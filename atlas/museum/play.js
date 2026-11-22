@@ -93,6 +93,26 @@
           names: l => { const a = NAMES[l] || NAMES.en; return { p1: a[0], p2: a[1] }; },
           dot: ['background:radial-gradient(circle at 35% 30%,#6a6a96,#34345a 60%,#1e1e38)', 'background:radial-gradient(circle at 35% 30%,#e0607a,#9b1b2e 60%,#5e0d1a)'] };
         return g; } },
+    // 木画紫檀双六局 (1 = 1 cm): 盤双六, the 本双六 rules (atlas/games/sugoroku.js). The stones after the Shōsōin's own 双六子 (北倉18): fifteen of
+    // green glass (緑瑠璃, 1.4–1.5 across, 0.7–0.8 thick) for you and fifteen of yellow glass (黄瑠璃, 1.3–1.5, 0.6–0.7) for the AI — round, domed on
+    // top (the Shōsōin's photograph). Each point is a flower on the long rim; its stones line up from the flower toward the middle; cut stones wait
+    // in the middle strip; the dice are the board's two ivory dice (the pair laid out for show is put away).
+    sugoroku: { game: 'sugoroku', view: { yaw: 0, pit: 1.2, d: .8 }, noContact: true, light: { key: .62, env: .35 },
+      board(TH, obj, K) {
+        const P = obj.userData.play, g = new TH.Group(), Y = P.top, R = P.row, SP = 1.5;
+        const colX = c => c <= 6 ? -(P.P0 + (6 - c) * P.PS) : P.P0 + (c - 7) * P.PS;
+        const slot = (abs, k) => { const near = abs <= 12, c = near ? abs : 25 - abs; return [colX(c), Y + Math.floor(k / 8) * .7, (near ? 1 : -1) * (R - (k % 8) * SP + (k >= 8 ? SP / 2 : 0))]; };
+        const bar = (side, k) => [(side ? 1 : -1) * (2.2 + k * 1.6), Y, 0];
+        const hit = (x, z) => { if (Math.abs(z) < 1.8) return 0; if (Math.abs(z) > R + 1.4) return -1; let c = 0, bd = 1e9; for (let i = 1; i <= 12; i++) { const d = Math.abs(x - colX(i)); if (d < bd) { bd = d; c = i; } } if (bd > P.PS / 2) return -1; return z > 0 ? c : 25 - c; };
+        const glass = (col, rough) => K.mat({ color: col, roughness: rough, metalness: 0, clearcoat: 1, clearcoatRoughness: .08 });
+        const MAT = [glass('#1c6a33', .14), glass('#c48d16', .16)];
+        const geo = (d, t) => new TH.LatheGeometry([[0, 0], [d * .46, 0], [d / 2, t * .12], [d * .49, t * .32], [d * .43, t * .62], [d * .3, t * .87], [d * .14, t * .98], [0, t]].map(([a, b]) => new TH.Vector2(Math.max(.001, a), b)), 32);
+        const GEO = [geo(1.45, .75), geo(1.4, .66)];
+        const stone = side => { const m = new TH.Mesh(GEO[side], MAT[side]); m.castShadow = m.receiveShadow = true; return m; };
+        const die = () => { const m = new TH.Mesh(P.dieG, P.dieM); m.castShadow = m.receiveShadow = true; return m; };
+        const diceAt = (side, i) => side ? [-(9.5 + i * 2.3), -1.6] : [9.5 + i * 2.3, 1.6];
+        g.userData = { top: Y, slot, bar, hit, stone, die, diceAt };
+        return g; } },
   };
   let cur = null;
   function start(id, o) {
