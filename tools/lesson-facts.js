@@ -67,6 +67,35 @@ const CHECKS = {
       });
     });
   },
+  // (2026-11-23 lesson loop) the gomoku lessons ('gomoku', key = the step's index): every position loads (rule: the problem's, else renju),
+  // every answer point is empty, and what the step's words (atlas/lessons3d.js gmLsJa) say the answer does holds with the engine's exact
+  // patterns: a five (five), the opponent's five point (block), no open-four point left to the opponent (three, defend: no five, open four
+  // or four-after-four left either), an open four (sfour), a four-three not forbidden (fourthree / fourthreeB), black's 3-3 / 4-4·overline
+  // (forbid33 / forbid44), a white four whose every stop is black's forbidden point (trap), the first four of a four-after-four win (vcf)
+  'gomoku'() {
+    const E = require(path.join(ROOT, 'gomoku/engine.js')), L = J('gomoku/lessons.json'), g = 'gomoku', C = E.C;
+    const cells = a => String(a || '').split(/\s+/).filter(Boolean).map(E.sqOf);
+    const winPt = (pos, c) => { const k = pos.cls[c]; for (let m = 0; m < 225; m++) { const i = E.M2I[m]; if (pos.b[i] === E.EMPTY && (k[i] === C.FIVE || k[i] === C.F4) && !(c === E.BLACK && pos.renju && pos.forbidden(m))) return true; } return false; };
+    L.steps.forEach((st, si) => { const K = String(si), id = st.id;
+      (st.problems || []).forEach((P, j) => { const w = `${id} q${j + 1}`, rule = P.rule || 'renju', s = P.side || 1, o = 3 - s;
+        let pos; try { pos = E.setup(rule, { b: cells(P.b), w: cells(P.w), side: s }); } catch (e) { bad(g, K, `${w}: the position does not load`); return; }
+        const ok = (P.ok || []).map(E.sqOf); if (!ok.length) { bad(g, K, `${w}: no answer`); return; }
+        ok.forEach(m => { const nm = E.sqName(m), i = E.M2I[m], k = pos.cls[s][i];
+          if (pos.at(m) !== E.EMPTY) { bad(g, K, `${w}: the answer ${nm} is not empty`); return; }
+          if (id === 'forbid33') { if (pos.forbidden(m) !== 1) bad(g, K, `${w}: ${nm} is not a 3-3 (forbidden ${pos.forbidden(m)})`); return; }
+          if (id === 'forbid44') { const f = pos.forbidden(m); if (f !== 2 && f !== 3) bad(g, K, `${w}: ${nm} is not a 4-4 / overline (forbidden ${f})`); return; }
+          if (!pos.isLegal(m)) { bad(g, K, `${w}: the answer ${nm} is not legal`); return; }
+          if (id === 'five' && k !== C.FIVE) bad(g, K, `${w}: ${nm} does not make five`);
+          if (id === 'block' && !pos.fives(o).includes(E.M2I[m])) bad(g, K, `${w}: ${nm} is not the opponent's five point`);
+          if (id === 'sfour' && k !== C.F4) bad(g, K, `${w}: ${nm} does not make an open four`);
+          if ((id === 'fourthree' || id === 'fourthreeB') && k !== C.F43) bad(g, K, `${w}: ${nm} is not a four-three`);
+          pos.make(m);
+          if (id === 'three' && winPt(pos, o)) bad(g, K, `${w}: after ${nm} the opponent still has an open four / five`);
+          if (id === 'defend') { const S = new E.Solver(); S.limit = 2e5; if (winPt(pos, o) || pos.fives(o).length || S.vcf(pos, 12) >= 0) bad(g, K, `${w}: after ${nm} the opponent still wins by fours`); }
+          if (id === 'trap') { const f = pos.fives(s), fb = f.length && f.every(q => pos.forbidIdx(q)); if (!fb) bad(g, K, `${w}: ${nm}: the four can be stopped on a point black may play`); }
+          if (id === 'vcf') { const f = pos.fives(s); if (f.length !== 1) bad(g, K, `${w}: ${nm} is not a (simple) four`); else { pos.make(E.I2M[f[0]]); const S = new E.Solver(); S.limit = 2e5; if (S.vcf(pos, 12) < 0 && !pos.fives(s).length) bad(g, K, `${w}: after ${nm} no four-after-four win follows`); pos.unmake(); } }
+          pos.unmake(); }); }); });
+  },
   amazons() {
     const E = require(path.join(ROOT, 'amazons/engine.js')), L = J('amazons/lessons.json'), NC = J('atlas/nocoord/amazons.json');
     const N = E.N || 10, rc = i => [Math.floor(i / N), i % N];
