@@ -1059,8 +1059,10 @@ const LEVELS = [
   { depth: 13, exact: 20, wld: 22, end: 26, time: 10000, use: 1, max: 20000, mpc: 1, bm: 0.3 },   // 28 (Lv.20 until 2026-11-13)
   // 29-36 (2026-11-13, "天上" — beyond what a person plays against: no rewards in the portal): Lv.21-28 until then. 29-35 read to a fixed depth,
   // 36 is the strongest, by time on all threads (wtry / xtry / tryMs / end: MODEL_CARD.md「上位レベルの追加の読み切り」「終局まで読む」)
-  { depth: 16, exact: 22, wld: 24, end: 28, time: 15000, use: 1, max: 30000, mpc: 1, bm: 0.3 },   // 29 (Lv.21 until 2026-11-13)
-  { depth: 20, mix: 16, exact: 22, wld: 24, end: 28, time: 20000, use: 1, max: 40000, mpc: 1, bm: 0.3 },   // 30 (Lv.22 until 2026-11-13)
+  // (29 and 30, 2026-11-22: depth 16 / depth 20 mixed with 16 at t 1.5 until then. Against Edax level 18, 300 games each on an M4 Pro:
+  // 29 -92 ± 17 Elo at 2.13 s a game -> +5 ± 17 at 2.09 s; 30 -9 ± 16 at 3.55 s -> +27 ± 14 at 3.25 s — MODEL_CARD.md「天上レベルの枝刈り」)
+  { depth: 20, t: 1.1, exact: 22, wld: 24, end: 28, time: 15000, use: 1, max: 30000, mpc: 1, bm: 0.3 },   // 29 (Lv.21 until 2026-11-13)
+  { depth: 22, t: 1.1, exact: 22, wld: 24, end: 28, time: 20000, use: 1, max: 40000, mpc: 1, bm: 0.3 },   // 30 (Lv.22 until 2026-11-13)
   // (31, 2026-11-22: depth 20 at t 1.5 until then. Against Edax level 18, 300 games each on an M4 Pro: +85 ± 16 Elo at 5.25 s a game,
   // the former setting +7 ± 16 at 4.87 s, +40 to +48 with retrained weights — MODEL_CARD.md「天上レベルの枝刈り」)
   { depth: 22, t: 1.3, exact: 22, wld: 24, end: 28, time: 20000, use: 1, max: 40000, mpc: 1, bm: 0.3 },   // 31 (Lv.23 until 2026-11-13)
