@@ -210,6 +210,54 @@ const CHECKS = {
         }
       }); });
   },
+  // (2026-11-23 lesson loop, connect4) every answer column is open, the solver table C4SOL agrees (A on every answer, '-' on a full
+  // column), and what ポトンウサ's words (atlas/lessons3d.js c4LsJa, run here) say about the answer and about each wrong column holds on a
+  // board counted here independently: a four now, a block of the opponent's four, two immediate wins / stacked winning cells, the row of a
+  // new winning cell, the number of open 4-lines through the cell, the cell under the opponent's winning cell, a win missed; a hint
+  // naming the green / red marks only where the lesson shows them.
+  connect4() {
+    const L = J('connect4/lessons.json'), G = 'connect4', vm = require('vm');
+    const src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8');
+    const s1 = src.slice(src.indexOf('  const C4M = '), src.indexOf('  const CONNECT4 = {')), s2 = src.slice(src.indexOf('  const C4_ANS = '), src.indexOf('  /* hnefatafl (2026-11-15)'));
+    const X = vm.runInNewContext(s1 + s2 + '\n;({ c4LsJa, C4SOL })', {});
+    const grid = mv => { const g = Array.from({ length: 7 }, () => []); for (let i = 0; i < mv.length; i++) g[+mv[i] - 1].push(i & 1 ? 2 : 1); return g; };
+    const at = (g, c, r) => c < 0 || c > 6 || r < 0 || r > 5 ? -1 : r < g[c].length ? g[c][r] : 0;
+    const WIN = []; for (let c = 0; c < 7; c++) for (let r = 0; r < 6; r++) for (const [dc, dr] of [[1, 0], [0, 1], [1, 1], [1, -1]]) { const w = [0, 1, 2, 3].map(k => [c + dc * k, r + dr * k]); if (w.every(([x, y]) => x >= 0 && x < 7 && y >= 0 && y < 6)) WIN.push(w); }
+    const four = (g, c, r, p) => WIN.some(w => w.some(([x, y]) => x === c && y === r) && w.every(([x, y]) => (x === c && y === r) || at(g, x, y) === p));
+    const wins = (g, p) => [0, 1, 2, 3, 4, 5, 6].filter(c => g[c].length < 6 && four(g, c, g[c].length, p));   // columns where p makes four now
+    const cells = (g, p) => { const o = []; for (let c = 0; c < 7; c++) for (let r = g[c].length; r < 6; r++) if (four(g, c, r, p)) o.push([c, r]); return o; };   // p's winning cells (empty)
+    const lines = (g, c, r, p) => WIN.filter(w => w.some(([x, y]) => x === c && y === r) && w.every(([x, y]) => at(g, x, y) !== 3 - p)).length;
+    const drop = (g, c, p) => { const h = g.map(x => x.slice()); h[c].push(p); return h; };
+    const plain = t => String(t || '').replace(/[\u0001\u0002]/g, '').replace(/<[^>]+>/g, '');
+    L.steps.forEach((st, si) => { const K = String(si), hm = st.hintMarks || '';
+      (st.problems || []).forEach((P, j) => { const w = `${st.id} q${j + 1}`, g = grid(P.moves), me = P.moves.length & 1 ? 2 : 1, op = 3 - me, sol = (X.C4SOL[st.id] || [])[j] || '';
+        P.answer.forEach(a => { if (g[a].length >= 6) bad(G, K, `${w}: answer column ${a} is full`); if (sol[a] !== 'A') bad(G, K, `${w}: C4SOL has ${sol[a]} on answer column ${a}`); });
+        for (let c = 0; c < 7; c++) if ((sol[c] === '-') !== (g[c].length >= 6)) bad(G, K, `${w}: C4SOL '${sol[c]}' on column ${c} (height ${g[c].length})`);
+        let o; try { o = X.c4LsJa(st, P, j, me, c => ['金', '銀'][c - 1], si); } catch (e) { bad(G, K, `${w}: the words failed: ${e.message}`); return; }
+        const hint = plain(o.hintTx);
+        if (/緑の印|光ってる印/.test(hint) && !/^(me|both)$/.test(hm)) bad(G, K, `${w}: the hint names the green marks, the lesson shows none`);
+        if (/赤い印/.test(hint) && !/^(op|both)$/.test(hm)) bad(G, K, `${w}: the hint names the red marks, the lesson shows none`);
+        // what the words say a column does (good: the answer; ng: a wrong column, the answer's clause after 緑の印の列)
+        const claims = (t, u, who) => { const h = g[u].length, A = drop(g, u, me), thrB = cells(g, me), thrA = cells(A, me), nw = thrA.filter(([c, r]) => !thrB.some(([x, y]) => x === c && y === r));
+          if (/4つ(そろって|並びが完成|つながって)|ぴたりと入る|線がうまって/.test(t) && !four(g, u, h, me)) bad(G, K, `${w} ${who}: said to make four, column ${u} does not`);
+          if (/先にふさげる|3つ並びの先をつぶせる|負ける心配がなくなる|先回りできる|4つ目が入る場所をうばえる|ふさぎながら|守りながら|ふさいだ石|相手を止めて|守りと攻めが/.test(t) && !four(g, u, h, op)) bad(G, K, `${w} ${who}: said to block a four, column ${u} does not`);
+          if (/2つ同時|2つになる|ダブルリーチ|もう片方で勝てる|守りきれない/.test(t) && wins(A, me).length < 2) bad(G, K, `${w} ${who}: said to make two wins at once, column ${u} makes ${wins(A, me).length}`);
+          if (/上下にならんだ|2つ重なる|すぐ上で勝てる|「7」の形がそろって|となりあう勝ちマスが2つ/.test(t) && !thrA.some(([c, r]) => thrA.some(([x, y]) => x === c && y === r + 1))) bad(G, K, `${w} ${who}: said to stack two winning cells, column ${u} does not`);
+          const rw = t.match(/(\d)段目(?!.*(効きにくい|役立たない|合う段じゃない|味方をしてくれない))/); if (rw && /(勝ちマス|ねらい)/.test(t) && !nw.some(([, r]) => r + 1 === +rw[1])) bad(G, K, `${w} ${who}: said to make a winning cell on row ${rw[1]}, column ${u} does not`);
+          const nl = t.match(/線[がは](\d+)本|(\d+)本の(線|4つ並び)/), nn = nl && +(nl[1] || nl[2]); if (nl && nn !== lines(g, u, h, me)) bad(G, K, `${w} ${who}: says ${nn} lines, column ${u} has ${lines(g, u, h, me)}`);
+          if (/新しい勝ちマス|あと1つでそろう|ねらいが1つふえる|空中に勝ちマス|勝ちマスが1つふえる|勝ちマスの真下に置けなくなる/.test(t) && !nw.length) bad(G, K, `${w} ${who}: said to make a new winning cell, column ${u} does not`); };
+        claims(plain(o.good(P.answer[0])), P.answer[0], 'praise');
+        for (let u = 0; u < 7; u++) { if (P.answer.includes(u) || g[u].length >= 6) continue;
+          const t = plain(o.ng(u)), [mine, ans] = t.split(/緑の印の列/), A = drop(g, u, me), h = g[u].length;
+          if (ans) claims(ans, P.answer[0], `miss ${u}`);
+          if (/落とし穴|土台になっちゃう|すぐ上で相手が4つ|手が届くようにしちゃう|相手の勝ちマスの真下！/.test(mine) && !(h + 1 < 6 && four(A, u, h + 1, op))) bad(G, K, `${w} miss ${u}: said to put a disc under the opponent's four, it does not`);
+          if (/あいたまま|ふさがらない|すぐに4つそろえ|残ったまま|守りが間に合わず|逆に相手に4つ|相手の勝ちになる|4つそろえさせ|相手の4つ目が先に入る/.test(mine) && !wins(A, op).length) bad(G, K, `${w} miss ${u}: said to leave the opponent a four, there is none`);
+          if (/勝ちを見のがし|今すぐ4つ並べられる列があった|目の前の勝ち|勝負が決まらない|勝負を決めそこね|勝ちを逃した|すぐ勝てる場面/.test(mine) && !(wins(g, me).length && !four(g, u, h, me))) bad(G, K, `${w} miss ${u}: said to miss a four, there is none to miss`);
+          const nl = mine.match(/線[がは](\d+)本|(\d+)本の(線|4つ並び)/), nn = nl && +(nl[1] || nl[2]); if (nl && nn !== lines(g, u, h, me)) bad(G, K, `${w} miss ${u}: says ${nn} lines, column ${u} has ${lines(g, u, h, me)}`);
+          const rw = mine.match(/(\d)段目/); if (rw) { const thrB = cells(g, me), nw = cells(A, me).filter(([c, r]) => !thrB.some(([x, y]) => x === c && y === r)); if (!nw.some(([, r]) => r + 1 === +rw[1])) bad(G, K, `${w} miss ${u}: said to make a winning cell on row ${rw[1]}, it does not`); }
+        }
+      }); });
+  },
   // (2026-11-22 lesson loop, hex/open) the opening lines and their problems: every move of the line legal, a problem's best move legal
   // and the engine's best value (or within 3% of it), and what each stored note says the move does true on the board — a bridge with an own
   // stone, touching the opponent, a swap, an intrusion into the opponent's bridge, the 2nd row
