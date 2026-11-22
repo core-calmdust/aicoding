@@ -252,8 +252,9 @@
     /* ---------- input ---------- */
     function cellOf(e) {
       const p = T3.pick(e, Y); if (!p) return -1;
-      const c = Math.floor((p.x + S / 2) / cs), r = Math.floor((p.z + S / 2) / cs);
-      return c < 0 || c >= n || r < 0 || r >= n ? -1 : r * n + c;
+      // the nearest point as the board places it (a carved board's holes stand off a regular grid — the museum's Ballinderry board)
+      let best = -1, bd = cs * cs * .5; for (let i = 0; i < n * n; i++) { const [x, z] = xz(i), d = (x - p.x) ** 2 + (z - p.z) ** 2; if (d < bd) { bd = d; best = i; } }
+      return best;
     }
     const ownBy = (sq, s) => { const p = pos.b[sq]; return s === 0 ? p === 1 : p === 2 || p === 3; };
     function onClick(e) {
