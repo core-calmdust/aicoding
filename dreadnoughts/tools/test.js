@@ -31,12 +31,15 @@ let fail = 0; const ok = (c, m) => { console.log((c ? 'ok  ' : 'NG  ') + m); if 
     ok(await p.evaluate(() => new Set([...document.querySelectorAll('#drGrid .card')].map(c => c.offsetHeight)).size === 1), name + ': the draft cards are all one height');
     // tap a card to choose it, tap again to undo
     await p.waitForFunction(() => { const G = DN.G(); return G.phase !== 'draft' || (!G.busy && G.draft.turn === 0); }, null, { timeout: 30000 });
-    const k0 = await p.evaluate(() => { const c = document.querySelector('#drGrid .card:not(.off)'); c.click(); return +c.dataset.k; });
+    // (phones: a tap opens the card's detail, picked from its button — 2026-11-23)
+    await p.evaluate(() => { window.__pick = c => { c.click(); const b = document.querySelector('#cardPop:not(.hide) #cpPick:not(.hide)'); if (b) b.click(); }; });
+    if (touch) { ok(await p.evaluate(() => { const c = document.querySelector('#drGrid .card:not(.off)'); c.click(); const pop = document.querySelector('#cardPop'), ok = !pop.classList.contains('hide') && !!pop.querySelector('.card .desc') && !document.querySelector('#cpPick').classList.contains('hide'); document.querySelector('#cpClose').click(); return ok && pop.classList.contains('hide') && !document.querySelector('#drGrid .card.sel'); }), name + ': a tapped tile opens its detail (with the pick button), closing picks nothing'); }
+    const k0 = await p.evaluate(() => { const c = document.querySelector('#drGrid .card:not(.off)'); __pick(c); return +c.dataset.k; });
     ok(await p.evaluate(k => document.querySelector(`#drGrid .card[data-k="${k}"]`).classList.contains('sel') && !document.querySelector('#drOk').disabled, k0), name + ': a tapped card is chosen');
-    await p.evaluate(k => document.querySelector(`#drGrid .card[data-k="${k}"]`).click(), k0);
+    await p.evaluate(k => __pick(document.querySelector(`#drGrid .card[data-k="${k}"]`)), k0);
     ok(await p.evaluate(() => !document.querySelector('#drGrid .card.sel') && document.querySelector('#drOk').disabled), name + ': a second tap undoes it');
     for (let n = 0; n < 60; n++) { const ph = await p.evaluate(() => DN.G().phase); if (ph !== 'draft') break;
-      await p.evaluate(() => { const G = DN.G(); if (G.busy || G.draft.turn !== 0) return; const c = document.querySelector('#drGrid .card:not(.off)'); if (c) { c.click(); document.querySelector('#drOk').click(); } }); await p.waitForTimeout(500); }
+      await p.evaluate(() => { const G = DN.G(); if (G.busy || G.draft.turn !== 0) return; const c = document.querySelector('#drGrid .card:not(.off)'); if (c) { __pick(c); document.querySelector('#drOk').click(); } }); await p.waitForTimeout(500); }
     ok(await p.evaluate(() => DN.G().phase === 'deploy' && DN.G().my.length >= 3), name + ': the draft ends in the deployment');
     await p.waitForTimeout(1800); await shot('deploy');
     // deploy: drag a ship one square (PC)

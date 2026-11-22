@@ -248,10 +248,18 @@ function poseFor(name) {
   /* title */ return { p: new T.Vector3(-7.5, 1.35, 20.5), t: new T.Vector3(4, .9, 2), fov: 36, off: [0, 0] };
 }
 function pose(name) { V.poses = V.poses || {}; if (!V.poses[name]) V.poses[name] = poseFor(name); return V.poses[name]; }
-function applyPose(P) { const c = V.cam; c.fov = P.fov; c.position.copy(P.p); c.lookAt(P.t); c.setViewOffset(innerWidth, innerHeight, P.off[0], P.off[1], innerWidth, innerHeight); c.updateProjectionMatrix(); V.tgt = P.t.clone(); }
+// (2026-11-23 the user) phones: pinch to zoom and slide to move the board — a user view on top of the zone's pose (V.uv: scale, pan x/z)
+function uvLim(u) { const m = 5.5 * (1 - 1 / u.s) + .6; u.x = Math.max(-m, Math.min(m, u.x)); u.z = Math.max(-m, Math.min(m, u.z)); }
+function userView(P) { const u = V.uv; if (!u || (u.s === 1 && !u.x && !u.z) || !(V.pose === 'z0' || V.pose === 'z1')) return P;
+  const t = P.t.clone().add(new T.Vector3(u.x, 0, u.z)), p = P.p.clone().sub(P.t).multiplyScalar(1 / u.s).add(t); return { p, t, fov: P.fov, off: P.off }; }
+function zoomBy(f) { const u = V.uv || (V.uv = { s: 1, x: 0, z: 0 }); u.s = Math.max(1, Math.min(3.2, u.s * f)); uvLim(u); }
+function panBy(dx, dy) { if (!V.cur) return; const u = V.uv || (V.uv = { s: 1, x: 0, z: 0 }), d = V.cur.p.distanceTo(V.cur.t) / u.s, k = 2 * d * Math.tan(V.cur.fov * Math.PI / 360) / innerHeight;
+  const pitch = Math.asin(Math.min(1, (V.cur.p.y - V.cur.t.y) / Math.max(1e-3, V.cur.p.distanceTo(V.cur.t)))); u.x -= dx * k; u.z -= dy * k / Math.max(.5, Math.sin(pitch)); uvLim(u); }
+function resetView() { V && (V.uv = { s: 1, x: 0, z: 0 }); }
+function applyPose(P) { P = userView(P); const c = V.cam; c.fov = P.fov; c.position.copy(P.p); c.lookAt(P.t); c.setViewOffset(innerWidth, innerHeight, P.off[0], P.off[1], innerWidth, innerHeight); c.updateProjectionMatrix(); V.tgt = P.t.clone(); }
 // fly the camera to a pose: a smooth arc (rises in the middle when it crosses between the zones)
 function show(name, dur) {
-  if (!V) return Promise.resolve(); const to = pose(name); V.pose = name;
+  if (!V) return Promise.resolve(); const to = pose(name); if (V.pose !== name) resetView(); V.pose = name;
   if (!dur || !V.cur) { V.anim = null; V.cur = { p: to.p.clone(), t: to.t.clone(), fov: to.fov, off: to.off.slice() }; applyPose(V.cur); return Promise.resolve(); }
   const from = { p: V.cur.p.clone(), t: V.cur.t.clone(), fov: V.cur.fov, off: V.cur.off.slice() }, lift = Math.min(4, from.p.distanceTo(to.p) * .18);
   return new Promise(res => { V.anim = { from, to, t0: performance.now(), dur, lift, res }; });
@@ -321,7 +329,7 @@ function variant(mat, kind) {
   const m = mat.clone();
   if (kind === 'sunk') { m.color = m.color.clone().multiplyScalar(.28); m.roughness = 1; m.metalness = .1; if (m.emissive) m.emissiveIntensity = 0; }
   if (kind === 'ghost' || kind === 'bad') { m.transparent = true; m.opacity = kind === 'bad' ? .55 : .5; m.depthWrite = false; if (kind === 'bad') { m.emissive = new T.Color(0xff2a1a); m.emissiveIntensity = .7; } }
-  if (kind === 'pick') { m.emissive = new T.Color(0xffd27a); m.emissiveIntensity = .35; }
+  if (kind === 'pick') { m.emissive = new T.Color(0xd8f0ff); m.emissiveIntensity = .55; }
   variants.set(id, m); return m;
 }
 function setLook(s, kind) { if (s.look === kind) return; s.look = kind; s.g.traverse(o => { if (!o.isMesh) return; const base = o.userData.base || (o.userData.base = o.material); o.material = kind === 'own' ? base : variant(base, kind); o.castShadow = kind === 'own' || kind === 'sunk' || kind === 'pick'; o.receiveShadow = true; }); }
@@ -535,5 +543,5 @@ function dbgTick(now) { DBG.fr++; if (now - DBG.t > 500) { const f = DBG.fr * 10
 function dbgToggle(on) { DBG.on = on === undefined ? !DBG.on : !!on; try { sessionStorage.setItem('t3d-debug', DBG.on ? '1' : ''); } catch (x) {} if (!DBG.on) { if (DBG.el) DBG.el.hidden = true; return; } DBG.t = performance.now(); DBG.fr = 0; DBG.n = 0; DBG.lo = 1e9; dbgPaint(); }
 addEventListener('keydown', e => { if ((e.key === 'i' || e.key === 'I') && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey && !(e.target && e.target.closest && e.target.closest('input,textarea,select,[contenteditable]'))) dbgToggle(); });
 
-window.World = { dbg: dbgToggle, throttle: on => { if (V) V.throttle = !!on; }, init, setZone, grids, focus, show, pose, fx, kind, sweep, shake, sail, cellAt, pointIn, aim, screenOf, portrait, portraitIf, preview, waveAt, ZC, _v: () => V, fit, refit: () => { if (V) { V.poses = null; } } };
+window.World = { zoomBy: f => V && zoomBy(f), panBy: (x, y) => V && panBy(x, y), resetView, viewScale: () => (V && V.uv ? V.uv.s : 1), dbg: dbgToggle, throttle: on => { if (V) V.throttle = !!on; }, init, setZone, grids, focus, show, pose, fx, kind, sweep, shake, sail, cellAt, pointIn, aim, screenOf, portrait, portraitIf, preview, waveAt, ZC, _v: () => V, fit, refit: () => { if (V) { V.poses = null; } } };
 })();

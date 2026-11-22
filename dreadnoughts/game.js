@@ -20,6 +20,8 @@ const DN = {
     'v.foe': '敵の海域', 'v.mine': '自軍の海域',
     's.k': '対局の設定', 's.level': 'AIの強さ', 's.first': '先攻', 's.adj': '艦の置き方', 's.go': '出撃する', 'rec': 'おすすめ',
     'd.mine': '自軍の編成', 'd.foe': '敵の編成', 'd.budget': '残りコスト', 'd.k': '{n}巡目 ・ 3〜6隻 ・ コスト{b}まで', 'd.you': 'YOUR PICK', 'd.ai': 'ENEMY PICK',
+    'd.mineS': '自軍', 'd.foeS': '敵',
+    'cp.pick': 'この艦を選ぶ', 'cp.unpick': '選択を外す', 'cp.close': '閉じる',
     'd.ships': '{n}/{m}隻', 'd.ai.pick': '敵が{s}を選んだ', 'd.wait': '敵が艦を選んでいます…',
     'dep.hint': '艦をドラッグで移動、タップで回転。配置が決まったら出撃。', 'dep.hint.pc': '艦をドラッグで移動、クリックで回転。配置が決まったら出撃。',
     'b.you': 'YOUR TURN', 'b.foe': 'ENEMY TURN', 'b.deploy': 'DEPLOYMENT', 'b.over': 'BATTLE OVER',
@@ -39,6 +41,8 @@ const DN = {
     'h.mine': 'Our fleet', 'h.foe': 'Enemy fleet', 'h.afloat': 'SHIPS AFLOAT', 'h.bal': 'Balance', 'h.you': 'Us', 'h.log': 'Battle log', 'h.k': 'How to play',
     'v.foe': 'Enemy waters', 'v.mine': 'Our waters',
     's.k': 'Game settings', 's.level': 'AI strength', 's.first': 'First to fire', 's.adj': 'Ship spacing', 's.go': 'Engage', 'rec': 'RECOMMENDED',
+    'd.mineS': 'Ours', 'd.foeS': 'Enemy',
+    'cp.pick': 'Pick this ship', 'cp.unpick': 'Unpick', 'cp.close': 'Close',
     'd.mine': 'Our picks', 'd.foe': 'Enemy picks', 'd.budget': 'Budget', 'd.k': 'Pick {n} · 3–6 ships · up to {b} cost', 'd.you': 'YOUR PICK', 'd.ai': 'ENEMY PICK',
     'd.ships': '{n}/{m} ships', 'd.ai.pick': 'The enemy took the {s}', 'd.wait': 'The enemy is choosing…',
     'dep.hint': 'Drag a ship to move it, tap to turn it. Engage when ready.', 'dep.hint.pc': 'Drag a ship to move it, click to turn it. Engage when ready.',
@@ -224,13 +228,21 @@ function layoutPhone() {
 function renderStrip() {
   const el = $('#strip'); if (!PHONE() || !G || !(G.phase === 'deploy' || G.phase === 'battle' || G.phase === 'over')) { el.innerHTML = ''; return; }
   const p = G.st && G.view === 1 ? 1 : 0, sd = G.st ? G.st.sides[p] : null, ships = G.st ? sd.ships : G.my;
-  el.innerHTML = ships.map((s, i) => fleetItem(s, i, sd, p === 0)).join(''); el.dataset.p = p; fillPortraits(el);
+  el.innerHTML = ships.map((s, i) => fleetItem(s, i, sd, p === 0)).join(''); el.dataset.p = p; fillPortraits(el); spotTip();
+}
+// (2026-11-23 the user) deployment on phones: a tap on a ship in the strip lights it on the sea and shows its skill in one line above the strip
+let spot = -1;
+function spotTip() {
+  const el = $('#spotTip'), st = $('#strip'), s = G && G.phase === 'deploy' && PHONE() && spot >= 0 ? G.my[spot] : null;
+  if (!s) { el.classList.add('hide'); return; }
+  const T = E.TYPES[s.t]; el.innerHTML = `<b>${t('ship.' + s.t)}</b>${T.skill ? `<span class="sn">${icon(abilityKey(T))}${shipSkillName(T)}</span><span class="tx">${shipSkillText(T)}</span>` : ''}`;
+  el.classList.remove('hide'); el.style.bottom = (innerHeight - st.getBoundingClientRect().top + 6) + 'px';
 }
 
 // ---------- world sync ----------
 function lastOn(z) { if (!G.st) return -1; for (let i = G.st.log.length - 1; i >= 0; i--) { const m = G.st.log[i]; if (m.by !== z && !m.skill) return m.cell; if (m.by === z) break; } return -1; }
 function zoneOpts(z) {
-  if (z === 0) { const sd = G.st ? G.st.sides[0] : null; return { ships: G.my, show: i => (sd && sd.sunk[i]) ? 'sunk' : drag && drag.i === i ? (drag.bad ? 'bad' : 'ghost') : 'own', shots: sd ? sd.shots : null, last: lastOn(0), scans: G.st ? G.st.scans[1] : null, mines: sd ? sd.mines : null }; }
+  if (z === 0) { const sd = G.st ? G.st.sides[0] : null; return { ships: G.my, show: i => (sd && sd.sunk[i]) ? 'sunk' : drag && drag.i === i ? (drag.bad ? 'bad' : 'ghost') : G.phase === 'deploy' && spot === i ? 'pick' : 'own', shots: sd ? sd.shots : null, last: lastOn(0), scans: G.st ? G.st.scans[1] : null, mines: sd ? sd.mines : null }; }
   if (!G.st) return { ships: [] };
   const sd = G.st.sides[1], over = G.phase === 'over';
   return { ships: sd.ships, show: i => sd.sunk[i] ? 'sunk' : over ? 'own' : '', shots: over ? sd.shots : E.view(sd).shots, heat: G.hint ? G.hint.p : null, best: G.hint ? G.hint.best : -1, last: lastOn(1),
@@ -269,7 +281,7 @@ function fleetItem(s, i, side, mine) {
   const T = E.TYPES[s.t], sunk = side && side.sunk[i], hits = side ? (mine ? side.hitsOn[i] : sunk ? s.len : 0) : 0, known = mine || sunk || G.phase === 'over';
   const sk = !!(G.st && G.st.cd && T.skill), c = sk ? G.st.cd[mine ? 0 : 1][i] : null, live = sk ? E.skillLive(G.st, mine ? 0 : 1, i) : false;
   const tag = sk ? (live ? (c === 0 ? t('sk.ready') : t('sk.wait', { n: c })) : t('sk.lost')) : '';
-  return `<div class="fi${mine ? '' : ' foe'}${sunk ? ' dead' : ''}${known ? '' : ' unk'}" title="${t('ship.' + s.t)}">${portraitImg(s.t, s.len)}<b>${t('ship.' + s.t)}</b><span class="hp">${Array.from({ length: s.len }, (_, k) => `<i${k < hits ? ' class="x"' : ''}></i>`).join('')}</span>${tag ? `<span class="tg">${tag}</span>` : ''}</div>`;
+  return `<div class="fi${mine ? '' : ' foe'}${sunk ? ' dead' : ''}${known ? '' : ' unk'}${G.phase === 'deploy' && spot === i ? ' on' : ''}" data-i="${i}" title="${t('ship.' + s.t)}">${portraitImg(s.t, s.len)}<b>${t('ship.' + s.t)}</b><span class="hp">${Array.from({ length: s.len }, (_, k) => `<i${k < hits ? ' class="x"' : ''}></i>`).join('')}</span>${tag ? `<span class="tg">${tag}</span>` : ''}</div>`;
 }
 function renderFleets() {
   const sd = G.st ? G.st.sides[0] : null;
@@ -341,7 +353,7 @@ let pickSel = [], pickTab = -1, focusK = null, pv = null, pv2 = null;
 function myRun(d) { let n = d.n, c = 0; for (let g = 0; g < 12; g++) { const p = (((n + 1) >> 1) & 1) ^ d.first; if (p === 0) c++; else if (!d.done[1]) break; n++; } return Math.max(1, Math.min(c, E.MAXSHIPS - d.picks[0].length)); }
 function startDraft() {
   const first = S.first === 'ai' ? 1 : S.first === 'random' ? (Math.random() < .5 ? 0 : 1) : 0;
-  G = newG({ phase: 'draft', rule: 'tactics', adj: S.adj, level: S.level, first, draft: E.draftNew(1 - first) });   // (the second to shoot picks first)
+  pkSide = 0; G = newG({ phase: 'draft', rule: 'tactics', adj: S.adj, level: S.level, first, draft: E.draftNew(1 - first) });   // (the second to shoot picks first)
   pickSel = []; pickTab = -1; focusK = null;
   phaseUI(); syncWorld(); World.show('wide', 1400);
   if (!PHONE()) { if (!pv) pv = World.preview($('#pv')); pv.start(); }
@@ -360,10 +372,11 @@ function addMyShip(k) {
   if (put) G.my.push(put); else G.my = E.randomFleet(Math.random, G.adj, G.my.map(s => s.t).concat(k));
 }
 // a ship card (draft, archive, fleets): cost · name · length, the reach diagram beside the ship, the ability and what it does
+let pkSide = 0;   // the picks row on phones shows our side (0) or theirs (1)
 function shipCard(k, o) {
   o = o || {}; const T = E.TYPES[k], cost = o.cost != null ? o.cost : T.cost;
   return `<${o.tag || 'button'} class="card r${ROLE_OF(k)}${o.cls || ''}" data-k="${k}"${o.i != null ? ` data-i="${o.i}"` : ''} ${o.attrs || ''}><span class="role"></span>
-    <span class="top"><span class="cost">${cost}</span><b>${t('ship.' + k)}</b>${lenPips(T.len)}${o.pool > 1 ? `<em class="pool">×${o.pool}</em>` : ''}</span>
+    <span class="top"><span class="cost">${cost}</span><b>${t('ship.' + k)}</b><span class="rl">${t('dr.g' + ROLE_OF(k))}</span>${lenPips(T.len)}${o.pool > 1 ? `<em class="pool">×${o.pool}</em>` : ''}</span>
     <span class="art">${cardArt(T)}${portraitImg(k, T.len)}</span>
     <span class="skl">${icon(abilityKey(T))}<span>${shipSkillName(T)}</span><small>${kindOf(T)}</small></span>
     <span class="desc">${shipSkillText(T)}</span>${o.foot || '<span class="foot"></span>'}</${o.tag || 'button'}>`;
@@ -376,6 +389,19 @@ function draftCard(k, d, mine, run, selCost, costOf) {
   const foot = sel ? `<span class="foot badge">${run > 1 ? (pickSel.indexOf(k) + 1) + ' · ' : ''}${t('pk.sel')}</span>` : why ? `<span class="foot why">${why}</span>` : dup ? `<span class="foot why gold">${t('pk.dup', { n: E.DUP_EXTRA })}</span>` : '';
   return shipCard(k, { cost, pool: d.pool[k], cls: (can || sel ? '' : ' off') + (sel ? ' sel' : '') + (dup ? ' dup' : ''), attrs: can ? '' : 'aria-disabled="true"', foot });
 }
+// (2026-11-23 the user) phones: the ships are small tiles (ship · name · role); a tap opens the whole card here, with the pick button in the draft
+let cpK = -1, cpMode = '';
+function cardPop(k, mode) {
+  cpK = k; cpMode = mode; const d = G && G.phase === 'draft' ? G.draft : null, pop = $('#cardPop');
+  let html;
+  if (mode === 'draft' && d) { const mine = d.turn === 0 && !G.busy, run = myRun(d), costOf = ks => E.draftCost(d.picks[0].concat(ks)) - E.draftCost(d.picks[0]);
+    html = draftCard(k, d, mine, run, costOf(pickSel), costOf).replace(/^<button/, '<div').replace(/<\/button>$/, '</div>');
+    const sel = pickSel.includes(k), can = mine && E.draftCan(d, 0, k);
+    $('#cpPick').classList.toggle('hide', !(sel || can)); $('#cpPickT').textContent = t(sel ? 'cp.unpick' : 'cp.pick'); $('#cpPick').classList.toggle('prime', !sel);
+  } else { html = shipCard(k, { tag: 'div' }); $('#cpPick').classList.add('hide'); }
+  $('#cpCard').innerHTML = html; $('#cpCloseT').textContent = t('cp.close'); pop.classList.remove('hide'); fillPortraits(pop);
+}
+function cardPopClose() { $('#cardPop').classList.add('hide'); cpK = -1; }
 function renderDraft() {
   if (!G || G.phase !== 'draft') return;
   const d = G.draft, mine = d.turn === 0 && !G.busy, f = d.f;
@@ -390,8 +416,9 @@ function renderDraft() {
   const left = E.draftLeft(d, 0), used = E.BUDGET - left;
   $('#bgV').textContent = left - selCost; $('#bgF').style.width = (used / E.BUDGET * 100) + '%'; $('#bgS').style.left = (used / E.BUDGET * 100) + '%'; $('#bgS').style.width = (selCost / E.BUDGET * 100) + '%';
   $('#bgN').textContent = t('d.ships', { n: d.picks[0].length + pickSel.length, m: E.MAXSHIPS });
-  const chips = (p, cls) => d.picks[p].map((k, i) => `<span class="chip ${cls}${i === d.picks[p].length - 1 && d.last === p ? ' new' : ''}">${portraitImg(k, E.TYPES[k].len)}${t('ship.' + k)}</span>`).join('') || '<span class="chip" style="opacity:.4;padding-left:8px">—</span>';
+  const chips = (p, cls) => d.picks[p].map((k, i) => `<span class="chip r${ROLE_OF(k)} ${cls}${i === d.picks[p].length - 1 && d.last === p ? ' new' : ''}" data-k="${k}">${portraitImg(k, E.TYPES[k].len)}<span class="nm">${t('ship.' + k)}</span><span class="rl">${t('dr.g' + ROLE_OF(k))}</span></span>`).join('') || '<span class="chip" style="opacity:.4;padding-left:8px">—</span>';
   $('#pkMine').innerHTML = chips(0, ''); $('#pkFoe').innerHTML = chips(1, 'foe');
+  $('#pkRow').classList.toggle('foe', pkSide === 1); $('#pkSwT').textContent = t(pkSide ? 'd.foeS' : 'd.mineS'); $('#pkSwN').textContent = d.picks[pkSide].length;   // (phones: one row, one side at a time)
   $('#drOk').disabled = !(mine && pickSel.length);
   $('#drOkT').textContent = mine ? (run > 1 ? t('pk.okn', { n: pickSel.length, m: run }) : t('pk.ok')) : t('d.wait');
   if (focusK == null || !f[focusK]) focusK = pickSel[pickSel.length - 1] != null ? pickSel[pickSel.length - 1] : all[0];
@@ -411,7 +438,7 @@ function stopPreviews() { if (pv) pv.stop(); if (pv2) pv2.stop(); }
 
 // ---------- deploy ----------
 function enterDeploy() {
-  G.phase = 'deploy'; drag = null; G.view = 0;
+  G.phase = 'deploy'; drag = null; G.view = 0; spot = -1;
   $('#deployBar p').textContent = t(PC.matches ? 'dep.hint.pc' : 'dep.hint');
   render(); save(); World.refit(); look(0, 1300);
 }
@@ -591,8 +618,29 @@ function skillTip(i) {
 }
 // ---------- input on the sea ----------
 const cv = $('#world');
+// (2026-11-23 the user) phones: two fingers pinch-zoom the board, a slide moves it (a slide is never a shot or a rotation)
+const touches = new Map(); let gest = null;
+const tdist = () => { const [a, b] = [...touches.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
+const tmid = () => { const v = [...touches.values()]; return { x: v.reduce((s, p) => s + p.x, 0) / v.length, y: v.reduce((s, p) => s + p.y, 0) / v.length }; };
+const canView = () => G && (G.phase === 'deploy' || G.phase === 'battle' || G.phase === 'over') && !PC.matches;
 cv.addEventListener('pointerdown', e => {
-  if (!G || G.phase !== 'deploy') return;
+  if (e.pointerType !== 'mouse' && canView()) { touches.set(e.pointerId, { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY });
+    if (touches.size === 2) { if (drag) { G.my[drag.i] = drag.from; drag = null; syncWorld(); } gest = { kind: 'pinch', d: tdist(), m: tmid() }; return; }
+    if (touches.size === 1) gest = { kind: 'maybe' }; }
+}, true);
+cv.addEventListener('pointermove', e => {
+  const tp = touches.get(e.pointerId); if (!tp || !gest) return; tp.x = e.clientX; tp.y = e.clientY;
+  if (gest.kind === 'pinch' && touches.size >= 2) { const d = tdist(), m = tmid(); World.zoomBy(d / gest.d); World.panBy(m.x - gest.m.x, m.y - gest.m.y); gest.d = d; gest.m = m; e.stopImmediatePropagation(); return; }
+  if (drag) return;   // (a ship being dragged in the deployment)
+  if (gest.kind === 'maybe' && Math.hypot(tp.x - tp.x0, tp.y - tp.y0) > 10) { gest = { kind: 'pan', x: tp.x, y: tp.y }; World.aim(1, -1); }
+  if (gest.kind === 'pan') { World.panBy(tp.x - gest.x, tp.y - gest.y); gest.x = tp.x; gest.y = tp.y; e.stopImmediatePropagation(); }
+}, true);
+const touchEnd = e => { if (!touches.has(e.pointerId)) return; touches.delete(e.pointerId); const g = gest;
+  if (touches.size === 0) gest = null; else if (g && g.kind === 'pinch') gest = { kind: 'done' };
+  if (g && (g.kind === 'pinch' || g.kind === 'pan' || g.kind === 'done')) { e.stopImmediatePropagation(); if (touches.size === 0 && g.kind !== 'maybe') gest = null; } };
+cv.addEventListener('pointerup', touchEnd, true); cv.addEventListener('pointercancel', touchEnd, true);
+cv.addEventListener('pointerdown', e => {
+  if (!G || G.phase !== 'deploy') return; if (touches.size > 1) return;
   const cell = World.cellAt(0, e); if (cell < 0) return; const i = shipAtCell(cell); if (i < 0) return;
   e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (x) {}
   const s = G.my[i]; drag = { i, from: Object.assign({}, s), k: s.h ? cell % 10 - s.c : (cell / 10 | 0) - s.r, cell, moved: false, bad: false, grid: gridWithout(i) };
@@ -628,11 +676,14 @@ $('#segAdj').addEventListener('click', e => { const b = e.target.closest('button
 $('#sGo').onclick = engage;
 $('#drTabs').addEventListener('click', e => { const b = e.target.closest('button[data-g]'); if (!b) return; pickTab = +b.dataset.g; renderDraft(); $('#drGrid').scrollTop = 0; });
 $('#drGrid').addEventListener('click', e => {
-  const c = e.target.closest('.card'); if (!c) return; const k = +c.dataset.k; focusK = k;
+  if (PHONE()) { const c = e.target.closest('.card'); if (c) { sfx('select'); cardPop(+c.dataset.k, 'draft'); } return; }
+  const c = e.target.closest('.card'); if (c) pickToggle(c);
+});
+function pickToggle(c) { const k = +c.dataset.k; focusK = k;
   if (c.getAttribute('aria-disabled') && !pickSel.includes(k)) { renderDraft(); return; }
   const run = myRun(G.draft); if (pickSel.includes(k)) pickSel = pickSel.filter(x => x !== k); else if (pickSel.length < run) pickSel.push(k); else pickSel = pickSel.slice(0, -1).concat(k);
   sfx('select'); renderDraft();
-});
+}
 $('#drGrid').addEventListener('pointerover', e => { if (!PC.matches) return; const c = e.target.closest('.card'); if (!c) return; const k = +c.dataset.k; if (k !== focusK) { focusK = k; showShip(k, pv, '#pvName', '#pvMeta', '#pvSkill'); } });
 $('#drOk').onclick = () => { if (!pickSel.length) return; const ks = pickSel; pickSel = []; for (const k of ks) { if (G.phase !== 'draft' || G.draft.turn !== 0) break; draftPickMine(k); } draftStep(); };
 $('#arTabs').addEventListener('click', e => { const b = e.target.closest('button[data-g], button[data-s]'); if (!b) return; if (b.dataset.s) arSort = b.dataset.s; else arTab = +b.dataset.g; renderArchive(); $('#arGrid').scrollTop = 0; });
@@ -640,9 +691,13 @@ $('#drAll').onclick = () => { sfx('select'); openArchive(); };
 $('#pMine').addEventListener('click', () => { if (G && G.st) { sfx('select'); openFleets(0); } });
 $('#pFoe').addEventListener('click', () => { if (G && G.st) { sfx('select'); openFleets(1); } });
 $('#drShow').addEventListener('click', e => { const c = e.target.closest('.picks h5'); if (c) { sfx('select'); openFleets(c.classList.contains('foe') ? 1 : 0); } });
+$('#cardPop').addEventListener('click', e => { if (e.target === $('#cardPop') || e.target.closest('#cpClose')) { sfx('select'); cardPopClose(); } });
+$('#cpPick').addEventListener('click', () => { const k = cpK; if (k < 0 || !G || !G.draft) return; cardPopClose(); const c = document.querySelector(`#drGrid .card[data-k="${k}"]`); if (c) pickToggle(c); });
+$('#pkSw').addEventListener('click', () => { pkSide = 1 - pkSide; sfx('select'); if (G && G.draft) renderDraft(); });
+$('#pkRow').addEventListener('click', e => { const c = e.target.closest('.chip[data-k]'); if (c) { sfx('select'); cardPop(+c.dataset.k, 'view'); } });
 $('#dock').addEventListener('pointerover', e => { if (!PC.matches) return; const b = e.target.closest('.sk'); skillTip(b ? +b.dataset.i : null); });
 $('#dock').addEventListener('pointerleave', () => { if (PC.matches) skillTip(G && G.armed != null && !PC.matches ? G.armed : null); });
-$('#arGrid').addEventListener('click', e => { const c = e.target.closest('.card'); if (!c) return; arK = +c.dataset.k; sfx('select'); renderArchive(); });
+$('#arGrid').addEventListener('click', e => { const c = e.target.closest('.card'); if (!c) return; if (PHONE()) { sfx('select'); return cardPop(+c.dataset.k, 'view'); } arK = +c.dataset.k; sfx('select'); renderArchive(); });
 $('#arGrid').addEventListener('pointerover', e => { if (!PC.matches) return; const c = e.target.closest('.card'); if (c && +c.dataset.k !== arK) { arK = +c.dataset.k; $$('#arGrid .card').forEach(x => x.classList.toggle('sel', +x.dataset.k === arK)); showShip(arK, pv2, '#pv2Name', '#pv2Meta', '#pv2Skill'); } });
 $('#dShuffle').onclick = () => { if (G.phase !== 'deploy') return; G.my = E.randomFleet(Math.random, G.adj, G.my.map(s => s.t)); sfx('place'); syncWorld(); renderFleets(); save(); };
 $('#dGo').onclick = startBattle;
@@ -651,7 +706,7 @@ $('#dock').addEventListener('click', e => { const b = e.target.closest('.sk'); i
   G.armed = G.armed === i ? null : i; hover = aimTap = -1; G.hint = null; sfx('select'); if (G.view !== 1) look(1); render(); if (!PC.matches) skillTip(G.armed); });
 $('#views').addEventListener('click', e => { const b = e.target.closest('.vt'); if (!b || !G || G.busy || !(G.phase === 'battle' || G.phase === 'over')) return; look(+b.dataset.z, 800); });
 $('#bHint').onclick = hint;
-$('#strip').addEventListener('click', () => { if (G && G.st) { sfx('select'); openFleets(+$('#strip').dataset.p || 0); } });
+$('#strip').addEventListener('click', e => { if (G && G.phase === 'deploy') { const f = e.target.closest('.fi[data-i]'); if (!f) return; const i = +f.dataset.i; spot = spot === i ? -1 : i; sfx('select'); render(); return; } if (G && G.st) { sfx('select'); openFleets(+$('#strip').dataset.p || 0); } });
 $('#bMenu').onclick = () => { $('#pResign').disabled = !(G && G.phase === 'battle'); sheet('#scrMenu', true); };
 $('#pNew').onclick = () => { sheet('#scrMenu', false); openSetup(); };
 $('#pResign').onclick = resign;

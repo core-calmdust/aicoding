@@ -10,8 +10,9 @@ const { chromium } = require('playwright');
   await p.tap('#mPlay'); await p.waitForTimeout(400); await shot('2setup');
   await p.tap('#sGo'); await p.waitForTimeout(2500);
   await p.waitForFunction(() => { const G = DN.G(); return !G.busy && G.draft.turn === 0; }, null, { timeout: 30000 });
-  await p.evaluate(() => document.querySelector('#drGrid .card:not(.off)').click()); await p.waitForTimeout(800); await shot('3draft');
-  for (let n = 0; n < 60; n++) { if (await p.evaluate(() => DN.G().phase) !== 'draft') break; await p.evaluate(() => { const G = DN.G(); if (G.busy || G.draft.turn !== 0) return; const c = document.querySelector('#drGrid .card:not(.off)'); if (c) { c.click(); document.querySelector('#drOk').click(); } }); await p.waitForTimeout(500); }
+  await p.evaluate(() => { window.__pick = c => { c.click(); const b = document.querySelector('#cardPop:not(.hide) #cpPick:not(.hide)'); if (b) b.click(); }; __pick(document.querySelector('#drGrid .card:not(.off)')); }); await p.waitForTimeout(800); await shot('3draft');
+  await p.evaluate(() => document.querySelector('#drGrid .card').click()); await p.waitForTimeout(600); await shot('3b-detail'); await p.evaluate(() => document.querySelector('#cpClose').click());
+  for (let n = 0; n < 60; n++) { if (await p.evaluate(() => DN.G().phase) !== 'draft') break; await p.evaluate(() => { const G = DN.G(); if (G.busy || G.draft.turn !== 0) return; const c = document.querySelector('#drGrid .card:not(.off)'); if (c) { __pick(c); document.querySelector('#drOk').click(); } }); await p.waitForTimeout(500); }
   await p.waitForTimeout(2000); await shot('4deploy');
   await p.tap('#dGo'); await p.waitForTimeout(3000); await p.waitForFunction(() => { const G = DN.G(); return !G.busy && G.st.turn === 0; }, null, { timeout: 60000 }); await shot('5battle');
   await p.evaluate(() => { const G = DN.G(); G.st.cd[0] = G.st.cd[0].map(() => 0); DN.render(); }); await p.waitForTimeout(300); await p.evaluate(() => document.querySelector('#bMenu') && 0);
