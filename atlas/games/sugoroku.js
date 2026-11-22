@@ -109,7 +109,7 @@
     function hud() {
       if (stopped || !st) return;
       const side = s => `<span class="hs ${st.turn === s && !over ? 'on' : ''}"><i class="dk" style="${DOT[s]}"></i>${esc(s ? L.ai : L.you)}<b>${homeN(s)}/15</b></span>`;
-      const dv = dice ? `<span class="hm" style="font-size:22px;letter-spacing:2px">${dice.map((v, i) => `<span style="opacity:${used[i] ? .3 : 1}">${DIE[v]}</span>`).join('')}</span>` : '';
+      const dv = dice ? `<span class="hd" style="font-size:22px;letter-spacing:2px;white-space:nowrap">${dice.map((v, i) => `<span style="opacity:${used[i] ? .3 : 1}">${DIE[v]}</span>`).join('')}</span>` : '';
       const mid = phase === 'roll' && st.turn === 0 && !over ? `<button type="button" data-sgr="roll">${esc(X.roll)}</button>` : msg ? `<span class="hm">${esc(msg)}</span>` : '';
       ctx.hud(`${side(0)}${dv}${mid}${side(1)}`);
     }

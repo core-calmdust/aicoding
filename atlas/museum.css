@@ -287,10 +287,31 @@ html.exv-open{overflow:hidden}
 .explay.stop{background:transparent;color:#e6cf94;border:1px solid rgba(212,175,95,.5)}
 .explay.stop:hover{background:rgba(212,175,95,.12)}
 .explay[hidden]{display:none}
+.exturn{flex:none;width:38px;height:38px;border-radius:50%;border:1px solid rgba(212,175,95,.5);background:transparent;color:#e6cf94;display:grid;place-items:center;cursor:pointer}.exturn:hover{background:rgba(212,175,95,.12)}.exturn[hidden]{display:none}
+.exturn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}   /* the board lengthwise / across (long boards, during a game) */
 .exv-play .expcard .expf,.exv-play .expcard>b{display:none}
-.exv-play .expcard{padding:6px}
+.exv-play .expcard{padding:6px;gap:8px}
 .exstage:has(.expcard) .exhint{display:none}
-@media (max-width:819px){.expcard{flex-wrap:wrap;justify-content:center;bottom:46px;gap:8px 10px;padding:10px 14px;border-radius:20px}.expcard>b{flex:1 1 100%;text-align:center;border:0;padding:0}}
+/* phones (2026-11-23): a compact card — the game's name as a small caption, one row of Lv · 先手/後手 · あそぶ (their labels dropped: the values say it),
+   low in the case so the piece stays in view; the case's own buttons go to the top left and the scale under them while the card is there;
+   during a game the texts below go and the case takes the whole screen, and the buttons come back to the bottom right beside the small "stop" button */
+@media (max-width:819px){
+  .expcard{flex-wrap:wrap;justify-content:center;bottom:30px;gap:6px 8px;padding:7px 10px 9px;border-radius:18px;max-width:calc(100% - 20px)}
+  .expcard>b{flex:1 1 100%;text-align:center;border:0;padding:0;font-size:11.5px;letter-spacing:.14em}
+  .expf>span{display:none}
+  .expdd-b{height:36px;min-width:74px;padding:0 8px 0 12px;gap:6px}
+  .expseg{height:36px}.expseg button{padding:0 11px;font-size:13px}
+  .explay{height:36px;padding:0 18px}
+  .exv-play .expcard{padding:5px;bottom:28px}
+  .exstage:has(.expcard) .exbtns{top:calc(12px + env(safe-area-inset-top));bottom:auto;left:10px;right:auto}
+  .exstage:has(.expcard) .exscale{top:calc(66px + env(safe-area-inset-top));bottom:auto;left:14px}
+  .exv-play .exstage .exbtns{top:auto;bottom:28px;left:auto;right:10px}
+  .exv.exv-play{grid-template-rows:minmax(0,1fr) 0}   /* (during a game the texts below are not wanted: the case takes the whole screen; the close button stays) */
+  .exv-play .exinfo{background:none;box-shadow:none;margin:0}.exv-play .exscroll{display:none}
+  .exhud{flex-wrap:wrap;justify-content:center;border-radius:18px;row-gap:2px}
+  .exhud .hm:not(:empty){order:9;text-align:center;font-size:12px;padding:0 4px 2px}
+  .exv-play .exstage .exscale{top:auto;bottom:40px}   /* (the message goes to a second line when the bar would not fit beside the close button; the scale moves to the bottom during a game) */
+}
 .exhud{position:absolute;left:50%;top:14px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;max-width:calc(100% - 24px);padding:6px 8px;border-radius:999px;background:rgba(24,18,14,.72);color:#f3e9d8;font-size:14px;font-weight:700;pointer-events:none;z-index:2}
 .exhud:empty{display:none}
 .exhud .hs{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;white-space:nowrap;opacity:.6}
@@ -303,6 +324,14 @@ html.exv-open{overflow:hidden}
 .exhud button{pointer-events:auto;height:32px;padding:0 18px!important;border:1px solid rgba(212,175,95,.6)!important;border-radius:999px;background:rgba(243,234,214,.08)!important;color:#f3e4bf!important;font:inherit;font-size:13.5px!important;font-weight:800;letter-spacing:.08em;box-shadow:none!important;transform:none!important;cursor:pointer;white-space:nowrap}
 .exhud button:hover{background:rgba(243,234,214,.18)!important}
 .exhud button:disabled{opacity:.35;cursor:default}
-@media (max-width:819px){.exhud{left:calc(50% - 24px);max-width:calc(100% - 80px);gap:4px;padding:4px 5px;font-size:12.5px}.exhud .hs{padding:4px 8px;gap:4px}.exhud .hs b{font-size:13px}.exhud .hm{padding:0 3px}.exhud button{padding:0 12px!important}}   /* (phones: clear of the close button at the top right) */
+@media (max-width:819px){.exhud{left:10px;right:58px;transform:none;margin:0 auto;width:fit-content;max-width:none;gap:4px;padding:4px 5px;font-size:12.5px}.exhud .hs{padding:4px 8px;gap:4px}.exhud .hs b{font-size:13px}.exhud .hm{padding:0 3px}.exhud button{padding:0 12px!important}}   /* (phones: clear of the close button at the top right) */
 .exv-play .exspots,.exv-play .exhint{display:none!important}
 .exv-play .exbtns [data-k="spin"],.exv-play .exbtns [data-k="reset"],.exv-play .exbtns [data-k="flip"]{display:none!important}
+/* phones held sideways (2026-11-23): the case and the texts side by side, as on a computer (a low screen leaves no room to stack them) */
+@media (max-width:1000px) and (max-height:520px) and (orientation:landscape){
+  .exv{grid-template-columns:minmax(0,1fr) 300px;grid-template-rows:none}
+  .exinfo{margin:0;border-radius:0;box-shadow:-20px 0 40px -20px rgba(0,0,0,.6)}
+  .exv.exv-play{grid-template-columns:minmax(0,1fr) 0;grid-template-rows:none}
+  .expcard{bottom:14px}.exv-play .expcard{bottom:12px}
+  .exv-play .exstage .exbtns{bottom:12px}
+}
