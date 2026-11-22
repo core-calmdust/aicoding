@@ -78,18 +78,20 @@ async function runLesson(ctx, game, kind, key) {
       if (game === 'chess' && typeof ru === 'string' && /^[a-h][1-8][a-h][1-8]/.test(ru)) await tapChess(pg, ru); else await pg.evaluate(() => window.__atlasLs.rampAnswer());
       await S(900); continue;
     }
-    if (s.phase === 'prob' && !s.done && s.ans != null && !(s.next && s.next.on && answered.has('p' + s.k))) {
-      if (s.kind !== 'tsume' && answered.has('p' + s.k)) { await S(400); continue; }   // (answered: the move is still being played out)
+    if (s.phase === 'prob' && !s.done && (s.ans != null || s.kind === 'tfseq') && !(s.next && s.next.on && answered.has('p' + s.k))) {
+      if (s.kind !== 'tsume' && s.kind !== 'tfseq' && answered.has('p' + s.k)) { await S(400); continue; }   // (answered: the move is still being played out)
       // wait for the board to take a move (pieces down, the player's turn), then play the answer like a player
       const ready = a => game === 'chess' ? a && !a.busy && a.pzOn && a.legal > 0 : !a || (!a.busy && !a.over);
       let t = null, ok = false;
       for (let i = 0; i < 80; i++) { t = await snap(pg, game); if (!t || t.k !== s.k || t.phase !== 'prob' || t.done) break; if (ready(t.ad)) { ok = true; break; } await S(300); }
       if (!t || t.k !== s.k || t.phase !== 'prob' || t.done) continue;
+      if (t.kind === 'tfseq' && t.moves % 2) { await S(400); continue; }   // (tafl: the defence is still to come)
       const tag = 'p' + s.k + ':' + t.moves;
       if (answered.has(tag)) { if (!ok) { fail = `board takes no more moves: #${s.k + 1}/${s.n} 「${t.say}」 board=${JSON.stringify(t.ad)}`; break; } await S(400); continue; }
       if (!ok) { fail = `board takes no move: #${s.k + 1}/${s.n} 「${t.say}」 board=${JSON.stringify(t.ad)}`; break; }
       answered.add(tag); answered.add('p' + s.k);
       let u = t.ans; if (t.kind === 'tsume' && t.sol && t.sol.length && t.moves != null) u = t.sol[t.moves];
+      if (t.kind === 'tfseq') u = await pg.evaluate(() => window.__atlasLs.seqAns());   // (tafl: the N-move escape / capture, a move that keeps it forced, each turn)
       if (u == null) { fail = `no answer to play: #${s.k + 1}/${s.n}`; break; }
       if (game === 'chess' && typeof u === 'string' && /^[a-h][1-8][a-h][1-8]/.test(u)) {
         await tapChess(pg, u); await S(700);
