@@ -59,11 +59,13 @@
   }
 
   function start(ctx) {
-    const T3 = ctx.Table3D, TH = window.THREE, GB = T3.goban, t = ctx.t, X = TX[ctx.lang] || TX.en, lang = ctx.lang;
+    // ctx.board (所蔵品で遊ぶ, atlas/museum/play.js): the museum's own 19-line board — its userData.GB brings its own stones, userData.names the two sides' names
+    const T3 = ctx.Table3D, TH = window.THREE, MB = !ctx.pz && ctx.board ? ctx.board : null, GB = Object.assign({}, T3.goban || (window.Table3D && Table3D.goban), MB && MB.userData.GB), t = ctx.t, lang = ctx.lang;
+    const X = Object.assign({}, TX[ctx.lang] || TX.en, MB && MB.userData.names ? MB.userData.names(lang) : null);
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
     const PZ = ctx.pz || null;   // PZ: a puzzle / lesson position (atlas/puzzles.js · lessons3d.js): { spec: { n, stones, turn }, me, view } — no AI, ctx.pz.moved decides
-    const n = PZ && PZ.spec && PZ.spec.n ? PZ.spec.n : [9, 13, 19].includes(+ctx.size) ? +ctx.size : 9;
-    const board = T3.MODELS.go(true, { n }); T3.show('go', board);
+    const n = MB ? MB.userData.n : PZ && PZ.spec && PZ.spec.n ? PZ.spec.n : [9, 13, 19].includes(+ctx.size) ? +ctx.size : 9;
+    const board = MB || T3.MODELS.go(true, { n }); T3.show('go', board);
     const U = board.userData, Y = U.top, c = U.cell;
     const tall = innerHeight > innerWidth * 1.15;   // phones held upright: the width decides, so frame a little wider and keep the board centred
     const fitAll = () => { if (T3.fit) T3.fit(tall ? { w: U.W + 1.9, d: U.W + 3.4, y: Y - 1.3, cy: Y, pitch: 1.0 } : { w: U.W + .6, d: U.W + 3.4, y: Y - 2.4, cy: Y, pitch: 1.0 }); };   // the whole board from the player's side: the near side and the legs show
@@ -160,7 +162,7 @@
     let msgNow = '';
     function hud(msg) {
       if (msg !== undefined) msgNow = msg || '';
-      const side = col => `<span class="hs ${pos && pos.turn === col && !over ? 'on' : ''}"><i class="dk ${col === 1 ? 'b' : 'w'}"></i>${pvp ? pname(col) : col === human ? L.you : L.ai}${pos ? `<b class="gocap" title="">${pos.caps[col]}</b>` : ''}</span>`;
+      const side = col => `<span class="hs ${pos && pos.turn === col && !over ? 'on' : ''}"><i class="dk ${col === 1 ? 'b' : 'w'}"${U.dot ? ` style="${U.dot[col - 1]}"` : ''}></i>${pvp ? pname(col) : col === human ? L.you : L.ai}${pos ? `<b class="gocap" title="">${pos.caps[col]}</b>` : ''}</span>`;
       const canPass = myTurn();
       ctx.hud(`${side(1)}<span class="hm">${msgNow}</span><button type="button" class="btn gopass" data-gop="pass" ${canPass ? '' : 'disabled'}>${X.pass}</button>${side(2)}`);
     }

@@ -139,8 +139,9 @@
       const reelG = new TT.LatheGeometry([[0, 0], [.95, 0], [1.0, .12], [.62, .35], [.5, .9], [.62, 1.35], [.98, 1.55], [.9, 1.66], [0, 1.66]].map(([x, y]) => new TT.Vector2(x, y)), 24);
       const coneG = new TT.LatheGeometry([[0, 0], [.95, 0], [1.0, .15], [.7, .5], [.42, 1.6], [.3, 2.4], [.34, 2.7], [.2, 2.9], [0, 2.95]].map(([x, y]) => new TT.Vector2(x, y)), 24);
       const sqc = (c, r) => [-fieldW / 2 + ST + c * (SQ + ST) + SQ / 2, Y0 + BH + .12, -fieldD / 2 + ST + r * (SQ + ST) + SQ / 2];
-      [[0, 0], [2, 0], [3, 1], [5, 0], [1, 2]].forEach(([c, r]) => { const m = new TT.Mesh(reelG, K.mat({ color: '#b4b89c', roughness: .6 })); m.position.set(...sqc(c, r)); m.scale.setScalar(.82); G.add(m); });
-      [[6, 1], [4, 2], [8, 1], [9, 2], [9, 0]].forEach(([c, r], i) => { const m = new TT.Mesh(coneG, i === 1 || i === 3 ? faience : ivory); m.position.set(...sqc(c, r)); m.scale.set(.75, .9, .75); G.add(m); });
+      const reelM = K.mat({ color: '#b4b89c', roughness: .6 }), disp = [];   // disp: the things laid out for show — put away while a game is played on the board (atlas/museum/play.js)
+      [[0, 0], [2, 0], [3, 1], [5, 0], [1, 2]].forEach(([c, r]) => { const m = new TT.Mesh(reelG, reelM); m.position.set(...sqc(c, r)); m.scale.setScalar(.82); G.add(m); disp.push(m); });
+      [[6, 1], [4, 2], [8, 1], [9, 2], [9, 0]].forEach(([c, r], i) => { const m = new TT.Mesh(coneG, i === 1 || i === 3 ? faience : ivory); m.position.set(...sqc(c, r)); m.scale.set(.75, .9, .75); G.add(m); disp.push(m); });
       /* ---------- the stand: rails, four animal legs on drums, two sledge runners ---------- */
       const RL = 46.0, RW = 16.2, RH = 1.8;   // the top frame (rebated for the box)
       [[RL, RH, .9, 0, RW / 2 - .45], [RL, RH, .9, 0, -RW / 2 + .45], [.9, RH, RW, RL / 2 - .45, 0], [.9, RH, RW, -RL / 2 + .45, 0]].forEach(([w, h, d, x, z]) => { const m = new TT.Mesh(new TT.BoxGeometry(w, h, d), ebony); m.position.set(x, STH - h / 2, z); G.add(m); });
@@ -184,9 +185,11 @@
         for (let x = 30; x < w - 60; x += 78) { [0, 7, 44, 51].forEach(d => { g.beginPath(); g.moveTo(x + d, 0); g.lineTo(x + d, h); g.stroke(); }); g.beginPath(); for (let k = 0; k <= 6; k++) { const xx = x + 10 + k * 5.4, yy = k % 2 ? h * .2 : h * .8; k ? g.lineTo(xx, yy) : g.moveTo(xx, yy); } g.stroke(); } });
       const stM = K.mat({ map: stT, color: '#ffffff', roughness: .6 });
       const stickG = (() => { const pts = [[0, -8.6], [.3, -8.5], [.52, -8.0], [.6, -6.5], [.62, 0], [.6, 5.6], [.52, 6.6], [.44, 7.2], [.5, 7.6], [.42, 8.3], [.2, 8.7], [0, 8.75]].map(([r, y]) => new TT.Vector2(r, y)); const q = new TT.LatheGeometry(pts, 14); q.rotateZ(-Math.PI / 2); q.scale(1, .55, 1); return q; })();
-      [[-13, 12.8, .03], [-12.4, 15.0, -.02]].forEach(([x, z, ry]) => { const m = new TT.Mesh(stickG, stM); m.position.set(x, .36, z); m.rotation.y = ry; G.add(m); });
+      [[-13, 12.8, .03], [-12.4, 15.0, -.02]].forEach(([x, z, ry]) => { const m = new TT.Mesh(stickG, stM); m.position.set(x, .36, z); m.rotation.y = ry; G.add(m); disp.push(m); });
       const amber = K.mat({ color: '#b5651d', roughness: .25, clearcoat: .6, clearcoatRoughness: .2 });
-      [[9, 12.6, amber, .2], [12.2, 12.9, amber, 1.1], [15.8, 13.2, ivory, .5]].forEach(([x, z, m, r]) => { const kb = new TT.Mesh(new TT.BoxGeometry(2.2, 1.0, 1.5, 3, 2, 2), m); const P = kb.geometry.attributes.position; for (let i = 0; i < P.count; i++) { const px = P.getX(i), py = P.getY(i), pz = P.getZ(i), pinch = 1 - .28 * Math.cos(px / 1.1 * Math.PI / 2) ; P.setXYZ(i, px, py * (.8 + .2 * Math.abs(px) / 1.1), pz * pinch); } kb.geometry.computeVertexNormals(); kb.position.set(x, .5, z); kb.rotation.y = r; G.add(kb); });
+      [[9, 12.6, amber, .2], [12.2, 12.9, amber, 1.1], [15.8, 13.2, ivory, .5]].forEach(([x, z, m, r]) => { const kb = new TT.Mesh(new TT.BoxGeometry(2.2, 1.0, 1.5, 3, 2, 2), m); const P = kb.geometry.attributes.position; for (let i = 0; i < P.count; i++) { const px = P.getX(i), py = P.getY(i), pz = P.getZ(i), pinch = 1 - .28 * Math.cos(px / 1.1 * Math.PI / 2) ; P.setXYZ(i, px, py * (.8 + .2 * Math.abs(px) / 1.1), pz * pinch); } kb.geometry.computeVertexNormals(); kb.position.set(x, .5, z); kb.rotation.y = r; G.add(kb); disp.push(kb); });
+      // for a game on this board (所蔵品で遊ぶ, atlas/museum/play.js): the field (top of the ivory, the pitch of the squares), the open drawer, the pieces' and sticks' parts
+      G.userData.play = { top: Y0 + BH + .12, pitch: SQ + ST, drawer: { x0: L / 2 + .4, x1: L / 2 + DOUT - .5, y: Y0 + .9 + .25, z: DWd / 2 - .3 }, reelG, coneG, reelM, ivory, faience, ebony, stickG, stM, hide: disp };
       return G;
     },
     ready: () => new Promise(res => { const im = new Image(); im.onload = () => { TXT = im; res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/senet-text.webp', HERE).href; setTimeout(res, 8000); }).then(() => new Promise(res => {   // the hieroglyph font: wait for its stylesheet, then for the face itself

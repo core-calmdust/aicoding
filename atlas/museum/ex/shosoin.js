@@ -243,6 +243,7 @@
         }
       };
       drawer(1, S / 2 - (.75 + S / 4) / 2, OUT); drawer(-1, -S / 2 + (.75 + S / 4) / 2, .3);
+      G.userData.play = { top: H, n: N, cell: P };   // for a game on this board (所蔵品で遊ぶ, atlas/museum/play.js): the face's height and its lines
       return G;
     },
   };

@@ -111,7 +111,7 @@
        where they go after it, the piece on its way while it walks — gliding (no cut); a span too long for the close view zooms out,
        up to the whole board. The button at the right edge switches it off (the whole board), remembered in atlas-senet-zoom. ---------- */
     let zoomPref = true; try { zoomPref = localStorage.getItem('atlas-senet-zoom') !== '0'; } catch (e) {}
-    const tallNow = () => innerHeight > innerWidth * 1.15 && !isPL() && kit && !kit.fit0.roll;
+    const tallNow = () => !ctx.board && innerHeight > innerWidth * 1.15 && !isPL() && kit && !kit.fit0.roll;   // (ctx.board: a museum board — its viewer keeps its own camera)
     let focusX = null, focusZ = 0, focusFast = false;   // [x0, x1]: the stretch of the board (world x, along the rows) to keep in view
     function applyFocus() {
       if (!T3.fit || stopped || !kit) return;
@@ -301,7 +301,7 @@
     /* ---------- go ---------- */
     loadJS(BASE + 'sprites.js?v=1', () => !!window.SENET_SPRITES).catch(() => null).then(() => loadJS(BASE + 'board2d.js?v=6', () => !!window.SenetBoard2D)).catch(() => null).then(loadEngine).then(e => {
       if (stopped) return; E = e;
-      kit = window.SenetKit.make(T3, { design: dsg, pieces: look, sfx: k => SND[k] && SND[k]() });
+      kit = window.SenetKit.make(T3, { design: dsg, pieces: look, sfx: k => SND[k] && SND[k](), board: ctx.board || null });   // (ctx.board: 所蔵品で遊ぶ — Tutankhamun's own box, atlas/museum/play.js)
       frame();
       st = E.newGame(RIDS[(+ctx.size || 1) - 1] || 'std', first); kit.sync(st); kit.restSticks(st.turn, null);
       if (!pvp) ask(st, 2);
