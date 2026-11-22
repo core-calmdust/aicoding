@@ -28,7 +28,7 @@ const DN = {
     'r.win': 'VICTORY', 'r.lose': 'DEFEAT', 'r.again': 'もう一度出撃', 'r.look': '海域を見る', 'r.sub': '{n}手で決着 ・ AI Lv.{l}', 'r.subR': '投了 ・ AI Lv.{l}',
     'r.acc': '命中率', 'r.shots': '発射', 'r.sunk': '撃沈', 'r.lost': '損失',
     'a.k': '全50隻', 'a.all': 'すべて', 'd.all': '全艦一覧', 'f.k': '両軍の艦', ok: 'OK', back: '戻る',
-    'u.cd': 'クールタイム {n}', 'u.len': '{n}マス', 'u.cost': 'コスト',
+    'u.tap2': '狙うマスを2回タップで発射', 'u.cd': 'クールタイム {n}', 'u.len': '{n}マス', 'u.cost': 'コスト',
     'help': [['艦隊を編成', 'タクティクスでは、毎回ちがう10種の艦から交互に選んで艦隊を組む。コスト20までで3〜6隻。艦ごとにスキル（攻撃・索敵・防御）があり、組み合わせで戦い方が変わる。'],
       ['配置', '自軍の海域に艦を並べる。ドラッグで移動、タップ（クリック）で回転。艦の大きさがそのまま的の大きさになる。'],
       ['撃ち合い', '敵の海域のマスを選んで砲撃。命中すると炎が上がり、艦のマスをすべて当てると撃沈。スキルはクールタイムが明けると使える。先に敵艦隊を全滅させた方の勝ち。']],
@@ -48,7 +48,7 @@ const DN = {
     'r.win': 'VICTORY', 'r.lose': 'DEFEAT', 'r.again': 'Sortie again', 'r.look': 'View the sea', 'r.sub': 'Decided in {n} moves · AI Lv.{l}', 'r.subR': 'Resigned · AI Lv.{l}',
     'r.acc': 'ACCURACY', 'r.shots': 'SHOTS', 'r.sunk': 'SUNK', 'r.lost': 'LOST',
     'a.k': 'All 50 ships', 'a.all': 'All', 'd.all': 'All ships', 'f.k': 'Both fleets', ok: 'OK', back: 'Back',
-    'u.cd': 'Cooldown {n}', 'u.len': '{n} squares', 'u.cost': 'Cost',
+    'u.tap2': 'Tap a square twice to fire', 'u.cd': 'Cooldown {n}', 'u.len': '{n} squares', 'u.cost': 'Cost',
     'help': [['Draft a fleet', 'In Tactics both sides take turns picking from ten ship types, different every game: up to 20 cost, 3 to 6 ships. Each ship has a skill — attack, scouting or defence — and the mix decides how you fight.'],
       ['Deploy', 'Place your ships in our waters. Drag to move, tap (click) to turn. A ship\'s length is the size of the target it makes.'],
       ['Exchange fire', 'Pick a square in the enemy waters to fire. A hit starts a fire; hit every square of a ship to sink it. Skills come back after their cooldown. Sink the whole enemy fleet first to win.']],
@@ -208,7 +208,23 @@ function safeRect() {
   const w = innerWidth, h = innerHeight;
   if (!G || G.phase === 'title') return { x: 0, y: 0, w, h };
   if (WIDE.matches) { const side = G.phase === 'deploy' ? 344 : 358; return { x: side, y: 70, w: Math.max(200, w - side * 2), h: Math.max(200, h - 70 - (G.phase === 'deploy' ? 104 : 148)) }; }
-  return { x: 6, y: 96, w: w - 12, h: Math.max(200, h - 96 - (G.phase === 'deploy' ? 210 : 236)) };
+  // phones: between the bars actually on screen (status band / waters switch above, the fleet strip / skills / deploy bar below)
+  const vis = el => el && !el.closest('.hide') && el.offsetParent !== null && getComputedStyle(el).display !== 'none';
+  let top = 0, bot = h; for (const id of ['#topbar', '#banner', '#views']) { const el = $(id); if (vis(el)) top = Math.max(top, el.getBoundingClientRect().bottom); }
+  for (const id of ['#strip', '#dock', '#deployBar']) { const el = $(id); if (vis(el) && el.offsetHeight) bot = Math.min(bot, el.getBoundingClientRect().top); }
+  return { x: 4, y: top + 10, w: w - 8, h: Math.max(160, bot - top - 20) };
+}
+const PHONE = () => !WIDE.matches;
+// phones: stack the bottom bars (skills or deploy bar at the very bottom, the fleet strip above them)
+function layoutPhone() {
+  if (!PHONE()) return; const st = $('#strip'), dock = $('#dock'), dep = $('#deployBar');
+  const under = !dock.closest('.hide') && dock.offsetHeight ? dock.offsetHeight : !dep.classList.contains('hide') ? dep.offsetHeight : 0;
+  const b = (under + 6) + 'px'; if (st.style.bottom !== b) { st.style.bottom = b; World.refit(); }
+}
+function renderStrip() {
+  const el = $('#strip'); if (!PHONE() || !G || !(G.phase === 'deploy' || G.phase === 'battle' || G.phase === 'over')) { el.innerHTML = ''; return; }
+  const p = G.st && G.view === 1 ? 1 : 0, sd = G.st ? G.st.sides[p] : null, ships = G.st ? sd.ships : G.my;
+  el.innerHTML = ships.map((s, i) => fleetItem(s, i, sd, p === 0)).join(''); el.dataset.p = p; fillPortraits(el);
 }
 
 // ---------- world sync ----------
@@ -236,16 +252,17 @@ function phaseUI() {
   $('#dock').classList.toggle('hide', !(ph === 'battle' && tac()));
   $('#views').classList.toggle('hide', !(ph === 'battle' || ph === 'over'));
   $('#scrDraft').classList.toggle('hide', ph !== 'draft');
-  sheetsUI();
+  sheetsUI(); layoutPhone(); World.refit();
   World.grids(ph === 'title' || ph === 'draft' ? 0 : 1, ph === 'title' || ph === 'draft' || ph === 'deploy' ? 0 : 1);
 }
-function render() { if (!G) return; phaseUI(); syncWorld(); renderBanner(); renderFleets(); renderLog(); renderBal(); renderDock(); renderViews(); $('#bHint').classList.toggle('off', !G.hint); $('#bHint').disabled = !(G.phase === 'battle' && G.st.turn === 0 && !G.busy); }
+function render() { if (!G) return; phaseUI(); syncWorld(); renderBanner(); renderFleets(); renderLog(); renderBal(); renderDock(); renderViews(); const sh = $('#strip').offsetHeight; renderStrip(); layoutPhone(); if ($('#strip').offsetHeight !== sh) World.refit(); $('#bHint').classList.toggle('off', !G.hint); $('#bHint').disabled = !(G.phase === 'battle' && G.st.turn === 0 && !G.busy); }
 function renderBanner(msg) {
   let tt = '', s = msg || '', foe = false;
   if (G.phase === 'deploy') { tt = t('b.deploy'); s = s || t('st.deploy'); }
   else if (G.phase === 'over') { tt = t('b.over'); s = s || (G.resigned ? t('st.resign') : t(G.st.winner === 0 ? 'st.win' : 'st.lose')); }
   else if (G.st) { foe = G.st.turn === 1; tt = t(foe ? 'b.foe' : 'b.you');
     if (!s) s = foe ? t('st.ai') : G.armed != null ? t('sk.aim.' + skillOf(G.my[G.armed])) : G.hint ? t('hint.best', { c: E.cellName(G.hint.best), p: Math.round(G.hint.p[G.hint.best] * 100) }) : G.rule === 'salvo' ? t('st.youN', { n: G.st.left }) : t('st.you'); }
+  $('#bnBal').style.visibility = G.st ? '' : 'hidden';
   $('#bnT').textContent = tt; $('#bnT').classList.toggle('foe', foe); $('#bnB').classList.toggle('foe', foe); $('#bnS').textContent = s;
 }
 function fleetItem(s, i, side, mine) {
@@ -276,7 +293,7 @@ function renderBal() {
   const ev = G.evals || [], n = G.st ? G.st.log.length : 0; let p = null;
   for (let i = Math.min(n, ev.length - 1); i >= 0 && p == null; i--) if (ev[i] != null) p = ev[i];
   if (G.phase === 'over') p = G.st.winner === 0 ? 1 : 0;
-  $('#balV').textContent = p == null ? '—' : Math.round(p * 100) + '%'; $('#balF').style.width = (p == null ? 50 : p * 100) + '%';
+  $('#balV').textContent = $('#bnBalV').textContent = p == null ? '—' : Math.round(p * 100) + '%'; $('#balF').style.width = $('#bnBalF').style.width = (p == null ? 50 : p * 100) + '%';
 }
 function renderDock() {
   const el = $('#dock'); if (!tac() || !G.st) { el.innerHTML = ''; return; }
@@ -285,7 +302,7 @@ function renderDock() {
     const p = dead ? 0 : Math.max(0, 1 - c / Math.max(1, T.cd));
     return `<button class="sk ${dead ? 'lost' : ready ? 'ready' : 'wait'}${G.armed === i ? ' armed' : ''}" data-i="${i}" ${ready && live && mine ? '' : 'disabled'} style="--p:${p.toFixed(3)}" title="${t('ship.' + s.t)} — ${t('sk.' + k + '.d')}"><span class="ring"></span><span class="ic">${icon(k)}</span><b>${t('sk.' + k)}</b><small>${dead ? t('sk.lost') : calm ? t('sk.calmed') : ready ? t('sk.ready') : t('sk.wait', { n: c })}</small></button>`; }).join('');
 }
-function renderViews() { $$('#views .vt').forEach(b => b.classList.toggle('on', G && +b.dataset.z === G.view)); }
+function renderViews() { $$('#views .vt').forEach(b => b.classList.toggle('on', G && +b.dataset.z === G.view)); if (G && G.st) { $('#vnFoe').textContent = G.st.sides[1].afloat; $('#vnMine').textContent = G.st.sides[0].afloat; } if (G && PHONE() && $('#strip').dataset.p !== String(G.st && G.view === 1 ? 1 : 0)) renderStrip(); }
 let toastT = 0, msgT = 0;
 function callout(word, sub, cls) { const el = $('#toast'); el.innerHTML = `<div class="tw ${cls || ''}">${word}</div>${sub ? `<div class="ts">${sub}</div>` : ''}`; clearTimeout(toastT); toastT = setTimeout(() => { el.innerHTML = ''; }, 1150); }
 function msg(text) { const el = $('#msg'); el.textContent = text; el.classList.add('on'); clearTimeout(msgT); msgT = setTimeout(() => el.classList.remove('on'), 1700); renderBanner(text); }
@@ -327,7 +344,7 @@ function startDraft() {
   G = newG({ phase: 'draft', rule: 'tactics', adj: S.adj, level: S.level, first, draft: E.draftNew(1 - first) });   // (the second to shoot picks first)
   pickSel = []; pickTab = -1; focusK = null;
   phaseUI(); syncWorld(); World.show('wide', 1400);
-  if (!pv) pv = World.preview($('#pv')); pv.start();
+  if (!PHONE()) { if (!pv) pv = World.preview($('#pv')); pv.start(); }
   renderDraft(); draftStep();
 }
 function draftStep() {
@@ -537,7 +554,7 @@ function resign() { if (!G || G.phase !== 'battle') return; sheet('#scrMenu', fa
 
 // ---------- archive ----------
 let arTab = -1, arK = 0;
-function openArchive() { sheet('#scrArchive', true); if (!pv2) pv2 = World.preview($('#pv2')); pv2.start(); renderArchive(); }
+function openArchive() { sheet('#scrArchive', true); if (!PHONE()) { if (!pv2) pv2 = World.preview($('#pv2')); pv2.start(); } renderArchive(); }
 let arSort = 'role';
 function renderArchive() {
   const f = G && G.phase === 'draft' && G.draft ? G.draft.f : null, byCost = (a, b) => E.TYPES[a].cost - E.TYPES[b].cost || a - b;
@@ -565,7 +582,8 @@ function renderFleets2() {
 // a skill's card above the dock (hover on PC, the armed skill on phones)
 function skillTip(i) {
   const el = $('#skTip'); if (i == null || !G || !G.st) { el.classList.add('hide'); return; }
-  const s = G.st.sides[0].ships[i]; el.innerHTML = shipCard(s.t, { tag: 'div' }); el.classList.remove('hide'); fillPortraits(el);
+  const s = G.st.sides[0].ships[i]; el.innerHTML = shipCard(s.t, { tag: 'div', foot: PHONE() ? `<span class="foot why gold">${t('u.tap2')}</span>` : '' }) + (PHONE() ? '<button id="tipX" aria-label="Close">×</button>' : ''); el.classList.remove('hide'); fillPortraits(el);
+  if (PHONE()) { el.style.bottom = (innerHeight - $('#dock').getBoundingClientRect().top + 6) + 'px'; el.querySelector('#tipX').onclick = () => { G.armed = null; hover = aimTap = -1; skillTip(null); render(); }; return; }
   const b = $(`#dock .sk[data-i="${i}"]`); if (b) { const r = b.getBoundingClientRect(), w = el.offsetWidth; el.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px'; el.style.bottom = (innerHeight - r.top + 10) + 'px'; }
 }
 // ---------- input on the sea ----------
@@ -630,6 +648,7 @@ $('#dock').addEventListener('click', e => { const b = e.target.closest('.sk'); i
   G.armed = G.armed === i ? null : i; hover = aimTap = -1; G.hint = null; sfx('select'); if (G.view !== 1) look(1); render(); if (!PC.matches) skillTip(G.armed); });
 $('#views').addEventListener('click', e => { const b = e.target.closest('.vt'); if (!b || !G || G.busy || !(G.phase === 'battle' || G.phase === 'over')) return; look(+b.dataset.z, 800); });
 $('#bHint').onclick = hint;
+$('#strip').addEventListener('click', () => { if (G && G.st) { sfx('select'); openFleets(+$('#strip').dataset.p || 0); } });
 $('#bMenu').onclick = () => { $('#pResign').disabled = !(G && G.phase === 'battle'); sheet('#scrMenu', true); };
 $('#pNew').onclick = () => { sheet('#scrMenu', false); openSetup(); };
 $('#pResign').onclick = resign;
@@ -644,7 +663,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Tab' && G && (G.phase === 'battle' || G.phase === 'over') && !G.busy) { e.preventDefault(); look(G.view ? 0 : 1, 800); }
   if (G && G.phase === 'battle' && !G.busy && G.st.turn === 0 && /^[1-6]$/.test(e.key)) { const b = $$('#dock .sk')[+e.key - 1]; if (b) b.click(); }
 });
-addEventListener('resize', () => { World.refit(); if (G && G.phase !== 'title') World.show(G.phase === 'draft' ? 'wide' : G.phase === 'over' && !$('#scrResult').classList.contains('hide') ? 'result' : G.view ? 'z1' : 'z0'); else World.show('title'); });
+addEventListener('resize', () => { layoutPhone(); World.refit(); if (G && G.phase !== 'title') World.show(G.phase === 'draft' ? 'wide' : G.phase === 'over' && !$('#scrResult').classList.contains('hide') ? 'result' : G.view ? 'z1' : 'z0'); else World.show('title'); });
 function applyLang() {
   document.documentElement.lang = LANG; $('#tLang').textContent = LANG === 'ja' ? 'EN' : 'JA';
   $$('[data-t]').forEach(el => { el.textContent = t(el.dataset.t); });
