@@ -1,0 +1,23 @@
+<!doctype html><html><head><meta charset="utf-8"><title>exhibit on white (for comparing with a studio photograph)</title></head><body style="margin:0;background:#fff">
+<!-- Renders a museum exhibit from straight above on a white ground under a soft raking light, like a studio photograph on white paper —
+     for tools/museum-kofukuji-score.py (which compares the faces of the pieces with the photograph).
+     ?id=kofukuji&w=36&d=32&px=2880[&src=<other file for the same id>] -->
+<script src="../vendor/three-r186.min.js?v=1"></script><script src="../vendor/three-compat.js?v=15"></script>
+<script src="../table3d.js"></script><script src="../museum/gallery.js"></script>
+<script>
+const q = new URLSearchParams(location.search), id = q.get('id'), PX = +(q.get('px') || 2048), W = +(q.get('w') || 36), D = +(q.get('d') || 32);
+const s = document.createElement('script'); s.src = (q.get('src') || '../museum/ex/' + id + '.js') + '?' + Date.now(); s.onload = async () => {
+  const B = AtlasEx[id]; if (B.ready) await B.ready();
+  const R = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); R.setPixelRatio(1); R.setSize(PX, Math.round(PX * D / W));
+  R.outputColorSpace = THREE.SRGBColorSpace; R.toneMapping = THREE.NoToneMapping; R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap; document.body.appendChild(R.domElement);
+  const S = new THREE.Scene(); S.background = new THREE.Color('#ffffff');
+  S.add(new THREE.HemisphereLight(0xffffff, 0xe8e8e8, 1.9)); const d = new THREE.DirectionalLight(0xffffff, 1.5); d.position.set(-14, 22, -10); d.castShadow = true; d.shadow.mapSize.set(2048, 2048);
+  Object.assign(d.shadow.camera, { left: -24, right: 24, top: 24, bottom: -24, near: 1, far: 80 }); d.shadow.radius = 6; d.shadow.bias = -.0005; S.add(d);
+  const o = B.build(THREE, window.Table3D, AtlasGallery.kit);
+  // the exhibit's own ground (its first mesh: a cloth, a plinth) becomes white paper
+  let first = true; o.traverse(m => { if (!m.isMesh) return; if (first) { first = false; m.material = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1 }); m.receiveShadow = true; m.castShadow = false; } else { m.castShadow = m.receiveShadow = true; } });
+  S.add(o);
+  const C = new THREE.OrthographicCamera(-W / 2, W / 2, D / 2, -D / 2, .1, 500); C.position.set(0, 200, 0); C.up.set(0, 0, -1); C.lookAt(0, 0, 0);
+  R.render(S, C); window.done = 1; };
+document.head.appendChild(s);
+</script></body></html>

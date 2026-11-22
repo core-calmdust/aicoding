@@ -23,21 +23,21 @@
   const load = n => new Promise(res => { const im = new Image(); im.onload = () => { IMG[n] = im; res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/ottoman-' + n + '.webp?v=1', HERE).href; setTimeout(res, 12000); });
   (window.AtlasEx = window.AtlasEx || {}).ottoman = {
     flip: true,
-    ready: () => Promise.all(['bg-1', 'bg-2', 'ch-1', 'ch-2'].map(load)),
+    ready: () => Promise.all(['bg-1', 'bg-2', 'ch-1', 'ch-2'].map(n => IMG[n] ? 0 : load(n))),
     build(TT, X, K) {
       const G = new TT.Group();
       const W = 56.5, D = 56.3, LW = W / 2, YF = 2.0, YT = 2.5;   // open width and depth, a leaf's width, the playing field's and the fillets' height
       const GAP = .05, IN1 = 1.3, IN2 = 1.9;                       // half the slit between the leaves; the fillets' inner edge and the foot of the moulding, from a leaf's edge
       const LIPW = .75, LIPH = .6;                                 // the bone lipping's section (quarter round)
       const PX = innerWidth < 820 ? 1536 : 2048, PH = Math.round(PX * 2040 / 2048);
-      /* ---------- the maps: A = (pearl, amber, stringing), B = (green bone | bone lipping, tone, joints) ---------- */
-      const tile = (im, sx, sy, sw, sh, w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d', { willReadFrequently: true }); if (im) g.drawImage(im, sx, sy, sw, sh, 0, 0, w, h); else { g.fillStyle = '#000'; g.fillRect(0, 0, w, h); } return g.getImageData(0, 0, w, h).data; };
-      const pack = (w, h, r, g2, b) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'), im = g.createImageData(w, h), d = im.data;
-        for (let i = 0, n = w * h * 4; i < n; i += 4) { d[i] = r[i]; d[i + 1] = g2[i]; d[i + 2] = b[i]; d[i + 3] = 255; } g.putImageData(im, 0, 0);
-        const t = new TT.CanvasTexture(c); t.colorSpace = TT.NoColorSpace; t.anisotropy = 8; t.generateMipmaps = true; t.minFilter = TT.LinearMipmapLinearFilter; return t; };
-      const maps = f => { const a = IMG[f + '-1'], b = IMG[f + '-2'], hw = PX >> 1, hh = PH >> 1;
-        return [pack(PX, PH, tile(a, 0, 0, 2048, 2040, PX, PH), tile(b, 0, 0, 2048, 2040, PX, PH), tile(a, 2048, 0, 2048, 2040, PX, PH)),
-          pack(hw, hh, tile(b, 2048, 1020, 1024, 1020, hw, hh), tile(b, 2048, 0, 1024, 1020, hw, hh), tile(b, 3072, 0, 1024, 1020, hw, hh))]; };
+      /* ---------- the maps ----------
+         The two grey pictures of a face go to the video card as they are, one byte a pixel (no reading back of pixels, no repacking:
+         that took most of the time to open the case and four times the memory). a1 = [ pearl | stringing ], a2 = [ amber | tiles:
+         tone, joints / green bone or bone lipping ]. They are not the material's own textures, so the case's rule for phones (no
+         picture over 1536 px) is applied here: PX is the width of one half. */
+      const atlas = im => { const c = document.createElement('canvas'); c.width = PX * 2; c.height = PH; const g = c.getContext('2d'); if (im) { g.imageSmoothingQuality = 'high'; g.drawImage(im, 0, 0, c.width, c.height); } else { g.fillStyle = '#000'; g.fillRect(0, 0, c.width, c.height); }
+        const t = new TT.CanvasTexture(c); t.format = TT.RedFormat; t.colorSpace = TT.NoColorSpace; t.anisotropy = 8; t.generateMipmaps = true; t.minFilter = TT.LinearMipmapLinearFilter; return t; };
+      const maps = f => [atlas(IMG[f + '-1']), atlas(IMG[f + '-2'])];
       // a tile of noise for the materials' own figure: r = soft clouds, g = streaks (the grain of shell and pearl), b = fine speckle
       const grainT = K.tex(512, 512, (g, w, h) => { const n = K.noise(91), n2 = K.noise(17), img = g.createImageData(w, h), d = img.data, P = 6.2832 / w, c8 = v => Math.max(0, Math.min(255, v * 255));
         // (made to repeat without a seam: the noise is read on a torus)
@@ -48,22 +48,30 @@
       /* ---------- the inlaid surface ----------
          mode 0 = the backgammon side (B.r is the green-stained bone; the hinges' bone strips are told by their place),
          mode 1 = the chess side (B.r is the bone lipping). */
-      const face = (f, mode) => { const [A, B] = maps(f);
-        const m = new TT.MeshPhysicalMaterial({ map: A, color: 0xffffff, roughness: .3, metalness: 0, clearcoat: .1, clearcoatRoughness: .45, specularIntensity: .5 });
-        m.ottB = B; m.ottGrain = grainT;
-        m.onBeforeCompile = sh => { sh.uniforms.uB = { value: B }; sh.uniforms.uGrain = { value: grainT }; sh.uniforms.uMode = { value: mode }; sh.uniforms.uTexel = { value: new TT.Vector2(1 / PX, 1 / PH) };
+      const owned = [];
+      const face = (f, mode) => { const [A, B] = maps(f); owned.push(A, B);
+        const m = new TT.MeshPhysicalMaterial({ map: grainT, color: 0xffffff, roughness: .3, metalness: 0, clearcoat: .1, clearcoatRoughness: .45, specularIntensity: .5 });
+        m.onBeforeCompile = sh => { sh.uniforms.uA1 = { value: A }; sh.uniforms.uA2 = { value: B }; sh.uniforms.uGrain = { value: grainT }; sh.uniforms.uMode = { value: mode }; sh.uniforms.uTexel = { value: new TT.Vector2(1 / PX, 1 / PH) };
           sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vObjView;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvObjView = (inverse(modelMatrix) * vec4(cameraPosition, 1.0)).xyz - position;');
           sh.fragmentShader = sh.fragmentShader.replace('#include <map_pars_fragment>', `#include <map_pars_fragment>
-            uniform sampler2D uB; uniform sampler2D uGrain; uniform float uMode; uniform vec2 uTexel; varying vec3 vObjView;
+            uniform sampler2D uA1; uniform sampler2D uA2; uniform sampler2D uGrain; uniform float uMode; uniform vec2 uTexel; varying vec3 vObjView;
+            // the halves and tiles of the two pictures (kept a hair inside their own part, so a neighbour never bleeds in)
+            vec2 ottC(vec2 uv) { return clamp(uv, vec2(0.002), vec2(0.998)); }
+            float ottPearl(vec2 uv) { uv = ottC(uv); return texture2D(uA1, vec2(uv.x * 0.5, uv.y)).r; }
+            float ottLine(vec2 uv) { uv = ottC(uv); return texture2D(uA1, vec2(0.5 + uv.x * 0.5, uv.y)).r; }
+            float ottAmber(vec2 uv) { uv = ottC(uv); return texture2D(uA2, vec2(uv.x * 0.5, uv.y)).r; }
+            float ottTone(vec2 uv) { uv = clamp(uv, vec2(0.006), vec2(0.994)); return texture2D(uA2, vec2(0.5 + uv.x * 0.25, 0.5 + uv.y * 0.5)).r; }
+            float ottJoint(vec2 uv) { uv = clamp(uv, vec2(0.006), vec2(0.994)); return texture2D(uA2, vec2(0.75 + uv.x * 0.25, 0.5 + uv.y * 0.5)).r; }
+            float ottExtra(vec2 uv) { uv = clamp(uv, vec2(0.006), vec2(0.994)); return texture2D(uA2, vec2(0.5 + uv.x * 0.25, uv.y * 0.5)).r; }
             // the surface's height in centimetres (exaggerated a little): the joint round each piece, proud stringing, cracks, the wave of old veneer
-            float ottH(vec2 uv) { vec4 a = texture2D(map, uv); vec3 b = texture2D(uB, uv).rgb;
+            float ottH(vec2 uv) { vec3 a = vec3(ottPearl(uv), 0.0, ottLine(uv)); vec3 b = vec3(0.0, 0.0, ottJoint(uv));
               float joint = 1.0 - smoothstep(0.0, 0.2, abs(a.r - 0.5));
               return smoothstep(0.3, 0.7, a.r) * 0.012 - joint * 0.014 + smoothstep(0.2, 0.6, a.b) * (1.0 - a.r) * 0.012 - b.b * 0.022
-                + (texture2D(uGrain, uv * 2.3).r - 0.5) * 0.016 + (texture2D(uGrain, uv * 9.0).r - 0.5) * 0.004 + b.g * a.r * 0.010 + a.g * 0.006; }
+                + (texture2D(uGrain, uv * 2.3).r - 0.5) * 0.016 + (texture2D(uGrain, uv * 9.0).r - 0.5) * 0.004 ; }
             vec3 ottPerturb(vec3 p, vec3 n, vec2 dH, float fd) { vec3 sx = dFdx(p), sy = dFdy(p), r1 = cross(sy, n), r2 = cross(n, sx); float det = dot(sx, r1) * fd;
               vec3 gr = sign(det) * (dH.x * r1 + dH.y * r2); return normalize(abs(det) * n - gr); }`)
             .replace('#include <map_fragment>', `
-            vec4 oA = texture2D(map, vMapUv); vec3 oB = texture2D(uB, vMapUv).rgb;
+            vec3 oA = vec3(ottPearl(vMapUv), ottAmber(vMapUv), ottLine(vMapUv)), oB = vec3(ottExtra(vMapUv), ottTone(vMapUv), ottJoint(vMapUv));
             // (how many texels one pixel covers: far away the maps are already averaged, and cutting them at a threshold would make the
             //  thin pieces pop in and out as the board turns — there the maps are used as they are)
             float oFp = max(length(dFdx(vMapUv) / uTexel), length(dFdy(vMapUv) / uTexel)), oFar = smoothstep(0.7, 1.8, oFp);
@@ -77,10 +85,15 @@
             oShell *= 0.86 + 0.28 * oG3.g;
             // mother-of-pearl: each piece its own tone (the map), the fine bands of its growth, and a colour that turns with the eye
             float oTone = clamp(oB.g * 1.5 - 0.3, 0.0, 1.0), oFig = mix(oG2.g, oG3.g, step(0.5, oG1.g)) - 0.5;
-            vec3 oPearl = mix(vec3(0.15, 0.16, 0.18), vec3(0.56, 0.55, 0.53), oTone * oTone * (3.0 - 2.0 * oTone)) * (1.0 + oFig * 0.3);
-            { float a = oB.g * 5.0 + oG1.r * 5.0 + oG1.g * 2.0; vec3 gd = normalize(vec3(cos(a), sin(a), cos(a * 1.7) * 0.8)); float t = dot(normalize(vObjView), gd);
-              vec3 hue = 0.5 + 0.5 * cos(6.2832 * (oG1.r * 0.9 + oB.g * 0.6 + t * 0.85 + vec3(0.0, 0.33, 0.67))); float shn = smoothstep(-0.9, 0.9, t);
-              oPearl = oPearl * (0.62 + 0.5 * shn) + (hue - 0.5) * (0.05 + 0.13 * shn) * (0.5 + oTone * 0.5); }
+            vec3 oPearl = mix(vec3(0.15, 0.16, 0.18), vec3(0.47, 0.465, 0.45), oTone * oTone * (3.0 - 2.0 * oTone)) * (1.0 + oFig * 0.3);
+            // nacre: each piece is cut at its own angle, so each has its own moment. As the eye moves, a silky band of light crosses a piece
+            // and its colour runs through rose, green and pale blue — soft pastel, never a rainbow; the neighbour turns at another moment.
+            { vec3 oG0 = texture2D(uGrain, vMapUv * 2.6 + 0.11).rgb; float a = oG0.r * 9.0 + oG1.r * 2.0; vec3 gd = normalize(vec3(cos(a), 0.35, sin(a))); float t = dot(normalize(vObjView), gd);
+              float ph = t * 2.1 + oG0.r * 1.3 + oG1.r * 0.4 + oB.g * 0.35 + oFig * 0.25;
+              vec3 hue = 0.5 + 0.5 * cos(6.2832 * (ph + vec3(0.0, 0.33, 0.67)));
+              float band = pow(0.5 + 0.5 * cos(6.2832 * (ph * 0.5 + 0.2 + oG3.g * 0.06)), 2.5), deep = 0.5 + 0.5 * cos(6.2832 * (ph * 0.5 + 0.7));
+              vec3 pastel = mix(vec3(1.0), 0.36 + 1.28 * hue, 0.33 + 0.17 * deep);
+              oPearl = oPearl * (0.56 + 0.8 * band) * pastel + hue * band * 0.04; }
             // bone: the lipping (chess side) and the strips over the hinges (backgammon side) — cream, a little streaked, yellowed in the joints
             vec2 oQ = abs(vMapUv - 0.5) * vec2(${W.toFixed(2)}, ${D.toFixed(2)});
             float oBone = uMode > 0.5 ? smoothstep(0.35, 0.65, oB.r) : step(oQ.x, 0.46) * step(abs(oQ.y - ${(D / 2 - 2.95).toFixed(2)}), 2.75);
@@ -95,7 +108,7 @@
             if (uMode < 0.5) { vec2 q = vec2(min(oQ.x - ${GAP.toFixed(2)}, ${(W / 2).toFixed(2)} - oQ.x), ${(D / 2).toFixed(2)} - oQ.y), e = q - ${IN2.toFixed(2)};   // how far inside the field (cm)
               float ao = min(e.x, e.y); if (ao > -0.05) oCol *= 0.55 + 0.45 * smoothstep(-0.05, 0.9, ao); else oCol *= 0.8 + 0.2 * smoothstep(${(IN2 - IN1 - .2).toFixed(2)}, 0.0, -ao - 0.05); }
             diffuseColor.rgb = oCol;`)
-            .replace('#include <roughnessmap_fragment>', `float roughnessFactor = mix(mix(0.34, 0.4, oAm * 0.5), mix(0.32, 0.5, oBone), oP) + oL * 0.15 + oB.b * 0.3 + (oG2.b - 0.5) * 0.1;`)
+            .replace('#include <roughnessmap_fragment>', `float roughnessFactor = mix(mix(0.34, 0.4, oAm * 0.5), mix(0.24, 0.5, oBone), oP) + oL * 0.15 + oB.b * 0.3 + (oG2.b - 0.5) * 0.1;`)
             .replace('#include <metalnessmap_fragment>', `float metalnessFactor = (1.0 - oP) * (1.0 - oL) * smoothstep(0.3, 1.0, oAm) * 0.2;`)
             .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
             { vec2 dx = dFdx(vMapUv), dy = dFdy(vMapUv); float fp = oFp;
@@ -164,6 +177,8 @@
         const me = new TT.Mesh(g, m); me.castShadow = me.receiveShadow = true; G.add(me); });
       // the hinge pins: a dark domed head over the slit, near each end (their place from the photograph; height estimated)
       [-1, 1].forEach(s => { const p = new TT.Mesh(new TT.SphereGeometry(.34, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), horn); p.scale.y = .55; p.position.set(0, YT, s * (D / 2 - 3.72)); p.castShadow = true; G.add(p); });
+      G.userData.dispose = () => owned.forEach(t => t.dispose());   // (the pictures are uniforms, not the material's own textures: the case cannot find them itself)
+      for (const k in IMG) delete IMG[k];   // (the decoded pictures are large: let go of them — ready() fetches them again from the browser's cache)
       return G;
     },
   };

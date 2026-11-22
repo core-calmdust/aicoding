@@ -25,7 +25,7 @@
     ready: () => Promise.all(NAMES.map(n => GLB[n] ? 0 : read(n).catch(e => console.warn('[lewis]', n, e)))),
     build(TT, X, K) {
       const G = new TT.Group();
-      const tex = (bmp, srgb) => { const c = document.createElement('canvas'), k = srgb ? 1 : .5; c.width = bmp.width * k; c.height = bmp.height * k; c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);   // (the normal and occlusion maps at half size: memory)
+      const tex = (bmp, srgb) => { const c = document.createElement('canvas'), k = 1; c.width = bmp.width * k; c.height = bmp.height * k; c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);   // (the files hold the normal and occlusion maps at half size already: tools/glb-shrink.py)
         const t = new TT.CanvasTexture(c); t.flipY = false; t.colorSpace = srgb ? TT.SRGBColorSpace : TT.NoColorSpace; return t; };
       const piece = name => { const d = GLB[name]; if (!d) return new TT.Group();
         const geo = new TT.BufferGeometry(); geo.setAttribute('position', new TT.BufferAttribute(d.pos, 3)); geo.setAttribute('normal', new TT.BufferAttribute(d.nor, 3)); geo.setAttribute('uv', new TT.BufferAttribute(d.uv, 2)); geo.setIndex(new TT.BufferAttribute(d.idx, 1));
