@@ -78,7 +78,7 @@ node tools/levelmatch.js report --out tools/levelmatch-out/results-v5.jsonl
 5. `ls -l tools/train/weights_v5m.bin.gz`（大きさ）
 6. 勝っていれば `weights_v5m.bin.gz` そのもの（GitHub Desktop で `reversi/weights_v5.bin.gz` として追加しても可）
 
-## 入れ替え（v5 が勝ったとき。Claude が行います）
+## 入れ替え（2026-11-23 に実施：`w_b60e4_13m.bin.gz` → `reversi/weights.bin.gz`、`?v=5`。次に入れ替えるときは `?v=6`。`weights.pk.bin.gz` は廃止）
 1. `weights_v5m.bin.gz` → `reversi/weights.bin.gz`（gzip 済みなので再圧縮不要）、`weights.json` を `{"nphase":60,"version":5,…}` に。
 2. `weights.bin.gz?v=4` → `?v=5`：`reversi/index.html`・`reversi/pro/pro.js`・`reversi/bench.html`・`atlas/games/reversi.js`（atlas は `atlas/lazy.js` の `games/reversi.js?v=` と `atlas/index.html` の `lazy.js?v=` も上げる）。`pro/pro.js` を変えたら `pro/index.html` の `pro.js?v=` も。
 3. `reversi/sw.js` の `CACHE` を上げる（weights は DATA の扱いでキャッシュ優先のため必須）。

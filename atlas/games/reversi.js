@@ -10,11 +10,11 @@
   'use strict';
   const BASE = '../reversi/';
   let weights = null, book = null, readyP = null;
-  // the AI's weights (7.8 MB gzip) and book: loaded on the first game, not with the page; inflated in a worker on the portal
+  // the AI's weights (12.8 MB) and book: loaded on the first game, not with the page; inflated in a worker on the portal
   const gunzipHere = buf => new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
   const ready = () => readyP || (readyP = (async () => {
     try {
-      let buf = await fetch(BASE + 'weights.bin.gz?v=4').then(r => r.arrayBuffer());
+      let buf = await fetch(BASE + 'weights.bin.gz?v=5').then(r => r.arrayBuffer());
       const u8 = new Uint8Array(buf, 0, 2);
       if (u8[0] === 0x1f && u8[1] === 0x8b && 'DecompressionStream' in window) buf = await (window.AtlasTexGen ? AtlasTexGen.gunzip(buf.slice(0)).catch(() => gunzipHere(buf)) : gunzipHere(buf));
       const meta = await fetch(BASE + 'weights.json').then(r => r.json()).catch(() => ({ nphase: 12 }));
