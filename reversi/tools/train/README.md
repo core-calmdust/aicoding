@@ -156,3 +156,31 @@ for w in b30e4m b30e0m c60e0m; do EDAX=$E node tools/edax-anchor.js --levels 18 
 node tools/edax-anchor.js --table
 ```
 見るところ：`--table` で、同じ時間のところの Elo が `w_b30e0m`／`w_c60e0m` のほうが今の評価・`w_b30e4m` より高いか。高ければ公開の評価を入れ替える（`weights.bin.gz`、MPC の幅、Praline の一致の約束の更新が要る）。
+
+## 10億局面級の学習（2026-11-22）
+これまでの学習は、手元の対局棋譜（約5,200万局）から局面を20%だけ抜き出した約3億局面でした。抜き出す割合を上げると同じデータから約12〜13億局面になります（Egaroucid は18億以上、Kalmia は約13億）。全部をメモリに載せると 64GB に収まらないので、局面を**手数ごとのファイル**に分けて書き出し、学習は今の段に要る手数だけ読みます（`rvtrain extract <フォルダ>/`・`rvtrain train <フォルダ>`。1本のファイルからの学習と同じ重みになることを確認済み）。
+
+置き場所は外付けディスク（約21GB）。評価の形は今と同じ（パターンB・着手可能数あり）で、段だけ1手ごと（60段）にします（手番側への偏りが出ない形）。1手あたり約4,700万局面あるので、前後の手数を混ぜる窓は使いません（`--window 0`）。
+
+```sh
+cd reversi/tools/train && git pull
+cc -O3 -pthread -o rvtrain rvtrain.c -lz -lm
+D="/Volumes/Orico A 8TB/shogi_data/reversi_data"
+mkdir -p "$D"
+# 1) 局面の取り出し（1〜2時間の見込み。途中で止めたら "$D/games90" を消してやり直す）
+caffeinate -i ./rvtrain extract "$D/games90/" --games --skip auto --frac 0.9 ~/data/Egaroucid_Train_Data_v0002_0 ~/data/Egaroucid_Train_Data_v0002_1
+du -sh "$D/games90"
+# 2) 学習2本（続けて。1本目＝13億局面：一晩〜半日の見込み、2本目＝比較の基準：同じやり方で今までの約3億局面、1〜2時間）
+caffeinate -i sh -c '
+./rvtrain train pairs.bin "'"$D"'/games90" --out w_b60e4_13.bin.gz --set B --phases 60 --ext 4 --window 0 --init ../../weights.bin.gz --threads 10 2>&1 | tee train_b60e4_13.log
+./rvtrain train pairs.bin games.bin --out w_b60e4_3.bin.gz --set B --phases 60 --ext 4 --window 0 --init ../../weights.bin.gz --threads 10 2>&1 | tee train_b60e4_3.log
+for w in b60e4_13 b60e4_3; do ./rvlabel mpc games.bin --weights w_$w.bin.gz --n 1500 --depth 12 --write w_${w}m.bin.gz | tee mpc_$w.log; done'
+# 3) 比較（Edax 相手、同じ時間。各 約20分。1,000局ずつ＝誤差 約±9）
+cd ../.. && E=~/edax-reversi/bin/mEdax-armv8.5-a
+for w in b60e4_13m b60e4_3m; do EDAX=$E node tools/edax-anchor.js --levels 18 --n 500 --bases "18,22,24,28" --weights tools/train/w_$w.bin.gz; done
+EDAX=$E node tools/edax-anchor.js --levels 18 --n 500 --bases "18,22,24,28"
+node tools/edax-anchor.js --table
+```
+- メモリの目安：13億局面の学習で 15〜20GB。
+- 見るところ：`w_b60e4_13m`（13億）が `w_b60e4_3m`（3億、同じやり方）と今の評価を、同じ時間で上回るか。上回れば公開の評価を入れ替え、そのあと定石を新しい評価で作り直す。
+- 学習の途中経過は `train_b60e4_13.log`（段ごとの検証誤差）。3億のときより検証誤差が下がっているかも見る。
