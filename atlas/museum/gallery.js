@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 124;
+  const V = 125;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -155,7 +155,7 @@
             const quit = () => { if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); rulesOn(false); playing(false); };
             const ok = AtlasMuseumPlay.start(id, { course: true, lang, onExit: quit, onPlay: () => { quit(); setTimeout(() => pb.click(), 60); } });
             if (!ok) return; rul.classList.remove('new'); playing(true); acts.hidden = true; clearInterval(poll); rulesOn(true); ov.quitPlay = quit; }); };
-        const playing = on => { if (!on && ov.fillLv) setTimeout(ov.fillLv, 50); { const rb = ov.querySelector('.exres'); if (rb) rb.remove(); } ov.classList.remove('exv-cfg'); if (cfg) cfg.classList.remove('on'); ov.classList.toggle('exv-play', on); pb.hidden = on; acts.hidden = !on; clearInterval(poll); if (on) { syncActs(); poll = setInterval(syncActs, 350); } lock = on; shut(); if (!on) hudEl.innerHTML = ''; };
+        const playing = on => { if (!on && ov.fillLv) setTimeout(ov.fillLv, 50); { const rb = ov.querySelector('.exres'); if (rb) rb.remove(); } ov.classList.remove('exv-cfg'); if (cfg) cfg.classList.remove('on'); if (ov.slide && innerWidth >= 820) ov.slide(() => ov.classList.toggle('exv-play', on)); else ov.classList.toggle('exv-play', on); pb.hidden = on; acts.hidden = !on; clearInterval(poll); if (on) { syncActs(); poll = setInterval(syncActs, 350); } lock = on; shut(); if (!on) hudEl.innerHTML = ''; };
         const quitGame = () => { if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); playing(false); }; ov.quitPlay = quitGame;
         pb.onclick = () => { if (!V3 || !V3.obj) return; pb.disabled = true;
           try { const q = JSON.parse(localStorage.getItem(PK) || '{}'); q[id] = { lv: +lvS.dataset.v, side: +sdS.dataset.v }; localStorage.setItem(PK, JSON.stringify(q)); } catch (x) {}
@@ -183,11 +183,14 @@
       // case's size eases from where it is to where the new state puts it; each step is drawn at once (resize → render), so the piece,
       // its numbers and the scale bar glide with the panel
       let anim = 0;
-      const setSt = (st, ms = 320) => { cancelAnimationFrame(anim); const sh = sheet(), key = sh ? '--sth' : '--exw', cur = () => sh ? stage.clientHeight : ov.clientWidth - stage.clientWidth, from = cur();
-        ov.dataset.st = st; wb.classList.toggle('on', st === 'big'); ov.style.removeProperty('--sth'); ov.style.removeProperty('--exw'); const to = cur();
+      // (slide(change): any change of layout — a new state, a game starting or ending — is run the same way)
+      const slide = (change, ms = 320) => { cancelAnimationFrame(anim); const sh = sheet(), key = sh ? '--sth' : '--exw', cur = () => sh ? stage.clientHeight : ov.clientWidth - stage.clientWidth, from = cur();
+        change(); ov.style.removeProperty('--sth'); ov.style.removeProperty('--exw'); const to = cur();
         if (Math.abs(to - from) < 2 || !ms) return; ov.style.setProperty(key, from + 'px'); ov.classList.add('exv-anim'); const t0 = performance.now();
         const step = now => { const k = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - k, 3); if (k >= 1 || !ov.isConnected) { ov.style.removeProperty(key); ov.classList.remove('exv-anim'); return; } ov.style.setProperty(key, (from + (to - from) * e).toFixed(1) + 'px'); anim = requestAnimationFrame(step); };
         anim = requestAnimationFrame(step); };
+      const setSt = (st, ms) => slide(() => { ov.dataset.st = st; wb.classList.toggle('on', st === 'big'); }, ms);
+      ov.slide = slide;   // (on a computer the texts slide away when a game starts and slide back when it ends: 2026-11-23)
       wb.onclick = () => setSt(ov.dataset.st === 'big' ? '' : 'big');
       let d = null;
       grab.onpointerdown = ev => { if (!sheet()) return; cancelAnimationFrame(anim); ov.classList.remove('exv-anim'); grab.setPointerCapture(ev.pointerId); d = { y: ev.clientY, h: stage.clientHeight, moved: 0 };
