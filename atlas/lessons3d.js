@@ -5646,7 +5646,7 @@
     k_tempo: 'keep', k_hoard: 'keep', k_starve: 'keep', e_keep: 'keep', n_play: 'play' };
   const MCJ_LS = {
     intro: {
-      sow: '穴をえらぶと、中の種を全部つかんで<b>反時計回り</b>に1粒ずつまいていくんだ。<br>きみのストアには入れるけど、相手のストアはとばすの。<b>種の数だけ先へ進む</b>って覚えてね！',
+      sow: '穴の種を全部つかんで、<b>反時計回り</b>に1粒ずつまくの。<br>相手のストアはとばして、<b>種の数だけ先へ</b>！',
       extra: 'さいごの1粒が<b>きみのストア</b>に入ったら、もう一回きみの番！<br>ストアのとなりの穴なら1粒、2つ目なら2粒……<b>種の数＝ストアまでの距離</b>の穴をさがそう。種も手番も得する、いちばん大事な手なんだ〜。',
       capture: 'さいごの1粒が<b>きみの側の空っぽの穴</b>に止まったら、向かいの相手の種を<b>まとめて横取り</b>！ 止まった1粒もいっしょにストアへ入るの。<br>相手の大きな山の向かいが空いていたら、チャンスだね。',
       defend: '相手の番に<b>きみの山が横取りされない</b>か、いつも確かめよう。<br>守り方は3つ。ねらわれた山を動かす、相手が止まる空の穴をうめる、相手の穴に種を足して止まる場所をずらす。どれが使えるかな？',
@@ -5684,7 +5684,7 @@
       blk: ['相手のもう一回、消せるかな？', '相手のぴったりの穴に、種を落とす手はどれ？', 'このままだと相手に続けて打たれちゃう！ どうする？', '相手の穴の数をずらせる手、どこかな？', 'さあ、相手の「もう一回」をじゃましよう！'],
       open: ['序盤のいちばんいい手はどれかな？', 'まずは、もう一回が取れる？', '序盤の組み立て、どの穴から始める？', '相手にぴったりの穴をあげない手、わかるかな？', 'さあ、定石どおりに指せるかな？'],
       end: ['終盤！ さいごの差がいちばん大きくなる手はどれかな？', 'ここは数えれば読みきれる！ どの穴をまく？', '勝ちまであと何粒？ いちばん得する手をえらんでね。', 'おしまいまで数えて、最善の一手を！', 'さあ、数え合いの勝負！ どの穴かな？'],
-      keep: ['あわてずに考えよう。いちばんいい手はどれかな？', '大きく動く手が、いつもいいとは限らないね。どうする？', '種を相手にわたしすぎない手、見つけられるかな？', 'さあ、きみの側の種をどう使う？', '先の形まで見て、一手をえらんでね！'],
+      keep: ['あわてずに考えよう。いちばんいい手はどれかな？', '大きく動く手が、いつもいいとは限らないの。どうする？', '種を相手にわたしすぎない手、見つけられるかな？', 'さあ、きみの側の種をどう使う？', '先の形まで見て、一手をえらんでね！'],
       play: ['実戦の局面！ いちばんいい手はどれかな？', 'きみの得と相手の得、くらべてみて！', 'さあ、ここまでの考え方を全部使おう！', '迷ったら相手の次の手まで数えてね。どの穴？', '最善手、見つけられるかな？'],
     },
     hint: {
@@ -5732,52 +5732,118 @@
     return { k, n, d, land: tr.land, extra: tr.extra && !tr.over, relays: tr.relays, cap: tr.cap || 0, gain: a[6] - b[6], turn: tm == null ? 0 : tm, toOpp,
       over, margin: q[6] - q[13], oppBest: over ? 0 : o1.best, oppCap: over ? 0 : o1.cap, oppHow: over ? '' : o1.how, oppEx: over ? 0 : o1.ex, cap0: o0.cap, ex0: o0.ex, total: b.reduce((s, x) => s + x, 0) };
   }
-  function mcLsJa(E, s, P, i, R, pts) {
-    const id = s.id, g = MCJ_GRP[id], A0 = MCJ_LS.ask[g]; if (!A0) return null;
-    const k0 = i + id.length, pick = L => L[k0 % L.length], pk = (L, j) => L[(k0 + j) % L.length], H = MCJ_LS.hint[id] || [];
-    const exact = P.exact === true || g === 'end', sc = P.sc, vBest = Math.max(...sc.filter(v => v !== null));
-    const right = u => sc[u] != null && pts(P, u) >= 16, wrongs = () => sc.map((v, j) => v === null || right(j) ? -1 : j).filter(j => j >= 0);
+  // (2026-11-22 lesson loop) マンカラビ's voice for one lesson: praise / soft words / push on, each lesson in an order of its own (mcVoice);
+  // every sentence below has five wordings, taken by the problem's number, so no line comes twice in a lesson (the praise and the
+  // miss have lists of their own, so the same problem's two answers never share a line either)
+  const MC_V = {
+    cheer: ['ブーン！ いい手！', 'さすが！', 'ばっちり！', 'お見事！', 'やったね！', 'ナイス！', 'すごい、正解！', 'そうそう、それ！', 'いい読み、さすが！', '上手！', '完璧！', 'よく見つけた！'],
+    soft: ['おしい！', '大丈夫！', 'ドンマイ！', 'あと一歩！', 'あと少し！', '今度こそ！', '気にしない、気にしない！', 'よくある見落とし！', '次は見つけられるはず！', 'いっしょに確かめよう！', 'これで覚えちゃおう！'],
+    push: ['この調子で次も行こう！', 'どんどん行こう！', 'その勢いで次へ！', '次も見せて！', 'まだまだいける！', 'わかってきたね、続けよう！'],
+  };
+  function mcVoice(n) { const a = [1, 5, 7, 11][Math.floor(n / 12) % 4], b = n % 12, a2 = 1 + Math.floor(n / 11) % 10, b2 = n % 11;
+    return { cheer: i => MC_V.cheer[(a * i + b) % 12], soft: i => MC_V.soft[(a2 * i + b2) % 11], push: i => MC_V.push[(i + n) % 6] }; }
+  const MCJ_GH = {   // (the 3rd-5th problems' hints, by group; the lesson's own two come first)
+    sow: ['穴ごとに、目標まであといくつか数えてみよう！', 'ストアをまたぐときは、きみのストアも1つ分と数えるの！', '多すぎても少なすぎても止まらないの。ちょうどの穴はどれ？'],
+    extra: ['ストアのすぐとなりに、1粒だけの穴はない？', 'ぴったりの穴が2つあったら、近いほうから使おう！', '種の数と、ストアまでの穴の数を見くらべてみて！'],
+    cap: ['まずは、きみの側の空っぽの穴を見つけよう！', '向かいに大きな山がある空き穴をねらってね！', 'その空き穴まで、ちょうどの数の種がある穴は？'],
+    def: ['ねらわれた山を動かせば、取られるものがなくなるの！', '相手が止まる空の穴に、種を落としてうめる手もあるね！', '相手の穴に1粒足して、止まる場所をずらすのも手！'],
+    blk: ['相手のストアまでの距離と、相手の穴の種の数をくらべてみて！', 'きみのまく種が、相手の列のどこまで届くか追ってみよう？', '相手の穴が1粒ふえるだけで、ぴったりはくずれるの！'],
+    open: ['まずはもう一回。そのあとで相手の形を見よう！', '相手の列にどれだけ種をわたすかも数えてね！', 'まいたあと、相手にぴったりの穴ができない？'],
+    end: ['おしまいの瞬間、どちらの列に何粒残る？', 'あと何粒で勝ちか、先に数えておこう！', 'もう一回で手番を重ねられるかもチェック！'],
+    keep: ['大きな山をまくと、種はどこまで流れる？', '少ない種で、手番だけわたす手もあるの！', 'きみの側にためた種は、さいごにきみのもの！'],
+    play: ['まずは、もう一回と横取りを探そう！', '相手の次の一手で何をされるかも見てね！', 'きみの得から相手の得を引いて、くらべよう！'],
+  };
+  // why the red pit falls short — five wordings each (by the problem's number)
+  const MCJ_WHY = {
+    sowShort: (n, m) => [`赤い丸の穴は${n}粒だから、目標の${m}つ手前で止まっちゃう。`, `赤い丸だと${n}粒しかないから、目標まで${m}つ足りないの。`, `赤い丸をまくと、さいごの1粒は目標の${m}つ手前。`, `赤い丸の${n}粒では、目標に${m}つ届かないの。`, `赤い丸からだと、あと${m}つのところで種が切れちゃう。`],
+    sowOver: (n, m) => [`赤い丸の穴は${n}粒だから、目標を${m}つ通りすぎちゃう。`, `赤い丸だと${n}粒あって、目標より${m}つ先まで行っちゃうの。`, `赤い丸をまくと、さいごの1粒は目標の${m}つ先。`, `赤い丸の${n}粒は、目標には${m}つ多すぎるの。`, `赤い丸からだと、目標を${m}つ追いこしちゃう。`],
+    notWin: () => ['赤い丸の穴だと、まだ勝ちが決まらないの。', '赤い丸では勝負がつかないまま、相手の番になっちゃう。', '赤い丸をまくと、勝ちまであと少し届かないの。', '赤い丸の手だと、決めきれずに相手へ手番がわたるの。', 'せっかくの勝ちの場面なのに、赤い丸では決まらないの。'],
+    noExRelay: () => ['赤い丸の穴だと、リレーがストアで止まらないから、もう一回がないの。', '赤い丸からのリレーは、ストアの外で止まっちゃう。もう一回はなし。', '赤い丸をまくと、リレーのさいごがストアに入らないの。', '赤い丸のリレーは、ストアにたどり着かずに終わるの。', '赤い丸だと、まき直しの行き先がストアじゃないの。手番は相手へ。'],
+    noExShort: m => [`赤い丸の穴は種が${m}粒足りなくて、ストアの手前で止まっちゃう。`, `赤い丸だと、ストアまで${m}粒足りないの。`, `赤い丸をまくと、ストアの${m}つ手前で種が切れちゃう。`, `赤い丸の種では、ストアに${m}つ届かないの。`, `赤い丸からだと、あと${m}粒あればストアだったのに！`],
+    noExOver: () => ['赤い丸の穴は種が多すぎて、ストアを通りすぎちゃうの。', '赤い丸だと、種がストアを越えて相手の列まで行っちゃう。', '赤い丸をまくと、さいごの1粒はストアの先。', '赤い丸の種は多すぎて、ぴったりにならないの。', '赤い丸からだと、ストアを通りこして止まるの。'],
+    capSmall: c => [`赤い丸の穴の横取りは${c}粒だけ。`, `赤い丸でも取れるけど、${c}粒しか入らないの。`, `赤い丸をまくと、横取りできるのは${c}粒。`, `赤い丸の横取りは小さめで、${c}粒どまり。`, `赤い丸だと、向かいの山が${c}粒しかないの。`],
+    noCap: () => ['赤い丸の穴だと空の穴に止まらないから、横取りできないの。', '赤い丸では、さいごの1粒が空の穴に落ちないの。横取りはなし。', '赤い丸をまくと、止まる場所が空の穴じゃないから取れないの。', '赤い丸の手だと、向かいの山に手が届かないの。', '赤い丸からだと、さいごの1粒が種のある穴に落ちちゃう。'],
+    oppCap: (b, mo) => [`赤い丸の穴のあと、相手に横取りされて${b}粒${mo}取られちゃう。`, `赤い丸をまくと、次に相手の横取りで${b}粒${mo}持っていかれるの。`, `赤い丸のあとは、相手の横取りが待っているの。${b}粒${mo}取られちゃう！`, `赤い丸の手だと、相手の番に横取りされて${b}粒${mo}ストアへ。`, `赤い丸では、きみの山が横取りの的のまま。相手に${b}粒${mo}取られるの。`],
+    oppBoth: (b, mo) => [`赤い丸の穴のあと、相手にもう一回から横取りまでつながれて、${b}粒${mo}取られちゃう。`, `赤い丸をまくと、相手はもう一回で打ち続けて、さいごに横取り。${b}粒${mo}取られるの。`, `赤い丸のあと、相手にもう一回と横取りを続けられて、${b}粒${mo}入れられちゃう。`, `赤い丸の手だと、相手のもう一回が横取りにつながって、${b}粒${mo}持っていかれるの。`, `赤い丸では、相手に続けて打たれて横取りまで決められちゃう。${b}粒${mo}取られるの。`],
+    oppEx: (b, mo) => [`赤い丸の穴のあと、相手にもう一回を続けられて${b}粒${mo}入れられちゃう。`, `赤い丸をまくと、相手がもう一回をつないで${b}粒${mo}ストアに入れるの。`, `赤い丸のあと、相手のぴったりの穴が残って、${b}粒${mo}入れられちゃう。`, `赤い丸の手だと、相手に続けて打たれて${b}粒${mo}入るの。`, `赤い丸では、相手のもう一回が止まらないの。${b}粒${mo}入れられちゃう。`],
+    oppPlain: (b, mo) => [`赤い丸の穴のあと、相手に${b}粒${mo}入れられちゃう。`, `赤い丸をまくと、相手は次の番で${b}粒${mo}ストアに入れられるの。`, `赤い丸のあと、相手の番に${b}粒${mo}入っちゃう。`, `赤い丸の手だと、相手に${b}粒${mo}かせがれるの。`, `赤い丸では、相手が次に${b}粒${mo}取れちゃう。`],
+    blk: () => ['赤い丸の穴だと、相手のぴったりの穴がそのまま残るの。', '赤い丸では相手の穴の数が変わらないから、相手のもう一回が消えないの。', '赤い丸をまくと、相手のぴったりの数がずれないまま。', '赤い丸の手だと、相手は次ももう一回できちゃう。', '赤い丸だと、相手のストア前の穴はさわられずに残るの。'],
+    turn: t => [`赤い丸の穴だと、この番で入るのは${t}粒だけ。`, `赤い丸をまくと、この番のストアは${t}粒どまり。`, `赤い丸では、この番に${t}粒しか入らないの。`, `赤い丸の手だと、ストアに入るのは${t}粒だけなの。`, `赤い丸だと、この番のかせぎは${t}粒。`],
+    toOpp: c => [`赤い丸の穴だと、種が${c}粒も相手の列へ流れちゃう。`, `赤い丸をまくと、${c}粒も相手の側へわたっちゃうの。`, `赤い丸では、相手の列に${c}粒もプレゼントすることになるの。`, `赤い丸の手だと、${c}粒が相手の側へ行っちゃう。`, `赤い丸だと、相手の列が${c}粒もふえちゃう。`],
+    lose: () => ['赤い丸の穴だと、さいごまで読むと負けになっちゃう。', '赤い丸をまくと、おしまいまで数えて、きみの負けになるの。', '赤い丸では、さいごの数え合いで相手が上回っちゃう。', '赤い丸の手だと、勝てた局面が負けに変わるの。', '赤い丸だと、おしまいのとき相手のほうが多くなるの。'],
+    diff: d => [`赤い丸の穴だと、さいごまで読むと差が${d}粒ちぢまるの。`, `赤い丸をまくと、おしまいの差が${d}粒へっちゃう。`, `赤い丸では、さいごに${d}粒ぶん損するの。`, `赤い丸の手だと、数えきったときの差が${d}粒少ないの。`, `赤い丸だと、おしまいまでに${d}粒もったいないの。`],
+    oppMore: (b, w) => [`赤い丸の穴のあと、相手が次に取れる種が${b}粒になるの（金の丸なら${w}粒）。`, `赤い丸をまくと、相手の次のかせぎが${b}粒。金の丸なら${w}粒ですんだの。`, `赤い丸では、相手に${b}粒取れる形が残るの。金の丸なら${w}粒。`, `赤い丸の手だと、相手の次の番は${b}粒。金の丸より${b - w}粒多いの。`, `赤い丸だと、相手が次に${b}粒入れられるの。金の丸なら${w}粒だけ。`],
+    toOpp2: c => [`赤い丸の穴だと、種が${c}粒、相手の列へ流れちゃう。`, `赤い丸をまくと、${c}粒が相手の側へ行くの。`, `赤い丸では、相手の列に${c}粒わたすことになるの。`, `赤い丸の手だと、相手の側に${c}粒落ちちゃう。`, `赤い丸だと、相手に${c}粒わたしちゃうの。`],
+    okish: () => ['赤い丸の穴も悪くないけど、金の丸のほうが、この先の種の入り方がいいの。', '赤い丸も一手だけど、何手か先の種の入り方で金の丸に少し負けるの。', '赤い丸でも戦えるけど、先まで数えると金の丸がちょっと多く入るの。', '赤い丸も考えられる手。でも、この先のかせぎは金の丸が上なの。', '赤い丸もわるくない手。先の数え合いで、金の丸がわずかに得なの。'],
+    near: () => ['赤い丸の穴もいい線！ 金の丸とほとんど同じなの。', '赤い丸もほぼ互角の手！ 金の丸がほんの少しだけ上なの。', '赤い丸もかなりいい手！ 差はほんのちょっと。', '赤い丸でもほとんど変わらないの！ 金の丸がわずかに上。', '赤い丸もおしい！ 金の丸とほぼ同じ働きなの。'],
+  };
+  // what the gold pit does — five wordings for the praise (G) and five more for the miss (N)
+  const MCJ_PLUS = {
+    win: { G: () => ['そのまま勝ちが決まる', 'この一手で勝ちきれる', 'ここで勝負が決まる', 'すぐに勝ちが決まる', 'おしまいまで一気に勝てる'], N: () => ['その場で勝ちが決まる', '勝負をここで決められる', 'この番で勝ちきれる', 'そのまま勝ちまで行ける', 'すぐに勝負がつく'] },
+    run: { G: t => [`もう一回をつないで、この番で${t}粒入る`, `もう一回を重ねて、${t}粒もストアに入る`, `続けて打って、この番だけで${t}粒かせげる`, `ぴったりを何度もつないで${t}粒入る`, `何度も続けて打てて、合計${t}粒入る`], N: t => [`続けて打てて、この番で${t}粒入る`, `もう一回が何度も続いて${t}粒になる`, `ぴったりをつなげて、合計${t}粒かせげる`, `この番だけで${t}粒もストアに入る`, `もう一回を重ねて${t}粒集められる`] },
+    extra: { G: () => ['ぴったりストアに届いて、もう一回打てる', 'さいごの1粒がストアに入って、続けて打てる', '種の数とストアまでの距離が同じで、もう一回打てる', 'ストアでぴたっと止まって、手番がきみに残る', 'ちょうどストアに落ちて、もう一度きみの番になる'], N: () => ['ストアにちょうど届いて、もう一回打てる', 'さいごの1粒がストアでぴたっと止まる', '距離と種の数が同じで、続けて打てる', 'ぴったりストアに入って、手番を続けられる', 'ちょうどストアで止まって、もう一度打てる'] },
+    cap: { G: c => [`相手の${c}粒を横取りできる`, `向かいの${c}粒をごっそりいただける`, `相手の山${c}粒がまるごときみのストアへ行く`, `空の穴に止まって、${c}粒をまるごと取れる`, `向かいの${c}粒をひと息に取れる`], N: c => [`向かいの${c}粒をいただける`, `相手の${c}粒の山をまるごと取れる`, `空の穴に止まって、向かいの${c}粒が手に入る`, `${c}粒の横取りが決まる`, `相手の${c}粒をストアにしまえる`] },
+    defuse: { G: () => ['相手の横取りのねらいをはずせる', 'ねらわれていた山を守れる', '相手の横取りを空ぶりにできる', 'きみの山を横取りから逃がせる', 'きみの山が取られる心配を消せる'], N: () => ['相手の横取りをかわせる', '取られそうな山を守れる', '相手のねらいを空ぶりにできる', 'きみの山を安全にできる', '横取りの心配がなくなる'] },
+    killEx: { G: () => ['相手のもう一回を消せる', '相手のぴったりの穴をずらせる', '相手の続けて打つ手をなくせる', '相手のストア前の穴の数をくずせる', '相手のもう一回を止められる'], N: () => ['相手のぴったりをくずせる', '相手の連続の手を消せる', '相手のもう一回の穴をずらせる', '相手に続けて打たせない', '相手のもう一回をふうじられる'] },
+    oppNone: { G: () => ['相手に次の得をさせない', '相手の次の番を空ぶりにできる', '相手に何も取らせない', '相手の次のかせぎをゼロにできる', '相手に得をさせない形にできる'], N: () => ['相手は次に何も取れない', '相手の次のかせぎがなくなる', '相手に1粒も入れさせない', '相手の得をゼロにできる', '相手に次の得をあたえない'] },
+    oppFew: { G: b => [`相手が次に取れるのは${b}粒だけになる`, `相手の次の番を${b}粒におさえられる`, `相手のかせぎを${b}粒どまりにできる`, `相手には${b}粒しか取らせない`, `次の相手の得が${b}粒ですむ`], N: b => [`相手の次は${b}粒だけになる`, `相手を${b}粒におさえられる`, `相手のかせぎを${b}粒どまりにできる`, `相手は${b}粒しか取れない`, `相手の得を${b}粒にとどめられる`] },
+    oppLess: { G: d => [`相手の次の得を${d}粒へらせる`, `相手のかせぎを${d}粒少なくできる`, `相手の次の番を${d}粒ぶん小さくできる`, `相手の取り分を${d}粒けずれる`, `相手に入る種を${d}粒へらせる`], N: d => [`相手の得が${d}粒へる`, `相手の次の番が${d}粒小さくなる`, `相手の入る種を${d}粒おさえられる`, `相手のかせぎから${d}粒けずれる`, `相手の取り分が${d}粒少なくなる`] },
+    noGive: { G: () => ['相手の列に種をわたさない', '種を1粒も相手の側へ流さない', 'きみの側の中で種を回せる', '相手に種をプレゼントしない', '相手の列をふやさずにすむ'], N: () => ['相手の側に種を落とさない', '種を相手にわたさずにすむ', 'きみの列の中だけでまける', '相手の列に1粒もあげない', '相手の種をふやさない'] },
+  };
+  function mcLsJa(E, s, P, i, R, pts, n) {
+    const id = s.id, g = MCJ_GRP[id], A0 = MCJ_LS.ask[g]; if (!A0) return null; n = n || 0;
+    const k0 = i + id.length, pick = L => L[k0 % L.length], H = MCJ_LS.hint[id] || [], GH = MCJ_GH[g] || [], VO = mcVoice(n);
+    const v = L => L[i % L.length];   // (the problem's own wording: one per problem, none twice in a lesson)
+    const exact = P.exact === true || g === 'end', sc = P.sc, vBest = Math.max(...sc.filter(x => x !== null));
+    const right = u => sc[u] != null && pts(P, u) >= 16, wrongs = () => sc.map((x, j) => x === null || right(j) ? -1 : j).filter(j => j >= 0);
     const FF = u => { try { return mcF(E, P.b, u, R); } catch (e) { return null; } }, A = P.best, FA = FF(A); if (!FA) return null;
     const dist = (from, to) => { let c = 0, x = from; while (x !== to && c < 30) { x = x === 13 ? 0 : x + 1; if (x !== 13) c++; } return c; };   // (sowing steps, the opponent's store skipped)
-    const n1 = v => Math.max(1, Math.round(Math.abs(v)));
-    // the one thing the wrong move misses, against the gold one (most telling first)
+    const n1 = x => Math.max(1, Math.round(Math.abs(x))), W_ = MCJ_WHY;
+    // the one thing the wrong move misses, against the gold one (most telling first) → { t, weak }
     const why = (G, u) => {
-      const W = FA, dv = vBest - sc[u];
-      if (g === 'sow') { const t = dist(G.k, P.target), dd = G.n - t; return dd < 0 ? `赤い丸の穴は${G.n}粒だから、目標の${-dd}つ手前で止まっちゃう。` : `赤い丸の穴は${G.n}粒だから、目標を${dd}つ通りすぎちゃう。`; }
-      if (W.over && W.margin > 0 && !(G.over && G.margin > 0)) return '赤い丸の穴だと、まだ勝ちが決まらないの。';
-      if (W.extra && !G.extra) return s.rules === 'sunka' || G.relays ? '赤い丸の穴だと、リレーがストアで止まらないから、もう一回がないの。' : G.n < G.d ? `赤い丸の穴は種が${G.d - G.n}粒足りなくて、ストアの手前で止まっちゃう。` : '赤い丸の穴は種が多すぎて、ストアを通りすぎちゃうの。';
-      if (W.cap > G.cap && W.cap >= 2) return G.cap ? `赤い丸の穴の横取りは${G.cap}粒だけ。` : '赤い丸の穴だと空の穴に止まらないから、横取りできないの。';
-      if (G.oppBest >= W.oppBest + 2) { const mo = G.oppBest >= 4 ? 'も' : ''; return G.oppHow === 'cap' ? `赤い丸の穴のあと、相手に横取りされて${G.oppBest}粒${mo}取られちゃう。` : G.oppHow === 'both' ? `赤い丸の穴のあと、相手にもう一回から横取りまでつながれて、${G.oppBest}粒${mo}取られちゃう。` : G.oppHow === 'extra' ? `赤い丸の穴のあと、相手にもう一回を続けられて${G.oppBest}粒${mo}入れられちゃう。` : `赤い丸の穴のあと、相手に${G.oppBest}粒${mo}入れられちゃう。`; }
-      if (g === 'blk' && G.oppEx > W.oppEx) return '赤い丸の穴だと、相手のぴったりの穴がそのまま残るの。';
-      if (W.turn >= G.turn + 2) return `赤い丸の穴だと、この番で入るのは${G.turn}粒だけ。`;
-      if (G.toOpp >= W.toOpp + 2) return `赤い丸の穴だと、種が${G.toOpp}粒も相手の列へ流れちゃう。`;
-      if (exact && vBest > 0 && sc[u] < 0) return '赤い丸の穴だと、さいごまで読むと負けになっちゃう。';
-      if (exact) return `赤い丸の穴だと、さいごまで読むと差が${n1(dv)}粒ちぢまるの。`;
-      if (G.oppBest > W.oppBest) return `赤い丸の穴のあと、相手が次に取れる種が${G.oppBest}粒になるの（金の丸なら${W.oppBest}粒）。`;
-      if (G.toOpp > W.toOpp) return `赤い丸の穴だと、種が${G.toOpp}粒、相手の列へ流れちゃう。`;
-      return dv >= 1.5 ? '赤い丸の穴も悪くないけど、金の丸のほうが、この先の種の入り方がいいの。' : '赤い丸の穴もいい線！ 金の丸とほとんど同じなの。';   // (2026-11-22: never "the AI says")
+      const W = FA, dv = vBest - sc[u], T = t => ({ t, weak: false });
+      if (g === 'sow') { const t = dist(G.k, P.target), dd = G.n - t; return T(v(dd < 0 ? W_.sowShort(G.n, -dd) : W_.sowOver(G.n, dd))); }
+      if (W.over && W.margin > 0 && !(G.over && G.margin > 0)) return T(v(W_.notWin()));
+      if (W.extra && !G.extra) return T(v(s.rules === 'sunka' || G.relays ? W_.noExRelay() : G.n < G.d ? W_.noExShort(G.d - G.n) : W_.noExOver()));
+      if (W.cap > G.cap && W.cap >= 2) return T(v(G.cap ? W_.capSmall(G.cap) : W_.noCap()));
+      if (G.oppBest >= W.oppBest + 2) { const mo = G.oppBest >= 4 ? 'も' : ''; return T(v((G.oppHow === 'cap' ? W_.oppCap : G.oppHow === 'both' ? W_.oppBoth : G.oppHow === 'extra' ? W_.oppEx : W_.oppPlain)(G.oppBest, mo))); }
+      if (g === 'blk' && G.oppEx > W.oppEx) return T(v(W_.blk()));
+      if (W.turn >= G.turn + 2) return T(v(W_.turn(G.turn)));
+      if (G.toOpp >= W.toOpp + 2) return T(v(W_.toOpp(G.toOpp)));
+      if (exact && vBest > 0 && sc[u] < 0) return T(v(W_.lose()));
+      if (exact) return { t: v(W_.diff(n1(dv))), weak: true };
+      if (G.oppBest > W.oppBest) return T(v(W_.oppMore(G.oppBest, W.oppBest)));
+      if (G.toOpp > W.toOpp) return T(v(W_.toOpp2(G.toOpp)));
+      return { t: v(dv >= 1.5 ? W_.okish() : W_.near()), weak: true };   // (2026-11-22: never "the AI says")
     };
-    const plus = (W, Q) => { const o = [];
-      if (W.over && W.margin > 0) o.push('そのまま勝ちが決まる');
-      if (W.extra) o.push(W.turn > W.gain + 1 ? `もう一回をつないで、この番で${W.turn}粒入る` : 'ぴったりストアに届いて、もう一回打てる');
-      if (W.cap >= 2) o.push(`相手の${W.cap}粒を横取りできる`);
-      if (W.cap0 >= 2 && W.oppCap < W.cap0 && o.length < 2) o.push('相手の横取りのねらいをはずせる');
-      if (W.ex0 > W.oppEx && W.oppEx === 0 && o.length < 2 && !W.extra) o.push('相手のもう一回を消せる');
-      if (o.length < 2 && Q && Q.oppBest >= W.oppBest + 2) o.push(!W.oppBest ? '相手に次の得をさせない' : W.oppBest <= 3 ? `相手が次に取れるのは${W.oppBest}粒だけになる` : `相手の次の得を${Q.oppBest - W.oppBest}粒へらせる`);
-      if (o.length < 2 && !W.extra && W.toOpp === 0 && (!Q || Q.toOpp > 0)) o.push('相手の列に種をわたさない');
+    const plus = (W, Q, side) => { const o = [], at = (k, x) => v(MCJ_PLUS[k][side](x));
+      if (W.over && W.margin > 0) o.push(at('win'));
+      if (W.extra) o.push(W.turn > W.gain + 1 ? at('run', W.turn) : at('extra'));
+      if (W.cap >= 2) o.push(at('cap', W.cap));
+      if (W.cap0 >= 2 && W.oppCap < W.cap0 && o.length < 2) o.push(at('defuse'));
+      if (W.ex0 > W.oppEx && W.oppEx === 0 && o.length < 2 && !W.extra) o.push(at('killEx'));
+      if (o.length < 2 && Q && Q.oppBest >= W.oppBest + 2) o.push(!W.oppBest ? at('oppNone') : W.oppBest <= 3 ? at('oppFew', W.oppBest) : at('oppLess', Q.oppBest - W.oppBest));
+      if (o.length < 2 && !W.extra && W.toOpp === 0 && (!Q || Q.toOpp > 0)) o.push(at('noGive'));
       return o.slice(0, 2).join('し、'); };
-    const deep = exact ? 'さいごまで読み切ると、これがいちばん差がつく手' : '何手か先まで数えると、これがいちばん種が増える手';
-    const PR = ['ブーン！', 'やったね！', 'おみごと！', 'ばっちり！', 'いい読み！'];
-    const alt = u => { if (u != null && !right(u) && sc[u] != null) return u; const W = wrongs().sort((x, y) => sc[y] - sc[x]); for (const x of W) { const Q = FF(x); if (Q && !/悪くない|いい線|ちぢまる/.test(why(Q, x))) return x; } return W[0]; };
-    const good = u => { const own = u != null && right(u) ? u : A, W = FF(own) || FA, p = pick(PR);
-      if (g === 'sow') { const t = dist(W.k, P.target); return W.n === t ? p + ' ' + pick(['種の数が、ちょうど目標までの距離だったね。', `${W.n}粒で、ちょうど目標に止まったね。`, '数えたとおり、目標でぴたっと止まったの。']) : `いい線！ 目標まであと${Math.abs(W.n - t)}つずれたけど、ほとんどぴったり。金の丸の穴なら、ちょうど止まったんだ。`; }
-      const a = plus(W, null), more = own !== A ? ' 金の丸の穴なら、もう少し得できたね。' : '';
-      if (!a) return `${p} 目先の得は小さいけど、${deep}なんだ。` + more;
-      return pk([`${p} その手なら、${a}から。`, `${p} ${a}んだ〜。`, `${p} ${a}のが大きいね。`], 0) + more; };
-    const ng = u0 => { const u = alt(u0); if (u == null) return `金の丸の穴が正解。${deep}なの。`; const G = FF(u) || FA;
-      if (g === 'sow') { const t = dist(FA.k, P.target); return why(G, u) + ` 金の丸の穴は${FA.n}粒で、目標までちょうど${t}つなんだ。`; }
-      const a = plus(FA, G); return why(G, u) + ' ' + (a ? pk(['金の丸の穴なら、', '金の丸の穴だと、'], 1) + a + pk(['から。', 'んだ。'], 2) : `金の丸の穴は、${deep}なの。`); };
-    return { ask: pick(A0), hintTx: H.length ? pick(H) : '', good, ng, own: true };
+    const deepG = exact ? ['さいごまで読み切ると、これがいちばん差がつく手なんだ。', 'おしまいまで数えると、これが最善なの。', '数えきったら、いちばん多く残るのがこの手！', 'さいごの数え合いで、いちばん得するのがこれ。', '読みきれてるね！ これがいちばん差がつくの。']
+      : ['目先の得は小さいけど、何手か先まで数えるといちばん種が増える手なんだ。', 'すぐには入らなくても、先まで見るといちばん得なの。', 'あとから効いてくる手！ 先のかせぎがいちばん多いの。', '今は地味でも、数手先でいちばん種が集まるの。', '先を見すえた一手！ これがいちばん伸びるの。'];
+    const deepN = exact ? ['金の丸の穴は、おしまいまで数えていちばん差がつく手なの。', '正解は金の丸。さいごの数え合いでいちばん多く残るの。', '金の丸をまけば、読みきったときの差がいちばん大きいの。', '金の丸の穴だと、おしまいの差がいちばん開くんだ。', 'ここは金の丸！ 数えきると、それがいちばん得なの。']
+      : ['金の丸の穴は、何手か先まで数えるといちばん種が増える手なの。', '正解は金の丸。少し先まで見ると、いちばん得なの。', '金の丸をまけば、先のかせぎがいちばん多くなるんだ。', '金の丸の穴だと、数手先でいちばん種が集まるの。', 'ここは金の丸！ あとから効いてくる手なんだ。'];
+    const goldN = a => v([`金の丸の穴なら、${a}から。`, `正解は金の丸。${a}の。`, `金の丸をまけば、${a}んだ。`, `金の丸の穴だと、${a}ところだったの。`, `ここは金の丸！ ${a}手なの。`]);
+    const bodyG = a => v([`その手なら、${a}から！`, `${a}のが大きいね。`, `${a}んだ〜。`, `それで${a}の！`, `${a}手、見つけたね！`]);
+    const pushOn = (i + n) % 2 === 0;
+    const alt = u => { if (u != null && !right(u) && sc[u] != null) return u; const W = wrongs().sort((x, y) => sc[y] - sc[x]); for (const x of W) { const Q = FF(x); if (Q && !why(Q, x).weak) return x; } return W[0]; };
+    const good = u => { const own = u != null && right(u) ? u : A, W = FF(own) || FA, p = VO.cheer(i), tail = pushOn ? ' ' + VO.push(i) : '';
+      if (g === 'sow') { const t = dist(W.k, P.target); return W.n === t ? p + ' ' + v(['種の数が、ちょうど目標までの距離だったね。', `${W.n}粒で、ぴたっと目標に止まった！`, '数えたとおり、さいごの1粒が目標に入ったの。', `目標まで${t}つ、種も${W.n}粒。ぴったりだね！`, 'きれいに目標でストップ！ 数え方もばっちり。']) + tail
+        : `いい線！ 目標まであと${Math.abs(W.n - t)}つずれたけど、ほとんどぴったり。金の丸の穴なら、ちょうど止まったんだ。` + tail; }
+      const a = plus(W, null, 'G'), more = own !== A ? ' ' + v(['金の丸なら、もう少し得できたね。', '金の丸ならもうちょっと多かったの。', 'いちばんは金の丸だけど、十分いい手！', '金の丸だと、さらに少し得なんだ。', '金の丸なら、あと少し上積みできたの。']) : '';
+      return p + ' ' + (a ? bodyG(a) : v(deepG)) + more + tail; };
+    const ng = u0 => { const u = alt(u0), sf = VO.soft(i); if (u == null) return sf + ' ' + v(deepN); const G = FF(u) || FA;
+      if (g === 'sow') { const t = dist(FA.k, P.target), m = FA.n; return sf + ' ' + why(G, u).t + ' ' + v([`金の丸の穴は${m}粒で、目標までちょうど${t}つなんだ。`, `金の丸なら${m}粒。目標までの${t}つとぴったり同じなの。`, `正解は金の丸。${t}つ先の目標に、${m}粒でちょうど届くの。`, `金の丸の${m}粒なら、さいごの1粒が目標に落ちるんだ。`, `ここは金の丸！ 目標まで${t}つ、種も${m}粒。`]); }
+      const a = plus(FA, G, 'N'); return sf + ' ' + why(G, u).t + ' ' + (a ? goldN(a) : v(deepN)); };
+    const ask = pick(A0); let hintTx = i < H.length ? H[i] : GH.length ? GH[(i - H.length) % GH.length] : '';
+    if (/かな？$/.test(ask)) hintTx = hintTx.replace(/かな？$/, '？');   // (no かな？ right after a かな？)
+    return { ask, hintTx, good, ng, own: true };
   }
   const MANCALA = {
     LKEY: 'aicoding-mancala-v1-lessons', data: null, I: null,
@@ -5813,7 +5879,7 @@
             return o; };
           return { pos: { spec: { b: P.b.slice(), rules: R, side: 0 }, me: 1, marks: base }, kind: 'best', P, base, hintMk, sow: s.id === 'sow', ans: P.best, ask: T('goal'), hintTx: T('hint'), hint: null, why: '',
             good: () => T('why', sp), ng: () => this.tx('fb.answerIs', lang, { m: MCM('ok', lang) }) + ' ' + T('why', sp) };
-        }).map((o, i) => { if (lang === 'ja' && window.MancalaEngine) try { Object.assign(o, mcLsJa(window.MancalaEngine, s, o.P, i, R, (P, k) => this.points(P, k)) || {}); } catch (e) { console.warn('[lessons3d] mancala lesson', e); } return o; }),   // (2026-11-21 lesson loop: マンカラビ's question, hint, why / what yours misses)
+        }).map((o, i) => { if (lang === 'ja' && window.MancalaEngine) try { Object.assign(o, mcLsJa(window.MancalaEngine, s, o.P, i, R, (P, k) => this.points(P, k), +key) || {}); } catch (e) { console.warn('[lessons3d] mancala lesson', e); } return o; }),   // (2026-11-21 lesson loop: マンカラビ's question, hint, why / what yours misses)
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= max * .75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
     },
     points(P, k) {   // (= mancala/app.js problemPoints)
