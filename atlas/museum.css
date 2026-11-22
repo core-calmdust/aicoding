@@ -349,3 +349,9 @@ html.exv-open{overflow:hidden}
 .expa span{white-space:nowrap}
 .expa[data-k=presign].ask{background:rgba(190,70,60,.28);color:#ffd9cf}
 .expa[data-k=pstop]{color:#cdb58a}
+/* a long board turned lengthwise for a phone held sideways (.exv-rot, museum/play.js): the bar runs down the right edge and the buttons down the left,
+   turned a quarter so they read the right way up once the phone is turned (its left edge toward you) */
+.exv-rot .exhud{left:auto!important;right:30px!important;top:50%;margin:0!important;width:max-content!important;max-width:none!important;transform:translate(50%,-50%) rotate(90deg)!important;flex-wrap:nowrap}
+.exv-rot .exhud .hm:not(:empty){order:0}
+.exv-rot .expcard{right:auto;left:44px;bottom:auto!important;top:50%;transform:translate(-50%,-50%) rotate(90deg)}
+html.exv-rot .urtoast{rotate:90deg}

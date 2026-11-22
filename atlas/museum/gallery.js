@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 107;
+  const V = 110;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -33,7 +33,7 @@
     { id: 'kofukuji', game: 'shogi', cm: 1, view: [0, .95, .78], lock: { game: 'shogi', ach: 3 } },   // (spots: from the model's userData)
   ];
   const T = l => (window.MUSEUM_GAL_T && (MUSEUM_GAL_T[l] || MUSEUM_GAL_T.en)) || {};
-  const PLAY = { ballinderry: { game: 'tafl', levels: 30 }, senet: { game: 'senet', levels: 20, long: true }, shosoin: { game: 'go', levels: 37 }, sugoroku: { game: 'sugoroku', levels: 20, long: true } };   // (levels: the game's own count — the names come from its adapter once it has loaded)   // 所蔵品で遊ぶ (2026-11-22): the exhibits that can be played on, and the game (and board size) that plays them
+  const PLAY = { ballinderry: { game: 'tafl', levels: 30, long: true }, senet: { game: 'senet', levels: 20, long: true }, shosoin: { game: 'go', levels: 37 }, sugoroku: { game: 'sugoroku', levels: 20, long: true } };   // (levels: the game's own count — the names come from its adapter once it has loaded)   // 所蔵品で遊ぶ (2026-11-22): the exhibits that can be played on, and the game (and board size) that plays them
   const ui = (l, k) => { const a = T(l).ui || {}, b = T('en').ui || {}; return a[k] != null ? a[k] : (b[k] != null ? b[k] : k); };
   const ex = (l, id) => Object.assign({}, (T('en').ex || {})[id] || {}, (T(l).ex || {})[id] || {});
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -338,6 +338,10 @@
       const now = performance.now(); if (pts.size === 1 && now - tap < 320 && V3.home && !V3.playing) { tween(V3.home); } tap = now; go(); };
     const move = e => { if (!pts.has(e.pointerId)) return; const p = pts.get(e.pointerId), dx = e.clientX - p[0], dy = e.clientY - p[1]; pts.set(e.pointerId, [e.clientX, e.clientY]);
       if (pts.size === 2) { const a = [...pts.values()], dd = Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]); V3.sph.d = clampD(d0 * pinch / Math.max(1, dd)); }
+      else if (V3.playing) {   // a game: a slide moves the board sideways (along the screen's width — or its height while the board is turned for a phone held sideways), a tap stays a move
+        V3.dragD = (V3.dragD || 0) + Math.abs(dx) + Math.abs(dy); if (V3.dragD > 8) V3.dragEnd = performance.now();
+        if (V3.tgtBase && V3.panLim && V3.dragD > 8) { const k = 2 * V3.sph.d * Math.tan(V3.cam.fov * Math.PI / 360) / Math.max(1, el.clientHeight), y = V3.sph.yaw, Y = V3.panAxis === 'y';
+          V3.panOff = Math.max(-V3.panLim, Math.min(V3.panLim, (V3.panOff || 0) + (Y ? dy : -dx) * k)); V3.tgt.copy(V3.tgtBase).add(new window.THREE.Vector3(Y ? -Math.sin(y) : Math.cos(y), 0, Y ? -Math.cos(y) : -Math.sin(y)).multiplyScalar(V3.panOff)); } }
       else if (!V3.playing) { V3.dragD = (V3.dragD || 0) + Math.abs(dx) + Math.abs(dy); if (V3.dragD > 8) V3.dragEnd = performance.now(); const k = 5.5 / Math.max(300, el.clientWidth); V3.vel.yaw = -dx * k; V3.vel.pit = dy * k; V3.sph.yaw += V3.vel.yaw; V3.sph.pit += V3.vel.pit; }
       go(); };
     const up = e => { pts.delete(e.pointerId); if (!pts.size) { V3.drag = false; go(); } };
