@@ -303,9 +303,10 @@ button{font:inherit;color:inherit;cursor:pointer}
   /* skills: big buttons along the bottom, scrolled sideways */
   #dock{left:0;right:0;bottom:0;transform:none;justify-content:flex-start;overflow-x:auto;scrollbar-width:none;gap:6px;padding:6px 8px calc(8px + var(--sb));background:rgba(3,8,13,.9);border-top:1px solid var(--brass2);max-width:none}
   #dock::-webkit-scrollbar{display:none}#dock:empty{display:none}
-  .sk{flex:none;width:auto;min-width:124px;height:58px;padding:0 12px 0 56px;align-items:flex-start;justify-content:center;gap:1px}.sk .ring{top:50%;left:10px;width:38px;height:38px;transform:translateY(-50%);-webkit-mask:radial-gradient(circle,transparent 16px,#000 17px);mask:radial-gradient(circle,transparent 16px,#000 17px)}.sk .ic{top:50%;left:29px;width:20px;height:20px;transform:translate(-50%,-50%)}
+  #dock{pointer-events:auto;touch-action:pan-x;overscroll-behavior-x:contain}#strip{touch-action:pan-x}   /* (2026-11-23 the user: the skills scroll sideways — the dock itself must take the touch) */
+  .sk{flex:none;width:150px;min-width:0;height:58px;padding:0 12px 0 56px;align-items:flex-start;justify-content:center;gap:1px}.sk .ring{top:50%;left:10px;width:38px;height:38px;transform:translateY(-50%);-webkit-mask:radial-gradient(circle,transparent 16px,#000 17px);mask:radial-gradient(circle,transparent 16px,#000 17px)}.sk .ic{top:50%;left:29px;width:20px;height:20px;transform:translate(-50%,-50%)}
   .sk.armed .ring{animation:spin2 2.4s linear infinite}@keyframes spin2{to{transform:translateY(-50%) rotate(360deg)}}
-  .sk b{font-size:15px;line-height:1.25}.sk small{font-size:12.5px;letter-spacing:.06em;line-height:1.25}.sk.armed{transform:none}.sk.ready:hover{transform:none}
+  .sk b{font-size:15px;line-height:1.25;max-width:100%;overflow:hidden;text-overflow:ellipsis}.sk small{max-width:100%}   /* (2026-11-23 the user: every skill box one size) */.sk small{font-size:12.5px;letter-spacing:.06em;line-height:1.25}.sk.armed{transform:none}.sk.ready:hover{transform:none}
   /* an armed skill: a compact bar in the fleet strip's place (the sea stays clear) */
   #skTip.arm{left:8px!important;right:8px;width:auto!important;display:flex;align-items:center;gap:10px;padding:6px 44px 6px 8px;pointer-events:auto;z-index:6;background:rgba(10,22,33,.97);border:1px solid var(--gold);filter:none}
   #skTip.arm .reach{flex:none;width:auto;height:100%;max-height:72px;aspect-ratio:1}
@@ -371,10 +372,77 @@ button{font:inherit;color:inherit;cursor:pointer}
   .tagline{font-size:14px;letter-spacing:.04em;line-height:1.8;max-width:330px}.menu{margin-top:26px}
   .tfoot{left:6vw;right:6vw;bottom:calc(18px + var(--sb));gap:12px;letter-spacing:.14em;font-size:13px}.tfoot span:not(.alpha){display:none}.tfoot a{white-space:nowrap;padding:10px 0}
   #tLang{height:44px}
+  /* (2026-11-23 the user) cards two to a row: compact, nothing left empty — cost · name, then the reach map beside the ship,
+     the skill, three lines of text, the state. Same in the draft, the archive and the fleets sheet. */
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));padding:4px 8px 12px;gap:6px}
+  .card{grid-template-columns:50px minmax(0,1fr);grid-template-areas:"top top" "rch img" "skl skl" "dsc dsc" "ft ft";grid-template-rows:auto 50px auto auto auto;align-content:start;column-gap:8px;padding:9px 9px 8px;min-height:auto;height:auto}
+  .card .top{margin-bottom:6px;gap:6px;padding-right:8px}.card .cost{width:26px;height:26px;font-size:16px}.card b{font-size:15px;letter-spacing:.02em}
+  .card .len{display:none}.card .pool{font-size:12.5px}.card .role{top:10px;right:8px;width:5px;height:5px}
+  .card .art .reach{width:50px;height:50px}.card .art img{height:50px;object-position:center}
+  .card .skl{margin-top:6px;font-size:13.5px;gap:4px;align-self:auto}.card .skl svg{width:14px;height:14px;flex:none}.card .skl small{display:none}
+  .card .desc{margin-top:4px;font-size:12.5px;line-height:1.5!important;min-height:calc(1.5em * 3);-webkit-line-clamp:3;letter-spacing:.01em}
+  .card .foot{margin-top:6px;height:auto;min-height:18px;line-height:18px;white-space:normal}.card .foot.why,.card .foot.badge{font-size:12px}.card .foot.badge{padding:0 6px}
+  .card.sel{transform:none}
+  /* the picks: one row — a switch (ours ⇄ theirs) and that side's ships; the ships open the fleets list */
+  .picks{display:flex!important;align-items:center;gap:6px}
+  .picks h5{display:none!important}
+  #pkSw{display:inline-flex!important}
+  .picks:not(.foe) #pkFoe,.picks.foe #pkMine{display:none}
+  .picks .chips{flex:1;min-width:0;cursor:pointer}
 }
+@media (max-width:339px){ .grid{grid-template-columns:1fr} }
+.card .rl{display:none}.chip .rl{display:none}
+@media (max-width:760px), (max-height:520px){
+  /* (2026-11-23 the user) draft and archive on phones: small tiles — the ship, its name under it, its role (attack / scouting / defence);
+     a tap opens the whole card (#cardPop) */
+  :is(#drGrid,#arGrid){grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  :is(#drGrid,#arGrid) .card{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px 6px;text-align:center}
+  :is(#drGrid,#arGrid) .card .top{display:contents}
+  :is(#drGrid,#arGrid) .card .cost{position:absolute;left:5px;top:5px;width:22px;height:22px;font-size:13.5px;z-index:1}
+  :is(#drGrid,#arGrid) .card .pool{position:absolute;right:6px;top:4px;font-size:11.5px}
+  :is(#drGrid,#arGrid) .card .art{display:block;order:1;width:100%;height:50px;margin:10px 0 0;padding:0;border:0;background:none}
+  :is(#drGrid,#arGrid) .card .art .reach{display:none}
+  :is(#drGrid,#arGrid) .card .art img{display:block;width:100%;height:50px;object-fit:contain;object-position:center}
+  :is(#drGrid,#arGrid) .card b{order:2;flex:none;width:100%;font-size:13.5px;letter-spacing:0;text-align:center}
+  :is(#drGrid,#arGrid) .card .rl{display:inline-flex;order:3;align-items:center;gap:4px;font-size:11px;letter-spacing:.04em;color:var(--mute)}
+  :is(#drGrid,#arGrid) .card .rl::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+  :is(#drGrid,#arGrid) .card.r0 .rl{color:#ff9f7a}:is(#drGrid,#arGrid) .card.r1 .rl{color:#7fd8ff}:is(#drGrid,#arGrid) .card.r2 .rl{color:#9ff0c8}:is(#drGrid,#arGrid) .card.r3 .rl{color:#c9c9d6}
+  :is(#drGrid,#arGrid) .card .role,:is(#drGrid,#arGrid) .card .skl,:is(#drGrid,#arGrid) .card .desc,:is(#drGrid,#arGrid) .card .len{display:none}
+  :is(#drGrid,#arGrid) .card .foot{order:4;align-self:center;margin-top:2px;min-height:16px;height:auto;line-height:16px;font-size:11px!important;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  /* the picks: tiles too */
+  .picks .chip{flex-direction:column;justify-content:center;gap:1px;width:74px;height:62px;padding:3px 2px;cursor:pointer}
+  .picks .chip img{width:62px;height:24px}.picks .chip .nm{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;line-height:1.2}
+  .picks .chip .rl{display:inline-flex;align-items:center;gap:3px;font-size:10px;line-height:1.1;color:var(--mute)}.picks .chip .rl::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+  .picks .chip.r0 .rl{color:#ff9f7a}.picks .chip.r1 .rl{color:#7fd8ff}.picks .chip.r2 .rl{color:#9ff0c8}.picks .chip.r3 .rl{color:#c9c9d6}
+  .picks #pkSw{align-self:stretch;height:auto;flex-direction:column;justify-content:center;gap:2px;width:58px;padding:0 4px;font-size:12px;text-align:center;white-space:normal;line-height:1.25}
+}
+/* deployment (phones): the tapped ship's skill in one line above the strip; the ship lights up on the sea */
+#spotTip{position:fixed;left:8px;right:8px;z-index:6;display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;background:rgba(10,18,26,.96);border:1px solid rgba(214,222,228,.4);border-left:3px solid var(--acc);font-size:13px;white-space:nowrap;overflow:hidden;pointer-events:none}
+#spotTip b{flex:none;font-family:var(--jp);font-size:13.5px;color:#fff}
+#spotTip .sn{flex:none;display:inline-flex;align-items:center;gap:4px;color:var(--gold2)}#spotTip .sn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6}
+#spotTip .tx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;color:#c3cbcc}
+#strip .fi.on{border-color:var(--acc)!important;background:rgba(166,214,92,.14)}
+/* one card, large: the detail of a tile (phones) */
+#cardPop{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:16px 14px calc(16px + env(safe-area-inset-bottom,0px));background:rgba(2,5,8,.72)}
+#cardPop .cp-in{width:min(380px,100%)}
+#cardPop .card{display:grid;grid-template-columns:92px minmax(0,1fr);grid-template-areas:"top top" "rch img" "skl skl" "dsc dsc" "ft ft";column-gap:12px;width:100%;padding:14px 14px 12px;background:#0b141d;cursor:default;transform:none}
+#cardPop .card .top{grid-area:top;margin-bottom:10px;display:flex}#cardPop .card .art{display:contents}
+#cardPop .card .art .reach{grid-area:rch;width:92px;height:92px}#cardPop .card .art img{grid-area:img;width:100%;height:92px;object-fit:contain}
+#cardPop .card b{font-size:19px}#cardPop .card .cost{width:32px;height:32px;font-size:19px}#cardPop .card .len{display:flex}
+#cardPop .card .rl{display:inline-flex;align-items:center;gap:4px;flex:none;font-size:12.5px;color:var(--mute)}#cardPop .card .rl::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}#cardPop .card .top b{flex:0 1 auto}#cardPop .card .top .len{margin-left:auto}#cardPop .card .role{display:none}
+#cardPop .card.r0 .rl{color:#ff9f7a}#cardPop .card.r1 .rl{color:#7fd8ff}#cardPop .card.r2 .rl{color:#9ff0c8}#cardPop .card.r3 .rl{color:#c9c9d6}
+#cardPop .card .top{padding-right:14px}
+#cardPop .card .skl{grid-area:skl;margin-top:10px;font-size:16px}#cardPop .card .skl small{display:inline;font-size:13px}
+#cardPop .card .desc{grid-area:dsc;-webkit-line-clamp:unset;display:block;min-height:0;margin-top:6px;font-size:15px;line-height:1.7!important;color:#d3d9d9}
+#cardPop .card .foot{grid-area:ft;margin-top:8px;height:auto;min-height:20px}
+#cardPop .cp-acts{display:flex;gap:8px;margin-top:8px}#cardPop .cp-acts .cmd{flex:1;height:50px;font-size:16px}
+#pkSw{display:none;flex:none;align-items:center;gap:6px;height:40px;padding:0 10px;border:1px solid var(--brass);background:rgba(12,18,24,.66);font-family:var(--jp);font-weight:700;font-size:13.5px;letter-spacing:.06em;color:var(--gold2);white-space:nowrap}
+#pkSw svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#pkSw u{text-decoration:none;font-family:var(--num);font-size:14px;opacity:.7}
+.picks.foe #pkSw{border-color:rgba(255,122,92,.55);color:#ffb19c}
 @media (max-width:760px) and (max-height:740px){
   #strip{padding:4px;gap:4px}#strip .fi{width:84px;padding:3px 3px 4px}#strip .fi img{width:74px;height:26px}#strip .fi .tg{display:none}
-  .sk{height:52px;min-width:116px;padding-left:50px}.sk .ring{width:32px;height:32px;-webkit-mask:radial-gradient(circle,transparent 13px,#000 14px);mask:radial-gradient(circle,transparent 13px,#000 14px)}.sk .ic{left:26px;width:17px;height:17px}.sk b{font-size:14px}
+  .sk{height:52px;width:140px;padding-left:50px}.sk .ring{width:32px;height:32px;-webkit-mask:radial-gradient(circle,transparent 13px,#000 14px);mask:radial-gradient(circle,transparent 13px,#000 14px)}.sk .ic{left:26px;width:17px;height:17px}.sk b{font-size:14px}
   #deployBar p{display:none}
   .vt{height:40px}
 }
@@ -446,7 +514,7 @@ button{font:inherit;color:inherit;cursor:pointer}
   <div class="dr">
     <div class="dr-cards"><div class="tabs" id="drTabs"></div><div class="grid" id="drGrid"></div></div>
     <div class="show" id="drShow"><canvas id="pv"></canvas><div class="info"><h3 id="pvName"></h3><div class="meta" id="pvMeta"></div><div class="sd" id="pvSkill"></div></div>
-      <div class="picks"><h5 data-t="d.mine"></h5><div class="chips" id="pkMine"></div><h5 class="foe" data-t="d.foe"></h5><div class="chips" id="pkFoe"></div></div></div>
+      <div class="picks" id="pkRow"><button id="pkSw" type="button"><svg viewBox="0 0 24 24"><path d="M7 7h12l-3-3M17 17H5l3 3"/></svg><span id="pkSwT"></span><u id="pkSwN"></u></button><h5 data-t="d.mine"></h5><div class="chips" id="pkMine"></div><h5 class="foe" data-t="d.foe"></h5><div class="chips" id="pkFoe"></div></div></div>
   </div>
   <div class="sh-foot"><div class="budget"><span class="num"><span data-t="d.budget"></span> <b id="bgV">20</b></span><div class="gauge"><i id="bgF"></i><u id="bgS"></u></div><span class="num" id="bgN"></span></div><button class="cmd prime" id="drOk"><span id="drOkT"></span></button></div>
 </div></section>
@@ -492,6 +560,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 (function () { const fit = () => document.querySelectorAll('#scrTitle .logo').forEach(el => { el.style.fontSize = ''; const w = el.clientWidth, sw = el.scrollWidth;
   if (w && sw > w) el.style.fontSize = (parseFloat(getComputedStyle(el).fontSize) * w / sw * .98) + 'px'; });
   addEventListener('resize', fit); addEventListener('load', fit); if (document.fonts) document.fonts.ready.then(fit); new MutationObserver(fit).observe(document.getElementById('scrTitle'), { attributes: true, attributeFilter: ['class'] }); fit(); })();</script>
+<div id="spotTip" class="hide"></div>
+<div id="cardPop" class="hide"><div class="cp-in"><div id="cpCard"></div><div class="cp-acts"><button class="cmd" id="cpClose" type="button"><span id="cpCloseT"></span></button><button class="cmd prime" id="cpPick" type="button"><span id="cpPickT"></span></button></div></div></div>
 <div id="load"><div><div class="l">DREADNOUGHTS</div><div class="pb"></div><div class="s"><span>LOADING THE FLEET</span><i>●</i></div></div></div>
 <div id="nogl" class="hide"></div>
 
@@ -500,7 +570,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 <script src="../seabattle/engine.js?v=34"></script>
 <script src="../atlas/vendor/three-r186.min.js?v=1"></script>
 <script src="../seabattle/ships3d.js?v=2"></script>
-<script src="world.js?v=3"></script>
-<script src="game.js?v=5"></script>
+<script src="world.js?v=5"></script>
+<script src="game.js?v=10"></script>
 </body>
 </html>
