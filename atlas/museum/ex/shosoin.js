@@ -127,11 +127,15 @@
       ];
       const PAL = [C.iv, C.red, C.grn, '#d8b878'];
       // the figures in ivory with their dyes, and a dark outline round each (the joint of the inlay)
+      // ivory tinted green and red where the inlay is stained, the engraved lines filled dark (plain numbers, no little arrays: this runs over
+      // more than a million pixels each time the case opens)
+      const tintPx = d => { for (let i = 0; i < d.length; i += 4) { const gr = Math.min(1, d[i + 1] / 255 * 1.5), rd = Math.min(1, d[i + 2] / 255 * 1.4), ln = d[i] / 255 * .85;
+        let r = 222, g2 = 206, b = 168; r += (96 - r) * gr; g2 += (140 - g2) * gr; b += (108 - b) * gr; r += (206 - r) * rd; g2 += (112 - g2) * rd; b += (78 - b) * rd; r += (84 - r) * ln; g2 += (46 - g2) * ln; b += (28 - b) * ln; d[i] = r; d[i + 1] = g2; d[i + 2] = b; } };
       let figC = null; if (FIG) { figC = document.createElement('canvas'); figC.width = FIG.width; figC.height = FIG.height; const q = figC.getContext('2d'); q.drawImage(FIG, 0, 0); const im = q.getImageData(0, 0, figC.width, figC.height), d = im.data;
-        for (let i = 0; i < d.length; i += 4) { const gr = Math.min(1, d[i + 1] / 255 * 1.5), rd = Math.min(1, d[i + 2] / 255 * 1.4); let c = [222, 206, 168]; c = c.map((v, k) => v + ([96, 140, 108][k] - v) * gr); c = c.map((v, k) => v + ([206, 112, 78][k] - v) * rd); { const ln = d[i] / 255 * .85; c = c.map((v, k) => v + ([84, 46, 28][k] - v) * ln); }   /* the engraved lines, filled dark */ d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; } q.putImageData(im, 0, 0); }
+        tintPx(d); q.putImageData(im, 0, 0); }
       // the little figures on the legs and the post, from the same photographs (a strip of 8: two birds, a hill, two standing deer, a bird, a hill, a lying deer)
       const tint = im0 => { const c = document.createElement('canvas'); c.width = im0.width; c.height = im0.height; const q = c.getContext('2d'); q.drawImage(im0, 0, 0); const im = q.getImageData(0, 0, c.width, c.height), d = im.data;
-        for (let i = 0; i < d.length; i += 4) { const gr = Math.min(1, d[i + 1] / 255 * 1.5), rd = Math.min(1, d[i + 2] / 255 * 1.4), ln = d[i] / 255 * .85; let cc = [222, 206, 168]; cc = cc.map((v, k) => v + ([96, 140, 108][k] - v) * gr); cc = cc.map((v, k) => v + ([206, 112, 78][k] - v) * rd); cc = cc.map((v, k) => v + ([84, 46, 28][k] - v) * ln); d[i] = cc[0]; d[i + 1] = cc[1]; d[i + 2] = cc[2]; } q.putImageData(im, 0, 0); return c; };
+        tintPx(d); q.putImageData(im, 0, 0); return c; };
       const legC = LEGS ? tint(LEGS) : null, LEGCM = [2.29, 2.18, 1.84, 3.1, 3.1, 2.36, 1.77, 3.35];
       const sprite = (g, k, x, y, s, flip) => { const sz = LEGCM[k] * s; g.save(); g.translate(x, y); if (flip) g.scale(-1, 1); g.shadowColor = 'rgba(14,6,3,.9)'; g.shadowBlur = 2; g.drawImage(legC, k * 128, 0, 128, 128, -sz / 2, -sz / 2, sz, sz); g.restore(); };
       const panelFig = (g, row, col, x, y, w2, h2) => { g.save(); g.shadowColor = 'rgba(14,6,3,.9)'; g.shadowBlur = 2.5; g.drawImage(figC, col * 512, row * 150, 512, 150, x, y, w2, h2); g.restore(); };
