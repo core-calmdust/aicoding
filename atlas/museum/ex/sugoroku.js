@@ -30,7 +30,7 @@
   const OPEN_S = [[15.4, 3.62], [15.6, 3.81], [16.11, 4.38], [17.37, 4.75], [18.63, 4.72], [19.89, 4.56], [21.15, 4.31], [22.42, 4.1], [23.68, 4], [24.94, 3.97], [26.2, 4.19], [26.86, 4.56], [27.47, 5.19], [27.97, 6.12], [28.27, 7.25], [28.41, 8.5], [28.41, 9.5], [28.27, 10.5], [28.07, 11.5], [27.72, 12.5], [27.26, 13.37], [26.71, 14.12], [25.95, 14.69], [25.04, 15.4], [24.18, 15.85], [20.2, 15.85], [15.45, 15.85], [10.6, 15.85], [6.56, 15.85], [5.65, 15.5], [4.95, 14.87], [4.14, 14], [3.53, 13], [3.08, 12], [2.78, 11], [2.63, 10], [2.57, 9], [2.63, 8], [2.78, 6.87], [3.13, 5.75], [3.53, 5], [4.04, 4.5], [4.54, 4.19], [5.05, 3.97], [6.06, 3.79], [7.07, 3.75], [8.08, 3.81], [9.09, 3.94], [10.1, 4.12], [11.11, 4.31], [12.12, 4.44], [13.13, 4.5], [14.14, 4.38], [14.64, 4.12], [15.05, 3.75]];
   (window.AtlasEx = window.AtlasEx || {}).sugoroku = {
     ready: () => { const get = (f, set) => new Promise(res => { const im = new Image(); im.onload = () => { set(im); res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/' + f, HERE).href; setTimeout(res, 8000); });
-      return Promise.all([get('sugoroku-sides.webp?v=2', im => { SIDE = im; }), get('sugoroku-top.webp?v=4', im => { TOP = im; })]); },
+      return Promise.all([get('sugoroku-sides.webp?v=2', im => { SIDE = im; }), get('sugoroku-top.webp?v=5', im => { TOP = im; })]); },
     build(TT, X, K) {
       const G = new TT.Group();
       const L = 54.3, W = 31.0, H = 16.7, RAIL = .8, BASE = 13.3, LIN = .9, EDGE = H - BASE, RIM = 1.9, RT = .7;   // (RIM: the wall round the field stands upright, about 1.9 high — the overall photograph)   // LIN: the strip of rosettes at the top of the base
@@ -252,10 +252,20 @@
       [[L, 1.8, 0, W / 2 - .9, 0], [L, 1.8, 0, -W / 2 + .9, Math.PI]].forEach(([len, d, x, z]) => add(new TT.BoxGeometry(len, RAIL, d), [z > 0 ? rA : rB, z > 0 ? rB : rA, railIn, railIn, z > 0 ? rL : railIn, z > 0 ? railIn : rL], x, RAIL / 2, z));
       [[1.8, W - 3.6, L / 2 - .9, 0], [1.8, W - 3.6, -L / 2 + .9, 0]].forEach(([wd, d, x]) => add(new TT.BoxGeometry(wd, RAIL, d), [x > 0 ? rW : railIn, x > 0 ? railIn : rW, railIn, railIn, railIn, railIn], x, RAIL / 2, 0));
       /* ---------- two ivory dice (双六頭, ~1.35 cm; opposite faces add up to 7) ---------- */
-      const pipT = n => K.tex(128, 128, (g, w) => { g.fillStyle = '#efe3c6'; g.fillRect(0, 0, w, w); g.fillStyle = n === 1 ? '#a8322a' : '#2a1a10';
-        const P = { 1: [[.5, .5]], 2: [[.28, .28], [.72, .72]], 3: [[.25, .25], [.5, .5], [.75, .75]], 4: [[.28, .28], [.72, .28], [.28, .72], [.72, .72]], 5: [[.25, .25], [.75, .25], [.5, .5], [.25, .75], [.75, .75]], 6: [[.28, .22], [.72, .22], [.28, .5], [.72, .5], [.28, .78], [.72, .78]] }[n];
-        P.forEach(([x, y]) => { g.beginPath(); g.arc(x * w, y * w, w * (n === 1 ? .14 : .09), 0, 6.29); g.fill(); }); });
-      const dieM = [1, 6, 2, 5, 3, 4].map(n => K.mat({ map: pipT(n), color: '#ffffff', roughness: .38, clearcoat: .3 }));   // +x 1 / −x 6, +y 2 / −y 5, +z 3 / −z 4
+      // (2026-11-23, after the Shōsōin's photograph of its 双六頭, 北倉17: old ivory gone a warm tan, darker and rubbed at the edges and corners,
+      //  the pips drilled hollows — most still dark with their filling, the one red; a bump map sinks them)
+      const PIPS = { 1: [[.5, .5]], 2: [[.28, .28], [.72, .72]], 3: [[.25, .25], [.5, .5], [.75, .75]], 4: [[.28, .28], [.72, .28], [.28, .72], [.72, .72]], 5: [[.25, .25], [.75, .25], [.5, .5], [.25, .75], [.75, .75]], 6: [[.28, .22], [.72, .22], [.28, .5], [.72, .5], [.28, .78], [.72, .78]] };
+      const pipT = (n, bump) => K.tex(128, 128, (g, w) => { const nz = K.noise(60 + n), img = g.createImageData(w, w), d = img.data;
+        for (let y = 0; y < w; y++) for (let x = 0; x < w; x++) { const i = (y * w + x) * 4, e = Math.min(x, y, w - 1 - x, w - 1 - y) / w, edge = Math.max(0, 1 - e / .09), c = Math.max(0, 1 - Math.hypot(Math.min(x, w - 1 - x), Math.min(y, w - 1 - y)) / (w * .16));
+          if (bump) { const v = 200 - edge * edge * 110 - c * 60; d[i] = d[i + 1] = d[i + 2] = v; }
+          else { const k = (.9 + nz(x / 26, y / 26, 3) * .22 + (nz(x / 3, y / 9, 2) - .5) * .08) * (1 - edge * .2 - c * .18); d[i] = 178 * k; d[i + 1] = 118 * k; d[i + 2] = 62 * k; }
+          d[i + 3] = 255; }
+        g.putImageData(img, 0, 0);
+        PIPS[n].forEach(([x, y], q) => { const r = w * (n === 1 ? .12 : .085); g.beginPath(); g.arc(x * w, y * w, r, 0, 6.29);
+          if (bump) { const gr = g.createRadialGradient(x * w, y * w, 0, x * w, y * w, r); gr.addColorStop(0, '#000'); gr.addColorStop(.75, '#202020'); gr.addColorStop(1, '#b0b0b0'); g.fillStyle = gr; }
+          else g.fillStyle = n === 1 ? '#9c2a22' : (n * 7 + q * 3) % 5 === 0 ? '#7a5632' : '#22140c';   // (here and there the filling is lost: a bare hollow)
+          g.fill(); if (!bump) { g.strokeStyle = 'rgba(90,54,26,.7)'; g.lineWidth = w * .012; g.stroke(); } }); }, bump ? { data: true } : undefined);
+      const dieM = [1, 6, 2, 5, 3, 4].map(n => K.mat({ map: pipT(n), bumpMap: pipT(n, true), bumpScale: 1.6, color: '#ffffff', roughness: .58 }));   // +x 1 / −x 6, +y 2 / −y 5, +z 3 / −z 4
       const dieG = new TT.BoxGeometry(1.35, 1.35, 1.35), shown = [];
       [[4.5, -2.0, .4, .3], [7.0, -.6, -.7, 1.1]].forEach(([x, z, r1, r2]) => { const d = add(dieG, dieM, x, BASE + EDGE - RIM + .68, z); d.rotation.set(0, r1, 0); shown.push(d); });
       // for a game on this board (所蔵品で遊ぶ, atlas/museum/play.js): the field's height, the rows of points, the dice (the two laid out for show are put away)
