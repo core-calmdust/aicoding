@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 103;
+  const V = 107;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -75,13 +75,15 @@
     ov.innerHTML = `<div class="exstage"><canvas></canvas><div class="exspots"></div><div class="exhud" aria-live="polite"></div>${PLAY[id] ? `<div class="expcard"><b>${esc(ui(lang, 'play_' + id))}</b>
           <div class="expf"><span>${esc(ui(lang, 'p_level'))}</span><div class="expdd" data-k="plv" data-v="1"><button type="button" class="expdd-b" aria-haspopup="listbox"><b>Lv.1</b><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button><div class="expdd-l" role="listbox">${Array.from({ length: PLAY[id].levels }, (_, i) => `<button type="button" role="option" data-v="${i + 1}"${i ? '' : ' class="on"'}>Lv.${i + 1}</button>`).join('')}</div></div></div>
           <div class="expf"><span>${esc(ui(lang, 'p_side'))}</span><div class="expseg" data-k="pside" data-v="1"><button type="button" data-v="1" class="on">${esc(ui(lang, 'p_first'))}</button><button type="button" data-v="2">${esc(ui(lang, 'p_second'))}</button></div></div>
-          <button type="button" class="explay" data-k="play">${esc(ui(lang, 'p_start'))}</button><button type="button" class="explay stop" data-k="pstop" hidden>${esc(ui(lang, 'p_stop'))}</button>${PLAY[id].long ? `<button type="button" class="exturn" data-k="pturn" hidden title="${esc(ui(lang, 'p_orient'))}" aria-label="${esc(ui(lang, 'p_orient'))}"><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M3 9a6 6 0 0 1 4-5M3 9V5.5M3 9h3.5M21 15a6 6 0 0 1-4 5M21 15v3.5M21 15h-3.5"/></svg></button>` : ''}</div>` : ''}
+          <button type="button" class="explay" data-k="play">${esc(ui(lang, 'p_start'))}</button><div class="expacts" hidden>${[['pundo', 'p_undo', '<path d="M9 6 4 11l5 5"/><path d="M4 11h9.5a5.5 5.5 0 0 1 0 11H11"/>'], ['presign', 'p_resign', '<path d="M6 21V4"/><path d="M6 4h11l-2.5 4L17 12H6"/>'], ['phint', 'p_hint', '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>']]
+            .concat(PLAY[id].long ? [['pturn', 'p_orient', '<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M3 9a6 6 0 0 1 4-5M3 9V5.5M3 9h3.5M21 15a6 6 0 0 1-4 5M21 15v3.5M21 15h-3.5"/>', 'p_orientS']] : []).concat([['pstop', 'p_quit', '<path d="M6 6l12 12M18 6 6 18"/>']])
+            .map(([k, l, d, sl]) => `<button type="button" class="expa" data-k="${k}" title="${esc(ui(lang, l))}"><svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg><span>${esc(ui(lang, sl || l))}</span></button>`).join('')}</div></div>` : ''}
         <div class="exscale" aria-hidden="true" dir="ltr"><i></i><span>10 cm</span></div>
         <p class="exhint">${esc(ui(lang, phone() ? 'hintT' : 'hint'))}</p>
         <div class="exbtns"><button type="button" class="exb" data-k="spin" aria-label="${esc(ui(lang, 'spin'))}" title="${esc(ui(lang, 'spin'))}"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v4.5h-4.5"/></svg></button>${B0 && B0.flip ? `<button type="button" class="exb" data-k="flip" aria-label="${esc(ui(lang, 'flip'))}" title="${esc(ui(lang, 'flip'))}"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.7-5.6M20 12a8 8 0 0 1-13.7 5.6"/><path d="M18 3v4h-4M6 21v-4h4"/></svg></button>` : ''}<button type="button" class="exb" data-k="reset" aria-label="${esc(ui(lang, 'reset'))}" title="${esc(ui(lang, 'reset'))}"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button></div>
         <p class="exload">${esc(ui(lang, 'loading'))}</p></div>
       <aside class="exinfo"><button type="button" class="exclose" aria-label="${esc(ui(lang, 'close'))}"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
-        <div class="exscroll"><small class="exkind">${esc(ui(lang, 'collection'))}${e.lock ? ` · ${esc(ui(lang, 'special'))}` : ''}</small><h2>${esc(t.name || id)}</h2>${t.alt ? `<p class="exalt">${esc(t.alt)}</p>` : ''}
+        <div class="exscroll"><small class="exkind">${esc(ui(lang, 'collection'))}${e.lock ? ` · ${esc(ui(lang, 'special'))}` : ''}</small><h2>${esc(t.name || id)}</h2>${t.alt ? `<p class="exalt">${esc(t.alt)}</p>` : ''}${PLAY[id] ? `<button type="button" class="excfg" data-k="pcfg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg><span>${esc(ui(lang, 'p_start'))}</span><small>${esc(ui(lang, 'play_' + id))}</small></button>` : ''}
         <dl class="exfacts">${[['date', t.date], ['where', t.found], ['museum', t.museum ? t.museum + (t.no ? `（${t.no}）` : '') : ''], ['mat', t.mat], ['size', t.size]].filter(r => r[1]).map(([k, v]) => `<dt>${esc(ui(lang, k))}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
         ${(t.p || []).map(p => `<p class="exp">${esc(p)}</p>`).join('')}
         ${(t.spots || []).length ? `<h3>${esc(ui(lang, 'look'))}</h3><ol class="exlook">${t.spots.map((s, i) => `<li><button type="button" data-n="${i}"><u>${i + 1}</u><span><b>${esc(s[0])}</b>${esc(s[1])}</span></button></li>`).join('')}</ol>` : ''}
@@ -113,8 +115,19 @@
         if (window.AtlasLazy) AtlasLazy.need(P.game).then(() => { const ad = window.Atlas3D && Atlas3D[P.game]; if (!ad || !ad.levelInfo || !ov.isConnected) return; lvS.querySelectorAll('.expdd-l button').forEach(b => { try { const nm = ad.levelInfo(+b.dataset.v, lang).name; if (nm) b.textContent = nm; } catch (x) {} }); setDD(lvS, lvS.dataset.v); });
         try { const q = JSON.parse(localStorage.getItem(PK) || '{}')[id]; if (q) { setLv(q.lv); setSd(q.side); } } catch (x) {}
         const tt = k => ({ 'p.you': ui(lang, 'p_you'), 'p.ai': 'AI', 'p.turn': ui(lang, 'p_turn'), 'p.think': ui(lang, 'p_think'), 'res.win': ui(lang, 'p_win'), 'res.lose': ui(lang, 'p_lose'), 'res.draw': ui(lang, 'p_draw') })[k] || '';
-        const tb = ov.querySelector('[data-k="pturn"]'); if (tb) tb.onclick = () => { if (window.AtlasMuseumPlay) AtlasMuseumPlay.turn(); };   // (a long board: lengthwise / across)
-        const playing = on => { ov.classList.toggle('exv-play', on); pb.hidden = on; sb.hidden = !on; if (tb) tb.hidden = !on; lock = on; shut(); if (!on) hudEl.innerHTML = ''; };
+        // during a game the card is the game's own buttons, as in the portal's 3D games: 待った・投了・ヒント (the board's turn on a long board) and やめる
+        const acts = ov.querySelector('.expacts'), AB = k => acts.querySelector(`[data-k="${k}"]`), MP = () => window.AtlasMuseumPlay;
+        let poll = 0, sure = 0;
+        const syncActs = () => { const m = MP(); if (!m || !ov.isConnected) return; AB('pundo').disabled = !m.can('undo'); AB('phint').disabled = !m.can('hint'); AB('presign').disabled = !m.can('resign'); };
+        AB('pundo').onclick = () => { const m = MP(); if (m) m.act('undo'); syncActs(); };
+        AB('phint').onclick = () => { const m = MP(); if (m) m.act('hint'); syncActs(); };
+        AB('presign').onclick = () => { const b = AB('presign'), m = MP(); if (!m) return;   // (twice: the first tap asks)
+          if (!sure) { sure = setTimeout(() => { sure = 0; b.classList.remove('ask'); b.querySelector('span').textContent = ui(lang, 'p_resign'); }, 2600); b.classList.add('ask'); b.querySelector('span').textContent = ui(lang, 'p_sure'); return; }
+          clearTimeout(sure); sure = 0; b.classList.remove('ask'); b.querySelector('span').textContent = ui(lang, 'p_resign'); m.act('resign'); syncActs(); };
+        const tb = AB('pturn'); if (tb) tb.onclick = () => { if (MP()) MP().turn(); };   // (a long board: lengthwise / across)
+        // phones: the card stays out of the way until the play button at the top of the texts asks for it (tapping it again puts it away)
+        const cfg = ov.querySelector('[data-k="pcfg"]'); if (cfg) cfg.onclick = () => { const on = !ov.classList.contains('exv-cfg'); ov.classList.toggle('exv-cfg', on); cfg.classList.toggle('on', on); };
+        const playing = on => { ov.classList.remove('exv-cfg'); if (cfg) cfg.classList.remove('on'); ov.classList.toggle('exv-play', on); pb.hidden = on; acts.hidden = !on; clearInterval(poll); if (on) { syncActs(); poll = setInterval(syncActs, 350); } lock = on; shut(); if (!on) hudEl.innerHTML = ''; };
         sb.onclick = () => { if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); playing(false); };
         pb.onclick = () => { if (!V3 || !V3.obj) return; pb.disabled = true;
           try { const q = JSON.parse(localStorage.getItem(PK) || '{}'); q[id] = { lv: +lvS.dataset.v, side: +sdS.dataset.v }; localStorage.setItem(PK, JSON.stringify(q)); } catch (x) {}
@@ -289,7 +302,7 @@
       const k = F.t < .5 ? 2 * F.t * F.t : 1 - Math.pow(-2 * F.t + 2, 2) / 2;
       V3.pivot.rotation.z = Math.PI * k; V3.pivot.position.y = V3.py + Math.sin(Math.PI * F.t) * V3.r * .5; V3.R.shadowMap.needsUpdate = true; moving = true;
     }
-    S.pit = Math.max(.08, Math.min(1.35, S.pit));
+    S.pit = Math.max(.08, Math.min(V3.pitMax || 1.35, S.pit));   // (pitMax: a game looks straight down on its board, museum/play.js)
     const c = V3.cam, t = V3.tgt; c.position.set(t.x + S.d * Math.cos(S.pit) * Math.sin(S.yaw), t.y + S.d * Math.sin(S.pit), t.z + S.d * Math.cos(S.pit) * Math.cos(S.yaw)); c.lookAt(t);
     V3.R.render(V3.scene, c);
     if (DBG.on) dbgTick(now);
@@ -334,7 +347,7 @@
     addEventListener('focus', vis); document.addEventListener('visibilitychange', vis);
     V3.offIn = () => { removeEventListener('focus', vis); document.removeEventListener('visibilitychange', vis); };
   }
-  const clampD = d => Math.max(V3.fitD() * .32, Math.min(V3.fitD() * 1.9, d));
+  const clampD = d => Math.max(V3.fitD() * (V3.playing ? .12 : .32), Math.min(V3.fitD() * 1.9, d));
 
   /* ---------- a small kit for the pieces' builders (museum/ex/*.js) ---------- */
   const kit = {
