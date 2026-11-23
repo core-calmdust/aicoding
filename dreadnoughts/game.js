@@ -429,6 +429,8 @@ function cardPop(k, mode) {
   $('#cpCard').innerHTML = html; $('#cpCloseT').textContent = t('cp.close'); pop.classList.remove('hide'); fillPortraits(pop);
 }
 function cardPopClose() { $('#cardPop').classList.add('hide'); cpK = -1; }
+// (2026-11-24) a wrapped role row makes one tile taller; every tile in the grid takes the tallest one's height so the rows stay even
+function eqCards(g) { const cs = [...g.querySelectorAll('.card')]; cs.forEach(c => c.style.minHeight = ''); const h = Math.max(0, ...cs.map(c => c.offsetHeight)); if (h) cs.forEach(c => c.style.minHeight = h + 'px'); }
 function renderDraft() {
   if (!G || G.phase !== 'draft') return;
   const d = G.draft, mine = d.turn === 0 && !G.busy, f = d.f;
@@ -438,6 +440,7 @@ function renderDraft() {
   const counts = [0, 1, 2, 3].map(g => all.filter(k => ROLE_OF(k) === g).length);
   $('#drTabs').innerHTML = `<button data-g="-1" class="${pickTab < 0 ? 'on' : ''}">${t('a.all')}<em>${all.length}</em></button>` + [0, 1, 2, 3].map(g => counts[g] ? `<button data-g="${g}" class="${pickTab === g ? 'on' : ''}">${t('dr.g' + g)}<em>${counts[g]}</em></button>` : '').join('');
   $('#drGrid').innerHTML = all.filter(k => pickTab < 0 || ROLE_OF(k) === pickTab).map(k => draftCard(k, d, mine, run, selCost, costOf)).join('');
+  eqCards($('#drGrid'));
   $('#drK').textContent = t('d.k', { n: d.n + 1, b: E.BUDGET });
   $('#drTurn').textContent = t(d.turn === 0 ? 'd.you' : 'd.ai'); $('#drTurn').classList.toggle('foe', d.turn !== 0);
   const left = E.draftLeft(d, 0), used = E.BUDGET - left;
@@ -544,7 +547,7 @@ const doAction = a => a.skill ? doSkill(a) : doShot(a.cell);
 async function playerShot(cell) {
   if (!G || !G.st || G.phase !== 'battle' || G.busy || G.st.turn !== 0 || G.view !== 1) return;
   const a = G.armed != null ? { skill: skillOf(G.my[G.armed]), ship: G.armed, cell } : { cell };
-  if (a.skill ? !E.preview(G.st, a.ship, cell) : G.st.sides[1].shots[cell]) { sfx('bad'); return; }
+  if (a.skill ? !E.preview(G.st, a.ship, cell) : (G.st.sides[1].shots[cell] && G.st.sides[1].shots[cell] !== 3)) { sfx('bad'); return; }   // (a dented square, 3, takes another shell — 2026-11-24)
   const st = G.st; G.busy = true; G.hint = null; World.aim(1, -1); renderDock(); render();
   const res = await doAction(a); if (!res || G.st !== st) return;
   after(st);
@@ -617,6 +620,7 @@ function renderArchive() {
   $('#arTabs').innerHTML = `<button data-g="-1" class="${arTab < 0 ? 'on' : ''}">${t('a.all')}<em>${all.length}</em></button>` + [0, 1, 2, 3].map(g => `<button data-g="${g}" class="${arTab === g ? 'on' : ''}">${t('dr.g' + g)}<em>${counts[g]}</em></button>`).join('')
     + `<span class="sp"></span>` + [['role', t('sl.s.role')], ['cost', t('sl.s.cost')]].map(([v, l]) => `<button data-s="${v}" class="sort${arSort === v ? ' on' : ''}">${l}</button>`).join('');
   $('#arGrid').innerHTML = all.filter(k => arTab < 0 || ROLE_OF(k) === arTab).map(k => shipCard(k, { cls: (k === arK ? ' sel' : '') + (f && f[k] ? ' onf' : ''), foot: f && f[k] ? `<span class="foot badge">${t('sl.onf')}</span>` : '' })).join('');
+  eqCards($('#arGrid'));
   showShip(arK, pv2, '#pv2Name', '#pv2Meta', '#pv2Skill'); fillPortraits($('#scrArchive'));
 }
 // the fleets sheet: both sides as cards, with each ship's state (cooldown, damage, sunk) — from the panels or the draft's picks
@@ -684,7 +688,7 @@ cv.addEventListener('pointermove', e => {
   if (!G || !G.st || G.phase !== 'battle' || G.busy || G.st.turn !== 0 || G.view !== 1 || !PC.matches) return;
   const c = World.cellAt(1, e);
   if (G.armed != null) { if (c !== hover) { hover = c; World.aim(1, -1); syncWorld(); } return; }
-  World.aim(1, c >= 0 && !G.st.sides[1].shots[c] ? c : -1); cv.style.cursor = c >= 0 ? 'crosshair' : '';
+  World.aim(1, c >= 0 && (!G.st.sides[1].shots[c] || G.st.sides[1].shots[c] === 3) ? c : -1); cv.style.cursor = c >= 0 ? 'crosshair' : '';
 });
 cv.addEventListener('pointerup', e => {
   if (drag) { const d = drag; drag = null; if (!d.moved) { if (tryTurn(d.i, d.cell)) sfx('place'); else { sfx('bad'); World.shake(.5); } } else if (d.bad) { G.my[d.i] = d.from; sfx('bad'); } else sfx('place'); syncWorld(); renderFleets(); save(); return; }
