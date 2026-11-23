@@ -10,3 +10,5 @@ rvlabel
 rvmatch
 rveng.so
 rveng.so.b.*
+*.x
+*.pt
