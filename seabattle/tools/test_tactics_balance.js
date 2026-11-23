@@ -5,16 +5,17 @@
 // every skill was used. A type is "balanced" when its pick rate is neither ~0 nor ~100% and its win rate sits near 50%.
 if (process.argv[4] === 'flat') require('../engine.js').setDraftW(new Array(require('../engine.js').TYPES.length).fill(.8));
 const E = require('../engine.js');
+const MODE = process.argv[5] || 'std', STREAK = process.argv[6] === 'streak';   // node … games seed flat grand [streak]
 const G = +process.argv[2] || 200, rnd = E.rng(+process.argv[3] || 1), LV = 20, NT = E.TYPES.length;
 const on = new Array(NT).fill(0), pick = new Array(NT).fill(0), won = new Array(NT).fill(0), notW = new Array(NT).fill(0), notN = new Array(NT).fill(0), used = {};
 let moves = 0, stuck = 0, firstWins = 0, fleetSize = 0, costSum = 0;
 for (let g = 0; g < G; g++) {
-  const d = E.draftNew(g & 1, rnd);
+  const d = E.draftNew(g & 1, rnd, MODE);
   while (d.turn >= 0) { const k = E.draftAI(d, rnd); E.draftPick(d, k >= 0 ? k : -1); }   // (with `flat` as 3rd argument the AI's taste is switched off: every type equally liked, so each ship's win rate is not skewed by what it is drafted with)
   const fleets = [0, 1].map(p => E.randomFleet(rnd, false, d.picks[p]));
-  const st = E.newGame({ rule: 'tactics', adj: false, fleets, first: g & 1 });
+  const st = E.newGame({ rule: 'tactics', mode: MODE, streak: STREAK, adj: false, fleets, first: g & 1 });
   let n = 0;
-  while (st.winner < 0 && n < 400) { const a = E.chooseAction(st, LV, rnd); const r = E.act(st, a); if (!r) { stuck++; break; } if (a.skill) used[a.skill] = (used[a.skill] || 0) + 1; n++; }
+  while (st.winner < 0 && n < 900) { const a = E.chooseAction(st, LV, rnd); const r = E.act(st, a); if (!r) { stuck++; break; } if (a.skill) used[a.skill] = (used[a.skill] || 0) + 1; n++; }
   moves += n; if (st.winner === (g & 1)) firstWins++;
   for (let k = 0; k < NT; k++) if (d.f[k]) { on[k]++; for (const p of [0, 1]) { if (d.picks[p].includes(k)) { pick[k] += .5; won[k] += st.winner === p ? 1 : 0; } else { notN[k]++; notW[k] += st.winner === p ? 1 : 0; } } }
   for (const p of [0, 1]) { fleetSize += d.picks[p].length; costSum += E.draftCost(d.picks[p]); }
