@@ -305,7 +305,7 @@ function loop() {
     if (V.throttle) fps = Math.min(fps, 30); V.cap = fps;
     if (fps < 60 && now - (V.drawn || 0) < 1000 / fps - 4) { loop(); return; }
     V.drawn = now;
-    const dt = Math.min(.05, (now - V.last) / 1000); V.last = now; V.t += dt; V.uni.uTime.value = V.t;
+    const dt = Math.min(.05, (now - V.last) / 1000); V.last = now; V.t += dt; V.uni.uTime.value = V.t; PICK_T.value = V.t;
     V.shake = Math.max(0, V.shake - dt * 2.2);
     stepCamera(now);
     for (let z = 0; z < 2; z++) for (const s of V.ships[z].values()) rideShip(s, dt);
@@ -344,13 +344,22 @@ function updateHulls() {
 
 // ---------- ships ----------
 function proto(k, len, key) { const id = key + '|' + len; if (!V.proto.has(id)) V.proto.set(id, SeaShips.build(T, k, len, key)); return V.proto.get(id); }
-const variants = new Map();
+const variants = new Map(), PICK_T = { value: 0 };
 function variant(mat, kind) {
   const id = mat.uuid + kind; if (variants.has(id)) return variants.get(id);
   const m = mat.clone();
   if (kind === 'sunk') { m.color = m.color.clone().multiplyScalar(.28); m.roughness = 1; m.metalness = .1; if (m.emissive) m.emissiveIntensity = 0; }
   if (kind === 'ghost' || kind === 'bad') { m.transparent = true; m.opacity = kind === 'bad' ? .55 : .5; m.depthWrite = false; if (kind === 'bad') { m.emissive = new T.Color(0xff2a1a); m.emissiveIntensity = .7; } }
-  if (kind === 'pick') { m.emissive = new T.Color(0xd8f0ff); m.emissiveIntensity = .55; }
+  if (kind === 'pick') {   // the chosen ship glints like a dora tile: a faint gold glow and a band of light running bow to stern now and then (2026-11-23 user)
+    m.emissive = new T.Color(0xffd27a); m.emissiveIntensity = .05;
+    const prev = m.onBeforeCompile, key = m.customProgramCacheKey ? m.customProgramCacheKey() : '';
+    m.onBeforeCompile = (sh, r) => { if (prev) prev(sh, r); sh.uniforms.uPickT = PICK_T;
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying float vPX;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvPX = position.x;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vPX; uniform float uPickT;').replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+        { float ph = mod(uPickT, 2.6), x = -2.8 + ph * 3.2, b = exp(-pow((vPX - x) * 2.6, 2.)) * step(ph, 1.75);
+          totalEmissiveRadiance += vec3(1., .86, .55) * (b * 1.5 + .06 + .05 * sin(uPickT * 3.)); }`); };
+    m.customProgramCacheKey = () => key + '-pick';
+  }
   variants.set(id, m); return m;
 }
 function setLook(s, kind) { if (s.look === kind) return; s.look = kind; s.g.traverse(o => { if (!o.isMesh) return; const base = o.userData.base || (o.userData.base = o.material); o.material = kind === 'own' ? base : variant(base, kind); o.castShadow = kind === 'own' || kind === 'sunk' || kind === 'pick'; o.receiveShadow = true; }); }
