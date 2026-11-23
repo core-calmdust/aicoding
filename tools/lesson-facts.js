@@ -371,6 +371,42 @@ const CHECKS = {
         }
       }); });
   },
+  // (2026-11-23 lesson loop) the hex lessons ('hex', key = the step's index): every answer is an empty cell, the best is among the
+  // answers, and the one-move problems are solved again by the exact solver of the engine (hex/tools/native.c serve, built to /tmp/hexn
+  // or $HEXN; without gcc only the legality is checked): the stored answers are exactly the moves that do the step's job —
+  //   b_connect: the cells that win at once / b_block, t_stop: the only cells that stop a connection in 1 / 2 /
+  //   b_bridge (2 moves), t_double (3 moves): the cells that force the connection in that many / b_save, b_edge, t_ladder, t_edge3: the
+  //   cells that keep the shortest forced connection. The scored problems (s_*): the moves legal, the best one the top value.
+  hex() {
+    const E = require(path.join(ROOT, 'hex/engine.js')), L = J('hex/lessons.json'), g = 'hex', cp = require('child_process');
+    let bin = process.env.HEXN || '/tmp/hexn';
+    if (!fs.existsSync(bin)) { try { cp.execSync(`gcc -O3 -march=native -DNATIVE -w -o ${bin} tools/native.c -lm`, { cwd: path.join(ROOT, 'hex'), stdio: 'ignore' }); } catch (e) { bin = null; } }
+    const run = cmds => { const r = cp.spawnSync(bin, ['serve'], { input: cmds.join('\n') + '\nquit\n', encoding: 'utf8', maxBuffer: 1 << 26 }); return r.stdout.trim().split('\n'); };
+    const KIND = { b_connect: 'now', b_block: ['stop', 1], t_stop: ['stop', 2], b_bridge: ['make', 2], t_double: ['make', 3], b_save: ['keep', 5], b_edge: ['keep', 4], t_ladder: ['keep', 6], t_edge3: ['keep', 3] };
+    const sp = s => `setpos ${s.n} ${s.side} ${s.sw ? 1 : 0} ${s.b}`, todo = [];
+    L.steps.forEach((st, si) => { const K = String(si);
+      st.problems.forEach((p, pi) => { const w = `problem ${pi + 1}`, q = E.Pos.from(p.s);
+        if (q.winner()) { bad(g, K, `${w}: the game is already over`); return; }
+        const mv = p.ok || (p.sc || []).map(e => e[0]);
+        mv.forEach(m => { if (!q.legal(m)) bad(g, K, `${w}: ${m} is not an empty cell`); });
+        if (p.ok && !p.ok.includes(p.best)) bad(g, K, `${w}: the best move is not among the answers`);
+        if (p.sc) { const top = Math.max(...p.sc.map(e => e[1])), b = p.sc.find(e => e[0] === p.best); if (!b || b[1] < top) bad(g, K, `${w}: the best move is not the top value`); }
+        const k = KIND[st.id]; if (!k || !p.ok) return;
+        if (k === 'now') { const wc = q.winCells(q.side).slice().sort((a, b) => a - b).join(); if (wc !== p.ok.slice().sort((a, b) => a - b).join()) bad(g, K, `${w}: the winning cells are ${wc}, the answer says ${p.ok}`); return; }
+        todo.push({ K, w, p, kind: k[0], k: k[1] }); }); });
+    if (!bin || !todo.length) return;
+    // phase 1: how many moves the mover needs (make / keep), or that the opponent threatens a connection (stop)
+    const r1 = run(todo.flatMap(t => [sp(t.p.s), t.kind === 'stop' ? `puzzle ${t.k} 1 6000` : `solve ${t.kind === 'make' ? t.k : t.k} 600`]));
+    const c2 = []; todo.forEach((t, i) => { const a = r1[2 * i + 1].trim().split(/\s+/).map(Number);
+      if (t.kind === 'stop') { const esc = []; for (let j = 0; j < a[0]; j++) if (a[2 + 2 * j] === 0) esc.push(a[1 + 2 * j]); t.got = esc; return; }
+      t.mw = a[0]; if (t.kind === 'make' && t.mw !== t.k) { bad(g, t.K, `${t.w}: the shortest forced connection takes ${t.mw} moves, the step teaches ${t.k}`); t.skip = 1; return; }
+      if (!(t.mw >= 2)) { bad(g, t.K, `${t.w}: no forced connection within ${t.k} moves (${t.mw})`); t.skip = 1; return; }
+      c2.push(t); });
+    const r2 = c2.length ? run(c2.flatMap(t => [sp(t.p.s), `puzzle ${t.mw} 0 6000`])) : [];
+    c2.forEach((t, i) => { const a = r2[2 * i + 1].trim().split(/\s+/).map(Number), ok = []; for (let j = 0; j < a[0]; j++) { const nd = a[2 + 2 * j]; if (nd > 0 && nd <= t.mw) ok.push(a[1 + 2 * j]); } t.got = ok; });
+    todo.forEach(t => { if (t.skip || !t.got) return; const A = t.got.slice().sort((a, b) => a - b).join(), B = t.p.ok.slice().sort((a, b) => a - b).join();
+      if (A !== B) bad(g, t.K, `${t.w}: the solver's answers are ${A || 'none'}, the stored ones ${B}`); });
+  },
   // (2026-11-22 lesson loop, hex/open) the opening lines and their problems: every move of the line legal, a problem's best move legal
   // and the engine's best value (or within 3% of it), and what each stored note says the move does true on the board — a bridge with an own
   // stone, touching the opponent, a swap, an intrusion into the opponent's bridge, the 2nd row
