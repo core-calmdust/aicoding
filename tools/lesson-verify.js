@@ -6,7 +6,7 @@
 //            (the zugzwang the lesson is about — not a tactical shot).
 //   endwin ⑦ after the answer every legal reply of the opponent loses with best play (the "give the opponent no counter" the words
 //            promise), i.e. the win is truly forced and quickest.
-// node tools/lesson-verify.js [connect4,mancala,gomoku,dots]
+// node tools/lesson-verify.js [connect4,mancala,gomoku,dots,amazons]
 'use strict';
 const path = require('path');
 const ROOT = path.join(__dirname, '..');
@@ -360,12 +360,123 @@ function dots(opt) {
     }); });
   return out;
 }
-const GAMES = { connect4, mancala, gomoku, dots };
+// (2026-11-24 第2期) amazons, the basics (AM_DONE): every right answer is a goal of the rules (no engine opinion), so ①② = the stored
+// answers are exactly the legal moves that reach the goal — b_queen: the amazon lands on the glowing square; b_arrow / b_block: the arrow
+// hits it; b_win: Black has no move left. ③ ≥3 legal moves, ≥3 landing squares and the goal a minority. ④ the step's shape. ⑤ no
+// other amazons position (lessons, warm-ups, puzzles, the 8 symmetries) within 2 squares. ⑥ d never goes down, the last > problem 1.
+// ⑦⑧ ケロ's 3D words (atlas/lessons3d.js amLsJa): the question and hint of problem k fit its board, the praise's facts, and for EVERY
+// wrong move the reason it gives is the board's (short of / past the goal, the wrong way, a blocker, not in line, an arrow shot short,
+// the exits left). ⑨ the 2D (amazons/app.js lessonAnswer) and the 3D (points) both score P.ok.
+const AM_DONE = new Set(['b_queen', 'b_arrow', 'b_block', 'b_win']);
+function amazons(opt) {
+  const fs = require('fs'), vm = require('vm');
+  const E = require(path.join(ROOT, 'amazons/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'amazons/lessons.json'), 'utf8'));
+  const src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8');
+  const X = vm.runInNewContext('const AMAZONS = { data: null };' + src.slice(src.indexOf('  const AMM = '), src.indexOf('  const AMAZONS = {')) + '\n;({ AMJ_LS, amLsJa, AMAZONS })', {});
+  X.AMAZONS.data = { ls: L };
+  const out = [], only = opt && opt.only, add = (id, j, m) => out.push({ step: id, q: j + 1, msg: m });
+  // ⑨ both versions score the same list
+  const app = fs.readFileSync(path.join(ROOT, 'amazons/app.js'), 'utf8');
+  if (!/const pts = P\.ok\.includes\(m\) \? 20 : 0;/.test(app)) add('-', -1, '⑨ amazons/app.js lessonAnswer does not score P.ok');
+  if (!/points\(P, m\) \{ return \(P\.ok \|\| \[P\.best\]\)\.includes\(m\) \? 20 : 0; \}/.test(src)) add('-', -1, '⑨ the 3D AMAZONS.points does not score P.ok');
+  const { mFrom, mTo, mArrow, RC } = E, N = E.sqName;
+  const RCo = i => RC[i], al = (f, t) => { if (f == null || t == null) return false; const [r1, c1] = RCo(f), [r2, c2] = RCo(t); return f !== t && (r1 === r2 || c1 === c2 || Math.abs(r1 - r2) === Math.abs(c1 - c2)); };
+  const seg = (f, t) => { const [r1, c1] = RCo(f), [r2, c2] = RCo(t), dr = Math.sign(r2 - r1), dc = Math.sign(c2 - c1), o = []; let r = r1 + dr, c = c1 + dc; while (r !== r2 || c !== c2) { o.push(r * 10 + c); r += dr; c += dc; } return o; };
+  const cheb = (f, t) => f == null || t == null ? -1 : Math.max(Math.abs(RCo(f)[0] - RCo(t)[0]), Math.abs(RCo(f)[1] - RCo(t)[1]));
+  const btw = (f, x, t) => al(f, t) && seg(f, t).includes(x);   // x strictly between f and t
+  const blk = (sq, f, t) => seg(f, t).some(q => sq[q]);
+  const whites = p => { const o = []; for (let k = 0; k < 8; k++) if (p.q[k] >= 0 && p.sq[p.q[k]] === 1) o.push(p.q[k]); return o; };
+  const blacks = p => { const o = []; for (let k = 0; k < 8; k++) if (p.q[k] >= 0 && p.sq[p.q[k]] === 2) o.push(p.q[k]); return o; };
+  // ⑤ the pool: every position the game shows
+  const pool = [];
+  L.steps.forEach(st => { st.problems.forEach((q, j) => pool.push([`${st.id} q${j + 1}`, q.s.b])); (st.ramp || []).forEach((r, j) => pool.push([`${st.id} ramp ${j + 1}`, r.s.b])); });
+  const PZ = JSON.parse(fs.readFileSync(path.join(ROOT, 'amazons/puzzles.json'), 'utf8'));
+  (PZ.themes || []).forEach(th => (th.puzzles || []).forEach((q, j) => pool.push([`puzzle ${th.id} ${j + 1}`, q.s.b])));
+  const SYM = [(r, c) => [r, c], (r, c) => [r, 9 - c], (r, c) => [9 - r, c], (r, c) => [9 - r, 9 - c], (r, c) => [c, r], (r, c) => [c, 9 - r], (r, c) => [9 - c, r], (r, c) => [9 - c, 9 - r]];
+  const dist = (a, b) => { let best = 99; for (const S of SYM) { let d = 0; for (let i = 0; i < 100 && d < best; i++) { const [r, c] = S((i / 10) | 0, i % 10); if (a[i] !== b[r * 10 + c]) d++; } best = Math.min(best, d); } return best; };
+  L.steps.forEach((st, si) => { const id = st.id; if (!AM_DONE.has(id) || (only && !only.has(id))) return;
+    let prevD = -1, firstD = null;
+    st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), all = p.moves(), T = (P.mk || [])[0], W = whites(p), B = blacks(p);
+      if (P.s.side !== 1) a('① White is not to move');
+      // ①②
+      const goal = id === 'b_queen' ? m => mTo(m) === T : id === 'b_win' ? m => { p.play(m); const r = !p.canMove(2); p.unplay(m); return r; } : m => mArrow(m) === T;
+      if (id !== 'b_win' && T == null) a('④ no glowing square');
+      const G = all.filter(goal), okS = new Set(P.ok), Gs = new Set(G);
+      if (!G.length) a('① the goal cannot be reached');
+      P.ok.forEach(m => { if (!all.includes(m)) a(`① the answer ${m} is not legal`); else if (!Gs.has(m)) a(`① the answer ${E.name(p, m)} does not reach the goal`); });
+      G.forEach(m => { if (!okS.has(m)) a(`② ${E.name(p, m)} reaches the goal but is scored wrong`); });
+      if (!okS.has(P.best)) a('① best is not an answer');
+      // ③
+      const dests = new Set(all.map(m => mFrom(m) * 100 + mTo(m))), okD = new Set(G.map(m => mFrom(m) * 100 + mTo(m)));
+      if (all.length < 3 || dests.size < 3) a(`③ ${all.length} legal moves, ${dests.size} landing squares`);
+      if (G.length > all.length * 0.3) a(`③ ${G.length} of ${all.length} moves are right`);
+      if (id !== 'b_queen' && id !== 'b_win' && dests.size < okD.size * 3) a(`③ ${okD.size} of ${dests.size} landing squares are right`);
+      // ④ and d (⑥)
+      let d = 0;
+      if (id === 'b_queen') { G.forEach(m => { if (cheb(mFrom(m), T) < 3) a('④ the goal is less than 3 squares away'); });
+        const from = new Set(G.map(mFrom)), dec = W.filter(f => !from.has(f) && al(f, T) && blk(p.sq, f, T));
+        if (from.size !== 1) a(`④ ${from.size} amazons reach the goal`);
+        d = W.length + dec.length; }
+      if (id === 'b_arrow' || id === 'b_block') { W.forEach(f => { if (al(f, T) && !blk(p.sq, f, T)) a(`④ the white amazon on ${N(f)} already sees the target`); });
+        if (id === 'b_block') { if (okD.size > 2) a(`④ ${okD.size} landing squares see the target (the lesson: few lines)`); if ([...P.s.b].filter(c => c === 'x').length < 16) a('④ not a crowded board'); }
+        d = Math.floor(dests.size / Math.max(1, okD.size)); }
+      if (id === 'b_win') { if (!p.canMove(2)) a('④ Black is stuck already'); d = Math.floor(all.length / Math.max(1, G.length)); }
+      if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
+      if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`);
+      // ⑤
+      for (const [who, b] of pool) { if (b === P.s.b) { if (who !== `${id} q${j + 1}`) a(`⑤ the same position as ${who}`); continue; } const e = dist(P.s.b, b); if (e <= 2) a(`⑤ ${e} squares from ${who}`); }
+      // ⑦⑧ the 3D words
+      let Wd; try { Wd = X.amLsJa(E, st, P, j); } catch (e) { a('⑧ the words fail: ' + e.message); return; }
+      const ask = Wd.ask, hint = Wd.hintTx, ex0 = E.emptyAround(p, 2);
+      const need = (t, re, ok, why) => { if (re.test(t) && !ok) a(`⑧ 「${t}」: ${why}`); };
+      for (const t of [ask, hint]) {
+        need(t, /どのアマゾン|アマゾンごとに|届くアマゾンはどれ/, W.length >= 2, `${W.length} white amazon`);
+        need(t, /線の途中に矢がないか/, W.some(f => al(f, T) && blk(p.sq, f, T)), 'no amazon in line with the goal behind an arrow');
+        need(t, /遠くても/, G.some(m => cheb(mFrom(m), T) >= 4), 'the goal is near');
+        need(t, /近くの線ほど.*遠くからの線/, G.every(m => cheb(mTo(m), T) >= 3), 'the answer shoots from near');
+        need(t, /アマゾンの通り道も/, [...Array(100).keys()].some(s => !p.sq[s] && al(s, T) && !blk(p.sq, s, T) && W.some(f => al(f, s) && blk(p.sq, f, s)) && !W.some(f => okD.has(f * 100 + s))), 'no square that sees the target behind a blocked path');
+        need(t, /黒のアマゾン全部|黒の全部のアマゾン/, B.length >= 2, `${B.length} black amazon`);
+        need(t, /出口が2つなら/, ex0.length === 2, `${ex0.length} exits`);
+        need(t, /白が動いたあとの元のマスが/, all.some(m => { if (okS.has(m) || !E.NB[mFrom(m)].some(x => p.sq[x] === 2)) return false; const q = p.clone().play(m); if (q.sq[mFrom(m)]) return false; q.sq[mFrom(m)] = 3; return !q.canMove(2); }), 'no move that closes every exit but the square it leaves');
+      }
+      const plain = t => String(t).replace(/[\u0001\u0002]/g, '');
+      for (const u of P.ok) { const good = plain(Wd.good(u)), f0 = mFrom(u), t0 = mTo(u), a0 = mArrow(u), nu = E.name(p, u);   // (the praise of every right move: ケロ praises the one played)
+      if (/\{|undefined|NaN/.test(good)) a(`⑧ the praise of ${nu} 「${good}」`);
+      { const g = good.match(/(.)(から！|んだ[。！])/); if (g && !/[るうくすつぬむぶぐいただ]/.test(g[1])) a(`⑧ the praise of ${nu} 「${good}」: 「${g[0]}」 is not Japanese`); }
+      { const n = good.match(/(\d+)マス/); const n0 = id === 'b_queen' ? seg(f0, t0).length + 1 : seg(t0, a0).length + 1; if (n && +n[1] !== n0) a(`⑧ the praise of ${nu} 「${good}」: ${n0} squares`); }
+      { const dm = good.match(/(縦|横|斜め)/); const dd = id === 'b_queen' ? [f0, t0] : [t0, a0], [r1, c1] = RCo(dd[0]), [r2, c2] = RCo(dd[1]), d0 = c1 === c2 ? '縦' : r1 === r2 ? '横' : '斜め'; if (dm && dm[1] !== d0 && id !== 'b_win') a(`⑧ the praise of ${nu} 「${good}」: ${d0}`); }
+      if (id === 'b_win') { const byT = ex0.includes(t0), byA = ex0.includes(a0);
+        if (/矢が刺さって|残った1マスに矢|矢1本で/.test(good) && !byA) a(`⑧ the praise of ${nu} 「${good}」: the arrow is not in an exit`);
+        if (/アマゾンで1つ、矢で1つ|白が片方の出口に入り|動きでふたを1つ|動きと矢で|出口2つをまとめて/.test(good) && !(byT && byA)) a(`⑧ the praise of ${nu} 「${good}」`);
+        if (/元のマス|来た道|すき間まで/.test(good) && !(byT && a0 === f0)) a(`⑧ the praise of ${nu} 「${good}」`); } }
+      // every wrong move
+      for (const m of all) { if (okS.has(m)) continue;
+        const raw = plain(Wd.ng(m)), i0 = raw.indexOf('赤い印の手'), t = i0 >= 0 ? raw.slice(i0) : raw, f = mFrom(m), to = mTo(m), ar = mArrow(m), nm = E.name(p, m);
+        if (i0 < 0) { a(`⑦ ${nm}: the words do not name the move`); continue; }
+        { const g = raw.match(/(.)(から！|んだ[。！])/); if (g && !/[るうくすつぬむぶぐいただ]/.test(g[1])) a(`⑧ ${nm}: 「${raw}」: 「${g[0]}」 is not Japanese`); }
+        const q = p.clone().play(m);
+        if (id === 'b_queen') { const A = al(f, T), Bk = A && blk(p.sq, f, T), short = btw(f, to, T), past = btw(f, T, to);
+          const cls = /一直線に並んでいない|曲がらないと|どれにも並ばない/.test(t) ? 'line' : /じゃまもの|ふさがっていて/.test(t) ? 'block' : /手前で止ま|足りなくて|距離が短い/.test(t) ? 'short' : /通りすぎ|行きすぎ/.test(t) ? 'past' : /向きがちがって|方向にある|反対|逆向き/.test(t) ? 'way' : '?';
+          const want = !A ? 'line' : Bk ? 'block' : short ? 'short' : past ? 'past' : 'way';
+          if (cls !== want) a(`⑦ ${nm}: 「${t}」 (the board: ${want})`);
+          const dm = t.match(/(縦|横|斜め)に動いても、ゴールは(縦|横|斜め)の方向/); if (dm && dm[1] === dm[2]) a(`⑦ ${nm}: 「${t}」`); }
+        else if (id === 'b_arrow' || id === 'b_block') { const sq2 = q.sq.slice(); sq2[ar] = 0; const A = al(to, T), Bk = A && blk(sq2, to, T), sh = A && !Bk && btw(to, ar, T);
+          const cls = /一直線に並ばな|どれにも見えない|ずれていて/.test(t) ? 'line' : /手前のマスに刺さ|的の手前で止め|的まで飛んでいない/.test(t) ? 'short' : /じゃまもの|ふさがれてる|飛び越えられない/.test(t) ? 'block' : /別のマスに撃|向きがずれて/.test(t) ? 'aim' : '?';
+          const want = !A ? 'line' : Bk ? 'block' : sh ? 'short' : 'aim';
+          if (cls !== want) a(`⑦ ${nm}: 「${t}」 (the board: ${want})`); }
+        else if (id === 'b_win') { const n = E.emptyAround(q, 2).length, op = E.NB[f].some(x => p.sq[x] === 2) && q.sq[f] === 0;
+          if (/新しい出口|空きマスから、黒が逃げ/.test(t)) { if (!op) a(`⑦ ${nm}: 「${t}」 (the square left is not an exit)`); }
+          else { const k = t.match(/(\d+)つ/); if (!k) a(`⑦ ${nm}: 「${t}」 (no count of the exits)`); else if (+k[1] !== n) a(`⑦ ${nm}: 「${t}」 (${n} exits left)`); } }
+      }
+    }); });
+  return out;
+}
+const GAMES = { connect4, mancala, gomoku, dots, amazons };
 module.exports = GAMES; GAMES.mancalaWords = mancalaWords;   // (not a game of the CLI: the words pass alone, for tests)
 if (require.main === module) {
-  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots').split(',');
+  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons').split(',');
   let bad = 0;
-  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'connect4' ? ' (count/endwin の⑦⑧)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
+  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'connect4' ? ' (count/endwin の⑦⑧)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
     bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
   process.exit(bad ? 1 : 0);
 }
