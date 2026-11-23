@@ -789,3 +789,11 @@ html.ptv-open,html.ptv-open body{overflow:hidden}
 .mutoast span i{font-style:normal;margin-right:1px}
 @media (min-width:820px){.mutoast{bottom:auto;top:86px}}
 #pg-museum .muhead h2.h{color:var(--ink);padding:3px 14px 3px 10px;border-radius:14px;background:rgba(255,253,247,.93);box-shadow:0 1px 0 rgba(0,0,0,.06)}
+
+/* 番号を隠す (paint.js / gallery.js): the switch, and the spots gone while it is on */
+.ptvnum svg,.exnum svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ptvnum .sl,.exnum .sl{display:none}
+.ptv.nospots .ptvnum .sl,.exv.nospots .exnum .sl{display:inline}
+.ptvtools button.ptvnum{display:inline-grid;place-items:center}
+.ptv.nospots .ptvtools button.ptvnum{background:#e0a440;color:#2a1a08}
+.ptv.nospots .ptvspots,.ptv.nospots .ptvcap,.exv.nospots .exspots{display:none}
