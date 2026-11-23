@@ -19,7 +19,7 @@ const DN = {
     'm.play': '出撃', 'm.archive': '艦艇図鑑', 'm.help': 'ブリーフィング', 'm.back': 'コレクションへ戻る',
     'h.mine': '自軍艦隊', 'h.foe': '敵艦隊', 'h.afloat': 'SHIPS AFLOAT', 'h.bal': '形勢', 'h.you': '自軍', 'h.log': '戦況ログ', 'h.k': '遊び方',
     'v.foe': '敵の海域', 'v.mine': '自軍の海域',
-    's.k': '対局の設定', 's.level': 'AIの強さ', 's.first': '先攻', 's.adj': '艦の置き方', 's.go': '出撃する', 'rec': 'おすすめ',
+    's.k': '対局の設定', 's.level': '敵の練度', 'df.recruit': '新兵', 'df.recruit.d': '狙いが甘く、よく外す。はじめての出撃に', 'df.regular': '正規兵', 'df.regular.d': '命中したら確実に追ってくる', 'df.elite': '精鋭', 'df.elite.d': '無駄撃ちが少なく、編成も読んでくる', 'df.veteran': '歴戦', 'df.veteran.d': '最善の射撃とスキルの先読み。互角の勝負', 'df.demon': '鬼神', 'df.demon.d': '歴戦より深く読み、艦隊のコスト上限が＋{b}（大艦隊＋{g}）', 's.first': '先攻', 's.adj': '艦の置き方', 's.go': '出撃する', 'rec': 'おすすめ',
     'd.mine': '自軍の編成', 'd.foe': '敵の編成', 'd.budget': '残りコスト', 'd.k': '{n}巡目 ・ 3〜6隻 ・ コスト{b}まで', 'd.you': 'YOUR PICK', 'd.ai': 'ENEMY PICK',
     'd.mineS': '自軍', 'd.foeS': '敵',
     'cp.pick': 'この艦を選ぶ', 'cp.unpick': '選択を外す', 'cp.close': '閉じる',
@@ -28,7 +28,7 @@ const DN = {
     'b.you': 'YOUR TURN', 'b.foe': 'ENEMY TURN', 'b.deploy': 'DEPLOYMENT', 'b.over': 'BATTLE OVER',
     'w.hit': 'HIT', 'w.miss': 'MISS', 'w.sunk': 'SUNK', 'w.lost': 'LOST', 'w.skill': 'SKILL', 'w.fog': 'NO SIGNAL', 'w.dent': 'ARMOR',
     'p.resume': '再開', 'p.new': '新しい対局', 'p.resign': '投了する', 'p.title': 'タイトルへ',
-    'r.win': 'VICTORY', 'r.lose': 'DEFEAT', 'r.again': 'もう一度出撃', 'r.look': '海域を見る', 'r.sub': '{n}手で決着 ・ AI Lv.{l}', 'r.subR': '投了 ・ AI Lv.{l}',
+    'r.win': 'VICTORY', 'r.lose': 'DEFEAT', 'r.again': 'もう一度出撃', 'r.look': '海域を見る', 'r.sub': '{n}手で決着 ・ AI {l}', 'r.subR': '投了 ・ AI {l}',
     'r.acc': '命中率', 'r.shots': '発射', 'r.sunk': '撃沈', 'r.lost': '損失',
     'rule.grand': '大艦隊', 'rule.grand.d': '12×12の広い海でコスト30・5〜8隻。1ターンに2手（射撃やスキルを2回）動ける、タクティクスの大規模版。', 'st.ap': 'このターンあと{n}手', 's.streak': '連続攻撃', 's.on': 'あり', 's.off': 'なし',
     'a.k': '全50隻', 'a.all': 'すべて', 'd.all': '全艦一覧', 'f.k': '両軍の艦', ok: 'OK', back: '戻る',
@@ -42,7 +42,7 @@ const DN = {
     'm.play': 'Sortie', 'm.archive': 'Ship archive', 'm.help': 'Briefing', 'm.back': 'Back to the collection',
     'h.mine': 'Our fleet', 'h.foe': 'Enemy fleet', 'h.afloat': 'SHIPS AFLOAT', 'h.bal': 'Balance', 'h.you': 'Us', 'h.log': 'Battle log', 'h.k': 'How to play',
     'v.foe': 'Enemy waters', 'v.mine': 'Our waters',
-    's.k': 'Game settings', 's.level': 'AI strength', 's.first': 'First to fire', 's.adj': 'Ship spacing', 's.go': 'Engage', 'rec': 'RECOMMENDED',
+    's.k': 'Game settings', 's.level': 'Enemy rank', 'df.recruit': 'Recruit', 'df.recruit.d': 'Loose aim, misses often. For a first sortie', 'df.regular': 'Regular', 'df.regular.d': 'Follows up every hit', 'df.elite': 'Elite', 'df.elite.d': 'Few wasted shots, reads your draft', 'df.veteran': 'Veteran', 'df.veteran.d': 'Best-odds fire and skill look-ahead. An even fight', 'df.demon': 'Demon', 'df.demon.d': 'Reads deeper than Veteran and drafts with +{b} budget (+{g} in Grand Fleet)', 's.first': 'First to fire', 's.adj': 'Ship spacing', 's.go': 'Engage', 'rec': 'RECOMMENDED',
     'd.mineS': 'Ours', 'd.foeS': 'Enemy',
     'cp.pick': 'Pick this ship', 'cp.unpick': 'Unpick', 'cp.close': 'Close',
     'd.mine': 'Our picks', 'd.foe': 'Enemy picks', 'd.budget': 'Budget', 'd.k': 'Pick {n} · 3–6 ships · up to {b} cost', 'd.you': 'YOUR PICK', 'd.ai': 'ENEMY PICK',
@@ -51,7 +51,7 @@ const DN = {
     'b.you': 'YOUR TURN', 'b.foe': 'ENEMY TURN', 'b.deploy': 'DEPLOYMENT', 'b.over': 'BATTLE OVER',
     'w.hit': 'HIT', 'w.miss': 'MISS', 'w.sunk': 'SUNK', 'w.lost': 'LOST', 'w.skill': 'SKILL', 'w.fog': 'NO SIGNAL', 'w.dent': 'ARMOR',
     'p.resume': 'Resume', 'p.new': 'New game', 'p.resign': 'Resign', 'p.title': 'Title screen',
-    'r.win': 'VICTORY', 'r.lose': 'DEFEAT', 'r.again': 'Sortie again', 'r.look': 'View the sea', 'r.sub': 'Decided in {n} moves · AI Lv.{l}', 'r.subR': 'Resigned · AI Lv.{l}',
+    'r.win': 'VICTORY', 'r.lose': 'DEFEAT', 'r.again': 'Sortie again', 'r.look': 'View the sea', 'r.sub': 'Decided in {n} moves · AI {l}', 'r.subR': 'Resigned · AI {l}',
     'r.acc': 'ACCURACY', 'r.shots': 'SHOTS', 'r.sunk': 'SUNK', 'r.lost': 'LOST',
     'rule.grand': 'Grand Fleet', 'rule.grand.d': 'Tactics on a wide 12×12 sea: 5–8 ships on a budget of 30, and two actions (shots or skills) each turn.', 'st.ap': '{n} more this turn', 's.streak': 'Hit again', 's.on': 'On', 's.off': 'Off',
     'a.k': 'All 50 ships', 'a.all': 'All', 'd.all': 'All ships', 'f.k': 'Both fleets', ok: 'OK', back: 'Back',
@@ -63,6 +63,12 @@ const DN = {
 };
 function t(k, v) { let s = DN[LANG] && DN[LANG][k]; if (s == null) s = SEA_I18N[LANG] && SEA_I18N[LANG][k]; if (s == null) s = DN.en[k]; if (s == null) s = SEA_I18N.en[k]; if (s == null) return k; if (v && typeof s === 'string') for (const x in v) s = s.split('{' + x + '}').join(v[x]); return s; }
 const tier = lv => t('tier')[Math.min(4, (lv - 1) / 4 | 0)];
+// (2026-11-24 user: Lv.20 が勝てるか勝てないか。弱い側のレベルが多すぎるので5段階のプルダウンに、戦争っぽい呼び名で)
+// five ranks on the engine's levels; 鬼神 (Lv.21) thinks longer and drafts with E.HELL_BONUS more budget
+const DIFF = [['recruit', 3], ['regular', 9], ['elite', 16], ['veteran', 20], ['demon', 21]];
+const diffOf = lv => DIFF.reduce((b, d) => Math.abs(d[1] - lv) < Math.abs(b[1] - lv) ? d : b);
+const dName = lv => t('df.' + diffOf(lv)[0]);
+const hellBonus = (lv, mode) => lv >= 21 ? E.HELL_BONUS[mode] || 0 : 0;
 const PC = matchMedia('(hover: hover) and (pointer: fine)'), WIDE = matchMedia('(min-width:761px) and (min-height:521px)');
 
 // ---------- sound (Web Audio, no files) ----------
@@ -204,7 +210,7 @@ function restore() {
   E.setMode(rule === 'grand' ? 'grand' : 'std'); World.setSize(E.N);
   if (!E.validFleet(g.my, false, T)) return false;
   G = newG({ phase: 'deploy', my: g.my, level: g.level || S.level, rule, streak: !!g.streak || g.rule === 'streak', adj: !!g.adj, first: g.first | 0, foePicks: g.foePicks });
-  if (g.phase !== 'battle' || !g.foe || !E.validFleet(g.foe, false, T)) return true;
+  if (g.phase !== 'battle' || !g.foe || !E.validFleet(g.foe, false, T, hellBonus(g.level || 0, rule === 'grand' ? 'grand' : 'std'))) return true;
   G.st = E.newGame({ rule, streak: G.streak, adj: G.adj, fleets: [g.my, g.foe], first: G.first });
   for (const a of g.acts || []) if (!E.act(G.st, a)) break;
   G.my = G.st.sides[0].ships; G.evals = Array.isArray(g.evals) ? g.evals.slice(0, G.st.log.length + 1) : [];
@@ -310,7 +316,7 @@ function renderFleets() {
   const sd = G.st ? G.st.sides[0] : null;
   $('#listMine').innerHTML = G.my.map((s, i) => fleetItem(s, i, sd, true)).join('');
   $('#mineLeft').textContent = sd ? t('left', { n: sd.afloat }) : t('d.ships', { n: G.my.length, m: G.my.length });
-  if (G.st) { const fs = G.st.sides[1]; $('#listFoe').innerHTML = fs.ships.map((s, i) => fleetItem(s, i, fs, false)).join(''); $('#foeLeft').textContent = fs.afloat; $('#foeLvl').textContent = 'AI Lv.' + G.level + ' ' + tier(G.level); }
+  if (G.st) { const fs = G.st.sides[1]; $('#listFoe').innerHTML = fs.ships.map((s, i) => fleetItem(s, i, fs, false)).join(''); $('#foeLeft').textContent = fs.afloat; $('#foeLvl').textContent = 'AI ' + dName(G.level); }
   fillPortraits($('#hud'));
 }
 function renderLog() {
@@ -357,10 +363,16 @@ function toTitle() {
 }
 const RULE_ORDER = ['tactics', 'grand', 'classic', 'salvo'];
 let ND = null;
-function openSetup() { ND = { rule: S.rule, level: S.level, first: S.first, adj: S.adj, streak: !!S.streak }; renderSetup(); sheet('#scrSetup', true); }
+function openSetup() { ND = { rule: S.rule, level: diffOf(S.level)[1], first: S.first, adj: S.adj, streak: !!S.streak }; renderSetup(); sheet('#scrSetup', true); }
+function renderDiff() {
+  const cur = diffOf(ND.level), row = ([k, lv]) => `<span class="dn">${t('df.' + k)}</span><span class="de">${DF_EN[k]}</span><span class="dd">${t('df.' + k + '.d', { b: E.HELL_BONUS.std, g: E.HELL_BONUS.grand })}</span>`;
+  $('#ddB').innerHTML = row(cur) + '<i class="chev"></i>'; $('#ddB').dataset.k = cur[0];
+  $('#ddL').innerHTML = DIFF.map((d, i) => `<button class="${d === cur ? 'on' : ''}" data-lv="${d[1]}" data-k="${d[0]}"><span class="ix">0${i + 1}</span>${row(d)}</button>`).join('');
+}
+const DF_EN = { recruit: 'RECRUIT', regular: 'REGULAR', elite: 'ELITE', veteran: 'VETERAN', demon: 'DEMON' };
 function renderSetup() {
   $('#ruleList').innerHTML = RULE_ORDER.map((r, i) => `<button class="rc${ND.rule === r ? ' on' : ''}" data-r="${r}"><span class="num">0${i + 1}</span>${r === 'tactics' ? `<span class="rec">${t('rec')}</span>` : ''}<b>${t('rule.' + r)}</b><p>${t('rule.' + r + '.d')}</p></button>`).join('');
-  $('#lvl').value = ND.level; $('#lvlV').innerHTML = `Lv.${ND.level}<small>${tier(ND.level)}</small>`;
+  renderDiff();
   $('#segFirst').innerHTML = [['you', t('ng.you')], ['random', t('ng.random')], ['ai', t('ng.ai')]].map(([v, l]) => `<button data-v="${v}" class="${ND.first === v ? 'on' : ''}">${l}</button>`).join('');
   $('#segAdj').innerHTML = [[0, t('ng.adj0')], [1, t('ng.adj1')]].map(([v, l]) => `<button data-v="${v}" class="${(!!v) === ND.adj ? 'on' : ''}">${l}</button>`).join('');
   const sv = ND.rule !== 'salvo'; $('#segStreak').innerHTML = [[0, t('s.off')], [1, t('s.on')]].map(([v, l]) => `<button data-v="${v}" class="${(!!v) === (ND.streak && sv) ? 'on' : ''}" ${sv ? '' : 'disabled'}>${l}</button>`).join('');
@@ -380,7 +392,7 @@ let pickSel = [], pickTab = -1, focusK = null, pv = null, pv2 = null;
 function myRun(d) { let n = d.n, c = 0; for (let g = 0; g < 12; g++) { const p = (((n + 1) >> 1) & 1) ^ d.first; if (p === 0) c++; else if (!d.done[1]) break; n++; } return Math.max(1, Math.min(c, E.MAXSHIPS - d.picks[0].length)); }
 function startDraft() {
   const first = S.first === 'ai' ? 1 : S.first === 'random' ? (Math.random() < .5 ? 0 : 1) : 0;
-  pkSide = 0; G = newG({ phase: 'draft', rule: S.rule, streak: !!S.streak, adj: S.adj, level: S.level, first, draft: E.draftNew(1 - first, Math.random, S.rule === 'grand' ? 'grand' : 'std') });   // (the second to shoot picks first)
+  pkSide = 0; G = newG({ phase: 'draft', rule: S.rule, streak: !!S.streak, adj: S.adj, level: S.level, first, draft: E.draftNew(1 - first, Math.random, S.rule === 'grand' ? 'grand' : 'std', [0, hellBonus(S.level, S.rule === 'grand' ? 'grand' : 'std')]) });   // (the second to shoot picks first)
   pickSel = []; pickTab = -1; focusK = null;
   phaseUI(); syncWorld(); World.show('wide', 1400);
   if (!PHONE()) { if (!pv) pv = World.preview($('#pv')); pv.start(); }
@@ -597,7 +609,7 @@ function finish() {
 function showResult() {
   const st = G.st, won = st.winner === 0, me = st.sides[1], foe = st.sides[0];   // (side[1] holds the shots we fired)
   $('#rsBig').textContent = t(won ? 'r.win' : 'r.lose'); $('#rsBig').className = 'big' + (won ? '' : ' lose');
-  $('#rsSub').textContent = G.resigned ? t('r.subR', { l: G.level }) : t('r.sub', { n: st.log.length, l: G.level });
+  $('#rsSub').textContent = G.resigned ? t('r.subR', { l: dName(G.level) }) : t('r.sub', { n: st.log.length, l: dName(G.level) });
   const acc = me.nshots ? Math.round(me.hits / me.nshots * 100) : 0;
   $('#rsStats').innerHTML = [[acc + '%', t('r.acc')], [me.nshots, t('r.shots')], [st.sides[1].sunk.filter(Boolean).length, t('r.sunk')], [foe.sunk.filter(Boolean).length, t('r.lost')]].map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join('');
   sheet('#scrResult', true);
@@ -634,7 +646,7 @@ function renderFleets2() {
         else st = `<span class="foot why gold">${p === 0 ? t('fv.hits', { n: sd.hitsOn[i], m: T.len }) : t('fv.afloat')}</span>`; }
       return shipCard(k, { tag: 'div', cls, foot: st }); }).join('');
     const left = inB ? t('left', { n: G.st.sides[p].afloat }) : G.draft ? t('dr.left', { c: E.draftLeft(G.draft, p) }) : '';
-    return `<section class="fsec" id="fsec${p}"><h3><span>${p ? t('fv.foe', { n: 'AI Lv.' + G.level }) : t('fv.me')}</span><small>${left}</small></h3>${cards ? `<div class="grid flat">${cards}</div>` : `<p class="none">${t('fv.none')}</p>`}</section>`; };
+    return `<section class="fsec" id="fsec${p}"><h3><span>${p ? t('fv.foe', { n: 'AI ' + dName(G.level) }) : t('fv.me')}</span><small>${left}</small></h3>${cards ? `<div class="grid flat">${cards}</div>` : `<p class="none">${t('fv.none')}</p>`}</section>`; };
   $('#flBody').innerHTML = sec(1) + sec(0); fillPortraits($('#scrFleet'));
 }
 // a skill's card above the dock (hover on PC, the armed skill on phones)
@@ -708,7 +720,14 @@ $('#mArchive').onclick = () => { sfx('select'); openArchive(); };
 $('#mHelp').onclick = () => { sfx('select'); sheet('#scrHelp', true); };
 $$('[data-close]').forEach(b => b.addEventListener('click', () => { const s = b.closest('.sheet'); s.classList.add('hide'); sheetsUI(); if (s.id === 'scrArchive' && pv2) pv2.stop(); }));
 $('#ruleList').addEventListener('click', e => { const b = e.target.closest('.rc'); if (b) { ND.rule = b.dataset.r; sfx('select'); renderSetup(); } });
-$('#lvl').addEventListener('input', e => { ND.level = +e.target.value; $('#lvlV').innerHTML = `Lv.${ND.level}<small>${tier(ND.level)}</small>`; });
+// (the list floats over the sheet, fixed to the window, so the sheet's scrolling box never cuts it off; it opens upward when there is more room above)
+function placeDD() { const l = $('#ddL'), r = $('#ddB').getBoundingClientRect(), H = innerHeight, below = H - r.bottom - 8, above = r.top - 8, up = below < 300 && above > below;
+  Object.assign(l.style, { left: r.left + 'px', width: r.width + 'px', top: up ? '' : (r.bottom + 4) + 'px', bottom: up ? (H - r.top + 4) + 'px' : '', maxHeight: Math.max(160, up ? above : below) + 'px' }); }
+$('#ddB').addEventListener('click', e => { e.stopPropagation(); const l = $('#ddL'), o = l.classList.toggle('hide'); $('#ddB').classList.toggle('open', !o); if (!o) placeDD(); sfx('select'); });
+addEventListener('resize', () => { if (!$('#ddL').classList.contains('hide')) placeDD(); });
+$('#scrSetup').addEventListener('scroll', () => { if (!$('#ddL').classList.contains('hide')) placeDD(); }, true);
+$('#ddL').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; e.stopPropagation(); ND.level = +b.dataset.lv; $('#ddL').classList.add('hide'); $('#ddB').classList.remove('open'); sfx('select'); renderDiff(); });
+document.addEventListener('click', () => { const l = $('#ddL'); if (l && !l.classList.contains('hide')) { l.classList.add('hide'); $('#ddB').classList.remove('open'); } });
 $('#segFirst').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { ND.first = b.dataset.v; renderSetup(); } });
 $('#segStreak').addEventListener('click', e => { const b = e.target.closest('button'); if (b && !b.disabled) { ND.streak = b.dataset.v === '1'; renderSetup(); } });
 $('#segAdj').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { ND.adj = b.dataset.v === '1'; renderSetup(); } });
