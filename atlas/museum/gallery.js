@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 141;
+  const V = 142;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -393,7 +393,7 @@
     if (!V3 || !V3.R) return; V3.raf = 0;
     const dt = Math.min(.05, (now - V3.last) / 1000); V3.last = now;
     const S = V3.sph; let moving = false;
-    if (V3.tw) { const k = Math.min(1, (now - V3.tw.t0) / V3.tw.ms), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; S.yaw = V3.tw.a.yaw + (V3.tw.b.yaw - V3.tw.a.yaw) * e; S.pit = V3.tw.a.pit + (V3.tw.b.pit - V3.tw.a.pit) * e; S.d = V3.tw.a.d + (V3.tw.b.d - V3.tw.a.d) * e; if (k >= 1) V3.tw = null; moving = true; }
+    if (V3.tw) { const k = Math.min(1, (now - V3.tw.t0) / V3.tw.ms), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; S.yaw = V3.tw.a.yaw + (V3.tw.b.yaw - V3.tw.a.yaw) * e; S.pit = V3.tw.a.pit + (V3.tw.b.pit - V3.tw.a.pit) * e; S.d = V3.tw.a.d + (V3.tw.b.d - V3.tw.a.d) * e; if (V3.tw.ta) V3.tgt.lerpVectors(V3.tw.ta, V3.tw.tb, e); if (k >= 1) V3.tw = null; moving = true; }   // (tgt: the point looked at glides too — a game's focus, museum/play.js)
     if (!V3.drag && (Math.abs(V3.vel.yaw) > 1e-4 || Math.abs(V3.vel.pit) > 1e-4)) { S.yaw += V3.vel.yaw; S.pit += V3.vel.pit; V3.vel.yaw *= .9; V3.vel.pit *= .9; moving = true; }
     if (V3.spin && !V3.drag && !V3.tw && awake()) { S.yaw += dt * .16; moving = true; }   // (the turntable keeps turning until it is touched or switched off: 2026-11-23, the user's choice)
     if (V3.flip && V3.flip.t !== V3.flip.to) {   // turning a two-sided piece over: lift, roll half a turn, set down
@@ -422,7 +422,7 @@
     const cm = V3.e.cm, u = 10 / cm, dist = c.position.distanceTo(V3.tgt), px = u / (2 * dist * Math.tan(c.fov * Math.PI / 360)) * h;
     const bar = ov.querySelector('.exscale'); bar.style.setProperty('--w', Math.max(12, Math.min(w * .4, px)).toFixed(1) + 'px'); bar.hidden = !(px > 10);
   }
-  function tween(to, ms = 700) { if (!V3) return; V3.vel.yaw = V3.vel.pit = 0; V3.tw = { a: Object.assign({}, V3.sph), b: Object.assign({}, to), t0: performance.now(), ms }; const d = to.yaw - V3.sph.yaw; V3.tw.b.yaw = V3.sph.yaw + Math.atan2(Math.sin(d), Math.cos(d)); go(); }
+  function tween(to, ms = 700) { if (!V3) return; V3.vel.yaw = V3.vel.pit = 0; V3.tw = { a: Object.assign({}, V3.sph), b: Object.assign({}, to), t0: performance.now(), ms, ta: to.tgt ? V3.tgt.clone() : null, tb: to.tgt || null }; const d = to.yaw - V3.sph.yaw; V3.tw.b.yaw = V3.sph.yaw + Math.atan2(Math.sin(d), Math.cos(d)); go(); }
   function focusSpot(i) {
     if (!V3 || !V3.spots || !V3.spots[i]) return;
     V3.spin = false; V3.ov.querySelector('[data-k="spin"]').classList.remove('on');
