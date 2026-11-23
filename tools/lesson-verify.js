@@ -674,7 +674,7 @@ function checkers(opt) {
 //   縦と横) and for every wrong move (the king or not, a blocker on the way, a capture or not, a piece of yours taken next), the question
 //   and the hint (a corner / the throne named is in an answer)
 //   ⑨ the 2D (tafl/app.js problemPoints) and the 3D (TAFL.points) both score P.ok
-const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile']);
+const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap']);
 function tafl(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'tafl/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'tafl/lessons.json'), 'utf8'));
@@ -699,9 +699,92 @@ function tafl(opt) {
   const SYM = [(r, c) => [r, c], (r, c) => [r, 10 - c], (r, c) => [10 - r, c], (r, c) => [10 - r, 10 - c], (r, c) => [c, r], (r, c) => [c, 10 - r], (r, c) => [10 - c, r], (r, c) => [10 - c, 10 - r]];
   const dist = (a, b) => { let best = 99; for (const S of SYM) { let d = 0; for (let i = 0; i < 121 && d < best; i++) { const [r, c] = S((i / 11) | 0, i % 11); if (a[i] !== b[r * 11 + c]) d++; } best = Math.min(best, d); } return best; };
   const seen = new Map(), symSeen = new Map(), plain = t => String(t).replace(/[\u0001\u0002]/g, '');
+  const five = (id, j, P, me, nm, a) => {
+      for (const [who, b] of pool) { if (who === `${id} q${j + 1}`) continue; const e = dist(P.s.b, b); if (e <= 3) a(`⑤ ${e} squares from ${who}`); }
+      for (const m of P.ok) { const k = nm(m).replace(/x.*/, ''); if (seen.has(k)) a(`⑤ the same answer ${k} as ${seen.get(k)}`); else seen.set(k, `${id} q${j + 1}`); }
+      // (2026-11-24 2巡目) the same move turned or mirrored (h4-h6xg6 = d8-d6xe6) is the same problem too: the 8 symmetries, the mover's side
+      for (const m of P.ok) { const sym = SYM.map(S => { const [a1, b1] = S(...RC(mFrom(m))), [a2, b2] = S(...RC(mTo(m))); return `${me}:${a1 * n + b1}>${a2 * n + b2}`; });
+        const hit = sym.find(k => symSeen.has(k)); if (hit && symSeen.get(hit) !== `${id} q${j + 1}`) a(`⑤ the same answer as ${symSeen.get(hit)} turned / mirrored (${nm(m)})`); sym.forEach(k => { if (!symSeen.has(k)) symSeen.set(k, `${id} q${j + 1}`); }); }
+  };
+
+  // (2026-11-24 第2期) the N-move problems (b_escape: the king to a corner, b_kingcap: the king caught, P.n own moves against every
+  // defence). A solver of its own (the rules of tafl/engine.js): force(p, m, k) = after m, whatever the opponent plays, the goal comes
+  // within k own moves (m counted). goal: the theme's win (a corner / the king captured), or any win (all = true: what the 2D / 3D
+  // runner, engine.c puzzle(), accepts — so no move outside P.ok may win in time in any way).
+  const solver = (me, all) => { const memo = new Map();
+    const goal = q => q.res === me && (all || (me === 2 ? CORNER(q.king) : q.why === 'capture'));
+    const now = p => (all ? p.moves() : me === 2 ? p.moves().filter(m => mFrom(m) === p.king && CORNER(mTo(m))) : p.moves().filter(m => p.nb(p.king).includes(mTo(m)))).some(m => goal(p.clone().play(m)));
+    const ord = (q, R) => { const k = q.king, adj = new Set(q.nb(k)), kr = (k / n) | 0, kc = k % n; return R.map(r => { const t = mTo(r), f = mFrom(r); return [f === k ? 0 : adj.has(t) ? 1 : ((t / n) | 0) === kr || t % n === kc ? 2 : 3, r]; }).sort((x, y) => x[0] - y[0]).map(x => x[1]); };
+    const win = (p, k) => { if (k === 1) return now(p); const key = p.b.join('') + k; if (memo.has(key)) return memo.get(key); let r = false; for (const m of p.moves()) if (force(p, m, k)) { r = true; break; } memo.set(key, r); return r; };
+    const force = (p, m, k) => { const q = p.clone().play(m); if (goal(q)) return true; if (q.res || k === 1) return false; const R = q.moves(); if (!R.length) return false;
+      for (const r of ord(q, R)) { const z = q.clone().play(r); if (z.res || !win(z, k - 1)) return false; } return true; };
+    const refute = (p, m, k, cap) => { const q = p.clone().play(m); if (goal(q)) return 0; if (q.res || k === 1) return 99; let c = 0; for (const r of ord(q, q.moves())) { const z = q.clone().play(r); if (z.res || !win(z, k - 1)) { if (++c >= cap) return c; } } return c; };
+    return { force, refute, goal }; };
+  const relSeen = new Map();
+  const kMob = q => { const z = q.clone(); z.turn = 2; z.res = 0; return z.king < 0 ? 0 : z.moves().filter(x => mFrom(x) === z.king).length; };
+  const winsNext = q => !q.res && q.moves().some(x => q.clone().play(x).res === q.turn);
+  const seqCheck = (st, si, P, j, a) => { const id = st.id, p = E.Pos.from(P.s), me = p.turn, all = p.moves(), nm = m => E.name(p, m), N = P.n, esc = id === 'b_escape';
+    const S = solver(me, false), SA = solver(me, true), okS = new Set(P.ok || []);
+    if (me !== (esc ? 2 : 1)) a('④ the wrong side to move');
+    // ①②
+    const goalSet = all.filter(m => S.force(p, m, N));
+    (P.ok || []).forEach(m => { if (!all.includes(m)) a(`① the answer ${m} is not legal`); else if (!goalSet.includes(m)) a(`① the answer ${nm(m)} does not force the ${esc ? 'escape' : 'capture'} in ${N} against every defence`); });
+    goalSet.forEach(m => { if (!okS.has(m)) a(`② ${nm(m)} forces it too but is scored wrong`); });
+    if (!okS.has(P.best)) a('① best is not an answer');
+    all.filter(m => !okS.has(m)).forEach(m => { if (SA.force(p, m, N)) a(`⑨ ${nm(m)} wins in ${N} some other way (the runner would take it)`); });
+    // ④ N moves are needed (none in N-1), the king not caught / boxed already, no win or loss at once
+    if (all.some(m => S.force(p, m, N - 1))) a(`④ the goal comes in ${N - 1} already`);
+    if (all.some(m => p.clone().play(m).res)) a('④ a move ends the game at once');
+    { const q = p.clone(); q.turn = 3 - me; q.res = 0; if (q.moves().some(m => q.clone().play(m).res === 3 - me)) a('④ the opponent threatens to win at once'); }
+    const hs = p.nb(p.king).filter(i => p.at(i) === 1 || THRONE(i)).length;
+    if (!esc && (hs > 2 || EDGE(p.king))) a(`④ the king is boxed already (${hs} hostile sides${EDGE(p.king) ? ', on the edge' : ''}) — not what the intro shows`);
+    if (esc && EDGE(p.king)) a('④ the king is on the edge already');
+    // ③
+    const wrong = all.filter(m => !okS.has(m)), kM = all.filter(m => mFrom(m) === p.king);
+    if (all.length < 3 || wrong.length < 2 || P.ok.length * 3 > all.length) a(`③ ${P.ok.length} of ${all.length} moves are right`);
+    if (esc && (kM.length < 3 || kM.filter(m => !okS.has(m)).length < 2)) a(`③ the king has ${kM.length} moves`);
+    // ⑤
+    five(id, j, P, me, nm, a);
+    // ⑤ the same shape moved along the board: the 5×5 around the king (8 symmetries, the board's edges / corners / throne as walls)
+    // within 2 squares of another problem of the lesson's
+    { const [kr, kc] = RC(p.king), loc = []; for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++) { const r = kr + dr, c = kc + dc, i = r * n + c; loc.push(r < 0 || c < 0 || r >= n || c >= n ? '#' : p.at(i) ? '.adk'[p.at(i)] : CORNER(i) || THRONE(i) ? '+' : '.'); }
+      for (const [jj, o] of relSeen.get(id) || []) { let best = 99; for (const S of SYM) { let e = 0; for (let q = 0; q < 25; q++) { const [a1, b1] = S(((q / 5) | 0) + 3, q % 5 + 3); if (loc[q] !== o[(a1 - 3) * 5 + b1 - 3]) e++; } best = Math.min(best, e); }
+        if (best <= 2) a(`⑤ the same shape around the king as q${jj + 1} (${best} squares apart)`); }
+      if (!relSeen.has(id)) relSeen.set(id, []); relSeen.get(id).push([j, loc]); }
+    // ⑥ d: the near-misses (wrong first moves that only one or two defences beat)
+    const d = wrong.filter(m => S.refute(p, m, N, 3) <= 2).length;
+    return d; };
+  const seqWords = (st, si, P, j, a) => { const id = st.id, esc = id === 'b_escape', p0 = E.Pos.from(P.s), me = p0.turn, N = P.n, S = solver(me, false);
+    let W; try { W = X.tfLsJa(E, st, P, j, k => X.TFM(k, 'ja'), si); } catch (e) { a('⑧ the words fail: ' + e.message); return; }
+    for (const t of [W.ask, W.hintTx, plain(W.good())]) if (!t || /\{|undefined|NaN/.test(t) || /2本同時|2本作/.test(t)) a(`⑧ 「${t}」`);
+    // ⑦⑧ at the first move (every wrong move) and at the second (the stored line, every wrong move there)
+    const stages = [[p0, 0]]; if (P.line && P.line.length >= 2) stages.push([p0.clone().play(P.line[0]).play(P.line[1]), 1]);
+    for (const [pos, used] of stages) { const left = N - used, all = pos.moves(), goods = all.filter(m => S.force(pos, m, left)); if (!goods.length) { a(`① the stored line: no forced move at your move ${used + 1}`); continue; }
+      const m = goods[0], q2 = pos.clone().play(m), nm = x => E.name(pos, x);
+      for (const u of all.filter(x => !goods.includes(x))) { const raw = plain(W.ng(u, pos, used, m)), x = nm(u), i0 = raw.indexOf('赤い印の手'), i1 = raw.indexOf('緑の印の手');
+        if (/\{|undefined|NaN/.test(raw) || i0 < 0 || i1 < 0) { a(`⑧ move ${used + 1} ${x}: 「${raw}」`); continue; }
+        const tx = raw.slice(i0, i1), tm = raw.slice(i1), q = pos.clone().play(u), say = (c, ok, why) => { if (c && !ok) a(`⑦ move ${used + 1} ${x}: 「${raw}」 — ${why}`); };
+        for (const t of raw.match(/\d+手(?=のうち|では|で(?:角|つか|捕獲))/g) || []) if (+t.replace('手', '') !== left) a(`⑧ move ${used + 1} ${x}: 「${raw}」 — ${left} moves are left`);
+        if (esc) { const king = pos.at(mFrom(u)) === 3, kl = q.kingLines().length, kl2 = q2.kingLines().length, wn = winsNext(q);
+          say(/つかまっちゃう|はさまれて負け|つかまる場所|王がつかま|攻め手でうま/.test(tx), wn, 'the king is not caught next'); say(wn, /つかまっちゃう|はさまれて負け|つかまる場所|王がつかま|攻め手でうま/.test(tx), 'the king is caught next, the words do not say it');
+          say(/王さまじゃない駒|王は動いてない|王さまはその場|王さまが進まない/.test(tx), !king, 'the king moved'); say(!king && !wn, /王さまじゃない駒|王は動いてない|王さまはその場|王さまが進まない/.test(tx), 'not the king, the words do not say it');
+          say(/1本/.test(tx), kl === 1 && q.moves().some(r => { const z = q.clone().play(r); return !z.res && !z.kingLines().length; }), `the king has ${kl} line(s) / no single block`);
+          say(/まだない|ひとつもできない|ふさがったまま|ゼロ/.test(tx), kl === 0, `the king has ${kl} line(s)`);
+          const c2 = tm.match(/(\d+)本/); say(!!c2, c2 && +c2[1] === kl2 && kl2 >= 2 && q2.moves().every(r => { const z = q2.clone().play(r); return !z.res && z.kingLines().length; }), `${kl2} line(s) after the right move / one block stops them`);
+          say(/そのまま角|その場で脱出|一直線に角|角まで一直線/.test(tm), q2.res === 2, 'the right move does not reach a corner'); }
+        else { const k0 = kMob(pos), k1 = kMob(q), k2 = kMob(q2), wn = winsNext(q);
+          say(/逃げられちゃう！|脱出され|角に着いちゃう|角まで走られ|角へ逃げこめる/.test(tx), wn, 'the king cannot reach a corner next'); say(wn, /逃げられちゃう！|脱出され|角に着いちゃう|角まで走られ|角へ逃げこめる/.test(tx), 'the king escapes next, the words do not say it');
+          const c1 = tx.match(/(\d+)(マス|つ残る)/); say(!!c1, c1 && +c1[1] === k1, `the king has ${k1} free squares`);
+          say(/動けないけど|動けなくても|王を止めても/.test(tx), k1 === 0, `the king has ${k1} free squares`);
+          const c3 = tm.match(/(\d+)から(\d+)に減|(\d+)マスから(\d+)マス/); say(!!c3, c3 && +(c3[1] || c3[3]) === k0 && +(c3[2] || c3[4]) === k2 && k2 < k0, `the king's free squares ${k0} → ${k2}`);
+          const c4 = tm.match(/(\d+)つにしぼ/); say(!!c4, c4 && +c4[1] === k2 && k2 < k0, `the king's free squares ${k0} → ${k2}`);
+          say(/その場で王|そのままかこみが閉じ|すぐ捕獲|その場で攻め手の勝ち|最後の1枚/.test(tm), q2.res === 1, 'the right move does not catch the king'); }
+      } } };
   L.steps.forEach((st, si) => { const id = st.id; if (!TF_DONE.has(id)) return;
     let prevD = -1, firstD = null;
     st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), me = p.turn, all = p.moves(), nm = m => E.name(p, m);
+      if (P.n > 1) { const d = seqCheck(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
+        if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); seqWords(st, si, P, j, a); return; }
       const okS = new Set(P.ok || []), capM = all.filter(m => p.clone().play(m).lastCaps.length);
       if (!P.ok || !P.ok.length) { a('① no answer list'); return; }
       // ①② the goal set
@@ -721,12 +804,7 @@ function tafl(opt) {
       if (id === 'b_move') { if (EDGE(p.king)) a('④ the king is on the edge already'); if (p.kingLines().length) a('④ the king has an open line to a corner'); if (me !== 2) a('④ not the defender to move'); }
       if (id === 'b_cap') capM.forEach(m => { const k = anvils(p, m); if (k.some(x => x !== '駒')) a(`④ ${nm(m)} takes against ${k.join('/')} (the next lesson)`); });
       if (id === 'b_hostile') capM.forEach(m => { const k = anvils(p, m); if (!k.some(x => x === '角' || x === '玉座')) a(`④ ${nm(m)} takes against a piece (not the lesson)`); });
-      // ⑤
-      for (const [who, b] of pool) { if (who === `${id} q${j + 1}`) continue; const e = dist(P.s.b, b); if (e <= 3) a(`⑤ ${e} squares from ${who}`); }
-      for (const m of P.ok) { const k = nm(m).replace(/x.*/, ''); if (seen.has(k)) a(`⑤ the same answer ${k} as ${seen.get(k)}`); else seen.set(k, `${id} q${j + 1}`); }
-      // (2026-11-24 2巡目) the same move turned or mirrored (h4-h6xg6 = d8-d6xe6) is the same problem too: the 8 symmetries, the mover's side
-      for (const m of P.ok) { const sym = SYM.map(S => { const [a1, b1] = S(...RC(mFrom(m))), [a2, b2] = S(...RC(mTo(m))); return `${me}:${a1 * n + b1}>${a2 * n + b2}`; });
-        const hit = sym.find(k => symSeen.has(k)); if (hit && symSeen.get(hit) !== `${id} q${j + 1}`) a(`⑤ the same answer as ${symSeen.get(hit)} turned / mirrored (${nm(m)})`); sym.forEach(k => { if (!symSeen.has(k)) symSeen.set(k, `${id} q${j + 1}`); }); }
+      five(id, j, P, me, nm, a);
       // ⑥
       const d = id === 'b_move' ? kWrong.length : wrong.filter(m => near(p, m, me)).length;
       if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
@@ -771,7 +849,7 @@ function tafl(opt) {
 // b_cannon・b_pawn). The goal set is read from the rules (a capture by that kind on which no legal move of the opponent can take back),
 // the engine values stored in sc (= xiangqi/app.js problemPoints, the 3D XIANGQI.points) must put that capture alone on top, and
 // ショウギツネ's words (atlas/lessons3d.js xqLsJa) are read back against the board for the answer and every wrong move.
-const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn']);
+const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn', 'b_mate1']);
 function xiangqi(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'xiangqi/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'xiangqi/lessons.json'), 'utf8'));
@@ -797,7 +875,7 @@ function xiangqi(opt) {
   OP.sets.forEach(g => (g.problems || []).forEach((q, j) => pool.push([`opening ${g.id} ${j + 1}`, brd(q.s)])));
   (PZ.themes || []).forEach(th => (th.puzzles || []).forEach((q, j) => pool.push([`puzzle ${th.id} ${j + 1}`, brd(q.s)])));
   const plain = t => String(t).replace(/<[^>]+>/g, '');
-  L.steps.forEach((st, si) => { const id = st.id; if (!XQ_DONE.has(id)) return; const K = KIND[id];
+  L.steps.forEach((st, si) => { const id = st.id; if (!XQ_DONE.has(id) || !KIND[id]) return; const K = KIND[id];
     let prevD = -1, firstD = null; const capT = new Set();
     st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), me = p.side, all = p.moves(), nm = m => E.name(p, m);
       // ⑨ every legal move has a value, once
@@ -861,6 +939,64 @@ function xiangqi(opt) {
       }
     });
     if (capT.size < 2) add(id, 4, `⑤ every answer takes the same kind of piece`);
+  });
+  // (2026-11-24 第2期) b_mate1「1手で詰ます」('ok' kind): the goal set = every move that gives check and leaves no reply (read from
+  // the rules); no quiet move wins by stalemate (困毙: the lesson is about check); the warm-up's mate too; the order by the decoy
+  // checks; ショウギツネ's words for every wrong move read back against the replies (taken / runs / blocked / no check).
+  const MATE1 = ['b_mate1'];
+  if (!/const right = u => P\.ok \? P\.ok\.includes\(u\)/.test(src)) add('-', -1, '⑨ the 3D right() for the ok kinds changed');
+  if (!/function problemPoints\(P, m\) \{\n  if \(P\.ok\) return P\.ok\.includes\(m\) \? 20 : 0;/.test(app)) add('-', -1, '⑨ the 2D problemPoints for the ok kinds changed');
+  const mates = p => p.moves().filter(m => { const q = p.clone().play(m); return q.inCheck() && !q.moves().length; });
+  L.steps.forEach((st, si) => { const id = st.id; if (!XQ_DONE.has(id) || !MATE1.includes(id)) return;
+    let prevD = -1, firstD = null; const tys = new Set();
+    (st.ramp || []).forEach((r, j) => { if (!r.s) return; const p = E.Pos.from(r.s), M = mates(p).map(m => E.name(p, m, 'iccs')).sort();
+      if (r.k === 'explain') { const mk = (r.marks || []).map(x => x[0]); if (!M.some(m => mk.includes(m.slice(0, 2)) && mk.includes(m.slice(2, 4)))) add(id, -1, `⑧ warm-up ${j + 1}: the marked move is not a mate`); }
+      if (r.ok && JSON.stringify(r.ok.slice().sort()) !== JSON.stringify(M)) add(id, -1, `① warm-up ${j + 1}: ok ${r.ok} ≠ the mates ${M}`);
+      if (p.moves().some(m => { const q = p.clone().play(m); return !q.inCheck() && !q.moves().length; })) add(id, -1, `④ warm-up ${j + 1}: a quiet move stalemates (not the lesson's check)`); });
+    st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), me = p.side, all = p.moves(), nm = m => E.name(p, m);
+      if (!P.ok || !P.ok.length) { a('⑨ not an ok-kind problem'); return; }
+      if (!P.ok.includes(P.best)) a('⑨ best is not in ok');
+      P.ok.forEach(m => { if (!all.includes(m)) a(`① ${m} in ok is not legal`); });
+      // ① ② the goal set = every mate (no other move wins on the spot)
+      const M = mates(p), okS = new Set(P.ok);
+      M.filter(m => !okS.has(m)).forEach(m => a(`② ${nm(m)} also mates, not in ok`));
+      P.ok.filter(m => !M.includes(m)).forEach(m => a(`① ${nm(m)} in ok does not mate`));
+      if (M.length > 2) a(`② ${M.length} mates: too many answers`);
+      // ④ the theme: a check that cannot be met; no quiet stalemate; nobody in check before
+      const stale = all.filter(m => { const q = p.clone().play(m); return !q.inCheck() && !q.moves().length; });
+      stale.forEach(m => a(`④ ${nm(m)} wins by stalemate, not by check`));
+      if (p.inCheck()) a('④ the mover is in check'); { const q = E.Pos.from(P.s.replace(/ [wb]$/, me ? ' w' : ' b')); if (q.inCheck()) a('④ the side not to move is in check'); }
+      // ③ not at a glance: enough moves, and checks that do not mate
+      const ck = all.filter(m => !okS.has(m) && p.clone().play(m).inCheck()), near = ck.filter(m => p.clone().play(m).moves().length <= 2);
+      if (all.length < 12) a(`③ ${all.length} legal moves`); if (ck.length < 2) a(`③ ${ck.length} checks that do not mate`);
+      M.forEach(m => tys.add(T(p.at(mFrom(m)))));
+      // ⑤ no near twin (the pool: every lesson, warm-up, opening, puzzle; mirrored)
+      const B = brd(P.s); for (const [who, b] of pool) { if (who === `${id} q${j + 1}`) continue; const e = dist(B, b); if (e <= 4) a(`⑤ ${e} points from ${who}`); }
+      // ⑥ easier first: the decoy checks (and those leaving one or two replies)
+      const d = ck.length + near.length;
+      if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
+      if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`);
+      // ⑦ ⑧ the 3D words
+      let W; try { W = X.xqLsJa(E, st, P, j, k => k === 'ok' ? '〈正〉' : '〈誤〉', si); } catch (e) { a('⑧ the words fail: ' + e.message); return; }
+      const g = plain(W.good(P.best)); if (/\{|undefined|NaN/.test(g) || !/將|王手|詰/.test(g)) a(`⑧ the praise 「${g}」`);
+      for (const t of [W.ask, W.hintTx]) if (/\{|undefined|NaN/.test(t)) a(`⑧ 「${t}」`);
+      for (const u of all) { if (okS.has(u)) continue; const raw = plain(W.ng(u)), x = nm(u), i1 = raw.indexOf('〈正〉'), t = i1 > 0 ? raw.slice(0, i1) : raw;
+        if (/\{|undefined|NaN/.test(raw)) { a(`⑧ ${x}: 「${raw}」`); continue; }
+        if (!raw.includes('〈誤〉') || !raw.includes('〈正〉')) a(`⑦ ${x}: the words do not name both moves 「${raw}」`);
+        const q = p.clone().play(u), rep = q.moves(), k = q.k[me ^ 1], to = mTo(u);
+        if (q.inCheck()) {
+          const take = /取られて終わ|そのまま取られる|ぱくっと取られ|取られて消え|ただで取られる/.test(t), run = /逃げられ|逃げ道が残って|空いている点へ動いて|逃げ出せる|逃げ場がまだ/.test(t), blk = /間に駒を入れ|はさんで防げ|合い駒|筋に駒を入れ|あいだをふさが/.test(t);
+          if (!take && !run && !blk) a(`⑦ ${x}: a check that does not mate, the words do not say how it is met 「${t}」`);
+          if (take && !rep.some(r => mTo(r) === to)) a(`⑦ ${x}: 「${t}」 (the checking piece cannot be taken)`);
+          if (run && !rep.some(r => mFrom(r) === k)) a(`⑦ ${x}: 「${t}」 (the general cannot move)`);
+          if (blk && !rep.some(r => mFrom(r) !== k && mTo(r) !== to)) a(`⑦ ${x}: 「${t}」 (nothing can block)`);
+        } else {
+          if (!/王手じゃない|王手にならず|おだやか|1手の余裕|1手もらって|詰みを防|詰まなくなる|逃げ道/.test(t)) a(`⑦ ${x}: not a check, the words do not say it 「${t}」`);
+          if (!rep.some(r => !mates(q.clone().play(r)).length)) a(`⑦ ${x}: 「${t}」 (the opponent cannot stop the mate after it)`);
+        }
+      }
+    });
+    if (tys.size < 3) add(id, 4, `⑤ the mates use fewer than three kinds of piece (${[...tys]})`);
   });
   return out;
 }

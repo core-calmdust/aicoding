@@ -52,6 +52,7 @@ static int loadKP(const char *path) {
       for (int i = 0; i < NUE_L2 * NUE_L1; i++) nueMB[k * NUE_L2 * NUE_L1 + i] = b8[i];
     }
   } else { memset(nueMA, 0, sizeof nueMA); memset(nueMC, 0, sizeof nueMC); }
+  nue_mlp_init();
 #endif
   (void)mlp; fclose(f); nue_set_nb(nb);
   if (!nue_kinit()) { fprintf(stderr, "bad bucket map\n"); return 0; }
