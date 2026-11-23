@@ -387,7 +387,7 @@ const CHECKS = {
     //     of under 5 discs are not compared)  ⑥ the win lessons get no easier (the own moves to the forced win never go down)
     //  ⑦ a wrong column that still wins by force is never said to fail (おしまい・止められちゃう・負け・引き分け …)
     //  (⑧ the words: the checks above; ⑨ the 2D lesson reads the same lessons.json.)  C4_SOLVE=0 skips the solver (① only from sc).
-    const C4_DONE = new Set(['four', 'block', 'centre', 'early', 'threat', 'open', 'diag', 'double', 'stack', 'force']);
+    const C4_DONE = new Set(['four', 'block', 'centre', 'early', 'threat', 'open', 'diag', 'double', 'stack', 'force', 'count', 'endwin']);
     const E4 = require(path.join(ROOT, 'connect4/engine.js')), SOLVE = process.env.C4_SOLVE !== '0';
     const cset = (mv, mir) => { const g = grid(mv), m = new Map(); g.forEach((col, c) => col.forEach((p, r) => m.set((mir ? 6 - c : c) + ',' + r, p))); return m; };
     const cdist = (a, b) => { let d = 0; for (const [k, v] of a) if (b.get(k) !== v) d++; for (const k of b.keys()) if (!a.has(k)) d++; return d; };
@@ -422,6 +422,8 @@ const CHECKS = {
           for (const u of oth) if (sc[u] > 0) { const t = plain(o.ng(u)).split(/緑の印の列/)[0]; if (/おしまい|止まっちゃう|止められちゃう|負け|守れちゃう|終わり|引き分け|届かない/.test(t)) no(w, `⑦ column ${u} still wins, the words say it fails: ${t}`); } }
       }); });
     if (pend.length && !process.env.C4_QUIET) console.log(`connect4: ${pend.length} pending (not yet verified lessons):\n  ` + pend.join('\n  '));
+    // count / endwin の move-specific な事実（⑦⑧）は tools/lesson-verify.js（上の汎用チェックでは表せない）
+    require('./lesson-verify.js').connect4().forEach(fa => bad(G, String(L.steps.findIndex(s => s.id === fa.step)), `${fa.step} q${fa.q}: ${fa.msg}`));
   },
   // (2026-11-23 lesson loop) the hex lessons ('hex', key = the step's index): every answer is an empty cell, the best is among the
   // answers, and the one-move problems are solved again by the exact solver of the engine (hex/tools/native.c serve, built to /tmp/hexn
