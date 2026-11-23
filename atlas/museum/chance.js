@@ -25,6 +25,10 @@
       score: v => v[0] + v[1] + v[2] },
     { id: 'liubo', kind: 'liubo', n: 6, faces: [1, 0], bins: [1, 2, 3, 4, 5, 6], links: [{ ex: 'liubo' }],
       score: v => v.reduce((a, b) => a + b, 0) || 6 },
+    // (2026-11-24) pachisi's cowries: six shells, counted by the mouths turned up — none 25, one 10, otherwise the number. A real
+    // cowrie does not fall mouth-up exactly half the time; the room counts it as half (approx).
+    { id: 'cowrie', kind: 'cowrie', n: 6, faces: [1, 0], bins: [2, 3, 4, 5, 6, 10, 25], links: [{ g: 'ludo' }], approx: true,
+      score: v => { const c = v.reduce((a, b) => a + b, 0); return c === 0 ? 25 : c === 1 ? 10 : c; } },
   ];
   const ICON = {
     talus: '<path d="M6.5 8.5c0-2.4 2-3.5 4-3 1.2.3 1.8 1 3 1s1.8-.9 3.2-.6c1.8.4 2.8 2.1 2.3 4-.3 1.2-1.3 1.8-1.3 3s1 1.9 1 3.3c0 2-1.9 3.4-4 2.8-1.2-.3-1.7-1.1-3.1-1.1s-2 .9-3.4.7c-1.9-.3-3-2.1-2.5-4 .3-1.1 1.3-1.7 1.3-2.9S6.5 9.8 6.5 8.5z"/><path d="M11 10.5c.8.9 2.2.9 3 0"/>',
@@ -32,9 +36,10 @@
     tetra: '<path d="M12 3.5 20.5 19H3.5z"/><path d="M12 3.5 10 19M12 3.5l4 9.5"/><circle cx="12" cy="5.2" r="1.3" fill="currentColor"/>',
     cube: '<rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="8.5" cy="8.5" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.4" fill="currentColor"/>',
     long: '<rect x="2.5" y="8.5" width="19" height="7" rx="2"/><circle cx="7" cy="12" r="1.6"/><circle cx="7" cy="12" r=".4" fill="currentColor"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="12" r=".4" fill="currentColor"/><circle cx="17" cy="12" r="1.6"/><circle cx="17" cy="12" r=".4" fill="currentColor"/>',
+    cowrie: '<path d="M12 3.5c4.6 0 7.5 3.8 7.5 8.5S16.6 20.5 12 20.5 4.5 16.7 4.5 12 7.4 3.5 12 3.5z"/><path d="M12 6.5c-.9 2-1 9 0 11" stroke-width="1.6"/><path d="M10.6 9h1M10.5 12h1M10.6 15h1M12.4 9h1M12.5 12h1M12.4 15h1" stroke-width="1"/>',
     liubo: '<path d="M3 6.5h18M3 10.5h18M3 14.5h18M3 18.5h18"/><path d="M5 5.5v2M5 9.5v2M5 13.5v2M5 17.5v2" stroke-width="1.2"/>',
   };
-  const TK = { talus: 'talus', sticks: 'senet', tetra: 'tetra', cube: 'cube', long: 'long', liubo: 'liubo' };
+  const TK = { talus: 'talus', sticks: 'senet', tetra: 'tetra', cube: 'cube', long: 'long', liubo: 'liubo', cowrie: 'cowrie' };
 
   /* ---------- the exact chances: every way the pieces can fall ---------- */
   function expected(T) {
@@ -143,6 +148,22 @@
     const face = new TH.PlaneGeometry(L - .02, w - .03); face.rotateX(-Math.PI / 2); face.translate(0, .006, 0);
     return geoCache['st' + k] = { back, face };
   }
+  // a money cowrie: a glossy dome on a flat underside; the underside carries the mouth, a long slit with teeth on both lips
+  function cowrieGeo() {
+    if (geoCache.cow) return geoCache.cow;
+    const g = new TH.SphereGeometry(1, 64, 40), P = g.attributes.position, v = new TH.Vector3();
+    for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i);
+      let x = v.x * 1.25, y = v.y, z = v.z * .9;
+      if (y < -.12) y = -.12 - (y + .12) * .12;   // the flat base, a little rounded
+      y *= y > 0 ? .78 * (1 - .06 * Math.cos(x * 2.4)) : 1;   // the dome, a touch humped
+      z *= 1 - .08 * x * x;   // narrower at the ends
+      P.setXYZ(i, x, y, z); }
+    g.computeVertexNormals();
+    const base = new TH.Shape(); for (let i = 0; i <= 48; i++) { const a = i / 48 * Math.PI * 2; base.lineTo(Math.cos(a) * 1.12, Math.sin(a) * .74 * (1 - .06 * Math.cos(a) * Math.cos(a))); }
+    const face = new TH.ShapeGeometry(base, 48); face.rotateX(Math.PI / 2); face.translate(0, -.128, 0);   // facing down
+    const uv = face.attributes.uv, fp = face.attributes.position; for (let i = 0; i < uv.count; i++) uv.setXY(i, (fp.getX(i) + 1.15) / 2.3, (fp.getZ(i) + .8) / 1.6);
+    return geoCache.cow = { dome: g, face };
+  }
   function makePiece(kind) {
     const g = new TH.Group(), body = new TH.Group(); g.add(body);
     const mesh = (geo, m) => { const o = new TH.Mesh(geo, m); o.castShadow = o.receiveShadow = true; body.add(o); return o; };
@@ -156,6 +177,18 @@
         : mat('bamboo', { map: canvasTex('bam', 512, 64, (q, W, H) => { q.fillStyle = '#d9c491'; q.fillRect(0, 0, W, H); sd = 5; for (let i = 0; i < 60; i++) { q.fillStyle = `rgba(150,110,50,${.08 + rnd() * .15})`; q.fillRect(0, rnd() * H, W, 1 + rnd()); } q.fillStyle = 'rgba(120,80,30,.55)'; [.33, .7].forEach(x => q.fillRect(W * x, 0, 4, H)); }), color: 0xffffff, roughness: .62 });
       mesh(G.back, backM); mesh(G.face, faceM);
       up = { 1: Q('x', 0), 0: Q('x', Math.PI) };
+    }
+    if (kind === 'cowrie') {
+      const G = cowrieGeo();
+      const shell = mat('cowrie', { map: canvasTex('cowt', 256, 256, (q, W, H) => { sd = 21; const gr = q.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#f4ead2'); gr.addColorStop(.5, '#ecdcb4'); gr.addColorStop(1, '#f6eed8'); q.fillStyle = gr; q.fillRect(0, 0, W, H);
+        for (let i = 0; i < 70; i++) { q.fillStyle = `rgba(${rnd() < .5 ? '200,170,110' : '250,245,232'},${.12 + rnd() * .2})`; q.beginPath(); q.arc(rnd() * W, rnd() * H, 2 + rnd() * 9, 0, 7); q.fill(); } }), color: 0xffffff, roughness: .18, clearcoat: 1, clearcoatRoughness: .08 });
+      const under = mat('cowrieU', { map: canvasTex('cowu', 512, 256, (q, W, H) => { q.fillStyle = '#efe4c8'; q.fillRect(0, 0, W, H);
+        const g2 = q.createRadialGradient(W / 2, H / 2, 10, W / 2, H / 2, W * .5); g2.addColorStop(0, 'rgba(225,205,160,.0)'); g2.addColorStop(1, 'rgba(205,180,130,.5)'); q.fillStyle = g2; q.fillRect(0, 0, W, H);
+        q.fillStyle = '#3a2a1a'; q.beginPath(); q.moveTo(W * .1, H * .5); q.bezierCurveTo(W * .35, H * .43, W * .65, H * .43, W * .9, H * .52); q.bezierCurveTo(W * .65, H * .56, W * .35, H * .56, W * .1, H * .5); q.fill();
+        q.strokeStyle = '#d9c79e'; q.lineWidth = 5; q.lineCap = 'round';
+        for (let i = 0; i < 13; i++) { const x = W * (.18 + i * .052); q.beginPath(); q.moveTo(x, H * .41); q.lineTo(x + 2, H * .47); q.stroke(); q.beginPath(); q.moveTo(x + 6, H * .59); q.lineTo(x + 4, H * .53); q.stroke(); } }), color: 0xffffff, roughness: .35, clearcoat: .6, clearcoatRoughness: .2 });
+      mesh(G.dome, shell); mesh(G.face, under); body.scale.setScalar(1.15);
+      up = { 0: Q('x', 0), 1: Q('x', Math.PI) };   // 1: the mouth up
     }
     if (kind === 'tetra') {
       const D = window.UrDice3D; const d = D.die({ look: 'bone' }); scale = 1.45 / D.DR; d.scale.setScalar(scale); d.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; } }); body.add(d);
@@ -238,6 +271,7 @@
   function slots(T) {
     const k = T.kind, n = T.n, out = [];
     if (k === 'senet' || k === 'liubo' || k === 'long') { const gap = k === 'long' ? 2.3 : k === 'senet' ? 2.6 : 2.1; for (let i = 0; i < n; i++) out.push([((i % 2) - .5) * (k === 'long' ? 1.4 : 1.8), (i - (n - 1) / 2) * gap]); return { s: out, r: k === 'long' ? 5.6 : k === 'senet' ? 8 : 9.6, yawJ: .12 }; }
+    if (k === 'cowrie') { for (let i = 0; i < n; i++) out.push([((i % 3) - 1) * 3.2 + (i > 2 ? .9 : 0), (i > 2 ? 1.5 : -1.5)]); return { s: out, r: 6.2, yawJ: Math.PI }; }
     const gap = k === 'cube' ? 3.6 : k === 'tetra' ? 3.8 : 3.9;
     for (let i = 0; i < n; i++) out.push([(i - (n - 1) / 2) * gap, (i % 2 ? .7 : -.7) * (k === 'cube' ? .4 : 1)]);
     return { s: out, r: k === 'cube' ? 4.4 : k === 'talus' ? 6.8 : 7, yawJ: Math.PI };
@@ -365,7 +399,7 @@
   function build(box) {
     box.innerHTML = `<div class="chx">
       <p class="chlead"></p>
-      <div class="chtools" role="tablist">${TOOLS.map(T => `<button type="button" class="cht" data-t="${T.id}" role="tab"><span class="chi"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[TK[T.id]]}</svg></span><span class="chtt"><b></b><small></small></span></button>`).join('')}</div>
+      <div class="chtools" role="tablist" style="--n:${TOOLS.length}">${TOOLS.map(T => `<button type="button" class="cht" data-t="${T.id}" role="tab"><span class="chi"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[TK[T.id]]}</svg></span><span class="chtt"><b></b><small></small></span></button>`).join('')}</div>
       <div class="chmain">
         <div class="chl">
           <div class="chstage"><canvas></canvas><div class="chbadges" aria-hidden="true"></div><div class="chres" aria-live="polite"></div><p class="chhint"></p></div>

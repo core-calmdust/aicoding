@@ -38,7 +38,7 @@
     { id: 'gallery', src: ['museum/gallery.js?v=146'], ready: () => !!window.AtlasGallery, render: (el, c) => AtlasGallery.render(el, c) },
     { id: 'paint', src: ['museum/paint-i18n.js?v=1', 'museum/paint.js?v=4'], ready: () => !!(window.AtlasPaint && window.MUSEUM_PAINT_T), render: (el, c) => AtlasPaint.render(el, c) },
     { id: 'read', src: ['museum/read-i18n.js?v=3', 'museum/read.js?v=4'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T), render: (el, c) => AtlasRead.render(el, c) },
-    { id: 'chance', src: ['museum/chance-i18n.js?v=1', 'museum/chance.js?v=2'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T), render: (el, c) => AtlasChance.render(el, c) },
+    { id: 'chance', src: ['museum/chance-i18n.js?v=2', 'museum/chance.js?v=3'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T), render: (el, c) => AtlasChance.render(el, c) },
   ];
   const KEY = 'atlas-museum-room';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
