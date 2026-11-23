@@ -67,6 +67,21 @@
       { set: TF([[3, 0], [3, 1], [0, 3], [1, 3], [5, 3], [6, 3], [3, 5], [3, 6]], [[3, 2], [2, 3], [4, 3], [3, 4]], [3, 3]), last: true },
     ],
   };
+  // ウル (Finkel's rules, as the portal's game): the route of the near player — 1–4 own row from the 4th square to the edge, 5–12 the
+  // middle row, 13–14 own row in the small block, then off. UR(own, theirs, wait, off): own / theirs on squares as [row, col]
+  const UR = (a, b, w, g) => ({ a: a || [], b: b || [], w: w || [7, 7], g: g || [0, 0] });
+  C.ur = [
+    { set: UR() },
+    { set: UR(), glow: ['c2,3', 'c2,2', 'c2,1', 'c2,0', 'c1,0', 'c1,1', 'c1,2', 'c1,3', 'c1,4', 'c1,5', 'c1,6', 'c1,7', 'c2,7', 'c2,6'], task: [{ t: 'tap', at: ['c2,3'] }] },
+    { set: UR(), task: [{ t: 'roll', v: 2 }] },
+    { set: UR(), udice: 2, task: [{ t: 'move', from: 'w0', to: 'c2,2' }] },
+    { set: UR([[2, 2], [1, 1]], [[0, 2]], [5, 6]), udice: 3, task: [{ t: 'move', from: 'c1,1', to: 'c1,4' }] },
+    { set: UR([[2, 3], [2, 0]], [[0, 1]], [5, 6]), udice: 3, task: [{ t: 'move', from: 'c2,0', to: 'c1,2', cands: ['c2,3', 'c2,0'] }] },
+    { set: UR([[1, 2], [2, 3]], [[1, 5], [0, 0]], [5, 5]), udice: 3, task: [{ t: 'move', from: 'c1,2', to: 'c1,5', cut: true }] },
+    { set: UR([[2, 1], [1, 5]], [[0, 3]], [5, 6]), glow: ['c2,0', 'c1,3', 'c2,6', 'c0,0', 'c0,6'], task: [{ t: 'roll', v: 1 }, { t: 'move', from: 'c2,1', to: 'c2,0' }, { t: 'roll', v: 3 }, { t: 'move', from: 'c2,0', to: 'c1,2' }] },
+    { set: UR([[1, 1], [2, 3]], [[1, 3]], [5, 6]), udice: 2, glow: ['c1,3'], gcol: 0xff9b7a, task: [{ t: 'move', from: 'c2,3', to: 'c2,1', cands: ['c1,1', 'c2,3'] }] },
+    { set: UR([[2, 7]], [[1, 6], [0, 6]], [0, 3], [6, 2]), udice: 2, task: [{ t: 'move', from: 'c2,7', to: 'off' }], last: true },
+  ];
   const has = id => !!C[id];
 
   // ---------- the boards: where a piece stands, how to make one, what a tap hits ----------
@@ -99,6 +114,21 @@
         make: kind => U.piece(kind),
         list(s) { return s.a.map(([f, r]) => [`t${f},${r}`, 1]).concat(s.d.map(([f, r]) => [`t${f},${r}`, 2]), s.k ? [[`t${s.k[0]},${s.k[1]}`, 3]] : []); },
         hit(x, z) { let best = null, bd = (U.cs * .7) ** 2; for (let r = 0; r < 7; r++) for (let f = 0; f < 7; f++) { const [px, pz] = U.cell(f, r), d = (px - x) ** 2 + (pz - z) ** 2; if (d < bd) { bd = d; best = `t${f},${r}`; } } return best; } };
+    }
+    if (id === 'ur') {   // the exhibit's own model: squares (U.pt), the waiting pieces beside the big block (U.start), the finished in the notch (U.goal)
+      const Y = U.top, rc = t => t.slice(1).split(',').map(Number);
+      const pos = loc => { const [k0, k] = loc.split(':'); if (loc[0] === 'w') { const [x, z] = U.start(+k0[1], +k); return [x, 0, z]; } if (loc[0] === 'g') return U.goal(+k0[1], +k); const [r, c] = rc(k0), [x, z] = U.pt(r, c); return [x, Y, z]; };
+      return { R: U.U * .5, sc: U.U * .45, base: Y,
+        pos, spot(t) { if (t === 'off') return U.goal(0, 0); if (t[0] === 'w') { const [x, z] = U.start(+t[1], 6); return [x, 0, z]; } return pos(t); },
+        make: kind => U.piece(kind),
+        list(s) { const L = []; s.a.forEach(([r, c]) => L.push([`c${r},${c}`, 0])); s.b.forEach(([r, c]) => L.push([`c${r},${c}`, 1]));
+          for (const sd of [0, 1]) { for (let k = 0; k < s.w[sd]; k++) L.push([`w${sd}:${k}`, sd]); for (let k = 0; k < s.g[sd]; k++) L.push([`g${sd}:${k}`, sd]); } return L; },
+        hit(x, z) { let best = null, bd = (U.U * .62) ** 2; for (let r = 0; r < 3; r++) for (let c = 0; c < 8; c++) { if (U.exists && !U.exists(r, c)) continue; const [px, pz] = U.pt(r, c), d = (px - x) ** 2 + (pz - z) ** 2; if (d < bd) { bd = d; best = `c${r},${c}`; } }
+          if (best) return best; const [gx, , gz] = U.goal(0, 0); if ((gx - x) ** 2 + (gz - z) ** 2 < (U.U * .9) ** 2) return 'off';
+          for (let k = 0; k < 7; k++) { const [sx, sz] = U.start(0, k); if ((sx - x) ** 2 + (sz - z) ** 2 < (U.U * .45) ** 2) return 'w0'; } return null; },
+        ringH: (U.PH || .3) + .02,
+        offLoc: pieces => `g0:${pieces.filter(p => p.loc.startsWith('g0:')).length}`,
+        cutLoc: pieces => `w1:${pieces.filter(p => p.loc.startsWith('w1:')).length}` };
     }
     // 本双六: a point's stones line up from its flower (U.slot), the middle strip (U.bar)
     const Y = U.top;
@@ -153,6 +183,14 @@
       await anim(820, k => dice.forEach((d, i) => { const q = Math.min(1, Math.max(0, k * 1.1 - i * .08)), e = 1 - Math.pow(1 - q, 2.6), [x, z] = U.diceAt(0, i); d.position.set(x, U.top + .68 + Math.sin(q * Math.PI) * 4, z + (1 - e) * 8); d.rotation.set(UP[v[i]][0] + r0[i][0] * (1 - e), (i ? -.3 : .25) + r0[i][1] * (1 - e), UP[v[i]][2] + r0[i][2] * (1 - e)); }));
       showDice(v); }
 
+    // ウル: the four tetrahedral dice of the near side beside the small block; n marked (white) tips up
+    let udice = null;
+    function showUDice(n) { const U = B.userData; if (!udice) udice = [0, 1, 2, 3].map(() => { const d = U.die(); PG.add(d); return d; });
+      udice.forEach((d, i) => { if (n == null) { d.visible = false; return; } d.visible = true; const [x, z] = U.diceAt(0, i); d.position.set(x, U.dieRest, z); U.dieUp(d, i < n, i * 1.3); }); kick(); }
+    async function rollUDice(n) { SND.roll(); showUDice(n); const U = B.userData, q0 = udice.map(d => d.quaternion.clone()), r0 = udice.map(() => [Math.random() * 7, Math.random() * 7]);
+      await anim(780, k => udice.forEach((d, i) => { const q = Math.min(1, Math.max(0, k * 1.12 - i * .04)), e = 1 - Math.pow(1 - q, 2.4), [x, z] = U.diceAt(0, i);
+        d.position.set(x, U.dieRest + Math.sin(q * Math.PI) * U.U * .9, z + (1 - e) * U.U * 1.4); d.quaternion.copy(q0[i]); d.rotateX(r0[i][0] * (1 - e)); d.rotateY(r0[i][1] * (1 - e)); }));
+      showUDice(n); }
     // marks: what glows (the page's own squares), the pieces to pick and the places to go, a ✕ for a point that may not be played
     const MG = new TH.Group(); B.add(MG);
     const mat = (c, op) => new TH.MeshBasicMaterial({ color: c, transparent: true, opacity: op, toneMapped: false, depthWrite: false });
@@ -162,7 +200,7 @@
     const pulse = []; let pulseOn = false;
     function pulseLoop() { if (stopped || !pulse.length) { pulseOn = false; return; } const k = .5 + .5 * Math.sin(performance.now() / 280); pulse.forEach(m => { m.scale.setScalar(m.userData.s * (.92 + k * .14)); m.material.opacity = m.userData.o * (.65 + k * .35); }); kick(); setTimeout(() => requestAnimationFrame(pulseLoop), 50); }
     function mark(kind, t, col) {
-      const [x, y, z] = LY.spot(t), s = LY.sc, p = kind === 'ring' ? at(t) : null, py = p ? p.m.position.y + (B.userData.S3 ? .5 : 1.1) : y;
+      const [x, y, z] = LY.spot(t), s = LY.sc, p = kind === 'ring' ? at(t) : null, py = p ? p.m.position.y + (LY.ringH != null ? LY.ringH : B.userData.S3 ? .5 : 1.1) : y;
       let m;
       if (kind === 'ban') { m = new TH.Group(); [1, -1].forEach(a => { const b = new TH.Mesh(BAR, mat(0xff5d5d, .95)); b.rotation.y = a * Math.PI / 4; m.add(b); }); m.scale.setScalar(s * 1.2); m.position.set(x, y + .03 * s, z); MG.add(m); return; }
       m = new TH.Mesh(kind === 'ring' ? RING : DISC, mat(col, kind === 'ring' ? .95 : kind === 'dest' ? .6 : .4)); m.userData.s = s * (kind === 'ring' ? 1.05 : .95); m.userData.o = m.material.opacity;
@@ -205,6 +243,7 @@
       setPieces(LY.list(P.set));
       if (id === 'senet') { showSticks(P.sticks || 5); sticks.forEach(s => { s.visible = step >= 2; }); }
       if (id === 'sugoroku') showDice(P.dice || (P.task && P.task[0].t === 'roll' ? [5, 2] : null));
+      if (id === 'ur') showUDice(P.udice != null ? P.udice : P.task && P.task[0].t === 'roll' ? 0 : null);
       say(words()[0]); plate(P.task ? kOf() : '');
       $('.pg').textContent = ` ${step + 1} / ${PAGES.length}`;
       el.querySelectorAll('.dots i').forEach((d, i) => d.classList.toggle('on', i === step));
@@ -219,7 +258,7 @@
     }
     async function doStep(st, t) {
       busy = true; clearMarks();
-      if (st.t === 'roll') { if (id === 'senet') await throwSticks(st.v); else await rollDice(st.v); }
+      if (st.t === 'roll') { if (id === 'senet') await throwSticks(st.v); else if (id === 'ur') await rollUDice(st.v); else await rollDice(st.v); }
       else if (st.t === 'tap') { if (st.put) { const p = { loc: t, kind: st.put, m: LY.make(st.put) }; const [x, y, z] = LY.pos(t); p.m.position.set(x, y + 3 * LY.sc, z); PG.add(p.m); pieces.push(p); SND.put(); await anim(260, k => { p.m.position.y = y + (1 - io(k)) * 3 * LY.sc; });
           if (st.cap) { await Promise.all(st.cap.map(c => { const q = at(c); return q ? lift(q) : 0; })); }
           if (st.banAfter) xban = st.banAfter; } }
@@ -232,7 +271,7 @@
           if (vic) pieces = pieces.filter(q => q !== vic);
           await hop(p, loc);
           if (st.swap) { pieces.push(vic); await hop(vic, st.from.startsWith('s') ? st.from : st.from); }
-          if (st.cut) { pieces.push(vic); SND.take(); await hop(vic, `b1:${count('b1')}`, 3); }
+          if (st.cut) { pieces.push(vic); SND.take(); await hop(vic, LY.cutLoc ? LY.cutLoc(pieces) : `b1:${count('b1')}`, 3); }
           if (st.cap) await Promise.all(st.cap.map(c => { const q = at(c); return q ? lift(q) : 0; }));
           if (st.then) { await new Promise(r => later(r, 250)); SND.water(); await hop(p, st.then, 1.2); }
         } }

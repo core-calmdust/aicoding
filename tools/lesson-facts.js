@@ -14,6 +14,28 @@ const out = {};   // game → { lessonId: [problems found] }
 const bad = (g, id, msg) => { ((out[g] = out[g] || {})[id] = out[g][id] || []).push(msg); };
 
 const CHECKS = {
+  // (2026-11-23 lesson loop) the go lessons ('go', key = the step's index): every answer (ok / good / half) is a legal move of the
+  // position (go/rules.js), and the life & death steps (live / kill / nakade / corner) are solved exactly (go/tsumego.js, the puzzle
+  // solver): the moves that reach the goal (live = Black lives, kill = Black dies, with best play) are exactly the stored ok moves,
+  // and the side not to move could still change the result by moving first (the status depends on who moves — not already settled).
+  // Found: 「二眼をつくる（生き）」1問目 had four more living moves than its answer, scored as wrong in the 2D lesson.
+  go() {
+    const R = require(path.join(ROOT, 'go/rules.js')), T = require(path.join(ROOT, 'go/tsumego.js')), L = J('go/lessons.json'), g = 'go', EX = { exact: true };
+    const LD = { live: 'live', kill: 'kill', nakade: 'kill', corner: null };
+    L.steps.forEach((st, si) => { const K = String(si);
+      (st.problems || []).forEach((p, pi) => { const w = `problem ${pi + 1}`, n = p.s.n, pos = R.Pos.from(p.s);
+        [...(p.ok || []), ...(p.good || []), ...(p.half || [])].forEach(m => { const i = R.parseCoord(m, n); if (i == null || i < 0 || !pos.tryPlay(i)) bad(g, K, `${w}: ${m} is not a legal move`); });
+        if (!(st.id in LD)) return;
+        const goal = LD[st.id] || (p.s.turn === 1 ? 'live' : 'kill'), G = p.s.turn === 1 ? 'b' : 'w', tc = goal === 'kill' ? (G === 'b' ? 'w' : 'b') : G, wall = goal === 'kill' ? G : (G === 'b' ? 'w' : 'b'), S = p.s.stones;
+        const target = [], region = []; for (let i = 0; i < n * n; i++) if (S[i] === tc) target.push(i);
+        const seen = new Set(target), stack = [...target];   // the region: the target and the points reached from it without crossing the wall's stones
+        while (stack.length) { const i = stack.pop(); region.push(i); const x = i % n, y = (i / n) | 0; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const X = x + dx, Y = y + dy; if (X < 0 || Y < 0 || X >= n || Y >= n) continue; const j = Y * n + X; if (seen.has(j) || S[j] === wall) continue; seen.add(j); stack.push(j); } }
+        if (region.length > 30) { bad(g, K, `${w}: the area to read is too big (${region.length} points)`); return; }
+        const P = { s: p.s, goal, target, region };
+        const win = T.solve(P, [], 5, false, EX).filter(e => e.need > 0).map(e => R.coord(e.m, n)).sort(), ok = (p.ok || []).slice().sort();
+        if (win.join() !== ok.join()) bad(g, K, `${w}: the moves that ${goal === 'live' ? 'live' : 'kill'} are ${win.join(' ') || 'none'}, the answer says ${ok.join(' ')}`);
+        if (!T.solve(P, [-1], 7, true, EX).some(e => e.need === 0)) bad(g, K, `${w}: already ${goal === 'live' ? 'alive' : 'dead'} whoever moves first`); }); });
+  },
   // (2026-11-22 lesson loop) the backgammon lessons ('backgammon', key = the step's index): every candidate play of a play problem is a
   // legal play of the roll (backgammon/bg.js genPlays — the 3D words come from the commentary engine on the best one), the race
   // questions' pip counts (qv.a = yours, qv.b = theirs) and their right answer (who leads, by how much) hold on the board, and the

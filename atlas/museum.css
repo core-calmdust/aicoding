@@ -461,3 +461,22 @@ html.exv-rot .exv .npc-float{left:160px!important;top:50%;bottom:auto!important;
 .exv-play .exclose{background:rgba(25,18,12,.6);border-color:rgba(255,255,255,.35);color:#fff;box-shadow:none}
 /* PC (a mouse, a wide window): no lengthwise / across button — the board lies across */
 @media (min-width:900px) and (not (pointer:coarse)){.expa[data-k="pturn"]{display:none!important}}
+/* the card never squeezes its parts over each other (a narrow case on PC — 2026-11-23: ウル's long name hid 相手 / 手番): they wrap to a second row */
+.expcard>*,.expf>*{flex:none}
+.expcard{flex-wrap:wrap;justify-content:center;row-gap:8px}
+.exstage{container-type:inline-size}
+@container (max-width:760px){.expcard{border-radius:20px;padding:9px 12px}.expcard>b{border-inline-end:0;padding-inline-end:0;flex-basis:100%;text-align:center}}
+/* the games' own pop-ups, put on the page itself (ウル・セネト・本双六 .urtoast, ウル's throw chip .urdk, 囲碁 .gotoast): above the case while a game is on (they were under it) */
+html.exv-playing .urtoast,html.exv-playing .urdk,html.exv-playing .gotoast{z-index:140}
+html.exv-rot .urdk{rotate:90deg}
+/* the rules course's words at the portal's rules-course sizes (2026-11-23 user: 通常ゲームと同じくらい) — .rgd: 14.5px phones, 16px, 21px from 900px */
+@media (min-width:641px){.exrul{width:min(760px,calc(100% - 24px))}.exrul-t{font-size:16px;line-height:1.75}.exrul-g{width:96px;height:96px}.exrul-k{font-size:15px}}
+@media (min-width:900px){
+  .exrul{width:min(1000px,calc(100% - 48px));padding:16px 22px 14px;border-radius:24px;bottom:20px}
+  .exrul-in{gap:18px;min-height:150px}.exrul-g{width:136px;height:136px}
+  .exrul-h b{font-size:15px}.exrul-h .pg{font-size:14px}
+  .exrul-t{font-size:21px;line-height:1.8;min-height:3.6em}
+  .exrul-k{font-size:18px;padding:9px 16px;border-radius:12px;margin-top:10px}.exrul-m{font-size:15px}
+  .exrul-a{margin-top:14px;padding-top:12px}.exrul-a button{height:48px;padding:0 26px;font-size:18px}
+  .exrul-a .dots{gap:8px}.exrul-a .dots i{width:10px;height:10px}
+}

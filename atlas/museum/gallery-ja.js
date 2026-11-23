@@ -1,7 +1,7 @@
 /* 博物館「所蔵品」の文言（日本語）。ex[id]: name 名前 / alt 別名 / date 年代 / where カードの地名 / found 出土・伝来 / museum 所蔵 / no 番号 /
    mat 素材 / size 大きさ / p 解説 / spots 見どころ [見出し, 本文]（gallery.js の spots と同じ順）/ model 3Dモデルについて / src 出典 [名前, URL] */
 (window.MUSEUM_GAL_T = window.MUSEUM_GAL_T || {}).ja = {
-  ui: { p_start: "あそぶ", p_undo: "待った", p_resign: "投了", p_hint: "ヒント", p_quit: "やめる", p_sure: "本当に？", p_orientS: "向き", p_rules: "ルール", p_orient: "盤の向きを変える", play_ballinderry: "ブランドゥブ", play_senet: "ツタンカーメンのセネト", play_ur: "ウル王朝のゲーム", play_shosoin: "木画紫檀棊局", play_sugoroku: "木画紫檀双六局", p_level: "相手", p_side: "手番", p_first: "先手", p_second: "後手", p_stop: "対局をやめる", p_you: "あなた", p_turn: "あなたの番", p_think: "考え中…", p_win: "あなたの勝ち", p_lose: "あなたの負け", p_draw: "引き分け", flip: '裏返す', guideH: '案内役ミュゼフク', guide: '所蔵品を見てまわると、少しずつおめかしして会いに来てくれます', gift: 'アトラモがやってきた！', sub: '世界の博物館が守る、ゲームの歴史の宝物。3Dで再現した名品を、手に取るようにぐるりと眺めてみよう。', collection: '所蔵品', special: '特別展示', lock: '{g}の実績を{n}個達成で公開', loading: '展示ケースを準備しています…', fail: '展示を読み込めませんでした',
+  ui: { p_start: "あそぶ", p_undo: "待った", p_resign: "投了", p_hint: "ヒント", p_quit: "やめる", p_sure: "本当に？", p_orientS: "向き", p_rules: "ルール", p_orient: "盤の向きを変える", play_ballinderry: "ブランドゥブ", play_senet: "ツタンカーメンのセネト", play_ur: "ウル王朝のゲーム", play_shosoin: "木画紫檀棊局", play_sugoroku: "木画紫檀双六局", play_ottoman: "チェス", p_level: "相手", p_side: "手番", p_first: "先手", p_second: "後手", p_stop: "対局をやめる", p_you: "あなた", p_turn: "あなたの番", p_think: "考え中…", p_win: "あなたの勝ち", p_lose: "あなたの負け", p_draw: "引き分け", flip: '裏返す', guideH: '案内役ミュゼフク', guide: '所蔵品を見てまわると、少しずつおめかしして会いに来てくれます', gift: 'アトラモがやってきた！', sub: '世界の博物館が守る、ゲームの歴史の宝物。3Dで再現した名品を、手に取るようにぐるりと眺めてみよう。', collection: '所蔵品', special: '特別展示', lock: '{g}の実績を{n}個達成で公開', loading: '展示ケースを準備しています…', fail: '展示を読み込めませんでした',
     hint: 'ドラッグで回転・ホイールで拡大・番号で見どころへ', hintT: 'ドラッグで回転・ピンチで拡大', spin: 'ゆっくり回す', reset: 'はじめの向きに戻す', wide: '解説をしまう／出す', close: '閉じる',
     date: '年代', where: '出土・伝来', museum: '所蔵', mat: '素材', size: '大きさ', look: '見どころ', aboutModel: 'この3Dモデルについて', sources: '出典', play: '{g}で遊ぶ' },
   ex: {
@@ -128,7 +128,7 @@
         ['螺鈿の鎖', '縁取りには、鼈甲の地にS字に巻き合う螺鈿の飾りと小さな星が交互に連なります。'],
         ['角の盾', '鎖は四隅で盾の形の飾りにつながります。'],
         ['骨の縁と側面', '外側の縁は山形の継ぎ目でつないだ骨の帯。板の側面には螺鈿の六角形が1列に並びます。']],
-      model: "寸法は所蔵館の記録どおり。螺鈿と鼈甲の配置は所蔵館の写真から取り、縁の断面と側面の貝の並びは推定です。",
+      model: "寸法は所蔵館の記録どおり。螺鈿と鼈甲の配置は所蔵館の写真から取り、縁の断面と側面の貝の並びは推定です。チェスの駒は盤と一緒には伝わっていません。対局には大百科のチェスの駒を使います。",
       src: [['Victoria and Albert Museum「Games board」861-1907', 'https://collections.vam.ac.uk/item/O370652/games-board-unknown']] },
     kofukuji: { name: '興福寺旧境内出土の将棋駒', alt: '日本最古の将棋駒と、駒の名を書いた木簡', date: '11世紀後半〜12世紀', where: '日本（奈良）', found: '奈良市登大路町、興福寺旧境内の吉祥院地区（1992年度、井戸状の遺構）と観禅院地区（2013年度、井戸と土坑）の発掘',
       museum: '奈良県立橿原考古学研究所附属博物館', no: '奈良県指定有形文化財（2022年、31点）', mat: '木、墨', size: '駒は長さ約2.5cm前後（酔象：長さ約2.5cm・幅約1.5cm・厚さ約2mm）',

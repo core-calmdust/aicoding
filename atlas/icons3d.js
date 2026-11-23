@@ -592,6 +592,82 @@
       const stick = mesh(new T.BoxGeometry(.28, .09, 2.2), [ebony, ebony, C(0xf2e6c6, { roughness: .5 }), ebony, ebony, ebony]); g.add(at(stick, p(2) + .1, .55, p(0) + .3, 0, .5, 0));
       return g;
     },
+    /* 博物館の所蔵品で遊ぶゲーム (2026-11-23): the same form as every game icon — a fragment of the exhibit as the board, its pieces large */
+    'mu-senet'() {   // Tutankhamun's box itself: the ebony box on its sledge, a gold band of signs, the ivory squares on top, a reel hopping along it, a cone
+      const g = plinth(3.6, M({ map: softWood('icmus0', '#b98a58', '#7a5230') }));
+      const eb = gloss(0x24160d), gold = C(0xd9ad4a, { roughness: .3, metalness: .5 }), ivory = C(0xf0e3c2, { roughness: .4 });
+      const lathe = (pts, mat) => mesh(new T.LatheGeometry(pts.map(([r, y]) => new T.Vector2(r, y)), 36), mat);
+      const box = new T.Group();
+      [-1, 1].forEach(sd => { box.add(at(rbox(3.0, .22, .3, .1, eb, true), 0, 0, sd * .62)); [-1, 1].forEach(e => box.add(at(rbox(.26, .62, .26, .08, eb, true), e * 1.1, .2, sd * .62))); });
+      box.add(at(rbox(2.9, .95, 1.5, .12, eb, true), 0, .78, 0));
+      box.add(at(rbox(2.98, .3, 1.58, .1, gold, true), 0, 1.12, 0));
+      const band = M({ map: X.canvasTex('icmus1', 512, 96, (c, W, H) => { c.fillStyle = '#e2b84e'; c.fillRect(0, 0, W, H); c.fillStyle = '#2a170c';
+        for (let i = 0; i < 9; i++) { const x = 30 + i * 56; if (i % 3 === 0) c.fillRect(x - 5, 22, 10, 52); else if (i % 3 === 1) { c.beginPath(); c.arc(x, 48, 18, 0, 7); c.fill(); } else { c.beginPath(); c.moveTo(x - 20, 74); c.lineTo(x, 22); c.lineTo(x + 20, 74); c.fill(); } } }), roughness: .35, metalness: .3 });
+      [-1, 1].forEach(sd => { const b = mesh(new T.PlaneGeometry(2.6, .34), band); b.position.set(0, 1.28, sd * .752); if (sd < 0) b.rotation.y = Math.PI; box.add(b); });
+      const top = M({ map: X.canvasTex('icmus2', 512, 256, (c, W, H) => { c.fillStyle = '#1c120b'; c.fillRect(0, 0, W, H); const s = W / 4;
+        for (let y = 0; y < 2; y++) for (let x = 0; x < 4; x++) { const q = c.createLinearGradient(x * s, y * s, (x + 1) * s, (y + 1) * s); q.addColorStop(0, '#f6ead0'); q.addColorStop(1, '#d9c393'); c.fillStyle = q; c.fillRect(x * s + 8, y * s + 8, s - 16, s - 16); } }), roughness: .45 });
+      const tp = mesh(new T.PlaneGeometry(2.7, 1.3), top); tp.rotation.x = -Math.PI / 2; tp.position.y = 1.735; box.add(tp);
+      box.position.y = .5; box.scale.setScalar(1.12); g.add(box);
+      const spool = lathe([[0, 0], [.6, 0], [.62, .06], [.6, .18], [.46, .26], [.32, .42], [.28, .58], [.32, .74], [.46, .88], [.6, .96], [.62, 1.06], [.58, 1.12], [0, 1.13]], ivory); spool.scale.setScalar(.82);
+      spool.scale.setScalar(.9); g.add(at(spool, -.75, 2.62, .12, .22, 0, .18));
+      const cone = lathe([[0, 0], [.55, 0], [.57, .07], [.5, .18], [.34, .55], [.2, .9], [.16, 1.02], [.2, 1.1], [.2, 1.2], [.13, 1.3], [0, 1.33]], eb); cone.scale.setScalar(.62);
+      cone.scale.setScalar(.72); g.add(at(cone, 1.0, 2.44, -.05));
+      return g;
+    },
+    'mu-shosoin'() {   // 木画紫檀棊局: red sandalwood with ivory lines and a flower star point, the marquetry band on its side; an indigo and a crimson bachiru stone with their birds
+      const top = M({ map: X.canvasTex('icmug1', 512, 512, (c, W) => {
+        c.drawImage(X.wood('icmugw', '#6e2a1c', '#3a120c').image, 0, 0, W, W); c.strokeStyle = '#f0e2bd'; c.lineWidth = 9; const pad = W / 6, st = (W - 2 * pad) / 2;
+        for (let i = 0; i < 3; i++) { c.beginPath(); c.moveTo(pad + i * st, 0); c.lineTo(pad + i * st, W); c.stroke(); c.beginPath(); c.moveTo(0, pad + i * st); c.lineTo(W, pad + i * st); c.stroke(); }
+        c.fillStyle = '#f0e2bd'; const cx = pad + st, cy = pad + st; for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2; c.beginPath(); c.ellipse(cx + Math.cos(a) * 24, cy + Math.sin(a) * 24, 15, 9, a, 0, 7); c.fill(); } c.beginPath(); c.arc(cx, cy, 9, 0, 7); c.fill();
+      }), roughness: .4 });
+      const side = M({ map: X.canvasTex('icmug2', 512, 128, (c, W, H) => { c.fillStyle = '#4a1a12'; c.fillRect(0, 0, W, H); c.fillStyle = '#efe3c4'; c.fillRect(0, 20, W, 88);
+        for (let i = 0; i < 8; i++) { c.fillStyle = i % 2 ? '#2f6a4a' : '#8a2a22'; c.beginPath(); c.arc(32 + i * 64, 64, 20, 0, 7); c.fill(); c.fillStyle = '#c9a04a'; c.beginPath(); c.arc(32 + i * 64, 64, 7, 0, 7); c.fill(); } }), roughness: .45 });
+      const g = boardChunk(3, 3.6, top, side);
+      const face = (key, a, b) => M({ map: X.canvasTex(key, 256, 256, (c, W) => { const q = c.createRadialGradient(W * .42, W * .38, 10, W / 2, W / 2, W * .5); q.addColorStop(0, a); q.addColorStop(1, b); c.fillStyle = q; c.fillRect(0, 0, W, W);
+        c.fillStyle = '#f2e6c4'; c.save(); c.translate(W / 2, W / 2); c.beginPath(); c.moveTo(-70, 14); c.bezierCurveTo(-40, -50, 20, -48, 52, -6); c.lineTo(84, -18); c.lineTo(62, 14); c.bezierCurveTo(44, 54, -14, 62, -44, 34); c.lineTo(-84, 50); c.closePath(); c.fill();
+        c.fillStyle = '#3a2a18'; c.beginPath(); c.arc(38, -6, 6, 0, 7); c.fill(); c.strokeStyle = '#6aa05a'; c.lineWidth = 7; c.beginPath(); c.moveTo(84, -18); c.quadraticCurveTo(104, -44, 92, -70); c.stroke(); c.restore(); }), roughness: .3 });
+      const stone = (key, a, b, sc) => { const p = new T.Group(); p.add(puck(.62, .34, C(parseInt(b.slice(1), 16), { roughness: .3 }), .5)); const f = mesh(new T.CircleGeometry(.5, 40), face(key, a, b)); f.rotation.x = -Math.PI / 2; f.position.y = .345; p.add(f); p.scale.setScalar(sc); return p; };
+      const S = 3.1 / 3, p = i => -1.55 + S * (i + .5);
+      g.add(at(stone('icmug3', '#5a63a8', '#22244e', 1.05), p(0), .5, p(1)));
+      g.add(at(stone('icmug4', '#e2506a', '#7a1024', 1.05), p(2) - .1, .5, p(2) - .1));
+      g.add(at(stone('icmug4', '#e2506a', '#7a1024', 1.4), p(1) + .3, 1.9, p(0) + .2, .5, .3, -.25));
+      return g;
+    },
+    'mu-sugoroku'() {   // 木画紫檀双六局: the red sandalwood field with its ivory half-moon and flowers, glass stones (green, yellow) and two ivory dice in the air
+      const top = M({ map: X.canvasTex('icmud1', 512, 512, (c, W) => {
+        c.drawImage(X.wood('icmudw', '#6a2a1a', '#34100a').image, 0, 0, W, W);
+        c.fillStyle = '#f3ead2'; c.beginPath(); c.arc(W / 2, 18, 120, 0, Math.PI); c.arc(W / 2, -30, 140, Math.PI * .83, Math.PI * .17, true); c.fill();
+        const fl = (x, y) => { for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2; c.fillStyle = '#f3ead2'; c.beginPath(); c.ellipse(x + Math.cos(a) * 26, y + Math.sin(a) * 26, 18, 12, a, 0, 7); c.fill(); } c.fillStyle = '#c9a04a'; c.beginPath(); c.arc(x, y, 11, 0, 7); c.fill(); };
+        [70, 190, 322, 442].forEach(x => fl(x, W - 70)); fl(70, 250); fl(442, 250);
+      }), roughness: .4 });
+      const side = M({ map: X.canvasTex('icmud2', 512, 128, (c, W, H) => { c.fillStyle = '#3a140c'; c.fillRect(0, 0, W, H); for (let i = 0; i < 16; i++) { c.fillStyle = ['#efe3c4', '#2f6a4a', '#efe3c4', '#b98a3a'][i % 4]; c.beginPath(); c.moveTo(i * 32 + 16, 30); c.lineTo(i * 32 + 30, 64); c.lineTo(i * 32 + 16, 98); c.lineTo(i * 32 + 2, 64); c.fill(); } }), roughness: .45 });
+      const g = boardChunk(3, 3.6, top, side);
+      const glass = hex => M({ color: hex, roughness: .12, transparent: true, opacity: .9 });
+      const S = 3.1 / 3, p = i => -1.55 + S * (i + .5);
+      g.add(at(puck(.5, .42, glass(0x3fae62), .6), p(0), .5, p(2)));
+      g.add(at(puck(.5, .42, glass(0x3fae62), .6), p(0) + .05, .92, p(2) - .04));
+      g.add(at(puck(.5, .42, glass(0xe2b02e), .6), p(2), .5, p(2)));
+      const d1 = die(.8, 0x2a170c); g.add(at(d1, p(1) - .2, 1.6, p(1), .5, .6, .3));
+      const d2 = die(.8, 0x2a170c); g.add(at(d2, p(2) - .1, 2.35, p(0) + .2, -.4, .2, .5));
+      return g;
+    },
+    'mu-ballinderry'() {   // the Ballinderry board: dark yew with its bored holes and the ringed centre, a carved knot round the rim; a bone king peg among dark pegs
+      const top = M({ map: X.canvasTex('icmub1', 512, 512, (c, W) => {
+        c.drawImage(X.wood('icmubw', '#7a5632', '#3a2412').image, 0, 0, W, W); const s = W / 3;
+        c.strokeStyle = 'rgba(30,16,6,.8)'; c.lineWidth = 9; c.lineCap = 'round'; for (let k = 0; k < 4; k++) { c.save(); c.translate(W / 2, W / 2); c.rotate(k * Math.PI / 2); c.beginPath(); for (let i = 0; i <= 12; i++) { const x = -W / 2 + 24 + i * (W - 48) / 12, y = -W / 2 + 20 + (i % 2 ? 12 : 0); i ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); c.restore(); }
+        c.fillStyle = '#140a04'; for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) { c.beginPath(); c.arc((x + .5) * s, (y + .5) * s, 17, 0, 7); c.fill(); }
+        c.strokeStyle = '#140a04'; c.lineWidth = 7; c.beginPath(); c.arc(1.5 * s, 1.5 * s, 46, 0, 7); c.stroke();
+      }), roughness: .6 });
+      const g = boardChunk(3, 3.6, top, M({ map: X.wood('icmubs', '#5a3c22', '#2a180c') }));
+      const lathe = (pts, mat) => mesh(new T.LatheGeometry(pts.map(([r, y]) => new T.Vector2(r, y)), 32), mat);
+      const peg = (mat, k) => lathe([[0, 0], [.12, 0], [.14, .1], [.34 * k, .14], [.38 * k, .3], [.5 * k, .52], [.52 * k, .7], [.4 * k, .9], [.18 * k, 1.0], [0, 1.02]], mat);
+      const dark = C(0x3a2416, { roughness: .6 }), bone = C(0xefe2c0, { roughness: .45 });
+      const S = 3.1 / 3, p = i => -1.55 + S * (i + .5);
+      g.add(at(peg(dark, 1), p(0), .5, p(1))); g.add(at(peg(dark, 1), p(2), .5, p(1))); g.add(at(peg(dark, 1), p(1), .5, p(0)));
+      const king = new T.Group(); const kb = peg(bone, 1.15); kb.scale.y = 1.35; king.add(kb); king.add(at(ball(.2, bone), 0, 1.5, 0)); king.scale.setScalar(1.25);
+      g.add(at(king, p(1), 1.15, p(1) + .05, .1, 0, -.12));
+      return g;
+    },
     agon() {   // a fragment of the Victorian (Jaques) Agon board: mahogany, rings of oxblood and ivory with gilt lines round the bottle-green throne; the bone queen with a gold crown steps onto the throne past bone and ebony guards
       const top = M({ map: X.canvasTex('icag2', 512, 512, (c, W) => {
         c.fillStyle = '#5a2316'; c.fillRect(0, 0, W, W);

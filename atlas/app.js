@@ -458,7 +458,7 @@
     // the ring's turn and each piece's bob don't snap back to their start (a jolt), and a logo drawn while the window is
     // not in front / the hero is off screen starts paused (it used to turn on, unfocused, after such a redraw — 2026-11-11)
     const o = $('ttl').querySelector('.ttlRing'), ct = (() => { try { const a = o && o.getAnimations()[0]; return a ? a.currentTime : null; } catch (e) { return null; } })();
-    $('ttl').innerHTML = emblem(SPLIT ? SPLIT[1] : t('title'), SPLIT ? SPLIT[0] : '', A_.GAMES.length);
+    $('ttl').innerHTML = emblem(SPLIT ? SPLIT[1] : t('title'), SPLIT ? SPLIT[0] : '', A_.GAMES.length + Object.keys(window.ATLAS_MU || {}).length);   // (the museum's playable exhibits count as games, 2026-11-23 user)
     { const r = $('ttl').querySelector('.ttlRing'); try { const a = r && r.getAnimations()[0]; if (a && ct != null) a.currentTime = ct; } catch (e) {} }
     svgSync();
     $('ttl').setAttribute('aria-label', t('title') + ' — World Board Game Atlas');
@@ -715,7 +715,7 @@
   const MU_COL = { senet: '#8a6a3a', shosoin: '#7a2a22', sugoroku: '#6a3a22', ballinderry: '#5a4630' };
   const MU_GAMES = Object.keys(window.ATLAS_MU || {}).map(k => ({ id: 'mu-' + k, mu: k, cat: 'hist', tags: ['ai'], color: MU_COL[k] || '#7a5a36', href: 'atlas/#museum/' + k, name: ATLAS_MU[k].n }));
   const muName = g => g.name[lang] || g.name.en, muDesc = g => { const d = ATLAS_MU[g.mu].d; return d[lang] || d.en; };
-  const muArt = g => `<img src="../images/atlas/mu-${g.mu}.webp?v=1" alt="" loading="lazy" decoding="async">`;
+  const muArt = g => `<img src="../images/atlas/mu-${g.mu}.webp?v=2" alt="" loading="lazy" decoding="async">`;
   const MU_OF = { senet: 'senet', shosoin: 'go', ballinderry: 'tafl' };   // the game played on it (the card's one-line: 博物館 · セネト)
   const muTl = g => { const o = A_.GAMES.find(x => x.id === MU_OF[g.mu]); return t('tab.museum') + (o ? ' · ' + gname(o) : ''); };
   const MU_BADGE = '<span class="badge museum">MUSEUM</span>';
