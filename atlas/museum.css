@@ -797,3 +797,11 @@ html.ptv-open,html.ptv-open body{overflow:hidden}
 .ptvtools button.ptvnum{display:inline-grid;place-items:center}
 .ptv.nospots .ptvtools button.ptvnum{background:#e0a440;color:#2a1a08}
 .ptv.nospots .ptvspots,.ptv.nospots .ptvcap,.exv.nospots .exspots{display:none}
+
+/* 読み物: a cover from a game's own art (a transparent icon) shown whole on the story's colour */
+.rdci.ga{background:radial-gradient(120% 100% at 50% 40%,color-mix(in srgb,var(--c) 55%,#fff),var(--c))}
+.rdci.ga img{object-fit:contain;padding:8px;filter:drop-shadow(0 8px 12px rgba(0,0,0,.3))}
+.rdhimg.ga{background:radial-gradient(120% 100% at 50% 40%,color-mix(in srgb,var(--c) 55%,#fff),var(--c))}
+.rdhimg.ga img{object-fit:contain;padding:12px 0;filter:drop-shadow(0 10px 16px rgba(0,0,0,.35))}
+.rdstamp.ga img{object-fit:contain;padding:4px;filter:none}
+.rdstamp.on.ga{background:color-mix(in srgb,var(--c) 30%,#fff)}
