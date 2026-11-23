@@ -30,7 +30,7 @@ const DN = {
     'p.resume': '再開', 'p.new': '新しい対局', 'p.resign': '投了する', 'p.title': 'タイトルへ',
     'r.win': 'VICTORY', 'r.lose': 'DEFEAT', 'r.again': 'もう一度出撃', 'r.look': '海域を見る', 'r.sub': '{n}手で決着 ・ AI {l}', 'r.subR': '投了 ・ AI {l}',
     'r.acc': '命中率', 'r.shots': '発射', 'r.sunk': '撃沈', 'r.lost': '損失',
-    'rule.grand': '大艦隊', 'rule.grand.d': '12×12の広い海でコスト30・5〜8隻。1ターンに2手（射撃やスキルを2回）動ける、タクティクスの大規模版。', 'st.ap': 'このターンあと{n}手', 's.streak': '連続攻撃', 's.on': 'あり', 's.off': 'なし',
+    'rule.grand': '大艦隊', 'rule.grand.d': '12×12の広い海でコスト30・5〜8隻。1ターンに2手（射撃やスキルを2回）動ける、タクティクスの大規模版。どちらかが残り2隻になると1ターン1手に。', 'l2.t.foe': 'ENEMY BREAKING', 'l2.t.me': 'LAST STAND', 'l2.t.both': 'FINAL SALVO', 'l2.s.foe': '敵艦隊、残り{n}隻 — とどめを刺せ', 'l2.s.me': '敵通信「降伏するなら今のうちだ」 — 残り{n}隻、後がない', 'l2.s.both': '両軍とも残りわずか — 最後の撃ち合い', 'l2.rule': 'ここから1ターン1手', 'st.ap': 'このターンあと{n}手', 's.streak': '連続攻撃', 's.on': 'あり', 's.off': 'なし',
     'a.k': '全50隻', 'a.all': 'すべて', 'd.all': '全艦一覧', 'f.k': '両軍の艦', ok: 'OK', back: '戻る',
     'u.tap2': '狙うマスを2回タップで発射', 'u.use': '使用', 'u.cd': 'クールタイム {n}', 'u.len': '{n}マス', 'u.cost': 'コスト',
     'help': [['艦隊を編成', 'タクティクスでは、毎回ちがう10種の艦から交互に選んで艦隊を組む。コスト20までで3〜6隻。艦ごとにスキル（攻撃・索敵・防御）があり、組み合わせで戦い方が変わる。'],
@@ -53,7 +53,7 @@ const DN = {
     'p.resume': 'Resume', 'p.new': 'New game', 'p.resign': 'Resign', 'p.title': 'Title screen',
     'r.win': 'VICTORY', 'r.lose': 'DEFEAT', 'r.again': 'Sortie again', 'r.look': 'View the sea', 'r.sub': 'Decided in {n} moves · AI {l}', 'r.subR': 'Resigned · AI {l}',
     'r.acc': 'ACCURACY', 'r.shots': 'SHOTS', 'r.sunk': 'SUNK', 'r.lost': 'LOST',
-    'rule.grand': 'Grand Fleet', 'rule.grand.d': 'Tactics on a wide 12×12 sea: 5–8 ships on a budget of 30, and two actions (shots or skills) each turn.', 'st.ap': '{n} more this turn', 's.streak': 'Hit again', 's.on': 'On', 's.off': 'Off',
+    'rule.grand': 'Grand Fleet', 'rule.grand.d': 'Tactics on a wide 12×12 sea: 5–8 ships on a budget of 30, and two actions (shots or skills) each turn — one each, once either fleet is down to two ships.', 'l2.t.foe': 'ENEMY BREAKING', 'l2.t.me': 'LAST STAND', 'l2.t.both': 'FINAL SALVO', 'l2.s.foe': 'Enemy fleet down to {n} — finish them', 'l2.s.me': 'Enemy radio: "Surrender while you still can." — {n} ships left', 'l2.s.both': 'Both fleets nearly gone — the last exchange', 'l2.rule': 'One action per turn from here', 'st.ap': '{n} more this turn', 's.streak': 'Hit again', 's.on': 'On', 's.off': 'Off',
     'a.k': 'All 50 ships', 'a.all': 'All', 'd.all': 'All ships', 'f.k': 'Both fleets', ok: 'OK', back: 'Back',
     'u.tap2': 'Tap a square twice to fire', 'u.use': 'Use', 'u.cd': 'Cooldown {n}', 'u.len': '{n} squares', 'u.cost': 'Cost',
     'help': [['Draft a fleet', 'In Tactics both sides take turns picking from ten ship types, different every game: up to 20 cost, 3 to 6 ships. Each ship has a skill — attack, scouting or defence — and the mix decides how you fight.'],
@@ -89,6 +89,7 @@ const SFX = {
   lose: () => [392, 330, 262].forEach((f, i) => tone(f, f * .97, .5, 'sine', .14, i * .22)),
   ping: () => { tone(1480, 1460, .5, 'sine', .07); tone(1480, 1460, .5, 'sine', .03, .22); },
   horn: () => { tone(110, 108, 1.1, 'sawtooth', .05); tone(165, 162, 1.1, 'sawtooth', .035); },
+  alarm: () => { for (let i = 0; i < 3; i++) { tone(620, 880, .32, 'sawtooth', .045, i * .42); tone(880, 620, .1, 'sawtooth', .03, i * .42 + .32); } tone(55, 52, 1.4, 'triangle', .22); },
 };
 const sfx = k => { try { SFX[k] && SFX[k](); } catch (e) {} };
 document.addEventListener('visibilitychange', () => { if (AC) { try { document.hidden ? AC.suspend() : AC.resume(); } catch (e) {} } });
@@ -214,10 +215,10 @@ function restore() {
   G.st = E.newGame({ rule, streak: G.streak, adj: G.adj, fleets: [g.my, g.foe], first: G.first });
   for (const a of g.acts || []) if (!E.act(G.st, a)) break;
   G.my = G.st.sides[0].ships; G.evals = Array.isArray(g.evals) ? g.evals.slice(0, G.st.log.length + 1) : [];
-  G.phase = G.st.winner >= 0 ? 'over' : 'battle'; G.view = 1;
+  G.phase = G.st.winner >= 0 ? 'over' : 'battle'; G.view = 1; lastStand(true);
   return true;
 }
-const newG = o => Object.assign({ phase: 'title', my: [], st: null, level: S.level, rule: S.rule, adj: S.adj, view: 0, hint: null, evals: [], busy: false, resigned: false, first: 0, armed: null, draft: null, foePicks: null }, o);
+const newG = o => (document.body.classList.remove('l2'), $('#l2') && ($('#l2').className = 'hide'), Object.assign({ phase: 'title', my: [], st: null, level: S.level, rule: S.rule, adj: S.adj, view: 0, hint: null, evals: [], busy: false, resigned: false, first: 0, armed: null, draft: null, foePicks: null }, o));
 const tac = () => G && (G.rule === 'tactics' || G.rule === 'grand');
 
 // ---------- the screen's free area for the camera (between the HUD panels) ----------
@@ -555,7 +556,16 @@ async function doSkill(a) {
   render(); save(); queueEval();
   return res;
 }
-const doAction = a => a.skill ? doSkill(a) : doShot(a.cell);
+const doAction = async a => { const r = await (a.skill ? doSkill(a) : doShot(a.cell)); lastStand(); return r; };
+// (2026-11-24 user: どちらかが残り2艦になったら煽るような演出、大艦隊だけ1ターン1手に) once per game, the moment a fleet is down to two
+function lastStand(quiet) {
+  const st = G && G.st; if (!st || G.rule !== 'grand' || G.l2 || st.winner >= 0) return;
+  const me = st.sides[0].afloat <= 2, foe = st.sides[1].afloat <= 2; if (!me && !foe) return;
+  G.l2 = true; document.body.classList.add('l2'); if (quiet) return;
+  const k = me && foe ? 'both' : me ? 'me' : 'foe', el = $('#l2');
+  $('#l2T').textContent = t('l2.t.' + k); $('#l2S').textContent = t('l2.s.' + k, { n: Math.min(st.sides[0].afloat, st.sides[1].afloat) || 2 }); $('#l2R').textContent = t('l2.rule');
+  el.className = 'on ' + k; void el.offsetWidth; sfx('alarm'); World.shake && World.shake(.5); clearTimeout(lastStand.tm); lastStand.tm = setTimeout(() => el.className = 'hide', 3600);
+}
 async function playerShot(cell) {
   if (!G || !G.st || G.phase !== 'battle' || G.busy || G.st.turn !== 0 || G.view !== 1) return;
   const a = G.armed != null ? { skill: skillOf(G.my[G.armed]), ship: G.armed, cell } : { cell };
@@ -571,7 +581,7 @@ async function playerNoAim(i) {
   const res = await doSkill({ skill: skillOf(G.my[i]), ship: i, cell: -1 }); if (!res || G.st !== st) return;
   after(st);
 }
-function after(st) { if (st.winner >= 0) return finish(); if (st.turn === 1) return aiTurn(); G.busy = false; render(); }
+function after(st) { lastStand(); if (st.winner >= 0) return finish(); if (st.turn === 1) return aiTurn(); G.busy = false; render(); }
 let aiW = null, aiWid = 0;
 function planMove(st, level) {
   const plain = () => E.chooseAction(st, level, Math.random);
@@ -800,7 +810,7 @@ function boot() {
   if (restore()) { phaseUI(); render(); World.refit(); World.sail(false); World.show(G.view ? 'z1' : 'z0'); if (G.phase === 'deploy') enterDeploy(); else if (G.phase === 'battle' && G.st.turn === 1) aiTurn(); else if (G.phase === 'over') showResult(); }
   else { G = newG({ phase: 'title' }); phaseUI(); syncWorld(); World.sail(true); World.show('title'); }
   setTimeout(() => { $('#load').classList.add('out'); setTimeout(() => $('#load').remove(), 900); }, 400);
-  window.DN = { G: () => G, S, t, World, engage, startBattle, toTitle, render };
+  window.DN = { lastStand: q => lastStand(q), G: () => G, S, t, World, engage, startBattle, toTitle, render };
 }
 boot();
 })();
