@@ -312,30 +312,57 @@ static void nueRefresh(void) {
 #endif
 #define NUE_MS (NUE_MB > 1 ? 10 : 6)   /* the MLP's weights: x 64 (int8 in the NUEM file), or x 1024 (int16, the NUES file: x 64 lost about 10% of the evaluation's spread to rounding) */
 static i16 nueMA[NUE_MB * NUE_L1 * 2 * NUE_MI], nueMB[NUE_MB * NUE_L2 * NUE_L1];   /* (int8 in the file, widened for the SIMD products; NUE_L1 a multiple of 8) */ static i32 nueMa[NUE_MB * NUE_L1], nueMd[NUE_MB * NUE_L2]; static i16 nueMC[NUE_MB * NUE_L2];
+static i16 nueMAT[NUE_MB * 2 * NUE_MI * NUE_L1];   /* nueMA by input: [set][input][NUE_L1] (nue_mlp_init, after the net is loaded) */
+static u8 nueBitPos[256][8], nueBitCnt[256];   /* [mask of 8 inputs]: the positions of its bits, and how many */
+static void nue_mlp_init(void) {
+  for (int m = 0; m < 256; m++) { int n = 0; for (int k = 0; k < 8; k++) if (m >> k & 1) nueBitPos[m][n++] = (u8)k; nueBitCnt[m] = (u8)n; }
+  for (int m = 0; m < NUE_MB; m++) for (int j = 0; j < NUE_L1; j++) for (int i = 0; i < 2 * NUE_MI; i++) nueMAT[(m * 2 * NUE_MI + i) * NUE_L1 + j] = nueMA[(m * NUE_L1 + j) * 2 * NUE_MI + i]; }
 static i32 nueMlp(const i16 *a, const i16 *b, int mb) {
-  const i16 *const MA = nueMA + mb * NUE_L1 * 2 * NUE_MI, *const MB = nueMB + mb * NUE_L2 * NUE_L1, *const MC = nueMC + mb * NUE_L2; const i32 *const Ma = nueMa + mb * NUE_L1, *const Md = nueMd + mb * NUE_L2;
-  i16 x[2 * NUE_MI] __attribute__((aligned(16))), h1[NUE_L1] __attribute__((aligned(16))); i32 m = 0;
+  const i16 *const MT = nueMAT + mb * 2 * NUE_MI * NUE_L1, *const MB = nueMB + mb * NUE_L2 * NUE_L1, *const MC = nueMC + mb * NUE_L2; const i32 *const Ma = nueMa + mb * NUE_L1, *const Md = nueMd + mb * NUE_L2;
+  i16 h1[NUE_L1] __attribute__((aligned(16))); i32 m = 0;
+  /* (2026-11-24) the first layer by its inputs that are not zero: in a trained 2048-wide net about one in ten of the clipped
+     first-layer outputs is above zero, and the dense products (NUE_L1 rows x 2 * NUE_MI) were half of the whole search's time.
+     The same integer sums in another order: the evaluation is unchanged. */
+  { i32 h[NUE_L1] __attribute__((aligned(16))); for (int j = 0; j < NUE_L1; j++) h[j] = Ma[j];
+    /* h[0..L1) += x * the input's column (int16 x int16 -> int32; NUE_L1 a multiple of 8). The sums are kept in registers
+       (hv[]): through memory, every input waited for the store of the one before it. */
 #if defined(NUE_NEON)
-  { const int16x8_t z = vdupq_n_s16(0), q = vdupq_n_s16(NUE_QA);
-    for (int i = 0; i < NUE_MI; i += 8) { vst1q_s16(x + i, vminq_s16(vmaxq_s16(vld1q_s16(a + i), z), q)); vst1q_s16(x + NUE_MI + i, vminq_s16(vmaxq_s16(vld1q_s16(b + i), z), q)); } }
-  for (int j = 0; j < NUE_L1; j++) {
-    const i16 *w = MA + j * 2 * NUE_MI; int32x4_t s0 = vdupq_n_s32(0), s1 = vdupq_n_s32(0);
-    for (int i = 0; i < 2 * NUE_MI; i += 8) { const int16x8_t xv = vld1q_s16(x + i), wv = vld1q_s16(w + i); s0 = vmlal_s16(s0, vget_low_s16(xv), vget_low_s16(wv)); s1 = vmlal_high_s16(s1, xv, wv); }
-    i32 zz = (Ma[j] + vaddvq_s32(vaddq_s32(s0, s1))) >> NUE_MS; h1[j] = zz < 0 ? 0 : zz > NUE_QA ? NUE_QA : zz;
-  }
+    int32x4_t hv[NUE_L1 / 4]; for (int j = 0; j < NUE_L1 / 4; j++) hv[j] = vld1q_s32(h + 4 * j);
+#define NUE_MLP_IN(i) { const i16 x = v[i] > NUE_QA ? NUE_QA : v[i]; const i16 *const c = col + (i) * NUE_L1; for (int j = 0; j < NUE_L1 / 8; j++) { const int16x8_t cv = vld1q_s16(c + 8 * j); hv[2 * j] = vmlal_n_s16(hv[2 * j], vget_low_s16(cv), x); hv[2 * j + 1] = vmlal_n_s16(hv[2 * j + 1], vget_high_s16(cv), x); } }
 #elif defined(NUE_SSE2)
-  { const __m128i z = _mm_setzero_si128(), q = _mm_set1_epi16(NUE_QA);
-    for (int i = 0; i < NUE_MI; i += 8) { _mm_store_si128((__m128i *)(x + i), _mm_min_epi16(_mm_max_epi16(_mm_loadu_si128((const __m128i *)(a + i)), z), q)); _mm_store_si128((__m128i *)(x + NUE_MI + i), _mm_min_epi16(_mm_max_epi16(_mm_loadu_si128((const __m128i *)(b + i)), z), q)); } }
-  for (int j = 0; j < NUE_L1; j++) {
-    const i16 *w = MA + j * 2 * NUE_MI; __m128i s0 = _mm_setzero_si128(), s1 = _mm_setzero_si128();
-    for (int i = 0; i < 2 * NUE_MI; i += 16) { s0 = _mm_add_epi32(s0, _mm_madd_epi16(_mm_load_si128((const __m128i *)(x + i)), _mm_loadu_si128((const __m128i *)(w + i)))); s1 = _mm_add_epi32(s1, _mm_madd_epi16(_mm_load_si128((const __m128i *)(x + i + 8)), _mm_loadu_si128((const __m128i *)(w + i + 8)))); }
-    i32 t[4]; _mm_storeu_si128((__m128i *)t, _mm_add_epi32(s0, s1));
-    i32 zz = (Ma[j] + t[0] + t[1] + t[2] + t[3]) >> NUE_MS; h1[j] = zz < 0 ? 0 : zz > NUE_QA ? NUE_QA : zz;
-  }
+    __m128i hv[NUE_L1 / 4]; for (int j = 0; j < NUE_L1 / 4; j++) hv[j] = _mm_load_si128((const __m128i *)(h + 4 * j));
+#define NUE_MLP_IN(i) { const __m128i xv = _mm_set1_epi16(v[i] > NUE_QA ? NUE_QA : v[i]); const i16 *const c = col + (i) * NUE_L1; for (int j = 0; j < NUE_L1 / 8; j++) { const __m128i cv = _mm_loadu_si128((const __m128i *)(c + 8 * j)), lo = _mm_mullo_epi16(cv, xv), hi = _mm_mulhi_epi16(cv, xv); \
+  hv[2 * j] = _mm_add_epi32(hv[2 * j], _mm_unpacklo_epi16(lo, hi)); hv[2 * j + 1] = _mm_add_epi32(hv[2 * j + 1], _mm_unpackhi_epi16(lo, hi)); } }
 #else
-  for (int i = 0; i < NUE_MI; i++) { x[i] = a[i] < 0 ? 0 : a[i] > NUE_QA ? NUE_QA : a[i]; x[NUE_MI + i] = b[i] < 0 ? 0 : b[i] > NUE_QA ? NUE_QA : b[i]; }
-  for (int j = 0; j < NUE_L1; j++) { const i16 *w = MA + j * 2 * NUE_MI; i32 zz = Ma[j]; for (int i = 0; i < 2 * NUE_MI; i++) zz += x[i] * w[i]; zz >>= NUE_MS; h1[j] = zz < 0 ? 0 : zz > NUE_QA ? NUE_QA : zz; }
+#define NUE_MLP_IN(i) { const i32 x = v[i] > NUE_QA ? NUE_QA : v[i]; const i16 *const c = col + (i) * NUE_L1; for (int j = 0; j < NUE_L1; j++) h[j] += x * c[j]; }
 #endif
+    for (int s = 0; s < 2; s++) { const i16 *const v = s ? b : a; const i16 *const col = MT + s * NUE_MI * NUE_L1;
+      /* which inputs are above zero: their indices are written to a list without a branch (per 8 inputs a bit mask, and the
+         table's positions of its bits; a loop over each mask's bits mispredicted its end in every block: 15 cycles x 512) */
+      unsigned short idx[NUE_MI + 8]; int n = 0;
+#if defined(NUE_NEON)
+      { static const unsigned short bw[8] = {1, 2, 4, 8, 16, 32, 64, 128}; const uint16x8_t bv = vld1q_u16(bw);
+        for (int i0 = 0; i0 < NUE_MI; i0 += 8) {
+          const unsigned mk = vaddvq_u16(vandq_u16(vcgtq_s16(vld1q_s16(v + i0), vdupq_n_s16(0)), bv));
+          vst1q_u16(idx + n, vaddq_u16(vmovl_u8(vld1_u8(nueBitPos[mk])), vdupq_n_u16((unsigned short)i0))); n += nueBitCnt[mk];
+        } }
+#elif defined(NUE_SSE2)
+      { const __m128i z = _mm_setzero_si128();
+        for (int i0 = 0; i0 < NUE_MI; i0 += 8) {
+          const unsigned mk = (unsigned)_mm_movemask_epi8(_mm_packs_epi16(_mm_cmpgt_epi16(_mm_loadu_si128((const __m128i *)(v + i0)), z), z)) & 255;
+          _mm_storeu_si128((__m128i *)(idx + n), _mm_add_epi16(_mm_unpacklo_epi8(_mm_loadl_epi64((const __m128i *)nueBitPos[mk]), z), _mm_set1_epi16((i16)i0))); n += nueBitCnt[mk];
+        } }
+#else
+      for (int i = 0; i < NUE_MI; i++) { idx[n] = (unsigned short)i; n += v[i] > 0; }
+#endif
+      for (int k = 0; k < n; k++) { const int i = idx[k]; NUE_MLP_IN(i) }
+    }
+#if defined(NUE_NEON)
+    for (int j = 0; j < NUE_L1 / 4; j++) vst1q_s32(h + 4 * j, hv[j]);
+#elif defined(NUE_SSE2)
+    for (int j = 0; j < NUE_L1 / 4; j++) _mm_store_si128((__m128i *)(h + 4 * j), hv[j]);
+#endif
+    for (int j = 0; j < NUE_L1; j++) { const i32 zz = h[j] >> NUE_MS; h1[j] = zz < 0 ? 0 : zz > NUE_QA ? NUE_QA : zz; } }
   for (int k = 0; k < NUE_L2; k++) {
     const i16 *w = MB + k * NUE_L1; i32 zz = Md[k];
 #if defined(NUE_NEON)
