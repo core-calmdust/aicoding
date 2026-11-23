@@ -767,12 +767,109 @@ function tafl(opt) {
     }); });
   return out;
 }
-const GAMES = { connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl };
+// (2026-11-24 第2期) xiangqi: the basics in which a piece of the lesson's kind takes a piece that cannot be taken back (b_rook・b_horse・
+// b_cannon・b_pawn). The goal set is read from the rules (a capture by that kind on which no legal move of the opponent can take back),
+// the engine values stored in sc (= xiangqi/app.js problemPoints, the 3D XIANGQI.points) must put that capture alone on top, and
+// ショウギツネ's words (atlas/lessons3d.js xqLsJa) are read back against the board for the answer and every wrong move.
+const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn']);
+function xiangqi(opt) {
+  const fs = require('fs'), vm = require('vm');
+  const E = require(path.join(ROOT, 'xiangqi/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'xiangqi/lessons.json'), 'utf8'));
+  const PZ = JSON.parse(fs.readFileSync(path.join(ROOT, 'xiangqi/puzzles.json'), 'utf8')), OP = JSON.parse(fs.readFileSync(path.join(ROOT, 'xiangqi/openings.json'), 'utf8'));
+  const src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), app = fs.readFileSync(path.join(ROOT, 'xiangqi/app.js'), 'utf8');
+  const ctx = { shSeed: s => { let h = 7; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; }, shPerm: (seed, n) => [...Array(n).keys()] };
+  const X = vm.runInNewContext(src.slice(src.indexOf('  const XQN ='), src.indexOf('  const XIANGQI = {')) + '\n;({ xqLsJa, XQN, XQV })', ctx);
+  const out = [], add = (id, j, m) => out.push({ step: id, q: j + 1, msg: m });
+  // ⑨ the 2D and the 3D score the same way (the stored values, 20 points within 10 of the top)
+  if (!/function problemPoints\(P, m\) \{\n  if \(P\.ok\) return P\.ok\.includes\(m\) \? 20 : 0;\n  const val = new Map\(P\.sc\), best = Math\.max\(\.\.\.P\.sc\.map\(e => e\[1\]\)\), mine = val\.has\(m\) \? val\.get\(m\) : -WIN;\n  if \(mine >= best - 10 /.test(app)) add('-', -1, '⑨ xiangqi/app.js problemPoints changed');
+  if (!/points\(P, m\) \{   \/\/ = xiangqi\/app\.js problemPoints[\s\S]{0,400}if \(mine >= best - 10 /.test(src)) add('-', -1, '⑨ the 3D XIANGQI.points changed');
+  const WIN = E.WIN, WINT = E.WINT, sOfV = v => v > WINT ? 0.9 + 0.1 * Math.min(1, 6 / (WIN - v + 1)) : v < -WINT ? -(0.9 + 0.1 * Math.min(1, 6 / (WIN + v + 1))) : v > WINT - 1000 ? 0.88 : v < -(WINT - 1000) ? -0.88 : Math.tanh(v / 450) * 0.82;
+  const pts = (P, m) => { const val = new Map(P.sc), best = Math.max(...P.sc.map(e => e[1])), mine = val.has(m) ? val.get(m) : -WIN;
+    if (mine >= best - 10 && !(best > WINT && mine < best)) return 20; return Math.max(0, Math.round(20 * (1 - (sOfV(best) - sOfV(mine)) / 0.5))); };
+  const KIND = { b_rook: 5, b_horse: 4, b_cannon: 6, b_pawn: 7 }, VAL = [0, 0, 2, 2, 4, 9, 4.5, 1], T = E.typeOf, C = E.colorOf, mTo = E.mTo, mFrom = E.mFrom;
+  const takeBack = (p, m) => { const q = p.clone().play(m); return q.moves().some(x => mTo(x) === mTo(m)); };
+  const caps = p => p.moves().filter(m => p.at(mTo(m)));
+  // ⑤ the pool: every position of the lessons (problems and warm-ups), the openings' problems and the puzzles; mirrored too
+  const brd = fen => { const a = []; for (const row of fen.split(' ')[0].split('/')) for (const ch of row) if (/\d/.test(ch)) for (let k = 0; k < +ch; k++) a.push('.'); else a.push(ch); return a; };
+  const dist = (a, b) => { let d1 = 0, d2 = 0; for (let i = 0; i < 90; i++) { if (a[i] !== b[i]) d1++; const r = (i / 9) | 0, c = i % 9; if (a[i] !== b[r * 9 + 8 - c]) d2++; } return Math.min(d1, d2); };
+  const pool = [];
+  L.steps.forEach(st => { (st.problems || []).forEach((q, j) => pool.push([`${st.id} q${j + 1}`, brd(q.s)])); (st.ramp || []).forEach((r, j) => r.s && pool.push([`${st.id} ramp ${j + 1}`, brd(r.s)])); });
+  OP.sets.forEach(g => (g.problems || []).forEach((q, j) => pool.push([`opening ${g.id} ${j + 1}`, brd(q.s)])));
+  (PZ.themes || []).forEach(th => (th.puzzles || []).forEach((q, j) => pool.push([`puzzle ${th.id} ${j + 1}`, brd(q.s)])));
+  const plain = t => String(t).replace(/<[^>]+>/g, '');
+  L.steps.forEach((st, si) => { const id = st.id; if (!XQ_DONE.has(id)) return; const K = KIND[id];
+    let prevD = -1, firstD = null; const capT = new Set();
+    st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), me = p.side, all = p.moves(), nm = m => E.name(p, m);
+      // ⑨ every legal move has a value, once
+      const sm = new Map(P.sc || []); if (sm.size !== (P.sc || []).length) a('⑨ a move is valued twice');
+      all.forEach(m => { if (!sm.has(m)) a(`⑨ ${nm(m)} has no value`); }); (P.sc || []).forEach(([m]) => { if (!all.includes(m)) a(`⑨ a valued move ${m} is not legal`); });
+      if (!all.includes(P.best)) { a('① the answer is not legal'); return; }
+      // ① the goal set: captures by the lesson's piece that cannot be taken back
+      const goal = caps(p).filter(m => T(p.at(mFrom(m))) === K && T(p.at(mTo(m))) !== E.KING && !takeBack(p, m));
+      if (!goal.includes(P.best)) a(`① the answer ${nm(P.best)} is not a capture by the lesson's piece that cannot be taken back`);
+      goal.filter(m => m !== P.best).forEach(m => a(`② ${nm(m)} also takes a piece that cannot be taken back`));
+      // ① the engine: the answer alone on top; ② the next move is clearly worse (100 or more, and not 16 points)
+      const S = P.sc.slice().sort((x, y) => y[1] - x[1]);
+      if (S[0][0] !== P.best) a(`① the engine prefers ${nm(S[0][0])}`);
+      else if (S.length > 1) { if (S[0][1] - S[1][1] < 100) a(`② the second move ${nm(S[1][0])} is only ${S[0][1] - S[1][1]} worse`); if (pts(P, S[1][0]) >= 16) a(`② the second move ${nm(S[1][0])} scores ${pts(P, S[1][0])}`); }
+      if (Math.abs(S[0][1]) > WINT - 1000) a('④ a won / lost position (mate in the values)');
+      // ③ not at a glance: wrong captures to be tempted by, and later a capture by the lesson's piece that is taken back
+      const wrongCaps = caps(p).filter(m => m !== P.best && T(p.at(mTo(m))) !== E.KING);
+      // (the trap: a capture taken back — by the lesson's piece; for the pawn, which loses little, any capture taken back at a loss)
+      const trapK = wrongCaps.filter(m => takeBack(p, m) && (K === 7 ? VAL[T(p.at(mFrom(m)))] > VAL[T(p.at(mTo(m)))] : T(p.at(mFrom(m))) === K));
+      if (all.length < 3) a(`③ ${all.length} legal moves`);
+      if (!wrongCaps.length) a('③ the answer is the only capture on the board');
+      if (j >= 2 && !trapK.length) a(`③ problem ${j + 1}: no capture that is taken back (the lesson's trap)`);
+      // ④ the theme: a piece worth a horse's half or more, not the king; no free capture of as much by another piece
+      const cv = VAL[T(p.at(mTo(P.best)))];
+      if (cv < 2) a('④ the answer takes a pawn'); if (p.inCheck()) a('④ the mover is in check');
+      caps(p).filter(m => m !== P.best && !takeBack(p, m) && VAL[T(p.at(mTo(m)))] >= cv && T(p.at(mTo(m))) !== E.KING).forEach(m => a(`④ ${nm(m)} takes as much for nothing`));
+      capT.add(T(p.at(mTo(P.best))));
+      // ⑤ no near twin (4 points or fewer apart, mirrored too)
+      const B = brd(P.s); for (const [who, b] of pool) { if (who === `${id} q${j + 1}`) continue; const e = dist(B, b); if (e <= 4) a(`⑤ ${e} points from ${who}`); }
+      // ⑥ easier first: the wrong captures (and the traps of the lesson's piece) grow
+      const d = wrongCaps.length + trapK.length;
+      if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
+      if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`);
+      // ⑦⑧ the 3D words
+      let W; try { W = X.xqLsJa(E, st, P, j, k => k === 'ok' ? '〈正〉' : '〈誤〉', si); } catch (e) { a('⑧ the words fail: ' + e.message); return; }
+      const NO = t => X.XQN(t, me ^ 1), N = t => X.XQN(t, me);
+      for (const t of [W.ask, W.hintTx]) {
+        if (/いくつか/.test(t) && caps(p).filter(m => T(p.at(mFrom(m))) === K).length < 2) a(`⑧ 「${t}」: the lesson's piece has fewer than two captures`);
+        if (/馬の足|足がふさが/.test(t) && !p.pseudo(me, true).length) a(`⑧ 「${t}」`);
+        if (/大きな駒/.test(t) && cv < 4) a(`⑧ 「${t}」: the answer takes a ${NO(T(p.at(mTo(P.best))))}`);
+      }
+      if (/馬の足/.test(W.ask)) { const f = mFrom(P.best), blocked = E.NMOV[f].some(([to, leg]) => p.at(leg) && p.at(to) && C(p.at(to)) !== me); if (!blocked) a(`⑧ 「${W.ask}」: no capture of the horse is blocked by its leg`); }
+      const g = plain(W.good(P.best)), ac = NO(T(p.at(mTo(P.best))));
+      if (/\{|undefined|NaN/.test(g)) a(`⑧ the praise 「${g}」`);
+      if (!g.includes(ac)) a(`⑧ the praise 「${g}」 does not name the ${ac} taken`);
+      for (const nme of ['車', '馬', '炮', '象', '相', '士', '仕', '卒', '兵']) if (nme !== ac && g.replace(/相手/g, '').includes(nme)) a(`⑧ the praise 「${g}」 names a ${nme}`);
+      for (const u of all) { if (u === P.best) continue; const raw = plain(W.ng(u)), q = p.clone().play(u), x = nm(u), i1 = raw.indexOf('〈正〉'), t = i1 > 0 ? raw.slice(0, i1) : raw;
+        if (/\{|undefined|NaN/.test(raw)) { a(`⑧ ${x}: 「${raw}」`); continue; }
+        if (!raw.includes('〈誤〉') || !raw.includes('〈正〉')) a(`⑦ ${x}: the words do not name both moves 「${raw}」`);
+        const took = !!p.at(mTo(u)), mine = new Set(); for (const r of q.moves()) { const v = q.at(mTo(r)); if (v && T(v) !== E.KING) mine.add(N(T(v))); }
+        const lossT = t.match(/きみの(.)を取り返され|代わりに(.)を取られ|もっと大きい(.)を失う/);
+        if (lossT) { const n2 = lossT[1] || lossT[2] || lossT[3]; if (!took || !takeBack(p, u) || N(T(p.at(mFrom(u)))) !== n2) a(`⑦ ${x}: 「${t}」 (no ${n2} of yours is taken back)`); }
+        const hangT = t.match(/きみの(.)が取られちゃう|相手に(.)をねらわれる|(.)が取られる形が残る|(.)が相手の駒の利きに|(.)がただで取られそう/);
+        if (hangT) { const n2 = hangT.slice(1).find(Boolean); if (!mine.has(n2)) a(`⑦ ${x}: 「${t}」 (no ${n2} of yours can be taken next)`); }
+        if (/駒を取れない|取りそこね|取る手じゃない|取るチャンスが消え|手が届かない|見のがし/.test(t) && took) a(`⑦ ${x}: 「${t}」 (it does take)`);
+        const small = t.match(/(.)取りは、(.)取りより得が小さい|で取れる(.)より、(.)のほうが大きい|だと(.)止まり/);
+        if (small && (!took || VAL[T(p.at(mTo(u)))] >= cv)) a(`⑦ ${x}: 「${t}」 (it does not take less)`);
+        // what happens must be said: a non-capture misses the free piece, a capture by the lesson's piece that is taken back says so
+        if (!took && !/駒を取れない|取りそこね|取る手じゃない|取るチャンスが消え|手が届かない|見のがし|取られ|ねらわれ|利きに/.test(t)) a(`⑦ ${x}: the words do not say what is missed 「${t}」`);
+        if (took && takeBack(p, u) && VAL[T(p.at(mFrom(u)))] > VAL[T(p.at(mTo(u)))] && !lossT) a(`⑦ ${x}: takes and is taken back at a loss, the words do not say it 「${t}」`);
+      }
+    });
+    if (capT.size < 2) add(id, 4, `⑤ every answer takes the same kind of piece`);
+  });
+  return out;
+}
+const GAMES = { connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi };
 module.exports = GAMES; GAMES.mancalaWords = mancalaWords; Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
 if (require.main === module) {
-  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl').split(',');
+  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi').split(',');
   let bad = 0;
-  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'connect4' ? ' (count/endwin の⑦⑧)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
+  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'connect4' ? ' (count/endwin の⑦⑧)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
     bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
   process.exit(bad ? 1 : 0);
 }
