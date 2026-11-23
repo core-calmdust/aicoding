@@ -6,7 +6,7 @@
 //            (the zugzwang the lesson is about — not a tactical shot).
 //   endwin ⑦ after the answer every legal reply of the opponent loses with best play (the "give the opponent no counter" the words
 //            promise), i.e. the win is truly forced and quickest.
-// node tools/lesson-verify.js [connect4,mancala,gomoku,dots,amazons,reversi,checkers]
+// node tools/lesson-verify.js [connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl]
 'use strict';
 const path = require('path');
 const ROOT = path.join(__dirname, '..');
@@ -660,12 +660,112 @@ function checkers(opt) {
     }); });
   return out;
 }
-const GAMES = { connect4, mancala, gomoku, dots, amazons, reversi, checkers };
+// (2026-11-24 第2期) tafl: the basics TF_DONE (b_move・b_cap・b_hostile), every problem with the rules (tafl/engine.js):
+//   ①② P.ok = the goal set exactly (b_move: the king's slides to a non-corner edge square; b_cap: every capture, all against a piece
+//   or the king; b_hostile: every capture, each against a corner or the empty throne), best ∈ ok
+//   ③ ≥3 legal moves, ≥2 wrong ones, at most a third of the moves right; b_move: ≥2 king moves that stop short
+//   ④ the theme: b_move — the king is inside, no open line to a corner, no win now; b_cap — no corner / throne capture, no win now;
+//   b_hostile — no capture against a piece; neither side wins at once
+//   ⑤ no position within 3 squares (8 symmetries) of any other lesson / warm-up / diagram / puzzle position, and no two problems of
+//   these lessons with the same answer (the same from→to)
+//   ⑥ d never goes down and the last > the first (b_move: the king's wrong slides; b_cap / b_hostile: the wrong moves that land next
+//   to an enemy man — the near-misses)
+//   ⑦⑧ タフリン's 3D words (atlas/lessons3d.js tfLsJa, run here) for every right move (the corner / throne it names, the number taken,
+//   縦と横) and for every wrong move (the king or not, a blocker on the way, a capture or not, a piece of yours taken next), the question
+//   and the hint (a corner / the throne named is in an answer)
+//   ⑨ the 2D (tafl/app.js problemPoints) and the 3D (TAFL.points) both score P.ok
+const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile']);
+function tafl(opt) {
+  const fs = require('fs'), vm = require('vm');
+  const E = require(path.join(ROOT, 'tafl/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'tafl/lessons.json'), 'utf8'));
+  const PZ = JSON.parse(fs.readFileSync(path.join(ROOT, 'tafl/puzzles.json'), 'utf8'));
+  const src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), app = fs.readFileSync(path.join(ROOT, 'tafl/app.js'), 'utf8');
+  const X = vm.runInNewContext(src.slice(src.indexOf('  const TFM = '), src.indexOf('  const TAFL = {')) + '\n;({ tfLsJa, TFM })', { window: {} });
+  const out = [], add = (id, j, m) => out.push({ step: id, q: j + 1, msg: m });
+  if (!/function problemPoints\(P, m\) \{\n  if \(P\.ok\) return P\.ok\.includes\(m\) \? 20 : 0;/.test(app)) add('-', -1, '⑨ tafl/app.js problemPoints does not score P.ok');
+  if (!/points\(P, m\) \{[^\n]*\n      if \(P\.ok\) return P\.ok\.includes\(m\) \? 20 : 0;/.test(src)) add('-', -1, '⑨ the 3D TAFL.points does not score P.ok');
+  const n = 11, F = E.geo('copenhagen').F, CORNER = i => !!(F[i] & 2), THRONE = i => !!(F[i] & 4), EDGE = i => !!(F[i] & 1);
+  const { mFrom, mTo } = E, RC = i => [Math.floor(i / n), i % n];
+  // what each capture of m leans on: the square beyond the taken man (the same line as the mover)
+  const anvils = (p, m) => { const t = mTo(m), q = p.clone().play(m); return q.lastCaps.map(c => { const o = 2 * c - t, x = p.at(o); return CORNER(o) ? '角' : THRONE(o) && !x ? '玉座' : x ? '駒' : '?'; }); };
+  const capDirs = (p, m) => { const t = mTo(m), q = p.clone().play(m); return new Set(q.lastCaps.map(c => RC(c)[0] === RC(t)[0] ? '横' : '縦')); };
+  const enemyMan = (p, i, me) => { const x = p.at(i); return me === 1 ? x === 2 : x === 1; };
+  const near = (p, m, me) => { const q = p.clone(); q.b[mTo(m)] = q.b[mFrom(m)]; q.b[mFrom(m)] = 0; return q.nb(mTo(m)).some(i => enemyMan(p, i, me)); };
+  const blocked = (p, f, t) => { const [r1, c1] = RC(f), [r2, c2] = RC(t), dr = Math.sign(r2 - r1), dc = Math.sign(c2 - c1); let r = r2 + dr, c = c2 + dc; while (r >= 0 && c >= 0 && r < n && c < n) { const i = r * n + c; if (p.at(i)) return true; if (EDGE(i) && !(F[i] & 8)) return false; if (EDGE(i)) return true; r += dr; c += dc; } return false; };
+  // ⑤ the pool
+  const pool = [];
+  L.steps.forEach(st => { (st.problems || []).forEach((q, j) => pool.push([`${st.id} q${j + 1}`, q.s.b])); if (st.diagram) pool.push([`${st.id} diagram`, st.diagram.s.b]); (st.ramp || []).forEach((r, j) => r.s && pool.push([`${st.id} ramp ${j + 1}`, r.s.b])); });
+  (PZ.themes || []).forEach(th => (th.puzzles || []).forEach((q, j) => pool.push([`puzzle ${th.id} ${j + 1}`, q.s.b])));
+  const SYM = [(r, c) => [r, c], (r, c) => [r, 10 - c], (r, c) => [10 - r, c], (r, c) => [10 - r, 10 - c], (r, c) => [c, r], (r, c) => [c, 10 - r], (r, c) => [10 - c, r], (r, c) => [10 - c, 10 - r]];
+  const dist = (a, b) => { let best = 99; for (const S of SYM) { let d = 0; for (let i = 0; i < 121 && d < best; i++) { const [r, c] = S((i / 11) | 0, i % 11); if (a[i] !== b[r * 11 + c]) d++; } best = Math.min(best, d); } return best; };
+  const seen = new Map(), plain = t => String(t).replace(/[\u0001\u0002]/g, '');
+  L.steps.forEach((st, si) => { const id = st.id; if (!TF_DONE.has(id)) return;
+    let prevD = -1, firstD = null;
+    st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), me = p.turn, all = p.moves(), nm = m => E.name(p, m);
+      const okS = new Set(P.ok || []), capM = all.filter(m => p.clone().play(m).lastCaps.length);
+      if (!P.ok || !P.ok.length) { a('① no answer list'); return; }
+      // ①② the goal set
+      const goal = id === 'b_move' ? all.filter(m => p.at(mFrom(m)) === 3 && EDGE(mTo(m)) && !CORNER(mTo(m))) : capM.filter(m => !p.clone().play(m).res);
+      P.ok.forEach(m => { if (!all.includes(m)) a(`① the answer ${m} is not legal`); else if (!goal.includes(m)) a(`① the answer ${nm(m)} does not reach the goal`); });
+      goal.forEach(m => { if (!okS.has(m)) a(`② ${nm(m)} reaches the goal but is scored wrong`); });
+      if (!okS.has(P.best)) a('① best is not an answer');
+      // ③
+      const wrong = all.filter(m => !okS.has(m));
+      if (all.length < 3 || wrong.length < 2) a(`③ ${all.length} legal moves, ${wrong.length} wrong`);
+      if (P.ok.length * 3 > all.length) a(`③ ${P.ok.length} of ${all.length} moves are right`);
+      const kWrong = all.filter(m => p.at(mFrom(m)) === 3 && !okS.has(m));
+      if (id === 'b_move' && kWrong.length < 2) a(`③ the king has ${kWrong.length} wrong slides`);
+      // ④
+      if (all.some(m => p.clone().play(m).res === me)) a('④ the mover wins at once');
+      { const q = p.clone(); q.turn = 3 - me; q.res = 0; if (q.moves().some(m => q.clone().play(m).res === 3 - me)) a('④ the opponent threatens to win at once'); }
+      if (id === 'b_move') { if (EDGE(p.king)) a('④ the king is on the edge already'); if (p.kingLines().length) a('④ the king has an open line to a corner'); if (me !== 2) a('④ not the defender to move'); }
+      if (id === 'b_cap') capM.forEach(m => { const k = anvils(p, m); if (k.some(x => x !== '駒')) a(`④ ${nm(m)} takes against ${k.join('/')} (the next lesson)`); });
+      if (id === 'b_hostile') capM.forEach(m => { const k = anvils(p, m); if (!k.some(x => x === '角' || x === '玉座')) a(`④ ${nm(m)} takes against a piece (not the lesson)`); });
+      // ⑤
+      for (const [who, b] of pool) { if (who === `${id} q${j + 1}`) continue; const e = dist(P.s.b, b); if (e <= 3) a(`⑤ ${e} squares from ${who}`); }
+      for (const m of P.ok) { const k = nm(m).replace(/x.*/, ''); if (seen.has(k)) a(`⑤ the same answer ${k} as ${seen.get(k)}`); else seen.set(k, `${id} q${j + 1}`); }
+      // ⑥
+      const d = id === 'b_move' ? kWrong.length : wrong.filter(m => near(p, m, me)).length;
+      if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
+      if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`);
+      // ⑦⑧ the 3D words
+      let W; try { W = X.tfLsJa(E, st, P, j, k => X.TFM(k, 'ja'), si); } catch (e) { a('⑧ the words fail: ' + e.message); return; }
+      const kinds = new Set(P.ok.flatMap(m => anvils(p, m)));
+      for (const t of [W.ask, W.hintTx]) {
+        if (/四隅|角に接|角か玉座に接/.test(t) && !/玉座/.test(t) && !kinds.has('角')) a(`⑧ 「${t}」: no answer uses a corner`);
+        if (/空いた玉座も|玉座に接/.test(t) && !/角/.test(t) && !kinds.has('玉座')) a(`⑧ 「${t}」: no answer uses the throne`);
+        if (/もう味方がいる|準備OK|味方とはさめる|自分の駒2つ/.test(t) && !kinds.has('駒')) a(`⑧ 「${t}」: the answer does not take against a piece`);
+      }
+      for (const u of P.ok) { const g = plain(W.good(u)), k = anvils(p, u), c = k.length;
+        if (!g || /\{|undefined|NaN/.test(g)) { a(`⑧ the praise of ${nm(u)} 「${g}」`); continue; }
+        if (/角/.test(g) && !k.includes('角') && id !== 'b_move') a(`⑧ the praise of ${nm(u)} 「${g}」: not against a corner`);
+        if (/玉座/.test(g) && !k.includes('玉座')) a(`⑧ the praise of ${nm(u)} 「${g}」: not against the throne`);
+        if (/味方/.test(g) && !/角|玉座/.test(g) && !k.includes('駒')) a(`⑧ the praise of ${nm(u)} 「${g}」: not against a piece`);
+        const cn = g.match(/(\d+)(つ|枚)/); if (cn && +cn[1] !== c) a(`⑧ the praise of ${nm(u)} 「${g}」: ${c} taken`);
+        if (/縦と横/.test(g) && capDirs(p, u).size < 2) a(`⑧ the praise of ${nm(u)} 「${g}」: not both ways`);
+        if (/角まであと少し/.test(g) && !p.clone().play(u).nb(mTo(u)).some(CORNER)) a(`⑧ the praise of ${nm(u)} 「${g}」: the king is not next to a corner`); }
+      for (const m of wrong) { const raw = plain(W.ng(m)), i0 = raw.indexOf('赤い印の手'), t0 = i0 >= 0 ? raw.slice(i0) : raw, i1 = t0.indexOf('緑の印の手'), t = i1 > 0 ? t0.slice(0, i1) : t0, x = nm(m);   // (t: what the words say of yours, up to the right move
+        if (/\{|undefined|NaN/.test(raw)) { a(`⑧ ${x}: 「${raw}」`); continue; }
+        if (!/緑の印の手/.test(raw)) a(`⑦ ${x}: the words do not name the right move 「${raw}」`);
+        const q = p.clone().play(m), king = p.at(mFrom(m)) === 3, took = q.lastCaps.length;
+        let c2 = 0; if (!q.res) for (const r of q.moves()) c2 = Math.max(c2, q.clone().play(r).lastCaps.length);
+        if (id === 'b_move') { const notK = /王じゃない|王さまじゃない|守り手の駒|その場から動いてない|王さまじゃなかった/.test(t);
+          if (notK !== !king) a(`⑦ ${x}: 「${t}」 (${king ? 'the king moved' : 'not the king'})`);
+          if (/駒がいて行き止まり|駒にぶつか/.test(t) && !(king && blocked(p, mFrom(m), mTo(m)))) a(`⑦ ${x}: 「${t}」 (nothing blocks the way to the edge)`); }
+        else { if (/取れるけど|取れても|取れる手/.test(t) !== !!took) a(`⑦ ${x}: 「${t}」 (takes ${took})`);
+          if (/取られ|はさまれ|ねらわれる|取り返され/.test(t) && !c2) a(`⑦ ${x}: 「${t}」 (nothing of yours can be taken next)`);
+          if (/取り返され/.test(t)) a(`⑧ ${x}: 「${t}」 (nothing was taken to take back)`);
+          if (c2 && !/取られ|はさまれ|ねらわれる/.test(t)) a(`⑦ ${x}: a piece of yours can be taken next, the words do not say it 「${t}」`); }
+      }
+    }); });
+  return out;
+}
+const GAMES = { connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl };
 module.exports = GAMES; GAMES.mancalaWords = mancalaWords; Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
 if (require.main === module) {
-  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons,reversi,checkers').split(',');
+  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl').split(',');
   let bad = 0;
-  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'connect4' ? ' (count/endwin の⑦⑧)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
+  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'connect4' ? ' (count/endwin の⑦⑧)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
     bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
   process.exit(bad ? 1 : 0);
 }

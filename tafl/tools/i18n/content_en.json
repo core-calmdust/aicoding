@@ -5,7 +5,7 @@
 "ls.b_move.goal": "Move the king to the edge of the board (the corners are still far away).",
 "ls.b_move.hint": "The gold ring is the king. Look along its row and column for a direction with no piece up to the edge.",
 "ls.b_move.why": "With {m} the king reached the edge.",
-"ls.b_move.ng": "{x} does not reach the edge. {m}, for example, did.",
+"ls.b_move.ng": "With {x} the king does not reach the edge. With {m}, for example, it did.",
 "ls.b_cap.title": "Capture by sandwiching",
 "ls.b_cap.sub": "From both sides of a row or column",
 "ls.b_cap.intro": "<p>Sandwich an enemy piece <b>between two of yours on a row or a column</b> and it is captured. Only <b>the side that moves</b> captures.</p><p class=\"note\">The king helps the defenders to capture. Diagonals do not count.</p>",
