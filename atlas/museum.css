@@ -530,7 +530,7 @@ html.exv-rot .urdk{rotate:90deg}
 .chlinks h4{margin:14px 0 6px;font-size:12.5px;color:var(--ink2)}
 .chlinks div{display:flex;flex-wrap:wrap;gap:6px}
 .chlk{display:inline-flex;align-items:center;gap:6px;padding:6px 12px 6px 6px;border:2px solid var(--line);border-radius:99px;background:#fff;font:700 13.5px var(--font);color:var(--ink);cursor:pointer}
-.chlk i{font-style:normal;font-size:11px;padding:2px 7px;border-radius:99px;background:var(--ink);color:#fff}
+.chlk i{flex:none;white-space:nowrap;font-style:normal;font-size:11px;padding:2px 7px;border-radius:99px;background:var(--ink);color:#fff}
 .chlk.ex i{background:#85592a}
 @media (hover:hover){.chlk:hover{border-color:#c9a35a}}
 .chchart{background:#fff;border:2px solid var(--line);border-radius:20px;padding:12px 14px 10px;box-shadow:var(--shadow)}

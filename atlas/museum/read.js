@@ -27,6 +27,9 @@
     { id: 'draughts', color: '#7a2a2a', cover: { g: 'checkers' }, mins: 3, sec: [null, null, null, null, null], links: [{ g: 'checkers' }, { g: 'alquerque' }, { paint: 'shahnama' }] },
     { id: 'reversi', color: '#23603e', cover: { g: 'reversi' }, mins: 3, sec: [null, null, null, null, null], links: [{ g: 'reversi' }] },
     { id: 'mancala', color: '#8a6a2a', cover: { g: 'mancala' }, mins: 3, sec: [null, null, null, null, null], links: [{ g: 'mancala' }, { room: 'map' }] },
+    { id: 'morris', color: '#5a4632', cover: { g: 'morris' }, mins: 3, sec: [null, null, null, null, null], links: [{ g: 'morris' }, { room: 'map' }] },
+    { id: 'patolli', color: '#8a3a2a', cover: { g: 'patolli' }, mins: 3, sec: [null, null, null, null, null], links: [{ g: 'patolli' }, { g: 'ludo' }, { paint: 'chaupar' }] },
+    { id: 'xiangqi', color: '#8a1e1e', cover: { g: 'xiangqi' }, mins: 3, sec: [null, null, null, null, null], links: [{ g: 'xiangqi' }, { g: 'janggi' }, { g: 'chess' }] },
   ];
   const src = p => p.g ? `../images/atlas/${p.g}.webp` : p.ex ? `../images/atlas/ex/${p.ex}.webp` : `../images/atlas/paint/${p.paint}-t.webp?v=1`;
   const ga = p => p && p.g ? ' ga' : '';   // (a cover from the game's own art: a transparent icon, shown whole on the story's colour)

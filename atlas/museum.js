@@ -37,7 +37,7 @@
     { id: 'tree', src: ['museum/tree.js?v=3'], ready: () => !!window.AtlasTree, render: (el, c) => AtlasTree.render(el, c) },
     { id: 'gallery', src: ['museum/gallery.js?v=147'], ready: () => !!window.AtlasGallery, render: (el, c) => AtlasGallery.render(el, c) },
     { id: 'paint', src: ['museum/paint-i18n.js?v=2', 'museum/paint.js?v=6'], ready: () => !!(window.AtlasPaint && window.MUSEUM_PAINT_T), render: (el, c) => AtlasPaint.render(el, c) },
-    { id: 'read', src: ['museum/read-i18n.js?v=4', 'museum/read.js?v=8'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T), render: (el, c) => AtlasRead.render(el, c) },
+    { id: 'read', src: ['museum/read-i18n.js?v=5', 'museum/read.js?v=9'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T), render: (el, c) => AtlasRead.render(el, c) },
     { id: 'chance', src: ['museum/chance-i18n.js?v=3', 'museum/chance.js?v=4'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T), render: (el, c) => AtlasChance.render(el, c) },
   ];
   const KEY = 'atlas-museum-room';
