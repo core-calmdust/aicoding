@@ -55,6 +55,35 @@
         g.quaternion.setFromAxisAngle(new TH.Vector3(0, 0, 1), Math.PI).multiply(new TH.Quaternion().setFromAxisAngle(new TH.Vector3(0, 1, 0), Math.PI / 2));   // face down under the board (it is turned over), White's side towards the viewer
         g.userData = { chess: true, top: 0 };
         return g; } },
+    // the chess and goose board (The Met 62.14; 1 = 1 cm). The Game of the Goose on the face that lies up: the 63 spaces of its spiral, their middles
+    // read off the photograph (0 = the gate the pieces wait in, 63 = the inner gate). No pieces or dice are kept with the board: turned ivory pawns,
+    // one plain and one stained green as the board's own inlay is, and two ivory dice — an estimate. The dice come to rest on the middle rosette.
+    goose: { game: 'goose', area: [-21, 21, -21.5, 21.5], top: 2.6, flip: 0, noContact: true, view: { tilt: 1.12, k: 1.06 },
+      board(TH, obj, K) {
+        const g = new TH.Group(), Y = 2.6, C = [[0.22,14.58],[2.95,15.27],[5.46,14.45],[7.7,13.23],[9.66,11.65],[11.41,9.61],[12.77,7.35],[13.69,4.94],[14.26,2.35],[14.38,-0.1],[14.15,-2.75],[13.56,-5.25],[12.63,-7.62],[11.18,-9.92],[9.39,-11.8],[7.22,-13.39],[4.89,-14.49],[2.43,-15.19],[-0.25,-15.4],[-2.85,-15.14],[-5.36,-14.36],[-7.71,-13.09],[-9.73,-11.44],[-11.53,-9.31],[-12.83,-7.05],[-13.72,-4.4],[-14.04,-1.8],[-13.87,0.75],[-13.21,3.27],[-12.04,5.73],[-10.36,7.95],[-8.26,9.75],[-5.91,11.06],[-3.27,11.76],[-0.85,11.6],[1.41,11.67],[3.6,11.05],[5.67,10.03],[7.43,8.5],[8.84,6.72],[9.86,4.64],[10.41,2.42],[10.55,0.13],[10.46,-2.21],[9.84,-4.53],[8.9,-6.5],[7.49,-8.38],[5.7,-9.88],[3.55,-10.97],[1.21,-11.55],[-1.06,-11.55],[-3.35,-11.04],[-5.58,-9.96],[-7.39,-8.42],[-8.72,-6.66],[-9.73,-4.51],[-10.16,-2.17],[-10.04,0.2],[-9.47,2.41],[-8.42,4.45],[-6.82,6.21],[-4.9,7.44],[-2.56,8.24],[0.06,7.22]];
+        const cell = (n, k) => { const [x, z] = C[Math.max(0, Math.min(63, n))], o = n === 0 ? [[-.55, .9], [.55, .9]][k || 0] : k == null ? [0, 0] : [[-.5, .25], [.5, -.25]][k]; return [x + o[0], Y, z + o[1]]; };
+        const hit = (x, z) => { let b = -1, bd = 1.7 * 1.7; C.forEach(([cx, cz], n) => { const d = (cx - x) ** 2 + (cz - z) ** 2; if (d < bd) { bd = d; b = n; } }); return b; };
+        const tex = (a, b, seed) => K.tex(128, 256, (c, w, h) => K.grain(c, w, h, { a, b, seed, sx: .5, sy: 7, warp: .3, pores: .003 }));
+        const MAT = [K.mat({ map: tex('#f1e8d2', '#dccfae', 71), color: '#ffffff', roughness: .42, clearcoat: .25, clearcoatRoughness: .5 }), K.mat({ map: tex('#4f8a5c', '#2f6a44', 73), color: '#ffffff', roughness: .42, clearcoat: .25, clearcoatRoughness: .5 })];
+        // a turned pawn: a spreading foot, a waist with a ring, an egg-shaped head with a small knob (2.6 cm tall, 1.5 across)
+        const prof = [[0, 0], [.74, 0], [.76, .08], [.7, .2], [.52, .3], [.36, .52], [.3, .8], [.34, .98], [.46, 1.04], [.46, 1.14], [.34, 1.2], [.3, 1.3], [.42, 1.5], [.5, 1.75], [.46, 2.0], [.34, 2.2], [.2, 2.32], [.14, 2.38], [.17, 2.46], [.14, 2.56], [0, 2.6]];
+        const GEO = new TH.LatheGeometry(prof.map(([a, b]) => new TH.Vector2(Math.max(.001, a), b)), 36);
+        const stone = side => { const m = new TH.Mesh(GEO, MAT[side]); m.castShadow = m.receiveShadow = true; return m; };
+        const pip = n => K.tex(128, 128, (c, w) => { c.fillStyle = '#ece2c8'; c.fillRect(0, 0, w, w); c.fillStyle = '#241408';
+          ({ 1: [[.5, .5]], 2: [[.28, .28], [.72, .72]], 3: [[.26, .26], [.5, .5], [.74, .74]], 4: [[.28, .28], [.72, .28], [.28, .72], [.72, .72]], 5: [[.26, .26], [.74, .26], [.5, .5], [.26, .74], [.74, .74]], 6: [[.28, .24], [.72, .24], [.28, .5], [.72, .5], [.28, .76], [.72, .76]] })[n].forEach(([x, y]) => { c.beginPath(); c.arc(x * w, y * w, w * .085, 0, 6.29); c.fill(); }); });
+        const DM = [1, 6, 2, 5, 3, 4].map(n => K.mat({ map: pip(n), color: '#ffffff', roughness: .45 })), DG = new TH.BoxGeometry(1.5, 1.5, 1.5);
+        const die = () => { const m = new TH.Mesh(DG, DM); m.castShadow = m.receiveShadow = true; return m; };
+        const diceAt = (side, i) => [-.13 + (i ? 1.5 : -1.5), -1.4 + (i ? .4 : -.3)];
+        g.userData = { goose: true, top: Y, cell, hit, stone, die, diceAt, dieH: .75, R: .76, th: 2.6, mats: MAT };
+        return g; } },
+    // … and chess on the face underneath (the case turns the board over): squares 3.5 × 3.6 cm; ivory lies at the lower left on the photograph, so the
+    // board is turned a quarter for a dark square at each player's left. The Atlas's own pieces (none are kept with the board).
+    'goose-ch': { game: 'chess', size: 8, area: [-21, 21, -21.5, 21.5], top: .3, flip: 1, local: true, noContact: true, view: { turn: Math.PI / 2, tilt: 1.02, k: 1.1 },
+      board(TH, obj, K) {
+        const g = new TH.Group(); g.scale.set(3.63, 3.57, 3.52); g.position.y = .3;
+        g.quaternion.setFromAxisAngle(new TH.Vector3(0, 0, 1), Math.PI).multiply(new TH.Quaternion().setFromAxisAngle(new TH.Vector3(0, 1, 0), Math.PI / 2));
+        g.userData = { chess: true, top: 0 };
+        return g; } },
     // the Ottoman board's inner face (1 = 1 cm): backgammon on its two tables — six mother-of-pearl cypress points from each long side on either leaf
     // (their places from the photograph), the hinge between them the bar; checkers borne off are piled on the plinth to the right. Your home table is
     // the near right one. No checkers or dice are kept with the board: plain turned discs (bone, dark wood) and bone dice — an estimate.

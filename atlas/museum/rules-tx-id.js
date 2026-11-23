@@ -73,4 +73,15 @@
     ["Bidak di bar harus <b>masuk dulu sebelum langkah lain</b>, ke rumah lawan (<b>19–24</b>) — tetapi tidak ke titik berisi <b>dua atau lebih</b> (19 merah).", "Masukkan <b>bidak putih</b> dari bar dengan angka <b>4</b>, ke <b>21</b>", "Masuk lagi! Angka 6 tertutup, 4 terbuka"],
     ["Setelah kelima belas ada di rumah, kamu boleh <b>mengeluarkannya</b>: ambil bidak dari titik sesuai angka dadu. <b>Yang lebih dulu mengeluarkan semuanya menang</b>!", ["Dengan angka <b>6</b>, keluarkan dari titik 6", "Dengan angka <b>3</b>, keluarkan dari titik 3"], "Begitu! Lima belas keluar dan kamu menang. Kamu sudah paham — coba permainan sungguhan"],
   ],
+  goose: [
+    ["Huu, selamat datang! Aku <b>Musowl</b>. Papan <b>Permainan Angsa</b> ini dibuat di Gujarat, India, sekitar 450 tahun lalu — mungkin yang tertua yang masih ada. Lempar dadu dan berlomba di jalur spiral sampai <b>63</b>"],
+    ["Jalurnya melingkar ke dalam sepanjang <b>63 petak</b>. Yang lebih dulu sampai di <b>gerbang 63</b> menang!", "Ketuk tujuan, <b>63</b>!", "Itulah tujuannya, dengan bunga gadingnya"],
+    ["Pada giliranmu kamu melempar <b>dua dadu</b>.", "Ketuk dekat dadu untuk melempar!", "<b>3 dan 1</b>: jumlahnya empat!"],
+    ["Kamu maju sebanyak <b>jumlah kedua dadu</b>.", "Pindahkan bidakmu ke <b>4</b>", "Bagus. Tanda mirip X itu angka 4 di papan ini"],
+    ["Berhenti di <b>angsa</b>, kamu maju <b>lagi sebanyak angka yang sama</b>! 3 dan 2 jadi 5. Petak 9 angsa, 14 juga…", ["Ke angsa di <b>9</b>", "Lima lagi, ke angsa di <b>14</b>", "Lima lagi, ke <b>19</b>!"], "Dari angsa ke angsa sekali jalan!"],
+    ["Tetapi sembilan di awal akan terbang dari angsa ke angsa sampai akhir. Maka <b>lemparan pertama 6 dan 3 menuju 26</b>, dan <b>5 dan 4 menuju 53</b>: petak bergambar dadu.", "<b>6 dan 3</b>! Pergi ke <b>26</b>", "Di petak dadu. Aturan yang cerdik, bukan?"],
+    ["Ada petak yang berbahaya. <b>Sumur (31)</b>: lewati 2 giliran. <b>Labirin (42)</b>: kembali ke 39. <b>Perahu (52)</b>: lewati 3 giliran. Dan <b>kerangka (58)</b>… kembali ke awal! Berhenti di petak lawan berarti bertukar tempat.", "Coba: pergi ke <b>58</b>", "Aduh, kembali ke awal! Hati-hati di permainan sungguhan"],
+    ["<b>63</b> harus dicapai <b>tepat</b>. Kelebihannya dihitung <b>mundur</b>. Kamu di 60: angka tiga dan kamu sampai!", "<b>2 dan 1</b>! Pergi ke <b>63</b>", "Sampai — kamu menang! Kamu sudah paham — coba permainan sungguhan"],
+  ],
+  'goose-ch': [["Huu, selamat datang! Aku <b>Musowl</b>. Sisi lain papan ini adalah <b>papan catur</b> dari gading dan eboni, dengan mosaik bundar mungil di tiap petak. Buahnya tidak tersimpan, jadi kupinjam buah catur Atlas"]],
 };
