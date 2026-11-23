@@ -84,4 +84,15 @@
     ["Tant qu’un pion sur la barre <b>n’est pas revenu en jeu, aucun autre ne bouge</b>. Il rentre dans le jan intérieur adverse (<b>19–24</b>), mais pas là où l’adversaire en a <b>deux ou plus</b> (le 19 rouge).", "Touche le <b>pion blanc</b> sur la barre et rentre avec <b>4</b> sur le <b>21</b>", "De retour, bien joué ! Le 6 bute sur la flèche rouge, mais le 4 entre. Comme un visiteur perdu qui retrouve sa salle"],
     ["Quand les 15 sont dans ton jan intérieur, tu peux <b>sortir des pions</b> depuis la flèche du nombre obtenu. <b>Le premier à tout sortir gagne</b> !", ["Avec <b>6</b>, touche le pion de la flèche 6 pour le sortir", "Puis avec <b>3</b>, sors aussi celui de la flèche 3 !"], "C’est ça, belle sortie ! Les 15 dehors, tu gagnes. Maintenant, une vraie partie contre l’IA. Je t’encourage depuis un coin du plateau"],
   ],
+  goose: [
+    ["Hou, bienvenue ! Je suis <b>Muséhibou</b>. Ce plateau de <b>jeu de l’oie</b> a été fait au Gujarat, en Inde, il y a environ 450 ans — peut-être le plus ancien qui reste. On lance les dés et l’on court le long d’une spirale jusqu’au <b>63</b>"],
+    ["Le chemin s’enroule vers l’intérieur sur <b>63 cases</b>. Le premier à la <b>porte du 63</b> gagne !", "Touchez le but, le <b>63</b> !", "Voilà le but, avec sa fleur d’ivoire"],
+    ["À votre tour, vous lancez <b>deux dés</b>.", "Touchez près des dés pour lancer !", "<b>3 et 1</b> : quatre en tout !"],
+    ["On avance de la <b>somme des deux dés</b>.", "Menez votre pion au <b>4</b>", "Bien. Ce signe en forme de X est le 4 de ce plateau"],
+    ["Sur une <b>oie</b>, on avance <b>encore du même nombre</b> ! 3 et 2 font 5. Le 9 est une oie, le 14 aussi…", ["Vers l’oie du <b>9</b>", "Cinq de plus, vers l’oie du <b>14</b>", "Cinq de plus, au <b>19</b> !"], "D’oie en oie, d’un seul élan !"],
+    ["Mais un neuf dès le départ volerait d’oie en oie jusqu’au bout. Alors <b>6 et 3 au premier lancer mènent au 26</b>, et <b>5 et 4 au 53</b> : les cases aux dés.", "<b>6 et 3</b> ! Allez au <b>26</b>", "Sur les dés. Une règle bien pensée, non ?"],
+    ["Certaines cases mordent. Le <b>puits (31)</b> : 2 tours passés. Le <b>labyrinthe (42)</b> : retour au 39. La <b>barque (52)</b> : 3 tours passés. Et le <b>squelette (58)</b>… retour au départ ! Si vous tombez sur l’adversaire, vous échangez vos places.", "Essayez : allez au <b>58</b>", "Aïe, retour au départ ! Prudence en vraie partie"],
+    ["Il faut atteindre le <b>63 exactement</b>. Ce qui dépasse se <b>recule</b>. Vous êtes au 60 : un trois et c’est gagné !", "<b>2 et 1</b> ! Allez au <b>63</b>", "Arrivé — vous gagnez ! Vous connaissez les règles : essayez une vraie partie"],
+  ],
+  'goose-ch': [["Hou, bienvenue ! Je suis <b>Muséhibou</b>. L’autre face de ce plateau est un <b>échiquier</b> d’ivoire et d’ébène, avec une minuscule mosaïque ronde dans chaque case. Aucune pièce n’a survécu, j’emprunte donc celles de l’Atlas"]],
 };

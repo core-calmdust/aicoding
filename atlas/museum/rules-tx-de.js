@@ -84,4 +84,15 @@
     ["Solange ein Stein auf der Bar <b>nicht zurück aufs Brett kommt, darf kein anderer ziehen</b>. Er kommt im Heimfeld des Gegners (<b>19–24</b>) herein, aber nicht dort, wo dieser <b>zwei oder mehr</b> hat (die rote 19).", "Tippe den <b>weißen Stein</b> auf der Bar an und komm mit <b>4</b> auf die <b>21</b>", "Wieder da, gut gemacht! Die 6 scheitert am roten Punkt, aber die 4 passt. Wie ein verirrter Besucher, der seinen Saal wiederfindet"],
     ["Sind alle 15 im Heimfeld, darfst du Steine vom Punkt der geworfenen Zahl <b>vom Brett nehmen</b> (auswürfeln). <b>Wer zuerst alle hinausbringt, gewinnt</b>!", ["Mit <b>6</b> tippe den Stein auf Punkt 6 an, um ihn hinauszuspielen", "Dann mit <b>3</b> auch den Stein auf Punkt 3 hinaus!"], "Genau so, schön ausgewürfelt! Sind alle 15 draußen, gewinnst du. Jetzt eine echte Partie gegen die KI. Ich feuere dich aus einer Ecke des Bretts an"],
   ],
+  goose: [
+    ["Huhu, willkommen! Ich bin <b>Museule</b>. Dieses Brett für das <b>Gänsespiel</b> entstand vor rund 450 Jahren in Gujarat in Indien – vielleicht das älteste, das es noch gibt. Man würfelt und läuft auf einer Spirale um die Wette bis zur <b>63</b>"],
+    ["Der Weg windet sich über <b>63 Felder</b> nach innen. Wer zuerst am <b>Tor der 63</b> ist, gewinnt!", "Tippe das Ziel an, die <b>63</b>!", "Das ist das Ziel – mit seiner Elfenbeinblüte"],
+    ["Wenn du dran bist, wirfst du <b>zwei Würfel</b>.", "Tippe bei den Würfeln, um zu werfen!", "<b>3 und 1</b> – zusammen vier!"],
+    ["Du ziehst die <b>Summe der beiden Würfel</b>.", "Zieh deine Figur auf die <b>4</b>", "Gut. Das X-artige Zeichen ist die 4 dieses Bretts"],
+    ["Auf einer <b>Gans</b> ziehst du <b>dieselbe Zahl noch einmal</b>! 3 und 2 sind 5. Die 9 ist eine Gans, die 14 auch …", ["Zur Gans auf der <b>9</b>", "Fünf weiter, zur Gans auf der <b>14</b>", "Noch fünf, auf die <b>19</b>!"], "Von Gans zu Gans in einem Zug!"],
+    ["Aber eine Neun gleich zu Beginn flöge von Gans zu Gans bis ins Ziel. Darum führt <b>6 und 3 beim ersten Wurf auf die 26</b> und <b>5 und 4 auf die 53</b> – die Felder mit den Würfeln.", "<b>6 und 3</b>! Zieh auf die <b>26</b>", "Auf den Würfeln. Eine kluge Regel, nicht wahr?"],
+    ["Manche Felder beißen. Der <b>Brunnen (31)</b>: 2 Runden aussetzen. Das <b>Labyrinth (42)</b>: zurück auf 39. Das <b>Boot (52)</b>: 3 Runden aussetzen. Und das <b>Skelett (58)</b> … zurück zum Start! Landest du beim Gegner, tauscht ihr die Plätze.", "Probier es: zieh auf die <b>58</b>", "Huch – zurück zum Start! Pass im echten Spiel auf"],
+    ["Die <b>63</b> muss man <b>genau</b> treffen. Was zu viel ist, zieht man <b>wieder zurück</b>. Du stehst auf 60: Eine Drei bringt dich ins Ziel!", "<b>2 und 1</b>! Zieh auf die <b>63</b>", "Im Ziel – du gewinnst! Du kennst die Regeln – jetzt ein echtes Spiel"],
+  ],
+  'goose-ch': [["Huhu, willkommen! Ich bin <b>Museule</b>. Die andere Seite dieses Bretts ist ein <b>Schachbrett</b> aus Elfenbein und Ebenholz, mit einem winzigen runden Mosaik in jedem Feld. Figuren sind nicht erhalten, also leihe ich mir die des Atlas"]],
 };

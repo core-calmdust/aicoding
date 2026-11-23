@@ -210,6 +210,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .grid.flat{padding:4px 0 10px;overflow:visible}
 .fsec h3{display:flex;align-items:baseline;gap:12px;margin:8px 0 10px;font-family:var(--jp);font-size:20px;letter-spacing:.12em;color:var(--gold2)}.fsec h3 small{font-family:var(--num);font-size:15px;letter-spacing:.2em;color:var(--mute)}
 .fsec + .fsec{margin-top:12px;padding-top:12px;border-top:1px solid rgba(214,222,228,.1)}.fsec .none{color:var(--mute);font-size:16px}
+#spotCard{position:fixed;width:300px;z-index:5;filter:drop-shadow(0 12px 24px rgba(0,0,0,.6))}#spotCard .card{width:100%;background:rgba(8,18,28,.97);cursor:default}#spotCard .card::after{border-color:var(--gold)}#spotCard .x{position:absolute;right:4px;top:4px;width:36px;height:36px;border:0;background:none;color:var(--gold2);font-size:22px;cursor:pointer;z-index:2}#spotCard .card .role{right:44px}#spotCard .card .top{padding-right:34px}
+#listMine .fi.on{background:rgba(216,180,106,.14);border-color:var(--gold)}
 #skTip{position:fixed;width:300px;pointer-events:none;z-index:5;filter:drop-shadow(0 12px 24px rgba(0,0,0,.6))}#skTip .card{width:100%;background:rgba(8,18,28,.96)}
 .tabs .sp{flex:1}.tabs button.sort{font-family:var(--num);letter-spacing:.16em;font-size:15px}
 .fleet{cursor:pointer}
@@ -581,6 +583,7 @@ button{font:inherit;color:inherit;cursor:pointer}
   if (w && sw > w) el.style.fontSize = (parseFloat(getComputedStyle(el).fontSize) * w / sw * .98) + 'px'; });
   addEventListener('resize', fit); addEventListener('load', fit); if (document.fonts) document.fonts.ready.then(fit); new MutationObserver(fit).observe(document.getElementById('scrTitle'), { attributes: true, attributeFilter: ['class'] }); fit(); })();</script>
 <div id="spotTip" class="hide"></div>
+<div id="spotCard" class="hide"></div>
 <div id="cardPop" class="hide"><div class="cp-in"><div id="cpCard"></div><div class="cp-acts"><button class="cmd" id="cpClose" type="button"><span id="cpCloseT"></span></button><button class="cmd prime" id="cpPick" type="button"><span id="cpPickT"></span></button></div></div></div>
 <div id="load"><div><div class="l">DREADNOUGHTS</div><div class="pb"></div><div class="s"><span>LOADING THE FLEET</span><i>●</i></div></div></div>
 <div id="nogl" class="hide"></div>
@@ -591,6 +594,6 @@ button{font:inherit;color:inherit;cursor:pointer}
 <script src="../atlas/vendor/three-r186.min.js?v=1"></script>
 <script src="../seabattle/ships3d.js?v=2"></script>
 <script src="world.js?v=8"></script>
-<script src="game.js?v=15"></script>
+<script src="game.js?v=16"></script>
 </body>
 </html>

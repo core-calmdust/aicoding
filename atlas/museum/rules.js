@@ -18,7 +18,20 @@
   const CH = (w, b) => ({ w: w || {}, b: b || {} });   // chess: { square: piece } for White (you) and Black
   const CH0 = CH({ a1: 'R', b1: 'N', c1: 'B', d1: 'Q', e1: 'K', f1: 'B', g1: 'N', h1: 'R', a2: 'P', b2: 'P', c2: 'P', d2: 'P', e2: 'P', f2: 'P', g2: 'P', h2: 'P' },
     { a8: 'R', b8: 'N', c8: 'B', d8: 'Q', e8: 'K', f8: 'B', g8: 'N', h8: 'R', a7: 'P', b7: 'P', c7: 'P', d7: 'P', e7: 'P', f7: 'P', g7: 'P', h7: 'P' });
+  const GS = (me, ai) => ({ me, ai });   // the Game of the Goose: your piece's space (0 = the start), the other's (or none)
+  const ALIAS = { 'goose-ch': 'ottoman' };   // chess on another exhibit's board: the same pages and layer (its own first words, museum/rules-tx-*.js)
   const C = {
+    // the chess and goose board (The Met 62.14): the Game of the Goose
+    goose: [
+      { set: GS(0, 0) },
+      { set: GS(0, 0), glow: ['g63'], task: [{ t: 'tap', at: ['g63'] }] },
+      { set: GS(0, 0), task: [{ t: 'roll', v: [3, 1] }] },
+      { set: GS(0, 0), dice: [3, 1], glow: ['g4'], task: [{ t: 'move', from: 'g0', to: 'g4' }] },
+      { set: GS(4), dice: [3, 2], glow: ['g9', 'g14', 'g19'], task: [{ t: 'move', from: 'g4', to: 'g9' }, { t: 'move', from: 'g9', to: 'g14' }, { t: 'move', from: 'g14', to: 'g19' }] },
+      { set: GS(0), dice: [6, 3], glow: ['g26'], task: [{ t: 'move', from: 'g0', to: 'g26' }] },
+      { set: GS(53, 31), dice: [3, 2], glow: ['g58'], gcol: 0xff9b7a, task: [{ t: 'move', from: 'g53', to: 'g58', then: 'g0' }] },
+      { set: GS(60, 44), dice: [2, 1], glow: ['g63'], task: [{ t: 'move', from: 'g60', to: 'g63' }], last: true },
+    ],
     // the Ottoman board, outside: chess (the Atlas's own pieces)
     ottoman: [
       { set: CH0 },
@@ -109,7 +122,7 @@
     { set: UR([[1, 1], [2, 3]], [[1, 3]], [5, 6]), udice: 2, glow: ['c1,3'], gcol: 0xff9b7a, task: [{ t: 'move', from: 'c2,3', to: 'c2,1', cands: ['c1,1', 'c2,3'] }] },
     { set: UR([[2, 7]], [[1, 6], [0, 6]], [0, 3], [6, 2]), udice: 2, task: [{ t: 'move', from: 'c2,7', to: 'off' }], last: true },
   ];
-  const has = id => !!C[id];
+  const has = id => !!C[ALIAS[id] || id];
 
   // ---------- the boards: where a piece stands, how to make one, what a tap hits ----------
   function layer(id, B, TH) {
@@ -157,6 +170,14 @@
         offLoc: pieces => `g0:${pieces.filter(p => p.loc.startsWith('g0:')).length}`,
         cutLoc: pieces => `w1:${pieces.filter(p => p.loc.startsWith('w1:')).length}` };
     }
+    if (id === 'goose') {   // 'g' + the space (g0 = the start gate … g63); the other side's piece 'h' + its space
+      const n = t => +t.slice(1);
+      return { R: 1.25, sc: .7, base: U.top,
+        pos(loc) { const k = n(loc); return U.cell(k, k === 0 ? (loc[0] === 'h' ? 1 : 0) : null); }, spot(t) { return U.cell(n(t), n(t) === 0 ? 0 : null); },
+        make: kind => { const g = new TH.Group(); g.add(U.stone(kind)); return g; },
+        list(s) { const L = [['g' + s.me, 0]]; if (s.ai != null) L.push(['h' + s.ai, 1]); return L; },
+        hit(x, z) { const h = U.hit(x, z); return h < 0 ? null : 'g' + h; } };
+    }
     if (id === 'ottoman') {   // chess: 'c' + the square's name (ce4); kinds 'wK' … 'bP' — the Atlas's own pieces, one square = 1 in the board's space
       const CS = window.Table3D && Table3D.chess, set = window.Table3D && Table3D.PIECES && Table3D.PIECES.chess ? Table3D.PIECES.chess.get() : 'jewel';
       const xz = t => [t.charCodeAt(1) - 97 - 3.5, 8 - +t[2] - 3.5];
@@ -180,7 +201,7 @@
   // ---------- the course ----------
   function run(id, env) {
     const TX = (window.AtlasMuseumRulesTX || {}), T = Object.assign({}, TX.en || {}, TX[env.lang] || {}), UI = Object.assign({}, (TX.en || {}).ui, (TX[env.lang] || {}).ui);
-    const RTL = env.lang === 'ar', AL = RTL ? '▶' : '◀', AR = RTL ? '◀' : '▶', PAGES = C[id], W = (T[id] || (TX.en || {})[id] || []), TH = env.TH, B = env.board, V = env.V, LY = layer(id, B, TH);
+    const RTL = env.lang === 'ar', AL = RTL ? '▶' : '◀', AR = RTL ? '◀' : '▶', CID = ALIAS[id] || id, PAGES = C[CID], W0 = (T[id] || (TX.en || {})[id] || []), W = CID === id ? W0 : W0.concat((T[CID] || (TX.en || {})[CID] || []).slice(W0.length)), TH = env.TH, B = env.board, V = env.V, LY = layer(CID, B, TH);
     try { localStorage.setItem('aicoding-museum-' + id + '-rules-seen', '1'); } catch (e) {}
     let stopped = false, step = 0, si = 0, busy = false, sel = null, timers = [], typeT = 0, autoT = 0;
     const later = (f, ms) => { const h = setTimeout(() => { if (!stopped) f(); }, ms); timers.push(h); return h; };
@@ -279,7 +300,7 @@
       const P = PAGES[step];
       setPieces(LY.list(P.set));
       if (id === 'senet') { showSticks(P.sticks || 5); sticks.forEach(s => { s.visible = step >= 2; }); }
-      if (id === 'sugoroku' || id === 'ottoman-bg') showDice(P.dice || (P.task && P.task[0].t === 'roll' ? [5, 2] : null));
+      if (id === 'sugoroku' || id === 'ottoman-bg' || id === 'goose') showDice(P.dice || (P.task && P.task[0].t === 'roll' ? [5, 2] : null));
       if (id === 'ur') showUDice(P.udice != null ? P.udice : P.task && P.task[0].t === 'roll' ? 0 : null);
       say(words()[0]); plate(P.task ? kOf() : '');
       $('.pg').textContent = ` ${step + 1} / ${PAGES.length}`;

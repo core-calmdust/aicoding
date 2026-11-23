@@ -84,4 +84,15 @@
     ["A piece on the bar must <b>come back in before anything else moves</b>, into the rival’s inner board (<b>19–24</b>), never where they have <b>two or more</b> (the red 19).", "Tap the <b>white piece</b> on the bar and bring it to <b>21</b> with the <b>4</b>", "Back in, nice! The red point blocked the 6, but the 4 worked. Like a lost visitor finding the gallery again"],
     ["Once all 15 are in your inner board, you <b>bear off</b> from the point of the number thrown. <b>First to bear off all wins</b>!", ["With the <b>6</b>, tap the piece on 6 and bear it off", "Now the <b>3</b>: bear off a piece from 3 too!"], "That’s it, nicely borne off! Bear off all 15 and you win. Next, a real game against the AI. I’ll cheer from a corner of the board"],
   ],
+  goose: [
+    ["Hoo, welcome! I’m <b>Musowl</b>. This board for the <b>Game of the Goose</b> was made in Gujarat, India, some 450 years ago — perhaps the oldest one left. You throw dice and race round a spiral to <b>63</b>"],
+    ["The track winds inward through <b>63 spaces</b>. First to the <b>gate at 63</b> wins!", "Tap the goal, <b>63</b>!", "That’s the goal — with its ivory flower"],
+    ["On your turn you throw <b>two dice</b>.", "Tap near the dice to throw!", "<b>3 and 1</b> — four in all!"],
+    ["You move the <b>two numbers added together</b>.", "Move your piece to <b>4</b>", "Good. That X-like sign is this board’s 4"],
+    ["Land on a <b>goose</b> and you go on <b>again by the same number</b>! 3 and 2 make 5. Nine is a goose, so is fourteen…", ["To the goose at <b>9</b>", "Five more, to the goose at <b>14</b>", "Five more, to <b>19</b>!"], "Goose to goose in one go! As a bird myself, I approve"],
+    ["But a nine at the very start would fly from goose to goose right to the end. So a <b>first throw of 6 and 3 goes to 26</b>, and <b>5 and 4 to 53</b> — the spaces with the dice.", "<b>6 and 3</b>! Move to <b>26</b>", "On the dice. A neat rule, isn’t it"],
+    ["Some spaces bite. The <b>well (31)</b>: miss 2 turns. The <b>maze (42)</b>: back to 39. The <b>boat (52)</b>: miss 3 turns. And the <b>skeleton (58)</b>… back to the start! Land on the other player and you change places.", "Try it: move to <b>58</b>", "Eek — back to the start! Watch out in a real game"],
+    ["You must reach <b>63 exactly</b>. Anything over is counted <b>back again</b>. You are on 60: a three gets you home!", "<b>2 and 1</b>! Move to <b>63</b>", "Home — you win! You have the rules; now try a real game"],
+  ],
+  'goose-ch': [["Hoo, welcome! I’m <b>Musowl</b>. The other face of this board is a <b>chessboard</b> of ivory and ebony, with a tiny round mosaic in every square. No pieces survive with it, so I’ve borrowed the Atlas’s to show you the game"]],
 };

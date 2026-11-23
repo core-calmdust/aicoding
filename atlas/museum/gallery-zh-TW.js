@@ -1,6 +1,6 @@
 /* Museum "Collection" texts (Traditional Chinese, Taiwan). Same keys as gallery-ja.js. */
 (window.MUSEUM_GAL_T = window.MUSEUM_GAL_T || {})['zh-TW'] = {
-  ui: { p_start: "開始", p_undo: "悔棋", p_resign: "認輸", p_hint: "提示", p_quit: "退出", p_sure: "確定？", p_orientS: "方向", p_rules: "規則", p_orient: "旋轉棋盤方向", play_ballinderry: "布蘭杜布", play_senet: "圖坦卡門的塞尼特", play_ur: "烏爾王族遊戲", play_shosoin: "木畫紫檀棋局", play_sugoroku: "木畫紫檀雙六局", play_ottoman: "西洋棋", "play_ottoman-bg": "雙陸棋", p_level: "對手", p_side: "先後", p_first: "先手", p_second: "後手", p_stop: "結束對局", p_you: "你", p_turn: "輪到你", p_think: "思考中…", p_win: "你贏了", p_lose: "你輸了", p_draw: "平局", flip: '翻面', guideH: '導覽員：館藏梟', guide: '逛遍館藏，館藏梟就會一次比一次打扮得更漂亮來見你', gift: '新的阿特拉莫來了！', sub: "世界各地博物館守護的遊戲史珍寶。每件名品都以3D重現——彷彿拿在手上，轉動細細端詳。", collection: "館藏", special: "特別展示", lock: "達成{n}個{g}成就後開放", loading: "正在準備展示櫃…", fail: "無法載入展品",
+  ui: { playable: "可以玩", p_start: "開始", p_undo: "悔棋", p_resign: "認輸", p_hint: "提示", p_quit: "退出", p_sure: "確定？", p_orientS: "方向", p_rules: "規則", p_orient: "旋轉棋盤方向", play_ballinderry: "布蘭杜布", play_senet: "圖坦卡門的塞尼特", play_ur: "烏爾王族遊戲", play_shosoin: "木畫紫檀棋局", play_sugoroku: "木畫紫檀雙六局", play_goose: "鵝棋", "play_goose-ch": "西洋棋", play_ottoman: "西洋棋", "play_ottoman-bg": "雙陸棋", p_level: "對手", p_side: "先後", p_first: "先手", p_second: "後手", p_stop: "結束對局", p_you: "你", p_turn: "輪到你", p_think: "思考中…", p_win: "你贏了", p_lose: "你輸了", p_draw: "平局", flip: '翻面', guideH: '導覽員：館藏梟', guide: '逛遍館藏，館藏梟就會一次比一次打扮得更漂亮來見你', gift: '新的阿特拉莫來了！', sub: "世界各地博物館守護的遊戲史珍寶。每件名品都以3D重現——彷彿拿在手上，轉動細細端詳。", collection: "館藏", special: "特別展示", lock: "達成{n}個{g}成就後開放", loading: "正在準備展示櫃…", fail: "無法載入展品",
     hint: "拖曳旋轉 · 滾輪縮放 · 點數字看細節", hintT: "拖曳旋轉 · 雙指縮放", spin: "緩緩旋轉", reset: "回到初始視角", wide: '收起／展開解說', close: "關閉",
     date: "年代", where: "出土 / 流傳", museum: "典藏", mat: "材質", size: "尺寸", look: "看點", aboutModel: "關於這個3D模型", sources: "參考資料", play: "玩{g}" },
   ex: {
@@ -115,6 +115,12 @@
         ["錳釉的一方", "另一方施錳釉，據描述是近於黑的紫色，但在展出照片中看來是帶斑紋的紅褐色。"]],
       model: "大小、形狀和擺放依據館方的紀錄與照片。釉色的斑駁和各子之間的細微差別為推定。",
       src: [["大都會藝術博物館，「Chess Set」1971.193a–ff", "https://metmuseum.org/art/collection/search/452204"], ["大都會藝術博物館教育資源（Image 37：在內沙布爾出土的類似的兵）", "https://www.metmuseum.org/learn/educators/curriculum-resources/art-of-the-islamic-world/unit-six/chapter-one/featured-works-of-art/image-37"]] },
+    goose: { name: "西洋棋與鵝棋棋盤", alt: "烏木鑲嵌象牙的雙面棋盤", date: "16世紀後期", where: "印度古吉拉特", found: "1962年由博物館購入（Pfeiffer基金）",
+      museum: "大都會藝術博物館（紐約）", no: '62.14', mat: "烏木、染黑的木、象牙、角、金線", size: "2.9×41.9×43公分",
+      p: ["一面是「鵝棋」，另一面是西洋棋。鵝棋的一面可能是現存最古老的鵝棋棋盤：擲骰子奔向中央第63格的競速遊戲，曾在佛羅倫斯梅迪奇宮廷流行。", "圖案依照義大利文藝復興時期的版畫。鑲嵌工藝被認為出自印度西部古吉拉特的工匠之手，他們也為北歐市場製作貝殼工藝品。"],
+      spots: [["終點之門（63）", "螺旋的盡頭是63：拱門中嵌著一朵象牙花。"], ["鵝", "共13隻鵝。停在鵝上，可按同樣的點數再走一次。"], ["骰子（26）", "26和53各有兩顆骰子：第一擲擲出9時的去處。"], ["井（31）", "石砌的井。掉進去就要停留。"], ["迷宮（42）", "圓形迷宮。進入後退回39。"], ["船（52）", "一條船——別的棋盤在這個數字上多畫監獄。"], ["骷髏（58）", "一手舉著東西的骷髏。停在這裡要回到起點。"], ["象牙數字", "數字刻在象牙帶上。4寫得像「X」，5寫得像「S」。"], ["西洋棋的格子", "象牙與烏木的64格，每格中央都有一枚夾雜綠、紅色的細密鑲嵌圓飾。"], ["波形邊飾", "棋盤四周環繞著一圈半圓相連的雕刻邊飾。"], ["兩側的飾件", "左右兩側中央各有一個飾花的U形飾件，用途沒有記載。"]],
+      model: "尺寸依照館方記錄。兩面都採用館方的正面照片（公有領域），經校正後貼上。邊框與盤面的高差（約3公釐）和側面沒有照片，屬推定。棋子和骰子沒有傳世：鵝棋的棋子（象牙色與綠色）和骰子為推定，西洋棋使用大百科自己的棋子。",
+      src: [["大都會藝術博物館「Chess and goose game board」62.14", "https://www.metmuseum.org/art/collection/search/202612"]] },
     ottoman: { name: "鄂圖曼帝國的西洋棋與雙陸棋盤", alt: "玳瑁與螺鈿鑲嵌的折疊棋盤", date: "約1600–1700年", where: "土耳其（可能是伊斯坦堡）", found: "鄂圖曼帝國時期；1907年由博物館向海牙的一家商行購得",
       museum: "維多利亞與亞伯特博物館（倫敦）", no: "861-1907", mat: "木、覆於金箔之上的玳瑁、螺鈿（珍珠母）、骨、象牙、鯨鬚、多種木材", size: "展開56.5 × 56.3公分・闔起厚5.5公分",
       p: ["由兩塊板以鉸鏈相連的折疊棋盤。展開時內側是雙陸棋盤；翻過來，外側是西洋棋盤。玳瑁底下襯有金箔，在光線下泛出柔和的光澤。",

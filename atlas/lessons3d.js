@@ -5293,7 +5293,7 @@
     LKEY: 'aicoding-connect4-v2-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../connect4/lessons.json?v=20261107l14'), Promise.all(['../connect4/i18n.js?v=20261107l14', '../connect4/learn.js?v=20261107l14'].map(u => fetch(u).then(r => r.text()).catch(() => '')))])
+      return (this.p = Promise.all([getJ('../connect4/lessons.json?v=20261123v2'), Promise.all(['../connect4/i18n.js?v=20261107l14', '../connect4/learn.js?v=20261107l14'].map(u => fetch(u).then(r => r.text()).catch(() => '')))])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T.join('\n'))(w); } catch (e) { console.warn('[lessons3d] connect4 texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -5335,7 +5335,7 @@
      (c4F: a four now, the opponent's four next, a cell under the opponent's winning cell, new winning cells and their row, two at once /
      stacked) and the solver's result of every column (C4SOL, connect4/engine.js with the book and tree: A the lesson's answer, W a win,
      w a slower win, D a draw, L a loss, - a full column). */
-  const C4SOL = {"four":["DLAwwww","wwwwAww","wwwwAwL","wDwAwww"],"block":["LLLLLAL","LLLALLL","LLALLLL"],"centre":["LLDADLL","LLLALLL","LLLALDL"],"early":["LLLALLL","LDAwLLL","LLLLALL","LLLALLL"],"threat":["LALLLLL","ALLLLLL","DAL-LLL"],"open":["LDAwwww","wwwwAww","LALLLLL","LwALLLL"],"diag":["LLLALLL","LLLLLAL","LALLLLL","LLLwLAL"],"double":["A-L---L","-L-L--A","L-L-AL-"],"stack":["LALLwwL","wwwLwAw","wAwwLww","wwAwwww"],"force":["wAwwwwD","wwAwwww","LLwwALL","LLAwwLL"],"parity":["DDADDDD","D-D-DAD","AD-L-DD"],"zugz":["LA----L","-D--L-A","--D--wA","AL---LL"],"follow":["LLLLALL","LLALLLL","wLLALLL","LLLALLL"],"first":["LALLLLL","wDwAwww","wwAwwww","wwwwAww"],"second":["LADLLwL","LDwADwL","LLLADDL","LDALDDL"],"op1":["LLLALLL","LDA-ADL","LALDDAL"],"op2":["DLAAAAA","LLDDLAA","LLwwLLA"],"op3":["LAL-LLL","LDL-LAL","LLL-ALL","LLLLLLA"],"count":["LL-A-L-","LL----A","-A--L-L","--AL---"],"endwin":["AD-----","-DA----","-----DA","--LA---"],"miss":["ALLLLLL","wLLLALL","LALLLLL","wLLLALL"],"under":["DLLAwLL","LLLALLL","wLL-ALL","LLw-LwA"],"edge":["LLALLLL","LLALLLL","LLLDALL","LLLLLAL"]};
+  const C4SOL = {"four":["DLAwwww","wwwwAww","LDALLLL","wDwAwww"],"block":["LLLLLAL","LLLALLL","LLALLLL"],"centre":["LLDADLL","LLLALLL","LLLALDL"],"early":["LLLALLL","LLALLLL","LLLLALL","LLLALLL"],"threat":["LALLLLL","ALLLLLL","DAL-LLL"],"open":["LDAwwwD","LLwADLL","LALLLLL","LwALLLL"],"diag":["LLLALLL","LLLLLAL","LLLADwD","LLLLLAL"],"double":["A-L---L","-L-L--A","L-L-AL-"],"stack":["LALLwwL","wwwLwAw","wAwwLww","LwDLLLA"],"force":["wAwwwwD","wwAwwww","LLwwALL","LLAwwLL"],"parity":["DDADDDD","D-D-DAD","AD-L-DD"],"zugz":["LA----L","-D--L-A","--D--wA","AL---LL"],"follow":["LLLLALL","LLALLLL","wLLALLL","LLLALLL"],"first":["LALLLLL","wDwAwww","wwAwwww","wwwwAww"],"second":["LADLLwL","LDwADwL","LLLADDL","LDALDDL"],"op1":["LLLALLL","LDA-ADL","LALDDAL"],"op2":["DLAAAAA","LLDDLAA","LLwwLLA"],"op3":["LAL-LLL","LDL-LAL","LLL-ALL","LLLLLLA"],"count":["LL-A-L-","LL----A","-A--L-L","--AL---"],"endwin":["AD-----","-DA----","-----DA","--LA---"],"miss":["ALLLLLL","wLLLALL","LALLLLL","wLLLALL"],"under":["DLLAwLL","LLLALLL","wLL-ALL","LLw-LwA"],"edge":["LLALLLL","LLALLLL","LLLDALL","LLLLLAL"]};
   const C4J_LS = {
     intro: {
       four: '自分の色を<b>ヨコ・タテ・ナナメ</b>に4つ並べたら勝ち！<br>コマは列の<b>いちばん下の空きマス</b>にポトンと落ちるの。<br>置く前に「今すぐ4つ並ぶマスはない？」って見るくせをつけようね。',
@@ -5504,6 +5504,9 @@
         w: ['{x}でも勝てるけど、勝つまでが長くなっちゃう。', '{x}も勝ちは残るけど、遠回りなの。', 'その{x}でも勝てるけど、相手にねばられちゃう。', '{x}だと勝つまでに手数がかかって、ちょっと損。', '{x}も悪くないけど、もっと早い勝ち方があるの。'] }[sv];
       const B2 = { L: ['最後まで読むと、相手の勝ちになっちゃう。', 'そのまま進むと、負けにつながるの。', '相手が正しく打てば、負けちゃう。', '先まで読むと、相手に勝ち筋が残るの。', 'このままだと、最後は相手の勝ち。'], D: ['最後まで読むと引き分けどまり。', 'それだと引き分けで終わっちゃう。', '先まで読んでも、勝ちには届かないの。', 'いいとこ引き分けなの。', '勝負は引き分けになりそう。'], w: ['まだ勝てるけど、遠回り。', '勝てても、手数がかかっちゃう。', '勝ちは残るけど、相手にねばられるの。', 'もっと早い勝ち方があったの。', '勝つまでが長くなっちゃう。'] }[sv];
       let b2 = '';
+      // (2026-11-23 第2期) a wrong column that still wins by force (sv 'w'): never say it fails (「ふさがれておしまい」「止められちゃう」) —
+      // it is a slower win, worded as one (the lesson's own point about it stays only when it is true: 勝ちを見のがし・ふさがれる)
+      if (sv === 'w' && /おしまい|止め|止ま|守れちゃう|終わり|負け|引き分け|届かない/.test(a)) { a = ''; weak = false; }
       if (!a) a = B ? V(B) : V(['{x}だと、相手に楽をさせちゃうの。', '{x}では、相手にいいマスをゆずっちゃう。', 'その{x}は、ちょっと働きが弱いの。', '{x}だと、相手の形がよくなっちゃう。', '{x}は少しもったいない手なの。']);
       else if (weak && B2) b2 = V(B2, 2);
       const head = VO.soft(i) + ' ', why = C4J_LS.lead[vi] + plus(FA, A)[(vi + 2) % 5] + C4J_LS.tail[vi];

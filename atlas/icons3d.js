@@ -593,6 +593,27 @@
       return g;
     },
     /* 博物館の所蔵品で遊ぶゲーム (2026-11-23): the same form as every game icon — a fragment of the exhibit as the board, its pieces large */
+    'mu-goose'() {   // the chess and goose board (The Met 62.14): a corner of the ebony spiral with its ivory lines and a goose; two turned pawns (ivory, green) and two dice in the air
+      const top = M({ map: X.canvasTex('icmuo1', 512, 512, (c, W) => {
+        c.fillStyle = '#17110e'; c.fillRect(0, 0, W, W); const cx = W / 2, cy = W / 2;
+        c.strokeStyle = '#a8472c'; c.lineWidth = 18; c.beginPath(); c.arc(cx, cy, W * .455, 0, 7); c.stroke();
+        c.strokeStyle = '#efe4c6'; c.lineWidth = 6; [.415, .2].forEach(r => { c.beginPath(); c.arc(cx, cy, W * r, 0, 7); c.stroke(); });
+        c.lineWidth = 30; c.setLineDash([W * .25 * Math.PI * 2 / 10 - 8, 8]); c.beginPath(); c.arc(cx, cy, W * .25, 0, 7); c.stroke(); c.setLineDash([]);
+        c.lineWidth = 6; for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5; c.beginPath(); c.moveTo(cx + Math.cos(a) * W * .2, cy + Math.sin(a) * W * .2); c.lineTo(cx + Math.cos(a) * W * .415, cy + Math.sin(a) * W * .415); c.stroke(); }
+        // geese, ivory, in every other space; a flower at the middle
+        const goose = () => { c.fillStyle = '#efe4c6'; c.beginPath(); c.moveTo(-9, 4); c.bezierCurveTo(-10, -2, -5, -5, 0, -4); c.lineTo(3, -10); c.quadraticCurveTo(5, -12.5, 8, -10.5); c.lineTo(11.5, -8.5); c.lineTo(7.2, -7.8); c.quadraticCurveTo(6.5, -2, 4, 0); c.bezierCurveTo(5, 4, 2, 7, -3, 7); c.bezierCurveTo(-6, 7, -8.5, 6, -9, 4); c.fill(); c.fillRect(-3.4, 7, 1.3, 4.6); c.fillRect(-5.5, 11.2, 5, 1.3); };
+        for (let i = 0; i < 10; i += 2) { const a = (i + .5) * Math.PI / 5; c.save(); c.translate(cx + Math.cos(a) * W * .345, cy + Math.sin(a) * W * .345); c.rotate(a + Math.PI / 2); c.scale(2.5, 2.5); goose(); c.restore(); }
+        c.fillStyle = '#efe4c6'; for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; c.beginPath(); c.ellipse(cx + Math.cos(a) * 30, cy + Math.sin(a) * 30, 20, 12, a, 0, 7); c.fill(); } c.fillStyle = '#2f7a4c'; c.beginPath(); c.arc(cx, cy, 13, 0, 7); c.fill();
+      }), roughness: .4 });
+      const g = boardChunk(3, 3.6, top, M({ color: 0x15100d, roughness: .45 }));
+      const lathe = (pts, mat) => mesh(new T.LatheGeometry(pts.map(([r, y]) => new T.Vector2(r, y)), 32), mat);
+      const pawn = mat => lathe([[0, 0], [.5, 0], [.52, .06], [.46, .16], [.3, .3], [.22, .55], [.26, .68], [.34, .72], [.34, .8], [.24, .86], [.3, 1.02], [.36, 1.2], [.32, 1.4], [.2, 1.56], [.1, 1.62], [.13, 1.7], [0, 1.76]], mat);
+      const iv = C(0xefe2c0, { roughness: .4 }), gr = C(0x3f8f5a, { roughness: .4 });
+      const S = 3.1 / 3, p = i => -1.55 + S * (i + .5);
+      const a = pawn(iv); a.scale.setScalar(1.15); g.add(at(a, p(2) - .25, .5, p(0) + .3)); const b = pawn(gr); b.scale.setScalar(1.15); g.add(at(b, p(0) + .3, .5, p(0) + .25));
+      g.add(at(die(.72, 0x2a170c), p(1), 2.0, p(1), .5, .6, .3)); g.add(at(die(.72, 0x2a170c), p(1) + .75, 2.75, p(1) - .5, -.4, .2, .5));
+      return g;
+    },
     'mu-senet'() {   // Tutankhamun's box itself: the ebony box on its sledge, a gold band of signs, the ivory squares on top, a reel hopping along it, a cone
       const g = plinth(3.6, M({ map: softWood('icmus0', '#b98a58', '#7a5230') }));
       const eb = gloss(0x24160d), gold = C(0xd9ad4a, { roughness: .3, metalness: .5 }), ivory = C(0xf0e3c2, { roughness: .4 });
