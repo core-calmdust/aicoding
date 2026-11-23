@@ -1,1 +1,1 @@
-{ "pass": 90, "history": [{ "at": "2026-11-21 19:55 JST", "from": 80, "to": 85, "overall": 92.5 }, { "at": "2026-11-21 22:40 JST", "from": 85, "to": 90, "overall": 95.4 }] }
+{"pass": 95, "history": [{"at": "2026-11-21 19:55 JST", "from": 80, "to": 85, "overall": 92.5}, {"at": "2026-11-21 22:40 JST", "from": 85, "to": 90, "overall": 95.4}, {"at": "2026-11-23 09:55 JST", "from": 90, "to": 95, "overall": 98.1}]}
