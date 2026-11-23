@@ -15,6 +15,30 @@ function connect4() {
   const L = require(path.join(ROOT, 'connect4/lessons.json'));
   const out = [];
   const add = (id, j, m) => out.push({ step: id, q: j + 1, msg: m });
+  // (2026-11-23 第2期) the 奇数・偶数 / 先手・後手 / 失敗例 lessons (sc = the stored solver values, checked against the solver in
+  // lesson-facts.js): ④ the answer does the lesson's move, and ⑥ the problems get no easier — d = the other legal columns that are
+  // not an obvious loss (U.obviousLoss: a four missed, a four left to the opponent) never goes down.
+  const odd = (p, r) => (p === 1) === (r % 2 === 0);   // (r from 0: the first player's rows are 1・3・5)
+  const THEME = {
+    parity: (g, me, a) => U.newThreats(g, a, me).some(t => !t.playable && odd(me, t.r)) || 'the answer makes no winning cell in the air on the mover\'s rows',
+    zugz: (g, me, a) => U.immWins(g, me).length ? 'the mover can connect four now' : U.immWins(g, 3 - me).length ? 'a block is needed now'
+      : U.threats(U.play(g, a, me), me).some(t => !t.playable) || 'after the answer the mover owns no winning cell in the air',
+    follow: (g, me, a, P) => me !== 2 ? 'the mover is not the second player' : +P.moves.slice(-1) - 1 !== a ? 'the answer is not on top of the last disc' : true,
+    first: (g, me, a) => me !== 1 ? 'the mover is not the first player' : U.newThreats(g, a, me).some(t => !t.playable && odd(1, t.r)) || 'no new odd-row winning cell in the air',
+    second: (g, me, a) => me !== 2 ? 'the mover is not the second player' : U.newThreats(g, a, me).some(t => !t.playable && odd(2, t.r)) || 'no new even-row winning cell in the air',
+    miss: (g, me, a) => !U.isWinAfter(g, a, me) ? 'the answer does not connect four' : U.immWins(g, 3 - me).length ? true : 'the opponent has no four to block (no temptation)',
+    under: (g, me, a) => { const q = 3 - me, T = U.threats(g, q), un = c => T.some(t => t.c === c && t.r === g[c].length + 1);
+      return un(a) ? 'the answer is under the opponent\'s winning cell' : U.immWins(g, q).length ? 'a block is needed now' : U.legal(g).some(c => c !== a && un(c)) || 'no column is under the opponent\'s winning cell'; },
+    edge: (g, me, a) => a === 0 || a === 6 ? 'the answer is an edge column' : [0, 6].some(c => g[c].length < 6) || 'no edge column is open',
+  };
+  for (const st of L.steps) { const th = THEME[st.id]; if (!th) continue; let prev = -1;
+    st.problems.forEach((P, j) => { const g = U.grid(P.moves), me = U.toMove(P.moves), a = P.answer[0], r = th(g, me, a, P);
+      if (r !== true) add(st.id, j, `④ ${r}`);
+      // ⑧ the 2D words (ls.first.why 「唯一の勝ちにつながる手」, goal 「勝ちにつながる一手」): the answer wins and no other column does
+      if (st.id === 'first' && !(P.sc[a] > 0 && P.sc.every((v, c) => P.answer.includes(c) || !(v > 0)))) add(st.id, j, `⑧ the words say the only winning column, the values are ${JSON.stringify(P.sc)}`);
+      const d = U.legal(g).filter(c => !P.answer.includes(c) && !U.obviousLoss(g, c, me)).length;
+      if (d < prev) add(st.id, j, `⑥ easier than the problem before (${d} plausible other columns after ${prev})`); prev = Math.max(prev, d); });
+  }
   for (const st of L.steps) {
     if (st.id === 'count') st.problems.forEach((P, j) => {
       const g = U.grid(P.moves), me = P.moves.length % 2 ? 2 : 1, op = 3 - me, a = P.answer[0], A = U.play(g, a, me);

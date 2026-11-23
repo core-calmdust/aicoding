@@ -5293,7 +5293,7 @@
     LKEY: 'aicoding-connect4-v2-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../connect4/lessons.json?v=20261123v3'), Promise.all(['../connect4/i18n.js?v=20261107l14', '../connect4/learn.js?v=20261107l14'].map(u => fetch(u).then(r => r.text()).catch(() => '')))])
+      return (this.p = Promise.all([getJ('../connect4/lessons.json?v=20261123v4'), Promise.all(['../connect4/i18n.js?v=20261107l14', '../connect4/learn.js?v=20261123l15'].map(u => fetch(u).then(r => r.text()).catch(() => '')))])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T.join('\n'))(w); } catch (e) { console.warn('[lessons3d] connect4 texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -5335,7 +5335,7 @@
      (c4F: a four now, the opponent's four next, a cell under the opponent's winning cell, new winning cells and their row, two at once /
      stacked) and the solver's result of every column (C4SOL, connect4/engine.js with the book and tree: A the lesson's answer, W a win,
      w a slower win, D a draw, L a loss, - a full column). */
-  const C4SOL = {"four":["DLAwwww","wwwwAww","LDALLLL","wDwAwww"],"block":["LLLLLAL","LLLALLL","LLALLLL"],"centre":["LLDADLL","LLLALLL","LLLALDL"],"early":["LLLALLL","LLALLLL","LLLLALL","LLLALLL"],"threat":["LALLLLL","ALLLLLL","DAL-LLL"],"open":["LDAwwwD","LLwADLL","LALLLLL","LwALLLL"],"diag":["LLLALLL","LLLLLAL","LLLADwD","LLLLLAL"],"double":["A-L---L","-L-L--A","L-L-AL-"],"stack":["LALLwwL","wwwLwAw","wAwwLww","LwDLLLA"],"force":["wAwwwwD","wwAwwww","LLwwALL","LLAwwLL"],"parity":["DDADDDD","D-D-DAD","AD-L-DD"],"zugz":["LA----L","-D--L-A","--D--wA","AL---LL"],"follow":["LLLLALL","LLALLLL","wLLALLL","LLLALLL"],"first":["LALLLLL","wDwAwww","wwAwwww","wwwwAww"],"second":["LADLLwL","LDwADwL","LLLADDL","LDALDDL"],"op1":["LLLALLL","LDA-ADL","LALDDAL"],"op2":["DLAAAAA","LLDDLAA","LLwwLLA"],"op3":["LAL-LLL","LDL-LAL","LLL-ALL","LLLLLLA"],"count":["A-L---L","L---LA-","DDA---D","L----LA"],"endwin":["DA--DD-","L-AD---","AL-L-L-","LL---LA"],"miss":["ALLLLLL","wLLLALL","LALLLLL","wLLLALL"],"under":["DLLAwLL","LLLALLL","wLL-ALL","LLw-LwA"],"edge":["LLALLLL","LLALLLL","LLLDALL","LLLLLAL"]};
+  const C4SOL = {"four":["DLAwwww","wwwwAww","LDALLLL","wDwAwww"],"block":["LLLLLAL","LLLALLL","LLALLLL"],"centre":["LLDADLL","LLLALLL","LLLALDL"],"early":["LLLALLL","LLALLLL","LLLLALL","LLLALLL"],"threat":["LALLLLL","ALLLLLL","DAL-LLL"],"open":["LDAwwwD","LLwADLL","LALLLLL","LwALLLL"],"diag":["LLLALLL","LLLLLAL","LLLADwD","LLLLLAL"],"double":["A-L---L","-L-L--A","L-L-AL-"],"stack":["LALLwwL","wwwLwAw","wAwwLww","LwDLLLA"],"force":["wAwwwwD","wwAwwww","LLwwALL","LLAwwLL"],"parity":["D-D-DAD","AD-L-DD","DDADDDD"],"zugz":["-D--L-A","LA----L","DA----D","AL---LL"],"follow":["LLLLALL","LLALLLL","wLLALLL","LLLALLL"],"first":["LALLLLL","LLLALLL","LLLLALL","DLALLLL"],"second":["LADLLwL","LLALLLL","LLLADDL","LDALDDL"],"op1":["LLLALLL","LDA-ADL","LALDDAL"],"op2":["DLAAAAA","LLDDLAA","LLwwLLA"],"op3":["LAL-LLL","LDL-LAL","LLL-ALL","LLLLLLA"],"count":["A-L---L","L---LA-","DDA---D","L----LA"],"endwin":["DA--DD-","L-AD---","AL-L-L-","LL---LA"],"miss":["ALLLLLL","wLLLALL","LALLLLL","wLLLALL"],"under":["wLL-ALL","LLw-LwA","DLLAwLL","LLLALLL"],"edge":["LLALLLL","LLALLLL","LLLDALL","LLLLALL"]};
   const C4J_LS = {
     intro: {
       four: '自分の色を<b>ヨコ・タテ・ナナメ</b>に4つ並べたら勝ち！<br>コマは列の<b>いちばん下の空きマス</b>にポトンと落ちるの。<br>置く前に「今すぐ4つ並ぶマスはない？」って見るくせをつけようね。',
