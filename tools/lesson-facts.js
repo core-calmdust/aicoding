@@ -235,6 +235,43 @@ const CHECKS = {
   // every practice position's best / scored moves are legal and the best is the stored top (within 15), and the kind of move the 3D guide
   // names (atlas/lessons3d.js tfFacts → TF_WHY / TF_SHORT: a win, a capture, a piece saved, the king's own move, a corner guard, the king's
   // room shut / widened by the counts the words give, a piece to the edge) is re-checked on the engine's board.
+  // (2026-11-23 lesson loop) the xiangqi openings ('xiangqi/open', key = the opening's id): the line replays legally, every practice
+  // problem's best move and scored moves are legal and the best is the top value, and the words (atlas/lessons3d.js xqWhyJa / xqOpJa,
+  // run here on the board) hold: a capture names the piece really taken, a "take back at once" (すかさず／すぐ) follows a capture of ours (in the line), "check"
+  // gives check, a rook "over the river" is over it, a central cannon is on the middle file, a horse "to the edge" is on an edge file,
+  // and a miss said to leave "a piece to be taken for nothing" (ただで取られ) leaves that piece attacked and unprotected.
+  'xiangqi/open'() {
+    const E = require(path.join(ROOT, 'xiangqi/engine.js')), O = J('xiangqi/openings.json'), G = 'xiangqi/open', vm = require('vm');
+    const src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), a = src.indexOf('  const XQN ='), b = src.indexOf('  /* (2026-11-21 lesson loop) the xiangqi lessons in');
+    const ctx = { shSeed: s => { let h = 7; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; }, shPerm: (seed, n) => [...Array(n).keys()] };
+    const X = vm.runInNewContext(src.slice(src.indexOf('  const XQJ_OP = {'), a) + src.slice(a, b) + '\n;({ xqFacts, xqKind, xqWhyJa, xqOpJa, xqOpVoice, xqNotesJa, XQN })', ctx);
+    const prot = (p, sq) => { const c = E.colorOf(p.at(sq)), q = p.clone(); q.side = c ^ 1; return q.moves().some(m => E.mTo(m) === sq) && (() => { // can the owner take back on sq after it is taken?
+      for (const m of q.moves()) if (E.mTo(m) === sq) { const r = q.clone().play(m); if (r.moves().some(x => E.mTo(x) === sq)) return true; } return false; })(); };
+    const words = (K, w, pos, m, tx, prevCap) => {
+      const F = X.xqFacts(E, pos, m), kd = X.xqKind(F), t = E.mTo(m), [tr, tc] = E.RC[t], after = pos.clone().play(m), c = pos.side;
+      if ((kd === 'cap' || kd === 'recap') && !pos.at(t)) bad(G, K, `${w}: said to take, but the point is empty`);
+      if (pos.at(t) && !tx.includes(X.XQN(E.typeOf(pos.at(t)), c ^ 1)) && (kd === 'cap' || kd === 'recap') && /\{P\}|取/.test(tx) && !/取られた駒|取り返しの一手/.test(tx)) bad(G, K, `${w}: the words do not name the piece taken (${X.XQN(E.typeOf(pos.at(t)), c ^ 1)}): ${tx}`);
+      if (kd === 'recap' && prevCap === false && /すかさず|すぐ/.test(tx)) bad(G, K, `${w}: said to take back at once (すかさず／すぐ), but the move before took nothing`);
+      if (/王手/.test(tx) && !after.inCheck()) bad(G, K, `${w}: said to give check, but it does not`);
+      if (kd === 'rookCross' && !(c ? tr >= 5 : tr <= 4)) bad(G, K, `${w}: the rook is said to cross the river, but does not`);
+      if (kd === 'cannonMid' && tc !== 4) bad(G, K, `${w}: said to be a central cannon, but not on the middle file`);
+      if (kd === 'horseEdge' && tc !== 0 && tc !== 8) bad(G, K, `${w}: the horse is said to go to the edge, but does not`);
+    };
+    O.sets.forEach(st => { const K = st.id, V = X.xqOpVoice(K), NJ = X.xqNotesJa(E, st, st.study.notes || [], V); let p = E.Pos.from(null), prevCap = null;
+      st.study.line.forEach((m, i) => { if (!p.moves().includes(m)) { bad(G, K, `move ${i + 1}: not legal`); return; }
+        if (NJ[String(i)]) words(K, `move ${i + 1}`, p, m, NJ[String(i)].ja, prevCap);
+        prevCap = !!p.at(E.mTo(m)); p = p.clone().play(m); });
+      (st.problems || []).forEach((P, j) => { const q = E.Pos.from(P.s), legal = new Set(q.moves()), w = `problem ${j + 1}`;
+        if (!legal.has(P.best)) { bad(G, K, `${w}: the best move is not legal`); return; }
+        (P.sc || []).forEach(([m]) => { if (!legal.has(m)) bad(G, K, `${w}: a scored move is not legal`); });
+        const top = Math.max(...(P.sc || [[0, 0]]).map(e => e[1])), bs = (P.sc || []).find(e => e[0] === P.best); if (bs && bs[1] < top - 15) bad(G, K, `${w}: the best move is not the top value`);
+        const o = X.xqOpJa(E, P, K, j, k => k === 'ok' ? '〈正〉' : '〈誤〉', V, j);
+        words(K, w, q, P.best, o.good(P.best), null);
+        (P.sc || []).filter(e => e[0] !== P.best).slice(0, 8).forEach(([u]) => { const tx = o.ng(u), mm = tx.match(/きみの(.)がただで取られ/); if (!mm) return;
+          const r = q.clone().play(u), me = q.side; let ok = false;
+          for (let sq = 0; sq < 90; sq++) { const x = r.at(sq); if (x && E.colorOf(x) === me && X.XQN(E.typeOf(x), me) === mm[1] && r.moves().some(y => E.mTo(y) === sq) && !prot(r, sq)) ok = true; }
+          if (!ok) bad(G, K, `${w}: the miss ${E.name ? E.name(q, u) : u} is said to leave the ${mm[1]} to be taken for nothing, but no such ${mm[1]} is attacked and unprotected`); }); }); });
+  },
   'tafl/open'() {
     const E = require(path.join(ROOT, 'tafl/engine.js')), O = J('tafl/openings.json'), G = 'tafl/open', vm = require('vm');
     const src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), a = src.indexOf('  const TF_BLOCK'), b = src.indexOf('  const TFJ_OP');

@@ -3488,7 +3488,7 @@
     let why; { const L = CK_WHY[FA.k] || CK_WHY.dev, fresh = L.filter(x => xqSn(x).every(y => !V.used.has(y.trim())));
       why = fresh.length ? ckWhyJa(FA, j, V) : xqPick(V, [0, 1, 2, 3, 4, 5].map(q => V.pr(i + q).replace('{a}', sh2))); }
     if (FA.thrAfter && !FA.win) why = xqJoin(why, xqPick(V, ckRot(['しかも次に跳び越えるねらいもあるカニ！', 'おまけに、次は相手の駒を跳べる形！', 'そのうえ相手の駒をひとつ、ねらっているね。'], j)));
-    const goodTx = xqJoin(V.cheer(i), why, i % 2 ? V.push(i) : '');
+    const pu = i % 2 ? [0, 1, 2].map(q => V.push(i + q)).find(x => xqEnd(xqSn(x)[0]) !== xqLastEnd(why)) || V.push(i) : '', goodTx = xqJoin(V.cheer(i), why, pu);
     const good = u => { if (u != null && u !== A && sc.has(u)) return f(best - sc.get(u) <= 6 ? xqJoin(V.cheer(i), '{x}もいい手だカニ！ {m}と同じくらいよく働くの。') : xqJoin('悪くない手だね！', `でも{m}なら${sh2}から、そっちが本筋なの。`));
       return goodTx; };
     const ng = u0 => {
@@ -3804,7 +3804,8 @@
     lead: ['正解は{m}だったの。', 'ここは{m}がいちばんだコン。', '{m}を見てみて！', '本筋は{m}なの。', '定跡では{m}を指すの。', 'ここで指したかったのは{m}！'],
     so: ['こっちなら{a}からね。', '{a}から、こっちを選びたいの。', 'この手なら{a}んだ。', 'これなら{a}の。', '{a}のが、この手のいいところコン。', 'こう指すと{a}からね。'],
     gap: ['{x}だと、そのよさが出ないの。', '{x}だと、その形が作れないコン。', '{x}だと、相手に先に良い場所を取られちゃう。', '{x}では駒の働きが一歩遅れて、相手に先を越されちゃう。', '{x}だと、相手の駒が先に動きやすくなるの。'],
-    late: ['{x}だと車の出番が遅れちゃう。車は早く働かせたい駒だからね。', '{x}では車が隅に残ったまま。いちばん強い駒が休んでいるの。', '{x}だと、車が働くまでに手がかかって損なの。'],
+    late: ['{x}だと車の出番が遅れちゃう。車は早く働かせたい駒だからね。', '{x}では車が隅に残ったまま。いちばん強い駒が休んでいるの。', '{x}だと、車が働くまでに手がかかって損なの。',
+      '{x}では、いちばん強い車がまだ戦いに入れないコン。', '{x}だと、車を出すのがもう1手あとになっちゃう。', '{x}では車の筋が開かないまま。せっかくの車がもったいない！', '{x}を指しているあいだに、相手の駒が先にそろっちゃうの。', '{x}だと車が働き出すのが遅くて、序盤の1手を損しちゃう。'],
     // (2026-11-22 lesson loop) the praise, the soft words after a miss, the push on — each opening takes them in its own order (xqOpVoice)
     cheer: ['いいね！', 'さすが！', 'お見事！', 'ばっちり！', 'その調子！', '上手！', 'ナイスだコン！', 'よく見つけたね！', 'すばらしい！', 'そうそう、それ！', 'いい手だね！', '完璧！'],
     soft: ['おしい！', 'ドンマイ！', 'あと少しだった！', 'いい線いってたコン！', '大丈夫、ここで覚えちゃおう！', '気にしない、気にしない！', 'よくある迷いだから平気！', 'だいじょうぶ、次はきっと指せるコン！', 'あと一歩！', 'みんな一度は迷う場面なの。'],
@@ -3856,21 +3857,30 @@
   const xqSh = (kd, n) => { const A = XQ_SHORT[kd] || XQ_SHORT.cannon; return A[n % A.length]; };
   const xqKind = F => F.cap ? (F.behind ? 'recap' : 'cap') : F.k;
   const xqSn = t => String(t).match(/[^。！？]*[。！？]+|[^。！？]+$/g) || [];
-  function xqPick(V, cands) {   // the first wording none of whose sentences the opening has said yet (else the one with the fewest), marked as said
-    const C = cands.filter(Boolean); if (!C.length) return ''; let bestW = C[0], bestN = 1e9;
-    for (const w of C) { const n = V ? xqSn(w).map(x => x.trim()).filter(x => x.length >= 6 && V.used.has(x)).length : 0; if (n < bestN) { bestN = n; bestW = w; } if (!n) break; }
-    if (V) xqSn(bestW).forEach(x => V.used.add(x.trim())); return bestW;
+  // (2026-11-23 lesson loop) a sentence is "said" without its short lead-in (車を取って、… / {x}だと、…), as the quality tool reads it,
+  // and a wording whose first sentence ends like the line before it (〜ね。〜ね。/ 〜かな？〜かな？) is passed over when another will do
+  const xqKey = x => x.trim().replace(/^[^、！]{1,5}(、|！ ?)/, '').trim();
+  const xqEnd = sn => { const b = String(sn || '').replace(/<[^>]+>/g, '').trim().replace(/[。！？!?]+$/, '').replace(/[）)」]+$/, ''); for (const e of ['なんだ', 'んだ', 'だよ', 'だね', 'よね', 'かな', 'よう', 'ろう', 'よ', 'ね']) if (b.endsWith(e)) return e === 'だよ' ? 'よ' : e === 'なんだ' ? 'んだ' : e === 'だね' ? 'ね' : e; return ''; };
+  const xqEnds = t => xqSn(t).map(xqEnd);
+  const xqLastEnd = t => { const E = xqEnds(t); return E.length ? E[E.length - 1] : ''; };
+  function xqPick(V, cands, avoid) {   // the first wording none of whose sentences the opening has said yet (else the one with the fewest), marked as said
+    const C = cands.filter(Boolean); if (!C.length) return ''; let bestW = C[0], best = 1e9;
+    for (const w of C) { const n = V ? xqSn(w).map(xqKey).filter(x => x.length >= 6 && V.used.has(x)).length : 0, E = xqEnds(w);
+      const bad = (avoid && E[0] === avoid ? 1 : 0) + (E.some((e, q) => q && e && e === E[q - 1]) ? 1 : 0), sc = n * 10 + bad;
+      if (sc < best) { best = sc; bestW = w; } if (!sc) break; }
+    if (V) xqSn(bestW).forEach(x => V.used.add(xqKey(x))); return bestW;
   }
   const XQ_TAIL = { check: ['しかも王手だね！', 'おまけに王手！', '王手にもなっているコン！'],
     aim: ['相手の{T}もねらっているよ。', 'ついでに相手の{T}をにらんでいるの。', '相手の{T}にも目が届くね！', 'しかも相手の{T}をねらえるコン。'] };
-  function xqWhyJa(F, k, V) { const kd = xqKind(F), L = XQ_WHY[kd] || XQ_WHY.cannon, P = XQN(F.cap || F.ty, F.cap ? F.c ^ 1 : F.c);
+  function xqWhyJa(F, k, V, avoid) { const kd = xqKind(F), P = XQN(F.cap || F.ty, F.cap ? F.c ^ 1 : F.c);
+    const L = (XQ_WHY[kd] || XQ_WHY.cannon).filter(x => !(kd === 'recap' && F.slow && /すかさず|すぐ/.test(x)));   // (a take-back moves later than the capture: not 'at once')
     const rot = (A, o) => A.map((_, q) => A[(o + q) % A.length]);
-    const main = xqPick(V, rot(L, k).map(s => s.replace(/\{P\}/g, P)));
+    const main = xqPick(V, rot(L, k).map(s => s.replace(/\{P\}/g, P)), avoid);
     let tail = '';
-    if (F.check) tail = xqPick(V, rot(XQ_TAIL.check, k));
-    else if (!F.cap && F.aims.length) tail = xqPick(V, rot(XQ_TAIL.aim, k).map(s => s.replace('{T}', XQN(F.aims[0], F.c ^ 1))));
+    if (F.check) tail = xqPick(V, rot(XQ_TAIL.check, k), xqLastEnd(main));
+    else if (!F.cap && F.aims.length) tail = xqPick(V, rot(XQ_TAIL.aim, k).map(s => s.replace('{T}', XQN(F.aims[0], F.c ^ 1))), xqLastEnd(main));
     return xqJoin(main, tail); }
-  function xqHintJa(F, k, V) {
+  function xqHintJa(F, k, V, avoid) {
     const kd = xqKind(F), rot = (A, o) => A.map((_, q) => A[(o + q) % A.length]);
     let H;
     if (kd === 'recap') H = ['駒の数を数えてみて。取られたままの駒はない？', 'さっき取られた駒、そのままでいいのかな？', '駒の損を戻せる手がありそうだね。'];
@@ -3884,7 +3894,7 @@
     else if (/^pawn/.test(kd)) H = ['兵（卒）を一つ進めると、何が動きやすくなる？', '小さな駒の一歩が、大事な場面もあるの。', '馬の前の兵（卒）に注目してみて！'];
     else if (kd === 'guard') H = ['王さまのまわりの守り、足りてる？', '攻める前に、守りを固める手もあるね。'];
     else H = ['金の丸の駒で、いちばん働く場所を考えてみて。'];
-    const h = xqPick(V, rot(H, k)), t = k % 3 === 1 ? xqPick(V, rot(['金の丸の駒がヒントだコン。', '金の丸がついた駒に注目！', '金の丸の駒から考えてみて。'], k)) : '';
+    const h = xqPick(V, rot(H, k), avoid), t = k % 3 === 1 ? xqPick(V, rot(['金の丸の駒がヒントだコン。', '金の丸がついた駒に注目！', '金の丸の駒から考えてみて。'], k), xqLastEnd(h)) : '';
     return xqJoin(h, t);
   }
   function xqOpVoice(id) {   // (2026-11-22 lesson loop) one opening's voice: praise / soft words / push in an order of its own, and the lines already said
@@ -3899,15 +3909,16 @@
     const ask = XQJ_OP.ask[k % XQJ_OP.ask.length].replace('{n}', name), kd = xqKind(FA), j = i + V.seed % 7, sh = xqSh(kd, j), sh2 = xqSh(kd, j + 1);
     // the praise: the cheer, why — in words the line's notes have not used — and now and then a push on
     let why; { const L = XQ_WHY[kd] || XQ_WHY.cannon, P0 = XQN(FA.cap || FA.ty, FA.cap ? FA.c ^ 1 : FA.c);
-      const fresh = L.map(x => x.replace(/\{P\}/g, P0)).filter(x => xqSn(x).every(y => !V.used.has(y.trim())));
-      why = fresh.length ? xqWhyJa(FA, j, V) : xqPick(V, [0, 1, 2, 3, 4, 5].map(q => V.pr(i + q).replace('{a}', sh2))); }
-    const goodTx = xqJoin(V.cheer(i), why, i % 2 ? V.push(i) : '');
+      const fresh = L.map(x => x.replace(/\{P\}/g, P0)).filter(x => xqSn(x).every(y => !V.used.has(xqKey(y))));
+      why = fresh.length ? xqWhyJa(FA, j, V, xqLastEnd(V.cheer(i))) : xqPick(V, [0, 1, 2, 3, 4, 5].map(q => V.pr(i + q).replace('{a}', sh2)), xqLastEnd(V.cheer(i))); }
+    const pu = i % 2 ? [0, 1, 2].map(q => V.push(i + q)).find(x => xqEnd(xqSn(x)[0]) !== xqLastEnd(why)) || V.push(i) : '', goodTx = xqJoin(V.cheer(i), why, pu);
     const good = u => { if (u != null && u !== A && sc.has(u)) return f(best - sc.get(u) <= 10 ? xqJoin(V.cheer(i), '{x}もいい手だコン！ {m}と同じくらいよく働くの。') : xqJoin('悪くない手だね！', `でも{m}なら${sh2}から、そっちが本筋なの。`));
       return goodTx; };
     const ng = u0 => {
       let u = u0; if (u == null || u === A) u = ((P.sc || []).find(x => x[0] !== A && best - x[1] > 10) || (P.sc || []).find(x => x[0] !== A) || [])[0];   // (no move given: a real miss, as the tool asks)
-      const rot = (A, o) => A.map((_, q) => A[(o + q) % A.length]), pk = A0 => xqPick(V, rot(A0, j));
-      const out = [V.soft(i), V.lead(i), pk(XQJ_OP.so.map(x => x.replace('{a}', sh)))];
+      const rot = (A, o) => A.map((_, q) => A[(o + q) % A.length]); let out = [V.soft(i), V.lead(i)];
+      const pk = A0 => xqPick(V, rot(A0, j), xqLastEnd(out[out.length - 1] || ''));
+      out.push(pk(XQJ_OP.so.map(x => x.replace('{a}', sh))));
       if (u == null) return f(xqJoin(...out));
       let F = null; try { F = xqFacts(E, pos, u); } catch (e) {}
       const lost = F ? [...F.mine].filter(q => !FA.mine.has(q)) : [], aft = pos.clone().play(u), d = sc.has(u) ? best - sc.get(u) : null;
@@ -3920,18 +3931,19 @@
       if (out.length === n0) out.push(d != null && d <= 10 ? pk(['{x}も悪くないけど、定跡の本筋はこっちなの。', '{x}もありだけど、よく指されるのはこっちコン。']) : pk(XQJ_OP.gap));   // (2026-11-22: no "the AI says")
       return f(xqJoin(...out));
     };
-    return { ask, hintTx: xqHintJa(FA, k, V), good, ng, own: true };
+    return { ask, hintTx: xqHintJa(FA, k, V, xqLastEnd(ask)), good, ng, own: true };
   }
   function xqNotesJa(E, g, notes, V) {   // the line's notes in ショウギツネ's words (3D, ja), rebuilt from the board; each line said once
-    const out = {}, cnt = {}; let pos = E.Pos.from(null), n = 0;
+    const out = {}, cnt = {}; let pos = E.Pos.from(null), n = 0, prevCap = true;
     g.study.line.forEach((m, i) => { const o = notes[String(i)];
       if (o) { let F = null; try { F = xqFacts(E, pos, m); } catch (e) {}
         const kd = F ? xqKind(F) : ''; cnt[kd] = (cnt[kd] || 0) + 1;
         let s = String(o.ja || '');
-        if (F) s = xqWhyJa(F, cnt[kd] + g.id.length, V);
+        if (F) { F.slow = i > 0 && !prevCap; s = xqWhyJa(F, cnt[kd] + g.id.length, V, n ? V.lastNote : ''); }
+        if (V) V.lastNote = xqLastEnd(s);
         if (n === 0) s = `ここまでが『${(g.title || {}).ja || ''}』の形だコン！ ` + s;
         out[String(i)] = { ja: s }; n++; }
-      pos = pos.clone().play(m); });
+      prevCap = !!pos.at(E.mTo(m)); pos = pos.clone().play(m); });
     return out;
   }
   /* (2026-11-21 lesson loop) the xiangqi lessons in ショウギツネ's words, Japanese, for the 3D table (no coordinates): a shorter intro,
@@ -5652,7 +5664,7 @@
     const HL = (TF_HINTV[FA.k] || ['金の丸の駒で、いちばん働く場所を考えてみて。']).map(h => typeof h === 'function' ? h(FA.att) : h);
     const hintTx = xqJoin(xqPick(V, tfRot(HL, j)), i % 3 === 1 ? xqPick(V, tfRot(['金の丸が動かす駒だよ。', '金の丸がついた駒に注目！', '金の丸の駒から考えてみて。'], j)) : '');
     const why = tfWhyV(FA, j, V) || xqPick(V, [0, 1, 2, 3, 4, 5].map(q => V.pr(i + q).replace('{a}', tfSh(FA.k, j, V))));
-    const goodTx = xqJoin(V.cheer(i), why, i % 2 ? V.push(i) : '');
+    const pu = i % 2 ? [0, 1, 2].map(q => V.push(i + q)).find(x => xqEnd(xqSn(x)[0]) !== xqLastEnd(why)) || V.push(i) : '', goodTx = xqJoin(V.cheer(i), why, pu);
     const sh = tfSh(FA.k, j, V);
     const good = u => { if (u != null && u !== A && sc.has(u)) return f(best - sc.get(u) <= 15 ? xqJoin(V.cheer(i), '{x}もいい手だね！ {m}と同じくらいよく働く手なの。') : xqJoin('悪くない手だね！', `でも{m}なら${sh}から、そっちが本筋なの。`));
       return goodTx; };
@@ -5690,7 +5702,7 @@
         if (n === 0) s = `『${(g.title || {}).ja || ''}』のはじまり！ ` + TF_SIDE(F ? F.att : true) + '：' + s.replace(/^[^：]*：/, '');
         lastAi = ai || lastAi;
         out[String(i)] = { ja: s }; n++; }
-      pos = pos.clone().play(m); });
+      prevCap = !!pos.at(E.mTo(m)); pos = pos.clone().play(m); });
     return out;
   }
   /* (2026-11-21 lesson loop) the tafl lessons in タフリン's words, Japanese, for the 3D table (no coordinates): her own intros, five
