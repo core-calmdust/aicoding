@@ -630,6 +630,11 @@ const CHECKS = {
     const L = J('dots/lessons.json');
     require('./lesson-verify.js').dots().forEach(fa => bad('dots', String(L.steps.findIndex(s => s.id === fa.step)), `${fa.step} q${fa.q}: ${fa.msg}`));
   },
+  // (2026-11-24 第2期) checkers: the strict ①〜⑨ of the verified endgames (CK_DONE: e_kings・e_men・e_draw) from the endgame database — tools/lesson-verify.js checkers
+  checkers() {
+    const L = J('checkers/lessons.json');
+    require('./lesson-verify.js').checkers().forEach(fa => bad('checkers', String(L.steps.findIndex(s => s.id === fa.step)), `${fa.step} q${fa.q}: ${fa.msg}`));
+  },
   // (2026-11-24 第2期) reversi: the strict ①〜⑨ of the verified exact endgames (RV_DONE: parity・finish) with an independent exact solver — tools/lesson-verify.js reversi
   reversi() {
     const L = J('reversi/lessons.json');
