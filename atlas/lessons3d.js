@@ -2235,6 +2235,7 @@
     green: ['正解は緑の枠のマス。', '緑の枠が、いちばんいい手。', 'いちばんは緑の枠！', '答えは緑の枠のところ。', '緑の枠に打てばよかったんだ。'],
   };
   const RV_CN = [0, 7, 56, 63], RV_X = { 9: 0, 14: 7, 49: 56, 54: 63 }, RV_C = { 1: 0, 8: 0, 6: 7, 15: 7, 48: 56, 57: 56, 55: 63, 62: 63 };
+  const rvEmpt = p => (String(Array.isArray(p.cells) ? p.cells.join('') : p.cells).match(/0/g) || []).length;   // (empty squares = how deep an exact read goes)
   function rvLsJa(kind, P, i, li, marks) {
     const F = P.f || {}, ks = Object.keys(F).map(Number), v = q => F[q][0], top = Math.max(...ks.map(v)), bs = ks.filter(q => v(q) >= top - 1e-9);
     const k = i % 5, o8 = li % 8 + i * [1, 3, 5, 7][(li >> 3) % 4], pk = (L, j) => L[((j % L.length) + L.length) % L.length];
@@ -2504,7 +2505,7 @@
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=20261107l14'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({}))])
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=20261124p1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({}))])
         .then(([ls, op, ev, wt]) => { this.WT = wt || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
@@ -2551,6 +2552,8 @@
         probs.splice(0, probs.length, ...probs.filter(p => P0 !== p && !this.near(cs(P0), cs(p))));   // (the warm-up's position is not asked again)
         take(std.filter(p => !probs.includes(p) && !this.near(cs(P0), cs(p))), 5 - probs.length);
       }
+      // (2026-11-24 第2期 ⑥) the exact endgames from easy to hard: fewer empties (= a shorter read) first, the exception (trap) last
+      if (probs.length && probs.every(p => p.type === 'exact')) probs.sort((a, b) => (a.trap ? 1 : 0) - (b.trap ? 1 : 0) || rvEmpt(a) - rvEmpt(b));
       if (!ramp.every(it => (it.k === 'explain' ? it.b : it.g))) ramp = [];   // (texts missing: no warm-up rather than an empty one)
       const look = W('look'), RU = (k, v) => fill(k === 'look' && look ? L(look, lang) : L(WT['ui/' + k], lang) || '', v || {});
       return { id: l.id, title: T.title || l.id, intro: ja && RVJ_LS.intro[l.id] ? RVJ_LS.intro[l.id] : (Array.isArray(T.intro) ? T.intro.join('<br>') : T.intro || ''), ramp: ramp.length ? ramp : null, RU,
@@ -7004,7 +7007,7 @@
     }
     async function prob() {
       const was = phase, p = cur.probs[cur.k]; if (!p) return finish();
-      phase = 'prob';
+      phase = 'prob'; head(cur.title);   // (2026-11-24 ⑨: the warm-up's 「準備 4/4」 / the line's 「手順」 no longer stays over the problems)
       p.hinted = false; p.used = 0; dots(); act(X.next, { nextOn: false });
       say(turnLine(id, p.pos, p.ask || X.opGoal, ctx.lang) + (id === 'reversi' && cur.k === RV_NUMS() && RV_SELF[ctx.lang] ? RV_SELF[ctx.lang] + '<br>' : '') + (p.ask || X.opGoal));
       await board(p.pos, p.sol, p.drill); if (stopped || cur.probs[cur.k] !== p) return;   // (p.drill: a chess ★ route problem — the ★ left on the table)
