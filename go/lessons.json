@@ -5442,7 +5442,7 @@
     {
      "s": {
       "n": 9,
-      "stones": "...............................................wwwww...wwbbbww.w.bb.bbw.w.....bw.",
+      "stones": ".......................................................wwwwwww..wbbb.bw..wb.b.b.w",
       "turn": 1
      },
      "view": [
@@ -5452,45 +5452,45 @@
       8
      ],
      "ok": [
-      "E1"
+      "F2"
      ],
      "why": {
-      "ja": "<bdi>E1</bdi>で<bdi>E2</bdi>と<bdi>F1</bdi>の2つの眼が同時に確定します。左側をどう攻められても、もう生きています。",
-      "en": "<bdi>E1</bdi> secures two eyes at once: <bdi>E2</bdi> and <bdi>F1</bdi>. Whatever White does on the left, Black is alive.",
-      "zh": "<bdi>E1</bdi>一手确保两只眼：<bdi>E2</bdi>和<bdi>F1</bdi>。不论白在左边怎么下，黑都活了。",
-      "ko": "<bdi>E1</bdi>로 두 집을 한꺼번에 확보합니다: <bdi>E2</bdi>와 <bdi>F1</bdi>. 백이 왼쪽에서 무엇을 해도 흑은 삽니다.",
-      "es": "<bdi>E1</bdi> asegura dos ojos de una vez: <bdi>E2</bdi> y <bdi>F1</bdi>. Haga lo que haga Blanco a la izquierda, Negro vive.",
-      "fr": "<bdi>E1</bdi> assure deux yeux d’un coup : <bdi>E2</bdi> et <bdi>F1</bdi>. Quoi que fasse Blanc à gauche, Noir vit.",
-      "pt": "<bdi>E1</bdi> garante dois olhos de uma vez: <bdi>E2</bdi> e <bdi>F1</bdi>. Faça o Branco o que fizer à esquerda, o Preto vive.",
-      "de": "<bdi>E1</bdi> sichert auf einmal zwei Augen: <bdi>E2</bdi> und <bdi>F1</bdi>. Was Weiß links auch tut, Schwarz lebt.",
-      "hi": "<bdi>E1</bdi> एक साथ दो आँखें पक्की करता है: <bdi>E2</bdi> और <bdi>F1</bdi>। बाईं ओर सफ़ेद कुछ भी करे, काला ज़िंदा है।",
-      "ar": "<bdi>E1</bdi> يضمن عينين دفعة واحدة: <bdi>E2</bdi> و<bdi>F1</bdi>. مهما فعل الأبيض على اليسار، يعيش الأسود.",
-      "ru": "<bdi>E1</bdi> сразу обеспечивает два глаза: <bdi>E2</bdi> и <bdi>F1</bdi>. Что бы белые ни делали слева, чёрные живы.",
-      "zh-TW": "<bdi>E1</bdi> 一手就確保兩隻眼：<bdi>E2</bdi> 和 <bdi>F1</bdi>。不管白在左邊怎麼下，黑都活了。",
-      "id": "<bdi>E1</bdi> langsung mengamankan dua mata: <bdi>E2</bdi> dan <bdi>F1</bdi>. Apa pun yang Putih lakukan di kiri, Hitam hidup.",
-      "tr": "<bdi>E1</bdi> bir anda iki göz sağlar: <bdi>E2</bdi> ve <bdi>F1</bdi>. Beyaz solda ne yaparsa yapsın Siyah yaşar."
+      "ja": "<bdi>F2</bdi>で壁のすき間をふさげば、<bdi>D1</bdi>と<bdi>F1</bdi>がどちらも確かな眼になります。",
+      "en": "Closing the gap in the wall at <bdi>F2</bdi> makes both <bdi>D1</bdi> and <bdi>F1</bdi> real eyes.",
+      "zh": "在<bdi>F2</bdi>堵住墙上的缺口，<bdi>D1</bdi>和<bdi>F1</bdi>就都成为真眼。",
+      "ko": "<bdi>F2</bdi>로 벽의 틈을 막으면 <bdi>D1</bdi>과 <bdi>F1</bdi>이 모두 확실한 눈이 됩니다.",
+      "es": "Cerrando el hueco del muro en <bdi>F2</bdi>, tanto <bdi>D1</bdi> como <bdi>F1</bdi> se vuelven ojos reales.",
+      "fr": "En bouchant la brèche du mur en <bdi>F2</bdi>, <bdi>D1</bdi> et <bdi>F1</bdi> deviennent tous deux de vrais yeux.",
+      "pt": "Fechando a brecha do muro em <bdi>F2</bdi>, <bdi>D1</bdi> e <bdi>F1</bdi> viram olhos verdadeiros.",
+      "de": "Schließt Schwarz die Lücke in der Mauer auf <bdi>F2</bdi>, werden <bdi>D1</bdi> und <bdi>F1</bdi> beide echte Augen.",
+      "hi": "<bdi>F2</bdi> पर दीवार की खाली जगह बंद करने से <bdi>D1</bdi> और <bdi>F1</bdi> दोनों पक्की आँखें बन जाती हैं।",
+      "ar": "بسدّ الفراغ في الجدار عند <bdi>F2</bdi> تصبح <bdi>D1</bdi> و<bdi>F1</bdi> عينين حقيقيتين.",
+      "ru": "Закрыв разрыв в стене ходом <bdi>F2</bdi>, чёрные делают <bdi>D1</bdi> и <bdi>F1</bdi> настоящими глазами.",
+      "zh-TW": "在 <bdi>F2</bdi> 堵住牆上的缺口，<bdi>D1</bdi> 和 <bdi>F1</bdi> 就都成為真眼。",
+      "id": "Dengan menutup celah di dinding pada <bdi>F2</bdi>, <bdi>D1</bdi> dan <bdi>F1</bdi> sama-sama menjadi mata sejati.",
+      "tr": "<bdi>F2</bdi> ile duvardaki boşluğu kapatınca <bdi>D1</bdi> ve <bdi>F1</bdi> ikisi de gerçek göz olur."
      },
      "ng": {
-      "ja": "白に<bdi>E1</bdi>を打たれると<bdi>E2</bdi>も<bdi>F1</bdi>も眼にならず、左側だけでは二眼ができません。",
-      "en": "If White takes <bdi>E1</bdi>, neither <bdi>E2</bdi> nor <bdi>F1</bdi> becomes an eye, and the left side alone cannot make two.",
-      "zh": "如果白占<bdi>E1</bdi>，<bdi>E2</bdi>和<bdi>F1</bdi>都成不了眼，只靠左边做不出两只眼。",
-      "ko": "백이 <bdi>E1</bdi>을 차지하면 <bdi>E2</bdi>도 <bdi>F1</bdi>도 집이 안 되고, 왼쪽만으로는 두 집을 못 만듭니다.",
-      "es": "Si Blanco toma <bdi>E1</bdi>, ni <bdi>E2</bdi> ni <bdi>F1</bdi> llegan a ser ojos, y el lado izquierdo solo no basta para dos.",
-      "fr": "Si Blanc prend <bdi>E1</bdi>, ni <bdi>E2</bdi> ni <bdi>F1</bdi> ne deviennent des yeux, et le côté gauche seul ne suffit pas pour deux.",
-      "pt": "Se o Branco pegar <bdi>E1</bdi>, nem <bdi>E2</bdi> nem <bdi>F1</bdi> viram olhos, e só o lado esquerdo não basta para dois.",
-      "de": "Nimmt Weiß <bdi>E1</bdi>, wird weder <bdi>E2</bdi> noch <bdi>F1</bdi> ein Auge, und die linke Seite allein reicht nicht für zwei.",
-      "hi": "अगर सफ़ेद <bdi>E1</bdi> ले ले, तो न <bdi>E2</bdi> आँख बनता है न <bdi>F1</bdi>, और अकेली बाईं ओर से दो आँखें नहीं बनतीं।",
-      "ar": "إذا أخذ الأبيض <bdi>E1</bdi> لا يصير <bdi>E2</bdi> ولا <bdi>F1</bdi> عينًا، والجانب الأيسر وحده لا يكفي لعينين.",
-      "ru": "Если белые займут <bdi>E1</bdi>, ни <bdi>E2</bdi>, ни <bdi>F1</bdi> не станут глазами, а одна левая сторона двух глаз не даст.",
-      "zh-TW": "如果白占了 <bdi>E1</bdi>，<bdi>E2</bdi> 和 <bdi>F1</bdi> 都做不成眼，只靠左邊做不出兩眼。",
-      "id": "Jika Putih mengambil <bdi>E1</bdi>, baik <bdi>E2</bdi> maupun <bdi>F1</bdi> tak jadi mata, dan sisi kiri saja tak cukup untuk dua.",
-      "tr": "Beyaz <bdi>E1</bdi>'i alırsa ne <bdi>E2</bdi> ne <bdi>F1</bdi> göz olur ve sol taraf tek başına iki göz yapamaz."
+      "ja": "白に<bdi>F2</bdi>を打たれると<bdi>F1</bdi>が眼にならず、<bdi>D1</bdi>の一眼だけになります。",
+      "en": "If White plays <bdi>F2</bdi>, <bdi>F1</bdi> is no eye and only the one eye at <bdi>D1</bdi> is left.",
+      "zh": "如果白下在<bdi>F2</bdi>，<bdi>F1</bdi>就不成眼，只剩<bdi>D1</bdi>一只眼。",
+      "ko": "백이 <bdi>F2</bdi>에 두면 <bdi>F1</bdi>은 눈이 되지 못하고 <bdi>D1</bdi>의 한 눈만 남습니다.",
+      "es": "Si Blanco juega <bdi>F2</bdi>, <bdi>F1</bdi> no es ojo y solo queda el ojo de <bdi>D1</bdi>.",
+      "fr": "Si Blanc joue <bdi>F2</bdi>, <bdi>F1</bdi> n’est pas un œil et il ne reste que l’œil en <bdi>D1</bdi>.",
+      "pt": "Se o Branco jogar <bdi>F2</bdi>, <bdi>F1</bdi> não vira olho e sobra só o olho em <bdi>D1</bdi>.",
+      "de": "Spielt Weiß <bdi>F2</bdi>, ist <bdi>F1</bdi> kein Auge, und nur das eine Auge auf <bdi>D1</bdi> bleibt.",
+      "hi": "अगर सफ़ेद <bdi>F2</bdi> खेले, तो <bdi>F1</bdi> आँख नहीं बनती और सिर्फ़ <bdi>D1</bdi> की एक आँख बचती है।",
+      "ar": "إذا لعب الأبيض <bdi>F2</bdi> لا تصير <bdi>F1</bdi> عينًا وتبقى عين واحدة عند <bdi>D1</bdi>.",
+      "ru": "Если белые сыграют <bdi>F2</bdi>, <bdi>F1</bdi> не станет глазом, и останется только один глаз на <bdi>D1</bdi>.",
+      "zh-TW": "如果白下在 <bdi>F2</bdi>，<bdi>F1</bdi> 就不成眼，只剩 <bdi>D1</bdi> 一隻眼。",
+      "id": "Jika Putih bermain di <bdi>F2</bdi>, <bdi>F1</bdi> tidak menjadi mata dan hanya tersisa satu mata di <bdi>D1</bdi>.",
+      "tr": "Beyaz <bdi>F2</bdi>'ye oynarsa <bdi>F1</bdi> göz olmaz ve yalnızca <bdi>D1</bdi>'deki tek göz kalır."
      }
     },
     {
      "s": {
       "n": 9,
-      "stones": "..............................................wwwww...wwbbbww..wbb.bb.w.wb.....w.",
+      "stones": "......................................................wwwwwww..bbb.bbw....b..bw..",
       "turn": 1
      },
      "view": [
@@ -5500,39 +5500,39 @@
       8
      ],
      "ok": [
-      "D1"
+      "D2"
      ],
      "why": {
-      "ja": "<bdi>D1</bdi>で<bdi>D2</bdi>と<bdi>C1</bdi>の二眼ができます。右側から白がハネてきても関係ありません。",
-      "en": "<bdi>D1</bdi> makes two eyes, <bdi>D2</bdi> and <bdi>C1</bdi>. White’s hane from the right no longer matters.",
-      "zh": "<bdi>D1</bdi>做出<bdi>D2</bdi>和<bdi>C1</bdi>两只眼。白从右边扳已经无关紧要。",
-      "ko": "<bdi>D1</bdi>로 <bdi>D2</bdi>와 <bdi>C1</bdi>의 두 집. 백이 오른쪽에서 젖혀도 상관없습니다.",
-      "es": "<bdi>D1</bdi> forma dos ojos, <bdi>D2</bdi> y <bdi>C1</bdi>. El hane de Blanco por la derecha ya no importa.",
-      "fr": "<bdi>D1</bdi> fait deux yeux, <bdi>D2</bdi> et <bdi>C1</bdi>. Le hane de Blanc par la droite n’a plus d’importance.",
-      "pt": "<bdi>D1</bdi> forma dois olhos, <bdi>D2</bdi> e <bdi>C1</bdi>. O hane do Branco pela direita já não importa.",
-      "de": "<bdi>D1</bdi> macht zwei Augen, <bdi>D2</bdi> und <bdi>C1</bdi>. Das Hane von Weiß von rechts spielt keine Rolle mehr.",
-      "hi": "<bdi>D1</bdi> दो आँखें बनाता है, <bdi>D2</bdi> और <bdi>C1</bdi>। दाईं ओर से सफ़ेद का हाने अब मायने नहीं रखता।",
-      "ar": "<bdi>D1</bdi> يصنع عينين، <bdi>D2</bdi> و<bdi>C1</bdi>. لم يعد هاني الأبيض من اليمين مهمًا.",
-      "ru": "<bdi>D1</bdi> даёт два глаза, <bdi>D2</bdi> и <bdi>C1</bdi>. Ханэ белых справа больше не важно.",
-      "zh-TW": "<bdi>D1</bdi> 做出 <bdi>D2</bdi> 和 <bdi>C1</bdi> 兩隻眼。白從右邊扳已經無所謂了。",
-      "id": "<bdi>D1</bdi> membuat dua mata, <bdi>D2</bdi> dan <bdi>C1</bdi>. Hane Putih dari kanan tak lagi berarti.",
-      "tr": "<bdi>D1</bdi> iki göz yapar: <bdi>D2</bdi> ve <bdi>C1</bdi>. Beyaz'ın sağdan hanesi artık önemli değil."
+      "ja": "<bdi>D2</bdi>でつなげば、隅の<bdi>A1</bdi>・<bdi>B1</bdi>と、<bdi>D1</bdi>・<bdi>E1</bdi>の2つの眼ができます。",
+      "en": "Connecting at <bdi>D2</bdi> gives two eyes: <bdi>A1</bdi>–<bdi>B1</bdi> in the corner and <bdi>D1</bdi>–<bdi>E1</bdi>.",
+      "zh": "在<bdi>D2</bdi>连接，就有角上的<bdi>A1</bdi>・<bdi>B1</bdi>和<bdi>D1</bdi>・<bdi>E1</bdi>两只眼。",
+      "ko": "<bdi>D2</bdi>로 이으면 귀의 <bdi>A1</bdi>・<bdi>B1</bdi>과 <bdi>D1</bdi>・<bdi>E1</bdi>의 두 눈이 생깁니다.",
+      "es": "Conectando en <bdi>D2</bdi> hay dos ojos: <bdi>A1</bdi>–<bdi>B1</bdi> en la esquina y <bdi>D1</bdi>–<bdi>E1</bdi>.",
+      "fr": "En connectant en <bdi>D2</bdi>, on a deux yeux : <bdi>A1</bdi>–<bdi>B1</bdi> dans le coin et <bdi>D1</bdi>–<bdi>E1</bdi>.",
+      "pt": "Conectando em <bdi>D2</bdi>, há dois olhos: <bdi>A1</bdi>–<bdi>B1</bdi> no canto e <bdi>D1</bdi>–<bdi>E1</bdi>.",
+      "de": "Verbindet Schwarz auf <bdi>D2</bdi>, entstehen zwei Augen: <bdi>A1</bdi>–<bdi>B1</bdi> in der Ecke und <bdi>D1</bdi>–<bdi>E1</bdi>.",
+      "hi": "<bdi>D2</bdi> पर जोड़ने से दो आँखें बनती हैं: कोने में <bdi>A1</bdi>–<bdi>B1</bdi> और <bdi>D1</bdi>–<bdi>E1</bdi>।",
+      "ar": "بالوصل عند <bdi>D2</bdi> تتكون عينان: <bdi>A1</bdi>–<bdi>B1</bdi> في الزاوية و<bdi>D1</bdi>–<bdi>E1</bdi>.",
+      "ru": "Соединение <bdi>D2</bdi> даёт два глаза: <bdi>A1</bdi>–<bdi>B1</bdi> в углу и <bdi>D1</bdi>–<bdi>E1</bdi>.",
+      "zh-TW": "在 <bdi>D2</bdi> 連接，就有角上的 <bdi>A1</bdi>・<bdi>B1</bdi> 和 <bdi>D1</bdi>・<bdi>E1</bdi> 兩隻眼。",
+      "id": "Dengan menyambung di <bdi>D2</bdi>, terbentuk dua mata: <bdi>A1</bdi>–<bdi>B1</bdi> di sudut dan <bdi>D1</bdi>–<bdi>E1</bdi>.",
+      "tr": "<bdi>D2</bdi>'de bağlayınca iki göz olur: köşede <bdi>A1</bdi>–<bdi>B1</bdi> ve <bdi>D1</bdi>–<bdi>E1</bdi>."
      },
      "ng": {
-      "ja": "<bdi>D1</bdi>を白に打たれると、<bdi>D2</bdi>の眼も<bdi>C1</bdi>の眼もなくなります。",
-      "en": "If White plays <bdi>D1</bdi>, both the <bdi>D2</bdi> eye and the <bdi>C1</bdi> eye disappear.",
-      "zh": "如果白下<bdi>D1</bdi>，<bdi>D2</bdi>的眼和<bdi>C1</bdi>的眼都没了。",
-      "ko": "백이 <bdi>D1</bdi>에 두면 <bdi>D2</bdi>의 집도 <bdi>C1</bdi>의 집도 사라집니다.",
-      "es": "Si Blanco juega <bdi>D1</bdi>, desaparecen tanto el ojo de <bdi>D2</bdi> como el de <bdi>C1</bdi>.",
-      "fr": "Si Blanc joue <bdi>D1</bdi>, l’œil en <bdi>D2</bdi> comme l’œil en <bdi>C1</bdi> disparaissent.",
-      "pt": "Se o Branco jogar <bdi>D1</bdi>, somem tanto o olho em <bdi>D2</bdi> quanto o olho em <bdi>C1</bdi>.",
-      "de": "Spielt Weiß <bdi>D1</bdi>, verschwinden sowohl das Auge auf <bdi>D2</bdi> als auch das auf <bdi>C1</bdi>.",
-      "hi": "अगर सफ़ेद <bdi>D1</bdi> खेले, तो <bdi>D2</bdi> की आँख और <bdi>C1</bdi> की आँख दोनों ग़ायब हो जाती हैं।",
-      "ar": "إذا لعب الأبيض <bdi>D1</bdi> تختفي العين عند <bdi>D2</bdi> والعين عند <bdi>C1</bdi> معًا.",
-      "ru": "Если белые сыграют <bdi>D1</bdi>, исчезают и глаз <bdi>D2</bdi>, и глаз <bdi>C1</bdi>.",
-      "zh-TW": "如果白下 <bdi>D1</bdi>，<bdi>D2</bdi> 的眼和 <bdi>C1</bdi> 的眼都會消失。",
-      "id": "Jika Putih main <bdi>D1</bdi>, mata <bdi>D2</bdi> dan mata <bdi>C1</bdi> sama-sama hilang.",
-      "tr": "Beyaz <bdi>D1</bdi> oynarsa hem <bdi>D2</bdi> gözü hem <bdi>C1</bdi> gözü kaybolur."
+      "ja": "白に<bdi>D2</bdi>を打たれると黒が2つに切れて、どちらの空間も一眼だけになります。",
+      "en": "If White plays <bdi>D2</bdi>, Black is cut in two and each part has only one eye.",
+      "zh": "如果白下在<bdi>D2</bdi>，黑被切成两块，每块都只有一只眼。",
+      "ko": "백이 <bdi>D2</bdi>에 두면 흑이 둘로 끊겨, 어느 쪽 공간도 한 눈뿐입니다.",
+      "es": "Si Blanco juega <bdi>D2</bdi>, Negro queda cortado en dos y cada parte tiene un solo ojo.",
+      "fr": "Si Blanc joue <bdi>D2</bdi>, Noir est coupé en deux et chaque partie n’a qu’un œil.",
+      "pt": "Se o Branco jogar <bdi>D2</bdi>, o Preto fica cortado em dois e cada parte tem só um olho.",
+      "de": "Spielt Weiß <bdi>D2</bdi>, wird Schwarz in zwei Teile geschnitten, und jeder hat nur ein Auge.",
+      "hi": "अगर सफ़ेद <bdi>D2</bdi> खेले, तो काला दो हिस्सों में कट जाता है और हर हिस्से में सिर्फ़ एक आँख रहती है।",
+      "ar": "إذا لعب الأبيض <bdi>D2</bdi> ينقطع الأسود إلى جزأين، ولكل جزء عين واحدة فقط.",
+      "ru": "Если белые сыграют <bdi>D2</bdi>, чёрные разрезаны надвое, и у каждой части только один глаз.",
+      "zh-TW": "如果白下在 <bdi>D2</bdi>，黑被切成兩塊，每塊都只有一隻眼。",
+      "id": "Jika Putih bermain di <bdi>D2</bdi>, Hitam terpotong menjadi dua dan tiap bagian hanya punya satu mata.",
+      "tr": "Beyaz <bdi>D2</bdi>'ye oynarsa Siyah ikiye kesilir ve her parçada yalnızca bir göz kalır."
      }
     },
     {
@@ -5634,7 +5634,7 @@
     {
      "s": {
       "n": 9,
-      "stones": "......................................................wwwwwwww.wbbbbbbw.wb.....w.",
+      "stones": "......................................................wwwwwwww.wbbbbbbw.w.b.b...w",
       "turn": 1
      },
      "view": [
@@ -5644,40 +5644,39 @@
       8
      ],
      "ok": [
-      "G1",
-      "D1"
+      "G1"
      ],
      "why": {
-      "ja": "<bdi>G1</bdi>と下がれば一線に4つ並んだ眼形（直四）で生き。<bdi>D1</bdi>で<bdi>C1</bdi>と<bdi>E1</bdi>側に眼を分けても生きです。",
-      "en": "Blocking at <bdi>G1</bdi> leaves a straight four on the edge, which lives. <bdi>D1</bdi>, dividing eyes at <bdi>C1</bdi> and on the <bdi>E1</bdi> side, also lives.",
-      "zh": "在<bdi>G1</bdi>挡，边上成直四，是活棋。在<bdi>D1</bdi>把眼分成<bdi>C1</bdi>和<bdi>E1</bdi>一侧，也能活。",
-      "ko": "<bdi>G1</bdi>으로 막으면 가장자리에 일자 네 집이 남아 삽니다. <bdi>C1</bdi>과 <bdi>E1</bdi> 쪽으로 집을 나누는 <bdi>D1</bdi>도 삽니다.",
-      "es": "Bloquear en <bdi>G1</bdi> deja cuatro en línea en el borde, que vive. <bdi>D1</bdi>, que divide ojos en <bdi>C1</bdi> y en el lado de <bdi>E1</bdi>, también vive.",
-      "fr": "Bloquer en <bdi>G1</bdi> laisse un quatre droit au bord, qui vit. <bdi>D1</bdi>, qui sépare des yeux en <bdi>C1</bdi> et du côté de <bdi>E1</bdi>, vit aussi.",
-      "pt": "Bloquear em <bdi>G1</bdi> deixa um quatro reto na borda, que vive. <bdi>D1</bdi>, dividindo olhos em <bdi>C1</bdi> e do lado de <bdi>E1</bdi>, também vive.",
-      "de": "Blocken auf <bdi>G1</bdi> lässt eine gerade Vier am Rand, die lebt. <bdi>D1</bdi>, das Augen auf <bdi>C1</bdi> und auf der <bdi>E1</bdi>-Seite trennt, lebt auch.",
-      "hi": "<bdi>G1</bdi> पर रोकने से किनारे पर सीधी चार बचती है, जो ज़िंदा है। <bdi>D1</bdi>, जो <bdi>C1</bdi> पर और <bdi>E1</bdi> वाली तरफ़ आँखें बाँटता है, भी जीता है।",
-      "ar": "السدّ عند <bdi>G1</bdi> يترك أربعة مستقيمة على الحافة، وهي حيّة. و<bdi>D1</bdi>، الذي يقسم العيون عند <bdi>C1</bdi> وفي جهة <bdi>E1</bdi>، يعيش أيضًا.",
-      "ru": "Блок на <bdi>G1</bdi> оставляет прямую четвёрку на краю — она живёт. <bdi>D1</bdi>, делящий глаза на <bdi>C1</bdi> и со стороны <bdi>E1</bdi>, тоже живёт.",
-      "zh-TW": "在 <bdi>G1</bdi> 擋，邊上留下直四，是活棋。<bdi>D1</bdi> 把眼分成 <bdi>C1</bdi> 和 <bdi>E1</bdi> 一側，也能活。",
-      "id": "Memblok di <bdi>G1</bdi> menyisakan empat lurus di tepi, yang hidup. <bdi>D1</bdi>, yang membagi mata di <bdi>C1</bdi> dan di sisi <bdi>E1</bdi>, juga hidup.",
-      "tr": "<bdi>G1</bdi>'de kapatmak kenarda düz dörtlü bırakır, bu yaşar. Gözleri <bdi>C1</bdi>'de ve <bdi>E1</bdi> tarafında bölen <bdi>D1</bdi> de yaşar."
+      "ja": "<bdi>G1</bdi>で右の空間を区切れば、<bdi>D1</bdi>と<bdi>F1</bdi>の二眼。<bdi>H1</bdi>まで広げようとすると、白に<bdi>G1</bdi>を打たれて間に合いません。",
+      "en": "Marking off the right side at <bdi>G1</bdi> gives two eyes, <bdi>D1</bdi> and <bdi>F1</bdi>. Reaching for <bdi>H1</bdi> is too slow: White plays <bdi>G1</bdi>.",
+      "zh": "在<bdi>G1</bdi>把右边隔开，就有<bdi>D1</bdi>和<bdi>F1</bdi>两只眼。想扩到<bdi>H1</bdi>的话，会被白下<bdi>G1</bdi>，来不及。",
+      "ko": "<bdi>G1</bdi>로 오른쪽 공간을 끊으면 <bdi>D1</bdi>과 <bdi>F1</bdi>의 두 눈. <bdi>H1</bdi>까지 넓히려 하면 백이 <bdi>G1</bdi>에 두어 늦습니다.",
+      "es": "Cerrando el lado derecho en <bdi>G1</bdi> hay dos ojos, <bdi>D1</bdi> y <bdi>F1</bdi>. Ir hasta <bdi>H1</bdi> es demasiado lento: Blanco juega <bdi>G1</bdi>.",
+      "fr": "En fermant le côté droit en <bdi>G1</bdi>, on a deux yeux, <bdi>D1</bdi> et <bdi>F1</bdi>. Viser <bdi>H1</bdi> est trop lent : Blanc joue <bdi>G1</bdi>.",
+      "pt": "Fechando o lado direito em <bdi>G1</bdi>, há dois olhos, <bdi>D1</bdi> e <bdi>F1</bdi>. Ir até <bdi>H1</bdi> é lento demais: o Branco joga <bdi>G1</bdi>.",
+      "de": "Grenzt Schwarz die rechte Seite mit <bdi>G1</bdi> ab, hat er zwei Augen, <bdi>D1</bdi> und <bdi>F1</bdi>. Bis <bdi>H1</bdi> auszugreifen ist zu langsam: Weiß spielt <bdi>G1</bdi>.",
+      "hi": "<bdi>G1</bdi> से दाईं जगह बंद करने पर <bdi>D1</bdi> और <bdi>F1</bdi> की दो आँखें बनती हैं। <bdi>H1</bdi> तक फैलाने की कोशिश धीमी है: सफ़ेद <bdi>G1</bdi> खेल देता है।",
+      "ar": "بإغلاق الجانب الأيمن عند <bdi>G1</bdi> تتكون عينان عند <bdi>D1</bdi> و<bdi>F1</bdi>. التمدد حتى <bdi>H1</bdi> بطيء جدًا: يلعب الأبيض <bdi>G1</bdi>.",
+      "ru": "Отгородив правую часть ходом <bdi>G1</bdi>, чёрные получают два глаза — <bdi>D1</bdi> и <bdi>F1</bdi>. Тянуться до <bdi>H1</bdi> слишком медленно: белые сыграют <bdi>G1</bdi>.",
+      "zh-TW": "在 <bdi>G1</bdi> 把右邊隔開，就有 <bdi>D1</bdi> 和 <bdi>F1</bdi> 兩隻眼。想擴到 <bdi>H1</bdi> 的話，會被白下 <bdi>G1</bdi>，來不及。",
+      "id": "Dengan menutup sisi kanan di <bdi>G1</bdi>, ada dua mata: <bdi>D1</bdi> dan <bdi>F1</bdi>. Meluas sampai <bdi>H1</bdi> terlalu lambat: Putih bermain di <bdi>G1</bdi>.",
+      "tr": "Sağ tarafı <bdi>G1</bdi> ile kapatınca <bdi>D1</bdi> ve <bdi>F1</bdi>'de iki göz olur. <bdi>H1</bdi>'e kadar genişlemeye çalışmak yavaş kalır: Beyaz <bdi>G1</bdi>'e oynar."
      },
      "ng": {
-      "ja": "白に<bdi>G1</bdi>とハネられ、さらに中に置かれると眼が1つしかできません。眼を広げるか分けるかしましょう。",
-      "en": "If White hanes at <bdi>G1</bdi> and then plays inside, Black gets only one eye. Widen the space or divide it.",
-      "zh": "如果白在<bdi>G1</bdi>扳再下到里面，黑只有一只眼。要扩大眼位或者分开眼位。",
-      "ko": "백이 <bdi>G1</bdi>에서 젖히고 안에 두면 흑은 한 집뿐. 집 자리를 넓히거나 나누세요.",
-      "es": "Si Blanco hace hane en <bdi>G1</bdi> y luego juega dentro, Negro solo tiene un ojo. Amplía el espacio o divídelo.",
-      "fr": "Si Blanc fait hane en <bdi>G1</bdi> puis joue à l’intérieur, Noir n’a qu’un œil. Agrandissez l’espace ou divisez-le.",
-      "pt": "Se o Branco fizer hane em <bdi>G1</bdi> e depois jogar dentro, o Preto só tem um olho. Amplie o espaço ou divida-o.",
-      "de": "Hanet Weiß auf <bdi>G1</bdi> und spielt dann hinein, hat Schwarz nur ein Auge. Vergrößere den Raum oder teile ihn.",
-      "hi": "अगर सफ़ेद <bdi>G1</bdi> पर हाने करके फिर अंदर खेले, तो काले के पास केवल एक आँख रहती है। जगह बढ़ाएँ या बाँटें।",
-      "ar": "إذا لعب الأبيض هاني عند <bdi>G1</bdi> ثم لعب في الداخل، لا يبقى للأسود إلا عين واحدة. وسّع المساحة أو قسّمها.",
-      "ru": "Если белые сделают ханэ на <bdi>G1</bdi>, а потом сыграют внутрь, у чёрных будет только один глаз. Расширяйте пространство или делите его.",
-      "zh-TW": "如果白在 <bdi>G1</bdi> 扳，再點進裡面，黑就只有一隻眼。要擴大眼位或把它分開。",
-      "id": "Jika Putih hane di <bdi>G1</bdi> lalu main di dalam, Hitam hanya dapat satu mata. Perluas atau bagi ruangnya.",
-      "tr": "Beyaz <bdi>G1</bdi>'de hane yapıp sonra içeri oynarsa Siyah'ın tek gözü olur. Alanı genişlet ya da böl."
+      "ja": "白に<bdi>G1</bdi>を打たれると<bdi>F1</bdi>が眼にならず、<bdi>D1</bdi>の一眼だけになります。",
+      "en": "If White plays <bdi>G1</bdi>, <bdi>F1</bdi> is no eye and only the one eye at <bdi>D1</bdi> is left.",
+      "zh": "如果白下在<bdi>G1</bdi>，<bdi>F1</bdi>就不成眼，只剩<bdi>D1</bdi>一只眼。",
+      "ko": "백이 <bdi>G1</bdi>에 두면 <bdi>F1</bdi>은 눈이 되지 못하고 <bdi>D1</bdi>의 한 눈만 남습니다.",
+      "es": "Si Blanco juega <bdi>G1</bdi>, <bdi>F1</bdi> no es ojo y solo queda el ojo de <bdi>D1</bdi>.",
+      "fr": "Si Blanc joue <bdi>G1</bdi>, <bdi>F1</bdi> n’est pas un œil et il ne reste que l’œil en <bdi>D1</bdi>.",
+      "pt": "Se o Branco jogar <bdi>G1</bdi>, <bdi>F1</bdi> não vira olho e sobra só o olho em <bdi>D1</bdi>.",
+      "de": "Spielt Weiß <bdi>G1</bdi>, ist <bdi>F1</bdi> kein Auge, und nur das eine Auge auf <bdi>D1</bdi> bleibt.",
+      "hi": "अगर सफ़ेद <bdi>G1</bdi> खेले, तो <bdi>F1</bdi> आँख नहीं बनती और सिर्फ़ <bdi>D1</bdi> की एक आँख बचती है।",
+      "ar": "إذا لعب الأبيض <bdi>G1</bdi> لا تصير <bdi>F1</bdi> عينًا وتبقى عين واحدة عند <bdi>D1</bdi>.",
+      "ru": "Если белые сыграют <bdi>G1</bdi>, <bdi>F1</bdi> не станет глазом, и останется только один глаз на <bdi>D1</bdi>.",
+      "zh-TW": "如果白下在 <bdi>G1</bdi>，<bdi>F1</bdi> 就不成眼，只剩 <bdi>D1</bdi> 一隻眼。",
+      "id": "Jika Putih bermain di <bdi>G1</bdi>, <bdi>F1</bdi> tidak menjadi mata dan hanya tersisa satu mata di <bdi>D1</bdi>.",
+      "tr": "Beyaz <bdi>G1</bdi>'e oynarsa <bdi>F1</bdi> göz olmaz ve yalnızca <bdi>D1</bdi>'deki tek göz kalır."
      }
     }
    ],
@@ -6954,7 +6953,7 @@
     {
      "s": {
       "n": 9,
-      "stones": ".............................................www.......bwww.....bbbw.......bw....",
+      "stones": "......................................................wwwww....bbbbw.......bw....",
       "turn": 2
      },
      "view": [
@@ -6964,40 +6963,39 @@
       8
      ],
      "ok": [
-      "B1",
-      "A3"
+      "B1"
      ],
      "why": {
-      "ja": "前の問題と同じ形で白番。急所の<bdi>B1</bdi>に置くか、<bdi>A3</bdi>とハネて眼の空間を狭めれば殺せます。",
-      "en": "The same shape as the previous problem, White to play. Placing at the vital point <bdi>B1</bdi> or narrowing the space with the hane at <bdi>A3</bdi> both kill.",
-      "zh": "和上一题同样的棋形，白先。点在要点<bdi>B1</bdi>，或在<bdi>A3</bdi>扳缩小眼位，都能杀。",
-      "ko": "앞 문제와 같은 모양, 백선. 급소 <bdi>B1</bdi>에 치중하거나 <bdi>A3</bdi>의 젖힘으로 좁히면 모두 잡힙니다.",
-      "es": "La misma forma que el problema anterior, juega Blanco. Colocar en el punto vital <bdi>B1</bdi> o reducir el espacio con el hane en <bdi>A3</bdi>: ambas matan.",
-      "fr": "La même forme que le problème précédent, Blanc joue. Placer au point vital <bdi>B1</bdi> ou réduire l’espace par le hane en <bdi>A3</bdi> : les deux tuent.",
-      "pt": "A mesma forma do problema anterior, Branco joga. Colocar no ponto vital <bdi>B1</bdi> ou reduzir o espaço com o hane em <bdi>A3</bdi>: as duas matam.",
-      "de": "Dieselbe Form wie in der vorigen Aufgabe, Weiß am Zug. Einsetzen auf den vitalen Punkt <bdi>B1</bdi> oder Verkleinern mit dem Hane auf <bdi>A3</bdi> – beides tötet.",
-      "hi": "पिछली पहेली जैसा ही आकार, सफ़ेद की बारी। अहम बिंदु <bdi>B1</bdi> पर रखना या <bdi>A3</bdi> पर हाने से जगह घटाना — दोनों मारते हैं।",
-      "ar": "الشكل نفسه كما في المسألة السابقة، والدور للأبيض. الوضع على النقطة الحيوية <bdi>B1</bdi> أو تضييق المساحة بالهاني عند <bdi>A3</bdi>: كلاهما يقتل.",
-      "ru": "Та же форма, что в прошлой задаче, ход белых. Убивают и вставка в жизненную точку <bdi>B1</bdi>, и сужение ханэ на <bdi>A3</bdi>.",
-      "zh-TW": "和上一題同樣的形，白先。點在要點 <bdi>B1</bdi>，或在 <bdi>A3</bdi> 扳縮小眼位，都能殺。",
-      "id": "Bentuk yang sama dengan soal sebelumnya, giliran Putih. Menempatkan di titik vital <bdi>B1</bdi> atau mempersempit ruang dengan hane di <bdi>A3</bdi> sama-sama membunuh.",
-      "tr": "Önceki problemle aynı şekil, sıra Beyaz'da. Hayati nokta <bdi>B1</bdi>'e yerleşmek de <bdi>A3</bdi>'te hane ile alanı daraltmak da öldürür."
+      "ja": "隅の直三も、真ん中の二の一<bdi>B1</bdi>が急所。置けば、黒は<bdi>A1</bdi>と<bdi>C1</bdi>を2つの眼に分けられません。",
+      "en": "A straight three in the corner too: the middle, the 2-1 point <bdi>B1</bdi>, is vital. After the placement Black cannot split <bdi>A1</bdi> and <bdi>C1</bdi> into two eyes.",
+      "zh": "角上的直三，要点也是中间的二一路<bdi>B1</bdi>。点了之后，黑无法把<bdi>A1</bdi>和<bdi>C1</bdi>分成两只眼。",
+      "ko": "귀의 직삼도 가운데 2의 1인 <bdi>B1</bdi>이 급소. 치중하면 흑은 <bdi>A1</bdi>과 <bdi>C1</bdi>을 두 눈으로 나눌 수 없습니다.",
+      "es": "También en un tres en línea de esquina, el centro, el punto 2-1 <bdi>B1</bdi>, es vital. Tras colocar, Negro no puede dividir <bdi>A1</bdi> y <bdi>C1</bdi> en dos ojos.",
+      "fr": "Pour un trois droit dans le coin aussi, le milieu, le point 2-1 <bdi>B1</bdi>, est vital. Après le placement, Noir ne peut pas séparer <bdi>A1</bdi> et <bdi>C1</bdi> en deux yeux.",
+      "pt": "Também no três reto do canto, o meio, o ponto 2-1 <bdi>B1</bdi>, é vital. Depois da colocação, o Preto não consegue dividir <bdi>A1</bdi> e <bdi>C1</bdi> em dois olhos.",
+      "de": "Auch bei der geraden Drei in der Ecke ist die Mitte, der 2-1-Punkt <bdi>B1</bdi>, vital. Nach dem Einsetzen kann Schwarz <bdi>A1</bdi> und <bdi>C1</bdi> nicht in zwei Augen teilen.",
+      "hi": "कोने के सीधे तीन में भी बीच का 2-1 बिंदु <bdi>B1</bdi> अहम है। वहाँ रखने के बाद काला <bdi>A1</bdi> और <bdi>C1</bdi> को दो आँखों में नहीं बाँट पाता।",
+      "ar": "في الثلاثة المستقيمة في الزاوية أيضًا، الوسط — النقطة 2-1 <bdi>B1</bdi> — حيوي. بعد الوضع لا يستطيع الأسود تقسيم <bdi>A1</bdi> و<bdi>C1</bdi> إلى عينين.",
+      "ru": "И у прямой тройки в углу жизненная точка — середина, пункт 2-1 <bdi>B1</bdi>. После вставки чёрные не могут разделить <bdi>A1</bdi> и <bdi>C1</bdi> на два глаза.",
+      "zh-TW": "角上的直三，要點也是中間的二一路 <bdi>B1</bdi>。點了之後，黑無法把 <bdi>A1</bdi> 和 <bdi>C1</bdi> 分成兩隻眼。",
+      "id": "Pada tiga lurus di sudut pun, bagian tengah, titik 2-1 <bdi>B1</bdi>, adalah titik vital. Setelah ditempati, Hitam tidak bisa memisahkan <bdi>A1</bdi> dan <bdi>C1</bdi> menjadi dua mata.",
+      "tr": "Köşedeki düz üçlüde de ortadaki 2-1 noktası <bdi>B1</bdi> hayatidir. Yerleşmeden sonra Siyah <bdi>A1</bdi> ile <bdi>C1</bdi>'i iki göze ayıramaz."
      },
      "ng": {
-      "ja": "黒に<bdi>B1</bdi>を打たれると生きてしまいます。急所かすき間、どちらかに打ちましょう。",
-      "en": "If Black gets <bdi>B1</bdi>, Black lives. Play the vital point or the gap.",
-      "zh": "如果黑占到<bdi>B1</bdi>，黑就活了。要下在要点或缺口上。",
-      "ko": "흑이 <bdi>B1</bdi>을 차지하면 흑이 삽니다. 급소나 틈에 두세요.",
-      "es": "Si Negro consigue <bdi>B1</bdi>, Negro vive. Juega el punto vital o el hueco.",
-      "fr": "Si Noir obtient <bdi>B1</bdi>, il vit. Jouez le point vital ou la brèche.",
-      "pt": "Se o Preto conseguir <bdi>B1</bdi>, ele vive. Jogue no ponto vital ou na brecha.",
-      "de": "Bekommt Schwarz <bdi>B1</bdi>, lebt Schwarz. Spiele den vitalen Punkt oder die Lücke.",
-      "hi": "अगर काले को <bdi>B1</bdi> मिल जाए, तो काला जीता है। अहम बिंदु या खाली जगह पर खेलें।",
-      "ar": "إذا حصل الأسود على <bdi>B1</bdi> يعيش. العب النقطة الحيوية أو الفراغ.",
-      "ru": "Если чёрные получат <bdi>B1</bdi>, они живут. Играйте в жизненную точку или в разрыв.",
-      "zh-TW": "如果黑下到 <bdi>B1</bdi> 就活了。要下在要點或缺口。",
-      "id": "Jika Hitam mendapat <bdi>B1</bdi>, Hitam hidup. Mainkan titik vital atau celahnya.",
-      "tr": "Siyah <bdi>B1</bdi>'i alırsa yaşar. Hayati noktaya ya da boşluğa oyna."
+      "ja": "黒に<bdi>B1</bdi>を打たれると、<bdi>A1</bdi>と<bdi>C1</bdi>が1つずつの眼になって生きてしまいます。",
+      "en": "If Black plays <bdi>B1</bdi>, <bdi>A1</bdi> and <bdi>C1</bdi> become one eye each and Black lives.",
+      "zh": "如果黑下在<bdi>B1</bdi>，<bdi>A1</bdi>和<bdi>C1</bdi>各成一只眼，黑就活了。",
+      "ko": "흑이 <bdi>B1</bdi>에 두면 <bdi>A1</bdi>과 <bdi>C1</bdi>이 각각 눈이 되어 살아 버립니다.",
+      "es": "Si Negro juega <bdi>B1</bdi>, <bdi>A1</bdi> y <bdi>C1</bdi> se vuelven un ojo cada uno y Negro vive.",
+      "fr": "Si Noir joue <bdi>B1</bdi>, <bdi>A1</bdi> et <bdi>C1</bdi> deviennent chacun un œil et Noir vit.",
+      "pt": "Se o Preto jogar <bdi>B1</bdi>, <bdi>A1</bdi> e <bdi>C1</bdi> viram um olho cada e o Preto vive.",
+      "de": "Spielt Schwarz <bdi>B1</bdi>, werden <bdi>A1</bdi> und <bdi>C1</bdi> je ein Auge, und Schwarz lebt.",
+      "hi": "अगर काला <bdi>B1</bdi> खेले, तो <bdi>A1</bdi> और <bdi>C1</bdi> एक-एक आँख बन जाते हैं और काला जी जाता है।",
+      "ar": "إذا لعب الأسود <bdi>B1</bdi> تصبح <bdi>A1</bdi> و<bdi>C1</bdi> عينًا لكل منهما ويعيش الأسود.",
+      "ru": "Если чёрные сыграют <bdi>B1</bdi>, <bdi>A1</bdi> и <bdi>C1</bdi> станут отдельными глазами, и чёрные живут.",
+      "zh-TW": "如果黑下在 <bdi>B1</bdi>，<bdi>A1</bdi> 和 <bdi>C1</bdi> 各成一隻眼，黑就活了。",
+      "id": "Jika Hitam bermain di <bdi>B1</bdi>, <bdi>A1</bdi> dan <bdi>C1</bdi> masing-masing menjadi mata dan Hitam hidup.",
+      "tr": "Siyah <bdi>B1</bdi>'e oynarsa <bdi>A1</bdi> ve <bdi>C1</bdi> birer göz olur ve Siyah yaşar."
      }
     },
     {
@@ -7051,50 +7049,56 @@
     {
      "s": {
       "n": 9,
-      "stones": "......................................................wwwwww...bbbbbw........w...",
+      "stones": "......................................................wwwwww...bbbbbw.........w..",
       "turn": 2
      },
      "view": [
       0,
       3,
-      5,
+      8,
       8
      ],
      "ok": [
+      "B1"
+     ],
+     "line": [
       "B1",
-      "E1"
+      "C1",
+      "E1",
+      "A1",
+      "F1"
      ],
      "why": {
-      "ja": "<bdi>E1</bdi>とハネて狭めても、<bdi>B1</bdi>に置いても殺せます。どちらも黒に直四を作らせない手です。",
-      "en": "Both the hane at <bdi>E1</bdi> and the placement at <bdi>B1</bdi> kill: neither lets Black make a straight four.",
-      "zh": "<bdi>E1</bdi>扳和<bdi>B1</bdi>点都能杀：两者都不让黑做成直四。",
-      "ko": "<bdi>E1</bdi>의 젖힘도 <bdi>B1</bdi>의 치중도 모두 잡힙니다. 어느 쪽이든 흑이 일자 네 집을 만들 수 없습니다.",
-      "es": "Tanto el hane en <bdi>E1</bdi> como la colocación en <bdi>B1</bdi> matan: ninguno deja a Negro hacer un cuatro en línea.",
-      "fr": "Le hane en <bdi>E1</bdi> comme le placement en <bdi>B1</bdi> tuent : aucun des deux ne laisse Noir faire un quatre droit.",
-      "pt": "Tanto o hane em <bdi>E1</bdi> quanto a colocação em <bdi>B1</bdi> matam: nenhum deixa o Preto fazer um quatro reto.",
-      "de": "Sowohl das Hane auf <bdi>E1</bdi> als auch das Einsetzen auf <bdi>B1</bdi> töten: Keins lässt Schwarz eine gerade Vier machen.",
-      "hi": "<bdi>E1</bdi> पर हाने और <bdi>B1</bdi> पर रखना — दोनों मारते हैं: कोई भी काले को सीधी चार नहीं बनाने देता।",
-      "ar": "الهاني عند <bdi>E1</bdi> والوضع عند <bdi>B1</bdi> يقتلان كلاهما: لا يسمح أي منهما للأسود بصنع أربعة مستقيمة.",
-      "ru": "Убивают и ханэ на <bdi>E1</bdi>, и вставка на <bdi>B1</bdi>: ни то, ни другое не даёт чёрным сделать прямую четвёрку.",
-      "zh-TW": "在 <bdi>E1</bdi> 扳和點 <bdi>B1</bdi> 都能殺：兩者都不讓黑做成直四。",
-      "id": "Hane di <bdi>E1</bdi> maupun penempatan di <bdi>B1</bdi> sama-sama membunuh: keduanya tak membiarkan Hitam membuat empat lurus.",
-      "tr": "Hem <bdi>E1</bdi>'deki hane hem <bdi>B1</bdi>'e yerleşme öldürür: ikisi de Siyah'ın düz dörtlü yapmasına izin vermez."
+      "ja": "ここも二の一<bdi>B1</bdi>が急所。黒が<bdi>C1</bdi>と取りにきたら、<bdi>E1</bdi>・<bdi>F1</bdi>と外からせまくして、眼は1つだけになります。",
+      "en": "Here too the 2-1 point <bdi>B1</bdi> is vital. If Black comes to capture with <bdi>C1</bdi>, narrow the space from outside with <bdi>E1</bdi> and <bdi>F1</bdi>: only one eye remains.",
+      "zh": "这里的要点也是二一路<bdi>B1</bdi>。黑在<bdi>C1</bdi>来提的话，白从外面在<bdi>E1</bdi>、<bdi>F1</bdi>缩小眼位，黑只剩一只眼。",
+      "ko": "여기도 2의 1인 <bdi>B1</bdi>이 급소. 흑이 <bdi>C1</bdi>로 잡으러 오면 <bdi>E1</bdi>, <bdi>F1</bdi>로 밖에서 좁혀 눈은 하나만 남습니다.",
+      "es": "Aquí también el punto 2-1 <bdi>B1</bdi> es vital. Si Negro va a capturar con <bdi>C1</bdi>, reduce desde fuera con <bdi>E1</bdi> y <bdi>F1</bdi>: solo queda un ojo.",
+      "fr": "Ici aussi, le point 2-1 <bdi>B1</bdi> est vital. Si Noir vient capturer par <bdi>C1</bdi>, réduisez de l’extérieur par <bdi>E1</bdi> et <bdi>F1</bdi> : il ne reste qu’un œil.",
+      "pt": "Aqui também o ponto 2-1 <bdi>B1</bdi> é vital. Se o Preto vier capturar com <bdi>C1</bdi>, reduza por fora com <bdi>E1</bdi> e <bdi>F1</bdi>: só resta um olho.",
+      "de": "Auch hier ist der 2-1-Punkt <bdi>B1</bdi> vital. Kommt Schwarz mit <bdi>C1</bdi> zum Schlagen, verkleinert Weiß von außen mit <bdi>E1</bdi> und <bdi>F1</bdi>: Es bleibt nur ein Auge.",
+      "hi": "यहाँ भी 2-1 बिंदु <bdi>B1</bdi> अहम है। अगर काला <bdi>C1</bdi> से पकड़ने आए, तो बाहर से <bdi>E1</bdi> और <bdi>F1</bdi> से जगह घटाएँ: सिर्फ़ एक आँख बचती है।",
+      "ar": "هنا أيضًا النقطة 2-1 <bdi>B1</bdi> حيوية. إذا جاء الأسود للأسر بـ<bdi>C1</bdi>، ضيّق من الخارج بـ<bdi>E1</bdi> و<bdi>F1</bdi>: تبقى عين واحدة فقط.",
+      "ru": "И здесь жизненная точка — пункт 2-1 <bdi>B1</bdi>. Если чёрные идут снимать ходом <bdi>C1</bdi>, сужайте снаружи ходами <bdi>E1</bdi> и <bdi>F1</bdi>: останется один глаз.",
+      "zh-TW": "這裡的要點也是二一路 <bdi>B1</bdi>。黑在 <bdi>C1</bdi> 來提的話，白從外面在 <bdi>E1</bdi>、<bdi>F1</bdi> 縮小眼位，黑只剩一隻眼。",
+      "id": "Di sini pun titik 2-1 <bdi>B1</bdi> adalah titik vital. Jika Hitam datang menangkap dengan <bdi>C1</bdi>, persempit dari luar dengan <bdi>E1</bdi> dan <bdi>F1</bdi>: hanya tersisa satu mata.",
+      "tr": "Burada da 2-1 noktası <bdi>B1</bdi> hayatidir. Siyah <bdi>C1</bdi> ile almaya gelirse dışarıdan <bdi>E1</bdi> ve <bdi>F1</bdi> ile daralt: yalnızca bir göz kalır."
      },
      "ng": {
-      "ja": "黒に<bdi>E1</bdi>とふさがれると、一線に4つ並んだ直四で生きてしまいます。",
-      "en": "If Black closes at <bdi>E1</bdi>, the straight four on the first line lives.",
-      "zh": "如果黑在<bdi>E1</bdi>封住，一路上的直四就活了。",
-      "ko": "흑이 <bdi>E1</bdi>으로 막으면 1선의 일자 네 집으로 삽니다.",
-      "es": "Si Negro cierra en <bdi>E1</bdi>, el cuatro en línea de la primera línea vive.",
-      "fr": "Si Noir ferme en <bdi>E1</bdi>, le quatre droit en première ligne vit.",
-      "pt": "Se o Preto fechar em <bdi>E1</bdi>, o quatro reto na primeira linha vive.",
-      "de": "Schließt Schwarz auf <bdi>E1</bdi>, lebt die gerade Vier auf der ersten Linie.",
-      "hi": "अगर काला <bdi>E1</bdi> पर बंद करे, तो पहली रेखा की सीधी चार ज़िंदा रहती है।",
-      "ar": "إذا سدّ الأسود عند <bdi>E1</bdi> تعيش الأربعة المستقيمة على الخط الأول.",
-      "ru": "Если чёрные закроют на <bdi>E1</bdi>, прямая четвёрка на первой линии живёт.",
-      "zh-TW": "如果黑在 <bdi>E1</bdi> 封住，一路的直四就活了。",
-      "id": "Jika Hitam menutup di <bdi>E1</bdi>, empat lurus di baris pertama hidup.",
-      "tr": "Siyah <bdi>E1</bdi>'de kapatırsa birinci sıradaki düz dörtlü yaşar."
+      "ja": "外から<bdi>F1</bdi>とハネても、黒に<bdi>B1</bdi>を打たれると隅と右に眼が分かれて生きてしまいます。この形は二の一が先です。",
+      "en": "Even the hane at <bdi>F1</bdi> from outside fails: if Black gets <bdi>B1</bdi>, the eyes split into the corner and the right, and Black lives. In this shape the 2-1 point comes first.",
+      "zh": "即使从外面在<bdi>F1</bdi>扳，黑一旦下到<bdi>B1</bdi>，角上和右边就分成两只眼活了。这个形要先下二一路。",
+      "ko": "밖에서 <bdi>F1</bdi>로 젖혀도 흑이 <bdi>B1</bdi>을 두면 귀와 오른쪽으로 눈이 나뉘어 삽니다. 이 모양은 2의 1이 먼저입니다.",
+      "es": "Ni siquiera el hane en <bdi>F1</bdi> desde fuera funciona: si Negro consigue <bdi>B1</bdi>, los ojos se separan en la esquina y a la derecha y vive. En esta forma va primero el punto 2-1.",
+      "fr": "Même le hane en <bdi>F1</bdi> de l’extérieur échoue : si Noir obtient <bdi>B1</bdi>, les yeux se séparent dans le coin et à droite, et Noir vit. Dans cette forme, le point 2-1 passe en premier.",
+      "pt": "Nem o hane em <bdi>F1</bdi> por fora funciona: se o Preto conseguir <bdi>B1</bdi>, os olhos se separam no canto e à direita e ele vive. Nesta forma, o ponto 2-1 vem primeiro.",
+      "de": "Selbst das Hane auf <bdi>F1</bdi> von außen reicht nicht: Bekommt Schwarz <bdi>B1</bdi>, teilen sich die Augen in Ecke und rechte Seite, und Schwarz lebt. In dieser Form kommt der 2-1-Punkt zuerst.",
+      "hi": "बाहर से <bdi>F1</bdi> पर हाने भी काम नहीं करता: अगर काले को <bdi>B1</bdi> मिल जाए, तो आँखें कोने और दाईं ओर बँट जाती हैं और काला जी जाता है। इस आकार में पहले 2-1 बिंदु।",
+      "ar": "حتى الهاني عند <bdi>F1</bdi> من الخارج لا يكفي: إذا حصل الأسود على <bdi>B1</bdi> تنقسم العيون بين الزاوية واليمين ويعيش. في هذا الشكل تأتي النقطة 2-1 أولًا.",
+      "ru": "Даже ханэ <bdi>F1</bdi> снаружи не помогает: если чёрные получат <bdi>B1</bdi>, глаза разделятся на угол и правую часть, и чёрные живут. В этой форме сначала пункт 2-1.",
+      "zh-TW": "即使從外面在 <bdi>F1</bdi> 扳，黑一旦下到 <bdi>B1</bdi>，角上和右邊就分成兩隻眼活了。這個形要先下二一路。",
+      "id": "Bahkan hane di <bdi>F1</bdi> dari luar gagal: jika Hitam mendapat <bdi>B1</bdi>, mata terbagi di sudut dan di kanan, dan Hitam hidup. Pada bentuk ini titik 2-1 lebih dulu.",
+      "tr": "Dışarıdan <bdi>F1</bdi>'de hane bile yetmez: Siyah <bdi>B1</bdi>'i alırsa gözler köşe ve sağ olarak ayrılır ve yaşar. Bu şekilde önce 2-1 noktası gelir."
      }
     }
    ],
