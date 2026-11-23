@@ -64,7 +64,7 @@
       { set: GO([], [[9, 9]]), glow: ['g8,9', 'g10,9', 'g9,8', 'g9,10'], task: [{ t: 'tap', at: ['g8,9', 'g10,9', 'g9,8', 'g9,10'], put: 1 }] },
       { set: GO([[8, 9], [10, 9], [9, 8]], [[9, 9]]), glow: ['g9,10'], task: [{ t: 'tap', at: ['g9,10'], put: 1, cap: ['g9,9'] }] },
       { set: GO([[8, 9], [11, 9], [9, 8], [10, 8], [9, 10]], [[9, 9], [10, 9]]), glow: ['g10,10'], task: [{ t: 'tap', at: ['g10,10'], put: 1, cap: ['g9,9', 'g10,9'] }] },
-      { set: GO([[4, 4]], [[8, 9], [10, 9], [9, 8], [9, 10]]), ban: ['g9,9'] },
+      { set: GO([[4, 4]], [[8, 9], [10, 9], [9, 8], [9, 10]]), ban: ['g9,9'], glow: ['g10,10'], task: [{ t: 'tap', at: ['g10,10'], put: 1 }] },
       { set: GO([[8, 9], [9, 8], [9, 10]], [[9, 9], [11, 9], [10, 8], [10, 10]]), glow: ['g10,9'], task: [{ t: 'tap', at: ['g10,9'], put: 1, cap: ['g9,9'], banAfter: ['g9,9'] }] },
       { set: GO([[4, 14], [4, 15], [4, 16], [4, 17], [4, 18], [0, 14], [1, 14], [2, 14], [3, 14]], [[6, 12], [7, 15]]), glow: [...[0, 1, 2, 3].flatMap(i => [15, 16, 17, 18].map(j => `g${i},${j}`))], gcol: 0x6ec8ff,
         task: [{ t: 'tap', at: [...[0, 1, 2, 3].flatMap(i => [15, 16, 17, 18].map(j => `g${i},${j}`))] }] },
@@ -237,11 +237,11 @@
     const pulse = []; let pulseOn = false;
     function pulseLoop() { if (stopped || !pulse.length) { pulseOn = false; return; } const k = .5 + .5 * Math.sin(performance.now() / 280); pulse.forEach(m => { m.scale.setScalar(m.userData.s * (.92 + k * .14)); m.material.opacity = m.userData.o * (.65 + k * .35); }); kick(); setTimeout(() => requestAnimationFrame(pulseLoop), 50); }
     function mark(kind, t, col) {
-      const [x, y, z] = LY.spot(t), s = LY.sc, p = kind === 'ring' ? at(t) : null, py = p ? p.m.position.y + (LY.ringH != null ? LY.ringH : B.userData.S3 ? .5 : 1.1) : y;
+      const [x, y, z] = LY.spot(t), s = LY.sc, p = kind === 'ring' ? at(t) : null, pp = p ? LY.pos(p.loc) : null, py = p ? pp[1] + LY.sc * .04 : y;   // (at the foot of the piece: seen from above a ring up in the air drifts off it — 2026-11-23)   // (where the piece rests — it may still be dropping in: 2026-11-23 丸の位置ズレ)
       let m;
       if (kind === 'ban') { m = new TH.Group(); [1, -1].forEach(a => { const b = new TH.Mesh(BAR, mat(0xff5d5d, .95)); b.rotation.y = a * Math.PI / 4; m.add(b); }); m.scale.setScalar(s * 1.2); m.position.set(x, y + .03 * s, z); MG.add(m); return; }
       m = new TH.Mesh(kind === 'ring' ? RING : DISC, mat(col, kind === 'ring' ? .95 : kind === 'dest' ? .6 : .4)); m.userData.s = s * (kind === 'ring' ? 1.05 : .95); m.userData.o = m.material.opacity;
-      m.scale.setScalar(m.userData.s); m.position.set(p ? p.m.position.x : x, (kind === 'ring' ? py : y) + .03 * s, p ? p.m.position.z : z); m.renderOrder = 3; MG.add(m);
+      m.scale.setScalar(m.userData.s); m.position.set(p ? pp[0] : x, (kind === 'ring' ? py : y) + .03 * s, p ? pp[2] : z); if (p) m.userData.piece = p; m.renderOrder = 3; MG.add(m);
       if (kind !== 'glow') { pulse.push(m); if (!pulseOn) { pulseOn = true; requestAnimationFrame(pulseLoop); } }
     }
     const clearMarks = () => { while (MG.children.length) MG.remove(MG.children[0]); pulse.length = 0; kick(); };
@@ -339,7 +339,8 @@
     show(0);
     return {
       stop() { stopped = true; clearInterval(typeT); clearTimeout(autoT); timers.forEach(clearTimeout); env.stage.removeEventListener('click', onTap); el.remove(); B.remove(PG); B.remove(MG); },
-      panel: el, _debug: { step: () => step, si: () => si, show, page: () => PAGES[step], done: () => done, busy: () => busy, spot: t => { const v = new TH.Vector3(...LY.spot(t)).applyMatrix4(B.matrix); return env.T3.project(v.x, v.z, v.y); }, piece: t => { const p = at(t); if (!p) return null; const v = p.m.position.clone().applyMatrix4(B.matrix); return env.T3.project(v.x, v.z, v.y); } },
+      panel: el, _debug: { rings: () => MG.children.filter(m => m.userData.piece).map(m => { const q = m.userData.piece, R = LY.pos(q.loc), sc = (x, y, z) => { const v = new TH.Vector3(x, y, z).applyMatrix4(B.matrix); return env.T3.project(v.x, v.z, v.y); };   // (on the screen: a ring left up in the air drifts off its piece — 2026-11-23 丸の位置ズレ)
+        const a = sc(m.position.x, m.position.y, m.position.z), c = sc(R[0], R[1], R[2]), e = sc(R[0] + m.userData.s, R[1], R[2]); return { loc: q.loc, ring: [m.position.x, m.position.z], piece: [q.m.position.x, q.m.position.z], r: m.userData.s, rest: R, scr: Math.hypot(a.x - c.x, a.y - c.y), scrR: Math.hypot(e.x - c.x, e.y - c.y) }; }), step: () => step, si: () => si, show, page: () => PAGES[step], done: () => done, busy: () => busy, spot: t => { const v = new TH.Vector3(...LY.spot(t)).applyMatrix4(B.matrix); return env.T3.project(v.x, v.z, v.y); }, piece: t => { const p = at(t); if (!p) return null; const v = p.m.position.clone().applyMatrix4(B.matrix); return env.T3.project(v.x, v.z, v.y); } },
     };
   }
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
