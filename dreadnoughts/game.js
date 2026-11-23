@@ -317,9 +317,9 @@ function renderBal() {
 function renderDock() {
   const el = $('#dock'); if (!tac() || !G.st) { el.innerHTML = ''; return; }
   const live = G.phase === 'battle', mine = G.st.turn === 0 && !G.busy;
-  el.innerHTML = G.st.sides[0].ships.map((s, i) => { const k = skillOf(s); if (!k) return ''; const T = E.TYPES[s.t], c = G.st.cd[0][i], dead = !E.skillLive(G.st, 0, i), calm = (k === 'twin' || k === 'rapid') && E.calmOn(G.st, 0), ready = !dead && !calm && c === 0;
+  el.innerHTML = G.st.sides[0].ships.map((s, i) => { const k = skillOf(s); if (!k) return ''; const T = E.TYPES[s.t], c = G.st.cd[0][i], dead = !E.skillLive(G.st, 0, i), calm = (k === 'twin' || k === 'rapid') && E.calmOn(G.st, 0), held = !dead && c === 0 && E.skillHeld ? E.skillHeld(G.st, 0, i) : '', ready = !dead && !calm && !held && c === 0;
     const p = dead ? 0 : Math.max(0, 1 - c / Math.max(1, T.cd));
-    return `<button class="sk ${dead ? 'lost' : ready ? 'ready' : 'wait'}${G.armed === i ? ' armed' : ''}" data-i="${i}" ${ready && live && mine ? '' : 'disabled'} style="--p:${p.toFixed(3)}" title="${t('ship.' + s.t)} — ${t('sk.' + k + '.d')}"><span class="ring"></span><span class="ic">${icon(k)}</span><b>${t('sk.' + k)}</b><small>${dead ? t('sk.lost') : calm ? t('sk.calmed') : ready ? t('sk.ready') : t('sk.wait', { n: c })}</small></button>`; }).join('');
+    return `<button class="sk ${dead ? 'lost' : ready ? 'ready' : 'wait'}${G.armed === i ? ' armed' : ''}" data-i="${i}" ${ready && live && mine ? '' : 'disabled'} style="--p:${p.toFixed(3)}" title="${t('ship.' + s.t)} — ${t('sk.' + k + '.d')}"><span class="ring"></span><span class="ic">${icon(k)}</span><b>${t('sk.' + k)}</b><small>${dead ? t('sk.lost') : calm ? t('sk.calmed') : held ? t('sk.held.' + held) : ready ? t('sk.ready') : t('sk.wait', { n: c })}</small></button>`; }).join('');
 }
 function renderViews() { $$('#views .vt').forEach(b => b.classList.toggle('on', G && +b.dataset.z === G.view)); if (G && G.st) { $('#vnFoe').textContent = G.st.sides[1].afloat; $('#vnMine').textContent = G.st.sides[0].afloat; } if (G && PHONE() && $('#strip').dataset.p !== String(G.st && G.view === 1 ? 1 : 0)) renderStrip(); }
 let toastT = 0, msgT = 0;
