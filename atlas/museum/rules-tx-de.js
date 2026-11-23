@@ -73,4 +73,15 @@
     ["Ein Stein auf der Bar muss <b>zuerst wieder hinein</b>, ins gegnerische Heimfeld (<b>19–24</b>) – aber nicht auf einen Punkt mit <b>zwei oder mehr</b> (die rote 19).", "Bring den <b>weißen Stein</b> von der Bar mit der <b>4</b> auf die <b>21</b>", "Wieder drin! Die 6 war blockiert, die 4 offen"],
     ["Sind alle fünfzehn im Heimfeld, darfst du <b>auswürfeln</b>: Nimm einen Stein vom Punkt der gewürfelten Zahl. <b>Wer zuerst alle draußen hat, gewinnt</b>!", ["Mit der <b>6</b> einen Stein von der 6 nehmen", "Mit der <b>3</b> einen Stein von der 3 nehmen"], "Genau so! Alle fünfzehn draußen und du gewinnst. Du kennst die Regeln – jetzt eine echte Partie"],
   ],
+  goose: [
+    ["Huhu, willkommen! Ich bin <b>Museule</b>. Dieses Brett für das <b>Gänsespiel</b> entstand vor rund 450 Jahren in Gujarat in Indien – vielleicht das älteste, das es noch gibt. Man würfelt und läuft auf einer Spirale um die Wette bis zur <b>63</b>"],
+    ["Der Weg windet sich über <b>63 Felder</b> nach innen. Wer zuerst am <b>Tor der 63</b> ist, gewinnt!", "Tippe das Ziel an, die <b>63</b>!", "Das ist das Ziel – mit seiner Elfenbeinblüte"],
+    ["Wenn du dran bist, wirfst du <b>zwei Würfel</b>.", "Tippe bei den Würfeln, um zu werfen!", "<b>3 und 1</b> – zusammen vier!"],
+    ["Du ziehst die <b>Summe der beiden Würfel</b>.", "Zieh deine Figur auf die <b>4</b>", "Gut. Das X-artige Zeichen ist die 4 dieses Bretts"],
+    ["Auf einer <b>Gans</b> ziehst du <b>dieselbe Zahl noch einmal</b>! 3 und 2 sind 5. Die 9 ist eine Gans, die 14 auch …", ["Zur Gans auf der <b>9</b>", "Fünf weiter, zur Gans auf der <b>14</b>", "Noch fünf, auf die <b>19</b>!"], "Von Gans zu Gans in einem Zug!"],
+    ["Aber eine Neun gleich zu Beginn flöge von Gans zu Gans bis ins Ziel. Darum führt <b>6 und 3 beim ersten Wurf auf die 26</b> und <b>5 und 4 auf die 53</b> – die Felder mit den Würfeln.", "<b>6 und 3</b>! Zieh auf die <b>26</b>", "Auf den Würfeln. Eine kluge Regel, nicht wahr?"],
+    ["Manche Felder beißen. Der <b>Brunnen (31)</b>: 2 Runden aussetzen. Das <b>Labyrinth (42)</b>: zurück auf 39. Das <b>Boot (52)</b>: 3 Runden aussetzen. Und das <b>Skelett (58)</b> … zurück zum Start! Landest du beim Gegner, tauscht ihr die Plätze.", "Probier es: zieh auf die <b>58</b>", "Huch – zurück zum Start! Pass im echten Spiel auf"],
+    ["Die <b>63</b> muss man <b>genau</b> treffen. Was zu viel ist, zieht man <b>wieder zurück</b>. Du stehst auf 60: Eine Drei bringt dich ins Ziel!", "<b>2 und 1</b>! Zieh auf die <b>63</b>", "Im Ziel – du gewinnst! Du kennst die Regeln – jetzt ein echtes Spiel"],
+  ],
+  'goose-ch': [["Huhu, willkommen! Ich bin <b>Museule</b>. Die andere Seite dieses Bretts ist ein <b>Schachbrett</b> aus Elfenbein und Ebenholz, mit einem winzigen runden Mosaik in jedem Feld. Figuren sind nicht erhalten, also leihe ich mir die des Atlas"]],
 };

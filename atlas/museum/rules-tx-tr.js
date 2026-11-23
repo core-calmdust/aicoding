@@ -73,4 +73,15 @@
     ["Bardaki pul <b>başka hamleden önce girmelidir</b>: rakibin iç hanesine (<b>19–24</b>) — ama <b>iki ve daha çok</b> pul olan haneye değil (kırmızı 19).", "Bardaki <b>beyaz pulu</b> <b>4</b> ile <b>21</b>’e sok", "Girdi! 6 kapalıydı, 4 açık"],
     ["On beşi de iç hanedeyken pulları <b>toplayabilirsin</b>: atılan sayının hanesinden bir pul al. <b>Hepsini ilk toplayan kazanır</b>!", ["<b>6</b> ile 6’dan bir pul topla", "<b>3</b> ile 3’ten bir pul topla"], "İşte böyle! On beşi de toplanınca kazanırsın. Kuralları biliyorsun — şimdi gerçek bir oyun dene"],
   ],
+  goose: [
+    ["Huu, hoş geldin! Ben <b>Müzebaykuş</b>. Bu <b>Kaz Oyunu</b> tahtası yaklaşık 450 yıl önce Hindistan’ın Gucerat bölgesinde yapıldı; belki de günümüze kalan en eskisi. Zar atıp sarmal yolda <b>63</b>’e kadar yarışırsın"],
+    ["Yol içe doğru kıvrılan <b>63 hane</b>. <b>63’teki kapıya</b> ilk varan kazanır!", "Hedefe, <b>63</b>’e dokun!", "İşte hedef; fildişi çiçeğiyle"],
+    ["Sıran gelince <b>iki zar</b> atarsın.", "Atmak için zarların yanına dokun!", "<b>3 ve 1</b>: toplam dört!"],
+    ["İki zarın <b>toplamı</b> kadar ilerlersin.", "Taşını <b>4</b>’e götür", "Güzel. X’e benzeyen işaret bu tahtanın 4’ü"],
+    ["<b>Kaza</b> konarsan <b>aynı sayı kadar bir daha</b> ilerlersin! 3 ve 2 eder 5. 9 kazdır, 14 de…", ["<b>9</b>’daki kaza", "Beş daha, <b>14</b>’teki kaza", "Beş daha, <b>19</b>’a!"], "Kazdan kaza tek solukta!"],
+    ["Ama en başta dokuz gelirse kazdan kaza sona kadar uçulur. O yüzden <b>ilk atış 6 ve 3 ise 26’ya</b>, <b>5 ve 4 ise 53’e</b> gidilir: zar resimli haneler.", "<b>6 ve 3</b>! <b>26</b>’ya git", "Zarların üstünde. Akıllıca bir kural, değil mi?"],
+    ["Tehlikeli haneler de var. <b>Kuyu (31)</b>: 2 tur bekle. <b>Labirent (42)</b>: 39’a dön. <b>Kayık (52)</b>: 3 tur bekle. Ve <b>iskelet (58)</b>… başa dön! Rakibin olduğu haneye konarsan yer değiştirirsiniz.", "Dene: <b>58</b>’e git", "Eyvah, başa döndün! Gerçek oyunda dikkat et"],
+    ["<b>63</b>’e <b>tam sayıyla</b> girmelisin. Fazlası <b>geri</b> sayılır. 60’tasın: üç gelirse vardın!", "<b>2 ve 1</b>! <b>63</b>’e git", "Vardın, kazandın! Kuralları biliyorsun — şimdi gerçek bir oyun dene"],
+  ],
+  'goose-ch': [["Huu, hoş geldin! Ben <b>Müzebaykuş</b>. Bu tahtanın öbür yüzü fildişi ve abanozdan bir <b>satranç tahtası</b>; her karede minik yuvarlak bir mozaik var. Taşları günümüze ulaşmadı, o yüzden Atlas’ın taşlarını ödünç aldım"]],
 };
