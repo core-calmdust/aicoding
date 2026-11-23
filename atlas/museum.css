@@ -466,3 +466,6 @@ html.exv-rot .exv .npc-float{left:160px!important;top:50%;bottom:auto!important;
 .expcard{flex-wrap:wrap;justify-content:center;row-gap:8px}
 .exstage{container-type:inline-size}
 @container (max-width:760px){.expcard{border-radius:20px;padding:9px 12px}.expcard>b{border-inline-end:0;padding-inline-end:0;flex-basis:100%;text-align:center}}
+/* the games' own pop-ups, put on the page itself (ウル・セネト・本双六 .urtoast, ウル's throw chip .urdk, 囲碁 .gotoast): above the case while a game is on (they were under it) */
+html.exv-playing .urtoast,html.exv-playing .urdk,html.exv-playing .gotoast{z-index:140}
+html.exv-rot .urdk{rotate:90deg}

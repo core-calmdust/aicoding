@@ -193,6 +193,7 @@
     // a rules course: the top bar's room above, the guide's panel below (its height as it stands)
     const coursePad = () => { const pe = stage.querySelector('.exrul'); return [56, (pe ? pe.offsetHeight : 180) + 22]; };
     const tgtB = V.tgt.clone(); apply(); V.playing = true;
+    document.documentElement.classList.add('exv-playing');   // (the games' own pop-ups on the page — ロゼット！もう一回, the throw chip … — come above the case: museum.css)
     const hid = (CM && def.courseShow ? [] : (V.obj.userData.play && V.obj.userData.play.hide) || []).filter(m => m.visible); hid.forEach(m => { m.visible = false; });   // the pieces and sticks laid out for show: put away during a game
     // beating the level's Atlamo boss gives its N / R / SR (no talk in the museum: quiet, 2026-11-23 user) — as in the portal's AI games (npc/npc.js), here in the case
     const npcT = !CM && (o.mode || 'ai') === 'ai' && window.AtlasNPC && AtlasNPC.portal ? AtlasNPC.portal({ game: def.game, level: o.level, quiet: true, host: V.ov,
@@ -217,7 +218,7 @@
     (c.shown || []).forEach(b => { if (b.parent) b.parent.remove(b); c.board.add(b); });   // (disposed with the board below, keeping what the exhibit shares)
     { const keep = new Set(); V.obj.traverse(o => { if (o.geometry) keep.add(o.geometry); (Array.isArray(o.material) ? o.material : o.material ? [o.material] : []).forEach(m => { keep.add(m); for (const k in m) if (m[k] && m[k].isTexture) keep.add(m[k]); }); });   // (what the game made is freed; the exhibit's own parts stay)
       c.board.traverse(o => { if (o.geometry && !keep.has(o.geometry)) o.geometry.dispose(); (Array.isArray(o.material) ? o.material : o.material ? [o.material] : []).forEach(m => { if (keep.has(m)) return; for (const k in m) if (m[k] && m[k].isTexture && !keep.has(m[k])) m[k].dispose(); m.dispose(); }); }); }
-    (c.hid || []).forEach(m => { m.visible = true; });
+    (c.hid || []).forEach(m => { m.visible = true; }); document.documentElement.classList.remove('exv-playing');
     if (V.flip && c.f0 != null) V.flip.to = c.f0;   // (turned back the way it lay)
     if (V.key) { V.key.intensity = c.L0.key; if (c.L0.kp) V.key.position.copy(c.L0.kp); } (c.L0.hemi || []).forEach(([o, i]) => { o.intensity = i; }); V.scene.environmentIntensity = c.L0.env; V.ov.classList.remove('exv-rot'); document.documentElement.classList.remove('exv-rot'); V.tgtBase = null; V.panLim = 0; V.home = c.L0.home; V.playing = false; V.pitMax = 0; if (c.tgt0) V.tgt.copy(c.tgt0); if (V.home && window.AtlasGallery) AtlasGallery.tween(V.home);
     if (V.R) V.R.shadowMap.needsUpdate = true; if (window.AtlasGallery) AtlasGallery.go();
