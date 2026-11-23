@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 134;
+  const V = 135;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -28,12 +28,14 @@
     // (「シャルルマーニュのチェス駒」は取り下げ中：公開できる水準に届かないため 2026-11-22。モデル ex/charlemagne.js と解説文は残してある。戻すときは museum-spec.md を参照)
     { id: 'nishapur', game: 'chess', cm: 1, view: [.9, .55, .78],
       spots: [[2.5, 5.2, 10.25], [-2.5, 4.7, 10.25], [-7.5, 5.0, 10.25], [-12.5, 4.6, 10.25], [-17.5, 3.4, 10.25], [-1.3, 3.1, 3.75], [2.5, 5.2, -10.25]] },
+    { id: 'goose', game: 'chess', cm: 1, flip: true, view: [0, .95, .82],   // (The Met 62.14: the goose side up, chess underneath)
+      spots: [[.06, 2.6, 7.22], [-.25, 2.6, -15.4], [-14.04, 2.6, -1.8], [-8.26, 2.6, 9.75], [10.55, 2.6, .13], [-5.58, 2.6, -9.96], [-9.47, 2.6, 2.41], [9.66, 2.6, 13.6], [1.7, .3, -1.7], [17.4, .15, -8.6], [18.2, 0, 0]], side: [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1] },
     { id: 'ottoman', game: 'backgammon', cm: 1, flip: true, view: [0, .95, .82], lock: { game: 'backgammon', ach: 3 },
       spots: [[-21.5, 2.1, -15], [-14.1, 2.1, 0], [-27.6, 2.55, 12], [-8.2, 0, 2.7], [-2.7, 0, 8.1], [-24.9, 0, 0], [-24.9, 0, -24.8], [28.3, 1.0, 12]], side: [0, 0, 0, 1, 1, 1, 1, 1] },
     { id: 'kofukuji', game: 'shogi', cm: 1, view: [0, .95, .78], lock: { game: 'shogi', ach: 3 } },   // (spots: from the model's userData)
   ];
   const T = l => (window.MUSEUM_GAL_T && (MUSEUM_GAL_T[l] || MUSEUM_GAL_T.en)) || {};
-  const PLAY = { ballinderry: { game: 'tafl', levels: 30, long: true }, senet: { game: 'senet', levels: 20, long: true }, shosoin: { game: 'go', levels: 37 }, sugoroku: { game: 'sugoroku', levels: 20, long: true }, ur: { game: 'ur', levels: 20, long: true }, ottoman: { game: 'chess', levels: 33, alt: { key: 'ottoman-bg', game: 'backgammon', levels: 10, src: 'games/backgammon-museum.js' } } };   // (ottoman: no museum rules course yet — the portal's own tour teaches it)   // (levels: the game's own count — the names come from its adapter once it has loaded)   // 所蔵品で遊ぶ (2026-11-22): the exhibits that can be played on, and the game (and board size) that plays them
+  const PLAY = { ballinderry: { game: 'tafl', levels: 30, long: true }, senet: { game: 'senet', levels: 20, long: true }, shosoin: { game: 'go', levels: 37 }, sugoroku: { game: 'sugoroku', levels: 20, long: true }, ur: { game: 'ur', levels: 20, long: true }, goose: { game: 'goose', levels: 1, alt: { key: 'goose-ch', game: 'chess', levels: 33 } }, ottoman: { game: 'chess', levels: 33, alt: { key: 'ottoman-bg', game: 'backgammon', levels: 10, src: 'games/backgammon-museum.js' } } };   // (ottoman: no museum rules course yet — the portal's own tour teaches it)   // (levels: the game's own count — the names come from its adapter once it has loaded)   // 所蔵品で遊ぶ (2026-11-22): the exhibits that can be played on, and the game (and board size) that plays them
   const ui = (l, k) => { const a = T(l).ui || {}, b = T('en').ui || {}; return a[k] != null ? a[k] : (b[k] != null ? b[k] : k); };
   const ex = (l, id) => Object.assign({}, (T('en').ex || {})[id] || {}, (T(l).ex || {})[id] || {});
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -132,7 +134,7 @@
             if (B && (N.isCel(g, n) ? n === N.CEL[g] + 1 : (n - 1) % 3 === 0)) { const i = N.band(g, n), b = B[i], top = N.top(g, i);
               h += `<div class="expdd-boss${top ? ' ur' : ''}"><img src="../images/atlas/av/${N.bossId(g, i)}-${top ? 3 : 2}.webp?v=1" alt="" loading="lazy"><div><small>${esc(N.range(g, i))}${top ? ' · UR' : ''}</small><b>${esc(b.n[lang] || b.n.en)}</b>${ttl && ttl[i] ? `<small>${esc(ttl[i])}</small>` : ''}</div></div>`; }
             const t = B ? N.tier(g, n) : -1, rw = t >= 0 ? `<i class="rw r${t}${own(n) ? ' got' : ''}">${['N', 'R', 'SR'][t]}</i>` : '', im = B ? `<img hidden src="../images/atlas/av/${N.bossId(g, N.band(g, n))}-${t < 0 ? 3 : t}.webp?v=1" alt="">` : '';
-            h += `<button type="button" role="option" data-v="${n}" data-lb="Lv.${n}">${im}<b>Lv.${n}</b><span class="nt">${esc(nm(n))}</span>${rw}${own(n) ? '<i class="ck">✓</i>' : ''}</button>`; }
+            h += `<button type="button" role="option" data-v="${n}" data-lb="${P.levels === 1 ? 'AI' : 'Lv.' + n}">${im}<b>${P.levels === 1 ? 'AI' : 'Lv.' + n}</b><span class="nt">${esc(nm(n))}</span>${rw}${own(n) ? '<i class="ck">✓</i>' : ''}</button>`; }
           lvS.querySelector('.expdd-l').innerHTML = h; setDD(lvS, lvS.dataset.want != null ? lvS.dataset.want : lvS.dataset.v); delete lvS.dataset.want; };
         ov.fillLv = fillLv;
         const loadLv = () => { Promise.all([need(), window.AtlasNPC && AtlasNPC.ensure ? AtlasNPC.ensure(lang).catch(() => {}) : 0]).then(fillLv);

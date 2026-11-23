@@ -73,4 +73,15 @@
     ["Uma peça na barra tem de <b>entrar antes de qualquer outro lance</b>, na casa interior adversária (<b>19–24</b>) — mas não numa casa com <b>duas ou mais</b> (a 19 vermelha).", "Entra com a <b>peça branca</b> da barra com o <b>4</b>, na <b>21</b>", "De volta! O 6 estava bloqueado, o 4 livre"],
     ["Com as quinze na tua casa interior podes <b>retirá-las</b>: tira uma peça da casa do número lançado. <b>Ganha quem retirar primeiro as quinze</b>!", ["Com o <b>6</b>, retira uma da 6", "Com o <b>3</b>, retira uma da 3"], "É isso! As quinze fora e ganhas. Já sabes as regras: experimenta uma partida a sério"],
   ],
+  goose: [
+    ["Uuh, bem-vindo! Sou <b>Museoruja</b>. Este tabuleiro do <b>jogo do ganso</b> foi feito no Guzerate, na Índia, há uns 450 anos — talvez o mais antigo que resta. Lançam-se dados e corre-se por uma espiral até ao <b>63</b>"],
+    ["O caminho enrola-se para dentro em <b>63 casas</b>. Ganha quem chegar primeiro à <b>porta do 63</b>!", "Toca na meta, o <b>63</b>!", "É essa a meta, com a sua flor de marfim"],
+    ["Na tua vez lanças <b>dois dados</b>.", "Toca perto dos dados para lançar!", "<b>3 e 1</b>: quatro ao todo!"],
+    ["Avanças a <b>soma dos dois números</b>.", "Leva a tua peça ao <b>4</b>", "Boa. Esse sinal parecido com um X é o 4 deste tabuleiro"],
+    ["Se caíres num <b>ganso</b>, avanças <b>outra vez o mesmo</b>! 3 e 2 são 5. O 9 é ganso, o 14 também…", ["Para o ganso do <b>9</b>", "Mais cinco, para o ganso do <b>14</b>", "Mais cinco, para o <b>19</b>!"], "De ganso em ganso, de uma assentada!"],
+    ["Mas um nove logo no início voaria de ganso em ganso até ao fim. Por isso, <b>6 e 3 no primeiro lançamento vão para o 26</b>, e <b>5 e 4 para o 53</b>: as casas dos dados.", "<b>6 e 3</b>! Vai para o <b>26</b>", "Nos dados. Uma regra engenhosa, não é?"],
+    ["Há casas que mordem. O <b>poço (31)</b>: 2 vezes sem jogar. O <b>labirinto (42)</b>: volta ao 39. O <b>barco (52)</b>: 3 vezes sem jogar. E o <b>esqueleto (58)</b>… volta ao início! Se caíres onde está o adversário, trocam de lugar.", "Experimenta: vai para o <b>58</b>", "Ai, volta ao início! Cuidado no jogo a sério"],
+    ["É preciso chegar ao <b>63 exato</b>. O que sobra <b>recua-se</b>. Estás no 60: com um três chegas!", "<b>2 e 1</b>! Vai para o <b>63</b>", "Meta — ganhaste! Já sabes as regras: experimenta uma partida a sério"],
+  ],
+  'goose-ch': [["Uuh, bem-vindo! Sou <b>Museoruja</b>. A outra face deste tabuleiro é um <b>tabuleiro de xadrez</b> de marfim e ébano, com um minúsculo mosaico redondo em cada casa. Não restam peças, por isso uso as do Atlas"]],
 };

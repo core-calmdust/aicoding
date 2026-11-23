@@ -73,4 +73,15 @@
     ["Una ficha en la barra debe <b>entrar antes de mover otra</b>, en la casa rival (<b>19–24</b>), pero no en un punto con <b>dos o más</b> (el 19 rojo).", "Entra la <b>ficha blanca</b> de la barra con el <b>4</b>, al <b>21</b>", "¡De vuelta! El 6 estaba bloqueado, el 4 libre"],
     ["Con las quince en tu casa puedes <b>sacarlas</b>: retira una ficha del punto del número tirado. ¡<b>Gana quien saca primero las quince</b>!", ["Con el <b>6</b>, saca una del 6", "Con el <b>3</b>, saca una del 3"], "¡Eso es! Las quince fuera y ganas. Ya sabes las reglas: prueba una partida de verdad"],
   ],
+  goose: [
+    ["¡Uuh, bienvenido! Soy <b>Museúho</b>. Este tablero del <b>juego de la oca</b> se hizo en Guyarat, en la India, hace unos 450 años: quizá el más antiguo que queda. Se tiran dados y se corre por una espiral hasta el <b>63</b>"],
+    ["El camino gira hacia dentro por <b>63 casillas</b>. ¡Gana quien llega primero a la <b>puerta del 63</b>!", "¡Toca la meta, el <b>63</b>!", "Esa es la meta, con su flor de marfil"],
+    ["En tu turno tiras <b>dos dados</b>.", "¡Toca cerca de los dados para tirar!", "¡<b>3 y 1</b>: cuatro en total!"],
+    ["Avanzas la <b>suma de los dos números</b>.", "Lleva tu ficha al <b>4</b>", "Bien. Ese signo parecido a una X es el 4 de este tablero"],
+    ["Si caes en una <b>oca</b>, avanzas <b>otra vez lo mismo</b>. 3 y 2 son 5. El 9 es oca, el 14 también…", ["A la oca del <b>9</b>", "Cinco más, a la oca del <b>14</b>", "¡Cinco más, al <b>19</b>!"], "¡De oca a oca y tiro porque me toca!"],
+    ["Pero un nueve al empezar volaría de oca en oca hasta el final. Por eso, <b>si la primera tirada es 6 y 3 se va al 26</b>, y <b>si es 5 y 4, al 53</b>: las casillas de los dados.", "¡<b>6 y 3</b>! Ve al <b>26</b>", "En los dados. Una regla ingeniosa, ¿verdad?"],
+    ["Hay casillas que muerden. El <b>pozo (31)</b>: 2 turnos sin jugar. El <b>laberinto (42)</b>: vuelve al 39. La <b>barca (52)</b>: 3 turnos sin jugar. Y el <b>esqueleto (58)</b>… ¡a la salida! Si caes donde está el rival, cambiáis de sitio.", "Prueba: ve al <b>58</b>", "¡Ay, a la salida! Cuidado en la partida de verdad"],
+    ["Hay que llegar al <b>63 exacto</b>. Lo que sobra se <b>retrocede</b>. Estás en el 60: ¡con un tres llegas!", "¡<b>2 y 1</b>! Ve al <b>63</b>", "¡Meta, has ganado! Ya sabes las reglas: prueba una partida de verdad"],
+  ],
+  'goose-ch': [["¡Uuh, bienvenido! Soy <b>Museúho</b>. La otra cara de este tablero es un <b>tablero de ajedrez</b> de marfil y ébano, con un diminuto mosaico redondo en cada casilla. No se conservan piezas, así que tomo prestadas las del Atlas"]],
 };
