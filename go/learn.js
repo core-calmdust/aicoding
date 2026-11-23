@@ -146,7 +146,7 @@ $('#rulesClose').onclick = () => closeRules();
 let LESSONS = null;
 // (2026-11-15) read when the lessons are first opened, not with the page (0.9MB)
 let lessonsP = null;
-const lessonsLoad = () => lessonsP || (lessonsP = fetch('lessons.json?v=20261123c').then(r => r.json()).then(d => (LESSONS = d)).catch(() => { lessonsP = null; return null; }));
+const lessonsLoad = () => lessonsP || (lessonsP = fetch('lessons.json?v=20261123d').then(r => r.json()).then(d => (LESSONS = d)).catch(() => { lessonsP = null; return null; }));
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
