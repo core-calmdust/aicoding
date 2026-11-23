@@ -107,9 +107,27 @@
           if (!headFine) [-1, 1].forEach(sx => { for (let k = 0; k < 4; k++) I.line(g, [[sx * (1.45 + k * .2), 2.6 + k * .2], [sx * (1.7 + k * .13), 4.6], [sx * (1.1 + k * .12), 6.3 + k * .15]], .07, -.5); }); } });
       hs.rotation.x = -Math.PI / 2; hs.position.set(0, T1 * .5, -S / 2 + .3); Pg.add(hs);
       // ---- the knob on the opposite edge: a short neck and a plain ball
-      const knobM = K.mat({ map: frameMap, color: '#d8d8d8', roughness: .4 });
-      const nk = add(new TT.CylinderGeometry(.62, .75, 1.3, 18), knobM, 0, T1 * .5, S / 2 + .55); nk.rotation.x = Math.PI / 2;
-      const ball = add(new TT.SphereGeometry(1.35, 28, 18), knobM, 0, T1 * .5, S / 2 + 2.2); ball.scale.set(1, .82, 1);
+      // (2026-11-23: it was a smooth ball with the frame's picture stretched over it. Now turned on its own profile — a collar where it
+      //  leaves the frame, a waist, a ball a little flattened at the end — with a picture and a relief of its own: the yew's grain running
+      //  round the turning, rubbed pale where hands have held it, tool marks, a few checks and dents, dirt in the collar's groove. No
+      //  close photograph of the knob was found: its wear is an estimate after the frame beside it.)
+      const KW = 512, KH = 256, kn = K.noise(71), kn2 = K.noise(72);
+      const knobPix = bump => K.tex(KW, KH, (g, w, h) => { const img = g.createImageData(w, h), d = img.data;
+        // x: round the knob (wraps); y: from the frame (0) to the end of the ball (1)
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const a = x / w * 6.2832, v = y / h, i = (y * w + x) * 4, cx = Math.cos(a) * 3, sx = Math.sin(a) * 3;
+          const ring = .5 + .5 * Math.sin(v * 150 + kn(cx, sx, 2) * 5), fine = kn2(cx * 9, v * 6 + sx * 9, 2), big = kn(cx * .8 + 5, sx * .8 + v * 2.2, 3);
+          const rub = Math.max(0, Math.min(1, (v - .42) * 2.4)) * Math.max(0, big - .32) * 1.9;                 // the ball's crown, worn by the hand
+          const chk = kn2(cx * 14 + 20, v * 1.6 + sx * 14, 1), check = chk > .9 ? (chk - .9) * 10 : 0;        // checks along the grain
+          const dent = Math.max(0, kn(cx * 4 + 9, sx * 4 + v * 14, 2) - .7) * 3.3, groove = Math.max(0, 1 - Math.abs(v - .2) / .035);
+          if (bump) { const hgt = 150 + ring * 26 + (fine - .5) * 40 - check * 120 - dent * 90 - groove * 70 + rub * 20; d[i] = d[i + 1] = d[i + 2] = Math.max(0, Math.min(255, hgt)); }
+          else { let k = .46 + ring * .12 + big * .3 + (fine - .5) * .16; k *= 1 - check * .6 - dent * .35 - groove * .5;
+            let r = 62 * k, g2 = 43 * k, b = 28 * k; r += (168 - r) * rub * .55; g2 += (122 - g2) * rub * .55; b += (78 - b) * rub * .55; d[i] = r; d[i + 1] = g2; d[i + 2] = b; }
+          d[i + 3] = 255; }
+        g.putImageData(img, 0, 0); }, bump ? { data: true } : undefined);
+      const knobM = K.mat({ map: knobPix(false), bumpMap: knobPix(true), bumpScale: 1.6, color: '#ffffff', roughness: .46, clearcoat: .18, clearcoatRoughness: .5 });
+      { const prof = [[.86, 0], [.9, .12], [.8, .3], [.6, .5], [.56, .8], [.6, 1.05], [.78, 1.3], [1.02, 1.55], [1.22, 1.85], [1.33, 2.2], [1.36, 2.55], [1.3, 2.9], [1.16, 3.2], [.94, 3.45], [.64, 3.63], [.3, 3.73], [.001, 3.76]];
+        const kg = new TT.LatheGeometry(prof.map(([r, y]) => new TT.Vector2(r, y)), 40); kg.rotateX(Math.PI / 2);
+        const kb = add(kg, knobM, 0, T1 * .5, S / 2 - .1); kb.scale.set(1, .84, 1); }
       G.userData.holes = HOLES.map(([u, v]) => [v, -u]);   // (for play: in the model's own axes — the head at −x)
       return G;
     },

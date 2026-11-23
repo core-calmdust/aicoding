@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 126;
+  const V = 127;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -107,7 +107,9 @@
         const sheetQ = matchMedia('(max-width:640px) and (orientation:portrait)');   // (phones held upright: the list as a sheet over the whole case — the card's corner is too small for it)
         const shut = () => { ov.querySelectorAll('.expdd.open').forEach(d => d.classList.remove('open')); const l = ov.querySelector('.expdd-l.sheet'); if (l) { l.classList.remove('sheet'); l._dd.appendChild(l); } const bk = ov.querySelector('.expdd-bk'); if (bk) bk.remove(); };
         [lvS].forEach(dd => { dd.querySelector('.expdd-b').onclick = ev => { ev.stopPropagation(); if (lock) return; const was = dd.classList.contains('open'); shut(); if (!was) { dd.classList.add('open'); const l = dd.querySelector('.expdd-l');
-            if (sheetQ.matches) { l._dd = dd; l.classList.add('sheet'); const bk = document.createElement('div'); bk.className = 'expdd-bk'; ov.appendChild(bk); ov.appendChild(l); }
+            // (always a sheet over the case, as the portal's level list is — 2026-11-23: inside the card the list could not be scrolled on a
+            //  computer (the case takes the wheel for zooming), so the Atlamo further down could not be reached)
+            { l._dd = dd; l.classList.add('sheet'); l.classList.toggle('pc', !sheetQ.matches); const bk = document.createElement('div'); bk.className = 'expdd-bk'; ov.appendChild(bk); ov.appendChild(l); }
             const on = l.querySelector('.on'); if (on) on.scrollIntoView({ block: 'center' }); } };
           dd.querySelector('.expdd-l').onclick = ev => { ev.stopPropagation(); const b = ev.target.closest('button[data-v]'); if (b) { shut(); setDD(dd, b.dataset.v); } }; });
         const setSd = v => { v = +v === 2 ? 2 : 1; sdS.dataset.v = v; sdS.querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.v === v)); };   // 手番: 先手 / 後手, two buttons side by side (as on the portal's card)
