@@ -5,7 +5,7 @@
 "ls.b_move.goal": "Mova o rei até a borda do tabuleiro (os cantos ainda estão longe).",
 "ls.b_move.hint": "O anel dourado é o rei. Procure na fileira e na coluna dele uma direção sem peças até a borda.",
 "ls.b_move.why": "Com {m} o rei chegou à borda.",
-"ls.b_move.ng": "{x} não chega à borda. {m}, por exemplo, chegava.",
+"ls.b_move.ng": "Com {x} o rei não chega à borda. Com {m}, por exemplo, chegava.",
 "ls.b_cap.title": "Capturar prendendo",
 "ls.b_cap.sub": "Pelos dois lados de uma fileira ou coluna",
 "ls.b_cap.intro": "<p>Prenda uma peça rival <b>entre duas suas numa fileira ou coluna</b> e ela é capturada. Só captura <b>o lado que joga</b>.</p><p class=\"note\">O rei ajuda os defensores a capturar. Diagonais não contam.</p>",

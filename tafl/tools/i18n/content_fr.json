@@ -5,7 +5,7 @@
 "ls.b_move.goal": "Amenez le roi au bord du plateau (les coins sont encore loin).",
 "ls.b_move.hint": "L’anneau doré est le roi. Cherchez sur sa rangée et sa colonne une direction sans pièce jusqu’au bord.",
 "ls.b_move.why": "Avec {m}, le roi a atteint le bord.",
-"ls.b_move.ng": "{x} n’atteint pas le bord. {m}, par exemple, y arrivait.",
+"ls.b_move.ng": "Avec {x}, le roi n’atteint pas le bord. Avec {m}, par exemple, il y arrivait.",
 "ls.b_cap.title": "Prise en tenaille",
 "ls.b_cap.sub": "Des deux côtés d’une rangée ou d’une colonne",
 "ls.b_cap.intro": "<p>Une pièce adverse prise <b>entre deux des vôtres sur une rangée ou une colonne</b> est capturée. Seul <b>le camp qui joue</b> capture.</p><p class=\"note\">Le roi aide les défenseurs à capturer. Les diagonales ne comptent pas.</p>",

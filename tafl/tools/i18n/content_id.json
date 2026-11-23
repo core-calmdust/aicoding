@@ -5,7 +5,7 @@
  "ls.b_move.goal": "Pindahkan raja ke tepi papan (sudutnya masih jauh).",
  "ls.b_move.hint": "Cincin emas adalah raja. Cari di baris dan kolomnya arah yang tidak ada bidak sampai ke tepi.",
  "ls.b_move.why": "Dengan {m} raja mencapai tepi.",
- "ls.b_move.ng": "{x} tidak sampai ke tepi. Misalnya {m} sampai.",
+ "ls.b_move.ng": "Dengan {x} raja tidak sampai ke tepi. Misalnya dengan {m} raja sampai.",
  "ls.b_cap.title": "Tangkap dengan mengapit",
  "ls.b_cap.sub": "Dari kedua sisi baris atau kolom",
  "ls.b_cap.intro": "<p>Apit bidak lawan <b>di antara dua bidak Anda di baris atau kolom</b> dan bidak itu tertangkap. Hanya <b>pihak yang melangkah</b> yang menangkap.</p><p class=\"note\">Raja membantu pembela menangkap. Diagonal tidak dihitung.</p>",

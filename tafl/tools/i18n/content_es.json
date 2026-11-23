@@ -5,7 +5,7 @@
 "ls.b_move.goal": "Mueve al rey hasta el borde del tablero (las esquinas aún están lejos).",
 "ls.b_move.hint": "El anillo dorado es el rey. Mira por su fila y su columna una dirección sin piezas hasta el borde.",
 "ls.b_move.why": "Con {m} el rey llegó al borde.",
-"ls.b_move.ng": "{x} no llega al borde. {m}, por ejemplo, sí.",
+"ls.b_move.ng": "Con {x} el rey no llega al borde. Con {m}, por ejemplo, sí llegaba.",
 "ls.b_cap.title": "Capturar encerrando",
 "ls.b_cap.sub": "Por ambos lados de una fila o columna",
 "ls.b_cap.intro": "<p>Encierra una pieza rival <b>entre dos tuyas en una fila o columna</b> y queda capturada. Solo captura <b>el bando que mueve</b>.</p><p class=\"note\">El rey ayuda a capturar a los defensores. En diagonal no cuenta.</p>",

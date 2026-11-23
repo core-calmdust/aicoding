@@ -5,7 +5,7 @@
  "ls.b_move.goal": "Kralı tahtanın kenarına götürün (köşeler henüz uzak).",
  "ls.b_move.hint": "Altın halka kraldır. Satırında ve sütununda kenara kadar taş olmayan bir yön arayın.",
  "ls.b_move.why": "{m} ile kral kenara ulaştı.",
- "ls.b_move.ng": "{x} kenara ulaşmıyor. Örneğin {m} ulaşıyordu.",
+ "ls.b_move.ng": "{x} ile şah kenara ulaşmıyor. Örneğin {m} ile ulaşıyordu.",
  "ls.b_cap.title": "Sıkıştırarak alma",
  "ls.b_cap.sub": "Satır ya da sütunun iki yanından",
  "ls.b_cap.intro": "<p>Rakip taşı <b>satır ya da sütunda iki taşınızın arasına</b> sıkıştırın, alınır. Yalnızca <b>hamle yapan taraf</b> alır.</p><p class=\"note\">Kral savunanlara almada yardım eder. Çaprazlar sayılmaz.</p>",
