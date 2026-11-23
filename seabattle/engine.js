@@ -109,6 +109,12 @@ const TYPES = [
 const SELF = { smoke: 1, command: 1, repair: 1, mine: 1, ward: 1, rapid: 1, plate: 1, allout: 1 };   // skills that act on your own fleet (a ward does not stop them)
 // 妨害 (jam) only counts down 1 a turn: no 統率・号令・総力・補給・通商破壊 speed-up (2026-11-20 user: 電子戦艦＋司令艦 was too strong —
 // with 統率 the jam came back every 2 turns, +3 each time, so the enemy's skills never came off cooldown).
+// 2026-11-23 user: 妨害を2隻取ると強すぎる・デメリットがない — taking turns, two jammers kept every enemy skill on cooldown (+3 every
+// three turns against −1 a turn). Now a jammed side is immune to jamming for its next JAM_GUARD turns, so a second jammer adds little.
+const JAM_GUARD = 4;
+// why a ready skill can't be used right now ('' = it can): its own smoke still hangs, its own ward is still up, the foe was just jammed
+function skillHeld(st, by, i) { const k = TYPES[st.sides[by].ships[i].t].skill, M = st.sides[by], O = st.sides[1 - by];
+  return k === 'smoke' && M.fog > 0 ? 'smoke' : k === 'ward' && M.ward > 0 ? 'ward' : k === 'jam' && O.jamImm > 0 ? 'jam' : ''; }
 const JAMS = (st, side, i) => { const s = st.sides[side].ships[i]; return !!s && TYPES[s.t] && TYPES[s.t].skill === 'jam'; };
 const PASSIVE = t => !!(t.armor || t.aa || t.counter || t.rally || t.hospital || t.trace || t.pursuit || t.haste || t.net || t.plunder || t.calm);
 const AREA = { bomb: 1, volley: 1, rocket: 1, barrage: 1, strafe: 1, lance: 1, ring: 1 }, SCAN = { sonar: 1, scout: 1, radar: 1, sweep: 1, echo: 1, diag: 1, cross: 1 }, MAXMINES = 2;
@@ -292,7 +298,7 @@ function strike(st, by, cell) {      // one shell on the other side's square (no
   return res;
 }
 function pass(st, by) { const T = st.sides[1 - by]; if (T.fog > 0 && --T.fog === 0) T.fogged.fill(0); if (T.supp > 0) T.supp--; st.rapid = 0; if (st.bonus) st.bonus = 0;
-  st.turn = 1 - by; if (st.sides[st.turn].ward > 0) st.sides[st.turn].ward--; if (st.cd) { const c = st.cd[st.turn], N2 = st.sides[st.turn], h = !N2.supp && N2.ships.some((s, j) => TYPES[s.t].haste && !N2.sunk[j]) ? 2 : 1; for (let i = 0; i < c.length; i++) if (c[i] > 0) c[i] = Math.max(0, c[i] - (JAMS(st, st.turn, i) ? 1 : h)); }
+  st.turn = 1 - by; if (st.sides[st.turn].ward > 0) st.sides[st.turn].ward--; if (st.sides[st.turn].jamImm > 0) st.sides[st.turn].jamImm--; if (st.cd) { const c = st.cd[st.turn], N2 = st.sides[st.turn], h = !N2.supp && N2.ships.some((s, j) => TYPES[s.t].haste && !N2.sunk[j]) ? 2 : 1; for (let i = 0; i < c.length; i++) if (c[i] > 0) c[i] = Math.max(0, c[i] - (JAMS(st, st.turn, i) ? 1 : h)); }
   if (st.rest && st.rest[st.turn] && st.winner < 0) { st.rest[st.turn] = 0; st.log.push({ by: st.turn, cell: -1, rest: 1 }); pass(st, st.turn); } }   // (a turn lost to a mine)
 // the player to move (st.turn) shoots at `cell` of the other side. → { by, cell, hit, sunk (ship index or -1), win, again } or null
 function fire(st, cell) {
@@ -351,7 +357,7 @@ function intelCell(st, by) { const T = st.sides[1 - by], lit = new Set(st.scans[
 function plateShip(st, by) { const M = st.sides[by]; let best = -1, bv = -1; M.ships.forEach((s, i) => { if (M.sunk[i] || M.armor[i]) return; const v = M.hitsOn[i] * 10 + s.len; if (v > bv) { bv = v; best = i; } }); return best; }
 // does the enemy of `by` have a breakwater afloat (and not suppressed)? Then `by` gets no extra shots.
 function calmOn(st, by) { const T = st.sides[1 - by]; return !T.supp && T.ships.some((s, i) => TYPES[s.t].calm && !T.sunk[i]); }
-function skillReady(st, by, ship) { return !!st.cd && st.winner < 0 && st.cd[by][ship] === 0 && skillLive(st, by, ship) && !(st.sides[by].fog > 0 && TYPES[st.sides[by].ships[ship].t].skill === 'smoke') && !(st.sides[by].ward > 0 && TYPES[st.sides[by].ships[ship].t].skill === 'ward'); }   // (no new smoke while the old still hangs: re-laying it each time it ran out kept the sea hidden for good — 2026-11-23 user)
+function skillReady(st, by, ship) { return !!st.cd && st.winner < 0 && st.cd[by][ship] === 0 && skillLive(st, by, ship) && !skillHeld(st, by, ship); }   // (no new smoke while the old still hangs: re-laying it each time it ran out kept the sea hidden for good — 2026-11-23 user)
 // what a skill would do (pure): the squares that get a shell, in order, with the result — used for the effects before act()
 function preview(st, ship, cell) {
   const by = st.turn; if (!skillReady(st, by, ship)) return null;
@@ -407,6 +413,7 @@ function useSkill(st, ship, cell) {
   if (pv.skill === 'sweep') { const before = O.mines.length; O.mines = O.mines.filter(c => !pv.area.includes(c)); res.swept = before - O.mines.length; st.log[at0].sw = res.swept; }
   if (pv.skill === 'allout') st.cd[by].forEach((c, i) => { if (i !== ship && c > 0 && !JAMS(st, by, i)) st.cd[by][i] = 0; });
   if (pv.skill === 'command') st.cd[by].forEach((c, i) => { if (i !== ship && c > 0 && !JAMS(st, by, i)) st.cd[by][i] = Math.max(0, c - 4); });
+  if (pv.skill === 'jam') O.jamImm = JAM_GUARD;   // (the jammed side shrugs off the next jam for a while: two jammers can't keep it locked)
   if (pv.skill === 'jam') st.cd[1 - by].forEach((c, i) => { if (c >= 0 && skillLive(st, 1 - by, i)) st.cd[1 - by][i] = Math.min(TYPES[O.ships[i].t].cd + 3, c + 3); });
   for (const x of pv.shots) { const at = st.log.length, r = strike(st, by, x.cell); res.shots.push(r); st.log.splice(at, 0, { by, cell: r.cell, hit: r.hit, sunk: r.sunk, via: pv.skill, fog: r.fog ? 1 : 0, dent: r.dent ? 1 : 0, mine: r.mine ? 1 : 0 }); if (st.winner >= 0) break; }
   st.cd[by][ship] = TYPES[st.sides[by].ships[ship].t].cd;
@@ -689,7 +696,7 @@ function planAction(st, level, rnd, now) {
 const E = { fleetScore, DRAFT_NOISE, canReachMin, planAction, PLAN, pickCost, DUP_EXTRA, ROLE, FIELD_N, FIELD_MIX, FIELD_ONE, calmOn, NOAIM, SELF, field, skillLive, setDraftW: w => { DRAFT_W = w; }, setRepairV: x => { REPAIR_V = x; }, setMineV: x => { MINE_V = x; }, N, NN, FLEET, TOTAL, RULES, TYPES, BUDGET, MINSHIPS, MAXSHIPS, MAXSAME, PRESETS, POOL, draftNew, draftLeft, draftCan, draftCanStop, draftPick, draftAI, draftCost, validDraft, footprint, skillReady, preview, useSkill, act, chooseAction, probs, scanLeft, rng, shipCells, inside, fits, gridOf, validFleet, randomFleet, newSide, newGame, fire, quota, view, heat, jointHeat, choose, advise, winProb, shotsToFinish, levelSpec, neighbors4, neighbors8, cellName };
 for (const k of ['N', 'NN', 'BUDGET', 'MINSHIPS', 'MAXSHIPS', 'FIELD_N', 'FIELD_ONE', 'FIELD_MIX']) delete E[k];
 Object.defineProperties(E, { N: { get: () => N }, NN: { get: () => NN }, BUDGET: { get: () => BUDGET }, MINSHIPS: { get: () => MINSHIPS }, MAXSHIPS: { get: () => MAXSHIPS }, FIELD_N: { get: () => FIELD_N }, FIELD_ONE: { get: () => FIELD_ONE }, FIELD_MIX: { get: () => FIELD_MIX }, mode: { get: () => MODE } });
-E.MODES = MODES; E.setMode = setMode; E.costOf = k => costOf(k);
+E.MODES = MODES; E.setMode = setMode; E.skillHeld = skillHeld; E.JAM_GUARD = JAM_GUARD; E.costOf = k => costOf(k);
 // a game state, a side or a draft carries its mode: switch to it whenever one is handed in (the AI worker gets a plain copy of the state)
 for (const k of Object.keys(E)) { const f = E[k]; if (typeof f !== 'function' || k === 'setMode' || /^set/.test(k)) continue; E[k] = function (a) { if (a && typeof a === 'object' && a.mode && a.mode !== MODE) setMode(a.mode); return f.apply(this, arguments); }; }
 if (typeof module !== 'undefined' && module.exports) module.exports = E; else root.SeaEngine = E;
