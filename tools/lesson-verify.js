@@ -698,7 +698,7 @@ function tafl(opt) {
   (PZ.themes || []).forEach(th => (th.puzzles || []).forEach((q, j) => pool.push([`puzzle ${th.id} ${j + 1}`, q.s.b])));
   const SYM = [(r, c) => [r, c], (r, c) => [r, 10 - c], (r, c) => [10 - r, c], (r, c) => [10 - r, 10 - c], (r, c) => [c, r], (r, c) => [c, 10 - r], (r, c) => [10 - c, r], (r, c) => [10 - c, 10 - r]];
   const dist = (a, b) => { let best = 99; for (const S of SYM) { let d = 0; for (let i = 0; i < 121 && d < best; i++) { const [r, c] = S((i / 11) | 0, i % 11); if (a[i] !== b[r * 11 + c]) d++; } best = Math.min(best, d); } return best; };
-  const seen = new Map(), plain = t => String(t).replace(/[\u0001\u0002]/g, '');
+  const seen = new Map(), symSeen = new Map(), plain = t => String(t).replace(/[\u0001\u0002]/g, '');
   L.steps.forEach((st, si) => { const id = st.id; if (!TF_DONE.has(id)) return;
     let prevD = -1, firstD = null;
     st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), me = p.turn, all = p.moves(), nm = m => E.name(p, m);
@@ -724,6 +724,9 @@ function tafl(opt) {
       // ⑤
       for (const [who, b] of pool) { if (who === `${id} q${j + 1}`) continue; const e = dist(P.s.b, b); if (e <= 3) a(`⑤ ${e} squares from ${who}`); }
       for (const m of P.ok) { const k = nm(m).replace(/x.*/, ''); if (seen.has(k)) a(`⑤ the same answer ${k} as ${seen.get(k)}`); else seen.set(k, `${id} q${j + 1}`); }
+      // (2026-11-24 2巡目) the same move turned or mirrored (h4-h6xg6 = d8-d6xe6) is the same problem too: the 8 symmetries, the mover's side
+      for (const m of P.ok) { const sym = SYM.map(S => { const [a1, b1] = S(...RC(mFrom(m))), [a2, b2] = S(...RC(mTo(m))); return `${me}:${a1 * n + b1}>${a2 * n + b2}`; });
+        const hit = sym.find(k => symSeen.has(k)); if (hit && symSeen.get(hit) !== `${id} q${j + 1}`) a(`⑤ the same answer as ${symSeen.get(hit)} turned / mirrored (${nm(m)})`); sym.forEach(k => { if (!symSeen.has(k)) symSeen.set(k, `${id} q${j + 1}`); }); }
       // ⑥
       const d = id === 'b_move' ? kWrong.length : wrong.filter(m => near(p, m, me)).length;
       if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
@@ -743,10 +746,14 @@ function tafl(opt) {
         if (/味方/.test(g) && !/角|玉座/.test(g) && !k.includes('駒')) a(`⑧ the praise of ${nm(u)} 「${g}」: not against a piece`);
         const cn = g.match(/(\d+)(つ|枚)/); if (cn && +cn[1] !== c) a(`⑧ the praise of ${nm(u)} 「${g}」: ${c} taken`);
         if (/縦と横/.test(g) && capDirs(p, u).size < 2) a(`⑧ the praise of ${nm(u)} 「${g}」: not both ways`);
-        if (/角まであと少し/.test(g) && !p.clone().play(u).nb(mTo(u)).some(CORNER)) a(`⑧ the praise of ${nm(u)} 「${g}」: the king is not next to a corner`); }
+        if (/角まであと少し/.test(g) && !p.clone().play(u).nb(mTo(u)).some(CORNER)) a(`⑧ the praise of ${nm(u)} 「${g}」: the king is not next to a corner`);
+        // (2026-11-24 2巡目) the king as the other side (b_cap's intro: 王さまもはさむ仲間): the praise says so, and only then
+        const kp = p.clone().play(u).lastCaps.some(c => p.at(2 * c - mTo(u)) === 3);
+        if (/王さまと組|王さまが反対側|王さまといっしょに|王さまと味方の駒で|王さまを相方/.test(g) !== kp) a(`⑧ the praise of ${nm(u)} 「${g}」: the king ${kp ? 'is' : 'is not'} the other side`); }
       for (const m of wrong) { const raw = plain(W.ng(m)), i0 = raw.indexOf('赤い印の手'), t0 = i0 >= 0 ? raw.slice(i0) : raw, i1 = t0.indexOf('緑の印の手'), t = i1 > 0 ? t0.slice(0, i1) : t0, x = nm(m);   // (t: what the words say of yours, up to the right move
         if (/\{|undefined|NaN/.test(raw)) { a(`⑧ ${x}: 「${raw}」`); continue; }
         if (!/緑の印の手/.test(raw)) a(`⑦ ${x}: the words do not name the right move 「${raw}」`);
+        if (i0 < 0) a(`⑦ ${x}: the words do not name your move (the red mark) 「${raw}」`);   // (2026-11-24 2巡目: 「その向きは…」「動かしたのが…」)
         const q = p.clone().play(m), king = p.at(mFrom(m)) === 3, took = q.lastCaps.length;
         let c2 = 0; if (!q.res) for (const r of q.moves()) c2 = Math.max(c2, q.clone().play(r).lastCaps.length);
         if (id === 'b_move') { const notK = /王じゃない|王さまじゃない|守り手の駒|その場から動いてない|王さまじゃなかった/.test(t);
