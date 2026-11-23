@@ -1929,6 +1929,7 @@
   // one new ★ position for a drill lesson (problem i): the piece the lesson teaches (the capture / safety lessons: the pieces their stages use),
   // ★ and black pieces at random — kept when the shortest route is 2–4 moves (the king 2–5), the first move has 1–2 right answers out of
   // 3 or more (the pawn: 2 or more), no promotion on the first move, and the position is new (not a stage's, not an earlier problem's)
+  const CD_SEEN = [];   // (every drill problem made on this page, as 64 squares — no two alike across the chess lessons)
   function cdGen(s, i, seen) {
     const stg = s.stages || [], sid = s.id, R = n => Math.floor(Math.random() * n), pcs = [...new Set(stg.map(g => (cdBoard(g.fen).find(c => c && c === c.toUpperCase()) || 'Q').toLowerCase()))];
     const free = (occ, lo = 0, hi = 63) => { for (let k = 0; k < 50; k++) { const q = lo + R(hi - lo + 1); if (!occ.has(q)) { occ.add(q); return q; } } return -1; };
@@ -1953,12 +1954,17 @@
       if (S.safe && (blk.some(([q, c]) => cdAtt(Array(64).fill(0), c, q, true).includes(q0)) || stars.some(z => blk.some(([q, c]) => { const o = Array(64).fill(0); blk.forEach(([x]) => { o[x] = 2; }); return cdAtt(o, c, q, true).includes(z); })))) continue;   // (start and ★ squares not attacked)
       const key = (() => { const b = Array(64).fill(''); blk.forEach(([q, c]) => { b[q] = c; }); b[q0] = pc.toUpperCase(); return b.join(',') + '|' + stars.map(cdName).sort().join(','); })();
       if (seen.has(key)) continue;
+      // (2026-11-23 lesson loop: the same lone piece on the same square with the same ★ a lesson or two later read as the same problem
+      //  again — キングの1問目がルークの3問目と、ナイトの2問目がキングの3問目とほぼ同じ配置だった。盤（駒・黒の駒・★）を64マスで比べ、
+      //  この画面で出したどの問題とも5マス以上ちがう配置だけを使う)
+      const sq = (() => { const b = Array(64).fill('.'); blk.forEach(([q, c]) => { b[q] = c; }); stars.forEach(q => { b[q] = b[q] === '.' ? '*' : '#'; }); b[q0] = pc.toUpperCase(); return b; })();
+      if (CD_SEEN.some(o => { let d = 0; for (let k = 0; k < 64 && d < 5; k++) if (o[k] !== sq[k]) d++; return d < 5; })) continue;
       const memo = new Map(), d = cdDist(S, st, memo), hi = pc === 'k' ? 5 : 4;
       if (d < 2 || d > hi) continue;
       const ms = cdMoves(S, st); if (ms.length < (pc === 'p' ? 2 : 3) || ms.some(m => m.promo)) continue;
       ms.forEach(m => { m.d = cdDist(S, m.st, memo); }); const ok = ms.filter(m => 1 + m.d === d);
       if (!ok.length || ok.length > 2 || ok.length >= ms.length) continue;
-      seen.add(key); return { gi: i, step: 0, S, st, d, ms, ok, left: stars.length };
+      seen.add(key); CD_SEEN.push(sq); if (CD_SEEN.length > 60) CD_SEEN.shift(); return { gi: i, step: 0, S, st, d, ms, ok, left: stars.length };
     }
     return null;
   }
