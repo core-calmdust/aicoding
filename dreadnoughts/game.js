@@ -403,8 +403,8 @@ let pkSide = 0;   // the picks row on phones shows our side (0) or theirs (1)
 function shipCard(k, o) {
   o = o || {}; const T = E.TYPES[k], cost = o.cost != null ? o.cost : T.cost;
   return `<${o.tag || 'button'} class="card r${ROLE_OF(k)}${o.cls || ''}" data-k="${k}"${o.i != null ? ` data-i="${o.i}"` : ''} ${o.attrs || ''}><span class="role"></span>
-    <span class="top"><span class="cost">${cost}</span><b>${t('ship.' + k)}</b>${lenPips(T.len)}${o.pool > 1 ? `<em class="pool">×${o.pool}</em>` : ''}${E.ONE_ONLY && E.ONE_ONLY[T.k] ? `<em class="pool one">${t('pk.one')}</em>` : ''}</span>
-    <span class="art">${cardArt(T)}${portraitImg(k, T.len)}</span><span class="meta"><span class="rl">${t('dr.g' + ROLE_OF(k))}</span><span class="sz">${lenPips(T.len)}<em>${T.len}</em></span></span>
+    <span class="top"><span class="cost">${cost}</span><b>${t('ship.' + k)}</b>${lenPips(T.len)}${(() => { const one = E.ONE_ONLY && E.ONE_ONLY[T.k], n = o.pool > 1 ? '×' + o.pool : ''; return one || n ? `<em class="pool${one ? ' one' : ''}${n ? '' : ' only'}">${one ? `<span class="oneT">${t('pk.one')}${n ? ' · ' : ''}</span>` : ''}${n}</em>` : ''; })()}</span>
+    <span class="art">${cardArt(T)}${portraitImg(k, T.len)}</span><span class="meta"><span class="rl">${t('dr.g' + ROLE_OF(k))}</span><span class="sz">${lenPips(T.len)}<em>${T.len}</em></span>${E.ONE_ONLY && E.ONE_ONLY[T.k] ? `<span class="one1">${t('pk.one')}</span>` : ''}</span>
     <span class="skl">${icon(abilityKey(T))}<span>${shipSkillName(T)}</span><small>${kindOf(T)}</small></span>
     <span class="desc">${shipSkillText(T)}</span>${o.foot || '<span class="foot"></span>'}</${o.tag || 'button'}>`;
 }
