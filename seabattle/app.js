@@ -472,7 +472,7 @@ const doAction = a => a.skill ? doSkill(a) : doShot(a.cell);
 async function playerShot(cell) {
   if (!G.st || G.phase !== 'battle' || G.busy || G.st.turn !== 0 || G.view !== 'enemy') return;
   const a = G.armed != null ? { skill: skillOf(G.my[G.armed]), ship: G.armed, cell } : { cell };
-  if (a.skill ? !E.preview(G.st, a.ship, cell) : G.st.sides[1].shots[cell]) { if (a.skill) sfx('bad'); return; }
+  if (a.skill ? !E.preview(G.st, a.ship, cell) : (G.st.sides[1].shots[cell] && G.st.sides[1].shots[cell] !== 3)) { if (a.skill) sfx('bad'); return; }   // (a dented square, 3, takes another shell — 2026-11-24)
   const st = G.st; G.busy = true; G.hint = null; SB.aim($('#bsvg'), -1); renderButtons(); renderSkills();
   const res = await doAction(a); if (!res || G.st !== st) return;
   if (st.winner >= 0) return finish();
@@ -569,7 +569,7 @@ $('#newOverlay').addEventListener('click', e => { if (e.target === $('#newOverla
 // ---------- wiring ----------
 const bsvg = $('#bsvg');
 bsvg.addEventListener('pointerdown', deployDown);
-bsvg.addEventListener('pointermove', e => { if (drag) return deployMove(e); if (!PCQ.matches || !G.st || G.phase !== 'battle' || G.busy || G.st.turn !== 0 || G.view !== 'enemy') return SB.aim(bsvg, -1); const c = SB.cellAt(bsvg, e); if (G.armed != null) { if (c !== hoverCell) { hoverCell = c; renderBoards(); } return; } SB.aim(bsvg, c >= 0 && !G.st.sides[1].shots[c] ? c : -1); });
+bsvg.addEventListener('pointermove', e => { if (drag) return deployMove(e); if (!PCQ.matches || !G.st || G.phase !== 'battle' || G.busy || G.st.turn !== 0 || G.view !== 'enemy') return SB.aim(bsvg, -1); const c = SB.cellAt(bsvg, e); if (G.armed != null) { if (c !== hoverCell) { hoverCell = c; renderBoards(); } return; } SB.aim(bsvg, c >= 0 && (!G.st.sides[1].shots[c] || G.st.sides[1].shots[c] === 3) ? c : -1); });
 bsvg.addEventListener('pointerup', deployUp);
 bsvg.addEventListener('pointercancel', () => { if (drag) { G.my[drag.i] = drag.from; drag = null; renderBoards(); } });
 bsvg.addEventListener('pointerleave', () => { SB.aim(bsvg, -1); if (G.armed != null && hoverCell >= 0 && PCQ.matches) { hoverCell = -1; renderBoards(); } });
