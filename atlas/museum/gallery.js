@@ -51,7 +51,7 @@
 
   /* ---------- the room: an intro and the cards ---------- */
   function render(sec, c) {
-    ctx = c; lang = c.lang || 'ja'; host = sec;
+    ctx = c; lang = c.lang || 'ja'; host = sec; MK('gallery', seenList().filter(i => EX.some(e => e.id === i)), EX.length);
     if (!sec.querySelector('.gxgrid')) sec.innerHTML = `<p class="gxsub"></p><div class="gxguide"></div><div class="gxgrid"></div>`;
     textsFor(lang).then(() => {
       if (host !== sec) return;
@@ -308,6 +308,8 @@
   /* ---------- ミュゼフク (musowl): the museum's Atlamo, earned by looking round the collection ----------
      N one piece seen · R every regular piece · SR a special exhibit opened · SSR every piece, special ones included */
   const SEEN = 'atlas-museum-seen';
+  const MK = (r, ids, n) => { try { if (window.AtlasMuseum && AtlasMuseum.mark) AtlasMuseum.mark(r, ids, n); } catch (e) {} };   // (館内スタンプ帳)
+
   const seenList = () => { try { return JSON.parse(localStorage.getItem(SEEN) || '[]') || []; } catch (x) { return []; } };
   function ranks(L) {
     const reg = EX.filter(x => !x.lock), sp = EX.filter(x => x.lock), has = x => L.includes(x.id), r = [];
@@ -316,6 +318,7 @@
   function seen(id) {
     let L = seenList();
     if (!L.includes(id)) { L.push(id); try { localStorage.setItem(SEEN, JSON.stringify(L)); } catch (x) {} }
+    MK('gallery', L.filter(i => EX.some(e => e.id === i)), EX.length);
     reward(L);
   }
   function reward(L) {

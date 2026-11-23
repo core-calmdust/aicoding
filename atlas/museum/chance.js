@@ -326,8 +326,9 @@
     el.extra.textContent = extra; el.extra.hidden = !extra;
     el.exLab.textContent = T.approx ? u('approx') : u('exp');
   }
+  const MK = (r, ids, n) => { try { if (window.AtlasMuseum && AtlasMuseum.mark) AtlasMuseum.mark(r, ids, n); } catch (e) {} };   // (館内スタンプ帳)
   function doThrow(times) {
-    if (busy || !tool) return; const T = tool;
+    if (busy || !tool) return; const T = tool; MK('chance', T.id, TOOLS.length);
     let last = null; for (let i = 0; i < times; i++) { last = roll(T); count(T, last); }
     busy = true; el.res.textContent = ''; el.res.classList.remove('on');
     if (times > 1) hist(T);
@@ -392,7 +393,7 @@
   }
 
   function render(box, c) {
-    ctx = c; lang = (window.MUSEUM_CHANCE_T || {})[c.lang] ? c.lang : 'en';
+    ctx = c; lang = (window.MUSEUM_CHANCE_T || {})[c.lang] ? c.lang : 'en'; MK('chance', null, TOOLS.length);
     if (host !== box || !box.querySelector('.chx')) { host = box; tool = null; build(box); }
     let id = null; try { id = localStorage.getItem('atlas-chance-tool'); } catch (e) {}
     if (!tool) choose(TOOLS.some(t => t.id === id) ? id : TOOLS[0].id); else texts();

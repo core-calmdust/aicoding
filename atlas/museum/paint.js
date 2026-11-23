@@ -39,8 +39,9 @@
 
   /* ---------- the viewer ---------- */
   let ov = null, vs = null;   // the overlay; the view: { s (scale), x, y (translation, px), W, H (the picture at s = 1), fit }
+  const MK = (r, ids, n) => { try { if (window.AtlasMuseum && AtlasMuseum.mark) AtlasMuseum.mark(r, ids, n); } catch (e) {} };   // (館内スタンプ帳)
   function openWork(id, n, keep) {
-    const W = WORKS.find(w => w.id === id); if (!W) return; const was = !!cur; cur = W;
+    const W = WORKS.find(w => w.id === id); if (!W) return; MK('paint', id, WORKS.length); const was = !!cur; cur = W;
     if (!keep && !was) try { history.pushState({ ptv: 1 }, ''); } catch (e) {}   // (the back button closes the viewer)
     if (!ov) build();
     const x = wt(W.id);
@@ -135,7 +136,7 @@
   }
 
   function render(box, c) {
-    ctx = c; lang = T()[c.lang] ? c.lang : 'en';
+    ctx = c; lang = T()[c.lang] ? c.lang : 'en'; MK('paint', null, WORKS.length);
     if (host !== box || !box.querySelector('.ptx')) { host = box; box.innerHTML = `<div class="ptx"><p class="chlead ptlead"></p><div class="ptgrid"></div><p class="ptcredit"></p></div>`;
       el = { lead: box.querySelector('.ptlead'), grid: box.querySelector('.ptgrid'), credit: box.querySelector('.ptcredit') }; }
     wall();
