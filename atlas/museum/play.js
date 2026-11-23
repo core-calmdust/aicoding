@@ -126,6 +126,10 @@
         const diceAt = (side, i) => [-1.6 + i * 2.3, side ? -2.7 : 2.7];   // (in the gap between the two tables, clear of the lines of stones and the middle strip)
         g.userData = { top: Y, slot, bar, hit, stone, die, diceAt };
         return g; } },
+    // ウルの王族のゲーム盤 (2026-11-23 user: 博物館でも遊べるように、ポータルの3D盤も残す): the exhibit is the portal's own model, so the game's kit
+    // builds the same board in the same place (its pieces, trays and dice with it) and the exhibit's own is put away meanwhile (ex/ur.js: play.hide)
+    ur: { game: 'ur', size: 1, noContact: true, area: obj => { const U = obj.userData, w = (U.W || 8) / 2 + .8, d = (U.D || 3) / 2 + 1.2; return [-w, w, -d, d]; }, view: { long: true },
+      board(TH) { return new TH.Group(); } },
   };
   let cur = null;
   function start(id, o) {
@@ -133,9 +137,9 @@
     if (!def || !V || !V.obj || !TH || (!ad && !o.course) || (o.course && !window.AtlasMuseumRules)) return null;
     stop(); const CM = !!o.course;
     const board = def.board(TH, V.obj, G.kit), stage = V.ov.querySelector('.exstage'), cv = stage.querySelector('canvas');
-    const dot = new TH.CircleGeometry(1, 24); dot.rotateX(-Math.PI / 2);
+    const dot = new TH.CircleGeometry(1, 24); dot.rotateX(-Math.PI / 2); const shown = [];
     const T3 = { MODELS: (window.Table3D && Table3D.MODELS) || {},
-      show(_, b) { V.obj.add(b); this.kick(); },
+      show(_, b) { V.obj.add(b); if (b !== board) shown.push(b); this.kick(); },   // (a game that builds its own board — ウル: the exhibit IS the portal's model — puts it here; taken away at the end)
       fit() {}, kick() { if (V.R) V.R.shadowMap.needsUpdate = true; G.go(); },
       wasDrag: () => performance.now() - (V.dragEnd || 0) < 250,
       contact(r, op) { const m = new TH.Mesh(dot, new TH.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: (op || .4) * .5, depthWrite: false })); m.scale.setScalar(r); m.userData.contact = true; if (def.noContact) m.visible = false; return m; },   // (noContact: the room's own shadows are enough)
@@ -159,7 +163,7 @@
     const vert = () => { if (!def.view.long || CM || matchMedia('(min-width:900px) and (not (pointer:coarse))').matches) return false;   // (PC: always across)
         // (a rules course: always across, the guide's panel below)
       let o = ''; try { o = localStorage.getItem(OK) || ''; } catch (e) {} return o ? o === 'v' : tall(); };
-    const box = new TH.Box3().setFromObject(V.obj), A = def.area || [box.min.x, box.max.x, box.min.z, box.max.z], AY = def.top != null ? def.top : (V.obj.userData.play && V.obj.userData.play.top) || box.max.y;
+    const box = new TH.Box3().setFromObject(V.obj), A = (typeof def.area === 'function' ? def.area(V.obj) : def.area) || [box.min.x, box.max.x, box.min.z, box.max.z], AY = def.top != null ? def.top : (V.obj.userData.play && V.obj.userData.play.top) || box.max.y;
     const tgt0 = V.tgt.clone(); V.tgt.copy(V.obj.localToWorld(new TH.Vector3((A[0] + A[1]) / 2, AY, (A[2] + A[3]) / 2))); V.pitMax = 1.52;
     // rot: a long board turned lengthwise on a tall screen is a sideways board for a phone held sideways — the bar and the buttons turn with it (CSS .exv-rot)
     const rot = () => vert() && tall();
@@ -186,7 +190,7 @@
         onEnd: res => { if (npcT && !res.pvp) npcT.end(res); if (o.onEnd) o.onEnd(res); } });
     // the case changes size (a phone: it grows when the game starts; a turned phone, a resized window): frame the board again
     let rsT = 0, szW = stage.clientWidth, szH = stage.clientHeight; const ro = new ResizeObserver(() => { clearTimeout(rsT); rsT = setTimeout(() => { if (!(cur && cur.V === V && V.scene)) return; const w = stage.clientWidth, h = stage.clientHeight; if (w === szW && h === szH) return; szW = w; szH = h; apply(); }, 120); }); ro.observe(stage);   // (only when the size really changed: framing the board twice at the start looked like two moves)
-    cur = { V, ses, board, npcT, course: !!o.course, L0, dot, hid, ro, tgt0, turn() { if (o.course) return; const v = !vert(); try { localStorage.setItem(OK, v ? 'v' : 'h'); } catch (e) {} apply(); } };
+    cur = { V, ses, board, shown, npcT, course: !!o.course, L0, dot, hid, ro, tgt0, turn() { if (o.course) return; const v = !vert(); try { localStorage.setItem(OK, v ? 'v' : 'h'); } catch (e) {} apply(); } };
     if (o.course) apply();
     return { stop };
   }
@@ -195,6 +199,7 @@
     try { if (c.ses && c.ses.stop) c.ses.stop(); } catch (e) {}
     const V = c.V; if (!V || !V.scene) return;
     if (c.board.parent) c.board.parent.remove(c.board);
+    (c.shown || []).forEach(b => { if (b.parent) b.parent.remove(b); c.board.add(b); });   // (disposed with the board below, keeping what the exhibit shares)
     { const keep = new Set(); V.obj.traverse(o => { if (o.geometry) keep.add(o.geometry); (Array.isArray(o.material) ? o.material : o.material ? [o.material] : []).forEach(m => { keep.add(m); for (const k in m) if (m[k] && m[k].isTexture) keep.add(m[k]); }); });   // (what the game made is freed; the exhibit's own parts stay)
       c.board.traverse(o => { if (o.geometry && !keep.has(o.geometry)) o.geometry.dispose(); (Array.isArray(o.material) ? o.material : o.material ? [o.material] : []).forEach(m => { if (keep.has(m)) return; for (const k in m) if (m[k] && m[k].isTexture && !keep.has(m[k])) m[k].dispose(); m.dispose(); }); }); }
     (c.hid || []).forEach(m => { m.visible = true; });
