@@ -665,6 +665,12 @@ const CHECKS = {
     const L = J('xiangqi/lessons.json');
     require('./lesson-verify.js').xiangqi().forEach(fa => bad('xiangqi', String(L.steps.findIndex(s => s.id === fa.step)), `${fa.step} q${fa.q}: ${fa.msg}`));
   },
+  // (2026-11-24 第2期) shogi: the strict ①〜⑨ of the verified steps (SH_DONE: k20) — the goal set from the rules, the stored candidates,
+  // the engine, the pool, the order of the 2D and the 3D, and ショウギツネ's words for every legal move — tools/lesson-verify.js shogi
+  shogi() {
+    const L = J('shogi/lessons.json');
+    require('./lesson-verify.js').shogi().forEach(fa => bad('shogi', String(L.grades.findIndex(g => g.id === fa.step)), `${fa.step} q${fa.q}: ${fa.msg}`));
+  },
 };
 
 const todo = games.length ? games : Object.keys(CHECKS);

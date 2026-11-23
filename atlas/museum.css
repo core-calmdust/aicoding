@@ -656,11 +656,11 @@ html.ptv-open,html.ptv-open body{overflow:hidden}
 .rdct small{display:block;font-size:12.5px;font-weight:700;color:var(--ink2)}
 .rdst{display:flex;gap:10px;margin-inline-start:auto;flex-wrap:wrap}
 .rdstamp{position:relative;flex:none;width:48px;height:48px;border-radius:50%;border:2px dashed #d6c7a4;display:grid;place-items:center;overflow:hidden;background:#fff}
-.rdstamp i{position:relative;font:800 15px var(--round);font-style:normal;color:#8f7d55}
+.rdstamp i{position:relative;font:800 15px var(--round);font-style:normal;color:#73633f}
 .rdstamp img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:sepia(.35) saturate(.85)}
 .rdstamp.on{border:3px solid var(--c);box-shadow:0 0 0 2px #fff inset;transform:rotate(-8deg)}
 .rdstamp.on::after{content:"";position:absolute;inset:0;background:color-mix(in srgb,var(--c) 38%,transparent);border-radius:50%}
-.rdstamp.on i{z-index:1;color:#fff;font-size:17px;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.rdstamp.on i{z-index:1;color:#fff;font-size:17px;line-height:1.15;padding:0 5px;border-radius:99px;background:rgba(20,14,8,.5);text-shadow:0 1px 2px rgba(0,0,0,.5)}
 .rdstamp.big{width:76px;height:76px}
 .rdstamp.big i{font-size:28px}
 .rdlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
@@ -805,3 +805,27 @@ html.ptv-open,html.ptv-open body{overflow:hidden}
 .rdhimg.ga img{object-fit:contain;padding:12px 0;filter:drop-shadow(0 10px 16px rgba(0,0,0,.35))}
 .rdstamp.ga img{object-fit:contain;padding:4px;filter:none}
 .rdstamp.on.ga{background:color-mix(in srgb,var(--c) 30%,#fff)}
+/* (2026-11-24) the page-turner and search over a room's cards (AtlasMuseum.pager) */
+.mupg{display:none;align-items:center;gap:10px;margin:0 0 12px}
+.mupg.on{display:flex}
+.mupg-b{justify-content:center;margin:14px 0 0}
+.mupg-s{flex:1 1 auto;min-width:0;max-width:420px;display:flex;align-items:center;gap:6px;height:42px;padding:0 6px 0 12px;border:2px solid var(--line);border-radius:99px;background:#fff;box-shadow:0 2px 0 var(--line)}
+.mupg-s:focus-within{border-color:#c9a35a}
+.mupg-s svg{flex:none;width:18px;height:18px;fill:none;stroke:#6b5a44;stroke-width:2.2;stroke-linecap:round}
+.mupg-s input{flex:1 1 auto;min-width:0;height:100%;border:0;outline:0;background:none;font:600 15px var(--font);color:var(--ink)}
+.mupg-s input::-webkit-search-cancel-button{display:none}
+.mupg-s input::placeholder{color:#7a6c5a}
+.mupg-x{flex:none;width:30px;height:30px;border:0;border-radius:50%;background:#efe6d6;color:#4f4a44;font:700 18px/1 var(--font);cursor:pointer}
+.mupg-n{flex:none;display:flex;align-items:center;gap:6px;margin-inline-start:auto}
+.mupg-b .mupg-n{margin:0}
+.mupg-n.one{visibility:hidden}
+.mupg-a{width:42px;height:42px;display:grid;place-items:center;padding:0;border:2px solid var(--line);border-radius:50%;background:#fff;box-shadow:0 2px 0 var(--line);color:var(--ink);cursor:pointer}
+.mupg-a svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.mupg-a svg:dir(rtl){transform:scaleX(-1)}
+.mupg-a:disabled{opacity:.35;cursor:default;box-shadow:none}
+@media (hover:hover){.mupg-a:not(:disabled):hover{border-color:#c9a35a}}
+.mupg-i{min-width:58px;padding:5px 10px;border-radius:99px;background:#fff;border:2px solid var(--line);text-align:center;font:800 14px var(--font);color:var(--ink);font-variant-numeric:tabular-nums}
+.mupg-off{display:none!important}
+.mupg-none{display:none;grid-column:1/-1;margin:0;padding:28px 12px;border-radius:16px;background:#fffaf0;border:2px dashed var(--line);text-align:center;font:700 15px var(--font);color:#4f4a44}
+.mupg-none.on{display:block}
+@media (max-width:819px){.mupg{gap:8px}.mupg-s{height:40px}.mupg-a{width:38px;height:38px}.mupg-i{min-width:52px;padding:4px 8px;font-size:13px}}
