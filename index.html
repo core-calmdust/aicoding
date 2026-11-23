@@ -1325,6 +1325,20 @@ function makeGallery(C) {
   let saved = null; try { saved = localStorage.getItem(KEY); } catch (e) {}
   const h = fromHash();
   texts();
+  /* the corner badges (MUSEUM · ORIGINAL · ONLINE …) on a narrow phone: they sit 6px out from the icon's corner, so a long word ran into the
+     next icon's badge (2026-11-24 user). Each badge that would come within ~12px of the next column is narrowed — tighter letters,
+     then a smaller size (down to 7px) — so there is always a gap. Measured again when the grid's width changes or the fonts arrive. */
+  const fitBadges = () => {
+    const ics = [...grid.querySelectorAll('.gx-icon:not([hidden]) .ic')].filter(e => e.getClientRects().length); if (!ics.length) return;
+    const r0 = ics[0].getBoundingClientRect(), nx = ics.find(e => { const r = e.getBoundingClientRect(); return Math.abs(r.top - r0.top) < 2 && r.left > r0.left + 2; });
+    const lim = Math.min(r0.width + 8, nx ? nx.getBoundingClientRect().left - r0.left - 12 : 1e9);
+    grid.querySelectorAll('.gx-icon .ol').forEach(o => { o.style.fontSize = o.style.letterSpacing = o.style.paddingLeft = o.style.paddingRight = '';
+      if (!o.getClientRects().length) return; let w = o.getBoundingClientRect().width; if (w <= lim) return;
+      o.style.letterSpacing = '.02em'; o.style.paddingLeft = o.style.paddingRight = '5px'; w = o.getBoundingClientRect().width; if (w <= lim) return;
+      const fs = parseFloat(getComputedStyle(o).fontSize); o.style.fontSize = Math.max(7, fs * (lim - 10) / (w - 10)).toFixed(2) + 'px'; });
+  };
+  fitBadges(); if (document.fonts) document.fonts.ready.then(fitBadges);
+  { let fw = 0; new ResizeObserver(() => { cancelAnimationFrame(fw); fw = requestAnimationFrame(fitBadges); }).observe(grid); }
   select(h || (byId(saved) ? saved : C.games[0].id), { instant: true, force: true, silent: !h, keepScroll: true });
   if (h) requestAnimationFrame(() => document.getElementById(C.section).scrollIntoView({ block: 'start' }));
   addEventListener('hashchange', () => {
