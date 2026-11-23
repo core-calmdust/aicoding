@@ -6,12 +6,12 @@
    "course": "basics",
    "problems": [
     {
-     "b": "h6 i6 d7 h8 f9 g10 i10",
-     "w": "e7 f7 g7 i7 e8 f8",
-     "side": 2,
-     "last": "i10",
+     "b": "k5 j6 i7 j7 l7 h8 j8 j9 h10 i10",
+     "w": "i5 j5 k7 e8 k8 g9 h9 i9 f10 j10",
+     "side": 1,
+     "last": "g9",
      "ok": [
-      "h7"
+      "l4"
      ],
      "rule": "free"
     },
@@ -22,16 +22,6 @@
      "last": "j4",
      "ok": [
       "e9"
-     ],
-     "rule": "free"
-    },
-    {
-     "b": "k5 j6 i7 j7 l7 h8 j8 j9 h10 i10",
-     "w": "i5 j5 k7 e8 k8 g9 h9 i9 f10 j10",
-     "side": 1,
-     "last": "g9",
-     "ok": [
-      "l4"
      ],
      "rule": "free"
     },
@@ -52,6 +42,16 @@
      "last": "m6",
      "ok": [
       "h11"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "h6 i6 d7 h8 f9 g10 i10",
+     "w": "e7 f7 g7 i7 e8 f8",
+     "side": 2,
+     "last": "i10",
+     "ok": [
+      "h7"
      ],
      "rule": "free"
     }
@@ -272,32 +272,22 @@
    "course": "basics",
    "problems": [
     {
-     "b": "h6 j6 h8 i8 i9",
-     "w": "d9 f9 g9 h9 g10",
-     "side": 1,
-     "last": "d9",
-     "ok": [
-      "e9"
-     ],
-     "rule": "free"
-    },
-    {
-     "b": "f7 g7 h8 f9 j9 f11 j11",
-     "w": "h9 h10 i10 g11 h11 i11 h12",
-     "side": 1,
-     "last": "h12",
-     "ok": [
-      "h13"
-     ],
-     "rule": "free"
-    },
-    {
-     "b": "d6 h6 i6 h7 i7 g8 h8 i8 i9 i11",
-     "w": "e7 g7 f8 j8 g9 h9 h10 i10 g11",
+     "b": "h8 g7 i9 i6 k8 l8 j8",
+     "w": "i7 h7 j10 f6 k9 j7",
      "side": 2,
-     "last": "i6",
+     "last": "j8",
      "ok": [
-      "i5"
+      "i8"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "h8 f6 e7 g10 g6 d9",
+     "w": "g9 g7 f9 g5 e9 i9",
+     "side": 1,
+     "last": "i9",
+     "ok": [
+      "h9"
      ],
      "rule": "free"
     },
@@ -312,12 +302,22 @@
      "rule": "free"
     },
     {
-     "b": "i4 h6 g7 e8 h8 j8 g9 i9 j9 g10 j10",
-     "w": "i5 f6 g6 i6 j6 i7 i8 h9 h10 h11",
+     "b": "h8 i10 g9 i6 h6 g6 j7 e6",
+     "w": "h9 j9 i7 k9 j10 j6 l8",
      "side": 2,
-     "last": "j10",
+     "last": "e6",
      "ok": [
-      "k11"
+      "f6"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "h8 i9 k9 j7 g10 g9 i7 h10 f9 i11",
+     "w": "i8 j10 g8 j9 j8 k8 j6 f10 h9 j12",
+     "side": 1,
+     "last": "j12",
+     "ok": [
+      "j11"
      ],
      "rule": "free"
     }
@@ -537,17 +537,6 @@
    "course": "basics",
    "problems": [
     {
-     "b": "g7 g8 h8 i9",
-     "w": "f8 f9 g9",
-     "side": 2,
-     "last": "g7",
-     "ok": [
-      "f6",
-      "j10"
-     ],
-     "rule": "free"
-    },
-    {
      "b": "h7 g8 h8 h9 g10",
      "w": "g7 e8 j8 i11",
      "side": 2,
@@ -559,13 +548,13 @@
      "rule": "free"
     },
     {
-     "b": "h8 h9 j9 g10 h10 i10",
-     "w": "j7 i8 k8 i9 f10",
-     "side": 2,
-     "last": "h9",
+     "b": "h8 j7 g9 k10 g10",
+     "w": "i9 j6 f10 h10 g11",
+     "side": 1,
+     "last": "g11",
      "ok": [
-      "h7",
-      "h11"
+      "j8",
+      "f12"
      ],
      "rule": "free"
     },
@@ -589,6 +578,17 @@
       "j5",
       "g8",
       "e10"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "h8 i8 g10 k7 j9 e6 e10",
+     "w": "i9 g8 f9 h9 f7 h7 f8",
+     "side": 1,
+     "last": "f8",
+     "ok": [
+      "f6",
+      "f10"
      ],
      "rule": "free"
     }
@@ -808,57 +808,57 @@
    "course": "basics",
    "problems": [
     {
-     "b": "h6 f7 g7 h8 i8 f9 g9",
-     "w": "g4 h5 g6 i6 h7 g8",
-     "side": 2,
-     "last": "f9",
-     "ok": [
-      "f3",
-      "j7"
-     ],
-     "rule": "free"
-    },
-    {
-     "b": "h6 f7 h7 i7 g8 h8 j8 h9",
-     "w": "h5 g7 e8 i8 g9 k9 h10 j10",
-     "side": 1,
-     "last": "h10",
-     "ok": [
-      "e6",
-      "i10"
-     ],
-     "rule": "free"
-    },
-    {
-     "b": "g6 j7 h8 i8 j8 h9 j9 g10 h10",
-     "w": "k6 h7 e8 e9 g9 i10 j10 f11 j11",
-     "side": 1,
-     "last": "f11",
-     "ok": [
-      "g8",
-      "k8"
-     ],
-     "rule": "free"
-    },
-    {
-     "b": "j5 h6 i6 i7 j7 h8 l8 i9 k9 i10",
-     "w": "k6 h7 l7 i8 j8 k8 m8 j9 f10",
+     "b": "h8 j7 i8 i9 k9 i6 g6 i10",
+     "w": "i7 j8 h9 g8 h11 i11 j11",
      "side": 2,
      "last": "i10",
      "ok": [
-      "g6",
-      "k10"
+      "g11",
+      "k11"
      ],
      "rule": "free"
     },
     {
-     "b": "i6 g7 h8 e9 h9 i9 j9 h10 i10 k10 h11",
-     "w": "g5 i5 f6 j6 h7 f8 g8 k9 g10 k11 h12",
+     "b": "h8 g6 g9 h5 i6 g5 j5 h7",
+     "w": "i8 h10 i7 h6 j7 f7 g7 i5",
      "side": 1,
-     "last": "h12",
+     "last": "i5",
      "ok": [
-      "k8",
-      "g12"
+      "k4",
+      "g8"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "h8 g8 i8 j7 f7 j9 h10 j8 h12 m7 j5 k11 k6",
+     "w": "h7 f8 k8 h9 i11 g9 k9 j10 l8 k10 j6 k7",
+     "side": 2,
+     "last": "k6",
+     "ok": [
+      "i5",
+      "m9"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "h8 f9 g10 i8 g8 i6 j7 k8",
+     "w": "i7 k9 k10 i10 f8 h7 h9 j8",
+     "side": 1,
+     "last": "j8",
+     "ok": [
+      "h5",
+      "l9"
+     ],
+     "rule": "free"
+    },
+    {
+     "b": "h8 j10 g6 f8 k9 i10 k7 h9 d10 g8 g13",
+     "w": "g7 f10 h6 i8 g11 g10 f11 e10 g9 g12",
+     "side": 2,
+     "last": "g13",
+     "ok": [
+      "d9",
+      "h13"
      ],
      "rule": "free"
     }
@@ -1077,12 +1077,12 @@
    "course": "basics",
    "problems": [
     {
-     "b": "i5 f6 g6 i6 g7 h8",
-     "w": "j6 h7 e8 g8 j8 i9",
+     "b": "j6 j7 k7 m7 h8 k8 l8 c9 h9 m10",
+     "w": "i5 k6 h7 l7 j8 d9 e9 f9 g9 l9",
      "side": 1,
-     "last": "i9",
+     "last": "l9",
      "ok": [
-      "h6"
+      "m9"
      ],
      "rule": "free"
     },
@@ -1097,6 +1097,16 @@
      "rule": "free"
     },
     {
+     "b": "i5 f6 g6 i6 g7 h8",
+     "w": "j6 h7 e8 g8 j8 i9",
+     "side": 1,
+     "last": "i9",
+     "ok": [
+      "h6"
+     ],
+     "rule": "free"
+    },
+    {
      "b": "g6 f7 h7 f8 g8 h8 f9 g9",
      "w": "h5 f6 i6 j6 g7 i8 h9 j9",
      "side": 1,
@@ -1107,22 +1117,12 @@
      "rule": "free"
     },
     {
-     "b": "j6 j7 k7 m7 h8 k8 l8 c9 h9 m10",
-     "w": "i5 k6 h7 l7 j8 d9 e9 f9 g9 l9",
-     "side": 1,
-     "last": "l9",
+     "b": "h8 f9 g8 e7 e5 e8 h10 g7 i6 f4 e4 d6",
+     "w": "g9 f7 f8 h5 g6 e9 h6 f6 f5 h7 e6",
+     "side": 2,
+     "last": "d6",
      "ok": [
-      "m9"
-     ],
-     "rule": "free"
-    },
-    {
-     "b": "i6 k6 g7 l7 h8 g9 i9 j9 f10 h10 f11 j12",
-     "w": "f6 j6 h7 i7 j7 k7 f8 i8 h9 k9 g10 i10",
-     "side": 1,
-     "last": "f8",
-     "ok": [
-      "j10"
+      "h3"
      ],
      "rule": "free"
     }
