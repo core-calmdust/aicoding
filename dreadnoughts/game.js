@@ -232,10 +232,15 @@ function layoutPhone() {
   const under = !dock.closest('.hide') && dock.offsetHeight ? dock.offsetHeight : !dep.classList.contains('hide') ? dep.offsetHeight : 0;
   const b = (under + 6) + 'px'; if (st.style.bottom !== b) { st.style.bottom = b; World.refit(); }
 }
+// short labels that don't fit (a skill's or a ship's name on a phone tile) shrink to fit instead of ending in "…"; long texts scroll
+// (2026-11-23 user: 短縮になる場合はスクロールか小さくするか、良い方を)
+function fitText(root, sel, min) { root.querySelectorAll(sel).forEach(el => { el.style.fontSize = ''; el.style.letterSpacing = ''; let f = parseFloat(getComputedStyle(el).fontSize);
+  if (el.scrollWidth > el.clientWidth + 1) el.style.letterSpacing = '0';
+  while (el.scrollWidth > el.clientWidth + 1 && f > min) { f -= .5; el.style.fontSize = f + 'px'; } }); }
 function renderStrip() {
   const el = $('#strip'); if (!PHONE() || !G || !(G.phase === 'deploy' || G.phase === 'battle' || G.phase === 'over')) { el.innerHTML = ''; return; }
   const p = G.st && G.view === 1 ? 1 : 0, sd = G.st ? G.st.sides[p] : null, ships = G.st ? sd.ships : G.my;
-  el.innerHTML = ships.map((s, i) => fleetItem(s, i, sd, p === 0)).join(''); el.dataset.p = p; fillPortraits(el); spotTip();
+  el.innerHTML = ships.map((s, i) => fleetItem(s, i, sd, p === 0)).join(''); el.dataset.p = p; fillPortraits(el); fitText(el, '.fi b', 8.5); spotTip();
 }
 // (2026-11-23 the user) deployment on phones: a tap on a ship in the strip lights it on the sea and shows its skill in one line above the strip
 let spot = -1;
@@ -331,6 +336,7 @@ function renderDock() {
   el.innerHTML = G.st.sides[0].ships.map((s, i) => { const k = skillOf(s); if (!k) return ''; const T = E.TYPES[s.t], c = G.st.cd[0][i], dead = !E.skillLive(G.st, 0, i), calm = (k === 'twin' || k === 'rapid') && E.calmOn(G.st, 0), held = !dead && c === 0 && E.skillHeld ? E.skillHeld(G.st, 0, i) : '', ready = !dead && !calm && !held && c === 0;
     const p = dead ? 0 : Math.max(0, 1 - c / Math.max(1, T.cd));
     return `<button class="sk ${dead ? 'lost' : ready ? 'ready' : 'wait'}${G.armed === i ? ' armed' : ''}" data-i="${i}" ${ready && live && mine ? '' : 'disabled'} style="--p:${p.toFixed(3)}" title="${t('ship.' + s.t)} — ${t('sk.' + k + '.d')}"><span class="ring"></span><span class="ic">${icon(k)}</span><b>${t('sk.' + k)}</b><small>${dead ? t('sk.lost') : calm ? t('sk.calmed') : held ? t('sk.held.' + held) : ready ? t('sk.ready') : t('sk.wait', { n: c })}</small></button>`; }).join('');
+  if (PHONE()) fitText(el, '.sk b, .sk small', 8.5);
 }
 function renderViews() { $$('#views .vt').forEach(b => b.classList.toggle('on', G && +b.dataset.z === G.view)); if (G && G.st) { $('#vnFoe').textContent = G.st.sides[1].afloat; $('#vnMine').textContent = G.st.sides[0].afloat; } if (G && PHONE() && $('#strip').dataset.p !== String(G.st && G.view === 1 ? 1 : 0)) renderStrip(); }
 let toastT = 0, msgT = 0;
