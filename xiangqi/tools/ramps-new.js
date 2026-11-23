@@ -36,7 +36,9 @@ const TEXT = {
   b_mate1: { t: P('王手をかけて、逃げ道をなくす', 'Check, with no way out'),
     body: P('<p>王手をかけて、相手がどうやっても王手をはずせなければ<b>詰み</b>で勝ちです。將（帥）は九宮から出られないので、逃げ道は少ししかありません。</p><p>光っている駒を<b>緑の点</b>へ動かすと詰みです。</p>',
       '<p>Give check so that nothing can stop it: that is <b>checkmate</b>, and you win. The general cannot leave its palace, so it has few escapes.</p><p>Moving the glowing piece to the <b>green point</b> is mate.</p>'),
-    g: G('1手で詰ませよう。', 'Mate in one.'), y: P('詰み！あなたの勝ちです。', 'Checkmate — you win!') },
+    g: G('1手で詰ませよう。', 'Mate in one.'), y: P('詰み！あなたの勝ちです。', 'Checkmate — you win!'),
+    // (2026-11-24 第2期) its own position: the lesson's first problem is not repeated, and this is a real check-mate (the old one was a stalemate)
+    from: { s: '4k4/1R2c4/5a3/C8/5c3/9/2p6/9/9/3K5 w', ok: [100], best: 100 } },
   t_capture: { t: P('自分より価値の高い駒を取る', 'Take a piece worth more than yours'),
     body: P('<p>守られている駒でも、自分の駒より価値が高ければ取る価値があります。目安は、車9・炮4.5・馬4・仕と相2・兵1（川を渡ると2）。</p><p>光っている駒で<b>緑の点</b>の駒を取ると、取り返されても得をします。</p>',
       '<p>Even a protected piece is worth taking if it is worth more than yours. Rough values: chariot 9, cannon 4.5, horse 4, advisor and elephant 2, soldier 1 (2 across the river).</p><p>Take the piece on the <b>green point</b> with the glowing piece: even if it is taken back, you gain.</p>'),
@@ -66,7 +68,7 @@ const TEXT = {
 function build(I18N) {
   const D = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'lessons.json'), 'utf8')), out = {};
   for (const id in TEXT) {
-    const s = D.steps.find(x => x.id === id), Pb = s.problems[0], pos = E.Pos.from(Pb.s), T = TEXT[id];
+    const s = D.steps.find(x => x.id === id), Pb = TEXT[id].from || s.problems[0], pos = E.Pos.from(Pb.s), T = TEXT[id];
     let okM = Pb.ok; if (!okM) { const b = Math.max(...Pb.sc.map(e => e[1])); okM = Pb.sc.filter(e => e[1] >= b - 10).map(e => e[0]); }
     const okN = okM.map(m => E.name(pos, m, 'iccs')), bestN = E.name(pos, Pb.best, 'iccs');
     const hint = {}; for (const l in I18N) if (I18N[l]['ls.' + id + '.hint']) hint[l] = I18N[l]['ls.' + id + '.hint'];

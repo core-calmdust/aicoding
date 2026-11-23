@@ -849,7 +849,7 @@ function tafl(opt) {
 // b_cannon・b_pawn). The goal set is read from the rules (a capture by that kind on which no legal move of the opponent can take back),
 // the engine values stored in sc (= xiangqi/app.js problemPoints, the 3D XIANGQI.points) must put that capture alone on top, and
 // ショウギツネ's words (atlas/lessons3d.js xqLsJa) are read back against the board for the answer and every wrong move.
-const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn']);
+const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn', 'b_mate1']);
 function xiangqi(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'xiangqi/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'xiangqi/lessons.json'), 'utf8'));
@@ -875,7 +875,7 @@ function xiangqi(opt) {
   OP.sets.forEach(g => (g.problems || []).forEach((q, j) => pool.push([`opening ${g.id} ${j + 1}`, brd(q.s)])));
   (PZ.themes || []).forEach(th => (th.puzzles || []).forEach((q, j) => pool.push([`puzzle ${th.id} ${j + 1}`, brd(q.s)])));
   const plain = t => String(t).replace(/<[^>]+>/g, '');
-  L.steps.forEach((st, si) => { const id = st.id; if (!XQ_DONE.has(id)) return; const K = KIND[id];
+  L.steps.forEach((st, si) => { const id = st.id; if (!XQ_DONE.has(id) || !KIND[id]) return; const K = KIND[id];
     let prevD = -1, firstD = null; const capT = new Set();
     st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), me = p.side, all = p.moves(), nm = m => E.name(p, m);
       // ⑨ every legal move has a value, once
@@ -939,6 +939,64 @@ function xiangqi(opt) {
       }
     });
     if (capT.size < 2) add(id, 4, `⑤ every answer takes the same kind of piece`);
+  });
+  // (2026-11-24 第2期) b_mate1「1手で詰ます」('ok' kind): the goal set = every move that gives check and leaves no reply (read from
+  // the rules); no quiet move wins by stalemate (困毙: the lesson is about check); the warm-up's mate too; the order by the decoy
+  // checks; ショウギツネ's words for every wrong move read back against the replies (taken / runs / blocked / no check).
+  const MATE1 = ['b_mate1'];
+  if (!/const right = u => P\.ok \? P\.ok\.includes\(u\)/.test(src)) add('-', -1, '⑨ the 3D right() for the ok kinds changed');
+  if (!/function problemPoints\(P, m\) \{\n  if \(P\.ok\) return P\.ok\.includes\(m\) \? 20 : 0;/.test(app)) add('-', -1, '⑨ the 2D problemPoints for the ok kinds changed');
+  const mates = p => p.moves().filter(m => { const q = p.clone().play(m); return q.inCheck() && !q.moves().length; });
+  L.steps.forEach((st, si) => { const id = st.id; if (!XQ_DONE.has(id) || !MATE1.includes(id)) return;
+    let prevD = -1, firstD = null; const tys = new Set();
+    (st.ramp || []).forEach((r, j) => { if (!r.s) return; const p = E.Pos.from(r.s), M = mates(p).map(m => E.name(p, m, 'iccs')).sort();
+      if (r.k === 'explain') { const mk = (r.marks || []).map(x => x[0]); if (!M.some(m => mk.includes(m.slice(0, 2)) && mk.includes(m.slice(2, 4)))) add(id, -1, `⑧ warm-up ${j + 1}: the marked move is not a mate`); }
+      if (r.ok && JSON.stringify(r.ok.slice().sort()) !== JSON.stringify(M)) add(id, -1, `① warm-up ${j + 1}: ok ${r.ok} ≠ the mates ${M}`);
+      if (p.moves().some(m => { const q = p.clone().play(m); return !q.inCheck() && !q.moves().length; })) add(id, -1, `④ warm-up ${j + 1}: a quiet move stalemates (not the lesson's check)`); });
+    st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), me = p.side, all = p.moves(), nm = m => E.name(p, m);
+      if (!P.ok || !P.ok.length) { a('⑨ not an ok-kind problem'); return; }
+      if (!P.ok.includes(P.best)) a('⑨ best is not in ok');
+      P.ok.forEach(m => { if (!all.includes(m)) a(`① ${m} in ok is not legal`); });
+      // ① ② the goal set = every mate (no other move wins on the spot)
+      const M = mates(p), okS = new Set(P.ok);
+      M.filter(m => !okS.has(m)).forEach(m => a(`② ${nm(m)} also mates, not in ok`));
+      P.ok.filter(m => !M.includes(m)).forEach(m => a(`① ${nm(m)} in ok does not mate`));
+      if (M.length > 2) a(`② ${M.length} mates: too many answers`);
+      // ④ the theme: a check that cannot be met; no quiet stalemate; nobody in check before
+      const stale = all.filter(m => { const q = p.clone().play(m); return !q.inCheck() && !q.moves().length; });
+      stale.forEach(m => a(`④ ${nm(m)} wins by stalemate, not by check`));
+      if (p.inCheck()) a('④ the mover is in check'); { const q = E.Pos.from(P.s.replace(/ [wb]$/, me ? ' w' : ' b')); if (q.inCheck()) a('④ the side not to move is in check'); }
+      // ③ not at a glance: enough moves, and checks that do not mate
+      const ck = all.filter(m => !okS.has(m) && p.clone().play(m).inCheck()), near = ck.filter(m => p.clone().play(m).moves().length <= 2);
+      if (all.length < 12) a(`③ ${all.length} legal moves`); if (ck.length < 2) a(`③ ${ck.length} checks that do not mate`);
+      M.forEach(m => tys.add(T(p.at(mFrom(m)))));
+      // ⑤ no near twin (the pool: every lesson, warm-up, opening, puzzle; mirrored)
+      const B = brd(P.s); for (const [who, b] of pool) { if (who === `${id} q${j + 1}`) continue; const e = dist(B, b); if (e <= 4) a(`⑤ ${e} points from ${who}`); }
+      // ⑥ easier first: the decoy checks (and those leaving one or two replies)
+      const d = ck.length + near.length;
+      if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
+      if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`);
+      // ⑦ ⑧ the 3D words
+      let W; try { W = X.xqLsJa(E, st, P, j, k => k === 'ok' ? '〈正〉' : '〈誤〉', si); } catch (e) { a('⑧ the words fail: ' + e.message); return; }
+      const g = plain(W.good(P.best)); if (/\{|undefined|NaN/.test(g) || !/將|王手|詰/.test(g)) a(`⑧ the praise 「${g}」`);
+      for (const t of [W.ask, W.hintTx]) if (/\{|undefined|NaN/.test(t)) a(`⑧ 「${t}」`);
+      for (const u of all) { if (okS.has(u)) continue; const raw = plain(W.ng(u)), x = nm(u), i1 = raw.indexOf('〈正〉'), t = i1 > 0 ? raw.slice(0, i1) : raw;
+        if (/\{|undefined|NaN/.test(raw)) { a(`⑧ ${x}: 「${raw}」`); continue; }
+        if (!raw.includes('〈誤〉') || !raw.includes('〈正〉')) a(`⑦ ${x}: the words do not name both moves 「${raw}」`);
+        const q = p.clone().play(u), rep = q.moves(), k = q.k[me ^ 1], to = mTo(u);
+        if (q.inCheck()) {
+          const take = /取られて終わ|そのまま取られる|ぱくっと取られ|取られて消え|ただで取られる/.test(t), run = /逃げられ|逃げ道が残って|空いている点へ動いて|逃げ出せる|逃げ場がまだ/.test(t), blk = /間に駒を入れ|はさんで防げ|合い駒|筋に駒を入れ|あいだをふさが/.test(t);
+          if (!take && !run && !blk) a(`⑦ ${x}: a check that does not mate, the words do not say how it is met 「${t}」`);
+          if (take && !rep.some(r => mTo(r) === to)) a(`⑦ ${x}: 「${t}」 (the checking piece cannot be taken)`);
+          if (run && !rep.some(r => mFrom(r) === k)) a(`⑦ ${x}: 「${t}」 (the general cannot move)`);
+          if (blk && !rep.some(r => mFrom(r) !== k && mTo(r) !== to)) a(`⑦ ${x}: 「${t}」 (nothing can block)`);
+        } else {
+          if (!/王手じゃない|王手にならず|おだやか|1手の余裕|1手もらって|詰みを防|詰まなくなる|逃げ道/.test(t)) a(`⑦ ${x}: not a check, the words do not say it 「${t}」`);
+          if (!rep.some(r => !mates(q.clone().play(r)).length)) a(`⑦ ${x}: 「${t}」 (the opponent cannot stop the mate after it)`);
+        }
+      }
+    });
+    if (tys.size < 3) add(id, 4, `⑤ the mates use fewer than three kinds of piece (${[...tys]})`);
   });
   return out;
 }
