@@ -3283,6 +3283,8 @@
         flyOpen(id, img); }, room,
       page: r => { if (window.AtlasMissions) AtlasMissions.page(r); }, achDone: gid => ACH.filter(a => a.gid === gid && a.done).length,
       // (所蔵品: the museum's own Atlamo, ミュゼフク) give the items not owned yet; returns them as { id, name, img }
+      // (館内スタンプ帳: the stamps' coins — added to the wallet's bonus like the missions' rewards)
+      coins: n => { W = A_.load(); W.bonus = (W.bonus || 0) + n; A_.save(W); try { (SFX.coin || SFX.tap)(); } catch (e) {} try { confetti(n >= 1000 ? 90 : 40); } catch (e) {} try { refresh(); } catch (e) {} },
       grant: ids => { W = A_.load(); const nw = ids.filter(id => !W.owned.includes(id)); if (!nw.length) return []; nw.forEach(id => W.owned.push(id)); A_.save(W); try { refresh(); } catch (e) {}
         return nw.map(id => { const it = ART.items.find(x => x.id === id); return { id, name: it ? iname(it) : id, img: it && it.d ? `../images/atlas/av/${it.d.sp}-${it.d.t}.webp` : '' }; }); } });
   }
