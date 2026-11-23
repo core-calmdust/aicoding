@@ -239,7 +239,17 @@ function renderStrip() {
 }
 // (2026-11-23 the user) deployment on phones: a tap on a ship in the strip lights it on the sea and shows its skill in one line above the strip
 let spot = -1;
+// PC: the chosen ship's full card (reach diagram, skill, what it does) beside the fleet panel while deploying (2026-11-23 user)
+function spotCard() {
+  const el = $('#spotCard'), s = G && G.phase === 'deploy' && !PHONE() && spot >= 0 ? G.my[spot] : null;
+  if (!s) { el.classList.add('hide'); return; }
+  el.innerHTML = shipCard(s.t, { tag: 'div' }) + '<button class="x" aria-label="Close">×</button>'; el.classList.remove('hide'); fillPortraits(el);
+  const it = $(`#listMine .fi[data-i="${spot}"]`), pr = $('#pMine').getBoundingClientRect(), r = it ? it.getBoundingClientRect() : pr;
+  el.style.left = (pr.right + 12) + 'px'; el.style.top = Math.max(76, Math.min(innerHeight - el.offsetHeight - 16, r.top + r.height / 2 - el.offsetHeight / 2)) + 'px';
+  el.querySelector('.x').onclick = e => { e.stopPropagation(); spot = -1; render(); };
+}
 function spotTip() {
+  spotCard();
   const el = $('#spotTip'), st = $('#strip'), s = G && G.phase === 'deploy' && PHONE() && spot >= 0 ? G.my[spot] : null;
   if (!s) { el.classList.add('hide'); return; }
   const T = E.TYPES[s.t]; el.innerHTML = `<b>${t('ship.' + s.t)}</b>${T.skill ? `<span class="sn">${icon(abilityKey(T))}${shipSkillName(T)}</span><span class="tx">${shipSkillText(T)}</span>` : ''}`;
@@ -274,7 +284,7 @@ function phaseUI() {
   sheetsUI(); layoutPhone(); World.refit();
   World.grids(ph === 'title' || ph === 'draft' ? 0 : 1, ph === 'title' || ph === 'draft' || ph === 'deploy' ? 0 : 1);
 }
-function render() { if (!G) return; phaseUI(); syncWorld(); renderBanner(); renderFleets(); renderLog(); renderBal(); renderDock(); renderViews(); const sh = $('#strip').offsetHeight; renderStrip(); layoutPhone(); if ($('#strip').offsetHeight !== sh) World.refit(); $('#bHint').classList.toggle('off', !G.hint); $('#bHint').disabled = !(G.phase === 'battle' && G.st.turn === 0 && !G.busy); }
+function render() { if (!G) return; phaseUI(); syncWorld(); renderBanner(); renderFleets(); spotCard(); renderLog(); renderBal(); renderDock(); renderViews(); const sh = $('#strip').offsetHeight; renderStrip(); layoutPhone(); if ($('#strip').offsetHeight !== sh) World.refit(); $('#bHint').classList.toggle('off', !G.hint); $('#bHint').disabled = !(G.phase === 'battle' && G.st.turn === 0 && !G.busy); }
 function renderBanner(msg) {
   let tt = '', s = msg || '', foe = false;
   if (G.phase === 'deploy') { tt = t('b.deploy'); s = s || t('st.deploy'); }
@@ -654,10 +664,11 @@ cv.addEventListener('pointerdown', e => {
   if (!G || G.phase !== 'deploy') return; if (touches.size > 1) return;
   const cell = World.cellAt(0, e); if (cell < 0) return; const i = shipAtCell(cell); if (i < 0) return;
   e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (x) {}
-  const s = G.my[i]; drag = { i, from: Object.assign({}, s), k: s.h ? cell % 10 - s.c : (cell / 10 | 0) - s.r, cell, moved: false, bad: false, grid: gridWithout(i) };
+  const s = G.my[i], N = E.N; drag = { i, from: Object.assign({}, s), k: s.h ? cell % N - s.c : (cell / N | 0) - s.r, cell, x0: e.clientX, y0: e.clientY, moved: false, bad: false, grid: gridWithout(i) };   // (the board may be 12×12: 大艦隊 — a hard 10 here made a click off the ship's middle move it instead of turning it)
 });
 cv.addEventListener('pointermove', e => {
-  if (drag) { const p = World.pointIn(0, e), s = G.my[drag.i]; let r = Math.floor(p.y), c = Math.floor(p.x); if (s.h) c -= drag.k; else r -= drag.k;
+  if (drag) { if (!drag.moved && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 7) return;   // (a click, not a drag, until the pointer really travels)
+    const p = World.pointIn(0, e), s = G.my[drag.i]; let r = Math.floor(p.y), c = Math.floor(p.x); if (s.h) c -= drag.k; else r -= drag.k;
     const n = clampShip({ len: s.len, h: s.h, r, c, t: s.t }); if (n.r === s.r && n.c === s.c) return; drag.moved = true; G.my[drag.i] = n; drag.bad = !E.fits(drag.grid, n, G.adj, -2); syncWorld(); return; }
   if (!G || !G.st || G.phase !== 'battle' || G.busy || G.st.turn !== 0 || G.view !== 1 || !PC.matches) return;
   const c = World.cellAt(1, e);
@@ -700,7 +711,7 @@ $('#drGrid').addEventListener('pointerover', e => { if (!PC.matches) return; con
 $('#drOk').onclick = () => { if (!pickSel.length) return; const ks = pickSel; pickSel = []; for (const k of ks) { if (G.phase !== 'draft' || G.draft.turn !== 0) break; draftPickMine(k); } draftStep(); };
 $('#arTabs').addEventListener('click', e => { const b = e.target.closest('button[data-g], button[data-s]'); if (!b) return; if (b.dataset.s) arSort = b.dataset.s; else arTab = +b.dataset.g; renderArchive(); $('#arGrid').scrollTop = 0; });
 $('#drAll').onclick = () => { sfx('select'); openArchive(); };
-$('#pMine').addEventListener('click', () => { if (G && G.st) { sfx('select'); openFleets(0); } });
+$('#pMine').addEventListener('click', e => { if (G && G.phase === 'deploy') { const f = e.target.closest('.fi[data-i]'); if (!f) return; const i = +f.dataset.i; spot = spot === i ? -1 : i; sfx('select'); render(); return; } if (G && G.st) { sfx('select'); openFleets(0); } });
 $('#pFoe').addEventListener('click', () => { if (G && G.st) { sfx('select'); openFleets(1); } });
 $('#drShow').addEventListener('click', e => { const c = e.target.closest('.picks h5'); if (c) { sfx('select'); openFleets(c.classList.contains('foe') ? 1 : 0); } });
 $('#cardPop').addEventListener('click', e => { if (e.target === $('#cardPop') || e.target.closest('#cpClose')) { sfx('select'); cardPopClose(); } });
