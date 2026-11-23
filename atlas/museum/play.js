@@ -55,6 +55,33 @@
         g.quaternion.setFromAxisAngle(new TH.Vector3(0, 0, 1), Math.PI).multiply(new TH.Quaternion().setFromAxisAngle(new TH.Vector3(0, 1, 0), Math.PI / 2));   // face down under the board (it is turned over), White's side towards the viewer
         g.userData = { chess: true, top: 0 };
         return g; } },
+    // the Ottoman board's inner face (1 = 1 cm): backgammon on its two tables — six mother-of-pearl cypress points from each long side on either leaf
+    // (their places from the photograph), the hinge between them the bar; checkers borne off are piled on the plinth to the right. Your home table is
+    // the near right one. No checkers or dice are kept with the board: plain turned discs (bone, dark wood) and bone dice — an estimate.
+    'ottoman-bg': { game: 'backgammon', adapter: 'museum', area: [-29.5, 34.5, -29.5, 29.5], top: 2, flip: 0, noContact: true, view: {},
+      board(TH, obj, K) {
+        const g = new TH.Group(), Y = 2, YB = 2.5, XS = [4.53, 8.36, 12.2, 16.07, 19.93, 23.85], R = 1.66, TH_ = .78, Z0 = 24.1;
+        const px = a => a <= 6 ? XS[6 - a] : a <= 12 ? -XS[a - 7] : a <= 18 ? -XS[18 - a] : XS[a - 19];
+        // five in a row along the point, the sixth and on laid over them (a second, a third layer)
+        const slot = (a, k) => { const sg = a <= 12 ? 1 : -1, ly = Math.floor(k / 5), i = k % 5; return [px(a), Y + ly * TH_, sg * (Z0 - (i + ly * .5) * R * 2.02)]; };
+        const bar = (side, k) => [0, YB + k * TH_, (side ? -1 : 1) * 5.2];
+        const off = (side, k) => [31.6, Math.floor(k % 5) * TH_, (side ? -1 : 1) * (23 - Math.floor(k / 5) * 3.7)];
+        const hit = (x, z) => { if (x > 28.6) return 25; if (Math.abs(x) < 2.1) return 0; if (Math.abs(x) > 26.6 || Math.abs(z) > 26.6) return -1;
+          let b = 0, bd = 9; XS.forEach((q, i) => { const d = Math.abs(Math.abs(x) - q); if (d < bd) { bd = d; b = i; } }); if (bd > 2.1) return -1;
+          return z > 0 ? (x > 0 ? 6 - b : 7 + b) : (x > 0 ? 19 + b : 18 - b); };
+        const tex = (a, b, seed) => K.tex(256, 256, (c, w, h) => { K.grain(c, w, h, { a, b, seed, sx: .6, sy: 6, warp: .4, pores: .004 }); c.strokeStyle = 'rgba(0,0,0,.28)'; c.lineWidth = 3; [.62, .8].forEach(r => { c.beginPath(); c.arc(w / 2, h / 2, w / 2 * r, 0, 6.29); c.stroke(); }); });
+        const MAT = [K.mat({ map: tex('#efe6cf', '#d6c8a2', 51), color: '#ffffff', roughness: .45, clearcoat: .2, clearcoatRoughness: .5 }), K.mat({ map: tex('#4a2e1e', '#1c100a', 53), color: '#ffffff', roughness: .4, clearcoat: .35, clearcoatRoughness: .4 })];
+        // a turned disc: a rounded edge, two rings cut in its face
+        const GEO = new TH.LatheGeometry([[0, 0], [R * .93, 0], [R, TH_ * .22], [R, TH_ * .78], [R * .93, TH_], [R * .82, TH_], [R * .8, TH_ * .9], [R * .64, TH_ * .9], [R * .62, TH_], [0, TH_]].map(([a, b]) => new TH.Vector2(Math.max(.001, a), b)), 40);
+        { const A = GEO.attributes.position, U = GEO.attributes.uv; for (let i = 0; i < A.count; i++) U.setXY(i, .5 + A.getX(i) / (2 * R), .5 + A.getZ(i) / (2 * R)); }
+        const stone = side => { const m = new TH.Mesh(GEO, MAT[side]); m.castShadow = m.receiveShadow = true; return m; };
+        const pip = n => K.tex(128, 128, (c, w) => { c.fillStyle = '#eadfc2'; c.fillRect(0, 0, w, w); c.fillStyle = '#241408';
+          ({ 1: [[.5, .5]], 2: [[.28, .28], [.72, .72]], 3: [[.26, .26], [.5, .5], [.74, .74]], 4: [[.28, .28], [.72, .28], [.28, .72], [.72, .72]], 5: [[.26, .26], [.74, .26], [.5, .5], [.26, .74], [.74, .74]], 6: [[.28, .24], [.72, .24], [.28, .5], [.72, .5], [.28, .76], [.72, .76]] })[n].forEach(([x, y]) => { c.beginPath(); c.arc(x * w, y * w, w * .085, 0, 6.29); c.fill(); }); });
+        const DM = [1, 6, 2, 5, 3, 4].map(n => K.mat({ map: pip(n), color: '#ffffff', roughness: .45 })), DG = new TH.BoxGeometry(1.7, 1.7, 1.7);
+        const die = () => { const m = new TH.Mesh(DG, DM); m.castShadow = m.receiveShadow = true; return m; };
+        const diceAt = (side, i) => [(side ? -1 : 1) * (10.5 + i * 3.6), (side ? -1 : 1) * 1.2];
+        g.userData = { top: Y, slot, bar, off, hit, stone, die, diceAt, R, th: TH_, dieH: .85, mats: MAT };
+        return g; } },
     // 木画紫檀棊局 (1 = 1 cm): go on its 19 lines. The stones after the Shōsōin's own (北倉25): ivory dyed indigo (紺牙撥鏤碁子, 120 kept; 1.6–1.7 across,
     // 0.6–0.7 thick) and dyed red with lac (紅牙撥鏤碁子, 132; 1.5–1.7, 0.7–0.8), a bird with a flowering spray in its beak cut through the dye on both
     // faces, a little green / yellow / red put in (the Shōsōin's photographs). Indigo plays first (black), red second (white). Whether they were one set is not recorded.
@@ -144,7 +171,7 @@
   let cur = null;
   function start(id, o) {
     const def = BOARDS[id], G = window.AtlasGallery, V = G && G._v && G._v(), TH = window.THREE, ad = window.Atlas3D && Atlas3D[def && def.game];
-    if (!def || !V || !V.obj || !TH || (!ad && !o.course) || (o.course && !window.AtlasMuseumRules)) return null;
+    if (!def || !V || !V.obj || !TH || ((!ad || (def.adapter && !ad[def.adapter])) && !o.course) || (o.course && !window.AtlasMuseumRules)) return null;
     stop(); const CM = !!o.course;
     const board = def.board(TH, V.obj, G.kit), stage = V.ov.querySelector('.exstage'), cv = stage.querySelector('canvas');
     const dot = new TH.CircleGeometry(1, 24); dot.rotateX(-Math.PI / 2); const shown = [];
@@ -188,7 +215,7 @@
     const apply = () => { const r = rot(); V.ov.classList.toggle('exv-rot', r); document.documentElement.classList.toggle('exv-rot', r);
       const v = vert(); V.tgtBase = tgtB.clone(); V.tgt.copy(tgtB); V.panXZ = [0, 0]; V.panLim = Math.max(A[1] - A[0], A[3] - A[2]) / 2;   // (a slide moves the board any way, gallery.js)
       const q = view();
-      if (o.course) { const pb = coursePad(), h = stage.clientHeight || 1, wpp = 2 * q.d * Math.tan(V.cam.fov * Math.PI / 360) / h; V.tgtBase.z += (pb[1] - pb[0]) / 2 * wpp; V.tgt.copy(V.tgtBase); }   // (the board in the room left above the guide's panel)
+      if (o.course) { const pb = coursePad(), h = stage.clientHeight || 1, wpp = 2 * q.d * Math.tan(V.cam.fov * Math.PI / 360) / h; const sh = (pb[1] - pb[0]) / 2 * wpp / Math.sin(q.pit); V.tgtBase.x += sh * Math.sin(q.yaw); V.tgtBase.z += sh * Math.cos(q.yaw); V.tgt.copy(V.tgtBase); }   /* (towards the viewer, whichever way the camera is turned; further when it looks from a slant) */   // (the board in the room left above the guide's panel)
       V.home = q; G.tween(q); if (V.R) V.R.shadowMap.needsUpdate = true; };
     // a rules course: the top bar's room above, the guide's panel below (its height as it stands)
     const coursePad = () => { const pe = stage.querySelector('.exrul'); return [56, (pe ? pe.offsetHeight : 180) + 22]; };
@@ -200,7 +227,7 @@
       left: () => { const r = stage.getBoundingClientRect(); return [r.left + r.width / 2, r.width]; },
       bottom: () => { const c = V.ov.querySelector('.expcard'), r = c && c.getBoundingClientRect(); return r && r.height ? innerHeight - r.top + 4 : 90; } }) : null;
     const ses = o.course ? (V.obj.add(board), AtlasMuseumRules.run(id, { lang: o.lang, TH, board, V, T3, stage, relayout: () => { if (cur && cur.V === V) apply(); }, onPlay: o.onPlay, onExit: o.onExit }))
-      : ad.start({ el: stage, Table3D: T3, board, lang: o.lang, t: o.t, level: o.level, side: o.side, size: def.size, mode: o.mode || 'ai', hud: o.hud || (() => {}),
+      : ((def.adapter && ad[def.adapter]) || ad.start)({ el: stage, Table3D: T3, board, lang: o.lang, t: o.t, level: o.level, side: o.side, size: def.size, mode: o.mode || 'ai', hud: o.hud || (() => {}),
         onTurn: (s, info) => { if (npcT && info && info.ply != null) npcT.turn(info.ply); },
         onEnd: res => { if (npcT && !res.pvp) npcT.end(res); if (o.onEnd) o.onEnd(res); } });
     // the case changes size (a phone: it grows when the game starts; a turned phone, a resized window): frame the board again

@@ -741,43 +741,43 @@
     {
      "s": {
       "n": 7,
-      "stones": ".................w.....wbw.......................",
+      "stones": ".........................w.....wbw...............",
       "turn": 1
      },
      "ok": [
-      "D3"
+      "E2"
      ],
      "why": {
-      "ja": "<bdi>D3</bdi>にノビるとダメが<bdi>C3</bdi>・<bdi>E3</bdi>・<bdi>D2</bdi>の3つに増え、もう取られません。",
-      "en": "Extending to <bdi>D3</bdi> gives three liberties (<bdi>C3</bdi>, <bdi>E3</bdi>, <bdi>D2</bdi>), and the stones are safe.",
-      "zh": "长到<bdi>D3</bdi>有三口气（<bdi>C3</bdi>、<bdi>E3</bdi>、<bdi>D2</bdi>），棋子安全了。",
-      "ko": "<bdi>D3</bdi>으로 뻗으면 수가 셋(<bdi>C3</bdi>, <bdi>E3</bdi>, <bdi>D2</bdi>)이 되어 안전합니다.",
-      "es": "Extenderse a <bdi>D3</bdi> da tres libertades (<bdi>C3</bdi>, <bdi>E3</bdi>, <bdi>D2</bdi>) y las piedras están a salvo.",
-      "fr": "Se prolonger en <bdi>D3</bdi> donne trois libertés (<bdi>C3</bdi>, <bdi>E3</bdi>, <bdi>D2</bdi>), et les pierres sont sauves.",
-      "pt": "Estender para <bdi>D3</bdi> dá três liberdades (<bdi>C3</bdi>, <bdi>E3</bdi>, <bdi>D2</bdi>), e as pedras ficam seguras.",
-      "de": "Verlängern nach <bdi>D3</bdi> ergibt drei Freiheiten (<bdi>C3</bdi>, <bdi>E3</bdi>, <bdi>D2</bdi>), und die Steine sind sicher.",
-      "hi": "<bdi>D3</bdi> तक बढ़ने से तीन स्वतंत्रताएँ (<bdi>C3</bdi>, <bdi>E3</bdi>, <bdi>D2</bdi>) मिलती हैं और पत्थर सुरक्षित हो जाते हैं।",
-      "ar": "المدّ إلى <bdi>D3</bdi> يعطي ثلاث حريات (<bdi>C3</bdi>، <bdi>E3</bdi>، <bdi>D2</bdi>)، فتصبح الأحجار آمنة.",
-      "ru": "Продление на <bdi>D3</bdi> даёт три свободы (<bdi>C3</bdi>, <bdi>E3</bdi>, <bdi>D2</bdi>), и камни в безопасности.",
-      "zh-TW": "長到 <bdi>D3</bdi> 就有三口氣（<bdi>C3</bdi>、<bdi>E3</bdi>、<bdi>D2</bdi>），棋子安全了。",
-      "id": "Memperpanjang ke <bdi>D3</bdi> memberi tiga kebebasan (<bdi>C3</bdi>, <bdi>E3</bdi>, <bdi>D2</bdi>), dan batu aman.",
-      "tr": "<bdi>D3</bdi>'e uzatmak üç özgürlük verir (<bdi>C3</bdi>, <bdi>E3</bdi>, <bdi>D2</bdi>) ve taşlar güvende olur."
+      "ja": "<bdi>E2</bdi>にノビるとダメが<bdi>D2</bdi>・<bdi>F2</bdi>・<bdi>E1</bdi>の3つに増え、もう取られません。",
+      "en": "Extending to <bdi>E2</bdi> gives three liberties (<bdi>D2</bdi>, <bdi>F2</bdi>, <bdi>E1</bdi>), and the stones are safe.",
+      "zh": "长到<bdi>E2</bdi>有三口气（<bdi>D2</bdi>、<bdi>F2</bdi>、<bdi>E1</bdi>），棋子安全了。",
+      "ko": "<bdi>E2</bdi>으로 뻗으면 수가 셋(<bdi>D2</bdi>, <bdi>F2</bdi>, <bdi>E1</bdi>)이 되어 안전합니다.",
+      "es": "Extenderse a <bdi>E2</bdi> da tres libertades (<bdi>D2</bdi>, <bdi>F2</bdi>, <bdi>E1</bdi>) y las piedras están a salvo.",
+      "fr": "Se prolonger en <bdi>E2</bdi> donne trois libertés (<bdi>D2</bdi>, <bdi>F2</bdi>, <bdi>E1</bdi>), et les pierres sont sauves.",
+      "pt": "Estender para <bdi>E2</bdi> dá três liberdades (<bdi>D2</bdi>, <bdi>F2</bdi>, <bdi>E1</bdi>), e as pedras ficam seguras.",
+      "de": "Verlängern nach <bdi>E2</bdi> ergibt drei Freiheiten (<bdi>D2</bdi>, <bdi>F2</bdi>, <bdi>E1</bdi>), und die Steine sind sicher.",
+      "hi": "<bdi>E2</bdi> तक बढ़ने से तीन स्वतंत्रताएँ (<bdi>D2</bdi>, <bdi>F2</bdi>, <bdi>E1</bdi>) मिलती हैं और पत्थर सुरक्षित हो जाते हैं।",
+      "ar": "المدّ إلى <bdi>E2</bdi> يعطي ثلاث حريات (<bdi>D2</bdi>، <bdi>F2</bdi>، <bdi>E1</bdi>)، فتصبح الأحجار آمنة.",
+      "ru": "Продление на <bdi>E2</bdi> даёт три свободы (<bdi>D2</bdi>, <bdi>F2</bdi>, <bdi>E1</bdi>), и камни в безопасности.",
+      "zh-TW": "長到 <bdi>E2</bdi> 就有三口氣（<bdi>D2</bdi>、<bdi>F2</bdi>、<bdi>E1</bdi>），棋子安全了。",
+      "id": "Memperpanjang ke <bdi>E2</bdi> memberi tiga kebebasan (<bdi>D2</bdi>, <bdi>F2</bdi>, <bdi>E1</bdi>), dan batu aman.",
+      "tr": "<bdi>E2</bdi>'e uzatmak üç özgürlük verir (<bdi>D2</bdi>, <bdi>F2</bdi>, <bdi>E1</bdi>) ve taşlar güvende olur."
      },
      "ng": {
-      "ja": "黒石はアタリです。ほかに打つと<bdi>D3</bdi>に打たれて取られます。",
-      "en": "The black stone is in atari. Anything else and White captures at <bdi>D3</bdi>.",
-      "zh": "黑子被打吃了。下在别处，白就会在<bdi>D3</bdi>提子。",
-      "ko": "흑돌은 단수입니다. 다른 곳에 두면 백이 <bdi>D3</bdi>에서 따냅니다.",
-      "es": "La piedra negra está en atari. Con cualquier otra jugada, Blanco captura en <bdi>D3</bdi>.",
-      "fr": "La pierre noire est en atari. Sur tout autre coup, Blanc capture en <bdi>D3</bdi>.",
-      "pt": "A pedra preta está em atari. Em qualquer outra jogada, o Branco captura em <bdi>D3</bdi>.",
-      "de": "Der schwarze Stein steht im Atari. Bei jedem anderen Zug schlägt Weiß auf <bdi>D3</bdi>.",
-      "hi": "काला पत्थर अटारी में है। कोई और चाल खेली तो सफ़ेद <bdi>D3</bdi> पर पकड़ लेगा।",
-      "ar": "الحجر الأسود في أتاري. بأي نقلة أخرى يأسره الأبيض عند <bdi>D3</bdi>.",
-      "ru": "Чёрный камень в атари. Любой другой ход — и белые берут на <bdi>D3</bdi>.",
-      "zh-TW": "黑子被叫吃。下在別處，白就會在 <bdi>D3</bdi> 提子。",
-      "id": "Batu hitam dalam atari. Langkah lain apa pun dan Putih menangkap di <bdi>D3</bdi>.",
-      "tr": "Siyah taş atarideki. Başka bir hamlede Beyaz <bdi>D3</bdi>'te alır."
+      "ja": "黒石はアタリです。ほかに打つと<bdi>E2</bdi>に打たれて取られます。",
+      "en": "The black stone is in atari. Anything else and White captures at <bdi>E2</bdi>.",
+      "zh": "黑子被打吃了。下在别处，白就会在<bdi>E2</bdi>提子。",
+      "ko": "흑돌은 단수입니다. 다른 곳에 두면 백이 <bdi>E2</bdi>에서 따냅니다.",
+      "es": "La piedra negra está en atari. Con cualquier otra jugada, Blanco captura en <bdi>E2</bdi>.",
+      "fr": "La pierre noire est en atari. Sur tout autre coup, Blanc capture en <bdi>E2</bdi>.",
+      "pt": "A pedra preta está em atari. Em qualquer outra jogada, o Branco captura em <bdi>E2</bdi>.",
+      "de": "Der schwarze Stein steht im Atari. Bei jedem anderen Zug schlägt Weiß auf <bdi>E2</bdi>.",
+      "hi": "काला पत्थर अटारी में है। कोई और चाल खेली तो सफ़ेद <bdi>E2</bdi> पर पकड़ लेगा।",
+      "ar": "الحجر الأسود في أتاري. بأي نقلة أخرى يأسره الأبيض عند <bdi>E2</bdi>.",
+      "ru": "Чёрный камень в атари. Любой другой ход — и белые берут на <bdi>E2</bdi>.",
+      "zh-TW": "黑子被叫吃。下在別處，白就會在 <bdi>E2</bdi> 提子。",
+      "id": "Batu hitam dalam atari. Langkah lain apa pun dan Putih menangkap di <bdi>E2</bdi>.",
+      "tr": "Siyah taş atarideki. Başka bir hamlede Beyaz <bdi>E2</bdi>'te alır."
      }
     },
     {
@@ -867,43 +867,43 @@
     {
      "s": {
       "n": 9,
-      "stones": "..............................b.......bw.......b.................................",
+      "stones": ".........................................bb......bw..............................",
       "turn": 2
      },
      "ok": [
-      "E5"
+      "F3"
      ],
      "why": {
-      "ja": "白<bdi>E5</bdi>とノビるとダメは4つ。<bdi>D4</bdi>だと黒<bdi>C4</bdi>が邪魔をしてダメは3つです。広い方へ逃げましょう。",
-      "en": "Extending to <bdi>E5</bdi> gives four liberties; <bdi>D4</bdi> only three, because black <bdi>C4</bdi> takes one away. Run toward open space.",
-      "zh": "长到<bdi>E5</bdi>有四口气；<bdi>D4</bdi>只有三口，因为黑<bdi>C4</bdi>占了一口。往空旷处逃。",
-      "ko": "<bdi>E5</bdi>로 뻗으면 수가 넷. <bdi>D4</bdi>는 흑 <bdi>C4</bdi>가 하나를 막아 셋뿐입니다. 넓은 쪽으로 도망치세요.",
-      "es": "Extenderse a <bdi>E5</bdi> da cuatro libertades; <bdi>D4</bdi> solo tres, porque la negra <bdi>C4</bdi> quita una. Huye hacia el espacio abierto.",
-      "fr": "Se prolonger en <bdi>E5</bdi> donne quatre libertés ; <bdi>D4</bdi> seulement trois, car la pierre noire <bdi>C4</bdi> en enlève une. Fuyez vers l’espace libre.",
-      "pt": "Estender para <bdi>E5</bdi> dá quatro liberdades; <bdi>D4</bdi> só três, porque a preta <bdi>C4</bdi> tira uma. Fuja para o espaço aberto.",
-      "de": "Verlängern nach <bdi>E5</bdi> ergibt vier Freiheiten; <bdi>D4</bdi> nur drei, weil Schwarz <bdi>C4</bdi> eine wegnimmt. Laufe ins Offene.",
-      "hi": "<bdi>E5</bdi> तक बढ़ने से चार स्वतंत्रताएँ मिलती हैं; <bdi>D4</bdi> से केवल तीन, क्योंकि काला <bdi>C4</bdi> एक छीन लेता है। खुली जगह की ओर भागें।",
-      "ar": "المدّ إلى <bdi>E5</bdi> يعطي أربع حريات؛ أما <bdi>D4</bdi> فثلاث فقط، لأن الأسود <bdi>C4</bdi> يأخذ واحدة. اهرب نحو المساحة المفتوحة.",
-      "ru": "Продление на <bdi>E5</bdi> даёт четыре свободы; <bdi>D4</bdi> — только три, потому что чёрный <bdi>C4</bdi> отнимает одну. Уходите на простор.",
-      "zh-TW": "長到 <bdi>E5</bdi> 有四口氣；<bdi>D4</bdi> 只有三口，因為黑 <bdi>C4</bdi> 占掉了一口。往空曠處逃。",
-      "id": "Memperpanjang ke <bdi>E5</bdi> memberi empat kebebasan; <bdi>D4</bdi> hanya tiga, karena hitam <bdi>C4</bdi> mengambil satu. Larilah ke ruang terbuka.",
-      "tr": "<bdi>E5</bdi>'e uzatmak dört özgürlük verir; <bdi>D4</bdi> yalnızca üç, çünkü siyah <bdi>C4</bdi> birini alır. Açık alana kaç."
+      "ja": "白<bdi>F3</bdi>とノビるとダメは4つ。<bdi>G4</bdi>だと黒<bdi>G5</bdi>が邪魔をしてダメは3つです。広い方へ逃げましょう。",
+      "en": "Extending to <bdi>F3</bdi> gives four liberties; <bdi>G4</bdi> only three, because black <bdi>G5</bdi> takes one away. Run toward open space.",
+      "zh": "长到<bdi>F3</bdi>有四口气；<bdi>G4</bdi>只有三口，因为黑<bdi>G5</bdi>占了一口。往空旷处逃。",
+      "ko": "<bdi>F3</bdi>로 뻗으면 수가 넷. <bdi>G4</bdi>는 흑 <bdi>G5</bdi>가 하나를 막아 셋뿐입니다. 넓은 쪽으로 도망치세요.",
+      "es": "Extenderse a <bdi>F3</bdi> da cuatro libertades; <bdi>G4</bdi> solo tres, porque la negra <bdi>G5</bdi> quita una. Huye hacia el espacio abierto.",
+      "fr": "Se prolonger en <bdi>F3</bdi> donne quatre libertés ; <bdi>G4</bdi> seulement trois, car la pierre noire <bdi>G5</bdi> en enlève une. Fuyez vers l’espace libre.",
+      "pt": "Estender para <bdi>F3</bdi> dá quatro liberdades; <bdi>G4</bdi> só três, porque a preta <bdi>G5</bdi> tira uma. Fuja para o espaço aberto.",
+      "de": "Verlängern nach <bdi>F3</bdi> ergibt vier Freiheiten; <bdi>G4</bdi> nur drei, weil Schwarz <bdi>G5</bdi> eine wegnimmt. Laufe ins Offene.",
+      "hi": "<bdi>F3</bdi> तक बढ़ने से चार स्वतंत्रताएँ मिलती हैं; <bdi>G4</bdi> से केवल तीन, क्योंकि काला <bdi>G5</bdi> एक छीन लेता है। खुली जगह की ओर भागें।",
+      "ar": "المدّ إلى <bdi>F3</bdi> يعطي أربع حريات؛ أما <bdi>G4</bdi> فثلاث فقط، لأن الأسود <bdi>G5</bdi> يأخذ واحدة. اهرب نحو المساحة المفتوحة.",
+      "ru": "Продление на <bdi>F3</bdi> даёт четыре свободы; <bdi>G4</bdi> — только три, потому что чёрный <bdi>G5</bdi> отнимает одну. Уходите на простор.",
+      "zh-TW": "長到 <bdi>F3</bdi> 有四口氣；<bdi>G4</bdi> 只有三口，因為黑 <bdi>G5</bdi> 占掉了一口。往空曠處逃。",
+      "id": "Memperpanjang ke <bdi>F3</bdi> memberi empat kebebasan; <bdi>G4</bdi> hanya tiga, karena hitam <bdi>G5</bdi> mengambil satu. Larilah ke ruang terbuka.",
+      "tr": "<bdi>F3</bdi>'e uzatmak dört özgürlük verir; <bdi>G4</bdi> yalnızca üç, çünkü siyah <bdi>G5</bdi> birini alır. Açık alana kaç."
      },
      "ng": {
-      "ja": "<bdi>D4</bdi>は黒石の近くでダメが3つしか増えません。相手の石から離れる方向へ。",
-      "en": "<bdi>D4</bdi> runs next to black stones and gets only three liberties. Run away from the opponent’s stones.",
-      "zh": "<bdi>D4</bdi>贴着黑子逃，只有三口气。要远离对方的棋子。",
-      "ko": "<bdi>D4</bdi>는 흑돌 옆으로 도망쳐 수가 셋뿐. 상대 돌에서 멀어지는 쪽으로 도망치세요.",
-      "es": "<bdi>D4</bdi> huye junto a piedras negras y solo consigue tres libertades. Aléjate de las piedras del rival.",
-      "fr": "<bdi>D4</bdi> fuit à côté de pierres noires et n’obtient que trois libertés. Fuyez loin des pierres adverses.",
-      "pt": "<bdi>D4</bdi> foge ao lado de pedras pretas e só ganha três liberdades. Fuja para longe das pedras do adversário.",
-      "de": "<bdi>D4</bdi> läuft neben schwarze Steine und bekommt nur drei Freiheiten. Laufe von den gegnerischen Steinen weg.",
-      "hi": "<bdi>D4</bdi> काले पत्थरों के बगल में भागता है और केवल तीन स्वतंत्रताएँ पाता है। प्रतिद्वंद्वी के पत्थरों से दूर भागें।",
-      "ar": "<bdi>D4</bdi> يهرب بجوار أحجار سوداء فلا يحصل إلا على ثلاث حريات. اهرب بعيدًا عن أحجار الخصم.",
-      "ru": "<bdi>D4</bdi> уходит вплотную к чёрным камням и получает только три свободы. Уходите подальше от камней соперника.",
-      "zh-TW": "<bdi>D4</bdi> 貼著黑子逃，只有三口氣。要往遠離對方棋子的方向逃。",
-      "id": "<bdi>D4</bdi> lari di samping batu hitam dan hanya dapat tiga kebebasan. Larilah menjauhi batu lawan.",
-      "tr": "<bdi>D4</bdi> siyah taşların yanına kaçar ve yalnızca üç özgürlük alır. Rakip taşlardan uzağa kaç."
+      "ja": "<bdi>G4</bdi>は黒石のそばでダメが3つしかありません。相手の石から離れる方向へ。",
+      "en": "<bdi>G4</bdi> runs next to black stones and gets only three liberties. Run away from the opponent’s stones.",
+      "zh": "<bdi>G4</bdi>贴着黑子逃，只有三口气。要远离对方的棋子。",
+      "ko": "<bdi>G4</bdi>는 흑돌 옆으로 도망쳐 수가 셋뿐. 상대 돌에서 멀어지는 쪽으로 도망치세요.",
+      "es": "<bdi>G4</bdi> huye junto a piedras negras y solo consigue tres libertades. Aléjate de las piedras del rival.",
+      "fr": "<bdi>G4</bdi> fuit à côté de pierres noires et n’obtient que trois libertés. Fuyez loin des pierres adverses.",
+      "pt": "<bdi>G4</bdi> foge ao lado de pedras pretas e só ganha três liberdades. Fuja para longe das pedras do adversário.",
+      "de": "<bdi>G4</bdi> läuft neben schwarze Steine und bekommt nur drei Freiheiten. Laufe von den gegnerischen Steinen weg.",
+      "hi": "<bdi>G4</bdi> काले पत्थरों के बगल में भागता है और केवल तीन स्वतंत्रताएँ पाता है। प्रतिद्वंद्वी के पत्थरों से दूर भागें।",
+      "ar": "<bdi>G4</bdi> يهرب بجوار أحجار سوداء فلا يحصل إلا على ثلاث حريات. اهرب بعيدًا عن أحجار الخصم.",
+      "ru": "<bdi>G4</bdi> уходит вплотную к чёрным камням и получает только три свободы. Уходите подальше от камней соперника.",
+      "zh-TW": "<bdi>G4</bdi> 貼著黑子逃，只有三口氣。要往遠離對方棋子的方向逃。",
+      "id": "<bdi>G4</bdi> lari di samping batu hitam dan hanya dapat tiga kebebasan. Larilah menjauhi batu lawan.",
+      "tr": "<bdi>G4</bdi> siyah taşların yanına kaçar ve yalnızca üç özgürlük alır. Rakip taşlardan uzağa kaç."
      }
     },
     {
@@ -6586,7 +6586,7 @@
     {
      "s": {
       "n": 9,
-      "stones": ".............................................wwww.....bbbww......bbw.......bw....",
+      "stones": ".............................................www......bbww......bbw.......bw.....",
       "turn": 2
      },
      "view": [
@@ -6596,42 +6596,42 @@
       8
      ],
      "ok": [
-      "B1"
+      "A1"
      ],
      "line": [
-      "B1"
+      "A1"
      ],
      "why": {
-      "ja": "隅の花五。急所は<bdi>B1</bdi>です。前のレッスンの「生き」の問題と同じ点が、殺す側の急所にもなります。",
-      "en": "A bulky five in the corner. The vital point is <bdi>B1</bdi> — the same point Black used to live in the previous lesson.",
-      "zh": "角上的刀把五。要点是<bdi>B1</bdi>——正是上一课黑做活用的那一点。",
-      "ko": "귀의 뭉친 다섯 집. 급소는 <bdi>B1</bdi> — 앞 단원에서 흑이 살 때 쓴 바로 그 점입니다.",
-      "es": "Un cinco compacto en la esquina. El punto vital es <bdi>B1</bdi>, el mismo que usó Negro para vivir en la lección anterior.",
-      "fr": "Un cinq compact dans le coin. Le point vital est <bdi>B1</bdi> — le même point que Noir a utilisé pour vivre dans la leçon précédente.",
-      "pt": "Um cinco compacto no canto. O ponto vital é <bdi>B1</bdi> — o mesmo ponto que o Preto usou para viver na lição anterior.",
-      "de": "Eine kompakte Fünf in der Ecke. Der vitale Punkt ist <bdi>B1</bdi> – derselbe Punkt, mit dem Schwarz in der vorigen Lektion gelebt hat.",
-      "hi": "कोने में गठीली पाँच। अहम बिंदु <bdi>B1</bdi> है — वही बिंदु जिससे पिछले पाठ में काला जिया था।",
-      "ar": "خمسة مكتنزة في الزاوية. النقطة الحيوية <bdi>B1</bdi>، وهي النقطة نفسها التي عاش بها الأسود في الدرس السابق.",
-      "ru": "Толстая пятёрка в углу. Жизненная точка — <bdi>B1</bdi>, тот же пункт, которым чёрные жили в прошлом уроке.",
-      "zh-TW": "角上的刀把五。要點是 <bdi>B1</bdi>——就是上一課黑用來做活的那一點。",
-      "id": "Lima gemuk di sudut. Titik vitalnya <bdi>B1</bdi> — titik yang sama yang dipakai Hitam untuk hidup di pelajaran sebelumnya.",
-      "tr": "Köşede tıknaz beşli. Hayati nokta <bdi>B1</bdi> — önceki derste Siyah'ın yaşamak için kullandığı aynı nokta."
+      "ja": "隅の曲がり三。曲がり角は隅の<bdi>A1</bdi>です。盤のはしでも、形の急所は変わりません。",
+      "en": "A bent three in the corner. The corner of the bend is the corner point <bdi>A1</bdi> itself: the vital point of a shape stays the same at the edge.",
+      "zh": "角上的曲三。拐角就是角上的<bdi>A1</bdi>。即使在棋盘边上，棋形的急所也不变。",
+      "ko": "귀의 굽은 셋입니다. 굽은 모서리는 귀의 <bdi>A1</bdi> 자체입니다. 판 끝에서도 모양의 급소는 같습니다.",
+      "es": "Un tres doblado en la esquina. El vértice del doblez es el propio punto de la esquina, <bdi>A1</bdi>: el punto vital de una forma no cambia en el borde.",
+      "fr": "Un trois coudé dans le coin. Le coude est le point du coin lui-même, <bdi>A1</bdi> : le point vital d’une forme reste le même au bord.",
+      "pt": "Um três dobrado no canto. A dobra é o próprio ponto do canto, <bdi>A1</bdi>: o ponto vital de uma forma não muda na borda.",
+      "de": "Eine gebogene Drei in der Ecke. Der Knick ist der Eckpunkt <bdi>A1</bdi> selbst: Der vitale Punkt einer Form bleibt am Rand derselbe.",
+      "hi": "कोने में मुड़ा हुआ तीन। मोड़ का कोना खुद कोने का बिंदु <bdi>A1</bdi> है: किनारे पर भी आकार का अहम बिंदु वही रहता है।",
+      "ar": "ثلاثة منحنية في الزاوية. ركن الانحناء هو نقطة الزاوية <bdi>A1</bdi> نفسها: النقطة الحيوية للشكل لا تتغير عند الحافة.",
+      "ru": "Изогнутая тройка в углу. Изгиб приходится на сам угловой пункт <bdi>A1</bdi>: жизненная точка формы у края та же.",
+      "zh-TW": "角上的曲三。拐角就是角上的<bdi>A1</bdi>。即使在棋盤邊上，棋形的要點也不變。",
+      "id": "Tiga bengkok di sudut. Tikungannya adalah titik sudut <bdi>A1</bdi> itu sendiri: titik vital sebuah bentuk tetap sama di tepi.",
+      "tr": "Köşede bükük üçlü. Bükülme noktası köşe noktası <bdi>A1</bdi>’in kendisidir: bir şeklin hayati noktası kenarda da değişmez."
      },
      "ng": {
-      "ja": "黒に<bdi>B1</bdi>を打たれると生きてしまいます。生きる急所＝殺す急所です。",
-      "en": "If Black gets <bdi>B1</bdi>, Black lives. The vital point for life is the vital point for killing.",
-      "zh": "如果黑占到<bdi>B1</bdi>，黑就活了。做活的要点就是杀棋的要点。",
-      "ko": "흑이 <bdi>B1</bdi>을 차지하면 흑이 삽니다. 사는 급소가 곧 잡는 급소입니다.",
-      "es": "Si Negro consigue <bdi>B1</bdi>, Negro vive. El punto vital para vivir es el punto vital para matar.",
-      "fr": "Si Noir obtient <bdi>B1</bdi>, il vit. Le point vital pour vivre est le point vital pour tuer.",
-      "pt": "Se o Preto conseguir <bdi>B1</bdi>, ele vive. O ponto vital para viver é o ponto vital para matar.",
-      "de": "Bekommt Schwarz <bdi>B1</bdi>, lebt Schwarz. Der vitale Punkt zum Leben ist der vitale Punkt zum Töten.",
-      "hi": "अगर काले को <bdi>B1</bdi> मिल जाए, तो काला जीता है। जीने का अहम बिंदु ही मारने का अहम बिंदु है।",
-      "ar": "إذا حصل الأسود على <bdi>B1</bdi> يعيش. النقطة الحيوية للحياة هي النقطة الحيوية للقتل.",
-      "ru": "Если чёрные получат <bdi>B1</bdi>, они живут. Жизненная точка для жизни — это и жизненная точка для убийства.",
-      "zh-TW": "如果黑下到 <bdi>B1</bdi> 就活了。做活的要點，也就是殺棋的要點。",
-      "id": "Jika Hitam mendapat <bdi>B1</bdi>, Hitam hidup. Titik vital untuk hidup adalah titik vital untuk membunuh.",
-      "tr": "Siyah <bdi>B1</bdi>'i alırsa yaşar. Yaşamak için hayati nokta, öldürmek için de hayati noktadır."
+      "ja": "黒に<bdi>A1</bdi>を打たれると、<bdi>A2</bdi>と<bdi>B1</bdi>の二眼で生きてしまいます。",
+      "en": "If Black plays <bdi>A1</bdi>, <bdi>A2</bdi> and <bdi>B1</bdi> become two eyes and Black lives.",
+      "zh": "如果黑棋下<bdi>A1</bdi>，<bdi>A2</bdi>和<bdi>B1</bdi>就成为两只眼而活棋。",
+      "ko": "흑이 <bdi>A1</bdi>에 두면 <bdi>A2</bdi>와 <bdi>B1</bdi>이 두 집이 되어 삽니다.",
+      "es": "Si Negro juega <bdi>A1</bdi>, <bdi>A2</bdi> y <bdi>B1</bdi> son dos ojos y Negro vive.",
+      "fr": "Si Noir joue <bdi>A1</bdi>, <bdi>A2</bdi> et <bdi>B1</bdi> deviennent deux yeux et Noir vit.",
+      "pt": "Se Preto jogar <bdi>A1</bdi>, <bdi>A2</bdi> e <bdi>B1</bdi> viram dois olhos e Preto vive.",
+      "de": "Spielt Schwarz <bdi>A1</bdi>, werden <bdi>A2</bdi> und <bdi>B1</bdi> zwei Augen und Schwarz lebt.",
+      "hi": "अगर काला <bdi>A1</bdi> खेले, तो <bdi>A2</bdi> और <bdi>B1</bdi> दो आँखें बन जाती हैं और काला जीवित रहता है।",
+      "ar": "إذا لعب الأسود <bdi>A1</bdi> تصبح <bdi>A2</bdi> و<bdi>B1</bdi> عينين ويعيش الأسود.",
+      "ru": "Если чёрные сыграют <bdi>A1</bdi>, <bdi>A2</bdi> и <bdi>B1</bdi> станут двумя глазами, и они живы.",
+      "zh-TW": "如果黑棋下<bdi>A1</bdi>，<bdi>A2</bdi>和<bdi>B1</bdi>就成為兩隻眼而活棋。",
+      "id": "Jika Hitam main <bdi>A1</bdi>, <bdi>A2</bdi> dan <bdi>B1</bdi> menjadi dua mata dan Hitam hidup.",
+      "tr": "Siyah <bdi>A1</bdi>’i oynarsa <bdi>A2</bdi> ve <bdi>B1</bdi> iki göz olur ve Siyah yaşar."
      }
     }
    ],
