@@ -882,8 +882,8 @@
     load() {
       if (this.p) return this.p;
       const voice = fetch('../shogi/voice-fox-ja.js?v=4').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
-      const rep = getJ('../shogi/lesson-replies.json?v=1').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
-      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=20261121k2'), getJ('../shogi/openings.json?v=20261107l14'),
+      const rep = getJ('../shogi/lesson-replies.json?v=2').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
+      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=20261124a'), getJ('../shogi/openings.json?v=20261107l14'),
         ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261121lp`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
@@ -902,7 +902,7 @@
     lesson(key, lang, X) {
       const g = this.data.ls.grades[+key]; if (!g) return null;
       const pool = g.problems.filter(p => !p.variant && (p.kind === 'best' || p.kind === 'tsume'));
-      const probs = g.rules ? pool : shuffle(pool).slice(0, 5);
+      const probs = g.rules ? pool : shuffle(pool).slice(0, 5).sort((a, b) => pool.indexOf(a) - pool.indexOf(b));   // (the pool's order: easy → hard, 2026-11-24 第2期)
       // the warm-up (lessons.json grade.ramp, shogi/tools/ramps.js; 2026-11-15 on the 3D table): the 2D form → the runner's (fen, hl, ar)
       const HLC = { ng: 'hang', ok: 'ok', hl: '' };
       const V = lang === 'ja' ? (this.V || {}) : {}, vo = k => V[k] != null ? { ja: V[k], __voice: true } : null;   // (ショウギツネ's lines win over the plain texts and atlas/nocoord)
@@ -7189,7 +7189,7 @@
       const Wm = t => t && /\{[mx]\}/.test(t) ? fill(t, { m: '<b>' + (moveName(p.pos, p.ans) || SP('ok', ctx.lang)) + '</b>', x: '<b>' + (moveName(p.pos, u) || '') + '</b>' }) : t;
       const whyR = Wm((id === 'chess' || id === 'shogi') && typeof p.good === 'function' ? p.good(u) : p.why), whyW = Wm(((id === 'shogi' || id === 'chess') && p.ng ? p.ng(u) : '') || p.ngTx || (p.why || '').replace(/^\s*(正解|Correct|Right)[！!]\s*/, ''));   // (shogi: why the move played falls short, 2026-11-21)
       if (pts >= 16) say(`${p.own ? '' : (p.kind === 'tsume' ? line('solved') : okLine()) || pick(X.good)} <b>${fill(X.pts, { n })}</b>${whyR ? '<br>' + whyR : ''}`);
-      else { if (p.ans) { if (p.drill) pz().undo(1); pz().mark(p.ans); } const mvN0 = p.kind !== 'tsume' && p.ans ? moveName(p.pos, p.ans) : '', nm = p.kind !== 'tsume' && p.ans && !(mvN0 && whyW && whyW.replace(/<[^>]+>|\s/g, '').includes(mvN0.replace(/\s/g, ''))), mvN = nm ? mvN0 : ''; say(`${msg || (p.own ? (pts > 0 ? 'いい線！' : 'おしい！') : pts > 0 ? X.partial : X.wrong)} <b>${fill(X.pts, { n })}</b>${nm ? '<br>' + (mvN ? fill(ANSW[ctx.lang] || ANSW.en, { m: '<b>' + mvN + '</b>' }) : (ANSP[ctx.lang] || ANSP.en)) : ''}${whyW ? '<br>' + whyW : ''}`);
+      else { if (p.ans) { if (p.drill) pz().undo(1); pz().mark(p.ans); } const mvN0 = p.kind !== 'tsume' && p.ans ? moveName(p.pos, p.ans) : '', nm = p.kind !== 'tsume' && p.ans && !(mvN0 && whyW && whyW.replace(/<[^>]+>|\s/g, '').includes(mvN0.replace(/\s/g, ''))), mvN = nm ? mvN0 : ''; say(`${msg || (p.own ? (pts >= (id === 'shogi' ? 10 : 1) ? 'いい線！' : 'おしい！') : pts > 0 ? X.partial : X.wrong)} <b>${fill(X.pts, { n })}</b>${nm ? '<br>' + (mvN ? fill(ANSW[ctx.lang] || ANSW.en, { m: '<b>' + mvN + '</b>' }) : (ANSP[ctx.lang] || ANSP.en)) : ''}${whyW ? '<br>' + whyW : ''}`);
         if (nm && !mvN) { const k = cur.k, mk = p.ans; later(async () => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz() || !pz().play) return; try { let r = await pz().play(mk); if (r === false) { pz().undo(1); await sleep(250); r = await pz().play(mk); } if (r === false) return; await sleep(1600); if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark(mk); } catch (e) { console.warn('[lessons] show move', e); } }, 1000); } }   // (the move is shown on the board, not named: no coordinates, 2026-11-14)
       try { chime(pts >= 16); } catch (e) {}
       act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
