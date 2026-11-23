@@ -159,8 +159,8 @@
       LB[0].textContent = '▶ ' + X.go; LB[1].textContent = '↻ ' + X.re + ' ×' + RR[turn];
       if (lbOn) return; lbOn = true;
       (function tick() { if (!(phase === 'choose' && !over && !stopped)) { lbOn = false; LB.forEach(e => { e.style.display = 'none'; }); return; }
-        const sp = spots(), a = T3.project(sp.go[0], sp.go[1], U.top + 4.6), b = T3.project(sp.re[0], sp.re[1] + 2.9, U.top);   // (below the dice, so their faces stay in view)
-        if (a) { LB[0].style.left = a.x + 'px'; LB[0].style.top = a.y + 'px'; } if (b) { LB[1].style.left = b.x + 'px'; LB[1].style.top = b.y + 'px'; }
+        const sp = spots(), a = T3.project(sp.go[0], sp.go[1], U.top + 4.6), b = T3.project(sp.re[0], sp.re[1] + 1.9, U.top);   // (under the dice, clear of them at any size of screen: the label hangs below the dice's near edge)
+        if (a) { LB[0].style.left = a.x + 'px'; LB[0].style.top = a.y + 'px'; } if (b) { LB[1].style.left = b.x + 'px'; LB[1].style.top = b.y + LB[1].offsetHeight / 2 + 8 + 'px'; }
         requestAnimationFrame(tick); })();
     }
     const choose = re => { if (phase !== 'choose' || busy || over) return; if (re && RR[turn] > 0) { RR[turn]--; phase = 'roll'; dice = null; doRoll(); } else move(turn, dice); };

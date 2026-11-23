@@ -173,6 +173,7 @@ html.skdark .trsub,html.skdark .trlegend{color:rgba(255,255,255,.8)}
 .gxpic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .35s cubic-bezier(.2,.7,.2,1)}
 .gxc.locked .gxpic img{filter:brightness(0) opacity(.55)}
 .gxlock{position:absolute;inset:0;display:grid;place-items:center}
+.gxplay{position:absolute;inset-inline-end:8px;bottom:8px;display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 9px 0 7px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:.04em;color:#22170a;background:#f3ead6;border:1px solid #c9a55a;box-shadow:0 2px 8px rgba(0,0,0,.45)}.gxplay svg{width:11px;height:11px;fill:#22170a}   /* 所蔵品で遊べる (2026-11-23 user) */
 .gxlock svg{width:46px;height:46px;fill:none;stroke:#f3dfb8;stroke-width:1.8;stroke-linecap:round;opacity:.85}
 .gxsp{position:absolute;left:10px;top:10px;padding:3px 10px;border-radius:99px;background:linear-gradient(135deg,#ffd76a,#d79a1c);color:#3a2408;font:700 12px var(--round);box-shadow:0 2px 0 #a8730f}
 .gxtx{display:flex;flex-direction:column;gap:3px;padding:12px 16px 14px}
