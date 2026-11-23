@@ -461,3 +461,8 @@ html.exv-rot .exv .npc-float{left:160px!important;top:50%;bottom:auto!important;
 .exv-play .exclose{background:rgba(25,18,12,.6);border-color:rgba(255,255,255,.35);color:#fff;box-shadow:none}
 /* PC (a mouse, a wide window): no lengthwise / across button — the board lies across */
 @media (min-width:900px) and (not (pointer:coarse)){.expa[data-k="pturn"]{display:none!important}}
+/* the card never squeezes its parts over each other (a narrow case on PC — 2026-11-23: ウル's long name hid 相手 / 手番): they wrap to a second row */
+.expcard>*,.expf>*{flex:none}
+.expcard{flex-wrap:wrap;justify-content:center;row-gap:8px}
+.exstage{container-type:inline-size}
+@container (max-width:760px){.expcard{border-radius:20px;padding:9px 12px}.expcard>b{border-inline-end:0;padding-inline-end:0;flex-basis:100%;text-align:center}}
