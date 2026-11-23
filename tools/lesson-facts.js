@@ -395,7 +395,16 @@ const CHECKS = {
     //     of under 5 discs are not compared)  ⑥ the win lessons get no easier (the own moves to the forced win never go down)
     //  ⑦ a wrong column that still wins by force is never said to fail (おしまい・止められちゃう・負け・引き分け …)
     //  (⑧ the words: the checks above; ⑨ the 2D lesson reads the same lessons.json.)  C4_SOLVE=0 skips the solver (① only from sc).
-    const C4_DONE = new Set(['four', 'block', 'centre', 'early', 'threat', 'open', 'diag', 'double', 'stack', 'force', 'count', 'endwin', 'parity', 'zugz', 'follow', 'first', 'second', 'miss', 'under', 'edge']);
+    const C4_DONE = new Set(['four', 'block', 'centre', 'early', 'threat', 'open', 'diag', 'double', 'stack', 'force', 'count', 'endwin', 'parity', 'zugz', 'follow', 'first', 'second', 'miss', 'under', 'edge', 'op1', 'op2', 'op3']);
+    // (2026-11-24 第2期 担当B：定跡 op1〜op3) the opening lessons: under 5 discs the solver is too slow, so the stored sc is checked against
+    //  the Lv8 opening tree (connect4/tree.bin, solved offline by the exact C solver) — every column's result, independent of the stored
+    //  table; ③ a weak (result) problem keeps at most 2 answers and 3 wrong columns; ④ op1 = the centre column is the only answer, op2 =
+    //  after d1 and a reply off the centre the first player's only winning columns, op3 = a position of the main line (C4_MAIN, the
+    //  solver's best line, ORDER ties) and its next move; ⑤ two openings under 5 discs are also compared: within 2 discs (mirror too) is
+    //  the same problem; ⑥ the line goes on (more discs each problem).
+    const C4_MAIN = '44444432655555323332267623526661117777711';
+    let C4T = null; const treeRes = mv => { if (!C4T) { C4T = require(path.join(ROOT, 'connect4/engine.js')); C4T.setTree(C4T.decodeTree(fs.readFileSync(path.join(ROOT, 'connect4/tree.bin')))); }
+      const tl = C4T.treeList(mv); return tl && [0, 1, 2, 3, 4, 5, 6].map(c => { const e = tl.find(x => x.c === c); return e ? Math.sign(e.v) : null; }); };
     const E4 = require(path.join(ROOT, 'connect4/engine.js')), SOLVE = process.env.C4_SOLVE !== '0';
     const cset = (mv, mir) => { const g = grid(mv), m = new Map(); g.forEach((col, c) => col.forEach((p, r) => m.set((mir ? 6 - c : c) + ',' + r, p))); return m; };
     const cdist = (a, b) => { let d = 0; for (const [k, v] of a) if (b.get(k) !== v) d++; for (const k of b.keys()) if (!a.has(k)) d++; return d; };
@@ -406,10 +415,18 @@ const CHECKS = {
       (st.problems || []).forEach((P, j) => { const w = `${id} q${j + 1}`, g = grid(P.moves), me = P.moves.length & 1 ? 2 : 1, iw = (43 - P.moves.length) >> 1;
         const leg = [0, 1, 2, 3, 4, 5, 6].filter(c => g[c].length < 6), ans = new Set(P.answer), weak = P.kind === 'weak';
         let sc = P.sc;
-        if (done && SOLVE && !(weak && P.moves.length < 5)) { sc = leg.map(() => 0); sc = [0, 1, 2, 3, 4, 5, 6].map(c => { E4.loadMoves(P.moves); return E4.solveMove(c, weak); });
+        if (done && SOLVE && !(weak && (P.moves.length < 5 || (/^op[123]$/.test(id) && treeRes(P.moves))))) { sc = leg.map(() => 0); sc = [0, 1, 2, 3, 4, 5, 6].map(c => { E4.loadMoves(P.moves); return E4.solveMove(c, weak); });
           const sg = v => v === null ? null : weak ? Math.sign(v) : v;
           if (sc.some((v, c) => sg(v) !== sg(P.sc[c]))) no(w, `① the solver gives ${JSON.stringify(sc)}, stored ${JSON.stringify(P.sc)}`); }
         if (leg.length < 3) no(w, `③ only ${leg.length} legal columns`);
+        if (/^op[123]$/.test(id)) { const op = id;
+          if (P.moves.length < 5 || weak) { const tr = treeRes(P.moves); if (!tr) no(w, '① not in the opening tree, not verified');
+            else if (tr.some((v, c) => v !== (P.sc[c] === null ? null : Math.sign(P.sc[c])))) no(w, `① the opening tree gives ${JSON.stringify(tr)}, stored ${JSON.stringify(P.sc)}`); }
+          if (weak && (ans.size > 2 || leg.length - ans.size < 3)) no(w, `③ ${ans.size} answers of ${leg.length} columns (a result problem keeps at most 2 and 3 wrong)`);
+          if (op === 'op1' && [...ans].join() !== '3') no(w, `④ the centre column is not the only answer (${[...ans]})`);
+          if (op === 'op2' && !(P.moves[0] === '4' && P.moves[1] !== '4' && !(P.moves.length & 1) && Math.max(...leg.map(c => Math.sign(P.sc[c]))) > 0)) no(w, '④ not the first player to move after d1 and a reply off the centre, with a win');
+          if (op === 'op3' && !(C4_MAIN.startsWith(P.moves) && ans.has(+C4_MAIN[P.moves.length] - 1))) no(w, '④ not a position of the main line with its next move as the answer');
+          if (j && P.moves.length < st.problems[j - 1].moves.length) no(w, '⑥ fewer discs than the problem before (the line goes back)'); }
         const val = c => weak ? Math.sign(sc[c]) : sc[c], b = Math.max(...leg.map(val)), best = leg.filter(c => val(c) === b);
         if (best.join() !== [...ans].sort((x, y) => x - y).join()) no(w, `① the best columns are ${best}, the answer ${[...ans]}`);
         const oth = leg.filter(c => !ans.has(c)), sec = oth.length ? Math.max(...oth.map(val)) : -99;
@@ -424,9 +441,9 @@ const CHECKS = {
         if (/^(centre|early)$/.test(id) && !weak) { const ln = c => lines(g, c, g[c].length, me); T[id] = leg.every(c => ln(c) <= ln(A)); }   // (2D 「線の多いマスを押さえ」)
         if (id in T && !T[id]) no(w, `④ the answer does not do the lesson's move (${id})`);
         const a = cset(P.moves), me0 = pool.findIndex(x => x[0] === w);
-        pool.forEach(([who, mv], k) => { if (k === me0 || (k > me0 && !/warm-up/.test(who))) return; if (P.moves.length < 5 && mv.length < 5) return;
-          const d = Math.min(cdist(a, cset(mv)), cdist(a, cset(mv, 1))); if (d <= 3) no(w, `⑤ ${d} disc(s) from ${who}`);
-          else if (mv.length === P.moves.length) { let e = 0; for (let x = 0; x < mv.length; x++) if (mv[x] !== P.moves[x]) e++; if (e <= 3) no(w, `⑤ the moves differ from ${who} in only ${e} place(s)`); } });
+        pool.forEach(([who, mv], k) => { if (k === me0 || (k > me0 && !/warm-up/.test(who))) return; const small = P.moves.length < 5 && mv.length < 5; if (small && !/^op[123]$/.test(id)) return;
+          const d = Math.min(cdist(a, cset(mv)), cdist(a, cset(mv, 1))); if (d <= (small ? 2 : 3)) no(w, `⑤ ${d} disc(s) from ${who}`);
+          else if (!small && mv.length === P.moves.length) { let e = 0; for (let x = 0; x < mv.length; x++) if (mv[x] !== P.moves[x]) e++; if (e <= 3) no(w, `⑤ the moves differ from ${who} in only ${e} place(s)`); } });
         if (!weak) { let o; try { o = X.c4LsJa(st, P, j, me, c => ['金', '銀'][c - 1], si); } catch (e) { return; }
           for (const u of oth) if (sc[u] > 0) { const t = plain(o.ng(u)).split(/緑の印の列/)[0]; if (/おしまい|止まっちゃう|止められちゃう|負け|守れちゃう|終わり|引き分け|届かない/.test(t)) no(w, `⑦ column ${u} still wins, the words say it fails: ${t}`); } }
       }); });
