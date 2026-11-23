@@ -623,6 +623,11 @@ const CHECKS = {
         for (let k = 1; k < C.length; k++) if (C[k][1] > C[k - 1][1]) bad(G, id, `${w}: the most played move is not first`); });
     });
   },
+  // (2026-11-23 第2期) dots & boxes: the strict ①〜⑧ of the verified lessons (DT_DONE) with the exact solver — tools/lesson-verify.js dots
+  dots() {
+    const L = J('dots/lessons.json');
+    require('./lesson-verify.js').dots().forEach(fa => bad('dots', String(L.steps.findIndex(s => s.id === fa.step)), `${fa.step} q${fa.q}: ${fa.msg}`));
+  },
 };
 
 const todo = games.length ? games : Object.keys(CHECKS);
