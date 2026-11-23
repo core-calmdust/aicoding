@@ -2843,7 +2843,7 @@ $('#rulesClose').onclick = () => { if (rulesTour) rulesTour.stop(); hideOverlay(
 
 // ====================================================================== lessons
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261021pz').then(r => r.json()).then(d => {
+const lessonsReady = fetch('lessons.json?v=20261123m0').then(r => r.json()).then(d => {
   LESSONS = d;
   if (d.cats) { LS_COURSES = {}; for (const c of d.cats) LS_COURSES[c.id] = c.steps; }
   return d;

@@ -135,13 +135,17 @@ function gameLevel(raw, ls) {
   const seen = [];   // [{ t, where }]
   raw.forEach((L, li) => { let hit = 0; const why = [];
     (L.probs || []).forEach((p, pi) => { const t = tok(p.pos || ''); if (t.length < 9) return;
+      // (2026-11-23: a dice game's problem is the board AND the roll — バックギャモンのオープニングは全問が初期配置で、目が違えば
+      //  答えも教えることも違う（3-1でポイントを作る・6-5で走る）。似ているとみるのは、同じ目（順不同）で盤が3マス以内の違いのとき。
+      //  同じ目・同じ盤は今までどおり重なりとして減点する（駒の動かし方の5問がオープニング①と同じ3-1・6-1・4-2だったのを見つけた）)
+      const dk = (() => { try { const o = JSON.parse(p.pos || 'null'); const v = o && (o.dice || (o.bg && o.bg.dice)); return Array.isArray(v) ? v.slice().sort().join('') : ''; } catch (e) { return ''; } })();
       // (2026-11-23: on a nearly empty board the stone or two that differ are the whole position — ヘックスのスワップ「中央の石」と
       //  「隅の石」、空の盤と石2つの盤は別の問題。似ているとみるのは、違うマスが3つ以下で、しかも同じ場所の同じ駒が1つ以上あるときだけ。
       //  空きマス（いちばん多い記号）と、文字の駒がある局面での数字（盤の大きさ・手番などの値）は「同じ駒」に数えない)
       const emp = (() => { const c = new Map(); t.forEach(x => c.set(x, (c.get(x) || 0) + 1)); return [...c].sort((a, b) => b[1] - a[1])[0][0]; })();
       const letters = t.some(x => /[^\d\W]/.test(x) && x !== emp && !/[a-z]{2}/.test(x));
-      const m = seen.find(o => { if (o.t.length !== t.length) return false; let d = 0, sh = 0; t.forEach((c, k) => { if (o.t[k] !== c) d++; else if (c !== emp && !(letters && /^\d+$/.test(c))) sh++; }); return d <= 3 && sh >= 1; });
-      if (m) { hit++; why.push(`q${pi + 1} ≈ ${m.where}`); } else seen.push({ t, where: `${L.title} q${pi + 1}` }); });
+      const m = seen.find(o => { if (o.t.length !== t.length || o.dk !== dk) return false; let d = 0, sh = 0; t.forEach((c, k) => { if (o.t[k] !== c) d++; else if (c !== emp && !(letters && /^\d+$/.test(c))) sh++; }); return d <= 3 && sh >= 1; });
+      if (m) { hit++; why.push(`q${pi + 1} ≈ ${m.where}`); } else seen.push({ t, dk, where: `${L.title} q${pi + 1}` }); });
     if (hit) { ls[li].pen.push([Math.min(18, 6 * hit), 'same position as another problem: ' + why.slice(0, 2).join(', ')]); } });
   const plain2 = s => String(s || '').replace(/<[^>]+>/g, '').replace(/♘e2–e4/g, '').replace(/\s/g, '');   // (♘e2–e4: the tool's stand-in for a move name, not the guide's words)
   const head = s => plain2(s).slice(0, 4);
