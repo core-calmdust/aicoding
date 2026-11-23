@@ -1969,11 +1969,14 @@
       const TP = T().Texture.prototype, d = Object.getOwnPropertyDescriptor(TP, 'needsUpdate');
       if (d && d.set) Object.defineProperty(TP, 'needsUpdate', { configurable: true, get: d.get, set(v) { d.set.call(this, v); if (v === true && R && !pfQuiet) kick(150); } });   // (not for a board being built ahead off screen: prefetch)
     } catch (e) {}
-    const de = document.documentElement, pk = () => poke(), pkLong = () => poke(600);
+    // (#skfx — a portal skin's moving scene behind the page — never moves anything the canvas covers: its animations starting (a shooting
+    // star after its delay) or its pieces being built no longer wake the loop for 0.6 s of frames each (2026-11-24, measured))
+    const fxIn = n => { for (; n && n.nodeType === 1; n = n.parentNode) if (n.id === 'skfx') return true; return false; };
+    const de = document.documentElement, pk = () => poke(), pkLong = e => { if (!(e && fxIn(e.target))) poke(600); };
     // (an attribute written with its old value — a clock re-setting its class — or a text change is no layout change: ignored)
     // (the 3D room — portal, Historia — only needs to see its canvas appear: a style written by a page's own JS animation, e.g. the
     // portal's floating pieces 30×/s, is not looked at there)
-    const real = m => m.type === 'attributes' ? m.oldValue !== m.target.getAttribute(m.attributeName) && (alignFn || m.attributeName !== 'style') : [...m.addedNodes, ...m.removedNodes].some(n => n.nodeType === 1);
+    const real = m => fxIn(m.target) ? false : m.type === 'attributes' ? m.oldValue !== m.target.getAttribute(m.attributeName) && (alignFn || m.attributeName !== 'style') : [...m.addedNodes, ...m.removedNodes].some(n => n.nodeType === 1);
     try { new MutationObserver(ms => { if (ms.some(real)) pk(); })
       .observe(de, { subtree: true, childList: true, attributes: true, attributeOldValue: true, attributeFilter: ['class', 'style', 'hidden', 'open'] }); } catch (e) {}
     ['transitionrun', 'transitionend', 'transitioncancel', 'animationstart', 'animationend'].forEach(t => document.addEventListener(t, pkLong, true));
