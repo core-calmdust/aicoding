@@ -6,7 +6,7 @@
 //            (the zugzwang the lesson is about — not a tactical shot).
 //   endwin ⑦ after the answer every legal reply of the opponent loses with best play (the "give the opponent no counter" the words
 //            promise), i.e. the win is truly forced and quickest.
-// node tools/lesson-verify.js [connect4,mancala,gomoku,dots,amazons]
+// node tools/lesson-verify.js [connect4,mancala,gomoku,dots,amazons,reversi]
 'use strict';
 const path = require('path');
 const ROOT = path.join(__dirname, '..');
@@ -471,12 +471,88 @@ function amazons(opt) {
     }); });
   return out;
 }
-const GAMES = { connect4, mancala, gomoku, dots, amazons };
+// (2026-11-24 第2期) reversi: the exact endgames (parity・finish) — every legal move solved again by an independent exact solver
+// (empties to the winner), the step's shape, no near-duplicates across everything the game shows, the easy-to-hard order of a
+// draw, and リバガメ's words for every move of every problem at every place of a draw (3D: lessons3d rvLsJa).
+const RV_DONE = new Set(['parity', 'finish']);
+function rvSolver() {
+  const DIRS = [-9, -8, -7, -1, 1, 7, 8, 9], ok = (p, d) => p >= 0 && p < 64 && Math.abs((p & 7) - ((p - d) & 7)) <= 1;
+  const flips = (b, q, s) => { const o = 3 - s, out = []; for (const d of DIRS) { let p = q + d; const t = []; while (ok(p, d) && b[p] === o) { t.push(p); p += d; } if (t.length && ok(p, d) && b[p] === s) out.push(...t); } return out; };
+  const legal = (b, s) => { const m = []; for (let q = 0; q < 64; q++) if (!b[q] && flips(b, q, s).length) m.push(q); return m; };
+  function neg(b, s, a, be, em, passed) {
+    let best = -99; const ms = [];
+    for (const q of em) { if (b[q]) continue; const f = flips(b, q, s); if (f.length) ms.push([q, f]); }
+    if (!ms.length) { if (passed) { let m = 0, o = 0, e = 0; for (let q = 0; q < 64; q++) { if (b[q] === s) m++; else if (b[q]) o++; else e++; } return m > o ? m - o + e : m < o ? m - o - e : 0; }
+      return -neg(b, 3 - s, -be, -a, em, true); }
+    if (em.length > 6) { const sc = new Map(ms.map(([q, f]) => { b[q] = s; for (const p of f) b[p] = s; let n = 0; for (const r of em) if (!b[r] && flips(b, r, 3 - s).length) n++; b[q] = 0; for (const p of f) b[p] = 3 - s; return [q, n * 10 - ([0, 7, 56, 63].includes(q) ? 5 : 0)]; })); ms.sort((x, y) => sc.get(x[0]) - sc.get(y[0])); }
+    for (const [q, f] of ms) { b[q] = s; for (const p of f) b[p] = s; const v = -neg(b, 3 - s, -be, -Math.max(a, best), em.filter(x => x !== q), false); b[q] = 0; for (const p of f) b[p] = 3 - s; if (v > best) { best = v; if (best >= be) return best; } }
+    return best;
+  }
+  const solveAll = (cells, s) => { const b = String(cells).split('').map(Number), em = []; for (let q = 0; q < 64; q++) if (!b[q]) em.push(q); const out = {};
+    for (const q of legal(b, s)) { const f = flips(b, q, s); b[q] = s; for (const p of f) b[p] = s; out[q] = -neg(b, 3 - s, -99, 99, em.filter(x => x !== q), false); b[q] = 0; for (const p of f) b[p] = 3 - s; } return out; };
+  const regions = b => { const seen = new Array(64).fill(0), reg = new Array(64).fill(0); for (let q = 0; q < 64; q++) if (!b[q] && !seen[q]) { const st = [q], m = []; seen[q] = 1; while (st.length) { const x = st.pop(); m.push(x); for (const d of DIRS) { const y = x + d; if (!ok(y, d) || b[y] || seen[y]) continue; seen[y] = 1; st.push(y); } } for (const x of m) reg[x] = m.length; } return reg; };
+  return { flips, legal, solveAll, regions };
+}
+function reversi(opt) {
+  const fs = require('fs'), vm = require('vm');
+  const L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'reversi/lessons.json'), 'utf8'));
+  const src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), app = fs.readFileSync(path.join(ROOT, 'reversi/index.html'), 'utf8');
+  const pre = ['  const fill = ', '  const L = (o, lang)'].map(k => { const i = src.indexOf(k); return src.slice(i, src.indexOf('\n', i)); }).join('\n');
+  const X = vm.runInNewContext(pre + '\n' + src.slice(src.indexOf('  const RV_TABS = '), src.indexOf('  const rvNC = ')) + '\n;({ rvLsJa, rvEmpt, RV_CN })', {});
+  const S = rvSolver(), out = [], only = opt && opt.only, add = (id, j, m) => out.push({ step: id, q: j + 1, msg: m });
+  // ⑥⑨ a draw of 5 is put in order (fewer empties first, the exception last) in both versions
+  if (!/probs\.every\(p => p\.type === 'exact'\)\) probs\.sort\(\(a, b\) => \(a\.trap \? 1 : 0\) - \(b\.trap \? 1 : 0\) \|\| rvEmpt\(a\) - rvEmpt\(b\)\)/.test(src)) add('-', -1, '⑥ the 3D REVERSI.lesson does not order the exact endgames');
+  if (!/probs\.every\(p => p\.type === 'exact'\)\) probs\.sort\(\(a, b\) => \(a\.trap \? 1 : 0\) - \(b\.trap \? 1 : 0\) \|\| nE\(a\) - nE\(b\)\)/.test(app)) add('-', -1, '⑥⑨ reversi/index.html startLesson does not order the exact endgames');
+  // ⑤ every position the game shows: lessons (problems + warm-ups) and puzzles, under the 8 symmetries
+  const SY = []; for (let t = 0; t < 8; t++) { const m = []; for (let q = 0; q < 64; q++) { let r = q >> 3, c = q & 7; if (t & 1) c = 7 - c; if (t & 2) r = 7 - r; if (t & 4) [r, c] = [c, r]; m.push(r * 8 + c); } SY.push(m); }
+  const dist = (a, b) => { let best = 99; for (const m of SY) { let n = 0; for (let q = 0; q < 64 && n < best; q++) if (a[q] !== b[m[q]]) n++; best = Math.min(best, n); } return best; };
+  const pool = []; L.lessons.forEach(l => { l.problems.forEach((p, j) => pool.push([`${l.id} q${j + 1}`, String(p.cells), p])); (l.warm || []).forEach((w, j) => pool.push([`${l.id} warm ${j + 1}`, String(w.cells), w])); });
+  const PZ = JSON.parse(fs.readFileSync(path.join(ROOT, 'reversi/puzzles.json'), 'utf8')); (PZ.levels || []).forEach(lv => lv.puzzles.forEach((p, j) => pool.push([`puzzle ${lv.id} ${j + 1}`, String(p.cells), p])));
+  const nums = t => [...String(t).matchAll(/(\d+)石差で(勝ち|負け)|引き分け/g)].map(m => m[0] === '引き分け' ? 0 : m[2] === '勝ち' ? +m[1] : -m[1]);
+  L.lessons.forEach((l, li) => { const id = l.id; if (!RV_DONE.has(id) || (only && !only.has(id))) return;
+    if (l.problems.length < 8 || l.problems.filter(p => p.trap).length < 2) add(id, -1, '⑤ the pool is too small to draw 5 different problems');
+    l.problems.forEach((P, j) => { const a = m => add(id, j, m), b = String(P.cells).split('').map(Number), s = P.toMove, F = P.f || {};
+      if (P.type !== 'exact') a('① not an exact problem');
+      const ex = S.solveAll(P.cells, s), lg = Object.keys(ex).map(Number), ks = Object.keys(F).map(Number);
+      if (lg.length !== ks.length || lg.some(q => !F[q])) { a(`① the stored moves ${ks} are not the legal moves ${lg}`); return; }
+      for (const q of lg) if (F[q][0] !== ex[q]) a(`① move ${q}: stored ${F[q][0]}, exact ${ex[q]}`);
+      const v = q => ex[q], srt = lg.map(v).sort((x, y) => y - x), bs = lg.filter(q => v(q) === srt[0]), best = bs[0];
+      if (bs.length > 1) a(`② ${bs.length} moves share the best result ${srt[0]}`);
+      if (srt[0] - srt[1] < 4 && Math.sign(srt[0]) === Math.sign(srt[1])) a(`② the 2nd move is only ${srt[0] - srt[1]} discs worse with the same outcome (${srt[0]} / ${srt[1]})`);
+      if (lg.length < 3) a(`③ only ${lg.length} legal moves`);
+      // the stored facts the words use: flips, the opponent's moves, the region, the pass
+      const reg = S.regions(b);
+      for (const q of lg) { const f = S.flips(b, q, s), c = b.slice(); c[q] = s; f.forEach(x => { c[x] = s; }); const ol = S.legal(c, 3 - s);
+        if (F[q][1] !== f.length) a(`⑧ move ${q}: ${F[q][1]} flips stored, ${f.length} on the board`);
+        if (F[q][3] !== ol.length) a(`⑧ move ${q}: ${F[q][3]} replies stored, ${ol.length} on the board`);
+        if (F[q][5] !== reg[q]) a(`⑧ move ${q}: region ${F[q][5]} stored, ${reg[q]} on the board`);
+        if (!!F[q][6] !== (ol.length === 0)) a(`⑧ move ${q}: the pass flag is wrong`); }
+      // ④ the theme
+      if (id === 'parity') { const odd = q => reg[q] % 2 === 1, pass = q => !!F[q][6];
+        if (!P.trap) { if (!odd(best) && !pass(best)) a('④ the answer is not in an odd region (nor a pass)'); if (!lg.some(q => q !== best && !odd(q))) a('④ no move in an even region to tell apart'); }
+        else { if (odd(best) || pass(best)) a('④ the exception: the answer is in an odd region'); if (!lg.some(q => q !== best && odd(q))) a('④ the exception: no odd-region move that loses out'); } }
+      if (id === 'finish') { if (srt[0] < 0) a('④ the answer does not save the game'); if (lg.filter(q => v(q) >= 0).length !== 1) a('④⑧ not the only move that saves the game (「ほかの手だと負けちゃう」)');
+        if (P.trap && (!lg.some(q => X.RV_CN.includes(q)) || X.RV_CN.includes(best))) a('④ the corner trap: no corner, or the corner is the answer'); }
+      // ⑤
+      for (const [nm, c2, o] of pool) { if (o === P) continue; const d = dist(String(P.cells), c2); if (d <= 3) a(`⑤ ${d} square(s) from ${nm}`); }
+      // ⑦⑧ the words, for each place in a draw (i = 0..4) and every move
+      for (let i = 0; i < 5; i++) { const W = X.rvLsJa(id, P, i, li, false);
+        for (const t of [W.ask, W.hintTx]) if (!t || /\{|undefined|NaN/.test(t)) a(`⑧ the question / hint 「${t}」`);
+        for (const q of lg) { const g = String(q === best ? W.good(q) : W.ng(q));
+          if (!g || /\{|undefined|NaN/.test(g)) { a(`⑧ move ${q} (#${i + 1}): 「${g}」`); continue; }
+          const n = nums(g), want = q === best ? [v(q)] : [v(q), v(best)];
+          if (n.some((x, k) => x !== want[k] && !(q === best && x === v(best)))) a(`⑦ move ${q} (#${i + 1}): 「${g}」 says ${n}, the board ${want}`);
+          for (const m of g.matchAll(/(\d+)マス/g)) if (![v(q)].concat(lg.map(z => reg[z])).includes(+m[1])) a(`⑧ move ${q} (#${i + 1}): 「${g}」 — no ${m[1]}-square region`);
+          if (q === best && /パス/.test(g) && !F[q][6] && !/パスさせられる！$/.test(g)) a(`⑧ move ${q} (#${i + 1}): praises a pass that is not there`);
+          if (q !== best && /緑の枠なら、相手をパス|緑の枠は、相手をパス|緑の枠なら相手はパス|緑の枠を打てば、相手は打つ場所|緑の枠で相手をパス|緑の枠なら、相手の手番/.test(g) && !F[best][6]) a(`⑦ move ${q} (#${i + 1}): says the answer makes a pass`); } } }); });
+  return out;
+}
+const GAMES = { connect4, mancala, gomoku, dots, amazons, reversi };
 module.exports = GAMES; GAMES.mancalaWords = mancalaWords;   // (not a game of the CLI: the words pass alone, for tests)
 if (require.main === module) {
-  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons').split(',');
+  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons,reversi').split(',');
   let bad = 0;
-  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'connect4' ? ' (count/endwin の⑦⑧)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
+  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'connect4' ? ' (count/endwin の⑦⑧)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
     bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
   process.exit(bad ? 1 : 0);
 }

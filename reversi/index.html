@@ -3138,7 +3138,7 @@ try { lessonProgress = JSON.parse(localStorage.getItem(LESSON_STORE) || '{}'); }
 const CORNER_OF = { 9: 0, 14: 7, 49: 56, 54: 63, 1: 0, 8: 0, 6: 7, 15: 7, 48: 56, 57: 56, 55: 63, 62: 63 };
 async function loadLessons() {
   if (lessonData) return lessonData;
-  try { lessonData = await fetch('lessons.json?v=20261107l14').then(r => r.json()); } catch (e) { lessonData = { lessons: [] }; }
+  try { lessonData = await fetch('lessons.json?v=20261124p1').then(r => r.json()); } catch (e) { lessonData = { lessons: [] }; }
   return lessonData;
 }
 const LT = l => l.text ? Object.assign({}, l.text.ja, l.text.en, l.text[LANG]) : l;  // per-field fallback: LANG → en → ja
@@ -3526,6 +3526,9 @@ function startLesson(i, noWarm) {
   const nTrap = trap.length ? (Math.random() < 0.5 ? 1 : 2) : 0;
   const rest = shuf([...std.slice(1, 5 - nTrap), ...trap.slice(0, nTrap)]);
   let probs = std.length ? [std[0], ...rest] : rest;   // problem 1 (tutorial) is always a standard one
+  // (2026-11-24 lesson loop ⑥, = atlas lessons3d) the exact endgames from easy to hard: fewer empties first, the exception (trap) last
+  const nE = p => (p.cells.match(/0/g) || []).length;
+  if (probs.length && probs.every(p => p.type === 'exact')) probs.sort((a, b) => (a.trap ? 1 : 0) - (b.trap ? 1 : 0) || nE(a) - nE(b));
   if (l.kind === 'opening') {   // 5 problems from different lines where possible, early moves first
     const byLine = {}; shuf(l.problems).forEach(p => { (byLine[p.line] = byLine[p.line] || []).push(p); });
     const lines = shuf(Object.keys(byLine)); probs = [];
