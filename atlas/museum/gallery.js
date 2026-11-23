@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 137;
+  const V = 138;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -28,6 +28,8 @@
     // (「シャルルマーニュのチェス駒」は取り下げ中：公開できる水準に届かないため 2026-11-22。モデル ex/charlemagne.js と解説文は残してある。戻すときは museum-spec.md を参照)
     { id: 'nishapur', game: 'chess', cm: 1, view: [.9, .55, .78],
       spots: [[2.5, 5.2, 10.25], [-2.5, 4.7, 10.25], [-7.5, 5.0, 10.25], [-12.5, 4.6, 10.25], [-17.5, 3.4, 10.25], [-1.3, 3.1, 3.75], [2.5, 5.2, -10.25]] },
+    { id: 'liubo', game: 'go', cm: 1, view: [.35, .6, .9],   // (The Met 1994.285: no game on it yet — the rules of liubo are lost; 'go' only gives the card its colour)
+      spots: [[-.6, 5.2, .3], [-.6, 5.2, -8], [1, 5.2, 12.6], [14.5, 5.2, -13], [11.15, 1.8, 10.4], [5, 1.3, 21]] },
     { id: 'goose', game: 'chess', cm: 1, flip: true, view: [0, .95, .82],   // (The Met 62.14: the goose side up, chess underneath)
       spots: [[.06, 2.6, 7.22], [-.25, 2.6, -15.4], [-14.04, 2.6, -1.8], [-8.26, 2.6, 9.75], [10.55, 2.6, .13], [-5.58, 2.6, -9.96], [-9.47, 2.6, 2.41], [9.66, 2.6, 13.6], [1.7, .3, -1.7], [17.4, .15, -8.6], [18.2, 0, 0]], side: [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1] },
     { id: 'ottoman', game: 'backgammon', cm: 1, flip: true, view: [0, .95, .82], lock: { game: 'backgammon', ach: 3 },
