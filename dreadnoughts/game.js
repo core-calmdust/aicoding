@@ -397,16 +397,16 @@ let pkSide = 0;   // the picks row on phones shows our side (0) or theirs (1)
 function shipCard(k, o) {
   o = o || {}; const T = E.TYPES[k], cost = o.cost != null ? o.cost : T.cost;
   return `<${o.tag || 'button'} class="card r${ROLE_OF(k)}${o.cls || ''}" data-k="${k}"${o.i != null ? ` data-i="${o.i}"` : ''} ${o.attrs || ''}><span class="role"></span>
-    <span class="top"><span class="cost">${cost}</span><b>${t('ship.' + k)}</b>${lenPips(T.len)}${o.pool > 1 ? `<em class="pool">×${o.pool}</em>` : ''}</span>
+    <span class="top"><span class="cost">${cost}</span><b>${t('ship.' + k)}</b>${lenPips(T.len)}${o.pool > 1 ? `<em class="pool">×${o.pool}</em>` : ''}${E.ONE_ONLY && E.ONE_ONLY[T.k] ? `<em class="pool one">${t('pk.one')}</em>` : ''}</span>
     <span class="art">${cardArt(T)}${portraitImg(k, T.len)}</span><span class="meta"><span class="rl">${t('dr.g' + ROLE_OF(k))}</span><span class="sz">${lenPips(T.len)}<em>${T.len}</em></span></span>
     <span class="skl">${icon(abilityKey(T))}<span>${shipSkillName(T)}</span><small>${kindOf(T)}</small></span>
     <span class="desc">${shipSkillText(T)}</span>${o.foot || '<span class="foot"></span>'}</${o.tag || 'button'}>`;
 }
 function draftCard(k, d, mine, run, selCost, costOf) {
-  const T = E.TYPES[k], have = d.picks[0].filter(x => x === k).length, taken = have >= E.MAXSAME, dup = have > 0 && !taken, cost = E.pickCost(d, 0, k), sel = pickSel.includes(k);
+  const T = E.TYPES[k], have = d.picks[0].filter(x => x === k).length, taken = have >= (E.maxSame ? E.maxSame(k) : E.MAXSAME), dup = have > 0 && !taken, cost = E.pickCost(d, 0, k), sel = pickSel.includes(k);
   const fits = sel || costOf((pickSel.length < run ? pickSel : pickSel.slice(0, -1)).concat(k)) <= E.draftLeft(d, 0);
   const can = mine && E.draftCan(d, 0, k) && fits;
-  const why = taken ? t('pk.taken') : !d.pool[k] ? t('pk.gone') : cost > E.draftLeft(d, 0) - (mine && !sel ? selCost : 0) ? t('pk.cost') : d.picks[0].length >= E.MAXSHIPS ? t('pk.full') : mine && !E.canReachMin(d, 0, k) ? t('pk.min') : '';
+  const why = taken ? t(E.maxSame && E.maxSame(k) === 1 ? 'pk.one' : 'pk.taken') : !d.pool[k] ? t('pk.gone') : cost > E.draftLeft(d, 0) - (mine && !sel ? selCost : 0) ? t('pk.cost') : d.picks[0].length >= E.MAXSHIPS ? t('pk.full') : mine && !E.canReachMin(d, 0, k) ? t('pk.min') : '';
   const foot = sel ? `<span class="foot badge">${run > 1 ? (pickSel.indexOf(k) + 1) + ' · ' : ''}${t('pk.sel')}</span>` : why ? `<span class="foot why">${why}</span>` : dup ? `<span class="foot why gold">${t('pk.dup', { n: E.DUP_EXTRA })}</span>` : '';
   return shipCard(k, { cost, pool: d.pool[k], cls: (can || sel ? '' : ' off') + (sel ? ' sel' : '') + (dup ? ' dup' : ''), attrs: can ? '' : 'aria-disabled="true"', foot });
 }

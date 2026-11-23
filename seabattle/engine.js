@@ -115,21 +115,27 @@ const JAM_GUARD = 4;
 // why a ready skill can't be used right now ('' = it can): its own smoke still hangs, its own ward is still up, the foe was just jammed
 function skillHeld(st, by, i) { const k = TYPES[st.sides[by].ships[i].t].skill, M = st.sides[by], O = st.sides[1 - by];
   return k === 'smoke' && M.fog > 0 ? 'smoke' : k === 'ward' && M.ward > 0 ? 'ward' : k === 'jam' && O.jamImm > 0 ? 'jam' : ''; }
-const JAMS = (st, side, i) => { const s = st.sides[side].ships[i]; return !!s && TYPES[s.t] && TYPES[s.t].skill === 'jam'; };
+// the cooldown skills themselves (妨害・号令・総力) only count down 1 a turn: nothing speeds them up — not 統率・加速・通商破壊, not each other
+// (総力 reset a 号令 and the 号令 then cut the 総力 back: a chain — 2026-11-23 user: クールタイム周りを一通り見直し)
+const CD_SKILL = { jam: 1, command: 1, allout: 1 };
+const JAMS = (st, side, i) => { const s = st.sides[side].ships[i]; return !!s && TYPES[s.t] && !!CD_SKILL[TYPES[s.t].skill]; };
 const PASSIVE = t => !!(t.armor || t.aa || t.counter || t.rally || t.hospital || t.trace || t.pursuit || t.haste || t.net || t.plunder || t.calm);
 const AREA = { bomb: 1, volley: 1, rocket: 1, barrage: 1, strafe: 1, lance: 1, ring: 1 }, SCAN = { sonar: 1, scout: 1, radar: 1, sweep: 1, echo: 1, diag: 1, cross: 1 }, MAXMINES = 2;
 const NOAIM = { smoke: 1, command: 1, jam: 1, repair: 1, mine: 1, suppress: 1, ward: 1, rapid: 1, intel: 1, plate: 1, listen: 1, allout: 1 };   // skills that need no square
 // the field (2026-11-20): the destroyer and 6 other types drawn at random, 2 of each — at least one attacker, one scout and one of
 // defence / support — and a fleet takes each type at most once, so the drafts differ from game to game
 const ROLE = { atk: [0, 1, 2, 8, 11, 15, 22, 23, 28, 30, 36, 41, 44, 47, 49], info: [3, 7, 16, 19, 25, 26, 29, 32, 33, 35, 43, 45], def: [5, 6, 9, 10, 12, 13, 14, 17, 18, 20, 21, 24, 27, 34, 37, 38, 39, 40, 42, 46, 48, 31] };   // (31 輸送艦 joined 防御／支援 on 2026-11-20: it had no role, so since the balanced field it never came up)
-let BUDGET = 20, MINSHIPS = 3, MAXSHIPS = 6; const MAXSAME = 2, DUP_EXTRA = 1, CLASSIC = [0, 1, 2, 3, 4], NT = TYPES.length;
+let BUDGET = 20, MINSHIPS = 3, MAXSHIPS = 6; const MAXSAME = 2,
+  // 2026-11-23 user: 号令などクールタイム周りのスキルは二重に取るとキツい → the types that move cooldowns (号令・総力・妨害 and the passives
+  // 統率・加速・通商破壊) are one to a fleet. (The passives never stacked anyway: a second copy only kept the effect alive after the first sank.)
+  ONE_ONLY = { flagship: 1, allout: 1, jammer: 1, supply: 1, cship: 1, raider: 1 }, maxSame = k => ONE_ONLY[TYPES[k].k] ? 1 : MAXSAME, DUP_EXTRA = 1, CLASSIC = [0, 1, 2, 3, 4], NT = TYPES.length;
 const PRESETS = [[0, 1, 2, 3], [0, 1, 3, 4], [1, 2, 3, 4, 6], [1, 8, 7, 4, 6], [0, 5, 3, 4], [9, 1, 8, 3], [0, 10, 7, 4, 6]];
 // a second copy of a type is allowed (the one the other side left) and costs 1 more (2026-11-20 user; 2000 games: first mover 51%,
 // 39% of fleets take a double, no double stands out)
 function costOf(k) { const d = MODES[MODE].cost; return TYPES[k].cost + (d && d[TYPES[k].k] || 0); }   // (a mode may re-price a type — 大艦隊's own balance)
 function draftCost(types) { let c = 0; const n = {}; for (const t of types) { c += costOf(t) + (n[t] ? DUP_EXTRA : 0); n[t] = 1; } return c; }
 function pickCost(d, p, k) { return costOf(k) + (d.picks[p].includes(k) ? DUP_EXTRA : 0); }
-function validDraft(types) { if (types.length < MINSHIPS || types.length > MAXSHIPS || draftCost(types) > BUDGET) return false; const n = new Array(NT).fill(0); for (const t of types) { if (!(t >= 0 && t < NT) || ++n[t] > MAXSAME) return false; } return true; }
+function validDraft(types) { if (types.length < MINSHIPS || types.length > MAXSHIPS || draftCost(types) > BUDGET) return false; const n = new Array(NT).fill(0); for (const t of types) { if (!(t >= 0 && t < NT) || ++n[t] > maxSame(t)) return false; } return true; }
 // The draft: 2 of each type lie on the table (10 ships); the players pick in turn — A B B A A B B A … — within the budget.
 // A player with MINSHIPS or more may stop; one who cannot afford anything left stops by itself. d.turn = -1 when it is over.
 const POOL = new Array(50).fill(0).map((x, i) => i < 5 ? 2 : 0);
@@ -158,20 +164,20 @@ function field(rnd) {
 }
 function draftNew(first, rnd, mode) { setMode(mode); const pool = field(rnd), d = { mode: MODE, pool, f: pool.slice(), picks: [[], []], done: [false, false], first: first ? 1 : 0, n: 0, turn: first ? 1 : 0, last: null }; return d; }
 function draftLeft(d, p) { return BUDGET - draftCost(d.picks[p]); }
-function draftCan(d, p, k) { return d.turn === p && !d.done[p] && d.pool[k] > 0 && d.picks[p].length < MAXSHIPS && pickCost(d, p, k) <= draftLeft(d, p) && d.picks[p].filter(x => x === k).length < MAXSAME && canReachMin(d, p, k); }
+function draftCan(d, p, k) { return d.turn === p && !d.done[p] && d.pool[k] > 0 && d.picks[p].length < MAXSHIPS && pickCost(d, p, k) <= draftLeft(d, p) && d.picks[p].filter(x => x === k).length < maxSame(k) && canReachMin(d, p, k); }
 // a pick must still leave room for a fleet of three: after it, the cheapest ships left on the table must fit the budget
 // (two copies of a 9 would cost 19 and leave nothing to buy — 2026-11-20)
 function canReachMin(d, p, k) {
   const picks = d.picks[p].concat(k), need = MINSHIPS - picks.length; if (need <= 0) return true;
   let left = BUDGET - draftCost(picks); const pool = d.pool.slice(); pool[k]--; const opts = [];
-  for (let x = 0; x < NT; x++) { const have = picks.filter(y => y === x).length; for (let n = 0; n < Math.min(pool[x], MAXSAME - have); n++) opts.push(costOf(x) + (have + n > 0 ? DUP_EXTRA : 0)); }
+  for (let x = 0; x < NT; x++) { const have = picks.filter(y => y === x).length; for (let n = 0; n < Math.min(pool[x], maxSame(x) - have); n++) opts.push(costOf(x) + (have + n > 0 ? DUP_EXTRA : 0)); }
   opts.sort((a, b) => a - b); if (opts.length < need) return false;
   for (let i = 0; i < need; i++) left -= opts[i];
   return left >= 0;
 }
 function draftCanStop(d, p) { return d.turn === p && d.picks[p].length >= MINSHIPS; }
 function draftNext(d) {
-  for (const p of [0, 1]) if (!d.done[p] && (d.picks[p].length >= MAXSHIPS || !TYPES.some((T, k) => d.pool[k] > 0 && pickCost(d, p, k) <= draftLeft(d, p) && d.picks[p].filter(x => x === k).length < MAXSAME && canReachMin(d, p, k)))) d.done[p] = true;
+  for (const p of [0, 1]) if (!d.done[p] && (d.picks[p].length >= MAXSHIPS || !TYPES.some((T, k) => d.pool[k] > 0 && pickCost(d, p, k) <= draftLeft(d, p) && d.picks[p].filter(x => x === k).length < maxSame(k) && canReachMin(d, p, k)))) d.done[p] = true;
   if (d.done[0] && d.done[1]) { d.turn = -1; return; }
   for (let g = 0; g < 4; g++) { d.n++; const p = (((d.n + 1) >> 1) & 1) ^ d.first; if (!d.done[p]) { d.turn = p; return; } }
 }
@@ -700,7 +706,7 @@ function planAction(st, level, rnd, now) {
 const E = { fleetScore, DRAFT_NOISE, canReachMin, planAction, PLAN, pickCost, DUP_EXTRA, ROLE, FIELD_N, FIELD_MIX, FIELD_ONE, calmOn, NOAIM, SELF, field, skillLive, setDraftW: w => { DRAFT_W = w; }, setRepairV: x => { REPAIR_V = x; }, setMineV: x => { MINE_V = x; }, N, NN, FLEET, TOTAL, RULES, TYPES, BUDGET, MINSHIPS, MAXSHIPS, MAXSAME, PRESETS, POOL, draftNew, draftLeft, draftCan, draftCanStop, draftPick, draftAI, draftCost, validDraft, footprint, skillReady, preview, useSkill, act, chooseAction, probs, scanLeft, rng, shipCells, inside, fits, gridOf, validFleet, randomFleet, newSide, newGame, fire, quota, view, heat, jointHeat, choose, advise, winProb, shotsToFinish, levelSpec, neighbors4, neighbors8, cellName };
 for (const k of ['N', 'NN', 'BUDGET', 'MINSHIPS', 'MAXSHIPS', 'FIELD_N', 'FIELD_ONE', 'FIELD_MIX']) delete E[k];
 Object.defineProperties(E, { N: { get: () => N }, NN: { get: () => NN }, BUDGET: { get: () => BUDGET }, MINSHIPS: { get: () => MINSHIPS }, MAXSHIPS: { get: () => MAXSHIPS }, FIELD_N: { get: () => FIELD_N }, FIELD_ONE: { get: () => FIELD_ONE }, FIELD_MIX: { get: () => FIELD_MIX }, mode: { get: () => MODE } });
-E.MODES = MODES; E.setMode = setMode; E.skillHeld = skillHeld; E.JAM_GUARD = JAM_GUARD; E.costOf = k => costOf(k);
+E.MODES = MODES; E.setMode = setMode; E.maxSame = maxSame; E.ONE_ONLY = ONE_ONLY; E.skillHeld = skillHeld; E.JAM_GUARD = JAM_GUARD; E.costOf = k => costOf(k);
 // a game state, a side or a draft carries its mode: switch to it whenever one is handed in (the AI worker gets a plain copy of the state)
 for (const k of Object.keys(E)) { const f = E[k]; if (typeof f !== 'function' || k === 'setMode' || /^set/.test(k)) continue; E[k] = function (a) { if (a && typeof a === 'object' && a.mode && a.mode !== MODE) setMode(a.mode); return f.apply(this, arguments); }; }
 if (typeof module !== 'undefined' && module.exports) module.exports = E; else root.SeaEngine = E;
