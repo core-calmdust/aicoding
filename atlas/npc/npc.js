@@ -16,7 +16,7 @@
   const A = window.AtlasNPC = window.AtlasNPC || {};
   if (A.skin) return;
   const SRC = (document.currentScript && document.currentScript.src) || location.href;
-  const BASE = new URL('./', SRC).href, ATLAS = new URL('../', BASE).href, IMG = new URL('../images/atlas/', ATLAS).href, V = '21';
+  const BASE = new URL('./', SRC).href, ATLAS = new URL('../', BASE).href, IMG = new URL('../images/atlas/', ATLAS).href, V = '22';
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
   const loaded = {};
   const load = src => loaded[src] || (loaded[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }));
@@ -498,6 +498,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     let ui = null, T = null, dead = false;
     ensure(langNow()).then(() => {
       if (dead || !A.BOSSES || !A.BOSSES[o.game]) return;
+      if (o.quiet) return;   // (o.quiet: no talk at all — the museum, 2026-11-23 user — only the reward below)
       ui = floatUI(o.host ? { host: o.host, left: o.left, bottom: o.bottom } : {}); T = Talk(o.game, ui, { pace: PACE[o.game], early: EARLY[o.game] });
       T.setLevel(o.level); T.newGame(0);
       // the portal's language menu mid-game: the lines in the new language (the bubble on screen too)
@@ -506,7 +507,11 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     }).catch(() => {});
     return {
       turn(ply) { if (T && ply != null) T.step(ply, null); },
-      end(res) { if (T) T.end(res.draw ? 'd' : res.win ? 'w' : 'l'); },
+      end(res) { if (T) T.end(res.draw ? 'd' : res.win ? 'w' : 'l');
+        else if (o.quiet && res.win && !dead) ensure(langNow()).then(() => {   // (quiet: beating the level's boss still gives its N / R / SR)
+          const g = o.game, t = A.tier(g, o.level), bi = A.band(g, o.level), id = 'av-' + A.bossId(g, bi) + '-' + t;
+          if (t < 0 || !window.Atlas || !Atlas.load) return; const W = Atlas.load(); if (!W || W.owned.includes(id)) return;
+          W.owned.push(id); Atlas.save(W); setTimeout(() => toast(id, bossName(A.BOSSES[g][bi], langNow()), t), 1200); }).catch(() => {}); },
       bottom(px) { document.documentElement.style.setProperty('--npc-bot', Math.round(px) + 'px'); },
       stop() { dead = true; if (ui) setTimeout(() => ui.remove(), 6000); },
       kill() { dead = true; if (ui) ui.remove(); },
