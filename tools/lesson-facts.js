@@ -170,6 +170,8 @@ const CHECKS = {
         if (pb.best != null && pb.ok && !pb.ok.includes(pb.best)) bad('amazons', K, st.id + ': ' + `problem ${j}: the best move is not among the answers`);
       });
     });
+    // (2026-11-24 第2期) the strict ①〜⑨ of the verified basics (AM_DONE): goal sets, the step's shape, no near-duplicates, the ramp and ケロ's words for every move — tools/lesson-verify.js amazons
+    require('./lesson-verify.js').amazons().forEach(fa => bad('amazons', String(L.steps.findIndex(s => s.id === fa.step)), `${fa.step} q${fa.q}: ${fa.msg}`));
   },
   // (2026-11-22 lesson loop) the morris lessons ('morris', key = the 3D list index: nine → six → twelve, steps with problems): every
   // accepted / scored move is legal and the best one is the engine's best; what the step's words say the answer does holds on the board —

@@ -315,7 +315,8 @@ button{font:inherit;color:inherit;cursor:pointer}
   #skTip.arm .reach{flex:none;width:auto;height:100%;max-height:72px;aspect-ratio:1}
   #skTip.arm .tx{flex:1;min-width:0}#skTip.arm b{display:flex;align-items:center;gap:6px;font-family:var(--jp);font-size:16px;color:var(--gold2);white-space:nowrap}#skTip.arm b svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6}
   #skTip.arm b small{font-family:var(--body);font-weight:400;font-size:12.5px;color:var(--mute);overflow:hidden;text-overflow:ellipsis}
-  #skTip.arm p{margin:3px 0 0;font-size:14px;line-height:1.45;color:#d6dcdc;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  #skTip.arm p{margin:3px 0 0;font-size:14px;line-height:1.45;color:#d6dcdc;max-height:calc(1.45em * 2);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:var(--brass) transparent}   /* (the whole text, scrolled — not cut with …) */
+  #skTip.arm .tx{align-self:stretch;display:flex;flex-direction:column;justify-content:center;min-height:0}
   #tipX{display:grid;position:absolute;right:2px;top:50%;transform:translateY(-50%);width:42px;height:42px;place-items:center;border:0;background:none;color:var(--gold2);font-size:26px}
   #acts{display:none}
   #msg{bottom:auto;top:calc(150px + var(--st));font-size:15px;white-space:normal;text-align:center;max-width:calc(100vw - 24px)}
@@ -438,10 +439,10 @@ button{font:inherit;color:inherit;cursor:pointer}
   .picks #pkSw{align-self:stretch;height:auto;flex-direction:column;justify-content:center;gap:2px;width:58px;padding:0 4px;font-size:12px;text-align:center;white-space:normal;line-height:1.25}
 }
 /* deployment (phones): the tapped ship's skill in one line above the strip; the ship lights up on the sea */
-#spotTip{position:fixed;left:8px;right:8px;z-index:6;display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;background:rgba(10,18,26,.96);border:1px solid rgba(214,222,228,.4);border-left:3px solid var(--acc);font-size:13px;white-space:nowrap;overflow:hidden;pointer-events:none}
+#spotTip{position:fixed;left:8px;right:8px;z-index:6;display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;background:rgba(10,18,26,.96);border:1px solid rgba(214,222,228,.4);border-left:3px solid var(--acc);font-size:13px;white-space:nowrap;overflow:hidden}
 #spotTip b{flex:none;font-family:var(--jp);font-size:13.5px;color:#fff}
 #spotTip .sn{flex:none;display:inline-flex;align-items:center;gap:4px;color:var(--gold2)}#spotTip .sn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6}
-#spotTip .tx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;color:#c3cbcc}
+#spotTip .tx{flex:1;min-width:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior:contain;color:#c3cbcc}#spotTip .tx::-webkit-scrollbar{display:none}   /* (one line, slid sideways to read the rest) */
 #strip .fi.on{border-color:var(--acc)!important;background:rgba(166,214,92,.14)}
 /* one card, large: the detail of a tile (phones) */
 #cardPop{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:16px 14px calc(16px + env(safe-area-inset-bottom,0px));background:rgba(2,5,8,.72)}
@@ -479,6 +480,37 @@ button{font:inherit;color:inherit;cursor:pointer}
   #skTip.arm.now{padding-right:128px}
   #tipGo{position:absolute;right:46px;top:50%;transform:translateY(-50%);height:44px;padding:0 16px;border:0;background:linear-gradient(180deg,#e9cf8e,#b48d45);color:#16100a;font-family:var(--jp);font-weight:700;font-size:15px;letter-spacing:.12em;white-space:nowrap}
 }
+/* ---------- one control language, Modern Warfare-style (2026-11-24 user: ボタンのデザインはモダンウォーフェア的なUIに統一):
+   square edges (no cut corners, no slants, no diamonds), a dark translucent fill with a 1px hairline, a white fill with near-black
+   text for the hovered / chosen / primary state, a thin green accent bar on the chosen one, no lift on hover ---------- */
+:root{--mw-fill:rgba(10,14,18,.74);--mw-line:rgba(255,255,255,.16);--mw-line2:rgba(255,255,255,.42);--mw-on:#f2f4f5;--mw-ink:#0b0f12}
+.cmd,.ico,.vt,.sk,.rc,.seg button,.card,.chip,.turnchip,#msg,.panel,.tabs button,.budget .gauge,.bal .track,#pkSw,#tipGo,#tipX,.sheet > .panel,.card .cost{clip-path:none!important}
+.cmd::after,.sk::after,.vt::after,.rc::after,.card::after{display:none}
+.cmd{border:1px solid var(--mw-line);background:var(--mw-fill);color:#e9edef;transition:background .12s,color .12s,border-color .12s}
+.cmd:hover,.cmd:focus-visible{background:var(--mw-on);color:var(--mw-ink);border-color:var(--mw-on)}
+.cmd.prime{background:var(--mw-on);color:var(--mw-ink);border-color:var(--mw-on);box-shadow:inset 4px 0 0 var(--acc)}.cmd.prime:hover{background:#fff}
+.cmd:active{transform:none}
+.ico{border:1px solid var(--mw-line);background:var(--mw-fill)}.ico:hover{background:var(--mw-on);color:var(--mw-ink);border-color:var(--mw-on)}
+.vt{border:1px solid var(--mw-line);background:var(--mw-fill)}
+.vt.on,.vt.on.foe{background:var(--mw-on);color:var(--mw-ink);border-color:var(--mw-on)}.vt.on{box-shadow:inset 0 -3px 0 var(--acc)}.vt.on.foe{box-shadow:inset 0 -3px 0 #ff7a5c}.vt.on i{opacity:1}.vt.on .n{color:var(--mw-ink)}
+.sk{border:1px solid var(--mw-line);background:var(--mw-fill)}
+.sk.ready{background:rgba(16,22,26,.86);box-shadow:inset 0 -2px 0 var(--acc)}
+.sk.ready:hover{transform:none;background:var(--mw-on);border-color:var(--mw-on)}.sk.ready:hover b,.sk.ready:hover small,.sk.ready:hover .ic{color:var(--mw-ink)}
+.sk.ready:hover .ring{background:conic-gradient(var(--mw-ink) calc(var(--p,1) * 360deg),rgba(0,0,0,.15) 0)}
+.sk.armed,.sk.armed:hover{transform:none;background:var(--mw-on);border-color:var(--mw-on);box-shadow:inset 0 3px 0 var(--acc)}.sk.armed b,.sk.armed small,.sk.armed .ic{color:var(--mw-ink)}
+.sk.armed .ring{background:conic-gradient(var(--mw-ink) 0 60deg,transparent 60deg 180deg,var(--mw-ink) 180deg 240deg,transparent 240deg)}
+.rc{border:1px solid var(--mw-line);background:rgba(10,14,18,.6)}.rc:hover{border-color:var(--mw-line2)}
+.rc.on{background:var(--mw-on);border-color:var(--mw-on);box-shadow:inset 4px 0 0 var(--acc)}.rc.on b,.rc.on .rec{color:var(--mw-ink)}.rc.on p{color:#3a4248}
+.seg button{border:1px solid var(--mw-line)}.seg button:hover{border-color:var(--mw-line2);color:#fff}.seg button.on{background:var(--mw-on);color:var(--mw-ink);border-color:var(--mw-on)}
+.tabs button.on::after{left:0;right:0;bottom:0;height:3px;background:var(--acc)}
+.card{border:1px solid rgba(255,255,255,.12);background:rgba(10,14,18,.7)}.card:hover{border-color:var(--mw-line2)}
+.card.sel{transform:none;background:rgba(242,244,245,.1);border-color:var(--mw-on);box-shadow:inset 4px 0 0 var(--acc)}
+.card .cost{border-radius:0}
+.chip{border-radius:0}
+#tipGo{background:var(--mw-on);color:var(--mw-ink);box-shadow:inset 4px 0 0 var(--acc)}
+.turnchip{border-radius:0}
+.panel::before,.panel::after{transform:none}
+.sheet > .panel{background:rgba(7,11,15,.95)}
 </style>
 </head>
 <body>
@@ -606,6 +638,6 @@ button{font:inherit;color:inherit;cursor:pointer}
 <script src="../atlas/vendor/three-r186.min.js?v=1"></script>
 <script src="../seabattle/ships3d.js?v=2"></script>
 <script src="world.js?v=9"></script>
-<script src="game.js?v=18"></script>
+<script src="game.js?v=19"></script>
 </body>
 </html>

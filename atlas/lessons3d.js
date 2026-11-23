@@ -5181,7 +5181,8 @@
         case 'b_win': { const n0 = F.ex0.length, byT = F.ex0.includes(F.t), byA = F.ex0.includes(F.a), back = F.a === F.f;
           if (back && byT) return pk(['アマゾンで出口に入って、空いた元のマスにも矢を撃ち返せる', '出口に入ったあと元のマスを矢でふさぐから、すき間が残らない', '出口へ動いて、来た道に矢でふたができる', '白が出口をふさぎ、元のマスも矢でうまる', '動いたあとのすき間まで、矢でしっかりふさげる'], j);
           if (byT && byA) return pk(['アマゾンで1つ、矢で1つ、出口を同時にふさげる', '2つの出口を、動きと矢で1手のうちにふさぎきれる', '出口2つをまとめてふさいで、黒の行き場がなくなる', '白が片方の出口に入り、もう片方は矢でうまる', '動きでふたを1つ、矢でもう1つ。これで黒は1歩も動けない'], j);
-          if (n0 === 1) return pk(['最後の出口に矢が刺さって、黒の行き場がなくなる', 'たった1つの出口がふさがる', '残った1マスに矢が刺さって、黒は手づまり', '最後のすき間がうまって、黒はもう指せない', '矢1本で、黒の最後の逃げ道が消える'], j);
+          if (byT) return pk(['白のアマゾンが最後の出口に入って、ふたをする', '出口に白がどっかり座って、黒の行き場がなくなる', '白のアマゾン自身が、黒の出口のふたになる', '最後のすき間に白が入って、黒は手づまりになる', '白で出口をふさいで、黒はもう指せない'], j);   // (2026-11-24 第2期: the amazon closes the exit, its arrow elsewhere)
+          if (n0 === 1) return pk(['最後の出口に矢が刺さって、黒の行き場がなくなる', 'たった1つの出口がふさがる', '残った1マスに矢が刺さって、黒は手づまりになる', '最後のすき間がうまって、黒はもう指せない', '矢1本で、黒の最後の逃げ道が消える'], j);
           return pk(['黒のまわりの空きマスが、全部ふさがる', '黒の行き場が、1マスも残らない', '黒の出口が全部なくなる'], j); }
         case 's_trap': { const byT = E.NB[T].includes(F.t), byA = E.NB[T].includes(F.a);
           if (byT && byA) return pk(['アマゾンで1つ、矢で1つ、その黒の出口をまとめてふさげる', '出口を2つ同時にふさいで、その黒の逃げ場がなくなる', '白が出口に入り、残りの出口には矢が刺さる', '2つの出口に、白と矢でいっぺんにふたができる', '動きと矢の両方で、その黒をぐるりと囲める'], j);
@@ -5200,13 +5201,16 @@
         case 'b_queen': { if (F.t === T) return 'それでも着いているけど、ほかの手と同じくらいいい'; const fa = amDir(E, F.f, T), bl = fa ? amBlock(E, pos.sq, F.f, T, -1) : -1;
           if (!fa) return pk(['そのアマゾンからは、ゴールが一直線に並んでいない', '曲がらないと届かない場所で、1手では着かない', 'そのアマゾンとゴールは、縦・横・斜めのどれにも並ばない'], j);
           if (bl >= 0) return pk(['線の途中にじゃまものがあって、ゴールまで進めない', '途中のマスがふさがっていて、飛び越えられない'], j);
-          if (fa === F.dir && F.n < amDist(E, F.f, T)) return pk(['ゴールの手前で止まっちゃってる', 'あと少し足りなくて、ゴールに着かない', '向きは合ってるけど、進む距離が短い'], j);
-          if (fa === F.dir) return pk(['ゴールを通りすぎちゃってる', '行きすぎて、ゴールのマスに止まっていない'], j);
+          const on = (x, y, z) => amBlock(E, Array(100).fill(0).map((v, q) => q === y ? 1 : 0), x, z, -1) === y;   // (y strictly between x and z on their line; 2026-11-24 第2期: the same axis the other way is not "short")
+          if (fa === F.dir && on(F.f, F.t, T)) return pk(['ゴールの手前で止まっちゃってる', 'あと少し足りなくて、ゴールに着かない', '向きは合ってるけど、進む距離が短い'], j);
+          if (fa === F.dir && on(F.f, T, F.t)) return pk(['ゴールを通りすぎちゃってる', '行きすぎて、ゴールのマスに止まっていない'], j);
+          if (fa === F.dir) return pk(['ゴールと反対の向きに進んじゃってる', '逆向きに動いて、ゴールから遠ざかっちゃう'], j);
           return pk([`向きがちがって、ゴールから離れちゃう`, `${F.dir}に動いても、ゴールは${fa}の方向にある`], j); }
-        case 'b_arrow': case 'b_block': { const fa = amDir(E, F.t, T), bl = fa ? amBlock(E, F.q.sq, F.t, T, -1) : -1;
+        case 'b_arrow': case 'b_block': { const fa = amDir(E, F.t, T), bl = fa ? amBlock(E, F.q.sq, F.t, T, F.a) : -1;   // (the line without your own arrow: an arrow shot short is not a blocker)
           if (F.a === T) return 'それでも的に届いている';
+          if (fa && bl < 0 && amBlock(E, F.q.sq, F.t, T, -1) === F.a) return pk(['的に向けて撃ったけど、手前のマスに刺さっちゃう', '矢を的の手前で止めちゃってる', '向きは合ってるのに、矢が的まで飛んでいない'], j);
           if (!fa) return pk(['着いたマスと的が一直線に並ばなくて、矢が届かない', '動いた先からは、的が縦・横・斜めのどれにも見えない', '着いた場所がずれていて、的をねらえない'], j);
-          if (bl >= 0) return pk([`${fa}の線の途中にじゃまものがあって、矢が通らない`, `的は${fa}に見えてるけど、途中でふさがれてる`, '矢は飛び越えられないから、手前で止まっちゃう'], j);
+          if (bl >= 0) return pk([`${fa}の線の途中にじゃまものがあって、矢が通らない`, `的は${fa}に見えてるけど、途中でふさがれてる`, 'じゃまものにぶつかって、矢がその手前で止まっちゃう'], j);
           return pk(['的は見えているのに、矢を別のマスに撃っちゃってる', '撃つ向きがずれて、的をはずしちゃう'], j); }
         case 'b_win': { if (!F.oCan) return 'それでも黒は動けない'; const n = F.oEx;
           if (F.opened) return pk(['動いた白の元のマスが、黒の新しい出口になっちゃう', '白が動いたあとの空きマスから、黒が逃げられる'], j);
@@ -5243,7 +5247,7 @@
     load() {
       if (this.p) return this.p;
       const tx = ['../checkers/i18n.js?v=20261107l14-nd1', '../amazons/i18n-am.js?v=4', '../amazons/i18n-am-more.js?v=4', '../amazons/i18n-am-ls.js?v=1', '../amazons/i18n-am-ls-more.js?v=1', '../amazons/i18n-am-ls-more2.js?v=1'];
-      return (this.p = Promise.all([getJ('../amazons/lessons.json?v=2'), Promise.all(tx.map(u => fetch(u).then(r => r.text()).catch(() => ''))), amEng().catch(() => null)])
+      return (this.p = Promise.all([getJ('../amazons/lessons.json?v=3'), Promise.all(tx.map(u => fetch(u).then(r => r.text()).catch(() => ''))), amEng().catch(() => null)])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T[0] + '\nvar I18N = window.I18N = window.I18N || {};\n' + T.slice(1).join('\n'))(w); } catch (e) { console.warn('[lessons3d] amazons texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
