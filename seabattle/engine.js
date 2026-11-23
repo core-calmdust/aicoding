@@ -135,7 +135,7 @@ const PRESETS = [[0, 1, 2, 3], [0, 1, 3, 4], [1, 2, 3, 4, 6], [1, 8, 7, 4, 6], [
 function costOf(k) { const d = MODES[MODE].cost; return TYPES[k].cost + (d && d[TYPES[k].k] || 0); }   // (a mode may re-price a type — 大艦隊's own balance)
 function draftCost(types) { let c = 0; const n = {}; for (const t of types) { c += costOf(t) + (n[t] ? DUP_EXTRA : 0); n[t] = 1; } return c; }
 function pickCost(d, p, k) { return costOf(k) + (d.picks[p].includes(k) ? DUP_EXTRA : 0); }
-function validDraft(types) { if (types.length < MINSHIPS || types.length > MAXSHIPS || draftCost(types) > BUDGET) return false; const n = new Array(NT).fill(0); for (const t of types) { if (!(t >= 0 && t < NT) || ++n[t] > maxSame(t)) return false; } return true; }
+function validDraft(types, extra) { if (types.length < MINSHIPS || types.length > MAXSHIPS || draftCost(types) > BUDGET + (extra | 0)) return false; const n = new Array(NT).fill(0); for (const t of types) { if (!(t >= 0 && t < NT) || ++n[t] > maxSame(t)) return false; } return true; }
 // The draft: 2 of each type lie on the table (10 ships); the players pick in turn — A B B A A B B A … — within the budget.
 // A player with MINSHIPS or more may stop; one who cannot afford anything left stops by itself. d.turn = -1 when it is over.
 const POOL = new Array(50).fill(0).map((x, i) => i < 5 ? 2 : 0);
@@ -162,14 +162,16 @@ function field(rnd) {
   pool.map((n, k) => k).filter(k => pool[k] && k !== 4).sort(() => rnd() - .5).slice(0, FIELD_ONE).forEach(k => { pool[k] = 1; });
   return pool;
 }
-function draftNew(first, rnd, mode) { setMode(mode); const pool = field(rnd), d = { mode: MODE, pool, f: pool.slice(), picks: [[], []], done: [false, false], first: first ? 1 : 0, n: 0, turn: first ? 1 : 0, last: null }; return d; }
-function draftLeft(d, p) { return BUDGET - draftCost(d.picks[p]); }
+function draftNew(first, rnd, mode, bonus) { setMode(mode); const pool = field(rnd), d = { mode: MODE, pool, f: pool.slice(), picks: [[], []], done: [false, false], first: first ? 1 : 0, n: 0, turn: first ? 1 : 0, last: null }; if (bonus) d.bonus = bonus.slice(); return d; }
+// (2026-11-24 鬼神 difficulty) a side may draft with extra budget: d.bonus = [you, AI]
+function budOf(d, p) { return BUDGET + (d.bonus ? d.bonus[p] | 0 : 0); }
+function draftLeft(d, p) { return budOf(d, p) - draftCost(d.picks[p]); }
 function draftCan(d, p, k) { return d.turn === p && !d.done[p] && d.pool[k] > 0 && d.picks[p].length < MAXSHIPS && pickCost(d, p, k) <= draftLeft(d, p) && d.picks[p].filter(x => x === k).length < maxSame(k) && canReachMin(d, p, k); }
 // a pick must still leave room for a fleet of three: after it, the cheapest ships left on the table must fit the budget
 // (two copies of a 9 would cost 19 and leave nothing to buy — 2026-11-20)
 function canReachMin(d, p, k) {
   const picks = d.picks[p].concat(k), need = MINSHIPS - picks.length; if (need <= 0) return true;
-  let left = BUDGET - draftCost(picks); const pool = d.pool.slice(); pool[k]--; const opts = [];
+  let left = budOf(d, p) - draftCost(picks); const pool = d.pool.slice(); pool[k]--; const opts = [];
   for (let x = 0; x < NT; x++) { const have = picks.filter(y => y === x).length; for (let n = 0; n < Math.min(pool[x], maxSame(x) - have); n++) opts.push(costOf(x) + (have + n > 0 ? DUP_EXTRA : 0)); }
   opts.sort((a, b) => a - b); if (opts.length < need) return false;
   for (let i = 0; i < need; i++) left -= opts[i];
@@ -209,7 +211,7 @@ function growFleet(d, p, picks) {
     if (bk < 0) break; dd.pool[bk]--; dd.picks[p].push(bk); }
   return dd.picks[p];
 }
-const DRAFT_NOISE = { 16: .6, 17: .45, 18: .3, 19: .15, 20: .05 };
+const DRAFT_NOISE = { 16: .6, 17: .45, 18: .3, 19: .15, 20: .05, 21: 0 };
 function draftSmart(d, rnd, noise) {
   const p = d.turn; let bk = -1, bv = -1e9;
   for (let k = 0; k < NT; k++) { if (!draftCan(d, p, k)) continue; const dd = Object.assign({}, d, { pool: d.pool.slice() }); dd.pool[k]--; const v = fleetScore(growFleet(dd, p, d.picks[p].concat(k)), d.picks[1 - p]) + noise * rnd(); if (v > bv) { bv = v; bk = k; } }
@@ -252,10 +254,10 @@ function fits(grid, s, adj, skip) {
   return true;
 }
 function gridOf(ships) { const g = new Int8Array(NN).fill(-1); ships.forEach((s, i) => { if (s) for (const k of shipCells(s)) g[k] = i; }); return g; }
-function validFleet(ships, adj, tactics) {
+function validFleet(ships, adj, tactics, extra) {
   if (!Array.isArray(ships)) return false;
   const types = ships.map((s, i) => s ? typeOf(s, i) : -1);
-  if (tactics ? !validDraft(types) : (ships.length !== 5 || types.some((t, i) => t !== i))) return false;
+  if (tactics ? !validDraft(types, extra) : (ships.length !== 5 || types.some((t, i) => t !== i))) return false;
   const g = new Int8Array(NN).fill(-1);
   for (let i = 0; i < ships.length; i++) { const s = ships[i]; if (!s || s.len !== TYPES[types[i]].len || !fits(g, s, adj, -2)) return false; for (const k of shipCells(s)) g[k] = i; }
   return true;
@@ -683,7 +685,10 @@ function determinize(st, me, rnd) {
   return s2;
 }
 function playOut(st, rnd, cap) { let n = 0; while (st.winner < 0 && n < cap) { const a = chooseAction(st, 20, rnd); if (!a || !act(st, a)) break; n++; } return st.winner; }
-const PLAN = { 19: { R: 40, ms: 700 }, 20: { R: 400, ms: 1200, min: 60 } };
+const PLAN = { 19: { R: 40, ms: 700 }, 20: { R: 400, ms: 1200, min: 60 }, 21: { R: 800, ms: 1800, min: 120 } };
+// Lv.21 (鬼神, 2026-11-24 user: Lv.20 で勝てるか勝てないか → その上を): Lv.20's play with a longer look-ahead, no draft noise,
+// and an open handicap: the AI drafts with HELL_BONUS more budget (Lv.20 self-play: +3 in 通常 wins 63%).
+const HELL_BONUS = { std: 3, grand: 4 };
 function planAction(st, level, rnd, now) {
   rnd = rnd || Math.random; now = now || (() => Date.now()); const me = st.turn, cfg = PLAN[level];
   const base = chooseAction(st, level, rnd); if (!cfg || !st.cd || st.rapid || !base) return base;
@@ -703,7 +708,7 @@ function planAction(st, level, rnd, now) {
   return cands[bj];
 }
 
-const E = { fleetScore, DRAFT_NOISE, canReachMin, planAction, PLAN, pickCost, DUP_EXTRA, ROLE, FIELD_N, FIELD_MIX, FIELD_ONE, calmOn, NOAIM, SELF, field, skillLive, setDraftW: w => { DRAFT_W = w; }, setRepairV: x => { REPAIR_V = x; }, setMineV: x => { MINE_V = x; }, N, NN, FLEET, TOTAL, RULES, TYPES, BUDGET, MINSHIPS, MAXSHIPS, MAXSAME, PRESETS, POOL, draftNew, draftLeft, draftCan, draftCanStop, draftPick, draftAI, draftCost, validDraft, footprint, skillReady, preview, useSkill, act, chooseAction, probs, scanLeft, rng, shipCells, inside, fits, gridOf, validFleet, randomFleet, newSide, newGame, fire, quota, view, heat, jointHeat, choose, advise, winProb, shotsToFinish, levelSpec, neighbors4, neighbors8, cellName };
+const E = { HELL_BONUS, fleetScore, DRAFT_NOISE, canReachMin, planAction, PLAN, pickCost, DUP_EXTRA, ROLE, FIELD_N, FIELD_MIX, FIELD_ONE, calmOn, NOAIM, SELF, field, skillLive, setDraftW: w => { DRAFT_W = w; }, setRepairV: x => { REPAIR_V = x; }, setMineV: x => { MINE_V = x; }, N, NN, FLEET, TOTAL, RULES, TYPES, BUDGET, MINSHIPS, MAXSHIPS, MAXSAME, PRESETS, POOL, draftNew, draftLeft, draftCan, draftCanStop, draftPick, draftAI, draftCost, validDraft, footprint, skillReady, preview, useSkill, act, chooseAction, probs, scanLeft, rng, shipCells, inside, fits, gridOf, validFleet, randomFleet, newSide, newGame, fire, quota, view, heat, jointHeat, choose, advise, winProb, shotsToFinish, levelSpec, neighbors4, neighbors8, cellName };
 for (const k of ['N', 'NN', 'BUDGET', 'MINSHIPS', 'MAXSHIPS', 'FIELD_N', 'FIELD_ONE', 'FIELD_MIX']) delete E[k];
 Object.defineProperties(E, { N: { get: () => N }, NN: { get: () => NN }, BUDGET: { get: () => BUDGET }, MINSHIPS: { get: () => MINSHIPS }, MAXSHIPS: { get: () => MAXSHIPS }, FIELD_N: { get: () => FIELD_N }, FIELD_ONE: { get: () => FIELD_ONE }, FIELD_MIX: { get: () => FIELD_MIX }, mode: { get: () => MODE } });
 E.MODES = MODES; E.setMode = setMode; E.maxSame = maxSame; E.ONE_ONLY = ONE_ONLY; E.skillHeld = skillHeld; E.JAM_GUARD = JAM_GUARD; E.costOf = k => costOf(k);
