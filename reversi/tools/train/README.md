@@ -184,3 +184,14 @@ node tools/edax-anchor.js --table
 - メモリの目安：13億局面の学習で 15〜20GB。
 - 見るところ：`w_b60e4_13m`（13億）が `w_b60e4_3m`（3億、同じやり方）と今の評価を、同じ時間で上回るか。上回れば公開の評価を入れ替え、そのあと定石を新しい評価で作り直す。
 - 学習の途中経過は `train_b60e4_13.log`（段ごとの検証誤差）。3億のときより検証誤差が下がっているかも見る。
+
+## 評価の圧縮の試作（`netz/`、2026-11-23）
+パターンの表を小さなネットの出力として学習し、配信を小さくする試み（読み込み時に今と同じ表へ展開するので読みは変わらない）。まだ試作で、公開物には入っていない。結果と測り方は `claude/reversi-mac-verification.md`「検証F」。
+```
+pip install torch numpy
+node netz/netz-conv.js train.x <学習用の局面.bin…> && node netz/netz-conv.js valid.x <検証用の局面.bin>
+python3 netz/netz.py 64 64 3000 e64          # → e64.pt（ネット）、e64.bin.gz（展開した表。edax-anchor.js --weights で対戦できる）
+EDAX=… node netz/netz-acc.js <検証用の局面.bin> 200 16 ../../weights.bin.gz e64.bin.gz
+```
+- 局面は `rvtrain extract` の 17バイト形式。手数ごとに均等に取る（ファイルの先頭や末尾だけを取ると、元データの並びのせいで偏る）。
+- `*.x`・`*.pt` は置かない（`.gitignore`）。
