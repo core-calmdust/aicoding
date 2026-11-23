@@ -697,5 +697,5 @@
     return { name: L[0][n - 1], desc: L[1][n - 1], who: Wh[n - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.backgammon = { levels: 10, sides: true, modes: ['ai', 'pvp'], table: true, land: 'pill', tableModes: ['ai', 'pvp'], clock: 'bg', levelInfo, start: tableStart };   // table: start() plays on the chabudai itself
+  window.Atlas3D.backgammon = { levels: 10, sides: true, modes: ['ai', 'pvp'], table: true, land: 'pill', tableModes: ['ai', 'pvp'], clock: 'bg', levelInfo, start: tableStart, files: { BASE, BV } };   // table: start() plays on the chabudai itself
 })();

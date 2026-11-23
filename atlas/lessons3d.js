@@ -2568,7 +2568,7 @@
       const ja = lang === 'ja', name = L(ln.name, lang), aim0 = L(rvNC(ln.moves, 'aim', lang) || ln.aim, lang), aim = ja ? rvCleanAim(aim0) || aim0 : aim0;
       let hs = 0; for (const ch of key) hs = (hs * 31 + ch.charCodeAt(0)) | 0; hs = Math.abs(hs);
       const V = ja ? rvOpVoice(key) : null, names = {}; if (ja) this.data.steps.forEach(x => { names[x.ln.moves] = L(x.ln.name, lang); });
-      return { id: 'opl:' + key, title: name, intro: `<b>${aim}</b>` + (ja ? '<br>' + RVJ_OP.intro[hs % RVJ_OP.intro.length] : ''),   // (no move list in coordinates: the line is played on the board next) start: rvAfter(''),
+      return { id: 'opl:' + key, title: name, intro: `<b>${aim}</b>` + (ja ? '<br>' + RVJ_OP.intro[hs % RVJ_OP.intro.length] : ''), start: rvAfter(''),   // (no move list in coordinates: the line is played on the board next. 2026-11-23: start was inside this comment — the study line began on an empty board)
         steps: mv.map(rvSq), notes: ja ? rvStepNotesJa(mv, names, rvCleanInfo(info), V) : info ? { [String(n - 1)]: info } : {},
         probs: ks.map((k, i) => { const pre = mv.slice(0, k).join(''), o = { pos: rvAfter(pre), kind: 'best', ask: fill(RV_ASK[lang] || RV_ASK.en, { n: name }), P: { rv: 'op', ans: rvSq(mv[k]), ev: ev[pre] || null }, ans: String(rvSq(mv[k])) };
           if (ja) Object.assign(o, rvOpJa(o, name, i, V));   // (2026-11-21 lesson loop: リバガメ asks, hints and explains — see RVJ_OP, rvOpVoice)
@@ -3321,7 +3321,7 @@
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../go/lessons.json?v=20261123'), getJ('../go/openings.json?v=4'), goRules(), fetch('../go/voice-pen-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
+      return (this.p = Promise.all([getJ('../go/lessons.json?v=20261123b'), getJ('../go/openings.json?v=4'), goRules(), fetch('../go/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
         try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
         return this; }).catch(e => { this.p = null; throw e; }));
     },
@@ -6639,6 +6639,31 @@
   };
   /* (2026-11-21 the user: a very easy first step — the answer is lit, or one obvious move — needs no 5 problems: 2 clear it). Lesson keys. */
   const EASY2 = { amazons: ['0', '1', '2'], morris: ['0'], tafl: ['0'], mancala: ['0'], reversi: ['0'], gomoku: ['0'], connect4: ['0'], hex: ['0'] };
+  /* whose move it is (2026-11-23 user: every problem — the warm-up's too — must say which side the player moves, 「黒の手番だよ」).
+     turnOf: 1 / 2 from the position (an object's me, reversi "…:1", a chess FEN's w / b, a shogi SFEN's b / w), 0 = no sides (dots),
+     null = not known. turnLine: the line put before the question, '' when the question already names the side (the same side). */
+  const TURN_N = { ja: { morris: ['金', '銀'], tafl: ['攻め手', '守り手'], chess: ['白', '黒'], reversi: ['●黒', '○白'], gomoku: ['●黒', '○白'], go: ['●黒', '○白'], checkers: ['黒', '白'], xiangqi: ['赤', '黒'], hex: ['赤', '青'], amazons: ['白', '黒'], connect4: ['金', '銀'], shogi: ['☗先手', '☖後手'], backgammon: ['金', '金'] },
+    en: { morris: ['Gold', 'Silver'], tafl: ['Attackers', 'Defenders'], chess: ['White', 'Black'], reversi: ['● Black', '○ White'], gomoku: ['● Black', '○ White'], go: ['● Black', '○ White'], checkers: ['Black', 'White'], xiangqi: ['Red', 'Black'], hex: ['Red', 'Blue'], amazons: ['White', 'Black'], connect4: ['Gold', 'Silver'], shogi: ['☗ Sente', '☖ Gote'], backgammon: ['Gold', 'Gold'] } };
+  function turnOf(id, pos) {
+    if (id === 'dots') return 0;
+    if (id === 'mancala') return 1;   // (the player's row is always the near one)
+    if (pos && typeof pos === 'object') { if (pos.pick) return 0; if (pos.bg) return 1; return pos.me === 1 || pos.me === 2 ? pos.me : null; }
+    const t = String(pos || '');
+    if (id === 'reversi') { const m = t.match(/:([12])$/); return m ? +m[1] : null; }
+    if (id === 'chess') { const f = t.split(' ')[1]; return f === 'w' ? 1 : f === 'b' ? 2 : null; }
+    if (id === 'shogi') { const f = t.split(' ')[1]; return f === 'b' ? 1 : f === 'w' ? 2 : null; }
+    return null;
+  }
+  function turnLine(id, pos, ask, lang) {
+    const w = turnOf(id, pos); if (!w) return '';
+    const ja = lang === 'ja', a = String(ask || '').replace(/<[^>]+>/g, '');
+    if (id === 'mancala') return ja ? (/手前/.test(a) ? '' : '<b>手前の列</b>がきみの穴だよ。') : '';
+    const N = (TURN_N[ja ? 'ja' : 'en'] || {})[id]; if (!N) return '';
+    const nm = N[w - 1], bare = nm.replace(/^[●○☗☖] ?/, '');
+    if (ja && (new RegExp('(' + bare + '|' + nm + ')(の手番|の番|番)|きみは' + bare)).test(a)) return '';   // (the question says it already)
+    if (!ja && /to (move|play)|You play/i.test(a)) return '';
+    return ja ? (id === 'backgammon' ? `きみは<b>${nm}</b>。` : `<b>${nm}</b>の手番だよ。`) : `<b>${nm}</b> to move. `;
+  }
   const DATA = { dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
 
   function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(lang), ncLoad(id)]).then(() => D.list(kind, lang)); }
@@ -6768,7 +6793,7 @@
       const goOn = () => (last ? (cur.k = 0, prob()) : ramp(i + 1));
       const RT = x => D.rampTx ? D.rampTx(L(x, ctx.lang), ctx.lang) : L(x, ctx.lang);   // (connect4: the disc names in the lines)
       if (it.k === 'explain') say(`💡 <b>${RT(it.t)}</b><br>${D.rampBody ? D.rampBody(it, ctx.lang) : L(it.b, ctx.lang)}`);
-      else say(RT(it.g) + (cur.ramp.findIndex(x => x.k === 'try') === i ? `<br><small>${RU('note')}</small>` : ''));   // (the note once: on the first try)
+      else say((it.k === 'try' ? turnLine(id, D.rampPos ? D.rampPos(it) : it.fen, RT(it.g), ctx.lang) : '') + RT(it.g) + (cur.ramp.findIndex(x => x.k === 'try') === i ? `<br><small>${RU('note')}</small>` : ''));   // (2026-11-23: whose move, on every try)   // (the note once: on the first try)
       act(last ? RU('main') : RU('next'), { hint: it.k === 'try', nextOn: it.k === 'explain' });
       $('[data-a=next]').onclick = goOn;
       $('[data-a=hint]').onclick = () => {
@@ -6892,22 +6917,14 @@
       };
       $('[data-a=next]').onclick = stepOn; stepOn();
     }
-    // (2026-11-12) every problem says first whose turn it is (the side the player plays): 「あなたは●黒番。」
-    const SIDE = { ja: ['あなたは<b>●黒番</b>。', 'あなたは<b>○白番</b>。'], en: ['You play <b>● Black</b>. ', 'You play <b>○ White</b>. '], zh: ['你执<b>●黑</b>。', '你执<b>○白</b>。'], 'zh-TW': ['你執<b>●黑</b>。', '你執<b>○白</b>。'], ko: ['당신은 <b>●흑</b> 차례. ', '당신은 <b>○백</b> 차례. '], es: ['Juegas con <b>● negras</b>. ', 'Juegas con <b>○ blancas</b>. '], fr: ['Vous jouez les <b>● noirs</b>. ', 'Vous jouez les <b>○ blancs</b>. '], pt: ['Você joga de <b>● pretas</b>. ', 'Você joga de <b>○ brancas</b>. '], de: ['Du spielst <b>● Schwarz</b>. ', 'Du spielst <b>○ Weiß</b>. '], ru: ['Вы играете <b>● чёрными</b>. ', 'Вы играете <b>○ белыми</b>. '], tr: ['<b>● Siyah</b> oynuyorsun. ', '<b>○ Beyaz</b> oynuyorsun. '], id: ['Kamu main <b>● Hitam</b>. ', 'Kamu main <b>○ Putih</b>. '], hi: ['आप <b>● काले</b> से खेल रहे हैं। ', 'आप <b>○ सफ़ेद</b> से खेल रहे हैं। '], ar: ['أنت تلعب <b>● بالأسود</b>. ', 'أنت تلعب <b>○ بالأبيض</b>. '] };
-    function sideLine(p) {
-      if ((id === 'checkers' || id === 'xiangqi') && p && p.pos && p.pos.me && D.tx) return D.tx('ls.turn', ctx.lang, { c: '<b>' + D.tx(p.pos.me === 1 ? 'p1' : 'p2', ctx.lang) + '</b>' }) + ' ';   // (「黒の番です。」)
-      if (id === 'gomoku' && p && p.pos && p.pos.me && !p.pos.pick && D.tx) return D.tx('ls.turn', ctx.lang, { c: '<b>' + D.tx(p.pos.me === 1 ? 'p1' : 'p2', ctx.lang) + '</b>' }) + ' ';   // (「白の番です。」)
-      if (id !== 'reversi' || !p || !p.pos) return '';
-      const s = String(p.pos).split(':')[1]; if (s !== '1' && s !== '2') return '';
-      return ((SIDE[ctx.lang] || SIDE.en)[+s - 1]) + (ctx.lang === 'ja' || /^zh/.test(ctx.lang) ? '' : '');
-    }
+    // (2026-11-12 → 2026-11-23) whose move it is: turnLine (above DATA) — every game, problems and warm-up tries
     // (2026-11-21 user) reversi: the flip counts on the first 2 problems only (1 when the lesson has only 2: EASY2) — the rest are solved without them
     const RV_NUMS = () => cur && cur.probs && cur.probs.length <= 2 ? 1 : 2, RV_SELF = { ja: 'ここからは数字なし。自分で数えて考えてみて！', en: 'From here on, no numbers: count for yourself!' };
     // one problem
-    /* a short fade between problems (2026-11-22 user: moving on looked like the same screen going on — a quick dip to dark and back
-       makes the next problem feel new): the table dims in ~140ms, the new position and words come in under it, then it clears in ~240ms */
+    /* a soft fade between COURSES (2026-11-23 user: not between problems — between lesson 1 and lesson 2, so moving to the next course
+       is clear): the table dims with a small card 「コース 2 / 9 ・ title」, the next lesson is set up under it, then it clears */
     let veil = null, veilT = 0;
-    function dim(on) {
+    function dim(on, card) {
       const host = ctx.el; if (!host) return Promise.resolve();
       const RM = matchMedia('(prefers-reduced-motion: reduce)').matches, tx = $('.tx');
       clearTimeout(veilT);
@@ -6916,23 +6933,24 @@
         if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
         if (!veil) { veil = document.createElement('div'); veil.className = 'ls-veil'; veil.style.cssText = 'position:absolute;inset:0;background:#0b0d14;opacity:0;pointer-events:none;z-index:5;transition:opacity 140ms ease-in'; }
         if (veil.parentNode !== host) host.appendChild(veil);
-        void veil.offsetWidth; veil.style.transition = 'opacity 140ms ease-in'; veil.style.opacity = '.72';
-        if (tx) { tx.style.transition = 'opacity 140ms ease-in'; tx.style.opacity = '0'; }
-        veilT = setTimeout(() => dim(false), 2500);   // (never left dark: a slow board load still clears)
-        return new Promise(r => setTimeout(r, 150));
+        veil.style.display = 'flex'; veil.style.alignItems = 'center'; veil.style.justifyContent = 'center';
+        veil.innerHTML = card ? '<div style="color:#fff;text-align:center;font-weight:800;line-height:1.35;padding:0 16px;text-shadow:0 2px 8px rgba(0,0,0,.5);transform:translateY(6px);transition:transform 320ms ease-out"><div style="font-size:14px;opacity:.8;letter-spacing:.08em">' + card.n + '</div><div style="font-size:22px;margin-top:4px">' + card.t + '</div></div>' : '';
+        void veil.offsetWidth; veil.style.transition = 'opacity 260ms ease-in'; veil.style.opacity = '.82';
+        if (veil.firstChild) veil.firstChild.style.transform = 'none';
+        if (tx) { tx.style.transition = 'opacity 260ms ease-in'; tx.style.opacity = '0'; }
+        veilT = setTimeout(() => dim(false), 3000);   // (never left dark: a slow board load still clears)
+        return new Promise(r => setTimeout(r, 280));
       }
-      if (veil) { veil.style.transition = 'opacity 240ms ease-out'; veil.style.opacity = '0'; const v = veil; veilT = setTimeout(() => v.remove(), 260); }
-      if (tx) { tx.style.transition = 'opacity 240ms ease-out'; tx.style.opacity = ''; }
+      if (veil) { veil.style.transition = 'opacity 420ms ease-out'; veil.style.opacity = '0'; const v = veil; veilT = setTimeout(() => v.remove(), 440); }
+      if (tx) { tx.style.transition = 'opacity 420ms ease-out'; tx.style.opacity = ''; }
       return Promise.resolve();
     }
     async function prob() {
       const was = phase, p = cur.probs[cur.k]; if (!p) return finish();
-      const fade = was === 'prob' || was === 'ramp' || was === 'done';
-      if (fade) { phase = 'fade'; onMoved = null; autoCancel(); act(X.next, { nextOn: false }); await dim(true); if (stopped || cur.probs[cur.k] !== p || phase !== 'fade') return dim(false); }   // (the old board takes no answers while it dims, and 次へ is off — a second tap must not skip a problem)
       phase = 'prob';
       p.hinted = false; p.used = 0; dots(); act(X.next, { nextOn: false });
-      say(sideLine(p) + (id === 'reversi' && cur.k === RV_NUMS() && RV_SELF[ctx.lang] ? RV_SELF[ctx.lang] + '<br>' : '') + (p.ask || X.opGoal));
-      await board(p.pos, p.sol, p.drill); if (fade) dim(false); if (stopped || cur.probs[cur.k] !== p) return;   // (p.drill: a chess ★ route problem — the ★ left on the table)
+      say(turnLine(id, p.pos, p.ask || X.opGoal, ctx.lang) + (id === 'reversi' && cur.k === RV_NUMS() && RV_SELF[ctx.lang] ? RV_SELF[ctx.lang] + '<br>' : '') + (p.ask || X.opGoal));
+      await board(p.pos, p.sol, p.drill); if (stopped || cur.probs[cur.k] !== p) return;   // (p.drill: a chess ★ route problem — the ★ left on the table)
       onMoved = (u, info) => moved(p, u, info);
       if (p.marks && p.marks.length && pz().mark) pz().mark(p.marks);
       choices(p);
@@ -7129,7 +7147,11 @@
     function nextItem() {
       const L2 = D.list(ctx.kind, ctx.lang), i = L2.findIndex(x => x.key === cur.key);
       const nx = L2.slice(i + 1).find(x => !x.full && x.st !== 'pass') || L2.slice(i + 1).find(x => !x.full);
-      if (nx) open(nx.key); else say(X.endOnly);
+      if (!nx) return say(X.endOnly);
+      const CN = { ja: ['コース', '定跡'], en: ['Course', 'Opening'], zh: ['课程', '定式'], 'zh-TW': ['課程', '定式'], ko: ['코스', '정석'] }, j = L2.indexOf(nx);
+      const card = { n: ((CN[ctx.lang] || CN.en)[ctx.kind === 'open' ? 1 : 0]) + ' ' + (j + 1) + ' / ' + L2.length, t: String(nx.title || '').replace(/[<>&]/g, '') };
+      phase = 'fade'; onMoved = null; autoCancel(); act(X.next, { nextOn: false });   // (no second tap while it dims)
+      dim(true, card).then(() => { if (stopped || phase !== 'fade') return dim(false); open(nx.key); setTimeout(() => { if (!stopped) dim(false); }, 650); });
     }
     let ac0 = null;
     function clearJingle(C, v) {   // the problem-clear sound (2026-11-14): テレレレッ・レレー！ — four quick notes up, a stop, then two with the last held over a chord
@@ -7172,6 +7194,7 @@
     say(X.loading); act(X.next, { nextOn: false });
     Promise.all([D.load(ctx.lang), ncLoad(id), lsvLoad(ctx.lang)]).then(() => { if (stopped) return; const go = k => k != null ? open(String(k)) : say(X.endOnly); if (ctx.key != null) go(ctx.key); else next(id, ctx.kind, ctx.lang).then(go); }).catch(() => { if (!stopped) say('⚠'); });
     const dbg = { state: () => cur && { key: cur.key, phase, k: cur.k, si: cur.si, res: cur.res.slice(), ans: cur.probs[cur.k] && cur.probs[cur.k].ans, ramp: phase === 'ramp' && cur.ramp && cur.ramp[cur.ri] ? cur.ramp[cur.ri].ans : undefined, moves: cur.probs[cur.k] && cur.probs[cur.k].P && cur.probs[cur.k].P.f ? Object.keys(cur.probs[cur.k].P.f).map(Number) : cur.probs[cur.k] && cur.probs[cur.k].P && cur.probs[cur.k].P.cand ? cur.probs[cur.k].P.cand.map(c => c[0]) : null, say: $('.tx').textContent },
+      data: () => D,
       open: (k, kind) => { if (kind) ctx.kind = kind === 'open' ? 'open' : 'lesson'; open(String(k)); }, items: kind => { const kd = kind === 'open' ? 'open' : 'lesson'; if (kd === 'open' && typeof D.opening !== 'function') return null; try { return (D.list(kd, ctx.lang) || []).filter(x => !x.full).map(x => ({ key: x.key, title: x.title })); } catch (e) { return null; } }, cur: () => cur, pz: () => pz(),   // (test hooks: tools/lesson-progress.js plays every problem)
       toProb: () => { if (cur && cur.probs.length) { cur.k = 0; prob(); } },   // (test hook: straight to the problems)
       seqAns: async () => { const p = cur && cur.probs[cur.k]; if (!p || p.kind !== 'tfseq' || !pz()) return null; const pre = pz().moves().slice(), left = p.n - (Math.ceil((pre.length + 1) / 2) - 1);   // (test hook, tafl's N-move problems: a move that keeps the forced escape / capture, as tfSeq checks it)
@@ -7195,5 +7218,5 @@
       panel: el, _debug: dbg,
     };
   }
-  window.AtlasLessons = { has: id => !!DATA[id], list, next, start, data: id => DATA[id].load().then(D => D.data) };
+  window.AtlasLessonsTurn = { turnOf, turnLine, N: TURN_N }; window.AtlasLessons = { has: id => !!DATA[id], list, next, start, data: id => DATA[id].load().then(D => D.data) };
 })();
