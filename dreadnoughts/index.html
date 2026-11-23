@@ -480,6 +480,37 @@ button{font:inherit;color:inherit;cursor:pointer}
   #skTip.arm.now{padding-right:128px}
   #tipGo{position:absolute;right:46px;top:50%;transform:translateY(-50%);height:44px;padding:0 16px;border:0;background:linear-gradient(180deg,#e9cf8e,#b48d45);color:#16100a;font-family:var(--jp);font-weight:700;font-size:15px;letter-spacing:.12em;white-space:nowrap}
 }
+/* ---------- one control language, Modern Warfare-style (2026-11-24 user: ボタンのデザインはモダンウォーフェア的なUIに統一):
+   square edges (no cut corners, no slants, no diamonds), a dark translucent fill with a 1px hairline, a white fill with near-black
+   text for the hovered / chosen / primary state, a thin green accent bar on the chosen one, no lift on hover ---------- */
+:root{--mw-fill:rgba(10,14,18,.74);--mw-line:rgba(255,255,255,.16);--mw-line2:rgba(255,255,255,.42);--mw-on:#f2f4f5;--mw-ink:#0b0f12}
+.cmd,.ico,.vt,.sk,.rc,.seg button,.card,.chip,.turnchip,#msg,.panel,.tabs button,.budget .gauge,.bal .track,#pkSw,#tipGo,#tipX,.sheet > .panel,.card .cost{clip-path:none!important}
+.cmd::after,.sk::after,.vt::after,.rc::after,.card::after{display:none}
+.cmd{border:1px solid var(--mw-line);background:var(--mw-fill);color:#e9edef;transition:background .12s,color .12s,border-color .12s}
+.cmd:hover,.cmd:focus-visible{background:var(--mw-on);color:var(--mw-ink);border-color:var(--mw-on)}
+.cmd.prime{background:var(--mw-on);color:var(--mw-ink);border-color:var(--mw-on);box-shadow:inset 4px 0 0 var(--acc)}.cmd.prime:hover{background:#fff}
+.cmd:active{transform:none}
+.ico{border:1px solid var(--mw-line);background:var(--mw-fill)}.ico:hover{background:var(--mw-on);color:var(--mw-ink);border-color:var(--mw-on)}
+.vt{border:1px solid var(--mw-line);background:var(--mw-fill)}
+.vt.on,.vt.on.foe{background:var(--mw-on);color:var(--mw-ink);border-color:var(--mw-on)}.vt.on{box-shadow:inset 0 -3px 0 var(--acc)}.vt.on.foe{box-shadow:inset 0 -3px 0 #ff7a5c}.vt.on i{opacity:1}.vt.on .n{color:var(--mw-ink)}
+.sk{border:1px solid var(--mw-line);background:var(--mw-fill)}
+.sk.ready{background:rgba(16,22,26,.86);box-shadow:inset 0 -2px 0 var(--acc)}
+.sk.ready:hover{transform:none;background:var(--mw-on);border-color:var(--mw-on)}.sk.ready:hover b,.sk.ready:hover small,.sk.ready:hover .ic{color:var(--mw-ink)}
+.sk.ready:hover .ring{background:conic-gradient(var(--mw-ink) calc(var(--p,1) * 360deg),rgba(0,0,0,.15) 0)}
+.sk.armed,.sk.armed:hover{transform:none;background:var(--mw-on);border-color:var(--mw-on);box-shadow:inset 0 3px 0 var(--acc)}.sk.armed b,.sk.armed small,.sk.armed .ic{color:var(--mw-ink)}
+.sk.armed .ring{background:conic-gradient(var(--mw-ink) 0 60deg,transparent 60deg 180deg,var(--mw-ink) 180deg 240deg,transparent 240deg)}
+.rc{border:1px solid var(--mw-line);background:rgba(10,14,18,.6)}.rc:hover{border-color:var(--mw-line2)}
+.rc.on{background:var(--mw-on);border-color:var(--mw-on);box-shadow:inset 4px 0 0 var(--acc)}.rc.on b,.rc.on .rec{color:var(--mw-ink)}.rc.on p{color:#3a4248}
+.seg button{border:1px solid var(--mw-line)}.seg button:hover{border-color:var(--mw-line2);color:#fff}.seg button.on{background:var(--mw-on);color:var(--mw-ink);border-color:var(--mw-on)}
+.tabs button.on::after{left:0;right:0;bottom:0;height:3px;background:var(--acc)}
+.card{border:1px solid rgba(255,255,255,.12);background:rgba(10,14,18,.7)}.card:hover{border-color:var(--mw-line2)}
+.card.sel{transform:none;background:rgba(242,244,245,.1);border-color:var(--mw-on);box-shadow:inset 4px 0 0 var(--acc)}
+.card .cost{border-radius:0}
+.chip{border-radius:0}
+#tipGo{background:var(--mw-on);color:var(--mw-ink);box-shadow:inset 4px 0 0 var(--acc)}
+.turnchip{border-radius:0}
+.panel::before,.panel::after{transform:none}
+.sheet > .panel{background:rgba(7,11,15,.95)}
 </style>
 </head>
 <body>
