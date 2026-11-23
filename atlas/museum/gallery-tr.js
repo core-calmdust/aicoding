@@ -127,7 +127,7 @@
         ["Sedef zincir", "Bordürde bağa zemin üzerinde S biçimli sedef kıvrımlar küçük yıldızlarla sıralanır."],
         ['Köşe kalkanları', 'Zincir her köşede kalkan biçimli bir motifle birleşir.'],
         ["Kemik kenar ve yanlar", "Dış kenar, balıksırtı eklemli bir kemik şerittir; kanatların yan yüzlerinde bir sıra sedef altıgen bulunur."]],
-      model: "Ölçüler müzenin kaydına göredir. Kakmanın düzeni müzenin fotoğraflarından alınmıştır; çerçevenin kesiti ve kenarlardaki sedef parçalarının sırası tahminidir. Tahtayla birlikte satranç taşı günümüze ulaşmadı: oyunda kullanılan taşlar, Osmanlı dünyasının torna işi takımlarına göre bir tahmindir.",
+      model: "Ölçüler müzenin kaydına göredir. Kakmanın düzeni müzenin fotoğraflarından alınmıştır; çerçevenin kesiti ve kenarlardaki sedef parçalarının sırası tahminidir. Tahtayla birlikte satranç taşı günümüze ulaşmadı: oyun, Atlas’ın kendi satranç taşlarıyla oynanır.",
       src: [['Victoria and Albert Müzesi, "Games board" 861-1907', 'https://collections.vam.ac.uk/item/O370652/games-board-unknown']] },
     kofukuji: { name: 'Eski Kōfuku-ji Arazisinden Shogi Taşları', alt: 'Japonya\'nın en eski shogi taşları ve adlarının yazılı olduğu bir tablet', date: '11. yüzyıl sonu–12. yüzyıl', where: 'Japonya (Nara)', found: 'Nara, Noborioji-chō\'da Kōfuku-ji\'nin eski arazisindeki kazılar: Kisshōin alanı (1992, kuyu benzeri bir çukur) ve Kanzen\'in alanı (2013, bir kuyu ve bir çukur)',
       museum: 'Nara İli Kashihara Arkeoloji Enstitüsü Müzesi', no: 'Nara İli Somut Kültür Varlığı (2022, 31 parça)', mat: 'Ahşap, mürekkep', size: 'Taşlar yaklaşık 2,5 cm uzunluğunda (sarhoş fil: yaklaşık 2,5 × 1,5 cm, 2 mm kalınlığında)',

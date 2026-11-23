@@ -127,7 +127,7 @@
         ['The mother-of-pearl chain', 'Round the border, mother-of-pearl S-scrolls alternating with small stars on turtle shell.'],
         ['Corner shields', 'The chain is linked at each corner by a shield-like motif.'],
         ['The bone edge and the sides', 'The outer edge is a band of bone joined in chevrons; the sides of the leaves carry a row of mother-of-pearl hexagons.']],
-      model: "Sizes follow the museum's record. The inlay is laid out from the museum's photographs; the profile of the frame and the order of the plaques on the edges are estimates. No chess pieces are kept with the board: the ones used for play are an estimate after the lathe-turned sets of the Ottoman world.",
+      model: "Sizes follow the museum's record. The inlay is laid out from the museum's photographs; the profile of the frame and the order of the plaques on the edges are estimates. No chess pieces are kept with the board: games are played with the Atlas’s own chess pieces.",
       src: [['Victoria and Albert Museum, “Games board” 861-1907', 'https://collections.vam.ac.uk/item/O370652/games-board-unknown']] },
     kofukuji: { name: 'Shogi Pieces from the Old Kōfuku-ji Grounds', alt: 'Japan\'s oldest shogi pieces, and a tablet written with their names', date: 'Late 11th–12th century', where: 'Japan (Nara)', found: 'Excavations in the former grounds of Kōfuku-ji, Noborioji-chō, Nara: the Kisshōin area (1992, a well-like pit) and the Kanzen\'in area (2013, a well and a pit)',
       museum: 'Nara Prefectural Kashihara Archaeological Institute Museum', no: 'Nara Prefecture Tangible Cultural Property (2022, 31 items)', mat: 'Wood, ink', size: 'Pieces about 2.5 cm long (the drunk elephant: about 2.5 × 1.5 cm, 2 mm thick)',

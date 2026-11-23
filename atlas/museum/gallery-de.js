@@ -127,7 +127,7 @@
         ["Die Perlmuttkette", "In der Bordüre wechseln S-förmige Perlmuttranken mit kleinen Sternen auf Schildpatt."],
         ['Eckschilde', 'An jeder Ecke ist die Kette durch ein schildartiges Motiv verbunden.'],
         ["Knochenkante und Seiten", "Die Außenkante ist ein Knochenband mit Winkelstößen; die Seiten der Flügel tragen eine Reihe von Perlmutt-Sechsecken."]],
-      model: "Maße nach den Angaben des Museums. Die Einlagen sind dessen Fotos entnommen; das Profil des Rahmens und die Reihenfolge der Plättchen an den Kanten sind geschätzt. Zum Brett sind keine Schachfiguren erhalten: Die Spielfiguren sind eine Schätzung nach gedrechselten Sätzen der osmanischen Welt.",
+      model: "Maße nach den Angaben des Museums. Die Einlagen sind dessen Fotos entnommen; das Profil des Rahmens und die Reihenfolge der Plättchen an den Kanten sind geschätzt. Zum Brett sind keine Schachfiguren erhalten: Gespielt wird mit den Schachfiguren des Atlas.",
       src: [['Victoria and Albert Museum, „Games board“ 861-1907', 'https://collections.vam.ac.uk/item/O370652/games-board-unknown']] },
     kofukuji: { name: 'Shogi-Steine vom alten Gelände des Kōfuku-ji', alt: 'Die ältesten Shogi-Steine Japans und ein Holztäfelchen mit ihren Namen', date: 'Spätes 11.–12. Jahrhundert', where: 'Japan (Nara)', found: 'Grabungen auf dem ehemaligen Gelände des Kōfuku-ji, Noborioji-chō, Nara: Bereich Kisshōin (1992, eine brunnenartige Grube) und Bereich Kanzen\'in (2013, ein Brunnen und eine Grube)',
       museum: 'Museum des Archäologischen Instituts Kashihara, Präfektur Nara', no: 'Materielles Kulturgut der Präfektur Nara (2022, 31 Objekte)', mat: 'Holz, Tusche', size: 'Steine etwa 2,5 cm lang (der betrunkene Elefant: etwa 2,5 × 1,5 cm, 2 mm dick)',

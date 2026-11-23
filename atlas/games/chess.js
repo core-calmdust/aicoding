@@ -85,12 +85,12 @@
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
     const set = T3.PIECES && T3.PIECES.chess ? T3.PIECES.chess.get() : 'jewel', look = T3.BOARDS && T3.BOARDS.chess ? T3.BOARDS.chess.get() : 'lux';   // (2026-11-15: six boards, six sets)
     // 所蔵品で遊ぶ (2026-11-23): ctx.board = a chess board handed in by the museum (atlas/museum/play.js: the Ottoman board), its userData:
-    // chess: true · top · piece(type, colour) → a Group with userData.type / color / h — one square = 1, White's side towards +z, as MODELS.chess
+    // chess: true · top · (piece(type, colour) → a Group with userData.type / color / h, else the player's own set) — one square = 1, White's side towards +z, as MODELS.chess
     const MB = !ctx.pz && ctx.board && ctx.board.userData && ctx.board.userData.chess ? ctx.board : null;
     const board = MB || T3.MODELS.chess(true); T3.show('chess', board);
     if (!MB && board.userData.setSet) board.userData.setSet(look);
     if (!MB && board.userData.setTone) board.userData.setTone('classic');
-    const newPiece = (tp, col) => MB ? MB.userData.piece(tp, col) : CS.piece(tp, col, { reflect: true, set });
+    const newPiece = (tp, col) => MB && MB.userData.piece ? MB.userData.piece(tp, col) : CS.piece(tp, col, { reflect: !MB, set });   // (the museum's board: no mirror image under the pieces; its own pieces if it has any)
     const Y = board.userData.top;
     if (T3.fit && !MB) T3.fit({ w: CS.OW + .2, d: CS.OW + .7, y: Y + .35, pitch: 1.0 });   // the whole board, large, from the player's side
     const pvp = ctx.mode === 'pvp', PX = PV[ctx.lang] || PV.en;   // pvp: both colours are tapped in turn, White at the bottom, no AI
@@ -313,7 +313,7 @@
     }
 
     /* ---------- promotion choice ---------- */
-    function loadImgs() { if (!imgs && CS && CS.images) imgs = CS.images(160, MB ? 'wood' : set).catch(() => null); return imgs; }
+    function loadImgs() { if (!imgs && CS && CS.images) imgs = CS.images(160, set).catch(() => null); return imgs; }
     function closePromo() { if (promoEl) { promoEl.remove(); promoEl = null; document.removeEventListener('pointerdown', outside, true); } }
     function outside(e) { if (promoEl && !promoEl.contains(e.target)) { closePromo(); deselect(); } }
     function askPromo(to, cands) {

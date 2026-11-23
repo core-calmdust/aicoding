@@ -127,7 +127,7 @@
         ["Rantai mutiara", "Di bingkai, sulur mutiara berbentuk S bergantian dengan bintang kecil di atas kulit penyu."],
         ['Perisai sudut', 'Di setiap sudut, rantai disambung oleh motif berbentuk perisai.'],
         ["Tepi tulang dan sisi", "Tepi luar berupa pita tulang yang disambung bentuk V; sisi kedua daun papan dihiasi sederet segi enam mutiara."]],
-      model: "Ukuran mengikuti catatan museum. Tata letak tatahan diambil dari foto museum; profil bingkai dan urutan keping kerang di sisi papan merupakan perkiraan. Tidak ada buah catur yang tersimpan bersama papan ini: buah untuk bermain adalah perkiraan menurut buah bubutan dunia Utsmaniyah.",
+      model: "Ukuran mengikuti catatan museum. Tata letak tatahan diambil dari foto museum; profil bingkai dan urutan keping kerang di sisi papan merupakan perkiraan. Tidak ada buah catur yang tersimpan bersama papan ini: permainan memakai buah catur milik Atlas sendiri.",
       src: [['Victoria and Albert Museum, "Games board" 861-1907', 'https://collections.vam.ac.uk/item/O370652/games-board-unknown']] },
     kofukuji: { name: 'Bidak Shogi dari Bekas Kompleks Kōfuku-ji', alt: 'Bidak shogi tertua di Jepang, dan sebuah bilah kayu bertuliskan nama-namanya', date: 'Akhir abad ke-11–abad ke-12', where: 'Jepang (Nara)', found: 'Penggalian di bekas kompleks Kōfuku-ji, Noborioji-chō, Nara: area Kisshōin (1992, lubang menyerupai sumur) dan area Kanzen\'in (2013, sebuah sumur dan sebuah lubang)',
       museum: 'Museum Institut Arkeologi Kashihara, Prefektur Nara', no: 'Benda Budaya Berwujud Prefektur Nara (2022, 31 buah)', mat: 'Kayu, tinta', size: 'Bidak panjangnya sekitar 2,5 cm (gajah mabuk: sekitar 2,5 × 1,5 cm, tebal 2 mm)',

@@ -458,7 +458,7 @@
     // the ring's turn and each piece's bob don't snap back to their start (a jolt), and a logo drawn while the window is
     // not in front / the hero is off screen starts paused (it used to turn on, unfocused, after such a redraw — 2026-11-11)
     const o = $('ttl').querySelector('.ttlRing'), ct = (() => { try { const a = o && o.getAnimations()[0]; return a ? a.currentTime : null; } catch (e) { return null; } })();
-    $('ttl').innerHTML = emblem(SPLIT ? SPLIT[1] : t('title'), SPLIT ? SPLIT[0] : '', A_.GAMES.length);
+    $('ttl').innerHTML = emblem(SPLIT ? SPLIT[1] : t('title'), SPLIT ? SPLIT[0] : '', A_.GAMES.length + Object.keys(window.ATLAS_MU || {}).length);   // (the museum's playable exhibits count as games, 2026-11-23 user)
     { const r = $('ttl').querySelector('.ttlRing'); try { const a = r && r.getAnimations()[0]; if (a && ct != null) a.currentTime = ct; } catch (e) {} }
     svgSync();
     $('ttl').setAttribute('aria-label', t('title') + ' — World Board Game Atlas');
