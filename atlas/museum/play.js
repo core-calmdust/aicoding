@@ -176,8 +176,8 @@
     const coursePad = () => { const pe = stage.querySelector('.exrul'); return [56, (pe ? pe.offsetHeight : 180) + 22]; };
     const tgtB = V.tgt.clone(); apply(); V.playing = true;
     const hid = ((V.obj.userData.play && V.obj.userData.play.hide) || []).filter(m => m.visible); hid.forEach(m => { m.visible = false; });   // the pieces and sticks laid out for show: put away during a game
-    // the level's Atlamo boss talks now and then, and beating it gives its N / R / SR — as in the portal's AI games (npc/npc.js), here in the case
-    const npcT = !CM && (o.mode || 'ai') === 'ai' && window.AtlasNPC && AtlasNPC.portal ? AtlasNPC.portal({ game: def.game, level: o.level, host: V.ov,
+    // beating the level's Atlamo boss gives its N / R / SR (no talk in the museum: quiet, 2026-11-23 user) — as in the portal's AI games (npc/npc.js), here in the case
+    const npcT = !CM && (o.mode || 'ai') === 'ai' && window.AtlasNPC && AtlasNPC.portal ? AtlasNPC.portal({ game: def.game, level: o.level, quiet: true, host: V.ov,
       left: () => { const r = stage.getBoundingClientRect(); return [r.left + r.width / 2, r.width]; },
       bottom: () => { const c = V.ov.querySelector('.expcard'), r = c && c.getBoundingClientRect(); return r && r.height ? innerHeight - r.top + 4 : 90; } }) : null;
     const ses = o.course ? (V.obj.add(board), AtlasMuseumRules.run(id, { lang: o.lang, TH, board, V, T3, stage, relayout: () => { if (cur && cur.V === V) apply(); }, onPlay: o.onPlay, onExit: o.onExit }))
