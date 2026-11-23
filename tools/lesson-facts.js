@@ -197,6 +197,13 @@ const CHECKS = {
             if (id === 'b_fly') { let n = 0; for (let i = 0; i < G.n; i++) if (pos.b[i] === me) n++; if (n !== 3) bad(g, K, `${w}: the side has ${n} pieces, not 3 (no flying)`); }
             if (id === 'b_reopen') { if (fr === NO || !pos.inMill(fr)) bad(g, K, `${w}: the answer does not open a mill`); else if (after.moves().some(x => E.mTo(x) === fr)) bad(g, K, `${w}: the opponent can step into the opened point`); }
             if (id === 'b_place') { const mx = Math.max(...[...legal].map(x => G.adj[E.mTo(x)].length)); if (G.adj[t].length < mx) bad(g, K, `${w}: the answer has ${G.adj[t].length} neighbours, another point ${mx}`); }
+            // (2026-11-23 lesson loop) 「どの駒を取るか」: the answer is a mill (it takes a piece). 「封じ込め」: the answer wins (a stored value
+            // over WINT — トゥエルブの4・5問目は勝ちにならない手が答えだった）and, when it takes a piece, the opponent keeps 3 or more (the win is
+            // the blockade, not the count). 「ただ一つの受け」: only one move keeps the result (the others score below it).
+            if (id === 'remove' && r === NO) bad(g, K, `${w}: the answer makes no mill`);
+            if (id === 'blockade' && P.sc) { const v = new Map(P.sc).get(m); if (!(v > E.WINT)) bad(g, K, `${w}: the answer does not win (${v})`);
+              else if (r !== NO && after.cnt[o] + after.hand[o] < 3) bad(g, K, `${w}: the answer wins by taking, not by a blockade`); }
+            if (id === 'defend' && P.sc) { const top = Math.max(...P.sc.map(e => e[1])), W = E.WINT; const n = P.sc.filter(([x, v]) => v >= top - 6 && !(top > W && v < top)).length; if (n !== 1) bad(g, K, `${w}: ${n} moves are as good as the answer (not the only defence)`); }
             if (id === 'tw_diag' && r !== NO) { const DG = [[0, 3, 6], [2, 5, 8], [21, 18, 15], [23, 20, 17]]; if (!DG.some(ml => ml.includes(t) && ml.every(q => after.b[q] === me))) bad(g, K, `${w}: the mill is not on a diagonal line`); }
           }); }); }); });
   },
