@@ -18,6 +18,7 @@
   const CH = (w, b) => ({ w: w || {}, b: b || {} });   // chess: { square: piece } for White (you) and Black
   const CH0 = CH({ a1: 'R', b1: 'N', c1: 'B', d1: 'Q', e1: 'K', f1: 'B', g1: 'N', h1: 'R', a2: 'P', b2: 'P', c2: 'P', d2: 'P', e2: 'P', f2: 'P', g2: 'P', h2: 'P' },
     { a8: 'R', b8: 'N', c8: 'B', d8: 'Q', e8: 'K', f8: 'B', g8: 'N', h8: 'R', a7: 'P', b7: 'P', c7: 'P', d7: 'P', e7: 'P', f7: 'P', g7: 'P', h7: 'P' });
+  const LB = (me, ai) => ({ me, ai });   // liubo: your pieces' spots on the board, the other side's (the rest of each six wait in hand)
   const GS = (me, ai) => ({ me, ai });   // the Game of the Goose: your piece's space (0 = the start), the other's (or none)
   const ALIAS = { 'goose-ch': 'ottoman' };   // chess on another exhibit's board: the same pages and layer (its own first words, museum/rules-tx-*.js)
   const C = {
@@ -31,6 +32,18 @@
       { set: GS(0), dice: [6, 3], glow: ['g26'], task: [{ t: 'move', from: 'g0', to: 'g26' }] },
       { set: GS(53, 31), dice: [3, 2], glow: ['g58'], gcol: 0xff9b7a, task: [{ t: 'move', from: 'g53', to: 'g58', then: 'g0' }] },
       { set: GS(60, 44), dice: [2, 1], glow: ['g63'], task: [{ t: 'move', from: 'g60', to: 'g63' }], last: true },
+    ],
+    // the liubo board (The Met 1994.285): liubo by our own reconstruction (atlas/games/liubo.js) — spots: r0–r15 the rim's stations (anticlockwise from
+    // your L), ta / tb your T's bar and stem, w the water, h0–h5 your hand, H0–H5 the other side's
+    liubo: [
+      { set: LB([], []) },
+      { set: LB([], []), glow: ['w'], task: [{ t: 'tap', at: ['w'] }] },
+      { set: LB([], []), task: [{ t: 'roll', v: 3 }] },
+      { set: LB([], []), ls: 3, glow: ['r2'], task: [{ t: 'move', from: 'h0', to: 'r2' }] },
+      { set: LB(['r4'], ['r6', 'r11']), ls: 2, glow: ['r6'], gcol: 0xff9b7a, task: [{ t: 'move', from: 'r4', to: 'r6', cut: true }] },
+      { set: LB(['r14'], ['r3']), ls: 3, glow: ['ta', 'tb'], task: [{ t: 'move', from: 'r14', to: 'tb' }] },
+      { set: LB(['ta'], ['r9']), ls: 4, glow: ['w'], task: [{ t: 'move', from: 'ta', to: 'w', fish: 2, then: 'h5' }] },
+      { set: LB(['tb'], ['r9']), ls: 1, glow: ['w'], task: [{ t: 'move', from: 'tb', to: 'w', fish: 3, then: 'h5' }], last: true },
     ],
     // the Ottoman board, outside: chess (the Atlas's own pieces)
     ottoman: [
@@ -178,6 +191,17 @@
         list(s) { const L = [['g' + s.me, 0]]; if (s.ai != null) L.push(['h' + s.ai, 1]); return L; },
         hit(x, z) { const h = U.hit(x, z); return h < 0 ? null : 'g' + h; } };
     }
+    if (id === 'liubo') {
+      const Y = U.top, xz = t => t[0] === 'r' ? U.ring[+t.slice(1)] : t === 'ta' ? U.tee(0, 0) : t === 'tb' ? U.tee(0, 1) : t === 'w' ? [U.water[0], U.water[1] + 2.6, 0] : null;
+      const pos = loc => { if (loc[0] === 'h' || loc[0] === 'H') { const h = U.hand(loc[0] === 'H' ? 1 : 0, +loc.slice(1)); return [h[0], .635, h[2]]; } const q = xz(loc); return [q[0], Y + (loc[0] === 't' || loc === 'w' ? 1.27 : .635), q[1]]; };
+      return { R: 1.5, sc: 1.25, base: Y, pos, spot(t) { return t === 'w' ? [U.water[0], Y, U.water[1]] : t[0] === 'h' || t[0] === 'H' ? pos(t) : [xz(t)[0], Y, xz(t)[1]]; },
+        make: kind => { const g = new TH.Group(); g.add(U.piece(kind)); return g; },
+        orient(m, loc) { const up = loc[0] === 't' || loc === 'w', q = xz(loc); m.children[0].rotation.set(0, q && !up ? q[2] : 0, up ? Math.PI / 2 : 0); },
+        list(s) { const L = []; [s.me, s.ai].forEach((a, sd) => { a.forEach(l => L.push([l, sd])); for (let i = 0; i < 6 - a.length; i++) L.push([(sd ? 'H' : 'h') + i, sd]); }); return L; },
+        cutLoc: pieces => 'H' + pieces.filter(p => p.loc[0] === 'H').length,
+        hit(x, z) { if (x < -19.3) return z > 0 ? 'h0' : null; let best = null, bd = 2.4 * 2.4; const tryIt = (t, k) => { const q = xz(t), d = ((q[0] - x) ** 2 + (q[1] - (t === 'w' ? 2.6 : 0) - z) ** 2) * (k || 1); if (d < bd) { bd = d; best = t; } };
+          for (let i = 0; i < 16; i++) tryIt('r' + i); tryIt('ta'); tryIt('tb'); tryIt('w', .16); return best; } };
+    }
     if (id === 'ottoman') {   // chess: 'c' + the square's name (ce4); kinds 'wK' … 'bP' — the Atlas's own pieces, one square = 1 in the board's space
       const CS = window.Table3D && Table3D.chess, set = window.Table3D && Table3D.PIECES && Table3D.PIECES.chess ? Table3D.PIECES.chess.get() : 'jewel';
       const xz = t => [t.charCodeAt(1) - 97 - 3.5, 8 - +t[2] - 3.5];
@@ -215,14 +239,14 @@
     function setPieces(list, instant) {
       const keep = [], want = list.slice();
       pieces.forEach(p => { const i = want.findIndex(([l, k]) => l === p.loc && k === p.kind); if (i >= 0) { keep.push(p); want.splice(i, 1); } else { const m = p.m, y0 = m.position.y; anim(260, k => { m.position.y = y0 + k * 2 * LY.sc; m.scale.setScalar(1 - k * .6); }).then(() => PG.remove(m)); } });
-      want.forEach(([loc, kind], n) => { const m = LY.make(kind); m.traverse(o => { if (o.isMesh) o.castShadow = o.receiveShadow = true; }); const [x, y, z] = LY.pos(loc); PG.add(m); keep.push({ loc, kind, m });
+      want.forEach(([loc, kind], n) => { const m = LY.make(kind); m.traverse(o => { if (o.isMesh) o.castShadow = o.receiveShadow = true; }); const [x, y, z] = LY.pos(loc); PG.add(m); if (LY.orient) LY.orient(m, loc); keep.push({ loc, kind, m });
         if (instant) { m.position.set(x, y, z); return; }
         m.position.set(x, y + 4 * LY.sc, z); later(() => anim(380, k => { m.position.y = y + (1 - io(k)) * 4 * LY.sc; }), 40 * n); });
       pieces = keep; kick();
     }
     const at = loc => pieces.filter(p => p.loc === loc || p.loc.startsWith(loc + ':')).sort((a, b) => (+b.loc.split(':')[1] || 0) - (+a.loc.split(':')[1] || 0))[0];
     const count = pre => pieces.filter(p => p.loc.startsWith(pre + ':')).length;
-    async function hop(p, loc, h) { const a = p.m.position.clone(), b = new TH.Vector3(...LY.pos(loc)); p.loc = loc;
+    async function hop(p, loc, h) { const a = p.m.position.clone(), b = new TH.Vector3(...LY.pos(loc)); p.loc = loc; if (LY.orient) LY.orient(p.m, loc);
       await anim(Math.min(620, 300 + a.distanceTo(b) / LY.sc * 40), k => { const e = io(k); p.m.position.set(a.x + (b.x - a.x) * e, a.y + (b.y - a.y) * e + Math.sin(k * Math.PI) * (h || 2.2) * LY.sc, a.z + (b.z - a.z) * e); }); SND.put(); }
     function lift(p) { pieces = pieces.filter(q => q !== p); const m = p.m, y0 = m.position.y; SND.take(); return anim(360, k => { m.position.y = y0 + k * 3 * LY.sc; m.traverse(o => { if (o.material) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = 1 - k; } }); }).then(() => PG.remove(m)); }
 
@@ -241,6 +265,15 @@
       await anim(820, k => dice.forEach((d, i) => { const q = Math.min(1, Math.max(0, k * 1.1 - i * .08)), e = 1 - Math.pow(1 - q, 2.6), [x, z] = U.diceAt(0, i); d.position.set(x, U.top + (U.dieH || .68) + Math.sin(q * Math.PI) * 4, z + (1 - e) * 8); d.rotation.set(UP[v[i]][0] + r0[i][0] * (1 - e), (i ? -.3 : .25) + r0[i][1] * (1 - e), UP[v[i]][2] + r0[i][2] * (1 - e)); }));
       showDice(v); }
 
+    // 六博: the six split-bamboo sticks on the plinth in front (n lie flat face up), and the two fish in the water
+    let ls = null, fishes = null;
+    const lsUp = n => [0, 3, 1, 4, 2, 5].map((_, i) => [0, 3, 1, 4, 2, 5].indexOf(i) < n);
+    function showLS(n) { const U = B.userData; if (!ls) ls = [0, 1, 2, 3, 4, 5].map(i => { const d = U.stick(), [x, y, z] = U.stickAt(i); d.position.set(x, y, z); d.rotation.y = ((i * 7) % 5 - 2) * .04; PG.add(d); return d; });
+      if (!fishes) fishes = [0, 1].map(i => { const f = U.fish(), [x, z] = U.fishAt(i); f.position.set(x, U.top + .14, z); f.rotation.y = i ? 2.9 : -.25; PG.add(f); return f; });
+      const up = lsUp(n || 0); ls.forEach((d, i) => { d.visible = n != null; d.children[0].rotation.x = up[i] ? 0 : Math.PI; }); kick(); }
+    async function rollLS(n) { SND.roll(); showLS(n); const U = B.userData, up = lsUp(n), r0 = ls.map(() => 8 + Math.random() * 6);
+      await anim(820, k => ls.forEach((d, i) => { const q = Math.min(1, Math.max(0, k * 1.1 - i * .03)), e = 1 - Math.pow(1 - q, 2.6), [x, y, z] = U.stickAt(i); d.position.set(x, y + Math.sin(q * Math.PI) * 4, z + (1 - e) * 8); d.children[0].rotation.x = (up[i] ? 0 : Math.PI) + r0[i] * (1 - e); }));
+      showLS(n); }
     // ウル: the four tetrahedral dice of the near side beside the small block; n marked (white) tips up
     let udice = null;
     function showUDice(n) { const U = B.userData; if (!udice) udice = [0, 1, 2, 3].map(() => { const d = U.die(); PG.add(d); return d; });
@@ -304,6 +337,7 @@
       setPieces(LY.list(P.set));
       if (id === 'senet') { showSticks(P.sticks || 5); sticks.forEach(s => { s.visible = step >= 2; }); }
       if (id === 'sugoroku' || id === 'ottoman-bg' || id === 'goose') showDice(P.dice || (P.task && P.task[0].t === 'roll' ? [5, 2] : null));
+      if (id === 'liubo') showLS(P.ls != null ? P.ls : P.task && P.task[0].t === 'roll' ? 0 : null);
       if (id === 'ur') showUDice(P.udice != null ? P.udice : P.task && P.task[0].t === 'roll' ? 0 : null);
       say(words()[0]); plate(P.task ? kOf() : '');
       $('.pg').textContent = ` ${step + 1} / ${PAGES.length}`;
@@ -320,7 +354,7 @@
     }
     async function doStep(st, t) {
       busy = true; clearMarks();
-      if (st.t === 'roll') { if (id === 'senet') await throwSticks(st.v); else if (id === 'ur') await rollUDice(st.v); else await rollDice(st.v); }
+      if (st.t === 'roll') { if (id === 'senet') await throwSticks(st.v); else if (id === 'liubo') await rollLS(st.v); else if (id === 'ur') await rollUDice(st.v); else await rollDice(st.v); }
       else if (st.t === 'tap') { if (st.put) { const p = { loc: t, kind: st.put, m: LY.make(st.put) }; const [x, y, z] = LY.pos(t); p.m.position.set(x, y + 3 * LY.sc, z); PG.add(p.m); pieces.push(p); SND.put(); await anim(260, k => { p.m.position.y = y + (1 - io(k)) * 3 * LY.sc; });
           if (st.cap) { await Promise.all(st.cap.map(c => { const q = at(c); return q ? lift(q) : 0; })); }
           if (st.banAfter) xban = st.banAfter; } }
@@ -336,6 +370,8 @@
           if (st.swap) { pieces.push(vic); await hop(vic, st.from.startsWith('s') ? st.from : st.from); }
           if (st.cut) { pieces.push(vic); SND.take(); await hop(vic, LY.cutLoc ? LY.cutLoc(pieces) : `b1:${count('b1')}`, 3); }
           if (st.cap) await Promise.all(st.cap.map(c => { const q = at(c); return q ? lift(q) : 0; }));
+          if (st.fish && fishes) { const f = fishes[st.fish === 3 ? 0 : 1], y0 = f.position.y, z0 = f.rotation.z, pz = f.position.z; SND.ok();   // (六博: the fish turned over — 3 — or pulled toward you — 2)
+            if (st.fish === 3) await anim(700, k => { f.position.y = y0 + Math.sin(k * Math.PI) * 2.6; f.rotation.z = z0 + Math.PI * io(k); }); else await anim(700, k => { const e = Math.sin(k * Math.PI); f.position.z = pz + 2.2 * e; f.position.y = y0 + .5 * e; }); f.position.y = y0; f.position.z = pz; }
           if (st.then) { await new Promise(r => later(r, 250)); SND.water(); await hop(p, st.then, 1.2); }
         } }
       busy = false; if (!stopped) finishStep();

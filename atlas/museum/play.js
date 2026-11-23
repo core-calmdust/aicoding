@@ -84,6 +84,38 @@
         g.quaternion.setFromAxisAngle(new TH.Vector3(0, 0, 1), Math.PI).multiply(new TH.Quaternion().setFromAxisAngle(new TH.Vector3(0, 1, 0), Math.PI / 2));
         g.userData = { chess: true, top: 0 };
         return g; } },
+    // 六博の盤と駒 (The Met 1994.285; 1 = 1 cm): liubo by a reconstruction of our own (atlas/games/liubo.js — the real rules are lost). The stations are
+    // the board's own marks, read off the straightened photograph (px / 40 − half the slab): the sixteen arms of the eight L marks round the rim,
+    // anticlockwise from the near side's L; the T at the near and the far side of the square (bar, stem); the square is the water.
+    // The twelve bone pieces are the exhibit's own shape (2.54 × 1.27 × 1.52); one side's are played dark so the two can be told apart (sets of six
+    // white and six black are known from other Han tombs). No sticks or fish are kept with this board: six split-bamboo sticks (shortened to 9 cm
+    // to lie in front of the board; the real ones were about 23) and two small bone fish — an estimate.
+    liubo: { game: 'liubo', area: [-24.4, 19.6, -16.6, 22.6], top: 5.1, noContact: true, view: { tilt: 1.2, k: 1.05 },
+      board(TH, obj, K) {
+        const g = new TH.Group(), Y = 5.1, c = (px, py, yaw) => [px / 40 - 18.5, py / 40 - 15.7, yaw || 0], V = Math.PI / 2;
+        const ring = [c(565, 1150, V), c(652, 1068), c(1275, 1150, V), c(1365, 1048), c(1365, 655), c(1266, 590, V), c(1365, 188), c(1268, 105, V),
+          c(848, 100, V), c(770, 195), c(190, 100, V), c(100, 178), c(90, 562), c(168, 655, V), c(95, 1060), c(170, 1150, V)];
+        const TEE = [[c(722, 965), c(722, 890)], [c(728, 318), c(724, 392)]], tee = (s, k) => TEE[s][k], water = [-.5, .3];
+        const hand = (s, i) => [-21.6, 0, (s ? -1 : 1) * (3.2 + i * 2.3), 0];   // (both to the left of the board: behind it they would be out of sight)
+        const speck = (base, n, cols, seed) => K.tex(128, 128, (q, w, h) => { q.fillStyle = base; q.fillRect(0, 0, w, h); let sd = seed; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+          for (let i = 0; i < 14; i++) { const x = R() * w, y = R() * h, r = 14 + R() * 40, gr = q.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, cols[i % 2] + '66'); gr.addColorStop(1, cols[i % 2] + '00'); q.fillStyle = gr; q.fillRect(x - r, y - r, 2 * r, 2 * r); }
+          for (let i = 0; i < n; i++) { q.fillStyle = R() < .5 ? 'rgba(30,20,12,' + (.2 + R() * .3) + ')' : 'rgba(240,230,210,' + (.12 + R() * .2) + ')'; q.beginPath(); q.arc(R() * w, R() * h, .4 + R() * 1.6, 0, 6.29); q.fill(); } });
+        const MAT = [K.mat({ map: speck('#d8cab0', 200, ['#a88a60', '#efe6d2'], 11), color: '#b4ab9c', roughness: .7 }), K.mat({ map: speck('#3a2a20', 200, ['#1c120c', '#5a4434'], 13), color: '#ffffff', roughness: .6 })];
+        const PG = new TH.BoxGeometry(2.54, 1.27, 1.52);
+        const piece = s => { const m = new TH.Mesh(PG, MAT[s]); m.castShadow = m.receiveShadow = true; return m; };
+        // a throwing stick: a split length of bamboo — the round back lacquered red, the cut face pale
+        const SR = .42, SL = 9, sg = new TH.CylinderGeometry(SR, SR, SL, 12, 1, false, 0, Math.PI), sf = new TH.PlaneGeometry(2 * SR, SL); sf.rotateY(-Math.PI / 2);
+        [sg, sf].forEach(q => { q.rotateZ(-Math.PI / 2); q.translate(0, SR / 2, 0); });
+        const SM = [K.mat({ color: '#6e2218', roughness: .38, clearcoat: .4, clearcoatRoughness: .4, side: TH.DoubleSide }), K.mat({ map: speck('#dcc898', 60, ['#b89a5c', '#efe2bc'], 17), color: '#b0a690', roughness: .7, side: TH.DoubleSide })];
+        const stick = () => { const o = new TH.Group(), r = new TH.Group(); [[sg, SM[0]], [sf, SM[1]]].forEach(([q, m]) => { const x = new TH.Mesh(q, m); x.castShadow = x.receiveShadow = true; r.add(x); }); o.add(r); return o; };
+        const stickAt = i => [(i % 3 - 1) * 9.6 + (i > 2 ? 1.2 : -1.2), SR / 2, 18.2 + (i > 2 ? 1.5 : 0)];   // (on the plinth in front, two rows of three)
+        // a fish for the water: a small flat bone fish
+        const fs = new TH.Shape(); fs.moveTo(-1.5, 0); fs.quadraticCurveTo(-.6, .75, .5, .32); fs.lineTo(1.5, .72); fs.lineTo(1.22, 0); fs.lineTo(1.5, -.72); fs.lineTo(.5, -.32); fs.quadraticCurveTo(-.6, -.75, -1.5, 0);
+        const FG = new TH.ExtrudeGeometry(fs, { depth: .26, bevelEnabled: true, bevelThickness: .05, bevelSize: .05, bevelSegments: 1, curveSegments: 8 }); FG.rotateX(-Math.PI / 2); FG.translate(0, -.13, 0);
+        const fish = () => { const m = new TH.Mesh(FG, MAT[0]); m.castShadow = m.receiveShadow = true; return m; };
+        const fishAt = i => [water[0] + (i ? 2.3 : -2.3), water[1] + (i ? .9 : -.9)];
+        g.userData = { liubo: true, top: Y, ring, tee, water, hand, piece, stick, stickAt, fish, fishAt, mats: MAT };
+        return g; } },
     // the Ottoman board's inner face (1 = 1 cm): backgammon on its two tables — six mother-of-pearl cypress points from each long side on either leaf
     // (their places from the photograph), the hinge between them the bar; checkers borne off are piled on the plinth to the right. Your home table is
     // the near right one. No checkers or dice are kept with the board: plain turned discs (bone, dark wood) and bone dice — an estimate.
