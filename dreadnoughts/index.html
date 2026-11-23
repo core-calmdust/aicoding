@@ -120,9 +120,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 .log li .t{color:#d7dcdc}.log li .t em{font-style:normal;color:var(--red2);font-weight:700}.log li .t strong{color:var(--gold2)}
 
 /* ---------- skill dock ---------- */
-#dock{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:10px;align-items:flex-end;max-width:calc(100vw - 32px);pointer-events:none}
+#dock{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:8px;align-items:flex-end;max-width:calc(100vw - 720px);overflow-x:auto;scrollbar-width:none;pointer-events:none;padding-top:10px}#dock::-webkit-scrollbar{display:none}   /* (between the side panels; a 大艦隊's many skills shrink, then scroll) */
 #dock > *{pointer-events:auto}
-.sk{position:relative;width:134px;height:116px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;padding:10px 6px 9px;border:0;background:var(--glass);clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);transition:transform .18s,background .2s}
+.sk{position:relative;flex:0 1 134px;min-width:88px;width:134px;height:116px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;padding:10px 6px 9px;border:0;background:var(--glass);clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);transition:transform .18s,background .2s}
 .sk::after{content:'';position:absolute;inset:0;clip-path:inherit;border:1px solid var(--brass2);pointer-events:none}
 .sk .ring{position:absolute;top:9px;left:50%;width:46px;height:46px;transform:translateX(-50%);border-radius:50%;background:conic-gradient(var(--gold) calc(var(--p,1) * 360deg),rgba(255,255,255,.08) 0);-webkit-mask:radial-gradient(circle,transparent 20px,#000 21px);mask:radial-gradient(circle,transparent 20px,#000 21px)}
 .sk .ic{position:absolute;top:20px;left:50%;transform:translateX(-50%);width:24px;height:24px;color:var(--gold2)}
@@ -174,7 +174,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .rc p{margin:0;font-size:15.5px;line-height:1.7;color:var(--mute)}
 .rc.on{background:linear-gradient(180deg,rgba(214,222,228,.18),rgba(214,222,228,.03))}.rc.on::after{border-color:var(--gold)}.rc.on b{color:var(--gold2)}
 .rc .rec{position:absolute;right:12px;top:14px;font-family:var(--num);font-size:12.5px;letter-spacing:.24em;color:var(--gold)}
-.opts{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:26px;margin-top:26px}
+.opt.dim{opacity:.45}.opts{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:26px;margin-top:26px}
 .opt h4{margin:0 0 10px;font-family:var(--num);font-weight:600;font-size:15px;letter-spacing:.3em;color:var(--gold);text-transform:uppercase}
 .lvl{display:flex;align-items:center;gap:16px}
 .lvl input{flex:1;accent-color:var(--gold)}
@@ -522,6 +522,7 @@ button{font:inherit;color:inherit;cursor:pointer}
       <div class="opt"><h4 data-t="s.level"></h4><div class="lvl"><input type="range" min="1" max="20" id="lvl"><div class="v" id="lvlV"></div></div></div>
       <div class="opt"><h4 data-t="s.first"></h4><div class="seg" id="segFirst"></div></div>
       <div class="opt"><h4 data-t="s.adj"></h4><div class="seg" id="segAdj"></div></div>
+      <div class="opt" id="optStreak"><h4 data-t="s.streak"></h4><div class="seg" id="segStreak"></div></div>
     </div>
   </div>
   <div class="sh-foot"><button class="cmd" data-close><span data-t="back"></span></button><div class="sp"></div><button class="cmd prime" id="sGo"><span data-t="s.go"></span><small>ENGAGE</small></button></div>
@@ -586,10 +587,10 @@ button{font:inherit;color:inherit;cursor:pointer}
 
 <script src="../seabattle/i18n.js?v=43"></script>
 <script src="../seabattle/draft-model.js?v=2"></script>
-<script src="../seabattle/engine.js?v=34"></script>
+<script src="../seabattle/engine.js?v=35"></script>
 <script src="../atlas/vendor/three-r186.min.js?v=1"></script>
 <script src="../seabattle/ships3d.js?v=2"></script>
-<script src="world.js?v=7"></script>
-<script src="game.js?v=12"></script>
+<script src="world.js?v=8"></script>
+<script src="game.js?v=13"></script>
 </body>
 </html>

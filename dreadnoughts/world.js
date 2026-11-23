@@ -5,11 +5,11 @@
 (function () {
 'use strict';
 let T = null, V = null;
-const N = 10, ZC = [new Float32Array([0, 7]), new Float32Array([0, -7])];   // zone centres (x, z): 0 = ours, 1 = theirs
+let N = 10, H = 5; const ZC = [new Float32Array([0, 7]), new Float32Array([0, -7])];   // zone centres (x, z): 0 = ours, 1 = theirs; N×N cells, H = N/2 (大艦隊: 14×14 — setSize)
 
 // ---------- waves (JS for the ships, GLSL for the water) ----------
 const WAVES = [[.82, .57, .055, 9.5, 1], [-.36, .93, .05, 5.7, 1.1], [.95, -.31, .042, 3.4, 1.2], [.2, .98, .035, 2.1, 1.35], [-.7, -.71, .02, 1.3, 1.5]];
-function calmAt(x, z) { let c = 1; for (const zc of ZC) { const dx = Math.max(0, Math.abs(x - zc[0]) - 5), dz = Math.max(0, Math.abs(z - zc[1]) - 5); c = Math.min(c, .4 + .6 * Math.min(1, Math.hypot(dx, dz) / 4)); } return c; }
+function calmAt(x, z) { let c = 1; for (const zc of ZC) { const dx = Math.max(0, Math.abs(x - zc[0]) - H), dz = Math.max(0, Math.abs(z - zc[1]) - H); c = Math.min(c, .4 + .6 * Math.min(1, Math.hypot(dx, dz) / 4)); } return c; }
 function waveAt(x, z, t) { let y = 0; for (const [dx, dz, st, L, sp] of WAVES) { const k = 2 * Math.PI / L, c = Math.sqrt(9.8 / k) * .16 * sp; y += st / k * Math.sin(k * (dx * x + dz * z - c * t)); } return y * calmAt(x, z); }
 const GLSL_WAVES = `
 const int NW = ${WAVES.length};
@@ -85,7 +85,7 @@ function textTex(txt, o) {
 function sprite(txt, size, o) { const m = new T.SpriteMaterial({ map: textTex(txt, o), transparent: true, depthWrite: false, depthTest: !(o && o.top) }); const s = new T.Sprite(m); s.scale.set(size, size, 1); s.renderOrder = 8; return s; }
 
 // ---------- the world ----------
-function cellXZ(z, cell) { return [ZC[z][0] - 5 + (cell % N) + .5, ZC[z][1] - 5 + (cell / N | 0) + .5]; }
+function cellXZ(z, cell) { return [ZC[z][0] - H + (cell % N) + .5, ZC[z][1] - H + (cell / N | 0) + .5]; }
 function init(canvas, opts) {
   T = window.THREE; opts = opts || {};
   const mobile = matchMedia('(pointer:coarse)').matches || Math.min(screen.width, screen.height) < 700;
@@ -102,19 +102,14 @@ function init(canvas, opts) {
   const sc = sun.shadow.camera; sc.left = -8; sc.right = 8; sc.top = 8; sc.bottom = -8; sc.near = 5; sc.far = 70; sun.shadow.bias = -.0006; sun.shadow.normalBias = .02;
   scene.add(new T.HemisphereLight(0xb4c8dc, 0x1a2a33, 1.05));
   const fill = new T.DirectionalLight(0x8fb2d6, .35); fill.position.set(6, 8, 14); scene.add(fill);
-  const cells = [0, 1].map(() => { const d = new Uint8Array(N * N * 4), tx = new T.DataTexture(d, N, N, T.RGBAFormat); tx.needsUpdate = true; tx.magFilter = tx.minFilter = T.NearestFilter; return { d, tx }; });
+  const cells = [0, 1].map(newCells);
   const uni = { uTime: { value: 0 }, uCellsA: { value: cells[0].tx }, uCellsB: { value: cells[1].tx }, uAim: { value: new T.Vector4(-99, -99, 0, 0) }, uRip: { value: Array.from({ length: 10 }, () => new T.Vector4(0, 0, -99, 0)) },
-    uSweep: { value: new T.Vector4(0, 0, -99, 0) }, uSweepBox: { value: new T.Vector4(0, 0, 0, 0) }, uFog: { value: new T.Vector2(0, 0) }, uGrid: { value: new T.Vector2(1, 1) }, uFocus: { value: 0 },
+    uSweep: { value: new T.Vector4(0, 0, -99, 0) }, uSweepBox: { value: new T.Vector4(0, 0, 0, 0) }, uFog: { value: new T.Vector2(0, 0) }, uZn: { value: new T.Vector2(H, H + 2) }, uGrid: { value: new T.Vector2(1, 1) }, uFocus: { value: 0 },
     uHulls: { value: Array.from({ length: 16 }, () => new T.Vector4(0, 0, 0, 0)) }, uNH: { value: 0 }, uCam: { value: cam.position },
     uNrm: { value: null }, uW: { value: WAVES.map(w => new T.Vector4(w[0], w[1], w[2], w[3])) }, uWs: { value: WAVES.map(w => w[4]) } };
   uni.uNrm.value = rippleNormals(); const water = makeWater(uni, mobile, { sunDir }); scene.add(water);
   // the coordinates (A–J, 1–10) round each zone: one flat textured plane per zone (one draw call, not twenty sprites)
-  const labels = [0, 1].map(z => { const c = document.createElement('canvas'); c.width = c.height = 1024; const g = c.getContext('2d'), u = 1024 / 12, col = z ? '#f0a58c' : '#e7cd8f';
-    g.font = "600 46px 'Rajdhani','Cormorant Garamond',sans-serif"; g.textAlign = 'center'; g.textBaseline = 'middle'; g.shadowColor = 'rgba(0,0,0,.9)'; g.shadowBlur = 8; g.fillStyle = col;
-    for (let i = 0; i < N; i++) { g.fillText('ABCDEFGHIJ'[i], (1 + i + .5) * u, .55 * u); g.fillText(String(i + 1), .5 * u, (1 + i + .5) * u); }
-    const tx = new T.CanvasTexture(c); tx.colorSpace = T.SRGBColorSpace; tx.anisotropy = 8;
-    const m = new T.Mesh(new T.PlaneGeometry(12, 12), new T.MeshBasicMaterial({ map: tx, transparent: true, depthWrite: false, depthTest: false, toneMapped: false }));
-    m.rotation.x = -Math.PI / 2; m.position.set(ZC[z][0], .25, ZC[z][1]); m.renderOrder = 8; scene.add(m); return m; });
+  const labels = [0, 1].map(z => makeLabel(z, scene));
   const fire = makeParticles(true, mobile ? 1800 : 3600), smoke = makeParticles(false, mobile ? 2400 : 5000); scene.add(fire.pts, smoke.pts);
   const shipLayer = new T.Group(), markLayer = [new T.Group(), new T.Group()], deco = new T.Group(); scene.add(shipLayer, markLayer[0], markLayer[1], deco);
   const flash = new T.PointLight(0xffa860, 0, 7, 1.6); scene.add(flash);
@@ -126,6 +121,22 @@ function init(canvas, opts) {
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { V.last = performance.now(); loop(); } });
   loop();
   return V;
+}
+function newCells() { const d = new Uint8Array(N * N * 4), tx = new T.DataTexture(d, N, N, T.RGBAFormat); tx.needsUpdate = true; tx.magFilter = tx.minFilter = T.NearestFilter; return { d, tx }; }
+// the coordinates (A–, 1–) round a zone: one flat textured plane per zone (one draw call)
+function makeLabel(z, scene) { const c = document.createElement('canvas'); c.width = c.height = 1024; const g = c.getContext('2d'), u = 1024 / (N + 2), col = z ? '#f0a58c' : '#e7cd8f';
+  g.font = `600 ${Math.round(u * .55)}px 'Rajdhani','Cormorant Garamond',sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.shadowColor = 'rgba(0,0,0,.9)'; g.shadowBlur = 8; g.fillStyle = col;
+  for (let i = 0; i < N; i++) { g.fillText('ABCDEFGHIJKLMNOP'[i], (1 + i + .5) * u, .55 * u); g.fillText(String(i + 1), .5 * u, (1 + i + .5) * u); }
+  const tx = new T.CanvasTexture(c); tx.colorSpace = T.SRGBColorSpace; tx.anisotropy = 8;
+  const m = new T.Mesh(new T.PlaneGeometry(N + 2, N + 2), new T.MeshBasicMaterial({ map: tx, transparent: true, depthWrite: false, depthTest: false, toneMapped: false }));
+  m.rotation.x = -Math.PI / 2; m.position.set(ZC[z][0], .25, ZC[z][1]); m.renderOrder = 8; scene.add(m); return m; }
+// 大艦隊: the zones grow to 14×14 (and back) — cells, coordinates, zone centres, the camera's fits; the fleets are dropped (setZone redraws them)
+function setSize(n) {
+  if (!V || n === N) return; N = n; H = n / 2; ZC[0][1] = H + 2; ZC[1][1] = -(H + 2); V.uni.uZn.value.set(H, H + 2);
+  for (const c of V.cells) c.tx.dispose(); V.cells = [0, 1].map(newCells); V.uni.uCellsA.value = V.cells[0].tx; V.uni.uCellsB.value = V.cells[1].tx;
+  for (const L of V.labels) { V.scene.remove(L); L.material.map.dispose(); L.material.dispose(); L.geometry.dispose(); } V.labels = [0, 1].map(z => makeLabel(z, V.scene)); labelVis();
+  for (let z = 0; z < 2; z++) { for (const s of V.ships[z].values()) V.shipLayer.remove(s.g); V.ships[z].clear(); V.o[z] = null; }
+  V.poses = null; V.uv = { s: 1, x: 0, z: 0 };
 }
 function rippleNormals() {
   const n = 128, h = new Float32Array(n * n), d = new Uint8Array(n * n * 4), W = [];
@@ -146,12 +157,12 @@ function makeWater(uni, mobile, V0) {
   const m = new T.ShaderMaterial({ uniforms: Object.assign({ uSunC: { value: new T.Color(0xffd2a0) }, uFlash: { value: new T.Vector4(0, 0, 0, 0) } }, uni, { uSun: { value: V0.sunDir } }),
     vertexShader: GLSL_WAVES + `
       uniform float uTime; varying vec3 vWp; varying float vH; varying vec3 vN;
-      float calm(vec2 p) { vec2 a = max(abs(p - vec2(0., 7.)) - 5., 0.), b = max(abs(p - vec2(0., -7.)) - 5., 0.); return .4 + .6 * min(1., min(length(a), length(b)) / 4.); }
+      uniform vec2 uZn; float calm(vec2 p) { vec2 a = max(abs(p - vec2(0., uZn.y)) - uZn.x, 0.), b = max(abs(p - vec2(0., -uZn.y)) - uZn.x, 0.); return .4 + .6 * min(1., min(length(a), length(b)) / 4.); }
       void main() { vec3 tg = vec3(1., 0., 0.), bn = vec3(0., 0., 1.); vec3 gd = gerst(position.xz, uTime, tg, bn);
         float fall = 1. - smoothstep(80., 260., length(position.xz)), k = fall * calm(position.xz); gd *= k; vN = normalize(mix(vec3(0., 1., 0.), normalize(cross(bn, tg)), k));
         vec3 w = position + gd; vWp = w; vH = gd.y; gl_Position = projectionMatrix * viewMatrix * vec4(w, 1.); }`,
     fragmentShader: `
-            uniform float uTime; uniform sampler2D uCellsA, uCellsB; uniform vec4 uAim; uniform vec4 uRip[10]; uniform vec4 uSweep; uniform vec4 uSweepBox; uniform vec2 uFog; uniform vec2 uGrid; uniform float uFocus; uniform vec3 uCam; uniform vec4 uHulls[16]; uniform int uNH; uniform sampler2D uNrm;
+            uniform float uTime; uniform sampler2D uCellsA, uCellsB; uniform vec4 uAim; uniform vec4 uRip[10]; uniform vec4 uSweep; uniform vec4 uSweepBox; uniform vec2 uFog; uniform vec2 uGrid; uniform float uFocus; uniform vec3 uCam; uniform vec4 uHulls[16]; uniform int uNH; uniform sampler2D uNrm; uniform vec2 uZn;
       varying vec3 vWp; varying float vH;` + GLSL_NOISE + `
       float box(vec2 p, vec2 b, float r) { vec2 d = abs(p) - b + r; return length(max(d, 0.)) + min(max(d.x, d.y), 0.) - r; }
       vec3 gridEm = vec3(0.); float foamAdd = 0.; vec3 tintAdd = vec3(0.); float darkAdd = 0.;
@@ -176,11 +187,11 @@ function makeWater(uni, mobile, V0) {
           if (d < .09) fo += (1. - smoothstep(.0, .045 + .03 * vn(p * 18. + uTime), d)) * smoothstep(.0, .012, d) * (.3 + .3 * vn(p * 25. - uTime * 2.)) * (.6 + .4 * smoothstep(.2, 1., t));
           if (mv) { float bx = -q.x - hl; float spread = .05 + bx * .12; if (bx > 0. && abs(q.y) < spread) fo += (1. - smoothstep(0., spread, abs(q.y))) * exp(-bx * .35) * (.5 + .5 * vn(p * 14. - uTime * 3.)) * .9; } }
         for (int zz = 0; zz < 2; zz++) {
-          vec2 zc = zz == 0 ? vec2(0., 7.) : vec2(0., -7.); vec2 pl = p - zc; float ga = zz == 0 ? uGrid.x : uGrid.y; if (ga < .01 || max(abs(pl.x), abs(pl.y)) > 5.6) continue;
+          vec2 zc = zz == 0 ? vec2(0., uZn.y) : vec2(0., -uZn.y); vec2 pl = p - zc; float ga = zz == 0 ? uGrid.x : uGrid.y; if (ga < .01 || max(abs(pl.x), abs(pl.y)) > uZn.x + .6) continue;
           vec3 gc = zz == 0 ? vec3(.85, .68, .4) : vec3(.95, .5, .38);
-          bool inB = abs(pl.x) < 5. && abs(pl.y) < 5.;
+          bool inB = abs(pl.x) < uZn.x && abs(pl.y) < uZn.x;
           if (inB) {
-            vec2 cp = pl + 5.; ivec2 ci = ivec2(floor(cp)); vec2 f = fract(cp) - .5; vec4 cd = zz == 0 ? texelFetch(uCellsA, ci, 0) : texelFetch(uCellsB, ci, 0);
+            vec2 cp = pl + uZn.x; ivec2 ci = ivec2(floor(cp)); vec2 f = fract(cp) - .5; vec4 cd = zz == 0 ? texelFetch(uCellsA, ci, 0) : texelFetch(uCellsB, ci, 0);
             int shot = int(cd.r * 255. + .5), flags = int(cd.b * 255. + .5); float heat = cd.g;
             if (heat > .01) tintAdd += vec3(1., .42, .16) * heat * .55 * (1. - smoothstep(.36, .5, max(abs(f.x), abs(f.y))));
             if ((flags & 1) != 0) { float b = box(f, vec2(.42), .1); tintAdd += vec3(1., .78, .38) * (.35 + .25 * sin(uTime * 6.)) * (1. - smoothstep(-.02, .02, b)); gridEm += vec3(1., .82, .45) * (1. - smoothstep(0., .03, abs(b))) * 1.2; }
@@ -193,7 +204,7 @@ function makeWater(uni, mobile, V0) {
             if (shot == 4) { float r = length(f); tintAdd += vec3(.5) * (1. - smoothstep(.15, .45, r)) * .4; }
           }
           vec2 g = abs(fract(pl + .5) - .5), fw = fwidth(pl) * 1.1; float ln = 1. - min(smoothstep(0., fw.x * 1.5, g.x), smoothstep(0., fw.y * 1.5, g.y));
-          float rim = abs(box(pl, vec2(5.), .0)), inside = 1. - smoothstep(-.01, .01, box(pl, vec2(5.), 0.));
+          float rim = abs(box(pl, vec2(uZn.x), .0)), inside = 1. - smoothstep(-.01, .01, box(pl, vec2(uZn.x), 0.));
           float corner = (1. - smoothstep(.0, .03, rim)) * step(4.2, max(abs(pl.x), abs(pl.y))) * step(min(abs(pl.x), abs(pl.y)), 5.04) * step(3.9, min(abs(pl.x), abs(pl.y)));   // (brighter corner brackets)
           float focus = zz == int(uFocus + .5) ? 1. : .55;
           gridEm += gc * ga * focus * (ln * inside * .2 + (1. - smoothstep(.012, .04, rim)) * .7 + corner * 1.4 + (1. - smoothstep(.04, .5, rim)) * .08 * inside);
@@ -236,7 +247,7 @@ function poseFor(name) {
     const z = name === 'z1' ? 1 : 0, zc = ZC[z], pitch = (w / h < .8 ? 62 : 58) * Math.PI / 180, fov = 24;
     // the free area (between the HUD panels) as a window into the full view: shift the principal point there and fit the zone inside it
     const sx = sf.x + sf.w / 2, sy = sf.y + sf.h / 2, ax = sf.w / w, ay = sf.h / h;
-    const pts = [[-5.9, -5.9], [5.55, -5.9], [-5.9, 5.55], [5.55, 5.55]].map(([x, zz]) => new T.Vector3(zc[0] + x, 0, zc[1] + zz));
+    const pts = [[-H - .9, -H - .9], [H + .55, -H - .9], [-H - .9, H + .55], [H + .55, H + .55]].map(([x, zz]) => new T.Vector3(zc[0] + x, 0, zc[1] + zz));
     const save = { fov: cam.fov }; cam.fov = fov; cam.clearViewOffset(); cam.updateProjectionMatrix();
     let tz = 0, best = 30;
     const place = (d, oz) => { cam.position.set(zc[0] - .18, Math.sin(pitch) * d, zc[1] + oz + Math.cos(pitch) * d); cam.lookAt(zc[0] - .18, 0, zc[1] + oz); cam.updateMatrixWorld(); };
@@ -250,7 +261,7 @@ function poseFor(name) {
 }
 function pose(name) { V.poses = V.poses || {}; if (!V.poses[name]) V.poses[name] = poseFor(name); return V.poses[name]; }
 // (2026-11-23 the user) phones: pinch to zoom and slide to move the board — a user view on top of the zone's pose (V.uv: scale, pan x/z)
-function uvLim(u) { const m = 5.5 * (1 - 1 / u.s) + .6; u.x = Math.max(-m, Math.min(m, u.x)); u.z = Math.max(-m, Math.min(m, u.z)); }
+function uvLim(u) { const m = (H + .5) * (1 - 1 / u.s) + .6; u.x = Math.max(-m, Math.min(m, u.x)); u.z = Math.max(-m, Math.min(m, u.z)); }
 function userView(P) { const u = V.uv; if (!u || (u.s === 1 && !u.x && !u.z) || !(V.pose === 'z0' || V.pose === 'z1')) return P;
   const t = P.t.clone().add(new T.Vector3(u.x, 0, u.z)), p = P.p.clone().sub(P.t).multiplyScalar(1 / u.s).add(t); return { p, t, fov: P.fov, off: P.off }; }
 function zoomBy(f) { const u = V.uv || (V.uv = { s: 1, x: 0, z: 0 }); u.s = Math.max(1, Math.min(3.2, u.s * f)); uvLim(u); }
@@ -369,10 +380,10 @@ function setZone(z, o) {
   marks(z, o);
 }
 function scanCells(sc) {
-  if (sc.list) return sc.list;
+  if (sc.cells) return sc.cells; if (sc.list) return sc.list;
   if (sc.plus) { const r = sc.at / N | 0, c = sc.at % N, out = [sc.at]; for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) { const rr = r + dr, cc = c + dc; if (rr >= 0 && rr < N && cc >= 0 && cc < N) out.push(rr * N + cc); } return out; }
-  const big = !!sc.big, r = big ? Math.max(2, Math.min(7, sc.at / 10 | 0)) : sc.at / 10 | 0, c = big ? Math.max(2, Math.min(7, sc.at % 10)) : sc.at % 10, e = big ? 2 : 1;
-  const r0 = sc.row ? r : sc.col ? 0 : Math.max(0, r - e), c0 = sc.row ? 0 : sc.col ? c : Math.max(0, c - e), r1 = sc.row ? r : sc.col ? 9 : Math.min(9, r + e), c1 = sc.row ? 9 : sc.col ? c : Math.min(9, c + e);
+  const big = !!sc.big, r = big ? Math.max(2, Math.min(N - 3, sc.at / N | 0)) : sc.at / N | 0, c = big ? Math.max(2, Math.min(N - 3, sc.at % N)) : sc.at % N, e = big ? 2 : 1;
+  const r0 = sc.row ? r : sc.col ? 0 : Math.max(0, r - e), c0 = sc.row ? 0 : sc.col ? c : Math.max(0, c - e), r1 = sc.row ? r : sc.col ? N - 1 : Math.min(N - 1, r + e), c1 = sc.row ? N - 1 : sc.col ? c : Math.min(N - 1, c + e);
   const out = []; for (let rr = r0; rr <= r1; rr++) for (let cc = c0; cc <= c1; cc++) out.push(rr * N + cc); return out;
 }
 const SH = {};
@@ -414,8 +425,8 @@ function labelVis() { const g = V.uni.uGrid.value; V.labels[0].visible = g.x > .
 
 // ---------- pointer ----------
 function hitXZ(e) { const r = V.canvas.getBoundingClientRect(); const v = new T.Vector2((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); const rc = V._ray || (V._ray = new T.Raycaster()); rc.setFromCamera(v, V.cam); const d = rc.ray.direction, o = rc.ray.origin; if (Math.abs(d.y) < 1e-6) return null; const t = -o.y / d.y; return t > 0 ? { x: o.x + d.x * t, z: o.z + d.z * t } : null; }
-function cellAt(z, e) { const p = hitXZ(e); if (!p) return -1; const c = Math.floor(p.x - ZC[z][0] + 5), r = Math.floor(p.z - ZC[z][1] + 5); return c >= 0 && c < N && r >= 0 && r < N ? r * N + c : -1; }
-function pointIn(z, e) { const p = hitXZ(e) || { x: 0, z: 0 }; return { x: p.x - ZC[z][0] + 5, y: p.z - ZC[z][1] + 5 }; }
+function cellAt(z, e) { const p = hitXZ(e); if (!p) return -1; const c = Math.floor(p.x - ZC[z][0] + H), r = Math.floor(p.z - ZC[z][1] + H); return c >= 0 && c < N && r >= 0 && r < N ? r * N + c : -1; }
+function pointIn(z, e) { const p = hitXZ(e) || { x: 0, z: 0 }; return { x: p.x - ZC[z][0] + H, y: p.z - ZC[z][1] + H }; }
 function aim(z, cell) { if (cell < 0) { V.uni.uAim.value.set(-99, -99, 0, 0); return; } const [x, zz] = cellXZ(z, cell); V.uni.uAim.value.set(x, zz, 1, 0); }
 function screenOf(z, cell) { const [x, zz] = cellXZ(z, cell), v = new T.Vector3(x, waveAt(x, zz, V.t) * .85, zz).project(V.cam), r = V.canvas.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }
 
@@ -459,7 +470,7 @@ function impact(p, hit) {
   }
 }
 function torpedo(z, cell, hit) {
-  const [x, zz] = cellXZ(z, cell), sx = ZC[z][0] + (z ? -6.2 : 6.2), dur = .7, t0 = performance.now();
+  const [x, zz] = cellXZ(z, cell), sx = ZC[z][0] + (z ? -H - 1.2 : H + 1.2), dur = .7, t0 = performance.now();
   return new Promise(res => { const tick = () => { const u = Math.min(1, (performance.now() - t0) / (dur * 1000)), px = sx + (x - sx) * u, py = waveAt(px, zz, V.t) * .85;
     for (let k = 0; k < 2; k++) emit(V.smoke, { p: [px + (Math.random() - .5) * .06, py + .01, zz + (Math.random() - .5) * .08], v: [0, .02, (Math.random() - .5) * .05], life: 1.8, size0: .09, size1: .3, c0: [.92, .96, .98, .7], c1: [.9, .95, .97, 0] });
     if (u < 1) return requestAnimationFrame(tick); impact({ x, y: py + (hit === true && shipUnder(z, cell) ? .1 : 0), z: zz }, hit); res(); }; tick(); });
@@ -555,5 +566,5 @@ function dbgTick(now) { DBG.fr++; if (now - DBG.t > 500) { const f = DBG.fr * 10
 function dbgToggle(on) { DBG.on = on === undefined ? !DBG.on : !!on; try { sessionStorage.setItem('t3d-debug', DBG.on ? '1' : ''); } catch (x) {} if (!DBG.on) { if (DBG.el) DBG.el.hidden = true; return; } DBG.t = performance.now(); DBG.fr = 0; DBG.n = 0; DBG.lo = 1e9; dbgPaint(); }
 addEventListener('keydown', e => { if ((e.key === 'i' || e.key === 'I') && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey && !(e.target && e.target.closest && e.target.closest('input,textarea,select,[contenteditable]'))) dbgToggle(); });
 
-window.World = { pause: on => { if (!V || V.paused === !!on) return; V.paused = !!on; if (!on) { V.last = performance.now(); loop(); } }, camPos: () => (V ? V.cam.position.toArray() : null), zoomBy: f => V && zoomBy(f), panBy: (x, y) => V && panBy(x, y), resetView, viewScale: () => (V && V.uv ? V.uv.s : 1), dbg: dbgToggle, throttle: on => { if (V) V.throttle = !!on; }, init, setZone, grids, focus, show, pose, fx, kind, sweep, shake, sail, cellAt, pointIn, aim, screenOf, portrait, portraitIf, preview, waveAt, ZC, _v: () => V, fit, refit: () => { if (V) { V.poses = null; } } };
+window.World = { setSize, size: () => N, pause: on => { if (!V || V.paused === !!on) return; V.paused = !!on; if (!on) { V.last = performance.now(); loop(); } }, camPos: () => (V ? V.cam.position.toArray() : null), zoomBy: f => V && zoomBy(f), panBy: (x, y) => V && panBy(x, y), resetView, viewScale: () => (V && V.uv ? V.uv.s : 1), dbg: dbgToggle, throttle: on => { if (V) V.throttle = !!on; }, init, setZone, grids, focus, show, pose, fx, kind, sweep, shake, sail, cellAt, pointIn, aim, screenOf, portrait, portraitIf, preview, waveAt, ZC, _v: () => V, fit, refit: () => { if (V) { V.poses = null; } } };
 })();

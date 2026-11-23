@@ -7,7 +7,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const STORE = 'aicoding-dreadnoughts', LANGS = ['ja', 'en'];
 const skillOf = s => E.TYPES[s.t].skill;
 let saved = null; try { saved = JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) {}
-const S = Object.assign({ rule: 'tactics', level: 8, first: 'you', adj: false, sound: true, lang: null }, saved && saved.settings);
+const S = Object.assign({ rule: 'tactics', level: 8, first: 'you', adj: false, streak: false, sound: true, lang: null }, saved && saved.settings);
+if (S.rule === 'streak') { S.rule = 'classic'; S.streak = true; }   // (連続攻撃 is now an option on any rule — 2026-11-23 user)
 try { if (localStorage.getItem('atlas-sfx') === '0') S.sound = false; } catch (e) {}
 let LANG = LANGS.includes(S.lang) ? S.lang : ((navigator.language || 'ja').toLowerCase().startsWith('ja') ? 'ja' : 'en');
 
@@ -29,6 +30,7 @@ const DN = {
     'p.resume': '再開', 'p.new': '新しい対局', 'p.resign': '投了する', 'p.title': 'タイトルへ',
     'r.win': 'VICTORY', 'r.lose': 'DEFEAT', 'r.again': 'もう一度出撃', 'r.look': '海域を見る', 'r.sub': '{n}手で決着 ・ AI Lv.{l}', 'r.subR': '投了 ・ AI Lv.{l}',
     'r.acc': '命中率', 'r.shots': '発射', 'r.sunk': '撃沈', 'r.lost': '損失',
+    'rule.grand': '大艦隊', 'rule.grand.d': '14×14の広い海でコスト40・6〜10隻の艦隊を編成して戦う、タクティクスの大規模版。', 's.streak': '連続攻撃', 's.on': 'あり', 's.off': 'なし',
     'a.k': '全50隻', 'a.all': 'すべて', 'd.all': '全艦一覧', 'f.k': '両軍の艦', ok: 'OK', back: '戻る',
     'u.tap2': '狙うマスを2回タップで発射', 'u.cd': 'クールタイム {n}', 'u.len': '{n}マス', 'u.cost': 'コスト',
     'help': [['艦隊を編成', 'タクティクスでは、毎回ちがう10種の艦から交互に選んで艦隊を組む。コスト20までで3〜6隻。艦ごとにスキル（攻撃・索敵・防御）があり、組み合わせで戦い方が変わる。'],
@@ -51,6 +53,7 @@ const DN = {
     'p.resume': 'Resume', 'p.new': 'New game', 'p.resign': 'Resign', 'p.title': 'Title screen',
     'r.win': 'VICTORY', 'r.lose': 'DEFEAT', 'r.again': 'Sortie again', 'r.look': 'View the sea', 'r.sub': 'Decided in {n} moves · AI Lv.{l}', 'r.subR': 'Resigned · AI Lv.{l}',
     'r.acc': 'ACCURACY', 'r.shots': 'SHOTS', 'r.sunk': 'SUNK', 'r.lost': 'LOST',
+    'rule.grand': 'Grand Fleet', 'rule.grand.d': 'Tactics on a wide 14×14 sea: draft 6–10 ships with a budget of 40.', 's.streak': 'Hit again', 's.on': 'On', 's.off': 'Off',
     'a.k': 'All 50 ships', 'a.all': 'All', 'd.all': 'All ships', 'f.k': 'Both fleets', ok: 'OK', back: 'Back',
     'u.tap2': 'Tap a square twice to fire', 'u.cd': 'Cooldown {n}', 'u.len': '{n} squares', 'u.cost': 'Cost',
     'help': [['Draft a fleet', 'In Tactics both sides take turns picking from ten ship types, different every game: up to 20 cost, 3 to 6 ships. Each ship has a skill — attack, scouting or defence — and the mix decides how you fight.'],
@@ -159,6 +162,9 @@ function cardArt(T) {
 }
 function reachSvg(skill) {
   if (!skill || E.NOAIM[skill]) return '';
+  const was = E.mode; E.setMode('std'); try { return reachSvg0(skill); } finally { E.setMode(was); }   // (drawn on the 10×10 window whatever the sea's size)
+}
+function reachSvg0(skill) {
   const at = 44, fp = new Set(E.footprint(skill, at)), atk = new Set(), scan = new Set(), maybe = new Set();
   const path = new Set(), TORP = { torpedo: 1, rtorpedo: 1, dtorpedo: 1 };
   if (SCAN_K[skill]) fp.forEach(c => scan.add(c)); else if (TORP[skill]) fp.forEach(c => path.add(c)); else fp.forEach(c => atk.add(c));
@@ -189,23 +195,24 @@ function pump() { if (pumping) return; pumping = true; const step = () => { cons
 let G = null, drag = null, hover = -1, aimTap = -1;
 function save() {
   const d = { settings: Object.assign({}, S, { lang: LANG }) };
-  if (G && (G.phase === 'deploy' || G.phase === 'battle')) d.game = { phase: G.phase, my: G.my, foe: G.st ? G.st.sides[1].ships : null, acts: G.st ? G.st.acts : [], first: G.first, foePicks: G.foePicks || null, rule: G.rule, adj: G.adj, level: G.level, evals: G.evals };
+  if (G && (G.phase === 'deploy' || G.phase === 'battle')) d.game = { phase: G.phase, my: G.my, foe: G.st ? G.st.sides[1].ships : null, acts: G.st ? G.st.acts : [], first: G.first, foePicks: G.foePicks || null, rule: G.rule, streak: !!G.streak, adj: G.adj, level: G.level, evals: G.evals };
   try { localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {}
 }
 function restore() {
   const g = saved && saved.game; if (!g || !Array.isArray(g.my)) return false;
-  const rule = E.RULES.includes(g.rule) ? g.rule : 'tactics', T = rule === 'tactics';
+  const rule = RULE_ORDER.includes(g.rule) ? g.rule : g.rule === 'streak' ? 'classic' : 'tactics', T = rule === 'tactics' || rule === 'grand';
+  E.setMode(rule === 'grand' ? 'grand' : 'std'); World.setSize(E.N);
   if (!E.validFleet(g.my, false, T)) return false;
-  G = newG({ phase: 'deploy', my: g.my, level: g.level || S.level, rule, adj: !!g.adj, first: g.first | 0, foePicks: g.foePicks });
+  G = newG({ phase: 'deploy', my: g.my, level: g.level || S.level, rule, streak: !!g.streak || g.rule === 'streak', adj: !!g.adj, first: g.first | 0, foePicks: g.foePicks });
   if (g.phase !== 'battle' || !g.foe || !E.validFleet(g.foe, false, T)) return true;
-  G.st = E.newGame({ rule, adj: G.adj, fleets: [g.my, g.foe], first: G.first });
+  G.st = E.newGame({ rule, streak: G.streak, adj: G.adj, fleets: [g.my, g.foe], first: G.first });
   for (const a of g.acts || []) if (!E.act(G.st, a)) break;
   G.my = G.st.sides[0].ships; G.evals = Array.isArray(g.evals) ? g.evals.slice(0, G.st.log.length + 1) : [];
   G.phase = G.st.winner >= 0 ? 'over' : 'battle'; G.view = 1;
   return true;
 }
 const newG = o => Object.assign({ phase: 'title', my: [], st: null, level: S.level, rule: S.rule, adj: S.adj, view: 0, hint: null, evals: [], busy: false, resigned: false, first: 0, armed: null, draft: null, foePicks: null }, o);
-const tac = () => G && G.rule === 'tactics';
+const tac = () => G && (G.rule === 'tactics' || G.rule === 'grand');
 
 // ---------- the screen's free area for the camera (between the HUD panels) ----------
 function safeRect() {
@@ -331,20 +338,23 @@ function toTitle() {
   ['#scrSetup', '#scrMenu', '#scrResult', '#scrArchive', '#scrHelp'].forEach(s => sheet(s, false));
   phaseUI(); syncWorld(); World.sail(true); World.refit(); World.show('title', 1600);
 }
-const RULE_ORDER = ['tactics', 'classic', 'streak', 'salvo'];
+const RULE_ORDER = ['tactics', 'grand', 'classic', 'salvo'];
 let ND = null;
-function openSetup() { ND = { rule: S.rule, level: S.level, first: S.first, adj: S.adj }; renderSetup(); sheet('#scrSetup', true); }
+function openSetup() { ND = { rule: S.rule, level: S.level, first: S.first, adj: S.adj, streak: !!S.streak }; renderSetup(); sheet('#scrSetup', true); }
 function renderSetup() {
-  $('#ruleList').innerHTML = RULE_ORDER.filter(r => E.RULES.includes(r)).map((r, i) => `<button class="rc${ND.rule === r ? ' on' : ''}" data-r="${r}"><span class="num">0${i + 1}</span>${r === 'tactics' ? `<span class="rec">${t('rec')}</span>` : ''}<b>${t('rule.' + r)}</b><p>${t('rule.' + r + '.d')}</p></button>`).join('');
+  $('#ruleList').innerHTML = RULE_ORDER.map((r, i) => `<button class="rc${ND.rule === r ? ' on' : ''}" data-r="${r}"><span class="num">0${i + 1}</span>${r === 'tactics' ? `<span class="rec">${t('rec')}</span>` : ''}<b>${t('rule.' + r)}</b><p>${t('rule.' + r + '.d')}</p></button>`).join('');
   $('#lvl').value = ND.level; $('#lvlV').innerHTML = `Lv.${ND.level}<small>${tier(ND.level)}</small>`;
   $('#segFirst').innerHTML = [['you', t('ng.you')], ['random', t('ng.random')], ['ai', t('ng.ai')]].map(([v, l]) => `<button data-v="${v}" class="${ND.first === v ? 'on' : ''}">${l}</button>`).join('');
   $('#segAdj').innerHTML = [[0, t('ng.adj0')], [1, t('ng.adj1')]].map(([v, l]) => `<button data-v="${v}" class="${(!!v) === ND.adj ? 'on' : ''}">${l}</button>`).join('');
+  const sv = ND.rule !== 'salvo'; $('#segStreak').innerHTML = [[0, t('s.off')], [1, t('s.on')]].map(([v, l]) => `<button data-v="${v}" class="${(!!v) === (ND.streak && sv) ? 'on' : ''}" ${sv ? '' : 'disabled'}>${l}</button>`).join('');
+  $('#optStreak').classList.toggle('dim', !sv);
 }
 function engage() {
   Object.assign(S, ND); save(); sheet('#scrSetup', false); sheet('#scrResult', false); sheet('#scrMenu', false); World.sail(false); sfx('horn');
   evalJob++;
-  if (S.rule === 'tactics') return startDraft();
-  G = newG({ phase: 'deploy', my: E.randomFleet(Math.random, S.adj), rule: S.rule, adj: S.adj, level: S.level });
+  E.setMode(S.rule === 'grand' ? 'grand' : 'std'); World.setSize(E.N);
+  if (S.rule === 'tactics' || S.rule === 'grand') return startDraft();
+  G = newG({ phase: 'deploy', my: E.randomFleet(Math.random, S.adj), rule: S.rule, streak: S.streak && S.rule !== 'salvo', adj: S.adj, level: S.level });
   enterDeploy();
 }
 
@@ -353,7 +363,7 @@ let pickSel = [], pickTab = -1, focusK = null, pv = null, pv2 = null;
 function myRun(d) { let n = d.n, c = 0; for (let g = 0; g < 12; g++) { const p = (((n + 1) >> 1) & 1) ^ d.first; if (p === 0) c++; else if (!d.done[1]) break; n++; } return Math.max(1, Math.min(c, E.MAXSHIPS - d.picks[0].length)); }
 function startDraft() {
   const first = S.first === 'ai' ? 1 : S.first === 'random' ? (Math.random() < .5 ? 0 : 1) : 0;
-  pkSide = 0; G = newG({ phase: 'draft', rule: 'tactics', adj: S.adj, level: S.level, first, draft: E.draftNew(1 - first) });   // (the second to shoot picks first)
+  pkSide = 0; G = newG({ phase: 'draft', rule: S.rule, streak: !!S.streak, adj: S.adj, level: S.level, first, draft: E.draftNew(1 - first, Math.random, S.rule === 'grand' ? 'grand' : 'std') });   // (the second to shoot picks first)
   pickSel = []; pickTab = -1; focusK = null;
   phaseUI(); syncWorld(); World.show('wide', 1400);
   if (!PHONE()) { if (!pv) pv = World.preview($('#pv')); pv.start(); }
@@ -368,7 +378,7 @@ function draftStep() {
 }
 function addMyShip(k) {
   const g = E.gridOf(G.my); let put = null;
-  for (let n = 0; n < 600 && !put; n++) { const s = { r: Math.random() * 10 | 0, c: Math.random() * 10 | 0, len: E.TYPES[k].len, h: Math.random() < .5 ? 1 : 0, t: k }; if (E.fits(g, s, G.adj, -2)) put = s; }
+  for (let n = 0; n < 600 && !put; n++) { const s = { r: Math.random() * E.N | 0, c: Math.random() * E.N | 0, len: E.TYPES[k].len, h: Math.random() < .5 ? 1 : 0, t: k }; if (E.fits(g, s, G.adj, -2)) put = s; }
   if (put) G.my.push(put); else G.my = E.randomFleet(Math.random, G.adj, G.my.map(s => s.t).concat(k));
 }
 // a ship card (draft, archive, fleets): cost · name · length, the reach diagram beside the ship, the ability and what it does
@@ -444,9 +454,9 @@ function enterDeploy() {
 }
 const shipAtCell = cell => E.gridOf(G.my)[cell];
 const gridWithout = i => E.gridOf(G.my.map((s, k) => k === i ? null : s));
-function clampShip(s) { const maxR = s.h ? 9 : 10 - s.len, maxC = s.h ? 10 - s.len : 9; s.r = Math.max(0, Math.min(maxR, s.r)); s.c = Math.max(0, Math.min(maxC, s.c)); return s; }
+function clampShip(s) { const N = E.N, maxR = s.h ? N - 1 : N - s.len, maxC = s.h ? N - s.len : N - 1; s.r = Math.max(0, Math.min(maxR, s.r)); s.c = Math.max(0, Math.min(maxC, s.c)); return s; }
 function tryTurn(i, pivot) {
-  const s = G.my[i], g = gridWithout(i), pr = pivot / 10 | 0, pc = pivot % 10, k0 = s.h ? pc - s.c : pr - s.r;
+  const s = G.my[i], g = gridWithout(i), pr = pivot / E.N | 0, pc = pivot % E.N, k0 = s.h ? pc - s.c : pr - s.r;
   const order = [k0]; for (let d = 1; d < s.len; d++) { if (k0 - d >= 0) order.push(k0 - d); if (k0 + d < s.len) order.push(k0 + d); }
   for (const k of order) { const n = clampShip({ len: s.len, h: s.h ? 0 : 1, r: s.h ? pr - k : pr, c: s.h ? pc : pc - k, t: s.t }); if (E.fits(g, n, G.adj, -2)) { G.my[i] = n; return true; } }
   for (let d = 1; d < 4; d++) for (let dr = -d; dr <= d; dr++) for (let dc = -d; dc <= d; dc++) { const n = { len: s.len, h: s.h ? 0 : 1, r: s.r + dr, c: s.c + dc, t: s.t }; if (E.inside(n) && E.fits(g, n, G.adj, -2)) { G.my[i] = n; return true; } }
@@ -455,7 +465,7 @@ function tryTurn(i, pivot) {
 function startBattle() {
   if (G.phase !== 'deploy' || !E.validFleet(G.my, G.adj, tac())) { sfx('bad'); World.shake(.6); return; }
   if (!tac()) G.first = S.first === 'ai' ? 1 : S.first === 'random' ? (Math.random() < .5 ? 0 : 1) : 0;
-  G.st = E.newGame({ rule: G.rule, adj: G.adj, fleets: [G.my, E.randomFleet(Math.random, G.adj, tac() ? (G.foePicks || E.PRESETS[0]) : null)], first: G.first });
+  G.st = E.newGame({ rule: G.rule, streak: G.streak, adj: G.adj, fleets: [G.my, E.randomFleet(Math.random, G.adj, tac() ? (G.foePicks || E.PRESETS[0]) : null)], first: G.first });
   G.my = G.st.sides[0].ships; G.armed = null; G.phase = 'battle'; G.evals = [.5]; sfx('horn');
   render(); save(); World.refit();
   look(1, 1500).then(() => { if (G.st && G.st.turn === 1 && G.phase === 'battle') aiTurn(); });
@@ -672,6 +682,7 @@ $$('[data-close]').forEach(b => b.addEventListener('click', () => { const s = b.
 $('#ruleList').addEventListener('click', e => { const b = e.target.closest('.rc'); if (b) { ND.rule = b.dataset.r; sfx('select'); renderSetup(); } });
 $('#lvl').addEventListener('input', e => { ND.level = +e.target.value; $('#lvlV').innerHTML = `Lv.${ND.level}<small>${tier(ND.level)}</small>`; });
 $('#segFirst').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { ND.first = b.dataset.v; renderSetup(); } });
+$('#segStreak').addEventListener('click', e => { const b = e.target.closest('button'); if (b && !b.disabled) { ND.streak = b.dataset.v === '1'; renderSetup(); } });
 $('#segAdj').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { ND.adj = b.dataset.v === '1'; renderSetup(); } });
 $('#sGo').onclick = engage;
 $('#drTabs').addEventListener('click', e => { const b = e.target.closest('button[data-g]'); if (!b) return; pickTab = +b.dataset.g; renderDraft(); $('#drGrid').scrollTop = 0; });
