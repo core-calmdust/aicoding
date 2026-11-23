@@ -240,8 +240,8 @@ function renderDraft() {
   const run = myRun(d), costOf = ks => E.draftCost(d.picks[0].concat(ks)) - E.draftCost(d.picks[0]), selCost = costOf(pickSel);
   // a card can be chosen if it fits beside the ones already chosen (cost); when the run is full a tap swaps it for the last one chosen
   const fits = k => { if (pickSel.includes(k)) return true; const rest = pickSel.length < run ? pickSel : pickSel.slice(0, -1); return costOf(rest.concat(k)) <= E.draftLeft(d, 0); };
-  const card = k => { const T = E.TYPES[k], have = d.picks[0].filter(x => x === k).length, taken = have >= E.MAXSAME, dup = have > 0 && !taken, cost = E.pickCost(d, 0, k), can = mine && E.draftCan(d, 0, k) && fits(k), sel = pickSel.includes(k);
-    const why = taken ? t('pk.taken') : !d.pool[k] ? t('pk.gone') : cost > E.draftLeft(d, 0) - (mine && !sel ? selCost : 0) ? t('pk.cost') : d.picks[0].length >= E.MAXSHIPS ? t('pk.full') : mine && !E.canReachMin(d, 0, k) ? t('pk.min') : '';
+  const card = k => { const T = E.TYPES[k], have = d.picks[0].filter(x => x === k).length, taken = have >= (E.maxSame ? E.maxSame(k) : E.MAXSAME), dup = have > 0 && !taken, cost = E.pickCost(d, 0, k), can = mine && E.draftCan(d, 0, k) && fits(k), sel = pickSel.includes(k);
+    const why = taken ? t(E.maxSame && E.maxSame(k) === 1 ? 'pk.one' : 'pk.taken') : !d.pool[k] ? t('pk.gone') : cost > E.draftLeft(d, 0) - (mine && !sel ? selCost : 0) ? t('pk.cost') : d.picks[0].length >= E.MAXSHIPS ? t('pk.full') : mine && !E.canReachMin(d, 0, k) ? t('pk.min') : '';
     const kind = T.skill ? t('pk.active', { n: T.cd }) : PASSIVE_T(T) ? t('pk.passive') : t('pk.none');
     return `<div class="pc g${ROLE_OF(k)}${can ? ' can' : ' off'}${taken ? ' taken' : ''}${dup ? ' dup' : ''}${sel ? ' sel' : ''}" data-k="${k}" aria-pressed="${sel}" ${can ? 'role="button" tabindex="0"' : ''} title="${can ? t('pk.tap') : why}"><div class="pt"><span class="pcost">${cost}</span><b>${t('ship.' + k)}</b>${lenIcon(T.len)}<em>×${d.pool[k]}</em></div>
       <div class="pa">${cardArt(T)}</div>
