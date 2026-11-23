@@ -389,7 +389,7 @@ const CHECKS = {
     //     of under 5 discs are not compared)  ⑥ the win lessons get no easier (the own moves to the forced win never go down)
     //  ⑦ a wrong column that still wins by force is never said to fail (おしまい・止められちゃう・負け・引き分け …)
     //  (⑧ the words: the checks above; ⑨ the 2D lesson reads the same lessons.json.)  C4_SOLVE=0 skips the solver (① only from sc).
-    const C4_DONE = new Set(['four', 'block', 'centre', 'early', 'threat', 'open', 'diag', 'double', 'stack', 'force', 'count', 'endwin']);
+    const C4_DONE = new Set(['four', 'block', 'centre', 'early', 'threat', 'open', 'diag', 'double', 'stack', 'force', 'count', 'endwin', 'parity', 'zugz', 'follow', 'first', 'second', 'miss', 'under', 'edge']);
     const E4 = require(path.join(ROOT, 'connect4/engine.js')), SOLVE = process.env.C4_SOLVE !== '0';
     const cset = (mv, mir) => { const g = grid(mv), m = new Map(); g.forEach((col, c) => col.forEach((p, r) => m.set((mir ? 6 - c : c) + ',' + r, p))); return m; };
     const cdist = (a, b) => { let d = 0; for (const [k, v] of a) if (b.get(k) !== v) d++; for (const k of b.keys()) if (!a.has(k)) d++; return d; };
@@ -407,7 +407,8 @@ const CHECKS = {
         const val = c => weak ? Math.sign(sc[c]) : sc[c], b = Math.max(...leg.map(val)), best = leg.filter(c => val(c) === b);
         if (best.join() !== [...ans].sort((x, y) => x - y).join()) no(w, `① the best columns are ${best}, the answer ${[...ans]}`);
         const oth = leg.filter(c => !ans.has(c)), sec = oth.length ? Math.max(...oth.map(val)) : -99;
-        if (!weak && b !== iw) { if (b > 0 && sec > 0 && sec >= b - 1) no(w, `② column ${oth.find(c => val(c) === sec)} wins almost as fast (${sec} vs ${b})`); if (b === 0 && sec === 0) no(w, '② another column draws too'); }
+        if (!weak && b !== iw) { if (b > 0 && sec > 0 && sec >= b - 1) no(w, `② column ${oth.find(c => val(c) === sec)} wins almost as fast (${sec} vs ${b})`); if (b === 0 && sec === 0) no(w, '② another column draws too');
+          if (b < 0 && sec >= b - 1) no(w, `② column ${oth.find(c => val(c) === sec)} loses almost as slowly (${sec} vs ${b})`); }   // (an all-lose problem: the answer must hold out clearly longer)
         if (!weak && b > 0 && /^(four|miss|open|double|stack|force)$/.test(id)) { const d = iw - b; if (d < prevD) no(w, `⑥ easier than the problem before (a win in ${d + 1} after ${prevD + 1})`); prevD = Math.max(prevD, d); }
         const A = P.answer[0], F = F4(P.moves, A), h = g[A].length, G2 = drop(g, A, me);
         const T = { four: F.win, miss: F.win, block: F.blocked, threat: F.newThr.length > 0, open: F.myNext.length >= 2 && F.newThr.every(([, r]) => r === h), stack: F.stacked && F.newThr.length > 0,
