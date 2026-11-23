@@ -48,12 +48,25 @@ const CHECKS = {
   // shots questions' share is the count out of 36.
   'backgammon'() {
     const BG = require(path.join(ROOT, 'backgammon/bg.js')), LS = J('backgammon/lessons.json'), G = 'backgammon';
+    const seenBg = new Map();
     const dec = (s0, side) => { const s1 = side === 1 ? String(s0).slice(26) + String(s0).slice(0, 26) : String(s0), q = new Int8Array(52); for (let i = 0; i < 52; i++) q[i] = parseInt(s1[i], 16) || 0; return q; };
     LS.steps.forEach((st, si) => (st.problems || []).forEach((P, pi) => { const id = String(si), q0 = dec(P.pos, P.side || 0), w = `q${pi + 1}`;
       if (P.kind === 'play') {
         const legal = new Set(BG.genPlays(q0, 0, P.dice[0], P.dice[1]).map(x => BG.key(x.pos)));
+        const got = new Set();
         P.plays.forEach(([m], k) => { const q = q0.slice(); for (let i = 0; i + 1 < m.length; i += 2) BG.apply(q, 0, m.charCodeAt(i) - 65, m.charCodeAt(i + 1) - 65);
-          if (!legal.has(BG.key(q))) bad(G, id, `${w}: play ${k + 1} (${m}) is not a legal play of ${P.dice.join('-')}`); });
+          if (!legal.has(BG.key(q))) bad(G, id, `${w}: play ${k + 1} (${m}) is not a legal play of ${P.dice.join('-')}`); got.add(BG.key(q)); });
+        // (2026-11-23 lesson loop) the problem is judged by the rank of your play among P.plays (app.js lessonSubmit): a legal play
+        // missing from the list scores as the worst one — every legal play is listed (or the 40 best: the stored lists stop at 40,
+        // the plays left out are the worse ones), the best one first and ahead of the 2nd
+        if (got.size !== legal.size && got.size < 40) bad(G, id, `${w}: ${legal.size - got.size} legal plays of ${P.dice.join('-')} are not in the list`);
+        if (P.plays.length > 1 && !(P.plays[0][1] > P.plays[1][1])) bad(G, id, `${w}: the answer is not ahead of the 2nd play`);
+        // the openings' first move (open1 / open2: 「最初の1手で {d} が出た」) is never a double — the opening roll is two different numbers
+        if (/^open[12]$/.test(st.id) && P.dice[0] === P.dice[1]) bad(G, id, `${w}: ${P.dice.join('-')} is a double, which the first move of a game never rolls`);
+        // the same board and the same roll in two problems of the course is one problem asked twice
+        //  (駒の動かし方とダイス had オープニング①'s 3-1 / 6-1 / 4-2 at the start position)
+        const sig = P.pos + ':' + P.dice.slice().sort().join('');
+        if (seenBg.has(sig)) bad(G, id, `${w}: the same position and roll as ${seenBg.get(sig)}`); else seenBg.set(sig, `${st.id} ${w}`);
       } else if (P.q === 'race') {
         const a = BG.pips(q0, 0), b = BG.pips(q0, 1), v = P.qv || {}; if (a !== v.a || b !== v.b) bad(G, id, `${w}: pips ${a}/${b}, the words say ${v.a}/${v.b}`);
         const o = P.opts[P.ans], [k, n] = Array.isArray(o) ? o : [o]; const okA = a === b ? k === 'even' : (k === (a < b ? 'lead_c' : 'lead_o') && n === Math.abs(a - b));
