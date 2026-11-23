@@ -125,7 +125,10 @@
       T3.fit({ w: span, d: F.d, y: F.y, pitch: F.pitch, up: F.up, cx, cz: focusZ, ease: true, ek: focusFast ? .2 : undefined });
     }
     const sqX = sq => sq >= 31 ? kit.U.W / 2 - .3 : kit.U.pt(sq)[0];
-    function focus(xs, fast) { if (!fast && focusZ && phase !== 'roll' && phase !== 'ai') focusZ = 0; focusFast = !!fast; const f = xs && xs.length ? [Math.min(...xs), Math.max(...xs)] : null; if (JSON.stringify(f) !== JSON.stringify(focusX)) manX = null; focusX = f; applyFocus(); }
+    // the museum's Tutankhamun box (ctx.board, 2026-11-24 user: スマホも動かせる駒にフォーカス): its viewer keeps its own camera — the same focus
+    // is asked of it (museum/play.js T3.focus: on a phone it comes close to the rows round these squares; null: the whole case)
+    const MUS = !!(ctx.board && T3.focus);
+    function focus(xs, fast) { if (MUS) { T3.focus(xs && xs.length ? [Math.min(...xs), Math.max(...xs)] : null, fast); return; } if (!fast && focusZ && phase !== 'roll' && phase !== 'ai') focusZ = 0; focusFast = !!fast; const f = xs && xs.length ? [Math.min(...xs), Math.max(...xs)] : null; if (JSON.stringify(f) !== JSON.stringify(focusX)) manX = null; focusX = f; applyFocus(); }
     // a sideways swipe slides the board (until the focus moves on); the tap that ends a swipe is not a move
     let manX = null, curSpan = 0, curLim = 0, curCx = 0, sw = null, swiped = 0;
     const swDown = e => { if (!e.isPrimary || !(zoomPref && tallNow() && focusX && curSpan)) return; sw = { x: e.clientX, y: e.clientY, cx: curCx, on: false }; };
@@ -134,7 +137,7 @@
       const k = curSpan / (ctx.el.clientWidth || innerWidth); manX = Math.max(-curLim, Math.min(curLim, sw.cx - dx * k)); applyFocus(); };
     const swUp = () => { if (sw && sw.on) swiped = performance.now(); sw = null; };
     ctx.el.addEventListener('pointerdown', swDown); addEventListener('pointermove', swMove); addEventListener('pointerup', swUp); addEventListener('pointercancel', swUp);
-    const focusSticks = side => { focusZ = side === 1 ? -1.05 : 0; focus([-kit.U.W / 2 + .7, -kit.U.W / 2 + 2.6]); };   // the sticks lie beside the start end; the opponent's on the far side: the view leans that way (clear of the bar at the top)
+    const focusSticks = side => { if (MUS) return focus(null); focusZ = side === 1 ? -1.05 : 0; focus([-kit.U.W / 2 + .7, -kit.U.W / 2 + 2.6]); };   // the sticks lie beside the start end; the opponent's on the far side: the view leans that way (clear of the bar at the top)
     const focusMoves = (ms, fast) => focus(ms.reduce((a, m) => a.concat([sqX(m.from), sqX(m.finish ? 31 : m.to)], m.water && m.dest ? [sqX(m.dest)] : []), []), fast);
     let zoomBtn = null;
     {

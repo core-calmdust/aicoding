@@ -235,10 +235,21 @@
     if (!def || !V || !V.obj || !TH || ((!ad || (def.adapter && !ad[def.adapter])) && !o.course) || (o.course && !window.AtlasMuseumRules)) return null;
     stop(); const CM = !!o.course;
     const board = def.board(TH, V.obj, G.kit), stage = V.ov.querySelector('.exstage'), cv = stage.querySelector('canvas');
-    const dot = new TH.CircleGeometry(1, 24); dot.rotateX(-Math.PI / 2); const shown = [];
+    const dot = new TH.CircleGeometry(1, 24); dot.rotateX(-Math.PI / 2); const shown = []; let foc = null, focOn = false;   // (T3.focus: the stretch asked for, and whether the camera is in close)
     const T3 = { MODELS: (window.Table3D && Table3D.MODELS) || {}, chess: window.Table3D && Table3D.chess, PIECES: window.Table3D && Table3D.PIECES,
       show(_, b) { V.obj.add(b); if (b !== board) shown.push(b); this.kick(); },   // (a game that builds its own board — ウル: the exhibit IS the portal's model — puts it here; taken away at the end)
-      fit() {}, kick() { if (V.R) V.R.shadowMap.needsUpdate = true; G.go(); },
+      fit() {},
+      // the focus on a phone (2026-11-24 user: セネトのように動かせる駒に寄る): xs = [x0, x1] along the board in its own space (null: the whole case).
+      // The camera comes in to the board's rows round that stretch (the plinth in front with the sticks left out), at least ~8 squares long,
+      // gliding there; a slide still moves it. Only the adapters that ask (senet); not in a rules course, not on a computer.
+      focus(xs, fast) { if (CM || !V.scene || !(cur && cur.V === V)) return; foc = xs; if (!xs || !(matchMedia('(pointer:coarse)').matches || innerWidth < 820)) { if (focOn) { apply(); focOn = false; } return; }
+        const U = board.userData || {}, rz = (U.D || 3) / 2 + .3, lo = xs[0] - 1.3, hi = xs[1] + 1.3, mid = (lo + hi) / 2, half = Math.max(4, (hi - lo) / 2);
+        V.obj.updateMatrixWorld(true); const toObj = (x, z) => V.obj.worldToLocal(board.localToWorld(new TH.Vector3(x, 0, z)));
+        const a = toObj(mid - half, -rz), b = toObj(mid + half, rz); let x0 = Math.min(a.x, b.x), x1 = Math.max(a.x, b.x); const z0 = Math.min(a.z, b.z), z1 = Math.max(a.z, b.z);
+        const L = x1 - x0; if (x0 < A[0]) { x0 = A[0]; x1 = Math.min(A[1], x0 + L); } if (x1 > A[1]) { x1 = A[1]; x0 = Math.max(A[0], x1 - L); }
+        const Af = [x0, x1, z0, z1], q = view(Af), t = V.obj.localToWorld(new TH.Vector3((x0 + x1) / 2, AY, (z0 + z1) / 2));
+        focOn = true; V.tgtBase = t.clone(); V.panXZ = [0, 0]; G.tween(Object.assign({}, q, { tgt: t }), fast ? 380 : 700); if (V.R) V.R.shadowMap.needsUpdate = true; },
+      kick() { if (V.R) V.R.shadowMap.needsUpdate = true; G.go(); },
       wasDrag: () => performance.now() - (V.dragEnd || 0) < 250,
       contact(r, op) { const m = new TH.Mesh(dot, new TH.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: (op || .4) * .5, depthWrite: false })); m.scale.setScalar(r); m.userData.contact = true; if (def.noContact) m.visible = false; return m; },   // (noContact: the room's own shadows are enough)
       pick(ev, y) { const r = cv.getBoundingClientRect(), rc = new TH.Raycaster(); rc.setFromCamera(new TH.Vector2(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1), V.cam);
@@ -270,15 +281,15 @@
     const tgt0 = V.tgt.clone(); V.tgt.copy(V.obj.localToWorld(new TH.Vector3((A[0] + A[1]) / 2, AY, (A[2] + A[3]) / 2))); V.pitMax = 1.52;
     // rot: a long board turned lengthwise on a tall screen is a sideways board for a phone held sideways — the bar and the buttons turn with it (CSS .exv-rot)
     const rot = () => vert() && tall();
-    const view = () => { const v = vert(), r = rot(), W = A[1] - A[0], Dp = A[3] - A[2], sw = v ? Dp : W, sh = v ? W : Dp, w = stage.clientWidth || 1, h = stage.clientHeight || 1, tv = Math.tan(V.cam.fov * Math.PI / 360);
+    const view = (Ar = A) => { const v = vert(), r = rot(), W = Ar[1] - Ar[0], Dp = Ar[3] - Ar[2], sw = v ? Dp : W, sh = v ? W : Dp, w = stage.clientWidth || 1, h = stage.clientHeight || 1, tv = Math.tan(V.cam.fov * Math.PI / 360);
       const m = w < 820 ? 100 : 96, pb = o.course ? coursePad() : 0, uh = Math.max(120, h - (r ? 40 : pb ? pb[0] + pb[1] : 2 * m)), uw = Math.max(120, w - (r ? 2 * 78 : 28));   // (room for the bar and the buttons: top and bottom, or left and right when turned; the same on both sides so the board stays centred)
       return { yaw: (v ? Math.PI / 2 : 0) + (def.view.turn || 0), pit: def.view.tilt || 1.52, d: Math.max(sh / 2 / tv * h / uh, sw / 2 / (tv * V.cam.aspect) * w / uw) * (def.view.k || 1.03) }; };   // (tilt: a game of standing pieces is looked at from the player's side, as on the portal's table — from straight above they are all circles)
     // a slide moves the board sideways (gallery.js): along the screen's width, or its height when turned; back to the middle whenever the view is set again
     const apply = () => { const r = rot(); V.ov.classList.toggle('exv-rot', r); document.documentElement.classList.toggle('exv-rot', r);
-      const v = vert(); V.tgtBase = tgtB.clone(); V.tgt.copy(tgtB); V.panXZ = [0, 0]; V.panLim = Math.max(A[1] - A[0], A[3] - A[2]) / 2;   // (a slide moves the board any way, gallery.js)
+      const v = vert(); V.tgtBase = tgtB.clone(); if (!focOn) V.tgt.copy(tgtB); V.panXZ = [0, 0];   /* (back from a focus: the point looked at glides home with the tween below) */ V.panLim = Math.max(A[1] - A[0], A[3] - A[2]) / 2;   // (a slide moves the board any way, gallery.js)
       const q = view();
       if (o.course) { const pb = coursePad(), h = stage.clientHeight || 1, wpp = 2 * q.d * Math.tan(V.cam.fov * Math.PI / 360) / h; const sh = (pb[1] - pb[0]) / 2 * wpp / Math.sin(q.pit); V.tgtBase.x += sh * Math.sin(q.yaw); V.tgtBase.z += sh * Math.cos(q.yaw); V.tgt.copy(V.tgtBase); }   /* (towards the viewer, whichever way the camera is turned; further when it looks from a slant) */   // (the board in the room left above the guide's panel)
-      V.home = q; G.tween(q); if (V.R) V.R.shadowMap.needsUpdate = true; };
+      V.home = q; G.tween(Object.assign({}, q, { tgt: V.tgtBase.clone() })); if (V.R) V.R.shadowMap.needsUpdate = true; if (focOn && foc) { focOn = false; T3.focus(foc); } };
     // a rules course: the top bar's room above, the guide's panel below (its height as it stands)
     const coursePad = () => { const pe = stage.querySelector('.exrul'); return [56, (pe ? pe.offsetHeight : 180) + 22]; };
     const tgtB = V.tgt.clone(); apply(); V.playing = true;
