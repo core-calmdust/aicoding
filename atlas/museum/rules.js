@@ -15,7 +15,34 @@
   const TF = (a, d, k) => ({ a: a || [], d: d || [], k: k || null });   // Brandubh: attackers / defenders / the king as [file, rank]
   const SG = (pts, bar) => ({ p: pts, bar: bar || [0, 0] });   // 本双六: { abs point: count (+ you, − the other side) }
   const SG0 = { 24: 2, 13: 5, 8: 3, 6: 5, 1: -2, 12: -5, 17: -3, 19: -5 };
+  const CH = (w, b) => ({ w: w || {}, b: b || {} });   // chess: { square: piece } for White (you) and Black
+  const CH0 = CH({ a1: 'R', b1: 'N', c1: 'B', d1: 'Q', e1: 'K', f1: 'B', g1: 'N', h1: 'R', a2: 'P', b2: 'P', c2: 'P', d2: 'P', e2: 'P', f2: 'P', g2: 'P', h2: 'P' },
+    { a8: 'R', b8: 'N', c8: 'B', d8: 'Q', e8: 'K', f8: 'B', g8: 'N', h8: 'R', a7: 'P', b7: 'P', c7: 'P', d7: 'P', e7: 'P', f7: 'P', g7: 'P', h7: 'P' });
   const C = {
+    // the Ottoman board, outside: chess (the Atlas's own pieces)
+    ottoman: [
+      { set: CH0 },
+      { set: CH0, glow: ['ce8'], task: [{ t: 'tap', at: ['ce8'] }] },
+      { set: CH0, glow: ['ce4'], task: [{ t: 'move', from: 'ce2', to: 'ce4' }] },
+      { set: CH({ e1: 'K', e4: 'P', a2: 'P', h2: 'P' }, { e8: 'K', d5: 'P', e5: 'P', a7: 'P' }), glow: ['cd5'], task: [{ t: 'move', from: 'ce4', to: 'cd5', take: true }] },
+      { set: CH({ e1: 'K', a1: 'R', h2: 'P' }, { e8: 'K', a7: 'P', c5: 'P' }), glow: ['ca5'], task: [{ t: 'move', from: 'ca1', to: 'ca5' }] },
+      { set: CH({ e1: 'K', c1: 'B', b2: 'P' }, { e8: 'K', h7: 'P' }), glow: ['cg5'], task: [{ t: 'move', from: 'cc1', to: 'cg5' }] },
+      { set: CH({ e1: 'K', d1: 'Q', d2: 'P', c2: 'P' }, { e8: 'K', f7: 'P' }), glow: ['ch5'], task: [{ t: 'move', from: 'cd1', to: 'ch5' }] },
+      { set: CH0, glow: ['cf3'], task: [{ t: 'move', from: 'cg1', to: 'cf3' }] },
+      { set: CH({ g1: 'K', a1: 'R', g2: 'P', h2: 'P' }, { g8: 'K', f7: 'P', g7: 'P', h7: 'P' }), glow: ['ca8'], task: [{ t: 'move', from: 'ca1', to: 'ca8' }], last: true },
+    ],
+    // the Ottoman board, inside: backgammon (the layer is the sugoroku one: points p1–p24, the bar b0, off)
+    'ottoman-bg': [
+      { set: SG(SG0) },
+      { set: SG(SG0), glow: ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'], task: [{ t: 'tap', at: ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'] }] },
+      { set: SG(SG0), glow: ['p24'], task: [{ t: 'tap', at: ['p24'] }] },
+      { set: SG(SG0), task: [{ t: 'roll', v: [3, 1] }] },
+      { set: SG(SG0), dice: [3, 1], task: [{ t: 'move', from: 'p8', to: 'p5' }, { t: 'move', from: 'p6', to: 'p5' }] },
+      { set: SG(SG0), dice: [2, 2], task: [{ t: 'move', from: 'p13', to: 'p11' }, { t: 'move', from: 'p13', to: 'p11' }, { t: 'move', from: 'p6', to: 'p4' }, { t: 'move', from: 'p6', to: 'p4' }] },
+      { set: SG({ 24: 2, 13: 5, 8: 3, 6: 5, 10: -1, 1: -1, 12: -5, 17: -3, 19: -5 }), dice: [3, 5], task: [{ t: 'move', from: 'p13', to: 'p10', cut: true }] },
+      { set: SG({ 24: 1, 13: 5, 8: 3, 6: 5, 1: -2, 12: -5, 17: -3, 19: -3, 20: -2 }, [1, 0]), dice: [6, 4], glow: ['p19'], gcol: 0xff9b7a, task: [{ t: 'move', from: 'b0', to: 'p21' }] },
+      { set: SG({ 1: 3, 2: 3, 3: 3, 4: 2, 5: 2, 6: 2, 19: -5, 20: -3, 21: -3, 22: -2, 24: -2 }), dice: [6, 3], task: [{ t: 'move', from: 'p6', to: 'off' }, { t: 'move', from: 'p3', to: 'off' }], last: true },
+    ],
     senet: [
       { set: SN([1, 3, 5, 7, 9], [2, 4, 6, 8, 10]) },
       { set: SN([], []), task: [{ t: 'tap', at: ['s30'] }], glow: ['s30'] },
@@ -130,14 +157,24 @@
         offLoc: pieces => `g0:${pieces.filter(p => p.loc.startsWith('g0:')).length}`,
         cutLoc: pieces => `w1:${pieces.filter(p => p.loc.startsWith('w1:')).length}` };
     }
-    // 本双六: a point's stones line up from its flower (U.slot), the middle strip (U.bar)
+    if (id === 'ottoman') {   // chess: 'c' + the square's name (ce4); kinds 'wK' … 'bP' — the Atlas's own pieces, one square = 1 in the board's space
+      const CS = window.Table3D && Table3D.chess, set = window.Table3D && Table3D.PIECES && Table3D.PIECES.chess ? Table3D.PIECES.chess.get() : 'jewel';
+      const xz = t => [t.charCodeAt(1) - 97 - 3.5, 8 - +t[2] - 3.5];
+      return { R: .5, sc: .42, base: U.top,
+        pos(loc) { const [x, z] = xz(loc); return [x, U.top, z]; }, spot(t) { return this.pos(t); },
+        make: kind => { const g = CS.piece(kind[1], kind[0], { set }); if (kind[1] === 'N') g.rotation.y = kind[0] === 'w' ? Math.PI / 2 : -Math.PI / 2; return g; },
+        list(s) { return Object.keys(s.w).map(q => ['c' + q, 'w' + s.w[q]]).concat(Object.keys(s.b).map(q => ['c' + q, 'b' + s.b[q]])); },
+        hit(x, z) { const f = Math.floor(x + 4), r = Math.floor(z + 4); return f < 0 || r < 0 || f > 7 || r > 7 ? null : 'c' + String.fromCharCode(97 + f) + (8 - r); } };
+    }
+    // 本双六 (and backgammon on the Ottoman board: U.off — checkers borne off): a point's stones line up from its flower (U.slot), the middle strip (U.bar)
     const Y = U.top;
     return { R: 2, sc: 1.35, base: Y, stack: true,
-      pos(loc) { const [a, k] = loc.slice(1).split(':'); return loc[0] === 'b' ? U.bar(+a, +k) : U.slot(+a, +k); },
-      spot(t) { return t[0] === 'b' ? U.bar(+t.slice(1), 0) : U.slot(+t.slice(1), 0); },
+      pos(loc) { const [a, k] = loc.slice(1).split(':'); return loc[0] === 'o' ? U.off(+a, +k) : loc[0] === 'b' ? U.bar(+a, +k) : U.slot(+a, +k); },
+      spot(t) { return t === 'off' ? U.off(0, 0) : t[0] === 'b' ? U.bar(+t.slice(1), 0) : U.slot(+t.slice(1), 0); },
+      offLoc: (pieces, sd) => `o${sd}:${pieces.filter(p => p.loc[0] === 'o' && +p.loc[1] === sd).length}`,
       make: kind => { const g = new TH.Group(); g.add(U.stone(kind)); return g; },
       list(s) { const L = []; for (const a in s.p) { const n = s.p[a]; for (let k = 0; k < Math.abs(n); k++) L.push([`p${a}:${k}`, n > 0 ? 0 : 1]); } for (const sd of [0, 1]) for (let k = 0; k < s.bar[sd]; k++) L.push([`b${sd}:${k}`, sd]); return L; },
-      hit(x, z) { const h = U.hit(x, z); return h < 0 ? null : h === 0 ? 'b0' : 'p' + h; } };
+      hit(x, z) { const h = U.hit(x, z); return h < 0 ? null : h === 25 ? 'off' : h === 0 ? 'b0' : 'p' + h; } };
   }
 
   // ---------- the course ----------
@@ -178,9 +215,9 @@
       sticks.forEach((s, i) => { s.position.copy(base[i]); U.S3.stickUp(s, i < L, U.kit.yaw ? U.kit.yaw(i) : 0); }); kick(); }
     const UP = { 1: [0, 0, Math.PI / 2], 2: [0, 0, 0], 3: [-Math.PI / 2, 0, 0], 4: [Math.PI / 2, 0, 0], 5: [Math.PI, 0, 0], 6: [0, 0, -Math.PI / 2] };
     function showDice(v) { const U = B.userData; if (!dice) dice = [0, 1].map(() => { const d = U.die(); PG.add(d); return d; });
-      dice.forEach((d, i) => { if (!v) { d.visible = false; return; } d.visible = true; const [x, z] = U.diceAt(0, i); d.position.set(x, U.top + .68, z); d.rotation.set(UP[v[i]][0], (i ? -.3 : .25), UP[v[i]][2]); }); kick(); }
+      dice.forEach((d, i) => { if (!v) { d.visible = false; return; } d.visible = true; const [x, z] = U.diceAt(0, i); d.position.set(x, U.top + (U.dieH || .68), z); d.rotation.set(UP[v[i]][0], (i ? -.3 : .25), UP[v[i]][2]); }); kick(); }
     async function rollDice(v) { SND.roll(); showDice(v); const U = B.userData, r0 = dice.map(() => [Math.random() * 9, Math.random() * 9, Math.random() * 9]);
-      await anim(820, k => dice.forEach((d, i) => { const q = Math.min(1, Math.max(0, k * 1.1 - i * .08)), e = 1 - Math.pow(1 - q, 2.6), [x, z] = U.diceAt(0, i); d.position.set(x, U.top + .68 + Math.sin(q * Math.PI) * 4, z + (1 - e) * 8); d.rotation.set(UP[v[i]][0] + r0[i][0] * (1 - e), (i ? -.3 : .25) + r0[i][1] * (1 - e), UP[v[i]][2] + r0[i][2] * (1 - e)); }));
+      await anim(820, k => dice.forEach((d, i) => { const q = Math.min(1, Math.max(0, k * 1.1 - i * .08)), e = 1 - Math.pow(1 - q, 2.6), [x, z] = U.diceAt(0, i); d.position.set(x, U.top + (U.dieH || .68) + Math.sin(q * Math.PI) * 4, z + (1 - e) * 8); d.rotation.set(UP[v[i]][0] + r0[i][0] * (1 - e), (i ? -.3 : .25) + r0[i][1] * (1 - e), UP[v[i]][2] + r0[i][2] * (1 - e)); }));
       showDice(v); }
 
     // ウル: the four tetrahedral dice of the near side beside the small block; n marked (white) tips up
@@ -242,7 +279,7 @@
       const P = PAGES[step];
       setPieces(LY.list(P.set));
       if (id === 'senet') { showSticks(P.sticks || 5); sticks.forEach(s => { s.visible = step >= 2; }); }
-      if (id === 'sugoroku') showDice(P.dice || (P.task && P.task[0].t === 'roll' ? [5, 2] : null));
+      if (id === 'sugoroku' || id === 'ottoman-bg') showDice(P.dice || (P.task && P.task[0].t === 'roll' ? [5, 2] : null));
       if (id === 'ur') showUDice(P.udice != null ? P.udice : P.task && P.task[0].t === 'roll' ? 0 : null);
       say(words()[0]); plate(P.task ? kOf() : '');
       $('.pg').textContent = ` ${step + 1} / ${PAGES.length}`;
@@ -264,12 +301,13 @@
           if (st.banAfter) xban = st.banAfter; } }
       else if (st.t === 'move') {
         const p = at(st.from); if (p) {
-          const vic = st.swap || st.cut ? at(st.to) : null;
+          const vic = st.swap || st.cut || st.take ? at(st.to) : null;   // (take: chess — the piece on the square is taken off)
           let loc = st.to;
           if (st.to === 'off') loc = LY.offLoc(pieces, 0);
           else if (LY.stack) loc = `${st.to}:${count(st.to) - (vic ? 1 : 0)}`;
           if (vic) pieces = pieces.filter(q => q !== vic);
           await hop(p, loc);
+          if (st.take && vic) await lift(vic);
           if (st.swap) { pieces.push(vic); await hop(vic, st.from.startsWith('s') ? st.from : st.from); }
           if (st.cut) { pieces.push(vic); SND.take(); await hop(vic, LY.cutLoc ? LY.cutLoc(pieces) : `b1:${count('b1')}`, 3); }
           if (st.cap) await Promise.all(st.cap.map(c => { const q = at(c); return q ? lift(q) : 0; }));
