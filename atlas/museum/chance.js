@@ -29,6 +29,10 @@
     // cowrie does not fall mouth-up exactly half the time; the room counts it as half (approx).
     { id: 'cowrie', kind: 'cowrie', n: 6, faces: [1, 0], bins: [2, 3, 4, 5, 6, 10, 25], links: [{ g: 'ludo' }], approx: true,
       score: v => { const c = v.reduce((a, b) => a + b, 0); return c === 0 ? 25 : c === 1 ? 10 : c; } },
+    // (2026-11-24) Korea's yut: four half-round sticks, counted by the flat faces up — 1 do, 2 gae, 3 geol, 4 yut, none mo (5).
+    // The same arithmetic as the Egyptian sticks, met on the other side of Asia; real sticks fall flat-up a little more than half (approx).
+    { id: 'yut', kind: 'yut', n: 4, faces: [1, 0], bins: [1, 2, 3, 4, 5], links: [{ g: 'senet' }], approx: true,
+      score: v => v.reduce((a, b) => a + b, 0) || 5 },
   ];
   const ICON = {
     talus: '<path d="M6.5 8.5c0-2.4 2-3.5 4-3 1.2.3 1.8 1 3 1s1.8-.9 3.2-.6c1.8.4 2.8 2.1 2.3 4-.3 1.2-1.3 1.8-1.3 3s1 1.9 1 3.3c0 2-1.9 3.4-4 2.8-1.2-.3-1.7-1.1-3.1-1.1s-2 .9-3.4.7c-1.9-.3-3-2.1-2.5-4 .3-1.1 1.3-1.7 1.3-2.9S6.5 9.8 6.5 8.5z"/><path d="M11 10.5c.8.9 2.2.9 3 0"/>',
@@ -38,8 +42,9 @@
     long: '<rect x="2.5" y="8.5" width="19" height="7" rx="2"/><circle cx="7" cy="12" r="1.6"/><circle cx="7" cy="12" r=".4" fill="currentColor"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="12" r=".4" fill="currentColor"/><circle cx="17" cy="12" r="1.6"/><circle cx="17" cy="12" r=".4" fill="currentColor"/>',
     cowrie: '<path d="M12 3.5c4.6 0 7.5 3.8 7.5 8.5S16.6 20.5 12 20.5 4.5 16.7 4.5 12 7.4 3.5 12 3.5z"/><path d="M12 6.5c-.9 2-1 9 0 11" stroke-width="1.6"/><path d="M10.6 9h1M10.5 12h1M10.6 15h1M12.4 9h1M12.5 12h1M12.4 15h1" stroke-width="1"/>',
     liubo: '<path d="M3 6.5h18M3 10.5h18M3 14.5h18M3 18.5h18"/><path d="M5 5.5v2M5 9.5v2M5 13.5v2M5 17.5v2" stroke-width="1.2"/>',
+    yut: '<path d="M3.5 6.5h17c0 2-1.6 3.5-3.5 3.5H7c-1.9 0-3.5-1.5-3.5-3.5z"/><path d="M3.5 14h17c0 2-1.6 3.5-3.5 3.5H7c-1.9 0-3.5-1.5-3.5-3.5z" fill="currentColor"/><path d="M8.5 3.5l2 2M10.5 3.5l-2 2M13.5 3.5l2 2M15.5 3.5l-2 2" stroke-width="1.2"/>',
   };
-  const TK = { talus: 'talus', sticks: 'senet', tetra: 'tetra', cube: 'cube', long: 'long', liubo: 'liubo', cowrie: 'cowrie' };
+  const TK = { talus: 'talus', sticks: 'senet', tetra: 'tetra', cube: 'cube', long: 'long', liubo: 'liubo', cowrie: 'cowrie', yut: 'yut' };
 
   /* ---------- the exact chances: every way the pieces can fall ---------- */
   function expected(T) {
@@ -178,6 +183,15 @@
       mesh(G.back, backM); mesh(G.face, faceM);
       up = { 1: Q('x', 0), 0: Q('x', Math.PI) };
     }
+    if (kind === 'yut') {
+      // a split round stick of birch: the bark-side back rounded and warm, the cut face pale with the old X-marks burned in
+      const G = stickGeo(12, 1.9, .82);
+      const back = mat('yutB', { map: canvasTex('yutb', 512, 64, (q, W, H) => { sd = 31; q.fillStyle = '#b07a44'; q.fillRect(0, 0, W, H); for (let i = 0; i < 70; i++) { q.fillStyle = `rgba(${rnd() < .5 ? '90,52,24' : '210,160,105'},${.1 + rnd() * .18})`; q.fillRect(0, rnd() * H, W, 1 + rnd() * 1.5); } }), color: 0xffffff, roughness: .5, clearcoat: .35, clearcoatRoughness: .35 });
+      const face = mat('yutF', { map: canvasTex('yutf', 512, 96, (q, W, H) => { sd = 33; q.fillStyle = '#ecd9b4'; q.fillRect(0, 0, W, H); for (let i = 0; i < 50; i++) { q.fillStyle = `rgba(170,120,70,${.06 + rnd() * .12})`; q.fillRect(0, rnd() * H, W, 1 + rnd()); }
+        q.strokeStyle = '#3a2412'; q.lineWidth = 7; q.lineCap = 'round'; [.3, .5, .7].forEach(x => { const c = W * x, r = H * .26; q.beginPath(); q.moveTo(c - r, H / 2 - r); q.lineTo(c + r, H / 2 + r); q.moveTo(c + r, H / 2 - r); q.lineTo(c - r, H / 2 + r); q.stroke(); }); }), color: 0xffffff, roughness: .6 });
+      mesh(G.back, back); mesh(G.face, face);
+      up = { 1: Q('x', 0), 0: Q('x', Math.PI) };
+    }
     if (kind === 'cowrie') {
       const G = cowrieGeo();
       const shell = mat('cowrie', { map: canvasTex('cowt', 256, 256, (q, W, H) => { sd = 21; const gr = q.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#f4ead2'); gr.addColorStop(.5, '#ecdcb4'); gr.addColorStop(1, '#f6eed8'); q.fillStyle = gr; q.fillRect(0, 0, W, H);
@@ -271,6 +285,7 @@
   function slots(T) {
     const k = T.kind, n = T.n, out = [];
     if (k === 'senet' || k === 'liubo' || k === 'long') { const gap = k === 'long' ? 2.3 : k === 'senet' ? 2.6 : 2.1; for (let i = 0; i < n; i++) out.push([((i % 2) - .5) * (k === 'long' ? 1.4 : 1.8), (i - (n - 1) / 2) * gap]); return { s: out, r: k === 'long' ? 5.6 : k === 'senet' ? 8 : 9.6, yawJ: .12 }; }
+    if (k === 'yut') { for (let i = 0; i < n; i++) out.push([((i % 2) - .5) * 1.6, (i - (n - 1) / 2) * 3]); return { s: out, r: 8.6, yawJ: .12 }; }
     if (k === 'cowrie') { for (let i = 0; i < n; i++) out.push([((i % 3) - 1) * 3.2 + (i > 2 ? .9 : 0), (i > 2 ? 1.5 : -1.5)]); return { s: out, r: 6.2, yawJ: Math.PI }; }
     const gap = k === 'cube' ? 3.6 : k === 'tetra' ? 3.8 : 3.9;
     for (let i = 0; i < n; i++) out.push([(i - (n - 1) / 2) * gap, (i % 2 ? .7 : -.7) * (k === 'cube' ? .4 : 1)]);
@@ -296,7 +311,7 @@
       const qF = Q('y', yaw).multiply(U.up[v]), ax = new TH.Vector3(Math.random() - .5, Math.random() - .5, Math.random() - .5).normalize();
       return { p, v, x, z, yaw, qF, ax, w: (3 + Math.random() * 2.5) * Math.PI, rest: U.rest[v], sx: x + (Math.random() - .5) * 6, sz: z + 15 + Math.random() * 5, h0: 7 + Math.random() * 3, dl: i * 55 + Math.random() * 40 }; });
     hideBadges(); SND.shake();
-    SND.land(plan.flatMap(q => [[(q.dl + .42 * dur) / 1000, .5], [(q.dl + .66 * dur) / 1000, .22], [(q.dl + .8 * dur) / 1000, .1]]), T.kind === 'senet' || T.kind === 'liubo' ? 1500 : 2600);
+    SND.land(plan.flatMap(q => [[(q.dl + .42 * dur) / 1000, .5], [(q.dl + .66 * dur) / 1000, .22], [(q.dl + .8 * dur) / 1000, .1]]), T.kind === 'senet' || T.kind === 'liubo' || T.kind === 'yut' ? 1500 : 2600);
     const qa = new TH.Quaternion();
     anim = now => { let busy = false;
       plan.forEach(q => { const t = Math.max(0, (now - t0 - q.dl) / dur); if (t < 1) busy = true; const k = Math.min(1, t), g = q.p.g;
@@ -316,7 +331,7 @@
     bEl.innerHTML = bVals.map(b => `<span class="chb${b.on ? '' : ' off'}">${b.t}</span>`).join(''); bOn = true; badges(); requestAnimationFrame(() => bEl && bEl.classList.add('on')); }
   function badges() {
     if (!bOn || !bEl) return; const v = new TH.Vector3(), W = st.clientWidth, H = st.clientHeight, els = bEl.children;
-    pieces.forEach((p, i) => { const e = els[i]; if (!e) return; const ox = { senet: 6.4, liubo: 7.9, long: 3.3 }[p.kind]; if (ox) v.set(p.x + ox, .4, p.z); else v.set(p.x, p.g.userData.rest[p.v] * 2 + .9, p.z); v.project(cam); e.style.transform = `translate(${((v.x + 1) / 2 * W).toFixed(1)}px,${((1 - v.y) / 2 * H).toFixed(1)}px)`; });
+    pieces.forEach((p, i) => { const e = els[i]; if (!e) return; const ox = { senet: 6.4, liubo: 7.9, long: 3.3, yut: 6.9 }[p.kind]; if (ox) v.set(p.x + ox, .4, p.z); else v.set(p.x, p.g.userData.rest[p.v] * 2 + .9, p.z); v.project(cam); e.style.transform = `translate(${((v.x + 1) / 2 * W).toFixed(1)}px,${((1 - v.y) / 2 * H).toFixed(1)}px)`; });
   }
 
   /* ---------- the room ---------- */
@@ -335,7 +350,7 @@
     if (T.kind === 'talus') return fmt(u('sum'), { n: s }) + (venus(vals) ? ' — ' + u('venus') : dog(vals) ? ' — ' + u('dog') : '');
     if (T.kind === 'cube' || T.kind === 'long') return vals.join(' + ') + ' = ' + s;
     const c = vals.reduce((a, b) => a + b, 0);
-    return fmt(x.res || '{c} → {n}', { c, n: s });
+    return fmt(x.res || '{c} → {n}', { c, n: s, w: x.names ? x.names[s - 1] : '' });
   }
   function count(T, vals) {
     const d = D(T.id); d.n++;
@@ -399,7 +414,7 @@
   function build(box) {
     box.innerHTML = `<div class="chx">
       <p class="chlead"></p>
-      <div class="chtools" role="tablist" style="--n:${TOOLS.length}">${TOOLS.map(T => `<button type="button" class="cht" data-t="${T.id}" role="tab"><span class="chi"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[TK[T.id]]}</svg></span><span class="chtt"><b></b><small></small></span></button>`).join('')}</div>
+      <div class="chtools" role="tablist" style="--n:${TOOLS.length > 7 ? Math.ceil(TOOLS.length / 2) : TOOLS.length}">${TOOLS.map(T => `<button type="button" class="cht" data-t="${T.id}" role="tab"><span class="chi"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[TK[T.id]]}</svg></span><span class="chtt"><b></b><small></small></span></button>`).join('')}</div>
       <div class="chmain">
         <div class="chl">
           <div class="chstage"><canvas></canvas><div class="chbadges" aria-hidden="true"></div><div class="chres" aria-live="polite"></div><p class="chhint"></p></div>
