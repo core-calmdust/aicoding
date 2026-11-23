@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 128;
+  const V = 129;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -33,7 +33,7 @@
     { id: 'kofukuji', game: 'shogi', cm: 1, view: [0, .95, .78], lock: { game: 'shogi', ach: 3 } },   // (spots: from the model's userData)
   ];
   const T = l => (window.MUSEUM_GAL_T && (MUSEUM_GAL_T[l] || MUSEUM_GAL_T.en)) || {};
-  const PLAY = { ballinderry: { game: 'tafl', levels: 30, long: true }, senet: { game: 'senet', levels: 20, long: true }, shosoin: { game: 'go', levels: 37 }, sugoroku: { game: 'sugoroku', levels: 20, long: true } };   // (levels: the game's own count — the names come from its adapter once it has loaded)   // 所蔵品で遊ぶ (2026-11-22): the exhibits that can be played on, and the game (and board size) that plays them
+  const PLAY = { ballinderry: { game: 'tafl', levels: 30, long: true }, senet: { game: 'senet', levels: 20, long: true }, shosoin: { game: 'go', levels: 37 }, sugoroku: { game: 'sugoroku', levels: 20, long: true }, ur: { game: 'ur', levels: 20, long: true, rules: false } };   // (ur, 2026-11-23: no museum rules course yet — the portal's own tour teaches it)   // (levels: the game's own count — the names come from its adapter once it has loaded)   // 所蔵品で遊ぶ (2026-11-22): the exhibits that can be played on, and the game (and board size) that plays them
   const ui = (l, k) => { const a = T(l).ui || {}, b = T('en').ui || {}; return a[k] != null ? a[k] : (b[k] != null ? b[k] : k); };
   const ex = (l, id) => Object.assign({}, (T('en').ex || {})[id] || {}, (T(l).ex || {})[id] || {});
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -150,7 +150,7 @@
         // phones: the card stays out of the way until the play button at the top of the texts asks for it (tapping it again puts it away)
         const cfg = ov.querySelector('[data-k="pcfg"]'); if (cfg) cfg.onclick = () => { const on = !ov.classList.contains('exv-cfg'); ov.classList.toggle('exv-cfg', on); cfg.classList.toggle('on', on); };
         // ルール: the rules course on this board, ミュゼフク guiding (museum/rules.js); its last page's button starts a game with the card's choices
-        const rul = ov.querySelector('[data-k="prules"]'), rulesOn = on => { ov.classList.toggle('exv-rul', on); };
+        const rul = ov.querySelector('[data-k="prules"]'); if (PLAY[id].rules === false) rul.remove(); const rulesOn = on => { ov.classList.toggle('exv-rul', on); };
         try { if (!localStorage.getItem('aicoding-museum-' + id + '-rules-seen')) rul.classList.add('new'); } catch (x) {}
         rul.onclick = () => { if (!V3 || !V3.obj || lock) return; rul.disabled = true;
           Promise.all([load('museum/play.js?v=' + V), load('museum/rules.js?v=' + V), load('museum/rules-tx-en.js?v=' + V), lang !== 'en' ? load('museum/rules-tx-' + lang + '.js?v=' + V) : 0]).then(() => { rul.disabled = false; if (!V3 || V3.ov !== ov || !window.AtlasMuseumPlay) return;
