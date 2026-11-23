@@ -372,7 +372,7 @@
 - 遊べる所蔵品（セネト・木画紫檀棊局・木画紫檀双六局・バリンダリー）は、ポータルのホームのアイコンとゲーム一覧の「ヒストリカル」に並ぶ。どちらも **MUSEUM バッジ**（黒地に金の枠。サイトのトップページと同じ意匠）を付け、押すと博物館のその展示品（`#museum/<id>`）が開く。
 - ポータル自身のゲームではないので、番号・実績バー・盤面シート・ルール／ヒストリアのボタンは付かない。絞り込みは「すべて」「ヒストリカル」と検索に掛かる。
 - 定義は `atlas/museum/mu-games.js`（`window.ATLAS_MU`：14言語の名前と説明。トップページ index.html の mus/mug/mud/mub と同じ文）と `atlas/app.js` の `MU_GAMES`。**遊べる展示を増やしたら両方（とトップページ）に足す。**
-- アイコンは実物のモデルを角から見た透過画像 `images/atlas/mu-<id>.webp`（320px）。`atlas/tools/exicon.html?id=<id>` で描く。一覧カードの絵は展示のサムネイル `images/atlas/ex/<id>.webp`。
+- アイコンは既存のゲームアイコンと同じ規則で作る（2026-11-23 ユーザー）。ポータル：`atlas/icons3d.js` の `ICONS['mu-<id>']`（所蔵品の切れ端を土台に、駒を大きく）→ `atlas/tools/icons.html` → `icon-post.py` → `images/atlas/mu-<id>.webp`。トップページ：`images/icons/mu-<id>.svg`（96の角丸・金の細枠）。一覧カードの絵は展示のサムネイル `images/atlas/ex/<id>.webp`。
 
 ## 2026-11-23：ウルの王族のゲーム盤でも遊べる
 

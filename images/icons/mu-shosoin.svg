@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <defs>
+    <clipPath id="mg-c"><rect width="96" height="96" rx="20"/></clipPath>
+    <linearGradient id="mg-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6e2a1e"/><stop offset="1" stop-color="#32100c"/></linearGradient>
+    <radialGradient id="mg-in" cx=".36" cy=".3" r=".8"><stop offset="0" stop-color="#5a63a8"/><stop offset=".6" stop-color="#2f3266"/><stop offset="1" stop-color="#1a1b3c"/></radialGradient>
+    <radialGradient id="mg-re" cx=".36" cy=".3" r=".8"><stop offset="0" stop-color="#e2506a"/><stop offset=".6" stop-color="#a81d36"/><stop offset="1" stop-color="#5e0c1c"/></radialGradient>
+  </defs>
+  <g clip-path="url(#mg-c)">
+    <rect width="96" height="96" fill="url(#mg-bg)"/>
+    <g stroke="#2a0c08" stroke-opacity=".35" stroke-width="1.2" fill="none"><path d="M-4 22c30 6 60-6 104 2M-4 50c36-8 60 8 104-2M-4 76c30 6 66-8 104 0"/></g>
+  <rect x="2.5" y="2.5" width="91" height="91" rx="18" fill="none" stroke="#d7ae55" stroke-width="2"/>
+    <g stroke="#f0e2bd" stroke-width="1.6" fill="none"><path d="M16 0V96M37.3 0V96M58.7 0V96M80 0V96M0 16H96M0 37.300H96M0 58.700H96M0 80H96"/></g>
+    <g transform="translate(58.7 37.3)"><g fill="#f0e2bd"><circle r="1.7"/><ellipse cx="0" cy="-4.2" rx="1.5" ry="2.3"/><ellipse cx="0" cy="4.2" rx="1.5" ry="2.3"/><ellipse cx="-4.2" cy="0" rx="2.3" ry="1.5"/><ellipse cx="4.2" cy="0" rx="2.3" ry="1.5"/></g></g>
+    <ellipse cx="38.5" cy="62.5" rx="12.5" ry="11.5" fill="#000" opacity=".35"/>
+    <circle cx="37.3" cy="58.7" r="12.5" fill="url(#mg-in)" stroke="#11122a" stroke-width=".8"/>
+    <g transform="translate(37.3 58.7) scale(2.1)"><path d="M-3.4 .6c1.6-2.8 4.4-2.6 6-.4l1.6-.6-1 1.6c-.8 2-3.4 2.6-5 1.400l-2 .8z" fill="#f2e6c4"/><circle cx="1.7" cy="-.300" r=".45" fill="#3a2a18"/></g>
+    <ellipse cx="59.9" cy="20" rx="12.5" ry="11.5" fill="#000" opacity=".35"/>
+    <circle cx="58.7" cy="16" r="12.5" fill="url(#mg-re)" stroke="#3c0812" stroke-width=".8"/>
+    <g transform="translate(58.7 16) scale(-2.1 2.1)"><path d="M-3.4 .6c1.6-2.8 4.4-2.6 6-.4l1.6-.6-1 1.6c-.8 2-3.4 2.6-5 1.400l-2 .8z" fill="#f2e6c4"/><circle cx="1.7" cy="-.300" r=".45" fill="#3a2a18"/></g>
+    <ellipse cx="17.2" cy="41.2" rx="12.5" ry="11.5" fill="#000" opacity=".35"/>
+    <circle cx="16" cy="37.3" r="12.5" fill="url(#mg-re)" stroke="#3c0812" stroke-width=".8"/>
+    <g transform="translate(16 37.3) scale(2.1)"><path d="M-3.4 .6c1.6-2.8 4.4-2.6 6-.4l1.6-.6-1 1.6c-.8 2-3.4 2.6-5 1.400l-2 .8z" fill="#f2e6c4"/><circle cx="1.7" cy="-.300" r=".45" fill="#3a2a18"/></g>
+    <ellipse cx="81.2" cy="62.5" rx="12.5" ry="11.5" fill="#000" opacity=".35"/>
+    <circle cx="80" cy="58.7" r="12.5" fill="url(#mg-in)" stroke="#11122a" stroke-width=".8"/>
+    <g transform="translate(80 58.7) scale(-2.1 2.1)"><path d="M-3.4 .6c1.6-2.8 4.4-2.6 6-.4l1.6-.6-1 1.6c-.8 2-3.4 2.6-5 1.400l-2 .8z" fill="#f2e6c4"/><circle cx="1.7" cy="-.300" r=".45" fill="#3a2a18"/></g>
+  </g>
+</svg>

@@ -715,7 +715,7 @@
   const MU_COL = { senet: '#8a6a3a', shosoin: '#7a2a22', sugoroku: '#6a3a22', ballinderry: '#5a4630' };
   const MU_GAMES = Object.keys(window.ATLAS_MU || {}).map(k => ({ id: 'mu-' + k, mu: k, cat: 'hist', tags: ['ai'], color: MU_COL[k] || '#7a5a36', href: 'atlas/#museum/' + k, name: ATLAS_MU[k].n }));
   const muName = g => g.name[lang] || g.name.en, muDesc = g => { const d = ATLAS_MU[g.mu].d; return d[lang] || d.en; };
-  const muArt = g => `<img src="../images/atlas/mu-${g.mu}.webp?v=1" alt="" loading="lazy" decoding="async">`;
+  const muArt = g => `<img src="../images/atlas/mu-${g.mu}.webp?v=2" alt="" loading="lazy" decoding="async">`;
   const MU_OF = { senet: 'senet', shosoin: 'go', ballinderry: 'tafl' };   // the game played on it (the card's one-line: 博物館 · セネト)
   const muTl = g => { const o = A_.GAMES.find(x => x.id === MU_OF[g.mu]); return t('tab.museum') + (o ? ' · ' + gname(o) : ''); };
   const MU_BADGE = '<span class="badge museum">MUSEUM</span>';

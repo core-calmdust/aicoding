@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <defs>
+    <clipPath id="ms-c"><rect width="96" height="96" rx="20"/></clipPath>
+    <linearGradient id="ms-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#33241a"/><stop offset="1" stop-color="#120b07"/></linearGradient>
+    <linearGradient id="ms-eb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a2f1e"/><stop offset="1" stop-color="#1e120a"/></linearGradient>
+    <linearGradient id="ms-iv" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbf1d8"/><stop offset="1" stop-color="#d9c393"/></linearGradient>
+    <linearGradient id="ms-go" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6dc8a"/><stop offset="1" stop-color="#b98a2e"/></linearGradient>
+  </defs>
+  <g clip-path="url(#ms-c)">
+    <rect width="96" height="96" fill="url(#ms-bg)"/>
+  <rect x="2.5" y="2.5" width="91" height="91" rx="18" fill="none" stroke="#d7ae55" stroke-width="2"/>
+    <ellipse cx="48" cy="82" rx="36" ry="3.5" fill="#000" opacity=".35"/>
+    <path d="M12 79h72l-4-5H16z" fill="url(#ms-eb)" stroke="#0c0704" stroke-width=".8"/>
+    <path d="M20 74V62h5v12zM71 74V62h5v12z" fill="url(#ms-eb)" stroke="#0c0704" stroke-width=".8"/>
+    <rect x="19" y="72" width="7" height="2.4" fill="url(#ms-go)"/><rect x="70" y="72" width="7" height="2.4" fill="url(#ms-go)"/>
+    <rect x="13" y="41" width="70" height="22" rx="1.5" fill="url(#ms-eb)" stroke="#0c0704" stroke-width="1"/>
+    <rect x="15.5" y="48.5" width="65" height="8" fill="url(#ms-go)"/>
+    <g fill="#2a170c"><rect x="19" y="50" width="1.6" height="5"/><circle cx="25" cy="52.5" r="1.8"/><path d="M30 55l2.5-5 2.5 5z"/><rect x="38" y="50" width="4.5" height="1.4"/><rect x="38" y="53.4" width="4.5" height="1.4"/><circle cx="47.5" cy="52.5" r="1.8"/><rect x="52" y="50" width="1.6" height="5"/><path d="M57 55l2.5-5 2.5 5z"/><rect x="65" y="50" width="4.5" height="1.4"/><rect x="65" y="53.4" width="4.5" height="1.4"/><circle cx="75" cy="52.5" r="1.8"/></g>
+    <g fill="url(#ms-iv)" stroke="#1a0f08" stroke-width=".8"><path d="M13 41l6-9h13l-3 9z"/><path d="M29 41l3-9h13l-1 9z"/><path d="M44 41l1-9h13l1 9z"/><path d="M59 41l-1-9h13l3 9z"/><path d="M74 41l-3-9h6l6 9z"/></g>
+    <ellipse cx="30" cy="35.5" rx="8" ry="2.2" fill="#000" opacity=".3"/>
+    <path d="M23 34.5c0 2.2 14 2.2 14 0v-2.6c-1.8-1.2-3.4-3-3.4-5.4s1.6-4.2 3.4-5.4v-2.6c0-2-14-2-14 0v2.6c1.8 1.2 3.4 3 3.4 5.4s-1.6 4.2-3.4 5.4z" fill="url(#ms-iv)" stroke="#6e5434" stroke-opacity=".6"/>
+    <ellipse cx="30" cy="18.4" rx="7" ry="1.9" fill="#fffaf0"/>
+    <ellipse cx="62" cy="36" rx="8" ry="2.2" fill="#000" opacity=".3"/>
+    <path d="M55 35.5c0 2.4 14 2.4 14 0l-4.8-15c-.7-2.2-3.7-2.2-4.4 0z" fill="#1c110a" stroke="#5a4130" stroke-width=".8"/><circle cx="62" cy="19.5" r="3" fill="#1c110a" stroke="#5a4130" stroke-width=".8"/>
+  </g>
+</svg>
