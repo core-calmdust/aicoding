@@ -6,7 +6,7 @@
 //            (the zugzwang the lesson is about — not a tactical shot).
 //   endwin ⑦ after the answer every legal reply of the opponent loses with best play (the "give the opponent no counter" the words
 //            promise), i.e. the win is truly forced and quickest.
-// node tools/lesson-verify.js [connect4,mancala,gomoku]
+// node tools/lesson-verify.js [connect4,mancala,gomoku,dots]
 'use strict';
 const path = require('path');
 const ROOT = path.join(__dirname, '..');
@@ -273,12 +273,99 @@ function gomoku(opt) {
     }); });
   return out;
 }
-const GAMES = { connect4, mancala, gomoku };
+// dots & boxes (2026-11-23 第2期)：the lessons in DT_DONE, every problem (problem 0 is the worked example of the 2D intro and the 3D
+// intro; 1–5 are the 3D lesson; 1 + four of 2–9 the 2D lesson), with the exact solver (dots/engine.js Solver.all, every legal line):
+//   ① the stored value of every legal line equals the solver's   ② the best value is at least one box (2) above the next, and no
+//      worse line counts as right (16+ points) in the 2D (dots/learn.js rankPoints) or the 3D (atlas/lessons3d.js dRank) scoring
+//      ⑨ the two scorings agree on every line   ③ at least 3 legal lines and at least 2 worse than the best
+//   ④ the lesson's move: safe = a 3×3 board, no box to take, the best lines are exactly the safe lines; third = the same on a 4×4 with
+//      a trap (an inner line safe on one side, a third side on the other); take = a box to take and every best line takes one;
+//      chain = no safe line, nothing to take, the best lines hand over the fewest boxes and the other lines do not all hand over as few
+//   ⑤ no other problem of the game (every lesson, the puzzles) within 2 lines (the 8 symmetries)
+//   ⑥ problems 1–9 get no easier (d: safe / third = the unsafe lines that touch a box of 0–1 sides, take = the lines that take
+//      nothing, chain = the chains and loops) and the last is harder than problem 1
+//   ⑦⑧ ハコピヨ's words (atlas/lessons3d.js dotsJa, run here) against the board: the boxes the red line hands over (≥1 when the
+//      words say so) and the boxes lost ((best − v) / 2), no 「開く」 for a line that takes, the question's 「1本」 / 「広い盤」 and the
+//      2D example's 「緑の点線も安全な線で、どれを選んでも同じ結果」 (problem 0 has other safe lines, all best)
+const DT_DONE = new Set(['safe', 'third', 'take', 'chain']);
+function dots(opt) {
+  const fs = require('fs'), vm = require('vm');
+  const E = require(path.join(ROOT, 'dots/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'dots/lessons.json'), 'utf8'));
+  const src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8');
+  const X = vm.runInNewContext(src.slice(src.indexOf('  const DK = '), src.indexOf('  const DOTS = {')) + '\n;({ dDecE, dDecV, dRank, dFacts, dotsJa, DTJ })', {});
+  const lj = fs.readFileSync(path.join(ROOT, 'dots/learn.js'), 'utf8'), rp = lj.slice(lj.indexOf('function rankPoints('), lj.indexOf('\n}\n', lj.indexOf('function rankPoints(')) + 3);
+  const RP = vm.runInNewContext(rp + ';rankPoints', {});
+  const out = [], only = opt && opt.only, add = (id, j, m) => out.push({ step: id, q: j + 1, msg: m });
+  const pool = []; L.steps.forEach(st => st.problems.forEach((q, j) => pool.push([`${st.id} q${j + 1}`, q])));
+  for (const f of fs.readdirSync(path.join(ROOT, 'dots/puzzles'))) { const d = JSON.parse(fs.readFileSync(path.join(ROOT, 'dots/puzzles', f), 'utf8'));
+    (d.levels || []).forEach((lv, i) => (lv || []).forEach((q, j) => { if (q && q.e) pool.push([`puzzle ${d.cat} ${i + 1}-${j + 1}`, q]); })); }
+  const dist = (a, b) => { if (a.n !== b.n) return 99; const G = E.geom(a.n, a.n), A = X.dDecE(a.e), B = new Set(X.dDecE(b.e)); let best = 99;
+    for (const P of G.perms) { const A2 = new Set(A.map(e => P[e])); let d = 0; for (const e of A2) if (!B.has(e)) d++; for (const e of B) if (!A2.has(e)) d++; best = Math.min(best, d); } return best; };
+  const plain = t => String(t || '').replace(/<[^>]+>/g, '');
+  L.steps.forEach((st, si) => { const id = st.id; if (!DT_DONE.has(id) || (only && !only.has(id))) return;
+    let prevD = -1, firstD = null;
+    st.problems.forEach((q, j) => { const a = m => add(id, j, m), G = E.geom(q.n, q.n), edges = X.dDecE(q.e), p = E.Pos.from(G, edges), lg = p.legal();
+      const S = new E.Solver(G), all = S.all(p), V = new Map(X.dDecV(q.v)), vs = all.map(x => x.v), best = Math.max(...vs);
+      // ①
+      for (const x of all) if (V.get(x.m) !== x.v) a(`① line ${x.m}: stored ${V.get(x.m)}, the solver ${x.v}`);
+      if (V.size !== lg.length) a(`① ${V.size} stored values for ${lg.length} legal lines`);
+      const B = all.filter(x => x.v === best).map(x => x.m), worse = all.filter(x => x.v < best), sec = worse.length ? Math.max(...worse.map(x => x.v)) : null;
+      // ② ⑨
+      if (sec !== null && best - sec < 2) a(`② the next line is only ${best - sec} below the best`);
+      const vals = all.map(x => [x.m, x.v]);
+      for (const x of all) { const p2 = RP(vals, x.v), p3 = X.dRank(vals, x.v); if (p2 !== p3) a(`⑨ line ${x.m}: the 2D scores ${p2}, the 3D ${p3}`);
+        if (x.v < best && Math.max(p2, p3) >= 16) a(`② line ${x.m} (${x.v} < ${best}) scores ${Math.max(p2, p3)} (counted right)`); }
+      // ③
+      if (lg.length < 3 || worse.length < 2) a(`③ ${lg.length} legal lines, ${worse.length} worse than the best`);
+      // ④
+      const safe = lg.filter(e => p.isSafe(e)), cap = p.hasCapture(), F = X.dFacts(q.n, edges), same = (x, y) => x.length === y.length && x.every(e => y.includes(e));
+      const cntOf = bx => bx < 0 ? -1 : p.cnt[bx], trap = lg.filter(e => !p.isSafe(e) && G.eb1[e] >= 0 && [G.eb0[e], G.eb1[e]].some(bx => cntOf(bx) <= 1));
+      let d = 0;
+      if (id === 'safe' || id === 'third') {
+        if (q.n !== (id === 'safe' ? 3 : 4)) a(`④ a ${q.n}×${q.n} board (the lesson's: ${id === 'safe' ? 3 : 4}×${id === 'safe' ? 3 : 4})`);
+        if (cap) a('④ a box to take'); if (!same(B, safe)) a(`④ the best lines ${B} are not the safe lines ${safe}`);
+        if (id === 'third' && !trap.length) a('④ no inner line that is safe on one side only');
+        d = lg.filter(e => !p.isSafe(e) && [G.eb0[e], G.eb1[e]].some(bx => bx >= 0 && p.cnt[bx] <= 1)).length;
+      } else if (id === 'take') {
+        if (!cap) a('④ no box to take'); if (!B.every(e => p.completes(e) > 0)) a(`④ a best line takes nothing (${B.filter(e => !p.completes(e))})`);
+        d = lg.filter(e => !p.completes(e)).length;
+      } else if (id === 'chain') {
+        if (safe.length || cap) a(`④ ${safe.length} safe lines, a box to take: ${cap}`);
+        const m = e => F.of(e).m, mn = Math.min(...lg.map(m));
+        if (!B.every(e => m(e) === mn)) a(`④ a best line hands over ${B.map(m)} boxes, the fewest is ${mn}`);
+        if (lg.every(e => m(e) === mn)) a('④ every line hands over as few boxes');
+        d = E.components(p, false).length;
+      }
+      // ⑥ (problem 0 is the worked example)
+      if (j >= 1) { if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
+        if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 2 (d ${d} vs ${firstD})`); }
+      // ⑤
+      for (const [who, r] of pool) { if (r === q) continue; const e = dist(q, r); if (e <= 2) a(`⑤ ${e} lines from ${who}`); }
+      // ⑦ ⑧ the 3D words (problems 1–5) and the 2D example's caption (problem 0)
+      if (j === 0 && id === 'safe' && !(safe.length >= 2 && same(B, safe))) a(`⑧ the example's 「緑の点線も安全な線で、どれを選んでも同じ結果」: ${safe.length} safe lines, best ${B}`);
+      if (j >= 1 && j <= 5) { const i = j - 1, ask = X.DTJ[id].ask[i % 5], P = { values: vals }, ans = B[0], W = X.dotsJa(st, F, P, ans, i, si);
+        if (/1本/.test(plain(ask)) && B.length !== 1) a(`⑧ the question 「${ask}」 with ${B.length} best lines`);
+        if (/広い盤/.test(ask) && q.n < 4) a(`⑧ the question 「${ask}」 on a ${q.n}×${q.n}`);
+        const g = plain(W.good(ans)), fb = F.of(ans);
+        if (/\{|undefined|NaN/.test(g)) a(`⑧ the praise 「${g}」`);
+        if (fb.cls === 'take' && !g.includes(String(fb.k)) && /\d箱|箱を\d/.test(g)) a(`⑧ the praise 「${g}」: the line takes ${fb.k}`);
+        for (const x of worse) { const t = plain(W.ng(x.m)), fx = F.of(x.m), L2 = (best - x.v) / 2;
+          if (/\{|undefined|NaN/.test(t)) { a(`⑧ the words for line ${x.m}: 「${t}」`); continue; }
+          const n = t.match(/(\d+)箱の差|(\d+)箱ぶん、もったいない|(\d+)箱ちがって/); if (n && +(n[1] || n[2] || n[3]) !== L2) a(`⑦ line ${x.m}: the words say ${n[0]}, the solver ${L2} boxes`);
+          if (!n) a(`⑦ line ${x.m}: the words do not say the boxes lost (${L2})`);
+          if (/(^|[^\d])0箱/.test(t)) a(`⑦ line ${x.m}: 「${t}」 (0 boxes)`);
+          const g2 = t.match(/相手に(\d+)箱|(\d+)箱が相手|(\d+)箱をぺろり|(\d+)箱が渡る|(\d+)箱を丸ごと|(\d+)箱の鎖|(\d+)箱あげる|(\d+)箱を渡す|(\d+)箱をまとめて|(\d+)箱をごっそり/);
+          if (g2) { const k = +g2.slice(1).find(Boolean); if (k !== fx.m) a(`⑦ line ${x.m}: the words say ${g2[0]}, the line hands over ${fx.m}`); }
+          if (fx.cls === 'take' && /開/.test(t)) a(`⑦ line ${x.m} takes a box, the words say it opens: 「${t}」`); } }
+    }); });
+  return out;
+}
+const GAMES = { connect4, mancala, gomoku, dots };
 module.exports = GAMES; GAMES.mancalaWords = mancalaWords;   // (not a game of the CLI: the words pass alone, for tests)
 if (require.main === module) {
-  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku').split(',');
+  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots').split(',');
   let bad = 0;
-  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'connect4' ? ' (count/endwin の⑦⑧)' : ` (${[...(g === 'gomoku' ? GM_DONE : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
+  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'connect4' ? ' (count/endwin の⑦⑧)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
     bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
   process.exit(bad ? 1 : 0);
 }

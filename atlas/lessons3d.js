@@ -6513,7 +6513,7 @@
      texts content/text.<lang>.json (a sandbox). The hint: the safe lines in gold (the steps about safe lines) or the step's words. */
   const DK = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
   const dDecE = x => [...x].map(c => DK.indexOf(c)), dDecO = x => [...x].map(c => c === '.' ? -1 : +c), dDecV = x => [...x].map((c, e) => c === '.' ? null : [e, DK.indexOf(c) - 30]).filter(Boolean);
-  const dRank = (vals, mine) => { const d = [...new Set(vals.map(x => x[1]))].sort((a, b) => b - a); if (d.length <= 1) return 20; const i = d.indexOf(mine); return i < 0 ? 0 : Math.max(0, Math.round(20 * (d.length - 1 - i) / (d.length - 1))); };
+  const dRank = (vals, mine) => { const d = [...new Set(vals.map(x => x[1]))].sort((a, b) => b - a); if (d.length <= 1) return 20; const i = d.indexOf(mine); return i < 0 ? 0 : i === 0 ? 20 : Math.min(15, Math.max(0, Math.round(20 * (d.length - 1 - i) / (d.length - 1)))); };   // (= dots/learn.js rankPoints: a worse line never reaches 16)
   const dSafe = (n, edges) => { const HN = (n + 1) * n, E = HN + n * (n + 1), on = new Set(edges), be = bx => { const r = Math.floor(bx / n), c = bx % n; return [r * n + c, (r + 1) * n + c, HN + r * (n + 1) + c, HN + r * (n + 1) + c + 1]; };
     const cnt = bx => be(bx).filter(e => on.has(e)).length, eb = e => { const o = []; for (let bx = 0; bx < n * n; bx++) if (be(bx).includes(e)) o.push(bx); return o; };
     const out = []; for (let e = 0; e < E; e++) if (!on.has(e) && eb(e).every(bx => cnt(bx) < 2)) out.push(e); return out; };
@@ -6545,7 +6545,7 @@
       ask: ['取れる箱があるよ！ どの線を引く？', '箱が取れそう。いちばんいい線は？', '3本で囲まれた箱、見つけた？', 'ごちそうが待ってる！ どこに引こうか？', '最後の問題！ 取れる箱をどうする？'],
       hint: ['3本で囲まれた箱の、のこり1本はどこかな？', '線が3本の箱を探してみよう！', '取ったらもう1回引けるのを忘れずに！', '4本目を引けば、その箱はきみのもの！', 'ほかの線を引くと、相手がその箱を取っちゃうよ？'] },
     chain: { intro: '安全な線がなくなると、どこに引いても箱をあげることになる。盤は、箱がつながった<b>鎖</b>と、輪になった<b>ループ</b>に分かれているんだ。<br>開いた鎖は相手が丸ごと取るから、あげるなら<b>いちばん短い鎖</b>から！',
-      ask: ['どこに引いても箱をあげちゃう…。損がいちばん少ない線は？', 'どの鎖から開く？', 'いちばん安くすむ線、わかる？', 'あげる箱を少なくするなら、どこかな？', 'ラスト！ 最小の損ですむ1本は？'],
+      ask: ['どこに引いても箱をあげちゃう…。損がいちばん少ない線は？', 'どの鎖から開く？', 'いちばん安くすむ線、わかる？', 'あげる箱を少なくするなら、どこかな？', 'ラスト！ 差し出すなら、どの鎖がいちばん安い？'],
       hint: ['つながった箱を数えて、いちばん短い鎖を探してみて！', '1箱だけの鎖はないかな？', '長い鎖を開くと、相手が丸ごと持っていっちゃう！', '鎖ごとに箱を数えて、くらべてみよう。', '開いた鎖の箱は、全部相手のものになると思ってね！'] },
     hard: { intro: '2箱の鎖を<b>端の線</b>で開くと、相手は2箱を取らずに先の線を引いて「返す」ことができる。手番を押しつけられちゃうんだ。<br><b>真ん中の線</b>で開けば1箱ずつに分かれて、相手は返せない！',
       ask: ['2箱の鎖をあげる場面。いちばんいい線はどれ？', 'この鎖は、どこから開く？', '相手に返させない開き方、わかる？', '箱をあげるなら、どの線で？', 'ラスト！ 上手なあげ方を見せて！'],
@@ -6666,7 +6666,7 @@
     load(lang) {
       const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261021L`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
       if (this.p) return this.p.then(() => T()).then(() => this);
-      return (this.p = Promise.all([getJ('../dots/lessons.json?v=20261116'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
+      return (this.p = Promise.all([getJ('../dots/lessons.json?v=20261123'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
         .then(([ls, X]) => { const w = {}; try { new Function('window', 'with (window) {' + X + '\n}')(w); } catch (e) { console.warn('[lessons3d] dots texts', e); } this.I = w.I18N || {}; this.data = { ls }; return T(); }).then(() => this)
         .catch(e => { this.p = null; throw e; }));
     },

@@ -2,7 +2,7 @@
  * categorized puzzles (詰めドット) and the daily puzzle. Loaded before the main script; uses its globals at run time.
  * All positions and move values come from the exact solvers (see the repository notes); nothing here is heuristic. */
 'use strict';
-const LV = '?v=20261021L';
+const LV = '?v=20261123L';
 const LSTORE2 = 'dots-lessons-v2', PSTORE2 = 'dots-puzzles-v2', PKEEP = 'dots-pz-keep-v1', OSTORE = 'dots-openings-v1', RSTORE = 'dots-rules-v1';
 const K64L = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 const decE = s => [...s].map(c => K64L.indexOf(c));
@@ -405,7 +405,7 @@ function finalAt(pr, v) { const sc = [0, 0]; let filled = 0; pr.owners.forEach(o
 function rankPoints(values, mine) {
   const d = [...new Set(values.map(x => x[1]))].sort((a, b) => b - a);
   if (d.length <= 1) return 20;
-  const i = d.indexOf(mine); return Math.max(0, Math.round(20 * (d.length - 1 - i) / (d.length - 1)));
+  const i = d.indexOf(mine); return i === 0 ? 20 : Math.min(15, Math.max(0, Math.round(20 * (d.length - 1 - i) / (d.length - 1))));   // (2026-11-23 第2期: a line worse than the best never counts as right — with 6+ values the 2nd best got 16)
 }
 function startLessonL(i) {
   endPuzzle(true); if (lesson) endLesson(true);
