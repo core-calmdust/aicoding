@@ -21,6 +21,9 @@
     { id: 'lewis', color: '#3e4a5c', cover: { ex: 'lewis' }, mins: 3, sec: [null, null, null, null, null], links: [{ ex: 'lewis' }, { g: 'chess' }, { room: 'paint' }] },
     { id: 'tafl', color: '#2f4f3a', cover: { ex: 'ballinderry' }, mins: 3, sec: [null, null, null, null, null], links: [{ g: 'tafl' }, { ex: 'ballinderry' }] },
     { id: 'goose', color: '#5a6e2a', cover: { ex: 'goose' }, mins: 3, sec: [null, null, null, null, null], links: [{ ex: 'goose' }, { room: 'chance' }, { g: 'backgammon' }] },
+    { id: 'shogi', color: '#6b4a24', cover: { ex: 'kofukuji' }, mins: 3, sec: [null, null, null, null, null], links: [{ g: 'shogi' }, { ex: 'kofukuji' }, { paint: 'shogi' }] },
+    { id: 'pachisi', color: '#a0482a', cover: { paint: 'chaupar' }, mins: 3, sec: [null, null, null, null, null], links: [{ g: 'ludo' }, { paint: 'chaupar' }, { room: 'chance' }] },
+    { id: 'go', color: '#33404a', cover: { ex: 'shosoin' }, mins: 3, sec: [null, null, null, null, null], links: [{ g: 'go' }, { ex: 'shosoin' }, { ex: 'sugoroku' }] },
   ];
   const src = p => p.ex ? `../images/atlas/ex/${p.ex}.webp` : `../images/atlas/paint/${p.paint}-t.webp?v=1`;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
