@@ -1486,8 +1486,8 @@ html.bv-pland .urtoast{top:calc(52px + var(--sat,env(safe-area-inset-top)));left
 .rgd-act .dots i{width:8px;height:8px;border-radius:50%;background:var(--line)}.rgd-act .dots i.done{background:var(--sun)}.rgd-act .dots i.on{background:var(--coral);width:20px;border-radius:99px}
 .rgd-act .btn.big{min-width:150px}
 .rgd-act .btn.rgd-auto{position:relative;overflow:hidden;isolation:isolate}
-.rgd-act .btn.rgd-auto::before{content:"";position:absolute;inset:0;z-index:-1;background:rgba(255,255,255,.22);transform-origin:left;animation:rgdT var(--rgt,2s) linear var(--rgd0,0ms) forwards}
-.rgd-act .btn.rgd-auto::after{content:"";position:absolute;left:10px;right:10px;bottom:4px;height:4px;border-radius:4px;background:rgba(255,255,255,.95);box-shadow:0 0 6px rgba(255,255,255,.7);transform-origin:left;animation:rgdT var(--rgt,2s) linear var(--rgd0,0ms) forwards}
+.rgd-act .btn.rgd-auto::before{content:"";position:absolute;inset:0;z-index:-1;background:color-mix(in srgb,var(--coral,#ff7a59) 22%,transparent);transform-origin:left;animation:rgdT var(--rgt,2s) linear var(--rgd0,0ms) forwards}
+.rgd-act .btn.rgd-auto::after{content:"";position:absolute;left:10px;right:10px;bottom:4px;height:5px;border-radius:5px;background:var(--coral,#ff7a59);box-shadow:0 0 0 1px rgba(255,255,255,.9);transform-origin:left;animation:rgdT var(--rgt,2s) linear var(--rgd0,0ms) forwards}
 [dir=rtl] .rgd-act .btn.rgd-auto::before,[dir=rtl] .rgd-act .btn.rgd-auto::after{transform-origin:right}
 @keyframes rgdT{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .rgd-act .btn.wait{background:#fff;color:var(--ink2);box-shadow:inset 0 0 0 2px var(--line);animation:rgWait 1.4s ease-in-out infinite}
@@ -2563,9 +2563,9 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="../shared/tick.js?v=2"></script>
 <script src="gamelist.js?v=49"></script>
 <link rel="stylesheet" href="worldmap.css?v=19">
-<link rel="stylesheet" href="museum.css?v=36">
+<link rel="stylesheet" href="museum.css?v=37">
 <script src="worldmap.js?v=40"></script>
-<script src="museum.js?v=139"></script>
+<script src="museum.js?v=140"></script>
 <script src="npc/npc.js?v=50"></script>
 <script src="avtalk.js?v=4"></script>
 <script>/* Page states as classes on <html> (2026-11-21) — html.cov-on: the 3D view / Historia / a sheet / a level sheet is open;

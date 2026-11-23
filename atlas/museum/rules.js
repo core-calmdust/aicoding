@@ -256,16 +256,19 @@
     const DISC = new TH.CircleGeometry(1, 36); DISC.rotateX(-Math.PI / 2);
     const BAR = new TH.BoxGeometry(1.5, .04, .2);
     const pulse = []; let pulseOn = false;
+    // the piece to pick glows itself (2026-11-23, the user: "光っているコマ" and nothing on the piece lit): a shell of light over each of its meshes, pulsing
+    const shells = [];
+    const glowOn = (p, col) => { p.m.traverse(o => { if (!o.isMesh || o.userData.shell) return; const sh = new TH.Mesh(o.geometry, new TH.MeshBasicMaterial({ color: col, transparent: true, opacity: .4, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); sh.userData = { shell: true, s: 1.05, o: .5 }; sh.scale.setScalar(1.05); sh.renderOrder = 4; shells.push([o, sh]); }); shells.forEach(([o, sh]) => { if (!sh.parent) { o.add(sh); pulse.push(sh); } }); };
     function pulseLoop() { if (stopped || !pulse.length) { pulseOn = false; return; } const k = .5 + .5 * Math.sin(performance.now() / 280); pulse.forEach(m => { m.scale.setScalar(m.userData.s * (.92 + k * .14)); m.material.opacity = m.userData.o * (.65 + k * .35); }); kick(); setTimeout(() => requestAnimationFrame(pulseLoop), 50); }
     function mark(kind, t, col) {
       const [x, y, z] = LY.spot(t), s = LY.sc, p = kind === 'ring' ? at(t) : null, pp = p ? LY.pos(p.loc) : null, py = p ? pp[1] + LY.sc * .04 : y;   // (at the foot of the piece: seen from above a ring up in the air drifts off it — 2026-11-23)   // (where the piece rests — it may still be dropping in: 2026-11-23 丸の位置ズレ)
       let m;
       if (kind === 'ban') { m = new TH.Group(); [1, -1].forEach(a => { const b = new TH.Mesh(BAR, mat(0xff5d5d, .95)); b.rotation.y = a * Math.PI / 4; m.add(b); }); m.scale.setScalar(s * 1.2); m.position.set(x, y + .03 * s, z); MG.add(m); return; }
       m = new TH.Mesh(kind === 'ring' ? RING : DISC, mat(col, kind === 'ring' ? .95 : kind === 'dest' ? .6 : .4)); m.userData.s = s * (kind === 'ring' ? 1.05 : .95); m.userData.o = m.material.opacity;
-      m.scale.setScalar(m.userData.s); m.position.set(p ? pp[0] : x, (kind === 'ring' ? py : y) + .03 * s, p ? pp[2] : z); if (p) m.userData.piece = p; m.renderOrder = 3; MG.add(m);
+      m.scale.setScalar(m.userData.s); m.position.set(p ? pp[0] : x, (kind === 'ring' ? py : y) + .03 * s, p ? pp[2] : z); if (p) { m.userData.piece = p; glowOn(p, col); } m.renderOrder = 3; MG.add(m);
       if (kind !== 'glow') { pulse.push(m); if (!pulseOn) { pulseOn = true; requestAnimationFrame(pulseLoop); } }
     }
-    const clearMarks = () => { while (MG.children.length) MG.remove(MG.children[0]); pulse.length = 0; kick(); };
+    const clearMarks = () => { while (MG.children.length) MG.remove(MG.children[0]); shells.forEach(([o, sh]) => { o.remove(sh); sh.material.dispose(); }); shells.length = 0; pulse.length = 0; kick(); };
     function marks() {
       clearMarks(); const P = PAGES[step], st = P.task && P.task[si];
       (P.glow || []).forEach(t => mark('glow', t, P.gcol || 0xffd65a)); (P.ban || []).concat(xban).forEach(t => mark('ban', t));
@@ -296,7 +299,7 @@
     let done = false, xban = [];
 
     function show(n) {
-      clearTimeout(autoT); step = Math.max(0, Math.min(PAGES.length - 1, n)); si = 0; sel = null; done = false; xban = [];
+      clearTimeout(autoT); { const nb = el.querySelector('[data-a="next"]'); if (nb) nb.classList.remove('auto'); } step = Math.max(0, Math.min(PAGES.length - 1, n)); si = 0; sel = null; done = false; xban = [];
       const P = PAGES[step];
       setPieces(LY.list(P.set));
       if (id === 'senet') { showSticks(P.sticks || 5); sticks.forEach(s => { s.visible = step >= 2; }); }
@@ -312,7 +315,8 @@
       const P = PAGES[step]; si++; sel = null;
       if (si < P.task.length) { plate(kOf()); marks(); if (P.task[si].t === 'roll') { /* waits for the tap */ } return; }
       done = true; marks(); plate(''); say(words()[2] || ''); SND.ok();
-      if (!P.last) { const len = String(words()[2] || '').replace(/<[^>]+>/g, '').length; autoT = later(() => show(step + 1), Math.min(4800, 1600 + len * 45)); }
+      if (!P.last) { const len = String(words()[2] || '').replace(/<[^>]+>/g, '').length; const ms = Math.min(4800, 1600 + len * 45), nb = $('[data-a="next"]'); autoT = later(() => show(step + 1), ms);
+        nb.classList.remove('auto'); void nb.offsetWidth; nb.style.setProperty('--rgt', ms + 'ms'); nb.classList.add('auto'); }   // (the meter on つぎへ: how long until the page turns by itself, as on the portal's tours)
     }
     async function doStep(st, t) {
       busy = true; clearMarks();

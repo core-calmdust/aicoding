@@ -415,7 +415,9 @@ html.exv-rot .urtoast{rotate:90deg}
 .exrul-m{height:0;overflow:visible;font-size:14px;color:#ffb3a6;opacity:0;transition:opacity .2s;position:relative;top:4px}.exrul-m.on{opacity:1}
 .exrul-a{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding-top:9px;border-top:1px solid rgba(212,175,95,.22)}
 .exrul-a button{height:40px;padding:0 20px;border-radius:999px;border:1px solid rgba(212,175,95,.5);background:transparent;color:#efdcae;font:inherit;font-size:15px;font-weight:700;letter-spacing:.06em;cursor:pointer;white-space:nowrap}
-.exrul-a button.go{background:#f3ead6;color:#22170a;border-color:#f3ead6}.exrul-a button.go.last{background:linear-gradient(180deg,#f6dc8a,#d9b158);border-color:#f6dc8a}
+.exrul-a button.go{background:#f3ead6;color:#22170a;border-color:#f3ead6}
+.exrul-a button.go.auto{position:relative;overflow:hidden;isolation:isolate}.exrul-a button.go.auto::before{content:'';position:absolute;inset:0;z-index:-1;background:rgba(201,140,40,.3);transform-origin:left;animation:exrulT var(--rgt,2s) linear forwards}.exrul-a button.go.auto::after{content:'';position:absolute;left:10px;right:10px;bottom:4px;height:4px;border-radius:4px;background:#b8741a;transform-origin:left;animation:exrulT var(--rgt,2s) linear forwards}[dir=rtl] .exrul-a button.go.auto::before,[dir=rtl] .exrul-a button.go.auto::after{transform-origin:right}@keyframes exrulT{from{transform:scaleX(0)}to{transform:scaleX(1)}}   /* (the time left before the page turns by itself) */
+.exrul-a button.go.last{background:linear-gradient(180deg,#f6dc8a,#d9b158);border-color:#f6dc8a}
 .exrul-a .dots{display:flex;gap:5px;flex-wrap:wrap;justify-content:center}.exrul-a .dots i{width:6px;height:6px;border-radius:50%;background:rgba(241,228,198,.25)}.exrul-a .dots i.on{background:#d9b866;box-shadow:0 0 6px rgba(217,184,102,.8)}
 @media (max-width:640px){
   .exprul{height:36px;padding:0 11px}
