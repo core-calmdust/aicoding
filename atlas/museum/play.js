@@ -164,7 +164,7 @@
     // ウルの王族のゲーム盤 (2026-11-23 user: 博物館でも遊べるように、ポータルの3D盤も残す): the exhibit is the portal's own model, so the game's kit
     // builds the same board in the same place (its pieces, trays and dice with it) and the exhibit's own is put away meanwhile (ex/ur.js: play.hide)
     ur: { game: 'ur', size: 1, noContact: true, area: obj => { const U = obj.userData, w = (U.W || 8) / 2 + .8, d = (U.D || 3) / 2 + 1.2; return [-w, w, -d, d]; }, view: { long: true },
-      board(TH) { return new TH.Group(); } },
+      board(TH, obj) { const g = new TH.Group(); g.userData = obj.userData; return g; }, courseShow: true },   // (a rules course: the exhibit's own board stays, museum/rules.js lays its pieces and dice with the model's places)
   };
   let cur = null;
   function start(id, o) {
@@ -218,7 +218,7 @@
     // a rules course: the top bar's room above, the guide's panel below (its height as it stands)
     const coursePad = () => { const pe = stage.querySelector('.exrul'); return [56, (pe ? pe.offsetHeight : 180) + 22]; };
     const tgtB = V.tgt.clone(); apply(); V.playing = true;
-    const hid = ((V.obj.userData.play && V.obj.userData.play.hide) || []).filter(m => m.visible); hid.forEach(m => { m.visible = false; });   // the pieces and sticks laid out for show: put away during a game
+    const hid = (CM && def.courseShow ? [] : (V.obj.userData.play && V.obj.userData.play.hide) || []).filter(m => m.visible); hid.forEach(m => { m.visible = false; });   // the pieces and sticks laid out for show: put away during a game
     // beating the level's Atlamo boss gives its N / R / SR (no talk in the museum: quiet, 2026-11-23 user) — as in the portal's AI games (npc/npc.js), here in the case
     const npcT = !CM && (o.mode || 'ai') === 'ai' && window.AtlasNPC && AtlasNPC.portal ? AtlasNPC.portal({ game: def.game, level: o.level, quiet: true, host: V.ov,
       left: () => { const r = stage.getBoundingClientRect(); return [r.left + r.width / 2, r.width]; },
