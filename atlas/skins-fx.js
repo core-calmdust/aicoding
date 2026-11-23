@@ -44,7 +44,10 @@
   const LANTERN = () => `<svg viewBox="-70 -70 140 160"><defs><radialGradient id="lg"><stop offset="0" stop-color="#ffd27a" stop-opacity=".75"/><stop offset=".35" stop-color="#ffaa55" stop-opacity=".3"/><stop offset="1" stop-color="#ff8a40" stop-opacity="0"/></radialGradient><radialGradient id="lb" cx=".5" cy=".7" r=".7"><stop offset="0" stop-color="#fff4d0"/><stop offset=".45" stop-color="#ffc878"/><stop offset="1" stop-color="#f08a48" stop-opacity=".85"/></radialGradient></defs><circle cy="12" r="70" fill="url(#lg)" class="lh"/><path d="M-15 -12 C-15 -17 15 -17 15 -12 L19 36 C19 40 -19 40 -19 36 Z" fill="url(#lb)"/><ellipse cy="36" rx="12" ry="5" fill="#fff6d8" opacity=".9"/></svg>`;
   const HORSE = (c, pole) => `<svg viewBox="0 0 60 130"><rect x="28" y="0" width="4" height="130" fill="${pole}"/><path d="M8 74 C8 52 26 46 40 50 C46 38 56 40 54 56 C54 66 46 74 40 74 L42 92 L36 92 L33 76 L18 76 L16 92 L10 92 Z" fill="${c}"/></svg>`;
   // a carousel's horses going round inside its canopy (x0, y0, w, h: the opening in the grid)
-  const carousel = (x0, y0, w, h, cols, pole) => `<i class="pc" style="left:${x0}px;top:${y0}px;width:${w}px;height:${h}px;overflow:hidden">${[0, 1, 2, 3, 4, 5].map(i => `<i class="pc a-car" style="left:${w / 2 - 30}px;top:0;width:60px;height:${h}px;--dl:${(-i * 2).toFixed(2)}s"><b class="a-carb" style="animation-delay:${(-i * .7).toFixed(1)}s">${HORSE(cols[i % cols.length], pole)}</b></i>`).join('')}</i>`;
+  // (2026-11-24) the horses' front / back order was a z-index in their keyframes: a z-index animation runs on the main thread, so the
+  // whole scene was re-styled every frame. Now three stacked tiers (z auto · 1 · 2, as the keyframes had it) each hold a copy of
+  // every horse, shown only while that horse's z-index would have been the tier's (an opacity step animation, run by the compositor).
+  const carousel = (x0, y0, w, h, cols, pole) => `<i class="pc" style="left:${x0}px;top:${y0}px;width:${w}px;height:${h}px;overflow:hidden">${['a', '1', '2'].map(z => `<i class="pc" style="left:0;top:0;width:${w}px;height:${h}px">${[0, 1, 2, 3, 4, 5].map(i => `<i class="pc a-cz${z}" style="left:${w / 2 - 30}px;top:0;width:60px;height:${h}px;--dl:${(-i * 2).toFixed(2)}s"><i class="pc a-car" style="left:0;top:0;width:60px;height:${h}px;--dl:${(-i * 2).toFixed(2)}s"><b class="a-carb" style="animation-delay:${(-i * .7).toFixed(1)}s">${HORSE(cols[i % cols.length], pole)}</b></i></i>`).join('')}</i>`).join('')}</i>`;
   const NTRAIN = () => `<svg viewBox="-230 -40 460 70"><g fill="#2b2460">${[-200, -100, 0, 100].map(x => `<rect x="${x}" y="-20" width="92" height="40" rx="10"/>`).join('')}<path d="M110 -20 L160 -20 C190 -20 200 0 200 20 L110 20 Z"/><rect x="150" y="-36" width="16" height="18" rx="3"/></g><g fill="#ffe9a6">${[-200, -100, 0, 100].map(x => [0, 1, 2].map(i => `<rect x="${x + 10 + i * 27}" y="-12" width="18" height="14" rx="3"/>`).join('')).join('')}<circle cx="196" cy="6" r="6"/></g></svg>`;
   const SHIP = () => `<svg viewBox="-60 -80 120 100"><path d="M-46 0 L46 0 L34 18 L-34 18 Z" fill="#9b6e3a"/><path d="M-4 0 L-4 -70 L-36 -6 Z" fill="#f4e8cf"/><path d="M4 -76 L4 -6 L40 -6 Z" fill="#f4e8cf"/><rect x="-2" y="-78" width="4" height="80" fill="#8a6a3c"/><path d="M2 -78 L18 -72 L2 -66 Z" fill="#d98c6a"/></svg>`;
   const PIN = () => `<svg viewBox="-20 -44 40 48"><path d="M0 2 C-4 -10 -16 -18 -16 -28 A16 16 0 0 1 16 -28 C16 -18 4 -10 0 2 Z" fill="#d9745e"/><circle cx="0" cy="-28" r="6" fill="#fbf2e2"/></svg>`;
@@ -439,7 +442,10 @@
 @keyframes aJel{0%{opacity:0;transform:translate(0,0)}6%{opacity:1}90%{opacity:1}100%{opacity:0;transform:translate(var(--rx),var(--ry))}}@keyframes aBell{0%,100%{transform:scale(1,1)}40%{transform:scale(.82,1.14)}}@keyframes aTn{0%,100%{transform:skewX(4deg)}50%{transform:skewX(-6deg)}}
 .a-ray{background:linear-gradient(90deg,transparent,rgba(255,255,255,.16) 40%,rgba(255,255,255,.16) 60%,transparent);-webkit-mask:linear-gradient(180deg,#000,transparent 90%);mask:linear-gradient(180deg,#000,transparent 90%);transform-origin:50% 0;animation:aRay var(--d) ease-in-out var(--dl) infinite alternate}@keyframes aRay{from{transform:rotate(-6deg);opacity:.5}to{transform:rotate(6deg);opacity:1}}
 .a-car{animation:aCar 12s linear var(--dl) infinite}.a-carb{animation:aCarB 1.4s ease-in-out infinite alternate}@keyframes aCarB{from{transform:translateY(-8px)}to{transform:translateY(8px)}}
-@keyframes aCar{0%{transform:translateX(0) scale(1);opacity:1;z-index:2}12.5%{transform:translateX(106px) scale(.92)}25%{transform:translateX(150px) scale(.8);opacity:.8}37.5%{transform:translateX(106px) scale(.68);opacity:.45;z-index:1}50%{transform:translateX(0) scale(.62);opacity:.35}62.5%{transform:translateX(-106px) scale(.68);opacity:.45}75%{transform:translateX(-150px) scale(.8);opacity:.8;z-index:2}87.5%{transform:translateX(-106px) scale(.92)}100%{transform:translateX(0) scale(1);opacity:1}}
+@keyframes aCar{0%{transform:translateX(0) scale(1);opacity:1}12.5%{transform:translateX(106px) scale(.92)}25%{transform:translateX(150px) scale(.8);opacity:.8}37.5%{transform:translateX(106px) scale(.68);opacity:.45}50%{transform:translateX(0) scale(.62);opacity:.35}62.5%{transform:translateX(-106px) scale(.68);opacity:.45}75%{transform:translateX(-150px) scale(.8);opacity:.8}87.5%{transform:translateX(-106px) scale(.92)}100%{transform:translateX(0) scale(1);opacity:1}}
+/* the z-index the keyframes had (2 → 1 → 2 → auto, a discrete value flips halfway between its keyframes: 18.75 % · 56.25 % · 87.5 %) as which tier shows the horse */
+.a-cz2,.a-cz1,.a-cza{animation:12s step-end var(--dl) infinite}.a-cz2{animation-name:aCz2}.a-cz1{animation-name:aCz1}.a-cza{animation-name:aCza}
+@keyframes aCz2{0%{opacity:1}18.75%{opacity:0}56.25%{opacity:1}87.5%{opacity:0}100%{opacity:0}}@keyframes aCz1{0%{opacity:0}18.75%{opacity:1}56.25%{opacity:0}100%{opacity:0}}@keyframes aCza{0%{opacity:0}87.5%{opacity:1}100%{opacity:1}}
 .a-shell{background:linear-gradient(0deg,transparent,rgba(255,240,200,.85));transform-origin:50% 100%;opacity:0;animation:aShell var(--d) ease-out var(--dl) infinite}@keyframes aShell{0%{opacity:0;transform:scaleY(0)}2%{opacity:1}12%{opacity:1;transform:scaleY(1)}16%,100%{opacity:0;transform:scaleY(1)}}
 .a-boom{mix-blend-mode:screen;opacity:0;transform:scale(.2);animation:aBoom var(--d) ease-out var(--dl) infinite}.a-boom.b2{animation-name:aBoom2}.a-boom svg{filter:blur(.8px)}@keyframes aBoom{0%,13%{opacity:0;transform:scale(.2)}15%{opacity:1}30%{opacity:.9;transform:scale(1)}42%,100%{opacity:0;transform:scale(1.1) translateY(30px)}}
 @keyframes aBoom2{0%,15%{opacity:0;transform:scale(.2) rotate(10deg)}18%{opacity:1}32%{opacity:.8;transform:scale(1) rotate(10deg)}44%,100%{opacity:0;transform:scale(1.05) rotate(10deg) translateY(36px)}}
@@ -455,9 +461,10 @@ html.skfx-off #skfx *{animation-play-state:paused!important}`;   // (html.skfx-o
      How real aurora looks: curtains of thin rays along the magnetic field, a bright sharp lower edge in green (≈100–150 km),
      fading upward to violet / red at the top; folds and S-shaped ripples travel along the band, rays flicker and flare,
      where folds overlap it is brighter. Drawn at a third of the window's size (soft by itself), rays added ('lighter'). */
-  function aurora(cv) {
-    const ctx = cv.getContext('2d'); let W = 0, H = 0, raf = 0, last = 0, on = true;
-    const sprite = (stops) => { const c = document.createElement('canvas'); c.width = 1; c.height = 256; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 256, 0, 0);
+  // the drawing itself (also run inside a worker: its source is sent there as text — so nothing from outside this function)
+  function aurCore(ctx, mk) {
+    let W = 40, H = 40;
+    const sprite = (stops) => { const c = mk(1, 256); const g = c.getContext('2d'), gr = g.createLinearGradient(0, 256, 0, 0);
       stops.forEach(([o, col]) => gr.addColorStop(o, col)); g.fillStyle = gr; g.fillRect(0, 0, 1, 256); return c; };
     const BANDS = [
       { y: .52, h: .34, a: .9, f: [.9, 2.3], v: [.022, -.035], amp: .05, ph: 0, sp: sprite([[0, 'rgba(200,255,220,0)'], [.015, 'rgba(210,255,225,1)'], [.06, 'rgba(70,255,160,.95)'], [.35, 'rgba(40,220,140,.45)'], [.7, 'rgba(90,120,220,.18)'], [.88, 'rgba(170,80,200,.1)'], [1, 'rgba(170,80,200,0)']]) },
@@ -465,40 +472,69 @@ html.skfx-off #skfx *{animation-play-state:paused!important}`;   // (html.skfx-o
       { y: .30, h: .26, a: .5, f: [.7, 2.7], v: [.012, -.024], amp: .04, ph: 4, sp: sprite([[0, 'rgba(255,200,240,0)'], [.03, 'rgba(255,170,230,.7)'], [.12, 'rgba(120,230,190,.6)'], [.45, 'rgba(130,110,230,.3)'], [.8, 'rgba(230,80,140,.16)'], [1, 'rgba(230,80,140,0)']]) },
     ];
     const TAU = Math.PI * 2, sn = Math.sin;
-    function size() { const r = cv.getBoundingClientRect(); W = Math.max(40, Math.round(r.width / 4)); H = Math.max(40, Math.round(r.height / 4)); cv.width = W; cv.height = H; }
+    return {
+      size(w, h) { W = w; H = h; ctx.canvas.width = W; ctx.canvas.height = H; },
+      draw(now) {
+        const t = now / 1000; ctx.clearRect(0, 0, W, H); ctx.globalCompositeOperation = 'lighter';
+        const pulse = .85 + .15 * sn(t * .25) * sn(t * .09 + 1);
+        BANDS.forEach((b, bi) => {
+          const N = Math.round(W * 1.5);
+          for (let i = 0; i < N; i++) {
+            const u = i / N;
+            // folds: the curtain's own sideways displacement (S-ripples travelling along it)
+            const fold = .055 * sn(TAU * (u * b.f[0] + t * b.v[0]) + b.ph) + .035 * sn(TAU * (u * b.f[1] + t * b.v[1]) + b.ph * 2) + .012 * sn(TAU * (u * 9 - t * .25));
+            const x = (u * 1.25 - .125 + fold) * W;
+            const y = H * (b.y + b.amp * sn(TAU * (u * .7 + t * .02) + b.ph) + .018 * sn(TAU * (u * 4 - t * .09) + bi));
+            // rays: fine structure that drifts and flickers; brightness waves running along the band
+            const ray = .5 + .5 * sn(TAU * (u * 38 + t * .05) + 3 * sn(TAU * (u * 6 - t * .05) + bi));
+            const ray2 = .5 + .5 * sn(TAU * (u * 23 - t * .04) + bi * 1.7);
+            const wave = .55 + .45 * sn(TAU * (u * 1.6 - t * .06) + b.ph);
+            const env = Math.min(1, u * 6, (1 - u) * 6) * Math.max(0, wave);
+            const flare = Math.max(0, sn(TAU * (u * 2.2 + t * .04) + bi * 2)) ** 6 * .6;
+            const I = env * (.35 + .45 * ray * ray + .2 * ray2) * (b.a + flare) * pulse;
+            if (I < .02) continue;
+            const h = H * b.h * (.55 + .3 * ray + .5 * flare + .15 * sn(TAU * (u * 3 + t * .07)));
+            const jy = H * .012 * sn(TAU * (u * 37 + t * .06) + bi);
+            ctx.globalAlpha = Math.min(.45, I * .32); ctx.drawImage(b.sp, x - 1, y - h + jy, 2.6, h);
+          }
+        });
+        ctx.globalAlpha = 1;
+      } };
+  }
+  /* (2026-11-24) the rays are drawn in a worker on an OffscreenCanvas: ~1500 strokes 24 times a second and the canvas's upload no longer
+     take the page's main thread (measured: the main thread was busy every frame, the commit alone ~0.25 s a second). Same drawing, same
+     clock (the page's time origin). Where a worker can't draw a canvas, it runs here as before. */
+  function aurora(cv) {
+    let raf = 0, last = 0, on = true, W = 0, H = 0, wk = null, core = null;
+    const off = () => !on || document.documentElement.classList.contains('skfx-off');
+    const size = () => { const r = cv.getBoundingClientRect(); W = Math.max(40, Math.round(r.width / 4)); H = Math.max(40, Math.round(r.height / 4)); if (wk) wk.postMessage({ size: [W, H] }); else if (core) core.size(W, H); };
+    try {
+      if (!cv.transferControlToOffscreen || typeof Worker === 'undefined') throw 0;
+      const src = `const aurCore = ${aurCore.toString()};
+        let core = null, on = false, last = 0, tid = 0; const T0 = performance.timeOrigin;
+        const tick = () => { tid = 0; if (!on || !core) return; const now = performance.timeOrigin + performance.now() - T0O; tid = setTimeout(tick, 41); if (now - last < 41 - 2) return; last = now; core.draw(now); };
+        let T0O = 0;
+        onmessage = e => { const m = e.data;
+          if (m.cv) { core = aurCore(m.cv.getContext('2d'), (w, h) => new OffscreenCanvas(w, h)); T0O = m.t0; }
+          if (m.size && core) core.size(m.size[0], m.size[1]);
+          if ('on' in m) { on = m.on; if (on && !tid) tick(); else if (!on && tid) { clearTimeout(tid); tid = 0; } } };`;
+      const url = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
+      wk = new Worker(url); URL.revokeObjectURL(url);
+      const oc = cv.transferControlToOffscreen();
+      wk.postMessage({ cv: oc, t0: performance.timeOrigin }, [oc]);
+    } catch (e) { if (wk) { wk.terminate(); wk = null; } core = aurCore(cv.getContext('2d'), (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }); }
+    // (the worker: told when to run — the gate, and #skfx hidden on the full version's place floor)
+    const gate = () => { if (!wk) return; const run = !off() && !!cv.getClientRects().length; if (run !== gate.run) { gate.run = run; wk.postMessage({ on: run }); } };
     function frame(now) {
-      raf = 0; if (!on || document.documentElement.classList.contains('skfx-off')) return;   // (paused: no frame asked for at all — 'skfx-gate' starts it again)
+      raf = 0; if (off()) return;   // (paused: no frame asked for at all — 'skfx-gate' starts it again)
       raf = requestAnimationFrame(frame);
       if (now - last < 41) return; last = now;
       if (!cv.getClientRects().length) return;   // (the full version showing the place's floor — #skfx hidden)
-      const t = now / 1000; ctx.clearRect(0, 0, W, H); ctx.globalCompositeOperation = 'lighter';
-      const pulse = .85 + .15 * sn(t * .25) * sn(t * .09 + 1);
-      BANDS.forEach((b, bi) => {
-        const N = Math.round(W * 1.5);
-        for (let i = 0; i < N; i++) {
-          const u = i / N;
-          // folds: the curtain's own sideways displacement (S-ripples travelling along it)
-          const fold = .055 * sn(TAU * (u * b.f[0] + t * b.v[0]) + b.ph) + .035 * sn(TAU * (u * b.f[1] + t * b.v[1]) + b.ph * 2) + .012 * sn(TAU * (u * 9 - t * .25));
-          const x = (u * 1.25 - .125 + fold) * W;
-          const y = H * (b.y + b.amp * sn(TAU * (u * .7 + t * .02) + b.ph) + .018 * sn(TAU * (u * 4 - t * .09) + bi));
-          // rays: fine structure that drifts and flickers; brightness waves running along the band
-          const ray = .5 + .5 * sn(TAU * (u * 38 + t * .05) + 3 * sn(TAU * (u * 6 - t * .05) + bi));
-          const ray2 = .5 + .5 * sn(TAU * (u * 23 - t * .04) + bi * 1.7);
-          const wave = .55 + .45 * sn(TAU * (u * 1.6 - t * .06) + b.ph);
-          const env = Math.min(1, u * 6, (1 - u) * 6) * Math.max(0, wave);
-          const flare = Math.max(0, sn(TAU * (u * 2.2 + t * .04) + bi * 2)) ** 6 * .6;
-          const I = env * (.35 + .45 * ray * ray + .2 * ray2) * (b.a + flare) * pulse;
-          if (I < .02) continue;
-          const h = H * b.h * (.55 + .3 * ray + .5 * flare + .15 * sn(TAU * (u * 3 + t * .07)));
-          const jy = H * .012 * sn(TAU * (u * 37 + t * .06) + bi);
-          ctx.globalAlpha = Math.min(.45, I * .32); ctx.drawImage(b.sp, x - 1, y - h + jy, 2.6, h);
-        }
-      });
-      ctx.globalAlpha = 1;
+      core.draw(now);
     }
-    const wake = () => { if (on && !raf) raf = requestAnimationFrame(frame); };
-    size(); const ro = new ResizeObserver(size); ro.observe(cv); addEventListener('skfx-gate', wake); wake();
-    return () => { on = false; cancelAnimationFrame(raf); raf = 0; removeEventListener('skfx-gate', wake); ro.disconnect(); };
+    const wake = () => { if (wk) return gate(); if (on && !raf) raf = requestAnimationFrame(frame); };
+    size(); const ro = new ResizeObserver(() => { size(); gate(); }); ro.observe(cv); addEventListener('skfx-gate', wake); const iv = wk ? setInterval(gate, 1000) : 0; wake();
+    return () => { on = false; cancelAnimationFrame(raf); raf = 0; clearInterval(iv); if (wk) { wk.terminate(); wk = null; } removeEventListener('skfx-gate', wake); ro.disconnect(); };
   }
 
   /* ---------------- mount / place ---------------- */

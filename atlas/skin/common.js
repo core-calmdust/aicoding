@@ -667,7 +667,7 @@
     (function skinBg() {   // (the skin's tint: the page's cards only — the dialogs keep the cream: their inner panels and fades are cream, 2026-11-20)
       let sk = null; try { sk = JSON.parse(localStorage.getItem('atlas-skin-css') || 'null'); } catch (e) {}
       if (!sk || !sk.id) return;
-      const SKV = 29;   // (= the portal's skins.js?v= in atlas/index.html: bump both together)
+      const SKV = 30;   // (= the portal's skins.js?v= in atlas/index.html: bump both together)
       const de = document.documentElement;
       if (!document.getElementById('askinCss')) { const st = document.createElement('style'); st.id = 'askinCss'; st.textContent = `
 html.atlas-skin[data-skin] .atlas-top{background:var(--sk-hdr)!important;border-bottom-color:var(--sk-line)!important}
