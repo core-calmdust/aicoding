@@ -6,6 +6,11 @@
      the well (31): miss 2 turns      the maze (42): back to 39      the boat (52, the prison of other boards): miss 3 turns      death (58): back to the start
      a space already taken: the two exchange places (the one found there goes back to where the mover came from — and is free of any waiting)
      63 must be reached exactly: what is over is counted back again
+   Levels (2026-11-23, the user: difficulty and Atlamo as the other games have): the game has no choices, so strength cannot differ — the levels are a
+   handicap in the open, re-throws: a side may throw again instead of moving, so many times in a game (REROLL[level] = [you, the other side]; both
+   shown at the start and counted on the bar). You choose after each throw (進む / 振り直す); the other side re-throws a throw that gains under 5
+   spaces as it values them (a hazard counted for what it costs), or any throw near the end that does not finish. Measured over 30,000 games with
+   that policy on both sides: 8–0 → 72 % for you, 0–0 → 50 %, 0–5 → 35 %, 0–20 → 18 %.
    (The bridge at 6 and the inn at 19 of other boards are not drawn on this one, and are not played. The well and the boat hold a piece "until another
     comes" in the old rules; for two players that is a count of turns, as many modern rule sheets have it.)
    The board comes in as ctx.board, its userData: goose: true · top · cell(n, k) → [x, y, z] (0 = the start … 63; k = 0 / 1: the two side by side)
@@ -15,20 +20,20 @@
 (function () {
   'use strict';
   const TX = {
-    ja: { n: ['白', '緑'], roll: '振る', tap: 'タップしてサイコロを振る', goose: 'ガチョウ！ もう一度 {n} 進む', d63: '6と3：26へ', d54: '5と4：53へ', well: '井戸：2回休み', maze: '迷路：39へ戻る', boat: '舟：3回休み', death: '死：ふりだしへ', swap: '入れかわり', back: '行きすぎ：戻る', rest: '{p}：休み（あと{n}回）', first: '先手：{p}', win: '{p}の勝ち！' },
-    en: { n: ['White', 'Green'], roll: 'Roll', tap: 'Tap to throw the dice', goose: 'A goose! {n} more', d63: '6 and 3: on to 26', d54: '5 and 4: on to 53', well: 'The well: miss 2 turns', maze: 'The maze: back to 39', boat: 'The boat: miss 3 turns', death: 'Death: back to the start', swap: 'Places exchanged', back: 'Too far: back again', rest: '{p}: resting ({n} more)', first: 'First: {p}', win: '{p} wins!' },
-    zh: { n: ['白', '绿'], roll: '掷骰', tap: '点击掷骰子', goose: '鹅！再走 {n} 步', d63: '6和3：前往26', d54: '5和4：前往53', well: '井：停2回合', maze: '迷宫：退回39', boat: '船：停3回合', death: '死亡：回到起点', swap: '交换位置', back: '走过头：退回', rest: '{p}：休息（还剩{n}回合）', first: '先手：{p}', win: '{p}获胜！' },
-    'zh-TW': { n: ['白', '綠'], roll: '擲骰', tap: '點擊擲骰子', goose: '鵝！再走 {n} 步', d63: '6和3：前往26', d54: '5和4：前往53', well: '井：停2回合', maze: '迷宮：退回39', boat: '船：停3回合', death: '死亡：回到起點', swap: '交換位置', back: '走過頭：退回', rest: '{p}：休息（還剩{n}回合）', first: '先手：{p}', win: '{p}獲勝！' },
-    ko: { n: ['백', '녹'], roll: '굴리기', tap: '탭해서 주사위 굴리기', goose: '거위! {n}칸 더', d63: '6과 3: 26으로', d54: '5와 4: 53으로', well: '우물: 2번 쉬기', maze: '미로: 39로 돌아가기', boat: '배: 3번 쉬기', death: '죽음: 처음으로', swap: '자리 바꾸기', back: '지나침: 되돌아가기', rest: '{p}: 쉬는 중 (앞으로 {n}번)', first: '선: {p}', win: '{p} 승리!' },
-    es: { n: ['Blanco', 'Verde'], roll: 'Tirar', tap: 'Toca para tirar los dados', goose: '¡Oca! {n} más', d63: '6 y 3: al 26', d54: '5 y 4: al 53', well: 'El pozo: 2 turnos sin jugar', maze: 'El laberinto: vuelve al 39', boat: 'La barca: 3 turnos sin jugar', death: 'La muerte: a la salida', swap: 'Cambio de lugar', back: 'Te pasaste: retrocede', rest: '{p}: descansa (quedan {n})', first: 'Empieza: {p}', win: '¡Gana {p}!' },
-    fr: { n: ['Blanc', 'Vert'], roll: 'Lancer', tap: 'Touchez pour lancer les dés', goose: 'Une oie ! Encore {n}', d63: '6 et 3 : au 26', d54: '5 et 4 : au 53', well: 'Le puits : 2 tours passés', maze: 'Le labyrinthe : retour au 39', boat: 'La barque : 3 tours passés', death: 'La mort : retour au départ', swap: 'Échange de places', back: 'Trop loin : on recule', rest: '{p} : au repos (encore {n})', first: 'Commence : {p}', win: '{p} gagne !' },
-    pt: { n: ['Branco', 'Verde'], roll: 'Lançar', tap: 'Toque para lançar os dados', goose: 'Um ganso! Mais {n}', d63: '6 e 3: para o 26', d54: '5 e 4: para o 53', well: 'O poço: 2 vezes sem jogar', maze: 'O labirinto: volta ao 39', boat: 'O barco: 3 vezes sem jogar', death: 'A morte: volta ao início', swap: 'Troca de lugares', back: 'Passou: recua', rest: '{p}: a descansar (faltam {n})', first: 'Começa: {p}', win: '{p} vence!' },
-    de: { n: ['Weiß', 'Grün'], roll: 'Würfeln', tap: 'Tippen, um zu würfeln', goose: 'Eine Gans! Noch {n}', d63: '6 und 3: auf die 26', d54: '5 und 4: auf die 53', well: 'Der Brunnen: 2 Runden aussetzen', maze: 'Das Labyrinth: zurück auf 39', boat: 'Das Boot: 3 Runden aussetzen', death: 'Der Tod: zurück zum Start', swap: 'Plätze getauscht', back: 'Zu weit: wieder zurück', rest: '{p}: setzt aus (noch {n})', first: 'Beginn: {p}', win: '{p} gewinnt!' },
-    ru: { n: ['Белые', 'Зелёные'], roll: 'Бросить', tap: 'Коснитесь, чтобы бросить кости', goose: 'Гусь! Ещё {n}', d63: '6 и 3: на 26', d54: '5 и 4: на 53', well: 'Колодец: пропуск 2 ходов', maze: 'Лабиринт: назад на 39', boat: 'Лодка: пропуск 3 ходов', death: 'Смерть: в начало', swap: 'Обмен местами', back: 'Перебор: назад', rest: '{p}: пропускает (ещё {n})', first: 'Первыми: {p}', win: 'Победа: {p}!' },
-    tr: { n: ['Beyaz', 'Yeşil'], roll: 'At', tap: 'Zar atmak için dokun', goose: 'Kaz! {n} daha', d63: '6 ve 3: 26’ya', d54: '5 ve 4: 53’e', well: 'Kuyu: 2 tur bekle', maze: 'Labirent: 39’a dön', boat: 'Kayık: 3 tur bekle', death: 'Ölüm: başa dön', swap: 'Yer değişimi', back: 'Fazla geldi: geri', rest: '{p}: bekliyor ({n} tur daha)', first: 'Başlayan: {p}', win: '{p} kazandı!' },
-    id: { n: ['Putih', 'Hijau'], roll: 'Lempar', tap: 'Ketuk untuk melempar dadu', goose: 'Angsa! {n} lagi', d63: '6 dan 3: ke 26', d54: '5 dan 4: ke 53', well: 'Sumur: lewati 2 giliran', maze: 'Labirin: kembali ke 39', boat: 'Perahu: lewati 3 giliran', death: 'Maut: kembali ke awal', swap: 'Bertukar tempat', back: 'Kelebihan: mundur lagi', rest: '{p}: istirahat ({n} lagi)', first: 'Mulai: {p}', win: '{p} menang!' },
-    hi: { n: ['सफ़ेद', 'हरा'], roll: 'फेंकें', tap: 'पासे फेंकने के लिए छुएँ', goose: 'हंस! {n} और', d63: '6 और 3: 26 पर', d54: '5 और 4: 53 पर', well: 'कुआँ: 2 बारी छोड़ें', maze: 'भूलभुलैया: 39 पर वापस', boat: 'नाव: 3 बारी छोड़ें', death: 'मृत्यु: शुरुआत पर', swap: 'जगह की अदला-बदली', back: 'आगे निकल गए: वापस', rest: '{p}: आराम ({n} और)', first: 'पहले: {p}', win: '{p} जीता!' },
-    ar: { n: ['الأبيض', 'الأخضر'], roll: 'ارمِ', tap: 'المس لترمي النرد', goose: 'إوزة! {n} أخرى', d63: '6 و3: إلى 26', d54: '5 و4: إلى 53', well: 'البئر: استرح دورين', maze: 'المتاهة: عد إلى 39', boat: 'القارب: استرح 3 أدوار', death: 'الموت: عد إلى البداية', swap: 'تبادل الأماكن', back: 'تجاوزت: ارجع', rest: '{p}: يستريح (بقي {n})', first: 'يبدأ: {p}', win: 'فاز {p}!' },
+    ja: { re: "振り直す", go: "進む", hc: "振り直し：あなた{a}回・相手{b}回", aire: "{p}が振り直し！", n: ['白', '緑'], roll: '振る', tap: 'タップしてサイコロを振る', goose: 'ガチョウ！ もう一度 {n} 進む', d63: '6と3：26へ', d54: '5と4：53へ', well: '井戸：2回休み', maze: '迷路：39へ戻る', boat: '舟：3回休み', death: '死：ふりだしへ', swap: '入れかわり', back: '行きすぎ：戻る', rest: '{p}：休み（あと{n}回）', first: '先手：{p}', win: '{p}の勝ち！' },
+    en: { re: "Throw again", go: "Move", hc: "Re-throws: you {a} · opponent {b}", aire: "{p} throws again!", n: ['White', 'Green'], roll: 'Roll', tap: 'Tap to throw the dice', goose: 'A goose! {n} more', d63: '6 and 3: on to 26', d54: '5 and 4: on to 53', well: 'The well: miss 2 turns', maze: 'The maze: back to 39', boat: 'The boat: miss 3 turns', death: 'Death: back to the start', swap: 'Places exchanged', back: 'Too far: back again', rest: '{p}: resting ({n} more)', first: 'First: {p}', win: '{p} wins!' },
+    zh: { re: "重掷", go: "前进", hc: "重掷次数：你{a}次·对手{b}次", aire: "{p}重掷！", n: ['白', '绿'], roll: '掷骰', tap: '点击掷骰子', goose: '鹅！再走 {n} 步', d63: '6和3：前往26', d54: '5和4：前往53', well: '井：停2回合', maze: '迷宫：退回39', boat: '船：停3回合', death: '死亡：回到起点', swap: '交换位置', back: '走过头：退回', rest: '{p}：休息（还剩{n}回合）', first: '先手：{p}', win: '{p}获胜！' },
+    'zh-TW': { re: "重擲", go: "前進", hc: "重擲次數：你{a}次·對手{b}次", aire: "{p}重擲！", n: ['白', '綠'], roll: '擲骰', tap: '點擊擲骰子', goose: '鵝！再走 {n} 步', d63: '6和3：前往26', d54: '5和4：前往53', well: '井：停2回合', maze: '迷宮：退回39', boat: '船：停3回合', death: '死亡：回到起點', swap: '交換位置', back: '走過頭：退回', rest: '{p}：休息（還剩{n}回合）', first: '先手：{p}', win: '{p}獲勝！' },
+    ko: { re: "다시 굴리기", go: "나아가기", hc: "다시 굴리기: 나 {a}번 · 상대 {b}번", aire: "{p} 다시 굴리기!", n: ['백', '녹'], roll: '굴리기', tap: '탭해서 주사위 굴리기', goose: '거위! {n}칸 더', d63: '6과 3: 26으로', d54: '5와 4: 53으로', well: '우물: 2번 쉬기', maze: '미로: 39로 돌아가기', boat: '배: 3번 쉬기', death: '죽음: 처음으로', swap: '자리 바꾸기', back: '지나침: 되돌아가기', rest: '{p}: 쉬는 중 (앞으로 {n}번)', first: '선: {p}', win: '{p} 승리!' },
+    es: { re: "Volver a tirar", go: "Avanzar", hc: "Repeticiones: tú {a} · rival {b}", aire: "¡{p} vuelve a tirar!", n: ['Blanco', 'Verde'], roll: 'Tirar', tap: 'Toca para tirar los dados', goose: '¡Oca! {n} más', d63: '6 y 3: al 26', d54: '5 y 4: al 53', well: 'El pozo: 2 turnos sin jugar', maze: 'El laberinto: vuelve al 39', boat: 'La barca: 3 turnos sin jugar', death: 'La muerte: a la salida', swap: 'Cambio de lugar', back: 'Te pasaste: retrocede', rest: '{p}: descansa (quedan {n})', first: 'Empieza: {p}', win: '¡Gana {p}!' },
+    fr: { re: "Relancer", go: "Avancer", hc: "Relances : vous {a} · adversaire {b}", aire: "{p} relance !", n: ['Blanc', 'Vert'], roll: 'Lancer', tap: 'Touchez pour lancer les dés', goose: 'Une oie ! Encore {n}', d63: '6 et 3 : au 26', d54: '5 et 4 : au 53', well: 'Le puits : 2 tours passés', maze: 'Le labyrinthe : retour au 39', boat: 'La barque : 3 tours passés', death: 'La mort : retour au départ', swap: 'Échange de places', back: 'Trop loin : on recule', rest: '{p} : au repos (encore {n})', first: 'Commence : {p}', win: '{p} gagne !' },
+    pt: { re: "Lançar de novo", go: "Avançar", hc: "Relançamentos: tu {a} · adversário {b}", aire: "{p} lança de novo!", n: ['Branco', 'Verde'], roll: 'Lançar', tap: 'Toque para lançar os dados', goose: 'Um ganso! Mais {n}', d63: '6 e 3: para o 26', d54: '5 e 4: para o 53', well: 'O poço: 2 vezes sem jogar', maze: 'O labirinto: volta ao 39', boat: 'O barco: 3 vezes sem jogar', death: 'A morte: volta ao início', swap: 'Troca de lugares', back: 'Passou: recua', rest: '{p}: a descansar (faltam {n})', first: 'Começa: {p}', win: '{p} vence!' },
+    de: { re: "Neu würfeln", go: "Ziehen", hc: "Neuwürfe: du {a} · Gegner {b}", aire: "{p} würfelt neu!", n: ['Weiß', 'Grün'], roll: 'Würfeln', tap: 'Tippen, um zu würfeln', goose: 'Eine Gans! Noch {n}', d63: '6 und 3: auf die 26', d54: '5 und 4: auf die 53', well: 'Der Brunnen: 2 Runden aussetzen', maze: 'Das Labyrinth: zurück auf 39', boat: 'Das Boot: 3 Runden aussetzen', death: 'Der Tod: zurück zum Start', swap: 'Plätze getauscht', back: 'Zu weit: wieder zurück', rest: '{p}: setzt aus (noch {n})', first: 'Beginn: {p}', win: '{p} gewinnt!' },
+    ru: { re: "Перебросить", go: "Ходить", hc: "Перебросы: вы {a} · соперник {b}", aire: "{p} перебрасывает!", n: ['Белые', 'Зелёные'], roll: 'Бросить', tap: 'Коснитесь, чтобы бросить кости', goose: 'Гусь! Ещё {n}', d63: '6 и 3: на 26', d54: '5 и 4: на 53', well: 'Колодец: пропуск 2 ходов', maze: 'Лабиринт: назад на 39', boat: 'Лодка: пропуск 3 ходов', death: 'Смерть: в начало', swap: 'Обмен местами', back: 'Перебор: назад', rest: '{p}: пропускает (ещё {n})', first: 'Первыми: {p}', win: 'Победа: {p}!' },
+    tr: { re: "Yeniden at", go: "İlerle", hc: "Yeniden atış: sen {a} · rakip {b}", aire: "{p} yeniden atıyor!", n: ['Beyaz', 'Yeşil'], roll: 'At', tap: 'Zar atmak için dokun', goose: 'Kaz! {n} daha', d63: '6 ve 3: 26’ya', d54: '5 ve 4: 53’e', well: 'Kuyu: 2 tur bekle', maze: 'Labirent: 39’a dön', boat: 'Kayık: 3 tur bekle', death: 'Ölüm: başa dön', swap: 'Yer değişimi', back: 'Fazla geldi: geri', rest: '{p}: bekliyor ({n} tur daha)', first: 'Başlayan: {p}', win: '{p} kazandı!' },
+    id: { re: "Lempar ulang", go: "Maju", hc: "Lempar ulang: kamu {a} · lawan {b}", aire: "{p} melempar ulang!", n: ['Putih', 'Hijau'], roll: 'Lempar', tap: 'Ketuk untuk melempar dadu', goose: 'Angsa! {n} lagi', d63: '6 dan 3: ke 26', d54: '5 dan 4: ke 53', well: 'Sumur: lewati 2 giliran', maze: 'Labirin: kembali ke 39', boat: 'Perahu: lewati 3 giliran', death: 'Maut: kembali ke awal', swap: 'Bertukar tempat', back: 'Kelebihan: mundur lagi', rest: '{p}: istirahat ({n} lagi)', first: 'Mulai: {p}', win: '{p} menang!' },
+    hi: { re: "फिर फेंकें", go: "आगे बढ़ें", hc: "दोबारा फेंक: आप {a} · सामने वाला {b}", aire: "{p} ने फिर फेंका!", n: ['सफ़ेद', 'हरा'], roll: 'फेंकें', tap: 'पासे फेंकने के लिए छुएँ', goose: 'हंस! {n} और', d63: '6 और 3: 26 पर', d54: '5 और 4: 53 पर', well: 'कुआँ: 2 बारी छोड़ें', maze: 'भूलभुलैया: 39 पर वापस', boat: 'नाव: 3 बारी छोड़ें', death: 'मृत्यु: शुरुआत पर', swap: 'जगह की अदला-बदली', back: 'आगे निकल गए: वापस', rest: '{p}: आराम ({n} और)', first: 'पहले: {p}', win: '{p} जीता!' },
+    ar: { re: "ارمِ ثانية", go: "تقدّم", hc: "إعادة الرمي: أنت {a} · الخصم {b}", aire: "{p} يرمي ثانية!", n: ['الأبيض', 'الأخضر'], roll: 'ارمِ', tap: 'المس لترمي النرد', goose: 'إوزة! {n} أخرى', d63: '6 و3: إلى 26', d54: '5 و4: إلى 53', well: 'البئر: استرح دورين', maze: 'المتاهة: عد إلى 39', boat: 'القارب: استرح 3 أدوار', death: 'الموت: عد إلى البداية', swap: 'تبادل الأماكن', back: 'تجاوزت: ارجع', rest: '{p}: يستريح (بقي {n})', first: 'يبدأ: {p}', win: 'فاز {p}!' },
   };
   const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
   const DIE = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
@@ -57,11 +62,14 @@
     return { path, ev, to: cur };
   }
 
+  const REROLL = [0, [8, 0], [6, 0], [5, 0], [4, 0], [3, 0], [2, 0], [1, 0], [1, 1], [1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [1, 7], [1, 8], [1, 10], [1, 12], [1, 14], [1, 17], [1, 20]];
+  const worth = to => to === 58 ? 0 : to === 52 ? 31 : to === 31 ? 17 : to === 42 ? 39 : to;
+  const again = (from, pl) => pl.to !== 63 && (from >= 51 || worth(pl.to) - from < 5);   // the other side's re-throw policy
   function start(ctx) {
     const T3 = ctx.Table3D, TH = window.THREE, t = ctx.t, B = ctx.board, U = B && B.userData;
     if (!U || !U.goose) { console.warn('[goose] needs the museum board'); return null; }
     const X = Object.assign({}, TX.en, TX[ctx.lang] || {}), L = { you: t('p.you'), ai: t('p.ai'), win: t('res.win'), lose: t('res.lose') };
-    const pvp = ctx.mode === 'pvp', first = pvp ? 0 : ctx.side === 2 ? 1 : 0;
+    const pvp = ctx.mode === 'pvp', first = pvp ? 0 : ctx.side === 2 ? 1 : 0, level = Math.max(1, Math.min(20, +ctx.level || 8)), RR = pvp ? [2, 2] : REROLL[level].slice();
     const hum = s => pvp || s === 0, nm = s => pvp ? X.n[s] : s ? L.ai : L.you;
     const pos = [0, 0], rest = [0, 0], thrown = [0, 0]; let turn = first, dice = null, phase = 'wait', over = false, stopped = false, busy = false, msg = '', ply = -1;
     T3.show('goose', B);
@@ -91,9 +99,9 @@
     const DOT = ['background:radial-gradient(circle at 35% 30%,#fffaf0,#d9c9a0 60%,#8a7648)', 'background:radial-gradient(circle at 35% 30%,#8fd0a0,#2f7a4c 60%,#123a22)'];
     function hud() {
       if (stopped) return;
-      const side = s => `<span class="hs ${turn === s && !over ? 'on' : ''}"><i class="dk" style="${DOT[s]}"></i>${esc(nm(s))}<b>${pos[s]}</b></span>`;
+      const side = s => `<span class="hs ${turn === s && !over ? 'on' : ''}"><i class="dk" style="${DOT[s]}"></i>${esc(nm(s))}<b>${pos[s]}</b>${RR[s] ? `<small style="opacity:.7;margin-inline-start:5px">↻${RR[s]}</small>` : ''}</span>`;
       const dv = dice ? `<span class="hd" style="font-size:22px;letter-spacing:2px;white-space:nowrap">${DIE[dice[0]]}${DIE[dice[1]]}</span>` : '';
-      const mid = phase === 'roll' && hum(turn) && !over ? `<button type="button" data-gsm="roll">${esc(X.roll)}</button>` : msg ? `<span class="hm">${esc(msg)}</span>` : '';
+      const mid = phase === 'choose' && !over ? `<button type="button" data-gsm="go">${esc(X.go)}</button><button type="button" data-gsm="re" style="margin-inline-start:6px">${esc(X.re)} ↻${RR[turn]}</button>` : phase === 'roll' && hum(turn) && !over ? `<button type="button" data-gsm="roll">${esc(X.roll)}</button>` : msg ? `<span class="hm">${esc(msg)}</span>` : '';
       ctx.hud(`${side(0)}${dv}${mid}${side(1)}`);
     }
     const say = m => { msg = m || ''; hud(); };
@@ -112,6 +120,13 @@
       if (phase !== 'roll' || busy || over) return;
       busy = true; phase = 'anim'; say(''); const s = turn, d = [1 + (Math.random() * 6 | 0), 1 + (Math.random() * 6 | 0)];
       await throwDice(s, d); if (stopped) return; dice = d; hud();
+      if (RR[s] > 0) {   // a re-throw in hand: you choose; the other side by its policy
+        if (hum(s)) { phase = 'choose'; busy = false; say(''); return; }
+        if (again(pos[s], plan(pos[s], d[0], d[1], !thrown[s]))) { RR[s]--; const m = X.aire.replace('{p}', nm(s)); toast(m); say(m); await sleep(900); if (stopped) return; busy = false; phase = 'roll'; return doRoll(); } }
+      return move(s, d);
+    }
+    async function move(s, d) {
+      busy = true; phase = 'anim'; say('');
       const from = pos[s], pl = plan(from, d[0], d[1], !thrown[s]); thrown[s] = 1;
       const tell = async e => { const m = (X[e.k] || '').replace('{n}', e.n || ''); toast(m); say(m); await sleep(e.k === 'back' ? 350 : 900); };
       for (let i = 0; i < pl.path.length; i++) { for (const e of pl.ev) if (e.at === i) await tell(e); if (stopped) return; await hop(s, pl.path[i], pl.path.length === 1 ? 5 : 0); }
@@ -128,24 +143,25 @@
     function end(w) {
       over = true; phase = 'over'; busy = false; if (ctx.onTurn) ctx.onTurn(-1, {}); SND.win();
       const score = `${pos[0]} : ${pos[1]}`;
-      if (pvp) { const wt = X.win.replace('{p}', X.n[w]); say(wt); return later(() => ctx.onEnd({ win: false, draw: false, level: 1, score, pvp: true, winnerText: wt }), 700); }
-      say(w === 0 ? L.win : L.lose); later(() => ctx.onEnd({ win: w === 0, draw: false, level: 1, score }), 700);
+      if (pvp) { const wt = X.win.replace('{p}', X.n[w]); say(wt); return later(() => ctx.onEnd({ win: false, draw: false, level, score, pvp: true, winnerText: wt }), 700); }
+      say(w === 0 ? L.win : L.lose); later(() => ctx.onEnd({ win: w === 0, draw: false, level, score }), 700);
     }
 
+    const choose = re => { if (phase !== 'choose' || busy || over) return; if (re && RR[turn] > 0) { RR[turn]--; phase = 'roll'; dice = null; doRoll(); } else move(turn, dice); };
     function onClick() { if (stopped || busy || over || (T3.wasDrag && T3.wasDrag())) return; if (phase === 'roll' && hum(turn)) doRoll(); }
-    function onHud(e) { const b = e.target.closest && e.target.closest('[data-gsm]'); if (!b || stopped) return; e.stopPropagation(); if (phase === 'roll' && hum(turn)) doRoll(); }
-    const onKey = e => { if (e.key === ' ' && !e.repeat && phase === 'roll' && hum(turn)) { e.preventDefault(); doRoll(); } };
+    function onHud(e) { const b = e.target.closest && e.target.closest('[data-gsm]'); if (!b || stopped) return; e.stopPropagation(); if (phase === 'choose') choose(b.dataset.gsm === 're'); else if (phase === 'roll' && hum(turn)) doRoll(); }
+    const onKey = e => { if (e.repeat) return; if (phase === 'choose' && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); choose(false); } else if (phase === 'choose' && (e.key === 'r' || e.key === 'R')) choose(true); else if (e.key === ' ' && phase === 'roll' && hum(turn)) { e.preventDefault(); doRoll(); } };
     ctx.el.addEventListener('click', onClick); document.addEventListener('click', onHud, true); document.addEventListener('keydown', onKey);
-    settle(); hud(); toast(X.first.replace('{p}', nm(first))); later(() => nextTurn(first), 900);
+    settle(); hud(); toast(X.hc.replace('{a}', RR[0]).replace('{b}', RR[1])); later(() => { toast(X.first.replace('{p}', nm(first))); nextTurn(first); }, 1700);
     const api = {
       stop() { stopped = true; timers.forEach(clearTimeout); ctx.el.removeEventListener('click', onClick); document.removeEventListener('click', onHud, true); document.removeEventListener('keydown', onKey); if (toastEl) toastEl.remove(); B.remove(G); },
       canResign: () => !over, resign() { if (!over) end(pvp ? 1 - turn : 1); },
       canUndo: () => false, undo() {}, canHint: () => false, hint: () => Promise.resolve(false),
-      _debug: { pos: () => pos.slice(), rest: () => rest.slice(), phase: () => phase, turn: () => turn, dice: () => dice, plan, set(s, n) { pos[s] = n; settle(); hud(); } },
+      _debug: { rr: () => RR.slice(), choose, pos: () => pos.slice(), rest: () => rest.slice(), phase: () => phase, turn: () => turn, dice: () => dice, plan, set(s, n) { pos[s] = n; settle(); hud(); } },
     };
     window.__gooseMuseum = api;
     return api;
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.goose = { levels: 1, sides: true, modes: ['ai', 'pvp'], levelInfo: () => ({ name: '' }), start, plan };
+  window.Atlas3D.goose = { levels: 20, sides: true, modes: ['ai', 'pvp'], levelInfo: n => ({ name: REROLL[n] ? '↻ ' + REROLL[n][0] + ' : ' + REROLL[n][1] : '' }), start, plan, REROLL };
 })();
