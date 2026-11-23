@@ -5301,7 +5301,7 @@
     LKEY: 'aicoding-connect4-v2-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../connect4/lessons.json?v=20261123v4'), Promise.all(['../connect4/i18n.js?v=20261107l14', '../connect4/learn.js?v=20261123l15'].map(u => fetch(u).then(r => r.text()).catch(() => '')))])
+      return (this.p = Promise.all([getJ('../connect4/lessons.json?v=20261124o1'), Promise.all(['../connect4/i18n.js?v=20261107l14', '../connect4/learn.js?v=20261123l15'].map(u => fetch(u).then(r => r.text()).catch(() => '')))])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T.join('\n'))(w); } catch (e) { console.warn('[lessons3d] connect4 texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -5343,7 +5343,7 @@
      (c4F: a four now, the opponent's four next, a cell under the opponent's winning cell, new winning cells and their row, two at once /
      stacked) and the solver's result of every column (C4SOL, connect4/engine.js with the book and tree: A the lesson's answer, W a win,
      w a slower win, D a draw, L a loss, - a full column). */
-  const C4SOL = {"four":["DLAwwww","wwwwAww","LDALLLL","wDwAwww"],"block":["LLLLLAL","LLLALLL","LLALLLL"],"centre":["LLDADLL","LLLALLL","LLLALDL"],"early":["LLLALLL","LLALLLL","LLLLALL","LLLALLL"],"threat":["LALLLLL","ALLLLLL","DAL-LLL"],"open":["LDAwwwD","LLwADLL","LALLLLL","LwALLLL"],"diag":["LLLALLL","LLLLLAL","LLLADwD","LLLLLAL"],"double":["A-L---L","-L-L--A","L-L-AL-"],"stack":["LALLwwL","wwwLwAw","wAwwLww","LwDLLLA"],"force":["wAwwwwD","wwAwwww","LLwwALL","LLAwwLL"],"parity":["D-D-DAD","AD-L-DD","DDADDDD"],"zugz":["-D--L-A","LA----L","DA----D","AL---LL"],"follow":["LLLLALL","LLALLLL","wLLALLL","LLLALLL"],"first":["LALLLLL","LLLALLL","LLLLALL","DLALLLL"],"second":["LADLLwL","LLALLLL","LLLADDL","LDALDDL"],"op1":["LLLALLL","LDA-ADL","LALDDAL"],"op2":["DLAAAAA","LLDDLAA","LLwwLLA"],"op3":["LAL-LLL","LDL-LAL","LLL-ALL","LLLLLLA"],"count":["A-L---L","L---LA-","DDA---D","L----LA"],"endwin":["DA--DD-","L-AD---","AL-L-L-","LL---LA"],"miss":["ALLLLLL","wLLLALL","LALLLLL","wLLLALL"],"under":["wLL-ALL","LLw-LwA","DLLAwLL","LLLALLL"],"edge":["LLALLLL","LLALLLL","LLLDALL","LLLLALL"]};
+  const C4SOL = {"four":["DLAwwww","wwwwAww","LDALLLL","wDwAwww"],"block":["LLLLLAL","LLLALLL","LLALLLL"],"centre":["LLDADLL","LLLALLL","LLLALDL"],"early":["LLLALLL","LLALLLL","LLLLALL","LLLALLL"],"threat":["LALLLLL","ALLLLLL","DAL-LLL"],"open":["LDAwwwD","LLwADLL","LALLLLL","LwALLLL"],"diag":["LLLALLL","LLLLLAL","LLLADwD","LLLLLAL"],"double":["A-L---L","-L-L--A","L-L-AL-"],"stack":["LALLwwL","wwwLwAw","wAwwLww","LwDLLLA"],"force":["wAwwwwD","wwAwwww","LLwwALL","LLAwwLL"],"parity":["D-D-DAD","AD-L-DD","DDADDDD"],"zugz":["-D--L-A","LA----L","DA----D","AL---LL"],"follow":["LLLLALL","LLALLLL","wLLALLL","LLLALLL"],"first":["LALLLLL","LLLALLL","LLLLALL","DLALLLL"],"second":["LADLLwL","LLALLLL","LLLADDL","LDALDDL"],"op1":["LLLALLL","LLLALLL","LLDALLL","LLLALLL"],"op2":["LDLDLAL","LLDDADL","DLLDDLA"],"op3":["LDL-LAL","LLL-ALL","LLA-LDL"],"count":["A-L---L","L---LA-","DDA---D","L----LA"],"endwin":["DA--DD-","L-AD---","AL-L-L-","LL---LA"],"miss":["ALLLLLL","wLLLALL","LALLLLL","wLLLALL"],"under":["wLL-ALL","LLw-LwA","DLLAwLL","LLLALLL"],"edge":["LLALLLL","LLALLLL","LLLDALL","LLLLALL"]};
   const C4J_LS = {
     intro: {
       four: '自分の色を<b>ヨコ・タテ・ナナメ</b>に4つ並べたら勝ち！<br>コマは列の<b>いちばん下の空きマス</b>にポトンと落ちるの。<br>置く前に「今すぐ4つ並ぶマスはない？」って見るくせをつけようね。',
@@ -5386,9 +5386,9 @@
       follow: ['後手として、いちばんいい返し手をえらんでね。', '相手が今置いた石、そのすぐ上はどこかな？', '{c}の番！ 置き返すならどの列？', '偶数段をもらう一手は？', 'さあ、じょうずに置き返そう！'],
       first: ['先手として、勝ちにつながる一手をえらんでね。', '奇数段に勝ちマスを作れる列はどこかな？', '{c}の番！ 先手らしい一手は？', '終盤に効く勝ちマス、作れそう？', 'さあ、先手の勝ちへ進もう！'],
       second: ['後手として、いちばんいい一手をえらんでね。', '先手のねらいを消せる列はどこかな？', '{c}の番！ 偶数段を生かす一手は？', '結果を悪くしない一手、見つけられる？', 'さあ、後手のねばりを見せよう！'],
-      op1: ['初手か序盤の正解をえらんでね。', '完全解析でいちばんの一手はどこかな？', '{c}の番！ 勝ちを残す列は？', 'ここで負けない列、どれだと思う？', 'さあ、序盤の正解を当ててみよう！'],
-      op2: ['先手として、いちばんいい一手をえらんでね。', '相手が真ん中をはずしたよ。どう攻める？', '{c}の番！ 勝ちにつながる列は？', '相手がはずした側と真ん中、くらべてみて！', 'さあ、とがめる一手を見つけよう！'],
-      op3: ['本線の、いちばんいい一手をえらんでね。', '本線ではどの列に置くかな？', '{c}の番！ 最善の一手は？', '置いたあと相手に勝ちマスができない列は？', 'さあ、本線の手を当ててみよう！'],
+      op1: ['{c}の番！ 勝ちを残せる列は、ひとつだけ。どこかな？', '{c}の番。真ん中の列の積み合い、どう続ける？ 勝ちを残す列はひとつだけ。', '{c}の番！ 勝ちを残す列は？', '{c}の番。ここで負けない列は、ひとつだけ。見つけられる？', 'さあ、序盤の正解を当ててみよう！ 負けない列はひとつだけ。'],
+      op2: ['{c}の番！ 勝ちにつながる列は、ひとつだけ。どこかな？', '相手が真ん中をはずしたよ。どう攻める？', '{c}の番！ 勝ちにつながる列は？', '相手が真ん中をはずしたよ。勝ちを残せる列は、ひとつだけ。どこかな？', 'さあ、とがめる一手を見つけよう！ 勝ちが残る列はひとつだけ。'],
+      op3: ['本線の、いちばんいい一手をえらんでね。', '本線ではどの列に置くかな？', '{c}の番！ 最善の一手は？', '真ん中の列が埋まったよ。本線で{c}が置く列は？', 'さあ、本線の手を当ててみよう！'],
       count: ['終盤の、いちばんいい一手をえらんでね。', '空きマスはいくつ残ってる？ どの列に置く？', '{c}の番！ 数を合わせる一手は？', 'さいごに残る列はどれかな？', 'さあ、数えて置いてみよう！'],
       endwin: ['いちばん早く勝てる一手をえらんでね。', '勝ちが見えてる！ 決め切る列はどこかな？', '{c}の番！ 最短の一手は？', '相手に反撃させない一手、見つけられる？', 'さあ、勝ち切っちゃおう！'],
       miss: ['いちばんいい一手をえらんでね。', '相手のねらいもあるけど、まずは自分を見て！ どの列？', '{c}の番！ 今すぐできることは？', 'ふさぐ前に、もっといい手はないかな？', 'さあ、見のがさずに決めよう！'],
@@ -5413,9 +5413,9 @@
       follow: ['相手が今置いた石のすぐ上を考えてみて。', '真上に置き返すと、偶数段がきみのものになるの。', '置き返す前に、そのマスで相手に勝ちマスをあげないかもチェック！', 'まねっこ作戦は、後手の守りの基本なの。', '相手が置いた列を思い出して。そこに重ねられるかな？'],
       first: ['緑の印はきみの勝ちマス。奇数段（1・3・5段目）に勝ちマスを作る手をさがしてね。', '置いたあと、相手に勝ちマスをわたさないかも確かめて！', '3段目の勝ちマスは、先手にとっていちばんたのもしいの。', '偶数段の勝ちマスは、先手にはあんまり効かないの。段を数えよう！', '相手の偶数段のねらいを消す手も、先手のいい手になるの。'],
       second: ['赤い印は相手の勝ちマス、緑の印はきみの勝ちマス。偶数段（2・4・6段目）に注目してね。', '先手の奇数段のねらいを消せる手はないかな？', '負けないのがいちばん。まずは相手の勝ちマスの下を空けておこう！', '後手は、ねばって引き分け以上をめざすのもりっぱな作戦なの。', '相手の3段目のねらい、つぶせる？'],
-      op1: ['真ん中の列から考えてみて。', '真ん中の石は、いちばん多くの線に参加できるね。', '端に近いほど、通る線は少なくなるの。', '相手の石のとなりに置くと、相手の線を切れることもあるの。', '序盤は、線の数がいちばんの目安！'],
-      op2: ['真ん中の列と、相手がはずした側の列をくらべてみて。', '相手の石のとなりより、線の多いマスを取るのが近道なの。', '相手が真ん中をあけてくれたら、遠慮なく使っちゃおう！', '自分の石を真ん中でタテにつなげると、強い形になるの。', '相手の石から遠い側を広げるのも、ひとつの手！'],
-      op3: ['置いたあとに相手の勝ちマスができないか、それぞれの列を見てみて。', '本線は真ん中の列をてっぺんまで積んでから、横へ広がっていくの。', 'まだ真ん中の列に空きがあるか、まず確かめてね。', '相手の石が多い側の線を、先に切っておけないかな？', 'となりの列は、真ん中とつながる線がたくさん通るの。'],
+      op1: ['真ん中の列から考えてみて。', '真ん中の列は、まだ上が空いてるね。', '真ん中の列が、まだ空っぽ！ いちばん下から使えるね。', '相手が真ん中に重ねてきたね。きみも負けずに積めないかな？', '序盤は、線の数がいちばんの目安！'],
+      op2: ['真ん中の列と、相手がはずした側の列をくらべてみて。', 'きみが前に置いた石の上も、立派な候補なの。', '相手がいま置いた石の上を見てみて。', 'ここは真ん中の列が主役じゃないの。きみが端に置いた石を見てみて。', '相手の石から遠い側を広げるのも、ひとつの手！'],
+      op3: ['置いたあとに相手の勝ちマスができないか、それぞれの列を見てみて。', '本線は真ん中の列をてっぺんまで積んでから、横へ広がっていくの。', '真ん中の列はもう満タン。相手が置いた側とは反対の側を広げてみて。', '真ん中のすぐとなりの列で、積み合いが続いてるね。そこを見てみて。', '相手がいま置いた石のすぐ上が、大事なマスなの。'],
       count: ['印は勝ちマス。それぞれの列の空きマスを数えて、どの列がさいごまで残るか考えてみて。', '勝ちマスのある列以外の空きマスが、偶数か奇数かがカギなの。', '勝ちマスの真下は、相手に置かせたいマス。自分から埋めちゃだめ！', '空きマスを1つ埋めるごとに、数が1つへる。手番と合わせて数えよう！', '赤い印と緑の印、どっちの勝ちマスが下にあるかも大事なの。'],
       endwin: ['緑の印はきみの勝ちマス。すぐ置ける場所はあるかな？', '相手に反撃の勝ちマスをあげない手順を考えてね。', 'リーチをかけて、相手の手を決めさせるのが早道なの。', '置いたあとに、相手が今すぐ4つ並べられないかも確かめて！', 'いちばん短い勝ち方は、勝ちマスを2つ作ること。どこならできる？'],
       miss: ['相手の勝ちマスより先に、きみの勝ちマスを見てね。', '赤い印は相手、緑の印はきみの勝ちマス。今すぐ置けるのはどっち？', '「①自分の勝ち ②相手をふさぐ」の順番を思い出して！', '自分の色の3つ並び、もう完成しかけていない？', 'ふさぐのは、自分の勝ちがないと分かってから！'],
