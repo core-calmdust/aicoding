@@ -2,7 +2,7 @@
 // Lesson quality gate for the 3D lessons in Japanese (2026-11-21).
 // Renders every lesson's lines the way the 3D table shows them (atlas/lessons3d.js: guideJa → atlas/lsvoice-ja.js → varyJa)
 // and scores each lesson out of 100. Usage:
-//   node tools/lesson-quality.js [game,game…] [--json out.json] [--show N]
+//   node tools/lesson-quality.js [game,game…] [--json out.json] [--show N] [--progress progress.json]
 // Needs Chrome + puppeteer-core (PUPPETEER_CORE / CHROME env, or the defaults below). Serves the repo itself on a free port.
 // The pass mark lives in tools/lesson-quality.json ("pass"); raise it when the average beats it by 10 (see claude/lesson-quality.md).
 const fs = require('fs'), path = require('path'), http = require('http');
@@ -10,7 +10,7 @@ const ROOT = path.resolve(__dirname, '..');
 const PUP = process.env.PUPPETEER_CORE || '/opt/npm-tools/node_modules/puppeteer-core';
 const CHROME = process.env.CHROME || '/usr/bin/google-chrome';
 const args = process.argv.slice(2), opt = k => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; };
-const games = (args.find(a => !a.startsWith('--') && args[args.indexOf(a) - 1] !== '--json' && args[args.indexOf(a) - 1] !== '--show') || '').split(',').filter(Boolean);
+const games = (args.find(a => !a.startsWith('--') && args[args.indexOf(a) - 1] !== '--json' && args[args.indexOf(a) - 1] !== '--show' && args[args.indexOf(a) - 1] !== '--progress') || '').split(',').filter(Boolean);
 const CFG = JSON.parse(fs.readFileSync(path.join(__dirname, 'lesson-quality.json'), 'utf8'));
 
 const MIME = { '.js': 'text/javascript', '.json': 'application/json', '.html': 'text/html', '.css': 'text/css', '.webp': 'image/webp', '.png': 'image/png', '.svg': 'image/svg+xml', '.bin': 'application/octet-stream', '.wasm': 'application/wasm' };
@@ -25,6 +25,7 @@ const end = sn => { const b = sn.replace(/[。！？!?]+$/, '').replace(/[）)�
 const REASON = /(から|ので|ため|と、|と相手|ると|れば|なら|だと|では|せいで|取られ|負け|逃げ|防げ|止め|ふさ|残る|残っちゃ|できない|届かない|ならない|損)/;
 const CONCRETE = /(緑|赤|金|銀|光って|印|矢印|☗|☖|♘|♗|♖|♕|♔|[a-h][1-8]|列|穴|点|マス|ストア|正解)/;
 
+let turnNames = {};
 function scoreLesson(id, L) {
   const pen = [], P = (n, why) => pen.push([n, why]);
   const all = [L.intro, ...(L.ramp || []), ...L.probs.flatMap(p => [p.ask, p.hint, p.good, p.ng])].filter(Boolean);   // (display order: intro → warm-up → each problem)
@@ -109,6 +110,14 @@ function scoreLesson(id, L) {
     const gram = new Map(); all.forEach(t => { const x = plain(t).replace(/[\s、。！？!?「」（）()・…〜♪]/g, ''); const g = new Set(); for (let k = 0; k + 10 <= x.length; k++) g.add(x.slice(k, k + 10)); g.forEach(v => gram.set(v, (gram.get(v) || 0) + 1)); });
     const rg = [...gram].filter(([, n]) => n >= 3).sort((a, b) => b[1] - a[1]); if (rg.length) P(Math.min(12, 4 + Math.floor(rg.length / 3)), `the same words in ${rg[0][1]} bubbles: ` + rg[0][0]); }
   { const flat = all.filter(t => !/[！？♪]/.test(plain(t))).length / Math.max(1, all.length); if (all.length >= 5 && flat > 0.45) P(Math.round((flat - 0.45) * 20) + 3, `${Math.round(flat * 100)}% of bubbles flat (no ！？)`); }
+  // (2026-11-23 ユーザー：問題ごとにどちらの手番かを必ず出す・問題の質も評価に入れる) the problems themselves, not only the words:
+  //  ⑫ whose move it is must be known for every problem and warm-up try (the runner says 「黒の手番だよ」 from it) — unknown: −10 each (max 30)
+  //  ⑬ a question that names the other side's move (「白の番！」 on a position where black moves) — −20 each
+  //  ⑭ an opening's study line with no start position (the board stays empty while the moves are told) — −60
+  { const N = turnNames[id], items = L.probs.map((p, i) => ({ tw: p.tw, t: plain(p.ask), w: 'q' + (i + 1) })).concat((L.tries || []).map((r, i) => ({ tw: r.tw, t: r.g, w: 'try' + (i + 1) })));
+    const unk = items.filter(x => x.tw == null); if (N && unk.length) P(Math.min(30, 10 * unk.length), `whose move is not known: ${unk.slice(0, 3).map(x => x.w).join(', ')}`);
+    if (N) items.forEach(x => { if (!(x.tw === 1 || x.tw === 2)) return; const other = N[2 - x.tw].replace(/^[●○☗☖] ?/, ''), mine = N[x.tw - 1].replace(/^[●○☗☖] ?/, ''); if (other !== mine && new RegExp(other + '(の手番|の番|番[。！])').test(x.t) && !new RegExp(mine + '(の手番|の番)').test(x.t)) P(20, `${x.w}: the question names ${other}'s move, but ${mine} moves`); });
+    if (L.nostart) P(60, 'opening study line has no start position (empty board)'); }
   const lost = pen.reduce((a, [n]) => a + n, 0);
   return { score: Math.max(0, 100 - lost), pen };
 }
@@ -160,23 +169,34 @@ function gameLevel(raw, ls) {
     try { const t = await (await fetch('lsvoice-ja.js?x=' + Date.now())).text(); const w = {}; new Function('window', t)(w); __setLSV(w.AtlasLsVoice); } catch (e) {}
     const say = (h, id) => { h = String(h || '').replace(/\{fig\d*\}\s*/g, '').replace(/\{[mx]\}/g, '♘e2–e4').replace(/[  ]*\u0001/g, '').replace(/\u0002[  ]*/g, '').replace(/<p[^>]*>/g, '').replace(/<\/p>\s*/g, '<br>').replace(/(<br>\s*)+$/, ''); return h ? __V(h, id) : ''; };
     const f = (x, p) => { try { return typeof x === 'function' ? x.call(p, p && p.ans, p) : x; } catch (e) { return ''; } };   // (called as the runner does, p.good(u): go's use `this`)
+    // (2026-11-23) whose move: the side the runner tells the player (atlas/lessons3d.js turnOf / turnLine), for every problem and warm-up try
+    const TW = (id, pos) => { try { return window.AtlasLessonsTurn ? AtlasLessonsTurn.turnOf(id, pos) : 0; } catch (e) { return null; } };
+    const TRY = (id, D, s) => (s.ramp || []).filter(r => r.k === 'try').map(r => { let rp; try { rp = D.rampPos ? D.rampPos(r) : r.fen; } catch (e) { rp = null; } return { tw: TW(id, rp), g: plain0(r.g && (typeof r.g === 'string' ? r.g : r.g.ja || r.g.en)) }; });
+    const plain0 = h => String(h || '').replace(/<[^>]+>/g, '');
+    window.__TN = (window.AtlasLessonsTurn || {}).N;
     const out = {};
     for (const id of (games.length ? games : Object.keys(__LD))) { const D = __LD[id]; out[id] = [];
       try { await D.load('ja'); await __NC.load(id); for (const it of D.list('lesson', 'ja')) { let s; try { s = __NC.apply(id, await D.lesson(it.key, 'ja', __X(id))); if (window.AtlasGameIntroJa) window.AtlasGameIntroJa(id, it.key, 'lesson', s); } catch (e) { continue; } if (!s) continue;
-        out[id].push({ first: !out[id].length, key: it.key, title: it.title, intro: say(s.intro, id), ramp: (s.ramp || []).flatMap(r => ['t', 'b', 'g', 'h', 'y'].map(f => r[f] && (typeof r[f] === 'string' ? r[f] : r[f].ja || r[f].en)).filter(x => x && !/^[a-o0-9\s,]+$/.test(String(x)))).map(x => say(D.rampTx ? D.rampTx(x, 'ja') : x, id)), probs: (s.probs || []).map(p => ({ pos: (() => { try { return JSON.stringify(p.pos && (p.pos.spec !== undefined ? p.pos.spec : p.pos)); } catch (e) { return ''; } })(), ask: say(p.ask, id), hint: say(p.hintTx, id), good: say(f(p.good, p) || f(p.why, p), id), ng: say(f(p.ng, p) || p.ngTx, id) })) }); } } catch (e) { out[id].push({ err: String(e) }); }
+        out[id].push({ first: !out[id].length, key: it.key, title: it.title, intro: say(s.intro, id), ramp: (s.ramp || []).flatMap(r => ['t', 'b', 'g', 'h', 'y'].map(f => r[f] && (typeof r[f] === 'string' ? r[f] : r[f].ja || r[f].en)).filter(x => x && !/^[a-o0-9\s,]+$/.test(String(x)))).map(x => say(D.rampTx ? D.rampTx(x, 'ja') : x, id)), probs: (s.probs || []).map(p => ({ pos: (() => { try { return JSON.stringify(p.pos && (p.pos.spec !== undefined ? p.pos.spec : p.pos)); } catch (e) { return ''; } })(), ask: say(p.ask, id), hint: say(p.hintTx, id), good: say(f(p.good, p) || f(p.why, p), id), ng: say(f(p.ng, p) || p.ngTx, id), tw: TW(id, p.pos) })), tries: TRY(id, D, s) }); } } catch (e) { out[id].push({ err: String(e) }); }
       // (2026-11-21 ユーザー：定跡・定石の問題もレッスンと同じく採点) the openings: intro, the study's notes, then the problems (no ask → the guide's opGoal, as the runner)
       if (!D.opening) continue; const oid = id + '/open', X = __X(id); out[oid] = [];
       try { for (const it of D.list('open', 'ja')) { let s; try { s = __NC.apply(id, await D.opening(it.key, 'ja')); } catch (e) { continue; } if (!s) continue;
         out[oid].push({ key: it.key, title: it.title, intro: say(s.intro, id), ramp: Object.values(s.notes || {}).map(x => say(typeof x === 'string' ? x : x.ja || x.en, id)).filter(Boolean),
-          probs: (s.probs || []).map(p => ({ ask: say(p.ask || X.opGoal, id), hint: say(p.hintTx, id), good: say(f(p.good, p) || f(p.why, p), id), ng: say(f(p.ng, p) || p.ngTx, id) })) }); } } catch (e) { out[oid].push({ err: String(e) }); } }
+          probs: (s.probs || []).map(p => ({ ask: say(p.ask || X.opGoal, id), hint: say(p.hintTx, id), good: say(f(p.good, p) || f(p.why, p), id), ng: say(f(p.ng, p) || p.ngTx, id), tw: TW(id, p.pos) })), nostart: !!(s.steps && s.steps.length && s.start == null) }); } } catch (e) { out[oid].push({ err: String(e) }); } }
+    out.__TN = window.__TN && window.__TN.ja;
     return out;
   }, games);
   await b.close(); srv.close();
+  const TN = R.__TN || {}; delete R.__TN; turnNames = TN;
   const rep = {}; let sum = 0, n = 0;
   // (2026-11-22) the board facts (tools/lesson-facts.js): a lesson whose marks / answers / claims do not hold on the board fails
   let FACTS = {}; try { const tmp = require('os').tmpdir() + '/lesson-facts.json'; try { require('child_process').execFileSync(process.execPath, [path.join(__dirname, 'lesson-facts.js'), '--json', tmp], { stdio: 'ignore' }); } catch (e) {} FACTS = JSON.parse(fs.readFileSync(tmp, 'utf8')); } catch (e) {}
+  // (2026-11-23 ユーザー：回答可能かどうかも評価に) --progress out.json (tools/lesson-progress.js --json): a lesson that could not be
+  //  played to the end with the right answers (stuck, a JS error, short of full points) loses 60
+  let PROG = {}; if (opt('--progress')) try { for (const r of JSON.parse(fs.readFileSync(opt('--progress'), 'utf8'))) if (!r.ok && r.key !== '-') (PROG[r.game + (r.kind === 'open' ? '/open' : '')] ||= {})[r.key] = r.fail || 'failed'; } catch (e) { console.error('progress: ' + e.message); }
   for (const id in R) { const ls = R[id].filter(l => !l.err).map(l => { const o = Object.assign({ key: l.key, title: l.title }, scoreLesson(id.split('/')[0], l)); const fx = FACTS[id] && FACTS[id][l.key]; if (fx) { o.pen = (o.pen || []).concat(fx.map(m => [60, 'wrong board fact: ' + m])); o.score = Math.max(0, o.score - 60); } return o; });
     gameLevel(R[id].filter(l => !l.err), ls);
+    ls.forEach(l => { const f = PROG[id] && PROG[id][l.key]; if (f) { l.pen.push([60, 'not playable to the end: ' + String(f).slice(0, 60)]); l.score = Math.max(0, 100 - l.pen.reduce((a, [n]) => a + n, 0)); } });
     const avg = ls.length ? ls.reduce((a, l) => a + l.score, 0) / ls.length : 0; rep[id] = { avg: Math.round(avg * 10) / 10, pass: ls.filter(l => l.score >= CFG.pass).length, n: ls.length, lessons: ls };
     sum += avg * ls.length; n += ls.length; }
   const overall = n ? Math.round(sum / n * 10) / 10 : 0;
