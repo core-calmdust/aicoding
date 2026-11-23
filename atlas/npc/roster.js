@@ -15,7 +15,7 @@
   'use strict';
   const A = window.AtlasNPC = window.AtlasNPC || {};
   A.LEVELS = { chess: 33, shogi: 30, go: 37, reversi: 36, gomoku: 20, checkers: 20, xiangqi: 20, janggi: 23, tafl: 30, ur: 20, senet: 20, morris: 11,
-    connect4: 9, dots: 12, mancala: 11, backgammon: 10, hex: 20, fanorona: 20, ugolki: 28, agon: 28, konane: 26, latrunculi: 26, foxgeese: 20, patolli: 20, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, botao: 20, alquerque: 20, amazons: 28, hitblow: 20, sugoroku: 20 };
+    connect4: 9, dots: 12, mancala: 11, backgammon: 10, hex: 20, fanorona: 20, ugolki: 28, agon: 28, konane: 26, latrunculi: 26, foxgeese: 20, patolli: 20, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, botao: 20, alquerque: 20, amazons: 28, hitblow: 20, sugoroku: 20, goose: 20 };
   const N = s => { const p = s.split('|'), k = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'ru', 'hi', 'ar'], o = {}; k.forEach((l, i) => { o[l] = p[i] || p[1]; }); ['es', 'fr', 'pt', 'de', 'id', 'tr'].forEach(l => { o[l] = o.en; }); return o; };
   const b = (v, m, n) => ({ v, m, n: N(n) });
   // colours: [body, belly / face, accent]
@@ -344,6 +344,18 @@
     ],
     // 本双六 (2026-11-23, the museum's 木画紫檀双六局): Nara and Heian Japan — the deer of Nara, the envoys who brought the game from Tang China,
     // Sei Shōnagon (枕草子: 碁・双六 for idle hours), Emperor Shirakawa's dice he could not command, the Shōsōin's guards, the Tenpyō court.
+    // the Game of the Goose (2026-11-23, the museum's chess and goose board, The Met 62.14): the game's own signs and its early history — a gosling,
+    // a merchant from Gujarat where the board was made, the London printer who registered the game in 1597, the well (31), the one who waits at 58,
+    // the king of Spain to whom the Medici sent the game, and the grand duke who sent it (a golden goose).
+    goose: [
+      b('sleepy', { a: 'bird', c: [0xffe07a, 0xfff8e0, 0xff9a3a], beak: 0xff9a3a, hat: 'straw', held: 'die' }, 'ガーピヨ|Gosling|小鹅啾|小鵝啾|꽥삐약|Гусёнок|गॉसलिंग|غوسلينغ'),
+      b('merchant', { a: 'camel', c: [0xd8b078, 0xfff0d8, 0x2f7a4c], hat: 'turban', held: 'piece', ex: ['necklace'] }, 'グジャラクダ|Gujacamel|古吉驼驼|古吉駝駝|구자낙타|Гуджаверблюд|गुजाकैमल|غوجاجمل'),
+      b('scholar', { a: 'owl', c: [0x8a7460, 0xf4eadc, 0x2a2a38], hat: 'beret', held: 'quill', ex: ['ruff'] }, 'ハンモトホー|Printowl|版元咕|版元咕|판모토호|Принтаул|प्रिंटाउल|برينتاول'),
+      b('trickster', { a: 'frog', c: [0x6ab85a, 0xe8f8d8, 0x3a6ad8], hat: 'straw', held: 'die', ex: ['scarf'], sc: 0x3a6ad8 }, 'イドケロ|Wellfrog|井蛙呱|井蛙呱|우물개굴|Колодеквак|वेलफ़्रॉग|ويلفروغ'),
+      b('villain', { a: 'wolf', c: [0xe8e4dc, 0xffffff, 0x2a2a38], hat: 'hood', held: 'staff', ex: ['robe'], rc: 0x2a2a38 }, 'ゴジュウハチ|Fiftyeight|五十八狼|五十八狼|오십팔랑|Пятьдесятвосемь|फ़िफ़्टीएट|فيفتي‌إيت'),
+      b('king', { a: 'lion', c: [0xd8a04a, 0xfff0d0, 0x8a2a2a], hat: 'crown', held: 'scroll', ex: ['ruff'] }, 'フェリペオン|Felipeon|腓力狮王|腓力獅王|펠리페온|Фелипеон|फ़ेलिपियन|فيليبيون'),
+      b('king', { a: 'bird', c: [0xffd65a, 0xfff8e0, 0xa8472c], beak: 0xff9a3a, hat: 'bigcrown', held: 'die', ex: ['cape'], cape: 0xa8472c }, 'メディチガチョウ|Medigoose|美第奇金鹅|梅迪奇金鵝|메디치거위|Медигусь|मेडिगूस|ميديغوس'),
+    ],
     sugoroku: [
       b('sleepy', { a: 'cat', c: [0xf6ead6, 0xffffff, 0x2f6a44], hat: 'eboshi', held: 'die' }, 'ナラニャン|Narakit|奈良喵|奈良喵|나라냥|Наракит|नाराकिट|ناراكيت'),
       b('merchant', { a: 'deer', c: [0xc8945a, 0xfff4e6, 0xb8923a], hat: 'antlers', held: 'die', ex: ['necklace'] }, 'スゴロクジカ|Sugodeer|双六鹿鹿|雙六鹿鹿|스고로쿠지카|Сугодир|सुगोडियर|سوغودير'),
