@@ -373,6 +373,7 @@ html.exv-open{overflow:hidden}
 .excfg.on{background:#3a2a1a}
 /* the game's own buttons in the card during a game (待った・投了・ヒント・向き・やめる): ivory line icons over a small label, the case's dark and gold */
 .expacts{display:flex;gap:4px;justify-content:center}.expacts[hidden]{display:none}
+.expa[hidden]{display:none!important}
 .expa{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:58px;height:52px;padding:0 6px;border:0;border-radius:12px;background:transparent;color:#efdcae;font:inherit;font-size:11.5px;font-weight:700;letter-spacing:.06em;cursor:pointer;transition:background .15s,opacity .15s}
 .expa:hover:not(:disabled){background:rgba(212,175,95,.14)}.expa:disabled{opacity:.32;cursor:default}
 .expa svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}

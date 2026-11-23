@@ -242,7 +242,7 @@
       // the focus on a phone (2026-11-24 user: セネトのように動かせる駒に寄る): xs = [x0, x1] along the board in its own space (null: the whole case).
       // The camera comes in to the board's rows round that stretch (the plinth in front with the sticks left out), at least ~8 squares long,
       // gliding there; a slide still moves it. Only the adapters that ask (senet); not in a rules course, not on a computer.
-      focus(xs, fast) { if (CM || !V.scene || !(cur && cur.V === V)) return; foc = xs; if (!xs || !(matchMedia('(pointer:coarse)').matches || innerWidth < 820)) { if (focOn) { apply(); focOn = false; } return; }
+      focus(xs, fast) { if (CM || !V.scene || !(cur && cur.V === V)) return; foc = xs; if (!xs || !zoomOn() || !(matchMedia('(pointer:coarse)').matches || innerWidth < 820)) { if (focOn) { apply(); focOn = false; } return; }
         const U = board.userData || {}, rz = (U.D || 3) / 2 + .3, lo = xs[0] - 1.3, hi = xs[1] + 1.3, mid = (lo + hi) / 2, half = Math.max(4, (hi - lo) / 2);
         V.obj.updateMatrixWorld(true); const toObj = (x, z) => V.obj.worldToLocal(board.localToWorld(new TH.Vector3(x, 0, z)));
         const a = toObj(mid - half, -rz), b = toObj(mid + half, rz); let x0 = Math.min(a.x, b.x), x1 = Math.max(a.x, b.x); const z0 = Math.min(a.z, b.z), z1 = Math.max(a.z, b.z);
@@ -305,7 +305,7 @@
         onEnd: res => { if (npcT && !res.pvp) npcT.end(res); if (o.onEnd) o.onEnd(res); } });
     // the case changes size (a phone: it grows when the game starts; a turned phone, a resized window): frame the board again
     let rsT = 0, szW = stage.clientWidth, szH = stage.clientHeight; const ro = new ResizeObserver(() => { clearTimeout(rsT); rsT = setTimeout(() => { if (!(cur && cur.V === V && V.scene)) return; const w = stage.clientWidth, h = stage.clientHeight; if (w === szW && h === szH) return; szW = w; szH = h; apply(); }, 120); }); ro.observe(stage);   // (only when the size really changed: framing the board twice at the start looked like two moves)
-    cur = { V, ses, board, shown, npcT, f0, course: !!o.course, L0, dot, hid, ro, tgt0, turn() { if (o.course) return; const v = !vert(); try { localStorage.setItem(OK, v ? 'v' : 'h'); } catch (e) {} apply(); } };
+    cur = { V, ses, board, shown, npcT, f0, course: !!o.course, L0, dot, hid, ro, tgt0, refocus() { const f = foc; T3.focus(f); }, turn() { if (o.course) return; const v = !vert(); try { localStorage.setItem(OK, v ? 'v' : 'h'); } catch (e) {} apply(); } };
     if (turning) { board.visible = false; (function w() { if (!(cur && cur.V === V && V.scene)) return; if (F.t === F.to) { board.visible = true; T3.kick(); return; } requestAnimationFrame(w); })(); G.go(); }
     if (o.course) apply();
     return { stop };
@@ -326,5 +326,8 @@
   const S = () => cur && !cur.course && cur.ses;   // the game's own actions (待った・ヒント・投了), as the portal's 3D games offer them
   const can = a => { const s = S(); if (!s) return false; try { return a === 'undo' ? !!(s.canUndo && s.canUndo()) : a === 'hint' ? !!(s.canHint ? s.canHint() : s.hint) : a === 'resign' ? !!(s.canResign ? s.canResign() : s.resign) : false; } catch (e) { return false; } };
   const act = a => { const s = S(); if (!s || !can(a)) return; try { if (a === 'undo') s.undo(); else if (a === 'hint') s.hint(); else if (a === 'resign') s.resign(); } catch (e) { console.warn('[museum play]', e); } };
-  window.AtlasMuseumPlay = { start, stop, can, act, _course: () => cur && cur.course && cur.ses, turn: () => { if (cur && cur.turn) cur.turn(); }, has: id => !!BOARDS[id], game: id => BOARDS[id] && BOARDS[id].game };
+  // the phone's focus can be switched off (the card's button: the whole board), remembered with the portal's senet (atlas-senet-zoom)
+  const ZK = 'atlas-senet-zoom', zoomOn = () => { try { return localStorage.getItem(ZK) !== '0'; } catch (e) { return true; } };
+  const zoom = () => { const on = !zoomOn(); try { localStorage.setItem(ZK, on ? '1' : '0'); } catch (e) {} if (cur && cur.refocus) cur.refocus(); return on; };
+  window.AtlasMuseumPlay = { start, stop, can, act, zoom, zoomOn, _course: () => cur && cur.course && cur.ses, turn: () => { if (cur && cur.turn) cur.turn(); }, has: id => !!BOARDS[id], game: id => BOARDS[id] && BOARDS[id].game };
 })();
