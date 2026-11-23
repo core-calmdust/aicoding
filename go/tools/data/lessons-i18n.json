@@ -4762,5 +4762,61 @@
   "zh-TW": "正解是 {m}。",
   "id": "Jawabannya {m}.",
   "tr": "Cevap {m}."
+ },
+ "Extending to <bdi>E2</bdi> gives three liberties (<bdi>D2</bdi>, <bdi>F2</bdi>, <bdi>E1</bdi>), and the stones are safe.": {
+  "zh": "长到<bdi>E2</bdi>有三口气（<bdi>D2</bdi>、<bdi>F2</bdi>、<bdi>E1</bdi>），棋子安全了。",
+  "ko": "<bdi>E2</bdi>으로 뻗으면 수가 셋(<bdi>D2</bdi>, <bdi>F2</bdi>, <bdi>E1</bdi>)이 되어 안전합니다.",
+  "es": "Extenderse a <bdi>E2</bdi> da tres libertades (<bdi>D2</bdi>, <bdi>F2</bdi>, <bdi>E1</bdi>) y las piedras están a salvo.",
+  "fr": "Se prolonger en <bdi>E2</bdi> donne trois libertés (<bdi>D2</bdi>, <bdi>F2</bdi>, <bdi>E1</bdi>), et les pierres sont sauves.",
+  "pt": "Estender para <bdi>E2</bdi> dá três liberdades (<bdi>D2</bdi>, <bdi>F2</bdi>, <bdi>E1</bdi>), e as pedras ficam seguras.",
+  "de": "Verlängern nach <bdi>E2</bdi> ergibt drei Freiheiten (<bdi>D2</bdi>, <bdi>F2</bdi>, <bdi>E1</bdi>), und die Steine sind sicher.",
+  "hi": "<bdi>E2</bdi> तक बढ़ने से तीन स्वतंत्रताएँ (<bdi>D2</bdi>, <bdi>F2</bdi>, <bdi>E1</bdi>) मिलती हैं और पत्थर सुरक्षित हो जाते हैं।",
+  "ar": "المدّ إلى <bdi>E2</bdi> يعطي ثلاث حريات (<bdi>D2</bdi>، <bdi>F2</bdi>، <bdi>E1</bdi>)، فتصبح الأحجار آمنة.",
+  "ru": "Продление на <bdi>E2</bdi> даёт три свободы (<bdi>D2</bdi>, <bdi>F2</bdi>, <bdi>E1</bdi>), и камни в безопасности.",
+  "zh-TW": "長到 <bdi>E2</bdi> 就有三口氣（<bdi>D2</bdi>、<bdi>F2</bdi>、<bdi>E1</bdi>），棋子安全了。",
+  "id": "Memperpanjang ke <bdi>E2</bdi> memberi tiga kebebasan (<bdi>D2</bdi>, <bdi>F2</bdi>, <bdi>E1</bdi>), dan batu aman.",
+  "tr": "<bdi>E2</bdi>'e uzatmak üç özgürlük verir (<bdi>D2</bdi>, <bdi>F2</bdi>, <bdi>E1</bdi>) ve taşlar güvende olur."
+ },
+ "The black stone is in atari. Anything else and White captures at <bdi>E2</bdi>.": {
+  "zh": "黑子被打吃了。下在别处，白就会在<bdi>E2</bdi>提子。",
+  "ko": "흑돌은 단수입니다. 다른 곳에 두면 백이 <bdi>E2</bdi>에서 따냅니다.",
+  "es": "La piedra negra está en atari. Con cualquier otra jugada, Blanco captura en <bdi>E2</bdi>.",
+  "fr": "La pierre noire est en atari. Sur tout autre coup, Blanc capture en <bdi>E2</bdi>.",
+  "pt": "A pedra preta está em atari. Em qualquer outra jogada, o Branco captura em <bdi>E2</bdi>.",
+  "de": "Der schwarze Stein steht im Atari. Bei jedem anderen Zug schlägt Weiß auf <bdi>E2</bdi>.",
+  "hi": "काला पत्थर अटारी में है। कोई और चाल खेली तो सफ़ेद <bdi>E2</bdi> पर पकड़ लेगा।",
+  "ar": "الحجر الأسود في أتاري. بأي نقلة أخرى يأسره الأبيض عند <bdi>E2</bdi>.",
+  "ru": "Чёрный камень в атари. Любой другой ход — и белые берут на <bdi>E2</bdi>.",
+  "zh-TW": "黑子被叫吃。下在別處，白就會在 <bdi>E2</bdi> 提子。",
+  "id": "Batu hitam dalam atari. Langkah lain apa pun dan Putih menangkap di <bdi>E2</bdi>.",
+  "tr": "Siyah taş atarideki. Başka bir hamlede Beyaz <bdi>E2</bdi>'te alır."
+ },
+ "Extending to <bdi>F3</bdi> gives four liberties; <bdi>G4</bdi> only three, because black <bdi>G5</bdi> takes one away. Run toward open space.": {
+  "zh": "长到<bdi>F3</bdi>有四口气；<bdi>G4</bdi>只有三口，因为黑<bdi>G5</bdi>占了一口。往空旷处逃。",
+  "ko": "<bdi>F3</bdi>로 뻗으면 수가 넷. <bdi>G4</bdi>는 흑 <bdi>G5</bdi>가 하나를 막아 셋뿐입니다. 넓은 쪽으로 도망치세요.",
+  "es": "Extenderse a <bdi>F3</bdi> da cuatro libertades; <bdi>G4</bdi> solo tres, porque la negra <bdi>G5</bdi> quita una. Huye hacia el espacio abierto.",
+  "fr": "Se prolonger en <bdi>F3</bdi> donne quatre libertés ; <bdi>G4</bdi> seulement trois, car la pierre noire <bdi>G5</bdi> en enlève une. Fuyez vers l’espace libre.",
+  "pt": "Estender para <bdi>F3</bdi> dá quatro liberdades; <bdi>G4</bdi> só três, porque a preta <bdi>G5</bdi> tira uma. Fuja para o espaço aberto.",
+  "de": "Verlängern nach <bdi>F3</bdi> ergibt vier Freiheiten; <bdi>G4</bdi> nur drei, weil Schwarz <bdi>G5</bdi> eine wegnimmt. Laufe ins Offene.",
+  "hi": "<bdi>F3</bdi> तक बढ़ने से चार स्वतंत्रताएँ मिलती हैं; <bdi>G4</bdi> से केवल तीन, क्योंकि काला <bdi>G5</bdi> एक छीन लेता है। खुली जगह की ओर भागें।",
+  "ar": "المدّ إلى <bdi>F3</bdi> يعطي أربع حريات؛ أما <bdi>G4</bdi> فثلاث فقط، لأن الأسود <bdi>G5</bdi> يأخذ واحدة. اهرب نحو المساحة المفتوحة.",
+  "ru": "Продление на <bdi>F3</bdi> даёт четыре свободы; <bdi>G4</bdi> — только три, потому что чёрный <bdi>G5</bdi> отнимает одну. Уходите на простор.",
+  "zh-TW": "長到 <bdi>F3</bdi> 有四口氣；<bdi>G4</bdi> 只有三口，因為黑 <bdi>G5</bdi> 占掉了一口。往空曠處逃。",
+  "id": "Memperpanjang ke <bdi>F3</bdi> memberi empat kebebasan; <bdi>G4</bdi> hanya tiga, karena hitam <bdi>G5</bdi> mengambil satu. Larilah ke ruang terbuka.",
+  "tr": "<bdi>F3</bdi>'e uzatmak dört özgürlük verir; <bdi>G4</bdi> yalnızca üç, çünkü siyah <bdi>G5</bdi> birini alır. Açık alana kaç."
+ },
+ "<bdi>G4</bdi> runs next to black stones and gets only three liberties. Run away from the opponent’s stones.": {
+  "zh": "<bdi>G4</bdi>贴着黑子逃，只有三口气。要远离对方的棋子。",
+  "ko": "<bdi>G4</bdi>는 흑돌 옆으로 도망쳐 수가 셋뿐. 상대 돌에서 멀어지는 쪽으로 도망치세요.",
+  "es": "<bdi>G4</bdi> huye junto a piedras negras y solo consigue tres libertades. Aléjate de las piedras del rival.",
+  "fr": "<bdi>G4</bdi> fuit à côté de pierres noires et n’obtient que trois libertés. Fuyez loin des pierres adverses.",
+  "pt": "<bdi>G4</bdi> foge ao lado de pedras pretas e só ganha três liberdades. Fuja para longe das pedras do adversário.",
+  "de": "<bdi>G4</bdi> läuft neben schwarze Steine und bekommt nur drei Freiheiten. Laufe von den gegnerischen Steinen weg.",
+  "hi": "<bdi>G4</bdi> काले पत्थरों के बगल में भागता है और केवल तीन स्वतंत्रताएँ पाता है। प्रतिद्वंद्वी के पत्थरों से दूर भागें।",
+  "ar": "<bdi>G4</bdi> يهرب بجوار أحجار سوداء فلا يحصل إلا على ثلاث حريات. اهرب بعيدًا عن أحجار الخصم.",
+  "ru": "<bdi>G4</bdi> уходит вплотную к чёрным камням и получает только три свободы. Уходите подальше от камней соперника.",
+  "zh-TW": "<bdi>G4</bdi> 貼著黑子逃，只有三口氣。要往遠離對方棋子的方向逃。",
+  "id": "<bdi>G4</bdi> lari di samping batu hitam dan hanya dapat tiga kebebasan. Larilah menjauhi batu lawan.",
+  "tr": "<bdi>G4</bdi> siyah taşların yanına kaçar ve yalnızca üç özgürlük alır. Rakip taşlardan uzağa kaç."
  }
 }
