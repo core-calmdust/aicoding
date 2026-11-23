@@ -1,16 +1,16 @@
 /* 博物館 (Museum tab) — atlas/museum.js: the title, the row of room buttons and the rooms' stage */
 .muhead .h{margin-bottom:4px}
 .musub{margin:0 0 12px;color:var(--ink2);font-weight:700;font-size:14.5px;line-height:1.6}
-.murooms{display:flex;gap:10px;margin:0 0 14px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 6px}
-.murooms::-webkit-scrollbar{display:none}
-.murm{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:12px;padding:10px 16px 10px 10px;border:2px solid var(--line);border-radius:20px;background:#fff;box-shadow:0 3px 0 var(--line);
+.murooms{display:grid;grid-template-columns:repeat(var(--h,3),minmax(0,1fr));gap:10px;margin:0 0 14px;padding:2px 2px 6px}
+@media (min-width:1180px){.murooms{grid-template-columns:repeat(var(--n,3),minmax(0,1fr))}}
+.murm{min-width:0;display:flex;align-items:center;gap:10px;padding:8px 12px 8px 8px;border:2px solid var(--line);border-radius:18px;background:#fff;box-shadow:0 3px 0 var(--line);
   font-family:var(--font);color:var(--ink);text-align:start;cursor:pointer;transition:transform .1s,box-shadow .1s,background .15s}
 .murm:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
-.murm .mui{flex:none;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:#f6eedb;color:var(--ink)}
-.murm .mui svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.murm .mui{flex:none;width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:#f6eedb;color:var(--ink)}
+.murm .mui svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .murm .mut{min-width:0}
-.murm b{display:block;font:700 17px var(--round);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.murm small{display:block;font-size:12.5px;font-weight:700;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.murm b{display:block;font:700 15.5px/1.25 var(--round);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.murm small{display:block;font-size:12px;font-weight:700;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .murm[aria-selected=true]{background:var(--ink);border-color:var(--ink);color:#fff;box-shadow:0 3px 0 #161a28}
 .murm[aria-selected=true] .mui{background:var(--sun);color:var(--ink)}
 .murm[aria-selected=true] small{color:rgba(255,255,255,.72)}
@@ -26,11 +26,12 @@ html.skdark .musub{color:rgba(255,255,255,.8)}
   .muhead{display:flex;align-items:baseline;gap:10px}
   .muhead .h{margin-bottom:6px}
   .musub{display:none}
-  .murooms{gap:6px;margin:0 -16px 8px;padding:2px 16px 6px}
-  .murm{flex:1 0 auto;gap:7px;padding:5px 12px 5px 5px;border-radius:99px}
-  .murm .mui{width:32px;height:32px;border-radius:50%}
-  .murm .mui svg{width:20px;height:20px}
-  .murm b{font-size:14px}
+  .murooms{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:0 0 10px;padding:0 0 4px}
+  .murm{flex-direction:column;justify-content:flex-start;gap:3px;padding:6px 2px 6px;border-radius:14px;text-align:center;box-shadow:0 2px 0 var(--line)}
+  .murm .mui{width:30px;height:30px;border-radius:50%}
+  .murm .mui svg{width:19px;height:19px}
+  .murm .mut{width:100%}
+  .murm b{font-size:11.5px;line-height:1.2;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
   .murm small{display:none}
   #pg-museum.on{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
   .muroom[data-r=map].on{display:flex;flex-direction:column}
@@ -484,4 +485,86 @@ html.exv-rot .urdk{rotate:90deg}
   .exrul-k{font-size:18px;padding:9px 16px;border-radius:12px;margin-top:10px}.exrul-m{font-size:15px}
   .exrul-a{margin-top:14px;padding-top:12px}.exrul-a button{height:48px;padding:0 26px;font-size:18px}
   .exrul-a .dots{gap:8px}.exrul-a .dots i{width:10px;height:10px}
+}
+
+/* ===== 偶然の道具 (the room of chance, atlas/museum/chance.js, 2026-11-24) ===== */
+.chlead{margin:0 0 12px;color:var(--ink2);font-weight:700;font-size:14.5px;line-height:1.6}
+html.skdark .chlead{color:rgba(255,255,255,.8)}
+.chtools{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:0 0 12px}
+.cht{min-width:0;display:flex;align-items:center;gap:8px;padding:7px 10px 7px 7px;border:2px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 3px 0 var(--line);font-family:var(--font);color:var(--ink);text-align:start;cursor:pointer;transition:transform .1s,box-shadow .1s}
+.cht:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.cht .chi{flex:none;width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:#f6eedb}
+.cht .chi svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.cht .chtt{min-width:0}
+.cht b{display:block;font:700 14px/1.25 var(--font);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cht small{display:block;font-size:11.5px;font-weight:700;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cht[aria-selected=true]{background:#2a1f17;border-color:#2a1f17;color:#fff;box-shadow:0 3px 0 #120c08}
+.cht[aria-selected=true] .chi{background:#c9a35a;color:#2a1f17}
+.cht[aria-selected=true] small{color:rgba(255,255,255,.7)}
+@media (hover:hover){.cht:not([aria-selected=true]):hover{transform:translateY(-2px);box-shadow:0 5px 0 var(--line)}}
+.chmain{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px;align-items:start}
+.chl,.chr{display:flex;flex-direction:column;gap:12px;min-width:0}
+.chl{position:sticky;top:84px}
+.chstage{position:relative;aspect-ratio:16/10;border-radius:22px;overflow:hidden;background:radial-gradient(120% 90% at 50% 35%,#3a2b20,#140d08 75%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 14px 30px -16px rgba(40,20,0,.55);touch-action:none;cursor:pointer;user-select:none;-webkit-user-select:none}
+.chstage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.chres{position:absolute;left:50%;top:12px;transform:translate(-50%,-6px);max-width:calc(100% - 24px);padding:7px 16px;border-radius:99px;background:rgba(20,13,8,.78);color:#fff3d6;font:800 16px/1.3 var(--font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;backdrop-filter:blur(4px)}
+.chres.on{opacity:1;transform:translate(-50%,0)}
+.chhint{position:absolute;left:0;right:0;bottom:8px;margin:0;text-align:center;font-size:11.5px;font-weight:700;color:rgba(255,240,220,.55);pointer-events:none}
+.chbadges{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .25s}
+.chbadges.on{opacity:1}
+.chb{position:absolute;left:0;top:0;margin:-13px 0 0 -17px;min-width:34px;height:26px;padding:0 8px;border-radius:99px;display:grid;place-items:center;background:#f4c95d;color:#2a1a08;font:800 14px/1 var(--round);box-shadow:0 2px 6px rgba(0,0,0,.45)}
+.chb.off{background:rgba(30,22,16,.75);color:rgba(255,240,220,.7)}
+.chbtns{display:flex;flex-wrap:wrap;gap:8px}
+.chbtns .btn{padding:10px 16px;font-size:15px}
+.chbtns .chgo{flex:1 1 140px;font-size:17px}
+.chbtns .chrs{margin-inline-start:auto}
+.chtext{background:#fff;border:2px solid var(--line);border-radius:20px;padding:16px 18px;box-shadow:var(--shadow)}
+.chname{margin:0;font:800 20px/1.3 var(--font)}
+.chsub{margin:2px 0 10px;font-size:12.5px;font-weight:700;color:var(--ink2)}
+.chbody p{margin:0 0 8px;font-size:14.5px;line-height:1.75}
+.chfact{margin:10px 0 0;padding:10px 12px;border-radius:14px;background:#fbf3df;font-size:14px;line-height:1.7}
+.chfact b{display:block;font-size:12px;color:#9a6a32;margin-bottom:2px}
+.chnote{margin:10px 0 0;font-size:12.5px;line-height:1.65;color:var(--ink2)}
+.chlinks h4{margin:14px 0 6px;font-size:12.5px;color:var(--ink2)}
+.chlinks div{display:flex;flex-wrap:wrap;gap:6px}
+.chlk{display:inline-flex;align-items:center;gap:6px;padding:6px 12px 6px 6px;border:2px solid var(--line);border-radius:99px;background:#fff;font:700 13.5px var(--font);color:var(--ink);cursor:pointer}
+.chlk i{font-style:normal;font-size:11px;padding:2px 7px;border-radius:99px;background:var(--ink);color:#fff}
+.chlk.ex i{background:#9a6a32}
+@media (hover:hover){.chlk:hover{border-color:#c9a35a}}
+.chchart{background:#fff;border:2px solid var(--line);border-radius:20px;padding:12px 14px 10px;box-shadow:var(--shadow)}
+.chsvg{display:block;width:100%;height:auto}
+.chgl{stroke:#efe6d2;stroke-width:1}
+.chax{stroke:#cbbd9c;stroke-width:1.5}
+.chob{fill:#c9a35a;transition:height .35s,y .35s}
+.chex{stroke:#2a1f17;stroke-width:2.5;stroke-linecap:round}
+.chbl{font:700 11px var(--round);fill:var(--ink2);text-anchor:middle}
+.chleg{display:flex;flex-wrap:wrap;gap:6px 14px;margin:4px 0 0;font-size:12px;font-weight:700;color:var(--ink2)}
+.chleg span{display:inline-flex;align-items:center;gap:6px}
+.chleg em{font-style:normal}
+.chleg i{display:inline-block;width:14px;height:10px;border-radius:3px}
+.chleg i.o{background:#c9a35a}
+.chleg i.e{height:0;border-top:3px solid #2a1f17;border-radius:0}
+.chn{margin:6px 0 0;font-size:13px;font-weight:800}
+.chextra{margin:2px 0 0;font-size:12.5px;font-weight:700;color:#9a6a32}
+@media (max-width:1100px) and (min-width:820px){.chtools{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:819px){
+  .chlead{font-size:13px;margin-bottom:8px}
+  .chtools{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:10px}
+  .cht{flex-direction:column;gap:2px;padding:6px 4px;border-radius:14px;text-align:center}
+  .cht .chi{width:28px;height:28px;border-radius:9px}
+  .cht .chi svg{width:19px;height:19px}
+  .cht .chtt{width:100%}
+  .cht b{font-size:12px}
+  .cht small{display:none}
+  .chmain{grid-template-columns:minmax(0,1fr);gap:10px}
+  .chl{position:static}
+  .chl,.chr{gap:10px}
+  .chstage{aspect-ratio:4/3;border-radius:18px}
+  .chres{font-size:14.5px;top:10px}
+  .chbtns .btn{padding:9px 12px;font-size:13.5px}
+  .chbtns .chgo{font-size:16px;flex-basis:100%}
+  .chbtns .chrs{margin-inline-start:0}
+  .chbtns .btn.ghost{flex:1 1 0}
+  .chtext{padding:14px 14px}
+  .chname{font-size:18px}
 }
