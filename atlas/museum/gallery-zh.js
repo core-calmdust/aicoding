@@ -1,6 +1,6 @@
 /* Museum "Collection" texts (Simplified Chinese). Same keys as gallery-ja.js. */
 (window.MUSEUM_GAL_T = window.MUSEUM_GAL_T || {}).zh = {
-  ui: { playable: "可以玩", p_start: "开始", p_undo: "悔棋", p_resign: "认输", p_hint: "提示", p_quit: "退出", p_sure: "确定？", p_orientS: "方向", p_rules: "规则", p_orient: "旋转棋盘方向", play_ballinderry: "布兰杜布", play_senet: "图坦卡蒙的塞尼特", play_ur: "乌尔王族游戏", play_shosoin: "木画紫檀棋局", play_sugoroku: "木画紫檀双六局", play_goose: "鹅棋", "play_goose-ch": "国际象棋", play_ottoman: "国际象棋", "play_ottoman-bg": "双陆棋", p_level: "对手", p_side: "先后", p_first: "先手", p_second: "后手", p_stop: "结束对局", p_you: "你", p_turn: "轮到你", p_think: "思考中…", p_win: "你赢了", p_lose: "你输了", p_draw: "平局", flip: '翻面', guideH: '向导：馆藏枭', guide: '逛遍馆藏，馆藏枭就会一次比一次打扮得更漂亮来见你', gift: '新的阿特拉莫来了！', sub: "世界各地博物馆珍藏的游戏史瑰宝。每件珍品都以3D重现——仿佛拿在手中，转动细看。", collection: "馆藏", special: "特别展示", lock: "达成{n}个{g}成就后开放", loading: "正在准备展柜…", fail: "展品加载失败",
+  ui: { playable: "可以玩", p_start: "开始", p_undo: "悔棋", p_resign: "认输", p_hint: "提示", p_quit: "退出", p_sure: "确定？", p_orientS: "方向", p_rules: "规则", p_orient: "旋转棋盘方向", play_ballinderry: "布兰杜布", play_senet: "图坦卡蒙的塞尼特", play_ur: "乌尔王族游戏", play_shosoin: "木画紫檀棋局", play_sugoroku: "木画紫檀双六局", play_goose: "鹅棋", "play_goose-ch": "国际象棋", play_ottoman: "国际象棋", "play_ottoman-bg": "双陆棋", play_liubo: "六博（复原规则）", p_level: "对手", p_side: "先后", p_first: "先手", p_second: "后手", p_stop: "结束对局", p_you: "你", p_turn: "轮到你", p_think: "思考中…", p_win: "你赢了", p_lose: "你输了", p_draw: "平局", flip: '翻面', guideH: '向导：馆藏枭', guide: '逛遍馆藏，馆藏枭就会一次比一次打扮得更漂亮来见你', gift: '新的阿特拉莫来了！', sub: "世界各地博物馆珍藏的游戏史瑰宝。每件珍品都以3D重现——仿佛拿在手中，转动细看。", collection: "馆藏", special: "特别展示", lock: "达成{n}个{g}成就后开放", loading: "正在准备展柜…", fail: "展品加载失败",
     hint: "拖动旋转 · 滚轮缩放 · 点数字看细节", hintT: "拖动旋转 · 双指缩放", spin: "缓慢旋转", reset: "回到初始视角", wide: '收起／展开解说', close: "关闭",
     date: "年代", where: "出土 / 传承", museum: "收藏", mat: "材质", size: "尺寸", look: "看点", aboutModel: "关于此3D模型", sources: "参考资料", play: "玩{g}" },
   ex: {
@@ -119,7 +119,7 @@
       museum: "大都会艺术博物馆（纽约）", no: '1994.285a–m', mat: "彩绘陶、骨", size: "36.2×31.4×5.1厘米",
       p: ["六博是汉代极为流行的两人游戏，在画有记号的棋盘上行棋，并掷骰或投箸决定走法。这块棋盘用陶土制成，用于随葬，寄托着在另一个世界继续游戏的愿望。", "玩法到唐代已经失传，至今仍无法确知。"],
       spots: [["中央的方框", "双线围成的方框。文献称之为“水”，其中放置鱼形棋子。"], ["T形", "从方框四边向外伸出的T形。"], ["L形", "棋盘四边中部的曲尺形线。"], ["V形", "四角的直角线。T、L、V纹也见于汉代铜镜。"], ["足", "盘底的四足。"], ["骨棋子", "十二枚长方体骨棋子，每人六枚。"]],
-      model: "尺寸依照馆方记录。盘面采用馆方照片（公有领域）校正后贴上，凹槽依红彩的位置做出。照片只有正面一张，因此盘的厚度、足的形状和位置以及背面均为推定。由于规则失传，这块棋盘暂时还不能对局。",
+      model: "尺寸依照馆方记录。盘面采用馆方照片（公有领域）校正后贴上，凹槽依红彩的位置做出。照片只有正面一张，因此盘的厚度、足的形状和位置以及背面均为推定。由于规则失传，这里能玩的是大百科根据文献残存的片段（双方各六枚棋子、六根箸、立起的棋子为枭、水中的鱼、得六筹者胜）拼出的复原规则，并不是当时真正的玩法。对局时为便于分辨，一方的棋子做成深色；箸和鱼为推定制作。",
       src: [["大都会艺术博物馆“Liubo Board and Pieces”1994.285a–m", "https://www.metmuseum.org/art/collection/search/50484"]] },
     goose: { name: "国际象棋与鹅棋棋盘", alt: "乌木镶嵌象牙的双面棋盘", date: "16世纪后期", where: "印度古吉拉特", found: "1962年由博物馆购入（Pfeiffer基金）",
       museum: "大都会艺术博物馆（纽约）", no: '62.14', mat: "乌木、染黑的木、象牙、角、金线", size: "2.9×41.9×43厘米",

@@ -614,6 +614,25 @@
       g.add(at(die(.72, 0x2a170c), p(1), 2.0, p(1), .5, .6, .3)); g.add(at(die(.72, 0x2a170c), p(1) + .75, 2.75, p(1) - .5, -.4, .2, .5));
       return g;
     },
+    'mu-liubo'() {   // the liubo board (The Met 1994.285): a corner of the grey clay slab with its red-painted grooves (the square, a T, an L), a bone piece lying and a dark one stood on end (the owl), two throwing sticks in the air
+      const top = M({ map: X.canvasTex('icmul1', 512, 512, (c, W) => {
+        c.fillStyle = '#7a6f5f'; c.fillRect(0, 0, W, W); let sd = 5; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+        for (let i = 0; i < 700; i++) { c.fillStyle = i % 2 ? 'rgba(50,40,30,.25)' : 'rgba(214,202,184,.2)'; c.beginPath(); c.arc(R() * W, R() * W, 1 + R() * 4, 0, 7); c.fill(); }
+        c.strokeStyle = '#d8482a'; c.lineCap = 'butt'; const L = (w, pts) => { c.lineWidth = w; c.beginPath(); pts.forEach(([x, y], i) => i ? c.lineTo(x * W, y * W) : c.moveTo(x * W, y * W)); c.stroke(); };
+        [0, .04].forEach(o => L(13, [[.36 + o * 1.4, 1], [.36 + o * 1.4, .4 + o * 1.4], [1, .4 + o * 1.4]]));   // the square's corner (a double line)
+        [0, .05].forEach(o => { L(12, [[.2 - o, .56], [.2 - o, .86]]); L(12, [[.2, .7 + o], [.36, .7 + o]]); });   // a T
+        [0, .05].forEach(o => { L(12, [[.5 + o, .04], [.5 + o, .24 - o], [.74, .24 - o]]); });   // an L
+        [0, .05].forEach(o => { L(12, [[.04, .1 + o], [.2 - o, .1 + o], [.2 - o, .3]]); });
+      }), roughness: .9 });
+      const g = boardChunk(3, 3.6, top, M({ color: 0x7a6e5e, roughness: .95 }));
+      const bone = C(0xe6d9bc, { roughness: .6 }), dark = C(0x3a2a20, { roughness: .55 }), red = C(0x8a2a1c, { roughness: .35 }), pale = C(0xe2cf9c, { roughness: .6 });
+      const blk = m => mesh(new T.BoxGeometry(.98, .5, .6), m);
+      g.add(at(blk(bone), -.2, .75, 1.05, 0, .25, 0));
+      g.add(at(blk(dark), -1.05, .99, -.75, 0, .1, Math.PI / 2));
+      const stick = () => { const o = new T.Group(); o.add(mesh(new T.BoxGeometry(2.3, .1, .2), red)); o.add(at(mesh(new T.BoxGeometry(2.3, .03, .2), pale), 0, .065, 0)); return o; };
+      g.add(at(stick(), .75, 2.15, -.2, .5, .7, .35)); g.add(at(stick(), .3, 2.75, .45, -.4, -.35, -.3));
+      return g;
+    },
     'mu-senet'() {   // Tutankhamun's box itself: the ebony box on its sledge, a gold band of signs, the ivory squares on top, a reel hopping along it, a cone
       const g = plinth(3.6, M({ map: softWood('icmus0', '#b98a58', '#7a5230') }));
       const eb = gloss(0x24160d), gold = C(0xd9ad4a, { roughness: .3, metalness: .5 }), ivory = C(0xf0e3c2, { roughness: .4 });

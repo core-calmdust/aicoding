@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <defs>
+    <clipPath id="ml-c"><rect width="96" height="96" rx="20"/></clipPath>
+    <linearGradient id="ml-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9a8e7c"/><stop offset="1" stop-color="#6a5f50"/></linearGradient>
+    <linearGradient id="ml-bn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6ecd4"/><stop offset="1" stop-color="#cdbb94"/></linearGradient>
+    <linearGradient id="ml-dk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5a4434"/><stop offset="1" stop-color="#22160f"/></linearGradient>
+  </defs>
+  <g clip-path="url(#ml-c)">
+    <rect width="96" height="96" fill="url(#ml-bg)"/>
+    <g fill="#4a3c2e" opacity=".28"><circle cx="14" cy="60" r="1.6"/><circle cx="70" cy="16" r="1.3"/><circle cx="84" cy="70" r="1.8"/><circle cx="30" cy="20" r="1.1"/><circle cx="52" cy="84" r="1.4"/><circle cx="20" cy="86" r="1.2"/></g>
+    <g fill="none" stroke="#c9432a" stroke-width="2.6" stroke-linecap="square">
+      <path d="M33 33H63V63H33Z"/><path d="M37 37H59V59H37Z"/>
+      <path d="M46.500 33V24M49.500 33V24M40 24H56M40 21H56"/><path d="M46.500 63V72M49.500 63V72M40 72H56M40 75H56"/>
+      <path d="M33 46.500H24M33 49.500H24M24 40V56M21 40V56"/><path d="M63 46.500H72M63 49.500H72M72 40V56M75 40V56"/>
+      <path d="M8 18H18V8M8 15H15V8"/><path d="M88 18H78V8M88 15H81V8"/><path d="M8 78H18V88M8 81H15V88"/><path d="M88 78H78V88M88 81H81V88"/>
+    </g>
+    <rect x="58" y="76" width="20" height="10" rx="1.5" fill="url(#ml-bn)" stroke="#8a7648" stroke-width=".8" transform="rotate(-8 68 81)"/>
+    <rect x="42" y="38" width="12" height="20" rx="1.5" fill="url(#ml-dk)" stroke="#120c08" stroke-width=".8"/>
+    <rect x="2.500" y="2.500" width="91" height="91" rx="18" fill="none" stroke="#d7ae55" stroke-width="2"/>
+  </g>
+</svg>

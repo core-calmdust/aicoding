@@ -712,7 +712,7 @@
   const RND_SVG = `<span class="dieic" aria-hidden="true"><img class="rb" src="../images/atlas/random-base.webp?v=1" alt="" decoding="async"><img class="cube" src="../images/atlas/random-die.webp?v=1" alt="" decoding="async"></span>`;
   /* 博物館の所蔵品で遊ぶゲーム (2026-11-23): not games of the portal's own list (no number, no achievements, no board sheet) — an icon on the home
      grid and a card in the game list's ヒストリカル group, each with the MUSEUM badge, that open the exhibit in the museum (#museum/<id>). */
-  const MU_COL = { senet: '#8a6a3a', shosoin: '#7a2a22', sugoroku: '#6a3a22', ballinderry: '#5a4630', goose: '#2a2420' };
+  const MU_COL = { senet: '#8a6a3a', shosoin: '#7a2a22', sugoroku: '#6a3a22', ballinderry: '#5a4630', goose: '#2a2420', liubo: '#6a5a4c' };
   const MU_GAMES = Object.keys(window.ATLAS_MU || {}).map(k => ({ id: 'mu-' + k, mu: k, cat: 'hist', tags: ['ai'], color: MU_COL[k] || '#7a5a36', href: 'atlas/#museum/' + k, name: ATLAS_MU[k].n }));
   const muName = g => g.name[lang] || g.name.en, muDesc = g => { const d = ATLAS_MU[g.mu].d; return d[lang] || d.en; };
   const muArt = g => `<img src="../images/atlas/mu-${g.mu}.webp?v=2" alt="" loading="lazy" decoding="async">`;

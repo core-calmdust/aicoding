@@ -15,7 +15,7 @@
   'use strict';
   const A = window.AtlasNPC = window.AtlasNPC || {};
   A.LEVELS = { chess: 33, shogi: 30, go: 37, reversi: 36, gomoku: 20, checkers: 20, xiangqi: 20, janggi: 23, tafl: 30, ur: 20, senet: 20, morris: 11,
-    connect4: 9, dots: 12, mancala: 11, backgammon: 10, hex: 20, fanorona: 20, ugolki: 28, agon: 28, konane: 26, latrunculi: 26, foxgeese: 20, patolli: 20, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, botao: 20, alquerque: 20, amazons: 28, hitblow: 20, sugoroku: 20, goose: 20 };
+    connect4: 9, dots: 12, mancala: 11, backgammon: 10, hex: 20, fanorona: 20, ugolki: 28, agon: 28, konane: 26, latrunculi: 26, foxgeese: 20, patolli: 20, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, botao: 20, alquerque: 20, amazons: 28, hitblow: 20, sugoroku: 20, goose: 20, liubo: 20 };
   const N = s => { const p = s.split('|'), k = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'ru', 'hi', 'ar'], o = {}; k.forEach((l, i) => { o[l] = p[i] || p[1]; }); ['es', 'fr', 'pt', 'de', 'id', 'tr'].forEach(l => { o[l] = o.en; }); return o; };
   const b = (v, m, n) => ({ v, m, n: N(n) });
   // colours: [body, belly / face, accent]
@@ -355,6 +355,19 @@
       b('villain', { a: 'wolf', c: [0xe8e4dc, 0xffffff, 0x2a2a38], hat: 'hood', held: 'staff', ex: ['robe'], rc: 0x2a2a38 }, 'ゴジュウハチ|Fiftyeight|五十八狼|五十八狼|오십팔랑|Пятьдесятвосемь|फ़िफ़्टीएट|فيفتي‌إيت'),
       b('king', { a: 'lion', c: [0xd8a04a, 0xfff0d0, 0x8a2a2a], hat: 'crown', held: 'scroll', ex: ['ruff'] }, 'フェリペオン|Felipeon|腓力狮王|腓力獅王|펠리페온|Фелипеон|फ़ेलिपियन|فيليبيون'),
       b('king', { a: 'bird', c: [0xffd65a, 0xfff8e0, 0xa8472c], beak: 0xff9a3a, hat: 'bigcrown', held: 'die', ex: ['cape'], cape: 0xa8472c }, 'メディチガチョウ|Medigoose|美第奇金鹅|梅迪奇金鵝|메디치거위|Медигусь|मेडिगूस|ميديغوس'),
+    ],
+    // 六博 (2026-11-23, the museum's liubo board, The Met 1994.285; a reconstruction of our own): the game's own words and Han China — an owlet
+    // (梟: the piece stood on end), an otter that pulls the fish from the water, a diviner (the 博局占 slip from Yinwan: fortunes told on the liubo
+    // diagram), a gambler (博徒), an immortal at play (仙人六博, a favourite scene of Han tomb carvings), the Queen Mother of the West (Hanshu:
+    // in 3 BCE her worshippers set out liubo boards), and Emperor Jing, who as crown prince quarrelled over a game with the heir of Wu (Shiji).
+    liubo: [
+      b('sleepy', { a: 'owl', c: [0xb89a74, 0xf6ecd8, 0xc8452c], hat: 'straw', held: 'sticks' }, 'ヒナキョウ|Owlet|小枭雏|小梟雛|아기올빼미|Совёнок|आउलेट|أوليت'),
+      b('merchant', { a: 'otter', c: [0x8a6a4a, 0xf0e2c8, 0x3a7a9a], hat: 'kasa', held: 'piece', ex: ['scarf'], sc: 0x3a7a9a }, 'ウオトリウソ|Fishotter|牵鱼獭|牽魚獺|고기잡이수달|Рыбовыдра|फ़िशऑटर|فيشأوتر'),
+      b('scholar', { a: 'turtle', c: [0x6a8a5a, 0xe8e8c8, 0x8a2a22], hat: 'mortar', held: 'scroll', ex: ['glasses'] }, 'ウラナイガメ|Omenturtle|占卜龟|占卜龜|점치는거북|Гадочерепаха|ओमेनटर्टल|أومينترتل'),
+      b('trickster', { a: 'monkey', c: [0xa87848, 0xf4dcc0, 0xc8452c], hat: 'bandana', held: 'sticks', ex: ['scarf'], sc: 0xc8452c }, 'バクトザル|Gamblemonk|博徒猴|博徒猴|노름원숭이|Игрообезьян|गैम्बलमंक|غامبلمونك'),
+      b('angel', { a: 'deer', c: [0xe8dcc0, 0xffffff, 0x6ab8c8], hat: 'halo', held: 'orb', ex: ['angelwings', 'robe'], rc: 0xe8f4f8 }, 'センニンジカ|Immortaldeer|仙人鹿|仙人鹿|신선사슴|Бессмертнолень|इम्मोर्टलडियर|إيمورتالدير'),
+      b('lady', { a: 'tiger', c: [0xf0b050, 0xfff4dc, 0xc8452c], hat: 'tiara', held: 'fan', ex: ['necklace', 'robe'], rc: 0xc8452c }, 'セイオウボトラ|Queentigress|西王母虎|西王母虎|서왕모호랑|Сиванмутигр|क्वीनटाइग्रेस|كوينتايغرس'),
+      b('king', { a: 'dragon', c: [0xc8452c, 0xffe8b0, 0x2a2a38], hat: 'bigcrown', held: 'sticks', ex: ['longbeard', 'cape'], cape: 0x2a2a38 }, 'ケイテイリュウ|Jingdragon|景帝龙|景帝龍|경제용|Цзиндракон|जिंगड्रैगन|جينغدراغون'),
     ],
     sugoroku: [
       b('sleepy', { a: 'cat', c: [0xf6ead6, 0xffffff, 0x2f6a44], hat: 'eboshi', held: 'die' }, 'ナラニャン|Narakit|奈良喵|奈良喵|나라냥|Наракит|नाराकिट|ناراكيت'),
