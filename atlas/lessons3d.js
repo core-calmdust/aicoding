@@ -674,6 +674,7 @@
     const nb = b.slice(); nb[z] = drop ? (s ? u[0].toUpperCase() : u[0].toLowerCase()) : (u[4] === '+' ? '+' : '') + b[a].replace('+', ''); if (!drop) nb[a] = '';
     if (u[4] !== '+' && !drop && b[a][0] === '+') nb[z] = b[a];
     const F = { pc, drop, cap, pro: u[4] === '+', behind: mat(s) < mat(!s), fm: s ? 9 - z % 9 : 1 + z % 9, rz: s ? (z / 9) | 0 : 8 - ((z / 9) | 0) };
+    if (!drop) { const fw = s ? ((a / 9) | 0) - ((z / 9) | 0) : ((z / 9) | 0) - ((a / 9) | 0); F.dir = fw > 0 ? 'up' : fw < 0 ? 'back' : 'side'; F.n = Math.max(Math.abs(((a / 9) | 0) - ((z / 9) | 0)), Math.abs(a % 9 - z % 9)); }   // (2026-11-24 第2期: the words say which way the piece went only when it did)
     F.trade = cap === 'b' && pc === 'b';
     if (!drop && pc === 'r' && ((a / 9) | 0) === ((z / 9) | 0) && !cap) { F.swing = { 5: '中飛車', 6: '四間飛車', 7: '三間飛車', 8: '向かい飛車', 3: '袖飛車' }[F.fm] || 'side'; if ((s ? 9 - a % 9 : 1 + a % 9) !== 2) F.swing = 'side'; }
     if (!drop && pc === 'p') {
@@ -729,9 +730,11 @@
     r: [['飛車の位置を整えて、攻めにも守りにも働くようにする手なの。', '飛車を動かして、使いやすい場所へ置く手！', '飛車の場所を整える手コン。', '飛車を引いておく手。'], ['', '', '大駒の置き場所は大事なの！']],
     df: [['この形で、強い人たちが本筋と考えている手コン。', 'この場面の定跡どおりの手！', '定跡の流れにそった手なの。'], ['']],
   };
+  // (2026-11-24 第2期・担当B) a wording that says which way the piece went (横へずらす・引く・上げる・前へ・一つ…) only for a move that went so
+  const shDirOk = (h, F) => !F.dir || F.pc === 'n' || !((/横へずら|横に/.test(h) && F.dir !== 'side') || (/引い|引く/.test(h) && F.dir !== 'back') || (/上げ|上が|前へ|前に(出|進)|進め|持ちあげ/.test(h) && F.dir !== 'up') || (/一つずら|一つ上げ|一つ進め|一段|一歩/.test(h) && F.n !== 1));
   function shWhyJa(F, pk) {
     const v = pk || SH_P0, X = SH_PN[F.pc], C = SH_PN[F.cap];
-    const W = key => { const [H, T] = SHW[key], h = v(key, H).replace(/\{X\}/g, X), t = v(key + '.t', T); return t ? h + (/[！？]$/.test(h) ? ' ' : '') + t : h; };
+    const W = key => { const [H0, T] = SHW[key], H1 = H0.filter(h => shDirOk(h, F)), H = H1.length ? H1 : SHW.df[0], h = v(key, H).replace(/\{X\}/g, X), t = v(key + '.t', T); return t ? h + (/[！？]$/.test(h) ? ' ' : '') + t : h; };
     if (F.trade && F.behind) return v('tb', ['角を取り返して、駒の損を取り戻す手。ここで取り返さないと、角1枚の損になっちゃう！', '取られた角を取り返す手！ これで駒の数が元どおりなの。', '角を取り返しておく手コン。放っておくと角損のままだからね。']);
     if (F.trade) return v('tr', ['自分から角を交換する手コン。おたがいに角を持ち駒にして、打ち込みのスキをねらい合う形になるの。', '角と角をぶつけて交換する手！ これで角が持ち駒になるの。', '角交換を選ぶ手。角を打ちこむすきを、おたがいに探す戦いになるコン。']);
     if (F.cap && F.behind) return v('cb', [`取られた駒を、すぐ${X}で取り返す手。取り返さないと駒損のままだからね。`, `${X}で取り返す手！ 駒の数をそろえておくの。`, `すかさず${X}で取り返す手コン。これで損はなし！`, `${X}で取り返して、駒の数を五分にもどす手。`, `取られっぱなしにしない、${X}の取り返し！`]);
@@ -745,7 +748,7 @@
     if (F.pc === 'g' || F.pc === 's') return W(F.guard ? 'gd' : F.pc === 's' && F.up && F.rside ? 'sa' : F.up ? 'up' : 'gs');
     return W(SHW[F.pc] ? F.pc : 'df');
   }
-  function shShortJa(F) { return F.trade && F.behind ? '角を取り返せる' : F.trade ? '角を交換できる' : F.cap && F.behind ? '駒を取り返せる' : F.cap ? '駒を取れる' : F.drop ? '持ち駒を生かせる' : F.swing ? '飛車の働く場所が決まる' : F.pc === 'k' ? '玉を安全にできる' : F.bopen ? '角道が開く' : F.bshut ? '角道を止められる' : F.clash ? '戦いを始められる' : F.rookp ? '飛車先の歩が伸びる' : F.block ? '相手の駒の利きを止められる' : F.guard ? '囲いが固まる' : F.pc === 's' && F.up && F.rside ? '攻めの銀が前に出る' : '定跡どおりの形になる'; }
+  function shShortJa(F) { return F.trade && F.behind ? '角を取り返せる' : F.trade ? '角を交換できる' : F.cap && F.behind ? '駒を取り返せる' : F.cap ? '駒を取れる' : F.drop ? '持ち駒を生かせる' : F.swing ? '飛車の働く場所が決まる' : F.pc === 'k' ? '玉を安全にできる' : F.bopen ? '角道が開く' : F.bshut ? '角道を止められる' : F.clash ? '戦いを始められる' : F.rookp ? '飛車先の歩が伸びる' : F.block ? '相手の駒の利きを止められる' : F.guard ? '囲いが固まる' : F.pc === 's' && F.up && F.rside ? '攻めの銀が前に出る' : F.dir && SH_PN[F.pc] && F.pc !== 'p' ? SH_PN[F.pc] + ({ up: ['が前に出て、相手の陣地に近づく', 'を前に進めて、攻めの形を作れる', 'が前へ出て、戦いに加われる'], back: ['を引いて、自分の陣地に戻せる', 'を引いて、守りに回せる', 'を引いて、陣形を引きしめられる'], side: ['を横に寄せて、形を整えられる', 'を横に寄せて、ほかの駒と並べられる', 'を横に動かして、位置を整えられる'] }[F.dir][(F.fm + F.rz) % 3]) : '定跡どおりの形になる'; }
   const SH_GLOW = ['光っている手がヒントだコン。', '光っている手を見てみて！', 'ヒントは光っている手！', '光っている駒に注目！', '答えのヒントは、光っているところ！', 'カギは光っている手コン！', '光っているマスがカギだコン！', '光っている手、どう思う？'];
   function shHintJa(F, k, cp, pk, line) {
     const v = pk || SH_P0, Q = (key, a) => { const q = v('h-' + key, a), g = v('glow', SH_GLOW); return q + (/[！？]$/.test(q) ? ' ' : '') + g; };
@@ -813,7 +816,7 @@
     } catch (e) { return ''; }
   }
   function shContrastJa(F, FA, k, ci) {   // (2026-11-22) a quiet miss in an opening: what the line's move does, and what yours does instead — from the board
-    const mine = F.bshut ? '{x}は角道を止めてしまう手' : F.pc === 'k' && !F.castle ? '{x}は玉を戦いの起きる側へ動かしてしまう手' : F.edge ? '{x}の端歩は、急がなくてもいい手' : F.swing && !FA.swing ? '{x}で飛車を動かすと、作戦が変わってしまう' : F.pc === 'r' && !FA.swing ? '{x}は飛車をうろうろさせる手' : '';
+    const mine = F.bshut ? '{x}は角道を止めてしまう手' : F.pc === 'k' && !F.castle ? '{x}は玉を戦いの起きる側へ動かしてしまう手' : F.edge ? '{x}の端歩は、急がなくてもいい手' : F.swing && !FA.swing ? '{x}は飛車を動かして、作戦が変わってしまう手' : F.pc === 'r' && !FA.swing ? '{x}は飛車をうろうろさせる手' : '';
     const theirs = `{m}なら${shShortJa(FA)}`;
     const c = ci != null ? ci : k, sh = shShortJa(FA);
     return mine ? [`${mine}。${theirs}から、ここは{m}が先なの。`, `${theirs}けど、${mine}なの。`, `${mine}だから、ここは見送りたいの。${theirs}！`, `残念、${mine}なの。${theirs}からね。`][c % 4] : [`${theirs}けど、{x}ではそうならないの。`, `{x}を指しても、${sh}ことにはならないの。{m}を先に指しておきたいところ！`, `{x}ではその働きがないの。${theirs}から、こっちが先コン。`, `{x}だと${sh}チャンスをのがしちゃうの。{m}が先！`][c % 4];
@@ -884,7 +887,7 @@
       const voice = fetch('../shogi/voice-fox-ja.js?v=4').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       const rep = getJ('../shogi/lesson-replies.json?v=2').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
       return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=20261124a'), getJ('../shogi/openings.json?v=20261107l14'),
-        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261121lp`).catch(() => ({ sets: [] })))])
+        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261124ob`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
           sets.forEach(s => { if (!s.cat) s.cat = s.handi ? 'handi' : 'mid'; });
@@ -920,7 +923,7 @@
     },
     opening(key, lang) {
       const s = this.data.sets.find(x => x.id === key); if (!s) return null;
-      const probs = (s.problems || []).length ? (s.handi ? s.problems.map((p, i) => i) : shuffle(s.problems.map((p, i) => i))).slice(0, 5).sort((a, b) => s.handi ? a - b : 0).map(i => s.problems[i]) : [];
+      const probs = (s.problems || []).length ? (s.handi ? s.problems.map((p, i) => i) : shuffle(s.problems.map((p, i) => i))).slice(0, 5).sort((a, b) => a - b).map(i => s.problems[i]) : [];   // (the pool's order: easy → hard, 2026-11-24 第2期・担当B)
       // (2026-11-21) sets with few game-based problems (the castles, 鬼殺し, 立石流 …): filled up with "the line's next move" problems
       // (lineProbs, shogi/tools/openings/lineprobs.js), in the line's order
       if (probs.length < 5 && (s.lineProbs || []).length) probs.push(...shuffle(s.lineProbs.slice()).slice(0, 5 - probs.length).sort((a, b) => a.ply - b.ply));
@@ -2615,7 +2618,7 @@
   /* the same texts without coordinates, for the 3D board (2026-11-14): atlas/nocoord/<game>.json { '<lesson id>/<ramp index>/<field>': { lang: text } }
      (the full games keep their own texts: their boards show coordinates) */
   const NC = {};
-  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=20').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
+  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=21').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
   // (2026-11-21 user: 「ドット＆ボックスの初回レッスンも、これはどういうゲームなのかの説明がない。まずは短くても良いからそこから」)
   // the first lesson of a game opens with what the game is and how it is won, in the guide's voice (ja; the games whose first intro lacks it)
   const GAME_JA = {

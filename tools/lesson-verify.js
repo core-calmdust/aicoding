@@ -950,12 +950,125 @@ function shogi(opt) {
   }
   return out;
 }
-const GAMES = { connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi };
+// (2026-11-24 第2期・担当B) shogi openings (<game>/open): the strict ①〜⑨ of the verified sets (SHO_DONE) — the game-based problems
+// "which move do strong players play most here?" (mode freq; the pool is curated by shogi/tools/openings/curate.js). Checked here on
+// their own: ① the answer is the most played move and the site's engine (depth 8, NNUE) puts it within 150 of its best; ② it is
+// played 12 times or more and the second move 60% of it or less (≤ 12 of 20 points: never 「正解」 in the 2D or the 3D); ③ 3+ legal
+// moves and 2+ stored candidates; ④ the set's own pattern holds (src pat, mirrored when the strategy is Gote's) and the mover is the
+// strategy's side, not in check; ⑤ 5 squares or more from every other problem of the shogi lessons, warm-ups and openings, one answer
+// at most twice; ⑥ the pool easy → hard (d = squares changed from the start + 20 × second / first) and both the 2D and the 3D keep
+// the pool's order; ⑦⑧ ショウギツネ's words (shOpJa) at every position in the lesson for the answer and every other legal move: the
+// side and the name in the question, the percentages from the stored counts, and each claim about the board checked on the board
+// (swing names, the bishop's line opened / shut, captures, recaptures, king moves, edge pawns, a piece left to be taken: the opponent
+// wins material at once by SEE and the engine puts the move 100+ below the answer); ⑨ the 2D and the 3D score a freq problem alike.
+const SHO_DONE = new Set(['nakabisha', 'mukai', 'migishiken']);
+let shoW = null;
+function shogiOpen(opt) {
+  const fs = require('fs'), vm = require('vm');
+  const E = require(path.join(ROOT, 'shogi/engine.js')), CU = require(path.join(ROOT, 'shogi/tools/openings/curate.js'));
+  if (!shoW) shoW = require(path.join(ROOT, 'shogi/tools/openings/wasm-engine.js')).loadSync();
+  const src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), app = fs.readFileSync(path.join(ROOT, 'shogi/index.html'), 'utf8');
+  const CATS = ['beg', 'mid', 'adv', 'sp', 'new', 'castle'], sets = [];
+  CATS.forEach(c => JSON.parse(fs.readFileSync(path.join(ROOT, `shogi/openings-${c}.json`), 'utf8')).sets.forEach(s => sets.push(s)));
+  JSON.parse(fs.readFileSync(path.join(ROOT, 'shogi/openings.json'), 'utf8')).sets.forEach(s => { if (!sets.some(x => x.id === s.id)) sets.push(s); });
+  if (opt && opt.sets) opt.sets.forEach(s => { const i = sets.findIndex(x => x.id === s.id); if (i >= 0) sets[i] = s; });
+  const SRC = {}; CATS.forEach(c => require(path.join(ROOT, `shogi/tools/openings/src/${c}.js`)).forEach(e => { SRC[e.id] = e; }));
+  const L = JSON.parse(fs.readFileSync(path.join(ROOT, 'shogi/lessons.json'), 'utf8'));
+  const out = [], add = (id, j, m) => out.push({ step: id, q: j + 1, msg: m });
+  // ⑨ the same scoring; ⑥ the pool's order in both
+  const MAT = "if (P.mode === 'material' || P.mode === 'freq') { const best = P.cand[0][1], c = P.cand.find(x => x[0] === u); return c ? Math.round(PTS * c[1] / best) : 0; }";
+  if (!app.includes(MAT.replace(/P\./g, 'pr.').replace(/\bu\)/g, 'usi)'))) add('-', -1, '⑨ shogi/index.html movePoints (freq) changed');
+  if (!src.includes(MAT)) add('-', -1, '⑨ the 3D SHOGI.points (freq) changed');
+  if (!app.includes('const probs = shuffle(g.problems.map((p, i) => i)).slice(0, 5).sort((a, b) => a - b).map(i => g.problems[i]);')) add('-', -1, '⑥ the 2D opening practice does not keep the pool order');
+  if (!src.includes('shuffle(s.problems.map((p, i) => i))).slice(0, 5).sort((a, b) => a - b).map(i => s.problems[i])')) add('-', -1, '⑥ the 3D opening practice does not keep the pool order');
+  const X = vm.runInNewContext(src.slice(src.indexOf('  const winP = (v, k) =>'), src.indexOf('  const SHOGI = {')) + '\n;({ shOpJa, shOpVoice })', { fill: (s, v) => String(s).replace(/\{(\w+)\}/g, (_, k) => v[k] != null ? v[k] : ''), console });
+  const pool = [];
+  sets.forEach(s => (s.problems || []).concat(s.lineProbs || []).forEach((p, j) => pool.push([s.id, j, CU.brd(p.sfen)])));
+  L.grades.forEach(g => { g.problems.forEach((p, j) => pool.push([g.id, j, CU.brd(p.sfen)])); (g.ramp || []).forEach((r, j) => r.sfen && pool.push([g.id + ' ramp', j, CU.brd(r.sfen)])); });
+  const S0 = CU.brd('lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1');
+  const plain = t => String(t).replace(/<[^>]+>/g, '');
+  const NM = { 1: '歩', 2: '香', 3: '桂', 4: '銀', 5: '角', 6: '飛車', 7: '金', 8: '玉' };
+  for (const s of sets) { const id = s.id; if (!SHO_DONE.has(id)) continue;
+    const e = SRC[id], P0 = s.problems || [], side = e.side === 'w' ? 1 : 0, C0 = CU.compile(e.pat, false), C1 = e.mirror ? CU.compile(e.pat, true) : null;
+    if (P0.length < 5) add(id, -1, `③ ${P0.length} problems in the pool (5 are drawn)`);
+    let prevD = -1; const ans = new Map(), nm = String(s.title.ja), VO = X.shOpVoice(id), hs = id.length * 3;
+    P0.forEach((P, j) => { const a = m => add(id, j, m), p = new E.Position(); p.setSfen(P.sfen); const ms = p.legalMoves(true), U = m => p.toUsi(m), legal = new Set(ms.map(U));
+      const C = P.cand || [], A = (P.accept || [])[0];
+      // ① ② ③
+      if (P.kind !== 'best' || P.mode !== 'freq') { a('① not a freq problem'); return; }
+      if ((P.accept || []).length !== 1 || A !== (C[0] || [])[0] || (P.pv || [])[0] !== A) a(`① accept ${P.accept} / pv ${P.pv} is not the most played ${(C[0] || [])[0]}`);
+      C.forEach(([u, n], k) => { if (!legal.has(u)) a(`① candidate ${u} is not legal`); if (k && n > C[k - 1][1]) a('① cand is not most played first'); });
+      const n1 = (C[0] || [0, 0])[1], n2 = (C[1] || [0, 0])[1], tot = P.total || C.reduce((x, c) => x + c[1], 0);
+      if (C.reduce((x, c) => x + c[1], 0) > tot) a('⑧ the total is below the counts');
+      const r = shoW.analyze(P.sfen, { depth: 8 }), sc = u => (r.find(x => x.usi === u) || { s: -1e9 }).s, best = r[0].s;
+      if (best - sc(A) > 150) a(`① the engine puts the answer ${best - sc(A)} below its best ${r[0].usi}`);
+      if (n1 < 12) a(`② played only ${n1} times`);
+      if (n2 > 0.6 * n1) a(`② the second move is played ${n2} times against ${n1} (${Math.round(20 * n2 / n1)} points)`);
+      if (ms.length < 3) a(`③ ${ms.length} legal moves`);
+      if (C.length < 2) a('③ a single candidate');
+      // ④
+      const m0 = CU.match(p, C0), m1 = C1 && CU.match(p, C1), strat = m0 && !m1 ? side : m1 && !m0 ? 1 - side : -1;
+      if (strat < 0) a(`④ the pattern of 『${nm}』 does not hold (or holds both ways)`); else if (strat !== p.side) a('④ the mover is not the strategy side');
+      if (p.inCheck()) a('④ the mover is in check');
+      // ⑤
+      const B = CU.brd(P.sfen);
+      for (const [w, k, b] of pool) { if (w === id && k === j) continue; const d = CU.dist(B, b); if (d <= 4) a(`⑤ ${d} squares from ${w} ${k + 1}`); }
+      ans.set(A, (ans.get(A) || 0) + 1); if (ans.get(A) === 3) a(`⑤ the answer ${A} a third time`);
+      // ⑥
+      const d = CU.dist(B, S0) + 20 * n2 / n1; if (d < prevD) a(`⑥ easier than the problem before (d ${d.toFixed(1)} after ${prevD.toFixed(1)})`); prevD = Math.max(prevD, d);
+      // ⑦⑧ the words at every place in the lesson
+      const N = tot || 1, pc = c => Math.max(1, Math.round(c / N * 100)), cnt = new Map(C);
+      const facts = u => { const q = new E.Position(); q.setSfen(P.sfen); const m = q.fromUsi(u), drop = E.isDrop(m), fr = drop ? -1 : E.mFrom(m), to = E.mTo(m), pt = drop ? E.dropType(m) : E.typeOf(q.board[fr]), cap = q.board[to];
+        const bish = x => { let n = 0; for (const mm of x.legalMoves(true)) if (!E.isDrop(mm) && [5, 13].includes(E.typeOf(x.board[E.mFrom(mm)]))) n++; return n; };
+        const nullSide = x => { const y = new E.Position(); y.setSfen(x.sfen().replace(/ [bw] /, ` ${q.side ? 'w' : 'b'} `)); return y; };
+        const b0 = bish(q); q.doMove(m); const b1 = bish(nullSide(q));
+        let win = 0; for (const mm of q.legalMoves(true)) if (!E.isDrop(mm) && q.board[E.mTo(mm)]) win = Math.max(win, q.see(mm));
+        const file = 9 - to % 9, rank = ((to / 9) | 0) + 1, sfile = q.side ? file : 10 - file;   // (q.side: the opponent now; sfile counted from the mover's right)
+        const fw = drop ? 0 : (p.side ? 1 : -1) * (((to / 9) | 0) - ((fr / 9) | 0)), n = drop ? 0 : Math.max(Math.abs(((to / 9) | 0) - ((fr / 9) | 0)), Math.abs(to % 9 - fr % 9));
+        return { pt, drop, cap: !!cap, fr, to, b0, b1, win, file: p.side ? 10 - file : file, rank, horiz: !drop && ((fr / 9) | 0) === ((to / 9) | 0), loss: sc(A) - sc(u), dir: drop ? '' : fw > 0 ? 'up' : fw < 0 ? 'back' : 'side', n };
+      };
+      const FA = facts(A);
+      for (let i = 0; i < 5; i++) {
+        let Q; try { Q = X.shOpJa({ pos: P.sfen, kind: 'best', P, ans: A }, nm, hs, i, false, VO); } catch (er) { a(`⑧ the 3D words fail: ${er.message}`); break; }
+        const who = p.side ? '☖後手' : '☗先手', ask = plain(Q.ask);
+        if (/\{|undefined|NaN/.test(ask) || (/先手|後手/.test(ask) && !ask.includes(who))) a(`⑧ the question 「${ask}」`);
+        if (/『/.test(ask) && !ask.includes(`『${nm}』`)) a(`⑧ the question names another opening 「${ask}」`);
+        const claims = (t, F, who2) => { const w = plain(t), bad = m => a(`⑦ ${who2}: ${m} 「${w}」`);
+          if (/\{(?![mx]\})|undefined|NaN/.test(w)) bad('a placeholder');
+          const sw = w.match(/「(中飛車|四間飛車|三間飛車|向かい飛車|袖飛車)」/); if (sw && !(F.pt === 6 && F.horiz && { 中飛車: 5, 四間飛車: 6, 三間飛車: 7, 向かい飛車: 8, 袖飛車: 3 }[sw[1]] === F.file)) bad(`not a swing to ${sw[1]}`);
+          return w; };
+        const g = claims(Q.good(A), FA, 'the answer');
+        const pcs = [...g.matchAll(/(\d+)%/g)].map(x => +x[1]); if (!pcs.length || pcs.some(x => x !== pc(n1))) a(`⑧ the praise gives ${pcs.join('/') || 'no'}% (the answer is ${pc(n1)}%) 「${g}」`);
+        if (/角道を(開け|開く|通す)|角道が開/.test(g) && !(FA.b1 > FA.b0 + 1)) a(`⑦ the answer: the bishop's line is not opened 「${g}」`);
+        if (/取る手|取り返|いただく/.test(g) && !FA.cap) a(`⑦ the answer takes nothing 「${g}」`);
+        if (/打つ手|打って/.test(g) && !FA.drop) a(`⑦ the answer is not a drop 「${g}」`);
+        if (/玉を(飛車と反対|囲い|安全|戦い)|玉が/.test(g) && FA.pt !== 8) a(`⑦ the answer is not a king move 「${g}」`);
+        // the way the answer's piece went (not for a knight's jump or a drop)
+        const dirBad = (t, F) => F.dir && F.pt !== 3 && ((/横へずら|横に/.test(t) && F.dir !== 'side') || (/引い|引く/.test(t) && F.dir !== 'back') || (/上げ|上が|前へ|前に(出|進)|進め|持ちあげ/.test(t) && F.dir !== 'up') || (/一つずら|一つ上げ|一つ進め|一段|一歩/.test(t) && F.n !== 1));
+        { const gm = g.replace(/(強い人|実戦|この場面)[^。！]*[。！]/g, ''); if (dirBad(gm, FA)) a(`⑦ the answer went ${FA.dir} ${FA.n}: 「${g}」`); }
+        for (const mv of ms) { const u = U(mv); if (u === A) continue; const F = facts(u), w = claims(Q.ng(u), F, u);
+          if (!w.includes('{m}') && !w.includes('{x}')) a(`⑦ ${u}: names neither the answer nor yours 「${w}」`);
+          const mine = cnt.has(u) ? cnt.get(u) : null, pp = [...w.matchAll(/(\d+)%/g)].map(x => +x[1]);
+          if (pp.length && (mine == null ? true : !pp.includes(pc(mine)) || pp.some(x => x !== pc(mine) && x !== pc(n1)))) a(`⑧ ${u}: the percentages ${pp} (yours ${mine == null ? '—' : pc(mine)}%, the answer ${pc(n1)}%) 「${w}」`);
+          if (/(取られ)/.test(w) && !/取り返/.test(w) && !(F.win > 0 && F.loss >= 100)) a(`⑦ ${u}: no piece is lost at once (SEE ${F.win}, the engine ${F.loss} below) 「${w}」`);
+          if (/取り返しそびれ/.test(w) && !(FA.cap && !F.cap)) a(`⑦ ${u}: not a missed recapture 「${w}」`);
+          for (const seg of w.split(/[。！]/)) if (/\{m\}(なら|だと|は)/.test(seg) && /が前に出て|が前へ出て|を前に進めて|を引いて、|を横に寄せて|を横に動かして/.test(seg) && dirBad(seg.replace(/^.*\{m\}(なら|だと|は)/, ''), FA)) a(`⑦ ${u}: the answer went ${FA.dir} 「${w}」`);
+          if (/\{x\}は角道を止め/.test(w) && !(F.b1 < F.b0 - 1)) a(`⑦ ${u}: does not shut the bishop's line 「${w}」`);
+          if (/\{x\}は玉を/.test(w) && F.pt !== 8) a(`⑦ ${u}: not a king move 「${w}」`);
+          if (/\{x\}の端歩/.test(w) && !(F.pt === 1 && (F.file === 1 || F.file === 9))) a(`⑦ ${u}: not an edge pawn 「${w}」`);
+          if (/\{x\}で飛車を動かす|\{x\}は飛車をうろうろ/.test(w) && F.pt !== 6) a(`⑦ ${u}: not a rook move 「${w}」`);
+        }
+      }
+    });
+  }
+  return out;
+}
+const GAMES = { connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen };
 module.exports = GAMES; GAMES.mancalaWords = mancalaWords; Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
 if (require.main === module) {
-  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi').split(',');
+  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen').split(',');
   let bad = 0;
-  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'connect4' ? ' (count/endwin の⑦⑧)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
+  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'connect4' ? ' (count/endwin の⑦⑧)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
     bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
   process.exit(bad ? 1 : 0);
 }
