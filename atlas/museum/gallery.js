@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 136;
+  const V = 137;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -61,7 +61,7 @@
         const t = ex(lang, e.id), g = ctx.games.find(x => x.id === e.game), op = isOpen(e);
         const cond = e.lock && !op ? ui(lang, 'lock').replace('{g}', g ? ctx.gname(g).replace(/\s*V\d+$/, '') : e.lock.game).replace('{n}', e.lock.ach) : '';
         return `<button type="button" class="card gxc${op ? '' : ' locked'}${e.lock ? ' sp' : ''}" data-id="${e.id}" style="--c:${g ? g.color : '#8a6a3a'}">
-          <span class="gxpic"><img src="../images/atlas/ex/${e.id}.webp?v=${V}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">${op ? '' : `<span class="gxlock"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg></span>`}${e.lock ? `<span class="gxsp">${esc(ui(lang, 'special'))}</span>` : ''}</span>
+          <span class="gxpic"><img src="../images/atlas/ex/${e.id}.webp?v=${V}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">${op ? '' : `<span class="gxlock"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg></span>`}${e.lock ? `<span class="gxsp">${esc(ui(lang, 'special'))}</span>` : ''}${PLAY[e.id] && op ? `<span class="gxplay"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>${esc(ui(lang, 'playable'))}</span>` : ''}</span>
           <span class="gxtx"><b>${esc(t.name || e.id)}</b><small>${esc(t.date || '')} · ${esc(t.where || '')}</small><i>${esc(op ? (t.museum || '') : cond)}</i></span></button>`;
       }).join('');
       sec.querySelectorAll('.gxc').forEach(b => b.onclick = () => { const e = EX.find(x => x.id === b.dataset.id); if (isOpen(e)) open(e.id); else { b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); } });
