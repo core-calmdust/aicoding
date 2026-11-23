@@ -5702,7 +5702,7 @@
         if (n === 0) s = `『${(g.title || {}).ja || ''}』のはじまり！ ` + TF_SIDE(F ? F.att : true) + '：' + s.replace(/^[^：]*：/, '');
         lastAi = ai || lastAi;
         out[String(i)] = { ja: s }; n++; }
-      prevCap = !!pos.at(E.mTo(m)); pos = pos.clone().play(m); });
+      pos = pos.clone().play(m); });
     return out;
   }
   /* (2026-11-21 lesson loop) the tafl lessons in タフリン's words, Japanese, for the 3D table (no coordinates): her own intros, five
