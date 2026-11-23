@@ -30,7 +30,7 @@ const DN = {
     'p.resume': '再開', 'p.new': '新しい対局', 'p.resign': '投了する', 'p.title': 'タイトルへ',
     'r.win': 'VICTORY', 'r.lose': 'DEFEAT', 'r.again': 'もう一度出撃', 'r.look': '海域を見る', 'r.sub': '{n}手で決着 ・ AI Lv.{l}', 'r.subR': '投了 ・ AI Lv.{l}',
     'r.acc': '命中率', 'r.shots': '発射', 'r.sunk': '撃沈', 'r.lost': '損失',
-    'rule.grand': '大艦隊', 'rule.grand.d': '14×14の広い海でコスト40・6〜10隻の艦隊を編成して戦う、タクティクスの大規模版。', 's.streak': '連続攻撃', 's.on': 'あり', 's.off': 'なし',
+    'rule.grand': '大艦隊', 'rule.grand.d': '12×12の広い海でコスト30・5〜8隻。1ターンに2手（射撃やスキルを2回）動ける、タクティクスの大規模版。', 'st.ap': 'このターンあと{n}手', 's.streak': '連続攻撃', 's.on': 'あり', 's.off': 'なし',
     'a.k': '全50隻', 'a.all': 'すべて', 'd.all': '全艦一覧', 'f.k': '両軍の艦', ok: 'OK', back: '戻る',
     'u.tap2': '狙うマスを2回タップで発射', 'u.cd': 'クールタイム {n}', 'u.len': '{n}マス', 'u.cost': 'コスト',
     'help': [['艦隊を編成', 'タクティクスでは、毎回ちがう10種の艦から交互に選んで艦隊を組む。コスト20までで3〜6隻。艦ごとにスキル（攻撃・索敵・防御）があり、組み合わせで戦い方が変わる。'],
@@ -53,7 +53,7 @@ const DN = {
     'p.resume': 'Resume', 'p.new': 'New game', 'p.resign': 'Resign', 'p.title': 'Title screen',
     'r.win': 'VICTORY', 'r.lose': 'DEFEAT', 'r.again': 'Sortie again', 'r.look': 'View the sea', 'r.sub': 'Decided in {n} moves · AI Lv.{l}', 'r.subR': 'Resigned · AI Lv.{l}',
     'r.acc': 'ACCURACY', 'r.shots': 'SHOTS', 'r.sunk': 'SUNK', 'r.lost': 'LOST',
-    'rule.grand': 'Grand Fleet', 'rule.grand.d': 'Tactics on a wide 14×14 sea: draft 6–10 ships with a budget of 40.', 's.streak': 'Hit again', 's.on': 'On', 's.off': 'Off',
+    'rule.grand': 'Grand Fleet', 'rule.grand.d': 'Tactics on a wide 12×12 sea: 5–8 ships on a budget of 30, and two actions (shots or skills) each turn.', 'st.ap': '{n} more this turn', 's.streak': 'Hit again', 's.on': 'On', 's.off': 'Off',
     'a.k': 'All 50 ships', 'a.all': 'All', 'd.all': 'All ships', 'f.k': 'Both fleets', ok: 'OK', back: 'Back',
     'u.tap2': 'Tap a square twice to fire', 'u.cd': 'Cooldown {n}', 'u.len': '{n} squares', 'u.cost': 'Cost',
     'help': [['Draft a fleet', 'In Tactics both sides take turns picking from ten ship types, different every game: up to 20 cost, 3 to 6 ships. Each ship has a skill — attack, scouting or defence — and the mix decides how you fight.'],
@@ -282,6 +282,7 @@ function renderBanner(msg) {
   else if (G.st) { foe = G.st.turn === 1; tt = t(foe ? 'b.foe' : 'b.you');
     if (!s) s = foe ? t('st.ai') : G.armed != null ? t('sk.aim.' + skillOf(G.my[G.armed])) : G.hint ? t('hint.best', { c: E.cellName(G.hint.best), p: Math.round(G.hint.p[G.hint.best] * 100) }) : G.rule === 'salvo' ? t('st.youN', { n: G.st.left }) : t('st.you'); }
   $('#bnBal').style.visibility = G.st ? '' : 'hidden';
+  if (G.st && G.st.per > 1 && G.phase === 'battle' && !msg) s = (G.st.turn === 0 ? t('st.ap', { n: G.st.ap }) + ' — ' : '') + s;
   $('#bnT').textContent = tt; $('#bnT').classList.toggle('foe', foe); $('#bnB').classList.toggle('foe', foe); $('#bnS').textContent = s;
 }
 function fleetItem(s, i, side, mine) {

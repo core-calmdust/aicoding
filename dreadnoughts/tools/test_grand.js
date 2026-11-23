@@ -9,14 +9,15 @@ let fail = 0; const ok = (c, m) => { console.log((c ? 'ok  ' : 'NG  ') + m); if 
   await p.click('#mPlay'); await p.evaluate(() => document.querySelector('.rc[data-r="grand"]').click());
   ok(await p.evaluate(() => /大艦隊/.test(document.querySelector('.rc.on').textContent)), 'the 大艦隊 rule is offered and chosen');
   await p.click('#sGo'); await p.waitForTimeout(1500);
-  ok(await p.evaluate(() => DN.G().draft.mode === 'grand' && SeaEngine.BUDGET === 40 && /40/.test(document.querySelector('#drK').textContent)), 'the draft is the grand one (budget 40)');
+  ok(await p.evaluate(() => DN.G().draft.mode === 'grand' && SeaEngine.BUDGET === 30 && /30/.test(document.querySelector('#drK').textContent)), 'the draft is the grand one (budget 30)');
   for (let n = 0; n < 120; n++) { if (await p.evaluate(() => DN.G().phase) !== 'draft') break; await p.evaluate(() => { const G = DN.G(); if (G.busy || G.draft.turn !== 0) return; const c = document.querySelector('#drGrid .card:not(.off)'); if (c) { c.click(); document.querySelector('#drOk').click(); } }); await p.waitForTimeout(400); }
-  ok(await p.evaluate(() => DN.G().phase === 'deploy' && DN.G().my.length >= 6 && DN.World.size() === 14), 'deploying 6+ ships on a 14×14 sea');
+  ok(await p.evaluate(() => DN.G().phase === 'deploy' && DN.G().my.length >= 5 && DN.World.size() === 12), 'deploying 5+ ships on a 12×12 sea');
   await p.waitForTimeout(1500); await p.screenshot({ path: '/tmp/dn/grand-deploy.png' });
   await p.click('#dGo'); await p.waitForTimeout(2500); await p.waitForFunction(() => !DN.G().busy && DN.G().st.turn === 0, null, { timeout: 90000 });
-  const pt = await p.evaluate(() => DN.World.screenOf(1, 14 * 13 + 13)); await p.mouse.click(pt.x, pt.y); await p.waitForFunction(() => DN.G().st.sides[1].shots[195] > 0, null, { timeout: 30000 }).catch(() => {});
-  ok(await p.evaluate(() => DN.G().st.sides[1].shots[195] > 0 && DN.G().st.mode === 'grand'), 'a shot at N14 (the far corner) lands');
+  const pt = await p.evaluate(() => DN.World.screenOf(1, 143)); await p.mouse.click(pt.x, pt.y); await p.waitForFunction(() => DN.G().st.sides[1].shots[143] > 0, null, { timeout: 30000 }).catch(() => {});
+  ok(await p.evaluate(() => DN.G().st.sides[1].shots[143] > 0 && DN.G().st.mode === 'grand'), 'a shot at L12 (the far corner) lands');
   await p.waitForFunction(() => !DN.G().busy && DN.G().st.turn === 0, null, { timeout: 90000 }).catch(() => {}); await p.screenshot({ path: '/tmp/dn/grand-battle.png' });
+  ok(await p.evaluate(() => DN.G().st.per === 2 && /あと/.test(document.querySelector('#bnS').textContent) || DN.G().st.turn === 1), 'two actions a turn, and the banner counts them');
   // back to a normal game with 連続攻撃
   await p.evaluate(() => document.querySelector('#pTitle').click()); await p.waitForTimeout(500);
   await p.click('#mPlay'); await p.evaluate(() => { document.querySelector('.rc[data-r="classic"]').click(); }); await p.evaluate(() => document.querySelector('#segStreak button[data-v="1"]').click());

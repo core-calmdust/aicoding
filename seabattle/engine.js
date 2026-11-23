@@ -138,13 +138,14 @@ let FIELD_N = 13;   // the destroyer + 13 drawn types (2026-11-20 user: 場の�
 // then that many types from each role.
 let FIELD_ONE = 4;   // of the 13 drawn types, this many are single copies
 let FIELD_MIX = [[4, 3, 6], [4, 4, 5], [5, 3, 5], [5, 4, 4]];
-// Board / fleet size modes. 'grand' = 大艦隊 (2026-11-23 user: マップとコストが広いルール): a 14×14 sea, budget 40, 6–10 ships, 18 types on the table.
+// Board / fleet size modes. 'grand' = 大艦隊 (2026-11-23 user: マップとコストが広いルール): a 12×12 sea, budget 30, 5–8 ships, 16 types on the table
+// (first 14×14 / 40 / 6–10, but games ran past 200 moves — 2026-11-23 user: 12 で様子見).
 // The mode is module state: every game / draft object carries .mode and the exported functions switch to it on entry (see the wrapper at the end).
 const MODES = { std: { n: 10, budget: 20, min: 3, max: 6, field: 13, one: 4, mix: [[4, 3, 6], [4, 4, 5], [5, 3, 5], [5, 4, 4]] },
-  grand: { n: 14, budget: 40, min: 6, max: 10, field: 18, one: 4, mix: [[6, 5, 7], [6, 4, 8], [7, 4, 7], [7, 5, 6]],
-    // prices on the big sea (tools/tune_grand.js, Lv.20 vs Lv.20, 4 rounds × 3000 games): long-reach attacks (torpedo lines, rings, the
-    // tracker) gain on a 14×14 sea, the defensive / support types lose — 2026-11-23
-    cost: {carrier:  1,  battleship:  1,  cruiser:  1,  flagship:  -2,  rocket:  1,  dread:  2,  patrol:  -1,  hospital:  3,  lcarrier:  1,  tboat:  2,  suppressor:  -2,  ecm:  -1,  tracker:  4,  plating:  -1,  dtorp:  4,  ringship:  3,  gunboat:  1,  repair:  -1,  intel:  1,  hcruiser:  1,  pursuer:  -1,  cship:  1,  mine:  -1,  sweeper:  -1,  flare:  -1,  rapidship:  2,  netlayer:  1,  hydro:  1,  bcruiser:  1,  allout:  -1} } };
+  grand: { n: 12, budget: 30, min: 5, max: 8, field: 16, one: 4, mix: [[5, 4, 7], [5, 5, 6], [6, 4, 6], [6, 5, 5]], per: 2,   // (two actions a turn — a big fleet's skills otherwise sat unused: 2026-11-23 user)
+    // prices on the 12×12 sea with two actions a turn (tools/tune_grand.js: Lv.20 vs Lv.20, 4 rounds × 6000 games, ±1 when a type's
+    // fleets win ≥ 53.5% / ≤ 46.5%) — 2026-11-23
+    cost: { tracker: 3, ringship: 1, rapidship: 1, cship: 1, raider: 1, mine: 1, radar: 1, tender: 1, hcruiser: 1 } } };
 let MODE = 'std';
 function setMode(m) { m = MODES[m] ? m : 'std'; if (m === MODE) return MODE; MODE = m; const o = MODES[m]; N = o.n; NN = N * N; BUDGET = o.budget; MINSHIPS = o.min; MAXSHIPS = o.max; FIELD_N = o.field; FIELD_ONE = o.one; FIELD_MIX = o.mix; return MODE; }
 function field(rnd) {
@@ -275,6 +276,7 @@ function newGame(o) {
   const st = { mode: MODE, streak: !!o.streak, rule: RULES.includes(o.rule) ? o.rule : 'classic', adj: !!o.adj, sides: [newSide(o.fleets[0]), newSide(o.fleets[1])], turn: o.first ? 1 : 0, winner: -1, log: [], acts: [], left: 1, cd: null, scans: [[], []] };
   if (st.rule === 'tactics') st.cd = st.sides.map(sd => sd.ships.map(s => TYPES[s.t].skill ? Math.ceil(TYPES[s.t].cd / 2) : -1));
   st.sides.forEach(sd => { sd.mode = MODE; });
+  st.per = MODES[MODE].per || 1; st.ap = st.per;   // (two-action games: the first turn has both actions too — one action left the first mover at 45%)
   st.left = quota(st);
   return st;
 }
@@ -297,6 +299,8 @@ function strike(st, by, cell) {      // one shell on the other side's square (no
   }
   return res;
 }
+// the end of one action: with two actions a turn (大艦隊) the first one keeps the turn (res.again), the second passes it
+function endAct(st, by, res) { if (st.per > 1 && st.winner < 0 && --st.ap > 0) { res.again = true; res.more = st.ap; return; } st.ap = st.per || 1; pass(st, by); }
 function pass(st, by) { const T = st.sides[1 - by]; if (T.fog > 0 && --T.fog === 0) T.fogged.fill(0); if (T.supp > 0) T.supp--; st.rapid = 0; if (st.bonus) st.bonus = 0;
   st.turn = 1 - by; if (st.sides[st.turn].ward > 0) st.sides[st.turn].ward--; if (st.sides[st.turn].jamImm > 0) st.sides[st.turn].jamImm--; if (st.cd) { const c = st.cd[st.turn], N2 = st.sides[st.turn], h = !N2.supp && N2.ships.some((s, j) => TYPES[s.t].haste && !N2.sunk[j]) ? 2 : 1; for (let i = 0; i < c.length; i++) if (c[i] > 0) c[i] = Math.max(0, c[i] - (JAMS(st, st.turn, i) ? 1 : h)); }
   if (st.rest && st.rest[st.turn] && st.winner < 0) { st.rest[st.turn] = 0; st.log.push({ by: st.turn, cell: -1, rest: 1 }); pass(st, st.turn); } }   // (a turn lost to a mine)
@@ -310,9 +314,9 @@ function fire(st, cell) {
   else if (st.bonus > 0) { st.bonus--; res.again = true; }
   else if (st.rapid && res.hit && !res.fog) res.again = true;
   else if (res.sunk >= 0 && !res.fog && st.cd && !calmOn(st, by) && !st.sides[by].supp && st.sides[by].ships.some((s, j) => TYPES[s.t].pursuit && !st.sides[by].sunk[j])) { res.again = true; res.pursuit = true; }   // (the pursuer: a sinking earns another shot)   // (quick-firing: on while the shells hit)
-  else if (st.rule === 'streak' || (st.streak && st.rule !== 'salvo')) { if (!res.hit || res.fog) pass(st, by); else res.again = true; }   // (連続攻撃: the rule, or the option on タクティクス/クラシック — 2026-11-23 user)
+  else if (st.rule === 'streak' || (st.streak && st.rule !== 'salvo')) { if (!res.hit || res.fog) endAct(st, by, res); else res.again = true; }   // (連続攻撃: the rule, or the option on タクティクス/クラシック — 2026-11-23 user)
   else if (st.rule === 'salvo') { if (--st.left <= 0) { pass(st, by); st.left = quota(st); } else res.again = true; }
-  else pass(st, by);
+  else endAct(st, by, res);
   if (st.rule !== 'salvo') st.left = 1;
   st.log.splice(nlog, 0, { by, cell, hit: res.hit, sunk: res.sunk, fog: res.fog ? 1 : 0, dent: res.dent ? 1 : 0, mine: res.mine ? 1 : 0 }); st.acts.push({ cell });
   return res;
@@ -391,7 +395,7 @@ function useSkill(st, ship, cell) {
   const by = st.turn, res = { by, skill: pv.skill, ship, cell, area: pv.area, shots: [], k: pv.k, win: false };
   if (st.sides[1 - by].ward && !SELF[pv.skill]) {   // the enemy's ECM ward: the skill is spent for nothing
     st.sides[1 - by].ward = 0; st.log.push({ by, cell, skill: pv.skill, blk: 1 }); st.cd[by][ship] = TYPES[st.sides[by].ships[ship].t].cd; st.acts.push({ skill: pv.skill, ship, cell });
-    res.blocked = true; pass(st, by); return res;
+    res.blocked = true; endAct(st, by, res); return res;
   }
   const at0 = st.log.length; st.log.push({ by, cell: pv.fix != null ? pv.fix : pv.lit != null ? pv.lit : cell, skill: pv.skill, k: pv.k, ic: pv.ic >= 0 ? pv.ic : undefined });
   if (pv.mc != null) st.sides[by].mines.push(pv.mc);
@@ -425,7 +429,7 @@ function useSkill(st, ship, cell) {
   if (pv.skill === 'bracket' && st.winner < 0) { const r = cell / N | 0, c0 = Math.max(2, Math.min(N - 3, cell % N)), mid = r * N + c0; if (!O.shots[mid]) { res.k = O.grid[mid] >= 0 ? 1 : 0; st.scans[by].push({ cells: [mid], k: res.k, at: mid, one: 1 }); st.log[at0].k = res.k; } }
   if (pv.skill === 'probe' && st.winner < 0) { const U = neighbors4(cell).filter(k => !st.sides[1 - by].shots[k]); res.k = U.filter(x => st.sides[1 - by].grid[x] >= 0).length; st.scans[by].push({ cells: U, k: res.k, at: cell, plus: 1 }); st.log[at0].k = res.k; }
   if (st.winner < 0 && pv.skill === 'rapid') { st.rapid = 1; res.again = true; }
-  else if (st.winner < 0) { if (pv.skill === 'twin') { st.bonus = 1; res.again = true; } else pass(st, by); }
+  else if (st.winner < 0) { if (pv.skill === 'twin') { st.bonus = 1; res.again = true; } else endAct(st, by, res); }
   return res;
 }
 function act(st, a) { return a.skill ? useSkill(st, a.ship, a.cell) : fire(st, a.cell); }
