@@ -17,13 +17,13 @@
   function card(g, c) {
     const fx = FX.filter(k => g.tags.includes(k) && c.tags[k]).map(k => { const T = c.tags[k], l = c.esc(c.t('tag.' + k));
       return `<i class="fx" style="--c:${T.c}" role="img" aria-label="${l}" title="${l}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${T.i}"/></svg></i>`; }).join('');
-    const pct = c.pct(g), b = c.badge(g), shot = SHOTS.has(g.id);
+    const pct = c.pct(g), b = c.badge(g), own = c.shot ? c.shot(g) : '', shot = SHOTS.has(g.id) || !!own;   // (c.shot: a card's own picture — the museum's exhibits)
     const about = c.about ? c.about(g) : '', tl = c.tl ? c.tl(g) : '';
     // ルール (the 3D rules tour, or the 2D game opened on its rules via ?rules=1) · ヒストリア (once window.Historia exists)
     const btn = (k, ic, lbl) => `<button type="button" class="glb" data-${k}="${g.id}">${ic}<span>${c.esc(lbl)}</span></button>`;
-    const btns = (c.hasRules && c.hasRules(g) ? btn('rules', IC.rules, c.t('bv.rules')) : '') + (window.Historia && (!Historia.has || Historia.has(g.id)) ? btn('hist', IC.hist, c.t('gl.historia')) : '');
+    const btns = (c.hasRules && c.hasRules(g) ? btn('rules', IC.rules, c.t('bv.rules')) : '') + (window.Historia && (!c.hasHist || c.hasHist(g)) && (!Historia.has || Historia.has(g.id)) ? btn('hist', IC.hist, c.t('gl.historia')) : '');
     return `<div class="glc" style="--c:${g.color}"><a class="glk" href="../${g.href}" data-open="${g.id}"${about ? ` title="${c.esc(about)}"` : ''}>
-      <span class="sh${shot ? '' : ' noshot'}">${shot ? `<img class="ss" src="shots/${g.id}.webp?v=${SHOT_V}" width="520" height="390" alt="" loading="lazy" decoding="async">` : ''}
+      <span class="sh${shot ? '' : ' noshot'}">${shot ? `<img class="ss" src="${own || `shots/${g.id}.webp?v=${SHOT_V}`}" width="520" height="390" alt="" loading="lazy" decoding="async">` : ''}
         <span class="g3m">${c.art(g)}</span>${b ? `<span class="bd">${b}</span>` : ''}${pct > 0 ? `<span class="pr"><i style="width:${pct}%"></i></span>` : ''}</span>
       <span class="mt"><b class="n">${c.esc(c.gname(g))}</b>${tl ? `<span class="tl">${c.esc(tl)}</span>` : ''}</span></a>
       <div class="ft"><span class="fxs">${fx}</span>${btns ? `<span class="glbs">${btns}</span>` : ''}</div></div>`;

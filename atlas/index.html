@@ -221,6 +221,8 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .badge{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:7px;font-family:var(--round);font-weight:700;font-size:11.5px;letter-spacing:.06em;color:#fff}
 .badge.new{background:var(--coral);box-shadow:0 2px 0 var(--coral2)}
 .badge.update{background:var(--sky);box-shadow:0 2px 0 var(--sky2)}
+.badge.museum{color:#f3e4bf;background:#21170f;box-shadow:0 0 0 1px #c9a55a inset,0 2px 0 #0e0906;letter-spacing:.1em}   /* 博物館の所蔵品で遊ぶゲーム (the site's top page has the same badge) */
+.ic.mu .lab .n{margin-bottom:6px}
 html[lang=ar] .badge,html[lang=hi] .badge{letter-spacing:0}
 .badge.beta{background:var(--grape);box-shadow:0 2px 0 var(--grape2)}
 .badge.alpha{background:#1fb597;box-shadow:0 2px 0 #13856e}
@@ -2578,7 +2580,8 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
     if (ul && !seen.has(ul)) { seen.add(ul); mo.observe(ul, { attributes: true, attributeFilter: ['hidden'] }); } }
   mo = new MutationObserver(sync); mo.observe(document.body, { childList: true }); sync(); window.__pgState = sync; })();
 </script>
-<script src="app.js?v=483"></script>
+<script src="museum/mu-games.js?v=1"></script>
+<script src="app.js?v=484"></script>
 <script src="../shared/praline-badge.js?v=9" data-portal defer></script>
 </body>
 </html>

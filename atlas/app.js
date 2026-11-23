@@ -699,7 +699,7 @@
   // the same chips + search on the home grid and on the games tab (they share one filter state)
   function renderFilter(ids = { chips: 'catChips', q: 'gSearch', ic: 'gSearchIc' }, onChange = renderGrid) {
     const cats = CHIPS, C = $(ids.chips);
-    C.innerHTML = cats.map(k => { const n = A_.GAMES.filter(g => inCat(g, k)).length;
+    C.innerHTML = cats.map(k => { const n = A_.GAMES.filter(g => inCat(g, k)).length + (k === 'all' || k === 'hist' ? MU_GAMES.length : 0);
       return `<button type="button" class="chip cat" data-k="${k}" aria-pressed="${gCat === k}">${esc(t('cat.' + k))} <em>${n}</em></button>`; }).join('');
     C.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { gCat = b.dataset.k; try { localStorage.setItem('atlas-cat', gCat); } catch (e) {}
       C.querySelectorAll('[data-k]').forEach(x => x.setAttribute('aria-pressed', x.dataset.k === gCat)); SFX.tok(); onChange(); });
@@ -710,14 +710,27 @@
   // the random tile: an isometric die with "?" faces on a thick base, drawn like the 3D game icons
   // the ランダム tile: a 3D icon in two layers like the others (atlas/icons3d.js ICONS.random, ?part=base / top): the die bobs on its own
   const RND_SVG = `<span class="dieic" aria-hidden="true"><img class="rb" src="../images/atlas/random-base.webp?v=1" alt="" decoding="async"><img class="cube" src="../images/atlas/random-die.webp?v=1" alt="" decoding="async"></span>`;
+  /* 博物館の所蔵品で遊ぶゲーム (2026-11-23): not games of the portal's own list (no number, no achievements, no board sheet) — an icon on the home
+     grid and a card in the game list's ヒストリカル group, each with the MUSEUM badge, that open the exhibit in the museum (#museum/<id>). */
+  const MU_COL = { senet: '#8a6a3a', shosoin: '#7a2a22', sugoroku: '#6a3a22', ballinderry: '#5a4630' };
+  const MU_GAMES = Object.keys(window.ATLAS_MU || {}).map(k => ({ id: 'mu-' + k, mu: k, cat: 'hist', tags: ['ai'], color: MU_COL[k] || '#7a5a36', href: 'atlas/#museum/' + k, name: ATLAS_MU[k].n }));
+  const muName = g => g.name[lang] || g.name.en, muDesc = g => { const d = ATLAS_MU[g.mu].d; return d[lang] || d.en; };
+  const muArt = g => `<img src="../images/atlas/mu-${g.mu}.webp?v=1" alt="" loading="lazy" decoding="async">`;
+  const MU_OF = { senet: 'senet', shosoin: 'go', ballinderry: 'tafl' };   // the game played on it (the card's one-line: 博物館 · セネト)
+  const muTl = g => { const o = A_.GAMES.find(x => x.id === MU_OF[g.mu]); return t('tab.museum') + (o ? ' · ' + gname(o) : ''); };
+  const MU_BADGE = '<span class="badge museum">MUSEUM</span>';
+  function visibleMu() { const q = norm(gQ.trim()); return MU_GAMES.filter(g => (gCat === 'all' || gCat === 'hist') && (!q || norm([g.mu, ...Object.values(g.name), 'museum', t('cat.hist')].join('|')).includes(q))); }
+  function openMu(k) { if (window.AtlasSfx) try { AtlasSfx.tap(); } catch (x) {} muEx = k; go('gallery'); }
   function renderGrid() {
-    const list = visibleGames();
+    const list = visibleGames(), mus = visibleMu();
     const rnd = list.length ? `<button type="button" class="ic rnd" id="rndTile" style="--c:#8d6bff" aria-label="${esc(t('rnd.n'))}"><span class="art">${RND_SVG}<img class="rimg" alt="" decoding="async" hidden></span>
       <span class="lab"><span class="n">${esc(t('rnd.n'))}</span><span class="pr"><i style="width:100%"></i></span></span></button>` : '';
     $('iconGrid').innerHTML = rnd + list.map(g => { const b = A_.badges(g)[0];
       return `<button class="ic" data-g="${g.id}" style="--c:${g.color}"><span class="art"><span class="no">${gno(g)}</span>${artImg(g)}</span>${b ? `<span class="bdg">${badgeHtml(b)}</span>` : ''}
-        <span class="lab"><span class="n">${esc(gname(g))}</span><span class="pr" title="${esc(t('tab.ach'))} ${achPct(g)}%"><i style="width:${achPct(g)}%"></i></span></span></button>`; }).join('');
-    $('gNone').hidden = !!list.length; $('gNone').textContent = t('search.none');
+        <span class="lab"><span class="n">${esc(gname(g))}</span><span class="pr" title="${esc(t('tab.ach'))} ${achPct(g)}%"><i style="width:${achPct(g)}%"></i></span></span></button>`; }).join('')
+      + mus.map(g => `<button class="ic mu" data-mu="${g.mu}" style="--c:${g.color}" title="${esc(muDesc(g))}"><span class="art">${muArt(g)}</span><span class="bdg">${MU_BADGE}</span><span class="lab"><span class="n">${esc(muName(g))}</span></span></button>`).join('');
+    $('iconGrid').querySelectorAll('[data-mu]').forEach(b => { b.onclick = () => openMu(b.dataset.mu); });
+    $('gNone').hidden = !!(list.length + mus.length); $('gNone').textContent = t('search.none');
     $('iconGrid').querySelectorAll('[data-g]').forEach(b => { b.onclick = () => flyOpen(b.dataset.g, b.querySelector('img')); });
     if ($('rndTile')) $('rndTile').onclick = () => rollRandom(list);
     if (window.AtlasGameList && AtlasGameList.fitLabels) AtlasGameList.fitLabels($('iconGrid').querySelectorAll('.ic span.n'));   // long names shrink rather than end in "…"
@@ -2680,15 +2693,15 @@
     renderGamesList();
   }
   function renderGamesList() {
-    const list = visibleGames();
+    const mus = visibleMu(), isMu = g => !!g.mu, list = visibleGames().concat(mus);
     // screenshot cards grouped by category (atlas/gamelist.js); the long description is in the board sheet a tap opens
-    AtlasGameList.render($('allGames'), list, { t, esc, gname, about: g => t('about.' + g.id), tl: g => t('tl.' + g.id),
-      hasRules: () => true,
+    AtlasGameList.render($('allGames'), list, { t, esc, gname: g => isMu(g) ? muName(g) : gname(g), about: g => isMu(g) ? muDesc(g) : t('about.' + g.id), tl: g => isMu(g) ? muTl(g) : t('tl.' + g.id),
+      hasRules: g => !isMu(g), shot: g => isMu(g) ? `../images/atlas/ex/${g.mu}.webp?v=3` : '', hasHist: g => !isMu(g),
       // the 3D rules tour on the table where the game has one; otherwise the 2D game opens straight on its own rules (shared/rulelink.js)
-      onRules: id => { if ((window.AtlasRules && AtlasRules[id]) || (window.AtlasLazy && AtlasLazy.hasRules(id))) { openBoard(id).then(() => { if (glOK && window.AtlasRules && AtlasRules[id]) startRules(true); }); return; } const g = A_.GAMES.find(x => x.id === id); if (g) location.href = '../' + g.href + '?rules=1'; }, onHistoria: id => Historia.open(id), art: g => artImg(g), badge: g => A_.badges(g).slice(0, 1).map(badgeHtml).join(''),
-      pct: g => achPct(g), tags: A_.TAGS, cats: A_.CATS });
+      onRules: id => { if ((window.AtlasRules && AtlasRules[id]) || (window.AtlasLazy && AtlasLazy.hasRules(id))) { openBoard(id).then(() => { if (glOK && window.AtlasRules && AtlasRules[id]) startRules(true); }); return; } const g = A_.GAMES.find(x => x.id === id); if (g) location.href = '../' + g.href + '?rules=1'; }, onHistoria: id => Historia.open(id), art: g => isMu(g) ? muArt(g) : artImg(g), badge: g => isMu(g) ? MU_BADGE : A_.badges(g).slice(0, 1).map(badgeHtml).join(''),
+      pct: g => isMu(g) ? 0 : achPct(g), tags: A_.TAGS, cats: A_.CATS });
     $('gNone2').hidden = !!list.length; $('gNone2').textContent = t('search.none');
-    $('allGames').querySelectorAll('[data-open]').forEach(a => a.onclick = e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); openBoard(a.dataset.open); });
+    $('allGames').querySelectorAll('[data-open]').forEach(a => a.onclick = e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); if (a.dataset.open.startsWith('mu-')) openMu(a.dataset.open.slice(3)); else openBoard(a.dataset.open); });
   }
 
   /* ---------- ACHIEVEMENTS ---------- */
