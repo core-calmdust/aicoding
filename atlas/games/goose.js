@@ -101,7 +101,7 @@
       if (stopped) return;
       const side = s => `<span class="hs ${turn === s && !over ? 'on' : ''}"><i class="dk" style="${DOT[s]}"></i>${esc(nm(s))}<b>${pos[s]}</b>${RR[s] ? `<small style="opacity:.7;margin-inline-start:5px">↻${RR[s]}</small>` : ''}</span>`;
       const dv = dice ? `<span class="hd" style="font-size:22px;letter-spacing:2px;white-space:nowrap">${DIE[dice[0]]}${DIE[dice[1]]}</span>` : '';
-      const mid = phase === 'choose' && !over ? `<button type="button" data-gsm="go">${esc(X.go)}</button><button type="button" data-gsm="re" style="margin-inline-start:6px">${esc(X.re)} ↻${RR[turn]}</button>` : phase === 'roll' && hum(turn) && !over ? `<button type="button" data-gsm="roll">${esc(X.roll)}</button>` : msg ? `<span class="hm">${esc(msg)}</span>` : '';
+      const mid = phase === 'roll' && hum(turn) && !over ? `<button type="button" data-gsm="roll">${esc(X.roll)}</button>` : msg ? `<span class="hm">${esc(msg)}</span>` : '';
       ctx.hud(`${side(0)}${dv}${mid}${side(1)}`);
     }
     const say = m => { msg = m || ''; hud(); };
@@ -121,7 +121,7 @@
       busy = true; phase = 'anim'; say(''); const s = turn, d = [1 + (Math.random() * 6 | 0), 1 + (Math.random() * 6 | 0)];
       await throwDice(s, d); if (stopped) return; dice = d; hud();
       if (RR[s] > 0) {   // a re-throw in hand: you choose; the other side by its policy
-        if (hum(s)) { phase = 'choose'; busy = false; say(''); return; }
+        if (hum(s)) { phase = 'choose'; busy = false; say(''); labels(); return; }
         if (again(pos[s], plan(pos[s], d[0], d[1], !thrown[s]))) { RR[s]--; const m = X.aire.replace('{p}', nm(s)); toast(m); say(m); await sleep(900); if (stopped) return; busy = false; phase = 'roll'; return doRoll(); } }
       return move(s, d);
     }
@@ -147,14 +147,33 @@
       say(w === 0 ? L.win : L.lose); later(() => ctx.onEnd({ win: w === 0, draw: false, level, score }), 700);
     }
 
+    // 進む / 振り直す (2026-11-23, the user: not up on the bar): two labels on the board itself — 進む by your piece, 振り直す by the dice — and a tap
+    // near either does it (the nearer of the two; the labels only show where)
+    const LB = ['go', 're'].map(k => { const e = document.createElement('div'); e.dataset.k = k;
+      e.style.cssText = 'position:fixed;z-index:141;left:0;top:0;pointer-events:none;display:none;padding:7px 14px;border-radius:999px;font:700 14px/1 system-ui,sans-serif;white-space:nowrap;color:#22170a;background:#f3ead6;border:1px solid #c9a55a;box-shadow:0 4px 14px rgba(0,0,0,.5);translate:-50% -50%';
+      document.body.appendChild(e); return e; });
+    const spots = () => { const p = P[turn].position, [dx, dz] = [0, 1].map(i => (U.diceAt(turn, 0)[i] + U.diceAt(turn, 1)[i]) / 2); return { go: [p.x, p.z], re: [dx, dz] }; };
+    let lbOn = false;
+    function labels() {
+      const on = phase === 'choose' && !over && !stopped; LB.forEach(e => { e.style.display = on ? 'block' : 'none'; }); if (!on) { lbOn = false; return; }
+      LB[0].textContent = '▶ ' + X.go; LB[1].textContent = '↻ ' + X.re + ' ×' + RR[turn];
+      if (lbOn) return; lbOn = true;
+      (function tick() { if (!(phase === 'choose' && !over && !stopped)) { lbOn = false; LB.forEach(e => { e.style.display = 'none'; }); return; }
+        const sp = spots(), a = T3.project(sp.go[0], sp.go[1], U.top + 4.6), b = T3.project(sp.re[0], sp.re[1] + 2.9, U.top);   // (below the dice, so their faces stay in view)
+        if (a) { LB[0].style.left = a.x + 'px'; LB[0].style.top = a.y + 'px'; } if (b) { LB[1].style.left = b.x + 'px'; LB[1].style.top = b.y + 'px'; }
+        requestAnimationFrame(tick); })();
+    }
     const choose = re => { if (phase !== 'choose' || busy || over) return; if (re && RR[turn] > 0) { RR[turn]--; phase = 'roll'; dice = null; doRoll(); } else move(turn, dice); };
-    function onClick() { if (stopped || busy || over || (T3.wasDrag && T3.wasDrag())) return; if (phase === 'roll' && hum(turn)) doRoll(); }
+    function onClick(e) { if (stopped || busy || over || (T3.wasDrag && T3.wasDrag())) return;
+      if (phase === 'choose') { const p = T3.pick(e, U.top); if (!p) return; const sp = spots(), dg = Math.hypot(p.x - sp.go[0], p.z - sp.go[1]), dr = Math.hypot(p.x - sp.re[0], p.z - sp.re[1]);
+        if (Math.min(dg, dr) > 6) return; choose(dr < dg); return; }
+      if (phase === 'roll' && hum(turn)) doRoll(); }
     function onHud(e) { const b = e.target.closest && e.target.closest('[data-gsm]'); if (!b || stopped) return; e.stopPropagation(); if (phase === 'choose') choose(b.dataset.gsm === 're'); else if (phase === 'roll' && hum(turn)) doRoll(); }
     const onKey = e => { if (e.repeat) return; if (phase === 'choose' && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); choose(false); } else if (phase === 'choose' && (e.key === 'r' || e.key === 'R')) choose(true); else if (e.key === ' ' && phase === 'roll' && hum(turn)) { e.preventDefault(); doRoll(); } };
     ctx.el.addEventListener('click', onClick); document.addEventListener('click', onHud, true); document.addEventListener('keydown', onKey);
     settle(); hud(); toast(X.hc.replace('{a}', RR[0]).replace('{b}', RR[1])); later(() => { toast(X.first.replace('{p}', nm(first))); nextTurn(first); }, 1700);
     const api = {
-      stop() { stopped = true; timers.forEach(clearTimeout); ctx.el.removeEventListener('click', onClick); document.removeEventListener('click', onHud, true); document.removeEventListener('keydown', onKey); if (toastEl) toastEl.remove(); B.remove(G); },
+      stop() { stopped = true; timers.forEach(clearTimeout); ctx.el.removeEventListener('click', onClick); document.removeEventListener('click', onHud, true); document.removeEventListener('keydown', onKey); if (toastEl) toastEl.remove(); LB.forEach(e => e.remove()); B.remove(G); },
       canResign: () => !over, resign() { if (!over) end(pvp ? 1 - turn : 1); },
       canUndo: () => false, undo() {}, canHint: () => false, hint: () => Promise.resolve(false),
       _debug: { rr: () => RR.slice(), choose, pos: () => pos.slice(), rest: () => rest.slice(), phase: () => phase, turn: () => turn, dice: () => dice, plan, set(s, n) { pos[s] = n; settle(); hud(); } },
