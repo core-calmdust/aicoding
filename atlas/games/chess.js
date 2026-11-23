@@ -84,11 +84,15 @@
     const T3 = ctx.Table3D, TH = window.THREE, CS = T3.chess, t = ctx.t, X = TX[ctx.lang] || TX.en;
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
     const set = T3.PIECES && T3.PIECES.chess ? T3.PIECES.chess.get() : 'jewel', look = T3.BOARDS && T3.BOARDS.chess ? T3.BOARDS.chess.get() : 'lux';   // (2026-11-15: six boards, six sets)
-    const board = T3.MODELS.chess(true); T3.show('chess', board);
-    if (board.userData.setSet) board.userData.setSet(look);
-    if (board.userData.setTone) board.userData.setTone('classic');
+    // 所蔵品で遊ぶ (2026-11-23): ctx.board = a chess board handed in by the museum (atlas/museum/play.js: the Ottoman board), its userData:
+    // chess: true · top · piece(type, colour) → a Group with userData.type / color / h — one square = 1, White's side towards +z, as MODELS.chess
+    const MB = !ctx.pz && ctx.board && ctx.board.userData && ctx.board.userData.chess ? ctx.board : null;
+    const board = MB || T3.MODELS.chess(true); T3.show('chess', board);
+    if (!MB && board.userData.setSet) board.userData.setSet(look);
+    if (!MB && board.userData.setTone) board.userData.setTone('classic');
+    const newPiece = (tp, col) => MB ? MB.userData.piece(tp, col) : CS.piece(tp, col, { reflect: true, set });
     const Y = board.userData.top;
-    if (T3.fit) T3.fit({ w: CS.OW + .2, d: CS.OW + .7, y: Y + .35, pitch: 1.0 });   // the whole board, large, from the player's side
+    if (T3.fit && !MB) T3.fit({ w: CS.OW + .2, d: CS.OW + .7, y: Y + .35, pitch: 1.0 });   // the whole board, large, from the player's side
     const pvp = ctx.mode === 'pvp', PX = PV[ctx.lang] || PV.en;   // pvp: both colours are tapped in turn, White at the bottom, no AI
     // ctx.pz: a puzzle driven by atlas/puzzles.js — the position is ctx.pz.fen, the side to move plays (at the bottom), no AI:
     // after each of the player's moves ctx.pz.moved(uci, info) decides; replies come through api.pz.play (2026-11-10)
@@ -97,7 +101,7 @@
     const mover = () => pvp && pos ? pos.side : human, mcol = () => mover() ? 'b' : 'w';   // the side whose taps count now
     // 0x88 square ↔ screen cell (f: 0 = left column, r: 0 = top row)
     const scr = sq => { const f = sq & 7, r = sq >> 4; return flip ? [7 - f, r] : [f, 7 - r]; };
-    const xz = sq => CS.cell(...scr(sq));
+    const cellAt = MB ? (f, r) => [f - 3.5, r - 3.5] : CS.cell, xz = sq => cellAt(...scr(sq));
     const sqAt = (f, r) => flip ? (r << 4) | (7 - f) : ((7 - r) << 4) | f;
 
     let E = null, pos = null, hashes = [], legal = [], moves = [], startFen = null;
@@ -125,7 +129,7 @@
     }
     function dress(g) { g.userData.refl = g.children.find(c => c.userData.reflection) || null; }
     function mk(tp, col, sq) {
-      const g = CS.piece(tp, col, { reflect: true, set }); dress(g);
+      const g = newPiece(tp, col); dress(g);
       const sh = T3.contact(.34, .5); sh.position.y = .002; g.add(sh); g.userData.sh = sh;
       const [x, z] = xz(sq); g.position.set(x, Y, z); face(g, sq); board.add(g); return g;
     }
@@ -188,7 +192,7 @@
         lift(g, Math.sin(k * Math.PI) * .9); g.rotation.y = k * Math.PI * 2;
         if (k >= .5 && !swapped) {
           swapped = true;
-          const n = CS.piece(tp, g.userData.color, { reflect: true, set }), sh = g.userData.sh;
+          const n = newPiece(tp, g.userData.color), sh = g.userData.sh;
           g.children.slice().forEach(c => { if (c !== sh) g.remove(c); });
           n.children.slice().forEach(c => g.add(c)); g.userData.type = tp; dress(g); lift(g, hOf(g));
         }
@@ -309,7 +313,7 @@
     }
 
     /* ---------- promotion choice ---------- */
-    function loadImgs() { if (!imgs && CS.images) imgs = CS.images(160, set).catch(() => null); return imgs; }
+    function loadImgs() { if (!imgs && CS && CS.images) imgs = CS.images(160, MB ? 'wood' : set).catch(() => null); return imgs; }
     function closePromo() { if (promoEl) { promoEl.remove(); promoEl = null; document.removeEventListener('pointerdown', outside, true); } }
     function outside(e) { if (promoEl && !promoEl.contains(e.target)) { closePromo(); deselect(); } }
     function askPromo(to, cands) {

@@ -1,6 +1,6 @@
 /* Museum "Collection" texts (Korean). Same keys as gallery-ja.js. */
 (window.MUSEUM_GAL_T = window.MUSEUM_GAL_T || {}).ko = {
-  ui: { p_start: "플레이", p_undo: "무르기", p_resign: "기권", p_hint: "힌트", p_quit: "그만", p_sure: "정말?", p_orientS: "방향", p_rules: "규칙", p_orient: "판 방향 바꾸기", play_ballinderry: "브란두브", play_senet: "투탕카멘의 세네트", play_ur: "우르 왕실 게임", play_shosoin: "목화자단기국", play_sugoroku: "목화자단쌍륙국", p_level: "상대", p_side: "차례", p_first: "선수", p_second: "후수", p_stop: "대국 그만두기", p_you: "나", p_turn: "내 차례", p_think: "생각 중…", p_win: "승리", p_lose: "패배", p_draw: "무승부", flip: '뒤집기', guideH: '안내원 뮤제후쿠', guide: '소장품을 둘러볼수록 뮤제후쿠가 조금씩 멋을 내고 찾아와요', gift: '새 아트라모가 찾아왔어요!', sub: "세계의 박물관이 지켜 온 게임 역사의 보물. 3D로 재현한 명품을 손에 든 듯 돌려 보며 자세히 살펴보세요.", collection: "소장품", special: "특별 전시", lock: "{g} 업적 {n}개 달성 시 공개", loading: "전시 케이스를 준비하는 중…", fail: "전시품을 불러오지 못했습니다",
+  ui: { p_start: "플레이", p_undo: "무르기", p_resign: "기권", p_hint: "힌트", p_quit: "그만", p_sure: "정말?", p_orientS: "방향", p_rules: "규칙", p_orient: "판 방향 바꾸기", play_ballinderry: "브란두브", play_senet: "투탕카멘의 세네트", play_ur: "우르 왕실 게임", play_shosoin: "목화자단기국", play_sugoroku: "목화자단쌍륙국", play_ottoman: "체스", p_level: "상대", p_side: "차례", p_first: "선수", p_second: "후수", p_stop: "대국 그만두기", p_you: "나", p_turn: "내 차례", p_think: "생각 중…", p_win: "승리", p_lose: "패배", p_draw: "무승부", flip: '뒤집기', guideH: '안내원 뮤제후쿠', guide: '소장품을 둘러볼수록 뮤제후쿠가 조금씩 멋을 내고 찾아와요', gift: '새 아트라모가 찾아왔어요!', sub: "세계의 박물관이 지켜 온 게임 역사의 보물. 3D로 재현한 명품을 손에 든 듯 돌려 보며 자세히 살펴보세요.", collection: "소장품", special: "특별 전시", lock: "{g} 업적 {n}개 달성 시 공개", loading: "전시 케이스를 준비하는 중…", fail: "전시품을 불러오지 못했습니다",
     hint: "드래그로 회전 · 휠로 확대 · 번호로 볼거리", hintT: "드래그로 회전 · 핀치로 확대", spin: "천천히 돌리기", reset: "처음 방향으로", wide: '해설 접기 / 펴기', close: "닫기",
     date: "연대", where: "출토 · 전래", museum: "소장", mat: "재질", size: "크기", look: "볼거리", aboutModel: "이 3D 모델에 대하여", sources: "출처", play: "{g} 플레이" },
   ex: {
@@ -127,7 +127,7 @@
         ["자개 사슬", "테두리에는 대모 바탕에 S자로 감기는 자개 장식과 작은 별이 번갈아 이어집니다."],
         ["모서리의 방패", "사슬은 네 모서리에서 방패 모양 장식으로 이어집니다."],
         ["뼈 테두리와 옆면", "바깥 가장자리는 산 모양 이음매로 이은 뼈 띠. 판의 옆면에는 자개 육각형이 한 줄로 늘어섭니다."]],
-      model: "치수는 소장관의 기록대로입니다. 자개와 대모의 배치는 소장관의 사진에서 가져왔고, 테두리의 단면과 옆면 자개의 순서는 추정입니다.",
+      model: "치수는 소장관의 기록대로입니다. 자개와 대모의 배치는 소장관의 사진에서 가져왔고, 테두리의 단면과 옆면 자개의 순서는 추정입니다. 체스 말은 판과 함께 전해지지 않습니다. 대국에 쓰는 말은 오스만 세계의 갈이틀로 깎은 말을 본뜬 추정입니다.",
       src: [["빅토리아 앨버트 박물관, \"Games board\" 861-1907", "https://collections.vam.ac.uk/item/O370652/games-board-unknown"]] },
     kofukuji: { name: "고후쿠지 옛 경내 출토 쇼기 말", alt: "일본에서 가장 오래된 쇼기 말과, 말의 이름을 적은 목간", date: "11세기 후반~12세기", where: "일본(나라)", found: "나라시 노보리오지초, 고후쿠지 옛 경내의 발굴: 깃쇼인 지구(1992년, 우물 모양의 유구)와 간젠인 지구(2013년, 우물과 구덩이)",
       museum: "나라현립 가시하라 고고학연구소 부속 박물관", no: "나라현 지정 유형문화재(2022년, 31점)", mat: "나무, 먹", size: "말 길이 약 2.5cm(취상: 약 2.5 × 1.5cm, 두께 2mm)",
