@@ -377,6 +377,51 @@ const CHECKS = {
           const rw = mine.match(/(\d)段目/); if (rw) { const thrB = cells(g, me), nw = cells(A, me).filter(([c, r]) => !thrB.some(([x, y]) => x === c && y === r)); if (!nw.some(([, r]) => r + 1 === +rw[1])) bad(G, K, `${w} miss ${u}: said to make a winning cell on row ${rw[1]}, it does not`); }
         }
       }); });
+    // (2026-11-23 第2期：問題の検証) the strict check of every problem of the lessons in C4_DONE (the verified ones; the rest are counted
+    // and listed as pending, not failed, until a loop run fixes and adds them — see claude/lesson-quality.md 「検証の進み具合」):
+    //  ① the exact solver (connect4/engine.js solveMove, every column) gives the stored sc, and the answers are exactly the best columns
+    //     (weak problems: the best result); the lesson's own move is what the answer does (four now / block / a new threat / two
+    //     immediate threats in the answer's row / a new diagonal three / stacked winning cells / a threat that wins within 3 moves)
+    //  ② no other column as good: when the answer wins (not at once), no other column wins within one move of it; a drawn answer, no
+    //     other draw  ③ at least 3 legal columns  ⑤ no other problem / warm-up of the game within 3 discs (mirror too) or with the same moves but 3 (= lesson-quality.js ⑨; two openings
+    //     of under 5 discs are not compared)  ⑥ the win lessons get no easier (the own moves to the forced win never go down)
+    //  ⑦ a wrong column that still wins by force is never said to fail (おしまい・止められちゃう・負け・引き分け …)
+    //  (⑧ the words: the checks above; ⑨ the 2D lesson reads the same lessons.json.)  C4_SOLVE=0 skips the solver (① only from sc).
+    const C4_DONE = new Set(['four', 'block', 'centre', 'early', 'threat', 'open', 'diag', 'double', 'stack', 'force']);
+    const E4 = require(path.join(ROOT, 'connect4/engine.js')), SOLVE = process.env.C4_SOLVE !== '0';
+    const cset = (mv, mir) => { const g = grid(mv), m = new Map(); g.forEach((col, c) => col.forEach((p, r) => m.set((mir ? 6 - c : c) + ',' + r, p))); return m; };
+    const cdist = (a, b) => { let d = 0; for (const [k, v] of a) if (b.get(k) !== v) d++; for (const k of b.keys()) if (!a.has(k)) d++; return d; };
+    const pool = []; L.steps.forEach(st => { (st.problems || []).forEach((P, j) => pool.push([`${st.id} q${j + 1}`, P.moves])); (st.ramp || []).forEach((R, j) => { if (R.moves != null) pool.push([`${st.id} warm-up ${j + 1}`, R.moves]); }); });
+    const F4 = vm.runInNewContext(s1 + s2 + '\n;({ c4F })', {}).c4F, pend = [];
+    L.steps.forEach((st, si) => { const K = String(si), id = st.id, done = C4_DONE.has(id); let prevD = -1;
+      const no = (w, m) => done ? bad(G, K, `${w}: ${m}`) : pend.push(`${w}: ${m}`);
+      (st.problems || []).forEach((P, j) => { const w = `${id} q${j + 1}`, g = grid(P.moves), me = P.moves.length & 1 ? 2 : 1, iw = (43 - P.moves.length) >> 1;
+        const leg = [0, 1, 2, 3, 4, 5, 6].filter(c => g[c].length < 6), ans = new Set(P.answer), weak = P.kind === 'weak';
+        let sc = P.sc;
+        if (done && SOLVE && !(weak && P.moves.length < 5)) { sc = leg.map(() => 0); sc = [0, 1, 2, 3, 4, 5, 6].map(c => { E4.loadMoves(P.moves); return E4.solveMove(c, weak); });
+          const sg = v => v === null ? null : weak ? Math.sign(v) : v;
+          if (sc.some((v, c) => sg(v) !== sg(P.sc[c]))) no(w, `① the solver gives ${JSON.stringify(sc)}, stored ${JSON.stringify(P.sc)}`); }
+        if (leg.length < 3) no(w, `③ only ${leg.length} legal columns`);
+        const val = c => weak ? Math.sign(sc[c]) : sc[c], b = Math.max(...leg.map(val)), best = leg.filter(c => val(c) === b);
+        if (best.join() !== [...ans].sort((x, y) => x - y).join()) no(w, `① the best columns are ${best}, the answer ${[...ans]}`);
+        const oth = leg.filter(c => !ans.has(c)), sec = oth.length ? Math.max(...oth.map(val)) : -99;
+        if (!weak && b !== iw) { if (b > 0 && sec > 0 && sec >= b - 1) no(w, `② column ${oth.find(c => val(c) === sec)} wins almost as fast (${sec} vs ${b})`); if (b === 0 && sec === 0) no(w, '② another column draws too'); }
+        if (!weak && b > 0 && /^(four|miss|open|double|stack|force)$/.test(id)) { const d = iw - b; if (d < prevD) no(w, `⑥ easier than the problem before (a win in ${d + 1} after ${prevD + 1})`); prevD = Math.max(prevD, d); }
+        const A = P.answer[0], F = F4(P.moves, A), h = g[A].length, G2 = drop(g, A, me);
+        const T = { four: F.win, miss: F.win, block: F.blocked, threat: F.newThr.length > 0, open: F.myNext.length >= 2 && F.newThr.every(([, r]) => r === h), stack: F.stacked && F.newThr.length > 0,
+          double: F.myNext.length >= 2 || F.stacked, force: F.myNext.length >= 1 && b > 0 && iw - b <= 2,
+          diag: WIN.some(L4 => L4.some(([x, y]) => x === A && y === h) && L4[0][0] !== L4[1][0] && L4[0][1] !== L4[1][1] && L4.filter(([x, y]) => at(G2, x, y) === me).length === 3 && L4.some(([x, y]) => at(G2, x, y) === 0 && F.newThr.some(([c, r]) => c === x && r === y))) };
+        T.stack = T.stack && F.newThr.some(([c, r]) => F.thrA.some(([x, y]) => x === c && Math.abs(y - r) === 1));   // (the new winning cell is one of the stacked pair: 2D 「同じ列の上下2マスが勝ちマスに」)
+        if (/^(centre|early)$/.test(id) && !weak) { const ln = c => lines(g, c, g[c].length, me); T[id] = leg.every(c => ln(c) <= ln(A)); }   // (2D 「線の多いマスを押さえ」)
+        if (id in T && !T[id]) no(w, `④ the answer does not do the lesson's move (${id})`);
+        const a = cset(P.moves), me0 = pool.findIndex(x => x[0] === w);
+        pool.forEach(([who, mv], k) => { if (k === me0 || (k > me0 && !/warm-up/.test(who))) return; if (P.moves.length < 5 && mv.length < 5) return;
+          const d = Math.min(cdist(a, cset(mv)), cdist(a, cset(mv, 1))); if (d <= 3) no(w, `⑤ ${d} disc(s) from ${who}`);
+          else if (mv.length === P.moves.length) { let e = 0; for (let x = 0; x < mv.length; x++) if (mv[x] !== P.moves[x]) e++; if (e <= 3) no(w, `⑤ the moves differ from ${who} in only ${e} place(s)`); } });
+        if (!weak) { let o; try { o = X.c4LsJa(st, P, j, me, c => ['金', '銀'][c - 1], si); } catch (e) { return; }
+          for (const u of oth) if (sc[u] > 0) { const t = plain(o.ng(u)).split(/緑の印の列/)[0]; if (/おしまい|止まっちゃう|止められちゃう|負け|守れちゃう|終わり|引き分け|届かない/.test(t)) no(w, `⑦ column ${u} still wins, the words say it fails: ${t}`); } }
+      }); });
+    if (pend.length && !process.env.C4_QUIET) console.log(`connect4: ${pend.length} pending (not yet verified lessons):\n  ` + pend.join('\n  '));
   },
   // (2026-11-23 lesson loop) the hex lessons ('hex', key = the step's index): every answer is an empty cell, the best is among the
   // answers, and the one-move problems are solved again by the exact solver of the engine (hex/tools/native.c serve, built to /tmp/hexn
