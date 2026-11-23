@@ -1,11 +1,11 @@
 // Node helper: load engine.wasm (+ endgame DB, + evaluation net) like the browser worker does.
 const fs = require('fs'), path = require('path'), zlib = require('zlib');
 const E = require('../engine.js');
-async function load(opts) {
+function loadSync(opts) {
   opts = opts || {};
   const root = path.join(__dirname, '..');
   let prog = null;
-  const { instance } = await WebAssembly.instantiate(fs.readFileSync(opts.file || path.join(root, opts.nosimd ? 'engine.wasm' : 'engine_simd.wasm')), { env: { now: () => Date.now(), progress: d => prog && prog(d) } });
+  const instance = new WebAssembly.Instance(new WebAssembly.Module(fs.readFileSync(opts.file || path.join(root, opts.nosimd ? 'engine.wasm' : 'engine_simd.wasm'))), { env: { now: () => Date.now(), progress: d => prog && prog(d) } });   // (sync: the lesson checks call it from a sync tool)
   const X = instance.exports;
   const io = () => new Int32Array(X.memory.buffer, X.io_ptr(), 8192);
   const netFile = opts.net || path.join(root, 'evalnet.bin.gz');
@@ -35,4 +35,5 @@ async function load(opts) {
     newGame() { X.new_game(); },
   };
 }
-module.exports = { load };
+async function load(opts) { return loadSync(opts); }
+module.exports = { load, loadSync };

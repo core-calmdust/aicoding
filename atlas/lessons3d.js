@@ -3546,10 +3546,10 @@
      stopped, the endgame database's result CK_EG) or, for a miss, the green arrow's move and what yours gives up (a piece jumped for
      nothing, the capture taken back, fewer jumps, no crown, the opponent still able to move, the shot missed / suffered, the win or the
      draw lost). Cheers the player on (CK_CH) and words each problem differently. */
-  const CK_EG = {   // the endgame lessons' wrong moves: the database's result for the side to move (d = only a draw, l = a loss) — checkers/tools/wasm.js analyze
-    '..BW......W.....................2': '4-8:d 11-7:l 11-8:l', '....................W........BW.2': '21-25:d 31-26:l', '...........B.................WB.1': '31-26:d', '....B......BW...................1': '5-9:d', '.BB........W....................1': '3-8:d',
-    '...........W....b.........b.w...1': '17-21:d 27-31:d 27-32:d', '...............w.....B.......w..2': '30-25:d 30-26:d', '..WB......b.......w.............2': '3-8:l 19-15:l 19-16:l', '............b....W....w......B..2': '18-14:d 18-15:d 23-19:d', '...W.......B.....b.w............1': '12-16:l 12-8:l',
-    '...B...w.b..............W.......2': '25-29:l 25-30:l 25-21:l 25-22:l', '...B..W........B..........w.....1': '16-19:l 16-20:l 16-11:l', '.W....BW...................B....1': '7-11:l 28-32:l 28-24:l', '.........w....B......B........w.2': '10-7:l 31-26:l 31-27:l', '........B..W..............b....W1': '9-13:l 9-14:l 9-5:l 9-6:l' };
+  const CK_EG = {   // the endgame lessons' wrong moves: the database's result for the side to move (d = only a draw, l = a loss) — tools/lesson-verify.js checkers re-solves them
+    '........................W.BW.B..2': '25-29:d 25-21:d 25-22:d 28-24:l', '...............B....W.....W.B...2': '21-25:l 21-17:d 27-31:d 27-32:d', '..BB...W.W......................2': '8-11:d 10-14:l 10-15:l 10-6:l 10-7:l', '............B..W......WB........1': '13-17:d 13-9:d 24-27:l 24-28:d 24-20:d', '..B..W.................W......B.2': '6-1:d 24-27:l 24-28:d 24-19:d 24-20:d',
+    '...W.......B.....b.w............1': '12-16:l 12-8:l', '..WB......b.......w.............2': '3-8:l 19-15:l 19-16:l', '..............w.b...b.........W.2': '15-10:d 15-11:d 31-27:d', '............b......b..W..W......2': '23-18:d 26-30:d 26-22:d', '............b....W....w......B..2': '18-14:d 18-15:d 23-19:d',
+    '....B..b.....w.........W........1': '5-9:l 8-11:l', '...B..W........B..........w.....1': '16-19:l 16-20:l 16-11:l', '................w........w.b..B.2': '17-13:l 17-14:l 26-22:l', '............Wb.w.......B........1': '14-17:l 24-19:l 24-20:l', '........B..W..............b....W1': '9-13:l 9-14:l 9-5:l 9-6:l' };
   const CK_DC = [0, 4, 27, 31];   // the double corners' squares (1, 5, 28, 32)
   const CKJ_LS = {
     intro: {
@@ -3667,7 +3667,7 @@
         case 'e_men': return F.crown ? pk(['先にキングになって競争に勝てる', '王冠を先にかぶって勝ちに進める', 'キングになって一歩リードできる', '先に成って、あとは追いかけるだけ', 'キング競争で先手を取れる'], j)
           : F.capN ? pk(['相手の駒を取って勝ちに近づける', '取って差を広げられる', '駒を取って勝ちを確かにできる', '取れば数で上回れる', '取って相手の手を減らせる'], j)
           : pk(['データベースでも勝ちにつながる', '勝ちの道に乗れる', 'ほかの手では届かない勝ちに届く', '勝ちを手放さずにすむ', '勝ちへの道をまっすぐ進める'], j);
-        case 'e_draw': return F.tDC ? pk(['二重コーナーに逃げこんで粘れる', '二重コーナーで守りを固められる', '角の二重コーナーで踏んばれる', '二重コーナーなら追い出されにくい', '角の安全地帯にもぐりこめる'], j)
+        case 'e_draw': return F.tDC ? pk(['二重コーナーの奥で粘れる', '二重コーナーで守りを固められる', '角の二重コーナーで踏んばれる', '二重コーナーなら追い出されにくい', '角の安全地帯にもぐりこめる'], j)
           : F.capN || F.trade ? pk(['駒を取り合って引き分けにできる', '交換で駒を減らして粘れる', '取り合いで差を消せる', '駒が減って相手が決めきれなくなる', '数の差をなくして粘れる'], j)
           : pk(['負けを避けて引き分けにできる', '最後まで粘って負けを消せる', 'ここで踏んばって負けない', '相手に決め手をあたえない', 'データベースでも引き分けのまま'], j);
       }
@@ -3681,7 +3681,8 @@
       if (id === 'b_king' && !F.crown) return pk(['キングになれない', 'せっかくの王冠のチャンスを逃しちゃう', 'マンのままで終わっちゃう'], j);
       if (F.crown && F.net < 0) return pk(['キングになったとたん取られちゃう', '成った駒をすぐ跳び越えられちゃう', '王冠をかぶった直後に取られちゃう'], j);
       if (F.capN && F.net < FA.net) return F.net < 0 ? pk(['取ったのに取り返されて、かえって損しちゃう', '取り返されて差し引きで損が出ちゃう', '着地した駒ごと取り返されて損になる'], j) : pk(['着地した駒をすぐ取り返されちゃう', '取り返されて、得が帳消しになっちゃう', '取った分をそのまま取り返される'], j);
-      if (r === 'l' && F.net < 0) return pk(['駒をタダで取られて、負けになっちゃう', '跳び越えられて、そのまま負け', '取られて、そのまま押し切られちゃう'], j);
+      if (r === 'l' && F.net < 0) return pk(['駒をタダで取られて、負けになっちゃう', '跳び越えられて、そのまま負け', '駒を取られて、そのまま押し切られて負けちゃう'], j);
+      if (r === 'd' && F.net < 0) return pk(['駒をタダで取られて、勝ちが引き分けに変わっちゃう', '跳び越えられて1枚減って、引き分けどまり', '駒を取られて、勝ちが消えて引き分けになっちゃう'], j);
       if (r === 'l' && F.oppCrown) return pk(['相手のマンがキングになって負けちゃう', '相手に王冠を許して負けになる', '相手にキングを作られて押し切られる'], j);
       if (r === 'l') return pk(['相手に追いつめられて負けちゃう', '負けが決まっちゃう', '粘りきれずに負けになる'], j);
       if (r === 'd' && F.oppDC) return pk(['相手のキングに二重コーナーへ逃げこまれちゃう', '相手のキングが二重コーナーで粘れちゃう', '二重コーナーに逃げられて引き分けになる'], j);
@@ -3711,7 +3712,7 @@
     LKEY: 'aicoding-checkers-lessons', OKEY: 'aicoding-checkers-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=20261122'), getJ('../checkers/openings.json?v=3'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=20261124'), getJ('../checkers/openings.json?v=3'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vc]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] checkers texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vc)(v); this.V = ((v.I18N || {})['ja@crab']) || {}; } catch (e) { this.V = {}; }   // (チェッカニ's own lines, 3D, ja)
           return this; })
