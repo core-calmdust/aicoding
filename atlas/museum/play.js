@@ -212,6 +212,7 @@
       pick(ev, y) { const r = cv.getBoundingClientRect(), rc = new TH.Raycaster(); rc.setFromCamera(new TH.Vector2(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1), V.cam);
         board.updateMatrixWorld(true); const ray = rc.ray.clone().applyMatrix4(new TH.Matrix4().copy(board.matrixWorld).invert()), p = new TH.Vector3();
         return ray.intersectPlane(new TH.Plane(new TH.Vector3(0, 1, 0), -(y || 0)), p) ? { x: p.x, z: p.z } : null; },
+      local: !!def.local,   // (project takes the board's own space: museum/rules.js's checks ask)
       project(x, z, y) {   /* (x, y, z in the board's parent's space — the table's world: senet-kit passes points through board.matrix first; the Ballinderry board sits at the parent's origin unscaled) */ const r = cv.getBoundingClientRect(), p = (def.local ? board : board.parent || board).localToWorld(new TH.Vector3(x, y || 0, z)).project(V.cam);   /* (local: the adapter's points are the board's own — a board turned and scaled in the exhibit) */ return { x: r.left + (p.x + 1) / 2 * r.width, y: r.top + (1 - p.y) / 2 * r.height }; } };
     // the room's light, turned down for a board looked at from above (the exhibit's own light glares on a flat top seen from there)
     const L0 = { key: V.key ? V.key.intensity : 0, env: V.scene.environmentIntensity, home: V.home, spin: V.spin };
