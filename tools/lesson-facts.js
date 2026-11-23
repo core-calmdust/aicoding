@@ -136,6 +136,8 @@ const CHECKS = {
           if (id === 'trap') { const f = pos.fives(s), fb = f.length && f.every(q => pos.forbidIdx(q)); if (!fb) bad(g, K, `${w}: ${nm}: the four can be stopped on a point black may play`); }
           if (id === 'vcf') { const f = pos.fives(s); if (f.length !== 1) bad(g, K, `${w}: ${nm} is not a (simple) four`); else { pos.make(E.I2M[f[0]]); const S = new E.Solver(); S.limit = 2e5; if (S.vcf(pos, 12) < 0 && !pos.fives(s).length) bad(g, K, `${w}: after ${nm} no four-after-four win follows`); pos.unmake(); } }
           pos.unmake(); }); }); });
+    // (2026-11-23 第2期) the strict ①〜⑧ of the verified lessons (GM_DONE) with an exact short-win search and the engine: tools/lesson-verify.js gomoku
+    require('./lesson-verify.js').gomoku().forEach(fa => bad(g, String(L.steps.findIndex(s => s.id === fa.step)), `${fa.step} q${fa.q}: ${fa.msg}`));
   },
   amazons() {
     const E = require(path.join(ROOT, 'amazons/engine.js')), L = J('amazons/lessons.json'), NC = J('atlas/nocoord/amazons.json');

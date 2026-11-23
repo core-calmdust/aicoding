@@ -6,7 +6,7 @@
 //            (the zugzwang the lesson is about — not a tactical shot).
 //   endwin ⑦ after the answer every legal reply of the opponent loses with best play (the "give the opponent no counter" the words
 //            promise), i.e. the win is truly forced and quickest.
-// node tools/lesson-verify.js [connect4,mancala]
+// node tools/lesson-verify.js [connect4,mancala,gomoku]
 'use strict';
 const path = require('path');
 const ROOT = path.join(__dirname, '..');
@@ -96,12 +96,91 @@ function mancala(opt) {
   if (pend.length && opt && opt.pending) console.log(`mancala: ${pend.length} pending (not yet verified lessons)`);
   return out;
 }
-const GAMES = { connect4, mancala };
+// gomoku (2026-11-23 第2期)：the lessons in GM_DONE (claude/lesson-quality.md 「検証の進み具合」), every problem, free rule, with an exact
+// short-win search (gmWin below: "the side to move makes five within k of its own moves against every defence", k ≤ 3, every legal
+// reply searched) and the engine's four-after-four solver (Solver.vcf) for longer wins:
+//   ① the answer set equals the set of moves that reach the lesson's goal: five = every five point; block = the opponent's one five point
+//      (and the mover has no five of its own); three = every move after which the opponent wins neither within 3 moves nor by fours
+//      (and the mover has no win of its own); sfour / fourthree = the moves that win fastest (level 2 / level 3)
+//   ② = ① (no other move as good)   ③ at least 3 legal moves   ④ sfour: every answer an open four, fourthree: every answer a four-three,
+//      three: the opponent has an open-four point now (a live three)
+//   ⑤ no other position of the game (every lesson problem / warm-up, puzzles.json with its old versions) within 3 stones, under the 8
+//      symmetries and any shift of the board
+//   ⑥ d = the other tempting points (the mover's three / four points, the opponent's four points, the answers left out) never goes down
+//      and the last is above the first
+//   ⑦⑧ what the 3D words (atlas/lessons3d.js gmLsJa) say holds: block — after the answer the opponent has no win within 3 nor by fours
+//      (「これで負けの心配は消えた」); sfour — no other move wins within 3 (「止められたら終わり」 of a closed four / three); three and
+//      fourthree — every other move loses / does not win (= ①); five — a four elsewhere is called 「四まで」 only (no claim it is stopped)
+const GM_DONE = new Set(['five', 'block', 'three', 'sfour', 'fourthree']);
+function gmWin(E) {
+  const C = E.C;
+  function win(pos, k) { const X = pos.side, Y = 3 - X;
+    if (pos.fives(X).length) return true; if (k < 2) return false;
+    const fy = pos.fives(Y); if (fy.length >= 2) return false;
+    const thr = k >= 3 ? C.F3 : C.B4; let cands;
+    if (fy.length) cands = fy.map(i => E.I2M[i]); else { cands = []; for (let m = 0; m < 225; m++) { const i = E.M2I[m]; if (pos.b[i] === 0 && pos.cls[X][i] >= thr) cands.push(m); } }
+    for (const m of cands) if (pos.isLegal(m) && after(pos, m, k)) return true;
+    return false; }
+  // X (to move) plays m: does X then win within k of its moves (m the first)? (k = 3 with no four made: every legal reply is tried)
+  function after(pos, m, k) { const X = pos.side; pos.make(m); let ok;
+    const fx = pos.fives(X), fy = pos.fives(3 - X);
+    if (fy.length) ok = false; else if (fx.length >= 2) ok = k >= 2;
+    else if (!fx.length && k < 3) ok = false;
+    else { const reps = fx.length ? [E.I2M[fx[0]]] : pos.legal(); ok = true;
+      for (const r of reps) { if (!pos.isLegal(r)) continue; pos.make(r); const w = win(pos, k - 1); pos.unmake(); if (!w) { ok = false; break; } } }
+    pos.unmake(); return ok; }
+  const level = (pos, m) => { if (pos.cls[pos.side][E.M2I[m]] === C.FIVE) return 1; for (let k = 2; k <= 3; k++) if (after(pos, m, k)) return k; return 0; };
+  const vcf = pos => { const S = new E.Solver(); S.limit = 2e6; return S.vcf(pos, 20) >= 0; };
+  return { win, after, level, vcf };
+}
+function gomoku(opt) {
+  const E = require(path.join(ROOT, 'gomoku/engine.js')), L = require(path.join(ROOT, 'gomoku/lessons.json')), PZ = require(path.join(ROOT, 'gomoku/puzzles.json'));
+  const C = E.C, G = gmWin(E), only = opt && opt.only, out = [];
+  const cells = a => String(a || '').split(/\s+/).filter(Boolean).map(E.sqOf), nm = m => E.sqName(m);
+  const pool = []; L.steps.forEach(st => { st.problems.forEach((P, j) => pool.push([`${st.id} q${j + 1}`, P])); (st.ramp || []).forEach((r, j) => { if (r.b || r.w) pool.push([`${st.id} warm-up ${j + 1}`, r]); }); });
+  const walk = (o, pre) => { if (Array.isArray(o)) o.forEach((x, i) => walk(x, pre + '/' + i)); else if (o && typeof o === 'object') { if (typeof o.b === 'string' && typeof o.w === 'string' && o.side) pool.push(['puzzle' + pre, o]); else for (const k in o) walk(o[k], pre + '/' + k); } };
+  walk(PZ.cats, ''); walk(PZ.old || {}, '/old');
+  const st2 = P => { const s = []; cells(P.b).forEach(m => s.push([1, m % 15, Math.floor(m / 15)])); cells(P.w).forEach(m => s.push([2, m % 15, Math.floor(m / 15)])); return s; };
+  const SY = [(x, y) => [x, y], (x, y) => [-x, y], (x, y) => [x, -y], (x, y) => [-x, -y], (x, y) => [y, x], (x, y) => [-y, x], (x, y) => [y, -x], (x, y) => [-y, -x]];
+  const dist = (A, B) => { if (Math.abs(A.length - B.length) > 3) return 99; const Bs = new Set(B.map(([c, x, y]) => c + ',' + x + ',' + y)); let best = 99;
+    for (const f of SY) { const A2 = A.map(([c, x, y]) => [c, ...f(x, y)]), tr = new Set(); for (const a of A2) for (const b of B) if (a[0] === b[0]) tr.add((b[1] - a[1]) + ',' + (b[2] - a[2]));
+      for (const t of tr) { const [dx, dy] = t.split(',').map(Number); let hit = 0; for (const a of A2) if (Bs.has(a[0] + ',' + (a[1] + dx) + ',' + (a[2] + dy))) hit++; best = Math.min(best, A.length + B.length - 2 * hit); } }
+    return best; };
+  const PS = pool.map(([w, p]) => [w, st2(p), p]);
+  L.steps.forEach(st => { const id = st.id; if (!GM_DONE.has(id) || (only && !only.has(id))) return;
+    let prevD = -1, firstD = null;
+    st.problems.forEach((P, j) => { const add = m => out.push({ step: id, q: j + 1, msg: m });
+      if (P.rule !== 'free') { add(`rule ${P.rule} (the verified lessons are free-rule)`); return; }
+      const s = P.side, o = 3 - s, pos = E.setup('free', { b: cells(P.b), w: cells(P.w), side: s }), lg = pos.legal(), ok = P.ok.slice().sort();
+      const cls = (c, m) => pos.cls[c][E.M2I[m]], fv = c => pos.fives(c).map(i => nm(E.I2M[i])).sort();
+      if (lg.length < 3) add(`③ only ${lg.length} legal moves`);
+      let want;
+      const lv = new Map(lg.map(m => [m, G.level(pos, m)])), mine = lg.filter(m => lv.get(m));
+      const fastest = k => lg.filter(m => lv.get(m) === k).map(nm).sort(), mn = mine.length ? Math.min(...mine.map(m => lv.get(m))) : 0;
+      if (id === 'five') { want = fv(s); if (fv(o).length && !want.length) add('① the opponent has a five point and the mover none'); }
+      else if (id === 'block') { if (fv(s).length) add('① the mover can make five'); want = fv(o); if (want.length !== 1) add(`① the opponent has ${want.length} five points`);
+        if (want.length === 1) { pos.make(E.sqOf(want[0])); if (G.win(pos, 2) || G.win(pos, 3) || G.vcf(pos)) add('⑧ after the block the opponent still wins (「負けの心配は消えた」 is false)'); pos.unmake(); } }
+      else if (id === 'three') { if (fv(s).length || fv(o).length) add('① a five point on the board'); if (mine.length || G.vcf(pos)) add('① the mover has a win of its own');
+        if (!lg.some(m => cls(o, m) === C.F4)) add('④ the opponent has no open three (no open-four point)');
+        want = []; for (const m of lg) { pos.make(m); const w = G.win(pos, 2) || G.win(pos, 3) || G.vcf(pos); pos.unmake(); if (!w) want.push(nm(m)); } want.sort(); }
+      else { if (fv(s).length || fv(o).length) add('① a five point on the board');
+        const K = id === 'sfour' ? 2 : 3; if (mn !== K) add(`① the fastest win takes ${mn || 'no'} moves (the lesson's: ${K})`); want = fastest(mn || K);
+        if (id === 'sfour') { if (!P.ok.every(q => cls(s, E.sqOf(q)) === C.F4)) add('④ an answer is not an open four'); const slow = mine.filter(m => !P.ok.includes(nm(m))); if (slow.length) add(`⑦ other moves also win (${slow.map(nm)}) — the words say they get stopped`); }
+        else if (!P.ok.every(q => cls(s, E.sqOf(q)) === C.F43)) add('④ an answer is not a four-three'); }
+      if (want.join() !== ok.join()) add(`①② the answers are ${ok}, the goal's moves ${want}`);
+      const d = lg.filter(m => !P.ok.includes(nm(m)) && (cls(s, m) >= C.F3 || cls(o, m) >= C.B4)).length;
+      if (d < prevD) add(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
+      if (j === st.problems.length - 1 && !(d > firstD)) add(`⑥ the last problem is no harder than the first (d ${d} vs ${firstD})`);
+      const A = st2(P); for (const [who, B, Q] of PS) { if (Q === P) continue; const e = dist(A, B); if (e <= 3) add(`⑤ ${e} stones from ${who}`); }
+    }); });
+  return out;
+}
+const GAMES = { connect4, mancala, gomoku };
 module.exports = GAMES;
 if (require.main === module) {
-  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala').split(',');
+  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku').split(',');
   let bad = 0;
-  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'connect4' ? ' (count/endwin の⑦⑧)' : ` (${[...MC_DONE].join('・')} の①〜⑧)`)); continue; }
+  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'connect4' ? ' (count/endwin の⑦⑧)' : ` (${[...(g === 'gomoku' ? GM_DONE : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
     bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
   process.exit(bad ? 1 : 0);
 }
