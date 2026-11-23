@@ -5728,7 +5728,7 @@
      opponent's best reply: a capture, the king let out / caught). The engine-scored strategy lessons use the openings' words (tfOpJa). */
   const TFJ_LS = {
     intro: {
-      b_move: '駒は縦か横に、<b>空いているマスならどこまでも</b>進めるの。王さまも同じ！ まずは王を盤の<b>端</b>まで走らせよう。',
+      b_move: '駒は縦か横に、<b>空いていればどこまでも</b>進めるの。王さまも同じ！ 王を盤の<b>端</b>まで走らせよう。',
       b_cap: '相手の駒を<b>縦か横の両側から</b>はさむと取れるの。取れるのは<b>動かした側</b>だけ！<br>守り手は王さまもはさむ仲間になれる。でも、ななめにはさんでも取れないから気をつけてね。',
       b_hostile: '<b>四隅</b>は、どちらの駒から見ても相手の駒と同じはたらきをするの。<b>空いた玉座</b>も同じ（攻め手にとっては、王がいても敵）！<br>角や玉座のとなりの駒は、反対側に1枚置くだけで取れちゃう。',
       b_escape: '王が<b>四隅のどれか</b>に着けば守り手の勝ち！ でも攻め手も道をふさぎに来るの。<br><b>3手のうちに</b>、どう守られても逃げ切れる手順をさがそう。コツは、角への道を<b>2本同時に</b>作ること。相手は1本しかふさげないからね。',
@@ -5784,8 +5784,8 @@
   };
   function tfLF(E, pos, m) {   // what a lesson move does: the king, the edge, the captures (and what helped), the king's open lines, the reply
     const f = E.mFrom(m), t = E.mTo(m), F = pos.G.F, me = pos.turn, after = pos.clone().play(m), caps = after.lastCaps.slice();
-    const help = caps.map(q => after.nb(q).some(x => !after.at(x) && (F[x] & 2)) ? '角' : after.nb(q).some(x => !after.at(x) && (F[x] & 4)) ? '玉座' : '').find(Boolean) || '';
-    const R = { m, f, t, king: pos.at(f) === 3, edge: !!(F[t] & 1), caps: caps.length, help, win: after.res === me ? after.why || 'win' : '', routes: after.res ? 0 : after.kingLines().length, kingNearCorner: after.king >= 0 && after.nb(after.king).some(x => F[x] & 2) };
+    const help = caps.map(q => { const o = 2 * q - t; return o < 0 || o >= F.length || !after.nb(q).includes(o) || after.at(o) ? '' : F[o] & 2 ? '角' : F[o] & 4 ? '玉座' : ''; }).find(Boolean) || '';   // (the far side of the piece taken: a corner / the empty throne)
+    const R = { m, f, t, king: pos.at(f) === 3, edge: !!(F[t] & 1), caps: caps.length, help, win: after.res === me ? after.why || 'win' : '', routes: after.res ? 0 : after.kingLines().length, kingPair: caps.some(q => { const o = 2 * q - t; return o >= 0 && o < F.length && after.nb(q).includes(o) && after.at(o) === 3; }), kingNearCorner: after.king >= 0 && after.nb(after.king).some(x => F[x] & 2) };
     R.scan = () => { if (R._s) return R._s; let c = 0, w = false, tu = false;
       if (!after.res) for (const r of after.moves()) { const z = after.clone().play(r); if (z.res && z.res !== me) w = true; c = Math.max(c, z.lastCaps.length); if (!z.res && z.kingLines().length >= 2) tu = true; }
       return (R._s = { c, w, tu }); };
@@ -5826,18 +5826,24 @@
     const say = (u0, pref, why, tail) => { const u = alt(u0, pref), G = u != null ? FF(u) : null; const w = G ? why(G) : ''; return f(w + (w && !/[。！？]$/.test(w) ? '。' : '') + tail); };
     let good, ng;
     if (id === 'b_move') {
-      good = () => fg(pk(['{x}で王が端に着いた！ ここからは辺にそって角をねらえるね。', '端まで一直線！ とちゅうに駒がないから、王は止まらずに走れたの。', 'いい走りっぷり！ 端に着いた王は、つぎに角をねらえるから攻め手はたいへん。', '王さま、ちゃんと端までとどいた！ 空いている列を見つけられたね。', 'まっすぐ走って、盤のふちに到着！ 角まであと少しのところまで来たの。']));
-      ng = u => say(u, G => G.king && !G.edge, G => !G.king ? pk(['{x}は王じゃない駒を動かしてるの。', '{x}で動いたのは、王さまじゃない駒なんだ。', '{x}は守り手の駒。今回走らせたいのは王さま！', '{x}だと、王さまはその場から動いてないね。', '動かしたのが王さまじゃなかったの。'])
-        : pk(['{x}だと王はとちゅうで止まって、端まで届かないの。', '{x}の方向だと、とちゅうに駒がいて行き止まり。', '{x}では盤のふちまで出られないね。', '{x}だと、王さまはまだ盤の内側にいるまま。', 'その向きは、端の手前で止まっちゃうんだ。']),
+      good = () => fg(pk(['{x}で王が端に着いた！ ここからは辺にそって角をねらえるね。', '端まで一直線！ とちゅうに駒がないから、王は止まらずに走れたの。', 'いい走りっぷり！ 端に着いた王は、つぎに角をねらえるから攻め手はたいへん。', '王さま、ちゃんと端までとどいた！ 空いている列を見つけられたんだ。', 'まっすぐ走って、盤のふちに到着！ 角まであと少しのところまで来たの。']));
+      // (2026-11-24 第2期) a king move short of the edge: a piece (or the throne / a corner) really stands in the way, or the king stopped
+      // short on an open line — the words say which (tools/lesson-verify.js tafl)
+      const stop = G => { const F = pos.G.F, N = pos.n, dr = Math.sign(((G.t / N) | 0) - ((G.f / N) | 0)), dc = Math.sign(G.t % N - G.f % N); let r = ((G.t / N) | 0) + dr, c = G.t % N + dc;
+        for (; r >= 0 && c >= 0 && r < N && c < N; r += dr, c += dc) { const q = r * N + c; if (pos.at(q) || (F[q] & 6)) return true; } return false; };
+      ng = u => say(u, G => G.king && !G.edge, G => !G.king ? pk(['{x}は王じゃない駒を動かしてるの。', '{x}で動いたのは、王さまじゃない駒なんだ。', '{x}は守り手の駒。今回走らせたいのは王さま！', '{x}だと、王さまはその場から動いてないね。', '{x}は王さまじゃない駒の手なの。'])
+        : stop(G) ? pk(['{x}の向きは、とちゅうに駒がいて端まで行けないの。', '{x}の方向だと、とちゅうに駒がいて行き止まり。', '{x}の列は、先に駒がいてふさがってるね。', '{x}の向きは、端の手前に駒がいるの。', '{x}の道は、とちゅうの駒にさえぎられてるんだ。'])
+        : pk(['{x}だと王はとちゅうで止まって、端まで届かないの。', '{x}は向きは合ってるけど、手前で止まっちゃった。', '{x}では盤のふちまで出られないね。もっと先まで行けたの。', '{x}だと、王さまはまだ盤の内側にいるまま。', '{x}は走る向きはいいのに、端の手前で止まっちゃったんだ。']),
         pk(['{m}なら、駒のない列を通って端まで行けるから。', '{m}の方向は、端までずっと空いていたね。', '正解の{m}は、さえぎる駒がひとつもない道なの。', '{m}を選べば、ふちまで一気に走れたんだ。', 'こっちの{m}だと、まっすぐ端に着けたの。']));
     } else if (id === 'b_cap' || id === 'b_hostile') {
       const hp = FA.help, ho = id === 'b_hostile' && !!hp, c2 = FA.caps >= 2;
-      good = () => fg(ho ? pk([`{x}で、${hp}とのあいだにはさんで取れた！ ${hp}は相手の駒と同じはたらきなの。`, `${hp}を味方につけたはさみ取り！ 片側に置くだけで取れちゃうのがポイント。`, `{x}で${hp}と自分の駒ではさんで、1つ取ったね。`, `${hp}がもう片側の役をしてくれた！ 1枚だけで取れたの。`, `${hp}のとなりは危ない場所。そこをしっかり突けたね。`])
+      good = u => { const G = u != null && okS.has(u) && FF(u) || FA, hp = G.help, ho = id === 'b_hostile' && !!hp, c2 = G.caps >= 2; { const FA = G; return fg(ho ? pk([`{x}で、${hp}とのあいだにはさんで取れた！ ${hp}は相手の駒と同じはたらきなの。`, `${hp}を味方につけたはさみ取り！ 片側に置くだけで取れちゃうのがポイント。`, `{x}で${hp}と自分の駒ではさんで、1つ取ったね。`, `${hp}がもう片側の役をしてくれた！ 1枚だけで取れたの。`, `${hp}のとなりは危ない場所。そこをしっかり突けたね。`])
         : c2 ? pk([`{x}で一度に${FA.caps}つも取れた！ 両側がそろう駒がふたつあったのね。`, `${FA.caps}枚まとめて取れた！ 1手で2方向をはさむ、ぜいたくな手なの。`, `{x}で${FA.caps}つ同時にいただき！ よく見えてたね。`, `一石二鳥！ 動かした先の両どなりで、${FA.caps}つはさめたの。`, `${FA.caps}枚取り！ 縦と横、両方そろう場所だったね。`])
-        : pk(['{x}で、はさみ取り成功！ 相手の駒が1つ減ったね。', '両側から、ぴったりはさめた！ 取れるのは動かした側だけだから、いまがチャンスだったの。', '{x}で相手の駒をいただき！ 縦か横にきちんとはさめたね。', '片側で待っていた味方と、うまく組めた！ これで1枚取りね。', 'はさんで1枚ゲット！ 相手の駒がへると、王さまも守りにくくなるの。']));
+        : G.kingPair ? pk(['{x}で、王さまと組んではさみ取り！ 王も守り手の仲間なの。', '王さまが反対側の壁になってくれた！ 王もはさむ仲間なんだ。', '{x}で、王さまといっしょにはさんで1枚取り！', '王さまと味方の駒で、ぴったりはさめた！ 王も立派なはさみ役なの。', '王さまを相方にして1枚いただき！ よく見つけたね。'])
+        : pk(['{x}で、はさみ取り成功！ 相手の駒が1つ減ったね。', '両側から、ぴったりはさめた！ 取れるのは動かした側だけだから、いまがチャンスだったの。', '{x}で相手の駒をいただき！ 縦か横にきちんとはさめたね。', '片側で待っていた味方と、うまく組めた！ これで1枚取りね。', 'はさんで1枚ゲット！ 相手の駒がへると、王さまも守りにくくなるの。'])); } };
       ng = u => say(u, G => !G.caps, G => (G.caps ? pk(['{x}でも取れるけど、取れる数が少ないの。', '{x}は取れても1つだけ。', '{x}でも1つは取れるね。', '{x}も取れる手ではあるの。', '{x}で取れるのは少しだけ。']) : ho ? pk([`{x}だと、${hp}の反対側があいたままで取れないの。`, `{x}では、${hp}とはさむ形にならないね。`, `{x}だと、${hp}の向かい側に駒が来ないの。`, `{x}だと、${hp}を使えていないの。`, `{x}だと、${hp}のとなりの相手が残ったまま。`])
           : pk(['{x}だと、相手の駒の両側がそろわないから取れないの。', '{x}では、はさむ形にならないね。', '{x}だと、片側があいたままなんだ。', '{x}では、反対側に味方がいないから取れないの。', '{x}では、相手の駒が1枚も減らないね。']))
-          + (G.scan().c ? pk(['しかも、相手にぎゃくに駒をはさまれちゃう。', 'おまけに、次にきみの駒がはさまれるの。', 'そのうえ、相手に1枚取られちゃう。', 'しかも、相手の次の手で取り返されるね。', 'おまけに、きみの駒がねらわれる形なの。']) : ''),
+          + (G.scan().c ? pk(['しかも、相手にぎゃくに駒をはさまれちゃう。', 'おまけに、次にきみの駒がはさまれるの。', 'そのうえ、相手に1枚取られちゃう。', 'しかも、次は相手にきみの駒を取られちゃう。', 'おまけに、きみの駒がねらわれる形なの。']) : ''),
         ho ? pk([`{m}なら、${hp}と自分の駒ではさめたから。`, `正解の{m}は、${hp}の向かい側に入る手。`, `{m}を選べば、${hp}が片側の役をしてくれたの。`, `こっちの{m}で、${hp}とはさむ形になったんだ。`, `{m}だったら、${hp}を味方にして取れたね。`])
           : pk([`{m}なら、反対側の味方といっしょにはさめたから${c2 ? `（${FA.caps}つ取り）` : ''}。`, '{m}で動かせば、相手の駒が両側からはさまれる形だったの。', '正解の{m}は、味方の向かい側に入る手。', '{m}を選べば、縦か横にきちんとはさめたね。', 'こっちの{m}だったら、取れていたんだ。']));
     } else if (id === 'b_safe') {
@@ -5890,7 +5896,7 @@
     LKEY: 'aicoding-tafl-lessons', OKEY: 'aicoding-tafl-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=3'), fetch('../tafl/i18n.js?v=6ek-nd1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261116').catch(() => null)])
+      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=4'), fetch('../tafl/i18n.js?v=6ek-nd1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261116').catch(() => null)])
         .then(([ls, T, _, op]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] tafl texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },

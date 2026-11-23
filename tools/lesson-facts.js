@@ -241,6 +241,9 @@ const CHECKS = {
           if (id === 't_encircle' && !(a.res === me)) bad(g, K, `${w}: the answer does not win (encircle)`);
           if (id === 'v_brandubh' && !(a.res === me)) bad(g, K, `${w}: the answer does not catch the king`);
         }); }); });
+    // (2026-11-24 第2期) the strict ①〜⑨ of the verified basics (TF_DONE: b_move・b_cap・b_hostile): goal sets by the rules, the step's shape,
+    // no near-duplicates, easy → hard and タフリン's words for every move — tools/lesson-verify.js tafl
+    require('./lesson-verify.js').tafl().forEach(fa => bad(g, String(L.steps.findIndex(s => s.id === fa.step)), `${fa.step} q${fa.q}: ${fa.msg}`));
   },
   // (2026-11-23 lesson loop) the tafl openings ('tafl/open', key = the opening's id): every line replays legally from the Copenhagen start,
   // every practice position's best / scored moves are legal and the best is the stored top (within 15), and the kind of move the 3D guide
