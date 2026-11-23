@@ -4544,7 +4544,7 @@ let LESSONS = null;
 // they are addressed by negative indices (-1 = LESSONS.rules[0]) — see gradeAt()
 // (2026-11-15) read when the lessons are first opened, not with the page (0.5MB)
 let lessonsP = null;
-const lessonsLoad = () => lessonsP || (lessonsP = fetch('lessons.json?v=20261121k2').then(r => r.json()).then(d => { d.rules = d.grades.filter(g => g.rules); d.grades = d.grades.filter(g => !g.rules); return (LESSONS = d); }).catch(e => { lessonsP = null; console.warn('lessons unavailable', e); }));
+const lessonsLoad = () => lessonsP || (lessonsP = fetch('lessons.json?v=20261124a').then(r => r.json()).then(d => { d.rules = d.grades.filter(g => g.rules); d.grades = d.grades.filter(g => !g.rules); return (LESSONS = d); }).catch(e => { lessonsP = null; console.warn('lessons unavailable', e); }));
 let lprog = {};
 try { lprog = JSON.parse(localStorage.getItem(LSTORE) || '{}'); } catch (e) {}
 const L = o => (o && (o[LANG] || o.en || o.ja)) || '';
@@ -5070,7 +5070,7 @@ function startLesson(gi) {
   // like the reversi lessons: mostly standard problems plus one or two "exception" problems
   const std = shuffle(g.problems.filter(p => !p.trap)), trap = shuffle(g.problems.filter(p => p.trap));
   const nTrap = trap.length ? (Math.random() < 0.5 ? 1 : 2) : 0;
-  const probs = g.rules ? g.problems.slice() : shuffle([...std.slice(0, 5 - nTrap), ...trap.slice(0, nTrap)]);   // the rules lesson: every problem, in order
+  const probs = g.rules ? g.problems.slice() : shuffle([...std.slice(0, 5 - nTrap), ...trap.slice(0, nTrap)]).sort((a, b) => g.problems.indexOf(a) - g.problems.indexOf(b));   // the rules lesson: every problem, in order; the others in the pool's order (easy → hard, 2026-11-24 第2期)
   lesson = { gi, g, probs, k: 0, results: [], pts: [], waiting: false };
   document.body.classList.add('in-lesson');
   if (!game) game = newRecord(HANDI[0], 0);
