@@ -5,6 +5,8 @@
 // Every scored problem: White to move, 5 per step, 20 points each (75 to pass). The right answers (ok) are computed from the rules:
 // nothing is judged by the engine's opinion. Each step opens with a warm-up ramp (考え方 → 例題), its texts are i18n keys
 // (am-ls / i18n-am-ls.js). Positions are random but seeded, and checked by the conditions below.
+// (2026-11-24) the basics' scored problems are then made again by tools/gen_basics2.js (checked by tools/lesson-verify.js amazons):
+// run it after this one.
 'use strict';
 const path = require('path'), fs = require('fs');
 const E = require(path.join(__dirname, '..', 'engine.js'));
