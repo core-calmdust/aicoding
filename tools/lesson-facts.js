@@ -329,6 +329,8 @@ const CHECKS = {
           for (const k of legal) { const t = E.trace(Int8Array.from(b), 0, k, R), hit = b[k] === dist(k, P.target); if ((t.land === P.target) !== hit) bad(g, K, `${w}: pit ${k}: the seed count vs the distance disagrees with the sowing`); }
         }
       }); });
+    // (2026-11-23 第2期) the strict ①〜⑧ of the verified lessons (MC_DONE) with the engine: tools/lesson-verify.js mancala
+    require('./lesson-verify.js').mancala().forEach(fa => bad(g, String(L.steps.findIndex(s => s.id === fa.step)), `${fa.step} q${fa.q}: ${fa.msg}`));
   },
   // (2026-11-23 lesson loop, connect4) every answer column is open, the solver table C4SOL agrees (A on every answer, '-' on a full
   // column), and what ポトンウサ's words (atlas/lessons3d.js c4LsJa, run here) say about the answer and about each wrong column holds on a
