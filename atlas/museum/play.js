@@ -47,38 +47,13 @@
         return g; } },
     // the Ottoman chess / backgammon board (V&A 861-1907; 1 = 1 cm): chess on its outer face — the case turns the board over for the game. The squares
     // as on the photograph (5.5 cm; the pearl squares are the light ones, so the board lies with its hinge across, a dark square at each player's left).
-    // No pieces are kept with the board: these are an estimate after the turned sets of the Ottoman world — bone against dark horn, every one made on
-    // the lathe (rings and beads cut in), the horse a turned body with a slanted head. One square = 1 in the board's own space (atlas/games/chess.js).
+    // No pieces are kept with the board: the game is played with the Atlas's own chess pieces (the set the player has chosen) — 2026-11-23, the user's choice.
+    // One square = 1 in the board's own space (atlas/games/chess.js).
     ottoman: { game: 'chess', size: 8, area: [-24.2, 24.2, -24.2, 24.2], top: 0, flip: 1, local: true, noContact: true, view: { turn: Math.PI / 2, tilt: 1.02, k: 1.1 },
       board(TH, obj, K) {
         const g = new TH.Group(); g.scale.setScalar(5.51);
         g.quaternion.setFromAxisAngle(new TH.Vector3(0, 0, 1), Math.PI).multiply(new TH.Quaternion().setFromAxisAngle(new TH.Vector3(0, 1, 0), Math.PI / 2));   // face down under the board (it is turned over), White's side towards the viewer
-        const bone = K.tex(256, 256, (c, w, h) => { K.grain(c, w, h, { a: '#efe6cf', b: '#d9cba6', seed: 41, sx: .5, sy: 7, warp: .3, pores: .004 }); });
-        const hornT = K.tex(256, 256, (c, w, h) => { K.grain(c, w, h, { a: '#2a1c14', b: '#0f0a08', seed: 43, sx: .5, sy: 8, warp: .5, pores: .003 }); });
-        const MAT = { w: K.mat({ map: bone, color: '#ffffff', roughness: .42, clearcoat: .25, clearcoatRoughness: .5 }), b: K.mat({ map: hornT, color: '#ffffff', roughness: .3, clearcoat: .55, clearcoatRoughness: .3 }) };
-        // a turned profile: l = straight to (r, y) · b = a bead between two heights (bulging out to rb) · c = a curve to (r, y) through a middle (rm, ym)
-        const turn = segs => { const P = [[0, 0]]; segs.forEach(q => { const [k, a, b, c, d] = q, L = P[P.length - 1];
-            if (k === 'l') P.push([a, b]);
-            else if (k === 'b') { const r0 = L[0], y0 = L[1], y1 = a, rb = b; for (let i = 1; i <= 8; i++) { const u = i / 8; P.push([r0 + (rb - r0) * Math.sin(u * Math.PI), y0 + (y1 - y0) * (1 - Math.cos(u * Math.PI)) / 2]); } }
-            else if (k === 'c') for (let i = 1; i <= 10; i++) { const u = i / 10; P.push([(1 - u) * (1 - u) * L[0] + 2 * u * (1 - u) * c + u * u * a, (1 - u) * (1 - u) * L[1] + 2 * u * (1 - u) * d + u * u * b]); } });
-          return new TH.LatheGeometry(P.map(([r, y]) => new TH.Vector2(Math.max(.0008, r), y)), 40); };
-        const foot = R => [['l', R, 0], ['l', R, .035], ['b', .075, R + .012], ['l', R * .8, .095], ['l', R * .74, .105]];   // the base all of them stand on: a plain step, a bead, a fillet
-        const GEO = {
-          P: turn([...foot(.25), ['c', .09, .3, .1, .16], ['l', .15, .32], ['b', .37, .17], ['l', .085, .39], ['c', .13, .5, .15, .41], ['c', .001, .62, .14, .62]]),
-          R: turn([...foot(.31), ['l', .21, .12], ['l', .2, .2], ['b', .235, .225], ['l', .2, .42], ['b', .455, .225], ['c', .29, .56, .21, .52], ['l', .3, .64], ['l', .27, .665], ['l', .2, .665], ['l', .17, .61], ['l', .001, .6]]),
-          N: turn([...foot(.29), ['c', .12, .34, .13, .17], ['l', .17, .36], ['b', .41, .19], ['l', .13, .43], ['c', .15, .56, .11, .5], ['l', .001, .58]]),
-          B: turn([...foot(.28), ['c', .095, .36, .11, .17], ['l', .16, .38], ['b', .43, .18], ['l', .1, .45], ['c', .15, .62, .11, .5], ['c', .05, .84, .19, .76], ['b', .88, .07], ['c', .001, .97, .03, .92]]),
-          Q: turn([...foot(.31), ['c', .11, .42, .13, .18], ['l', .19, .44], ['b', .5, .215], ['l', .12, .52], ['c', .17, .7, .12, .6], ['c', .12, .82, .2, .8], ['l', .2, .84], ['b', .9, .225], ['l', .1, .92], ['c', .12, 1.0, .08, .94], ['c', .001, 1.1, .13, 1.1]]),
-          K: turn([...foot(.33), ['c', .12, .46, .14, .19], ['l', .21, .48], ['b', .55, .24], ['l', .13, .57], ['c', .19, .78, .13, .66], ['c', .13, .92, .22, .9], ['l', .22, .94], ['b', 1.0, .245], ['l', .09, 1.02], ['c', .1, 1.12, .17, 1.06], ['l', .05, 1.15], ['b', 1.25, .095], ['c', .001, 1.31, .035, 1.29]]) };
-        // the horse's head: a thick slanted wedge on the turned body, nose towards +x (the adapter turns it to face the other side)
-        const headG = (() => { const sh = new TH.Shape(), P = [[-.1, 0], [.09, 0], [.12, .1], [.09, .19], [.17, .17], [.25, .2], [.27, .27], [.2, .33], [.12, .4], [.05, .5], [-.01, .46], [-.07, .44], [-.14, .34], [-.16, .18]].map(([x, y]) => new TH.Vector2(x, y));
-          sh.moveTo(P[0].x, P[0].y); sh.lineTo(P[1].x, P[1].y); sh.splineThru(P.slice(2)); sh.lineTo(P[0].x, P[0].y);
-          const q = new TH.ExtrudeGeometry(sh, { depth: .1, bevelEnabled: true, bevelThickness: .06, bevelSize: .05, bevelSegments: 6, curveSegments: 24 }); q.translate(0, .56, -.05); return q; })();
-        const H = { P: .62, R: .665, N: 1.04, B: .97, Q: 1.1, K: 1.31 };
-        const piece = (tp, col) => { const p = new TH.Group(), m = new TH.Mesh(GEO[tp], MAT[col]); m.castShadow = m.receiveShadow = true; p.add(m);
-          if (tp === 'N') { const hd = new TH.Mesh(headG, MAT[col]); hd.castShadow = hd.receiveShadow = true; p.add(hd); }
-          p.userData = { type: tp, color: col, h: H[tp], set: 'ottoman' }; return p; };
-        g.userData = { chess: true, top: 0, piece, mats: MAT };
+        g.userData = { chess: true, top: 0 };
         return g; } },
     // 木画紫檀棊局 (1 = 1 cm): go on its 19 lines. The stones after the Shōsōin's own (北倉25): ivory dyed indigo (紺牙撥鏤碁子, 120 kept; 1.6–1.7 across,
     // 0.6–0.7 thick) and dyed red with lac (紅牙撥鏤碁子, 132; 1.5–1.7, 0.7–0.8), a bird with a flowering spray in its beak cut through the dye on both
@@ -173,7 +148,7 @@
     stop(); const CM = !!o.course;
     const board = def.board(TH, V.obj, G.kit), stage = V.ov.querySelector('.exstage'), cv = stage.querySelector('canvas');
     const dot = new TH.CircleGeometry(1, 24); dot.rotateX(-Math.PI / 2); const shown = [];
-    const T3 = { MODELS: (window.Table3D && Table3D.MODELS) || {}, chess: window.Table3D && Table3D.chess,
+    const T3 = { MODELS: (window.Table3D && Table3D.MODELS) || {}, chess: window.Table3D && Table3D.chess, PIECES: window.Table3D && Table3D.PIECES,
       show(_, b) { V.obj.add(b); if (b !== board) shown.push(b); this.kick(); },   // (a game that builds its own board — ウル: the exhibit IS the portal's model — puts it here; taken away at the end)
       fit() {}, kick() { if (V.R) V.R.shadowMap.needsUpdate = true; G.go(); },
       wasDrag: () => performance.now() - (V.dragEnd || 0) < 250,
