@@ -314,6 +314,8 @@ html.exv-open{overflow:hidden}
 .exturn{flex:none;width:38px;height:38px;border-radius:50%;border:1px solid rgba(212,175,95,.5);background:transparent;color:#e6cf94;display:grid;place-items:center;cursor:pointer}.exturn:hover{background:rgba(212,175,95,.12)}.exturn[hidden]{display:none}
 .exturn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}   /* the board lengthwise / across (long boards, during a game) */
 .exv-play .expcard .expf,.exv-play .expcard>b{display:none}
+.exv-play .expcard .expgm{display:none}.expgm{flex:none}   /* a two-sided exhibit: which of its two games */
+@media (max-width:640px){.expgm{flex:1 1 100%;justify-content:center}.expgm button{flex:1}}
 .exv-play .expcard{padding:6px;gap:8px}
 .exstage:has(.expcard) .exhint{display:none}
 /* phones (2026-11-23): a compact card — the game's name as a small caption, one row of Lv · 先手/後手 · あそぶ (their labels dropped: the values say it),
