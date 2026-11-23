@@ -1,0 +1,27 @@
+{
+ "nakabisha": [
+  "ln1g1gsnl/1r1s1k1b1/p2ppp1pp/2p3p2/1p2P4/2P6/PPBP1PPPP/3SR4/LN1GKGSNL b - 1",
+  "lnsgk2nl/4r1gs1/pPpp1p2p/4p1R2/9/2P6/P1BPPPP1P/2S1K4/LN1G1GSNL w 2Pb2p 1",
+  "lns1k2nl/2g1r1g2/pPpp1ps1p/4p4/6R2/2P6/P1BPPPP1P/2S1K1G2/LN1G2SNL w 2Pb2p 1",
+  "lnsgk2nl/4r1gs1/pPpp1p2p/4p1pR1/9/2P6/P1BPPPP1P/4KSG2/LNSG3NL w Pb2p 1",
+  "lns1k2nl/4r1g2/p1pp1ps1p/2gb5/4p1R2/2P2PP2/P1BPP1N1P/2S1KSG2/LN1G4L w 2P3p 1",
+  "lns1k2nl/4r1g2/p1pp1ps1p/2g1p4/6R2/2P3P2/P1BPPP2P/2S1KSG2/LN1G3NL w 2Pb3p 1",
+  "lns1k2nl/2g1r1g2/pPpp1ps1p/1R7/4p4/2P6/P1BPPPP1P/2S1KSG2/LN1G3NL w 2Pb2p 1",
+  "lns1k2nl/2g1r1g2/pP1p1ps1p/1Rp6/4p4/2P3P2/P1BPPPN1P/4KSG2/LNSG4L w 2Pb2p 1"
+ ],
+ "mukai": [
+  "lnsg1gsnl/5k3/ppp1pp1pp/5bp2/2Pr5/3p5/PPB1PPPPP/1R1S1K3/LN1G1GSNL b P 1",
+  "ln1g1gsnl/1ks4r1/ppppp1bpp/5pp2/7P1/2P6/PPBPPPP1P/1KS2S1R1/LN1G1G1NL w - 1",
+  "lnsg1g1nl/3k3r1/1ppppsbpp/5pp2/p6P1/2P1P4/PPBPSPP1P/2K1G2R1/LNSG3NL w - 1",
+  "ln1g1g1nl/2sk3r1/1ppppsbpp/5pp2/p6P1/2P1P1P2/PPBP1P2P/1K2GS1R1/LNSG3NL w - 1",
+  "ln3gsn1/1r2g2kl/p2pspbpp/2p1p1p2/1p6P/2PP5/PPBSPPPP1/1R2G1S2/LN3GKNL b - 1",
+  "ln1g1g1nl/2sk3r1/1ppppsbpp/p4pp2/7P1/P1P1P1P2/1P1P1P2P/1BK1GS1R1/LNSG3NL w - 1"
+ ],
+ "migishiken": [
+  "ln1g1gsnl/2sr1k1b1/ppp1pp1p1/3p2p1p/2P6/3P4P/PP2PPPP1/1BRS1K3/LN1G1GSNL w - 1",
+  "ln1gk2nl/1r4g2/3pssbpp/p1p1ppp2/1p5P1/2P1SP3/PPBPP1P1P/2GS1R3/LNK2G1NL b - 1",
+  "l2gk2nl/1r4g2/2np1sbpp/p1psppp2/1p5P1/2P1SPP2/PPBPP3P/2GS1R3/LNK1G2NL b - 1",
+  "ln2k2nl/1r2g1gb1/3pss1pp/p1p1ppp2/1p7/2P1SPPP1/PPBPP3P/2GS1R3/LNK2G1NL b - 1",
+  "ln2k2nl/1r2g1g2/4ssbpp/2ppppp2/pp5P1/2P1SPP2/PPBPP1N1P/2GS1R3/LNK1G3L b - 1"
+ ]
+}

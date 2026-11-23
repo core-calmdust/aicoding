@@ -16,6 +16,10 @@
 #       YaneuraOu's search + OUR evaluation  vs  YaneuraOu + micro, the same nodes  -> what the evaluation is worth
 #   ... OPP=micro US=site NODES=2200000 ONODES=200000 [PARAMS="k=v,..."] ...
 #       the SITE's engine (its own search and evaluation, 1 thread) vs YaneuraOu + micro
+# (2026-11-24) US=kp KPNET=<a net of gtrain / trainkp, any shape>: our side is the site's search with THAT net (kptool, built
+# to the net's shape by tools/nnue/build-kp.sh) — a new net against Gikou or against YaneuraOu + micro before it is shipped:
+#   KPNET="/Volumes/.../g2048s.bin" US=kp OPP=micro MICRO="/Volumes/.../TuyouraOu11micro" NODES=200000 GAMES=10 P=10 bash shogi/tools/match/yo-gikou.sh
+#   KPNET="/Volumes/.../g2048s.bin" US=kp NODES=2200000 GAMES=5 P=10 bash shogi/tools/match/yo-gikou.sh        (vs Gikou, 5 s a move)
 # The net's folder may have spaces in its path (it is copied to the work folder); FV_SCALE is read from its eval_options.txt.
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd); SHOGI=$(cd "$HERE/../.." && pwd)
@@ -23,7 +27,12 @@ NODES=${NODES:-2200000}; FULL=${FULL:-5000}; GAMES=${GAMES:-4}; P=${P:-6}; GW=${
 WORK=${WORK:-$HOME/shogi-yo-ours}; ARCH=${ARCH:-SFNN_ka2_2048_8_64_progress8}; mkdir -p "$WORK"
 OPP=${OPP:-gikou}; US=${US:-yo}; ONODES=${ONODES:-$NODES}
 [ "$OPP" = micro ] && [ -z "$MICRO" ] && { echo "OPP=micro needs MICRO=<the net's folder> on the same line"; exit 1; }
-echo "(opponent: $OPP; our side: $US${MICRO:+; net: $MICRO})"
+echo "(opponent: $OPP; our side: $US${KPNET:+ $KPNET}${MICRO:+; net: $MICRO})"
+if [ "$US" = kp ]; then
+  [ -s "$KPNET" ] || { echo "US=kp needs KPNET=<the net> on the same line"; exit 1; }
+  export KPNET="$(cd "$(dirname "$KPNET")" && pwd)/$(basename "$KPNET")"
+  KP=$(bash "$SHOGI/tools/nnue/build-kp.sh" "$WORK/kp" "$KPNET" | tail -1); [ -x "$KP" ] || { echo "kptool was not built"; exit 1; }
+fi
 [ "$OPP" = micro ] || [ -x "$GW/release" ] || { echo "Gikou is not built yet: run shogi/tools/match/run-gikou.sh once"; exit 1; }
 CPU=AVX2; [ "$(uname -m)" = arm64 ] && CPU=APPLEM1
 J=$(getconf _NPROCESSORS_ONLN)
@@ -49,6 +58,8 @@ if [ -n "$MICRO" ]; then
     cp "$WORK/src-new/source/YaneuraOu-by-gcc" "$YO"
   fi
   UOPT="--usopt EvalDir=$ED"; [ -n "$FVS" ] && UOPT="$UOPT --usopt FV_SCALE=$FVS"
+elif [ "$US" = kp ]; then
+  YO="$KP"; TAG=kp; WHAT="the site's search + $(basename "$KPNET")"; UOPT=""
 else
   build_ours; YO="$YOO"; TAG=ours; WHAT="YaneuraOu's search + our evaluation"; UOPT=""
 fi
@@ -60,12 +71,12 @@ cd "$WORK"; printf 'usi\n%sisready\nquit\n' "${ED:+setoption name EvalDir value 
 if [ "$OPP" = micro ]; then
   [ -n "$MICRO" ] || { echo "OPP=micro needs MICRO=<the net's folder>"; exit 1; }
   OYO="$YO"; OOPT=$(echo "$UOPT" | sed 's/--usopt/--opt/g')
-  if [ "$US" = site ]; then WHAT="the site's engine${PARAMS:+ ($PARAMS)}"; TAG=site-micro; else build_ours; WHAT="YaneuraOu's search + our evaluation"; TAG=ours-micro; fi
+  if [ "$US" = site ]; then WHAT="the site's engine${PARAMS:+ ($PARAMS)}"; TAG=site-micro; elif [ "$US" = kp ]; then WHAT="the site's search + $(basename "$KPNET")"; TAG=kp-micro; else build_ours; WHAT="YaneuraOu's search + our evaluation"; TAG=ours-micro; fi
   echo "== $WHAT, $NODES nodes a move, vs YaneuraOu + $(basename "$MICRO"), $ONODES nodes a move: $P processes x $GAMES games"
   T0=$(date +%s); i=1
   while [ $i -le $P ]; do
     R=$(( (i - 1) * 7 % 100 )); tail -n +$(( R + 1 )) "$HERE/openings.txt" > "g-op-$i.txt"; if [ $R -gt 0 ]; then head -n $R "$HERE/openings.txt" >> "g-op-$i.txt"; fi
-    if [ "$US" = site ]; then USARG=""; else USARG="--us $YOO $WORK --usopt BookFile=no_book --usopt USI_Hash=256 --usopt Threads=1 --usopt NodesLimit=$NODES --usopt NetworkDelay=0 --usopt NetworkDelay2=0"; fi
+    if [ "$US" = site ]; then USARG=""; elif [ "$US" = kp ]; then USARG="--us $KP $WORK --usopt Nodes=$NODES"; else USARG="--us $YOO $WORK --usopt BookFile=no_book --usopt USI_Hash=256 --usopt Threads=1 --usopt NodesLimit=$NODES --usopt NetworkDelay=0 --usopt NetworkDelay2=0"; fi
     OURNET="$WORK/site.bin" OURSCALE=${OURSCALE:-100} ./usimatch site.bin $NODES "$OYO" "$WORK" $GAMES --opt BookFile=no_book --opt USI_Hash=256 --opt Threads=1 --opt NodesLimit=$ONODES \
       --opt NetworkDelay=0 --opt NetworkDelay2=0 $OOPT --openings "g-op-$i.txt" --byoyomi 60000 $USARG > "g-$TAG-$i.log" 2>&1 &
     i=$((i + 1))
@@ -82,8 +93,7 @@ T0=$(date +%s); i=1
 while [ $i -le $P ]; do
   R=$(( (i - 1) * 7 % 100 )); tail -n +$(( R + 1 )) "$HERE/openings.txt" > "g-op-$i.txt"; [ $R -gt 0 ] && head -n $R "$HERE/openings.txt" >> "g-op-$i.txt"
   OURNET="$WORK/site.bin" OURSCALE=${OURSCALE:-100} ./usimatch site.bin 0 "$GW/release" "$GW" $GAMES --opt Threads=1 --opt USI_Hash=256 --opt OwnBook=false --opt USI_Ponder=false \
-    --openings "g-op-$i.txt" --byoyomi $FULL --us "$YO" "$WORK" --usopt BookFile=no_book --usopt USI_Hash=256 --usopt Threads=1 --usopt NodesLimit=$NODES \
-    --usopt NetworkDelay=0 --usopt NetworkDelay2=0 $UOPT > "g-$TAG-$i.log" 2>&1 &
+    --openings "g-op-$i.txt" --byoyomi $FULL --us "$YO" "$WORK" $( [ "$US" = kp ] && echo "--usopt Nodes=$NODES" || echo "--usopt BookFile=no_book --usopt USI_Hash=256 --usopt Threads=1 --usopt NodesLimit=$NODES --usopt NetworkDelay=0 --usopt NetworkDelay2=0" ) $UOPT > "g-$TAG-$i.log" 2>&1 &
   i=$((i + 1))
 done
 wait

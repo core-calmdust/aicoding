@@ -1,18 +1,18 @@
 // The site's shogi engine (engine_simd512.wasm + nnue.bin.gz, the strongest setting of the page) for the node tools:
 // the same loading as the worker in engine.js (wReady / loadNNUE / wsetup / wasmAnalyze).
-//   const W = await require('./wasm-engine.js')();  W.analyze(sfen, { time: 3000 }) → [{ usi, s, d }, …] best first
+//   const W = await require('./wasm-engine.js')();  (or require('./wasm-engine.js').loadSync())  W.analyze(sfen, { time: 3000 }) → [{ usi, s, d }, …] best first
 'use strict';
 const fs = require('fs'), path = require('path'), zlib = require('zlib');
 const DIR = path.join(__dirname, '../..');
 const E = require(path.join(DIR, 'engine.js'));
-module.exports = async function load() {
+function make(inst) {
   const net = zlib.gunzipSync(fs.readFileSync(path.join(DIR, 'nnue.bin.gz')));
   const dv = new DataView(net.buffer, net.byteOffset, net.byteLength);
   if (dv.getUint32(0, true) !== 0x5145554E) throw new Error('nnue.bin.gz: bad magic');
   const H = dv.getInt32(4, true), NIN = dv.getInt32(8, true);
   const file = H === 512 ? 'engine_simd512.wasm' : 'engine_simd.wasm';
   const env = { now: () => Date.now(), progress: () => {}, aprogress: () => {} };
-  const { instance } = await WebAssembly.instantiate(fs.readFileSync(path.join(DIR, file)), { env });
+  const instance = inst(fs.readFileSync(path.join(DIR, file)), { env });
   const X = instance.exports, MEM = X.memory; X.init();
   // linear weights (the page's weights.bin.gz) for the parts that still use them
   try { const w = zlib.gunzipSync(fs.readFileSync(path.join(DIR, 'weights.bin.gz'))); const W = new Int16Array(w.buffer.slice(w.byteOffset, w.byteOffset + w.length)); if (W.length === E.TEMPO + 1) new Int16Array(MEM.buffer, X.weights_ptr(), W.length).set(W); } catch (e) {}
@@ -34,3 +34,6 @@ module.exports = async function load() {
     },
   };
 };
+const inst = (buf, imp) => new WebAssembly.Instance(new WebAssembly.Module(buf), imp);
+module.exports = async function load() { return make(inst); };
+module.exports.loadSync = () => make(inst);   // (tools/lesson-verify.js: the checks run without await)
