@@ -535,6 +535,17 @@ button{font:inherit;color:inherit;cursor:pointer}
 .ddl button.on{background:var(--mw-on);color:var(--mw-ink);box-shadow:inset 4px 0 0 var(--acc)}.ddl button.on .de,.ddl button.on .ix{color:#4a535a}.ddl button.on .dd{color:#2e353a}
 .ddl button[data-k="demon"] .dn{color:#ff7a5c}.ddl button.on[data-k="demon"] .dn,.ddb[data-k="demon"] .dn{color:#ff7a5c}.ddl button.on[data-k="demon"] .dn{color:#c03a1c}
 .optDiff{min-width:280px}
+/* (2026-11-24) a fleet down to two in 大艦隊: an alarm, a red pulse at the edges, a strip across the middle; afterwards a slow red edge stays */
+#l2{position:fixed;inset:0;z-index:45;pointer-events:none}#l2.hide{display:none}
+#l2 .l2v{position:absolute;inset:0;box-shadow:inset 0 0 160px 40px rgba(255,40,20,.55);animation:l2p .6s ease-in-out 5 alternate}
+#l2.foe .l2v{box-shadow:inset 0 0 160px 40px rgba(255,140,40,.45)}
+#l2 .l2s{position:absolute;left:0;right:0;top:42%;display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 12px;background:linear-gradient(90deg,transparent,rgba(8,4,4,.86) 18%,rgba(8,4,4,.86) 82%,transparent);border-top:1px solid rgba(255,90,60,.6);border-bottom:1px solid rgba(255,90,60,.6);animation:l2in .35s cubic-bezier(.2,.9,.3,1.2) both,l2out .4s ease-in 3.2s forwards}
+#l2 b{font-family:var(--num);font-weight:700;font-size:clamp(30px,6vw,58px);letter-spacing:.32em;text-indent:.32em;color:#ff5a3c;text-shadow:0 0 24px rgba(255,60,30,.6)}
+#l2.foe b{color:#ffb347;text-shadow:0 0 24px rgba(255,150,40,.55)}
+#l2 span{font-family:var(--jp);font-weight:600;font-size:clamp(15px,2.2vw,21px);letter-spacing:.06em;color:#f1f3f4;text-align:center}
+#l2 em{font-style:normal;font-family:var(--jp);font-size:13px;letter-spacing:.24em;padding:3px 10px;color:var(--mw-ink);background:var(--mw-on)}
+@keyframes l2p{from{opacity:.25}to{opacity:1}}@keyframes l2in{from{transform:scaleY(0);opacity:0}to{transform:none;opacity:1}}@keyframes l2out{to{opacity:0;transform:scaleY(.6)}}
+body.l2::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:4;box-shadow:inset 0 0 90px 10px rgba(255,40,20,.22);animation:l2p 2.4s ease-in-out infinite alternate}
 </style>
 </head>
 <body>
@@ -646,6 +657,7 @@ button{font:inherit;color:inherit;cursor:pointer}
     <div class="acts"><button class="cmd prime" id="rsAgain"><span data-t="r.again"></span></button><button class="cmd" id="rsSea"><span data-t="r.look"></span></button><button class="cmd" id="rsTitle"><span data-t="p.title"></span></button></div></div>
 </div></section>
 
+<div id="l2" class="hide"><div class="l2v"></div><div class="l2s"><b id="l2T"></b><span id="l2S"></span><em id="l2R"></em></div></div>
 <script>/* the logo always fits its column (a narrow phone, a wider fallback font before the web font arrives) */
 (function () { const fit = () => document.querySelectorAll('#scrTitle .logo').forEach(el => { el.style.fontSize = ''; const w = el.clientWidth, sw = el.scrollWidth;
   if (w && sw > w) el.style.fontSize = (parseFloat(getComputedStyle(el).fontSize) * w / sw * .98) + 'px'; });
@@ -658,10 +670,10 @@ button{font:inherit;color:inherit;cursor:pointer}
 
 <script src="../seabattle/i18n.js?v=45"></script>
 <script src="../seabattle/draft-model.js?v=2"></script>
-<script src="../seabattle/engine.js?v=39"></script>
+<script src="../seabattle/engine.js?v=40"></script>
 <script src="../atlas/vendor/three-r186.min.js?v=1"></script>
 <script src="../seabattle/ships3d.js?v=2"></script>
 <script src="world.js?v=9"></script>
-<script src="game.js?v=23"></script>
+<script src="game.js?v=24"></script>
 </body>
 </html>

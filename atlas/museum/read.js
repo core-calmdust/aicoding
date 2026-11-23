@@ -62,12 +62,11 @@
   function shelf() {
     cur = null; const S = stamps(), n = STORIES.filter(s => S[s.id]).length;
     host.innerHTML = `<div class="rdx"><p class="chlead">${esc(fmt(u('lead'), { n: STORIES.length }))}</p>
-      <div class="rdcard"><div class="rdct"><b>${esc(u('card'))}</b><small>${esc(n === STORIES.length ? u('cardAll') : fmt(u('cardN'), { n, of: STORIES.length }))}</small></div>
-        <div class="rdst">${STORIES.map(s => `<span class="rdstamp${S[s.id] ? ' on' : ''}${ga(s.cover)}" style="--c:${s.color}" title="${esc(st(s.id).title)}">${S[s.id] ? `<img src="${src(s.cover)}" alt="">` : ''}<i>${STORIES.indexOf(s) + 1}</i></span>`).join('')}</div></div>
       <div class="rdlist">${STORIES.map((s, i) => { const x = st(s.id);
         return `<button type="button" class="rdc" data-s="${s.id}" style="--c:${s.color}"><span class="rdci${ga(s.cover)}"><img src="${src(s.cover)}" alt="" loading="lazy"></span>
           <span class="rdct2"><em>${esc(fmt(u('no'), { n: i + 1 }))} · ${esc(fmt(u('mins'), { n: s.mins }))}${S[s.id] ? ` · <b class="rdok">✓ ${esc(u('stamped'))}</b>` : ''}</em><b>${esc(x.title)}</b><small>${esc(x.lead)}</small></span></button>`; }).join('')}</div></div>`;
     host.querySelectorAll('[data-s]').forEach(b => b.onclick = () => story(b.dataset.s, true));
+    if (window.AtlasMuseum && AtlasMuseum.pager) AtlasMuseum.pager(host.querySelector('.rdlist'), 'read', { rows: { pc: 3, phone: 6 } });
   }
 
   /* ---------- a story ---------- */

@@ -308,7 +308,8 @@ function strike(st, by, cell) {      // one shell on the other side's square (no
   return res;
 }
 // the end of one action: with two actions a turn (大艦隊) the first one keeps the turn (res.again), the second passes it
-function endAct(st, by, res) { if (st.per > 1 && st.winner < 0 && --st.ap > 0) { res.again = true; res.more = st.ap; return; } st.ap = st.per || 1; pass(st, by); }
+// (2026-11-24 user, 大艦隊だけ: どちらかが残り2隻になったら1ターン1手に) the turn in hand plays out; from the next turn on, one action each
+function endAct(st, by, res) { if (st.per > 1 && st.winner < 0 && --st.ap > 0) { res.again = true; res.more = st.ap; return; } if (st.per > 1 && st.sides.some(s => s.afloat <= 2)) { st.per = 1; st.last2 = true; } st.ap = st.per || 1; pass(st, by); }
 function pass(st, by) { const T = st.sides[1 - by]; if (T.fog > 0 && --T.fog === 0) T.fogged.fill(0); if (T.supp > 0) T.supp--; st.rapid = 0; if (st.bonus) st.bonus = 0;
   st.turn = 1 - by; if (st.sides[st.turn].ward > 0) st.sides[st.turn].ward--; if (st.sides[st.turn].jamImm > 0) st.sides[st.turn].jamImm--; if (st.cd) { const c = st.cd[st.turn], N2 = st.sides[st.turn], h = !N2.supp && N2.ships.some((s, j) => TYPES[s.t].haste && !N2.sunk[j]) ? 2 : 1; for (let i = 0; i < c.length; i++) if (c[i] > 0) c[i] = Math.max(0, c[i] - (JAMS(st, st.turn, i) ? 1 : h)); }
   if (st.rest && st.rest[st.turn] && st.winner < 0) { st.rest[st.turn] = 0; st.log.push({ by: st.turn, cell: -1, rest: 1 }); pass(st, st.turn); } }   // (a turn lost to a mine)
