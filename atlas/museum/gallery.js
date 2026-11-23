@@ -87,7 +87,7 @@
             .map(([k, l, d, sl]) => `<button type="button" class="expa" data-k="${k}" title="${esc(ui(lang, l))}"><svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg><span>${esc(ui(lang, sl || l))}</span></button>`).join('')}</div></div>` : ''}
         <div class="exscale" aria-hidden="true" dir="ltr"><i></i><span>10 cm</span></div>
         <p class="exhint">${esc(ui(lang, phone() ? 'hintT' : 'hint'))}</p>
-        <div class="exbtns"><button type="button" class="exb" data-k="spin" aria-label="${esc(ui(lang, 'spin'))}" title="${esc(ui(lang, 'spin'))}"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v4.5h-4.5"/></svg></button>${B0 && B0.flip ? `<button type="button" class="exb" data-k="flip" aria-label="${esc(ui(lang, 'flip'))}" title="${esc(ui(lang, 'flip'))}"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.7-5.6M20 12a8 8 0 0 1-13.7 5.6"/><path d="M18 3v4h-4M6 21v-4h4"/></svg></button>` : ''}<button type="button" class="exb" data-k="reset" aria-label="${esc(ui(lang, 'reset'))}" title="${esc(ui(lang, 'reset'))}"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><button type="button" class="exb" data-k="wide" aria-label="${esc(ui(lang, 'wide'))}" title="${esc(ui(lang, 'wide'))}"><svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path class="pc" d="M14.5 4.5v15"/><path class="sp" d="M3.5 13.5h17"/></svg></button></div>
+        <div class="exbtns"><button type="button" class="exb exnum" data-k="spots" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M10.6 9.2 12.4 8v8"/><path class="sl" d="M4.5 4.5l15 15"/></svg></button><button type="button" class="exb" data-k="spin" aria-label="${esc(ui(lang, 'spin'))}" title="${esc(ui(lang, 'spin'))}"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v4.5h-4.5"/></svg></button>${B0 && B0.flip ? `<button type="button" class="exb" data-k="flip" aria-label="${esc(ui(lang, 'flip'))}" title="${esc(ui(lang, 'flip'))}"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.7-5.6M20 12a8 8 0 0 1-13.7 5.6"/><path d="M18 3v4h-4M6 21v-4h4"/></svg></button>` : ''}<button type="button" class="exb" data-k="reset" aria-label="${esc(ui(lang, 'reset'))}" title="${esc(ui(lang, 'reset'))}"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><button type="button" class="exb" data-k="wide" aria-label="${esc(ui(lang, 'wide'))}" title="${esc(ui(lang, 'wide'))}"><svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path class="pc" d="M14.5 4.5v15"/><path class="sp" d="M3.5 13.5h17"/></svg></button></div>
         <p class="exload">${esc(ui(lang, 'loading'))}</p></div>
       <aside class="exinfo"><div class="exgrab" aria-hidden="true"><i></i></div><button type="button" class="exclose" aria-label="${esc(ui(lang, 'close'))}"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
         <div class="exscroll"><small class="exkind">${esc(ui(lang, 'collection'))}${e.lock ? ` · ${esc(ui(lang, 'special'))}` : ''}</small><h2>${esc(t.name || id)}</h2>${t.alt ? `<p class="exalt">${esc(t.alt)}</p>` : ''}${PLAY[id] ? `<button type="button" class="excfg" data-k="pcfg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg><span>${esc(ui(lang, 'p_start'))}</span><small>${esc(ui(lang, 'play_' + id))}</small></button>` : ''}
@@ -227,6 +227,9 @@
       grab.onpointerup = up; grab.onpointercancel = up; }
     ov.querySelector('[data-k="spin"]').onclick = () => { if (!V3) return; V3.spin = !V3.spin; ov.querySelector('[data-k="spin"]').classList.toggle('on', V3.spin); go(); };
     ov.querySelector('[data-k="spin"]').classList.add('on');
+    { const sb = ov.querySelector('[data-k="spots"]'), setSp = off => { ov.classList.toggle('nospots', off); sb.classList.toggle('on', off); sb.setAttribute('aria-pressed', off); const l = SPT[lang] || SPT.en; sb.setAttribute('aria-label', l); sb.title = l; };
+      sb.onclick = () => { const off = !ov.classList.contains('nospots'); try { localStorage.setItem(NOSP, off ? '1' : '0'); } catch (e) {} setSp(off); };
+      setSp(noSpots()); }
     const fb = ov.querySelector('[data-k="flip"]'); if (fb) fb.onclick = () => { if (!V3 || !V3.flip) return; V3.flip.to = V3.flip.to ? 0 : 1; fb.classList.toggle('on', !!V3.flip.to); go(); };
     Promise.all([load('museum/ex/' + id + '.js?v=' + V), e.src ? e.src() : 0]).then(() => { const B = window.AtlasEx && AtlasEx[id]; return B && B.ready ? B.ready() : 0; }).then(() => { if (V3 && V3.ov === ov) build(e); });
   }
@@ -314,6 +317,9 @@
   }
   /* ---------- ミュゼフク (musowl): the museum's Atlamo, earned by looking round the collection ----------
      N one piece seen · R every regular piece · SR a special exhibit opened · SSR every piece, special ones included */
+  // 番号を隠す (2026-11-24 ユーザー): one switch for the numbered spots, shared with the other room ('atlas-museum-nospots')
+  const NOSP = 'atlas-museum-nospots', SPT = { ja: '番号を隠す', en: 'Hide numbers', zh: '隐藏编号', 'zh-TW': '隱藏編號', ko: '번호 숨기기', es: 'Ocultar números', fr: 'Masquer les numéros', pt: 'Ocultar números', de: 'Nummern ausblenden', ru: 'Скрыть номера', tr: 'Numaraları gizle', id: 'Sembunyikan nomor', hi: 'नंबर छिपाएँ', ar: 'إخفاء الأرقام' };
+  const noSpots = () => { try { return localStorage.getItem(NOSP) === '1'; } catch (e) { return false; } };
   const SEEN = 'atlas-museum-seen';
   const MK = (r, ids, n) => { try { if (window.AtlasMuseum && AtlasMuseum.mark) AtlasMuseum.mark(r, ids, n); } catch (e) {} };   // (館内スタンプ帳)
 

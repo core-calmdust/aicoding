@@ -38,6 +38,9 @@
   }
 
   /* ---------- the viewer ---------- */
+  // 番号を隠す (2026-11-24 ユーザー): one switch for the numbered spots, shared with the other room ('atlas-museum-nospots')
+  const NOSP = 'atlas-museum-nospots', SPT = { ja: '番号を隠す', en: 'Hide numbers', zh: '隐藏编号', 'zh-TW': '隱藏編號', ko: '번호 숨기기', es: 'Ocultar números', fr: 'Masquer les numéros', pt: 'Ocultar números', de: 'Nummern ausblenden', ru: 'Скрыть номера', tr: 'Numaraları gizle', id: 'Sembunyikan nomor', hi: 'नंबर छिपाएँ', ar: 'إخفاء الأرقام' };
+  const noSpots = () => { try { return localStorage.getItem(NOSP) === '1'; } catch (e) { return false; } };
   let ov = null, vs = null;   // the overlay; the view: { s (scale), x, y (translation, px), W, H (the picture at s = 1), fit }
   const MK = (r, ids, n) => { try { if (window.AtlasMuseum && AtlasMuseum.mark) AtlasMuseum.mark(r, ids, n); } catch (e) {} };   // (館内スタンプ帳)
   function openWork(id, n, keep) {
@@ -104,7 +107,7 @@
     ov = document.createElement('div'); ov.className = 'ptv'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
     ov.innerHTML = `<div class="ptvstage"><div class="ptvframe"><img class="ptvimg" alt="" draggable="false"><div class="ptvspots"></div></div>
         <div class="ptvtools" dir="ltr"><button type="button" data-k="prev" aria-label="←">‹</button><span class="ptvcount"></span><button type="button" data-k="next" aria-label="→">›</button>
-          <span class="sep"></span><button type="button" data-k="out" aria-label="−">−</button><button type="button" data-k="fit" aria-label="⤢">⤢</button><button type="button" data-k="in" aria-label="+">+</button></div>
+          <span class="sep"></span><button type="button" data-k="out" aria-label="−">−</button><button type="button" data-k="fit" aria-label="⤢">⤢</button><button type="button" data-k="in" aria-label="+">+</button><span class="sep"></span><button type="button" data-k="spots" class="ptvnum" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M10.6 9.2 12.4 8v8"/><path class="sl" d="M4.5 4.5l15 15"/></svg></button></div>
         <div class="ptvcap"></div><p class="ptvhint"></p><button type="button" class="ptvx" data-k="x" aria-label="×">×</button></div>
       <aside class="ptvside"><h3 class="ptvh"></h3><p class="ptvsub"></p><div class="ptvbody"></div>
         <h4 class="ptvsph"></h4><ol class="ptvspl"></ol><h4 class="ptvlinksh"></h4><div class="ptvlinks"></div><h4 class="ptvrech"></h4><dl class="ptvrec"></dl></aside>`;
@@ -116,6 +119,9 @@
     ov.querySelector('[data-k="in"]').onclick = () => { const [cx, cy] = center(); zoomAt(1.6, cx, cy, true); };
     ov.querySelector('[data-k="out"]').onclick = () => { const [cx, cy] = center(); zoomAt(1 / 1.6, cx, cy, true); };
     ov.querySelector('[data-k="fit"]').onclick = () => { fitView(); hiSpot(-1); };
+    const sb = ov.querySelector('[data-k="spots"]'), setSp = off => { ov.classList.toggle('nospots', off); sb.setAttribute('aria-pressed', off); const l = SPT[lang] || SPT.en; sb.setAttribute('aria-label', l); sb.title = l; if (off) hiSpot(-1); };
+    sb.onclick = () => { const off = !ov.classList.contains('nospots'); try { localStorage.setItem(NOSP, off ? '1' : '0'); } catch (e) {} setSp(off); };
+    setSp(noSpots());
     st.addEventListener('wheel', e => { e.preventDefault(); const r = st.getBoundingClientRect(); zoomAt(Math.exp(-e.deltaY * .0016), e.clientX - r.left, e.clientY - r.top, false); }, { passive: false });
     // drag with one pointer, pinch with two; a quick double tap zooms in (or back out)
     const P = new Map(); let g = null, lastTap = 0;
