@@ -195,3 +195,24 @@ EDAX=… node netz/netz-acc.js <検証用の局面.bin> 200 16 ../../weights.bin
 ```
 - 局面は `rvtrain extract` の 17バイト形式。手数ごとに均等に取る（ファイルの先頭や末尾だけを取ると、元データの並びのせいで偏る）。
 - `*.x`・`*.pt` は置かない（`.gitignore`）。
+
+## 評価をパターン入力のネットにする試作（`netz/pnet.py`、2026-11-23）
+今の評価は「パターンごとの表の値の和」。これを「パターンごとのベクトルの和 → 小さな全結合層」に変えて精度が上がるかを見る（計画書「次の大きなてこの調査」A）。まだ学習と精度の比較だけで、エンジンには入っていない。
+```sh
+# Mac。1回だけ：
+cd ~/Documents/GitHub/aicoding/reversi/tools/train && git pull
+python3 -m venv ~/venv-reversi && source ~/venv-reversi/bin/activate && pip install torch numpy
+cc -O3 -o rvx netz/rvx.c -lz
+D="/Volumes/Orico A 8TB/shogi_data/reversi_data"
+./rvx "$D/games90" "$D/pn_train.x" --every 4            # 約3億局面・40GB（数分〜十数分）
+./rvx "$D/games90" "$D/pn_valid.x" --every 400 --skip 1   # 検証用 約300万局面（学習用と重ならない）
+# 学習（大きさ3通り＋今の表への補正1通り。続けて回す）
+cd "$D" && N=~/Documents/GitHub/aicoding/reversi/tools/train/netz
+for a in "32 16" "64 32" "128 32"; do set -- $a
+  caffeinate -i python3 $N/pnet.py $1 $2 40000 pn_$1 --seq --train pn_train.x --valid pn_valid.x --ref $N/ref 2>&1 | tee pn_$1.log; done
+caffeinate -i python3 $N/pnet.py 64 32 40000 pn_r64 --residual --seq --train pn_train.x --valid pn_valid.x --ref $N/ref 2>&1 | tee pn_r64.log
+```
+- `--ref netz/ref`：Edax レベル16 の値を付けた6,000局面（`ref.x`・`ref.ref`、リポジトリに同梱。`netz-ref.js` で作ったもの）。出力の「vs Edax」の行が、今の表（最初の `tables` の行）より小さくなるかを見る。
+- 40000 歩 × 16384 局面 ＝ 約6.5億局面ぶん（3億局面を約2周）。
+- 出力：`pn_*.pt`（ネット）、`pn_*.log`。ログの最後の数行（`tables` と最後の `step` の2行ずつ）を送る。
+
