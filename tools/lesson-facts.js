@@ -21,10 +21,16 @@ const CHECKS = {
   // Found: 「二眼をつくる（生き）」1問目 had four more living moves than its answer, scored as wrong in the 2D lesson.
   go() {
     const R = require(path.join(ROOT, 'go/rules.js')), T = require(path.join(ROOT, 'go/tsumego.js')), L = J('go/lessons.json'), g = 'go', EX = { exact: true };
+    const VP = (() => { const w = {}; new Function('window', fs.readFileSync(path.join(ROOT, 'go/voice-pen-ja.js'), 'utf8'))(w); return w.I18N['ja@pen'] || {}; })();
     const LD = { live: 'live', kill: 'kill', nakade: 'kill', corner: null };
     L.steps.forEach((st, si) => { const K = String(si);
       (st.problems || []).forEach((p, pi) => { const w = `problem ${pi + 1}`, n = p.s.n, pos = R.Pos.from(p.s);
         [...(p.ok || []), ...(p.good || []), ...(p.half || [])].forEach(m => { const i = R.parseCoord(m, n); if (i == null || i < 0 || !pos.tryPlay(i)) bad(g, K, `${w}: ${m} is not a legal move`); });
+        // (2026-11-23 09:50) the 3D words (go/voice-pen-ja.js <step>/<i>.why / .ng) point ([D1] → the green / red spot) only at an empty
+        // point of the board, or ([H7]の黒石) at a stone of that colour — found: 「逃げる」1問目 had kept the old problem's point after a rebuild
+        for (const f of ['why', 'ng']) for (const [, q, of] of String(VP[st.id + '/' + pi + '.' + f] || '').matchAll(/\[([A-HJ-T](?:1[0-9]|[1-9]))\](の[黒白]石)?/g)) {
+          const i = R.parseCoord(q, n), want = of ? (of[1] === '黒' ? 1 : 2) : 0;
+          if (i == null || pos.b[i] !== want) bad(g, K, `${w}: the 3D ${f} points at ${q}${of || ''}, but the board has ${i == null ? 'no such point' : ['an empty point', 'a black stone', 'a white stone'][pos.b[i]]} there`); }
         if (!(st.id in LD)) return;
         const goal = LD[st.id] || (p.s.turn === 1 ? 'live' : 'kill'), G = p.s.turn === 1 ? 'b' : 'w', tc = goal === 'kill' ? (G === 'b' ? 'w' : 'b') : G, wall = goal === 'kill' ? G : (G === 'b' ? 'w' : 'b'), S = p.s.stones;
         const target = [], region = []; for (let i = 0; i < n * n; i++) if (S[i] === tc) target.push(i);
