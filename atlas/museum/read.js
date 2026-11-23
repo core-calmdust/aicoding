@@ -24,8 +24,12 @@
     { id: 'shogi', color: '#6b4a24', cover: { ex: 'kofukuji' }, mins: 3, sec: [null, null, null, null, null], links: [{ g: 'shogi' }, { ex: 'kofukuji' }, { paint: 'shogi' }] },
     { id: 'pachisi', color: '#a0482a', cover: { paint: 'chaupar' }, mins: 3, sec: [null, null, null, null, null], links: [{ g: 'ludo' }, { paint: 'chaupar' }, { room: 'chance' }] },
     { id: 'go', color: '#33404a', cover: { ex: 'shosoin' }, mins: 3, sec: [null, null, null, null, null], links: [{ g: 'go' }, { ex: 'shosoin' }, { ex: 'sugoroku' }] },
+    { id: 'draughts', color: '#7a2a2a', cover: { g: 'checkers' }, mins: 3, sec: [null, null, null, null, null], links: [{ g: 'checkers' }, { g: 'alquerque' }, { paint: 'shahnama' }] },
+    { id: 'reversi', color: '#23603e', cover: { g: 'reversi' }, mins: 3, sec: [null, null, null, null, null], links: [{ g: 'reversi' }] },
+    { id: 'mancala', color: '#8a6a2a', cover: { g: 'mancala' }, mins: 3, sec: [null, null, null, null, null], links: [{ g: 'mancala' }, { room: 'map' }] },
   ];
-  const src = p => p.ex ? `../images/atlas/ex/${p.ex}.webp` : `../images/atlas/paint/${p.paint}-t.webp?v=1`;
+  const src = p => p.g ? `../images/atlas/${p.g}.webp` : p.ex ? `../images/atlas/ex/${p.ex}.webp` : `../images/atlas/paint/${p.paint}-t.webp?v=1`;
+  const ga = p => p && p.g ? ' ga' : '';   // (a cover from the game's own art: a transparent icon, shown whole on the story's colour)
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   let host = null, ctx = null, lang = 'ja', cur = null, qs = null;
   const T = () => window.MUSEUM_READ_T || {};
@@ -38,6 +42,7 @@
   const setStamp = id => { const s = stamps(); s[id] = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} MK(id); };
   const nm = (k, id) => (tx()[k] || {})[id] || ((T().en || {})[k] || {})[id] || id;
   const exName = id => nm('ex', id), paintName = id => nm('paint', id);
+  const gName = id => { const g = ((ctx && ctx.games) || []).find(q => q.id === id); return g && ctx.gname ? ctx.gname(g) : id; };
   // a painting: open the paintings room, then the work in its viewer
   function openPaint(id) { if (!ctx.goRoom) return; ctx.goRoom('paint'); let n = 0; const t = () => { if (window.AtlasPaint && document.querySelector('.muroom[data-r="paint"] .ptc')) AtlasPaint.open(id); else if (++n < 100) setTimeout(t, 100); }; t(); }
   function linkHtml(L) {
@@ -58,9 +63,9 @@
     cur = null; const S = stamps(), n = STORIES.filter(s => S[s.id]).length;
     host.innerHTML = `<div class="rdx"><p class="chlead">${esc(fmt(u('lead'), { n: STORIES.length }))}</p>
       <div class="rdcard"><div class="rdct"><b>${esc(u('card'))}</b><small>${esc(n === STORIES.length ? u('cardAll') : fmt(u('cardN'), { n, of: STORIES.length }))}</small></div>
-        <div class="rdst">${STORIES.map(s => `<span class="rdstamp${S[s.id] ? ' on' : ''}" style="--c:${s.color}" title="${esc(st(s.id).title)}">${S[s.id] ? `<img src="${src(s.cover)}" alt="">` : ''}<i>${STORIES.indexOf(s) + 1}</i></span>`).join('')}</div></div>
+        <div class="rdst">${STORIES.map(s => `<span class="rdstamp${S[s.id] ? ' on' : ''}${ga(s.cover)}" style="--c:${s.color}" title="${esc(st(s.id).title)}">${S[s.id] ? `<img src="${src(s.cover)}" alt="">` : ''}<i>${STORIES.indexOf(s) + 1}</i></span>`).join('')}</div></div>
       <div class="rdlist">${STORIES.map((s, i) => { const x = st(s.id);
-        return `<button type="button" class="rdc" data-s="${s.id}" style="--c:${s.color}"><span class="rdci"><img src="${src(s.cover)}" alt="" loading="lazy"></span>
+        return `<button type="button" class="rdc" data-s="${s.id}" style="--c:${s.color}"><span class="rdci${ga(s.cover)}"><img src="${src(s.cover)}" alt="" loading="lazy"></span>
           <span class="rdct2"><em>${esc(fmt(u('no'), { n: i + 1 }))} · ${esc(fmt(u('mins'), { n: s.mins }))}${S[s.id] ? ` · <b class="rdok">✓ ${esc(u('stamped'))}</b>` : ''}</em><b>${esc(x.title)}</b><small>${esc(x.lead)}</small></span></button>`; }).join('')}</div></div>`;
     host.querySelectorAll('[data-s]').forEach(b => b.onclick = () => story(b.dataset.s, true));
   }
@@ -70,7 +75,7 @@
     const S = STORIES.find(s => s.id === id); if (!S) return; cur = S; const x = st(id), i = STORIES.indexOf(S);
     host.innerHTML = `<article class="rda" style="--c:${S.color}">
       <button type="button" class="btn ghost sm rdback">← ${esc(u('back'))}</button>
-      <div class="rdh"><button type="button" class="rdhimg" ${S.cover.ex ? `data-ex="${S.cover.ex}"` : `data-paint="${S.cover.paint}"`}><img src="${src(S.cover)}" alt=""><span>${esc(S.cover.ex ? u('exhibit') : u('art'))} · ${esc(S.cover.ex ? exName(S.cover.ex) : paintName(S.cover.paint))} ›</span></button>
+      <div class="rdh"><button type="button" class="rdhimg${ga(S.cover)}" ${S.cover.g ? `data-g="${S.cover.g}"` : S.cover.ex ? `data-ex="${S.cover.ex}"` : `data-paint="${S.cover.paint}"`}><img src="${src(S.cover)}" alt=""><span>${esc(S.cover.g ? u('game') : S.cover.ex ? u('exhibit') : u('art'))} · ${esc(S.cover.g ? gName(S.cover.g) : S.cover.ex ? exName(S.cover.ex) : paintName(S.cover.paint))} ›</span></button>
         <div class="rdht"><em>${esc(fmt(u('no'), { n: i + 1 }))} · ${esc(fmt(u('mins'), { n: S.mins }))}</em><h3>${esc(x.title)}</h3><p>${esc(x.lead)}</p></div></div>
       ${(x.s || []).map((p, k) => { const im = S.sec[k], flip = im && S.sec.slice(0, k).filter(Boolean).length % 2;
         return `<section class="rds${im ? '' : ' np'}${flip ? ' fl' : ''}">${im ? `<button type="button" class="rdimg" ${im.ex ? `data-ex="${im.ex}"` : `data-paint="${im.paint}"`} aria-label="${esc(im.ex ? exName(im.ex) : paintName(im.paint))}"><img src="${src(im)}" alt="" loading="lazy"><span>${esc(im.ex ? exName(im.ex) : paintName(im.paint))} ›</span></button>` : ''}<p>${esc(p)}</p></section>`; }).join('')}
@@ -93,7 +98,7 @@
     const show = () => {
       if (qs.i >= Q.length) {
         const ok = !qs.miss, had = !!stamps()[S.id]; if (ok) setStamp(S.id);
-        box.innerHTML = `<div class="rdend ${ok ? 'ok' : ''}">${ok ? `<span class="rdstamp on big" style="--c:${S.color}"><img src="${src(S.cover)}" alt=""><i>✓</i></span>` : ''}<p><b>${esc(ok ? (had ? u('again') : u('got')) : fmt(u('missed'), { n: qs.miss }))}</b>${esc(ok ? u('gotSub') : u('retrySub'))}</p>
+        box.innerHTML = `<div class="rdend ${ok ? 'ok' : ''}">${ok ? `<span class="rdstamp on big${ga(S.cover)}" style="--c:${S.color}"><img src="${src(S.cover)}" alt=""><i>✓</i></span>` : ''}<p><b>${esc(ok ? (had ? u('again') : u('got')) : fmt(u('missed'), { n: qs.miss }))}</b>${esc(ok ? u('gotSub') : u('retrySub'))}</p>
           <button type="button" class="btn ${ok ? 'ghost' : 'sun'} sm" data-k="retry">${esc(u('retry'))}</button></div>`;
         box.querySelector('[data-k="retry"]').onclick = () => quiz(S);
         if (ok && !had && ctx.confetti) try { ctx.confetti(40); } catch (e) {}
