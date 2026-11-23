@@ -5293,7 +5293,7 @@
     LKEY: 'aicoding-connect4-v2-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../connect4/lessons.json?v=20261123v3'), Promise.all(['../connect4/i18n.js?v=20261107l14', '../connect4/learn.js?v=20261107l14'].map(u => fetch(u).then(r => r.text()).catch(() => '')))])
+      return (this.p = Promise.all([getJ('../connect4/lessons.json?v=20261123v4'), Promise.all(['../connect4/i18n.js?v=20261107l14', '../connect4/learn.js?v=20261123l15'].map(u => fetch(u).then(r => r.text()).catch(() => '')))])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T.join('\n'))(w); } catch (e) { console.warn('[lessons3d] connect4 texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -5335,7 +5335,7 @@
      (c4F: a four now, the opponent's four next, a cell under the opponent's winning cell, new winning cells and their row, two at once /
      stacked) and the solver's result of every column (C4SOL, connect4/engine.js with the book and tree: A the lesson's answer, W a win,
      w a slower win, D a draw, L a loss, - a full column). */
-  const C4SOL = {"four":["DLAwwww","wwwwAww","LDALLLL","wDwAwww"],"block":["LLLLLAL","LLLALLL","LLALLLL"],"centre":["LLDADLL","LLLALLL","LLLALDL"],"early":["LLLALLL","LLALLLL","LLLLALL","LLLALLL"],"threat":["LALLLLL","ALLLLLL","DAL-LLL"],"open":["LDAwwwD","LLwADLL","LALLLLL","LwALLLL"],"diag":["LLLALLL","LLLLLAL","LLLADwD","LLLLLAL"],"double":["A-L---L","-L-L--A","L-L-AL-"],"stack":["LALLwwL","wwwLwAw","wAwwLww","LwDLLLA"],"force":["wAwwwwD","wwAwwww","LLwwALL","LLAwwLL"],"parity":["DDADDDD","D-D-DAD","AD-L-DD"],"zugz":["LA----L","-D--L-A","--D--wA","AL---LL"],"follow":["LLLLALL","LLALLLL","wLLALLL","LLLALLL"],"first":["LALLLLL","wDwAwww","wwAwwww","wwwwAww"],"second":["LADLLwL","LDwADwL","LLLADDL","LDALDDL"],"op1":["LLLALLL","LDA-ADL","LALDDAL"],"op2":["DLAAAAA","LLDDLAA","LLwwLLA"],"op3":["LAL-LLL","LDL-LAL","LLL-ALL","LLLLLLA"],"count":["A-L---L","L---LA-","DDA---D","L----LA"],"endwin":["DA--DD-","L-AD---","AL-L-L-","LL---LA"],"miss":["ALLLLLL","wLLLALL","LALLLLL","wLLLALL"],"under":["DLLAwLL","LLLALLL","wLL-ALL","LLw-LwA"],"edge":["LLALLLL","LLALLLL","LLLDALL","LLLLLAL"]};
+  const C4SOL = {"four":["DLAwwww","wwwwAww","LDALLLL","wDwAwww"],"block":["LLLLLAL","LLLALLL","LLALLLL"],"centre":["LLDADLL","LLLALLL","LLLALDL"],"early":["LLLALLL","LLALLLL","LLLLALL","LLLALLL"],"threat":["LALLLLL","ALLLLLL","DAL-LLL"],"open":["LDAwwwD","LLwADLL","LALLLLL","LwALLLL"],"diag":["LLLALLL","LLLLLAL","LLLADwD","LLLLLAL"],"double":["A-L---L","-L-L--A","L-L-AL-"],"stack":["LALLwwL","wwwLwAw","wAwwLww","LwDLLLA"],"force":["wAwwwwD","wwAwwww","LLwwALL","LLAwwLL"],"parity":["D-D-DAD","AD-L-DD","DDADDDD"],"zugz":["-D--L-A","LA----L","DA----D","AL---LL"],"follow":["LLLLALL","LLALLLL","wLLALLL","LLLALLL"],"first":["LALLLLL","LLLALLL","LLLLALL","DLALLLL"],"second":["LADLLwL","LLALLLL","LLLADDL","LDALDDL"],"op1":["LLLALLL","LDA-ADL","LALDDAL"],"op2":["DLAAAAA","LLDDLAA","LLwwLLA"],"op3":["LAL-LLL","LDL-LAL","LLL-ALL","LLLLLLA"],"count":["A-L---L","L---LA-","DDA---D","L----LA"],"endwin":["DA--DD-","L-AD---","AL-L-L-","LL---LA"],"miss":["ALLLLLL","wLLLALL","LALLLLL","wLLLALL"],"under":["wLL-ALL","LLw-LwA","DLLAwLL","LLLALLL"],"edge":["LLALLLL","LLALLLL","LLLDALL","LLLLALL"]};
   const C4J_LS = {
     intro: {
       four: '自分の色を<b>ヨコ・タテ・ナナメ</b>に4つ並べたら勝ち！<br>コマは列の<b>いちばん下の空きマス</b>にポトンと落ちるの。<br>置く前に「今すぐ4つ並ぶマスはない？」って見るくせをつけようね。',
@@ -6052,7 +6052,7 @@
   // every sentence below has five wordings, taken by the problem's number, so no line comes twice in a lesson (the praise and the
   // miss have lists of their own, so the same problem's two answers never share a line either)
   const MC_V = {
-    cheer: ['ブーン！ いい手！', 'さすが！', 'ばっちり！', 'お見事！', 'やったね！', 'ナイス！', 'すごい、正解！', 'そうそう、それ！', 'いい読み、さすが！', '上手！', '完璧！', 'よく見つけた！'],
+    cheer: ['ブーン！ いい手！', 'さすが！', 'ばっちり！', 'お見事！', 'やった〜！', 'ナイス！', 'すごい、正解！', 'そうそう、それ！', 'いい読み、さすが！', '上手！', '完璧！', 'よく見つけた！'],
     soft: ['おしい！', '大丈夫！', 'ドンマイ！', 'あと一歩！', 'あと少し！', '今度こそ！', '気にしない、気にしない！', 'よくある見落とし！', '次は見つけられるはず！', 'いっしょに確かめよう！', 'これで覚えちゃおう！'],
     push: ['この調子で次も行こう！', 'どんどん行こう！', 'その勢いで次へ！', '次も見せて！', 'まだまだいける！', 'わかってきたね、続けよう！'],
   };
@@ -6062,12 +6062,33 @@
     sow: ['穴ごとに、目標まであといくつか数えてみよう！', 'ストアをまたぐときは、きみのストアも1つ分と数えるの！', '多すぎても少なすぎても止まらないの。ちょうどの穴はどれ？'],
     extra: ['ストアのすぐとなりに、1粒だけの穴はない？', 'ぴったりの穴が2つあったら、近いほうから使おう！', '種の数と、ストアまでの穴の数を見くらべてみて！'],
     cap: ['まずは、きみの側の空っぽの穴を見つけよう！', '向かいに大きな山がある空き穴をねらってね！', 'その空き穴まで、ちょうどの数の種がある穴は？'],
-    def: ['ねらわれた山を動かせば、取られるものがなくなるの！', '相手が止まる空の穴に、種を落としてうめる手もあるね！', '相手の穴に1粒足して、止まる場所をずらすのも手！'],
+    def: ['ねらわれた山を動かせば、取られるものがなくなるの！', '相手が止まる空の穴に、種を落としてうめる手もあるの！', '相手の穴に1粒足して、止まる場所をずらすのも手！'],
     blk: ['相手のストアまでの距離と、相手の穴の種の数をくらべてみて！', 'きみのまく種が、相手の列のどこまで届くか追ってみよう？', '相手の穴が1粒ふえるだけで、ぴったりはくずれるの！'],
     open: ['まずはもう一回。そのあとで相手の形を見よう！', '相手の列にどれだけ種をわたすかも数えてね！', 'まいたあと、相手にぴったりの穴ができない？'],
     end: ['おしまいの瞬間、どちらの列に何粒残る？', 'あと何粒で勝ちか、先に数えておこう！', 'もう一回で手番を重ねられるかもチェック！'],
     keep: ['大きな山をまくと、種はどこまで流れる？', '少ない種で、手番だけわたす手もあるの！', 'きみの側にためた種は、さいごにきみのもの！'],
     play: ['まずは、もう一回と横取りを探そう！', '相手の次の一手で何をされるかも見てね！', 'きみの得から相手の得を引いて、くらべよう！'],
+  };
+  // (2026-11-23 第2期) when a group hint holds on a problem (null: always) — and the hints for a problem none of them fits
+  const mcTurnCap = (E, Q, R) => { let best = 0; for (const l of E.turnMax(Int8Array.from(Q.b), 0, R).lines.filter(l => l[0] === Q.best).concat([[Q.best]])) { let c = Int8Array.from(Q.b), n = 0; for (const x of l) { const r = E.trace(c, 0, x, R); c = r.board; n = Math.max(n, r.cap || 0); if (r.over) break; } best = Math.max(best, n); } return best; };   // (the biggest capture in the answer's turn, extra turns followed)
+  const mcReady = (E, Q, R) => E.legal(Int8Array.from(Q.b), 0, R).filter(k => E.trace(Int8Array.from(Q.b), 0, k, R).extra);
+  const mcDef = (E, Q, R) => { const b = Int8Array.from(Q.b), th = E.legal(b, 1, R).map(k => ({ k, t: E.trace(b, 1, k, R) })).filter(x => x.t.cap >= 3), drops = E.trace(b, 0, Q.best, R).events.filter(e => e.t === 'drop').map(e => e.at);
+    return { mv: th.some(x => x.t.capFrom === Q.best), fill: th.some(x => drops.includes(x.t.land)), shift: th.some(x => drops.includes(7 + x.k)) }; };
+  const MCJ_GHFIT = {
+    sow: [null, (E, Q) => Q.target > 6, null],
+    extra: [(E, Q) => Q.b[5] === 1 && Q.best === 5, (E, Q, R) => { const r = mcReady(E, Q, R); return r.length >= 2 && r.every(k => k <= Q.best); }, null],
+    cap: [(E, Q, R) => mcTurnCap(E, Q, R) > 0, (E, Q, R) => mcTurnCap(E, Q, R) >= 4, (E, Q, R) => mcTurnCap(E, Q, R) > 0],
+    def: [(E, Q, R) => mcDef(E, Q, R).mv, (E, Q, R) => mcDef(E, Q, R).fill, (E, Q, R) => mcDef(E, Q, R).shift],
+    end: [null, null, (E, Q, R) => mcReady(E, Q, R).length > 0],
+  };
+  const mcNear = (E, Q, R) => { const r = mcReady(E, Q, R); return r.length >= 1 && r.every(k => k <= Q.best); }, mcNear2 = (E, Q, R) => mcReady(E, Q, R).length >= 2 && mcNear(E, Q, R);
+  const MCJ_HFIT = { extra: [null, mcNear2], chain: [mcNear, mcNear2] };   // (the lessons' own two hints: 「候補がいくつかあるなら…」「遠い穴を先にまくと…」 need two ready pits)
+  const MCJ_GHX = {
+    sow: ['1粒ずつ、穴を数えながらまいてみよう！', 'さいごの1粒が落ちる穴を、指でたどってみて。', '種の数だけ、となりへとなりへ進めるの。'],
+    extra: ['さいごの1粒がどこに落ちるか、指でなぞって確かめよう！', 'ストアまでの穴の数を、右から順に数えてみて。', 'まいたあと、手番がきみに残る穴はどこ？'],
+    cap: ['相手の大きな山の向かいは、空いていない？', 'さいごの1粒が空の穴に入る手を探してみて。', '取れる粒の数を、穴ごとにくらべよう！'],
+    def: ['相手の番に、どの穴の種がどこで止まるか追いかけてみて！', 'いちばん大きな山がねらわれていないか、先に確かめて。', '守ったあとに相手が取れる粒の数を、くらべてみよう。'],
+    end: ['さいごまで数えて、いちばん多く残る手をえらんでね！', '相手の列が空になったら、残りの種はどうなる？', 'あと何手でおしまいか、先に数えておくといいの。'],
   };
   // why the red pit falls short — five wordings each (by the problem's number)
   const MCJ_WHY = {
@@ -6157,7 +6178,18 @@
     const ng = u0 => { const u = alt(u0), sf = VO.soft(i); if (u == null) return sf + ' ' + v(deepN); const G = FF(u) || FA;
       if (g === 'sow') { const t = dist(FA.k, P.target), m = FA.n; return sf + ' ' + why(G, u).t + ' ' + v([`金の丸の穴は${m}粒で、目標までちょうど${t}つなんだ。`, `金の丸なら${m}粒。目標までの${t}つとぴったり同じなの。`, `正解は金の丸。${t}つ先の目標に、${m}粒でちょうど届くの。`, `金の丸の${m}粒なら、さいごの1粒が目標に落ちるんだ。`, `ここは金の丸！ 目標まで${t}つ、種も${m}粒。`]); }
       const a = plus(FA, G, 'N'); return sf + ' ' + why(G, u).t + ' ' + (a ? goldN(a) : v(deepN)); };
-    const ask = pick(A0); let hintTx = i < H.length ? H[i] : GH.length ? GH[(i - H.length) % GH.length] : '';
+    // (2026-11-23 第2期) the 3rd-5th problems' hints are given only where the board bears them out (MCJ_GHFIT: the pit by the store
+    // holds one seed and it is the answer / two pits are ready and the answer is the nearer one / the answer moves the threatened pile,
+    // fills the empty pit the opponent would stop in, or adds a seed to the opponent's pit …), each once a lesson; else MCJ_GHX
+    const ghOf = j => { const fits = MCJ_GHFIT[g] || [], hf = MCJ_HFIT[id] || [], used = new Set(); let t = '', nx = 0;
+      for (let q = 0; q <= j; q++) { const Q = s.problems[q], q0 = Math.max(0, q - H.length); t = '';
+        if (q < H.length) { let ok = true; try { ok = !hf[q] || !Q || hf[q](E, Q, R); } catch (e) { ok = false; } if (ok) { t = H[q]; continue; } }   // (the lesson's own two, where they hold)
+        if (!GH.length) continue;
+        if (!Q) { t = GH[q0 % GH.length]; continue; }
+        for (let z = 0; z < GH.length; z++) { const x = (q0 + z) % GH.length; if (used.has(x)) continue; let ok = true; try { ok = !fits[x] || fits[x](E, Q, R); } catch (e) { ok = false; } if (ok) { used.add(x); t = GH[x]; break; } }
+        if (!t) { const XL = MCJ_GHX[g] || []; t = XL.length ? XL[nx++ % XL.length] : ''; } }
+      return t; };
+    const ask = pick(A0); let hintTx = H.length || GH.length ? ghOf(i) : '';
     if (/かな？$/.test(ask)) hintTx = hintTx.replace(/かな？$/, '？');   // (no かな？ right after a かな？)
     return { ask, hintTx, good, ng, own: true };
   }
@@ -6165,7 +6197,7 @@
     LKEY: 'aicoding-mancala-v1-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../mancala/lessons.json?v=4'), Promise.all(['../mancala/i18n.js?v=20261107l15', '../mancala/i18n-learn.js?v=20261107l14'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mcEng().catch(() => null)])
+      return (this.p = Promise.all([getJ('../mancala/lessons.json?v=5'), Promise.all(['../mancala/i18n.js?v=20261107l15', '../mancala/i18n-learn.js?v=20261107l14'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mcEng().catch(() => null)])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] mancala texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -6201,7 +6233,7 @@
     points(P, k) {   // (= mancala/app.js problemPoints)
       const sc = P.sc, all = sc.filter(v => v !== null), mine = sc[k], best = Math.max(...all), n = all.length;
       if (mine == null) return 0; if (n <= 1 || mine >= best - 1e-9) return 20;
-      const r = all.filter(v => v > mine + 1e-9).length; return Math.max(0, Math.round(20 * (n - 1 - r) / (n - 1)));
+      const r = all.filter(v => v > mine + 1e-9).length; return Math.min(15, Math.max(0, Math.round(20 * (n - 1 - r) / (n - 1))));   // (2026-11-23: only the gold pit is right)
     },
     introPos(c) { const s = this.data.ls.steps.find(x => x.id === c.id), P = s && s.problems && s.problems[0]; return P ? { pos: { spec: { b: P.b.slice(), rules: this.rules(s), side: 0 }, me: 1, lock: true } } : null; },
   };
