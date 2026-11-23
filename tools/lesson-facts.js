@@ -670,6 +670,9 @@ const CHECKS = {
   shogi() {
     const L = J('shogi/lessons.json');
     require('./lesson-verify.js').shogi().forEach(fa => bad('shogi', String(L.grades.findIndex(g => g.id === fa.step)), `${fa.step} q${fa.q}: ${fa.msg}`));
+    // (2026-11-24 第2期・担当B) the openings (shogi/open): the strict ①〜⑨ of the verified sets (SHO_DONE: nakabisha・mukai・migishiken) —
+    // the most played move and the engine, a clear first, the set's pattern and side, the pool, the order and ショウギツネ's words
+    require('./lesson-verify.js').shogiOpen().forEach(fa => bad('shogi/open', fa.step, `q${fa.q}: ${fa.msg}`));
   },
 };
 

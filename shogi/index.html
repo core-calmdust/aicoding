@@ -1939,7 +1939,7 @@ html.atlas-skin #newOverlay #lvNote{display:none!important}   /* (the long note 
 <script src="strategy.js?v=20261107l14"></script>
 <script src="cpu-style.js?v=20261113pc"></script>
 <script src="lists-ui.js?v=20261113pc"></script>
-<script src="openings-ui.js?v=20261113pc"></script>
+<script src="openings-ui.js?v=20261124ob"></script>
 <script src="../shared/pzbook.js?v=9sk"></script>
 <script src="../shared/headerbar.js?v=64"></script>
 <script src="../shared/lessonkeys.js?v=3"></script>
@@ -4713,7 +4713,7 @@ if (window.ShogiOpenUI) ShogiOpenUI.init({ open: () => OPEN, prog: () => oprog, 
 function startOpening(oi) {
   busyToken++; cancelAI(); cancelAna(); rvCancel();
   const g = OPEN.sets[oi];
-  const probs = g.handi ? shuffle(g.problems.map((p, i) => i)).slice(0, 5).sort((a, b) => a - b).map(i => g.problems[i]) : shuffle(g.problems).slice(0, 5);
+  const probs = shuffle(g.problems.map((p, i) => i)).slice(0, 5).sort((a, b) => a - b).map(i => g.problems[i]);   // (the pool's order: easy → hard, 2026-11-24 第2期・担当B)
   lesson = { opening: true, gi: oi, g: { ...g, grade: g.title, prompt: g.handi ? { ja: t('op.handiPrompt'), en: t('op.handiPrompt') } : DTXT.opPrompt, hint: DTXT.hl }, probs, k: 0, results: [], pts: [], waiting: false };
   document.body.classList.add('in-lesson');
   if (!game) game = newRecord(HANDI[0], 0);
