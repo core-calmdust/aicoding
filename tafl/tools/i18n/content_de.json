@@ -5,7 +5,7 @@
 "ls.b_move.goal": "Zieh den König an den Brettrand (die Ecken sind noch weit).",
 "ls.b_move.hint": "Der goldene Ring ist der König. Suche in seiner Reihe und Spalte eine Richtung ohne Steine bis zum Rand.",
 "ls.b_move.why": "Mit {m} erreichte der König den Rand.",
-"ls.b_move.ng": "{x} erreicht den Rand nicht. {m} zum Beispiel schon.",
+"ls.b_move.ng": "Mit {x} erreicht der König den Rand nicht. Mit {m} zum Beispiel schon.",
 "ls.b_cap.title": "Schlagen durch Einklemmen",
 "ls.b_cap.sub": "Von beiden Seiten einer Reihe oder Spalte",
 "ls.b_cap.intro": "<p>Klemmst du einen gegnerischen Stein <b>in einer Reihe oder Spalte zwischen zwei eigene</b>, ist er geschlagen. Nur <b>die Seite am Zug</b> schlägt.</p><p class=\"note\">Der König hilft den Verteidigern beim Schlagen. Diagonalen zählen nicht.</p>",
