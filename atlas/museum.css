@@ -9,6 +9,7 @@
 .murm .mui{flex:none;width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:#f6eedb;color:var(--ink)}
 .murm .mui svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .murm .mut{min-width:0}
+.murm .mup{display:none}
 .murm b{display:block;font:700 15.5px/1.25 var(--round);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .murm small{display:block;font-size:12px;font-weight:700;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .murm[aria-selected=true]{background:var(--ink);border-color:var(--ink);color:#fff;box-shadow:0 3px 0 #161a28}
@@ -20,19 +21,22 @@
 .muload{padding:60px 0;text-align:center;font-weight:900;color:var(--ink2)}
 /* the map inside the museum: the museum's title stands for it */
 .muroom[data-r=map] .amhead .h{display:none}
-.muroom[data-r=map] .amsub{margin-top:0}
-html.skdark .musub{color:rgba(255,255,255,.8)}
+.muroom[data-r=map] .amsub{margin-top:0;width:fit-content;max-width:100%;padding:7px 12px;border-radius:14px;background:rgba(255,253,247,.93);box-shadow:0 1px 0 rgba(0,0,0,.06);color:var(--ink2)}
 @media (max-width:819px){
   .muhead{display:flex;align-items:baseline;gap:10px}
   .muhead .h{margin-bottom:6px}
   .musub{display:none}
-  .murooms{grid-template-columns:repeat(var(--p,4),minmax(0,1fr));gap:6px;margin:0 0 10px;padding:0 0 4px}
-  .murm{flex-direction:column;justify-content:flex-start;gap:3px;padding:6px 2px 6px;border-radius:14px;text-align:center;box-shadow:0 2px 0 var(--line)}
-  .murm .mui{width:30px;height:30px;border-radius:50%}
-  .murm .mui svg{width:19px;height:19px}
-  .murm .mut{width:100%}
-  .murm b{font-size:11.5px;line-height:1.2;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
-  .murm small{display:none}
+  /* (phone: one strip of all the rooms, icon over a short name, like the games' own menus — 2026-11-24 ユーザー) */
+  .murooms{grid-template-columns:repeat(var(--n,6),minmax(0,1fr));gap:2px;margin:0 0 10px;padding:4px;border:2px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 2px 0 var(--line)}
+  .murm{flex-direction:column;justify-content:flex-start;align-items:center;gap:2px;padding:5px 1px 5px;border:0;border-radius:12px;background:transparent;box-shadow:none;text-align:center}
+  .murm:active{transform:none;box-shadow:none;background:#f6eedb}
+  .murm .mui{width:28px;height:28px;border-radius:50%;background:transparent}
+  .murm .mui svg{width:21px;height:21px}
+  .murm .mut{display:none}
+  .murm .mup{display:block;width:100%;padding:0 1px;font:700 10.5px/1.25 var(--round);white-space:nowrap;overflow:hidden;color:var(--ink)}
+  .murm[aria-selected=true]{background:var(--ink);box-shadow:none}
+  .murm[aria-selected=true] .mui{background:transparent;color:var(--sun)}
+  .murm[aria-selected=true] .mup{color:#fff}
   #pg-museum.on{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
   .muroom[data-r=map].on{display:flex;flex-direction:column}
   .muroom[data-r=map] .ammap{height:clamp(240px,calc(100svh - 610px),108vw)}
@@ -51,7 +55,7 @@ html.skdark .musub{color:rgba(255,255,255,.8)}
 /* the ruler: era bands + year ticks, stuck to the top while the tree scrolls */
 .trruler{position:sticky;top:0;z-index:6;height:52px;background:rgba(255,250,238,.96);border-bottom:2px solid var(--line);box-sizing:border-box;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .trera{position:absolute;top:0;height:24px;display:flex;align-items:center;box-sizing:border-box;border-inline-start:2px solid var(--line)}
-.trera b{position:sticky;left:var(--trNW,128px);padding:0 10px;font:700 13px var(--round);color:var(--ink2);white-space:nowrap}
+.trera b{position:sticky;left:var(--trNW,128px);padding:0 10px;font:700 13px var(--round);color:#4f4a44;white-space:nowrap}
 .trera.e-anc{background:#f3e6c8}.trera.e-med{background:#efe0bd}.trera.e-early{background:#f3e6c8}.trera.e-mod{background:#efe0bd}.trera.e-cont{background:#f3e6c8}
 .trtick{position:absolute;top:28px;transform:translateX(-50%);font:700 12px var(--round);color:var(--ink2);white-space:nowrap;padding:2px 5px}
 .trtick::before{content:"";position:absolute;left:50%;top:-5px;width:2px;height:5px;background:var(--line)}
@@ -136,7 +140,6 @@ html.skdark .musub{color:rgba(255,255,255,.8)}
 .trc em{font-style:normal;font-size:10.5px;font-weight:900;color:var(--ink2);padding:1px 6px;border-radius:99px;background:#f6eedb}
 .trc:active{transform:translateY(2px);box-shadow:none}
 .tracts{grid-area:acts;display:flex;flex-direction:column;justify-content:center;gap:10px;align-self:stretch;padding-inline-start:20px;border-inline-start:2px solid var(--line)}
-html.skdark .trsub,html.skdark .trlegend{color:rgba(255,255,255,.8)}
 @media (max-width:819px){
   .trsub{display:none}
   .trfam{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:2px 16px 4px}
@@ -184,7 +187,6 @@ html.skdark .trsub,html.skdark .trlegend{color:rgba(255,255,255,.8)}
 .gxc.locked .gxtx i{color:var(--coral2)}
 .gxc.shake{animation:gxShake .4s}
 @keyframes gxShake{20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
-html.skdark .gxsub{color:rgba(255,255,255,.8)}
 /* the viewer: a dark gallery case over the page */
 html.exv-open{overflow:hidden}
 .exv{position:fixed;inset:0;z-index:120;display:grid;grid-template-columns:minmax(0,1fr) var(--exw,420px);background:radial-gradient(70% 90% at 38% 42%,#3b2a1d 0%,#1d140e 58%,#0f0a07 100%);opacity:0;transition:opacity .25s;color:#f5ead6}
@@ -490,7 +492,6 @@ html.exv-rot .urdk{rotate:90deg}
 
 /* ===== 偶然の道具 (the room of chance, atlas/museum/chance.js, 2026-11-24) ===== */
 .chlead{margin:0 0 12px;color:var(--ink2);font-weight:700;font-size:14.5px;line-height:1.6}
-html.skdark .chlead{color:rgba(255,255,255,.8)}
 .chtools{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:0 0 12px}
 .cht{min-width:0;display:flex;align-items:center;gap:8px;padding:7px 10px 7px 7px;border:2px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 3px 0 var(--line);font-family:var(--font);color:var(--ink);text-align:start;cursor:pointer;transition:transform .1s,box-shadow .1s}
 .cht:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
@@ -510,7 +511,7 @@ html.skdark .chlead{color:rgba(255,255,255,.8)}
 .chstage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .chres{position:absolute;left:50%;top:12px;transform:translate(-50%,-6px);max-width:calc(100% - 24px);padding:7px 16px;border-radius:99px;background:rgba(20,13,8,.78);color:#fff3d6;font:800 16px/1.3 var(--font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;backdrop-filter:blur(4px)}
 .chres.on{opacity:1;transform:translate(-50%,0)}
-.chhint{position:absolute;left:0;right:0;bottom:8px;margin:0;text-align:center;font-size:11.5px;font-weight:700;color:rgba(255,240,220,.55);pointer-events:none}
+.chhint{position:absolute;left:0;right:0;bottom:8px;margin:0;text-align:center;font-size:11.5px;font-weight:700;color:rgba(255,240,220,.78);pointer-events:none}
 .chbadges{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .25s}
 .chbadges.on{opacity:1}
 .chb{position:absolute;left:0;top:0;margin:-13px 0 0 -17px;min-width:34px;height:26px;padding:0 8px;border-radius:99px;display:grid;place-items:center;background:#f4c95d;color:#2a1a08;font:800 14px/1 var(--round);box-shadow:0 2px 6px rgba(0,0,0,.45)}
@@ -530,7 +531,7 @@ html.skdark .chlead{color:rgba(255,255,255,.8)}
 .chlinks div{display:flex;flex-wrap:wrap;gap:6px}
 .chlk{display:inline-flex;align-items:center;gap:6px;padding:6px 12px 6px 6px;border:2px solid var(--line);border-radius:99px;background:#fff;font:700 13.5px var(--font);color:var(--ink);cursor:pointer}
 .chlk i{font-style:normal;font-size:11px;padding:2px 7px;border-radius:99px;background:var(--ink);color:#fff}
-.chlk.ex i{background:#9a6a32}
+.chlk.ex i{background:#85592a}
 @media (hover:hover){.chlk:hover{border-color:#c9a35a}}
 .chchart{background:#fff;border:2px solid var(--line);border-radius:20px;padding:12px 14px 10px;box-shadow:var(--shadow)}
 .chsvg{display:block;width:100%;height:auto}
@@ -572,16 +573,18 @@ html.skdark .chlead{color:rgba(255,255,255,.8)}
 
 /* ===== 描かれたゲーム (paintings room, atlas/museum/paint.js, 2026-11-24) ===== */
 .ptgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px}
-.ptc{display:flex;flex-direction:column;padding:0;border:0;background:none;text-align:start;font-family:var(--font);color:var(--ink);cursor:pointer}
-.ptf{display:grid;place-items:center;aspect-ratio:4/3.4;padding:14px;border-radius:6px;background:var(--mat);box-shadow:inset 0 0 0 7px #3a2b1e,inset 0 0 0 9px #b8935a,inset 0 0 0 11px #2a1e14,0 10px 22px -12px rgba(40,20,0,.6);transition:transform .2s,box-shadow .2s}
-.ptf img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+@media (max-width:640px){.ptgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 12px}}
+.ptc{display:flex;flex-direction:column;min-width:0;width:100%;padding:0;border:0;background:none;text-align:start;font-family:var(--font);color:var(--ink);cursor:pointer}
+.ptf{position:relative;display:block;width:100%;aspect-ratio:4/3.4;padding:0;border-radius:6px 6px 0 0;background:var(--mat);box-shadow:inset 0 0 0 7px #3a2b1e,inset 0 0 0 9px #b8935a,inset 0 0 0 11px #2a1e14,0 10px 22px -12px rgba(40,20,0,.6);transition:transform .2s,box-shadow .2s}
+/* (the picture: centred inside the mat by absolute insets — a % max-height in an aspect-ratio box does not resolve in Safari, which let the image spill out on iPhone) */
+.ptf img{position:absolute;inset:14px;margin:auto;max-width:calc(100% - 28px);max-height:calc(100% - 28px);width:auto;height:auto;box-shadow:0 2px 8px rgba(0,0,0,.35)}
 @media (hover:hover){.ptc:hover .ptf{transform:translateY(-3px);box-shadow:inset 0 0 0 7px #3a2b1e,inset 0 0 0 9px #d9b26a,inset 0 0 0 11px #2a1e14,0 16px 28px -12px rgba(40,20,0,.7)}}
-.ptl{display:block;padding:10px 4px 0}
+.ptl{display:block;flex:1;padding:9px 10px 10px;border-radius:0 0 10px 10px;background:#fffdf7;border:2px solid var(--line);border-top:0}
 .ptl b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font:800 15px/1.4 var(--font)}
 .ptl small{display:block;margin-top:3px;font-size:12px;font-weight:700;color:var(--ink2)}
 .ptl em{display:inline-block;margin-top:5px;padding:2px 9px;border-radius:99px;background:#f6eedb;font-style:normal;font-size:11.5px;font-weight:800;color:#7a5a36}
 .ptcredit{margin:18px 0 0;font-size:12px;font-weight:700;color:var(--ink2)}
-html.skdark .ptl small,html.skdark .ptcredit{color:rgba(255,255,255,.75)}
+@media (max-width:640px){.ptf img{inset:10px;max-width:calc(100% - 20px);max-height:calc(100% - 20px)}.ptl b{font-size:13.5px}.ptl small{font-size:11px}}
 /* the viewer */
 .ptv{position:fixed;inset:0;z-index:150;display:none;grid-template-columns:minmax(0,1fr) 380px;background:#141009;color:#f3ead8}
 .ptv.on{display:grid}
@@ -653,7 +656,7 @@ html.ptv-open,html.ptv-open body{overflow:hidden}
 .rdct small{display:block;font-size:12.5px;font-weight:700;color:var(--ink2)}
 .rdst{display:flex;gap:10px;margin-inline-start:auto;flex-wrap:wrap}
 .rdstamp{position:relative;flex:none;width:48px;height:48px;border-radius:50%;border:2px dashed #d6c7a4;display:grid;place-items:center;overflow:hidden;background:#fff}
-.rdstamp i{position:relative;font:800 15px var(--round);font-style:normal;color:#c2b38f}
+.rdstamp i{position:relative;font:800 15px var(--round);font-style:normal;color:#8f7d55}
 .rdstamp img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:sepia(.35) saturate(.85)}
 .rdstamp.on{border:3px solid var(--c);box-shadow:0 0 0 2px #fff inset;transform:rotate(-8deg)}
 .rdstamp.on::after{content:"";position:absolute;inset:0;background:color-mix(in srgb,var(--c) 38%,transparent);border-radius:50%}
@@ -672,7 +675,7 @@ html.ptv-open,html.ptv-open body{overflow:hidden}
 .rdct2 b{font:800 18px/1.35 var(--font)}
 .rdct2 small{font-size:13.5px;line-height:1.65;color:var(--ink2);font-weight:600}
 .rdok{color:#2f7d4a}
-.rda{max-width:760px;margin:0 auto}
+.rda{max-width:780px;margin:0 auto;padding:16px 20px 18px;border:2px solid var(--line);border-radius:24px;background:#fffdf7;color:var(--ink);box-shadow:var(--shadow)}   /* (a page of its own: the story reads the same on every skin, dark or light) */
 .rdback{margin:0 0 12px}
 .rdh{border-radius:22px;overflow:hidden;background:#2a1f17;color:#fff;box-shadow:var(--shadow);margin:0 0 20px}
 .rdhimg{position:relative;display:block;width:100%;padding:0;border:0;background:#2a1f17;cursor:pointer}
@@ -692,7 +695,7 @@ html.ptv-open,html.ptv-open body{overflow:hidden}
 .rdimg img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#2a1f17}
 .rdimg span{display:block;padding:6px 10px;font-size:12px;font-weight:800;color:var(--ink2);line-height:1.4}
 @media (hover:hover){.rdimg:hover{border-color:var(--c)}}
-.rdq{margin:24px 0 0;padding:16px 18px 18px;border:2px solid var(--line);border-radius:22px;background:#fffaf0;box-shadow:var(--shadow)}
+.rdq{margin:24px 0 0;padding:16px 18px 18px;border:2px solid var(--line);border-radius:22px;background:#fbf3e2}
 .rdq h4,.rdlinks h4{margin:0 0 10px;font:800 16px var(--font)}
 .rdqn{margin:0 0 4px;font-size:12.5px;font-weight:800;color:var(--ink2)}
 .rdqq{margin:0 0 12px;font:800 17px/1.55 var(--font)}
@@ -712,6 +715,7 @@ html.ptv-open,html.ptv-open body{overflow:hidden}
 .rdnav{display:flex;justify-content:space-between;gap:10px;margin:22px 0 8px}
 .rdnav .btn{max-width:48%;white-space:normal;text-align:start;line-height:1.4}
 @media (max-width:640px){
+  .rda{padding:12px 12px 14px;border-radius:20px}
   .rdlist{grid-template-columns:minmax(0,1fr)}
   .rdcard{padding:10px 12px}
   .rdst{margin-inline-start:0;gap:8px}
@@ -769,3 +773,19 @@ html.ptv-open,html.ptv-open body{overflow:hidden}
   .mupass-r em{font-size:12px}
   .mupass-r .btn{padding:5px 10px;font-size:13px}
 }
+
+/* ===== 肌（スキン）に左右されない読みやすさ (2026-11-24): text that sat straight on the page's skin — leads, notes, legends — gets a
+   paper backing, so it reads the same on every skin, dark, mid-tone (cork, wood) or light; checked with /tmp/w/skqa (every skin) ===== */
+.musub,.chlead,.gxsub,.trsub,.ptcredit,.trlegend{width:fit-content;max-width:100%;padding:7px 12px;border-radius:14px;background:rgba(255,253,247,.93);box-shadow:0 1px 0 rgba(0,0,0,.06);color:var(--ink2)}
+.muhead .musub{margin-bottom:12px}
+.mupass-h .mupass-rw{margin-top:2px;color:#9a6a32;font-weight:800}
+/* the stamp's reward: a note that rises above the bottom menu */
+.mutoast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));z-index:120;display:flex;align-items:center;gap:10px;max-width:calc(100% - 28px);padding:8px 16px 8px 8px;border-radius:99px;background:#2b3044;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.35);
+  transform:translate(-50%,20px);opacity:0;transition:transform .35s cubic-bezier(.3,1.5,.5,1),opacity .3s;pointer-events:none}
+.mutoast.on{transform:translate(-50%,0);opacity:1}
+.mutoast img{width:36px;height:36px;border-radius:50%;background:#f6eedb;flex:none}
+.mutoast b{font-size:14px;line-height:1.35}
+.mutoast span{flex:none;font:800 14px var(--round);color:var(--sun)}
+.mutoast span i{font-style:normal;margin-right:1px}
+@media (min-width:820px){.mutoast{bottom:auto;top:86px}}
+#pg-museum .muhead h2.h{color:var(--ink);padding:3px 14px 3px 10px;border-radius:14px;background:rgba(255,253,247,.93);box-shadow:0 1px 0 rgba(0,0,0,.06)}
