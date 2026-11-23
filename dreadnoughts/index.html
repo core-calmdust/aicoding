@@ -467,6 +467,18 @@ button{font:inherit;color:inherit;cursor:pointer}
   #deployBar p{display:none}
   .vt{height:40px}
 }
+/* (2026-11-23 user: スキルの丸の位置がズレる) phones: the ring and its icon share one grid cell above the name and the state, in the flow —
+   nothing absolute, so no font or height can push the text over the ring */
+@media (max-width:760px), (max-height:520px){
+  #dock .sk{display:grid;grid-template-columns:100%;grid-template-rows:auto auto auto;justify-content:stretch;justify-items:center;align-content:center;row-gap:2px;height:auto;min-height:58px;padding:5px 2px 6px}
+  #dock .sk .ring,#dock .sk .ic{position:relative;top:auto;left:auto;transform:none;grid-area:1/1;align-self:center;justify-self:center}
+  #dock .sk .ring{width:30px;height:30px;-webkit-mask:radial-gradient(circle,transparent 12px,#000 13px);mask:radial-gradient(circle,transparent 12px,#000 13px)}
+  #dock .sk .ic{width:15px;height:15px;display:grid;place-items:center}
+  #dock .sk b{grid-row:2;max-width:100%;overflow:hidden;text-overflow:ellipsis}#dock .sk small{grid-row:3}
+  #dock .sk.armed .ring{animation:spin4 2.4s linear infinite}@keyframes spin4{to{transform:rotate(360deg)}}
+  #skTip.arm.now{padding-right:128px}
+  #tipGo{position:absolute;right:46px;top:50%;transform:translateY(-50%);height:44px;padding:0 16px;border:0;background:linear-gradient(180deg,#e9cf8e,#b48d45);color:#16100a;font-family:var(--jp);font-weight:700;font-size:15px;letter-spacing:.12em;white-space:nowrap}
+}
 </style>
 </head>
 <body>
@@ -593,7 +605,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 <script src="../seabattle/engine.js?v=38"></script>
 <script src="../atlas/vendor/three-r186.min.js?v=1"></script>
 <script src="../seabattle/ships3d.js?v=2"></script>
-<script src="world.js?v=8"></script>
-<script src="game.js?v=17"></script>
+<script src="world.js?v=9"></script>
+<script src="game.js?v=18"></script>
 </body>
 </html>

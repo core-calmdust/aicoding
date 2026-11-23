@@ -32,7 +32,7 @@ const DN = {
     'r.acc': '命中率', 'r.shots': '発射', 'r.sunk': '撃沈', 'r.lost': '損失',
     'rule.grand': '大艦隊', 'rule.grand.d': '12×12の広い海でコスト30・5〜8隻。1ターンに2手（射撃やスキルを2回）動ける、タクティクスの大規模版。', 'st.ap': 'このターンあと{n}手', 's.streak': '連続攻撃', 's.on': 'あり', 's.off': 'なし',
     'a.k': '全50隻', 'a.all': 'すべて', 'd.all': '全艦一覧', 'f.k': '両軍の艦', ok: 'OK', back: '戻る',
-    'u.tap2': '狙うマスを2回タップで発射', 'u.cd': 'クールタイム {n}', 'u.len': '{n}マス', 'u.cost': 'コスト',
+    'u.tap2': '狙うマスを2回タップで発射', 'u.use': '使用', 'u.cd': 'クールタイム {n}', 'u.len': '{n}マス', 'u.cost': 'コスト',
     'help': [['艦隊を編成', 'タクティクスでは、毎回ちがう10種の艦から交互に選んで艦隊を組む。コスト20までで3〜6隻。艦ごとにスキル（攻撃・索敵・防御）があり、組み合わせで戦い方が変わる。'],
       ['配置', '自軍の海域に艦を並べる。ドラッグで移動、タップ（クリック）で回転。艦の大きさがそのまま的の大きさになる。'],
       ['撃ち合い', '敵の海域のマスを選んで砲撃。命中すると炎が上がり、艦のマスをすべて当てると撃沈。スキルはクールタイムが明けると使える。先に敵艦隊を全滅させた方の勝ち。']],
@@ -55,7 +55,7 @@ const DN = {
     'r.acc': 'ACCURACY', 'r.shots': 'SHOTS', 'r.sunk': 'SUNK', 'r.lost': 'LOST',
     'rule.grand': 'Grand Fleet', 'rule.grand.d': 'Tactics on a wide 12×12 sea: 5–8 ships on a budget of 30, and two actions (shots or skills) each turn.', 'st.ap': '{n} more this turn', 's.streak': 'Hit again', 's.on': 'On', 's.off': 'Off',
     'a.k': 'All 50 ships', 'a.all': 'All', 'd.all': 'All ships', 'f.k': 'Both fleets', ok: 'OK', back: 'Back',
-    'u.tap2': 'Tap a square twice to fire', 'u.cd': 'Cooldown {n}', 'u.len': '{n} squares', 'u.cost': 'Cost',
+    'u.tap2': 'Tap a square twice to fire', 'u.use': 'Use', 'u.cd': 'Cooldown {n}', 'u.len': '{n} squares', 'u.cost': 'Cost',
     'help': [['Draft a fleet', 'In Tactics both sides take turns picking from ten ship types, different every game: up to 20 cost, 3 to 6 ships. Each ship has a skill — attack, scouting or defence — and the mix decides how you fight.'],
       ['Deploy', 'Place your ships in our waters. Drag to move, tap (click) to turn. A ship\'s length is the size of the target it makes.'],
       ['Exchange fire', 'Pick a square in the enemy waters to fire. A hit starts a fire; hit every square of a ship to sink it. Skills come back after their cooldown. Sink the whole enemy fleet first to win.']],
@@ -632,7 +632,8 @@ function skillTip(i) {
   const el = $('#skTip'); el.className = ''; $('#strip').style.visibility = ''; if (i == null || !G || !G.st) { el.classList.add('hide'); return; }
   const s = G.st.sides[0].ships[i]; el.innerHTML = shipCard(s.t, { tag: 'div', foot: PHONE() ? `<span class="foot why gold">${t('u.tap2')}</span>` : '' }) + (PHONE() ? '<button id="tipX" aria-label="Close">×</button>' : ''); el.classList.remove('hide'); fillPortraits(el);
   if (PHONE()) {   // phones: a compact bar in the fleet strip's place (same size), so the sea stays clear to aim
-    const T = E.TYPES[s.t], st = $('#strip'); el.className = 'arm'; el.innerHTML = `${cardArt(T)}<div class="tx"><b>${icon(abilityKey(T))}${shipSkillName(T)}<small>${t('ship.' + s.t)}</small></b><p>${shipSkillText(T)}</p></div><button id="tipX" aria-label="Close">×</button>`;
+    const T = E.TYPES[s.t], st = $('#strip'), now = E.NOAIM[T.skill]; el.className = 'arm' + (now ? ' now' : ''); el.innerHTML = `${cardArt(T)}<div class="tx"><b>${icon(abilityKey(T))}${shipSkillName(T)}<small>${t('ship.' + s.t)}</small></b><p>${shipSkillText(T)}</p></div>${now ? `<button id="tipGo">${t('u.use')}</button>` : ''}<button id="tipX" aria-label="Close">×</button>`;
+    if (now) el.querySelector('#tipGo').onclick = e => { e.stopPropagation(); const k = G.armed; if (k == null || G.busy) return; G.armed = null; skillTip(null); playerNoAim(k); };
     el.style.bottom = st.style.bottom; el.style.height = st.offsetHeight + 'px'; st.style.visibility = 'hidden';
     el.querySelector('#tipX').onclick = e => { e.stopPropagation(); G.armed = null; hover = aimTap = -1; skillTip(null); render(); }; return; }
   const b = $(`#dock .sk[data-i="${i}"]`); if (b) { const r = b.getBoundingClientRect(), w = el.offsetWidth; el.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px'; el.style.bottom = (innerHeight - r.top + 10) + 'px'; }
@@ -643,6 +644,7 @@ const cv = $('#world');
 const touches = new Map(); let gest = null;
 const tdist = () => { const [a, b] = [...touches.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
 const tmid = () => { const v = [...touches.values()]; return { x: v.reduce((s, p) => s + p.x, 0) / v.length, y: v.reduce((s, p) => s + p.y, 0) / v.length }; };
+const aimSlide = () => G && G.phase === 'battle' && G.st && G.st.turn === 0 && !G.busy && G.view === 1 && G.armed != null && !E.NOAIM[skillOf(G.my[G.armed])];
 const canView = () => G && (G.phase === 'deploy' || G.phase === 'battle' || G.phase === 'over') && !PC.matches;
 cv.addEventListener('pointerdown', e => {
   if (e.pointerType !== 'mouse' && canView()) { touches.set(e.pointerId, { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY });
@@ -653,12 +655,15 @@ cv.addEventListener('pointermove', e => {
   const tp = touches.get(e.pointerId); if (!tp || !gest) return; tp.x = e.clientX; tp.y = e.clientY;
   if (gest.kind === 'pinch' && touches.size >= 2) { const d = tdist(), m = tmid(); World.zoomBy(d / gest.d); World.panBy(m.x - gest.m.x, m.y - gest.m.y); gest.d = d; gest.m = m; e.stopImmediatePropagation(); return; }
   if (drag) return;   // (a ship being dragged in the deployment)
-  if (gest.kind === 'maybe' && Math.hypot(tp.x - tp.x0, tp.y - tp.y0) > 10) { gest = { kind: 'pan', x: tp.x, y: tp.y }; World.aim(1, -1); }
+  // an aimed skill is armed: a slide moves its reach over the enemy sea instead of the board (2026-11-23 user: ソナーの範囲をスライドで動かす);
+  // letting go leaves it there, and a tap on that square fires
+  if (gest.kind === 'maybe' && Math.hypot(tp.x - tp.x0, tp.y - tp.y0) > 10) gest = aimSlide() ? { kind: 'aim' } : { kind: 'pan', x: tp.x, y: tp.y }, gest.kind === 'pan' && World.aim(1, -1);
+  if (gest.kind === 'aim') { const c = World.cellAt(1, e); if (c >= 0 && c !== hover) { hover = aimTap = c; syncWorld(); sfx('lock'); } e.stopImmediatePropagation(); return; }
   if (gest.kind === 'pan') { World.panBy(tp.x - gest.x, tp.y - gest.y); gest.x = tp.x; gest.y = tp.y; e.stopImmediatePropagation(); }
 }, true);
 const touchEnd = e => { if (!touches.has(e.pointerId)) return; touches.delete(e.pointerId); const g = gest;
   if (touches.size === 0) gest = null; else if (g && g.kind === 'pinch') gest = { kind: 'done' };
-  if (g && (g.kind === 'pinch' || g.kind === 'pan' || g.kind === 'done')) { e.stopImmediatePropagation(); if (touches.size === 0 && g.kind !== 'maybe') gest = null; } };
+  if (g && (g.kind === 'pinch' || g.kind === 'pan' || g.kind === 'done' || g.kind === 'aim')) { e.stopImmediatePropagation(); if (touches.size === 0 && g.kind !== 'maybe') gest = null; } };
 cv.addEventListener('pointerup', touchEnd, true); cv.addEventListener('pointercancel', touchEnd, true);
 cv.addEventListener('pointerdown', e => {
   if (!G || G.phase !== 'deploy') return; if (touches.size > 1) return;
@@ -679,6 +684,7 @@ cv.addEventListener('pointerup', e => {
   if (drag) { const d = drag; drag = null; if (!d.moved) { if (tryTurn(d.i, d.cell)) sfx('place'); else { sfx('bad'); World.shake(.5); } } else if (d.bad) { G.my[d.i] = d.from; sfx('bad'); } else sfx('place'); syncWorld(); renderFleets(); save(); return; }
   if (!G || G.phase !== 'battle') return;
   const c = World.cellAt(1, e); if (c < 0) return;
+  if (G.armed != null && E.NOAIM[skillOf(G.my[G.armed])]) return;   // (a no-aim skill waits for its 使用 button)
   // touch: an armed skill shows its reach on the first tap and fires on a second tap of the same square
   if (!PC.matches && G.armed != null && c !== aimTap) { aimTap = c; hover = c; syncWorld(); sfx('lock'); return; }
   aimTap = -1; playerShot(c);
@@ -725,7 +731,9 @@ $('#arGrid').addEventListener('pointerover', e => { if (!PC.matches) return; con
 $('#dShuffle').onclick = () => { if (G.phase !== 'deploy') return; G.my = E.randomFleet(Math.random, G.adj, G.my.map(s => s.t)); sfx('place'); syncWorld(); renderFleets(); save(); };
 $('#dGo').onclick = startBattle;
 $('#dock').addEventListener('click', e => { const b = e.target.closest('.sk'); if (!b || b.disabled || !G.st || G.busy || G.phase !== 'battle' || G.st.turn !== 0) return; const i = +b.dataset.i;
-  if (E.NOAIM[skillOf(G.my[i])]) { G.armed = null; return playerNoAim(i); }
+  if (E.NOAIM[skillOf(G.my[i])]) {
+    if (!PHONE() || G.armed === i) { G.armed = null; skillTip(null); return playerNoAim(i); }   // (phones: the second tap — 2026-11-23 user: 機雷がタップした瞬間に使われた)
+    G.armed = i; hover = aimTap = -1; G.hint = null; sfx('select'); render(); skillTip(i); return; }
   G.armed = G.armed === i ? null : i; hover = aimTap = -1; G.hint = null; sfx('select'); if (G.view !== 1) look(1); render(); if (!PC.matches) skillTip(G.armed); });
 $('#views').addEventListener('click', e => { const b = e.target.closest('.vt'); if (!b || !G || G.busy || !(G.phase === 'battle' || G.phase === 'over')) return; look(+b.dataset.z, 800); });
 $('#bHint').onclick = hint;
