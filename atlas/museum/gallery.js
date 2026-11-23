@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 142;
+  const V = 144;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -37,7 +37,7 @@
     { id: 'kofukuji', game: 'shogi', cm: 1, view: [0, .95, .78], lock: { game: 'shogi', ach: 3 } },   // (spots: from the model's userData)
   ];
   const T = l => (window.MUSEUM_GAL_T && (MUSEUM_GAL_T[l] || MUSEUM_GAL_T.en)) || {};
-  const PLAY = { ballinderry: { game: 'tafl', levels: 30, long: true }, senet: { game: 'senet', levels: 20, long: true }, shosoin: { game: 'go', levels: 37 }, sugoroku: { game: 'sugoroku', levels: 20, long: true }, ur: { game: 'ur', levels: 20, long: true }, liubo: { game: 'liubo', levels: 20 }, goose: { game: 'goose', levels: 20, alt: { key: 'goose-ch', game: 'chess', levels: 33 } }, ottoman: { game: 'chess', levels: 33, alt: { key: 'ottoman-bg', game: 'backgammon', levels: 10, src: 'games/backgammon-museum.js' } } };   // (ottoman: no museum rules course yet — the portal's own tour teaches it)   // (levels: the game's own count — the names come from its adapter once it has loaded)   // 所蔵品で遊ぶ (2026-11-22): the exhibits that can be played on, and the game (and board size) that plays them
+  const PLAY = { ballinderry: { game: 'tafl', levels: 30, long: true }, senet: { game: 'senet', levels: 20, long: true, zoom: true }, shosoin: { game: 'go', levels: 37 }, sugoroku: { game: 'sugoroku', levels: 20, long: true }, ur: { game: 'ur', levels: 20, long: true }, liubo: { game: 'liubo', levels: 20 }, goose: { game: 'goose', levels: 20, alt: { key: 'goose-ch', game: 'chess', levels: 33 } }, ottoman: { game: 'chess', levels: 33, alt: { key: 'ottoman-bg', game: 'backgammon', levels: 10, src: 'games/backgammon-museum.js' } } };   // (ottoman: no museum rules course yet — the portal's own tour teaches it)   // (levels: the game's own count — the names come from its adapter once it has loaded)   // 所蔵品で遊ぶ (2026-11-22): the exhibits that can be played on, and the game (and board size) that plays them
   const ui = (l, k) => { const a = T(l).ui || {}, b = T('en').ui || {}; return a[k] != null ? a[k] : (b[k] != null ? b[k] : k); };
   const ex = (l, id) => Object.assign({}, (T('en').ex || {})[id] || {}, (T(l).ex || {})[id] || {});
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -45,6 +45,9 @@
   const load = src => loaded[src] || (loaded[src] = new Promise(res => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = res; document.head.appendChild(s); }));
   const textsFor = l => Promise.all([...new Set(['ja', 'en', l])].map(x => (window.MUSEUM_GAL_T && MUSEUM_GAL_T[x]) ? 0 : load('museum/gallery-' + x + '.js?v=' + V)));
   const phone = () => innerWidth < 820;
+  // the zoom button of a game that comes in to its pieces on a phone (senet): [come in, the whole board]; the icon shows what it does
+  const ZOOML = { ja: ['寄る', '全体'], en: ['Zoom', 'Whole'], zh: ['聚焦', '全盘'], 'zh-TW': ['聚焦', '全盤'], ko: ['확대', '전체'], es: ['Acercar', 'Todo'], fr: ['Zoom', 'Entier'], pt: ['Aproximar', 'Inteiro'], de: ['Zoom', 'Ganz'], ru: ['Ближе', 'Целиком'], tr: ['Yakın', 'Tümü'], id: ['Dekat', 'Semua'], hi: ['पास', 'पूरा'], ar: ['تقريب', 'الكل'] };
+  const ZOOMI = ['<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>', '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M10.5 8v5M8 10.5h5"/>'];
 
   let ctx = null, lang = 'ja', host = null;
   const isOpen = e => { if (!e.lock) return true; try { return (ctx.achDone ? ctx.achDone(e.lock.game) : 0) >= e.lock.ach; } catch (x) { return false; } };
@@ -80,7 +83,7 @@
           <div class="expf"><span>${esc(ui(lang, 'p_level'))}</span><div class="expdd" data-k="plv" data-v="1"><button type="button" class="expdd-b" aria-haspopup="listbox"><span class="lvb"></span><b>Lv.1</b><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button><div class="expdd-l" role="listbox">${Array.from({ length: PLAY[id].levels }, (_, i) => `<button type="button" role="option" data-v="${i + 1}"${i ? '' : ' class="on"'}>Lv.${i + 1}</button>`).join('')}</div></div></div>
           <div class="expf"><span>${esc(ui(lang, 'p_side'))}</span><div class="expseg" data-k="pside" data-v="1"><button type="button" data-v="1" class="on">${esc(ui(lang, 'p_first'))}</button><button type="button" data-v="2">${esc(ui(lang, 'p_second'))}</button></div></div>
           <button type="button" class="exprul" data-k="prules"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h9a4 4 0 0 1 4 4v12H9a4 4 0 0 1-4-4z"/><path d="M9 9h5M9 13h5"/></svg>${esc(ui(lang, 'p_rules'))}</button><button type="button" class="explay" data-k="play">${esc(ui(lang, 'p_start'))}</button><div class="expacts" hidden>${[['pundo', 'p_undo', '<path d="M9 6 4 11l5 5"/><path d="M4 11h9.5a5.5 5.5 0 0 1 0 11H11"/>'], ['presign', 'p_resign', '<path d="M6 21V4"/><path d="M6 4h11l-2.5 4L17 12H6"/>'], ['phint', 'p_hint', '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>']]
-            .concat(PLAY[id].long ? [['pturn', 'p_orient', '<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M3 9a6 6 0 0 1 4-5M3 9V5.5M3 9h3.5M21 15a6 6 0 0 1-4 5M21 15v3.5M21 15h-3.5"/>', 'p_orientS']] : [])
+            .concat(PLAY[id].zoom ? [['pzoom', 'p_zoomW', ZOOMI[0], 'p_zoomW']] : []).concat(PLAY[id].long ? [['pturn', 'p_orient', '<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M3 9a6 6 0 0 1 4-5M3 9V5.5M3 9h3.5M21 15a6 6 0 0 1-4 5M21 15v3.5M21 15h-3.5"/>', 'p_orientS']] : [])
             .map(([k, l, d, sl]) => `<button type="button" class="expa" data-k="${k}" title="${esc(ui(lang, l))}"><svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg><span>${esc(ui(lang, sl || l))}</span></button>`).join('')}</div></div>` : ''}
         <div class="exscale" aria-hidden="true" dir="ltr"><i></i><span>10 cm</span></div>
         <p class="exhint">${esc(ui(lang, phone() ? 'hintT' : 'hint'))}</p>
@@ -152,7 +155,11 @@
         AB('presign').onclick = () => { const b = AB('presign'), m = MP(); if (!m) return;   // (twice: the first tap asks)
           if (!sure) { sure = setTimeout(() => { sure = 0; b.classList.remove('ask'); b.querySelector('span').textContent = ui(lang, 'p_resign'); }, 2600); b.classList.add('ask'); b.querySelector('span').textContent = ui(lang, 'p_sure'); return; }
           clearTimeout(sure); sure = 0; b.classList.remove('ask'); b.querySelector('span').textContent = ui(lang, 'p_resign'); m.act('resign'); syncActs(); };
-        const tb = AB('pturn'); if (tb) tb.onclick = () => { if (MP()) MP().turn(); };   // (a long board: lengthwise / across)
+        const tb = AB('pturn'); if (tb) tb.onclick = () => { if (MP()) MP().turn(); };
+        // (a phone: the camera comes in to the pieces that can move — this switches it off and on: the whole board / come in; 2026-11-24 user)
+        const zb = AB('pzoom'); if (zb) { const zp = () => { const on = !MP() || !MP().zoomOn || MP().zoomOn(), L = ZOOML[lang] || ZOOML.en, t2 = on ? L[1] : L[0];
+            zb.hidden = !(phone() || matchMedia('(pointer:coarse)').matches); zb.title = t2; zb.querySelector('svg').innerHTML = ZOOMI[on ? 0 : 1]; zb.querySelector('span').textContent = t2; };
+          zp(); addEventListener('resize', zp); zb.onclick = () => { if (MP() && MP().zoom) MP().zoom(); zp(); }; }   // (a long board: lengthwise / across)
         // phones: the card stays out of the way until the play button at the top of the texts asks for it (tapping it again puts it away)
         const cfg = ov.querySelector('[data-k="pcfg"]'); if (cfg) cfg.onclick = () => { const on = !ov.classList.contains('exv-cfg'); ov.classList.toggle('exv-cfg', on); cfg.classList.toggle('on', on); };
         // ルール: the rules course on this board, ミュゼフク guiding (museum/rules.js); its last page's button starts a game with the card's choices
