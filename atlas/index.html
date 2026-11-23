@@ -2101,6 +2101,12 @@ html[dir=rtl] .uarc i,html[dir=rtl] .usb svg{transform:scaleX(-1)}
 @media (min-width:701px){.rgd-act .btn.ic{width:auto;flex-direction:row;gap:9px;padding:0 20px 0 16px;min-height:56px;border-radius:99px}.rgd-act .btn.ic svg{width:26px;height:26px}.rgd-act .btn.ic small{font-size:15px;max-width:none}}   /* (room enough on the 3D view: wide pills with the label beside the icon, 2026-11-11) */
 @media (max-width:600px){.rgd-act .btn.ic{width:60px;padding:6px 0 5px;gap:2px}.rgd-act .btn.ic svg{width:26px;height:26px}.rgd-act .btn.ic small{font-size:11px}.rgd-act .btn.big{font-size:16px;padding-top:12px;padding-bottom:12px}}
 .rgd.lsg .rgd-act{gap:8px}.rgd.lsg .rgd-act .sp{flex:1}.rgd.lsg .cnt{display:flex;align-items:center;gap:5px;min-height:0}.rgd.lsg .lsd{width:12px;height:12px;border-radius:50%;background:#e6dccb;display:inline-block}.rgd.lsg .lsd.ok{background:#3ccf91}.rgd.lsg .lsd.mid{background:#ffb21e}.rgd.lsg .lsd.ng{background:#ff5d5d}.rgd.lsg .lsd.on{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--ink)}
+/* phones (2026-11-24 ユーザー：盤面は可能な限り左右いっぱいに — セリフの見やすさは調整): the guide's bubble and its buttons take less height,
+   so the board above them can be framed across the whole width; the bubble is wider (a smaller guide beside it) so a line holds more */
+@media (max-width:600px){.rgd{bottom:calc(8px + env(safe-area-inset-bottom));width:calc(100% - 16px);gap:6px}.rgd-in{gap:6px}.rgd .pic{width:50px;height:50px}
+  .rgd .bub{padding:7px 12px 8px;margin-bottom:4px;border-radius:18px}.rgd .bub::before{bottom:12px}.rgd .bub::after{bottom:13px}.rgd .nm{margin-bottom:1px;font-size:11px}
+  .rgd .tx{font-size:15px;line-height:1.6;min-height:3.2em}.rgd .cnt{margin-top:3px}
+  .rgd-act{padding:3px 5px 6px;gap:6px}.rgd-act .btn.ic{width:54px;padding:4px 0 3px;gap:1px;border-radius:18px}.rgd-act .btn.ic svg{width:22px;height:22px}.rgd-act .btn.ic small{font-size:10.5px}.rgd-act .btn.big{font-size:16px;padding-top:9px;padding-bottom:9px}}
 html.bv-on:not(#_) .msbtn,html.rec-on:not(#_) .msbtn,html[data-pg=museum]:not(#_) .msbtn,html[data-pg=gacha]:not(#_) .msbtn,html[data-pg=dress]:not(#_) .msbtn{display:none}   /* (ミッション: not over the 3D view) */
 /* shogi / chess, PC: 対戦 · レート戦 · パズル · レッスン (app.js mxPanels, 2026-11-10) */
 .bvi .mtab3.mtab4 button{padding-inline:4px;font-size:13.5px}.bvi .mxp.mxoff > *{display:none!important}#bvFull.mxgone{display:none!important}.mxone > #bvTable{grid-column:1 / -1}
@@ -2543,7 +2549,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=515"></script>
+<script src="lazy.js?v=516"></script>
 <script src="puzzle-lines.js?v=2"></script>
 <script src="puzzles.js?v=43"></script>
 <script src="lessons3d.js?v=161"></script>
@@ -2581,7 +2587,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   mo = new MutationObserver(sync); mo.observe(document.body, { childList: true }); sync(); window.__pgState = sync; })();
 </script>
 <script src="museum/mu-games.js?v=3"></script>
-<script src="app.js?v=489"></script>
+<script src="app.js?v=490"></script>
 <script src="../shared/praline-badge.js?v=9" data-portal defer></script>
 </body>
 </html>

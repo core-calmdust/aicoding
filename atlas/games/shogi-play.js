@@ -162,7 +162,9 @@
     let tall = false, ST = [], KH = Y;   // KH: the height the pieces in hand rest at (the stand's top; on the table when tall)
     const GRID_W = [[-.92, -1.12], [0, -1.12], [.92, -1.12], [-.92, 0], [0, 0], [.92, 0], [0, 1.12]];   // (pieces in hand made larger, 2026-11-11)          // 3 × 3 on the upright plate
     const GRID_T = [[-3.3, 0], [-2.2, 0], [-1.1, 0], [0, 0], [1.1, 0], [2.2, 0], [3.3, 0]];   // tall screens: one row on the table along the board's edge (no stands, 2026-11-09)
-    const boardDepth = () => { try { let d = 0; board.children.forEach(o => { if ((o.userData && o.userData.ty != null) || stands.includes(o) || o.isSprite) return; if (o.isMesh || o.isGroup) { const b = new TH.Box3().setFromObject(o); if (!b.isEmpty() && b.max.y > .05) d = Math.max(d, (b.max.z - b.min.z) / (SC || 1)); } }); return d; } catch (e) { return 0; } };   // (the board model's real depth, rim and all)
+    // (2026-11-24: the depth by the board's own world scale — dividing by SC when the board was not scaled yet made it 1.25× too deep:
+    //  the pieces in hand far off and the board framed small on phones)
+    const boardDepth = () => { try { let d = 0; board.updateWorldMatrix(true, false); const ws = Math.abs(board.getWorldScale(new TH.Vector3()).z) || 1; board.children.forEach(o => { if ((o.userData && o.userData.ty != null) || stands.includes(o) || o.isSprite) return; if (o.isMesh || o.isGroup) { const b = new TH.Box3().setFromObject(o); if (!b.isEmpty() && b.max.y > .05) d = Math.max(d, (b.max.z - b.min.z) / ws); } }); return d; } catch (e) { return 0; } };   // (the board model's real depth, rim and all)
     function layout() {
       const r = ctx.el.getBoundingClientRect();
       tall = r.width < r.height * .95;
@@ -170,15 +172,16 @@
       const SZ = FH / 2 + (board.userData.mg || 0) - 3.55 / 2;   // (3.55: the stand's top plate, models/shogi.js komadai)
       // phones (tall): no stands — the pieces in hand lie in a row on the table just below (yours) / above (the AI's) the board, so
       // the board itself can be framed much larger (2026-11-09)
-      ST = tall ? [{ x: 0, z: BDd / 2 + .72 }, { x: 0, z: -(BDd / 2 + .72) }]
+      ST = tall ? [{ x: 0, z: BDd / 2 + .56 }, { x: 0, z: -(BDd / 2 + .56) }]   // (just off the rim: less height for the rows, a wider board — 2026-11-24)
         : [{ x: FW / 2 + 2.15, z: SZ }, { x: -FW / 2 - 2.15, z: -SZ }];   // (the stands' near / far edge in line with the board's, whatever its size, 2026-11-12)
       KH = tall ? .01 : Y;
       stands.forEach((k, i) => { k.position.set(ST[i].x, 0, ST[i].z); k.rotation.y = i ? Math.PI : 0; k.visible = !tall; });   // (the AI's stand turned round: its picture faces the other way, 2026-11-12)
       // wide: the player's stand sits a little nearer the bottom — shift the scene so the HUD stays clear
       board.position.z = tall ? 0 : .25;
+      // (2026-11-24 ユーザー：スマホでは盤面を可能な限り左右いっぱいに) phones: the grid across the screen, a thin margin only
       // 詰将棋 (ctx.pz) on phones: the defender's pieces in hand (the row above the board) must be read — more room at the top
       if (PZ && pzFit()) { T3.kick(400); return; }
-      if (T3.fit) T3.fit(Object.assign(tall ? { w: (PZ ? FW + .7 : FW + 1.8) * SC, d: (PZ ? FH + 1.9 : BDd + 2 * 1.45) * SC, y: Y * SC, pitch: 1.53, cz: PZ ? -.3 * SC : 0 } : { w: (FW + 8.2) * SC, d: Math.max(FH + 3.2, 12.4) * SC, y: Y * SC, pitch: 1.53 }, PZ && zEase ? { ease: true, ek: .14 } : {}));
+      if (T3.fit) T3.fit(Object.assign(tall ? { w: (FW + .3) * SC, d: (PZ ? FH + .5 : BDd + 2 * 1.05) * SC, y: Y * SC, pitch: 1.53, cz: PZ ? -.15 * SC : 0 } : { w: (FW + 8.2) * SC, d: Math.max(FH + 3.2, 12.4) * SC, y: Y * SC, pitch: 1.53 }, PZ && zEase ? { ease: true, ek: .14 } : {}));
       T3.kick(400);
     }
     const HS = () => tall ? .9 : 1.08;   // a piece in hand (was .82 everywhere)

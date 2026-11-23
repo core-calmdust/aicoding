@@ -99,10 +99,10 @@
         // a soft shadow under the raised lacquer (map only)
         if (kind === 'map') for (let y = H - 1; y >= 3; y--) for (let x = W - 1; x >= 2; x--) { const j = ((y - 3) * W + (x - 2)) * 4 + 3, a = gd[j] / 255 * .28, i = (y * W + x) * 4; if (a) { d[i] *= 1 - a; d[i + 1] *= 1 - a; d[i + 2] *= 1 - a; } }
         for (let i = 0; i < W * H; i++) {
-          const a = gd[i * 4 + 3] / 255; if (!a) { if (kind === 'rough') { d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = 150; } continue; }
+          const a = gd[i * 4 + 3] / 255; if (!a) { if (kind === 'rough') { d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = 205; } continue; }   // (matte wood, a soft sheen on the strokes: 2026-11-24)
           const hgt = 1 - (red ? gd[i * 4 + 1] : gd[i * 4]) / 255;    // dark layer = top of the stroke
           if (kind === 'map') { const L = red ? [150, 22, 14] : [16, 9, 5], hi = Math.pow(hgt, 3) * 26; for (let k = 0; k < 3; k++) d[i * 4 + k] = d[i * 4 + k] * (1 - a) + (L[k] + hi) * a; }
-          else if (kind === 'rough') { const v = 150 * (1 - a) + 28 * a; d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = v; }
+          else if (kind === 'rough') { const v = 205 * (1 - a) + 165 * a; d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = v; }
           else { const v = 255 * a * (.35 + .65 * hgt); d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = v; }
         }
       },
@@ -167,11 +167,11 @@
         draw(red ? '#9c1f16' : '#120804', 0);
         c.save(); c.translate(-1.2, -1.6); c.globalCompositeOperation = 'lighter'; draw(red ? 'rgba(120,40,20,.25)' : 'rgba(79,70,61,.22)', 0, -.03); c.restore();   // highlight on the crown of the lacquer
       }
-      if (kind === 'rough') draw('#1a1a1a', 2);
+      if (kind === 'rough') draw('#a5a5a5', 2);   // (the lacquered strokes: a soft sheen, not a mirror — 2026-11-24)
       if (kind === 'bump') { draw('#606060', 8, .03); draw('#c0c0c0', 4); draw('#ffffff', 1, -.02); }
       };
       if (kind === 'map') tsuge(c0, W, H, 11 + type, ink);
-      else { c0.fillStyle = kind === 'rough' ? '#888' : '#000'; c0.fillRect(0, 0, W, H); ink(c0); }
+      else { c0.fillStyle = kind === 'rough' ? '#cdcdcd' : '#000'; c0.fillRect(0, 0, W, H); ink(c0); }   // (the wood: matte, 2026-11-24)
     });
   }
   // board top: straight-grained kaya with the black lacquer lines (太刀盛り) and four stars
@@ -398,7 +398,9 @@
     if (matCache[key]) return matCache[key];
     if (set !== 'moriage') glyphsOf(set);
     const TT = T();
-    const face = new TT.MeshPhysicalMaterial({ map: faceTex(type, ou, 'map', set), roughnessMap: faceTex(type, ou, 'rough', set), bumpMap: faceTex(type, ou, 'bump', set), bumpScale: .032, roughness: 1, clearcoat: .55, clearcoatRoughness: .28 });
+    // (2026-11-24 ユーザー：盤面の光がコマに反射して白飛びする — the slanted faces of the far side's pieces mirrored the room's soft boxes and
+    //  the key light: a thin satin finish now, no strong clearcoat, little of the room in it, and a low specular — the same in every room)
+    const face = new TT.MeshPhysicalMaterial({ map: faceTex(type, ou, 'map', set), roughnessMap: faceTex(type, ou, 'rough', set), bumpMap: faceTex(type, ou, 'bump', set), bumpScale: .032, roughness: 1, clearcoat: 0, reflectivity: .15, specularIntensity: .2, envMapIntensity: .45 });
     const side = sideM || (sideM = M({ map: X.canvasTex('tsugeSide', 128, 128, (c, W, H) => tsuge(c, W, H, 3)), roughness: .5, bumpScale: .002 }));
     return (matCache[key] = [face, side]);
   }
@@ -411,7 +413,7 @@
   glyphsReady.then(() => upgrade('moriage'));
   function piece(type, gote, ou, set = curSet()) {
     const m = new (T().Mesh)(pieceGeo(SIZE[type] || 1), pieceMats(type, ou, set));
-    m.castShadow = true; m.receiveShadow = true;
+    m.castShadow = true; m.receiveShadow = false;   // (2026-11-24: no shadow of the room / the stands falling across a piece's face — it read as a smudge)
     const g = new (T().Group)(); g.add(m); if (gote) g.rotation.y = Math.PI;
     g.userData.type = type; return g;
   }
