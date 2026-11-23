@@ -642,6 +642,12 @@ const CHECKS = {
     const L = J('reversi/lessons.json');
     require('./lesson-verify.js').reversi().forEach(fa => bad('reversi', String(L.lessons.findIndex(l => l.id === fa.step)), `${fa.step} q${fa.q}: ${fa.msg}`));
   },
+  // (2026-11-24 第2期) xiangqi: the strict ①〜⑨ of the verified basics (XQ_DONE: b_rook・b_horse・b_cannon・b_pawn) — the goal set from the
+  // rules (a capture by the lesson's piece that cannot be taken back), the stored engine values, the pool and ショウギツネ's words — tools/lesson-verify.js xiangqi
+  xiangqi() {
+    const L = J('xiangqi/lessons.json');
+    require('./lesson-verify.js').xiangqi().forEach(fa => bad('xiangqi', String(L.steps.findIndex(s => s.id === fa.step)), `${fa.step} q${fa.q}: ${fa.msg}`));
+  },
 };
 
 const todo = games.length ? games : Object.keys(CHECKS);
