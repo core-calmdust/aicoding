@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 132;
+  const V = 133;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -33,7 +33,7 @@
     { id: 'kofukuji', game: 'shogi', cm: 1, view: [0, .95, .78], lock: { game: 'shogi', ach: 3 } },   // (spots: from the model's userData)
   ];
   const T = l => (window.MUSEUM_GAL_T && (MUSEUM_GAL_T[l] || MUSEUM_GAL_T.en)) || {};
-  const PLAY = { ballinderry: { game: 'tafl', levels: 30, long: true }, senet: { game: 'senet', levels: 20, long: true }, shosoin: { game: 'go', levels: 37 }, sugoroku: { game: 'sugoroku', levels: 20, long: true }, ur: { game: 'ur', levels: 20, long: true }, ottoman: { game: 'chess', levels: 33, rules: false } };   // (ottoman: no museum rules course yet — the portal's own tour teaches it)   // (levels: the game's own count — the names come from its adapter once it has loaded)   // 所蔵品で遊ぶ (2026-11-22): the exhibits that can be played on, and the game (and board size) that plays them
+  const PLAY = { ballinderry: { game: 'tafl', levels: 30, long: true }, senet: { game: 'senet', levels: 20, long: true }, shosoin: { game: 'go', levels: 37 }, sugoroku: { game: 'sugoroku', levels: 20, long: true }, ur: { game: 'ur', levels: 20, long: true }, ottoman: { game: 'chess', levels: 33, alt: { key: 'ottoman-bg', game: 'backgammon', levels: 10, src: 'games/backgammon-museum.js' } } };   // (ottoman: no museum rules course yet — the portal's own tour teaches it)   // (levels: the game's own count — the names come from its adapter once it has loaded)   // 所蔵品で遊ぶ (2026-11-22): the exhibits that can be played on, and the game (and board size) that plays them
   const ui = (l, k) => { const a = T(l).ui || {}, b = T('en').ui || {}; return a[k] != null ? a[k] : (b[k] != null ? b[k] : k); };
   const ex = (l, id) => Object.assign({}, (T('en').ex || {})[id] || {}, (T(l).ex || {})[id] || {});
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -72,7 +72,7 @@
     const e = EX.find(x => x.id === id); if (!e || V3) return;
     const t = ex(lang, id), g = ctx.games.find(x => x.id === e.game), B0 = e.flip ? { flip: true } : null;
     const ov = document.createElement('div'); ov.className = 'exv'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
-    ov.innerHTML = `<div class="exstage"><canvas></canvas><div class="exspots"></div><div class="exhud" aria-live="polite"></div>${PLAY[id] ? `<div class="expcard"><b>${esc(ui(lang, 'play_' + id))}</b>
+    ov.innerHTML = `<div class="exstage"><canvas></canvas><div class="exspots"></div><div class="exhud" aria-live="polite"></div>${PLAY[id] ? `<div class="expcard">${PLAY[id].alt ? `<div class="expseg expgm" data-k="pgame" data-v="0"><button type="button" data-v="0" class="on">${esc(ui(lang, 'play_' + id))}</button><button type="button" data-v="1">${esc(ui(lang, 'play_' + PLAY[id].alt.key))}</button></div>` : `<b>${esc(ui(lang, 'play_' + id))}</b>`}
           <div class="expf"><span>${esc(ui(lang, 'p_level'))}</span><div class="expdd" data-k="plv" data-v="1"><button type="button" class="expdd-b" aria-haspopup="listbox"><span class="lvb"></span><b>Lv.1</b><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button><div class="expdd-l" role="listbox">${Array.from({ length: PLAY[id].levels }, (_, i) => `<button type="button" role="option" data-v="${i + 1}"${i ? '' : ' class="on"'}>Lv.${i + 1}</button>`).join('')}</div></div></div>
           <div class="expf"><span>${esc(ui(lang, 'p_side'))}</span><div class="expseg" data-k="pside" data-v="1"><button type="button" data-v="1" class="on">${esc(ui(lang, 'p_first'))}</button><button type="button" data-v="2">${esc(ui(lang, 'p_second'))}</button></div></div>
           <button type="button" class="exprul" data-k="prules"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h9a4 4 0 0 1 4 4v12H9a4 4 0 0 1-4-4z"/><path d="M9 9h5M9 13h5"/></svg>${esc(ui(lang, 'p_rules'))}</button><button type="button" class="explay" data-k="play">${esc(ui(lang, 'p_start'))}</button><div class="expacts" hidden>${[['pundo', 'p_undo', '<path d="M9 6 4 11l5 5"/><path d="M4 11h9.5a5.5 5.5 0 0 1 0 11H11"/>'], ['presign', 'p_resign', '<path d="M6 21V4"/><path d="M6 4h11l-2.5 4L17 12H6"/>'], ['phint', 'p_hint', '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>']]
@@ -100,7 +100,8 @@
     const close = () => { if (!V3 || V3.ov !== ov) return; removeEventListener('popstate', onPop); if (hist) { hist = false; try { history.back(); } catch (x) {} }
       if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); teardown(); ov.classList.remove('on'); document.documentElement.classList.remove('exv-open'); setTimeout(() => ov.remove(), 260); };
     ov.querySelector('.exclose').onclick = () => { if (ov.quitPlay && ov.classList.contains('exv-play')) ov.quitPlay(); else close(); };   // (during a game the × at the top right ends the game — as in the portal's 3D games — and a second one closes the case)
-    { const pb = ov.querySelector('[data-k="play"]'), P = PLAY[id];   // 所蔵品で遊ぶ: a game on this board, here in the museum (museum/play.js)
+    { const pb = ov.querySelector('[data-k="play"]'); let P = PLAY[id], pid = id;   // (pid: the board's key in museum/play.js and museum/rules.js — a two-sided exhibit has a second game, P.alt)
+      const need = () => Promise.resolve(window.AtlasLazy ? AtlasLazy.need(P.game) : 0).then(() => P.src ? load(P.src + '?v=' + V) : 0);     // 所蔵品で遊ぶ: a game on this board, here in the museum (museum/play.js)
       if (pb && P) { const hudEl = ov.querySelector('.exhud'), PK = 'atlas-museum-play', lvS = ov.querySelector('[data-k="plv"]'), sdS = ov.querySelector('[data-k="pside"]');
         // the card's own pull-downs (the portal's rule: no system <select>): a button showing the choice, its list opening upward over the case
         let lock = false; const setDD = (dd, v) => { const o = [...dd.querySelectorAll('.expdd-l button')], b = o.find(x => +x.dataset.v === +v) || o.find(x => +x.dataset.v === 1) || o[0]; dd.dataset.v = b.dataset.v; dd.querySelector('.expdd-b b').textContent = b.dataset.lb || b.textContent; const im = b.querySelector('img'); dd.querySelector('.expdd-b .lvb').innerHTML = im ? `<img src="${im.getAttribute('src')}" alt="">` : ''; o.forEach(x => x.classList.toggle('on', x === b)); if (dd === lvS) sdS.classList.toggle('off', +b.dataset.v === 0); };
@@ -134,8 +135,9 @@
             h += `<button type="button" role="option" data-v="${n}" data-lb="Lv.${n}">${im}<b>Lv.${n}</b><span class="nt">${esc(nm(n))}</span>${rw}${own(n) ? '<i class="ck">✓</i>' : ''}</button>`; }
           lvS.querySelector('.expdd-l').innerHTML = h; setDD(lvS, lvS.dataset.want != null ? lvS.dataset.want : lvS.dataset.v); delete lvS.dataset.want; };
         ov.fillLv = fillLv;
-        Promise.all([window.AtlasLazy ? AtlasLazy.need(P.game) : 0, window.AtlasNPC && AtlasNPC.ensure ? AtlasNPC.ensure(lang).catch(() => {}) : 0]).then(fillLv);
-        try { const q = JSON.parse(localStorage.getItem(PK) || '{}')[id]; if (q) { lvS.dataset.want = q.lv; setLv(q.lv); setSd(q.side); } } catch (x) {}
+        const loadLv = () => { Promise.all([need(), window.AtlasNPC && AtlasNPC.ensure ? AtlasNPC.ensure(lang).catch(() => {}) : 0]).then(fillLv);
+          try { const q = JSON.parse(localStorage.getItem(PK) || '{}')[pid]; if (q) { lvS.dataset.want = q.lv; setLv(q.lv); setSd(q.side); } else { lvS.dataset.want = 1; setSd(1); } } catch (x) {} };
+        loadLv();
         const tt = k => ({ 'p.you': ui(lang, 'p_you'), 'p.ai': 'AI', 'p.turn': ui(lang, 'p_turn'), 'p.think': ui(lang, 'p_think'), 'res.win': ui(lang, 'p_win'), 'res.lose': ui(lang, 'p_lose'), 'res.draw': ui(lang, 'p_draw') })[k] || '';
         // during a game the card is the game's own buttons, as in the portal's 3D games: 待った・投了・ヒント (the board's turn on a long board) and やめる
         const acts = ov.querySelector('.expacts'), AB = k => acts.querySelector(`[data-k="${k}"]`), MP = () => window.AtlasMuseumPlay;
@@ -150,20 +152,25 @@
         // phones: the card stays out of the way until the play button at the top of the texts asks for it (tapping it again puts it away)
         const cfg = ov.querySelector('[data-k="pcfg"]'); if (cfg) cfg.onclick = () => { const on = !ov.classList.contains('exv-cfg'); ov.classList.toggle('exv-cfg', on); cfg.classList.toggle('on', on); };
         // ルール: the rules course on this board, ミュゼフク guiding (museum/rules.js); its last page's button starts a game with the card's choices
-        const rul = ov.querySelector('[data-k="prules"]'); if (PLAY[id].rules === false) rul.remove(); const rulesOn = on => { ov.classList.toggle('exv-rul', on); };
-        try { if (!localStorage.getItem('aicoding-museum-' + id + '-rules-seen')) rul.classList.add('new'); } catch (x) {}
+        const rul = ov.querySelector('[data-k="prules"]'); if (PLAY[id].rules === false) rul.remove(); const rulNew = () => { try { rul.classList.toggle('new', !localStorage.getItem('aicoding-museum-' + pid + '-rules-seen')); } catch (x) {} };
+        // a two-sided exhibit: which of its two games (the card's switch; the last one played is kept)
+        const gm = ov.querySelector('[data-k="pgame"]'), GK = 'atlas-museum-game';
+        const setGame = k => { k = +k ? 1 : 0; if (lock) return; P = k ? PLAY[id].alt : PLAY[id]; pid = k ? P.key : id; gm.dataset.v = k; gm.querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.v === k)); lvS.querySelector('.expdd-l').innerHTML = Array.from({ length: P.levels }, (_, i) => `<button type="button" role="option" data-v="${i + 1}">Lv.${i + 1}</button>`).join(''); loadLv(); rulNew(); try { const q = JSON.parse(localStorage.getItem(GK) || '{}'); q[id] = k; localStorage.setItem(GK, JSON.stringify(q)); } catch (x) {} };
+        if (gm) { gm.querySelectorAll('button').forEach(b => b.onclick = ev => { ev.stopPropagation(); setGame(b.dataset.v); }); try { if (JSON.parse(localStorage.getItem(GK) || '{}')[id]) setGame(1); } catch (x) {} }
+        const rulesOn = on => { ov.classList.toggle('exv-rul', on); };
+        rulNew();
         rul.onclick = () => { if (!V3 || !V3.obj || lock) return; rul.disabled = true;
-          Promise.all([load('museum/play.js?v=' + V), load('museum/rules.js?v=' + V), load('museum/rules-tx-en.js?v=' + V), lang !== 'en' ? load('museum/rules-tx-' + lang + '.js?v=' + V) : 0]).then(() => { rul.disabled = false; if (!V3 || V3.ov !== ov || !window.AtlasMuseumPlay) return;
+          Promise.all([need(), load('museum/play.js?v=' + V), load('museum/rules.js?v=' + V), load('museum/rules-tx-en.js?v=' + V), lang !== 'en' ? load('museum/rules-tx-' + lang + '.js?v=' + V) : 0]).then(() => { rul.disabled = false; if (!V3 || V3.ov !== ov || !window.AtlasMuseumPlay) return;
             const quit = () => { if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); rulesOn(false); playing(false); };
-            prePlay(); const ok = AtlasMuseumPlay.start(id, { course: true, lang, onExit: quit, onPlay: () => { quit(); setTimeout(() => pb.click(), 60); } });
+            prePlay(); const ok = AtlasMuseumPlay.start(pid, { course: true, lang, onExit: quit, onPlay: () => { quit(); setTimeout(() => pb.click(), 60); } });
             if (!ok) return; rul.classList.remove('new'); playing(true); acts.hidden = true; clearInterval(poll); rulesOn(true); ov.quitPlay = quit; }); };
         const prePlay = () => { if (ov.slide && !ov.classList.contains('exv-play')) ov.slide(() => ov.classList.add('exv-play'), { play: true }); };   // (first the case at its game size, then the game: it flies to the board in one move)
         const playing = on => { if (!on && ov.fillLv) setTimeout(ov.fillLv, 50); { const rb = ov.querySelector('.exres'); if (rb) rb.remove(); } ov.classList.remove('exv-cfg'); if (cfg) cfg.classList.remove('on'); if (on !== ov.classList.contains('exv-play')) { if (ov.slide) ov.slide(() => ov.classList.toggle('exv-play', on), on ? { play: true } : { noD: true }); else ov.classList.toggle('exv-play', on); } pb.hidden = on; acts.hidden = !on; clearInterval(poll); if (on) { syncActs(); poll = setInterval(syncActs, 350); } lock = on; shut(); if (!on) hudEl.innerHTML = ''; };
         const quitGame = () => { if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); playing(false); }; ov.quitPlay = quitGame;
         pb.onclick = () => { if (!V3 || !V3.obj) return; pb.disabled = true;
-          try { const q = JSON.parse(localStorage.getItem(PK) || '{}'); q[id] = { lv: +lvS.dataset.v, side: +sdS.dataset.v }; localStorage.setItem(PK, JSON.stringify(q)); } catch (x) {}
-          Promise.all([load('museum/play.js?v=' + V), window.AtlasLazy ? AtlasLazy.need(P.game) : 0]).then(() => { pb.disabled = false; if (!V3 || V3.ov !== ov || !window.AtlasMuseumPlay) return;
-            prePlay(); const lv = +lvS.dataset.v, ok = AtlasMuseumPlay.start(id, { level: lv || 1, mode: lv ? 'ai' : 'pvp', side: +sdS.dataset.v, lang, t: tt, hud: h => { hudEl.innerHTML = h; }, onEnd: res => { const k = res.pvp ? 'win' : res.draw ? 'draw' : res.win ? 'win' : 'lose', tx = res.pvp ? (res.winnerText || ui(lang, 'p_draw')) : ui(lang, 'p_' + k); hudEl.innerHTML = `<span class="hm">${esc(tx)}</span>`;
+          try { const q = JSON.parse(localStorage.getItem(PK) || '{}'); q[pid] = { lv: +lvS.dataset.v, side: +sdS.dataset.v }; localStorage.setItem(PK, JSON.stringify(q)); } catch (x) {}
+          Promise.all([load('museum/play.js?v=' + V), need()]).then(() => { pb.disabled = false; if (!V3 || V3.ov !== ov || !window.AtlasMuseumPlay) return;
+            prePlay(); const lv = +lvS.dataset.v, ok = AtlasMuseumPlay.start(pid, { level: lv || 1, mode: lv ? 'ai' : 'pvp', side: +sdS.dataset.v, lang, t: tt, hud: h => { hudEl.innerHTML = h; }, onEnd: res => { const k = res.pvp ? 'win' : res.draw ? 'draw' : res.win ? 'win' : 'lose', tx = res.pvp ? (res.winnerText || ui(lang, 'p_draw')) : ui(lang, 'p_' + k); hudEl.innerHTML = `<span class="hm">${esc(tx)}</span>`;
               // the result in the middle of the case (a plaque in the museum's manner), gone at a tap or when the game is left
               const old = ov.querySelector('.exres'); if (old) old.remove(); const rb = document.createElement('div'); rb.className = 'exres ' + k; rb.innerHTML = `<b>${esc(tx)}</b>`;
               rb.onclick = () => rb.remove(); ov.querySelector('.exstage').appendChild(rb); requestAnimationFrame(() => rb.classList.add('on')); } });
