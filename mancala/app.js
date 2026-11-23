@@ -1653,7 +1653,7 @@ $('#rulesClose').onclick = () => { const tour = curTour(); if (tour) tour.stop()
 
 // ====================================================================== lessons & puzzles: shared
 let LESSONS = null, PUZZLES = null;
-const lessonsReady = fetch('lessons.json?v=20261123lv1').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=20261123lv2').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const puzzlesReady = fetch('puzzles.json?v=20261104pzd').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
@@ -1936,7 +1936,7 @@ function problemPoints(sc, k) {
   const all = sc.filter(v => v !== null), mine = sc[k], best = Math.max(...all), n = all.length;
   if (n <= 1 || mine >= best - 1e-9) return 20;
   const r = all.filter(v => v > mine + 1e-9).length;
-  return Math.max(0, Math.round(20 * (n - 1 - r) / (n - 1)));
+  return Math.min(15, Math.max(0, Math.round(20 * (n - 1 - r) / (n - 1))));   // (2026-11-23 第2期: a pit worse than the gold one never counts as right — with 6 pits the 2nd best got 16)
 }
 // a solved problem moves on to the next one by itself after a short success beat (shared/cardbar.js; any tap cancels it).
 // The last problem of a lesson / drill keeps the usual 結果 button.
