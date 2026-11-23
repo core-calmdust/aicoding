@@ -16,6 +16,11 @@
     { id: 'zeno', color: '#5b4a2e', cover: { ex: 'pyrgus' }, mins: 3, sec: [null, null, null, null, null], links: [{ g: 'backgammon' }, { ex: 'pyrgus' }, { room: 'chance' }] },
     { id: 'sugoroku', color: '#7a2e3a', cover: { ex: 'sugoroku' }, mins: 3, sec: [null, null, null, null, { paint: 'sugoroku' }], links: [{ ex: 'sugoroku' }, { paint: 'sugoroku' }, { g: 'backgammon' }] },
     { id: 'queen', color: '#2a3a52', cover: { paint: 'shahnama' }, mins: 3, sec: [null, { ex: 'nishapur' }, { ex: 'lewis' }, null, null], links: [{ g: 'chess' }, { ex: 'lewis' }, { ex: 'nishapur' }] },
+    // (2026-11-24: four more)
+    { id: 'senet', color: '#7a5a1e', cover: { ex: 'senet' }, mins: 3, sec: [null, null, { paint: 'nefertari' }, null, null], links: [{ g: 'senet' }, { ex: 'senet' }, { paint: 'nefertari' }] },
+    { id: 'lewis', color: '#3e4a5c', cover: { ex: 'lewis' }, mins: 3, sec: [null, null, null, null, null], links: [{ ex: 'lewis' }, { g: 'chess' }, { room: 'paint' }] },
+    { id: 'tafl', color: '#2f4f3a', cover: { ex: 'ballinderry' }, mins: 3, sec: [null, null, null, null, null], links: [{ g: 'tafl' }, { ex: 'ballinderry' }] },
+    { id: 'goose', color: '#5a6e2a', cover: { ex: 'goose' }, mins: 3, sec: [null, null, null, null, null], links: [{ ex: 'goose' }, { room: 'chance' }, { g: 'backgammon' }] },
   ];
   const src = p => p.ex ? `../images/atlas/ex/${p.ex}.webp` : `../images/atlas/paint/${p.paint}-t.webp?v=1`;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -48,7 +53,7 @@
   /* ---------- the shelf: the stamp card and the stories ---------- */
   function shelf() {
     cur = null; const S = stamps(), n = STORIES.filter(s => S[s.id]).length;
-    host.innerHTML = `<div class="rdx"><p class="chlead">${esc(u('lead'))}</p>
+    host.innerHTML = `<div class="rdx"><p class="chlead">${esc(fmt(u('lead'), { n: STORIES.length }))}</p>
       <div class="rdcard"><div class="rdct"><b>${esc(u('card'))}</b><small>${esc(n === STORIES.length ? u('cardAll') : fmt(u('cardN'), { n, of: STORIES.length }))}</small></div>
         <div class="rdst">${STORIES.map(s => `<span class="rdstamp${S[s.id] ? ' on' : ''}" style="--c:${s.color}" title="${esc(st(s.id).title)}">${S[s.id] ? `<img src="${src(s.cover)}" alt="">` : ''}<i>${STORIES.indexOf(s) + 1}</i></span>`).join('')}</div></div>
       <div class="rdlist">${STORIES.map((s, i) => { const x = st(s.id);
