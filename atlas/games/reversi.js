@@ -73,6 +73,8 @@
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), pass: t('p.pass'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
     const board = T3.MODELS.reversi(true); T3.show('reversi', board);
     const S = board.userData.S, Y = board.userData.top;
+    // phones (2026-11-24 ユーザー：盤面は可能な限り左右いっぱいに): the board with its frame across the width (the default framing left ~15% each side)
+    if (T3.fit && innerHeight > innerWidth * 1.15) T3.fit({ w: S + 1.5, d: S + 1.5, y: Y + .2, pitch: 1.25 });
     const RM = T3.rvMats(), DH = T3.rvDisc.H / 2;   // flat, matte Othello discs (half thickness: the centre sits DH above the felt)
     const hintM = new THREE.MeshBasicMaterial({ color: 0xffe27a, transparent: true, opacity: .55 });
     const cntM = {}, cntMat = n => cntM[n] || (cntM[n] = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
