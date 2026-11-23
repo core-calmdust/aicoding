@@ -377,6 +377,9 @@ const CHECKS = {
           const rw = mine.match(/(\d)段目/); if (rw) { const thrB = cells(g, me), nw = cells(A, me).filter(([c, r]) => !thrB.some(([x, y]) => x === c && y === r)); if (!nw.some(([, r]) => r + 1 === +rw[1])) bad(G, K, `${w} miss ${u}: said to make a winning cell on row ${rw[1]}, it does not`); }
         }
       }); });
+    // (2026-11-23 phase 2) the strict problem checks ①〜⑧ of tools/lesson-verify.js on the steps verified so far
+    const V = require('./lesson-verify.js').connect4({});
+    V.fails.forEach(f => bad(G, String(L.steps.findIndex(s => s.id === f.step)), `${f.step} q${f.q}: ${f.msg}`));
   },
   // (2026-11-23 lesson loop) the hex lessons ('hex', key = the step's index): every answer is an empty cell, the best is among the
   // answers, and the one-move problems are solved again by the exact solver of the engine (hex/tools/native.c serve, built to /tmp/hexn
