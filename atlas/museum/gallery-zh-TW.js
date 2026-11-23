@@ -1,6 +1,6 @@
 /* Museum "Collection" texts (Traditional Chinese, Taiwan). Same keys as gallery-ja.js. */
 (window.MUSEUM_GAL_T = window.MUSEUM_GAL_T || {})['zh-TW'] = {
-  ui: { p_start: "開始", p_undo: "悔棋", p_resign: "認輸", p_hint: "提示", p_quit: "退出", p_sure: "確定？", p_orientS: "方向", p_rules: "規則", p_orient: "旋轉棋盤方向", play_ballinderry: "布蘭杜布", play_senet: "圖坦卡門的塞尼特", play_ur: "烏爾王族遊戲", play_shosoin: "木畫紫檀棋局", play_sugoroku: "木畫紫檀雙六局", p_level: "對手", p_side: "先後", p_first: "先手", p_second: "後手", p_stop: "結束對局", p_you: "你", p_turn: "輪到你", p_think: "思考中…", p_win: "你贏了", p_lose: "你輸了", p_draw: "平局", flip: '翻面', guideH: '導覽員：館藏梟', guide: '逛遍館藏，館藏梟就會一次比一次打扮得更漂亮來見你', gift: '新的阿特拉莫來了！', sub: "世界各地博物館守護的遊戲史珍寶。每件名品都以3D重現——彷彿拿在手上，轉動細細端詳。", collection: "館藏", special: "特別展示", lock: "達成{n}個{g}成就後開放", loading: "正在準備展示櫃…", fail: "無法載入展品",
+  ui: { p_start: "開始", p_undo: "悔棋", p_resign: "認輸", p_hint: "提示", p_quit: "退出", p_sure: "確定？", p_orientS: "方向", p_rules: "規則", p_orient: "旋轉棋盤方向", play_ballinderry: "布蘭杜布", play_senet: "圖坦卡門的塞尼特", play_ur: "烏爾王族遊戲", play_shosoin: "木畫紫檀棋局", play_sugoroku: "木畫紫檀雙六局", play_ottoman: "西洋棋", p_level: "對手", p_side: "先後", p_first: "先手", p_second: "後手", p_stop: "結束對局", p_you: "你", p_turn: "輪到你", p_think: "思考中…", p_win: "你贏了", p_lose: "你輸了", p_draw: "平局", flip: '翻面', guideH: '導覽員：館藏梟', guide: '逛遍館藏，館藏梟就會一次比一次打扮得更漂亮來見你', gift: '新的阿特拉莫來了！', sub: "世界各地博物館守護的遊戲史珍寶。每件名品都以3D重現——彷彿拿在手上，轉動細細端詳。", collection: "館藏", special: "特別展示", lock: "達成{n}個{g}成就後開放", loading: "正在準備展示櫃…", fail: "無法載入展品",
     hint: "拖曳旋轉 · 滾輪縮放 · 點數字看細節", hintT: "拖曳旋轉 · 雙指縮放", spin: "緩緩旋轉", reset: "回到初始視角", wide: '收起／展開解說', close: "關閉",
     date: "年代", where: "出土 / 流傳", museum: "典藏", mat: "材質", size: "尺寸", look: "看點", aboutModel: "關於這個3D模型", sources: "參考資料", play: "玩{g}" },
   ex: {
@@ -127,7 +127,7 @@
         ["螺鈿鏈紋", "邊框上，玳瑁地上S形迴捲的螺鈿紋與小星交替相連。"],
         ["角上的盾形", "鏈紋在四角以盾形紋樣相連。"],
         ["骨質邊與側面", "外緣是以人字形接縫相連的骨條；兩片盤板的側面排著一行螺鈿六邊形。"]],
-      model: "尺寸依據館藏紀錄。螺鈿與玳瑁的佈局取自館方照片；邊框的斷面和側面貝片的排列為推測。",
+      model: "尺寸依據館藏紀錄。螺鈿與玳瑁的佈局取自館方照片；邊框的斷面和側面貝片的排列為推測。棋子沒有隨棋盤一同傳世。對局用的棋子是參照鄂圖曼世界的車旋棋子所作的推定。",
       src: [["維多利亞與亞伯特博物館，「Games board」861-1907", "https://collections.vam.ac.uk/item/O370652/games-board-unknown"]] },
     kofukuji: { name: "興福寺舊境內出土的將棋棋子", alt: "日本最古老的將棋棋子，以及寫有棋子名稱的木簡", date: "11世紀後半–12世紀", where: "日本（奈良）", found: "奈良市登大路町興福寺舊境內的發掘：吉祥院地區（1992年，井狀遺構）與觀禪院地區（2013年，水井與土坑）",
       museum: "奈良縣立橿原考古學研究所附屬博物館", no: "奈良縣指定有形文化財（2022年，31件）", mat: "木、墨", size: "棋子長約2.5公分（醉象：約2.5 × 1.5公分，厚2公釐）",
