@@ -315,7 +315,8 @@ button{font:inherit;color:inherit;cursor:pointer}
   #skTip.arm .reach{flex:none;width:auto;height:100%;max-height:72px;aspect-ratio:1}
   #skTip.arm .tx{flex:1;min-width:0}#skTip.arm b{display:flex;align-items:center;gap:6px;font-family:var(--jp);font-size:16px;color:var(--gold2);white-space:nowrap}#skTip.arm b svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6}
   #skTip.arm b small{font-family:var(--body);font-weight:400;font-size:12.5px;color:var(--mute);overflow:hidden;text-overflow:ellipsis}
-  #skTip.arm p{margin:3px 0 0;font-size:14px;line-height:1.45;color:#d6dcdc;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  #skTip.arm p{margin:3px 0 0;font-size:14px;line-height:1.45;color:#d6dcdc;max-height:calc(1.45em * 2);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:var(--brass) transparent}   /* (the whole text, scrolled — not cut with …) */
+  #skTip.arm .tx{align-self:stretch;display:flex;flex-direction:column;justify-content:center;min-height:0}
   #tipX{display:grid;position:absolute;right:2px;top:50%;transform:translateY(-50%);width:42px;height:42px;place-items:center;border:0;background:none;color:var(--gold2);font-size:26px}
   #acts{display:none}
   #msg{bottom:auto;top:calc(150px + var(--st));font-size:15px;white-space:normal;text-align:center;max-width:calc(100vw - 24px)}
@@ -438,10 +439,10 @@ button{font:inherit;color:inherit;cursor:pointer}
   .picks #pkSw{align-self:stretch;height:auto;flex-direction:column;justify-content:center;gap:2px;width:58px;padding:0 4px;font-size:12px;text-align:center;white-space:normal;line-height:1.25}
 }
 /* deployment (phones): the tapped ship's skill in one line above the strip; the ship lights up on the sea */
-#spotTip{position:fixed;left:8px;right:8px;z-index:6;display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;background:rgba(10,18,26,.96);border:1px solid rgba(214,222,228,.4);border-left:3px solid var(--acc);font-size:13px;white-space:nowrap;overflow:hidden;pointer-events:none}
+#spotTip{position:fixed;left:8px;right:8px;z-index:6;display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;background:rgba(10,18,26,.96);border:1px solid rgba(214,222,228,.4);border-left:3px solid var(--acc);font-size:13px;white-space:nowrap;overflow:hidden}
 #spotTip b{flex:none;font-family:var(--jp);font-size:13.5px;color:#fff}
 #spotTip .sn{flex:none;display:inline-flex;align-items:center;gap:4px;color:var(--gold2)}#spotTip .sn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6}
-#spotTip .tx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;color:#c3cbcc}
+#spotTip .tx{flex:1;min-width:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior:contain;color:#c3cbcc}#spotTip .tx::-webkit-scrollbar{display:none}   /* (one line, slid sideways to read the rest) */
 #strip .fi.on{border-color:var(--acc)!important;background:rgba(166,214,92,.14)}
 /* one card, large: the detail of a tile (phones) */
 #cardPop{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:16px 14px calc(16px + env(safe-area-inset-bottom,0px));background:rgba(2,5,8,.72)}
@@ -606,6 +607,6 @@ button{font:inherit;color:inherit;cursor:pointer}
 <script src="../atlas/vendor/three-r186.min.js?v=1"></script>
 <script src="../seabattle/ships3d.js?v=2"></script>
 <script src="world.js?v=9"></script>
-<script src="game.js?v=18"></script>
+<script src="game.js?v=19"></script>
 </body>
 </html>
