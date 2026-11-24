@@ -3335,29 +3335,10 @@
   else go(h0, false);
   history.replaceState({ pg: page }, '', '#' + page);
   if (h1 && h0 !== 'museum') openBoard(h1);
-  /* ---------- phones: a left / right swipe moves between the pages (ホーム · ゲーム · 博物館 …, the tab bar's order) — 2026-11-24 user ----------
-     Before, a sideways swipe did nothing in the page and the browser's own edge swipe left the portal (back to CALMDUST). Now
-     · a quick sideways flick on a page (not on something that pans sideways itself — a map, a slider, a row that scrolls, the 3D views)
-       goes to the next / previous page, sliding in from that side;
-     · the edge "back" swipe goes to the previous page: from the first touch a marker entry sits on the history, a back lands below it,
-       and the page steps back instead of leaving (on ホーム, the first page, it leaves as before). Overlays that use the history
-       themselves (an exhibit, a painting) still close first. */
+  /* ---------- the browser's back / forward (2026-11-24 user): its edge swipes walk back and forth through the pages, museum rooms and stories
+     in the order visited. (The sideways flick between pages that was here is gone: the user asked for the browser's own gesture only.) */
   (function pageSwipe() {
-    const ok = () => isPhone() && !$('bv').classList.contains('on') && !$('ov').classList.contains('on') && !document.querySelector('.exv, .ptv.on, .lvsheet:not(.out), #recOv.on') && !document.documentElement.classList.contains('exv-open');
-    const step = d => { const i = TABS.indexOf(page), j = i + d; if (i < 0 || j < 0 || j >= TABS.length) return false;
-      const k = TABS[j]; go(k); const sec = $('pg-' + k); if (sec) { sec.classList.remove('pgL', 'pgR'); void sec.offsetWidth; sec.classList.add(d > 0 ? 'pgR' : 'pgL'); setTimeout(() => sec.classList.remove('pgL', 'pgR'), 400); } return true; };
-    const pansX = el => { for (let n = el; n && n !== document.body; n = n.parentElement) {
-      if (/^(TEXTAREA|SELECT|VIDEO)$/.test(n.tagName) || (n.tagName === 'INPUT' && (n.type === 'range' || n === document.activeElement)) || n.dataset.noswipe != null) return true;
-      const cs = getComputedStyle(n); if (/none|pan-y/.test(cs.touchAction) && !/pan-x/.test(cs.touchAction)) return true;
-      if (/(auto|scroll)/.test(cs.overflowX) && n.scrollWidth > n.clientWidth + 2) return true; } return false; };
-    let s0 = null;
-    addEventListener('touchstart', e => { s0 = null; if (e.touches.length !== 1 || !ok()) return; const t = e.touches[0];
-      if (t.clientX < 16 || t.clientX > innerWidth - 16 || pansX(e.target)) return;   // (the very edges: the browser's own gesture)
-      s0 = { x: t.clientX, y: t.clientY, t: e.timeStamp }; }, { passive: true });   // (the events' own times: a busy page (the gacha machine) handles them late)
-    addEventListener('touchmove', e => { if (s0 && e.touches.length > 1) s0 = null; }, { passive: true });
-    addEventListener('touchend', e => { if (!s0) return; const t = e.changedTouches[0], dx = t.clientX - s0.x, dy = t.clientY - s0.y, dt = e.timeStamp - s0.t; s0 = null;
-      if (dt > 700 || Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 2 || !ok()) return;
-      const rtl = document.documentElement.dir === 'rtl'; step((dx < 0) !== rtl ? 1 : -1); }, { passive: true });
+    // (2026-11-24 user: フリックは外す) no sideways flick between pages any more; only the browser's own back / forward below
     // the browser's back / forward (its edge swipes) — 2026-11-24 user: 「ブラウザの端からスワイプした時の挙動と同じやり方で前に戻る」.
     // Every page (go), museum room and story is a history entry ({ pg, mu }), so back returns to where you were, step by step, and forward
     // goes again. Overlays with their own entries (an exhibit, a painting) close themselves; a board or sheet without one closes on back
