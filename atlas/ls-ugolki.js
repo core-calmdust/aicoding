@@ -9,7 +9,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const READY = ['b_step', 'b_jump', 'b_enter', 'b_finish', 's_far', 's_ladder', 's_road', 's_block', 's_leave'];
+  const READY = ['b_step', 'b_jump', 'b_enter', 'b_finish', 's_far', 's_ladder', 's_road', 's_block', 's_leave', 's_deep'];
   const SALT = { s_block: 2 };   // (the praise / miss openers of s_block came in the same order as b_enter's: a lesson's own order)
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
   const ENG = '../ugolki/engine.js?v=13-v3nn-b3';   // (= atlas/games/ugolki.js: one cache)
@@ -23,6 +23,7 @@
       s_ladder: '跳び台になるのは自分の駒だけじゃない。<b>黒の駒</b>も跳び越せるんだ。<br>黒の駒が1マスおきに並んでいたら、それは白のための<b>はしご</b>。黒に動かされる前に使っちゃおう。いちばん遠くまで行く手を探してね。',
       s_road: '前へ跳べる手がないときは、<b>1歩で道を作る</b>んだ。<br>駒が1マスおきに並ぶと、次の手でそこを続けて跳べる。どの1歩なら<b>次の手</b>でいちばん遠くまで進めるか考えよう（黒は動かないと考えてね）。',
       s_block: 'ホー、今度は<b>相手のじゃま</b>をする作戦だよ。黒も白の駒を跳び台にして、連続ジャンプで一気に進んでくるんだ。<br>黒が着地したい<b>マスに先に入る</b>か、跳び台になっている<b>白の駒をどかす</b>と、長い跳びは止まる。黒の次の手がいちばん短くなる手を探そう！',
+      s_deep: 'ホー、終盤は<b>手数の計算</b>が勝負だよ。黒は動かないと考えて、白があと何手で陣地の9マスを埋められるか数えてみよう。<br>陣地に入れる手があっても、それが<b>いちばん速いとは限らない</b>。入っても、そのあと完成までの手数が増えることがあるんだ。完成までの手数がいちばん少なくなる手を探そう！',
       s_leave: 'ホー、ウゴルキには<b>40手ルール</b>があるんだ。自分の<b>40手目が終わったとき、スタートの隅に駒が1こでも残っていたら負け</b>（黒の隅は空だから黒の勝ち）。<br>期限が近いのに隅の駒が残っていたら、ほかの手より先にその駒を動かそう。黒に出口をふさがれないかも考えてね。',
       b_finish: '陣地に8こ入って、あと<b>1マスだけ空いている</b>。最後の1こを入れれば完成だ！<br>完成したら黒に<b>最後の1手</b>があって、黒もそこで完成すれば引き分け。この問題の黒は次の1手では完成できないから、完成させれば勝ちだよ。',
     },
@@ -34,6 +35,7 @@
       s_ladder: ['白の番！ 黒の駒も使って、いちばん遠くへ行こう！', 'ホー、黒の駒の並びをよく見て。いちばん前へ行ける跳び方は？', '黒の駒も跳び台になるよ。いちばん進む手はどれ？', '白の番だよ。黒のはしごを借りて、いちばん遠くまで進もう！', '自分の駒だけで跳ぶより遠い道はないかな？'],
       s_road: ['白の番！ 次の手でいちばん遠くまで進めるのは、どの1歩？', 'ホー、今は前へ跳べない。次に長く跳べる道を1歩で作ろう！', '1マスおきに駒を並べるには、どの駒を動かす？', '白の番だよ。次の手のジャンプがいちばん長くなる1歩はどれ？', '跳び台を1こ置けば道がつながるかも。どこに置く？'],
       s_block: ['白の番！ 黒の長い跳びを止める手はどれ？', 'ホー、黒が遠くまで跳べる形だね。黒の次の手がいちばん短くなる手を探して！', '黒の連続ジャンプの道すじをたどってみよう。どこをふさげば止まる？', '白の番だよ。自分が進むより、黒を止めるほうが大きい場面なんだ。止める手はどれ？', '黒の着地マスと跳び台、両方を見くらべて！ いちばん効く手は？'],
+      s_deep: ['白の番！ 黒は動かないと考えて、陣地を最短の手数で完成させる手はどれ？', 'ホー、黒は動かないとしよう。9マスを埋めるのに、いちばん手数がかからない手は？', '黒が動かないとすると、白はあと何手で完成するかな？ その最短の手数を守る手を探して！', '白の番だよ。黒は動かないものとして、完成までの手数がいちばん少なくなる手を選ぼう！', '陣地に入れる手に飛びつく前に数えてみて。黒は動かないとして、最短で完成する手はどれ？'],
       s_leave: ['白の{t}手目！ 40手目が終わるまでに、スタートの隅を空にできる手は？', 'ホー、40手目まで、今の手を入れて残り{k}手。隅に残った駒を間に合わせよう！', '白の{t}手目だよ。40手ルールで負けない手を探して！', 'スタートの隅にまだ駒がいるね。白の{t}手目、出し切れる手はどれ？', '期限の40手目まで、今の手を入れてあと{k}手。どう動けば間に合う？'],
       b_finish: ['白の番！ 陣地を完成させる手はどれ？', 'ホー、空きはあと1マス。最後の1こを入れよう！', '外に残った1こ、どの道なら空きマスに届く？', '白の番だよ。1手で陣地を完成させて！', '最後の1こを入れて勝ち切ろう。どう動く？'],
     },
@@ -46,6 +48,7 @@
       s_ladder: ['光っている黒の駒は、白が跳び越せる駒。その並びをたどってみて。', 'ホー、金の輪の黒い駒が跳び台になるよ。続けて跳べる道はある？', '輪のついた黒の駒を跳び越すと、どこまで行けるかな？', '黒の駒が1マスおきに並んでいる所を探そう。光る駒がヒント！', '自分の駒と光る黒の駒、両方を跳び台にして数えてみて。', 'ホー、光っている黒の駒の向こうが空いていれば跳べるよ。'],
       s_road: ['光っている駒が、次の手で跳びたい駒。その前に跳び台を並べよう。', 'ホー、金の輪の駒の前に、1マスおきの並びを作れないかな？', '輪のついた駒の跳ぶ道に、すき間がないか見てみて。そこを1歩でうめよう。', '光る駒から見て、跳び台が1つ足りない所はどこ？', '動かすのは光っている駒じゃなくて、跳び台になる駒だよ。', 'ホー、跳び台は1マスおき。光る駒の進む向きに、すき間を探そう。'],
       s_block: ['光っている黒の駒が、次に長く跳ぼうとしている駒。着地するマスをたどってみて。', 'ホー、金の輪の黒い駒の跳ぶ道に、白の駒が跳び台として入っていないかな？', '輪のついた黒の駒が跳び越す駒と、着地するマスを順に数えよう。', '光る黒の駒の通り道のどこかに、白が先に入れるマスはある？', '光っている黒の駒の道をふさげば、黒の手は短くなるよ。'],
+      s_deep: ['光っているのが陣地の空きマス。黒が動かなければ、最短{N}手で全部埋まるよ。どの順番なら{N}手で足りる？', 'ホー、外の駒と光る空きマスを結んでみよう。最短は{N}手。どの駒をどこへ入れるか、1手ずつ数えてね。', '光る空きマスへの道を、駒ごとに数えよう。最短の{N}手で足りる手順の1手目はどれ？', 'すぐ陣地に入る手も、そのあと何手かかるか数えてみて。最短は{N}手だよ。'],
       s_leave: ['光っているのが、まだスタートの隅にいる駒。どこから外へ出られるかな？', 'ホー、金の輪の駒の出口になるマスを見て。黒にふさがれそうなマスはない？', '輪のついた駒を、40手目までに外へ出す順番を考えよう。', '光る駒が1こでも隅に残ったまま40手目が終わると負け。出口を数えよう！', 'ホー、光る駒が跳び越せる駒はいる？ 跳べば一気に隅の外まで行けるかも。', '光っている駒のとなりの空きマスを数えよう。黒の駒がそこへ来られるかも見てね。'],
       b_finish: ['光っているのが最後の空きマス。外の1こはそこへ届くかな？', 'ホー、金色のマスへの道を探そう。跳んで届くこともあるよ。', '外の駒から金色の空きマスまで、1歩か跳び越しで行ける道はどれ？', '金色のマスのとなりや、跳び越した先を見てみて。', '陣地の中の駒は動かさなくていい。外の1こに注目！', 'ホー、空きマスの手前に跳び台になる駒はいる？'],
     },
@@ -69,6 +72,10 @@
       leaveOut: ['緑で隅の駒が外へ出て、残りは{c}こ。黒がどう動いても、40手目でその駒も外へ出せる形なんだ。', 'まず1こ外へ出した！ 隅の残り{c}こは、黒がどこへ動いても次の40手目に出られるよ。', '先に出したのが大正解。黒がどう動いても、隅の残り{c}こは40手目に外へ出せるんだ。'],
       leaveIn: ['まだ隅の中だけど、ここからなら黒がどう動いても40手目に外へ出られるんだ。', '隅の中で動かしただけに見えるけど、ここからなら黒がどこをふさいでも40手目に外へ出せるんだ。'],
       leaveAll: ['緑でスタートの隅が空っぽになった。40手目のあとも負けにならないよ。', 'ホー、隅の駒が全部外へ出た。これで40手ルールは心配いらないんだ。'],
+      deepIn: ['緑で1こ陣地に入って、この手を入れて最短の{N}手で9マス完成！ ほかの手だと{S}手以上かかるんだ。', 'ホー、陣地に入れる順番がぴったり。黒が動かなければ、この手から{N}手で完成だよ（ほかの手は{S}手以上）。', '陣地に入れて、しかも最短の{N}手のまま！ ほかの手では{S}手以上かかるんだ。'],
+      deepInJ: ['跳んで陣地に入って、この手を入れて最短の{N}手で9マス完成！ ほかの手だと{S}手以上かかるんだ。', 'ホー、ジャンプで陣地に入ったね。黒が動かなければ、この手から{N}手で完成だよ（ほかの手は{S}手以上）。', '跳び越して陣地に入る道が最短の{N}手につながっていたね。ほかの手では{S}手以上かかるんだ。'],
+      deepOut: ['すぐには入れないけど、これが最短の順番！ この手を入れて{N}手で9マス完成。ほかの手だと{S}手以上かかるんだ。', 'ホー、あわてて入れなかったのが大正解。黒が動かなければ、この手から{N}手で完成だよ（ほかの手は{S}手以上）。', '先に道を整える1手だね。この手を入れて最短の{N}手、ほかの手では{S}手以上かかるんだ。'],
+      deepOutJ: ['跳ぶ手で順番を整えたね。すぐには入れないけど、この手を入れて最短の{N}手で9マス完成！ ほかの手だと{S}手以上かかるんだ。', 'ホー、ジャンプで一気に寄せたね。黒が動かなければ、この手から{N}手で完成だよ（ほかの手は{S}手以上）。', '跳ぶ道が最短の{N}手につながっていたね。ほかの手では{S}手以上かかるんだ。'],
       doneJ: ['跳び越して最後の空きマスへ！ 9マス完成で、黒は次の1手で追いつけないから白の勝ちだよ。', 'ホー、ジャンプで9マス完成！ 黒の最後の1手では完成できないから、これで勝ちだ。', '跳んで届く道を見つけたね。9マス全部うまって、黒はまだそろわないから白の勝ち！'],
     },
     n: {
@@ -107,6 +114,12 @@
       lFew: ['赤だとスタートの隅に{c}こ残ったまま。1手で外へ出せるのは1こだけだから、40手目のあとも隅に残って負けちゃう。緑なら間に合うよ。', '赤の手のあと、隅の駒は{c}こ。残りの40手目だけでは全部は出せないんだ。緑の手を見て。'],
       lBlock: ['赤のあと、黒に出口のマスをふさがれると、隅の{c}こは40手目に外へ出られない。緑なら黒がどう動いても間に合うよ。', '赤だと隅に{c}こ残って、黒が出口をふさげば40手目に出られず負け。緑ならふさがれても出られるんだ。'],
       lInside: ['赤は隅の中で動いただけ。黒に出口をふさがれると、40手目に外へ出られなくなるんだ。緑なら黒がどう動いても間に合うよ。', '赤は隅の中で動いただけで、外へは出ていない。黒が出口をふさげば40手目に出られず負け。緑の手を見て。'],
+      dIn: ['赤で1こ陣地に入るけど、そのあと完成まで全部で{x}手かかる。緑なら{N}手だから、{d}手遅れちゃうんだ。', '赤だと陣地に1こ入っても、9マスそろうまで{x}手。緑の{N}手より{d}手遅いんだ。', 'ホー、陣地に入る手に飛びついたね。赤だと完成まで{x}手、緑なら{N}手で、{d}手の差なんだ。'],
+      dInside: ['赤は陣地の中で動いただけで、完成まで{x}手。緑なら{N}手、{d}手の遅れだよ。', '赤だと駒が陣地の中で動いただけだから、完成まで{x}手かかる。緑の{N}手より{d}手遅いんだ。'],
+      dLeave: ['赤だと駒が陣地から出てしまって、完成まで{x}手。緑なら{N}手だから{d}手遅れるんだ。', '赤は陣地から出る手だから、9マスそろうまで{x}手。緑の{N}手より{d}手遅いよ。'],
+      dBack: ['赤は陣地から{k}マス遠ざかる手。完成まで{x}手かかって、緑の{N}手より{d}手遅いんだ。', '赤だと{k}マス遠ざかって、完成まで{x}手。緑なら{N}手、{d}手の差だよ。'],
+      dFwd: ['赤で{g}マス進むけど、完成までは{x}手。緑なら{N}手で、{d}手速いんだ。', '赤も{g}マス寄る手だけど、9マスそろうまで{x}手かかる。緑の{N}手より{d}手遅いよ。', 'ホー、{g}マス進んでも順番が悪いと遅くなる。赤だと完成まで{x}手、緑なら{N}手、{d}手の差なんだ。'],
+      dSide: ['赤は陣地に近づかない手で、完成まで{x}手。緑なら{N}手、{d}手の差だよ。', '赤だと距離が縮まらず、完成まで{x}手かかる。緑の{N}手より{d}手遅いんだ。'],
       fNear: ['赤い手は{g}マス近づくけど、空きマスには届かない。陣地の空きは1マスのままなんだ。緑なら完成！', '赤だと外の1こは{g}マス進むだけなので、陣地はまだ1マス空いている。緑の道なら届くよ。', '{g}マス寄っても空きマスに入らなければ未完成。緑なら最後の1マスまで届くね。'],
       fNone: ['赤い手のあとも外の1こは陣地に届かず、近づきもしない。空きは1マスのままだから未完成。緑なら完成！', '赤だと外の駒が空きマスへ近づかないんだ。陣地は1マス空いたまま。緑の道を見て。', '外の駒が横や後ろへ動くと、空きマスは埋まらない。緑なら完成だね。'],
       fInside: ['赤い手は陣地の中の駒を動かしただけだから、空きは1マスのままで完成しないんだ。緑なら外の1こが入るよ。', '赤は中の駒の手なので、陣地はまだ1マス空いている。外の1こを入れる緑の手で完成だ。', '中の駒を動かしても、外の1こが入らなければ完成しない。緑の手を見て！', '陣地の中で場所を変えるだけだと、空きは1マス残る。緑なら外の1こで埋まるね。', '赤い手では外の駒がそのままだから未完成。緑なら9マスそろうよ。'],
@@ -122,7 +135,7 @@
   }
   const fill = (s, v) => String(s).replace(/\{(\w+)\}/g, (_, k) => v[k] != null ? v[k] : '');
   // ---------- the board facts of one move (White = 1 to move; DIST = steps to the far corner) ----------
-  function fact(E, id, spec, m) {
+  function fact(E, id, spec, m, P) {
     E.setRule('c33');
     const p = E.Pos.from(spec), me = p.turn, T = E.target(me), D = E.DIST()[me], f = E.mFrom(m), t = E.mTo(m);
     if (!p.moves().includes(m)) return null;
@@ -135,6 +148,7 @@
     else if (id === 's_far' || id === 's_ladder') { o.opp = overOpp(E, p, m); o.k = !h ? (g > 0 ? 'step' : g < 0 ? 'back' : 'side') : g > 0 ? 'jump' : g < 0 ? 'jback' : 'jside'; }
     else if (id === 's_road') { const n = nextBest(E, q, D); o.nx = n.g; o.nh = n.h; o.k = h ? 'jump' : 'step'; }
     else if (id === 's_block') { const b = blackBest(E, q), b0 = blackBest(E, p); o.b = b.g; o.b0 = b0.g; o.k = b.g >= b0.g ? (b.g > b0.g ? 'more' : 'still') : 'part'; o.land = b0.all.some(x => x.path.slice(1).includes(t)); o.spring = b0.all.some(x => x.mid.includes(f)); }
+    else if (id === 's_deep') { const dn = new Map((P && P.dn) || []); o.n = dn.get(m); o.k = !o.inF && o.inT ? 'in' : o.inF && o.inT ? 'inside' : o.inF ? 'leave' : g > 0 ? 'fwd' : g < 0 ? 'back' : 'side'; }
     else if (id === 's_leave') { const H = E.HOME()[me]; o.c = q.inHome(me); o.left = E.R.limit - p.movesOf(me) - 1; o.t = p.movesOf(me) + 1; o.safe = o.left <= 1 ? leaveSafe(E, q, o.left) : null; o.homeF = !!H[f]; o.homeT = !!H[t]; o.k = o.safe ? 'out' : o.homeF && o.homeT ? 'inside' : o.c > o.left ? 'few' : 'block'; }
     return o;
   }
@@ -154,6 +168,7 @@
   }
   // the question (s_leave says which move it is: the 3D board shows no move count)
   function askOf(E, id, P, V, last) {
+    if (id === 's_deep') return (last ? 'ホー、これで最後の問題！ ' : '') + V.v(JA.ask[id]);
     if (id !== 's_leave') return V.v(last ? JA.askLast : JA.ask[id]);
     E.setRule('c33'); const p = E.Pos.from(P.s), t = p.movesOf(1) + 1;
     return (last ? 'ホー、これで最後の問題！ ' : '') + fill(V.v(JA.ask[id]), { t, k: E.R.limit - t + 1 });
@@ -164,14 +179,16 @@
   function nextBest(E, q, D) { const r = q.clone(); r.side = 0; let b = { g: -99, h: 0, m: -1 }; for (const m of r.moves()) { if (m === E.PASS) continue; const g = D[E.mFrom(m)] - D[E.mTo(m)], h = E.isJump(r, m) ? E.path(r, m).length - 1 : 0; if (g > b.g || (g === b.g && h > b.h)) b = { g, h, m }; } b.pos = r; return b; }
   // the words for a move u of a problem P: { k, html }
   function say(E, id, P, u, lang, V, last, tx) {
-    const f = fact(E, id, P.s, u), fb = fact(E, id, P.s, P.best), right = P.ok.includes(u);
+    const f = fact(E, id, P.s, u, P), fb = fact(E, id, P.s, P.best, P), right = P.ok.includes(u);
     if (lang !== 'ja') return { f, html: tx(right ? 'why' : 'ng', { m: SPOT('ok'), x: SPOT('ng') }) };
     const v = { n: P.ok.length, G: fb.g, g: f.g, k: -f.g, h: f.h, a: id === 'b_enter' && (f.k === 'inside') ? f.home0 : f.home, holes: f.holes, o: f.opp, N: fb.nx, nx: f.nx, nh: f.nh };
     if (right) {
       const k = id === 'b_step' ? 'step' : id === 'b_jump' ? (f.h > 1 ? 'chain' : 'jump1') : id === 'b_enter' ? (f.h ? 'inJ' : 'in') : id === 's_far' ? 'far' : id === 's_ladder' ? 'ladder' : id === 's_road' ? (f.g < 0 ? 'roadB' : 'road')
+        : id === 's_deep' ? (f.k === 'in' ? (f.h ? 'deepInJ' : 'deepIn') : (f.h ? 'deepOutJ' : 'deepOut'))
         : id === 's_block' ? (f.land ? 'blockL' : 'blockS') : id === 's_leave' ? (f.left === 0 ? 'leave0' : !f.c ? 'leaveAll' : f.homeF && f.homeT ? 'leaveIn' : 'leaveOut') : (f.h ? 'doneJ' : 'done');
       if (id === 's_block') { v.B = f.b; v.b0 = f.b0; }
       if (id === 's_leave') { v.t = f.t; v.c = f.c; }
+      if (id === 's_deep') { v.N = f.n; v.S = Math.min(...(P.dn || []).map(x => x[1]).filter(n => n > f.n)); }
       if (id === 's_block' && f.g < 0) return { f, k, html: `${V.v(JA.cheer)} ${fill(V.v(JA.w[k]), v)} 白は1マス下がるけど、黒は${f.b0 - f.b}マスも遅れるんだ。${last ? '' : ' ' + V.v(JA.push)}` };
       if (id === 'b_jump' || id === 's_far' || id === 's_ladder') v.G = f.g;
       if (id === 's_road') v.N = f.nx;
@@ -192,6 +209,7 @@
       else k = 'fJump';
     } else if (id === 's_road') k = f.h ? (f.nx > 0 ? 'rJump' : 'rJump0') : (f.nx > 0 ? 'rStep' : 'rStep0');
     else if (id === 's_block') { v.B = fb.b; v.b = f.b; k = f.k === 'more' ? 'bMore' : f.k === 'part' ? 'bPart' : f.g >= 2 ? 'bLure' : 'bStill'; }
+    else if (id === 's_deep') { v.x = f.n; v.N = fb.n; v.d = f.n - fb.n; k = { in: 'dIn', inside: 'dInside', leave: 'dLeave', back: 'dBack', fwd: 'dFwd', side: 'dSide' }[f.k]; }
     else if (id === 's_leave') { v.c = f.c; k = f.left === 0 ? 'lFew0' : f.c > f.left ? 'lFew' : f.k === 'inside' ? 'lInside' : 'lBlock'; }
     else if (id === 'b_enter') k = f.k;
     else k = { near: 'fNear', none: 'fNone', inside: 'fInside', leave: 'fLeave' }[f.k];
@@ -217,7 +235,7 @@
       LKEY: 'aicoding-ugolki-lessons', data: null, I: null, JA, READY,
       load() {
         const ld = u => fetch(u).then(r => r.text()).catch(() => '');
-        return this.p || (this.p = Promise.all([getJ('../ugolki/lessons.json?v=6'), ld('../ugolki/i18n-ug.js?v=4lv6'), ld('../ugolki/i18n-ug-more.js?v=4lv6'), ld('../ugolki/i18n-ug-eu.js?v=4lvn6'), ld('../ugolki/i18n-ug-hiar.js?v=4lv-l14-6'),
+        return this.p || (this.p = Promise.all([getJ('../ugolki/lessons.json?v=7'), ld('../ugolki/i18n-ug.js?v=4lv7'), ld('../ugolki/i18n-ug-more.js?v=4lv7'), ld('../ugolki/i18n-ug-eu.js?v=4lvn7'), ld('../ugolki/i18n-ug-hiar.js?v=4lv-l14-7'),
           loadJs(ENG, () => !!window.UgolkiEngine)])
           .then(([d, ...src]) => { const w = { I18N: {} }; LANGS.forEach(l => { w.I18N[l] = {}; }); for (const tx of src.slice(0, 4)) { try { new Function('window', 'I18N', tx)(w, w.I18N); } catch (e) { console.warn('[lessons3d] ugolki texts', e); } }
             this.I = w.I18N; this.data = d; return this; })
@@ -238,7 +256,7 @@
         const probs = s.problems.map((P, pi) => {
           const last = pi === N - 1;
           const o = { pos: { spec: P.s, me: 1 }, kind: 'best', P, ans: P.best, ok: P.ok.slice(), own: ja, ckls: true, dHint: true, hint: E ? hintPts(E, id, P) : [],
-            ask: ja ? askOf(E, id, P, V, last) : T('goal'), hintTx: ja ? V.v(JA.hint[id]) : T('hint') };
+            ask: ja ? askOf(E, id, P, V, last) : T('goal'), hintTx: ja ? fill(V.v(JA.hint[id]), { N: id === 's_deep' ? Math.min(...P.dn.map(x => x[1])) : '' }) : T('hint') };
           const sayU = u => say(E, id, P, u, lang, V, last, (k, v) => T(k, v)).html;
           o.good = u => sayU(u == null ? P.best : u);
           o.ng = u => { if (u == null || P.ok.includes(u)) { E.setRule('c33'); u = E.Pos.from(P.s).moves().find(x => !P.ok.includes(x)); } return sayU(u); };
