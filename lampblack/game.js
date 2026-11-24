@@ -165,12 +165,15 @@
     const strip = $('strip');
     let h = 0;
     if (pc) {
-      h = Math.max(250, strip.offsetHeight + 24);
+      h = Math.max(250, strip.offsetHeight + 24, Math.round(innerHeight * .42));   // the road below the backdrop: the same height for text and choices
       // while the text runs, the dock never shrinks (and starts tall enough for most lines): the backdrop keeps its size line to line
       if (!$('tx').classList.contains('hide')) { h = Math.max(h, Math.round(innerHeight * .42), G.dockText || 0); G.dockText = h; }
       else G.dockText = 0;
     }
     document.documentElement.style.setProperty('--dockH', (pc ? h : 0) + 'px');
+    // how far down the road the front row stands: fixed for the window, so nobody moves when the text strip changes
+    document.documentElement.style.setProperty('--fs', pc ? '1.1' : '1');
+    document.documentElement.style.setProperty('--depth', (pc ? Math.max(0, Math.round(innerHeight * .42) - 250) : 0) + 'px');
     if (!pc) {
       const sh = Math.round(Math.min(innerHeight * .46, innerWidth * 1.05));
       document.documentElement.style.setProperty('--stageH', sh + 'px');
@@ -208,7 +211,7 @@
       const row = i < front ? 0 : 1, k = row ? i - front : i, m = row ? n - front : front;
       const x = m === 1 ? (o.x || 50) : (o.span ? o.span[0] : 10) + ((o.span ? o.span[1] - o.span[0] : 80) * (k + (row ? .5 : 0)) / Math.max(1, m - (row ? 0 : 1)));
       el.classList.toggle('back', !!row); el.classList.toggle('front', !row);
-      requestAnimationFrame(() => { el.style.left = Math.min(94, Math.max(6, x)) + '%'; el.style.bottom = (row ? 12 : 0) + '%'; el.style.opacity = ''; });
+      requestAnimationFrame(() => { el.style.left = Math.min(94, Math.max(6, x)) + '%'; el.style.bottom = row ? '12%' : ''; el.style.opacity = ''; });
       if (o.fallen === id) el.classList.add('fallen');
     });
     for (const id in have) { const e = have[id]; e.style.opacity = '0'; setTimeout(() => e.remove(), 600); }
