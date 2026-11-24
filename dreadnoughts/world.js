@@ -244,14 +244,16 @@ function fit() {
 function poseFor(name) {
   const cam = V.cam, w = innerWidth, h = innerHeight, sf = V.safe();
   if (name === 'z0' || name === 'z1') {
-    const z = name === 'z1' ? 1 : 0, zc = ZC[z], pitch = (w / h < .8 ? 62 : 58) * Math.PI / 180, fov = 24;
+    // (2026-11-24 user: スマホ版はパースをやめて、左右いっぱいまで盤を出す) a portrait phone looks straight down through a long lens —
+    // a near-flat plan view, the grid square on screen — and the zone fills the width edge to edge
+    const flat = w / h < .8, z = name === 'z1' ? 1 : 0, zc = ZC[z], pitch = (flat ? 89.9 : 58) * Math.PI / 180, fov = flat ? 8 : 24, edge = flat ? .995 : .96;
     // the free area (between the HUD panels) as a window into the full view: shift the principal point there and fit the zone inside it
     const sx = sf.x + sf.w / 2, sy = sf.y + sf.h / 2, ax = sf.w / w, ay = sf.h / h;
     const pts = [[-H - .9, -H - .9], [H + .55, -H - .9], [-H - .9, H + .55], [H + .55, H + .55]].map(([x, zz]) => new T.Vector3(zc[0] + x, 0, zc[1] + zz));
     const save = { fov: cam.fov }; cam.fov = fov; cam.clearViewOffset(); cam.updateProjectionMatrix();
     let tz = 0, best = 30;
     const place = (d, oz) => { cam.position.set(zc[0] - .18, Math.sin(pitch) * d, zc[1] + oz + Math.cos(pitch) * d); cam.lookAt(zc[0] - .18, 0, zc[1] + oz); cam.updateMatrixWorld(); };
-    for (let it = 0; it < 4; it++) { let lo = 4, hi = 120; for (let k = 0; k < 32; k++) { const d = (lo + hi) / 2; place(d, tz); let m = 0; for (const p of pts) { const q = p.clone().project(cam); m = Math.max(m, Math.abs(q.x) / ax, Math.abs(q.y) / ay); } if (m > .96) lo = d; else hi = d; } best = hi; place(best, tz); const ys = pts.map(p => p.clone().project(cam).y); tz -= (Math.max(...ys) + Math.min(...ys)) / 2 / ay * 3; }
+    for (let it = 0; it < 4; it++) { let lo = 4, hi = flat ? 500 : 120; for (let k = 0; k < 32; k++) { const d = (lo + hi) / 2; place(d, tz); let m = 0; for (const p of pts) { const q = p.clone().project(cam); m = Math.max(m, Math.abs(q.x) / ax, Math.abs(q.y) / ay); } if (m > edge) lo = d; else hi = d; } best = hi; place(best, tz); const ys = pts.map(p => p.clone().project(cam).y); tz -= (Math.max(...ys) + Math.min(...ys)) / 2 / ay * 3; }
     place(best, tz); cam.fov = save.fov; cam.updateProjectionMatrix();
     return { p: cam.position.clone(), t: new T.Vector3(zc[0] - .18, 0, zc[1] + tz), fov, off: [w / 2 - sx, h / 2 - sy] };
   }
