@@ -42,10 +42,10 @@
     // (2026-11-24 audit textKB) one file only: tools/museum-read-split.js fills each language's file with English for anything it lacks
     // (2026-11-24 audit textKB, per screen) that file is now the shelf's index only; each story's text is museum/read-i18n/<lang>/<id>.js, which
     // read.js loads when the story opens (with ?v=READ_I18N_V, read as AtlasMuseum.readV)
-    { id: 'read', src: () => [`museum/read-i18n/${rl()}.js?v=${READ_I18N_V}`, 'museum/read.js?v=74'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T && MUSEUM_READ_T[rl()]), render: (el, c) => AtlasRead.render(el, c) },
+    { id: 'read', src: () => [`museum/read-i18n/${rl()}.js?v=${READ_I18N_V}`, 'museum/read.js?v=75'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T && MUSEUM_READ_T[rl()]), render: (el, c) => AtlasRead.render(el, c) },
     { id: 'chance', src: () => ['museum/chance-i18n/en.js?v=' + CHANCE_I18N_V, ...(rl() !== 'en' ? [`museum/chance-i18n/${rl()}.js?v=${CHANCE_I18N_V}`] : []), 'museum/chance.js?v=7'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T && MUSEUM_CHANCE_T.en && MUSEUM_CHANCE_T[rl()]), render: (el, c) => AtlasChance.render(el, c) },   // (per language)
   ];
-  const READ_I18N_V = 35, PAINT_I18N_V = 16, CHANCE_I18N_V = 1, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
+  const READ_I18N_V = 36, PAINT_I18N_V = 16, CHANCE_I18N_V = 1, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
   const KEY = 'atlas-museum-room';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const loaded = {};
