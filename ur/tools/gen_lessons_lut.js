@@ -201,6 +201,7 @@ function main() {
   const msg = {}; for (const k in MSG) msg[k] = MSG[k]; Object.assign(msg, RC.MSG);
   const ui = Object.assign({}, X.UI);
   const data = { version: 2, rule: 'finkel', lut: 'RoyalUr.net finkel.rgu / blitz.rgu', score: { per: 20, pass: 75, hint: [16, 12], retry: 10, answer: 0 }, ui, msg, cats, steps };
+  require('./fix_count_choice.js').apply(data, UF);   // (追54: the counting problems' errors and breakdowns from the board)
   const file = path.join(__dirname, '..', 'lessons.json');
   fs.writeFileSync(file, JSON.stringify(data));
   console.log('wrote', file, steps.map(s => s.id + '(' + s.problems.map(q => q.kind === 'move' ? (q.ev[0][2] - q.ev[1][2]).toFixed(2) : 'c').join(',') + ')').join(' '));

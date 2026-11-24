@@ -96,11 +96,30 @@
         lead2: ['両方の合計を出して、差を見てみよう！', '少ないほうがゴールに近いんだ。差はいくつかな？'] },
       cw: { 'c.roll': ['4個のうち青い印が<b>{n}個</b>上を向く出方は、16通り中<b>{m}通り</b>なんだ。', '<b>{n}</b>が出るのは16通りのうち<b>{m}通り</b>。覚えておくと便利だワン！', '<b>{n}</b>の出方は<b>{m}通り</b>あるから、確率は<b>{m}/16</b>！', '16通りのうち<b>{n}</b>になるのは<b>{m}通り</b>だよ。'],
         'c.risk': ['相手の駒からの距離の目を足すんだ。{list} で、合わせて<b>{m}/16</b>！', '届く目の出やすさを足すと {list}、つまり<b>{m}/16</b>だね。', '{list} と足して、<b>{m}/16</b>になるワン。', '距離の目ごとに数えると {list}、合計<b>{m}/16</b>なんだ。', '当たる目を拾っていくと {list}。全部で<b>{m}/16</b>！', '{list} を合わせた<b>{m}/16</b>が、つかまる確率だよ。'],
+        'c.pipsB': ['盤の上の駒を足すと {list}、合計<b>{m}</b>歩なんだ。', '{list} で<b>{m}</b>歩。数え方はばっちりだワン！', '黄色の数字をひとつずつ足して、<b>{m}</b>歩になるね。', '駒ごとの残りを合わせると<b>{m}</b>歩なんだ。'],
+        'c.pipsBO': ['盤の上の駒に、まだ入っていない<b>{k}個</b>を15歩ずつ足して {list}、合計<b>{m}</b>歩！', '待っている駒も1個15歩。{list} で<b>{m}</b>歩なんだ。', '盤の上の数字と、待っている{k}個の15歩を合わせて<b>{m}</b>歩だワン。', '待っている駒まで足して、合計<b>{m}</b>歩になるね。'],
+        'c.pipsBG': ['盤の上の駒を足すと {list}、合計<b>{m}</b>歩。ゴールした{g}個は0歩だから数えないんだ。', '{list} で<b>{m}</b>歩。上がった{g}個は0歩だワン！', '黄色の数字を足して<b>{m}</b>歩。ゴールした駒は数えなくていいんだ。', '盤の上の駒だけを合わせて<b>{m}</b>歩。上がった駒は0歩だね。'],
+        'c.pipsBOG': ['まだ入っていない{k}個は15歩ずつ、上がった{g}個は0歩。{list} で合計<b>{m}</b>歩！', '盤の上の駒と待っている駒を足して {list} ＝ <b>{m}</b>歩。ゴールした{g}個は数えないんだ。', '待っている{k}個の15歩も入れて<b>{m}</b>歩。上がった駒は0歩だワン。', '盤の上の数字に、待っている駒の分を足して<b>{m}</b>歩になるね。'],
         'c.pips': ['ひとつずつ足すと、合計<b>{m}</b>歩なんだ。', '残り歩数を足していくと<b>{m}</b>。数え方はばっちりだワン！', '白の駒をぜんぶ合わせて<b>{m}</b>歩。これが答え！', '合計は<b>{m}</b>歩になるんだ。'],
         'c.rpips': ['相手の駒も同じように数えるよ。合計<b>{m}</b>歩！', '黒の駒をぜんぶ合わせると<b>{m}</b>歩になるんだ。', '相手の残りは合わせて<b>{m}</b>歩だワン。'],
         'c.lead2y': ['残り歩数は きみ<b>{a}</b>・相手<b>{b}</b>。<b>{d}歩</b>差で、きみがリードしているんだ！', 'きみ<b>{a}</b>歩、相手<b>{b}</b>歩。少ないきみが<b>{d}歩</b>リードだね！', '<b>{a}</b>対<b>{b}</b>で、きみのほうが<b>{d}歩</b>ゴールに近いワン！'],
         'c.lead2r': ['残り歩数は きみ<b>{a}</b>・相手<b>{b}</b>。<b>{d}歩</b>差で、相手がリードしているんだ。', 'きみ<b>{a}</b>歩、相手<b>{b}</b>歩。少ない相手が<b>{d}歩</b>リードしているね。', '<b>{a}</b>対<b>{b}</b>で、相手のほうが<b>{d}歩</b>ゴールに近いワン。'] },
-      cn: { 'c.mostNg': ['<b>{x}</b>が出るのは16通り中<b>{m}通り</b>。2の6通りにはかなわないんだ。', '<b>{x}</b>は<b>{m}通り</b>しかないワン。いちばん多いのは6通りの目だよ。'],
+      cn: { 'c.oneWayNg': ['<b>{x}</b>は、{n}個上を向く出方を1通りと数えた数なんだ。どの{n}個が上を向くかで変わるから、<b>{m}通り</b>あるワン。', '上を向く{n}個の選び方はいくつもあるから、1通りじゃなくて<b>{m}通り</b>なんだ。'],
+        'c.halfNg': ['<b>{x}</b>は、印1個が上を向く確率（半分）なんだ。{n}は4個の向きの組み合わせで決まるから、16通り中<b>{m}通り</b>だワン。', '1個だけなら半分だけど、{n}は4個の組み合わせで決まるから、16通り中<b>{m}通り</b>だよ。'],
+        'c.nearNg': ['<b>{x}</b>は、いちばん近い駒の目だけだね。<b>{d}マス</b>後ろの駒も{d}が出れば届くんだ。', '近い駒だけじゃないワン！ {d}マス後ろの駒も{d}が出れば届くから、その目も足すんだ。'],
+        'c.aheadNg': ['<b>{x}</b>は、{d}マス前の相手の駒まで数えちゃってる。駒は前にしか進まないから、前の駒は来ないんだ。', '前にいる駒は後ろへ戻れないから、追いかけてこられないワン。{d}マス前の駒は数えないよ。'],
+        'c.privNg': ['<b>{x}</b>は、相手の手前の列の駒を忘れてるね。その駒も{d}が出れば届くんだ。', '手前の列の駒も、{d}が出ればまん中の列に出てきて取りに来るワン。'],
+        'c.safeNg': ['<b>{x}</b>は、取られない確率（16−{m}）だね。聞いているのは取られるほうだから、逆なんだ。', 'それは逃げきれる確率だワン。取られる確率を聞いているから、届く目の分だけを数えるんだ。'],
+        'c.offNg': ['<b>{x}</b>は、まだ入っていない{k}個を忘れてるね。待っている駒もゴールまで15歩あるから、足すんだ。', '盤の外で待っている{k}個も、1個15歩あるから数に入れるワン！'],
+        'c.offOnceNg': ['<b>{x}</b>は、待っている{k}個を1個分しか数えていないね。1個ずつ15歩だから15×{k}なんだ。', '待っている駒は重なって見えても{k}個あるから、15×{k}だワン。'],
+        'c.off14Ng': ['<b>{x}</b>は、待っている駒を14歩と数えてるね。14マス進んだあと、上がるのにもう1歩いるから15歩なんだ。', '道は14マスだけど、上がるのにもう1歩いるから、待っている駒は15歩だワン！'],
+        'c.goalNg': ['<b>{x}</b>は、ゴールした{k}個まで15歩と数えちゃってる。上がった駒はもう歩かないから0歩なんだ。', 'ゴールした駒はもう歩かなくていいから、0歩で数えるワン。'],
+        'c.minus1Ng': ['<b>{x}</b>は、14−位置で数えてるね。上がるには15マス目まで進むから、15−位置なんだ。', '14−位置だと1個につき1歩ずつ足りないワン。上がるのは15マス目だから、15−位置だよ。'],
+        'c.posNg': ['<b>{x}</b>は、いる場所の数をそのまま足しちゃってる。聞いているのは残り歩数だから、15−位置なんだ。', '何マス目かを足すと、進んだ駒ほど大きくなっちゃうワン。あと何歩かを足すんだ！'],
+        'c.leadOffNg': ['<b>{x}</b>は、待っている駒を数えずにくらべた答えだね。待っている駒も足すと、きみ<b>{a}</b>・相手<b>{b}</b> なんだ。', '盤の外の駒も1個15歩あるから、足すと きみ<b>{a}</b>・相手<b>{b}</b> になるワン。'],
+        'c.leadOff14Ng': ['<b>{x}</b>は、待っている駒を14歩と数えた答えだね。15歩で数えると、きみ<b>{a}</b>・相手<b>{b}</b> なんだ。', '待っている駒は1個15歩だから、きみ<b>{a}</b>・相手<b>{b}</b> になるワン。'],
+        'c.leadGoalNg': ['<b>{x}</b>は、ゴールした駒も15歩と数えた答えだね。上がった駒は0歩だから、きみ<b>{a}</b>・相手<b>{b}</b> なんだ。', '上がった駒はもう歩かないから数えないワン。きみ<b>{a}</b>・相手<b>{b}</b> だよ。'],
+        'c.mostNg': ['<b>{x}</b>が出るのは16通り中<b>{m}通り</b>。2の6通りにはかなわないんだ。', '<b>{x}</b>は<b>{m}通り</b>しかないワン。いちばん多いのは6通りの目だよ。'],
         'c.rollNg': ['<b>{x}</b>は出目が<b>{v}</b>になる確率だから、ちがうんだ。', '<b>{x}</b>だと、<b>{v}</b>が出る確率になっちゃうワン。', '<b>{x}</b>なら<b>{v}</b>の出やすさだから、別の目だね。'], 'c.roll8Ng': ['<b>{x}</b>になる目はないから、ちがうワン。', '16通りで<b>{x}</b>になる目はひとつもないから、ちがうね。'], 'c.lowNg': ['<b>{x}</b>だと少なすぎるから、数え落としがあるね。', '<b>{x}</b>では足りないワン。足しわすれがあるみたい。', '<b>{x}</b>は小さすぎるから、まだ数えていないものがあるんだ。', 'それだと<b>{x}</b>。もう少し大きくなるはずだから、数え直してみて！'], 'c.highNg': ['<b>{x}</b>だと多すぎるから、数えなくていいものまで足しているね。', '<b>{x}</b>では大きすぎるワン。よけいに足したところがあるんだ。', '<b>{x}</b>は多いから、どこかで数えすぎているみたい。', 'それだと<b>{x}</b>。もっと小さくなるはずだから、見直してみて！'], 'c.sideNg': ['残り歩数が少ないほうがリードだから、逆なんだ。', 'ゴールに近いのは歩数が少ないほうだから、そっちじゃないワン。'] },
     };
     const ROT = (a, k) => a.map((_, i) => a[(i + k) % a.length]);
@@ -124,7 +143,7 @@
       LKEY: 'aicoding-ur-lessons', data: null,
       load() {
         const eng = window.UrEngine ? Promise.resolve() : new Promise(res => { const sc = document.createElement('script'); sc.src = '../ur/engine.js?v=6'; sc.onload = res; sc.onerror = res; document.head.appendChild(sc); });
-        return this.p || (this.p = Promise.all([getJ('../ur/lessons.json?v=20261124d'), eng]).then(([d]) => { this.data = d; return this; }).catch(e => { this.p = null; throw e; }));
+        return this.p || (this.p = Promise.all([getJ('../ur/lessons.json?v=20261124e'), eng]).then(([d]) => { this.data = d; return this; }).catch(e => { this.p = null; throw e; }));
       },
       list(kind, lang) {
         if (kind === 'open') return [];
@@ -160,10 +179,13 @@
         const probs = s.problems.map((q, pi) => {
           const last = pi === N - 1;
           if (q.kind === 'choice') {
-            const KO = { 'c.roll': 'roll', 'c.risk': 'risk', 'c.pips': 'pips', 'c.rpips': 'rpips', 'c.lead2y': 'lead2', 'c.lead2r': 'lead2' }, kind = KO[q.why[0]];
+            const KO0 = { 'c.roll': 'roll', 'c.risk': 'risk', 'c.pips': 'pips', 'c.rpips': 'rpips', 'c.lead2y': 'lead2', 'c.lead2r': 'lead2' }, kindOf = w => /^c\.pipsB/.test(w[0]) ? (w[1].r ? 'rpips' : 'pips') : KO0[w[0]], kind = kindOf(q.why);
+            // (追54: a hint names only what is on this board — the pieces still waiting, the pieces home)
+            const sides = kind === 'lead2' ? [0, 1] : kind === 'rpips' ? [1] : [0], wait = sides.some(sd => q.s && q.s.pos[sd].includes(0)), home = sides.some(sd => q.s && q.s.pos[sd].includes(15));
+            const ok54 = t => (!/盤に出ていない/.test(t) || wait) && (!/上がった駒/.test(t) || home), hl = l => (l || []).filter(ok54);
             const lab = x => { const t = tx(x, lang); return ja ? t.replace('あなた', 'きみ').replace('相手', '相手') : t; };
             const o = { kind: 'choice', P: q, pos: this.pos(q.s || EMPTY, null, q.marks || [], true, q.why[0] === 'c.roll' ? q.why[1].n : null), marks: q.marks || [], choices: q.opts.map(lab), right: q.ans, ans: q.ans, dHint: true, hint: [], own: ja,
-              ask: ja ? fill(JA.cq[kind][Math.min(JA.cq[kind].length - 1, s.problems.slice(0, pi).filter(x => x.why && KO[x.why[0]] === kind).length)], q.why[1] || {}) : tx(q.q, lang),   /* (in order: 「今度は」 never first, 「これで最後」 last) */ hintTx: ja ? V.v(JA.chint[kind === 'roll' ? 'roll' : kind === 'lead2' ? 'lead2' : id] || JA.chint.prob) : tx(s.hints[pi % 2], lang) };
+              ask: ja ? fill(JA.cq[kind][Math.min(JA.cq[kind].length - 1, s.problems.slice(0, pi).filter(x => x.why && kindOf(x.why) === kind).length)], q.why[1] || {}) : tx(q.q, lang),   /* (in order: 「今度は」 never first, 「これで最後」 last) */ hintTx: ja ? V.v(hl(JA.chint[kind === 'roll' ? 'roll' : kind === 'lead2' ? 'lead2' : id] || JA.chint.prob)) : tx((q.hints && q.hints[pi % 2]) || s.hints[pi % 2], lang) };
             const why0 = this.msg(q.why, lang), why = () => ja ? fill(V.v(JA.cw[q.why[0]]), q.why[1]) : why0;
             o.good = () => ja ? `${V.v(JA.cheer)} ${why()}${last ? ' ' + V.v(JA.push) : ''}` : why0;
             o.ng = u => { const i = typeof u === 'number' && u !== q.ans ? u : q.ans === 0 ? 1 : 0, g = q.ngo && q.ngo[i];

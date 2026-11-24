@@ -5,7 +5,7 @@
 (function () {
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles', PZ_LAST = STORE + '-pz-last', PZ_TAB = STORE + '-pz-tab', LS_CAT = STORE + '-ls-cat';
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=5').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=6').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LL = o => o == null ? '' : typeof o === 'string' ? o : (o[LANG] !== undefined ? o[LANG] : o.en !== undefined ? o.en : o.ja || '');
 const fill = (s, v) => String(s).replace(/\{(\w+)\}/g, (_, k) => v && v[k] !== undefined ? v[k] : '');
 const UI = (D, k, v) => fill(D && D.ui && D.ui[k] ? LL(D.ui[k]) : k, v);
@@ -239,8 +239,9 @@ $('#lsHint').onclick = () => {
   if (lesson.done) return;
   lesson.hint++;
   if (lesson.phase === 'ramp') { fb(`💡 ${esc(LL(it.h) || UI(D, 'look'))}`); if (it.look) { special.marks = (it.marks || []).concat(it.look); update(); } return; }
-  if (lesson.hint === 1) fb(`💡 ${esc(LL(s.hints && s.hints[0]) || UI(D, 'look'))}`);
-  else if (lesson.hint === 2) { fb(`💡 ${esc(LL(s.hints && s.hints[1]) || UI(D, 'look'))}`); if (it.look) { special.marks = (it.marks || []).concat(it.look); update(); } }
+  const hs = it.hints || s.hints;   // (2026-11-24 追54: a counting problem has its own hints — only what is on its board)
+  if (lesson.hint === 1) fb(`💡 ${esc(LL((it.hints && it.hints[0]) || (s.hints && s.hints[0])) || UI(D, 'look'))}`);
+  else if (lesson.hint === 2) { fb(`💡 ${esc(LL(hs && hs[1]) || UI(D, 'look'))}`); if (it.look) { special.marks = (it.marks || []).concat(it.look); update(); } }
   else {
     lesson.done = true; lesson.scores[lesson.i] = 0;
     if (it.kind === 'choice') fb(`${esc(UI(D, 'ans', { m: LL(it.opts[it.ans]) }))} — ${esc(MSG(D, it.why))}`);
