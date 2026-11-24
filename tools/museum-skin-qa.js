@@ -49,7 +49,8 @@ const PHONE = process.env.PHONE === '1';
           });
           return R;
         }, band);
-        const tag = await p.addStyleTag({ content: '#pg-museum *{color:transparent!important;-webkit-text-fill-color:transparent!important;text-shadow:none!important}' });
+        // (the stamp toast is a passing message laid over the page: hidden in the shot, so the text under it is measured against the page)
+        const tag = await p.addStyleTag({ content: '#pg-museum *{color:transparent!important;-webkit-text-fill-color:transparent!important;text-shadow:none!important}.mutoast{display:none!important}' });
         const file = `${OUT}${st}-${sk}-${k}.png`; await p.screenshot({ path: file });
         await tag.evaluate(n => n.remove());
         shots.push({ file, items }); y += step; k++;
