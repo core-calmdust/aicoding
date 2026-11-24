@@ -695,10 +695,10 @@
   }
   /* 矛盾を突く：誰の発言か → どの証拠をつきつけるか → 発言のどこがおかしいか。正しく突けば嘘が暴かれ、外せばあなたの言葉が軽くなる */
   const nightName = n => n === 0 ? '最初の夜' : dayName(n) + 'の夜';
-  function partText(p) {
+  function partText(p, st0) {
     if (p.k === 'loc') return `夜は${locName(p.loc)}にいた`;
     if (p.k === 'fig') return `${SP.fig(st, p.cat, p.val)}を見た`;
-    if (p.k === 'who') return `${nm(p.who)}を${locName(p.loc)}で見た`;
+    if (p.k === 'who') { const lp = st0 && st0.parts.find(q => q.k === 'loc'); return `${nm(p.who)}を${lp && E.near(st, lp.loc).includes(p.loc) ? 'となりの' : ''}${locName(p.loc)}で見た`; }
     return `現場の痕跡は「${SP.traceShort(st, p)}」だった`;
   }
   function evText(e) {
@@ -714,14 +714,14 @@
     if (!who) return debate();
     const mine = SL.filter(x => x.who === who).sort((a, b) => b.night - a.night);
     let stmt = mine[0];
-    if (mine.length > 1) { const v = await pickOpt(`${esc(nm(who))}の、どの夜の話？`, '', mine.map(x => ({ t: nightName(x.night), s: x.parts.map(partText).join('。') + '。', v: x.id, ic: IC.talk }))); if (!v) return debate(); stmt = mine.find(x => x.id === v); }
-    const ev = await pickOpt('どの証拠をつきつける？', `${nm(who)}の話（${nightName(stmt.night)}）：${stmt.parts.map(partText).join('。')}。`, EV.map(e => { const x = evText(e); return { t: x.t, s: x.s, v: e.id, ic: IC.show }; }));
+    if (mine.length > 1) { const v = await pickOpt(`${esc(nm(who))}の、どの夜の話？`, '', mine.map(x => ({ t: nightName(x.night), s: x.parts.map(q => partText(q, x)).join('。') + '。', v: x.id, ic: IC.talk }))); if (!v) return debate(); stmt = mine.find(x => x.id === v); }
+    const ev = await pickOpt('どの証拠をつきつける？', `${nm(who)}の話（${nightName(stmt.night)}）：${stmt.parts.map(q => partText(q, stmt)).join('。')}。`, EV.map(e => { const x = evText(e); return { t: x.t, s: x.s, v: e.id, ic: IC.show }; }));
     if (!ev) return debate();
-    const part = stmt.parts.length === 1 ? 0 : await pickOpt('話の、どこがおかしい？', `つきつける証拠：${evText(EV.find(e => e.id === ev)).t}`, stmt.parts.map((p, i) => ({ t: `「${partText(p)}」`, v: String(i), ic: IC.clash })));
+    const part = stmt.parts.length === 1 ? 0 : await pickOpt('話の、どこがおかしい？', `つきつける証拠：${evText(EV.find(e => e.id === ev)).t}`, stmt.parts.map((p, i) => ({ t: `「${partText(p, stmt)}」`, v: String(i), ic: IC.clash })));
     if (part == null) return debate();
     const E1 = EV.find(e => e.id === ev), P1 = stmt.parts[+part];
     const lp = stmt.parts.find(p => p.k === 'loc');
-    const items = [{ who: 'you', text: E1.k === 'self' ? `${nm(who)}。${nightName(stmt.night)}、「${partText(P1)}」と言ったな。${lp ? `だが、${locName(lp.loc)}から見えるのは${E.near(st, lp.loc).map(locName).join('と')}だけだ。` : ''}話が、話の中で食い違っている。` : `${nm(who)}。${nightName(stmt.night)}、「${partText(P1)}」と言ったな。だが、${E1.k === 'trace' ? `わたしは${locName(E1.loc)}で、この目で「${SP.traceShort(st, E1)}」を見ている` : `${E1.by === 'you' ? 'わたしは' : nm(E1.by) + 'は'}その夜、${nm(E1.who)}を${locName(E1.loc)}で見ている`}。` }];
+    const items = [{ who: 'you', text: E1.k === 'self' ? `${nm(who)}。${nightName(stmt.night)}、「${partText(P1, stmt)}」と言ったな。${lp ? `だが、${locName(lp.loc)}から見えるのは${E.near(st, lp.loc).map(locName).join('と')}だけだ。` : ''}話が、話の中で食い違っている。` : `${nm(who)}。${nightName(stmt.night)}、「${partText(P1, stmt)}」と言ったな。だが、${E1.k === 'trace' ? `わたしは${locName(E1.loc)}で、この目で「${SP.traceShort(st, E1)}」を見ている` : `${E1.by === 'you' ? 'わたしは' : nm(E1.by) + 'は'}その夜、${nm(E1.who)}を${locName(E1.loc)}で見ている`}。` }];
     const t = pup(who); if (t) { t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); }
     const r = E.judgeClash(S, st, stmt.id, +part, ev);
     for (const e of r.ev || []) { const y = SP.event(S, st, e); if (y && y.text) items.push({ who: e.by, text: y.text }); }
@@ -1052,7 +1052,7 @@
     h += `<div class="nh">名乗り出た人</div>` + (claims || '<div class="li"><span class="src">まだいない</span></div>');
     h += `<div class="nh">聞いた話</div>`;
     const rows = L.slice().reverse().map(x => {
-      if (x.k === 'night') { const T = x.T; const saw = T.saw.map(s => s.kind === 'fig' ? SP.fig(st, s.cat, s.val) + 'を見た' : `${nm(s.who)}を${locName(s.loc)}で見た`).join('、'); return `<div class="li"><b>${esc(nm(x.who))}</b>　<span class="src">${dayName(x.day)}</span><br>夜は${esc(locName(T.loc))}にいた。${esc(saw || '何も見ていない。')}</div>`; }
+      if (x.k === 'night') { const T = x.T; const saw = T.saw.map(s => s.kind === 'fig' ? SP.fig(st, s.cat, s.val) + 'を見た' : `${nm(s.who)}を${E.near(st, T.loc).includes(s.loc) ? 'となりの' : ''}${locName(s.loc)}で見た`).join('、'); return `<div class="li"><b>${esc(nm(x.who))}</b>　<span class="src">${dayName(x.day)}</span><br>夜は${esc(locName(T.loc))}にいた。${esc(saw || '何も見ていない。')}</div>`; }
       if (x.k === 'op') return `<div class="li"><b>${esc(nm(x.who))}</b>　<span class="src">${dayName(x.day)}</span><br>${x.o && !x.o.low ? `${esc(nm(x.o.target))}が怪しい` : '決めかねている'}</div>`;
       if (x.k === 'secret') return `<div class="li"><b>${esc(nm(x.who))}</b>　<span class="src">秘密を打ち明けた</span><br>${esc(ch(x.who).secret.confess)}</div>`;
       return '';

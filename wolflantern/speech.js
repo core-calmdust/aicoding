@@ -82,7 +82,9 @@
     const saw = T.saw.filter(s => s.kind === 'fig');
     const who = T.saw.filter(s => s.kind === 'who');
     for (const s of saw.slice(0, 2)) out.push(say(S, story, T.id, 'fig', { fig: fig(story, s.cat, s.val) }));
-    for (const s of who.slice(0, 1)) out.push(say(S, story, T.id, 'who', { who: callName(S, story, T.id, s.who), loc: loc(story, s.loc) }));
+    // a person seen at the place next door is said to be there: "the graveyard next door"
+    const nextTo = (a, b) => { const ring = story.locs.map(l => l.id), i = ring.indexOf(a), j = ring.indexOf(b); if (i < 0 || j < 0 || a === b) return false; const d = Math.abs(i - j); return d === 1 || d === ring.length - 1; };
+    for (const s of who.slice(0, 1)) out.push(say(S, story, T.id, 'who', { who: callName(S, story, T.id, s.who), loc: (nextTo(T.loc, s.loc) ? 'となりの' : '') + loc(story, s.loc) }));
     if (!saw.length && !who.length) out.push(say(S, story, T.id, 'none'));
     return out;
   }
