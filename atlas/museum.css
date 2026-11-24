@@ -1026,3 +1026,4 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 
 /* (2026-11-24) phones: diagrams get a little more width so their labels stay at least 10px (audit: figTiny) */
 @media (max-width:520px){.rdfig.dg{padding:6px}}
+.rdreg{margin:0 0 14px}
