@@ -1656,7 +1656,7 @@ $('#lsNext').onclick = () => {
   if (lesson.virt) {
     const op = opProg(), old = op[s.id] || { best: 0, pass: false }; op[s.id] = { best: Math.max(old.best, n), pass: old.pass || pass };
     try { localStorage.setItem(OP_STORE, JSON.stringify(op)); } catch (e) {}
-    $('#ldTitle').textContent = t(pass ? 'op.pass' : 'ls.failed');
+    $('#ldTitle').textContent = t(pass ? 'op.pass' : n + 20 >= 75 ? 'ls.failed' : 'ls.failedFar');
     $('#ldSub').innerHTML = score;
     $('#btnLessonNextStep').classList.add('hidden');
     showLessonView('lessonDoneView'); showOverlay('#lessonOverlay');
@@ -1666,7 +1666,7 @@ $('#lsNext').onclick = () => {
   const pr = lsProgress(), old = pr[s.id] || { best: 0, clear: false };
   pr[s.id] = { best: Math.max(old.best, n), clear: old.clear || pass };
   try { localStorage.setItem(LS_STORE, JSON.stringify(pr)); } catch (e) {}
-  $('#ldTitle').textContent = t(pass ? 'ls.passed' : 'ls.failed');
+  $('#ldTitle').textContent = t(pass ? 'ls.passed' : n + 20 >= 75 ? 'ls.failed' : 'ls.failedFar');
   $('#ldSub').innerHTML = score;
   $('#btnLessonNextStep').classList.toggle('hidden', lesson.step + 1 >= LESSONS.steps.length);
   const nx = LESSONS.steps[lesson.step + 1];
