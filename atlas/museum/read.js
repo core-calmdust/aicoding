@@ -44,6 +44,7 @@
     // (2026-11-24) mahjong is a page of its own (mahjong/, not in the Atlas's GAMES): the cover and the first link go there (href), named by the story's text (game)
     { id: 'mahjong', region: 'asia', color: '#1d6a4a', cover: { g: 'mahjong', s: 'mahjong', href: '../mahjong/' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'mahjongTiles' }, m1: { svg: 'mahjongHand' }, m2: { svg: 'mahjongSpread' } }, refs: ['沈一帆『圖畫麻雀牌譜』(1914) / Yifan Shen, Illustrated Mahjong Guide', 'William Henry Wilkinson, “Chinese Origin of Playing Cards”, American Anthropologist (1895)', 'Joseph Park Babcock, Rules of Mah-Jongg (1920)', '天野大三「報知ルール」（報知新聞、1952）', '中国国家体育总局『中国麻将竞赛规则』(1998) / Mahjong Competition Rules', 'Wikipedia, “Mahjong”, “Japanese mahjong”'], links: [{ g: 'mahjong', href: '../mahjong/' }, { g: 'shanghai' }, { g: 'xiangqi' }] },
     { id: 'gomoku', region: 'asia', color: '#5a3a24', cover: { g: 'gomoku', s: 'gomoku' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'gomokuFive' }, m1: { svg: 'renjuForbidden' }, m2: { svg: 'gomokuSolved' } }, refs: ['黒岩涙香『萬朝報』（1899年12月6日） / Ruikō Kuroiwa, Yorozu chōhō (1899)', '『五目定石集』（1856） / Gomoku Jōseki Collection', 'L. Victor Allis, Searching for Solutions in Games and Artificial Intelligence (PhD thesis, University of Limburg, 1994)', 'János Wágner, István Virág, “Solving Renju”, ICGA Journal 24(1) (2001)', 'Renju International Federation (RIF), rules and history'], links: [{ g: 'gomoku' }, { g: 'go' }, { g: 'connect4' }] },
+    { id: 'carrom', region: 'asia', color: '#8a4a22', cover: { g: 'carrom', s: 'carrom' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'carromBoard' }, m1: { svg: 'carromStrike' }, m2: { svg: 'carromFamily' } }, refs: ['International Carrom Federation, Laws of Carrom', 'Wikipedia, “Carrom” (Patiala palace board; early tournaments in India and Sri Lanka; North American carrom)', 'Wikipedia, “International Carrom Federation” (founded 1988, Chennai; world championships from 1991)', 'Wikipedia, “Novuss”', 'tradgames.org.uk, “Carrom: History and Information”'], links: [{ g: 'carrom' }, { g: 'crokinole' }, { g: 'ludo' }] },
   ];
   // pictures shown only beside a story's paragraph (not in another room): a museum's open-access photo (CC0), linked to the museum's page.
   // The name, in each language, is MUSEUM_READ_T[lang].pic[id]. Files images/atlas/museum-story/pic/<id>.webp (≤ 960 px).
@@ -671,6 +672,39 @@
       R.forEach(([yr, pl, ds], k) => { const y = o + 8 + RH * k;
         g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="15" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
         g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(pl)}</text><text x="${xn + 16}" y="${y + 19}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // carrom: the board — four netted pockets, a double baseline on each side, the corner arrows — and the opening rosette: the red queen in the
+    // middle, 18 men (9 white, 9 black) round it; the striker on the near baseline
+    carromBoard: () => { const W = 300, f = 18, I = W - 2 * f, cx = W / 2; let g = `<rect x="1" y="1" width="${W - 2}" height="${W - 2}" rx="10" fill="#7a3e1e" stroke="#4a220e" stroke-width="2"/><rect x="${f}" y="${f}" width="${I}" height="${I}" fill="#f1dfb8"/>`;
+      [[f, f], [W - f, f], [f, W - f], [W - f, W - f]].forEach(([x, y]) => { g += `<circle cx="${x + (x < cx ? 12 : -12)}" cy="${y + (y < cx ? 12 : -12)}" r="12" fill="#1d1410"/>`; });
+      const bl = (a, b, c, d) => `<line x1="${a}" y1="${b}" x2="${c}" y2="${d}" stroke="#3a2a1a" stroke-width="1.4"/>`, L = 66, R = W - 66, n1 = W - 50, n2 = W - 60;
+      [[n1, n2], [50, 60]].forEach(([p, q]) => { g += bl(L, p, R, p) + bl(L, q, R, q) + bl(p, L, p, R) + bl(q, L, q, R); [L, R].forEach(x => { g += `<circle cx="${x}" cy="${(p + q) / 2}" r="5" fill="#c0392b"/><circle cx="${(p + q) / 2}" cy="${x}" r="5" fill="#c0392b"/>`; }); });
+      [[f + 30, f + 30, 1, 1], [W - f - 30, f + 30, -1, 1], [f + 30, W - f - 30, 1, -1], [W - f - 30, W - f - 30, -1, -1]].forEach(([x, y, sx, sy]) => { g += `<line x1="${x}" y1="${y}" x2="${x + sx * 52}" y2="${y + sy * 52}" stroke="#3a2a1a" stroke-width="1.2"/>`; });
+      g += `<circle cx="${cx}" cy="${cx}" r="40" fill="none" stroke="#3a2a1a" stroke-width="1.4"/>`;
+      const pc = (x, y, k) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7" fill="${k === 2 ? '#c0392b' : k ? '#1d1b1b' : '#f7f1e3'}" stroke="${k === 1 ? '#000' : '#8a7a5a'}" stroke-width="1"/>`;
+      g += pc(cx, cx, 2);
+      for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; g += pc(cx + 14.5 * Math.cos(a), cx + 14.5 * Math.sin(a), k % 2); }
+      for (let k = 0; k < 12; k++) { const a = k * Math.PI / 6 + Math.PI / 12, r = 28; g += pc(cx + r * Math.cos(a), cx + r * Math.sin(a), (k + 1) % 2); }
+      g += `<circle cx="${cx}" cy="${W - 55}" r="9.5" fill="#fbf8ee" stroke="#2a5a8a" stroke-width="2.4"/>`;
+      return `<svg viewBox="0 0 ${W} ${W}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // a carrom shot: the striker flicked from the baseline (blue) rebounds off the right cushion, hits a white man, which runs into the top-right pocket (red)
+    carromStrike: () => { const W = 300, f = 18, cx = W / 2; let g = `<rect x="1" y="1" width="${W - 2}" height="${W - 2}" rx="10" fill="#7a3e1e" stroke="#4a220e" stroke-width="2"/><rect x="${f}" y="${f}" width="${W - 2 * f}" height="${W - 2 * f}" fill="#f1dfb8"/>`;
+      [[f, f], [W - f, f], [f, W - f], [W - f, W - f]].forEach(([x, y]) => { g += `<circle cx="${x + (x < cx ? 12 : -12)}" cy="${y + (y < cx ? 12 : -12)}" r="12" fill="#1d1410"/>`; });
+      g += `<line x1="66" y1="${W - 50}" x2="${W - 66}" y2="${W - 50}" stroke="#3a2a1a" stroke-width="1.4"/><line x1="66" y1="${W - 60}" x2="${W - 66}" y2="${W - 60}" stroke="#3a2a1a" stroke-width="1.4"/>`;
+      const sx = 120, sy = W - 55, bx = W - f - 9, by = 150, hx = 232, hy = 88, mx = 244, my = 74, px = W - f - 12, py = f + 12;
+      g += `<path d="M${sx} ${sy}L${bx} ${by}L${hx + 6} ${hy + 9}" fill="none" stroke="#2a5a8a" stroke-width="3" stroke-dasharray="6 4" marker-end="url(#crA)"/>`;
+      g += `<path d="M${mx + 4} ${my - 4}L${px - 12} ${py + 12}" fill="none" stroke="#c0392b" stroke-width="3" marker-end="url(#crB)"/>`;
+      g += `<circle cx="${mx}" cy="${my}" r="7.5" fill="#f7f1e3" stroke="#8a7a5a" stroke-width="1"/><circle cx="${hx}" cy="${hy}" r="9.5" fill="#fbf8ee" stroke="#2a5a8a" stroke-width="2" opacity=".45"/><circle cx="${sx}" cy="${sy}" r="9.5" fill="#fbf8ee" stroke="#2a5a8a" stroke-width="2.4"/>`;
+      [[100, 120, 1], [150, 160, 0], [80, 200, 1], [170, 175, 0], [60, 90, 0]].forEach(([x, y, k]) => { g += `<circle cx="${x}" cy="${y}" r="7.5" fill="${k ? '#1d1b1b' : '#f7f1e3'}" stroke="${k ? '#000' : '#8a7a5a'}" stroke-width="1"/>`; });
+      g += `<circle cx="${bx}" cy="${by}" r="5" fill="none" stroke="#2a5a8a" stroke-width="2"/>`;
+      const mk = (id, col) => `<marker id="${id}" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="${col}"/></marker>`;
+      return `<svg viewBox="0 0 ${W} ${W}" role="img" style="font-family:inherit;direction:ltr"><defs>${mk('crA', '#2a5a8a')}${mk('crB', '#c0392b')}</defs>${g}</svg>`; },
+    // carrom's cousins: flicking games of other lands (names and places: the story's figL.family — [carrom, place], then the cousins)
+    carromFamily: () => { const F = ((st('carrom').figL || {}).family) || [], W = 300, RH = 46, top = 66; if (!F.length) return `<svg viewBox="0 0 ${W} 40" role="img"></svg>`;
+      const [c0, ...rest] = F, K = ['#2a5a8a', '#14864a', '#8a5a24', '#6a3a8a'], H = top + 14 + RH * rest.length; let g = '';
+      g += `<rect x="6" y="6" width="${W - 12}" height="50" rx="10" fill="#8a4a22"/><text x="${W / 2}" y="28" font-size="16" font-weight="800" fill="#fff" text-anchor="middle">${esc(c0[0])}</text><text x="${W / 2}" y="46" font-size="13" fill="#f3e2c8" text-anchor="middle">${esc(c0[1])}</text>`;
+      g += `<line x1="26" y1="56" x2="26" y2="${top + 14 + RH * (rest.length - 1) + 6}" stroke="#b8ad98" stroke-width="2.4"/>`;
+      rest.forEach((r, k) => { const y = top + 14 + RH * k + 6; g += `<path d="M26 ${y}H44" stroke="#b8ad98" stroke-width="2.4"/><circle cx="52" cy="${y}" r="7" fill="${K[k % K.length]}"/><text x="66" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(r[0])}</text><text x="66" y="${y + 19}" font-size="13" fill="#5a544a">${esc(r[1])}</text>`; });
       return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
     // four tetrahedral dice: how often each score comes (out of 16)
     tetraOdds: () => { const n = [1, 4, 6, 4, 1], W = 300, H = 150, bw = 40, gap = (W - 40 - bw * 5) / 4; let g = '';
