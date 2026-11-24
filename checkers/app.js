@@ -1602,7 +1602,7 @@ $('#lsList').onclick = () => { if (!lesson) return; if (lesson.study || lesson.v
 
 // ====================================================================== openings (famous lines, studied move by move, then practice)
 let OPEN = null, openChoiceIdx = -1;
-const openReady = fetch('openings.json?v=4').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
+const openReady = fetch('openings.json?v=5').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
   .then(() => { if (!OPEN) document.querySelectorAll('.ls-tabs button[data-v=open]').forEach(b => b.remove()); });
 const OP_STORE = STORE + '-open';
 function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{}'); } catch (e) { return {}; } }

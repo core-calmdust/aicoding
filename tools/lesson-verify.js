@@ -1591,12 +1591,55 @@ function checkersOpen(opt) {
   }
   return out;
 }
-const GAMES = { connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen };
+// (2026-11-24 第2期 担当B, 追15) the openings' own lines, every /open game with named lines (shogi・tafl・checkers; connect4's op1〜op3
+//  have no named lines, op3's main line is checked in lesson-facts.js): ① every move of the study line is legal from its start,
+//  ④ the line begins with the opening's named moves (tafl・checkers `moves`) or reaches the opening's own shape (shogi src `pat`, either
+//  wing when `mirror`), ⑤ two openings: the last position of one line is never a position of the other's line (the same line, its first
+//  half, or the other line run into at its end; tafl with the 8 symmetries) — differently named openings teach different lines.
+function openLines(opt) {
+  const fs = require('fs'), out = [], add = (id, m) => out.push({ step: id, q: 0, msg: m }), J = f => JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8'));
+  const cross = (game, L) => { const ids = Object.keys(L);
+    for (const a of ids) { const fin = L[a][L[a].length - 1]; for (const b of ids) { if (a === b) continue; const k = L[b].indexOf(fin);
+      if (k >= 0) add(`${game} ${a}`, `⑤ the line ends (ply ${L[a].length - 1}) in a position of ${b}'s line (ply ${k})${k === L[a].length - 1 && k === L[b].length - 1 ? ': the same line' : k === L[a].length - 1 ? ': its first half' : ''}`); } } };
+  { // shogi
+    const E = require(path.join(ROOT, 'shogi/engine.js')), CU = require(path.join(ROOT, 'shogi/tools/openings/curate.js'));
+    const CATS = ['beg', 'mid', 'adv', 'sp', 'new', 'castle'], sets = [];
+    CATS.forEach(c => J(`shogi/openings-${c}.json`).sets.forEach(s => sets.push(s)));
+    J('shogi/openings.json').sets.forEach(s => { if (!sets.some(x => x.id === s.id)) sets.push(s); });
+    if (opt && opt.shogi) opt.shogi.forEach(s => { const i = sets.findIndex(x => x.id === s.id); if (i >= 0) sets[i] = s; });
+    const SRC = {}; CATS.forEach(c => require(path.join(ROOT, `shogi/tools/openings/src/${c}.js`)).forEach(e => { SRC[e.id] = e; }));
+    const key = p => p.sfen().split(' ').slice(0, 3).join(' '), L = {};
+    for (const s of sets) { const st = s.study; if (!st || !st.steps || !st.steps.length) { add(`shogi ${s.id}`, '① no study line'); continue; }
+      const p = new E.Position(); p.setSfen(st.start); const ks = [key(p)], e = SRC[s.id], C = e && e.pat ? [CU.compile(e.pat, false)].concat(e.mirror ? [CU.compile(e.pat, true)] : []) : null; let shape = false;
+      for (const [u] of st.steps) { const m = p.legalMoves(true).find(x => p.toUsi(x) === u); if (!m) { add(`shogi ${s.id}`, `① move ${ks.length} ${u} is not legal`); break; } p.doMove(m); p.sp = 0; ks.push(key(p)); if (C && C.some(c => CU.match(p, c))) shape = true; }
+      if (C && !shape) add(`shogi ${s.id}`, `④ the line never reaches the opening's shape (${e.pat})`);
+      L[s.id] = ks; }
+    cross('shogi', L); }
+  { // tafl
+    const E = require(path.join(ROOT, 'tafl/engine.js')), O = (opt && opt.tafl) || J('tafl/openings.json'), L = {};
+    const SYM = [(r, c) => [r, c], (r, c) => [r, 10 - c], (r, c) => [10 - r, c], (r, c) => [10 - r, 10 - c], (r, c) => [c, r], (r, c) => [c, 10 - r], (r, c) => [10 - c, r], (r, c) => [10 - c, 10 - r]];
+    const can = q => SYM.map(S => { let o = ''; const b = q.spec().b; for (let i = 0; i < 121; i++) { const [r, c] = S((i / 11) | 0, i % 11); o += b[r * 11 + c]; } return o; }).sort()[0] + q.turn;
+    for (const g of O.sets) { let q = E.Pos.from(null, 'copenhagen'); const ks = [can(q)], defs = g.moves.split(' ');
+      g.study.line.forEach((m, k) => { if (!q) return; if (q.res || !q.moves().includes(m)) { add(`tafl ${g.id}`, `① move ${k + 1} is not legal`); q = null; return; }
+        if (k < defs.length && E.name(q, m).replace(/x.*/, '') !== defs[k]) add(`tafl ${g.id}`, `④ the line does not begin with ${g.moves}`); q = q.clone().play(m); ks.push(can(q)); });
+      L[g.id] = ks; }
+    cross('tafl', L); }
+  { // checkers
+    if (!ckW) ckW = require(path.join(ROOT, 'checkers/tools/wasm.js')).loadSync();
+    const E = ckW.E, O = (opt && opt.checkers) || J('checkers/openings.json'), L = {}, key = p => JSON.stringify(p.spec());
+    for (const g of O.sets) { let p = E.Pos.from(null); const ks = [key(p)], named = []; { let q = E.Pos.from(null); for (const t of g.moves.split(' ')) { const m = E.parse(q, t); named.push(m); q.play(m); } }
+      if (!named.every((m, k) => g.study.line[k] === m)) add(`checkers ${g.id}`, `④ the line does not begin with ${g.moves}`);
+      for (const [k, m] of g.study.line.entries()) { if (!p.moves().includes(m)) { add(`checkers ${g.id}`, `① move ${k + 1} is not legal`); break; } p = p.clone().play(m); ks.push(key(p)); }
+      L[g.id] = ks; }
+    cross('checkers', L); }
+  return out;
+}
+const GAMES = { connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines };
 module.exports = GAMES; GAMES.mancalaWords = mancalaWords; Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
 if (require.main === module) {
-  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen').split(',');
+  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,openLines').split(',');
   let bad = 0;
-  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'connect4' ? ' (count/endwin の⑦⑧)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
+  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'openLines' ? ' (shogi・tafl・checkers の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
     bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
   process.exit(bad ? 1 : 0);
 }
