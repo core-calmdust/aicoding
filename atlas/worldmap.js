@@ -46,6 +46,7 @@
   const zl = (l, i) => (ZT[l] || ZT.en)[i];
   let ctx = null, lang = 'ja', host = null, el = {}, view = null, sel = null, reg = 'all', anim = 0, ro = null, raf = 0;
   const u = k => (UI[lang] || UI.en)[k] || UI.en[k];
+  const READ_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h9l3 3v13H6z"/><path d="M9 10h6M9 13h6M9 16h4"/></svg>';
   const D = id => window.ATLAS_MAP_DATA && window.ATLAS_MAP_DATA[id];
   const games = () => ctx.games.filter(g => D(g.id));
   const home = g => { const d = D(g.id); return d.p[d.h]; };
@@ -223,6 +224,8 @@
       ${hasH(g.id) ? `<button type="button" class="amhist" style="--c:${g.color}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.7 1.5 1.5z"/></svg>${esc(u('hist'))}</button>` : ''}</div>`;
     el.info.querySelector('.amplay').onclick = () => { const im = [...el.info.querySelectorAll('.amart img')].find(i => i.offsetParent); ctx.open(g.id, im); };
     const hb = el.info.querySelector('.amhist'); if (hb) hb.onclick = () => window.Historia.open(g.id);   // (opens the board view first, then the history over it)
+    { const M = window.AtlasMuseum, sid = M && M.readOf && M.readOf(g.id), acts = el.info.querySelector('.amacts');   // (2026-11-24 ユーザー: 読み物とのつながり)
+      if (sid && acts && host.closest('#pg-museum')) { acts.insertAdjacentHTML('beforeend', `<button type="button" class="amhist amread" style="--c:${g.color}">${READ_SVG}${esc(M.rname('read'))}</button>`); acts.querySelector('.amread').onclick = () => M.openItem('read', sid); } }
     // the journey chips: hovering (or touching) one lights its numbered stop on the map
     el.info.querySelectorAll('.amjour [data-n]').forEach(ch => {
       const lit = on => { hotN = on ? ch.dataset.n : null; el.map.querySelectorAll(`.num[data-n="${ch.dataset.n}"]`).forEach(n => n.classList.toggle('hot', on)); };
@@ -383,5 +386,7 @@
       if (!fineP) fineP = load('historia/map-fine.js?v=6').then(redraw);
     });
   }
-  window.AtlasMap = { render, regionOf };
+  window.AtlasMap = { render, regionOf, REG,
+    label: (k, l) => (UI[l] || UI.en)[k] || UI.en[k],   // (the region chips' names, for the stories' shelf)
+    pick: id => { if (!host || !host.isConnected || !D(id)) return false; select(id); return true; } };   // (another room asks: show this game)
 })();
