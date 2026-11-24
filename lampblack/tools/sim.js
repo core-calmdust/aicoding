@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /* 狼影灯 — 推理の公平性シミュレーション
-   usage: node wolflantern/tools/sim.js [story] [--n 300] [--diff 0,1,2,3] [--verbose]
+   usage: node lampblack/tools/sim.js [story] [--n 300] [--diff 0,1,2,3] [--verbose]
    プレイヤー役を「探偵ボット」（プレイヤーと同じ情報だけで可能世界を数えて投票する）と「でたらめ投票」にやらせ、
-   難易度ごとの勝率・日数・初日の確信度などを出す。基準（claude/wolflantern-spec.md「推理の公平性の基準」）を外れたら exit 1。 */
+   難易度ごとの勝率・日数・初日の確信度などを出す。基準（claude/lampblack-spec.md「推理の公平性の基準」）を外れたら exit 1。 */
 const W = require('./load.js');
 const E = W.WLEngine;
 const args = process.argv.slice(2);
