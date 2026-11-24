@@ -50,6 +50,8 @@ body.night #scene .glow{fill:#ffd99a;opacity:.85}
 #scene .fire{animation:fire 1.6s infinite alternate}
 @keyframes fire{from{opacity:.75}to{opacity:1}}
 #scene.swap{opacity:0}
+body.ghost #stage{filter:saturate(.45) contrast(.92) brightness(1.04)}
+body.ghost .pp .pup{opacity:.92}
 body.crowd #scene .near{opacity:.34;filter:blur(1px)}
 body.crowd #scene .glow{opacity:.5}
 
@@ -412,14 +414,14 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 
 <div id="sheet" class="hide" role="dialog" aria-modal="true"><div class="box" id="sheetBox"></div></div>
 
-<script src="engine.js?v=1"></script>
+<script src="engine.js?v=2"></script>
 <script src="voices.js?v=1"></script>
 <script src="speech.js?v=1"></script>
 <script src="art.js?v=1"></script>
-<script src="stories/kirigane.js?v=1"></script>
-<script src="stories/hokushin.js?v=1"></script>
-<script src="stories/tomoshibi.js?v=1"></script>
+<script src="stories/kirigane.js?v=2"></script>
+<script src="stories/hokushin.js?v=2"></script>
+<script src="stories/tomoshibi.js?v=2"></script>
 <script src="sound.js?v=1"></script>
-<script src="game.js?v=1"></script>
+<script src="game.js?v=2"></script>
 </body>
 </html>
