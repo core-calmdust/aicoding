@@ -55,6 +55,7 @@
     { id: 'solitaire', region: 'europe', color: '#2f6b4f', cover: { g: 'solitaire', s: 'solitaire' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'klondikeLayout' }, m1: { svg: 'freecellSolvable' }, m2: { svg: 'patienceTimeline' } }, refs: ['Das neue Königliche L’Hombre-Spiel (1783 edition), the earliest description of “Patience”', 'Lady Adelaide Cadogan, Illustrated Games of Patience (c. 1870; London edition 1874)', 'Hoyle’s Games (1907): “Seven-Card Klondike”', 'David Parlett, The Penguin Book of Patience (1979)', 'Martin Gardner, Scientific American (June 1968): Baker’s Game; Paul Alfille, FreeCell on PLATO (1978)', 'Wikipedia, “Patience (game)”, “Klondike (solitaire)”, “FreeCell”'], links: [{ g: 'solitaire' }, { g: 'poker' }, { g: 'blackjack' }] },
     { id: 'sudoku', region: 'asia', color: '#3a8a5a', cover: { g: 'sudoku', s: 'sudoku' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'sudokuRules' }, m1: { svg: 'sudokuSeventeen' }, m2: { svg: 'sudokuTimeline' } }, refs: ['Le Siècle (Paris), 19 November 1892; La France, 6 July 1895', 'Number Place, an American puzzle magazine (1979), attributed to Howard Garns', 'The Japanese puzzle magazine that named the puzzle “sudoku” (1984)', 'Gary McGuire, Bastian Tugemann, Gilles Civario, “There is no 16-Clue Sudoku: Solving the Sudoku Minimum Number of Clues Problem”, arXiv:1201.0749 (2012)', 'Bertram Felgenhauer, Frazer Jarvis, “Enumerating possible Sudoku grids” (2005)', 'Wikipedia, “Sudoku”'], links: [{ g: 'sudoku' }, { g: 'speedsudoku' }, { g: 'hitblow' }] },
     { id: 'shanghai', region: 'americas', color: '#1f6a4c', cover: { g: 'shanghai', s: 'shanghai' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'shanghaiFree' }, m1: { svg: 'shanghaiTurtle' }, m2: { svg: 'shanghaiTimeline' } }, refs: ['Brodie Lockard, “Mah-Jongg” on the PLATO system (1981)', 'A home-computer release of 1986 that spread the name “Shanghai”', 'An analysis of ten million deals of the turtle layout (about 3 % unsolvable), as cited by Wikipedia', 'Wikipedia, “Mahjong solitaire”, “Shisen-Sho”'], links: [{ g: 'shanghai' }, { g: 'solitaire' }, { g: 'sudoku' }] },
+    { id: 'samegame', region: 'asia', color: '#e2672e', cover: { g: 'samegame', s: 'samegame' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'samegameGroup' }, m1: { svg: 'samegameScore' }, m2: { svg: 'samegameTimeline' } }, refs: ['Kuniaki Moribe, “Chain Shot!” (1985), distributed through a Japanese computer magazine', 'Eiji Fukumoto, “SameGame” for Unix (1992)', 'Matthias Schüssler, “Clickomania!” (1998)', 'Therese C. Biedl et al., “The Complexity of Clickomania” (2001)', 'Wikipedia, “SameGame”'], links: [{ g: 'samegame' }, { g: 'shanghai' }, { g: 'jailbreak' }] },
   ];
   // pictures shown only beside a story's paragraph (not in another room): a museum's open-access photo (CC0), linked to the museum's page.
   // The name, in each language, is MUSEUM_READ_T[lang].pic[id]. Files images/atlas/museum-story/pic/<id>.webp (≤ 960 px).
@@ -1038,6 +1039,34 @@
     // mahjong solitaire in time (text: the story's figL.time — [year, name, note])
     shanghaiTimeline: () => { const R = ((st('shanghai').figL || {}).time) || [], W = 300, RH = 50, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 70; let g = '';
       const C = ['#8a8478', '#2a5a8a', '#c0392b', '#6a3a8a', '#14864a'];
+      g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
+      R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
+        g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
+        g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="${xn + 16}" y="${y + 20}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // samegame: tap a group of two or more touching tiles of one colour (5 blue tiles, outlined) — it vanishes, the tiles above fall, the empty column closes up to the left
+    samegameGroup: () => { const C = { O: '#e2672e', Y: '#e8b832', G: '#7a8f3a', B: '#2e6f93' }, S = 21, W = 300, H = 6 * S + 16;
+      const before = ['OYYGOO', 'BOGYY.', 'BBBB..', 'YGOOGY', 'GYYOB.', 'OOGY..'], grp = { '1,0': 1, '2,0': 1, '2,1': 1, '2,2': 1, '2,3': 1 };
+      const after = before.map((col, c) => [...col].filter((ch, r) => ch !== '.' && !grp[c + ',' + r]).join('')).filter(s => s.length).map(s => s.padEnd(6, '.'));
+      while (after.length < 6) after.push('......');
+      const board = (cols, ox, mark) => { let g = `<rect x="${ox - 3}" y="5" width="${S * 6 + 6}" height="${S * 6 + 6}" rx="6" fill="#fbf6ea" stroke="#d8cfb8"/>`;
+        cols.forEach((col, c) => [...col].forEach((ch, r) => { if (ch === '.') return; const x = ox + c * S, y = 8 + (5 - r) * S; g += `<rect x="${x + 1}" y="${y + 1}" width="${S - 2}" height="${S - 2}" rx="3.5" fill="${C[ch]}"/>`;
+          if (mark && grp[c + ',' + r]) g += `<rect x="${x + 1}" y="${y + 1}" width="${S - 2}" height="${S - 2}" rx="3.5" fill="none" stroke="#fff" stroke-width="2.2"/><circle cx="${x + S / 2}" cy="${y + S / 2}" r="3" fill="#fff"/>`; }));
+        return g; };
+      let g = board(before, 6, 1) + board(after, W - 6 - S * 6, 0);
+      g += `<path d="M${6 + S * 6 + 6} ${H / 2}H${W - 6 - S * 6 - 8}" stroke="#2b2a28" stroke-width="3" marker-end="url(#sgA)"/>`;
+      const bx = W - 6 - S * 6; g += `<path d="M${bx + S * 1.5} ${8 + S * 0.6}v${S * 1.4}" stroke="#c0392b" stroke-width="2.4" marker-end="url(#sgB)"/><path d="M${bx + S * 4.6} ${8 + S * 0.5}h-${S * 1.6}" stroke="#c0392b" stroke-width="2.4" marker-end="url(#sgB)"/>`;
+      const mk = (id, col) => `<marker id="${id}" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="${col}"/></marker>`;
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr"><defs>${mk('sgA', '#2b2a28')}${mk('sgB', '#c0392b')}</defs>${g}</svg>`; },
+    // samegame scoring: (n − 2)² points for a group of n — 2 tiles score 0, 5 score 9, 10 score 64; one big group beats many small ones
+    samegameScore: () => { const W = 300, H = 210, base = 180, bw = 24, gap = (W - 20 - bw * 9) / 8; let g = `<line x1="8" y1="${base + .5}" x2="${W - 8}" y2="${base + .5}" stroke="#b8ad98" stroke-width="1.5"/>`;
+      for (let n = 2; n <= 10; n++) { const k = n - 2, v = k * k, h = v / 64 * 140, x = 10 + k * (bw + gap), hi = n === 5 || n === 10;
+        g += `<rect x="${x}" y="${base - h}" width="${bw}" height="${Math.max(h, 1.5)}" rx="4" fill="${hi ? '#e2672e' : '#e8b832'}"/><text x="${x + bw / 2}" y="${base - h - 6}" font-size="13" font-weight="800" fill="${hi ? '#c0392b' : '#5a544a'}" text-anchor="middle">${v}</text><text x="${x + bw / 2}" y="${base + 18}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="middle">${n}</text>`; }
+      g += `<text x="12" y="22" font-size="17" font-weight="800" fill="#2e6f93">(n − 2)²</text>`;
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // samegame in time (text: the story's figL.time — [year, name, note])
+    samegameTimeline: () => { const R = ((st('samegame').figL || {}).time) || [], W = 300, RH = 50, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 62; let g = '';
+      const C = ['#e2672e', '#e8b832', '#7a8f3a', '#2e6f93', '#6a3a8a'];
       g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
       R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
         g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
