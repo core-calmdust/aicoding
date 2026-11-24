@@ -902,7 +902,7 @@
       if (this.p) return this.p;
       const voice = fetch('../shogi/voice-fox-ja.js?v=4').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       const rep = getJ('../shogi/lesson-replies.json?v=2').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
-      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=20261124a'), getJ('../shogi/openings.json?v=20261124ol1'),
+      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261124a'), getJ('../shogi/openings.json?v=20261124ol1'),
         ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261124oc`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
@@ -2048,7 +2048,7 @@
     load() {
       if (this.p) return this.p;
       const txt = u => fetch(u).then(r => r.text());
-      return (this.p = Promise.all([getJ('../chess/lessons.json?v=20261107i14'), getJ('../chess/openings.json?v=20261107i14'), txt('../chess/i18n.js?v=20261107pro2-i14'), txt('../chess/i18n_basics.js?v=20261019ol-i14'), txt('../chess/voice-knight-ja.js?v=3').catch(() => '')])
+      return (this.p = Promise.all([getJ('../chess/lessons.json?v=30261107i14'), getJ('../chess/openings.json?v=20261107i14'), txt('../chess/i18n.js?v=20261107pro2-i14'), txt('../chess/i18n_basics.js?v=20261019ol-i14'), txt('../chess/voice-knight-ja.js?v=3').catch(() => '')])
         .then(([ls, op, a, b, vk]) => {
           const w = {}; try { new Function('window', a)(w); new Function('window', b)(w); } catch (e) { console.warn('[lessons3d] chess texts', e); }   // (a sandbox: the page's own I18N stays untouched)
           try { const v = {}; new Function('window', vk)(v); this.V = ((v.I18N || {})['ja@knight']) || {}; } catch (e) { this.V = {}; }   // (ナイトン's own lines, 3D, ja)
@@ -2524,7 +2524,7 @@
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=20261124p1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({}))])
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261124p1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({}))])
         .then(([ls, op, ev, wt]) => { this.WT = wt || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
@@ -3104,7 +3104,7 @@
     LKEY: 'aicoding-gomoku-lessons', OKEY: 'aicoding-gomoku-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=20261123'), getJ('../gomoku/openings.json?v=20261113'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261123'), getJ('../gomoku/openings.json?v=20261113'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] gomoku texts', e); } this.I = w.I18N || {}; this.data = { ls, op };
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
@@ -3349,7 +3349,7 @@
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../go/lessons.json?v=20261123d'), getJ('../go/openings.json?v=4'), goRules(), fetch('../go/voice-pen-ja.js?v=6').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
+      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261123d'), getJ('../go/openings.json?v=4'), goRules(), fetch('../go/voice-pen-ja.js?v=6').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
         try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
         return this; }).catch(e => { this.p = null; throw e; }));
     },
@@ -3741,7 +3741,7 @@
     LKEY: 'aicoding-checkers-lessons', OKEY: 'aicoding-checkers-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=20261124b'), getJ('../checkers/openings.json?v=5'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=30261124b'), getJ('../checkers/openings.json?v=5'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vc]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] checkers texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vc)(v); this.V = ((v.I18N || {})['ja@crab']) || {}; } catch (e) { this.V = {}; }   // (チェッカニ's own lines, 3D, ja)
           return this; })
@@ -4146,7 +4146,7 @@
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=20261124xm'), getJ('../xiangqi/openings.json?v=2'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd1').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=1').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261124xm'), getJ('../xiangqi/openings.json?v=2'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd1').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=1').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vf]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vf)(v); this.V = ((v.I18N || {})['ja@fox']) || {}; } catch (e) { this.V = {}; }   // (ショウギツネ's own lines, 3D, ja)
           return this; })
@@ -4220,7 +4220,7 @@
     LKEY: 'aicoding-janggi-lessons', OKEY: null, data: null, I: null, V: {},
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../janggi/lessons.json?v=2'), fetch('../janggi/i18n.js?v=3').then(r => r.text()), jgScript(JG_ENG, () => window.JanggiEngine), jgScript('games/janggi-ls.js?v=1', () => window.AtlasJanggiLs), jgScript('games/janggi-pz.js?v=1', () => window.AtlasMini && window.AtlasMini.janggi)])
+      return (this.p = Promise.all([getJ('../janggi/lessons.json?v=3'), fetch('../janggi/i18n.js?v=3').then(r => r.text()), jgScript(JG_ENG, () => window.JanggiEngine), jgScript('games/janggi-ls.js?v=2', () => window.AtlasJanggiLs), jgScript('games/janggi-pz.js?v=1', () => window.AtlasMini && window.AtlasMini.janggi)])
         .then(([ls, tx]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] janggi texts', e); } this.I = w.I18N || {}; const D = (window.AtlasJanggiLs || {}).DONE || [];
           this.data = { ls: Object.assign({}, ls, { steps: ls.steps.filter(x => D.includes(x.id)) }) }; return this; })
         .catch(e => { this.p = null; throw e; }));
@@ -4555,7 +4555,7 @@
       if (this.p) return this.p;
       const tx = window.AtlasBgTexts ? AtlasBgTexts() : Promise.resolve({});
       const bg = window.AtlasBgExplain ? AtlasBgExplain() : Promise.resolve();   // (the rules and the commentary engine: atlas/puzzles.js loads them — the same files and cache keys as the table)
-      return (this.p = Promise.all([getJ('../backgammon/lessons.json?v=20261123m0'), getJ('../backgammon/openings.json?v=20261021op'), tx, bg, getJ('../backgammon/ramps.json?v=3').catch(() => null)])
+      return (this.p = Promise.all([getJ('../backgammon/lessons.json?v=30261123m0'), getJ('../backgammon/openings.json?v=20261021op'), tx, bg, getJ('../backgammon/ramps.json?v=3').catch(() => null)])
         .then(([ls, op, I, _, rp]) => { this.I = I || {}; this.data = { ls, op, rp }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -5023,7 +5023,7 @@
     LKEY: 'aicoding-hex-lessons', OKEY: 'aicoding-hex-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../hex/lessons.json?v=20261123b'), getJ('../hex/openings.json?v=1'), fetch('../hex/i18n.js?v=20261115').then(r => r.text()), hxEng().catch(() => null), getJ('../hex/ramps3d.json?v=1').catch(() => ({})), fetch('../hex/voice-pen-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../hex/lessons.json?v=30261123b'), getJ('../hex/openings.json?v=1'), fetch('../hex/i18n.js?v=20261115').then(r => r.text()), hxEng().catch(() => null), getJ('../hex/ramps3d.json?v=1').catch(() => ({})), fetch('../hex/voice-pen-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, , rt, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] hex texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; this.RT = rt || {};
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
@@ -5416,7 +5416,7 @@
     LKEY: 'aicoding-connect4-v2-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../connect4/lessons.json?v=20261124o1'), Promise.all(['../connect4/i18n.js?v=20261107l14', '../connect4/learn.js?v=20261123l15'].map(u => fetch(u).then(r => r.text()).catch(() => '')))])
+      return (this.p = Promise.all([getJ('../connect4/lessons.json?v=30261124o1'), Promise.all(['../connect4/i18n.js?v=20261107l14', '../connect4/learn.js?v=20261123l15'].map(u => fetch(u).then(r => r.text()).catch(() => '')))])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T.join('\n'))(w); } catch (e) { console.warn('[lessons3d] connect4 texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -6826,7 +6826,7 @@
     load(lang) {
       const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261021L`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
       if (this.p) return this.p.then(() => T()).then(() => this);
-      return (this.p = Promise.all([getJ('../dots/lessons.json?v=20261123'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
+      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261123'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
         .then(([ls, X]) => { const w = {}; try { new Function('window', 'with (window) {' + X + '\n}')(w); } catch (e) { console.warn('[lessons3d] dots texts', e); } this.I = w.I18N || {}; this.data = { ls }; return T(); }).then(() => this)
         .catch(e => { this.p = null; throw e; }));
     },
