@@ -2736,7 +2736,7 @@ function rtConfirm(after) {
 let LESSONS = null, lsVar = 'nine', pzVar = 'nine';
 const VSUF = v => v === 'nine' ? '' : '-' + v, VPRE = v => v === 'nine' ? '' : v + ':';
 const LSDATA = {}, PZDATA = {};
-function loadLs(v) { return LSDATA[v] || (LSDATA[v] = fetch(`lessons${VSUF(v)}.json?v=20261123lq`).then(r => r.json()).catch(() => null)); }
+function loadLs(v) { return LSDATA[v] || (LSDATA[v] = fetch(`lessons${VSUF(v)}.json?v=20261125n81`).then(r => r.json()).catch(() => null)); }
 function loadPz(v) { return PZDATA[v] || (PZDATA[v] = fetch(`puzzles${VSUF(v)}.json?v=20261104pzd`).then(r => r.json()).catch(() => null)); }
 const lessonsReady = loadLs('nine').then(d => (LESSONS = d));
 const lsKey = id => VPRE(lsVar) + id;
