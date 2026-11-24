@@ -190,7 +190,7 @@ function jgPuzzleTexts() {
     let ng = '';
     if (m != null) { const mid = pos.clone().play(m), r = E.think(P.s, [m], 6).move, R = E.puzzle(P.s, [m, r], P.n - 1, false, ck) || [];
       ng = W.say('ja', W.why(E, mid, r), R.some(e => e.need > 0 && e.need <= P.n - 1), P.n - 1, OWN, jn++); }
-    return { ask, hint, good: gd, ng, tw: null };
+    return { ask, hint, good: gd, ng, tw: pos.side === 0 ? 1 : 2 };   // (whose move: 楚 = TURN_N.janggi[0]; the goal names 楚)
   }) }));
 }
 (async () => {
