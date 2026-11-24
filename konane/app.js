@@ -1799,7 +1799,7 @@ function startPractice(gi) {
 
 // ====================================================================== puzzles: win / win material within N moves (PZBook v2)
 let PUZZLES = null;
-const puzzlesReady = fetch('puzzles.json?v=4').then(r => r.json()).then(d => { PUZZLES = d; pzProgress(); return d; }).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=5').then(r => r.json()).then(d => { PUZZLES = d; pzProgress(); return d; }).catch(() => null);
 let pzLevel = 0;
 const pzKey = (id, j) => id + '-' + j;
 const starVal = x => x === true ? 3 : (+x || 0);
@@ -1944,15 +1944,20 @@ async function puzzleMove(m) {
   const before = posAt(cur).pos.clone(), dm = moveDur(m, before);
   playMove2(m); Pz.used++; renderPuzzleCard();
   if (!good.includes(m)) {
-    Pz.state = 'fail'; Pz.failed = true;
-    await sleep(dm + 350);
-    if (puzzle !== Pz) return;
-    moves = moves.slice(0, cur - 1); cur = moves.length; Pz.used--;
-    const p0 = posAt(cur).pos;
-    if (good[0] !== undefined) markMove(p0, good[0], 'ok'); markMove(p0, m, 'ng');
-    Pz.busy = false; Pz.state = 'play'; update(false); playChime(false); renderPuzzleCard();
-    pzStatus(`<b class="ng">${PZBook.t('blunder')}</b> ${t(left <= 1 ? 'pz.bl.last' : 'pz.bl.reach', { n: left, m: mvIn(before, m) })} ${t('pz.retry')}`);
-    return;
+    // the 詰め rule (claude/game-conventions-addendum.md, 2026-11-11): a move off the solution is played on, not taken back, and the right
+    // move is not shown by itself. The last move: the opponent's stones that can still jump (red); before it: the defender's most
+    // stubborn reply (duelReply, the same as the 3D) and what it did on the board (pzWhy; tools/lesson-verify-konane.js ⑦⑧⑨)
+    Pz.failed = true;
+    await sleep(dm + 120);
+    if (puzzle !== Pz || tok !== busyToken) return;
+    const mid = posAt(cur).pos.clone();
+    if (left <= 1) { lessonMarks = [...new Set(mid.moves().map(mFrom))].map(f => ({ at: f, cls: 'ng' })); return pzFail(Pz, pzWhy(Pz, { last: true, mid, m: mvIn(before, m) })); }
+    const r = await replyReq(left - 1);
+    if (r == null || puzzle !== Pz || tok !== busyToken) return;
+    await sleep(380); if (puzzle !== Pz || tok !== busyToken) return;
+    playMove2(r); await sleep(moveDur(r, mid) + 120); if (puzzle !== Pz) return;
+    lessonMarks = [{ at: mTo(r), cls: 'ng' }];
+    return pzFail(Pz, pzWhy(Pz, { mid, after: posAt(cur).pos, reply: r, left: left - 1 }));
   }
   await sleep(dm + 60);
   if (puzzle !== Pz || tok !== busyToken) return;
@@ -1960,6 +1965,17 @@ async function puzzleMove(m) {
   if (puzzle !== Pz || tok !== busyToken) return;
   Pz.busy = false; renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay());
   pzStatus(t('pz.reply', { m: Pz.lastReply || '', n: Pz.n - Pz.used }));
+}
+// the board's facts after a move off the solution (as atlas/games/konane-pz.js why): last = the opponent's jumps still left after the last
+// move; stuck = the reply left the player without a jump; far = the jumps the opponent still has, the moves left; k = the stones it took
+function pzWhy(Pz, o) {
+  if (o.last) return t('pz.why.last', { m: o.m, j: o.mid.mobility(3 - Pz.me) });
+  const v = { r: mvIn(o.mid, o.reply), k: E.captured(o.mid, o.reply).length, j: o.after.mobility(3 - Pz.me), n: o.left, c: pname(Pz.me) };
+  return t(o.after.mobility(Pz.me) ? 'pz.why.far' : 'pz.why.stuck', v);
+}
+function pzFail(Pz, why) {
+  Pz.state = 'fail'; Pz.busy = false; update(false); playChime(false); renderPuzzleCard();
+  pzStatus(`${why} ${t('pz.why.answer')}`);
 }
 function puzzleSolved() {
   const Pz = puzzle; if (!Pz) return;

@@ -73,13 +73,15 @@
   function start(ctx) {
     const T3 = ctx.Table3D, TH = window.THREE, t = ctx.t, X = TX[ctx.lang] || TX.en, K3 = T3.konane;
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
-    const N = RSZ[rix(ctx.size)], rule = RIDS[rix(ctx.size)], board = K3.board(N); T3.show('konane', board);
+    const PZ = ctx.pz || null;   // PZ: a puzzle position driven by atlas/puzzles.js (no AI: ctx.pz.moved decides; 2026-11-24 担当C)
+    let START = PZ && PZ.spec ? PZ.spec : null;
+    const rule = PZ ? (START && START.rule) || 's8' : RIDS[rix(ctx.size)], N = RSZ[Math.max(0, RIDS.indexOf(rule))], board = K3.board(N); T3.show('konane', board);
     const U = board.userData, Y = U.top - U.sink;
     const tall = innerHeight > innerWidth * 1.15;
     if (T3.fit) T3.fit(tall ? { w: U.W + .6, d: U.H + .8, y: U.top + .2, pitch: 1.0 } : { w: U.W + .3, d: U.H + .5, y: U.top + .2, pitch: 1.0 });
-    const pvp = ctx.mode === 'pvp';
-    const human = pvp ? 1 : ctx.side === 2 ? 2 : 1;
-    const flip = human === 2;
+    const pvp = !PZ && ctx.mode === 'pvp';
+    let human = PZ ? (PZ.me === 2 ? 2 : 1) : pvp ? 1 : ctx.side === 2 ? 2 : 1;
+    let flip = human === 2;
     const pname = c => X.n[c - 1];
     let E = null;
     const scr = i => { const [r, c] = E.RC[i]; return flip ? [N - 1 - c, N - 1 - r] : [c, r]; };
@@ -133,7 +135,7 @@
     }
 
     /* ---------- position ---------- */
-    function refresh() { pos = E.replay(null, moves).pos; }
+    function refresh() { pos = E.replay(START, moves).pos; }
     function hud(msg) {
       const side = c => `<span class="hs ${pos && pos.side + 1 === c && !over ? 'on' : ''}"><i class="dk" style="${DK[c - 1]}"></i>${pvp ? pname(c) : c === human ? L.you : L.ai}<b>${pos ? (pos.opening ? pos.count(c) : pos.mobility(c)) : 0}</b></span>`;
       ctx.hud(`${side(1)}<span class="hm">${msg || ''}</span>${side(2)}`);
@@ -145,7 +147,7 @@
     }
     function showMarks() {
       clear(hl); hintJ++;
-      if (moves.length) { const m = moves[moves.length - 1]; if (E.isRemove(m)) mark(hl, GEO.cup, MAT.last, E.mFrom(m)); else { const before = E.replay(null, moves.slice(0, -1)).pos, p = E.path(before, m); mark(hl, GEO.cup, MAT.lastF, p[0]); mark(hl, GEO.cup, MAT.last, E.mTo(m)); } }
+      if (moves.length) { const m = moves[moves.length - 1]; if (E.isRemove(m)) mark(hl, GEO.cup, MAT.last, E.mFrom(m)); else { const before = E.replay(START, moves.slice(0, -1)).pos, p = E.path(before, m); mark(hl, GEO.cup, MAT.lastF, p[0]); mark(hl, GEO.cup, MAT.last, E.mTo(m)); } }
       if (pos && pos.opening && !over && (pvp || pos.side + 1 === human)) legal.forEach(m => pulse(mark(hl, GEO.ring, MAT.rm, E.mFrom(m), .05), 3));
     }
 
@@ -179,9 +181,9 @@
       pcs[to] = p;
       travel(p.g, path, done);
     }
-    function commit(m) { busy = true; play(m, () => { busy = false; next(); }); }
+    function commit(m) { if (PZ) { const before = pos.clone(); pzOn = false; busy = true; play(m, () => { busy = false; pzAfter(before); }); return; } busy = true; play(m, () => { busy = false; next(); }); }
     function next() {
-      if (stopped) return;
+      if (stopped || PZ) return;
       const st = E.judge(pos);
       if (st.over) return end(st);
       legal = pos.moves();
@@ -222,7 +224,7 @@
       return E.sqAt(r, c);
     }
     function onClick(e) {
-      if (over || busy || thinking || !pos || pos.side + 1 !== mover() || T3.wasDrag()) return;
+      if (over || busy || thinking || !pos || pos.side + 1 !== mover() || T3.wasDrag() || (PZ && !pzOn)) return;
       const i = cellOf(e); if (i < 0) { deselect(); return; }
       const me = pos.side + 1;
       if (pos.opening) {
@@ -250,12 +252,60 @@
       refresh(); legal = pos.moves(); const wait = setup(); hud('');
       later(() => { busy = false; next(); }, wait + 200);
     }
+    /* ---------- puzzle mode (ctx.pz, 2026-11-24 担当C): a position from konane/puzzles.json, no AI; atlas/puzzles.js judges each move
+       (ctx.pz.moved(m, info)) and plays the replies (api.pz.play). The solver is the game's own (engine duelGood / duelReply, what
+       konane/app.js asks its worker), run here on the page: the puzzles are small (tools/lesson-verify-konane.js reads all 226 in a
+       few seconds). Marks: points [square, 'ok'|'ng'|'hl'|'ring'] or a whole move { m, cls } (a ring on its first square, dots along
+       its path, a disc where it lands). ---------- */
+    let pzOn = false;
+    const pzMk = new TH.Group(); board.add(pzMk);
+    const PZC = { ok: 0x2fd17a, ng: 0xff3b30, hl: 0xffb21a, ring: 0xffc928 }, pzMat = {};
+    const pm = (k, op) => pzMat[k + op] || (pzMat[k + op] = basic(PZC[k] != null ? PZC[k] : PZC.hl, op));
+    function pzState() { const st = E.judge(pos); return { over: !!st.over, winner: st.winner || 0, turn: pos.side + 1, n: moves.length, mob: [pos.mobility(1), pos.mobility(2)] }; }
+    function pzAfter(before) { const m = moves[moves.length - 1]; legal = pos.moves(); if (PZ.moved) PZ.moved(m, Object.assign({ before }, pzState())); }
+    function pzWait() { busy = false; over = !!(pos && E.judge(pos).over); legal = pos ? pos.moves() : []; pzOn = !PZ.lock && !over; showMarks(); hud(''); }
+    function pzLoad(spec, me, o) {
+      PZ.spec = spec || null; PZ.me = me === 2 ? 2 : 1; PZ.lock = !!(o && o.lock);
+      if (!E) return;   // (the engine is still loading: it starts from PZ)
+      timers.forEach(clearTimeout); timers.length = 0; jid++; pzOn = false; clear(pzMk); deselect(); clear(hl);
+      START = PZ.spec; human = PZ.me; flip = human === 2; E.setRule((START && START.rule) || rule);
+      moves = []; over = false; busy = true; refresh(); legal = pos.moves(); const wait = setup(); hud('');
+      later(() => { pzWait(); if (PZ.ready) PZ.ready(); }, wait + 150);
+    }
+    function pzMark(list) {
+      clear(pzMk); if (list == null || !pos) return;
+      const L = typeof list === 'number' ? [[list, 'ring']] : list;
+      for (const e of L) {
+        if (e && !Array.isArray(e) && e.m != null) { const k = e.cls || 'ok', p = E.path(pos, e.m).length > 1 ? E.path(pos, e.m) : e.path || [E.mFrom(e.m), E.mTo(e.m)]; mark(pzMk, GEO.ring, pm(k, .95), p[0], .05); p.slice(1, -1).forEach(q => mark(pzMk, GEO.dot, pm(k, .9), q, .03)); mark(pzMk, GEO.cup, pm(k, .55), p[p.length - 1], .012); continue; }
+        const [q, k] = Array.isArray(e) ? e : [e.at, e.cls]; if (!(q >= 0 && q < N * N)) continue;
+        if (k === 'ring') { mark(pzMk, GEO.cup, pm('hl', .45), q, .012); mark(pzMk, GEO.ring, pm('ring', 1), q, .05); continue; }
+        mark(pzMk, GEO.cup, pm(k, k === 'hl' ? .45 : .55), q, .012); if (k === 'ng') mark(pzMk, GEO.ring, pm('ng', .95), q, .05);
+      }
+      kick(400);
+    }
+    const pzApi = {
+      load: (spec, me, o) => pzLoad(spec, me, o),
+      wait: pzWait,
+      play: m => new Promise(res => { if (!pos || !pos.moves().includes(m)) return res(false); pzOn = false; busy = true; clear(pzMk); deselect(); play(m, () => { busy = false; legal = pos.moves(); over = E.judge(pos).over; res(true); }); }),
+      undo(k = 1) { timers.forEach(clearTimeout); timers.length = 0; deselect(); moves.splice(Math.max(0, moves.length - k)); refresh(); legal = pos.moves(); over = false; rebuild(); clear(pzMk); showMarks(); },
+      moves: () => moves.slice(),
+      state: () => pos ? pzState() : {},
+      mark: pzMark,
+      pos: () => pos ? pos.clone() : null,
+      engine: () => E,
+      // the first moves that win within `left` own moves whatever the reply (engine duelGood: what konane/app.js accepts)
+      good: (left, mvs) => Promise.resolve(E ? E.duelGood(START, mvs || moves, left, (START && START.rule) || rule) || [] : []),
+      // the defender's most stubborn reply (engine duelReply: the 2D's), `left` = the attacker's moves left after it
+      reply: left => Promise.resolve(E ? E.duelReply(START, moves, left, (START && START.rule) || rule).move : null),
+    };
+
     hud('');
-    loadEngine().then(e => { if (stopped) return; E = e; E.setRule(rule); if (!pvp) worker = newWorker(); begin(); }).catch(() => hud('⚠'));
+    loadEngine().then(e => { if (stopped) return; E = e; E.setRule(rule); if (PZ) { pzLoad(PZ.spec, PZ.me, { lock: PZ.lock }); return; } if (!pvp) worker = newWorker(); begin(); }).catch(() => hud('⚠'));
 
     const dbg = {
       at: i => { const [x, z] = xz(i); return T3.project(x, z, U.top); },
-      state: () => ({ moves: moves.length, side: pos && pos.side, human, pvp, over, busy, thinking, sel: sel ? sel.from : null, pieces: Object.keys(pcs).length, mob: pos && [pos.mobility(1), pos.mobility(2)] }),
+      play: (from, to) => { const m = legal.find(x => E.mFrom(x) === from && E.mTo(x) === to); if (m === undefined || busy || over || (PZ && !pzOn)) return false; commit(m); return true; },
+      state: () => ({ moves: moves.length, side: pos && pos.side, human, pvp, over, busy, thinking, pzOn, sel: sel ? sel.from : null, pieces: Object.keys(pcs).length, mob: pos && [pos.mobility(1), pos.mobility(2)] }),
       legal: () => legal.map(m => ({ m, from: E.mFrom(m), to: E.mTo(m) })),
     };
     window.Atlas3D.konane._dbg = dbg;
@@ -269,7 +319,7 @@
       hud(L.lose); later(() => ctx.onEnd({ win: false, draw: false, level: ctx.level, score: r }), 200);
     }
     const api = {
-      human: human - 1,
+      human: human - 1, pz: PZ ? pzApi : null,
       canUndo: () => myTurn() && moves.length >= undoN() && (pvp || moves.length - undoN() >= (human === 2 ? 1 : 0)),
       undo() { if (!api.canUndo()) return; timers.forEach(clearTimeout); timers.length = 0; jid++; deselect(); moves.splice(moves.length - undoN()); refresh(); rebuild(); ply++; busy = false; legal = pos.moves(); next(); },
       canHint: () => myTurn(),
@@ -298,7 +348,7 @@
         timers.forEach(clearTimeout); clearTimeout(toastT); if (toastEl) toastEl.remove();
         ctx.el.removeEventListener('click', onClick);
         if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null;
-        Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
+        Object.values(MAT).forEach(m => m.dispose()); Object.values(pzMat).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
         if (window.Atlas3D.konane._dbg === dbg) delete window.Atlas3D.konane._dbg;
       },
       _debug: dbg,
