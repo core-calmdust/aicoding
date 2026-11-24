@@ -1480,7 +1480,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=4').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=5').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { let pr; try { pr = JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } return pzMigrate(pr); }
@@ -1735,11 +1735,27 @@ function lessonAnswer(m) {
     update(false);
   }, moveDur(m, pos0) + 700);
 }
+// the fox lessons (2026-11-24 担当C): the words name what the move does on the board (foxgeese/ls-facts.js; every legal move is checked by
+// tools/lesson-verify-foxgeese.js) — a step takes nothing, a jump stopped early, the geese's reply that covers, the geese attacked at once
+const LF_KEY = { take: 'lf.take', step: 'lf.step', most: 'lf.most', stop: 'lf.stop', other: 'lf.other', fork: 'lf.fork', t0: 'lf.t0', t1: 'lf.t1', tdef: 'lf.tdef', trap: 'lf.trap' };
+function lfText(s, P, m) {
+  if (!window.FoxLsFacts || !/^f_(jump|double|fork)$/.test(s.id)) return null;
+  const pos0 = E.Pos.from(P.s), best = P.ok.includes(m) ? m : P.best, f = FoxLsFacts.fact(E, s.id, P.s, m), fb = FoxLsFacts.fact(E, s.id, P.s, best);
+  const k = f.k === 'step' && s.id === 'f_double' ? 'lf.stepD' : LF_KEY[f.k]; if (!k) return null;
+  return t(k, { m: mvIn(pos0, best), x: mvIn(pos0, m), r: f.r != null ? mvIn(pos0.clone().play(m), f.r) : '', n: f.k === 'most' ? f.n : fb.n != null ? fb.n : f.n, c: f.k === 'tdef' ? f.t : f.c, t: fb.t });
+}
+function lfHint(s, P) {   // the geese the step's hint talks about (never the answer itself)
+  if (!window.FoxLsFacts || !/^f_(jump|double|fork)$/.test(s.id)) return null;
+  const pos = E.Pos.from(P.s);
+  if (s.id === 'f_jump') return E.NBR[pos.fox].filter(([x]) => pos.sq[x] === E.P2).map(([x]) => x);
+  if (s.id === 'f_double') return FoxLsFacts.aimed(E, pos);
+  return FoxLsFacts.aimed(E, pos.clone().play(P.best));
+}
 function okAnswer(P, s, m, pts) {
   const pos0 = posAt(0).pos;
   lesson.results[lesson.i] = pts; renderLessonCard();
-  const best = P.ok.includes(m) ? m : P.best;
-  $('#lsFb').innerHTML = `<span class="pts ${pts ? 'ok' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts ? 'ok' : 'ng'}">${t(pts ? 'fb.perfect' : 'fb.bad')}</b> ` + (pts ? t('ls.' + s.id + '.why', { m: mvIn(pos0, m) }) : t('ls.' + s.id + '.ng', { m: mvIn(pos0, best), x: mvIn(pos0, m) }));
+  const best = P.ok.includes(m) ? m : P.best, lf = lfText(s, P, m);
+  $('#lsFb').innerHTML = `<span class="pts ${pts ? 'ok' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts ? 'ok' : 'ng'}">${t(pts ? 'fb.perfect' : 'fb.bad')}</b> ` + (lf || (pts ? t('ls.' + s.id + '.why', { m: mvIn(pos0, m) }) : t('ls.' + s.id + '.ng', { m: mvIn(pos0, best), x: mvIn(pos0, m) })));
   playChime(!!pts); playMove2(m);
   lsAuto(!!pts, moveDur(m, pos0) + 1100);
   const tok = busyToken;
@@ -1757,8 +1773,9 @@ $('#lsHint').onclick = () => {
   lesson.hinted = true;
   const s = curStep(), P = lessonProblem();
   lessonMarks = [];
-  const good = P.ok || [P.best];
-  for (const f of new Set(good.map(mFrom))) lessonMarks.push({ at: f, cls: 'ok' });
+  const good = P.ok || [P.best], lh = lfHint(s, P);
+  if (lh) for (const q of lh) lessonMarks.push({ at: q, cls: 'ok' });   // (the fox lessons: the geese to look at, not the fox — there is one fox)
+  else for (const f of new Set(good.map(mFrom))) lessonMarks.push({ at: f, cls: 'ok' });
   $('#lsFb').innerHTML = lesson.virt ? t('op.hint') : t('ls.' + s.id + '.hint');
   renderFx();
 };

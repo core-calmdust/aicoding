@@ -147,7 +147,102 @@ function verify(opt) {
     for (const f of ['i18n-fg.js', 'i18n-fg-more.js']) new Function('window', 'I18N', fs.readFileSync(path.join(ROOT, 'foxgeese', f), 'utf8'))(w, w.I18N);
     for (const l of L) for (const k of ['cap', 'farWin', 'trap', 'farTake', 'lastWin', 'lastTake']) { const x = w.I18N[l]['pz.why.' + k]; if (!x) add('2D', -1, `⑨ ${l}: no pz.why.${k}`); else if (/勝率|評価/.test(x)) add('2D', -1, `追16 ${l}: pz.why.${k}`); }
     const app = opt.app ? '' : fs.readFileSync(path.join(ROOT, 'foxgeese/app.js'), 'utf8'); if (!/function pzWhy\(/.test(app) || !/pzStatus\(why \|\| t\('pz\.reply'/.test(app)) add('2D', -1, '⑦⑨ foxgeese/app.js does not say why after a move off the solution (pzWhy)'); }
+  if (!opt.noLessons) out.push(...verifyLessons(opt));
   return { out, rows, total: PZ.themes.reduce((a, T) => a + T.puzzles.length, 0) };
+}
+
+// (2026-11-24 担当C) the fox lessons on the 3D table (atlas/ls-foxgeese.js READY: f_jump · f_double · f_fork; foxgeese/lessons.json, rule g15),
+// every problem by ①〜⑨ and 追1〜, independently of foxgeese/ls-facts.js (which the 2D / 3D words read):
+//  ① the saved ok set = every move that does the lesson's thing (f_jump: takes a goose · f_double: takes the most · f_fork: no goose now,
+//    and after it every reply of the geese leaves a capture), and the answer does not let the geese shut the fox in next move
+//  ② one right move (P.ok has one move, = best)  ③ 4 legal moves or more, 3 wrong or more
+//  ④ f_jump: one goose, a single jump; f_double: the answer takes 2 or more; f_fork: no capture now, the answer attacks 2 geese or more
+//  ⑤ no two problems (the lessons, the puzzles) within 4 points (the lessons: the left-right mirror; with a puzzle: the 8 of the square)
+//  ⑥ in the order asked, d (the wrong moves + 2 × the near misses: a jump that takes fewer / a move the geese cover in 1 or 2 ways /
+//    a goose more next to the fox) does not go down
+//  ⑦⑧ every wrong move: ls-facts' fact is the board's (a step takes nothing; stopped on the answer's line / another way; after it no goose
+//    can be jumped / one only and the named reply covers it / several and the named reply covers them all / the named reply shuts the fox in),
+//    and the words of every language (2D lf.* in 14 languages, ドミダック's ja) exist for it and carry no {placeholder} left
+//  追7 the hints' counts: f_jump has 2 geese or more next to the fox (「順番に見よう」), f_fork's answer attacks 2 or more (「2羽以上」)
+//  追16 no evaluation in the words · 追3 only the ok moves score (atlas/ls-foxgeese.js points)
+function verifyLessons(opt) {
+  opt = opt || {};
+  const LS = opt.ls || JSON.parse(fs.readFileSync(path.join(ROOT, 'foxgeese/lessons.json'), 'utf8'));
+  const PZ = JSON.parse(fs.readFileSync(path.join(ROOT, 'foxgeese/puzzles.json'), 'utf8'));
+  const F = opt.facts || require(path.join(ROOT, 'foxgeese/ls-facts.js')), A = require(path.join(ROOT, 'atlas/ls-foxgeese.js'));
+  const out = [], add = (id, j, m) => out.push({ theme: 'lesson ' + id, q: j + 1, msg: m });
+  const w = { I18N: {} }, LG = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar']; LG.forEach(l => { w.I18N[l] = {}; });
+  for (const f of ['i18n-fg.js', 'i18n-fg-more.js']) new Function('window', 'I18N', fs.readFileSync(path.join(ROOT, 'foxgeese', f), 'utf8'))(w, w.I18N);
+  const JA = opt.ja || A.JA;
+  const caps = p => p.foxMoves([]).filter(m => p.clone().play(m).cap > p.cap);
+  const firstG = p => new Set(caps(p).map(m => E.jumped(m)[0]));
+  const shut = p => p.moves().some(g => !p.clone().play(g).foxMoves([]).length);
+  const KEYS = { f_jump: ['take', 'step'], f_double: ['most', 'stepD', 'stop', 'other'], f_fork: ['fork', 't0', 't1', 'tdef', 'trap'] };
+  const LFK = { stepD: 'lf.stepD' };
+  const norm = b => { let o = ''; for (let i = 0; i < 49; i++) o += E.ON[i] ? (b[i] === 'f' || b[i] === 'g' ? b[i] : '.') : ' '; return o; };
+  const pool = [];
+  (LS.steps || []).forEach(st => (st.problems || []).forEach((P, j) => pool.push({ id: st.id, j, b: norm(P.s.b), sym: SYM8.filter((_, t) => t === 0 || t === 2), ls: true })));
+  PZ.themes.forEach(T => T.puzzles.forEach((P, j) => pool.push({ id: T.id, j, b: norm(P.s.b), sym: SYM8 })));
+  for (const st of LS.steps) {
+    if (!A.READY.includes(st.id)) continue;
+    const id = st.id; let dPrev = -1;
+    // the words exist in every language (2D) and in ドミダック's ja for every fact this lesson can give
+    for (const k of KEYS[id]) {
+      for (const l of LG) { const x = w.I18N[l][LFK[k] || 'lf.' + k]; if (!x) add(id, -1, `⑦⑨ ${l}: no ${LFK[k] || 'lf.' + k}`); else if (/勝率|評価|見込み/.test(x)) add(id, -1, `追16 ${l}: lf.${k}`); }
+      const jl = (JA.w[k] || JA.n[k]); if (!jl || !jl.length) add(id, -1, `⑦ ja: ドミダック has no words for ${k}`); else if (jl.some(t => /勝率|評価|見込み/.test(t))) add(id, -1, `追16 ja: ${k}`);
+    }
+    st.problems.forEach((P, j) => {
+      E.setRule(P.s.rule || 'g15'); const pos = E.Pos.from(P.s), L = pos.moves();
+      const took = m => pos.clone().play(m).cap - pos.cap, most = Math.max(...L.map(took));
+      let good;
+      if (id === 'f_jump') good = L.filter(m => took(m) > 0);
+      else if (id === 'f_double') good = L.filter(m => most > 0 && took(m) === most);
+      else good = L.filter(m => { const q = pos.clone().play(m); if (took(m) || !q.foxMoves([]).length) return false; const R = q.moves(); return R.length && R.every(r => caps(q.clone().play(r)).length > 0); });
+      const okS = P.ok || [];
+      if (good.length !== okS.length || !good.every(m => okS.includes(m))) add(id, j, `① the saved answers (${okS.map(m => E.name(pos, m)).join(',')}) ≠ the moves that do it (${good.map(m => E.name(pos, m)).join(',')})`);
+      if (okS.length !== 1 || P.best !== okS[0]) add(id, j, `② ${okS.length} right moves (best ${P.best})`);
+      if (L.length < 4 || L.length - good.length < 3) add(id, j, `③ ${L.length} legal moves, ${L.length - good.length} wrong`);
+      const a = pos.clone().play(P.best);
+      if (shut(a)) add(id, j, '① after the answer the geese shut the fox in');
+      if (id === 'f_jump' && (good.length !== 1 || E.jumped(P.best).length !== 1)) add(id, j, '④ not one goose by a single jump');
+      if (id === 'f_double' && most < 2) add(id, j, `④ the most is ${most}`);
+      if (id === 'f_fork' && (caps(pos).length || firstG(a).size < 2)) add(id, j, `④ a capture now (${caps(pos).length}) / the answer attacks ${firstG(a).size}`);
+      const adj = E.NBR[pos.fox].filter(([x]) => pos.sq[x] === E.P2).length;
+      if (id === 'f_jump' && adj < 2) add(id, j, `追7 ${adj} goose next to the fox (the hint: look at them one by one)`);
+      // ⑤
+      const me = pool.find(x => x.ls && x.id === id && x.j === j);
+      for (const x of pool) { if (x === me) continue; const syms = x.ls ? me.sym : SYM8; if (syms.some(f => diff(me.b, symB(x.b, f)) <= 4)) add(id, j, `⑤ within 4 points of ${x.ls ? 'lesson ' : ''}${x.id}#${x.j + 1}`); }
+      // ⑦⑧ every wrong move, the fact recomputed from the board
+      let near = 0;
+      for (const m of L) {
+        const f = F.fact(E, id, P.s, m), q = pos.clone().play(m), k = took(m), right = okS.includes(m);
+        const kk = f.k === 'step' && id === 'f_double' ? 'stepD' : f.k;
+        if (!KEYS[id].includes(kk)) { add(id, j, `⑧ ${E.name(pos, m)}: a fact ${f.k} the lesson has no words for`); continue; }
+        let truth;
+        if (id === 'f_jump') truth = k ? 'take' : 'step';
+        else if (id === 'f_double') { if (k === most) truth = 'most'; else if (!k) truth = 'stepD'; else { const pm = E.path(m); truth = L.some(x => took(x) === most && pm.every((v, i) => E.path(x)[i] === v)) ? 'stop' : 'other'; } }
+        else {
+          if (right) truth = 'fork';
+          else if (shut(q)) truth = 'trap';
+          else { const t = firstG(q).size; truth = t === 0 ? 't0' : t === 1 ? 't1' : 'tdef'; }
+          if (f.r != null) { const z = q.clone().play(f.r); if (truth === 'trap' ? z.foxMoves([]).length : caps(z).length) add(id, j, `⑧ ${E.name(pos, m)}: the named reply ${E.name(q, f.r)} does not ${truth === 'trap' ? 'shut the fox in' : 'cover every jump'}`); }
+          if ((truth === 't1' || truth === 'tdef') && f.t !== firstG(q).size) add(id, j, `⑧ ${E.name(pos, m)}: says ${f.t} geese attacked, the board ${firstG(q).size}`);
+        }
+        if ((right ? 1 : 0) !== (['take', 'most', 'fork'].includes(truth) ? 1 : 0)) add(id, j, `① ${E.name(pos, m)} right=${right} but the board says ${truth}`);
+        if (kk !== truth) add(id, j, `⑧ ${E.name(pos, m)}: the words say ${kk}, the board ${truth}`);
+        if (id === 'f_double' && (f.n !== most || (f.c != null && f.c !== k))) add(id, j, `⑧ ${E.name(pos, m)}: counts ${f.c}/${f.n}, the board ${k}/${most}`);
+        // near misses (⑥)
+        if (!right) { if (id === 'f_double' && k > 0) near++; if (id === 'f_fork') { const R = q.moves(); if (R.filter(r => !caps(q.clone().play(r)).length).length <= 2) near++; } }
+        // the filled words leave no placeholder (2D en / ja and the 3D ja)
+        for (const l of ['ja', 'en']) { const x = w.I18N[l][LFK[kk] || 'lf.' + kk] || ''; const y = x.replace(/\{(\w+)\}/g, (_, v) => ({ m: 'M', x: 'X', r: 'R', n: 1, c: 1, t: 2 })[v] != null ? 'ok' : '{' + v + '}'); if (/\{\w+\}/.test(y)) add(id, j, `⑦ ${l} lf.${kk} has an unknown placeholder`); }
+      }
+      if (id === 'f_jump') near = adj - 1;
+      const d = (L.length - good.length) + 2 * near;
+      if (d < dPrev) add(id, j, `⑥ d ${d} < the problem before (${dPrev})`); dPrev = d;
+      if (A.make && (A.make({ getJ: () => 0, J: () => ({}), put: () => 0, L: x => x, fill: (t) => t }).points(P, L.find(m => !okS.includes(m))) !== 0)) add(id, j, '追3 a wrong move scores');
+    });
+  }
+  return out;
 }
 // --selftest: broken data must be caught (the answer / order / duplicates / choices / the words / the reply / the evaluation words)
 function selftest() {
@@ -166,8 +261,20 @@ function selftest() {
     ['the 2D reason gone (⑦⑨)', null, /^⑦⑨/, { app: true }],
     ['an evaluation in the words (追16)', null, /^追16/, { why: o => Object.assign(F.why(o), { ja: '勝率が下がる' }) }],
   ];
+  const lsBase = JSON.parse(fs.readFileSync(path.join(ROOT, 'foxgeese/lessons.json'), 'utf8')), lsc = () => JSON.parse(JSON.stringify(lsBase));
+  const FF = require(path.join(ROOT, 'foxgeese/ls-facts.js')), AJ = require(path.join(ROOT, 'atlas/ls-foxgeese.js')).JA;
+  const lcases = [
+    ['lesson: the answer changed (①②)', d => { const P = d.steps[0].problems[0]; E.setRule('g15'); const m = E.Pos.from(P.s).moves().find(x => !P.ok.includes(x)); P.ok = [m]; P.best = m; }, /^①/],
+    ['lesson: order reversed (⑥)', d => { d.steps[2].problems.reverse(); }, /^⑥/],
+    ['lesson: a duplicate (⑤)', d => { d.steps[1].problems[3] = JSON.parse(JSON.stringify(d.steps[1].problems[1])); }, /^⑤/],
+    ['lesson: the fact wrong (⑧)', null, /^⑧/, { facts: { fact: (E2, id, sp, m) => { const f = FF.fact(E2, id, sp, m); return f.k === 'stop' ? Object.assign({}, f, { k: 'other' }) : f.k === 't1' ? Object.assign({}, f, { k: 't0' }) : f; } } }],
+    ['lesson: ja words gone (⑦)', null, /^⑦/, { ja: Object.assign({}, AJ, { n: Object.assign({}, AJ.n, { tdef: [] }) }) }],
+    ['lesson: an evaluation in the words (追16)', null, /^追16/, { ja: Object.assign({}, AJ, { w: Object.assign({}, AJ.w, { most: ['勝率が上がる'] }) }) }],
+  ];
+  for (const [name, f, re, o] of lcases) { const d = lsc(); if (f) f(d); const out = verifyLessons(Object.assign({ ls: d }, o || {})); const hit = out.some(x => re.test(x.msg)); console.log((hit ? 'caught ' : 'MISSED ') + name); cases.push([name, null, re, { _hit: hit }]); }
   let ok = 0;
   for (const [name, f, re, o] of cases) {
+    if (o && '_hit' in o) { if (o._hit) ok++; continue; }
     const d = clone(); if (f) f(d);
     const r = verify(Object.assign({ data: d }, o || {}));
     const hit = r.out.some(x => re.test(x.msg));
@@ -175,7 +282,7 @@ function selftest() {
   }
   console.log(`selftest ${ok}/${cases.length}`); return ok === cases.length;
 }
-module.exports = { verify, selftest, goodSet, att, def, refutes, THEME, SYM8, symB, diff, setMemo: () => { memo = new Map(); budget = 3e6; } };
+module.exports = { verify, verifyLessons, selftest, goodSet, att, def, refutes, THEME, SYM8, symB, diff, setMemo: () => { memo = new Map(); budget = 3e6; } };
 if (require.main === module && process.argv.includes('--selftest')) process.exit(selftest() ? 0 : 1);
 else if (require.main === module) {
   const a = process.argv.slice(2), jx = a.indexOf('--json'), fx = a.indexOf('--file');
