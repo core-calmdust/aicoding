@@ -9,7 +9,7 @@ const only = process.argv.slice(2).find(a => !a.startsWith('--'));
 const ACTS = ['hello', 'home', 'fig', 'who', 'none', 'sus', 'nosus', 'okay', 'bad', 'seen', 'co_seer', 'co_medium', 'rs_w', 'rs_h', 'rm_w', 'rm_h', 'report', 'item', 'accuse', 'agree', 'defend', 'grief', 'deny', 'counter', 'thanks'];
 const CLICHE = ['背筋が凍', '血の気が引', '息を呑ん', '静寂が支配', '闇に包まれ', '不穏な空気', '戦慄が走', '嫌な予感', '心臓が早鐘', '悪寒が走', '凍りつい', '時が止まった'];
 const TELL = ['恐ろしい', '恐怖', '不気味', '悲しい', '怖かった', '怖い', '寂しい', 'ぞっと', '戦慄'];
-const SENSE = /吹雪|息|燭|炭|靴|跡|音|匂|香|冷た|温|白|黒|赤|光|灯|湯気|雪|雨|風|霜|煤|湿|濡|鳴|響|揺|軋|きし|ぬく|凍|潮|波|火|煙|錆|鉄|硝子|銀|真鍮|木|石|砂|泥|毛|爪/;
+const SENSE = /吹雪|息|燭|炭|靴|跡|音|匂|香|冷た|温|白|黒|赤|光|灯|湯気|雪|雨|風|霜|煤|湿|濡|鳴|響|揺|軋|きし|ぬく|凍|潮|波|火|煙|錆|鉄|硝子|銀|真鍮|木|石|砂|泥|毛|爪|紙|インク|墨|針|糸|指|青銅|花|色|湯呑|鎖|網|線香/;
 const sents = s => (String(s).replace(/\{\w+\}/g, '〇').match(/[^。！？\n]+[。！？」』]*/g) || []).map(x => x.trim()).filter(Boolean);
 const ending = s => { const b = s.replace(/[。！？」』]+$/, ''); return b.slice(-2); };
 let fail = 0;
@@ -183,6 +183,40 @@ function scoreNarr(st) {
   return { score: Math.max(0, Math.round(100 - ded.reduce((a, d) => a + d[0], 0))), ded };
 }
 // story text that the prose checks also read (the voiced lines checked against each speaker's voice)
+// 8. the heroes: every story has many "you"s, each with a way in, a thread of their own, and an ending
+function scoreHeroes(base) {
+  const ded = [], add = (n, why) => ded.push([n, why]);
+  const H = base.heroes || [];
+  if (H.length < 6) add((6 - H.length) * 8, `主人公 ${H.length}人（6人以上）`);
+  const jobs = H.map(h => h.job);
+  const homes = new Set(H.map(h => h.home)); if (homes.size < 3) add(4, `主人公の居場所が${homes.size}か所しかない（3以上）`);
+  const tr = new Set(H.map(h => JSON.stringify(h.traits))); if (tr.size < H.length) add(4, '特徴がまったく同じ主人公がいる');
+  for (const h of H) {
+    for (const f of ['id', 'job', 'you', 'book', 'pitch', 'home', 'traits', 'intro', 'open', 'close', 'win', 'epi']) if (!h[f]) add(5, `${h.job}：${f} がない`);
+    for (const r of ['villager', 'guard']) if (!(h.how || {})[r]) add(3, `${h.job}：役 ${r} の由来がない`);
+    const own = Object.values(h.arc || {}).flat(); if (own.length < 2) add(4, `${h.job}：自分の糸（本筋の自分の場面）が${own.length}（2以上）`);
+    if (!base.locs.some(l => l.id === h.home)) add(6, `${h.job}：居場所がない`);
+    for (const c of ['height', 'hand', 'foot', 'mark']) if (!h.traits || !base.traits[c].v[h.traits[c]]) add(6, `${h.job}：特徴 ${c} が物語にない値`);
+    if (String(h.pitch).length > 48) add(2, `${h.job}：紹介が長い（${h.pitch.length}/48字）`);
+    // the hero's own words: same prose rules
+    const T = [h.intro, h.open, h.close, h.win, h.epi].concat(own.map(e => e.t)).filter(Boolean);
+    let long = 0; for (const t of T) for (const x of sents(t)) if (x.length > 72) long++; if (long) add(long * 1.5, `${h.job}：長すぎる文 ${long}`);
+    for (const c of CLICHE) if (T.join('').includes(c)) add(4, `${h.job}：使い古された言い回し「${c}」`);
+    const flat = T.filter(t => !SENSE.test(t)); if (flat.length > 1) add(flat.length, `${h.job}：五感の手ざわりのない文 ${flat.length}`);
+    if (!/\{book\}|\n/.test('') && !T.some(t => t.includes(h.book))) add(2, `${h.job}：書きつけるもの「${h.book}」が自分の文に一度も出ない`);
+    // the shared story, seen as this hero: no other hero's job, and no hole left
+    const st = W.WLHero.apply(base, h.id);
+    const shared = JSON.stringify(Object.assign({}, st, { heroes: null, heroData: null, hero: null }));
+    const left = shared.match(/\{(job|you|book)\}/g); if (left) add(5, `${h.job}：置き換え漏れ ${left[0]}`);
+    for (const j of jobs) if (j !== h.job && !h.job.includes(j) && shared.includes(j) && !/^(先生|医者|学生)$/.test(j)) add(4, `${h.job}で遊ぶと、ほかの主人公の肩書き「${j}」が出てくる`);
+  }
+  // each hero must score on the story's own rubrics too
+  let worst = 100, wn = '';
+  for (const h of H) { const st = W.WLHero.apply(base, h.id); const a = scoreStory(st).score, b = scoreNarr(st).score; if (Math.min(a, b) < worst) { worst = Math.min(a, b); wn = h.job; } }
+  if (worst < 90) add(90 - worst, `${wn}で遊んだときの文章・物語の点が ${worst}`);
+  return { score: Math.max(0, Math.round(100 - ded.reduce((a, d) => a + d[0], 0))), ded };
+}
+
 function narrLines(st) {
   const out = [];
   const A = st.arc || {};
@@ -196,8 +230,9 @@ function narrLines(st) {
 function composed() {
   const E = W.WLEngine, SP = W.WLSpeech, bad = [], samples = [];
   for (const id of Object.keys(W.WL_STORIES)) {
-    const st = W.WL_STORIES[id];
+    const H = W.WL_STORIES[id].heroes || [];
     for (let g = 0; g < 12; g++) {
+      const st = W.WLHero.apply(W.WL_STORIES[id], H.length ? H[g % H.length].id : null);
       const S = E.newGame(st, { diff: g % 4, seed: 77 + g });
       for (let d = 1; d < 5 && !S.result; d++) {
         E.npcSearch(S, st);
@@ -223,13 +258,16 @@ function composed() {
 const BAR = 90;
 for (const id of Object.keys(W.WL_STORIES)) {
   if (only && only !== id && only !== 'voices') continue;
-  const st = W.WL_STORIES[id], r = scoreStory(st);
+  const base = W.WL_STORIES[id], st = W.WLHero.apply(base, null), r = scoreStory(st);
   if (r.score < BAR) fail++;
   console.log(`${r.score >= BAR ? 'OK ' : 'NG '} ${String(r.score).padStart(3)}  ${st.title}`);
   if (show || r.score < BAR) for (const [n, w] of r.ded) console.log(`      -${n}  ${w}`);
   const q = scoreNarr(st); if (q.score < BAR) fail++;
   console.log(`${q.score >= BAR ? 'OK ' : 'NG '} ${String(q.score).padStart(3)}  ${st.title}（物語の厚み）`);
   if (show || q.score < BAR) for (const [n, w] of q.ded) console.log(`      -${n}  ${w}`);
+  const hq = scoreHeroes(base); if (hq.score < BAR) fail++;
+  console.log(`${hq.score >= BAR ? 'OK ' : 'NG '} ${String(hq.score).padStart(3)}  ${st.title}（主人公 ${(base.heroes || []).length}人）`);
+  if (show || hq.score < BAR) for (const [n, w] of hq.ded) console.log(`      -${n}  ${w}`);
 }
 if (!only || only === 'voices') { const v = scoreVoices(); if (v.score < BAR) fail++; console.log(`${v.score >= BAR ? 'OK ' : 'NG '} ${String(v.score).padStart(3)}  声（voices.js）`); if (show || v.score < BAR) for (const [n, w] of v.ded) console.log(`      -${n}  ${w}`); }
 { const c = composed(); const sc = Math.max(0, 100 - c.bad.length * 2); if (sc < BAR) fail++; console.log(`${sc >= BAR ? 'OK ' : 'NG '} ${String(sc).padStart(3)}  組み立てたせりふ（崩れ ${c.bad.length}件）`); if (show || sc < BAR) c.bad.slice(0, 20).forEach(x => console.log('      ' + x)); if (process.argv.includes('--samples')) c.samples.forEach(x => console.log('  · ' + x)); }
