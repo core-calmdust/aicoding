@@ -16,7 +16,7 @@
       sfx = ac.createGain(); sfx.gain.value = SFX; sfx.connect(master);
       bgm = ac.createGain(); bgm.gain.value = musicOn ? BGM : 0; bgm.connect(master);
       if (want) { const w = want; want = null; music(w.name, w.level); }
-      loadSample('bell'); loadSample('wolf');
+      loadSample('bell'); loadSample('wolf'); loadSample('door');
       document.addEventListener('visibilitychange', () => { if (!ac) return; if (document.hidden) ac.suspend(); else if (on && !paused) ac.resume(); });
     }
     if (ac.state === 'suspended' && !document.hidden) ac.resume();
@@ -35,7 +35,7 @@
     duckUntil = back;
   }
   // the recorded bell and howl (audio/); the synthesised ones below stand in until they load
-  const SAMPLE = { bell: 'audio/bell.mp3?v=1', wolf: 'audio/wolf.mp3?v=1' }, smp = {};
+  const SAMPLE = { bell: 'audio/bell.mp3?v=1', wolf: 'audio/wolf.mp3?v=1', door: 'audio/door.mp3?v=1' }, smp = {};
   function loadSample(k) { if (!smp[k] && ac) smp[k] = fetch(SAMPLE[k]).then(r => r.arrayBuffer()).then(b => new Promise((res, rej) => ac.decodeAudioData(b, res, rej))).then(buf => (smp[k + ':buf'] = buf)).catch(() => { delete smp[k]; return null; }); return smp[k]; }
   function playSample(k, gain, t) {
     const buf = smp[k + ':buf']; if (!buf) { loadSample(k); return false; }
@@ -68,6 +68,8 @@
     o.connect(f); f.connect(v); o2.connect(v2); v2.connect(v); v.connect(sfx);
     [o, o2, lfo].forEach(x => { x.start(t); x.stop(t + 3.2); });
   }
+  // an old wooden door, slowly opening: the wolf is coming (a recording only; silent until it loads)
+  function door(when, vol) { const a = ctx(); if (!a) return; playSample('door', (vol || 1) * .45, a.currentTime + (when || 0)); }
   function windOn(level) {
     const a = ctx(); if (!a) return; if (wind) { wind.g.gain.linearRampToValueAtTime(level * 1.8, a.currentTime + 1.5); return; }
     const s = a.createBufferSource(); s.buffer = noiseBuf(a, 4); s.loop = true;
@@ -145,5 +147,5 @@
   // the window lost focus: everything stops until it comes back
   function pause(p) { paused = !!p; if (!ac) return; if (paused) ac.suspend(); else if (on && !document.hidden) ac.resume(); }
   function set(v) { on = !!v; try { localStorage.setItem('wolflantern-snd', on ? '1' : '0'); } catch (e) {} if (!on) { windOff(); if (ac) ac.suspend(); } else if (ac) ac.resume(); }
-  root.WLSound = { pause, bell, howl, windOn, windOff, pluck, page, ok, thud, talk, music, set, setMusic, setTalk, get on() { return on; }, get musicOn() { return musicOn; }, get talkOn() { return talkOn; }, get bgmLevel() { return bgm ? bgm.gain.value : null; }, unlock: ctx };
+  root.WLSound = { pause, bell, howl, door, windOn, windOff, pluck, page, ok, thud, talk, music, set, setMusic, setTalk, get on() { return on; }, get musicOn() { return musicOn; }, get talkOn() { return talkOn; }, get bgmLevel() { return bgm ? bgm.gain.value : null; }, unlock: ctx };
 })(window);

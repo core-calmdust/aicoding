@@ -445,7 +445,7 @@
       setScene(N.loc);
       items.push({ text: st.text.day[Math.min(S.day - 1, st.text.day.length - 1)] });
       if (N.died && N.target === 'you') {
-        setCast([]); SND.thud();
+        setCast([]); SND.door(0, 1.1); SND.thud();
         items.push({ text: st.text.dead }, { text: st.text.ghost });
       } else if (N.died) {
         const v = N.target, c = ch(v);
@@ -964,7 +964,7 @@
   async function wolfRun() {
     const fx = $('fx');
     const d = document.createElement('div'); d.className = 'run'; d.innerHTML = ART.wolf(); fx.appendChild(d);
-    SND.howl(.3);
+    SND.howl(.3); SND.door(1.3);   // far off a howl, then a door creaks open somewhere close
     await wait(2900);
     d.remove();
   }
