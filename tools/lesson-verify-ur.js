@@ -89,9 +89,14 @@ module.exports = function ur(opt = {}) {
   const P16 = [0, 4, 6, 4, 1], W16 = [1, 4, 6, 4, 1];
   const num = x => parseInt(String(typeof x === 'object' ? x.ja.split('+')[1] : x), 10);
   const sideOf = x => typeof x === 'object' ? (x.ja.startsWith(X.Q.you.ja) ? 0 : 1) : null;
+  const posM = C => C.m - C.on.reduce((y, p) => y + 15 - p, 0) + C.on.reduce((y, p) => y + p, 0);
   const cnt3 = a => ({ on: a.filter(x => x >= 1 && x <= 14), k0: a.filter(x => x === 0).length, kG: a.filter(x => x === 15).length, m: a.reduce((t, p) => t + 15 - p, 0) });
   function count54(L, q, where, s, k) {
     const o = q.opts || [], ngo = q.ngo || [], bad = (i, msg) => add(L.id, where, `追54 誤答 ${JSON.stringify(typeof o[i] === 'object' ? o[i].ja : o[i])}: ${msg}`);
+    // 追64：その問題のよくある誤りの一覧（説明のないものも含む）で、誤答の値になる誤りがちょうど1つか
+    const only64 = (all, valOf) => o.forEach((x, i) => { if (i === q.ans) return; const v = valOf(x), hit = all.filter(e => e[1] === v);
+      if (hit.length !== 1) add(L.id, where, `追64 誤答 ${JSON.stringify(typeof x === 'object' ? x.ja : x)} になる誤りが${hit.length}つ（${hit.map(e => e[0]).join('・')}）`);
+      else if ((ngo[i] || [])[0] !== hit[0][0]) add(L.id, where, `追64 誤答 ${JSON.stringify(typeof x === 'object' ? x.ja : x)} の説明 ${(ngo[i] || [])[0]} が、その値になる誤り ${hit[0][0]} と違う`); });
     o.forEach((x, i) => { const g = ngo[i]; if (i !== q.ans && g && ['c.lowNg', 'c.highNg', 'c.roll8Ng'].includes(g[0])) bad(i, `説明 ${g[0]} が数え方の誤りを名指さない（少なすぎ・多すぎ・ない目の決まり文句）`); });
     const hint = (q.hints || [])[0] || q.h, hj = hint && hint.ja || '';
     if (k === 'c.roll') { const n = q.why[1].n, m = W16[n];
@@ -99,7 +104,12 @@ module.exports = function ur(opt = {}) {
       o.forEach((x, i) => { if (i === q.ans) return; const g = ngo[i] || [], v = parseInt(x, 10);
         if (g[0] === 'c.oneWayNg' && !(v === 1 && m > 1 && g[1].n === n && g[1].m === m)) bad(i, '「1通りと数える」の数が合わない');
         if (g[0] === 'c.halfNg' && !(v === 8 && g[1].n === n && g[1].m === m)) bad(i, '「印1個の確率（半分）」の数が合わない');
-        if (g[0] === 'c.rollNg' && !String(g[1].v).split(' / ').every(r => W16[+r] === v && +r !== n)) bad(i, '別の目の確率の目が合わない'); });
+        if (g[0] === 'c.rollNg' && !String(g[1].v).split(' / ').every(r => W16[+r] === v && +r !== n)) bad(i, '別の目の確率の目が合わない');
+        if (g[0] === 'c.notNg' && !(v === 16 - m && g[1].n === n && g[1].m === m)) bad(i, '「出ない確率」の数が合わない');
+        if (!['c.oneWayNg', 'c.halfNg', 'c.rollNg', 'c.notNg'].includes(g[0])) bad(i, `説明 ${g[0]} は出目の確率の数え方の誤りでない`); });
+      const all = [['c.halfNg', 8], ['c.notNg', 16 - m]]; if (m > 1) all.push(['c.oneWayNg', 1]);
+      for (const w of new Set(W16)) if (w !== m) all.push(['c.rollNg', w]);
+      only64(all, x => parseInt(x, 10));
       return; }
     if (k === 'c.risk') {
       const dm = (q.marks || []).find(x => x.type === 'danger'); let p = null; for (let i = 1; i <= 14; i++) { const c = UF.rc('finkel', 0, i); if (dm && c && c.r === dm.r && c.c === dm.c) p = i; }
@@ -118,7 +128,15 @@ module.exports = function ur(opt = {}) {
         else if (g[0] === 'c.aheadNg') { if (!ahead.length || v !== m + ahead.reduce((y, r) => y + P16[r - p], 0) || g[1].d !== ahead.map(r => r - p).join('・')) bad(i, '「前の相手の駒まで数える」が盤と合わない'); }
         else if (g[0] === 'c.privNg') { const pv = att.filter(a => a.q <= 4); if (!pv.length || v !== m - pv.reduce((y, a) => y + P16[a.d], 0)) bad(i, '「相手の手前の列の駒を忘れる」が盤と合わない'); }
         else if (g[0] === 'c.safeNg') { if (v !== 16 - m || g[1].m !== m) bad(i, '「取られない確率」の数が合わない'); }
+        else if (g[0] === 'c.farNg') { const f = att[att.length - 1]; if (att.length < 2 || v !== P16[f.d] || g[1].d !== f.d || g[1].e !== att.slice(0, -1).map(a => a.d).join('・')) bad(i, '「遠い駒だけ」が盤と合わない'); }
+        else if (g[0] === 'c.distNg') { if (v !== att.reduce((y, a) => y + a.d, 0) || g[1].list !== att.map(a => a.d).join(' + ')) bad(i, '「距離をそのまま通り数に」が盤と合わない'); }
         else bad(i, `説明 ${g[0]} は取られる確率の数え方の誤りでない`); });
+      const all = [['c.distNg', att.reduce((y, a) => y + a.d, 0)]]; if (m) all.push(['c.safeNg', 16 - m]);
+      if (att.length >= 2) all.push(['c.nearNg', P16[att[0].d]], ['c.farNg', P16[att[att.length - 1].d]]);
+      if (ahead.length) all.push(['c.aheadNg', m + ahead.reduce((y, r) => y + P16[r - p], 0)]);
+      const pv0 = att.filter(a => a.q <= 4); if (pv0.length) all.push(['c.privNg', m - pv0.reduce((y, a) => y + P16[a.d], 0)]);
+      if (att.length === 1) { const d = att[0].d; if (P16[d] > 1) all.push(['1通り', 1]); for (const w of [d - 1, d + 1]) if (w >= 1 && w <= 4) all.push(['となりの目' + w, P16[w]]); }
+      only64(all.filter(e => e[1] !== m), x => parseInt(x, 10));
       return; }
     if (/^c\.pipsB/.test(k)) { const sd = q.why[1].r ? 1 : 0, C = cnt3(s.pos[sd]);
       const key = 'c.pipsB' + (C.k0 ? 'O' : '') + (C.kG ? 'G' : ''); if (k !== key) add(L.id, where, `追54 説明 ${k} の内訳が盤（入っていない駒 ${C.k0}・ゴール ${C.kG}）と合わない → ${key}`);
@@ -129,13 +147,23 @@ module.exports = function ur(opt = {}) {
         'c.minus1Ng': C.on.length && v === C.m - C.on.length, 'c.posNg': C.on.length && v === C.m - C.on.reduce((y, p) => y + 15 - p, 0) + C.on.reduce((y, p) => y + p, 0) }[g[0]];
         if (!ok) bad(i, `説明 ${g[0]} の誤りでは ${v} にならない（盤：入っていない駒 ${C.k0}・ゴール ${C.kG}）`);
         if (ok && ['c.offNg', 'c.offOnceNg', 'c.off14Ng'].includes(g[0]) && g[1].k !== C.k0) bad(i, '入っていない駒の数が違う'); if (ok && g[0] === 'c.goalNg' && g[1].k !== C.kG) bad(i, 'ゴールした駒の数が違う'); });
+      const all = [], on = C.on.length, P = C.on.reduce((y, p) => y + p, 0), R = C.on.reduce((y, p) => y + 15 - p, 0);
+      if (C.k0) all.push(['c.offNg', C.m - 15 * C.k0], ['c.off14Ng', C.m - C.k0]); if (C.k0 >= 2) all.push(['c.offOnceNg', C.m - 15 * (C.k0 - 1)]);
+      if (C.kG) all.push(['c.goalNg', C.m + 15 * C.kG]);
+      if (on) all.push(['c.minus1Ng', C.m - on], ['c.posNg', C.m - R + P], ['16−位置', C.m + on]);
+      all.push(['相手の合計', cnt3(s.pos[1 - sd]).m]);
+      only64(all.filter(e => e[1] !== C.m), x => +x);
       return; }
     if (k === 'c.lead2y' || k === 'c.lead2r') { const A = cnt3(s.pos[0]), B = cnt3(s.pos[1]), res = (fa, fb) => fb - fa ? [fb - fa > 0 ? 0 : 1, Math.abs(fb - fa)] : null, ans = res(A.m, B.m);
       if ((A.k0 + B.k0 > 0) !== /入っていない/.test(hj) || (A.kG + B.kG > 0) !== /ゴール/.test(hj)) add(L.id, where, `追54 ヒント「${hj}」の内訳が盤と合わない`);
       o.forEach((x, i) => { if (i === q.ans) return; const g = ngo[i] || [], got = [sideOf(x), num(x)], want = {
-        'c.sideNg': [1 - ans[0], ans[1]], 'c.leadOffNg': A.k0 + B.k0 ? res(A.m - 15 * A.k0, B.m - 15 * B.k0) : null, 'c.leadGoalNg': A.kG + B.kG ? res(A.m + 15 * A.kG, B.m + 15 * B.kG) : null, 'c.leadOff14Ng': A.k0 !== B.k0 ? res(A.m - A.k0, B.m - B.k0) : null }[g[0]];
+        'c.sideNg': [1 - ans[0], ans[1]], 'c.leadOffNg': A.k0 + B.k0 ? res(A.m - 15 * A.k0, B.m - 15 * B.k0) : null, 'c.leadGoalNg': A.kG + B.kG ? res(A.m + 15 * A.kG, B.m + 15 * B.kG) : null, 'c.leadOff14Ng': A.k0 !== B.k0 ? res(A.m - A.k0, B.m - B.k0) : null, 'c.leadPosNg': res(posM(A), posM(B)) }[g[0]];
         if (!want || want[0] !== got[0] || want[1] !== got[1]) bad(i, `説明 ${g[0]} の誤りでは ${JSON.stringify(got)} にならない`);
         if (g[1] && g[1].a != null && (g[1].a !== A.m || g[1].b !== B.m)) bad(i, '説明の残り歩数が盤と合わない'); });
+      const key = r => r && r.join(':'), all = [['c.sideNg', key([1 - ans[0], ans[1]])], ['c.leadPosNg', key(res(posM(A), posM(B)))], ['14−位置', key(res(A.m - A.on.length, B.m - B.on.length))]];
+      if (A.k0 + B.k0) all.push(['c.leadOffNg', key(res(A.m - 15 * A.k0, B.m - 15 * B.k0))]); if (A.kG + B.kG) all.push(['c.leadGoalNg', key(res(A.m + 15 * A.kG, B.m + 15 * B.kG))]);
+      if (A.k0 !== B.k0) all.push(['c.leadOff14Ng', key(res(A.m - A.k0, B.m - B.k0))]);
+      only64(all.filter(e => e[1] && e[1] !== key(ans)), x => key([sideOf(x), num(x)]));
       return; }
   }
   for (const L of D.steps) {
@@ -179,8 +207,12 @@ const T={
  '説明の内訳キー':()=>{const D=cp();st(D,'race').problems[1].why[0]='c.pipsBOG';return D},
  'リードの誤答の数字':()=>{const D=cp();const q=st(D,'race').problems[2];const i=q.ngo.findIndex(g=>g&&g[0]==='c.leadOff14Ng');q.opts[i]=Object.fromEntries(Object.entries(q.opts[i]).map(([k,v])=>[k,v.replace('+8','+7')]));return D},
  '前の駒を消す':()=>{const D=cp();const q=st(D,'prob').problems[4];q.s.pos[1][2]=15;return D},
+ '追64 重なる誤答（旧データ：組み合わせ1通り＝出目0/4）':()=>{const D=cp();const q=st(D,'prob').problems[0];const i=q.ngo.findIndex(g=>g&&g[0]==='c.notNg');q.opts[i]='1/16';q.ngo[i]=['c.oneWayNg',{x:'1/16',n:3,m:4}];return D},
+ '追64 重なる誤答（旧データ：入っていない駒を忘れる＝ゴールを15）':()=>{const D=cp();const q=st(D,'race').problems[2];const i=q.ngo.findIndex(g=>g&&g[0]==='c.leadPosNg');q.opts[i]=Object.fromEntries(Object.entries(q.opts[i]).map(([k,v])=>[k,v.replace(/^.*\+21$/,m=>m)]));q.opts[i].ja='あなた +6';q.ngo[i]=['c.leadOffNg',{x:'あなた +6',a:52,b:43}];return D},
+ '追64 説明のキーが値の誤りと違う':()=>{const D=cp();const q=st(D,'prob').problems[3];const i=q.ngo.findIndex(g=>g&&g[0]==='c.distNg');q.ngo[i][0]='c.safeNg';return D},
+ '追64 遠い駒だけ＝取られない確率（旧データ）':()=>{const D=cp();const q=st(D,'prob').problems[3];const i=q.ngo.findIndex(g=>g&&g[0]==='c.distNg');q.opts[i]='6/16';q.ngo[i]=['c.safeNg',{x:'6/16',m:10}];return D},
  '少なすぎの決まり文句':()=>{const D=cp();const q=st(D,'race').problems[3];const i=q.ngo.findIndex(g=>g);q.ngo[i]=['c.lowNg',{x:q.opts[i]}];return D},
 };
-let ok=0;for(const k in T){const r=V({data:T[k](),noLut:true}).filter(x=>/追54/.test(x.msg));console.log(r.length?'検出':'見逃し',k,r.length,r[0]&&r[0].msg.slice(0,80));if(r.length)ok++}
+let ok=0;for(const k in T){const r=V({data:T[k](),noLut:true}).filter(x=>/追54|追64/.test(x.msg));console.log(r.length?'検出':'見逃し',k,r.length,r[0]&&r[0].msg.slice(0,80));if(r.length)ok++}
 console.log(ok+'/'+Object.keys(T).length);if(ok!==Object.keys(T).length)process.exit(1);
 }

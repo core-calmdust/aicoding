@@ -261,7 +261,8 @@
     function pzMark(list) {
       clear(pzMk); if (list == null || !pos) return;
       const L0 = typeof list === 'number' ? [[list, 'ring']] : list;
-      for (const e of L0) {
+      for (const e0 of L0) {
+        const e = Array.isArray(e0) && e0[0] && typeof e0[0] === 'object' ? { m: e0[0].m, cls: e0[1] } : e0;   // ([{ m }, cls]: the lessons' marks, atlas/lessons3d.js)
         if (e && !Array.isArray(e) && e.m != null) { const k = e.cls || 'ok', p = E.path(pos, e.m); mark(pzMk, GEO.ring, pm(k, .95), p[0], .05); p.slice(1, -1).forEach(q => mark(pzMk, GEO.dot, pm(k, .9), q, .03)); mark(pzMk, GEO.sq, pm(k, .5), p[p.length - 1], .012); continue; }
         const [q, k] = Array.isArray(e) ? e : [e.at, e.cls]; if (!(q >= 0 && q < 64)) continue;
         if (k === 'ring') { mark(pzMk, GEO.sq, pm('hl', .4), q, .012); mark(pzMk, GEO.ring, pm('ring', 1), q, .05); continue; }

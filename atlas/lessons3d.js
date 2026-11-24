@@ -2057,7 +2057,7 @@
     load() {
       if (this.p) return this.p;
       const txt = u => fetch(u).then(r => r.text());
-      return (this.p = Promise.all([getJ('../chess/lessons.json?v=30261107i14'), getJ('../chess/openings.json?v=20261107i14'), txt('../chess/i18n.js?v=20261107pro2-i14'), txt('../chess/i18n_basics.js?v=20261019ol-i14'), txt('../chess/voice-knight-ja.js?v=3').catch(() => '')])
+      return (this.p = Promise.all([getJ('../chess/lessons.json?v=30261107i14'), getJ('../chess/openings.json?v=20261107i14'), txt('../chess/i18n.js?v=20261107pro2-i14-p61'), txt('../chess/i18n_basics.js?v=20261019ol-i14'), txt('../chess/voice-knight-ja.js?v=3').catch(() => '')])
         .then(([ls, op, a, b, vk]) => {
           const w = {}; try { new Function('window', a)(w); new Function('window', b)(w); } catch (e) { console.warn('[lessons3d] chess texts', e); }   // (a sandbox: the page's own I18N stays untouched)
           try { const v = {}; new Function('window', vk)(v); this.V = ((v.I18N || {})['ja@knight']) || {}; } catch (e) { this.V = {}; }   // (ナイトン's own lines, 3D, ja)
@@ -4237,7 +4237,7 @@
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261124xm2'), getJ('../xiangqi/openings.json?v=3'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=1').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261124xm2'), getJ('../xiangqi/openings.json?v=3'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=1').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vf]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vf)(v); this.V = ((v.I18N || {})['ja@fox']) || {}; } catch (e) { this.V = {}; }   // (ショウギツネ's own lines, 3D, ja)
           return this; })
@@ -5154,7 +5154,7 @@
     LKEY: 'aicoding-hex-lessons', OKEY: 'aicoding-hex-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../hex/lessons.json?v=30261123b'), getJ('../hex/openings.json?v=1'), fetch('../hex/i18n.js?v=20261124').then(r => r.text()), hxEng().catch(() => null), getJ('../hex/ramps3d.json?v=2').catch(() => ({})), fetch('../hex/voice-pen-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../hex/lessons.json?v=30261123b'), getJ('../hex/openings.json?v=1'), fetch('../hex/i18n.js?v=20261124-p61').then(r => r.text()), hxEng().catch(() => null), getJ('../hex/ramps3d.json?v=2').catch(() => ({})), fetch('../hex/voice-pen-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, , rt, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] hex texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; this.RT = rt || {};
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
@@ -5548,7 +5548,7 @@
     LKEY: 'aicoding-connect4-v2-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../connect4/lessons.json?v=30261124o1'), Promise.all(['../connect4/i18n.js?v=20261107l14', '../connect4/learn.js?v=20261123l15'].map(u => fetch(u).then(r => r.text()).catch(() => '')))])
+      return (this.p = Promise.all([getJ('../connect4/lessons.json?v=30261124o1'), Promise.all(['../connect4/i18n.js?v=20261107l14-p61', '../connect4/learn.js?v=20261123l15'].map(u => fetch(u).then(r => r.text()).catch(() => '')))])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T.join('\n'))(w); } catch (e) { console.warn('[lessons3d] connect4 texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -6766,7 +6766,7 @@
     LKEY: 'aicoding-morris-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([Promise.all(MMV.map(v => getJ(`../morris/lessons${v === 'nine' ? '' : '-' + v}.json?v=20261123`))), Promise.all(['../morris/i18n.js?v=20261116', '../morris/i18n_more.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mrEng().catch(() => null)])
+      return (this.p = Promise.all([Promise.all(MMV.map(v => getJ(`../morris/lessons${v === 'nine' ? '' : '-' + v}.json?v=20261123`))), Promise.all(['../morris/i18n.js?v=20261116-p61', '../morris/i18n_more.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mrEng().catch(() => null)])
         .then(([L, T]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] morris texts', e); } this.I = w.I18N || {};
           const steps = []; L.forEach((d, k) => d.steps.forEach(s => { if (s.problems && s.problems.length) steps.push(Object.assign({ v: MMV[k] }, s)); })); this.data = { steps }; return this; })
         .catch(e => { this.p = null; throw e; }));
@@ -7012,24 +7012,29 @@
     return ja ? (id === 'backgammon' ? `きみは<b>${nm}</b>。` : `<b>${nm}</b>の手番だよ。`) : `<b>${nm}</b> to move. `;
   }
   /* ur (2026-11-24 担当C): the data, ダイスン's words and the board hooks are in atlas/ls-ur.js (loaded the first time) */
-  const UR = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUr) return res(); const sc = document.createElement('script'); sc.src = 'ls-ur.js?v=3'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const UR = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUr) return res(); const sc = document.createElement('script'); sc.src = 'ls-ur.js?v=4'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsUr.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   /* senet (2026-11-24 担当C): the data, セティ's words and the board hooks are in atlas/ls-senet.js (loaded the first time) */
-  const SENET = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsSenet) return res(); const sc = document.createElement('script'); sc.src = 'ls-senet.js?v=4'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const SENET = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsSenet) return res(); const sc = document.createElement('script'); sc.src = 'ls-senet.js?v=5'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsSenet.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   /* patolli (2026-11-24 担当C): the data, ダイスン's words and the board hooks are in atlas/ls-patolli.js (loaded the first time) */
-  const PATOLLI = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsPatolli) return res(); const sc = document.createElement('script'); sc.src = 'ls-patolli.js?v=1'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const PATOLLI = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsPatolli) return res(); const sc = document.createElement('script'); sc.src = 'ls-patolli.js?v=2'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsPatolli.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   /* fox and geese (2026-11-24 担当C): the data, ドミダック's words and the board facts are in atlas/ls-foxgeese.js (loaded the first time) */
   const FOXGEESE = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsFoxgeese) return res(); const sc = document.createElement('script'); sc.src = 'ls-foxgeese.js?v=2'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsFoxgeese.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
+  /* ugolki (2026-11-24 担当D): the data, モリフク's words and the board facts are in atlas/ls-ugolki.js (loaded the first time; only the
+     lessons checked and rebuilt for the 3D, AtlasLsUgolki.READY — tools/lesson-verify-ugolki-ls.js) */
+  const UGOLKI = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUgolki) return res(); const sc = document.createElement('script'); sc.src = 'ls-ugolki.js?v=1'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+    .then(() => { const U = AtlasLsUgolki.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
+    .catch(e => { this.p = null; throw e; })); } };
   // (2026-11-24 ユーザー指示: ur・senet・patolli のレッスンは廃止 — 双六系はマンカラ・バックギャモンのような戦略性の高いものを除いてレッスン・パズルを作らない。
   //  UR・SENET・PATOLLI とそのファイルは残すが、DATA に載せない＝AtlasLessons.has が false でタブに出ない)
-  const DATA = { foxgeese: FOXGEESE, dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, janggi: JANGGI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
+  const DATA = { foxgeese: FOXGEESE, ugolki: UGOLKI, dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, janggi: JANGGI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
 
   function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(lang), ncLoad(id)]).then(() => D.list(kind, lang)); }
   function next(id, kind, lang) { return list(id, kind, lang).then(L2 => { const x = L2.find(i => !i.full && i.st !== 'pass') || L2.find(i => !i.full); return x ? x.key : null; }); }
@@ -7139,7 +7144,7 @@
             pz: Object.assign({ lesson: true, fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: () => id === 'reversi' && phase !== 'ramp' && !(phase === 'prob' && cur && cur.k >= RV_NUMS()), ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
           ctx.Table3D.play(true);
         } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks, lock: !!G.lock });
-        else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots' || id === 'foxgeese')) pz().load(G.spec, G.me, { lock: !!G.lock });
+        else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots' || id === 'foxgeese' || id === 'ugolki')) pz().load(G.spec, G.me, { lock: !!G.lock });
         else if (G && id === 'mancala') pz().load(G.spec, G.me, { lock: !!G.lock, marks: G.marks });
         else if (G && id === 'connect4') pz().load(G.moves, G.me, { lock: !!G.lock });
         else if (G && id === 'backgammon') pz().load(G.bg);
@@ -7465,7 +7470,7 @@
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;
       }
-      if ((id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots' || id === 'foxgeese') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
+      if ((id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots' || id === 'foxgeese' || id === 'ugolki') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
         const right = pts >= 16, k = cur.k;   // (p.own: the guide names the green arrow herself — the heading is only 「おしい！」)
         say(`${right ? (p.own && (id === 'morris' || id === 'janggi' || p.ckls) ? '' : line('solved') || pick(X.good)) : p.own ? (pts >= 10 ? 'いい線いってる！' : '') : pts >= 10 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
         try { chime(right); } catch (e) {}

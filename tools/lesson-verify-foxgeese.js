@@ -262,6 +262,7 @@ function verifyLessons(opt) {
 //    goose stood / the same first jump was there before; free / freeO; wide / hole / reach0 after the named escape), the named jump {r} is of
 //    that kind and takes the most of its kind {n}, the named escape {r} leaves no shutting move, the counts {e}; words in 14 languages and
 //    ドミダック's ja with a reason  追52 the hint rings: g_safe the attacked goose, g_trap / g_net the fox's points (empty points)
+//  追70 an intro that states a rule of thumb (g_net 「先に広いほうの逃げ道」) holds for every answer
 function gooseLesson(st, X) {
   const { add, pool, w, LG, JA, F, A, opt } = X, id = st.id;
   const RIGHT = { g_safe: ['safeF', 'safeA'], g_trap: ['trap'], g_net: ['net'] }[id];
@@ -300,6 +301,11 @@ function gooseLesson(st, X) {
       if (L.filter(m => m !== b && D0.has(E.mTo(m))).length < 1) add(id, j, '追52 g_trap: only the answer can step into the ringed point (the hint gives the answer away)');
     }
     if (id === 'g_net' && (J0.length || D0.size !== 2 || shutNow)) add(id, j, `④ g_net: ${J0.length} jumps now, ${D0.size} points, a shutting move ${shutNow}`);
+    // 追70 the intro's rule of thumb holds for every answer: 「先に広いほうの逃げ道をふさぐ」 (g_net) — the answer fills the fox's point that
+    //  leads to more room (E.foxArea from there) than the other one
+    if (id === 'g_net') { const intro = [JA.intro && JA.intro.g_net, w.I18N.ja['ls.g_net.intro'], w.I18N.en['ls.g_net.intro']].join(' ');
+      if (/広いほう|wider/.test(intro)) { const room = d => { const z = pos.clone(); z.sq[z.fox] = 0; z.sq[d] = E.P1; z.fox = d; return E.foxArea(z); }, to = E.mTo(P.best);
+        if (!D0.has(to) || [...D0].some(d => d !== to && room(d) >= room(to))) add(id, j, `追70 the intro says the answer closes the wider way out, but ${E.name(pos, P.best)} ${D0.has(to) ? 'closes the narrower / an equal one' : 'closes neither'}`); } }
     // ⑤ no other problem (the lessons, the puzzles) within 4 points (with a lesson: the left-right mirror; with a puzzle: the 8 of the square)
     { const me = pool.find(x => x.ls && x.id === id && x.j === j);
       for (const x of pool) { if (x === me) continue; const syms = x.ls ? me.sym : SYM8; if (syms.some(f => diff(me.b, symB(x.b, f)) <= 4)) add(id, j, `⑤ within 4 points of ${x.ls ? 'lesson ' : ''}${x.id}#${x.j + 1}`); } }
@@ -379,6 +385,7 @@ function selftest() {
     ['geese lesson: the escape named wrong (⑧)', null, /^⑧/, { facts: { fact: (E2, id, sp, m) => { const f = FF.fact(E2, id, sp, m); if (!/^(wide|hole|reach0)$/.test(f.k)) return f; const q = E2.Pos.from(sp).play(m), alt = q.foxMoves([]).find(x => FF.shuts(E2, q.clone().play(x)).length); return Object.assign({}, f, { r: alt != null ? alt : -1 }); } } }],
     ['geese lesson: ja words gone (⑦)', null, /^⑦/, { ja: Object.assign({}, AJ, { n: Object.assign({}, AJ.n, { jopen: [] }) }) }],
     ['geese lesson: the hint rings the answer goose (追52)', null, /^追52/, { hintPts: (id, P) => { E.setRule('g15'); return /^g_/.test(id) ? [E.mFrom(P.best)] : A0.make({ getJ: () => 0, J: () => ({}), put: () => 0, L: x => x, fill: t => t }).hintPts(id, P); } }],
+    ['geese lesson: the old g_net intro 「先に広いほうの逃げ道」 (追70)', null, /^追70/, { ja: Object.assign({}, AJ, { intro: Object.assign({}, AJ.intro, { g_net: '狐がどこへ逃げても次に閉じ込められるように、<b>先に広いほうの逃げ道</b>をふさぎます。' }) }) }],
     ['geese lesson: 2 right moves (②)', d => { const P = d.steps.find(s => s.id === 'g_trap').problems[2]; P.ok = [P.best, P.best]; }, /^[①②]/],
   ];
   for (const [name, f, re, o] of lcases) { const d = lsc(); if (f) f(d); const out = verifyLessons(Object.assign({ ls: d }, o || {})); const hit = out.some(x => re.test(x.msg)); console.log((hit ? 'caught ' : 'MISSED ') + name); cases.push([name, null, re, { _hit: hit }]); }

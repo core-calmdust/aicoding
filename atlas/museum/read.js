@@ -60,6 +60,9 @@
     { id: 'machines', region: 'americas', color: '#2a4a6a', cover: { s: 'machines' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'machinesTimeline' }, m1: { svg: 'machinesTree' }, m2: { svg: 'machinesSolved' } }, refs: ['Claude E. Shannon, “Programming a Computer for Playing Chess”, Philosophical Magazine 41 (1950)', 'A. M. Turing, “Digital computers applied to games”, in B. V. Bowden (ed.), Faster than Thought (1953)', 'A. L. Samuel, “Some Studies in Machine Learning Using the Game of Checkers”, IBM Journal of Research and Development 3 (1959)', 'J. Schaeffer et al., “Checkers Is Solved”, Science 317 (2007)', 'M. Campbell, A. J. Hoane Jr., F. Hsu, “Deep Blue”, Artificial Intelligence 134 (2002)', 'D. Silver et al., “Mastering the game of Go with deep neural networks and tree search”, Nature 529 (2016)', 'D. Silver et al., “A general reinforcement learning algorithm that masters chess, shogi, and Go through self-play”, Science 362 (2018)', 'Wikipedia, “Mechanical Turk”, “El Ajedrecista”, “Computer chess”, “Solved game”, “Game complexity”'], links: [{ g: 'chess' }, { g: 'checkers' }, { g: 'go' }, { g: 'connect4' }] },
     { id: 'graffiti', region: 'europe', color: '#6a6052', cover: { s: 'graffiti' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'graffitiMap' }, m1: { svg: 'graffitiBoards' }, m2: { svg: 'graffitiDating' } }, refs: ['CIL VIII 17938 (the board in the forum of Timgad: “venari lavari ludere ridere occest vivere”)', 'R. C. Bell, Board and Table Games from Many Civilizations (1960)', 'Friedrich Berger, “From circle and square to the image of the world: a possible interpretation for some petroglyphs of merels boards”, Rock Art Research 21 (2004)', 'Matthew Champion, Medieval Graffiti: The Lost Voices of England’s Churches (2015)', 'Anthea Hawdon, “Gaming up the walls”, Raking Light (talk at the Making Your Mark graffiti symposium, Southampton, 2019)', 'Wikipedia, “Basilica Julia”, “Nine men’s morris”, “Mancala”'], links: [{ g: 'morris' }, { g: 'mancala' }, { g: 'latrunculi' }] },
     { id: 'bans', region: 'asia', color: '#7a2e3a', cover: { s: 'bans' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'bansTimeline' }, m1: { svg: 'bansWhy' }, m2: { svg: 'bansOutcome' } }, refs: ['『日本書紀』持統天皇三年十二月条 / Nihon Shoki, Jitō 3, 12th month', 'Louis IX of France, ordinance against gambling (1254)', 'Florence, the ban on playing cards (1377)', 'Diego Durán, Historia de las Indias de Nueva España e islas de la tierra firme (c. 1581)', 'The Tokugawa shogunate’s ban on Tenshō karuta (1633)', 'Ruhollah Khomeini, ruling on chess played without gambling (1988)', 'Roger Sharpe’s called shot before New York City Council members (April 1976)', 'Wikipedia, “History of chess”, “Karuta”, “Playing card”, “Pinball”'], links: [{ g: 'backgammon' }, { g: 'patolli' }, { g: 'solitaire' }] },
+    { id: 'pieces', region: 'europe', color: '#3a2a1e', cover: { s: 'pieces' }, mins: 3, sec: [{ ex: 'nishapur' }, { ex: 'lewis' }, null, null, null], figs: { m0: { svg: 'piecesEvolution' }, m1: { svg: 'piecesBishop' }, m2: { svg: 'piecesTimeline' } }, refs: ['The Metropolitan Museum of Art, chess set from Nishapur, Iran (12th century), 1971.193a–ff', 'British Museum, “The Lewis Chessmen” (1831,1101.78–159)', 'Design registration of 1 March 1849 to Nathaniel Cooke (Ornamental Designs Act 1842); Illustrated London News, 8 September 1849', 'H. J. R. Murray, A History of Chess (1913)', 'FIDE Handbook, Standards of Chess Equipment', 'Wikipedia, “Chess piece”, “Staunton chess set”'], links: [{ g: 'chess' }, { ex: 'lewis' }, { ex: 'nishapur' }, { g: 'shogi' }] },
+    { id: 'tombs', region: 'mea', color: '#5a4632', cover: { s: 'tombs' }, mins: 3, sec: [{ ex: 'ur' }, { ex: 'senet' }, { ex: 'liubo' }, null, { ex: 'shosoin' }], figs: { m0: { svg: 'tombsMap' }, m1: { svg: 'tombsWhy' }, m2: { svg: 'tombsTimeline' } }, refs: ['C. L. Woolley, Ur Excavations II: The Royal Cemetery (1934)', 'Book of the Dead, chapter 17; Griffith Institute, Tutankhamun: Anatomy of an Excavation', 'Hunan Museum, the liubo set from Mawangdui tomb 3', 'P. Crummy et al., Stanway: An Élite Burial Site at Camulodunum (2007)', 'N. Nicolaysen, The Viking-Ship Discovered at Gokstad in Norway (1882)', 'C. Hedenstierna-Jonson et al., “A female Viking warrior confirmed by genomics”, American Journal of Physical Anthropology 164 (2017)', '宮内庁正倉院事務所 / Shōsōin Office, Imperial Household Agency', 'Wikipedia, “Hnefatafl”, “Birka female Viking warrior”'], links: [{ g: 'ur' }, { g: 'senet' }, { g: 'latrunculi' }, { ex: 'liubo' }] },
+    { id: 'nim', region: 'americas', color: '#2a5a8a', cover: { s: 'nim' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'nimHeaps' }, m1: { svg: 'nimNimatron' }, m2: { svg: 'nimFamily' } }, refs: ['Charles L. Bouton, “Nim, a game with a complete mathematical theory”, Annals of Mathematics 3 (1901–02)', 'E. U. Condon, G. L. Tawney, W. A. Derr, US patent 2,215,544, “Machine to Play Game of Nim” (1940)', 'R. P. Sprague, “Über mathematische Kampfspiele”, Tohoku Mathematical Journal 41 (1935–36)', 'P. M. Grundy, “Mathematics and games”, Eureka 2 (1939)', 'John H. Conway, On Numbers and Games (1976)', 'E. R. Berlekamp, J. H. Conway, R. K. Guy, Winning Ways for your Mathematical Plays (1982)', 'Wikipedia, “Nim”, “Nimatron”, “Sprague–Grundy theorem”'], links: [{ g: 'dots' }, { g: 'amazons' }, { g: 'hex' }] },
   ];
   // pictures shown only beside a story's paragraph (not in another room): a museum's open-access photo (CC0), linked to the museum's page.
   // The name, in each language, is MUSEUM_READ_T[lang].pic[id]. Files images/atlas/museum-story/pic/<id>.webp (≤ 960 px).
@@ -1226,6 +1229,119 @@
         else if (k === 1) g += `<path d="M${xb} ${y}H${xb + 26}" stroke="#8a8478" stroke-width="4" stroke-dasharray="3 5" stroke-linecap="round"/><path d="M${xb + 32} ${y - 7}l12 12M${xb + 44} ${y - 7}l-12 12" stroke="#c0392b" stroke-width="3.2" stroke-linecap="round"/>`;
         else [-20, 0, 20].forEach(d => { g += `<path d="M${xb} ${y}C${xb + 24} ${y} ${xb + 30} ${y + d} ${x1 - 8} ${y + d}" fill="none" stroke="#14864a" stroke-width="3.4" stroke-linecap="round" marker-end="url(#boA)"/>`; }); });
       return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr"><defs><marker id="boA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#14864a"/></marker></defs>${g}</svg>`; },
+    // chess pieces, six kinds × three styles: abstract (Islamic world, like the Nishapur set), figurative (Europe, like the Lewis chessmen),
+    // Staunton (1849). Self-drawn silhouettes; text: the story's figL.evo — [three style names] and figL.names — [king … pawn]
+    piecesEvolution: () => { const F = st('pieces').figL || {}, E = F.evo || [], N = F.names || [], W = 300, x0 = 122, cw = 70, RH = 46, top = 30, H = top + RH * 6 + 6;
+      const ink = '#2b2a28', blue = '#2a5a8a', ivory = '#e9dcc0';
+      const AB = [   // abstract: throne, small throne, two tusks, a knob, a notched block, a dome
+        'M-14 0V-18H-7V-27H7V-18H14V0Z', 'M-11 0V-14H-5V-21H5V-14H11V0Z', 'M-13 0Q-13 -17 -6 -19L-9 -30L-2 -20H2L9 -30L6 -19Q13 -17 13 0Z',
+        'M-12 0Q-12 -15 -3 -17L1 -28L7 -25L6 -16Q12 -13 12 0Z', 'M-12 0V-25H-3L0 -17L3 -25H12V0Z', 'M-9 0Q-9 -14 0 -15Q9 -14 9 0Z'];
+      const FG = [   // figurative: seated king with crown, queen with veil, bishop with mitre, rider on a horse, warder with shield, slab pawn
+        'M-12 0V-20H12V0ZM-6 -20V-24A6 6 0 0 1 6 -24V-20ZM-6 -30L-4 -35L-1 -31L1 -35L4 -31L6 -35V-29H-6Z', 'M-11 0V-19H11V0ZM-7 -19Q-8 -33 0 -33Q8 -33 7 -19Z',
+        'M-11 0V-20H11V0ZM-5 -20V-24A5 5 0 0 1 5 -24V-20ZM-6 -27L0 -38L6 -27Z', 'M-13 0L-9 -14H-2L0 -24L-4 -26L2 -32L9 -26L6 -14H12L13 0Z',
+        'M-9 0V-22H9V0ZM-5 -22V-26A5 5 0 0 1 5 -26V-22ZM-14 -16A7 9 0 1 0 -14 -15Z', 'M-8 0V-17Q0 -23 8 -17V0Z'];
+      const base = w => `M${-w} 0H${w}L${w - 2} -4H${-w + 2}Z`;
+      const ST = [   // Staunton: base + stem + top
+        base(12) + 'M-7 -4L-4 -22H4L7 -4ZM-8 -22H8L6 -27H-6ZM-1.6 -27V-36H1.6V-27ZM-5 -32.5H5V-30.5H-5Z', base(11) + 'M-6 -4L-4 -20H4L6 -4ZM-8 -20H8L6 -25H-6ZM-6 -25L-7 -31L-3 -27L0 -32L3 -27L7 -31L6 -25Z',
+        base(10) + 'M-5 -4L-3 -15H3L5 -4ZM-6 -15H6L5 -17H-5ZM0 -31Q-7 -24 -5 -17H5Q7 -24 0 -31Z', base(11) + 'M-9 -4Q-9 -14 -4 -18L-8 -26Q-2 -33 5 -31Q10 -25 8 -14L9 -4Z',
+        base(11) + 'M-7 -4L-6 -20H6L7 -4ZM-8 -20V-27H-5V-24H-1.5V-27H1.5V-24H5V-27H8V-20Z', base(9) + 'M-4 -4L-2.5 -12H2.5L4 -4ZM-5 -12H5L4 -14H-4ZM0 -14A5.5 5.5 0 1 1 0 -24.9A5.5 5.5 0 1 1 0 -14Z'];
+      let g = '';
+      E.forEach((nm, j) => { g += `<text x="${x0 + cw * j}" y="16" font-size="12" font-weight="800" fill="${[blue, '#8a5a24', ink][j]}" text-anchor="middle">${esc(nm)}</text>`; });
+      for (let k = 0; k < 6; k++) { const y = top + RH * k + RH - 6;
+        if (k % 2 === 0) g += `<rect x="2" y="${y - RH + 8}" width="${W - 4}" height="${RH}" rx="6" fill="#f3ede0"/>`;
+        g += `<text x="8" y="${y - 12}" font-size="13" font-weight="800" fill="${ink}">${esc(N[k] || '')}</text>`;
+        g += `<path transform="translate(${x0} ${y})" d="${AB[k]}" fill="#3f6f9a" stroke="#1f3f5f" stroke-width="1.2"/>`;
+        g += `<path transform="translate(${x0 + cw} ${y})" d="${FG[k]}" fill="${ivory}" stroke="#8a6a3a" stroke-width="1.4"/>`;
+        g += `<path transform="translate(${x0 + cw * 2} ${y})" d="${ST[k]}" fill="#3a2a1e" stroke="#1a120c" stroke-width=".8"/>`; }
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr"><defs><marker id="peA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b8ad98"/></marker></defs>${g}</svg>`; },
+    // the elephant became a bishop (and a jester, a runner…), the chariot a tower: the pieces' names in some languages, each with its meaning
+    // (text: the story's figL.rows — [two row titles], figL.fil and figL.ruk — six meanings each, in the order of the words below)
+    piecesBishop: () => { const F = st('pieces').figL || {}, R = F.rows || [], FI = F.fil || [], RU = F.ruk || [], W = 300, H = 318; let g = '';
+      const WF = ['alfil', 'fou', 'Läufer', 'bishop', 'слон', 'alfiere'], WR = ['rook', 'torre', 'tour', 'Turm', 'ладья', '車'];
+      const row = (y, title, words, mean, icons) => { let s = `<text x="8" y="${y}" font-size="14" font-weight="800" fill="#2b2a28">${esc(title)}</text>`;
+        icons.forEach((d, i) => { const x = 50 + i * 100; s += `<path transform="translate(${x} ${y + 50})" d="${d}" fill="${['#8a8478', '#3f6f9a', '#3a2a1e'][i]}"/>`; if (i < 2) s += `<path d="M${x + 24} ${y + 36}H${x + 70}" stroke="#b8ad98" stroke-width="2.4" marker-end="url(#pbA)"/>`; });
+        words.forEach((w, i) => { const c = i % 2, r = Math.floor(i / 2), x = 8 + c * 148, yy = y + 74 + r * 22;
+          s += `<text x="${x}" y="${yy}" font-size="14" font-weight="800" fill="#7a2a3a">${esc(w)}</text><text x="${x + 58}" y="${yy}" font-size="12" fill="#5a544a">${esc(mean[i] || '')}</text>`; });
+        return s; };
+      const ELE = 'M-20 0V-12Q-22 -26 -6 -28Q10 -30 16 -20Q20 -12 22 -2L18 0L16 -8Q14 -4 10 -2V0H4V-6H-12V0Z', CAR = 'M-22 -6H14L20 -18H10V-26H-6V-14H-22ZM-12 0A6 6 0 1 0 -12 -0.1ZM8 0A6 6 0 1 0 8 -0.1Z';
+      const FIL = 'M-13 0Q-13 -17 -6 -19L-9 -30L-2 -20H2L9 -30L6 -19Q13 -17 13 0Z', BIS = 'M-10 0H10L8 -4H-8ZM-5 -4L-3 -15H3L5 -4ZM-6 -15H6L5 -17H-5ZM0 -33Q-8 -25 -6 -17H6Q8 -25 0 -33ZM-2 -22L3 -28L4 -27L-1 -21Z';
+      const RUK = 'M-12 0V-25H-3L0 -17L3 -25H12V0Z', ROK = 'M-11 0H11L9 -4H-9ZM-7 -4L-6 -20H6L7 -4ZM-8 -20V-27H-5V-24H-1.5V-27H1.5V-24H5V-27H8V-20Z';
+      g += row(18, R[0] || '', WF, FI, [ELE, FIL, BIS]) + row(170, R[1] || '', WR, RU, [CAR, RUK, ROK]);
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr"><defs><marker id="pbA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b8ad98"/></marker></defs>${g}</svg>`; },
+    // chess pieces in time (text: the story's figL.time — [year, name, note])
+    piecesTimeline: () => { const R = ((st('pieces').figL || {}).time) || [], W = 300, RH = 50, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 102; let g = '';
+      const C = ['#8a5a24', '#3f6f9a', '#8a6a3a', '#6a3a8a', '#3a2a1e', '#14864a'];
+      g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
+      R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
+        g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
+        g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="${xn + 16}" y="${y + 20}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // games found in graves, place by place (text: the story's figL.map — [place, date and what]); the last row, the Shōsōin, is a treasure house, not a grave
+    tombsMap: () => { const R = ((st('tombs').figL || {}).map) || [], K = ['ur', 'sen', 'liu', 'lat', 'taf', 'pcs', 'go'], W = 300, RH = 48, o = 8, H = o * 2 + RH * R.length + 4; let g = '';
+      const ic = (t, x, y) => { const ln = 'stroke="#5a4636" stroke-width="1.3" fill="none"'; let s = `<rect x="${x - 18}" y="${y - 18}" width="36" height="36" rx="7" fill="${t === 'go' ? '#e6ece4' : '#efe3c8'}" stroke="#b8a47c"/>`;
+        if (t === 'ur') { for (let c = 0; c < 8; c++) for (let r = 0; r < 3; r++) if (r === 1 || c < 4 || c > 5) s += `<rect x="${x - 14 + c * 3.5}" y="${y - 6 + r * 4}" width="3.2" height="3.6" fill="#2f5f9e" opacity="${(c + r) % 2 ? .55 : .95}"/>`; }
+        else if (t === 'sen') { for (let c = 0; c < 10; c++) for (let r = 0; r < 3; r++) s += `<rect x="${x - 15 + c * 3}" y="${y - 5 + r * 3.6}" width="2.7" height="3.2" fill="#a8823a"/>`; }
+        else if (t === 'liu') s += `<rect x="${x - 12}" y="${y - 12}" width="24" height="24" ${ln}/><rect x="${x - 4}" y="${y - 4}" width="8" height="8" ${ln}/><path d="M${x} ${y - 12}v4M${x} ${y + 12}v-4M${x - 12} ${y}h4M${x + 12} ${y}h-4M${x - 12} ${y - 12}l4 4M${x + 12} ${y - 12}l-4 4M${x - 12} ${y + 12}l4 -4M${x + 12} ${y + 12}l-4 -4" ${ln}/>`;
+        else if (t === 'lat') { s += `<rect x="${x - 12}" y="${y - 12}" width="24" height="24" ${ln}/>`; for (let i = 1; i < 6; i++) s += `<path d="M${x - 12 + i * 4} ${y - 12}v24M${x - 12} ${y - 12 + i * 4}h24" stroke="#8a7a5a" stroke-width=".7"/>`; [[-8, -8, '#2a5a8a'], [0, -8, '#2a5a8a'], [4, 4, '#f4efe2'], [-4, 8, '#f4efe2']].forEach(([a, b, c]) => { s += `<circle cx="${x + a}" cy="${y + b}" r="2" fill="${c}" stroke="#333" stroke-width=".5"/>`; }); }
+        else if (t === 'taf') { s += `<rect x="${x - 13}" y="${y - 13}" width="26" height="26" ${ln}/>`; for (let i = 1; i < 13; i++) s += `<path d="M${x - 13 + i * 2} ${y - 13}v26M${x - 13} ${y - 13 + i * 2}h26" stroke="#a89878" stroke-width=".4"/>`; s += `<circle cx="${x}" cy="${y}" r="3" fill="#c8962a" stroke="#5a4636" stroke-width=".8"/>`; }
+        else if (t === 'pcs') { [[-8, 4], [-2, 6], [4, 3], [-5, -4], [2, -3], [8, -5]].forEach(([a, b], i) => { s += `<path d="M${x + a - 3} ${y + b + 3}Q${x + a} ${y + b - 5} ${x + a + 3} ${y + b + 3}Z" fill="${i % 2 ? '#2f6a5a' : '#e8dcc0'}" stroke="#333" stroke-width=".5"/>`; }); s += `<rect x="${x + 7}" y="${y + 5}" width="6" height="6" rx="1" fill="#fff" stroke="#333" stroke-width=".6"/><circle cx="${x + 10}" cy="${y + 8}" r=".9" fill="#333"/>`; }
+        else s += `<path d="M${x - 13} ${y - 2}L${x} ${y - 13}L${x + 13} ${y - 2}Z" fill="#7a5a3a"/><rect x="${x - 10}" y="${y - 2}" width="20" height="13" fill="#a8825a"/><path d="M${x - 10} ${y + 2}h20M${x - 10} ${y + 6}h20" stroke="#7a5a3a" stroke-width="1"/>`;
+        return s; };
+      R.forEach(([nm, ds], k) => { const y = o + RH * k + 24 + (k === 6 ? 6 : 0);
+        if (k === 6) g += `<path d="M6 ${y - 30}H${W - 6}" stroke="#b8ad98" stroke-width="1.4" stroke-dasharray="5 4"/>`;
+        g += ic(K[k], 26, y) + `<text x="54" y="${y - 3}" font-size="14" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="54" y="${y + 15}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // why a game went into a grave: four answers proposed, each with an example (text: the story's figL.why — [reason, example] × 4)
+    tombsWhy: () => { const R = ((st('tombs').figL || {}).why) || [], W = 300, RH = 66, H = RH * R.length + 8, C = ['#7a5a1e', '#8a2a3a', '#2a5a8a', '#2f6a4a']; let g = '';
+      R.forEach(([nm, ex], k) => { const y = 6 + RH * k, c = C[k % C.length];
+        g += `<rect x="4" y="${y}" width="${W - 8}" height="${RH - 8}" rx="10" fill="${c}" opacity=".1" stroke="${c}" stroke-width="1.2"/><rect x="4" y="${y}" width="8" height="${RH - 8}" rx="4" fill="${c}"/>`;
+        g += `<text x="22" y="${y + 22}" font-size="15" font-weight="800" fill="${c}">${esc(nm)}</text><text x="22" y="${y + 44}" font-size="13" fill="#2b2a28">${esc(ex)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // games and graves in time (text: the story's figL.time — [date, place, what])
+    tombsTimeline: () => { const R = ((st('tombs').figL || {}).time) || [], W = 300, RH = 46, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 108; let g = '';
+      const C = ['#a8823a', '#2f5f9e', '#a8823a', '#8a3a26', '#5a4632', '#33404a', '#2f6a5a', '#6b4a24'];
+      g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
+      R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
+        g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="13" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
+        g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="${xn + 16}" y="${y + 20}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // Nim: heaps 3, 4, 5 in binary — count the 1s in each column; an odd column (the 2s) gives the nim-sum 010 = 2; taking 2 from the heap of 3
+    // leaves 1, 4, 5 and every column even (nim-sum 0) (text: the story's figL.heaps — [heap, 4s, 2s, 1s, nim-sum, the winning move])
+    nimHeaps: () => { const L = ((st('nim').figL || {}).heaps) || [], W = 300, hp = [3, 4, 5], nm = ['A', 'B', 'C'], bx = 132, cw = 52, ry = 42, rh = 40, H = ry + rh * 4 + 44; let g = '';
+      g += `<text x="10" y="${ry - 14}" font-size="12" font-weight="800" fill="#5a544a">${esc(L[0] || '')}</text>`;
+      [L[1], L[2], L[3]].forEach((t, j) => { g += `<text x="${bx + cw * j + cw / 2}" y="${ry - 14}" font-size="12" font-weight="800" fill="#5a544a" text-anchor="middle">${esc(t || '')}</text>`; });
+      g += `<rect x="${bx + cw - 2}" y="${ry - 6}" width="${cw + 4}" height="${rh * 4 + 4}" rx="6" fill="#f3c9c2" opacity=".55"/>`;
+      hp.forEach((n, i) => { const y = ry + rh * i;
+        g += `<text x="10" y="${y + 21}" font-size="15" font-weight="800" fill="#2b2a28">${nm[i]}</text>`;
+        for (let k = 0; k < n; k++) { const take = i === 0 && k >= 1, cx = 38 + k * 17; g += `<circle cx="${cx}" cy="${y + 15}" r="7.5" fill="${take ? '#f3c9c2' : '#e0b040'}" stroke="${take ? '#c0392b' : '#8a5a10'}" stroke-width="1.4"${take ? ' stroke-dasharray="3 2"' : ''}/>`; }
+        [4, 2, 1].forEach((b, j) => { const on = n & b; g += `<rect x="${bx + cw * j + 8}" y="${y}" width="${cw - 16}" height="${rh - 10}" rx="5" fill="${on ? '#2a5a8a' : '#eef1f4'}"/><text x="${bx + cw * j + cw / 2}" y="${y + 21}" font-size="15" font-weight="800" fill="${on ? '#fff' : '#9aa4ae'}" text-anchor="middle">${on ? 1 : 0}</text>`; }); });
+      const sy = ry + rh * 3 + 4; g += `<path d="M10 ${sy - 2}H${bx + cw * 3}" stroke="#2b2a28" stroke-width="2"/>`;
+      [0, 1, 0].forEach((v, j) => { g += `<text x="${bx + cw * j + cw / 2}" y="${sy + 24}" font-size="16" font-weight="800" fill="${v ? '#c0392b' : '#14864a'}" text-anchor="middle">${v}</text>`; });
+      g += `<text x="${bx - 10}" y="${sy + 23}" font-size="12" font-weight="800" fill="#c0392b" text-anchor="end">${esc(L[4] || '')}</text>`;
+      g += `<text x="${W / 2}" y="${H - 12}" font-size="13" font-weight="800" fill="#c0392b" text-anchor="middle">${esc(L[5] || '')}</text>`;
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // the Nimatron (1940): a large cabinet with four rows of seven lamps — four heaps of up to seven — shown at a world's fair (self-drawn, generic)
+    // (text: the story's figL.nima — [where and when, the lamps, the score])
+    nimNimatron: () => { const L = ((st('nim').figL || {}).nima) || [], W = 300, H = 268, ox = 40, oy = 14, cw = 220, ch = 170; let g = '';
+      g += `<rect x="${ox}" y="${oy}" width="${cw}" height="${ch}" rx="10" fill="#3a4250" stroke="#1f242c" stroke-width="2"/><rect x="${ox + 12}" y="${oy + 12}" width="${cw - 24}" height="${ch - 54}" rx="6" fill="#20252e"/>`;
+      const lit = [5, 3, 6, 2];
+      for (let r = 0; r < 4; r++) for (let c = 0; c < 7; c++) { const x = ox + 34 + c * 26, y = oy + 34 + r * 27, on = c < lit[r];
+        g += `<circle cx="${x}" cy="${y}" r="9" fill="${on ? '#ffd45a' : '#4a5260'}"${on ? ' stroke="#fff3c0" stroke-width="1.5"' : ''}/>`; }
+      for (let i = 0; i < 4; i++) g += `<rect x="${ox + 30 + i * 46}" y="${oy + ch - 32}" width="26" height="18" rx="4" fill="#c0392b" stroke="#7a1a12"/>`;
+      g += `<rect x="${ox + 20}" y="${oy + ch}" width="20" height="26" fill="#2b3038"/><rect x="${ox + cw - 40}" y="${oy + ch}" width="20" height="26" fill="#2b3038"/>`;
+      g += `<text x="${W / 2}" y="${oy + ch + 46}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="middle">${esc(L[0] || '')}</text>`;
+      g += `<text x="${W / 2}" y="${oy + ch + 64}" font-size="13" fill="#5a544a" text-anchor="middle">${esc(L[1] || '')}</text><text x="${W / 2}" y="${oy + ch + 81}" font-size="13" fill="#5a544a" text-anchor="middle">${esc(L[2] || '')}</text>`;
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // from Nim: the Sprague–Grundy theorem, Conway's numbers and games, and the games of the Atlas that the theory reaches
+    // (text: the story's figL.fam — [name, note] × 6: Nim, Sprague–Grundy, Conway, dots and boxes, amazons, hex)
+    nimFamily: () => { const L = ((st('nim').figL || {}).fam) || [], W = 300, H = 330; let g = '';
+      const box = (x, y, w, [t, s] = [], c) => `<rect x="${x - w / 2}" y="${y - 22}" width="${w}" height="46" rx="10" fill="${c}" opacity=".14" stroke="${c}" stroke-width="1.6"/><text x="${x}" y="${y - 3}" font-size="${w < 120 ? 12 : 14}" font-weight="800" fill="${c}" text-anchor="middle">${esc(t || '')}</text><text x="${x}" y="${y + 15}" font-size="12" fill="#2b2a28" text-anchor="middle">${esc(s || '')}</text>`;
+      const arr = (x1, y1, x2, y2, d) => `<path d="M${x1} ${y1}L${x2} ${y2}" stroke="#8a8478" stroke-width="2"${d ? ' stroke-dasharray="5 4"' : ''} marker-end="url(#nfA)"/>`;
+      g += arr(150, 50, 150, 80) + arr(150, 128, 150, 158) + arr(150, 206, 51, 254) + arr(150, 206, 150, 254);
+      g += `<path d="M250 28H292V254" fill="none" stroke="#8a8478" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#nfA)"/>`;
+      g += box(150, 28, 200, L[0], '#c0392b') + box(150, 106, 250, L[1], '#2a5a8a') + box(150, 184, 230, L[2], '#6a3a8a');
+      g += box(51, 280, 98, L[3], '#14864a') + box(150, 280, 98, L[4], '#8a5a24') + box(249, 280, 98, L[5], '#33404a');
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr"><defs><marker id="nfA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8a8478"/></marker></defs>${g}</svg>`; },
     // four tetrahedral dice: how often each score comes (out of 16)
     tetraOdds: () => { const n = [1, 4, 6, 4, 1], W = 300, H = 150, bw = 40, gap = (W - 40 - bw * 5) / 4; let g = '';
       n.forEach((v, i) => { const x = 20 + i * (bw + gap), h = v / 6 * 96, y = 112 - h;
