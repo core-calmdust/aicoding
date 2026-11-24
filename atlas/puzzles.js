@@ -951,20 +951,20 @@
     ar: { hi: 'أنا كيرو! لنقوِّ الحساب بألغاز الأمازونات.', mid: 'رائع! بقي {n}.', reply: 'ردّ الخصم. بقي {n}.', guard: 'صمدت! المرات المتبقية: {n}.' },
   };
   const HXX = {
-    ja: { hi: 'ゴイシペンだよ。詰めヘックスで、つなぐ読みをきたえよう！', out: '{n}手以内にはつながらなかった…', mid: 'いい調子！ あと{n}手。' },
-    en: { hi: "Stoneguin here! Let's train your reading with Hex puzzles.", out: "Couldn't connect — move limit: {n}…", mid: 'Good! Moves left: {n}.' },
-    zh: { hi: '我是棋石企鹅！用六贯棋谜题锻炼计算力吧！', out: '没能在{n}手内连通…', mid: '不错！还剩{n}手。' },
-    'zh-TW': { hi: '我是棋子企鵝！用六貫棋謎題鍛鍊計算力吧！', out: '沒能在{n}手內連通…', mid: '不錯！還剩{n}手。' },
-    ko: { hi: '바둑돌펭이야! 헥스 퍼즐로 수읽기를 단련하자!', out: '{n}수 안에 잇지 못했어…', mid: '좋아! {n}수 남았어.' },
-    es: { hi: '¡Soy Pingüipiedra! Entrena tu lectura con problemas de Hex.', out: 'No se conectó — límite de jugadas: {n}…', mid: '¡Bien! Jugadas restantes: {n}.' },
-    fr: { hi: 'C’est Pingopierre ! Entraîne ta lecture avec des problèmes de Hex.', out: 'Pas connecté — limite de coups : {n}…', mid: 'Bien ! Coups restants : {n}.' },
-    pt: { hi: 'Aqui é o Pinguipedra! Treine a leitura com problemas de Hex.', out: 'Não conectou — limite de lances: {n}…', mid: 'Boa! Lances restantes: {n}.' },
-    de: { hi: 'Hier ist Steinguin! Trainiere dein Lesen mit Hex-Aufgaben.', out: 'Nicht verbunden – Zuglimit: {n}…', mid: 'Gut! Verbleibende Züge: {n}.' },
-    ru: { hi: 'Это Стоунгвин! Тренируем расчёт на задачах по хексу.', out: 'Соединить не удалось — лимит ходов: {n}…', mid: 'Отлично! Осталось ходов: {n}.' },
-    tr: { hi: 'Ben Stoneguin! Hex bulmacalarıyla okuma gücünü geliştirelim.', out: '{n} hamlede bağlanamadı…', mid: 'Güzel! {n} hamle kaldı.' },
-    id: { hi: 'Aku Stoneguin! Ayo latih membaca dengan soal Hex.', out: 'Tidak tersambung dalam {n} langkah…', mid: 'Bagus! Sisa {n} langkah.' },
-    hi: { hi: 'मैं स्टोनगुइन हूँ! हेक्स पहेलियों से पढ़ने की क्षमता बढ़ाएँ।', out: 'जुड़ नहीं पाए — चालों की सीमा: {n}…', mid: 'बढ़िया! बची चालें: {n}।' },
-    ar: { hi: 'أنا بطريق الحجر! لنقوِّ القراءة بألغاز هيكس.', out: 'لم يتم الاتصال — حدّ النقلات: {n}…', mid: 'رائع! بقي {n}.' },
+    ja: { hi: 'ゴイシペンだよ。詰めヘックスで、つなぐ読みをきたえよう！', out: '{n}手以内にはつながらなかった…', mid: '相手は金色の印の点に置いたよ。あと{n}手、次はどこに置く？' },
+    en: { hi: "Stoneguin here! Let's train your reading with Hex puzzles.", out: "Couldn't connect — move limit: {n}…", mid: 'The opponent played at the gold mark. Moves left: {n} — where next?' },
+    zh: { hi: '我是棋石企鹅！用六贯棋谜题锻炼计算力吧！', out: '没能在{n}手内连通…', mid: '对手下在金色标记处。还剩{n}手，下一步下哪里？' },
+    'zh-TW': { hi: '我是棋子企鵝！用六貫棋謎題鍛鍊計算力吧！', out: '沒能在{n}手內連通…', mid: '對手下在金色標記處。還剩{n}手，下一步下哪裡？' },
+    ko: { hi: '바둑돌펭이야! 헥스 퍼즐로 수읽기를 단련하자!', out: '{n}수 안에 잇지 못했어…', mid: '상대는 금색 표시의 칸에 두었어. 남은 수: {n}. 다음은 어디에 둘까?' },
+    es: { hi: '¡Soy Pingüipiedra! Entrena tu lectura con problemas de Hex.', out: 'No se conectó — límite de jugadas: {n}…', mid: 'El rival jugó en la marca dorada. Jugadas restantes: {n}. ¿Dónde sigues?' },
+    fr: { hi: 'C’est Pingopierre ! Entraîne ta lecture avec des problèmes de Hex.', out: 'Pas connecté — limite de coups : {n}…', mid: 'L’adversaire a joué sur la marque dorée. Coups restants : {n}. Et maintenant ?' },
+    pt: { hi: 'Aqui é o Pinguipedra! Treine a leitura com problemas de Hex.', out: 'Não conectou — limite de lances: {n}…', mid: 'O rival jogou na marca dourada. Lances restantes: {n}. Onde agora?' },
+    de: { hi: 'Hier ist Steinguin! Trainiere dein Lesen mit Hex-Aufgaben.', out: 'Nicht verbunden – Zuglimit: {n}…', mid: 'Der Gegner setzte auf die goldene Markierung. Verbleibende Züge: {n}. Wohin jetzt?' },
+    ru: { hi: 'Это Стоунгвин! Тренируем расчёт на задачах по хексу.', out: 'Соединить не удалось — лимит ходов: {n}…', mid: 'Соперник сходил на золотую отметку. Осталось ходов: {n}. Куда дальше?' },
+    tr: { hi: 'Ben Stoneguin! Hex bulmacalarıyla okuma gücünü geliştirelim.', out: '{n} hamlede bağlanamadı…', mid: 'Rakip altın işarete oynadı. Kalan hamle: {n}. Sırada nereye?' },
+    id: { hi: 'Aku Stoneguin! Ayo latih membaca dengan soal Hex.', out: 'Tidak tersambung dalam {n} langkah…', mid: 'Lawan bermain di tanda emas. Sisa langkah: {n}. Ke mana berikutnya?' },
+    hi: { hi: 'मैं स्टोनगुइन हूँ! हेक्स पहेलियों से पढ़ने की क्षमता बढ़ाएँ।', out: 'जुड़ नहीं पाए — चालों की सीमा: {n}…', mid: 'विरोधी ने सुनहरे निशान पर रखा। बची चालें: {n}। अब कहाँ?' },
+    ar: { hi: 'أنا بطريق الحجر! لنقوِّ القراءة بألغاز هيكس.', out: 'لم يتم الاتصال — حدّ النقلات: {n}…', mid: 'لعب الخصم عند العلامة الذهبية. النقلات المتبقية: {n}. أين الآن؟' },
   };
   // the guide's lines for 詰めチェッカー (the rest are the game's own texts)
   const CKX = {
@@ -1836,62 +1836,63 @@
       }
       amMarks(p); p.state = 'answer'; say(B.tx('pz.answerDone', ctx.lang) || X.retry); buttons();
     }
-    /* 詰めヘックス (= hex/app.js puzzleMove / blockMove, PZBook v2): "connect in N" — a move off the solution is not stopped at once: the
-       defender answers with the engine's move and the player goes on until N is used up; connecting within it still counts (★2). An
-       obvious mistake (the opponent connects at once, or more stones are needed than moves are left) is taken back with the right cell
-       shown. "Stop": one move that leaves the opponent no forced connection within k. Cells are named by their marks (no coordinates). */
+    /* 詰めヘックス (= hex/app.js puzzleMove / blockMove; 2026-11-25 担当A 追88): the rule of every 詰め problem — nothing is judged on the
+       way (no 「いい手」), a move off the solution is not taken back and the right cell is not shown by itself (「答え」). After a right
+       move the defender answers with its longest resistance (hxDefence, as the 2D) and its cell is marked gold. After a move off the
+       solution the defender's reply (hex/pzwhy.js reply: the same cell as the 2D) is played and marked red, and ゴイシペン says what
+       is on the board (HexPzWhy.facts: the stones still needed, the moves left, the opponent connected — tools/lesson-verify-hexpz.js).
+       "Stop": a wrong cell stays, the opponent plays its quickest attack (red) and the words say it connects whatever comes. */
     const SPH = k => ctx.lang === 'ja' ? '\u0001' + (k === 'ok' ? '緑の印の点' : '赤い印の点') + '\u0002' : `<i class="ls-spot ${k}"></i>`;
-    function hxBlunder(p, before, m, left) {   // (= hex/app.js pzBlunder)
-      const after = before.clone(); after.play(m);
-      if (after.winner()) return null;
-      if (after.winCells(3 - p.me).length) return 'lose';
-      if (after.need(p.me) > left - 1) return 'reach';
-      return null;
-    }
     async function hxDefence(list) {   // the longest resistance; ties broken by the engine's value (hex/app.js pickDefenceBest)
       const sc = e => e.need === 0 ? 99 : e.need < 0 ? 50 : e.need, top = Math.max(...list.map(sc)), tied = list.filter(e => sc(e) === top);
       if (tied.length < 2) return tied[0].m;
       const an = await pz().analyze(400), v = m => { const e = an.find(x => x.m === m); return e ? e.v : -1e9; };
       return tied.reduce((a, b) => v(b.m) > v(a.m) ? b : a).m;
     }
-    const hxOut = p => { p.failed = true; p.state = 'fail'; streak = 0; chime(false); say(fill(HA.out, { n: p.n }) + ' ' + (line('retry') || X.retry)); buttons(); };
+    let hxN = 0;
+    const HW = () => window.HexPzWhy, hxT = (k, v) => HW().own(ctx.lang, k, hxN++, v);
+    function hxFail(p, html) { p.failed = true; p.state = 'fail'; streak = 0; chime(false); say(html + ' ' + hxT('answer', { a: RVA.lb })); buttons(); }
     async function hxMoved(p, m, info) {
-      const before = info.before, pre = pz().moves().slice(0, -1);
+      const W = HW(), me = p.me, pre = pz().moves().slice(0, -1);
       if (p.block) {
         say(B.tx('pz.checking', ctx.lang));
         const list = await pz().puzzle(p.k, true, pre); if (p !== cur || stopped) return;
         p.used = 1;
-        const e = (list || []).find(x => x.m === m), good = (list || []).filter(x => x.need === 0);
+        const e = (list || []).find(x => x.m === m);
         if (e && e.need === 0) return solved(p);
-        p.failed = true; streak = 0; chime(false); await sleep(500); if (p !== cur) return;
-        pz().undo(1); p.used = 0; pz().mark([...(good[0] ? [[good[0].m, 'ok']] : []), [m, 'ng']]); p.state = 'fail';
-        say(B.tx('pz.fail', ctx.lang) + ' ' + B.tx('pz.failBlock', ctx.lang, { m: SPH('ng'), b: SPH('ok'), k: p.k, o: B.tx('p' + (3 - p.me), ctx.lang) }) + ' ' + (line('retry') || X.retry)); buttons(); return;
+        p.failed = true; p.off = true;
+        const j = e && e.need > 0 ? e.need : p.k;
+        const att = await pz().puzzle(j, false); if (p !== cur || stopped) return;
+        const a = W.attack(att, j);
+        let w = { k: 'bLine', v: { j: Math.max(1, j - 1) } };
+        if (a != null) { await sleep(300); if (p !== cur) return; await pz().play(a); if (p !== cur) return; pz().mark([[a, 'ng']]); w = W.block({ me, after: pz().pos(), j: j - 1 }); }
+        return hxFail(p, hxT(w.k, w.v));
       }
       const left = p.n - p.used;
       say(B.tx('pz.checking', ctx.lang));
       const list = await pz().puzzle(left, false, pre); if (p !== cur || stopped) return;
       p.used++;
-      if (info.winner === p.me) return solved(p);
-      const L = list || [], e = L.find(x => x.m === m), good = L.filter(x => x.need > 0 && x.need <= left).sort((a, b) => a.need - b.need);
-      const back = async html => { p.failed = true; streak = 0; chime(false); await sleep(500); if (p !== cur) return; pz().undo(1); p.used--; pz().mark([...(good[0] ? [[good[0].m, 'ok']] : []), [m, 'ng']]); p.state = 'fail'; say(html + ' ' + (line('retry') || X.retry)); buttons(); };
-      if (!e || !(e.need > 0) || e.need > left) {
-        if (left <= 1) return back(good.length ? B.tx('pz.fail', ctx.lang) + ' ' + B.tx('pz.failWhy', ctx.lang, { m: SPH('ng'), b: SPH('ok'), n: p.n }) : fill(HA.out, { n: p.n }));
-        const why = before ? hxBlunder(p, before, m, left) : null;
-        if (why) return back(B.tx('pz.bl.' + why, ctx.lang, { n: p.n }) + (good.length ? ' ' + B.tx('pz.best', ctx.lang, { b: SPH('ok') }) : ''));
-        p.failed = true; p.off = true;   // not the solution: played on, the defender answers with the engine's move
-        const r = await pz().think(16); if (p !== cur || stopped) return;
-        await sleep(250); if (p !== cur) return;
-        if (r == null) return hxOut(p);
-        await pz().play(r); if (p !== cur) return;
-        if (pz().state().over || p.used >= p.n) return hxOut(p);
-        say(B.tx('pz.stray', ctx.lang) + ' ' + fill(HA.mid, { n: p.n - p.used })); p.state = 'play'; pz().wait(); buttons(); return;
+      if (info.winner === me) return solved(p);
+      const e = (list || []).find(x => x.m === m);
+      if (!e || !(e.need > 0) || e.need > left) {   // off the solution: the defender's reply, then what is on the board
+        p.failed = true; p.off = true;
+        const mid = pz().pos();
+        let after = null;
+        if (left > 1) {
+          const dl = await pz().puzzle(left - 1, true); if (p !== cur || stopped) return;
+          const r = W.reply(mid, dl || [], me);
+          await sleep(300); if (p !== cur) return;
+          if (r != null) { await pz().play(r); if (p !== cur) return; after = pz().pos(); pz().mark([[r, 'ng']]); }
+        }
+        const w = W.facts({ me, mid, after, left: left - 1 });
+        return hxFail(p, hxT(w.k, w.v));
       }
-      say(B.tx('pz.good', ctx.lang));
       const dl = await pz().puzzle(p.n - p.used, true); if (p !== cur || stopped) return;
       await sleep(250); if (p !== cur) return;
       if (!dl || !dl.length) return solved(p);
       const r = await hxDefence(dl); if (p !== cur || stopped) return;
       await pz().play(r); if (p !== cur) return;
+      pz().mark([[r, 'hl']]);
       say(line('mid') || fill(HA.mid, { n: p.n - p.used })); p.state = 'play'; pz().wait(); buttons();
     }
     async function hxAuto(p) {   // 答え: the solver's line for both sides (hex/app.js pzAnswer); "stop": the one blocking cell
