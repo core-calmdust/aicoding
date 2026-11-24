@@ -2513,6 +2513,8 @@ const senet = () => require('./lesson-verify-senet.js')();   // (2026-11-24 担�
 const SOFT53 = /いい線|あと少し|あと一歩|おしい|惜しい|悪くない|まだ戦える|でも戦える|すぐには負けない|もありだけど/;   // (追66: おしい too — 「close」 to a move far from the answer)
 const soft53 = (t, pts, lost) => { const m = String(t).match(SOFT53); return m && (pts < 10 || lost) ? `追53 「${m[0]}」 for a move worth ${pts} points${lost ? ' that loses' : ''}` : null; };
 // 追53 (common): the 3D result line (atlas/lessons3d.js) says 「いい手だね…」(X.partial) / 「いい線！」 only for 10+ points, not for any points
+// 追78: closeness / regret openers in the 14 languages (the 3D puzzles' words after a move off the solution)
+const NEAR78 = /おしい|惜しい|おしかった|あと少し|あと一歩|いい線|So close|Almost|One step short|Too bad|差一|可惜|아깝|모자라|Casi|Por poco|Por un paso|Presque|À un pas|Dommage|Quase|Por pouco|Por um passo|Knapp|Schade|Schritt zu wenig|Почти|Чуть-чуть|Жаль|Az kaldı|Çok yakın|adım eksik|Hampir|Sayang|selangkah|लगभग|थोड़ा सा|बस एक कदम|अफ़सोस|اقتربت|خسارة|قريب|خطوة واحدة/;
 function near53(opt) { const src = require('fs').readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), out = [];
   for (const m of src.matchAll(/pts\s*(>|>=)\s*(\d+)\s*\?\s*(X\.partial|'いい線[^']*')/g)) if (!(m[1] === '>=' ? +m[2] >= 10 : +m[2] >= 9)) out.push({ step: 'lessons3d', q: 0, msg: `追53 ${m[0]}: the soft headline for a move under 10 points` });
   if (!/X\.partial/.test(src)) out.push({ step: 'lessons3d', q: 0, msg: '追53 the check finds no X.partial (changed?)' });
@@ -2543,7 +2545,13 @@ function near53(opt) { const src = require('fs').readFileSync(path.join(ROOT, 'a
   { const fs = require('fs'), NEAR = /おしい|惜しい|おしかった|あと少し|あと一歩|いい線/, DONE = (opt && opt.done76) || ['foxgeese', 'konane'];
     for (const g of DONE) { const f = path.join(ROOT, 'atlas/games', g + '-pz.js'); if (!fs.existsSync(f)) { out.push({ step: g + '-pz.js', q: 0, msg: '追78 file not found' }); continue; }
       const t = (opt && opt.src76 && opt.src76[g]) || fs.readFileSync(f, 'utf8'), a = t.search(/\n\s*ja: \{/), b = t.indexOf('en: {', a); if (a < 0 || b < 0) { out.push({ step: g + '-pz.js', q: 0, msg: '追78 the ja block not found' }); continue; }
-      for (const m of t.slice(a, b).matchAll(/(['"])((?:(?!\1)[^\n])*)\1/g)) if (NEAR.test(m[2])) out.push({ step: g + '-pz.js', q: 0, msg: `追78 the words after a move off the solution say the move was close 「${m[2].slice(0, 40)}」` }); } }
+      for (const m of t.slice(a, b).matchAll(/(['"])((?:(?!\1)[^\n])*)\1/g)) if (NEAR.test(m[2])) out.push({ step: g + '-pz.js', q: 0, msg: `追78 the words after a move off the solution say the move was close 「${m[2].slice(0, 40)}」` });
+      // 追78 (2026-11-25 03:32 担当C): the other 13 languages too — the module's T[lang] for the keys said after a move off the solution
+      // (foxgeese cap・farWin・trap・farTake・lastWin・lastTake, konane stuck・far・last): no closeness or regret opener in any language
+      let P; try { const M = { exports: {} }; new Function('module', 'window', t)(M, undefined); P = M.exports; } catch (e) { out.push({ step: g + '-pz.js', q: 0, msg: '追78 the module does not load: ' + e.message }); continue; }
+      const KEYS = g === 'konane' ? ['stuck', 'far', 'last'] : ['cap', 'farWin', 'trap', 'farTake', 'lastWin', 'lastTake'];
+      for (const l of ['en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar']) { if (!P[l]) { out.push({ step: g + '-pz.js', q: 0, msg: `追78 no ${l} block` }); continue; }
+        for (const k of KEYS) for (const x of [].concat(P[l][k] == null ? [] : P[l][k])) if (NEAR78.test(x)) out.push({ step: g + '-pz.js', q: 0, msg: `追78 ${l}.${k} says the move was close 「${String(x).slice(0, 40)}」` }); } } }
   // 追81 (2026-11-25 担当A): the line after a wrong move in a warm-up (<game>/lessons.json rampUi.ng, every language, and the 3D voice
   //  <game>/voice-*-ja.js 'ui:ng') is said whatever the move, so it does not say the move was close (gomoku's 「おしい！」 after e10, a
   //  move nowhere near the three). The games done: N81_DONE; the others are 「追81 未確認」 in claude/lesson-quality.md.
