@@ -1171,7 +1171,7 @@ function tafl(opt) {
 // b_cannon・b_pawn). The goal set is read from the rules (a capture by that kind on which no legal move of the opponent can take back),
 // the engine values stored in sc (= xiangqi/app.js problemPoints, the 3D XIANGQI.points) must put that capture alone on top, and
 // ショウギツネ's words (atlas/lessons3d.js xqLsJa) are read back against the board for the answer and every wrong move.
-const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn', 'b_mate1']);
+const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn', 'b_mate1', 'm_mate2']);
 function xiangqi(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'xiangqi/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'xiangqi/lessons.json'), 'utf8'));
@@ -1319,6 +1319,72 @@ function xiangqi(opt) {
       }
     });
     if (tys.size < 3) add(id, 4, `⑤ the mates use fewer than three kinds of piece (${[...tys]})`);
+  });
+  // (2026-11-24 第2期 担当A) m_mate2「2手で詰ます」('ok' kind): the goal set = every first move after which each reply leaves a
+  // mate by check (read from the rules, every reply); no other first move wins in two by any means (stalemate 困毙 included: the
+  // lesson is about mate), none wins at once; every reply to the answer is met by a mate by check (追6); 追1 the warm-up is not a
+  // problem; 追27 the answers move two or more kinds of piece; ⑥ easier first by (quiet answer, replies to the answer, decoys);
+  // ⑦⑧ ショウギツネ's words for every wrong first move read back against a reply that escapes; the hint and praise against the board.
+  const MATE2 = ['m_mate2'], noMv = q => !q.moves().length, win1 = q => q.moves().some(x => noMv(q.clone().play(x)));
+  const mate1 = q => q.moves().filter(x => { const z = q.clone().play(x); return z.inCheck() && noMv(z); });
+  const m2info = p => p.moves().map(u => { const q = p.clone().play(u), R = q.moves(); if (!R.length) return { u, now: true, chk: q.inCheck(), R: 0, esc: [], escC: [] };
+    const esc = [], escC = []; for (const r of R) { const z = q.clone().play(r); if (!win1(z)) esc.push(r); if (!mate1(z).length) escC.push(r); } return { u, q, chk: q.inCheck(), R: R.length, esc, escC }; });
+  const kMoves = q => { const kk = q.k[q.side]; return q.moves().filter(x => mFrom(x) === kk).length; };
+  L.steps.forEach((st, si) => { const id = st.id; if (!XQ_DONE.has(id) || !MATE2.includes(id)) return;
+    const tys = new Set(); let prevK = null, firstK = null; const key = (a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+    const probS = new Set(st.problems.map(P => P.s.split(' ')[0]));
+    (st.ramp || []).forEach((r, j) => { if (!r.s) return; const p = E.Pos.from(r.s), I = m2info(p), G = I.filter(x => !x.now && !x.escC.length).map(x => E.name(p, x.u, 'iccs')).sort();
+      if (probS.has(r.s.split(' ')[0])) add(id, -1, `追1 warm-up ${j + 1} is problem ${[...st.problems].findIndex(P => P.s.split(' ')[0] === r.s.split(' ')[0]) + 1}`);
+      if (I.some(x => x.now || (!x.esc.length && x.escC.length))) add(id, -1, `④ warm-up ${j + 1}: a first move wins at once or by stalemate`);
+      if (G.length !== 1) add(id, -1, `② warm-up ${j + 1}: ${G.length} first moves mate in two`);
+      if (r.k === 'explain') { const mk = (r.marks || []).map(x => x[0]); if (!G.some(m => mk.includes(m.slice(0, 2)) && mk.includes(m.slice(2, 4)))) add(id, -1, `⑧ warm-up ${j + 1}: the marked move is not the mate in two`); }
+      if (r.ok && JSON.stringify(r.ok.slice().sort()) !== JSON.stringify(G)) add(id, -1, `① warm-up ${j + 1}: ok ${r.ok} ≠ ${G}`); });
+    st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), me = p.side, all = p.moves(), nm = m => E.name(p, m);
+      if (!P.ok || !P.ok.length) { a('⑨ not an ok-kind problem'); return; }
+      if (!P.ok.includes(P.best)) a('⑨ best is not in ok');
+      const I = m2info(p), okS = new Set(P.ok), G = I.filter(x => !x.now && !x.escC.length), W = I.filter(x => x.now || !x.esc.length);
+      P.ok.forEach(m => { if (!all.includes(m)) a(`① ${m} in ok is not legal`); else if (!G.some(x => x.u === m)) a(`① ${nm(m)} in ok: some reply escapes the mate by check`); });
+      G.filter(x => !okS.has(x.u)).forEach(x => a(`② ${nm(x.u)} also mates in two, not in ok`));
+      W.filter(x => !G.includes(x)).forEach(x => a(`④ ${nm(x.u)} wins ${x.now ? 'at once' : 'in two'} by stalemate (困毙), not by mate (追6)`));
+      if (G.length > 1) a(`② ${G.length} first moves mate in two`);
+      if (p.inCheck()) a('④ the mover is in check'); { const q = E.Pos.from(P.s.replace(/ [wb]$/, me ? ' w' : ' b')); if (q.inCheck()) a('④ the side not to move is in check'); }
+      const ans = G.find(x => x.u === P.ok[0]); if (!ans) return;
+      const ck = I.filter(x => x !== ans && x.chk).length, near = I.filter(x => x !== ans && x.esc.length <= 2).length;
+      if (all.length < 12) a(`③ ${all.length} legal moves`); if (ck < 2) a(`③ ${ck} checks that do not mate in two`);
+      tys.add(T(p.at(mFrom(ans.u))));
+      const B = brd(P.s); for (const [who, b] of pool) { if (who === `${id} q${j + 1}`) continue; const e = dist(B, b); if (e <= 4) a(`⑤ ${e} points from ${who}`); }
+      const K = [ans.chk ? 0 : 1, Math.min(ans.R, 9), ck + near];
+      if (prevK && key(K, prevK) < 0) a(`⑥ easier than the problem before (${K} after ${prevK})`); if (!prevK || key(K, prevK) > 0) prevK = K; if (!firstK) firstK = K;
+      if (j === st.problems.length - 1 && !(key(K, firstK) > 0)) a(`⑥ the last problem is no harder than problem 1`);
+      let Wd; try { Wd = X.xqLsJa(E, st, P, j, k => k === 'ok' ? '〈正〉' : '〈誤〉', si); } catch (e) { a('⑧ the words fail: ' + e.message); return; }
+      const g = plain(Wd.good(P.best)); if (/\{|undefined|NaN/.test(g)) a(`⑧ the praise 「${g}」`);
+      if (ans.chk ? /王手じゃなくても|静かな手|王手をかけずに/.test(g) : /王手で受け方|王手を受けた/.test(g)) a(`⑧ the praise does not match the answer (check ${ans.chk}) 「${g}」`);
+      const shut = kMoves(ans.q) < kMoves(E.Pos.from(P.s.replace(/ [wb]$/, me ? ' w' : ' b')));
+      for (const t of [g, Wd.hintTx]) if (/逃げ道を先にふさ|逃げ道になりそうな点を、先に消/.test(t) && (ans.chk || !shut)) a(`⑧ 「${t}」 but the answer does not take a square from the general`);
+      for (const t of [Wd.ask, Wd.hintTx]) { if (/\{|undefined|NaN/.test(t)) a(`⑧ 「${t}」`); if (ans.chk && /静か|王手をかけなくて|王手はどれも受け/.test(t)) a(`追7 「${t}」 but the answer is a check`); if (!ans.chk && /王手をかけて|王手のあと|王手した駒|王手を受けた/.test(t)) a(`追7 「${t}」 but the answer is not a check`); }
+      for (const x of I) { if (okS.has(x.u)) continue; const raw = plain(Wd.ng(x.u)), xn = nm(x.u), i1 = raw.indexOf('〈正〉'), t = i1 > 0 ? raw.slice(0, i1) : raw;
+        if (/\{|undefined|NaN/.test(raw)) { a(`⑧ ${xn}: 「${raw}」`); continue; }
+        if (!raw.includes('〈誤〉') || !raw.includes('〈正〉')) a(`⑦ ${xn}: the words do not name both moves 「${raw}」`);
+        const tl = i1 > 0 ? raw.slice(i1) : '';   // (the answer's reason after the miss: the same facts as the praise)
+        if (ans.chk ? /王手じゃなくても|静かな手|王手をかけずに/.test(tl) : /王手で受け方|王手を受けた/.test(tl)) a(`⑧ ${xn}: the answer's reason does not match it (check ${ans.chk}) 「${tl}」`);
+        if (/どこへ逃げても/.test(tl) && !ans.q.moves().some(r => mFrom(r) === ans.q.k[me ^ 1])) a(`⑧ ${xn}: 「${tl}」 but the general cannot move after the answer`);
+        if (/逃げ道を先にふさ/.test(tl) && (ans.chk || !shut)) a(`⑧ ${xn}: 「${tl}」 but the answer does not take a square from the general`);
+        const k = x.q.k[me ^ 1], to = mTo(x.u), es = x.esc;
+        const take = /取られて終わ|そのまま取られ|ぱくっと取られ|取られて消え|ただで取られる/.test(t), run = /逃げられ|逃げ道が残って|空いている点へ動いて|逃げ出せる|逃げ場がまだ|將が動いて|將が1歩動いて/.test(t), blk = /間に駒を入れ|はさんで防げ|合い駒|筋に駒を入れ|あいだをふさが/.test(t);
+        const capd = /相手に(.+?)を取られて|きみの(.+?)が取られて/.exec(t), mvd = /相手の(.+?)が動いて受け|相手に(.+?)で守りの1手/.exec(t);
+        if (x.chk && !take && !run && !blk) a(`⑦ ${xn}: a check, the words do not say how it is met 「${t}」`);
+        if (!x.chk && !run && !capd && !mvd) a(`⑦ ${xn}: not a check, the words do not name the reply that escapes 「${t}」`);
+        if (!x.chk && /王手/.test(t) && !/王手じゃない/.test(t)) a(`⑦ ${xn}: 「${t}」 (it is not a check)`);
+        if (x.chk && /王手じゃない/.test(t)) a(`⑦ ${xn}: 「${t}」 (it is a check)`);
+        if (!x.chk && /王手じゃないから/.test(t) && !ans.chk) a(`⑦ ${xn}: 「${t}」 (the answer is not a check either)`);
+        if (take && !es.some(r => mTo(r) === to)) a(`⑦ ${xn}: 「${t}」 (no capture of the checking piece escapes the mate)`);
+        if (run && !es.some(r => mFrom(r) === k)) a(`⑦ ${xn}: 「${t}」 (no move of the general escapes the mate)`);
+        if (blk && !es.some(r => mFrom(r) !== k && mTo(r) !== to)) a(`⑦ ${xn}: 「${t}」 (no block escapes the mate)`);
+        if (capd && !x.chk) { const nmC = capd[1] || capd[2]; if (!es.some(r => x.q.at(mTo(r)) && X.XQN(T(x.q.at(mTo(r))), me) === nmC)) a(`⑦ ${xn}: 「${t}」 (no reply taking a ${nmC} escapes)`); }
+        if (mvd && !x.chk) { const nmM = mvd[1] || mvd[2]; if (!es.some(r => mFrom(r) !== k && !x.q.at(mTo(r)) && X.XQN(T(x.q.at(mFrom(r))), me ^ 1) === nmM)) a(`⑦ ${xn}: 「${t}」 (no quiet ${nmM} reply escapes)`); }
+      }
+    });
+    if (tys.size < 2) add(id, 4, `追27 every answer moves the same kind of piece (${[...tys]})`);
   });
   return out;
 }
@@ -1945,6 +2011,80 @@ function chessOpen() {
     chessOpenSet(ctx, s, s.drill, picks).forEach(m => out.push({ step: s.id, q: +m.slice(1, m.indexOf(' ')), msg: m.slice(m.indexOf(' ') + 1) })); }
   return out;
 }
+// (2026-11-24 第2期・担当A、追14・追1) hex: the 3D warm-up (atlas/lessons3d.js HEX.lesson: explain = the step's problem 1 with its
+// answers green → try = the same problem turned 180°; texts hex/ramps3d.json ja and ゴイシペン's hex/voice-pen-ja.js ramp:<step>/*):
+// the green cells are the answers (hxOk) and legal, the turned try's answers are the turned cells and do the same job, the words of
+// the explain (body) and of the praise (y) are the board's facts (see below), and the warm-up's problem is not asked again in the 3D
+// problems (追1) — no other problem of the step is it or its 180° turn within 2 cells.
+function hex(opt) {
+  const fs = require('fs'), E = require(path.join(ROOT, 'hex/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'hex/lessons.json'), 'utf8'));
+  const RT = (opt && opt.ramps) || JSON.parse(fs.readFileSync(path.join(ROOT, 'hex/ramps3d.json'), 'utf8'));
+  const src = (opt && opt.src) || fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8');
+  const VP = (() => { const w = {}; new Function('window', fs.readFileSync(path.join(ROOT, 'hex/voice-pen-ja.js'), 'utf8'))(w); const o = w.I18N && (w.I18N['ja@pen'] || w.I18N.ja) || w; return (opt && opt.voice) || o; })();
+  const out = [], add = (id, m) => out.push({ step: id, q: 0, msg: 'warm-up: ' + m }), plain = t => String(t || '').replace(/<[^>]+>/g, '');
+  const hxOk = P => { if (P.ok) return P.ok.slice(); const best = Math.max(...P.sc.map(e => e[1])); return P.sc.filter(e => e[1] >= best - 15).sort((a, b) => b[1] - a[1]).map(e => e[0]); };
+  const h0 = src.indexOf('LKEY: \'aicoding-hex-lessons\''), HX = src.slice(h0, src.indexOf('points(P, m) {   // = hex/app.js problemPoints', h0));
+  if (!HX.includes('ok = hxOk(P0)') || !HX.includes("sr = Object.assign({}, sp, { b: String(sp.b).split('').reverse().join('') })")) add('-', 'the 3D warm-up is no longer problem 1 (explain) and its 180° turn (try): update this check');
+  if (!/\}\)\.filter\(\(o, i\) => !\(ramp && i === 0\)\)/.test(HX)) add('-', '追1 the 3D problems ask the warm-up\'s problem again (problem 1 = the explain)');
+  const dist = (a, b) => { let d = 0; for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) d++; return d; }, rev = b => String(b).split('').reverse().join('');
+  // 追32 (2026-11-24): the shapes the problems use are the ones the intro teaches — b_save: every answer is the other cell of an
+  // intruded bridge, between two stones or between a second-row stone and the edge; when the edge kind is asked, the intros
+  // (2D ja・en, 3D ゴイシペン) say that the edge links up like a stone
+  { const st = L.steps.find(x => x.id === 'b_save'), I = (() => { const w = {}; new Function('window', fs.readFileSync(path.join(ROOT, 'hex/i18n.js'), 'utf8'))(w); return w.I18N || {}; })();
+    const j3 = (src.match(/      b_save: '([^']*)',/) || [])[1] || ''; let edge = 0;
+    if (st) st.problems.forEach((P, j) => { const sp = P.s, n = sp.n, N = n * n, q = E.Pos.from(sp), me = sp.side, op = 3 - me, { NB } = E.geo(n), c = P.ok[0];
+      const d = x => me === 1 ? Math.min(Math.floor(x / n), n - 1 - Math.floor(x / n)) : Math.min(x % n, n - 1 - x % n);
+      let ss = false; for (let x = 0; x < N && !ss; x++) for (let y = x + 1; y < N; y++) if (q.at(x) === me && q.at(y) === me && !NB[x].includes(y)) { const cm = NB[x].filter(z => NB[y].includes(z)); if (cm.length === 2 && cm.includes(c) && cm.some(z => q.at(z) === op)) { ss = true; break; } }
+      const ed = d(c) === 0 && NB[c].some(x => q.at(x) === me && d(x) === 1 && NB[x].filter(z => d(z) === 0).length === 2 && NB[x].filter(z => d(z) === 0).every(z => z === c || q.at(z) === op));
+      if (!ss && !ed) out.push({ step: 'b_save', q: j + 1, msg: '追32 the answer is not the other cell of an intruded bridge' });
+      if (!ss && ed) edge++; });
+    if (edge) [['2D ja', /辺/, plain((I.ja || {})['ls.b_save.intro'])], ['2D en', /edge/i, plain((I.en || {})['ls.b_save.intro'])], ['3D ja', /辺/, plain(j3)]].forEach(([w, re, t]) => { if (!re.test(t)) out.push({ step: 'b_save', q: 0, msg: `追32 ${edge} problems are bridges to the edge, the ${w} intro does not say the edge links up: ${t}` }); }); }
+  L.steps.forEach(st => { const id = st.id, P0 = (st.problems || [])[0]; if (!P0) return;
+    const T = f => [plain((RT[id + '/' + f] || {}).ja), plain(VP['ramp:' + id + '/' + f])], a = m => add(id, m);
+    if (!(RT[id + '/t'] && RT[id + '/g'])) return;   // (no warm-up for this step)
+    if (!T('body')[1] || !T('y')[1]) a('ゴイシペン\'s words (voice-pen-ja.js ramp:' + id + '/body, y) missing');
+    const sp = P0.s, n = sp.n, N = n * n, q = E.Pos.from(sp), me = sp.side, op = 3 - me, { NB } = E.geo(n), ok = hxOk(P0), cells = ok.filter(c => c !== 1023);
+    const rq = E.Pos.from(Object.assign({}, sp, { b: rev(sp.b) })), rot = c => c === 1023 ? c : N - 1 - c, nm = c => E.nameOf(c, n);
+    if (q.winner()) a('the position is already won');
+    cells.forEach(c => { if (!q.legal(c)) a(`green ${nm(c)} is not an empty cell`); if (!rq.legal(rot(c))) a(`the turned try's answer ${nm(rot(c))} is not empty`); });
+    const sameJob = (Q, M, s) => { const W = Q.winCells(s).sort((x, y) => x - y).join(); return W; };
+    if (id === 'b_connect' || id === 'b_block') { const s = id === 'b_connect' ? me : op;
+      if (sameJob(q, 0, s) !== cells.slice().sort((x, y) => x - y).join()) a(`green ${cells.map(nm)} ≠ the cells that connect at once ${q.winCells(s).map(nm)}`);
+      if (sameJob(rq, 0, s) !== cells.map(rot).sort((x, y) => x - y).join()) a('the turned try: its answers do not connect / stop at once'); }
+    const d = c => me === 1 ? Math.min(Math.floor(c / n), n - 1 - Math.floor(c / n)) : Math.min(c % n, n - 1 - c % n);
+    const edgeCells = c => NB[c].filter(x => d(x) === 0 && d(c) === 1), common = (x, y) => NB[x].filter(z => NB[y].includes(z));
+    const after = c => { const r = q.clone(); r.b[c] = me; r._w = undefined; return r; };
+    const say = (re, cond, what) => T('body').forEach((t, j) => { if (re.test(t) !== cond) a(`${j ? 'voice' : 'ramps3d'} body ${cond ? 'does not say' : 'says'} ${what}: ${t}`); });
+    // how many green cells: the words for one cell never stand for two
+    say(/緑の印の点<?\/?b?>?は(2つ|ふたつ)/, cells.length + (ok.includes(1023) ? 1 : 0) >= 2 && id !== 'b_connect' && id !== 'b_block' && id !== 't_edge3' ? true : false, 'that there are two green cells');
+    if (id === 'b_bridge') { const c = cells[0], r = after(c), W = r.winCells(me);
+      if (W.length !== 2) a(`"つながり方が2通り": after the green cell ${W.length} cells connect at once`);
+      if (r.moves().some(x => { if (x === 1023) return false; const r2 = r.clone(); r2.b[x] = op; r2._w = undefined; return !r2.winCells(me).length; })) a('"相手は片方しか止められない": one reply stops both'); }
+    if (id === 'b_save') { const c = cells[0];
+      const ss = []; for (let x = 0; x < N; x++) for (let y = x + 1; y < N; y++) if (q.at(x) === me && q.at(y) === me && !NB[x].includes(y)) { const cm = common(x, y); if (cm.length === 2 && cm.includes(c) && cm.some(z => q.at(z) === op)) ss.push([x, y]); }
+      const ed = NB[c].filter(x => q.at(x) === me && d(x) === 1 && d(c) === 0 && edgeCells(x).includes(c) && edgeCells(x).some(z => q.at(z) === op));
+      if (!ss.length && !ed.length) a('green is not the other cell of an intruded bridge');
+      say(/2つの石/, ss.length > 0, '"2つの石" (a bridge between two stones)'); say(/辺/, !ss.length && ed.length > 0, '"辺" (the bridge to the edge)');
+      T('y').forEach((t, j) => { if (/辺/.test(t) !== (!ss.length && ed.length > 0)) a(`${j ? 'voice' : 'ramps3d'} y: ${t}`); }); }
+    if (id === 'b_edge' || id === 't_ladder' || id === 't_edge3') cells.forEach(c => { if (d(c) !== 1) a(`"2段目": green ${nm(c)} is on row ${d(c) + 1}`);
+      if (id !== 't_ladder' && edgeCells(c).some(x => q.at(x))) a(`"下の2マスが空いて": below ${nm(c)} is not empty`); });
+    if (id === 't_ladder') { if (![...q.b].some((v, i) => v === me && d(i) === 0 && !cells.some(c => NB[c].includes(i)))) a('"ラダーエスケープ": no own stone on the edge row ahead');
+      if (![...q.b].some((v, i) => v === op && d(i) === 0)) a('"相手が1段目をふさぐ": no opponent stone on the first row'); }
+    if (id === 't_edge3') { const z = [...q.b].map((v, i) => v === me && d(i) === 2 ? i : -1).filter(i => i >= 0); if (!z.length) a('"3段目の石": none');
+      cells.forEach(c => { if (!z.some(x => { const cm = common(x, c); return cm.length === 2 && cm.every(y => !q.at(y)); }) || edgeCells(c).some(x => q.at(x))) a(`"ブリッジか2段目のテンプレートが残る": not so at ${nm(c)}`); }); }
+    if (id === 't_stop') cells.forEach(c => { for (let x = 0; x < N; x++) for (let y = x + 1; y < N; y++) if (q.at(x) === op && q.at(y) === op && !NB[x].includes(y)) { const cm = common(x, y); if (cm.length === 2 && cm.includes(c) && cm.every(z => !q.at(z))) a(`"ブリッジではない1か所": green ${nm(c)} is inside a bridge`); } });
+    if (id === 's_center') { if (q.count(1) + q.count(2)) a('"1手目": the board is not empty');
+      cells.forEach(c => { const r = Math.floor(c / n), k = c % n; if (!(r + k === n - 1)) a(`"中央か短い対角線": ${nm(c)} is on neither`); });
+      if (cells.length === 2) say(/中央|まん中/, true, 'the centre'); }
+    if (id === 's_swap') { if (q.count(1) !== 1 || q.count(2) || me !== 2 || !sp.sw) a('"赤の1手目を見て": not one red stone with Blue to move under the swap rule');
+      if (ok.length !== 1 || ok[0] !== 1023) a('"スワップ…が正解": the swap is not the only green'); }
+    if (id === 's_block') cells.forEach(c => { if (NB[c].some(x => q.at(x) === op)) a(`"少し離れて": green ${nm(c)} touches an opponent stone`); });
+    if (id === 's_plan') cells.forEach(c => { const r = after(c); if (!(r.need(me) < q.need(me) && r.need(op) > q.need(op))) a(`"自分を助けて、相手をふさぐ": ${nm(c)} (${q.need(me)}→${r.need(me)}, ${q.need(op)}→${r.need(op)})`); });
+    // 追1: the other problems of the step are not the warm-up or its turn
+    st.problems.slice(1).forEach((p, j) => { if (p.s.n === n && Math.min(dist(p.s.b, sp.b), dist(p.s.b, rev(sp.b))) <= 2 && (q.count(1) + q.count(2) > 1)) a(`追1 problem ${j + 2} is the warm-up's position (or its turn) within 2 cells`); });
+  });
+  return out;
+}
 // (2026-11-24 担当D) janggi on the 3D table: the puzzles (all themes) — tools/lesson-verify-janggi.js
 const janggi = () => { const J = require('./lesson-verify-janggi.js'); return J.puzzles().concat(J.lessons()); };
 // (2026-11-24 第2期・担当B) hex openings (hex/open): the practice problems of the sets marked verified (hex/tools/op_curate.js).
@@ -2076,12 +2216,12 @@ function hxDeep(O, out) {   // ① ② again: the native engine searches every v
 }
 const ur = () => require('./lesson-verify-ur.js')();   // (2026-11-24 担当C：ウルのレッスン、tools/lesson-verify-ur.js)
 const senet = () => require('./lesson-verify-senet.js')();   // (2026-11-24 担当C：セネトのレッスン、tools/lesson-verify-senet.js)
-const GAMES = { chessOpen, ur, senet, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines, janggi, hexOpen };
+const GAMES = { chessOpen, ur, senet, hex, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines, janggi, hexOpen };
 module.exports = GAMES; GAMES.mancalaWords = mancalaWords; Object.assign(GAMES, { chessOpenCtx, chessOpenProblem, chessOpenSet, chessOpenD }); Object.defineProperty(GAMES, '_hex', { value: { ctx: hxCtx, near: hxNear, problem: hxProblem, d: hxD, pts: hxPts, kind: (sp, m) => { const X = hxX(); return X.HXA.kind(X.HXA.facts(sp, m)); } } }); Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
 if (require.main === module) {
-  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,chessOpen,openLines,janggi,hexOpen').split(',');
+  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,chessOpen,openLines,janggi,hex,hexOpen').split(',');
   let bad = 0;
-  for (const g of games) { const f = GAMES[g](g === 'hexOpen' && a.includes('--deep') ? { deep: true } : undefined); if (!f.length) { console.log(`OK ${g}` + (g === 'chessOpen' ? ' (チェスの定跡の drill の①〜⑨・追3・追25。drill のない定跡は pending)' : g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'senet' ? ' (セネトの作り直したレッスン（v2）の①〜⑧・追7・追16・追22・追23・追28。厳密な勝率は C で解き直し)' : g === 'hexOpen' ? ` (ヘックスの定跡 ${JSON.parse(require('fs').readFileSync(path.join(ROOT, 'hex/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id).join('・') || 'なし'} の①〜⑨` + (a.includes('--deep') ? '。①②はエンジンで読み直し)' : '。①②は保存した2つの読みで照合、読み直しは --deep＝追26)') : g === 'janggi' ? ' (パズル全問・レッスン b_rook・b_horse・b_pawn・b_mate1・m_mate2・m_mate3・e_rook・e_pawn の①〜⑨・追19・追20・追24・追27・追31)' : g === 'ur' ? (require('fs').existsSync(require('path').join(process.env.UR_LUT_DIR || '/tmp/urlut', 'finkel.rgu')) ? ' (ウルのレッスン12本の①〜⑧・追7・追16)' : ' (ウルのレッスン12本の③〜⑧・追7・追16。①②は完全解析表なしで未照合＝追26)') : g === 'openLines' ? ' (shogi・tafl・checkers の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
+  for (const g of games) { const f = GAMES[g](g === 'hexOpen' && a.includes('--deep') ? { deep: true } : undefined); if (!f.length) { console.log(`OK ${g}` + (g === 'chessOpen' ? ' (チェスの定跡の drill の①〜⑨・追3・追25。drill のない定跡は pending)' : g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'senet' ? ' (セネトの作り直したレッスン（v2）の①〜⑧・追7・追16・追22・追23・追28。厳密な勝率は C で解き直し)' : g === 'hex' ? ' (3D の準備13本：緑の印・半回転の try・説明と ほめ言葉の語が盤の事実・追1 準備の問題を本番で出さない)' : g === 'hexOpen' ? ` (ヘックスの定跡 ${JSON.parse(require('fs').readFileSync(path.join(ROOT, 'hex/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id).join('・') || 'なし'} の①〜⑨` + (a.includes('--deep') ? '。①②はエンジンで読み直し)' : '。①②は保存した2つの読みで照合、読み直しは --deep＝追26)') : g === 'janggi' ? ' (パズル全問・レッスン b_rook・b_horse・b_elephant・b_cannon・b_pawn・b_mate1・m_mate2・m_mate3・e_rook・e_pawn の①〜⑨・追19・追20・追24・追27・追31・追34)' : g === 'ur' ? (require('fs').existsSync(require('path').join(process.env.UR_LUT_DIR || '/tmp/urlut', 'finkel.rgu')) ? ' (ウルのレッスン12本の①〜⑧・追7・追16)' : ' (ウルのレッスン12本の③〜⑧・追7・追16。①②は完全解析表なしで未照合＝追26)') : g === 'openLines' ? ' (shogi・tafl・checkers の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
     bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
   process.exit(bad ? 1 : 0);
 }

@@ -133,7 +133,7 @@ function puzzles(opt) {
   return opt && opt.facts ? { out, facts } : out;
 }
 
-// (2026-11-24 担当D) the lessons on the 3D table (atlas/games/janggi-ls.js DONE: the capture basics b_rook・b_horse・b_pawn), as
+// (2026-11-24 担当D) the lessons on the 3D table (atlas/games/janggi-ls.js DONE: the capture basics b_rook・b_horse・b_elephant・b_cannon・b_pawn), as
 // xiangqi's (tools/lesson-verify.js xiangqi): every problem, ①〜⑨ and 追1〜:
 //  ① the goal set read from the rules = captures by the step's piece that no legal reply can take back (not the general) — the answer
 //    alone; the stored values (sc, = janggi/app.js problemPoints · 3D JANGGI.points) put it alone on top, and a fresh engine search
@@ -281,6 +281,8 @@ function lessons(opt) {
       const wrongCaps = caps(p).filter(m => m !== P.best && T(p.at(mTo(m))) !== E.KING);
       const trapK = wrongCaps.filter(m => takeBack(p, m) && (K === 7 ? PTS[T(p.at(mFrom(m)))] > PTS[T(p.at(mTo(m)))] : T(p.at(mFrom(m))) === K));
       if (all.length < 3) a(`③ ${all.length} legal moves`);
+      // 追17 the question names the piece (「象で取って」): among the moves of that kind of piece the answer is one, 3 wrong or more
+      { const rg = all.filter(m => T(p.at(mFrom(m))) === K); if (rg.length - 1 < 3) a(`追17 the ${JL.NM(K, true)} the question names have ${rg.length} moves (${rg.length - 1} wrong): the question leaves almost no choice`); }
       if (!wrongCaps.length) a('③ the answer is the only capture on the board');
       if (j >= 2 && !trapK.length) a(`③ problem ${j + 1}: no capture that is taken back (the lesson's trap)`);
       const ct = T(p.at(mTo(P.best))), cv = PTS[ct];

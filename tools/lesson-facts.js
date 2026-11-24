@@ -461,6 +461,7 @@ const CHECKS = {
   //   cells that keep the shortest forced connection. The scored problems (s_*): the moves legal, the best one the top value.
   hex() {
     const E = require(path.join(ROOT, 'hex/engine.js')), L = J('hex/lessons.json'), g = 'hex', cp = require('child_process');
+    require('./lesson-verify.js').hex().forEach(fa => bad(g, String(Math.max(0, L.steps.findIndex(s => s.id === fa.step))), `${fa.step}: ${fa.msg}`));   // (2026-11-24 第2期・追14・追1: the 3D warm-ups)
     let bin = process.env.HEXN || '/tmp/hexn';
     if (!fs.existsSync(bin)) { try { cp.execSync(`gcc -O3 -march=native -DNATIVE -w -o ${bin} tools/native.c -lm`, { cwd: path.join(ROOT, 'hex'), stdio: 'ignore' }); } catch (e) { bin = null; } }
     const run = cmds => { const r = cp.spawnSync(bin, ['serve'], { input: cmds.join('\n') + '\nquit\n', encoding: 'utf8', maxBuffer: 1 << 26 }); return r.stdout.trim().split('\n'); };
