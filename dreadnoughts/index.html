@@ -280,7 +280,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 
 /* ---------- phone ---------- */
 /* ---------- phone (portrait first): one column, big type, thumb-sized targets; the sea's free area is measured from these bars in JS ---------- */
-#strip,#bnBal,.vt .n,#tipX{display:none}
+#strip,.vt .n,#tipX{display:none}
 @media (max-width:760px), (max-height:520px){
   :root{--cut:10px;--sb:env(safe-area-inset-bottom,0px);--st:env(safe-area-inset-top,0px)}
   #bSound,#tSound{display:none!important}
@@ -292,8 +292,6 @@ button{font:inherit;color:inherit;cursor:pointer}
   #banner .bt{flex:none;font-size:12.5px;letter-spacing:.22em;text-indent:0;padding:4px 8px;border:1px solid currentColor}
   #banner .bs{flex:1;min-width:0;margin:0;font-size:14.5px;line-height:1.4;letter-spacing:.02em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:none;text-shadow:none}
   #banner .bar{display:none}
-  #bnBal{display:flex;flex:none;flex-direction:column;align-items:flex-end;gap:3px;font-family:var(--num);font-size:12px;letter-spacing:.14em;color:var(--mute)}#bnBal b{font-size:17px;color:var(--gold2);letter-spacing:.04em}
-  #bnBal i{display:block;width:56px;height:4px;background:rgba(255,122,92,.45)}#bnBal i u{display:block;height:100%;background:var(--gold2);text-decoration:none}
   /* the waters switch: one full-width segmented control */
   #views{left:8px;right:8px;top:calc(98px + var(--st));bottom:auto;flex-direction:row;gap:6px}
   .vt{flex:1;min-width:0;height:44px;justify-content:center;padding:0 8px;font-size:15px;clip-path:none}.vt kbd{display:none}
@@ -575,13 +573,12 @@ body.l2::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:4;b
     <button class="ico" id="bSound" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>
     <button class="ico" id="bMenu" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
   </header>
-  <div id="banner"><div class="bt" id="bnT"></div><div class="bs" id="bnS"></div><div class="bar" id="bnB"></div><div id="bnBal"><b id="bnBalV">50%</b><i><u id="bnBalF" style="width:50%"></u></i></div></div>
+  <div id="banner"><div class="bt" id="bnT"></div><div class="bs" id="bnS"></div><div class="bar" id="bnB"></div></div>
   <aside id="left">
     <section class="panel fleet" id="pMine"><div class="ph"><b data-t="h.mine"></b><i></i><small id="mineLeft"></small></div><div class="fl-list" id="listMine"></div></section>
   </aside>
   <aside id="right">
     <section class="panel fleet" id="pFoe"><div class="ph"><b data-t="h.foe"></b><i></i><small id="foeLvl"></small></div><div class="count foe"><b id="foeLeft">0</b><span data-t="h.afloat"></span></div><div class="fl-list" id="listFoe"></div></section>
-    <section class="panel"><div class="ph"><b data-t="h.bal"></b><i></i></div><div class="bal"><div class="row"><span data-t="h.you"></span><b id="balV">50%</b></div><div class="track"><div class="fill" id="balF" style="width:50%"></div></div></div></section>
     <section class="panel log"><div class="ph"><b data-t="h.log"></b><i></i></div><ol id="logList"></ol></section>
   </aside>
   <div id="strip"></div>
@@ -674,6 +671,6 @@ body.l2::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:4;b
 <script src="../atlas/vendor/three-r186.min.js?v=1"></script>
 <script src="../seabattle/ships3d.js?v=2"></script>
 <script src="world.js?v=9"></script>
-<script src="game.js?v=24"></script>
+<script src="game.js?v=25"></script>
 </body>
 </html>

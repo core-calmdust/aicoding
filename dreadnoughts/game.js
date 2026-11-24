@@ -303,7 +303,6 @@ function renderBanner(msg) {
   else if (G.phase === 'over') { tt = t('b.over'); s = s || (G.resigned ? t('st.resign') : t(G.st.winner === 0 ? 'st.win' : 'st.lose')); }
   else if (G.st) { foe = G.st.turn === 1; tt = t(foe ? 'b.foe' : 'b.you');
     if (!s) s = foe ? t('st.ai') : G.armed != null ? t('sk.aim.' + skillOf(G.my[G.armed])) : G.hint ? t('hint.best', { c: E.cellName(G.hint.best), p: Math.round(G.hint.p[G.hint.best] * 100) }) : G.rule === 'salvo' ? t('st.youN', { n: G.st.left }) : t('st.you'); }
-  $('#bnBal').style.visibility = G.st ? '' : 'hidden';
   if (G.st && G.st.per > 1 && G.phase === 'battle' && !msg) s = (G.st.turn === 0 ? t('st.ap', { n: G.st.ap }) + ' — ' : '') + s;
   $('#bnT').textContent = tt; $('#bnT').classList.toggle('foe', foe); $('#bnB').classList.toggle('foe', foe); $('#bnS').textContent = s;
 }
@@ -331,12 +330,8 @@ function renderLog() {
     return `<li class="${foe ? 'foe' : ''}"><span class="n">${i + 1}</span><span class="d"></span><span class="t">${txt}</span></li>`; }).join('');
   ol.scrollTop = ol.scrollHeight;
 }
-function renderBal() {
-  const ev = G.evals || [], n = G.st ? G.st.log.length : 0; let p = null;
-  for (let i = Math.min(n, ev.length - 1); i >= 0 && p == null; i--) if (ev[i] != null) p = ev[i];
-  if (G.phase === 'over') p = G.st.winner === 0 ? 1 : 0;
-  $('#balV').textContent = $('#bnBalV').textContent = p == null ? '—' : Math.round(p * 100) + '%'; $('#balF').style.width = $('#bnBalF').style.width = (p == null ? 50 : p * 100) + '%';
-}
+// (2026-11-24 user: 形勢表示は廃止) the balance bar and its background rollouts are gone
+function renderBal() {}
 function renderDock() {
   const el = $('#dock'); if (!tac() || !G.st) { el.innerHTML = ''; return; }
   const live = G.phase === 'battle', mine = G.st.turn === 0 && !G.busy;
@@ -519,7 +514,7 @@ async function doShot(cell) {
   else if (res.sunk >= 0) { sfx('sunk'); World.shake(1.2); callout(t(by === 0 ? 'w.sunk' : 'w.lost'), t(by === 0 ? 'fx.sunk' : 'fx.lost', { s: ship }) + (res.pursuit ? ' — ' + t(by === 0 ? 'fx.pursuit' : 'fx.foe.pursuit') : ''), 'sunk'); }
   else if (res.hit) { sfx('hit'); callout(t('w.hit'), E.cellName(cell)); }
   else { sfx('miss'); callout(t('w.miss'), E.cellName(cell), 'miss'); }
-  render(); save(); queueEval();
+  render(); save();
   return res;
 }
 const SCANS = { sonar: 1, scout: 1, radar: 1, sweep: 1, flare: 1, echo: 1, diag: 1, cross: 1 };
@@ -553,7 +548,7 @@ async function doSkill(a) {
   callout(sunk.length ? t(by === 0 ? 'w.sunk' : 'w.lost') : W, sub, cls); renderBanner(sub);
   const cn = res.shots.find(x => x.counter); if (cn) { await sleep(800); callout(t('sk.counter'), t(by === 0 ? 'fx.counter' : 'fx.foe.counter', { c: E.cellName(cn.counter.cell), r: t(cn.counter.hit ? 'log.hit' : 'log.miss') })); }
   if (res.traced != null) { await sleep(700); callout(t('sk.trace'), t(by === 0 ? 'fx.foe.trace' : 'fx.trace', { c: E.cellName(res.traced) })); }
-  render(); save(); queueEval();
+  render(); save();
   return res;
 }
 const doAction = async a => { const r = await (a.skill ? doSkill(a) : doShot(a.cell)); lastStand(); return r; };
