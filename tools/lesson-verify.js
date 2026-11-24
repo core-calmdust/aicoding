@@ -731,7 +731,43 @@ function amazons(opt) {
             else b(/元のマスか/, () => G && G.some(m => mArrow(m) === mFrom(m)), 'no answer shoots back'); }
           if (id === 's_trap' && r.k === 'try' && G) b(/閉じ込め成功|閉じこめ成功/, () => true, '');
         }
+        // ③ for a try (2026-11-24 担当A): 「いちばん多く動ける手を選んで」 with every legal move right is no choice (s_fill's old try: 14 of 14)
+        if (r.k === 'try' && G && G.length * 2 > all.length) a(`③ ${G.length} of the ${all.length} legal moves are right — nothing to choose`);
       }); });
+  }
+  // 追32 (2026-11-24 担当A): the shapes the answers use are taught — by the intro or the warm-up, in the 2D (ja・en) and the 3D (ケロ).
+  //  s_trap / b_win: how each black amazon that the answer shuts in is closed — its one exit by an arrow, by White stepping in, or two
+  //  exits at once (White steps into one and shoots into the other); a step whose problems need the last must say two exits, a step
+  //  whose answers step in must say the amazon closes squares too.
+  // 追44 (2026-11-24 担当A): a tip of the intro or the hint the student follows must not be wrong in the problems — s_fill told 「元いたマス
+  //  に矢を刺す」 while in all five problems every arrow back into the square left cuts the room (White stands mid-passage). A text that
+  //  tells to shoot back has to say when not to (通り道・途中 / passage・middle) once a problem (or that try) has only wrong arrows back.
+  am32();
+  function am32() {
+    const I = {}; try { const w = { I18N: {} }; ['i18n-am-ls.js'].forEach(f => new Function('window', 'I18N', fs.readFileSync(path.join(ROOT, 'amazons', f), 'utf8'))(w, w.I18N)); Object.assign(I, w.I18N); } catch (e) { add('-', -1, '追32 amazons/i18n-am-ls.js does not load'); return; }
+    let NC = {}; try { NC = JSON.parse(fs.readFileSync(path.join(ROOT, 'atlas/nocoord/amazons.json'), 'utf8')); } catch (e) {}
+    const plain = t => String(t || '').replace(/<[^>]+>/g, ''), J = I.ja || {}, EN = I.en || {};
+    const rampTx = (st, d) => (st.ramp || []).map((r, j) => ['t', 'body', 'g', 'h', 'y'].map(f => typeof r[f] !== 'string' ? '' : d === '3D' ? X.AMJ_LS.ramp[r[f]] || (NC[`${st.id}/${j}/${f}`] || {}).ja || '' : (d === 'en' ? EN : J)[r[f]] || '').join(' ')).join(' ');
+    const texts = st => [['2D ja', plain(J[`ls.${st.id}.intro`]) + ' ' + plain(rampTx(st, 'ja'))], ['2D en', plain(EN[`ls.${st.id}.intro`]) + ' ' + plain(rampTx(st, 'en'))], ['3D', plain(X.AMJ_LS.intro[st.id]) + ' ' + plain(rampTx(st, '3D'))]];
+    L.steps.forEach(st => { const id = st.id; if (!AM_DONE.has(id) || (only && !only.has(id))) return;
+      if (id === 's_trap' || id === 'b_win') { let both = 0, stepIn = 0;
+        st.problems.forEach((P, j) => { const p = E.Pos.from(P.s), kinds = P.ok.map(m => { const q = p.clone().play(m), K = new Set();
+            blacks(p).forEach(b => { const ex = nbr(b).filter(x => !p.sq[x]); if (!ex.length || freeN(q.sq, b) !== 0) return;
+              const byA = ex.includes(mTo(m)), byR = ex.includes(mArrow(m)); K.add(byA && byR ? 'both' : byA ? 'in' : 'arrow'); });
+            return K; });
+          if (kinds.length && kinds.every(K => K.has('both'))) both++;
+          if (kinds.some(K => K.has('in') || K.has('both'))) stepIn++; });
+        for (const [who, t] of texts(st)) {
+          if (both && !(who === '2D en' ? /two exits/i : /出口が2つ/).test(t)) add(id, -1, `追32 ${both} problems shut a black amazon with two exits (White steps into one, the arrow fills the other), the ${who} intro and warm-up say only one exit`);
+          if (stepIn && !(who === '2D en' ? /with your amazons? and arrows|your amazon(?:s)? (?:steps|moves) in|or your amazon|into one of them/i : /アマゾンと矢|アマゾンで入|白で入|白で片方|片方の出口に入/).test(t)) add(id, -1, `追32 answers step White into an exit, the ${who} intro and warm-up do not say an amazon closes a square`); } }
+      if (id === 's_fill') {
+        const backAllWrong = (s0, ok) => { const p = E.Pos.from(s0), all = p.moves(), okI = ok.map(m => typeof m === 'string' ? all.find(x => E.name(p, x) === m) : m), bk = all.filter(m => mArrow(m) === mFrom(m)); return bk.length > 0 && bk.every(m => !okI.includes(m)); };
+        const wrongIn = st.problems.filter(P => backAllWrong(P.s, P.ok)).length;
+        const tips = [['2D ja intro', J['ls.s_fill.intro']], ['2D ja hint', J['ls.s_fill.hint']], ['2D en intro', EN['ls.s_fill.intro']], ['2D en hint', EN['ls.s_fill.hint']], ['3D intro', X.AMJ_LS.intro.s_fill], ...((X.AMJ_LS.hint || {}).s_fill || []).map((h, k) => [`3D hint ${k + 1}`, h])];
+        const BACK = /元(?:いた|の)マス|square you (?:just )?left|square you left/i, CAVEAT = /通り道|途中|passage|middle/i;
+        if (wrongIn) tips.forEach(([who, t]) => { t = plain(t); if (BACK.test(t) && !CAVEAT.test(t)) add(id, -1, `追44 the ${who} tells to shoot back into the square left, but in ${wrongIn} of the ${st.problems.length} problems every such arrow is wrong (it cuts the room): 「${t.slice(0, 60)}」`); });
+        (st.ramp || []).forEach((r, j) => { if (r.k !== 'try' || !backAllWrong(r.s, r.ok || [])) return;
+          [['2D ja', J[r.h]], ['2D en', EN[r.h]], ['3D', X.AMJ_LS.ramp[r.h]], ['3D nocoord', (NC[`${id}/${j}/h`] || {}).ja]].forEach(([who, t]) => { t = plain(t); if (BACK.test(t) && !/切れ|ちぎれ|cuts?/i.test(t)) add(id, -1, `追44 warm-up ${j + 1}: the ${who} hint tells to shoot back, every arrow back is wrong there: 「${t.slice(0, 60)}」`); }); }); } });
   }
   return out;
 }

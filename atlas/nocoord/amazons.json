@@ -368,19 +368,19 @@
 "tr": "Beyazın odası 6 kare. Amazon oynadıktan sonra oku bıraktığı kareye sapladı. Yeşil işaretli karelerin hepsine hâlâ gidilebilir, yani hiçbir hamle boşa gitmez."
 },
 "s_fill/1/h": {
-"ja": "白の部屋は5マス。矢で部屋を切らないように、元のマスか端のマスに刺そう。",
-"en": "White’s room has 5 squares. So as not to cut the room with the arrow, shoot it into the square you left or an end square.",
-"zh": "白方的区域有5格。为了不把区域切断，把箭射到原来的格子或者边上的格子。",
-"zh-TW": "白方的區域有5格。為了不把區域切斷，把箭射到原來的格子或者邊上的格子。",
-"ko": "백의 방은 5칸. 화살로 방을 끊지 않도록 원래 칸이나 끝 칸에 꽂자.",
-"es": "La zona blanca tiene 5 casillas. Para no partirla con la flecha, clávala en la casilla que dejas o en una de un extremo.",
-"fr": "La pièce blanche compte 5 cases. Pour ne pas la couper avec la flèche, plante-la sur la case quittée ou sur une case du bout.",
-"pt": "A sala branca tem 5 casas. Para não cortá-la com a flecha, crave-a na casa que você deixou ou numa casa da ponta.",
-"de": "Der weiße Raum hat 5 Felder. Damit der Pfeil ihn nicht zerschneidet, schieß ihn auf das verlassene Feld oder ein Endfeld.",
-"hi": "सफ़ेद के कमरे में 5 खाने हैं। तीर से कमरा न कटे, इसलिए उसे छोड़े हुए खाने में या किनारे के खाने में गाड़ो।",
-"ar": "غرفة الأبيض فيها 5 مربعات. حتى لا تقطعها بالسهم، اغرسه في المربع الذي غادرته أو في مربع طرفي.",
-"ru": "В комнате белых 5 клеток. Чтобы не разрезать её стрелой, бей в покинутую клетку или в крайнюю.",
-"id": "Ruang Putih ada 5 petak. Agar ruangnya tidak terpotong panah, tancapkan di petak yang kamu tinggalkan atau di petak ujung.",
-"tr": "Beyazın odası 5 kare. Odayı okla bölmemek için oku bıraktığın kareye ya da bir uç kareye sapla."
+"ja": "白の部屋は横一列の6マスで、白はその途中にいる。元のマスに矢を刺すと部屋が2つに切れる。列の端の行き止まりに刺そう。",
+"en": "White’s room is a row of 6 squares, and White stands partway along it. An arrow into the square it leaves cuts the room in two. Shoot into the dead end at one end of the row.",
+"zh": "白方的区域是横向一排6格，白方在中间。射回原来的格子会把区域切成两半。把箭射到这一排尽头的死角。",
+"zh-TW": "白方的區域是橫向一排6格，白方在中間。射回原來的格子會把區域切成兩半。把箭射到這一排盡頭的死角。",
+"ko": "백의 방은 가로 한 줄 6칸이고, 백은 그 중간에 있어. 원래 칸에 화살을 꽂으면 방이 둘로 끊겨. 줄 끝의 막다른 칸에 꽂자.",
+"es": "La zona blanca es una fila de 6 casillas y la blanca está a mitad de ella. Una flecha en la casilla que deja parte la zona en dos. Clávala en el callejón sin salida de un extremo de la fila.",
+"fr": "La pièce blanche est une rangée de 6 cases, et la blanche est au milieu. Une flèche sur la case quittée coupe la pièce en deux. Plante-la dans le cul-de-sac au bout de la rangée.",
+"pt": "A sala branca é uma fileira de 6 casas, e a branca está no meio dela. Uma flecha na casa que ela deixa corta a sala em duas. Crave-a no beco sem saída de uma ponta da fileira.",
+"de": "Der weiße Raum ist eine Reihe aus 6 Feldern, und Weiß steht mittendrin. Ein Pfeil auf das verlassene Feld zerteilt den Raum. Schieß in die Sackgasse an einem Ende der Reihe.",
+"hi": "सफ़ेद का कमरा 6 खानों की एक पंक्ति है, और सफ़ेद उसके बीच में है। छोड़े खाने में तीर कमरे को दो टुकड़ों में काट देता है। पंक्ति के सिरे की बंद गली में तीर गाड़ो।",
+"ar": "غرفة الأبيض صف من 6 مربعات، والأبيض في وسطه. السهم في المربع المتروك يشطر الغرفة نصفين. اغرسه في الطريق المسدود عند طرف الصف.",
+"ru": "Комната белых — ряд из 6 клеток, и белая стоит в его середине. Стрела в покинутую клетку разрежет комнату надвое. Бей в тупик на конце ряда.",
+"id": "Ruang Putih adalah satu baris 6 petak, dan Putih ada di tengahnya. Panah ke petak yang ditinggalkan membelah ruang jadi dua. Tancapkan di jalan buntu di ujung baris.",
+"tr": "Beyazın odası 6 karelik bir sıra ve beyaz onun ortasında. Bıraktığı kareye atılan ok odayı ikiye böler. Oku sıranın ucundaki çıkmaza sapla."
 }
 }
