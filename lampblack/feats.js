@@ -18,6 +18,7 @@
     huntWin: (S, sc, R) => R.win && !!S.foxHunt,
     foxSign: S => S.pl.told.some(t => t.sign),
     catBite: S => S.nights.some(N => N.dragged),
+    fanaticJail: S => S.votes.some(v => v.out && (S.people.find(p => p.id === v.out) || {}).role === 'madman'),
     catJailWolf: S => S.votes.some(v => v.dragged && S.wolves.includes(v.dragged)),
   };
   const F = {
@@ -68,6 +69,18 @@
       { id: 'fast', name: '三日で開いた峠', desc: '標準以上で、三日目までに解決する', c: ['fast'] },
       { id: 'ghost', name: '湯けむりの幽霊', desc: '幽霊になっても、湯治場を解決へ導く', c: ['ghost'] },
       { id: 'rankS', name: '招き猫の両目', desc: '評価Sを取る', c: ['rankS'] },
+    ],
+    shirane: [
+      { id: 'clear1', name: '祈りの数がそろう', desc: '標準以上で解決する', c: ['win', 1] },
+      { id: 'clear2', name: '院長の耳', desc: '上級以上で解決する', c: ['win', 2] },
+      { id: 'clear3', name: '三百年目の吹雪', desc: '悪夢で解決する', c: ['win', 3] },
+      { id: 'fanatic', name: '黒い蝋燭を消す者', desc: '狂信者を地下の独房へ送る', c: ['fanaticJail'] },
+      { id: 'seer', name: '曇った水晶', desc: '占い師として解決する', c: ['roleWin', 'seer'] },
+      { id: 'clash', name: '書き足しを見抜く', desc: 'ひと幕で、矛盾を二度突く', c: ['clash2'] },
+      { id: 'clean', name: '独房は空のまま', desc: '標準以上で、罪のない者を一度も独房へ送らずに解決する', c: ['noWrong'] },
+      { id: 'fast', name: '三日で開いた峰', desc: '標準以上で、三日目までに解決する', c: ['fast'] },
+      { id: 'ghost', name: '祈りの声のひとつ', desc: '幽霊になっても、修道院を解決へ導く', c: ['ghost'] },
+      { id: 'rankS', name: '聖人の目', desc: '評価Sを取る', c: ['rankS'] },
     ],
   };
   const list = id => F[id] || [];

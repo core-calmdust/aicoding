@@ -736,5 +736,155 @@
     },
   };
 
-  root.WLScenes = { alps: ALPS, train: TRAIN, island: ISLAND, onsen: ONSEN };
+
+  /* ================= 白嶺修道院（雪の峰の修道院） ================= */
+  function barrel(x, y, w, h) { return ell(x + w / 2, y + h / 2, w / 2, h / 2) + rect(x + w * .08, y + h * .2, w * .84, h * .6); }
+  const ABBEY = {
+    chapel: {
+      props: ['尖塔の礼拝堂', 'ばら窓', '尖頭窓の列', '狼を抱く聖人像の影', '燭台', '十字の墓標', 'つらら'],
+      far: alpsFar,
+      mid(r) {
+        let d = '', c = '', g = '';
+        const X = 800, W = 480;
+        d += rect(X, 420, W, 340) + poly([[X - 20, 424], [X + W / 2, 250], [X + W + 20, 424]]);
+        d += rect(X + W / 2 - 50, 120, 100, 310) + poly([[X + W / 2 - 60, 126], [X + W / 2, -20], [X + W / 2 + 60, 126]]) + rect(X + W / 2 - 3, -60, 6, 46) + rect(X + W / 2 - 16, -46, 32, 6);
+        c += circ(X + W / 2, 340, 52); c += lattice(X + W / 2 - 52, 288, 104, 104, 4, 4, 4); g += circ(X + W / 2, 340, 30);
+        for (let i = 0; i < 4; i++) { const x = X + 28 + i * (i < 2 ? 70 : 70) + (i >= 2 ? 210 : 0); g += gothic(x, 640, 44, 160); c += rect(x + 20, 486, 4, 154); }
+        g += gothic(X + W / 2 - 50, 760, 100, 170);
+        c += gothic(X + W / 2 - 40, 760, 80, 156);
+        c += gothic(X + W / 2 - 22, 200, 44, 60);
+        d += icicles(r, X - 10, X + W + 10, 426, 22);
+        return P(d) + P(g, 'glow') + P(c, 'cut') + P(snowcap(r, [[X - 22, 426], [X + W / 2, 249], [X + W + 22, 426]], 14) + snowcap(r, [[X + W / 2 - 62, 128], [X + W / 2, -21], [X + W / 2 + 62, 128]], 8), 'snow') + alpsVillage(r, 0, 760, 700);
+      },
+      near(r) {
+        let d = '', c = '', g = '';
+        // left: the statue of the saint holding a wolf, on its plinth
+        d += rect(150, 680, 170, 80) + rect(166, 664, 138, 18);
+        d += `M200,664C196,600 206,520 230,480C222,460 226,430 246,422C266,414 284,430 282,452C298,470 300,530 296,664Z`;
+        d += `M222,560c16,-28 52,-36 76,-26l14,-14l4,16c10,6 12,18 6,26l-20,6c-18,16 -52,20 -76,10z`;
+        c += S('M244,446q10,6 20,0', 3, 'cut') + rect(176, 700, 118, 4) + rect(176, 724, 118, 4);
+        // a tall candlestick with its flame
+        d += rect(380, 600, 10, 160) + rect(366, 750, 38, 10) + rect(372, 596, 26, 8) + rect(381, 560, 8, 36);
+        g += ell(385, 548, 7, 14);
+        // right: grave crosses in the snow and a bare tree with a crow
+        for (const [x, h] of [[1260, 110], [1350, 140], [1450, 100], [1540, 124]]) { d += rect(x, 760 - h, 12, h) + rect(x - 22, 760 - h + 26, 56, 11); }
+        d += bareTree(1520, 760, 420, r, -18) + crow(1470, 420, 1.1);
+        return P(d) + P(g, 'glow') + P(c, 'cut') + P(snowcap(r, [[148, 682], [235, 678], [322, 682]], 6), 'snow') + alpsGround(r) + fore(r, 'alps');
+      },
+    },
+    scriptorium: {
+      props: ['高い尖頭窓', '書見台と写本', '巻物の棚', 'インク壺と鵞ペン', '燭台', '石の柱'],
+      far: alpsFar,
+      mid(r) {
+        let d = '', c = '', g = '';
+        const X = 720, W = 720;
+        d += rect(X, 360, W, 400) + poly([[X - 20, 364], [X + 60, 300], [X + W - 60, 300], [X + W + 20, 364]]);
+        for (let i = 0; i < 5; i++) { const x = X + 50 + i * 140; g += gothic(x, 620, 80, 220); c += rect(x + 38, 420, 4, 200) + rect(x, 520, 80, 4); }
+        // shelves of books and scrolls under the windows
+        for (let i = 0; i < 5; i++) { const x = X + 40 + i * 140; d += rect(x, 650, 100, 6); for (let k = 0; k < 7; k++) c += rect(x + 6 + k * 13, 660 + (k % 3) * 4, 9, 30 - (k % 3) * 4); for (let k = 0; k < 3; k++) c += circ(x + 20 + k * 30, 724, 9); }
+        return P(d) + P(g, 'glow') + P(c, 'cut') + P(snowcap(r, [[X - 22, 366], [X + 60, 299], [X + W - 60, 299], [X + W + 22, 366]], 12), 'snow');
+      },
+      near(r) {
+        let d = '', c = '', g = '';
+        // left: a slanted lectern with an open codex, quill and ink
+        d += rect(190, 560, 14, 200) + rect(150, 750, 94, 10) + poly([[110, 560], [300, 520], [304, 536], [114, 576]]);
+        d += poly([[130, 548], [205, 532], [205, 520], [134, 536]]) + poly([[208, 530], [286, 514], [282, 502], [208, 518]]);
+        c += S('M140,544l56,-12 M146,552l50,-10 M216,526l56,-12 M220,534l50,-10', 2, 'cut');
+        d += ell(330, 742, 22, 16) + rect(318, 720, 24, 10) + bar(330, 720, 360, 640, 4);
+        c += bar(338, 704, 352, 670, 2);
+        // right: a heavy column and a candlestick
+        d += rect(1300, 300, 70, 460) + rect(1286, 290, 98, 18) + rect(1290, 740, 90, 20);
+        c += rect(1316, 320, 4, 420) + rect(1346, 320, 4, 420);
+        d += rect(1460, 610, 10, 150) + rect(1446, 750, 38, 10) + rect(1452, 606, 26, 8) + rect(1461, 572, 8, 34);
+        g += ell(1465, 560, 7, 14);
+        return P(d) + P(g, 'glow') + P(c, 'cut') + alpsGround(r) + fore(r, 'alps');
+      },
+    },
+    cloister: {
+      props: ['回廊の半円アーチ', '中庭の井戸と釣瓶', '雪の薬草園の畝', '石の柱', '吊り灯籠', '雀'],
+      far: alpsFar,
+      mid(r) {
+        let d = '', c = '', g = '';
+        const X = 640, W = 900;
+        d += rect(X, 420, W, 340) + rect(X - 10, 400, W + 20, 24);
+        for (let i = 0; i < 7; i++) { const x = X + 30 + i * 124; c += roundArch(x, 760, 96, 260); c += rect(x + 104, 520, 12, 240); }
+        c += planks(X, 424, W, 60, 12);
+        // the well in the courtyard and the herb beds
+        d += rect(960, 690, 140, 70) + rect(954, 682, 152, 12) + rect(970, 560, 10, 124) + rect(1080, 560, 10, 124) + rect(962, 552, 136, 10) + rect(1026, 562, 4, 70) + rect(1016, 630, 24, 22);
+        c += bricks(966, 696, 128, 60, 32, 15);
+        return P(d) + P(g, 'glow') + P(c, 'cut') + P(snowcap(r, [[X - 12, 401], [X + W / 2, 398], [X + W + 12, 401]], 10) + snowcap(r, [[958, 553], [1030, 550], [1102, 553]], 7), 'snow');
+      },
+      near(r) {
+        let d = '', c = '', g = '';
+        // left: a stone column with a hanging lantern, snowy herb beds
+        d += rect(170, 320, 60, 440) + rect(156, 310, 88, 16) + rect(160, 744, 80, 16);
+        c += rect(186, 340, 4, 400) + rect(210, 340, 4, 400);
+        d += rect(230, 360, 120, 6) + rect(338, 366, 3, 30) + lantern(340, 440, 1.2); g += lanternGlow(340, 440, 1.2);
+        for (let i = 0; i < 3; i++) { d += `M${20 + i * 120},760c10,-30 90,-30 100,0z`; c += S(`M${40 + i * 120},748l10,-14 M${60 + i * 120},746l6,-18 M${80 + i * 120},748l10,-14`, 2.4, 'cut'); }
+        // right: a column, a bench and a sparrow
+        d += rect(1380, 320, 60, 440) + rect(1366, 310, 88, 16) + rect(1370, 744, 80, 16);
+        c += rect(1396, 340, 4, 400) + rect(1420, 340, 4, 400);
+        d += rect(1200, 700, 160, 12) + rect(1210, 712, 10, 48) + rect(1340, 712, 10, 48);
+        d += 'M1290,700c4,-14 20,-18 28,-8l8,-4l-2,8c4,8 -4,14 -14,12z';
+        return P(d) + P(g, 'glow') + P(c, 'cut') + P(snowcap(r, [[1198, 701], [1280, 698], [1362, 701]], 5), 'snow') + alpsGround(r) + fore(r, 'alps');
+      },
+    },
+    cellar: {
+      props: ['石の穹窿', '並んだ樽', '竈と鍋', '石段', '吊るしたハムと香草', '燭台'],
+      far: r => P('M0,900L0,0L1600,0L1600,900Z'),
+      mid(r) {
+        let d = '', c = '', g = '';
+        // the vaulted ceiling: a row of round arches seen from inside
+        for (let i = 0; i < 5; i++) { const x = 40 + i * 320; d += rect(x, 120, 40, 640); c += roundArch(x + 50, 470, 260, 300); }
+        d += rect(0, 100, 1600, 30);
+        // barrels stacked under the arches in the middle
+        for (let i = 0; i < 4; i++) { d += barrel(700 + i * 110, 640, 100, 120); c += rect(708 + i * 110, 672, 84, 4) + rect(708 + i * 110, 728, 84, 4) + circ(750 + i * 110, 700, 6); }
+        for (let i = 0; i < 3; i++) { d += barrel(755 + i * 110, 530, 100, 110); c += rect(763 + i * 110, 560, 84, 4) + rect(763 + i * 110, 610, 84, 4); }
+        return P(d) + P(c, 'cut') + P(g, 'glow');
+      },
+      near(r) {
+        let d = '', c = '', g = '';
+        // left: the hearth with its fire and a pot on a chain
+        d += rect(60, 480, 300, 280) + rect(40, 466, 340, 20);
+        c += roundArch(110, 760, 200, 210); g += roundArch(130, 760, 160, 120);
+        d += rect(208, 486, 4, 120) + ell(210, 640, 46, 30) + rect(170, 616, 80, 10);
+        d += S('M190,600q-10,-40 6,-70 M226,600q12,-36 -4,-66', 6, 'smoke');
+        // right: stone steps going up, hams and herbs hanging, a candle
+        for (let i = 0; i < 7; i++) d += rect(1240 + i * 50, 760 - i * 44, 360 - i * 50, 44);
+        c += S('M1240,716h360 M1290,672h310 M1340,628h260 M1390,584h210 M1440,540h160 M1490,496h110', 2, 'cut');
+        d += rect(1180, 300, 300, 8);
+        for (let i = 0; i < 4; i++) { const x = 1200 + i * 70; d += rect(x + 10, 308, 3, 30) + ell(x + 12, 372, 18, 36); c += ell(x + 12, 372, 6, 14); }
+        d += rect(1140, 690, 10, 70) + rect(1128, 752, 34, 8); g += ell(1145, 680, 6, 12);
+        return P(d) + P(g, 'glow fire') + P(c, 'cut') + P('M0,900L0,760L1600,760L1600,900Z') + fore(r, 'alps');
+      },
+    },
+    hospice: {
+      props: ['門と門番の詰所', '石の塀', '宿坊の灯る窓', '煙突の煙', '積んだ薪', '巡礼の杖と帽子'],
+      far: alpsFar,
+      mid(r) {
+        let d = '', c = '', g = '';
+        const X = 820, W = 520;
+        d += rect(X, 500, W, 260) + poly([[X - 30, 504], [X + W / 2, 360], [X + W + 30, 504]]) + rect(X + 380, 380, 50, 110);
+        for (let i = 0; i < 4; i++) { g += rect(X + 40 + i * 120, 560, 64, 70); c += lattice(X + 40 + i * 120, 560, 64, 70, 2, 3, 4); }
+        g += roundArch(X + 210, 760, 100, 120);
+        c += roundArch(X + 220, 760, 80, 104);
+        // the wall and the gate to the left of the guesthouse
+        d += rect(380, 600, 420, 160) + rect(372, 590, 436, 14) + rect(540, 470, 120, 290) + poly([[530, 474], [600, 420], [670, 474]]);
+        c += bricks(380, 610, 160, 146, 40, 22) + bricks(660, 610, 140, 146, 40, 22) + roundArch(560, 760, 80, 190) + lattice(560, 590, 80, 170, 4, 6, 4);
+        return P(d) + S(smoke(X + 405, 378, 220), 9, 'smoke') + P(g, 'glow') + P(c, 'cut') + P(snowcap(r, [[X - 32, 506], [X + W / 2, 359], [X + W + 32, 506]], 16) + snowcap(r, [[370, 591], [590, 588], [810, 591]], 8) + snowcap(r, [[528, 476], [600, 419], [672, 476]], 8), 'snow');
+      },
+      near(r) {
+        let d = '', c = '';
+        // left: a pilgrim's staff with a hat and a gourd, leaning on a post
+        d += rect(140, 400, 14, 360) + bar(240, 760, 300, 420, 7) + ell(296, 418, 38, 10) + ell(296, 408, 20, 12) + ell(266, 520, 14, 20) + ell(266, 496, 8, 8);
+        c += S('M286,416q10,-6 20,0', 2, 'cut');
+        // right: a stack of firewood and an axe in the block
+        for (let row = 0; row < 6; row++) for (let i = 0; i < 9; i++) { d += circ(1320 + i * 26 + (row % 2) * 13, 748 - row * 26, 12); c += circ(1320 + i * 26 + (row % 2) * 13, 748 - row * 26, 4); }
+        d += rect(1200, 710, 80, 50) + bar(1240, 712, 1270, 640, 6) + poly([[1258, 646], [1296, 630], [1290, 664]]);
+        return P(d) + P(c, 'cut') + P(snowcap(r, [[1306, 620], [1430, 616], [1556, 620]], 8), 'snow') + alpsGround(r) + fore(r, 'alps');
+      },
+    },
+  };
+
+  root.WLScenes = { alps: ALPS, train: TRAIN, island: ISLAND, onsen: ONSEN, abbey: ABBEY };
 })(typeof window !== 'undefined' ? window : globalThis);
