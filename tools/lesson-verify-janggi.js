@@ -183,7 +183,7 @@ function lessons(opt) {
   const deep = opt && opt.deep;
   // (2026-11-24 担当D) the mate steps (JL.MATE: b_mate1 = 1, m_mate2 = 2, m_mate3 = 3; P.ok = the one first move): ①②③ by the solver
   //  (checkOne: the stored move mates within n, exactly n, no other first move does, no wrong move mates at once, 3 checks to choose
-  //  from in mate in 1, other forcing moves in mate in n); ④ n = the step's, the side to move 楚, 追25 the answers move two kinds of
+  //  from in mate in 1, other forcing moves in mate in n); ④ n = the step's, the side to move 楚, 追27 the answers move two kinds of
   //  piece or more; ⑤ the pool (a problem may be its own source in the reserve); ⑥ d = the pieces on the board never falls, the last
   //  above the first; ⑦⑧ ショウギツネ's words for the answer and every legal wrong move, against one ply of the board.
   const kingMv = (q, x) => T(q.at(mFrom(x))) === E.KING;
@@ -239,7 +239,7 @@ function lessons(opt) {
           if (e === 'c' && !t.includes(`王手した${JL.NM(T(p.at(mFrom(u))), true)}を`)) a(`⑦ ${nm(u)}: 「${t}」 names the wrong piece`); }
       }
     });
-    if (kinds.size < 2) add(id, 4, '追25 every answer moves the same kind of piece');
+    if (kinds.size < 2) add(id, 4, '追27 every answer moves the same kind of piece');
     if (asks.size < st.problems.length) add(id, -1, '⑧ the same question twice in a lesson');
   }
   LS.steps.forEach((st, si) => { const id = st.id; if (!DONE.includes(id)) return; if (JL.MATE && JL.MATE[id]) return mateStep(st, si); const K = JL.KIND[id];

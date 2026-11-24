@@ -1122,7 +1122,7 @@
     near: ['{x}も{m}と同じくらい指される手（{b}%）。{m}のほうがわずかに多いから、こっちを正解にしているピョン。', '{x}も実戦でよく見る手で、{b}%。{m}なら{w}から、ほんの少し人気が上なんだ。', '{x}も本筋のひとつ（{b}%）。{m}なら{w}から、今回はこっちを覚えよう！', '{x}もほぼ同じ数だけ指される（{b}%）。{m}なら{w}し、わずかに多いから正解にしたピョン。'],
     half: ['{x}もよく指される手（{b}%）。でも{m}なら{a}%で、こっちがいちばんの本筋なんだ。', '{x}は{b}%の人が選ぶ手。{m}なら{a}%で、{w}。', '{x}も悪くない手で、{b}%。ただ{m}なら{w}から、選ぶ人も多い（{a}%）。', '{x}を選ぶ人も{b}%いる。それでも{m}なら{w}から、{a}%の人がこっちを選ぶんだ。'],
     low: ['{x}は実戦で{b}%だけ。{m}なら{a}%の人が選んでいて、{w}。', '{x}を選ぶ人は{b}%しかいないんだ。{m}なら{w}から、こっちを覚えよう。', '{x}は少数派（{b}%）。{m}なら{a}%の人が選ぶし、{w}。', '{x}は{b}%と少なめ。{m}なら{w}から、強い人の多く（{a}%）がこっちを選ぶピョン。'],
-    hang: ['{x}だと、その{P}が相手の{T}に取られて損しちゃう！', '{x}では、動いた{P}が{T}のえじきになるんだ。'],
+    hang: ['{x}だと、その{P}は相手の{T}に取られる位置。取り合いで損をしやすいんだ。', '{x}では、動いた{P}を相手の{T}がねらえる。守りが足りない形なんだ。'],   // (2026-11-24: said only when the engine shows the loss — tools/lesson-verify.js chessOpen)
     recap: ['{x}だと取り返しそびれて、駒損のままになっちゃう。', '{x}では取られた駒を取り返せず、損をしたままなんだ。'],
     king: ['{x}でキングが動くと、もうキャスリングできなくなっちゃう。', '{x}のようにキングを動かすと、キャスリングの権利がなくなっちゃう。'],
     late: ['{x}だとキャスリングが遅れて、キングが真ん中に残っちゃう。', '{x}ではキングが真ん中のまま。中央が開くとねらわれやすいんだ。'],
@@ -1131,6 +1131,7 @@
     again: ['{x}だと同じ駒をもう一度動かすことになる。まだ出ていない駒を先に出そう！', '{x}だと同じ駒で2手使っちゃう。ほかの駒が眠ったままになるね。'],
     pawn: ['{x}だとポーンの手で1手使っちゃう。まだ出ていない駒を出すほうが先ピョン。', '{x}だとポーンの手になる。駒を出すほうが、いまは急ぎなんだ。'],
     flank: ['{x}の端のポーンでは、中央の争いに役立たないんだ。', '{x}だと端っこの手になる。いまは中央のほうが大事なところだね。'],
+    few: ['{x}は、ここで多く指される{k}つの手に入っていないんだ。{m}なら{w}から、こっちを選びたい！', '{x}は、強い人がよく選ぶ{k}つの手のどれでもない。{m}なら{w}。'],   // (2026-11-24: the record keeps the moves of 3% or more, five at most — with five kept, a move left out may still be played a little more often than "hardly")
     rare: ['{x}は強い人の対局ではほとんど指されない手。{m}なら{w}から、こっちを選びたい！', '{x}を選ぶ人はめったにいないんだ。{m}なら{w}。'],
   };
   const chEnd = sn => { const b = sn.replace(/[。！？!?]+$/, '').replace(/[）)」]+$/, ''); for (const e of ['なんだ', 'んだ', 'だよ', 'だね', 'よね', 'かな', 'よう', 'ろう', 'よ', 'ね']) if (b.endsWith(e)) return e === 'だよ' ? 'よ' : e === 'なんだ' ? 'んだ' : e === 'だね' ? 'ね' : e; return /[！？]$/.test(sn) ? sn.slice(-1) : 'x'; };
@@ -1183,7 +1184,7 @@
       let F; try { F = chFacts(o.pos, u); } catch (e) { F = {}; }
       const vx = chVars(F, white); vx.T = F.hang || '駒';
       const L = F.hang ? CH_NG.hang : FA.cap && FA.behind && !F.cap ? CH_NG.recap : F.king && !F.castle ? CH_NG.king : FA.castle ? CH_NG.late : F.pc === 'q' && F.move <= 10 && !F.cap ? CH_NG.queen
-        : F.pc === 'r' ? CH_NG.rook : FA.dev && (F.pc === 'n' || F.pc === 'b') && !F.dev ? CH_NG.again : FA.dev && F.pc === 'p' ? CH_NG.pawn : F.flank ? CH_NG.flank : CH_NG.rare;
+        : F.pc === 'r' ? CH_NG.rook : FA.dev && (F.pc === 'n' || F.pc === 'b') && !F.dev ? CH_NG.again : FA.dev && F.pc === 'p' ? CH_NG.pawn : F.flank ? CH_NG.flank : C.length >= 5 && Math.min(...C.map(x => x[1])) > N * .05 ? CH_NG.few.map(t => t.replace('{k}', C.length)) : CH_NG.rare;
       return chJoin(head, pk(L, vx));
     };
     const ngTx = ngOf(null); V.add(ngTx);
@@ -2085,7 +2086,7 @@
     },
     opening(key, lang) {
       const s = this.data.op.sets.find(x => x.id === key); if (!s) return null;
-      const probs = shuffle(s.problems || []).slice(0, 5);
+      const probs = s.drill ? shuffle(s.drill.slice()).slice(0, 5).sort((a, b) => s.drill.indexOf(a) - s.drill.indexOf(b)).map(i => s.problems[i]) : shuffle(s.problems || []).slice(0, 5);   // (2026-11-24 第2期・担当B: the verified drill, easy → hard — tools/lesson-verify.js chessOpen)
       const nc = NC.chess || {}, notes = Object.assign({}, s.study && s.study.notes || {}); Object.keys(nc).forEach(k => { const m = k.match(/^op:(.+)\/n(\d+)$/); if (m && m[1] === s.id) notes[m[2]] = nc[k]; });   // (3D: the texts without coordinates)
       const IN = nc['op:' + s.id + '/intro'] || s.intro, ja = lang === 'ja';
       if (ja && CHJ_OP.notes[s.id]) Object.entries(CHJ_OP.notes[s.id]).forEach(([k, v]) => { notes[k] = { ja: v }; });   // (2026-11-21 lesson loop: ナイトン's own lines)
@@ -2097,7 +2098,7 @@
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[s.id] || { best: 0, pass: false }, pass = pts >= 75; pr[s.id] = { best: Math.max(o.best || 0, pts), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
     },
     points(P, u) {   // = chess/app.js problemPoints (the stored scores)
-      if (P.cand) { const c = (P.cand.find(x => x[0] === u) || [0, 0])[1], top = P.cand[0][1]; return c >= top ? 20 : c ? Math.max(4, Math.round(20 * Math.sqrt(c / top))) : 0; }
+      if (P.cand) { if (P.acc && P.acc.includes(u)) return 20; const c = (P.cand.find(x => x[0] === u) || [0, 0])[1], top = P.cand[0][1]; return c >= top ? 20 : c ? Math.max(4, Math.round(20 * Math.sqrt(c / top))) : 0; }   // (acc: the moves as good and as often played as the most played one — openings.json, chess/tools/op_curate.js)
       if (P.ok) return P.ok.includes(u) ? 20 : 0;
       if (!P.sc) return u === P.best ? 20 : 0;
       const val = new Map(P.sc), best = Math.max(...P.sc.map(e => e[1])), MT = 20000, mine = val.has(u) ? val.get(u) : -30000;
@@ -6704,7 +6705,7 @@
     take: { intro: '3本で囲まれた箱は、4本目で取れる。取ったらもう1回引けるから、<b>先に取って</b>から考えても損はないんだ。<br>ほうっておくと、その箱も手番も相手のものに！',
       ask: ['取れる箱があるよ！ どの線を引く？', '箱が取れそう。いちばんいい線は？', '3本で囲まれた箱、見つけた？', 'ごちそうが待ってる！ どこに引こうか？', '最後の問題！ 取れる箱をどうする？'],
       hint: ['3本で囲まれた箱の、のこり1本はどこかな？', '線が3本の箱を探してみよう！', '取ったらもう1回引けるのを忘れずに！', '4本目を引けば、その箱はきみのもの！', 'ほかの線を引くと、相手がその箱を取っちゃうよ？'] },
-    chain: { intro: '安全な線がなくなると、どこに引いても箱をあげることになる。盤は、箱がつながった<b>鎖</b>と、輪になった<b>ループ</b>に分かれているんだ。<br>開いた鎖は相手が丸ごと取るから、あげるなら<b>いちばん短い鎖</b>から！',
+    chain: { intro: '安全な線がなくなると、どこに引いても箱をあげることになる。盤は、箱がつながった<b>鎖</b>に分かれているんだ（輪になった鎖は<b>ループ</b>）。<br>開いた鎖は相手が丸ごと取るから、あげるなら<b>いちばん短い鎖</b>から！',
       ask: ['どこに引いても箱をあげちゃう…。損がいちばん少ない線は？', 'どの鎖から開く？', 'いちばん安くすむ線、わかる？', 'あげる箱を少なくするなら、どこかな？', 'ラスト！ 差し出すなら、どの鎖がいちばん安い？'],
       hint: ['つながった箱を数えて、いちばん短い鎖を探してみて！', '1箱だけの鎖はないかな？', '長い鎖を開くと、相手が丸ごと持っていっちゃう！', '鎖ごとに箱を数えて、くらべてみよう。', '開いた鎖の箱は、全部相手のものになると思ってね！'] },
     hard: { intro: '2箱の鎖を<b>端の線</b>で開くと、相手は2箱を取らずに先の線を引いて「返す」ことができる。手番を押しつけられちゃうんだ。<br><b>真ん中の線</b>で開けば1箱ずつに分かれて、相手は返せない！',

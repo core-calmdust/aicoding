@@ -648,6 +648,8 @@ const CHECKS = {
         if (P.n && C.reduce((t, x) => t + x[1], 0) > P.n) bad(G, id, `${w}: the moves' games add up past n`);
         for (let k = 1; k < C.length; k++) if (C[k][1] > C[k - 1][1]) bad(G, id, `${w}: the most played move is not first`); });
     });
+    // (2026-11-24 第2期・担当B) the strict ①〜⑨ of the drills (openings.json drill, chess/tools/op_curate.js) — tools/lesson-verify.js chessOpen
+    require('./lesson-verify.js').chessOpen().forEach(fa => bad(G, fa.step, `q${fa.q}: ${fa.msg}`));
   },
   // (2026-11-23 第2期) dots & boxes: the strict ①〜⑧ of the verified lessons (DT_DONE) with the exact solver — tools/lesson-verify.js dots
   dots() {
