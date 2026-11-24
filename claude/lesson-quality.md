@@ -133,7 +133,7 @@
 | ludo（3D対応・レッスンのみ） | 未（担当C） | — | 2D：lessons.json |
 | foxgeese（3D対応） | 未（担当C） | — | 2D：lessons.json・puzzles.json |
 | konane（3D対応） | 未（担当C） | — | 2D：lessons.json・puzzles.json |
-| janggi（3D対応） | 一部（パズル289問：1〜3手詰め・連続王手4手・5手以上。レッスン15本は未） | lesson-verify-janggi.js（`node tools/lesson-verify.js janggi`）：WebAssembly の詰み探索で全問①答え＝n手以内に詰む初手の集まり・n はちょうど・連続王手は n−1 手の普通の詰みもなし・解答手順（攻め最短・受け最長）が詰みで終わり連続王手は全部王手②正解の初手は1つ③合法手3以上・追19④テーマと n・連続王手の印⑤レッスン・レッスン予備・シャンチーのパズル・ほかのパズルと鏡像込み4点以内なし⑥追19（段の平均 d）⑦⑧全合法手の不正解の種類（すぐ詰まされる＝相手に1手詰め・王手でない・詰まない）を盤で照合、ショウギツネの3Dの文（atlas/games/janggi-pz.js）が盤の事実の語を持つ・丁寧語や他ゲームの語なし・追20⑨2D puzzleMove と3D xqMoved が同じ判定 | 担当D 本PR |
+| janggi（3D対応） | 一部（パズル289問：1〜3手詰め・連続王手4手・5手以上。レッスン15本は未）作業中（担当D・開始 2026-11-24 11:05 JST：レッスン） | lesson-verify-janggi.js（`node tools/lesson-verify.js janggi`）：WebAssembly の詰み探索で全問①答え＝n手以内に詰む初手の集まり・n はちょうど・連続王手は n−1 手の普通の詰みもなし・解答手順（攻め最短・受け最長）が詰みで終わり連続王手は全部王手②正解の初手は1つ③合法手3以上・追19④テーマと n・連続王手の印⑤レッスン・レッスン予備・シャンチーのパズル・ほかのパズルと鏡像込み4点以内なし⑥追19（段の平均 d）⑦⑧全合法手の不正解の種類（すぐ詰まされる＝相手に1手詰め・王手でない・詰まない）を盤で照合、ショウギツネの3Dの文（atlas/games/janggi-pz.js）が盤の事実の語を持つ・丁寧語や他ゲームの語なし・追20⑨2D puzzleMove と3D xqMoved が同じ判定 | 担当D 本PR |
 | ugolki（3D対応） | 未（担当D） | — | 2D：lessons.json・puzzles.json |
 | fanorona（3D対応） | 未（担当D） | — | 2D：lessons.json・puzzles.json |
 | agon（3D対応） | 未（担当D） | — | 2D：lessons.json・puzzles.json |
