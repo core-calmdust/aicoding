@@ -1,7 +1,7 @@
 /* World Board Game Atlas — 博物館の「描かれたゲーム」 (paintings room, 2026-11-24).
    Games as people painted, carved and printed them, 3,300 years of them: a wall of framed works; one opens in a viewer that can be zoomed
    and dragged, with numbered details to tap and the museum's record beside it, and links to the game or the piece of the collection.
-   Pictures: The Metropolitan Museum of Art, The Cleveland Museum of Art and The Art Institute of Chicago, Open Access (CC0 — free for any use, commercial included); each record keeps its object number.
+   Pictures: The Metropolitan Museum of Art, The Cleveland Museum of Art and The Art Institute of Chicago and the Rijksmuseum, Open Access (CC0 — free for any use, commercial included); each record keeps its object number.
    Files images/atlas/paint/<id>.webp (≤ 2048 px) and <id>-t.webp (the wall). Texts: museum/paint-i18n.js (MUSEUM_PAINT_T[lang]).
    Facts and sources: claude/museum-spec.md (描かれたゲーム).
    AtlasPaint.render(box, ctx) — the museum (atlas/museum.js) calls it; ctx.open(gameId), ctx.goEx(exhibitId), ctx.goRoom(room). */
@@ -63,6 +63,8 @@
     { id: 'kota', w: 1530, h: 2048, cma: '1978.71', bg: '#7a2a2a', spots: [[.5, .746], [.455, .718], [.485, .665], [.52, .56], [.3, .51], [.47, .32]], links: [{ g: 'ludo' }, { room: 'chance' }] },
     // (2026-11-25) Chicago: the Mexican Game of the Coyote — hens hem in a coyote, like fox and geese
     { id: 'coyote', w: 1686, h: 2143, aic: 52331, no: '1944.1047', bg: '#c9ccbe', spots: [[.47, .36], [.5, .58], [.45, .88], [.5, .07], [.17, .73], [.84, .2]], links: [{ g: 'foxgeese' }] },
+    // (2026-11-25) the Rijksmuseum (public domain) — rijks: its object number (its page): a 1709 satire played as trictrac for the town of Mons
+    { id: 'mons', w: 1057, h: 2048, rijks: 'RP-P-OB-83.374', bg: '#c8c2b4', spots: [[.65, .2], [.665, .13], [.775, .17], [.45, .14], [.2, .12], [.45, .62]], links: [{ g: 'backgammon' }, { ex: 'ottoman' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
@@ -120,8 +122,8 @@
       if (L.ex) { const mu = (window.ATLAS_MU || {})[L.ex], nm = (mu && mu.n && (mu.n[lang] || mu.n.en)) || (tx().ex || {})[L.ex] || ((T().en || {}).ex || {})[L.ex] || L.ex; return `<button type="button" class="chlk ex" data-ex="${L.ex}"><i>${esc(u('exhibit'))}</i>${esc(nm)}</button>`; }
       return `<button type="button" class="chlk rm" data-room="${L.room}"><i>${esc(u('room'))}</i>${esc(u('room_' + L.room))}</button>`; }).join('');
     ov.querySelector('.ptvrec').innerHTML = [[u('r_artist'), x.artist], [u('r_date'), x.date], [u('r_place'), x.place], [u('r_medium'), x.medium], [u('r_size'), x.size],
-      [u('r_museum'), W.aic ? u('aic') + ' ' + W.no : W.cma ? u('cma') + ' ' + W.cma : u('met') + ' ' + W.no], [u('r_credit'), x.credit], [u('r_rights'), u('cc0')]].filter(r => r[1]).map(r => `<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join('')
-      + `<dt></dt><dd><a href="${W.aic ? 'https://www.artic.edu/artworks/' + W.aic : W.cma ? 'https://www.clevelandart.org/art/' + W.cma : 'https://www.metmuseum.org/art/collection/search/' + W.met}" target="_blank" rel="noopener">${esc(u('metlink'))} ↗</a></dd>`;
+      [u('r_museum'), W.rijks ? u('rijks') + ' ' + W.rijks : W.aic ? u('aic') + ' ' + W.no : W.cma ? u('cma') + ' ' + W.cma : u('met') + ' ' + W.no], [u('r_credit'), x.credit], [u('r_rights'), u('cc0')]].filter(r => r[1]).map(r => `<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join('')
+      + `<dt></dt><dd><a href="${W.rijks ? 'https://www.rijksmuseum.nl/en/collection/' + W.rijks : W.aic ? 'https://www.artic.edu/artworks/' + W.aic : W.cma ? 'https://www.clevelandart.org/art/' + W.cma : 'https://www.metmuseum.org/art/collection/search/' + W.met}" target="_blank" rel="noopener">${esc(u('metlink'))} ↗</a></dd>`;
     ov.querySelector('.ptvlinks').querySelectorAll('[data-g]').forEach(b => b.onclick = () => { window.AtlasPaint.onClose = null; close(true); ctx.open && ctx.open(b.dataset.g); });
     ov.querySelector('.ptvlinks').querySelectorAll('[data-ex]').forEach(b => b.onclick = () => { window.AtlasPaint.onClose = null; close(true); ctx.goEx && ctx.goEx(b.dataset.ex); });
     ov.querySelector('.ptvlinks').querySelectorAll('[data-room]').forEach(b => b.onclick = () => { window.AtlasPaint.onClose = null; close(true); ctx.goRoom && ctx.goRoom(b.dataset.room); });
