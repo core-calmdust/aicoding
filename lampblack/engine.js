@@ -1231,6 +1231,8 @@
         if (s.kind === 'who' && !st.parts.some(p => p.k === 'who' && p.who === s.who)) st.parts.push({ k: 'who', who: s.who, loc: s.loc });
       }
     }
+    // a sighting told in the meeting ("I saw X at B"), not only to the player's face
+    for (const t of S.pl.told) if (t.kind === 'who' && t.by !== 'you' && !t.sign) { const st = get(t.by, t.night); if (!st.parts.some(p => p.k === 'who' && p.who === t.who)) st.parts.push({ k: 'who', who: t.who, loc: t.loc }); }
     for (const r of S.reports) if (r.by !== 'you') { const st = get(r.by, r.night); if (!st.parts.some(p => p.k === 'trace' && p.cat === r.cat)) st.parts.push({ k: 'trace', cat: r.cat, val: r.val, neg: r.neg }); }
     for (const f of S.figs) { const st = get(f.by, f.night); if (!st.parts.some(p => p.k === 'fig' && p.cat === f.cat)) st.parts.push({ k: 'fig', cat: f.cat, val: f.val }); }
     return Object.values(by).filter(st => st.parts.length && person(S, st.who).alive);
@@ -1240,6 +1242,8 @@
     const out = [];
     for (const k of S.pl.found) { const [ni, ti] = k.split('|').map(Number); const t = S.nights[ni].traces[ti]; out.push({ id: 'tr|' + k, k: 'trace', night: ni, cat: t.cat, val: t.val, neg: t.neg, loc: S.nights[ni].loc }); }
     out.push({ id: 'self', k: 'self' });
+    // what someone said of themselves: "I was at A that night" — laid against a sighting of them elsewhere
+    for (const x of S.pl.log || []) { if (x.k !== 'night' || !x.T || x.T.night == null) continue; const id = 'sd|' + x.T.id + '|' + x.T.night; if (!out.some(o => o.id === id) && person(S, x.T.id).alive) out.push({ id, k: 'said', night: x.T.night, who: x.T.id, loc: x.T.loc }); }
     S.pl.told.filter(t => t.kind === 'who').forEach((t, i) => { if (!out.some(o => o.k === 'seen' && o.who === t.who && o.night === t.night && o.loc === t.loc)) out.push({ id: 'sw|' + i, k: 'seen', night: t.night, who: t.who, loc: t.loc, by: t.by }); });
     return out;
   }
@@ -1251,10 +1255,13 @@
     let cid = null;
     if (part.k === 'trace' && ev.k === 'trace' && ev.night === st.night) cid = 'tr|' + st.who + '|' + st.night + '|' + part.cat;
     if (part.k === 'fig' && ev.k === 'trace' && ev.night === st.night) cid = 'fg|' + st.who + '|' + st.night + '|' + part.cat;
-    if (part.k === 'loc' && ev.k === 'seen' && ev.night === st.night && ev.who === st.who) cid = 'wh|' + st.who + '|' + st.night;
+    let over = null;
+    if (part.k === 'loc' && ev.k === 'seen' && ev.night === st.night && ev.who === st.who) { cid = 'wh|' + st.who + '|' + st.night; over = { by: ev.by, loc: ev.loc }; }
+    // the other way round: "I saw X at B" — against X's own word that they were at A
+    if (part.k === 'who' && ev.k === 'said' && ev.night === st.night && ev.who === part.who && ev.loc !== part.loc) { cid = 'wh|' + part.who + '|' + st.night; over = { by: st.who, loc: part.loc }; }
     if (ev.k === 'self' && (part.k === 'loc' || (part.k === 'who' && !canSee(story, (st.parts.find(p => p.k === 'loc') || {}).loc, part.loc)))) cid = 'sf|' + st.who + '|' + st.night;
     const c = cid && contradictions(S, story).find(o => o.id === cid && (o.kind !== 'trace' && o.kind !== 'fig' || (o.seen.cat === ev.cat && o.seen.val === ev.val && o.seen.neg === ev.neg)));
-    if (c) return { ok: true, ev: pointOut(S, story, c.id) };
+    if (c) { const ev2 = pointOut(S, story, c.id, over); return { ok: true, ev: ev2, other: !ev2.some(e => (e.t === 'caught' || e.t === 'confess') && e.by === st.who) }; }
     // a miss: the village hears the player accuse someone with nothing — the player's word is worth a little less
     S.exposed = S.exposed || {}; S.exposed.you = (S.exposed.you || 0) + .25;
     (S.heat = S.heat || {}).you = ((S.heat || {}).you || 0) + 1;
@@ -1262,9 +1269,10 @@
     return { ok: false, ev: [{ t: 'denyseen', by: st.who }] };
   }
   // point one out in the meeting: the liar is caught, a hidden errand comes out, or a false sighting turns on its teller
-  function pointOut(S, story, id) {
-    const c = contradictions(S, story).find(o => o.id === id);
+  function pointOut(S, story, id, over) {
+    let c = contradictions(S, story).find(o => o.id === id);
     if (!c) return [];
+    if (over && c.seen) c = Object.assign({}, c, { seen: Object.assign({}, c.seen, over) });   // the sighting the player actually laid down
     (S.pl.pointed = S.pl.pointed || []).push(id);
     S.exposed = S.exposed || {};
     const ev = [], p = person(S, c.who);
