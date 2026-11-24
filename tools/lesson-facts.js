@@ -94,6 +94,14 @@ const CHECKS = {
     // stored searches, the way there, no near board, the order of the 2D and the 3D, リバガメ's words for every legal move — tools/lesson-verify-rvopen.js
     require('./lesson-verify-rvopen.js')().forEach(fa => bad(G, fa.step, `q${fa.q}: ${fa.msg}`));
   },
+  // (2026-11-24 第2期・担当B) the backgammon openings ('backgammon/open', key = the item): the strict ①〜⑨ on every problem as the 3D
+  // table asks it — tools/lesson-verify-bgopen.js. The opening rolls that are also a problem of the lessons オープニング①② (one start
+  // position per roll: ⑤) are listed as pending, not failed, until they are made into other problems (claude/lesson-quality.md 進み具合)
+  'backgammon/open'() {
+    const PEND = new Set(['o31', 'o42', 'o53', 'o61', 'o21', 'o41', 'o51', 'o62', 'o64', 'o65']), pend = [];
+    require('./lesson-verify-bgopen.js')().forEach(fa => { if (PEND.has(fa.step) && /^⑤ the same position and roll as lesson open[12] /.test(fa.msg)) pend.push(`${fa.step} q${fa.q}: ${fa.msg}`); else bad('backgammon/open', fa.step, `q${fa.q}: ${fa.msg}`); });
+    if (pend.length && !process.env.C4_QUIET) console.log(`backgammon/open: ${pend.length} pending (⑤ the same as a lesson problem):\n  ` + pend.join('\n  '));
+  },
   // (2026-11-22 lesson loop) the gomoku openings (珠型, 'gomoku/open'): the line replays legally under renju (no forbidden black move,
   // no stone on a stone), every practice position loads, and its best answer is a legal move — not a black forbidden point, and when
   // the opponent has a four, the answer stops it (or makes five)

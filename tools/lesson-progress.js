@@ -89,6 +89,7 @@ async function runLesson(ctx, game, kind, key) {
       const tag = 'p' + s.k + ':' + t.moves;
       if (answered.has(tag)) { if (!ok) { fail = `board takes no more moves: #${s.k + 1}/${s.n} 「${t.say}」 board=${JSON.stringify(t.ad)}`; break; } await S(400); continue; }
       if (!ok) { fail = `board takes no move: #${s.k + 1}/${s.n} 「${t.say}」 board=${JSON.stringify(t.ad)}`; break; }
+      if (game === 'backgammon' && !t.ad) await S(2500);   // (2026-11-24 担当B: the backgammon table has no adapter state — wait for prob() to set the board up, as a player can; answering before its await board() ended let prob()'s act(次へ, off) come after 結果)
       answered.add(tag); answered.add('p' + s.k);
       let u = t.ans; if (t.kind === 'tsume' && t.sol && t.sol.length && t.moves != null) u = t.sol[t.moves];
       if (t.kind === 'tfseq') u = await pg.evaluate(() => window.__atlasLs.seqAns());   // (tafl: the N-move escape / capture, a move that keeps it forced, each turn)
