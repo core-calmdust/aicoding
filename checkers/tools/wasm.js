@@ -29,6 +29,7 @@ function loadSync(opts) {
   return {
     X, E, setup, io,
     analyze(spec, moves, ms) { setup(spec, moves); X.analyze(ms, 60); return { list: list(), depth: io()[1] }; },
+    analyzeDepth(spec, depth) { setup(spec, []); X.analyze(600000, depth); return { list: list(), depth: io()[1] }; },   // (a fixed depth: the same reading however busy the machine is)
     best(spec, moves, ms) { setup(spec, moves); X.best(99, ms, 0); const r = io(); return { m: wMove(r[0], r[1]), v: r[2], depth: r[3] }; },
     probe(spec) { setup(spec, []); return X.eg_probe_root(); },
     puzzle(spec, moves, n, defend, goal, base) { setup(spec, moves); X.puzzle(n, defend ? 1 : 0, goal || 0, base || 0, 3000); const r = io(), out = []; for (let i = 0; i < r[0]; i++) out.push({ m: wMove(r[1 + 3 * i], r[2 + 3 * i]), need: r[3 + 3 * i] }); return out; },

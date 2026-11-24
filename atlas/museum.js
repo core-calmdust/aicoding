@@ -34,10 +34,10 @@
   // the rooms, in order. src: scripts loaded the first time the room opens; ready(): the room's code is there
   const ROOMS = [
     { id: 'map', ready: () => !!window.AtlasMap, render: (el, c) => AtlasMap.render(el, c) },
-    { id: 'tree', src: ['museum/tree.js?v=4'], ready: () => !!window.AtlasTree, render: (el, c) => AtlasTree.render(el, c) },
+    { id: 'tree', src: ['museum/tree.js?v=6'], ready: () => !!window.AtlasTree, render: (el, c) => AtlasTree.render(el, c) },
     { id: 'gallery', src: ['museum/gallery.js?v=149'], ready: () => !!window.AtlasGallery, render: (el, c) => AtlasGallery.render(el, c) },
     { id: 'paint', src: ['museum/paint-i18n.js?v=3', 'museum/paint.js?v=9'], ready: () => !!(window.AtlasPaint && window.MUSEUM_PAINT_T), render: (el, c) => AtlasPaint.render(el, c) },
-    { id: 'read', src: ['museum/read-i18n.js?v=9', 'museum/read.js?v=16'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T), render: (el, c) => AtlasRead.render(el, c) },
+    { id: 'read', src: ['museum/read-i18n.js?v=11', 'museum/read.js?v=18'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T), render: (el, c) => AtlasRead.render(el, c) },
     { id: 'chance', src: ['museum/chance-i18n.js?v=3', 'museum/chance.js?v=7'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T), render: (el, c) => AtlasChance.render(el, c) },
   ];
   const KEY = 'atlas-museum-room';

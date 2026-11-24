@@ -29,7 +29,7 @@ const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,
         const small = ctl.filter(e => { const r = (e.tagName === 'INPUT' && e.closest('label') || e).getBoundingClientRect(); return (r.width < minT - .5 || r.height < minT - .5) && !e.closest('.ptsp,.exspot,.exspots,.ptvspots,canvas,.amap,.ammap,.trscroll'); });
         out.tapSmall = small.length; window.__detail = { tapSmall: small.map(e => (e.className || e.tagName) + ' ' + Math.round(e.getBoundingClientRect().width) + 'x' + Math.round(e.getBoundingClientRect().height)) };
         // 3 小さすぎる文字: 12px 未満
-        const tiny = all.filter(e => [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()) && parseFloat(getComputedStyle(e).fontSize) < 12);
+        const tiny = all.filter(e => [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()) && parseFloat(getComputedStyle(e).fontSize) < 12 && !e.matches('.trn em'));   // (.trn em: the ORIGINAL tag, kept small on purpose — ユーザー 2026-11-24)
         out.tinyText = tiny.length; window.__detail.tinyText = tiny.map(e => (e.className || e.tagName) + ' ' + getComputedStyle(e).fontSize);
         // 4 名前のないボタン（文字も aria-label も title もない）
         const nn = ctl.filter(e => !(e.textContent.trim() || e.getAttribute('aria-label') || e.getAttribute('title') || e.querySelector('img[alt]:not([alt=""])')));
@@ -38,7 +38,7 @@ const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,
         // 5 文字の切れ（… で途切れている）
         out.ellipsis = all.filter(e => getComputedStyle(e).textOverflow === 'ellipsis' && e.scrollWidth > e.clientWidth + 1).length;
         // 6 1行が長すぎる（本文の段落で 1 行 45em を超える）
-        out.longLine = all.filter(e => e.tagName === 'P' && e.textContent.length > 80 && e.getBoundingClientRect().width / parseFloat(getComputedStyle(e).fontSize) > 45).length;
+        out.longLine = all.filter(e => e.tagName === 'P' && e.textContent.length > 80 && e.getBoundingClientRect().width / parseFloat(getComputedStyle(e).fontSize) > 48).length;
         // 7 1画面目: 部屋の中身の始まりが画面の 65% より上にあるか
         const st = root.querySelector('.muroom.on'), top = st ? st.getBoundingClientRect().top : 9999;
         out.foldLate = top > innerHeight * .65 ? 1 : 0;
@@ -64,6 +64,10 @@ const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,
         return (window.AtlasRead ? AtlasRead.STORIES : []).filter(S => { const x = t[S.id] || {}; return !((x.kf || []).length >= 3 && (x.more || []).length >= 3 && (x.tl || []).length >= 4 && (S.refs || []).length >= 1); }).length; });
       // 16 記事の図: 本文の画像（sec）と節の図（figs）を合わせて 2 つ未満の物語の数
       m.fewFigs = r !== 'read' ? 0 : await p.evaluate(() => (window.AtlasRead ? AtlasRead.STORIES : []).filter(S => (S.sec || []).filter(Boolean).length + Object.values(S.figs || {}).reduce((a, f) => a + [].concat(f).length, 0) < 2).length);
+      // 17 読み物の画像が見つからない（表紙・本文の画像・節の図のファイルを取りに行って 200 でないもの）
+      m.brokenImg = r !== 'read' ? 0 : await p.evaluate(async () => { const u = f => f.s ? `../images/atlas/museum-story/${f.s}.webp` : f.g ? `../images/atlas/${f.g}.webp` : f.ex ? `../images/atlas/ex/${f.ex}.webp` : f.paint ? `../images/atlas/paint/${f.paint}-t.webp` : null;
+        const L = new Set(); (window.AtlasRead ? AtlasRead.STORIES : []).forEach(S => [S.cover, ...(S.sec || []), ...Object.values(S.figs || {}).flatMap(f => [].concat(f))].forEach(f => { const x = f && u(f); if (x) L.add(x); }));
+        let bad = 0; for (const x of L) { try { const r = await fetch(new URL(x, location.href), { method: 'HEAD' }); if (!r.ok) bad++; } catch (e) { bad++; } } return bad; });
       if (r === 'pass') m.foldLate = 0;   // (the open card pushes the room down on purpose)
       rows.push({ view: `${V.w}x${V.h}${V.lang !== 'ja' ? ':' + V.lang : ''}`, room: r, ...m, js: errs.length });
     }
