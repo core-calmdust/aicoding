@@ -1667,3 +1667,68 @@ html[data-back=crimson] .bk{background:radial-gradient(circle at 50% 50%,rgba(22
 
 /* the statistics sheet takes only the height it needs (the empty state is one line) */
 .gd .stats-modal{height:auto;max-height:min(calc(100dvh - 32px),900px)}
+/* ===================== tutorial 2026-11-24 (tutorial.js: veil with holes + rings, bubble beside them) ===================== */
+#tutLayer.gd-tl .tut-mask{position:fixed;left:0;top:0;pointer-events:none}
+#tutLayer.gd-tl .tut-mask path{fill:rgba(5,5,6,.58)}
+#tutLayer.gd-tl.center .tut-mask path{fill:rgba(5,5,6,.7)}
+#tutLayer.gd-tl .tut-ring{position:fixed;pointer-events:none;box-shadow:0 0 0 2px #e3bf6a,0 0 20px 4px rgba(227,191,106,.45);transition:left .3s,top .3s,width .3s,height .3s}
+#tutLayer.gd-tl.act .tut-ring{animation:gdTutRing 1.4s ease-in-out infinite}
+@keyframes gdTutRing{0%,100%{box-shadow:0 0 0 2px #8fe3b8,0 0 12px 2px rgba(143,227,184,.4)}50%{box-shadow:0 0 0 3px #8fe3b8,0 0 26px 8px rgba(143,227,184,.65)}}
+#tutLayer .gd-box{width:min(440px,calc(100vw - 20px));max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);overflow-y:auto;overscroll-behavior:contain;border-color:rgba(227,191,106,.6)}
+#tutLayer.gd-tl.center .gd-box{width:min(560px,calc(100vw - 20px))}
+.gd-box .tut-tr{display:flex;gap:4px}
+.gd-box .tp-h{display:block;font-size:17px;color:#f8f6f1;margin:2px 0 6px;line-height:1.35}
+.gd-box .tp-body p{margin:0;font-size:14.5px;line-height:1.8}
+.gd-box .tp-body p b{color:#f2d283}
+.gd-box .tp-wait{color:var(--muted)}
+.gd-box.min .tp-body p,.gd-box.min .tp-pics{display:none}
+.gd-box .tut-btns{margin-top:12px}
+.gd-box .tut-btns #tuBack{margin-right:auto}
+.tp-pics{margin-top:12px;padding:10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:8px}
+.tp-pics.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+.tp-pics.flow{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px}
+.tp-pics.flow > b{color:var(--accent);font-size:18px}
+.tp-pics.one{align-items:center}
+.tp-row{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0}
+.tp-pics.flow .tp-row,.tp-pics.one .tp-row{align-items:center}
+.tp-row small{font-size:12px;color:#d9d4ca;line-height:1.35}
+.tp-c{display:flex;flex-wrap:wrap;gap:2px}
+.tp-c .mc,.tp-scale .mc,.tp-legend .mc{width:28px;height:39px;font-size:13.5px}
+.tp-pics.one .tp-c .mc{width:24px;height:34px;font-size:12px}
+.tp-scale{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:3px}
+.tp-scale > span{font-size:11.5px;color:var(--muted);padding:0 4px}
+.tp-scale > i{font-style:normal;color:var(--accent);font-weight:700;padding:0 2px}
+.tp-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 14px;font-size:12px;color:#d9d4ca}
+.tp-legend span{display:inline-flex;align-items:center;gap:5px}
+.tp-legend .mc{width:22px;height:31px;font-size:11px}
+.tp-pass{display:inline-flex;align-items:center;height:39px;padding:0 10px;border-radius:99px;background:rgba(255,255,255,.08);font-size:12.5px;font-weight:700}
+@media (min-width:900px){
+  #tutLayer .gd-box{width:min(480px,calc(100vw - 24px))}
+  #tutLayer.gd-tl.center .gd-box{width:min(640px,calc(100vw - 24px))}
+  .gd-box .tp-h{font-size:21px;margin-bottom:8px}
+  .gd-box .tp-body p{font-size:16.5px;line-height:1.85}
+  .tp-c .mc,.tp-scale .mc{width:32px;height:44px;font-size:15px}
+  .tp-row small{font-size:13.5px}
+}
+@media (max-width:760px){
+  #tutLayer .gd-box{max-height:46vh;max-height:46dvh;padding:11px 13px 10px}
+  .gd-box .tp-h{font-size:16px;margin-bottom:4px}
+  .gd-box .tp-body p{font-size:14px;line-height:1.7}
+  .tp-pics{margin-top:8px;padding:8px}
+  .tp-pics.grid{gap:8px}
+  .tp-c .mc,.tp-scale .mc{width:22px;height:31px;font-size:11px}.tp-c .mc small,.tp-scale .mc small{font-size:9.5px}
+  .gd-box .tut-btns{margin-top:8px}
+}
+html[lang=ar] .gd-box .tut-btns #tuBack{margin-right:0;margin-left:auto}
+.gd-box .tp-body p{text-align:start}
+.gd-box .tp-h{text-align:start}
+.tp-scale{flex-wrap:nowrap}
+.tp-scale.up{align-items:flex-start;gap:6px}
+.tp-scale.up > i{align-self:center;margin-top:-14px}
+.tp-k{display:inline-flex;flex-direction:column;align-items:center;gap:3px;max-width:86px;text-align:center}
+.tp-k small{font-size:11px;color:#d9d4ca;line-height:1.3}
+@media (max-width:760px){.tp-scale{gap:1px}.tp-scale > span{padding:0 2px;font-size:10.5px}.tp-scale .mc{width:19px!important;height:28px!important;font-size:10px!important}.tp-k{max-width:68px}.tp-k small{font-size:10px}}
+#tutLayer.gd-tl.watch .tut-mask path{fill:transparent}
+#tutLayer.gd-tl.watch .gd-box{width:auto;max-width:calc(100vw - 20px);padding:10px 16px}
+#tutLayer.gd-tl.watch .gd-box .tut-top{margin-bottom:2px}
+@media (max-width:760px){#tutLayer.gd-tl.center .gd-box{max-height:86vh;max-height:86dvh}#tutLayer.gd-tl.watch .gd-box{width:auto}}
