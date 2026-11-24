@@ -97,10 +97,11 @@ body.anim-off .pp.idle .pup{animation:none}
 .tg .ht,.ro .ht{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border-radius:50%;background:#e07a10;color:#fff;font:800 15px/1 var(--ui);font-variant-numeric:tabular-nums;box-shadow:0 1px 3px rgba(0,0,0,.35)}
 #roster{position:absolute;top:calc(var(--hdH) + 6px);left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:6;pointer-events:auto;max-width:calc(100% - 20px)}
 #roster.hide{display:none}
-.ro{position:relative;width:84px;flex:0 0 auto;background:rgba(246,238,219,.92);border:1.5px solid rgba(27,18,12,.22);border-radius:3px;padding:6px 2px 3px;text-align:center;color:var(--ink);cursor:pointer}
+.ro{position:relative;width:var(--roW,84px);flex:0 0 auto;background:rgba(246,238,219,.92);border:1.5px solid rgba(27,18,12,.22);border-radius:3px;padding:6px 2px 3px;text-align:center;color:var(--ink);cursor:pointer}
 .ro .bust{width:52px;height:56px;display:block;margin:2px auto 0}
 .ro b{display:block;font:800 14px/1.3 var(--ui);white-space:nowrap;overflow:hidden;letter-spacing:-.02em}
 .ro b.long{font-size:11px;letter-spacing:-.06em;line-height:1.65}
+#roster.tight .ro .bust{width:40px;height:44px}#roster.tight .ro b{font-size:12px}#roster.tight .ro b.long{font-size:9.5px}#roster.tight .ro .rs i{font-size:11px;padding:3px 3px}
 .ro .cl{position:absolute;left:-5px;top:-11px}
 .ro .ht{position:absolute;right:-8px;top:-11px}
 .ro .rs{display:flex;gap:2px;justify-content:center;flex-wrap:wrap;margin-top:2px;min-height:0}
@@ -193,6 +194,7 @@ body.night #hb .ap{color:#f1e8d2}
 .loc .scn .near{opacity:.75}
 .loc .scn .glow{fill:var(--lamp)}.loc .scn .snow{fill:#efe4c9}.loc .scn .pane{fill:#8a96ad}
 .loc b{position:absolute;left:8px;top:7px;font:800 16px/1.1 var(--prose);background:rgba(246,238,219,.9);padding:3px 7px 4px;border-radius:2px}
+.loc .see{position:absolute;left:8px;bottom:6px;font:700 11.5px/1.2 var(--ui);font-style:normal;background:rgba(246,238,219,.88);color:var(--mute);padding:2px 6px 3px;border-radius:2px;max-width:calc(100% - 64px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .loc em{position:absolute;right:6px;bottom:6px;font:700 12.5px var(--ui);font-style:normal;background:var(--acc);color:#fff;padding:3px 7px;border-radius:2px}
 .loc:hover{border-color:var(--ink)}
 .loc.cur{border-color:var(--acc);box-shadow:inset 0 0 0 1.5px var(--acc)}
@@ -473,7 +475,7 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 
 <div id="sheet" class="hide" role="dialog" aria-modal="true"><div class="box" id="sheetBox"></div></div>
 
-<script src="engine.js?v=10"></script>
+<script src="engine.js?v=11"></script>
 <script src="voices.js?v=5"></script>
 <script src="speech.js?v=5"></script>
 <script src="art.js?v=2"></script>
@@ -493,6 +495,6 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 <script src="stories/tomoshibi.who.js?v=2"></script>
 <script src="stories/tomoshibi.who.open.js?v=1"></script>
 <script src="sound.js?v=5"></script>
-<script src="game.js?v=16"></script>
+<script src="game.js?v=18"></script>
 </body>
 </html>

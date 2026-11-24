@@ -83,6 +83,9 @@
     return S;
   }
 
+  // what can be seen from where: the same place, and the two next to it (the places stand in a ring)
+  function near(story, a) { const ring = story.locs.map(l => l.id), i = ring.indexOf(a); if (i < 0) return []; return [ring[(i + ring.length - 1) % ring.length], ring[(i + 1) % ring.length]]; }
+  const canSee = (story, from, to) => from === to || near(story, from).includes(to);
   const person = (S, id) => S.people.find(p => p.id === id);
   const alive = S => S.people.filter(p => p.alive);
   const isWolf = (S, id) => S.wolves.includes(id);
@@ -216,7 +219,7 @@
       }
       if (p.role === 'wolf' && rnd(S) < .2) {          // a made-up sighting of a person out at night
         const inn = alive(S).filter(q => q.role !== 'wolf' && q.id !== id && !q.isPlayer);
-        if (inn.length) { const q = pick(S, inn); T.saw.push({ kind: 'who', who: q.id, loc: pick(S, story.locs.map(l => l.id)), lie: true }); }
+        if (inn.length) { const q = pick(S, inn); const smart = rnd(S) < .5 + .13 * diffOf(S).id; T.saw.push({ kind: 'who', who: q.id, loc: smart ? pick(S, [p.home].concat(near(story, p.home))) : pick(S, story.locs.map(l => l.id)), lie: true }); }
       }
     } else {
       // an innocent: tells the truth about others; hides their own secret errand
@@ -1037,6 +1040,12 @@
       const w = S.pl.told.find(t => t.kind === 'who' && t.who === T.id && t.night === T.night && t.loc !== T.loc && t.by !== T.id);
       if (w) out.push({ id: 'wh|' + T.id + '|' + T.night, kind: 'where', who: T.id, night: T.night, said: { loc: T.loc }, seen: { loc: w.loc, by: w.by } });
     }
+    // 4. a story that breaks itself: "I was at home" — yet saw someone where home cannot see
+    for (const x of S.pl.log || []) {
+      if (x.k !== 'night' || !x.T || x.T.night == null) continue;
+      const T = x.T, P = person(S, T.id); if (!P || !P.alive || (P.secret && P.secret.open && T.hid)) continue;
+      for (const sg of T.saw) if (sg.kind === 'who' && !canSee(story, T.loc, sg.loc) && !out.some(o => o.id === 'sf|' + T.id + '|' + T.night)) out.push({ id: 'sf|' + T.id + '|' + T.night, kind: 'self', who: T.id, night: T.night, said: { loc: T.loc }, seen: { who: sg.who, loc: sg.loc }, hid: !!T.hid });
+    }
     return out.filter(o => !done.has(o.id));
   }
   /* ---------- 矛盾を突く, in three steps: whose words → what evidence → which part is wrong ---------- */
@@ -1061,6 +1070,7 @@
   function evidence(S) {
     const out = [];
     for (const k of S.pl.found) { const [ni, ti] = k.split('|').map(Number); const t = S.nights[ni].traces[ti]; out.push({ id: 'tr|' + k, k: 'trace', night: ni, cat: t.cat, val: t.val, neg: t.neg, loc: S.nights[ni].loc }); }
+    out.push({ id: 'self', k: 'self' });
     S.pl.told.filter(t => t.kind === 'who').forEach((t, i) => { if (!out.some(o => o.k === 'seen' && o.who === t.who && o.night === t.night && o.loc === t.loc)) out.push({ id: 'sw|' + i, k: 'seen', night: t.night, who: t.who, loc: t.loc, by: t.by }); });
     return out;
   }
@@ -1073,6 +1083,7 @@
     if (part.k === 'trace' && ev.k === 'trace' && ev.night === st.night) cid = 'tr|' + st.who + '|' + st.night + '|' + part.cat;
     if (part.k === 'fig' && ev.k === 'trace' && ev.night === st.night) cid = 'fg|' + st.who + '|' + st.night + '|' + part.cat;
     if (part.k === 'loc' && ev.k === 'seen' && ev.night === st.night && ev.who === st.who) cid = 'wh|' + st.who + '|' + st.night;
+    if (ev.k === 'self' && (part.k === 'loc' || (part.k === 'who' && !canSee(story, (st.parts.find(p => p.k === 'loc') || {}).loc, part.loc)))) cid = 'sf|' + st.who + '|' + st.night;
     const c = cid && contradictions(S, story).find(o => o.id === cid && (o.kind !== 'trace' && o.kind !== 'fig' || (o.seen.cat === ev.cat && o.seen.val === ev.val && o.seen.neg === ev.neg)));
     if (c) return { ok: true, ev: pointOut(S, story, c.id) };
     // a miss: the village hears the player accuse someone with nothing — the player's word is worth a little less
@@ -1090,6 +1101,11 @@
     const ev = [], p = person(S, c.who);
     const bump = (x, w) => { S.exposed[x] = (S.exposed[x] || 0) + w; (S.heat = S.heat || {})[x] = (S.heat[x] || 0) + 1; };
     const witness = () => pick(S, alive(S).filter(q => !q.isPlayer && q.id !== c.who && q.id !== (c.seen && c.seen.by)));
+    if (c.kind === 'self') {
+      if (c.hid && p.secret && !p.secret.open) { p.secret.open = true; ev.push({ t: 'confess', by: c.who }); }   // they were out on their errand, and told the truth about what they saw
+      else { bump(c.who, 1); ev.push({ t: 'caught', by: c.who }); const w = witness(); if (w) ev.push({ t: 'notice', by: w.id, target: c.who }); }
+      return ev;
+    }
     if (c.kind !== 'where') {
       // innocents tell what they saw; a trace or a figure that the player's own eyes deny is a lie
       bump(c.who, 1); ev.push({ t: 'caught', by: c.who });
@@ -1119,5 +1135,5 @@
     return res;
   }
 
-  root.WLEngine = { ROLE, SETUP, DIFF, CATS, newGame, night, meeting, voteRound, exile, check, score, search, ask, present, playerClaim, playerResults, callOut, callEvidence, contradictions, pointOut, dodge, dodgeTalk, statements, evidence, judgeClash, askDivine, askGuard, askHide, testimony, analyze, opinion, suspicion, npcSearch, canConfront, fitsTraces, person, alive, isWolf, rnd, pick, shuffle };
+  root.WLEngine = { ROLE, SETUP, DIFF, CATS, newGame, night, meeting, voteRound, exile, check, score, search, ask, present, playerClaim, playerResults, callOut, callEvidence, contradictions, pointOut, dodge, dodgeTalk, near, canSee, statements, evidence, judgeClash, askDivine, askGuard, askHide, testimony, analyze, opinion, suspicion, npcSearch, canConfront, fitsTraces, person, alive, isWolf, rnd, pick, shuffle };
 })(typeof window !== 'undefined' ? window : globalThis);
