@@ -103,9 +103,9 @@ module.exports = function senet(opt = {}) {
     });
     (L.ramp || []).forEach((r, i) => { if (r.k === 'try' && r.kind !== 'choice') move(L, r, 'ramp' + i, 2); if (r.k === 'explain' && r.seq && r.seq.length) move(L, Object.assign({}, r, { ok: r.seq }), 'ramp' + i, 3); });
   }
-  // 追26：準備に選択問題があるゲームの2D（senet・ur の app-learn.js）は、選択肢の描画を本番の問題だけに絞らない
+  // 追28：準備に選択問題があるゲームの2D（senet・ur の app-learn.js）は、選択肢の描画を本番の問題だけに絞らない
   for (const g of ['senet', 'ur']) { const L = JSON.parse(fs.readFileSync(path.join(ROOT, g, 'lessons.json'), 'utf8')); if (!L.steps.some(x => (x.ramp || []).some(r => r.kind === 'choice'))) continue;
-    const src = fs.readFileSync(path.join(ROOT, g, 'app-learn.js'), 'utf8'); if (/!ramp && it\.kind === 'choice'/.test(src) || !/if \(it\.kind === 'choice'\)/.test(src)) add('2D', 0, `追26 ${g}/app-learn.js が準備の選択問題のボタンを出さない`); }
+    const src = fs.readFileSync(path.join(ROOT, g, 'app-learn.js'), 'utf8'); if (/!ramp && it\.kind === 'choice'/.test(src) || !/if \(it\.kind === 'choice'\)/.test(src)) add('2D', 0, `追28 ${g}/app-learn.js が準備の選択問題のボタンを出さない`); }
   // ⑤ 全局面（問題・準備・見本・ルール説明）：駒の並びを1つずつくらべて4つ以上ちがう（出目の違いも1つ）。見本の盤＝準備の explain は同じでよい
   const items = [];
   V2.forEach(L => { (L.problems || []).forEach((q, i) => q.s && items.push({ s: q.s, n: q.n || 0, where: L.id + '#' + (i + 1) })); (L.ramp || []).forEach((r, i) => r.s && items.push({ s: r.s, n: r.n || 0, where: L.id + '/ramp' + i })); });
