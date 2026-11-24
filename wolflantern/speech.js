@@ -58,6 +58,13 @@
       case 'defend': return { by: e.by, kind: 'defend', text: say(S, story, e.by, 'defend') };
       case 'counter': return { by: e.by, kind: 'co', text: say(S, story, e.by, 'counter', { rival: N(e.rival), role: roleName(story, e.role) }) };
       case 'grief': return { by: e.by, kind: 'grief', text: say(S, story, e.by, 'grief') };
+      case 'whoseen': return { by: e.by, kind: 'fig', text: say(S, story, e.by, 'who', { who: N(e.who), loc: loc(story, e.loc) }) };
+      case 'denyseen': return { by: e.by, kind: 'defend', text: say(S, story, e.by, 'deny') };
+      case 'evnone': return { by: e.by, kind: 'grief', text: say(S, story, e.by, 'evnone') };
+      case 'callnone': return { by: e.by, kind: 'grief', text: say(S, story, e.by, 'callnone') };
+      case 'reqok': return { by: e.by, kind: 'co', text: say(S, story, e.by, 'reqok', { target: N(e.target) }) };
+      case 'reqno': return { by: e.by, kind: 'co', text: say(S, story, e.by, 'reqno_' + (e.why || 'trust'), { target: N(e.target) }) };
+      case 'guardheard': return { by: e.by, kind: 'grief', text: say(S, story, e.by, 'guardheard', { target: N(e.target) }) };
     }
     return null;
   }
