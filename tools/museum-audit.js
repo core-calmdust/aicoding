@@ -46,6 +46,9 @@ const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,
         out.fontSizes = Math.max(0, new Set(all.filter(e => [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())).map(e => Math.round(parseFloat(getComputedStyle(e).fontSize)))).size - 9);
         // 9 フォーカスが見えない: :focus-visible の指定がなく outline:none のコントロール
         out.focusHidden = 0; { const c = ctl[0]; if (c) { c.focus(); const s = getComputedStyle(c); if ((s.outlineStyle === 'none' || parseFloat(s.outlineWidth) === 0) && s.boxShadow === 'none') out.focusHidden = 1; c.blur(); } }
+        // 13 意味のない名前（記号だけの aria-label：「+」「−」「×」など）
+        const vague = ctl.filter(e => { const l = (e.getAttribute('aria-label') || '').trim(); return l && /^[\s+\-−×✕<>‹›0-9.]+$/.test(l); });
+        out.vagueName = vague.length; window.__detail.vagueName = vague.map(e => (e.className || e.tagName) + ' "' + e.getAttribute('aria-label') + '"');
         // 10 画像の alt なし（装飾は alt=""）
         out.noAlt = all.filter(e => e.tagName === 'IMG' && !e.hasAttribute('alt')).length;
         // 11 固定の下メニューに重なる操作（スマホ）
@@ -54,6 +57,8 @@ const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,
       }, phone);
       // 12 キーボード: Tab 6 回で部屋のタブにたどり着けるか（たどり着いた要素が博物館の中か）
       if (process.env.DETAIL) { const d = await p.evaluate(() => window.__detail); for (const k in d) { const c = {}; d[k].forEach(x => { const key = x.replace(/ [\d.]+(px|x\d+)?$/, m => m); c[key] = (c[key] || 0) + 1; }); if (d[k].length) console.log(`  ${V.w} ${r} ${k}:`, JSON.stringify(c)); } }
+      // 14 タブのキーボード操作: 部屋のタブで → を押すと次のタブにフォーカスが移るか
+      m.tabKeys = await p.evaluate(() => { const t = [...document.querySelectorAll('#muRooms [role=tab]')]; if (t.length < 2) return 0; t[0].focus(); t[0].dispatchEvent(new KeyboardEvent('keydown', { key: getComputedStyle(t[0]).direction === 'rtl' ? 'ArrowLeft' : 'ArrowRight', bubbles: true })); const ok = document.activeElement === t[1]; document.activeElement.blur(); return ok ? 0 : 1; });
       if (r === 'pass') m.foldLate = 0;   // (the open card pushes the room down on purpose)
       rows.push({ view: `${V.w}x${V.h}${V.lang !== 'ja' ? ':' + V.lang : ''}`, room: r, ...m, js: errs.length });
     }

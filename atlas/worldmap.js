@@ -41,6 +41,9 @@
   const toU = ([lon, lat]) => [lon + 180, LAT0 - lat];
 
   // module state survives re-renders (language change, coming back to the tab)
+  // (2026-11-24 rubric vagueName) the zoom buttons' spoken names, shared with the museum's tree and paintings
+  const ZT = window.AtlasZoomT = {"ja": ["拡大", "縮小", "全体を表示"], "en": ["Zoom in", "Zoom out", "Show all"], "zh": ["放大", "缩小", "显示全部"], "zh-TW": ["放大", "縮小", "顯示全部"], "ko": ["확대", "축소", "전체 보기"], "es": ["Acercar", "Alejar", "Ver todo"], "fr": ["Zoomer", "Dézoomer", "Tout afficher"], "pt": ["Aproximar", "Afastar", "Ver tudo"], "de": ["Vergrößern", "Verkleinern", "Alles zeigen"], "ru": ["Увеличить", "Уменьшить", "Показать всё"], "tr": ["Yakınlaştır", "Uzaklaştır", "Tümünü göster"], "id": ["Perbesar", "Perkecil", "Tampilkan semua"], "hi": ["बड़ा करें", "छोटा करें", "सब दिखाएँ"], "ar": ["تكبير", "تصغير", "عرض الكل"]};
+  const zl = (l, i) => (ZT[l] || ZT.en)[i];
   let ctx = null, lang = 'ja', host = null, el = {}, view = null, sel = null, reg = 'all', anim = 0, ro = null, raf = 0;
   const u = k => (UI[lang] || UI.en)[k] || UI.en[k];
   const D = id => window.ATLAS_MAP_DATA && window.ATLAS_MAP_DATA[id];
@@ -360,7 +363,7 @@
       sec.innerHTML = `<div class="amhead"><h2 class="h" id="amTtl"></h2><p class="amsub" id="amSub"></p></div>
         <div class="chips cats amreg" id="amReg"></div>
         <div class="amwrap"><div class="card ammap" id="amMap" dir="ltr" tabindex="0"><canvas></canvas><svg class="amsvg" aria-hidden="true"></svg><div class="ampins"></div><div class="amclus"></div><svg class="amsvg amsvg2" aria-hidden="true"></svg>
-          <div class="amzoom"><button type="button" data-z="in" aria-label="+">+</button><button type="button" data-z="out" aria-label="−">−</button><button type="button" data-z="all"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 3.8 5.2 3.8 8.5s-1.2 6.1-3.8 8.5c-2.6-2.4-3.8-5.2-3.8-8.5S9.4 5.9 12 3.5z"/></svg></button></div>
+          <div class="amzoom"><button type="button" data-z="in" aria-label="${zl(lang, 0)}">+</button><button type="button" data-z="out" aria-label="${zl(lang, 1)}">−</button><button type="button" data-z="all" aria-label="${zl(lang, 2)}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 3.8 5.2 3.8 8.5s-1.2 6.1-3.8 8.5c-2.6-2.4-3.8-5.2-3.8-8.5S9.4 5.9 12 3.5z"/></svg></button></div>
           <p class="amhint" id="amHint"></p><p class="amload" id="amLoad"></p></div>
           <aside class="card aminfo" id="amInfo" aria-live="polite"></aside></div>
         <div class="amlist" id="amList"></div>`;
