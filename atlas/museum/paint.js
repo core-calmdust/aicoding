@@ -7,7 +7,7 @@
    AtlasPaint.render(box, ctx) — the museum (atlas/museum.js) calls it; ctx.open(gameId), ctx.goEx(exhibitId), ctx.goRoom(room). */
 (function () {
   'use strict';
-  const V = 1, IMG = '../images/atlas/paint/';
+  const V = 2, IMG = '../images/atlas/paint/';
   /* the works, oldest first. w, h: the picture's size (px) · bg: the wall card's mat · spots: [x, y] on the picture (0–1), the texts say what
      each one is · links: the Atlas's games (g), the collection (ex), a room (room) · met: the Met's object id (its page) */
   const WORKS = [
@@ -24,9 +24,13 @@
     { id: 'webb', w: 1542, h: 2003, met: 195456, no: '26.54', bg: '#a7aab0', spots: [[.476, .324], [.375, .3], [.62, .344], [.317, .444], [.69, .233], [.505, .161]], links: [{ g: 'backgammon' }, { ex: 'ottoman' }] },
     { id: 'liberale', w: 2049, h: 1721, met: 436884, no: '43.98.8', bg: '#6b5a48', spots: [[.542, .541], [.344, .297], [.6, .288], [.447, .209], [.146, .2], [.893, .209]], links: [{ g: 'chess' }, { ex: 'lewis' }] },
     // The Cleveland Museum of Art, Open Access (CC0) — cma: its accession number (its page)
-    { id: 'mirror', w: 992, h: 990, cma: '1940.1200', bg: '#5a5650', spots: [[.49, .564], [.404, .291], [.621, .321], [.681, .574], [.147, .402]], links: [{ g: 'chess' }, { ex: 'lewis' }] },
-    { id: 'morris', w: 1011, h: 992, cma: '1923.247', bg: '#d8d2c4', spots: [[.5, .494], [.188, .176], [.321, .312], [.5, .242], [.5, .1], [.084, .222]], links: [{ g: 'morris' }] },
-    { id: 'leifeng', w: 949, h: 992, cma: '2025.105', bg: '#b8463a', spots: [[.062, .617], [.414, .897], [.157, .897], [.194, .444], [.531, .353], [.499, .509]], links: [{ ex: 'goose' }, { g: 'ludo' }] },
+    { id: 'mirror', w: 2048, h: 2043, cma: '1940.1200', bg: '#5a5650', spots: [[.49, .564], [.404, .291], [.621, .321], [.681, .574], [.147, .402]], links: [{ g: 'chess' }, { ex: 'lewis' }] },
+    { id: 'morris', w: 2048, h: 2008, cma: '1923.247', bg: '#d8d2c4', spots: [[.5, .494], [.188, .176], [.321, .312], [.5, .242], [.5, .1], [.084, .222]], links: [{ g: 'morris' }] },
+    { id: 'leifeng', w: 1959, h: 2048, cma: '2025.105', bg: '#b8463a', spots: [[.062, .617], [.414, .897], [.157, .897], [.194, .444], [.531, .353], [.499, .509]], links: [{ ex: 'goose' }, { g: 'ludo' }] },
+    { id: 'tutinama', w: 1330, h: 2048, cma: '1962.279.32.b', bg: '#c9a56a', spots: [[.313, .736], [.142, .686], [.258, .776], [.391, .565], [.874, .625], [.5, .15]], links: [{ g: 'chess' }, { ex: 'nishapur' }] },
+    { id: 'teniers', w: 2048, h: 1497, cma: '1943.377', bg: '#4a3a2c', spots: [[.325, .69], [.19, .66], [.256, .596], [.066, .37], [.224, .21], [.608, .42]], links: [{ g: 'backgammon' }, { ex: 'ottoman' }] },
+    { id: 'imari', w: 2048, h: 2048, cma: '1964.260', bg: '#2e2e30', spots: [[.547, .66], [.44, .627], [.653, .573], [.5, .373], [.16, .467]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
+    { id: 'shoei', w: 2048, h: 941, cma: '1979.46.1', bg: '#b89a5a', spots: [[.62, .654], [.704, .589], [.87, .71], [.873, .567], [.425, .725], [.61, .177]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
   ];
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   let host = null, ctx = null, lang = 'ja', el = {}, cur = null;
