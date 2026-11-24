@@ -43,6 +43,8 @@
     { id: 'talbot', w: 1591, h: 2048, aic: 27083, no: '1967.158', bg: '#5a4a3a', spots: [[.479, .583], [.307, .356], [.664, .456], [.771, .278], [.879, .711]], links: [{ g: 'chess' }] },
     // (2026-11-24) the Met: Ingram after Boucher — xiangqi as 18th-century Paris imagined it
     { id: 'ingram', w: 1552, h: 2252, met: 394687, no: '66.628.4(1)', bg: '#a89a7e', spots: [[.6, .53], [.47, .515], [.55, .4], [.73, .5], [.72, .19], [.5, .905]], links: [{ g: 'xiangqi' }] },
+    // (2026-11-24) Chicago: Posada's Game of the Goose (Mexico) — the rules printed in the middle
+    { id: 'posada', w: 1686, h: 1239, aic: 52048, no: '1944.945', bg: '#cfc6a6', spots: [[.45, .417], [.325, .848], [.294, .733], [.294, .61], [.15, .72], [.647, .468]], links: [{ ex: 'goose' }, { g: 'ludo' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
