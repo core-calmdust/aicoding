@@ -292,7 +292,7 @@ function dots(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'dots/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'dots/lessons.json'), 'utf8'));
   const src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8');
-  const X = vm.runInNewContext(src.slice(src.indexOf('  const DK = '), src.indexOf('  const DOTS = {')) + '\n;({ dDecE, dDecV, dRank, dFacts, dotsJa, DTJ })', {});
+  const X = vm.runInNewContext(src.slice(src.indexOf('  const DK = '), src.indexOf('  const DOTS = {')) + '\n;({ dDecE, dDecV, dDecO, dRank, dFacts, dotsJa, DTJ })', {});
   const lj = fs.readFileSync(path.join(ROOT, 'dots/learn.js'), 'utf8'), rp = lj.slice(lj.indexOf('function rankPoints('), lj.indexOf('\n}\n', lj.indexOf('function rankPoints(')) + 3);
   const RP = vm.runInNewContext(rp + ';rankPoints', {});
   const out = [], only = opt && opt.only, add = (id, j, m) => out.push({ step: id, q: j + 1, msg: m });
@@ -358,7 +358,52 @@ function dots(opt) {
           if (g2) { const k = +g2.slice(1).find(Boolean); if (k !== fx.m) a(`⑦ line ${x.m}: the words say ${g2[0]}, the line hands over ${fx.m}`); }
           if (fx.cls === 'take' && /開/.test(t)) a(`⑦ line ${x.m} takes a box, the words say it opens: 「${t}」`); } }
     }); });
+  dtIntro(L, X, E, lj, add, only);
   return out;
+}
+// (2026-11-24 第2期 追14) the dots examples of DT_DONE (no warm-up: problem 0 is the worked example under the 2D intro and the 3D intro's
+// board): the 2D figure as learn.js exampleMarks draws it (gold = right, green dotted = the other safe lines) against its caption
+// (ls.<id>.ex / ls.exampleCap / the body, ja): every gold line is a best line; 「緑」 ⇔ green lines are drawn, 「どれを選んでも同じ
+// 結果」 = every green line is best; the final score a + b = the boxes; 「点線の枠で光っている箱」 = a box to take is framed; 「数字は鎖の
+// 長さ」 = chains to number; the chain figure (LFIGS) = its caption (a loop of 4 top left, a chain of 5 around it); ハコピヨ's 3D intro
+// (DTJ.intro) against the same board: safe = a safe line and a line giving a third side; third = 4×4, boxes with two sides here and
+// there (2+), a line safe on one side only; take = a box to take and the best line takes; chain = no safe line, and 「…と、輪になった
+// ループに分かれ」 only with a loop on the board.
+function dtIntro(L, X, E, lj, add, only) {
+  const fs = require('fs'), vm = require('vm'), ja = JSON.parse(fs.readFileSync(path.join(ROOT, 'dots/content/text.ja.json'), 'utf8'));
+  const cut = (a, b) => lj.slice(lj.indexOf(a), lj.indexOf(b, lj.indexOf(a)));
+  const EM = vm.runInNewContext(cut('function exampleMarks(', '\n}\n') + '\n}\n;exampleMarks', {});
+  const LF = vm.runInNewContext(cut('const LFIGS = ', '})();') + '})();\n;LFIGS', {});
+  const plain = t => String(t || '').replace(/<[^>]+>/g, '');
+  L.steps.forEach(st => { const id = st.id; if (!DT_DONE.has(id) || (only && !only.has(id))) return;
+    const a = m => add(id, -1, `example (problem 1): ${m}`), q = st.problems[0], G = E.geom(q.n, q.n), p = E.Pos.from(G, X.dDecE(q.e)), V = X.dDecV(q.v);
+    const best = Math.max(...V.map(x => x[1])), val = new Map(V), lg = p.legal(), safe = lg.filter(e => p.gives(e) === 0 && p.completes(e) === 0);
+    const mk = EM(id, V, safe), ex = plain(ja[`ls.${id}.ex`]), body = plain([].concat(ja[`ls.${id}.body`] || []).join(' ')), green = mk.safe || [];
+    if (!mk.hl.length || mk.hl.some(e => val.get(e) !== best)) a(`⑧ the gold lines ${mk.hl} are not best lines (best ${best})`);
+    if (/緑/.test(ex) !== green.length > 0) a(`⑧ the caption 「${ex}」 with ${green.length} green lines drawn`);
+    if (/どれを選んでも同じ結果/.test(ex) && green.some(e => val.get(e) !== best)) a(`⑧ 「どれを選んでも同じ結果」: green ${green.map(e => e + '=' + val.get(e))}, best ${best}`);
+    const sc = [0, 0]; let f = 0; X.dDecO(q.o).forEach(o => { if (o >= 0) { sc[o]++; f++; } });
+    const rem = q.n * q.n - f, fa = sc[0] + (rem + best) / 2, fb = sc[1] + (rem - best) / 2;
+    if (!Number.isInteger(fa) || !Number.isInteger(fb) || fa < 0 || fb < 0) a(`⑧ ls.exampleCap: the final score ${fa} − ${fb}`);
+    const cap3 = []; for (let b = 0; b < G.B; b++) if (p.cnt[b] === 3) cap3.push(b);
+    if (/点線の枠で光っている箱/.test(body) && !cap3.length) a('⑧ the body speaks of the framed boxes to take, the example has none');
+    if (/数字は鎖の長さ/.test(ex) && !E.components(p, true).length) a('⑧ 「数字は鎖の長さ」: no chain on the example');
+    // the chain figure
+    if (id === 'chain') { const fg = (LF.chain || [])[0]; if (!fg) a('⑧ the chain figure is missing'); else {
+      const P2 = E.Pos.from(E.geom(fg.fig.R, fg.fig.C), Object.keys(fg.fig.by).map(Number)), cs = E.components(P2, true);
+      const lp = cs.find(c => c.loop), ch = cs.find(c => !c.loop), cap = plain(ja[fg.cap]);
+      if ([...P2.cnt].some(c => c !== 2) || !lp || lp.n !== 4 || [0, 1, 3, 4].some(b => !lp.boxes.includes(b)) || !ch || ch.n !== 5 || cs.length !== 2 || /L4/.test(cap) !== true) a(`⑧ the chain figure 「${cap}」: ${cs.map(c => (c.loop ? 'L' : '') + c.n)}`);
+      for (const [b, t] of Object.entries(fg.fig.num)) { const c = cs.find(c => c.boxes.includes(+b)); if (!c || String(t) !== (c.loop ? 'L' : '') + c.n) a(`⑧ the chain figure's number ${t} on box ${b}`); } } }
+    // ハコピヨ's 3D intro on the same board
+    const it = plain(X.DTJ[id] && X.DTJ[id].intro), two = [...p.cnt].filter(c => c === 2).length;
+    const trap = lg.filter(e => !p.isSafe(e) && G.eb1[e] >= 0 && [G.eb0[e], G.eb1[e]].some(b => b >= 0 && p.cnt[b] <= 1));
+    if (!it) a('⑧ no 3D intro');
+    if (id === 'safe' && !(safe.length && lg.some(e => p.gives(e) > 0))) a(`⑧ the 3D intro (safe): ${safe.length} safe lines on its board`);
+    if (id === 'third' && !(q.n === 4 && two >= 2 && trap.length)) a(`⑧ the 3D intro (third) 「盤が広くなると…両がわ」: ${q.n}×${q.n}, ${two} boxes with two sides, ${trap.length} lines safe on one side only`);
+    if (id === 'take' && !(p.hasCapture() && V.filter(x => x[1] === best).every(x => p.completes(x[0]) > 0))) a('⑧ the 3D intro (take): no box to take, or the best line takes nothing');
+    if (id === 'chain') { if (safe.length) a(`⑧ the 3D intro (chain) 「安全な線がなくなると」: ${safe.length} safe lines on its board`);
+      if (/と、輪になった/.test(it) && !E.components(p, true).some(c => c.loop)) a(`⑧ the 3D intro (chain) 「${it.slice(0, 40)}…」 speaks of the board's loops, its board has none`); }
+  });
 }
 // (2026-11-24 第2期) amazons, the basics (AM_DONE): every right answer is a goal of the rules (no engine opinion), so ①② = the stored
 // answers are exactly the legal moves that reach the goal — b_queen: the amazon lands on the glowing square; b_arrow / b_block: the arrow
@@ -1886,7 +1931,7 @@ module.exports = GAMES; GAMES.mancalaWords = mancalaWords; Object.assign(GAMES, 
 if (require.main === module) {
   const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,chessOpen,openLines,janggi').split(',');
   let bad = 0;
-  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'chessOpen' ? ' (チェスの定跡の drill の①〜⑨・追3・追25。drill のない定跡は pending)' : g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'janggi' ? ' (パズル全問・レッスン b_rook・b_horse・b_pawn の①〜⑨・追19・追20・追24)' : g === 'ur' ? ' (ウルのレッスン12本の①〜⑧・追7・追16)' : g === 'openLines' ? ' (shogi・tafl・checkers の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
+  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'chessOpen' ? ' (チェスの定跡の drill の①〜⑨・追3・追25。drill のない定跡は pending)' : g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'janggi' ? ' (パズル全問・レッスン b_rook・b_horse・b_pawn・b_mate1・m_mate2・m_mate3 の①〜⑨・追19・追20・追24・追27)' : g === 'ur' ? (require('fs').existsSync(require('path').join(process.env.UR_LUT_DIR || '/tmp/urlut', 'finkel.rgu')) ? ' (ウルのレッスン12本の①〜⑧・追7・追16)' : ' (ウルのレッスン12本の③〜⑧・追7・追16。①②は完全解析表なしで未照合＝追26)') : g === 'openLines' ? ' (shogi・tafl・checkers の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
     bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
   process.exit(bad ? 1 : 0);
 }

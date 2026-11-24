@@ -372,6 +372,13 @@ async function openLessons(course) {
   showLView('lessonListView'); $('#lessonOverlay').classList.add('show');
 }
 let introI = 0;
+// the worked example's marks (tools/lesson-verify.js dots runs this too): gold = the best line(s), green dotted = the other safe lines.
+// (2026-11-24 第2期 追14) 「安全な線」: its caption says 「緑の点線も安全な線で、どれを選んでも同じ結果」, so one best line is gold and the
+// other best safe lines are green (with every best line gold there was no green line to see)
+function exampleMarks(id, values, safe) {
+  const best = Math.max(...values.map(x => x[1])), B = values.filter(x => x[1] === best).map(x => x[0]), hl = B.slice(0, id === 'safe' ? 1 : 3);
+  return ['safe', 'third', 'parity', 'sacrifice', 'open3', 'mid4', 'mid5'].includes(id) ? { hl, safe: safe.filter(e => !hl.includes(e)) } : { hl };
+}
 function decodeProblem(q) { return { n: q.n, edges: decE(q.e), owners: decO(q.o), values: decV(q.v), k: q.k }; }
 function openIntroL(i) {
   introI = i; lessonSrc = 'lesson'; $('#btnLessonStart').classList.remove('hidden');
@@ -381,9 +388,8 @@ function openIntroL(i) {
   // worked example: the first (easiest) position of the pool, with its best move in gold
   const ex = decodeProblem(s.problems[0]), best = Math.max(...ex.values.map(x => x[1]));
   const G = E.geom(ex.n, ex.n), p = E.Pos.from(G, ex.edges);
-  const fig = figFromProblem(ex, { hl: ex.values.filter(x => x[1] === best).map(x => x[0]).slice(0, 3) });
+  const fig = figFromProblem(ex, exampleMarks(s.id, ex.values, safeEdges(p)));
   const ca = chainAids(p); if (['chain', 'hard', 'double', 'control', 'loop', 'count', 'exam'].includes(s.id)) { fig.num = ca.nums; fig.numc = ca.numc; }
-  if (['safe', 'third', 'parity', 'sacrifice', 'open3', 'mid4', 'mid5'].includes(s.id)) fig.safe = safeEdges(p).filter(e => !fig.hl.includes(e));
   const fin = finalAt(ex, best);
   const body = tA('ls.' + s.id + '.body').map(x => `<p>${x}</p>`).join('');
   const figs = (LFIGS[s.id] || []).map(f => `<figure class="mini">${miniSVG(f.fig)}<figcaption>${t(f.cap)}</figcaption></figure>`).join('');

@@ -181,7 +181,68 @@ function lessons(opt) {
   XP.themes.forEach(th => th.puzzles.forEach((q, j) => pool.push([`xiangqi ${th.id} ${j + 1}`, brd(q.s)])));
   const plain = t => String(t).replace(/<[^>]+>/g, '').replace(/[\u0001\u0002]/g, '');
   const deep = opt && opt.deep;
-  LS.steps.forEach((st, si) => { const id = st.id; if (!DONE.includes(id)) return; const K = JL.KIND[id];
+  // (2026-11-24 担当D) the mate steps (JL.MATE: b_mate1 = 1, m_mate2 = 2, m_mate3 = 3; P.ok = the one first move): ①②③ by the solver
+  //  (checkOne: the stored move mates within n, exactly n, no other first move does, no wrong move mates at once, 3 checks to choose
+  //  from in mate in 1, other forcing moves in mate in n); ④ n = the step's, the side to move 楚, 追27 the answers move two kinds of
+  //  piece or more; ⑤ the pool (a problem may be its own source in the reserve); ⑥ d = the pieces on the board never falls, the last
+  //  above the first; ⑦⑧ ショウギツネ's words for the answer and every legal wrong move, against one ply of the board.
+  const kingMv = (q, x) => T(q.at(mFrom(x))) === E.KING;
+  function mateStep(st, si) {
+    const id = st.id, N = JL.MATE[id], kinds = new Set(), asks = new Set(); let prevD = -1, firstD = null;
+    if (!JL.INTRO[id]) add(id, -1, '⑧ no 3D intro');
+    st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), all = p.moves(), nm = m => E.name(p, m);
+      if (p.side !== 0) a('⑧ the side to move is not 楚');
+      if (!P.ok || P.ok.length !== 1 || P.ok[0] !== P.best) a('② the stored answers are not the one move P.best');
+      if (!all.includes(P.best)) { a('① the answer is not legal'); return; }
+      const r = checkOne({ s: P.s, a: P.best, n: N }, false, N); r.bad.forEach(a);
+      kinds.add(T(p.at(mFrom(P.best))));
+      const B = brd(P.s); for (const [who, b] of pool) { if (who === `lesson ${id} q${j + 1}`) continue; const e = dist(B, b); if (e <= 4 && !(e === 0 && /^lesson_mate/.test(who))) a(`⑤ ${e} points from ${who}`); }
+      const d = pieces(P.s); if (d < prevD) a(`⑥ fewer pieces than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
+      if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`);
+      let W; try { W = JL.lsJa(E, st, P, j, k => k === 'ok' ? '〈正〉' : '〈誤〉', si); } catch (e) { a('⑧ the words fail: ' + e.message); return; }
+      if (!W || !W.own) { a('⑧ no own words'); return; }
+      asks.add(plain(W.ask));
+      const AM = JL.NM(T(p.at(mFrom(P.best))), true), ck = m => p.clone().play(m).inCheck(), aq = !ck(P.best);
+      const BAD = x0 => { const x = plain(x0); if (/\{|undefined|NaN|null/.test(x)) a(`⑧ 「${x}」`); if (/(です|ます|ません|ました|でしょう|ましょう)(?=[。！？]|$)/m.test(x)) a(`⑧ polite 「${x}」`); if (/シャンチー|チェス|帥|炮|仕|相（|詰将棋|玉/.test(x)) a(`⑧ another game's words 「${x}」`); };
+      [W.ask, W.hintTx].forEach(BAD);
+      if (!plain(W.hintTx).includes(AM)) a(`⑧ the hint does not name the answer's piece ${AM} 「${plain(W.hintTx)}」`);
+      const g = plain(W.good(P.best)); BAD(g);
+      if (!g.includes(AM)) a(`⑧ the praise 「${g}」 does not name the ${AM}`);
+      const QW = /静か|王手じゃない|王手をかけず|王手をかけない/, nCk = all.filter(ck).length, nRe = p.clone().play(P.best).moves().filter(x => !E.isPass(x)).length;
+      if (QW.test(g) !== (N > 1 && aq)) a(`⑧ the praise 「${g}」: the answer is ${aq ? 'quiet' : 'a check'}`);
+      if (!/詰/.test(g)) a(`⑧ the praise 「${g}」 does not say mate`);
+      // the numbers the words claim: the count of moves to mate, the checks there were (mate in 1), the opponent's replies after it
+      for (const m of g.matchAll(/(\d+)手(目までに|の詰み)/g)) if (+m[1] !== N) a(`⑧ the praise 「${g}」 says ${m[1]} moves (${N})`);
+      for (const m of g.matchAll(/王手は(\d+)通り|(\d+)つの王手から/g)) if (+(m[1] || m[2]) !== nCk) a(`⑧ the praise 「${g}」: ${nCk} checks`);
+      for (const m of g.matchAll(/ほかの(\d+)つの王手/g)) if (+m[1] !== nCk - 1) a(`⑧ the praise 「${g}」: ${nCk - 1} other checks`);
+      for (const m of g.matchAll(/受けは(\d+)通り|(\d+)通りの(受け|手)/g)) if (+(m[1] || m[2]) !== nRe) a(`⑧ the praise 「${g}」: ${nRe} replies`);
+      if (/九宮のどこへも動けない/.test(g) && (N !== 1 || p.clone().play(P.best).moves().some(x => !E.isPass(x) && kingMv(p.clone().play(P.best), x)))) a(`⑧ the praise 「${g}」: the general can move`);
+      for (const u of all.concat([P.best])) { const raw = plain(W.ng(u)); BAD(raw);
+        if (!raw.includes('〈正〉')) { a(`⑦ ${nm(u)}: the right move is not named 「${raw}」`); continue; }
+        const rt = raw.slice(raw.indexOf('〈正〉'));
+        if (!rt.includes(AM)) a(`⑦ the right move's piece ${AM} is not named 「${rt}」`);
+        if (N > 1 && /静か|王手じゃない|王手をかけず|王手をかけない/.test(rt) !== aq) a(`⑦ 「${rt}」: the answer is ${aq ? 'quiet' : 'a check'}`);
+        for (const m of rt.matchAll(/(\d+)手(目までに|の詰み)/g)) if (+m[1] !== N) a(`⑦ 「${rt}」 says ${m[1]} moves (${N})`);
+        for (const m of rt.matchAll(/(\d+)つの王手/g)) if (+m[1] !== all.filter(ck).length) a(`⑦ 「${rt}」: the checks`);
+        if (u === P.best) continue;
+        if (!raw.includes('〈誤〉')) { a(`⑦ ${nm(u)}: the words do not name your move 「${raw}」`); continue; }
+        const t = raw.slice(0, raw.indexOf('〈正〉')), q = p.clone().play(u), R = q.moves().filter(x => !E.isPass(x));
+        const lose = R.some(x => q.clone().play(x).status() === -1), isC = q.inCheck();
+        if (N > 1 && /1手で詰まされ|1手で詰ませる手/.test(t) !== lose) a(`⑦ ${nm(u)}: 「${t}」 (the opponent ${lose ? 'has' : 'has no'} mate in 1)`);
+        if (N === 1 && /詰まされ/.test(t)) a(`⑦ ${nm(u)}: 「${t}」 (mate in 1 has no such class)`);
+        const said = /は王手だけど|で王手しても|の王手は惜しい|王手をかけても|王手はかかる/.test(t), notC = /王手になっていない|王手がかからない|うまく受けられ|しのぐ受け/.test(t);
+        if (!(N > 1 && lose)) { if (said !== isC || notC === isC) a(`⑦ ${nm(u)}: 「${t}」 (it is ${isC ? '' : 'not '}a check)`);
+          if (N > 1 && !t.includes(N + '手では詰まない')) a(`⑦ ${nm(u)}: 「${t}」 does not say no mate in ${N}`); }
+        if (said && isC && !(N > 1 && lose)) { const k = R.some(x => kingMv(q, x)), c = R.some(x => mTo(x) === mTo(u));
+          const e = /将が逃げられ/.test(t) ? 'k' : /を取られ/.test(t) ? 'c' : /防がれ/.test(t) ? 'b' : '';
+          if (e !== (k ? 'k' : c ? 'c' : 'b')) a(`⑦ ${nm(u)}: 「${t}」 (the general ${k ? 'escapes' : c ? 'takes the checker' : 'is covered'})`);
+          if (e === 'c' && !t.includes(`王手した${JL.NM(T(p.at(mFrom(u))), true)}を`)) a(`⑦ ${nm(u)}: 「${t}」 names the wrong piece`); }
+      }
+    });
+    if (kinds.size < 2) add(id, 4, '追27 every answer moves the same kind of piece');
+    if (asks.size < st.problems.length) add(id, -1, '⑧ the same question twice in a lesson');
+  }
+  LS.steps.forEach((st, si) => { const id = st.id; if (!DONE.includes(id)) return; if (JL.MATE && JL.MATE[id]) return mateStep(st, si); const K = JL.KIND[id];
     if (!K) { add(id, -1, '④ no piece kind for the step'); return; }
     if (!JL.INTRO[id]) add(id, -1, '⑧ no 3D intro');
     let prevD = -1, firstD = null; const capT = new Set(), asks = new Set();
@@ -215,7 +276,7 @@ function lessons(opt) {
       let W; try { W = JL.lsJa(E, st, P, j, k => k === 'ok' ? '〈正〉' : '〈誤〉', si); } catch (e) { a('⑧ the words fail: ' + e.message); return; }
       asks.add(plain(W.ask));
       const AC = JL.NM(ct, false), NMv = ['車', '馬', '包', '象', '士', '卒', '兵', '将'];
-      const BAD = t => { const x = plain(t); if (/\{|undefined|NaN|null/.test(x)) a(`⑧ 「${x}」`); if (/(です|ます|ません|ました|でしょう)(?=[。！？]|$)/m.test(x)) a(`⑧ polite 「${x}」`); if (/シャンチー|チェス|帥|炮|仕|相（|九宮の外/.test(x)) a(`⑧ another game's words 「${x}」`); };
+      const BAD = t => { const x = plain(t); if (/\{|undefined|NaN|null/.test(x)) a(`⑧ 「${x}」`); if (/(です|ます|ません|ました|でしょう|ましょう)(?=[。！？]|$)/m.test(x)) a(`⑧ polite 「${x}」`); if (/シャンチー|チェス|帥|炮|仕|相（|九宮の外/.test(x)) a(`⑧ another game's words 「${x}」`); };
       [W.ask, W.hintTx].forEach(BAD);
       if (!plain(W.hintTx).includes(JL.NM(K, true))) a(`⑧ the hint does not name the step's piece 「${plain(W.hintTx)}」`);
       const g = plain(W.good(P.best)); BAD(g);
