@@ -565,5 +565,176 @@
     },
   };
 
-  root.WLScenes = { alps: ALPS, train: TRAIN, island: ISLAND };
+
+  /* ================= 猫鳴き湯（雪の湯治場） ================= */
+  // a sitting cat, facing right (s: scale)
+  const catSit = (x, y, s, flip) => { const k = flip ? -1 : 1; return `M${f(x)},${f(y)}c0,${f(-20 * s)} ${f(4 * s * k)},${f(-34 * s)} ${f(12 * s * k)},${f(-40 * s)}l${f(-2 * s * k)},${f(-12 * s)}l${f(6 * s * k)},${f(6 * s)}l${f(6 * s * k)},0l${f(5 * s * k)},${f(-6 * s)}l${f(-1 * s * k)},${f(13 * s)}c${f(6 * s * k)},${f(8 * s)} ${f(6 * s * k)},${f(30 * s)} ${f(2 * s * k)},${f(41 * s)}c${f(8 * s * k)},${f(-2 * s)} ${f(16 * s * k)},${f(-10 * s)} ${f(14 * s * k)},${f(-20 * s)}l${f(4 * s * k)},${f(2 * s)}c${f(2 * s * k)},${f(14 * s)} ${f(-8 * s * k)},${f(22 * s)} ${f(-20 * s * k)},${f(22 * s)}z`; };
+  const steam = (x, y, h, w) => S(`M${x},${y}c${-w},${-h * .2} ${w},${-h * .35} 0,${-h * .5}c${-w},${-h * .15} ${w * .8},${-h * .35} ${w * .2},${-h * .5}`, 10, 'smoke');
+  const onsenGround = r => alpsGround(r);
+  function gableRoof(x, y, w, h, ov) { return poly([[x - ov, y], [x + w / 2, y - h], [x + w + ov, y]]) + poly([[x + w / 2 - 30, y - h + 18], [x + w / 2, y - h - 14], [x + w / 2 + 30, y - h + 18]]); }
+  function jizo(x, y, s) { return ell(x, y - 46 * s, 11 * s, 12 * s) + `M${f(x - 15 * s)},${f(y)}c0,${f(-22 * s)} ${f(4 * s)},${f(-34 * s)} ${f(15 * s)},${f(-34 * s)}c${f(11 * s)},0 ${f(15 * s)},${f(12 * s)} ${f(15 * s)},${f(34 * s)}z`; }
+  const ONSEN = {
+    bath: {
+      props: ['破風屋根の共同湯', '湯けむり', '暖簾', '積み上げた湯桶', '竹の樋', '薪の山', '雪の屋根'],
+      far: alpsFar,
+      mid(r) {
+        let d = '', c = '', g = '';
+        const X = 820, W = 520;
+        d += rect(X, 500, W, 260) + gableRoof(X, 504, W, 150, 40) + rect(X + 60, 380, 70, 60) + poly([[X + 50, 384], [X + 95, 350], [X + 140, 384]]);
+        for (let i = 0; i < 4; i++) { g += rect(X + 40 + i * 120, 540, 70, 56); c += lattice(X + 40 + i * 120, 540, 70, 56, 4, 2, 3); }
+        // the noren over the door, split in three
+        g += rect(X + 200, 640, 120, 120);
+        for (let i = 0; i < 3; i++) c += rect(X + 202 + i * 40, 636, 36, 50);
+        c += planks(X, 600, W, 36, 9);
+        c += poly([[X + 220, 500], [X + W / 2, 420], [X + 300, 500]]);
+        return P(d) + steam(X + 95, 350, 260, 28) + steam(X + 380, 360, 220, 22) + P(g, 'glow') + P(c, 'cut') + P(snowcap(r, [[X - 42, 506], [X + W / 2, 353], [X + W + 42, 506]], 16), 'snow') + alpsVillage(r, 0, 760, 690);
+      },
+      near(r) {
+        let d = '', c = '';
+        // left: a pyramid of wooden buckets and a bamboo pipe
+        for (let row = 0; row < 4; row++) for (let i = 0; i < 4 - row; i++) { const x = 70 + i * 62 + row * 31, y = 760 - row * 44; d += poly([[x, y], [x + 4, y - 40], [x + 52, y - 40], [x + 56, y]]); c += rect(x + 6, y - 30, 44, 3) + rect(x + 8, y - 14, 40, 3); }
+        d += bar(0, 470, 430, 520, 16) + rect(410, 516, 14, 244);
+        c += bar(0, 470, 430, 520, 4);
+        d += S('M424,528q10,30 2,60', 5, 'cut');
+        // right: a stack of firewood under a little roof, an axe in the block
+        d += rect(1240, 560, 340, 10) + poly([[1220, 562], [1410, 520], [1600, 562]]) + rect(1250, 570, 10, 190) + rect(1570, 570, 10, 190);
+        for (let row = 0; row < 7; row++) for (let i = 0; i < 12; i++) { d += circ(1280 + i * 25 + (row % 2) * 12, 748 - row * 25, 11); c += circ(1280 + i * 25 + (row % 2) * 12, 748 - row * 25, 3.6); }
+        return P(d) + P(c, 'cut') + P(snowcap(r, [[1218, 563], [1410, 519], [1602, 563]], 9), 'snow') + onsenGround(r) + fore(r, 'alps');
+      },
+    },
+    ryokan: {
+      props: ['二階建ての旅籠', '格子の窓明かり', '二階の欄干', '吊り看板', '石灯籠', '招き猫', '座る猫'],
+      far: alpsFar,
+      mid(r) {
+        let d = '', c = '', g = '';
+        const X = 760, W = 620;
+        d += rect(X, 560, W, 200) + rect(X + 20, 410, W - 40, 150) + poly([[X - 40, 564], [X + 20, 530], [X + W - 20, 530], [X + W + 40, 564]]) + poly([[X - 20, 414], [X + 60, 340], [X + W - 60, 340], [X + W + 20, 414]]);
+        for (let i = 0; i < 5; i++) { g += rect(X + 50 + i * 110, 440, 80, 70); c += lattice(X + 50 + i * 110, 440, 80, 70, 4, 3, 3); }
+        c += rect(X + 20, 518, W - 40, 6); for (let x = X + 30; x < X + W - 30; x += 18) c += rect(x, 522, 4, 22);
+        for (let i = 0; i < 4; i++) { g += rect(X + 60 + i * 140, 600, 100, 90); c += lattice(X + 60 + i * 140, 600, 100, 90, 5, 1, 3); }
+        d += rect(X + W - 10, 300, 10, 120) + rect(X + W - 10, 300, 110, 8) + rect(X + W + 20, 310, 70, 90);
+        c += rect(X + W + 50, 320, 6, 70) + rect(X + W + 34, 340, 38, 4) + rect(X + W + 34, 364, 38, 4);
+        return P(d) + P(g, 'glow') + P(c, 'cut') + P(snowcap(r, [[X - 22, 416], [X + 60, 339], [X + W - 60, 339], [X + W + 22, 416]], 14) + snowcap(r, [[X - 42, 566], [X + 20, 529], [X + W - 20, 529], [X + W + 42, 566]], 10), 'snow') + alpsVillage(r, 0, 700, 690);
+      },
+      near(r) {
+        let d = '', c = '', g = '';
+        // left: a stone lantern and a cat on the step
+        d += rect(150, 720, 120, 40) + rect(186, 600, 48, 120) + poly([[140, 604], [210, 560], [280, 604]]) + rect(170, 520, 80, 44) + poly([[150, 524], [210, 470], [270, 524]]) + rect(202, 450, 16, 22);
+        g += rect(184, 530, 52, 26); c += rect(208, 530, 4, 26);
+        d += catSit(330, 760, 1.6);
+        c += circ(352, 702, 2.4);
+        // a potted pine on either side of the step, an umbrella stand
+        d += poly([[386, 760], [392, 714], [436, 714], [442, 760]]) + rect(410, 640, 8, 76) + ell(414, 640, 30, 14) + ell(404, 666, 24, 10) + ell(426, 690, 20, 9);
+        c += rect(392, 730, 44, 3);
+        d += poly([[1170, 760], [1176, 690], [1236, 690], [1242, 760]]);
+        for (let i = 0; i < 4; i++) d += bar(1186 + i * 12, 690, 1176 + i * 18, 600 + i * 6, 5) + circ(1176 + i * 18, 598 + i * 6, 6);
+        c += rect(1178, 706, 56, 3) + rect(1176, 730, 60, 3);
+        // right: the beckoning cat on its stand, one eye gone
+        d += rect(1330, 700, 160, 60) + rect(1350, 690, 120, 14);
+        d += ell(1410, 600, 70, 92) + ell(1410, 500, 58, 50) + poly([[1360, 470], [1366, 430], [1392, 456]]) + poly([[1460, 470], [1454, 430], [1428, 456]]);
+        d += ell(1468, 520, 16, 40);
+        c += circ(1390, 498, 7) + S('M1418,500q12,-8 24,0', 4, 'cut') + ell(1410, 530, 10, 5) + ell(1410, 620, 34, 30) + bar(1360, 548, 1460, 548, 5);
+        c += S('M1400,610q10,-10 20,0', 3, 'cut');
+        return P(d) + P(g, 'glow') + P(c, 'cut') + P(snowcap(r, [[148, 526], [210, 469], [272, 526]], 7) + snowcap(r, [[138, 606], [210, 559], [282, 606]], 7), 'snow') + onsenGround(r) + fore(r, 'alps');
+      },
+    },
+    toji: {
+      props: ['湯治の長屋', '並んだ戸口', '干し大根', '七輪と鍋', '物干し竿', '戸口の薬袋', '七輪の煙'],
+      far: alpsFar,
+      mid(r) {
+        let d = '', c = '', g = '';
+        const X = 700, W = 760;
+        d += rect(X, 540, W, 220) + poly([[X - 30, 544], [X + 40, 470], [X + W - 40, 470], [X + W + 30, 544]]);
+        for (let i = 0; i < 5; i++) {
+          const x = X + 40 + i * 146;
+          c += rect(x, 600, 60, 160) + rect(x + 68, 590, 56, 50);
+          c += lattice(x + 68, 590, 56, 50, 3, 2, 3);
+          if (i % 2) g += rect(x + 72, 594, 48, 42);
+          for (let k = 0; k < 4; k++) d += rect(x + 6 + k * 12, 556, 5, 34 + (k % 2) * 8) + ell(x + 8 + k * 12, 594 + (k % 2) * 8, 4, 6);
+        }
+        c += planks(X, 544, W, 46, 11);
+        for (let i = 0; i < 4; i++) d += rect(X + 110 + i * 180, 420, 14, 52);
+        return P(d) + S(smoke(X + 117, 420, 160), 8, 'smoke') + S(smoke(X + 477, 420, 140), 8, 'smoke') + P(g, 'glow') + P(c, 'cut') + P(snowcap(r, [[X - 32, 546], [X + 40, 469], [X + W - 40, 469], [X + W + 32, 546]], 14), 'snow') + alpsVillage(r, 0, 660, 690);
+      },
+      near(r) {
+        let d = '', c = '', g = '';
+        // left: a charcoal brazier with a pot, its smoke, a stool
+        d += poly([[150, 760], [160, 690], [260, 690], [270, 760]]) + rect(146, 680, 128, 12) + poly([[170, 680], [176, 640], [244, 640], [250, 680]]) + rect(196, 626, 28, 14);
+        g += rect(176, 700, 68, 12); c += rect(166, 720, 88, 4);
+        d += rect(320, 720, 90, 12) + rect(330, 732, 10, 28) + rect(390, 732, 10, 28);
+        // a water tub and a ladle, a stack of straw bales at the edge of the stage
+        d += poly([[20, 760], [28, 650], [132, 650], [140, 760]]); c += rect(30, 676, 100, 4) + rect(28, 720, 104, 4);
+        d += poly([[360, 720], [366, 640], [434, 640], [440, 720]]) + bar(400, 640, 430, 560, 5) + ell(432, 556, 12, 7);
+        c += rect(368, 660, 64, 3) + rect(366, 694, 68, 3);
+        for (let i = 0; i < 3; i++) { d += rect(1160 + i * 4, 700 - i * 44, 86 - i * 8, 44); c += rect(1166 + i * 4, 716 - i * 44, 74 - i * 8, 2) + rect(1166 + i * 4, 730 - i * 44, 74 - i * 8, 2); }
+        d += catSit(1214, 568, 1.1, true);
+        // right: a drying pole with radishes and a paper medicine bag
+        d += rect(1260, 470, 12, 290) + rect(1540, 470, 12, 290) + rect(1250, 470, 312, 10);
+        for (let i = 0; i < 9; i++) { const x = 1284 + i * 30; d += rect(x, 480, 3, 14) + ell(x + 1, 530 + (i % 3) * 8, 7, 38); c += rect(x - 3, 520 + (i % 3) * 8, 8, 2); }
+        d += rect(1440, 600, 60, 80) + poly([[1440, 600], [1470, 580], [1500, 600]]);
+        c += rect(1452, 620, 36, 3) + rect(1452, 636, 36, 3) + rect(1452, 652, 24, 3);
+        return P(d) + S(smoke(210, 620, 180), 8, 'smoke') + P(g, 'glow') + P(c, 'cut') + P(snowcap(r, [[1248, 471], [1400, 468], [1564, 471]], 7), 'snow') + onsenGround(r) + fore(r, 'alps');
+      },
+    },
+    mound: {
+      props: ['地蔵堂', '地蔵と赤い前掛け', '猫塚の小さな塚', '卒塔婆', '枯れ木と鴉', '鈴の緒'],
+      far: alpsFar,
+      mid(r) {
+        let d = '', c = '', g = '';
+        const X = 900, W = 360;
+        d += rect(X, 540, W, 220) + poly([[X - 70, 548], [X + 10, 470], [X + W - 10, 470], [X + W + 70, 548]]) + poly([[X + 60, 474], [X + W / 2, 410], [X + W - 60, 474]]);
+        d += rect(X - 50, 740, W + 100, 20) + rect(X - 30, 720, W + 60, 20);
+        g += rect(X + 110, 600, 140, 120); c += lattice(X + 110, 600, 140, 120, 6, 3, 4);
+        d += rect(X + W / 2 - 3, 548, 6, 60) + circ(X + W / 2, 616, 12);
+        c += planks(X, 548, W, 40, 10);
+        // the small cat mounds and wooden grave tablets behind
+        for (let i = 0; i < 9; i++) { const x = 560 + i * 34; d += ell(x, 716, 16, 12) + rect(x - 3, 650 + (i % 3) * 10, 6, 60 - (i % 3) * 10); }
+        return P(d) + P(g, 'glow') + P(c, 'cut') + P(snowcap(r, [[X - 72, 550], [X + 10, 469], [X + W - 10, 469], [X + W + 72, 550]], 14) + snowcap(r, [[X + 58, 476], [X + W / 2, 409], [X + W - 58, 476]], 8), 'snow') + alpsVillage(r, 0, 520, 690);
+      },
+      near(r) {
+        let d = '', c = '', bibs = '';
+        // left: a row of jizo with red bibs
+        for (let i = 0; i < 5; i++) { const x = 70 + i * 66, s = 1.35 - i * .05; d += jizo(x, 760, s) + rect(x - 22, 756, 44, 6); bibs += poly([[x - 12 * s, 760 - 34 * s], [x + 12 * s, 760 - 34 * s], [x, 760 - 18 * s]]); }
+        // right: a bare tree with crows, wooden tablets
+        d += bareTree(1420, 760, 520, r, -24) + crow(1390, 352, 1.2) + crow(1300, 420, 1);
+        for (let i = 0; i < 4; i++) { const x = 1240 + i * 28; d += poly([[x, 760], [x, 600 + i * 12], [x + 8, 592 + i * 12], [x + 16, 600 + i * 12], [x + 16, 760]]); c += rect(x + 6, 640 + i * 12, 4, 60); }
+        return P(d) + P(bibs, 'cut') + P(c, 'cut') + P(snowcap(r, [[40, 708], [70, 700], [100, 708]], 5) + snowcap(r, [[106, 712], [136, 704], [166, 712]], 5), 'snow') + onsenGround(r) + fore(r, 'alps');
+      },
+    },
+    spring: {
+      props: ['湯滝', '岩の裂け目', '湯けむり', '湯守小屋', '竹の樋', '湯の花の岩', 'つらら'],
+      far: alpsFar,
+      mid(r) {
+        let d = '', c = '', g = '';
+        // the rock face with the hot fall pouring down, a little right of centre
+        d += 'M760,760L760,520C780,460 820,420 880,400L940,330C980,300 1040,290 1080,320L1160,300C1220,290 1280,330 1300,390L1340,460C1380,520 1400,600 1400,760Z';
+        for (let i = 0; i < 6; i++) c += S(`M${1030 + i * 14},330C${1026 + i * 14},430 ${1040 + i * 14},560 ${1030 + i * 14},700`, 4, 'cut');
+        c += ell(1070, 712, 120, 22);
+        c += S('M820,520l40,-20 M860,600l60,-18 M1260,500l40,10 M1240,620l60,8', 5, 'cut');
+        // strata in the rock and the yellow bloom where the water splashes
+        c += S('M790,560q60,-14 140,-6 M800,660q70,-20 160,-8 M1180,560q60,-10 150,6 M1190,680q70,-14 180,4 M900,450q40,-20 90,-16 M1150,430q50,-10 110,10', 3, 'cut');
+        for (let i = 0; i < 18; i++) c += circ(960 + r() * 230, 640 + r() * 60, 2 + r() * 4);
+        // the keeper's hut on the shoulder of the rock
+        d += rect(1290, 390, 120, 90) + poly([[1276, 394], [1350, 340], [1424, 394]]); g += rect(1320, 420, 30, 34);
+        d += icicles(r, 1280, 1420, 396, 18);
+        return P(d) + steam(1070, 700, 380, 40) + steam(980, 690, 300, 30) + steam(1160, 690, 280, 28) + P(g, 'glow') + P(c, 'cut') + P(snowcap(r, [[870, 402], [940, 331], [1000, 300], [1080, 321]], 14) + snowcap(r, [[1274, 396], [1350, 339], [1426, 396]], 10), 'snow');
+      },
+      near(r) {
+        let d = '', c = '';
+        // left: rocks crusted with yellow bloom, a bamboo pipe dripping
+        d += 'M0,760L0,600C40,560 110,560 160,590C210,560 290,570 330,620C380,640 420,700 430,760Z';
+        for (let i = 0; i < 14; i++) c += circ(30 + r() * 360, 640 + r() * 100, 3 + r() * 5);
+        d += bar(60, 520, 420, 560, 14) + rect(60, 520, 10, 100);
+        c += bar(60, 520, 420, 560, 3);
+        d += S('M420,566q4,30 -2,60 M424,566q10,40 0,80', 3, 'cut');
+        // right: the steaming pool's stone rim and a hanging ladle
+        d += 'M1180,760C1200,710 1260,690 1340,700C1420,690 1520,700 1600,720L1600,760Z';
+        c += ell(1390, 736, 160, 14);
+        d += rect(1500, 480, 10, 230) + rect(1460, 480, 90, 8) + ell(1470, 560, 22, 12) + bar(1470, 488, 1470, 556, 4);
+        return P(d) + steam(1380, 720, 220, 26) + P(c, 'cut') + onsenGround(r) + fore(r, 'alps');
+      },
+    },
+  };
+
+  root.WLScenes = { alps: ALPS, train: TRAIN, island: ISLAND, onsen: ONSEN };
 })(typeof window !== 'undefined' ? window : globalThis);

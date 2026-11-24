@@ -17,6 +17,8 @@
     noHunt: (S, sc, R) => R.win && !S.foxHunt && S.people.some(p => p.role === 'fox'),
     huntWin: (S, sc, R) => R.win && !!S.foxHunt,
     foxSign: S => S.pl.told.some(t => t.sign),
+    catBite: S => S.nights.some(N => N.dragged),
+    catJailWolf: S => S.votes.some(v => v.dragged && S.wolves.includes(v.dragged)),
   };
   const F = {
     kirigane: [
@@ -54,6 +56,18 @@
       { id: 'clean', name: '油庫は空のまま', desc: '標準以上で、罪のない者を一度も油庫へ送らずに解決する', c: ['noWrong'] },
       { id: 'ghost', name: '灯台の幽霊', desc: '幽霊になっても、島を解決へ導く', c: ['ghost'] },
       { id: 'rankS', name: '島いちばんの目', desc: '評価Sを取る', c: ['rankS'] },
+    ],
+    nekonaki: [
+      { id: 'clear1', name: '湯けむりが晴れる', desc: '標準以上で解決する', c: ['win', 1] },
+      { id: 'clear2', name: '湯守の目', desc: '上級以上で解決する', c: ['win', 2] },
+      { id: 'clear3', name: '百年目の雪', desc: '悪夢で解決する', c: ['win', 3] },
+      { id: 'cat', name: '二股の尾', desc: '猫又として解決する', c: ['roleWin', 'cat'] },
+      { id: 'bite', name: '猫又を噛んだ牙', desc: '狼が猫又を噛み、道連れにされる', c: ['catBite'] },
+      { id: 'jail', name: '道連れの土蔵', desc: '土蔵へ送られた猫又が、狼を道連れにする', c: ['catJailWolf'] },
+      { id: 'clean', name: '土蔵は空のまま', desc: '標準以上で、罪のない者を一度も土蔵へ送らずに解決する', c: ['noWrong'] },
+      { id: 'fast', name: '三日で開いた峠', desc: '標準以上で、三日目までに解決する', c: ['fast'] },
+      { id: 'ghost', name: '湯けむりの幽霊', desc: '幽霊になっても、湯治場を解決へ導く', c: ['ghost'] },
+      { id: 'rankS', name: '招き猫の両目', desc: '評価Sを取る', c: ['rankS'] },
     ],
   };
   const list = id => F[id] || [];

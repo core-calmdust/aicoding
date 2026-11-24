@@ -7,7 +7,7 @@
   const $ = id => document.getElementById(id);
   const PCQ = matchMedia('(hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4)');
   const KEY = 'wolflantern-save-v1', REC = 'wolflantern-rec-v1', PREF = 'wolflantern-pref-v1';
-  const ORDER = ['kirigane', 'hokushin', 'tomoshibi'];
+  const ORDER = ['kirigane', 'hokushin', 'tomoshibi', 'nekonaki', 'shirane'];
   const DIFFN = ['入門', '標準', '上級', '悪夢'];
   const DIFFD = ['狼2匹。占い師と霊媒師がいる。はじめての夜に。', '狼2匹と狂人。狩人が加わり、嘘が増える。', '狼3匹と狂人。痕跡は少なく、物は罠になる。', '狼4匹と狂人。誰の言葉も信じきれない。'];
   const NUM = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];

@@ -40,11 +40,11 @@
       12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1 },
       13: { wolf: 4, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1 },
     },
-    //   cat     — 猫鳴き湯: a nekomata (猫又) on the village side. Sent to the jail, it drags someone with it (anyone);
+    //   cat     — 猫鳴き湯: a nekomata (猫又) on the village side. Sent to the jail, it drags one of those who voted for it;
     //             bitten, it drags one of the wolves.
     cat: {
-      8:  { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 0, cat: 1 },
-      10: { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 1, cat: 1 },
+      8:  { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 0, cat: 1 },   // the cat helps the village: a madman more on 入門, a third wolf on 標準
+      10: { wolf: 3, madman: 0, seer: 1, medium: 1, guard: 1, cat: 1 },
       12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1, cat: 1 },
       13: { wolf: 4, madman: 1, seer: 1, medium: 1, guard: 1, cat: 1 },
     },
@@ -892,8 +892,9 @@
     S.votes.push({ day: S.day, ballots: rounds[rounds.length - 1].ballots, rounds, out, lot: !!lot });
     const o = person(S, out);
     o.alive = false; o.death = { day: S.day, cause: 'exile' };
-    if (o.role === 'cat') {   // the nekomata does not go alone
-      const live = alive(S);
+    if (o.role === 'cat') {   // the nekomata does not go alone: it takes one of those who voted it in
+      const bl = rounds[rounds.length - 1].ballots || {}, voters = alive(S).filter(p => bl[p.id] === out);
+      const live = voters.length ? voters : alive(S);
       if (live.length) { const v = pick(S, live); v.alive = false; v.death = { day: S.day, cause: 'cat' }; S.votes[S.votes.length - 1].dragged = v.id; }
     }
     if (S.pl.role === 'medium' && S.people[0].alive && out !== 'you') S.pl.res.push({ night: S.nights.length, target: out, res: isWolf(S, out) ? 'wolf' : o.role === 'fox' ? 'fox' : 'human', medium: true });
