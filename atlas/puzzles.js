@@ -2233,8 +2233,8 @@
         const mid = pz().pos();
         await pz().play(r); if (p !== cur) return;
         if (id === 'janggi' && window.JanggiPzWhy) return jgStray(p, mid, r);   // (追42: the reply's fact, not pz.stray)
-        if (pz().state().over || p.used >= p.n) return xqOut(p);
-        say(B.tx('pz.stray', ctx.lang) + ' ' + fill(QA.mid, { n: p.n - p.used })); p.state = 'play'; pz().wait(); buttons(); return;
+        if (id === 'xiangqi' && window.XiangqiPzWhy) return jgStray(p, mid, r, window.XiangqiPzWhy);   // (追42・追20: the reply's fact, no praise)
+        return xqOut(p);   // (the words of the reply are not loaded: no stray line with QA.mid's praise — 追20)
       }
       say(B.tx('pz.good', ctx.lang));
       const dl = await xqReq(p, p.n - p.used, true); if (p !== cur || stopped) return;
@@ -2248,8 +2248,8 @@
        the board (took a piece of yours / the general stepped out / a piece blocked the check / moved — janggi/pzwhy.js) and, from the
        solver, whether a mate is still there in the moves left (checked by tools/lesson-verify-janggi.js 追42). */
     let jgN = 0;
-    async function jgStray(p, mid, r) {
-      const E = pz().engine(), W = window.JanggiPzWhy, w = W.why(E, mid, r), left = p.n - p.used, own = ((window.AtlasJanggiPz || {}).why || {})[ctx.lang];
+    async function jgStray(p, mid, r, W0) {   // (2026-11-24 担当A: xiangqi too, W0 = xiangqi/pzwhy.js with ショウギツネ's own words OWN)
+      const E = pz().engine(), W = W0 || window.JanggiPzWhy, w = W.why(E, mid, r), left = p.n - p.used, own = (W0 ? W0.OWN || {} : (window.AtlasJanggiPz || {}).why || {})[ctx.lang];
       pz().mark(w.k === 'pass' ? null : [[{ m: r }, 'ng'], [E.mTo(r), 'ng']]);   // (the reply: a red arrow and its point)
       if (pz().state().over || left <= 0) { p.failed = true; p.state = 'fail'; streak = 0; chime(false); say(W.say(ctx.lang, w, null, 0, own, jgN++) + ' ' + fill(QA.out, { n: p.n }) + ' ' + (line('retry') || X.retry)); buttons(); return; }
       const L = await xqReq(p, left, false); if (p !== cur || stopped) return;
