@@ -990,12 +990,8 @@ html.ptv-open,html.ptv-open body{overflow:hidden}
 .muwrap .rdh .rdhimg img{height:100%;min-height:300px;object-fit:cover}
 .muwrap .rdh .rdht{border-top:0;border-inline-start:5px solid var(--c);display:flex;flex-direction:column;justify-content:center;padding:28px 30px}
 .muwrap .rdh .rdht h3{font-size:clamp(22px,2.2vw,30px);line-height:1.35}
-@media (min-width:1100px){
-  .muwrap .rda{display:grid;grid-template-columns:minmax(0,1fr) 320px;column-gap:44px;align-items:start}
-  .muwrap .rda > *{grid-column:1;min-width:0}
-  .muwrap .rda > .rdback,.muwrap .rda > .rdh{grid-column:1/-1}
-  .muwrap .rda > .rdkf{grid-column:2;grid-row:3/span 40;position:sticky;top:96px;margin:0}
-}
+/* (2026-11-24 ユーザー: 要点の固定は不要) the key points stay in the text's flow, under the title */
+
 @media (max-width:819px){
   .muwrap .rdh{display:block}
   .muwrap .rdh .rdhimg img{min-height:0;height:auto}
@@ -1014,3 +1010,7 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
   body:has(.ptv.on,.exv.on) .mutoast.on{transform:none}
   body:has(.ptv.on,.exv.on) .mutoast b{font-size:13px}
 }
+/* the story's text: one centred column under the full-width title (the header and the back button keep the sheet's width) */
+.muwrap .rda > :not(.rdh):not(.rdback){max-width:820px;margin-inline:auto}
+.muwrap .rda > :not(.rdh):not(.rdback) p{max-width:none}
+@media (min-width:1100px){.muwrap .rda .rds p,.muwrap .rda .rdm p{font-size:17px}}
