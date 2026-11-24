@@ -190,6 +190,7 @@ function verifyLessons(opt) {
     for (const k of KEYS[id]) {
       for (const l of LG) { const x = w.I18N[l][LFK[k] || 'lf.' + k]; if (!x) add(id, -1, `⑦⑨ ${l}: no ${LFK[k] || 'lf.' + k}`); else if (/勝率|評価|見込み/.test(x)) add(id, -1, `追16 ${l}: lf.${k}`); }
       const jl = (JA.w[k] || JA.n[k]); if (!jl || !jl.length) add(id, -1, `⑦ ja: ドミダック has no words for ${k}`); else if (jl.some(t => /勝率|評価|見込み/.test(t))) add(id, -1, `追16 ja: ${k}`);
+      else if (jl.some(t => !/(から|ので|ため|と、|と相手|ると|れば|なら|だと|では|せいで|取られ|負け|逃げ|防げ|止め|ふさ|残る|残っちゃ|できない|届かない|ならない|損)/.test(t))) add(id, -1, `⑦ ja: a line for ${k} gives no reason`);
     }
     st.problems.forEach((P, j) => {
       E.setRule(P.s.rule || 'g15'); const pos = E.Pos.from(P.s), L = pos.moves();
@@ -208,6 +209,9 @@ function verifyLessons(opt) {
       if (id === 'f_double' && most < 2) add(id, j, `④ the most is ${most}`);
       if (id === 'f_fork' && (caps(pos).length || firstG(a).size < 2)) add(id, j, `④ a capture now (${caps(pos).length}) / the answer attacks ${firstG(a).size}`);
       const adj = E.NBR[pos.fox].filter(([x]) => pos.sq[x] === E.P2).length;
+      // 追52 the hint's rings tell something: geese to look at (not the one fox), never empty; the 2D marks the same (app.js lfHint)
+      { global.window = global.window || {}; window.FoxEngine = E; window.FoxLsFacts = require(path.join(ROOT, 'foxgeese/ls-facts.js')); const hp = (opt.hintPts || A.make({ getJ: () => 0, J: () => ({}), put: () => 0, L: x => x, fill: t => t }).hintPts)(id, P);
+        if (!hp.length || hp.some(q => pos.sq[q] !== E.P2)) add(id, j, `追52 the hint rings ${hp.length ? 'a point that is not a goose' : 'nothing'}`); }
       if (id === 'f_jump' && adj < 2) add(id, j, `追7 ${adj} goose next to the fox (the hint: look at them one by one)`);
       // ⑤
       const me = pool.find(x => x.ls && x.id === id && x.j === j);
@@ -242,6 +246,7 @@ function verifyLessons(opt) {
       if (A.make && (A.make({ getJ: () => 0, J: () => ({}), put: () => 0, L: x => x, fill: (t) => t }).points(P, L.find(m => !okS.includes(m))) !== 0)) add(id, j, '追3 a wrong move scores');
     });
   }
+  if (!/function lfHint\(/.test(opt.app2d != null ? opt.app2d : fs.readFileSync(path.join(ROOT, 'foxgeese/app.js'), 'utf8'))) add('2D', -1, '追52 the 2D hint marks the fox (no lfHint)');
   return out;
 }
 // --selftest: broken data must be caught (the answer / order / duplicates / choices / the words / the reply / the evaluation words)
@@ -269,6 +274,8 @@ function selftest() {
     ['lesson: a duplicate (⑤)', d => { d.steps[1].problems[3] = JSON.parse(JSON.stringify(d.steps[1].problems[1])); }, /^⑤/],
     ['lesson: the fact wrong (⑧)', null, /^⑧/, { facts: { fact: (E2, id, sp, m) => { const f = FF.fact(E2, id, sp, m); return f.k === 'stop' ? Object.assign({}, f, { k: 'other' }) : f.k === 't1' ? Object.assign({}, f, { k: 't0' }) : f; } } }],
     ['lesson: ja words gone (⑦)', null, /^⑦/, { ja: Object.assign({}, AJ, { n: Object.assign({}, AJ.n, { tdef: [] }) }) }],
+    ['lesson: the hint rings the fox (追52)', null, /^追52/, { hintPts: (id, P) => { E.setRule('g15'); return [E.Pos.from(P.s).fox]; } }],
+    ['lesson: the 2D hint without lfHint (追52)', null, /^追52/, { app2d: '' }],
     ['lesson: an evaluation in the words (追16)', null, /^追16/, { ja: Object.assign({}, AJ, { w: Object.assign({}, AJ.w, { most: ['勝率が上がる'] }) }) }],
   ];
   for (const [name, f, re, o] of lcases) { const d = lsc(); if (f) f(d); const out = verifyLessons(Object.assign({ ls: d }, o || {})); const hit = out.some(x => re.test(x.msg)); console.log((hit ? 'caught ' : 'MISSED ') + name); cases.push([name, null, re, { _hit: hit }]); }
