@@ -53,6 +53,7 @@
     { id: 'botao', region: 'americas', color: '#2f7a2a', cover: { g: 'botao', s: 'botao' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'botaoFlick' }, m1: { svg: 'botaoRules' }, m2: { svg: 'botaoFamily' } }, refs: ['Geraldo Décourt, rules of “Foot-Ball Celotex” (1929/1930)', 'Conselho Nacional de Desportos, Resolução n.º 14 (29 September 1988)', 'Confederação Brasileira de Futebol de Mesa (CBFM), Regra 12 Toques', 'A British table football of flicked figures (patent 1946–47), after a Liverpool game of 1929', 'Wikipedia, “Button football”, “Table football”'], links: [{ g: 'botao' }, { g: 'hockey' }, { g: 'carrom' }] },
     { id: 'hockey', region: 'americas', color: '#2f6fd0', cover: { g: 'hockey', s: 'hockey' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'hockeyRod' }, m1: { svg: 'airTable' }, m2: { svg: 'hockeyFamily' } }, refs: ['Donald H. Munro, the first table hockey game (Toronto, 1932)', 'US patents for the air hockey table by Crossman, Kenrick and Lemieux (Brunswick, 1970s)', 'United States Air-Table Hockey Association (USAA), world singles championship from 1978', 'International Table Hockey Federation (ITHF)', 'Wikipedia, “Air hockey”, “Table hockey games”'], links: [{ g: 'hockey' }, { g: 'botao' }, { g: 'crokinole' }] },
     { id: 'solitaire', region: 'europe', color: '#2f6b4f', cover: { g: 'solitaire', s: 'solitaire' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'klondikeLayout' }, m1: { svg: 'freecellSolvable' }, m2: { svg: 'patienceTimeline' } }, refs: ['Das neue Königliche L’Hombre-Spiel (1783 edition), the earliest description of “Patience”', 'Lady Adelaide Cadogan, Illustrated Games of Patience (c. 1870; London edition 1874)', 'Hoyle’s Games (1907): “Seven-Card Klondike”', 'David Parlett, The Penguin Book of Patience (1979)', 'Martin Gardner, Scientific American (June 1968): Baker’s Game; Paul Alfille, FreeCell on PLATO (1978)', 'Wikipedia, “Patience (game)”, “Klondike (solitaire)”, “FreeCell”'], links: [{ g: 'solitaire' }, { g: 'poker' }, { g: 'blackjack' }] },
+    { id: 'sudoku', region: 'asia', color: '#3a8a5a', cover: { g: 'sudoku', s: 'sudoku' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'sudokuRules' }, m1: { svg: 'sudokuSeventeen' }, m2: { svg: 'sudokuTimeline' } }, refs: ['Le Siècle (Paris), 19 November 1892; La France, 6 July 1895', 'Number Place, an American puzzle magazine (1979), attributed to Howard Garns', 'The Japanese puzzle magazine that named the puzzle “sudoku” (1984)', 'Gary McGuire, Bastian Tugemann, Gilles Civario, “There is no 16-Clue Sudoku: Solving the Sudoku Minimum Number of Clues Problem”, arXiv:1201.0749 (2012)', 'Bertram Felgenhauer, Frazer Jarvis, “Enumerating possible Sudoku grids” (2005)', 'Wikipedia, “Sudoku”'], links: [{ g: 'sudoku' }, { g: 'speedsudoku' }, { g: 'hitblow' }] },
   ];
   // pictures shown only beside a story's paragraph (not in another room): a museum's open-access photo (CC0), linked to the museum's page.
   // The name, in each language, is MUSEUM_READ_T[lang].pic[id]. Files images/atlas/museum-story/pic/<id>.webp (≤ 960 px).
@@ -978,6 +979,34 @@
     // patience in time (text: the story's figL.time — [year, name, note])
     patienceTimeline: () => { const R = ((st('solitaire').figL || {}).time) || [], W = 300, RH = 50, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 84; let g = '';
       const C = ['#8a5a24', '#6a3a8a', '#c0392b', '#2a5a8a', '#14864a'];
+      g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
+      R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
+        g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
+        g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="${xn + 16}" y="${y + 20}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // sudoku: rows, columns and boxes — each must hold 1 to 9 once; the four 5s outside the top-left box rule out its rows and columns (red bands) and leave one cell for its 5 (green)
+    sudokuRules: () => { const S = 32, o = 6, W = S * 9 + o * 2; let g = `<rect x="${o}" y="${o}" width="${S * 9}" height="${S * 9}" fill="#fff"/>`;
+      const fives = [[1, 5], [2, 7], [6, 0], [4, 1]], T = [0, 2];
+      fives.forEach(([r, c]) => { if (r < 3) g += `<rect x="${o}" y="${o + r * S}" width="${S * 9}" height="${S}" fill="#f3c9c2" opacity=".75"/>`; else g += `<rect x="${o + c * S}" y="${o}" width="${S}" height="${S * 9}" fill="#f3c9c2" opacity=".75"/>`; });
+      g += `<rect x="${o + T[1] * S}" y="${o + T[0] * S}" width="${S}" height="${S}" fill="#8fd0a8"/>`;
+      for (let i = 0; i <= 9; i++) { const w = i % 3 ? 1 : 2.6, c = i % 3 ? '#b8ad98' : '#2b2a28'; g += `<path d="M${o + i * S} ${o}V${o + S * 9}M${o} ${o + i * S}H${o + S * 9}" stroke="${c}" stroke-width="${w}"/>`; }
+      g += `<rect x="${o}" y="${o}" width="${S * 3}" height="${S * 3}" fill="none" stroke="#14864a" stroke-width="4"/>`;
+      const num = (r, c, n, col) => `<text x="${o + c * S + S / 2}" y="${o + r * S + S / 2 + 7}" font-size="20" font-weight="800" fill="${col}" text-anchor="middle">${n}</text>`;
+      fives.forEach(([r, c]) => { g += num(r, c, 5, '#c0392b'); });
+      [[0, 0, 3], [1, 1, 8], [2, 0, 2], [1, 2, 9], [3, 4, 1], [5, 6, 7], [7, 3, 4], [8, 8, 6], [0, 6, 4], [6, 5, 8]].forEach(([r, c, n]) => { g += num(r, c, n, '#2b2a28'); });
+      g += num(T[0], T[1], 5, '#0e6a38');
+      return `<svg viewBox="0 0 ${W} ${W}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // the 17-clue minimum: a puzzle with only 17 givens that still has one answer; with 16 none exists (exhaustive computer search, 2012)
+    sudokuSeventeen: () => { const S = 26, o = 6, G = '000000010400000000020000000000050407008000300001090000300400200050100000000806000', W = 300, H = S * 9 + o * 2; let g = `<rect x="${o}" y="${o}" width="${S * 9}" height="${S * 9}" fill="#fff"/>`;
+      for (let i = 0; i <= 9; i++) { const w = i % 3 ? 1 : 2.4, c = i % 3 ? '#c8c0b0' : '#2b2a28'; g += `<path d="M${o + i * S} ${o}V${o + S * 9}M${o} ${o + i * S}H${o + S * 9}" stroke="${c}" stroke-width="${w}"/>`; }
+      [...G].forEach((ch, i) => { if (ch !== '0') { const r = Math.floor(i / 9), c = i % 9; g += `<rect x="${o + c * S + 2}" y="${o + r * S + 2}" width="${S - 4}" height="${S - 4}" rx="3" fill="#e2efe6"/><text x="${o + c * S + S / 2}" y="${o + r * S + S / 2 + 6}" font-size="16" font-weight="800" fill="#14864a" text-anchor="middle">${ch}</text>`; } });
+      const x0 = o + S * 9 + 8, cx = (x0 + W) / 2;
+      g += `<text x="${cx}" y="70" font-size="34" font-weight="800" fill="#14864a" text-anchor="middle">17</text><circle cx="${cx}" cy="94" r="11" fill="#14864a"/><path d="M${cx - 6} 94l4 4.5 8-9" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>`;
+      g += `<text x="${cx}" y="168" font-size="34" font-weight="800" fill="#8a8478" text-anchor="middle">16</text><circle cx="${cx}" cy="192" r="11" fill="#c0392b"/><path d="M${cx - 5} 187l10 10M${cx + 5} 187l-10 10" stroke="#fff" stroke-width="2.8" stroke-linecap="round"/>`;
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // sudoku in time (text: the story's figL.time — [year, name, note])
+    sudokuTimeline: () => { const R = ((st('sudoku').figL || {}).time) || [], W = 300, RH = 50, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 70; let g = '';
+      const C = ['#8a5a24', '#6a3a8a', '#2a5a8a', '#c0392b', '#14864a'];
       g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
       R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
         g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
