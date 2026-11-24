@@ -2,6 +2,7 @@
 // ①② 手の問題は、その局面から到達できる全局面を senet/tools/senet_exact.c（gcc でその場でコンパイル）で解き直し、全合法手の勝率を保存値 ev と照合。
 //    C の手の生成が senet/engine.js と同じことも、小さい局面で JavaScript 版（senet_exact.solveJS）と照合する。
 // ③④⑤⑥⑦⑧・選択問題の答えと誤答の説明（追22）・確率の数え上げ（追23）・ヒントの印（追7）・勝率の文なし（追16）・14言語。
+// 追54・追64：数える問題の誤答は senet/tools/count_facts.js の「よくある誤り」の値（ほかの誤りと重ならない）で説明がその誤りを名指す。追59：問題ごとのヒント（2D・3D）が盤にあることだけを言う。
 // opt.noExact：①の解き直しを省く（壊したデータの検出テスト用。形・順・理由は確かめる）
 'use strict';
 const fs = require('fs'), path = require('path');
@@ -70,6 +71,44 @@ module.exports = function senet(opt = {}) {
     if (q.kind === 'move' || q.k === 'try') { const want = JSON.stringify(F.lookMarks(s, q.n, best, th)); if (JSON.stringify(q.look || []) !== want) add(L.id, where, `追7 ヒントの印が盤の事実と合わない`); }
     return gap;
   }
+  // 追54・追59（2026-11-24 担当C）：数える問題の誤答は「よくある数え方の誤り」で、その値を盤から数え直して一致すること
+  // （少なすぎ／多すぎの決まり文句・「その目はない」は不合格）。答えの内訳（why）は盤にあるものだけ。ヒントは問題ごとに持ち、
+  // その問題の種類と盤にあること（届く距離・前の相手の駒・ふさがり・入れ替え・上がった駒・ゴール近くの駒）だけを言う。
+  const C = require(path.join(ROOT, 'senet/tools/count_facts.js'));
+  function count54(L, q, where) {
+    const k = q.why && q.why[0], o = q.opts, ngo = q.ngo || [], ramp = typeof where === 'string';
+    const bad = (m) => add(L.id, where, '追54 ' + m), bad59 = (m) => add(L.id, where, '追59 ' + m);
+    const val = (x) => typeof x === 'object' ? (x.ja.startsWith('あなた') ? 'y' : 'r') + parseInt(x.ja.split('+')[1], 10) : String(x);
+    const ERR = C.answerOf(q) != null ? C.errors(q) : null;
+    if (ERR) { if (val(o[q.ans]) !== C.answerOf(q)) bad(`答え ${val(o[q.ans])} が盤の数え直し ${C.answerOf(q)} と合わない`);
+      o.forEach((x, i) => { const g = ngo[i]; if (i === q.ans || !g) return;
+        if (['c.lowNg', 'c.highNg', 'c.roll8Ng'].includes(g[0])) { bad(`誤答 ${val(x)} の説明が決まり文句（${g[0]}）で、数え方の誤りを名指していない`); return; }
+        const es = ERR.filter(e => e.x === val(x));
+        if (!es.length) { bad(`誤答 ${val(x)} がどの数え方の誤りの値でもない（説明 ${g[0]}）`); return; }
+        if (es.length > 1) add(L.id, where, `追64 誤答 ${val(x)} が2つ以上の誤り（${es.map(e => e.key).join('・')}）と同じ値で、説明がもう片方の誤りの子に合わない`);
+        if (val(x) === C.answerOf(q)) bad(`誤答 ${val(x)} が答えと同じ`);
+        const e = es.find(f => f.key === g[0]);
+        if (!e) { bad(`誤答 ${val(x)} の説明 ${g[0]} はこの値になる数え方の誤り（${es.map(f => f.key).join('・')}）でない`); return; }
+        for (const kk in e.p) if (kk !== 'x' && g[1][kk] != null && String(g[1][kk]) !== String(e.p[kk])) bad(`誤答 ${val(x)} の説明 ${g[0]} の値 ${kk}=${g[1][kk]} が盤（${e.p[kk]}）と合わない`);
+        for (const kk in e.p) if (kk !== 'x' && g[1][kk] == null && /\{/.test(D.msg[g[0]].ja) && D.msg[g[0]].ja.includes('{' + kk + '}')) bad(`誤答 ${val(x)} の説明 ${g[0]} に ${kk} がない`); }); }
+    const H = q.hints, needH = !ramp && q.kind === 'choice';
+    if (needH && (!Array.isArray(H) || H.length !== 2)) { bad59('数える問題に問題ごとのヒント（2つ）がない'); }
+    if (needH && Array.isArray(H)) H.forEach((h, i) => has14(h, L.id + '#' + where + '.hint' + i));
+    const HJ = needH && Array.isArray(H) ? H.map(h => h.ja).join(' ') : ramp ? (q.h && q.h.ja) || '' : '';
+    const say = (cond, re, what) => { if (!HJ) return; if (cond && !re.test(HJ)) bad59(`ヒントが盤にある「${what}」を言わない`); if (!cond && re.test(HJ)) bad59(`ヒントが盤にない「${what}」を言う`); };
+    if (k === 'c.roll') { const n = q.why[1].n; say(n === 5, /4本とも黒/, '4本とも黒（5）'); if (n !== 5) say(true, new RegExp(`白が${n}本`), `白が${n}本`); }
+    if (k === 'c.risk') { const R = C.risk(q.s.pos, C.targetOf(q));
+      if (q.why[1].list !== R.hit.map(h => `${h.d}（${h.w}/16）`).join(' + ')) bad(`答えの内訳 ${q.why[1].list} が届く相手の駒の距離と合わない`);
+      if (HJ) { const mm = HJ.match(/距離 ([\d・]+) の目/); if (!mm || mm[1] !== R.hit.map(h => h.d).join('・')) bad59(`ヒントの距離 ${mm && mm[1]} が届く相手の駒の距離 ${R.hit.map(h => h.d).join('・')} と合わない`); }
+      say(R.ahead.length > 0, /前にいる/, '前にいる相手の駒'); }
+    if (k === 'c.wcnt') { const F = C.wcnt(q.s.pos); say(F.blockWhy.includes('own'), /味方の駒/, 'すぐ前の味方の駒'); say(F.blockWhy.includes('pair'), /2枚並んだ/, '2枚並んだ相手の駒'); say(F.swaps.length > 0, /入れ替え/, '入れ替え'); }
+    if (/^c\.wdest/.test(k)) say(false, /味方の駒がいる駒は進め|入れ替え/, '出目1で動ける駒の数え方（別の種類の問題）');
+    if (/^c\.r?pipsG?$/.test(k)) { const sd = /^c\.rpips/.test(k) ? 1 : 0, P = C.pips(q.s.pos[sd]);
+      if ((P.g > 0) !== /G$/.test(k) || q.why[1].list !== P.list.join(' + ') || (P.g && q.why[1].g !== P.g)) bad(`答えの内訳 ${JSON.stringify(q.why[1])} が盤（上がった駒 ${P.g}・${P.list.join(' + ')}）と合わない`);
+      say(P.g > 0, /上がった駒/, '上がった駒'); if (!ramp) { say(P.near.length > 0, /ゴール近く/, 'ゴール近くの駒'); if (P.near.length && !HJ.includes(`${P.near.join('・')} の駒は ${P.near.map(p => 31 - p).join('・')}`)) bad59(`ヒントのゴール近くの駒が ${P.near.join('・')} と合わない`); } }
+    if (/^c\.lead2/.test(k)) { const near = [...new Set(q.s.pos.flat().filter(p => p >= 26 && p <= 30))];
+      say(q.s.pos.some(a => a.includes(31)), /上がった駒/, '上がった駒'); say(near.length > 0, /ゴール近く/, 'ゴール近くの駒'); }
+  }
   function choice(L, q, where) {
     const o = q.opts || [];
     if (o.length < 3 || new Set(o.map(x => JSON.stringify(x))).size !== o.length) add(L.id, where, `③選択肢 ${o.length}（重複なし3つ以上）`);
@@ -80,7 +119,7 @@ module.exports = function senet(opt = {}) {
     if (k === 'c.again') right = (W[1] + W[4] + W[5]) + '/16';
     if (k === 'c.risk') { const mk = (q.marks || []).find(x => x.type === 'danger'), i = s.pos[0].findIndex(p => F.sq(p).r === mk.r && F.sq(p).c === mk.c); right = Math.round(E.hitRisk(s, 0)[i] * 16) + '/16'; cnt = 1 + String(q.why[1].list).split('+').length;
       if (+right.split('/')[0] !== q.why[1].m) add(L.id, where, '追23 理由の通り数が数え上げと合わない'); }
-    if (k === 'c.pips' || k === 'c.rpips') { const sd = k === 'c.pips' ? 0 : 1; right = String(F.pipsOf(s.pos[sd])); cnt = s.pos[sd].filter(x => x < 31).length; }
+    if (/^c\.r?pipsG?$/.test(k)) { const sd = /^c\.rpips/.test(k) ? 1 : 0; right = String(F.pipsOf(s.pos[sd])); cnt = s.pos[sd].filter(x => x < 31).length; }
     // 水の家（2026-11-24 担当C）：落ちた駒の戻り先（15 から手前の最初の空きマス）と、出目1で水の家に落ちない手の数を engine.js で数え直す
     if (k === 'c.wdest' || k === 'c.wdest1' || k === 'c.wdest15') { const bd = E.board(s), wm = E.legalMoves(Object.assign(S(q.s), { winner: -1 }), 1).find(m => m.water);
       if (!wm) { add(L.id, where, '⑧26の駒が1で水の家に落ちる局面でない'); return 0; }
@@ -107,6 +146,7 @@ module.exports = function senet(opt = {}) {
       if (g[0] === 'c.lowNg' || g[0] === 'c.highNg') { if ((g[0] === 'c.lowNg') !== (num(x) < num(o[q.ans]))) add(L.id, where, `⑦誤答 ${num(x)} の説明 ${g[0]} が逆`); }
       if (g[0] === 'c.rollNg' && !String(g[1].v).split(' / ').every(v => W[+v] + '/16' === x)) add(L.id, where, `⑦誤答 ${x} の出目 ${g[1].v} が違う`);
       if (g[0] === 'c.roll8Ng' && [1, 2, 3, 4, 5].some(v => W[v] + '/16' === x)) add(L.id, where, `⑦誤答 ${x} になる目がある`); });
+    count54(L, q, where);
     return cnt;
   }
   for (const L of V2) {
@@ -133,5 +173,19 @@ module.exports = function senet(opt = {}) {
     const a = items[i], b = items[j]; if (a.where.startsWith('tour:') && b.where.startsWith('tour:')) continue;
     const t = F.tokDiff(a.s, b.s, a.n, b.n); if (t < F.MIN_TOK) add(a.where.split(/[#/]/)[0], 0, `⑤ ${a.where} と ${b.where} の駒の並びが${t}か所しかちがわない`);
   }
+  // 追59（3D）：atlas/ls-senet.js のセティのヒント（数える問題）は、どの行もその問題の盤にあることだけを言う
+  { const vm = require('vm'), src = fs.readFileSync(path.join(ROOT, 'atlas/ls-senet.js'), 'utf8'), ctx = { window: {} }; vm.runInNewContext(src, ctx);
+    const D3 = ctx.window.AtlasLsSenet.make({ getJ: () => Promise.resolve(D), J: () => ({}), put: () => {}, L: (o, l) => o && (o[l] || o.ja || o), fill: (t, v) => t.replace(/\{(\w+)\}/g, (_, k) => v[k] != null ? v[k] : '') });
+    const KOK = { 'c.roll': 'roll', 'c.again': 'again', 'c.risk': 'risk', 'c.wcnt': 'wcnt', 'c.wdest': 'wdest', 'c.wdest1': 'wdest', 'c.wdest15': 'wdest', 'c.pips': 'pips', 'c.pipsG': 'pips', 'c.rpips': 'rpips', 'c.rpipsG': 'rpips', 'c.lead2y': 'lead2', 'c.lead2r': 'lead2' };
+    if (typeof D3.chintJA !== 'function') add('3D', 0, '追59 ls-senet.js が chintJA を出さない');
+    else V2.forEach(L => L.problems.forEach((q, i) => { if (q.kind !== 'choice') return; const kind = KOK[q.why[0]], lines = D3.chintJA(kind, q), all = lines.join(' '), w = '3D#' + (i + 1), b = m => add(L.id, w, '追59 3D ' + m);
+      const sides = kind === 'lead2' ? [0, 1] : kind === 'rpips' ? [1] : [0], pos = q.s && q.s.pos;
+      if (/pips|lead2/.test(kind)) { const off = sides.some(sd => pos[sd].includes(31)), near = [...new Set(sides.flatMap(sd => pos[sd].filter(p => p >= 26 && p <= 30)))];
+        if (off !== /上がった駒/.test(all)) b('ヒントの「上がった駒」が盤と合わない'); if ((near.length > 0) !== /ゴール近く/.test(all)) b('ヒントの「ゴール近くの駒」が盤と合わない'); if (/26は5、28は3/.test(all)) b('盤にない 26・28 の値を言う'); }
+      if (kind === 'risk') { const R = C.risk(pos, C.targetOf(q)); if (!all.includes(`距離${R.hit.map(h => h.d).join('と')}の目`)) b('ヒントの距離が届く相手の駒と合わない'); if ((R.ahead.length > 0) !== /前にいる/.test(all)) b('ヒントの「前にいる相手の駒」が盤と合わない'); }
+      if (kind === 'wcnt') { const F = C.wcnt(pos); if (F.blockWhy.includes('own') !== /味方/.test(all) || F.blockWhy.includes('pair') !== /2枚並んだ/.test(all) || (F.swaps.length > 0) !== /入れ替え/.test(all)) b('ヒントのふさがり・入れ替えが盤と合わない'); if (/25からは入れない/.test(all)) b('盤にない「26の相手の駒」を言う'); }
+      if (kind === 'roll' && (q.why[1].n === 5) !== /4本とも黒/.test(all)) b('出目5でない問題で「4本とも黒」を言う（またはその逆）');
+      if (kind === 'roll' && q.why[1].n !== 5 && !all.includes(`<b>${q.why[1].n}</b>本`)) b('出目の数を言わない');
+    })); }
   return out;
 };
