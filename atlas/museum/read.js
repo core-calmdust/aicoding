@@ -35,6 +35,8 @@
     { id: 'foxgeese', color: '#7a4a1e', cover: { g: 'foxgeese', s: 'foxgeese' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'foxGeeseBoard' }, m1: { svg: 'huntFamily' } }, refs: ['Grettis saga Ásmundarsonar (14th c.)', 'H. J. R. Murray, A History of Board-Games Other Than Chess (1952)', 'R. C. Bell, Board and Table Games from Many Civilizations (1960)', 'Claude-Auguste Berey, the Princesse de Soubise playing solitaire (engraving, 1697)', 'John D. Beasley, The Ins and Outs of Peg Solitaire (1985)', 'Lim Yew Jin & Jürg Nievergelt, “Computing Tigers and Goats”, ICGA Journal 27 (2004)'], links: [{ g: 'foxgeese' }, { g: 'peg' }, { g: 'tafl' }] },
     { id: 'latrunculi', color: '#6a4a2a', cover: { g: 'latrunculi', s: 'latrunculi' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'latCapture' }, m1: { svg: 'latTwoSided' }, m2: { ex: 'pyrgus' } }, refs: ['Varro, De lingua Latina 10.22', 'Laus Pisonis, lines 190–208 (1st c.)', 'Seneca, De tranquillitate animi 14.7', 'Martial, Epigrams 14.17', 'P. Crummy et al., Stanway: An Élite Burial Site at Camulodunum (2007)', 'U. Schädler, „Latrunculi – ein verlorenes strategisches Brettspiel der Römer“, Homo Ludens 4 (1994)'], links: [{ g: 'latrunculi' }, { g: 'tafl' }, { ex: 'pyrgus' }] },
     { id: 'amazons', color: '#7a3a22', cover: { g: 'amazons', s: 'amazons' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'amazonTurn' }, m1: { svg: 'amazonRooms' } }, refs: ['Walter Zamkauskas, El Juego de las Amazonas, El Acertijo (1988)', 'Elwyn Berlekamp, “Sums of N×2 Amazons”, in Game Theory, Optimal Stopping, Probability and Statistics (2000)', 'Patrick Hensgens, A Knowledge-Based Approach of the Game of Amazons (master’s thesis, Maastricht, 2001)', 'ICGA, Computer Olympiad results: Amazons'], links: [{ g: 'amazons' }, { g: 'chess' }, { g: 'go' }] },
+    // (2026-11-24) Lines of Action is not in the Atlas yet (its own page loa/, ja / en): the cover and the link go there (href), named by the story's own text (game)
+    { id: 'loa', color: '#4a2a4e', cover: { g: 'loa', s: 'loa', href: '../loa/' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'loaMove' }, m1: { svg: 'loaConnect' } }, refs: ['Sid Sackson, A Gamut of Games (1969) — the game by Claude Soucie', 'Mark H. M. Winands, Informed Search in Complex Games (PhD thesis, Universiteit Maastricht, 2004)', 'Mark H. M. Winands, “6×6 LOA is Solved”, ICGA Journal 31(4) (2008)', 'Maastricht University, Games and AI Group: Lines of Action (MIA, MC-LOA; Computer Olympiad 2003, 2004, 2006, 2009, 2013, 2015)', 'Mind Sports Olympiad, Lines of Action World Championship'], links: [{ g: 'loa', href: '../loa/' }, { g: 'checkers' }, { g: 'go' }] },
   ];
   const src = p => p.s ? `../images/atlas/museum-story/${p.s}.webp?v=1` : p.g ? `../images/atlas/${p.g}.webp` : p.ex ? `../images/atlas/ex/${p.ex}.webp` : `../images/atlas/paint/${p.paint}-t.webp?v=1`;
   const ga = p => p && p.g && !p.s ? ' ga' : '';   // (a cover from the game's own art: a transparent icon, shown whole on the story's colour)
@@ -50,7 +52,7 @@
   const setStamp = id => { const s = stamps(); s[id] = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} MK(id); };
   const nm = (k, id) => (tx()[k] || {})[id] || ((T().en || {})[k] || {})[id] || id;
   const exName = id => nm('ex', id), paintName = id => nm('paint', id);
-  const gName = id => { const g = ((ctx && ctx.games) || []).find(q => q.id === id); return g && ctx.gname ? ctx.gname(g) : id; };
+  const gName = id => { const g = ((ctx && ctx.games) || []).find(q => q.id === id); return g && ctx.gname ? ctx.gname(g) : (cur && st(cur.id).game) || id; };
   // a painting: open the paintings room, then the work in its viewer
   // (2026-11-24 audit: a figure opened from a story brings the reader back) closing the painting or the case returns to the read room, the same
   // place in the story and the button that opened it
@@ -59,7 +61,7 @@
   function openPaint(id, btn) { if (!ctx.goRoom) return; const back = backTo(btn); ctx.goRoom('paint', { replace: 1 }); let n = 0; const t = () => { if (window.AtlasPaint && document.querySelector('.muroom[data-r="paint"] .ptc')) { AtlasPaint.onClose = back; AtlasPaint.open(id); } else if (++n < 100) setTimeout(t, 100); }; t(); }
   function openEx(id, btn) { if (!ctx.goEx) return; const back = backTo(btn); ctx.goEx(id); let n = 0; const t = () => { if (window.AtlasGallery) AtlasGallery.onClose = back; else if (++n < 100) setTimeout(t, 100); }; t(); }
   function linkHtml(L) {
-    if (L.g) { const g = (ctx.games || []).find(q => q.id === L.g); return g ? `<button type="button" class="chlk" data-g="${L.g}"><i>${esc(u('game'))}</i>${esc(ctx.gname ? ctx.gname(g) : L.g)}</button>` : ''; }
+    if (L.g) { const g = (ctx.games || []).find(q => q.id === L.g); if (!g && L.href) return `<button type="button" class="chlk" data-href="${L.href}"><i>${esc(u('game'))}</i>${esc(gName(L.g))}</button>`; return g ? `<button type="button" class="chlk" data-g="${L.g}"><i>${esc(u('game'))}</i>${esc(ctx.gname ? ctx.gname(g) : L.g)}</button>` : ''; }
     if (L.ex) return `<button type="button" class="chlk ex" data-ex="${L.ex}"><i>${esc(u('exhibit'))}</i>${esc(exName(L.ex))}</button>`;
     if (L.paint) return `<button type="button" class="chlk pt" data-paint="${L.paint}"><i>${esc(u('art'))}</i>${esc(paintName(L.paint))}</button>`;
     return `<button type="button" class="chlk rm" data-room="${L.room}"><i>${esc(u('room'))}</i>${esc(u('room_' + L.room))}</button>`;
@@ -411,6 +413,33 @@
       const q = (c, r, w) => { const x = o + c * C + C / 2, y = o + r * C + C / 2; return `<circle cx="${x}" cy="${y}" r="11" fill="${w ? '#f7f1e3' : '#2b2622'}" stroke="${w ? '#8a7a5a' : '#000'}" stroke-width="1.5"/><text x="${x}" y="${y + 5}" font-size="14" font-weight="800" fill="${w ? '#2b2622' : '#f7f1e3'}" text-anchor="middle">♛</text>`; };
       g += q(1, 1, 1) + q(5, 6, 1) + q(5, 1, 0) + q(1, 6, 0);
       return `<svg viewBox="0 0 ${W} ${W}" role="img" style="font-family:inherit">${g}</svg>`; },
+    // lines of action: the black piece on c4 moves exactly as many squares as there are pieces on the line — 3 along the rank (over its own
+    // piece: blue), 2 up the file (onto a white piece: a capture, red); along the diagonal the 3 squares would pass a white piece (×)
+    loaMove: () => { const C = 30, N = 8, o = 8, W = o * 2 + C * N; let g = '';
+      for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) g += `<rect x="${o + c * C}" y="${o + r * C}" width="${C}" height="${C}" fill="${(r + c) % 2 ? '#b98f62' : '#ead6b4'}"/>`;
+      const P = (c, r) => [o + c * C + C / 2, o + r * C + C / 2], pc = (c, r, w) => { const [x, y] = P(c, r); return `<circle cx="${x}" cy="${y}" r="11" fill="${w ? '#f7f1e3' : '#2b2622'}" stroke="${w ? '#8a7a5a' : '#000'}" stroke-width="1.5"/><circle cx="${x}" cy="${y}" r="6" fill="none" stroke="${w ? '#c9bb9a' : '#4a423a'}" stroke-width="1.2"/>`; };
+      const band = (c1, r1, c2, r2) => { const [a, b] = P(c1, r1), [x, y] = P(c2, r2); return `<line x1="${a}" y1="${b}" x2="${x}" y2="${y}" stroke="#e8c25a" stroke-width="14" stroke-linecap="round" opacity=".38"/>`; };
+      g += band(2, 0, 2, 7) + band(0, 4, 7, 4) + band(0, 2, 5, 7);
+      g += pc(2, 4, 0) + pc(3, 4, 0) + pc(6, 4, 1) + pc(2, 2, 1) + pc(3, 5, 1) + pc(1, 3, 0) + pc(6, 1, 1) + pc(5, 6, 0);
+      const [sx, sy] = P(2, 4), arr = (c, r, col, id, dash) => { const [x, y] = P(c, r), L = Math.hypot(x - sx, y - sy), ux = (x - sx) / L, uy = (y - sy) / L; return `<path d="M${sx + ux * 12} ${sy + uy * 12}L${x - ux * 15} ${y - uy * 15}" stroke="${col}" stroke-width="3"${dash ? ' stroke-dasharray="5 4"' : ''} marker-end="url(#${id})"/>`; };
+      const num = (c, r, n, col) => { const [x, y] = P(c, r); return `<circle cx="${x}" cy="${y}" r="11" fill="${col}" stroke="#fff" stroke-width="1.5"/><text x="${x}" y="${y + 5}" font-size="15" font-weight="800" fill="#fff" text-anchor="middle">${n}</text>`; };
+      g += arr(5, 4, '#2a5a8a', 'lmA') + num(5, 4, 3, '#2a5a8a');
+      g += arr(2, 2, '#c0392b', 'lmB'); { const [x, y] = P(2, 2); g += `<circle cx="${x}" cy="${y}" r="13.5" fill="none" stroke="#c0392b" stroke-width="3"/><circle cx="${x + 11}" cy="${y - 11}" r="9" fill="#c0392b" stroke="#fff" stroke-width="1.2"/><text x="${x + 11}" y="${y - 6.5}" font-size="13" font-weight="800" fill="#fff" text-anchor="middle">2</text>`; }
+      g += arr(5, 7, '#6a6258', 'lmC', 1); { const [x, y] = P(5, 7); g += `<circle cx="${x}" cy="${y}" r="10" fill="#4a423a"/><path d="M${x - 4.5} ${y - 4.5}l9 9M${x + 4.5} ${y - 4.5}l-9 9" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>`; }
+      const mk = (id, col) => `<marker id="${id}" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="${col}"/></marker>`;
+      return `<svg viewBox="0 0 ${W} ${W}" role="img" style="font-family:inherit"><defs>${mk('lmA', '#2a5a8a')}${mk('lmB', '#c0392b')}${mk('lmC', '#6a6258')}</defs>${g}</svg>`; },
+    // lines of action: the goal — every white piece touches another (diagonals count), so White is one group and wins; Black is still in three
+    loaConnect: () => { const C = 30, N = 8, o = 8, W = o * 2 + C * N; let g = '';
+      for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) g += `<rect x="${o + c * C}" y="${o + r * C}" width="${C}" height="${C}" fill="${(r + c) % 2 ? '#b98f62' : '#ead6b4'}"/>`;
+      const P = (c, r) => [o + c * C + C / 2, o + r * C + C / 2];
+      const Wp = [[2, 2], [3, 3], [3, 4], [4, 4], [5, 3], [4, 5], [2, 5], [5, 5]], Bp = [[1, 6], [0, 7], [1, 7], [6, 1], [7, 2], [6, 6], [7, 6]];
+      const links = (A, col, w) => { let h = ''; A.forEach((a, i) => A.slice(i + 1).forEach(b => { if (Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1])) === 1) { const [x1, y1] = P(...a), [x2, y2] = P(...b); h += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/>`; } })); return h; };
+      const hull = (A) => { const xs = A.map(a => P(...a)[0]), ys = A.map(a => P(...a)[1]); return `<rect x="${Math.min(...xs) - 15}" y="${Math.min(...ys) - 15}" width="${Math.max(...xs) - Math.min(...xs) + 30}" height="${Math.max(...ys) - Math.min(...ys) + 30}" rx="15" fill="none" stroke="#4a423a" stroke-width="2" stroke-dasharray="5 4"/>`; };
+      g += hull([[1, 6], [0, 7], [1, 7]]) + hull([[6, 1], [7, 2]]) + hull([[6, 6], [7, 6]]);
+      g += links(Wp, '#e0a52a', 7) + links(Bp, '#6a6258', 5);
+      const pc = (c, r, w) => { const [x, y] = P(c, r); return `<circle cx="${x}" cy="${y}" r="11" fill="${w ? '#f7f1e3' : '#2b2622'}" stroke="${w ? (w === 2 ? '#e0a52a' : '#8a7a5a') : '#000'}" stroke-width="${w === 2 ? 3 : 1.5}"/><circle cx="${x}" cy="${y}" r="6" fill="none" stroke="${w ? '#c9bb9a' : '#4a423a'}" stroke-width="1.2"/>`; };
+      Wp.forEach(a => g += pc(a[0], a[1], 2)); Bp.forEach(a => g += pc(a[0], a[1], 0));
+      return `<svg viewBox="0 0 ${W} ${W}" role="img" style="font-family:inherit">${g}</svg>`; },
     // four tetrahedral dice: how often each score comes (out of 16)
     tetraOdds: () => { const n = [1, 4, 6, 4, 1], W = 300, H = 150, bw = 40, gap = (W - 40 - bw * 5) / 4; let g = '';
       n.forEach((v, i) => { const x = 20 + i * (bw + gap), h = v / 6 * 96, y = 112 - h;
@@ -426,6 +455,7 @@
   }
   function wire(el) {
     el.querySelectorAll('[data-g]').forEach(b => b.onclick = () => ctx.open && ctx.open(b.dataset.g));
+    el.querySelectorAll('[data-href]').forEach(b => b.onclick = () => { location.href = b.dataset.href; });   // (a game with its own page outside the Atlas)
     el.querySelectorAll('[data-ex]').forEach(b => b.onclick = () => openEx(b.dataset.ex, b));
     el.querySelectorAll('[data-paint]').forEach(b => b.onclick = () => openPaint(b.dataset.paint, b));
     el.querySelectorAll('[data-room]').forEach(b => b.onclick = () => ctx.goRoom && ctx.goRoom(b.dataset.room));
@@ -454,7 +484,7 @@
     if (user && ctx.hist) ctx.hist({ room: 'read', story: id });
     host.innerHTML = `<article class="rda" style="--c:${S.color}">
       <button type="button" class="btn ghost sm rdback">← ${esc(u('back'))}</button>
-      <div class="rdh"><button type="button" class="rdhimg${ga(S.cover)}" ${S.cover.g ? `data-g="${S.cover.g}"` : S.cover.ex ? `data-ex="${S.cover.ex}"` : `data-paint="${S.cover.paint}"`}><img src="${src(S.cover)}" alt=""><span>${esc(S.cover.g ? u('game') : S.cover.ex ? u('exhibit') : u('art'))} · ${esc(S.cover.g ? gName(S.cover.g) : S.cover.ex ? exName(S.cover.ex) : paintName(S.cover.paint))} ›</span></button>
+      <div class="rdh"><button type="button" class="rdhimg${ga(S.cover)}" ${S.cover.href && !((ctx.games || []).some(q => q.id === S.cover.g)) ? `data-href="${S.cover.href}"` : S.cover.g ? `data-g="${S.cover.g}"` : S.cover.ex ? `data-ex="${S.cover.ex}"` : `data-paint="${S.cover.paint}"`}><img src="${src(S.cover)}" alt=""><span>${esc(S.cover.g ? u('game') : S.cover.ex ? u('exhibit') : u('art'))} · ${esc(S.cover.g ? gName(S.cover.g) : S.cover.ex ? exName(S.cover.ex) : paintName(S.cover.paint))} ›</span></button>
         <div class="rdht"><em>${esc(fmt(u('no'), { n: i + 1 }))} · ${esc(fmt(u('mins'), { n: mins(S) }))}</em><h3>${esc(x.title)}</h3><p>${esc(x.lead)}</p></div></div>
       ${x.kf && x.kf.length ? `<aside class="rdkf"><h4>${esc(u('kfH'))}</h4><ul>${x.kf.map(k => `<li>${esc(k)}</li>`).join('')}</ul></aside>` : ''}
       ${(x.s || []).map((p, k) => { const im = S.sec[k], flip = im && S.sec.slice(0, k).filter(Boolean).length % 2;
