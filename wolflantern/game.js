@@ -940,8 +940,9 @@
     const mad = S.people.find(p => p.role === 'madman');
     if (mad) await say([{ text: `狼に心を寄せていた人間——狂人は、**${nm(mad.id)}**だった。` }]);
     if (st.arc && st.arc.coda) await say([{ text: st.arc.coda }]);
-    if (R.win || R.why === 'overrun') await say([{ text: R.win ? st.text.win : st.text.lose }]);
-    if (R.win && st.heroData && st.heroData.epi) await say([{ text: st.heroData.epi }]);
+    const gone = !S.people[0].alive;   // the player died: the ending must not have them write or walk
+    if (R.win || R.why === 'overrun') await say([{ text: fill(R.win ? (gone && st.text.winGhost || st.text.win) : (gone && st.text.loseGhost || st.text.lose), { book: st.lex.book }) }]);
+    if (R.win && st.heroData) { const ep = gone ? st.heroData.epiGhost : st.heroData.epi; if (ep) await say([{ text: ep }]); }
     if (R.win) {
       const surv = S.people.filter(p => p.alive && !p.isPlayer && p.role !== 'wolf' && ch(p.id).epi);
       for (let i = surv.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [surv[i], surv[j]] = [surv[j], surv[i]]; }
@@ -959,7 +960,8 @@
     const why = ({ cleared: '狼をすべて見つけ出した', overrun: '狼の数が、人の数に並んだ' }[R.why] || '') + (S.ghost ? '（あなたは幽霊として見届けた）' : '');
     await sheet(`<h3 style="text-align:center">${R.win ? '解決' : '未解決'}　<small style="font:500 15px var(--ui);color:var(--mute)">${esc(why)}</small></h3>
       <div class="rank">${sc.rank}</div>
-      <div class="stat"><div><b>${S.day}</b><span>日</span></div><div><b>${sc.wrong}</b><span>誤った追放</span></div><div><b>${sc.lost}</b><span>失われた人</span></div><div><b>${DIFFN[S.diff]}</b><span>むずかしさ</span></div></div>
+      <div class="stat"><div><b>${sc.wolfVotes}<small style="font-size:.5em">／${sc.wolfVotes + sc.badVotes}</small></b><span>狼に入れた票</span></div><div><b>${sc.accHit}</b><span>当たった名指し</span></div><div><b>${sc.clashHit}</b><span>暴いた矛盾</span></div><div><b>${sc.lost}</b><span>失われた人</span></div></div>
+      <p style="font-size:13.5px;color:var(--mute);margin:-6px 0 12px">評価は、あなた自身の票・名指し・矛盾・名乗りの結果と、生き延びた日数で決まる（${DIFFN[S.diff]}・${S.day}日）。</p>
       <p style="font-size:15px">人狼：${wolves.map(w => esc(nm(w.id))).join('、')}${mad ? `　狂人：${esc(nm(mad.id))}` : ''}</p>
       <div class="foot"><button class="btn" data-a="title">タイトルへ</button><button class="btn" data-a="select">ほかの物語へ</button><button class="btn pri" data-a="again">もう一度</button></div>`, box => box.querySelectorAll('[data-a]').forEach(b => b.onclick = () => closeSheet(b.dataset.a))).then(a => {
       if (a === 'again') { buildSetup(); } else if (a === 'select') buildSelect(); else buildTitle();
