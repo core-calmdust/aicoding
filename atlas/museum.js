@@ -249,5 +249,12 @@
     if (!grid._pgR) { grid._pgR = true; let tm = 0; addEventListener('resize', () => { clearTimeout(tm); tm = setTimeout(() => { if (grid.isConnected) draw(); }, 150); }); }
     draw();
   }
+  // (2026-11-24 audit trapEsc) the painting and case viewers are modal: Tab and Shift+Tab go round their own controls, not out into the page behind
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return; const d = [...document.querySelectorAll('.ptv.on,.exv.on')].pop(); if (!d) return;
+    const f = [...d.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])')].filter(x => { const r = x.getBoundingClientRect(), s = getComputedStyle(x); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden'; });
+    if (!f.length) return; const i = f.indexOf(document.activeElement);
+    if (i < 0 || (e.shiftKey && i === 0) || (!e.shiftKey && i === f.length - 1)) { e.preventDefault(); f[e.shiftKey ? (i <= 0 ? f.length - 1 : i - 1) : (i < 0 || i === f.length - 1 ? 0 : i + 1)].focus(); }
+  }, true);
   window.AtlasMuseum = { render, room: () => room, ROOMS, V, goEx, go: r => open(r, true), mark, prog, pager, catalog, tabKeys, rove };
 })();
