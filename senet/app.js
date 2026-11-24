@@ -1188,7 +1188,7 @@ if (window.CountTick) { CountTick.setMuted(() => !settings.sound); }
 if (window.RulesOffer) RulesOffer.init({ game: GID, lang: () => LANG, open: () => window.SenetLearn && SenetLearn.openRules(0), watch: '#rulesOverlay' });
 if (window.GameRecord) GameRecord.init({ game: GID, lang: () => LANG, menu: '.controls', sides: () => [t('first'), t('second')], variant: () => ({ k: game.rule, n: t('rule.' + game.rule) }), variants: () => RULES, variantName: k => t('rule.' + k), defVariant: 'std' });
 if (window.SenetCoach) SenetCoach.init();
-HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson'], lang: () => LANG }) : null;
+HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => relayout(true));
 if (window.RecordExport) RecordExport.attach({ btn: '#btnShare', key: GID, title: t('meta.title'), lang: () => LANG, toast: m => toast(m), empty: () => !game.plies.length,
   formats: () => [{ id: 'txt', label: t('fmt.txt'), ext: 'txt', meta: 'self', text: () => recordText() }],
