@@ -3,7 +3,7 @@
 // board with a jump generator of this file (its own, not the engine's) — every problem of every READY lesson, ①〜⑨ and 追1〜:
 //  ① ok = exactly the moves that reach the goal (b_double: take 2 or more in one move · b_win: the opponent has no jump after it);
 //    best ∈ ok; the engine's legal moves = this file's jumps (from, to, stones taken).
-//  ② one right move (ok has 1 move).   ③ 5 legal moves or more, 4 wrong ones or more.
+//  ② one right move (ok has 1 move).   ③ 5 legal moves or more, 4 wrong ones or more; 追72 right moves ≤ 1/3 of the legal ones.
 //  ④ the theme: b_double — the stone that takes 2 also has its own line stopped after 1 (a 'stop' wrong move); 3 stones or more can
 //    jump (the hint's marks narrow nothing to the answer alone, 追52). b_win — the opponent has 2 jumps or more now; some wrong move
 //    leaves it a single jump; the hint's stones = the opponent's stones that could jump now.
@@ -18,7 +18,7 @@
 //    0-point move (追66・追68); no evaluation words (追16).
 //  ⑨ the 2D: konane/app.js reads the same facts (KonaneLsFacts) for the words and the hint; konane/index.html loads ls-facts.js; every
 //    language has the keys (ls.b_double.why / ng.stop / ng.other / hint, ls.b_win.why / ng / ng1 / hint) with {m} and {x}; ng1 names
-//    one jump (no {j}: 追58); the warm-up's right move is a legal move of its board and its marks are squares of it (追14).
+//    one jump (no {j}: 追58); the warm-up's right move is a legal move of its board and its marks are squares of it (追75).
 // Usage: node tools/lesson-verify-konane-ls.js [--selftest]   (also run by tools/lesson-verify-konane.js / lesson-verify.js konane)
 'use strict';
 const fs = require('fs'), path = require('path');
@@ -75,6 +75,7 @@ function verify(opt) {
       const wrong = L.filter(m => !P.ok.includes(m));
       if (L.length < 5) add(id, q, `③ ${L.length} legal moves`);
       if (wrong.length < 4) add(id, q, `③ ${wrong.length} wrong moves`);
+      if (P.ok.length * 3 > L.length) add(id, q, `追72 ${P.ok.length} right of ${L.length} legal moves (more than 1/3)`);
       let nearN = 0;
       const ans = J.find(x => mv(x) === P.best);
       for (const m of wrong) {
@@ -122,9 +123,9 @@ function verify(opt) {
     for (let i = 1; i < ds.length; i++) if (ds[i] < ds[i - 1]) add(id, i + 1, `⑥ d ${ds[i]} < the one before ${ds[i - 1]}`);
     // the warm-ups (2D only): the right move is a move of the board, the marks are its squares
     (st.ramp || []).forEach((r, i) => { if (r.k !== 'try') return; const n = Math.round(Math.sqrt(r.s.b.length)); E.setRule(n === 6 ? 's6' : n === 10 ? 's10' : 's8'); const p = E.Pos.from(r.s), nm = p.moves().map(m => E.name(p, m));
-      (r.ok || []).forEach(o => { if (!nm.includes(o)) add(id, -(i + 1), `追14 warm-up ${i + 1}: the right move ${o} is not a move of its board`); });
-      if (!(r.look || []).length) add(id, -(i + 1), `追14 warm-up ${i + 1}: the second hint lights nothing`);
-      (r.look || []).forEach(x => { if (!(x >= 1 && x <= r.s.b.length) || r.s.b[x - 1] === '.') add(id, -(i + 1), `追14 warm-up ${i + 1}: the mark ${x} is not a stone`); });
+      (r.ok || []).forEach(o => { if (!nm.includes(o)) add(id, -(i + 1), `追75 warm-up ${i + 1}: the right move ${o} is not a move of its board`); });
+      if (!(r.look || []).length) add(id, -(i + 1), `追75 warm-up ${i + 1}: the second hint lights nothing`);
+      (r.look || []).forEach(x => { if (!(x >= 1 && x <= r.s.b.length) || r.s.b[x - 1] === '.') add(id, -(i + 1), `追75 warm-up ${i + 1}: the mark ${x} is not a stone`); });
       E.setRule('s8'); });
   }
   // ⑨ the 2D
@@ -151,7 +152,7 @@ function selftest() {
     ['the words say a wrong kind (⑧)', null, /^⑧/, { fact: (E2, id, s, m) => { const f = FACTS.fact(E2, id, s, m); return f.k === 'other' ? Object.assign({}, f, { end: f.end === 'edge' ? 'empty' : 'edge' }) : f; } }],
     ['the jumps left counted wrong (⑧)', null, /^⑧/, { fact: (E2, id, s, m) => { const f = FACTS.fact(E2, id, s, m); return f.k === 'left' ? Object.assign({}, f, { j: f.j + 1 }) : f; } }],
     ['the hint lights the answer only (⑦)', null, /^⑦/, { hint: (E2, id, s) => [E2.mFrom(st(base, id).problems.find(P => P.s === s || P.s.b === s.b).best)] }],
-    ['a warm-up answer that is no move (追14)', d => { st(d, 'b_win').ramp[0].ok = ['h6-f6-d6-b6']; }, /^追14/],
+    ['a warm-up answer that is no move (追75)', d => { st(d, 'b_win').ramp[0].ok = ['h6-f6-d6-b6']; }, /^追75/],
     ['「おしい」 for 0 points (追66)', null, /^追66/, { ja: Object.assign({}, LSK.JA, { soft: ['おしい！'] }) }],
     ['the 2D words without the facts (⑨)', null, /^⑨/, { app: 'function okAnswer() {}' }],
     ['a language without ng1 (⑨)', null, /^⑨/, { i18n: (() => { const I = {}; LANGS.forEach(l => { I[l] = {}; }); for (const f of ['i18n-kn.js', 'i18n-kn-more.js']) new Function('window', 'I18N', fs.readFileSync(path.join(ROOT, 'konane', f), 'utf8'))({ I18N: I }, I); delete I.de['ls.b_win.ng1']; return I; })() }],

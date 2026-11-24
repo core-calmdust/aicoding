@@ -21,7 +21,7 @@ function scoreStory(st) {
   // 1. completeness
   const need = { prologue: 5, day: 6, peace: 2, exile: 2, night: 2, climax: 2 };
   for (const k in need) if (!T[k] || T[k].length < need[k]) add(10, `text.${k} が${need[k]}つ未満`);
-  for (const k of ['meet', 'vote', 'role', 'win', 'lose', 'dead', 'exiledYou']) if (!T[k]) add(10, `text.${k} がない`);
+  for (const k of ['meet', 'vote', 'role', 'win', 'lose', 'dead', 'exiledYou', 'ghost']) if (!T[k]) add(10, `text.${k} がない`);
   for (const l of st.locs) { if (!(T.discover || {})[l.id] || T.discover[l.id].length < 2) add(6, `発見の文（${l.name}）が2つ未満`); if (!l.none || l.none.length < 2) add(3, `空振りの文（${l.name}）が2つ未満`); }
   if (st.locs.length !== 5) add(10, '場所が5つでない');
   if (st.chars.length !== 12) add(15, '人物が12人でない');
@@ -40,7 +40,7 @@ function scoreStory(st) {
   const fixed = [];
   (T.prologue || []).forEach((p, i) => fixed.push(['prologue' + i, p.t]));
   for (const k of ['day', 'peace', 'exile', 'night', 'climax']) (T[k] || []).forEach((t, i) => fixed.push([k + i, t]));
-  for (const k of ['meet', 'vote', 'role', 'win', 'lose', 'dead', 'exiledYou']) if (T[k]) fixed.push([k, T[k]]);
+  for (const k of ['meet', 'vote', 'role', 'win', 'lose', 'dead', 'exiledYou', 'ghost']) if (T[k]) fixed.push([k, T[k]]);
   for (const l in T.discover || {}) T.discover[l].forEach((t, i) => fixed.push(['discover.' + l + i, t]));
   st.locs.forEach(l => { fixed.push(['loc.' + l.id, l.desc]); l.none.forEach((t, i) => fixed.push(['none.' + l.id + i, t])); });
   st.items.forEach(it => fixed.push(['item.' + it.id, it.found + it.desc + (it.use || '')]));
@@ -123,7 +123,7 @@ function composed() {
         for (const p of E.alive(S).filter(p => !p.isPlayer)) {
           const T = E.testimony(S, st, p.id, S.nights.length - 1); if (T) SP.night(S, st, T).forEach(t => lines.push([p.id, t]));
           const o = E.opinion(S, st, p.id); lines.push([p.id, SP.opinion(S, st, p.id, o)]);
-          const t2 = E.alive(S).find(q => q.id !== p.id); const r = E.ask(S, st, p.id, 'about', t2.id, true); SP.about(S, st, p.id, r).forEach(t => lines.push([p.id, t]));
+          const t2 = E.alive(S).find(q => q.id !== p.id); const r = E.ask(S, st, p.id, 'about', t2.id, true); if (r.k === 'about') SP.about(S, st, p.id, r).forEach(t => lines.push([p.id, t]));
         }
         for (const e of E.meeting(S, st)) { const x = SP.event(S, st, e); if (x) lines.push([e.by, x.text]); }
         for (const [who, t] of lines) {

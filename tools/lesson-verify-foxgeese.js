@@ -185,11 +185,12 @@ function verifyLessons(opt) {
   PZ.themes.forEach(T => T.puzzles.forEach((P, j) => pool.push({ id: T.id, j, b: norm(P.s.b), sym: SYM8 })));
   for (const st of LS.steps) {
     if (!A.READY.includes(st.id)) continue;
+    if (/^g_/.test(st.id)) { gooseLesson(st, { add, pool, w, LG, JA, F, A, opt }); continue; }
     const id = st.id; let dPrev = -1;
     // the words exist in every language (2D) and in ドミダック's ja for every fact this lesson can give
     for (const k of KEYS[id]) {
       for (const l of LG) { const x = w.I18N[l][LFK[k] || 'lf.' + k]; if (!x) add(id, -1, `⑦⑨ ${l}: no ${LFK[k] || 'lf.' + k}`); else if (/勝率|評価|見込み/.test(x)) add(id, -1, `追16 ${l}: lf.${k}`); }
-      const jl = (JA.w[k] || JA.n[k]); if (!jl || !jl.length) add(id, -1, `⑦ ja: ドミダック has no words for ${k}`); else if (jl.some(t => /勝率|評価|見込み/.test(t))) add(id, -1, `追16 ja: ${k}`);
+      const jl = ['take', 'most', 'fork'].includes(k) ? JA.w[k] : JA.n[k]; if (!jl || !jl.length) add(id, -1, `⑦ ja: ドミダック has no words for ${k}`); else if (jl.some(t => /勝率|評価|見込み/.test(t))) add(id, -1, `追16 ja: ${k}`);
       else if (jl.some(t => !/(から|ので|ため|と、|と相手|ると|れば|なら|だと|では|せいで|取られ|負け|逃げ|防げ|止め|ふさ|残る|残っちゃ|できない|届かない|ならない|損)/.test(t))) add(id, -1, `⑦ ja: a line for ${k} gives no reason`);
     }
     st.problems.forEach((P, j) => {
@@ -249,6 +250,106 @@ function verifyLessons(opt) {
   if (!/function lfHint\(/.test(opt.app2d != null ? opt.app2d : fs.readFileSync(path.join(ROOT, 'foxgeese/app.js'), 'utf8'))) add('2D', -1, '追52 the 2D hint marks the fox (no lfHint)');
   return out;
 }
+// (2026-11-24 23:32 担当C) the geese lessons g_safe · g_trap · g_net (the geese to move), recomputed from the board, not through ls-facts:
+//  ① ok = every goose move that does it (g_safe: the fox then has a move and no jump · g_trap: the fox cannot move · g_net: the fox has a
+//    move, and after each one some goose move leaves it none)  ② one right move  ③ 4 legal moves or more, 3 wrong or more
+//  ④ g_safe: the fox can jump now, one goose attacked, no move shuts it in · g_trap: no jump now, one point to go to, the closing goose has a
+//    friend straight behind it (the intro), and another goose can step there too (the hint's ring does not give the answer)
+//    · g_net: no jump now, two points to go to, no move shuts it in now
+//  ⑤ (with the fox lessons' loop) ⑥ d = wrong + 2 × near (g_safe: the attacked goose safe but another jump · g_trap: into the fox's point
+//    but not shut · g_net: the fox escapes by one way only) does not go down
+//  ⑦⑧ every legal move: the fact's kind = the board's (jself / jopen / jstill: the jump's first goose is the moved one / it lands where the
+//    goose stood / the same first jump was there before; free / freeO; wide / hole / reach0 after the named escape), the named jump {r} is of
+//    that kind and takes the most of its kind {n}, the named escape {r} leaves no shutting move, the counts {e}; words in 14 languages and
+//    ドミダック's ja with a reason  追52 the hint rings: g_safe the attacked goose, g_trap / g_net the fox's points (empty points)
+//  追70 an intro that states a rule of thumb (g_net 「先に広いほうの逃げ道」) holds for every answer
+function gooseLesson(st, X) {
+  const { add, pool, w, LG, JA, F, A, opt } = X, id = st.id;
+  const RIGHT = { g_safe: ['safeF', 'safeA'], g_trap: ['trap'], g_net: ['net'] }[id];
+  const WRONG = { g_safe: ['jself', 'jopen', 'jstill'], g_trap: ['jself', 'jopen', 'free', 'freeO'], g_net: ['jself', 'jopen', 'wide', 'hole', 'reach0'] }[id];
+  const LGK = A.LG_KEY || {};
+  for (const k of RIGHT.concat(WRONG)) {
+    const key = LGK[k]; if (!key) { add(id, -1, `⑦⑨ no 2D key for ${k}`); continue; }
+    for (const l of LG) { const x = w.I18N[l][key]; if (!x) add(id, -1, `⑦⑨ ${l}: no ${key}`); else if (/勝率|評価|見込み/.test(x)) add(id, -1, `追16 ${l}: ${key}`); else if (/\{(?![mxrne]\})\w+\}/.test(x)) add(id, -1, `⑦ ${l} ${key} has an unknown placeholder`); }
+    const jl = RIGHT.includes(k) ? JA.w[k] : JA.n[k];
+    if (!jl || !jl.length) add(id, -1, `⑦ ja: ドミダック has no words for ${k}`);
+    else if (jl.some(t => /勝率|評価|見込み/.test(t))) add(id, -1, `追16 ja: ${k}`);
+    else if (jl.some(t => !/(から|ので|ため|と、|ると|れば|なら|だと|では|せいで|取られ|ふさが|動けない|閉じ込め)/.test(t))) add(id, -1, `⑦ ja: a line for ${k} gives no reason`);
+  }
+  const jumps = p => p.foxMoves([]).filter(x => E.jumped(x).length);
+  const pts = p => new Set(p.foxMoves([]).map(x => E.path(x)[1]));
+  const shutBy = z => z.moves().filter(g => !z.clone().play(g).foxMoves([]).length);
+  let dPrev = -1;
+  st.problems.forEach((P, j) => {
+    E.setRule(P.s.rule || 'g15'); const pos = E.Pos.from(P.s), L = pos.moves(), okS = P.ok || [];
+    if (pos.side !== 1) { add(id, j, '④ not the geese to move'); return; }
+    const J0 = jumps(pos), D0 = pts(pos);
+    const does = m => { const q = pos.clone().play(m), Fm = q.foxMoves([]);
+      if (id === 'g_safe') return Fm.length > 0 && !jumps(q).length;
+      if (id === 'g_trap') return !Fm.length;
+      return Fm.length > 0 && Fm.every(f => shutBy(q.clone().play(f)).length > 0); };
+    const good = L.filter(does);
+    if (good.length !== okS.length || !good.every(m => okS.includes(m))) add(id, j, `① the saved answers (${okS.map(m => E.name(pos, m)).join(',')}) ≠ the moves that do it (${good.map(m => E.name(pos, m)).join(',')})`);
+    if (okS.length !== 1 || P.best !== okS[0]) add(id, j, `② ${okS.length} right moves (best ${P.best})`);
+    if (L.length < 4 || L.length - good.length < 3) add(id, j, `③ ${L.length} legal moves, ${L.length - good.length} wrong`);
+    const shutNow = L.some(m => !pos.clone().play(m).foxMoves([]).length);
+    if (id === 'g_safe' && (!J0.length || new Set(J0.map(x => E.jumped(x)[0])).size !== 1 || shutNow)) add(id, j, `④ g_safe: ${J0.length} jumps now / attacked ${new Set(J0.map(x => E.jumped(x)[0])).size} / a shutting move ${shutNow}`);
+    if (id === 'g_trap') {
+      if (J0.length || D0.size !== 1) add(id, j, `④ g_trap: ${J0.length} jumps now, ${D0.size} points`);
+      const b = P.best, [r0, c0] = E.RC[pos.fox], [r1, c1] = E.RC[E.mTo(b)], r2 = 2 * r1 - r0, c2 = 2 * c1 - c0;
+      if (!(r2 >= 0 && r2 < 7 && c2 >= 0 && c2 < 7 && E.ON[r2 * 7 + c2] && pos.clone().play(b).sq[r2 * 7 + c2] === E.P2)) add(id, j, '④ g_trap: the closing goose has no friend straight behind it (the intro says it has)');
+      if (L.filter(m => m !== b && D0.has(E.mTo(m))).length < 1) add(id, j, '追52 g_trap: only the answer can step into the ringed point (the hint gives the answer away)');
+    }
+    if (id === 'g_net' && (J0.length || D0.size !== 2 || shutNow)) add(id, j, `④ g_net: ${J0.length} jumps now, ${D0.size} points, a shutting move ${shutNow}`);
+    // 追70 the intro's rule of thumb holds for every answer: 「先に広いほうの逃げ道をふさぐ」 (g_net) — the answer fills the fox's point that
+    //  leads to more room (E.foxArea from there) than the other one
+    if (id === 'g_net') { const intro = [JA.intro && JA.intro.g_net, w.I18N.ja['ls.g_net.intro'], w.I18N.en['ls.g_net.intro']].join(' ');
+      if (/広いほう|wider/.test(intro)) { const room = d => { const z = pos.clone(); z.sq[z.fox] = 0; z.sq[d] = E.P1; z.fox = d; return E.foxArea(z); }, to = E.mTo(P.best);
+        if (!D0.has(to) || [...D0].some(d => d !== to && room(d) >= room(to))) add(id, j, `追70 the intro says the answer closes the wider way out, but ${E.name(pos, P.best)} ${D0.has(to) ? 'closes the narrower / an equal one' : 'closes neither'}`); } }
+    // ⑤ no other problem (the lessons, the puzzles) within 4 points (with a lesson: the left-right mirror; with a puzzle: the 8 of the square)
+    { const me = pool.find(x => x.ls && x.id === id && x.j === j);
+      for (const x of pool) { if (x === me) continue; const syms = x.ls ? me.sym : SYM8; if (syms.some(f => diff(me.b, symB(x.b, f)) <= 4)) add(id, j, `⑤ within 4 points of ${x.ls ? 'lesson ' : ''}${x.id}#${x.j + 1}`); } }
+    // 追52 the hint's rings
+    { global.window = global.window || {}; window.FoxEngine = E; window.FoxLsFacts = require(path.join(ROOT, 'foxgeese/ls-facts.js'));
+      const hp = (opt.hintPts || A.make({ getJ: () => 0, J: () => ({}), put: () => 0, L: x => x, fill: t => t }).hintPts)(id, P);
+      const want = id === 'g_safe' ? new Set(J0.map(x => E.jumped(x)[0])) : D0;
+      if (!hp.length || hp.length !== want.size || hp.some(q => !want.has(q))) add(id, j, `追52 the hint rings ${hp.map(E.sqName).join(',') || 'nothing'}, not ${id === 'g_safe' ? 'the attacked goose' : 'the fox\'s points'}`); }
+    // ⑦⑧ every legal move
+    let near = 0;
+    for (const m of L) {
+      const f = F.fact(E, id, P.s, m), q = pos.clone().play(m), Jq = jumps(q), right = okS.includes(m);
+      let truth;
+      if (Jq.length) {
+        const before = new Set(J0.map(x => E.path(x).slice(0, 2).join(','))), kind = x => E.jumped(x)[0] === E.mTo(m) ? 'jself' : E.path(x)[1] === E.mFrom(m) ? 'jopen' : before.has(E.path(x).slice(0, 2).join(',')) ? 'jstill' : 'jnew';
+        truth = ['jself', 'jopen', 'jstill', 'jnew'].find(c => Jq.some(x => kind(x) === c));
+        if (f.r == null || !Jq.includes(f.r) || kind(f.r) !== truth) add(id, j, `⑧ ${E.name(pos, m)}: the named jump is not a ${truth} jump`);
+        else if (f.n !== E.jumped(f.r).length || Jq.some(x => kind(x) === truth && E.jumped(x).length > f.n)) add(id, j, `⑧ ${E.name(pos, m)}: says ${f.n} geese taken`);
+      } else if (id === 'g_safe') truth = !q.foxMoves([]).length ? 'trap' : J0.some(x => E.path(x)[1] === E.mTo(m)) ? 'safeF' : 'safeA';
+      else if (id === 'g_trap') {
+        const Fq = q.foxMoves([]); truth = !Fq.length ? 'trap' : D0.has(E.mTo(m)) ? 'freeO' : 'free';
+        if (Fq.length && (f.e !== pts(q).size || !Fq.includes(f.r))) add(id, j, `⑧ ${E.name(pos, m)}: says ${f.e} points / a fox move that is not one`);
+      } else {
+        const Fq = q.foxMoves([]);
+        if (!Fq.length) truth = 'trap';
+        else if (Fq.every(x => shutBy(q.clone().play(x)).length)) { truth = 'net'; if (f.e !== pts(q).size) add(id, j, `⑧ ${E.name(pos, m)}: says ${f.e} points, the board ${pts(q).size}`); }
+        else if (f.r == null || !Fq.includes(f.r) || shutBy(q.clone().play(f.r)).length) { truth = '?'; add(id, j, `⑧ ${E.name(pos, m)}: the named escape is not one`); }
+        else { const z = q.clone().play(f.r), Dz = pts(z); if (f.e !== Dz.size) add(id, j, `⑧ ${E.name(pos, m)}: says ${f.e} points after the escape, the board ${Dz.size}`);
+          truth = Dz.size >= 2 ? 'wide' : z.moves().some(g => Dz.has(E.mTo(g))) ? 'hole' : 'reach0'; }
+      }
+      if (right !== RIGHT.includes(truth)) add(id, j, `① ${E.name(pos, m)} right=${right} but the board says ${truth}`);
+      if (f.k !== truth) add(id, j, `⑧ ${E.name(pos, m)}: the words say ${f.k}, the board ${truth}`);
+      if (!right && !RIGHT.concat(WRONG).includes(truth)) add(id, j, `⑦ ${E.name(pos, m)}: ${truth} has no words in this lesson`);
+      if (!right) {
+        if (id === 'g_safe' && truth !== 'jstill') near++;
+        if (id === 'g_trap' && D0.has(E.mTo(m))) near++;
+        if (id === 'g_net' && !/^j/.test(truth) && q.foxMoves([]).filter(x => !shutBy(q.clone().play(x)).length).length === 1) near++;
+      }
+    }
+    const d = (L.length - good.length) + 2 * near;
+    if (d < dPrev) add(id, j, `⑥ d ${d} < the problem before (${dPrev})`); dPrev = d;
+    if (A.make({ getJ: () => 0, J: () => ({}), put: () => 0, L: x => x, fill: t => t }).points(P, L.find(m => !okS.includes(m))) !== 0) add(id, j, '追3 a wrong move scores');
+  });
+}
 // --selftest: broken data must be caught (the answer / order / duplicates / choices / the words / the reply / the evaluation words)
 function selftest() {
   const base = JSON.parse(fs.readFileSync(path.join(ROOT, 'foxgeese/puzzles.json'), 'utf8'));
@@ -267,7 +368,7 @@ function selftest() {
     ['an evaluation in the words (追16)', null, /^追16/, { why: o => Object.assign(F.why(o), { ja: '勝率が下がる' }) }],
   ];
   const lsBase = JSON.parse(fs.readFileSync(path.join(ROOT, 'foxgeese/lessons.json'), 'utf8')), lsc = () => JSON.parse(JSON.stringify(lsBase));
-  const FF = require(path.join(ROOT, 'foxgeese/ls-facts.js')), AJ = require(path.join(ROOT, 'atlas/ls-foxgeese.js')).JA;
+  const FF = require(path.join(ROOT, 'foxgeese/ls-facts.js')), A0 = require(path.join(ROOT, 'atlas/ls-foxgeese.js')), AJ = A0.JA;
   const lcases = [
     ['lesson: the answer changed (①②)', d => { const P = d.steps[0].problems[0]; E.setRule('g15'); const m = E.Pos.from(P.s).moves().find(x => !P.ok.includes(x)); P.ok = [m]; P.best = m; }, /^①/],
     ['lesson: order reversed (⑥)', d => { d.steps[2].problems.reverse(); }, /^⑥/],
@@ -277,6 +378,15 @@ function selftest() {
     ['lesson: the hint rings the fox (追52)', null, /^追52/, { hintPts: (id, P) => { E.setRule('g15'); return [E.Pos.from(P.s).fox]; } }],
     ['lesson: the 2D hint without lfHint (追52)', null, /^追52/, { app2d: '' }],
     ['lesson: an evaluation in the words (追16)', null, /^追16/, { ja: Object.assign({}, AJ, { w: Object.assign({}, AJ.w, { most: ['勝率が上がる'] }) }) }],
+    ['geese lesson: the answer changed (①②)', d => { const P = d.steps.find(s => s.id === 'g_safe').problems[0]; E.setRule('g15'); const m = E.Pos.from(P.s).moves().find(x => !P.ok.includes(x)); P.ok = [m]; P.best = m; }, /^①/],
+    ['geese lesson: order reversed (⑥)', d => { d.steps.find(s => s.id === 'g_net').problems.reverse(); }, /^⑥/],
+    ['geese lesson: a duplicate (⑤)', d => { const s = d.steps.find(x => x.id === 'g_trap'); s.problems[4] = JSON.parse(JSON.stringify(s.problems[1])); }, /^⑤/],
+    ['geese lesson: the jump named wrong (⑧)', null, /^⑧/, { facts: { fact: (E2, id, sp, m) => { const f = FF.fact(E2, id, sp, m); return f.k === 'jself' ? Object.assign({}, f, { k: 'jopen' }) : f.k === 'wide' ? Object.assign({}, f, { e: f.e + 1 }) : f; } } }],
+    ['geese lesson: the escape named wrong (⑧)', null, /^⑧/, { facts: { fact: (E2, id, sp, m) => { const f = FF.fact(E2, id, sp, m); if (!/^(wide|hole|reach0)$/.test(f.k)) return f; const q = E2.Pos.from(sp).play(m), alt = q.foxMoves([]).find(x => FF.shuts(E2, q.clone().play(x)).length); return Object.assign({}, f, { r: alt != null ? alt : -1 }); } } }],
+    ['geese lesson: ja words gone (⑦)', null, /^⑦/, { ja: Object.assign({}, AJ, { n: Object.assign({}, AJ.n, { jopen: [] }) }) }],
+    ['geese lesson: the hint rings the answer goose (追52)', null, /^追52/, { hintPts: (id, P) => { E.setRule('g15'); return /^g_/.test(id) ? [E.mFrom(P.best)] : A0.make({ getJ: () => 0, J: () => ({}), put: () => 0, L: x => x, fill: t => t }).hintPts(id, P); } }],
+    ['geese lesson: the old g_net intro 「先に広いほうの逃げ道」 (追70)', null, /^追70/, { ja: Object.assign({}, AJ, { intro: Object.assign({}, AJ.intro, { g_net: '狐がどこへ逃げても次に閉じ込められるように、<b>先に広いほうの逃げ道</b>をふさぎます。' }) }) }],
+    ['geese lesson: 2 right moves (②)', d => { const P = d.steps.find(s => s.id === 'g_trap').problems[2]; P.ok = [P.best, P.best]; }, /^[①②]/],
   ];
   for (const [name, f, re, o] of lcases) { const d = lsc(); if (f) f(d); const out = verifyLessons(Object.assign({ ls: d }, o || {})); const hit = out.some(x => re.test(x.msg)); console.log((hit ? 'caught ' : 'MISSED ') + name); cases.push([name, null, re, { _hit: hit }]); }
   let ok = 0;

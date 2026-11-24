@@ -26,9 +26,9 @@
   // how often they plant a belonging, how often the weather wipes a trace, how far a figure is seen
   const DIFF = [
     { id: 0, size: 8,  ap: 3, traces: 2, neg: .25, player: 0,    plant: 0,   drop: .25, erase: 0,   adj: .3,  npcFind: .3,  fakeSeer: .5, assist: true, wit: .3, sway: 1.2 },
-    { id: 1, size: 10, ap: 3, traces: 2, neg: .4,  player: .3,   plant: .3,  drop: .15, erase: .15, adj: .25, npcFind: .25, fakeSeer: .6, assist: false, wit: .4, sway: 1 },
-    { id: 2, size: 12, ap: 3, traces: 2, neg: .5,  player: .45,  plant: .4,  drop: .12, erase: .25, adj: .22, npcFind: .22, fakeSeer: .5,  assist: false, wit: .55, sway: .9 },
-    { id: 3, size: 13, ap: 3, traces: 1, neg: .6,  player: .45,  plant: .55, drop: .1,  erase: .35, adj: .2,  npcFind: .2,  fakeSeer: .7, assist: false, wit: .62, sway: .65 },
+    { id: 1, size: 10, ap: 3, traces: 2, neg: .4,  player: .3,   plant: .35, drop: .15, erase: .2,  adj: .25, npcFind: .25, fakeSeer: .6, assist: false, wit: .32, sway: .8 },
+    { id: 2, size: 12, ap: 3, traces: 2, neg: .5,  player: .45,  plant: .4,  drop: .12, erase: .25, adj: .22, npcFind: .22, fakeSeer: .55, assist: false, wit: .5, sway: .7 },
+    { id: 3, size: 13, ap: 3, traces: 1, neg: .6,  player: .45,  plant: .55, drop: .1,  erase: .35, adj: .2,  npcFind: .2,  fakeSeer: .7, assist: false, wit: .6, sway: .55 },
   ];
   const CATS = ['height', 'hand', 'foot', 'mark'];
 
@@ -113,6 +113,7 @@
       if (S.pl.role === 'guard' && person(S, 'you').alive) guarded = act.guard || null;
       else if (npcGuard) guarded = guardPick(S, npcGuard);
     }
+    if (!act.prologue) S.lastGuard = guarded;
     let died = !!target, savedBy = null;
     if (!act.prologue && target) {
       if (guarded === target) { died = false; savedBy = 'guard'; }
@@ -368,7 +369,7 @@
     }
     const acc = S.pl.accuse && S.pl.accuse.day === S.day ? S.pl.accuse.target : null;
     if (acc && sus[acc] != null && p.role !== 'wolf') {
-      const cred = 1 - (A.p.you || 0) * 2.2;
+      const cred = S.ghost && S.ghost.cause === 'wolf' ? 1 : 1 - (A.p.you || 0) * 2.2;
       sus[acc] += Math.max(0, cred) * (.12 + .3 * p.persona.trust) * (S.pl.accuse.ev ? 1.6 : 1) * D.sway;
     }
     if (p.role === 'wolf') {               // wolves pretend: they use the village's view, never their partners
@@ -389,14 +390,14 @@
     return wpick(S, cand, p => .08 + A.p[p.id] + (S.claims.some(c => c.by === p.id) ? .3 : 0)).id;
   }
   function guardPick(S, g) {
-    const cand = alive(S).filter(p => p.id !== g.id);
+    const cand = alive(S).filter(p => p.id !== g.id && p.id !== S.lastGuard);
     if (!cand.length) return null;
     const A = analyze(S, g.id);
     return wpick(S, cand, p => {
       let v = .2;
       const c = S.claims.find(c => c.by === p.id);
-      if (c) v += (c.role === 'seer' ? 2.2 : 1.1) * (1 - A.p[p.id]);
-      if (p.isPlayer && S.pl.co) v += 1.2;
+      if (c) v += (c.role === 'seer' ? 1.6 : .8) * (1 - A.p[p.id]);
+      if (p.isPlayer && S.pl.co) v += .5;
       return v * (1 - A.p[p.id]);
     }).id;
   }
@@ -404,16 +405,29 @@
     const D = diffOf(S);
     const pub = analyze(S, 'pub');
     const cand = alive(S).filter(p => p.role !== 'wolf');
-    // a lone seer claimer dies first, nearly always
-    const seers = cand.filter(p => S.claims.some(c => c.by === p.id && c.role === 'seer'));
-    if (seers.length === 1 && rnd(S) < .8 * (seers[0].isPlayer ? D.player : 1)) return seers[0].id;
+    const last = S.nights[S.nights.length - 1];
+    const gjOn = last && last.saved === 'guard' ? last.target : null;     // the guard stood at this door last night
+    const seerC = S.claims.filter(c => c.role === 'seer' && person(S, c.by).alive);
+    const fakeOurs = seerC.some(c => isWolf(S, c.by));                    // a partner is pretending to be the seer
+    const claimed = cand.filter(p => seerC.some(c => c.by === p.id));
+    // a lone seer claimer — the player too, no favours — is the first prey. Not when biting them would prove them real
+    // (our partner claims the same: better to have them voted out), and less when the guard was at that door last night
+    if (claimed.length === 1 || (claimed.length === 2 && !fakeOurs)) {
+      // two claimers and neither is ours: one is the madman — the wolves cannot tell, and bite one of them
+      const s = claimed.length === 1 ? claimed[0] : wpick(S, claimed, p => (p.id === gjOn ? 2 : 1) * (1.1 - pub.p[p.id]));
+      let bite = claimed.length === 2 ? .6 : fakeOurs ? .55 : .75;
+      if (gjOn === s.id) bite = Math.min(.95, bite * 1.3);     // the guard cannot stand at the same door two nights running
+      if (s.isPlayer && D.id === 0) bite *= .5;
+      if (rnd(S) < bite) return s.id;
+    }
     const t = wpick(S, cand, p => {
       let v = 1;
       const c = S.claims.find(c => c.by === p.id);
-      if (c) { const same = S.claims.filter(x => x.role === c.role && !isWolf(S, x.by) && person(S, x.by).alive).length; v += (c.role === 'seer' ? 3.2 : 1.6) / Math.max(1, same); }
+      if (c) { const same = S.claims.filter(x => x.role === c.role && !isWolf(S, x.by) && person(S, x.by).alive).length; v += (c.role === 'seer' ? 3.2 : 1.6) / Math.max(1, same); if (fakeOurs && c.role === 'seer') v *= .3; }
+      if (p.id === gjOn) v *= 1.6;
       v += (p.persona.logic || .5) * 1.2;
       v *= 1.15 - pub.p[p.id];                                    // keep the suspected alive as scapegoats
-      if (p.isPlayer) v *= D.player * (1 + (S.pl.co ? 1.5 : 0) + (S.pl.hit || 0));
+      if (p.isPlayer) v *= c ? (D.id === 0 ? .5 : 1) : D.player * (1 + (S.pl.hit || 0));
       return v;
     });
     return t.id;
@@ -595,7 +609,9 @@
     // the wolves agree on one innocent: the one the village already doubts most
     const pub = analyze(S, 'pub');
     const pool = alive(S).filter(p => !isWolf(S, p.id) && (!among || among.includes(p.id)));
-    const bloc = pool.length ? pool.slice().sort((a, b) => (pub.p[b.id] + (heat[b.id] || 0) * .12 + (S.claims.some(c => c.by === b.id && c.role === 'seer') ? .15 : 0)) - (pub.p[a.id] + (heat[a.id] || 0) * .12 + (S.claims.some(c => c.by === a.id && c.role === 'seer') ? .15 : 0)))[0].id : null;
+    const fakeOurs = S.claims.some(c => c.role === 'seer' && isWolf(S, c.by) && person(S, c.by).alive);
+    const bw = q => pub.p[q.id] + (heat[q.id] || 0) * .12 + (S.claims.some(c => c.by === q.id && c.role === 'seer') ? (fakeOurs ? .5 : .15) : 0);
+    const bloc = pool.length ? pool.slice().sort((a, b) => bw(b) - bw(a))[0].id : null;
     for (const p of alive(S)) {
       if (p.isPlayer) { if (playerVote) ballots.you = playerVote; continue; }
       const { sus } = suspicion(S, story, p.id);
@@ -615,8 +631,10 @@
   }
   function tally(ballots) { const c = {}; for (const k in ballots) if (ballots[k]) c[ballots[k]] = (c[ballots[k]] || 0) + 1; return c; }
   // one round of the vote: { ballots, count, top }  (among: the runoff's names)
-  function voteRound(S, story, playerVote, among) {
-    const b = npcBallots(S, story, among, playerVote), c = tally(b);
+  function voteRound(S, story, playerVote, among, ghostVote) {
+    const b = npcBallots(S, story, among, playerVote);
+    if (ghostVote && (!among || among.includes(ghostVote))) b.you = ghostVote;     // the dead player's one vote
+    const c = tally(b);
     const max = Math.max(0, ...Object.values(c)), top = Object.keys(c).filter(k => c[k] === max);
     return { ballots: b, count: c, top, among: among || null };
   }
@@ -632,9 +650,19 @@
   /* ---------- end ---------- */
   function check(S) {
     const w = wolvesAlive(S).length, h = alive(S).length - w;
-    if (!S.people[0].alive) return S.result = { win: false, why: S.people[0].death.cause === 'exile' ? 'exiled' : 'killed' };
-    if (w === 0) return S.result = { win: true, why: 'cleared' };
-    if (w >= h) return S.result = { win: false, why: 'overrun' };
+    const pl = S.people[0];
+    if (!pl.alive && !S.ghost) {      // the player goes on as a ghost: their results are left behind, they keep one whisper and one vote
+      S.ghost = { since: S.day, cause: pl.death.cause, whisper: 1, vote: 1, will: null };
+      if ((S.pl.role === 'seer' || S.pl.role === 'medium') && S.pl.res.some(r => r.seer || r.medium)) {
+        let c = S.claims.find(c => c.by === 'you');
+        if (!c) { c = { by: 'you', role: S.pl.role, day: S.day, res: [], will: true }; S.claims.push(c); }
+        const add = S.pl.res.filter(r => (r.seer || r.medium) && !c.res.some(x => x.target === r.target));
+        for (const r of add) c.res.push({ target: r.target, res: r.res, day: S.day });
+        S.ghost.will = add.length ? add.map(r => ({ target: r.target, res: r.res })) : null;
+      }
+    }
+    if (w === 0) return S.result = { win: true, why: 'cleared', ghost: !!S.ghost };
+    if (w >= h) return S.result = { win: false, why: 'overrun', ghost: !!S.ghost };
     return null;
   }
   function score(S) {
@@ -642,7 +670,7 @@
     const lost = S.people.filter(p => !p.isPlayer && p.death && p.role !== 'wolf').length;
     const wrong = S.votes.filter(v => v.out && !isWolf(S, v.out)).length;
     let pts = S.result.win ? 60 : 10;
-    pts += Math.max(0, 20 - 4 * wrong) + Math.max(0, 14 - 2 * lost) + (S.people[0].alive ? 6 : 0) - Math.max(0, S.day - 3) * 2;
+    pts += Math.max(0, 20 - 4 * wrong) + Math.max(0, 14 - 2 * lost) + (S.people[0].alive ? 6 : -8) - Math.max(0, S.day - 3) * 2;
     pts += S.diff * 4;
     const rank = pts >= 92 ? 'S' : pts >= 80 ? 'A' : pts >= 66 ? 'B' : pts >= 45 ? 'C' : 'D';
     return { pts, rank, lost, wrong, days: S.day };
@@ -651,7 +679,7 @@
   /* ---------- the player's actions ---------- */
   // search a place: a trace of last night, an item, a secret's clue, or nothing
   function search(S, story, loc) {
-    if (S.pl.ap <= 0) return { k: 'noap' };
+    if (S.pl.ap <= 0 || !S.people[0].alive) return { k: 'noap' };
     S.pl.ap--;
     const n = S.nights.length - 1, N = S.nights[n];
     const key = (ni, i) => ni + '|' + i;
@@ -681,6 +709,7 @@
   }
   // ask a person: 'night' | 'suspect' | 'about' (target) | 'secret'
   function ask(S, story, id, q, target, free) {
+    if (!S.people[0].alive) return { k: 'gone' };
     if (!free) { if (S.pl.ap <= 0) return { k: 'noap' }; }
     const p = person(S, id);
     if (!p || !p.alive) return { k: 'gone' };

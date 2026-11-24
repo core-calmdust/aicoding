@@ -708,7 +708,7 @@
     ICO: { Win: '<circle cx="12" cy="12" r="3"/><path d="M12 4v4M12 16v4M4 12h4M16 12h4"/>', Tac: '<path d="M5 19L19 5M14 5h5v5"/>' },
     fetch() {
       const ld = u => fetch(u).then(r => r.text()).catch(() => '');
-      return Promise.all([fetch(this.url).then(r => r.json()), ld('../foxgeese/i18n-fg.js?v=10'), ld('../foxgeese/i18n-fg-more.js?v=14')]).then(([d, a, b]) => {
+      return Promise.all([fetch(this.url).then(r => r.json()), ld('../foxgeese/i18n-fg.js?v=10'), ld('../foxgeese/i18n-fg-more.js?v=15')]).then(([d, a, b]) => {
         const w = { I18N: {} }; ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].forEach(l => { w.I18N[l] = {}; });
         for (const tx of [a, b]) { try { new Function('window', 'I18N', tx)(w, w.I18N); } catch (e) {} }
         this.I = w.I18N; d.levels = d.themes; return d;

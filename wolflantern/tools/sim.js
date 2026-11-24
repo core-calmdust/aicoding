@@ -13,7 +13,7 @@ const stories = args[0] && !args[0].startsWith('--') ? [args[0]] : Object.keys(W
 const verbose = args.includes('--verbose');
 
 // the bar: detective win rate per difficulty, and the random voter must lose clearly more often
-const BAR = { det: [[.9, 1], [.8, .97], [.6, .9], [.45, .82]], gap: .25, day1: .9 };   // the bot reasons perfectly: a person wins less
+const BAR = { det: [[.9, 1], [.8, 1], [.6, .98], [.45, .9]], gap: .25, day1: .9 };   // 2026-11-25：死んでも幽霊で続くので上限を広げた   // the bot reasons perfectly: a person wins less
 
 function playBot(story, diff, seed, smart) {
   const S = E.newGame(story, { diff, seed });
@@ -23,6 +23,8 @@ function playBot(story, diff, seed, smart) {
     // investigate
     E.npcSearch(S, story);
     const n = S.nights.length - 1, NN = S.nights[n];
+    const dead = !S.people[0].alive;
+    if (dead) S.pl.ap = 0;
     while (S.pl.ap > 0) {
       if (smart && NN.killer && NN.traces.some((t, i) => !t.gone && !S.pl.found.includes(n + '|' + i))) { E.search(S, story, NN.loc); continue; }
       if (smart && S.items.some(it => !it.taken && S.day >= it.day) && W.WL_STORIES && Math.random() < .3) { const it = S.items.find(x => !x.taken && S.day >= x.day); E.search(S, story, it.loc); continue; }
@@ -32,9 +34,9 @@ function playBot(story, diff, seed, smart) {
       E.ask(S, story, p.id, 'night');
     }
     // meeting
-    if (smart) { for (const k of S.pl.found) E.present(S, story, k); if ((S.pl.role === 'seer' || S.pl.role === 'medium') && (day >= 2 || S.pl.res.some(r => r.res === 'wolf'))) E.playerClaim(S); E.playerResults(S); }
+    if (smart && !dead) { for (const k of S.pl.found) E.present(S, story, k); if ((S.pl.role === 'seer' || S.pl.role === 'medium') && (day >= 2 || S.pl.res.some(r => r.res === 'wolf'))) E.playerClaim(S); E.playerResults(S); }
     E.meeting(S, story);
-    if (smart) { const A = E.analyze(S, 'you'); const t = E.alive(S).filter(p => !p.isPlayer).sort((a, b) => A.p[b.id] - A.p[a.id])[0]; if (t && A.p[t.id] > .3) S.pl.accuse = { day, target: t.id, ev: S.pl.found.length > 0 }; }
+    if (smart && (!dead || (S.ghost && S.ghost.whisper))) { const A = E.analyze(S, 'you'); const t = E.alive(S).filter(p => !p.isPlayer).sort((a, b) => A.p[b.id] - A.p[a.id])[0]; if (t && A.p[t.id] > .3) { S.pl.accuse = { day, target: t.id, ev: S.pl.found.length > 0 }; if (dead) S.ghost.whisper = 0; } }
     // vote
     const live = E.alive(S).filter(p => !p.isPlayer);
     let pv;
@@ -59,7 +61,7 @@ function playBot(story, diff, seed, smart) {
     if (E.check(S)) break;
     S.pl.ap = S.pl.apMax; S.pl.asks = 3;
   }
-  return { S, win: S.result && S.result.win, why: S.result && S.result.why, days: S.day, day1conf, guard };
+  return { S, win: S.result && S.result.win, why: (S.result && S.result.why) + (S.ghost ? '+ghost' : ''), days: S.day, day1conf, guard, seerDead: S.pl.role === 'seer' && S.pl.co && S.ghost ? 1 : 0, seerCo: S.pl.role === 'seer' && S.pl.co ? 1 : 0 };
 }
 
 let fail = 0;
@@ -72,16 +74,16 @@ for (const sid of stories) {
   const dist = {}; for (const cat of E.CATS) { dist[cat] = {}; for (const c of story.chars) dist[cat][c.traits[cat]] = (dist[cat][c.traits[cat]] || 0) + 1; }
   console.log('  特徴の分布', JSON.stringify(dist), dup.length ? '  同じ組み合わせ: ' + dup.map(v => v.join('=')).join(', ') : '');
   for (const d of diffs) {
-    let w = 0, rw = 0, days = 0, conf = 0, why = {}, t0 = Date.now(), gd = 0;
+    let w = 0, rw = 0, days = 0, conf = 0, why = {}, t0 = Date.now(), gd = 0, sc = 0, sd = 0;
     for (let i = 0; i < N; i++) {
-      const r = playBot(story, d, 1000 + i * 7919 + d, true); if (r.win) w++; days += r.days; conf += r.day1conf; why[r.why] = (why[r.why] || 0) + 1; gd += r.guard;
+      const r = playBot(story, d, 1000 + i * 7919 + d, true); if (r.win) w++; days += r.days; conf += r.day1conf; why[r.why] = (why[r.why] || 0) + 1; gd += r.guard; sc += r.seerCo; sd += r.seerDead;
       const q = playBot(story, d, 1000 + i * 7919 + d, false); if (q.win) rw++;
     }
     const det = w / N, rnd = rw / N, c1 = conf / N;
     const [lo, hi] = BAR.det[d];
     const ok = det >= lo && det <= hi && det - rnd >= BAR.gap && c1 <= BAR.day1;
     if (!ok) fail++;
-    console.log(`  ${['入門', '標準', '上級', '悪夢'][d]}(${E.DIFF[d].size}人)  探偵 ${(det * 100).toFixed(0)}%  でたらめ ${(rnd * 100).toFixed(0)}%  平均${(days / N).toFixed(1)}日  初日の確信 ${(c1 * 100).toFixed(0)}%  護衛成功 ${(gd / N).toFixed(2)}/局  結末 ${JSON.stringify(why)}  ${ok ? 'OK' : '★基準外'}  (${((Date.now() - t0) / N / 2).toFixed(0)}ms/局)`);
+    console.log(`  ${['入門', '標準', '上級', '悪夢'][d]}(${E.DIFF[d].size}人)  探偵 ${(det * 100).toFixed(0)}%  でたらめ ${(rnd * 100).toFixed(0)}%  平均${(days / N).toFixed(1)}日  初日の確信 ${(c1 * 100).toFixed(0)}%  護衛成功 ${(gd / N).toFixed(2)}/局  名乗った占い師の死 ${sd}/${sc}  結末 ${JSON.stringify(why)}  ${ok ? 'OK' : '★基準外'}  (${((Date.now() - t0) / N / 2).toFixed(0)}ms/局)`);
   }
 }
 process.exit(fail ? 1 : 0);

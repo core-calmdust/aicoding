@@ -88,10 +88,13 @@ if [ "$OPP" = micro ]; then
     case "$MAGIC" in 4d45554e|5345554e) KPF="$KPF -DNUE_L1=$(od -An -t d4 -j 16 -N 4 clock-net.bin | tr -d ' ') -DNUE_L2=$(od -An -t d4 -j 20 -N 4 clock-net.bin | tr -d ' ') -DNUE_MI=$(od -An -t d4 -j 24 -N 4 clock-net.bin | tr -d ' ')";; esac
     [ "$MAGIC" = 5345554e ] && KPF="$KPF -DNUE_MB=8"
     cc -O3 -DNATIVE -DMT -DSEARCH2_MT -DTTM_BITS=16 -DNUE_H=$NH $KPF -w -o usimatch-clock "$HERE/usimatch.c" -lpthread
-    CT="clock-$(basename "$NET" | sed 's/[^A-Za-z0-9]/_/g')-t$THREADS-o$OTHREADS"
-    echo "== the site's engine + $(basename "$NET") on $THREADS threads vs YaneuraOu + $(basename "$MICRO") on $OTHREADS thread(s), both on the clock $FISCHER: $GAMES games (while it runs: tail -f $WORK/g-$CT.log)"
+    # OLIMIT=<nodes>: the opponent also stops at that many nodes a move (10 of our threads lost to 1 of its: v7 0-6, g2048s
+    # 1-8, so the score said nothing; with a limit it comes back to the middle and two of our nets can be told apart)
+    OLIM=""; [ -n "$OLIMIT" ] && OLIM="--opt NodesLimit=$OLIMIT"
+    CT="clock-$(basename "$NET" | sed 's/[^A-Za-z0-9]/_/g')-t$THREADS-o$OTHREADS${OLIMIT:+-n$OLIMIT}"
+    echo "== the site's engine + $(basename "$NET") on $THREADS threads vs YaneuraOu + $(basename "$MICRO") on $OTHREADS thread(s)${OLIMIT:+, at most $OLIMIT nodes a move}, both on the clock $FISCHER: $GAMES games (while it runs: tail -f $WORK/g-$CT.log)"
     T0=$(date +%s)
-    ./usimatch-clock clock-net.bin 1000000 "$OYO" "$WORK" $GAMES --opt BookFile=no_book --opt USI_Hash=1024 --opt Threads=$OTHREADS --opt NetworkDelay=0 --opt NetworkDelay2=0 $OOPT \
+    ./usimatch-clock clock-net.bin 1000000 "$OYO" "$WORK" $GAMES --opt BookFile=no_book --opt USI_Hash=1024 --opt Threads=$OTHREADS --opt NetworkDelay=0 --opt NetworkDelay2=0 $OLIM $OOPT \
       --openings "$HERE/openings.txt" --fischer $FISCHER --threads $THREADS > "g-$CT.log" 2>&1 || true
     grep "total" "g-$CT.log" | tail -1 | sed "s|^|$(basename "$NET") ($THREADS threads) vs YaneuraOu + $(basename "$MICRO") ($OTHREADS): |"; echo "($(( ($(date +%s) - T0) / 60 )) minutes; log: $WORK/g-$CT.log)"; exit 0
   fi

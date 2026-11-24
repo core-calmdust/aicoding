@@ -240,8 +240,9 @@
 
   /* ---------- header ---------- */
   function hud() {
+    if (S.ghost) document.body.classList.add('ghost');
     const ph = { morning: '朝', invest: '昼', meeting: '集会', vote: '投票', night: '夜', end: '終幕', prologue: '序幕' }[S.phase] || '';
-    $('hbWhere').innerHTML = `${PCQ.matches ? esc(st.title) + '　' : ''}${S.phase === 'prologue' ? '' : dayName(S.day)} ${ph}<small>${DIFFN[S.diff]}${S.phase === 'prologue' ? '' : '・' + esc(SP.roleName(st, S.pl.role))}</small>`;
+    $('hbWhere').innerHTML = `${PCQ.matches ? esc(st.title) + '　' : ''}${S.phase === 'prologue' ? '' : dayName(S.day)} ${ph}<small>${DIFFN[S.diff]}${S.phase === 'prologue' ? '' : '・' + esc(SP.roleName(st, S.pl.role))}${S.ghost ? '・幽霊' : ''}</small>`;
     if (S.phase === 'invest') $('hbAp').innerHTML = `<span>残り</span>` + Array.from({ length: S.pl.apMax }, (_, i) => `<i class="${i < S.pl.ap ? '' : 'off'}"></i>`).join('');
     else $('hbAp').innerHTML = '';
   }
@@ -296,7 +297,10 @@
     if (!first) {
       setScene(N.loc);
       items.push({ text: st.text.day[Math.min(S.day - 1, st.text.day.length - 1)] });
-      if (N.died) {
+      if (N.died && N.target === 'you') {
+        setCast([]); SND.thud();
+        items.push({ text: st.text.dead }, { text: st.text.ghost });
+      } else if (N.died) {
         const v = N.target, c = ch(v);
         setCast(v === 'you' ? [] : [v], { fallen: v, x: 58 });
         SND.thud();
@@ -306,6 +310,7 @@
         setCast([]);
         items.push({ text: fill(pickOne(st.text.peace), { loc: locName(N.loc) }) });
         if (N.saved === 'ward') items.push({ text: '枕もとの鈴が、夜中にひとりでに鳴った。あの音がなければ、あなたは今ここにいない。' });
+        if (N.saved === 'guard' && N.target === 'you') items.push({ text: `戸口の前の床に、獣の爪の跡が残っていた。あなたの部屋の前まで来て、そこで引き返している。\n誰かが一晩じゅう、**あなたを守っていた**のだ。` });
         if (N.saved === 'guard' && S.pl.role === 'guard') items.push({ text: `あなたが夜通し見張った戸口の前に、獣の爪の跡があった。${nm(N.target)}は、何も知らずに眠っていた。` });
       }
       // what the player saw
@@ -328,6 +333,7 @@
     }
     await say(items);
     if (E.check(S)) return end();
+    if (S.ghost) return ghostDay();
     // the day begins
     S.pl.ap = S.pl.apMax; S.pl.asks = 3; S.pl.accuse = null; S.pl.shown = S.pl.shown || [];
     S.npcFound = E.npcSearch(S, st);
@@ -447,6 +453,7 @@
     debate();
   }
   function debate() {
+    if (S.ghost) return ghostDebate();
     S.phase = 'meeting'; hud();
     G.onPup = id => talk(id, true).then(() => debate());
     const canCo = (S.pl.role === 'seer' || S.pl.role === 'medium') && !S.pl.co;
@@ -510,27 +517,75 @@
     save(); debate();
   }
 
+  /* the ghost: the player died, but watches to the end with one whisper and one vote */
+  function willLines() {
+    const g = S.ghost; if (!g || !g.will || g.willTold) return [];
+    g.willTold = true;
+    const role = st.roles[S.pl.role].name;
+    return [{ text: `${st.lex.book || '手帳'}の最後の頁に、あなたは${role}として見たことを書き残していた。朝、それを見つけた者が、皆の前で読み上げた。\n` + g.will.map(w => `${nm(w.target)}：${w.res === 'wolf' ? '**人狼**' : '人間'}`).join('　') }];
+  }
+  async function ghostDay() {
+    S.pl.ap = 0; S.pl.accuse = null;
+    document.body.classList.add('ghost'); hud();
+    await say(willLines());
+    E.npcSearch(S, st);
+    meeting();
+  }
+  function ghostDebate() {
+    S.phase = 'meeting'; hud(); document.body.classList.add('ghost');
+    G.onPup = null;
+    const g = S.ghost;
+    showMenu(`<div class="q">あなたの声は、もう誰にも聞こえない。けれど、まだできることがある。<small>囁きは一度だけ。幽霊の一票も一度だけ。${G.ghostVote ? `（今日の一票は${esc(nm(G.ghostVote))}へ）` : ''}${S.pl.accuse ? `（${esc(nm(S.pl.accuse.target))}の名を囁いた）` : ''}</small></div>
+      <div class="btns">
+        <button class="btn" id="gWh" ${g.whisper ? '' : 'disabled'}>${IC.ask}名を囁く<small>残り${g.whisper}</small></button>
+        <button class="btn" id="gVo" ${g.vote && !G.ghostVote ? '' : 'disabled'}>${IC.vote}幽霊の一票<small>残り${g.vote}</small></button>
+        <button class="btn pri" id="gGo">${IC.go}投票を見届ける</button>
+      </div>`);
+    $('gWh').onclick = async () => {
+      const id = await pickPerson('誰の名を囁く？', '生きている者たちの耳もとで、ひとりの名を囁く。あなたを信じていた者ほど、その名を疑いはじめる。', live().map(p => p.id), { mark: true });
+      if (!id) return ghostDebate();
+      g.whisper = 0; S.pl.accuse = { day: S.day, target: id, ev: true, ghost: true };
+      const ear = live().filter(p => p.id !== id).sort((a, b) => b.persona.trust - a.persona.trust)[0];
+      await say([{ text: `灯りがひとつ、風もないのに揺れた。誰かが振り返る。\n……${nm(id)}。その名だけが、部屋の空気に残った。` }, ear ? { who: ear.id, text: SP.say(S, st, ear.id, 'bad', { target: SP.callName(S, st, ear.id, id), why: SP.why(S, st, ear.id, { k: 'gut' }) }) } : null]);
+      save(); ghostDebate();
+    };
+    $('gVo').onclick = async () => {
+      const id = await pickPerson('幽霊の一票を、誰に入れる？', '一度きり。今日の投票に、あなたの一票が加わる。', live().map(p => p.id), { mark: true });
+      if (id) G.ghostVote = id;
+      ghostDebate();
+    };
+    $('gGo').onclick = vote;
+    renderNb();
+  }
+
   /* the vote */
   async function vote() {
     S.phase = 'vote'; hud(); save();
-    const pick = await pickPerson('誰に票を入れる？', `最も票を集めた人が${st.lex.jail}へ送られる。`, live().map(p => p.id), { mark: true });
-    if (!pick) return debate();
-    await say([{ text: st.text.vote }]);
-    let r = E.voteRound(S, st, pick);
+    const gv = S.ghost ? G.ghostVote : null;
+    const pick = S.ghost ? null : await pickPerson('誰に票を入れる？', `最も票を集めた人が${st.lex.jail}へ送られる。`, live().map(p => p.id), { mark: true });
+    if (!pick && !S.ghost) return debate();
+    if (gv) { S.ghost.vote = 0; G.ghostVote = null; }
+    await say([{ text: st.text.vote }].concat(gv ? [{ text: `誰にも見えない手が、黒板に一本の線を引いた。**${nm(gv)}**の名の下に。` }] : []));
+    let r = E.voteRound(S, st, pick, null, gv);
     const rounds = [r];
     await threads(r.ballots);
     if (r.top.length > 1) {
       await say([{ text: `票が割れた。${r.top.map(nm).join('と')}。もう一度、この中から選ぶ。` }]);
-      let p2 = r.top.includes(pick) ? pick : await pickPerson('決選投票', `${r.top.map(nm).join('・')}の中から選ぶ。`, r.top.filter(x => x !== 'you'));
-      if (!p2) p2 = r.top.find(x => x !== 'you');
-      r = E.voteRound(S, st, p2, r.top); rounds.push(r);
+      let p2 = S.ghost ? null : r.top.includes(pick) ? pick : await pickPerson('決選投票', `${r.top.map(nm).join('・')}の中から選ぶ。`, r.top.filter(x => x !== 'you'));
+      if (!p2 && !S.ghost) p2 = r.top.find(x => x !== 'you');
+      r = E.voteRound(S, st, p2, r.top, gv); rounds.push(r);
       await threads(r.ballots);
     }
     let out = r.top[0], lot = false;
     if (r.top.length > 1) { lot = true; out = r.top[Math.floor(Math.random() * r.top.length)]; await say([{ text: `それでも決まらない。くじが引かれ、**${nm(out)}**の名が出た。` }]); }
     $('fx').querySelector('.threads')?.remove();
     E.exile(S, out, rounds, lot);
-    if (out === 'you') { await say([{ text: `票の糸は、すべてあなたに結ばれていた。` }]); S.phase = 'end'; save(); return end(); }
+    if (out === 'you') {
+      await say([{ text: `票の糸は、すべてあなたに結ばれていた。` }, { text: st.text.exiledYou }]);
+      if (E.check(S)) { S.phase = 'end'; save(); return end(); }
+      await say([{ text: st.text.ghost }].concat(willLines()));
+      S.phase = 'night'; save(); return night();
+    }
     const c = ch(out);
     const t = pickOne(st.text.exile);
     await say([{ text: fill(t, { name: c.name }) }, { who: out, text: c.last }]);
@@ -572,14 +627,15 @@
     SND.windOn(.09);
     await say([{ text: pickOne(st.text.night) }]);
     const act = {};
-    const r = S.pl.role;
+    const r = S.ghost ? null : S.pl.role;
+    if (!S.ghost && S.pl.co) await say([{ text: `あなたは${st.roles[S.pl.role].name}だと名乗った。狼は、名乗った者の戸口を知っている。\n今夜、誰かがあなたを守ってくれるだろうか。` }]);
     if (r === 'seer') {
       const done = new Set(S.pl.res.filter(x => x.seer).map(x => x.target));
       act.divine = await pickPerson('今夜、誰を占う？', '朝に結果がわかる。', live().filter(p => !done.has(p.id)).map(p => p.id), { mark: true }) || pickOne(live()).id;
     } else if (r === 'guard') {
-      act.guard = await pickPerson('今夜、誰を守る？', '守った人は、人狼に襲われても死なない。自分は守れない。', live().map(p => p.id), { mark: true }) || null;
+      act.guard = await pickPerson('今夜、誰を守る？', '守った人は、人狼に襲われても死なない。自分は守れない。二晩続けて同じ人は守れない。', live().filter(p => p.id !== S.lastGuard).map(p => p.id), { mark: true }) || null;
     }
-    const lantern = S.pl.items.find(i => st.items.find(x => x.id === i).kind === 'stake');
+    const lantern = !S.ghost && S.pl.items.find(i => st.items.find(x => x.id === i).kind === 'stake');
     if (lantern) {
       const v = await pickOpt('夜の見張り', `${st.items.find(x => x.id === lantern).name}を持っている。どこかで夜を明かせば、通りかかる影が見えるかもしれない。`, [{ t: '部屋で眠る', v: 'home', ic: IC.moon }].concat(st.locs.map(l => ({ t: l.name + 'で見張る', v: l.id, ic: IC.search }))));
       if (v && v !== 'home') { act.stake = v; S.pl.stakeAt = v; await say([{ text: fill(st.items.find(x => x.id === lantern).use, { loc: locName(v) }) }]); }
@@ -610,8 +666,8 @@
     setScene(st.meetLoc || 'inn', false, true);
     if (R.win) {
       await say([{ text: pickOne(st.text.climax) }]);
-    } else if (R.why === 'killed') { document.body.classList.add('night'); await say([{ text: st.text.dead }]); }
-    else if (R.why === 'exiled') await say([{ text: st.text.exiledYou }]);
+    }
+    document.body.classList.remove('ghost');
     // the truth
     const all = S.people.filter(p => !p.isPlayer).map(p => p.id);
     setCast(all);
@@ -634,7 +690,7 @@
     if (order.indexOf(sc.rank) < order.indexOf(rr[k].best)) rr[k].best = sc.rank;
     try { localStorage.setItem(REC, JSON.stringify(rr)); } catch (e) {}
     clearSave();
-    const why = { cleared: '狼をすべて見つけ出した', overrun: '狼の数が、人の数に並んだ', killed: 'あなたは夜明けを迎えられなかった', exiled: 'あなたは追放された' }[R.why];
+    const why = ({ cleared: '狼をすべて見つけ出した', overrun: '狼の数が、人の数に並んだ' }[R.why] || '') + (S.ghost ? '（あなたは幽霊として見届けた）' : '');
     await sheet(`<h3 style="text-align:center">${R.win ? '解決' : '未解決'}　<small style="font:500 15px var(--ui);color:var(--mute)">${esc(why)}</small></h3>
       <div class="rank">${sc.rank}</div>
       <div class="stat"><div><b>${S.day}</b><span>日</span></div><div><b>${sc.wrong}</b><span>誤った追放</span></div><div><b>${sc.lost}</b><span>失われた人</span></div><div><b>${DIFFN[S.diff]}</b><span>むずかしさ</span></div></div>
@@ -757,6 +813,7 @@
     scr('play'); palette(st); hud();
     const ph = S.phase;
     if (ph === 'prologue') return prologue();
+    if (S.ghost && (ph === 'morning' || ph === 'invest')) return ghostDay();
     if (ph === 'morning') { S.phase = 'invest'; G.loc = (S.nights[S.nights.length - 1] || {}).loc || st.locs[0].id; return hub(); }
     if (ph === 'invest') { G.loc = (S.nights[S.nights.length - 1] || {}).loc || st.locs[0].id; return hub(); }
     if (ph === 'meeting' || ph === 'vote') { setScene(st.meetLoc || 'inn', false, true); setCast(live().map(p => p.id)); return debate(); }
