@@ -85,7 +85,6 @@ body.show-names .pp .nm,.pp:hover .nm,.pp.speak .nm,.pp.sel .nm{opacity:1}
 .pp.idle .pup{animation:breathe 4.6s ease-in-out infinite;animation-delay:var(--d,0s)}
 body.anim-off .pp.idle .pup{animation:none}
 @keyframes breathe{0%,100%{rotate:-1.1deg;scale:1 1}30%{scale:1 1.014}50%{rotate:1.1deg;scale:1 1.006}80%{scale:1 1.016}}
-.pp.speak.idle .pup{animation-duration:1.6s}   /* the one speaking sways a little more quickly, like a rod puppet being worked */
 .pp.fallen .pup{transform:rotate(-86deg) translate(-30%,10%);filter:blur(.6px)}
 .pp.lift{bottom:120%!important;opacity:0;transition:bottom 1.6s cubic-bezier(.5,0,.6,1),opacity 1.6s}
 .pp.drop{transform:translateX(-50%) translateY(140%);opacity:0;transition:transform 1.2s cubic-bezier(.6,0,.8,.4),opacity 1.2s}
@@ -521,6 +520,6 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 <script src="stories/tomoshibi.who.js?v=2"></script>
 <script src="stories/tomoshibi.who.open.js?v=1"></script>
 <script src="sound.js?v=9"></script>
-<script src="game.js?v=33"></script>
+<script src="game.js?v=34"></script>
 </body>
 </html>

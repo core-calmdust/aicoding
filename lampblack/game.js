@@ -192,7 +192,7 @@
       if (!el) {
         const cc = ch(id); if (!cc) return;
         el = document.createElement('div'); el.className = 'pp idle'; el.dataset.id = id;
-        el.style.setProperty('--d', (i * .37 % 3) + 's');
+        el.style.setProperty('--d', (-(i * 1.37 % 4.6)).toFixed(2) + 's');   // a negative delay: already mid-sway when it appears, no still pause then a jerk
         el.innerHTML = ART.puppet(cc.look, cc.color) + `<span class="nm">${esc(cc.name)}</span>`;
         el.style.left = (o.from === 'left' ? -10 : o.from === 'right' ? 110 : 50) + '%';
         if (!o.from) el.style.opacity = '0';
