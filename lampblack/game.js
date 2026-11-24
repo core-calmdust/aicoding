@@ -9,7 +9,14 @@
   const KEY = 'wolflantern-save-v1', REC = 'wolflantern-rec-v1', PREF = 'wolflantern-pref-v1';
   const ORDER = ['kirigane', 'hokushin', 'tomoshibi', 'nekonaki', 'shirane'];
   const DIFFN = ['入門', '標準', '上級', '悪夢'];
-  const DIFFD = ['狼2匹。占い師と霊媒師がいる。はじめての夜に。', '狼2匹と狂人。狩人が加わり、嘘が増える。', '狼3匹と狂人。痕跡は少なく、物は罠になる。', '狼4匹と狂人。誰の言葉も信じきれない。'];
+  const DIFFT = ['はじめての夜に。', '嘘が増える。', '痕跡は少なく、物は罠になる。', '誰の言葉も信じきれない。'];
+  // the card's line follows the story's real cast for that size (the wolves and the roles differ story by story)
+  function diffDesc(s, i) {
+    const R = E.setupOf(s, E.DIFF[i].size);
+    const mad = R.madman ? `と${s.rules === 'fanatic' ? (s.roles.madman || {}).name || '狂信者' : '狂人'}` : '';
+    const ex = [R.guard && '狩人', R.mason && '共有者', R.cat && '猫又', R.fox && '妖狐', R.immoral && '背徳者'].filter(Boolean);
+    return `狼${R.wolf}匹${mad}。${ex.length ? ex.join('・') + 'がいる。' : ''}${DIFFT[i]}`;
+  }
   const NUM = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
   const ROLE_ICON = {
     auto: '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="11"/><path d="M12.5 12.5a3.6 3.6 0 1 1 4.8 3.4c-.9.4-1.3 1.1-1.3 2.1v.6M16 22.5v.2"/></svg>',
@@ -133,7 +140,7 @@
     const fr = (rec()[base.id] || {}).feats || {}, fl = window.WLFeats.list(base.id);
     $('setFeatN').textContent = `${fl.filter(f => fr[f.id]).length}/${fl.length}`;
     $('setFeats').innerHTML = fl.map(f => `<div class="feat${fr[f.id] ? ' got' : ''}"><i>${fr[f.id] ? '★' : '☆'}</i><b>${esc(f.name)}</b><span>${esc(f.desc)}</span></div>`).join('');
-    $('setDiff').innerHTML = DIFFN.map((d, i) => `<button class="tile${G.diff === i ? ' on' : ''}" data-d="${i}"><b>${d}</b><span class="cnt">${E.DIFF[i].size}人</span><span>${DIFFD[i]}</span></button>`).join('');
+    $('setDiff').innerHTML = DIFFN.map((d, i) => `<button class="tile${G.diff === i ? ' on' : ''}" data-d="${i}"><b>${d}</b><span class="cnt">${E.DIFF[i].size}人</span><span>${diffDesc(st, i)}</span></button>`).join('');
     const RR = E.setupOf(st, E.DIFF[G.diff].size);
     const roles = [['auto', 'おまかせ', '物語が決める'], ['villager', st.roles.villager.name, '調べる回数が多い'], ['seer', '占い師', '毎晩ひとりを占う'], ['medium', '霊媒師', '追放者の正体を知る']]
       .concat(st.rules === 'mason' ? [['mason', st.roles.mason.name, '相方と互いに人間だと知る']] : [['guard', '狩人', '毎晩ひとりを守る']])
