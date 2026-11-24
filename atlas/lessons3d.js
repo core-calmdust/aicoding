@@ -7025,6 +7025,7 @@
     /* a soft fade between COURSES (2026-11-23 user: not between problems — between lesson 1 and lesson 2, so moving to the next course
        is clear): the table dims with a small card 「コース 2 / 9 ・ title」, the next lesson is set up under it, then it clears */
     let veil = null, veilT = 0;
+    const veilHold = () => ctx.el && ctx.el.clientWidth >= 700 ? 1600 : 650;   // how long the card stays after the next lesson is set up (PC longer: 2026-11-24 user)
     function dim(on, card) {
       const host = ctx.el; if (!host) return Promise.resolve();
       const RM = matchMedia('(prefers-reduced-motion: reduce)').matches, tx = $('.tx');
@@ -7035,11 +7036,13 @@
         if (!veil) { veil = document.createElement('div'); veil.className = 'ls-veil'; veil.style.cssText = 'position:absolute;inset:0;background:#0b0d14;opacity:0;pointer-events:none;z-index:5;transition:opacity 140ms ease-in'; }
         if (veil.parentNode !== host) host.appendChild(veil);
         veil.style.display = 'flex'; veil.style.alignItems = 'center'; veil.style.justifyContent = 'center';
-        veil.innerHTML = card ? '<div style="color:#fff;text-align:center;font-weight:800;line-height:1.35;padding:0 16px;text-shadow:0 2px 8px rgba(0,0,0,.5);transform:translateY(6px);transition:transform 320ms ease-out"><div style="font-size:14px;opacity:.8;letter-spacing:.08em">' + card.n + '</div><div style="font-size:22px;margin-top:4px">' + card.t + '</div></div>' : '';
+        // (2026-11-24 user, PC: the card bigger and in the middle of the table; it also stays up longer — VEIL_HOLD)
+        const W = host.clientWidth, PC = W >= 700, fT = PC ? Math.round(Math.min(60, Math.max(34, W * .042))) : 22, fN = PC ? Math.round(fT * .5) : 14;
+        veil.innerHTML = card ? '<div style="color:#fff;text-align:center;font-weight:800;line-height:1.3;padding:0 16px;max-width:' + (PC ? '80%' : '100%') + ';text-shadow:0 2px 10px rgba(0,0,0,.55);transform:translateY(6px);transition:transform 320ms ease-out"><div style="font-size:' + fN + 'px;opacity:.8;letter-spacing:.08em">' + card.n + '</div><div style="font-size:' + fT + 'px;margin-top:' + (PC ? 10 : 4) + 'px">' + card.t + '</div></div>' : '';
         void veil.offsetWidth; veil.style.transition = 'opacity 260ms ease-in'; veil.style.opacity = '.82';
         if (veil.firstChild) veil.firstChild.style.transform = 'none';
         if (tx) { tx.style.transition = 'opacity 260ms ease-in'; tx.style.opacity = '0'; }
-        veilT = setTimeout(() => dim(false), 3000);   // (never left dark: a slow board load still clears)
+        veilT = setTimeout(() => dim(false), 3000 + veilHold());   // (never left dark: a slow board load still clears)
         return new Promise(r => setTimeout(r, 280));
       }
       if (veil) { veil.style.transition = 'opacity 420ms ease-out'; veil.style.opacity = '0'; const v = veil; veilT = setTimeout(() => v.remove(), 440); }
@@ -7252,7 +7255,7 @@
       const CN = { ja: ['コース', '定跡'], en: ['Course', 'Opening'], zh: ['课程', '定式'], 'zh-TW': ['課程', '定式'], ko: ['코스', '정석'] }, j = L2.indexOf(nx);
       const card = { n: ((CN[ctx.lang] || CN.en)[ctx.kind === 'open' ? 1 : 0]) + ' ' + (j + 1) + ' / ' + L2.length, t: String(nx.title || '').replace(/[<>&]/g, '') };
       phase = 'fade'; onMoved = null; autoCancel(); act(X.next, { nextOn: false });   // (no second tap while it dims)
-      dim(true, card).then(() => { if (stopped || phase !== 'fade') return dim(false); open(nx.key); setTimeout(() => { if (!stopped) dim(false); }, 650); });
+      dim(true, card).then(() => { if (stopped || phase !== 'fade') return dim(false); open(nx.key); setTimeout(() => { if (!stopped) dim(false); }, veilHold()); });
     }
     let ac0 = null;
     function clearJingle(C, v) {   // the problem-clear sound (2026-11-14): テレレレッ・レレー！ — four quick notes up, a stop, then two with the last held over a chord
