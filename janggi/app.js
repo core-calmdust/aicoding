@@ -1905,8 +1905,14 @@ async function puzzleMove(m) {
     if (puzzle !== Pz) return;
     Pz.busy = false;
     if (statusAt(cur).over) { Pz.state = 'fail'; playChime(false); renderPuzzleCard(); pzStatus(`<b class="ng">${t('pz.fail')}</b> ${PZBook.t('outOfMoves', { n: Pz.n })}`); return; }
+    // (追42) what the reply did on the board (marked red) and whether a mate is still there in the moves left (janggi/pzwhy.js)
+    const W = window.JanggiPzWhy, wy = W ? W.why(E, b2, res.move) : null, left2 = Pz.n - Pz.used;
+    if (wy && wy.k !== 'pass') { lessonMarks = []; markMove(posAt(cur).pos, res.move, 'ng'); update(false); }
+    if (W && left2 <= 0) { Pz.state = 'fail'; playChime(false); renderPuzzleCard(); pzStatus(`<b class="ng">${t('pz.fail')}</b> ${W.say(LANG, wy, null, 0)} ${PZBook.t('outOfMoves', { n: Pz.n })}`); return; }
+    let reach = null;
+    if (W) { const L2 = await mateReq(left2, false); if (puzzle !== Pz) return; reach = (L2 || []).some(x => x.need > 0 && x.need <= left2); }
     renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay());
-    pzStatus(`<b class="ng">${t('pz.stray')}</b> ${PZBook.t('movesLeft', { n: Pz.n - Pz.used })}`);
+    pzStatus(W ? `<b class="ng">${t('pz.stray')}</b> ${W.say(LANG, wy, reach, left2)}` : `<b class="ng">${t('pz.stray')}</b> ${PZBook.t('movesLeft', { n: Pz.n - Pz.used })}`);
     return;
   }
   pzStatus(t('pz.good'));

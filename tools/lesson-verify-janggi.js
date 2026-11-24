@@ -116,7 +116,8 @@ function puzzles(opt) {
   try {
     const w = {}; new Function('window', fs.readFileSync(path.join(ROOT, 'atlas/games/janggi-pz.js'), 'utf8'))(w);
     const V = w.AtlasJanggiPz && w.AtlasJanggiPz.ja || {}, need = { 'pz.bl.lose': /すぐ|次の1手|詰まされ/, 'pz.bl.nock': /王手/, 'pz.failWhy': /\{m\}[\s\S]*詰[みま][\s\S]*\{b\}/, 'pz.stray': /外れ|はずれ/, 'pz.goal': /\{c\}[\s\S]*\{n\}/, 'pz.goalCk': /\{c\}[\s\S]*王手[\s\S]*\{n\}/, 'pz.best': /\{b\}/ };
-    for (const k in need) if (!need[k].test(V[k] || '')) add('-', -1, `⑧ the 3D line ${k} does not say what the board shows: ${V[k] || '(none)'}`);
+    for (const k in need) for (const x of [].concat(V[k] || '')) if (!need[k].test(x)) add('-', -1, `⑧ the 3D line ${k} does not say what the board shows: ${x || '(none)'}`);   // (a list: every variant)
+    for (const k in V) for (const x of [].concat(V[k])) if (/(です|ます|ません|ました)(?=[。！？]|$)/.test(x)) add('-', -1, `ショウギツネ: polite 「${x}」`);
     if (/\{n\}手以内に詰み/.test(V['pz.failWhy'] || '')) add('-', -1, '追13 failWhy names the whole count on the last move');
     const L = w.AtlasPuzzleLines && w.AtlasPuzzleLines.janggi;
     for (const k of ['hi', 'intro', 'mid', 'solved', 'streak', 'help', 'out', 'stuck', 'retry', 'hint', 'again', 'allDone']) if (!L || !L.ja || !(L.ja[k] || []).length) add('-', -1, '⑧ no 3D line ' + k);
@@ -130,7 +131,72 @@ function puzzles(opt) {
     const w = {}; new Function('window', fs.readFileSync(path.join(ROOT, 'atlas/games/janggi-pz.js'), 'utf8'))(w);
     if (PRAISE.test((w.AtlasJanggiPz.ja || {})['pz.stray'] || '')) add('-', -1, '追20 pz.stray praises');
   } catch (e) { add('-', -1, '追20 JGX: ' + e.message); }
+  // 追42 a move off the solution (cls 'stray': not mated at once, a check if checks-only): the words after the defender's reply say
+  // what that reply did on the board and whether a mate is still there (janggi/pzwhy.js; the 3D atlas/puzzles.js jgStray, the 2D
+  // janggi/app.js puzzleMove). Every puzzle of 2 moves or more × every stray first move × every legal reply: the class read again from
+  // the board on its own (a capture → the piece taken and the taker; a check → the general stepped out / another piece stopped it;
+  // a quiet move → the general / another piece moved), the words of all 14 languages and ショウギツネ's say the names and leave no
+  // placeholder; and per puzzle the first stray move with every reply: the solver's mate-within-the-rest decides reach / noreach.
+  try { stray42(PZ, add); } catch (e) { add('-', -1, '追42 ' + e.message); }
   return opt && opt.facts ? { out, facts } : out;
+}
+function stray42(PZ, add, W0) {
+  const E = engine(), W = W0 || require(path.join(ROOT, 'janggi/pzwhy.js'));
+  const w3 = {}; new Function('window', fs.readFileSync(path.join(ROOT, 'atlas/games/janggi-pz.js'), 'utf8'))(w3);
+  const OWN = (w3.AtlasJanggiPz.why || {}).ja;
+  if (!OWN) { add('-', -1, '追42 no ショウギツネ words for the reply (AtlasJanggiPz.why.ja)'); return; }
+  const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
+  for (const lg of LANGS) for (const k of ['cap', 'esc', 'block', 'run', 'move', 'pass', 'reach', 'noreach']) if (!(W.T[lg] && W.T[lg][k])) add('-', -1, `追42 no 2D words ${lg}.${k}`);
+  for (const k of ['cap', 'esc', 'block', 'run', 'move', 'pass', 'reach', 'noreach']) if (!(OWN[k] || []).length) add('-', -1, `追42 no ショウギツネ words ${k}`);
+  const PRAISE = /調子|いいね|いい手|すごい|お見事|やったね|さすが|Nice|Good|Great/;
+  for (const k in OWN) for (const x of OWN[k]) { if (PRAISE.test(x)) add('-', -1, `追42/追20 praise after a move off the line: ${x}`); if (/(です|ます|ません|ました)(?=[。！？]|$)/.test(x)) add('-', -1, `ショウギツネ: polite 「${x}」`); }
+  // the ja words must claim exactly the class's fact: cap = 取; esc = 逃; block = 防|止; run/move = 動か; reach = まだ|残って; noreach = もう|ない
+  const CLAIM = { cap: /取/, esc: /逃/, block: /防|止/, run: /動|寄せ/, move: /動|回し/, pass: /パス/, reach: /まだ|残って/, noreach: /もう|なく|ない/ };
+  const NEVER = { cap: /逃げ|防/, esc: /取られ|取った/, block: /取られ|取った|逃げ/, run: /取られ|取った/, move: /取られ|取った/, reach: /詰まなく|ない/, noreach: /まだ/ };
+  for (const k in CLAIM) for (const x of [].concat(OWN[k] || [], W.T.ja[k] || [])) { if (!CLAIM[k].test(x)) add('-', -1, `追42 ${k} 「${x}」 does not say its fact`); if (NEVER[k] && NEVER[k].test(x)) add('-', -1, `追42 ${k} 「${x}」 says another class's fact`); }
+  let nMv = 0, nRe = 0, reach = 0, noreach = 0; const cnt = {};
+  for (const T of PZ.themes || []) {
+    const [, ck] = THEME[T.id] || [0, false];
+    T.puzzles.forEach((P, j) => {
+      if (P.n < 2) return;
+      const a = msg => add(T.id, j, msg), pos = E.Pos.from(P.s);
+      const L = E.puzzle(P.s, [], P.n, false, ck) || [];
+      let first = true;
+      for (const m of pos.moves()) {
+        const e = L.find(x => x.m === m); if (e && e.need > 0 && e.need <= P.n) continue;   // (the solution)
+        const mid = pos.clone().play(m); if (mid.status() !== 0) continue;
+        if (ck && !mid.inCheck()) continue;   // (pz.bl.nock: taken back)
+        if (mid.moves().some(x => mid.clone().play(x).status() === -1)) continue;   // (pz.bl.lose: taken back)
+        nMv++;
+        for (const r of mid.moves()) {
+          nRe++;
+          const w = W.why(E, mid, r), after = mid.clone().play(r);
+          // the class on its own: from the board before and after the reply
+          let k;
+          if (E.isPass(r)) k = 'pass';
+          else { const taken = mid.at(E.mTo(r)); const kingMv = E.typeOf(mid.at(E.mFrom(r))) === E.KING;
+            k = taken ? 'cap' : mid.inCheck() ? (kingMv ? 'esc' : 'block') : (kingMv ? 'run' : 'move');
+            if (k === 'cap') { if (!w.p || w.p.t !== E.typeOf(taken) || E.colorOf(taken) === mid.side) a('追42 the piece taken is not named right'); if (!w.b || w.b.t !== E.typeOf(mid.at(E.mFrom(r)))) a('追42 the taker is not named right'); }
+            if ((k === 'esc' || k === 'block') && after.attacked(mid.side)) a('追42 the check is not out after ' + k); }
+          if (w.k !== k) { a(`追42 reply class ${w.k} but the board says ${k}`); continue; }
+          cnt[k] = (cnt[k] || 0) + 1;
+          for (const lg of LANGS) { const t = W.say(lg, w, true, 2) + W.say(lg, w, false, 2); if (/[{}]|undefined|null/.test(t)) a(`追42 ${lg} words with a placeholder: ${t}`); }
+          const t3 = W.say('ja', w, null, 0, OWN, nRe);
+          if (k === 'cap' && !(t3.includes(W.name('ja', w.p.t, w.p.c)) && t3.includes(W.name('ja', w.b.t, w.b.c)))) a('追42 ショウギツネ does not name the pieces: ' + t3);
+          if ((k === 'block' || k === 'move') && !t3.includes(W.name('ja', w.b.t, w.b.c))) a('追42 ショウギツネ does not name the piece moved: ' + t3);
+        }
+        if (first) {   // the solver: is a mate still there in n − 1 after each reply? (= the runner's xqReq(p, left, false), need ≤ left)
+          first = false;
+          for (const r of mid.moves()) { const R = E.puzzle(P.s, [m, r], P.n - 1, false, ck) || [], ok = R.some(x => x.need > 0 && x.need <= P.n - 1); ok ? reach++ : noreach++; }
+        }
+      }
+    });
+  }
+  const p3 = fs.readFileSync(path.join(ROOT, 'atlas/puzzles.js'), 'utf8'), app = fs.readFileSync(path.join(ROOT, 'janggi/app.js'), 'utf8');
+  if (!/const L = await xqReq\(p, left, false\);[^\n]*\n\s*const reach = \(L \|\| \[\]\)\.some\(e => e\.need > 0 && e\.need <= left\)/.test(p3)) add('-', -1, '追42 the 3D jgStray does not ask the solver for the moves left');
+  if (!/return jgStray\(p, mid, r\)/.test(p3)) add('-', -1, '追42 the 3D xqMoved does not call jgStray for janggi');
+  if (!/W\.why\(E, b2, res\.move\)/.test(app) || !/reach = \(L2 \|\| \[\]\)\.some\(x => x\.need > 0 && x\.need <= left2\)/.test(app)) add('-', -1, '追42 the 2D puzzleMove does not say the reply\'s fact');
+  stray42.stats = { moves: nMv, replies: nRe, cnt, reach, noreach };
 }
 
 // (2026-11-24 担当D) the lessons on the 3D table (atlas/games/janggi-ls.js DONE: the capture basics b_rook・b_horse・b_elephant・b_cannon・b_pawn), as
@@ -492,7 +558,7 @@ function lessons(opt) {
   return out;
 }
 
-module.exports = { puzzles, lessons, checkOne, engine, brd, dist, pieces, THEME };
+module.exports = { puzzles, lessons, stray42, checkOne, engine, brd, dist, pieces, THEME };
 if (require.main === module) {
   const dp = process.argv.indexOf('--deep'), out = puzzles().concat(lessons({ deep: dp > 0 ? +process.argv[dp + 1] : 0 })), json = process.argv.indexOf('--json');
   if (json > 0) fs.writeFileSync(process.argv[json + 1], JSON.stringify(out, null, 1));

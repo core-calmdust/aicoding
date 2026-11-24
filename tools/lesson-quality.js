@@ -174,6 +174,25 @@ function fgPuzzleTexts() {
     return { key: T.id, title: T.id, intro: F.text('ja', 'hi', 0), ramp: [], probs };
   });
 }
+// (2026-11-24 担当D, 追42) the 3D janggi mates: per theme of 2 moves or more, the goal, the hint, the praise after a right move and, for the
+//  first 5 puzzles, ショウギツネ's words after the first wrong (not taken back) move: the engine's reply and its fact (janggi/pzwhy.js,
+//  AtlasJanggiPz.why.ja as atlas/puzzles.js jgStray says it), with reach / noreach from the solver — scored as a lesson
+function jgPuzzleTexts() {
+  const V = require('./lesson-verify-janggi.js'), E = V.engine(), W = require(path.join(ROOT, 'janggi/pzwhy.js')), PZ = JSON.parse(fs.readFileSync(path.join(ROOT, 'janggi/puzzles.json'), 'utf8'));
+  const w = {}; new Function('window', fs.readFileSync(path.join(ROOT, 'atlas/games/janggi-pz.js'), 'utf8'))(w);
+  const J = w.AtlasJanggiPz.ja, OWN = w.AtlasJanggiPz.why.ja, L = w.AtlasPuzzleLines.janggi.ja, fill = (x, v) => String(x).replace(/\{(\w+)\}/g, (_, k) => v[k] != null ? v[k] : '');
+  let jn = 0; const N = {}, tx = k => { const x = J[k]; return Array.isArray(x) ? x[N[k] = N[k] == null ? 0 : N[k] + 1, N[k] % x.length] : x; };   // (= BOOK.janggi.tx: the variants in turn)
+  return PZ.themes.filter(T => T.puzzles[0] && T.puzzles[0].n >= 2).map((T, ti) => ({ key: T.id, title: T.id, intro: L.hi[ti % L.hi.length], ramp: [], probs: T.puzzles.slice(0, 5).map((P, i) => {
+    const ck = !!T.ck, pos = E.Pos.from(P.s), good = (E.puzzle(P.s, [], P.n, false, ck) || []).filter(e => e.need > 0 && e.need <= P.n).map(e => e.m);
+    const m = pos.moves().find(x => { if (good.includes(x)) return false; const q = pos.clone().play(x); return q.status() === 0 && (!ck || q.inCheck()) && !q.moves().some(y => q.clone().play(y).status() === -1); });
+    const ask = L.intro[(ti + i) % L.intro.length] + ' ' + fill(tx(ck ? 'pz.goalCk' : 'pz.goal'), { c: '楚', n: P.n }), hint = tx('pz.hintText');   // (the 3D hint for the mates: the gold rings and this line only)
+    const gd = tx('pz.good') + ' ' + L.mid[(ti + i) % L.mid.length];
+    let ng = '';
+    if (m != null) { const mid = pos.clone().play(m), r = E.think(P.s, [m], 6).move, R = E.puzzle(P.s, [m, r], P.n - 1, false, ck) || [];
+      ng = W.say('ja', W.why(E, mid, r), R.some(e => e.need > 0 && e.need <= P.n - 1), P.n - 1, OWN, jn++); }
+    return { ask, hint, good: gd, ng, tw: null };
+  }) }));
+}
 (async () => {
   await new Promise(r => srv.listen(0, r)); const port = srv.address().port;
   const puppeteer = require(PUP);
@@ -217,6 +236,7 @@ function fgPuzzleTexts() {
   //  ドミダック's words, atlas/games/foxgeese-pz.js): the greeting + goal, the hints, the praise after a right move, and for each of the
   //  first 5 puzzles the words after its first wrong move (the reply the 3D plays, the fact why() names) — scored as a lesson
   if (!games.length || games.includes('foxgeese')) R['foxgeese/pz'] = fgPuzzleTexts();
+  if (!games.length || games.includes('janggi')) try { R['janggi/pz'] = jgPuzzleTexts(); } catch (e) { R['janggi/pz'] = [{ err: String(e) }]; }
   const TN = R.__TN || {}; delete R.__TN; turnNames = TN;
   const rep = {}; let sum = 0, n = 0;
   // (2026-11-22) the board facts (tools/lesson-facts.js): a lesson whose marks / answers / claims do not hold on the board fails
