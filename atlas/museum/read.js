@@ -58,6 +58,8 @@
     { id: 'samegame', region: 'asia', color: '#e2672e', cover: { g: 'samegame', s: 'samegame' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'samegameGroup' }, m1: { svg: 'samegameScore' }, m2: { svg: 'samegameTimeline' } }, refs: ['Kuniaki Moribe, “Chain Shot!” (1985), distributed through a Japanese computer magazine', 'Eiji Fukumoto, “SameGame” for Unix (1992)', 'Matthias Schüssler, “Clickomania!” (1998)', 'Therese C. Biedl et al., “The Complexity of Clickomania” (2001)', 'Wikipedia, “SameGame”'], links: [{ g: 'samegame' }, { g: 'shanghai' }, { g: 'jailbreak' }] },
     { id: 'cards', region: 'asia', color: '#8a2a3a', cover: { s: 'cards' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'cardsSuits' }, m1: { svg: 'cardsRoute' }, m2: { svg: 'cardsCourt' } }, refs: ['歐陽脩『歸田錄』（11世紀） / Ouyang Xiu, Guitian lu (11th c.), on the “leaf game”', 'L. A. Mayer, Mamluk Playing Cards, ed. R. Ettinghausen & O. Kurz (Leiden, 1971)', 'John of Rheinfelden, Tractatus de moribus et disciplina humanae conversationis (1377)', 'Michael Dummett, The Game of Tarot (1980)', 'David Parlett, The Oxford Guide to Card Games (1990)', 'Wikipedia, “Playing card”, “Mamluk playing cards”, “Karuta”, “Joker (playing card)”'], links: [{ g: 'poker' }, { g: 'solitaire' }, { g: 'blackjack' }] },
     { id: 'machines', region: 'americas', color: '#2a4a6a', cover: { s: 'machines' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'machinesTimeline' }, m1: { svg: 'machinesTree' }, m2: { svg: 'machinesSolved' } }, refs: ['Claude E. Shannon, “Programming a Computer for Playing Chess”, Philosophical Magazine 41 (1950)', 'A. M. Turing, “Digital computers applied to games”, in B. V. Bowden (ed.), Faster than Thought (1953)', 'A. L. Samuel, “Some Studies in Machine Learning Using the Game of Checkers”, IBM Journal of Research and Development 3 (1959)', 'J. Schaeffer et al., “Checkers Is Solved”, Science 317 (2007)', 'M. Campbell, A. J. Hoane Jr., F. Hsu, “Deep Blue”, Artificial Intelligence 134 (2002)', 'D. Silver et al., “Mastering the game of Go with deep neural networks and tree search”, Nature 529 (2016)', 'D. Silver et al., “A general reinforcement learning algorithm that masters chess, shogi, and Go through self-play”, Science 362 (2018)', 'Wikipedia, “Mechanical Turk”, “El Ajedrecista”, “Computer chess”, “Solved game”, “Game complexity”'], links: [{ g: 'chess' }, { g: 'checkers' }, { g: 'go' }, { g: 'connect4' }] },
+    { id: 'graffiti', region: 'europe', color: '#6a6052', cover: { s: 'graffiti' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'graffitiMap' }, m1: { svg: 'graffitiBoards' }, m2: { svg: 'graffitiDating' } }, refs: ['CIL VIII 17938 (the board in the forum of Timgad: “venari lavari ludere ridere occest vivere”)', 'R. C. Bell, Board and Table Games from Many Civilizations (1960)', 'Friedrich Berger, “From circle and square to the image of the world: a possible interpretation for some petroglyphs of merels boards”, Rock Art Research 21 (2004)', 'Matthew Champion, Medieval Graffiti: The Lost Voices of England’s Churches (2015)', 'Anthea Hawdon, “Gaming up the walls”, Raking Light (talk at the Making Your Mark graffiti symposium, Southampton, 2019)', 'Wikipedia, “Basilica Julia”, “Nine men’s morris”, “Mancala”'], links: [{ g: 'morris' }, { g: 'mancala' }, { g: 'latrunculi' }] },
+    { id: 'bans', region: 'asia', color: '#7a2e3a', cover: { s: 'bans' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'bansTimeline' }, m1: { svg: 'bansWhy' }, m2: { svg: 'bansOutcome' } }, refs: ['『日本書紀』持統天皇三年十二月条 / Nihon Shoki, Jitō 3, 12th month', 'Louis IX of France, ordinance against gambling (1254)', 'Florence, the ban on playing cards (1377)', 'Diego Durán, Historia de las Indias de Nueva España e islas de la tierra firme (c. 1581)', 'The Tokugawa shogunate’s ban on Tenshō karuta (1633)', 'Ruhollah Khomeini, ruling on chess played without gambling (1988)', 'Roger Sharpe’s called shot before New York City Council members (April 1976)', 'Wikipedia, “History of chess”, “Karuta”, “Playing card”, “Pinball”'], links: [{ g: 'backgammon' }, { g: 'patolli' }, { g: 'solitaire' }] },
   ];
   // pictures shown only beside a story's paragraph (not in another room): a museum's open-access photo (CC0), linked to the museum's page.
   // The name, in each language, is MUSEUM_READ_T[lang].pic[id]. Files images/atlas/museum-story/pic/<id>.webp (≤ 960 px).
@@ -1155,6 +1157,75 @@
         const tx = w + x0 + 6 > W - 56 ? x0 + w - 6 : x0 + w + 6, an = tx < x0 + w ? 'end' : 'start';
         g += `<text x="${tx}" y="${y + 34}" font-size="13" font-weight="800" fill="${an === 'end' ? '#2b2a28' : '#5a544a'}" text-anchor="${an}">10<tspan dy="-5" font-size="12">${ex}</tspan></text>`; });
       return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // board graffiti — a small icon per kind (scratched lines): a Roman three-row board, a morris board, mancala pits
+    // famous places where boards were cut into public stone (text: the story's figL.map — [place, note]; icons by row: Roman board, Roman board, morris (date unsure), pits, morris, morris)
+    graffitiMap: () => { const R = ((st('graffiti').figL || {}).map) || [], K = ['tab', 'tab', 'mor', 'pit', 'mor', 'mor'], W = 300, RH = 50, o = 8, H = o * 2 + RH * R.length; let g = '';
+      const ic = (t, x, y) => { let s = `<rect x="${x - 18}" y="${y - 18}" width="36" height="36" rx="7" fill="#d9d2c3" stroke="#a89f8c"/>`, ln = 'stroke="#5a5040" stroke-width="1.6" fill="none"';
+        if (t === 'mor') s += `<rect x="${x - 13}" y="${y - 13}" width="26" height="26" ${ln}/><rect x="${x - 8.5}" y="${y - 8.5}" width="17" height="17" ${ln}/><rect x="${x - 4}" y="${y - 4}" width="8" height="8" ${ln}/><path d="M${x} ${y - 13}V${y - 4}M${x} ${y + 4}V${y + 13}M${x - 13} ${y}H${x - 4}M${x + 4} ${y}H${x + 13}" ${ln}/>`;
+        else if (t === 'tab') { for (let r = 0; r < 3; r++) for (let c = 0; c < 6; c++) s += `<path d="M${x - 13 + c * 4.4 + (c > 2 ? 2 : 0)} ${y - 10 + r * 9}v6" stroke="#5a5040" stroke-width="1.6"/>`; }
+        else for (let r = 0; r < 2; r++) for (let c = 0; c < 4; c++) s += `<circle cx="${x - 10.5 + c * 7}" cy="${y - 5 + r * 10}" r="2.8" fill="#8a8070" stroke="#5a5040"/>`;
+        return s; };
+      R.forEach(([nm, ds], k) => { const y = o + RH * k + 25;
+        g += ic(K[k], 26, y) + `<text x="54" y="${y - 3}" font-size="14" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="54" y="${y + 15}" font-size="13" fill="#5a544a">${esc(ds)}</text>`;
+        if (k === 2) g += `<circle cx="40" cy="${y - 14}" r="8" fill="#c0392b"/><text x="40" y="${y - 9.5}" font-size="12" font-weight="800" fill="#fff" text-anchor="middle">?</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // the three boards most often scratched into stone, drawn as cut lines on a slab: the morris board (24 points), the Roman
+    // three-row board (3 × 12 places, here as six-letter words: VENARI LAVARI LVDERE RIDERE OCCEST VIVERE, Timgad), and mancala pits (2 × 6)
+    // (text: the story's figL.boards — [name, note] × 3)
+    graffitiBoards: () => { const L = ((st('graffiti').figL || {}).boards) || [], W = 300, H = 292; let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="10" fill="#cfc7b6"/>`;
+      const cut = d => `<path d="${d}" fill="none" stroke="#f3eee2" stroke-width="2.6" transform="translate(.8 .8)"/><path d="${d}" fill="none" stroke="#6a604e" stroke-width="2.2" stroke-linecap="round"/>`;
+      const mx = 72, my = 70; let d = ''; [44, 29, 14].forEach(r => { d += `M${mx - r} ${my - r}H${mx + r}V${my + r}H${mx - r}Z`; }); d += `M${mx} ${my - 44}V${my - 14}M${mx} ${my + 14}V${my + 44}M${mx - 44} ${my}H${mx - 14}M${mx + 14} ${my}H${mx + 44}`;
+      g += cut(d); [44, 29, 14].forEach(r => [[-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0]].forEach(([a, b]) => { g += `<circle cx="${mx + a * r}" cy="${my + b * r}" r="2.6" fill="#6a604e"/>`; }));
+      const px = 162, py = 40; for (let r = 0; r < 2; r++) for (let c = 0; c < 6; c++) g += `<ellipse cx="${px + 10 + c * 22}" cy="${py + 12 + r * 30}" rx="9" ry="10" fill="#9a907c" stroke="#5a5040" stroke-width="1.6"/><ellipse cx="${px + 10 + c * 22 - 1}" cy="${py + 10 + r * 30}" rx="5" ry="4" fill="#857b68"/>`;
+      g += `<text x="${mx}" y="138" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="middle">${esc((L[0] || [])[0] || '')}</text><text x="${mx}" y="155" font-size="12" fill="#4a4436" text-anchor="middle">${esc((L[0] || [])[1] || '')}</text>`;
+      g += `<text x="${px + 64}" y="110" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="middle">${esc((L[2] || [])[0] || '')}</text><text x="${px + 64}" y="127" font-size="12" fill="#4a4436" text-anchor="middle">${esc((L[2] || [])[1] || '')}</text>`;
+      const WD = ['VENARI', 'LAVARI', 'LVDERE', 'RIDERE', 'OCCEST', 'VIVERE'], ty = 180, cw = 21.5, tx = (W - cw * 12) / 2;
+      g += cut(`M${tx - 4} ${ty - 16}H${W - tx + 4}V${ty + 60}H${tx - 4}Z`);
+      WD.forEach((w, k) => [...w].forEach((ch, i) => { const r = Math.floor(k / 2), c = (k % 2) * 6 + i; g += `<text x="${tx + c * cw + cw / 2}" y="${ty + 4 + r * 22}" font-size="15" font-weight="800" fill="#5a5040" text-anchor="middle" font-family="Georgia,serif">${ch}</text>`; }));
+      g += `<text x="${W / 2}" y="${ty + 80}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="middle">${esc((L[1] || [])[0] || '')}</text><text x="${W / 2}" y="${ty + 96}" font-size="12" fill="#4a4436" text-anchor="middle">${esc((L[1] || [])[1] || '')}</text>`;
+      return `<svg viewBox="0 0 ${W} ${H + 8}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // why a scratched board is hard to date: the stone can be far older than the lines (Kurna: a temple roof of c. 1400 BC with Coptic crosses
+    // among the diagrams — the boards could be cut at any time up to today), and a reused stone can carry a board older than the wall it sits in
+    // (text: the story's figL.dating — [date, text] × 3, then two lines for the wall)
+    graffitiDating: () => { const L = ((st('graffiti').figL || {}).dating) || [], R = L.slice(0, 3), Wl = L[3] || [], W = 300, RH = 46, x0 = 34; let g = '';
+      const C = ['#8a5a24', '#2a5a8a', '#14864a'];
+      g += `<path d="M14 18V${18 + RH * 2}" stroke="#c0392b" stroke-width="2.4" stroke-dasharray="5 4"/><path d="M14 18h6M14 ${18 + RH * 2}h6" stroke="#c0392b" stroke-width="2.4"/><circle cx="14" cy="${18 + RH}" r="9" fill="#c0392b"/><text x="14" y="${23 + RH}" font-size="13" font-weight="800" fill="#fff" text-anchor="middle">?</text>`;
+      g += `<line x1="${x0}" y1="18" x2="${x0}" y2="${18 + RH * 2}" stroke="#b8ad98" stroke-width="3"/>`;
+      R.forEach(([yr, tx], k) => { const y = 18 + RH * k; g += `<circle cx="${x0}" cy="${y}" r="7" fill="${C[k]}" stroke="#fff" stroke-width="2"/><text x="${x0 + 14}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28">${esc(yr)}</text><text x="${x0 + 14}" y="${y + 23}" font-size="13" fill="#5a544a">${esc(tx)}</text>`; });
+      const wy = 158, bw = 44, bh = 22; for (let r = 0; r < 3; r++) for (let c = -1; c < 6; c++) { const x = 40 + c * bw + (r % 2 ? bw / 2 : 0); if (x < 36 || x + bw > 266) continue; g += `<rect x="${x + 1}" y="${wy + r * bh + 1}" width="${bw - 2}" height="${bh - 2}" fill="#c9b79a" stroke="#9a8a6e"/>`; }
+      const sx = 128, sy = wy + bh; g += `<rect x="${sx}" y="${sy + 1}" width="${bw - 2}" height="${bh - 2}" fill="#a8a092" stroke="#6a604e" stroke-width="1.4"/>`;
+      g += `<g transform="translate(${sx + bw / 2 - 1} ${sy + bh / 2}) rotate(90)"><rect x="-8" y="-8" width="16" height="16" fill="none" stroke="#3a3428" stroke-width="1.2"/><rect x="-4.5" y="-4.5" width="9" height="9" fill="none" stroke="#3a3428" stroke-width="1.2"/><path d="M0 -8V-4.5M0 4.5V8M-8 0H-4.5M4.5 0H8" stroke="#3a3428" stroke-width="1.2"/></g>`;
+      g += `<text x="${W / 2}" y="${wy + bh * 3 + 22}" font-size="13" font-weight="800" fill="#2b2a28" text-anchor="middle">${esc(Wl[0] || '')}</text><text x="${W / 2}" y="${wy + bh * 3 + 40}" font-size="13" fill="#5a544a" text-anchor="middle">${esc(Wl[1] || '')}</text>`;
+      return `<svg viewBox="0 0 ${W} ${wy + bh * 3 + 48}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // games that rulers banned, in time (text: the story's figL.time — [year, what, where])
+    bansTimeline: () => { const R = ((st('bans').figL || {}).time) || [], W = 300, RH = 46, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 76; let g = '';
+      const C = ['#7a2e3a', '#2a4a7a', '#8a2a3a', '#8a3a2a', '#6b4a24', '#33404a', '#2a6a4a', '#c0392b'];
+      g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
+      R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k, lift = /✓/.test(nm);
+        g += lift ? `<circle cx="${xn}" cy="${y}" r="9" fill="#14864a" stroke="#fff" stroke-width="2"/><path d="M${xn - 4.5} ${y}l3 3.5 6-7" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`
+          : `<circle cx="${xn}" cy="${y}" r="9" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><path d="M${xn - 4} ${y - 4}l8 8" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>`;
+        g += `<text x="${xn - 15}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
+        g += `<text x="${xn + 17}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm.replace('✓', '').trim())}</text><text x="${xn + 17}" y="${y + 20}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // why games were banned: four reasons, each with examples; gambling (first, widest) is behind most bans
+    // (text: the story's figL.why — [reason, example, example] × 4)
+    bansWhy: () => { const R = ((st('bans').figL || {}).why) || [], W = 300, RH = 66, H = RH * R.length + 8, C = ['#c0392b', '#c8962a', '#6a3a8a', '#2a5a8a'];
+      let g = ''; R.forEach(([nm, a, b], k) => { const y = 6 + RH * k, w = k === 0 ? W - 8 : W - 8 - 0, c = C[k];
+        g += `<rect x="4" y="${y}" width="${w}" height="${RH - 8}" rx="10" fill="${c}" opacity="${k === 0 ? .16 : .1}" stroke="${c}" stroke-width="${k === 0 ? 2.4 : 1.2}"/>`;
+        g += `<rect x="4" y="${y}" width="8" height="${RH - 8}" rx="4" fill="${c}"/>`;
+        g += `<text x="22" y="${y + 22}" font-size="15" font-weight="800" fill="${c}">${esc(nm)}</text>`;
+        g += `<text x="22" y="${y + 44}" font-size="13" fill="#2b2a28">${esc(a)}${b ? ' · ' + esc(b) : ''}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // did the bans work? three stories as lines in time: sugoroku went on (the line continues), patolli all but vanished
+    // (the line stops at ×), cards kept spreading (the line branches) (text: the story's figL.out — [game, result] × 3)
+    bansOutcome: () => { const R = ((st('bans').figL || {}).out) || [], W = 300, RH = 66, H = RH * 3 + 10, x0 = 176, x1 = 292; let g = '';
+      R.forEach(([nm, rs], k) => { const y = 8 + RH * k + 26, xb = x0 + 34;
+        g += `<text x="6" y="${y - 4}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="6" y="${y + 16}" font-size="13" fill="#5a544a">${esc(rs)}</text>`;
+        g += `<path d="M${x0} ${y}H${xb}" stroke="#8a8478" stroke-width="4" stroke-linecap="round"/><path d="M${xb} ${y - 12}v24" stroke="#c0392b" stroke-width="3"/><path d="M${xb - 5} ${y - 16}h10" stroke="#c0392b" stroke-width="3"/>`;
+        if (k === 0) g += `<path d="M${xb} ${y}H${x1 - 8}" stroke="#14864a" stroke-width="4" stroke-linecap="round" marker-end="url(#boA)"/>`;
+        else if (k === 1) g += `<path d="M${xb} ${y}H${xb + 26}" stroke="#8a8478" stroke-width="4" stroke-dasharray="3 5" stroke-linecap="round"/><path d="M${xb + 32} ${y - 7}l12 12M${xb + 44} ${y - 7}l-12 12" stroke="#c0392b" stroke-width="3.2" stroke-linecap="round"/>`;
+        else [-20, 0, 20].forEach(d => { g += `<path d="M${xb} ${y}C${xb + 24} ${y} ${xb + 30} ${y + d} ${x1 - 8} ${y + d}" fill="none" stroke="#14864a" stroke-width="3.4" stroke-linecap="round" marker-end="url(#boA)"/>`; }); });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr"><defs><marker id="boA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#14864a"/></marker></defs>${g}</svg>`; },
     // four tetrahedral dice: how often each score comes (out of 16)
     tetraOdds: () => { const n = [1, 4, 6, 4, 1], W = 300, H = 150, bw = 40, gap = (W - 40 - bw * 5) / 4; let g = '';
       n.forEach((v, i) => { const x = 20 + i * (bw + gap), h = v / 6 * 96, y = 112 - h;
@@ -1196,13 +1267,39 @@
   /* ---------- a story ---------- */
   // (2026-11-24) the minutes a story takes, from its own text: ~500 characters a minute (CJK) or ~200 words (others)
   function mins(S) {
-    const x = st(S.id), t = [x.lead, ...(x.s || []), ...(x.kf || []), ...((x.more || []).flatMap(m => [m.h, ...m.p])), ...((x.tl || []).map(r => r.join(' ')))].join(' ');
+    const x = st(S.id); if (x.mins != null) return Math.max(S.mins || 1, x.mins);   // (the index's minutes, worked out by tools/museum-read-split.js)
+    const t = [x.lead, ...(x.s || []), ...(x.kf || []), ...((x.more || []).flatMap(m => [m.h, ...m.p])), ...((x.tl || []).map(r => r.join(' ')))].join(' ');
     const cjk = (t.match(/[\u3000-\u9fff\uac00-\ud7af]/g) || []).length, words = t.replace(/[\u3000-\u9fff\uac00-\ud7af]/g, ' ').split(/\s+/).filter(Boolean).length;
     return Math.max(S.mins || 1, Math.round(cjk / 500 + words / 200));
   }
+  // (2026-11-24 audit textKB, per screen) a story's whole text is its own file, museum/read-i18n/<lang>/<id>.js, loaded when the story opens
+  // (the room loads only the index: titles, leads, minutes, names). need(id) → Promise<true|false>; a failed load can be tried again.
+  const want = {};
+  const has = id => Array.isArray((tx()[id] || {}).s);
+  const readV = () => (window.AtlasMuseum && AtlasMuseum.readV) || 1;
+  function need(id) {
+    if (has(id)) return Promise.resolve(true);
+    const k = lang + '/' + id; if (want[k]) return want[k];
+    return (want[k] = new Promise(res => { const sc = document.createElement('script'); sc.src = `museum/read-i18n/${lang}/${id}.js?v=${readV()}`;
+      sc.onload = () => { if (!has(id)) delete want[k]; res(has(id)); }; sc.onerror = () => { sc.remove(); delete want[k]; res(false); }; document.head.appendChild(sc); }));
+  }
+  const idle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 1500));
   function story(id, user) {
-    const S = STORIES.find(s => s.id === id); if (!S) return; cur = S; const x = st(id), i = STORIES.indexOf(S);
+    const S = STORIES.find(s => s.id === id); if (!S) return Promise.resolve(); cur = S;
     if (user && ctx.hist) ctx.hist({ room: 'read', story: id });
+    if (has(id)) { draw(S, user); return Promise.resolve(); }
+    // the text is not here yet: a short loading line (with the way back), then the story; on failure a button to try again
+    const i = STORIES.indexOf(S), h = host;
+    h.innerHTML = `<article class="rda" style="--c:${S.color}"><button type="button" class="btn ghost sm rdback">← ${esc(u('back'))}</button>
+      <div class="rdload" role="status" aria-live="polite"><p class="chlead">${esc(fmt(u('no'), { n: i + 1 }))} · ${esc(st(id).title || '')}</p><p class="chlead">${esc(u('loading'))}</p></div></article>`;
+    h.querySelector('.rdback').onclick = () => { shelf(); top(); if (ctx.hist) ctx.hist({ room: 'read' }); };
+    return need(id).then(ok => { if (cur !== S || host !== h || !h.querySelector('.rdload')) return;
+      if (ok) { draw(S, user); return; }
+      const box = h.querySelector('.rdload'); box.innerHTML = `<p class="chlead">${esc(u('loadErr'))}</p><button type="button" class="btn sun sm">${esc(u('loadRetry'))}</button>`;
+      const b = box.querySelector('button'); b.onclick = () => story(id, false).then(() => { const a = h.querySelector('.rdback'); if (a && !h.querySelector('.rdload')) top(); }); b.focus({ preventScroll: true }); });
+  }
+  function draw(S, user) {
+    const id = S.id, x = st(id), i = STORIES.indexOf(S);
     host.innerHTML = `<article class="rda" style="--c:${S.color}">
       <button type="button" class="btn ghost sm rdback">← ${esc(u('back'))}</button>
       <div class="rdh">${S.cover.s && !S.cover.g && !S.cover.ex && !S.cover.paint ? `<div class="rdhimg" style="cursor:default"><img src="${src(S.cover)}" alt=""></div>` : `<button type="button" class="rdhimg${ga(S.cover)}" ${S.cover.href && !((ctx.games || []).some(q => q.id === S.cover.g)) ? `data-href="${S.cover.href}"` : S.cover.g ? `data-g="${S.cover.g}"` : S.cover.ex ? `data-ex="${S.cover.ex}"` : `data-paint="${S.cover.paint}"`}><img src="${src(S.cover)}" alt=""><span>${esc(S.cover.g ? u('game') : S.cover.ex ? u('exhibit') : u('art'))} · ${esc(S.cover.g ? gName(S.cover.g) : S.cover.ex ? exName(S.cover.ex) : paintName(S.cover.paint))} ›</span></button>`}
@@ -1223,6 +1320,7 @@
     wire(host.querySelector('.rda'));
     quiz(S);
     if (user) top();
+    idle(() => [STORIES[i + 1], STORIES[i - 1]].forEach(n => { if (n && cur === S) need(n.id); }));   // (the neighbours, for the ‹ › buttons)
   }
   const top = () => { const r = host.getBoundingClientRect(), y = r.top + scrollY - (innerWidth < 820 ? 70 : 90); if (Math.abs(scrollY - y) > 40 && scrollY > y) scrollTo({ top: Math.max(0, y), behavior: 'smooth' }); };
 
@@ -1259,5 +1357,5 @@
     if (host !== box) { host = box; cur = null; }
     if (cur) story(cur.id, false); else shelf();
   }
-  window.AtlasRead = { render, STORIES, V, open: id => story(id, true), show: id => { story(id, false); top(); }, showShelf: () => { shelf(); top(); }, current: () => (host && host.querySelector('.rda') && cur ? cur.id : null), _stamps: stamps };
+  window.AtlasRead = { render, STORIES, V, load: id => need(id), open: id => story(id, true), show: id => story(id, false).then(top), showShelf: () => { shelf(); top(); }, current: () => (host && host.querySelector('.rda') && cur ? cur.id : null), _stamps: stamps };
 })();
