@@ -10,7 +10,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const DONE = ['b_rook', 'b_horse', 'b_elephant', 'b_cannon', 'b_pawn', 'b_escape', 'b_mate1', 'm_mate2', 'm_mate3', 'e_rook', 'e_pawn'];   // (verified: tools/lesson-verify-janggi.js; the rest are not listed yet)
+  const DONE = ['b_rook', 'b_horse', 'b_elephant', 'b_cannon', 'b_pawn', 'b_escape', 'b_mate1', 't_capture', 'm_mate2', 'm_mate3', 'e_rook', 'e_pawn'];   // (verified: tools/lesson-verify-janggi.js; the rest are not listed yet)
   const KIND = { b_rook: 5, b_horse: 4, b_elephant: 3, b_cannon: 6, b_pawn: 7 };
   const MATE = { b_mate1: 1, m_mate2: 2, m_mate3: 3, e_rook: 'n', e_pawn: 'n' };   // (the mate steps: P.ok = the one first move that mates within n; 'n' = the endgames: n is the problem's own P.n, the fastest mate)
   const PTS = [0, 0, 3, 3, 5, 13, 7, 2];
@@ -27,6 +27,7 @@
     e_rook: 'ここからは<b>終盤</b>。駒が少なくなったら、残った駒で将を詰ませにいくの。<br>きみには<b>車と馬</b>、相手の将には<b>士</b>がついてる。車で将の<b>動ける点を減らして</b>、馬で逃げ道をふさぐのがコツ。<br>九宮のななめの線も通り道だよ。<b>いちばん早く詰む</b>手を探そうコン！',
     e_pawn: '今度は<b>卒2つ</b>の終盤だよ。<br>卒は相手の九宮に入ると、<b>ななめの線にそって前へ</b>も進めるの。でも後ろには戻れないから、急いで奥まで進めすぎないでね。<br>自分の<b>将</b>も、相手の将の動きをふさぐ大事な駒。<b>いちばん早く詰む</b>手を探してみてコン！',
     b_escape: 'ピンチだコン！ 相手の駒が、きみの<b>大事な駒</b>をねらっているの。<br>取られる前に、相手の駒が<b>届かない点</b>へ逃がそう。<br>逃げた先で<b>別の駒</b>にねらわれないか、ほかの駒が取られる形にならないかも確かめてね！',
+    t_capture: 'ここからは<b>戦術</b>だコン。<br>相手に守られている駒でも、<b>自分の駒より点数が高ければ</b>取る値打ちがあるの。点数の目安は、車13・包7・馬5・象と士3・卒2。<br>取り返されても、<b>差し引きで得をする</b>取り方を探してみよう！',
     m_mate3: 'いよいよ<b>3手で詰ます</b>問題だよ。<br>最初の1手のあと、相手のどの受けにも<b>3手目までに必ず詰む</b>続きがある手を選んでね。<br>相手の受けを1つずつ読むのがコツ。自分の将が詰まされないかも、ちゃんと見てね！',
   };
   const ASK = {
@@ -150,9 +151,37 @@
       return v(EOPEN) + w + v(ERIGHT, 2)(M, H); };
     return { ask: v(EASK)(H, AT), hintTx: v(EHINT2)(H), good: () => v(EGOOD)(H, k), ng, own: true };
   }
+
+  // (2026-11-24 担当D) t_capture 「得な交換」: the answer takes a guarded 馬・車・包 with a cheaper piece; the opponent takes it back and
+  // 楚 is still ahead (the piece taken minus the opponent's best exchange afterwards = the net, escFacts' SEE). Every other move wins
+  // nothing: the words say what the board does after it — the piece taken back (both points, the net), another piece lost and its taker,
+  // a quiet move (and what it leaves en prise), or a mate in 1 — counted again by tools/lesson-verify-janggi.js.
+  const TASK = ['得になる取り方を見つけてみて！', '取り返されても損をしない取り方はどれかな？', '安い駒で高い駒を取れるところはある？', '駒の点数を比べてみて。差し引きで得をする手は？', 'ここは駒得のチャンスだコン！ どの駒で、どれを取る？'];
+  const THINT = [M => `金の輪の${M}で取れる駒を見てみて。取り返されても、取った駒のほうが高いのはどれ？`, M => `金の輪の${M}を使うよ。取ったあと取り返されるときの、点数の足し算と引き算をしてみてね！`, M => `守られている駒でも、金の輪の${M}より点数が高ければ得になるの。ねらいはどれかな？`, M => `高い駒で取ると、取り返されて損をすることがあるの。金の輪の${M}みたいな安い駒で取れないかなコン？`, M => `金の輪の${M}から、取れる駒を1つずつ数えてみて。差し引きで得をするのは1つだけだよ。`];
+  const TGOOD = [(MA, W, AC, V, g) => `正解！ ${W}点の${MA}で${V}点の${AC}を取ったね。相手に取り返されても、${g}点のおつりがくるの。その調子！`, (MA, W, AC, V, g) => `お見事！ ${AC}（${V}点）と${MA}（${W}点）の取りかえっこで、${g}点のもうけだコン。この計算、忘れないでね！`, (MA, W, AC, V, g) => `やったね！ 守られている${AC}でも、${MA}で取れば${g}点の得。点数を比べる目、ばっちりだよ！`, (MA, W, AC, V, g) => `すごい！ ${MA}（${W}点）を取り返されても、${AC}は${V}点。差し引き${g}点、きみの得だね。次もこの目でいこう！`, (MA, W, AC, V, g) => `さすが！ 安い${MA}で高い${AC}を取る、いちばん得な交換だね。${g}点のもうけ、どんどんいこうコン！`];
+  const TOPEN = ['ここは計算どころ、いっしょに見よう。', '惜しかったね、いっしょに数えよう。', '', '大丈夫、交換の計算は慣れだコン。', '点数を比べてみよう。'];
+  const TRIGHT = [(K, MA, W, AC, V, g) => `正解は${K}。${MA}で${AC}を取れば、${g}点の得だったの。`, (K, MA, W, AC, V, g) => `${K}なら、${MA}を取り返されても${AC}のほうが高かったよ。次は見つかるね！`, (K, MA, W, AC, V, g) => `答えは${K}。${MA}と${AC}の交換で、${g}点もうかったんだコン。`, (K, MA, W, AC, V, g) => `いちばんは${K}、${MA}で${AC}を取る得な交換だったの。`, (K, MA, W, AC, V, g) => `${K}がよかったね。${AC}は${MA}より${g}点も高いんだ。`];
+  const sayNet = g => g < 0 ? `差し引き${-g}点の損になっちゃう` : '差し引きとんとんで、得にならない';
+  function tradeJa(E, s, P, i, ck, n) {
+    const v = (L, o) => L[(i + n + (o || 0)) % L.length], T = E.typeOf, p = E.Pos.from(P.s), A = P.best, M = ck('ok'), X = ck('ng'), F = escFacts(E);
+    const cap = m => !E.isPass(m) && p.at(E.mTo(m)) ? T(p.at(E.mTo(m))) : 0, mover = m => T(p.at(E.mFrom(m)));
+    const act = u => { const q = p.clone().play(u), D = F.danger(q); return { q, D, dd: D[0], m1: F.mate1(q), net: PTS[cap(u)] - (D[0] ? D[0].g : 0) }; };
+    const a0 = act(A), MA = NM(mover(A), true), W = PTS[mover(A)], AC = NM(cap(A), false), V = PTS[cap(A)], g = a0.net;
+    const ng = u0 => { const L = p.moves(), u = u0 != null && u0 !== A && L.includes(u0) ? u0 : L.find(x => x !== A && cap(x)) || L.find(x => x !== A); let w = '';
+      if (u != null) { const r = act(u), c = cap(u), C = NM(c, false), CV = PTS[c], MT = NM(mover(u), true), MV = PTS[mover(u)], dd = r.dd;
+        if (r.m1) w = v([`${X}だと、相手に1手で詰まされちゃう！ 自分の将の守りも見てね。`, `${X}のあと、相手には1手で詰ませる手があるの。こっちの将が先に詰んじゃう！`], 1);
+        else if (c && dd && dd.s === E.mTo(u)) { const B = NM(dd.by, false); w = v([`${X}で${C}（${CV}点）を取ると、きみの${MT}（${MV}点）を相手の${B}に取り返されて、${sayNet(r.net)}の。`, `${X}だと${C}（${CV}点）は取れるけど、${MT}（${MV}点）が相手の${B}に取り返されるの。${sayNet(r.net)}んだ。`, `${X}の${C}（${CV}点）取りは、${MT}（${MV}点）を相手の${B}に取り返される形。${sayNet(r.net)}コン。`], 1); }
+        else if (c && dd) { const Lp = NM(dd.t, true), B = NM(dd.by, false); w = v([`${X}で${C}（${CV}点）は取れるけど、こんどは${Lp}を相手の${B}に取られちゃう。${sayNet(r.net)}の。`, `${X}だと${C}（${CV}点）を取っても、${Lp}が相手の${B}に取られる形になるの。${sayNet(r.net)}んだ。`], 1); }
+        else if (c) w = `${X}で${C}（${CV}点）を取れるの。`;
+        else if (dd) { const Lp = NM(dd.t, true), B = NM(dd.by, false); w = v([`${X}は駒を取らない手で、しかも${Lp}を相手の${B}に取られる形になるの。`, `${X}だと駒を取れないうえに、${Lp}が相手の${B}に取られちゃう。`], 1); }
+        else w = v([`${X}では駒を取れないの。せっかくの駒得のチャンスを逃しちゃう。`, `${X}は駒を取る手じゃないね。得をするチャンスがそのまま残っちゃう。`, `${X}だと、得な交換をしそこねちゃう。`], 1); }
+      return v(TOPEN) + w + v(TRIGHT, 2)(M, MA, W, AC, V, g); };
+    return { ask: v(TASK), hintTx: v(THINT)(MA), good: () => v(TGOOD)(MA, W, AC, V, g), ng, own: true };
+  }
   function lsJa(E, s, P, i, ck, n) {
+    if (s.id === 't_capture') return tradeJa(E, s, P, i, ck, n || 0);
     if (s.id === 'b_escape') return escJa(E, s, P, i, ck, n || 0);
-    if (MATE[s.id] && ASK[s.id]) return mateJa(E, s, P, i, ck, n || 0);
+    if (MATE[s.id] && ASK[s.id]) return mateJa(E, s, P, i, ck, ['b_mate1', 'm_mate2', 'm_mate3', 'e_rook', 'e_pawn'].indexOf(s.id) + 1);   // (an offset of its own: no two mate steps read the openers in the same order, wherever they sit on the list)
     const id = s.id, K = KIND[id]; if (!K || !ASK[id]) return null; n = n || 0;
     const v = (L, o) => L[(i + n + (o || 0)) % L.length];
     const p = E.Pos.from(P.s), T = E.typeOf, A = P.best, M = ck('ok'), X = ck('ng');
