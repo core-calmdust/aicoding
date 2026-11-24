@@ -29,6 +29,11 @@ const MSG = {
   'c.leadOffNg': LL('{x} は、まだ入っていない駒を数えずにくらべた答えです。入っていない駒も1個15歩で、残り歩数は あなた {a}・相手 {b} です。', '{x} compares without the pieces not yet on the board. They count 15 each: steps left are you {a}, rival {b}.', '{x} 是没算还没上盘的棋子就比较的结果。没上盘的每枚也是15步：剩余步数 你 {a}、对手 {b}。', '{x}는 아직 들어오지 않은 말을 빼고 비교한 답이에요. 들어오지 않은 말도 1개 15걸음이라, 남은 걸음은 나 {a}, 상대 {b}예요.', '{x} compara sin contar las fichas que no han entrado. Cada una cuenta 15: faltan tú {a}, rival {b}.', '{x} compare sans les pions pas encore entrés. Ils comptent 15 chacun : il reste vous {a}, adversaire {b}.', '{x} compara sem as peças que ainda não entraram. Cada uma conta 15: faltam você {a}, rival {b}.', '{x} vergleicht ohne die Steine außerhalb. Sie zählen je 15: übrig sind du {a}, Gegner {b}.', '{x} में बाहर वाले मोहरे गिने बिना तुलना की। वे भी 15-15 गिनते हैं: बचे क़दम आप {a}, विरोधी {b}।', '{x} يقارن دون القطع التي لم تدخل. كل واحدة تُعدّ 15: الباقي أنت {a} والخصم {b}.', '{x} — сравнение без фишек, ещё не вошедших на доску. Они считаются по 15: осталось у вас {a}, у соперника {b}.', '{x} 是沒算還沒上盤的棋子就比較的結果。沒上盤的每枚也是15步：剩餘步數 你 {a}、對手 {b}。', '{x} membandingkan tanpa bidak yang belum masuk. Masing-masing dihitung 15: sisa kamu {a}, lawan {b}.', '{x}, girmemiş taşları saymadan karşılaştırır. Her biri 15 sayılır: kalan sen {a}, rakip {b}.'),
   'c.leadOff14Ng': LL('{x} は、まだ入っていない駒を1個14歩と数えてくらべた答えです。1個15歩で、残り歩数は あなた {a}・相手 {b} です。', '{x} compares counting each piece not yet on the board as 14. It is 15 each: steps left are you {a}, rival {b}.', '{x} 是把没上盘的棋子每枚算14步来比较的结果。应是每枚15步：剩余步数 你 {a}、对手 {b}。', '{x}는 들어오지 않은 말을 1개 14걸음으로 세어 비교한 답이에요. 1개 15걸음이라, 남은 걸음은 나 {a}, 상대 {b}예요.', '{x} compara contando cada ficha sin entrar como 14. Son 15 cada una: faltan tú {a}, rival {b}.', '{x} compare en comptant chaque pion non entré comme 14. C’est 15 chacun : il reste vous {a}, adversaire {b}.', '{x} compara contando cada peça que não entrou como 14. São 15 cada: faltam você {a}, rival {b}.', '{x} vergleicht und zählt jeden Stein außerhalb als 14. Es sind je 15: übrig sind du {a}, Gegner {b}.', '{x} में बाहर वाला हर मोहरा 14 गिनकर तुलना की। हर एक 15 है: बचे क़दम आप {a}, विरोधी {b}।', '{x} يقارن بعدّ كل قطعة لم تدخل بـ14. هي 15 لكل واحدة: الباقي أنت {a} والخصم {b}.', '{x} — сравнение, где каждая невошедшая фишка считается за 14. Нужно по 15: осталось у вас {a}, у соперника {b}.', '{x} 是把沒上盤的棋子每枚算14步來比較的結果。應是每枚15步：剩餘步數 你 {a}、對手 {b}。', '{x} membandingkan dengan menghitung tiap bidak yang belum masuk sebagai 14. Seharusnya 15: sisa kamu {a}, lawan {b}.', '{x}, girmemiş her taşı 14 sayarak karşılaştırır. Her biri 15’tir: kalan sen {a}, rakip {b}.'),
   'c.leadGoalNg': LL('{x} は、ゴールした駒も15歩と数えてくらべた答えです。ゴールした駒は0歩で、残り歩数は あなた {a}・相手 {b} です。', '{x} compares counting pieces already home as 15. Home pieces need 0: steps left are you {a}, rival {b}.', '{x} 是把已到终点的棋子也算15步来比较的结果。到终点的是0步：剩余步数 你 {a}、对手 {b}。', '{x}는 골인한 말도 15걸음으로 세어 비교한 답이에요. 골인한 말은 0걸음이라, 남은 걸음은 나 {a}, 상대 {b}예요.', '{x} compara contando las fichas en la meta como 15. Esas son 0: faltan tú {a}, rival {b}.', '{x} compare en comptant les pions arrivés comme 15. Ils valent 0 : il reste vous {a}, adversaire {b}.', '{x} compara contando as peças que chegaram como 15. Elas valem 0: faltam você {a}, rival {b}.', '{x} vergleicht und zählt Steine im Ziel als 15. Sie zählen 0: übrig sind du {a}, Gegner {b}.', '{x} में घर पहुँचे मोहरे भी 15 गिनकर तुलना की। वे 0 हैं: बचे क़दम आप {a}, विरोधी {b}।', '{x} يقارن بعدّ القطع الواصلة بـ15. هي 0: الباقي أنت {a} والخصم {b}.', '{x} — сравнение, где дошедшие фишки считаются за 15. Им нужно 0: осталось у вас {a}, у соперника {b}.', '{x} 是把已到終點的棋子也算15步來比較的結果。到終點的是0步：剩餘步數 你 {a}、對手 {b}。', '{x} membandingkan dengan menghitung bidak yang finis sebagai 15. Itu 0: sisa kamu {a}, lawan {b}.', '{x}, eve varmış taşları 15 sayarak karşılaştırır. Onlar 0’dır: kalan sen {a}, rakip {b}.'),
+// 追64（2026-11-24 担当C）：誤りの一覧を広げたぶんの説明
+  'c.notNg': LL('{x} は、出目 {n} が出ない確率です（16 − {m}）。聞いているのは {n} が出る確率です。', '{x} is the chance of NOT rolling {n} (16 − {m}). The question asks for the chance of rolling it.', '{x} 是掷不出 {n} 的概率（16−{m}）。问的是掷出 {n} 的概率。', '{x}은(는) {n}이(가) 안 나올 확률이에요(16−{m}). 묻는 것은 {n}이(가) 나올 확률이에요.', '{x} es la probabilidad de NO sacar {n} (16 − {m}). Se pregunta la de sacarlo.', '{x} est la chance de NE PAS faire {n} (16 − {m}). On demande celle de le faire.', '{x} é a chance de NÃO tirar {n} (16 − {m}). A pergunta é a de tirá-lo.', '{x} ist die Chance, KEINE {n} zu werfen (16 − {m}). Gefragt ist die Chance, sie zu werfen.', '{x} {n} न आने की संभावना है (16 − {m})। पूछी गई है {n} आने की संभावना।', '{x} هو احتمال ألّا يخرج {n} (16 − {m}). والسؤال عن احتمال خروجه.', '{x} — шанс НЕ выбросить {n} (16 − {m}). Спрашивают шанс выбросить.', '{x} 是擲不出 {n} 的機率（16−{m}）。問的是擲出 {n} 的機率。', '{x} adalah peluang TIDAK melempar {n} (16 − {m}). Yang ditanya peluang melemparnya.', '{x}, {n} ATMAMA olasılığıdır (16 − {m}). Sorulan, onu atma olasılığı.'),
+  'c.farNg': LL('{x} は、{d}マス後ろの相手の駒だけを数えた数です。もっと近い{e}マス後ろの駒も、{e}が出れば届きます。', '{x} counts only the rival piece {d} squares behind. The nearer one, {e} squares behind, also reaches you on a {e}.', '{x} 只算了后面{d}格的对手棋子。更近的后面{e}格的棋子掷出{e}也能追上。', '{x}는 {d}칸 뒤의 상대 말만 센 수예요. 더 가까운 {e}칸 뒤의 말도 {e}이 나오면 닿아요.', '{x} solo cuenta la ficha rival {d} casillas detrás. La más cercana, {e} casillas detrás, también te alcanza con un {e}.', '{x} ne compte que le pion adverse {d} cases derrière. Le plus proche, {e} cases derrière, vous atteint aussi sur un {e}.', '{x} conta só a peça rival {d} casas atrás. A mais próxima, {e} casas atrás, também te alcança com um {e}.', '{x} zählt nur den gegnerischen Stein {d} Felder dahinter. Der nähere, {e} Felder dahinter, erreicht dich mit einer {e} auch.', '{x} में सिर्फ़ {d} खाने पीछे वाला विरोधी मोहरा गिना। ज़्यादा पास वाला, {e} खाने पीछे, भी {e} आने पर पहुँचता है।', '{x} يعدّ قطعة الخصم التي خلفك بـ{d} خانات فقط. والأقرب، خلفك بـ{e} خانات، تصل إليك أيضًا برمية {e}.', '{x} учитывает только фишку соперника в {d} клетках позади. Более близкая, в {e} клетках позади, тоже достанет при {e}.', '{x} 只算了後面{d}格的對手棋子。更近的後面{e}格的棋子擲出{e}也能追上。', '{x} hanya menghitung bidak lawan {d} petak di belakang. Yang lebih dekat, {e} petak di belakang, juga sampai dengan angka {e}.', '{x} yalnız {d} kare gerideki rakip taşı sayar. Daha yakın olan, {e} kare geride, {e} gelirse o da ulaşır.'),
+  'c.distNg': LL('{x} は、距離の数字（{list}）をそのまま通り数にした数です。距離ごとに、その目が出る通り数を足します。', '{x} uses the distances themselves ({list}) as the number of ways. Add the ways to roll each distance instead.', '{x} 是把距离的数字（{list}）直接当成种数。应该加上每个距离的点数出现的种数。', '{x}은(는) 거리 숫자({list})를 그대로 가짓수로 센 수예요. 거리마다 그 눈이 나오는 가짓수를 더해요.', '{x} toma las distancias mismas ({list}) como número de formas. Hay que sumar las formas de sacar cada distancia.', '{x} prend les distances elles-mêmes ({list}) pour le nombre de façons. Il faut additionner les façons de faire chaque distance.', '{x} toma as próprias distâncias ({list}) como número de jeitos. Some os jeitos de tirar cada distância.', '{x} nimmt die Abstände selbst ({list}) als Anzahl der Möglichkeiten. Addiere stattdessen die Möglichkeiten, jeden Abstand zu werfen.', '{x} में दूरियों ({list}) को ही तरीकों की गिनती मान लिया गया है। हर दूरी का अंक आने के तरीके जोड़ने होते हैं।', '{x} يعدّ المسافات نفسها ({list}) عددَ الطرق. اجمع بدلًا منها عدد طرق رمي كل مسافة.', '{x} — сами расстояния ({list}) взяты за число способов. Нужно сложить способы выбросить каждое расстояние.', '{x} 是把距離的數字（{list}）直接當成種數。應該加上每個距離的點數出現的種數。', '{x} memakai jaraknya sendiri ({list}) sebagai jumlah cara. Seharusnya jumlahkan cara melempar tiap jarak.', '{x}, uzaklıkların kendisini ({list}) yol sayısı sayar. Her uzaklığı atma yollarını toplamalısın.'),
+  'c.leadPosNg': LL('{x} は、盤上の駒の位置（何マス目か）を残り歩数のつもりで足してくらべた答えです。残り歩数は「15−位置」で、あなた {a}・相手 {b} です。', '{x} compares by adding the positions of the pieces on the board as if they were steps left. Steps left are “15 − position”: you {a}, rival {b}.', '{x} 是把盘上棋子的位置（第几格）当成剩余步数相加来比较的结果。剩余步数是“15−位置”：你 {a}、对手 {b}。', '{x}는 판 위 말의 위치(몇 번째 칸)를 남은 걸음처럼 더해서 비교한 답이에요. 남은 걸음은 ‘15−위치’라서 나 {a}, 상대 {b}예요.', '{x} compara sumando las posiciones de las fichas como si fueran pasos restantes. Los pasos son «15 − posición»: tú {a}, rival {b}.', '{x} compare en additionnant les positions des pions comme si c’étaient les pas restants. Les pas sont « 15 − position » : vous {a}, adversaire {b}.', '{x} compara somando as posições das peças como se fossem passos restantes. Os passos são “15 − posição”: você {a}, rival {b}.', '{x} vergleicht, indem die Positionen der Steine wie Restschritte addiert werden. Restschritte sind „15 − Position“: du {a}, Gegner {b}.', '{x} में बोर्ड के मोहरों के स्थान को बचे क़दम मानकर जोड़ा और तुलना की। बचे क़दम “15 − स्थान” हैं: आप {a}, विरोधी {b}।', '{x} يقارن بجمع مواقع القطع على اللوحة كأنها الخطوات الباقية. الخطوات الباقية هي «15 − الموقع»: أنت {a}، الخصم {b}.', '{x} — сравнение по сумме позиций фишек, будто это оставшиеся шаги. Оставшиеся шаги — «15 − позиция»: у вас {a}, у соперника {b}.', '{x} 是把盤上棋子的位置（第幾格）當成剩餘步數相加來比較的結果。剩餘步數是「15−位置」：你 {a}、對手 {b}。', '{x} membandingkan dengan menjumlahkan posisi bidak seolah-olah sisa langkah. Sisa langkah adalah “15 − posisi”: kamu {a}, lawan {b}.', '{x}, taşların konumlarını kalan adımmış gibi toplayarak karşılaştırır. Kalan adım “15 − konum”dur: sen {a}, rakip {b}.'),
 };
 // 残り歩数の答えの説明：盤上だけ（B）・入っていない駒あり（BO）、ゴールした駒ありなら G の文を足す
 const PB = LL('盤上の駒の残り歩数（15−位置）を足します：{list} ＝ {m}。', 'Add the steps left (15 − position) of the pieces on the board: {list} = {m}.', '把盘上棋子的剩余步数（15−位置）相加：{list} ＝ {m}。', '판 위 말의 남은 걸음(15−위치)을 더해요: {list} = {m}.', 'Suma los pasos que faltan (15 − posición) de las fichas del tablero: {list} = {m}.', 'Additionnez les pas restants (15 − position) des pions sur le plateau : {list} = {m}.', 'Some os passos que faltam (15 − posição) das peças no tabuleiro: {list} = {m}.', 'Addiere die restlichen Schritte (15 − Position) der Steine auf dem Brett: {list} = {m}.', 'बोर्ड के मोहरों के बचे क़दम (15 − स्थान) जोड़ें: {list} = {m}।', 'اجمع الخطوات الباقية (15 − الموقع) للقطع على اللوحة: {list} = {m}.', 'Сложите оставшиеся шаги (15 − позиция) фишек на доске: {list} = {m}.', '把盤上棋子的剩餘步數（15−位置）相加：{list} ＝ {m}。', 'Jumlahkan sisa langkah (15 − posisi) bidak di papan: {list} = {m}.', 'Tahtadaki taşların kalan adımlarını (15 − konum) topla: {list} = {m}.');
@@ -50,13 +55,15 @@ const fillL = (T, v) => { const o = {}; for (const l of LANGS) o[l] = T[l].repla
 const frac = m => m + '/16';
 function sideCount(a) { const on = a.filter(x => x >= 1 && x <= 14); return { on, k0: a.filter(x => x === 0).length, kG: a.filter(x => x === 15).length, m: a.reduce((s, p) => s + 15 - p, 0) }; }
 // 残り歩数のよくある誤り → その数（盤にない誤りは入れない）
-function pipErrs(a) { const S = sideCount(a), m = S.m, e = {};
+function pipErrs(a, opp) { const S = sideCount(a), m = S.m, e = {};
   if (S.k0) e['c.offNg'] = m - 15 * S.k0;
   if (S.kG) e['c.goalNg'] = m + 15 * S.kG;
   if (S.k0 >= 2) e['c.offOnceNg'] = m - 15 * (S.k0 - 1);
   if (S.k0) e['c.off14Ng'] = m - S.k0;
   if (S.on.length) e['c.minus1Ng'] = m - S.on.length;
   if (S.on.length) e['c.posNg'] = m - S.on.reduce((s, p) => s + 15 - p, 0) + S.on.reduce((s, p) => s + p, 0);
+  if (S.on.length) e['~plus1'] = m + S.on.length;          // 16−位置（追64：重なりを見るだけ。説明はない）
+  if (opp) e['~oppSum'] = sideCount(opp).m;                 // 相手の側の合計
   return e; }
 function pipWhy(a) { const S = sideCount(a), list = S.on.map(p => 15 - p).concat(S.k0 ? ['15×' + S.k0] : []).join(' + ');
   return ['c.pipsB' + (S.k0 ? 'O' : '') + (S.kG ? 'G' : ''), { list, m: S.m, k: S.k0, g: S.kG }]; }
@@ -69,6 +76,9 @@ function leadErrs(s) { const A = sideCount(s.pos[0]), B = sideCount(s.pos[1]), d
   if (A.k0 || B.k0) e['c.leadOffNg'] = mk(A.m - 15 * A.k0, B.m - 15 * B.k0);
   if (A.kG || B.kG) e['c.leadGoalNg'] = mk(A.m + 15 * A.kG, B.m + 15 * B.kG);
   if (A.k0 !== B.k0) e['c.leadOff14Ng'] = mk(A.m - A.k0, B.m - B.k0);
+  const posM = (S, a) => S.m - S.on.reduce((x, p) => x + 15 - p, 0) + S.on.reduce((x, p) => x + p, 0);
+  e['c.leadPosNg'] = mk(posM(A), posM(B));                   // 追64：位置をそのまま足してくらべる
+  if (A.on.length !== B.on.length) e['~leadMinus1'] = mk(A.m - A.on.length, B.m - B.on.length);   // 14−位置（重なりを見るだけ）
   for (const k in e) if (!e[k]) delete e[k];
   return { ans, a: A.m, b: B.m, e }; }
 // 取られる確率：印の駒 p（あなた）をねらう相手の駒（1〜4マス後ろ）と、よくある誤り
@@ -80,24 +90,30 @@ function riskParts(s, p) { const op = s.pos[1], att = op.filter(q => q >= 1 && q
   const pv = att.filter(a => a.q <= 4);
   if (pv.length) e['c.privNg'] = [m - pv.reduce((x, a) => x + P16[a.d], 0), { d: pv.map(a => a.d).join('・') }];
   if (m) e['c.safeNg'] = [16 - m, { m }];
+  // 追64：誤りの一覧を広げる（遠い駒だけ・距離をそのまま・1つの駒の目の数え違い）
+  if (att.length >= 2) { const far = att[att.length - 1]; e['c.farNg'] = [P16[far.d], { d: far.d, e: att.slice(0, -1).map(a => a.d).join('・') }]; }
+  if (att.length) e['c.distNg'] = [att.reduce((x, a) => x + a.d, 0), { list: att.map(a => a.d).join(' + ') }];
+  if (att.length === 1) { const d = att[0].d; if (P16[d] > 1) e['~oneWay'] = [1]; [d - 1, d + 1].forEach(w => { if (w >= 1 && w <= 4) e['~look' + w] = [P16[w]]; }); }
   return { att, m, e }; }
 // 出目の確率の誤り
 function rollErrs(n) { const m = W[n], e = {};
   if (m > 1) e['c.oneWayNg'] = [1, { n, m }];
   e['c.halfNg'] = [8, { n, m }];
   for (const w of new Set(W)) if (w !== m) e['c.rollNg:' + w] = [w, { v: W.map((x, i) => x === w ? i : -1).filter(i => i >= 0).join(' / ') }];
+  e['c.notNg'] = [16 - m, { n, m }];                        // 追64：出ない確率
   return e; }
 const ORDER_PIP = ['c.offNg', 'c.goalNg', 'c.offOnceNg', 'c.off14Ng', 'c.minus1Ng', 'c.posNg'];
-const ORDER_LEAD = ['c.sideNg', 'c.leadOffNg', 'c.leadGoalNg', 'c.leadOff14Ng'];
-const ORDER_RISK = ['c.privNg', 'c.nearNg', 'c.aheadNg', 'c.safeNg'];
+const ORDER_LEAD = ['c.sideNg', 'c.leadOffNg', 'c.leadGoalNg', 'c.leadOff14Ng', 'c.leadPosNg'];
+const ORDER_RISK = ['c.privNg', 'c.nearNg', 'c.aheadNg', 'c.safeNg', 'c.farNg', 'c.distNg'];
 // 誤りの候補から、答えと値が重ならない3つを選ぶ
-function pick3(cands, ans, eq) { const got = []; for (const c of cands) { if (got.length === 3) break; if (eq(c.v, ans) || got.some(g => eq(g.v, c.v))) continue; got.push(c); } if (got.length < 3) throw new Error('追54: 盤にある誤りが3つ作れない ' + JSON.stringify(cands)); return got; }
+// 追64：ほかの誤り（説明のないものも含む一覧 all）と値が重なる誤りは使わない
+function pick3(cands, ans, eq, all) { const got = []; for (const c of cands) { if (got.length === 3) break; if (eq(c.v, ans) || got.some(g => eq(g.v, c.v))) continue; if (all && all.filter(v => eq(v, c.v)).length > 1) continue; got.push(c); } if (got.length < 3) throw new Error('追54: 盤にある誤りが3つ作れない ' + JSON.stringify(cands)); return got; }
 const okSide = a => { const on = a.filter(x => x >= 1 && x <= 14); return new Set(on).size === on.length; };
 
 function fixRoll(q) { const n = q.why[1].n, m = W[n], e = rollErrs(n);
   const c = Object.keys(e).map(k => ({ k: k.split(':')[0], v: e[k][0], p: e[k][1] }));
   // 出目 n：組み合わせを1通り → 印1個の半分 → 別の目
-  const got = pick3(c.filter(x => x.k !== 'c.rollNg').concat(c.filter(x => x.k === 'c.rollNg').sort((x, y) => Math.abs(x.v - m) - Math.abs(y.v - m))), m, (a, b) => a === b);
+  const got = pick3(c.filter(x => x.k !== 'c.rollNg' && x.k !== 'c.notNg').concat(c.filter(x => x.k === 'c.rollNg').sort((x, y) => Math.abs(x.v - m) - Math.abs(y.v - m)), c.filter(x => x.k === 'c.notNg')), m, (a, b) => a === b, c.map(x => x.v));
   const vals = [m].concat(got.map(g => g.v)).sort((a, b) => a - b);
   q.opts = vals.map(frac); q.ans = vals.indexOf(m);
   q.ngo = vals.map(v => { if (v === m) return null; const g = got.find(x => x.v === v); return [g.k, Object.assign({ x: frac(v) }, g.p)]; });
@@ -109,15 +125,15 @@ function fixRisk(q, rcFn) { const s = q.s, dm = (q.marks || []).find(x => x.type
   const hm = Math.round(E.hitRisk(t, 0)[s.pos[0].indexOf(p)] * 16);
   if (hm !== R.m) throw new Error('risk mismatch ' + hm + ' ' + R.m);
   const c = ORDER_RISK.filter(k => R.e[k]).map(k => ({ k, v: R.e[k][0], p: R.e[k][1] }));
-  const got = pick3(c, R.m, (a, b) => a === b), vals = [R.m].concat(got.map(g => g.v)).sort((a, b) => a - b);
+  const got = pick3(c, R.m, (a, b) => a === b, Object.values(R.e).map(x => x[0])), vals = [R.m].concat(got.map(g => g.v)).sort((a, b) => a - b);
   q.opts = vals.map(frac); q.ans = vals.indexOf(R.m);
   q.why = ['c.risk', { list: R.att.map(a => `${a.d}→${frac(P16[a.d])}`).join(' + '), m: R.m }];
   q.ngo = vals.map(v => { if (v === R.m) return null; const g = got.find(x => x.v === v); return [g.k, Object.assign({ x: frac(v) }, g.p)]; });
   q.marks = [dm].concat(R.att.map(a => Object.assign(rcFn('finkel', 1, a.q), { type: 'text', text: String(a.d), size: 26, color: '#ffe27a' })));
 }
-function fixPips(q, side) { const a = q.s.pos[side], S = sideCount(a), e = pipErrs(a);
+function fixPips(q, side) { const a = q.s.pos[side], S = sideCount(a), e = pipErrs(a, q.s.pos[1 - side]);
   const c = ORDER_PIP.filter(k => k in e && e[k] > 0).map(k => ({ k, v: e[k] }));
-  const got = pick3(c, S.m, (x, y) => x === y), vals = [S.m].concat(got.map(g => g.v)).sort((x, y) => x - y);
+  const got = pick3(c, S.m, (x, y) => x === y, Object.values(e)), vals = [S.m].concat(got.map(g => g.v)).sort((x, y) => x - y);
   q.opts = vals.map(String); q.ans = vals.indexOf(S.m);
   const w = pipWhy(a); if (side) w[1].r = 1; q.why = w;
   q.ngo = vals.map(v => { if (v === S.m) return null; const g = got.find(x => x.v === v); return [g.k, { x: String(v), k: g.k === 'c.goalNg' ? S.kG : S.k0 }]; });
@@ -125,11 +141,11 @@ function fixPips(q, side) { const a = q.s.pos[side], S = sideCount(a), e = pipEr
 }
 function fixLead(q, Q) { const L = leadErrs(q.s), eq = (x, y) => x[0] === y[0] && x[1] === y[1];
   const c = ORDER_LEAD.filter(k => L.e[k]).map(k => ({ k, v: L.e[k] }));
-  const got = pick3(c, L.ans, eq), raw = [L.ans].concat(got.map(g => g.v)).sort((x, y) => x[0] - y[0] || x[1] - y[1]);
+  const got = pick3(c, L.ans, eq, Object.values(L.e)), raw = [L.ans].concat(got.map(g => g.v)).sort((x, y) => x[0] - y[0] || x[1] - y[1]);
   const lab = ([w, v]) => { const o = {}; for (const l of LANGS) o[l] = (w === 0 ? Q.you : Q.rival)[l] + ' +' + v; return o; };
   q.opts = raw.map(lab); q.ans = raw.findIndex(r => eq(r, L.ans));
   q.why = [L.ans[0] === 0 ? 'c.lead2y' : 'c.lead2r', { a: L.a, b: L.b, d: L.ans[1] }];
-  q.ngo = raw.map(r => { if (eq(r, L.ans)) return null; const g = got.find(x => eq(x.v, r)); return [g.k, { x: lab(r).ja, a: L.a, b: L.b }]; });
+  q.ngo = raw.map(r => { if (eq(r, L.ans)) return null; const g = got.find(x => eq(x.v, r)); return [g.k, { x: lab(r), a: L.a, b: L.b }]; });   // (x: the option's label in 14 languages — the 2D / 3D words pick the player's language)
   q.hints = [pipHints(q.s.pos), H2L];
 }
 // 取られる確率の3問の局面（追54：誤りが盤にある局面に作り直す）
