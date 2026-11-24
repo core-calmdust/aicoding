@@ -1,0 +1,25 @@
+<!doctype html><script src="/atlas/vendor/three-r186.min.js"></script><script src="/seabattle/engine.js"></script><script src="/seabattle/ships3d.js"></script>
+<script>
+// coplanar, overlapping, facing-the-same-way triangles from different meshes (or the same mesh) = z-fighting
+const T = THREE, E = SeaEngine, out = [];
+for (let k = 0; k < E.TYPES.length; k++) { const Tt = E.TYPES[k], g = SeaShips.build(T, k, Tt.len, Tt.k); g.updateMatrixWorld(true);
+  const tris = []; let mi = 0;
+  g.traverse(o => { if (!o.isMesh || !o.visible) return; const m = mi++, geo = o.geometry, P = geo.attributes.position, I = geo.index, n = I ? I.count : P.count;
+    const v = [new T.Vector3(), new T.Vector3(), new T.Vector3()];
+    for (let i = 0; i < n; i += 3) { for (let j = 0; j < 3; j++) v[j].fromBufferAttribute(P, I ? I.getX(i + j) : i + j).applyMatrix4(o.matrixWorld);
+      const nn = new T.Vector3().subVectors(v[1], v[0]).cross(new T.Vector3().subVectors(v[2], v[0])); const a = nn.length(); if (a < 1e-7) continue; nn.divideScalar(a);
+      tris.push({ m, name: o.name || (o.material && o.material.name) || '', n: nn.clone(), d: nn.dot(v[0]), p: v.map(x => x.clone()), area: a / 2 }); } });
+  // bucket by quantised plane
+  const B = new Map(); for (const t of tris) { const key = [t.n.x, t.n.y, t.n.z].map(x => Math.round(x * 50)).join(',') + '|' + Math.round(t.d * 400); (B.get(key) || B.set(key, []).get(key)).push(t); }
+  let hits = 0, area = 0, ex = new Set();
+  for (const L of B.values()) { if (L.length < 2) continue;
+    for (let a = 0; a < L.length; a++) for (let b = a + 1; b < L.length; b++) { const A = L[a], Bb = L[b]; if (A.m === Bb.m) continue; if (A.n.dot(Bb.n) < .999 || Math.abs(A.d - Bb.d) > 4e-4) continue;
+      // overlap test in plane: project to 2D, check centroid of one inside the other (cheap) or bbox overlap with shared interior
+      const ax = Math.abs(A.n.x) > .9 ? 'yz' : Math.abs(A.n.y) > .9 ? 'xz' : 'xy', pr = p => ax === 'yz' ? [p.y, p.z] : ax === 'xz' ? [p.x, p.z] : [p.x, p.y];
+      const inside = (q, t) => { const [p0, p1, p2] = t.p.map(pr), s = (u, v, w) => (v[0] - u[0]) * (w[1] - u[1]) - (v[1] - u[1]) * (w[0] - u[0]); const d1 = s(p0, p1, q), d2 = s(p1, p2, q), d3 = s(p2, p0, q); return (d1 > 1e-9 && d2 > 1e-9 && d3 > 1e-9) || (d1 < -1e-9 && d2 < -1e-9 && d3 < -1e-9); };
+      const cen = t => { const c = t.p.reduce((s, p) => s.add(p), new T.Vector3()).divideScalar(3); return pr(c); };
+      if (inside(cen(A), Bb) || inside(cen(Bb), A)) { hits++; area += Math.min(A.area, Bb.area); ex.add(A.m + '/' + Bb.m); } } }
+  if (hits) out.push({ k: Tt.k, hits, area: +area.toFixed(4), pairs: [...ex].slice(0, 6).join(' ') });
+}
+window.R = out;
+</script>
