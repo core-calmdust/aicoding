@@ -27,6 +27,7 @@
     xiangqi: { guide: '../images/atlas/g-shogi.webp', name: { ja: 'ショウギツネ', en: 'Shogitsune', zh: '将棋狐', ko: '쇼기여우', es: 'Shogizorro', fr: 'Shogirenard', pt: 'Shogiraposa', de: 'Shogifuchs', hi: 'शोगी लोमड़ी', ar: 'ثعلب الشوغي', ru: 'Сёгицунэ', 'zh-TW': '將棋狐', id: 'Shogitsune', tr: 'Shogitsune' } },   // (the xiangqi guide is the shogi fox, as atlas/rules/xiangqi.js)
     backgammon: { guide: '../images/atlas/g-dice.webp', name: {"ja":"ダイスン","en":"Dicepup","zh":"骰子汪","ko":"다이슨","es":"Dicepup","fr":"Dicepup","pt":"Dicepup","de":"Dicepup","hi":"डाइसपप","ar":"دايس باب","ru":"Дайспап","zh-TW":"骰子汪","id":"Dicepup","tr":"Dicepup"} },
     senet: { noPz: true, guide: '../images/atlas/av/camel-2.webp', name: {"ja":"セティ","en":"Seti","zh":"塞提","ko":"세티","es":"Seti","fr":"Seti","pt":"Seti","de":"Seti","hi":"सेती","ar":"سيتي","ru":"Сети","zh-TW":"塞提","id":"Seti","tr":"Seti"} },   // (senet: セティ, the rules tour's camel, guides the 3D lessons; no puzzles — addendum 2026-11-24)
+    patolli: { noPz: true, guide: '../images/atlas/g-dice.webp', name: {"ja":"ダイスン","en":"Dicepup","zh":"骰子汪","ko":"다이슨","es":"Dicepup","fr":"Dicepup","pt":"Dicepup","de":"Dicepup","hi":"डाइसपप","ar":"دايس باب","ru":"Дайспап","zh-TW":"骰子汪","id":"Dicepup","tr":"Dicepup"} },   // (patolli: ダイスン, the rules tour's guide, leads the 3D lessons; no puzzles — addendum 2026-11-24)
     ur: { noPz: true, guide: '../images/atlas/g-dice.webp', name: {"ja":"ダイスン","en":"Dicepup","zh":"骰子汪","ko":"다이슨","es":"Dicepup","fr":"Dicepup","pt":"Dicepup","de":"Dicepup","hi":"डाइसपप","ar":"دايس باب","ru":"Дайспап","zh-TW":"骰子汪","id":"Dicepup","tr":"Dicepup"} },   // (ur: ダイスン guides the 3D lessons; no puzzles for the dice-race games — addendum 2026-11-24)
     connect4: { guide: '../images/atlas/g-plop.webp', name: { ja: 'ポトンウサ', en: 'Plopbun', zh: '叮咚兔', 'zh-TW': '叮咚兔', ko: '포통우사', es: 'Plopbun', fr: 'Plopbun', pt: 'Plopbun', de: 'Plopbun', hi: 'प्लॉपबन', ar: 'بلوب بن', ru: 'Плопбан', id: 'Plopbun', tr: 'Plopbun' } },
     mancala: { guide: '../images/atlas/g-gem.webp', name: {"ja": "マンカラビ", "en": "Gembeetle", "zh": "宝石甲虫", "ko": "보석풍뎅이", "es": "Escarabajoya", "fr": "Scarabijou", "pt": "Besourojoia", "de": "Juwelkäfer", "hi": "रत्नू भौंरा", "ar": "خنفوس الجواهر", "ru": "Джембитл", "zh-TW": "寶石甲蟲", "id": "Gembeetle", "tr": "Gembeetle"} },
@@ -34,6 +35,7 @@
     morris: { guide: '../images/atlas/g-owl.webp', name: { ja: 'モリフク', en: 'Millowl', zh: '方阵猫头鹰', 'zh-TW': '方陣貓頭鷹', ko: '모리후쿠', es: 'Millowl', fr: 'Millowl', pt: 'Millowl', de: 'Millowl', hi: 'मिलआउल', ar: 'ميل أول', ru: 'Миллоул', id: 'Millowl', tr: 'Millowl' } },
     tafl: { guide: '../images/atlas/g-puffin.webp', name: { ja: 'タフリン', en: 'Taflin', zh: '塔芙林', 'zh-TW': '塔芙林', ko: '타플린', es: 'Taflín', fr: 'Taflin', pt: 'Taflin', de: 'Taflin', hi: 'टैफ़लिन', ar: 'تافلين', ru: 'Тафлин', id: 'Taflin', tr: 'Taflin' } },
     amazons: { guide: '../images/atlas/av/frog-0.webp', name: { ja: 'ケロ', en: 'Kero', zh: '呱呱', 'zh-TW': '呱呱', ko: '케로', es: 'Kero', fr: 'Kero', pt: 'Kero', de: 'Kero', hi: 'केरो', ar: 'كيرو', ru: 'Керо', id: 'Kero', tr: 'Kero' } },
+    foxgeese: { guide: '../images/atlas/av/duck-0.webp', name: {"ja":"ドミダック","en":"Dominoduck","zh":"骨牌鸭鸭","zh-TW":"骨牌鴨鴨","ko":"도미닥","es":"Dominoduck","fr":"Dominoduck","pt":"Dominoduck","de":"Dominoduck","hi":"डोमिनोडक","ar":"دومينو دك","ru":"Доминоутка","id":"Dominoduck","tr":"Dominoduck"} },   // (the guide of atlas/rules/foxgeese.js)
     peg: { guide: '../images/atlas/av/marble-2.webp', name: { ja: 'ビーユ', en: 'Bille', zh: '比尤', ko: '비유', es: 'Bille', fr: 'Bille', pt: 'Bille', de: 'Bille', hi: 'बिय', ar: 'بيّ', ru: 'Бий', 'zh-TW': '比尤', id: 'Bille', tr: 'Bille' } },
   };
   // the guide's lines ({n}, {c}, {a}, {b}: filled in; arrays: one is picked at random)
@@ -303,6 +305,16 @@
     for (let i = 1; i < n; i++) o += `<path d="M${2 + i * c} 2V82M2 ${2 + i * c}H82" stroke="#6a4424" stroke-width=".5"/>`;
     for (let i = 0; i < b.length; i++) { const ch = b[i]; if (ch === '.') continue; const x = 2 + (i % n + .5) * c, y = 2 + (Math.floor(i / n) + .5) * c, r = c * (ch === 'k' ? .42 : .36);
       o += `<circle cx="${x}" cy="${y}" r="${r}" fill="${ch === 'a' ? '#2a1a10' : '#f6ecd4'}" stroke="${ch === 'a' ? '#000' : '#8a7550'}" stroke-width=".6"/>`; if (ch === 'k') o += `<circle cx="${x}" cy="${y}" r="${r * .45}" fill="#e2b13c"/>`; }
+    return o + '</svg>';
+  };
+  // fox and geese (2026-11-24): a foxgeese/puzzles.json spec { b: 49 chars '.fg' on the 7×7 grid of the cross } (the lines, the fox, the geese)
+  window.AtlasMini.foxgeese = spec => {
+    const b = String(spec && spec.b || ''), on = i => { const r = Math.floor(i / 7), c = i % 7; return (r >= 2 && r <= 4) || (c >= 2 && c <= 4); }, X = i => 12 + (i % 7) * 10, Y = i => 12 + Math.floor(i / 7) * 10;
+    let o = '<svg viewBox="0 0 84 84" aria-hidden="true"><rect width="84" height="84" rx="6" fill="#d8c08a"/><g stroke="#6a4a24" stroke-width="1" stroke-linecap="round">';
+    for (let i = 0; i < 49; i++) { if (!on(i)) continue; const r = Math.floor(i / 7), c = i % 7;
+      for (const [dr, dc] of [[0, 1], [1, 0], [1, 1], [1, -1]]) { if (dr && dc && (r + c) % 2) continue; const r1 = r + dr, c1 = c + dc, j = r1 * 7 + c1; if (r1 > 6 || c1 < 0 || c1 > 6 || !on(j)) continue; o += `<line x1="${X(i)}" y1="${Y(i)}" x2="${X(j)}" y2="${Y(j)}"/>`; } }
+    o += '</g>';
+    for (let i = 0; i < 49; i++) { if (!on(i)) continue; const ch = b[i]; o += ch === 'f' ? `<circle cx="${X(i)}" cy="${Y(i)}" r="4.4" fill="#e0662a" stroke="#7a2e0c" stroke-width=".9"/>` : ch === 'g' ? `<circle cx="${X(i)}" cy="${Y(i)}" r="3.8" fill="#fbfaf4" stroke="#7d7a70" stroke-width=".9"/>` : `<circle cx="${X(i)}" cy="${Y(i)}" r="1.3" fill="#6a4a24"/>`; }
     return o + '</svg>';
   };
   // peg solitaire (2026-11-13): 'board:pegs:goal' (peg/puzzles.json b · p · t) on the board's own hole layout (PegEngine)
@@ -667,6 +679,35 @@
     look(i, lang) { const T = this.data.themes[i], P = T.puzzles[0]; return { desc: this.tx('pz.th.' + T.id + '.sub', lang), board: P ? 'tf:' + JSON.stringify(P.s) : '' }; },
     guide: '../images/atlas/g-puffin.webp',
   };
+  /* ---------- fox and geese (2026-11-24 担当C): foxgeese/puzzles.json (13 geese, traditional: w2–w4 the geese shut the fox in within N,
+     t2–t3 the fox takes a goose within N — foxgeese/app.js puzzleMove), the full game's records 'aicoding-foxgeese-puzzles'
+     { '<theme>-<j>': stars }. Texts: foxgeese/i18n-fg.js + i18n-fg-more.js (a sandbox); on the 3D table ドミダック's words
+     (atlas/games/foxgeese-pz.js AtlasFoxgeesePz). Checked by tools/lesson-verify-foxgeese.js. ---------- */
+  BOOK.foxgeese = {
+    url: '../foxgeese/puzzles.json?v=5', KEY: 'aicoding-foxgeese-puzzles', LAST: 'aicoding-foxgeese-pz-last', data: null, I: null,
+    ICO: { Win: '<circle cx="12" cy="12" r="3"/><path d="M12 4v4M12 16v4M4 12h4M16 12h4"/>', Tac: '<path d="M5 19L19 5M14 5h5v5"/>' },
+    fetch() {
+      const ld = u => fetch(u).then(r => r.text()).catch(() => '');
+      return Promise.all([fetch(this.url).then(r => r.json()), ld('../foxgeese/i18n-fg.js?v=9'), ld('../foxgeese/i18n-fg-more.js?v=13')]).then(([d, a, b]) => {
+        const w = { I18N: {} }; ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].forEach(l => { w.I18N[l] = {}; });
+        for (const tx of [a, b]) { try { new Function('window', 'I18N', tx)(w, w.I18N); } catch (e) {} }
+        this.I = w.I18N; d.levels = d.themes; return d;
+      });
+    },
+    tx(k, lang, v) { const F = (window.AtlasFoxgeesePz || {})[lang] || {}; let x = F[k]; if (Array.isArray(x)) x = x[Math.floor(Math.random() * x.length)]; const I = this.I || {}; if (x === undefined) x = I[lang] && I[lang][k]; if (x === undefined) x = I.en && I.en[k]; if (x === undefined) x = (I.ja && I.ja[k]) || ''; return v ? fill(x, v) : x; },
+    sv: x => x === true ? 3 : (+x || 0),
+    pr() { return store.get(this.KEY, {}) || {}; },
+    sets() { const pr = this.pr(); return this.data.themes.map((T, i) => ({ key: i, recs: T.puzzles.map((_, j) => this.sv(pr[T.id + '-' + j])), cat: T.grp })); },
+    title(i, lang) { return this.tx('pz.th.' + this.data.themes[i].id, lang); },
+    problem(i, j, X, lang) {
+      const T = this.data.themes[i], P = T.puzzles[j];
+      return { i, j, P, rk: T.id + '-' + j, kind: 'fg', goal: P.g || 'take', spec: Object.assign({ rule: this.data.rule }, P.s), me: P.s.side === 2 ? 2 : 1, n: P.n, count: T.puzzles.length, set: this.title(i, lang) };
+    },
+    save(p, stars, daily) { const pr = this.pr(); pr[p.rk] = Math.max(this.sv(pr[p.rk]), stars); store.set(this.KEY, pr); if (!daily) store.set(this.LAST, String(p.i)); },
+    cats(lang) { return ['Win', 'Tac'].filter(k => this.data.themes.some(T => T.grp === k)).map(k => ({ k, name: this.tx('pz.grp' + k, lang), desc: this.tx('pz.grp' + k + 'Sub', lang), icon: `<svg viewBox="0 0 24 24">${this.ICO[k]}</svg>` })); },
+    look(i, lang) { const T = this.data.themes[i], P = T.puzzles[0]; return { desc: this.tx('pz.th.' + T.id + '.sub', lang), board: P ? 'fg:' + JSON.stringify(P.s) : '' }; },
+    guide: '../images/atlas/av/duck-0.webp',
+  };
   /* ---------- morris (2026-11-16): morris/puzzles(-six|-twelve).json ("win in N" / "mill in N", themes per rule set), the full game's
      records 'aicoding-morris-puzzles2' { '<six:|twelve:><theme>-<j>': stars } (morris/index.html pzKey). Texts: morris/i18n.js + i18n_more.js (a sandbox). */
   const MMV = ['nine', 'six', 'twelve'], MMPRE = v => v === 'nine' ? '' : v + ':';
@@ -999,7 +1040,7 @@
   };
   /* ---------- the daily puzzles: the same problem of the day as the full games, and their streak record ---------- */
   const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  const DAILY = { dots: { d1: 'dots-daily-v1' }, morris: { d1: 'aicoding-morris-daily' }, mancala: { d1: 'aicoding-mancala-v1-daily' }, tafl: { d1: 'aicoding-tafl-daily' }, connect4: { d1: 'aicoding-connect4-v2-daily' }, amazons: { d1: 'aicoding-amazons-daily' }, hex: { d1: 'aicoding-hex-daily' }, backgammon: { d1: 'aicoding-backgammon-v2-daily' }, xiangqi: { d1: 'aicoding-xiangqi-daily' }, janggi: { d1: 'aicoding-janggi-daily' }, checkers: { d1: 'aicoding-checkers-daily' }, go: { d1: 'aicoding-go-daily' }, reversi: { d1: 'reversi-emerald-daily' }, chess: { d1: 'aicoding-chess-daily' }, shogi: { d1: 'shogi-kaya-daily', d2: 'shogi-kaya-daily-easy' }, peg: { d1: 'aicoding-peg-daily', d2: 'aicoding-peg-daily' } };
+  const DAILY = { dots: { d1: 'dots-daily-v1' }, morris: { d1: 'aicoding-morris-daily' }, mancala: { d1: 'aicoding-mancala-v1-daily' }, tafl: { d1: 'aicoding-tafl-daily' }, connect4: { d1: 'aicoding-connect4-v2-daily' }, amazons: { d1: 'aicoding-amazons-daily' }, hex: { d1: 'aicoding-hex-daily' }, backgammon: { d1: 'aicoding-backgammon-v2-daily' }, xiangqi: { d1: 'aicoding-xiangqi-daily' }, janggi: { d1: 'aicoding-janggi-daily' }, foxgeese: { d1: 'aicoding-foxgeese-daily' }, checkers: { d1: 'aicoding-checkers-daily' }, go: { d1: 'aicoding-go-daily' }, reversi: { d1: 'reversi-emerald-daily' }, chess: { d1: 'aicoding-chess-daily' }, shogi: { d1: 'shogi-kaya-daily', d2: 'shogi-kaya-daily-easy' }, peg: { d1: 'aicoding-peg-daily', d2: 'aicoding-peg-daily' } };
   function dailyPick(id, which) {
     const B = BOOK[id], now = new Date(), date = ymd(now), wd = now.getDay(), day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 864e5);
     if (id === 'reversi') {   // (reversi/index.html dailyPick: Mon–Tue level 2, Wed–Thu 3, Fri–Sat 4, Sun 5)
@@ -1015,7 +1056,7 @@
       const a = stage * STAGE, b = Math.min(n, a + STAGE);
       return { date, i: c, j: a + h % Math.max(1, b - a) };
     }
-    if (id === 'xiangqi' || id === 'janggi') {   // (xiangqi/app.js · janggi/app.js dailyPick: a theme per weekday)
+    if (id === 'xiangqi' || id === 'janggi' || id === 'foxgeese') {   // (xiangqi/app.js · janggi/app.js · foxgeese/app.js dailyPick: a theme per weekday)
       const D = B.data; if (!D || !D.themes) return null;
       const ids = D.daily || D.themes.map(x => x.id), L = Math.max(0, D.themes.findIndex(x => x.id === ids[now.getDay() % ids.length]));
       let h = Math.imul(day, 2654435761) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13;
@@ -1087,7 +1128,7 @@
     const d = dailyPick(id, which); if (!d) return null;
     const B = BOOK[id]; let p;
     if (id === 'chess') p = B.problem(d.i, d.j, X);
-    else if (id === 'reversi' || id === 'go' || id === 'xiangqi' || id === 'janggi' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'mancala' || id === 'morris' || id === 'dots') p = B.problem(d.i, d.j, X, lang);
+    else if (id === 'reversi' || id === 'go' || id === 'xiangqi' || id === 'janggi' || id === 'foxgeese' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'mancala' || id === 'morris' || id === 'dots') p = B.problem(d.i, d.j, X, lang);
     else if (id === 'checkers' || id === 'backgammon' || id === 'connect4') p = B.problem(d.i, d.j, X, lang, d.date);   // (the day's slot: an old puzzle for dates up to the cut)
     else if (id === 'peg') p = { i: -1, j: 0, P: d.P, kind: 'peg', cells: B.cells(d.P), n: d.P.n, count: 1, set: '' };
     else { const g = B.data.sets[d.i], P = (g.base || g.problems)[d.j]; p = { i: d.i, j: d.j, P, sfen: P.sfen, kind: 'tsume', n: P.n, count: g.problems.length, set: (g.title && (g.title[lang] || g.title.en)) || g.id }; }
@@ -1192,7 +1233,7 @@
     /* ---------- the guide's panel (the rules tour's .rgd) ---------- */
     const el = document.createElement('div'); el.className = 'rgd pzg';
     el.innerHTML = `<div class="rgd-in"><div class="pic"><img src="${GD.guide}" alt=""></div><div class="bub"><div class="nm">${name}<span class="pg"></span></div><div class="tx"></div><div class="rvn" hidden></div><div class="cnt"></div></div></div>
-      <div class="rgd-act"><button type="button" class="btn ghost sm ic" data-a="hint" aria-label="${X.hint}" title="${X.hint}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg><small>${X.hint}</small></button><button type="button" class="btn ghost sm ic" data-a="again" aria-label="${X.again}" title="${X.again}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5"/></svg><small>${X.again}</small></button>${ctx.onList ? `<button type="button" class="btn ghost sm ic" data-a="list" aria-label="${ctx.t ? ctx.t('bv.list') : ''}" title="${ctx.t ? ctx.t('bv.list') : ''}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg><small>${ctx.t ? ctx.t('bv.list') : ''}</small></button>` : ''}${id === 'reversi' || id === 'tafl' || id === 'mancala' || id === 'morris' || id === 'dots' || id === 'gomoku' || id === 'go' || id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'backgammon' || id === 'hex' || id === 'amazons' || id === 'connect4' ? `<button type="button" class="btn ghost sm ic" data-a="ans" aria-label="${RVA.lb}" title="${RVA.lb}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><small>${RVA.lb}</small></button>` : ''}<span class="sp"></span><button type="button" class="btn big" data-a="next">${X.next} ▶</button></div>`;
+      <div class="rgd-act"><button type="button" class="btn ghost sm ic" data-a="hint" aria-label="${X.hint}" title="${X.hint}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg><small>${X.hint}</small></button><button type="button" class="btn ghost sm ic" data-a="again" aria-label="${X.again}" title="${X.again}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5"/></svg><small>${X.again}</small></button>${ctx.onList ? `<button type="button" class="btn ghost sm ic" data-a="list" aria-label="${ctx.t ? ctx.t('bv.list') : ''}" title="${ctx.t ? ctx.t('bv.list') : ''}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg><small>${ctx.t ? ctx.t('bv.list') : ''}</small></button>` : ''}${id === 'reversi' || id === 'foxgeese' || id === 'tafl' || id === 'mancala' || id === 'morris' || id === 'dots' || id === 'gomoku' || id === 'go' || id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'backgammon' || id === 'hex' || id === 'amazons' || id === 'connect4' ? `<button type="button" class="btn ghost sm ic" data-a="ans" aria-label="${RVA.lb}" title="${RVA.lb}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><small>${RVA.lb}</small></button>` : ''}<span class="sp"></span><button type="button" class="btn big" data-a="next">${X.next} ▶</button></div>`;
     ctx.panel.appendChild(el);
     const $ = s => el.querySelector(s);
     function say(html) {   // typed speech; a tap on the bubble shows it all
@@ -1236,6 +1277,7 @@
       if (p.kind === 'mc') return (p.spec.rules !== 'kalah' ? `<small>${B.tx('rule.' + p.spec.rules, ctx.lang)}</small><br>` : '') + '<b>' + (p.mk === 'turn' ? B.tx('pz.goalTurn', ctx.lang, { n: p.P.goal }) : p.mk === 'pick' ? B.tx('pz.goalPick', ctx.lang) : B.tx('pz.goalEnd', ctx.lang, { a: p.P.goal[0], b: p.P.goal[1] })) + '</b>';
       if (p.kind === 'dt') return `<small>${p.spec.n}×${p.spec.n}</small><br><b>` + B.tx('pz.goal', ctx.lang, { a: p.target[0], b: p.target[1] }) + '</b>';
       if (p.kind === 'mm') return (p.spec.v !== 'nine' ? `<small>${B.tx('title.' + p.spec.v, ctx.lang)}</small><br>` : '') + '<b>' + B.tx(p.goal === 'mill' ? 'pz.goalMill' : 'pz.goal', ctx.lang, { c: B.tx(p.me === 1 ? 'p1' : 'p2', ctx.lang), n: p.n }) + '</b>';
+      if (p.kind === 'fg') return fgT(p, p.goal === 'win' ? 'goalWin' : 'goalTake', { n: p.n });
       if (p.kind === 'tf') return '<b>' + B.tx(p.goal === 'cap' ? 'pz.goalCap' : 'pz.goalEsc', ctx.lang, { c: B.tx(p.me === 1 ? 'p1' : 'p2', ctx.lang), n: p.n }) + '</b>';
       if (p.kind === 'am') return '<b>' + B.tx(p.am === 'duel' ? 'pz.goal' : 'pz.goal.' + p.am, ctx.lang, { c: amName(p.me), n: p.n }) + '</b>';
       if (p.kind === 'ck') return '<b>' + B.tx(p.g ? 'pz.goalGain' : 'pz.goal', ctx.lang, { c: B.tx(p.me === 1 ? 'p1' : 'p2', ctx.lang), n: p.n, g: p.g }) + '</b>';
@@ -1263,13 +1305,13 @@
           pz: Object.assign({ moves: p.moves, bg: p.bg, step: i => cur ? bgStep(cur, i) : true, fen: p.fen, sfen: p.sfen, sol: p.P.sol, cells: p.cells, toMove: p.toMove, me: p.me, start: p.start, spec: p.spec, view: p.view, marks: p.marks, rule: p.kind === 'gm' ? 'renju' : undefined, last: p.last, judge: p.kind === 'gm' ? (p.vcf ? 'vcf' : 'all') : undefined }, { ready: () => cur && cur.ready && cur.ready(), moved: (u, i) => cur && cur.moved && cur.moved(u, i) }) });
         ctx.Table3D.play(true);   // (after start(): the adapter's show() puts its board on the table in the showcase view)
       } else if (p.kind === 'gm') pz().load(p.start, 'renju', p.me, p.last, { judge: p.vcf ? 'vcf' : 'all' });
-      else if (p.kind === 'ck' || p.kind === 'xq' || p.kind === 'hx' || p.kind === 'am' || p.kind === 'tf' || p.kind === 'mc' || p.kind === 'mm' || p.kind === 'dt') pz().load(p.spec, p.me);
+      else if (p.kind === 'ck' || p.kind === 'xq' || p.kind === 'hx' || p.kind === 'am' || p.kind === 'tf' || p.kind === 'mc' || p.kind === 'mm' || p.kind === 'dt' || p.kind === 'fg') pz().load(p.spec, p.me);
       else if (p.kind === 'c4') pz().load(p.moves, p.me);
       else if (p.kind === 'bg') pz().load(p.bg);
       else if (p.kind === 'go') pz().load(p.spec, p.me, { view: p.view, marks: p.marks });
       else pz().load(p.fen || p.sfen || p.cells, p.P.sol, p.toMove, p.me);
       cur.ready = opts.ready; cur.moved = opts.moved;
-      say((first ? (line('hi') || X.hi[id] || (id === 'gomoku' ? GA.hi : id === 'go' ? GO.hi : id === 'checkers' ? CA.hi : id === 'xiangqi' || id === 'janggi' ? QA.hi : id === 'hex' ? HA.hi : id === 'tafl' ? TA.hi : id === 'morris' ? MO.hi : id === 'dots' ? DT.hi : id === 'mancala' ? MA.hi : id === 'amazons' ? AA.hi : id === 'connect4' ? C4.hi : id === 'backgammon' ? QB.hi : '') || PEG_HI[ctx.lang] || PEG_HI.en) : line('intro') || '') + ' ' + goal(p)); first = false;
+      say((first ? (line('hi') || X.hi[id] || (id === 'gomoku' ? GA.hi : id === 'go' ? GO.hi : id === 'checkers' ? CA.hi : id === 'xiangqi' || id === 'janggi' ? QA.hi : id === 'foxgeese' ? B.tx('hi', ctx.lang) : id === 'hex' ? HA.hi : id === 'tafl' ? TA.hi : id === 'morris' ? MO.hi : id === 'dots' ? DT.hi : id === 'mancala' ? MA.hi : id === 'amazons' ? AA.hi : id === 'connect4' ? C4.hi : id === 'backgammon' ? QB.hi : '') || PEG_HI[ctx.lang] || PEG_HI.en) : line('intro') || '') + ' ' + goal(p)); first = false;
     }
     async function onReady(p) {
       if (p !== cur || stopped) return;
@@ -1279,6 +1321,7 @@
       if (p.kind === 'xq' && p.auto) return xqAuto(p);
       if (p.kind === 'hx' && p.auto) return hxAuto(p);
       if (p.kind === 'tf' && p.auto) return tfAuto(p);
+      if (p.kind === 'fg' && p.auto) return fgAuto(p);
       if (p.kind === 'mm' && p.auto) return mmAuto(p);
       if (p.kind === 'dt' && p.auto) return dtAuto(p);
       if (p.kind === 'mc') { p.used = 0; p.slip = null; if (p.auto) return mcAuto(p); }
@@ -1305,6 +1348,7 @@
       if (p.kind === 'ck') return ckMoved(p, u, info);
       if (p.kind === 'hx') return hxMoved(p, u, info);
       if (p.kind === 'tf') return tfMoved(p, u, info);
+      if (p.kind === 'fg') return fgMoved(p, u, info);
       if (p.kind === 'mm') return mmMoved(p, u, info);
       if (p.kind === 'dt') return dtMoved(p, u, info);
       if (p.kind === 'mc') return mcMoved(p, u, info);
@@ -1932,6 +1976,89 @@
       }
       p.state = 'answer'; say(B.tx('pz.answerDone', ctx.lang)); buttons();
     }
+    /* 狐とガチョウのパズル (2026-11-24 担当C; = foxgeese/app.js puzzleMove): "shut the fox in within N" (the geese) / "take a goose within N"
+       (the fox). The goal set is the engine's goalGood (the 2D asks the same). A move off it is played on (the user's rule for every 詰め
+       problem: no "mistake" — it only costs the stars); the defender answers with a move that leaves the goal out of reach (a capture /
+       the fox shut in first: AtlasFoxgeesePz.pickReply) and ドミダック says what happened on the board (AtlasFoxgeesePz.why, checked by
+       tools/lesson-verify-foxgeese.js ⑦⑧), the reply's point in red. The last move missing the goal is taken back: the right move in
+       green, the one played in red. */
+    const FGP = () => window.AtlasFoxgeesePz;
+    // ドミダック's line k: its variants in turn (a counter per line, from 2 × the theme), so the same words do not come back puzzle after
+    // puzzle (tools/lesson-quality.js reads them the same way)
+    const fgN = {};
+    const fgT = (p, k, v) => { const c = fgN[k] = fgN[k] == null ? (p.i | 0) * 2 : fgN[k] + 1, F = FGP(), x = F && F.text(ctx.lang, k, c, v); return x != null ? x : B.tx(k, ctx.lang, v); };
+    const fgHit = (p, before, st) => p.goal === 'win' ? st.over && st.winner === 2 && st.why === 'trap' : st.cap > (before ? before.cap : 0) || (st.over && st.winner === 1 && st.why === 'few');
+    async function fgReply(p, mid, left) {   // the defender's reply after a move off the solution (the same choice as the checker)
+      const mv = pz().moves();
+      const can = async (r, k) => (await pz().good(k, p.goal, mv.concat([r]))).length > 0;   // (the attacker still reaches the goal within k after the reply r)
+      let first = null;
+      for (const r of mid.moves()) {
+        const z = mid.clone().play(r), hit = p.goal === 'win' ? z.cap > mid.cap : !z.foxMoves([]).length;
+        if (hit) return r;
+        if (first == null && !(left >= 1 && await can(r, left))) first = r;
+        if (p !== cur || stopped) return null;
+      }
+      return first;
+    }
+    async function fgMoved(p, m, info) {
+      const before = info.before, left = p.n - p.used, F = FGP(), E = pz().engine();
+      say(fgT(p, 'pz.checking'));
+      const good = await pz().good(left, p.goal, pz().moves().slice(0, -1)); if (p !== cur || stopped) return;
+      p.used++;
+      if (fgHit(p, before, info)) return solved(p);
+      const fail = html => { p.failed = true; p.state = 'fail'; streak = 0; chime(false); say(html + ' ' + (line('retry') || X.retry)); buttons(); };
+      if (!good.includes(m)) {
+        p.failed = true; p.off = true;
+        if (left <= 1) {   // the last move: taken back, the right move in green, the fox's escape (red) named
+          await sleep(500); if (p !== cur) return; pz().undo(1); p.used--;
+          pz().mark([{ m, cls: 'ng' }, ...(good[0] != null ? [{ m: good[0], cls: 'ok' }] : [])]);   // (back on the position before it: the one played red, the right move green — drawn last, on top when both end on the same point)
+          return fail(fgT(p, p.goal === 'win' ? 'lastWin' : 'lastTake'));
+        }
+        const mid = pz().pos(), r = await fgReply(p, mid, left - 1); if (p !== cur || stopped) return;
+        if (r == null) return fail(fgT(p, 'out', { n: p.n }));
+        await sleep(300); if (p !== cur) return;
+        await pz().play(r); if (p !== cur) return;
+        const z = pz().pos(), w = F.why({ goal: p.goal, before, mid, after: z, m, reply: r, left: left - 1, E });
+        pz().mark([[E.mTo(r), 'ng']]);
+        const st = pz().state();
+        const wt = fgT(p, w.key, { n: left - 1, k: z.cap - mid.cap });
+        if (st.over || w.k === 'trap' || p.used >= p.n) return fail(wt);
+        say(wt + ' ' + fgT(p, 'mid', { n: p.n - p.used })); p.state = 'play'; pz().wait(); buttons(); return;
+      }
+      say(fgT(p, 'good'));
+      await sleep(250); if (p !== cur) return;
+      const mid = pz().pos(), r = await fgDefend(p, mid, p.n - p.used); if (p !== cur || stopped) return;
+      if (r == null) return solved(p);
+      await pz().play(r); if (p !== cur) return;
+      const st = pz().state();
+      if (st.over && st.winner === p.me) return solved(p);
+      say(fgT(p, p.goal === 'win' ? 'midWin' : 'midTake', { n: p.n - p.used })); p.state = 'play'; pz().wait(); buttons();
+    }
+    // after a right move: the defender's most stubborn reply — the one after which the attacker needs the most moves (ties: the first)
+    async function fgDefend(p, mid, left) {
+      const mv = pz().moves(); let best = null, bk = -1;
+      for (const r of mid.moves()) {
+        let need = left + 1;
+        for (let k = 1; k <= left; k++) { const g = await pz().good(k, p.goal, mv.concat([r])); if (p !== cur || stopped) return null; if (g.length) { need = k; break; } }
+        if (need > bk) { bk = need; best = r; }
+      }
+      return best;
+    }
+    async function fgAuto(p) {   // 答え: the solver's line for both sides (foxgeese/app.js pzAnswer)
+      p.state = 'busy'; buttons(); say(fgT(p, 'pz.showing'));
+      for (let step = 0; step < 12; step++) {
+        if (p !== cur || stopped) return;
+        const left = p.n - p.used, good = await pz().good(left, p.goal); if (p !== cur || stopped) return;
+        if (!good.length) break;
+        await sleep(450); if (p !== cur) return; pz().mark([{ m: good[0], cls: 'ok' }]); await sleep(500); if (p !== cur) return;
+        const before = pz().pos(); if (!(await pz().play(good[0]))) break; if (p !== cur) return; p.used++;
+        const st = pz().state(); if (fgHit(p, before, st) || st.over) break;
+        const r = await fgDefend(p, pz().pos(), p.n - p.used); if (p !== cur || stopped) return; if (r == null) break;
+        await sleep(350); if (p !== cur) return; pz().mark([{ m: r, cls: 'hl' }]); await sleep(450); if (p !== cur) return;
+        if (!(await pz().play(r))) break; if (p !== cur) return;
+      }
+      p.state = 'answer'; say(fgT(p, 'pz.answerDone')); buttons();
+    }
     /* マンカラのパズル (= mancala/app.js puzzleMove v2): pick — one move, judged by the stored exact values; turn — store `goal`
        seeds within N moves (each extra turn counts), a move after which the goal can no longer be forced (pzReach) fails at once, another
        slip is played on; end — finish with the best result against a perfect defender (the worker's solver), a move that worsens the
@@ -2243,7 +2370,7 @@
     function solved(p) {
       const n = p.answered ? 1 : p.hinted || p.failed || p.off ? 2 : 3;   // (★3 first try · ★2 after a hint, a miss or leaving the line · ★1 after the answer — gomoku/app.js PZBook.starsFor)
       p.state = 'solved'; chime(true); stars(n);
-      if (p.daily) { dailySolved(p, p.hinted || p.failed); if (id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'backgammon' || id === 'hex' || id === 'amazons' || id === 'connect4' || id === 'tafl' || id === 'mancala' || id === 'morris' || id === 'dots') B.save(p, n, true); if (id === 'reversi') { const pr = B.pr(); pr[p.rk] = Math.max(B.sv(pr[p.rk]), n); store.set(B.KEY, pr); } if (id === 'chess') { const pr = store.get(B.KEY, {}); pr[p.rk] = Math.max(B.sv(pr[p.rk]), n); store.set(B.KEY, pr); } if (id === 'go') { const pr = store.get(B.KEY, {}), v = pr[p.rk]; pr[p.rk] = Math.max(v === true ? 3 : +v || 0, n); store.set(B.KEY, pr); } }   // (as the full games: chess also keeps the stars, shogi only the streak)
+      if (p.daily) { dailySolved(p, p.hinted || p.failed); if (id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'foxgeese' || id === 'backgammon' || id === 'hex' || id === 'amazons' || id === 'connect4' || id === 'tafl' || id === 'mancala' || id === 'morris' || id === 'dots') B.save(p, n, true); if (id === 'reversi') { const pr = B.pr(); pr[p.rk] = Math.max(B.sv(pr[p.rk]), n); store.set(B.KEY, pr); } if (id === 'chess') { const pr = store.get(B.KEY, {}); pr[p.rk] = Math.max(B.sv(pr[p.rk]), n); store.set(B.KEY, pr); } if (id === 'go') { const pr = store.get(B.KEY, {}), v = pr[p.rk]; pr[p.rk] = Math.max(v === true ? 3 : +v || 0, n); store.set(B.KEY, pr); } }   // (as the full games: chess also keeps the stars, shogi only the streak)
       else B.save(p, n);
       streak = n === 3 ? streak + 1 : 0;
       say(n === 3 ? (streak >= 3 && line('streak', { n: streak })) || line('solved') || pick(X.solved) : line('help') || X.solvedHelp);
@@ -2298,6 +2425,13 @@
         const Z = pz(), good = (L || []).filter(x => x.need > 0 && x.need <= p.n - p.used); if (!good.length) return;
         p.hinted = true; Z.mark([...new Set(good.map(x => Z.mFrom(x.m) !== Z.NONE ? Z.mFrom(x.m) : Z.mTo(x.m)))].map(q => [q, 'ring'])); say(B.tx('pz.hintText', ctx.lang) || X.hintSay); return;
       }
+      if (p.kind === 'fg') {   // 1) the idea (foxgeese/app.js pz.hint1) · 2) the pieces that start a solution (gold rings) · 3) the move
+        p.state = 'busy'; buttons(); const left = p.n - p.used, good = await pz().good(left, p.goal); if (p !== cur) return; p.state = 'play'; pz().wait(); buttons();
+        if (!good.length) return; const E = pz().engine(); p.hinted = true; p.hl = Math.min(3, (p.hl || 0) + 1);
+        if (p.hl === 1) { say(fgT(p, 'pz.hint1', { n: left })); return; }
+        if (p.hl === 2) { pz().mark([...new Set(good.map(m => E.mFrom(m)))].map(q => [q, 'ring'])); say(fgT(p, 'pz.hintText') || X.hintSay); return; }
+        pz().mark([{ m: good[0], cls: 'ok' }]); say(line('hint') || X.hintSay); return;
+      }
       if (p.kind === 'tf') {   // the pieces that start a solution (gold rings), not the whole move (tafl/app.js pzHint)
         p.state = 'busy'; buttons(); const L = await pz().puzzle(p.n - p.used); if (p !== cur) return; p.state = 'play'; pz().wait(); buttons();
         const good = (L || []).filter(x => x.need > 0 && x.need <= p.n - p.used); if (!good.length) return; const E = pz().engine();
@@ -2336,9 +2470,9 @@
     }
     $('[data-a=hint]').onclick = hint;
     if ($('[data-a=list]')) $('[data-a=list]').onclick = () => ctx.onList();   // 一覧 (the portal's list sheet: pick another problem)
-    $('[data-a=again]').onclick = () => { if (!cur) return; begin(cur.daily && (cur.kind === 'peg' || cur.kind === 'ck' || cur.kind === 'xq' || cur.kind === 'bg' || cur.kind === 'hx' || cur.kind === 'am' || cur.kind === 'c4' || cur.kind === 'tf' || cur.kind === 'mc' || cur.kind === 'mm' || cur.kind === 'dt') ? dailyProblem(id, cur.daily.which, X, ctx.lang) : B.problem(cur.i, cur.j, X, ctx.lang), false); const a = line('again'); if (a) say(a + ' ' + goal(cur)); };
+    $('[data-a=again]').onclick = () => { if (!cur) return; begin(cur.daily && (cur.kind === 'peg' || cur.kind === 'fg' || cur.kind === 'ck' || cur.kind === 'xq' || cur.kind === 'bg' || cur.kind === 'hx' || cur.kind === 'am' || cur.kind === 'c4' || cur.kind === 'tf' || cur.kind === 'mc' || cur.kind === 'mm' || cur.kind === 'dt') ? dailyProblem(id, cur.daily.which, X, ctx.lang) : B.problem(cur.i, cur.j, X, ctx.lang), false); const a = line('again'); if (a) say(a + ' ' + goal(cur)); };
     $('[data-a=next]').onclick = () => nextPuzzle();
-    if ($('[data-a=ans]')) $('[data-a=ans]').onclick = () => { if (!cur || (cur.kind !== 'rv' && cur.kind !== 'gm' && cur.kind !== 'go' && cur.kind !== 'ck' && cur.kind !== 'xq' && cur.kind !== 'bg' && cur.kind !== 'hx' && cur.kind !== 'am' && cur.kind !== 'c4' && cur.kind !== 'tf' && cur.kind !== 'mc' && cur.kind !== 'mm' && cur.kind !== 'dt')) return; const np = cur.daily && (cur.kind === 'ck' || cur.kind === 'xq' || cur.kind === 'bg' || cur.kind === 'hx' || cur.kind === 'am' || cur.kind === 'c4' || cur.kind === 'tf' || cur.kind === 'mc' || cur.kind === 'mm' || cur.kind === 'dt') ? dailyProblem(id, cur.daily.which, X, ctx.lang) : B.problem(cur.i, cur.j, X, ctx.lang); np.auto = true; begin(np, false); cur.failed = true; cur.answered = true; };
+    if ($('[data-a=ans]')) $('[data-a=ans]').onclick = () => { if (!cur || (cur.kind !== 'rv' && cur.kind !== 'gm' && cur.kind !== 'go' && cur.kind !== 'ck' && cur.kind !== 'xq' && cur.kind !== 'bg' && cur.kind !== 'hx' && cur.kind !== 'am' && cur.kind !== 'c4' && cur.kind !== 'tf' && cur.kind !== 'mc' && cur.kind !== 'mm' && cur.kind !== 'dt' && cur.kind !== 'fg')) return; const np = cur.daily && (cur.kind === 'fg' || cur.kind === 'ck' || cur.kind === 'xq' || cur.kind === 'bg' || cur.kind === 'hx' || cur.kind === 'am' || cur.kind === 'c4' || cur.kind === 'tf' || cur.kind === 'mc' || cur.kind === 'mm' || cur.kind === 'dt') ? dailyProblem(id, cur.daily.which, X, ctx.lang) : B.problem(cur.i, cur.j, X, ctx.lang); np.auto = true; begin(np, false); cur.failed = true; cur.answered = true; };
 
     requestAnimationFrame(() => el.classList.add('on'));
     say(X.loading); buttons();

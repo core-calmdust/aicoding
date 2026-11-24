@@ -288,6 +288,8 @@ const CHECKS = {
           const r = q.clone().play(u), me = q.side; let ok = false;
           for (let sq = 0; sq < 90; sq++) { const x = r.at(sq); if (x && E.colorOf(x) === me && X.XQN(E.typeOf(x), me) === mm[1] && r.moves().some(y => E.mTo(y) === sq) && !prot(r, sq)) ok = true; }
           if (!ok) bad(G, K, `${w}: the miss ${E.name ? E.name(q, u) : u} is said to leave the ${mm[1]} to be taken for nothing, but no such ${mm[1]} is attacked and unprotected`); }); }); });
+    // (2026-11-24 第2期・担当B) the strict ①〜⑨ of the verified openings (openings.json verified: the engine's fixed-depth values at depth 7 and 8, the way there, no near-duplicates, the order of the 2D and the 3D, ショウギツネ's words for every wrong move) — tools/lesson-verify.js xiangqiOpen
+    require('./lesson-verify.js').xiangqiOpen().forEach(fa => bad(G, fa.step, `q${fa.q}: ${fa.msg}`));
   },
   'tafl/open'() {
     const E = require(path.join(ROOT, 'tafl/engine.js')), O = J('tafl/openings.json'), G = 'tafl/open', vm = require('vm');

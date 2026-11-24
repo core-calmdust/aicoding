@@ -191,7 +191,7 @@ html.skdark .ic .lab .n{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.45)}@media 
 section.pg{display:none;padding:14px 0 24px}
 section.pg.on{display:block;animation:pgIn .35s ease}
 @keyframes pgIn{from{opacity:0;transform:translateY(8px)}}
-@media (max-width:760px){html,body{overscroll-behavior-x:none}}   /* (phones: a sideways swipe is the page's own — Chrome's swipe-to-go-back no longer takes it) */
+/* (2026-11-24 user: the browser's own back swipe goes back — overscroll-behavior-x is left as the browser has it) */
 section.pg.on.pgR{animation:pgInR .3s ease}section.pg.on.pgL{animation:pgInL .3s ease}   /* (phones: a page reached by a sideways swipe slides in from that side) */
 @keyframes pgInR{from{opacity:0;transform:translateX(40px)}}@keyframes pgInL{from{opacity:0;transform:translateX(-40px)}}
 [dir=rtl] section.pg.on.pgR{animation-name:pgInL}[dir=rtl] section.pg.on.pgL{animation-name:pgInR}
@@ -2553,10 +2553,10 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=520"></script>
+<script src="lazy.js?v=522"></script>
 <script src="puzzle-lines.js?v=2"></script>
-<script src="puzzles.js?v=46"></script>
-<script src="lessons3d.js?v=185"></script>
+<script src="puzzles.js?v=50"></script>
+<script src="lessons3d.js?v=189"></script>
 <script src="missions.js?v=10"></script>
 <link rel="stylesheet" href="historia.css?v=17">
 <script src="historia.js?v=50"></script>
@@ -2575,7 +2575,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=20">
 <link rel="stylesheet" href="museum.css?v=72">
 <script src="worldmap.js?v=41"></script>
-<script src="museum.js?v=200"></script>
+<script src="museum.js?v=201"></script>
 <script src="npc/npc.js?v=51"></script>
 <script src="avtalk.js?v=4"></script>
 <script>/* Page states as classes on <html> (2026-11-21) — html.cov-on: the 3D view / Historia / a sheet / a level sheet is open;
@@ -2591,7 +2591,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   mo = new MutationObserver(sync); mo.observe(document.body, { childList: true }); sync(); window.__pgState = sync; })();
 </script>
 <script src="museum/mu-games.js?v=3"></script>
-<script src="app.js?v=494"></script>
+<script src="app.js?v=497"></script>
 <script src="../shared/praline-badge.js?v=9" data-portal defer></script>
 </body>
 </html>

@@ -28,6 +28,34 @@
 "tr": "<p>Ortadaki <b>kale</b>, oklar gibi <b>yukarı, aşağı ve yanlara</b> istediği kadar gider. <b>Fil</b> de aynısını <b>çaprazlarda</b> yapar.</p><p>İkisi de atlayamaz: yoldaki bir taş onları durdurur.</p>"
 },
 "k20/1/t": {
+"zh": "步・香・桂向前走，金和玉走周围",
+"ko": "보·향차·계마는 앞으로, 금과 왕은 주위로",
+"es": "Peón, lanza y caballo avanzan; oro y rey se mueven alrededor",
+"fr": "Pion, lance et cavalier vont vers l’avant ; l’or et le roi tournent autour",
+"pt": "Peão, lança e cavalo vão para a frente; ouro e rei andam ao redor",
+"de": "Bauer, Lanze, Springer ziehen vorwärts; Gold und König rundherum",
+"hi": "प्यादा, भाला, घोड़ा आगे; सोना और राजा आसपास",
+"ar": "الجندي والرمح والحصان للأمام؛ الذهب والملك حولهما",
+"ru": "Пешка, стрелка, конь — вперёд; золото и король — вокруг",
+"zh-TW": "步兵・香車・桂馬往前，金將和王將走四周",
+"id": "Pion, tombak, kuda maju; emas dan raja melangkah ke sekitar",
+"tr": "Piyon, mızrak, at ileri; altın ve şah çevreye"
+},
+"k20/1/body": {
+"zh": "<p><b>步</b>向前走1格，<b>香</b>向前直走任意格。<b>桂</b>跳到前方两格处的左右。能跳过途中棋子的只有桂。</p><p><b>金</b>可向前、横、后和斜前方这6个方向走1格（箭头）。<b>玉</b>可向周围8个方向走1格。</p>",
+"ko": "<p><b>보</b>는 앞으로 1칸, <b>향차</b>는 앞으로 곧장 어디까지나 가요. <b>계마</b>는 앞쪽 2칸 너머의 좌우로 뛰어요. 중간의 말을 뛰어넘을 수 있는 건 계마뿐이에요.</p><p><b>금</b>은 앞·옆·뒤와 대각선 앞, 6방향으로 1칸(화살표). <b>왕</b>은 주위 8방향으로 1칸 움직여요.</p>",
+"es": "<p>El <b>peón</b> avanza una casilla; la <b>lanza</b> va recta hacia adelante todo lo que quiera. El <b>caballo</b> salta dos adelante y uno al lado: es la única pieza que puede saltar por encima de otras.</p><p>El <b>oro</b> da un paso adelante, a los lados, atrás o en diagonal hacia adelante: seis direcciones (flechas). El <b>rey</b> da un paso en cualquiera de las ocho direcciones.</p>",
+"fr": "<p>Le <b>pion</b> avance d’une case ; la <b>lance</b> va tout droit vers l’avant aussi loin qu’elle veut. Le <b>cavalier</b> saute de deux en avant et un de côté : c’est la seule pièce qui peut sauter par-dessus les autres.</p><p>L’<b>or</b> fait un pas en avant, de côté, en arrière ou en diagonale avant : six directions (flèches). Le <b>roi</b> fait un pas dans les huit directions.</p>",
+"pt": "<p>O <b>peão</b> anda uma casa para a frente; a <b>lança</b> vai reto para a frente até onde quiser. O <b>cavalo</b> salta duas à frente e uma para o lado: é a única peça que pula por cima das outras.</p><p>O <b>ouro</b> dá um passo para a frente, para os lados, para trás ou na diagonal da frente: seis direções (setas). O <b>rei</b> dá um passo em qualquer das oito direções.</p>",
+"de": "<p>Der <b>Bauer</b> zieht ein Feld vorwärts; die <b>Lanze</b> geradeaus vorwärts, so weit sie will. Der <b>Springer</b> springt zwei vor und eins zur Seite – als einziger Stein kann er über andere springen.</p><p>Das <b>Gold</b> zieht ein Feld vorwärts, seitlich, rückwärts oder schräg vorwärts: sechs Richtungen (Pfeile). Der <b>König</b> zieht ein Feld in jede der acht Richtungen.</p>",
+"hi": "<p><b>प्यादा</b> एक कदम आगे चलता है; <b>भाला</b> सीधा आगे जितना चाहे। <b>घोड़ा</b> दो आगे और एक बगल में कूदता है — दूसरे मोहरों के ऊपर से कूदने वाला अकेला मोहरा।</p><p><b>सोना</b> आगे, बगल, पीछे या तिरछा आगे — छह दिशाओं में एक कदम (तीर)। <b>राजा</b> आठों दिशाओं में एक कदम चलता है।</p>",
+"ar": "<p><b>الجندي</b> يتقدم مربعًا واحدًا؛ و<b>الرمح</b> يسير للأمام مستقيمًا إلى أي مسافة. <b>الحصان</b> يقفز مربعين للأمام ومربعًا جانبيًا، وهو القطعة الوحيدة التي تقفز فوق غيرها.</p><p><b>الذهب</b> يخطو مربعًا للأمام أو جانبيًا أو للخلف أو قطريًا للأمام: ستة اتجاهات (الأسهم). و<b>الملك</b> يخطو مربعًا في أي من الاتجاهات الثمانية.</p>",
+"ru": "<p><b>Пешка</b> ходит на одну клетку вперёд; <b>стрелка</b> — прямо вперёд на любое расстояние. <b>Конь</b> прыгает на две вперёд и одну вбок — только он может перепрыгивать через фигуры.</p><p><b>Золото</b> шагает на одну клетку вперёд, вбок, назад или по диагонали вперёд: шесть направлений (стрелки). <b>Король</b> шагает на одну клетку в любую из восьми сторон.</p>",
+"zh-TW": "<p><b>步兵</b>往前走1格，<b>香車</b>往前直走任意格。<b>桂馬</b>跳到前方兩格處的左右。能跳過途中棋子的只有桂馬。</p><p><b>金將</b>可往前、橫、後和斜前方這6個方向走1格（箭頭）。<b>王將</b>可往四周8個方向走1格。</p>",
+"id": "<p><b>Pion</b> maju satu kotak; <b>tombak</b> maju lurus sejauh yang ia mau. <b>Kuda</b> melompat dua maju dan satu ke samping — satu-satunya bidak yang bisa melompati bidak lain.</p><p><b>Emas</b> melangkah satu kotak ke depan, samping, belakang, atau diagonal depan: enam arah (panah). <b>Raja</b> melangkah satu kotak ke delapan arah mana pun.</p>",
+"tr": "<p><b>Piyon</b> bir kare ileri gider; <b>mızrak</b> istediği kadar dümdüz ileri gider. <b>At</b> iki ileri bir yana sıçrar — diğer taşların üstünden atlayabilen tek taş.</p><p><b>Altın</b> ileri, yana, geri ya da çapraz ileri bir kare gider: altı yön (oklar). <b>Şah</b> sekiz yönün her birine bir kare gider.</p>"
+},
+"k20/2/t": {
 "zh": "进入最里面三行就能升变",
 "ko": "안쪽 3단에 들어가면 승격할 수 있어요",
 "es": "Entra en las tres filas del fondo y podrás promocionar",
@@ -41,7 +69,7 @@
 "id": "Masuki tiga baris terjauh dan kamu boleh promosi",
 "tr": "En uzak üç sıraya gir, terfi edebilirsin"
 },
-"k20/1/body": {
+"k20/2/body": {
 "zh": "<p>对方那边最里面的三行就是<b>敌阵</b>（发光的那一行及更里面）。棋子走进、在里面走动或走出敌阵时，可以把它翻过来，这叫<b>升变</b>。</p><p>刚才银走进敌阵，变成了<b>成银</b>。升变后的银、桂、香、步，走法都<b>和金一样</b>。</p>",
 "ko": "<p>상대 쪽 안쪽 3단이 <b>적진</b>이에요(빛나는 단부터 안쪽). 말이 적진에 들어가거나, 적진 안에서 움직이거나, 적진에서 나올 때 뒤집어서 <b>승격</b>할 수 있어요.</p><p>방금 은이 적진에 들어가서 <b>승격한 은</b>이 되었어요. 승격한 은·계마·향차·보는 <b>금과 같은 움직임</b>이 돼요.</p>",
 "es": "<p>Las tres filas del fondo del rival son la <b>zona de promoción</b> (la fila que brilla y las de detrás). Cuando una pieza entra, se mueve dentro o sale de ella, puedes darle la vuelta: <b>promociona</b>.</p><p>La plata acaba de entrar en la zona y se ha convertido en <b>plata promocionada</b>. Una plata, caballo, lanza o peón promocionados se mueven <b>como un oro</b>.</p>",
@@ -55,21 +83,21 @@
 "id": "<p>Tiga baris terjauh di sisi lawan adalah <b>zona promosi</b> (baris yang menyala dan seterusnya). Saat bidak masuk, bergerak di dalam, atau keluar dari zona itu, kamu boleh membaliknya: bidak itu <b>promosi</b>.</p><p>Perak barusan masuk ke zona dan menjadi <b>perak promosi</b>. Perak, kuda, tombak, atau pion promosi bergerak <b>seperti emas</b>.</p>",
 "tr": "<p>Rakibin en uzak üç sırası <b>terfi bölgesidir</b> (parlayan sıra ve ötesi). Bir taş bu bölgeye girdiğinde, içinde gittiğinde ya da oradan çıktığında onu ters çevirebilirsin: taş <b>terfi eder</b>.</p><p>Gümüş az önce bölgeye girdi ve <b>terfi etmiş gümüş</b> oldu. Terfi etmiş gümüş, at, mızrak ya da piyon <b>altın gibi</b> gider.</p>"
 },
-"k20/2/g": {
-"zh": "用角吃掉对方的金吧！",
-"ko": "각으로 상대의 금을 잡아 보세요!",
-"es": "¡Captura el oro del rival con tu alfil!",
-"fr": "Prends l’or adverse avec ton fou !",
-"pt": "Capture o ouro do adversário com seu bispo!",
-"de": "Schlag das gegnerische Gold mit deinem Läufer!",
-"hi": "अपने ऊँट से विरोधी का सोना पकड़ो!",
-"ar": "خذ ذهب الخصم بفيلك!",
-"ru": "Возьми золото соперника своим слоном!",
-"zh-TW": "用角行吃掉對手的金吧！",
-"id": "Makan emas lawan dengan gajahmu!",
-"tr": "Rakibin altınını filinle al!"
+"k20/3/g": {
+"zh": "用角吃掉对方的金，并直接<b>升变</b>吧！",
+"ko": "각으로 상대의 금을 잡고, 그대로 <b>승격</b>해 보세요!",
+"es": "¡Captura el oro del rival con tu alfil y <b>promociona</b> al llegar!",
+"fr": "Prends l’or adverse avec ton fou et <b>promeus-le</b> en arrivant !",
+"pt": "Capture o ouro do adversário com seu bispo e <b>promova</b> ao chegar!",
+"de": "Schlag das gegnerische Gold mit deinem Läufer und <b>befördere</b> ihn dabei!",
+"hi": "अपने ऊँट से विरोधी का सोना पकड़ो, और वहीं उसे <b>प्रमोट</b> करो!",
+"ar": "خذ ذهب الخصم بفيلك، <b>ورقِّه</b> حين يصل!",
+"ru": "Возьми золото соперника своим слоном и сразу <b>преврати</b> его!",
+"zh-TW": "用角行吃掉對手的金，並直接<b>升變</b>吧！",
+"id": "Makan emas lawan dengan gajahmu, lalu <b>promosikan</b> saat mendarat!",
+"tr": "Rakibin altınını filinle al ve indiği yerde <b>terfi</b> ettir!"
 },
-"k20/2/h": {
+"k20/3/h": {
 "zh": "角可以沿斜线一直走。斜线的尽头有没有对方的金？",
 "ko": "각은 대각선으로 어디까지나 가요. 대각선 끝에 상대의 금이 있지 않나요?",
 "es": "El alfil se desliza por las diagonales. ¿Hay un oro al final de alguna?",
@@ -83,21 +111,21 @@
 "id": "Gajah meluncur di sepanjang diagonal. Adakah emas di ujung salah satunya?",
 "tr": "Fil çaprazlar boyunca kayar. Birinin sonunda bir altın duruyor mu?"
 },
-"k20/2/y": {
-"zh": "吃到金了！落在敌阵里，所以升变成<b>马</b>最划算。",
-"ko": "금을 잡았어요! 적진에 들어갔으니 승격해서 <b>용마</b>로 만드는 게 이득이에요.",
-"es": "¡Capturaste el oro! Cayó en la zona, así que lo inteligente es promocionarlo a <b>caballo dragón</b>.",
-"fr": "Tu as pris l’or ! Ton fou est arrivé dans la zone, donc le promouvoir en <b>cheval-dragon</b> est le bon choix.",
-"pt": "Você capturou o ouro! O bispo caiu na zona, então promover para <b>cavalo-dragão</b> é a escolha esperta.",
-"de": "Du hast das Gold geschlagen! Dein Läufer steht jetzt in der Zone, also ist die Beförderung zum <b>Drachenpferd</b> die kluge Wahl.",
-"hi": "तुमने सोना पकड़ लिया! ऊँट क्षेत्र में पहुँचा है, इसलिए उसे प्रमोट करके <b>ड्रैगन-घोड़ा</b> बनाना समझदारी है।",
-"ar": "أخذتَ الذهب! وصل الفيل إلى المنطقة، فترقيته إلى <b>حصان تنين</b> هي الخيار الذكي.",
-"ru": "Ты взял золото! Слон оказался в зоне, так что разумно превратить его в <b>лошадь</b>.",
-"zh-TW": "吃到金了！停在敵陣裡，所以升變成<b>龍馬</b>最划算。",
-"id": "Kamu memakan emas! Gajahmu mendarat di zona, jadi promosi menjadi <b>kuda naga</b> adalah pilihan cerdas.",
-"tr": "Altını aldın! Filin bölgeye girdi, bu yüzden onu <b>ejder ata</b> terfi ettirmek akıllıca."
+"k20/3/y": {
+"zh": "吃掉金，升变成<b>马</b>了！角进入敌阵就能升变。马可以斜走任意格，还能向四周走1格，是很强的棋子。",
+"ko": "금을 잡고 <b>용마</b>로 승격했어요! 각은 적진에 들어가면 승격할 수 있어요. 용마는 대각선으로 어디까지나＋주위 1칸으로 움직이는 강한 말이에요.",
+"es": "¡Capturaste el oro y tienes un <b>caballo dragón</b>! Un alfil que entra en la zona puede promocionar; el caballo dragón se desliza en diagonal y además da un paso en cualquier dirección.",
+"fr": "Tu as pris l’or et obtenu un <b>cheval-dragon</b> ! Un fou qui entre dans la zone peut être promu ; le cheval-dragon glisse en diagonale et fait aussi un pas dans toutes les directions.",
+"pt": "Você capturou o ouro e ganhou um <b>cavalo-dragão</b>! Um bispo que entra na zona pode promover; o cavalo-dragão desliza na diagonal e ainda dá um passo em qualquer direção.",
+"de": "Du hast das Gold geschlagen und ein <b>Drachenpferd</b> bekommen! Ein Läufer in der Zone darf befördern; das Drachenpferd zieht diagonal beliebig weit und dazu einen Schritt in jede Richtung.",
+"hi": "तुमने सोना पकड़ा और <b>ड्रैगन-घोड़ा</b> बना लिया! क्षेत्र में घुसा ऊँट प्रमोट हो सकता है; ड्रैगन-घोड़ा तिरछा कितना भी चलता है और हर दिशा में एक कदम भी।",
+"ar": "أخذتَ الذهب وصار لديك <b>حصان تنين</b>! الفيل الذي يدخل المنطقة يمكن ترقيته؛ وحصان التنين ينزلق قطريًا ويخطو أيضًا خطوة في أي اتجاه.",
+"ru": "Ты взял золото и получил <b>лошадь</b>! Слон, вошедший в зону, может превратиться; лошадь ходит по диагонали на любое расстояние и ещё на одну клетку в любую сторону.",
+"zh-TW": "吃掉金，升變成<b>龍馬</b>了！角行進入敵陣就能升變。龍馬可以斜走任意格，還能向四周走1格，是很強的棋子。",
+"id": "Kamu memakan emas dan mendapat <b>kuda naga</b>! Gajah yang masuk zona boleh promosi; kuda naga meluncur diagonal dan juga melangkah satu kotak ke segala arah.",
+"tr": "Altını aldın ve bir <b>ejder at</b> elde ettin! Bölgeye giren fil terfi edebilir; ejder at çaprazda istediği kadar gider, ayrıca her yöne bir adım atar."
 },
-"k20/3/g": {
+"k20/4/g": {
 "zh": "银能吃的子有两个。吃价值更高的那个吧！",
 "ko": "은으로 잡을 수 있는 말이 2개 있어요. 가치가 더 높은 쪽을 잡으세요!",
 "es": "Tu plata puede capturar dos piezas. ¡Captura la más valiosa!",
@@ -111,7 +139,7 @@
 "id": "Perakmu bisa memakan dua bidak. Makan yang lebih berharga!",
 "tr": "Gümüşün iki taş alabilir. Daha değerli olanı al!"
 },
-"k20/3/h": {
+"k20/4/h": {
 "zh": "棋子价值大约是：步1、银5、金6、角8、飞10。银可以走正前方和斜前方。",
 "ko": "말의 가치 기준은 보1·은5·금6·각8·비차10 정도예요. 은은 바로 앞과 대각선 앞으로 움직여요.",
 "es": "Valores aproximados: peón 1, plata 5, oro 6, alfil 8, torre 10. La plata se mueve recto hacia delante y en diagonal hacia delante.",
@@ -125,7 +153,7 @@
 "id": "Nilai kasar: pion 1, perak 5, emas 6, gajah 8, benteng 10. Perak bergerak lurus ke depan dan diagonal ke depan.",
 "tr": "Kabaca değerler: piyon 1, gümüş 5, altın 6, fil 8, kale 10. Gümüş dümdüz ileri ve çapraz ileri gider."
 },
-"k20/3/y": {
+"k20/4/y": {
 "zh": "吃到飞车了！能吃的子有好几个时，先吃价值最高的。",
 "ko": "비차를 잡았어요! 잡을 수 있는 말이 여러 개일 때는 가장 가치가 높은 말부터예요.",
 "es": "¡Capturaste la torre! Cuando puedes capturar varias piezas, empieza por la más valiosa.",

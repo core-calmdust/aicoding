@@ -1947,7 +1947,7 @@ function startPractice(gi) {
 
 // ====================================================================== puzzles: win / win material within N moves (PZBook v2)
 let PUZZLES = null;
-const puzzlesReady = fetch('puzzles.json?v=4').then(r => r.json()).then(d => { PUZZLES = d; pzProgress(); return d; }).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=5').then(r => r.json()).then(d => { PUZZLES = d; pzProgress(); return d; }).catch(() => null);
 let pzLevel = 0;
 const pzKey = (id, j) => id + '-' + j;
 const starVal = x => x === true ? 3 : (+x || 0);
@@ -2094,18 +2094,29 @@ async function puzzleMove(m) {
   playMove2(m); Pz.used++; renderPuzzleCard();
   // a move off the solution is not called a mistake: play goes on until the moves run out (the user's rule for every
   // 詰め problem, 2026-11) — it only costs the three stars
-  if (!good.includes(m)) Pz.failed = true;
+  const off = !good.includes(m), mid = posAt(cur).pos.clone();
+  if (off) Pz.failed = true;
   await sleep(dm + 60);
   if (puzzle !== Pz || tok !== busyToken) return;
   if (pzWon(Pz) || await pzOpponent(Pz, tok)) { if (puzzle === Pz) puzzleSolved(); return; }
   if (puzzle !== Pz || tok !== busyToken) return;
+  // (2026-11-24 担当C) a move off the solution: say what happened on the board — the reply took a goose / escaped / shut the fox in /
+  // defended (pz.why.*, the same facts as the 3D ドミダック's words, tools/lesson-verify-foxgeese.js ⑦⑧); the last move: the fox can still
+  // move / no goose taken, and the answer
+  const why = off ? pzWhy(Pz, before, mid, posAt(cur).pos, m, left, good) : '';
   if (Pz.used >= Pz.n || statusAt(cur).over) {   // out of moves: back to the start for another try
-    pzStatus(`${PZBook.t('outOfMoves', { n: Pz.n })} ${t('pz.retry')}`); playChime(false);
+    pzStatus(`${why || PZBook.t('outOfMoves', { n: Pz.n })} ${t('pz.retry')}`); playChime(false);
     await sleep(1500); if (puzzle !== Pz || tok !== busyToken) return;
     moves = []; cur = 0; Pz.used = 0; Pz.busy = false; Pz.lastReply = ''; lessonMarks = []; update(false); renderPuzzleCard(); return;
   }
   Pz.busy = false; renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay());
-  pzStatus(t('pz.reply', { m: Pz.lastReply || '', n: Pz.n - Pz.used }));
+  pzStatus(why || t('pz.reply', { m: Pz.lastReply || '', n: Pz.n - Pz.used }));
+}
+function pzWhy(Pz, before, mid, after, m, left, good) {
+  const v = { m: mvIn(before, m), r: Pz.lastReply || '', n: Pz.n - Pz.used, b: good.length ? mvIn(before, good[0]) : '' };
+  if (left <= 1) return t(Pz.goal === 'win' ? 'pz.why.lastWin' : 'pz.why.lastTake', v);
+  if (Pz.goal === 'win') return after.cap > mid.cap ? t('pz.why.cap', Object.assign(v, { k: after.cap - mid.cap })) : t('pz.why.farWin', v);
+  return !after.foxMoves([]).length ? t('pz.why.trap', v) : t('pz.why.farTake', v);
 }
 function puzzleSolved() {
   const Pz = puzzle; if (!Pz) return;

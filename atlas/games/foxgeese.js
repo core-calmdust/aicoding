@@ -105,12 +105,14 @@
   function start(ctx) {
     const T3 = ctx.Table3D, TH = window.THREE, t = ctx.t, X = TX[ctx.lang] || TX.en, F3 = T3.foxgeese;
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
-    const N = 7, rule = RIDS[rix(ctx.size)] || RIDS[0], board = F3.board(); T3.show('foxgeese', board);
+    const PZ = ctx.pz || null;   // PZ: a puzzle position driven by atlas/puzzles.js (no AI: ctx.pz.moved decides; 2026-11-24 担当C)
+    let START = PZ && PZ.spec ? PZ.spec : null;
+    const N = 7, rule = PZ ? (START && START.rule) || 'g13' : RIDS[rix(ctx.size)] || RIDS[0], board = F3.board(); T3.show('foxgeese', board);
     const U = board.userData, Y = U.top - U.sink;
     const tall = innerHeight > innerWidth * 1.15;
     if (T3.fit) T3.fit(tall ? { w: U.W + .6, d: U.H + .8, y: U.top + .2, pitch: 1.0 } : { w: U.W + .3, d: U.H + .5, y: U.top + .2, pitch: 1.0 });
-    const pvp = ctx.mode === 'pvp', SD = sideOf(ctx.side);
-    const human = pvp ? 1 : SD.human, first = SD.first;   // human: 1 the fox · 2 the geese; first: who moves first (two players too)
+    const pvp = !PZ && ctx.mode === 'pvp', SD = sideOf(ctx.side);
+    let human = PZ ? (PZ.me === 2 ? 2 : 1) : pvp ? 1 : SD.human; const first = SD.first;   // human: 1 the fox · 2 the geese; first: who moves first (two players too)
     const pname = c => X.n[c - 1];
     let E = null;
     const xz = i => { const [r, c] = E.RC[i]; return U.pt(c, r); };   // (never turned: the geese are always on the near side)
@@ -164,14 +166,14 @@
     }
 
     /* ---------- position ---------- */
-    function refresh() { E.setFirst(first); pos = E.replay(null, moves).pos; }
+    function refresh() { E.setFirst(first); pos = E.replay(START, moves).pos; }
     function hud(msg) {
       const num = c => pos ? (c === 1 ? pos.cap : pos.geese) : 0;   // the fox: geese taken · the geese: how many are left
       const side = c => `<span class="hs ${pos && pos.side + 1 === c && !over ? 'on' : ''}"><i class="dk" style="${DK[c - 1]}"></i>${pvp ? pname(c) : c === human ? L.you : L.ai}<b>${num(c)}</b></span>`;
       css();
       // the quiet-move clock (2026-11-17 user: この残り手数をUIに出した方がいい): moves each left without a capture before the fox
       // wins (engine QUIET_MAX plies); red in the last 10
-      const ql = pos && !over ? Math.max(0, Math.ceil(((E.QUIET_MAX || 120) - pos.quiet) / 2)) : -1;
+      const ql = pos && !over && !PZ ? Math.max(0, Math.ceil(((E.QUIET_MAX || 120) - pos.quiet) / 2)) : -1;
       const qc = ql >= 0 ? `<span class="hs fgq${ql <= 10 ? ' lo' : ''}" title="${X.qt}">⏳<b>${X.q.replace('{n}', ql)}</b></span>` : '';
       ctx.hud(`${side(1)}<span class="hm">${msg || ''}</span>${qc}${side(2)}`);
     }
@@ -212,9 +214,9 @@
       pcs[to] = p;
       travel(p.g, path, done);
     }
-    function commit(m) { busy = true; play(m, () => { busy = false; next(); }); }
+    function commit(m) { if (PZ) { const before = pos.clone(); pzOn = false; busy = true; play(m, () => { busy = false; pzAfter(before); }); return; } busy = true; play(m, () => { busy = false; next(); }); }
     function next() {
-      if (stopped) return;
+      if (stopped || PZ) return;
       E.setFirst(first); const st = E.judge(pos, E.replay(null, moves).hashes);   // 同じ局面の3回目・取りのない40手ずつ（既定の制限）は狐の勝ち（引き分けなし）
       if (st.over) return end(st);
       legal = pos.moves();
@@ -256,7 +258,7 @@
       const i = E.sqAt(r, c); return E.ON[i] ? i : -1;
     }
     function onClick(e) {
-      if (over || busy || thinking || !pos || pos.side + 1 !== mover() || T3.wasDrag()) return;
+      if (over || busy || thinking || !pos || pos.side + 1 !== mover() || T3.wasDrag() || (PZ && !pzOn)) return;
       const i = pointOf(e); if (i < 0) { deselect(); return; }
       const me = pos.side + 1;
       if (sel) {
@@ -290,12 +292,64 @@
       refresh(); legal = pos.moves(); const wait = setup(); hud('');
       later(() => { busy = false; next(); }, wait + 200);
     }
+    /* ---------- puzzle mode (ctx.pz, 2026-11-24 担当C): a position from foxgeese/puzzles.json, no AI; atlas/puzzles.js judges each move
+       (ctx.pz.moved(m, info)) and plays the replies (api.pz.play). The solver is the game's worker, asked as foxgeese/app.js asks it
+       ({ type: 'goal', start, moves, n, g, rule }). Marks: points [point, 'ok'|'ng'|'hl'|'ring'] or a whole move { m, cls } (a ring on its
+       first point, dots along its path, a disc on its last). ---------- */
+    let pzOn = false, pzW = null, pzJ = 0;
+    const pzMk = new TH.Group(); board.add(pzMk);
+    const PZC = { ok: 0x2fd17a, ng: 0xff3b30, hl: 0xffb21a, ring: 0xffc928 }, pzMat = {};
+    const pm = (k, op) => pzMat[k + op] || (pzMat[k + op] = basic(PZC[k] != null ? PZC[k] : PZC.hl, op));
+    const hashesNow = () => E.replay(START, moves).hashes;
+    function pzState() { const st = E.judge(pos, hashesNow()); return { over: !!st.over, winner: st.winner || 0, why: st.why, turn: pos.side + 1, n: moves.length, cap: pos.cap, geese: pos.geese }; }
+    function pzAfter(before) { const m = moves[moves.length - 1]; legal = pos.moves(); if (PZ.moved) PZ.moved(m, Object.assign({ before }, pzState())); }
+    function pzWait() { busy = false; over = !!(pos && E.judge(pos, hashesNow()).over); legal = pos ? pos.moves() : []; pzOn = !PZ.lock && !over; showMarks(); }
+    function pzLoad(spec, me, o) {
+      PZ.spec = spec || null; PZ.me = me === 2 ? 2 : 1; PZ.lock = !!(o && o.lock);
+      if (!E) return;   // (the engine is still loading: it starts from PZ)
+      timers.forEach(clearTimeout); timers.length = 0; jid++; pzJ++; pzOn = false; clear(pzMk); deselect(); clear(hl);
+      START = PZ.spec; human = PZ.me; E.setRule((START && START.rule) || rule);
+      moves = []; over = false; busy = true; refresh(); legal = pos.moves(); const wait = setup(); hud('');
+      later(() => { pzWait(); if (PZ.ready) PZ.ready(); }, wait + 150);
+    }
+    function pzMark(list) {
+      clear(pzMk); if (list == null || !pos) return;
+      const L = typeof list === 'number' ? [[list, 'ring']] : list;
+      for (const e of L) {
+        if (e && !Array.isArray(e) && e.m != null) { const k = e.cls || 'ok', p = E.path(e.m); mark(pzMk, GEO.ring, pm(k, .95), p[0], .05); p.slice(1, -1).forEach(q => mark(pzMk, GEO.dot, pm(k, .9), q, .03)); mark(pzMk, GEO.cup, pm(k, .55), p[p.length - 1], .012); continue; }
+        const [q, k] = Array.isArray(e) ? e : [e.at, e.cls]; if (!(q >= 0 && q < 49) || !E.ON[q]) continue;
+        if (k === 'ring') { mark(pzMk, GEO.cup, pm('hl', .45), q, .012); mark(pzMk, GEO.ring, pm('ring', 1), q, .05); continue; }
+        mark(pzMk, GEO.cup, pm(k, k === 'hl' ? .45 : .55), q, .012);
+      }
+      kick(400);
+    }
+    const pzReq = msg => new Promise(res => {
+      if (!pzW) pzW = new Worker(BASE + 'engine.js' + VER);
+      const id = ++pzJ; pzW.onmessage = e => { const r = e.data; if (r.id !== id || r.type !== 'result') return; res(stopped ? null : r); };
+      pzW.onerror = () => { pzW = null; res(null); };
+      pzW.postMessage(Object.assign({ start: START, moves: moves.slice(), rule: (START && START.rule) || rule, id }, msg));
+    });
+    const pzApi = {
+      load: (spec, me, o) => pzLoad(spec, me, o),
+      wait: pzWait,
+      play: m => new Promise(res => { if (!pos || !pos.moves().includes(m)) return res(false); pzOn = false; busy = true; clear(pzMk); deselect(); play(m, () => { busy = false; legal = pos.moves(); over = E.judge(pos, hashesNow()).over; res(true); }); }),
+      undo(k = 1) { timers.forEach(clearTimeout); timers.length = 0; deselect(); moves.splice(Math.max(0, moves.length - k)); refresh(); legal = pos.moves(); over = false; rebuild(); clear(pzMk); showMarks(); },
+      moves: () => moves.slice(),
+      state: () => pos ? pzState() : {},
+      mark: pzMark,
+      pos: () => pos ? pos.clone() : null,
+      engine: () => E,
+      // the first moves that reach the goal within `left` own moves whatever the reply (engine goalGood: what foxgeese/app.js accepts)
+      good: (left, goal, mvs) => pzReq(Object.assign({ type: 'goal', n: left, g: { goal } }, mvs ? { moves: mvs } : {})).then(r => (r && r.list ? r.list.map(x => x.m) : [])),
+    };
+
     hud('');
-    loadEngine().then(e => { if (stopped) return; E = e; E.setRule(rule); E.setFirst(first); if (!pvp) worker = newWorker(); begin(); }).catch(() => hud('⚠'));
+    loadEngine().then(e => { if (stopped) return; E = e; E.setRule(rule); E.setFirst(first); if (PZ) { pzLoad(PZ.spec, PZ.me, { lock: PZ.lock }); return; } if (!pvp) worker = newWorker(); begin(); }).catch(() => hud('⚠'));
 
     const dbg = {
       at: i => { const [x, z] = xz(i); return T3.project(x, z, U.top); },
-      state: () => ({ moves: moves.length, side: pos && pos.side, human, pvp, over, busy, thinking, rule, sel: sel ? sel.pre.slice() : null, pieces: Object.keys(pcs).length, geese: pos && pos.geese, cap: pos && pos.cap }),
+      play: (from, to) => { const m = legal.find(x => E.mFrom(x) === from && E.mTo(x) === to); if (m === undefined || busy || over || (PZ && !pzOn)) return false; commit(m); return true; },
+      state: () => ({ moves: moves.length, side: pos && pos.side, human, pvp, over, busy, thinking, rule, pzOn, sel: sel ? sel.pre.slice() : null, pieces: Object.keys(pcs).length, geese: pos && pos.geese, cap: pos && pos.cap }),
       legal: () => legal.map(m => ({ m, from: E.mFrom(m), to: E.mTo(m), path: E.path(m) })),
     };
     window.Atlas3D.foxgeese._dbg = dbg;
@@ -309,7 +363,7 @@
       hud(L.lose); later(() => ctx.onEnd({ win: false, draw: false, level: ctx.level, score: r }), 200);
     }
     const api = {
-      human: human - 1,
+      human: human - 1, pz: PZ ? pzApi : null,
       canUndo: () => myTurn() && moves.length >= undoN() && (pvp || moves.length - undoN() >= (human !== first ? 1 : 0)),
       undo() { if (!api.canUndo()) return; timers.forEach(clearTimeout); timers.length = 0; jid++; deselect(); moves.splice(moves.length - undoN()); refresh(); rebuild(); ply++; busy = false; next(); },
       canHint: () => myTurn(),
@@ -337,7 +391,8 @@
         stopped = true; jid++;
         timers.forEach(clearTimeout); clearTimeout(toastT); if (toastEl) toastEl.remove();
         ctx.el.removeEventListener('click', onClick); removeEventListener('atlas-pieces', onPcs);
-        if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null;
+        if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null; if (pzW) pzW.terminate(); pzW = null;
+        Object.values(pzMat).forEach(m => m.dispose());
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
         if (window.Atlas3D.foxgeese._dbg === dbg) delete window.Atlas3D.foxgeese._dbg;
       },
