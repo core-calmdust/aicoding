@@ -919,3 +919,7 @@ html.ptv-open,html.ptv-open body{overflow:hidden}
 #pg-museum :focus-visible{outline:3px solid #2f6fd0;outline-offset:2px;border-radius:inherit}
 #pg-museum .murm:focus-visible{outline-offset:-3px}
 @media (prefers-reduced-motion:reduce){#pg-museum *,#pg-museum *::before,#pg-museum *::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
+.mupass-t .mupass-rwd{margin-top:1px;color:#8a5a22;font-size:12px;font-weight:800}
+/* (2026-11-24) a room that shows its stamps takes the card's whole width; the short rows (map, tree) pair up — no tall empty cells */
+.mupass-l{align-items:start}
+.mupass-r:has(.mupass-st){grid-column:1/-1}
