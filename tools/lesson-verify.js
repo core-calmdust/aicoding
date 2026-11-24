@@ -2461,8 +2461,13 @@ function near53() { const src = require('fs').readFileSync(path.join(ROOT, 'atla
   { const a = src.indexOf('    function scored(p, pts, msg, u) {'), b = src.indexOf('\n    }\n', a); if (a < 0 || b < 0) out.push({ step: 'lessons3d', q: 0, msg: '追66 scored() not found' });
     else { const body = src.slice(a, b); for (const m of body.matchAll(/'([^'\n]*)'/g)) { if (!/^(おしい|いい線|あと少し|あと一歩)/.test(m[1])) continue; const pre = body.slice(Math.max(0, m.index - 14), m.index);
       if (!/pts >= 1\d \? $/.test(pre)) out.push({ step: 'lessons3d', q: 0, msg: `追66 the heading 「${m[1]}」 is not under pts >= 10 (…${pre})` }); } } }
-  { const tx = src.slice(src.indexOf('  const TX = {'), src.indexOf('  const OPCAT = ')), NEAR = /おしい|いい線|あと少し|Close|Casi|Presque|Quase|Knapp|करीब|قريب|Почти|Hampir|Az kaldı|아깝/;
-    for (const m of tx.matchAll(/wrong: '([^']*)'/g)) if (NEAR.test(m[1])) out.push({ step: 'lessons3d', q: 0, msg: `追66 the 0-point heading TX.wrong says the move was close 「${m[1]}」` }); }
+  { const tx = src.slice(src.indexOf('  const TX = {'), src.indexOf('  const OPCAT = ')), NEAR = /おしい|惜しい|いい線|あと少し|あと一歩|close|almost|Casi|Presque|Quase|Knapp|^Fast\b|करीब|क़रीब|ज़रा सा|थोड़ा सा|लगभग|قريب|اقترب|Почти|Hampir|Az kaldı|아깝|差一点|差一點/i;
+    for (const m of tx.matchAll(/wrong: '([^']*)'/g)) if (NEAR.test(m[1])) out.push({ step: 'lessons3d', q: 0, msg: `追66 the 0-point heading TX.wrong says the move was close 「${m[1]}」` });
+    // 追77 (2026-11-25 担当B): each game's own voice (VOICE[id][lang].wrong) replaces TX.wrong — the 0-point heading of that game — in
+    //  every language; the check above read TX only, and 14 games x 14 languages (136 headings) said 「おしい！」「So close!」「¡Casi!」… on a 0-point move
+    const a = src.indexOf('  const VOICE = {'), b = src.indexOf('\n  };\n', a), vo = a < 0 || b < 0 ? '' : src.slice(a, b);
+    if (!vo || !/wrong: '/.test(vo)) out.push({ step: 'lessons3d', q: 0, msg: '追77 VOICE (the games\' own 0-point headings) not found (changed?)' });
+    for (const m of vo.matchAll(/wrong: '([^']*)'/g)) if (NEAR.test(m[1])) out.push({ step: 'lessons3d', q: 0, msg: `追77 a game's 0-point heading VOICE.wrong says the move was close 「${m[1]}」` }); }
   // 追68 (2026-11-24 担当C): the games' own 3D lesson files (atlas/ls-<game>.js) open a wrong answer with a line from their `soft` list,
   // and the 2D lessons (<game>/lessons.json ui.wrong) head it — both on a 0-point answer, so neither says the answer was close
   { const fs = require('fs'), NEAR = /おしい|惜しい|いい線|あと少し|あと一歩|Close|Almost|Casi|Presque|Quase|Knapp|^Fast\b|लगभग|قريب|Почти|Hampir|Az kaldı|아깝|差一点|差一點/;
