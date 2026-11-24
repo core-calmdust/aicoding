@@ -10,7 +10,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const DONE = ['b_rook', 'b_horse', 'b_elephant', 'b_cannon', 'b_pawn', 'b_mate1', 'm_mate2', 'm_mate3', 'e_rook', 'e_pawn'];   // (verified: tools/lesson-verify-janggi.js; the rest are not listed yet)
+  const DONE = ['b_rook', 'b_horse', 'b_elephant', 'b_cannon', 'b_pawn', 'b_escape', 'b_mate1', 'm_mate2', 'm_mate3', 'e_rook', 'e_pawn'];   // (verified: tools/lesson-verify-janggi.js; the rest are not listed yet)
   const KIND = { b_rook: 5, b_horse: 4, b_elephant: 3, b_cannon: 6, b_pawn: 7 };
   const MATE = { b_mate1: 1, m_mate2: 2, m_mate3: 3, e_rook: 'n', e_pawn: 'n' };   // (the mate steps: P.ok = the one first move that mates within n; 'n' = the endgames: n is the problem's own P.n, the fastest mate)
   const PTS = [0, 0, 3, 3, 5, 13, 7, 2];
@@ -26,6 +26,7 @@
     m_mate2: '今度は<b>2手で詰ます</b>問題。<br>最初の1手のあと、相手がどう受けても<b>次の手で必ず詰む</b>手を探してね。<br>王手から始まるとは限らないよ。逃げ道を先にふさぐ、静かな手もあるんだコン！',
     e_rook: 'ここからは<b>終盤</b>。駒が少なくなったら、残った駒で将を詰ませにいくの。<br>きみには<b>車と馬</b>、相手の将には<b>士</b>がついてる。車で将の<b>動ける点を減らして</b>、馬で逃げ道をふさぐのがコツ。<br>九宮のななめの線も通り道だよ。<b>いちばん早く詰む</b>手を探そうコン！',
     e_pawn: '今度は<b>卒2つ</b>の終盤だよ。<br>卒は相手の九宮に入ると、<b>ななめの線にそって前へ</b>も進めるの。でも後ろには戻れないから、急いで奥まで進めすぎないでね。<br>自分の<b>将</b>も、相手の将の動きをふさぐ大事な駒。<b>いちばん早く詰む</b>手を探してみてコン！',
+    b_escape: 'ピンチだコン！ 相手の駒が、きみの<b>大事な駒</b>をねらっているの。<br>取られる前に、相手の駒が<b>届かない点</b>へ逃がそう。<br>逃げた先で<b>別の駒</b>にねらわれないか、ほかの駒が取られる形にならないかも確かめてね！',
     m_mate3: 'いよいよ<b>3手で詰ます</b>問題だよ。<br>最初の1手のあと、相手のどの受けにも<b>3手目までに必ず詰む</b>続きがある手を選んでね。<br>相手の受けを1つずつ読むのがコツ。自分の将が詰まされないかも、ちゃんと見てね！',
   };
   const ASK = {
@@ -113,7 +114,44 @@
     const q0 = v(ASK[s.id]), ask = typeof q0 === 'function' ? q0(N) : q0;
     return { ask, hintTx: MATE[s.id] === 'n' ? v(EHINT)(AM, N) : v(MHINT[N])(AM), good, ng, own: true };
   }
+
+  // (2026-11-24 担当D) b_escape: one piece of yours is in danger (the opponent wins something on it: a static exchange, SEE); the answer
+  // is the one move after which nothing of yours is in danger. The words name the piece, its attacker, the piece lost after a wrong
+  // move and who takes it (the cheapest taker) — the board facts tools/lesson-verify-janggi.js counts again on its own.
+  const SV = [0, 1000, 3, 3, 5, 13, 7, 2];
+  function escFacts(E) {
+    const T = E.typeOf, C = E.colorOf, mTo = E.mTo, mFrom = E.mFrom;
+    const takers = (q, s) => q.moves().filter(m => !E.isPass(m) && mTo(m) === s);
+    const see = (q, s, d) => { const x = q.at(s); if (!x || T(x) === E.KING || C(x) === q.side || d > 8) return 0; const L = takers(q, s); if (!L.length) return 0;
+      const m = L.reduce((a, y) => SV[T(q.at(mFrom(y)))] < SV[T(q.at(mFrom(a)))] ? y : a); return Math.max(0, SV[T(x)] - see(q.clone().play(m), s, d + 1)); };
+    // the pieces of the side not to move in q that are lost: [{ s, t, by }] (by = the cheapest taker's type), the biggest loss first
+    const danger = q => { const out = []; for (let s = 0; s < 90; s++) { const x = q.at(s); if (!x || C(x) === q.side || T(x) === E.KING) continue; const g = see(q, s, 0);
+      if (g > 0) out.push({ s, t: T(x), g, by: takers(q, s).map(m => T(q.at(mFrom(m)))).reduce((a, b) => SV[b] < SV[a] ? b : a) }); } return out.sort((a, b) => b.g - a.g || SV[b.t] - SV[a.t]); };
+    const flip = p => { const q = p.clone(); q.side ^= 1; q.rehash(); return q; };
+    const mate1 = q => q.moves().some(x => q.clone().play(x).status() === -1);
+    return { danger, flip, mate1, takers };
+  }
+  const EASK = [(H, A) => `相手の${A}が、きみの${H}をねらってる！ どこへ逃がす？`, (H, A) => `このままだと${H}を${A}に取られちゃう。安全な逃げ先はどこかな？`, H => `ねらわれた${H}を、取られない点へ逃がしてあげて！`, (H, A) => `${A}のねらいから${H}を助けよう。逃げた先も安全な点はどれ？`, H => `${H}の逃げ先はいくつもあるけど、本当に安全なのは1つだけ。見つけられるかなコン？`];
+  const EHINT2 = [H => `金の輪の${H}の行き先を、1つずつ確かめて。相手の駒が届かない点はどこ？`, H => `金の輪の${H}が逃げた先に、相手の車・包・馬が届かないか見てね。包は台を1つ跳び越えて取るよ！`, H => `金の輪の${H}を動かしたあと、ほかの駒がただで取られる形にならないかも確かめようコン。`, H => `逃げ先の候補を全部並べてみて。金の輪の${H}が、そこでまた取られない点は？`, H => `金の輪の${H}だよ。今ねらっている駒だけじゃなく、ほかの相手の駒の利きもたどってみて！`];
+  const EGOOD = [(H, k) => `ばっちり！ ${H}を逃がして、相手のどの駒にも取られない形になったね。行き先は${k}つあったけど、安全なのはここだけなの。`, H => `助かったね！ ${H}は無事に逃げられたコン。逃げた先も、ほかの駒も、もう取られる心配はないよ。その調子！`, (H, k) => `その通り！ ${k}つの行き先のうち、${H}が取られずにすむのはここだけ。よく確かめたね、次もこの目でいこう！`, H => `いい逃げ方！ ${H}を、相手の駒の届かない点へ逃がせたね。この確かめ方で次もいこう！`, (H, k) => `見事だコン！ ${H}の行き先${k}つから、ただ1つの安全な点を選べたね。どんどんいこう！`];
+  const EOPEN = ['ここは見落としやすいの。', 'いっしょに確かめよう。', '', '大丈夫、よくある見落とし。', 'これで覚えちゃおう！ '];
+  const ERIGHT = [(M, H) => `正解は${M}。そこなら${H}はどの駒にも取られなかったの。`, (M, H) => `${M}なら、${H}が取られない点へ逃げられたよ。次はきっと見つかるね！`, (M, H) => `答えは${M}。${H}も、ほかの駒も無事な点だったんだコン。`, (M, H) => `いちばんは${M}。相手の駒が${H}に届かない、ただ1つの点だったの。`, (M, H) => `${M}がよかったね。そこへ逃げれば、${H}はもう安全だったんだ。`];
+  function escJa(E, s, P, i, ck, n) {
+    const v = (L, o) => L[(i + n + (o || 0)) % L.length], T = E.typeOf, p = E.Pos.from(P.s), A = P.best, M = ck('ok'), X = ck('ng'), F = escFacts(E);
+    const D = F.danger(F.flip(p)), d0 = D[0] || { s: E.mFrom(A), t: T(p.at(E.mFrom(A))), by: 0 }, H = NM(d0.t, true), AT = NM(d0.by, false), k = p.movesFrom(d0.s).length;
+    const ng = u0 => { const L = p.moves(), u = u0 != null && u0 !== A && L.includes(u0) ? u0 : L.find(x => x !== A && E.mFrom(x) === d0.s) || L.find(x => x !== A); let w = '';
+      if (u != null) { const q = p.clone().play(u), Q = F.danger(q), dd = Q[0], moved = E.mFrom(u) === d0.s;
+        if (F.mate1(q)) w = v([`${X}だと、相手に1手で詰まされちゃう！ 自分の将の守りも見てね。`, `${X}のあと、相手には1手で詰ませる手があるの。こっちの将が先に詰んじゃう！`], 1);
+        else if (dd) { const Lp = NM(dd.t, true), B = NM(dd.by, false);
+          if (moved && dd.s === E.mTo(u)) w = v([`${X}だと、逃げた先の${H}を相手の${B}に取られちゃう。`, `${X}に逃げても、そこには相手の${B}が届くの。${H}が取られる形だコン。`, `${X}の逃げ先は、相手の${B}の利きの中なの。${H}が取られちゃうよ。`], 1);
+          else if (moved) w = v([`${X}で${H}は逃げられるけど、こんどは${Lp}を相手の${B}に取られちゃう。`, `${X}だと${H}は助かっても、${Lp}が相手の${B}に取られる形になるの。`], 1);
+          else if (dd.s === d0.s) w = v([`${X}では、ねらわれた${H}を助けられないの。相手の${B}に取られちゃう。`, `${X}を指しても、${H}は相手の${B}に取られたままだコン。`, `${X}だと、${H}へのねらいが消えないの。相手の${B}に取られちゃう。`], 1);
+          else w = v([`${X}のあと、${Lp}を相手の${B}に取られる形になるの。`, `${X}だと、こんどは${Lp}が相手の${B}に取られちゃう。`], 1); } }
+      return v(EOPEN) + w + v(ERIGHT, 2)(M, H); };
+    return { ask: v(EASK)(H, AT), hintTx: v(EHINT2)(H), good: () => v(EGOOD)(H, k), ng, own: true };
+  }
   function lsJa(E, s, P, i, ck, n) {
+    if (s.id === 'b_escape') return escJa(E, s, P, i, ck, n || 0);
     if (MATE[s.id] && ASK[s.id]) return mateJa(E, s, P, i, ck, n || 0);
     const id = s.id, K = KIND[id]; if (!K || !ASK[id]) return null; n = n || 0;
     const v = (L, o) => L[(i + n + (o || 0)) % L.length];
@@ -131,5 +169,5 @@
       return v(OPEN) + w + v(RIGHT, 2)(M, AC); };
     return { ask: v(ASK[id]), hintTx: v(HINT[id]), good, ng, own: true };
   }
-  window.AtlasJanggiLs = { DONE, INTRO, lsJa, NM, PTS, KIND, MATE };
+  window.AtlasJanggiLs = { DONE, INTRO, lsJa, NM, PTS, KIND, MATE, escFacts };
 })();
