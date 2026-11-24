@@ -5,8 +5,9 @@
   let ac = null, master = null, sfx = null, bgm = null, wind = null, on = true, musicOn = true, talkOn = true;
   try { on = localStorage.getItem('wolflantern-snd') !== '0'; musicOn = localStorage.getItem('wolflantern-bgm') !== '0'; talkOn = localStorage.getItem('wolflantern-talk') !== '0'; } catch (e) {}
   const SFX = 1.0, BGM = .34;
+  let paused = false;
   function ctx() {
-    if (!on) return null;
+    if (!on || paused) return null;
     if (!ac) {
       const C = root.AudioContext || root.webkitAudioContext; if (!C) return null;
       ac = new C(); master = ac.createGain(); master.gain.value = .95;
@@ -15,7 +16,7 @@
       sfx = ac.createGain(); sfx.gain.value = SFX; sfx.connect(master);
       bgm = ac.createGain(); bgm.gain.value = musicOn ? BGM : 0; bgm.connect(master);
       if (want) { const w = want; want = null; music(w.name, w.level); }
-      document.addEventListener('visibilitychange', () => { if (!ac) return; if (document.hidden) ac.suspend(); else if (on) ac.resume(); });
+      document.addEventListener('visibilitychange', () => { if (!ac) return; if (document.hidden) ac.suspend(); else if (on && !paused) ac.resume(); });
     }
     if (ac.state === 'suspended' && !document.hidden) ac.resume();
     return ac;
@@ -60,32 +61,23 @@
     o.connect(v); v.connect(sfx); o.start(t); o.stop(t + (len || .2) + .05);
   }
   const pluck = i => blip(220 * Math.pow(2, (i % 7) / 12), .6, 'triangle', .16);   // a thread pulled tight
-  const page = () => { const a = ctx(); if (!a) return; const s = a.createBufferSource(), f = a.createBiquadFilter(), v = a.createGain(); s.buffer = noiseBuf(a, .25); f.type = 'highpass'; f.frequency.value = 1800; v.gain.setValueAtTime(.26, a.currentTime); v.gain.exponentialRampToValueAtTime(.001, a.currentTime + .2); s.connect(f); f.connect(v); v.connect(sfx); s.start(); };
+  const page = () => { const a = ctx(); if (!a) return; const s = a.createBufferSource(), f = a.createBiquadFilter(), v = a.createGain(); s.buffer = noiseBuf(a, .25); f.type = 'highpass'; f.frequency.value = 1300; v.gain.setValueAtTime(.6, a.currentTime); v.gain.exponentialRampToValueAtTime(.001, a.currentTime + .2); s.connect(f); f.connect(v); v.connect(sfx); s.start(); };
   const ok = () => { blip(660, .25, 'sine', .14); setTimeout(() => blip(990, .4, 'sine', .12), 120); };
   const thud = () => { blip(70, .6, 'sine', .5); blip(140, .25, 'triangle', .12); };
   /* ---------- talk: a short voiced blip per few letters, pitched by who is speaking ---------- */
   const NOISE = {};
   let lastTalk = 0;
   function talk(vo) {
-    if (!talkOn) return; const a = ctx(); if (!a) return;
-    const t = a.currentTime; if (t - lastTalk < .045) return; lastTalk = t;
-    if (!vo) {   // narration: the faint scratch of a pen
-      const b = NOISE.n || (NOISE.n = noiseBuf(a, .2)); const s0 = a.createBufferSource(), f = a.createBiquadFilter(), v = a.createGain();
-      s0.buffer = b; f.type = 'bandpass'; f.frequency.value = 3200 + Math.random() * 1400; f.Q.value = 1.4;
-      v.gain.setValueAtTime(.16, t); v.gain.exponentialRampToValueAtTime(.0008, t + .05);
-      s0.connect(f); f.connect(v); v.connect(sfx); s0.start(t, Math.random() * .1); s0.stop(t + .07); return;
-    }
-    const o = a.createOscillator(), f = a.createBiquadFilter(), f2 = a.createBiquadFilter(), v = a.createGain();
-    o.type = vo.wave || 'triangle';
-    const semi = (Math.random() * 2 - 1) * (vo.range || 2);
-    o.frequency.setValueAtTime(vo.f * Math.pow(2, semi / 12), t);
-    o.frequency.linearRampToValueAtTime(vo.f * Math.pow(2, (semi + (vo.glide || -1)) / 12), t + .06);
-    const vowels = [700, 1100, 1700, 500, 2300];   // a, o, e, u, i — a rough mouth
-    f.type = 'bandpass'; f.frequency.value = vowels[Math.floor(Math.random() * vowels.length)] * (vo.mouth || 1); f.Q.value = 1.8;
-    f2.type = 'lowpass'; f2.frequency.value = 3200;
-    const len = vo.len || .07, vol = (vo.vol || 1) * .62;
-    v.gain.setValueAtTime(0, t); v.gain.linearRampToValueAtTime(vol, t + .008); v.gain.exponentialRampToValueAtTime(.0008, t + len);
-    o.connect(f); f.connect(f2); f2.connect(v); v.connect(sfx); o.start(t); o.stop(t + len + .02);
+    if (!talkOn || !vo) return; const a = ctx(); if (!a) return;   // narration stays silent
+    const t = a.currentTime; if (t - lastTalk < .06) return; lastTalk = t;
+    // one plain, soft blip: the speaker's pitch, a hair of variation
+    const o = a.createOscillator(), v = a.createGain();
+    // pitch: the voice's height squeezed into a narrow band, so no one sounds much louder than another
+    const f = 280 + (vo.f - 108) * 1.1;
+    o.type = 'sine'; o.frequency.value = f * Math.pow(2, (Math.random() - .5) * (vo.range || 1) / 12);
+    const vol = .065 * Math.pow(420 / f, .45);   // ears hear high notes louder: lower ones get a little more
+    v.gain.setValueAtTime(0, t); v.gain.linearRampToValueAtTime(vol, t + .006); v.gain.exponentialRampToValueAtTime(.0005, t + .05);
+    o.connect(v); v.connect(sfx); o.start(t); o.stop(t + .06);
   }
 
   /* ---------- music: two tracks, crossfaded at their ends so they loop without a seam ---------- */
@@ -126,6 +118,8 @@
   function setMusic(v) { musicOn = !!v; try { localStorage.setItem('wolflantern-bgm', musicOn ? '1' : '0'); } catch (e) {} if (bgm && ac) bgm.gain.setTargetAtTime(musicOn ? BGM : 0, ac.currentTime, .3); }
   function setTalk(v) { talkOn = !!v; try { localStorage.setItem('wolflantern-talk', talkOn ? '1' : '0'); } catch (e) {} }
 
+  // the window lost focus: everything stops until it comes back
+  function pause(p) { paused = !!p; if (!ac) return; if (paused) ac.suspend(); else if (on && !document.hidden) ac.resume(); }
   function set(v) { on = !!v; try { localStorage.setItem('wolflantern-snd', on ? '1' : '0'); } catch (e) {} if (!on) { windOff(); if (ac) ac.suspend(); } else if (ac) ac.resume(); }
-  root.WLSound = { bell, howl, windOn, windOff, pluck, page, ok, thud, talk, music, set, setMusic, setTalk, get on() { return on; }, get musicOn() { return musicOn; }, get talkOn() { return talkOn; }, unlock: ctx };
+  root.WLSound = { pause, bell, howl, windOn, windOff, pluck, page, ok, thud, talk, music, set, setMusic, setTalk, get on() { return on; }, get musicOn() { return musicOn; }, get talkOn() { return talkOn; }, unlock: ctx };
 })(window);

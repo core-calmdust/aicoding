@@ -168,7 +168,20 @@
     },
   };
   // the whole backdrop of one place
+  // the new cut-paper backdrops (scenes.js), used only once they have passed tools/scene-quality.js
+  function h32(t) { let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
+  function sceneHash(kind, loc) { const N = root.WLScenes && root.WLScenes[kind] && root.WLScenes[kind][loc]; if (!N) return null; return h32(String(N.far) + String(N.mid) + String(N.near) + (root.WLScenes.v || '')); }
+  function sceneNew(kind, loc, seed) {
+    const N = root.WLScenes && root.WLScenes[kind] && root.WLScenes[kind][loc]; if (!N) return '';
+    const s = (seed || 7) * 7919 + 13;
+    return `<svg class="scn" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <g transform="translate(0 112)"><g class="far" fill="currentColor">${N.far(R(31))}</g>
+      <g class="mid" fill="currentColor">${N.mid(R(57))}</g>
+      <g class="near" fill="currentColor">${N.near(R(s))}</g></g></svg>`;
+  }
   function scene(kind, loc, seed) {
+    const pass = root.WL_SCENE_PASS || {};
+    if (pass[kind + '/' + loc] && pass[kind + '/' + loc] === sceneHash(kind, loc)) return sceneNew(kind, loc, seed);
     const K = SCENES[kind]; if (!K) return '';
     const r = R((seed || 7) * 7919 + 13);
     const near = (K[loc] ? K[loc].call(K, r) : '') + K.ground.call(K, r);
@@ -178,5 +191,5 @@
       <g class="near" fill="currentColor">${near}</g></g></svg>`;
   }
 
-  root.WLArt = { puppet, bust, wolf, scene, INK };
+  root.WLArt = { puppet, bust, wolf, scene, sceneNew, sceneHash, INK };
 })(typeof window !== 'undefined' ? window : globalThis);

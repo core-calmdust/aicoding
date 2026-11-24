@@ -5140,8 +5140,11 @@
     const hint2 = id === 's_block' && HK[kb0] ? pk(HK[kb0], nth) : hintTx;
     const full = u => pts(P, u) >= 20;
     const wrongOf = u => u != null && u !== best && !full(u) ? u : (P.sc.slice().sort((a, c) => a[1] - c[1])[k % 2] || [])[0];
-    const good = function (u) { this._hl = []; const same = u != null && u !== best;
-      return [VC.good(k), same ? pk(['きみの手も、いちばんの手とほとんど同じくらいいい手！', 'その手も満点、いちばんの手と変わらないくらい強いペン！'], k) : f2(pk(C.why, k), { a: whyB(k) }), VC.push(k)].filter(Boolean).join(' '); };
+    const Mg = best === 1023 ? 'スワップ' : M;
+    const good = function (u) { this._hl = []; const same = u != null && u !== best, top = same && full(u);   // (追71: 「満点・変わらない強さ」 only for a 20-point move; 16〜19 points: a good move, but the best — marked green — is named with its reason)
+      return [VC.good(k), top ? pk(['きみの手も満点！ いちばんの手と変わらない強さなんだ。', 'その手も満点、いちばんの手と同じくらい強いペン！'], k)
+        : same ? f2(pk(['きみの手もいい手！ でも、いちばんは{m}。{a}んだ。', 'その手もなかなかだペン！ ただ、いちばんは{m}。{a}ペン。', '合格の一手！ でも{m}のほうがもっといい。そこなら{a}ね。'], k), { m: Mg, a: whyB(k) })
+        : f2(pk(C.why, k), { a: whyB(k) }), VC.push(k)].filter(Boolean).join(' '); };
     const ng = function (u0) { this._hl = []; const u = wrongOf(u0); if (u == null) return '';
       const fu = HXA.facts(sp, u), ku = HXA.kind(fu), mine = val.has(u) ? val.get(u) : null, d = mine == null ? null : Math.round((HXA.wr(vb) - HXA.wr(mine)) * 100);
       const Mb = best === 1023 ? 'スワップ' : M, Xu = u === 1023 ? 'スワップ' : X;
@@ -7053,7 +7056,7 @@
     .catch(e => { this.p = null; throw e; })); } };
   /* ugolki (2026-11-24 担当D): the data, モリフク's words and the board facts are in atlas/ls-ugolki.js (loaded the first time; only the
      lessons checked and rebuilt for the 3D, AtlasLsUgolki.READY — tools/lesson-verify-ugolki-ls.js) */
-  const UGOLKI = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUgolki) return res(); const sc = document.createElement('script'); sc.src = 'ls-ugolki.js?v=3'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const UGOLKI = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUgolki) return res(); const sc = document.createElement('script'); sc.src = 'ls-ugolki.js?v=4'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsUgolki.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   // (2026-11-24 ユーザー指示: ur・senet・patolli のレッスンは廃止 — 双六系はマンカラ・バックギャモンのような戦略性の高いものを除いてレッスン・パズルを作らない。
@@ -7508,7 +7511,7 @@
         const head = p.own ? (right ? '' : pts >= 10 ? 'おしい！' : '') : right ? okLine() || pick(X.good) : pts >= 10 ? X.partial : X.wrong;   // (p.own: ゴイシペン praises / names the green cell himself)
         say(`${head} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : '<br>' + p.ng(u)));
         try { chime(right); } catch (e) {}
-        later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark([...(right || !cell(p.ans) ? [] : [[p.ans, 'ok']]), ...(cell(u) ? [[u, right ? 'ok' : 'ng']] : []), ...(right ? [] : (p._hl || []).filter(q => cell(q) && q !== u && q !== p.ans).map(q => [q, 'hl']))]); }, 900);
+        later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark([...((right && (pts >= 20 || p.ans === u)) || !cell(p.ans) ? [] : [[p.ans, 'ok']]), ...(cell(u) ? [[u, right ? (pts >= 20 || p.ans === u || !cell(p.ans) ? 'ok' : 'hl') : 'ng']] : []), ...(right ? [] : (p._hl || []).filter(q => cell(q) && q !== u && q !== p.ans).map(q => [q, 'hl']))]); }, 900);
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;

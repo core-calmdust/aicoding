@@ -6,7 +6,7 @@
 //  ① n is exact: the side to move reaches the goal within n of its moves whatever the reply, and not within n−1; the engine's own solver
 //    (goalGood, what the 2D and the 3D accept) gives the same set of first moves.
 //  ② the goal set (the first moves accepted) has 2 moves at most (both are accepted).
-//  ③ 4 legal moves or more, 3 wrong first moves or more; the take puzzles: no capture is possible at once (n ≥ 2 already says so).
+//  ③ 4 legal moves or more, 3 wrong first moves or more; 追72 the right first moves ≤ 1/3 of the legal moves; the take puzzles: no capture is possible at once (n ≥ 2 already says so).
 //  ④ the theme: w2/w3/w4 = the geese to move, goal 'win', n = 2/3/4; t2/t3 = the fox to move, goal 'take', n = 2/3. The win is by the
 //    theme's means: the engine's set equals the strict set (追6).
 //  ⑤ no two positions (all the puzzles, the lessons) within 4 points of each other under the board's symmetries (g13 / the puzzles: the
@@ -87,6 +87,7 @@ function verify(opt) {
         const wrong = L.filter(m => !good.includes(m));
         if (L.length < 4) add(T.id, j, `③ ${L.length} legal moves`);
         if (wrong.length < 3) add(T.id, j, `③ ${wrong.length} wrong first moves`);
+        if (good.length * 3 > L.length) add(T.id, j, `追72 ${good.length} right first moves of ${L.length} legal moves (more than 1/3)`);
         let near = 0;
         for (const m of wrong) { const k = refutes(pos, m, n, goal); if (k <= 2) near++; }
         const d = near * 2 + wrong.length; ds.push(d); r.d = d; r.near = near; r.legal = L.length; r.good = good.length;
@@ -204,6 +205,7 @@ function verifyLessons(opt) {
       if (good.length !== okS.length || !good.every(m => okS.includes(m))) add(id, j, `① the saved answers (${okS.map(m => E.name(pos, m)).join(',')}) ≠ the moves that do it (${good.map(m => E.name(pos, m)).join(',')})`);
       if (okS.length !== 1 || P.best !== okS[0]) add(id, j, `② ${okS.length} right moves (best ${P.best})`);
       if (L.length < 4 || L.length - good.length < 3) add(id, j, `③ ${L.length} legal moves, ${L.length - good.length} wrong`);
+      if (good.length * 3 > L.length) add(id, j, `追72 ${good.length} right moves of ${L.length} legal moves (more than 1/3)`);
       const a = pos.clone().play(P.best);
       if (shut(a)) add(id, j, '① after the answer the geese shut the fox in');
       if (id === 'f_jump' && (good.length !== 1 || E.jumped(P.best).length !== 1)) add(id, j, '④ not one goose by a single jump');
@@ -292,6 +294,7 @@ function gooseLesson(st, X) {
     if (good.length !== okS.length || !good.every(m => okS.includes(m))) add(id, j, `① the saved answers (${okS.map(m => E.name(pos, m)).join(',')}) ≠ the moves that do it (${good.map(m => E.name(pos, m)).join(',')})`);
     if (okS.length !== 1 || P.best !== okS[0]) add(id, j, `② ${okS.length} right moves (best ${P.best})`);
     if (L.length < 4 || L.length - good.length < 3) add(id, j, `③ ${L.length} legal moves, ${L.length - good.length} wrong`);
+    if (good.length * 3 > L.length) add(id, j, `追72 ${good.length} right moves of ${L.length} legal moves (more than 1/3)`);
     const shutNow = L.some(m => !pos.clone().play(m).foxMoves([]).length);
     if (id === 'g_safe' && (!J0.length || new Set(J0.map(x => E.jumped(x)[0])).size !== 1 || shutNow)) add(id, j, `④ g_safe: ${J0.length} jumps now / attacked ${new Set(J0.map(x => E.jumped(x)[0])).size} / a shutting move ${shutNow}`);
     if (id === 'g_trap') {
@@ -361,6 +364,7 @@ function selftest() {
     ['order reversed (⑥)', d => { d.themes[0].puzzles.reverse(); }, /^⑥/],
     ['a duplicate (⑤)', d => { d.themes[0].puzzles[5] = JSON.parse(JSON.stringify(d.themes[0].puzzles[2])); }, /^⑤/],
     ['3 legal moves (③)', d => { d.themes[1].puzzles[0] = { s: { b: '................ggg...ggg..f.gggg............g...', side: 1, cap: 2, n: 20, rule: 'g13' }, n: 2, g: 'take' }; }, /^③/],
+    ['2 right of 5 legal moves (追72: the old t2 #10)', d => { d.themes[1].puzzles[0] = { s: { b: '...............g...g..fgg...g...g....gg......g...', side: 1, cap: 4, n: 20, rule: 'g13' }, n: 2, g: 'take' }; }, /^追72/],
     ['goal within n−1 (①)', d => { d.themes[1].puzzles[3].n = 3; d.themes[1].id = 't3'; }, /^①/],
     ['the words wrong (⑧)', null, /^⑧/, { why: o => Object.assign(F.why(o), { k: 'far' }) }],
     ['a reply that does not refute (⑦)', null, /^⑦/, { pick: (mid) => mid.moves()[0] }],
