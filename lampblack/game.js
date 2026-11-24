@@ -99,6 +99,12 @@
 
   /* ---------- select ---------- */
   function rec() { try { return JSON.parse(localStorage.getItem(REC) || '{}'); } catch (e) { return {}; } }
+  // the story's roles, in one line: the special ones stand out
+  function roleLine(s) {
+    if (s.rules === 'mason') return `特殊役職 <b>${esc(s.roles.mason.name)}</b>（狩人の代わりに2人）`;
+    if (s.rules === 'fox') return `特殊役職 <b>${esc(s.roles.fox.name)}</b>（第三の陣営）`;
+    return '標準の役職（占い師・霊媒師・狩人・狂人）';
+  }
   function buildSelect() {
     palette(null); SND.music('story', .55);
     const R = rec();
@@ -108,7 +114,7 @@
       const best = `<div class="rec">${r ? `最高評価 ${r.best}・解決 ${r.win}/${r.plays}・` : ''}実績 ${got}/${fl.length}</div>`;
       return `<button class="sc" data-id="${s.id}" style="--p:${s.pal.paper};--l:${s.pal.lamp};--i:${s.pal.ink};--acc2:${s.pal.acc}">
         <div class="ph">${ART.scene(s.scene, s.locs[0].id, 3)}<span class="no">${esc(s.no)}</span></div>
-        <div class="tx"><h3>${esc(s.title)}<small>${esc(s.kana)}</small></h3><div class="tg">${esc(s.tag)}</div><p>${esc(s.concept)}</p><div class="mood">${esc(s.mood)}</div>${best}</div></button>`;
+        <div class="tx"><h3>${esc(s.title)}<small>${esc(s.kana)}</small></h3><div class="tg">${esc(s.tag)}</div><p>${esc(s.concept)}</p><div class="mood">${roleLine(s)}</div>${best}</div></button>`;
     }).join('');
     $('stories').querySelectorAll('.sc').forEach(b => b.onclick = () => { G.storyId = b.dataset.id; SND.page(); buildSetup(); });
     scr('select');
