@@ -49,6 +49,7 @@
     { id: 'ugolki', region: 'europe', color: '#1f4e9a', cover: { g: 'ugolki', s: 'ugolki' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'halmaJump' }, m1: { svg: 'ugolkiCorner' }, m2: { svg: 'halmaStar' } }, refs: ['George Howard Monks, US Patent No. 383,653 (Halma, 1888)', 'Bruce Whitehill, on the origins of Halma (as cited by tradgames.org.uk, “Halma”)', 'tradgames.org.uk, “Halma” (Hoppity, Thomas Hill, Stern-Halma 1892, J. Pressman & Co. 1928)', 'Wikipedia, “Halma”, “Chinese checkers”, “Ugolki”', 'И. Троицкий, учебник классических уголков / I. Troitsky, a textbook of classic ugolki (the 40/80-move rules)'], links: [{ g: 'ugolki' }, { g: 'checkers' }, { g: 'peg' }] },
     { id: 'agon', region: 'europe', color: '#7a2a22', cover: { g: 'agon', s: 'agon' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'agonBoard' }, m1: { svg: 'agonMove' }, m2: { svg: 'agonCapture' } }, refs: ['Thos Sherwin, Agon, or the Queen’s Guards (London, 1842)', 'David Parlett, The Oxford History of Board Games (1999)', 'Jack Botermans, The Book of Games: Strategy, Tactics & History (2008)', 'Ludii Portal, “Agon” (rules and starting layout)', 'Wikipedia, “Agon (game)”'], links: [{ g: 'agon' }, { g: 'hex' }, { g: 'ugolki' }] },
     { id: 'dots', region: 'europe', color: '#2a4a7a', cover: { g: 'dots', s: 'dots' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'dotsChain' }, m1: { svg: 'connect4Gravity' }, m2: { svg: 'solvedTimeline' } }, refs: ['Édouard Lucas, La Pipopipette (1889); also in L’Arithmétique amusante (1895)', 'Elwyn Berlekamp, The Dots and Boxes Game: Sophisticated Child’s Play (2000)', 'E. R. Berlekamp, J. H. Conway, R. K. Guy, Winning Ways for your Mathematical Plays, vol. 2 (1982), ch. 16', 'L. Victor Allis, A Knowledge-based Approach of Connect-Four (master’s thesis, Vrije Universiteit Amsterdam, 1988)', 'tradgames.org.uk, “Four in a Row” (Milton Bradley 1974; the Captain’s Mistress story)', 'Wikipedia, “Dots and boxes”, “Connect Four”'], links: [{ g: 'dots' }, { g: 'connect4' }, { g: 'gomoku' }] },
+    { id: 'hitblow', region: 'europe', color: '#2b3683', cover: { g: 'hitblow', s: 'hitblow' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'hitblowFeedback' }, m1: { svg: 'hitblowSearch' }, m2: { svg: 'hitblowFive' } }, refs: ['Donald E. Knuth, “The Computer as Master Mind”, Journal of Recreational Mathematics 9(1) (1976–77)', 'Kenji Koyama, Tony W. Lai, “An Optimal Mastermind Strategy”, Journal of Recreational Mathematics 25(4) (1993)', 'Jerrold M. Grochow, “MOO in Multics”, Software: Practice and Experience 2(3) (1972)', 'Invicta Plastics, Mastermind (1971–72)', 'Wikipedia, “Mastermind (board game)”, “Bulls and cows”'], links: [{ g: 'hitblow' }, { g: 'sudoku' }, { g: 'dots' }] },
   ];
   // pictures shown only beside a story's paragraph (not in another room): a museum's open-access photo (CC0), linked to the museum's page.
   // The name, in each language, is MUSEUM_READ_T[lang].pic[id]. Files images/atlas/museum-story/pic/<id>.webp (≤ 960 px).
@@ -845,6 +846,38 @@
       g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
       R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
         g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="15" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
+        g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="${xn + 16}" y="${y + 20}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // hit & blow: one guess and its answer — the hidden code above, the guess below: same colour in the same place = a hit (pink pin), the right colour in another place = a blow (white pin)
+    hitblowFeedback: () => { const K = ['#e0453a', '#f0a020', '#e8d040', '#3aa860', '#3a78d8', '#9a5ad0'], W = 300, H = 210, x0 = 34, dx = 52, ya = 46, yg = 156, r = 17; let g = '';
+      g += `<rect x="${x0 - 26}" y="${ya - 30}" width="${dx * 3 + 52}" height="60" rx="12" fill="#1c2340"/><rect x="${x0 - 26}" y="${yg - 30}" width="${dx * 3 + 52}" height="60" rx="12" fill="#2b3683"/>`;
+      const ans = [0, 1, 2, 3], gs = [0, 2, 4, 1], X = i => x0 + i * dx;
+      const peg = (x, y, c) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${K[c]}" stroke="rgba(0,0,0,.35)" stroke-width="1.5"/><circle cx="${x - 5}" cy="${y - 6}" r="4.5" fill="#fff" opacity=".45"/>`;
+      ans.forEach((c, i) => { g += peg(X(i), ya, c); }); gs.forEach((c, i) => { g += peg(X(i), yg, c); });
+      g += `<path d="M${X(0)} ${ya + r + 3}V${yg - r - 3}" stroke="#e8458a" stroke-width="4"/>`;
+      g += `<path d="M${X(1)} ${yg - r - 3}L${X(2)} ${ya + r + 3}" stroke="#8a8478" stroke-width="3" stroke-dasharray="6 4"/><path d="M${X(3)} ${yg - r - 3}L${X(1)} ${ya + r + 3}" stroke="#8a8478" stroke-width="3" stroke-dasharray="6 4"/>`;
+      g += `<path d="M${X(2) - 7} ${yg - r - 16}l14 14M${X(2) + 7} ${yg - r - 16}l-14 14" stroke="#c0392b" stroke-width="3" stroke-linecap="round"/>`;
+      const px = x0 + dx * 3 + 56, pin = (x, y, f) => `<circle cx="${x}" cy="${y}" r="8" fill="${f || '#1c2340'}" stroke="${f ? 'rgba(0,0,0,.35)' : '#4a5490'}" stroke-width="1.5"/>`;
+      g += `<rect x="${px - 6}" y="${yg - 30}" width="${W - px}" height="60" rx="12" fill="#2b3683"/>` + pin(px + 14, yg - 12, '#e8458a') + pin(px + 38, yg - 12, '#f4f1ea') + pin(px + 14, yg + 12, '#f4f1ea') + pin(px + 38, yg + 12);
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // how the answers shrink the field: 6 colours × 4 holes = 1296 codes; Knuth's method on one code — 256, 41, 6, 1 left, found at the 5th guess (bars on a log scale)
+    hitblowSearch: () => { const K = ['#e0453a', '#f0a020', '#e8d040', '#3aa860', '#3a78d8', '#9a5ad0'], W = 300, RH = 40, o = 30, H = o + RH * 5 + 8; let g = '';
+      const rows = [[[0, 0, 1, 1], 0, 1, 256], [[1, 2, 3, 3], 0, 2, 41], [[2, 1, 2, 4], 1, 1, 6], [[2, 3, 0, 2], 0, 1, 1], [[3, 1, 4, 5], 4, 0, 1]];
+      const bx = 120, bw = W - bx - 8, L = n => Math.max(6, Math.log(n) / Math.log(1296) * bw);
+      g += `<rect x="${bx}" y="4" width="${bw}" height="18" rx="4" fill="#8a94c8"/><text x="${bx + bw - 6}" y="18" font-size="13" font-weight="800" fill="#fff" text-anchor="end">1296</text>`;
+      rows.forEach(([cs, h, b, n], k) => { const y = o + RH * k + RH / 2;
+        cs.forEach((c, i) => { g += `<circle cx="${14 + i * 21}" cy="${y}" r="9" fill="${K[c]}" stroke="rgba(0,0,0,.3)" stroke-width="1.2"/>`; });
+        for (let j = 0; j < 4; j++) { const f = j < h ? '#e8458a' : j < h + b ? '#f4f1ea' : '#2b3683'; g += `<circle cx="${96 + (j % 2) * 11}" cy="${y - 5.5 + (j >> 1) * 11}" r="4.3" fill="${f}" stroke="#2b3683" stroke-width="1"/>`; }
+        const done = k === rows.length - 1, w = done ? 26 : L(n);
+        g += `<rect x="${bx}" y="${y - 10}" width="${w}" height="20" rx="4" fill="${done ? '#14864a' : '#2b3683'}"/>`;
+        g += done ? `<path d="M${bx + 7} ${y}l4.5 5 9-10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>` : `<text x="${bx + w + 6}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28">${n}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // the code-breaking games in time (text: the story's figL.time — [year, name, note])
+    hitblowFive: () => { const R = ((st('hitblow').figL || {}).time) || [], W = 300, RH = 50, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 84; let g = '';
+      const C = ['#8a5a24', '#2a5a8a', '#c0392b', '#14864a', '#6a3a8a'];
+      g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
+      R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
+        g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
         g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="${xn + 16}" y="${y + 20}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
       return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
     // four tetrahedral dice: how often each score comes (out of 16)
