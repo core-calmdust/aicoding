@@ -1947,14 +1947,141 @@ function chessOpen() {
 }
 // (2026-11-24 担当D) janggi on the 3D table: the puzzles (all themes) — tools/lesson-verify-janggi.js
 const janggi = () => { const J = require('./lesson-verify-janggi.js'); return J.puzzles().concat(J.lessons()); };
+// (2026-11-24 第2期・担当B) hex openings (hex/open): the practice problems of the sets marked verified (hex/tools/op_curate.js).
+// ① the stored best is the top of the stored values at two budgets of the engine's search (P.sc the longer, P.sc2 the shorter; with
+// --deep both are searched again with the native engine, /tmp/hexn), best first; ② every other scored move is worth 12 points or
+// less in the 2D problemPoints / 3D HEX.points at both budgets (a move that is not scored counts as the worst − 60, as in the
+// scoring); ③ 3+ legal moves; ④ the side to move is the set's (set.side), P.mv replays from the set's three named moves (g.moves)
+// to the board, the game is not decided (|v| ≤ 600); ⑤ 3+ cells (more than two moves; the 180° turn and the colour-swap mirror too)
+// from every line position of every set (the study shows them with the answer — 追1), every lesson / puzzle board and the other
+// problems, an answer cell at most twice and one kind of move (HXA.kind) at most 3 times in a set; ⑥ easy → hard (hxD: the stones
+// on the board + the points of the second move) and the 2D / 3D draw 5 and keep the pool's order; ⑦⑧ ゴイシペン's words (opJa) at
+// every place in the lesson for every legal move: no placeholder, the shape the praise and the hint name is the answer's (HXA.kind),
+// the reason for a miss true on the board (an unanswered intrusion, a far / edge / adjacent / touching move as said); ⑨ the 2D and the
+// 3D score alike.
+const HXW = 29000;
+const hxPts = (P, m, sc) => { sc = sc || P.sc; const val = new Map(sc), best = Math.max(...sc.map(e => e[1])), mine = val.has(m) ? val.get(m) : (sc.length ? Math.min(...sc.map(e => e[1])) - 60 : -1000);
+  const wr = v => v > HXW ? 1 : v < -HXW ? 0 : Math.max(0, Math.min(1, (v + 1000) / 2000));
+  if (mine >= best - 15 && !(best > HXW && mine < best)) return 20; if (best > HXW && mine <= HXW) return mine > 400 ? 8 : 0; if (mine < -HXW && best >= -HXW) return 0;
+  return Math.max(0, Math.round(20 * (1 - (wr(best) - wr(mine)) / 0.25))); };   // (= hex/app.js problemPoints, the 3D HEX.points)
+const hxSyms = (b, n) => { const N = n * n, sw = x => x === 'r' ? 'b' : x === 'b' ? 'r' : '.', out = [b, '', '', ''];
+  for (let i = 0; i < N; i++) { const r = (i / n) | 0, c = i % n; out[1] += b[N - 1 - i]; out[2] += sw(b[c * n + r]); out[3] += sw(b[N - 1 - (c * n + r)]); } return out; };
+const hxDist = (a, b) => { if (a.length !== b.length) return 99; let best = 99; for (const x of hxSyms(b, Math.round(Math.sqrt(b.length)))) { let d = 0; for (let i = 0; i < a.length && d < best; i++) if (a[i] !== x[i]) d++; best = Math.min(best, d); } return best; };
+const hxD = P => (P.s.b.match(/[rb]/g) || []).length + Math.max(0, ...P.sc.filter(e => e[0] !== P.best).map(e => hxPts(P, e[0])));
+function hxCtx(O) {
+  const fs = require('fs'), E = require(path.join(ROOT, 'hex/engine.js')), pool = [];
+  const walk = (o, who) => { if (!o || typeof o !== 'object') return; if (Array.isArray(o)) { o.forEach((x, i) => walk(x, who + ' ' + (i + 1))); return; } if (o.s && o.s.b && o.s.n) pool.push([who, o.s.b, null]); for (const k in o) if (k !== 's') walk(o[k], who + (isNaN(+k) ? ' ' + k : '')); };
+  walk(JSON.parse(fs.readFileSync(path.join(ROOT, 'hex/lessons.json'), 'utf8')).steps, 'lesson');
+  walk(JSON.parse(fs.readFileSync(path.join(ROOT, 'hex/puzzles.json'), 'utf8')).themes, 'puzzle');
+  O.sets.forEach(g => { const p = new E.Pos(g.n, g.swap); g.study.line.forEach((m, k) => { p.play(m); pool.push([`line ${g.id} ${k + 1}`, p.spec().b, null]); });
+    (g.problems || []).forEach((q, j) => pool.push([`open ${g.id} q${j + 1}`, q.s.b, g.id])); });
+  return pool;
+}
+const hxNear = (pool, spec, id, extra) => { let d = 99; for (const [, b, own] of pool) if (own !== id) d = Math.min(d, hxDist(spec.b, b)); for (const q of extra || []) if (q.s !== spec) d = Math.min(d, hxDist(spec.b, q.s.b)); return d; };
+function hxProblem(P, P2) {   // ① ② ③ ④ (value side) of one problem from its two stored searches
+  const E = require(path.join(ROOT, 'hex/engine.js')), w = [], q = E.Pos.from(P.s);
+  if (q.winner()) return ['④ the game is already over'];
+  for (const [nm, X] of [['long', P], ['short', P2]]) { const sc = X.sc || [];
+    if (!sc.length) { w.push(`① no ${nm} values`); continue; }
+    if (sc.some(([m]) => !q.legal(m))) w.push(`① a ${nm} scored move is not legal`);
+    if (sc.some((e, i) => i && e[1] > sc[i - 1][1])) w.push(`① the ${nm} values are not best first`);
+    if (sc[0][0] !== P.best) w.push(`① the ${nm} search's top is ${sc[0][0]}, not the answer ${P.best}`);
+    const p2 = Math.max(0, ...sc.filter(e => e[0] !== P.best).map(e => hxPts(P, e[0], sc))); if (p2 > 12) w.push(`② a second move worth ${p2} points (${nm})`);
+    if (sc.length < 6) w.push(`② only ${sc.length} moves scored (${nm})`); }
+  let legal = 0; for (let m = 0; m < P.s.n * P.s.n; m++) if (q.legal(m)) legal++; if (legal < 3) w.push(`③ ${legal} legal moves`);
+  if (Math.abs(P.sc[0][1]) > 600) w.push(`④ decided already (${P.sc[0][1]})`);
+  return w;
+}
+let hxoX = null;
+function hxX() {
+  const fs = require('fs'), vm = require('vm'), E = require(path.join(ROOT, 'hex/engine.js')), src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8');
+  if (!hxoX) { const sl = (a, b) => src.slice(src.indexOf(a), src.indexOf(b)), line = a => src.slice(src.indexOf(a)).split('\n')[0] + '\n';
+    const W = { HexEngine: E }, ctxV = vm.createContext({ window: W, console });
+    hxoX = vm.runInContext(line('  const fill = ') + sl('  const HXA = (() => {', '  function hxNoteJa(') + line('  const HXM = ') +
+      'const HEX_WINT = 29000;\n' + 'const HX = { points' + (() => { const a = src.indexOf('    points(P, m) {   // = hex/app.js problemPoints'); return src.slice(a + 10, src.indexOf('    opening(key, lang) {', a)); })() + 'opJa' + (() => { const a = src.indexOf('    opJa(P, LI, i, probs, used) {'); return src.slice(a + 8, src.indexOf('    // the warm-up: its position, marks, the right moves', a)); })() + '};\n;({ HXA, HXJ_OP, HX })', ctxV); }
+  return hxoX;
+}
+function hexOpen(opt) {
+  const fs = require('fs'), vm = require('vm'), E = require(path.join(ROOT, 'hex/engine.js'));
+  const O = (opt && opt.op) || JSON.parse(fs.readFileSync(path.join(ROOT, 'hex/openings.json'), 'utf8'));
+  const src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), app = fs.readFileSync(path.join(ROOT, 'hex/app.js'), 'utf8');
+  const out = [], add = (id, j, m) => out.push({ step: id, q: j + 1, msg: m });
+  // ⑨ ⑥ the scoring and the order, 2D and 3D
+  const PT = "const val = new Map(P.sc), best = Math.max(...P.sc.map(e => e[1])), mine = val.has(m) ? val.get(m) : (P.sc.length ? Math.min(...P.sc.map(e => e[1])) - 60 : -1000);";
+  if (!app.includes(PT) || !src.includes(PT) || !app.includes('return Math.max(0, Math.round(20 * (1 - loss / 0.25)));') || !src.includes('return Math.max(0, Math.round(20 * (1 - (wr(best) - wr(mine)) / 0.25)));')) add('-', -1, '⑨ the 2D problemPoints / the 3D HEX.points changed');
+  if (!app.includes('problems: g.verified ? idx.slice(0, 5).sort((a, b) => a - b).map(i => g.problems[i]) : pool.slice(0, 5)')) add('-', -1, '⑥ the 2D opening practice does not keep the verified pool\'s order');
+  if (!src.includes('const probs = g.verified ? shuffle((g.problems || []).map((p, i) => i)).slice(0, 5).sort((a, b) => a - b).map(i => g.problems[i]) : shuffle(g.problems || []).slice(0, 5)')) add('-', -1, '⑥ the 3D opening practice does not keep the verified pool\'s order');
+  const X = hxX(), pool = hxCtx(O);
+  const plain = t => String(t).replace(/<[^>]+>/g, '');
+  for (const g of O.sets) { if (!g.verified) continue; const id = g.id, P0 = g.problems || [], LI = O.sets.indexOf(g), named = g.moves.split(' ');
+    if (P0.length < 5) add(id, -1, `③ ${P0.length} problems in the pool (5 are drawn)`);
+    let prevD = -1; const ans = new Map(), kinds = new Map();
+    P0.forEach((P, j) => { const a = m => add(id, j, m), q = E.Pos.from(P.s);
+      hxProblem(P, { sc: P.sc2 }).forEach(a);
+      // ④ the way there and the side
+      { const p = new E.Pos(g.n, g.swap); let bad = !(P.mv && P.mv.length >= named.length);
+        (P.mv || []).forEach((m, k) => { if (bad) return; if (!p.legal(m)) { bad = true; return; } if (k < named.length && E.nameOf(m, g.n) !== named[k]) bad = true; p.play(m); });
+        if (bad) a('④ P.mv does not replay from the set\'s named moves'); else if (p.spec().b !== P.s.b || p.side !== P.s.side) a('④ P.mv does not reach the position'); }
+      if (P.s.side !== g.side) a(`④ the mover is not the set's side (${g.side})`);
+      // ⑤
+      const dn = hxNear(pool, P.s, id, P0); if (dn <= 2) a(`⑤ ${dn} cells from another board`);
+      const fb = X.HXA.facts(P.s, P.best), kb0 = X.HXA.kind(fb), kb = P.s.sw && kb0 !== 'swap' ? 'noswap' : kb0;
+      ans.set(P.best, (ans.get(P.best) || 0) + 1); if (ans.get(P.best) === 3) a(`⑤ the answer ${E.nameOf(P.best, g.n)} a third time`);
+      kinds.set(kb, (kinds.get(kb) || 0) + 1); if (kinds.get(kb) === 4) a(`⑤ a 4th ${kb} answer`);
+      // ⑥
+      const d = hxD(P); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d);
+      // ⑦⑧ the words, at each place of the lesson, for every legal move
+      const legal = []; for (let m = 0; m < g.n * g.n; m++) if (q.legal(m)) legal.push(m);
+      const NB = E.geo(g.n).NB, s = P.s.side, o = 3 - s, at = c => P.s.b[c] === 'r' ? 1 : P.s.b[c] === 'b' ? 2 : 0;
+      const savable = fb.save > 0;   // (an own bridge cut into: the answer answers it)
+      for (let i = 0; i < 5; i++) { const probs = P0.slice(0, 5); let W; try { W = X.HX.opJa.call(X.HX, P, LI, i, probs, {}); } catch (e) { a("⑧ the words fail: " + e.stack.split("\n").slice(0, 3).join(" | ")); break; }
+        const ask = plain(W.ask), hint = plain(W.hintTx); if (/\{|undefined|NaN/.test(ask + hint)) a(`⑧ the question / hint 「${ask}」「${hint}」`);
+        if (!ask.includes(s === 2 ? '青' : '赤')) a(`⑧ the question does not name the side 「${ask}」`);
+        if (!(X.HXJ_OP.hint[kb] || X.HXJ_OP.hint.open).map(plain).includes(hint)) a(`⑧ the hint is not the answer's shape (${kb}) 「${hint}」`);
+        const gd = plain(W.good.call({}, P.best)); if (/\{|undefined|NaN/.test(gd)) a(`⑧ the praise 「${gd}」`);
+        if (!(X.HXJ_OP.why[kb] || X.HXJ_OP.why.open).some(t => gd.includes(plain(t)))) a(`⑧ the praise is not the answer's shape (${kb}) 「${gd}」`);
+        for (const u of legal) { if (u === P.best) continue; const w = plain(W.ng.call({}, u)), bad = m => a(`⑦ ${E.nameOf(u, g.n)}: ${m} 「${w}」`);
+          if (/\{|undefined|NaN/.test(w)) { bad('a placeholder'); continue; }
+          if (X.HX.points(P, u) >= 20) { bad('a full-points move counted as a miss'); continue; }
+          const fu = X.HXA.facts(P.s, u), ku = X.HXA.kind(fu);
+          if (/ブリッジに受けていない|割りこみを放っておく|受けそびれたブリッジ/.test(w) && !(savable && !fu.save)) bad('no own bridge is left unanswered');
+          if (/もう1つの割りこまれたほう|大事なほうのブリッジ/.test(w) && !(savable && fu.save)) bad('yours answers no other cut bridge');
+          if (/ほかの石から遠すぎ|戦いの場所から離れすぎ|まわりに石がなくて/.test(w) && !(fu.dOpp >= 4 && fu.dOwn >= 4)) bad(`the move is ${fu.dOpp} / ${fu.dOwn} from the stones`);
+          if (/割りこむ先手を逃し|すき間をつくチャンス|受けさせる一手を打てず/.test(w) && !(fb.intrude && !fu.intrude)) bad('not an intrusion missed');
+          if (/くっつけて止めると|となりで止めても|ぴったりつけると/.test(w) && !fu.touch) bad('the move touches nothing');
+          if (/離れすぎて|間があきすぎて|遠くで待っても/.test(w) && fu.touch) bad('the move touches the opponent');
+          if (/1マスずつしか進めず|となりにつなぐだけ|歩みがおそく/.test(w) && !(fu.adj && fb.bridge)) bad('not an adjacent move against a bridge');
+          if (/ふちの1段目|辺そのものに打つ|いちばん外側の列/.test(w) && !fu.onEdge) bad('not on the edge');
+          if (/まん中を相手に先に取られ/.test(w) && !fb.center) bad('the answer is not the centre');
+          if (/もらっても得が小さい石|ふちの弱い石|うまみの少ない石/.test(w) && u !== 1023) bad('not a swap');
+        } }
+    });
+  }
+  if (opt && opt.deep) hxDeep(O, out);
+  return out;
+}
+function hxDeep(O, out) {   // ① ② again: the native engine searches every verified problem anew at the two budgets
+  const cp = require('child_process'), fs = require('fs'), E = require(path.join(ROOT, 'hex/engine.js')), bin = process.env.HEXN || '/tmp/hexn', MS = { 7: 1500, 9: 2000, 11: 2500 };
+  if (!fs.existsSync(bin)) cp.execSync(`gcc -O3 -march=native -DNATIVE -w -o ${bin} tools/native.c -lm`, { cwd: path.join(ROOT, 'hex') });
+  const run = cmds => cp.spawnSync(bin, ['serve'], { input: cmds.join('\n') + '\nquit\n', encoding: 'utf8', maxBuffer: 1 << 26 }).stdout.trim().split('\n');
+  const sp = s => `setpos ${s.n} ${s.side} ${s.sw ? 1 : 0} ${s.b}`;
+  for (const g of O.sets) { if (!g.verified) continue;
+    g.problems.forEach((P, j) => { const sc = {};
+      for (const [nm, ms] of [['short', MS[g.n]], ['long', MS[g.n] * 2]]) { const r = run([sp(P.s), `analyze ${ms * 2} 0 12`]), a = r[1].trim().split(/\s+/).map(Number), L = [];
+        for (let i = 0; i < a[0]; i++) L.push(a[2 + 3 * i]);
+        const cmds = []; L.forEach(m => { const p = E.Pos.from(P.s); p.play(m); cmds.push(sp(p.spec()), `analyze ${ms} 0 1`); });
+        const rr = run(cmds); sc[nm] = L.map((m, i) => { const p = E.Pos.from(P.s); p.play(m); if (p.winner()) return [m, 29999]; const b = rr[2 * i + 1].trim().split(/\s+/).map(Number); return [m, Math.max(-29999, Math.min(29999, -(b[0] ? b[3] : 0)))]; }).sort((x, y) => y[1] - x[1]); }
+      hxProblem({ s: P.s, best: P.best, sc: sc.long }, { sc: sc.short }).forEach(m => out.push({ step: g.id, q: j + 1, msg: 'deep ' + m })); });
+  }
+}
 const ur = () => require('./lesson-verify-ur.js')();   // (2026-11-24 担当C：ウルのレッスン、tools/lesson-verify-ur.js)
 const senet = () => require('./lesson-verify-senet.js')();   // (2026-11-24 担当C：セネトのレッスン、tools/lesson-verify-senet.js)
-const GAMES = { chessOpen, ur, senet, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines, janggi };
-module.exports = GAMES; GAMES.mancalaWords = mancalaWords; Object.assign(GAMES, { chessOpenCtx, chessOpenProblem, chessOpenSet, chessOpenD }); Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
+const GAMES = { chessOpen, ur, senet, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines, janggi, hexOpen };
+module.exports = GAMES; GAMES.mancalaWords = mancalaWords; Object.assign(GAMES, { chessOpenCtx, chessOpenProblem, chessOpenSet, chessOpenD }); Object.defineProperty(GAMES, '_hex', { value: { ctx: hxCtx, near: hxNear, problem: hxProblem, d: hxD, pts: hxPts, kind: (sp, m) => { const X = hxX(); return X.HXA.kind(X.HXA.facts(sp, m)); } } }); Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
 if (require.main === module) {
-  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,chessOpen,openLines,janggi').split(',');
+  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,chessOpen,openLines,janggi,hexOpen').split(',');
   let bad = 0;
-  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'chessOpen' ? ' (チェスの定跡の drill の①〜⑨・追3・追25。drill のない定跡は pending)' : g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'senet' ? ' (セネトの作り直したレッスン（v2）の①〜⑧・追7・追16・追22・追23・追28。厳密な勝率は C で解き直し)' : g === 'janggi' ? ' (パズル全問・レッスン b_rook・b_horse・b_pawn・b_mate1・m_mate2・m_mate3・e_rook・e_pawn の①〜⑨・追19・追20・追24・追27・追31)' : g === 'ur' ? (require('fs').existsSync(require('path').join(process.env.UR_LUT_DIR || '/tmp/urlut', 'finkel.rgu')) ? ' (ウルのレッスン12本の①〜⑧・追7・追16)' : ' (ウルのレッスン12本の③〜⑧・追7・追16。①②は完全解析表なしで未照合＝追26)') : g === 'openLines' ? ' (shogi・tafl・checkers の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
+  for (const g of games) { const f = GAMES[g](g === 'hexOpen' && a.includes('--deep') ? { deep: true } : undefined); if (!f.length) { console.log(`OK ${g}` + (g === 'chessOpen' ? ' (チェスの定跡の drill の①〜⑨・追3・追25。drill のない定跡は pending)' : g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'senet' ? ' (セネトの作り直したレッスン（v2）の①〜⑧・追7・追16・追22・追23・追28。厳密な勝率は C で解き直し)' : g === 'hexOpen' ? ` (ヘックスの定跡 ${JSON.parse(require('fs').readFileSync(path.join(ROOT, 'hex/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id).join('・') || 'なし'} の①〜⑨` + (a.includes('--deep') ? '。①②はエンジンで読み直し)' : '。①②は保存した2つの読みで照合、読み直しは --deep＝追26)') : g === 'janggi' ? ' (パズル全問・レッスン b_rook・b_horse・b_pawn・b_mate1・m_mate2・m_mate3・e_rook・e_pawn の①〜⑨・追19・追20・追24・追27・追31)' : g === 'ur' ? (require('fs').existsSync(require('path').join(process.env.UR_LUT_DIR || '/tmp/urlut', 'finkel.rgu')) ? ' (ウルのレッスン12本の①〜⑧・追7・追16)' : ' (ウルのレッスン12本の③〜⑧・追7・追16。①②は完全解析表なしで未照合＝追26)') : g === 'openLines' ? ' (shogi・tafl・checkers の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
     bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
   process.exit(bad ? 1 : 0);
 }
