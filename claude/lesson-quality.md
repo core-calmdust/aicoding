@@ -131,7 +131,7 @@
 | ludo（3D対応・レッスンのみ） | 未（担当C） | — | 2D：lessons.json |
 | foxgeese（3D対応） | 未（担当C） | — | 2D：lessons.json・puzzles.json |
 | konane（3D対応） | 未（担当C） | — | 2D：lessons.json・puzzles.json |
-| janggi（3D対応） | 未（担当D） | — | 2D：lessons.json・puzzles.json |
+| janggi（3D対応） | 未（担当D） | — | 2D：lessons.json・puzzles.json・作業中（担当D・2026-11-24 10:03 JST） |
 | ugolki（3D対応） | 未（担当D） | — | 2D：lessons.json・puzzles.json |
 | fanorona（3D対応） | 未（担当D） | — | 2D：lessons.json・puzzles.json |
 | agon（3D対応） | 未（担当D） | — | 2D：lessons.json・puzzles.json |
