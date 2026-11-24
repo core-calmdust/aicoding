@@ -16,6 +16,7 @@
       sfx = ac.createGain(); sfx.gain.value = SFX; sfx.connect(master);
       bgm = ac.createGain(); bgm.gain.value = musicOn ? BGM : 0; bgm.connect(master);
       if (want) { const w = want; want = null; music(w.name, w.level); }
+      loadSample('bell'); loadSample('wolf');
       document.addEventListener('visibilitychange', () => { if (!ac) return; if (document.hidden) ac.suspend(); else if (on && !paused) ac.resume(); });
     }
     if (ac.state === 'suspended' && !document.hidden) ac.resume();
@@ -33,8 +34,18 @@
     bgm.gain.setTargetAtTime(musicOn ? BGM : 0, back, .9);
     duckUntil = back;
   }
+  // the recorded bell and howl (audio/); the synthesised ones below stand in until they load
+  const SAMPLE = { bell: 'audio/bell.mp3?v=1', wolf: 'audio/wolf.mp3?v=1' }, smp = {};
+  function loadSample(k) { if (!smp[k] && ac) smp[k] = fetch(SAMPLE[k]).then(r => r.arrayBuffer()).then(b => new Promise((res, rej) => ac.decodeAudioData(b, res, rej))).then(buf => (smp[k + ':buf'] = buf)).catch(() => { delete smp[k]; return null; }); return smp[k]; }
+  function playSample(k, gain, t) {
+    const buf = smp[k + ':buf']; if (!buf) { loadSample(k); return false; }
+    const s = ac.createBufferSource(), v = ac.createGain(); s.buffer = buf; v.gain.value = gain;
+    s.connect(v); v.connect(sfx); s.start(t); return buf.duration;
+  }
   function bell(vol, when) {
     const a = ctx(); if (!a) return; const t = a.currentTime + (when || 0);
+    const d = playSample('bell', (vol || .5) * 1.3, t);   // the recording is loudness-matched (-18 LUFS): a bell sits above the music
+    if (d) { duck(t + d * .8); return; }
     duck(t + 4.2);
     [[.56, 1], [.92, .7], [1.19, .55], [1.71, .35], [2.0, .3], [2.74, .2], [3.76, .12]].forEach(([r, g], i) => {
       const o = a.createOscillator(), v = a.createGain(); o.frequency.value = 196 * r * (i === 3 ? 1.013 : 1);
@@ -45,6 +56,8 @@
   // a far-off howl: a sine that rises, wavers and falls, through a soft filter
   function howl(when) {
     const a = ctx(); if (!a) return; const t = a.currentTime + (when || 0);
+    const d = playSample('wolf', .75, t);
+    if (d) { duck(t + d * .85); return; }
     const o = a.createOscillator(), o2 = a.createOscillator(), lfo = a.createOscillator(), lg = a.createGain(), v = a.createGain(), f = a.createBiquadFilter();
     o.type = 'sawtooth'; o2.type = 'sine'; f.type = 'bandpass'; f.Q.value = 2.2; f.frequency.value = 900;
     o.frequency.setValueAtTime(330, t); o.frequency.linearRampToValueAtTime(520, t + .7); o.frequency.linearRampToValueAtTime(560, t + 1.9); o.frequency.exponentialRampToValueAtTime(300, t + 3);
