@@ -15,7 +15,7 @@
   'use strict';
 
   /* ---------- rules ---------- */
-  const ROLE = { wolf: 'wolf', madman: 'madman', seer: 'seer', medium: 'medium', guard: 'guard', mason: 'mason', fox: 'fox', villager: 'villager' };
+  const ROLE = { wolf: 'wolf', madman: 'madman', seer: 'seer', medium: 'medium', guard: 'guard', mason: 'mason', fox: 'fox', cat: 'cat', villager: 'villager' };
   const SETUP = {
     8:  { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 0 },
     10: { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 1 },
@@ -40,8 +40,24 @@
       12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1 },
       13: { wolf: 4, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1 },
     },
+    //   cat     — 猫鳴き湯: a nekomata (猫又) on the village side. Sent to the jail, it drags someone with it (anyone);
+    //             bitten, it drags one of the wolves.
+    cat: {
+      8:  { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 0, cat: 1 },
+      10: { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 1, cat: 1 },
+      12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1, cat: 1 },
+      13: { wolf: 4, madman: 1, seer: 1, medium: 1, guard: 1, cat: 1 },
+    },
+    //   fanatic — 白嶺修道院: the madman is a fanatic (狂信者) who knows the wolves (they do not know them).
+    //             Its lies cover the wolves; it is there from the easiest level.
+    fanatic: {
+      8:  { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 0 },
+      10: { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 1 },
+      12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1 },
+      13: { wolf: 4, madman: 1, seer: 1, medium: 1, guard: 1 },
+    },
   };
-  const setupOf = (story, size) => Object.assign({ mason: 0, fox: 0 }, (SETUPS[story && story.rules] || SETUP)[size]);
+  const setupOf = (story, size) => Object.assign({ mason: 0, fox: 0, cat: 0 }, (SETUPS[story && story.rules] || SETUP)[size]);
   const RS = S => S.R || setupOf(null, S.size);
   // difficulty: size, action points, traces left per attack, how often the wolves come for the player,
   // how often they plant a belonging, how often the weather wipes a trace, how far a figure is seen
@@ -72,10 +88,10 @@
     cast.forEach(ci => { const c = story.chars[ci]; P.push({ id: c.id, ci, name: c.name, traits: c.traits, home: c.home, alive: true, persona: c.persona, secret: c.secret ? { loc: c.secret.loc, p: c.secret.p != null ? c.secret.p : .45, open: false } : null }); });
     // roles
     const R = S.R = setupOf(story, D.size), bag = [];
-    S.rules = story.rules || 'std'; S.foxLoc = story.foxLoc || null;
-    for (const r of ['wolf', 'madman', 'seer', 'medium', 'guard', 'mason', 'fox']) for (let i = 0; i < R[r]; i++) bag.push(r);
+    S.rules = story.rules || 'std'; S.foxLoc = story.foxLoc || null; S.fan = story.rules === 'fanatic';
+    for (const r of ['wolf', 'madman', 'seer', 'medium', 'guard', 'mason', 'fox', 'cat']) for (let i = 0; i < R[r]; i++) bag.push(r);
     while (bag.length < D.size) bag.push('villager');
-    const can = ['villager', 'seer', 'medium', 'guard', 'mason'].filter(r => r === 'villager' || bag.includes(r));
+    const can = ['villager', 'seer', 'medium', 'guard', 'mason', 'cat'].filter(r => r === 'villager' || bag.includes(r));
     let pr = opts.role && opts.role !== 'auto' ? opts.role : wpick(S, can, r => r === 'villager' ? 4 : 2);
     if (!can.includes(pr)) pr = 'villager';
     bag.splice(bag.indexOf(pr), 1);
@@ -217,6 +233,10 @@
     const rec = { n, killer: killer ? killer.id : null, target, loc, died, saved: savedBy, guarded, traces, ev, pos, sights, day: S.day, cursed };
     S.nights.push(rec);
     if (died && target !== 'first') { const t = person(S, target); t.alive = false; t.death = { day: S.day + 1, cause: 'wolf', night: n }; }
+    if (died && target !== 'first' && person(S, target).role === 'cat') {   // the cat's claws: one of the wolves goes with it
+      const ws = alive(S).filter(p => p.role === 'wolf');
+      if (ws.length) { const w = pick(S, ws); w.alive = false; w.death = { day: S.day + 1, cause: 'catw', night: n }; rec.dragged = w.id; }
+    }
     if (cursed && person(S, cursed).alive) { const t = person(S, cursed); t.alive = false; t.death = { day: S.day + 1, cause: 'curse', night: n }; S.foxGone = true; }
     // the gossip: people remember who they saw out
     for (const s of sights) if (s.kind === 'who') (S.gossip[s.by] = S.gossip[s.by] || []).push({ night: n, who: s.who, loc: s.loc });
@@ -227,7 +247,7 @@
   function planFakes(S) {
     const D = diffOf(S);
     const w = S.people.filter(p => p.role === 'wolf'), m = S.people.find(p => p.role === 'madman');
-    if (m && rnd(S) < .62) S.fake[m.id] = { role: 'seer', from: rnd(S) < .7 ? 1 : 2 };
+    if (m && rnd(S) < (S.fan ? .8 : .62)) S.fake[m.id] = { role: 'seer', from: S.fan || rnd(S) < .7 ? 1 : 2 };
     else if (w.length && (w.length > 1 || m) && rnd(S) < D.fakeSeer) { const f = pick(S, w); S.fake[f.id] = { role: 'seer', from: rnd(S) < .6 ? 1 : 2 }; }
     if (w.length > 1 && rnd(S) < (D.id >= 3 ? .45 : .22)) { const f = pick(S, w.filter(x => !S.fake[x.id]) || w); if (f) S.fake[f.id] = { role: 'medium', from: 2 }; }
   }
@@ -249,7 +269,7 @@
         const frame = inn.length ? pick(S, inn) : null;
         if (frame) {
           const c = pick(S, ['height', 'hand', 'foot']);
-          const v = p.role === 'madman' ? pick(S, Object.keys(story.traits[c].v)) : frame.traits[c];
+          const v = p.role === 'madman' && !S.fan ? pick(S, Object.keys(story.traits[c].v)) : frame.traits[c];   // the fanatic knows whom to frame
           T.saw.push({ kind: 'fig', cat: c, val: v, lie: true });
         }
       }
@@ -298,6 +318,7 @@
     const hardW = new Set(), hardH = new Set();
     for (const r of K.ownRes) (r.res === 'wolf' ? hardW : hardH).add(r.target);
     if (K.role === 'wolf') { S.wolves.forEach(w => hardW.add(w)); if (S.foxBit) hardH.add(S.foxBit); }
+    for (const p of S.people) if (p.death && p.death.cause === 'catw') hardW.add(p.id);   // the cat's claws only take a wolf
     for (const c of S.claims) if (c.role === 'mason') hardH.add(c.by);     // a pair of masons speaks for each other: nobody can fake it
     const exiledDay = {}; for (const p of S.people) if (p.death && p.death.cause === 'exile') exiledDay[p.id] = p.death.day;
     const aliveAt = (id, night) => !(exiledDay[id] != null && exiledDay[id] <= night);
@@ -417,7 +438,7 @@
       const pub = analyze(S, 'pub');
       for (const q in sus) sus[q] = isWolf(S, q) ? 0 : pub.p[q] + .18 * (hash01(S.seed + 'w' + id + q) - .5) + (S.claims.some(c => c.by === q && c.role === 'seer') ? .25 : 0);
     }
-    if (p.role === 'madman') { const pub = analyze(S, 'pub'); for (const q in sus) sus[q] = 1 - pub.p[q] + .3 * (hash01(S.seed + 'm' + id + q) - .5); }
+    if (p.role === 'madman') { const pub = analyze(S, 'pub'); for (const q in sus) sus[q] = S.fan ? (isWolf(S, q) ? 0 : pub.p[q] + .2 * (hash01(S.seed + 'm' + id + q) - .5) + (S.claims.some(c => c.by === q && c.role === 'seer') ? .3 : 0)) : 1 - pub.p[q] + .3 * (hash01(S.seed + 'm' + id + q) - .5); }
     // the fox of the shrine: the village must find it too, and the more wolves are gone, the more it matters
     const fv = p.role === 'fox' || p.role === 'madman' ? null : foxView(S, story, id);
     if (fv) {
@@ -512,6 +533,7 @@
       const c = S.claims.find(c => c.by === p.id);
       if (c) { const same = S.claims.filter(x => x.role === c.role && !isWolf(S, x.by) && person(S, x.by).alive).length; v += (c.role === 'seer' ? 3.2 : c.role === 'mason' ? 2.6 : 1.6) / Math.max(1, c.role === 'mason' ? 1 : same); if (fakeOurs && c.role === 'seer') v *= .3; }
       if (p.id === gjOn) v *= 1.6;
+      if (S.claims.some(c => c.by === p.id && c.role === 'cat')) v *= .15;   // biting a cat costs a wolf
       if (S.req && S.req.guard && S.req.guard.day === S.day && S.req.guard.target === p.id) v *= .85;
       v += (p.persona.logic || .5) * 1.2;
       v *= 1.15 - pub.p[p.id];                                    // keep the suspected alive as scapegoats
@@ -593,8 +615,10 @@
     else if (p.role === 'medium' && !S.fake[p.id]) role = rnd(S) < .9 ? 'medium' : null;
     else if (p.role === 'guard') role = rnd(S) < .8 ? 'guard' : null;
     else if (p.role === 'mason') role = rnd(S) < .95 ? 'mason' : null;
+    else if (p.role === 'cat') role = rnd(S) < .85 ? 'cat' : null;
     else if (p.role === 'wolf' || p.role === 'madman') {
       if (RS(S).guard && !aliveClaims('guard').length && rnd(S) < (p.role === 'wolf' ? .55 : .45)) role = 'guard';
+      else if (RS(S).cat && !aliveClaims('cat').length && rnd(S) < .3) role = 'cat';   // a bluff: hang me and someone goes with me
       else if (aliveClaims('seer').length < 2 && rnd(S) < .2) role = 'seer';
     }
     if (!role) return [];
@@ -665,7 +689,7 @@
   function announce(S, c, day, ev) {
     {
       const p = person(S, c.by);
-      if (!p.alive || p.isPlayer || c.role === 'mason') return;
+      if (!p.alive || p.isPlayer || c.role === 'mason' || c.role === 'cat') return;
       const fresh = [];
       if (c.role === 'guard') {
         const hist = guardHistory(S, p, c); for (const r of hist) c.res.push(r);
@@ -765,7 +789,7 @@
     let t, res;
     if (target && others.some(q => q.id === target)) {   // the reading the player asked for: a wolf covers a partner, or frames a villager
       t = target;
-      if (p.role === 'wolf') res = isWolf(S, t) ? 'human' : rnd(S) < .4 ? 'wolf' : 'human';
+      if (p.role === 'wolf' || (p.role === 'madman' && S.fan)) res = isWolf(S, t) ? 'human' : rnd(S) < .4 ? 'wolf' : 'human';
       else res = rnd(S) < .4 ? 'wolf' : 'human';
       return { target: t, res, day, fake: true };
     }
@@ -775,6 +799,12 @@
       else if (rnd(S) < .45 && inn.length) { t = pick(S, inn).id; res = 'wolf'; }
       else { t = pick(S, others).id; res = 'human'; }
       if (res === 'human' && !isWolf(S, t) && rnd(S) < .5) { const ws = others.filter(q => isWolf(S, q.id)); if (ws.length) t = pick(S, ws).id; }
+    } else if (S.fan) {   // the fanatic knows: it calls the wolves human and a villager — or the real seer — a wolf
+      const inn = others.filter(q => !isWolf(S, q.id)), ws = others.filter(q => isWolf(S, q.id));
+      if (realSeer && person(S, realSeer.by).alive && rnd(S) < .3 && !done.has(realSeer.by)) { t = realSeer.by; res = 'wolf'; }
+      else if (ws.length && rnd(S) < .45) { t = pick(S, ws).id; res = 'human'; }
+      else if (inn.length) { t = pick(S, inn).id; res = rnd(S) < .5 ? 'wolf' : 'human'; }
+      else { t = pick(S, others).id; res = 'human'; }
     } else {   // the madman guesses
       t = pick(S, others).id; res = rnd(S) < .45 ? 'wolf' : 'human';
     }
@@ -836,10 +866,12 @@
         let v = sus[x] + (heat[x] || 0) * .06 * (1 - p.persona.logic) + (x === 'you' && S.pl.hit ? -.05 : 0);
         const gc = S.claims.filter(c => c.role === 'guard' && person(S, c.by).alive);
         if (gc.some(c => c.by === x)) v += gc.length === 1 ? -.22 * (p.persona.trust || .5) * 2 : .04;   // a lone guard is too precious to hang
+        if (S.claims.some(c => c.by === x && c.role === 'cat')) v -= .16 * (1 - (p.persona.bold || .5));   // hang a cat and it takes someone along
         const sw = S.swayVote; if (sw && sw.day === S.day && sw.target === x && p.role !== 'wolf') v += sw.dir * .26 * (p.persona.trust || .5) * 2;   // what the player said after the claim
-        if (p.role === 'wolf' && isWolf(S, x)) {      // a partner: abandon only when they are surely lost
+        const wolfSide = p.role === 'wolf' || (p.role === 'madman' && S.fan);
+        if (wolfSide && isWolf(S, x)) {      // a partner: abandon only when they are surely lost
           v = (heat[x] || 0) >= alive(S).length / 2 ? 2 : -1;
-        } else if (p.role === 'wolf' && x === bloc) v += .6;
+        } else if (wolfSide && x === bloc) v += p.role === 'wolf' ? .6 : .4;
         if (v > bv) { bv = v; best = x; }
       }
       ballots[p.id] = best;
@@ -860,6 +892,10 @@
     S.votes.push({ day: S.day, ballots: rounds[rounds.length - 1].ballots, rounds, out, lot: !!lot });
     const o = person(S, out);
     o.alive = false; o.death = { day: S.day, cause: 'exile' };
+    if (o.role === 'cat') {   // the nekomata does not go alone
+      const live = alive(S);
+      if (live.length) { const v = pick(S, live); v.alive = false; v.death = { day: S.day, cause: 'cat' }; S.votes[S.votes.length - 1].dragged = v.id; }
+    }
     if (S.pl.role === 'medium' && S.people[0].alive && out !== 'you') S.pl.res.push({ night: S.nights.length, target: out, res: isWolf(S, out) ? 'wolf' : o.role === 'fox' ? 'fox' : 'human', medium: true });
     return o;
   }
@@ -1008,6 +1044,7 @@
     if (S.claims.some(c => c.by === 'you')) return null;
     const role = S.pl.role;
     if (role === 'mason') { const ev = []; claim(S, 'you', 'mason', ev); S.pl.co = true; return Object.assign(S.claims.find(c => c.by === 'you'), { ev }); }
+    if (role === 'cat') { const c = { by: 'you', role, day: S.day, res: [] }; S.claims.push(c); S.pl.co = true; return c; }
     if (role !== 'seer' && role !== 'medium' && role !== 'guard') return null;
     const res = role === 'guard' ? S.nights.filter(N => N.n > 0 && N.guarded).map(N => ({ night: N.n, target: N.guarded, res: 'guard', day: S.day })) : S.pl.res.map(r => ({ target: r.target, res: r.res, day: S.day }));
     const c = { by: 'you', role, day: S.day, res };
@@ -1015,7 +1052,7 @@
     return c;
   }
   function playerResults(S) {   // new results after a claim go public at the meeting
-    const c = S.claims.find(c => c.by === 'you'); if (!c || c.role === 'mason') return [];
+    const c = S.claims.find(c => c.by === 'you'); if (!c || c.role === 'mason' || c.role === 'cat') return [];
     if (c.role === 'guard') { const fr = S.nights.filter(N => N.n > 0 && N.guarded && !c.res.some(x => x.night === N.n)).map(N => ({ night: N.n, target: N.guarded, res: 'guard', day: S.day })); c.res.push(...fr); return fr; }
     const fresh = S.pl.res.filter(r => !c.res.some(x => x.target === r.target));
     for (const r of fresh) c.res.push({ target: r.target, res: r.res, day: S.day });
