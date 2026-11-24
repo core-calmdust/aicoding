@@ -15,7 +15,7 @@
   'use strict';
 
   /* ---------- rules ---------- */
-  const ROLE = { wolf: 'wolf', madman: 'madman', seer: 'seer', medium: 'medium', guard: 'guard', mason: 'mason', fox: 'fox', cat: 'cat', villager: 'villager' };
+  const ROLE = { wolf: 'wolf', madman: 'madman', seer: 'seer', medium: 'medium', guard: 'guard', mason: 'mason', fox: 'fox', immoral: 'immoral', cat: 'cat', villager: 'villager' };
   const SETUP = {
     8:  { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 0 },
     10: { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 1 },
@@ -33,6 +33,12 @@
       10: { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 0, mason: 2 },
       12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 0, mason: 2 },
       13: { wolf: 4, madman: 1, seer: 1, medium: 1, guard: 0, mason: 2 },
+    },
+    immoral: {   // 霧笛座: the fox and the one who serves it (背徳者). When the fox dies, the immoral follows it the same night
+      8:  { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 1, fox: 1, immoral: 1 },
+      10: { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 1, fox: 1, immoral: 1 },
+      12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1, immoral: 1 },
+      13: { wolf: 4, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1, immoral: 1 },
     },
     fox: {
       8:  { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 0, fox: 1 },
@@ -57,7 +63,7 @@
       13: { wolf: 4, madman: 1, seer: 1, medium: 1, guard: 1 },
     },
   };
-  const setupOf = (story, size) => Object.assign({ mason: 0, fox: 0, cat: 0 }, (SETUPS[story && story.rules] || SETUP)[size]);
+  const setupOf = (story, size) => Object.assign({ mason: 0, fox: 0, immoral: 0, cat: 0 }, (SETUPS[story && story.rules] || SETUP)[size]);
   const RS = S => S.R || setupOf(null, S.size);
   // difficulty: size, action points, traces left per attack, how often the wolves come for the player,
   // how often they plant a belonging, how often the weather wipes a trace, how far a figure is seen
@@ -89,7 +95,7 @@
     // roles
     const R = S.R = setupOf(story, D.size), bag = [];
     S.rules = story.rules || 'std'; S.foxLoc = story.foxLoc || null; S.fan = story.rules === 'fanatic';
-    for (const r of ['wolf', 'madman', 'seer', 'medium', 'guard', 'mason', 'fox', 'cat']) for (let i = 0; i < R[r]; i++) bag.push(r);
+    for (const r of ['wolf', 'madman', 'seer', 'medium', 'guard', 'mason', 'fox', 'immoral', 'cat']) for (let i = 0; i < R[r]; i++) bag.push(r);
     while (bag.length < D.size) bag.push('villager');
     const can = ['villager', 'seer', 'medium', 'guard', 'mason', 'cat'].filter(r => r === 'villager' || bag.includes(r));
     let pr = opts.role && opts.role !== 'auto' ? opts.role : wpick(S, can, r => r === 'villager' ? 4 : 2);
@@ -151,7 +157,7 @@
     for (const p of live) {
       pos[p.id] = p.home;
       if (p.secret && !p.isPlayer && rnd(S) < p.secret.p) pos[p.id] = p.secret.loc;
-      if (p.role === 'fox') pos[p.id] = story.foxLoc && rnd(S) < .85 ? story.foxLoc : p.home;   // the fox keeps its own night at the shrine
+      if (p.role === 'fox') pos[p.id] = story.foxLoc && rnd(S) < (S.rules === 'immoral' && diffOf(S).id === 0 ? .95 : .85) ? story.foxLoc : p.home;   // (霧笛座の入門: the fox keeps to its lair almost every night)   // the fox keeps its own night at the shrine
     }
     if (act.stake) pos.you = act.stake;
     // the wolves choose
@@ -238,6 +244,9 @@
       if (ws.length) { const w = pick(S, ws); w.alive = false; w.death = { day: S.day + 1, cause: 'catw', night: n }; rec.dragged = w.id; }
     }
     if (cursed && person(S, cursed).alive) { const t = person(S, cursed); t.alive = false; t.death = { day: S.day + 1, cause: 'curse', night: n }; S.foxGone = true; }
+    // the immoral: once the fox is dead, it follows the fox the same night (no wound; the village learns the fox is gone)
+    const im = S.people.find(p => p.role === 'immoral' && p.alive);
+    if (im && !act.prologue && !S.people.some(p => p.role === 'fox' && p.alive)) { im.alive = false; im.death = { day: S.day + 1, cause: 'follow', night: n }; rec.followed = im.id; S.foxGone = true; }
     // the gossip: people remember who they saw out
     for (const s of sights) if (s.kind === 'who') (S.gossip[s.by] = S.gossip[s.by] || []).push({ night: n, who: s.who, loc: s.loc });
     return rec;
@@ -282,6 +291,9 @@
       if (p.role === 'fox' && truthLoc !== p.home) T.loc = p.home;   // the fox never says where it spends the night
       else if (p.secret && !p.secret.open && truthLoc !== p.home) { T.loc = p.home; T.hid = true; }
       for (const s of mine) T.saw.push(Object.assign({}, s));
+      // the immoral covers for the fox: "I saw them at home" — while the fox sat at its lair
+      const fx = p.role === 'immoral' && S.people.find(q => q.role === 'fox' && q.alive);
+      if (fx && N.pos[fx.id] !== fx.home && !T.saw.some(s => s.who === fx.id) && rnd(S) < (diffOf(S).id === 0 ? 0 : .6)) T.saw.push({ kind: 'who', who: fx.id, loc: fx.home, lie: true });
     }
     S.testi[key] = T;
     return T;
@@ -310,7 +322,7 @@
     const K = know(S, obs);
     const nW = S.wolves.length, nM = RS(S).madman;
     const ids = S.people.map(p => p.id);
-    const deadByWolf = new Set(S.people.filter(p => p.death && (p.death.cause === 'wolf' || p.death.cause === 'curse')).map(p => p.id));
+    const deadByWolf = new Set(S.people.filter(p => p.death && (p.death.cause === 'wolf' || p.death.cause === 'curse' || p.death.cause === 'follow')).map(p => p.id));
     let cand = ids.filter(id => !deadByWolf.has(id));
     if (K.self && K.role !== 'wolf') cand = cand.filter(id => id !== obs);
     if (obs !== 'pub' && obs !== 'you' && opt.trustPlayer !== false && !opt.paranoid) { /* NPCs may suspect the player: keep them */ }
@@ -329,7 +341,7 @@
     const claims = S.claims.filter(c => c.by !== obs || true);
     const seerC = claims.filter(c => c.role === 'seer'), medC = claims.filter(c => c.role === 'medium');
     const liveIds = new Set(alive(S).map(p => p.id));
-    const burnt = new Set(S.people.filter(p => p.death && p.death.cause === 'curse').map(p => p.id));
+    const burnt = new Set(S.people.filter(p => p.death && (p.death.cause === 'curse' || p.death.cause === 'follow')).map(p => p.id));
     const lastNight = S.nights.length - 1;
     const acc = {}, accM = {}, accS = {}; let tot = 0, n = 0;
     ids.forEach(id => { acc[id] = 0; accM[id] = 0; accS[id] = 0; });
@@ -440,7 +452,7 @@
     }
     if (p.role === 'madman') { const pub = analyze(S, 'pub'); for (const q in sus) sus[q] = S.fan ? (isWolf(S, q) ? 0 : pub.p[q] + .2 * (hash01(S.seed + 'm' + id + q) - .5) + (S.claims.some(c => c.by === q && c.role === 'seer') ? .3 : 0)) : 1 - pub.p[q] + .3 * (hash01(S.seed + 'm' + id + q) - .5); }
     // the fox of the shrine: the village must find it too, and the more wolves are gone, the more it matters
-    const fv = p.role === 'fox' || p.role === 'madman' ? null : foxView(S, story, id);
+    const fv = p.role === 'fox' || p.role === 'madman' || p.role === 'immoral' ? null : foxView(S, story, id);
     if (fv) {
       const gone = new Set(); for (const c of S.claims) if (c.role === 'medium') for (const r of c.res) if (r.res === 'wolf') gone.add(r.target);
       const F = p.role === 'wolf' ? (S.foxBit ? .5 : .1) : .12 + .5 * Math.min(1, gone.size / Math.max(1, S.wolves.length));
@@ -869,6 +881,7 @@
         if (S.claims.some(c => c.by === x && c.role === 'cat')) v -= .16 * (1 - (p.persona.bold || .5));   // hang a cat and it takes someone along
         const sw = S.swayVote; if (sw && sw.day === S.day && sw.target === x && p.role !== 'wolf') v += sw.dir * .26 * (p.persona.trust || .5) * 2;   // what the player said after the claim
         const wolfSide = p.role === 'wolf' || (p.role === 'madman' && S.fan && S.diff > 0);   // on 入門 the fanatic lies but does not vote as a bloc
+        if (p.role === 'immoral' && isFox(S, x)) v = -1;   // never against the fox
         if (wolfSide && isWolf(S, x)) {      // a partner: abandon only when they are surely lost
           v = (heat[x] || 0) >= alive(S).length / 2 ? 2 : -1;
         } else if (wolfSide && x === bloc) v += p.role === 'wolf' ? .6 : .4;
@@ -928,7 +941,7 @@
   // the score is what the player did, not what the village did around them
   function score(S) {
     if (!S.result) return null;
-    const foe = id => isWolf(S, id) || (person(S, id) || {}).role === 'fox';   // the fox is the village's enemy too
+    const foe = id => isWolf(S, id) || ['fox', 'immoral'].includes((person(S, id) || {}).role);   // the fox is the village's enemy too
     const lost = S.people.filter(p => !p.isPlayer && p.death && !foe(p.id)).length;
     const wrong = S.votes.filter(v => v.out && !foe(v.out)).length;
     const L = S.pl.log || [];

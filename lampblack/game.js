@@ -112,6 +112,7 @@
     if (s.rules === 'mason') return `特殊役職 <b>${esc(s.roles.mason.name)}</b>（狩人の代わりに2人）`;
     if (s.rules === 'cat') return `特殊役職 <b>${esc(s.roles.cat.name)}</b>（村側・道連れ）`;
     if (s.rules === 'fanatic') return `特殊役職 <b>${esc(s.roles.madman.name)}</b>（狼を知る裏切り者）`;
+    if (s.rules === 'immoral') return `特殊役職 <b>${esc(s.roles.fox.name)}</b>と<b>${esc(s.roles.immoral.name)}</b>（第三の陣営）`;
     if (s.rules === 'fox') return `特殊役職 <b>${esc(s.roles.fox.name)}</b>（第三の陣営）`;
     return '標準の役職（占い師・霊媒師・狩人・狂人）';
   }
@@ -548,7 +549,7 @@
   async function roleCard() {
     const r = S.pl.role, R = st.roles[r];
     await say([{ text: fill(st.text.role, { roleHow: R.how }) }]);
-    await sheet(`<div class="rolecard"><div class="em">${ROLE_ICON[r]}</div><p style="font:700 15px var(--ui);letter-spacing:.2em;color:var(--mute);margin:0">あなたの役</p><h3>${esc(R.name)}</h3><p>${esc(R.perk)}</p><p style="font-size:15px;color:var(--mute)">この${st.lex.village}には人狼が${S.wolves.length}匹${E.RS(S).madman ? (st.rules === 'fanatic' ? '、狼の正体を知る狂信者がひとり' : '、狼に味方する狂人がひとり') : ''}${E.RS(S).cat ? '、道連れの猫又がひとり' : ''}${E.RS(S).fox ? '、社に棲む妖狐がひとり' : ''}${E.RS(S).mason ? '、互いを知る共有者がふたり' : ''}いる。全部で${S.size}人。</p>${st.rulesNote ? `<p style="font-size:14px;color:var(--mute)">${esc(st.rulesNote)}</p>` : ''}</div><div class="foot" style="justify-content:center"><button class="btn pri" data-ok>はじまる</button></div>`, box => box.querySelector('[data-ok]').onclick = () => closeSheet(true));
+    await sheet(`<div class="rolecard"><div class="em">${ROLE_ICON[r]}</div><p style="font:700 15px var(--ui);letter-spacing:.2em;color:var(--mute);margin:0">あなたの役</p><h3>${esc(R.name)}</h3><p>${esc(R.perk)}</p><p style="font-size:15px;color:var(--mute)">この${st.lex.village}には人狼が${S.wolves.length}匹${E.RS(S).madman ? (st.rules === 'fanatic' ? '、狼の正体を知る狂信者がひとり' : '、狼に味方する狂人がひとり') : ''}${E.RS(S).cat ? '、道連れの猫又がひとり' : ''}${E.RS(S).fox ? `、${st.roles.fox.tag || '社に棲む妖狐'}がひとり` : ''}${E.RS(S).immoral ? `、${st.roles.immoral.tag || '妖狐に仕える背徳者'}がひとり` : ''}${E.RS(S).mason ? '、互いを知る共有者がふたり' : ''}いる。全部で${S.size}人。</p>${st.rulesNote ? `<p style="font-size:14px;color:var(--mute)">${esc(st.rulesNote)}</p>` : ''}</div><div class="foot" style="justify-content:center"><button class="btn pri" data-ok>はじまる</button></div>`, box => box.querySelector('[data-ok]').onclick = () => closeSheet(true));
   }
 
   /* morning: what the night left behind */
@@ -582,7 +583,9 @@
       if (N.dragged) { const v = N.dragged; items.push({ text: fill(pickOne(st.text.catDrag || ['{name}も、冷たくなっていた。']), { name: nm(v), cat: N.target === 'you' ? 'あなた' : nm(N.target) }), fx: () => setCast([v], { fallen: v, x: 58 }) }); }
       // the fox burned by a reading
       if (N.cursed && N.cursed !== 'you') { const v = N.cursed; items.push({ text: fill(pickOne(st.text.curse || ['朝、{name}が見つかった。傷ひとつなかった。']), { name: nm(v) }), fx: () => setCast([v], { fallen: v, x: 58 }) }); }
-      if (S.foxHunt && S.foxHunt.day === S.day) items.push({ text: st.text.foxHunt || '狼の気配が、島から消えた。けれど社の鈴は鳴りやまない。\n本土の船が着くのは明日の朝だ。今日のうちに狐を見つけなければ、この島は狐のものになる。' });
+      // the immoral followed the fox
+      if (N.followed && N.followed !== 'you') { const v = N.followed; items.push({ text: fill(pickOne(st.text.follow || ['朝、{name}が見つかった。眠るような顔だった。']), { name: nm(v) }), fx: () => setCast([v], { fallen: v, x: 58 }) }); }
+      if (S.foxHunt && S.foxHunt.day === S.day) items.push({ text: st.text.foxHunt || '狼の気配が消えた。けれど狐の気配は消えない。\n今日のうちに狐を見つけなければ、ここは狐のものになる。' });
       // what the player saw
       for (const s of N.sights.filter(s => s.by === 'you')) {
         if (s.kind === 'fig') items.push({ text: (S.pl.stakeAt ? `${locName(S.pl.stakeAt)}の暗がりで息を殺していると、` : '夜中、窓の外を、') + `**${SP.fig(st, s.cat, s.val)}**が横切っていった。` });
@@ -1146,7 +1149,7 @@
     const all = S.people.filter(p => !p.isPlayer).map(p => p.id);
     setCast(all);
     await wait(300);
-    for (const p of S.people) if (!p.isPlayer) { const e = pup(p.id); if (!e) continue; const b = document.createElement('span'); b.className = 'badge' + (p.role === 'wolf' || p.role === 'madman' ? ' w' : p.role === 'fox' ? ' f' : ''); b.textContent = SP.roleName(st, p.role); e.appendChild(b); if (!p.alive) e.classList.add('dim'); }
+    for (const p of S.people) if (!p.isPlayer) { const e = pup(p.id); if (!e) continue; const b = document.createElement('span'); b.className = 'badge' + (p.role === 'wolf' || p.role === 'madman' ? ' w' : p.role === 'fox' || p.role === 'immoral' ? ' f' : ''); b.textContent = SP.roleName(st, p.role); e.appendChild(b); if (!p.alive) e.classList.add('dim'); }
     await say([{ text: `幕の向こうで、灯りがひとつ強くなった。\nすべての影が、本当の形を映しはじめる。` }]);
     for (const w of wolves) {
       const e = pup(w.id);
@@ -1158,7 +1161,9 @@
     const cat = S.people.find(p => p.role === 'cat');
     if (cat) await say([{ text: `尾の裂けた猫——猫又は、**${nm(cat.id)}**だった。` }]);
     const fox = S.people.find(p => p.role === 'fox');
-    if (fox) await say([{ text: `社に棲む狐——妖狐は、**${nm(fox.id)}**だった。${fox.alive ? '最後まで、誰にも見破られなかった。' : fox.death.cause === 'curse' ? '占いの鏡に映されて、燃え尽きた。' : `${st.lex.jail}へ送られて、正体を明かした。`}`, fx: () => { const e = pup(fox.id); if (e) { e.classList.remove('dim'); e.classList.add('shake'); } } }]);
+    if (fox) await say([{ text: `${st.roles.fox.reveal || '社に棲む狐'}——${st.roles.fox.name}は、**${nm(fox.id)}**だった。${fox.alive ? '最後まで、誰にも見破られなかった。' : fox.death.cause === 'curse' ? '占いの鏡に映されて、燃え尽きた。' : `${st.lex.jail}へ送られて、正体を明かした。`}`, fx: () => { const e = pup(fox.id); if (e) { e.classList.remove('dim'); e.classList.add('shake'); } } }]);
+    const imm = S.people.find(p => p.role === 'immoral');
+    if (imm) await say([{ text: `${st.roles.fox.name}に仕えていた${st.roles.immoral.name}は、**${nm(imm.id)}**だった。${imm.alive ? '主を失うことなく、幕が下りた。' : imm.death.cause === 'follow' ? '主のあとを追って、ひとりで幕を引いた。' : `${st.lex.jail}へ送られて、何も語らなかった。`}`, fx: () => { const e = pup(imm.id); if (e) { e.classList.remove('dim'); e.classList.add('shake'); } } }]);
     if (st.arc && st.arc.coda) await say([{ text: st.arc.coda }]);
     const gone = !S.people[0].alive;   // the player died: the ending must not have them write or walk
     if (R.why === 'fox' && st.text.loseFox) await say([{ text: fill(st.text.loseFox, { book: st.lex.book }) }]);
@@ -1180,12 +1185,12 @@
     if (order.indexOf(sc.rank) < order.indexOf(rr[k].best)) rr[k].best = sc.rank;
     try { localStorage.setItem(REC, JSON.stringify(rr)); } catch (e) {}
     clearSave();
-    const why = ({ cleared: '狼をすべて見つけ出した', overrun: '狼の数が、人の数に並んだ', fox: '社の狐が生き残った' }[R.why] || '') + (S.ghost ? '（あなたは幽霊として見届けた）' : '');
+    const why = ({ cleared: '狼をすべて見つけ出した', overrun: '狼の数が、人の数に並んだ', fox: `${(st.roles.fox && st.roles.fox.reveal) || '社の狐'}が生き残った` }[R.why] || '') + (S.ghost ? '（あなたは幽霊として見届けた）' : '');
     await sheet(`<h3 style="text-align:center">${R.win ? '解決' : '未解決'}　<small style="font:500 15px var(--ui);color:var(--mute)">${esc(why)}</small></h3>
       <div class="rank">${sc.rank}</div>
       ${scoreTable(sc)}
       ${fresh.length ? `<div class="newfeat"><b>新しい実績</b>${fresh.map(f => `<div class="feat got"><i>★</i><b>${esc(f.name)}</b><span>${esc(f.desc)}</span></div>`).join('')}</div>` : ''}
-      <p style="font-size:15px">人狼：${wolves.map(w => esc(nm(w.id))).join('、')}${mad ? `　${esc(SP.roleName(st, 'madman'))}：${esc(nm(mad.id))}` : ''}${cat ? `　猫又：${esc(nm(cat.id))}` : ''}${fox ? `　妖狐：${esc(nm(fox.id))}` : ''}</p>
+      <p style="font-size:15px">人狼：${wolves.map(w => esc(nm(w.id))).join('、')}${mad ? `　${esc(SP.roleName(st, 'madman'))}：${esc(nm(mad.id))}` : ''}${cat ? `　猫又：${esc(nm(cat.id))}` : ''}${fox ? `　妖狐：${esc(nm(fox.id))}` : ''}${S.people.find(p => p.role === 'immoral') ? `　${esc(SP.roleName(st, 'immoral'))}：${esc(nm(S.people.find(p => p.role === 'immoral').id))}` : ''}</p>
       <div class="foot"><button class="btn" data-a="title">タイトルへ</button><button class="btn" data-a="select">ほかの物語へ</button><button class="btn pri" data-a="again">もう一度</button></div>`, box => box.querySelectorAll('[data-a]').forEach(b => b.onclick = () => closeSheet(b.dataset.a))).then(a => {
       if (a === 'again') { buildSetup(); } else if (a === 'select') buildSelect(); else buildTitle();
     });
@@ -1219,7 +1224,7 @@
     const cats = E.CATS;
     return `<div class="nh">登場人物 ${S.size - 1}人</div>` + S.people.filter(p => !p.isPlayer).map(p => {
       const c = ch(p.id);
-      const st2 = !p.alive ? (p.death.cause === 'wolf' ? `犠牲（${dayName(p.death.day)}）` : p.death.cause === 'curse' ? `呪い死（${dayName(p.death.day)}）` : p.death.cause === 'catw' ? `猫又の道連れ（${dayName(p.death.day)}）・人狼` : p.death.cause === 'cat' ? `猫又の道連れ（${dayName(p.death.day)}）` : `追放（${dayName(p.death.day)}）`) : '';
+      const st2 = !p.alive ? (p.death.cause === 'wolf' ? `犠牲（${dayName(p.death.day)}）` : p.death.cause === 'curse' ? `呪い死（${dayName(p.death.day)}）` : p.death.cause === 'follow' ? `後追い（${dayName(p.death.day)}）` : p.death.cause === 'catw' ? `猫又の道連れ（${dayName(p.death.day)}）・人狼` : p.death.cause === 'cat' ? `猫又の道連れ（${dayName(p.death.day)}）` : `追放（${dayName(p.death.day)}）`) : '';
       const claim = S.claims.find(x => x.by === p.id);
       const fit = D.assist ? E.fitsTraces(S, p.id) : null;
       const chips = cats.map(cat => { let cls = ''; if (fit) { const hits = S.pl.found.map(k => k.split('|').map(Number)).filter(([ni, ti]) => S.nights[ni].traces[ti].cat === cat); if (hits.length) { const ok = hits.every(([ni, ti]) => { const tr = S.nights[ni].traces[ti]; return tr.neg ? p.traits[cat] !== tr.val : p.traits[cat] === tr.val; }); cls = ok ? ' hit' : ' miss'; } } return `<span class="chip${cls}">${esc(SP.trait(st, cat, p.traits[cat]))}</span>`; }).join('');

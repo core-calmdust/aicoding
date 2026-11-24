@@ -9,7 +9,7 @@
   const name = (S, story, id) => id === 'you' ? story.hero.name : id === 'first' ? story.first.name : (charOf(story, id) || { name: id }).name;
   const nameSan = (S, story, id, reg) => id === 'you' ? story.hero.title : name(S, story, id);   // NPCs call the player by title
   const loc = (story, id) => { const l = story.locs.find(l => l.id === id); return l ? l.name : id; };
-  const roleName = (story, r) => r === 'wolf' ? '人狼' : r === 'madman' ? ((story.roles || {}).madman || { name: '狂人' }).name : r === 'fox' ? '妖狐' : (story.roles[r] || { name: r }).name;
+  const roleName = (story, r) => r === 'wolf' ? '人狼' : r === 'madman' ? ((story.roles || {}).madman || { name: '狂人' }).name : r === 'fox' ? ((story.roles || {}).fox || { name: '妖狐' }).name : (story.roles[r] || { name: r }).name;
   const roleShort = r => ({ seer: '占い', medium: '霊視', guard: '護衛', mason: '共有', cat: '猫又' })[r] || r;
   const trait = (story, cat, val) => story.traits[cat].v[val];
   const fig = (story, cat, val) => (story.traits[cat].fig || {})[val] || ('「' + trait(story, cat, val) + '」人影');
