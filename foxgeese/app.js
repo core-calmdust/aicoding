@@ -1480,7 +1480,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=5').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=6').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { let pr; try { pr = JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } return pzMigrate(pr); }
@@ -1738,13 +1738,19 @@ function lessonAnswer(m) {
 // the fox lessons (2026-11-24 担当C): the words name what the move does on the board (foxgeese/ls-facts.js; every legal move is checked by
 // tools/lesson-verify-foxgeese.js) — a step takes nothing, a jump stopped early, the geese's reply that covers, the geese attacked at once
 const LF_KEY = { take: 'lf.take', step: 'lf.step', most: 'lf.most', stop: 'lf.stop', other: 'lf.other', fork: 'lf.fork', t0: 'lf.t0', t1: 'lf.t1', tdef: 'lf.tdef', trap: 'lf.trap' };
+const LG_KEY = { safeF: 'lf.safeF', safeA: 'lf.safeA', trap: 'lf.gtrap', net: 'lf.net', jself: 'lf.jself', jopen: 'lf.jopen', jstill: 'lf.jstill', free: 'lf.free', freeO: 'lf.freeO', wide: 'lf.wide', hole: 'lf.hole', reach0: 'lf.reach0' };
 function lfText(s, P, m) {
+  if (window.FoxLsFacts && /^g_(safe|trap|net)$/.test(s.id)) {   // the geese lessons (2026-11-24 23:32 担当C): {r} the fox's reply, {n} the geese it takes, {e} its points
+    const pos0 = E.Pos.from(P.s), best = P.ok.includes(m) ? m : P.best, f = FoxLsFacts.fact(E, s.id, P.s, m), k = LG_KEY[f.k]; if (!k) return null;
+    return t(k, { m: mvIn(pos0, best), x: mvIn(pos0, m), r: f.r != null ? mvIn(pos0.clone().play(m), f.r) : '', n: f.n, e: f.e });
+  }
   if (!window.FoxLsFacts || !/^f_(jump|double|fork)$/.test(s.id)) return null;
   const pos0 = E.Pos.from(P.s), best = P.ok.includes(m) ? m : P.best, f = FoxLsFacts.fact(E, s.id, P.s, m), fb = FoxLsFacts.fact(E, s.id, P.s, best);
   const k = f.k === 'step' && s.id === 'f_double' ? 'lf.stepD' : LF_KEY[f.k]; if (!k) return null;
   return t(k, { m: mvIn(pos0, best), x: mvIn(pos0, m), r: f.r != null ? mvIn(pos0.clone().play(m), f.r) : '', n: f.k === 'most' ? f.n : fb.n != null ? fb.n : f.n, c: f.k === 'tdef' ? f.t : f.c, t: fb.t });
 }
 function lfHint(s, P) {   // the geese the step's hint talks about (never the answer itself)
+  if (window.FoxLsFacts && /^g_(safe|trap|net)$/.test(s.id)) return FoxLsFacts.hintPts(E, s.id, P.s);   // (the geese lessons: the attacked goose / the fox's points)
   if (!window.FoxLsFacts || !/^f_(jump|double|fork)$/.test(s.id)) return null;
   const pos = E.Pos.from(P.s);
   if (s.id === 'f_jump') return E.NBR[pos.fox].filter(([x]) => pos.sq[x] === E.P2).map(([x]) => x);
