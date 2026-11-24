@@ -15,7 +15,7 @@ const args = process.argv.slice(2), opt = k => { const i = args.indexOf(k); retu
 const OPTV = new Set(['--kind', '--key', '--jobs', '--json', '--from']);
 const games = (args.find((a, i) => !a.startsWith('--') && !OPTV.has(args[i - 1])) || '').split(',').filter(Boolean);
 const FROM = opt('--from'), PHONE = args.includes('--phone'), JOBS = +(opt('--jobs') || 3), ONLY_KIND = opt('--kind'), ONLY_KEY = opt('--key');
-const ALL = ['dots', 'morris', 'mancala', 'tafl', 'shogi', 'chess', 'reversi', 'gomoku', 'go', 'checkers', 'xiangqi', 'backgammon', 'hex', 'amazons', 'connect4'];
+const ALL = ['ur', 'dots', 'morris', 'mancala', 'tafl', 'shogi', 'chess', 'reversi', 'gomoku', 'go', 'checkers', 'xiangqi', 'backgammon', 'hex', 'amazons', 'connect4'];
 const MIME = { '.js': 'text/javascript', '.json': 'application/json', '.html': 'text/html', '.css': 'text/css', '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.bin': 'application/octet-stream', '.wasm': 'application/wasm', '.glb': 'model/gltf-binary', '.mp3': 'audio/mpeg' };
 const srv = http.createServer((q, r) => { const u = decodeURIComponent(q.url.split('?')[0]); const f = path.join(ROOT, u.endsWith('/') ? u + 'index.html' : u);
   if (!f.startsWith(ROOT)) { r.writeHead(403); return r.end(); }

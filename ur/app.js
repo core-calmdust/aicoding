@@ -1105,7 +1105,7 @@ relayout(true);
 update();
 if (hadSave) { if (overNow()) gameOverShown = true; afterPosition(); }
 // expose for tests / other modules
-window.__ur = { get game() { return game; }, get cur() { return cur; }, settings, newGame, doRoll, commit, curState, curRoll, viewAt, rtStart, openNewDialog, get busy() { return animating || thinking; }, overNow, statusAt, posAt, line };
+window.__ur = { get game() { return game; }, get cur() { return cur; }, settings, newGame, doRoll, commit, play, curState, curRoll, viewAt, rtStart, openNewDialog, get busy() { return animating || thinking; }, overNow, statusAt, posAt, line };
 // ====================================================================== landscape option (phones, as fanorona / backgammon)
 // The option turns the phone's screen even with the rotation locked: real fullscreen + orientation lock where the browser
 // allows it (Android), otherwise the page reloads into a wrapper (index.html) that shows the game in an iframe turned 90°,
