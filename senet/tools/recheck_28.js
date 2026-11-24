@@ -3,7 +3,7 @@
 // candidate list; otherwise removes it. node tools/recheck_28.js
 const fs = require('fs'), path = require('path'), E = require('../engine.js');
 const r2 = x => Math.round(x * 1000) / 1000;
-for (const f of ['puzzles.json', 'lessons.json']) {
+for (const f of ['lessons.json']) {   // (puzzles.json は 2026-11-24 に廃止)
   const file = path.join(__dirname, '..', f), D = JSON.parse(fs.readFileSync(file, 'utf8'));
   let kept = 0, dropped = 0;
   const check = o => {

@@ -71,7 +71,7 @@ function build() {
   learn.addEventListener('click', e => {
     const b = e.target.closest('[data-go]'); if (!b) return;
     close();
-    const id = { rules: '#btnRules', lesson: '#btnLesson', puzzle: '#btnPuzzle' }[b.dataset.go], el = $(id); if (el) el.click();
+    const id = { rules: '#btnRules', lesson: '#btnLesson' }[b.dataset.go], el = $(id); if (el) el.click();
   });
   rail.addEventListener('click', e => {
     const b = e.target.closest('[data-lt]'); if (!b) return;
@@ -121,7 +121,7 @@ function relabel() {
     b.setAttribute('aria-label', l); b.title = l;
   });
   const row = (k, ic, desc) => `<button type="button" data-go="${k}">${ICON[ic]}<span>${tt('btn.' + k, k)}${desc ? `<small>${desc}</small>` : ''}</span></button>`;
-  const h = `<h3>${label('learn').replace('\n', ' / ')}</h3>` + row('rules', 'rules', tt('btn.rules.title', '')) + row('lesson', 'learn', tt('btn.lesson.title', '')) + row('puzzle', 'puzzle', tt('btn.puzzle.title', ''));
+  const h = `<h3>${label('learn').replace('\n', ' / ')}</h3>` + row('rules', 'rules', tt('btn.rules.title', '')) + row('lesson', 'learn', tt('btn.lesson.title', ''));
   if (learn.dataset.h !== h) { learn.dataset.h = h; learn.innerHTML = h; }
   const l = lang(), rh = rest.querySelector('span'), rp = rest.querySelector('p'), rt = REST[l] || REST.en;
   if (rh.textContent !== label('coach')) rh.textContent = label('coach');
