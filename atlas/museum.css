@@ -915,3 +915,7 @@ html.ptv-open,html.ptv-open body{overflow:hidden}
 .mupass-s1:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
 @media (max-width:819px){.mupass-s1{width:44px;height:44px}}
 @media (max-width:819px){#pg-museum .mupass-x{width:44px;height:44px}}
+/* (rubric A1/A3) a focus ring the same everywhere in the museum, and no sliding about for those who ask for less motion */
+#pg-museum :focus-visible{outline:3px solid #2f6fd0;outline-offset:2px;border-radius:inherit}
+#pg-museum .murm:focus-visible{outline-offset:-3px}
+@media (prefers-reduced-motion:reduce){#pg-museum *,#pg-museum *::before,#pg-museum *::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}

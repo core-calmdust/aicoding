@@ -34,11 +34,11 @@
   // the rooms, in order. src: scripts loaded the first time the room opens; ready(): the room's code is there
   const ROOMS = [
     { id: 'map', ready: () => !!window.AtlasMap, render: (el, c) => AtlasMap.render(el, c) },
-    { id: 'tree', src: ['museum/tree.js?v=3'], ready: () => !!window.AtlasTree, render: (el, c) => AtlasTree.render(el, c) },
+    { id: 'tree', src: ['museum/tree.js?v=4'], ready: () => !!window.AtlasTree, render: (el, c) => AtlasTree.render(el, c) },
     { id: 'gallery', src: ['museum/gallery.js?v=148'], ready: () => !!window.AtlasGallery, render: (el, c) => AtlasGallery.render(el, c) },
-    { id: 'paint', src: ['museum/paint-i18n.js?v=3', 'museum/paint.js?v=8'], ready: () => !!(window.AtlasPaint && window.MUSEUM_PAINT_T), render: (el, c) => AtlasPaint.render(el, c) },
+    { id: 'paint', src: ['museum/paint-i18n.js?v=3', 'museum/paint.js?v=9'], ready: () => !!(window.AtlasPaint && window.MUSEUM_PAINT_T), render: (el, c) => AtlasPaint.render(el, c) },
     { id: 'read', src: ['museum/read-i18n.js?v=6', 'museum/read.js?v=12'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T), render: (el, c) => AtlasRead.render(el, c) },
-    { id: 'chance', src: ['museum/chance-i18n.js?v=3', 'museum/chance.js?v=6'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T), render: (el, c) => AtlasChance.render(el, c) },
+    { id: 'chance', src: ['museum/chance-i18n.js?v=3', 'museum/chance.js?v=7'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T), render: (el, c) => AtlasChance.render(el, c) },
   ];
   const KEY = 'atlas-museum-room';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -48,11 +48,26 @@
   const u = k => (UI[lang] || UI.en)[k] || UI.en[k];
   const saved = () => { try { const r = localStorage.getItem(KEY); return ROOMS.some(x => x.id === r) ? r : null; } catch (e) { return null; } };
 
+  // (2026-11-24 rubric A1) a tab list the keyboard can walk: one tab in the Tab order (the chosen one), ← → Home End move between them,
+  // Enter / Space chooses (the buttons do that themselves). RTL turns the arrows round.
+  function tabKeys(list) {
+    if (!list || list._tk) return; list._tk = true;
+    list.addEventListener('keydown', e => {
+      const t = [...list.querySelectorAll('[role=tab]')].filter(b => b.offsetParent), i = t.indexOf(document.activeElement); if (i < 0) return;
+      const rtl = getComputedStyle(list).direction === 'rtl', k = e.key; let j = -1;
+      if (k === 'ArrowRight' || k === 'ArrowDown') j = (i + (rtl && k === 'ArrowRight' ? -1 : 1) + t.length) % t.length;
+      else if (k === 'ArrowLeft' || k === 'ArrowUp') j = (i + (rtl && k === 'ArrowLeft' ? 1 : -1) + t.length) % t.length;
+      else if (k === 'Home') j = 0; else if (k === 'End') j = t.length - 1;
+      if (j < 0) return; e.preventDefault(); t[j].focus();
+    });
+  }
+  function rove(list) { if (!list) return; list.querySelectorAll('[role=tab]').forEach(b => b.tabIndex = b.getAttribute('aria-selected') === 'true' ? 0 : -1); }
   function bar() {
     el.rooms.style.setProperty('--n', ROOMS.length); el.rooms.style.setProperty('--h', ROOMS.length <= 4 ? ROOMS.length : Math.ceil(ROOMS.length / 2));
     // (a phone: one strip of all the rooms, icon over a short name — like the games' own menus, 2026-11-24 ユーザー)
     el.rooms.innerHTML = ROOMS.map(r => `<button type="button" class="murm" data-r="${r.id}" role="tab" aria-selected="${r.id === room}"><span class="mui"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[r.id]}</svg></span><span class="mut"><b>${esc(u(r.id))}</b><small>${esc(u(r.id + 'S'))}</small></span><span class="mup">${esc(u(r.id + 'P') !== r.id + 'P' ? u(r.id + 'P') : u(r.id))}</span></button>`).join('');
     el.rooms.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { if (b.dataset.r !== room) open(b.dataset.r, true); });
+    tabKeys(el.rooms); rove(el.rooms);
     fitBar();
   }
   // the short names shrink (to 8.5px at the least) until each fits its button
@@ -66,7 +81,7 @@
     const R = ROOMS.find(r => r.id === id) || ROOMS[0];
     room = R.id; host.dataset.room = room;
     try { localStorage.setItem(KEY, room); } catch (e) {}
-    el.rooms.querySelectorAll('[data-r]').forEach(b => b.setAttribute('aria-selected', b.dataset.r === room));
+    el.rooms.querySelectorAll('[data-r]').forEach(b => b.setAttribute('aria-selected', b.dataset.r === room)); rove(el.rooms);
     // each room keeps its own box (the map keeps its view and its picked game when you come back to it)
     let box = el.stage.querySelector(`.muroom[data-r="${room}"]`);
     if (!box) { box = document.createElement('div'); box.className = 'muroom'; box.dataset.r = room; el.stage.appendChild(box); }
@@ -156,7 +171,7 @@
       host = sec;
       // (2026-11-24) the whole museum on one sheet of paper: the skin shows round it, never behind its text
       sec.innerHTML = `<div class="muwrap"><div class="muhead"><div class="mutt"><h2 class="h" id="muTtl"></h2><p class="musub" id="muSub"></p></div><button type="button" class="mupbtn" id="muPass" aria-expanded="false"></button></div>
-        <div class="mupass" id="muPassP"></div><div class="murooms" id="muRooms" role="tablist"></div><div class="mustage" id="muStage"></div></div>`;
+        <div class="mupass" id="muPassP"></div><div class="murooms" id="muRooms" role="tablist"></div><div class="mustage" id="muStage" role="tabpanel"></div></div>`;
       el = { rooms: sec.querySelector('#muRooms'), stage: sec.querySelector('#muStage'), pass: sec.querySelector('#muPassP'), pbtn: sec.querySelector('#muPass') };
       el.pbtn.onclick = () => passToggle();
     }
@@ -223,5 +238,5 @@
     if (!grid._pgR) { grid._pgR = true; let tm = 0; addEventListener('resize', () => { clearTimeout(tm); tm = setTimeout(() => { if (grid.isConnected) draw(); }, 150); }); }
     draw();
   }
-  window.AtlasMuseum = { render, room: () => room, ROOMS, V, goEx, go: r => open(r, true), mark, prog, pager, catalog };
+  window.AtlasMuseum = { render, room: () => room, ROOMS, V, goEx, go: r => open(r, true), mark, prog, pager, catalog, tabKeys, rove };
 })();
