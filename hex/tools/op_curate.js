@@ -8,12 +8,12 @@
 //   and it is 3+ cells (more than two moves; 180° turn and the colour-swap mirror too) from every line position of every set and from every
 //   lesson / puzzle board and the other chosen problems.
 //   gcc -O3 -march=native -DNATIVE -w -o /tmp/hexn hex/tools/native.c -lm
-//   node hex/tools/op_curate.js c7 [--write]     (several ids: c7,c9)
+//   node hex/tools/op_curate.js c7 [--write] [--wide]     (several ids: c7,c9)
 const fs = require('fs'), path = require('path');
 const ROOT = path.join(__dirname, '..', '..');
 const E = require('../engine.js');
 const CHK = require(path.join(ROOT, 'tools/lesson-verify.js'))._hex;
-const ids = (process.argv[2] || '').split(',').filter(Boolean), WRITE = process.argv.includes('--write');
+const ids = (process.argv[2] || '').split(',').filter(Boolean), WRITE = process.argv.includes('--write'), WIDE = process.argv.includes('--wide');
 const OF = path.join(ROOT, 'hex/openings.json'), O = JSON.parse(fs.readFileSync(OF, 'utf8'));
 const MS = { 7: 1500, 9: 2000, 11: 2500 };
 function choose(keep, id) {   // easy → hard (hxD); ⑤ an answer cell at most twice, one kind of move at most 3 times, more than two moves apart
@@ -22,8 +22,11 @@ function choose(keep, id) {   // easy → hard (hxD); ⑤ an answer cell at most
   for (const P of keep) { const k = CHK.kind(P.s, P.best); if ((ca.get(P.best) || 0) >= 2 || (ck.get(k) || 0) >= 3 || CHK.near([], P.s, id, pick) <= 2) continue; ca.set(P.best, (ca.get(P.best) || 0) + 1); ck.set(k, (ck.get(k) || 0) + 1); pick.push(P); }
   keep.length = 0; keep.push(...pick);
 }
-if (process.argv.includes('--merge')) {   // OUT=dir node op_curate.js c9,e9 --merge: the kept problems of earlier runs into openings.json
-  for (const id of ids) { const g = O.sets.find(s => s.id === id), keep = JSON.parse(fs.readFileSync(path.join(process.env.OUT, id + '.json'), 'utf8')); choose(keep, id);
+if (process.argv.includes('--merge')) {   // OUT=dir node op_curate.js c9,e9 --merge [--deep]: the kept problems of earlier runs into openings.json
+  for (const id of ids) { const g = O.sets.find(s => s.id === id), keep = [];   // (OUT may list several dirs, a:b — the kept problems of every run)
+    for (const d of process.env.OUT.split(':')) { const f = path.join(d, id + '.json'); if (fs.existsSync(f)) for (const P of JSON.parse(fs.readFileSync(f, 'utf8'))) if (!keep.some(Q => Q.s.b === P.s.b)) keep.push(P); }
+    if (process.argv.includes('--deep')) { const n0 = keep.length, ok = keep.filter(P => { const w = CHK.deep1(P, g.n).concat(CHK.deep1(P, g.n)); if (w.length) console.error(' deep NG', E.nameOf(P.best, g.n), w.join('; ')); return !w.length; }); keep.length = 0; keep.push(...ok); console.error(id, 'deep', keep.length + '/' + n0); }   // (--deep: the native engine reads each again twice — 追26・追84 — and a problem that fails either read is not chosen)
+    choose(keep, id);
     console.error(id, 'chosen', keep.length, keep.map(P => E.nameOf(P.best, g.n) + ':' + CHK.kind(P.s, P.best) + ':' + CHK.d(P)).join(' '));
     if (keep.length >= 5) { g.problems = keep.length > 7 ? [0, 1, 2, 3, 4, 5, 6].map(i => keep[Math.round(i * (keep.length - 1) / 6)]) : keep; g.verified = true; } }
   fs.writeFileSync(OF, JSON.stringify(O)); process.exit(0);
@@ -48,9 +51,12 @@ if (process.argv.includes('--merge')) {   // OUT=dir node op_curate.js c9,e9 --m
       for (const e of a.list) { if (e.m === line[k] || e.m === E.SWAP) continue;
         let mv = line.slice(0, k).concat([e.m]);
         const push = m2 => { const q = replay(m2); if (q.side === side && !q.winner() && !seenB.has(q.spec().b)) { seenB.add(q.spec().b); cands.push(m2.slice()); } };
-        for (let c = 0; c < 4; c++) { const p = replay(mv); if (p.winner()) break; await N.setpos(p.spec()); const b = await N.best(0, Math.round(ms * .6), 0, 3); mv = mv.concat([b.m]);
+        if (WIDE) push(mv);   // (--wide: right after the opponent leaves the line)
+        for (let c = 0; c < 4; c++) { const p = replay(mv); if (p.winner()) break; await N.setpos(p.spec());
+          if (WIDE && c % 2 === 1) { const a2 = await N.analyze(Math.round(ms * .6), 0, 4); for (const x of a2.list.slice(1)) if (x.m !== E.SWAP) push(mv.concat([x.m])); }   // (--wide: the opponent's 2nd–4th moves too — not only answers to an intrusion)
+          await N.setpos(p.spec()); const b = await N.best(0, Math.round(ms * .6), 0, 3); mv = mv.concat([b.m]);
           if (c % 2 === 1) push(mv);
-          else { const q = replay(mv); if (!q.winner()) for (const x of intrusions(q)) push(mv.concat([x])); } } }   // (the opponent cuts into one of our bridges: we answer)
+          else if (!WIDE) { const q = replay(mv); if (!q.winner()) for (const x of intrusions(q)) push(mv.concat([x])); } } }   // (the opponent cuts into one of our bridges: we answer; --wide leaves these out — the earlier runs gave only 'save' problems)
     }
     console.error(id, 'candidates', cands.length);
     const keep = [];
