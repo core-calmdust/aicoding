@@ -84,10 +84,10 @@
 .amart img.flat{width:76%;height:76%;border-radius:10px}
 .amfacts{display:flex;gap:8px;flex-wrap:wrap}
 .amfacts span{display:inline-flex;align-items:center;gap:6px;padding:4px 11px 4px 5px;border-radius:99px;background:#f6eedb;font-weight:900;font-size:13.5px}
-.amfacts i{font-style:normal;font-size:11px;padding:2px 8px;border-radius:99px;background:#fff;color:var(--ink2)}
+.amfacts i{font-style:normal;font-size:12px;padding:2px 8px;border-radius:99px;background:#fff;color:var(--ink2)}
 .aminfo h3{margin:4px 0 0;font-size:16px}
 .amd{margin:0;font-size:14px;line-height:1.75;color:var(--ink)}
-.amjour i{display:block;font-style:normal;font-size:11.5px;font-weight:900;color:var(--ink2);margin-bottom:4px}
+.amjour i{display:block;font-style:normal;font-size:12px;font-weight:900;color:var(--ink2);margin-bottom:4px}
 .amjour div{display:flex;flex-wrap:wrap;align-items:center;gap:4px;font-size:13px;font-weight:700}
 .amjour span{padding:2px 9px;border-radius:99px;border:2px solid var(--line);background:#fff}
 .amjour span.h{border-color:var(--ink);background:var(--ink);color:#fff}
@@ -130,12 +130,12 @@
   .aminfo .amtop{grid-area:top;display:block;min-width:0}
   .aminfo .amtop>.amart{display:none}
   .aminfo .amtop b{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .aminfo .amtop small{font-size:11px}
+  .aminfo .amtop small{font-size:12px}
   .aminfo .amart.ph{display:grid;grid-area:art;width:50px;height:50px;border-radius:16px;align-self:center}
   .aminfo .amfacts{grid-area:facts;flex-wrap:nowrap;gap:6px;min-width:0;overflow:hidden}
   .aminfo .amfacts span{padding:2px 9px 2px 3px;font-size:12px;white-space:nowrap;min-width:0}
   .aminfo .amfacts span b{overflow:hidden;text-overflow:ellipsis}
-  .aminfo .amfacts i{font-size:10px;padding:1px 6px}
+  .aminfo .amfacts i{font-size:12px;padding:1px 6px}
   .aminfo .amstory{grid-area:story;min-width:0;margin-top:4px}
   .aminfo .amstory h3{display:none}
   .aminfo .amd{font-size:13px;line-height:1.6;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
@@ -148,7 +148,7 @@
   .aminfo .amacts>*{flex:1;padding-block:10px}
   .aminfo .amempty{grid-column:1/-1;grid-row:1/-1;margin:auto;padding:0}
   .ampin,.amclu{width:34px;height:34px;border-width:2.5px}
-  .amclu b{min-width:19px;height:19px;font-size:11.5px;line-height:19px;right:-7px;top:-7px}
+  .amclu b{min-width:19px;height:19px;font-size:12px;line-height:19px;right:-7px;top:-7px}
   .amhint{display:none}
   .amzoom{right:8px;top:auto;bottom:8px;flex-direction:row}
   .amzoom button{width:34px;height:34px}
@@ -163,7 +163,7 @@
 /* numbered stops on the map and in the journey chips */
 .ammap .amsvg .num circle{fill:color-mix(in srgb,var(--c) 70%,#1d2030);stroke:#fff;stroke-width:2.2}
 .ammap .amsvg .lbl .num text{font:900 11px var(--round,inherit);fill:#fff;stroke:none;text-anchor:middle;dominant-baseline:central}
-.amjour u{display:inline-grid;place-items:center;min-width:17px;height:17px;margin-inline-end:5px;border-radius:99px;background:color-mix(in srgb,var(--c,#8a6a3a) 70%,#1d2030);color:#fff;font:900 10.5px/1 var(--round,inherit);text-decoration:none;vertical-align:1px}
+.amjour u{display:inline-grid;place-items:center;min-width:17px;height:17px;margin-inline-end:5px;border-radius:99px;background:color-mix(in srgb,var(--c,#8a6a3a) 70%,#1d2030);color:#fff;font:900 12px/1 var(--round,inherit);text-decoration:none;vertical-align:1px}
 /* a journey chip under the pointer lights its stop on the map */
 .ammap .amsvg .num circle,.ammap .amsvg .lbl .num text{transition:transform .18s ease,fill .18s}
 .ammap .amsvg .num{transform-box:fill-box;transform-origin:center;transition:transform .18s ease,filter .18s}
