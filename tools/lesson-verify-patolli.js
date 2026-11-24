@@ -105,8 +105,8 @@ module.exports = function patolli(opt = {}) {
       else if (q.kind === 'choice') { has14(q.q, L.id + '#' + w + '.q'); const c = choice(L, q, w); if (prev != null && c < prev) add(L.id, w, `⑥数える数 ${c} が前の問題 ${prev} より少ない`); prev = c; }
       else add(L.id, w, 'kind');
     });
-    // 追36 選ぶ問題の答えの位置がかたよらない（同じレッスンの3問以上がすべて同じ位置なら、位置で当てられる）
-    { const a = L.problems.filter(q => q.kind === 'choice').map(q => q.ans); if (a.length >= 3 && new Set(a).size === 1) add(L.id, 0, `追36 選ぶ問題の答えがすべて ${a[0] + 1} 番目`); }
+    // 追40 選ぶ問題の答えの位置がかたよらない（同じレッスンの3問以上がすべて同じ位置なら、位置で当てられる）
+    { const a = L.problems.filter(q => q.kind === 'choice').map(q => q.ans); if (a.length >= 3 && new Set(a).size === 1) add(L.id, 0, `追40 選ぶ問題の答えがすべて ${a[0] + 1} 番目`); }
     (L.ramp || []).forEach((r, i) => { if (r.k === 'try' && r.kind !== 'choice') move(L, r, 'ramp' + i, 3); if (r.k === 'try' && r.kind === 'choice') choice(L, r, 'ramp' + i); if (r.k === 'explain' && r.seq && r.seq.length) move(L, Object.assign({}, r, { ok: r.seq }), 'ramp' + i, 3); });
   }
   // 追22（2D）：patolli/app-learn.js が選ぶ問題の誤答で説明（ngo）を出す
