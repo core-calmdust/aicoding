@@ -18,7 +18,7 @@ const srv = http.createServer((q, r) => { const u = decodeURIComponent(q.url.spl
   if (!f.startsWith(ROOT)) { r.writeHead(403); return r.end(); }
   fs.readFile(f, (e, d) => { if (e) { r.writeHead(404); return r.end(); } r.writeHead(200, { 'Content-Type': MIME[path.extname(f)] || 'application/octet-stream' }); r.end(d); }); });
 
-const TIC = { ur: /ワン/, patolli: /ワン/, amazons: /ケロ/, shogi: /コン(?![ト-ヾ])/, xiangqi: /コン(?![ト-ヾ])/, janggi: /コン(?![ト-ヾ])/, backgammon: /ワン/, chess: /ピョン/, go: /ペン(?!ギ)/, gomoku: /ペン(?!ギ)/, hex: /ペン(?!ギ)/, checkers: /カニ/, foxgeese: /クワ/, konane: /カニ/ };const plain = s => String(s || '').replace(/<br\s*\/?>/g, '\n').replace(/<[^>]+>/g, '').trim();
+const TIC = { ur: /ワン/, patolli: /ワン/, amazons: /ケロ/, shogi: /コン(?![ト-ヾ])/, xiangqi: /コン(?![ト-ヾ])/, janggi: /コン(?![ト-ヾ])/, backgammon: /ワン/, chess: /ピョン/, go: /ペン(?!ギ)/, gomoku: /ペン(?!ギ)/, hex: /ペン(?!ギ)/, checkers: /カニ/, foxgeese: /クワ/, konane: /カニ/, ugolki: /ホー/ };const plain = s => String(s || '').replace(/<br\s*\/?>/g, '\n').replace(/<[^>]+>/g, '').trim();
 const sents = s => (plain(s).match(/[^。！？\n]+[。！？]+|[^。！？\n]+$/gm) || []).map(x => x.trim()).filter(Boolean);
 const end = sn => { const b = sn.replace(/[。！？!?]+$/, '').replace(/[）)」]+$/, ''); for (const e of ['なんだ', 'んだ', 'だよ', 'だね', 'よね', 'かな', 'よう', 'ろう', 'よ', 'ね']) if (b.endsWith(e)) return e === 'だよ' ? 'よ' : e === 'なんだ' ? 'んだ' : e === 'だね' ? 'ね' : e; return /[！？]$/.test(sn) ? sn.slice(-1) : 'x'; };
 const REASON = /(から|ので|ため|と、|と相手|ると|れば|なら|だと|では|せいで|取られ|負け|逃げ|防げ|止め|ふさ|残る|残っちゃ|できない|届かない|ならない|損)/;
@@ -247,7 +247,7 @@ function jgPuzzleTexts() {
   await pg.setRequestInterception(true);   // (fonts / CDNs: not needed, and they hang where the network is closed — as tools/lesson-progress.js)
   pg.on('request', q => { const u = q.url(); if (u.startsWith(`http://127.0.0.1:${port}/`) || u.startsWith('data:') || u.startsWith('blob:')) q.continue(); else q.abort(); });
   await pg.goto(`http://127.0.0.1:${port}/atlas/`, { waitUntil: 'domcontentloaded' }); await new Promise(r => setTimeout(r, 4000));
-  const pgGames = games.filter(g => g !== 'konane' && g !== 'ugolki'), onlyPz = games.length && !pgGames.length;   // (konane: the puzzles only, scored below)   // (foxgeese: the lessons (atlas/ls-foxgeese.js) and the puzzles, scored below)
+  const pgGames = games.filter(g => g !== 'konane'), onlyPz = games.length && !pgGames.length;   // (konane: the puzzles only, scored below)   // (foxgeese: the lessons (atlas/ls-foxgeese.js) and the puzzles, scored below)
   const R = onlyPz ? {} : await pg.evaluate(async games => {
     let src = await (await fetch('lessons3d.js?x=' + Date.now())).text();
     src = src.replace('  window.AtlasGuideJa = guideJa;', '  window.AtlasGuideJa = guideJa; let LSVD = null; const lsvX = (h, id) => { const m = (LSVD || {})[id]; if (!m) return h; for (const k of Object.keys(m).sort((a, b) => b.length - a.length)) if (h.includes(k)) h = h.split(k).join(m[k]); return h; }; window.__setLSV = d => { LSVD = d; };')
