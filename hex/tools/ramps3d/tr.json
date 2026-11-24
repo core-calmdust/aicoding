@@ -182,18 +182,18 @@
   "ar": "إذا تسلّل الخصم إلى جسرك، فردّ فورًا"
  },
  "b_save/body": {
-  "zh": "<p>对方刚刚下进了你桥中的一格。马上下在<b>带绿色标记的格子</b>（另一格）上，两颗棋子就仍然相连。</p><p>如果不应对，连线就会被切断。</p>",
-  "zh-TW": "<p>對手剛剛下進了你的橋的一個空格。立刻下在<b>有綠色標記的格子</b>（另一格），兩顆棋子就能保持相連。</p><p>不應對的話，連線就會被切斷。</p>",
-  "ko": "<p>상대가 방금 브리지의 한 칸에 두었습니다. 바로 <b>초록 표시가 있는 칸</b>(다른 칸)에 두면 두 돌은 계속 연결됩니다.</p><p>응수하지 않으면 사슬이 끊깁니다.</p>",
-  "es": "<p>El rival acaba de jugar en una casilla de tu puente. Juega enseguida en la <b>casilla con la marca verde</b> (la otra) y tus dos piedras seguirán conectadas.</p><p>Si no respondes, tu cadena queda cortada.</p>",
-  "fr": "<p>L'adversaire vient de jouer dans une case de votre pont. Jouez aussitôt la <b>case marquée en vert</b> (l'autre case) et vos deux pierres restent reliées.</p><p>Si vous ne répondez pas, votre chaîne est coupée.</p>",
-  "pt": "<p>O adversário acabou de jogar em uma casa da sua ponte. Jogue na hora na <b>casa com a marca verde</b> (a outra) e suas duas pedras continuam ligadas.</p><p>Se você não responder, a cadeia é cortada.</p>",
-  "de": "<p>Der Gegner hat gerade in ein Feld deiner Brücke gespielt. Spiel sofort auf das <b>grün markierte Feld</b> (das andere), dann bleiben deine Steine verbunden.</p><p>Antwortest du nicht, ist deine Kette zerschnitten.</p>",
-  "ru": "<p>Соперник только что сыграл в одну клетку вашего моста. Сразу сыграйте в <b>клетку с зелёной меткой</b> (другую) — и ваши камни останутся связаны.</p><p>Если не ответить, цепь разрежут.</p>",
-  "tr": "<p>Rakip az önce köprünün bir hücresine oynadı. Hemen <b>yeşil işaretli hücreye</b> (diğer hücreye) oyna, iki taşın bağlı kalsın.</p><p>Karşılık vermezsen zincirin kesilir.</p>",
-  "id": "<p>Lawan baru saja bermain di satu sel jembatanmu. Segera mainkan <b>sel bertanda hijau</b> (sel yang lain) dan kedua batumu tetap terhubung.</p><p>Jika tidak dijawab, rantaimu terpotong.</p>",
-  "hi": "<p>विरोधी ने अभी आपके ब्रिज के एक खाने में चाल चली है। तुरंत <b>हरे निशान वाले खाने</b> (दूसरे खाने) पर खेलें, और आपकी दोनों गोटियाँ जुड़ी रहेंगी।</p><p>जवाब न दें, तो कड़ी कट जाती है।</p>",
-  "ar": "<p>لعب الخصم للتو في إحدى خانتي جسرك. العب فورًا في <b>الخانة ذات العلامة الخضراء</b> (الخانة الأخرى) فيبقى حجراك متصلين.</p><p>إن لم تردّ، تُقطع سلسلتك.</p>"
+  "zh": "<p>对方刚刚下进了你桥中的一格。这里是第二行的棋子与<b>你的边</b>之间的桥（边也像棋子一样能相连）。</p><p>马上下在<b>带绿色标记的格子</b>（另一格）上，棋子就仍然连着边。如果不应对，它和边的连接就会被切断。</p>",
+  "zh-TW": "<p>對手剛剛下進了你的橋的一個空格。這裡是第二行的棋子與<b>你的邊</b>之間的橋（邊也像棋子一樣能相連）。</p><p>立刻下在<b>有綠色標記的格子</b>（另一格），棋子就能和邊保持相連。不應對的話，它和邊的連接就會被切斷。</p>",
+  "ko": "<p>상대가 방금 브리지의 한 칸에 두었습니다. 여기서는 두 번째 줄의 돌과 <b>자기 변</b> 사이의 브리지입니다(변도 돌처럼 연결됩니다).</p><p>바로 <b>초록 표시가 있는 칸</b>(다른 칸)에 두면 돌은 변과 계속 연결됩니다. 응수하지 않으면 변과의 연결이 끊깁니다.</p>",
+  "es": "<p>El rival acaba de jugar en una casilla de tu puente. Aquí es el puente entre tu piedra de la segunda fila y <b>tu borde</b> (un borde conecta igual que una piedra).</p><p>Juega enseguida en la <b>casilla con la marca verde</b> (la otra) y la piedra seguirá unida al borde. Si no respondes, queda separada del borde.</p>",
+  "fr": "<p>L'adversaire vient de jouer dans une case de votre pont. Ici, c'est le pont entre votre pierre de la deuxième rangée et <b>votre bord</b> (un bord se relie comme une pierre).</p><p>Jouez aussitôt la <b>case marquée en vert</b> (l'autre case) et la pierre reste reliée au bord. Si vous ne répondez pas, elle est coupée du bord.</p>",
+  "pt": "<p>O adversário acabou de jogar em uma casa da sua ponte. Aqui é a ponte entre sua pedra da segunda fileira e <b>sua borda</b> (a borda se liga como uma pedra).</p><p>Jogue na hora na <b>casa com a marca verde</b> (a outra) e a pedra continua ligada à borda. Se você não responder, ela é cortada da borda.</p>",
+  "de": "<p>Der Gegner hat gerade in ein Feld deiner Brücke gespielt. Hier ist es die Brücke zwischen deinem Stein in der zweiten Reihe und <b>deinem Rand</b> (ein Rand verbindet sich wie ein Stein).</p><p>Spiel sofort auf das <b>grün markierte Feld</b> (das andere), dann bleibt der Stein mit dem Rand verbunden. Antwortest du nicht, ist er vom Rand abgeschnitten.</p>",
+  "ru": "<p>Соперник только что сыграл в одну клетку вашего моста. Здесь это мост между вашим камнем во втором ряду и <b>вашей стороной</b> (сторона соединяется так же, как камень).</p><p>Сразу сыграйте в <b>клетку с зелёной меткой</b> (другую) — и камень останется связан со стороной. Если не ответить, его отрежут от стороны.</p>",
+  "tr": "<p>Rakip az önce köprünün bir hücresine oynadı. Burada köprü, ikinci sıradaki taşınla <b>kendi kenarın</b> arasında (kenar da bir taş gibi bağlanır).</p><p>Hemen <b>yeşil işaretli hücreye</b> (diğer hücreye) oyna, taş kenara bağlı kalsın. Karşılık vermezsen kenarla bağı kesilir.</p>",
+  "id": "<p>Lawan baru saja bermain di satu sel jembatanmu. Di sini jembatannya ada di antara batumu di baris kedua dan <b>sisimu</b> (sisi tersambung seperti sebuah batu).</p><p>Segera mainkan <b>sel bertanda hijau</b> (sel yang lain) dan batu itu tetap terhubung ke sisi. Jika tidak dijawab, batu itu terputus dari sisi.</p>",
+  "hi": "<p>विरोधी ने अभी आपके ब्रिज के एक खाने में चाल चली है। यहाँ ब्रिज दूसरी पंक्ति की आपकी गोटी और <b>आपके किनारे</b> के बीच है (किनारा भी गोटी की तरह जुड़ता है)।</p><p>तुरंत <b>हरे निशान वाले खाने</b> (दूसरे खाने) पर खेलें, और गोटी किनारे से जुड़ी रहेगी। जवाब न दें, तो किनारे से उसका जुड़ाव कट जाता है।</p>",
+  "ar": "<p>لعب الخصم للتو في إحدى خانتي جسرك. الجسر هنا بين حجرك في الصف الثاني و<b>حافتك</b> (الحافة تتصل كما يتصل الحجر).</p><p>العب فورًا في <b>الخانة ذات العلامة الخضراء</b> (الخانة الأخرى) فيبقى الحجر متصلًا بالحافة. إن لم تردّ، يُقطع عن الحافة.</p>"
  },
  "b_save/g": {
   "zh": "同样的形状，棋盘转了半圈。守住桥。",
@@ -210,18 +210,18 @@
   "ar": "الشكل نفسه، بعد تدوير اللوحة نصف دورة. أنقذ الجسر."
  },
  "b_save/y": {
-  "zh": "正确！连线依然连着。",
-  "zh-TW": "正確！連線依然相連。",
-  "ko": "정답! 사슬은 계속 연결되어 있습니다.",
-  "es": "¡Correcto! Tu cadena sigue conectada.",
-  "fr": "Bravo ! Votre chaîne est toujours reliée.",
-  "pt": "Certo! A cadeia continua ligada.",
-  "de": "Richtig! Die Kette ist noch verbunden.",
-  "ru": "Верно! Цепь по-прежнему связана.",
-  "tr": "Doğru! Zincir hâlâ bağlı.",
-  "id": "Benar! Rantaimu masih terhubung.",
-  "hi": "सही! कड़ी अब भी जुड़ी है।",
-  "ar": "صحيح! ما زالت السلسلة متصلة."
+  "zh": "正确！棋子依然连着边。",
+  "zh-TW": "正確！棋子依然和邊相連。",
+  "ko": "정답! 돌은 변과 계속 연결되어 있습니다.",
+  "es": "¡Correcto! La piedra sigue unida al borde.",
+  "fr": "Bravo ! La pierre est toujours reliée au bord.",
+  "pt": "Certo! A pedra continua ligada à borda.",
+  "de": "Richtig! Der Stein ist noch mit dem Rand verbunden.",
+  "ru": "Верно! Камень по-прежнему связан со стороной.",
+  "tr": "Doğru! Taş hâlâ kenara bağlı.",
+  "id": "Benar! Batu itu masih terhubung ke sisi.",
+  "hi": "सही! गोटी अब भी किनारे से जुड़ी है।",
+  "ar": "صحيح! ما زال الحجر متصلًا بالحافة."
  },
  "b_edge/t": {
   "zh": "第 2 行的棋子已经和边相连",
@@ -518,18 +518,18 @@
   "ar": "افتتح في المركز أو على القطر القصير"
  },
  "s_center/body": {
-  "zh": "<p>没有交换规则时，先手会下在中央或短对角线（连接两个钝角的线）上：从那里到红方的两条边都很近。</p><p><b>带绿色标记的格子</b>是 AI 认为最强的第一手。</p>",
-  "zh-TW": "<p>沒有交換規則時，先手會在中央或短對角線（兩個鈍角之間的線）上開局：從那裡到紅方的兩條邊都很近。</p><p><b>有綠色標記的格子</b>是 AI 評為最強的第一手。</p>",
-  "ko": "<p>스왑 규칙이 없으면 선수는 중앙이나 짧은 대각선(두 둔각 모서리를 잇는 선) 위에서 시작합니다. 거기서는 빨강의 두 변이 모두 가깝기 때문입니다.</p><p><b>초록 표시가 있는 칸</b>은 AI가 가장 강하다고 본 첫 수입니다.</p>",
-  "es": "<p>Sin la regla del cambio, el primer jugador abre en el centro o en la diagonal corta (la línea entre las dos esquinas obtusas): desde ahí los dos bordes de Rojo están cerca.</p><p>La <b>casilla con la marca verde</b> es la primera jugada que la IA considera más fuerte.</p>",
-  "fr": "<p>Sans la règle de l'échange, le premier joueur ouvre au centre ou sur la petite diagonale (la ligne entre les deux coins obtus) : de là, les deux bords de Rouge sont proches.</p><p>La <b>case marquée en vert</b> est le premier coup que l'IA juge le plus fort.</p>",
-  "pt": "<p>Sem a regra da troca, o primeiro jogador abre no centro ou na diagonal curta (a linha entre os dois cantos obtusos): dali as duas bordas do Vermelho ficam perto.</p><p>A <b>casa com a marca verde</b> é o primeiro lance que a IA considera mais forte.</p>",
-  "de": "<p>Ohne Tauschregel eröffnet der Anziehende in der Mitte oder auf der kurzen Diagonale (der Linie zwischen den beiden stumpfen Ecken): Von dort sind beide Ränder von Rot nah.</p><p>Das <b>grün markierte Feld</b> ist der erste Zug, den die KI für den stärksten hält.</p>",
-  "ru": "<p>Без правила обмена первый игрок начинает в центре или на короткой диагонали (линия между двумя тупыми углами): оттуда близко до обеих сторон Красных.</p><p><b>Клетка с зелёной меткой</b> — первый ход, который ИИ считает сильнейшим.</p>",
-  "tr": "<p>Takas kuralı olmadan ilk oyuncu merkezde ya da kısa köşegende (iki geniş açılı köşe arasındaki çizgi) açar: oradan Kırmızı'nın iki kenarı da yakındır.</p><p><b>Yeşil işaretli hücre</b>, YZ'nin en güçlü bulduğu ilk hamledir.</p>",
-  "id": "<p>Tanpa aturan tukar, pemain pertama membuka di tengah atau di diagonal pendek (garis antara dua sudut tumpul): dari sana kedua sisi Merah dekat.</p><p><b>Sel bertanda hijau</b> adalah langkah pertama yang dinilai AI paling kuat.</p>",
-  "hi": "<p>स्वैप नियम के बिना पहला खिलाड़ी केंद्र या छोटे विकर्ण (दो अधिक कोणों के बीच की रेखा) पर शुरू करता है: वहाँ से लाल के दोनों किनारे पास होते हैं।</p><p><b>हरे निशान वाला खाना</b> वह पहली चाल है जिसे AI सबसे मज़बूत मानता है।</p>",
-  "ar": "<p>من دون قاعدة التبديل، يفتتح اللاعب الأول في المركز أو على القطر القصير (الخط بين الزاويتين المنفرجتين): من هناك تكون حافتا الأحمر قريبتين.</p><p><b>الخانة ذات العلامة الخضراء</b> هي النقلة الأولى التي يراها الذكاء الاصطناعي الأقوى.</p>"
+  "zh": "<p>没有交换规则时，先手会下在中央或短对角线（连接两个钝角的线）上：从那里到红方的两条边都很近。</p><p><b>带绿色标记的格子</b>有两个：中央和短对角线上的一格。AI 认为两者几乎一样强。</p>",
+  "zh-TW": "<p>沒有交換規則時，先手會在中央或短對角線（兩個鈍角之間的線）上開局：從那裡到紅方的兩條邊都很近。</p><p><b>有綠色標記的格子</b>有兩個：中央和短對角線上的一格。AI 評為兩者幾乎一樣強。</p>",
+  "ko": "<p>스왑 규칙이 없으면 선수는 중앙이나 짧은 대각선(두 둔각 모서리를 잇는 선) 위에서 시작합니다. 거기서는 빨강의 두 변이 모두 가깝기 때문입니다.</p><p><b>초록 표시가 있는 칸</b>은 두 곳입니다. 중앙과 짧은 대각선 위의 칸으로, AI는 둘 다 거의 같은 정도로 강한 첫 수로 봅니다.</p>",
+  "es": "<p>Sin la regla del cambio, el primer jugador abre en el centro o en la diagonal corta (la línea entre las dos esquinas obtusas): desde ahí los dos bordes de Rojo están cerca.</p><p>Hay dos <b>casillas con la marca verde</b>: el centro y una casilla de la diagonal corta. La IA las considera casi igual de fuertes.</p>",
+  "fr": "<p>Sans la règle de l'échange, le premier joueur ouvre au centre ou sur la petite diagonale (la ligne entre les deux coins obtus) : de là, les deux bords de Rouge sont proches.</p><p>Il y a deux <b>cases marquées en vert</b> : le centre et une case de la petite diagonale. L'IA les juge presque aussi fortes l'une que l'autre.</p>",
+  "pt": "<p>Sem a regra da troca, o primeiro jogador abre no centro ou na diagonal curta (a linha entre os dois cantos obtusos): dali as duas bordas do Vermelho ficam perto.</p><p>Há duas <b>casas com a marca verde</b>: o centro e uma casa da diagonal curta. A IA considera as duas quase igualmente fortes.</p>",
+  "de": "<p>Ohne Tauschregel eröffnet der Anziehende in der Mitte oder auf der kurzen Diagonale (der Linie zwischen den beiden stumpfen Ecken): Von dort sind beide Ränder von Rot nah.</p><p>Es gibt zwei <b>grün markierte Felder</b>: die Mitte und ein Feld auf der kurzen Diagonale. Die KI hält beide für fast gleich stark.</p>",
+  "ru": "<p>Без правила обмена первый игрок начинает в центре или на короткой диагонали (линия между двумя тупыми углами): оттуда близко до обеих сторон Красных.</p><p><b>Клеток с зелёной меткой</b> две: центр и клетка на короткой диагонали. ИИ считает их почти одинаково сильными.</p>",
+  "tr": "<p>Takas kuralı olmadan ilk oyuncu merkezde ya da kısa köşegende (iki geniş açılı köşe arasındaki çizgi) açar: oradan Kırmızı'nın iki kenarı da yakındır.</p><p>İki <b>yeşil işaretli hücre</b> var: merkez ve kısa köşegen üzerindeki bir hücre. YZ ikisini de neredeyse aynı güçte buluyor.</p>",
+  "id": "<p>Tanpa aturan tukar, pemain pertama membuka di tengah atau di diagonal pendek (garis antara dua sudut tumpul): dari sana kedua sisi Merah dekat.</p><p>Ada dua <b>sel bertanda hijau</b>: tengah dan satu sel di diagonal pendek. AI menilai keduanya hampir sama kuat.</p>",
+  "hi": "<p>स्वैप नियम के बिना पहला खिलाड़ी केंद्र या छोटे विकर्ण (दो अधिक कोणों के बीच की रेखा) पर शुरू करता है: वहाँ से लाल के दोनों किनारे पास होते हैं।</p><p><b>हरे निशान वाले खाने</b> दो हैं: केंद्र और छोटे विकर्ण पर एक खाना। AI दोनों को लगभग बराबर मज़बूत मानता है।</p>",
+  "ar": "<p>من دون قاعدة التبديل، يفتتح اللاعب الأول في المركز أو على القطر القصير (الخط بين الزاويتين المنفرجتين): من هناك تكون حافتا الأحمر قريبتين.</p><p>هناك <b>خانتان بعلامة خضراء</b>: المركز وخانة على القطر القصير. يراهما الذكاء الاصطناعي متقاربتين جدًا في القوة.</p>"
  },
  "s_center/g": {
   "zh": "同样的形状，棋盘转了半圈。选择一步强的第一手。",
