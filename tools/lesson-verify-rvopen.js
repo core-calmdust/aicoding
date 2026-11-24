@@ -89,7 +89,7 @@ function poolCheck(opt, ST, pool, add) {   // the verified lines: the 5 problems
         if (/\{|undefined|NaN/.test(w)) { bad('a placeholder'); continue; }
         if (RXO.test(w)) bad('speaks of the line\'s moves');
         if (/数は近い/.test(w)) bad('no difference on the board to tell');
-        if (/おしい|あと少し|あと一歩|いい線/.test(w) && pts(P.sc, sqn(u)) < 8) bad(`「おしい」 for a move of ${pts(P.sc, sqn(u))} points`);
+        if (/おしい|あと少し|あと一歩|いい線|悪くない|まだ戦える|でも戦える|すぐには負けない|もありだけど/.test(w) && pts(P.sc, sqn(u)) < 10) bad(`追53 「おしい」 for a move of ${pts(P.sc, sqn(u))} points`);
         if (vu >= vA - 0.5) bad(`a move as good as the answer (${vu} / ${vA}) is told off`);
         if (/相手が隅に打てる|隅を取られちゃう|相手は隅に打てる|隅への道が開いて/.test(w) && !(fu.oC > fa.oC)) bad('no corner given');
         if (/（X）|Xに打つと/.test(w) && !(fu.x && !fa.x)) bad('not an X square');
@@ -112,6 +112,13 @@ function reversiOpen(opt) {
   (PZ.levels || []).forEach(lv => lv.puzzles.forEach((p, j) => pool.push([`puzzle ${lv.id} ${j + 1}`, String(p.cells)])));
   ST.forEach(s => s.ks.forEach((k, j) => pool.push([`open ${s.ln.moves} q${j + 1}`, X.rvAfter(s.mv.slice(0, k).join('')).split(':')[0], s, j])));
   poolCheck(opt, ST, pool.filter(x => !x[2]), add);
+  // 追53 (2026-11-24 担当B): every line that asks its own moves (all but the verified pools), every legal move — the words open with
+  // 「おしい・あと少し・あと一歩・いい線」 only for a move worth 10+ points (REVERSI.points: 14 − 2.5 × discs below the best, at most 14)
+  for (const s of ST) { const id = s.ln.moves; if (RVO_DONE.has(id)) continue; const V = X.rvOpVoice(id), name = String(s.ln.name.ja);
+    s.ks.forEach((k, j) => { const pre = s.mv.slice(0, k).join(''), pos = X.rvAfter(pre), [cs, tm] = pos.split(':'), c = cs.split('').map(Number), lg = X.rvLegal(c, +tm), A = X.rvSq(s.mv[k]), sqn = q => 'abcdefgh'[q & 7] + ((q >> 3) + 1), ev = EV[pre] || null;
+      const o = { pos, kind: 'best', P: { rv: 'op', ans: A, ev }, ans: String(A) }; let W; try { W = X.rvOpJa(o, name, j, V); } catch (e) { add(id, j, '⑧ the words fail: ' + e.message); return; }
+      for (const u of lg) { if (u === A) continue; const w = String(W.ng(u)).replace(/<[^>]+>/g, ''), p = ev ? pts(ev, sqn(u)) : 0;
+        const m = w.match(/おしい|あと少し|あと一歩|いい線|悪くない|まだ戦える|でも戦える|すぐには負けない|もありだけど/); if (m && p < 10) add(id, j, `⑦ ${sqn(u)}: 追53 「${m[0]}」 for a move of ${p} points 「${w}」`); } }); }
   for (const s of ST) { const id = s.ln.moves; if (!opt.all || RVO_DONE.has(id)) continue;   // (the lines' own moves: --all reports them; a verified line asks its pool instead)
     const study = new Set(); for (let k = 0; k <= s.mv.length; k++) study.add(X.rvAfter(s.mv.slice(0, k).join('')).split(':')[0]);
     let prevD = -1; const V = X.rvOpVoice(id), name = String(s.ln.name.ja);

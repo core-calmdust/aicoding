@@ -2425,12 +2425,13 @@
     askN: ['『{n}』の続き、{s}の次の一手はどこかな？', '{s}の番！ 『{n}』の手順を思い出して打ってみて！', 'ここで{s}が打つ、『{n}』の一手はどこだと思う？', '『{n}』はこの先どう進むんだっけ？ {s}の手を打ってみよう！', '次は{s}。『{n}』なら、どこに打つ？'],
     ask: ['さあ{s}の一手！ 定石どおりに打てるかな？', '{s}の番！ さっきの手順、覚えてるかな？', '{s}の一手、きみならどこに置く？', '続けて{s}の番。手順の次はどこだっけ？', 'お次は{s}！ 盤の形から思い出せるかな？', '{s}ならここでどう打つ？ 落ち着いていこう！'],
     cheer: ['いいね！', 'さすが！', 'ばっちり！', 'お見事！', 'その調子！', '上手！', 'ナイス！', 'よく覚えてたね、すごい！', 'そうそう、それ！', 'いい手だね！', '完璧！', 'やったね！'],
-    soft: ['おしい！', 'ドンマイ！', 'あと少しだった！', 'いい線いってたね！', '大丈夫、ここで覚えちゃおう！', '気にしない、気にしない！', 'よくある迷いだから平気！', 'だいじょうぶ、次はきっと打てるね！', 'あと一歩！', '今度はもう覚えたかな？'],
+    soft: ['おしい！', 'ドンマイ！', 'あと少しだった！', 'いい線いってたね！', '大丈夫、ここで覚えちゃおう！', '気にしない、気にしない！', 'よくある迷いだから平気！', 'だいじょうぶ、次はきっと打てるね！', 'あと一歩！', '今度はもう覚えたかな？',
+      '平気、平気！', 'いっしょに見てみよう！', 'ここは見落としやすい所！', 'みんな一度は迷う場面だよ。', 'あわてなくて大丈夫！'],   // (追53: the last five, for a move under 10 points — no 「おしい」)
     push: ['次もこの調子でいこう！', 'どんどん行こう！', 'その勢いで次へ進もう！', 'まだまだいけるね！', 'この感じで続けよう！', '次も楽しみだね！'],
   };
   function rvOpVoice(id) {   // one opening's voice: the wordings in turn, the praise / the soft words / the push in an order of its own
     let h = shSeed('rv' + id); h = Math.imul(h ^ (h >>> 16), 0x45d9f3b) >>> 0; h = Math.imul(h ^ (h >>> 13), 0x45d9f3b) >>> 0; const seed = (h ^ (h >>> 16)) >>> 0;
-    const O = RVJ_OP, pc = shPerm(seed, O.cheer.length), ps = shPerm((seed ^ 0x9e3779b9) >>> 0, O.soft.length), pp = shPerm((seed ^ 0x51ed27f1) >>> 0, O.push.length);
+    const O = RVJ_OP, pc = shPerm(seed, O.cheer.length), ps = shPerm((seed ^ 0x7f4a7c15) >>> 0, O.soft.length), pp = shPerm((seed ^ 0x51ed27f1) >>> 0, O.push.length);
     // (a wording is skipped while one of its sentences, or a 10-letter run of it already in two bubbles, has been said in this opening)
     const cnt = {}, used = new Set(), gram = new Map(), sn = t => (String(t).replace(/<[^>]+>/g, '').match(/[^。！？]+[。！？]*/g) || []).map(x => x.trim()).filter(x => x.length >= 5);
     const gr = t => { const x = String(t).replace(/<[^>]+>/g, '').replace(/[\s、。！？!?「」（）()・…〜♪]/g, ''), g = new Set(); for (let k = 0; k + 10 <= x.length; k++) g.add(x.slice(k, k + 10)); return g; };
@@ -2503,8 +2504,10 @@
     const { F, me } = rvOpFacts(o.pos), A = +o.ans, ks = Object.keys(F).map(Number), fa = F[A] || { n: 0, open: 0, oM: 0, oC: 0 };
     const minOf = k => Math.min(...ks.map(q => F[q][k])), maxOf = k => Math.max(...ks.map(q => F[q][k])), side = me === 1 ? '黒' : '白';
     const SOFT = off ? RVJ_OP.soft.filter(t => !RXO.test(t)) : null, CHEER = off ? RVJ_OP.cheer.filter(t => !RXO.test(t)) : null;   // (off: no 「覚え」)
-    const NEAR = /おしい|あと少し|あと一歩|いい線/, ptsOf = u => { const e = o.P && o.P.ev; if (!e) return 0; const m = e.find(x => rvSq(x[0]) === u); return m ? Math.max(0, Math.min(14, Math.round(14 - 2.5 * (e[0][1] - m[1])))) : 0; };   // (off: 「おしい」 only for a move that still scores 8+)
-    const soft = (k, u) => { if (!off) return V.soft(k); const L2 = u != null && ptsOf(u) < 8 ? SOFT.filter(t => !NEAR.test(t)) : SOFT; return L2[(V.seed + k) % L2.length]; }, cheer = k => off ? CHEER[(V.seed + k) % CHEER.length] : V.cheer(k);
+    const NEAR = /おしい|あと少し|あと一歩|いい線/, ptsOf = u => { const e = o.P && o.P.ev; if (!e) return 0; const best = Math.max(...e.map(x => x[1])), m = e.find(x => rvSq(x[0]) === u); return m ? Math.max(0, Math.min(14, Math.round(14 - 2.5 * (best - m[1])))) : 0; };   // (= REVERSI.points for a move off the line)
+    const soft = (k, u) => { const near = u != null && ptsOf(u) >= 10, S = q => off ? SOFT[(V.seed + q) % SOFT.length] : V.soft(q), t = S(k); if (near || !NEAR.test(t)) return t;
+      const n = off ? SOFT.length : RVJ_OP.soft.length, U = [0, 1, 2, 3, 4].map(S), L = []; for (let q = 5; q < n + 5; q++) { const x = S(q); if (!NEAR.test(x) && !U.includes(x) && !L.includes(x)) L.push(x); }
+      const r = [0, 1, 2, 3, 4].slice(0, Math.min(k, 5)).filter(q => NEAR.test(S(q))).length; return L.length ? L[(r + Math.max(0, k - 5) + (V.seed >>> 3)) % L.length] : 'ドンマイ！'; }, cheer = k => off ? CHEER[(V.seed + k) % CHEER.length] : V.cheer(k);   // (追53: 「おしい・あと少し・あと一歩・いい線」 only for a move worth 10+ points, in the line's own problems too)
     const ask = off ? V.v('askO', RVJ_OP.askO.map(t => fill(t, { n: nmQ, s: me === 1 ? '黒' : '白' }))) : i === 0 || i === 3 ? v('askN', RVJ_OP.askN.map(t => fill(t, { n: name, s: side }).replace('『' + name + '』', nmQ))) : v('ask', RVJ_OP.ask.map(t => fill(t, { s: side })));
     const spread = k => ks.length > 1 && minOf(k) < maxOf(k);   // (a fact that tells the moves apart — on the first moves every move flips one disc)
     const O = () => v('opp', RV_OPP), MEM = off ? RVJ_OP.cmpO : ['さっき盤で見た手順を思い出してみて。相手の直前の手に、どう応じていたかな？', '石がどんな形に並んでいたか、思い出してみて。盤の絵がヒントになるかも！', 'あわてずに、手順の流れを頭の中でもう一度並べてみよう。', '最後にできあがる形を思いうかべると、次の一手が見えてくるかも？', '一手前の相手の石に、どう応じる流れだったっけ？', '手順の動画を巻きもどすつもりで、ゆっくり思い出してみて！'];
@@ -4937,7 +4940,7 @@
       open: ['まだ広いところがある！ どの方向にも伸びられる点を探してみて。', '石の少ない場所に、いい点が眠っているかも？'] },
     good: ['いいね！', 'さすが！', 'お見事！', 'ばっちりだペン！', 'やったね！'],
     push: ['次もこの調子で行こう！', null, 'どんどん行こう！', null, 'その勢いで次へ行こうペン！'],
-    soft: ['おしい！', 'ドンマイだペン！', '大丈夫、ここはむずかしいんだ。', '気にしない、気にしない！', 'あと一歩！'],
+    soft: ['いい線いってたペン！', 'ドンマイだペン！', '大丈夫、ここはむずかしいんだ。', '気にしない、気にしない！', 'あと一歩！', 'いっしょに確かめようペン！', 'よくある迷いどころだよ。'],   // (追53: 「いい線・あと一歩」 only for 10+ points — opJa soft. No 「おしい！」: the 3D heading says it already)
     tail: [null, 'これで覚えちゃおう！', null, '次はきっと見つけられるペン！', '次もいっしょに考えよう！'],
     // why the best cell is best (praise), by its shape
     why: { swap: ['この1手目は強すぎるから、もらっちゃうのがいちばん！', '中央に近い強い石を、そっくり自分のものにできた！'],
@@ -5237,13 +5240,18 @@
       const fb = HXA.facts(sp, best), kb0 = HXA.kind(fb), kb = sw && kb0 !== 'swap' ? 'noswap' : kb0, side = H.side(sp.side === 2 ? 2 : 1);
       const nth = (probs || []).slice(0, i).filter(Q => Q.sc && kindOf(Q) === kb).length + LI, uz = (key, a) => { used = used || {}; const c = used[key] = (used[key] || 0) + 1; return pk(a, c + LI); };
       const M = HXM('ok', 'ja'), X = HXM('ng', 'ja'), Mb = best === 1023 ? 'スワップ' : M;
-      const full = u => this.points(P, u) >= 20;
+      const self = this, full = u => this.points(P, u) >= 20;
       const wrongOf = u => u != null && u !== best && !full(u) ? u : (P.sc.slice().sort((a, c) => a[1] - c[1])[k % 2] || [])[0];
       const ask = sw ? pk(H.askSw, k + LI) : fill(pk(H.ask, k + LI), { s: side }), hintTx = pk(H.hint[kb] || H.hint.open, nth);
-      const good = function (u) { this._hl = []; const same = u != null && u !== best;
-        return [pk(H.good, k), same ? pk(['きみの手も、いちばんの手と同じくらい強いペン！', 'その手も満点！ いちばんの手と変わらない強さなんだ。'], k) : pk(H.why[kb] || H.why.open, nth), pk(H.push, k)].filter(Boolean).join(' '); };
+      const good = function (u) { this._hl = []; const same = u != null && u !== best, top = same && full(u);   // (追71: 「満点・同じくらい強い」 only for a 20-point move; 16〜19 points: good, but the green one is better)
+        return [pk(H.good, k), top ? pk(['きみの手も、いちばんの手と同じくらい強いペン！', 'その手も満点！ いちばんの手と変わらない強さなんだ。'], k)
+          : same ? fill(pk(['きみの手もいい手！ でも、いちばんは{m}。{a}んだ。', 'その手もなかなかだペン！ ただ{m}なら、{a}。', 'いい線の一手！ ほんの少しだけ{m}が上。{a}から！'], k), { m: Mb, a: pk(H.ngWhy[kb] || H.ngWhy.open, nth) })
+          : pk(H.why[kb] || H.why.open, nth), pk(H.push, k)].filter(Boolean).join(' '); };
+      const NEAR = /おしい|いい線|あと少し|あと一歩/, low = P.sc.length ? Math.min(...P.sc.map(e => e[1])) - 60 : -1000;
+      const soft = u => { const near = u != null && self.points(P, u) >= 10 && (val.has(u) ? val.get(u) : low) >= -HEX_WINT, t = pk(H.soft, k); if (near || !NEAR.test(t)) return t;
+        const L2 = H.soft.slice(5).filter(x => !NEAR.test(x)); return pk(L2, H.soft.slice(0, 5).filter(x => NEAR.test(x)).indexOf(t)); };   // (a near word left out: one of the spare words, a different one for each — no line twice in a lesson)   // (追53: 「おしい・あと一歩」 only for a move worth 10+ points that does not lose)
       const ng = function (u0) { this._hl = []; const u = wrongOf(u0); const right = fill(best === 1023 ? pk(['ここはスワップが正解！ {a}んだ。', '答えはスワップ。{a}から！', 'スワップしていれば、{a}！'], nth) : pk(H.right, k + 2), { m: Mb, a: pk(H.ngWhy[kb] || H.ngWhy.open, nth + 1) });
-        if (u == null) return [pk(H.soft, k), right, pk(H.tail, k)].filter(Boolean).join(' ');
+        if (u == null) return [soft(null), right, pk(H.tail, k)].filter(Boolean).join(' ');
         const fu = u === 1023 ? { swap: 1 } : HXA.facts(sp, u), ku = HXA.kind(fu), Xu = u === 1023 ? 'スワップ' : X, stones = /[rb]/.test(String(sp.b));
         let b;
         if (kb === 'swap') b = uz('swap', ['強い赤石が、相手のまま残っちゃう', 'せっかくの強い石を、もらいそこねちゃう', '中央に近いいい石を、相手に持たせたままになる']);
@@ -5258,7 +5266,7 @@
         else if (fu.onEdge && !fb.onEdge) b = uz('edg1', ['ふちの1段目は辺に近すぎて、働きが小さい', '辺そのものに打つと、2段目ほど遠くまで効かない', 'いちばん外側の列は、道をのばす力が弱い']);
         else if (kb0 === 'edge' && !fu.edge) b = uz('edg2', ['辺までの道が、まだ切られやすい', '辺とのつながりに、すきが残っちゃう', '辺の手前で、相手にふさがれる心配が残る']);
         else b = uz('lack' + kb0, H.lack[kb0] || H.lack.open);   // (what the move leaves undone — never "the AI says")
-        return [pk(H.soft, k), right, fill(pk(H.you, k + 3), { x: Xu, b }), pk(H.tail, k)].filter(Boolean).join(' '); };
+        return [soft(u), right, fill(pk(H.you, k + 3), { x: Xu, b }), pk(H.tail, k)].filter(Boolean).join(' '); };
       return { own: true, ask, hintTx, good, ng };
     },
     // the warm-up: its position, marks, the right moves
