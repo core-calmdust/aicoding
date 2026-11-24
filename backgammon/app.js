@@ -2843,7 +2843,7 @@ $('#rulesClose').onclick = () => { if (rulesTour) rulesTour.stop(); hideOverlay(
 
 // ====================================================================== lessons
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261123m0').then(r => r.json()).then(d => {
+const lessonsReady = fetch('lessons.json?v=20261124a1').then(r => r.json()).then(d => {
   LESSONS = d;
   if (d.cats) { LS_COURSES = {}; for (const c of d.cats) LS_COURSES[c.id] = c.steps; }
   return d;
@@ -3126,7 +3126,9 @@ function renderLessonFb() {
     h += `<div class="plays-table">${F.plays.slice(0, 4).map((x, i) => `<div class="${i === 0 ? 'best' : ''} ${i === F.mine ? 'mine' : ''}"><span>${i + 1}</span><span>${BG.notation(x.moves)}</span><span>${fmtE(x.e)}</span></div>`).join('')}${F.mine >= 4 ? `<div class="mine"><span>${F.mine + 1}</span><span>${BG.notation(F.plays[F.mine].moves)}</span><span>${fmtE(F.plays[F.mine].e)}</span></div>` : ''}</div><div style="font-size:12px;color:var(--dim);margin-top:4px">${t('fb.eqNote', { n: F.plays.length })}</div>`;
     h += lsWhyHTML(P, F);
   } else {
-    const qv = QV(P); if (P.q === 'shots') qv.m = t('ls.why.shotsD', { d: (P.qv || {}).d });
+    const qv = QV(P), C = window.BGChoice;
+    if (P.q === 'shots') qv.m = C && (P.qv || {}).ds ? C.shotsWhy(P, t, qv) : t('ls.why.shotsD', { d: (P.qv || {}).d });   // (2026-11-24 担当A: the count from its parts — direct numbers, sums, blocked rolls)
+    if (!F.ok && C && lesson.choice != null) { const x = C.ng(P, lesson.choice, t, qv); if (x) h += x + ' '; }   // (追22: what the wrong choice overlooks)
     h += t('ls.why.' + (P.why || P.q), qv);
   }
   $('#lsFb').innerHTML = h;

@@ -4552,6 +4552,9 @@
       take: [`${o2}がまたダブルしてきた！ テイクする？ パスする？`, 'この局面でダブルされたら、受ける？ 降りる？', `さて、次はどうする？ ${c}はテイク？ それともパス？`],
     };
     const LQ = { race: '最後の1問ワン！ リードしてるのはどっち？', shots: '最後の1問！ 印のブロットに当たる目は何通り？', double: '最後の1問ワン！ ダブルするか、待つか、決めてみて。', take: '最後の1問ワン！ テイクかパスか、決めてみて。' };
+    // (2026-11-24 担当A, 追7: the shots words from the board — the sums only when a sum reaches, two shooters, a blocked roll)
+    const sep = '・', dsD = (v.ds || []).filter(d => d <= 6), many = (v.ds || []).length > 1;
+    if (q === 'shots' && v.ds) AQ.shots = AQ.shots.filter(t => v.cn || !/足し算/.test(t));
     if (pi > 0 && AQ[q]) p.ask = last ? LQ[q] : V.v('ask:' + q, AQ[q]); V.mark(p.ask);
     const HQ = {
       race: ['いちばん奥の駒から順に、ゴールまでの残りを足してみて！', 'ゴールまでの残りマス × 駒の数を、ポイントごとに足していくワン。', '差が小さいときほど、ていねいに数えよう！'],
@@ -4559,14 +4562,32 @@
       double: ['勝つチャンスがどれくらいか、局面を見て考えてみて！', 'ダブルは「十分有利、でも相手がまだ受けられる」くらいがちょうどいいワン。', '有利すぎるなら、ダブルせずにギャモンをねらう手もあるワン。', '相手が受けたくなるか、降りたくなるか、相手の立場で考えてみよう！'],
       take: ['ギャモン負けが多いと、テイクは危なくなるワン。', 'パスなら1点、テイクして負ければ2点。どっちの損が小さいかな？', '相手のインナーの強さや、閉じ込められた駒の数も見てみて！', '勝ち目が4回に1回より多くありそうか、考えてみて。', 'ピップの差と、相手の壁の強さを見くらべてみよう！', 'もし受けたら、どれくらい逆転のチャンスがあるかな？'],
     };
+    if (q === 'shots' && v.ds) HQ.shots = ['36通りのうち、印のブロットに当たる目を1つずつ数えてみよう！'].concat(
+      !many && dsD.length ? [`いちばん近い相手の駒からブロットまで${v.d}つ。${v.d}が出る目だけで11通りはあるワン。`] : [],
+      many ? ['ブロットをねらえる相手の駒がいくつもあるね。同じ目で2つの駒が当てられても、1通りと数えよう。'] : [],
+      v.cn ? ['2つの目の合計やゾロ目で届く組み合わせも数えてね。'] : [],
+      v.bn ? ['途中にきみのポイントがあると、そこに止まる足し算の目は届かないワン。'] : []);
     const h0 = p.hintTx;
     p.hintTx = bgFin(V, pi === 0 && h0 && V.free(h0) && (q !== 'double' || sid === 'racecube') ? V.mark(h0) : HQ[q] ? V.v('h:' + q, HQ[q], bgEndLast(p.ask)) : h0, bgEndLast(p.ask));
     const pc = x => Math.round(+x || 0), lose = pc(v.l);
+    const shDir = () => { const D = dsD.join(sep); return !v.dn ? '' : V.v('sh:dir', dsD.length > 1
+      ? [`${D}のどれかが出る目は${v.dn}通り`, `${D}が1つでも入った目は${v.dn}通り`, `直接当たる${D}の目を数えると${v.dn}通り`, `${D}を含む組み合わせは${v.dn}通り`]
+      : [`${D}が出る目は${v.dn}通り`, `${D}が1つでも入った目は${v.dn}通り`, `直接当たる${D}の目を数えると${v.dn}通り`, `${D}を含む組み合わせは${v.dn}通り`]); };
+    const shSum = () => { const cl = (v.cl || []).join(sep); return V.v('sh:sum', [`そこに足し算・ゾロ目の${cl}が届いて${v.cn}通り`, `足し算・ゾロ目の${cl}でも届いて${v.cn}通り`, `目の合計で届く${cl}を加えて${v.cn}通り`, `${cl}は2つの目の合計で届くから、さらに${v.cn}通り`]); };
+    const shBlk = () => { const bl = (v.bl || []).join(sep); return V.v('sh:blk', [`${bl}は、止まるマスがきみのポイントでふさがって届かないね。`, `${bl}だけは、途中のきみのポイントに止まれないから当たらないんだ。`, `${bl}は、とちゅうで止まるところに、きみの駒が2枚以上いるから届かないワン。`, `ただし${bl}は、きみのポイントが通せんぼして当たらないんだ。`]); };
+    // the count from its parts (qv: backgammon/tools/shots_facts.js — checked by tools/lesson-verify-bg.js)
+    const shCore = pct => {
+      const dir = shDir();
+      let t = v.cn ? (dir ? `${dir}、` : '') + shSum() + `、合わせて${v.n}通り` : dir;
+      t += pct ? V.v('sh:p', [`。36通りのうち約${v.p}%で当たるんだ。`, `、約${v.p}%で当たるワン。`, `だから、当たるのは約${v.p}%なんだ。`, `。確率にすると約${v.p}%だね。`]) : '。';
+      if (v.bn) t += shBlk();
+      return t;
+    };
     const why = () => {
       if (q === 'race') { const d = Math.abs(v.a - v.b), L = v.a < v.b ? c : o2;
         return d ? V.v('w:race', [`ピップは${c}が${v.a}、${o2}が${v.b}。${L}が${d}ピップ少ない、つまりリードしてるんだ。`, `数えると${c}は${v.a}、${o2}は${v.b}ピップ。差の${d}ピップぶん、${L}が先を行ってるワン。`, `${L}のほうがゴールまで${d}ピップ近いね。${c}${v.a}、${o2}${v.b}で比べたとおり！`])
           : V.v('w:race0', [`どっちも${v.a}ピップで同じ。こういうときは、先にサイコロを振れる側がちょっと有利なんだ。`, `${v.a}ピップどうしの横並び！ 自分の番の側が少しだけ得ワン。`]); }
-      if (q === 'shots') return V.v('w:shots', [`ブロットまでの距離は${v.d}。直接の目と足し算の目を合わせて${v.n}通り、約${v.p}%で当たるんだ。`, `距離${v.d}のブロットに当たる目は${v.n}通り。36通りのうち約${v.p}%ワン。`, `直接の目に足し算の目も加えて、ちょうど${v.n}通り。距離${v.d}なら約${v.p}%で当たるね。`, `距離は${v.d}。数えると${v.n}通りだから、当たるのは約${v.p}%なんだ。`]);
+      if (q === 'shots') return v.ds ? shCore(true) : V.v('w:shots', [`ブロットまでの距離は${v.d}。直接の目と足し算の目を合わせて${v.n}通り、約${v.p}%で当たるんだ。`, `距離${v.d}のブロットに当たる目は${v.n}通り。36通りのうち約${v.p}%ワン。`, `直接の目に足し算の目も加えて、ちょうど${v.n}通り。距離${v.d}なら約${v.p}%で当たるね。`, `距離は${v.d}。数えると${v.n}通りだから、当たるのは約${v.p}%なんだ。`]);
       const w = P.why, p0 = v.p;
       if (w === 'nd') return V.v('w:nd', [`勝つチャンスは約${p0}%。まだダブルには早いから、待つのがいちばんなんだ。`, `約${p0}%なら、まだ様子見ワン。キューブは手元に置いておこう！`, `勝ち目は約${p0}%。もう少し有利になってからダブルしても遅くないね。`]);
       if (w === 'dt') return V.v('w:dt', [`勝つチャンスは約${p0}%。ダブルするならここ！ でも相手はまだテイクできる局面なんだ。`, `約${p0}%まで来たら、ダブルのタイミングワン！ 相手はまだ受けて戦えるね。`, `勝ち目は約${p0}%。相手がテイクしたくなる、ちょうどいいダブルなんだ。`]);
@@ -4588,6 +4609,17 @@
         const pre = k === ka ? V.v('n:race1', ['リードしてる側は合ってるワン。でも差の数がちがうね。', '先を行ってる側は正解！ 差の数だけずれちゃったね。']) : lead ? V.v('n:race2', [`正解は${lead}のリードワン。`, `先を行ってるのは${lead}のほうなんだ。`, `リードしてるのは${lead}だったね。`]) : '実は、どっちも同じピップなんだ。';
         const why2 = V.v('n:race3', ['見た目の駒の数だと、ゴールまでの残りの差を見落としちゃうからね。1枚ずつ足して比べるのがコツ！', '駒の数より、1枚ずつの残りの道のりを足すと、差がはっきりするワン。', '奥にいる駒ほどピップが大きいから、そこを数えもらすと差が変わっちゃうんだ。']);
         return bgFin(V, S + pre + `数えると${c}が${v.a}、${o2}が${v.b}` + (v.a === v.b ? 'で同じ。' : `で、差は${Math.abs(v.a - v.b)}ピップ。`) + why2, '!');
+      }
+      if (q === 'shots' && v.ds) {   // (2026-11-24 担当A, 追22: what the chosen count overlooks — the same kinds as the 2D, backgammon/i18n-ls2.js BGChoice)
+        const K = window.AtlasBgChoice ? AtlasBgChoice.kind(P, i) : (n < v.n ? 'low' : 'high'), d = Math.abs(v.n - n);
+        const T1 = { 1: 11, 2: 12, 3: 14, 4: 15, 5: 15, 6: 17, 7: 6, 8: 6, 9: 5, 10: 3, 11: 2, 12: 3 }, sl = (v.ds || []).map(x => `距離${x}で${T1[x] || 0}通り`).join(sep);
+        const D = dsD.join(sep);
+        const X = K === 'direct' ? `${n}通りは、直接当たる目だけの数ワン。足し算・ゾロ目の${(v.cl || []).join(sep)}でも届くから、${v.cn}通り増えて${v.n}通りになるんだ。`
+          : K === 'block' ? `${n}通りは、届かない目まで数えちゃったね。` + shBlk()
+          : K === 'dup' ? `${n}通りは、駒ごとの数（${sl}）を足した数。同じ目で2つの駒が当てられても、1通りと数えるんだ。` + `${D}のどれかが出る目を1つずつ数えると${v.n}通りワン。`
+          : K === 'low' ? V.v('n:shl', [`${n}通りだと、${d}通り足りないね。`, `${n}通りでは、まだ数え足りないワン。`, `${n}通りは少なめ。見落とした目があるから、${d}通り足りないんだ。`, `${n}通りだと、${d}通りぶん見落としてるね。`, `惜しい！ 数えもれがあると${n}通りになっちゃう。本当は${d}通り多いんだ。`]) + shCore(false)
+          : V.v('n:shh', [`${n}通りだと、${d}通り多すぎるね。`, `${n}通りは、当たらない目まで数えたから多すぎワン。`, `数えすぎると${n}通りになっちゃう。実際は${d}通り少ないんだ。`, `${n}通りでは、当たらない目まで入ってるね。`, `${d}通りぶん数えすぎだから、${n}通りにはならないね。`]) + shCore(false);
+        return bgFin(V, S + `正解は${v.n}通り。` + X, '!');
       }
       if (q === 'shots') return bgFin(V, S + `正解は${v.n}通り。` + V.v('n:shd', [`距離${v.d}のブロットだね。`, `ブロットまでは${v.d}つ。`, `相手の駒からブロットまで${v.d}つの距離ワン。`]) + (n < v.n ? V.v('n:sh1', ['直接の目だけじゃなく、2つの目の合計やゾロ目でも届くから、そのぶん増えるんだ。', '足し算の目やゾロ目も数えると、当たる目はもっと多くなるワン。', '直接の目だけだと少なくなっちゃう。合計で届く目も足すと答えになるね。', 'ゾロ目は4回動けるから、思ったより遠くまで届くんだ。', '2つの目の合計で止まれる組み合わせ、数えもれがあったかも？ そこを足すと答えになるワン。', '片方の目だけで届く目に、合計で届く目を加えると、数がそろうね。']) : V.v('n:sh2', ['途中にきみのポイントがあると、相手の足し算の目は届かないから、そのぶん減るんだ。', '少し数えすぎだね。ふさがった道を通る目は届かないから、数から引くワン。', '同じ組み合わせを二度数えていないかな？ 1通りずつ数えると答えになるね。', '合計で届く目でも、途中で止まる場所がふさがっていたら当たらないんだ。', '遠い組み合わせを入れすぎたかも？ 届かない目を引くと答えになるワン。'])), '!');
       const w = P.why, A = { nd: 'ノーダブル', dt: 'ダブル（相手はテイク）', dp: 'ダブル（相手はパス）', tg: 'ノーダブル', take: 'テイク', pass: 'パス' };
@@ -4625,7 +4657,7 @@
         const pre = k === ka ? 'リードしてる側は合ってるワン。でも差の数がちがうね。' : lead ? `リードしてるのは${lead}のほうワン。` : '実は、どっちも同じピップなんだ。';
         return pre + `数えると${c}が${v.a}、${o2}が${v.b}` + (v.a === v.b ? 'で同じ。' : `で、差は${Math.abs(v.a - v.b)}ピップ。`) + '見た目の駒の数だと、ゴールまでの残りの差を見落としちゃうからね。1枚ずつ足して比べるのがコツ！';
       }
-      if (P.q === 'shots') return `正解は${v.n}通りワン。` + (n < v.n ? '数えもれがあるね。直接の目だけじゃなく、2つの目の合計やゾロ目でも届くから、そのぶん増えるんだ。' : '少し数えすぎだね。途中が相手のポイントでふさがると、足し算の目は届かないから、そのぶん減るんだ。') + `ブロットまでの距離は${v.d}。`;
+      if (P.q === 'shots') return `正解は${v.n}通りワン。` + (n < v.n ? '数えもれがあるね。直接の目だけじゃなく、2つの目の合計やゾロ目でも届くから、そのぶん増えるんだ。' : '少し数えすぎだね。途中がきみのポイントでふさがると、足し算の目は届かないから、そのぶん減るんだ。') + `ブロットまでの距離は${v.d}。`;
       const w = P.why, A = { nd: 'ノーダブル', dt: 'ダブル（相手はテイク）', dp: 'ダブル（相手はパス）', tg: 'ノーダブル', take: 'テイク', pass: 'パス' };
       let x = '';
       if (w === 'nd') x = 'ここでダブルするのは早すぎるワン。相手にキューブを渡すと、2倍の点で逆転されるチャンスをあげちゃうんだ。';
@@ -4643,7 +4675,7 @@
       if (this.p) return this.p;
       const tx = window.AtlasBgTexts ? AtlasBgTexts() : Promise.resolve({});
       const bg = window.AtlasBgExplain ? AtlasBgExplain() : Promise.resolve();   // (the rules and the commentary engine: atlas/puzzles.js loads them — the same files and cache keys as the table)
-      return (this.p = Promise.all([getJ('../backgammon/lessons.json?v=30261123m0'), getJ('../backgammon/openings.json?v=20261021op'), tx, bg, getJ('../backgammon/ramps.json?v=3').catch(() => null)])
+      return (this.p = Promise.all([getJ('../backgammon/lessons.json?v=30261124a1'), getJ('../backgammon/openings.json?v=20261021op'), tx, bg, getJ('../backgammon/ramps.json?v=3').catch(() => null)])
         .then(([ls, op, I, _, rp]) => { this.I = I || {}; this.data = { ls, op, rp }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -4713,12 +4745,14 @@
             try { this.teachJaV(o, V, pi, last, pi === 0 ? T('hint') : ''); } catch (e) { o.hintTx = T('hint'); }
             return o;
           }
-          const qv = Object.assign({}, N, P.qv || {}); if (P.q === 'shots') qv.m = this.tx('ls.why.shotsD', lang, { d: (P.qv || {}).d });
+          const qv = Object.assign({}, N, P.qv || {}), C = window.AtlasBgChoice, tr = (k, v) => this.tx(k, lang, v);
+          if (P.q === 'shots') qv.m = C && (P.qv || {}).ds ? C.shotsWhy(P, tr, qv) : this.tx('ls.why.shotsD', lang, { d: (P.qv || {}).d });   // (2026-11-24 担当A: the count from its parts)
           const o = { pos: { bg: { pos, dice: null } }, kind: 'choice', P, ask: this.tx('ls.q.' + P.q, lang, qv), hintTx: P.q === 'take' ? this.tx('ls.takepoint.hint', lang) : P.q === 'double' ? this.tx('ls.racecube.hint', lang) : T('hint'), ans: [],
             marks: (P.mk || []).map(([sd, pt, c]) => ({ pt: (sd ^ P.side) === 0 ? pt : 25 - pt, cls: c === 'ok' ? 'ok' : 'hl' })),
             choices: P.opts.map(o => { const [ok, on] = Array.isArray(o) ? o : [o]; return this.tx('ls.opt.' + ok, lang, Object.assign({}, qv, { n: on })) || ok; }), right: P.ans,
             why: this.tx('ls.why.' + (P.why || P.q), lang, qv) };
           if (ja) { bgChJaV(o, N, V, pi, last, s.id); o.why = ''; }
+          else if (C && (P.q === 'shots' || P.q === 'race')) { const W = o.why; o.good = () => W; o.ng = u => { const x = C.ng(P, typeof u === 'number' && u !== P.ans ? u : P.opts.findIndex((_, i) => i !== P.ans), tr, qv); return (x ? x + ' ' : '') + W; }; o.why = ''; }   // (追22: what the wrong choice overlooks, in every language)
           return o;
         }),
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, pass: false }, pass = pts >= 75; pr[s.id] = { best: Math.max(o.best || 0, pts), pass: o.pass || pass }; put(this.LKEY, pr); return pass; } };
@@ -7383,8 +7417,8 @@
           try { const q0 = bgDecP(p.bgPos), mk = mv => { const q = q0.slice(); mv.forEach(c => BG.apply(q, 0, BG.mvFrom(c), BG.mvTo(c))); return { moves: mv, pos: q }; };
             teach = AtlasBgTeach.html(BGX.teach(q0, 0, mk(bgCodes(p.bgPos, p.best()).moves), pts >= 20 ? null : mk(u.steps)), (k, v) => D.tx(k, ctx.lang, v), false, true); } catch (e) { console.warn(e); }
         }
-        const own = p.kind === 'bgplay' && typeof p.ng === 'function' && u && u.steps, chJa = p.kind === 'choice' && typeof p.ng === 'function';   // (ダイスン names the green play / the answer himself: the head stays short; p.ownHead (the lessons in bgVoice): his own praise / soft words open it, no head)
-        say(`${p.ownHead && (own || chJa) ? '' : chJa ? (right ? '' : 'おしい！') : right ? (own && pts >= 16 ? '' : line('solved') || pick(X.good)) : own ? String(pts > 0 ? X.partial : X.wrong).replace(/([！!]).*$/, '$1') : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (p.why ? '<br>' + p.why : '') + teach);
+        const own = p.kind === 'bgplay' && typeof p.ng === 'function' && u && u.steps, chJa = p.kind === 'choice' && typeof p.ng === 'function' && ctx.lang === 'ja';   /* (2026-11-24: the other languages' choice words (AtlasBgChoice) keep their own head, not 「おしい！」) */   // (ダイスン names the green play / the answer himself: the head stays short; p.ownHead (the lessons in bgVoice): his own praise / soft words open it, no head)
+        say(`${p.ownHead && (own || chJa) ? '' : chJa ? (right ? '' : 'おしい！') : right ? (own && pts >= 16 ? '' : line('solved') || pick(X.good)) : own || p.kind === 'choice' ? String(pts > 0 ? X.partial : X.wrong).replace(/([！!]).*$/, '$1') : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (p.why ? '<br>' + p.why : '') + teach);
         try { chime(right); } catch (e) {}
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
