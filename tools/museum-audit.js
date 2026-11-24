@@ -84,6 +84,11 @@ const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,
           const ok = await p.evaluate(() => { const a = document.activeElement; return !!(a && a.closest('.muroom[data-r="read"]') && document.querySelector('.muroom.on') && document.querySelector('.muroom.on').dataset.r === 'read'); });
           if (!ok) bad++; }
         await p.evaluate(() => { const b = document.querySelector('.rdback'); if (b) b.click(); }); return bad; })();
+      // 21 ダイアログの外へ逃げるフォーカス: 絵・所蔵品のビューアを開いて Tab を 30 回押したとき、ビューアの外に出た回数（PC の幅だけ）
+      m.trapLeak = ((r !== 'paint' && r !== 'gallery') || phone) ? 0 : await (async () => { const sel = r === 'paint' ? '.ptc' : '.gxc:not(.locked)', dlg = r === 'paint' ? '.ptv.on' : '.exv.on';
+        if (!(await p.$(sel))) return 0; await p.focus(sel); await p.keyboard.press('Enter'); await p.waitForTimeout(3000); let out = 0;
+        for (let i = 0; i < 30; i++) { await p.keyboard.press('Tab'); if (!(await p.evaluate(d => !!document.activeElement.closest(d), dlg))) out++; }
+        await p.keyboard.press('Escape'); await p.waitForTimeout(900); return out; })();
       if (r === 'pass') m.foldLate = 0;   // (the open card pushes the room down on purpose)
       rows.push({ view: `${V.w}x${V.h}${V.lang !== 'ja' ? ':' + V.lang : ''}`, room: r, ...m, js: errs.length });
     }
