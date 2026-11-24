@@ -197,6 +197,29 @@ function knPuzzleTexts() {
     return { key: T.id, title: T.id, intro: F.text('ja', 'hi', 0), ramp: [], probs };
   });
 }
+// (2026-11-24 担当D) the 3D ugolki puzzles: per theme as a player meets it (atlas/puzzles.js ugMoved with モリフク's words,
+//  atlas/games/ugolki-pz.js): the greeting + goal, the hints, after a right move the reply line (no praise on the way: the 詰め rule)
+//  and the cheer when solved, and for each of the first 5 puzzles the words after its first wrong move (the engine's duelReply, the
+//  fact why() names) — scored as a lesson; whose move from the puzzle (side 1 = 白 / 2 = 黒)
+function ugPuzzleTexts() {
+  const F = require(path.join(ROOT, 'atlas/games/ugolki-pz.js')), E = require(path.join(ROOT, 'ugolki/engine.js')), PZ = JSON.parse(fs.readFileSync(path.join(ROOT, 'ugolki/puzzles.json'), 'utf8'));
+  E.setRule('c33');
+  const name = c => c === 2 ? '黒' : '白';
+  return PZ.themes.map((T, ti) => {
+    const N = {}, tx = (k, v) => F.text('ja', k, ti * 2 + (N[k] = N[k] == null ? 0 : N[k] + 1) * (1 + Math.floor(ti / 5)), v);   // (= atlas/puzzles.js ugT: each line's variants in turn)
+    const probs = T.puzzles.slice(0, 5).map(P => {
+      const pos = E.Pos.from(P.s), me = pos.turn, n = P.n, good = E.duelGood(P.s, [], n, 'c33') || [];
+      const m = pos.moves().find(x => !good.includes(x)), q = pos.clone().play(m);
+      let ng;
+      if (n <= 1) ng = tx('last', F.why({ last: true, mid: q, me, E }).v);
+      else { const r = E.duelReply(q.spec(), [], n - 1, 'c33').move, z = q.clone().play(r), w = F.why({ mid: q, after: z, reply: r, left: n - 1, me, E }); const v = Object.assign({ c: name(me) }, w.v); if (w.k === 'over') v.w = tx(w.v.w === 'draw' ? 'wDraw' : 'wLose'); ng = tx(w.k, v); }
+      const ask = tx('goal', { n, c: name(me) }), hint = tx('pz.hint1', { n }) + ' ' + tx('pz.hintText');
+      const gd = (n > 1 ? tx('mid', { n: n - 1 }) + ' ' : '') + tx('solved');
+      return { ask, hint, good: gd, ng: ng + ' ' + tx('ans'), tw: P.s.side === 2 ? 2 : 1 };
+    });
+    return { key: T.id, title: T.id, intro: F.text('ja', 'hi', 0), ramp: [], probs };
+  });
+}
 // (2026-11-24 担当D, 追42) the 3D janggi mates: per theme of 2 moves or more, the goal, the hint, the praise after a right move and, for the
 //  first 5 puzzles, ショウギツネ's words after the first wrong (not taken back) move: the engine's reply and its fact (janggi/pzwhy.js,
 //  AtlasJanggiPz.why.ja as atlas/puzzles.js jgStray says it), with reach / noreach from the solver — scored as a lesson
@@ -224,7 +247,7 @@ function jgPuzzleTexts() {
   await pg.setRequestInterception(true);   // (fonts / CDNs: not needed, and they hang where the network is closed — as tools/lesson-progress.js)
   pg.on('request', q => { const u = q.url(); if (u.startsWith(`http://127.0.0.1:${port}/`) || u.startsWith('data:') || u.startsWith('blob:')) q.continue(); else q.abort(); });
   await pg.goto(`http://127.0.0.1:${port}/atlas/`, { waitUntil: 'domcontentloaded' }); await new Promise(r => setTimeout(r, 4000));
-  const pgGames = games.filter(g => g !== 'konane'), onlyPz = games.length && !pgGames.length;   // (konane: the puzzles only, scored below)   // (foxgeese: the lessons (atlas/ls-foxgeese.js) and the puzzles, scored below)
+  const pgGames = games.filter(g => g !== 'konane' && g !== 'ugolki'), onlyPz = games.length && !pgGames.length;   // (konane: the puzzles only, scored below)   // (foxgeese: the lessons (atlas/ls-foxgeese.js) and the puzzles, scored below)
   const R = onlyPz ? {} : await pg.evaluate(async games => {
     let src = await (await fetch('lessons3d.js?x=' + Date.now())).text();
     src = src.replace('  window.AtlasGuideJa = guideJa;', '  window.AtlasGuideJa = guideJa; let LSVD = null; const lsvX = (h, id) => { const m = (LSVD || {})[id]; if (!m) return h; for (const k of Object.keys(m).sort((a, b) => b.length - a.length)) if (h.includes(k)) h = h.split(k).join(m[k]); return h; }; window.__setLSV = d => { LSVD = d; };')
@@ -262,6 +285,7 @@ function jgPuzzleTexts() {
   //  first 5 puzzles the words after its first wrong move (the reply the 3D plays, the fact why() names) — scored as a lesson
   if (!games.length || games.includes('foxgeese')) R['foxgeese/pz'] = fgPuzzleTexts();
   if (!games.length || games.includes('konane')) R['konane/pz'] = knPuzzleTexts();
+  if (!games.length || games.includes('ugolki')) R['ugolki/pz'] = ugPuzzleTexts();
   if (!games.length || games.includes('janggi')) try { R['janggi/pz'] = jgPuzzleTexts(); } catch (e) { R['janggi/pz'] = [{ err: String(e) }]; }
   const TN = R.__TN || {}; delete R.__TN; turnNames = TN;
   const rep = {}; let sum = 0, n = 0;

@@ -27,9 +27,10 @@ URL: https://core-calmdust.github.io/aicoding/ugolki/ ／ トップは「チェ�
 - 定跡（tools/gen_openings.js）：標準の定跡、標準（f3型）、ルージンの定跡。
 - AI の序盤ブック（2026-11-15）：`ugolki/book-<ルール>.json`（c33・c34・c44・diag。`shared/tools/genbook.js ugolki --rule <r> --plies 4 --ms 5000 --margin 10`）。book 付きのレベル（四段以上）が初期配置からの6手目まで使い、無い局面は前のままその場で分析。
 - パズル＝勝ち切りパズル（2026-11-04、tools/gen_duel.js → build_duel.py、生データ tools/duel_raw.jsonl）：実戦の終盤局面（手数・40/80手ルールそのまま、生成時は中盤にランダム手を混ぜて形を多様化）で「手番側が N 手以内に勝て、相手も最善で粘る」。勝ちの初手は1〜2通り、素直な手（いちばん大きく前進する手）では勝てないものだけ。多様性：同じ正解手は1テーマ2題まで、正解手＋陣地の空きマスが同じ問題は1題、同じ正解手は連続させない。テーマ7＝2手（白黒混合・8題、2手は形の種類が少ないため）、白番／黒番 × 3（やさしい）、4（ふつう）、5（むずかしい）、計144問。誤答は solver で即判定して戻し正解を表示。ヒント3段階、答えの再生あり。
+- パズルの作り直し（2026-11-24、担当D、3D対応）：tools/lesson-verify-ugolki.js の厳しい解き方（40手・80手のきまり・黒の最後の1手も対局と同じに判定）で全144問を検証し、68問が不合格（⑤ ほかの問題・レッスンと盤の対称（陣地を通る対角線・色を入れかえた180°回転）込みで4マス以内 52、① 80手の数え勝負で2手目に決着／40手のきまりが手順の途中に入る 19、② 正解手16（数え勝負）2 ほか）。ugolki/tools/fix_puzzles.js で今の問題と gen_duel.js の新しい候補（seed 9101・400局）から全基準を通るものを選び直して 152問（x2 8・ほかのテーマ 24ずつ）、テーマごとに d（2応手以内で負かされる惜しい手×2＋外れた初手の数）の小さい順。外れた手は戻さず相手が最も粘る手で応じ、盤の事実（far・block・slow・catch・over・last・lastDraw、ugolki/i18n-ug-pzwhy.js 14言語＝atlas/games/ugolki-pz.js why）を言う（以前は戻して正解を緑で出していた）。3D卓（atlas/puzzles.js BOOK.ugolki）も同じ問題・記録。
 - コーチ（coach.js / coach-i18n.js 10言語）。
 - オンライン：Firebase はチェッカーのプロジェクト checkers-multiplay の節 ugolki/（2026-11-16 統合）、ルールは shared/tools/secrules.py の ugolki → checkers/database.rules.json。
-- 3D（ポータルのフル機能版）は未対応。ポータルのアイコンは atlas/icons3d.js の ugolki()（グジェリ盤と gzhelPiece）。
+- 3D（ポータルのフル機能版）：パズルは3D卓に対応（2026-11-24、atlas-portal-spec.md「ウゴルキ」）。レッスンは未。ポータルのアイコンは atlas/icons3d.js の ugolki()（グジェリ盤と gzhelPiece）。
 
 ## 保存キー
 - aicoding-ugolki（設定・対局）、-lessons、-puzzles、-open、-daily、-rated、-rules、aicoding-ugolki-rules-seen、ugolki-online-name。
