@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /* 狼影灯 — 推理の公平性シミュレーション
-   usage: node wolflantern/tools/sim.js [story] [--n 300] [--diff 0,1,2,3] [--verbose]
+   usage: node lampblack/tools/sim.js [story] [--n 300] [--diff 0,1,2,3] [--verbose]
    プレイヤー役を「探偵ボット」（プレイヤーと同じ情報だけで可能世界を数えて投票する）と「でたらめ投票」にやらせ、
-   難易度ごとの勝率・日数・初日の確信度などを出す。基準（claude/wolflantern-spec.md「推理の公平性の基準」）を外れたら exit 1。 */
+   難易度ごとの勝率・日数・初日の確信度などを出す。基準（claude/lampblack-spec.md「推理の公平性の基準」）を外れたら exit 1。 */
 const W = require('./load.js');
 const E = W.WLEngine;
 const args = process.argv.slice(2);
@@ -13,7 +13,7 @@ const stories = args[0] && !args[0].startsWith('--') ? [args[0]] : Object.keys(W
 const verbose = args.includes('--verbose');
 
 // the bar: detective win rate per difficulty, and the random voter must lose clearly more often
-const BAR = { det: [[.9, 1], [.8, 1], [.6, .98], [.45, .9]], gap: .25, day1: .9 };   // 2026-11-25：死んでも幽霊で続くので上限を広げた   // the bot reasons perfectly: a person wins less
+const BAR = { det: [[.85, 1], [.75, 1], [.6, .95], [.35, .8]], rnd: [.5, .38, .25, .15], gap: .3, day1: .9 };   // 2026-11-25：村まかせ（でたらめ投票）で勝てないことを基準に加えた   // 2026-11-25：死んでも幽霊で続くので上限を広げた   // the bot reasons perfectly: a person wins less
 
 function playBot(story, diff, seed, smart) {
   const S = E.newGame(story, { diff, seed });
@@ -81,7 +81,7 @@ for (const sid of stories) {
     }
     const det = w / N, rnd = rw / N, c1 = conf / N;
     const [lo, hi] = BAR.det[d];
-    const ok = det >= lo && det <= hi && det - rnd >= BAR.gap && c1 <= BAR.day1;
+    const ok = det >= lo && det <= hi && det - rnd >= BAR.gap && rnd <= BAR.rnd[d] && c1 <= BAR.day1;
     if (!ok) fail++;
     console.log(`  ${['入門', '標準', '上級', '悪夢'][d]}(${E.DIFF[d].size}人)  探偵 ${(det * 100).toFixed(0)}%  でたらめ ${(rnd * 100).toFixed(0)}%  平均${(days / N).toFixed(1)}日  初日の確信 ${(c1 * 100).toFixed(0)}%  護衛成功 ${(gd / N).toFixed(2)}/局  名乗った占い師の死 ${sd}/${sc}  結末 ${JSON.stringify(why)}  ${ok ? 'OK' : '★基準外'}  (${((Date.now() - t0) / N / 2).toFixed(0)}ms/局)`);
   }

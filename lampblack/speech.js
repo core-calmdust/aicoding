@@ -67,6 +67,7 @@
       case 'caught': return { by: e.by, kind: 'defend', text: say(S, story, e.by, 'caught') };
       case 'notice': return { by: e.by, kind: 'accuse', target: e.target, text: say(S, story, e.by, 'notice', { target: N(e.target) }) };
       case 'confess': { const c = charOf(story, e.by); return { by: e.by, kind: 'grief', text: c && c.secret ? c.secret.confess : '' }; }
+      case 'guardsus': return { by: e.by, kind: 'accuse', target: 'you', text: say(S, story, e.by, 'guardsus') };
       case 'callnone': return { by: e.by, kind: 'grief', text: say(S, story, e.by, 'callnone') };
       case 'reqok': return { by: e.by, kind: 'co', text: say(S, story, e.by, 'reqok', { target: N(e.target) }) };
       case 'reqno': return { by: e.by, kind: 'co', text: say(S, story, e.by, 'reqno_' + (e.why || 'trust'), { target: N(e.target) }) };
@@ -82,7 +83,9 @@
     const saw = T.saw.filter(s => s.kind === 'fig');
     const who = T.saw.filter(s => s.kind === 'who');
     for (const s of saw.slice(0, 2)) out.push(say(S, story, T.id, 'fig', { fig: fig(story, s.cat, s.val) }));
-    for (const s of who.slice(0, 1)) out.push(say(S, story, T.id, 'who', { who: callName(S, story, T.id, s.who), loc: loc(story, s.loc) }));
+    // a person seen at the place next door is said to be there: "the graveyard next door"
+    const nextTo = (a, b) => { const ring = story.locs.map(l => l.id), i = ring.indexOf(a), j = ring.indexOf(b); if (i < 0 || j < 0 || a === b) return false; const d = Math.abs(i - j); return d === 1 || d === ring.length - 1; };
+    for (const s of who.slice(0, 1)) out.push(say(S, story, T.id, 'who', { who: callName(S, story, T.id, s.who), loc: (nextTo(T.loc, s.loc) ? 'となりの' : '') + loc(story, s.loc) }));
     if (!saw.length && !who.length) out.push(say(S, story, T.id, 'none'));
     return out;
   }

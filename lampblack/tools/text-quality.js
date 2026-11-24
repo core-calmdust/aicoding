@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-/* 狼影灯 — 文章の採点（物語ごと100点から減点。合格は90点。くわしい基準は claude/wolflantern-spec.md「文章の基準」）
-   usage: node wolflantern/tools/text-quality.js [story] [--show]
+/* 狼影灯 — 文章の採点（物語ごと100点から減点。合格は90点。くわしい基準は claude/lampblack-spec.md「文章の基準」）
+   usage: node lampblack/tools/text-quality.js [story] [--show]
    見るもの：抜け・置き換えの崩れ、毎回変わる配役と矛盾する名指し、長すぎる文、同じ文末の連続、
    使い古された言い回し、感情を説明する言葉、五感の手ざわり、口調のぶれ、くり返し、画面に収まる長さ、声（voices.js）の抜けと重なり */
 const W = require('./load.js');
@@ -21,7 +21,7 @@ function scoreStory(st) {
   // 1. completeness
   const need = { prologue: 5, day: 6, peace: 2, exile: 2, night: 2, climax: 2 };
   for (const k in need) if (!T[k] || T[k].length < need[k]) add(10, `text.${k} が${need[k]}つ未満`);
-  for (const k of ['meet', 'vote', 'role', 'win', 'lose', 'dead', 'exiledYou', 'ghost']) if (!T[k]) add(10, `text.${k} がない`);
+  for (const k of ['meet', 'vote', 'role', 'win', 'lose', 'winGhost', 'loseGhost', 'dead', 'exiledYou', 'ghost']) if (!T[k]) add(10, `text.${k} がない`);
   for (const l of st.locs) { if (!(T.discover || {})[l.id] || T.discover[l.id].length < 2) add(6, `発見の文（${l.name}）が2つ未満`); if (!l.none || l.none.length < 2) add(3, `空振りの文（${l.name}）が2つ未満`); }
   if (st.locs.length !== 5) add(10, '場所が5つでない');
   if (st.chars.length !== 12) add(15, '人物が12人でない');
@@ -40,7 +40,7 @@ function scoreStory(st) {
   const fixed = [];
   (T.prologue || []).forEach((p, i) => fixed.push(['prologue' + i, p.t]));
   for (const k of ['day', 'peace', 'exile', 'night', 'climax']) (T[k] || []).forEach((t, i) => fixed.push([k + i, t]));
-  for (const k of ['meet', 'vote', 'role', 'win', 'lose', 'dead', 'exiledYou', 'ghost']) if (T[k]) fixed.push([k, T[k]]);
+  for (const k of ['meet', 'vote', 'role', 'win', 'lose', 'winGhost', 'loseGhost', 'dead', 'exiledYou', 'ghost']) if (T[k]) fixed.push([k, T[k]]);
   for (const l in T.discover || {}) T.discover[l].forEach((t, i) => fixed.push(['discover.' + l + i, t]));
   st.locs.forEach(l => { fixed.push(['loc.' + l.id, l.desc]); l.none.forEach((t, i) => fixed.push(['none.' + l.id + i, t])); });
   st.items.forEach(it => fixed.push(['item.' + it.id, it.found + it.desc + (it.use || '')]));
@@ -192,14 +192,14 @@ function scoreHeroes(base) {
   const homes = new Set(H.map(h => h.home)); if (homes.size < 3) add(4, `主人公の居場所が${homes.size}か所しかない（3以上）`);
   const tr = new Set(H.map(h => JSON.stringify(h.traits))); if (tr.size < H.length) add(4, '特徴がまったく同じ主人公がいる');
   for (const h of H) {
-    for (const f of ['id', 'job', 'you', 'book', 'pitch', 'home', 'traits', 'intro', 'open', 'close', 'win', 'epi']) if (!h[f]) add(5, `${h.job}：${f} がない`);
+    for (const f of ['id', 'job', 'you', 'book', 'pitch', 'home', 'traits', 'intro', 'open', 'close', 'win', 'epi', 'epiGhost']) if (!h[f]) add(5, `${h.job}：${f} がない`);
     for (const r of ['villager', 'guard']) if (!(h.how || {})[r]) add(3, `${h.job}：役 ${r} の由来がない`);
     const ownArc = Object.values(h.arc || {}).flat(); if (ownArc.length < 2) add(4, `${h.job}：自分の糸（本筋の自分の場面）が${ownArc.length}（2以上）`);
     if (!base.locs.some(l => l.id === h.home)) add(6, `${h.job}：居場所がない`);
     for (const c of ['height', 'hand', 'foot', 'mark']) if (!h.traits || !base.traits[c].v[h.traits[c]]) add(6, `${h.job}：特徴 ${c} が物語にない値`);
     if (String(h.pitch).length > 48) add(2, `${h.job}：紹介が長い（${h.pitch.length}/48字）`);
     // the hero's own words: same prose rules
-    const T = [h.intro, h.open, h.close, h.win, h.epi].concat(ownArc.map(e => e.t)).filter(Boolean);
+    const T = [h.intro, h.open, h.close, h.win, h.epi, h.epiGhost].concat(ownArc.map(e => e.t)).filter(Boolean);
     let long = 0; for (const t of T) for (const x of sents(t)) if (x.length > 72) long++; if (long) add(long * 1.5, `${h.job}：長すぎる文 ${long}`);
     for (const c of CLICHE) if (T.join('').includes(c)) add(4, `${h.job}：使い古された言い回し「${c}」`);
     const flat = T.filter(t => !SENSE.test(t)); if (flat.length > 1) add(flat.length, `${h.job}：五感の手ざわりのない文 ${flat.length}`);

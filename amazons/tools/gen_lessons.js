@@ -209,7 +209,7 @@ const RAMPS = {
     ex('f1', S(['a1'], ['j10'], ['a3', 'b3', 'c3', 'd3', 'd2', 'd1']), ['a1-b2/a1'], [['a2', 'ok'], ['b1', 'ok'], ['c1', 'ok'], ['c2', 'ok']]),
     // (2026-11-24 追32・追45: the old try (a1 in a corner of a5-square room) had every legal move right, and the shoot-back tip of the intro
     //  was wrong in all five problems; now White stands mid-row a1–f1: the arrow back cuts the room, an arrow into an end is right)
-    tryItem('f2', S(['c1'], ['j10'], ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'g1']), (m, p) => { const q = p.clone().play(m); return 1 + fillCount(q, mTo(m), new Map()) === 5; }, ['a1']),
+    tryItem('f2', S(['c1'], ['j10'], ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'g1']), (m, p) => { const q = p.clone().play(m); return 1 + fillCount(q, mTo(m), new Map()) === 5; }, ['a1', 'f1']),
   ],
 };
 // ---------------------------------------------------------------- build
