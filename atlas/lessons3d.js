@@ -2057,7 +2057,7 @@
     load() {
       if (this.p) return this.p;
       const txt = u => fetch(u).then(r => r.text());
-      return (this.p = Promise.all([getJ('../chess/lessons.json?v=30261107i14'), getJ('../chess/openings.json?v=20261107i14'), txt('../chess/i18n.js?v=20261107pro2-i14'), txt('../chess/i18n_basics.js?v=20261019ol-i14'), txt('../chess/voice-knight-ja.js?v=3').catch(() => '')])
+      return (this.p = Promise.all([getJ('../chess/lessons.json?v=30261107i14'), getJ('../chess/openings.json?v=20261107i14'), txt('../chess/i18n.js?v=20261107pro2-i14-p61'), txt('../chess/i18n_basics.js?v=20261019ol-i14'), txt('../chess/voice-knight-ja.js?v=3').catch(() => '')])
         .then(([ls, op, a, b, vk]) => {
           const w = {}; try { new Function('window', a)(w); new Function('window', b)(w); } catch (e) { console.warn('[lessons3d] chess texts', e); }   // (a sandbox: the page's own I18N stays untouched)
           try { const v = {}; new Function('window', vk)(v); this.V = ((v.I18N || {})['ja@knight']) || {}; } catch (e) { this.V = {}; }   // (ナイトン's own lines, 3D, ja)
@@ -4237,7 +4237,7 @@
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261124xm2'), getJ('../xiangqi/openings.json?v=3'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=1').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261124xm2'), getJ('../xiangqi/openings.json?v=3'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=1').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vf]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vf)(v); this.V = ((v.I18N || {})['ja@fox']) || {}; } catch (e) { this.V = {}; }   // (ショウギツネ's own lines, 3D, ja)
           return this; })
@@ -5154,7 +5154,7 @@
     LKEY: 'aicoding-hex-lessons', OKEY: 'aicoding-hex-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../hex/lessons.json?v=30261123b'), getJ('../hex/openings.json?v=1'), fetch('../hex/i18n.js?v=20261124').then(r => r.text()), hxEng().catch(() => null), getJ('../hex/ramps3d.json?v=2').catch(() => ({})), fetch('../hex/voice-pen-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../hex/lessons.json?v=30261123b'), getJ('../hex/openings.json?v=1'), fetch('../hex/i18n.js?v=20261124-p61').then(r => r.text()), hxEng().catch(() => null), getJ('../hex/ramps3d.json?v=2').catch(() => ({})), fetch('../hex/voice-pen-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, , rt, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] hex texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; this.RT = rt || {};
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
@@ -5548,7 +5548,7 @@
     LKEY: 'aicoding-connect4-v2-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../connect4/lessons.json?v=30261124o1'), Promise.all(['../connect4/i18n.js?v=20261107l14', '../connect4/learn.js?v=20261123l15'].map(u => fetch(u).then(r => r.text()).catch(() => '')))])
+      return (this.p = Promise.all([getJ('../connect4/lessons.json?v=30261124o1'), Promise.all(['../connect4/i18n.js?v=20261107l14-p61', '../connect4/learn.js?v=20261123l15'].map(u => fetch(u).then(r => r.text()).catch(() => '')))])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T.join('\n'))(w); } catch (e) { console.warn('[lessons3d] connect4 texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -6766,7 +6766,7 @@
     LKEY: 'aicoding-morris-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([Promise.all(MMV.map(v => getJ(`../morris/lessons${v === 'nine' ? '' : '-' + v}.json?v=20261123`))), Promise.all(['../morris/i18n.js?v=20261116', '../morris/i18n_more.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mrEng().catch(() => null)])
+      return (this.p = Promise.all([Promise.all(MMV.map(v => getJ(`../morris/lessons${v === 'nine' ? '' : '-' + v}.json?v=20261123`))), Promise.all(['../morris/i18n.js?v=20261116-p61', '../morris/i18n_more.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mrEng().catch(() => null)])
         .then(([L, T]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] morris texts', e); } this.I = w.I18N || {};
           const steps = []; L.forEach((d, k) => d.steps.forEach(s => { if (s.problems && s.problems.length) steps.push(Object.assign({ v: MMV[k] }, s)); })); this.data = { steps }; return this; })
         .catch(e => { this.p = null; throw e; }));

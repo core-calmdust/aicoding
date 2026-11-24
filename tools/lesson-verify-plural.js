@@ -18,16 +18,18 @@
 const fs = require('fs'), path = require('path');
 const ROOT = path.join(__dirname, '..');
 const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
-const I18N_DONE = ['xiangqi'];   // (追61) the games whose <game>/i18n.js pz.* words are checked (fixed)
+const I18N_DONE = ['xiangqi', 'chess', 'hex', 'morris', 'connect4', 'reversi'];   // (追61) the games whose <game>/i18n.js pz.* words are checked (fixed)
+// (追65) the plural verb before the number is found in any case: 「Te toca (quedan {n})」「Sua vez (restam {n})」「Ваш ход (осталось {n})」 were missed
+// because the rule only knew the capitalised Quedan / Restam / Осталось.
 const NUM = '\\{n\\}';   // ({g} is a piece in xiangqi/pzwhy.js: the general)
 const after = new RegExp(NUM + '[\\s\\u00a0]+([^\\s<>,.;:!?…()—–।\\-\'"]+)', 'g');
 const RULE = {
   en: { w: w => /s$/i.test(w) || /^empty$/i.test(w) },
-  es: { w: w => /s$/i.test(w), pre: /(Quedan|Faltan|Restan)\s+(<b>)?\{(?:n|g)\}/ },
-  pt: { w: w => /s$/i.test(w), pre: /(Faltam|Restam|Ficam)\s+(<b>)?\{(?:n|g)\}/ },
+  es: { w: w => /s$/i.test(w), pre: /(Quedan|Faltan|Restan)\s+(<b>)?\{(?:n|g)\}/i },
+  pt: { w: w => /s$/i.test(w), pre: /(Faltam|Restam|Ficam)\s+(<b>)?\{(?:n|g)\}/i },
   fr: { w: w => w !== 'fois' && /[sx]$/i.test(w) },
   de: { w: w => /^[A-ZÄÖÜ]/.test(w) || /^leer/.test(w) },   // a noun (capitalised) or leere Felder; oder / und / mehr / -mal are fine
-  ru: { w: () => true, pre: /(Осталось|Остался|Осталась|Остались)\s+(<b>)?\{(?:n|g)\}/ },
+  ru: { w: () => true, pre: /(Осталось|Остался|Осталась|Остались)\s+(<b>)?\{(?:n|g)\}/i },
   hi: { w: w => !/^(बाकी|बाक़ी|बार|और|में|के|का|की|से|तक)$/.test(w) },
   ar: { w: w => !/^(أو)$/.test(w), pre: /الـ\{(?:n|g)\}/ },
 };
