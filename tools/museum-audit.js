@@ -89,6 +89,8 @@ const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,
         if (!(await p.$(sel))) return 0; await p.focus(sel); await p.keyboard.press('Enter'); await p.waitForTimeout(3000); let out = 0;
         for (let i = 0; i < 30; i++) { await p.keyboard.press('Tab'); if (!(await p.evaluate(d => !!document.activeElement.closest(d), dlg))) out++; }
         await p.keyboard.press('Escape'); await p.waitForTimeout(900); return out; })();
+      // 22 読み物の文の重さ: 読み込んだ物語の文ファイル（read-i18n）の合計が 300KB を超えた分（100KB ごとに 1）。全言語を一度に読まないこと
+      m.textKB = r !== 'read' ? 0 : await p.evaluate(() => { const n = performance.getEntriesByType('resource').filter(e => /\/museum\/read-i18n/.test(e.name)).reduce((a, e) => a + (e.decodedBodySize || e.transferSize || 0), 0); return Math.max(0, Math.ceil((n - 300 * 1024) / 102400)); });
       if (r === 'pass') m.foldLate = 0;   // (the open card pushes the room down on purpose)
       rows.push({ view: `${V.w}x${V.h}${V.lang !== 'ja' ? ':' + V.lang : ''}`, room: r, ...m, js: errs.length });
     }
