@@ -103,7 +103,7 @@ const themes = PZ_THEMES.map(th => {
   return { id: th, cat: TH[th].cat, name: TH[th].name, desc: TH[th].desc, hint: TH[th].hint, puzzles: list.map((it, i) => toP(it, th + '-' + (i + 1))) };
 });
 const P = { version: 1, rule: 'std', ui: UI, msg: MSG, cats: CATS, daily: PZ_THEMES, themes };
-fs.writeFileSync(__dirname + '/../puzzles.json', JSON.stringify(P));
+// (パズルは 2026-11-24 に廃止：puzzles.json は書かない。レッスンの局面選びのため上の処理は残す)
 console.log('puzzles', themes.map(t => t.id + ':' + t.puzzles.length).join(' '));
 
 // ---------------------------------------------------------------- lessons

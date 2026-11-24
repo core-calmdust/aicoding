@@ -178,3 +178,7 @@ winProb(state, d)；evaluate(state, n, d) → [{ move, wp }]；think(state, n, l
 - ヒストリア：マヤの盤（古典期前期、ティカル・コパン）をどう扱うか（十字形のパトリとは別系統かもしれないので、いまは書いていない）。
 - オンライン対戦（Firebase `backgammon-multi` の節 `patolli/`、通信の形式をパトリ用に直す）、`shared/rulesoffer.js` へのパトリの行（いまは `app.js` の `fixRulesOffer()`）。
 - 2D の文言を変えたとき、3D 側の写し（`atlas/games/patolli.js` の `TX`、`atlas/i18n.js` の about／hist、ヒストリア、`atlas/npc/t/`）を作り直す道具がない（今回は手元のスクリプトで作った）。必要になったら `patolli/tools/` に置く。
+
+
+## パズルの廃止（2026-11-24、ユーザー指示）
+- 双六系のゲームにはパズルを作らない（addendum）。`patolli/puzzles.json` と生成ツール、2D のパズルボタン・一覧のパズルタブ・パズルのカードと一覧ダイアログ（app-learn.js のパズル部分）、shared/atlas.js の puzzles タグとパズル数の集計を削除（デイリーもパズルだったので daily タグと集計も削除）。記録 `aicoding-patolli-puzzles` は消さない。レッスンはそのまま。
