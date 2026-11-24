@@ -36,7 +36,7 @@
     const c = charOf(story, id); const reg = (V()[c.voice] || {}).reg || 'plain';
     const T = WHY()[reg] || WHY().plain;
     if (!w || w.k === 'gut') return (V()[c.voice] || {}).gut || T.gut;
-    const o = { role: w.role ? roleShort(w.role) : '', by: w.by ? name(S, story, w.by) : '' };
+    const o = { role: w.role ? roleShort(w.role) : '', by: w.by ? (w.by === 'you' ? story.hero.title : name(S, story, w.by)) : '' };
     if (w.k === 'counter') o.role = roleName(story, w.role);
     if (w.k === 'trace') o.trait = trait(story, w.cat, w.val);
     return fill(T[w.k] || T.gut, o);
@@ -51,7 +51,7 @@
   function event(S, story, e) {
     const N = n => callName(S, story, e.by, n);
     switch (e.t) {
-      case 'co': return { by: e.by, kind: 'co', text: say(S, story, e.by, 'co_' + e.role) };
+      case 'co': return { by: e.by, kind: 'co', text: say(S, story, e.by, 'co_' + e.role + (e.dodge && e.role === 'guard' ? '_dodge' : '')) };
       case 'result': return { by: e.by, kind: 'result', res: e.res, text: e.role === 'guard' ? say(S, story, e.by, 'rg', { target: N(e.target) }) : say(S, story, e.by, (e.role === 'seer' ? 'rs_' : 'rm_') + (e.res === 'wolf' ? 'w' : 'h'), { target: N(e.target) }) };
       case 'report': return { by: e.by, kind: 'report', text: say(S, story, e.by, 'report', { loc: loc(story, S.nights[e.night].loc), trace: traceText(story, e) }) };
       case 'itemfound': return { by: e.by, kind: 'report', text: say(S, story, e.by, 'item', { loc: loc(story, S.nights[e.night].loc), owner: N(e.owner), belong: charOf(story, e.owner).belong }) };
@@ -82,7 +82,9 @@
     const saw = T.saw.filter(s => s.kind === 'fig');
     const who = T.saw.filter(s => s.kind === 'who');
     for (const s of saw.slice(0, 2)) out.push(say(S, story, T.id, 'fig', { fig: fig(story, s.cat, s.val) }));
-    for (const s of who.slice(0, 1)) out.push(say(S, story, T.id, 'who', { who: callName(S, story, T.id, s.who), loc: loc(story, s.loc) }));
+    // a person seen at the place next door is said to be there: "the graveyard next door"
+    const nextTo = (a, b) => { const ring = story.locs.map(l => l.id), i = ring.indexOf(a), j = ring.indexOf(b); if (i < 0 || j < 0 || a === b) return false; const d = Math.abs(i - j); return d === 1 || d === ring.length - 1; };
+    for (const s of who.slice(0, 1)) out.push(say(S, story, T.id, 'who', { who: callName(S, story, T.id, s.who), loc: (nextTo(T.loc, s.loc) ? 'となりの' : '') + loc(story, s.loc) }));
     if (!saw.length && !who.length) out.push(say(S, story, T.id, 'none'));
     return out;
   }

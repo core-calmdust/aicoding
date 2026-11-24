@@ -270,6 +270,33 @@ function gomoku(opt) {
       if (d < prevD) add(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
       if (j === st.problems.length - 1 && !(d > firstD)) add(`⑥ the last problem is no harder than the first (d ${d} vs ${firstD})`);
       const A = st2(P); for (const [who, B, Q] of PS) { if (Q === P) continue; const e = dist(A, B); if (e <= 3) add(`⑤ ${e} stones from ${who}`); }
+      // 追72 (2026-11-25 担当A): the right points are a third of the legal points at most
+      if (P.ok.length * 3 > lg.length) add(`追72 ${P.ok.length} of the ${lg.length} legal points are right (more than a third)`);
+    });
+    // 追75 (2026-11-25 担当A): every warm-up try can be answered on its own board — its answers (it.ok: the 2D and the 3D rampOk both
+    //  compare the cell names) are legal empty points there and exactly the points that reach its goal (①②, the problems' goals:
+    //  five = the mover's five points, block = the opponent's, block3 = the points after which the opponent has no win (k ≤ 3, VCF),
+    //  sfour = the open fours, fourthree = the fastest wins in 3), the 2nd hint's ring (look) is on stones of that board, and the right
+    //  points are a third of the legal points at most (追72)
+    (st.ramp || []).forEach((r, j) => { if (r.k !== 'try') return; const a = m => out.push({ step: id, q: 0, msg: `warm-up ${j + 1}: ${m}` });
+      const s = r.side, o = 3 - s, pos = E.setup(r.rule || 'free', { b: cells(r.b), w: cells(r.w), side: s }), lg = pos.legal(), lgN = new Set(lg.map(nm));
+      (r.ok || []).forEach(q => { if (!lgN.has(q)) a(`追75 the answer ${q} is not a legal point of this board`); });
+      if (!(r.ok || []).length) a('追75 no answer');
+      (r.look || []).forEach(q => { const m = E.sqOf(q); if (!(m >= 0) || !pos.b[E.M2I[m]]) a(`追75 the 2nd hint's ring ${q} is on no stone`); });
+      if (!(r.look || []).length) a("追75 the 2nd hint shows nothing");
+      const cls = (c, m) => pos.cls[c][E.M2I[m]], fv = c => pos.fives(c).map(i => nm(E.I2M[i])).sort();
+      let want = null;
+      if (r.goal === 'five') want = fv(s);
+      else if (r.goal === 'block') want = fv(o);
+      else if (r.goal === 'block3') { want = []; for (const m of lg) { pos.make(m); const w = G.win(pos, 2) || G.win(pos, 3) || G.vcf(pos); pos.unmake(); if (!w) want.push(nm(m)); } }
+      else if (r.goal === 'sfour') want = lg.filter(m => cls(s, m) === C.F4).map(nm);
+      else if (r.goal === 'fourthree') { const lv = lg.filter(m => cls(s, m) >= C.F3).map(m => [m, G.level(pos, m)]).filter(x => x[1]); const mn = lv.length ? Math.min(...lv.map(x => x[1])) : 0; if (mn !== 3) a(`① the fastest win takes ${mn || 'no'} moves (the try's: 3)`); want = lv.filter(x => x[1] === mn).map(x => nm(x[0])); }
+      else a(`the goal ${r.goal} is not checked`);
+      if (want) { want.sort(); const ok = (r.ok || []).slice().sort(); if (want.join() !== ok.join()) a(`①② the answers are ${ok}, the goal's points ${want}`); }
+      if ((r.ok || []).length * 3 > lg.length) a(`追72 ${r.ok.length} of the ${lg.length} legal points are right`);
+      // 追80 (2026-11-25 担当A): a try that asks to stop the opponent (block・block3・defend) where the mover has a win of its own (a five
+      //  point, an open four to make, a VCF) — the old three warm-up 3 gave Black f9 g8 h7, an open three: e10 / i6 made an open four
+      if (/^(block|block3|defend)$/.test(r.goal) && (fv(s).length || lg.some(m => cls(s, m) === C.F4) || G.vcf(pos))) a(`追80 the try asks to stop the opponent, but the mover wins by its own threat`);
     }); });
   return out;
 }
@@ -417,7 +444,7 @@ function amazons(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'amazons/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'amazons/lessons.json'), 'utf8'));
   const src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8');
-  const X = vm.runInNewContext('const AMAZONS = { data: null };' + src.slice(src.indexOf('  const AMM = '), src.indexOf('  const AMAZONS = {')) + '\n;({ AMJ_LS, amLsJa, AMAZONS })', {});
+  const X = vm.runInNewContext('const AMAZONS = { data: null };' + src.slice(src.indexOf('  const AMM = '), src.indexOf('  const AMAZONS = {')) + '\n;({ AMJ_LS, amLsJa, AMAZONS, AM_GM })', {});
   X.AMAZONS.data = { ls: L };
   const out = [], only = opt && opt.only, add = (id, j, m) => out.push({ step: id, q: j + 1, msg: m });
   // ⑨ both versions score the same list
@@ -733,6 +760,23 @@ function amazons(opt) {
         }
         // ③ for a try (2026-11-24 担当A): 「いちばん多く動ける手を選んで」 with every legal move right is no choice (s_fill's old try: 14 of 14)
         if (r.k === 'try' && G && G.length * 2 > all.length) a(`③ ${G.length} of the ${all.length} legal moves are right — nothing to choose`);
+        // 追72 (2026-11-25 担当A): a try whose answers are a set of moves — the right ones are a third of the legal moves at most
+        //  (the problems: ③ above, 3 in 10 at most)
+        if (r.k === 'try' && G && G.length * 3 > all.length) a(`追72 ${G.length} of the ${all.length} legal moves are right (more than a third)`);
+        // 追75 (2026-11-25 担当A): a try can be answered on its own board — its answers are legal moves there (① above, by the names the
+        //  2D rampMove and the 3D rampOk compare), the 2nd hint's mark (look) is a square of the board, and the 3D marks the goal names
+        //  (AM_GM: 「金の印」 a square, 「赤い印」 an amazon) are there: a mark the words name but the board does not show, or on the
+        //  wrong piece, leaves the try unanswerable in 3D.
+        if (r.k === 'try') { const lk = r.look || [], gm = (X.AM_GM || {})[`${id}/${j}`] || [], gi = gm.map(([s0, c]) => [E.sqIdx(s0), c]);
+          if (!lk.length || lk.some(x => !(x >= 1 && x <= 100))) a(`追75 the 2nd hint's mark ${JSON.stringify(r.look)} is not a square of the board`);
+          gi.forEach(([x, c], k) => { if (!(x >= 0 && x < 100)) a(`追75 the 3D mark ${gm[k][0]} is not a square`); else if (c === 'ng' && p.sq[x] !== 1 && p.sq[x] !== 2) a(`追75 the 3D red mark ${gm[k][0]} is on no amazon`);
+            else if (c === 'hl' && x !== look && !(p.sq[x] === 3 && nbr(look).includes(x))) a(`追75 the 3D gold mark ${gm[k][0]} is not the 2nd hint's square ${N(look)} (or the arrow next to it)`); });
+          const t3 = ['g', 'h'].map(f => typeof r[f] === 'string' ? X.AMJ_LS.ramp[r[f]] || '' : '').join(' ');
+          if (/金の印/.test(t3) && !gi.some(([, c]) => c === 'hl')) a('追75 the 3D words name a gold mark the board does not show');
+          if (/赤い印/.test(t3) && !gi.some(([, c]) => c === 'ng')) a('追75 the 3D words name a red mark the board does not show');
+          const rd = gi.find(([, c]) => c === 'ng');
+          if (rd && /赤い印の黒|黒の[^。！]*赤い印/.test(t3) && p.sq[rd[0]] !== 2) a('追75 the 3D red mark is not on a black amazon');
+          if (rd && /白のアマゾン（赤い印）|赤い印の白/.test(t3) && p.sq[rd[0]] !== 1) a('追75 the 3D red mark is not on a white amazon'); }
       }); });
   }
   // 追32 (2026-11-24 担当A): the shapes the answers use are taught — by the intro or the warm-up, in the 2D (ja・en) and the 3D (ケロ).
@@ -2469,6 +2513,8 @@ const senet = () => require('./lesson-verify-senet.js')();   // (2026-11-24 担�
 const SOFT53 = /いい線|あと少し|あと一歩|おしい|惜しい|悪くない|まだ戦える|でも戦える|すぐには負けない|もありだけど/;   // (追66: おしい too — 「close」 to a move far from the answer)
 const soft53 = (t, pts, lost) => { const m = String(t).match(SOFT53); return m && (pts < 10 || lost) ? `追53 「${m[0]}」 for a move worth ${pts} points${lost ? ' that loses' : ''}` : null; };
 // 追53 (common): the 3D result line (atlas/lessons3d.js) says 「いい手だね…」(X.partial) / 「いい線！」 only for 10+ points, not for any points
+// 追78: closeness / regret openers in the 14 languages (the 3D puzzles' words after a move off the solution)
+const NEAR78 = /おしい|惜しい|おしかった|あと少し|あと一歩|いい線|So close|Almost|One step short|Too bad|差一|可惜|아깝|모자라|Casi|Por poco|Por un paso|Presque|À un pas|Dommage|Quase|Por pouco|Por um passo|Knapp|Schade|Schritt zu wenig|Почти|Чуть-чуть|Жаль|Az kaldı|Çok yakın|adım eksik|Hampir|Sayang|selangkah|लगभग|थोड़ा सा|बस एक कदम|अफ़सोस|اقتربت|خسارة|قريب|خطوة واحدة/;
 function near53(opt) { const src = require('fs').readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), out = [];
   for (const m of src.matchAll(/pts\s*(>|>=)\s*(\d+)\s*\?\s*(X\.partial|'いい線[^']*')/g)) if (!(m[1] === '>=' ? +m[2] >= 10 : +m[2] >= 9)) out.push({ step: 'lessons3d', q: 0, msg: `追53 ${m[0]}: the soft headline for a move under 10 points` });
   if (!/X\.partial/.test(src)) out.push({ step: 'lessons3d', q: 0, msg: '追53 the check finds no X.partial (changed?)' });
@@ -2499,7 +2545,21 @@ function near53(opt) { const src = require('fs').readFileSync(path.join(ROOT, 'a
   { const fs = require('fs'), NEAR = /おしい|惜しい|おしかった|あと少し|あと一歩|いい線/, DONE = (opt && opt.done76) || ['foxgeese', 'konane'];
     for (const g of DONE) { const f = path.join(ROOT, 'atlas/games', g + '-pz.js'); if (!fs.existsSync(f)) { out.push({ step: g + '-pz.js', q: 0, msg: '追78 file not found' }); continue; }
       const t = (opt && opt.src76 && opt.src76[g]) || fs.readFileSync(f, 'utf8'), a = t.search(/\n\s*ja: \{/), b = t.indexOf('en: {', a); if (a < 0 || b < 0) { out.push({ step: g + '-pz.js', q: 0, msg: '追78 the ja block not found' }); continue; }
-      for (const m of t.slice(a, b).matchAll(/(['"])((?:(?!\1)[^\n])*)\1/g)) if (NEAR.test(m[2])) out.push({ step: g + '-pz.js', q: 0, msg: `追78 the words after a move off the solution say the move was close 「${m[2].slice(0, 40)}」` }); } }
+      for (const m of t.slice(a, b).matchAll(/(['"])((?:(?!\1)[^\n])*)\1/g)) if (NEAR.test(m[2])) out.push({ step: g + '-pz.js', q: 0, msg: `追78 the words after a move off the solution say the move was close 「${m[2].slice(0, 40)}」` });
+      // 追78 (2026-11-25 03:32 担当C): the other 13 languages too — the module's T[lang] for the keys said after a move off the solution
+      // (foxgeese cap・farWin・trap・farTake・lastWin・lastTake, konane stuck・far・last): no closeness or regret opener in any language
+      let P; try { const M = { exports: {} }; new Function('module', 'window', t)(M, undefined); P = M.exports; } catch (e) { out.push({ step: g + '-pz.js', q: 0, msg: '追78 the module does not load: ' + e.message }); continue; }
+      const KEYS = g === 'konane' ? ['stuck', 'far', 'last'] : ['cap', 'farWin', 'trap', 'farTake', 'lastWin', 'lastTake'];
+      for (const l of ['en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar']) { if (!P[l]) { out.push({ step: g + '-pz.js', q: 0, msg: `追78 no ${l} block` }); continue; }
+        for (const k of KEYS) for (const x of [].concat(P[l][k] == null ? [] : P[l][k])) if (NEAR78.test(x)) out.push({ step: g + '-pz.js', q: 0, msg: `追78 ${l}.${k} says the move was close 「${String(x).slice(0, 40)}」` }); } } }
+  // 追81 (2026-11-25 担当A): the line after a wrong move in a warm-up (<game>/lessons.json rampUi.ng, every language, and the 3D voice
+  //  <game>/voice-*-ja.js 'ui:ng') is said whatever the move, so it does not say the move was close (gomoku's 「おしい！」 after e10, a
+  //  move nowhere near the three). The games done: N81_DONE; the others are 「追81 未確認」 in claude/lesson-quality.md.
+  { const fs = require('fs'), NEAR = /おしい|惜しい|いい線|あと少し|あと一歩|Close|Almost|Casi|Presque|Quase|Knapp|^Fast\b|लगभग|قريب|Почти|Hampir|Az kaldı|아깝|差一点|差一點/;
+    for (const d of N81_DONE) { let D = null; try { D = JSON.parse(fs.readFileSync(path.join(ROOT, d, 'lessons.json'), 'utf8')); } catch (e) {}
+      const w = D && D.rampUi && D.rampUi.ng; if (!w) out.push({ step: d + '/lessons.json', q: 0, msg: '追81 no rampUi.ng' });
+      else for (const [l, v] of Object.entries(typeof w === 'string' ? { '-': w } : w)) if (NEAR.test(v)) out.push({ step: d + '/lessons.json', q: 0, msg: `追81 the warm-up's wrong-move line rampUi.ng.${l} 「${v}」 says the move was close` });
+      for (const f of fs.readdirSync(path.join(ROOT, d)).filter(f => /^voice-.*-ja\.js$/.test(f))) { const m = fs.readFileSync(path.join(ROOT, d, f), 'utf8').match(/'ui:ng':\s*'([^']*)'/); if (m && NEAR.test(m[1])) out.push({ step: d + '/' + f, q: 0, msg: `追81 the 3D warm-up's wrong-move line ui:ng 「${m[1]}」 says the move was close` }); } } }
   // 追78 (2026-11-25 担当D): janggi・ugolki -pz.js in every language (ugolki has 14; janggi only ja — the others use the runner's and
   // janggi/i18n.js pz.* lines): no string says the move was close or praises the moves before it (the 'out' line of a missed count, the
   // 'reach' line after a move off the line, ugolki's far・block・slow・catch・over・last・lastDraw). The comments are not read.
@@ -2507,17 +2567,18 @@ function near53(opt) { const src = require('fs').readFileSync(path.join(ROOT, 'a
     for (const g of (opt && opt.done78d) || ['janggi', 'ugolki']) { const f = path.join(ROOT, 'atlas/games', g + '-pz.js'); if (!fs.existsSync(f)) { out.push({ step: g + '-pz.js', q: 0, msg: '追78 file not found' }); continue; }
       const t = ((opt && opt.src76 && opt.src76[g]) || fs.readFileSync(f, 'utf8')).replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"])\/\/[^\n]*/g, '$1');
       for (const m of t.matchAll(/(['"`])((?:(?!\1)[^\n\\]|\\.)*)\1/g)) if (NEARX.test(m[2])) out.push({ step: g + '-pz.js', q: 0, msg: `追78 a puzzle line says the move was close or praises it 「${m[2].slice(0, 40)}」` }); } }
-  // 追80 (2026-11-25 担当D): the 2D lesson's end heading when not passed (ls.failed 「もう一息！」「Almost!」…) is said only when one more
+  // 追82 (2026-11-25 担当D): the 2D lesson's end heading when not passed (ls.failed 「もう一息！」「Almost!」…) is said only when one more
   // right answer (20 points) passes (n + 20 >= 75); below that the heading is ls.failedFar, which says in no language that it was close.
-  // Done: LF80_DONE (the other games with ls.failed — checkers・chess・go・hex・morris・reversi・tafl・xiangqi — are 「追80 未確認」).
+  // Done: the list below (the other games with ls.failed — checkers・chess・go・hex・morris・reversi・tafl・xiangqi — are 「追82 未確認」).
   { const fs = require('fs'), NEARF = /もう一息|もう少し|あと少し|あと一歩|惜し|Almost|Close|Casi|Presque|Quase|Fast!|Почти|Hampir|Az kaldı|조금만|아깝|再加把|差一|लगभग|थोड़ा|تقريب|اقترب|Por poco|Sedikit/;
     for (const g of (opt && opt.done80) || ['janggi', 'fanorona']) { const app = (opt && opt.app80 && opt.app80[g]) || fs.readFileSync(path.join(ROOT, g, 'app.js'), 'utf8'), i18 = (opt && opt.i18n80 && opt.i18n80[g]) || fs.readFileSync(path.join(ROOT, g, 'i18n.js'), 'utf8');
       const bare = [...app.matchAll(/t\(pass \? '[\w.]+' : ([^)]*)\)/g)].filter(m => !/^n \+ 20 >= 75 \? 'ls\.failed' : 'ls\.failedFar'$/.test(m[1].trim()));
-      if (/'ls\.failed'/.test(app) && !/n \+ 20 >= 75 \? 'ls\.failed' : 'ls\.failedFar'/.test(app)) out.push({ step: g + '/app.js', q: 0, msg: '追80 the not-passed heading ls.failed is said whatever the points' });
-      bare.forEach(m => out.push({ step: g + '/app.js', q: 0, msg: `追80 a lesson end heading not under n + 20 >= 75: ${m[0].slice(0, 60)}` }));
-      const fa = [...i18.matchAll(/"ls\.failedFar": ?"([^"]*)"/g)]; if (fa.length < 14) out.push({ step: g + '/i18n.js', q: 0, msg: `追80 ls.failedFar in ${fa.length} of 14 languages` });
-      fa.forEach(m => { if (NEARF.test(m[1])) out.push({ step: g + '/i18n.js', q: 0, msg: `追80 ls.failedFar says it was close 「${m[1]}」` }); }); } }
+      if (/'ls\.failed'/.test(app) && !/n \+ 20 >= 75 \? 'ls\.failed' : 'ls\.failedFar'/.test(app)) out.push({ step: g + '/app.js', q: 0, msg: '追82 the not-passed heading ls.failed is said whatever the points' });
+      bare.forEach(m => out.push({ step: g + '/app.js', q: 0, msg: `追82 a lesson end heading not under n + 20 >= 75: ${m[0].slice(0, 60)}` }));
+      const fa = [...i18.matchAll(/"ls\.failedFar": ?"([^"]*)"/g)]; if (fa.length < 14) out.push({ step: g + '/i18n.js', q: 0, msg: `追82 ls.failedFar in ${fa.length} of 14 languages` });
+      fa.forEach(m => { if (NEARF.test(m[1])) out.push({ step: g + '/i18n.js', q: 0, msg: `追82 ls.failedFar says it was close 「${m[1]}」` }); }); } }
   return out; }
+const N81_DONE = ['gomoku'];
 function xiangqiOpen(opt) {
   const fs = require('fs'), CU = require(path.join(ROOT, 'xiangqi/tools/op_curate.js')), E = require(path.join(ROOT, 'xiangqi/engine.js'));
   const OP = (opt && opt.op) || JSON.parse(fs.readFileSync(path.join(ROOT, 'xiangqi/openings.json'), 'utf8'));
@@ -2638,6 +2699,6 @@ Object.defineProperty(GAMES, '_xqStray', { value: xqStray42 });   // (the xiangq
 if (require.main === module) {
   const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'near53,plural58,backgammon,reversiOpen,gomokuOpen,goOpen,open67,connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,chessOpen,xiangqiOpen,openLines,janggi,foxgeese,konane,hex,hexOpen,bgOpen').split(',');
   let bad = 0;
-  for (const g of games) { const f = GAMES[g]((g === 'hexOpen' || g === 'reversiOpen' || g === 'gomokuOpen') && a.includes('--deep') ? { deep: true } : undefined); if (!f.length) { console.log(`OK ${g}` + (g === 'ugolki' ? ' (勝ち切りパズル全問の①〜⑨・追16・追65、tools/lesson-verify-ugolki.js ＋ 3D のレッスン（READY）全問の①〜⑨・追17・追27・追52、tools/lesson-verify-ugolki-ls.js)' : g === 'bgOpen' ? ' (バックギャモンの定跡 34項目99問の①〜⑨・追63（評価の誤差）・追53、3D の出し方どおり。⑤ レッスンと同じ盤の10問は pending)' : g === 'open67' ? ' (追67：tafl・checkers・xiangqi・shogi・chess・gomoku・reversi・hex・backgammon の定跡と connect4 の問題の局面が、どの本の見本の局面と同じでも、見本の手が正解（20点）に入っている。検証済みの本は NG、ほかは pending＝node tools/lesson-verify-op67.js --all)' : g === 'goOpen' ? ` (囲碁の定石・布石 ${require('./lesson-verify-goopen.js').DONE().join('・') || 'なし'} の①〜⑨・追4・追9。ほかの本は pending、--all で全問の不合格の内訳)` : g === 'gomokuOpen' ? ` (五目並べの定跡（珠型） ${require('./lesson-verify-gmopen.js').DONE().join('・') || 'なし'} の5問の①〜⑨・追1・追39・追53。①は保存した2つの読みと net の最善で照合、--deep で読み直し)` : g === 'reversiOpen' ? ` (リバーシの定跡 ${[...require('./lesson-verify-rvopen.js').DONE].join('・') || 'なし'} の手順の外の5問の①〜⑨・追1・追43、全定跡の不正解の文の頭＝追53` + (a.includes('--deep') ? '。①②はエンジンで読み直し)' : '。①②は保存した2つの読みで照合、読み直しは --deep)') : g === 'xiangqiOpen' ? ` (シャンチーの定跡 ${JSON.parse(require('fs').readFileSync(path.join(ROOT, 'xiangqi/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id).join('・')} の①〜⑨・追3・追4・追5・追8・追9・追41。ほかの定跡は pending)` : g === 'chessOpen' ? ' (チェスの定跡の drill の①〜⑨・追3・追25。drill のない定跡は pending、プールの全問で追53・追66)' : g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'patolli' ? ' (パトリの作り直したレッスン（v2：豆の確率・腕の先・上がり）の①〜⑧・追7・追16・追22・追23・追40。厳密な勝率は C で解き直し)' : g === 'senet' ? ' (セネトのレッスン9本（v2）の①〜⑧・追7・追16・追22・追23・追28・追36・追40・追47・追54・追59・追64。厳密な勝率は C で解き直し、水の家の選ぶ問題は engine.js で数え直し)' : g === 'backgammon' ? ' (選ぶ問題 shots・race の①〜⑨・追22・追23・追40・追54：36通りをルールで数え直し、誤答ごとの説明を14言語で)' : g === 'hex' ? ' (3D の準備13本：緑の印・半回転の try・説明と ほめ言葉の語が盤の事実・追1 準備の問題を本番で出さない)' : g === 'hexOpen' ? ` (ヘックスの定跡 ${JSON.parse(require('fs').readFileSync(path.join(ROOT, 'hex/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id).join('・') || 'なし'} の①〜⑨、全定跡の不正解の文の頭＝追53・16〜19点のほめ言葉＝追71` + (a.includes('--deep') ? '。①②はエンジンで読み直し)' : '。①②は保存した2つの読みで照合、読み直しは --deep＝追26)') : g === 'foxgeese' ? ' (パズル全250問の①〜⑨・追6・追13・追16：厳密なソルバーで手数・正解の集まり・全段階の全不正解手の応手と文、2D の外れた手の文／3D のレッスン（狐：取れるガチョウ・続けて取る・2羽を同時に／ガチョウ：跳ばれない・閉じ込める・2手で閉じ込める）30問の①〜⑧・追3・追7・追16・追52・追70：正解の集まり・全合法手の盤の事実と14言語の文・ヒントの印)' : g === 'konane' ? ' (コナネのパズル全問の①〜⑨・追13・追16・追56：厳密なソルバーで手数・正解の集まり・テーマ（止まる・続けて跳ぶ）を正解手の全部で・全段階の全不正解手の応手と文、2D の外れた手の文。レッスン（3D の READY）：跳び方を数え直して正解の集まり・全不正解手の盤の事実・ヒントの印・準備の手・14言語)' : g === 'janggi' ? ' (パズル全問・レッスン b_rook・b_horse・b_elephant・b_cannon・b_pawn・b_escape・b_mate1・t_capture・t_fork・t_check・t_defend・m_mate2・m_mate3・e_rook・e_pawn の①〜⑨・追19・追20・追24・追27・追31・追34・追38・追39・追42・追44・追51・追55・追60)' : g === 'ur' ? (require('fs').existsSync(require('path').join(process.env.UR_LUT_DIR || '/tmp/urlut', 'finkel.rgu')) ? ' (ウルのレッスン12本の①〜⑧・追7・追16)' : ' (ウルのレッスン12本の③〜⑧・追7・追16。①②は完全解析表なしで未照合＝追26)') : g === 'plural58' ? ' (全ゲームの3Dパズルの案内文 atlas/puzzles.js とシャンチーの外れた手の文 xiangqi/pzwhy.js、追61 の <game>/i18n.js pz.*（xiangqi・chess・hex・morris・connect4・reversi）：1になりうる数のとなりに複数形の語がない＝追58、前の動詞（quedan・restam・осталось）は大文字小文字を問わない＝追69、en・es・fr・pt・de・ru・hi・ar)' : g === 'near53' ? ' (3D の結果の見出し「いい手だね…」「いい線！」「おしい！」は10点以上だけ＝追53・追57・追66、0点の見出し TX.wrong は14言語とも「惜しい」と言わない、3D レッスン本文の不正解の文の頭 soft にも近さの語なし＝追73、3D パズルの外れた手の文（foxgeese・konane の -pz.js の ja、janggi・ugolki の -pz.js の全言語）にも＝追78、2D レッスンの不合格の見出し「もう一息」は あと1問で合格のときだけ（janggi・fanorona）＝追80)': g === 'openLines' ? ' (shogi・tafl・checkers・xiangqi の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧${g === 'xiangqi' ? '、詰め233問の外れた手の文＝追20・追42' : g === 'checkers' ? '、詰めチェッカー527問の外れた手×全応手の文＝追20・追42・追58' : ''})`)); continue; }    bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
+  for (const g of games) { const f = GAMES[g]((g === 'hexOpen' || g === 'reversiOpen' || g === 'gomokuOpen') && a.includes('--deep') ? { deep: true } : undefined); if (!f.length) { console.log(`OK ${g}` + (g === 'ugolki' ? ' (勝ち切りパズル全問の①〜⑨・追16・追65、tools/lesson-verify-ugolki.js ＋ 3D のレッスン（READY）全問の①〜⑨・追17・追27・追52、tools/lesson-verify-ugolki-ls.js)' : g === 'bgOpen' ? ' (バックギャモンの定跡 34項目99問の①〜⑨・追63（評価の誤差）・追53、3D の出し方どおり。⑤ レッスンと同じ盤の10問は pending)' : g === 'open67' ? ' (追67：tafl・checkers・xiangqi・shogi・chess・gomoku・reversi・hex・backgammon の定跡と connect4 の問題の局面が、どの本の見本の局面と同じでも、見本の手が正解（20点）に入っている。検証済みの本は NG、ほかは pending＝node tools/lesson-verify-op67.js --all)' : g === 'goOpen' ? ` (囲碁の定石・布石 ${require('./lesson-verify-goopen.js').DONE().join('・') || 'なし'} の①〜⑨・追4・追9。ほかの本は pending、--all で全問の不合格の内訳)` : g === 'gomokuOpen' ? ` (五目並べの定跡（珠型） ${require('./lesson-verify-gmopen.js').DONE().join('・') || 'なし'} の5問の①〜⑨・追1・追39・追53。①は保存した2つの読みと net の最善で照合、--deep で読み直し)` : g === 'reversiOpen' ? ` (リバーシの定跡 ${[...require('./lesson-verify-rvopen.js').DONE].join('・') || 'なし'} の手順の外の5問の①〜⑨・追1・追43、全定跡の不正解の文の頭＝追53` + (a.includes('--deep') ? '。①②はエンジンで読み直し)' : '。①②は保存した2つの読みで照合、読み直しは --deep)') : g === 'xiangqiOpen' ? ` (シャンチーの定跡 ${JSON.parse(require('fs').readFileSync(path.join(ROOT, 'xiangqi/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id).join('・')} の①〜⑨・追3・追4・追5・追8・追9・追41。ほかの定跡は pending)` : g === 'chessOpen' ? ' (チェスの定跡の drill の①〜⑨・追3・追25。drill のない定跡は pending、プールの全問で追53・追66)' : g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'patolli' ? ' (パトリの作り直したレッスン（v2：豆の確率・腕の先・上がり）の①〜⑧・追7・追16・追22・追23・追40。厳密な勝率は C で解き直し)' : g === 'senet' ? ' (セネトのレッスン9本（v2）の①〜⑧・追7・追16・追22・追23・追28・追36・追40・追47・追54・追59・追64。厳密な勝率は C で解き直し、水の家の選ぶ問題は engine.js で数え直し)' : g === 'backgammon' ? ' (選ぶ問題 shots・race の①〜⑨・追22・追23・追40・追54：36通りをルールで数え直し、誤答ごとの説明を14言語で)' : g === 'hex' ? ' (3D の準備13本：緑の印・半回転の try・説明と ほめ言葉の語が盤の事実・追1 準備の問題を本番で出さない)' : g === 'hexOpen' ? ` (ヘックスの定跡 ${JSON.parse(require('fs').readFileSync(path.join(ROOT, 'hex/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id).join('・') || 'なし'} の①〜⑨、全定跡の不正解の文の頭＝追53・16〜19点のほめ言葉＝追71` + (a.includes('--deep') ? '。①②はエンジンで読み直し)' : '。①②は保存した2つの読みで照合、読み直しは --deep＝追26)') : g === 'foxgeese' ? ' (パズル全250問の①〜⑨・追6・追13・追16：厳密なソルバーで手数・正解の集まり・全段階の全不正解手の応手と文、2D の外れた手の文／3D のレッスン（狐：取れるガチョウ・続けて取る・2羽を同時に／ガチョウ：跳ばれない・閉じ込める・2手で閉じ込める）30問の①〜⑧・追3・追7・追16・追52・追70：正解の集まり・全合法手の盤の事実と14言語の文・ヒントの印)' : g === 'konane' ? ' (コナネのパズル全問の①〜⑨・追13・追16・追56：厳密なソルバーで手数・正解の集まり・テーマ（止まる・続けて跳ぶ）を正解手の全部で・全段階の全不正解手の応手と文、2D の外れた手の文。レッスン（3D の READY）：跳び方を数え直して正解の集まり・全不正解手の盤の事実・ヒントの印・準備の手・14言語)' : g === 'janggi' ? ' (パズル全問・レッスン b_rook・b_horse・b_elephant・b_cannon・b_pawn・b_escape・b_mate1・t_capture・t_fork・t_check・t_defend・m_mate2・m_mate3・e_rook・e_pawn の①〜⑨・追19・追20・追24・追27・追31・追34・追38・追39・追42・追44・追51・追55・追60)' : g === 'ur' ? (require('fs').existsSync(require('path').join(process.env.UR_LUT_DIR || '/tmp/urlut', 'finkel.rgu')) ? ' (ウルのレッスン12本の①〜⑧・追7・追16)' : ' (ウルのレッスン12本の③〜⑧・追7・追16。①②は完全解析表なしで未照合＝追26)') : g === 'plural58' ? ' (全ゲームの3Dパズルの案内文 atlas/puzzles.js とシャンチーの外れた手の文 xiangqi/pzwhy.js、追61 の <game>/i18n.js pz.*（xiangqi・chess・hex・morris・connect4・reversi）：1になりうる数のとなりに複数形の語がない＝追58、前の動詞（quedan・restam・осталось）は大文字小文字を問わない＝追69、en・es・fr・pt・de・ru・hi・ar)' : g === 'near53' ? ' (3D の結果の見出し「いい手だね…」「いい線！」「おしい！」は10点以上だけ＝追53・追57・追66、0点の見出し TX.wrong は14言語とも「惜しい」と言わない、3D レッスン本文の不正解の文の頭 soft にも近さの語なし＝追73、3D パズルの外れた手の文（foxgeese・konane の -pz.js の ja、janggi・ugolki の -pz.js の全言語）にも＝追78、2D レッスンの不合格の見出し「もう一息」は あと1問で合格のときだけ（janggi・fanorona）＝追82)': g === 'openLines' ? ' (shogi・tafl・checkers・xiangqi の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧${g === 'xiangqi' ? '、詰め233問の外れた手の文＝追20・追42' : g === 'checkers' ? '、詰めチェッカー527問の外れた手×全応手の文＝追20・追42・追58' : ''})`)); continue; }    bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
   process.exit(bad ? 1 : 0);
 }

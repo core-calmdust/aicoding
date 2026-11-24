@@ -5,8 +5,9 @@
   let ac = null, master = null, sfx = null, bgm = null, wind = null, on = true, musicOn = true, talkOn = true;
   try { on = localStorage.getItem('wolflantern-snd') !== '0'; musicOn = localStorage.getItem('wolflantern-bgm') !== '0'; talkOn = localStorage.getItem('wolflantern-talk') !== '0'; } catch (e) {}
   const SFX = 1.0, BGM = .34;
+  let paused = false;
   function ctx() {
-    if (!on) return null;
+    if (!on || paused) return null;
     if (!ac) {
       const C = root.AudioContext || root.webkitAudioContext; if (!C) return null;
       ac = new C(); master = ac.createGain(); master.gain.value = .95;
@@ -15,15 +16,26 @@
       sfx = ac.createGain(); sfx.gain.value = SFX; sfx.connect(master);
       bgm = ac.createGain(); bgm.gain.value = musicOn ? BGM : 0; bgm.connect(master);
       if (want) { const w = want; want = null; music(w.name, w.level); }
-      document.addEventListener('visibilitychange', () => { if (!ac) return; if (document.hidden) ac.suspend(); else if (on) ac.resume(); });
+      document.addEventListener('visibilitychange', () => { if (!ac) return; if (document.hidden) ac.suspend(); else if (on && !paused) ac.resume(); });
     }
     if (ac.state === 'suspended' && !document.hidden) ac.resume();
     return ac;
   }
   function noiseBuf(a, sec) { const b = a.createBuffer(1, a.sampleRate * sec, a.sampleRate), d = b.getChannelData(0); let l = 0; for (let i = 0; i < d.length; i++) { const w = Math.random() * 2 - 1; l = (l + .02 * w) / 1.02; d[i] = l * 3.2; } return b; }
   // a cracked bronze bell: inharmonic partials, one slightly sour
+  // the music steps back while a bell rings, and comes back when the last one fades
+  let duckUntil = 0;
+  function duck(until) {
+    if (!bgm || !ac) return;
+    const now = ac.currentTime, back = Math.max(duckUntil, until);
+    bgm.gain.cancelScheduledValues(now);
+    bgm.gain.setTargetAtTime(musicOn ? BGM * .18 : 0, now, .12);
+    bgm.gain.setTargetAtTime(musicOn ? BGM : 0, back, .9);
+    duckUntil = back;
+  }
   function bell(vol, when) {
     const a = ctx(); if (!a) return; const t = a.currentTime + (when || 0);
+    duck(t + 4.2);
     [[.56, 1], [.92, .7], [1.19, .55], [1.71, .35], [2.0, .3], [2.74, .2], [3.76, .12]].forEach(([r, g], i) => {
       const o = a.createOscillator(), v = a.createGain(); o.frequency.value = 196 * r * (i === 3 ? 1.013 : 1);
       v.gain.setValueAtTime(0, t); v.gain.linearRampToValueAtTime(g * (vol || .5) * .62, t + .01); v.gain.exponentialRampToValueAtTime(.0005, t + 4.5 - i * .35);
@@ -114,9 +126,11 @@
     const next = t + D - X;
     c.timer = setTimeout(() => { if (!c.stopped) play(c, next, false); }, Math.max(0, (next - a.currentTime - 1.5) * 1000));
   }
-  function setMusic(v) { musicOn = !!v; try { localStorage.setItem('wolflantern-bgm', musicOn ? '1' : '0'); } catch (e) {} if (bgm && ac) bgm.gain.setTargetAtTime(musicOn ? BGM : 0, ac.currentTime, .3); }
+  function setMusic(v) { musicOn = !!v; try { localStorage.setItem('wolflantern-bgm', musicOn ? '1' : '0'); } catch (e) {} if (bgm && ac) { bgm.gain.cancelScheduledValues(ac.currentTime); bgm.gain.setTargetAtTime(musicOn ? BGM : 0, ac.currentTime, .3); duckUntil = 0; } }
   function setTalk(v) { talkOn = !!v; try { localStorage.setItem('wolflantern-talk', talkOn ? '1' : '0'); } catch (e) {} }
 
+  // the window lost focus: everything stops until it comes back
+  function pause(p) { paused = !!p; if (!ac) return; if (paused) ac.suspend(); else if (on && !document.hidden) ac.resume(); }
   function set(v) { on = !!v; try { localStorage.setItem('wolflantern-snd', on ? '1' : '0'); } catch (e) {} if (!on) { windOff(); if (ac) ac.suspend(); } else if (ac) ac.resume(); }
-  root.WLSound = { bell, howl, windOn, windOff, pluck, page, ok, thud, talk, music, set, setMusic, setTalk, get on() { return on; }, get musicOn() { return musicOn; }, get talkOn() { return talkOn; }, unlock: ctx };
+  root.WLSound = { pause, bell, howl, windOn, windOff, pluck, page, ok, thud, talk, music, set, setMusic, setTalk, get on() { return on; }, get musicOn() { return musicOn; }, get talkOn() { return talkOn; }, get bgmLevel() { return bgm ? bgm.gain.value : null; }, unlock: ctx };
 })(window);

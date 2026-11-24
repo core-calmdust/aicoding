@@ -199,3 +199,4 @@ URL: https://core-calmdust.github.io/aicoding/foxgeese/ （cat: hist＝ヒスト
 
 - 2D「かわいい」の狐：丸い顔（絵の上から52%）を点の中心に合わせる（`html[data-pcs=cute] .pc.p1` の margin-top −.57セル、小盤 SVG も .52）。2026-11-20 ユーザー。
 - オンラインのルール表示では 15羽 の「（後退なし）」を省いて「15羽」とだけ出す（`online-ui.js` varName）。2026-11-20 ユーザー。
+- 3D パズルの外れた手のあとの文（atlas/games/foxgeese-pz.js）は、14言語とも近さ・残念の語（おしい・So close!・可惜！・¡Casi!・Schade! など）で始めない。応手で必ず届かなくなる手なので「盤を見てみよう」「いっしょに確かめよう」で始め、盤の事実を言う（追78、2026-11-25 担当C。tools/lesson-verify.js near53）。

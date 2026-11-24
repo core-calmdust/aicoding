@@ -131,5 +131,5 @@
 - データ：`tools/lesson_ramps.js`（局面と14言語の文。画面の決まり文句はアルケルケと共通）→ `node tools/gen_ramps.js`（正解をルールで全部求め、考え方の手順を1手ずつ検証。問題は変えない）。画面は `fanorona/app.js` の準備ステップ（アルケルケと共通、`claude/alquerque-spec.md`）。
 
 
-## レッスンの終わりの見出し（2026-11-25 担当D、lesson-quality.md 追80）
+## レッスンの終わりの見出し（2026-11-25 担当D、lesson-quality.md 追82）
 - 75点未満のとき、あと1問（20点）で合格（n + 20 ≥ 75）なら ls.failed「もう一息！」、それより下は ls.failedFar「今回は不合格です。もう一度どうぞ！」（14言語、近さの語なし）。定跡の練習の見出しも同じ（fanorona/app.js）。機械チェック：`node tools/lesson-verify.js near53`。

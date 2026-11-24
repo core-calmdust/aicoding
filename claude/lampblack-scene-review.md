@@ -1,6 +1,6 @@
 # 狼影灯 — 背景の目の審査
 
-`node wolflantern/tools/scene-quality.js --shots` で書き出した見え方（PC昼・PC夜・スマホ）を目で見て判定する。
+`node lampblack/tools/scene-quality.js --shots` で書き出した見え方（PC昼・PC夜・スマホ）を目で見て判定する。
 機械の採点（90点以上）とこの審査の両方に通った場面だけが `scenes-pass.js` に載り、ゲームで使われる。
 場面の絵を直すとハッシュが変わり、この表の行は無効になる（審査をやり直す）。
 
