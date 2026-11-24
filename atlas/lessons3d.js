@@ -3928,7 +3928,7 @@
     const kd = xqKind(F), rot = (A, o) => A.map((_, q) => A[(o + q) % A.length]);
     let H;
     if (kd === 'recap') H = ['駒の数を数えてみて。取られたままの駒はない？', 'さっき取られた駒、そのままでいいのかな？', '駒の損を戻せる手がありそうだね。'];
-    else if (kd === 'cap') H = ['取れる駒がないか、盤をよく見てみて！', '相手の駒で、ただで取れるものはない？', '取り合いが始まりそうな局面コン。', '目の前に取れる駒、ないかな？'];
+    else if (kd === 'cap') H = ['取れる駒がないか、盤をよく見てみて！', '相手の駒で、ただで取れるものはない？', '取り合いが始まりそうな局面コン。', '目の前に取れる駒、ないかな？'].filter(x => !(F.retake && /ただで/.test(x)));
     else if (F.check) H = ['王さまに王手をかけられる駒がありそう。', '相手の王さまのまわり、すきはない？', '相手の王さまをおびやかす手、見えるかな？'];
     else if (F.aims.length) H = ['相手の駒で、ねらえそうなものはない？', '動かすと相手の駒をにらめる駒、どれかな？', '相手の大事な駒に、届きそうな手を探してみて。', '指したあと、相手の駒をねらえる手があるコン。'];
     else if (/^rook/.test(kd)) H = ['車の出番、そろそろじゃない？', 'いちばん強い駒、車の使い方を考えてみて。', '隅で休んでいる駒はいないかな？', '車が通れる筋、開いていない？'];
@@ -3946,15 +3946,39 @@
     return { cheer: i => O.cheer[pc[i % pc.length]], soft: i => O.soft[ps[i % ps.length]], push: i => O.push[pp[i % pp.length]], lead: i => O.lead[pl[i % pl.length]], pr: i => O.pr[pr[i % pr.length]], used: new Set(), seed };
   }
   const xqJoin = (...a) => a.filter(Boolean).reduce((s, t) => !s ? t : s + (/[！？]$/.test(s) ? ' ' : '') + t, '');
+  // (2026-11-24 第2期・担当B) the board facts behind a wrong move's words (xiangqi/open): what the answer does that yours does not —
+  // recap (the answer takes back, yours takes nothing), lost / lostTrade (yours leaves a piece to be taken: E.threats; 'free' = it cannot
+  // be taken back), miss (the answer takes a piece, yours none or a smaller one), aim (the answer attacks a piece of a kind yours does
+  // not), check (the answer checks, yours not); null: no fact (the old general lines, never in a verified opening — lesson-verify.js)
+  const xqRetake = (E, pos, m) => { const q = pos.clone().play(m), t = E.mTo(m); return q.moves().some(r => E.mTo(r) === t); };
+  function xqNgFact(E, pos, A, FA, u, F) {
+    const lost = [...F.mine].filter(q => !FA.mine.has(q)), aft = pos.clone().play(u), lp = lost.length ? E.typeOf(aft.at(lost[0])) : 0;
+    if (FA.cap && FA.behind && !F.cap) return { k: 'recap' };
+    if (lp && F.cap && XQV[F.cap] >= XQV[lp]) {}
+    else if (lp && F.cap) return { k: 'lostTrade', lp, cp: F.cap };
+    else if (lp) { const q = lost[0], free = aft.moves().some(r => E.mTo(r) === q && !aft.clone().play(r).moves().some(x => E.mTo(x) === q)); return { k: free ? 'free' : 'lost', lp, was: E.threats(pos, pos.side ^ 1).has(E.mFrom(u) === q ? -1 : q) }; }
+    if (FA.cap && (!F.cap || (E.mTo(u) !== E.mTo(A) && XQV[F.cap] < XQV[FA.cap]))) return { k: 'miss', retake: xqRetake(E, pos, A) };
+    const big = a => Math.max(0, ...a.map(t => XQV[t]));
+    if (!FA.cap && FA.aims.length && big(F.aims) < big(FA.aims)) return { k: 'aim', T: FA.aims.slice().sort((a, b) => XQV[b] - XQV[a])[0] };
+    if (FA.check && !F.check && !F.cap) return { k: 'check' };
+    return null;
+  }
   function xqOpJa(E, P, name, k, ck, V, i) {   // ck(k): the move named by its arrow; V: the opening's voice (xqOpVoice), i: the problem's number
     V = V || xqOpVoice(name); i = i || 0;
     const pos = E.Pos.from(P.s), A = P.best, sc = new Map(P.sc || []), best = sc.has(A) ? sc.get(A) : Math.max(...(P.sc || [[0, 0]]).map(x => x[1]));
     const FA = xqFacts(E, pos, A), M = ck('ok'), X = ck('ng'), f = s => s.replace(/\{m\}/g, M).replace(/\{x\}/g, X);
-    const ask = XQJ_OP.ask[k % XQJ_OP.ask.length].replace('{n}', name), kd = xqKind(FA), j = i + V.seed % 7, sh = xqSh(kd, j), sh2 = xqSh(kd, j + 1);
+    // (2026-11-24 第2期・担当B, 追41) the answer moves a piece the opponent was aiming at to a safe square: that is said first (the praise,
+    // the hint, the line after a miss), not only "a horse comes out"
+    FA.flee = E.threats(pos, pos.side ^ 1).has(E.mFrom(A)) && !E.threats(pos.clone().play(A), pos.side ^ 1).has(E.mTo(A));
+    const FP = XQN(FA.ty, FA.c), FLEE = { why: [`ねらわれていた${FP}を、取られない場所へ逃がす手なの。`, `${FP}がねらわれていたから、まずは安全なところへよけるの。`, `ねらわれた${FP}をかわす！ 駒を取られないのが先だコン。`], sh: [`${FP}が取られずに済む`, `ねらわれた${FP}を守れる`] };
+    const CP = FA.cap ? XQN(FA.cap, FA.c ^ 1) : '', nameIt = t => CP ? t.replace('駒を取れる', `${CP}を取れる`).replace('駒を取り返せる', `${CP}を取り返せる`) : t;   // (a capture names the piece taken)
+    const ask = XQJ_OP.ask[k % XQJ_OP.ask.length].replace('{n}', name), kd = xqKind(FA), j = i + V.seed % 7, sh = nameIt(FA.flee && !FA.cap ? FLEE.sh[j % 2] : xqSh(kd, j)), sh2 = nameIt(FA.flee && !FA.cap ? FLEE.sh[(j + 1) % 2] : xqSh(kd, j + 1));
     // the praise: the cheer, why — in words the line's notes have not used — and now and then a push on
+    { const mv = P.mv || [], lm = mv[mv.length - 1]; FA.slow = !(lm != null && E.mTo(lm) === E.mTo(A) && E.replay(null, mv.slice(0, -1)).pos.at(E.mTo(lm))); FA.retake = !!FA.cap && xqRetake(E, pos, A); }   // (すぐ取り返す: only right after the capture; ただで: only if it cannot be taken back)
     let why; { const L = XQ_WHY[kd] || XQ_WHY.cannon, P0 = XQN(FA.cap || FA.ty, FA.cap ? FA.c ^ 1 : FA.c);
       const fresh = L.map(x => x.replace(/\{P\}/g, P0)).filter(x => xqSn(x).every(y => !V.used.has(xqKey(y))));
       why = fresh.length ? xqWhyJa(FA, j, V, xqLastEnd(V.cheer(i))) : xqPick(V, [0, 1, 2, 3, 4, 5].map(q => V.pr(i + q).replace('{a}', sh2)), xqLastEnd(V.cheer(i))); }
+    if (FA.flee) why = FA.cap ? xqJoin(why, `しかも、ねらわれていた${FP}もこれで安全なの。`) : xqPick(V, FLEE.why.map((_, q) => FLEE.why[(j + q) % FLEE.why.length]), xqLastEnd(V.cheer(i)));
     const pu = i % 2 ? [0, 1, 2].map(q => V.push(i + q)).find(x => xqEnd(xqSn(x)[0]) !== xqLastEnd(why)) || V.push(i) : '', goodTx = xqJoin(V.cheer(i), why, pu);
     const good = u => { if (u != null && u !== A && sc.has(u)) return f(best - sc.get(u) <= 10 ? xqJoin(V.cheer(i), '{x}もいい手だコン！ {m}と同じくらいよく働くの。') : xqJoin('悪くない手だね！', `でも{m}なら${sh2}から、そっちが本筋なの。`));
       return goodTx; };
@@ -3965,17 +3989,21 @@
       out.push(pk(XQJ_OP.so.map(x => x.replace('{a}', sh))));
       if (u == null) return f(xqJoin(...out));
       let F = null; try { F = xqFacts(E, pos, u); } catch (e) {}
-      const lost = F ? [...F.mine].filter(q => !FA.mine.has(q)) : [], aft = pos.clone().play(u), d = sc.has(u) ? best - sc.get(u) : null;
-      const lp = lost.length ? E.typeOf(aft.at(lost[0])) : 0, n0 = out.length, me = XQN(lp, pos.side), RECAP = ['{x}だと取り返しそびれて、駒損のままになっちゃう。', '{x}では取られた駒を取り返せず、損をしたままなの。', '{x}だと、取り返すチャンスを逃しちゃう！'];
-      if (F && FA.cap && FA.behind && !F.cap) out.push(pk(RECAP));   // (the bigger miss first)
-      else if (F && lp && F.cap && XQV[F.cap] >= XQV[lp]) {}   // (an even trade or better: no 'taken' line)
-      else if (F && lp) out.push(F.cap ? `{x}で${XQN(F.cap, pos.side ^ 1)}を取っても、きみの${me}を取られて損しちゃう！` : pk([`{x}だと、きみの${me}がただで取られちゃう！`, `{x}では${me}の守りが外れて、相手に取られてしまうの。`, `{x}だと、${me}が相手のねらいに残っちゃう！`]));
-      else if (F && FA.cap && !F.cap) out.push(FA.behind ? pk(RECAP) : pk([`{x}だと、取れる${XQN(FA.cap, pos.side ^ 1)}を見のがしちゃう。`, `{x}では、ただで取れた${XQN(FA.cap, pos.side ^ 1)}がそのまま残るの。`]));
-      else if (F && /^rook/.test(FA.k) && !FA.cap && F.ty !== 5) out.push(pk(XQJ_OP.late));
+      const d = sc.has(u) ? best - sc.get(u) : null, n0 = out.length, NF = F ? xqNgFact(E, pos, A, FA, u, F) : null, RECAP = ['{x}だと取り返しそびれて、駒損のままになっちゃう。', '{x}では取られた駒を取り返せず、損をしたままなの。', '{x}だと、取り返すチャンスを逃しちゃう！'];
+      const me = NF && NF.lp ? XQN(NF.lp, pos.side) : '', XP = XQN(FA.cap, pos.side ^ 1);
+      if (!NF) {}
+      else if (NF.k === 'recap') out.push(pk(RECAP));   // (the bigger miss first)
+      else if (NF.k === 'lostTrade') out.push(`{x}で${XQN(NF.cp, pos.side ^ 1)}を取っても、きみの${me}を取られて損しちゃう！`);
+      else if (NF.k === 'free') out.push(pk(NF.was ? [`{x}だと、ねらわれていた${me}がそのまま。ただで取られちゃう！`, `{x}では${me}を助けられず、ただで取られてしまうの。`] : [`{x}だと、きみの${me}がただで取られちゃう！`, `{x}では${me}の守りが外れて、ただで取られてしまうの。`]));
+      else if (NF.k === 'lost') out.push(pk(NF.was ? [`{x}だと、ねらわれていた${me}がそのまま。相手に取られて損しちゃう！`] : [`{x}だと、${me}が相手のねらいに残っちゃう！`, `{x}では${me}が相手に取られる形になって、損しちゃうの。`]));
+      else if (NF.k === 'miss') out.push(pk(NF.retake ? [`{x}だと、取れる${XP}を見のがしちゃう。`, `{x}では、{m}で取れた${XP}がそのまま残るの。`] : [`{x}だと、取れる${XP}を見のがしちゃう。`, `{x}では、ただで取れた${XP}がそのまま残るの。`]));
+      else if (NF.k === 'aim') out.push(pk([`{x}だと、{m}のように相手の${XQN(NF.T, pos.side ^ 1)}をねらう形にならないの。`, `{x}では相手の${XQN(NF.T, pos.side ^ 1)}に手が届かないコン。`]));
+      else if (NF.k === 'check') out.push(pk(['{x}だと王手にならないの。{m}の王手なら、相手は受けに手を使うことになるのに。', '{x}では王手がかからず、相手に自由に指されちゃう。']));
+      if (out.length === n0 && F && /^rook/.test(FA.k) && !FA.cap && F.ty !== 5) out.push(pk(XQJ_OP.late));
       if (out.length === n0) out.push(d != null && d <= 10 ? pk(['{x}も悪くないけど、定跡の本筋はこっちなの。', '{x}もありだけど、よく指されるのはこっちコン。']) : pk(XQJ_OP.gap));   // (2026-11-22: no "the AI says")
       return f(xqJoin(...out));
     };
-    return { ask, hintTx: xqHintJa(FA, k, V, xqLastEnd(ask)), good, ng, own: true };
+    return { ask, hintTx: FA.flee && !FA.cap ? xqPick(V, ['相手にねらわれている駒はないかな？', '取られそうな駒がないか、先に確かめてみて！', 'まずは自分の駒を見回してみて。ねらわれている駒がいるよ。', '相手の駒がどこをにらんでいるか、たどってみよう！'].map((_, q, a) => a[(k + q) % a.length]), xqLastEnd(ask)) : xqHintJa(FA, k, V, xqLastEnd(ask)), good, ng, own: true };
   }
   function xqNotesJa(E, g, notes, V) {   // the line's notes in ショウギツネ's words (3D, ja), rebuilt from the board; each line said once
     const out = {}, cnt = {}; let pos = E.Pos.from(null), n = 0, prevCap = true;
@@ -4170,7 +4198,7 @@
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261124xm2'), getJ('../xiangqi/openings.json?v=2'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd1').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=1').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261124xm2'), getJ('../xiangqi/openings.json?v=3'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd1').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=1').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vf]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vf)(v); this.V = ((v.I18N || {})['ja@fox']) || {}; } catch (e) { this.V = {}; }   // (ショウギツネ's own lines, 3D, ja)
           return this; })
@@ -4200,7 +4228,7 @@
       const g = this.data.op.sets.find(x => x.id === key); if (!g) return null;
       const notes = {}; (g.study.notes || []).forEach((n, i) => { if (n) notes[String(i)] = L(n, lang); });
       const it = g.intro && (g.intro[lang] || g.intro.en), hist = Array.isArray(it) ? it.join(' ') : it || '';
-      const probs = shuffle(g.problems || []).slice(0, 5), E = window.XiangqiEngine, ja = lang === 'ja' && E;
+      const probs = shuffle((g.problems || []).map((p, i) => i)).slice(0, 5).sort((a, b) => a - b).map(i => g.problems[i]), E = window.XiangqiEngine, ja = lang === 'ja' && E;   // (2026-11-24 第2期・担当B: 5 drawn, in the pool's order = easy → hard, 追9)
       const XV = ja ? xqOpVoice(g.id) : null; let nj = null; if (ja) try { nj = xqNotesJa(E, g, notes, XV); } catch (e) { console.warn('[lessons3d] xiangqi notes', e); }
       return { id: g.id, title: L(g.title, lang), intro: ja && XQJ_OP.intro[g.id] ? XQJ_OP.intro[g.id] : hist, start: { spec: null, me: g.side === 2 ? 2 : 1 }, steps: g.study.line.slice(), notes: nj || notes,
         probs: probs.map((P, i) => { const o = { pos: { spec: P.s, me: xqMe(P.s) }, kind: 'best', P, ask: this.tx('op.goal', lang), ans: P.best, hintTx: this.tx('op.hint', lang), hint: E ? [E.mFrom(P.best)] : null, ng: () => this.tx('op.why', lang, { m: CKM('ok', lang) }) };
