@@ -62,6 +62,7 @@
     { id: 'bans', region: 'asia', color: '#7a2e3a', cover: { s: 'bans' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'bansTimeline' }, m1: { svg: 'bansWhy' }, m2: { svg: 'bansOutcome' } }, refs: ['『日本書紀』持統天皇三年十二月条 / Nihon Shoki, Jitō 3, 12th month', 'Louis IX of France, ordinance against gambling (1254)', 'Florence, the ban on playing cards (1377)', 'Diego Durán, Historia de las Indias de Nueva España e islas de la tierra firme (c. 1581)', 'The Tokugawa shogunate’s ban on Tenshō karuta (1633)', 'Ruhollah Khomeini, ruling on chess played without gambling (1988)', 'Roger Sharpe’s called shot before New York City Council members (April 1976)', 'Wikipedia, “History of chess”, “Karuta”, “Playing card”, “Pinball”'], links: [{ g: 'backgammon' }, { g: 'patolli' }, { g: 'solitaire' }] },
     { id: 'pieces', region: 'europe', color: '#3a2a1e', cover: { s: 'pieces' }, mins: 3, sec: [{ ex: 'nishapur' }, { ex: 'lewis' }, null, null, null], figs: { m0: { svg: 'piecesEvolution' }, m1: { svg: 'piecesBishop' }, m2: { svg: 'piecesTimeline' } }, refs: ['The Metropolitan Museum of Art, chess set from Nishapur, Iran (12th century), 1971.193a–ff', 'British Museum, “The Lewis Chessmen” (1831,1101.78–159)', 'Design registration of 1 March 1849 to Nathaniel Cooke (Ornamental Designs Act 1842); Illustrated London News, 8 September 1849', 'H. J. R. Murray, A History of Chess (1913)', 'FIDE Handbook, Standards of Chess Equipment', 'Wikipedia, “Chess piece”, “Staunton chess set”'], links: [{ g: 'chess' }, { ex: 'lewis' }, { ex: 'nishapur' }, { g: 'shogi' }] },
     { id: 'tombs', region: 'mea', color: '#5a4632', cover: { s: 'tombs' }, mins: 3, sec: [{ ex: 'ur' }, { ex: 'senet' }, { ex: 'liubo' }, null, { ex: 'shosoin' }], figs: { m0: { svg: 'tombsMap' }, m1: { svg: 'tombsWhy' }, m2: { svg: 'tombsTimeline' } }, refs: ['C. L. Woolley, Ur Excavations II: The Royal Cemetery (1934)', 'Book of the Dead, chapter 17; Griffith Institute, Tutankhamun: Anatomy of an Excavation', 'Hunan Museum, the liubo set from Mawangdui tomb 3', 'P. Crummy et al., Stanway: An Élite Burial Site at Camulodunum (2007)', 'N. Nicolaysen, The Viking-Ship Discovered at Gokstad in Norway (1882)', 'C. Hedenstierna-Jonson et al., “A female Viking warrior confirmed by genomics”, American Journal of Physical Anthropology 164 (2017)', '宮内庁正倉院事務所 / Shōsōin Office, Imperial Household Agency', 'Wikipedia, “Hnefatafl”, “Birka female Viking warrior”'], links: [{ g: 'ur' }, { g: 'senet' }, { g: 'latrunculi' }, { ex: 'liubo' }] },
+    { id: 'nim', region: 'americas', color: '#2a5a8a', cover: { s: 'nim' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'nimHeaps' }, m1: { svg: 'nimNimatron' }, m2: { svg: 'nimFamily' } }, refs: ['Charles L. Bouton, “Nim, a game with a complete mathematical theory”, Annals of Mathematics 3 (1901–02)', 'E. U. Condon, G. L. Tawney, W. A. Derr, US patent 2,215,544, “Machine to Play Game of Nim” (1940)', 'R. P. Sprague, “Über mathematische Kampfspiele”, Tohoku Mathematical Journal 41 (1935–36)', 'P. M. Grundy, “Mathematics and games”, Eureka 2 (1939)', 'John H. Conway, On Numbers and Games (1976)', 'E. R. Berlekamp, J. H. Conway, R. K. Guy, Winning Ways for your Mathematical Plays (1982)', 'Wikipedia, “Nim”, “Nimatron”, “Sprague–Grundy theorem”'], links: [{ g: 'dots' }, { g: 'amazons' }, { g: 'hex' }] },
   ];
   // pictures shown only beside a story's paragraph (not in another room): a museum's open-access photo (CC0), linked to the museum's page.
   // The name, in each language, is MUSEUM_READ_T[lang].pic[id]. Files images/atlas/museum-story/pic/<id>.webp (≤ 960 px).
@@ -1304,6 +1305,43 @@
         g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="13" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
         g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="${xn + 16}" y="${y + 20}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
       return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // Nim: heaps 3, 4, 5 in binary — count the 1s in each column; an odd column (the 2s) gives the nim-sum 010 = 2; taking 2 from the heap of 3
+    // leaves 1, 4, 5 and every column even (nim-sum 0) (text: the story's figL.heaps — [heap, 4s, 2s, 1s, nim-sum, the winning move])
+    nimHeaps: () => { const L = ((st('nim').figL || {}).heaps) || [], W = 300, hp = [3, 4, 5], nm = ['A', 'B', 'C'], bx = 132, cw = 52, ry = 42, rh = 40, H = ry + rh * 4 + 44; let g = '';
+      g += `<text x="10" y="${ry - 14}" font-size="12" font-weight="800" fill="#5a544a">${esc(L[0] || '')}</text>`;
+      [L[1], L[2], L[3]].forEach((t, j) => { g += `<text x="${bx + cw * j + cw / 2}" y="${ry - 14}" font-size="12" font-weight="800" fill="#5a544a" text-anchor="middle">${esc(t || '')}</text>`; });
+      g += `<rect x="${bx + cw - 2}" y="${ry - 6}" width="${cw + 4}" height="${rh * 4 + 4}" rx="6" fill="#f3c9c2" opacity=".55"/>`;
+      hp.forEach((n, i) => { const y = ry + rh * i;
+        g += `<text x="10" y="${y + 21}" font-size="15" font-weight="800" fill="#2b2a28">${nm[i]}</text>`;
+        for (let k = 0; k < n; k++) { const take = i === 0 && k >= 1, cx = 38 + k * 17; g += `<circle cx="${cx}" cy="${y + 15}" r="7.5" fill="${take ? '#f3c9c2' : '#e0b040'}" stroke="${take ? '#c0392b' : '#8a5a10'}" stroke-width="1.4"${take ? ' stroke-dasharray="3 2"' : ''}/>`; }
+        [4, 2, 1].forEach((b, j) => { const on = n & b; g += `<rect x="${bx + cw * j + 8}" y="${y}" width="${cw - 16}" height="${rh - 10}" rx="5" fill="${on ? '#2a5a8a' : '#eef1f4'}"/><text x="${bx + cw * j + cw / 2}" y="${y + 21}" font-size="15" font-weight="800" fill="${on ? '#fff' : '#9aa4ae'}" text-anchor="middle">${on ? 1 : 0}</text>`; }); });
+      const sy = ry + rh * 3 + 4; g += `<path d="M10 ${sy - 2}H${bx + cw * 3}" stroke="#2b2a28" stroke-width="2"/>`;
+      [0, 1, 0].forEach((v, j) => { g += `<text x="${bx + cw * j + cw / 2}" y="${sy + 24}" font-size="16" font-weight="800" fill="${v ? '#c0392b' : '#14864a'}" text-anchor="middle">${v}</text>`; });
+      g += `<text x="${bx - 10}" y="${sy + 23}" font-size="12" font-weight="800" fill="#c0392b" text-anchor="end">${esc(L[4] || '')}</text>`;
+      g += `<text x="${W / 2}" y="${H - 12}" font-size="13" font-weight="800" fill="#c0392b" text-anchor="middle">${esc(L[5] || '')}</text>`;
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // the Nimatron (1940): a large cabinet with four rows of seven lamps — four heaps of up to seven — shown at a world's fair (self-drawn, generic)
+    // (text: the story's figL.nima — [where and when, the lamps, the score])
+    nimNimatron: () => { const L = ((st('nim').figL || {}).nima) || [], W = 300, H = 268, ox = 40, oy = 14, cw = 220, ch = 170; let g = '';
+      g += `<rect x="${ox}" y="${oy}" width="${cw}" height="${ch}" rx="10" fill="#3a4250" stroke="#1f242c" stroke-width="2"/><rect x="${ox + 12}" y="${oy + 12}" width="${cw - 24}" height="${ch - 54}" rx="6" fill="#20252e"/>`;
+      const lit = [5, 3, 6, 2];
+      for (let r = 0; r < 4; r++) for (let c = 0; c < 7; c++) { const x = ox + 34 + c * 26, y = oy + 34 + r * 27, on = c < lit[r];
+        g += `<circle cx="${x}" cy="${y}" r="9" fill="${on ? '#ffd45a' : '#4a5260'}"${on ? ' stroke="#fff3c0" stroke-width="1.5"' : ''}/>`; }
+      for (let i = 0; i < 4; i++) g += `<rect x="${ox + 30 + i * 46}" y="${oy + ch - 32}" width="26" height="18" rx="4" fill="#c0392b" stroke="#7a1a12"/>`;
+      g += `<rect x="${ox + 20}" y="${oy + ch}" width="20" height="26" fill="#2b3038"/><rect x="${ox + cw - 40}" y="${oy + ch}" width="20" height="26" fill="#2b3038"/>`;
+      g += `<text x="${W / 2}" y="${oy + ch + 46}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="middle">${esc(L[0] || '')}</text>`;
+      g += `<text x="${W / 2}" y="${oy + ch + 64}" font-size="13" fill="#5a544a" text-anchor="middle">${esc(L[1] || '')}</text><text x="${W / 2}" y="${oy + ch + 81}" font-size="13" fill="#5a544a" text-anchor="middle">${esc(L[2] || '')}</text>`;
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // from Nim: the Sprague–Grundy theorem, Conway's numbers and games, and the games of the Atlas that the theory reaches
+    // (text: the story's figL.fam — [name, note] × 6: Nim, Sprague–Grundy, Conway, dots and boxes, amazons, hex)
+    nimFamily: () => { const L = ((st('nim').figL || {}).fam) || [], W = 300, H = 330; let g = '';
+      const box = (x, y, w, [t, s] = [], c) => `<rect x="${x - w / 2}" y="${y - 22}" width="${w}" height="46" rx="10" fill="${c}" opacity=".14" stroke="${c}" stroke-width="1.6"/><text x="${x}" y="${y - 3}" font-size="${w < 120 ? 12 : 14}" font-weight="800" fill="${c}" text-anchor="middle">${esc(t || '')}</text><text x="${x}" y="${y + 15}" font-size="12" fill="#2b2a28" text-anchor="middle">${esc(s || '')}</text>`;
+      const arr = (x1, y1, x2, y2, d) => `<path d="M${x1} ${y1}L${x2} ${y2}" stroke="#8a8478" stroke-width="2"${d ? ' stroke-dasharray="5 4"' : ''} marker-end="url(#nfA)"/>`;
+      g += arr(150, 50, 150, 80) + arr(150, 128, 150, 158) + arr(150, 206, 51, 254) + arr(150, 206, 150, 254);
+      g += `<path d="M250 28H292V254" fill="none" stroke="#8a8478" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#nfA)"/>`;
+      g += box(150, 28, 200, L[0], '#c0392b') + box(150, 106, 250, L[1], '#2a5a8a') + box(150, 184, 230, L[2], '#6a3a8a');
+      g += box(51, 280, 98, L[3], '#14864a') + box(150, 280, 98, L[4], '#8a5a24') + box(249, 280, 98, L[5], '#33404a');
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr"><defs><marker id="nfA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8a8478"/></marker></defs>${g}</svg>`; },
     // four tetrahedral dice: how often each score comes (out of 16)
     tetraOdds: () => { const n = [1, 4, 6, 4, 1], W = 300, H = 150, bw = 40, gap = (W - 40 - bw * 5) / 4; let g = '';
       n.forEach((v, i) => { const x = 20 + i * (bw + gap), h = v / 6 * 96, y = 112 - h;
