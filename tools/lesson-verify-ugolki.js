@@ -6,7 +6,7 @@
 // can end the game inside the line — those puzzles must not be shipped).
 // Every puzzle, ①〜⑨ and 追1〜 (claude/lesson-quality.md):
 //  ① n is exact: the side to move wins within n of its moves whatever the reply, and not within n−1; the engine's duelGood = the
-//    strict set of first moves; the line never reaches move 40 / 80 (追57).
+//    strict set of first moves; the line never reaches move 40 / 80 (追65).
 //  ② 1 or 2 winning first moves (both accepted); the best wrong move needs n+1 moves or more (the gap is printed: --rows).
 //  ③ 4 legal moves or more, 3 wrong first moves or more.
 //  ④ the theme: x2 n = 2 (both sides), w3…b5 = the side and n; the collection's promise (pz.desc: "simply racing forward never
@@ -102,7 +102,7 @@ function verify(opt) {
       const r = { theme: T.id, j, ok: true };
       if (P.n !== th[1]) add(T.id, j, `④ n ${P.n} ≠ the theme's ${th[1]}`);
       if (th[0] && P.s.side !== th[0]) add(T.id, j, `④ side ${P.s.side} ≠ the theme's ${th[0]}`);
-      if (P.s.n + 2 * P.n + 1 >= 2 * R.cap || (P.s.n < 2 * R.limit && P.s.n + 2 * P.n + 1 >= 2 * R.limit)) add(T.id, j, `①追57 the line reaches the ${P.s.n < 2 * R.limit ? '40' : '80'}-move rule (ply ${P.s.n}, n ${P.n})`);
+      if (P.s.n + 2 * P.n + 1 >= 2 * R.cap || (P.s.n < 2 * R.limit && P.s.n + 2 * P.n + 1 >= 2 * R.limit)) add(T.id, j, `①追65 the line reaches the ${P.s.n < 2 * R.limit ? '40' : '80'}-move rule (ply ${P.s.n}, n ${P.n})`);
       const L = pos.moves(), good = goodSet(pos, P.n, me), less = P.n > 1 ? goodSet(pos, P.n - 1, me) : [];
       if (!good.length) add(T.id, j, `① no win within ${P.n}`);
       if (less.length) add(T.id, j, `① already a win within ${P.n - 1}`);
@@ -183,7 +183,7 @@ function selftest() {
     ['order reversed (⑥)', d => { d.themes[1].puzzles.reverse(); }, /^⑥/],
     ['a duplicate (⑤)', d => { d.themes[1].puzzles[5] = JSON.parse(JSON.stringify(d.themes[1].puzzles[2])); }, /^⑤/],
     ['a mirrored copy (⑤)', d => { const P = d.themes[1].puzzles[3]; d.themes[1].puzzles[8] = { s: { b: symB(P.s.b, SYM[1][0], false), side: P.s.side, n: P.s.n }, n: P.n, a: P.a }; }, /^⑤/],
-    ['near the 80-move count (追57)', d => { d.themes[1].puzzles[2].s.n = 156; }, /^①/],
+    ['near the 80-move count (追65)', d => { d.themes[1].puzzles[2].s.n = 156; }, /^①/],
     ['the words wrong (⑧)', null, /^⑧/, { why: o => { const w = F.why(o); return Object.assign({}, w, { v: Object.assign({}, w.v, { k: (w.v.k | 0) + 1 }) }); } }],
     ['a reply that does not refute (⑦)', null, /^⑦/, { reply: (q, left) => { const me = 3 - q.turn, L = q.moves(); for (const r of L) { const z = q.clone().play(r), j = E.judge(z); if (j.over ? j.winner === me : att(z, left, me)) return r; } return -1; } }],
     ['the 2D takes the move back (⑨)', null, /^⑦?⑨/, { app: 'moves = moves.slice(0, cur - 1); cur = moves.length; Pz.used--;' }],

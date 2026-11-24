@@ -1,4 +1,4 @@
-// (2026-11-24 担当D) Rebuild ugolki/puzzles.json so that every puzzle passes tools/lesson-verify-ugolki.js (①〜⑨, 追57):
+// (2026-11-24 担当D) Rebuild ugolki/puzzles.json so that every puzzle passes tools/lesson-verify-ugolki.js (①〜⑨, 追65):
 // the current puzzles first (kept in place when they pass), then candidates from tools/gen_duel.js output (JSON lines).
 // Each candidate is solved exactly (the strict solver of the verifier: the 40 / 80-move rules and Black's last move as in the game),
 // must agree with the engine's duelGood, not reach the 40 / 80-move rule on the way, have 1–2 winning first moves, 3+ wrong ones,
