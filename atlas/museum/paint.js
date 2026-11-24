@@ -1,7 +1,7 @@
 /* World Board Game Atlas — 博物館の「描かれたゲーム」 (paintings room, 2026-11-24).
    Games as people painted, carved and printed them, 3,300 years of them: a wall of framed works; one opens in a viewer that can be zoomed
    and dragged, with numbered details to tap and the museum's record beside it, and links to the game or the piece of the collection.
-   Pictures: The Metropolitan Museum of Art and The Cleveland Museum of Art, Open Access (CC0 — free for any use, commercial included); each record keeps its object number.
+   Pictures: The Metropolitan Museum of Art, The Cleveland Museum of Art and The Art Institute of Chicago, Open Access (CC0 — free for any use, commercial included); each record keeps its object number.
    Files images/atlas/paint/<id>.webp (≤ 2048 px) and <id>-t.webp (the wall). Texts: museum/paint-i18n.js (MUSEUM_PAINT_T[lang]).
    Facts and sources: claude/museum-spec.md (描かれたゲーム).
    AtlasPaint.render(box, ctx) — the museum (atlas/museum.js) calls it; ctx.open(gameId), ctx.goEx(exhibitId), ctx.goRoom(room). */
@@ -24,6 +24,7 @@
     { id: 'webb', w: 1542, h: 2003, met: 195456, no: '26.54', bg: '#a7aab0', spots: [[.476, .324], [.375, .3], [.62, .344], [.317, .444], [.69, .233], [.505, .161]], links: [{ g: 'backgammon' }, { ex: 'ottoman' }] },
     { id: 'liberale', w: 2049, h: 1721, met: 436884, no: '43.98.8', bg: '#6b5a48', spots: [[.542, .541], [.344, .297], [.6, .288], [.447, .209], [.146, .2], [.893, .209]], links: [{ g: 'chess' }, { ex: 'lewis' }] },
     // The Cleveland Museum of Art, Open Access (CC0) — cma: its accession number (its page)
+    // The Art Institute of Chicago, public-domain works (images CC0) — aic: its object id (its page), no: its reference number
     { id: 'mirror', w: 2048, h: 2043, cma: '1940.1200', bg: '#5a5650', spots: [[.49, .564], [.404, .291], [.621, .321], [.681, .574], [.147, .402]], links: [{ g: 'chess' }, { ex: 'lewis' }] },
     { id: 'morris', w: 2048, h: 2008, cma: '1923.247', bg: '#d8d2c4', spots: [[.5, .494], [.188, .176], [.321, .312], [.5, .242], [.5, .1], [.084, .222]], links: [{ g: 'morris' }] },
     { id: 'leifeng', w: 1959, h: 2048, cma: '2025.105', bg: '#b8463a', spots: [[.062, .617], [.414, .897], [.157, .897], [.194, .444], [.531, .353], [.499, .509]], links: [{ ex: 'goose' }, { g: 'ludo' }] },
@@ -36,6 +37,10 @@
     { id: 'goryeo', w: 2048, h: 1923, cma: '1917.356', bg: '#7f948a', spots: [[.496, .645], [.418, .61], [.563, .6], [.441, .47], [.3, .6], [.63, .38]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
     { id: 'kangra', w: 1394, h: 2048, cma: '1936.683', bg: '#d9cbb2', spots: [[.47, .7], [.36, .5], [.668, .5], [.13, .3], [.94, .29], [.65, .37]], links: [{ g: 'ludo' }, { room: 'chance' }] },
     { id: 'vuillard', w: 1687, h: 2048, cma: '1951.65.2', bg: '#6e3a4c', spots: [[.5, .76], [.332, .547], [.696, .605], [.598, .415], [.29, .34], [.07, .968]], links: [{ g: 'checkers' }] },
+    // (2026-11-24) The Art Institute of Chicago: an early photograph (chess), a Netherlandish roundel (dice), a benizuri-e (sugoroku)
+    { id: 'pvl', w: 1686, h: 1648, aic: 267692, no: '2023.52', bg: '#bdb6a8', spots: [[.617, .483], [.544, .428], [.36, .26], [.522, .25], [.69, .24], [.261, .822]], links: [{ room: 'chance' }] },
+    { id: 'kiyohiro', w: 1387, h: 2048, aic: 19696, no: '1925.1907', bg: '#c9b48a', spots: [[.5, .709], [.367, .498], [.639, .566], [.622, .272], [.877, .573], [.966, .716]], links: [{ g: 'backgammon' }, { ex: 'sugoroku' }] },
+    { id: 'talbot', w: 1591, h: 2048, aic: 27083, no: '1967.158', bg: '#5a4a3a', spots: [[.479, .583], [.307, .356], [.664, .456], [.771, .278], [.879, .711]], links: [{ g: 'chess' }] },
   ];
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   let host = null, ctx = null, lang = 'ja', el = {}, cur = null;
@@ -83,8 +88,8 @@
       if (L.ex) { const mu = (window.ATLAS_MU || {})[L.ex], nm = (mu && mu.n && (mu.n[lang] || mu.n.en)) || (tx().ex || {})[L.ex] || ((T().en || {}).ex || {})[L.ex] || L.ex; return `<button type="button" class="chlk ex" data-ex="${L.ex}"><i>${esc(u('exhibit'))}</i>${esc(nm)}</button>`; }
       return `<button type="button" class="chlk rm" data-room="${L.room}"><i>${esc(u('room'))}</i>${esc(u('room_' + L.room))}</button>`; }).join('');
     ov.querySelector('.ptvrec').innerHTML = [[u('r_artist'), x.artist], [u('r_date'), x.date], [u('r_place'), x.place], [u('r_medium'), x.medium], [u('r_size'), x.size],
-      [u('r_museum'), W.cma ? u('cma') + ' ' + W.cma : u('met') + ' ' + W.no], [u('r_credit'), x.credit], [u('r_rights'), u('cc0')]].filter(r => r[1]).map(r => `<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join('')
-      + `<dt></dt><dd><a href="${W.cma ? 'https://www.clevelandart.org/art/' + W.cma : 'https://www.metmuseum.org/art/collection/search/' + W.met}" target="_blank" rel="noopener">${esc(u('metlink'))} ↗</a></dd>`;
+      [u('r_museum'), W.aic ? u('aic') + ' ' + W.no : W.cma ? u('cma') + ' ' + W.cma : u('met') + ' ' + W.no], [u('r_credit'), x.credit], [u('r_rights'), u('cc0')]].filter(r => r[1]).map(r => `<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join('')
+      + `<dt></dt><dd><a href="${W.aic ? 'https://www.artic.edu/artworks/' + W.aic : W.cma ? 'https://www.clevelandart.org/art/' + W.cma : 'https://www.metmuseum.org/art/collection/search/' + W.met}" target="_blank" rel="noopener">${esc(u('metlink'))} ↗</a></dd>`;
     ov.querySelector('.ptvlinks').querySelectorAll('[data-g]').forEach(b => b.onclick = () => { window.AtlasPaint.onClose = null; close(true); ctx.open && ctx.open(b.dataset.g); });
     ov.querySelector('.ptvlinks').querySelectorAll('[data-ex]').forEach(b => b.onclick = () => { window.AtlasPaint.onClose = null; close(true); ctx.goEx && ctx.goEx(b.dataset.ex); });
     ov.querySelector('.ptvlinks').querySelectorAll('[data-room]').forEach(b => b.onclick = () => { window.AtlasPaint.onClose = null; close(true); ctx.goRoom && ctx.goRoom(b.dataset.room); });
