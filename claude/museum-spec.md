@@ -570,3 +570,4 @@
 - 2026-11-24 洗練ループ：物語の図から絵・所蔵品を開いて閉じると、読み物の部屋の同じ物語・同じ位置・押したボタンに戻る（read.js の backTo、AtlasPaint.onClose / AtlasGallery.onClose）。ビューアを開くとフォーカスは閉じるボタンへ、部屋の中から開いたときは閉じると押したボタンへ戻る。
 - 2026-11-24 洗練ループ：読み物の文は atlas/museum/read-i18n.js で編集し、`node tools/museum-read-split.js` で言語ごとの atlas/museum/read-i18n/<lang>.js を作り直す（atlas/museum.js の READ_I18N_V を1上げる）。博物館は英語と表示中の言語のファイルだけを読み込む。
 - 2026-11-24 洗練ループ：描かれたゲームの文も同じ方式（paint-i18n.js で編集 → `node tools/museum-read-split.js` → atlas/museum/paint-i18n/<lang>.js、PAINT_I18N_V）。英語と表示中の言語だけ読み、約215KB → 約25KB。
+- 2026-11-24 洗練ループ：偶然の道具の文も同じ方式（chance-i18n.js → atlas/museum/chance-i18n/<lang>.js、CHANCE_I18N_V）。約96KB → 約15KB。
