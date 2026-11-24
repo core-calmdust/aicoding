@@ -10,7 +10,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const DONE = ['b_rook', 'b_horse', 'b_elephant', 'b_cannon', 'b_pawn', 'b_escape', 'b_mate1', 't_capture', 't_fork', 't_check', 'm_mate2', 'm_mate3', 'e_rook', 'e_pawn'];   // (verified: tools/lesson-verify-janggi.js; the rest are not listed yet)
+  const DONE = ['b_rook', 'b_horse', 'b_elephant', 'b_cannon', 'b_pawn', 'b_escape', 'b_mate1', 't_capture', 't_fork', 't_check', 't_defend', 'm_mate2', 'm_mate3', 'e_rook', 'e_pawn'];   // (verified: tools/lesson-verify-janggi.js; the rest are not listed yet)
   const KIND = { b_rook: 5, b_horse: 4, b_elephant: 3, b_cannon: 6, b_pawn: 7 };
   const MATE = { b_mate1: 1, m_mate2: 2, m_mate3: 3, e_rook: 'n', e_pawn: 'n' };   // (the mate steps: P.ok = the one first move that mates within n; 'n' = the endgames: n is the problem's own P.n, the fastest mate)
   const PTS = [0, 0, 3, 3, 5, 13, 7, 2];
@@ -30,6 +30,7 @@
     t_capture: 'ここからは<b>戦術</b>だコン。<br>相手に守られている駒でも、<b>自分の駒より点数が高ければ</b>取る値打ちがあるの。点数の目安は、車13・包7・馬5・象と士3・卒2。<br>取り返されても、<b>差し引きで得をする</b>取り方を探してみよう！',
     t_check: '<b>王手</b>は、相手が必ず受けなきゃいけない手だよ。<br>だから王手と同時に<b>別の駒もねらう</b>と、相手は将を助けるのが先で、もう1つを守る手が間に合わないの。<br>動いた駒が取られないかも確かめてね。王手を<b>得をする道具</b>にしようコン！',
     t_fork: '今度は<b>両取り</b>だコン。<br>1つの駒で<b>相手の駒を2つ同時にねらう</b>と、相手は1手で片方しか助けられないの。<br>ねらう2つが、守られていないか自分の駒より高いこと、動いた駒が取られないことも確かめてね。<b>馬</b>や<b>車</b>の両取りはよく出てくるよ！',
+    t_defend: 'ねらわれた駒は、<b>逃げるだけ</b>が守りじゃないコン。<br>逃げ場がないときは、<b>ほかの駒で守る</b>の。取られても<b>取り返せる</b>ようにする（ひもをつける）か、相手の駒との<b>間に駒を入れて</b>さえぎるんだ。<br>守りに動いた駒のせいで、ほかの駒が取られないかも確かめてね！',
     m_mate3: 'いよいよ<b>3手で詰ます</b>問題だよ。<br>最初の1手のあと、相手のどの受けにも<b>3手目までに必ず詰む</b>続きがある手を選んでね。<br>相手の受けを1つずつ読むのがコツ。自分の将が詰まされないかも、ちゃんと見てね！',
   };
   const ASK = {
@@ -256,11 +257,60 @@
       return v(COPEN) + w + v(CRIGHT, 2)(M, MA, TA); };
     return { ask: v(CASK), hintTx: v(CHINT)(MA), good: () => v(CGOOD)(MA, TA, g), ng, own: true };
   }
+  // (2026-11-24 担当D) t_defend 「守る」: one piece of 楚 (車・包・馬) is in danger and every move of it fails; the answer is a quiet move of
+  // another piece after which nothing of 楚 is in danger: 'guard' (the attacker still reaches the piece, but the moved piece takes back,
+  // so taking loses for 漢), 'line' (the moved piece stands between a 車 / 包 and the piece), 'leg' (it stands on a 馬 / 象's leg),
+  // 'screen' (it leaves the point a 包 jumped over). The words name the piece in danger, its attacker, the defender and the way; for a
+  // wrong move what the board does: a mate in 1, the piece in danger (or the escaped piece where it went, or another piece) taken by
+  // the opponent's cheapest taker, a guard that does not hold — counted again by tools/lesson-verify-janggi.js (defendStep).
+  function defendFacts(E, p, A) {
+    const F = escFacts(E), T = E.typeOf, mTo = E.mTo, mFrom = E.mFrom, z = F.flip(p), D = F.danger(z), d0 = D[0], H = d0.s;
+    const att = F.takers(z, H).map(mFrom), q = p.clone().play(A), rc = s => [(s / 9) | 0, s % 9];
+    let how = null;
+    if (F.takers(q, H).length) how = 'guard';
+    else for (const a of att) { const t = T(p.at(a)), [r1, c1] = rc(a), [r2, c2] = rc(H), btw = s => { const [r, c] = rc(s); return (r1 === r2 && r === r1 && (c - c1) * (c - c2) < 0) || (c1 === c2 && c === c1 && (r - r1) * (r - r2) < 0); };
+      if ((t === 5 || t === 6) && btw(mTo(A))) { how = 'line'; break; }
+      if (t === 6 && btw(mFrom(A))) { how = 'screen'; break; }
+      if (t === 4 || t === 3) { const dr = r2 - r1, dc = c2 - c1, l1 = Math.abs(dr) > Math.abs(dc) ? [r1 + Math.sign(dr), c1] : [r1, c1 + Math.sign(dc)], L = [l1];
+        if (t === 3) L.push([l1[0] + Math.sign(dr), l1[1] + Math.sign(dc)]); if (L.some(([r, c]) => r * 9 + c === mTo(A))) { how = 'leg'; break; } } }
+    return { F, z, d0, H, att, how };
+  }
+  const DASK = [(H, B) => `相手の${B}が、きみの${H}をねらってるよ。どう守る？`, (H, B) => `${H}がピンチ！ 相手の${B}に取られないようにする1手は？`, (H, B) => `${H}は逃げてもうまくいかないの。相手の${B}のねらいを、ほかの駒で防げるかな？`, (H, B) => `相手の${B}のねらいを消す手はどれかな？ ${H}を守ろうコン！`, (H, B) => `${H}を助ける手、見つけられる？ 相手の${B}をよく見てね。`];
+  const DHINT = [(M, H) => `${H}は、どこへ逃げてもうまくいかないの。金の輪の${M}で守れないかな？`, (M, H) => `金の輪の${M}を動かして、${H}を取られないようにしよう。動いた先から${H}に届く？ それとも、間に入れる？`, (M, H) => `金の輪の${M}の行き先を1つずつ確かめてね。そのあと相手が${H}を取ったら、取り返せるかな？`, (M, H) => `ねらわれた${H}を、金の輪の${M}で助けるの。${M}が動いたあと、ほかの駒が取られる形にならないかも見てね！`, (M, H) => `逃げるだけが守りじゃないコン。金の輪の${M}で、${H}を守る点を探そう！`];
+  const DWAY = { guard: (M, H, B, k) => [[`${M}で${H}にひもをつけた`, `${M}で${H}にひもをつけて`], [`${M}を${H}の守りにつけた`, `${M}を${H}の守りにつけて`], [`${M}が${H}を守る形にした`, `${M}が${H}を守る形にして`]][k % 3], line: (M, H, B) => [`${M}を相手の${B}と${H}の間に入れた`, `${M}を相手の${B}と${H}の間に入れて`], leg: (M, H, B) => [`${M}で相手の${B}の足をふさいだ`, `${M}で相手の${B}の足をふさいで`], screen: (M, H, B) => [`${M}をどけて、相手の${B}の台をなくした`, `${M}をどけて、相手の${B}の台をなくして`] };
+  const DWHY = { guard: (M, H, B, k) => [`相手が${H}を取っても${M}で取り返せるから、取っても相手の得にならないの`, `${H}を取られても、すぐ${M}で取り返せるの。相手は取っても得をしないんだ`, `相手が${H}を取ったら、${M}で取り返せるの。これで取り合いは相手の得にならないよ`][k % 3], line: (M, H, B) => `相手の${B}は、もう${H}に届かないの`, leg: (M, H, B) => `相手の${B}は、もう${H}へ跳べないの`, screen: (M, H, B) => `台がないと、相手の${B}は${H}を取れないの` };
+  const DGOOD = [(W, Y) => `ナイス！ ${W}ね。${Y}。その調子！`, (W, Y) => `いいね！ ${W}よ。${Y}。守りもばっちりだコン！`, (W, Y) => `そのとおり！ ${W}の。${Y}。逃げずに守る手、覚えておいて！`, (W, Y) => `ばっちり！ ${W}わけ。これで${Y}。次もこの目でいこう！`, (W, Y) => `お見事！ ${W}んだ。${Y}。ほかの駒が取られる形にもなってないよ！`];
+  const DOPEN = ['いっしょに確かめよう。', '惜しかったね、盤をよく見よう。', '', '大丈夫、守りは慣れだコン。', 'これで覚えちゃおう！ '];
+  const DRIGHT = [(K, Wt, H) => `正解は${K}。${Wt}、${H}を守れたの。`, (K, Wt, H) => `${K}なら、${Wt}${H}を守れたよ。次はきっと見つかるね！`, (K, Wt, H) => `答えは${K}。${Wt}、${H}を助けられたんだコン。`, (K, Wt, H) => `いちばんは${K}、${Wt}${H}を守る手だったの。`, (K, Wt, H) => `${K}がよかったね。${Wt}おけば、${H}は守れたんだ。`];
+  function defendJa(E, s, P, i, ck, n) {
+    const v = (L, o) => L[(i + n + (o || 0)) % L.length], T = E.typeOf, p = E.Pos.from(P.s), A = P.best, M = ck('ok'), X = ck('ng');
+    const DF = defendFacts(E, p, A), F = DF.F, d0 = DF.d0, H = NM(d0.t, true), AT = NM(d0.by, false), MA0 = NM(T(p.at(E.mFrom(A))), true), MA = MA0 === H ? `別の${MA0}` : MA0;   // (a 馬 guarding a 馬: 「別の馬」)
+    const B1 = DF.how === 'guard' ? AT : NM(T(p.at(DF.att.find(a => [4, 5, 6, 3].includes(T(p.at(a)))) != null ? DF.att.find(a => [4, 5, 6, 3].includes(T(p.at(a)))) : DF.att[0])), false);
+    const [W, Wt] = (DWAY[DF.how] || DWAY.guard)(MA, H, B1, i), Y = (DWHY[DF.how] || DWHY.guard)(MA, H, B1, i);
+    const ng = u0 => { const L = p.moves(), u = u0 != null && u0 !== A && L.includes(u0) ? u0 : L.find(x => x !== A && E.mFrom(x) === d0.s) || L.find(x => x !== A); let w = '';
+      if (u != null) { const q = p.clone().play(u), Q = F.danger(q), dd = Q[0], moved = E.mFrom(u) === d0.s, c = !E.isPass(u) && p.at(E.mTo(u)) ? T(p.at(E.mTo(u))) : 0, C = NM(c, false), MT = NM(T(p.at(E.mFrom(u))), true);
+        const reach = !moved && F.takers(F.flip(q), d0.s).some(x => E.mFrom(x) === E.mTo(u)), inQ = !moved && Q.some(x => x.s === d0.s), MT2 = MT === H ? `動かした${MT}` : MT, Hs = MT === H ? `ねらわれた${H}` : H;
+        if (F.mate1(q)) w = v([`${X}だと、相手に1手で詰まされちゃう！ 自分の将の守りも見てね。`, `${X}のあと、相手には1手で詰ませる手があるの。こっちの将が先に詰んじゃう！`], 1);
+        else if (dd) { const Lp = (dd.s !== d0.s && dd.s !== E.mTo(u) && NM(dd.t, true) === H ? '別の' : '') + NM(dd.t, true), B = NM(dd.by, false);
+          if (moved && dd.s === E.mTo(u)) w = v([`${X}${c ? `で${C}を取って` : 'で'}逃げても、逃げた先の${H}を相手の${B}に取られちゃう。`, `${X}${c ? `で${C}を取って` : 'に'}逃げても、そこには相手の${B}が届くの。${H}が取られる形だコン。`], 1);
+          else if (moved) { const V3 = `${X}${c ? `で${C}を取る` : 'の'}逃げ方だと、${Lp}が相手の${B}に取られちゃう。`;
+            w = Q.some(x => x.s === E.mTo(u)) ? V3 : v([`${X}${c ? `で${C}を取って` : 'で'}${H}は逃げられるけど、こんどは${Lp}を相手の${B}に取られちゃう。`, `${H}は${X}${c ? `で${C}を取って` : 'で'}逃げきれても、${Lp}が相手の${B}に取られる形になるの。`, V3], 1); }
+          else if (c && dd.s === E.mTo(u)) w = v([`${X}で${C}を取っても、${MT2}を相手の${B}に取り返されちゃう。`, `${X}の${C}取りは、${MT2}が相手の${B}に取り返される形なの。`], 1) + (inQ ? `${Hs}も、まだ取られる形のままだよ。` : '');
+          else if (dd.s === E.mTo(u)) w = v([`${X}だと、動かした${MT}が相手の${B}に取られちゃう。`, `${X}の行き先には相手の${B}が届くの。${MT2}が取られる形だコン。`], 1) + (inQ ? `${Hs}も、まだ取られる形のままだよ。` : '');
+          else if (c && dd.s === d0.s) w = v([`${X}で${C}を取っても、${H}は相手の${B}に取られたままなの。`, `${X}だと${C}は取れるけど、${H}へのねらいは消えないの。相手の${B}に取られちゃう。`], 1);
+          else if (dd.s === d0.s && reach) w = v([`${X}で${MT}も${H}に届くけど、相手の${B}に取られる形は変わらないの。取り合いになっても、相手のほうが得をするんだ。`, `${X}で${H}に${MT}のひもをつけても、取り合いは相手の得のまま。${H}は相手の${B}に取られちゃう。`], 1);
+          else if (dd.s === d0.s) w = v([`${X}では、ねらわれた${H}を助けられないの。相手の${B}に取られちゃう。`, `${X}を指しても、${H}は相手の${B}に取られたままだコン。`, `${X}だと、${H}へのねらいが消えないの。相手の${B}に取られちゃう。`], 1);
+          else if (inQ) w = `${X}だと、${H}へのねらいは消えないし、${Lp}も相手の${B}に取られる形になるの。`;
+          else w = v([`${X}で${H}は守れるけど、こんどは${Lp}を相手の${B}に取られちゃう。`, `${X}だと${H}は助かっても、${Lp}が相手の${B}に取られる形になるの。`], 1); } }
+      return v(DOPEN) + w + v(DRIGHT, 2)(M, Wt, H); };
+    return { ask: v(DASK)(H, AT), hintTx: v(DHINT)(MA0, MA0 === H ? `ねらわれた${H}` : H), good: () => v(DGOOD)(W, Y), ng, own: true };
+  }
   function lsJa(E, s, P, i, ck, n) {
     if (s.id === 't_check') return checkJa(E, s, P, i, ck, n || 0);
     if (s.id === 't_capture') return tradeJa(E, s, P, i, ck, n || 0);
     if (s.id === 't_fork') return forkJa(E, s, P, i, ck, n || 0);
     if (s.id === 'b_escape') return escJa(E, s, P, i, ck, n || 0);
+    if (s.id === 't_defend') return defendJa(E, s, P, i, ck, n || 0);
     if (MATE[s.id] && ASK[s.id]) return mateJa(E, s, P, i, ck, ['b_mate1', 'm_mate2', 'm_mate3', 'e_rook', 'e_pawn'].indexOf(s.id) + 1);   // (an offset of its own: no two mate steps read the openers in the same order, wherever they sit on the list)
     const id = s.id, K = KIND[id]; if (!K || !ASK[id]) return null; n = n || 0;
     const v = (L, o) => L[(i + n + (o || 0)) % L.length];
@@ -278,5 +328,5 @@
       return v(OPEN) + w + v(RIGHT, 2)(M, AC); };
     return { ask: v(ASK[id]), hintTx: v(HINT[id]), good, ng, own: true };
   }
-  window.AtlasJanggiLs = { DONE, INTRO, lsJa, NM, PTS, KIND, MATE, escFacts };
+  window.AtlasJanggiLs = { DONE, INTRO, lsJa, NM, PTS, KIND, MATE, escFacts, defendFacts };
 })();
