@@ -318,7 +318,7 @@ static void nue_mlp_init(void) {
   for (int m = 0; m < 256; m++) { int n = 0; for (int k = 0; k < 8; k++) if (m >> k & 1) nueBitPos[m][n++] = (u8)k; nueBitCnt[m] = (u8)n; }
   for (int m = 0; m < NUE_MB; m++) for (int j = 0; j < NUE_L1; j++) for (int i = 0; i < 2 * NUE_MI; i++) nueMAT[(m * 2 * NUE_MI + i) * NUE_L1 + j] = nueMA[(m * NUE_L1 + j) * 2 * NUE_MI + i]; }
 static i32 nueMlp(const i16 *a, const i16 *b, int mb) {
-  const i16 *const MT = nueMAT + mb * 2 * NUE_MI * NUE_L1, *const MB = nueMB + mb * NUE_L2 * NUE_L1, *const MC = nueMC + mb * NUE_L2; const i32 *const Ma = nueMa + mb * NUE_L1, *const Md = nueMd + mb * NUE_L2;
+  const i16 *const MTc = nueMAT + mb * 2 * NUE_MI * NUE_L1, *const MB = nueMB + mb * NUE_L2 * NUE_L1, *const MC = nueMC + mb * NUE_L2; const i32 *const Ma = nueMa + mb * NUE_L1, *const Md = nueMd + mb * NUE_L2;
   i16 h1[NUE_L1] __attribute__((aligned(16))); i32 m = 0;
   /* (2026-11-24) the first layer by its inputs that are not zero: in a trained 2048-wide net about one in ten of the clipped
      first-layer outputs is above zero, and the dense products (NUE_L1 rows x 2 * NUE_MI) were half of the whole search's time.
@@ -336,7 +336,7 @@ static i32 nueMlp(const i16 *a, const i16 *b, int mb) {
 #else
 #define NUE_MLP_IN(i) { const i32 x = v[i] > NUE_QA ? NUE_QA : v[i]; const i16 *const c = col + (i) * NUE_L1; for (int j = 0; j < NUE_L1; j++) h[j] += x * c[j]; }
 #endif
-    for (int s = 0; s < 2; s++) { const i16 *const v = s ? b : a; const i16 *const col = MT + s * NUE_MI * NUE_L1;
+    for (int s = 0; s < 2; s++) { const i16 *const v = s ? b : a; const i16 *const col = MTc + s * NUE_MI * NUE_L1;
       /* which inputs are above zero: their indices are written to a list without a branch (per 8 inputs a bit mask, and the
          table's positions of its bits; a loop over each mask's bits mispredicted its end in every block: 15 cycles x 512) */
       unsigned short idx[NUE_MI + 8]; int n = 0;
