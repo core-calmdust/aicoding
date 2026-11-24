@@ -64,6 +64,10 @@ const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,
         return (window.AtlasRead ? AtlasRead.STORIES : []).filter(S => { const x = t[S.id] || {}; return !((x.kf || []).length >= 3 && (x.more || []).length >= 3 && (x.tl || []).length >= 4 && (S.refs || []).length >= 1); }).length; });
       // 16 記事の図: 本文の画像（sec）と節の図（figs）を合わせて 2 つ未満の物語の数
       m.fewFigs = r !== 'read' ? 0 : await p.evaluate(() => (window.AtlasRead ? AtlasRead.STORIES : []).filter(S => (S.sec || []).filter(Boolean).length + Object.values(S.figs || {}).reduce((a, f) => a + [].concat(f).length, 0) < 2).length);
+      // 17 読み物の画像が見つからない（表紙・本文の画像・節の図のファイルを取りに行って 200 でないもの）
+      m.brokenImg = r !== 'read' ? 0 : await p.evaluate(async () => { const u = f => f.s ? `../images/atlas/museum-story/${f.s}.webp` : f.g ? `../images/atlas/${f.g}.webp` : f.ex ? `../images/atlas/ex/${f.ex}.webp` : f.paint ? `../images/atlas/paint/${f.paint}-t.webp` : null;
+        const L = new Set(); (window.AtlasRead ? AtlasRead.STORIES : []).forEach(S => [S.cover, ...(S.sec || []), ...Object.values(S.figs || {}).flatMap(f => [].concat(f))].forEach(f => { const x = f && u(f); if (x) L.add(x); }));
+        let bad = 0; for (const x of L) { try { const r = await fetch(new URL(x, location.href), { method: 'HEAD' }); if (!r.ok) bad++; } catch (e) { bad++; } } return bad; });
       if (r === 'pass') m.foldLate = 0;   // (the open card pushes the room down on purpose)
       rows.push({ view: `${V.w}x${V.h}${V.lang !== 'ja' ? ':' + V.lang : ''}`, room: r, ...m, js: errs.length });
     }
