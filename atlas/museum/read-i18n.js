@@ -2,7 +2,7 @@
    ja is the source; facts and sources: claude/museum-spec.md (読み物). */
 window.MUSEUM_READ_T = {
   ja: {
-    ui: { lead: 'ゲームはどうやって見つかり、忘れられ、読み解かれ、変わってきたのか。{n}つの物語を読んで、最後のクイズに全問正解するとスタンプがもらえます。', card: 'スタンプカード', cardN: '{n} / {of} 個あつめました', cardAll: 'ぜんぶ集まりました！', no: '物語 {n}', mins: '約{n}分', stamped: 'スタンプ済み',
+    ui: { lead: 'ゲームはどうやって見つかり、忘れられ、読み解かれ、変わってきたのか。{n}篇の物語を読んで、最後のクイズに全問正解するとスタンプがもらえます。', card: 'スタンプカード', cardN: '{n} / {of} 個あつめました', cardAll: 'ぜんぶ集まりました！', no: '物語 {n}', mins: '約{n}分', stamped: 'スタンプ済み',
       back: '物語の一覧', quiz: 'たしかめクイズ', links: 'この物語の展示を見る・遊ぶ', game: 'ゲーム', exhibit: '所蔵品', art: '絵画', room: '展示室', room_chance: '偶然の道具',
       qn: '{n} / {of} 問', right: '正解！', wrong: '残念…正しい答えに印をつけました。', got: 'スタンプを押しました！', again: '全問正解！', gotSub: 'スタンプカードに記録されています。', missed: '{n} 問まちがえました', retrySub: '全問正解でスタンプがもらえます。物語を読み返して、もう一度。', retry: 'もう一度挑戦' },
     ex: { ur: 'ウルの王族のゲーム盤', liubo: '六博の盤と駒', pyrgus: 'ローマのダイスタワー', sugoroku: '木画紫檀双六局', nishapur: 'ニーシャープールのチェスセット', lewis: 'ルイス島のチェス駒' },
@@ -106,7 +106,7 @@ window.MUSEUM_READ_T = {
         ['Where was the poem with the earliest record of the modern queen written?', 'Valencia, 15th century', 'India, 6th century', 'Lewis, 12th century', 'London, 19th century']] },
   },
   zh: {
-    ui: { lead: '游戏是怎样被发现、被遗忘、被解读、又被改变的？读完{n}个故事，答对结尾小测验的全部题目，就能得到一枚印章。', card: '印章卡', cardN: '已收集 {n} / {of}', cardAll: '全部集齐！', no: '故事 {n}', mins: '约{n}分钟', stamped: '已盖章',
+    ui: { lead: '游戏是怎样被发现、被遗忘、被解读、又被改变的？读完{n}篇故事，答对结尾小测验的全部题目，就能得到一枚印章。', card: '印章卡', cardN: '已收集 {n} / {of}', cardAll: '全部集齐！', no: '故事 {n}', mins: '约{n}分钟', stamped: '已盖章',
       back: '全部故事', quiz: '小测验', links: '看展品・玩游戏', game: '游戏', exhibit: '馆藏', art: '绘画', room: '展厅', room_chance: '掷具',
       qn: '第 {n} / {of} 题', right: '答对了！', wrong: '可惜……正确答案已标出。', got: '盖章成功！', again: '全部答对！', gotSub: '已记录在印章卡上。', missed: '答错 {n} 题', retrySub: '全部答对才能得到印章。再读一遍故事，重新挑战吧。', retry: '再挑战' },
     ex: { ur: '乌尔王族游戏盘', liubo: '六博棋盘与棋子', pyrgus: '罗马掷骰塔', sugoroku: '木画紫檀双六局', nishapur: '内沙布尔国际象棋', lewis: '刘易斯岛棋子' },
@@ -158,7 +158,7 @@ window.MUSEUM_READ_T = {
         ['最早记载现代王后走法的诗写于哪里？', '15世纪的巴伦西亚', '6世纪的印度', '12世纪的刘易斯岛', '19世纪的伦敦']] },
   },
   'zh-TW': {
-    ui: { lead: '遊戲是怎樣被發現、被遺忘、被解讀、又被改變的？讀完{n}個故事，答對結尾小測驗的全部題目，就能得到一枚印章。', card: '印章卡', cardN: '已收集 {n} / {of}', cardAll: '全部集齊！', no: '故事 {n}', mins: '約{n}分鐘', stamped: '已蓋章',
+    ui: { lead: '遊戲是怎樣被發現、被遺忘、被解讀、又被改變的？讀完{n}篇故事，答對結尾小測驗的全部題目，就能得到一枚印章。', card: '印章卡', cardN: '已收集 {n} / {of}', cardAll: '全部集齊！', no: '故事 {n}', mins: '約{n}分鐘', stamped: '已蓋章',
       back: '全部故事', quiz: '小測驗', links: '看展品・玩遊戲', game: '遊戲', exhibit: '館藏', art: '繪畫', room: '展廳', room_chance: '擲具',
       qn: '第 {n} / {of} 題', right: '答對了！', wrong: '可惜……正確答案已標出。', got: '蓋章成功！', again: '全部答對！', gotSub: '已記錄在印章卡上。', missed: '答錯 {n} 題', retrySub: '全部答對才能得到印章。再讀一遍故事，重新挑戰吧。', retry: '再挑戰' },
     ex: { ur: '烏爾王族遊戲盤', liubo: '六博棋盤與棋子', pyrgus: '羅馬擲骰塔', sugoroku: '木畫紫檀雙六局', nishapur: '內沙布爾西洋棋', lewis: '路易斯島棋子' },
