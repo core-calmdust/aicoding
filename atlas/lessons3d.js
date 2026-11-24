@@ -4312,7 +4312,7 @@
     LKEY: 'aicoding-janggi-lessons', OKEY: null, data: null, I: null, V: {},
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../janggi/lessons.json?v=9'), fetch('../janggi/i18n.js?v=5').then(r => r.text()), jgScript(JG_ENG, () => window.JanggiEngine), jgScript('games/janggi-ls.js?v=8', () => window.AtlasJanggiLs), jgScript('games/janggi-pz.js?v=1', () => window.AtlasMini && window.AtlasMini.janggi)])
+      return (this.p = Promise.all([getJ('../janggi/lessons.json?v=10'), fetch('../janggi/i18n.js?v=6').then(r => r.text()), jgScript(JG_ENG, () => window.JanggiEngine), jgScript('games/janggi-ls.js?v=9', () => window.AtlasJanggiLs), jgScript('games/janggi-pz.js?v=1', () => window.AtlasMini && window.AtlasMini.janggi)])
         .then(([ls, tx]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] janggi texts', e); } this.I = w.I18N || {}; const D = (window.AtlasJanggiLs || {}).DONE || [];
           this.data = { ls: Object.assign({}, ls, { steps: ls.steps.filter(x => D.includes(x.id)) }) }; return this; })
         .catch(e => { this.p = null; throw e; }));
@@ -7007,7 +7007,7 @@
     return ja ? (id === 'backgammon' ? `きみは<b>${nm}</b>。` : `<b>${nm}</b>の手番だよ。`) : `<b>${nm}</b> to move. `;
   }
   /* ur (2026-11-24 担当C): the data, ダイスン's words and the board hooks are in atlas/ls-ur.js (loaded the first time) */
-  const UR = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUr) return res(); const sc = document.createElement('script'); sc.src = 'ls-ur.js?v=2'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const UR = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUr) return res(); const sc = document.createElement('script'); sc.src = 'ls-ur.js?v=3'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsUr.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   /* senet (2026-11-24 担当C): the data, セティ's words and the board hooks are in atlas/ls-senet.js (loaded the first time) */

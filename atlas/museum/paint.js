@@ -51,6 +51,8 @@
     { id: 'kyosai', w: 2048, h: 1618, cma: '1991.125.k', bg: '#d6cdb8', spots: [[.33, .6], [.77, .32], [.62, .32], [.85, .47], [.75, .72], [.4, .75]], links: [{ g: 'go' }] },
     // (2026-11-24) Chicago: a Yokuts gambling tray, woven with its own dice game
     { id: 'yokuts', w: 1686, h: 1262, aic: 132674, no: '1994.312a-b', bg: '#cfcac2', spots: [[.415, .125], [.43, .287], [.325, .587], [.52, .507], [.7, .53], [.45, .43]], links: [{ room: 'chance' }] },
+    // (2026-11-24) Chicago: Hokkei's surimono — Benkei beaten at sugoroku
+    { id: 'hokkei', w: 1686, h: 1924, aic: 81008, no: '1954.524', bg: '#8a7a3e', spots: [[.66, .62], [.48, .41], [.65, .31], [.19, .08], [.82, .09], [.91, .83]], links: [{ g: 'backgammon' }, { ex: 'sugoroku' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',

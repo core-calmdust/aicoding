@@ -18,7 +18,7 @@
 const fs = require('fs'), path = require('path');
 const ROOT = path.join(__dirname, '..');
 const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
-const I18N_DONE = ['xiangqi'];   // (追59) the games whose <game>/i18n.js pz.* words are checked (fixed)
+const I18N_DONE = ['xiangqi'];   // (追61) the games whose <game>/i18n.js pz.* words are checked (fixed)
 const NUM = '\\{n\\}';   // ({g} is a piece in xiangqi/pzwhy.js: the general)
 const after = new RegExp(NUM + '[\\s\\u00a0]+([^\\s<>,.;:!?…()—–।\\-\'"]+)', 'g');
 const RULE = {
@@ -68,8 +68,8 @@ function verify(opt) {
   for (const need of ['TX', 'RV', 'C4X', 'MCX', 'MMX', 'TFX', 'AMX', 'HXX', 'CKX', 'XQX', 'JGX', 'BGX', 'GOX', 'GMX']) if (!B[need]) add(need, `atlas/puzzles.js has no ${need} (the check would see nothing)`);
   const XW = opt.xq || require(path.join(ROOT, 'xiangqi/pzwhy.js'));
   all.push(...texts('xiangqi/pzwhy.js T', XW.T), ...texts('xiangqi/pzwhy.js OWN', XW.OWN));
-  // 追59: the game's own 2D words (<game>/i18n.js, pz.*) that the 3D puzzle also says (B.tx: the goal 「mate within 1 moves」, the
-  // solved line, the reason of a wrong move). The games in I18N_DONE are checked; the others are counted as pending (追59 未確認).
+  // 追61: the game's own 2D words (<game>/i18n.js, pz.*) that the 3D puzzle also says (B.tx: the goal 「mate within 1 moves」, the
+  // solved line, the reason of a wrong move). The games in I18N_DONE are checked; the others are counted as pending (追61 未確認).
   const vm = require('vm'), pending = {};
   for (const g of fs.readdirSync(ROOT)) {
     const f = path.join(ROOT, g, 'i18n.js'); if (!fs.existsSync(f)) continue;
@@ -80,14 +80,14 @@ function verify(opt) {
     if (I18N_DONE.includes(g)) all.push(...T);
     else { const c = T.filter(t => RULE[t.lang] && check(t).length).length; if (c) pending[g] = c; }
   }
-  for (const g of I18N_DONE) if (!fs.existsSync(path.join(ROOT, g, 'i18n.js'))) add(g, `追59 ${g}/i18n.js is missing`);
+  for (const g of I18N_DONE) if (!fs.existsSync(path.join(ROOT, g, 'i18n.js'))) add(g, `追61 ${g}/i18n.js is missing`);
   let n = 0;
-  for (const t of all) { if (!RULE[t.lang]) continue; n++; const b = check(t); if (b.length) add(`${t.where}.${t.key}`, `${/i18n\.js$/.test(t.where) ? "追59" : "追58"} a number that can be 1 next to a plural word ${b.join(' ')}: ${t.s}`); }
+  for (const t of all) { if (!RULE[t.lang]) continue; n++; const b = check(t); if (b.length) add(`${t.where}.${t.key}`, `${/i18n\.js$/.test(t.where) ? "追61" : "追58"} a number that can be 1 next to a plural word ${b.join(' ')}: ${t.s}`); }
   if (n < 150) add('-', `追58 only ${n} texts with a number were seen (the blocks moved?)`);
   return { out, n, pending };
 }
 module.exports = { verify, blocks, check, RULE };
 if (require.main === module) {
   const r = verify(); r.out.forEach(o => console.log(`NG ${o.q}: ${o.msg}`));
-  console.log(r.out.length ? `${r.out.length} NG / ${r.n} texts` : `OK ${r.n} texts (en・es・fr・pt・de・ru・hi・ar)`); if (Object.keys(r.pending).length) console.log('追59 pending (<game>/i18n.js pz.*):', JSON.stringify(r.pending)); process.exit(r.out.length ? 1 : 0);
+  console.log(r.out.length ? `${r.out.length} NG / ${r.n} texts` : `OK ${r.n} texts (en・es・fr・pt・de・ru・hi・ar)`); if (Object.keys(r.pending).length) console.log('追61 pending (<game>/i18n.js pz.*):', JSON.stringify(r.pending)); process.exit(r.out.length ? 1 : 0);
 }
