@@ -247,7 +247,7 @@ function jgPuzzleTexts() {
   await pg.setRequestInterception(true);   // (fonts / CDNs: not needed, and they hang where the network is closed — as tools/lesson-progress.js)
   pg.on('request', q => { const u = q.url(); if (u.startsWith(`http://127.0.0.1:${port}/`) || u.startsWith('data:') || u.startsWith('blob:')) q.continue(); else q.abort(); });
   await pg.goto(`http://127.0.0.1:${port}/atlas/`, { waitUntil: 'domcontentloaded' }); await new Promise(r => setTimeout(r, 4000));
-  const pgGames = games.filter(g => g !== 'konane'), onlyPz = games.length && !pgGames.length;   // (konane: the puzzles only, scored below)   // (foxgeese: the lessons (atlas/ls-foxgeese.js) and the puzzles, scored below)
+  const pgGames = games, onlyPz = false;   // (konane: the lessons (atlas/ls-konane.js, 2026-11-25) and the puzzles, scored below)   // (foxgeese: the lessons (atlas/ls-foxgeese.js) and the puzzles, scored below)
   const R = onlyPz ? {} : await pg.evaluate(async games => {
     let src = await (await fetch('lessons3d.js?x=' + Date.now())).text();
     src = src.replace('  window.AtlasGuideJa = guideJa;', '  window.AtlasGuideJa = guideJa; let LSVD = null; const lsvX = (h, id) => { const m = (LSVD || {})[id]; if (!m) return h; for (const k of Object.keys(m).sort((a, b) => b.length - a.length)) if (h.includes(k)) h = h.split(k).join(m[k]); return h; }; window.__setLSV = d => { LSVD = d; };')

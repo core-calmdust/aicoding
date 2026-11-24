@@ -10,7 +10,7 @@
   const nameSan = (S, story, id, reg) => id === 'you' ? story.hero.title : name(S, story, id);   // NPCs call the player by title
   const loc = (story, id) => { const l = story.locs.find(l => l.id === id); return l ? l.name : id; };
   const roleName = (story, r) => r === 'wolf' ? '人狼' : r === 'madman' ? '狂人' : (story.roles[r] || { name: r }).name;
-  const roleShort = r => ({ seer: '占い', medium: '霊視' })[r] || r;
+  const roleShort = r => ({ seer: '占い', medium: '霊視', guard: '護衛' })[r] || r;
   const trait = (story, cat, val) => story.traits[cat].v[val];
   const fig = (story, cat, val) => (story.traits[cat].fig || {})[val] || ('「' + trait(story, cat, val) + '」人影');
   const traceText = (story, t) => t.neg ? (story.traits[t.cat].ntr[t.val] || (trait(story, t.cat, t.val) + 'ではない。')) : story.traits[t.cat].tr[t.val];
@@ -26,7 +26,10 @@
     const k = id + ':' + act;
     const i = ((h32(S.seed + k) % 97) + (S.vc[k] = (S.vc[k] || 0) + 1)) % list.length;
     const add = name => (vo.reg === 'plain' || vo.reg === 'kid' && false) ? name : name;
-    return fill(list[i], Object.assign({ you: story.hero.title, god: story.lex.god || '神さま', godCall: story.lex.godCall || '神さま', blessing: story.lex.blessing || 'ようこそ' }, vars || {}));
+    const out = fill(list[i], Object.assign({ you: story.hero.title, god: story.lex.god || '神さま', godCall: story.lex.godCall || '神さま', blessing: story.lex.blessing || 'ようこそ' }, vars || {}));
+    // the hero's title with an honorific becomes how people really call them (先生さん → 先生, 医者さん → お医者さま)
+    const H = story.hero;
+    return H && H.you && H.title ? out.split(H.title + 'さん').join(H.you) : out;
   }
   // the reason clause in the speaker's register
   function why(S, story, id, w) {
@@ -49,7 +52,7 @@
     const N = n => callName(S, story, e.by, n);
     switch (e.t) {
       case 'co': return { by: e.by, kind: 'co', text: say(S, story, e.by, 'co_' + e.role) };
-      case 'result': return { by: e.by, kind: 'result', res: e.res, text: say(S, story, e.by, (e.role === 'seer' ? 'rs_' : 'rm_') + (e.res === 'wolf' ? 'w' : 'h'), { target: N(e.target) }) };
+      case 'result': return { by: e.by, kind: 'result', res: e.res, text: e.role === 'guard' ? say(S, story, e.by, 'rg', { target: N(e.target) }) : say(S, story, e.by, (e.role === 'seer' ? 'rs_' : 'rm_') + (e.res === 'wolf' ? 'w' : 'h'), { target: N(e.target) }) };
       case 'report': return { by: e.by, kind: 'report', text: say(S, story, e.by, 'report', { loc: loc(story, S.nights[e.night].loc), trace: traceText(story, e) }) };
       case 'itemfound': return { by: e.by, kind: 'report', text: say(S, story, e.by, 'item', { loc: loc(story, S.nights[e.night].loc), owner: N(e.owner), belong: charOf(story, e.owner).belong }) };
       case 'fig': return { by: e.by, kind: 'fig', text: say(S, story, e.by, 'fig', { fig: fig(story, e.cat, e.val) }) };
@@ -58,6 +61,16 @@
       case 'defend': return { by: e.by, kind: 'defend', text: say(S, story, e.by, 'defend') };
       case 'counter': return { by: e.by, kind: 'co', text: say(S, story, e.by, 'counter', { rival: N(e.rival), role: roleName(story, e.role) }) };
       case 'grief': return { by: e.by, kind: 'grief', text: say(S, story, e.by, 'grief') };
+      case 'whoseen': return { by: e.by, kind: 'fig', text: say(S, story, e.by, 'who', { who: N(e.who), loc: loc(story, e.loc) }) };
+      case 'denyseen': return { by: e.by, kind: 'defend', text: say(S, story, e.by, 'deny') };
+      case 'evnone': return { by: e.by, kind: 'grief', text: say(S, story, e.by, 'evnone') };
+      case 'caught': return { by: e.by, kind: 'defend', text: say(S, story, e.by, 'caught') };
+      case 'notice': return { by: e.by, kind: 'accuse', target: e.target, text: say(S, story, e.by, 'notice', { target: N(e.target) }) };
+      case 'confess': { const c = charOf(story, e.by); return { by: e.by, kind: 'grief', text: c && c.secret ? c.secret.confess : '' }; }
+      case 'callnone': return { by: e.by, kind: 'grief', text: say(S, story, e.by, 'callnone') };
+      case 'reqok': return { by: e.by, kind: 'co', text: say(S, story, e.by, 'reqok', { target: N(e.target) }) };
+      case 'reqno': return { by: e.by, kind: 'co', text: say(S, story, e.by, 'reqno_' + (e.why || 'trust'), { target: N(e.target) }) };
+      case 'guardheard': return { by: e.by, kind: 'grief', text: say(S, story, e.by, 'guardheard', { target: N(e.target) }) };
     }
     return null;
   }

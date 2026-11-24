@@ -6,7 +6,7 @@
 //  ① n is exact: the side to move wins within n of its moves whatever the reply, and not within n−1; the engine's duelGood = the
 //    strict set of first moves.
 //  ② the set of winning first moves has 2 moves at most (both are accepted).
-//  ③ 4 legal moves or more, 3 wrong first moves or more.
+//  ③ 4 legal moves or more, 3 wrong first moves or more; 追72 the winning first moves ≤ 1/3 of the legal moves.
 //  ④ the theme: w1…w5 = n; stop = every winning move stops a jump line that could go on, and every longer jump of that line loses;
 //    chain = every winning move is a multiple jump and every shorter jump of that line loses. The collection's promise (pz.desc: "the
 //    move that leaves the fewest jumps is not enough", n ≥ 2): some move that leaves the opponent the fewest jumps right now loses.
@@ -84,6 +84,7 @@ function verify(opt) {
       const wrong = L.filter(m => !good.includes(m));
       if (L.length < 4) add(T.id, j, `③ ${L.length} legal moves`);
       if (wrong.length < 3) add(T.id, j, `③ ${wrong.length} wrong first moves`);
+      if (good.length * 3 > L.length) add(T.id, j, `追72 ${good.length} right first moves of ${L.length} legal moves (more than 1/3)`);
       // ④ the theme's means, the collection's promise
       for (const w of good) {
         const p1 = E.path(pos, w)[1], same = L.filter(x => x !== w && E.mFrom(x) === E.mFrom(w) && E.path(pos, x)[1] === p1);
@@ -157,6 +158,7 @@ function selftest() {
     ['the words wrong (⑧)', null, /^⑧/, { why: o => { const w = F.why(o); return Object.assign({}, w, { v: Object.assign({}, w.v, { j: (w.v.j | 0) + 1 }) }); } }],
     ['a reply that does not refute (⑦)', null, /^⑦/, { reply: mid => mid.moves()[mid.moves().length - 1] }],
     ['the 2D takes the move back (⑨)', null, /^⑦?⑨/, { app: 'moves = moves.slice(0, cur - 1); cur = moves.length; Pz.used--;' }],
+    ['2 right of 5 legal moves (追72: the old w2 #8)', d => { d.themes[0].puzzles[0] = { s: { b: 'w..b.b..b.......wbw.w..b...w..b...w...w.....b.b.w.....wbb.b...b.', side: 1 }, n: 2 }; }, /^追72/],
     ['an evaluation in the words (追16)', null, /^追16/, { why: o => Object.assign({}, F.why(o), { ja: '勝率が下がる' }) }],
   ];
   let ok = 0;

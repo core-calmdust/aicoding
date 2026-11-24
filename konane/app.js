@@ -1333,7 +1333,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=3').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=4').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { let pr; try { pr = JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } return pzMigrate(pr); }
@@ -1591,7 +1591,10 @@ function okAnswer(P, s, m, pts) {
   const pos0 = posAt(0).pos;
   lesson.results[lesson.i] = pts; renderLessonCard();
   const best = P.ok.includes(m) ? m : P.best;
-  $('#lsFb').innerHTML = `<span class="pts ${pts ? 'ok' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts ? 'ok' : 'ng'}">${t(pts ? 'fb.perfect' : 'fb.bad')}</b> ` + (pts ? t('ls.' + s.id + '.why', { m: mvIn(pos0, m) }) : t('ls.' + s.id + '.ng', { m: mvIn(pos0, best), x: mvIn(pos0, m) }));
+  // (2026-11-25 担当C) b_double / b_win: the words say what the move did on the board (konane/ls-facts.js, the same as the 3D)
+  const F = window.KonaneLsFacts && !lesson.virt && /^b_(double|win)$/.test(s.id) ? KonaneLsFacts.fact(E, s.id, P.s, m) : null;
+  const ngKey = !F ? '.ng' : F.k === 'stop' ? '.ng.stop' : F.k === 'other' ? '.ng.other' : F.k === 'left' ? (F.j === 1 ? '.ng1' : '.ng') : '.ng';
+  $('#lsFb').innerHTML = `<span class="pts ${pts ? 'ok' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts ? 'ok' : 'ng'}">${t(pts ? 'fb.perfect' : 'fb.bad')}</b> ` + (pts ? t('ls.' + s.id + '.why', { m: mvIn(pos0, m) }) : t('ls.' + s.id + ngKey, { m: mvIn(pos0, best), x: mvIn(pos0, m), j: F && F.j }));
   playChime(!!pts); playMove2(m);
   lsAuto(!!pts, moveDur(m, pos0) + 1100);
   const tok = busyToken;
@@ -1610,7 +1613,9 @@ $('#lsHint').onclick = () => {
   const s = curStep(), P = lessonProblem();
   lessonMarks = [];
   const good = P.ok || [P.best];
-  for (const f of new Set(good.map(mFrom))) lessonMarks.push({ at: f, cls: 'ok' });
+  // (2026-11-25 担当C) b_double: every stone that can jump · b_win: the opponent's stones that could jump now (not the answer's stone, 追52)
+  const hp = window.KonaneLsFacts && !lesson.virt && /^b_(double|win)$/.test(s.id) ? KonaneLsFacts.hint(E, s.id, P.s) : null;
+  for (const f of hp || new Set(good.map(mFrom))) lessonMarks.push({ at: f, cls: 'ok' });
   $('#lsFb').innerHTML = lesson.virt ? t('op.hint') : t('ls.' + s.id + '.hint');
   renderFx();
 };
@@ -1799,7 +1804,7 @@ function startPractice(gi) {
 
 // ====================================================================== puzzles: win / win material within N moves (PZBook v2)
 let PUZZLES = null;
-const puzzlesReady = fetch('puzzles.json?v=5').then(r => r.json()).then(d => { PUZZLES = d; pzProgress(); return d; }).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=6').then(r => r.json()).then(d => { PUZZLES = d; pzProgress(); return d; }).catch(() => null);
 let pzLevel = 0;
 const pzKey = (id, j) => id + '-' + j;
 const starVal = x => x === true ? 3 : (+x || 0);

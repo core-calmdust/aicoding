@@ -24,6 +24,8 @@
     bag: '<svg viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>',
     go: '<svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg>',
     show: '<svg viewBox="0 0 24 24"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.6"/></svg>',
+    call: '<svg viewBox="0 0 24 24"><path d="M4 10v4h3l5 4V6L7 10H4z"/><path d="M16 9c1.2 1.6 1.2 4.4 0 6M18.5 7c2.2 2.8 2.2 7.2 0 10"/></svg>',
+    clash: '<svg viewBox="0 0 24 24"><path d="M5 5l6 6M19 5l-6 6M12 13v7M8 20h8"/><path d="M4 4l2 0 0 2M20 4h-2v2"/></svg>',
     point: '<svg viewBox="0 0 24 24"><path d="M4 12h11M11 7l5 5-5 5"/><circle cx="19" cy="12" r="1.6"/></svg>',
     ask: '<svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M10.2 8.6a1.9 1.9 0 1 1 2.6 1.8c-.5.2-.8.6-.8 1.1v.4M12 13.6v.1"/></svg>',
     vote: '<svg viewBox="0 0 24 24"><path d="M5 11l4 4 10-10"/><path d="M4 20h16"/></svg>',
@@ -39,6 +41,7 @@
 
   /* ---------- helpers ---------- */
   const story = id => window.WL_STORIES[id];
+  const withHero = (id, h) => window.WLHero.apply(story(id), h);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   const nm = id => SP.name(S, st, id);
   const ch = id => st.chars.find(c => c.id === id);
@@ -56,6 +59,7 @@
   /* ---------- screens ---------- */
   function scr(name) {
     G.scr = name;
+    if (name !== 'play') { $('roster')?.classList.add('hide'); document.body.classList.remove('has-roster'); }
     for (const id of ['scrTitle', 'scrSelect', 'scrSetup']) $(id).classList.toggle('hide', id !== 'scr' + name[0].toUpperCase() + name.slice(1));
     document.body.className = document.body.className.replace(/\bscr-\w+/g, '').trim() + ' scr-' + name;
     const play = name === 'play';
@@ -76,7 +80,7 @@
 
   /* ---------- title ---------- */
   function buildTitle() {
-    palette(null);
+    palette(null); SND.music(null);
     const all = ORDER.map(story).filter(Boolean).flatMap(s => s.chars.slice(0, 5));
     const n = 10, items = [];
     for (let i = 0; i < n; i++) items.push(i === 3 || i === 8 ? ART.wolf() : ART.puppet(all[(i * 3) % all.length].look, all[(i * 3) % all.length].color, { rod: false }));
@@ -91,7 +95,7 @@
   /* ---------- select ---------- */
   function rec() { try { return JSON.parse(localStorage.getItem(REC) || '{}'); } catch (e) { return {}; } }
   function buildSelect() {
-    palette(null);
+    palette(null); SND.music('story', .55);
     const R = rec();
     $('stories').innerHTML = ORDER.map(story).filter(Boolean).map(s => {
       const r = R[s.id];
@@ -106,9 +110,14 @@
 
   /* ---------- setup ---------- */
   function buildSetup() {
-    st = story(G.storyId); palette(st);
+    const base = story(G.storyId), HS = base.heroes || [];
+    if (!G.heroPick || !HS.some(h => h.id === G.heroPick)) G.heroPick = 'auto';
+    st = withHero(G.storyId, G.heroPick === 'auto' ? null : G.heroPick); palette(st);
     $('setTitle').innerHTML = `<span style="font:400 1.3em var(--brush);letter-spacing:.06em">${esc(st.title)}</span>　<small style="font:700 15px var(--ui);color:var(--mute)">${esc(st.no)}</small>`;
     $('setConcept').textContent = st.concept;
+    const done = (rec()[base.id] || {}).heroes || {};
+    $('setHero').innerHTML = [`<button class="tile${G.heroPick === 'auto' ? ' on' : ''}" data-h="auto"><b>おまかせ</b><span>毎回ちがう立場で幕が開く。</span></button>`].concat(HS.map(h => `<button class="tile${G.heroPick === h.id ? ' on' : ''}" data-h="${h.id}"><b>${esc(h.job)}</b><span>${esc(h.pitch)}</span>${done[h.id] ? '<span class="done">解決ずみ</span>' : ''}</button>`)).join('');
+    $('setHero').querySelectorAll('.tile').forEach(b => b.onclick = () => { G.heroPick = b.dataset.h; buildSetup(); });
     $('setDiff').innerHTML = DIFFN.map((d, i) => `<button class="tile${G.diff === i ? ' on' : ''}" data-d="${i}"><b>${d}</b><span class="cnt">${E.DIFF[i].size}人</span><span>${DIFFD[i]}</span></button>`).join('');
     const roles = [['auto', 'おまかせ', '物語が決める'], ['villager', '村人', '調べる回数が多い'], ['seer', '占い師', '毎晩ひとりを占う'], ['medium', '霊媒師', '追放者の正体を知る'], ['guard', '狩人', '毎晩ひとりを守る']];
     const can = r => r === 'auto' || r === 'villager' || E.SETUP[E.DIFF[G.diff].size][r] > 0;
@@ -165,7 +174,7 @@
         el.style.left = (o.from === 'left' ? -10 : o.from === 'right' ? 110 : 50) + '%';
         if (!o.from) el.style.opacity = '0';
         c.appendChild(el);
-        el.onclick = () => { if (G.onPup) G.onPup(id); };
+        el.onclick = () => { if (G.onPup && !G.talking && $('sheet').classList.contains('hide') && $('tx').classList.contains('hide')) G.onPup(id); };
       }
       delete have[id];
       el.classList.remove('lift', 'drop', 'fallen', 'speak', 'dim', 'sel', 'turn');
@@ -176,6 +185,7 @@
       if (o.fallen === id) el.classList.add('fallen');
     });
     for (const id in have) { const e = have[id]; e.style.opacity = '0'; setTimeout(() => e.remove(), 600); }
+    if (S) renderRoster();
   }
   const pup = id => $('cast').querySelector(`.pp[data-id="${id}"]`);
   function speakPup(id) { $('cast').querySelectorAll('.pp.speak').forEach(e => e.classList.remove('speak')); const e = id && pup(id); if (e) e.classList.add('speak'); }
@@ -195,8 +205,23 @@
     else if (id === 'you') { who.classList.add('none'); nmEl.textContent = st.hero.name; speakPup(null); }
     else { who.classList.add('none'); nmEl.textContent = it.title || ''; speakPup(null); }
     tx.classList.toggle('narr', !id);
+    G.talkVo = voiceOf(id);
     type(it.text);
+    renderRoster();
     SND.page();
+  }
+  // the talk sound: each voice has its own pitch and mouth; each person shifts it a little
+  const VO = { elder: { f: 128, mouth: .85, len: .09, range: 1.5 }, polite: { f: 245, mouth: 1.05 }, rough: { f: 118, wave: 'square', mouth: .8, vol: .75 }, cheer: { f: 310, wave: 'square', mouth: 1.2, range: 3, glide: 1, vol: .8 },
+    cool: { f: 172, range: 1 }, timid: { f: 262, wave: 'sine', mouth: 1.1, vol: .75, len: .05 }, noble: { f: 150, mouth: .95, range: 1 }, sister: { f: 225, wave: 'square', mouth: 1.1, vol: .75 },
+    child: { f: 390, wave: 'square', mouth: 1.3, range: 3, glide: 2, vol: .75, len: .055 }, pious: { f: 235, wave: 'sine', range: 1 }, merchant: { f: 192, wave: 'sawtooth', vol: .6 }, blunt: { f: 108, mouth: .8, range: .5, len: .1 } };
+  function voiceOf(id) {
+    if (!id) return null;
+    if (id === 'you') return { f: 200, mouth: 1 };
+    const c = ch(id); if (!c) return null;
+    const v = Object.assign({}, VO[c.voice] || { f: 200 });
+    let hsh = 0; for (const x of c.id) hsh = (hsh * 31 + x.charCodeAt(0)) | 0;
+    v.f *= 1 + ((Math.abs(hsh) % 9) - 4) * .025;
+    return v;
   }
   function type(text) {
     const t = $('tx').querySelector('.t');
@@ -208,7 +233,8 @@
     if (!sp) { t.innerHTML = html; $('tx').classList.add('done'); return; }
     t.innerHTML = chars.map(c => c[0] === '<' ? c : `<i>${c}</i>`).join('');
     const is = t.querySelectorAll('i'); let k = 0;
-    G.typing = setInterval(() => { for (let s = 0; s < 2 && k < is.length; s++) is[k++].style.opacity = 1; if (k >= is.length) finishType(); }, sp * 2);
+    const vo = G.talkVo, quiet = /[\s、。！？…—「」『』（）・\-]/;
+    G.typing = setInterval(() => { let say = false; for (let s = 0; s < 2 && k < is.length; s++) { const ch0 = is[k].textContent; if (!quiet.test(ch0)) say = true; is[k++].style.opacity = 1; } if (say) SND.talk(vo); if (k >= is.length) finishType(); }, sp * 2);
   }
   function finishType() { clearInterval(G.typing); G.typing = null; const t = $('tx').querySelector('.t'); t.querySelectorAll('i').forEach(i => i.style.opacity = 1); $('tx').classList.add('done'); }
   $('tx').addEventListener('click', nextPage);
@@ -239,18 +265,55 @@
   }
 
   /* ---------- header ---------- */
+  /* the roster: everyone, alive or not, with what has been said about them (like a village board) */
+  const CIRC = ['', '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩', '⑪', '⑫'];
+  const SHORT = { seer: '占', medium: '霊', guard: '狩' };
+  function tagsOf(id) {
+    const c = S.claims.find(c => c.by === id);
+    let cl = '';
+    if (c) { const same = S.claims.filter(x => x.role === c.role); cl = `<span class="cl ${c.role}">${SHORT[c.role] || ''}${same.length > 1 ? same.indexOf(c) + 1 : ''}</span>`; }
+    const heat = (S.phase === 'meeting' || S.phase === 'vote') && S.mtg && S.mtg.day === S.day ? (S.heat || {})[id] || 0 : 0;
+    const ht = heat ? `<span class="ht">${CIRC[Math.min(12, heat)]}</span>` : '';
+    return { cl, ht };
+  }
+  function resultsOn(id) {
+    const out = [];
+    S.claims.forEach(c => { const same = S.claims.filter(x => x.role === c.role); const k = (SHORT[c.role] || '') + (same.length > 1 ? same.indexOf(c) + 1 : '');
+      for (const r of c.res) if (r.target === id) out.push(r.res === 'guard' ? `<i class="g" title="${esc(nm(c.by))}が守った">${k}守</i>` : `<i class="${r.res === 'wolf' ? 'k' : ''}" title="${esc(nm(c.by))}：${r.res === 'wolf' ? '人狼' : '人間'}">${k}${r.res === 'wolf' ? '●' : '○'}</i>`); });
+    for (const r of S.pl.res) if (r.target === id && !(S.claims.find(c => c.by === 'you') || { res: [] }).res.some(x => x.target === id)) out.push(`<i class="${r.res === 'wolf' ? 'k' : ''}" title="あなたが知った">自${r.res === 'wolf' ? '●' : '○'}</i>`);
+    return out.join('');
+  }
+  function renderRoster() {
+    const R = $('roster'); if (!R) return;
+    const on = S && G.scr === 'play' && S.phase !== 'prologue' && S.phase !== 'end';
+    R.classList.toggle('hide', !on); document.body.classList.toggle('has-roster', !!on);
+    if (!on) return;
+    R.innerHTML = S.people.map(p => {
+      const t = tagsOf(p.id), dead = !p.alive, mk = S.pl.notes[p.id] || '';
+      const dc = dead && p.death ? (p.death.cause === 'wolf' ? '噛' : '吊') : '';
+      return `<div class="ro${p.isPlayer ? ' you' : ''}${dead ? ' dead' : ''}${mk ? ' mk-' + mk : ''}" data-id="${p.id}">${bust(p.id)}<b>${esc(p.isPlayer ? 'あなた' : p.name)}</b>${t.cl}${t.ht}<div class="rs">${resultsOn(p.id)}</div>${dead ? `<svg class="x" viewBox="0 0 44 44"><path d="M8 8L36 36M36 8L8 36"/></svg><span class="dc">${dc}</span>` : ''}</div>`;
+    }).join('');
+    R.querySelectorAll('.ro').forEach(e => e.onclick = () => { const id = e.dataset.id; const p = person(id); if (!p || !p.alive || p.isPlayer) return; if (G.onPup && !G.talking && $('sheet').classList.contains('hide') && $('tx').classList.contains('hide')) G.onPup(id); });
+    // the same marks above the puppets' heads
+    $('cast').querySelectorAll('.pp').forEach(e => { let g = e.querySelector('.tg'); if (!g) { g = document.createElement('div'); g.className = 'tg'; e.appendChild(g); } const t = tagsOf(e.dataset.id); g.innerHTML = t.cl + t.ht; });
+  }
   function hud() {
     if (S.ghost) document.body.classList.add('ghost');
     const ph = { morning: '朝', invest: '昼', meeting: '集会', vote: '投票', night: '夜', end: '終幕', prologue: '序幕' }[S.phase] || '';
     $('hbWhere').innerHTML = `${PCQ.matches ? esc(st.title) + '　' : ''}${S.phase === 'prologue' ? '' : dayName(S.day)} ${ph}<small>${DIFFN[S.diff]}${S.phase === 'prologue' ? '' : '・' + esc(SP.roleName(st, S.pl.role))}${S.ghost ? '・幽霊' : ''}</small>`;
     if (S.phase === 'invest') $('hbAp').innerHTML = `<span>残り</span>` + Array.from({ length: S.pl.apMax }, (_, i) => `<i class="${i < S.pl.ap ? '' : 'off'}"></i>`).join('');
     else $('hbAp').innerHTML = '';
+    renderRoster();
   }
 
   /* ---------- the game ---------- */
   async function start() {
-    clearSave();
+    clearSave(); SND.music('story', 1);
+    const HS = story(G.storyId).heroes || [];
+    const hid = G.heroPick && G.heroPick !== 'auto' ? G.heroPick : (HS.length ? HS[Math.floor(Math.random() * HS.length)].id : null);
+    st = withHero(G.storyId, hid);
     S = E.newGame(st, { diff: G.diff, role: G.role });
+    S.hero = st.heroId;
     S.phase = 'prologue'; S.pl.log = [];
     scr('play'); palette(st); hud();
     if (!pref.seen) { await showRules(true); pref.seen = true; savePref(); }
@@ -276,6 +339,7 @@
         }
         continue;
       }
+      if (pg.by) { setCast(castIn(pg.by).slice(0, 1), { x: 58 }); await say([pg.t ? { text: fill(pg.t, ctxVars()) } : null].concat(storyLine(pg))); setCast([]); continue; }
       await say([{ text: fill(pg.t, ctxVars()) }]);
     }
     // the role
@@ -283,6 +347,48 @@
     S.phase = 'morning'; save();
     await morning(true);
   }
+  /* ---------- the story around the game: speakers, interludes, night vignettes ---------- */
+  const castIn = ids => (ids || []).filter(id => { const p = person(id); return p && p.alive && !p.isPlayer; });
+  // a line spoken by the first of its candidates who is here and alive; else the narration
+  function storyLine(e) {
+    const id = castIn(e.by)[0];
+    if (id && e.alt && e.alt[id]) return [{ who: id, text: e.alt[id] }];
+    return e.n ? [{ text: e.n }] : [];
+  }
+  function arcItems(day) {
+    const A = st.arc; if (!A || !A.days || !A.days[day]) return [];
+    S.arcShown = S.arcShown || {}; if (S.arcShown[day]) return [];
+    S.arcShown[day] = 1;
+    const out = [];
+    for (const e of A.days[day]) { if (e.t) out.push({ text: e.t }); if (e.by || e.n) out.push(...storyLine(e)); }
+    return out;
+  }
+  // a scene between people of the village: everyone in it alive, and (for some) someone gone
+  function pickInter() {
+    S.interShown = S.interShown || [];
+    const dead = new Set(S.people.filter(p => !p.alive).map(p => p.id));
+    const ok = (st.inter || []).filter(x => !S.interShown.includes(x.id) && castIn(x.need).length === x.need.length && (!x.dead || x.dead.some(d => dead.has(d))));
+    if (!ok.length) return null;
+    const grief = ok.filter(x => x.dead);
+    const x = grief.length ? grief[0] : ok[Math.floor(Math.random() * ok.length)];
+    S.interShown.push(x.id);
+    return x;
+  }
+  async function interlude(when) {
+    const x = pickInter(); if (!x) return;
+    if (x.bg) setScene(x.bg);
+    setCast(x.need, { span: [32, 68] });
+    await say([{ title: when || '幕間', text: '' }].slice(0, 0).concat(x.lines.map(([w, t]) => w ? { who: w, text: t } : { text: t })));
+    log({ k: 'inter', id: x.id });
+  }
+  function vignette() {
+    S.vignShown = S.vignShown || [];
+    const c = castIn(live().map(p => p.id)).map(id => ch(id)).filter(c => c.vign && !S.vignShown.includes(c.id));
+    if (!c.length) return null;
+    const v = c[Math.floor(Math.random() * c.length)]; S.vignShown.push(v.id);
+    return { text: v.vign };
+  }
+
   async function roleCard() {
     const r = S.pl.role, R = st.roles[r];
     await say([{ text: fill(st.text.role, { roleHow: R.how }) }]);
@@ -291,7 +397,7 @@
 
   /* morning: what the night left behind */
   async function morning(first) {
-    S.phase = 'morning'; hud(); document.body.classList.remove('night');
+    S.phase = 'morning'; hud(); SND.music('story', 1); document.body.classList.remove('night');
     const N = S.nights[S.nights.length - 1];
     const items = [];
     if (!first) {
@@ -305,7 +411,9 @@
         setCast(v === 'you' ? [] : [v], { fallen: v, x: 58 });
         SND.thud();
         items.push({ text: fill(SP.say ? pickOne(st.text.discover[N.loc] || st.text.discover[st.locs[0].id]) : '', { victim: nm(v), note: c ? c.note : '' }) });
-        const g = live().find(p => p.id !== v);
+        // the ones who loved them
+        let g = 0;
+        for (const cc of st.chars) for (const b of cc.bond || []) if (b.with === v && g < 2 && castIn([cc.id]).length) { g++; items.push({ who: cc.id, text: b.grief, fx: () => setCast([v, cc.id], { fallen: v, span: [40, 66] }) }); }
       } else {
         setCast([]);
         items.push({ text: fill(pickOne(st.text.peace), { loc: locName(N.loc) }) });
@@ -331,6 +439,7 @@
       if (r.seer) items.push({ text: `${st.roles.seer.name}の力が、**${nm(r.target)}**の影を映した。……${r.res === 'wolf' ? '**それは、狼の形をしていた。**' : '人の形のままだった。人間だ。'}` });
       if (r.medium) items.push({ text: `追放された**${nm(r.target)}**の影が、ゆっくりと浮かぶ。……${r.res === 'wolf' ? '**狼だった。**' : '人間だった。'}` });
     }
+    items.push(...arcItems(S.day));
     await say(items);
     if (E.check(S)) return end();
     if (S.ghost) return ghostDay();
@@ -339,6 +448,8 @@
     S.npcFound = E.npcSearch(S, st);
     S.phase = 'invest'; save();
     G.loc = (S.nights[S.nights.length - 1] || {}).loc || st.locs[0].id;
+    await interlude();
+    save();
     hub();
   }
   const pickOne = a => a[Math.floor(Math.random() * a.length)];
@@ -382,6 +493,11 @@
   }
   async function talk(id, inMeeting) {
     const p = person(id); if (!p || !p.alive) return;
+    if (inMeeting && S.pl.asks <= 0) { await say([{ text: '今日の聞き取りは使いきった。' }]); return; }
+    G.talking = true;
+    try { return await talkIn(id, inMeeting); } finally { G.talking = false; }
+  }
+  async function talkIn(id, inMeeting) {
     const free = inMeeting || S.pl.talked[id] === S.day;
     if (!inMeeting && !free && S.pl.ap <= 0) return hub('今日の行動は使いきった。');
     const opts = [
@@ -394,6 +510,7 @@
     if (!q) return inMeeting ? null : hub();
     let target = null;
     if (q === 'about') { target = await pickPerson(`${esc(nm(id))}に、誰のことを聞く？`, '', E.alive(S).map(x => x.id).filter(x => x !== id)); if (!target) return inMeeting ? null : hub(); }
+    if (inMeeting) S.pl.asks--;   // the interview is used when a question is put, however it was opened
     const r = E.ask(S, st, id, q, target, inMeeting || free);
     if (!inMeeting && !free) { /* the ap was used inside ask */ }
     G.loc = G.loc; setCast(inMeeting ? E.alive(S).filter(x => !x.isPlayer).map(x => x.id) : [id], inMeeting ? {} : { x: 58 });
@@ -435,7 +552,8 @@
 
   /* the meeting */
   async function meeting() {
-    S.phase = 'meeting'; hud(); save();
+    if (!(S.mtg && S.mtg.day === S.day) && (S.duskDay !== S.day)) { S.duskDay = S.day; await interlude(); }
+    S.phase = 'meeting'; hud(); save(); SND.music('meeting', 1);
     setScene(st.meetLoc || 'inn', false, true);
     const ids = live().map(p => p.id);
     setCast(ids);
@@ -456,7 +574,7 @@
     if (S.ghost) return ghostDebate();
     S.phase = 'meeting'; hud();
     G.onPup = id => talk(id, true).then(() => debate());
-    const canCo = (S.pl.role === 'seer' || S.pl.role === 'medium') && !S.pl.co;
+    const canCo = (S.pl.role === 'seer' || S.pl.role === 'medium' || S.pl.role === 'guard') && !S.pl.co;
     const newRes = S.pl.co && S.pl.res.some(r => !S.claims.find(c => c.by === 'you').res.some(x => x.target === r.target) && (r.seer || r.medium));
     const unshown = S.pl.found.filter(k => !S.reports.some(r => r.by === 'you' && r.night === +k.split('|')[0] && r.cat === S.nights[+k.split('|')[0]].traces[+k.split('|')[1]].cat));
     const ac = S.pl.accuse ? `（${nm(S.pl.accuse.target)}を名指しした）` : '';
@@ -467,14 +585,18 @@
         ${newRes ? `<button class="btn acc" id="dRes">${IC.show}結果を伝える</button>` : ''}
         <button class="btn" id="dAsk" ${S.pl.asks > 0 ? '' : 'disabled'}>${IC.ask}聞き取り<small>残り${S.pl.asks}</small></button>
         <button class="btn" id="dAcc" ${S.pl.accuse ? 'disabled' : ''}>${IC.point}名指しする</button>
+        <button class="btn" id="dCall">${IC.call}呼びかける<small>${appealsLeft()}</small></button>
+        <button class="btn${E.contradictions(S, st).length ? ' acc' : ''}" id="dClash" ${E.contradictions(S, st).length ? '' : 'disabled'}>${IC.clash}矛盾を突く<small>${E.contradictions(S, st).length || ''}</small></button>
         <button class="btn pri" id="dVote">${IC.vote}投票へ</button>
       </div>`);
     const on = (id, f) => { const b = $(id); if (b) b.onclick = f; };
     on('dShow', showEvidence);
     on('dCo', coming);
     on('dRes', coming);
-    on('dAsk', async () => { const id = await pickPerson('誰に聞く？', `聞き取りは残り${S.pl.asks}回。行動は使わない。`, live().map(p => p.id), { mark: true }); if (!id) return debate(); S.pl.asks--; await talk(id, true); debate(); });
+    on('dAsk', async () => { const id = await pickPerson('誰に聞く？', `聞き取りは残り${S.pl.asks}回。行動は使わない。`, live().map(p => p.id), { mark: true }); if (!id) return debate(); await talk(id, true); debate(); });
     on('dAcc', accuse);
+    on('dCall', appeal);
+    on('dClash', clash);
     on('dVote', vote);
     renderNb();
   }
@@ -490,20 +612,96 @@
     log({ k: 'show', key: v });
     save(); debate();
   }
-  async function coming() {
+  async function coming() { await say(comingLines()); log({ k: 'co' }); save(); debate(); }
+  function comingLines() {
     const first = !S.pl.co;
     if (first) E.playerClaim(S); else E.playerResults(S);
     const c = S.claims.find(c => c.by === 'you');
     const role = st.roles[S.pl.role].name;
     const lines = [];
     if (first) lines.push({ who: 'you', text: `聞いてほしい。わたしは${role}だ。` });
-    for (const r of c.res.filter(r => !r.told)) { r.told = true; lines.push({ who: 'you', text: S.pl.role === 'seer' ? `${nm(r.target)}を占った。結果は……${r.res === 'wolf' ? '**人狼**' : '人間'}だ。` : `${nm(r.target)}の影を見た。${r.res === 'wolf' ? '**狼だった**' : '人間だった'}。` }); }
+    for (const r of c.res.filter(r => !r.told)) { r.told = true; lines.push({ who: 'you', text: S.pl.role === 'guard' ? `${r.night === 1 ? '最初の晩' : dayName(r.night) + 'の晩'}は、${nm(r.target)}の戸口に立っていた。` : S.pl.role === 'seer' ? `${nm(r.target)}を占った。結果は……${r.res === 'wolf' ? '**人狼**' : '人間'}だ。` : `${nm(r.target)}の影を見た。${r.res === 'wolf' ? '**狼だった**' : '人間だった'}。` }); }
     if (first && !c.res.length) lines.push({ who: 'you', text: 'まだ結果はない。けれど、黙っているよりはいいと思った。' });
     // rivals answer
     for (const o of S.claims.filter(o => o.role === c.role && o.by !== 'you' && person(o.by).alive)) lines.push({ who: o.by, text: SP.say(S, st, o.by, 'counter', { rival: st.hero.title, role }) });
-    await say(lines);
-    log({ k: 'co' });
-    save(); debate();
+    return lines;
+  }
+  /* 呼びかけ：村に頼む。皆が聞いている（狼も）。頼まれた側は、自分の損得で応じるか決める */
+  function appealUsed() { const u = (S.req.used = S.req.used || {}); return (u[S.day] = u[S.day] || {}); }
+  function appealsLeft() { const u = appealUsed(); return ['call', 'evid', 'div', 'guard'].filter(k => !u[k] && appealCan(k)).length || ''; }
+  function appealCan(k) {
+    const R = E.SETUP[S.size];
+    if (k === 'div') return S.claims.some(c => c.role === 'seer' && c.by !== 'you' && person(c.by).alive);
+    if (k === 'guard') return R.guard > 0 && S.pl.role !== 'guard';
+    return true;
+  }
+  async function appeal() {
+    const u = appealUsed(), R = E.SETUP[S.size];
+    const seerN = st.roles.seer.name, medN = st.roles.medium.name, grdN = st.roles.guard ? st.roles.guard.name : '';
+    const opts = [
+      { t: `${seerN}・${medN}は名乗り出てほしい`, s: '名乗るかどうかは本人が決める。何も見ていない者は、命を惜しんで黙るかもしれない。偽物が出てくることもある。', v: 'call:seer,medium', ic: IC.call, dis: u.call },
+      { t: `${seerN}だけ、名乗り出てほしい`, s: `${medN}はまだ隠れていてよい、という頼み方。`, v: 'call:seer', ic: IC.call, dis: u.call },
+      { t: '見たもの・見つけたものを、全部出してほしい', s: '黙っていた痕跡や、夜に出歩いていた者の話が出てくるかもしれない。ただし、嘘の報告も混ざる。', v: 'evid', ic: IC.call, dis: u.evid },
+      S.req.hide ? { t: `${seerN}は、もう隠れなくていい`, s: '先の頼みを取り下げる。', v: 'hide:0', ic: IC.call }
+        : { t: `${seerN}は、狼を見つけるまで隠れていてほしい`, s: '本物は名乗らずに占い続ける。ただし、偽物が先に名乗れば黙ってはいないだろう。', v: 'hide:1', ic: IC.call },
+    ];
+    if (appealCan('div')) opts.push({ t: `${seerN}へ：今夜はこの人を占ってほしい`, s: '名乗った全員に頼む。引き受けるかは、あなたをどれだけ信じているか次第。偽物も、たいてい引き受ける。', v: 'div', ic: IC.call, dis: u.div });
+    if (appealCan('guard')) opts.push({ t: `${grdN}へ：名乗らなくていい、この人を守ってほしい`, s: `${grdN}が誰かは、あなたにもわからない。守ってくれるかは本人次第。狼もこの頼みを聞いている。`, v: 'guard', ic: IC.call, dis: u.guard });
+    const v = await pickOpt('村に呼びかける', '集会の全員が聞いている。人狼も、だ。', opts);
+    if (!v) return debate();
+    let mine = '', ev = [];
+    if (v.startsWith('call:')) {
+      const roles = v.slice(5).split(',');
+      u.call = 1;
+      mine = roles.length > 1 ? `${seerN}と${medN}がいるなら、名乗り出てほしい。黙っていても、狼は待ってくれない。` : `${seerN}がいるなら、今、名乗り出てほしい。${medN}は、まだ出なくていい。`;
+      await say([{ who: 'you', text: mine }]);
+      ev = E.callOut(S, st, roles);
+    } else if (v === 'evid') {
+      u.evid = 1;
+      await say([{ who: 'you', text: '昨夜のことで、見たもの、見つけたものがあるなら、今ここで全部出してほしい。小さなことでもいい。黙っていれば、狼が得をするだけだ。' }]);
+      ev = E.callEvidence(S, st);
+    } else if (v.startsWith('hide:')) {
+      const on = v === 'hide:1';
+      E.askHide(S, on);
+      await say([{ who: 'you', text: on ? `${seerN}は、まだ名乗らないでほしい。狼を見つけるまでは、黙って占い続けてくれ。それがいちばん長く生き延びる道だ。` : `${seerN}は、もう隠れなくていい。見たものを、皆に聞かせてほしい。` }]);
+      log({ k: 'hide', on }); save(); return debate();
+    } else if (v === 'div') {
+      const t = await pickPerson(`${seerN}に、誰を占ってもらう？`, '頼みは皆に聞こえる。', live().map(p => p.id), { mark: true });
+      if (!t) return appeal();
+      u.div = 1;
+      await say([{ who: 'you', text: `${seerN}を名乗る者に頼みたい。今夜は、${nm(t)}を占ってくれないか。` }]);
+      ev = E.askDivine(S, st, t);
+    } else if (v === 'guard') {
+      const t = await pickPerson(`${grdN}に、誰を守ってもらう？`, '名乗らなくていい。返事もいらない。', live().filter(p => p.id !== 'you').map(p => p.id), { mark: true });
+      if (!t) return appeal();
+      u.guard = 1;
+      await say([{ who: 'you', text: `${grdN}がいるなら、名乗らなくていい。返事もいらない。今夜は、${nm(t)}の戸口に立ってほしい。` }]);
+      ev = E.askGuard(S, st, t);
+    }
+    const items = [];
+    for (const e of ev) { const x = SP.event(S, st, e); if (x && x.text) items.push({ who: e.by, text: x.text }); }
+    if (v.startsWith('call:') && !ev.some(e => e.t === 'co')) items.unshift({ text: '誰も、すぐには口を開かなかった。何人かが、目を伏せた。' });
+    if (items.length) await say(items);
+    log({ k: 'appeal', v }); save(); debate();
+  }
+  /* 矛盾を突く：あなたが知っていることどうしの食い違いを、皆の前で示す */
+  function clashText(c) {
+    const who = nm(c.who), when = c.night === 0 ? '最初の夜' : dayName(c.night) + 'の夜';
+    if (c.kind === 'trace') return { t: `${who}の報告と、あなたの見た痕跡`, s: `${who}は${when}の現場で「${SP.traceShort(st, c.said)}」を見たと言った。あなたが見た痕跡は「${SP.traceShort(st, c.seen)}」だった。`, say: `${who}。${when}、現場の痕跡は「${SP.traceShort(st, c.said)}」だったと言ったな。わたしはこの目で見た。「${SP.traceShort(st, c.seen)}」だった。` };
+    if (c.kind === 'fig') return { t: `${who}の見た人影と、痕跡`, s: `${who}は${when}、${SP.fig(st, c.said.cat, c.said.val)}を見たと言った。だが現場の痕跡は「${SP.traceShort(st, c.seen)}」を示している。`, say: `${who}は${when}、${SP.fig(st, c.said.cat, c.said.val)}を見たと言った。だが現場には「${SP.traceShort(st, c.seen)}」の痕跡があった。その人影は、どこから来た？` };
+    const by = c.seen.by === 'you' ? 'あなた自身' : nm(c.seen.by);
+    return { t: `${who}のいた場所`, s: `${who}は${when}、${locName(c.said.loc)}にいたと言った。だが${by}は、その夜${who}を${locName(c.seen.loc)}で見ている。`, say: `${who}は${when}、${locName(c.said.loc)}にいたと言った。だが${c.seen.by === 'you' ? 'わたしは' : by + 'は'}、その夜${who}を${locName(c.seen.loc)}で見ている。どちらが本当だ？` };
+  }
+  async function clash() {
+    const L = E.contradictions(S, st);
+    const v = await pickOpt('矛盾を突く', '話の食い違いを、皆の前で示す。嘘をついた者は、たいてい狼か、狼の味方だ。ただし、人が嘘をつくのは狼だからとは限らない。', L.map(c => { const x = clashText(c); return { t: x.t, s: x.s, v: c.id, ic: IC.clash }; }));
+    if (!v) return debate();
+    const c = L.find(x => x.id === v), x = clashText(c);
+    const items = [{ who: 'you', text: x.say }];
+    const t = pup(c.who); if (t) { t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); }
+    for (const e of E.pointOut(S, st, v)) { const y = SP.event(S, st, e); if (y && y.text) items.push({ who: e.by, text: y.text }); }
+    await say(items);
+    log({ k: 'clash', id: v }); save(); debate();
   }
   async function accuse() {
     const id = await pickPerson('誰を名指しする？', '名指しすると、あなたを信じる人がその人を疑いはじめる。外せば、あなたが疑われる。', live().map(p => p.id), { mark: true });
@@ -578,6 +776,30 @@
     }
     let out = r.top[0], lot = false;
     if (r.top.length > 1) { lot = true; out = r.top[Math.floor(Math.random() * r.top.length)]; await say([{ text: `それでも決まらない。くじが引かれ、**${nm(out)}**の名が出た。` }]); }
+    // 回避CO: the one chosen may name a role to escape; then the village votes again
+    if (!(S.dodged && S.dodged[S.day])) {
+      let ev = [];
+      if (out === 'you' && !S.ghost && !S.pl.co && (S.pl.role === 'seer' || S.pl.role === 'medium' || S.pl.role === 'guard')) {
+        const go = await pickOpt('票はあなたに集まった', `${st.roles[S.pl.role].name}だと名乗れば、票が変わるかもしれない。名乗れば、狼にも知られる。`, [{ t: `${st.roles[S.pl.role].name}だと名乗る`, v: 1, ic: IC.point }, { t: '名乗らずに受け入れる', v: 2, ic: IC.vote }]);
+        if (go === 1) { (S.dodged = S.dodged || {})[S.day] = 'you'; $('fx').querySelector('.threads')?.remove(); await say([{ text: '扉へ向かう腕を振りほどいて、あなたは皆に向き直った。' }].concat(comingLines())); ev = [null]; }
+      } else if (out !== 'you') {
+        ev = E.dodge(S, st, out);
+        if (ev.length) {
+          $('fx').querySelector('.threads')?.remove();
+          const items = [];
+          for (const e of ev) { if (e.t === 'dodge') { items.push({ text: `${st.lex.jail}の扉が開けられたとき、**${nm(e.by)}**が声を上げた。`, fx: () => { const t = pup(e.by); if (t) { t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); } } }); continue; } const x = SP.event(S, st, e); if (x && x.text) items.push({ who: e.by, text: x.text }); }
+          await say(items); renderRoster();
+        }
+      }
+      if (ev.length) {
+        await say([{ text: '名乗りを聞いて、もう一度、票が入れ直される。' }]);
+        const p3 = S.ghost ? null : await pickPerson('入れ直しの投票', '名乗りを聞いたうえで、もう一度選ぶ。', live().map(p => p.id), { mark: true }) || pick;
+        r = E.voteRound(S, st, p3, null, null); rounds.push(r);
+        await threads(r.ballots);
+        out = r.top[0]; lot = false;
+        if (r.top.length > 1) { lot = true; out = r.top[Math.floor(Math.random() * r.top.length)]; await say([{ text: `票が割れた。くじが引かれ、**${nm(out)}**の名が出た。` }]); }
+      }
+    }
     $('fx').querySelector('.threads')?.remove();
     E.exile(S, out, rounds, lot);
     if (out === 'you') {
@@ -622,10 +844,10 @@
 
   /* the night */
   async function night() {
-    S.phase = 'night'; hud();
+    S.phase = 'night'; hud(); SND.music('story', .4);
     document.body.classList.add('night'); setScene(st.nightLoc || st.locs[0].id, true); setCast([]);
     SND.windOn(.09);
-    await say([{ text: pickOne(st.text.night) }]);
+    await say([{ text: pickOne(st.text.night) }, vignette()]);
     const act = {};
     const r = S.ghost ? null : S.pl.role;
     if (!S.ghost && S.pl.co) await say([{ text: `あなたは${st.roles[S.pl.role].name}だと名乗った。狼は、名乗った者の戸口を知っている。\n今夜、誰かがあなたを守ってくれるだろうか。` }]);
@@ -659,7 +881,7 @@
 
   /* the end: who they were */
   async function end() {
-    S.phase = 'end'; hud(); save();
+    S.phase = 'end'; hud(); save(); SND.music('story', .85);
     const R = S.result || E.check(S);
     const wolves = S.people.filter(p => p.role === 'wolf');
     document.body.classList.remove('night');
@@ -681,11 +903,19 @@
     }
     const mad = S.people.find(p => p.role === 'madman');
     if (mad) await say([{ text: `狼に心を寄せていた人間——狂人は、**${nm(mad.id)}**だった。` }]);
+    if (st.arc && st.arc.coda) await say([{ text: st.arc.coda }]);
     if (R.win || R.why === 'overrun') await say([{ text: R.win ? st.text.win : st.text.lose }]);
+    if (R.win && st.heroData && st.heroData.epi) await say([{ text: st.heroData.epi }]);
+    if (R.win) {
+      const surv = S.people.filter(p => p.alive && !p.isPlayer && p.role !== 'wolf' && ch(p.id).epi);
+      for (let i = surv.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [surv[i], surv[j]] = [surv[j], surv[i]]; }
+      const ep = surv.slice(0, 4).map(p => ch(p.id).epi);
+      if (ep.length) { setCast(surv.slice(0, 4).map(p => p.id)); await say(ep.map(t => ({ text: t }))); }
+    }
     const sc = E.score(S);
     // the record
     const rr = rec(); const k = st.id; rr[k] = rr[k] || { plays: 0, win: 0, best: '-' };
-    rr[k].plays++; if (R.win) rr[k].win++;
+    rr[k].plays++; if (R.win) { rr[k].win++; if (st.heroId) (rr[k].heroes = rr[k].heroes || {})[st.heroId] = 1; }
     const order = ['S', 'A', 'B', 'C', 'D', '-'];
     if (order.indexOf(sc.rank) < order.indexOf(rr[k].best)) rr[k].best = sc.rank;
     try { localStorage.setItem(REC, JSON.stringify(rr)); } catch (e) {}
@@ -712,7 +942,7 @@
     else if (t === 'ev') B.innerHTML = nbEvidence();
     else if (t === 'say') B.innerHTML = nbSay();
     else B.innerHTML = nbVotes();
-    B.querySelectorAll('.marks button').forEach(b => b.onclick = () => { const id = b.dataset.id, m = b.dataset.m; S.pl.notes[id] = S.pl.notes[id] === m ? '' : m; save(); renderNb(); if (S.phase === 'invest') hub(); });
+    B.querySelectorAll('.marks button').forEach(b => b.onclick = () => { const id = b.dataset.id, m = b.dataset.m; S.pl.notes[id] = S.pl.notes[id] === m ? '' : m; save(); renderNb(); renderRoster(); if (S.phase === 'invest') hub(); });
   }
   function nbPeople() {
     const D = E.DIFF[S.diff];
@@ -724,7 +954,7 @@
       const fit = D.assist ? E.fitsTraces(S, p.id) : null;
       const chips = cats.map(cat => { let cls = ''; if (fit) { const hits = S.pl.found.map(k => k.split('|').map(Number)).filter(([ni, ti]) => S.nights[ni].traces[ti].cat === cat); if (hits.length) { const ok = hits.every(([ni, ti]) => { const tr = S.nights[ni].traces[ti]; return tr.neg ? p.traits[cat] !== tr.val : p.traits[cat] === tr.val; }); cls = ok ? ' hit' : ' miss'; } } return `<span class="chip${cls}">${esc(SP.trait(st, cat, p.traits[cat]))}</span>`; }).join('');
       const mine = S.pl.res.filter(r => r.target === p.id).map(r => `<span class="chip ${r.res === 'wolf' ? 'w' : 'h'}">${r.test ? '銀' : r.seer ? '占' : '霊'}：${r.res === 'wolf' ? '人狼' : '人間'}</span>`).join('');
-      const cl = claim ? `<span class="chip role">${esc(SP.roleName(st, claim.role))}を名乗る</span>` + claim.res.map(r => `<span class="chip">→${esc(nm(r.target))}：${r.res === 'wolf' ? '人狼' : '人間'}</span>`).join('') : '';
+      const cl = claim ? `<span class="chip role">${esc(SP.roleName(st, claim.role))}を名乗る</span>` + claim.res.map(r => `<span class="chip">→${esc(nm(r.target))}：${r.res === 'guard' ? '守った' : r.res === 'wolf' ? '人狼' : '人間'}</span>`).join('') : '';
       const sec = p.secret && p.secret.open ? `<div class="li" style="border:0;padding-bottom:0"><span class="src">秘密</span> ${esc(c.secret.confess.slice(0, 46))}…</div>` : '';
       const m = S.pl.notes[p.id] || '';
       return `<div class="card"><div class="who-row${p.alive ? '' : ' gone'}">${bust(p.id)}<div style="flex:1;min-width:0"><div class="nm">${esc(c.name)}<small>${esc(c.job)}${st2 ? '・' + st2 : ''}</small></div><div class="chips">${chips}</div>${cl || mine ? `<div class="chips">${cl}${mine}</div>` : ''}</div><div class="marks"><button data-id="${p.id}" data-m="h" class="h${m === 'h' ? ' on' : ''}" aria-label="白">白</button><button data-id="${p.id}" data-m="g" class="g${m === 'g' ? ' on' : ''}" aria-label="灰">灰</button><button data-id="${p.id}" data-m="w" class="w${m === 'w' ? ' on' : ''}" aria-label="黒">黒</button></div></div>${sec}</div>`;
@@ -753,7 +983,7 @@
   function nbSay() {
     let h = '';
     const L = (S.pl.log || []).filter(x => x.k === 'night' || x.k === 'op' || x.k === 'about' || x.k === 'secret');
-    const claims = S.claims.map(c => `<div class="li"><b>${esc(nm(c.by))}</b>　${esc(SP.roleName(st, c.role))}を名乗る（${dayName(c.day)}）${c.res.length ? '<br>' + c.res.map(r => `${esc(nm(r.target))}：${r.res === 'wolf' ? '<b>人狼</b>' : '人間'}`).join('　') : ''}</div>`).join('');
+    const claims = S.claims.map(c => `<div class="li"><b>${esc(nm(c.by))}</b>　${esc(SP.roleName(st, c.role))}を名乗る（${dayName(c.day)}）${c.res.length ? '<br>' + c.res.map(r => `${esc(nm(r.target))}：${r.res === 'guard' ? '守った' : r.res === 'wolf' ? '<b>人狼</b>' : '人間'}`).join('　') : ''}</div>`).join('');
     h += `<div class="nh">名乗り出た人</div>` + (claims || '<div class="li"><span class="src">まだいない</span></div>');
     h += `<div class="nh">聞いた話</div>`;
     const rows = L.slice().reverse().map(x => {
@@ -779,7 +1009,7 @@
       <div class="promise"><b>一、痕跡は嘘をつかない</b>現場に残った足跡・匂い・手の跡は、その夜に襲った人狼のもの。外れることはない。</div>
       <div class="promise"><b>二、物は嘘をつくことがある</b>現場に落ちていた持ち物は、本当に落としたのかもしれないし、狼が罪をなすりつけるために置いたのかもしれない。</div>
       <div class="promise"><b>三、人間は他人のことで嘘をつかない</b>人間が見たと言う人影や人の姿は本当のこと。ただし、秘密を隠すために自分がどこにいたかは偽ることがある。人狼と狂人は何でも偽る。</div>
-      <p><b>一日の流れ</b>　朝：夜の出来事 → 昼：場所を調べる・話を聞く（行動は1日3回、村人は4回）→ 集会：痕跡を示す・名乗る・聞き取り・名指し → 投票 → 夜：役の力を使う。</p>
+      <p><b>一日の流れ</b>　朝：夜の出来事 → 昼：場所を調べる・話を聞く（行動は1日3回、村人は4回）→ 集会：痕跡を示す・名乗る・聞き取り・名指し・呼びかけ・矛盾を突く → 投票 → 夜：役の力を使う。</p>
       <p><b>推理手帳</b>（右上の帳面）に、人物の特徴・痕跡・証言・投票が自動で書きとめられる。白・灰・黒の印は自分用のメモ。</p>
       <div class="foot"><button class="btn pri" data-x>${first ? '幕を開ける' : '閉じる'}</button></div>`, box => box.querySelectorAll('[data-x]').forEach(b => b.onclick = () => closeSheet(true)));
   }
@@ -790,12 +1020,14 @@
       <div class="set-row"><span>動き</span>${seg('anim', [[true, 'あり'], [false, 'なし']])}</div>
       <div class="set-row"><span>人形の名札</span>${seg('names', [[true, 'いつも'], [false, '話すとき']])}</div>
       <div class="set-row"><span>音</span><div class="seg" data-k="snd"><button data-v="1" class="${SND.on ? 'on' : ''}">あり</button><button data-v="0" class="${SND.on ? '' : 'on'}">なし</button></div></div>
+      <div class="set-row"><span>音楽</span><div class="seg" data-k="bgm"><button data-v="1" class="${SND.musicOn ? 'on' : ''}">あり</button><button data-v="0" class="${SND.musicOn ? '' : 'on'}">なし</button></div></div>
+      <div class="set-row"><span>話し声</span><div class="seg" data-k="talk"><button data-v="1" class="${SND.talkOn ? 'on' : ''}">あり</button><button data-v="0" class="${SND.talkOn ? '' : 'on'}">なし</button></div></div>
       ${S && G.scr === 'play' ? '<div class="foot" style="justify-content:flex-start"><button class="btn" data-quit>この物語をやめてタイトルへ</button></div>' : ''}
       <div class="foot"><button class="btn pri" data-x>閉じる</button></div>`, box => {
       box.querySelectorAll('[data-x]').forEach(b => b.onclick = () => closeSheet());
       box.querySelectorAll('.seg').forEach(s => s.querySelectorAll('button').forEach(b => b.onclick = () => {
         const k = s.dataset.k, v = b.dataset.v;
-        if (k === 'snd') SND.set(v === '1'); else pref[k] = v === 'true' ? true : v === 'false' ? false : +v;
+        if (k === 'snd') SND.set(v === '1'); else if (k === 'bgm') SND.setMusic(v === '1'); else if (k === 'talk') SND.setTalk(v === '1'); else pref[k] = v === 'true' ? true : v === 'false' ? false : +v;
         savePref(); s.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
         document.body.classList.toggle('anim-off', !pref.anim); document.body.classList.toggle('show-names', !!pref.names);
       }));
@@ -809,9 +1041,10 @@
   /* ---------- resume ---------- */
   async function resume() {
     const sv = loadSave(); if (!sv) return;
-    st = story(sv.story); S = sv.S; G.storyId = st.id; G.diff = S.diff;
+    S = sv.S; st = withHero(sv.story, S.hero); S.req = S.req || { divine: {}, guard: null, hide: false, calls: {} }; G.storyId = st.id; G.diff = S.diff;
     scr('play'); palette(st); hud();
     const ph = S.phase;
+    SND.music(ph === 'meeting' || ph === 'vote' ? 'meeting' : 'story', ph === 'night' ? .4 : 1);
     if (ph === 'prologue') return prologue();
     if (S.ghost && (ph === 'morning' || ph === 'invest')) return ghostDay();
     if (ph === 'morning') { S.phase = 'invest'; G.loc = (S.nights[S.nights.length - 1] || {}).loc || st.locs[0].id; return hub(); }

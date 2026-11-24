@@ -9,7 +9,7 @@ const only = process.argv.slice(2).find(a => !a.startsWith('--'));
 const ACTS = ['hello', 'home', 'fig', 'who', 'none', 'sus', 'nosus', 'okay', 'bad', 'seen', 'co_seer', 'co_medium', 'rs_w', 'rs_h', 'rm_w', 'rm_h', 'report', 'item', 'accuse', 'agree', 'defend', 'grief', 'deny', 'counter', 'thanks'];
 const CLICHE = ['背筋が凍', '血の気が引', '息を呑ん', '静寂が支配', '闇に包まれ', '不穏な空気', '戦慄が走', '嫌な予感', '心臓が早鐘', '悪寒が走', '凍りつい', '時が止まった'];
 const TELL = ['恐ろしい', '恐怖', '不気味', '悲しい', '怖かった', '怖い', '寂しい', 'ぞっと', '戦慄'];
-const SENSE = /吹雪|息|燭|炭|靴|跡|音|匂|香|冷た|温|白|黒|赤|光|灯|湯気|雪|雨|風|霜|煤|湿|濡|鳴|響|揺|軋|きし|ぬく|凍|潮|波|火|煙|錆|鉄|硝子|銀|真鍮|木|石|砂|泥|毛|爪/;
+const SENSE = /吹雪|息|燭|炭|靴|跡|音|匂|香|冷た|温|白|黒|赤|光|灯|湯気|雪|雨|風|霜|煤|湿|濡|鳴|響|揺|軋|きし|ぬく|凍|潮|波|火|煙|錆|鉄|硝子|銀|真鍮|木|石|砂|泥|毛|爪|紙|インク|墨|針|糸|指|青銅|花|色|湯呑|鎖|網|線香/;
 const sents = s => (String(s).replace(/\{\w+\}/g, '〇').match(/[^。！？\n]+[。！？」』]*/g) || []).map(x => x.trim()).filter(Boolean);
 const ending = s => { const b = s.replace(/[。！？」』]+$/, ''); return b.slice(-2); };
 let fail = 0;
@@ -44,15 +44,18 @@ function scoreStory(st) {
   for (const l in T.discover || {}) T.discover[l].forEach((t, i) => fixed.push(['discover.' + l + i, t]));
   st.locs.forEach(l => { fixed.push(['loc.' + l.id, l.desc]); l.none.forEach((t, i) => fixed.push(['none.' + l.id + i, t])); });
   st.items.forEach(it => fixed.push(['item.' + it.id, it.found + it.desc + (it.use || '')]));
+  for (const e of Object.values((st.arc || {}).days || {}).flat()) for (const k of ['t', 'n']) if (e[k]) fixed.push(['arc/' + k, e[k]]);
+  for (const e of T.prologue || []) if (e.n) fixed.push(['arc/pn', e.n]);
+  if ((st.arc || {}).coda) fixed.push(['arc.coda', st.arc.coda]);
   for (const [k, t] of fixed) for (const n of names) if (t.includes(n)) add(8, `${k}：配役が変わるのに「${n}」を名指ししている`);
   // a character's own lines naming another character: allowed (they live there), but only a few
   let cross = 0; for (const c of st.chars) for (const f of ['intro', 'last', 'note', 'wolf']) for (const n of names) if (n !== c.name && String(c[f]).includes(n)) cross++;
   if (cross > 5) add(2 * (cross - 5), `人物のせりふが他の人物を${cross}回名指し`);
   // 3. placeholders
   const allow = { discover: /\{(victim|note)\}/g, peace: /\{loc\}/g, exile: /\{name\}/g, prologue: /\{(first|firstNote)\}/g, role: /\{roleHow\}/g };
-  for (const [k, t] of fixed) { const ph = (t.match(/\{\w+\}/g) || []); const kk = k.replace(/[.\d].*$/, '').replace(/\d+$/, ''); const ok = allow[kk]; for (const p of ph) if (!ok || !p.match(new RegExp(ok.source))) if (!/^item/.test(k) || !/\{(loc|name)\}/.test(p)) add(5, `${k}：置き換えられない ${p}`); }
+  for (const [k, t] of fixed) { const ph = (t.match(/\{\w+\}/g) || []); const kk = k.replace(/[.\d].*$/, '').replace(/\d+$/, ''); const ok = allow[kk]; for (const p of ph) if (!ok || !p.match(new RegExp(ok.source))) if ((!/^item/.test(k) || !/\{(loc|name)\}/.test(p)) && !/^arc/.test(k)) add(5, `${k}：置き換えられない ${p}`); }
   // 4. prose quality over all the narration and the characters' own lines
-  const prose = fixed.map(x => x[1]).concat(st.chars.flatMap(c => [c.profile, c.intro, c.last, c.note, c.wolf, c.secret && c.secret.confess, c.secret && c.secret.clue]).filter(Boolean));
+  const prose = fixed.map(x => x[1]).concat(st.chars.flatMap(c => [c.profile, c.intro, c.last, c.note, c.wolf, c.secret && c.secret.confess, c.secret && c.secret.clue]).filter(Boolean)).concat(narrLines(st).map(l => l[1]));
   const all = prose.join('\n');
   let long = 0; for (const t of prose) for (const s of sents(t)) if (s.length > 72) long++;
   if (long) add(Math.min(15, long * 1.5), `長すぎる文（72字超）${long}`);
@@ -70,7 +73,7 @@ function scoreStory(st) {
   // 5. voice: the first person and the register of each character's own lines
   for (const c of st.chars) {
     const V = W.WL_VOICES[c.voice]; if (!V) { add(8, `${c.name}：声 ${c.voice} がない`); continue; }
-    const lines = [c.intro, c.last, c.wolf, c.secret && c.secret.confess].filter(Boolean).join('');
+    const lines = [c.intro, c.last, c.wolf, c.secret && c.secret.confess].concat(narrLines(st).filter(l => l[0] === c.id).map(l => l[1])).filter(Boolean).join('');
     const fps = ['わし', 'わたし', 'わたくし', 'おれ', 'あたし', '僕', 'ぼく', '私', '手前'];
     const used = fps.filter(f => new RegExp(f === '私' ? '私(?!たち)' : f).test(lines.replace(/わたし/g, f === 'わし' ? '' : 'わたし')));
     const same = { '私': ['わたし'], 'わたし': ['私'], '手前': ['あたし'] };
@@ -110,12 +113,126 @@ function scoreVoices() {
   return { score: Math.max(0, 100 - ded.reduce((a, d) => a + d[0], 0)), ded };
 }
 
+// 物語の厚み（2026-11-25 ユーザー指摘：ゲームに必要な情報だけが続き、物語の展開を感じない）
+// 序幕の積み上げ・日ごとの本筋（謎と伏線の回収）・幕間（人物どうしの場面）・絆と喪失・夜の点景・後日談・1日あたりの物語の量を測る
+const MECH = /投票|占い|占っ|霊媒|役職|行動を|痕跡|証言|集会で|名指し|人狼が\d/;
+function lineOf(e) { return e.alt ? Object.values(e.alt) : []; }
+function scoreNarr(st) {
+  const ded = [], add = (n, why) => ded.push([n, why]);
+  const T = st.text || {}, ids = st.chars.map(c => c.id), name = id => (st.chars.find(c => c.id === id) || {}).name || id;
+  // P 序幕：殺人の前に、場所と人と暮らしを見せる
+  const P = T.prologue || [];
+  if (P.length < 9) add((9 - P.length) * 3, `序幕が${P.length}頁（9頁以上）`);
+  const kill = P.findIndex(p => /\{first\}/.test(p.t || ''));
+  if (kill >= 0 && kill < 6) add(8, `序幕の${kill + 1}頁目でもう事件が起きる（7頁目以降に）`);
+  const castLines = P.filter(p => p.by).length;
+  if (castLines < 4) add((4 - castLines) * 3, `序幕で人物が話す場面 ${castLines}（4以上）`);
+  // A 本筋：日ごとに進む謎、伏線と回収、結末で明かす答え
+  const A = st.arc || {};
+  if (!A.mystery) add(10, '本筋の謎（arc.mystery）がない');
+  if (!A.coda) add(8, '本筋の答え（arc.coda）がない');
+  const days = A.days || {};
+  for (let d = 1; d <= 5; d++) { const e = days[d] || []; if (!e.length) add(6, `${d}日目の本筋がない`); else if (e.length < 2) add(2, `${d}日目の本筋が1場面だけ`); }
+  const all = Object.values(days).flat();
+  const voiced = all.filter(e => e.by); if (voiced.length < 10) add(10 - voiced.length, `本筋で人物が話す場面 ${voiced.length}（10以上）`);
+  for (const e of voiced) { if (e.by.length < 2) add(1, `本筋の台詞に代わりの話し手がいない：${e.by.join(',')}`); for (const id of e.by) if (!(e.alt || {})[id]) add(2, `本筋の台詞 ${id} の文がない`); if (!e.n) add(1, '本筋の台詞に、話し手がいないときの地の文がない'); }
+  const len = all.reduce((a, e) => a + (e.t || '').length + Math.max(0, ...lineOf(e).map(x => x.length)), 0);
+  if (len < 2600) add(Math.ceil((2600 - len) / 100), `本筋の分量 ${len}字（2600字以上）`);
+  const setups = new Set(all.filter(e => e.setup).map(e => e.setup).concat((P.filter(p => p.setup).map(p => p.setup))));
+  const pays = new Set(all.filter(e => e.pay).flatMap(e => [].concat(e.pay)).concat(A.payInCoda || []));
+  if (setups.size < 4) add((4 - setups.size) * 3, `伏線 ${setups.size}（4以上）`);
+  for (const x of setups) if (!pays.has(x)) add(4, `回収されない伏線「${x}」`);
+  for (const x of pays) if (!setups.has(x)) add(2, `仕込みのない回収「${x}」`);
+  // I 幕間：人物どうしの場面
+  const I = st.inter || [];
+  if (I.length < 18) add((18 - I.length) * 2, `幕間 ${I.length}（18以上）`);
+  const cnt = {}; I.forEach(x => x.need.forEach(id => cnt[id] = (cnt[id] || 0) + 1));
+  for (const id of ids) if ((cnt[id] || 0) < 2) add(2, `${name(id)} の出る幕間が ${cnt[id] || 0}（2以上）`);
+  const grief = I.filter(x => x.dead && x.dead.length); if (grief.length < 5) add((5 - grief.length) * 3, `誰かを失ったあとの幕間 ${grief.length}（5以上）`);
+  for (const x of I) {
+    if (x.lines.length < 3 || x.lines.length > 10) add(1, `幕間 ${x.id} の長さ ${x.lines.length}行`);
+    for (const [w] of x.lines) if (w && !x.need.includes(w)) add(3, `幕間 ${x.id}：出られない ${w} が話す`);
+    const spk = new Set(x.lines.filter(l => l[0]).map(l => l[0])); if (!spk.size) add(2, `幕間 ${x.id}：誰も話さない`);
+  }
+  // B 絆：その人を失ったとき、誰が何と言うか
+  for (const c of st.chars) if (!(c.bond || []).length) add(2, `${c.name}：絆（bond）がない`);
+  for (const c of st.chars) for (const b of c.bond || []) { if (!ids.includes(b.with)) add(2, `${c.name}：絆の相手 ${b.with} がいない`); if (!b.grief) add(2, `${c.name}：${b.with} を失ったときの言葉がない`); }
+  // Q 人物の個性（2026-11-25 ユーザー：キャラクター個別の特性を強調）：癖・こだわり（quirk）と、その人らしさの合図の言葉（sig）が、
+  //   本人のせりふ・幕間・本筋・夜の点景にくり返し現れること
+  for (const c of st.chars) {
+    if (!c.quirk) { add(2, `${c.name}：癖・こだわり（quirk）がない`); continue; }
+    const sig = [].concat(c.sig || []); if (!sig.length) { add(2, `${c.name}：合図の言葉（sig）がない`); continue; }
+    const mine = [c.intro, c.last, c.vign, c.epi].concat((c.bond || []).map(b => b.grief)).concat((st.inter || []).flatMap(x => x.lines.filter(l => l[0] === c.id || (!l[0] && x.need.includes(c.id))).map(l => l[1]))).concat(Object.values((st.arc || {}).days || {}).flat().map(e => (e.alt || {})[c.id])).filter(Boolean);
+    const hits = mine.filter(t => sig.some(w => t.includes(w))).length;
+    if (hits < 4) add((4 - hits) * 1.5, `${c.name}：その人らしさ（${sig.join('・')}）の出る場面 ${hits}（4以上）`);
+  }
+  // V 夜の点景、E 後日談
+  for (const c of st.chars) { if (!c.vign) add(1, `${c.name}：夜の点景がない`); if (!c.epi) add(1, `${c.name}：後日談がない`); }
+  // D 1日あたりの物語の量（日の書き出し＋本筋＋幕間2つ＋夜の点景）
+  const avgI = I.length ? I.reduce((a, x) => a + x.lines.reduce((b, l) => b + l[1].length, 0), 0) / I.length : 0;
+  const avgV = st.chars.reduce((a, c) => a + (c.vign || '').length, 0) / st.chars.length;
+  for (let d = 1; d <= 4; d++) {
+    const e = days[d] || [];
+    const n = (T.day[d - 1] || '').length + e.reduce((a, x) => a + (x.t || '').length + Math.max(0, ...lineOf(x).map(y => y.length)), 0) + avgI * 2 + avgV;
+    if (n < 480) add(Math.ceil((480 - n) / 40), `${d}日目の物語の量 ${Math.round(n)}字（480字以上）`);
+  }
+  // M 物語の文にゲームの仕組みの言葉が出すぎない
+  const story = all.flatMap(e => [e.t || '', e.n || ''].concat(lineOf(e))).concat(I.flatMap(x => x.lines.map(l => l[1]))).join('\n');
+  const mech = (story.match(new RegExp(MECH.source, 'g')) || []).length;
+  if (mech > 3) add(mech - 3, `物語の文に仕組みの言葉 ${mech}`);
+  return { score: Math.max(0, Math.round(100 - ded.reduce((a, d) => a + d[0], 0))), ded };
+}
+// story text that the prose checks also read (the voiced lines checked against each speaker's voice)
+// 8. the heroes: every story has many "you"s, each with a way in, a thread of their own, and an ending
+function scoreHeroes(base) {
+  const ded = [], add = (n, why) => ded.push([n, why]);
+  const H = base.heroes || [];
+  if (H.length < 6) add((6 - H.length) * 8, `主人公 ${H.length}人（6人以上）`);
+  const jobs = H.map(h => h.job);
+  const homes = new Set(H.map(h => h.home)); if (homes.size < 3) add(4, `主人公の居場所が${homes.size}か所しかない（3以上）`);
+  const tr = new Set(H.map(h => JSON.stringify(h.traits))); if (tr.size < H.length) add(4, '特徴がまったく同じ主人公がいる');
+  for (const h of H) {
+    for (const f of ['id', 'job', 'you', 'book', 'pitch', 'home', 'traits', 'intro', 'open', 'close', 'win', 'epi']) if (!h[f]) add(5, `${h.job}：${f} がない`);
+    for (const r of ['villager', 'guard']) if (!(h.how || {})[r]) add(3, `${h.job}：役 ${r} の由来がない`);
+    const own = Object.values(h.arc || {}).flat(); if (own.length < 2) add(4, `${h.job}：自分の糸（本筋の自分の場面）が${own.length}（2以上）`);
+    if (!base.locs.some(l => l.id === h.home)) add(6, `${h.job}：居場所がない`);
+    for (const c of ['height', 'hand', 'foot', 'mark']) if (!h.traits || !base.traits[c].v[h.traits[c]]) add(6, `${h.job}：特徴 ${c} が物語にない値`);
+    if (String(h.pitch).length > 48) add(2, `${h.job}：紹介が長い（${h.pitch.length}/48字）`);
+    // the hero's own words: same prose rules
+    const T = [h.intro, h.open, h.close, h.win, h.epi].concat(own.map(e => e.t)).filter(Boolean);
+    let long = 0; for (const t of T) for (const x of sents(t)) if (x.length > 72) long++; if (long) add(long * 1.5, `${h.job}：長すぎる文 ${long}`);
+    for (const c of CLICHE) if (T.join('').includes(c)) add(4, `${h.job}：使い古された言い回し「${c}」`);
+    const flat = T.filter(t => !SENSE.test(t)); if (flat.length > 1) add(flat.length, `${h.job}：五感の手ざわりのない文 ${flat.length}`);
+    if (!/\{book\}|\n/.test('') && !T.some(t => t.includes(h.book))) add(2, `${h.job}：書きつけるもの「${h.book}」が自分の文に一度も出ない`);
+    // the shared story, seen as this hero: no other hero's job, and no hole left
+    const st = W.WLHero.apply(base, h.id);
+    const shared = JSON.stringify(Object.assign({}, st, { heroes: null, heroData: null, hero: null }));
+    const left = shared.match(/\{(job|you|book)\}/g); if (left) add(5, `${h.job}：置き換え漏れ ${left[0]}`);
+    for (const j of jobs) if (j !== h.job && !h.job.includes(j) && shared.includes(j) && !/^(先生|医者|学生)$/.test(j)) add(4, `${h.job}で遊ぶと、ほかの主人公の肩書き「${j}」が出てくる`);
+  }
+  // each hero must score on the story's own rubrics too
+  let worst = 100, wn = '';
+  for (const h of H) { const st = W.WLHero.apply(base, h.id); const a = scoreStory(st).score, b = scoreNarr(st).score; if (Math.min(a, b) < worst) { worst = Math.min(a, b); wn = h.job; } }
+  if (worst < 90) add(90 - worst, `${wn}で遊んだときの文章・物語の点が ${worst}`);
+  return { score: Math.max(0, Math.round(100 - ded.reduce((a, d) => a + d[0], 0))), ded };
+}
+
+function narrLines(st) {
+  const out = [];
+  const A = st.arc || {};
+  for (const e of Object.values(A.days || {}).flat().concat(st.text.prologue || [])) for (const id in e.alt || {}) out.push([id, e.alt[id]]);
+  for (const x of st.inter || []) for (const l of x.lines) out.push(l);
+  for (const c of st.chars) { for (const b of c.bond || []) out.push([c.id, b.grief]); if (c.vign) out.push([null, c.vign]); if (c.epi) out.push([null, c.epi]); }
+  return out;
+}
+
 // 7. lines put together in play: run games and render what people say
 function composed() {
   const E = W.WLEngine, SP = W.WLSpeech, bad = [], samples = [];
   for (const id of Object.keys(W.WL_STORIES)) {
-    const st = W.WL_STORIES[id];
+    const H = W.WL_STORIES[id].heroes || [];
     for (let g = 0; g < 12; g++) {
+      const st = W.WLHero.apply(W.WL_STORIES[id], H.length ? H[g % H.length].id : null);
       const S = E.newGame(st, { diff: g % 4, seed: 77 + g });
       for (let d = 1; d < 5 && !S.result; d++) {
         E.npcSearch(S, st);
@@ -141,10 +258,16 @@ function composed() {
 const BAR = 90;
 for (const id of Object.keys(W.WL_STORIES)) {
   if (only && only !== id && only !== 'voices') continue;
-  const st = W.WL_STORIES[id], r = scoreStory(st);
+  const base = W.WL_STORIES[id], st = W.WLHero.apply(base, null), r = scoreStory(st);
   if (r.score < BAR) fail++;
   console.log(`${r.score >= BAR ? 'OK ' : 'NG '} ${String(r.score).padStart(3)}  ${st.title}`);
   if (show || r.score < BAR) for (const [n, w] of r.ded) console.log(`      -${n}  ${w}`);
+  const q = scoreNarr(st); if (q.score < BAR) fail++;
+  console.log(`${q.score >= BAR ? 'OK ' : 'NG '} ${String(q.score).padStart(3)}  ${st.title}（物語の厚み）`);
+  if (show || q.score < BAR) for (const [n, w] of q.ded) console.log(`      -${n}  ${w}`);
+  const hq = scoreHeroes(base); if (hq.score < BAR) fail++;
+  console.log(`${hq.score >= BAR ? 'OK ' : 'NG '} ${String(hq.score).padStart(3)}  ${st.title}（主人公 ${(base.heroes || []).length}人）`);
+  if (show || hq.score < BAR) for (const [n, w] of hq.ded) console.log(`      -${n}  ${w}`);
 }
 if (!only || only === 'voices') { const v = scoreVoices(); if (v.score < BAR) fail++; console.log(`${v.score >= BAR ? 'OK ' : 'NG '} ${String(v.score).padStart(3)}  声（voices.js）`); if (show || v.score < BAR) for (const [n, w] of v.ded) console.log(`      -${n}  ${w}`); }
 { const c = composed(); const sc = Math.max(0, 100 - c.bad.length * 2); if (sc < BAR) fail++; console.log(`${sc >= BAR ? 'OK ' : 'NG '} ${String(sc).padStart(3)}  組み立てたせりふ（崩れ ${c.bad.length}件）`); if (show || sc < BAR) c.bad.slice(0, 20).forEach(x => console.log('      ' + x)); if (process.argv.includes('--samples')) c.samples.forEach(x => console.log('  · ' + x)); }
