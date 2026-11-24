@@ -1966,9 +1966,16 @@ async function puzzleMove(m) {
     await sleep(moveDur(res.move, b2));
     if (puzzle !== Pz) return;
     Pz.busy = false;
-    if (statusAt(cur).over) { Pz.state = 'fail'; playChime(false); renderPuzzleCard(); pzStatus(`<b class="ng">${t('pz.fail')}</b> ${PZBook.t('outOfMoves', { n: Pz.n })}`); return; }
+    if (statusAt(cur).over) { Pz.state = 'fail'; playChime(false); if (window.CheckersPzWhy) { lessonMarks = []; markMove(b2, res.move, 'ng'); update(false); } renderPuzzleCard(); pzStatus(`<b class="ng">${t('pz.fail')}</b> ${window.CheckersPzWhy ? CheckersPzWhy.say(LANG, CheckersPzWhy.why(E, b2, res.move), null, 0, 0) + ' ' : ''}${PZBook.t('outOfMoves', { n: Pz.n })}`); return; }
+    // (2026-11-24 追42・追20) the reply as a red arrow and its fact on the board (checkers/pzwhy.js), then whether the goal is still
+    // reachable in the moves left (the solver) — not only 「正解手順から外れました」
+    const W = window.CheckersPzWhy, w = W ? W.why(E, b2, res.move) : null, left2 = Pz.n - Pz.used;
+    lessonMarks = []; markMove(b2, res.move, 'ng'); update(false);
+    const L2 = w ? await mateReq(left2) : null;
+    if (puzzle !== Pz) return;
+    const reach = (L2 || []).some(x => x.need > 0 && x.need <= left2);
     renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay());
-    pzStatus(`<b class="ng">${t('pz.stray')}</b> ${PZBook.t('movesLeft', { n: Pz.n - Pz.used })}`);
+    pzStatus(w ? W.say(LANG, w, reach, left2, Pz.goal === 'gain' ? Pz.g : 0) : PZBook.t('movesLeft', { n: left2 }));
     return;
   }
   pzStatus(t('pz.good'));

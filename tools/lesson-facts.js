@@ -74,6 +74,8 @@ const CHECKS = {
       } else if (P.q === 'shots') { const v = P.qv || {}; if (Math.abs(Math.round(v.n / 36 * 100) - v.p) > 1) bad(G, id, `${w}: ${v.n} of 36 is not ${v.p}%`);
         const o = P.opts[P.ans]; if ((Array.isArray(o) ? o[1] : o) !== v.n) bad(G, id, `${w}: the right answer is not ${v.n}`); }
     }));
+    // (2026-11-24 第2期・担当A) the strict ①〜⑨・追22・追23・追40 of the choice questions (shots・race) — tools/lesson-verify-bg.js
+    require('./lesson-verify-bg.js')().forEach(fa => bad(G, String(LS.steps.findIndex(s => s.id === fa.step)), `${fa.step} q${fa.q}: ${fa.msg}`));
   },
   // (2026-11-22 lesson loop) the reversi openings ('reversi/open', key = the line's moves): every line replays legally from the start
   // (a side with no move passes), the 3D guide's fixed words hold — the first move is f5 (「4か所どこに打っても同じ形」), the second
@@ -98,9 +100,7 @@ const CHECKS = {
   // table asks it — tools/lesson-verify-bgopen.js. The opening rolls that are also a problem of the lessons オープニング①② (one start
   // position per roll: ⑤) are listed as pending, not failed, until they are made into other problems (claude/lesson-quality.md 進み具合)
   'backgammon/open'() {
-    const PEND = new Set(['o31', 'o42', 'o53', 'o61', 'o21', 'o41', 'o51', 'o62', 'o64', 'o65']), pend = [];
-    require('./lesson-verify-bgopen.js')().forEach(fa => { if (PEND.has(fa.step) && /^⑤ the same position and roll as lesson open[12] /.test(fa.msg)) pend.push(`${fa.step} q${fa.q}: ${fa.msg}`); else bad('backgammon/open', fa.step, `q${fa.q}: ${fa.msg}`); });
-    if (pend.length && !process.env.C4_QUIET) console.log(`backgammon/open: ${pend.length} pending (⑤ the same as a lesson problem):\n  ` + pend.join('\n  '));
+    require('./lesson-verify-bgopen.js')().forEach(fa => bad('backgammon/open', fa.step, `q${fa.q}: ${fa.msg}`));   // (the pending ones are printed, not failed)
   },
   // (2026-11-22 lesson loop) the gomoku openings (珠型, 'gomoku/open'): the line replays legally under renju (no forbidden black move,
   // no stone on a stone), every practice position loads, and its best answer is a legal move — not a black forbidden point, and when
@@ -119,6 +119,8 @@ const CHECKS = {
         if (!mine.length && theirs.length && !theirs.includes(best)) bad(G, g.id, `problem ${j}: the opponent has a four but the best answer ${sc[0][0]} does not stop it`);
       });
     });
+    // (2026-11-24 第2期・担当B) the verified openings (openings.json verified): the strict ①〜⑨ — tools/lesson-verify-gmopen.js
+    require('./lesson-verify-gmopen.js')().forEach(fa => bad(G, fa.step, `q${fa.q}: ${fa.msg}`));
   },
   // (2026-11-23 lesson loop) the gomoku lessons ('gomoku', key = the step's index): every position loads (rule: the problem's, else renju),
   // every answer point is empty, and what the step's words (atlas/lessons3d.js gmLsJa) say the answer does holds with the engine's exact
