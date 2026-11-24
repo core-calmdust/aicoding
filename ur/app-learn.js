@@ -217,9 +217,10 @@ function renderLessonCard() {
   else pr = `<p>${esc(it.kind === 'choice' ? (LL(it.q) || UI(D, 'qChoice')) : (it.q ? LL(it.q) : UI(D, 'qMove', { n: it.n })))}</p>`;
   $('#lsPrompt').innerHTML = pr;
   const ch = $('#lsChoices');
-  if (!ramp && it.kind === 'choice') {
+  if (it.kind === 'choice') {   // (2026-11-24 追24: the warm-up's question with choices too — not scored, a miss can be tried again)
     ch.innerHTML = it.opts.map((o, i) => `<button data-i="${i}" class="${lesson.done && i === it.ans ? 'ok' : ''}">${esc(LL(o))}</button>`).join('');
     ch.onclick = e => { const b = e.target.closest('button'); if (!b || lesson.done) return; const i = +b.dataset.i;
+      if (i === it.ans && ramp) { lesson.done = true; snd('ok'); fb(`<b class="ok">${esc(UI(D, 'rampGood'))}</b> ${esc(LL(it.g))}`); renderLessonCard(); return; }
       if (i === it.ans) { lesson.done = true; const pts = score(); lesson.scores[lesson.i] = pts; snd('ok'); fb(`<b class="ok">${esc(UI(D, 'correct'))}</b> ${esc(MSG(D, it.why))} <b>${esc(UI(D, 'score', { n: pts }))}</b>`); renderLessonCard(); if (window.CardBar) CardBar.autoNext({ ok: () => lesson && lesson.done, btn: '#lsNext', ms: 1800 }); }
       else { lesson.wrong = true; b.classList.add('ng'); snd('ng'); fb(`<b class="ng">${esc(UI(D, 'wrong'))}</b> ${esc(it.ngo && it.ngo[i] ? MSG(D, it.ngo[i]) + ' ' + UI(D, 'rampRetry') : UI(D, 'rampRetry'))}`); } };   // (2026-11-24: why the choice is wrong — ngo)
   } else { ch.innerHTML = ''; ch.onclick = null; }
