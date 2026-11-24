@@ -21,9 +21,11 @@ const completable = (it, id) => {
   assert(it.n != null && it.s && Array.isArray(it.ok) && it.ok.length, 'move problem without a throw / answer: ' + id);
   const ms = E.legalMoves(C.unpack(it.s), it.n); assert(it.ok.some(a => ms.some(m => m.from === a[0] && m.to === a[1])), 'answer cannot be played: ' + id);
 };
-const moveItem = (it, id, scored) => {
+const opt = (o, w) => typeof o === 'string' ? assert(o, w) : two(o, w);   // (v2: an answer like '5/32' is the same in every language)
+const moveItem = (it, id, scored, v2) => {
   const st = C.unpack(it.s), ms = E.legalMoves(st, it.n); assert(ms.length >= 2, 'moves ' + id);
   for (const a of it.ok) assert(ms.some(m => m.from === a[0] && m.to === a[1]), 'legal ' + id);
+  if (v2) { assert(L.msg[it.why[0]] && (!scored || it.best), 'why ' + id); for (const m of ms) if (!it.ok.some(a => a[0] === m.from)) assert(it.ng[String(m.from)] && L.msg[it.ng[String(m.from)][0]], 'ng ' + id); return; }   // (v2 = rebuilt with the exact win chances: checked by tools/lesson-verify.js patolli, not by the 2–3-throw look-ahead)
   const e2 = E.evaluate(st, it.n, 2), e3 = E.evaluate(st, it.n, 3);
   assert(it.ok.some(a => a[0] === e2[0].move.from), 'best d2 ' + id); assert(it.ok.some(a => a[0] === e3[0].move.from), 'best d3 ' + id);
   const rest = e2.filter(e => !it.ok.some(a => a[0] === e.move.from)); assert(rest.length && e2[0].wp - rest[0].wp >= 0.04 - 1e-9, 'gap ' + id);
@@ -42,9 +44,9 @@ for (const s of L.steps) {
     assert(RAMP_KINDS.includes(rk), `ramp step the page cannot run (${rk}): ${s.id} ramp ${ri + 1}`);
     if (r.k !== 'explain') completable(r, s.id + ' ramp ' + (ri + 1));
     if (r.k === 'explain') { two(r.body, s.id + ' explain'); let st = C.unpack(r.s); for (const [f, to] of r.seq || []) { const m = E.legalMoves(st, r.n != null ? r.n : to - f).find(x => x.from === f && x.to === to); assert(m, 'seq ' + s.id); st = E.apply(st, m, r.n != null ? r.n : to - f).state; st.turn = 0; } }
-    else { two(r.h, 'h'); two(r.g, 'g'); two(r.y, 'y'); if (r.kind === 'choice') { assert(r.ans >= 0 && r.ans < r.opts.length); r.opts.forEach(o => two(o, 'opt')); } else moveItem(r, s.id + ' try', false); }
+    else { two(r.h, 'h'); two(r.g, 'g'); two(r.y, 'y'); if (r.kind === 'choice') { assert(r.ans >= 0 && r.ans < r.opts.length); r.opts.forEach(o => opt(o, 'opt')); } else moveItem(r, s.id + ' try', false, s.v2); }
   });
-  s.problems.forEach((p, i) => { nP++; completable(p, s.id + ' #' + (i + 1)); if (p.kind === 'choice') { two(p.q, 'q'); p.opts.forEach(o => two(o, 'opt')); assert(p.ans >= 0 && p.ans < p.opts.length); assert(L.msg[p.why[0]], 'why'); } else moveItem(p, s.id + ' #' + (i + 1), true); });
+  s.problems.forEach((p, i) => { nP++; completable(p, s.id + ' #' + (i + 1)); if (p.kind === 'choice') { two(p.q, 'q'); p.opts.forEach(o => opt(o, 'opt')); assert(p.ans >= 0 && p.ans < p.opts.length); assert(L.msg[p.why[0]], 'why'); } else moveItem(p, s.id + ' #' + (i + 1), true, s.v2); });
   console.log(s.id.padEnd(6), s.rule.padEnd(8), 'ok');
 }
 // 確率の文と合っているか（1＝5/32、2・3＝10/32、4＝5/32、5個＝1/32）

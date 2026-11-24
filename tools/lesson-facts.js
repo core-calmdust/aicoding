@@ -521,6 +521,8 @@ const CHECKS = {
         if (sc.has(P.best) && sc.get(P.best) < top - 60) bad(g, K, `problem ${j}: the best move is not the engine's best (${sc.get(P.best)} < ${top})`);
         (P.sc || []).forEach(([m]) => { if (!q.legal(m)) bad(g, K, `problem ${j}: a scored move is not legal`); }); });
     });
+    // (2026-11-24 第2期・担当B) the strict ①〜⑨ of the verified sets (openings.json verified: two searches agree, the second move ≤ 12 points, off the line by 3+ cells, the order, ゴイシペン's words for every move) — tools/lesson-verify.js hexOpen
+    require('./lesson-verify.js').hexOpen().forEach(fa => bad(g, fa.step, `q${fa.q}: ${fa.msg}`));
   },
   // (2026-11-23 lesson loop) the checkers openings ('checkers/open', key = the opening's id): every line replays legally, every practice
   // position's best and scored moves are legal and the best is the engine's top (within a little), and the kind of move the 3D guide

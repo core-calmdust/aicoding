@@ -1605,11 +1605,11 @@ $('#lsFb').addEventListener('click', e => {
   toast(t('op.playing'));
 });
 function startPractice(gi) {
-  const g = OPEN.sets[gi], pool = g.problems.slice();
-  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  const g = OPEN.sets[gi], pool = g.problems.slice(), idx = pool.map((p, i) => i);
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; [idx[i], idx[j]] = [idx[j], idx[i]]; }
   hideOverlay('#lessonOverlay');
   stashGame(); puzzle = null; document.body.classList.remove('in-puzzle');
-  lesson = { step: 0, gi, virt: { id: g.id, title: g.title, problems: pool.slice(0, 5) }, i: 0, results: [], answered: false, hinted: false };
+  lesson = { step: 0, gi, virt: { id: g.id, title: g.title, problems: g.verified ? idx.slice(0, 5).sort((a, b) => a - b).map(i => g.problems[i]) : pool.slice(0, 5) }, i: 0, results: [], answered: false, hinted: false };
   document.body.classList.add('in-lesson');
   loadLessonProblem();
 }
