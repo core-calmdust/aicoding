@@ -331,6 +331,13 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
 .tiles.r5{grid-template-columns:repeat(5,1fr)}
 .tiles.heroes{grid-template-columns:repeat(4,1fr)}
+.feats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.feat{display:grid;grid-template-columns:22px 1fr;column-gap:8px;padding:9px 12px;border:1.5px solid rgba(27,18,12,.16);border-radius:3px;background:rgba(246,238,219,.55);color:var(--mute);text-align:left}
+.feat i{grid-row:1/3;font-style:normal;font-size:18px;line-height:1.2;color:rgba(27,18,12,.3)}
+.feat b{font:700 15px/1.35 var(--prose)}.feat span{font:13px/1.5 var(--ui)}
+.feat.got{border-color:var(--acc);background:rgba(246,238,219,.95);color:var(--ink)}.feat.got i{color:var(--acc)}
+.newfeat{margin:10px 0;display:grid;gap:6px}.newfeat>b{font:700 13px var(--ui);letter-spacing:.14em;color:var(--acc)}
+@media (max-width:620px){.feats{grid-template-columns:1fr}}
 .tile .done{font:700 12px var(--ui);color:var(--acc);letter-spacing:.08em}
 .tile{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px 13px;border:1.5px solid var(--line);border-radius:3px;background:#fbf6ea;text-align:left;min-height:96px}
 .tile b{font:800 19px/1.2 var(--prose)}
@@ -474,8 +481,8 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
     <h3>あなたの役</h3>
     <div class="tiles r5" id="setRole"></div>
     <p class="setrules hide" id="setRules"></p>
-    <h3>あなたは誰か</h3>
-    <div class="tiles heroes" id="setHero"></div>
+    <h3>実績 <small id="setFeatN" style="font:700 14px var(--ui);color:var(--mute);letter-spacing:.06em"></small></h3>
+    <div class="feats" id="setFeats"></div>
     <div class="foot"><button class="btn" id="setBack">もどる</button><button class="btn pri" id="setGo">幕を開ける</button></div>
   </div>
 </section>
@@ -499,6 +506,7 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 <script src="scenes.js?v=1"></script>
 <script src="scenes-pass.js?v=1"></script>
 <script src="hero.js?v=2"></script>
+<script src="feats.js?v=1"></script>
 <script src="stories/kirigane.js?v=5"></script>
 <script src="stories/kirigane.tale.js?v=3"></script>
 <script src="stories/kirigane.who.js?v=2"></script>
@@ -512,6 +520,6 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 <script src="stories/tomoshibi.who.js?v=2"></script>
 <script src="stories/tomoshibi.who.open.js?v=1"></script>
 <script src="sound.js?v=5"></script>
-<script src="game.js?v=24"></script>
+<script src="game.js?v=25"></script>
 </body>
 </html>
