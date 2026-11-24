@@ -54,6 +54,7 @@
     { id: 'hockey', region: 'americas', color: '#2f6fd0', cover: { g: 'hockey', s: 'hockey' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'hockeyRod' }, m1: { svg: 'airTable' }, m2: { svg: 'hockeyFamily' } }, refs: ['Donald H. Munro, the first table hockey game (Toronto, 1932)', 'US patents for the air hockey table by Crossman, Kenrick and Lemieux (Brunswick, 1970s)', 'United States Air-Table Hockey Association (USAA), world singles championship from 1978', 'International Table Hockey Federation (ITHF)', 'Wikipedia, “Air hockey”, “Table hockey games”'], links: [{ g: 'hockey' }, { g: 'botao' }, { g: 'crokinole' }] },
     { id: 'solitaire', region: 'europe', color: '#2f6b4f', cover: { g: 'solitaire', s: 'solitaire' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'klondikeLayout' }, m1: { svg: 'freecellSolvable' }, m2: { svg: 'patienceTimeline' } }, refs: ['Das neue Königliche L’Hombre-Spiel (1783 edition), the earliest description of “Patience”', 'Lady Adelaide Cadogan, Illustrated Games of Patience (c. 1870; London edition 1874)', 'Hoyle’s Games (1907): “Seven-Card Klondike”', 'David Parlett, The Penguin Book of Patience (1979)', 'Martin Gardner, Scientific American (June 1968): Baker’s Game; Paul Alfille, FreeCell on PLATO (1978)', 'Wikipedia, “Patience (game)”, “Klondike (solitaire)”, “FreeCell”'], links: [{ g: 'solitaire' }, { g: 'poker' }, { g: 'blackjack' }] },
     { id: 'sudoku', region: 'asia', color: '#3a8a5a', cover: { g: 'sudoku', s: 'sudoku' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'sudokuRules' }, m1: { svg: 'sudokuSeventeen' }, m2: { svg: 'sudokuTimeline' } }, refs: ['Le Siècle (Paris), 19 November 1892; La France, 6 July 1895', 'Number Place, an American puzzle magazine (1979), attributed to Howard Garns', 'The Japanese puzzle magazine that named the puzzle “sudoku” (1984)', 'Gary McGuire, Bastian Tugemann, Gilles Civario, “There is no 16-Clue Sudoku: Solving the Sudoku Minimum Number of Clues Problem”, arXiv:1201.0749 (2012)', 'Bertram Felgenhauer, Frazer Jarvis, “Enumerating possible Sudoku grids” (2005)', 'Wikipedia, “Sudoku”'], links: [{ g: 'sudoku' }, { g: 'speedsudoku' }, { g: 'hitblow' }] },
+    { id: 'shanghai', region: 'americas', color: '#1f6a4c', cover: { g: 'shanghai', s: 'shanghai' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'shanghaiFree' }, m1: { svg: 'shanghaiTurtle' }, m2: { svg: 'shanghaiTimeline' } }, refs: ['Brodie Lockard, “Mah-Jongg” on the PLATO system (1981)', 'A home-computer release of 1986 that spread the name “Shanghai”', 'An analysis of ten million deals of the turtle layout (about 3 % unsolvable), as cited by Wikipedia', 'Wikipedia, “Mahjong solitaire”, “Shisen-Sho”'], links: [{ g: 'shanghai' }, { g: 'solitaire' }, { g: 'sudoku' }] },
   ];
   // pictures shown only beside a story's paragraph (not in another room): a museum's open-access photo (CC0), linked to the museum's page.
   // The name, in each language, is MUSEUM_READ_T[lang].pic[id]. Files images/atlas/museum-story/pic/<id>.webp (≤ 960 px).
@@ -1007,6 +1008,36 @@
     // sudoku in time (text: the story's figL.time — [year, name, note])
     sudokuTimeline: () => { const R = ((st('sudoku').figL || {}).time) || [], W = 300, RH = 50, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 70; let g = '';
       const C = ['#8a5a24', '#6a3a8a', '#2a5a8a', '#c0392b', '#14864a'];
+      g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
+      R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
+        g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
+        g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="${xn + 16}" y="${y + 20}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // mahjong solitaire: which tiles are free — nothing on top, and the left or the right side open (✓ free, × not)
+    shanghaiFree: () => { const W = 300, w = 34, h = 46, H = 236; let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="10" fill="#1f6a4c"/>`;
+      const sh = (x, y) => `<rect x="${x + 3}" y="${y + 4}" width="${w}" height="${h}" rx="3.5" fill="#000" opacity=".25"/>`;
+      const T = (x, y, k, n, col) => sh(x, y) + mjTile(x, y, w, h, k, n, col);
+      const ok = (x, y, yes) => `<circle cx="${x}" cy="${y}" r="10" fill="${yes ? '#14864a' : '#c0392b'}" stroke="#fff" stroke-width="1.5"/>` + (yes ? `<path d="M${x - 5} ${y}l3.5 4 7-8" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>` : `<path d="M${x - 4.5} ${y - 4.5}l9 9M${x + 4.5} ${y - 4.5}l-9 9" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>`);
+      const r1 = 34, x1 = 70; [['p', 3], ['s', 5], ['m', 2], ['z', '中', '#c62828']].forEach(([k, n, c], i) => { g += T(x1 + i * w, r1, k, n, c); });
+      g += `<rect x="${x1 + w * 1.5 + 4}" y="${r1 - 2}" width="${w}" height="${h}" rx="3.5" fill="#000" opacity=".3"/>` + mjTile(x1 + w * 1.5 - 2, r1 - 8, w, h, 'z', '發', '#14864a');
+      g += ok(x1 - 4, r1 - 6, 1) + ok(x1 + w * 4 + 4, r1 - 6, 1) + ok(x1 + w * 2 + 2, r1 - 14, 1) + ok(x1 + w * 1.5, r1 + h + 12, 0) + ok(x1 + w * 2.5, r1 + h + 12, 0);
+      const r2 = 150, x2 = 90; [['p', 7], ['z', '東'], ['s', 1]].forEach(([k, n, c], i) => { g += T(x2 + i * w, r2, k, n, c); });
+      g += ok(x2 - 4, r2 - 6, 1) + ok(x2 + w * 1.5, r2 - 10, 0) + ok(x2 + w * 3 + 4, r2 - 6, 1);
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // the turtle: the classic 144-tile layout seen from above — 87 tiles on the bottom layer, then 36, 16, 4 and 1 (darker = higher)
+    shanghaiTurtle: () => { const u = 19, v = 25, ox = 7, oy = 8, W = 300, H = 250; let g = '';
+      const L1 = [[1, 12], [3, 10], [2, 11], [1, 12], [1, 12], [2, 11], [3, 10], [1, 12]], tiles = [];
+      L1.forEach(([a, b], r) => { for (let c = a; c <= b; c++) tiles.push([c, r, 0]); }); tiles.push([0, 3.5, 0], [13, 3.5, 0], [14, 3.5, 0]);
+      for (let r = 1; r <= 6; r++) for (let c = 4; c <= 9; c++) tiles.push([c, r, 1]);
+      for (let r = 2; r <= 5; r++) for (let c = 5; c <= 8; c++) tiles.push([c, r, 2]);
+      for (let r = 3; r <= 4; r++) for (let c = 6; c <= 7; c++) tiles.push([c, r, 3]); tiles.push([6.5, 3.5, 4]);
+      const C = ['#f4efe2', '#d9e8d0', '#a8cf9a', '#6aa86a', '#2f7a4a'];
+      tiles.forEach(([c, r, z]) => { const x = ox + c * u - z * 2, y = oy + r * v - z * 2.5; g += `<rect x="${x + 1.5}" y="${y + 2}" width="${u - 1}" height="${v - 1}" rx="2.5" fill="#000" opacity=".18"/><rect x="${x}" y="${y}" width="${u - 1}" height="${v - 1}" rx="2.5" fill="${C[z]}" stroke="#5a544a" stroke-width=".8"/>`; });
+      const n = [87, 36, 16, 4, 1]; n.forEach((k, z) => { const x = 14 + z * 58; g += `<rect x="${x}" y="222" width="16" height="20" rx="2.5" fill="${C[z]}" stroke="#5a544a" stroke-width=".8"/><text x="${x + 22}" y="237" font-size="14" font-weight="800" fill="#2b2a28">${k}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // mahjong solitaire in time (text: the story's figL.time — [year, name, note])
+    shanghaiTimeline: () => { const R = ((st('shanghai').figL || {}).time) || [], W = 300, RH = 50, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 70; let g = '';
+      const C = ['#8a8478', '#2a5a8a', '#c0392b', '#6a3a8a', '#14864a'];
       g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
       R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
         g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
