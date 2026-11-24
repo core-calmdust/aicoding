@@ -7002,7 +7002,7 @@
     return ja ? (id === 'backgammon' ? `きみは<b>${nm}</b>。` : `<b>${nm}</b>の手番だよ。`) : `<b>${nm}</b> to move. `;
   }
   /* ur (2026-11-24 担当C): the data, ダイスン's words and the board hooks are in atlas/ls-ur.js (loaded the first time) */
-  const UR = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUr) return res(); const sc = document.createElement('script'); sc.src = 'ls-ur.js?v=2'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const UR = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUr) return res(); const sc = document.createElement('script'); sc.src = 'ls-ur.js?v=3'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsUr.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   /* senet (2026-11-24 担当C): the data, セティ's words and the board hooks are in atlas/ls-senet.js (loaded the first time) */
