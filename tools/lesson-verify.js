@@ -1519,6 +1519,28 @@ function shogiOpen(opt) {
       }
     });
   }
+  // 追25 / 追30 over every freq problem of every shogi opening (the words are shared by all sets): the record (probs.js) keeps every move
+  // played 3 times or more, so a move outside it was played at most min(2, games left over) times — "hardly played" only when that is
+  // under 3%, "never played" only when no game is left over, the stated counts the same; and the games are Floodgate's (strong programs,
+  // rated 3000+), so no line may say "strong people" / "n% of people" / "popular" about them.
+  const PEOPLE = /強い人|%の人|の人が|の人は|選ぶ人|指す人|人も|人は|人気|プロ|棋士|愛好家/;
+  for (const s of sets) { const nm = String(s.title.ja), VO = X.shOpVoice(s.id), hs = s.id.length * 3;
+    (s.problems || []).forEach((P, j) => { if (P.mode !== 'freq') return; const a = m => add(s.id, j, m), C = P.cand || [], A = (P.accept || [])[0];
+      const sum = C.reduce((x, c) => x + c[1], 0), N = P.total || sum, rest = N - sum, k2 = Math.min(2, Math.max(0, rest)), cnt = new Map(C);
+      if (C.some(c => c[1] < 3) || sum > N || P.total == null) { a(`追25 the record is not as collected (every move 3+ times, the total kept): ${JSON.stringify(C)} / ${P.total}`); return; }
+      const p = new E.Position(); p.setSfen(P.sfen); const ms = p.legalMoves(true).map(m => p.toUsi(m));
+      for (let i = 0; i < 5; i++) { let Q; try { Q = X.shOpJa({ pos: P.sfen, kind: 'best', P, ans: A }, nm, hs, i, false, VO); } catch (er) { a(`⑧ the 3D words fail: ${er.message}`); break; }
+        const T = [['the question', plain(Q.ask)], ['the hint', plain(Q.hintTx || '')], ['the answer', plain(Q.good(A))]];
+        for (const u of ms) if (u !== A) T.push([u, plain(cnt.has(u) ? Q.good(u) + ' / ' + Q.ng(u) : Q.ng(u))]);
+        for (const [who, w] of T) { if (PEOPLE.test(w)) a(`追30 ${who}: the games are strong programs' (Floodgate), not people's 「${w}」`);
+          if (who.length < 6 && !cnt.has(who)) {   // (a move outside the record)
+            if (/ほとんど指されない|ほとんどない|めったに|ほとんど出てこない/.test(w) && !(k2 / N < 0.03)) a(`追25 ${who}: "hardly played" but it may be played ${k2} of ${N} (${Math.round(k2 / N * 100)}%) 「${w}」`);
+            if (/一度も|一つもない|どれにも出てこない|指されない手なの|では指されない手/.test(w) && rest !== 0) a(`追25 ${who}: "never played" but ${rest} games are outside the record 「${w}」`);
+            const mk = w.match(/(\d+)局のうち、?多くても(\d+)局|(\d+)局で多くても(\d+)局/); if (mk && (+(mk[1] || mk[3]) !== N || +(mk[2] || mk[4]) !== k2)) a(`追25 ${who}: the counts ${mk[0]} (N ${N}, at most ${k2})`);
+            const mn = w.match(/(\d+)局(で一度も|に一つも|では一度も|のどれにも)/); if (mn && +mn[1] !== N) a(`追25 ${who}: ${mn[1]} games, the record has ${N}`); } }
+      }
+    });
+  }
   return out;
 }
 // (2026-11-24 第2期・担当B) tafl openings (tafl/openings.json, <game>/open): the plans of TFO_DONE (sets marked verified), every problem
@@ -1932,7 +1954,7 @@ module.exports = GAMES; GAMES.mancalaWords = mancalaWords; Object.assign(GAMES, 
 if (require.main === module) {
   const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,chessOpen,openLines,janggi').split(',');
   let bad = 0;
-  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'chessOpen' ? ' (チェスの定跡の drill の①〜⑨・追3・追25。drill のない定跡は pending)' : g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'senet' ? ' (セネトの作り直したレッスン（v2）の①〜⑧・追7・追16・追22・追23・追28。厳密な勝率は C で解き直し)' : g === 'janggi' ? ' (パズル全問・レッスン b_rook・b_horse・b_pawn・b_mate1・m_mate2・m_mate3・e_rook・e_pawn の①〜⑨・追19・追20・追24・追27・追30)' : g === 'ur' ? (require('fs').existsSync(require('path').join(process.env.UR_LUT_DIR || '/tmp/urlut', 'finkel.rgu')) ? ' (ウルのレッスン12本の①〜⑧・追7・追16)' : ' (ウルのレッスン12本の③〜⑧・追7・追16。①②は完全解析表なしで未照合＝追26)') : g === 'openLines' ? ' (shogi・tafl・checkers の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
+  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'chessOpen' ? ' (チェスの定跡の drill の①〜⑨・追3・追25。drill のない定跡は pending)' : g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'senet' ? ' (セネトの作り直したレッスン（v2）の①〜⑧・追7・追16・追22・追23・追28。厳密な勝率は C で解き直し)' : g === 'janggi' ? ' (パズル全問・レッスン b_rook・b_horse・b_pawn・b_mate1・m_mate2・m_mate3・e_rook・e_pawn の①〜⑨・追19・追20・追24・追27・追31)' : g === 'ur' ? (require('fs').existsSync(require('path').join(process.env.UR_LUT_DIR || '/tmp/urlut', 'finkel.rgu')) ? ' (ウルのレッスン12本の①〜⑧・追7・追16)' : ' (ウルのレッスン12本の③〜⑧・追7・追16。①②は完全解析表なしで未照合＝追26)') : g === 'openLines' ? ' (shogi・tafl・checkers の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
     bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
   process.exit(bad ? 1 : 0);
 }

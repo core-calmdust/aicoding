@@ -253,12 +253,12 @@ function lessons(opt) {
           if (e === 'c' && !t.includes(`王手した${JL.NM(T(p.at(mFrom(u))), true)}を`)) a(`⑦ ${nm(u)}: 「${t}」 names the wrong piece`); }
       }
     });
-    // 追27 two kinds of piece among the answers — but an endgame of one kind of piece (e_pawn: 卒2つ) cannot (追30): there the answers
+    // 追27 two kinds of piece among the answers — but an endgame of one kind of piece (e_pawn: 卒2つ) cannot (追31): there the answers
     // move two ways or more (straight / sideways / diagonal), and every endgame has both a check and a quiet answer
     const one = END && st.problems.every(P => new Set(P.s.split(' ')[0].replace(/[^A-Z]/g, '').replace(/K/g, '').replace(/H/g, 'N')).size === 1);
     if (!one && kinds.size < 2) add(id, 4, '追27 every answer moves the same kind of piece');
-    if (one && dirs.size < 2) add(id, 4, '追30 every answer of a one-piece endgame moves the same way');
-    if (END && ckA.size < 2) add(id, 4, `追30 every answer of the endgame is ${ckA.has(true) ? 'a check' : 'quiet'}`);
+    if (one && dirs.size < 2) add(id, 4, '追31 every answer of a one-piece endgame moves the same way');
+    if (END && ckA.size < 2) add(id, 4, `追31 every answer of the endgame is ${ckA.has(true) ? 'a check' : 'quiet'}`);
     if (asks.size < st.problems.length) add(id, -1, '⑧ the same question twice in a lesson');
   }
   LS.steps.forEach((st, si) => { const id = st.id; if (!DONE.includes(id)) return; if (JL.MATE && JL.MATE[id]) return mateStep(st, si); const K = JL.KIND[id];
