@@ -12,3 +12,4 @@ foxgeese/.fgdata/
 # shogi/tools/nnue/gtrain.py: the decoder built on first use
 shogi/tools/nnue/libgfeed.*
 __pycache__/
+tafl/tools/.curate/

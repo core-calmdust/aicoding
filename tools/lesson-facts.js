@@ -315,6 +315,8 @@ const CHECKS = {
         (P.sc || []).forEach(([m]) => { if (!legal.has(m)) bad(G, K, `${w}: a scored move is not legal`); });
         const top = Math.max(...(P.sc || [[0, 0]]).map(e => e[1])), bs = (P.sc || []).find(e => e[0] === P.best); if (bs && bs[1] < top - 15) bad(G, K, `${w}: the best move is not the top value`);
         check(K, w, q, P.best); }); });
+    // (2026-11-24 第2期・担当B) the strict ①〜⑨ of the verified plans (openings.json verified: the engine's exact values at depth 5 and 6, the way there, no near-duplicates, the order of the 2D and the 3D, タフリン's words for every wrong move) — tools/lesson-verify.js taflOpen
+    require('./lesson-verify.js').taflOpen().forEach(fa => bad(G, fa.step, `q${fa.q}: ${fa.msg}`));
   },
   // (2026-11-22 lesson loop) the mancala lessons ('mancala', key = the step's index in mancala/lessons.json): a scored pit is exactly a
   // pit with seeds (sc null ⇔ empty), the gold pit (best) is legal and the top of the stored values; 種まき (sow): the gold pit's last seed
