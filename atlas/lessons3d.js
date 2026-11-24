@@ -130,6 +130,22 @@
       hi: { hi: 'मैं शोगित्सुने हूँ! चलो साथ में शियांगची सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छी हरे तीर वाली है।', wrong: 'बस थोड़ा सा! जवाब हरे तीर वाली चाल है।', hintSay: 'संकेत: सुनहरे घेरे वाले मोहरे देखो।', opGoal: 'यहाँ सबसे अच्छी अगली चाल कौन सी है?' },
       ar: { hi: 'أنا شوغيتسوني! لنتعلّم الشيانغتشي معًا.', partial: 'نقلة جيدة! لكن الأفضل هو السهم الأخضر.', wrong: 'قريب جدًا! الإجابة هي السهم الأخضر.', hintSay: 'تلميح: انظر إلى القطع داخل الحلقات الذهبية.', opGoal: 'ما أفضل نقلة هنا؟' },
     },
+    janggi: {   // (2026-11-24 担当D: as xiangqi, the game named)
+      ja: { hi: 'ショウギツネだよ！ いっしょにチャンギのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の矢印の手なんだ。', wrong: 'おしい！ 正解は緑の矢印の手だよ。', hintSay: 'ヒントだよ。金の丸の駒に注目してみて。', opGoal: 'この局面、いちばん良い次の一手はどれかな？' },
+      en: { hi: "Shogitsune here! Let's study janggi together.", partial: 'A nice move! But the green arrow is the best.', wrong: 'So close! The green arrow is the answer.', hintSay: 'Psst — look at the pieces in the gold rings!', opGoal: 'What is the best next move here?' },
+      zh: { hi: '我是将棋狐！一起来学韩国象棋吧。', partial: '好棋！不过最好的是绿色箭头那一步。', wrong: '差一点！正解是绿色箭头那一步。', hintSay: '提示：注意金色圆圈里的棋子。', opGoal: '这个局面，最好的下一步是哪一步？' },
+      'zh-TW': { hi: '我是將棋狐！一起來學韓國象棋吧。', partial: '好棋！不過最好的是綠色箭頭那一步。', wrong: '差一點！正解是綠色箭頭那一步。', hintSay: '提示：注意金色圓圈裡的棋子。', opGoal: '這個局面，最好的下一步是哪一步？' },
+      ko: { hi: '쇼기여우야! 같이 장기를 공부하자.', partial: '좋은 수야! 하지만 가장 좋은 건 초록 화살표 수야.', wrong: '아깝다! 정답은 초록 화살표 수야.', hintSay: '힌트: 금색 원 안의 말을 봐.', opGoal: '이 국면에서 가장 좋은 다음 수는?' },
+      es: { hi: '¡Soy Shogizorro! Estudiemos janggi juntos.', partial: '¡Buena jugada! Pero la mejor es la flecha verde.', wrong: '¡Casi! La respuesta es la flecha verde.', hintSay: 'Pista: mira las piezas con anillo dorado.', opGoal: '¿Cuál es la mejor jugada aquí?' },
+      fr: { hi: 'C’est Shogirenard ! Étudions le janggi ensemble.', partial: 'Joli coup ! Mais le meilleur, c’est la flèche verte.', wrong: 'Presque ! La réponse est la flèche verte.', hintSay: 'Indice : regarde les pièces dans les anneaux dorés.', opGoal: 'Quel est le meilleur coup ici ?' },
+      pt: { hi: 'Aqui é a Shogiraposa! Vamos estudar janggi juntos.', partial: 'Boa jogada! Mas a melhor é a seta verde.', wrong: 'Quase! A resposta é a seta verde.', hintSay: 'Dica: veja as peças nos anéis dourados.', opGoal: 'Qual é o melhor lance aqui?' },
+      de: { hi: 'Hier ist Shogifuchs! Lass uns zusammen Janggi lernen.', partial: 'Guter Zug! Aber am besten ist der grüne Pfeil.', wrong: 'Knapp! Die Antwort ist der grüne Pfeil.', hintSay: 'Tipp: Schau auf die Steine in den goldenen Ringen.', opGoal: 'Was ist hier der beste Zug?' },
+      ru: { hi: 'Это Сёгицунэ! Давай вместе изучать чанги.', partial: 'Хороший ход! Но лучший — зелёная стрелка.', wrong: 'Почти! Ответ — зелёная стрелка.', hintSay: 'Подсказка: смотри на фигуры в золотых кольцах.', opGoal: 'Какой здесь лучший ход?' },
+      tr: { hi: 'Ben Shogitsune! Birlikte janggi çalışalım.', partial: 'Güzel hamle! Ama en iyisi yeşil ok.', wrong: 'Az kaldı! Cevap yeşil ok.', hintSay: 'İpucu: altın halkalardaki taşlara bak.', opGoal: 'Burada en iyi hamle hangisi?' },
+      id: { hi: 'Aku Shogitsune! Ayo belajar janggi bersama.', partial: 'Langkah bagus! Tapi yang terbaik panah hijau.', wrong: 'Hampir! Jawabannya panah hijau.', hintSay: 'Petunjuk: lihat bidak di cincin emas.', opGoal: 'Langkah terbaik di sini yang mana?' },
+      hi: { hi: 'मैं शोगित्सुने हूँ! चलो साथ में जांग्गी सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छी हरे तीर वाली है।', wrong: 'बस थोड़ा सा! जवाब हरे तीर वाली चाल है।', hintSay: 'संकेत: सुनहरे घेरे वाले मोहरे देखो।', opGoal: 'यहाँ सबसे अच्छी अगली चाल कौन सी है?' },
+      ar: { hi: 'أنا شوغيتسوني! لنتعلّم الجانغي معًا.', partial: 'نقلة جيدة! لكن الأفضل هو السهم الأخضر.', wrong: 'قريب جدًا! الإجابة هي السهم الأخضر.', hintSay: 'تلميح: انظر إلى القطع داخل الحلقات الذهبية.', opGoal: 'ما أفضل نقلة هنا؟' },
+    },
     checkers: {
       ja: { hi: 'チェッカニだよ！ いっしょにチェッカーのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の矢印の手なんだ。', wrong: 'おしい！ 正解は緑の矢印の手だよ。', hintSay: 'ヒントだよ。金の丸の駒に注目してみて。', opGoal: 'この局面、いちばん良い次の一手はどれかな？' },
       en: { hi: "Checkrab here! Let's study checkers together.", partial: 'A nice move! But the green arrow is the best.', wrong: 'So close! The green arrow is the answer.', hintSay: 'Psst — look at the pieces in the gold rings!', opGoal: 'What is the best next move here?' },
@@ -4193,6 +4209,52 @@
     },
   };
 
+  /* janggi (2026-11-24, 担当D): the lessons of the full game (janggi/lessons.json: steps of 5 one-move problems scored by the engine's
+     values, = janggi/app.js problemPoints) on the janggi table (atlas/games/janggi.js ctx.pz, as xiangqi's). Progress = the full game's
+     'aicoding-janggi-lessons' { id: { best, clear } }. Texts: janggi/i18n.js; in Japanese ショウギツネ's own words (atlas/games/janggi-ls.js
+     AtlasJanggiLs: intro, question, hints, why / what yours misses from the board). Only the checked steps (AtlasJanggiLs.DONE) are
+     listed (claude/lesson-quality.md「検証の進み具合」; tools/lesson-verify-janggi.js). No openings on the 3D table (app.js NO_OPEN3D). */
+  const JG_ENG = '../janggi/engine.js?v=7';   // (the table adapter's file: one cache)
+  const jgScript = (src, ok) => ok() ? Promise.resolve() : new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = src; sc.onload = () => ok() ? res() : rej(new Error(src)); sc.onerror = rej; document.head.appendChild(sc); });
+  const jgS = v => { const E = window.JanggiEngine, W = E ? E.WIN : 30000, WT = E ? E.WINT : 29000; return v > WT ? 0.9 + 0.1 * Math.min(1, 6 / (W - v + 1)) : v < -WT ? -(0.9 + 0.1 * Math.min(1, 6 / (W + v + 1))) : v > WT - 1000 ? 0.88 : v < -(WT - 1000) ? -0.88 : Math.tanh(v / 800) * 0.82; };   // (= janggi/app.js sOfV)
+  const JANGGI = Object.assign({}, XIANGQI, {
+    LKEY: 'aicoding-janggi-lessons', OKEY: null, data: null, I: null, V: {},
+    load() {
+      if (this.p) return this.p;
+      return (this.p = Promise.all([getJ('../janggi/lessons.json?v=2'), fetch('../janggi/i18n.js?v=3').then(r => r.text()), jgScript(JG_ENG, () => window.JanggiEngine), jgScript('games/janggi-ls.js?v=1', () => window.AtlasJanggiLs), jgScript('games/janggi-pz.js?v=1', () => window.AtlasMini && window.AtlasMini.janggi)])
+        .then(([ls, tx]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] janggi texts', e); } this.I = w.I18N || {}; const D = (window.AtlasJanggiLs || {}).DONE || [];
+          this.data = { ls: Object.assign({}, ls, { steps: ls.steps.filter(x => D.includes(x.id)) }) }; return this; })
+        .catch(e => { this.p = null; throw e; }));
+    },
+    tx(k, lang, v) { const I = this.I || {}; let x = I[lang] && I[lang][k]; if (x === undefined) x = I.en && I.en[k]; if (x === undefined) x = (I.ja && I.ja[k]) || ''; return v ? fill(x, v) : x; },
+    mini: fen => window.AtlasMini && AtlasMini.janggi ? AtlasMini.janggi(fen) : '',
+    list(kind, lang) { if (kind === 'open') return []; return XIANGQI.list.call(this, kind, lang); },
+    lesson(key, lang) {
+      const s = this.data.ls.steps[+key]; if (!s) return null;
+      const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), E = window.JanggiEngine, JL = window.AtlasJanggiLs, ja = lang === 'ja' && E && JL;
+      return { id: s.id, title: T('title'), intro: ja && JL.INTRO[s.id] || T('intro'), ramp: null, RU: (k, v) => fill('', v || {}),
+        probs: (s.problems || []).map((P, i) => { const good = P.ok || [P.best];
+          const o = { pos: { spec: P.s, me: xqMe(P.s) }, kind: 'best', P, ask: T('goal'), ans: P.ok ? P.ok[0] : P.best, hintTx: T('hint'), hint: E ? [...new Set(good.map(E.mFrom))] : null,
+            good: () => T('why', { m: CKM('ok', lang), x: CKM('ng', lang) }), ng: () => T('ng', { m: CKM('ok', lang), x: CKM('ng', lang) }) };
+          if (ja) try { Object.assign(o, JL.lsJa(E, s, P, i, k => CKM(k, lang), +key) || {}); } catch (e) { console.warn('[lessons3d] janggi lesson', e); }
+          return o; }),
+        save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= max * .75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
+    },
+    opening: null,
+    points(P, m) {   // = janggi/app.js problemPoints
+      const E = window.JanggiEngine, WIN = E ? E.WIN : 30000, WINT = E ? E.WINT : 29000;
+      if (P.ok) return P.ok.includes(m) ? 20 : 0;
+      const val = new Map(P.sc), best = Math.max(...P.sc.map(e => e[1])), mine = val.has(m) ? val.get(m) : -WIN;
+      if (mine >= best - 10 && !(best > WINT && mine < best)) return 20;
+      if (best > WINT && mine > WINT) return 16;
+      if (best > WINT && mine <= WINT) return mine > -WINT && mine >= 300 ? 8 : mine > -100 ? 4 : 0;
+      if (mine < -WINT && best >= -WINT) return 0;
+      return Math.max(0, Math.round(20 * (1 - (jgS(best) - jgS(mine)) / 0.5)));
+    },
+    rampPos: null, rampMarks: null, rampOk: null, rampAns: null, rampLook: null, rampSeq: null,
+    introPos(c) { const s = this.data.ls.steps.find(x => x.id === c.id), P = s && s.problems && s.problems[0]; return P ? { pos: { spec: P.s, me: xqMe(P.s), lock: true } } : null; },
+  });
+
   /* backgammon (2026-11-14): the lessons (backgammon/lessons.json: 23 steps in 7 categories, 5 problems each — a play for a roll, scored
      by the rank of the play among the engine's candidates (= backgammon/app.js problemPoints), or a question with choices) and the
      openings (openings.json: the 15 opening rolls and the replies; a line's decision is the problem — right when it is within the
@@ -5304,8 +5366,8 @@
     LKEY: 'aicoding-amazons-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      const tx = ['../checkers/i18n.js?v=20261107l14-nd1', '../amazons/i18n-am.js?v=4', '../amazons/i18n-am-more.js?v=4', '../amazons/i18n-am-ls.js?v=2', '../amazons/i18n-am-ls-more.js?v=2', '../amazons/i18n-am-ls-more2.js?v=2'];
-      return (this.p = Promise.all([getJ('../amazons/lessons.json?v=4'), Promise.all(tx.map(u => fetch(u).then(r => r.text()).catch(() => ''))), amEng().catch(() => null)])
+      const tx = ['../checkers/i18n.js?v=20261107l14-nd1', '../amazons/i18n-am.js?v=4', '../amazons/i18n-am-more.js?v=4', '../amazons/i18n-am-ls.js?v=3', '../amazons/i18n-am-ls-more.js?v=3', '../amazons/i18n-am-ls-more2.js?v=3'];
+      return (this.p = Promise.all([getJ('../amazons/lessons.json?v=5'), Promise.all(tx.map(u => fetch(u).then(r => r.text()).catch(() => ''))), amEng().catch(() => null)])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T[0] + '\nvar I18N = window.I18N = window.I18N || {};\n' + T.slice(1).join('\n'))(w); } catch (e) { console.warn('[lessons3d] amazons texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -6794,8 +6856,8 @@
   /* whose move it is (2026-11-23 user: every problem — the warm-up's too — must say which side the player moves, 「黒の手番だよ」).
      turnOf: 1 / 2 from the position (an object's me, reversi "…:1", a chess FEN's w / b, a shogi SFEN's b / w), 0 = no sides (dots),
      null = not known. turnLine: the line put before the question, '' when the question already names the side (the same side). */
-  const TURN_N = { ja: { ur: ['白', '黒'], morris: ['金', '銀'], tafl: ['攻め手', '守り手'], chess: ['白', '黒'], reversi: ['●黒', '○白'], gomoku: ['●黒', '○白'], go: ['●黒', '○白'], checkers: ['黒', '白'], xiangqi: ['赤', '黒'], hex: ['赤', '青'], amazons: ['白', '黒'], connect4: ['金', '銀'], shogi: ['☗先手', '☖後手'], backgammon: ['金', '金'] },
-    en: { ur: ['Light', 'Dark'], morris: ['Gold', 'Silver'], tafl: ['Attackers', 'Defenders'], chess: ['White', 'Black'], reversi: ['● Black', '○ White'], gomoku: ['● Black', '○ White'], go: ['● Black', '○ White'], checkers: ['Black', 'White'], xiangqi: ['Red', 'Black'], hex: ['Red', 'Blue'], amazons: ['White', 'Black'], connect4: ['Gold', 'Silver'], shogi: ['☗ Sente', '☖ Gote'], backgammon: ['Gold', 'Gold'] } };
+  const TURN_N = { ja: { ur: ['白', '黒'], morris: ['金', '銀'], tafl: ['攻め手', '守り手'], chess: ['白', '黒'], reversi: ['●黒', '○白'], gomoku: ['●黒', '○白'], go: ['●黒', '○白'], checkers: ['黒', '白'], xiangqi: ['赤', '黒'], janggi: ['楚', '漢'], hex: ['赤', '青'], amazons: ['白', '黒'], connect4: ['金', '銀'], shogi: ['☗先手', '☖後手'], backgammon: ['金', '金'] },
+    en: { ur: ['Light', 'Dark'], morris: ['Gold', 'Silver'], tafl: ['Attackers', 'Defenders'], chess: ['White', 'Black'], reversi: ['● Black', '○ White'], gomoku: ['● Black', '○ White'], go: ['● Black', '○ White'], checkers: ['Black', 'White'], xiangqi: ['Red', 'Black'], janggi: ['Cho', 'Han'], hex: ['Red', 'Blue'], amazons: ['White', 'Black'], connect4: ['Gold', 'Silver'], shogi: ['☗ Sente', '☖ Gote'], backgammon: ['Gold', 'Gold'] } };
   function turnOf(id, pos) {
     if (id === 'dots') return 0;
     if (id === 'mancala') return 1;   // (the player's row is always the near one)
@@ -6821,7 +6883,7 @@
   const UR = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUr) return res(); const sc = document.createElement('script'); sc.src = 'ls-ur.js?v=1'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsUr.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
-  const DATA = { ur: UR, dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
+  const DATA = { ur: UR, dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, janggi: JANGGI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
 
   function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(lang), ncLoad(id)]).then(() => D.list(kind, lang)); }
   function next(id, kind, lang) { return list(id, kind, lang).then(L2 => { const x = L2.find(i => !i.full && i.st !== 'pass') || L2.find(i => !i.full); return x ? x.key : null; }); }
@@ -6931,7 +6993,7 @@
             pz: Object.assign({ lesson: true, fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: () => id === 'reversi' && phase !== 'ramp' && !(phase === 'prob' && cur && cur.k >= RV_NUMS()), ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
           ctx.Table3D.play(true);
         } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks, lock: !!G.lock });
-        else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots')) pz().load(G.spec, G.me, { lock: !!G.lock });
+        else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots')) pz().load(G.spec, G.me, { lock: !!G.lock });
         else if (G && id === 'mancala') pz().load(G.spec, G.me, { lock: !!G.lock, marks: G.marks });
         else if (G && id === 'connect4') pz().load(G.moves, G.me, { lock: !!G.lock });
         else if (G && id === 'backgammon') pz().load(G.bg);
@@ -6999,7 +7061,7 @@
         if (it.k === 'explain') { if (D.rampUndo) D.rampUndo(pz()); else pz().undo(1); marks0(); pz().wait(); return; }   // (the explanation's board is for looking)
         if (D.rampOk ? D.rampOk(it, u) : it.ok.includes(u)) return rDone();   // (right: on to the next step by itself, the meter on 次へ)
         say(RU('ng')); try { chime(false); } catch (e) {}
-        if (D.rampMarks && !['checkers', 'xiangqi', 'backgammon', 'tafl', 'amazons', 'connect4'].includes(id)) pz().mark((id === 'ur' ? D.rampMarks(it) : []).concat([[u, 'ng']]));   // (checkers / xiangqi: a move number, not a square — the miss is taken back below)
+        if (D.rampMarks && !['checkers', 'xiangqi', 'janggi', 'backgammon', 'tafl', 'amazons', 'connect4'].includes(id)) pz().mark((id === 'ur' ? D.rampMarks(it) : []).concat([[u, 'ng']]));   // (checkers / xiangqi: a move number, not a square — the miss is taken back below)
         later(() => { if (cur && phase === 'ramp' && cur.ri === i && !ok) { if (D.rampUndo) D.rampUndo(pz()); else if (!(it.pick)) pz().undo(1); marks0(); pz().wait(); } }, 1100);
       };
       pz().wait();
@@ -7257,9 +7319,9 @@
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;
       }
-      if ((id === 'checkers' || id === 'xiangqi' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
+      if ((id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
         const right = pts >= 16, k = cur.k;   // (p.own: the guide names the green arrow herself — the heading is only 「おしい！」)
-        say(`${right ? (p.own && (id === 'morris' || p.ckls) ? '' : line('solved') || pick(X.good)) : p.own ? (pts > 0 ? 'いい線いってる！' : 'おしい！') : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
+        say(`${right ? (p.own && (id === 'morris' || id === 'janggi' || p.ckls) ? '' : line('solved') || pick(X.good)) : p.own ? (pts > 0 ? 'いい線いってる！' : 'おしい！') : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
         try { chime(right); } catch (e) {}
         later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark([...(right || p.ans == null ? [] : [[{ m: p.ans }, 'ok']]), [{ m: u }, right ? 'ok' : 'ng']]); }, 900);
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});

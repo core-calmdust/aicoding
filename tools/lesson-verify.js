@@ -394,6 +394,24 @@ function amazons(opt) {
   (PZ.themes || []).forEach(th => (th.puzzles || []).forEach((q, j) => pool.push([`puzzle ${th.id} ${j + 1}`, q.s.b])));
   const SYM = [(r, c) => [r, c], (r, c) => [r, 9 - c], (r, c) => [9 - r, c], (r, c) => [9 - r, 9 - c], (r, c) => [c, r], (r, c) => [c, 9 - r], (r, c) => [9 - c, r], (r, c) => [9 - c, 9 - r]];
   const dist = (a, b) => { let best = 99; for (const S of SYM) { let d = 0; for (let i = 0; i < 100 && d < best; i++) { const [r, c] = S((i / 10) | 0, i % 10); if (a[i] !== b[r * 10 + c]) d++; } best = Math.min(best, d); } return best; };
+  const rooms = sq => { const seen = new Int8Array(100).fill(-1), R = []; let w = 0, b = 0, sep = true;
+    for (let s0 = 0; s0 < 100; s0++) { if (sq[s0] === 3 || seen[s0] >= 0) continue; const Q = [s0]; seen[s0] = R.length;
+      for (let h = 0; h < Q.length; h++) { const [r, c] = RCo(Q[h]); for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = c + dc, t = rr * 10 + cc; if ((dr || dc) && rr >= 0 && rr < 10 && cc >= 0 && cc < 10 && seen[t] < 0 && sq[t] !== 3) { seen[t] = R.length; Q.push(t); } } }
+      const nw = Q.filter(q => sq[q] === 1).length, nb = Q.filter(q => sq[q] === 2).length, ne = Q.filter(q => !sq[q]).length; R.push({ nw, nb, ne });
+      if (nw && nb) sep = false; else if (nw) w += ne; else if (nb) b += ne; }
+    return { sep, w, b, R }; };
+  const nbr = i => { if (i == null || i < 0) return []; const [r, c] = RCo(i), o = []; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = c + dc; if ((dr || dc) && rr >= 0 && rr < 10 && cc >= 0 && cc < 10) o.push(rr * 10 + cc); } return o; };
+  const freeN = (sq, x) => nbr(x).filter(t => !sq[t]).length;
+  // the most moves an amazon on a can make alone (squares sq: 0 empty), brute force with a memo on the filled squares
+  const fillBF = (sq0, a0) => { const memo = new Map(), sq = Array.from(sq0); const key = a => sq.join('') + a;
+    const rec = a => { const k = key(a); if (memo.has(k)) return memo.get(k); let best = 0;
+      for (let d = 0; d < 8; d++) { const DR = [-1, -1, -1, 0, 0, 1, 1, 1][d], DC = [-1, 0, 1, -1, 1, -1, 0, 1][d]; let [r, c] = RCo(a);
+        for (;;) { r += DR; c += DC; if (r < 0 || r > 9 || c < 0 || c > 9) break; const t = r * 10 + c; if (sq[t]) break;
+          sq[a] = 0; sq[t] = 1;
+          for (let e = 0; e < 8; e++) { let [r2, c2] = [r, c]; for (;;) { r2 += [-1, -1, -1, 0, 0, 1, 1, 1][e]; c2 += [-1, 0, 1, -1, 1, -1, 0, 1][e]; if (r2 < 0 || r2 > 9 || c2 < 0 || c2 > 9) break; const u = r2 * 10 + c2; if (sq[u]) break; sq[u] = 3; best = Math.max(best, 1 + rec(t)); sq[u] = 0; } }
+          sq[t] = 0; sq[a] = 1; } }
+      memo.set(k, best); return best; };
+    return rec(a0); };
   L.steps.forEach((st, si) => { const id = st.id; if (!AM_DONE.has(id) || (only && !only.has(id))) return;
     if (id.startsWith('s_')) return amStrat(st);
     let prevD = -1, firstD = null;
@@ -478,24 +496,6 @@ function amazons(opt) {
   function amStrat(st) { const id = st.id; let prevD = -1, firstD = null;
     // 追18: a threshold the scoring uses (s_escape: 4 or more empty squares round it) is said in the 3D intro
     if (id === 's_escape' && !/4つ以上/.test(X.AMJ_LS.intro.s_escape || '')) add(id, -1, '追18 the 3D intro does not say the 4 empty squares the answer needs');
-    const rooms = sq => { const seen = new Int8Array(100).fill(-1), R = []; let w = 0, b = 0, sep = true;
-      for (let s0 = 0; s0 < 100; s0++) { if (sq[s0] === 3 || seen[s0] >= 0) continue; const Q = [s0]; seen[s0] = R.length;
-        for (let h = 0; h < Q.length; h++) { const [r, c] = RCo(Q[h]); for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = c + dc, t = rr * 10 + cc; if ((dr || dc) && rr >= 0 && rr < 10 && cc >= 0 && cc < 10 && seen[t] < 0 && sq[t] !== 3) { seen[t] = R.length; Q.push(t); } } }
-        const nw = Q.filter(q => sq[q] === 1).length, nb = Q.filter(q => sq[q] === 2).length, ne = Q.filter(q => !sq[q]).length; R.push({ nw, nb, ne });
-        if (nw && nb) sep = false; else if (nw) w += ne; else if (nb) b += ne; }
-      return { sep, w, b, R }; };
-    const nbr = i => { if (i == null || i < 0) return []; const [r, c] = RCo(i), o = []; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = c + dc; if ((dr || dc) && rr >= 0 && rr < 10 && cc >= 0 && cc < 10) o.push(rr * 10 + cc); } return o; };
-    const freeN = (sq, x) => nbr(x).filter(t => !sq[t]).length;
-    // the most moves an amazon on a can make alone (squares sq: 0 empty), brute force with a memo on the filled squares
-    const fillBF = (sq0, a0) => { const memo = new Map(), sq = Array.from(sq0); const key = a => sq.join('') + a;
-      const rec = a => { const k = key(a); if (memo.has(k)) return memo.get(k); let best = 0;
-        for (let d = 0; d < 8; d++) { const DR = [-1, -1, -1, 0, 0, 1, 1, 1][d], DC = [-1, 0, 1, -1, 1, -1, 0, 1][d]; let [r, c] = RCo(a);
-          for (;;) { r += DR; c += DC; if (r < 0 || r > 9 || c < 0 || c > 9) break; const t = r * 10 + c; if (sq[t]) break;
-            sq[a] = 0; sq[t] = 1;
-            for (let e = 0; e < 8; e++) { let [r2, c2] = [r, c]; for (;;) { r2 += [-1, -1, -1, 0, 0, 1, 1, 1][e]; c2 += [-1, 0, 1, -1, 1, -1, 0, 1][e]; if (r2 < 0 || r2 > 9 || c2 < 0 || c2 > 9) break; const u = r2 * 10 + c2; if (sq[u]) break; sq[u] = 3; best = Math.max(best, 1 + rec(t)); sq[u] = 0; } }
-            sq[t] = 0; sq[a] = 1; } }
-        memo.set(k, best); return best; };
-      return rec(a0); };
     st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), all = p.moves(), T = (P.mk || [])[0], W = whites(p), B = blacks(p), okS = new Set(P.ok), nm = m => E.name(p, m);
       if (P.s.side !== 1) a('① White is not to move');
       let kk = -1; for (let k = 0; k < 8; k++) if (p.q[k] === T) kk = k;
@@ -587,6 +587,106 @@ function amazons(opt) {
           if (/ちぎれ|切って/.test(t) && !(c > 0 && kc && +kc[1] === c)) a(`⑦ ${x}: 「${t}」 (${c} squares cut off)`); if (c > 0 && !/ちぎれ|切って/.test(t)) a(`⑦ ${x}: 「${t}」 (the room is cut: ${c})`); }
       }
     });
+  }
+  // (2026-11-24 第2期 追14) the warm-ups (ramp: the explanation with its marks and the "try" with its answers) of all eight lessons:
+  //  every move named is legal, the marks are the squares the words say, a try's answers are exactly the moves that reach its goal
+  //  (①②, the same goals as the problems), and the facts the 2D words (amazons/i18n-am-ls.js) and the 3D words (ケロ's AMJ_LS.ramp,
+  //  then atlas/nocoord/amazons.json) give — the squares, arrows, exits, rooms, counts, directions — are the board's (⑧).
+  amWarm();
+  function amWarm() {
+    const W2 = {}; try { const w = { I18N: {} }; new Function('window', 'I18N', fs.readFileSync(path.join(ROOT, 'amazons/i18n-am-ls.js'), 'utf8'))(w, w.I18N); Object.assign(W2, w.I18N.ja || {}); } catch (e) { add('-', -1, '追14 amazons/i18n-am-ls.js does not load'); }
+    let NC = {}; try { NC = JSON.parse(fs.readFileSync(path.join(ROOT, 'atlas/nocoord/amazons.json'), 'utf8')); } catch (e) {}
+    const SQ = '([a-j](?:10|[1-9]))', sqI = s => E.sqIdx(s), DIR8 = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]];
+    const ray = (sq, f, d) => { const o = []; let [r, c] = RCo(f); for (;;) { r += d[0]; c += d[1]; if (r < 0 || r > 9 || c < 0 || c > 9) break; const t = r * 10 + c; o.push(t); if (sq[t]) break; } return o; };   // (the last may be the blocker)
+    const reach = (sq, f) => DIR8.flatMap(d => ray(sq, f, d).filter(t => !sq[t]));
+    const far = (sq, f) => DIR8.map(d => ray(sq, f, d).filter(t => !sq[t]).pop()).filter(x => x != null);
+    const dirOf = (f, t) => { const [r1, c1] = RCo(f), [r2, c2] = RCo(t); return c1 === c2 ? (r2 < r1 ? '上' : '下') : r1 === r2 ? '横' : '斜め'; };
+    const roomCells = (sq, w) => { const R = new Set([w]), Q = [w]; for (let h = 0; h < Q.length; h++) for (const t of nbr(Q[h])) if (!R.has(t) && sq[t] !== 3 && sq[t] !== 2) { R.add(t); Q.push(t); } return R; };
+    L.steps.forEach(st => { const id = st.id; if (!AM_DONE.has(id) || (only && !only.has(id))) return;
+      (st.ramp || []).forEach((r, j) => { const a = m => add(id, -1, `warm-up ${j + 1} (${r.k}): ${m}`), p = E.Pos.from(r.s), all = p.moves(), nm = m => E.name(p, m), W = whites(p), B = blacks(p);
+        const T2 = ['t', 'body', 'g', 'h', 'y'].map(f => typeof r[f] === 'string' ? W2[r[f]] || '' : '').join(' ');
+        const T3 = ['t', 'body', 'g', 'h', 'y'].map(f => typeof r[f] !== 'string' ? '' : X.AMJ_LS.ramp[r[f]] || (NC[`${id}/${j}/${f}`] || {}).ja || W2[r[f]] || '').join(' ');
+        const texts = [['2D', T2], ['3D', T3]], mk = k => (r.marks || []).filter(x => x[1] === k).map(x => x[0] - 1), gm = (X.AMJ_LS && null) || null;
+        const same = (A, B2) => A.length === B2.length && [...A].every(x => B2.includes(x)), names = A => [...A].map(N).sort().join('・');
+        // the moves shown, then the position after them
+        let q = p.clone(); for (const s of (r.seq || [])) { const m = q.moves().find(x => E.name(q, x) === s); if (m == null) { a(`① the move ${s} is not legal`); return; } q.play(m); }
+        const m0 = (r.seq || []).length ? all.find(x => nm(x) === r.seq[0]) : null;
+        let G = null, look = (r.look || []).map(x => x - 1)[0];
+        if (r.k === 'try') { const okS = new Set((r.ok || []).map(n => all.find(m => nm(m) === n)).filter(x => x != null));
+          if (okS.size !== (r.ok || []).length) a(`① an answer is not legal (${r.ok.filter(n => !all.some(m => nm(m) === n))})`);
+          const T = look, after = m => p.clone().play(m);
+          if (id === 'b_queen' || id === 'b_block') G = all.filter(m => mTo(m) === T);
+          else if (id === 'b_arrow') G = all.filter(m => mArrow(m) === T);
+          else if (id === 'b_win') G = all.filter(m => !after(m).canMove(2));
+          else if (id === 's_trap') { const bk = B.filter(b => freeN(p.sq, b) === 1 && nbr(b).includes(T)); if (bk.length !== 1) a(`④ ${bk.length} black amazons with the one exit ${N(T)}`); G = all.filter(m => bk.length && freeN(after(m).sq, bk[0]) === 0); }
+          else if (id === 's_escape') { const boxable = q2 => q2.moves().some(r2 => { q2.play(r2); const v = freeN(q2.sq, mTo(r2) === T ? -1 : T) === 0; q2.unplay(r2); return v; });
+            G = all.filter(m => { if (mFrom(m) !== T) return false; const q2 = after(m), t2 = mTo(m); return freeN(q2.sq, t2) >= 4 && !q2.moves().some(r2 => { q2.play(r2); const v = freeN(q2.sq, t2) === 0; q2.unplay(r2); return v; }); }); }
+          else if (id === 's_wall') { const sc = all.map(m => { const rr = rooms(after(m).sq); return rr.sep ? rr.w - rr.b : -999; }), mx = Math.max(...sc); G = all.filter((m, i) => sc[i] === mx && mx > -999); }
+          else if (id === 's_fill') { const sc = all.map(m => fillBF(after(m).sq, mTo(m))), mx = Math.max(...sc); G = all.filter((m, i) => sc[i] === mx); }
+          if (G) { if (!G.length) a('① the goal cannot be reached'); okS.forEach(m => { if (!G.includes(m)) a(`① the answer ${nm(m)} does not reach the goal`); }); G.forEach(m => { if (!okS.has(m)) a(`② ${nm(m)} reaches the goal but is scored wrong`); }); }
+          if (look == null) a('⑧ no gold mark');
+        }
+        // the facts the words give
+        for (const [who, t] of texts) { if (!t.trim()) continue; const b = (re, ok, msg) => { const g = t.match(re); if (g && !ok(g)) a(`⑧ ${who} 「${g[0]}」: ${msg}`); };
+          if (/\{|undefined|NaN/.test(t)) a(`⑧ ${who}: 「${t.slice(0, 50)}」`);
+          // pieces and arrows named
+          for (const g of t.matchAll(new RegExp('(白|黒)の(?:アマゾン)?（?\\s*' + SQ, 'g'))) if (p.sq[sqI(g[2])] !== (g[1] === '白' ? 1 : 2)) a(`⑧ ${who} 「${g[0]}」: no ${g[1]} amazon on ${g[2]}`);
+          for (const g of t.matchAll(new RegExp(SQ + ' (?:の|から)(?:アマゾン|は|からは)', 'g'))) { const s = sqI(g[1]); if (p.sq[s] !== 1 && p.sq[s] !== 2 && !(r.seq || []).length) a(`⑧ ${who} 「${g[0]}」: no amazon on ${g[1]}`); }
+          for (const g of t.matchAll(new RegExp(SQ + '\\s*(?:に矢があ|に矢）|の矢)', 'g'))) if (p.sq[sqI(g[1])] !== 3) a(`⑧ ${who} 「${g[0]}」: no arrow on ${g[1]}`);
+          for (const g of t.matchAll(new RegExp('((?:' + SQ.slice(1, -1) + '・)+' + SQ.slice(1, -1) + ')\\s*が矢', 'g'))) g[1].split('・').forEach(s => { if (p.sq[sqI(s)] !== 3) a(`⑧ ${who} 「${g[0]}」: no arrow on ${s}`); });
+          // the move shown: from, to, arrow, the direction of the shot
+          if (m0 != null) { b(new RegExp(SQ + ' から ' + SQ + ' へ'), g => sqI(g[1]) === mFrom(m0) && sqI(g[2]) === mTo(m0), `the move is ${nm(m0)}`);
+            b(new RegExp(SQ + ' に刺し'), g => sqI(g[1]) === mArrow(m0), `the arrow is on ${N(mArrow(m0))}`);
+            b(/(縦|横|斜め)へ矢/, g => dirOf(mTo(m0), mArrow(m0)).replace(/上|下/, '縦') === g[1], `the arrow flies ${dirOf(mTo(m0), mArrow(m0))}`); }
+          // exits (the empty squares next to an amazon)
+          b(new RegExp('(?:隣|となり)の空きマスは\\s*((?:' + SQ.slice(1, -1) + '・)*' + SQ.slice(1, -1) + ')\\s*の(\\d)つだけ'), g => { const s = g[1].split('・').map(sqI), am = (r.marks || []).filter(x => x[1] === 'ng').map(x => x[0] - 1)[0];
+            return am != null && same(s, nbr(am).filter(x => !p.sq[x])) && +g[2] === s.length; }, 'not the empty squares next to the marked amazon');
+          b(/(?:隣|となり)の空きマスは(?:緑の印の)?(\d)つだけ|(?:隣|となり)の空きマスは1つだけ|出口は1つだけ|出口は1マスだけ/, g => { const n = +(g[1] || 1), am = (r.marks || []).filter(x => x[1] === 'ng').map(x => x[0] - 1)[0];
+            const tgt = am != null ? am : (look != null && B.some(x => nbr(x).includes(look)) ? B.find(x => nbr(x).includes(look)) : B[0]); return freeN(p.sq, tgt) === n; }, 'not the number of empty squares next to it');
+          b(new RegExp('出口は\\s*' + SQ + '\\s*だけ'), g => { const s = sqI(g[1]); return B.some(x => nbr(x).includes(s) && freeN(p.sq, x) === 1); }, 'not the only exit of a black amazon');
+          b(/([0-9])マスが矢でふさがれ|隣の([0-9])マスが矢/, g => { const n = +(g[1] || g[2]); return B.some(x => nbr(x).filter(y => p.sq[y] === 3).length === n); }, 'no black amazon with that many arrows next to it');
+          // after the move shown
+          if ((r.seq || []).length) { b(/もう1手も指せない|白の勝ち/, () => !q.canMove(2), 'Black can still move');
+            b(/ゲームは続き|もう1体のアマゾンが残る|アマゾンが残る/, () => q.canMove(2) && B.some(x => freeN(q.sq, x) === 0), 'not one black amazon shut in with the game going on'); }
+          // queen moves: the marks of b_queen / b_block
+          if (id === 'b_queen' && r.k === 'explain') { const ok = mk('ok'); b(/いちばん遠いマス|光っているマスのどれにでも/, () => W.length === 1 && same(ok, far(p.sq, W[0])), `the marks are not the farthest square each way (${names(far(p.sq, W[0]))})`); }
+          if (id === 'b_block' && r.k === 'explain') { const ok = mk('ok'), ng = mk('ng'), R0 = reach(p.sq, W[0]);
+            if (!ok.every(x => R0.includes(x) && far(p.sq, W[0]).includes(x)) || ng.some(x => R0.includes(x))) a(`⑧ the green marks are not reachable farthest squares / the red ones are reachable`);
+            for (const g of t.matchAll(new RegExp('(上|下|横|斜め)(?:へ)?は\\s*' + SQ + '\\s*まで（' + SQ, 'g'))) { const x = sqI(g[2]), y = sqI(g[3]);
+              if (!(far(p.sq, W[0]).includes(x) && dirOf(W[0], x).replace(/上|下/, g[1] === '横' || g[1] === '斜め' ? '縦' : '$&') === g[1] && p.sq[y] === 3 && nbr(x).includes(y) && al(W[0], y))) a(`⑧ ${who} 「${g[0]}」`); } }
+          if (id === 'b_queen' && r.k === 'try') { b(/縦の線|縦にまっすぐ/, () => G && G.length && G.every(m => dirOf(mFrom(m), mTo(m)).match(/上|下/)), 'the answer is not up / down a file');
+            b(/まっすぐ上/, () => G.every(m => dirOf(mFrom(m), mTo(m)) === '上'), 'not up'); b(/(\d+)マス、1手/, g => G.every(m => cheb(mFrom(m), mTo(m)) === +g[1]), 'not that many squares'); }
+          if (id === 'b_arrow' && r.k === 'try') { b(new RegExp(SQ + ' からは\\s*' + SQ + ' へ一直線ではありません'), g => !al(sqI(g[1]), sqI(g[2])) || blk(p.sq, sqI(g[1]), sqI(g[2])), 'they are in line');
+            b(/いまのマスからは金の印へ一直線ではありません|いまの場所からは、金の印へ一直線じゃない/, () => W.every(w => !al(w, look) || blk(p.sq, w, look)), 'the amazon is in line with the gold mark');
+            b(/元いた\s*(?:[a-j]\d+\s*)?に矢|元いたマスに矢|元のマス/, () => W.includes(look), 'the gold mark is not where the amazon stands'); }
+          if (id === 'b_block' && r.k === 'try') { const w = W[0], dirs = DIR8.filter(d => { const ry = ray(p.sq, w, d); return ry.includes(look); }), ry = dirs.length ? ray(p.sq, w, dirs[0]) : [];
+            if (!(ry.length && ry[ry.length - 1] !== look && p.sq[ry[ry.length - 1]] === 3 && ry[ry.length - 2] === look)) a('⑧ the gold square is not the last one before an arrow on the amazon\'s line');
+            b(/上へ行けるいちばん遠い|上には/, () => dirs.length && dirOf(w, look) === '上', 'not up'); b(new RegExp(SQ + '\\s*の矢の手前、\\s*' + SQ), g => p.sq[sqI(g[1])] === 3 && sqI(g[2]) === look && nbr(look).includes(sqI(g[1])), 'not the square before the arrow'); }
+          if (id === 's_escape') { const am = r.k === 'try' ? look : mk('ng')[0];
+            b(/隅/, () => [0, 9, 90, 99].includes(am), `${N(am)} is not a corner`);
+            b(/ほとんどふさがって/, () => freeN(p.sq, am) * 3 <= nbr(am).length, `${freeN(p.sq, am)} of the ${nbr(am).length} squares next to ${N(am)} are empty`);
+            b(/大きく動/, () => G && G.length && G.every(m => cheb(mFrom(m), mTo(m)) >= 2), 'the answers move one square');
+            b(/中央のほう|まん中のほう/, () => G && G.every(m => { const c = s => { const [rr, cc] = RCo(s); return Math.max(Math.abs(rr - 4.5), Math.abs(cc - 4.5)); }; return c(mTo(m)) < c(mFrom(m)); }), 'an answer does not go toward the centre');
+            if (r.k === 'explain') { const ok = mk('ok'); if (!same(ok, nbr(am).filter(x => !p.sq[x]))) a('⑧ the green marks are not the empty squares next to the amazon'); } }
+          if (id === 's_wall') { const ra = (r.seq || []).length ? rooms(q.sq) : null;
+            if (ra) { b(/白の部屋（(\d+)マス）は黒の部屋（(\d+)マス）/, g => ra.sep && +g[1] === ra.w && +g[2] === ra.b, `the rooms are ${ra.w} and ${ra.b}`); b(/盤を(?:左右に|二つに)分け/, () => ra.sep, 'the board is not split'); }
+            const wall = [...Array(100).keys()].filter(i => p.sq[i] === 3), col = wall.length ? RCo(wall[0])[1] : -1, gaps = [...Array(10).keys()].map(rr => rr * 10 + col).filter(i => !p.sq[i]);
+            b(/すき間は\s*([a-j](?:10|[1-9]))\s*だけ|すき間は1マスだけ/, g => gaps.length === 1 && (!g[1] || sqI(g[1]) === gaps[0]), `the gaps are ${names(gaps)}`);
+            b(/([a-j]) の列(?:に|の)/, g => 'abcdefghij'.indexOf(g[1]) === col, `the wall is on file ${'abcdefghij'[col]}`);
+            if (G) { b(/白のアマゾンは右側に残/, () => G.every(m => whites(p.clone().play(m)).every(x => RCo(x)[1] > col)), 'an answer leaves a white amazon on the left');
+              b(/ずっと広い/, () => G.every(m => { const rr = rooms(p.clone().play(m).sq); return rr.w - rr.b >= 10; }), 'the white room is not much bigger'); } }
+          if (id === 's_fill') { const w = W[0], R = roomCells(p.sq, w);
+            b(/(?:白の)?部屋は\s*(\d+)マス/, g => R.size === +g[1], `the room has ${R.size} squares`);
+            b(new RegExp('部屋は\\s*((?:' + SQ.slice(1, -1) + '・)+' + SQ.slice(1, -1) + ')'), g => same(g[1].split('・').map(sqI), [...R]), `the room is ${names(R)}`);
+            if (r.k === 'explain') { const ok = mk('ok'), sc = all.map(m => fillBF(p.clone().play(m).sq, mTo(m))), mx = Math.max(...sc);
+              if (sc[all.indexOf(m0)] !== mx) a(`① ${nm(m0)} does not keep the most moves`);
+              const left = [...roomCells(q.sq, mTo(m0))].filter(x => !q.sq[x]); if (!same(ok, left)) a(`⑧ the green marks are not the squares left (${names(left)})`);
+              b(/まだ全部行ける/, () => fillBF(q.sq, mTo(m0)) === left.length, 'not every square left can be used');
+              b(/元のマスに矢/, () => mArrow(m0) === mFrom(m0), 'the arrow is not on the square left'); }
+            else b(/元のマスか/, () => G && G.some(m => mArrow(m) === mFrom(m)), 'no answer shoots back'); }
+          if (id === 's_trap' && r.k === 'try' && G) b(/閉じ込め成功|閉じこめ成功/, () => true, '');
+        }
+      }); });
   }
   return out;
 }
@@ -1779,14 +1879,14 @@ function chessOpen() {
   return out;
 }
 // (2026-11-24 担当D) janggi on the 3D table: the puzzles (all themes) — tools/lesson-verify-janggi.js
-const janggi = () => require('./lesson-verify-janggi.js').puzzles();
+const janggi = () => { const J = require('./lesson-verify-janggi.js'); return J.puzzles().concat(J.lessons()); };
 const ur = () => require('./lesson-verify-ur.js')();   // (2026-11-24 担当C：ウルのレッスン、tools/lesson-verify-ur.js)
 const GAMES = { chessOpen, ur, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines, janggi };
 module.exports = GAMES; GAMES.mancalaWords = mancalaWords; Object.assign(GAMES, { chessOpenCtx, chessOpenProblem, chessOpenSet, chessOpenD }); Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
 if (require.main === module) {
   const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,chessOpen,openLines,janggi').split(',');
   let bad = 0;
-  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'chessOpen' ? ' (チェスの定跡の drill の①〜⑨・追3・追24。drill のない定跡は pending)' : g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'janggi' ? ' (パズル全問の①〜⑨・追19・追20)' : g === 'ur' ? ' (ウルのレッスン12本の①〜⑧・追7・追16)' : g === 'openLines' ? ' (shogi・tafl・checkers の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
+  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'chessOpen' ? ' (チェスの定跡の drill の①〜⑨・追3・追25。drill のない定跡は pending)' : g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'janggi' ? ' (パズル全問・レッスン b_rook・b_horse・b_pawn の①〜⑨・追19・追20・追24)' : g === 'ur' ? ' (ウルのレッスン12本の①〜⑧・追7・追16)' : g === 'openLines' ? ' (shogi・tafl・checkers の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
     bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
   process.exit(bad ? 1 : 0);
 }
