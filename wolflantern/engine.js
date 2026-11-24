@@ -492,6 +492,45 @@
     meetingRest(S, story, ev, day, n, N, live);
     return ev;
   }
+  // who a guard claimer says they stood guard for, night by night (the real one tells the truth; a liar invents)
+  function guardHistory(S, p, c) {
+    const out = [], told = new Set(c.res.map(r => r.night));
+    for (const N of S.nights) {
+      if (N.n === 0 || told.has(N.n) || N.day == null || N.day >= S.day) continue;
+      let t = null;
+      if (p.role === 'guard') t = N.guarded;
+      else { const cand = S.people.filter(q => q.id !== p.id && (q.alive || (q.death && q.death.night === N.n))); const pick1 = cand.length ? cand[Math.floor(rnd(S) * cand.length)] : null; t = pick1 && pick1.id; }
+      if (t) out.push({ night: N.n, target: t, res: 'guard', day: S.day, fake: p.role !== 'guard' });
+    }
+    return out;
+  }
+  // the one the vote has chosen may name a role to escape the jail (回避CO): a real one tells the truth, a wolf may lie
+  function dodge(S, story, out) {
+    const p = person(S, out);
+    if (!p || p.isPlayer || !p.alive || S.claims.some(c => c.by === out)) return [];
+    S.dodged = S.dodged || {}; if (S.dodged[S.day]) return [];
+    const aliveClaims = r => S.claims.filter(c => c.role === r && person(S, c.by).alive);
+    let role = null;
+    if (p.role === 'seer' && !S.fake[p.id]) role = rnd(S) < .95 ? 'seer' : null;
+    else if (p.role === 'medium' && !S.fake[p.id]) role = rnd(S) < .9 ? 'medium' : null;
+    else if (p.role === 'guard') role = rnd(S) < .8 ? 'guard' : null;
+    else if (p.role === 'wolf' || p.role === 'madman') {
+      if (!aliveClaims('guard').length && rnd(S) < (p.role === 'wolf' ? .55 : .45)) role = 'guard';
+      else if (aliveClaims('seer').length < 2 && rnd(S) < .2) role = 'seer';
+    }
+    if (!role) return [];
+    S.dodged[S.day] = out;
+    const ev = [{ t: 'dodge', by: out }];
+    claim(S, out, role, ev);
+    const c = S.claims.find(c => c.by === out); c.dodge = S.day;
+    announce(S, c, S.day, ev);
+    // the real guard, hidden, hears a lie in their own name
+    if (role === 'guard' && p.role !== 'guard') {
+      const g = alive(S).find(q => q.role === 'guard' && !q.isPlayer && !S.claims.some(x => x.by === q.id));
+      if (g && rnd(S) < .65) { claim(S, g.id, 'guard', ev); announce(S, S.claims.find(x => x.by === g.id), S.day, ev); }
+    }
+    return ev;
+  }
   // should a real seer come forward now? (the player's "stay hidden" asks them to wait for a wolf)
   function seerWants(S, p, black, day) {
     if (black) return true;
@@ -505,6 +544,10 @@
       const p = person(S, c.by);
       if (!p.alive || p.isPlayer) return;
       const fresh = [];
+      if (c.role === 'guard') {
+        for (const r of guardHistory(S, p, c)) { c.res.push(r); ev.push({ t: 'result', by: p.id, role: 'guard', target: r.target, res: 'guard' }); }
+        return;
+      }
       if (c.role === 'seer') {
         if (!S.fake[p.id] && p.role === 'seer') { for (const r of S.own[p.id] || []) if (!c.res.some(x => x.night === r.night)) fresh.push({ night: r.night, target: r.target, res: r.res, day }); }
         else { let k = 0; const R = S.req && S.req.divine[p.id]; while (c.res.length + fresh.length < day && k++ < 2) { const asked = R && R.ok && R.day === day - 1 && !c.res.some(x => x.target === R.target) && !fresh.some(x => x.target === R.target) && person(S, R.target).alive ? R.target : null; const r = fakeResult(S, p, 'seer', day, asked, fresh); if (r) fresh.push(r); else break; } }
@@ -654,6 +697,8 @@
       let best = null, bv = -1;
       for (const x of cand) {
         let v = sus[x] + (heat[x] || 0) * .06 * (1 - p.persona.logic) + (x === 'you' && S.pl.hit ? -.05 : 0);
+        const gc = S.claims.filter(c => c.role === 'guard' && person(S, c.by).alive);
+        if (gc.some(c => c.by === x)) v += gc.length === 1 ? -.22 * (p.persona.trust || .5) * 2 : .04;   // a lone guard is too precious to hang
         if (p.role === 'wolf' && isWolf(S, x)) {      // a partner: abandon only when they are surely lost
           v = (heat[x] || 0) >= alive(S).length / 2 ? 2 : -1;
         } else if (p.role === 'wolf' && x === bloc) v += .6;
@@ -792,13 +837,15 @@
   function playerClaim(S) {
     if (S.claims.some(c => c.by === 'you')) return null;
     const role = S.pl.role;
-    if (role !== 'seer' && role !== 'medium') return null;
-    const c = { by: 'you', role, day: S.day, res: S.pl.res.map(r => ({ target: r.target, res: r.res, day: S.day })) };
+    if (role !== 'seer' && role !== 'medium' && role !== 'guard') return null;
+    const res = role === 'guard' ? S.nights.filter(N => N.n > 0 && N.guarded).map(N => ({ night: N.n, target: N.guarded, res: 'guard', day: S.day })) : S.pl.res.map(r => ({ target: r.target, res: r.res, day: S.day }));
+    const c = { by: 'you', role, day: S.day, res };
     S.claims.push(c); S.pl.co = true;
     return c;
   }
   function playerResults(S) {   // new results after a claim go public at the meeting
     const c = S.claims.find(c => c.by === 'you'); if (!c) return [];
+    if (c.role === 'guard') { const fr = S.nights.filter(N => N.n > 0 && N.guarded && !c.res.some(x => x.night === N.n)).map(N => ({ night: N.n, target: N.guarded, res: 'guard', day: S.day })); c.res.push(...fr); return fr; }
     const fresh = S.pl.res.filter(r => !c.res.some(x => x.target === r.target));
     for (const r of fresh) c.res.push({ target: r.target, res: r.res, day: S.day });
     return fresh;
@@ -970,5 +1017,5 @@
     return res;
   }
 
-  root.WLEngine = { ROLE, SETUP, DIFF, CATS, newGame, night, meeting, voteRound, exile, check, score, search, ask, present, playerClaim, playerResults, callOut, callEvidence, contradictions, pointOut, askDivine, askGuard, askHide, testimony, analyze, opinion, suspicion, npcSearch, canConfront, fitsTraces, person, alive, isWolf, rnd, pick, shuffle };
+  root.WLEngine = { ROLE, SETUP, DIFF, CATS, newGame, night, meeting, voteRound, exile, check, score, search, ask, present, playerClaim, playerResults, callOut, callEvidence, contradictions, pointOut, dodge, askDivine, askGuard, askHide, testimony, analyze, opinion, suspicion, npcSearch, canConfront, fitsTraces, person, alive, isWolf, rnd, pick, shuffle };
 })(typeof window !== 'undefined' ? window : globalThis);
