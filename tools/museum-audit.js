@@ -12,7 +12,7 @@ const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,
   for (const V of views) {
     const phone = V.w < 820;
     const p = await b.newPage({ viewport: { width: V.w, height: V.h }, hasTouch: phone, isMobile: phone }); const errs = []; p.on('pageerror', e => errs.push(e.message));
-    await p.addInitScript(l => { localStorage.setItem('atlas-museum-room', 'map'); localStorage.setItem('atlas-lang', l); localStorage.setItem('aicoding-lang', l); }, V.lang);
+    await p.addInitScript(l => { localStorage.setItem('atlas-museum-room', 'map'); localStorage.setItem('atlas-lang', l); localStorage.setItem('aicoding-lang', l); try { performance.setResourceTimingBufferSize(10000); } catch (e) {} }, V.lang);   // (a big buffer: textKB reads the story files' entries)
     await p.goto(BASE + '/atlas/index.html#museum', { waitUntil: 'load' }); await p.waitForTimeout(4500);
     await p.evaluate(() => { const o = document.querySelector('#ov.on'); if (o) o.classList.remove('on'); });
     for (const r of rooms) {
@@ -60,6 +60,8 @@ const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,
       // 14 タブのキーボード操作: 部屋のタブで → を押すと次のタブにフォーカスが移るか
       m.tabKeys = await p.evaluate(() => { const t = [...document.querySelectorAll('#muRooms [role=tab]')]; if (t.length < 2) return 0; t[0].focus(); t[0].dispatchEvent(new KeyboardEvent('keydown', { key: getComputedStyle(t[0]).direction === 'rtl' ? 'ArrowLeft' : 'ArrowRight', bubbles: true })); const ok = document.activeElement === t[1]; document.activeElement.blur(); return ok ? 0 : 1; });
       // 15 記事の情報量（読み物の部屋だけで数える）: 要点 3・見出しつきの節 3 以上・年表 4 以上・出典がそろっていない物語の数
+      // (2026-11-24) each story's text is its own file (read-i18n/<lang>/<id>.js), loaded on demand: load them all before the checks that read every story
+      if (r === 'read') await p.evaluate(() => window.AtlasRead && AtlasRead.load ? Promise.all(AtlasRead.STORIES.map(S => AtlasRead.load(S.id))) : 0);
       m.thinStory = r !== 'read' ? 0 : await p.evaluate(() => { const T = window.MUSEUM_READ_T, l = document.documentElement.lang || 'ja', t = (T && (T[l] || T.ja)) || {};
         return (window.AtlasRead ? AtlasRead.STORIES : []).filter(S => { const x = t[S.id] || {}; return !((x.kf || []).length >= 3 && (x.more || []).length >= 3 && (x.tl || []).length >= 4 && (S.refs || []).length >= 1); }).length; });
       // 16 記事の図: 本文の画像（sec）と節の図（figs）を合わせて 2 つ未満の物語の数
@@ -73,7 +75,7 @@ const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,
         let bad = 0; (window.AtlasRead ? AtlasRead.STORIES : []).forEach(S => [S.cover, ...(S.sec || []), ...(S.links || []), ...Object.values(S.figs || {}).flatMap(f => [].concat(f))].forEach(f => { if (!f) return; if (f.ex && !(t.ex || {})[f.ex]) bad++; if (f.paint && !(t.paint || {})[f.paint]) bad++; })); return bad; });
       // 19 図の中の小さすぎる字: 読み物の図（SVG）の文字が、表示された大きさで 10px 未満になる数（全部の物語を開いて数える。小さい画面ほど縮むので 320px で効く）
       m.figTiny = r !== 'read' ? 0 : await p.evaluate(async () => { if (!window.AtlasRead) return 0; let bad = 0; const keep = scrollY;
-        for (const S of AtlasRead.STORIES) { AtlasRead.open(S.id); await new Promise(z => setTimeout(z, 60));
+        for (const S of AtlasRead.STORIES) { await AtlasRead.open(S.id); await new Promise(z => setTimeout(z, 60));
           document.querySelectorAll('.rdfig.dg svg').forEach(svg => { const vb = svg.viewBox.baseVal, k = vb && vb.width ? svg.getBoundingClientRect().width / vb.width : 1; svg.querySelectorAll('text').forEach(t => { if (parseFloat(t.getAttribute('font-size') || 16) * k < 10) bad++; }); }); }
         const back = document.querySelector('.rdback'); if (back) back.click(); scrollTo(0, keep); return bad; });
       // 20 戻り先: 物語の図（絵・所蔵品）を開いて閉じると、読み物の部屋のその物語・その図のボタンに戻るか（戻らない数。PC の幅だけで測る）
@@ -89,8 +91,12 @@ const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,
         if (!(await p.$(sel))) return 0; await p.focus(sel); await p.keyboard.press('Enter'); await p.waitForTimeout(3000); let out = 0;
         for (let i = 0; i < 30; i++) { await p.keyboard.press('Tab'); if (!(await p.evaluate(d => !!document.activeElement.closest(d), dlg))) out++; }
         await p.keyboard.press('Escape'); await p.waitForTimeout(900); return out; })();
-      // 22 読み物の文の重さ: 読み込んだ物語の文ファイル（read-i18n）の合計が 300KB を超えた分（100KB ごとに 1）。全言語を一度に読まないこと
-      m.textKB = r !== 'read' ? 0 : await p.evaluate(() => { const n = performance.getEntriesByType('resource').filter(e => /\/museum\/read-i18n/.test(e.name)).reduce((a, e) => a + (e.decodedBodySize || e.transferSize || 0), 0); return Math.max(0, Math.ceil((n - 300 * 1024) / 102400)); });
+      // 22 読み物の文の重さ（1画面あたり）: 一覧＝索引ファイル（read-i18n/<lang>.js）、物語＝索引＋その物語のファイル（read-i18n/<lang>/<id>.js）。
+      //    いちばん重い画面が 300KB を超えた分（100KB ごとに 1）。全言語・全物語を一度に読まないこと（2026-11-24 物語ごとのファイルに分けた）
+      m.textKB = r !== 'read' ? 0 : await p.evaluate(() => { const E = performance.getEntriesByType('resource').filter(e => /\/museum\/read-i18n\//.test(e.name)), sz = e => e.decodedBodySize || e.transferSize || 0;
+        const idx = E.filter(e => /\/read-i18n\/[^/]+\.js/.test(e.name)).reduce((a, e) => a + sz(e), 0), one = Math.max(0, ...E.filter(e => /\/read-i18n\/[^/]+\/[^/]+\.js/.test(e.name)).map(sz));
+        window.__textKB = [Math.round(idx / 1024), Math.round(one / 1024)]; return Math.max(0, Math.ceil((idx + one - 300 * 1024) / 102400)); });
+      if (r === 'read' && process.env.DETAIL) console.log(`  ${V.w} read textKB index/story:`, await p.evaluate(() => window.__textKB));
       // 23 戻る（ブラウザの戻る・端からのスワイプ）: 読み物で 一覧 → 物語 を開いて戻ると一覧に、もう一度戻ると前の部屋に戻るか（戻らない数）
       m.histBack = r !== 'read' ? 0 : await (async () => { let bad = 0; const cur = () => p.evaluate(() => [document.querySelector('#pg-museum .muroom.on').dataset.r, AtlasRead.current ? AtlasRead.current() : null]);
         await p.evaluate(() => AtlasMuseum.go('map')); await p.waitForTimeout(800); await p.evaluate(() => AtlasMuseum.go('read')); await p.waitForTimeout(1200);

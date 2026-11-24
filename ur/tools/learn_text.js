@@ -8,7 +8,7 @@ const MORE = {
   'Choose the answer': ['Выберите ответ', '選擇答案', 'Pilih jawabannya', 'Cevabı seç'],
   'Roll {n}': ['Бросок {n}', '點數 {n}', 'Lemparan {n}', 'Atış {n}'],
   'Correct!': ['Верно!', '答對了！', 'Benar!', 'Doğru!'],
-  'Not quite.': ['Почти!', '差一點！', 'Hampir!', 'Az kaldı!'],
+  'Not this one!': ['Не этот!', '可惜！', 'Bukan yang ini!', 'Bu değil!'],
   'Best move': ['Лучший ход', '最佳走法', 'Langkah terbaik', 'En iyi hamle'],
   'Show answer': ['Показать ответ', '看答案', 'Lihat jawaban', 'Cevabı göster'],
   'Hint': ['Подсказка', '提示', 'Petunjuk', 'İpucu'],
@@ -172,7 +172,7 @@ const UI = {
   qChoice: L('答えを選ぼう', 'Choose the answer', '选择答案', '답을 고르세요', 'Elige la respuesta', 'Choisissez la réponse', 'Escolha a resposta', 'Wähle die Antwort', 'उत्तर चुनें', 'اختر الإجابة'),
   roll: L('出目 {n}', 'Roll {n}', '点数 {n}', '눈 {n}', 'Tirada {n}', 'Jet {n}', 'Lance {n}', 'Wurf {n}', 'अंक {n}', 'الرمية {n}'),
   correct: L('正解！', 'Correct!', '正确！', '정답!', '¡Correcto!', 'Correct !', 'Correto!', 'Richtig!', 'सही!', 'صحيح!'),
-  wrong: L('おしい！', 'Not quite.', '差一点！', '아쉬워요!', '¡Casi!', 'Presque !', 'Quase!', 'Fast!', 'लगभग!', 'قريب!'),
+  wrong: L('ざんねん！', 'Not this one!', '可惜！', '이번엔 아니에요!', '¡Esta no!', 'Pas celui-ci !', 'Este não!', 'Leider nicht!', 'यह नहीं!', 'ليست هذه!'),   // 追66：0点の見出しに「おしい」と言わない
   best: L('最善手', 'Best move', '最佳着', '최선수', 'Mejor jugada', 'Meilleur coup', 'Melhor lance', 'Bester Zug', 'सबसे अच्छी चाल', 'أفضل نقلة'),
   answer: L('答えを見る', 'Show answer', '看答案', '답 보기', 'Ver respuesta', 'Voir la réponse', 'Ver resposta', 'Lösung zeigen', 'उत्तर देखें', 'أظهر الإجابة'),
   hint: L('ヒント', 'Hint', '提示', '힌트', 'Pista', 'Indice', 'Dica', 'Tipp', 'संकेत', 'تلميح'),
