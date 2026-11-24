@@ -226,6 +226,7 @@ function verify(opt) {
       if (id === 'b_finish' && hp.length !== 1) add(id, j, '⑧ the hint should mark the one hole');
       if (id === 's_far') { const D = DIST[1], fw = real(p).filter(x => hops(p, x) && gainOf(p, x) >= 2).map(E.mFrom); if (hp.length < 2 || !hp.every(x => p.sq[x] === 1 && fw.includes(x)) || !fw.every(x => hp.includes(x))) add(id, j, '追52 the hint should mark every piece with a forward jump (2 or more)'); }
       if (id === 's_ladder') { if (hp.length < 2 || !hp.every(x => p.sq[x] === 2)) add(id, j, '追52 the hint should mark the black springboards (2 or more)'); const Q = E.path(p, P.best); if (!Q.some((x, i) => i && hp.includes((Q[i - 1] + x) / 2))) add(id, j, '⑧ the answer hops over none of the marked black pieces'); }
+      if (id === 's_road' && /下がる1歩/.test((UL.JA.intro.s_road || '') + UL.JA.hint.s_road.join('')) && !LS.steps.find(x => x.id === 's_road').problems.some(Q => { const q = E.Pos.from(Q.s); return Q.ok.some(m => gainOf(q, m) < 0); })) add(id, j, '追70 the intro / hints speak of a step back, no answer steps back');
       if (id === 's_road') { if (!hp.length || hp.some(x => P.ok.some(m => E.mFrom(m) === x)) || hp.some(x => p.sq[x] !== 1)) add(id, j, '追52 the hint should mark the jumper (not the stepped piece)'); }
       rows.push({ id, q: j + 1, legal: c.legal, ok: c.ok.length, d: c.d, best: real(p).includes(P.best) ? E.name(p, P.best) : "—" });
     });
