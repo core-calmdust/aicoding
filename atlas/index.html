@@ -2511,15 +2511,15 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script src="npc/roster.js?v=20"></script>
 <script src="art.js?v=21"></script>
 <script src="skins.js?v=30"></script>
-<script src="../shared/atlas-updates.js?v=55"></script>
-<script src="../shared/atlas.js?v=20261124sn1"></script>
+<script src="../shared/atlas-updates.js?v=56"></script>
+<script src="../shared/atlas.js?v=20261124gd"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2as1"></script>
-<script src="i18n/v.js?v=20261121mu2"></script>
+<script src="i18n/v.js?v=20261124gd"></script>
 <script>/* the UI strings: only ja, en and the page language (atlas/i18n/<lang>.js, made from i18n.js by tools/i18n-split.js — 2026-11-10);
    when they were made from another version of i18n.js than FULL, the whole i18n.js loads instead. Edit i18n.js, bump FULL's ?v=, run the tool. */
 (function () {
-  var FULL = 'i18n.js?v=20261121mu2', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
+  var FULL = 'i18n.js?v=20261124gd', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
   try { l = localStorage.getItem('aicoding-lang') || (function (x) { return /^zh-(tw|hk|mo|hant)/i.test(x) ? 'zh-TW' : String(x).slice(0, 2); })(navigator.language || 'ja'); } catch (e) {}
   if (!S || S.v !== v) { document.write('<script src="' + FULL + '"><\/script>'); return; }
   var L = ['ja', 'en']; if (S.langs.indexOf(l) >= 0 && L.indexOf(l) < 0) L.push(l);
@@ -2527,7 +2527,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
   L.forEach(function (x) { document.write('<script src="i18n/' + x + '.js?v=' + v + '"><\/script>'); });
 })();
 </script>
-<script src="gamelist-i18n.js?v=20261116m1"></script>
+<script src="gamelist-i18n.js?v=20261124gd"></script>
 <script src="img/tex/baked.js?v=3"></script>
 <script src="table3d.js?v=186"></script>
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
@@ -2541,7 +2541,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 })();
 </script>
 <script src="models/cardtables.js?v=4"></script>
-<script src="icons3d.js?v=46"></script>
+<script src="icons3d.js?v=47"></script>
 <script>/* rules tours: after a solved step, the ▶ button fills up like a timer until the tour moves on by itself */
 window.AtlasRgdTimer = function (btn, ms, alive) {
   if (!btn) return; btn.classList.remove('rgd-auto'); void btn.offsetWidth; btn.style.setProperty('--rgt', ms + 'ms'); btn.classList.add('rgd-auto');
@@ -2553,10 +2553,10 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=523"></script>
+<script src="lazy.js?v=525"></script>
 <script src="puzzle-lines.js?v=2"></script>
-<script src="puzzles.js?v=51"></script>
-<script src="lessons3d.js?v=197"></script>
+<script src="puzzles.js?v=55"></script>
+<script src="lessons3d.js?v=200"></script>
 <script src="missions.js?v=10"></script>
 <link rel="stylesheet" href="historia.css?v=17">
 <script src="historia.js?v=50"></script>
@@ -2571,11 +2571,11 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 .rsg-ov.draw .rsg-flag{color:#b8862a!important}</style>
 <script src="../shared/resign.js?v=3"></script><script src="../shared/drawoffer.js?v=1"></script>
 <script src="../shared/tick.js?v=2"></script>
-<script src="gamelist.js?v=49"></script>
+<script src="gamelist.js?v=50"></script>
 <link rel="stylesheet" href="worldmap.css?v=20">
-<link rel="stylesheet" href="museum.css?v=73">
-<script src="worldmap.js?v=41"></script>
-<script src="museum.js?v=214"></script>
+<link rel="stylesheet" href="museum.css?v=78">
+<script src="worldmap.js?v=42"></script>
+<script src="museum.js?v=225"></script>
 <script src="npc/npc.js?v=51"></script>
 <script src="avtalk.js?v=4"></script>
 <script>/* Page states as classes on <html> (2026-11-21) — html.cov-on: the 3D view / Historia / a sheet / a level sheet is open;
@@ -2591,7 +2591,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   mo = new MutationObserver(sync); mo.observe(document.body, { childList: true }); sync(); window.__pgState = sync; })();
 </script>
 <script src="museum/mu-games.js?v=3"></script>
-<script src="app.js?v=497"></script>
+<script src="app.js?v=498"></script>
 <script src="../shared/praline-badge.js?v=9" data-portal defer></script>
 </body>
 </html>

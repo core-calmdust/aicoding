@@ -622,8 +622,85 @@ ar: {
   gammon: 'متقدم كثيرًا؟ العب على الغامون بدل الفوز الآمن|خاسر؟ تجنّب الغامون أولًا|أعد القطع الخلفية مبكرًا وأخرج واحدة على الأقل',
 },
 };
+// (2026-11-24 第2期・担当A, 追22) what a wrong choice overlooks in the shots / race questions, from the problem's board facts (qv:
+// lessons.json, backgammon/tools/shots_facts.js) — shared by the 2D (app.js renderLessonFb) and checked by tools/lesson-verify-bg.js
+const NG = {
+ja: { 'ls.sh.sep': '・', 'ls.sh.dir': '{ds}が出れば直接当たる目：{dn}通り。', 'ls.sh.sum': '足し算・ゾロ目で届く目：{cl}（{cn}通り）。', 'ls.sh.blk': '{bl}は、止まるマスが{c}のポイントでふさがって届きません。', 'ls.sh.item': '距離{d}で{k}通り',
+  'ls.ng.sh.direct': '{x}通りは、直接当たる目だけの数です。', 'ls.ng.sh.low': '{x}通りでは数えもれがあります。', 'ls.ng.sh.block': '{x}通りは、ふさがって届かない{bl}まで数えています。', 'ls.ng.sh.dup': '{x}通りは、駒ごとの数（{sl}）を足した数。同じ目で2つの駒が当てられても1通りです。', 'ls.ng.sh.high': '{x}通りでは多すぎます。',
+  'ls.ng.race.side': 'リードしているのは、ピップの少ない{L}です。', 'ls.ng.race.diff': 'リードする側は合っていますが、差は{x}ではなく{d}ピップです。', 'ls.ng.race.even': '同じピップではありません。', 'ls.ng.race.noLead': 'どちらも同じピップで、リードはありません。' },
+en: { 'ls.sh.sep': ', ', 'ls.sh.dir': 'Rolls with a {ds} hit directly: {dn}.', 'ls.sh.sum': 'Sums and doubles that reach: {cl} ({cn}).', 'ls.sh.blk': '{bl} cannot reach: a landing point on the way is {c}’s point.', 'ls.sh.item': '{k} from {d} away',
+  'ls.ng.sh.direct': '{x} counts only the direct hits.', 'ls.ng.sh.low': '{x} leaves some rolls out.', 'ls.ng.sh.block': '{x} also counts {bl}, which is blocked.', 'ls.ng.sh.dup': '{x} adds up each checker’s count ({sl}); a roll that hits from two checkers is still one roll.', 'ls.ng.sh.high': '{x} is too many.',
+  'ls.ng.race.side': '{L} has fewer pips, so {L} is ahead.', 'ls.ng.race.diff': 'The right side, but the gap is {d} pips, not {x}.', 'ls.ng.race.even': 'The pip counts are not equal.', 'ls.ng.race.noLead': 'Both have the same pips; nobody leads.' },
+zh: { 'ls.sh.sep': '、', 'ls.sh.dir': '掷出{ds}即可直接打中：{dn}种。', 'ls.sh.sum': '靠点数相加或双骰到达：{cl}（{cn}种）。', 'ls.sh.blk': '{bl}到不了：途中落脚的点是{c}的点。', 'ls.sh.item': '距离{d}有{k}种',
+  'ls.ng.sh.direct': '{x}种只算了直接打中的掷法。', 'ls.ng.sh.low': '{x}种漏算了一些掷法。', 'ls.ng.sh.block': '{x}种把被挡住的{bl}也算进去了。', 'ls.ng.sh.dup': '{x}种是把每枚棋子的数（{sl}）相加。两枚棋子都能打中的掷法也只算1种。', 'ls.ng.sh.high': '{x}种算多了。',
+  'ls.ng.race.side': '点数少的{L}领先。', 'ls.ng.race.diff': '领先的一方对了，但差距是{d}点，不是{x}点。', 'ls.ng.race.even': '双方点数并不相同。', 'ls.ng.race.noLead': '双方点数相同，没有人领先。' },
+'zh-TW': { 'ls.sh.sep': '、', 'ls.sh.dir': '擲出{ds}即可直接擊中：{dn} 種。', 'ls.sh.sum': '靠點數相加或雙骰到達：{cl}（{cn} 種）。', 'ls.sh.blk': '{bl}到不了：途中落腳的點是{c}的點。', 'ls.sh.item': '距離 {d} 有 {k} 種',
+  'ls.ng.sh.direct': '{x} 種只算了直接擊中的擲法。', 'ls.ng.sh.low': '{x} 種漏算了一些擲法。', 'ls.ng.sh.block': '{x} 種把被擋住的{bl}也算進去了。', 'ls.ng.sh.dup': '{x} 種是把每枚棋子的數（{sl}）相加。兩枚棋子都能擊中的擲法也只算 1 種。', 'ls.ng.sh.high': '{x} 種算多了。',
+  'ls.ng.race.side': '點數少的{L}領先。', 'ls.ng.race.diff': '領先的一方對了，但差距是 {d} 點，不是 {x} 點。', 'ls.ng.race.even': '雙方點數並不相同。', 'ls.ng.race.noLead': '雙方點數相同，沒有人領先。' },
+ko: { 'ls.sh.sep': ', ', 'ls.sh.dir': '{ds}이(가) 나오면 바로 맞힘: {dn}가지.', 'ls.sh.sum': '합이나 더블로 닿는 눈: {cl} ({cn}가지).', 'ls.sh.blk': '{bl}은(는) 닿지 못함: 도중에 멈추는 칸이 {c}의 포인트.', 'ls.sh.item': '거리 {d}에서 {k}가지',
+  'ls.ng.sh.direct': '{x}가지는 바로 맞히는 눈만 센 수입니다.', 'ls.ng.sh.low': '{x}가지는 빠뜨린 눈이 있습니다.', 'ls.ng.sh.block': '{x}가지는 막혀서 닿지 않는 {bl}까지 센 수입니다.', 'ls.ng.sh.dup': '{x}가지는 말마다의 수({sl})를 더한 것. 두 말이 같은 눈으로 맞혀도 1가지입니다.', 'ls.ng.sh.high': '{x}가지는 너무 많습니다.',
+  'ls.ng.race.side': '핍이 적은 {L}이(가) 앞서 있습니다.', 'ls.ng.race.diff': '앞선 쪽은 맞지만, 차이는 {x}가 아니라 {d}핍입니다.', 'ls.ng.race.even': '핍 수가 같지 않습니다.', 'ls.ng.race.noLead': '둘 다 핍이 같아 앞선 쪽이 없습니다.' },
+es: { 'ls.sh.sep': ', ', 'ls.sh.dir': 'Tiradas con un {ds} que golpean directas: {dn}.', 'ls.sh.sum': 'Sumas y dobles que llegan: {cl} ({cn}).', 'ls.sh.blk': '{bl} no llega: un punto de paso es de {c}.', 'ls.sh.item': '{k} desde {d}',
+  'ls.ng.sh.direct': '{x} cuenta solo los golpes directos.', 'ls.ng.sh.low': 'Con {x} faltan tiradas.', 'ls.ng.sh.block': '{x} cuenta también {bl}, que está bloqueada.', 'ls.ng.sh.dup': '{x} suma lo de cada ficha ({sl}); una tirada que golpea desde dos fichas sigue siendo una.', 'ls.ng.sh.high': '{x} son demasiadas.',
+  'ls.ng.race.side': '{L} tiene menos pips, así que va por delante.', 'ls.ng.race.diff': 'El lado es correcto, pero la diferencia es de {d} pips, no {x}.', 'ls.ng.race.even': 'Los pips no son iguales.', 'ls.ng.race.noLead': 'Ambos tienen los mismos pips; nadie va por delante.' },
+fr: { 'ls.sh.sep': ', ', 'ls.sh.dir': 'Jets avec un {ds} qui frappent directement : {dn}.', 'ls.sh.sum': 'Sommes et doubles qui arrivent : {cl} ({cn}).', 'ls.sh.blk': '{bl} n’arrive pas : une case d’arrêt est une flèche de {c}.', 'ls.sh.item': '{k} à {d} cases',
+  'ls.ng.sh.direct': '{x} ne compte que les coups directs.', 'ls.ng.sh.low': 'Avec {x}, il manque des jets.', 'ls.ng.sh.block': '{x} compte aussi {bl}, qui est bloqué.', 'ls.ng.sh.dup': '{x} additionne le compte de chaque pion ({sl}) ; un jet qui frappe depuis deux pions ne compte qu’une fois.', 'ls.ng.sh.high': '{x}, c’est trop.',
+  'ls.ng.race.side': '{L} a moins de pips, donc {L} mène.', 'ls.ng.race.diff': 'Le bon camp, mais l’écart est de {d} pips, pas {x}.', 'ls.ng.race.even': 'Les comptes ne sont pas égaux.', 'ls.ng.race.noLead': 'Les deux ont autant de pips ; personne ne mène.' },
+pt: { 'ls.sh.sep': ', ', 'ls.sh.dir': 'Lances com um {ds} que acertam direto: {dn}.', 'ls.sh.sum': 'Somas e duplos que chegam: {cl} ({cn}).', 'ls.sh.blk': '{bl} não chega: uma casa de parada é das {c}.', 'ls.sh.item': '{k} a {d} de distância',
+  'ls.ng.sh.direct': '{x} conta só os acertos diretos.', 'ls.ng.sh.low': 'Com {x} faltam lances.', 'ls.ng.sh.block': '{x} conta também {bl}, que está bloqueado.', 'ls.ng.sh.dup': '{x} soma a conta de cada pedra ({sl}); um lance que acerta de duas pedras continua sendo um.', 'ls.ng.sh.high': '{x} é demais.',
+  'ls.ng.race.side': '{L} tem menos pips, então {L} está à frente.', 'ls.ng.race.diff': 'O lado está certo, mas a diferença é de {d} pips, não {x}.', 'ls.ng.race.even': 'As contagens não são iguais.', 'ls.ng.race.noLead': 'Ambos têm os mesmos pips; ninguém está à frente.' },
+de: { 'ls.sh.sep': ', ', 'ls.sh.dir': 'Würfe mit einer {ds} treffen direkt: {dn}.', 'ls.sh.sum': 'Summen und Pasche, die hinkommen: {cl} ({cn}).', 'ls.sh.blk': '{bl} kommt nicht hin: ein Zwischenfeld ist ein Punkt von {c}.', 'ls.sh.item': '{k} aus {d} Entfernung',
+  'ls.ng.sh.direct': '{x} zählt nur die direkten Treffer.', 'ls.ng.sh.low': 'Bei {x} fehlen Würfe.', 'ls.ng.sh.block': '{x} zählt auch {bl} mit, das blockiert ist.', 'ls.ng.sh.dup': '{x} addiert die Zahlen der einzelnen Steine ({sl}); ein Wurf, der von zwei Steinen trifft, zählt nur einmal.', 'ls.ng.sh.high': '{x} sind zu viele.',
+  'ls.ng.race.side': '{L} hat weniger Pips und führt deshalb.', 'ls.ng.race.diff': 'Die Seite stimmt, aber der Abstand ist {d} Pips, nicht {x}.', 'ls.ng.race.even': 'Die Pip-Zahlen sind nicht gleich.', 'ls.ng.race.noLead': 'Beide haben gleich viele Pips; niemand führt.' },
+ru: { 'ls.sh.sep': ', ', 'ls.sh.dir': 'Броски с {ds} бьют напрямую: {dn}.', 'ls.sh.sum': 'Суммы и дубли, которые доходят: {cl} ({cn}).', 'ls.sh.blk': '{bl} не доходит: промежуточный пункт занят {c}.', 'ls.sh.item': '{k} с расстояния {d}',
+  'ls.ng.sh.direct': '{x} — это только прямые попадания.', 'ls.ng.sh.low': 'В {x} пропущены броски.', 'ls.ng.sh.block': 'В {x} засчитан и {bl}, который заблокирован.', 'ls.ng.sh.dup': '{x} — сумма по каждой шашке ({sl}); бросок, бьющий с двух шашек, считается один раз.', 'ls.ng.sh.high': '{x} — слишком много.',
+  'ls.ng.race.side': 'У {L} меньше пипов, значит впереди {L}.', 'ls.ng.race.diff': 'Сторона верна, но разница {d} пипов, а не {x}.', 'ls.ng.race.even': 'Пипы не равны.', 'ls.ng.race.noLead': 'У обеих сторон одинаково пипов; никто не впереди.' },
+tr: { 'ls.sh.sep': ', ', 'ls.sh.dir': '{ds} gelen zarlar doğrudan vurur: {dn}.', 'ls.sh.sum': 'Toplam ve çift zarla ulaşanlar: {cl} ({cn}).', 'ls.sh.blk': '{bl} ulaşamaz: yoldaki duraklardan biri {c} tarafının kapısı.', 'ls.sh.item': '{d} uzaktan {k}',
+  'ls.ng.sh.direct': '{x} yalnızca doğrudan vuruşları sayar.', 'ls.ng.sh.low': '{x} ile bazı zarlar eksik.', 'ls.ng.sh.block': '{x}, kapalı olan {bl} zarını da sayıyor.', 'ls.ng.sh.dup': '{x}, her pulun sayısını ({sl}) toplar; iki puldan vuran bir zar yine tek sayılır.', 'ls.ng.sh.high': '{x} fazla.',
+  'ls.ng.race.side': '{L} daha az pipe sahip, yani önde olan {L}.', 'ls.ng.race.diff': 'Taraf doğru ama fark {x} değil, {d} pip.', 'ls.ng.race.even': 'Pip sayıları eşit değil.', 'ls.ng.race.noLead': 'İki tarafın pipi eşit; önde olan yok.' },
+id: { 'ls.sh.sep': ', ', 'ls.sh.dir': 'Lemparan dengan angka {ds} langsung memukul: {dn}.', 'ls.sh.sum': 'Jumlah dan dadu kembar yang sampai: {cl} ({cn}).', 'ls.sh.blk': '{bl} tidak sampai: titik singgah di jalan adalah titik {c}.', 'ls.sh.item': '{k} dari jarak {d}',
+  'ls.ng.sh.direct': '{x} hanya menghitung pukulan langsung.', 'ls.ng.sh.low': '{x} masih kurang beberapa lemparan.', 'ls.ng.sh.block': '{x} ikut menghitung {bl}, padahal terhalang.', 'ls.ng.sh.dup': '{x} menjumlahkan hitungan tiap bidak ({sl}); lemparan yang memukul dari dua bidak tetap satu.', 'ls.ng.sh.high': '{x} terlalu banyak.',
+  'ls.ng.race.side': '{L} punya pip lebih sedikit, jadi {L} yang unggul.', 'ls.ng.race.diff': 'Pihaknya benar, tetapi selisihnya {d} pip, bukan {x}.', 'ls.ng.race.even': 'Jumlah pip tidak sama.', 'ls.ng.race.noLead': 'Pip keduanya sama; tidak ada yang unggul.' },
+hi: { 'ls.sh.sep': ', ', 'ls.sh.dir': '{ds} वाले रोल सीधे हिट करते हैं: {dn}।', 'ls.sh.sum': 'जोड़ और जोड़ी से पहुँचने वाले: {cl} ({cn})।', 'ls.sh.blk': '{bl} नहीं पहुँचता: रास्ते का एक पड़ाव {c} का पॉइंट है।', 'ls.sh.item': '{d} दूर से {k}',
+  'ls.ng.sh.direct': '{x} में सिर्फ़ सीधे हिट गिने गए हैं।', 'ls.ng.sh.low': '{x} में कुछ रोल छूट गए हैं।', 'ls.ng.sh.block': '{x} में रुका हुआ {bl} भी गिन लिया गया है।', 'ls.ng.sh.dup': '{x} हर गोटी की गिनती ({sl}) का जोड़ है; दो गोटियों से हिट करने वाला रोल भी एक ही गिना जाता है।', 'ls.ng.sh.high': '{x} बहुत ज़्यादा है।',
+  'ls.ng.race.side': '{L} के पिप कम हैं, इसलिए {L} आगे है।', 'ls.ng.race.diff': 'पक्ष सही है, पर अंतर {x} नहीं, {d} पिप है।', 'ls.ng.race.even': 'पिप बराबर नहीं हैं।', 'ls.ng.race.noLead': 'दोनों के पिप बराबर हैं; कोई आगे नहीं।' },
+ar: { 'ls.sh.sep': '، ', 'ls.sh.dir': 'الرميات التي فيها {ds} تضرب مباشرة: {dn}.', 'ls.sh.sum': 'المجاميع والأزواج التي تصل: {cl} ({cn}).', 'ls.sh.blk': '{bl} لا تصل: إحدى نقاط التوقف في الطريق نقطة لـ{c}.', 'ls.sh.item': '{k} من مسافة {d}',
+  'ls.ng.sh.direct': '{x} تعدّ الضربات المباشرة فقط.', 'ls.ng.sh.low': 'في {x} رميات ناقصة.', 'ls.ng.sh.block': '{x} تعدّ أيضًا {bl} وهي مسدودة.', 'ls.ng.sh.dup': '{x} تجمع عدد كل قطعة ({sl})؛ الرمية التي تضرب من قطعتين تُعدّ مرة واحدة.', 'ls.ng.sh.high': '{x} أكثر من اللازم.',
+  'ls.ng.race.side': 'لدى {L} نقاط أقل، لذا {L} متقدم.', 'ls.ng.race.diff': 'الطرف صحيح، لكن الفرق {d} نقطة وليس {x}.', 'ls.ng.race.even': 'العددان غير متساويين.', 'ls.ng.race.noLead': 'العددان متساويان؛ لا أحد متقدم.' },
+};
 const I = window.I18N || (window.I18N = {});
 for (const l in S) { const o = Object.assign({}, S[l]); for (const id in (K[l] || {})) o['ls.' + id + '.keys'] = K[l][id]; I[l] = Object.assign(I[l] || {}, o); }
+for (const l in NG) I[l] = Object.assign(I[l] || {}, NG[l]);
+// the kind of a wrong choice (the same rules as backgammon/tools/shots_facts.js shotKind) and the words for it
+const BGChoice = {
+  kind(P, i) {
+    const o = P.opts[i], [k, x] = Array.isArray(o) ? o : [o], v = P.qv || {};
+    if (i === P.ans) return 'right';
+    if (P.q === 'shots') { if (x < v.n) return x === v.dn ? 'direct' : 'low'; if (v.bn && x === v.n + v.bn) return 'block'; if ((v.ds || []).length > 1 && x === v.S) return 'dup'; return 'high'; }
+    if (P.q === 'race') { if (v.a === v.b) return 'noLead'; if (k === 'even') return 'even'; return k !== (v.a < v.b ? 'lead_c' : 'lead_o') ? 'side' : 'diff'; }
+    return '';
+  },
+  // the right count, rebuilt from its parts: the direct numbers, the sums / doubles, the blocked rolls
+  shotsWhy(P, tr, V) {
+    const v = P.qv || {}, sep = tr('ls.sh.sep'), dsD = (v.ds || []).filter(d => d <= 6), out = [];
+    if (dsD.length && v.dn) out.push(tr('ls.sh.dir', Object.assign({}, V, { ds: dsD.join(sep), dn: v.dn })));
+    if (v.cn) out.push(tr('ls.sh.sum', Object.assign({}, V, { cl: (v.cl || []).join(sep), cn: v.cn })));
+    if (v.bn) out.push(tr('ls.sh.blk', Object.assign({}, V, { bl: (v.bl || []).join(sep) })));
+    return out.join(' ');
+  },
+  ng(P, i, tr, V) {
+    const k = BGChoice.kind(P, i), o = P.opts[i], x = Array.isArray(o) ? o[1] : undefined, v = P.qv || {}, sep = tr('ls.sh.sep');
+    if (!k || k === 'right') return '';
+    if (P.q === 'shots') {
+      const T1 = { 1: 11, 2: 12, 3: 14, 4: 15, 5: 15, 6: 17, 7: 6, 8: 6, 9: 5, 10: 3, 11: 2, 12: 3, 15: 1, 16: 1, 18: 1, 20: 1, 24: 1 };
+      const sl = (v.ds || []).map(d => tr('ls.sh.item', { d, k: T1[d] || 0 })).join(sep);
+      return tr('ls.ng.sh.' + k, Object.assign({}, V, { x, bl: (v.bl || []).join(sep), sl }));
+    }
+    if (P.q === 'race') return tr('ls.ng.race.' + k, Object.assign({}, V, { x, d: Math.abs(v.a - v.b), L: v.a < v.b ? V.c : V.o }));
+    return '';
+  },
+};
+if (typeof window !== 'undefined') window.BGChoice = BGChoice;
 try { if (typeof document !== 'undefined' && document.head && !document.getElementById('bgLsKeysCss')) { const st = document.createElement('style'); st.id = 'bgLsKeysCss'; st.textContent = '.ls-keys{margin:10px 0 2px;padding:8px 12px;border-radius:10px;background:rgba(200,150,60,.10);border:1px solid rgba(200,150,60,.35)}.ls-keys ul{margin:4px 0 0;padding-inline-start:1.2em}.ls-keys li{margin:2px 0}'; document.head.appendChild(st); } } catch (e) {}
 // the key ideas as HTML (under the intro); '' when the step has none
 window.BGLsKeys = function (id, tr) {

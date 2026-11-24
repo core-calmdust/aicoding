@@ -1422,7 +1422,75 @@ function xiangqi(opt) {
     });
     if (tys.size < 2) add(id, 4, `追27 every answer moves the same kind of piece (${[...tys]})`);
   });
+  try { xqStray42(PZ, (id, j, m) => out.push({ step: 'puzzle ' + id, q: j + 1, msg: m }), opt && opt.why); } catch (e) { add('-', -1, '追42 ' + e.message); }
   return out;
+}
+// (2026-11-24 担当A, 追42・追20) the xiangqi mates on the 3D table and the 2D page: after a move off the solution (not a blunder that is
+// taken back) the defender's reply is marked red and its fact is said — xiangqi/pzwhy.js classes cap / esc / block / run / move, read
+// from the board before and after the reply for EVERY wrong move × EVERY reply of every mate of 2 moves or more; the pieces named
+// right (the taker, the piece taken, the defender's general); then whether a mate is still there in the moves left (the solver, as
+// the runner's xqReq(p, left, false)); ショウギツネ's own words (OWN.ja) claim exactly the class's fact, plain form, no praise (追20);
+// the 2D's 14 languages have every class, no placeholder left. The 3D xqMoved has no pz.stray + QA.mid line left (QA.mid = 「いい調子！」).
+function xqStray42(PZ, add, W0) {
+  const fs = require('fs'), E = require(path.join(ROOT, 'xiangqi/engine.js'));
+  if (!xqStray42.wasm) { const x = new WebAssembly.Instance(new WebAssembly.Module(fs.readFileSync(path.join(ROOT, 'xiangqi/engine.wasm'))), { env: { now: () => Date.now(), progress: () => {} } }); E.setWasm(x.exports); xqStray42.wasm = true; }
+  const W = W0 || require(path.join(ROOT, 'xiangqi/pzwhy.js')), OWN = (W.OWN || {}).ja;
+  if (!OWN) { add('-', -1, '追42 no ショウギツネ words for the reply (XiangqiPzWhy.OWN.ja)'); return; }
+  const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], KS = ['cap', 'esc', 'block', 'run', 'move', 'reach', 'noreach'];
+  for (const lg of LANGS) for (const k of KS) if (!(W.T[lg] && W.T[lg][k])) add('-', -1, `追42 no 2D words ${lg}.${k}`);
+  for (const k of KS) if (!(OWN[k] || []).length) add('-', -1, `追42 no ショウギツネ words ${k}`);
+  const PRAISE = /調子|いいね|いい手|すごい|お見事|やったね|さすが|Nice|Good|Great|不错|좋아/;
+  for (const k in OWN) for (const x of OWN[k]) { if (PRAISE.test(x)) add('-', -1, `追42/追20 praise after a move off the line: ${x}`); if (/(です|ます|ません|ました)(?=[。！？]|$)/.test(x)) add('-', -1, `ショウギツネ: polite 「${x}」`); }
+  for (const lg of LANGS) for (const k of KS) if (PRAISE.test(String((W.T[lg] || {})[k]))) add('-', -1, `追20 praise in the 2D ${lg}.${k}`);
+  const CLAIM = { cap: /取/, esc: /逃/, block: /防|止/, run: /動|寄せ/, move: /動|回し/, reach: /まだ|残って/, noreach: /もう|なく|ない/ };
+  const NEVER = { cap: /逃げ|防/, esc: /取られ|取った/, block: /取られ|取った|逃げ/, run: /取られ|取った/, move: /取られ|取った/, reach: /詰まなく|ない/, noreach: /まだ/ };
+  for (const k in CLAIM) for (const x of [].concat(OWN[k] || [], W.T.ja[k] || [])) { if (!CLAIM[k].test(x)) add('-', -1, `追42 ${k} 「${x}」 does not say its fact`); if (NEVER[k].test(x)) add('-', -1, `追42 ${k} 「${x}」 says another class's fact`); }
+  for (const k of ['esc', 'run']) for (const x of [].concat(OWN[k], W.T.ja[k])) if (!/\{g\}/.test(x)) add('-', -1, `追42 ${k} 「${x}」 does not name the general`);
+  let nMv = 0, nRe = 0, reach = 0, noreach = 0; const cnt = {};
+  for (const T of PZ.themes || []) T.puzzles.forEach((P, j) => {
+    if (P.n < 2) return;
+    const a = msg => add(T.id, j, msg), pos = E.Pos.from(P.s), ck = !!T.ck;
+    const L = E.puzzle(P.s, [], P.n, false, ck) || [];
+    if (!L.length) { a('追42 the solver gives no moves'); return; }
+    let first = true;
+    for (const m of pos.moves()) {
+      const e = L.find(x => x.m === m); if (e && e.need > 0 && e.need <= P.n) continue;   // (the solution)
+      const mid = pos.clone().play(m); if (mid.status() !== 0) continue;
+      if (ck && !mid.inCheck()) continue;   // (pz.bl.nock: taken back)
+      if (mid.moves().some(x => mid.clone().play(x).status() === -1)) continue;   // (pz.bl.lose: taken back)
+      nMv++;
+      for (const r of mid.moves()) {
+        nRe++;
+        const w = W.why(E, mid, r), after = mid.clone().play(r), taken = mid.at(E.mTo(r)), mover = mid.at(E.mFrom(r)), kingMv = E.typeOf(mover) === E.KING;
+        const k = taken ? 'cap' : mid.inCheck() ? (kingMv ? 'esc' : 'block') : (kingMv ? 'run' : 'move');
+        if (w.k !== k) { a(`追42 reply class ${w.k} but the board says ${k}`); continue; }
+        if (k === 'cap' && (!w.p || w.p.t !== E.typeOf(taken) || w.p.c !== E.colorOf(taken) || E.colorOf(taken) === mid.side)) a('追42 the piece taken is not named right');
+        if (!w.b || w.b.t !== E.typeOf(mover) || w.b.c !== mid.side) a('追42 the reply\'s piece is not named right');
+        if (!w.g || w.g.t !== E.KING || w.g.c !== mid.side) a('追42 the defender\'s general is not named right');
+        if ((k === 'esc' || k === 'block') && after.attacked(mid.side)) a('追42 the check is not out after ' + k);
+        cnt[k] = (cnt[k] || 0) + 1;
+        for (const lg of LANGS) { const t = W.say(lg, w, true, 2) + W.say(lg, w, false, 2); if (/[{}]|undefined|null/.test(t)) a(`追42 ${lg} words with a placeholder: ${t}`); }
+        const t3 = W.say('ja', w, null, 0, OWN, nRe);
+        if (k === 'cap' && !(t3.includes(W.name('ja', w.p.t, w.p.c)) && t3.includes(W.name('ja', w.b.t, w.b.c)))) a('追42 ショウギツネ does not name the pieces: ' + t3);
+        if ((k === 'block' || k === 'move') && !t3.includes(W.name('ja', w.b.t, w.b.c))) a('追42 ショウギツネ does not name the piece moved: ' + t3);
+        if ((k === 'esc' || k === 'run') && !t3.includes(W.name('ja', E.KING, mid.side))) a('追42 ショウギツネ does not name the general: ' + t3);
+      }
+      if (first) {   // the solver: is a mate still there in n − 1 after each reply? (= the runner's xqReq(p, left, false), need ≤ left)
+        first = false;
+        for (const r of mid.moves()) { const R = E.puzzle(P.s, [m, r], P.n - 1, false, ck) || [], ok = R.some(x => x.need > 0 && x.need <= P.n - 1); ok ? reach++ : noreach++; }
+      }
+    }
+  });
+  const p3 = fs.readFileSync(path.join(ROOT, 'atlas/puzzles.js'), 'utf8'), app = fs.readFileSync(path.join(ROOT, 'xiangqi/app.js'), 'utf8');
+  const xq = p3.slice(p3.indexOf('async function xqMoved('), p3.indexOf('async function jgStray('));
+  if (!/id === 'xiangqi' && window\.XiangqiPzWhy\) return jgStray\(p, mid, r, window\.XiangqiPzWhy\)/.test(xq)) add('-', -1, '追42 the 3D xqMoved does not say the reply\'s fact for xiangqi');
+  if (/pz\.stray/.test(xq.replace(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g, ''))) add('-', -1, '追42/追20 the 3D xqMoved still says pz.stray (with QA.mid「いい調子！」)');
+  if (!/const L = await xqReq\(p, left, false\);[^\n]*\n\s*const reach = \(L \|\| \[\]\)\.some\(e => e\.need > 0 && e\.need <= left\)/.test(p3)) add('-', -1, '追42 the 3D jgStray does not ask the solver for the moves left');
+  if (!/W\.why\(E, b2, res\.move\)/.test(app) || !/reach = \(L2 \|\| \[\]\)\.some\(x => x\.need > 0 && x\.need <= left2\)/.test(app)) add('-', -1, '追42 the 2D puzzleMove does not say the reply\'s fact');
+  const lz = fs.readFileSync(path.join(ROOT, 'atlas/lazy.js'), 'utf8'), ix = fs.readFileSync(path.join(ROOT, 'xiangqi/index.html'), 'utf8');
+  if (!/"xiangqi": \[[^\]]*"\.\.\/xiangqi\/pzwhy\.js\?v=\d+"/.test(lz)) add('-', -1, '追42 the 3D does not load xiangqi/pzwhy.js (atlas/lazy.js)');
+  if (!/<script src="pzwhy\.js\?v=\d+"><\/script>/.test(ix)) add('-', -1, '追42 the 2D page does not load pzwhy.js');
+  xqStray42.stats = { moves: nMv, replies: nRe, cnt, reach, noreach };
 }
 // (2026-11-24 第2期) shogi: the strict ①〜⑨ of the verified steps (SH_DONE). k20「駒の動きと価値」(mode material): take the most
 // valuable piece that can be taken. The goal set from the rules (every capture of the top piece), the stored candidates (every
@@ -2328,7 +2396,8 @@ function hxDeep(O, out) {   // ① ② again: the native engine searches every v
       hxProblem({ s: P.s, best: P.best, sc: sc.long }, { sc: sc.short }).forEach(m => out.push({ step: g.id, q: j + 1, msg: 'deep ' + m })); });
   }
 }
-const ur = () => require('./lesson-verify-ur.js')();   // (2026-11-24 担当C：ウルのレッスン、tools/lesson-verify-ur.js)
+const ur = () => require('./lesson-verify-ur.js')();
+const backgammon = () => require('./lesson-verify-bg.js')();   // (2026-11-24 担当A：バックギャモンの選ぶ問題 shots・race、tools/lesson-verify-bg.js)   // (2026-11-24 担当C：ウルのレッスン、tools/lesson-verify-ur.js)
 const senet = () => require('./lesson-verify-senet.js')();   // (2026-11-24 担当C：セネトのレッスン、tools/lesson-verify-senet.js)
 // (2026-11-24 第2期・担当B) xiangqi openings (xiangqi/open): the practice pool of every opening marked verified (xiangqi/openings.json,
 // chosen by xiangqi/tools/op_curate.js). ① the stored values are the engine's fixed-depth values (depth 8, a fresh game: deterministic)
@@ -2440,15 +2509,17 @@ function stray() {
   fns.forEach((f, i) => { const body = src.slice(f.at, i + 1 < fns.length ? fns[i + 1].at : src.length); if (/B\.tx\('pz\.stray'/.test(body)) out.push({ step: f.name === 'xqMoved' && /id === 'janggi' && window\.JanggiPzWhy\) return jgStray\(/.test(body) ? 'xiangqi' : STRAY_KIND[f.name] || f.name, q: 0, msg: '追42 a move off the solution: only pz.stray, the board\'s fact is not said' }); });
   return out;
 }
-// (2026-11-24 担当C) fox and geese on the 3D table: the puzzles (all 5 themes, 250) — tools/lesson-verify-foxgeese.js
+// (2026-11-24 担当C) fox and geese on the 3D table: the puzzles (all 5 themes, 250) and the lessons listed on the 3D (atlas/ls-foxgeese.js READY) — tools/lesson-verify-foxgeese.js
 const foxgeese = () => require('./lesson-verify-foxgeese.js').verify().out.map(o => ({ step: o.theme, q: o.q, msg: o.msg }));
 const reversiOpen = opt => require('./lesson-verify-rvopen.js')(opt);   // (2026-11-24 担当B：リバーシの定跡、tools/lesson-verify-rvopen.js)
 const patolli = () => require('./lesson-verify-patolli.js')();   // (2026-11-24 担当C：パトリのレッスン（ベルの復元 v2）、tools/lesson-verify-patolli.js)
-const GAMES = { chessOpen, xiangqiOpen, reversiOpen, ur, senet, patolli, foxgeese, stray, hex, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines, janggi, hexOpen };
+const gomokuOpen = opt => require('./lesson-verify-gmopen.js')(opt);   // (2026-11-24 担当B：五目並べの定跡（珠型）、tools/lesson-verify-gmopen.js)
+const GAMES = { backgammon, gomokuOpen, chessOpen, xiangqiOpen, reversiOpen, ur, senet, patolli, foxgeese, stray, hex, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines, janggi, hexOpen };
 module.exports = GAMES; GAMES.mancalaWords = mancalaWords; Object.assign(GAMES, { chessOpenCtx, chessOpenProblem, chessOpenSet, chessOpenD }); Object.defineProperty(GAMES, '_hex', { value: { ctx: hxCtx, near: hxNear, problem: hxProblem, d: hxD, pts: hxPts, kind: (sp, m) => { const X = hxX(); return X.HXA.kind(X.HXA.facts(sp, m)); } } }); Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
+Object.defineProperty(GAMES, '_xqStray', { value: xqStray42 });   // (the xiangqi 追42 check alone, with a broken pzwhy for tests)
 if (require.main === module) {
-  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'reversiOpen,connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,chessOpen,xiangqiOpen,openLines,janggi,foxgeese,hex,hexOpen').split(',');
+  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'backgammon,reversiOpen,gomokuOpen,connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,chessOpen,xiangqiOpen,openLines,janggi,foxgeese,hex,hexOpen').split(',');
   let bad = 0;
-  for (const g of games) { const f = GAMES[g]((g === 'hexOpen' || g === 'reversiOpen') && a.includes('--deep') ? { deep: true } : undefined); if (!f.length) { console.log(`OK ${g}` + (g === 'reversiOpen' ? ` (リバーシの定跡 ${[...require('./lesson-verify-rvopen.js').DONE].join('・') || 'なし'} の手順の外の5問の①〜⑨・追1・追43` + (a.includes('--deep') ? '。①②はエンジンで読み直し)' : '。①②は保存した2つの読みで照合、読み直しは --deep)') : g === 'xiangqiOpen' ? ` (シャンチーの定跡 ${JSON.parse(require('fs').readFileSync(path.join(ROOT, 'xiangqi/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id).join('・')} の①〜⑨・追3・追4・追5・追8・追9・追41。ほかの定跡は pending)` : g === 'chessOpen' ? ' (チェスの定跡の drill の①〜⑨・追3・追25。drill のない定跡は pending)' : g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'patolli' ? ' (パトリの作り直したレッスン（v2：豆の確率・腕の先・上がり）の①〜⑧・追7・追16・追22・追23・追40。厳密な勝率は C で解き直し)' : g === 'senet' ? ' (セネトのレッスン9本（v2）の①〜⑧・追7・追16・追22・追23・追28・追36・追40・追47。厳密な勝率は C で解き直し、水の家の選ぶ問題は engine.js で数え直し)' : g === 'hex' ? ' (3D の準備13本：緑の印・半回転の try・説明と ほめ言葉の語が盤の事実・追1 準備の問題を本番で出さない)' : g === 'hexOpen' ? ` (ヘックスの定跡 ${JSON.parse(require('fs').readFileSync(path.join(ROOT, 'hex/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id).join('・') || 'なし'} の①〜⑨` + (a.includes('--deep') ? '。①②はエンジンで読み直し)' : '。①②は保存した2つの読みで照合、読み直しは --deep＝追26)') : g === 'foxgeese' ? ' (パズル全250問の①〜⑨・追6・追13・追16：厳密なソルバーで手数・正解の集まり・全段階の全不正解手の応手と文、2D の外れた手の文)' : g === 'janggi' ? ' (パズル全問・レッスン b_rook・b_horse・b_elephant・b_cannon・b_pawn・b_escape・b_mate1・t_capture・t_fork・t_check・m_mate2・m_mate3・e_rook・e_pawn の①〜⑨・追19・追20・追24・追27・追31・追34・追38・追39・追42・追44・追51・追52)' : g === 'ur' ? (require('fs').existsSync(require('path').join(process.env.UR_LUT_DIR || '/tmp/urlut', 'finkel.rgu')) ? ' (ウルのレッスン12本の①〜⑧・追7・追16)' : ' (ウルのレッスン12本の③〜⑧・追7・追16。①②は完全解析表なしで未照合＝追26)') : g === 'openLines' ? ' (shogi・tafl・checkers の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧)`)); continue; }    bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
+  for (const g of games) { const f = GAMES[g]((g === 'hexOpen' || g === 'reversiOpen' || g === 'gomokuOpen') && a.includes('--deep') ? { deep: true } : undefined); if (!f.length) { console.log(`OK ${g}` + (g === 'gomokuOpen' ? ` (五目並べの定跡（珠型） ${require('./lesson-verify-gmopen.js').DONE().join('・') || 'なし'} の5問の①〜⑨・追1・追39・追53。①は保存した2つの読みと net の最善で照合、--deep で読み直し)` : g === 'reversiOpen' ? ` (リバーシの定跡 ${[...require('./lesson-verify-rvopen.js').DONE].join('・') || 'なし'} の手順の外の5問の①〜⑨・追1・追43` + (a.includes('--deep') ? '。①②はエンジンで読み直し)' : '。①②は保存した2つの読みで照合、読み直しは --deep)') : g === 'xiangqiOpen' ? ` (シャンチーの定跡 ${JSON.parse(require('fs').readFileSync(path.join(ROOT, 'xiangqi/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id).join('・')} の①〜⑨・追3・追4・追5・追8・追9・追41。ほかの定跡は pending)` : g === 'chessOpen' ? ' (チェスの定跡の drill の①〜⑨・追3・追25。drill のない定跡は pending)' : g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'patolli' ? ' (パトリの作り直したレッスン（v2：豆の確率・腕の先・上がり）の①〜⑧・追7・追16・追22・追23・追40。厳密な勝率は C で解き直し)' : g === 'senet' ? ' (セネトのレッスン9本（v2）の①〜⑧・追7・追16・追22・追23・追28・追36・追40・追47。厳密な勝率は C で解き直し、水の家の選ぶ問題は engine.js で数え直し)' : g === 'backgammon' ? ' (選ぶ問題 shots・race の①〜⑨・追22・追23・追40・追54：36通りをルールで数え直し、誤答ごとの説明を14言語で)' : g === 'hex' ? ' (3D の準備13本：緑の印・半回転の try・説明と ほめ言葉の語が盤の事実・追1 準備の問題を本番で出さない)' : g === 'hexOpen' ? ` (ヘックスの定跡 ${JSON.parse(require('fs').readFileSync(path.join(ROOT, 'hex/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id).join('・') || 'なし'} の①〜⑨` + (a.includes('--deep') ? '。①②はエンジンで読み直し)' : '。①②は保存した2つの読みで照合、読み直しは --deep＝追26)') : g === 'foxgeese' ? ' (パズル全250問の①〜⑨・追6・追13・追16：厳密なソルバーで手数・正解の集まり・全段階の全不正解手の応手と文、2D の外れた手の文／3D のレッスン（狐：取れるガチョウ・続けて取る・2羽を同時に）15問の①〜⑧・追3・追7・追16・追52：正解の集まり・全合法手の盤の事実と14言語の文・ヒントの印)' : g === 'janggi' ? ' (パズル全問・レッスン b_rook・b_horse・b_elephant・b_cannon・b_pawn・b_escape・b_mate1・t_capture・t_fork・t_check・m_mate2・m_mate3・e_rook・e_pawn の①〜⑨・追19・追20・追24・追27・追31・追34・追38・追39・追42・追44・追51・追55)' : g === 'ur' ? (require('fs').existsSync(require('path').join(process.env.UR_LUT_DIR || '/tmp/urlut', 'finkel.rgu')) ? ' (ウルのレッスン12本の①〜⑧・追7・追16)' : ' (ウルのレッスン12本の③〜⑧・追7・追16。①②は完全解析表なしで未照合＝追26)') : g === 'openLines' ? ' (shogi・tafl・checkers の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧${g === 'xiangqi' ? '、詰め233問の外れた手の文＝追20・追42' : ''})`)); continue; }    bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
   process.exit(bad ? 1 : 0);
 }

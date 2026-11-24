@@ -651,7 +651,7 @@ function lessons(opt) {
       if (!g.includes(MA) || !g.includes(TA) || !g.includes(g0 + '点') || !g.includes('王手')) a(`⑧ the praise 「${g}」 does not name the check, the ${MA}, the ${TA} and ${g0}点`);
       for (const mm of g.matchAll(/(\d+)点/g)) if (+mm[1] !== g0) a(`⑧ the praise 「${g}」: ${mm[1]}点`);
       for (const n2 of ['車', '馬', '包', '象', '士', '卒', '兵']) if (![MA, TA].includes(n2) && g.includes(n2)) a(`⑧ the praise 「${g}」 names a ${n2}`);
-      if (hit[0] && g0 > PTS[hit[0].t]) a(`追52 the praise names the ${TA} (${PTS[hit[0].t]}点) but the sure gain is ${g0}点: it comes from elsewhere`);
+      if (hit[0] && g0 > PTS[hit[0].t]) a(`追55 the praise names the ${TA} (${PTS[hit[0].t]}点) but the sure gain is ${g0}点: it comes from elsewhere`);
       if (/取れた|間に合わない|手が回らない|助けられない/.test(g)) a(`⑧ the praise 「${g}」 says the ${TA} is won (only the value is sure)`);
       for (const u of all.concat([P.best])) { const raw = plain(W.ng(u)); BAD(raw);
         if (!raw.includes('〈正〉')) { a(`⑦ ${nm(u)}: the right move not named 「${raw}」`); continue; }
