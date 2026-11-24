@@ -17,7 +17,7 @@ const UI = {
   note: L10('（準備の問題は採点しません）', '(Warm-up moves are not scored)', '（热身题不计分）', '(준비 문제는 채점하지 않습니다)', '(El calentamiento no puntúa)', '(L’échauffement n’est pas noté)', '(O aquecimento não vale pontos)', '(Das Aufwärmen wird nicht gewertet)', '(तैयारी के अंक नहीं गिने जाते)', '(لا يُحتسب التمهيد في النقاط)'),
   look: L10('光っている石を見てみよう。', 'Look at the glowing stones.', '看看发光的棋子。', '빛나는 돌을 보세요.', 'Mira las piedras que brillan.', 'Regardez les pierres qui brillent.', 'Olhe as pedras que brilham.', 'Schau dir die leuchtenden Steine an.', 'चमकते पत्थरों को देखो।', 'انظر إلى الأحجار المضيئة.'),
   ans: L10('答え：{m}', 'Answer: {m}', '答案：{m}', '정답: {m}', 'Respuesta: {m}', 'Réponse : {m}', 'Resposta: {m}', 'Lösung: {m}', 'उत्तर: {m}', 'الجواب: {m}'),
-  ng: L10('おしい！ 局面を戻すので、もう一度考えてみよう。', 'Not quite! The position goes back — try again.', '差一点！局面会复原，再想一想。', '아깝다! 국면을 되돌리니 다시 생각해 보자.', '¡Casi! La posición vuelve atrás: inténtalo otra vez.', 'Presque ! La position revient : réessayez.', 'Quase! A posição volta: tente de novo.', 'Fast! Die Stellung wird zurückgesetzt – versuch es noch einmal.', 'लगभग! स्थिति वापस आती है — फिर सोचो।', 'قريب! سيعود الوضع — حاول مرة أخرى.'),
+  ng: L10('ちがうみたい。局面を戻すので、もう一度考えてみよう。', 'Not quite! The position goes back — try again.', '不对哦！局面会复原，再想一想。', '아니야! 국면을 되돌리니 다시 생각해 보자.', '¡Esa no es! La posición vuelve atrás: inténtalo otra vez.', 'Pas tout à fait ! La position revient : réessayez.', 'Não é essa! A posição volta: tente de novo.', 'Nicht ganz! Die Stellung wird zurückgesetzt – versuch es noch einmal.', 'यह नहीं! स्थिति वापस आती है — फिर सोचो।', 'ليست هذه! سيعود الوضع — حاول مرة أخرى.'),
 };
 
 const RAMPS = {
