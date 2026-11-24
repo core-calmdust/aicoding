@@ -1,4 +1,4 @@
-# 狼影灯 WOLF LANTERN（wolflantern/）
+# 狼影灯 LAMPBLACK WEREWOLF（wolflantern/）
 
 影絵芝居で遊ぶ、ひとり用の人狼ミステリー。開発室に ALPHA で掲載（2026-11-25）。
 物語（場所・人物・展開）は同じでも、毎回の配役で人狼が変わり、痕跡・証言・名乗りから推理して当てる。
