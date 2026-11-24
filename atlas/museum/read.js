@@ -52,6 +52,7 @@
     { id: 'hitblow', region: 'europe', color: '#2b3683', cover: { g: 'hitblow', s: 'hitblow' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'hitblowFeedback' }, m1: { svg: 'hitblowSearch' }, m2: { svg: 'hitblowFive' } }, refs: ['Donald E. Knuth, “The Computer as Master Mind”, Journal of Recreational Mathematics 9(1) (1976–77)', 'Kenji Koyama, Tony W. Lai, “An Optimal Mastermind Strategy”, Journal of Recreational Mathematics 25(4) (1993)', 'Jerrold M. Grochow, “MOO in Multics”, Software: Practice and Experience 2(3) (1972)', 'Invicta Plastics, Mastermind (1971–72)', 'Wikipedia, “Mastermind (board game)”, “Bulls and cows”'], links: [{ g: 'hitblow' }, { g: 'sudoku' }, { g: 'dots' }] },
     { id: 'botao', region: 'americas', color: '#2f7a2a', cover: { g: 'botao', s: 'botao' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'botaoFlick' }, m1: { svg: 'botaoRules' }, m2: { svg: 'botaoFamily' } }, refs: ['Geraldo Décourt, rules of “Foot-Ball Celotex” (1929/1930)', 'Conselho Nacional de Desportos, Resolução n.º 14 (29 September 1988)', 'Confederação Brasileira de Futebol de Mesa (CBFM), Regra 12 Toques', 'A British table football of flicked figures (patent 1946–47), after a Liverpool game of 1929', 'Wikipedia, “Button football”, “Table football”'], links: [{ g: 'botao' }, { g: 'hockey' }, { g: 'carrom' }] },
     { id: 'hockey', region: 'americas', color: '#2f6fd0', cover: { g: 'hockey', s: 'hockey' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'hockeyRod' }, m1: { svg: 'airTable' }, m2: { svg: 'hockeyFamily' } }, refs: ['Donald H. Munro, the first table hockey game (Toronto, 1932)', 'US patents for the air hockey table by Crossman, Kenrick and Lemieux (Brunswick, 1970s)', 'United States Air-Table Hockey Association (USAA), world singles championship from 1978', 'International Table Hockey Federation (ITHF)', 'Wikipedia, “Air hockey”, “Table hockey games”'], links: [{ g: 'hockey' }, { g: 'botao' }, { g: 'crokinole' }] },
+    { id: 'solitaire', region: 'europe', color: '#2f6b4f', cover: { g: 'solitaire', s: 'solitaire' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'klondikeLayout' }, m1: { svg: 'freecellSolvable' }, m2: { svg: 'patienceTimeline' } }, refs: ['Das neue Königliche L’Hombre-Spiel (1783 edition), the earliest description of “Patience”', 'Lady Adelaide Cadogan, Illustrated Games of Patience (c. 1870; London edition 1874)', 'Hoyle’s Games (1907): “Seven-Card Klondike”', 'David Parlett, The Penguin Book of Patience (1979)', 'Martin Gardner, Scientific American (June 1968): Baker’s Game; Paul Alfille, FreeCell on PLATO (1978)', 'Wikipedia, “Patience (game)”, “Klondike (solitaire)”, “FreeCell”'], links: [{ g: 'solitaire' }, { g: 'poker' }, { g: 'blackjack' }] },
   ];
   // pictures shown only beside a story's paragraph (not in another room): a museum's open-access photo (CC0), linked to the museum's page.
   // The name, in each language, is MUSEUM_READ_T[lang].pic[id]. Files images/atlas/museum-story/pic/<id>.webp (≤ 960 px).
@@ -947,6 +948,36 @@
     // table hockey in time (text: the story's figL.time — [year, name, note])
     hockeyFamily: () => { const R = ((st('hockey').figL || {}).time) || [], W = 300, RH = 50, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 84; let g = '';
       const C = ['#8a5a24', '#2a5a8a', '#6a3a8a', '#c0392b', '#14864a'];
+      g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
+      R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
+        g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
+        g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="${xn + 16}" y="${y + 20}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // klondike: the layout — stock and waste top left, the four foundations top right, the seven tableau piles (1 to 7 cards, the top one face up)
+    klondikeLayout: () => { const W = 300, cw = 36, ch = 50, gx = 42, ox = 6, ty = 6, py = 70; let g = `<rect x="0" y="0" width="${W}" height="190" rx="10" fill="#2f6b4f"/>`;
+      const back = (x, y) => `<rect x="${x}" y="${y}" width="${cw}" height="${ch}" rx="4" fill="#b8342c" stroke="#fff" stroke-width="1.6"/><rect x="${x + 4}" y="${y + 4}" width="${cw - 8}" height="${ch - 8}" rx="2" fill="none" stroke="#f2c7c0" stroke-width="1"/>`;
+      const face = (x, y, r, s) => { const red = s === '♥' || s === '♦'; return `<rect x="${x}" y="${y}" width="${cw}" height="${ch}" rx="4" fill="#fffdf6" stroke="#8a8478" stroke-width="1"/><text x="${x + 4}" y="${y + 14}" font-size="12" font-weight="800" fill="${red ? '#c0392b' : '#1d1b1b'}">${r}</text><text x="${x + cw / 2}" y="${y + 38}" font-size="18" fill="${red ? '#c0392b' : '#1d1b1b'}" text-anchor="middle">${s}</text>`; };
+      const slot = (x, y) => `<rect x="${x}" y="${y}" width="${cw}" height="${ch}" rx="4" fill="none" stroke="#9cc8b0" stroke-width="1.4" stroke-dasharray="4 3"/>`;
+      g += back(ox, ty) + back(ox + 2, ty - 2) + face(ox + gx, ty, '7', '♥');
+      g += face(ox + gx * 3, ty, 'A', '♠') + face(ox + gx * 4, ty, '2', '♥') + slot(ox + gx * 5, ty) + slot(ox + gx * 6, ty);
+      const up = [['K', '♠'], ['9', '♦'], ['5', '♣'], ['Q', '♥'], ['8', '♠'], ['3', '♦'], ['J', '♣']];
+      for (let p = 0; p < 7; p++) { const x = ox + gx * p; for (let k = 0; k < p; k++) g += back(x, py + k * 9); g += face(x, py + p * 9, ...up[p]); }
+      return `<svg viewBox="0 0 ${W} 190" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // freecell: four free cells and four foundations above eight face-up cascades; of the 32,000 numbered deals of the old bundled game, only #11982 cannot be solved
+    freecellSolvable: () => { const W = 300, cw = 30, ch = 42, gx = 37, ox = 4; let g = `<rect x="0" y="0" width="${W}" height="140" rx="10" fill="#2f6b4f"/>`;
+      const face = (x, y, r, s) => { const red = s === '♥' || s === '♦'; return `<rect x="${x}" y="${y}" width="${cw}" height="${ch}" rx="3" fill="#fffdf6" stroke="#8a8478" stroke-width="1"/><text x="${x + 2}" y="${y + 13}" font-size="12" font-weight="800" fill="${red ? '#c0392b' : '#1d1b1b'}">${r}</text><text x="${x + cw / 2}" y="${y + 33}" font-size="15" fill="${red ? '#c0392b' : '#1d1b1b'}" text-anchor="middle">${s}</text>`; };
+      const slot = (x, y, c) => `<rect x="${x}" y="${y}" width="${cw}" height="${ch}" rx="3" fill="${c || 'none'}" stroke="#9cc8b0" stroke-width="1.4" stroke-dasharray="4 3"/>`;
+      for (let i = 0; i < 4; i++) g += slot(ox + gx * i, 6, 'rgba(255,255,255,.08)'); g += face(ox + gx, 6, '9', '♣');
+      for (let i = 4; i < 8; i++) g += slot(ox + gx * i, 6); g += face(ox + gx * 4, 6, 'A', '♦') + face(ox + gx * 5, 6, '2', '♠');
+      g += `<path d="M${ox + gx * 4 - 4} 4V52" stroke="#9cc8b0" stroke-width="1.4"/>`;
+      const cs = [['K', '♥', 'Q', '♣', 'J', '♦'], ['8', '♠', '7', '♥'], ['10', '♦', '9', '♠', '8', '♥'], ['6', '♣'], ['Q', '♠', 'J', '♥'], ['5', '♦', '4', '♠', '3', '♥'], ['7', '♣'], ['J', '♠', '10', '♥']];
+      cs.forEach((c, i) => { for (let k = 0; k < c.length / 2; k++) g += face(ox + gx * i, 60 + k * 15, c[2 * k], c[2 * k + 1]); });
+      g += `<rect x="4" y="152" width="${W - 8}" height="22" rx="5" fill="#14864a"/><rect x="${4 + (W - 8) * 11982 / 32000 - 2}" y="148" width="4" height="30" fill="#c0392b"/><text x="10" y="168" font-size="13" font-weight="800" fill="#fff">1</text><text x="${W - 10}" y="168" font-size="13" font-weight="800" fill="#fff" text-anchor="end">32000</text>`;
+      g += `<text x="${4 + (W - 8) * 11982 / 32000}" y="196" font-size="14" font-weight="800" fill="#c0392b" text-anchor="middle">#11982</text>`;
+      return `<svg viewBox="0 0 ${W} 202" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // patience in time (text: the story's figL.time — [year, name, note])
+    patienceTimeline: () => { const R = ((st('solitaire').figL || {}).time) || [], W = 300, RH = 50, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 84; let g = '';
+      const C = ['#8a5a24', '#6a3a8a', '#c0392b', '#2a5a8a', '#14864a'];
       g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
       R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
         g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
