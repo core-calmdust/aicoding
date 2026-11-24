@@ -1338,7 +1338,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=6').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=7').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { let pr; try { pr = JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } return pzMigrate(pr); }
