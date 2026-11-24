@@ -4390,7 +4390,7 @@
       o62: '6と2は、6で後ろの駒を相手のバーポイントへ、2で中盤から材料を下ろすのがいちばんワン。1枚を逃がす手や、ゴールデンポイントに置く手は少し落ちるね。',
       o63: '6と3は、相手のバーポイントに出て材料を置くか、後ろの1枚を逃がすか。ほとんど互角だけど、前のほうがわずかに上ワン。',
       o64: '6と4は、考え方の違う手が3つあるね。ポイントを作る、後ろの1枚を逃がす、相手のバーポイントに出て材料を置く。どれを選んでも大きな差はないワン。',
-      o65: '6と5は、後ろの1枚を相手の陣地からミッドポイントまで一気に逃がすワン！ 「ラバーズリープ」と呼ばれる有名な手で、ほかの手よりずっと上なんだ。',
+      o65: '6と5は、後ろの1枚を相手の陣地からミッドポイントまで一気に逃がすワン！ 「ラバーズリープ」と呼ばれる有名な手で、ほかの手よりずっと上なんだ。6と5を分けて使う手は次点ワン。後ろの1枚が相手のバーポイントで1枚だけになって打たれやすいぶん、落ちるんだ。',
       r31: '相手がゴールデンポイントを作ると、そこには駒を出せないね。だから応手も少し変わるワン。ポイントを作れる目なら、こっちも作るのがいちばんなんだ。',
       r42: '相手がインナーの4番目にポイントを作った後の応手ワン。いつもの手が使えない目もあるけど、ポイントを作れる目なら、やっぱり作るのがいちばんだね。',
       r61: '相手がバーポイントを作ると、6の目で後ろの駒を出せなくなるね。2つの目を合わせて走る手が多いけど、走らずに材料を置くのが良い目もあるワン。',
@@ -7053,7 +7053,7 @@
     .catch(e => { this.p = null; throw e; })); } };
   /* ugolki (2026-11-24 担当D): the data, モリフク's words and the board facts are in atlas/ls-ugolki.js (loaded the first time; only the
      lessons checked and rebuilt for the 3D, AtlasLsUgolki.READY — tools/lesson-verify-ugolki-ls.js) */
-  const UGOLKI = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUgolki) return res(); const sc = document.createElement('script'); sc.src = 'ls-ugolki.js?v=2'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const UGOLKI = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUgolki) return res(); const sc = document.createElement('script'); sc.src = 'ls-ugolki.js?v=3'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsUgolki.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   // (2026-11-24 ユーザー指示: ur・senet・patolli のレッスンは廃止 — 双六系はマンカラ・バックギャモンのような戦略性の高いものを除いてレッスン・パズルを作らない。

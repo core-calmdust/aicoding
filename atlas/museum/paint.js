@@ -65,6 +65,8 @@
     { id: 'coyote', w: 1686, h: 2143, aic: 52331, no: '1944.1047', bg: '#c9ccbe', spots: [[.47, .36], [.5, .58], [.45, .88], [.5, .07], [.17, .73], [.84, .2]], links: [{ g: 'foxgeese' }] },
     // (2026-11-25) the Rijksmuseum (public domain) — rijks: its object number (its page): a 1709 satire played as trictrac for the town of Mons
     { id: 'mons', w: 1057, h: 2048, rijks: 'RP-P-OB-83.374', bg: '#c8c2b4', spots: [[.65, .2], [.665, .13], [.775, .17], [.45, .14], [.2, .12], [.45, .62]], links: [{ g: 'backgammon' }, { ex: 'ottoman' }] },
+    // (2026-11-25) the Rijksmuseum: a political game of the goose, 1867 (64 squares, ending in Insulinde)
+    { id: 'stembus', w: 2048, h: 1565, rijks: 'RP-P-OB-89.857', bg: '#d8c89a', spots: [[.1, .12], [.27, .48], [.63, .53], [.905, .9], [.5, .88], [.63, .88]], links: [{ ex: 'goose' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',

@@ -301,6 +301,8 @@
           }
         }
       }
+      // lies the player exposed in front of everyone: a liar is most likely a wolf (or the madman)
+      if (S.exposed && (obs === 'pub' || obs === 'you' || (K.self && (K.self.persona.trust || .5) > .35))) for (const x in S.exposed) if (x !== obs && !Ws.has(x)) wt *= Math.pow(nM ? .45 : .22, S.exposed[x]);
       // claims: enumerate who is the real seer / medium; the rest of the non-wolf claimers must be the madman
       const nonW = arr => arr.filter(c => !Ws.has(c.by));
       const sNon = nonW(seerC), mNon = nonW(medC);
@@ -902,6 +904,60 @@
     if (!ev.length) { const t = pick(S, alive(S).filter(p => !p.isPlayer)); if (t) ev.push({ t: 'evnone', by: t.id }); }
     return ev;
   }
+  /* ---------- contradictions the player can point out (only from what the player knows) ---------- */
+  function contradictions(S, story) {
+    const out = [], fitsT = (v, t) => t.neg ? v !== t.val : v === t.val;
+    const done = new Set(S.pl.pointed || []);
+    const mine = {}; for (const k of S.pl.found) { const [ni, ti] = k.split('|').map(Number); const t = S.nights[ni].traces[ti]; (mine[ni] = mine[ni] || []).push(t); }
+    // 1. a report of a trace that differs from the trace the player saw with their own eyes
+    for (const r of S.reports) {
+      if (r.by === 'you' || !person(S, r.by).alive) continue;
+      const t = (mine[r.night] || []).find(t => t.cat === r.cat && t.neg === r.neg);
+      if (t && t.val !== r.val) out.push({ id: 'tr|' + r.by + '|' + r.night + '|' + r.cat, kind: 'trace', who: r.by, night: r.night, said: { cat: r.cat, val: r.val, neg: r.neg }, seen: { cat: t.cat, val: t.val, neg: t.neg } });
+    }
+    // 2. a figure someone says they saw, that no trace of that night allows
+    const figs = S.figs.map(f => Object.assign({ pub: true }, f)).concat(S.pl.told.filter(t => t.kind === 'fig'));
+    for (const f of figs) {
+      if (f.by === 'you' || !person(S, f.by).alive) continue;
+      const t = (mine[f.night] || []).find(t => t.cat === f.cat && !fitsT(f.val, t));
+      if (t && !out.some(o => o.kind === 'fig' && o.who === f.by && o.night === f.night)) out.push({ id: 'fg|' + f.by + '|' + f.night + '|' + f.cat, kind: 'fig', who: f.by, night: f.night, said: { cat: f.cat, val: f.val }, seen: { cat: t.cat, val: t.val, neg: t.neg } });
+    }
+    // 3. "I was at home" — but someone saw them out that night
+    for (const key in S.testi) {
+      const T = S.testi[key];
+      if (!(S.pl.log || []).some(x => x.k === 'night' && x.who === T.id && x.T && x.T.night === T.night)) continue;   // the player heard it
+      const P = person(S, T.id); if (!P.alive || (P.secret && P.secret.open)) continue;   // an errand already confessed explains the lie
+      const w = S.pl.told.find(t => t.kind === 'who' && t.who === T.id && t.night === T.night && t.loc !== T.loc && t.by !== T.id);
+      if (w) out.push({ id: 'wh|' + T.id + '|' + T.night, kind: 'where', who: T.id, night: T.night, said: { loc: T.loc }, seen: { loc: w.loc, by: w.by } });
+    }
+    return out.filter(o => !done.has(o.id));
+  }
+  // point one out in the meeting: the liar is caught, a hidden errand comes out, or a false sighting turns on its teller
+  function pointOut(S, story, id) {
+    const c = contradictions(S, story).find(o => o.id === id);
+    if (!c) return [];
+    (S.pl.pointed = S.pl.pointed || []).push(id);
+    S.exposed = S.exposed || {};
+    const ev = [], p = person(S, c.who);
+    const bump = (x, w) => { S.exposed[x] = (S.exposed[x] || 0) + w; (S.heat = S.heat || {})[x] = (S.heat[x] || 0) + 1; };
+    const witness = () => pick(S, alive(S).filter(q => !q.isPlayer && q.id !== c.who && q.id !== (c.seen && c.seen.by)));
+    if (c.kind !== 'where') {
+      // innocents tell what they saw; a trace or a figure that the player's own eyes deny is a lie
+      bump(c.who, 1); ev.push({ t: 'caught', by: c.who });
+      const w = witness(); if (w) ev.push({ t: 'notice', by: w.id, target: c.who });
+      return ev;
+    }
+    const N = S.nights[c.night];
+    if (N && N.pos[c.who] === c.seen.loc) {
+      if (p.secret && !p.secret.open && p.role !== 'wolf' && p.role !== 'madman') {   // the hidden errand: a human with a secret
+        p.secret.open = true; ev.push({ t: 'confess', by: c.who });
+      } else { bump(c.who, 1); ev.push({ t: 'caught', by: c.who }); const w = witness(); if (w) ev.push({ t: 'notice', by: w.id, target: c.who }); }
+    } else {   // the sighting was made up: the one who told it is the liar
+      ev.push({ t: 'denyseen', by: c.who });
+      if (c.seen.by !== 'you' && person(S, c.seen.by).alive) { bump(c.seen.by, .6); ev.push({ t: 'caught', by: c.seen.by }); }
+    }
+    return ev;
+  }
   // "seers, stay hidden until you find a wolf" (or lift it)
   function askHide(S, on) { S.req.hide = !!on; return []; }
 
@@ -914,5 +970,5 @@
     return res;
   }
 
-  root.WLEngine = { ROLE, SETUP, DIFF, CATS, newGame, night, meeting, voteRound, exile, check, score, search, ask, present, playerClaim, playerResults, callOut, callEvidence, askDivine, askGuard, askHide, testimony, analyze, opinion, suspicion, npcSearch, canConfront, fitsTraces, person, alive, isWolf, rnd, pick, shuffle };
+  root.WLEngine = { ROLE, SETUP, DIFF, CATS, newGame, night, meeting, voteRound, exile, check, score, search, ask, present, playerClaim, playerResults, callOut, callEvidence, contradictions, pointOut, askDivine, askGuard, askHide, testimony, analyze, opinion, suspicion, npcSearch, canConfront, fitsTraces, person, alive, isWolf, rnd, pick, shuffle };
 })(typeof window !== 'undefined' ? window : globalThis);
