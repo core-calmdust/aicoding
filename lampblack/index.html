@@ -106,6 +106,7 @@ body.show-names .pp .nm,.pp:hover .nm,.pp.speak .nm,.pp.sel .nm{opacity:1}
 body.anim-off .pp.idle .pup{animation:none}
 @keyframes breathe{0%,100%{rotate:-1.1deg;scale:1 1}30%{scale:1 1.014}50%{rotate:1.1deg;scale:1 1.006}80%{scale:1 1.016}}
 .pp.fallen .pup{transform:rotate(-86deg) translate(-30%,10%);filter:blur(.6px)}
+.pp.front.mid{bottom:calc(max(var(--backB,0px), 0px) * .4 + 3%);width:var(--pw,118px)}
 .pp.pp.fallen{bottom:calc(max(var(--backB,0px), 0px) + 9%)}   /* the dead lie a little way up the road, clear of the text */
 .pp.lift{bottom:120%!important;opacity:0;transition:bottom 1.6s cubic-bezier(.5,0,.6,1),opacity 1.6s}
 .pp.drop{transform:translateX(-50%) translateY(140%);opacity:0;transition:transform 1.2s cubic-bezier(.6,0,.8,.4),opacity 1.2s}
@@ -551,6 +552,6 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 <script src="stories/shirane.who.js?v=1"></script>
 <script src="stories/shirane.who.open.js?v=1"></script>
 <script src="sound.js?v=10"></script>
-<script src="game.js?v=39"></script>
+<script src="game.js?v=40"></script>
 </body>
 </html>

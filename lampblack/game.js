@@ -283,7 +283,7 @@
       el.classList.remove('lift', 'drop', 'fallen', 'speak', 'dim', 'sel', 'turn');
       const row = i < front ? 0 : 1, k = row ? i - front : i, m = row ? n - front : front;
       const x = m === 1 ? (o.x || 50) : (o.span ? o.span[0] : 10) + ((o.span ? o.span[1] - o.span[0] : 80) * (k + (row ? .5 : 0)) / Math.max(1, m - (row ? 0 : 1)));
-      el.classList.toggle('back', !!row); el.classList.toggle('front', !row);
+      el.classList.toggle('back', !!row); el.classList.toggle('front', !row); el.classList.toggle('mid', !!o.mid);   // the day's search: the people stand halfway up the road, above the menu, names showing
       requestAnimationFrame(() => { el.style.left = Math.min(94, Math.max(6, x)) + '%'; el.style.bottom = ''; el.style.opacity = ''; });
       if (o.fallen === id) el.classList.add('fallen');
     });
@@ -616,7 +616,7 @@
   }
   function hub(msg) {
     S.phase = 'invest'; hud();
-    setScene(G.loc); setCast(peopleAt(G.loc).slice(0, 4), { span: [22, 78] });
+    setScene(G.loc); setCast(peopleAt(G.loc).slice(0, 4), { span: [22, 78], mid: true });
     G.onPup = id => talk(id);
     const N = S.nights[S.nights.length - 1];
     const locs = st.locs.map(l => `<button class="loc${l.id === G.loc ? ' cur' : ''}" data-l="${l.id}" title="${esc(l.name)}から見えるのは：${E.near(st, l.id).map(locName).join('・')}">${ART.scene(st.scene, l.id, 1)}<b>${esc(l.name)}</b><i class="see">見える：${E.near(st, l.id).map(x => esc(locName(x))).join('・')}</i>${N && N.loc === l.id && N.killer ? '<em>現場</em>' : ''}</button>`).join('');
@@ -632,7 +632,7 @@
   }
   async function search(loc) {
     if (S.pl.ap <= 0) return hub('今日の行動は使いきった。');
-    G.loc = loc; setScene(loc); setCast(peopleAt(loc).slice(0, 4), { span: [22, 78] });
+    G.loc = loc; setScene(loc); setCast(peopleAt(loc).slice(0, 4), { span: [22, 78], mid: true });
     const r = E.search(S, st, loc);
     const L = st.locs.find(l => l.id === loc);
     const items = [];
