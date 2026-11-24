@@ -36,10 +36,13 @@
     { id: 'map', ready: () => !!window.AtlasMap, render: (el, c) => AtlasMap.render(el, c) },
     { id: 'tree', src: ['museum/tree.js?v=6'], ready: () => !!window.AtlasTree, render: (el, c) => AtlasTree.render(el, c) },
     { id: 'gallery', src: ['museum/gallery.js?v=151'], ready: () => !!window.AtlasGallery, render: (el, c) => AtlasGallery.render(el, c) },
-    { id: 'paint', src: ['museum/paint-i18n.js?v=3', 'museum/paint.js?v=10'], ready: () => !!(window.AtlasPaint && window.MUSEUM_PAINT_T), render: (el, c) => AtlasPaint.render(el, c) },
-    { id: 'read', src: ['museum/read-i18n.js?v=29', 'museum/read.js?v=38'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T), render: (el, c) => AtlasRead.render(el, c) },
+    { id: 'paint', src: () => ['museum/paint-i18n/en.js?v=' + PAINT_I18N_V, ...(rl() !== 'en' ? [`museum/paint-i18n/${rl()}.js?v=${PAINT_I18N_V}`] : []), 'museum/paint.js?v=10'], ready: () => !!(window.AtlasPaint && window.MUSEUM_PAINT_T && MUSEUM_PAINT_T.en && MUSEUM_PAINT_T[rl()]), render: (el, c) => AtlasPaint.render(el, c) },   // (per language, like the stories)
+    // (2026-11-24 audit pageKB) the stories' text in one file per language (museum/read-i18n/<lang>.js, made by tools/museum-read-split.js from
+    // museum/read-i18n.js): English (the fallback for anything missing) and the page's language, not all fourteen (1.5 MB)
+    { id: 'read', src: () => ['museum/read-i18n/en.js?v=' + READ_I18N_V, ...(rl() !== 'en' ? [`museum/read-i18n/${rl()}.js?v=${READ_I18N_V}`] : []), 'museum/read.js?v=38'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T && MUSEUM_READ_T.en && MUSEUM_READ_T[rl()]), render: (el, c) => AtlasRead.render(el, c) },
     { id: 'chance', src: ['museum/chance-i18n.js?v=3', 'museum/chance.js?v=7'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T), render: (el, c) => AtlasChance.render(el, c) },
   ];
+  const READ_I18N_V = 1, PAINT_I18N_V = 1, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
   const KEY = 'atlas-museum-room';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const loaded = {};
@@ -90,7 +93,7 @@
     if (room === 'map' || room === 'tree') mark(room, room, 1);
     const go = () => { if (room === R.id) R.render(box, rctx()); };
     if (R.ready()) go();
-    else { box.innerHTML = `<p class="muload">${esc(u('load'))}</p>`; Promise.all((R.src || []).map(load)).then(go); }
+    else { box.innerHTML = `<p class="muload">${esc(u('load'))}</p>`; const L = typeof R.src === 'function' ? R.src() : (R.src || []); L.reduce((q, x) => q.then(() => load(x)), Promise.resolve()).then(go); }   // (in order: the text before the room's code)
     if (user && innerWidth < 820) { const t = el.rooms.getBoundingClientRect().top + scrollY - 70; if (scrollY > t) scrollTo({ top: Math.max(0, t), behavior: 'smooth' }); }
   }
   // 館内スタンプ帳 (2026-11-24): each room reports what the visitor has done there — mark(room, ids, total): ids seen/done (a list or one),
@@ -249,5 +252,12 @@
     if (!grid._pgR) { grid._pgR = true; let tm = 0; addEventListener('resize', () => { clearTimeout(tm); tm = setTimeout(() => { if (grid.isConnected) draw(); }, 150); }); }
     draw();
   }
+  // (2026-11-24 audit trapEsc) the painting and case viewers are modal: Tab and Shift+Tab go round their own controls, not out into the page behind
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return; const d = [...document.querySelectorAll('.ptv.on,.exv.on')].pop(); if (!d) return;
+    const f = [...d.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])')].filter(x => { const r = x.getBoundingClientRect(), s = getComputedStyle(x); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden'; });
+    if (!f.length) return; const i = f.indexOf(document.activeElement);
+    if (i < 0 || (e.shiftKey && i === 0) || (!e.shiftKey && i === f.length - 1)) { e.preventDefault(); f[e.shiftKey ? (i <= 0 ? f.length - 1 : i - 1) : (i < 0 || i === f.length - 1 ? 0 : i + 1)].focus(); }
+  }, true);
   window.AtlasMuseum = { render, room: () => room, ROOMS, V, goEx, go: r => open(r, true), mark, prog, pager, catalog, tabKeys, rove };
 })();

@@ -461,6 +461,7 @@ const CHECKS = {
   //   cells that keep the shortest forced connection. The scored problems (s_*): the moves legal, the best one the top value.
   hex() {
     const E = require(path.join(ROOT, 'hex/engine.js')), L = J('hex/lessons.json'), g = 'hex', cp = require('child_process');
+    require('./lesson-verify.js').hex().forEach(fa => bad(g, String(Math.max(0, L.steps.findIndex(s => s.id === fa.step))), `${fa.step}: ${fa.msg}`));   // (2026-11-24 第2期・追14・追1: the 3D warm-ups)
     let bin = process.env.HEXN || '/tmp/hexn';
     if (!fs.existsSync(bin)) { try { cp.execSync(`gcc -O3 -march=native -DNATIVE -w -o ${bin} tools/native.c -lm`, { cwd: path.join(ROOT, 'hex'), stdio: 'ignore' }); } catch (e) { bin = null; } }
     const run = cmds => { const r = cp.spawnSync(bin, ['serve'], { input: cmds.join('\n') + '\nquit\n', encoding: 'utf8', maxBuffer: 1 << 26 }); return r.stdout.trim().split('\n'); };
@@ -518,6 +519,8 @@ const CHECKS = {
         if (sc.has(P.best) && sc.get(P.best) < top - 60) bad(g, K, `problem ${j}: the best move is not the engine's best (${sc.get(P.best)} < ${top})`);
         (P.sc || []).forEach(([m]) => { if (!q.legal(m)) bad(g, K, `problem ${j}: a scored move is not legal`); }); });
     });
+    // (2026-11-24 第2期・担当B) the strict ①〜⑨ of the verified sets (openings.json verified: two searches agree, the second move ≤ 12 points, off the line by 3+ cells, the order, ゴイシペン's words for every move) — tools/lesson-verify.js hexOpen
+    require('./lesson-verify.js').hexOpen().forEach(fa => bad(g, fa.step, `q${fa.q}: ${fa.msg}`));
   },
   // (2026-11-23 lesson loop) the checkers openings ('checkers/open', key = the opening's id): every line replays legally, every practice
   // position's best and scored moves are legal and the best is the engine's top (within a little), and the kind of move the 3D guide

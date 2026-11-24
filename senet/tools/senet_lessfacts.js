@@ -39,7 +39,7 @@ function themeOk(s, n, best, ms, th) {
       return r0 >= 4 && pieceRiskAfter(s, best) + 2 <= r0 && alt.every(m => riskAfter(s, m) >= rb + RISK_D); }
     case 'safe': return plain && !AG(n) && alt.every(m => riskAfter(s, m) >= rb3(s, best) + 4) && riskNow(s).some(r => r >= 4) && !themeOk(s, n, best, ms, 'escape');
     case 'beauty': return best.to === 26 && !best.capture;
-    // 水の家：正解はふつうの手（入れ替え・上がりが正解だと、選ぶ理由がそちらになり主題からずれる：追34）
+    // 水の家：正解はふつうの手（入れ替え・上がりが正解だと、選ぶ理由がそちらになり主題からずれる：追36）
     case 'water': return s.pos[0].includes(26) && n === 1 && !best.water && !best.capture && !best.finish && ms.some(m => m.water);
     case 'exit': return best.finish;
   }
