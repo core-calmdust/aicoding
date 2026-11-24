@@ -208,6 +208,7 @@
   document.querySelectorAll('#gsSeg button').forEach(b => b.onclick = () => { gsSet(b.dataset.v); if (b.dataset.v === 'gacha' && !busy) renderGacha(); window.scrollTo({ top: 0 }); });
   let muRoom = null, muEx = null;   // (muEx: an exhibit to open in the collection room, #museum/<id>)   // (#map / #tree: open the museum on that room)
   function go(k, push = true) {
+    const was = page;
     const toShop = k === 'shop'; if (toShop) k = 'gacha';
     if (k === 'map' || k === 'tree' || k === 'gallery') { muRoom = k; k = 'museum'; }
     if (k === 'gacha') gsSet(toShop ? 'shop' : 'gacha');   // phones: the ガチャ｜ショップ tabs of the page
@@ -215,7 +216,8 @@
     page = k; propSync(); document.documentElement.dataset.pg = k; requestAnimationFrame(() => AtlasVis.check());   // (phones: the updates ticker hides on the map and きせかえ)
     tabsEl.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b.dataset.k === k));
     document.querySelectorAll('section.pg').forEach(s => s.classList.toggle('on', s.id === 'pg-' + k));
-    if (push) history.replaceState(history.state, '', '#' + k);
+    // (2026-11-24 user: the browser's back / forward — its edge swipe — walks back through where you have been) each page a history entry
+    if (push) { if (was !== k) history.pushState({ pg: k }, '', '#' + k); else history.replaceState(Object.assign({}, history.state, { pg: k }), '', '#' + k);  dispatchEvent(new Event('atlas-hist')); }
     render(k);
     if (toShop && !isPhone()) requestAnimationFrame(() => $('shopSec').scrollIntoView({ behavior: push ? 'smooth' : 'auto', block: 'start' }));
     else if (push) window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3331,7 +3333,7 @@
   const [h0, h1] = (location.hash || '#home').slice(1).split('/');
   if (h0 === 'museum' && h1) { muEx = h1; go('gallery', false); }   // #museum/<exhibit>: the collection room with that exhibit open (the top page's museum games, 2026-11-23)
   else go(h0, false);
-  history.replaceState(null, '', '#' + page);
+  history.replaceState({ pg: page }, '', '#' + page);
   if (h1 && h0 !== 'museum') openBoard(h1);
   /* ---------- phones: a left / right swipe moves between the pages (ホーム · ゲーム · 博物館 …, the tab bar's order) — 2026-11-24 user ----------
      Before, a sideways swipe did nothing in the page and the browser's own edge swipe left the portal (back to CALMDUST). Now
@@ -3348,22 +3350,27 @@
       if (/^(TEXTAREA|SELECT|VIDEO)$/.test(n.tagName) || (n.tagName === 'INPUT' && (n.type === 'range' || n === document.activeElement)) || n.dataset.noswipe != null) return true;
       const cs = getComputedStyle(n); if (/none|pan-y/.test(cs.touchAction) && !/pan-x/.test(cs.touchAction)) return true;
       if (/(auto|scroll)/.test(cs.overflowX) && n.scrollWidth > n.clientWidth + 2) return true; } return false; };
-    let s0 = null, lastStep = 0;   // (lastStep: a browser that also takes the same swipe as "back" must not step twice)
+    let s0 = null;
     addEventListener('touchstart', e => { s0 = null; if (e.touches.length !== 1 || !ok()) return; const t = e.touches[0];
       if (t.clientX < 16 || t.clientX > innerWidth - 16 || pansX(e.target)) return;   // (the very edges: the browser's own gesture)
       s0 = { x: t.clientX, y: t.clientY, t: e.timeStamp }; }, { passive: true });   // (the events' own times: a busy page (the gacha machine) handles them late)
     addEventListener('touchmove', e => { if (s0 && e.touches.length > 1) s0 = null; }, { passive: true });
     addEventListener('touchend', e => { if (!s0) return; const t = e.changedTouches[0], dx = t.clientX - s0.x, dy = t.clientY - s0.y, dt = e.timeStamp - s0.t; s0 = null;
       if (dt > 700 || Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 2 || !ok()) return;
-      const rtl = document.documentElement.dir === 'rtl'; if (step((dx < 0) !== rtl ? 1 : -1)) lastStep = performance.now(); }, { passive: true });
-    // the history marker (pushed on the first touch: a browser skips history entries made without one)
-    const mark = () => { if (!isPhone() || (history.state && history.state.atab)) return; try { history.pushState(Object.assign({}, history.state, { atab: 1 }), '', location.hash); } catch (e) {} };
-    addEventListener('pointerdown', mark, { passive: true });
-    addEventListener('popstate', () => { if (!isPhone() || (history.state && (history.state.atab || history.state.exv || history.state.ptv))) return;
-      setTimeout(() => { if (history.state && history.state.atab) return;   // (an overlay's own handler put it back)
-        try { history.replaceState(history.state, '', '#' + page); } catch (e) {}   // (the entry below the marker still has the address of the first page)
-        if (!ok()) { document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); mark(); }   // (a board / sheet open: back closes it, as Esc does)
-        else if (performance.now() - lastStep < 900) mark(); else if (TABS.indexOf(page) > 0) { step(-1); mark(); } else history.back(); }, 0); });
+      const rtl = document.documentElement.dir === 'rtl'; step((dx < 0) !== rtl ? 1 : -1); }, { passive: true });
+    // the browser's back / forward (its edge swipes) — 2026-11-24 user: 「ブラウザの端からスワイプした時の挙動と同じやり方で前に戻る」.
+    // Every page (go), museum room and story is a history entry ({ pg, mu }), so back returns to where you were, step by step, and forward
+    // goes again. Overlays with their own entries (an exhibit, a painting) close themselves; a board or sheet without one closes on back
+    // and the place is kept (the entry is put back).
+    let cur = history.state;
+    addEventListener('popstate', () => { const s = history.state;
+      if (s && (s.exv || s.ptv)) { cur = s; return; }
+      const sheet = $('bv').classList.contains('on') || $('ov').classList.contains('on') || document.querySelector('.lvsheet:not(.out), #recOv.on');
+      if (sheet && !document.querySelector('.exv, .ptv.on')) { document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); try { history.pushState(cur, '', location.hash); } catch (e) {} return; }
+      cur = s; if (!s || !s.pg) return;
+      if (s.pg !== page) go(s.pg, false);
+      if (s.pg === 'museum' && s.mu && window.AtlasMuseum && AtlasMuseum.restore) AtlasMuseum.restore(s.mu); });
+    addEventListener('atlas-hist', () => { cur = history.state; });
   })();
   welcome();
 })();
