@@ -1,4 +1,4 @@
-/* 狼影灯 WOLF LANTERN — game engine (no DOM; shared by the page and the node tools in wolflantern/tools/)
+/* 狼影灯 LAMPBLACK WEREWOLF — game engine (no DOM; shared by the page and the node tools in wolflantern/tools/)
    A single-player werewolf mystery. Every play deals new roles to the same story; the wolves leave traces,
    people talk, and the player finds the wolves by reasoning.
 
