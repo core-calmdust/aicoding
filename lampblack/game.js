@@ -988,7 +988,7 @@
   async function end() {
     S.phase = 'end'; hud(); save(); renderRoster();
     const R = S.result || E.check(S);
-    SND.music(R && R.win ? 'story' : 'gameover', .85);   // the wolves won: the losing song
+    SND.music(R && R.win ? 'clear' : 'gameover', .85);   // the village won: the winning song; the wolves (or the fox) won: the losing song
     const wolves = S.people.filter(p => p.role === 'wolf');
     document.body.classList.remove('night');
     setScene(st.meetLoc || 'inn', false, true);
