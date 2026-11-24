@@ -68,6 +68,9 @@ const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,
       m.brokenImg = r !== 'read' ? 0 : await p.evaluate(async () => { const u = f => f.s ? `../images/atlas/museum-story/${f.s}.webp` : f.g ? `../images/atlas/${f.g}.webp` : f.ex ? `../images/atlas/ex/${f.ex}.webp` : f.paint ? `../images/atlas/paint/${f.paint}-t.webp` : null;
         const L = new Set(); (window.AtlasRead ? AtlasRead.STORIES : []).forEach(S => [S.cover, ...(S.sec || []), ...Object.values(S.figs || {}).flatMap(f => [].concat(f))].forEach(f => { const x = f && u(f); if (x) L.add(x); }));
         let bad = 0; for (const x of L) { try { const r = await fetch(new URL(x, location.href), { method: 'HEAD' }); if (!r.ok) bad++; } catch (e) { bad++; } } return bad; });
+      // 18 名前の抜け: 読み物の図・リンク・表紙が指す所蔵品・絵の名前がその言語にない（ラベルに id がそのまま出る）
+      m.rawName = r !== 'read' ? 0 : await p.evaluate(() => { const T = window.MUSEUM_READ_T || {}, l = Object.keys(T).find(k => k === (localStorage.getItem('atlas-lang') || 'ja')) || 'ja', t = T[l] || {};
+        let bad = 0; (window.AtlasRead ? AtlasRead.STORIES : []).forEach(S => [S.cover, ...(S.sec || []), ...(S.links || []), ...Object.values(S.figs || {}).flatMap(f => [].concat(f))].forEach(f => { if (!f) return; if (f.ex && !(t.ex || {})[f.ex]) bad++; if (f.paint && !(t.paint || {})[f.paint]) bad++; })); return bad; });
       if (r === 'pass') m.foldLate = 0;   // (the open card pushes the room down on purpose)
       rows.push({ view: `${V.w}x${V.h}${V.lang !== 'ja' ? ':' + V.lang : ''}`, room: r, ...m, js: errs.length });
     }
