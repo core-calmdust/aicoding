@@ -168,6 +168,9 @@ GAMES に追加（store 含む）→ i18n.js に hist.<id>（歴史・雑学、1
   - レッスン：lessons.json の9ステップ（各5問、点数はフル版の problemPoints）。定跡は定石コースの名前つき手順（手順を1手ずつ→練習最大5局面、定跡の手20点、ほかは評価差で0〜14点）。記録は `reversi-emerald-lessons`（定跡は `opl:<手順>`）。
   - レート戦：`reversi-rated-v1`、10分+30秒、レベル別レートはフル版の RT_LV（レベル数が変わったら app.js の RTG.reversi も合わせる）。
   - スマホのあそぶシート（PS_GAMES）はまだ将棋・チェスのみ。
+- チャンギ（2026-11-24、担当D、3D未対応ゲームの対応）：
+  - パズル：フル版と同じ janggi/puzzles.json（1〜3手詰め・連続王手4手・5手以上、289問）と記録（`aicoding-janggi-puzzles`・`aicoding-janggi-pz-last`・今日のパズル `aicoding-janggi-daily`、選び方はフル版の dailyPick＝曜日ごとのテーマ）。判定はシャンチーの詰めと同じ（puzzles.js の kind `xq`：エンジンの詰み探索で残り手数以内に詰む手なら相手が最も粘る手で応じて続行、外れた手は相手のエンジンの手で続行、すぐ詰まされる手・連続王手で王手でない手はその場で戻す）。案内はルール説明と同じショウギツネ。日本語のセリフ・ゲームの文言（pz.*）のキャラの言い方・一覧の小さい盤（川なし・九宮の斜め線・八角駒）は `atlas/games/janggi-pz.js`（lazy.js の janggi の組で読む）、`BOOK.janggi` は `BOOK.xiangqi` を元に URL・記録・文言・カテゴリ（Pattern なし）だけ差し替え。3D卓アダプタ `atlas/games/janggi.js` に `ctx.pz`・`api.pz`（games/xiangqi.js から移植）。全問を tools/lesson-verify-janggi.js（`node tools/lesson-verify.js janggi`）で検証。
+  - レッスン：まだ（atlas/lessons3d.js の DATA にないので、レッスンタブはフル機能へ）。
 
 ## 将棋の種目（2026-11-12）
 - 3Dビューの将棋カード（PC の対戦タブ・スマホのあそぶシート）に「種目」の行。AI戦と二人で対戦のとき出す（レート戦は本将棋のみ）。
