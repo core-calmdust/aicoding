@@ -1247,26 +1247,67 @@
     S.pl.told.filter(t => t.kind === 'who').forEach((t, i) => { if (!out.some(o => o.k === 'seen' && o.who === t.who && o.night === t.night && o.loc === t.loc)) out.push({ id: 'sw|' + i, k: 'seen', night: t.night, who: t.who, loc: t.loc, by: t.by }); });
     return out;
   }
-  // judge: does this evidence break this part? Only a real contradiction counts
+  // the evidence that could bear on one part of a statement: the same night, about the same person or the same kind of trace
+  function clashEvidence(S, story, stmtId, partIdx) {
+    const st = statements(S, story).find(x => x.id === stmtId); if (!st) return [];
+    const part = st.parts[partIdx]; if (!part) return [];
+    return evidence(S).filter(e => {
+      if (e.k === 'self') return part.k === 'loc' ? st.parts.some(p => p.k === 'who') : part.k === 'who';
+      if (e.night !== st.night) return false;
+      if (part.k === 'loc') return e.k === 'seen' && e.who === st.who;
+      if (part.k === 'who') return (e.k === 'said' && e.who === part.who) || (e.k === 'seen' && e.who === part.who && e.by !== st.who);
+      return e.k === 'trace' && e.cat === part.cat;
+    });
+  }
+  // judge: do this part and this evidence really clash? If they do, the truth of the night says which side lied
   function judgeClash(S, story, stmtId, partIdx, evId) {
     const st = statements(S, story).find(x => x.id === stmtId), ev = evidence(S).find(x => x.id === evId);
-    if (!st || !ev) return { ok: false };
-    const part = st.parts[partIdx]; if (!part) return { ok: false };
-    let cid = null;
-    if (part.k === 'trace' && ev.k === 'trace' && ev.night === st.night) cid = 'tr|' + st.who + '|' + st.night + '|' + part.cat;
-    if (part.k === 'fig' && ev.k === 'trace' && ev.night === st.night) cid = 'fg|' + st.who + '|' + st.night + '|' + part.cat;
-    let over = null;
-    if (part.k === 'loc' && ev.k === 'seen' && ev.night === st.night && ev.who === st.who) { cid = 'wh|' + st.who + '|' + st.night; over = { by: ev.by, loc: ev.loc }; }
-    // the other way round: "I saw X at B" — against X's own word that they were at A
-    if (part.k === 'who' && ev.k === 'said' && ev.night === st.night && ev.who === part.who && ev.loc !== part.loc) { cid = 'wh|' + part.who + '|' + st.night; over = { by: st.who, loc: part.loc }; }
-    if (ev.k === 'self' && (part.k === 'loc' || (part.k === 'who' && !canSee(story, (st.parts.find(p => p.k === 'loc') || {}).loc, part.loc)))) cid = 'sf|' + st.who + '|' + st.night;
-    const c = cid && contradictions(S, story).find(o => o.id === cid && (o.kind !== 'trace' && o.kind !== 'fig' || (o.seen.cat === ev.cat && o.seen.val === ev.val && o.seen.neg === ev.neg)));
-    if (c) { const ev2 = pointOut(S, story, c.id, over); return { ok: true, ev: ev2, other: !ev2.some(e => (e.t === 'caught' || e.t === 'confess') && e.by === st.who) }; }
-    // a miss: the village hears the player accuse someone with nothing — the player's word is worth a little less
-    S.exposed = S.exposed || {}; S.exposed.you = (S.exposed.you || 0) + .25;
-    (S.heat = S.heat || {}).you = ((S.heat || {}).you || 0) + 1;
-    S.pl.miss = S.pl.miss || {}; S.pl.miss[S.day] = (S.pl.miss[S.day] || 0) + 1;
-    return { ok: false, ev: [{ t: 'denyseen', by: st.who }] };
+    if (!st || !ev) return { ok: false, why: 'none' };
+    const part = st.parts[partIdx]; if (!part) return { ok: false, why: 'none' };
+    const N = S.nights[st.night] || { pos: {}, traces: [] }, fitsT = (v, t) => t.neg ? v !== t.val : v === t.val;
+    const lp = st.parts.find(p => p.k === 'loc');
+    // 1. is it a real clash?
+    let clash = false, why = 'agree', other = null;   // other: who told the evidence, if the evidence itself could be the lie
+    if (ev.k === 'self') {
+      const bad = lp && st.parts.find(p => p.k === 'who' && !canSee(story, lp.loc, p.loc));
+      clash = part.k === 'loc' ? !!bad : part.k === 'who' && lp && !canSee(story, lp.loc, part.loc);
+      why = 'sees';
+    } else if (ev.night !== st.night) why = 'night';
+    else if (part.k === 'loc') { if (ev.k === 'seen' && ev.who === st.who) { clash = ev.loc !== part.loc; other = ev.by !== 'you' ? ev.by : null; } else why = 'other'; }
+    else if (part.k === 'who') {
+      if ((ev.k === 'said' || ev.k === 'seen') && ev.who === part.who) { clash = ev.loc !== part.loc; other = ev.k === 'said' ? ev.who : ev.by !== 'you' ? ev.by : null; } else why = 'other';
+    }
+    else if (ev.k !== 'trace' || ev.cat !== part.cat) why = 'kind';
+    else if (part.k === 'fig') clash = !fitsT(part.val, ev);
+    else if (part.k === 'trace') { if (ev.neg !== part.neg) why = 'kind'; else clash = ev.val !== part.val; }
+    if (!clash) {
+      // a miss: the village hears the player accuse someone with nothing — the player's word is worth a little less
+      S.exposed = S.exposed || {}; S.exposed.you = (S.exposed.you || 0) + .25;
+      (S.heat = S.heat || {}).you = ((S.heat || {}).you || 0) + 1;
+      S.pl.miss = S.pl.miss || {}; S.pl.miss[S.day] = (S.pl.miss[S.day] || 0) + 1;
+      return { ok: false, why, ev: [{ t: 'denyseen', by: st.who }] };
+    }
+    const key = 'cl|' + [st.id, part.k, part.who || part.cat || '', ev.id].join('|');
+    if ((S.pl.pointed || []).includes(key)) return { ok: false, why: 'done', again: true };
+    (S.pl.pointed = S.pl.pointed || []).push(key);
+    // 2. which side is false? the night itself knows
+    const killer = N.killer ? person(S, N.killer) : null;
+    const partTrue = part.k === 'loc' ? N.pos[st.who] === part.loc
+      : part.k === 'who' ? N.pos[part.who] === part.loc
+      : part.k === 'fig' ? !!killer && killer.traits[part.cat] === part.val
+      : (N.traces || []).some(t => t.cat === part.cat && t.neg === part.neg && t.val === part.val);
+    const selfFalse = ev.k === 'self';   // a story that breaks itself is false as told
+    let liar = st.who;
+    if (!selfFalse && partTrue && other) liar = other;   // the clicked words hold: the evidence was the lie
+    S.exposed = S.exposed || {};
+    const out = [], P = person(S, liar);
+    const bump = (x, w) => { S.exposed[x] = (S.exposed[x] || 0) + w; (S.heat = S.heat || {})[x] = (S.heat[x] || 0) + 1; };
+    if (liar !== st.who) out.push({ t: 'denyseen', by: st.who });
+    // a human with a secret errand lied only about where they were: they own up
+    const aboutSelf = (liar === st.who && (part.k === 'loc' || selfFalse)) || (liar === other && ev.k === 'said');
+    if (aboutSelf && P.secret && !P.secret.open && P.role !== 'wolf' && P.role !== 'madman' && P.role !== 'fox') { P.secret.open = true; out.push({ t: 'confess', by: liar }); }
+    else { bump(liar, 1); out.push({ t: 'caught', by: liar }); const w = pick(S, alive(S).filter(q => !q.isPlayer && q.id !== liar && q.id !== st.who)); if (w) out.push({ t: 'notice', by: w.id, target: liar }); }
+    return { ok: true, ev: out, liar, other: liar !== st.who };
   }
   // point one out in the meeting: the liar is caught, a hidden errand comes out, or a false sighting turns on its teller
   function pointOut(S, story, id, over) {
@@ -1313,5 +1354,5 @@
   }
 
   const isFox = (S, id) => (person(S, id) || {}).role === 'fox';
-  root.WLEngine = { ROLE, SETUP, SETUPS, setupOf, RS, isFox, foxView, DIFF, CATS, newGame, night, meeting, voteRound, exile, check, score, search, ask, present, playerClaim, playerResults, callOut, callEvidence, contradictions, pointOut, dodge, dodgeTalk, near, canSee, statements, evidence, judgeClash, askDivine, askGuard, askHide, testimony, analyze, opinion, suspicion, npcSearch, canConfront, fitsTraces, person, alive, isWolf, rnd, pick, shuffle };
+  root.WLEngine = { ROLE, SETUP, SETUPS, setupOf, RS, isFox, foxView, DIFF, CATS, newGame, night, meeting, voteRound, exile, check, score, search, ask, present, playerClaim, playerResults, callOut, callEvidence, contradictions, pointOut, dodge, dodgeTalk, near, canSee, statements, evidence, clashEvidence, judgeClash, askDivine, askGuard, askHide, testimony, analyze, opinion, suspicion, npcSearch, canConfront, fitsTraces, person, alive, isWolf, rnd, pick, shuffle };
 })(typeof window !== 'undefined' ? window : globalThis);

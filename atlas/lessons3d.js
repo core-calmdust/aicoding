@@ -1955,8 +1955,8 @@
     return rows.join('/') + ' w - - 0 1';
   }
   // one new ★ position for a drill lesson (problem i): the piece the lesson teaches (the capture / safety lessons: the pieces their stages use),
-  // ★ and black pieces at random — kept when the shortest route is 2–4 moves (the king 2–5), the first move has 1–2 right answers out of
-  // 3 or more (the pawn: 2 or more), no promotion on the first move, and the position is new (not a stage's, not an earlier problem's)
+  // ★ and black pieces at random — kept when the shortest route is 2–4 moves (the king 2–5), the first move has 1–2 right answers, a
+  // third of the moves at most (3 or more moves; 追72), no promotion on the first move, and the position is new (not a stage's, not an earlier problem's)
   const CD_SEEN = [];   // (every drill problem made on this page, as 64 squares — no two alike across the chess lessons)
   function cdGen(s, i, seen) {
     const stg = s.stages || [], sid = s.id, R = n => Math.floor(Math.random() * n), pcs = [...new Set(stg.map(g => (cdBoard(g.fen).find(c => c && c === c.toUpperCase()) || 'Q').toLowerCase()))];
@@ -1965,8 +1965,8 @@
       const pc = sid === 'b_capture' || sid === 'b_safety' ? pcs[(i + tr) % pcs.length] : pcs[0], occ = new Set(), blk = [], stars = [];
       let q0;
       if (pc === 'p') {   // a pawn on the 2nd–4th rank, black pieces just ahead to take, ★ on them or on a square ahead
-        const f = 1 + R(6), r = 1 + R(3); q0 = r * 8 + f; occ.add(q0);
-        const nb = 1 + R(2); for (let k = 0; k < nb; k++) { const rr = r + 1 + R(2), ff = f + R(5) - 2; if (rr > 6 || ff < 0 || ff > 7 || occ.has(rr * 8 + ff)) continue; occ.add(rr * 8 + ff); blk.push([rr * 8 + ff, 'pnb'[R(3)]]); }
+        const f = 1 + R(6), r = R(3) ? 1 : 1 + R(3); q0 = r * 8 + f; occ.add(q0);   // (追72: mostly from the 2nd rank — 3 moves or more to choose from)
+        const nb = 1 + R(3); for (let k = 0; k < nb; k++) { const rr = r + 1 + R(2), ff = f + R(5) - 2; if (rr > 6 || ff < 0 || ff > 7 || occ.has(rr * 8 + ff)) continue; occ.add(rr * 8 + ff); blk.push([rr * 8 + ff, 'pnb'[R(3)]]); }
         blk.forEach(([q]) => { if (R(3)) stars.push(q); }); if (!stars.length || R(2)) { const rr = Math.min(6, r + 2 + R(2)), ff = f + R(3) - 1; if (ff >= 0 && ff < 8 && !occ.has(rr * 8 + ff)) { occ.add(rr * 8 + ff); stars.push(rr * 8 + ff); } }
       } else {
         q0 = free(occ);
@@ -1989,9 +1989,9 @@
       if (CD_SEEN.some(o => { let d = 0; for (let k = 0; k < 64 && d < 5; k++) if (o[k] !== sq[k]) d++; return d < 5; })) continue;
       const memo = new Map(), d = cdDist(S, st, memo), hi = pc === 'k' ? 5 : 4;
       if (d < 2 || d > hi) continue;
-      const ms = cdMoves(S, st); if (ms.length < (pc === 'p' ? 2 : 3) || ms.some(m => m.promo)) continue;
+      const ms = cdMoves(S, st); if (ms.length < 3 || ms.some(m => m.promo)) continue;
       ms.forEach(m => { m.d = cdDist(S, m.st, memo); }); const ok = ms.filter(m => 1 + m.d === d);
-      if (!ok.length || ok.length > 2 || ok.length >= ms.length) continue;
+      if (!ok.length || ok.length > 2 || ok.length * 3 > ms.length) continue;   // (追72 2026-11-25: the right first moves are a third of the moves at most)
       seen.add(key); CD_SEEN.push(sq); if (CD_SEEN.length > 60) CD_SEEN.shift(); return { gi: i, step: 0, S, st, d, ms, ok, left: stars.length };
     }
     return null;
@@ -2006,7 +2006,7 @@
       for (let step = 0; st.sm && step < 12; step++) {
         const d = cdDist(S, st, memo), ms = cdMoves(S, st).map(m => Object.assign(m, { d: cdDist(S, m.st, memo) }));
         const ok = ms.filter(m => 1 + m.d === d);
-        if (ms.length >= 3 && ok.length < ms.length && !ms.some(m => m.promo)) cands.push({ gi, step, S, st, d, ms, ok, left: stars.filter((q, i) => st.sm >> i & 1).length });
+        if (ms.length >= 3 && ok.length && ok.length * 3 <= ms.length && !ms.some(m => m.promo)) cands.push({ gi, step, S, st, d, ms, ok, left: stars.filter((q, i) => st.sm >> i & 1).length });
         if (!ok.length) break; st = ok[0].st;
       }
     });
@@ -2045,7 +2045,7 @@
         if (x.cap) return T(V(W.cap), p);   // (a capture off the ★: a blocker taken — on a ★ it is the branch above)
         if (!reach(x)) return T(V(W.noReach), p);
         return T(V(W.off), p); };
-      const o = { pos: cdFen(c.S, c.st), kind: 'best', drill: { stars, safe: c.S.safe }, P: { ok: okU }, ans, hintTx,
+      const o = { pos: cdFen(c.S, c.st), kind: 'best', drill: { stars, safe: c.S.safe }, P: { ok: okU }, nLegal: c.ms.length, ans, hintTx,
         ask: C.askS ? C.askS[sid][i % 3] : V(sid === 'b_capture' ? C.askCap : sid === 'b_safety' ? C.askSafe : C.ask).replace('{p}', C.pk[pc]),
         good: u => { const m = (u && okU.includes(u) && by(u)) || c.ok[0]; return V(C.good)('{x}', whyR(m)); },
         ng: u0 => { const x = alt(u0); if (!x) return ''; return V(C.ng)('{m}', '{x}', whyW(c.ok[0], x)); } };
@@ -6981,7 +6981,7 @@
     load(lang) {
       const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261021L`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
       if (this.p) return this.p.then(() => T()).then(() => this);
-      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261123'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
+      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261125'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
         .then(([ls, X]) => { const w = {}; try { new Function('window', 'with (window) {' + X + '\n}')(w); } catch (e) { console.warn('[lessons3d] dots texts', e); } this.I = w.I18N || {}; this.data = { ls }; return T(); }).then(() => this)
         .catch(e => { this.p = null; throw e; }));
     },

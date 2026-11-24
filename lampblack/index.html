@@ -38,7 +38,7 @@ body.night .pup,body.night .scn{color:#05070d}
 body.anim-off #scrim .lamp{animation:none}
 body.paused *,body.paused *::before,body.paused *::after{animation-play-state:paused!important}
 
-#scene{position:absolute;left:0;right:0;top:0;bottom:calc(var(--dockH) - 16px);color:var(--ink);transition:opacity .5s,bottom .45s ease;will-change:opacity;contain:layout paint}
+#scene{position:absolute;left:0;right:0;top:0;bottom:calc(var(--dockH) - 16px + var(--raise,0px));color:var(--ink);transition:opacity .5s,bottom .45s ease;will-change:opacity;contain:layout paint}
 #scene .scn{position:absolute;inset:0;width:100%;height:100%}
 #scene .far{opacity:.17;filter:blur(2.4px)}
 #scene .mid{opacity:.42;filter:blur(.8px)}
@@ -66,13 +66,25 @@ body.crowd #scene .near{opacity:.34;filter:blur(1px)}
 body.crowd #scene .glow{opacity:.5}
 
 /* the puppets */
-#floor{position:absolute;left:0;right:0;top:calc(100% - var(--dockH) - 16px);bottom:0;pointer-events:none;transition:top .45s ease;background:linear-gradient(to bottom,color-mix(in srgb,var(--ink) 16%,transparent),color-mix(in srgb,var(--ink) 4%,transparent) 55%,transparent)}
-#floor svg{position:absolute;inset:0;width:100%;height:100%}
-#floor .road{fill:var(--ink);opacity:.07}
-#floor .edge{fill:none;stroke:var(--ink);stroke-width:2;opacity:.22;vector-effect:non-scaling-stroke}
-#floor .line{fill:none;stroke:var(--ink);stroke-width:1;opacity:.1;vector-effect:non-scaling-stroke}
-#floor .mid{fill:none;stroke:var(--ink);stroke-width:1.5;stroke-dasharray:14 18;opacity:.12;vector-effect:non-scaling-stroke}
-body.night #floor .road{opacity:.12}
+#floor{position:absolute;left:0;right:0;top:calc(100% - var(--dockH) - 16px - var(--raise,0px));bottom:0;pointer-events:none;transition:top .45s ease,opacity .5s;background:linear-gradient(to bottom,color-mix(in srgb,var(--ink) 14%,transparent),transparent 40%)}
+body:not(.scr-play) #floor{display:none}
+#floor svg{position:absolute;inset:0;width:100%;height:100%;color:var(--ink)}
+#floor .road{fill:currentColor;opacity:.09;filter:blur(1.2px)}
+#floor .tuft{fill:currentColor;opacity:.88;filter:blur(.5px)}
+#floor .side{fill:currentColor;opacity:.2;filter:blur(.9px)}
+#floor .far{fill:currentColor;opacity:.42;filter:blur(1px)}
+#floor.swap{opacity:0}
+#floor .pave{fill:currentColor;opacity:.13;filter:blur(.6px)}
+#floor .dark{fill:currentColor;opacity:.5;filter:blur(.5px)}
+#floor .water{fill:currentColor;opacity:.13}
+#floor .wave{fill:none;stroke:currentColor;stroke-width:1.5;opacity:.28;filter:blur(.4px)}
+#floor .snow{fill:#fffaf0;opacity:.55;stroke:currentColor;stroke-opacity:.25;stroke-width:1.5;filter:blur(.5px)}
+#floor .w-plank .pave,#floor .w-step .pave{opacity:.3}
+#floor .s-snow .road{opacity:.2}
+#floor .rug{fill:currentColor;opacity:.16;filter:blur(.6px)}
+#floor .sand{fill:currentColor;opacity:.1;filter:blur(1px)}
+body.night #floor .road{opacity:.13}
+.pp.back{bottom:var(--backB,12%)}
 .pp.front{bottom:calc(-1 * var(--depth,0px));width:calc(var(--pw,118px) * var(--fs,1))}
 #cast{position:absolute;left:0;right:0;bottom:calc(var(--dockH) - 10px);height:calc(100% - var(--dockH) - var(--hdH));pointer-events:none;transition:bottom .45s ease,height .45s ease}
 .pp{position:absolute;bottom:0;width:var(--pw,118px);transform:translateX(-50%);transition:left .7s cubic-bezier(.3,.7,.2,1),bottom .7s,transform .5s,opacity .6s,filter .6s;pointer-events:auto;cursor:pointer;-webkit-user-select:none;user-select:none}
@@ -94,6 +106,7 @@ body.show-names .pp .nm,.pp:hover .nm,.pp.speak .nm,.pp.sel .nm{opacity:1}
 body.anim-off .pp.idle .pup{animation:none}
 @keyframes breathe{0%,100%{rotate:-1.1deg;scale:1 1}30%{scale:1 1.014}50%{rotate:1.1deg;scale:1 1.006}80%{scale:1 1.016}}
 .pp.fallen .pup{transform:rotate(-86deg) translate(-30%,10%);filter:blur(.6px)}
+.pp.pp.fallen{bottom:calc(max(var(--backB,0px), 0px) + 9%)}   /* the dead lie a little way up the road, clear of the text */
 .pp.lift{bottom:120%!important;opacity:0;transition:bottom 1.6s cubic-bezier(.5,0,.6,1),opacity 1.6s}
 .pp.drop{transform:translateX(-50%) translateY(140%);opacity:0;transition:transform 1.2s cubic-bezier(.6,0,.8,.4),opacity 1.2s}
 .pp .badge{position:absolute;left:50%;top:-6px;transform:translate(-50%,-100%);white-space:nowrap;font:700 13px/1 var(--ui);padding:4px 8px;border-radius:999px;background:var(--ink);color:var(--paper)}
@@ -445,7 +458,7 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 <div id="stage" aria-hidden="true">
   <div id="scrim"><i class="moonl"></i><i class="lamp"></i><i class="fiber"></i><i class="edge"></i></div>
   <div id="scene"></div>
-  <div id="floor"><svg viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true"><path class="road" d="M330,0 L670,0 L1180,100 L-180,100 Z"/><path class="edge" d="M330,0 L-180,100 M670,0 L1180,100" /><path class="line" d="M300,6 L700,6 M262,14 L738,14 M214,24 L786,24 M154,37 L846,37 M80,53 L920,53 M-10,73 L1010,73"/><path class="mid" d="M500,0 L500,100"/></svg></div>
+  <div id="floor"></div>
   <div id="cast"></div>
   <div id="roster" class="hide"></div>
   <div id="fx"></div>
@@ -509,7 +522,7 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 
 <div id="sheet" class="hide" role="dialog" aria-modal="true"><div class="box" id="sheetBox"></div></div>
 
-<script src="engine.js?v=16"></script>
+<script src="engine.js?v=17"></script>
 <script src="voices.js?v=9"></script>
 <script src="speech.js?v=10"></script>
 <script src="art.js?v=2"></script>
@@ -538,6 +551,6 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 <script src="stories/shirane.who.js?v=1"></script>
 <script src="stories/shirane.who.open.js?v=1"></script>
 <script src="sound.js?v=9"></script>
-<script src="game.js?v=36"></script>
+<script src="game.js?v=39"></script>
 </body>
 </html>
