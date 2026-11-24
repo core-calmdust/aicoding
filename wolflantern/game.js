@@ -279,8 +279,8 @@
   function resultsOn(id) {
     const out = [];
     S.claims.forEach(c => { const same = S.claims.filter(x => x.role === c.role); const k = (SHORT[c.role] || '') + (same.length > 1 ? same.indexOf(c) + 1 : '');
-      for (const r of c.res) if (r.target === id) out.push(r.res === 'guard' ? `<i class="g" title="${esc(nm(c.by))}が守った">${k}守</i>` : `<i class="${r.res === 'wolf' ? 'k' : ''}" title="${esc(nm(c.by))}：${r.res === 'wolf' ? '人狼' : '人間'}">${k}${r.res === 'wolf' ? '●' : '○'}</i>`); });
-    for (const r of S.pl.res) if (r.target === id && !(S.claims.find(c => c.by === 'you') || { res: [] }).res.some(x => x.target === id)) out.push(`<i class="${r.res === 'wolf' ? 'k' : ''}" title="あなたが知った">自${r.res === 'wolf' ? '●' : '○'}</i>`);
+      for (const r of c.res) if (r.target === id) out.push(r.res === 'guard' ? `<i class="g" title="${esc(nm(c.by))}が守った">${k} 守</i>` : `<i class="${r.res === 'wolf' ? 'k' : 'h'}" title="${esc(nm(c.by))}：${r.res === 'wolf' ? '人狼' : '人間'}">${k} ${r.res === 'wolf' ? '黒' : '白'}</i>`); });
+    for (const r of S.pl.res) if (r.target === id && !(S.claims.find(c => c.by === 'you') || { res: [] }).res.some(x => x.target === id)) out.push(`<i class="${r.res === 'wolf' ? 'k' : 'h'}" title="あなたが知った">自 ${r.res === 'wolf' ? '黒' : '白'}</i>`);
     return out.join('');
   }
   function renderRoster() {
@@ -291,7 +291,8 @@
     R.innerHTML = S.people.map(p => {
       const t = tagsOf(p.id), dead = !p.alive, mk = S.pl.notes[p.id] || '';
       const dc = dead && p.death ? (p.death.cause === 'wolf' ? '噛' : '吊') : '';
-      return `<div class="ro${p.isPlayer ? ' you' : ''}${dead ? ' dead' : ''}${mk ? ' mk-' + mk : ''}" data-id="${p.id}">${bust(p.id)}<b>${esc(p.isPlayer ? 'あなた' : p.name)}</b>${t.cl}${t.ht}<div class="rs">${resultsOn(p.id)}</div>${dead ? `<svg class="x" viewBox="0 0 44 44"><path d="M8 8L36 36M36 8L8 36"/></svg><span class="dc">${dc}</span>` : ''}</div>`;
+      const rs = resultsOn(p.id), rcls = /class="k"/.test(rs) ? ' res-k' : /class="h"/.test(rs) ? ' res-h' : '';
+      return `<div class="ro${p.isPlayer ? ' you' : ''}${dead ? ' dead' : ''}${mk ? ' mk-' + mk : ''}${rcls}" data-id="${p.id}">${bust(p.id)}<b>${esc(p.isPlayer ? 'あなた' : p.name)}</b>${t.cl}${t.ht}<div class="rs">${rs}</div>${dead ? `<svg class="x" viewBox="0 0 44 44"><path d="M8 8L36 36M36 8L8 36"/></svg><span class="dc">${dc}</span>` : ''}</div>`;
     }).join('');
     R.querySelectorAll('.ro').forEach(e => e.onclick = () => { const id = e.dataset.id; const p = person(id); if (!p || !p.alive || p.isPlayer) return; if (G.onPup && !G.talking && $('sheet').classList.contains('hide') && $('tx').classList.contains('hide')) G.onPup(id); });
     // the same marks above the puppets' heads
@@ -586,7 +587,7 @@
         <button class="btn" id="dAsk" ${S.pl.asks > 0 ? '' : 'disabled'}>${IC.ask}聞き取り<small>残り${S.pl.asks}</small></button>
         <button class="btn" id="dAcc" ${S.pl.accuse ? 'disabled' : ''}>${IC.point}名指しする</button>
         <button class="btn" id="dCall">${IC.call}呼びかける<small>${appealsLeft()}</small></button>
-        <button class="btn${E.contradictions(S, st).length ? ' acc' : ''}" id="dClash" ${E.contradictions(S, st).length ? '' : 'disabled'}>${IC.clash}矛盾を突く<small>${E.contradictions(S, st).length || ''}</small></button>
+        <button class="btn" id="dClash" ${canClash() ? '' : 'disabled'}>${IC.clash}矛盾を突く</button>
         <button class="btn pri" id="dVote">${IC.vote}投票へ</button>
       </div>`);
     const on = (id, f) => { const b = $(id); if (b) b.onclick = f; };
@@ -684,24 +685,39 @@
     if (items.length) await say(items);
     log({ k: 'appeal', v }); save(); debate();
   }
-  /* 矛盾を突く：あなたが知っていることどうしの食い違いを、皆の前で示す */
-  function clashText(c) {
-    const who = nm(c.who), when = c.night === 0 ? '最初の夜' : dayName(c.night) + 'の夜';
-    if (c.kind === 'trace') return { t: `${who}の報告と、あなたの見た痕跡`, s: `${who}は${when}の現場で「${SP.traceShort(st, c.said)}」を見たと言った。あなたが見た痕跡は「${SP.traceShort(st, c.seen)}」だった。`, say: `${who}。${when}、現場の痕跡は「${SP.traceShort(st, c.said)}」だったと言ったな。わたしはこの目で見た。「${SP.traceShort(st, c.seen)}」だった。` };
-    if (c.kind === 'fig') return { t: `${who}の見た人影と、痕跡`, s: `${who}は${when}、${SP.fig(st, c.said.cat, c.said.val)}を見たと言った。だが現場の痕跡は「${SP.traceShort(st, c.seen)}」を示している。`, say: `${who}は${when}、${SP.fig(st, c.said.cat, c.said.val)}を見たと言った。だが現場には「${SP.traceShort(st, c.seen)}」の痕跡があった。その人影は、どこから来た？` };
-    const by = c.seen.by === 'you' ? 'あなた自身' : nm(c.seen.by);
-    return { t: `${who}のいた場所`, s: `${who}は${when}、${locName(c.said.loc)}にいたと言った。だが${by}は、その夜${who}を${locName(c.seen.loc)}で見ている。`, say: `${who}は${when}、${locName(c.said.loc)}にいたと言った。だが${c.seen.by === 'you' ? 'わたしは' : by + 'は'}、その夜${who}を${locName(c.seen.loc)}で見ている。どちらが本当だ？` };
+  /* 矛盾を突く：誰の発言か → どの証拠をつきつけるか → 発言のどこがおかしいか。正しく突けば嘘が暴かれ、外せばあなたの言葉が軽くなる */
+  const nightName = n => n === 0 ? '最初の夜' : dayName(n) + 'の夜';
+  function partText(p) {
+    if (p.k === 'loc') return `夜は${locName(p.loc)}にいた`;
+    if (p.k === 'fig') return `${SP.fig(st, p.cat, p.val)}を見た`;
+    if (p.k === 'who') return `${nm(p.who)}を${locName(p.loc)}で見た`;
+    return `現場の痕跡は「${SP.traceShort(st, p)}」だった`;
   }
+  function evText(e) {
+    if (e.k === 'trace') return { t: `${locName(e.loc)}の痕跡「${SP.traceShort(st, e)}」`, s: `${nightName(e.night)}。あなたがこの目で見た。` };
+    return { t: `${nm(e.who)}が${locName(e.loc)}にいた`, s: `${nightName(e.night)}。${e.by === 'you' ? 'あなたが見た' : nm(e.by) + 'の話'}。` };
+  }
+  const missLeft = () => 2 - ((S.pl.miss || {})[S.day] || 0);
+  function canClash() { return missLeft() > 0 && E.statements(S, st).length && E.evidence(S).length; }
   async function clash() {
-    const L = E.contradictions(S, st);
-    const v = await pickOpt('矛盾を突く', '話の食い違いを、皆の前で示す。嘘をついた者は、たいてい狼か、狼の味方だ。ただし、人が嘘をつくのは狼だからとは限らない。', L.map(c => { const x = clashText(c); return { t: x.t, s: x.s, v: c.id, ic: IC.clash }; }));
-    if (!v) return debate();
-    const c = L.find(x => x.id === v), x = clashText(c);
-    const items = [{ who: 'you', text: x.say }];
-    const t = pup(c.who); if (t) { t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); }
-    for (const e of E.pointOut(S, st, v)) { const y = SP.event(S, st, e); if (y && y.text) items.push({ who: e.by, text: y.text }); }
+    const SL = E.statements(S, st), EV = E.evidence(S);
+    const who = await pickPerson('誰の発言を突く？', `的外れは今日あと${missLeft()}回まで。外せば、あなたの言葉が軽くなる。`, [...new Set(SL.map(x => x.who))], { mark: true });
+    if (!who) return debate();
+    const mine = SL.filter(x => x.who === who).sort((a, b) => b.night - a.night);
+    let stmt = mine[0];
+    if (mine.length > 1) { const v = await pickOpt(`${esc(nm(who))}の、どの夜の話？`, '', mine.map(x => ({ t: nightName(x.night), s: x.parts.map(partText).join('。') + '。', v: x.id, ic: IC.talk }))); if (!v) return debate(); stmt = mine.find(x => x.id === v); }
+    const ev = await pickOpt('どの証拠をつきつける？', `${nm(who)}の話（${nightName(stmt.night)}）：${stmt.parts.map(partText).join('。')}。`, EV.map(e => { const x = evText(e); return { t: x.t, s: x.s, v: e.id, ic: IC.show }; }));
+    if (!ev) return debate();
+    const part = stmt.parts.length === 1 ? 0 : await pickOpt('話の、どこがおかしい？', `つきつける証拠：${evText(EV.find(e => e.id === ev)).t}`, stmt.parts.map((p, i) => ({ t: `「${partText(p)}」`, v: String(i), ic: IC.clash })));
+    if (part == null) return debate();
+    const E1 = EV.find(e => e.id === ev), P1 = stmt.parts[+part];
+    const items = [{ who: 'you', text: `${nm(who)}。${nightName(stmt.night)}、「${partText(P1)}」と言ったな。だが、${E1.k === 'trace' ? `わたしは${locName(E1.loc)}で、この目で「${SP.traceShort(st, E1)}」を見ている` : `${E1.by === 'you' ? 'わたしは' : nm(E1.by) + 'は'}その夜、${nm(E1.who)}を${locName(E1.loc)}で見ている`}。` }];
+    const t = pup(who); if (t) { t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); }
+    const r = E.judgeClash(S, st, stmt.id, +part, ev);
+    for (const e of r.ev || []) { const y = SP.event(S, st, e); if (y && y.text) items.push({ who: e.by, text: y.text }); }
+    if (!r.ok) items.push({ text: `${st.lex.meet}のざわめきが、あなたのほうへ向いた。証拠は、その言葉を崩していなかった。${missLeft() > 0 ? '' : '\n今日はもう、うかつに人の言葉を突けない。'}` });
     await say(items);
-    log({ k: 'clash', id: v }); save(); debate();
+    log({ k: 'clash', ok: r.ok }); save(); renderRoster(); debate();
   }
   async function accuse() {
     const id = await pickPerson('誰を名指しする？', '名指しすると、あなたを信じる人がその人を疑いはじめる。外せば、あなたが疑われる。', live().map(p => p.id), { mark: true });
@@ -789,6 +805,20 @@
           const items = [];
           for (const e of ev) { if (e.t === 'dodge') { items.push({ text: `${st.lex.jail}の扉が開けられたとき、**${nm(e.by)}**が声を上げた。`, fx: () => { const t = pup(e.by); if (t) { t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); } } }); continue; } const x = SP.event(S, st, e); if (x && x.text) items.push({ who: e.by, text: x.text }); }
           await say(items); renderRoster();
+          // the player may speak before the vote is cast again
+          const dc = S.claims.find(c => c.by === out), rn = dc ? st.roles[dc.role].name : '';
+          const talkV = await pickOpt('名乗りを聞いて、何か言う？', '言わなくてもいい。あなたを信じる人ほど、その言葉に動かされる。', [
+            { t: `${nm(out)}の名乗りを信じる`, s: '票を入れ直すなら、別の人に。', v: 'trust', ic: IC.ask },
+            { t: '今さら名乗るのは怪しい', s: '本物なら、もっと早く出ていたはずだ。', v: 'doubt', ic: IC.point },
+            { t: `本物の${rn}がいるなら、今名乗ってほしい`, s: '隠れている本物が、対抗して出てくるかもしれない。', v: 'counter', ic: IC.call },
+            { t: '何も言わない', v: 'none', ic: IC.vote }]);
+          if (talkV && talkV !== 'none') {
+            const line = { trust: `${nm(out)}を信じる。${rn}を${st.lex.jail}へ送るわけにはいかない。票は、ほかの誰かに入れよう。`, doubt: `今になって${rn}だと？ 本物なら、もっと早く名乗っていたはずだ。わたしは信じない。`, counter: `本物の${rn}がいるなら、今ここで名乗ってほしい。黙っていれば、偽物が生き残る。` }[talkV];
+            const ev2 = E.dodgeTalk(S, st, out, talkV), it2 = [{ who: 'you', text: line }];
+            for (const e of ev2) { const x = SP.event(S, st, e); if (x && x.text) it2.push({ who: e.by, text: x.text }); }
+            if (talkV === 'counter' && !ev2.some(e => e.t === 'co')) it2.push({ text: '誰も、続いて名乗り出なかった。' });
+            await say(it2); renderRoster();
+          }
         }
       }
       if (ev.length) {
@@ -881,7 +911,7 @@
 
   /* the end: who they were */
   async function end() {
-    S.phase = 'end'; hud(); save(); SND.music('story', .85);
+    S.phase = 'end'; hud(); save(); SND.music('story', .85); renderRoster();
     const R = S.result || E.check(S);
     const wolves = S.people.filter(p => p.role === 'wolf');
     document.body.classList.remove('night');
@@ -925,7 +955,7 @@
       <div class="rank">${sc.rank}</div>
       <div class="stat"><div><b>${S.day}</b><span>日</span></div><div><b>${sc.wrong}</b><span>誤った追放</span></div><div><b>${sc.lost}</b><span>失われた人</span></div><div><b>${DIFFN[S.diff]}</b><span>むずかしさ</span></div></div>
       <p style="font-size:15px">人狼：${wolves.map(w => esc(nm(w.id))).join('、')}${mad ? `　狂人：${esc(nm(mad.id))}` : ''}</p>
-      <div class="foot"><button class="btn" data-a="title">タイトルへ</button><button class="btn" data-a="select">ほかの物語へ</button><button class="btn pri" data-a="again">同じ物語をもう一度</button></div>`, box => box.querySelectorAll('[data-a]').forEach(b => b.onclick = () => closeSheet(b.dataset.a))).then(a => {
+      <div class="foot"><button class="btn" data-a="title">タイトルへ</button><button class="btn" data-a="select">ほかの物語へ</button><button class="btn pri" data-a="again">もう一度</button></div>`, box => box.querySelectorAll('[data-a]').forEach(b => b.onclick = () => closeSheet(b.dataset.a))).then(a => {
       if (a === 'again') { buildSetup(); } else if (a === 'select') buildSelect(); else buildTitle();
     });
   }

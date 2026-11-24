@@ -531,6 +531,18 @@
     }
     return ev;
   }
+  // the player speaks after someone dodged with a claim: believe it, doubt it, or call the real one out
+  function dodgeTalk(S, story, out, kind) {
+    const ev = [], c = S.claims.find(c => c.by === out);
+    if (kind === 'trust') S.swayVote = { day: S.day, target: out, dir: -1 };
+    if (kind === 'doubt') S.swayVote = { day: S.day, target: out, dir: .45 };
+    if (kind === 'counter' && c) {
+      const real = alive(S).find(q => q.role === c.role && !q.isPlayer && q.id !== out && !S.claims.some(x => x.by === q.id) && !S.fake[q.id]);
+      if (real && rnd(S) < (c.role === 'guard' ? .8 : .9)) { claim(S, real.id, c.role, ev); announce(S, S.claims.find(x => x.by === real.id), S.day, ev); }
+      else { const t = pick(S, alive(S).filter(q => !q.isPlayer && q.id !== out)); if (t) ev.push({ t: 'callnone', by: t.id }); }
+    }
+    return ev;
+  }
   // should a real seer come forward now? (the player's "stay hidden" asks them to wait for a wolf)
   function seerWants(S, p, black, day) {
     if (black) return true;
@@ -699,6 +711,7 @@
         let v = sus[x] + (heat[x] || 0) * .06 * (1 - p.persona.logic) + (x === 'you' && S.pl.hit ? -.05 : 0);
         const gc = S.claims.filter(c => c.role === 'guard' && person(S, c.by).alive);
         if (gc.some(c => c.by === x)) v += gc.length === 1 ? -.22 * (p.persona.trust || .5) * 2 : .04;   // a lone guard is too precious to hang
+        const sw = S.swayVote; if (sw && sw.day === S.day && sw.target === x && p.role !== 'wolf') v += sw.dir * .26 * (p.persona.trust || .5) * 2;   // what the player said after the claim
         if (p.role === 'wolf' && isWolf(S, x)) {      // a partner: abandon only when they are surely lost
           v = (heat[x] || 0) >= alive(S).length / 2 ? 2 : -1;
         } else if (p.role === 'wolf' && x === bloc) v += .6;
@@ -979,6 +992,48 @@
     }
     return out.filter(o => !done.has(o.id));
   }
+  /* ---------- 矛盾を突く, in three steps: whose words → what evidence → which part is wrong ---------- */
+  // everything a person has said about one night, that the player heard (to them, or in the meeting), split into parts
+  function statements(S, story) {
+    const by = {};
+    const get = (id, n) => { const k = id + '|' + n; return by[k] = by[k] || { id: k, who: id, night: n, parts: [] }; };
+    for (const x of S.pl.log || []) {
+      if (x.k !== 'night' || !x.T || x.T.night == null) continue;
+      const st = get(x.who, x.T.night);
+      if (!st.parts.some(p => p.k === 'loc')) st.parts.push({ k: 'loc', loc: x.T.loc });
+      for (const s of x.T.saw) {
+        if (s.kind === 'fig' && !st.parts.some(p => p.k === 'fig' && p.cat === s.cat)) st.parts.push({ k: 'fig', cat: s.cat, val: s.val });
+        if (s.kind === 'who' && !st.parts.some(p => p.k === 'who' && p.who === s.who)) st.parts.push({ k: 'who', who: s.who, loc: s.loc });
+      }
+    }
+    for (const r of S.reports) if (r.by !== 'you') { const st = get(r.by, r.night); if (!st.parts.some(p => p.k === 'trace' && p.cat === r.cat)) st.parts.push({ k: 'trace', cat: r.cat, val: r.val, neg: r.neg }); }
+    for (const f of S.figs) { const st = get(f.by, f.night); if (!st.parts.some(p => p.k === 'fig' && p.cat === f.cat)) st.parts.push({ k: 'fig', cat: f.cat, val: f.val }); }
+    return Object.values(by).filter(st => st.parts.length && person(S, st.who).alive);
+  }
+  // what the player can lay on the table
+  function evidence(S) {
+    const out = [];
+    for (const k of S.pl.found) { const [ni, ti] = k.split('|').map(Number); const t = S.nights[ni].traces[ti]; out.push({ id: 'tr|' + k, k: 'trace', night: ni, cat: t.cat, val: t.val, neg: t.neg, loc: S.nights[ni].loc }); }
+    S.pl.told.filter(t => t.kind === 'who').forEach((t, i) => { if (!out.some(o => o.k === 'seen' && o.who === t.who && o.night === t.night && o.loc === t.loc)) out.push({ id: 'sw|' + i, k: 'seen', night: t.night, who: t.who, loc: t.loc, by: t.by }); });
+    return out;
+  }
+  // judge: does this evidence break this part? Only a real contradiction counts
+  function judgeClash(S, story, stmtId, partIdx, evId) {
+    const st = statements(S, story).find(x => x.id === stmtId), ev = evidence(S).find(x => x.id === evId);
+    if (!st || !ev) return { ok: false };
+    const part = st.parts[partIdx]; if (!part) return { ok: false };
+    let cid = null;
+    if (part.k === 'trace' && ev.k === 'trace' && ev.night === st.night) cid = 'tr|' + st.who + '|' + st.night + '|' + part.cat;
+    if (part.k === 'fig' && ev.k === 'trace' && ev.night === st.night) cid = 'fg|' + st.who + '|' + st.night + '|' + part.cat;
+    if (part.k === 'loc' && ev.k === 'seen' && ev.night === st.night && ev.who === st.who) cid = 'wh|' + st.who + '|' + st.night;
+    const c = cid && contradictions(S, story).find(o => o.id === cid && (o.kind !== 'trace' && o.kind !== 'fig' || (o.seen.cat === ev.cat && o.seen.val === ev.val && o.seen.neg === ev.neg)));
+    if (c) return { ok: true, ev: pointOut(S, story, c.id) };
+    // a miss: the village hears the player accuse someone with nothing — the player's word is worth a little less
+    S.exposed = S.exposed || {}; S.exposed.you = (S.exposed.you || 0) + .25;
+    (S.heat = S.heat || {}).you = ((S.heat || {}).you || 0) + 1;
+    S.pl.miss = S.pl.miss || {}; S.pl.miss[S.day] = (S.pl.miss[S.day] || 0) + 1;
+    return { ok: false, ev: [{ t: 'denyseen', by: st.who }] };
+  }
   // point one out in the meeting: the liar is caught, a hidden errand comes out, or a false sighting turns on its teller
   function pointOut(S, story, id) {
     const c = contradictions(S, story).find(o => o.id === id);
@@ -1017,5 +1072,5 @@
     return res;
   }
 
-  root.WLEngine = { ROLE, SETUP, DIFF, CATS, newGame, night, meeting, voteRound, exile, check, score, search, ask, present, playerClaim, playerResults, callOut, callEvidence, contradictions, pointOut, dodge, askDivine, askGuard, askHide, testimony, analyze, opinion, suspicion, npcSearch, canConfront, fitsTraces, person, alive, isWolf, rnd, pick, shuffle };
+  root.WLEngine = { ROLE, SETUP, DIFF, CATS, newGame, night, meeting, voteRound, exile, check, score, search, ask, present, playerClaim, playerResults, callOut, callEvidence, contradictions, pointOut, dodge, dodgeTalk, statements, evidence, judgeClash, askDivine, askGuard, askHide, testimony, analyze, opinion, suspicion, npcSearch, canConfront, fitsTraces, person, alive, isWolf, rnd, pick, shuffle };
 })(typeof window !== 'undefined' ? window : globalThis);
