@@ -256,10 +256,11 @@
   // choose a person from a grid
   function pickPerson(title, sub, ids, o) {
     o = o || {};
-    const btns = ids.map(id => `<button class="pb" data-id="${id}">${bust(id)}<span>${esc(nm(id))}</span>${o.mark ? `<i class="mk ${S.pl.notes[id] || ''}"></i>` : ''}</button>`).join('');
+    const off = o.off || {};
+    const btns = ids.map(id => off[id] ? `<button class="pb off" disabled>${bust(id)}<span>${esc(nm(id))}</span><small>${esc(off[id])}</small></button>` : `<button class="pb" data-id="${id}">${bust(id)}<span>${esc(nm(id))}</span>${o.mark ? `<i class="mk ${S.pl.notes[id] || ''}"></i>` : ''}</button>`).join('');
     return sheet(`<button class="ib x" data-x aria-label="閉じる"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button><h3>${title}</h3>${sub ? `<p>${sub}</p>` : ''}<div class="grid-pick">${btns}</div><div class="foot"><button class="btn" data-x>もどる</button></div>`, box => {
       box.querySelectorAll('[data-x]').forEach(b => b.onclick = () => closeSheet(null));
-      box.querySelectorAll('.pb').forEach(b => b.onclick = () => closeSheet(b.dataset.id));
+      box.querySelectorAll('.pb:not(.off)').forEach(b => b.onclick = () => closeSheet(b.dataset.id));
     });
   }
   function pickOpt(title, sub, opts) {
@@ -540,7 +541,9 @@
     if (!v) return hub();
     const it = st.items.find(x => x.id === v);
     if (it.kind === 'secret') {
-      const id = await pickPerson(`${esc(it.name)}で、誰のことを調べる？`, '', live().filter(p => p.secret && !p.secret.open).map(p => p.id));
+      const has = live().filter(p => p.secret), off = {};
+      has.forEach(p => { if (p.secret.open) off[p.id] = 'もう打ち明けた'; });
+      const id = await pickPerson(`${esc(it.name)}で、誰のことを調べる？`, '', has.map(p => p.id), { off });
       if (!id) return hub();
       S.pl.used[v] = 1; const p = person(id); p.secret.open = true;
       await say([{ text: fill(it.use, { name: nm(id) }) }, { who: id, text: ch(id).secret.confess }]);
@@ -649,7 +652,7 @@
     const opts = [
       { t: `${seerN}・${medN}は名乗り出てほしい`, s: '名乗るかどうかは本人が決める。何も見ていない者は、命を惜しんで黙るかもしれない。偽物が出てくることもある。', v: 'call:seer,medium', ic: IC.call, dis: u.call },
       { t: `${seerN}だけ、名乗り出てほしい`, s: `${medN}はまだ隠れていてよい、という頼み方。`, v: 'call:seer', ic: IC.call, dis: u.call },
-      ...(R.guard ? [{ t: `${grdN}も、名乗り出てほしい`, s: `${grdN}は名乗れば狼に狙われる。守りが当たった夜のあとや、残りが少ないときほど出てきやすい。偽物が出ることもある。`, v: 'call:guard', ic: IC.call, dis: u.call }] : []),
+      ...(R.guard ? [{ t: `${grdN}も、名乗り出てほしい`, s: `${grdN}は名乗れば狼に狙われる。守りが当たった夜のあとや、残りが少ないときほど出てきやすい。わけもなく頼むと、狩人を探す狼だと疑われる。`, v: 'call:guard', ic: IC.call, dis: u.call }] : []),
       { t: '見たもの・見つけたものを、全部出してほしい', s: '黙っていた痕跡や、夜に出歩いていた者の話が出てくるかもしれない。ただし、嘘の報告も混ざる。', v: 'evid', ic: IC.call, dis: u.evid },
       S.req.hide ? { t: `${seerN}は、もう隠れなくていい`, s: '先の頼みを取り下げる。', v: 'hide:0', ic: IC.call }
         : { t: `${seerN}は、狼を見つけるまで隠れていてほしい`, s: '本物は名乗らずに占い続ける。ただし、偽物が先に名乗れば黙ってはいないだろう。', v: 'hide:1', ic: IC.call },
