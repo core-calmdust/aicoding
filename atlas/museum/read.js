@@ -50,6 +50,7 @@
     { id: 'agon', region: 'europe', color: '#7a2a22', cover: { g: 'agon', s: 'agon' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'agonBoard' }, m1: { svg: 'agonMove' }, m2: { svg: 'agonCapture' } }, refs: ['Thos Sherwin, Agon, or the Queen’s Guards (London, 1842)', 'David Parlett, The Oxford History of Board Games (1999)', 'Jack Botermans, The Book of Games: Strategy, Tactics & History (2008)', 'Ludii Portal, “Agon” (rules and starting layout)', 'Wikipedia, “Agon (game)”'], links: [{ g: 'agon' }, { g: 'hex' }, { g: 'ugolki' }] },
     { id: 'dots', region: 'europe', color: '#2a4a7a', cover: { g: 'dots', s: 'dots' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'dotsChain' }, m1: { svg: 'connect4Gravity' }, m2: { svg: 'solvedTimeline' } }, refs: ['Édouard Lucas, La Pipopipette (1889); also in L’Arithmétique amusante (1895)', 'Elwyn Berlekamp, The Dots and Boxes Game: Sophisticated Child’s Play (2000)', 'E. R. Berlekamp, J. H. Conway, R. K. Guy, Winning Ways for your Mathematical Plays, vol. 2 (1982), ch. 16', 'L. Victor Allis, A Knowledge-based Approach of Connect-Four (master’s thesis, Vrije Universiteit Amsterdam, 1988)', 'tradgames.org.uk, “Four in a Row” (Milton Bradley 1974; the Captain’s Mistress story)', 'Wikipedia, “Dots and boxes”, “Connect Four”'], links: [{ g: 'dots' }, { g: 'connect4' }, { g: 'gomoku' }] },
     { id: 'hitblow', region: 'europe', color: '#2b3683', cover: { g: 'hitblow', s: 'hitblow' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'hitblowFeedback' }, m1: { svg: 'hitblowSearch' }, m2: { svg: 'hitblowFive' } }, refs: ['Donald E. Knuth, “The Computer as Master Mind”, Journal of Recreational Mathematics 9(1) (1976–77)', 'Kenji Koyama, Tony W. Lai, “An Optimal Mastermind Strategy”, Journal of Recreational Mathematics 25(4) (1993)', 'Jerrold M. Grochow, “MOO in Multics”, Software: Practice and Experience 2(3) (1972)', 'Invicta Plastics, Mastermind (1971–72)', 'Wikipedia, “Mastermind (board game)”, “Bulls and cows”'], links: [{ g: 'hitblow' }, { g: 'sudoku' }, { g: 'dots' }] },
+    { id: 'botao', region: 'americas', color: '#2f7a2a', cover: { g: 'botao', s: 'botao' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'botaoFlick' }, m1: { svg: 'botaoRules' }, m2: { svg: 'botaoFamily' } }, refs: ['Geraldo Décourt, rules of “Foot-Ball Celotex” (1929/1930)', 'Conselho Nacional de Desportos, Resolução n.º 14 (29 September 1988)', 'Confederação Brasileira de Futebol de Mesa (CBFM), Regra 12 Toques', 'Peter Adolph, Subbuteo (patent 1946–47)', 'Wikipedia, “Button football”, “Subbuteo”, “Table football”'], links: [{ g: 'botao' }, { g: 'hockey' }, { g: 'carrom' }] },
   ];
   // pictures shown only beside a story's paragraph (not in another room): a museum's open-access photo (CC0), linked to the museum's page.
   // The name, in each language, is MUSEUM_READ_T[lang].pic[id]. Files images/atlas/museum-story/pic/<id>.webp (≤ 960 px).
@@ -879,6 +880,39 @@
       R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
         g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
         g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="${xn + 16}" y="${y + 20}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // futebol de botão: the flick — the palheta presses the button's edge (1), the button strikes the ball, and the ball flies past the keeper into the goal (2)
+    botaoFlick: () => { const W = 300, H = 300; let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="10" fill="#2f8a3a"/>`;
+      for (let i = 0; i < 6; i++) g += `<rect x="0" y="${i * 50}" width="${W}" height="25" fill="#fff" opacity=".05"/>`;
+      g += `<path d="M30 0V70H270V0" fill="none" stroke="#fff" stroke-width="2" opacity=".85"/><path d="M95 0V32H205V0" fill="none" stroke="#fff" stroke-width="2" opacity=".85"/>`;
+      g += `<rect x="112" y="0" width="76" height="8" fill="#f4f1ea" stroke="#8a8478"/><path d="M112 8h76" stroke="#d8d4c8" stroke-width="2"/>`;
+      g += `<rect x="128" y="12" width="34" height="14" rx="2" fill="#2a4a8a" stroke="#14264a" stroke-width="1.5"/>`;
+      const bx = 112, by = 236, ox = 142, oy = 150;
+      g += `<path d="M${bx + 6} ${by - 22}L${ox - 5} ${oy + 11}" stroke="#f0c020" stroke-width="3.2" marker-end="url(#bfA)"/>`;
+      g += `<path d="M${ox + 4} ${oy - 8}Q${172} ${80} ${178} ${14}" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="6 5" marker-end="url(#bfB)"/>`;
+      g += `<circle cx="${ox}" cy="${oy}" r="6.5" fill="#f4f1ea" stroke="#2b2a28" stroke-width="1.4"/>`;
+      g += `<circle cx="${bx}" cy="${by}" r="22" fill="#d0352b" stroke="#7a1a12" stroke-width="2"/><circle cx="${bx}" cy="${by}" r="13" fill="none" stroke="#f4d0c8" stroke-width="1.6"/>`;
+      g += `<path d="M${bx - 18} ${by + 34}L${bx + 2} ${by + 14}L${bx + 14} ${by + 26}L${bx - 6} ${by + 46}Z" fill="#3a3430" stroke="#14110f" stroke-width="1.5"/>`;
+      g += `<circle cx="${bx - 26}" cy="${by + 40}" r="10" fill="#c0392b"/><text x="${bx - 26}" y="${by + 44.5}" font-size="13" font-weight="800" fill="#fff" text-anchor="middle">1</text>`;
+      g += `<circle cx="${190}" cy="${60}" r="10" fill="#c0392b"/><text x="190" y="64.5" font-size="13" font-weight="800" fill="#fff" text-anchor="middle">2</text>`;
+      [[200, 200, '#d0352b'], [60, 150, '#d0352b'], [230, 120, '#f4f1ea'], [90, 90, '#f4f1ea']].forEach(([x, y, c]) => { g += `<circle cx="${x}" cy="${y}" r="18" fill="${c}" stroke="${c === '#f4f1ea' ? '#8a8478' : '#7a1a12'}" stroke-width="2" opacity=".9"/>`; });
+      const mk = (id, col) => `<marker id="${id}" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="${col}"/></marker>`;
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr"><defs>${mk('bfA', '#f0c020')}${mk('bfB', '#fff')}</defs>${g}</svg>`; },
+    // futebol de botão: a team (ten buttons and the keeper's block) and Brazil's three classic rule sets by the number of touches (text: the story's figL.rules — [touches, name])
+    botaoRules: () => { const R = ((st('botao').figL || {}).rules) || [], W = 300, H = 262; let g = `<rect x="0" y="0" width="${W}" height="112" rx="10" fill="#2f8a3a"/><path d="M10 104H290M110 104V84H190V104" fill="none" stroke="#fff" stroke-width="1.6" opacity=".8"/><path d="M128 112V106H172V112" fill="none" stroke="#fff" stroke-width="2"/>`;
+      g += `<rect x="134" y="90" width="32" height="12" rx="2" fill="#2a4a8a" stroke="#14264a" stroke-width="1.4"/>`;
+      [[40, 70], [100, 72], [200, 72], [260, 70], [70, 46], [150, 52], [230, 46], [110, 24], [190, 24], [150, 14]].forEach(([x, y]) => { g += `<circle cx="${x}" cy="${y}" r="10" fill="#d0352b" stroke="#7a1a12" stroke-width="1.5"/>`; });
+      R.forEach(([n, nm], k) => { const cw = 92, x = 4 + k * (cw + 6), y = 126;
+        g += `<rect x="${x}" y="${y}" width="${cw}" height="132" rx="10" fill="#f4efe2" stroke="#d8cfb8"/><text x="${x + cw / 2}" y="${y + 46}" font-size="38" font-weight="800" fill="#2f8a3a" text-anchor="middle">${esc(n)}</text>`;
+        const t = +n || 0; for (let i = 0; i < t; i++) { const row = Math.floor(i / 6), m = Math.min(6, t - row * 6); g += `<circle cx="${x + cw / 2 - (m - 1) * 6 + (i % 6) * 12}" cy="${y + 64 + row * 11}" r="4" fill="#d0352b"/>`; }
+        const words = String(nm).split(/\n/); words.forEach((w, j) => { g += `<text x="${x + cw / 2}" y="${y + 104 + j * 17}" font-size="13" font-weight="800" fill="#2b2a28" text-anchor="middle">${esc(w)}</text>`; }); });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // the flicking-football family (names and notes: the story's figL.family — [botão, note], then the cousins)
+    botaoFamily: () => { const F = ((st('botao').figL || {}).family) || [], W = 300, RH = 46, top = 66; if (!F.length) return `<svg viewBox="0 0 ${W} 40" role="img"></svg>`;
+      const [c0, ...rest] = F, K = ['#2a5a8a', '#c0392b', '#8a5a24', '#6a3a8a'], H = top + 14 + RH * rest.length; let g = '';
+      g += `<rect x="6" y="6" width="${W - 12}" height="50" rx="10" fill="#2f8a3a"/><text x="${W / 2}" y="28" font-size="16" font-weight="800" fill="#fff" text-anchor="middle">${esc(c0[0])}</text><text x="${W / 2}" y="46" font-size="13" fill="#e8f4d8" text-anchor="middle">${esc(c0[1])}</text>`;
+      g += `<line x1="26" y1="56" x2="26" y2="${top + 14 + RH * (rest.length - 1) + 6}" stroke="#b8ad98" stroke-width="2.4"/>`;
+      rest.forEach((r, k) => { const y = top + 14 + RH * k + 6; g += `<path d="M26 ${y}H44" stroke="#b8ad98" stroke-width="2.4"/><circle cx="52" cy="${y}" r="7" fill="${K[k % K.length]}"/><text x="66" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(r[0])}</text><text x="66" y="${y + 19}" font-size="13" fill="#5a544a">${esc(r[1])}</text>`; });
       return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
     // four tetrahedral dice: how often each score comes (out of 16)
     tetraOdds: () => { const n = [1, 4, 6, 4, 1], W = 300, H = 150, bw = 40, gap = (W - 40 - bw * 5) / 4; let g = '';
