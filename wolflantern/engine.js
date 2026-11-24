@@ -24,11 +24,11 @@
   };
   // difficulty: size, action points, traces left per attack, how often the wolves come for the player,
   // how often they plant a belonging, how often the weather wipes a trace, how far a figure is seen
-  const DIFF = [
-    { id: 0, size: 8,  ap: 3, traces: 2, neg: .25, player: 0,    plant: 0,   drop: .25, erase: 0,   adj: .3,  npcFind: .3,  fakeSeer: .5, assist: true, wit: .3, sway: 1.2 },
-    { id: 1, size: 10, ap: 3, traces: 2, neg: .4,  player: .3,   plant: .35, drop: .15, erase: .2,  adj: .25, npcFind: .25, fakeSeer: .6, assist: false, wit: .32, sway: .8 },
-    { id: 2, size: 12, ap: 3, traces: 2, neg: .5,  player: .45,  plant: .4,  drop: .12, erase: .25, adj: .22, npcFind: .22, fakeSeer: .55, assist: false, wit: .5, sway: .7 },
-    { id: 3, size: 13, ap: 3, traces: 1, neg: .6,  player: .45,  plant: .55, drop: .1,  erase: .35, adj: .2,  npcFind: .2,  fakeSeer: .7, assist: false, wit: .6, sway: .55 },
+  const DIFF = [   // 2026-11-25：村まかせでも勝ててしまうので、村の推理を弱め、痕跡を減らした（あなたの働きで勝敗が決まるように）
+    { id: 0, size: 8,  ap: 3, traces: 1, neg: .35, player: 0,    plant: .15, drop: .2,  erase: .1,  adj: .25, npcFind: .22, fakeSeer: .6,  assist: true,  wit: .16, sway: 1.3 },
+    { id: 1, size: 10, ap: 3, traces: 1, neg: .5,  player: .3,   plant: .4,  drop: .12, erase: .3,  adj: .2,  npcFind: .1,  fakeSeer: .9,  assist: false, wit: .05, sway: 1.0 },
+    { id: 2, size: 12, ap: 3, traces: 1, neg: .6,  player: .45,  plant: .45, drop: .1,  erase: .35, adj: .17, npcFind: .15, fakeSeer: .8,  assist: false, wit: .16, sway: .9 },
+    { id: 3, size: 13, ap: 3, traces: 1, neg: .7,  player: .45,  plant: .55, drop: .08, erase: .45, adj: .15, npcFind: .12, fakeSeer: .85, assist: false, wit: .18, sway: .8 },
   ];
   const CATS = ['height', 'hand', 'foot', 'mark'];
 
@@ -482,6 +482,8 @@
         if (!c && seerWants(S, p, black, day)) claim(S, p.id, 'seer', ev);
       } else if (p.role === 'medium' && !S.fake[p.id]) {
         if (!c && S.votes.some(v => v.out) && rnd(S) < .7 + .3 * p.persona.bold) claim(S, p.id, 'medium', ev);
+      } else if (p.role === 'guard') {
+        if (!c && rnd(S) < guardWants(S, p)) { claim(S, p.id, 'guard', ev); wolfCounterGuard(S, p.id, ev); }
       } else if (S.fake[p.id] && !c && day >= S.fake[p.id].from) {
         if (S.fake[p.id].role === 'medium' && !S.votes.some(v => v.out)) continue;
         claim(S, p.id, S.fake[p.id].role, ev);
@@ -522,6 +524,7 @@
     S.dodged[S.day] = out;
     const ev = [{ t: 'dodge', by: out }];
     claim(S, out, role, ev);
+    ev.forEach(e => { if (e.t === 'co' && e.by === out) e.dodge = true; });
     const c = S.claims.find(c => c.by === out); c.dodge = S.day;
     announce(S, c, S.day, ev);
     // the real guard, hidden, hears a lie in their own name
@@ -543,6 +546,25 @@
     }
     return ev;
   }
+  // should the real guard come forward? Mostly no — a known guard is the wolves' next meal.
+  // But a good guard (someone attacked and saved) proves the village right, and near the end every vote counts.
+  function guardWants(S, p) {
+    const N = S.nights[S.nights.length - 1];
+    const gj = N && N.saved === 'guard' && N.guarded && N.target !== 'first';
+    const few = alive(S).length <= 6;
+    let w = .02 + .05 * p.persona.bold;
+    if (gj) w += .4 + .25 * p.persona.bold;
+    if (few) w += .3;
+    if (S.req && S.req.guardCall === S.day) w += .25;
+    return Math.min(.9, w);
+  }
+  // a wolf may claim to be the guard too, to muddy a real one
+  function wolfCounterGuard(S, realId, ev) {
+    const w = alive(S).find(q => (q.role === 'wolf' || q.role === 'madman') && !q.isPlayer && !S.claims.some(x => x.by === q.id));
+    if (!w || rnd(S) > (w.role === 'wolf' ? .3 : .25)) return false;
+    claim(S, w.id, 'guard', ev); announce(S, S.claims.find(x => x.by === w.id), S.day, ev);
+    return true;
+  }
   // should a real seer come forward now? (the player's "stay hidden" asks them to wait for a wolf)
   function seerWants(S, p, black, day) {
     if (black) return true;
@@ -557,7 +579,8 @@
       if (!p.alive || p.isPlayer) return;
       const fresh = [];
       if (c.role === 'guard') {
-        for (const r of guardHistory(S, p, c)) { c.res.push(r); ev.push({ t: 'result', by: p.id, role: 'guard', target: r.target, res: 'guard' }); }
+        const hist = guardHistory(S, p, c); for (const r of hist) c.res.push(r);
+        const last = hist[hist.length - 1]; if (last) ev.push({ t: 'result', by: p.id, role: 'guard', target: last.target, res: 'guard' });   // the rest is on the record
         return;
       }
       if (c.role === 'seer') {
@@ -757,15 +780,33 @@
     if (w >= h) return S.result = { win: false, why: 'overrun', ghost: !!S.ghost };
     return null;
   }
+  // the score is what the player did, not what the village did around them
   function score(S) {
     if (!S.result) return null;
     const lost = S.people.filter(p => !p.isPlayer && p.death && p.role !== 'wolf').length;
     const wrong = S.votes.filter(v => v.out && !isWolf(S, v.out)).length;
-    let pts = S.result.win ? 60 : 10;
-    pts += Math.max(0, 20 - 4 * wrong) + Math.max(0, 14 - 2 * lost) + (S.people[0].alive ? 6 : -8) - Math.max(0, S.day - 3) * 2;
-    pts += S.diff * 4;
-    const rank = pts >= 92 ? 'S' : pts >= 80 ? 'A' : pts >= 66 ? 'B' : pts >= 45 ? 'C' : 'D';
-    return { pts, rank, lost, wrong, days: S.day };
+    const L = S.pl.log || [];
+    // the player's own ballots (the last round of each day)
+    let wolfVotes = 0, badVotes = 0;
+    for (const v of S.votes) { const b = (v.rounds ? v.rounds[v.rounds.length - 1] : v).ballots || v.ballots; const t = b && b.you; if (!t) continue; if (isWolf(S, t)) wolfVotes++; else badVotes++; }
+    const acc = L.filter(x => x.k === 'accuse'), accHit = acc.filter(x => isWolf(S, x.who)).length, accMiss = acc.length - accHit;
+    const clashHit = L.filter(x => x.k === 'clash' && x.ok).length, clashMiss = L.filter(x => x.k === 'clash' && x.ok === false).length;
+    const shown = L.filter(x => x.k === 'show').length;
+    const mine = S.claims.find(c => c.by === 'you'), black = mine ? mine.res.filter(r => r.res === 'wolf' && isWolf(S, r.target)).length : 0;
+    const deathDay = S.people[0].death ? S.people[0].death.day : null;
+    const part = {
+      outcome: S.result.win ? 35 : 0,
+      votes: Math.min(24, wolfVotes * 8) - badVotes * 5,
+      accuse: Math.min(14, accHit * 7) - accMiss * 4,
+      clash: Math.min(10, clashHit * 5) - clashMiss * 2,
+      evidence: Math.min(4, shown) + Math.min(8, black * 4),
+      survival: deathDay == null ? 6 : deathDay <= 2 ? -10 : deathDay <= 3 ? -5 : 0,
+      losses: -2 * lost,
+      level: S.diff * 3,
+    };
+    const pts = Object.values(part).reduce((a, b) => a + b, 0);
+    const rank = pts >= 88 ? 'S' : pts >= 72 ? 'A' : pts >= 55 ? 'B' : pts >= 35 ? 'C' : 'D';
+    return { pts, rank, lost, wrong, days: S.day, part, wolfVotes, badVotes, accHit, accMiss, clashHit, clashMiss, shown, black, deathDay };
   }
 
   /* ---------- the player's actions ---------- */
@@ -884,6 +925,10 @@
         const has = S.votes.some(v => v.out);
         w = has ? .55 + .3 * p.persona.bold : .12 + .2 * p.persona.bold;   // nothing to tell yet: better to wait
         role = 'medium'; why = has ? 'trust' : 'risk';
+      } else if (p.role === 'guard' && roles.includes('guard')) {
+        S.req.guardCall = day;
+        w = guardWants(S, p) + .1 * p.persona.bold + .2 * trustYou(p.id);
+        role = 'guard'; why = w < .45 ? 'risk' : 'trust';
       } else if (S.fake[p.id] && roles.includes(S.fake[p.id].role)) {
         const f = S.fake[p.id];
         if (f.role === 'medium' && !S.votes.some(v => v.out)) continue;
@@ -892,8 +937,10 @@
       } else continue;
       decide.push({ p, role, go: rnd(S) < Math.max(.03, Math.min(.97, w)), why });
     }
+    // asked for the guard: a wolf or the madman may step forward in the guard's name
+    if (roles.includes('guard')) for (const p of live) if ((p.role === 'wolf' || p.role === 'madman') && !S.fake[p.id] && !decide.some(d => d.p.id === p.id)) { decide.push({ p, role: 'guard', go: rnd(S) < .18, why: 'fake' }); break; }
     // a fake who sees the real one step forward is pushed to counter at once
-    for (const d of decide) if (!d.go && d.why === 'fake' && decide.some(x => x.go && x.role === d.role && x.why !== 'fake') && rnd(S) < .8) d.go = true;
+    for (const d of decide) if (!d.go && d.why === 'fake' && decide.some(x => x.go && x.role === d.role && x.why !== 'fake') && rnd(S) < (d.role === 'guard' ? .3 : .8)) d.go = true;
     // the real ones first speak, the fakes answer them
     decide.sort((a, b) => (a.why === 'fake') - (b.why === 'fake'));
     for (const d of decide) if (d.go) { claim(S, d.p.id, d.role, ev); const c = S.claims.find(c => c.by === d.p.id); if (c) announce(S, c, day, ev); }

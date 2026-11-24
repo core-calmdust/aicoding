@@ -278,7 +278,7 @@
     let cl = '';
     if (c) { const same = S.claims.filter(x => x.role === c.role); cl = `<span class="cl ${c.role}">${SHORT[c.role] || ''}${same.length > 1 ? same.indexOf(c) + 1 : ''}</span>`; }
     const heat = (S.phase === 'meeting' || S.phase === 'vote') && S.mtg && S.mtg.day === S.day ? (S.heat || {})[id] || 0 : 0;
-    const ht = heat ? `<span class="ht" title="今日の集会で${heat}回名指しされた">疑${heat}</span>` : '';
+    const ht = heat ? `<span class="ht" title="今日の集会で${heat}回名指しされた">${heat}</span>` : '';
     return { cl, ht };
   }
   function resultsOn(id) {
@@ -647,6 +647,7 @@
     const opts = [
       { t: `${seerN}・${medN}は名乗り出てほしい`, s: '名乗るかどうかは本人が決める。何も見ていない者は、命を惜しんで黙るかもしれない。偽物が出てくることもある。', v: 'call:seer,medium', ic: IC.call, dis: u.call },
       { t: `${seerN}だけ、名乗り出てほしい`, s: `${medN}はまだ隠れていてよい、という頼み方。`, v: 'call:seer', ic: IC.call, dis: u.call },
+      ...(R.guard ? [{ t: `${grdN}も、名乗り出てほしい`, s: `${grdN}は名乗れば狼に狙われる。守りが当たった夜のあとや、残りが少ないときほど出てきやすい。偽物が出ることもある。`, v: 'call:guard', ic: IC.call, dis: u.call }] : []),
       { t: '見たもの・見つけたものを、全部出してほしい', s: '黙っていた痕跡や、夜に出歩いていた者の話が出てくるかもしれない。ただし、嘘の報告も混ざる。', v: 'evid', ic: IC.call, dis: u.evid },
       S.req.hide ? { t: `${seerN}は、もう隠れなくていい`, s: '先の頼みを取り下げる。', v: 'hide:0', ic: IC.call }
         : { t: `${seerN}は、狼を見つけるまで隠れていてほしい`, s: '本物は名乗らずに占い続ける。ただし、偽物が先に名乗れば黙ってはいないだろう。', v: 'hide:1', ic: IC.call },
@@ -659,7 +660,7 @@
     if (v.startsWith('call:')) {
       const roles = v.slice(5).split(',');
       u.call = 1;
-      mine = roles.length > 1 ? `${seerN}と${medN}がいるなら、名乗り出てほしい。黙っていても、狼は待ってくれない。` : `${seerN}がいるなら、今、名乗り出てほしい。${medN}は、まだ出なくていい。`;
+      mine = roles[0] === 'guard' ? `${grdN}がいるなら、名乗り出てほしい。誰を守ってきたのか、聞かせてくれ。` : roles.length > 1 ? `${seerN}と${medN}がいるなら、名乗り出てほしい。黙っていても、狼は待ってくれない。` : `${seerN}がいるなら、今、名乗り出てほしい。${medN}は、まだ出なくていい。`;
       await say([{ who: 'you', text: mine }]);
       ev = E.callOut(S, st, roles);
     } else if (v === 'evid') {
@@ -915,6 +916,21 @@
   }
 
   /* the end: who they were */
+  // the score, section by section
+  function scoreTable(sc) {
+    const P = sc.part, sg = n => (n > 0 ? '+' : n < 0 ? '−' : '±') + Math.abs(n);
+    const rows = [
+      ['結末', R0 => S.result.win ? '狼をすべて見つけ出した' : '狼を止められなかった', P.outcome],
+      ['投票', () => `狼に${sc.wolfVotes}票・人間に${sc.badVotes}票`, P.votes],
+      ['名指し', () => `当たり${sc.accHit}・外れ${sc.accMiss}`, P.accuse],
+      ['矛盾を突く', () => `暴いた${sc.clashHit}・的外れ${sc.clashMiss}`, P.clash],
+      ['証拠と名乗り', () => `示した痕跡${sc.shown}・名乗って出した黒${sc.black}`, P.evidence],
+      ['生き延びた', () => sc.deathDay == null ? '最後まで生きていた' : `${dayName(sc.deathDay)}に倒れた`, P.survival],
+      ['失われた人', () => `${sc.lost}人`, P.losses],
+      ['むずかしさ', () => DIFFN[S.diff], P.level],
+    ];
+    return `<table class="sct">${rows.map(([k, d, n]) => `<tr><th>${k}</th><td>${esc(d())}</td><td class="${n > 0 ? 'p' : n < 0 ? 'm' : ''}">${sg(n)}</td></tr>`).join('')}<tr class="tot"><th>合計</th><td>S 88以上・A 72以上・B 55以上・C 35以上</td><td>${sc.pts}</td></tr></table>`;
+  }
   async function end() {
     S.phase = 'end'; hud(); save(); SND.music('story', .85); renderRoster();
     const R = S.result || E.check(S);
@@ -939,8 +955,9 @@
     const mad = S.people.find(p => p.role === 'madman');
     if (mad) await say([{ text: `狼に心を寄せていた人間——狂人は、**${nm(mad.id)}**だった。` }]);
     if (st.arc && st.arc.coda) await say([{ text: st.arc.coda }]);
-    if (R.win || R.why === 'overrun') await say([{ text: R.win ? st.text.win : st.text.lose }]);
-    if (R.win && st.heroData && st.heroData.epi) await say([{ text: st.heroData.epi }]);
+    const gone = !S.people[0].alive;   // the player died: the ending must not have them write or walk
+    if (R.win || R.why === 'overrun') await say([{ text: fill(R.win ? (gone && st.text.winGhost || st.text.win) : (gone && st.text.loseGhost || st.text.lose), { book: st.lex.book }) }]);
+    if (R.win && st.heroData) { const ep = gone ? st.heroData.epiGhost : st.heroData.epi; if (ep) await say([{ text: ep }]); }
     if (R.win) {
       const surv = S.people.filter(p => p.alive && !p.isPlayer && p.role !== 'wolf' && ch(p.id).epi);
       for (let i = surv.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [surv[i], surv[j]] = [surv[j], surv[i]]; }
@@ -958,7 +975,7 @@
     const why = ({ cleared: '狼をすべて見つけ出した', overrun: '狼の数が、人の数に並んだ' }[R.why] || '') + (S.ghost ? '（あなたは幽霊として見届けた）' : '');
     await sheet(`<h3 style="text-align:center">${R.win ? '解決' : '未解決'}　<small style="font:500 15px var(--ui);color:var(--mute)">${esc(why)}</small></h3>
       <div class="rank">${sc.rank}</div>
-      <div class="stat"><div><b>${S.day}</b><span>日</span></div><div><b>${sc.wrong}</b><span>誤った追放</span></div><div><b>${sc.lost}</b><span>失われた人</span></div><div><b>${DIFFN[S.diff]}</b><span>むずかしさ</span></div></div>
+      ${scoreTable(sc)}
       <p style="font-size:15px">人狼：${wolves.map(w => esc(nm(w.id))).join('、')}${mad ? `　狂人：${esc(nm(mad.id))}` : ''}</p>
       <div class="foot"><button class="btn" data-a="title">タイトルへ</button><button class="btn" data-a="select">ほかの物語へ</button><button class="btn pri" data-a="again">もう一度</button></div>`, box => box.querySelectorAll('[data-a]').forEach(b => b.onclick = () => closeSheet(b.dataset.a))).then(a => {
       if (a === 'again') { buildSetup(); } else if (a === 'select') buildSelect(); else buildTitle();
