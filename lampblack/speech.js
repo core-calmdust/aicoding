@@ -36,6 +36,7 @@
     const c = charOf(story, id); const reg = (V()[c.voice] || {}).reg || 'plain';
     const T = WHY()[reg] || WHY().plain;
     if (!w || w.k === 'gut') return (V()[c.voice] || {}).gut || T.gut;
+    if (w.by && w.by === id) w = { k: 'divined' };   // a speaker never names themself as a third person
     const o = { role: w.role ? roleShort(w.role) : '', by: w.by ? (w.by === 'you' ? story.hero.title : name(S, story, w.by)) : '' };
     if (w.k === 'counter') o.role = roleName(story, w.role);
     if (w.k === 'trace') o.trait = trait(story, w.cat, w.val);

@@ -794,7 +794,9 @@
     const p = person(S, id);
     const own = (S.own[id] || []).find(r => r.target === t && r.res === 'wolf');
     if (own && p.role === 'seer') return { k: 'divined' };
-    const blk = S.claims.find(c => c.res.some(r => r.target === t && r.res === 'wolf') && c.by !== t);
+    const mine = S.claims.find(c => c.by === id && c.res.some(r => r.target === t && r.res === 'wolf'));
+    if (mine) return { k: 'divined' };   // their own reading: said in the first person, never "my own name + さん"
+    const blk = S.claims.find(c => c.res.some(r => r.target === t && r.res === 'wolf') && c.by !== t && c.by !== id);
     if (blk) return { k: 'black', by: blk.by, role: blk.role };
     const myC = S.claims.find(c => c.by === t);
     if (myC && S.claims.filter(c => c.role === myC.role).length > 1) return { k: 'counter', role: myC.role };
