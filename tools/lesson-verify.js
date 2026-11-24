@@ -367,7 +367,7 @@ function dots(opt) {
 // ⑦⑧ ケロ's 3D words (atlas/lessons3d.js amLsJa): the question and hint of problem k fit its board, the praise's facts, and for EVERY
 // wrong move the reason it gives is the board's (short of / past the goal, the wrong way, a blocker, not in line, an arrow shot short,
 // the exits left). ⑨ the 2D (amazons/app.js lessonAnswer) and the 3D (points) both score P.ok.
-const AM_DONE = new Set(['b_queen', 'b_arrow', 'b_block', 'b_win']);
+const AM_DONE = new Set(['b_queen', 'b_arrow', 'b_block', 'b_win', 's_trap', 's_escape', 's_wall', 's_fill']);
 function amazons(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'amazons/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'amazons/lessons.json'), 'utf8'));
@@ -395,6 +395,7 @@ function amazons(opt) {
   const SYM = [(r, c) => [r, c], (r, c) => [r, 9 - c], (r, c) => [9 - r, c], (r, c) => [9 - r, 9 - c], (r, c) => [c, r], (r, c) => [c, 9 - r], (r, c) => [9 - c, r], (r, c) => [9 - c, 9 - r]];
   const dist = (a, b) => { let best = 99; for (const S of SYM) { let d = 0; for (let i = 0; i < 100 && d < best; i++) { const [r, c] = S((i / 10) | 0, i % 10); if (a[i] !== b[r * 10 + c]) d++; } best = Math.min(best, d); } return best; };
   L.steps.forEach((st, si) => { const id = st.id; if (!AM_DONE.has(id) || (only && !only.has(id))) return;
+    if (id.startsWith('s_')) return amStrat(st);
     let prevD = -1, firstD = null;
     st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), all = p.moves(), T = (P.mk || [])[0], W = whites(p), B = blacks(p);
       if (P.s.side !== 1) a('① White is not to move');
@@ -469,6 +470,124 @@ function amazons(opt) {
           else { const k = t.match(/(\d+)つ/); if (!k) a(`⑦ ${nm}: 「${t}」 (no count of the exits)`); else if (+k[1] !== n) a(`⑦ ${nm}: 「${t}」 (${n} exits left)`); } }
       }
     }); });
+  // (2026-11-24 第2期) the strategy steps s_trap・s_escape・s_wall・s_fill — the goal of each is a fact of the rules, checked here on
+  // its own (the rooms by a flood fill of this file, the moves left in a room by a brute-force search of this file):
+  //  s_trap: the marked black amazon has no empty square next to it after the move; s_escape: the marked white amazon moves, has 4 or
+  //  more empty squares round it and no black reply boxes it in; s_wall: the board splits (no room with both colours) with the most for
+  //  White (its empty squares − Black's); s_fill: the most moves left for White's amazon in its own room.
+  function amStrat(st) { const id = st.id; let prevD = -1, firstD = null;
+    // 追14: a threshold the scoring uses (s_escape: 4 or more empty squares round it) is said in the 3D intro
+    if (id === 's_escape' && !/4つ以上/.test(X.AMJ_LS.intro.s_escape || '')) add(id, -1, '追14 the 3D intro does not say the 4 empty squares the answer needs');
+    const rooms = sq => { const seen = new Int8Array(100).fill(-1), R = []; let w = 0, b = 0, sep = true;
+      for (let s0 = 0; s0 < 100; s0++) { if (sq[s0] === 3 || seen[s0] >= 0) continue; const Q = [s0]; seen[s0] = R.length;
+        for (let h = 0; h < Q.length; h++) { const [r, c] = RCo(Q[h]); for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = c + dc, t = rr * 10 + cc; if ((dr || dc) && rr >= 0 && rr < 10 && cc >= 0 && cc < 10 && seen[t] < 0 && sq[t] !== 3) { seen[t] = R.length; Q.push(t); } } }
+        const nw = Q.filter(q => sq[q] === 1).length, nb = Q.filter(q => sq[q] === 2).length, ne = Q.filter(q => !sq[q]).length; R.push({ nw, nb, ne });
+        if (nw && nb) sep = false; else if (nw) w += ne; else if (nb) b += ne; }
+      return { sep, w, b, R }; };
+    const nbr = i => { if (i == null || i < 0) return []; const [r, c] = RCo(i), o = []; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = c + dc; if ((dr || dc) && rr >= 0 && rr < 10 && cc >= 0 && cc < 10) o.push(rr * 10 + cc); } return o; };
+    const freeN = (sq, x) => nbr(x).filter(t => !sq[t]).length;
+    // the most moves an amazon on a can make alone (squares sq: 0 empty), brute force with a memo on the filled squares
+    const fillBF = (sq0, a0) => { const memo = new Map(), sq = Array.from(sq0); const key = a => sq.join('') + a;
+      const rec = a => { const k = key(a); if (memo.has(k)) return memo.get(k); let best = 0;
+        for (let d = 0; d < 8; d++) { const DR = [-1, -1, -1, 0, 0, 1, 1, 1][d], DC = [-1, 0, 1, -1, 1, -1, 0, 1][d]; let [r, c] = RCo(a);
+          for (;;) { r += DR; c += DC; if (r < 0 || r > 9 || c < 0 || c > 9) break; const t = r * 10 + c; if (sq[t]) break;
+            sq[a] = 0; sq[t] = 1;
+            for (let e = 0; e < 8; e++) { let [r2, c2] = [r, c]; for (;;) { r2 += [-1, -1, -1, 0, 0, 1, 1, 1][e]; c2 += [-1, 0, 1, -1, 1, -1, 0, 1][e]; if (r2 < 0 || r2 > 9 || c2 < 0 || c2 > 9) break; const u = r2 * 10 + c2; if (sq[u]) break; sq[u] = 3; best = Math.max(best, 1 + rec(t)); sq[u] = 0; } }
+            sq[t] = 0; sq[a] = 1; } }
+        memo.set(k, best); return best; };
+      return rec(a0); };
+    st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), all = p.moves(), T = (P.mk || [])[0], W = whites(p), B = blacks(p), okS = new Set(P.ok), nm = m => E.name(p, m);
+      if (P.s.side !== 1) a('① White is not to move');
+      let kk = -1; for (let k = 0; k < 8; k++) if (p.q[k] === T) kk = k;
+      const after = m => p.clone().play(m);
+      let goal, score = null, d = 0;
+      if (id === 's_trap') { if (kk < 0 || p.sq[T] !== 2) a('④ the mark is not on a black amazon');
+        const n0 = freeN(p.sq, T); if (n0 < 1 || n0 > 2) a(`④ the black amazon has ${n0} exits (the lesson: 1 or 2)`);
+        goal = m => { const q = after(m); return freeN(q.sq, q.q[kk]) === 0; }; }
+      if (id === 's_escape') { if (kk < 0 || p.sq[T] !== 1) a('④ the mark is not on a white amazon');
+        const boxable = q => q.moves().some(r => { q.play(r); const v = freeN(q.sq, q.q[kk]) === 0; q.unplay(r); return v; });
+        const flip = E.Pos.from(Object.assign({}, P.s, { side: 2 })); if (!boxable(flip)) a('④ the white amazon is in no danger (Black could not box it in now)');
+        goal = m => { if (mFrom(m) !== T) return false; const q = after(m); return freeN(q.sq, mTo(m)) >= 4 && !boxable(q); }; }
+      if (id === 's_wall') { if (rooms(p.sq).sep) a('④ the board is split already'); if (T == null || p.sq[T]) a('④ no empty gap marked');
+        score = m => { const r = rooms(after(m).sq); return r.sep ? r.w - r.b : -999; }; }
+      if (id === 's_fill') { if (W.length !== 1 || B.length !== 1) a('④ not one amazon each'); const r0 = rooms(p.sq); if (!r0.sep) a('④ the rooms are not split');
+        score = m => fillBF(after(m).sq, mTo(m)); }
+      const sc = score ? all.map(score) : null, mx = sc ? Math.max(...sc) : 0;
+      const G = score ? all.filter((m, i) => sc[i] === mx && mx > -999) : all.filter(goal), Gs = new Set(G);
+      if (!G.length) a('① the goal cannot be reached');
+      P.ok.forEach(m => { if (!all.includes(m)) a(`① the answer ${m} is not legal`); else if (!Gs.has(m)) a(`① the answer ${nm(m)} is not best`); });
+      G.forEach(m => { if (!okS.has(m)) a(`② ${nm(m)} is as good but scored wrong`); });
+      if (!okS.has(P.best)) a('① best is not an answer');
+      // ③
+      if (all.length < 3) a(`③ ${all.length} legal moves`);
+      if (G.length > all.length * 0.3) a(`③ ${G.length} of ${all.length} moves are right`);
+      if (id === 's_trap') { const near = all.filter(m => !Gs.has(m) && (nbr(T).includes(mArrow(m)) || nbr(T).includes(mTo(m)) || nbr(T).includes(mFrom(m)))); if (near.length < 3) a(`③ ${near.length} wrong moves near the black amazon`); d = Math.floor(all.length / G.length); }
+      if (id === 's_escape') { const mv = all.filter(m => mFrom(m) === T), w = mv.filter(m => !Gs.has(m)); if (G.length * 2 > mv.length) a(`③ ${G.length} of the marked amazon's ${mv.length} moves are right`); if (w.length < 3) a(`③ ${w.length} wrong moves of the marked amazon`); d = Math.floor(100 * w.length / Math.max(1, mv.length)); }
+      if (id === 's_wall') { if (!G.every(m => mArrow(m) === T)) a('④ an answer does not shoot into the gap'); const at = all.filter(m => mArrow(m) === T), w = at.filter(m => !Gs.has(m));
+        if (w.length < 3 || G.length > at.length * 0.75) a(`③ ${G.length} of the ${at.length} moves that shoot into the gap are right`); d = Math.floor(100 * w.length / Math.max(1, at.length)); }
+      if (id === 's_fill') { const vals = [...new Set(sc)]; if (all.length < 6 || vals.length < 3) a(`③ ${all.length} moves, ${vals.length} values`);
+        const f0 = W[0], n0 = rooms(p.sq).R.find(r => r.nw).ne, cutOf = m => { const q = after(m), rr = rooms(q.sq).R.find(r => r.nw); return n0 - 1 - rr.ne; };
+        if (!all.some(m => !Gs.has(m) && cutOf(m) > 0)) a('④ no wrong move cuts the room'); if (G.some(m => cutOf(m) > 0)) a('④ the answer cuts the room');
+        d = Math.floor(all.length / G.length); }
+      if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
+      if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`);
+      // ⑤
+      for (const [who, b] of pool) { if (b === P.s.b) { if (who !== `${id} q${j + 1}`) a(`⑤ the same position as ${who}`); continue; } const e = dist(P.s.b, b); if (e <= 2) a(`⑤ ${e} squares from ${who}`); }
+      // ⑦⑧ ケロ's words
+      let Wd; try { Wd = X.amLsJa(E, st, P, j); } catch (e) { a('⑧ the words fail: ' + e.message); return; }
+      const plain = t => String(t).replace(/[\u0001\u0002]/g, ''), n0 = T != null ? freeN(p.sq, T) : 0;
+      const need = (t, re, ok, why) => { if (re.test(t) && !ok) a(`⑧ 「${t}」: ${why}`); };
+      for (const t of [Wd.ask, Wd.hintTx]) {
+        need(t, /出口が1つなら/, n0 === 1 && G.some(m => !nbr(T).includes(mTo(m))), 'not one exit closed by an arrow');
+        need(t, /出口が2つなら/, n0 === 2, `${n0} exits`);
+        need(t, /白のアマゾンで出口に入って/, G.some(m => nbr(T).includes(mTo(m))), 'no answer moves into the exit');
+        need(t, /動いた白の元のマスが/, all.some(m => !Gs.has(m) && nbr(T).includes(mFrom(m)) && !after(m).sq[mFrom(m)]), 'no white amazon next to it leaves an exit');
+        need(t, /このままだと閉じこめられちゃう/, true, '');
+        need(t, /黒の1手でふさがれないか/, id !== 's_escape' || all.some(m => mFrom(m) === T && !Gs.has(m) && freeN(after(m).sq, mTo(m)) >= 4), 'no wide square that Black boxes in');
+        need(t, /自分のとなりをふさいだら/, all.some(m => mFrom(m) === T && !Gs.has(m) && nbr(mTo(m)).includes(mArrow(m))), 'no wrong move shoots next to itself');
+        need(t, /2体とも/, W.length === 2, `${W.length} white amazons`);
+        need(t, /矢でふさぐか、アマゾンで入るか/, false, 'an amazon in the gap never splits the board');
+        need(t, /光ってるマスが壁のすき間/, G.every(m => mArrow(m) === T), 'the answers do not shoot into the glowing square');
+        need(t, /むこう側へ渡る手/, all.some(m => !Gs.has(m) && mArrow(m) === T), 'no wrong move crosses and shuts the gap');
+        need(t, /切っちゃう矢|ちぎれやすい/, id !== 's_fill' || all.some(m => !Gs.has(m) && rooms(after(m).sq).R.find(r => r.nw).ne < rooms(p.sq).R.find(r => r.nw).ne - 1), 'no move cuts the room');
+        need(t, /元いたマスやすみっこ/, G.some(m => mArrow(m) === mFrom(m)) || id !== 's_fill', 'no answer shoots back');
+      }
+      for (const u of P.ok) { const g = plain(Wd.good(u)), q = after(u), nu = nm(u);
+        if (/\{|undefined|NaN/.test(g)) a(`⑧ the praise of ${nu} 「${g}」`);
+        if (id === 's_trap') { if (/2つ|まとめて|同時に|いっぺんに|両方/.test(g) && n0 < 2) a(`⑧ the praise of ${nu} 「${g}」: ${n0} exit`);
+          if (/元のマス|来た道|どいたマス|空いたマス/.test(g) && !(mArrow(u) === mFrom(u) && nbr(T).includes(mTo(u)))) a(`⑧ the praise of ${nu} 「${g}」`);
+          if (/最後の出口に矢|矢1本で/.test(g) && !(nbr(T).includes(mArrow(u)) && n0 === 1)) a(`⑧ the praise of ${nu} 「${g}」`);
+          if (/白.*出口に入|出口.*白が入|白のアマゾン自身|白でふさ|白で出口/.test(g) && !nbr(T).includes(mTo(u))) a(`⑧ the praise of ${nu} 「${g}」`); }
+        if (id === 's_escape') { const n = g.match(/(\d+)(つ|マス)/); if (n && +n[1] !== freeN(q.sq, mTo(u))) a(`⑧ the praise of ${nu} 「${g}」: ${freeN(q.sq, mTo(u))} free`);
+          if (/遠くへ撃って/.test(g) && nbr(mTo(u)).includes(mArrow(u))) a(`⑧ the praise of ${nu} 「${g}」: the arrow is next to it`); }
+        if (id === 's_wall') { const r = rooms(q.sq); for (const [re, v] of [[/白の部屋が(\d+)マス/, r.w], [/黒の部屋が?(\d+)マス/, r.b], [/(\d+)対/, r.w], [/対(\d+)/, r.b], [/白は(\d+)マス/, r.w], [/黒の部屋は(\d+)マス/, r.b]]) { const x = g.match(re); if (x && +x[1] !== v) a(`⑧ the praise of ${nu} 「${g}」: White ${r.w}, Black ${r.b}`); } }
+        if (id === 's_fill') { const n = g.match(/(\d+)手/); if (n && +n[1] !== mx) a(`⑧ the praise of ${nu} 「${g}」: ${mx} moves`); }
+        if (id === 's_fill' && mx !== rooms(p.sq).R.find(r => r.nw).ne - 1) a(`⑧ the praise of ${nu}: the room is not used to the last square (${mx + 1} of ${rooms(p.sq).R.find(r => r.nw).ne})`);
+      }
+      for (const m of all) { if (okS.has(m)) continue; const raw = plain(Wd.ng(m)), i0 = raw.indexOf('赤い印の手'), t = i0 >= 0 ? raw.slice(i0) : raw, q = after(m), x = nm(m);
+        if (i0 < 0) { a(`⑦ ${x}: the words do not name the move`); continue; }
+        if (/\{|undefined|NaN/.test(t)) a(`⑦ ${x}: 「${t}」`);
+        if (id === 's_trap') { const n = freeN(q.sq, q.q[kk]), op = nbr(T).includes(mFrom(m)) && !q.sq[mFrom(m)];
+          if (/元のマス|どいたマス/.test(t)) { if (!op) a(`⑦ ${x}: 「${t}」 (the square left is not an exit)`); }
+          else { const k = t.match(/(\d+)つ/); if (!k || +k[1] !== n) a(`⑦ ${x}: 「${t}」 (${n} exits left)`); } }
+        if (id === 's_escape') { const moved = mFrom(m) === T, sqT = moved ? mTo(m) : T, n = freeN(q.sq, sqT), trap = q.moves().some(r => { q.play(r); const v = freeN(q.sq, q.q[kk]) === 0; q.unplay(r); return v; }), self = moved && nbr(sqT).includes(mArrow(m));
+          if (/閉じこめられちゃう|つかまっちゃう|ふたをされちゃう|囲まれちゃう/.test(t) && !trap) a(`⑦ ${x}: 「${t}」 (Black cannot box it in)`);
+          if (/助からない/.test(t) && !trap) a(`⑦ ${x}: 「${t}」 (it is safe for now)`);
+          if (/自分の矢|矢を近く|すぐそばに矢|足もと|自分のまわりに矢/.test(t) && !self) a(`⑦ ${x}: 「${t}」 (the arrow is not next to it)`);
+          if (moved && !trap && !self && !/空きが(\d+)つ|せまい場所/.test(t)) a(`⑦ ${x}: 「${t}」 (the reason: ${n} free squares)`);
+          { const k = t.match(/(?:空きが|出口が)(\d+)つ/); if (k && +k[1] !== n) a(`⑦ ${x}: 「${t}」 (${n} free)`); }
+          if (!moved && /逃げた先|行き先/.test(t)) a(`⑦ ${x}: 「${t}」 (it did not move)`); }
+        if (id === 's_wall') { const r = rooms(q.sq), cross = !r.sep && q.sq[T] === 3, inGap = q.sq[T] === 1;
+          if (/開いたまま|壁が完成しなくて|盤が分かれずに/.test(t) && (r.sep || cross || inGap)) a(`⑦ ${x}: 「${t}」 (the gap is ${cross ? 'shut, White crossed' : inGap ? 'an amazon' : 'shut'})`);
+          if (/渡っちゃって|むこう側に入って/.test(t) && !cross) a(`⑦ ${x}: 「${t}」`);
+          if (/すき間に立っても|すき間に入っただけ/.test(t) && !inGap) a(`⑦ ${x}: 「${t}」`);
+          if (r.sep) { const k = t.match(/白の部屋が(\d+)マス/); if (k && +k[1] !== r.w) a(`⑦ ${x}: 「${t}」 (White ${r.w})`); } }
+        if (id === 's_fill') { const v = fillBF(q.sq, mTo(m)), dd = mx - v, k = t.match(/(\d+)手(?:も|ぶん)?(?:損|少な|足りな|へ)/); if (!k || +k[1] !== dd) a(`⑦ ${x}: 「${t}」 (${dd} moves fewer)`);
+          const c = (() => { const n1 = rooms(p.sq).R.find(r => r.nw).ne, rr = rooms(q.sq).R.find(r => r.nw); return n1 - 1 - rr.ne; })(), kc = t.match(/(\d+)マス/);
+          if (/ちぎれ|切って/.test(t) && !(c > 0 && kc && +kc[1] === c)) a(`⑦ ${x}: 「${t}」 (${c} squares cut off)`); if (c > 0 && !/ちぎれ|切って/.test(t)) a(`⑦ ${x}: 「${t}」 (the room is cut: ${c})`); }
+      }
+    });
+  }
   return out;
 }
 // (2026-11-24 第2期) reversi: the exact endgames (parity・finish) — every legal move solved again by an independent exact solver

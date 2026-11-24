@@ -5094,7 +5094,7 @@
       b_block: 'アマゾンも矢も、<b>ほかの駒や矢を飛び越えられない</b>。線の途中に何かあれば、その手前で止まっちゃう。<br>的のマスから逆にたどって、ふさがっていない線をさがすのがコツだケロ！',
       b_win: '自分の番に<b>どのアマゾンも動けなかったら負け</b>。取ったり取られたりはなくて、引き分けもないゲームなんだ。<br>相手のアマゾン全部のまわりをふさげたら、勝ちケロ！',
       s_trap: 'ここからは作戦！ 相手のアマゾンを1体<b>閉じこめる</b>と、そいつは最後まで動けない。<br>まわりの空きマスが1つ2つしかないアマゾンは、ねらい目だケロ。',
-      s_escape: '反対に、自分のアマゾンのまわりがせまくなったら危険信号！ 相手の1手で閉じこめられちゃうかも。<br>そうなる前に、<b>まわりが広く空いた場所</b>へ逃がそう。自分の矢で自分のとなりをふさがないようにね。',
+      s_escape: '反対に、自分のアマゾンのまわりがせまくなったら危険信号！ 相手の1手で閉じこめられちゃうかも。<br>そうなる前に、<b>まわりが広く空いた場所</b>（となりの空きマスが4つ以上）へ逃がそう。自分の矢で自分のとなりをふさがないようにね。',
       s_wall: '矢が並ぶと、盤はいくつかの<b>部屋</b>に分かれる。分かれたら、もうおたがいの部屋には入れないんだ。<br>最後は、自分の部屋で長く動けたほうの勝ち！ 壁のすき間は、白の部屋が広くなるようにふさぐケロ。',
       s_fill: '部屋が分かれたら、あとは何回動けるかの勝負！ ふつうは1マスで1手だけど、矢の置き方が悪いと<b>行けなくなるマス</b>ができちゃう。<br>元いたマスや行き止まりのすみに矢を刺して、端から埋めていくケロ。',
     },
@@ -5164,6 +5164,43 @@
     if (id === 's_fill') { F.left = E.fillMax(q, t); const R = E.roomOf(pos, f); F.room = R ? R.length - 1 : 0; const R2 = E.roomOf(q, t); F.cut = R ? Math.max(0, F.room - 1 - (R2 ? R2.length - 1 : 0)) : 0; }
     return F;
   }
+  // (2026-11-24 第2期・追7) the strategy steps' hints are chosen by the board, not by the problem's number: each hint has the fact it
+  // takes for granted; when the fact does not hold on this board, its always-true line is said instead
+  function amHint(E, id, pos, P, ok, k) {
+    const T = (P.mk || [])[0], NB = E.NB, all = pos.moves(), okS = new Set(ok), wr = all.filter(m => !okS.has(m));
+    let kk = -1; for (let x = 0; x < 8; x++) if (pos.q[x] === T) kk = x;
+    const W = []; for (let x = 0; x < 8; x++) if (pos.q[x] >= 0 && pos.sq[pos.q[x]] === 1) W.push(pos.q[x]);
+    const after = m => pos.clone().play(m);
+    let L = null;
+    if (id === 's_trap') { const n0 = kk >= 0 ? E.freeAt(pos, kk) : 0;
+      L = [['光る黒のとなりで、まだ空いてるマスはどこ？ そこが出口ケロ。', true],
+        ['出口が1つなら、矢を1本刺すだけでいいね！', n0 === 1 && ok.some(m => !NB[T].includes(E.mTo(m))), 'その黒のとなりの空きマスに、白の矢が届く線はあるかな？'],
+        ['白のアマゾンで出口に入って、ふさぐ手もあるよ。', ok.some(m => NB[T].includes(E.mTo(m))), '白のアマゾンから出口まで、まっすぐの線をさがしてみて！'],
+        ['動いた白の元のマスが、新しい出口にならないか気をつけて！', wr.some(m => NB[T].includes(E.mFrom(m)) && pos.sq[E.mFrom(m)] === 1 && !after(m).sq[E.mFrom(m)]), '閉じこめたあと、その黒のとなりに空きが残っていないか数えてね。'],
+        ['出口が2つなら、アマゾンと矢で1つずつふさげないかな？', n0 === 2, '出口が1つなら、そこに届く矢を1本見つければいいケロ。']]; }
+    if (id === 's_escape') { const trapped = m => { const q = after(m); if (kk < 0) return false; for (const r of q.moves()) { q.play(r); const b = E.boxed(q, kk); q.unplay(r); if (b) return true; } return false; };
+      const mv = wr.filter(m => E.mFrom(m) === T);
+      L = [['赤いアマゾンの行き先で、となりに空きマスが多いところを選んでね。', true],
+        ['逃げた先で、黒の1手でふさがれないかも確かめて！', mv.some(m => E.freeAt(after(m), kk) >= 4 && trapped(m)), '黒のアマゾンのすぐ近くは、ふさがれやすいから気をつけてね。'],
+        ['矢は自分から離れたところへ撃とう。自分のとなりをふさいだらもったいないケロ。', mv.some(m => NB[E.mTo(m)].includes(E.mArrow(m))), '行き先を決めたら、矢はそのまわりの空きを減らさない場所へ撃とう。'],
+        ['盤のすみや矢のそばは、出口が少なくなりがちだよ。', true],
+        ['となりの空きマスが4つ以上あると、ひとまず安心ケロ！', true]]; }
+    if (id === 's_wall') {
+      L = [['光ってるマスが壁のすき間だよ。そこをふさげば盤が分かれるね。', ok.every(m => E.mArrow(m) === T), '壁のすき間は1つだけ。そこがふさがれば部屋が分かれるケロ。'],
+        [`白のアマゾンを${W.length === 2 ? '2体とも' : '全部'}広い側に残したまま、すき間をふさいでね！`, true],
+        ['ふさいだあと、白と黒の部屋のマスを数えてくらべてみて。', true],
+        ['アマゾンですき間に入るだけじゃ、どいたらまた開いちゃう。矢でふさぐケロ！', all.some(m => E.mTo(m) === T), 'すき間に矢が届く白のアマゾンはどれ？ 線をたどってみて。'],
+        ['すき間を通ってむこう側へ渡る手は、白が黒の部屋に入っちゃうよ。', wr.some(m => E.mArrow(m) === T), '白のアマゾンが全部、広い側にいるまま分けられる手をさがそう。']]; }
+    if (id === 's_fill') { const f = W[0], room = f != null ? E.roomOf(pos, f) : null, n = room ? room.length - 1 : 0;
+      const cut = m => { const R2 = E.roomOf(after(m), E.mTo(m)); return n - 1 - (R2 ? R2.length - 1 : 0) > 0; };
+      L = [['部屋を2つに切っちゃう矢は損！ 元いたマスやすみっこに矢を刺してみて。', wr.some(cut) && ok.some(m => E.mArrow(m) === E.mFrom(m)), '矢を刺したあと、部屋のマスが全部つながっているか見てみよう！'],
+        ['行き止まりのマスから先に埋めると、むだが出にくいケロ。', true],
+        ['動いたあと、残りのマスを全部回れるか想像してみよう！', true],
+        ['真ん中に矢を刺すと、部屋がちぎれやすいんだ。', wr.some(cut), '動いたあと、行けないマスが残らないか数えてみてね。'],
+        ['最後のマスまで、1手ずつ順に行ける形を残してね。', true]]; }
+    if (!L) return null;
+    const x = L[k % L.length]; return x[1] ? x[0] : x[2] || null;   // (a hint whose fact does not hold gives way to its own always-true line: no line twice in a lesson)
+  }
   function amLsJa(E, s, P, i) {
     const id = s.id, pos = E.Pos.from(P.s), ok = P.ok || [P.best], A = P.best != null ? P.best : ok[0], k = i % 5, T = (P.mk || [])[0];
     const si = Math.max(0, ((AMAZONS.data && AMAZONS.data.ls.steps) || []).indexOf(s)), o8 = si % 8 + i * [1, 3, 5, 7][(si >> 3) % 4];   // (the praise / soft openers in a different order in each lesson)
@@ -5192,13 +5229,14 @@
           if (n0 === 1) return pk(['最後の出口に矢が刺さって、黒の行き場がなくなる', 'たった1つの出口がふさがる', '残った1マスに矢が刺さって、黒は手づまりになる', '最後のすき間がうまって、黒はもう指せない', '矢1本で、黒の最後の逃げ道が消える'], j);
           return pk(['黒のまわりの空きマスが、全部ふさがる', '黒の行き場が、1マスも残らない', '黒の出口が全部なくなる'], j); }
         case 's_trap': { const byT = E.NB[T].includes(F.t), byA = E.NB[T].includes(F.a);
-          if (byT && byA) return pk(['アマゾンで1つ、矢で1つ、その黒の出口をまとめてふさげる', '出口を2つ同時にふさいで、その黒の逃げ場がなくなる', '白が出口に入り、残りの出口には矢が刺さる', '2つの出口に、白と矢でいっぺんにふたができる', '動きと矢の両方で、その黒をぐるりと囲める'], j);
+          if (byT && F.a === F.f) return pk(['白が出口に入って、元のマスにも矢を撃ち返すから、すき間が残らない', '出口に入って、空いたマスも矢でふさげる', '出口に白が入り、どいたマスも矢でうまる', 'ふたをした白の元のマスまで、矢でしっかりふさげる', '白で出口をふさいで、来た道にも矢を刺せる'], j);
+          if (byT && byA && F.free0 >= 2) return pk(['アマゾンで1つ、矢で1つ、その黒の出口をまとめてふさげる', '出口を2つ同時にふさいで、その黒の逃げ場がなくなる', '白が出口に入り、残りの出口には矢が刺さる', '2つの出口に、白と矢でいっぺんにふたができる', '動きと矢の両方で、その黒をぐるりと囲める'], j);
           if (byT && F.a === F.f) return pk(['白が出口に入って、元のマスにも矢を撃ち返すから、すき間が残らない', '出口に入って、空いたマスも矢でふさげる', '出口に白が入り、どいたマスも矢でうまる', 'ふたをした白の元のマスまで、矢でしっかりふさげる', '白で出口をふさいで、来た道にも矢を刺せる'], j);
           if (byT) return pk(['白のアマゾンが出口に入って、ふたをする', '出口に白が入って、その黒はもう動けない', '白が出口にどっかり座って、黒を通さない', '白のアマゾン自身が、出口のふたになる', '出口を白でふさいで、その黒をつかまえられる'], j);
           return pk(['最後の出口に矢が刺さって、その黒は最後まで動けない', '出口がふさがって、黒は残りのアマゾンだけで戦うことになる', '矢1本で、その黒を閉じこめられる', '出口に矢でふたをして、黒を1体つかまえられる', '逃げ道がなくなって、その黒は置き物になる'], j); }
-        case 's_escape': return pk([`まわりに空きマスが${F.free}つある広い場所へ移れる`, `となりが${F.free}マスも空いていて、黒の1手ではふさぎきれない`, `広い場所へ出て、閉じこめられる心配がなくなる`, `黒の次の1手では囲めない場所へ逃げられる`, '矢も遠くへ撃って、自分のまわりを広いまま保てる'], j);
+        case 's_escape': return pk([`まわりに空きマスが${F.free}つある広い場所へ移れる`, `となりが${F.free}マスも空いていて、黒の1手ではふさぎきれない`, `広い場所へ出て、閉じこめられる心配がなくなる`, `黒の次の1手では囲めない場所へ逃げられる`, F.selfNext ? `矢をとなりに刺しても、まだ${F.free}マス空いていて広いまま` : '矢も遠くへ撃って、自分のまわりを広いまま保てる'], j);
         case 's_wall': if (!F.sep) return pk(['すき間がふさがって、黒が入ってきにくくなる', '壁がほぼできて、白の陣地が守れる'], j); return pk([`白の部屋が${F.w}マス、黒の部屋が${F.b}マスに分かれる`, `${F.w}対${F.b}で、白の部屋のほうが広くなる`, 'すき間がふさがって、黒はもうこっちに入ってこられない', `壁が完成して、白は${F.w}マスの部屋を使える`, `盤が分かれて、黒の部屋は${F.b}マスだけになる`], j);
-        case 's_fill': return pk([`この部屋で、まだ${F.left}手も指せる`, `マスをむだなく使えて、${F.left}手ぶん動ける`, '部屋が切れずに、端から順に埋めていける', `行けなくなるマスを作らずに、${F.left}手を残せる`, '矢を行き止まりに刺すから、部屋がちぎれない'], j);
+        case 's_fill': return pk([`この部屋で、まだ${F.left}手も指せる`, `マスをむだなく使えて、${F.left}手ぶん動ける`, '部屋が切れずに、端から順に埋めていける', `行けなくなるマスを作らずに、${F.left}手を残せる`, '矢で部屋を切らずに、残りのマスを順にたどれる'], j);
       }
       return '';
     };
@@ -5227,12 +5265,14 @@
           return pk([`その黒にまだ出口が${F.free}つ残って、逃げられちゃう`, `出口が${F.free}つ空いたままで、閉じこめられない`, `その黒は、残った${F.free}つの出口から外へ出られる`], j); }
         case 's_escape': {
           if (!F.moved) return F.trap ? pk(['赤いアマゾンがそのままで、黒の次の1手で閉じこめられちゃう', 'あぶないアマゾンを放っておくことになって、黒にふたをされちゃう', 'ほかのアマゾンを動かしても、赤いアマゾンは黒の1手でつかまっちゃう'], j)
-            : pk(['あぶないアマゾンをそのまま放っておくことになる', '赤いアマゾンが動かないまま、出口も少ないまま', 'ほかのアマゾンを動かしても、赤いアマゾンは助からない'], j);
+            : pk(['あぶないアマゾンをそのまま放っておくことになる', '赤いアマゾンが動かないまま、出口も少ないまま', 'ほかのアマゾンを動かしただけで、赤いアマゾンのまわりはせまいまま'], j);
           if (F.selfNext && F.trap) return pk(['自分の矢で自分のとなりをふさいで、黒の1手で閉じこめられちゃう', '矢を近くに撃って出口が減り、黒にふたをされちゃう', 'すぐそばに矢を刺したせいで、黒の1手でつかまっちゃう'], j);
           if (F.trap) return pk([`逃げた先も出口が${F.free}つしかなくて、黒の1手で閉じこめられちゃう`, `行き先がせまくて、黒にすぐふたをされちゃう`, '逃げた場所でも、黒の次の手で囲まれちゃう'], j);
           if (F.selfNext) return pk(['自分の矢で自分のとなりをふさいじゃってる', '矢を近くに撃って、自分の出口を減らしてる', 'すぐそばに矢を刺して、逃げ道をせばめてる', '矢が自分の足もとをふさいで、もったいない', '自分のまわりに矢を置いて、せっかくの広さを減らしてる'], j);
-          return pk([`まわりの空きが${F.free}つだけで、まだ安心できない`, 'せまい場所に残っていて、そのうち囲まれちゃう'], j); }
-        case 's_wall': { if (!F.sep) return pk(['すき間が開いたままで、黒に入ってこられちゃう', '盤が分かれずに、黒と広い場所を取り合うことになる', '壁が完成しなくて、黒が白の陣地へもぐりこめる'], j);
+          return pk([`まわりの空きが${F.free}つだけで、まだ安心できない`, `となりの空きが${F.free}つで、4つに届かない`], j); }
+        case 's_wall': { if (!F.sep && F.q.sq[T] === 3) return pk(['すき間はふさいだけど、白のアマゾンが黒の側へ渡っちゃって、部屋が分かれない', '壁はできても、白が1体むこう側に入って、黒と同じ部屋になっちゃう'], j);
+          if (!F.sep && F.q.sq[T] === 1) return pk(['白がすき間に立っても、矢の壁じゃないから、どけばまた開いちゃう', 'アマゾンですき間に入っただけで、壁は完成しない'], j);
+          if (!F.sep) return pk(['すき間が開いたままで、黒に入ってこられちゃう', '盤が分かれずに、黒と広い場所を取り合うことになる', '壁が完成しなくて、黒が白の陣地へもぐりこめる'], j);
           if (F.wSmall) return pk(['白のアマゾンが1体、せまい側に取り残される', '白が1体せまい部屋に入って、うまく働けない'], j);
           return pk([`白の部屋が${F.w}マスで、黒の${F.b}マスより得が少ない`, `分かれても、白の部屋が${F.w}マスしかない`], j); }
         case 's_fill': { const d = FA.left - F.left;
@@ -5247,14 +5287,14 @@
     const ng = u0 => { const u = wrongOf(u0); let F = null; try { if (u != null) F = amLF(E, pos, u, P, id); } catch (e) {}
       const out = [pk(AM_CH.soft, o8), fill2(AM_CH.right[(k + 2) % 5], why(FA, k + 2))]; if (F) out.push(fill2(AM_CH.you[(k + 3) % 5], loss(F, k + 2)));
       if (AM_CH.tail[k]) out.push(AM_CH.tail[k]); return out.filter(Boolean).join(' '); };
-    return { ask: pk(AMJ_LS.ask[id] || [''], k), hintTx: pk(AMJ_LS.hint[id] || [''], k), good, ng, own: true, ckls: true };   // (ckls: ケロ praises himself — no heading line)
+    return { ask: pk(AMJ_LS.ask[id] || [''], k), hintTx: amHint(E, id, pos, P, ok, k) || pk(AMJ_LS.hint[id] || [''], k), good, ng, own: true, ckls: true };   // (ckls: ケロ praises himself — no heading line)
   }
   const AMAZONS = {
     LKEY: 'aicoding-amazons-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      const tx = ['../checkers/i18n.js?v=20261107l14-nd1', '../amazons/i18n-am.js?v=4', '../amazons/i18n-am-more.js?v=4', '../amazons/i18n-am-ls.js?v=1', '../amazons/i18n-am-ls-more.js?v=1', '../amazons/i18n-am-ls-more2.js?v=1'];
-      return (this.p = Promise.all([getJ('../amazons/lessons.json?v=3'), Promise.all(tx.map(u => fetch(u).then(r => r.text()).catch(() => ''))), amEng().catch(() => null)])
+      const tx = ['../checkers/i18n.js?v=20261107l14-nd1', '../amazons/i18n-am.js?v=4', '../amazons/i18n-am-more.js?v=4', '../amazons/i18n-am-ls.js?v=2', '../amazons/i18n-am-ls-more.js?v=2', '../amazons/i18n-am-ls-more2.js?v=2'];
+      return (this.p = Promise.all([getJ('../amazons/lessons.json?v=4'), Promise.all(tx.map(u => fetch(u).then(r => r.text()).catch(() => ''))), amEng().catch(() => null)])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T[0] + '\nvar I18N = window.I18N = window.I18N || {};\n' + T.slice(1).join('\n'))(w); } catch (e) { console.warn('[lessons3d] amazons texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },

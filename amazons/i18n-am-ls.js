@@ -55,7 +55,7 @@ ja: {
   'ls.s_fill.goal': '白の部屋で、最後までいちばん多く動ける手を選ぼう。',
   'ls.s_fill.hint': '部屋を2つに切ってしまう矢はダメ。元いたマスや隅のマスに矢を刺すと無駄が出にくいよ。',
   'ls.s_fill.why': '{m}。この部屋のマスを無駄なく使い切れます。',
-  'ls.s_fill.ng': '{x} では行けなくなるマスができて、手数を損します。{m} なら最後まで使い切れます。',
+  'ls.s_fill.ng': '{x} では、最後まで動ける手数が少なくなります（行けなくなるマスや、むだになるマスができます）。{m} なら最後まで使い切れます。',
 
   'rp.q1.t': 'クイーンの動き', 'rp.q1.b': '白のアマゾン（e5）は、光っているマスのどれにでも1手で行けます。縦・横・斜めの8方向に、何マスでも。ただし途中で曲がることはできません。',
   'rp.q2.g': 'c8 のマスへアマゾンを動かそう（矢はどこでもOK）。', 'rp.q2.h': 'c3 からまっすぐ上（縦の線）に進めば着きます。', 'rp.q2.y': 'そう！ 縦にまっすぐ5マス、1手で進みました。',
@@ -129,7 +129,7 @@ en: {
   'ls.s_fill.goal': 'Choose the move that lets White keep moving longest in this room.',
   'ls.s_fill.hint': 'Never cut the room in two. Arrows into the square you left or into a corner waste nothing.',
   'ls.s_fill.why': '{m}. Every square of the room can still be used.',
-  'ls.s_fill.ng': '{x} cuts off squares and loses moves. With {m} the room is used to the last square.',
+  'ls.s_fill.ng': 'After {x} White has fewer moves left to the end (squares cut off or wasted). With {m} the room is used to the last square.',
 
   'rp.q1.t': 'The queen’s move', 'rp.q1.b': 'The white amazon on e5 can reach any glowing square in one move: eight directions, straight or diagonal, any distance — but it cannot turn on the way.',
   'rp.q2.g': 'Move the amazon to c8 (any arrow is fine).', 'rp.q2.h': 'Straight up from c3 along the file.', 'rp.q2.y': 'Yes! Five squares straight up in one move.',
