@@ -42,7 +42,7 @@
         capture: { et: '取ってみよう！', eb: 'この目で相手の駒にちょうど届く駒がいるんだ。取ったら相手の駒はスタートに逆戻り！', tt: '相手の駒を取ろう！', g: '相手の駒をつかまえられる駒を動かしてみて！', h: '真ん中の列の相手の駒まで、目の数だけ離れている駒は？', y: '取った！ 相手は最初からやり直しだ！' },
         choose: { et: 'くらべて選ぼう！', eb: '取る手とほかの手の、動かしたあとの安全さをくらべると、ここはこの手なんだ。', tt: 'いちばんいい手は？', g: '取る手もふくめて、いちばんの手を選んでみて！', h: '取った駒のすぐうしろに、相手の駒は残っていない？', y: 'お見事！ よくくらべられたワン。' },
         goal: { et: 'ゴールさせよう！', eb: 'この目で、ちょうど上がれる駒がいるよ。ゴールに入れば、もう誰にもつかまらない！', tt: '終盤のいちばんの手は？', g: '終盤だね。いちばんいい手を選んでみて！', h: '15から場所を引いた数が、出た目と同じ駒はどれ？', y: 'ゴール！ これで1枚安心だ！' },
-        race: { et: '数えてみよう！', eb: '白の駒の上の数字が、それぞれの残り歩数。盤の外で待っている駒もちゃんと足していくんだ。', tt: '残り歩数を数えよう！', g: 'きみの駒の残り歩数、合計はいくつかな？', h: '数字の書いてある駒と、まだ出ていない駒を合わせてね！', y: '正解！ 数え方はばっちりだワン。' },
+        race: { et: '数えてみよう！', eb: '白の駒の上の数字が、それぞれの残り歩数。盤の外で待っている駒もちゃんと足していくんだ。', tt: '残り歩数を数えよう！', g: 'きみの駒の残り歩数、合計はいくつかな？', h: '数字の書いてある駒と、まだ出ていない駒を合わせてね！', y: '正解！ ひとつずつ足すと、合計<b>{m}</b>歩。数え方はばっちりだワン。' },
         blitz: { et: '取ってもう一回！', eb: 'ブリッツでは、取る手がそのまま「もう一度振れる手」なんだ。', tt: 'ブリッツのいい手は？', g: 'ブリッツのルールで、いちばんの手を選んでみて！', h: '取れる駒はいるかな？ 取れば続けて振れるよ。', y: 'やったね！ 取ってもう一回だワン。' },
       },
       ask: ['出目は<b>{n}</b>！ どの駒を動かすのがいちばんかな？', 'サイコロは<b>{n}</b>が出たワン。きみならどう動かす？', '<b>{n}</b>が出たよ。いちばんいい手を探してみて！', 'さあ、出目は<b>{n}</b>。ここはどの駒でいく？', '今度の目は<b>{n}</b>だね。よく見て選んでみよう！', '<b>{n}</b>が出た！ さて、どの駒を進めようか？', '出目は<b>{n}</b>。盤をじっくり見てから決めよう！'],
@@ -100,7 +100,8 @@
         'c.rpips': ['相手の駒も同じように数えるよ。合計<b>{m}</b>歩！', '黒の駒をぜんぶ合わせると<b>{m}</b>歩になるんだ。', '相手の残りは合わせて<b>{m}</b>歩だワン。'],
         'c.lead2y': ['残り歩数は きみ<b>{a}</b>・相手<b>{b}</b>。<b>{d}歩</b>差で、きみがリードしているんだ！', 'きみ<b>{a}</b>歩、相手<b>{b}</b>歩。少ないきみが<b>{d}歩</b>リードだね！', '<b>{a}</b>対<b>{b}</b>で、きみのほうが<b>{d}歩</b>ゴールに近いワン！'],
         'c.lead2r': ['残り歩数は きみ<b>{a}</b>・相手<b>{b}</b>。<b>{d}歩</b>差で、相手がリードしているんだ。', 'きみ<b>{a}</b>歩、相手<b>{b}</b>歩。少ない相手が<b>{d}歩</b>リードしているね。', '<b>{a}</b>対<b>{b}</b>で、相手のほうが<b>{d}歩</b>ゴールに近いワン。'] },
-      cn: { 'c.rollNg': ['<b>{x}</b>は出目が<b>{v}</b>になる確率だから、ちがうんだ。', '<b>{x}</b>だと、<b>{v}</b>が出る確率になっちゃうワン。', '<b>{x}</b>なら<b>{v}</b>の出やすさだから、別の目だね。'], 'c.roll8Ng': ['<b>{x}</b>になる目はないから、ちがうワン。', '16通りで<b>{x}</b>になる目はひとつもないから、ちがうね。'], 'c.lowNg': ['<b>{x}</b>だと少なすぎるから、数え落としがあるね。', '<b>{x}</b>では足りないワン。足しわすれがあるみたい。', '<b>{x}</b>は小さすぎるから、まだ数えていないものがあるんだ。', 'それだと<b>{x}</b>。もう少し大きくなるはずだから、数え直してみて！'], 'c.highNg': ['<b>{x}</b>だと多すぎるから、数えなくていいものまで足しているね。', '<b>{x}</b>では大きすぎるワン。よけいに足したところがあるんだ。', '<b>{x}</b>は多いから、どこかで数えすぎているみたい。', 'それだと<b>{x}</b>。もっと小さくなるはずだから、見直してみて！'], 'c.sideNg': ['残り歩数が少ないほうがリードだから、逆なんだ。', 'ゴールに近いのは歩数が少ないほうだから、そっちじゃないワン。'] },
+      cn: { 'c.mostNg': ['<b>{x}</b>が出るのは16通り中<b>{m}通り</b>。2の6通りにはかなわないんだ。', '<b>{x}</b>は<b>{m}通り</b>しかないワン。いちばん多いのは6通りの目だよ。'],
+        'c.rollNg': ['<b>{x}</b>は出目が<b>{v}</b>になる確率だから、ちがうんだ。', '<b>{x}</b>だと、<b>{v}</b>が出る確率になっちゃうワン。', '<b>{x}</b>なら<b>{v}</b>の出やすさだから、別の目だね。'], 'c.roll8Ng': ['<b>{x}</b>になる目はないから、ちがうワン。', '16通りで<b>{x}</b>になる目はひとつもないから、ちがうね。'], 'c.lowNg': ['<b>{x}</b>だと少なすぎるから、数え落としがあるね。', '<b>{x}</b>では足りないワン。足しわすれがあるみたい。', '<b>{x}</b>は小さすぎるから、まだ数えていないものがあるんだ。', 'それだと<b>{x}</b>。もう少し大きくなるはずだから、数え直してみて！'], 'c.highNg': ['<b>{x}</b>だと多すぎるから、数えなくていいものまで足しているね。', '<b>{x}</b>では大きすぎるワン。よけいに足したところがあるんだ。', '<b>{x}</b>は多いから、どこかで数えすぎているみたい。', 'それだと<b>{x}</b>。もっと小さくなるはずだから、見直してみて！'], 'c.sideNg': ['残り歩数が少ないほうがリードだから、逆なんだ。', 'ゴールに近いのは歩数が少ないほうだから、そっちじゃないワン。'] },
     };
     const ROT = (a, k) => a.map((_, i) => a[(i + k) % a.length]);
     // a lesson's voice: a line is not said twice in a lesson
@@ -123,7 +124,7 @@
       LKEY: 'aicoding-ur-lessons', data: null,
       load() {
         const eng = window.UrEngine ? Promise.resolve() : new Promise(res => { const sc = document.createElement('script'); sc.src = '../ur/engine.js?v=6'; sc.onload = res; sc.onerror = res; document.head.appendChild(sc); });
-        return this.p || (this.p = Promise.all([getJ('../ur/lessons.json?v=20261124c'), eng]).then(([d]) => { this.data = d; return this; }).catch(e => { this.p = null; throw e; }));
+        return this.p || (this.p = Promise.all([getJ('../ur/lessons.json?v=20261124d'), eng]).then(([d]) => { this.data = d; return this; }).catch(e => { this.p = null; throw e; }));
       },
       list(kind, lang) {
         if (kind === 'open') return [];
@@ -148,8 +149,10 @@
         const ramp = (s.ramp || []).map(r => {
           const o = { k: r.k, s: r.s, n: r.n, seq: r.seq, marks: r.marks || [], look: r.look || [], ok: r.ok, kind: r.kind, opts: r.opts, ans: r.ans };
           if (r.k === 'explain') { o.t = ja ? R.et : tx(r.t, lang); o.b = ja ? R.eb : tx(r.body, lang); }
-          else { o.t = ja ? R.tt : tx(r.t, lang); o.g = ja ? R.g : tx(r.t, lang); o.h = ja ? R.h : tx(r.h, lang); o.y = ja ? R.y : tx(r.g, lang) || tx(d.ui.rampGood, lang); }
-          if (r.kind === 'choice') { o.choices = r.opts.map(x => tx(x, lang)); o.right = r.ans; }
+          else { o.t = ja ? R.tt : tx(r.t, lang); o.g = ja ? R.g : tx(r.t, lang); o.h = ja ? R.h : tx(r.h, lang); o.y = ja ? fill(R.y, r.why ? r.why[1] : {}) : tx(r.g, lang) || tx(d.ui.rampGood, lang); }
+          if (r.kind === 'choice') { o.choices = r.opts.map(x => tx(x, lang)); o.right = r.ans;
+            // 追47: why the picked choice is wrong (the same facts as the problems' ngo)
+            o.ngx = k => { const g = r.ngo && r.ngo[k]; if (!g) return ''; return ja ? fill(V.v(JA.cn[g[0]] || ['<b>{x}</b>はちがうワン。']), Object.assign({}, g[1], { x: plain(tx(r.opts[k], lang)) })) : this.msg(g, lang); }; }
           return o;
         });
         const intro = ja ? JA.intro[id] : tx(s.body, lang);

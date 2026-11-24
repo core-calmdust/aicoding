@@ -12,6 +12,7 @@
 const fs = require('fs'), path = require('path');
 const E = require('../engine.js'), X = require('./learn_text.js'), XL = require('./learn_text_lut.js'), F = require('./ur_facts.js');
 const UF = require('./ur_lessfacts.js');
+const RC = require('./fix_ramp_choice.js');   // (追47 準備の選ぶ問題の why・ngo と文言)
 const [FINKEL, BLITZ] = process.argv.slice(2);
 if (!FINKEL || !BLITZ) { console.error('usage: gen_lessons_lut.js <finkel.rgu> <blitz.rgu>'); process.exit(2); }
 const LUT = { finkel: require('./lut.js').open('finkel', FINKEL), blitz: require('./lut.js').open('blitz', BLITZ) };
@@ -175,7 +176,7 @@ function main() {
     P.forEach(q => q.s && used.push(q.s));
     steps.push({ id: 'prob', cat: 'basic', rule: 'finkel', title: LS.title, tip: LS.tip, body: LS.body, diagram: { s: ex.s, marks: ex.marks },
       ramp: [{ k: 'explain', s: ex.s, n: null, seq: [], marks: ex.marks, t: LS.exT, body: LS.exB },
-        { k: 'try', kind: 'choice', opts: ['0', '1', '2', '3', '4'], ans: 2, t: LS.tryT, h: LS.h1, g: fillMsg('c.roll', { n: 2, m: 6 }), y: X.UI.rampRetry }],
+        RC.most({ k: 'try', kind: 'choice', opts: ['0', '1', '2', '3', '4'], ans: 2, t: LS.tryT, h: LS.h1, g: fillMsg('c.roll', { n: 2, m: 6 }), y: X.UI.rampRetry })],
       problems: P, hints: [LS.h1, LS.h2] });
   }
   steps.push(moveLesson('rosette', 'basic', 'finkel', 'rosette'));
@@ -192,12 +193,12 @@ function main() {
     const P = [pipsChoice(11, 3, false), pipsChoice(12, 3, true), leadChoice(13, 3), pipsChoice(14, 5, false), leadChoice(15, 5)];
     steps.push({ id: 'race', cat: 'end', rule: 'finkel', title: LS.title, tip: LS.tip, body: LS.body, diagram: { s: pc.s, marks: pc.marks },
       ramp: [{ k: 'explain', s: pc.s, n: null, seq: [], marks: pc.marks, t: LS.exT, body: LS.exB },
-        Object.assign({ k: 'try', t: LS.tryT, h: LS.h1, g: fillMsg('c.pips', { m: pt.opts[pt.ans] }), y: X.UI.rampRetry }, { kind: 'choice', s: pt.s, marks: pt.marks, opts: pt.opts, ans: pt.ans })],
+        RC.pips(Object.assign({ k: 'try', t: LS.tryT, h: LS.h1, g: fillMsg('c.pips', { m: pt.opts[pt.ans] }), y: X.UI.rampRetry }, { kind: 'choice', s: pt.s, marks: pt.marks, opts: pt.opts, ans: pt.ans }))],   // (追47: why・ngo)
       problems: P.map(q => { const o = Object.assign({}, q); delete o._n; return o; }), hints: [LS.h1, LS.h2] });
   }
   steps.push(moveLesson('blitz', 'vari', 'blitz', 'blitz'));
   const cats = ['basic', 'tactics', 'end', 'vari'].map(id => ({ id, name: X.CATS[id], steps: steps.filter(s => s.cat === id).map(s => s.id) }));
-  const msg = {}; for (const k in MSG) msg[k] = MSG[k];
+  const msg = {}; for (const k in MSG) msg[k] = MSG[k]; Object.assign(msg, RC.MSG);
   const ui = Object.assign({}, X.UI);
   const data = { version: 2, rule: 'finkel', lut: 'RoyalUr.net finkel.rgu / blitz.rgu', score: { per: 20, pass: 75, hint: [16, 12], retry: 10, answer: 0 }, ui, msg, cats, steps };
   const file = path.join(__dirname, '..', 'lessons.json');
