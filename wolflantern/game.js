@@ -916,6 +916,21 @@
   }
 
   /* the end: who they were */
+  // the score, section by section
+  function scoreTable(sc) {
+    const P = sc.part, sg = n => (n > 0 ? '+' : n < 0 ? '−' : '±') + Math.abs(n);
+    const rows = [
+      ['結末', R0 => S.result.win ? '狼をすべて見つけ出した' : '狼を止められなかった', P.outcome],
+      ['投票', () => `狼に${sc.wolfVotes}票・人間に${sc.badVotes}票`, P.votes],
+      ['名指し', () => `当たり${sc.accHit}・外れ${sc.accMiss}`, P.accuse],
+      ['矛盾を突く', () => `暴いた${sc.clashHit}・的外れ${sc.clashMiss}`, P.clash],
+      ['証拠と名乗り', () => `示した痕跡${sc.shown}・名乗って出した黒${sc.black}`, P.evidence],
+      ['生き延びた', () => sc.deathDay == null ? '最後まで生きていた' : `${dayName(sc.deathDay)}に倒れた`, P.survival],
+      ['失われた人', () => `${sc.lost}人`, P.losses],
+      ['むずかしさ', () => DIFFN[S.diff], P.level],
+    ];
+    return `<table class="sct">${rows.map(([k, d, n]) => `<tr><th>${k}</th><td>${esc(d())}</td><td class="${n > 0 ? 'p' : n < 0 ? 'm' : ''}">${sg(n)}</td></tr>`).join('')}<tr class="tot"><th>合計</th><td>S 88以上・A 72以上・B 55以上・C 35以上</td><td>${sc.pts}</td></tr></table>`;
+  }
   async function end() {
     S.phase = 'end'; hud(); save(); SND.music('story', .85); renderRoster();
     const R = S.result || E.check(S);
@@ -960,8 +975,7 @@
     const why = ({ cleared: '狼をすべて見つけ出した', overrun: '狼の数が、人の数に並んだ' }[R.why] || '') + (S.ghost ? '（あなたは幽霊として見届けた）' : '');
     await sheet(`<h3 style="text-align:center">${R.win ? '解決' : '未解決'}　<small style="font:500 15px var(--ui);color:var(--mute)">${esc(why)}</small></h3>
       <div class="rank">${sc.rank}</div>
-      <div class="stat"><div><b>${sc.wolfVotes}<small style="font-size:.5em">／${sc.wolfVotes + sc.badVotes}</small></b><span>狼に入れた票</span></div><div><b>${sc.accHit}</b><span>当たった名指し</span></div><div><b>${sc.clashHit}</b><span>暴いた矛盾</span></div><div><b>${sc.lost}</b><span>失われた人</span></div></div>
-      <p style="font-size:13.5px;color:var(--mute);margin:-6px 0 12px">評価は、あなた自身の票・名指し・矛盾・名乗りの結果と、生き延びた日数で決まる（${DIFFN[S.diff]}・${S.day}日）。</p>
+      ${scoreTable(sc)}
       <p style="font-size:15px">人狼：${wolves.map(w => esc(nm(w.id))).join('、')}${mad ? `　狂人：${esc(nm(mad.id))}` : ''}</p>
       <div class="foot"><button class="btn" data-a="title">タイトルへ</button><button class="btn" data-a="select">ほかの物語へ</button><button class="btn pri" data-a="again">もう一度</button></div>`, box => box.querySelectorAll('[data-a]').forEach(b => b.onclick = () => closeSheet(b.dataset.a))).then(a => {
       if (a === 'again') { buildSetup(); } else if (a === 'select') buildSelect(); else buildTitle();

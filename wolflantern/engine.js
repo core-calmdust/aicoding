@@ -806,7 +806,7 @@
     };
     const pts = Object.values(part).reduce((a, b) => a + b, 0);
     const rank = pts >= 88 ? 'S' : pts >= 72 ? 'A' : pts >= 55 ? 'B' : pts >= 35 ? 'C' : 'D';
-    return { pts, rank, lost, wrong, days: S.day, part, wolfVotes, badVotes, accHit, clashHit };
+    return { pts, rank, lost, wrong, days: S.day, part, wolfVotes, badVotes, accHit, accMiss, clashHit, clashMiss, shown, black, deathDay };
   }
 
   /* ---------- the player's actions ---------- */
