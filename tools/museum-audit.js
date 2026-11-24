@@ -62,6 +62,8 @@ const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,
       // 15 記事の情報量（読み物の部屋だけで数える）: 要点 3・見出しつきの節 3 以上・年表 4 以上・出典がそろっていない物語の数
       m.thinStory = r !== 'read' ? 0 : await p.evaluate(() => { const T = window.MUSEUM_READ_T, l = document.documentElement.lang || 'ja', t = (T && (T[l] || T.ja)) || {};
         return (window.AtlasRead ? AtlasRead.STORIES : []).filter(S => { const x = t[S.id] || {}; return !((x.kf || []).length >= 3 && (x.more || []).length >= 3 && (x.tl || []).length >= 4 && (S.refs || []).length >= 1); }).length; });
+      // 16 記事の図: 本文の画像（sec）と節の図（figs）を合わせて 2 つ未満の物語の数
+      m.fewFigs = r !== 'read' ? 0 : await p.evaluate(() => (window.AtlasRead ? AtlasRead.STORIES : []).filter(S => (S.sec || []).filter(Boolean).length + Object.values(S.figs || {}).reduce((a, f) => a + [].concat(f).length, 0) < 2).length);
       if (r === 'pass') m.foldLate = 0;   // (the open card pushes the room down on purpose)
       rows.push({ view: `${V.w}x${V.h}${V.lang !== 'ja' ? ':' + V.lang : ''}`, room: r, ...m, js: errs.length });
     }
