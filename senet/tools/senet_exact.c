@@ -14,7 +14,7 @@ static const double P[6] = {0, 4/16., 6/16., 4/16., 1/16., 1/16.};
 #define AGAIN(n) ((n)==1||(n)==4||(n)==5)
 // state: low 31 bits = mover mask (bit q for square q, 1..30), high = opp mask
 static u64 *HK; static int32_t *HV; static u64 HCAP;
-static u64 *KEY; static int64_t NS, CAP;
+static u64 *KEY; static int64_t NS, CAP; static int64_t MAXS=3000000;   // (到達局面の上限：引数1で変えられる)
 static u64 hsh(u64 x){ x^=x>>33; x*=0xff51afd7ed558ccdULL; x^=x>>33; x*=0xc4ceb9fe1a85ec53ULL; x^=x>>33; return x; }
 static void hinit(u64 cap){ HCAP=cap; HK=malloc(cap*8); HV=malloc(cap*4); memset(HV,-1,cap*4); }
 static int64_t hget(u64 k){ u64 i=hsh(k)&(HCAP-1); while(HV[i]>=0){ if(HK[i]==k) return HV[i]; i=(i+1)&(HCAP-1);} return -1; }
@@ -59,7 +59,7 @@ static int64_t solveSeed(uint32_t me, uint32_t op, int *its){
         ES[NE++] = AGAIN(n) ? (int32_t)(hadd(MK(mv[j].me,mv[j].op))*2) : (int32_t)(hadd(MK(mv[j].op,mv[j].me))*2+1); }
     }
     EI[i*6+5]=(int32_t)NE;
-    if(NS>3000000){ return -1; }
+    if(NS>MAXS){ return -1; }
   }
   VV=malloc(NS*8); for(int64_t i=0;i<NS;i++) VV[i]=0.5;
   int it;
@@ -76,7 +76,7 @@ static void parse(char *p, uint32_t *me, uint32_t *op){ int side=0; *me=0; *op=0
 // commands: "S me/op" solve the closure of a seed; "Q n me/op" the moves of throw n with the mover's exact win chance after each
 // (M from value; M 0 value = a pass; X = a state outside the solved closure)
 int main(int argc,char**argv){
-  char line[512]; Mv mv[16];
+  char line[512]; Mv mv[16]; if(argc>1) MAXS=atoll(argv[1]);
   while(fgets(line,sizeof line,stdin)){
     uint32_t me, op;
     if(line[0]=='S'){ parse(line+1,&me,&op); int it=0; int64_t n=solveSeed(me,op,&it); printf("S %lld %d\n",(long long)n,it); fflush(stdout); continue; }

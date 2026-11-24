@@ -4,7 +4,7 @@
 const fs = require('fs'), path = require('path');
 // (also the paintings' text: atlas/museum/paint-i18n.js → atlas/museum/paint-i18n/<lang>.js; bump PAINT_I18N_V in atlas/museum.js)
 const root = path.join(__dirname, '..');
-for (const [name, G] of [['read', 'MUSEUM_READ_T'], ['paint', 'MUSEUM_PAINT_T']]) {
+for (const [name, G] of [['read', 'MUSEUM_READ_T'], ['paint', 'MUSEUM_PAINT_T'], ['chance', 'MUSEUM_CHANCE_T']]) {
   const src = path.join(root, `atlas/museum/${name}-i18n.js`), out = path.join(root, `atlas/museum/${name}-i18n`);
   const window = {}; new Function('window', fs.readFileSync(src, 'utf8'))(window);
   const T = window[G]; fs.mkdirSync(out, { recursive: true });

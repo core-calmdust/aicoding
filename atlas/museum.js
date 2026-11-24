@@ -40,9 +40,9 @@
     // (2026-11-24 audit pageKB) the stories' text in one file per language (museum/read-i18n/<lang>.js, made by tools/museum-read-split.js from
     // museum/read-i18n.js): English (the fallback for anything missing) and the page's language, not all fourteen (1.5 MB)
     { id: 'read', src: () => ['museum/read-i18n/en.js?v=' + READ_I18N_V, ...(rl() !== 'en' ? [`museum/read-i18n/${rl()}.js?v=${READ_I18N_V}`] : []), 'museum/read.js?v=38'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T && MUSEUM_READ_T.en && MUSEUM_READ_T[rl()]), render: (el, c) => AtlasRead.render(el, c) },
-    { id: 'chance', src: ['museum/chance-i18n.js?v=3', 'museum/chance.js?v=7'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T), render: (el, c) => AtlasChance.render(el, c) },
+    { id: 'chance', src: () => ['museum/chance-i18n/en.js?v=' + CHANCE_I18N_V, ...(rl() !== 'en' ? [`museum/chance-i18n/${rl()}.js?v=${CHANCE_I18N_V}`] : []), 'museum/chance.js?v=7'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T && MUSEUM_CHANCE_T.en && MUSEUM_CHANCE_T[rl()]), render: (el, c) => AtlasChance.render(el, c) },   // (per language)
   ];
-  const READ_I18N_V = 1, PAINT_I18N_V = 1, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
+  const READ_I18N_V = 1, PAINT_I18N_V = 1, CHANCE_I18N_V = 1, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
   const KEY = 'atlas-museum-room';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const loaded = {};
