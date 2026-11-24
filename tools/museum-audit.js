@@ -71,6 +71,11 @@ const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,
       // 18 名前の抜け: 読み物の図・リンク・表紙が指す所蔵品・絵の名前がその言語にない（ラベルに id がそのまま出る）
       m.rawName = r !== 'read' ? 0 : await p.evaluate(() => { const T = window.MUSEUM_READ_T || {}, l = Object.keys(T).find(k => k === (localStorage.getItem('atlas-lang') || 'ja')) || 'ja', t = T[l] || {};
         let bad = 0; (window.AtlasRead ? AtlasRead.STORIES : []).forEach(S => [S.cover, ...(S.sec || []), ...(S.links || []), ...Object.values(S.figs || {}).flatMap(f => [].concat(f))].forEach(f => { if (!f) return; if (f.ex && !(t.ex || {})[f.ex]) bad++; if (f.paint && !(t.paint || {})[f.paint]) bad++; })); return bad; });
+      // 19 図の中の小さすぎる字: 読み物の図（SVG）の文字が、表示された大きさで 10px 未満になる数（全部の物語を開いて数える。小さい画面ほど縮むので 320px で効く）
+      m.figTiny = r !== 'read' ? 0 : await p.evaluate(async () => { if (!window.AtlasRead) return 0; let bad = 0; const keep = scrollY;
+        for (const S of AtlasRead.STORIES) { AtlasRead.open(S.id); await new Promise(z => setTimeout(z, 60));
+          document.querySelectorAll('.rdfig.dg svg').forEach(svg => { const vb = svg.viewBox.baseVal, k = vb && vb.width ? svg.getBoundingClientRect().width / vb.width : 1; svg.querySelectorAll('text').forEach(t => { if (parseFloat(t.getAttribute('font-size') || 16) * k < 10) bad++; }); }); }
+        const back = document.querySelector('.rdback'); if (back) back.click(); scrollTo(0, keep); return bad; });
       if (r === 'pass') m.foldLate = 0;   // (the open card pushes the room down on purpose)
       rows.push({ view: `${V.w}x${V.h}${V.lang !== 'ja' ? ':' + V.lang : ''}`, room: r, ...m, js: errs.length });
     }
