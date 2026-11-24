@@ -24,7 +24,7 @@ function scan(src) {
   }
   return hits;
 }
-// (追90) the 3D table's words after the defender's reply in a 詰め puzzle (atlas/puzzles.js <X>.mid, every language) must not judge
+// (追91) the 3D table's words after the defender's reply in a 詰め puzzle (atlas/puzzles.js <X>.mid, every language) must not judge
 // the move (「いい調子！」「Good!」): it is said after a right move only, so praise tells the player the move was right.
 const MID_DONE = ['HXX'];
 const PRAISE = /いい調子|いいね|いい手|その調子|ナイス|上手|\b(good|nice|great|well done)\b|¡?bien\b|\bbien !|\bboa\b|\bgut\b|отлично|хорошо|güzel|\bbagus\b|बढ़िया|शाबाश|رائع|أحسنت|不错|不錯|很好|좋아|잘했/i;
@@ -37,11 +37,11 @@ function mids(src) {
 function verify(opt = {}) {
   const out = [], pending = {};
   const atl = opt.atlas != null ? opt.atlas : fs.readFileSync(path.join(ROOT, 'atlas/puzzles.js'), 'utf8'), M = mids(atl);
-  if (!M.HXX || !M.HXX.length) out.push({ step: 'mid90', q: 'HXX', msg: 'atlas/puzzles.js HXX.mid not found' });
+  if (!M.HXX || !M.HXX.length) out.push({ step: 'mid91', q: 'HXX', msg: 'atlas/puzzles.js HXX.mid not found' });
   for (const [X, L] of Object.entries(M)) {
     const bad = L.filter(x => PRAISE.test(x));
     if (!bad.length) continue;
-    if (MID_DONE.includes(X)) bad.forEach(x => out.push({ step: 'mid90', q: X, msg: 'the 3D mid line praises the move: ' + x })); else pending['3D ' + X + '.mid'] = bad.length;
+    if (MID_DONE.includes(X)) bad.forEach(x => out.push({ step: 'mid91', q: X, msg: 'the 3D mid line praises the move: ' + x })); else pending['3D ' + X + '.mid'] = bad.length;
   }
   const games = fs.readdirSync(ROOT).filter(d => fs.existsSync(path.join(ROOT, d, 'app.js')));
   for (const g of games) {

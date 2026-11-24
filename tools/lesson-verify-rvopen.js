@@ -93,13 +93,20 @@ function poolCheck(opt, ST, pool, add) {   // the verified lines: the 5 problems
         if (/おしい|あと少し|あと一歩|いい線|悪くない|まだ戦える|でも戦える|すぐには負けない|もありだけど/.test(w) && pts(P.sc, sqn(u)) < 10) bad(`追53 「おしい」 for a move of ${pts(P.sc, sqn(u))} points`);
         if (vu >= vA - 0.5) bad(`a move as good as the answer (${vu} / ${vA}) is told off`);
         if (/相手が隅に打てる|隅を取られちゃう|相手は隅に打てる|隅への道が開いて/.test(w) && !(fu.oC > fa.oC)) bad('no corner given');
-        if (/（X）|Xに打つと/.test(w) && !(fu.x && !fa.x)) bad('not an X square');
-        if (/隅のとなりのマス|Cに打つと/.test(w) && !(fu.cq && !fa.cq)) bad('not a C square');
+        if (/（X）|Xに打つと|Xのマス/.test(w) && !(fu.x && !fa.x)) bad('not an X square');
+        if (/隅のとなりのマス|Cに打つと|（C）|Cのマス/.test(w) && !(fu.cq && !fa.cq)) bad('not a C square');
         { const m1 = w.match(/開放度は赤い枠が(\d+)、緑の枠は(\d+)|空きが(\d+)マス。緑の枠なら(\d+)マス/); if (m1) { const x = m1.slice(1).filter(Boolean).map(Number); if (x[0] !== fu.open || x[1] !== fa.open) bad(`openness ${fu.open} / ${fa.open}`); } }
         if (/開放度|空き/.test(w) && !(fu.open > fa.open) && !/数は近い/.test(w)) bad(`openness ${fu.open} is not more than ${fa.open}`);
         { const m1 = w.match(/きみの打てる場所は(\d+)か所まで減っちゃう。緑の枠なら(\d+)か所|打てる場所は赤い枠だと(\d+)か所、緑の枠なら(\d+)か所|きみの打ち場所は(\d+)か所だけ。緑の枠なら(\d+)か所/); if (m1) { const x = m1.slice(1).filter(Boolean).map(Number), mu = X.rvReplyMob(P.pos, u); if (x[0] !== mu || x[1] !== mA || !(mu < mA)) bad(`the moves left after the reply ${mu} / ${mA}`); } }
         { const m1 = w.match(/は、赤い枠だと(\d+)か所、緑の枠なら(\d+)か所|赤い枠のあと、相手は(\d+)か所に打てる。緑の枠なら(\d+)か所|緑の枠なら[^。]*は(\d+)か所なのに、赤い枠だと(\d+)か所/); if (m1) { const x = m1.slice(1).filter(x => x != null).map(Number), [xu, xa] = m1[5] != null ? [x[1], x[0]] : [x[0], x[1]]; if (xu !== fu.oM || xa !== fa.oM || !(fu.oM > fa.oM)) bad(`the replies ${fu.oM} / ${fa.oM}`); } }
         { const m1 = w.match(/赤い枠は(\d+)枚も返す|(\d+)枚も返すと|返しすぎの(\d+)枚/); if (m1) { const x = +(m1[1] || m1[2] || m1[3]); if (x !== fu.n || !(fu.n > fa.n)) bad(`flips ${fu.n} / ${fa.n}`); } } }
+      // 追85 (2026-11-25 担当B): not only the wording the voice picks in this order — every wording the reason may take (the voice
+      // takes them in turn and skips the ones said already, so the order of play decides which one shows): a fresh voice, the same
+      // wrong move asked 8 times in a row, every wording checked again (「数は近いけど」 while the board has a difference to tell)
+      for (const u of lg) { if (u === A) continue; const V2 = X.rvOpVoice(id), W2 = X.rvOpJa(o, name, j, V2, true), seen = new Set();
+        for (let r = 0; r < 8; r++) { const w = pl(W2.ng(u)); if (seen.has(w)) continue; seen.add(w);
+          if (/数は近い/.test(w)) { a(`⑦追85 ${sqn(u)}: a wording the voice may take says there is no difference 「${w}」`); break; }
+          if (/\{|undefined|NaN/.test(w)) { a(`⑧追85 ${sqn(u)}: a placeholder 「${w}」`); break; } } }
     }); }
 }
 function reversiOpen(opt) {
