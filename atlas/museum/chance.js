@@ -444,6 +444,7 @@
 
   function render(box, c) {
     ctx = c; lang = (window.MUSEUM_CHANCE_T || {})[c.lang] ? c.lang : 'en'; MK('chance', null, TOOLS.length);
+    if (window.AtlasMuseum && AtlasMuseum.catalog) AtlasMuseum.catalog('chance', TOOLS.map(T => ({ id: T.id, img: null, t: tt(T.id).name || T.id })));
     if (host !== box || !box.querySelector('.chx')) { host = box; tool = null; build(box); }
     let id = null; try { id = localStorage.getItem('atlas-chance-tool'); } catch (e) {}
     if (!tool) choose(TOOLS.some(t => t.id === id) ? id : TOOLS[0].id); else texts();

@@ -35,10 +35,10 @@
   const ROOMS = [
     { id: 'map', ready: () => !!window.AtlasMap, render: (el, c) => AtlasMap.render(el, c) },
     { id: 'tree', src: ['museum/tree.js?v=3'], ready: () => !!window.AtlasTree, render: (el, c) => AtlasTree.render(el, c) },
-    { id: 'gallery', src: ['museum/gallery.js?v=147'], ready: () => !!window.AtlasGallery, render: (el, c) => AtlasGallery.render(el, c) },
-    { id: 'paint', src: ['museum/paint-i18n.js?v=3', 'museum/paint.js?v=7'], ready: () => !!(window.AtlasPaint && window.MUSEUM_PAINT_T), render: (el, c) => AtlasPaint.render(el, c) },
-    { id: 'read', src: ['museum/read-i18n.js?v=6', 'museum/read.js?v=11'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T), render: (el, c) => AtlasRead.render(el, c) },
-    { id: 'chance', src: ['museum/chance-i18n.js?v=3', 'museum/chance.js?v=5'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T), render: (el, c) => AtlasChance.render(el, c) },
+    { id: 'gallery', src: ['museum/gallery.js?v=148'], ready: () => !!window.AtlasGallery, render: (el, c) => AtlasGallery.render(el, c) },
+    { id: 'paint', src: ['museum/paint-i18n.js?v=3', 'museum/paint.js?v=8'], ready: () => !!(window.AtlasPaint && window.MUSEUM_PAINT_T), render: (el, c) => AtlasPaint.render(el, c) },
+    { id: 'read', src: ['museum/read-i18n.js?v=6', 'museum/read.js?v=12'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T), render: (el, c) => AtlasRead.render(el, c) },
+    { id: 'chance', src: ['museum/chance-i18n.js?v=3', 'museum/chance.js?v=6'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T), render: (el, c) => AtlasChance.render(el, c) },
   ];
   const KEY = 'atlas-museum-room';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -89,6 +89,22 @@
     if (n && e.n !== n) { e.n = n; ch = true; }
     if (ch) { try { localStorage.setItem(PK, JSON.stringify(P)); } catch (x) {} pay(); passBtn(); if (el.pass && el.pass.classList.contains('on')) passPanel(); }
   }
+  // (2026-11-24 ユーザー: 物語のスタンプはスタンプカードに — もっとたくさん押す仕組みに) each room hands over its list of items once it
+  // has loaded — catalog(room, [{ id, img, t }]) — kept in 'atlas-museum-cat' so the card can show every item's own stamp next time too
+  const CK = 'atlas-museum-cat';
+  const cats = () => { try { return JSON.parse(localStorage.getItem(CK) || '{}') || {}; } catch (e) { return {}; } };
+  function catalog(r, items) {
+    const C = cats(), v = JSON.stringify(items); if (JSON.stringify(C[r]) === v) return;
+    C[r] = items; try { localStorage.setItem(CK, JSON.stringify(C)); } catch (e) {}
+    if (el.pass && el.pass.classList.contains('on')) passPanel();
+  }
+  // a stamp opens its own item: the room, then the story / work / piece / tool
+  function openItem(r, id) {
+    open(r, true); if (r === 'chance') { try { localStorage.setItem('atlas-chance-tool', id); } catch (e) {} }
+    const W = { read: () => window.AtlasRead && host.querySelector('.muroom[data-r="read"] .rdc') && (AtlasRead.open(id), 1), paint: () => window.AtlasPaint && host.querySelector('.muroom[data-r="paint"] .ptc') && (AtlasPaint.open(id), 1),
+      gallery: () => window.AtlasGallery && host.querySelector('.muroom[data-r="gallery"] .gxc') && (AtlasGallery.open(id), 1), chance: () => window.AtlasChance && AtlasChance._debug && (AtlasChance._debug.choose(id), 1) }[r];
+    if (!W) return; let n = 0; const t = () => { if (!W() && ++n < 100) setTimeout(t, 100); }; t();
+  }
   // the reward (2026-11-24 ユーザー: コインで): ¢200 the first time a room is stamped, ¢1000 more when all six are; paid once
   // ('atlas-museum-prog'._paid: the rooms paid for, ._all: the book). ctx.coins adds to the wallet (W.bonus) with the coin sound.
   const ROOM_COINS = 200, BOOK_COINS = 1000;
@@ -112,6 +128,12 @@
   const pstate = r => { const e = prog()[r]; if (!e || !e.n) return { d: 0, n: 0 }; return { d: Math.min(e.ids.length, e.n), n: e.n }; };
   const stamped = r => { const p = pstate(r); return p.n > 0 && p.d >= p.n; };
   function passBtn() { if (!el.pbtn) return; const k = ROOMS.filter(r => stamped(r.id)).length; el.pbtn.innerHTML = `<img src="../images/atlas/av/musowl-${k >= ROOMS.length ? 3 : k >= 4 ? 2 : k >= 2 ? 1 : 0}.webp" alt=""><b>${esc(u('pass'))}</b><i>${k} / ${ROOMS.length}</i>`; }
+  function stampRow(r) {
+    const C = cats()[r]; if (!C || !C.length) return '';
+    const done = (prog()[r] || {}).ids || [];
+    return `<div class="mupass-st">${C.map((it, i) => { const on = done.includes(it.id);
+      return `<button type="button" class="mupass-s1${on ? ' on' : ''}" data-r="${r}" data-it="${esc(it.id)}" title="${esc(it.t)}" aria-label="${esc((i + 1) + '. ' + it.t + (on ? ' ✓' : ''))}">${on && it.img ? `<img src="${esc(it.img)}" alt="" loading="lazy">` : ''}<i>${on && !it.img ? '✓' : i + 1}</i></button>`; }).join('')}</div>`;
+  }
   function passPanel() {
     const box = el.pass;
     box.innerHTML = `<div class="mupass-h"><b>${esc(u('passT'))}</b><small>${esc(u('passS'))}</small><small class="mupass-rw">${esc(u('passR'))}</small><button type="button" class="mupass-x" aria-label="${esc(u('passX'))}">×</button></div>
@@ -119,9 +141,10 @@
         return `<div class="mupass-r${ok ? ' ok' : ''}"><span class="mupass-s"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[r.id]}</svg>${ok ? '<i>✓</i>' : ''}</span>
           <span class="mupass-t"><b>${esc(u(r.id))}</b><small>${esc(u('t_' + r.id))}</small>${one ? '' : `<span class="mupass-bar"><span style="width:${p.n ? Math.round(p.d / p.n * 100) : 0}%"></span></span>`}</span>
           <em dir="ltr">${one ? (ok ? '✓' : esc(u('passNo'))) : p.n ? `${p.d} / ${p.n}` : esc(u('passNo'))}</em>
-          <button type="button" class="btn ghost sm" data-go="${r.id}">${esc(u('passGo'))}</button></div>`; }).join('')}</div>`;
+          <button type="button" class="btn ghost sm" data-go="${r.id}">${esc(u('passGo'))}</button>${stampRow(r.id)}</div>`; }).join('')}</div>`;
     box.querySelector('.mupass-x').onclick = () => passToggle(false);
     box.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { passToggle(false); open(b.dataset.go, true); });
+    box.querySelectorAll('[data-it]').forEach(b => b.onclick = () => { passToggle(false); openItem(b.dataset.r, b.dataset.it); });
   }
   function passToggle(on) { const o = on == null ? !el.pass.classList.contains('on') : on; if (o) passPanel(); el.pass.classList.toggle('on', o); el.pbtn.setAttribute('aria-expanded', o); }
   // what a room is given: the portal's ctx, and goEx(id) — open a piece of the collection (from another room's link)
@@ -200,5 +223,5 @@
     if (!grid._pgR) { grid._pgR = true; let tm = 0; addEventListener('resize', () => { clearTimeout(tm); tm = setTimeout(() => { if (grid.isConnected) draw(); }, 150); }); }
     draw();
   }
-  window.AtlasMuseum = { render, room: () => room, ROOMS, V, goEx, go: r => open(r, true), mark, prog, pager };
+  window.AtlasMuseum = { render, room: () => room, ROOMS, V, goEx, go: r => open(r, true), mark, prog, pager, catalog };
 })();

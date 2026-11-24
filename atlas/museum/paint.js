@@ -40,6 +40,7 @@
     el.grid.querySelectorAll('[data-w]').forEach(b => b.onclick = () => openWork(b.dataset.w));
     if (window.AtlasMuseum && AtlasMuseum.pager) AtlasMuseum.pager(el.grid, 'paint', { rows: { pc: 2, phone: 4 } });
     el.credit.innerHTML = esc(u('credit'));
+    if (window.AtlasMuseum && AtlasMuseum.catalog) AtlasMuseum.catalog('paint', WORKS.map(W => ({ id: W.id, img: `${IMG}${W.id}-t.webp?v=${V}`, t: wt(W.id).title })));
   }
 
   /* ---------- the viewer ---------- */
