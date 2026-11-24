@@ -1171,7 +1171,7 @@ function tafl(opt) {
 // b_cannon・b_pawn). The goal set is read from the rules (a capture by that kind on which no legal move of the opponent can take back),
 // the engine values stored in sc (= xiangqi/app.js problemPoints, the 3D XIANGQI.points) must put that capture alone on top, and
 // ショウギツネ's words (atlas/lessons3d.js xqLsJa) are read back against the board for the answer and every wrong move.
-const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn', 'b_mate1']);
+const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn', 'b_mate1', 'm_mate2']);
 function xiangqi(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'xiangqi/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'xiangqi/lessons.json'), 'utf8'));
@@ -1319,6 +1319,72 @@ function xiangqi(opt) {
       }
     });
     if (tys.size < 3) add(id, 4, `⑤ the mates use fewer than three kinds of piece (${[...tys]})`);
+  });
+  // (2026-11-24 第2期 担当A) m_mate2「2手で詰ます」('ok' kind): the goal set = every first move after which each reply leaves a
+  // mate by check (read from the rules, every reply); no other first move wins in two by any means (stalemate 困毙 included: the
+  // lesson is about mate), none wins at once; every reply to the answer is met by a mate by check (追6); 追1 the warm-up is not a
+  // problem; 追27 the answers move two or more kinds of piece; ⑥ easier first by (quiet answer, replies to the answer, decoys);
+  // ⑦⑧ ショウギツネ's words for every wrong first move read back against a reply that escapes; the hint and praise against the board.
+  const MATE2 = ['m_mate2'], noMv = q => !q.moves().length, win1 = q => q.moves().some(x => noMv(q.clone().play(x)));
+  const mate1 = q => q.moves().filter(x => { const z = q.clone().play(x); return z.inCheck() && noMv(z); });
+  const m2info = p => p.moves().map(u => { const q = p.clone().play(u), R = q.moves(); if (!R.length) return { u, now: true, chk: q.inCheck(), R: 0, esc: [], escC: [] };
+    const esc = [], escC = []; for (const r of R) { const z = q.clone().play(r); if (!win1(z)) esc.push(r); if (!mate1(z).length) escC.push(r); } return { u, q, chk: q.inCheck(), R: R.length, esc, escC }; });
+  const kMoves = q => { const kk = q.k[q.side]; return q.moves().filter(x => mFrom(x) === kk).length; };
+  L.steps.forEach((st, si) => { const id = st.id; if (!XQ_DONE.has(id) || !MATE2.includes(id)) return;
+    const tys = new Set(); let prevK = null, firstK = null; const key = (a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+    const probS = new Set(st.problems.map(P => P.s.split(' ')[0]));
+    (st.ramp || []).forEach((r, j) => { if (!r.s) return; const p = E.Pos.from(r.s), I = m2info(p), G = I.filter(x => !x.now && !x.escC.length).map(x => E.name(p, x.u, 'iccs')).sort();
+      if (probS.has(r.s.split(' ')[0])) add(id, -1, `追1 warm-up ${j + 1} is problem ${[...st.problems].findIndex(P => P.s.split(' ')[0] === r.s.split(' ')[0]) + 1}`);
+      if (I.some(x => x.now || (!x.esc.length && x.escC.length))) add(id, -1, `④ warm-up ${j + 1}: a first move wins at once or by stalemate`);
+      if (G.length !== 1) add(id, -1, `② warm-up ${j + 1}: ${G.length} first moves mate in two`);
+      if (r.k === 'explain') { const mk = (r.marks || []).map(x => x[0]); if (!G.some(m => mk.includes(m.slice(0, 2)) && mk.includes(m.slice(2, 4)))) add(id, -1, `⑧ warm-up ${j + 1}: the marked move is not the mate in two`); }
+      if (r.ok && JSON.stringify(r.ok.slice().sort()) !== JSON.stringify(G)) add(id, -1, `① warm-up ${j + 1}: ok ${r.ok} ≠ ${G}`); });
+    st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), me = p.side, all = p.moves(), nm = m => E.name(p, m);
+      if (!P.ok || !P.ok.length) { a('⑨ not an ok-kind problem'); return; }
+      if (!P.ok.includes(P.best)) a('⑨ best is not in ok');
+      const I = m2info(p), okS = new Set(P.ok), G = I.filter(x => !x.now && !x.escC.length), W = I.filter(x => x.now || !x.esc.length);
+      P.ok.forEach(m => { if (!all.includes(m)) a(`① ${m} in ok is not legal`); else if (!G.some(x => x.u === m)) a(`① ${nm(m)} in ok: some reply escapes the mate by check`); });
+      G.filter(x => !okS.has(x.u)).forEach(x => a(`② ${nm(x.u)} also mates in two, not in ok`));
+      W.filter(x => !G.includes(x)).forEach(x => a(`④ ${nm(x.u)} wins ${x.now ? 'at once' : 'in two'} by stalemate (困毙), not by mate (追6)`));
+      if (G.length > 1) a(`② ${G.length} first moves mate in two`);
+      if (p.inCheck()) a('④ the mover is in check'); { const q = E.Pos.from(P.s.replace(/ [wb]$/, me ? ' w' : ' b')); if (q.inCheck()) a('④ the side not to move is in check'); }
+      const ans = G.find(x => x.u === P.ok[0]); if (!ans) return;
+      const ck = I.filter(x => x !== ans && x.chk).length, near = I.filter(x => x !== ans && x.esc.length <= 2).length;
+      if (all.length < 12) a(`③ ${all.length} legal moves`); if (ck < 2) a(`③ ${ck} checks that do not mate in two`);
+      tys.add(T(p.at(mFrom(ans.u))));
+      const B = brd(P.s); for (const [who, b] of pool) { if (who === `${id} q${j + 1}`) continue; const e = dist(B, b); if (e <= 4) a(`⑤ ${e} points from ${who}`); }
+      const K = [ans.chk ? 0 : 1, Math.min(ans.R, 9), ck + near];
+      if (prevK && key(K, prevK) < 0) a(`⑥ easier than the problem before (${K} after ${prevK})`); if (!prevK || key(K, prevK) > 0) prevK = K; if (!firstK) firstK = K;
+      if (j === st.problems.length - 1 && !(key(K, firstK) > 0)) a(`⑥ the last problem is no harder than problem 1`);
+      let Wd; try { Wd = X.xqLsJa(E, st, P, j, k => k === 'ok' ? '〈正〉' : '〈誤〉', si); } catch (e) { a('⑧ the words fail: ' + e.message); return; }
+      const g = plain(Wd.good(P.best)); if (/\{|undefined|NaN/.test(g)) a(`⑧ the praise 「${g}」`);
+      if (ans.chk ? /王手じゃなくても|静かな手|王手をかけずに/.test(g) : /王手で受け方|王手を受けた/.test(g)) a(`⑧ the praise does not match the answer (check ${ans.chk}) 「${g}」`);
+      const shut = kMoves(ans.q) < kMoves(E.Pos.from(P.s.replace(/ [wb]$/, me ? ' w' : ' b')));
+      for (const t of [g, Wd.hintTx]) if (/逃げ道を先にふさ|逃げ道になりそうな点を、先に消/.test(t) && (ans.chk || !shut)) a(`⑧ 「${t}」 but the answer does not take a square from the general`);
+      for (const t of [Wd.ask, Wd.hintTx]) { if (/\{|undefined|NaN/.test(t)) a(`⑧ 「${t}」`); if (ans.chk && /静か|王手をかけなくて|王手はどれも受け/.test(t)) a(`追7 「${t}」 but the answer is a check`); if (!ans.chk && /王手をかけて|王手のあと|王手した駒|王手を受けた/.test(t)) a(`追7 「${t}」 but the answer is not a check`); }
+      for (const x of I) { if (okS.has(x.u)) continue; const raw = plain(Wd.ng(x.u)), xn = nm(x.u), i1 = raw.indexOf('〈正〉'), t = i1 > 0 ? raw.slice(0, i1) : raw;
+        if (/\{|undefined|NaN/.test(raw)) { a(`⑧ ${xn}: 「${raw}」`); continue; }
+        if (!raw.includes('〈誤〉') || !raw.includes('〈正〉')) a(`⑦ ${xn}: the words do not name both moves 「${raw}」`);
+        const tl = i1 > 0 ? raw.slice(i1) : '';   // (the answer's reason after the miss: the same facts as the praise)
+        if (ans.chk ? /王手じゃなくても|静かな手|王手をかけずに/.test(tl) : /王手で受け方|王手を受けた/.test(tl)) a(`⑧ ${xn}: the answer's reason does not match it (check ${ans.chk}) 「${tl}」`);
+        if (/どこへ逃げても/.test(tl) && !ans.q.moves().some(r => mFrom(r) === ans.q.k[me ^ 1])) a(`⑧ ${xn}: 「${tl}」 but the general cannot move after the answer`);
+        if (/逃げ道を先にふさ/.test(tl) && (ans.chk || !shut)) a(`⑧ ${xn}: 「${tl}」 but the answer does not take a square from the general`);
+        const k = x.q.k[me ^ 1], to = mTo(x.u), es = x.esc;
+        const take = /取られて終わ|そのまま取られ|ぱくっと取られ|取られて消え|ただで取られる/.test(t), run = /逃げられ|逃げ道が残って|空いている点へ動いて|逃げ出せる|逃げ場がまだ|將が動いて|將が1歩動いて/.test(t), blk = /間に駒を入れ|はさんで防げ|合い駒|筋に駒を入れ|あいだをふさが/.test(t);
+        const capd = /相手に(.+?)を取られて|きみの(.+?)が取られて/.exec(t), mvd = /相手の(.+?)が動いて受け|相手に(.+?)で守りの1手/.exec(t);
+        if (x.chk && !take && !run && !blk) a(`⑦ ${xn}: a check, the words do not say how it is met 「${t}」`);
+        if (!x.chk && !run && !capd && !mvd) a(`⑦ ${xn}: not a check, the words do not name the reply that escapes 「${t}」`);
+        if (!x.chk && /王手/.test(t) && !/王手じゃない/.test(t)) a(`⑦ ${xn}: 「${t}」 (it is not a check)`);
+        if (x.chk && /王手じゃない/.test(t)) a(`⑦ ${xn}: 「${t}」 (it is a check)`);
+        if (!x.chk && /王手じゃないから/.test(t) && !ans.chk) a(`⑦ ${xn}: 「${t}」 (the answer is not a check either)`);
+        if (take && !es.some(r => mTo(r) === to)) a(`⑦ ${xn}: 「${t}」 (no capture of the checking piece escapes the mate)`);
+        if (run && !es.some(r => mFrom(r) === k)) a(`⑦ ${xn}: 「${t}」 (no move of the general escapes the mate)`);
+        if (blk && !es.some(r => mFrom(r) !== k && mTo(r) !== to)) a(`⑦ ${xn}: 「${t}」 (no block escapes the mate)`);
+        if (capd && !x.chk) { const nmC = capd[1] || capd[2]; if (!es.some(r => x.q.at(mTo(r)) && X.XQN(T(x.q.at(mTo(r))), me) === nmC)) a(`⑦ ${xn}: 「${t}」 (no reply taking a ${nmC} escapes)`); }
+        if (mvd && !x.chk) { const nmM = mvd[1] || mvd[2]; if (!es.some(r => mFrom(r) !== k && !x.q.at(mTo(r)) && X.XQN(T(x.q.at(mFrom(r))), me ^ 1) === nmM)) a(`⑦ ${xn}: 「${t}」 (no quiet ${nmM} reply escapes)`); }
+      }
+    });
+    if (tys.size < 2) add(id, 4, `追27 every answer moves the same kind of piece (${[...tys]})`);
   });
   return out;
 }
