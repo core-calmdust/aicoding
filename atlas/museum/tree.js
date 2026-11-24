@@ -164,6 +164,7 @@
   const textsFor = l => Promise.all([...new Set(['ja', 'en', l])].map(x => (window.MUSEUM_TREE_T && MUSEUM_TREE_T[x]) ? 0 : load('museum/tree-' + x + '.js?v=' + V)));
 
   /* ---------- module state ---------- */
+  const zl = i => { const Z = window.AtlasZoomT || {}; return (Z[lang] || Z.en || ['+', '−', '⤢'])[i]; };   // (the zoom buttons' names, from worldmap.js)
   let ctx = null, lang = 'ja', host = null, el = {}, sel = null, fam = 'all', zoom = 1, built = null;
   const node = id => built && built.byId[id];
   const gameOf = id => ctx.games.find(g => g.id === id);
@@ -367,7 +368,7 @@
           <div class="trruler" id="trRuler"></div>
           <div class="trbody"><div class="trnames" id="trNames"></div><div class="trcanvas" id="trCanvas"><div class="trlanes"></div><svg class="trsvg" aria-hidden="true"></svg><div class="trnodes"></div></div></div>
         </div>
-        <div class="amzoom trzoom"><button type="button" data-z="in" aria-label="+">+</button><button type="button" data-z="out" aria-label="−">−</button><button type="button" data-z="all"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button></div>
+        <div class="amzoom trzoom"><button type="button" data-z="in" aria-label="${zl(0)}">+</button><button type="button" data-z="out" aria-label="${zl(1)}">−</button><button type="button" data-z="all" aria-label="${zl(2)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button></div>
         <p class="trload" id="trLoad"></p></div>
         <div class="trlegend" id="trLeg"></div>
         <aside class="card trinfo" id="trInfo" aria-live="polite"></aside>`;

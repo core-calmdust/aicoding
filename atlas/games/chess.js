@@ -141,7 +141,28 @@
     }
     const hOf = g => g.userData.h0 || 0;
     function land(g) { anim(170, k => { const s = 1 + Math.sin(k * Math.PI) * .07; g.scale.set(s, 1 / s, s); }, () => g.scale.set(1, 1, 1)); }
+    /* ---------- lessons (2026-11-24 user): a–h along the bottom and 1–8 up the left on the frame (Black's view turns them with the
+       board), so a move named ♘g1–f3 in the guide's lines can be found ---------- */
+    let coordG = null;
+    function coordsDraw() {
+      if (coordG) { board.remove(coordG); coordG.children.forEach(m => { m.material.map.dispose(); m.material.dispose(); m.geometry.dispose(); }); coordG = null; }
+      if (!PZ || !PZ.lesson || stopped || MB) return;
+      const MG = (CS.MARGIN || .85) / 2;   // the middle of the frame
+      coordG = new TH.Group();
+      const lab = (txt, x, z) => {
+        const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
+        g.font = '700 78px "Helvetica Neue",Arial,sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+        g.lineWidth = 10; g.strokeStyle = 'rgba(0,0,0,.55)'; g.strokeText(txt, 64, 68); g.fillStyle = 'rgba(255,255,255,.95)'; g.fillText(txt, 64, 68);   // (light and dark frames alike)
+        const tx = new TH.CanvasTexture(c); tx.encoding = TH.sRGBEncoding; tx.anisotropy = 4;
+        const m = new TH.Mesh(new TH.PlaneGeometry(.42, .42), new TH.MeshBasicMaterial({ map: tx, transparent: true, depthWrite: false, toneMapped: false }));
+        m.rotation.x = -Math.PI / 2; m.position.set(x, Y + .004, z); m.renderOrder = 1; coordG.add(m);
+      };
+      for (let f = 0; f < 8; f++) { const sq = sqAt(f, 7), [x, z] = cellAt(f, 7); lab('abcdefgh'[sq & 7], x, z + .5 + MG); }
+      for (let r = 0; r < 8; r++) { const sq = sqAt(0, r), [x, z] = cellAt(0, r); lab(String((sq >> 4) + 1), x - .5 - MG, z); }
+      board.add(coordG); if (T3.kick) T3.kick(200);
+    }
     function setup() {
+      coordsDraw();
       Object.values(pcs).forEach(g => board.remove(g)); pcs = {};
       let i = 0;
       for (let sq = 0; sq < 120; sq++) {

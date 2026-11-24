@@ -19,7 +19,7 @@ const arrow = (rule, f, t) => ({ type: 'arrow', from: spot(rule, f), to: spot(ru
 function fill(key, params) { const t = X.MSG[key], o = {}; for (const l of X.LANGS) o[l] = t[l].replace(/\{(\w+)\}/g, (_, k) => params[k] != null ? params[k] : ''); return o; }
 
 // ---- puzzle sigs (avoid reuse)
-const PZ = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'puzzles.json'), 'utf8'));
+const PZ = { themes: [] };   // (パズルは 2026-11-24 に廃止)
 const used = new Set();
 for (const T of PZ.themes) for (const p of T.puzzles) used.add(L.sig({ s: p.s, n: p.n, ev: p.ev }));
 

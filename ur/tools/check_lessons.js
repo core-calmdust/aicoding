@@ -80,7 +80,7 @@ for (const L of D.steps) {
 }
 // no lesson position reused as a puzzle
 try {
-  const PZ = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'puzzles.json'), 'utf8')), K = new Set();
+  const PZ = { themes: [] }, K = new Set();   // (パズルは 2026-11-24 に廃止)
   for (const T of PZ.themes) for (const p of T.puzzles) K.add(E.key(st(p.s)) + '/' + p.n);
   for (const L of D.steps) for (const q of L.problems) if (q.kind === 'move' && K.has(E.key(st(q.s)) + '/' + q.n)) ng(L.id, 'same position as a puzzle');
 } catch (e) {}

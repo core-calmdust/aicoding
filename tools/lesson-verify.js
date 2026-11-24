@@ -476,8 +476,8 @@ function amazons(opt) {
   //  more empty squares round it and no black reply boxes it in; s_wall: the board splits (no room with both colours) with the most for
   //  White (its empty squares − Black's); s_fill: the most moves left for White's amazon in its own room.
   function amStrat(st) { const id = st.id; let prevD = -1, firstD = null;
-    // 追14: a threshold the scoring uses (s_escape: 4 or more empty squares round it) is said in the 3D intro
-    if (id === 's_escape' && !/4つ以上/.test(X.AMJ_LS.intro.s_escape || '')) add(id, -1, '追14 the 3D intro does not say the 4 empty squares the answer needs');
+    // 追18: a threshold the scoring uses (s_escape: 4 or more empty squares round it) is said in the 3D intro
+    if (id === 's_escape' && !/4つ以上/.test(X.AMJ_LS.intro.s_escape || '')) add(id, -1, '追18 the 3D intro does not say the 4 empty squares the answer needs');
     const rooms = sq => { const seen = new Int8Array(100).fill(-1), R = []; let w = 0, b = 0, sep = true;
       for (let s0 = 0; s0 < 100; s0++) { if (sq[s0] === 3 || seen[s0] >= 0) continue; const Q = [s0]; seen[s0] = R.length;
         for (let h = 0; h < Q.length; h++) { const [r, c] = RCo(Q[h]); for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = c + dc, t = rr * 10 + cc; if ((dr || dc) && rr >= 0 && rr < 10 && cc >= 0 && cc < 10 && seen[t] < 0 && sq[t] !== 3) { seen[t] = R.length; Q.push(t); } } }
