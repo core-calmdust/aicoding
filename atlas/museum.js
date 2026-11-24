@@ -35,9 +35,9 @@
   const ROOMS = [
     { id: 'map', ready: () => !!window.AtlasMap, render: (el, c) => AtlasMap.render(el, c) },
     { id: 'tree', src: ['museum/tree.js?v=6'], ready: () => !!window.AtlasTree, render: (el, c) => AtlasTree.render(el, c) },
-    { id: 'gallery', src: ['museum/gallery.js?v=149'], ready: () => !!window.AtlasGallery, render: (el, c) => AtlasGallery.render(el, c) },
-    { id: 'paint', src: ['museum/paint-i18n.js?v=3', 'museum/paint.js?v=9'], ready: () => !!(window.AtlasPaint && window.MUSEUM_PAINT_T), render: (el, c) => AtlasPaint.render(el, c) },
-    { id: 'read', src: ['museum/read-i18n.js?v=29', 'museum/read.js?v=37'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T), render: (el, c) => AtlasRead.render(el, c) },
+    { id: 'gallery', src: ['museum/gallery.js?v=151'], ready: () => !!window.AtlasGallery, render: (el, c) => AtlasGallery.render(el, c) },
+    { id: 'paint', src: ['museum/paint-i18n.js?v=3', 'museum/paint.js?v=10'], ready: () => !!(window.AtlasPaint && window.MUSEUM_PAINT_T), render: (el, c) => AtlasPaint.render(el, c) },
+    { id: 'read', src: ['museum/read-i18n.js?v=29', 'museum/read.js?v=38'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T), render: (el, c) => AtlasRead.render(el, c) },
     { id: 'chance', src: ['museum/chance-i18n.js?v=3', 'museum/chance.js?v=7'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T), render: (el, c) => AtlasChance.render(el, c) },
   ];
   const KEY = 'atlas-museum-room';
@@ -170,7 +170,11 @@
   }
   function passToggle(on) { const o = on == null ? !el.pass.classList.contains('on') : on; if (o) passPanel(); el.pass.classList.toggle('on', o); el.pbtn.setAttribute('aria-expanded', o); }
   // what a room is given: the portal's ctx, and goEx(id) — open a piece of the collection (from another room's link)
-  function goEx(id) { open('gallery', true); let n = 0; const t = () => { if (window.AtlasGallery && host.querySelector('.muroom[data-r="gallery"] .gxgrid .gxc')) AtlasGallery.open(id); else if (++n < 100) setTimeout(t, 100); }; t(); }
+  // (2026-11-24 audit backLost) a case opened from another room (the tree's node, a story's link) closes back into that room and its button
+  function goEx(id) { const from = room, btn = document.activeElement, y = scrollY; open('gallery', true); let n = 0;
+    const key = btn && btn.tagName === 'BUTTON' ? `.muroom[data-r="${from}"] button${btn.classList[0] ? '.' + btn.classList[0] : ''}${Object.keys(btn.dataset).map(k => `[data-${k.replace(/[A-Z]/g, c => '-' + c.toLowerCase())}="${btn.dataset[k]}"]`).join('')}` : '';
+    const back = () => { open(from, true); setTimeout(() => { scrollTo(0, y); const b = btn && btn.isConnected && btn.offsetParent ? btn : key && host.querySelector(key); if (b) b.focus({ preventScroll: true }); }, 150); };
+    const t = () => { if (window.AtlasGallery && host.querySelector('.muroom[data-r="gallery"] .gxgrid .gxc')) { if (from !== 'gallery' && !AtlasGallery.onClose) AtlasGallery.onClose = back; AtlasGallery.open(id); } else if (++n < 100) setTimeout(t, 100); }; t(); }
   const rctx = () => Object.assign({}, ctx, { goEx, goRoom: r => open(r, true) });
   function render(sec, c) {
     ctx = c; lang = UI[c.lang] ? c.lang : 'en';

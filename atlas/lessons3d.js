@@ -640,9 +640,9 @@
      cand: freq = [move, games] with total / win, cp = [move, engine value] with floor). {m} = the line's move, {x} = yours. */
   const SHJ_OP = {
     intro: ['『{n}』をいっしょに覚えるコン！<br>{t}。', '今日は『{n}』だコン。<br>{t}。手順を追いかけてみてね！', '『{n}』の手順を見ていくコン！<br>{t}。', 'さあ、『{n}』の練習！<br>{t}。どんな形になるか、楽しみだコン。'],
-    ask: ['{s}の番だコン。『{n}』で、強い人がいちばん指した手はどれかな？', '『{n}』のこの場面、{s}ならどう指す？', 'さあ{s}の一手！ 定跡どおりに指せるかな？', '{s}がここでいちばんよく選ぶ手、わかる？', '{s}の番。手順を思い出して、本筋の手を指してみて！'],
+    ask: ['{s}の番だコン。『{n}』で、強いソフトの対局でいちばん多い手はどれかな？', '『{n}』のこの場面、{s}ならどう指す？', 'さあ{s}の一手！ 定跡どおりに指せるかな？', '{s}がここでいちばんよく選ぶ手、わかる？', '{s}の番。手順を思い出して、本筋の手を指してみて！'],
     askCp: ['{s}の番だコン。ここでいちばん良い手はどれかな？', '駒落ちのこの場面、{s}ならどう指す？', 'さあ{s}の一手！ 駒の多さを生かせる手を探してみて。', '{s}の番。いちばん良い手、わかるかな？', '{s}の一手を考えてみて！ 定跡の形を思い出してね。'],
-    pct: ['強い人の対局の{a}%が、この手を選んでいるコン。', '実戦では{a}%がこの手。いちばん人気！', '強い人の{a}%が指した、定跡の本筋の手。', 'この場面では{a}%の人がこれを選ぶの。覚えておいてね。', '{a}%の人が選ぶ、いちばん多い手なの。', '実戦の{a}%で指されている、おなじみの手！'],
+    pct: ['強いソフトどうしの対局の{a}%が、この手を選んでいるコン。', '実戦では{a}%がこの手。いちばん多いの！', '強いソフトの対局の{a}%で指された、定跡の本筋の手。', 'この場面では{a}%の対局がこれを選ぶの。覚えておいてね。', '{a}%の対局で選ばれた、いちばん多い手なの。', '実戦の{a}%で指されている、おなじみの手！'],
     cp: ['駒落ちの定跡でも、この手が本筋だコン。', 'この形では、これがいちばん確かな手なの。', 'ほかの手より、駒の働きがはっきり良くなる手。', '駒の多さを生かす、まっすぐな一手！', '上手の手薄なところをつく手なの。', '下手らしい、筋のいい手コン！'],
     lead: ['{m}が定跡の手。', '正解は{m}だったコン。', 'ここは{m}を指したかったね。', '本筋は{m}なの。', 'いちばんは{m}！', '定跡は{m}だったの。', 'ここは{m}が本筋コン。', '答えは{m}！'],
     // (2026-11-22 lesson loop) the praise, the soft words after a miss, the push on — each opening takes them in its own order (shOpVoice)
@@ -744,7 +744,7 @@
     l: [['香車を上げる手。', '香車を一つ上げる手コン！', '香車を一段持ちあげる手。'], ['玉が入る場所を作ったり、端の攻めに使ったりするの。', '端の形が変わるね。', '']],
     b: [['角を動かして、次の駒組みに備える手。', '角の位置を変える手！', '角を動かして、働く場所を探す手コン。', '角を一つずらしておく手。'], ['', 'ななめの利きを別の場所へ向けるの。', '']],
     r: [['飛車の位置を整えて、攻めにも守りにも働くようにする手なの。', '飛車を動かして、使いやすい場所へ置く手！', '飛車の場所を整える手コン。', '飛車を引いておく手。'], ['', '', '大駒の置き場所は大事なの！']],
-    df: [['この形で、強い人たちが本筋と考えている手コン。', 'この場面の定跡どおりの手！', '定跡の流れにそった手なの。'], ['']],
+    df: [['この形で、強いソフトが本筋として選ぶ手コン。', 'この場面の定跡どおりの手！', '定跡の流れにそった手なの。'], ['']],
   };
   // (2026-11-24 第2期・担当B) a wording that says which way the piece went (横へずらす・引く・上げる・前へ・一つ…) only for a move that went so
   const shDirOk = (h, F) => !F.dir || F.pc === 'n' || !((/横へずら|横に/.test(h) && F.dir !== 'side') || (/引い|引く/.test(h) && F.dir !== 'back') || (/上げ|上が|前へ|前に(出|進)|進め|持ちあげ/.test(h) && F.dir !== 'up') || (/一つずら|一つ上げ|一つ進め|一段|一歩/.test(h) && F.n !== 1));
@@ -780,7 +780,7 @@
     if (F.guard) return Q('gd', ['玉のまわりの守りを見てみて。', '玉のそばに、まだすき間がない？', '囲いを作るなら、どの駒が近づくといいかな？', '守りの駒、玉から遠くない？', '玉をもっと安心させる手は？']);
     if (cp) return Q('cp2', ['駒の多さを、どう生かすかな？', '指したあと、駒がどう働くか想像してみて。', '駒落ちの定跡の形、思い出せる？']);
     if (line) return Q('ln', ['完成した形を思い出してみて！', '指したあとの形を想像してみてね。', '手順の次の一手、思い出せる？', '囲いの形を頭に浮かべてみて！', '組み上がりまで、あと何手かな？']);
-    return Q('df', ['強い人がいちばん選んだ手を探してみて。', '手順の流れを思い出してみて！', '手順のどこまで来たか、思い出そう。', '指したあとの形を想像してみよう！', '定跡の形、頭に浮かぶかな？', 'この局面、次は何をする場面？']);
+    return Q('df', ['強いソフトの対局でいちばん多い手を探してみて。', '手順の流れを思い出してみて！', '手順のどこまで来たか、思い出そう。', '指したあとの形を想像してみよう！', '定跡の形、頭に浮かぶかな？', 'この局面、次は何をする場面？']);
   }
   function shSfenStep(sfen, u) {   // the position after the move u (board, side, hands) as an sfen
     const { b, sente: s, H } = shBd(sfen), z = shSq(u.slice(2, 4));
@@ -877,7 +877,7 @@
     const w = shWhyJa(FA, v), t0 = cp ? v('cpT', SHJ_OP.cp) : v('pct', SHJ_OP.pct).replace('{a}', pc(cnt.get(A) || 0)), t = /コン/.test(w) ? t0.replace('コン。', 'の。').replace('コン！', '！') : t0;
     const fq = v('fq', [0, 1, 2, 3]), ct = v('ct', [0, 1, 2, 3]), lead = v('lead', SHJ_OP.lead), ch = V.cheer(i), so = V.soft(i), pu = V.push(i), sh = shShortJa(FA), hint = shHintJa(FA, k, cp, v);
     const good = u => {
-      if (u && u !== A && cnt.has(u)) return shJoin(ch, cp ? `{x}も悪くない手コン。でも{m}なら${sh}から、ほんの少し上なの。` : `{x}も人気の手！ 実戦では${pc(cnt.get(u))}%、いちばん多い{m}も${pc(cnt.get(A))}%で、どっちも本筋なの。`);
+      if (u && u !== A && cnt.has(u)) return shJoin(ch, cp ? `{x}も悪くない手コン。でも{m}なら${sh}から、ほんの少し上なの。` : `{x}もよく指される手！ 実戦では${pc(cnt.get(u))}%、いちばん多い{m}も${pc(cnt.get(A))}%で、どっちも本筋なの。`);
       return shFit(shJoin(ch, w, t), pu); };
     const ng = u0 => {
       let u = u0; if (!u || u === A) u = (C.find(x => x[0] !== A) || [])[0]; const L = x => shJoin(so, shJoin(lead, x));
@@ -888,11 +888,15 @@
       if (F.hang && !FA.hang && (cp ? dd > .12 : mine == null)) return L(`{x}だと、その${SH_PN[F.pc]}を相手の${SH_PN[F.hang]}にタダで取られちゃう！`);
       if (FA.cap && FA.behind && !F.cap) return L('{x}だと取り返しそびれて、駒損のままになっちゃう。');
       if (!cp && mine != null) { const b = pc(mine), a = pc(cnt.get(A));
-        return L((b * 2 >= a ? [`{x}もよく指される手（${b}%）。でも{m}なら${a}%で、こっちがいちばんの本筋なの。`, `{x}も${b}%ある人気の手。でも{m}なら${sh}から、${a}%の人がこっちを選ぶの。`, `{x}も悪くない（${b}%）けど、{m}は${sh}ので、${a}%の人が指しているの。`, `{x}を選ぶ人も${b}%いるコン。それでも{m}なら${sh}から、${a}%でいちばん多いの。`]
-          : [`{x}も指される手だけど、${b}%だけ。{m}は${a}%の人が選んでいて、${sh}からね。`, `{x}を選ぶ人は${b}%くらい。{m}なら${sh}から、${a}%の人がこっちなの。`, `{x}は${b}%と少数派。{m}は${sh}ので、${a}%の人が指しているの。`, `{x}は強い人の${b}%しか指さない手。{m}だと${sh}から、${a}%の人が選ぶコン。`])[fq]); }
+        return L((b * 2 >= a ? [`{x}もよく指される手（${b}%）。でも{m}なら${a}%で、こっちがいちばんの本筋なの。`, `{x}も${b}%ある手。でも{m}なら${sh}から、${a}%の対局がこっちを選ぶの。`, `{x}も悪くない（${b}%）けど、{m}は${sh}ので、${a}%の対局で指されているの。`, `{x}を選ぶ対局も${b}%あるコン。それでも{m}なら${sh}から、${a}%でいちばん多いの。`]
+          : [`{x}も指される手だけど、${b}%だけ。{m}は${a}%の対局で選ばれていて、${sh}からね。`, `{x}を選ぶ対局は${b}%くらい。{m}なら${sh}から、${a}%の対局がこっちなの。`, `{x}は${b}%と少数派。{m}は${sh}ので、${a}%の対局で指されているの。`, `{x}は強いソフトの対局の${b}%でしか指されない手。{m}だと${sh}から、${a}%の対局が選ぶコン。`])[fq]); }
       const rw = shStaticWhyJa(o.pos, u, k); if (rw) return L(rw);
       if (cp) return L(shContrastJa(F, FA, k, ct));
-      return L(['{x}は、強い人の対局ではほとんど指されない手。', '{x}を選ぶ強い人は、ほとんどいないの。', '{x}は実戦ではめったに見ない手。', '{x}は定跡では指されない手なの。'][fq] + shContrastJa(F, FA, k, ct));
+      // (追25: the record keeps every move played 3 times or more, so a move outside it was played at most 2 times — and at most as often as the games left over)
+      const rest = Math.max(0, N - C.reduce((s, x) => s + x[1], 0)), k2 = Math.min(2, rest);
+      return L((rest === 0 ? [`{x}は、この場面の${N}局で一度も指されていない手。`, `{x}を選んだ対局は、記録の${N}局に一つもないの。`, `{x}は、記録した${N}局では一度も出てこない手。`, `{x}は、この場面の${N}局のどれにも出てこない手なの。`]
+        : k2 / N < 0.03 ? ['{x}は、強いソフトの対局ではほとんど指されない手。', '{x}を選んだ対局は、ほとんどないの。', '{x}は実戦ではめったに見ない手。', '{x}は、この場面の対局ではほとんど出てこない手なの。']
+        : [`{x}は、この場面の${N}局のうち、多くても${k2}局しか指されていない手。`, `{x}を選んだ対局は、記録の${N}局で多くても${k2}局だけ。`, `{x}は少数派で、${N}局のうち多くても${k2}局なの。`, `{x}が指されたのは、${N}局のうち多くても${k2}局。`])[fq] + shContrastJa(F, FA, k, ct));
     };
     return { ask, hintTx: hint, good, ng };
   }
@@ -4221,7 +4225,7 @@
     LKEY: 'aicoding-janggi-lessons', OKEY: null, data: null, I: null, V: {},
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../janggi/lessons.json?v=3'), fetch('../janggi/i18n.js?v=3').then(r => r.text()), jgScript(JG_ENG, () => window.JanggiEngine), jgScript('games/janggi-ls.js?v=2', () => window.AtlasJanggiLs), jgScript('games/janggi-pz.js?v=1', () => window.AtlasMini && window.AtlasMini.janggi)])
+      return (this.p = Promise.all([getJ('../janggi/lessons.json?v=4'), fetch('../janggi/i18n.js?v=3').then(r => r.text()), jgScript(JG_ENG, () => window.JanggiEngine), jgScript('games/janggi-ls.js?v=3', () => window.AtlasJanggiLs), jgScript('games/janggi-pz.js?v=1', () => window.AtlasMini && window.AtlasMini.janggi)])
         .then(([ls, tx]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] janggi texts', e); } this.I = w.I18N || {}; const D = (window.AtlasJanggiLs || {}).DONE || [];
           this.data = { ls: Object.assign({}, ls, { steps: ls.steps.filter(x => D.includes(x.id)) }) }; return this; })
         .catch(e => { this.p = null; throw e; }));
@@ -6856,8 +6860,8 @@
   /* whose move it is (2026-11-23 user: every problem — the warm-up's too — must say which side the player moves, 「黒の手番だよ」).
      turnOf: 1 / 2 from the position (an object's me, reversi "…:1", a chess FEN's w / b, a shogi SFEN's b / w), 0 = no sides (dots),
      null = not known. turnLine: the line put before the question, '' when the question already names the side (the same side). */
-  const TURN_N = { ja: { ur: ['白', '黒'], morris: ['金', '銀'], tafl: ['攻め手', '守り手'], chess: ['白', '黒'], reversi: ['●黒', '○白'], gomoku: ['●黒', '○白'], go: ['●黒', '○白'], checkers: ['黒', '白'], xiangqi: ['赤', '黒'], janggi: ['楚', '漢'], hex: ['赤', '青'], amazons: ['白', '黒'], connect4: ['金', '銀'], shogi: ['☗先手', '☖後手'], backgammon: ['金', '金'] },
-    en: { ur: ['Light', 'Dark'], morris: ['Gold', 'Silver'], tafl: ['Attackers', 'Defenders'], chess: ['White', 'Black'], reversi: ['● Black', '○ White'], gomoku: ['● Black', '○ White'], go: ['● Black', '○ White'], checkers: ['Black', 'White'], xiangqi: ['Red', 'Black'], janggi: ['Cho', 'Han'], hex: ['Red', 'Blue'], amazons: ['White', 'Black'], connect4: ['Gold', 'Silver'], shogi: ['☗ Sente', '☖ Gote'], backgammon: ['Gold', 'Gold'] } };
+  const TURN_N = { ja: { ur: ['白', '黒'], senet: ['糸巻き', '円錐'], morris: ['金', '銀'], tafl: ['攻め手', '守り手'], chess: ['白', '黒'], reversi: ['●黒', '○白'], gomoku: ['●黒', '○白'], go: ['●黒', '○白'], checkers: ['黒', '白'], xiangqi: ['赤', '黒'], janggi: ['楚', '漢'], hex: ['赤', '青'], amazons: ['白', '黒'], connect4: ['金', '銀'], shogi: ['☗先手', '☖後手'], backgammon: ['金', '金'] },
+    en: { ur: ['Light', 'Dark'], senet: ['Spools', 'Cones'], morris: ['Gold', 'Silver'], tafl: ['Attackers', 'Defenders'], chess: ['White', 'Black'], reversi: ['● Black', '○ White'], gomoku: ['● Black', '○ White'], go: ['● Black', '○ White'], checkers: ['Black', 'White'], xiangqi: ['Red', 'Black'], janggi: ['Cho', 'Han'], hex: ['Red', 'Blue'], amazons: ['White', 'Black'], connect4: ['Gold', 'Silver'], shogi: ['☗ Sente', '☖ Gote'], backgammon: ['Gold', 'Gold'] } };
   function turnOf(id, pos) {
     if (id === 'dots') return 0;
     if (id === 'mancala') return 1;   // (the player's row is always the near one)
@@ -6870,7 +6874,7 @@
   }
   function turnLine(id, pos, ask, lang) {
     const w = turnOf(id, pos); if (!w) return '';
-    if (id === 'ur' && pos && pos.ur && pos.ur.lock) return '';   // (ur: a question to count on a board for looking — no move to make)
+    if ((id === 'ur' || id === 'senet') && pos && pos[id] && pos[id].lock) return '';   // (ur: a question to count on a board for looking — no move to make)
     const ja = lang === 'ja', a = String(ask || '').replace(/<[^>]+>/g, '');
     if (id === 'mancala') return ja ? (/手前/.test(a) ? '' : '<b>手前の列</b>がきみの穴だよ。') : '';
     const N = (TURN_N[ja ? 'ja' : 'en'] || {})[id]; if (!N) return '';
@@ -6883,7 +6887,11 @@
   const UR = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUr) return res(); const sc = document.createElement('script'); sc.src = 'ls-ur.js?v=1'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsUr.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
-  const DATA = { ur: UR, dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, janggi: JANGGI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
+  /* senet (2026-11-24 担当C): the data, セティ's words and the board hooks are in atlas/ls-senet.js (loaded the first time) */
+  const SENET = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsSenet) return res(); const sc = document.createElement('script'); sc.src = 'ls-senet.js?v=1'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+    .then(() => { const U = AtlasLsSenet.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; return this; }); })
+    .catch(e => { this.p = null; throw e; })); } };
+  const DATA = { ur: UR, senet: SENET, dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, janggi: JANGGI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
 
   function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(lang), ncLoad(id)]).then(() => D.list(kind, lang)); }
   function next(id, kind, lang) { return list(id, kind, lang).then(L2 => { const x = L2.find(i => !i.full && i.st !== 'pass') || L2.find(i => !i.full); return x ? x.key : null; }); }
@@ -6997,7 +7005,7 @@
         else if (G && id === 'mancala') pz().load(G.spec, G.me, { lock: !!G.lock, marks: G.marks });
         else if (G && id === 'connect4') pz().load(G.moves, G.me, { lock: !!G.lock });
         else if (G && id === 'backgammon') pz().load(G.bg);
-        else if (G && id === 'ur') pz().load(G.ur);
+        else if (G && (id === 'ur' || id === 'senet')) pz().load(G[id]);
         else if (G) pz().load(G.start, G.rule, G.me, G.last, { pick: G.pick, noForbid: G.noForbid, lock: !!G.lock });
         else if (drill && pz().drill) pz().drill(Object.assign({ fen: pos }, drill));
         else if (id === 'shogi') pz().load(pos, sol || [], { lock: !!lock });
@@ -7033,7 +7041,7 @@
       };
       await board(D.rampPos ? D.rampPos(it) : it.fen); if (stopped || phase !== 'ramp' || cur.ri !== i) return;
       const marks0 = () => { if (D.rampMarks) pz().mark(D.rampMarks(it)); else if (pz().annot) pz().annot(it.k === 'explain' ? rmk(it) : null); };
-      if (it.k === 'explain' && it.seq && it.seq.length) { for (const q of (D.rampSeq ? D.rampSeq(it) : it.seq)) { await sleep(420); if (stopped || phase !== 'ramp' || cur.ri !== i) return; await pz().play(q); } }   // (an example sequence, played out)
+      if (it.k === 'explain' && it.seq && it.seq.length) { for (const q of (D.rampSeq ? D.rampSeq(it) : it.seq)) { await sleep(420); if (stopped || phase !== 'ramp' || cur.ri !== i) return; await pz().play(q); } if (stopped || phase !== 'ramp' || cur.ri !== i) return; }   // (an example sequence, played out — 2026-11-24: Next pressed while it walked: this step is over, nothing more on the next one's board)
       marks0();
       let rLine = false;   // (a mate in 3 or more: the first move was right, the line goes on — the defender answers, the player mates)
       const rDone = () => {
@@ -7061,7 +7069,7 @@
         if (it.k === 'explain') { if (D.rampUndo) D.rampUndo(pz()); else pz().undo(1); marks0(); pz().wait(); return; }   // (the explanation's board is for looking)
         if (D.rampOk ? D.rampOk(it, u) : it.ok.includes(u)) return rDone();   // (right: on to the next step by itself, the meter on 次へ)
         say(RU('ng')); try { chime(false); } catch (e) {}
-        if (D.rampMarks && !['checkers', 'xiangqi', 'janggi', 'backgammon', 'tafl', 'amazons', 'connect4'].includes(id)) pz().mark((id === 'ur' ? D.rampMarks(it) : []).concat([[u, 'ng']]));   // (checkers / xiangqi: a move number, not a square — the miss is taken back below)
+        if (D.rampMarks && !['checkers', 'xiangqi', 'janggi', 'backgammon', 'tafl', 'amazons', 'connect4'].includes(id)) pz().mark((id === 'ur' || id === 'senet' ? D.rampMarks(it) : []).concat([[u, 'ng']]));   // (checkers / xiangqi: a move number, not a square — the miss is taken back below)
         later(() => { if (cur && phase === 'ramp' && cur.ri === i && !ok) { if (D.rampUndo) D.rampUndo(pz()); else if (!(it.pick)) pz().undo(1); marks0(); pz().wait(); } }, 1100);
       };
       pz().wait();
@@ -7290,7 +7298,7 @@
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;
       }
-      if (id === 'ur') {   // (2026-11-24: ダイスン's reason from the board; a move: back to the problem, the best move's route green, yours red)
+      if (id === 'ur' || id === 'senet') {   // (2026-11-24: ダイスン's / セティ's reason from the board; a move: back to the problem, the best move's route green, yours red)
         const right = pts >= 16, k = cur.k, mv = p.kind !== 'choice';
         say(`${p.own ? '' : right ? pick(X.good) : X.wrong} <b>${fill(X.pts, { n })}</b><br>` + (right ? p.good(u) : p.ng(u)));
         try { chime(right); } catch (e) {}
