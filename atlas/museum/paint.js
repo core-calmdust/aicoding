@@ -31,6 +31,11 @@
     { id: 'teniers', w: 2048, h: 1497, cma: '1943.377', bg: '#4a3a2c', spots: [[.325, .69], [.19, .66], [.256, .596], [.066, .37], [.224, .21], [.608, .42]], links: [{ g: 'backgammon' }, { ex: 'ottoman' }] },
     { id: 'imari', w: 2048, h: 2048, cma: '1964.260', bg: '#2e2e30', spots: [[.547, .66], [.44, .627], [.653, .573], [.5, .373], [.16, .467]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
     { id: 'shoei', w: 2048, h: 941, cma: '1979.46.1', bg: '#b89a5a', spots: [[.62, .654], [.704, .589], [.87, .71], [.873, .567], [.425, .725], [.61, .177]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
+    // (2026-11-24) four more from Cleveland: a Muromachi stable screen (go and shogi), a Goryeo celadon pitcher (go), a Kangra drawing (chaupar), Vuillard (checkers)
+    { id: 'umaya', w: 2048, h: 919, cma: '1934.373.1', bg: '#b8964a', spots: [[.421, .764], [.393, .71], [.562, .777], [.615, .72], [.705, .7], [.421, .54]], links: [{ g: 'shogi' }, { g: 'go' }, { ex: 'kofukuji' }] },
+    { id: 'goryeo', w: 2048, h: 1923, cma: '1917.356', bg: '#7f948a', spots: [[.496, .645], [.418, .61], [.563, .6], [.441, .47], [.3, .6], [.63, .38]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
+    { id: 'kangra', w: 1394, h: 2048, cma: '1936.683', bg: '#d9cbb2', spots: [[.47, .7], [.36, .5], [.668, .5], [.13, .3], [.94, .29], [.65, .37]], links: [{ g: 'ludo' }, { room: 'chance' }] },
+    { id: 'vuillard', w: 1687, h: 2048, cma: '1951.65.2', bg: '#6e3a4c', spots: [[.5, .76], [.332, .547], [.696, .605], [.598, .415], [.29, .34], [.07, .968]], links: [{ g: 'checkers' }] },
   ];
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   let host = null, ctx = null, lang = 'ja', el = {}, cur = null;
