@@ -293,6 +293,7 @@
     const R = $('roster'); if (!R) return;
     const on = S && G.scr === 'play' && S.phase !== 'prologue' && S.phase !== 'end';
     R.classList.toggle('hide', !on); document.body.classList.toggle('has-roster', !!on);
+    if ($('rmap')) $('rmap').classList.toggle('hide', !on);
     if (!on) return;
     R.innerHTML = S.people.map(p => {
       const t = tagsOf(p.id), dead = !p.alive, mk = S.pl.notes[p.id] || '';
@@ -301,9 +302,19 @@
       return `<div class="ro${p.isPlayer ? ' you' : ''}${dead ? ' dead' : ''}${mk ? ' mk-' + mk : ''}${rcls}" data-id="${p.id}">${bust(p.id)}<b class="${(p.isPlayer ? 'あなた' : p.name).length > 5 ? 'long' : ''}">${esc(p.isPlayer ? 'あなた' : p.name)}</b>${t.cl}${t.ht}<div class="rs">${rs}</div>${dead ? `<svg class="x" viewBox="0 0 44 44"><path d="M8 8L36 36M36 8L8 36"/></svg><span class="dc">${dc}</span>` : ''}</div>`;
     }).join('');
     if (PCQ.matches) { const W0 = $('stage').clientWidth - 40, n = S.people.length; const w = Math.max(54, Math.min(84, Math.floor(W0 / n) - 5)); R.style.setProperty('--roW', w + 'px'); R.classList.toggle('tight', w < 70); } else R.style.removeProperty('--roW');
+    renderMap(R);
     R.querySelectorAll('.ro').forEach(e => e.onclick = () => { const id = e.dataset.id; const p = person(id); if (!p || !p.alive || p.isPlayer) return; if (G.onPup && !G.talking && $('sheet').classList.contains('hide') && $('tx').classList.contains('hide')) G.onPup(id); });
     // the same marks above the puppets' heads
     $('cast').querySelectorAll('.pp').forEach(e => { let g = e.querySelector('.tg'); if (!g) { g = document.createElement('div'); g.className = 'tg'; e.appendChild(g); } const t = tagsOf(e.dataset.id); g.innerHTML = t.cl + t.ht; });
+  }
+  /* the ring of places under the roster: neighbours see each other, and the two ends meet */
+  function renderMap(R) {
+    let M = $('rmap'); if (!M) { M = document.createElement('div'); M.id = 'rmap'; R.parentNode.insertBefore(M, R.nextSibling); }
+    const N = S.nights[S.nights.length - 1], me = S.people.find(p => p.isPlayer);
+    const mine = N && N.pos && me && N.pos[me.id], seen = mine ? E.near(st, mine) : [], crime = N && N.killer ? N.loc : null;
+    const chip = l => `<span class="rc${l.id === mine ? ' me' : seen.includes(l.id) ? ' see' : ''}" title="${esc(l.name)}：となりの${E.near(st, l.id).map(x => esc(locName(x))).join('・')}が見える">${esc(l.name)}${l.id === crime ? '<i class="cr">現場</i>' : ''}${l.id === mine ? '<i class="yo">あなた</i>' : ''}</span>`;
+    M.innerHTML = `<div class="rrow">${st.locs.map(chip).join('<s></s>')}</div><div class="rback" title="両端もとなり同士"></div>`;
+    M.style.top = (R.offsetTop + R.offsetHeight + 8) + 'px';
   }
   function hud() {
     if (S.ghost) document.body.classList.add('ghost');
@@ -1128,7 +1139,7 @@
   $('selBack').onclick = buildTitle;
   $('setBack').onclick = buildSelect;
   $('setGo').onclick = () => { SND.unlock(); start(); };
-  addEventListener('resize', () => { if (G.scr === 'play') { if (!PCQ.matches) document.documentElement.style.setProperty('--nbW', '0px'); else if (document.body.classList.contains('nb-open')) document.documentElement.style.setProperty('--nbW', '400px'); layoutDock(); } });
+  addEventListener('resize', () => { if (G.scr === 'play') { if (!PCQ.matches) document.documentElement.style.setProperty('--nbW', '0px'); else if (document.body.classList.contains('nb-open')) document.documentElement.style.setProperty('--nbW', '400px'); layoutDock(); if (S) renderRoster(); } });
   PCQ.addEventListener?.('change', () => layoutDock());
   window.WLGame = { get S() { return S; }, get st() { return st; }, G, buildSelect, buildSetup, start, hub, meeting, debate, vote, night, end, setNb, resume };
   buildTitle();
