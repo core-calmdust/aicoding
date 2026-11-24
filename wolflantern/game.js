@@ -79,7 +79,7 @@
 
   /* ---------- title ---------- */
   function buildTitle() {
-    palette(null);
+    palette(null); SND.music(null);
     const all = ORDER.map(story).filter(Boolean).flatMap(s => s.chars.slice(0, 5));
     const n = 10, items = [];
     for (let i = 0; i < n; i++) items.push(i === 3 || i === 8 ? ART.wolf() : ART.puppet(all[(i * 3) % all.length].look, all[(i * 3) % all.length].color, { rod: false }));
@@ -94,7 +94,7 @@
   /* ---------- select ---------- */
   function rec() { try { return JSON.parse(localStorage.getItem(REC) || '{}'); } catch (e) { return {}; } }
   function buildSelect() {
-    palette(null);
+    palette(null); SND.music('story', .55);
     const R = rec();
     $('stories').innerHTML = ORDER.map(story).filter(Boolean).map(s => {
       const r = R[s.id];
@@ -203,8 +203,22 @@
     else if (id === 'you') { who.classList.add('none'); nmEl.textContent = st.hero.name; speakPup(null); }
     else { who.classList.add('none'); nmEl.textContent = it.title || ''; speakPup(null); }
     tx.classList.toggle('narr', !id);
+    G.talkVo = voiceOf(id);
     type(it.text);
     SND.page();
+  }
+  // the talk sound: each voice has its own pitch and mouth; each person shifts it a little
+  const VO = { elder: { f: 128, mouth: .85, len: .09, range: 1.5 }, polite: { f: 245, mouth: 1.05 }, rough: { f: 118, wave: 'square', mouth: .8, vol: .75 }, cheer: { f: 310, wave: 'square', mouth: 1.2, range: 3, glide: 1, vol: .8 },
+    cool: { f: 172, range: 1 }, timid: { f: 262, wave: 'sine', mouth: 1.1, vol: .75, len: .05 }, noble: { f: 150, mouth: .95, range: 1 }, sister: { f: 225, wave: 'square', mouth: 1.1, vol: .75 },
+    child: { f: 390, wave: 'square', mouth: 1.3, range: 3, glide: 2, vol: .75, len: .055 }, pious: { f: 235, wave: 'sine', range: 1 }, merchant: { f: 192, wave: 'sawtooth', vol: .6 }, blunt: { f: 108, mouth: .8, range: .5, len: .1 } };
+  function voiceOf(id) {
+    if (!id) return null;
+    if (id === 'you') return { f: 200, mouth: 1 };
+    const c = ch(id); if (!c) return null;
+    const v = Object.assign({}, VO[c.voice] || { f: 200 });
+    let hsh = 0; for (const x of c.id) hsh = (hsh * 31 + x.charCodeAt(0)) | 0;
+    v.f *= 1 + ((Math.abs(hsh) % 9) - 4) * .025;
+    return v;
   }
   function type(text) {
     const t = $('tx').querySelector('.t');
@@ -216,7 +230,8 @@
     if (!sp) { t.innerHTML = html; $('tx').classList.add('done'); return; }
     t.innerHTML = chars.map(c => c[0] === '<' ? c : `<i>${c}</i>`).join('');
     const is = t.querySelectorAll('i'); let k = 0;
-    G.typing = setInterval(() => { for (let s = 0; s < 2 && k < is.length; s++) is[k++].style.opacity = 1; if (k >= is.length) finishType(); }, sp * 2);
+    const vo = G.talkVo, quiet = /[\s、。！？…—「」『』（）・\-]/;
+    G.typing = setInterval(() => { let say = false; for (let s = 0; s < 2 && k < is.length; s++) { const ch0 = is[k].textContent; if (!quiet.test(ch0)) say = true; is[k++].style.opacity = 1; } if (say) SND.talk(vo); if (k >= is.length) finishType(); }, sp * 2);
   }
   function finishType() { clearInterval(G.typing); G.typing = null; const t = $('tx').querySelector('.t'); t.querySelectorAll('i').forEach(i => i.style.opacity = 1); $('tx').classList.add('done'); }
   $('tx').addEventListener('click', nextPage);
@@ -257,7 +272,7 @@
 
   /* ---------- the game ---------- */
   async function start() {
-    clearSave();
+    clearSave(); SND.music('story', 1);
     const HS = story(G.storyId).heroes || [];
     const hid = G.heroPick && G.heroPick !== 'auto' ? G.heroPick : (HS.length ? HS[Math.floor(Math.random() * HS.length)].id : null);
     st = withHero(G.storyId, hid);
@@ -346,7 +361,7 @@
 
   /* morning: what the night left behind */
   async function morning(first) {
-    S.phase = 'morning'; hud(); document.body.classList.remove('night');
+    S.phase = 'morning'; hud(); SND.music('story', 1); document.body.classList.remove('night');
     const N = S.nights[S.nights.length - 1];
     const items = [];
     if (!first) {
@@ -502,7 +517,7 @@
   /* the meeting */
   async function meeting() {
     if (!(S.mtg && S.mtg.day === S.day) && (S.duskDay !== S.day)) { S.duskDay = S.day; await interlude(); }
-    S.phase = 'meeting'; hud(); save();
+    S.phase = 'meeting'; hud(); save(); SND.music('meeting', 1);
     setScene(st.meetLoc || 'inn', false, true);
     const ids = live().map(p => p.id);
     setCast(ids);
@@ -770,7 +785,7 @@
 
   /* the night */
   async function night() {
-    S.phase = 'night'; hud();
+    S.phase = 'night'; hud(); SND.music('story', .4);
     document.body.classList.add('night'); setScene(st.nightLoc || st.locs[0].id, true); setCast([]);
     SND.windOn(.09);
     await say([{ text: pickOne(st.text.night) }, vignette()]);
@@ -807,7 +822,7 @@
 
   /* the end: who they were */
   async function end() {
-    S.phase = 'end'; hud(); save();
+    S.phase = 'end'; hud(); save(); SND.music('story', .85);
     const R = S.result || E.check(S);
     const wolves = S.people.filter(p => p.role === 'wolf');
     document.body.classList.remove('night');
@@ -946,12 +961,14 @@
       <div class="set-row"><span>動き</span>${seg('anim', [[true, 'あり'], [false, 'なし']])}</div>
       <div class="set-row"><span>人形の名札</span>${seg('names', [[true, 'いつも'], [false, '話すとき']])}</div>
       <div class="set-row"><span>音</span><div class="seg" data-k="snd"><button data-v="1" class="${SND.on ? 'on' : ''}">あり</button><button data-v="0" class="${SND.on ? '' : 'on'}">なし</button></div></div>
+      <div class="set-row"><span>音楽</span><div class="seg" data-k="bgm"><button data-v="1" class="${SND.musicOn ? 'on' : ''}">あり</button><button data-v="0" class="${SND.musicOn ? '' : 'on'}">なし</button></div></div>
+      <div class="set-row"><span>話し声</span><div class="seg" data-k="talk"><button data-v="1" class="${SND.talkOn ? 'on' : ''}">あり</button><button data-v="0" class="${SND.talkOn ? '' : 'on'}">なし</button></div></div>
       ${S && G.scr === 'play' ? '<div class="foot" style="justify-content:flex-start"><button class="btn" data-quit>この物語をやめてタイトルへ</button></div>' : ''}
       <div class="foot"><button class="btn pri" data-x>閉じる</button></div>`, box => {
       box.querySelectorAll('[data-x]').forEach(b => b.onclick = () => closeSheet());
       box.querySelectorAll('.seg').forEach(s => s.querySelectorAll('button').forEach(b => b.onclick = () => {
         const k = s.dataset.k, v = b.dataset.v;
-        if (k === 'snd') SND.set(v === '1'); else pref[k] = v === 'true' ? true : v === 'false' ? false : +v;
+        if (k === 'snd') SND.set(v === '1'); else if (k === 'bgm') SND.setMusic(v === '1'); else if (k === 'talk') SND.setTalk(v === '1'); else pref[k] = v === 'true' ? true : v === 'false' ? false : +v;
         savePref(); s.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
         document.body.classList.toggle('anim-off', !pref.anim); document.body.classList.toggle('show-names', !!pref.names);
       }));
@@ -968,6 +985,7 @@
     S = sv.S; st = withHero(sv.story, S.hero); S.req = S.req || { divine: {}, guard: null, hide: false, calls: {} }; G.storyId = st.id; G.diff = S.diff;
     scr('play'); palette(st); hud();
     const ph = S.phase;
+    SND.music(ph === 'meeting' || ph === 'vote' ? 'meeting' : 'story', ph === 'night' ? .4 : 1);
     if (ph === 'prologue') return prologue();
     if (S.ghost && (ph === 'morning' || ph === 'invest')) return ghostDay();
     if (ph === 'morning') { S.phase = 'invest'; G.loc = (S.nights[S.nights.length - 1] || {}).loc || st.locs[0].id; return hub(); }
