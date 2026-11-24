@@ -76,6 +76,14 @@ const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,
         for (const S of AtlasRead.STORIES) { AtlasRead.open(S.id); await new Promise(z => setTimeout(z, 60));
           document.querySelectorAll('.rdfig.dg svg').forEach(svg => { const vb = svg.viewBox.baseVal, k = vb && vb.width ? svg.getBoundingClientRect().width / vb.width : 1; svg.querySelectorAll('text').forEach(t => { if (parseFloat(t.getAttribute('font-size') || 16) * k < 10) bad++; }); }); }
         const back = document.querySelector('.rdback'); if (back) back.click(); scrollTo(0, keep); return bad; });
+      // 20 戻り先: 物語の図（絵・所蔵品）を開いて閉じると、読み物の部屋のその物語・その図のボタンに戻るか（戻らない数。PC の幅だけで測る）
+      m.backLost = (r !== 'read' || phone) ? 0 : await (async () => { let bad = 0;
+        for (const [sid, sel] of [['shogi', '.rdfb[data-paint]'], ['lewis', '.rdfb[data-ex]']]) {
+          await p.evaluate(s => AtlasRead.open(s), sid); await p.waitForTimeout(400); if (!(await p.$(sel))) { bad++; continue; }
+          await p.focus(sel); await p.keyboard.press('Enter'); await p.waitForTimeout(3000); await p.keyboard.press('Escape'); await p.waitForTimeout(1200);
+          const ok = await p.evaluate(() => { const a = document.activeElement; return !!(a && a.closest('.muroom[data-r="read"]') && document.querySelector('.muroom.on') && document.querySelector('.muroom.on').dataset.r === 'read'); });
+          if (!ok) bad++; }
+        await p.evaluate(() => { const b = document.querySelector('.rdback'); if (b) b.click(); }); return bad; })();
       if (r === 'pass') m.foldLate = 0;   // (the open card pushes the room down on purpose)
       rows.push({ view: `${V.w}x${V.h}${V.lang !== 'ja' ? ':' + V.lang : ''}`, room: r, ...m, js: errs.length });
     }

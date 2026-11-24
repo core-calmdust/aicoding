@@ -80,6 +80,7 @@
   function open(id) {
     const e = EX.find(x => x.id === id); if (!e || V3) return;
     const t = ex(lang, id), g = ctx.games.find(x => x.id === e.game), B0 = e.flip ? { flip: true } : null;
+    const ret = document.activeElement;   // (focus goes back here when the case closes)
     const ov = document.createElement('div'); ov.className = 'exv'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
     ov.innerHTML = `<div class="exstage"><canvas></canvas><div class="exspots"></div><div class="exhud" aria-live="polite"></div>${PLAY[id] ? `<div class="expcard">${PLAY[id].alt ? `<div class="expseg expgm" data-k="pgame" data-v="0"><button type="button" data-v="0" class="on">${esc(ui(lang, 'play_' + id))}</button><button type="button" data-v="1">${esc(ui(lang, 'play_' + PLAY[id].alt.key))}</button></div>` : `<b>${esc(ui(lang, 'play_' + id))}</b>`}
           <div class="expf"><span>${esc(ui(lang, 'p_level'))}</span><div class="expdd" data-k="plv" data-v="1"><button type="button" class="expdd-b" aria-haspopup="listbox"><span class="lvb"></span><b>Lv.1</b><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button><div class="expdd-l" role="listbox">${Array.from({ length: PLAY[id].levels }, (_, i) => `<button type="button" role="option" data-v="${i + 1}"${i ? '' : ' class="on"'}>Lv.${i + 1}</button>`).join('')}</div></div></div>
@@ -101,13 +102,15 @@
         ${g ? `<div class="exacts"><button type="button" class="amplay" style="--c:${g.color}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>${esc(ui(lang, 'play').replace('{g}', ctx.gname(g).replace(/\s*V\d+$/, '')))}</button></div>` : ''}
         </div></aside>`;
     document.body.appendChild(ov); document.documentElement.classList.add('exv-open');
-    requestAnimationFrame(() => ov.classList.add('on'));
+    requestAnimationFrame(() => { ov.classList.add('on'); const x = ov.querySelector('.exclose'); if (x) x.focus({ preventScroll: true }); });
     // the phone's back gesture / the browser's back button closes the case (a history entry while it is open)
     let hist = false; try { history.pushState(Object.assign({}, history.state, { exv: id }), ''); hist = true; } catch (x) {}
     const onPop = () => { hist = false; close(); };
     addEventListener('popstate', onPop);
     const close = () => { if (!V3 || V3.ov !== ov) return; removeEventListener('popstate', onPop); if (hist) { hist = false; try { history.back(); } catch (x) {} }
-      if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); teardown(); ov.classList.remove('on'); document.documentElement.classList.remove('exv-open'); setTimeout(() => ov.remove(), 260); };
+      if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); teardown(); ov.classList.remove('on'); document.documentElement.classList.remove('exv-open'); setTimeout(() => ov.remove(), 260);
+      // (2026-11-24 audit) opened from a story's figure: back to the story; otherwise focus returns to what opened the case
+      const f = window.AtlasGallery.onClose; window.AtlasGallery.onClose = null; if (f) f(); else setTimeout(() => { const b = ret && ret.isConnected && ret.offsetParent ? ret : document.querySelector(`.muroom.on .gxc[data-id="${id}"]`); if (b) b.focus({ preventScroll: true }); }, 150); };   // (after the history step back, which may redraw the room)
     ov.querySelector('.exclose').onclick = () => { if (ov.quitPlay && ov.classList.contains('exv-play')) ov.quitPlay(); else close(); };   // (during a game the × at the top right ends the game — as in the portal's 3D games — and a second one closes the case)
     { const pb = ov.querySelector('[data-k="play"]'); let P = PLAY[id], pid = id;   // (pid: the board's key in museum/play.js and museum/rules.js — a two-sided exhibit has a second game, P.alt)
       const need = () => Promise.resolve(window.AtlasLazy ? AtlasLazy.need(P.game) : 0).then(() => P.src ? load(P.src + '?v=' + V) : 0);     // 所蔵品で遊ぶ: a game on this board, here in the museum (museum/play.js)
