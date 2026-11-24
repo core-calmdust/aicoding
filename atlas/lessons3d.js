@@ -7025,7 +7025,7 @@
     /* a soft fade between COURSES (2026-11-23 user: not between problems — between lesson 1 and lesson 2, so moving to the next course
        is clear): the table dims with a small card 「コース 2 / 9 ・ title」, the next lesson is set up under it, then it clears */
     let veil = null, veilT = 0;
-    const veilHold = () => ctx.el && ctx.el.clientWidth >= 700 ? 1600 : 650;   // how long the card stays after the next lesson is set up (PC longer: 2026-11-24 user)
+    const veilHold = () => 1600;   // how long the card stays after the next lesson is set up (2026-11-24 user: longer, PC and phone)
     function dim(on, card) {
       const host = ctx.el; if (!host) return Promise.resolve();
       const RM = matchMedia('(prefers-reduced-motion: reduce)').matches, tx = $('.tx');
@@ -7037,8 +7037,8 @@
         if (veil.parentNode !== host) host.appendChild(veil);
         veil.style.display = 'flex'; veil.style.alignItems = 'center'; veil.style.justifyContent = 'center';
         // (2026-11-24 user, PC: the card bigger and in the middle of the table; it also stays up longer — VEIL_HOLD)
-        const W = host.clientWidth, PC = W >= 700, fT = PC ? Math.round(Math.min(60, Math.max(34, W * .042))) : 22, fN = PC ? Math.round(fT * .5) : 14;
-        veil.innerHTML = card ? '<div style="color:#fff;text-align:center;font-weight:800;line-height:1.3;padding:0 16px;max-width:' + (PC ? '80%' : '100%') + ';text-shadow:0 2px 10px rgba(0,0,0,.55);transform:translateY(6px);transition:transform 320ms ease-out"><div style="font-size:' + fN + 'px;opacity:.8;letter-spacing:.08em">' + card.n + '</div><div style="font-size:' + fT + 'px;margin-top:' + (PC ? 10 : 4) + 'px">' + card.t + '</div></div>' : '';
+        const W = host.clientWidth, PC = W >= 700, fT = PC ? Math.round(Math.min(60, Math.max(34, W * .042))) : Math.round(Math.min(34, Math.max(28, W * .08))), fN = Math.round(fT * .5);   // (phone too, 2026-11-24 user)
+        veil.innerHTML = card ? '<div style="color:#fff;text-align:center;font-weight:800;line-height:1.3;padding:0 16px;max-width:' + (PC ? '80%' : '92%') + ';text-shadow:0 2px 10px rgba(0,0,0,.55);transform:translateY(6px);transition:transform 320ms ease-out"><div style="font-size:' + fN + 'px;opacity:.8;letter-spacing:.08em">' + card.n + '</div><div style="font-size:' + fT + 'px;margin-top:' + (PC ? 10 : 6) + 'px">' + card.t + '</div></div>' : '';
         void veil.offsetWidth; veil.style.transition = 'opacity 260ms ease-in'; veil.style.opacity = '.82';
         if (veil.firstChild) veil.firstChild.style.transform = 'none';
         if (tx) { tx.style.transition = 'opacity 260ms ease-in'; tx.style.opacity = '0'; }
