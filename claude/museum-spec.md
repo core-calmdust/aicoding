@@ -572,3 +572,4 @@
 - 2026-11-24 洗練ループ：描かれたゲームの文も同じ方式（paint-i18n.js で編集 → `node tools/museum-read-split.js` → atlas/museum/paint-i18n/<lang>.js、PAINT_I18N_V）。英語と表示中の言語だけ読み、約215KB → 約25KB。
 - 2026-11-24 洗練ループ：偶然の道具の文も同じ方式（chance-i18n.js → atlas/museum/chance-i18n/<lang>.js、CHANCE_I18N_V）。約96KB → 約15KB。
 - 2026-11-24 ユーザー指示：ブラウザの戻る（端からのスワイプ）で、物語 → 一覧 → 前の部屋 → 前のページと来た道を戻る。museum.js の hist / restore（AtlasMuseum.restore）、read.js の AtlasRead.show / showShelf / current。物語の図から開くビューアへの行き帰りは履歴を増やさない。
+- 2026-11-24 コンテンツ拡充（ユーザー：チェックがラインを越えたら拡充に戻る）：読み物に㉒「ローマの兵士たちの盤」（ルドゥス・ラトルンクロルム）を追加。出典：ウァロ『ラテン語論』、『ピソー頌』、セネカ『心の平静について』14.7（ユリウス・カヌス）、マルティアリス『エピグラム』14.17（両面の盤）、スタンウェイの墓の報告書（Crummy 他 2007）、Schädler 1994。図は latCapture（はさんで取る・囲まれて動けない）・latTwoSided（両面の盤）・所蔵品のピルグス。表紙はラトルンクロルムの石の盤（boardicon、look=stone）。遊び方は復元であることを本文で明記。
