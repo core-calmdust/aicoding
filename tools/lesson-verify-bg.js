@@ -80,4 +80,4 @@ module.exports = function (opt) {
   if (!/AtlasBgChoice\.kind\(P, i\)/.test(l3) || !/C\.ng\(P, typeof u/.test(l3)) bad('3D', 0, '⑨/追22: atlas/lessons3d.js does not show the wrong choice\'s words');
   return F;
 };
-if (require.main === module) { const f = module.exports(); f.forEach(x => console.log(`NG backgammon ${x.step} q${x.q}: ${x.msg}`)); console.log(f.length ? `${f.length} NG` : 'OK backgammon (shots・race の①〜⑨・追22・追23・追40)'); process.exit(f.length ? 1 : 0); }
+if (require.main === module) { const f = module.exports(); f.forEach(x => console.log(`NG backgammon ${x.step} q${x.q}: ${x.msg}`)); console.log(f.length ? `${f.length} NG` : 'OK backgammon (shots・race の①〜⑨・追22・追23・追40・追53)'); process.exit(f.length ? 1 : 0); }
