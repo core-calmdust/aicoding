@@ -792,6 +792,10 @@
         c += S('M140,544l56,-12 M146,552l50,-10 M216,526l56,-12 M220,534l50,-10', 2, 'cut');
         d += ell(330, 742, 22, 16) + rect(318, 720, 24, 10) + bar(330, 720, 360, 640, 4);
         c += bar(338, 704, 352, 670, 2);
+        // a pile of bound books on the floor, a stool
+        for (let i = 0; i < 5; i++) { d += rect(370 + (i % 2) * 6, 744 - i * 18, 70 - i * 4, 16); c += rect(374 + (i % 2) * 6, 750 - i * 18, 60 - i * 4, 2); }
+        d += rect(1170, 690, 90, 12) + rect(1180, 702, 10, 58) + rect(1240, 702, 10, 58);
+        for (let i = 0; i < 3; i++) d += rect(1178 + i * 26, 650, 20, 40) + poly([[1178 + i * 26, 650], [1188 + i * 26, 640], [1198 + i * 26, 650]]);
         // right: a heavy column and a candlestick
         d += rect(1300, 300, 70, 460) + rect(1286, 290, 98, 18) + rect(1290, 740, 90, 20);
         c += rect(1316, 320, 4, 420) + rect(1346, 320, 4, 420);
@@ -825,6 +829,10 @@
         d += rect(1380, 320, 60, 440) + rect(1366, 310, 88, 16) + rect(1370, 744, 80, 16);
         c += rect(1396, 340, 4, 400) + rect(1420, 340, 4, 400);
         d += rect(1200, 700, 160, 12) + rect(1210, 712, 10, 48) + rect(1340, 712, 10, 48);
+        // a basket of herbs on the bench, a watering can by the beds
+        d += poly([[1220, 700], [1226, 666], [1274, 666], [1280, 700]]) + S('M1226,666q24,-34 48,0', 4) ;
+        for (let i = 0; i < 5; i++) d += bar(1236 + i * 8, 668, 1230 + i * 10, 640 - (i % 2) * 8, 3);
+        d += poly([[370, 760], [376, 700], [436, 700], [440, 760]]) + bar(436, 712, 470, 690, 6) + S('M380,700q24,-30 52,0', 4);
         d += 'M1290,700c4,-14 20,-18 28,-8l8,-4l-2,8c4,8 -4,14 -14,12z';
         return P(d) + P(g, 'glow') + P(c, 'cut') + P(snowcap(r, [[1198, 701], [1280, 698], [1362, 701]], 5), 'snow') + alpsGround(r) + fore(r, 'alps');
       },
@@ -881,7 +889,12 @@
         // right: a stack of firewood and an axe in the block
         for (let row = 0; row < 6; row++) for (let i = 0; i < 9; i++) { d += circ(1320 + i * 26 + (row % 2) * 13, 748 - row * 26, 12); c += circ(1320 + i * 26 + (row % 2) * 13, 748 - row * 26, 4); }
         d += rect(1200, 710, 80, 50) + bar(1240, 712, 1270, 640, 6) + poly([[1258, 646], [1296, 630], [1290, 664]]);
-        return P(d) + P(c, 'cut') + P(snowcap(r, [[1306, 620], [1430, 616], [1556, 620]], 8), 'snow') + alpsGround(r) + fore(r, 'alps');
+        // a low wall with a bench and a lantern post at the left, a hand cart at the right edge
+        d += rect(0, 660, 130, 100) + rect(-4, 650, 138, 14); c += bricks(0, 668, 130, 90, 32, 18);
+        d += rect(330, 520, 10, 240) + lantern(335, 560, 1.3);
+        d += rect(1160, 700, 120, 10) + circ(1180, 740, 20) + circ(1260, 740, 20) + bar(1270, 704, 1310, 660, 5);
+        c += circ(1180, 740, 8) + circ(1260, 740, 8);
+        return P(d) + P(lanternGlow(335, 560, 1.3), 'glow') + P(c, 'cut') + P(snowcap(r, [[1306, 620], [1430, 616], [1556, 620]], 8) + snowcap(r, [[-4, 651], [65, 648], [134, 651]], 6), 'snow') + alpsGround(r) + fore(r, 'alps');
       },
     },
   };

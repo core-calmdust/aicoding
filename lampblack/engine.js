@@ -247,7 +247,7 @@
   function planFakes(S) {
     const D = diffOf(S);
     const w = S.people.filter(p => p.role === 'wolf'), m = S.people.find(p => p.role === 'madman');
-    if (m && rnd(S) < (S.fan ? .8 : .62)) S.fake[m.id] = { role: 'seer', from: S.fan || rnd(S) < .7 ? 1 : 2 };
+    if (m && rnd(S) < (S.fan ? (D.id === 0 ? .5 : .8) : .62)) S.fake[m.id] = { role: 'seer', from: S.fan && D.id > 0 || rnd(S) < .7 ? 1 : 2 };   // the fanatic comes forward early (less so on 入門)
     else if (w.length && (w.length > 1 || m) && rnd(S) < D.fakeSeer) { const f = pick(S, w); S.fake[f.id] = { role: 'seer', from: rnd(S) < .6 ? 1 : 2 }; }
     if (w.length > 1 && rnd(S) < (D.id >= 3 ? .45 : .22)) { const f = pick(S, w.filter(x => !S.fake[x.id]) || w); if (f) S.fake[f.id] = { role: 'medium', from: 2 }; }
   }
