@@ -53,6 +53,9 @@
     { id: 'botao', region: 'americas', color: '#2f7a2a', cover: { g: 'botao', s: 'botao' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'botaoFlick' }, m1: { svg: 'botaoRules' }, m2: { svg: 'botaoFamily' } }, refs: ['Geraldo Décourt, rules of “Foot-Ball Celotex” (1929/1930)', 'Conselho Nacional de Desportos, Resolução n.º 14 (29 September 1988)', 'Confederação Brasileira de Futebol de Mesa (CBFM), Regra 12 Toques', 'A British table football of flicked figures (patent 1946–47), after a Liverpool game of 1929', 'Wikipedia, “Button football”, “Table football”'], links: [{ g: 'botao' }, { g: 'hockey' }, { g: 'carrom' }] },
     { id: 'hockey', region: 'americas', color: '#2f6fd0', cover: { g: 'hockey', s: 'hockey' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'hockeyRod' }, m1: { svg: 'airTable' }, m2: { svg: 'hockeyFamily' } }, refs: ['Donald H. Munro, the first table hockey game (Toronto, 1932)', 'US patents for the air hockey table by Crossman, Kenrick and Lemieux (Brunswick, 1970s)', 'United States Air-Table Hockey Association (USAA), world singles championship from 1978', 'International Table Hockey Federation (ITHF)', 'Wikipedia, “Air hockey”, “Table hockey games”'], links: [{ g: 'hockey' }, { g: 'botao' }, { g: 'crokinole' }] },
     { id: 'solitaire', region: 'europe', color: '#2f6b4f', cover: { g: 'solitaire', s: 'solitaire' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'klondikeLayout' }, m1: { svg: 'freecellSolvable' }, m2: { svg: 'patienceTimeline' } }, refs: ['Das neue Königliche L’Hombre-Spiel (1783 edition), the earliest description of “Patience”', 'Lady Adelaide Cadogan, Illustrated Games of Patience (c. 1870; London edition 1874)', 'Hoyle’s Games (1907): “Seven-Card Klondike”', 'David Parlett, The Penguin Book of Patience (1979)', 'Martin Gardner, Scientific American (June 1968): Baker’s Game; Paul Alfille, FreeCell on PLATO (1978)', 'Wikipedia, “Patience (game)”, “Klondike (solitaire)”, “FreeCell”'], links: [{ g: 'solitaire' }, { g: 'poker' }, { g: 'blackjack' }] },
+    { id: 'sudoku', region: 'asia', color: '#3a8a5a', cover: { g: 'sudoku', s: 'sudoku' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'sudokuRules' }, m1: { svg: 'sudokuSeventeen' }, m2: { svg: 'sudokuTimeline' } }, refs: ['Le Siècle (Paris), 19 November 1892; La France, 6 July 1895', 'Number Place, an American puzzle magazine (1979), attributed to Howard Garns', 'The Japanese puzzle magazine that named the puzzle “sudoku” (1984)', 'Gary McGuire, Bastian Tugemann, Gilles Civario, “There is no 16-Clue Sudoku: Solving the Sudoku Minimum Number of Clues Problem”, arXiv:1201.0749 (2012)', 'Bertram Felgenhauer, Frazer Jarvis, “Enumerating possible Sudoku grids” (2005)', 'Wikipedia, “Sudoku”'], links: [{ g: 'sudoku' }, { g: 'speedsudoku' }, { g: 'hitblow' }] },
+    { id: 'shanghai', region: 'americas', color: '#1f6a4c', cover: { g: 'shanghai', s: 'shanghai' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'shanghaiFree' }, m1: { svg: 'shanghaiTurtle' }, m2: { svg: 'shanghaiTimeline' } }, refs: ['Brodie Lockard, “Mah-Jongg” on the PLATO system (1981)', 'A home-computer release of 1986 that spread the name “Shanghai”', 'An analysis of ten million deals of the turtle layout (about 3 % unsolvable), as cited by Wikipedia', 'Wikipedia, “Mahjong solitaire”, “Shisen-Sho”'], links: [{ g: 'shanghai' }, { g: 'solitaire' }, { g: 'sudoku' }] },
+    { id: 'samegame', region: 'asia', color: '#e2672e', cover: { g: 'samegame', s: 'samegame' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'samegameGroup' }, m1: { svg: 'samegameScore' }, m2: { svg: 'samegameTimeline' } }, refs: ['Kuniaki Moribe, “Chain Shot!” (1985), distributed through a Japanese computer magazine', 'Eiji Fukumoto, “SameGame” for Unix (1992)', 'Matthias Schüssler, “Clickomania!” (1998)', 'Therese C. Biedl et al., “The Complexity of Clickomania” (2001)', 'Wikipedia, “SameGame”'], links: [{ g: 'samegame' }, { g: 'shanghai' }, { g: 'jailbreak' }] },
   ];
   // pictures shown only beside a story's paragraph (not in another room): a museum's open-access photo (CC0), linked to the museum's page.
   // The name, in each language, is MUSEUM_READ_T[lang].pic[id]. Files images/atlas/museum-story/pic/<id>.webp (≤ 960 px).
@@ -978,6 +981,92 @@
     // patience in time (text: the story's figL.time — [year, name, note])
     patienceTimeline: () => { const R = ((st('solitaire').figL || {}).time) || [], W = 300, RH = 50, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 84; let g = '';
       const C = ['#8a5a24', '#6a3a8a', '#c0392b', '#2a5a8a', '#14864a'];
+      g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
+      R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
+        g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
+        g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="${xn + 16}" y="${y + 20}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // sudoku: rows, columns and boxes — each must hold 1 to 9 once; the four 5s outside the top-left box rule out its rows and columns (red bands) and leave one cell for its 5 (green)
+    sudokuRules: () => { const S = 32, o = 6, W = S * 9 + o * 2; let g = `<rect x="${o}" y="${o}" width="${S * 9}" height="${S * 9}" fill="#fff"/>`;
+      const fives = [[1, 5], [2, 7], [6, 0], [4, 1]], T = [0, 2];
+      fives.forEach(([r, c]) => { if (r < 3) g += `<rect x="${o}" y="${o + r * S}" width="${S * 9}" height="${S}" fill="#f3c9c2" opacity=".75"/>`; else g += `<rect x="${o + c * S}" y="${o}" width="${S}" height="${S * 9}" fill="#f3c9c2" opacity=".75"/>`; });
+      g += `<rect x="${o + T[1] * S}" y="${o + T[0] * S}" width="${S}" height="${S}" fill="#8fd0a8"/>`;
+      for (let i = 0; i <= 9; i++) { const w = i % 3 ? 1 : 2.6, c = i % 3 ? '#b8ad98' : '#2b2a28'; g += `<path d="M${o + i * S} ${o}V${o + S * 9}M${o} ${o + i * S}H${o + S * 9}" stroke="${c}" stroke-width="${w}"/>`; }
+      g += `<rect x="${o}" y="${o}" width="${S * 3}" height="${S * 3}" fill="none" stroke="#14864a" stroke-width="4"/>`;
+      const num = (r, c, n, col) => `<text x="${o + c * S + S / 2}" y="${o + r * S + S / 2 + 7}" font-size="20" font-weight="800" fill="${col}" text-anchor="middle">${n}</text>`;
+      fives.forEach(([r, c]) => { g += num(r, c, 5, '#c0392b'); });
+      [[0, 0, 3], [1, 1, 8], [2, 0, 2], [1, 2, 9], [3, 4, 1], [5, 6, 7], [7, 3, 4], [8, 8, 6], [0, 6, 4], [6, 5, 8]].forEach(([r, c, n]) => { g += num(r, c, n, '#2b2a28'); });
+      g += num(T[0], T[1], 5, '#0e6a38');
+      return `<svg viewBox="0 0 ${W} ${W}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // the 17-clue minimum: a puzzle with only 17 givens that still has one answer; with 16 none exists (exhaustive computer search, 2012)
+    sudokuSeventeen: () => { const S = 26, o = 6, G = '000000010400000000020000000000050407008000300001090000300400200050100000000806000', W = 300, H = S * 9 + o * 2; let g = `<rect x="${o}" y="${o}" width="${S * 9}" height="${S * 9}" fill="#fff"/>`;
+      for (let i = 0; i <= 9; i++) { const w = i % 3 ? 1 : 2.4, c = i % 3 ? '#c8c0b0' : '#2b2a28'; g += `<path d="M${o + i * S} ${o}V${o + S * 9}M${o} ${o + i * S}H${o + S * 9}" stroke="${c}" stroke-width="${w}"/>`; }
+      [...G].forEach((ch, i) => { if (ch !== '0') { const r = Math.floor(i / 9), c = i % 9; g += `<rect x="${o + c * S + 2}" y="${o + r * S + 2}" width="${S - 4}" height="${S - 4}" rx="3" fill="#e2efe6"/><text x="${o + c * S + S / 2}" y="${o + r * S + S / 2 + 6}" font-size="16" font-weight="800" fill="#14864a" text-anchor="middle">${ch}</text>`; } });
+      const x0 = o + S * 9 + 8, cx = (x0 + W) / 2;
+      g += `<text x="${cx}" y="70" font-size="34" font-weight="800" fill="#14864a" text-anchor="middle">17</text><circle cx="${cx}" cy="94" r="11" fill="#14864a"/><path d="M${cx - 6} 94l4 4.5 8-9" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>`;
+      g += `<text x="${cx}" y="168" font-size="34" font-weight="800" fill="#8a8478" text-anchor="middle">16</text><circle cx="${cx}" cy="192" r="11" fill="#c0392b"/><path d="M${cx - 5} 187l10 10M${cx + 5} 187l-10 10" stroke="#fff" stroke-width="2.8" stroke-linecap="round"/>`;
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // sudoku in time (text: the story's figL.time — [year, name, note])
+    sudokuTimeline: () => { const R = ((st('sudoku').figL || {}).time) || [], W = 300, RH = 50, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 70; let g = '';
+      const C = ['#8a5a24', '#6a3a8a', '#2a5a8a', '#c0392b', '#14864a'];
+      g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
+      R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
+        g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
+        g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="${xn + 16}" y="${y + 20}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // mahjong solitaire: which tiles are free — nothing on top, and the left or the right side open (✓ free, × not)
+    shanghaiFree: () => { const W = 300, w = 34, h = 46, H = 236; let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="10" fill="#1f6a4c"/>`;
+      const sh = (x, y) => `<rect x="${x + 3}" y="${y + 4}" width="${w}" height="${h}" rx="3.5" fill="#000" opacity=".25"/>`;
+      const T = (x, y, k, n, col) => sh(x, y) + mjTile(x, y, w, h, k, n, col);
+      const ok = (x, y, yes) => `<circle cx="${x}" cy="${y}" r="10" fill="${yes ? '#14864a' : '#c0392b'}" stroke="#fff" stroke-width="1.5"/>` + (yes ? `<path d="M${x - 5} ${y}l3.5 4 7-8" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>` : `<path d="M${x - 4.5} ${y - 4.5}l9 9M${x + 4.5} ${y - 4.5}l-9 9" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>`);
+      const r1 = 34, x1 = 70; [['p', 3], ['s', 5], ['m', 2], ['z', '中', '#c62828']].forEach(([k, n, c], i) => { g += T(x1 + i * w, r1, k, n, c); });
+      g += `<rect x="${x1 + w * 1.5 + 4}" y="${r1 - 2}" width="${w}" height="${h}" rx="3.5" fill="#000" opacity=".3"/>` + mjTile(x1 + w * 1.5 - 2, r1 - 8, w, h, 'z', '發', '#14864a');
+      g += ok(x1 - 4, r1 - 6, 1) + ok(x1 + w * 4 + 4, r1 - 6, 1) + ok(x1 + w * 2 + 2, r1 - 14, 1) + ok(x1 + w * 1.5, r1 + h + 12, 0) + ok(x1 + w * 2.5, r1 + h + 12, 0);
+      const r2 = 150, x2 = 90; [['p', 7], ['z', '東'], ['s', 1]].forEach(([k, n, c], i) => { g += T(x2 + i * w, r2, k, n, c); });
+      g += ok(x2 - 4, r2 - 6, 1) + ok(x2 + w * 1.5, r2 - 10, 0) + ok(x2 + w * 3 + 4, r2 - 6, 1);
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // the turtle: the classic 144-tile layout seen from above — 87 tiles on the bottom layer, then 36, 16, 4 and 1 (darker = higher)
+    shanghaiTurtle: () => { const u = 19, v = 25, ox = 7, oy = 8, W = 300, H = 250; let g = '';
+      const L1 = [[1, 12], [3, 10], [2, 11], [1, 12], [1, 12], [2, 11], [3, 10], [1, 12]], tiles = [];
+      L1.forEach(([a, b], r) => { for (let c = a; c <= b; c++) tiles.push([c, r, 0]); }); tiles.push([0, 3.5, 0], [13, 3.5, 0], [14, 3.5, 0]);
+      for (let r = 1; r <= 6; r++) for (let c = 4; c <= 9; c++) tiles.push([c, r, 1]);
+      for (let r = 2; r <= 5; r++) for (let c = 5; c <= 8; c++) tiles.push([c, r, 2]);
+      for (let r = 3; r <= 4; r++) for (let c = 6; c <= 7; c++) tiles.push([c, r, 3]); tiles.push([6.5, 3.5, 4]);
+      const C = ['#f4efe2', '#d9e8d0', '#a8cf9a', '#6aa86a', '#2f7a4a'];
+      tiles.forEach(([c, r, z]) => { const x = ox + c * u - z * 2, y = oy + r * v - z * 2.5; g += `<rect x="${x + 1.5}" y="${y + 2}" width="${u - 1}" height="${v - 1}" rx="2.5" fill="#000" opacity=".18"/><rect x="${x}" y="${y}" width="${u - 1}" height="${v - 1}" rx="2.5" fill="${C[z]}" stroke="#5a544a" stroke-width=".8"/>`; });
+      const n = [87, 36, 16, 4, 1]; n.forEach((k, z) => { const x = 14 + z * 58; g += `<rect x="${x}" y="222" width="16" height="20" rx="2.5" fill="${C[z]}" stroke="#5a544a" stroke-width=".8"/><text x="${x + 22}" y="237" font-size="14" font-weight="800" fill="#2b2a28">${k}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // mahjong solitaire in time (text: the story's figL.time — [year, name, note])
+    shanghaiTimeline: () => { const R = ((st('shanghai').figL || {}).time) || [], W = 300, RH = 50, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 70; let g = '';
+      const C = ['#8a8478', '#2a5a8a', '#c0392b', '#6a3a8a', '#14864a'];
+      g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
+      R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
+        g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
+        g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="${xn + 16}" y="${y + 20}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // samegame: tap a group of two or more touching tiles of one colour (5 blue tiles, outlined) — it vanishes, the tiles above fall, the empty column closes up to the left
+    samegameGroup: () => { const C = { O: '#e2672e', Y: '#e8b832', G: '#7a8f3a', B: '#2e6f93' }, S = 21, W = 300, H = 6 * S + 16;
+      const before = ['OYYGOO', 'BOGYY.', 'BBBB..', 'YGOOGY', 'GYYOB.', 'OOGY..'], grp = { '1,0': 1, '2,0': 1, '2,1': 1, '2,2': 1, '2,3': 1 };
+      const after = before.map((col, c) => [...col].filter((ch, r) => ch !== '.' && !grp[c + ',' + r]).join('')).filter(s => s.length).map(s => s.padEnd(6, '.'));
+      while (after.length < 6) after.push('......');
+      const board = (cols, ox, mark) => { let g = `<rect x="${ox - 3}" y="5" width="${S * 6 + 6}" height="${S * 6 + 6}" rx="6" fill="#fbf6ea" stroke="#d8cfb8"/>`;
+        cols.forEach((col, c) => [...col].forEach((ch, r) => { if (ch === '.') return; const x = ox + c * S, y = 8 + (5 - r) * S; g += `<rect x="${x + 1}" y="${y + 1}" width="${S - 2}" height="${S - 2}" rx="3.5" fill="${C[ch]}"/>`;
+          if (mark && grp[c + ',' + r]) g += `<rect x="${x + 1}" y="${y + 1}" width="${S - 2}" height="${S - 2}" rx="3.5" fill="none" stroke="#fff" stroke-width="2.2"/><circle cx="${x + S / 2}" cy="${y + S / 2}" r="3" fill="#fff"/>`; }));
+        return g; };
+      let g = board(before, 6, 1) + board(after, W - 6 - S * 6, 0);
+      g += `<path d="M${6 + S * 6 + 6} ${H / 2}H${W - 6 - S * 6 - 8}" stroke="#2b2a28" stroke-width="3" marker-end="url(#sgA)"/>`;
+      const bx = W - 6 - S * 6; g += `<path d="M${bx + S * 1.5} ${8 + S * 0.6}v${S * 1.4}" stroke="#c0392b" stroke-width="2.4" marker-end="url(#sgB)"/><path d="M${bx + S * 4.6} ${8 + S * 0.5}h-${S * 1.6}" stroke="#c0392b" stroke-width="2.4" marker-end="url(#sgB)"/>`;
+      const mk = (id, col) => `<marker id="${id}" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="${col}"/></marker>`;
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr"><defs>${mk('sgA', '#2b2a28')}${mk('sgB', '#c0392b')}</defs>${g}</svg>`; },
+    // samegame scoring: (n − 2)² points for a group of n — 2 tiles score 0, 5 score 9, 10 score 64; one big group beats many small ones
+    samegameScore: () => { const W = 300, H = 210, base = 180, bw = 24, gap = (W - 20 - bw * 9) / 8; let g = `<line x1="8" y1="${base + .5}" x2="${W - 8}" y2="${base + .5}" stroke="#b8ad98" stroke-width="1.5"/>`;
+      for (let n = 2; n <= 10; n++) { const k = n - 2, v = k * k, h = v / 64 * 140, x = 10 + k * (bw + gap), hi = n === 5 || n === 10;
+        g += `<rect x="${x}" y="${base - h}" width="${bw}" height="${Math.max(h, 1.5)}" rx="4" fill="${hi ? '#e2672e' : '#e8b832'}"/><text x="${x + bw / 2}" y="${base - h - 6}" font-size="13" font-weight="800" fill="${hi ? '#c0392b' : '#5a544a'}" text-anchor="middle">${v}</text><text x="${x + bw / 2}" y="${base + 18}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="middle">${n}</text>`; }
+      g += `<text x="12" y="22" font-size="17" font-weight="800" fill="#2e6f93">(n − 2)²</text>`;
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // samegame in time (text: the story's figL.time — [year, name, note])
+    samegameTimeline: () => { const R = ((st('samegame').figL || {}).time) || [], W = 300, RH = 50, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 62; let g = '';
+      const C = ['#e2672e', '#e8b832', '#7a8f3a', '#2e6f93', '#6a3a8a'];
       g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
       R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
         g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
