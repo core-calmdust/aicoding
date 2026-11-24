@@ -81,6 +81,21 @@ module.exports = function senet(opt = {}) {
     if (k === 'c.risk') { const mk = (q.marks || []).find(x => x.type === 'danger'), i = s.pos[0].findIndex(p => F.sq(p).r === mk.r && F.sq(p).c === mk.c); right = Math.round(E.hitRisk(s, 0)[i] * 16) + '/16'; cnt = 1 + String(q.why[1].list).split('+').length;
       if (+right.split('/')[0] !== q.why[1].m) add(L.id, where, '追23 理由の通り数が数え上げと合わない'); }
     if (k === 'c.pips' || k === 'c.rpips') { const sd = k === 'c.pips' ? 0 : 1; right = String(F.pipsOf(s.pos[sd])); cnt = s.pos[sd].filter(x => x < 31).length; }
+    // 水の家（2026-11-24 担当C）：落ちた駒の戻り先（15 から手前の最初の空きマス）と、出目1で水の家に落ちない手の数を engine.js で数え直す
+    if (k === 'c.wdest' || k === 'c.wdest1' || k === 'c.wdest15') { const bd = E.board(s), wm = E.legalMoves(Object.assign(S(q.s), { winner: -1 }), 1).find(m => m.water);
+      if (!wm) { add(L.id, where, '⑧26の駒が1で水の家に落ちる局面でない'); return 0; }
+      const d = wm.dest; right = String(d); cnt = 15 - d + 1;
+      if (q.why[1].d !== d || (k === 'c.wdest15') !== (d === 15) || (k === 'c.wdest1') !== (d === 14) || (k === 'c.wdest' && (d > 13 || q.why[1].e !== d + 1))) add(L.id, where, `⑧理由の戻り先 ${JSON.stringify(q.why[1])} ≠ ${d}`);
+      for (let x = d + 1; x <= 15; x++) if (bd[x] < 0) add(L.id, where, `⑧${x} が空いているのに戻り先が ${d}`);
+      o.forEach((x, i) => { if (i === q.ans) return; const g = (q.ngo || [])[i], v = +x; if (!g) return;
+        const want = v === 27 ? 'c.w27Ng' : v > d && v <= 15 && bd[v] >= 0 ? 'c.wOccNg' : v < d ? 'c.wPastNg' : null;
+        if (g[0] !== want || (want === 'c.wPastNg' && g[1].d !== d)) add(L.id, where, `⑦誤答 ${x} の説明 ${g[0]} が盤の事実（${want}）と合わない`); }); }
+    if (k === 'c.wcnt') { const ms = E.legalMoves(Object.assign(S(q.s), { winner: -1 }), 1), ok = ms.filter(m => !m.water);
+      if (!ms.some(m => m.water)) add(L.id, where, '⑧26の駒が1で水の家に落ちる局面でない');
+      right = String(ok.length); cnt = s.pos[0].filter(x => x < 31).length;
+      if (q.why[1].m !== ok.length || q.why[1].list !== ok.map(m => `${m.from}→${m.to}`).join(' · ')) add(L.id, where, `⑧理由の手 ${q.why[1].list} が盤の事実と合わない`);
+      if (s.pos[0].filter(x => x < 26).length - ok.length < 1) add(L.id, where, '④1で動けない駒がない（数えるだけで考えるところがない）'); }
+    if (k === 'c.most') { right = String([1, 2, 3, 4, 5].reduce((a, b) => W[b] > W[a] ? b : a)); o.forEach((x, i) => { const g = (q.ngo || [])[i]; if (i !== q.ans && g && (g[0] !== 'c.mostNg' || g[1].m !== W[+x])) add(L.id, where, `⑦誤答 ${x} の通り数 ${g[1] && g[1].m} ≠ ${W[+x]}`); }); }
     if (k === 'c.lead2y' || k === 'c.lead2r') { const a = F.pipsOf(s.pos[0]), b = F.pipsOf(s.pos[1]), d = b - a; right = (d > 0 ? 'you' : 'rival') + Math.abs(d); if ((k === 'c.lead2y') !== (d > 0)) add(L.id, where, `⑧理由 ${k} のリードの側が違う`); if (q.why[1].d !== Math.abs(d) || q.why[1].a !== a || q.why[1].b !== b) add(L.id, where, '⑧理由のマス数が違う'); cnt = s.pos[0].filter(x => x < 31).length + 1;
       const x = o[q.ans], got = (x.ja.startsWith('あなた') ? 'you' : 'rival') + x.ja.split('+')[1]; if (got !== right) add(L.id, where, `⑧答え ${got} ≠ ${right}`); }
     else if (right == null) add(L.id, where, `理由 ${k} の答えを確かめられない`);
@@ -97,6 +112,7 @@ module.exports = function senet(opt = {}) {
   for (const L of V2) {
     has14(L.title, L.id + '.title'); has14(L.body, L.id + '.body'); (L.hints || []).forEach((h, i) => has14(h, L.id + '.hint' + i));
     if ((L.problems || []).length !== 5) add(L.id, 0, `問題数 ${(L.problems || []).length}`);
+    { const ch = L.problems.filter(q => q.kind === 'choice'); if (ch.length >= 3 && new Set(ch.map(q => q.ans)).size < 2) add(L.id, 0, `追40 選ぶ問題の答えの位置がすべて ${ch[0].ans + 1} 番目`); }
     let prev = null;
     L.problems.forEach((q, i) => {
       const w = i + 1;
@@ -104,7 +120,7 @@ module.exports = function senet(opt = {}) {
       else if (q.kind === 'choice') { const c = choice(L, q, w); if (prev != null && c < prev) add(L.id, w, `⑥数える数 ${c} が前の問題 ${prev} より少ない`); prev = c; }
       else add(L.id, w, 'kind');
     });
-    (L.ramp || []).forEach((r, i) => { if (r.k === 'try' && r.kind !== 'choice') move(L, r, 'ramp' + i, 2); if (r.k === 'explain' && r.seq && r.seq.length) move(L, Object.assign({}, r, { ok: r.seq }), 'ramp' + i, 3); });
+    (L.ramp || []).forEach((r, i) => { if (r.k === 'try' && r.kind !== 'choice') move(L, r, 'ramp' + i, 2); if (r.k === 'try' && r.kind === 'choice') { if (!r.why || !r.ngo) add(L.id, 'ramp' + i, '追43 準備の選ぶ問題に答えの理由（why）か誤答の説明（ngo）がない'); else choice(L, r, 'ramp' + i); } if (r.k === 'explain' && r.seq && r.seq.length) move(L, Object.assign({}, r, { ok: r.seq }), 'ramp' + i, 3); });
   }
   // 追28：準備に選択問題があるゲームの2D（senet・ur の app-learn.js）は、選択肢の描画を本番の問題だけに絞らない
   for (const g of ['senet', 'ur']) { const L = JSON.parse(fs.readFileSync(path.join(ROOT, g, 'lessons.json'), 'utf8')); if (!L.steps.some(x => (x.ramp || []).some(r => r.kind === 'choice'))) continue;
