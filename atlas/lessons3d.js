@@ -17,11 +17,11 @@
   const PTS = 20, HINT_PEN = 4, PASS = .75;
   const TX = {
     ja: { start: 'はじめる', next: '次へ', practice: '練習へ', hint: 'ヒント', again: 'もう一度', nextL: '次のレッスン', result: '結果を見る', loading: '準備中…',
-      good: ['正解！', 'いいね！', 'おみごと！'], partial: 'いい手だね。でも一番は光っている手だよ。', wrong: 'おしい！ 正解は光っている手だよ。', pts: '{n}点',
+      good: ['正解！', 'いいね！', 'おみごと！'], partial: 'いい手だね。でも一番は光っている手だよ。', wrong: 'ざんねん！ 正解は光っている手だよ。', pts: '{n}点',
       pass: '合格！ {p} / {m}点。よくがんばったね、この調子で次のレッスンもいこう！', fail: '{p} / {m}点。合格は{q}点、あと少し！ もう一度いってみよう！', step: '{i} / {n}手目', end: '手順はここまで。つぎは練習問題に挑戦しよう！', endOnly: '基本の手順はここまで。おつかれさま！',
       tsume: '<b>{n}手詰め</b>。王手を続けて玉を詰ませよう！', escaped: '玉に逃げられちゃった…', hintSay: '光っているところに注目してみて。', opGoal: 'この局面、強い人が一番よく指した手はどれかな？', drill: 'このレッスンはフル機能版で遊べます。', full: 'フル機能で開く' },
     en: { start: 'Start', next: 'Next', practice: 'Practice', hint: 'Hint', again: 'Retry', nextL: 'Next lesson', result: 'See result', loading: 'Setting up…',
-      good: ['Correct!', 'Nice!', 'Well done!'], partial: 'A decent move — but the glowing one is best.', wrong: 'Close! The glowing move is the answer.', pts: '{n} pts',
+      good: ['Correct!', 'Nice!', 'Well done!'], partial: 'A decent move — but the glowing one is best.', wrong: 'Not this one! The glowing move is the answer.', pts: '{n} pts',
       pass: 'Passed! {p} / {m} pts', fail: '{p} / {m} pts. {q} to pass — try again!', step: 'Move {i} / {n}', end: 'That is the line. Now try the practice positions!', endOnly: 'That is the basic line. Well done!',
       tsume: '<b>Mate in {n}</b>. Keep checking and catch the king!', escaped: 'The king got away…', hintSay: 'Look at the glowing squares.', opGoal: 'Which move did strong players choose most often here?', drill: 'This lesson is played in the full version.', full: 'Open the full version' },
     zh: { start: '开始', next: '下一步', practice: '去练习', hint: '提示', again: '再来一次', nextL: '下一课', result: '查看结果', loading: '准备中…',
@@ -29,35 +29,35 @@
       pass: '合格！{p} / {m}分', fail: '{p} / {m}分。合格需{q}分，再挑战一次吧！', step: '第{i} / {n}手', end: '手顺到此为止。接下来挑战练习题吧！', endOnly: '基本手顺到此为止，辛苦了！',
       tsume: '<b>{n}手诘</b>。连续将军，把玉将死吧！', escaped: '玉逃掉了……', hintSay: '注意发光的地方。', opGoal: '这个局面，高手最常下的是哪一步？', drill: '这一课请在完整版中进行。', full: '打开完整版' },
     ko: { start: '시작', next: '다음', practice: '연습하기', hint: '힌트', again: '다시 하기', nextL: '다음 레슨', result: '결과 보기', loading: '준비 중…',
-      good: ['정답!', '좋아!', '훌륭해!'], partial: '좋은 수야. 하지만 최선은 빛나는 수야.', wrong: '아깝다! 정답은 빛나는 수야.', pts: '{n}점',
+      good: ['정답!', '좋아!', '훌륭해!'], partial: '좋은 수야. 하지만 최선은 빛나는 수야.', wrong: '이번엔 아니야! 정답은 빛나는 수야.', pts: '{n}점',
       pass: '합격! {p} / {m}점', fail: '{p} / {m}점. 합격은 {q}점. 다시 도전해 보자!', step: '{i} / {n}수째', end: '수순은 여기까지. 이제 연습 문제에 도전해 보자!', endOnly: '기본 수순은 여기까지. 수고했어!',
       tsume: '<b>{n}수 외통</b>이야. 장을 계속 걸어 왕을 잡자!', escaped: '왕이 도망쳤어…', hintSay: '빛나는 곳을 잘 봐.', opGoal: '이 국면에서 강자들이 가장 많이 둔 수는 무엇일까?', drill: '이 레슨은 풀 버전에서 할 수 있어요.', full: '풀 버전 열기' },
     es: { start: 'Empezar', next: 'Siguiente', practice: 'A practicar', hint: 'Pista', again: 'Reintentar', nextL: 'Siguiente lección', result: 'Ver resultado', loading: 'Preparando…',
-      good: ['¡Correcto!', '¡Bien!', '¡Muy bien!'], partial: 'Buena jugada, pero la mejor es la que brilla.', wrong: '¡Casi! La jugada que brilla es la respuesta.', pts: '{n} pts',
+      good: ['¡Correcto!', '¡Bien!', '¡Muy bien!'], partial: 'Buena jugada, pero la mejor es la que brilla.', wrong: '¡Esta no! La jugada que brilla es la respuesta.', pts: '{n} pts',
       pass: '¡Aprobado! {p} / {m} pts', fail: '{p} / {m} pts. Se aprueba con {q}: ¡inténtalo otra vez!', step: 'Jugada {i} / {n}', end: 'Hasta aquí la línea. ¡Ahora las posiciones de práctica!', endOnly: 'Hasta aquí la línea básica. ¡Bien hecho!',
       tsume: '<b>Mate en {n}</b>. ¡Da jaque tras jaque y atrapa al rey!', escaped: 'El rey se escapó…', hintSay: 'Fíjate en las casillas que brillan.', opGoal: '¿Qué jugada eligieron más los jugadores fuertes aquí?', drill: 'Esta lección se juega en la versión completa.', full: 'Abrir la versión completa' },
     fr: { start: 'Commencer', next: 'Suivant', practice: 'S’entraîner', hint: 'Indice', again: 'Réessayer', nextL: 'Leçon suivante', result: 'Voir le résultat', loading: 'Préparation…',
-      good: ['Exact !', 'Bien !', 'Bravo !'], partial: 'Bon coup, mais le meilleur est celui qui brille.', wrong: 'Presque ! Le coup qui brille est la réponse.', pts: '{n} pts',
+      good: ['Exact !', 'Bien !', 'Bravo !'], partial: 'Bon coup, mais le meilleur est celui qui brille.', wrong: 'Pas celui-ci ! Le coup qui brille est la réponse.', pts: '{n} pts',
       pass: 'Réussi ! {p} / {m} pts', fail: '{p} / {m} pts. Il faut {q} pour réussir : réessaie !', step: 'Coup {i} / {n}', end: 'Voilà la ligne. Place aux positions d’entraînement !', endOnly: 'Voilà la ligne de base. Bravo !',
       tsume: '<b>Mat en {n}</b>. Enchaîne les échecs et attrape le roi !', escaped: 'Le roi s’est échappé…', hintSay: 'Regarde les cases qui brillent.', opGoal: 'Quel coup les joueurs forts ont-ils le plus joué ici ?', drill: 'Cette leçon se joue dans la version complète.', full: 'Ouvrir la version complète' },
     pt: { start: 'Começar', next: 'Próximo', practice: 'Praticar', hint: 'Dica', again: 'Tentar de novo', nextL: 'Próxima lição', result: 'Ver resultado', loading: 'Preparando…',
-      good: ['Correto!', 'Boa!', 'Muito bem!'], partial: 'Bom lance, mas o melhor é o que brilha.', wrong: 'Quase! O lance que brilha é a resposta.', pts: '{n} pts',
+      good: ['Correto!', 'Boa!', 'Muito bem!'], partial: 'Bom lance, mas o melhor é o que brilha.', wrong: 'Este não! O lance que brilha é a resposta.', pts: '{n} pts',
       pass: 'Aprovado! {p} / {m} pts', fail: '{p} / {m} pts. Aprova com {q}: tente de novo!', step: 'Lance {i} / {n}', end: 'Essa é a linha. Agora as posições de prática!', endOnly: 'Essa é a linha básica. Muito bem!',
       tsume: '<b>Mate em {n}</b>. Dê xeque atrás de xeque e pegue o rei!', escaped: 'O rei escapou…', hintSay: 'Olhe as casas que brilham.', opGoal: 'Qual lance os jogadores fortes mais escolheram aqui?', drill: 'Esta lição é jogada na versão completa.', full: 'Abrir a versão completa' },
     de: { start: 'Los', next: 'Weiter', practice: 'Üben', hint: 'Tipp', again: 'Nochmal', nextL: 'Nächste Lektion', result: 'Ergebnis', loading: 'Wird vorbereitet…',
-      good: ['Richtig!', 'Gut!', 'Stark!'], partial: 'Ein guter Zug – der beste ist aber der leuchtende.', wrong: 'Knapp! Der leuchtende Zug ist die Lösung.', pts: '{n} P.',
+      good: ['Richtig!', 'Gut!', 'Stark!'], partial: 'Ein guter Zug – der beste ist aber der leuchtende.', wrong: 'Leider nicht! Der leuchtende Zug ist die Lösung.', pts: '{n} P.',
       pass: 'Bestanden! {p} / {m} P.', fail: '{p} / {m} P. Bestanden ab {q} – versuch es nochmal!', step: 'Zug {i} / {n}', end: 'Das ist die Variante. Jetzt die Übungsstellungen!', endOnly: 'Das ist die Grundvariante. Gut gemacht!',
       tsume: '<b>Matt in {n}</b>. Schach um Schach – fang den König!', escaped: 'Der König ist entwischt…', hintSay: 'Schau auf die leuchtenden Felder.', opGoal: 'Welchen Zug haben starke Spieler hier am häufigsten gewählt?', drill: 'Diese Lektion gibt es in der Vollversion.', full: 'Vollversion öffnen' },
     hi: { start: 'शुरू करें', next: 'आगे', practice: 'अभ्यास', hint: 'संकेत', again: 'फिर से', nextL: 'अगला पाठ', result: 'परिणाम', loading: 'तैयार हो रहा है…',
-      good: ['सही!', 'बढ़िया!', 'शानदार!'], partial: 'अच्छी चाल — पर सबसे अच्छी चमकती चाल है।', wrong: 'करीब थे! चमकती चाल सही जवाब है।', pts: '{n} अंक',
+      good: ['सही!', 'बढ़िया!', 'शानदार!'], partial: 'अच्छी चाल — पर सबसे अच्छी चमकती चाल है।', wrong: 'यह नहीं! चमकती चाल सही जवाब है।', pts: '{n} अंक',
       pass: 'पास! {p} / {m} अंक', fail: '{p} / {m} अंक। पास के लिए {q} — फिर कोशिश करें!', step: 'चाल {i} / {n}', end: 'लाइन यहीं तक। अब अभ्यास की स्थितियाँ!', endOnly: 'मूल लाइन यहीं तक। बहुत अच्छे!',
       tsume: '<b>{n} में मात</b>। शह पर शह देकर राजा को पकड़ो!', escaped: 'राजा बच निकला…', hintSay: 'चमकती जगहों को देखो।', opGoal: 'यहाँ मज़बूत खिलाड़ियों ने सबसे ज़्यादा कौन-सी चाल चुनी?', drill: 'यह पाठ पूरे संस्करण में है।', full: 'पूरा संस्करण खोलें' },
     ar: { start: 'ابدأ', next: 'التالي', practice: 'تدرّب', hint: 'تلميح', again: 'أعد المحاولة', nextL: 'الدرس التالي', result: 'النتيجة', loading: 'جارٍ التحضير…',
-      good: ['صحيح!', 'أحسنت!', 'رائع!'], partial: 'نقلة جيدة، لكن الأفضل هي المضيئة.', wrong: 'قريب! النقلة المضيئة هي الجواب.', pts: '{n} نقطة',
+      good: ['صحيح!', 'أحسنت!', 'رائع!'], partial: 'نقلة جيدة، لكن الأفضل هي المضيئة.', wrong: 'ليست هذه! النقلة المضيئة هي الجواب.', pts: '{n} نقطة',
       pass: 'نجحت! {p} / {m}', fail: '{p} / {m}. النجاح عند {q} — حاول مجددًا!', step: 'النقلة {i} / {n}', end: 'هذا هو الخط. والآن مواقف التدريب!', endOnly: 'هذا هو الخط الأساسي. أحسنت!',
       tsume: '<b>مات في {n}</b>. كِش بعد كِش وأمسك الملك!', escaped: 'هرب الملك…', hintSay: 'انظر إلى المربعات المضيئة.', opGoal: 'ما النقلة التي اختارها الأقوياء أكثر هنا؟', drill: 'هذا الدرس في النسخة الكاملة.', full: 'افتح النسخة الكاملة' },
     ru: { start: 'Начать', next: 'Далее', practice: 'К практике', hint: 'Подсказка', again: 'Ещё раз', nextL: 'Следующий урок', result: 'Итог', loading: 'Подготовка…',
-      good: ['Верно!', 'Отлично!', 'Здорово!'], partial: 'Неплохой ход, но лучший — светящийся.', wrong: 'Почти! Светящийся ход — ответ.', pts: '{n} очк.',
+      good: ['Верно!', 'Отлично!', 'Здорово!'], partial: 'Неплохой ход, но лучший — светящийся.', wrong: 'Не этот! Светящийся ход — ответ.', pts: '{n} очк.',
       pass: 'Зачёт! {p} / {m}', fail: '{p} / {m}. Для зачёта {q} — попробуй ещё!', step: 'Ход {i} / {n}', end: 'Вот и вся линия. Теперь практика!', endOnly: 'Вот и базовая линия. Молодец!',
       tsume: '<b>Мат в {n}</b>. Шах за шахом — поймай короля!', escaped: 'Король ускользнул…', hintSay: 'Посмотри на светящиеся поля.', opGoal: 'Какой ход сильные игроки выбирали здесь чаще всего?', drill: 'Этот урок — в полной версии.', full: 'Открыть полную версию' },
     'zh-TW': { start: '開始', next: '下一步', practice: '去練習', hint: '提示', again: '再來一次', nextL: '下一課', result: '查看結果', loading: '準備中…',
@@ -65,11 +65,11 @@
       pass: '合格！{p} / {m}分', fail: '{p} / {m}分。合格需{q}分，再挑戰一次吧！', step: '第{i} / {n}手', end: '手順到此為止。接下來挑戰練習題吧！', endOnly: '基本手順到此為止，辛苦了！',
       tsume: '<b>{n}手詰</b>。連續將軍，把玉將死吧！', escaped: '玉逃走了……', hintSay: '注意發光的地方。', opGoal: '這個局面，高手最常下的是哪一步？', drill: '這一課請在完整版中進行。', full: '開啟完整版' },
     id: { start: 'Mulai', next: 'Lanjut', practice: 'Latihan', hint: 'Petunjuk', again: 'Ulangi', nextL: 'Pelajaran berikutnya', result: 'Lihat hasil', loading: 'Menyiapkan…',
-      good: ['Benar!', 'Bagus!', 'Hebat!'], partial: 'Langkah bagus, tapi yang terbaik yang menyala.', wrong: 'Hampir! Langkah yang menyala adalah jawabannya.', pts: '{n} poin',
+      good: ['Benar!', 'Bagus!', 'Hebat!'], partial: 'Langkah bagus, tapi yang terbaik yang menyala.', wrong: 'Bukan yang ini! Langkah yang menyala adalah jawabannya.', pts: '{n} poin',
       pass: 'Lulus! {p} / {m}', fail: '{p} / {m}. Lulus di {q} — coba lagi!', step: 'Langkah {i} / {n}', end: 'Itulah variasinya. Sekarang posisi latihan!', endOnly: 'Itulah variasi dasarnya. Bagus!',
       tsume: '<b>Mat dalam {n}</b>. Skak terus dan tangkap rajanya!', escaped: 'Rajanya lolos…', hintSay: 'Lihat kotak yang menyala.', opGoal: 'Langkah mana yang paling sering dipilih pemain kuat di sini?', drill: 'Pelajaran ini ada di versi lengkap.', full: 'Buka versi lengkap' },
     tr: { start: 'Başla', next: 'İleri', practice: 'Alıştırma', hint: 'İpucu', again: 'Tekrar', nextL: 'Sonraki ders', result: 'Sonuç', loading: 'Hazırlanıyor…',
-      good: ['Doğru!', 'Güzel!', 'Harika!'], partial: 'İyi hamle, ama en iyisi parlayan.', wrong: 'Az kaldı! Parlayan hamle cevap.', pts: '{n} puan',
+      good: ['Doğru!', 'Güzel!', 'Harika!'], partial: 'İyi hamle, ama en iyisi parlayan.', wrong: 'Bu değil! Parlayan hamle cevap.', pts: '{n} puan',
       pass: 'Geçtin! {p} / {m}', fail: '{p} / {m}. Geçmek için {q} — tekrar dene!', step: 'Hamle {i} / {n}', end: 'Varyant bu kadar. Şimdi alıştırma pozisyonları!', endOnly: 'Temel varyant bu kadar. Aferin!',
       tsume: '<b>{n} hamlede mat</b>. Şah üstüne şah çek, şahı yakala!', escaped: 'Şah kaçtı…', hintSay: 'Parlayan karelere bak.', opGoal: 'Güçlü oyuncular burada en çok hangi hamleyi seçti?', drill: 'Bu ders tam sürümde.', full: 'Tam sürümü aç' },
   };
@@ -881,7 +881,7 @@
       return shFit(shJoin(ch, w, t), pu); };
     const ng = u0 => {
       let u = u0; if (!u || u === A) u = (C.find(x => x[0] !== A) || [])[0];
-      const so2 = (pt => { const N = /いい線|あと少し|あと一歩/, t0 = V.soft(i); if (pt >= 10 || !N.test(t0)) return t0; const U = [0, 1, 2, 3, 4].map(q => V.soft(q)), L = []; for (let q = 5; q < 24; q++) { const t = V.soft(q); if (!N.test(t) && !U.includes(t) && !L.includes(t)) L.push(t); } const r = [0, 1, 2, 3, 4].slice(0, Math.min(i, 5)).filter(q => N.test(V.soft(q))).length; return L.length ? L[(r + Math.max(0, i - 5)) % L.length] : 'ドンマイ！'; })(u && V.pts ? V.pts(P, u) : 0), L = x => shJoin(so2, shJoin(lead, x));   // (追53: the near words only for a move worth 10+ points)
+      const so2 = (pt => { const N = /いい線|あと少し|あと一歩|おしい/, t0 = V.soft(i); if (pt >= 10 || !N.test(t0)) return t0; const U = [0, 1, 2, 3, 4].map(q => V.soft(q)), L = []; for (let q = 5; q < 24; q++) { const t = V.soft(q); if (!N.test(t) && !U.includes(t) && !L.includes(t)) L.push(t); } const r = [0, 1, 2, 3, 4].slice(0, Math.min(i, 5)).filter(q => N.test(V.soft(q))).length; return L.length ? L[(r + Math.max(0, i - 5)) % L.length] : 'ドンマイ！'; })(u && V.pts ? V.pts(P, u) : 0), L = x => shJoin(so2, shJoin(lead, x));   // (追53: the near words only for a move worth 10+ points)
       if (!u) return L(w);
       let F; try { F = shFacts(o.pos, u); } catch (e) { F = {}; }
       const best = C.length ? C[0][1] : 0, mine = cnt.has(u) ? cnt.get(u) : null;
@@ -1185,7 +1185,7 @@
     const good = u => { if (u && u !== A && cnt.has(u)) return chJoin(V.cheer(i + 1), `{x}も人気の手！ 実戦では${pc(cnt.get(u))}%、いちばん多い{m}も${pc(cnt.get(A))}%で、どっちも本筋なんだ。`); return goodTx; };
     const ngOf = u0 => {
       let u = u0; if (!u || u === A) u = (C.find(x => x[0] !== A) || [])[0];
-      const head = chJoin((pt => { const N = /いい線|あと少し|あと一歩/, t0 = V.soft(i); if (pt >= 10 || !N.test(t0)) return t0; const U = [0, 1, 2, 3, 4].map(q => V.soft(q)), L = []; for (let q = 5; q < 24; q++) { const t = V.soft(q); if (!N.test(t) && !U.includes(t) && !L.includes(t)) L.push(t); } const r = [0, 1, 2, 3, 4].slice(0, Math.min(i, 5)).filter(q => N.test(V.soft(q))).length; return L.length ? L[(r + Math.max(0, i - 5)) % L.length] : 'ドンマイ！'; })(u != null && V.pts ? V.pts(P, u) : 0), V.lead(i)), pk = (L, v) => V.pick(L.flatMap(t => shorts.map(w => chF(fl(t, w), v || {}))), j, V.endOf(head));
+      const head = chJoin((pt => { const N = /いい線|あと少し|あと一歩|おしい/, t0 = V.soft(i); if (pt >= 10 || !N.test(t0)) return t0; const U = [0, 1, 2, 3, 4].map(q => V.soft(q)), L = []; for (let q = 5; q < 24; q++) { const t = V.soft(q); if (!N.test(t) && !U.includes(t) && !L.includes(t)) L.push(t); } const r = [0, 1, 2, 3, 4].slice(0, Math.min(i, 5)).filter(q => N.test(V.soft(q))).length; return L.length ? L[(r + Math.max(0, i - 5)) % L.length] : 'ドンマイ！'; })(u != null && V.pts ? V.pts(P, u) : 0), V.lead(i)), pk = (L, v) => V.pick(L.flatMap(t => shorts.map(w => chF(fl(t, w), v || {}))), j, V.endOf(head));
       if (!u) return chJoin(head, V.pick((CH_WHY[kd] || CH_WHY.other).map(x => chF(x, vv)), j + 1));
       const fl = (s, w) => s.replace(/\{b\}/g, cnt.has(u) ? pc(cnt.get(u)) : 0).replace(/\{a\}/g, pc(cnt.get(A) || 0)).replace(/\{w\}/g, w);
       if (cnt.has(u)) { const b = pc(cnt.get(u)), a = pc(cnt.get(A)); return chJoin(head, pk(b >= a ? CH_NG.near : b * 2 >= a ? CH_NG.half : CH_NG.low)); }
@@ -3572,7 +3572,7 @@
     const ng = u0 => {
       let u = u0; if (u == null || u === A) u = ((P.sc || []).find(x => x[0] !== A && best - x[1] > 6) || (P.sc || []).find(x => x[0] !== A) || [])[0];   // (no move given: a real miss, as the tool asks)
       const pk = A0 => xqPick(V, ckRot(A0, j));
-      const out = [(pt => { const N = /いい線|あと少し|あと一歩/, t0 = V.soft(i); if (pt >= 10 || !N.test(t0)) return t0; const U = [0, 1, 2, 3, 4].map(q => V.soft(q)), L = []; for (let q = 5; q < 24; q++) { const t = V.soft(q); if (!N.test(t) && !U.includes(t) && !L.includes(t)) L.push(t); } const r = [0, 1, 2, 3, 4].slice(0, Math.min(i, 5)).filter(q => N.test(V.soft(q))).length; return L.length ? L[(r + Math.max(0, i - 5)) % L.length] : 'ドンマイ！'; })(u != null && V.pts ? V.pts(P, u) : 0), V.lead(i), pk(CKJ_OP.so.map(x => x.replace('{a}', sh)))];   // (追53: 「いい線・あと少し・あと一歩」 only for a move worth 10+ points — V.pts = the game's points)
+      const out = [(pt => { const N = /いい線|あと少し|あと一歩|おしい/, t0 = V.soft(i); if (pt >= 10 || !N.test(t0)) return t0; const U = [0, 1, 2, 3, 4].map(q => V.soft(q)), L = []; for (let q = 5; q < 24; q++) { const t = V.soft(q); if (!N.test(t) && !U.includes(t) && !L.includes(t)) L.push(t); } const r = [0, 1, 2, 3, 4].slice(0, Math.min(i, 5)).filter(q => N.test(V.soft(q))).length; return L.length ? L[(r + Math.max(0, i - 5)) % L.length] : 'ドンマイ！'; })(u != null && V.pts ? V.pts(P, u) : 0), V.lead(i), pk(CKJ_OP.so.map(x => x.replace('{a}', sh)))];   // (追53: 「いい線・あと少し・あと一歩」 only for a move worth 10+ points — V.pts = the game's points)
       if (u == null) return f(xqJoin(...out));
       let F = null; try { F = ckFacts(E, pos, u); } catch (e) {}
       const d = sc.has(u) ? best - sc.get(u) : null, n0 = out.length;
@@ -4023,7 +4023,7 @@
       return goodTx; };
     const ng = u0 => {
       let u = u0; if (u == null || u === A) u = ((P.sc || []).find(x => x[0] !== A && best - x[1] > 10) || (P.sc || []).find(x => x[0] !== A) || [])[0];   // (no move given: a real miss, as the tool asks)
-      const rot = (A, o) => A.map((_, q) => A[(o + q) % A.length]); let out = [(pt => { const N = /いい線|あと少し|あと一歩/, t0 = V.soft(i); if (pt >= 10 || !N.test(t0)) return t0; const U = [0, 1, 2, 3, 4].map(q => V.soft(q)), L = []; for (let q = 5; q < 24; q++) { const t = V.soft(q); if (!N.test(t) && !U.includes(t) && !L.includes(t)) L.push(t); } const r = [0, 1, 2, 3, 4].slice(0, Math.min(i, 5)).filter(q => N.test(V.soft(q))).length; return L.length ? L[(r + Math.max(0, i - 5)) % L.length] : 'ドンマイ！'; })(u != null && V.pts ? V.pts(P, u) : 0), V.lead(i)];   // (追53: 「いい線・あと少し・あと一歩」 only for a move worth 10+ points — V.pts = the game's points)
+      const rot = (A, o) => A.map((_, q) => A[(o + q) % A.length]); let out = [(pt => { const N = /いい線|あと少し|あと一歩|おしい/, t0 = V.soft(i); if (pt >= 10 || !N.test(t0)) return t0; const U = [0, 1, 2, 3, 4].map(q => V.soft(q)), L = []; for (let q = 5; q < 24; q++) { const t = V.soft(q); if (!N.test(t) && !U.includes(t) && !L.includes(t)) L.push(t); } const r = [0, 1, 2, 3, 4].slice(0, Math.min(i, 5)).filter(q => N.test(V.soft(q))).length; return L.length ? L[(r + Math.max(0, i - 5)) % L.length] : 'ドンマイ！'; })(u != null && V.pts ? V.pts(P, u) : 0), V.lead(i)];   // (追53: 「いい線・あと少し・あと一歩」 only for a move worth 10+ points — V.pts = the game's points)
       const pk = A0 => xqPick(V, rot(A0, j), xqLastEnd(out[out.length - 1] || ''));
       out.push(pk(XQJ_OP.so.map(x => x.replace('{a}', sh))));
       if (u == null) return f(xqJoin(...out));
@@ -5933,7 +5933,7 @@
     const ng = u0 => {
       let u = u0; if (u == null || u === A) u = ((P.sc || []).find(x => x[0] !== A && best - x[1] > 15) || (P.sc || []).find(x => x[0] !== A) || [])[0];
       const pk = L => xqPick(V, tfRot(L, j));
-      const out = [(pt => { const N = /いい線|あと少し|あと一歩/, t0 = V.soft(i); if (pt >= 10 || !N.test(t0)) return t0; const U = [0, 1, 2, 3, 4].map(q => V.soft(q)), L = []; for (let q = 5; q < 24; q++) { const t = V.soft(q); if (!N.test(t) && !U.includes(t) && !L.includes(t)) L.push(t); } const r = [0, 1, 2, 3, 4].slice(0, Math.min(i, 5)).filter(q => N.test(V.soft(q))).length; return L.length ? L[(r + Math.max(0, i - 5)) % L.length] : 'ドンマイ！'; })(u != null && V.pts ? V.pts(P, u) : 0), V.lead(i), pk(TFV_OP.so.map(x => x.replace('{a}', sh)))];   // (追53: 「いい線・あと少し・あと一歩」 only for a move worth 10+ points — V.pts = the game's points)
+      const out = [(pt => { const N = /いい線|あと少し|あと一歩|おしい/, t0 = V.soft(i); if (pt >= 10 || !N.test(t0)) return t0; const U = [0, 1, 2, 3, 4].map(q => V.soft(q)), L = []; for (let q = 5; q < 24; q++) { const t = V.soft(q); if (!N.test(t) && !U.includes(t) && !L.includes(t)) L.push(t); } const r = [0, 1, 2, 3, 4].slice(0, Math.min(i, 5)).filter(q => N.test(V.soft(q))).length; return L.length ? L[(r + Math.max(0, i - 5)) % L.length] : 'ドンマイ！'; })(u != null && V.pts ? V.pts(P, u) : 0), V.lead(i), pk(TFV_OP.so.map(x => x.replace('{a}', sh)))];   // (追53: 「いい線・あと少し・あと一歩」 only for a move worth 10+ points — V.pts = the game's points)
       if (u == null) return f(xqJoin(...out));
       let F = null; try { F = tfFacts(E, pos, u); } catch (e) {}
       const d = sc.has(u) ? best - sc.get(u) : null, n0 = out.length; let tgtU = 0;
@@ -7423,7 +7423,7 @@
             teach = AtlasBgTeach.html(BGX.teach(q0, 0, mk(bgCodes(p.bgPos, p.best()).moves), pts >= 20 ? null : mk(u.steps)), (k, v) => D.tx(k, ctx.lang, v), false, true); } catch (e) { console.warn(e); }
         }
         const own = p.kind === 'bgplay' && typeof p.ng === 'function' && u && u.steps, chJa = p.kind === 'choice' && typeof p.ng === 'function' && ctx.lang === 'ja';   /* (2026-11-24: the other languages' choice words (AtlasBgChoice) keep their own head, not 「おしい！」) */   // (ダイスン names the green play / the answer himself: the head stays short; p.ownHead (the lessons in bgVoice): his own praise / soft words open it, no head)
-        say(`${p.ownHead && (own || chJa) ? '' : chJa ? (right ? '' : 'おしい！') : right ? (own && pts >= 16 ? '' : line('solved') || pick(X.good)) : own || p.kind === 'choice' ? String(pts >= 10 ? X.partial : X.wrong).replace(/([！!]).*$/, '$1') : pts >= 10 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (p.why ? '<br>' + p.why : '') + teach);
+        say(`${p.ownHead && (own || chJa) ? '' : chJa ? (right ? '' : pts >= 10 ? 'おしい！' : '') : right ? (own && pts >= 16 ? '' : line('solved') || pick(X.good)) : own || p.kind === 'choice' ? String(pts >= 10 ? X.partial : X.wrong).replace(/([！!]).*$/, '$1') : pts >= 10 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (p.why ? '<br>' + p.why : '') + teach);
         try { chime(right); } catch (e) {}
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
@@ -7440,7 +7440,7 @@
       }
       if (id === 'mancala' && typeof u === 'number') {   // (back to the problem: the answer's pit in gold, yours red, every pit's value)
         const right = pts >= 16, k = cur.k, P = p.P;
-        say(`${p.own ? (right ? '' : pts >= 10 ? 'いい線！' : 'おしい！') : right ? line('solved') || pick(X.good) : pts >= 10 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b><br>` + (right ? p.good(u) : p.ng(u)) + (p.sow ? '' : '<br><small>' + D.tx('fb.values', ctx.lang, { a: mcFmt(P.sc[u], false), b: mcFmt(P.sc[P.best], false) }).replace('あなたの手', 'きみの手') + '</small>'));   // (p.own: マンカラビ praises / names the gold pit himself)
+        say(`${p.own ? (right ? '' : pts >= 10 ? 'いい線！' : '') : right ? line('solved') || pick(X.good) : pts >= 10 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b><br>` + (right ? p.good(u) : p.ng(u)) + (p.sow ? '' : '<br><small>' + D.tx('fb.values', ctx.lang, { a: mcFmt(P.sc[u], false), b: mcFmt(P.sc[P.best], false) }).replace('あなたの手', 'きみの手') + '</small>'));   // (p.own: マンカラビ praises / names the gold pit himself)
         try { chime(right); } catch (e) {}
         later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().load(p.pos.spec, 1, { lock: true });
           const best = Math.max(...P.sc.filter(v => v !== null));
@@ -7451,7 +7451,7 @@
       }
       if (id === 'connect4' && typeof u === 'number') {   // (back to the problem: the right column green, yours red)
         const right = pts >= 16, k = cur.k;
-        say(`${p.own ? (right ? '' : 'おしい！') : right ? line('solved') || pick(X.good) : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right || !p.own ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));   // (p.own: ポトンウサ names the green column and why yours falls short himself)
+        say(`${p.own ? (right ? '' : pts >= 10 ? 'おしい！' : '') : right ? line('solved') || pick(X.good) : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right || !p.own ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));   // (p.own: ポトンウサ names the green column and why yours falls short himself)
         try { chime(right); } catch (e) {}
         later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark([[p.ans, 'ok'], ...(right ? [] : [[u, 'ng']])]); }, 900);
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
@@ -7460,7 +7460,7 @@
       }
       if ((id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots' || id === 'foxgeese') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
         const right = pts >= 16, k = cur.k;   // (p.own: the guide names the green arrow herself — the heading is only 「おしい！」)
-        say(`${right ? (p.own && (id === 'morris' || id === 'janggi' || p.ckls) ? '' : line('solved') || pick(X.good)) : p.own ? (pts >= 10 ? 'いい線いってる！' : 'おしい！') : pts >= 10 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
+        say(`${right ? (p.own && (id === 'morris' || id === 'janggi' || p.ckls) ? '' : line('solved') || pick(X.good)) : p.own ? (pts >= 10 ? 'いい線いってる！' : '') : pts >= 10 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
         try { chime(right); } catch (e) {}
         later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark([...(right || p.ans == null ? [] : [[{ m: p.ans }, 'ok']]), [{ m: u }, right ? 'ok' : 'ng'], ...(!right && p._rp != null ? [[{ m: p._rp }, 'hl']] : [])]); }, 900);   // (foxgeese: the geese's covering step gold, p._rp)
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
@@ -7469,7 +7469,7 @@
       }
       if (id === 'hex' && typeof u === 'number' && typeof p.ng === 'function') {   // (2026-11-21 lesson loop: ゴイシペン's why / what your move misses; back to the problem with the right cell green, yours red)
         const right = pts >= 16, k = cur.k, N = p.pos.spec.n * p.pos.spec.n, cell = q => q >= 0 && q < N;
-        const head = p.own ? (right ? '' : 'おしい！') : right ? okLine() || pick(X.good) : pts >= 10 ? X.partial : X.wrong;   // (p.own: ゴイシペン praises / names the green cell himself)
+        const head = p.own ? (right ? '' : pts >= 10 ? 'おしい！' : '') : right ? okLine() || pick(X.good) : pts >= 10 ? X.partial : X.wrong;   // (p.own: ゴイシペン praises / names the green cell himself)
         say(`${head} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : '<br>' + p.ng(u)));
         try { chime(right); } catch (e) {}
         later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark([...(right || !cell(p.ans) ? [] : [[p.ans, 'ok']]), ...(cell(u) ? [[u, right ? 'ok' : 'ng']] : []), ...(right ? [] : (p._hl || []).filter(q => cell(q) && q !== u && q !== p.ans).map(q => [q, 'hl']))]); }, 900);
@@ -7480,7 +7480,7 @@
       if (id === 'reversi' && u != null && u !== '' && !isNaN(+u) && p.P && (p.P.f || (p.P.rv === 'op' && p.good))) { u = +u;   // (openings too, 2026-11-21)
           // (2026-11-21: back to the problem — the best squares green, yours red; why, in the guide's words)
         const right = pts >= 16, k = cur.k, okA = p.oks || [+p.ans], tx = right ? p.good(u) : p.ng(u);
-        say(`${p.own ? (right ? '' : pts >= 10 ? 'いい線！' : 'おしい！') : right ? line('solved') || pick(X.good) : pts >= 10 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (tx ? '<br>' + tx : right ? '' : '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: SP('ok', ctx.lang) })));   // (p.own: リバガメ praises / names the green square himself)
+        say(`${p.own ? (right ? '' : pts >= 10 ? 'いい線！' : '') : right ? line('solved') || pick(X.good) : pts >= 10 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (tx ? '<br>' + tx : right ? '' : '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: SP('ok', ctx.lang) })));   // (p.own: リバガメ praises / names the green square himself)
         try { chime(right); } catch (e) {}
         later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1);
           const danger = right && cur.id === 'corner' ? Object.entries(p.P.f).filter(x => x[1][4] && +x[0] !== u).map(x => [+x[0], 'ng']) : [];
@@ -7493,7 +7493,7 @@
         const okA = (p.P.ok && p.P.ok.length ? p.P.ok : [p.ans]).filter(q => q >= 0);
         const said = pts >= 16 ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: SP('ok', ctx.lang) });   // (no coordinates: the points are named by their marks)
         pz().mark([...okA.filter(q => q !== u).slice(0, 4).map(q => [q, 'ok']), [u, pts >= 16 ? 'ok' : 'ng'], ...(p._hl || []).filter(q => q !== u && !okA.includes(q)).map(q => [q, 'hl'])]);
-        say(`${p.own ? (pts >= 16 ? '' : pts >= 10 ? 'いい線！' : 'おしい！') : pts >= 16 ? line('solved') || pick(X.good) : pts >= 10 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + said + (id === 'go' && pts < 20 && p.ans >= 0 && !said.includes(SP('ok', ctx.lang)) ? '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: SP('ok', ctx.lang) }) : ''));
+        say(`${p.own ? (pts >= 16 ? '' : pts >= 10 ? 'いい線！' : '') : pts >= 16 ? line('solved') || pick(X.good) : pts >= 10 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + said + (id === 'go' && pts < 20 && p.ans >= 0 && !said.includes(SP('ok', ctx.lang)) ? '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: SP('ok', ctx.lang) }) : ''));
         if (id === 'go' && p.line && p.line.length > 1) { const k = cur.k; later(async () => { if (!cur || cur.k !== k || phase !== 'prob') return; pz().undo(9); for (const q of p.line) { await sleep(700); if (!cur || cur.k !== k || phase !== 'prob' || stopped) return; await pz().play(q); } }, 900); }   // (go: the right line played out, as the full game)
         try { chime(pts >= 16); } catch (e) {}
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
@@ -7504,7 +7504,7 @@
       const Wm = t => t && /\{[mx]\}/.test(t) ? fill(t, { m: '<b>' + (moveName(p.pos, p.ans) || SP('ok', ctx.lang)) + '</b>', x: '<b>' + (moveName(p.pos, u) || '') + '</b>' }) : t;
       const whyR = Wm((id === 'chess' || id === 'shogi') && typeof p.good === 'function' ? p.good(u) : p.why), whyW = Wm(((id === 'shogi' || id === 'chess') && p.ng ? p.ng(u) : '') || p.ngTx || (p.why || '').replace(/^\s*(正解|Correct|Right)[！!]\s*/, ''));   // (shogi: why the move played falls short, 2026-11-21)
       if (pts >= 16) say(`${p.own ? '' : (p.kind === 'tsume' ? line('solved') : okLine()) || pick(X.good)} <b>${fill(X.pts, { n })}</b>${whyR ? '<br>' + whyR : ''}`);
-      else { if (p.ans) { if (p.drill) pz().undo(1); pz().mark(p.ans); } const mvN0 = p.kind !== 'tsume' && p.ans ? moveName(p.pos, p.ans) : '', nm = p.kind !== 'tsume' && p.ans && !(mvN0 && whyW && whyW.replace(/<[^>]+>|\s/g, '').includes(mvN0.replace(/\s/g, ''))), mvN = nm ? mvN0 : ''; say(`${msg || (p.own ? (pts >= (id === 'shogi' ? 10 : 1) ? 'いい線！' : 'おしい！') : pts >= 10 ? X.partial : X.wrong)} <b>${fill(X.pts, { n })}</b>${nm ? '<br>' + (mvN ? fill(ANSW[ctx.lang] || ANSW.en, { m: '<b>' + mvN + '</b>' }) : (ANSP[ctx.lang] || ANSP.en)) : ''}${whyW ? '<br>' + whyW : ''}`);
+      else { if (p.ans) { if (p.drill) pz().undo(1); pz().mark(p.ans); } const mvN0 = p.kind !== 'tsume' && p.ans ? moveName(p.pos, p.ans) : '', nm = p.kind !== 'tsume' && p.ans && !(mvN0 && whyW && whyW.replace(/<[^>]+>|\s/g, '').includes(mvN0.replace(/\s/g, ''))), mvN = nm ? mvN0 : ''; say(`${msg || (p.own ? (pts >= 10 ? 'いい線！' : '') : pts >= 10 ? X.partial : X.wrong)} <b>${fill(X.pts, { n })}</b>${nm ? '<br>' + (mvN ? fill(ANSW[ctx.lang] || ANSW.en, { m: '<b>' + mvN + '</b>' }) : (ANSP[ctx.lang] || ANSP.en)) : ''}${whyW ? '<br>' + whyW : ''}`);
         if (nm && !mvN) { const k = cur.k, mk = p.ans; later(async () => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz() || !pz().play) return; try { let r = await pz().play(mk); if (r === false) { pz().undo(1); await sleep(250); r = await pz().play(mk); } if (r === false) return; await sleep(1600); if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark(mk); } catch (e) { console.warn('[lessons] show move', e); } }, 1000); } }   // (the move is shown on the board, not named: no coordinates, 2026-11-14)
       try { chime(pts >= 16); } catch (e) {}
       act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
