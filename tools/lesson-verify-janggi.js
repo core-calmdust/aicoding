@@ -232,7 +232,7 @@ function lessons(opt) {
   // 追24 the heading over a right answer: not the puzzle mode's lines (AtlasPuzzleLines.janggi.solved「きれいに詰んだ！」) on a capture lesson
   if (!/p\.own && \(id === 'morris' \|\| id === 'janggi' \|\| p\.ckls\) \? '' : line\('solved'\)/.test(src)) add('-', -1, '追24 a right answer in a janggi lesson is headed by the puzzle lines (詰んだ)');
   // 追39 the heading over a wrong move with a few points (a move that loses a piece scores 2〜9): 「いい線いってる！」 only from half the points up
-  if (!/p\.own \? \(pts >= 10 \? 'いい線いってる！' : 'おしい！'\)/.test(src)) add('-', -1, '追39 the 3D heading praises a wrong move with a few points (いい線いってる！ under 10)');
+  if (!/p\.own \? \(pts >= 10 \? 'いい線いってる！' : ''\)/.test(src))   // (2026-11-25 報告: #3597 追66 で0〜9点は「おしい！」も言わない形に) add('-', -1, '追39 the 3D heading praises a wrong move with a few points (いい線いってる！ under 10)');
   if (!/steps: ls\.steps\.filter\(x => D\.includes\(x\.id\)\)/.test(src)) add('-', -1, '⑨ the 3D table lists steps that are not checked');
   const WIN = E.WIN, WINT = E.WINT, sOfV = v => v > WINT ? 0.9 + 0.1 * Math.min(1, 6 / (WIN - v + 1)) : v < -WINT ? -(0.9 + 0.1 * Math.min(1, 6 / (WIN + v + 1))) : v > WINT - 1000 ? 0.88 : v < -(WINT - 1000) ? -0.88 : Math.tanh(v / 800) * 0.82;
   const pts = (P, m) => { const val = new Map(P.sc), best = Math.max(...P.sc.map(e => e[1])), mine = val.has(m) ? val.get(m) : -WIN;
