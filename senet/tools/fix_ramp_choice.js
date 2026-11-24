@@ -1,4 +1,4 @@
-// senet/tools/fix_ramp_choice.js — 追43（2026-11-24 担当C）：準備（ramp）の選ぶ問題に、答えの理由（why）と誤答それぞれの説明（ngo）をつける。
+// senet/tools/fix_ramp_choice.js — 追46（2026-11-24 担当C）：準備（ramp）の選ぶ問題に、答えの理由（why）と誤答それぞれの説明（ngo）をつける。
 // 投げ棒の確率：「いちばん出やすい目は？」（c.most / c.mostNg）。残りのマス：合計（c.pips、少なすぎ・多すぎ）。tools/lesson-verify.js senet が数え直す。
 'use strict';
 const fs = require('fs'), path = require('path'), F = require('./senet_lessfacts.js'), WT = require('./learn_text_water.js');

@@ -148,7 +148,7 @@
           if (r.k === 'explain') { o.t = ja ? R.et : tx(r.t, lang); o.b = ja ? R.eb : tx(r.body, lang); }
           else { o.t = ja ? R.tt : tx(r.t, lang); o.g = ja ? R.g : tx(r.t, lang); o.h = ja ? R.h : tx(r.h, lang); o.y = ja ? R.y : tx(r.g, lang) || tx(d.ui.rampGood, lang); }
           if (r.kind === 'choice') { o.choices = r.opts.map(x => tx(x, lang)); o.right = r.ans;
-            // 追43: why the picked choice is wrong (the same facts as the problems' ngo)
+            // 追46: why the picked choice is wrong (the same facts as the problems' ngo)
             o.ngx = k => { const g = r.ngo && r.ngo[k]; if (!g) return ''; return ja ? fill(V.v(JA.cn[g[0]] || ['<b>{x}</b>はちがうよ。']), Object.assign({}, g[1], { x: plain(tx(r.opts[k], lang)) })) : this.msg(g, lang); }; }
           return o;
         });

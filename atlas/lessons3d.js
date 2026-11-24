@@ -2126,6 +2126,7 @@
     return c.join('') + ':' + me;
   }
   const RV_ASK = { ja: '『{n}』の次の一手を打とう。', en: 'Play the next move of the {n}.', zh: '下出「{n}」的下一手。', 'zh-TW': '下出「{n}」的下一手。', ko: '「{n}」의 다음 수를 두자.', es: 'Juega la siguiente jugada de «{n}».', fr: 'Jouez le coup suivant de « {n} ».', pt: 'Jogue o próximo lance de «{n}».', de: 'Spiele den nächsten Zug von „{n}“.', ru: 'Сделайте следующий ход линии «{n}».', tr: '“{n}” hattının sıradaki hamlesini oyna.', id: 'Mainkan langkah berikutnya dari «{n}».', hi: '«{n}» की अगली चाल चलो।', ar: 'العب النقلة التالية في «{n}».' };
+  const RV_ASKO = { ja: '『{n}』の手順から外れた局面。いちばん良い手を打とう。', en: 'A position off the {n} line. Play the best move.', zh: '偏离「{n}」手顺的局面。请下出最好的一手。', 'zh-TW': '偏離「{n}」手順的局面。請下出最好的一手。', ko: '「{n}」 수순에서 벗어난 국면. 가장 좋은 수를 두자.', es: 'Una posición fuera de la línea «{n}». Juega la mejor jugada.', fr: 'Une position hors de la ligne « {n} ». Jouez le meilleur coup.', pt: 'Uma posição fora da linha «{n}». Jogue o melhor lance.', de: 'Eine Stellung abseits der Linie „{n}“. Spiele den besten Zug.', ru: 'Позиция вне линии «{n}». Сделайте лучший ход.', tr: '“{n}” hattının dışına çıkan bir konum. En iyi hamleyi oyna.', id: 'Posisi yang keluar dari jalur «{n}». Mainkan langkah terbaik.', hi: '«{n}» की चालों से हटी हुई स्थिति। सबसे अच्छी चाल चलो।', ar: 'وضعية خارج خط «{n}». العب أفضل نقلة.' };
   const rvSvg = cs => { const c = String(cs).split(':')[0]; let o = '<svg viewBox="0 0 84 84" aria-hidden="true"><rect width="84" height="84" rx="6" fill="#2f8f5b"/>';
     for (let k = 1; k < 8; k++) o += `<path d="M${2 + k * 10} 2V82M2 ${2 + k * 10}H82" stroke="#1f6b42" stroke-width=".8"/>`;
     for (let q = 0; q < 64; q++) if (c[q] === '1' || c[q] === '2') o += `<circle cx="${7 + (q & 7) * 10}" cy="${7 + (q >> 3) * 10}" r="4.1" fill="${c[q] === '1' ? '#17181c' : '#f6f2e6'}"${c[q] === '2' ? ' stroke="#bdb6a2" stroke-width=".6"' : ''}/>`;
@@ -2413,6 +2414,9 @@
     return t.replace(/[（(][^）)]*(損|互角)[^）)]*[）)]/g, '').replace(/^\d石ほど損をする、/, '').replace(/、?\d石(ほど)?損の/g, '').replace(/[、。]?互角を保つ[、。]?/g, '').replace(/、?(ほぼ)?互角の/g, '').replace(/^[、。]|[、。]$/g, '').trim(); };
   const RVJ_OP = {
     intro: ['まずは手順を盤で見てみよう。そのあと、続きを打ってもらうね！', '手順をひととおり見たら、次はきみの番。覚えられるかな？', 'ゆっくり手順を並べるから、形をよく見ておいてね。', '一手ずつ並べていくよ。どんな形になるか、いっしょに見よう！', 'まずは盤で手順を追いかけよう。そのあとで、きみに打ってもらうね。'],
+    askO: ['{n}の手順から外れた局面！ {s}の番、いちばん良い手はどこかな？', 'ここで{s}が打つ、いちばんの手はどこ？ 盤をよく見て！', '手順を外れた形。{s}なら、どこに打つ？', '{s}の番！ ここでいちばん良い一手を見つけて！', '形が変わったところで{s}の一手。きみならどこに置く？'],
+    cmpO: ['返す枚数、まわりの空き、打ったあとの相手の打ち場所を、手ごとにくらべてみて。', '隅のまわり（XやC）に打つ手は、相手に隅をあげないか確かめよう。', '相手がどう応じたら、自分の打てる場所がいくつ残るかを考えてみて！', '外がわに石を出しすぎない手はどれかな？'],
+    leadO: ['いちばん良い手は緑の枠。', 'ここは緑の枠がいちばん！', '正解は緑の枠だった！', '緑の枠に打ちたかった！', '答えは緑の枠のマス。'],
     askN: ['『{n}』の続き、{s}の次の一手はどこかな？', '{s}の番！ 『{n}』の手順を思い出して打ってみて！', 'ここで{s}が打つ、『{n}』の一手はどこだと思う？', '『{n}』はこの先どう進むんだっけ？ {s}の手を打ってみよう！', '次は{s}。『{n}』なら、どこに打つ？'],
     ask: ['さあ{s}の一手！ 定石どおりに打てるかな？', '{s}の番！ さっきの手順、覚えてるかな？', '{s}の一手、きみならどこに置く？', '続けて{s}の番。手順の次はどこだっけ？', 'お次は{s}！ 盤の形から思い出せるかな？', '{s}ならここでどう打つ？ 落ち着いていこう！'],
     cheer: ['いいね！', 'さすが！', 'ばっちり！', 'お見事！', 'その調子！', '上手！', 'ナイス！', 'よく覚えてたね、すごい！', 'そうそう、それ！', 'いい手だね！', '完璧！', 'やったね！'],
@@ -2478,13 +2482,27 @@
     if (info) { const last = out[String(n - 1)], both = last ? last + '<br>' + info : info, r = rvEnds(both, ''); out[String(n - 1)] = r.t.replace(/<[^>]+>/g, '').length <= 130 ? r.t : rvEnds(info, '').t; }
     return out;
   }
-  function rvOpJa(o, name, i, V) {
-    const nm = /(^|[^A-Za-z])[a-h][1-8](?![0-9A-Za-z])/.test(name) ? 'この定石' : name, nmQ = nm === name ? '『' + name + '』' : nm, v = V.v;
+  /* (2026-11-24 第2期・担当B) off: a practice problem off the study line (reversi/opcourse-probs.json, tools/op_curate.js — the line was
+     just played on the board, so its own next move is no question, 追1): the best move after a move that leaves the line, and no word
+     of 「定石の手・手順・覚えた」 (the answer is the engine's best of the position, not the line's move). A wrong move is told by what it
+     gives on the board: a corner, X / C, openness, the opponent's moves, the flips, or how few moves are left after the reply (rvReplyMob). */
+  const rvMob = (c, me) => rvLegal(c, me).length;
+  function rvReplyMob(posStr, m) {   // after m and the opponent's reply that leaves the fewest moves: how many moves the mover has
+    const [cs, tm] = String(posStr).split(':'), c = cs.split('').map(Number), me = +tm, op = 3 - me, f = rvFlips(c, m, me), nc = c.slice(); nc[m] = me; f.forEach(q => { nc[q] = me; });
+    const rs = rvLegal(nc, op); if (!rs.length) return rvMob(nc, me);
+    return Math.min(...rs.map(r => { const g = rvFlips(nc, r, op), d = nc.slice(); d[r] = op; g.forEach(q => { d[q] = op; }); return rvMob(d, me); }));
+  }
+  function rvOpJa(o, name, i, V, off) {
+    const nm = /(^|[^A-Za-z])[a-h][1-8](?![0-9A-Za-z])/.test(name) ? 'この定石' : name, nmQ = nm === name ? '『' + name + '』' : nm, RXO = /定石|手順|覚え|思い出/;
+    const v = off ? (k, arr) => { const a = arr.filter(t => !RXO.test(t)); return V.v(k + 'o', a.length ? a : arr); } : V.v;
     const { F, me } = rvOpFacts(o.pos), A = +o.ans, ks = Object.keys(F).map(Number), fa = F[A] || { n: 0, open: 0, oM: 0, oC: 0 };
     const minOf = k => Math.min(...ks.map(q => F[q][k])), maxOf = k => Math.max(...ks.map(q => F[q][k])), side = me === 1 ? '黒' : '白';
-    const ask = i === 0 || i === 3 ? v('askN', RVJ_OP.askN.map(t => fill(t, { n: name, s: side }).replace('『' + name + '』', nmQ))) : v('ask', RVJ_OP.ask.map(t => fill(t, { s: side })));
+    const SOFT = off ? RVJ_OP.soft.filter(t => !RXO.test(t)) : null, CHEER = off ? RVJ_OP.cheer.filter(t => !RXO.test(t)) : null;   // (off: no 「覚え」)
+    const NEAR = /おしい|あと少し|あと一歩|いい線/, ptsOf = u => { const e = o.P && o.P.ev; if (!e) return 0; const m = e.find(x => rvSq(x[0]) === u); return m ? Math.max(0, Math.min(14, Math.round(14 - 2.5 * (e[0][1] - m[1])))) : 0; };   // (off: 「おしい」 only for a move that still scores 8+)
+    const soft = (k, u) => { if (!off) return V.soft(k); const L2 = u != null && ptsOf(u) < 8 ? SOFT.filter(t => !NEAR.test(t)) : SOFT; return L2[(V.seed + k) % L2.length]; }, cheer = k => off ? CHEER[(V.seed + k) % CHEER.length] : V.cheer(k);
+    const ask = off ? V.v('askO', RVJ_OP.askO.map(t => fill(t, { n: nmQ, s: me === 1 ? '黒' : '白' }))) : i === 0 || i === 3 ? v('askN', RVJ_OP.askN.map(t => fill(t, { n: name, s: side }).replace('『' + name + '』', nmQ))) : v('ask', RVJ_OP.ask.map(t => fill(t, { s: side })));
     const spread = k => ks.length > 1 && minOf(k) < maxOf(k);   // (a fact that tells the moves apart — on the first moves every move flips one disc)
-    const O = () => v('opp', RV_OPP), MEM = ['さっき盤で見た手順を思い出してみて。相手の直前の手に、どう応じていたかな？', '石がどんな形に並んでいたか、思い出してみて。盤の絵がヒントになるかも！', 'あわてずに、手順の流れを頭の中でもう一度並べてみよう。', '最後にできあがる形を思いうかべると、次の一手が見えてくるかも？', '一手前の相手の石に、どう応じる流れだったっけ？', '手順の動画を巻きもどすつもりで、ゆっくり思い出してみて！'];
+    const O = () => v('opp', RV_OPP), MEM = off ? RVJ_OP.cmpO : ['さっき盤で見た手順を思い出してみて。相手の直前の手に、どう応じていたかな？', '石がどんな形に並んでいたか、思い出してみて。盤の絵がヒントになるかも！', 'あわてずに、手順の流れを頭の中でもう一度並べてみよう。', '最後にできあがる形を思いうかべると、次の一手が見えてくるかも？', '一手前の相手の石に、どう応じる流れだったっけ？', '手順の動画を巻きもどすつもりで、ゆっくり思い出してみて！'];
     let hint;
     if (fa.cn) hint = v('hc', ['隅に打てるチャンスがあるみたい。どこかな？', '盤の角をよく見てみて！', ...MEM]);
     else if (spread('n') && spread('open') && fa.n === minOf('n') && fa.open === minOf('open')) hint = v('h1', ['たくさん返す手より、返す石が少なくて、まわりの空きも少ない手。静かな中割りっぽい手をさがしてみて。', '返す枚数も、まわりの空きも少ない手が正解。中割りの形を思い出して！', 'ねらいは、まわりを石にかこまれた石だけを返す手。どこかな？', '外に石を出さない、ひかえめな手をさがしてみよう！', ...MEM]);
@@ -2503,17 +2521,19 @@
     };
     const tail = () => v('tl', [`${nmQ}の形を作る大事な一手なんだ。`, 'この流れごと覚えておくと、次の手も見えてくるね。', '手順の意味がわかると、忘れにくくなるんだ。', 'これで形がまた一つ進んだ！', '定石の流れにぴったりの手。', '形がきれいに整ってきた！']);
     const good = () => { const w = why(), t = i % 2 === 0 && (w + '12345678901234567890').length <= 100 ? w + tail() : w, p = i % 2 === 1 || i === 4 ? V.push(i) : '';
-      return rvEnds(V.cheer(i) + '<br>' + t + (p ? ' ' + p : ''), '!').t; };
+      return rvEnds(cheer(i) + '<br>' + t + (p ? ' ' + p : ''), '!').t; };
     const pickWrong = u => {   // (no wrong move given — the checker passes the answer: the most telling one, the AI's lowest, else the most flips)
       if (u !== A && F[u]) return u; const w = ks.filter(q => q !== A); if (!w.length) return null;
       const ev = o.P.ev, sc = ev ? new Map(ev.map(([m, x]) => [rvSq(m), x])) : null, inEv = sc ? w.filter(q => sc.has(q)) : [];
       if (inEv.length) return inEv.reduce((a, q) => sc.get(q) < sc.get(a) ? q : a, inEv[0]);
       return w.reduce((a, q) => F[q].n > F[a].n ? q : a, w[0]);
     };
-    const LEAD = ['定石の手は緑の枠。', '緑の枠が、この定石の手！', '正しい手順は緑の枠のマス。', '答えは緑の枠だった！', '手順の手は緑の枠のほう。', 'ここは緑の枠に打ちたかった！', '正解は緑の枠！'];
+    const LEAD = off ? RVJ_OP.leadO : ['定石の手は緑の枠。', '緑の枠が、この定石の手！', '正しい手順は緑の枠のマス。', '答えは緑の枠だった！', '手順の手は緑の枠のほう。', 'ここは緑の枠に打ちたかった！', '正解は緑の枠！'];
     const ng = u0 => {
-      const u = pickWrong(+u0), out = [V.soft(i), v('lead', LEAD)]; if (u == null) return out.join('');
-      const fu = F[u], near = Math.abs(fu.oM - fa.oM) <= 1 && Math.abs(fu.n - fa.n) <= 1, N7 = [near ? `緑の枠は${fa.n}枚返して${O()}が${fa.oM}か所、赤い枠は${fu.n}枚で${fu.oM}か所。数は近くても、手順から外れると次の形が変わっちゃうんだ。` : fu.oM > fa.oM ? `緑の枠なら${O()}は${fa.oM}か所、赤い枠だと${fu.oM}か所。相手に選ぶ余地をあげちゃうからね。` : `赤い枠のほうが${O()}は少ない（${fu.oM}か所）けど、定石の手順から外れると、覚えた次の形が使えなくなるんだ。`, '赤い枠だと、定石で覚えたこの先の形にならないから、次の手を自分で考えることになるね。', fu.n !== fa.n ? `赤い枠は${fu.n}枚返し、緑の枠は${fa.n}枚返し。形が変わると、覚えた手順が使えなくなるからね。` : '返す枚数は同じでも、場所がちがえば形が変わる。覚えた手順が使えなくなるからね。', '赤い枠に打つと、この先は定石の外の形。そこからは手探りになっちゃう。'];
+      const u = pickWrong(+u0), out = [soft(i, u), v('lead', LEAD)]; if (u == null) return out.join('');
+      const fu = F[u], near = Math.abs(fu.oM - fa.oM) <= 1 && Math.abs(fu.n - fa.n) <= 1, mA = off ? rvReplyMob(o.pos, A) : 0, mU = off ? rvReplyMob(o.pos, u) : 0;
+      if (off && fu.oC <= fa.oC && !(fu.x && !fa.x) && !(fu.cq && !fa.cq) && mU < mA) { out.push(v('nm', [`赤い枠だと、相手にうまく応じられたとき、きみの打てる場所は${mU}か所まで減っちゃう。緑の枠なら${mA}か所残るんだ。`, `相手のいちばんいやな応手のあと、打てる場所は赤い枠だと${mU}か所、緑の枠なら${mA}か所。赤い枠は自分の手が先に詰まっちゃうね。`, `赤い枠のあと、相手の応じ方しだいで、きみの打ち場所は${mU}か所だけ。緑の枠なら${mA}か所あって、手が詰まりにくいんだ。`])); return rvEnds(out.join(''), '!').t; }
+      const N7 = off ? [`緑の枠は${fa.n}枚返して${O()}が${fa.oM}か所、赤い枠は${fu.n}枚で${fu.oM}か所。数は近いけど、相手のいちばんいやな応手のあとでも、緑の枠なら打てる場所が${mA}か所残るんだ。`, `どちらも数は近い手。でも緑の枠は、相手がどう応じても、きみの打てる場所が${mA}か所以上残る手なんだ。`] : [near ? `緑の枠は${fa.n}枚返して${O()}が${fa.oM}か所、赤い枠は${fu.n}枚で${fu.oM}か所。数は近くても、手順から外れると次の形が変わっちゃうんだ。` : fu.oM > fa.oM ? `緑の枠なら${O()}は${fa.oM}か所、赤い枠だと${fu.oM}か所。相手に選ぶ余地をあげちゃうからね。` : `赤い枠のほうが${O()}は少ない（${fu.oM}か所）けど、定石の手順から外れると、覚えた次の形が使えなくなるんだ。`, '赤い枠だと、定石で覚えたこの先の形にならないから、次の手を自分で考えることになるね。', fu.n !== fa.n ? `赤い枠は${fu.n}枚返し、緑の枠は${fa.n}枚返し。形が変わると、覚えた手順が使えなくなるからね。` : '返す枚数は同じでも、場所がちがえば形が変わる。覚えた手順が使えなくなるからね。', '赤い枠に打つと、この先は定石の外の形。そこからは手探りになっちゃう。'];
       if (fu.oC > fa.oC) out.push(v('n1', ['赤い枠だと、相手が隅に打てるようになっちゃう。隅は取られたら取り返せない場所なんだ。', '赤い枠では隅への道が開いて、相手に隅を取られちゃうね。', '赤い枠のあと、相手は隅に打てる。隅をあげると、辺までくずれていくからね。']));
       else if (fu.x && !fa.x) out.push(v('n2', ['赤い枠は隅のななめ隣（X）。あとで相手に隅を取られる足場になりやすいんだ。', 'Xに打つと、その隅を相手にねらわれやすくなるからね。']));
       else if (fu.cq && !fa.cq) out.push(v('n3', ['赤い枠は隅のとなりのマス。辺の形がくずれるから、相手に隅をねらわれやすいね。', 'Cに打つと辺の形がくずれて、隅をねらわれやすくなるんだ。']));
@@ -2529,8 +2549,8 @@
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261124p1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({}))])
-        .then(([ls, op, ev, wt]) => { this.WT = wt || {};
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261124p1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=1').catch(() => ({}))])
+        .then(([ls, op, ev, wt, opp]) => { this.WT = wt || {}; this.OPP = opp || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
           this.data = { ls, op, ev, steps }; return this;
@@ -2603,7 +2623,11 @@
       const V = ja ? rvOpVoice(key) : null, names = {}; if (ja) this.data.steps.forEach(x => { names[x.ln.moves] = L(x.ln.name, lang); });
       return { id: 'opl:' + key, title: name, intro: `<b>${aim}</b>` + (ja ? '<br>' + RVJ_OP.intro[hs % RVJ_OP.intro.length] : ''), start: rvAfter(''),   // (no move list in coordinates: the line is played on the board next. 2026-11-23: start was inside this comment — the study line began on an empty board)
         steps: mv.map(rvSq), notes: ja ? rvStepNotesJa(mv, names, rvCleanInfo(info), V) : info ? { [String(n - 1)]: info } : {},
-        probs: ks.map((k, i) => { const pre = mv.slice(0, k).join(''), o = { pos: rvAfter(pre), kind: 'best', ask: fill(RV_ASK[lang] || RV_ASK.en, { n: name }), P: { rv: 'op', ans: rvSq(mv[k]), ev: ev[pre] || null }, ans: String(rvSq(mv[k])) };
+        // (2026-11-24 第2期・担当B) a line with its verified pool (reversi/opcourse-probs.json: 5 positions off the study line, the engine's
+        // best in two searches, every other move 2+ discs below) asks those, in the pool's order (easy → hard); the others, the line's own moves
+        probs: (this.OPP[key] || []).length >= 5 ? this.OPP[key].slice(0, 5).map((P, i) => { const o = { pos: P.pos, kind: 'best', ask: fill(RV_ASKO[lang] || RV_ASKO.en, { n: name }), P: { rv: 'op', ans: rvSq(P.best), ev: P.sc }, ans: String(rvSq(P.best)) };
+          if (ja) Object.assign(o, rvOpJa(o, name, i, V, true)); else { o.good = () => ''; o.ng = () => ''; }
+          return o; }) : ks.map((k, i) => { const pre = mv.slice(0, k).join(''), o = { pos: rvAfter(pre), kind: 'best', ask: fill(RV_ASK[lang] || RV_ASK.en, { n: name }), P: { rv: 'op', ans: rvSq(mv[k]), ev: ev[pre] || null }, ans: String(rvSq(mv[k])) };
           if (ja) Object.assign(o, rvOpJa(o, name, i, V));   // (2026-11-21 lesson loop: リバガメ asks, hints and explains — see RVJ_OP, rvOpVoice)
           else { o.good = () => ''; o.ng = () => ''; }
           return o; }),
@@ -2639,7 +2663,7 @@
   /* the same texts without coordinates, for the 3D board (2026-11-14): atlas/nocoord/<game>.json { '<lesson id>/<ramp index>/<field>': { lang: text } }
      (the full games keep their own texts: their boards show coordinates) */
   const NC = {};
-  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=21').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
+  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=22').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
   // (2026-11-21 user: 「ドット＆ボックスの初回レッスンも、これはどういうゲームなのかの説明がない。まずは短くても良いからそこから」)
   // the first lesson of a game opens with what the game is and how it is won, in the guide's voice (ja; the games whose first intro lacks it)
   const GAME_JA = {
@@ -4272,7 +4296,7 @@
     LKEY: 'aicoding-janggi-lessons', OKEY: null, data: null, I: null, V: {},
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../janggi/lessons.json?v=6'), fetch('../janggi/i18n.js?v=4').then(r => r.text()), jgScript(JG_ENG, () => window.JanggiEngine), jgScript('games/janggi-ls.js?v=5', () => window.AtlasJanggiLs), jgScript('games/janggi-pz.js?v=1', () => window.AtlasMini && window.AtlasMini.janggi)])
+      return (this.p = Promise.all([getJ('../janggi/lessons.json?v=7'), fetch('../janggi/i18n.js?v=4').then(r => r.text()), jgScript(JG_ENG, () => window.JanggiEngine), jgScript('games/janggi-ls.js?v=6', () => window.AtlasJanggiLs), jgScript('games/janggi-pz.js?v=1', () => window.AtlasMini && window.AtlasMini.janggi)])
         .then(([ls, tx]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] janggi texts', e); } this.I = w.I18N || {}; const D = (window.AtlasJanggiLs || {}).DONE || [];
           this.data = { ls: Object.assign({}, ls, { steps: ls.steps.filter(x => D.includes(x.id)) }) }; return this; })
         .catch(e => { this.p = null; throw e; }));
@@ -5217,11 +5241,11 @@
       b_queen: '駒の<b>アマゾン</b>は、チェスのクイーンと同じ動き。縦・横・斜めに、まっすぐ何マスでも進めるケロ！ 途中で曲がるのはなし。',
       b_arrow: '動いたら、着いたマスから<b>矢</b>を1本撃つんだ。矢もアマゾンと同じ線を飛ぶケロ。<br>刺さったマスは最後までふさがったまま！ 「動く＋矢」で1手になるね。',
       b_block: 'アマゾンも矢も、<b>ほかの駒や矢を飛び越えられない</b>。線の途中に何かあれば、その手前で止まっちゃう。<br>的のマスから逆にたどって、ふさがっていない線をさがすのがコツだケロ！',
-      b_win: '自分の番に<b>どのアマゾンも動けなかったら負け</b>。取ったり取られたりはなくて、引き分けもないゲームなんだ。<br>相手のアマゾン全部のまわりをふさげたら、勝ちケロ！',
-      s_trap: 'ここからは作戦！ 相手のアマゾンを1体<b>閉じこめる</b>と、そいつは最後まで動けない。<br>まわりの空きマスが1つ2つしかないアマゾンは、ねらい目だケロ。',
+      b_win: '自分の番に<b>どのアマゾンも動けなかったら負け</b>。取ったり取られたりはなくて、引き分けもないゲームなんだ。<br>相手のアマゾン全部のまわりを、矢か白で入ってふさげたら勝ちケロ！ 出口が2つなら、白で片方に入って、もう片方に矢を刺せば1手でふさげるよ。',
+      s_trap: 'ここからは作戦！ 相手のアマゾンを1体<b>閉じこめる</b>と、そいつは最後まで動けない。<br>まわりの空きマスが1つ2つしかないアマゾンは、ねらい目だケロ。出口が1つなら、矢を刺すか白で入る。出口が2つなら、白で片方に入って、そこからもう片方に矢を刺せば1手でふさげるよ。',
       s_escape: '反対に、自分のアマゾンのまわりがせまくなったら危険信号！ 相手の1手で閉じこめられちゃうかも。<br>そうなる前に、<b>まわりが広く空いた場所</b>（となりの空きマスが4つ以上）へ逃がそう。自分の矢で自分のとなりをふさがないようにね。',
       s_wall: '矢が並ぶと、盤はいくつかの<b>部屋</b>に分かれる。分かれたら、もうおたがいの部屋には入れないんだ。<br>最後は、自分の部屋で長く動けたほうの勝ち！ 壁のすき間は、白の部屋が広くなるようにふさぐケロ。',
-      s_fill: '部屋が分かれたら、あとは何回動けるかの勝負！ ふつうは1マスで1手だけど、矢の置き方が悪いと<b>行けなくなるマス</b>ができちゃう。<br>元いたマスや行き止まりのすみに矢を刺して、端から埋めていくケロ。',
+      s_fill: '部屋が分かれたら、あとは何回動けるかの勝負！ 矢の置き方が悪いと<b>行けなくなるマス</b>ができちゃう。<br>矢は<b>行き止まりのすみ</b>へ。通り道の途中から動いたときは、元のマスに刺すと部屋がちぎれるケロ。',
     },
     // the warm-ups: rp.<x>.<field> of amazons/lessons.json (t: the title, g: the goal, h: the hint, y: the praise)
     ramp: {
@@ -5233,7 +5257,7 @@
       'rp.t1.t': '閉じこめちゃえ！', 'rp.t2.g': '赤い印の黒のアマゾンを閉じこめてみて！', 'rp.t2.h': 'その黒のとなりで空いているのは1マスだけ。そこが出口ケロ！', 'rp.t2.y': '閉じこめ成功！ 黒は残りの1体だけで戦うしかないね。',
       'rp.e1.t': '危ないアマゾン！', 'rp.e2.g': 'すみにいる白のアマゾン（赤い印）を、広い場所へ逃がしてあげて！', 'rp.e2.h': 'すみのマスは、となりがほとんどふさがってる。盤のまん中のほうへ大きく動こう！', 'rp.e2.y': '脱出成功ケロ！ 広い場所なら、かんたんには囲まれないね。',
       'rp.l1.t': 'すき間をふさごう！', 'rp.l2.g': '壁のすき間をふさいで、盤を2つに分けてみて！', 'rp.l2.h': '縦に並んだ矢の壁で、矢のないマスがすき間。白のアマゾンは広い側に残しておくケロ。', 'rp.l2.y': '盤が分かれた！ 白の部屋のほうがずっと広いね。',
-      'rp.f1.t': 'むだなく埋めよう！', 'rp.f2.g': '白の部屋で、最後までいちばん多く動ける手を選んでみて！', 'rp.f2.h': '白の部屋は5マス。部屋を切らないように、元のマスか端のマスに矢を刺そう！', 'rp.f2.y': 'ばっちり！ これでこの部屋を最後まで使い切れるケロ。',
+      'rp.f1.t': 'むだなく埋めよう！', 'rp.f1.b': '白はすみの行き止まりにいたから、動いたあと元のマスに矢を刺しても部屋は切れない。残りの緑の印のマスにはまだ全部行けるから、手数を損しないケロ。', 'rp.f2.g': '白の部屋で、最後までいちばん多く動ける手を選んでみて！', 'rp.f2.h': '白の部屋は横一列の6マスで、白は途中にいる。元のマスに矢を刺すと部屋がちぎれちゃう。列の端の行き止まりに刺すケロ！', 'rp.f2.y': 'ばっちり！ 端の行き止まりなら部屋が切れないから、最後まで使い切れるケロ。',
     },
     ask: {
       b_queen: ['光ってるマスへアマゾンを動かしてみよう！ 矢はどこに撃ってもいいケロ。', 'ゴールの光るマスまで、1手で行ける？', 'どのアマゾンなら、光ってるマスに届くかな？', '光ったマスまでひとっ跳び！ どう動く？', 'あのマスへ行く道、見つけられるかなケロ？'],
@@ -5253,7 +5277,7 @@
       s_trap: ['光る黒のとなりで、まだ空いてるマスはどこ？ そこが出口ケロ。', '出口が1つなら、矢を1本刺すだけでいいね！', '白のアマゾンで出口に入って、ふさぐ手もあるよ。', '動いた白の元のマスが、新しい出口にならないか気をつけて！', '出口が2つなら、アマゾンと矢で1つずつふさげないかな？'],
       s_escape: ['赤いアマゾンの行き先で、となりに空きマスが多いところを選んでね。', '逃げた先で、黒の1手でふさがれないかも確かめて！', '矢は自分から離れたところへ撃とう。自分のとなりをふさいだらもったいないケロ。', '盤のすみや矢のそばは、出口が少なくなりがちだよ。', 'となりの空きマスが4つ以上あると、ひとまず安心ケロ！'],
       s_wall: ['光ってるマスが壁のすき間だよ。そこをふさげば盤が分かれるね。', '白のアマゾンを2体とも広い側に残したまま、すき間をふさいでね！', 'ふさいだあと、白と黒の部屋のマスを数えてくらべてみて。', '矢でふさぐか、アマゾンで入るか。どっちが白の得かな？', '白が1体でもせまい側に残ると損しちゃうケロ。'],
-      s_fill: ['部屋を2つに切っちゃう矢は損！ 元いたマスやすみっこに矢を刺してみて。', '行き止まりのマスから先に埋めると、むだが出にくいケロ。', '動いたあと、残りのマスを全部回れるか想像してみよう！', '真ん中に矢を刺すと、部屋がちぎれやすいんだ。', '最後のマスまで、1手ずつ順に行ける形を残してね。'],
+      s_fill: ['部屋を2つに切っちゃう矢は損！ 行き止まりのすみっこに矢を刺してみて。', '行き止まりのマスから先に埋めると、むだが出にくいケロ。', '動いたあと、残りのマスを全部回れるか想像してみよう！', '真ん中に矢を刺すと、部屋がちぎれやすいんだ。', '最後のマスまで、1手ずつ順に行ける形を残してね。'],
     },
   };
   const AM_CH = {
@@ -5418,8 +5442,8 @@
     LKEY: 'aicoding-amazons-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      const tx = ['../checkers/i18n.js?v=20261107l14-nd1', '../amazons/i18n-am.js?v=4', '../amazons/i18n-am-more.js?v=4', '../amazons/i18n-am-ls.js?v=3', '../amazons/i18n-am-ls-more.js?v=3', '../amazons/i18n-am-ls-more2.js?v=3'];
-      return (this.p = Promise.all([getJ('../amazons/lessons.json?v=5'), Promise.all(tx.map(u => fetch(u).then(r => r.text()).catch(() => ''))), amEng().catch(() => null)])
+      const tx = ['../checkers/i18n.js?v=20261107l14-nd1', '../amazons/i18n-am.js?v=4', '../amazons/i18n-am-more.js?v=4', '../amazons/i18n-am-ls.js?v=4', '../amazons/i18n-am-ls-more.js?v=4', '../amazons/i18n-am-ls-more2.js?v=4'];
+      return (this.p = Promise.all([getJ('../amazons/lessons.json?v=6'), Promise.all(tx.map(u => fetch(u).then(r => r.text()).catch(() => ''))), amEng().catch(() => null)])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T[0] + '\nvar I18N = window.I18N = window.I18N || {};\n' + T.slice(1).join('\n'))(w); } catch (e) { console.warn('[lessons3d] amazons texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -7105,7 +7129,7 @@
         let box = $('.lsch'); if (!box) { box = document.createElement('div'); box.className = 'lsch bgch'; $('.bub').insertBefore(box, $('.cnt')); }
         box.hidden = false; box.innerHTML = it.choices.map((c, k) => `<button type="button" class="btn sm" data-ci="${k}">${c}</button>`).join('');
         box.onclick = e => { const b = e.target.closest('[data-ci]'); if (!b || ok || phase !== 'ramp' || cur.ri !== i) return; const k = +b.dataset.ci;
-          if (k === it.right) { box.querySelectorAll('button').forEach((x, j) => { x.disabled = true; x.classList.toggle('ok', j === k); }); rDone(); } else { b.classList.add('ng'); b.disabled = true; say((it.ngx ? it.ngx(k) + ' ' : '') + RU('ng')); try { chime(false); } catch (e2) {} } };   // (追43: senet's warm-up says why the choice is wrong)
+          if (k === it.right) { box.querySelectorAll('button').forEach((x, j) => { x.disabled = true; x.classList.toggle('ok', j === k); }); rDone(); } else { b.classList.add('ng'); b.disabled = true; say((it.ngx ? it.ngx(k) + ' ' : '') + RU('ng')); try { chime(false); } catch (e2) {} } };   // (追46: senet's warm-up says why the choice is wrong)
       }
       onMoved = async (u, info) => {
         if (stopped || phase !== 'ramp' || cur.ri !== i) return;

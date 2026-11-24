@@ -12,85 +12,85 @@
 'use strict';
 (function () {
 const X = {
-  ja: { 'tab.tiger': '虎', 'tab.tiger.d': '縦取りの代表「虎」から、コンポス・ローズビル・金魚などの奥まで', 'tab.rabbit': '兎・猫', 'tab.rabbit.d': '縦取りの3手目c5の「兎」、c4の「猫」。ローズ・燕の奥まで', 'tab.diag': '牛・闘牛', 'tab.diag.d': '斜め取りの「牛」「闘牛」と並び取りの「鼠」、牛の奥まで',
+  ja: { offPrompt: '{c}の番です。『{name}』の手順から外れた局面で、いちばん良い手を打ちましょう。', offD: '手順から外れた局面で、いちばん良い手を打つ{n}問（75点で合格）', offBest: 'この局面のAIの最善手です。', offGap: 'AIの最善は {b}（{vb}）。{m} は約{d}石損（{v}）。', 'tab.tiger': '虎', 'tab.tiger.d': '縦取りの代表「虎」から、コンポス・ローズビル・金魚などの奥まで', 'tab.rabbit': '兎・猫', 'tab.rabbit.d': '縦取りの3手目c5の「兎」、c4の「猫」。ローズ・燕の奥まで', 'tab.diag': '牛・闘牛', 'tab.diag.d': '斜め取りの「牛」「闘牛」と並び取りの「鼠」、牛の奥まで',
     'b.perp': '縦取り', 'b.diag': '斜め取り', 'b.para': '並び取り', from: '『{p}』から {m} と進んだ形です。', root: 'すべての定石の出発点になる形です。', next: 'この先の定石', seq: '手順',
     study: '手順を見る', studyD: '{n}手を1手ずつ再生。それぞれの手の評価と狙いを解説します', prac: '実戦練習', pracD: '手順の局面から3手ずつ打つ{n}問。1手ごとにコーチが評価します（75点以上で合格）', drillD: '初手から最後まで{c}を担当して手順を打ち切ります',
     pracStep: '実戦練習 {i}/{n}', prompt: '{c}の番です。『{name}』の手順どおりに3手打ちましょう。',
     ply: '{n}手目　{c} {m}', ev: '{c}から見た評価 {v}（打てる{k}手のうち{r}番目）', evBest: 'AIの評価でも最善の手です。', evGap: '最善の {b}（{vb}）より約{d}石損な手ですが、定石として打たれます。', named: 'ここで『{name}』の形になります。', branch: 'この局面から分かれる定石', start: '初期配置です。▶で黒の1手目から再生します。', nums: '盤の数字は次に打てる手の評価（手番側から見た最終石差の予想）、金の丸が定石の手です。', end: '手順はここまで。次の手からは自由に戦います。',
     okLine: '定石どおり、『{name}』の手です。', okOther: '『{other}』へ進む定石の手です。『{name}』の手は {a}。', off: '{m} は定石にない手です（評価 {v}）。『{name}』の手は {a}（評価 {va}）。', aiBest: '定石の先：AIの最善手です。', aiGap: '定石の先：AIの最善は {b}（{vb}）。{m} は約{d}石損（{v}）。', pass: '合格は75点以上です。' },
-  en: { 'tab.tiger': 'Tiger', 'tab.tiger.d': 'The Tiger, the main perpendicular opening, and its depths: Comp\'Oth, Rose-bill, Goldfish…', 'tab.rabbit': 'Rabbit · Cat', 'tab.rabbit.d': 'The Rabbit (3.c5) and the Cat (3.c4) of the perpendicular opening, on to the Rose and the Swallow', 'tab.diag': 'Cow · Bull', 'tab.diag.d': 'The diagonal Cow and Bull, the parallel Mouse, and the Cow\'s depths',
+  en: { offPrompt: '{c} to play. A position off the {name} line: play the best move.', offD: '{n} positions off the line: play the best move (75 pts to pass)', offBest: 'The engine\'s best move here.', offGap: 'The engine prefers {b} ({vb}). {m} loses about {d} discs ({v}).', 'tab.tiger': 'Tiger', 'tab.tiger.d': 'The Tiger, the main perpendicular opening, and its depths: Comp\'Oth, Rose-bill, Goldfish…', 'tab.rabbit': 'Rabbit · Cat', 'tab.rabbit.d': 'The Rabbit (3.c5) and the Cat (3.c4) of the perpendicular opening, on to the Rose and the Swallow', 'tab.diag': 'Cow · Bull', 'tab.diag.d': 'The diagonal Cow and Bull, the parallel Mouse, and the Cow\'s depths',
     'b.perp': 'Perpendicular', 'b.diag': 'Diagonal', 'b.para': 'Parallel', from: 'Grown out of the {p}: {m}.', root: 'The starting point of the openings that follow.', next: 'Openings that grow out of it', seq: 'Moves',
     study: 'Watch the moves', studyD: 'Replay the {n} moves one by one, with each move\'s value and idea', prac: 'Practice', pracD: '{n} positions of the line, 3 moves each; the coach rates every move (75 pts to pass)', drillD: 'Play {c} from the first move to the last',
     pracStep: 'Practice {i}/{n}', prompt: '{c} to play. Play 3 moves of the {name}.',
     ply: 'Move {n}　{c} {m}', ev: 'Value for {c}: {v} (#{r} of {k} moves)', evBest: 'The engine\'s best move too.', evGap: 'About {d} discs below the best {b} ({vb}), but played as book.', named: 'This makes the {name}.', branch: 'Openings that branch from here', start: 'The starting position. ▶ replays from Black\'s first move.', nums: 'The numbers are the values of the next moves (expected final disc difference for the side to move); the gold ring is the book move.', end: 'The line ends here; play goes on freely.',
     okLine: 'Book move: the {name}.', okOther: 'A book move into the {other}. The {name} plays {a}.', off: '{m} is not a book move ({v}). The {name} plays {a} ({va}).', aiBest: 'Past the book: the engine\'s best move.', aiGap: 'Past the book: the engine prefers {b} ({vb}). {m} loses about {d} discs ({v}).', pass: '75 points to pass.' },
-  zh: { 'tab.tiger': '虎', 'tab.tiger.d': '纵取的代表“虎”，以及康波斯、玫瑰喙、金鱼等深处的变化', 'tab.rabbit': '兔・猫', 'tab.rabbit.d': '纵取第3手c5的“兔”、c4的“猫”，直到玫瑰与燕的深处', 'tab.diag': '牛・斗牛', 'tab.diag.d': '斜取的“牛”“斗牛”、并取的“鼠”，以及牛的深处',
+  zh: { offPrompt: '轮到{c}。偏离『{name}』手顺的局面，请下出最好的一手。', offD: '偏离手顺的局面中下出最好的一手，共{n}题（75分合格）', offBest: '这是此局面AI的最佳着法。', offGap: 'AI的最佳是 {b}（{vb}）。{m} 约亏{d}子（{v}）。', 'tab.tiger': '虎', 'tab.tiger.d': '纵取的代表“虎”，以及康波斯、玫瑰喙、金鱼等深处的变化', 'tab.rabbit': '兔・猫', 'tab.rabbit.d': '纵取第3手c5的“兔”、c4的“猫”，直到玫瑰与燕的深处', 'tab.diag': '牛・斗牛', 'tab.diag.d': '斜取的“牛”“斗牛”、并取的“鼠”，以及牛的深处',
     'b.perp': '纵取', 'b.diag': '斜取', 'b.para': '并取', from: '由『{p}』走 {m} 而来。', root: '后面所有定式的出发点。', next: '由此延伸的定式', seq: '手顺',
     study: '观看手顺', studyD: '逐手播放{n}手，讲解每一手的评价与意图', prac: '实战练习', pracD: '从手顺局面各走3手，共{n}题。每一手由教练评价（75分合格）', drillD: '从第1手到最后由你执{c}走完手顺',
     pracStep: '实战练习 {i}/{n}', prompt: '轮到{c}。按『{name}』的手顺走3手。',
     ply: '第{n}手　{c} {m}', ev: '{c}方评价 {v}（可下{k}手中第{r}）', evBest: 'AI评价也是最佳着法。', evGap: '比最佳的 {b}（{vb}）约亏{d}子，但作为定式常被采用。', named: '至此形成『{name}』。', branch: '从此局面分出的定式', start: '初始局面。按▶从黑的第1手播放。', nums: '棋盘上的数字是下一手各点的评价（以行棋方看的最终子数差预测），金圈是定式着法。', end: '手顺到此为止，之后自由对局。',
     okLine: '符合定式，是『{name}』的着法。', okOther: '这是走向『{other}』的定式着法。『{name}』走 {a}。', off: '{m} 不是定式着法（评价 {v}）。『{name}』走 {a}（评价 {va}）。', aiBest: '定式之后：AI的最佳着法。', aiGap: '定式之后：AI最佳是 {b}（{vb}）。{m} 约亏{d}子（{v}）。', pass: '75分以上合格。' },
-  'zh-TW': { 'tab.tiger': '虎', 'tab.tiger.d': '縱取的代表「虎」，以及康波斯、玫瑰喙、金魚等深處的變化', 'tab.rabbit': '兔・貓', 'tab.rabbit.d': '縱取第3手c5的「兔」、c4的「貓」，直到玫瑰與燕的深處', 'tab.diag': '牛・鬥牛', 'tab.diag.d': '斜取的「牛」「鬥牛」、並取的「鼠」，以及牛的深處',
+  'zh-TW': { offPrompt: '輪到{c}。偏離『{name}』手順的局面，請下出最好的一手。', offD: '偏離手順的局面中下出最好的一手，共{n}題（75分合格）', offBest: '這是此局面AI的最佳著法。', offGap: 'AI的最佳是 {b}（{vb}）。{m} 約虧{d}子（{v}）。', 'tab.tiger': '虎', 'tab.tiger.d': '縱取的代表「虎」，以及康波斯、玫瑰喙、金魚等深處的變化', 'tab.rabbit': '兔・貓', 'tab.rabbit.d': '縱取第3手c5的「兔」、c4的「貓」，直到玫瑰與燕的深處', 'tab.diag': '牛・鬥牛', 'tab.diag.d': '斜取的「牛」「鬥牛」、並取的「鼠」，以及牛的深處',
     'b.perp': '縱取', 'b.diag': '斜取', 'b.para': '並取', from: '由『{p}』走 {m} 而來。', root: '後面所有定石的出發點。', next: '由此延伸的定石', seq: '手順',
     study: '觀看手順', studyD: '逐手播放{n}手，講解每一手的評價與意圖', prac: '實戰練習', pracD: '從手順局面各走3手，共{n}題。每一手由教練評價（75分合格）', drillD: '從第1手到最後由你執{c}走完手順',
     pracStep: '實戰練習 {i}/{n}', prompt: '輪到{c}。按『{name}』的手順走3手。',
     ply: '第{n}手　{c} {m}', ev: '{c}方評價 {v}（可下{k}手中第{r}）', evBest: 'AI評價也是最佳著法。', evGap: '比最佳的 {b}（{vb}）約虧{d}子，但作為定石常被採用。', named: '至此形成『{name}』。', branch: '從此局面分出的定石', start: '初始局面。按▶從黑的第1手播放。', nums: '棋盤上的數字是下一手各點的評價（以行棋方看的最終子數差預測），金圈是定石著法。', end: '手順到此為止，之後自由對局。',
     okLine: '符合定石，是『{name}』的著法。', okOther: '這是走向『{other}』的定石著法。『{name}』走 {a}。', off: '{m} 不是定石著法（評價 {v}）。『{name}』走 {a}（評價 {va}）。', aiBest: '定石之後：AI的最佳著法。', aiGap: '定石之後：AI最佳是 {b}（{vb}）。{m} 約虧{d}子（{v}）。', pass: '75分以上合格。' },
-  ko: { 'tab.tiger': '호랑이', 'tab.tiger.d': '세로잡기의 대표 ‘호랑이’와 콤포스·로즈빌·금붕어 등 깊은 변화까지', 'tab.rabbit': '토끼・고양이', 'tab.rabbit.d': '세로잡기 3수째 c5의 ‘토끼’, c4의 ‘고양이’. 로즈·제비의 깊은 변화까지', 'tab.diag': '소・투우', 'tab.diag.d': '대각잡기의 ‘소’‘투우’와 나란히잡기의 ‘쥐’, 소의 깊은 변화까지',
+  ko: { offPrompt: '{c} 차례입니다. 『{name}』 수순에서 벗어난 국면에서 가장 좋은 수를 두세요.', offD: '수순에서 벗어난 국면에서 가장 좋은 수를 두는 {n}문제(75점 합격)', offBest: '이 국면에서 AI의 최선수입니다.', offGap: 'AI의 최선은 {b}({vb}). {m}은(는) 약 {d}개 손해({v}).', 'tab.tiger': '호랑이', 'tab.tiger.d': '세로잡기의 대표 ‘호랑이’와 콤포스·로즈빌·금붕어 등 깊은 변화까지', 'tab.rabbit': '토끼・고양이', 'tab.rabbit.d': '세로잡기 3수째 c5의 ‘토끼’, c4의 ‘고양이’. 로즈·제비의 깊은 변화까지', 'tab.diag': '소・투우', 'tab.diag.d': '대각잡기의 ‘소’‘투우’와 나란히잡기의 ‘쥐’, 소의 깊은 변화까지',
     'b.perp': '세로잡기', 'b.diag': '대각잡기', 'b.para': '나란히잡기', from: '『{p}』에서 {m}로 나아간 형태입니다.', root: '뒤에 오는 모든 정석의 출발점입니다.', next: '여기서 이어지는 정석', seq: '수순',
     study: '수순 보기', studyD: '{n}수를 한 수씩 재생하며 각 수의 평가와 노림을 해설합니다', prac: '실전 연습', pracD: '수순의 국면에서 3수씩 두는 {n}문제. 한 수마다 코치가 평가합니다(75점 이상 합격)', drillD: '첫 수부터 끝까지 {c}을 맡아 수순을 둡니다',
     pracStep: '실전 연습 {i}/{n}', prompt: '{c} 차례입니다. 『{name}』의 수순대로 3수 두세요.',
     ply: '{n}수째　{c} {m}', ev: '{c} 기준 평가 {v}(둘 수 있는 {k}수 중 {r}번째)', evBest: 'AI 평가로도 최선의 수입니다.', evGap: '최선인 {b}({vb})보다 약 {d}돌 손해지만 정석으로 둡니다.', named: '여기서 『{name}』의 형태가 됩니다.', branch: '이 국면에서 갈라지는 정석', start: '초기 배치입니다. ▶로 흑의 첫 수부터 재생합니다.', nums: '판의 숫자는 다음에 둘 수 있는 수의 평가(둘 차례 쪽에서 본 최종 돌 차이 예상), 금색 원이 정석의 수입니다.', end: '수순은 여기까지. 이후는 자유롭게 싸웁니다.',
     okLine: '정석대로, 『{name}』의 수입니다.', okOther: '『{other}』로 가는 정석의 수입니다. 『{name}』의 수는 {a}.', off: '{m}는 정석에 없는 수입니다(평가 {v}). 『{name}』의 수는 {a}(평가 {va}).', aiBest: '정석 이후: AI의 최선수입니다.', aiGap: '정석 이후: AI의 최선은 {b}({vb}). {m}는 약 {d}돌 손해({v}).', pass: '75점 이상이면 합격입니다.' },
-  es: { 'tab.tiger': 'Tigre', 'tab.tiger.d': 'El Tigre, la apertura perpendicular principal, y sus profundidades: Comp\'Oth, Rose-bill, Pez dorado…', 'tab.rabbit': 'Conejo · Gato', 'tab.rabbit.d': 'El Conejo (3.c5) y el Gato (3.c4) de la perpendicular, hasta la Rosa y la Golondrina', 'tab.diag': 'Vaca · Toro', 'tab.diag.d': 'La Vaca y el Toro diagonales, el Ratón paralelo y las profundidades de la Vaca',
+  es: { offPrompt: 'Juegan {c}. Una posición fuera de la línea {name}: juega la mejor jugada.', offD: '{n} posiciones fuera de la línea: juega la mejor jugada (75 pts para aprobar)', offBest: 'La mejor jugada del motor aquí.', offGap: 'El motor prefiere {b} ({vb}). {m} pierde unas {d} fichas ({v}).', 'tab.tiger': 'Tigre', 'tab.tiger.d': 'El Tigre, la apertura perpendicular principal, y sus profundidades: Comp\'Oth, Rose-bill, Pez dorado…', 'tab.rabbit': 'Conejo · Gato', 'tab.rabbit.d': 'El Conejo (3.c5) y el Gato (3.c4) de la perpendicular, hasta la Rosa y la Golondrina', 'tab.diag': 'Vaca · Toro', 'tab.diag.d': 'La Vaca y el Toro diagonales, el Ratón paralelo y las profundidades de la Vaca',
     'b.perp': 'Perpendicular', 'b.diag': 'Diagonal', 'b.para': 'Paralela', from: 'Nace de la {p}: {m}.', root: 'El punto de partida de las aperturas que siguen.', next: 'Aperturas que nacen de aquí', seq: 'Jugadas',
     study: 'Ver las jugadas', studyD: 'Reproduce las {n} jugadas una a una, con el valor y la idea de cada una', prac: 'Práctica', pracD: '{n} posiciones de la línea, 3 jugadas cada una; el entrenador valora cada jugada (75 pts para aprobar)', drillD: 'Juega con {c} de la primera jugada a la última',
     pracStep: 'Práctica {i}/{n}', prompt: 'Juegan {c}. Haz 3 jugadas de la {name}.',
     ply: 'Jugada {n}　{c} {m}', ev: 'Valor para {c}: {v} (n.º {r} de {k} jugadas)', evBest: 'También la mejor según el motor.', evGap: 'Unas {d} fichas por debajo de la mejor, {b} ({vb}), pero se juega como teoría.', named: 'Así se forma la {name}.', branch: 'Aperturas que se separan aquí', start: 'La posición inicial. ▶ reproduce desde la primera jugada de las negras.', nums: 'Los números son los valores de las siguientes jugadas (diferencia final esperada para quien mueve); el círculo dorado es la jugada de teoría.', end: 'La línea termina aquí; luego se juega libremente.',
     okLine: 'Jugada de teoría: la {name}.', okOther: 'Jugada de teoría hacia la {other}. La {name} juega {a}.', off: '{m} no es de teoría ({v}). La {name} juega {a} ({va}).', aiBest: 'Fuera de la teoría: la mejor del motor.', aiGap: 'Fuera de la teoría: el motor prefiere {b} ({vb}). {m} pierde unas {d} fichas ({v}).', pass: 'Se aprueba con 75 puntos.' },
-  fr: { 'tab.tiger': 'Tigre', 'tab.tiger.d': 'Le Tigre, la grande ouverture perpendiculaire, et ses profondeurs : Comp\'Oth, Rose-bill, Poisson rouge…', 'tab.rabbit': 'Lapin · Chat', 'tab.rabbit.d': 'Le Lapin (3.c5) et le Chat (3.c4) de la perpendiculaire, jusqu\'à la Rose et l\'Hirondelle', 'tab.diag': 'Vache · Taureau', 'tab.diag.d': 'La Vache et le Taureau diagonaux, la Souris parallèle et les profondeurs de la Vache',
+  fr: { offPrompt: 'Aux {c} de jouer. Une position hors de la ligne {name} : jouez le meilleur coup.', offD: '{n} positions hors de la ligne : jouez le meilleur coup (75 pts pour réussir)', offBest: 'Le meilleur coup du moteur ici.', offGap: 'Le moteur préfère {b} ({vb}). {m} perd environ {d} pions ({v}).', 'tab.tiger': 'Tigre', 'tab.tiger.d': 'Le Tigre, la grande ouverture perpendiculaire, et ses profondeurs : Comp\'Oth, Rose-bill, Poisson rouge…', 'tab.rabbit': 'Lapin · Chat', 'tab.rabbit.d': 'Le Lapin (3.c5) et le Chat (3.c4) de la perpendiculaire, jusqu\'à la Rose et l\'Hirondelle', 'tab.diag': 'Vache · Taureau', 'tab.diag.d': 'La Vache et le Taureau diagonaux, la Souris parallèle et les profondeurs de la Vache',
     'b.perp': 'Perpendiculaire', 'b.diag': 'Diagonale', 'b.para': 'Parallèle', from: 'Issue de la {p} : {m}.', root: 'Le point de départ des ouvertures qui suivent.', next: 'Ouvertures qui en découlent', seq: 'Coups',
     study: 'Voir les coups', studyD: 'Rejoue les {n} coups un par un, avec la valeur et l\'idée de chacun', prac: 'Entraînement', pracD: '{n} positions de la ligne, 3 coups chacune ; le coach note chaque coup (75 pts pour réussir)', drillD: 'Jouez {c} du premier coup au dernier',
     pracStep: 'Entraînement {i}/{n}', prompt: 'Trait aux {c}. Jouez 3 coups de la {name}.',
     ply: 'Coup {n}　{c} {m}', ev: 'Valeur pour {c} : {v} ({r}e sur {k} coups)', evBest: 'Aussi le meilleur coup du moteur.', evGap: 'Environ {d} pions sous le meilleur, {b} ({vb}), mais joué comme théorie.', named: 'Voici la {name}.', branch: 'Ouvertures qui partent d\'ici', start: 'La position de départ. ▶ rejoue depuis le premier coup noir.', nums: 'Les nombres sont les valeurs des coups suivants (écart final attendu pour le trait) ; le cercle doré est le coup théorique.', end: 'La ligne s\'arrête ici ; la partie continue librement.',
     okLine: 'Coup théorique : la {name}.', okOther: 'Coup théorique vers la {other}. La {name} joue {a}.', off: '{m} n\'est pas théorique ({v}). La {name} joue {a} ({va}).', aiBest: 'Après la théorie : le meilleur coup du moteur.', aiGap: 'Après la théorie : le moteur préfère {b} ({vb}). {m} perd environ {d} pions ({v}).', pass: '75 points pour réussir.' },
-  pt: { 'tab.tiger': 'Tigre', 'tab.tiger.d': 'O Tigre, a principal abertura perpendicular, e suas profundezas: Comp\'Oth, Rose-bill, Peixinho-dourado…', 'tab.rabbit': 'Coelho · Gato', 'tab.rabbit.d': 'O Coelho (3.c5) e o Gato (3.c4) da perpendicular, até a Rosa e a Andorinha', 'tab.diag': 'Vaca · Touro', 'tab.diag.d': 'A Vaca e o Touro diagonais, o Rato paralelo e as profundezas da Vaca',
+  pt: { offPrompt: 'Jogam as {c}. Uma posição fora da linha {name}: jogue o melhor lance.', offD: '{n} posições fora da linha: jogue o melhor lance (75 pts para passar)', offBest: 'O melhor lance do motor aqui.', offGap: 'O motor prefere {b} ({vb}). {m} perde cerca de {d} peças ({v}).', 'tab.tiger': 'Tigre', 'tab.tiger.d': 'O Tigre, a principal abertura perpendicular, e suas profundezas: Comp\'Oth, Rose-bill, Peixinho-dourado…', 'tab.rabbit': 'Coelho · Gato', 'tab.rabbit.d': 'O Coelho (3.c5) e o Gato (3.c4) da perpendicular, até a Rosa e a Andorinha', 'tab.diag': 'Vaca · Touro', 'tab.diag.d': 'A Vaca e o Touro diagonais, o Rato paralelo e as profundezas da Vaca',
     'b.perp': 'Perpendicular', 'b.diag': 'Diagonal', 'b.para': 'Paralela', from: 'Nasce da {p}: {m}.', root: 'O ponto de partida das aberturas seguintes.', next: 'Aberturas que nascem daqui', seq: 'Lances',
     study: 'Ver os lances', studyD: 'Reproduz os {n} lances um a um, com o valor e a ideia de cada um', prac: 'Prática', pracD: '{n} posições da linha, 3 lances cada; o treinador avalia cada lance (75 pts para passar)', drillD: 'Jogue de {c} do primeiro ao último lance',
     pracStep: 'Prática {i}/{n}', prompt: 'Vez das {c}. Faça 3 lances da {name}.',
     ply: 'Lance {n}　{c} {m}', ev: 'Valor para {c}: {v} ({r}º de {k} lances)', evBest: 'Também o melhor lance do motor.', evGap: 'Cerca de {d} peças abaixo do melhor, {b} ({vb}), mas jogado como teoria.', named: 'Assim se forma a {name}.', branch: 'Aberturas que se separam aqui', start: 'A posição inicial. ▶ reproduz desde o primeiro lance das pretas.', nums: 'Os números são os valores dos próximos lances (diferença final esperada para quem joga); o círculo dourado é o lance teórico.', end: 'A linha termina aqui; depois joga-se livremente.',
     okLine: 'Lance teórico: a {name}.', okOther: 'Lance teórico rumo à {other}. A {name} joga {a}.', off: '{m} não é teórico ({v}). A {name} joga {a} ({va}).', aiBest: 'Após a teoria: o melhor lance do motor.', aiGap: 'Após a teoria: o motor prefere {b} ({vb}). {m} perde cerca de {d} peças ({v}).', pass: '75 pontos para passar.' },
-  de: { 'tab.tiger': 'Tiger', 'tab.tiger.d': 'Der Tiger, die wichtigste senkrechte Eröffnung, und seine Tiefen: Comp\'Oth, Rose-bill, Goldfisch…', 'tab.rabbit': 'Hase · Katze', 'tab.rabbit.d': 'Hase (3.c5) und Katze (3.c4) der senkrechten Eröffnung, bis zu Rose und Schwalbe', 'tab.diag': 'Kuh · Stier', 'tab.diag.d': 'Die diagonale Kuh und der Stier, die parallele Maus und die Tiefen der Kuh',
+  de: { offPrompt: '{c} ist am Zug. Eine Stellung abseits der Linie {name}: spiele den besten Zug.', offD: '{n} Stellungen abseits der Linie: spiele den besten Zug (75 P. zum Bestehen)', offBest: 'Der beste Zug der Engine hier.', offGap: 'Die Engine bevorzugt {b} ({vb}). {m} verliert etwa {d} Steine ({v}).', 'tab.tiger': 'Tiger', 'tab.tiger.d': 'Der Tiger, die wichtigste senkrechte Eröffnung, und seine Tiefen: Comp\'Oth, Rose-bill, Goldfisch…', 'tab.rabbit': 'Hase · Katze', 'tab.rabbit.d': 'Hase (3.c5) und Katze (3.c4) der senkrechten Eröffnung, bis zu Rose und Schwalbe', 'tab.diag': 'Kuh · Stier', 'tab.diag.d': 'Die diagonale Kuh und der Stier, die parallele Maus und die Tiefen der Kuh',
     'b.perp': 'Senkrechte Eröffnung', 'b.diag': 'Diagonale Eröffnung', 'b.para': 'Parallele Eröffnung', from: 'Entsteht aus: {p} – {m}.', root: 'Der Ausgangspunkt der folgenden Eröffnungen.', next: 'Eröffnungen, die daraus entstehen', seq: 'Züge',
     study: 'Züge ansehen', studyD: 'Die {n} Züge einzeln abspielen, mit Wert und Idee jedes Zuges', prac: 'Übung', pracD: '{n} Stellungen der Variante, je 3 Züge; der Coach bewertet jeden Zug (75 P. zum Bestehen)', drillD: 'Spiele {c} vom ersten bis zum letzten Zug',
     pracStep: 'Übung {i}/{n}', prompt: '{c} am Zug. Spiele 3 Züge: {name}.',
     ply: 'Zug {n}　{c} {m}', ev: 'Wert für {c}: {v} (Nr. {r} von {k} Zügen)', evBest: 'Auch der beste Zug der Engine.', evGap: 'Etwa {d} Steine unter dem besten, {b} ({vb}), aber als Theorie gespielt.', named: 'Damit entsteht: {name}.', branch: 'Eröffnungen, die hier abzweigen', start: 'Die Ausgangsstellung. ▶ spielt ab dem ersten Zug von Schwarz ab.', nums: 'Die Zahlen sind die Werte der nächsten Züge (erwartete Steindifferenz für die Seite am Zug); der goldene Ring ist der Theoriezug.', end: 'Die Variante endet hier; danach wird frei gespielt.',
     okLine: 'Theoriezug: {name}.', okOther: 'Ein Theoriezug in Richtung {other}. {name} spielt {a}.', off: '{m} ist kein Theoriezug ({v}). {name} spielt {a} ({va}).', aiBest: 'Nach der Theorie: der beste Zug der Engine.', aiGap: 'Nach der Theorie: die Engine bevorzugt {b} ({vb}). {m} verliert etwa {d} Steine ({v}).', pass: 'Bestanden ab 75 Punkten.' },
-  hi: { 'tab.tiger': 'बाघ', 'tab.tiger.d': 'लंबवत ओपनिंग का मुख्य “बाघ” और उसकी गहराइयाँ: कॉम्पोस, रोज़-बिल, गोल्डफ़िश…', 'tab.rabbit': 'खरगोश · बिल्ली', 'tab.rabbit.d': 'लंबवत ओपनिंग की तीसरी चाल c5 “खरगोश” और c4 “बिल्ली”, रोज़ और स्वैलो तक', 'tab.diag': 'गाय · साँड', 'tab.diag.d': 'तिरछी ओपनिंग की “गाय” और “साँड”, समानांतर “चूहा” और गाय की गहराइयाँ',
+  hi: { offPrompt: '{c} की चाल। {name} की चालों से हटी स्थिति: सबसे अच्छी चाल चलो।', offD: 'चालों से हटी {n} स्थितियाँ: सबसे अच्छी चाल चलो (पास के लिए 75 अंक)', offBest: 'यहाँ इंजन की सबसे अच्छी चाल।', offGap: 'इंजन {b} ({vb}) पसंद करता है। {m} से लगभग {d} गोटियों का नुकसान ({v})।', 'tab.tiger': 'बाघ', 'tab.tiger.d': 'लंबवत ओपनिंग का मुख्य “बाघ” और उसकी गहराइयाँ: कॉम्पोस, रोज़-बिल, गोल्डफ़िश…', 'tab.rabbit': 'खरगोश · बिल्ली', 'tab.rabbit.d': 'लंबवत ओपनिंग की तीसरी चाल c5 “खरगोश” और c4 “बिल्ली”, रोज़ और स्वैलो तक', 'tab.diag': 'गाय · साँड', 'tab.diag.d': 'तिरछी ओपनिंग की “गाय” और “साँड”, समानांतर “चूहा” और गाय की गहराइयाँ',
     'b.perp': 'लंबवत ओपनिंग', 'b.diag': 'तिरछी ओपनिंग', 'b.para': 'समानांतर ओपनिंग', from: '“{p}” से {m} चलकर बना रूप।', root: 'आगे आने वाली सभी ओपनिंग का आरंभ बिंदु।', next: 'इससे निकलने वाली ओपनिंग', seq: 'चालें',
     study: 'चालें देखें', studyD: '{n} चालें एक-एक करके, हर चाल के मूल्यांकन और उद्देश्य के साथ', prac: 'अभ्यास', pracD: 'क्रम की {n} स्थितियों से 3-3 चालें; कोच हर चाल आँकता है (75 अंक पर पास)', drillD: 'पहली से आख़िरी चाल तक {c} से खेलें',
     pracStep: 'अभ्यास {i}/{n}', prompt: '{c} की बारी। “{name}” के क्रम से 3 चालें चलें।',
     ply: 'चाल {n}　{c} {m}', ev: '{c} के लिए मूल्यांकन {v} ({k} चालों में {r}वीं)', evBest: 'इंजन के अनुसार भी सबसे अच्छी चाल।', evGap: 'सबसे अच्छी {b} ({vb}) से लगभग {d} गोटी कम, पर ओपनिंग के रूप में खेली जाती है।', named: 'यहाँ “{name}” बनता है।', branch: 'यहाँ से निकलने वाली ओपनिंग', start: 'शुरुआती स्थिति। ▶ काले की पहली चाल से चलाता है।', nums: 'संख्याएँ अगली चालों का मूल्यांकन हैं (चाल वाले पक्ष के लिए अनुमानित अंतिम अंतर); सुनहरा घेरा ओपनिंग की चाल है।', end: 'क्रम यहाँ समाप्त; आगे खेल स्वतंत्र है।',
     okLine: 'ओपनिंग की चाल: “{name}”।', okOther: '“{other}” की ओर जाने वाली ओपनिंग चाल। “{name}” में {a}।', off: '{m} ओपनिंग की चाल नहीं ({v})। “{name}” में {a} ({va})।', aiBest: 'ओपनिंग के बाद: इंजन की सबसे अच्छी चाल।', aiGap: 'ओपनिंग के बाद: इंजन {b} ({vb}) पसंद करता है। {m} से लगभग {d} गोटी का नुक़सान ({v})।', pass: '75 अंक पर पास।' },
-  ar: { 'tab.tiger': 'النمر', 'tab.tiger.d': '«النمر» أهم افتتاحات الأخذ العمودي، وأعماقه: كومبوس وروز-بِل والسمكة الذهبية…', 'tab.rabbit': 'الأرنب · القط', 'tab.rabbit.d': '«الأرنب» (3.c5) و«القط» (3.c4) في الأخذ العمودي، حتى الوردة والسنونو', 'tab.diag': 'البقرة · الثور', 'tab.diag.d': '«البقرة» و«الثور» القطريان و«الفأر» المتوازي، وأعماق البقرة',
+  ar: { offPrompt: 'دور {c}. وضعية خارج خط {name}: العب أفضل نقلة.', offD: '{n} أوضاع خارج الخط: العب أفضل نقلة (75 نقطة للنجاح)', offBest: 'أفضل نقلة للمحرك هنا.', offGap: 'يفضّل المحرك {b} ({vb}). {m} تخسر نحو {d} أقراص ({v}).', 'tab.tiger': 'النمر', 'tab.tiger.d': '«النمر» أهم افتتاحات الأخذ العمودي، وأعماقه: كومبوس وروز-بِل والسمكة الذهبية…', 'tab.rabbit': 'الأرنب · القط', 'tab.rabbit.d': '«الأرنب» (3.c5) و«القط» (3.c4) في الأخذ العمودي، حتى الوردة والسنونو', 'tab.diag': 'البقرة · الثور', 'tab.diag.d': '«البقرة» و«الثور» القطريان و«الفأر» المتوازي، وأعماق البقرة',
     'b.perp': 'الأخذ العمودي', 'b.diag': 'الأخذ القطري', 'b.para': 'الأخذ المتوازي', from: 'نشأ من «{p}» بالنقلات {m}.', root: 'نقطة انطلاق الافتتاحات التالية.', next: 'افتتاحات تنشأ منه', seq: 'النقلات',
     study: 'شاهد النقلات', studyD: 'إعادة النقلات الـ{n} واحدة واحدة مع تقييم كل نقلة وفكرتها', prac: 'تدريب', pracD: '{n} أوضاع من الخط، 3 نقلات لكل منها؛ يقيّم المدرب كل نقلة (النجاح بـ75 نقطة)', drillD: 'العب بـ{c} من النقلة الأولى حتى الأخيرة',
     pracStep: 'تدريب {i}/{n}', prompt: 'دور {c}. العب 3 نقلات من «{name}».',
     ply: 'النقلة {n}　{c} {m}', ev: 'التقييم لـ{c}: {v} (رقم {r} من {k} نقلات)', evBest: 'وهي أيضًا أفضل نقلة عند المحرك.', evGap: 'أقل من الأفضل {b} ({vb}) بنحو {d} أحجار، لكنها تُلعب كافتتاح معروف.', named: 'هنا يتكوّن «{name}».', branch: 'افتتاحات تتفرع من هنا', start: 'الوضع الابتدائي. ▶ يعيد من أول نقلة للأسود.', nums: 'الأرقام تقييمات النقلات التالية (الفارق النهائي المتوقع لمن عليه الدور)؛ الدائرة الذهبية نقلة الافتتاح.', end: 'ينتهي الخط هنا، وبعده اللعب حر.',
     okLine: 'نقلة افتتاح: «{name}».', okOther: 'نقلة افتتاح نحو «{other}». في «{name}» تُلعب {a}.', off: '{m} ليست من الافتتاح ({v}). في «{name}» تُلعب {a} ({va}).', aiBest: 'بعد الافتتاح: أفضل نقلة للمحرك.', aiGap: 'بعد الافتتاح: يفضّل المحرك {b} ({vb}). {m} تخسر نحو {d} أحجار ({v}).', pass: 'النجاح بـ75 نقطة.' },
-  ru: { 'tab.tiger': 'Тигр', 'tab.tiger.d': '«Тигр» — главный перпендикулярный дебют — и его глубины: Comp\'Oth, Роуз-билл, Золотая рыбка…', 'tab.rabbit': 'Кролик · Кот', 'tab.rabbit.d': '«Кролик» (3.c5) и «Кот» (3.c4) перпендикулярного дебюта, до Розы и Ласточки', 'tab.diag': 'Корова · Бык', 'tab.diag.d': 'Диагональные «Корова» и «Бык», параллельная «Мышь» и глубины Коровы',
+  ru: { offPrompt: 'Ход {c}. Позиция вне линии {name}: сделайте лучший ход.', offD: '{n} позиций вне линии: сделайте лучший ход (75 очков для зачёта)', offBest: 'Лучший ход движка здесь.', offGap: 'Движок предпочитает {b} ({vb}). {m} теряет около {d} фишек ({v}).', 'tab.tiger': 'Тигр', 'tab.tiger.d': '«Тигр» — главный перпендикулярный дебют — и его глубины: Comp\'Oth, Роуз-билл, Золотая рыбка…', 'tab.rabbit': 'Кролик · Кот', 'tab.rabbit.d': '«Кролик» (3.c5) и «Кот» (3.c4) перпендикулярного дебюта, до Розы и Ласточки', 'tab.diag': 'Корова · Бык', 'tab.diag.d': 'Диагональные «Корова» и «Бык», параллельная «Мышь» и глубины Коровы',
     'b.perp': 'Перпендикулярный дебют', 'b.diag': 'Диагональный дебют', 'b.para': 'Параллельный дебют', from: 'Вырастает из «{p}»: {m}.', root: 'Отправная точка следующих дебютов.', next: 'Дебюты, которые из него вырастают', seq: 'Ходы',
     study: 'Смотреть ходы', studyD: '{n} ходов по одному — с оценкой и идеей каждого', prac: 'Практика', pracD: '{n} позиций линии по 3 хода; тренер оценивает каждый ход (75 очк. для зачёта)', drillD: 'Играйте за {c} с первого хода до последнего',
     pracStep: 'Практика {i}/{n}', prompt: 'Ход {c}. Сделайте 3 хода по «{name}».',
     ply: 'Ход {n}　{c} {m}', ev: 'Оценка для {c}: {v} ({r}-й из {k} ходов)', evBest: 'И лучший ход движка.', evGap: 'Примерно на {d} фишек хуже лучшего {b} ({vb}), но играется по теории.', named: 'Так получается «{name}».', branch: 'Дебюты, которые отсюда расходятся', start: 'Начальная позиция. ▶ — с первого хода чёрных.', nums: 'Числа — оценки следующих ходов (ожидаемая итоговая разница для стороны на ходу); золотое кольцо — ход по теории.', end: 'Линия заканчивается; дальше игра свободная.',
     okLine: 'Ход по теории: «{name}».', okOther: 'Ход по теории в сторону «{other}». В «{name}» — {a}.', off: '{m} — не теория ({v}). В «{name}» — {a} ({va}).', aiBest: 'После теории: лучший ход движка.', aiGap: 'После теории: движок предпочитает {b} ({vb}). {m} теряет около {d} фишек ({v}).', pass: 'Зачёт от 75 очков.' },
-  id: { 'tab.tiger': 'Harimau', 'tab.tiger.d': 'Harimau, pembukaan tegak lurus utama, dan kedalamannya: Comp\'Oth, Rose-bill, Ikan Mas…', 'tab.rabbit': 'Kelinci · Kucing', 'tab.rabbit.d': 'Kelinci (3.c5) dan Kucing (3.c4) dari pembukaan tegak lurus, hingga Mawar dan Walet', 'tab.diag': 'Sapi · Banteng', 'tab.diag.d': 'Sapi dan Banteng diagonal, Tikus paralel, dan kedalaman Sapi',
+  id: { offPrompt: 'Giliran {c}. Posisi di luar jalur {name}: mainkan langkah terbaik.', offD: '{n} posisi di luar jalur: mainkan langkah terbaik (lulus 75 poin)', offBest: 'Langkah terbaik mesin di sini.', offGap: 'Mesin memilih {b} ({vb}). {m} rugi sekitar {d} keping ({v}).', 'tab.tiger': 'Harimau', 'tab.tiger.d': 'Harimau, pembukaan tegak lurus utama, dan kedalamannya: Comp\'Oth, Rose-bill, Ikan Mas…', 'tab.rabbit': 'Kelinci · Kucing', 'tab.rabbit.d': 'Kelinci (3.c5) dan Kucing (3.c4) dari pembukaan tegak lurus, hingga Mawar dan Walet', 'tab.diag': 'Sapi · Banteng', 'tab.diag.d': 'Sapi dan Banteng diagonal, Tikus paralel, dan kedalaman Sapi',
     'b.perp': 'Pembukaan tegak lurus', 'b.diag': 'Pembukaan diagonal', 'b.para': 'Pembukaan paralel', from: 'Tumbuh dari {p}: {m}.', root: 'Titik awal pembukaan-pembukaan berikutnya.', next: 'Pembukaan yang tumbuh dari sini', seq: 'Langkah',
     study: 'Lihat langkahnya', studyD: 'Putar {n} langkah satu per satu, dengan nilai dan ide tiap langkah', prac: 'Latihan', pracD: '{n} posisi dari jalur ini, 3 langkah masing-masing; pelatih menilai tiap langkah (lulus 75 poin)', drillD: 'Mainkan {c} dari langkah pertama sampai terakhir',
     pracStep: 'Latihan {i}/{n}', prompt: 'Giliran {c}. Mainkan 3 langkah {name}.',
     ply: 'Langkah {n}　{c} {m}', ev: 'Nilai untuk {c}: {v} (ke-{r} dari {k} langkah)', evBest: 'Juga langkah terbaik mesin.', evGap: 'Sekitar {d} keping di bawah yang terbaik, {b} ({vb}), tetapi dimainkan sebagai teori.', named: 'Di sini terbentuk {name}.', branch: 'Pembukaan yang bercabang dari sini', start: 'Posisi awal. ▶ memutar dari langkah pertama Hitam.', nums: 'Angka adalah nilai langkah berikutnya (perkiraan selisih akhir bagi yang melangkah); lingkaran emas adalah langkah teori.', end: 'Jalur berakhir di sini; selanjutnya bermain bebas.',
     okLine: 'Langkah teori: {name}.', okOther: 'Langkah teori menuju {other}. {name} memainkan {a}.', off: '{m} bukan langkah teori ({v}). {name} memainkan {a} ({va}).', aiBest: 'Setelah teori: langkah terbaik mesin.', aiGap: 'Setelah teori: mesin memilih {b} ({vb}). {m} rugi sekitar {d} keping ({v}).', pass: 'Lulus dengan 75 poin.' },
-  tr: { 'tab.tiger': 'Kaplan', 'tab.tiger.d': 'Dik açılışın başı Kaplan ve derinlikleri: Comp\'Oth, Rose-bill, Japon Balığı…', 'tab.rabbit': 'Tavşan · Kedi', 'tab.rabbit.d': 'Dik açılışta 3.c5 Tavşan ve 3.c4 Kedi; Gül ve Kırlangıç\'a kadar', 'tab.diag': 'İnek · Boğa', 'tab.diag.d': 'Çapraz İnek ve Boğa, paralel Fare ve İnek\'in derinlikleri',
+  tr: { offPrompt: 'Sıra {c}. {name} hattının dışında bir konum: en iyi hamleyi oyna.', offD: 'Hattın dışında {n} konum: en iyi hamleyi oyna (geçmek için 75 puan)', offBest: 'Motorun buradaki en iyi hamlesi.', offGap: 'Motor {b} ({vb}) hamlesini tercih ediyor. {m} yaklaşık {d} taş kaybettirir ({v}).', 'tab.tiger': 'Kaplan', 'tab.tiger.d': 'Dik açılışın başı Kaplan ve derinlikleri: Comp\'Oth, Rose-bill, Japon Balığı…', 'tab.rabbit': 'Tavşan · Kedi', 'tab.rabbit.d': 'Dik açılışta 3.c5 Tavşan ve 3.c4 Kedi; Gül ve Kırlangıç\'a kadar', 'tab.diag': 'İnek · Boğa', 'tab.diag.d': 'Çapraz İnek ve Boğa, paralel Fare ve İnek\'in derinlikleri',
     'b.perp': 'Dik açılış', 'b.diag': 'Çapraz açılış', 'b.para': 'Paralel açılış', from: '{p} açılışından {m} ile doğar.', root: 'Sonraki açılışların başlangıç noktası.', next: 'Buradan doğan açılışlar', seq: 'Hamleler',
     study: 'Hamleleri izle', studyD: '{n} hamleyi tek tek oynatır; her hamlenin değeri ve fikri', prac: 'Alıştırma', pracD: 'Hattın {n} konumundan 3\'er hamle; koç her hamleyi değerlendirir (geçmek için 75 puan)', drillD: 'İlk hamleden son hamleye {c} ile oyna',
     pracStep: 'Alıştırma {i}/{n}', prompt: 'Sıra {c} tarafında. {name} hattından 3 hamle oynayın.',
@@ -102,7 +102,7 @@ const BASE = [['f5d6', 'b.perp'], ['f5f6', 'b.diag'], ['f5f4', 'b.para']];
 const TABS = [['tiger', ['op-tiger', 'op-tigervar', 'op-compos', 'op-rosebill'], 'f5d6c3d3c4'], ['rabbit', ['op-rabbit', 'op-roseswallow'], 'f5d6c5'], ['diag', ['op-cow', 'op-bull', 'op-cowdeep'], 'f5f6e6f4']];
 const PT2 = o => (o && (o[LANG] || o.en || o.ja)) || '';
 const splitM = s => String(s || '').match(/../g) || [];
-let STEPS = null, EV = null, evP = null;
+let STEPS = null, EV = null, evP = null, OPP = {};
 function steps() {
   if (STEPS || !openData || !openData.sets) return STEPS || [];
   STEPS = []; const byId = new Map(openData.sets.map((s, i) => [s.id, i])), used = new Set();
@@ -111,7 +111,9 @@ function steps() {
   openData.sets.forEach((s, si) => { if (!used.has(si) && s.kind === 'opening') add('tiger', si); });
   return STEPS;
 }
-const loadEv = () => evP || (evP = fetch('opcourse-evals.json?v=1').then(r => r.json()).then(d => (EV = d)).catch(() => (EV = {})));
+const loadEv = () => evP || (evP = Promise.all([fetch('opcourse-evals.json?v=1').then(r => r.json()).then(d => (EV = d)).catch(() => (EV = {})),
+  fetch('opcourse-probs.json?v=1').then(r => r.json()).then(d => (OPP = d || {})).catch(() => (OPP = {}))]));   // (2026-11-24 第2期・担当B) + the verified pools off the line (= the 3D)
+const poolOf = moves => (OPP[moves] || []).length >= 5 ? OPP[moves].slice(0, 5) : null;
 // the named line a sequence grows out of: the longest other named line (or a base opening) that is a strict prefix
 function parentOf(moves) {
   let best = null;
@@ -177,7 +179,7 @@ function intro(i) {
   const chapNo = S.filter((x, k) => k <= i && x.chap === st.chap).length, x = LT(st.set);
   $('#btnLessonStart').classList.add('hidden');
   const p = lxAfter(ln.moves), fig = rlSVG(p.cells, { marks: p.last >= 0 ? { [p.last]: 'new' } : {} });
-  const ip = opInfoParts(ln), probs = picks(ln.moves).length, s = lxState(stepId(st));
+  const ip = opInfoParts(ln), pool = poolOf(ln.moves), probs = pool ? pool.length : picks(ln.moves).length, s = lxState(stepId(st));
   const lead = [`<b>${PT2(ln.aim)}</b>`, `<div class="oc-seq">${seqHtml(ln.moves, par ? par.m.length : 0)}</div>`,
     `<span class="oc-from">${par ? tx('from', { p: par.name, m: splitM(ln.moves.slice(par.m.length)).map((m, k) => `${par.m.length / 2 + k + 1}.${m}`).join(' ') }) : tx('root')}</span>`];
   const kids = childrenOf(ln.moves);
@@ -186,7 +188,7 @@ function intro(i) {
     const U = (window.__lux && (__lux.ui[LANG] || __lux.ui.en)) || {}, H = k => LuxIntro.head(k, LANG);
     const note = noteHtml(ln);
     LuxIntro.opening({ step: `${x.title} · STEP ${chapNo}`, title: nm, fig, cap: (U.figO || '') + (s.pr ? ` · ${s.st.text}` : ''), lead,
-      choices: [{ ic: '📖', b: tx('study'), small: tx('studyD', { n: seq.length }), attrs: 'data-ocs="1"' }, { ic: '✎', b: tx('prac'), small: tx('pracD', { n: probs }), attrs: 'data-ocp="1"' },
+      choices: [{ ic: '📖', b: tx('study'), small: tx('studyD', { n: seq.length }), attrs: 'data-ocs="1"' }, { ic: '✎', b: tx('prac'), small: tx(pool ? 'offD' : 'pracD', { n: probs }), attrs: 'data-ocp="1"' },
         { ic: '●', b: t('op.drillB'), small: tx('drillD', { c: t('black') }), attrs: 'data-ocd="1"' }, { ic: '○', b: t('op.drillW'), small: tx('drillD', { c: t('white') }), attrs: 'data-ocd="2"' }],
       secs: [(ip.rest || note) && { h: H('think'), html: (ip.rest ? tagged(ip.rest) : '') + note }, ip.origin && { h: H('hist'), html: tagged(ip.origin) }, kidsH && { h: tx('next'), html: kidsH }].filter(Boolean) });
   };
@@ -258,7 +260,7 @@ function practice(i) {
   lesson = { opc: true, idx: i, st, ln: st.ln, l: st.set, ks: picks(st.ln.moves), i: 0, results: [], answered: false };
   introIdx = i;
   document.body.classList.add('in-lesson');
-  loadEv().then(() => { if (lesson && lesson.opc && lesson.idx === i) loadProb(); });
+  loadEv().then(() => { if (!(lesson && lesson.opc && lesson.idx === i)) return; const pool = poolOf(st.ln.moves); if (pool) { lesson.pool = pool; lesson.ks = pool.map((_, k) => k); } loadProb(); });
 }
 const seqOf = () => splitM(lesson.ln.moves);
 function rebuild(ms, anim) {
@@ -267,7 +269,33 @@ function rebuild(ms, anim) {
   cur = positions.length - 1; reviewing = false;
   clearMarks(); clearHints(); renderBoard(anim && a ? a : null); if (anim && a) playPlace(a.flips.length);
 }
+// (2026-11-24 第2期・担当B) a verified pool (opcourse-probs.json = the 3D's): one move from a position off the line, scored like the 3D
+// REVERSI.points (the engine's best 20, another move 14 − 2.5 × the discs below it, from the stored search)
+function loadPool() {
+  const L = lesson, P = L.pool[L.i], base = P.via.match(/../g), L0 = L, I0 = L.i;
+  L.answered = false; L.base = base;
+  $('#reviewBar').classList.remove('show'); $('#coach').classList.remove('show');
+  rebuild(base, false);
+  if (window.SeqPrac) SeqPrac.stop();
+  const full = line => base.concat(line), sc = P.sc, top = sc[0];
+  SeqPrac.start({ N: 1,
+    lang: () => LANG, book: () => null, best: () => P.best, model: () => null,
+    analyze: async () => sc.map(([u, v]) => ({ u, wr: 1 / (1 + Math.exp(-v / 6)) })),
+    think: async () => P.best,
+    rate: async (line, u) => { if (u === P.best) return { pts: 20, best: P.best, why: esc(tx('offBest')) };
+      const mine = sc.find(x => x[0] === u), d = mine ? Math.max(0, top[1] - mine[1]) : 8;
+      return { pts: Math.max(0, Math.min(14, Math.round(14 - 2.5 * d))), best: P.best, why: esc(tx('offGap', { b: P.best, vb: evFmt(top[1]), m: u, d: d.toFixed(1), v: mine ? evFmt(mine[1]) : '—' })) }; },
+    name: (line, u) => `${full(line).length + 1}.${u}`,
+    over: line => { let o = true; rebuildTmp(full(line), (c, tm) => { o = !tm; }); return o; },
+    show: (line, anim) => { if (lesson !== L0 || L0.i !== I0) return; rebuild(full(line), anim); card(); },
+    mark: u => { clearMarks(); addMark(rlSq(u), 'best'); },
+    changed: () => { if (lesson !== L0 || L0.i !== I0) return; card(); },
+    done: total => { if (lesson !== L0 || L0.i !== I0) return; L0.results[L0.i] = total; L0.answered = true; card(); try { if (total >= 16) sfxCorrect(); else playChime(false); } catch (e) {} },
+  });
+  card();
+}
 function loadProb() {
+  if (lesson && lesson.pool) return loadPool();
   const L = lesson, k = L.ks[L.i], seq = seqOf(), base = seq.slice(0, k);
   L.answered = false; L.base = base;
   $('#reviewBar').classList.remove('show'); $('#coach').classList.remove('show');
@@ -322,7 +350,8 @@ function card() {
   $('#lsTitle').textContent = PT2(L.ln.name);
   $('#lsDots').innerHTML = L.ks.map((_, k) => `<i class="${L.results[k] != null ? (L.results[k] >= 16 ? 'ok' : L.results[k] >= 10 ? 'mid' : 'ng') : k === L.i ? 'cur' : ''}"></i>`).join('');
   const seq = seqOf(), at = L.base.length + (S ? S.line.length : 0);
-  $('#lsPrompt').innerHTML = (S && !S.done ? tx('prompt', { c: `<b>${cname(positions[positions.length - 1].toMove || BLACK)}</b>`, name: PT2(L.ln.name) }) : '')
+  if (L.pool) { $('#lsPrompt').innerHTML = S && !S.done ? tx('offPrompt', { c: `<b>${cname(positions[positions.length - 1].toMove || BLACK)}</b>`, name: PT2(L.ln.name) }) : ''; }
+  else $('#lsPrompt').innerHTML = (S && !S.done ? tx('prompt', { c: `<b>${cname(positions[positions.length - 1].toMove || BLACK)}</b>`, name: PT2(L.ln.name) }) : '')
     + `<div class="oc-seq sm">${seq.map((m, j) => `<span class="oc-m${j < L.base.length ? ' pl' : j < at && S && S.line[j - L.base.length] === m ? ' ok' : ''}${j === at ? ' at' : ''}"><i>${j + 1}</i>${j < at || (S && S.done) ? m : '?'}</span>`).join('')}</div>`;
   $('#lsFb').innerHTML = window.SeqPrac ? SeqPrac.status() : '';
   $('#lsNext').textContent = t(L.i === n - 1 ? 'ls.result' : 'ls.next');

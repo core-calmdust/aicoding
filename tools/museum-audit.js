@@ -91,6 +91,13 @@ const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,
         await p.keyboard.press('Escape'); await p.waitForTimeout(900); return out; })();
       // 22 読み物の文の重さ: 読み込んだ物語の文ファイル（read-i18n）の合計が 300KB を超えた分（100KB ごとに 1）。全言語を一度に読まないこと
       m.textKB = r !== 'read' ? 0 : await p.evaluate(() => { const n = performance.getEntriesByType('resource').filter(e => /\/museum\/read-i18n/.test(e.name)).reduce((a, e) => a + (e.decodedBodySize || e.transferSize || 0), 0); return Math.max(0, Math.ceil((n - 300 * 1024) / 102400)); });
+      // 23 戻る（ブラウザの戻る・端からのスワイプ）: 読み物で 一覧 → 物語 を開いて戻ると一覧に、もう一度戻ると前の部屋に戻るか（戻らない数）
+      m.histBack = r !== 'read' ? 0 : await (async () => { let bad = 0; const cur = () => p.evaluate(() => [document.querySelector('#pg-museum .muroom.on').dataset.r, AtlasRead.current ? AtlasRead.current() : null]);
+        await p.evaluate(() => AtlasMuseum.go('map')); await p.waitForTimeout(800); await p.evaluate(() => AtlasMuseum.go('read')); await p.waitForTimeout(1200);
+        await p.evaluate(() => document.querySelector('.muroom.on [data-s]').click()); await p.waitForTimeout(800);
+        await p.goBack(); await p.waitForTimeout(1000); let c = await cur(); if (c[0] !== 'read' || c[1]) bad++;
+        await p.goBack(); await p.waitForTimeout(1000); c = await cur(); if (c[0] !== 'map') bad++;
+        await p.evaluate(() => AtlasMuseum.go('read')); await p.waitForTimeout(800); return bad; })();
       if (r === 'pass') m.foldLate = 0;   // (the open card pushes the room down on purpose)
       rows.push({ view: `${V.w}x${V.h}${V.lang !== 'ja' ? ':' + V.lang : ''}`, room: r, ...m, js: errs.length });
     }
