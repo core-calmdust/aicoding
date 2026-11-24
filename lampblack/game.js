@@ -265,6 +265,13 @@
   window.addEventListener('focus', () => setPaused(false));
   document.addEventListener('visibilitychange', () => setPaused(document.hidden || !document.hasFocus()));
   document.addEventListener('keydown', e => {
+    // F: full screen on / off (not while typing, not with a modifier)
+    if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target || {}).tagName || '')) {
+      e.preventDefault();
+      const d = document, el = d.documentElement;
+      try { if (d.fullscreenElement || d.webkitFullscreenElement) (d.exitFullscreen || d.webkitExitFullscreen).call(d); else (el.requestFullscreen || el.webkitRequestFullscreen).call(el); } catch (err) {}
+      return;
+    }
     if (!$('sheet').classList.contains('hide')) { if (e.key === 'Escape') closeSheet(); return; }
     if (G.scr === 'play' && !$('tx').classList.contains('hide') && (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight')) { e.preventDefault(); nextPage(); }
   });
@@ -1134,6 +1141,7 @@
       ${st && st.rulesNote ? `<div class="promise"><b>この物語のしくみ</b>${esc(st.rulesNote)}</div>` : ''}
       <p><b>一日の流れ</b>　朝：夜の出来事 → 昼：場所を調べる・話を聞く（行動は1日3回、村人は4回）→ 集会：痕跡を示す・名乗る・聞き取り・名指し・呼びかけ・矛盾を突く → 投票 → 夜：役の力を使う。</p>
       <p><b>推理手帳</b>（右上の帳面）に、人物の特徴・痕跡・証言・投票が自動で書きとめられる。白・灰・黒の印は自分用のメモ。</p>
+      <p><b>キー</b>　Enter・スペース：文章を送る　F：フルスクリーンの入／切</p>
       <div class="foot"><button class="btn pri" data-x>${first ? '幕を開ける' : '閉じる'}</button></div>`, box => box.querySelectorAll('[data-x]').forEach(b => b.onclick = () => closeSheet(true)));
   }
   function showOpts() {
