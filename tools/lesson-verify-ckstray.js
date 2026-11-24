@@ -9,7 +9,7 @@
 //     3D words plain (no です・ます), gain puzzles speak of the gain;
 //   - the pages use it: atlas/puzzles.js ckMoved no longer says pz.stray / CA.mid after a wrong move, checkers/app.js puzzleMove no
 //     longer says pz.stray, both load checkers/pzwhy.js (atlas/lazy.js · checkers/index.html).
-//   - 追57: the words with a number that can be 1 (cap1 / reachG1, CKX.mid) have no plural noun after it.
+//   - 追58: the words with a number that can be 1 (cap1 / reachG1, CKX.mid) have no plural noun after it.
 // Usage: node tools/lesson-verify-ckstray.js [--quick]   (lesson-verify.js checkers calls verify())
 'use strict';
 const fs = require('fs'), path = require('path');
@@ -46,9 +46,9 @@ function verify(opt) {
     if (!/CheckersPzWhy/.test(body)) add('pages', '3D', '追42 ckMoved does not use CheckersPzWhy');
   }
   if (!/async function ckStray\(/.test(pz) || /function ckStray[\s\S]{0,1500}CA\.mid/.test(pz.slice(pz.indexOf('async function ckStray('), pz.indexOf('async function ckStray(') + 1500))) add('pages', '3D', '追20 ckStray missing or says CA.mid (praise) after a wrong move');
-  // 追57: a number that can be 1 followed by a plural noun (「1 moves left」): チェッカニ's CKX.mid (the moves left after a right move, 1 at the end)
+  // 追58: a number that can be 1 followed by a plural noun (「1 moves left」): チェッカニ's CKX.mid (the moves left after a right move, 1 at the end)
   { const c0 = pz.indexOf('  const CKX = {'), blk = pz.slice(c0, pz.indexOf('\n  };', c0));
-    for (const m of blk.matchAll(/mid: '([^']*)'/g)) if (/\{n\} (moves|jugadas|coups|lances|Züge|Zügen|ходов|चालें)/.test(m[1])) add('pages', '3D', `追57 CKX.mid puts a plural noun after {n} (1 at the end): ${m[1]}`);
+    for (const m of blk.matchAll(/mid: '([^']*)'/g)) if (/\{n\} (moves|jugadas|coups|lances|Züge|Zügen|ходов|चालें)/.test(m[1])) add('pages', '3D', `追58 CKX.mid puts a plural noun after {n} (1 at the end): ${m[1]}`);
     if (c0 < 0) add('pages', '3D', 'atlas/puzzles.js has no CKX'); }
   const lazy = fs.readFileSync(path.join(ROOT, 'atlas/lazy.js'), 'utf8');
   if (!/"checkers": \[[^\]]*"\.\.\/checkers\/pzwhy\.js\?v=\d+"/.test(lazy)) add('pages', '3D', 'atlas/lazy.js does not load ../checkers/pzwhy.js for checkers');
