@@ -153,3 +153,9 @@
 ## NNUE の採用（2026-11-22）
 - 1周目のネット（約2013万局面、`janggi/nnue.bin.gz`、`NET`・`NETV` = '1'）。**Lv.19・20・解析・コーチ・最強解析だけ**が使い、Lv.1〜18 は手作りのまま（`wNN(L.s && L.ms)`。局面数の合わせ直しはしない）。基準値は Lv.19・20 を +300（2730／2800）。トップの紹介文に NNUE搭載・約2000万局面（14言語）。キャッシュ：`engine.js?v=6`、`pro.js?v=4`、app.js `…-nn1`、大百科 `games/janggi.js?v=12`。詳細は `janggi/MODEL_CARD.md`「採用したネット」。
 - **天上の新設（2026-11-22）**：天上Ⅰ〜Ⅲ（Lv.19・20 の設定＋ネット、20秒＋ネット：2730／2800／2850）。Lv.19・20 は手作りに戻し 2430／2500。`LV_MAX` 23・`LV_HUMAN` 20、名前・説明は他の天上のゲームと同じ14言語、大百科の3D卓 `levels: 23`、`AtlasNPC.CEL.janggi` 20。キャッシュ `engine.js?v=7`、`pro.js?v=5`。
+
+## パズル：外れた手のあとの文（2026-11-24 担当D、lesson-quality.md 追42）
+- 詰めパズルは外れた手（すぐ詰まされる・連続王手で王手でない手は除く）も続行し、相手はエンジンの手で応じる。応手のあと、`janggi/pzwhy.js`（`JanggiPzWhy.why(E, mid, r)`）で応手を分類して事実を言う：cap＝取った（取られた駒・取った駒を名指し）／esc＝王手を将が逃げた／block＝王手をほかの駒で防いだ／run・move＝王手でない手のあと将・ほかの駒を動かした／pass。続けて、残りの手数でまだ詰むか（ソルバーに残り手数で聞いて need ≤ 残り）を reach／noreach で言う。残り0手なら事実と「n手で詰まなかった」。
+- 2D（janggi/app.js puzzleMove）：見出し pz.stray のあとに14言語の文（pzwhy.js の T）、応手を赤い矢印と点で表示。3D（atlas/puzzles.js jgStray）：ショウギツネの日本語（atlas/games/janggi-pz.js `AtlasJanggiPz.why.ja`、言い回しを順に）、ほかの言語は pzwhy.js。
+- 機械チェック：`node tools/lesson-verify.js janggi`（lesson-verify-janggi.js stray42：2手以上の全問×外れた初手×相手の全応手で分類を盤から数え直し、名指しする駒・14言語の文の穴・ショウギツネの文の語（取／逃／防・止／動か、まだ／もう）・ほめ言葉や丁寧語なし、各問の最初の外れた手の全応手でソルバーの reach／noreach、3D・2D がソルバーに残り手数で聞くこと）。`node tools/lesson-verify.js stray` でチャンギは pz.stray だけの一覧から外れる。
+
