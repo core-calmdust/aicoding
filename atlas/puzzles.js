@@ -851,18 +851,18 @@
   // the guide's lines for 詰めチェッカー (the rest are the game's own texts)
   const CKX = {
     ja: { hi: 'チェッカニだよ！ 詰めチェッカーで読みをきたえよう！', out: '{n}手以内に目標に届かなかった…', mid: 'いい調子！ あと{n}手。' },
-    en: { hi: "Checkrab here! Let's sharpen your reading with checkers puzzles!", out: "Couldn't reach the goal within {n} moves…", mid: 'Nice! {n} moves left.' },
+    en: { hi: "Checkrab here! Let's sharpen your reading with checkers puzzles!", out: "Couldn't reach the goal within {n} moves…", mid: 'Nice! Moves left: {n}.' },
     zh: { hi: '我是跳棋蟹！用跳棋谜题锻炼计算力吧！', out: '没能在{n}步内达成目标……', mid: '不错！还剩{n}步。' },
     'zh-TW': { hi: '我是跳棋蟹！用跳棋謎題鍛鍊計算力吧！', out: '沒能在{n}步內達成目標……', mid: '不錯！還剩{n}步。' },
     ko: { hi: '체카니야! 체커 퍼즐로 수읽기를 단련하자!', out: '{n}수 안에 목표에 닿지 못했어…', mid: '좋아! {n}수 남았어.' },
-    es: { hi: '¡Soy Checkrab! Entrena tu cálculo con problemas de damas.', out: 'No se alcanzó el objetivo en {n} jugadas…', mid: '¡Bien! Quedan {n} jugadas.' },
-    fr: { hi: 'C’est Checkrab ! Entraîne ton calcul avec des problèmes de dames.', out: 'Objectif non atteint en {n} coups…', mid: 'Bien ! Encore {n} coups.' },
-    pt: { hi: 'Aqui é o Checkrab! Treine o cálculo com problemas de damas.', out: 'Não deu para chegar ao objetivo em {n} lances…', mid: 'Boa! Faltam {n} lances.' },
-    de: { hi: 'Hier ist Checkrab! Trainiere dein Rechnen mit Dame-Aufgaben.', out: 'Ziel in {n} Zügen nicht erreicht…', mid: 'Gut! Noch {n} Züge.' },
+    es: { hi: '¡Soy Checkrab! Entrena tu cálculo con problemas de damas.', out: 'No se alcanzó el objetivo en {n} jugadas…', mid: '¡Bien! Jugadas restantes: {n}.' },
+    fr: { hi: 'C’est Checkrab ! Entraîne ton calcul avec des problèmes de dames.', out: 'Objectif non atteint en {n} coups…', mid: 'Bien ! Coups restants : {n}.' },
+    pt: { hi: 'Aqui é o Checkrab! Treine o cálculo com problemas de damas.', out: 'Não deu para chegar ao objetivo em {n} lances…', mid: 'Boa! Lances restantes: {n}.' },
+    de: { hi: 'Hier ist Checkrab! Trainiere dein Rechnen mit Dame-Aufgaben.', out: 'Ziel in {n} Zügen nicht erreicht…', mid: 'Gut! Verbleibende Züge: {n}.' },
     ru: { hi: 'Это Чекраб! Тренируем расчёт на шашечных задачах.', out: 'За {n} ходов цель не достигнута…', mid: 'Отлично! Осталось {n}.' },
     tr: { hi: 'Ben Checkrab! Dama bulmacalarıyla hesap gücünü geliştirelim.', out: '{n} hamlede hedefe ulaşılamadı…', mid: 'Güzel! {n} hamle kaldı.' },
     id: { hi: 'Aku Checkrab! Ayo latih perhitungan dengan soal dam.', out: 'Target tidak tercapai dalam {n} langkah…', mid: 'Bagus! Sisa {n} langkah.' },
-    hi: { hi: 'मैं चेकरैब हूँ! चेकर्स पहेलियों से गणना मज़बूत करें।', out: '{n} चालों में लक्ष्य तक नहीं पहुँचे…', mid: 'बढ़िया! {n} चालें बाकी।' },
+    hi: { hi: 'मैं चेकरैब हूँ! चेकर्स पहेलियों से गणना मज़बूत करें।', out: '{n} चालों में लक्ष्य तक नहीं पहुँचे…', mid: 'बढ़िया! बची चालें: {n}।' },
     ar: { hi: 'أنا تشيكراب! لنقوِّ الحساب بألغاز الداما.', out: 'لم يتحقق الهدف خلال {n} نقلات…', mid: 'رائع! بقي {n}.' },
   };
   /* ---------- xiangqi (2026-11-14): xiangqi/puzzles.json (500 mates: 10 themes × 50, "mate in N" / checks-only 連将), the full game's
@@ -1533,6 +1533,18 @@
     }
     const ckPick = (list, left) => { let b = null; for (const e of list || []) if (e.need > 0 && e.need <= left && (!b || e.need < b.need)) b = e; return b && b.m; };
     function ckOut(p) { p.failed = true; p.state = 'fail'; streak = 0; chime(false); say(fill(CA.out, { n: p.n }) + ' ' + (line('retry') || X.retry)); buttons(); }
+    /* (2026-11-24 担当A, 追42・追20) after a move off the solution the defender's reply is drawn as a red arrow and チェッカニ says what it
+       did on the board (jumped and took / crowned / saved the threatened piece / moved — checkers/pzwhy.js) and, from the solver, whether
+       the goal is still there in the moves left (checked by tools/lesson-verify-ckstray.js: every wrong move × every reply). */
+    let ckJ = 0;
+    async function ckStray(p, mid, r) {
+      const E = pz().engine(), W = window.CheckersPzWhy, w = W.why(E, mid, r), left = p.n - p.used, own = ctx.lang === 'ja' ? W.OWN.ja : null;
+      try { pz().mark([{ path: E.path(mid, r), cls: 'ng' }]); } catch (e) {}
+      if (pz().state().over || left <= 0) { p.failed = true; p.state = 'fail'; streak = 0; chime(false); say(W.say(ctx.lang, w, null, 0, p.g, own, ckJ++) + ' ' + fill(CA.out, { n: p.n }) + ' ' + (line('retry') || X.retry)); buttons(); return; }
+      const L = await ckReq(p, left, false); if (p !== cur || stopped) return;
+      const reach = (L || []).some(e => e.need > 0 && e.need <= left);
+      say(W.say(ctx.lang, w, reach, left, p.g, own, ckJ++)); p.state = 'play'; pz().wait(); buttons();
+    }
     async function ckMoved(p, m, info) {
       const left = p.n - p.used, before = info.before, pre = pz().moves().slice(0, -1);
       say(B.tx('pz.checking', ctx.lang));
@@ -1549,9 +1561,10 @@
         const r = await pz().think(17); if (p !== cur || stopped) return;
         await sleep(250); if (p !== cur) return;
         if (r == null) return ckOut(p);
+        const mid = pz().pos();
         await pz().play(r); if (p !== cur) return;
-        if (pz().state().over || p.used >= p.n) return ckOut(p);
-        say(B.tx('pz.stray', ctx.lang) + ' ' + fill(CA.mid, { n: p.n - p.used })); p.state = 'play'; pz().wait(); buttons(); return;
+        if (window.CheckersPzWhy) return ckStray(p, mid, r);   // (追42・追20: the reply's fact on the board, no praise)
+        return ckOut(p);   // (the words of the reply are not loaded: no stray line with CA.mid's praise — 追20)
       }
       say(B.tx('pz.good', ctx.lang));
       const dl = await ckReq(p, p.n - p.used, true); if (p !== cur || stopped) return;
