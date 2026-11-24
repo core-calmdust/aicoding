@@ -20,6 +20,9 @@
 # to the net's shape by tools/nnue/build-kp.sh) — a new net against Gikou or against YaneuraOu + micro before it is shipped:
 #   KPNET="/Volumes/.../g2048s.bin" US=kp OPP=micro MICRO="/Volumes/.../TuyouraOu11micro" NODES=200000 GAMES=10 P=10 bash shogi/tools/match/yo-gikou.sh
 #   KPNET="/Volumes/.../g2048s.bin" US=kp NODES=2200000 GAMES=5 P=10 bash shogi/tools/match/yo-gikou.sh        (vs Gikou, 5 s a move)
+# (2026-11-24) On the clock, many threads (the real conditions), two of our nets against the same strong opponent:
+#   FISCHER=300000,10000 THREADS=10 GAMES=8 US=site OPP=micro MICRO="/Volumes/.../TuyouraOu11micro" bash shogi/tools/match/yo-gikou.sh                               (the site's net)
+#   NET="/Volumes/.../g2048s.bin" FISCHER=300000,10000 THREADS=10 GAMES=8 US=site OPP=micro MICRO="/Volumes/.../TuyouraOu11micro" bash shogi/tools/match/yo-gikou.sh
 # The net's folder may have spaces in its path (it is copied to the work folder); FV_SCALE is read from its eval_options.txt.
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd); SHOGI=$(cd "$HERE/../.." && pwd)
@@ -72,6 +75,26 @@ if [ "$OPP" = micro ]; then
   [ -n "$MICRO" ] || { echo "OPP=micro needs MICRO=<the net's folder>"; exit 1; }
   OYO="$YO"; OOPT=$(echo "$UOPT" | sed 's/--usopt/--opt/g')
   if [ "$US" = site ]; then WHAT="the site's engine${PARAMS:+ ($PARAMS)}"; TAG=site-micro; elif [ "$US" = kp ]; then WHAT="the site's search + $(basename "$KPNET")"; TAG=kp-micro; else build_ours; WHAT="YaneuraOu's search + our evaluation"; TAG=ours-micro; fi
+  if [ -n "$FISCHER" ]; then
+    # (2026-11-24) the real conditions: both on a clock (FISCHER=300000,10000 = 5 min + 10 s a move), our side the site's
+    # engine on THREADS threads with NET (default the site's net; a net of gtrain in a new shape is built to its sizes),
+    # YaneuraOu + micro on OTHREADS threads (default 1: against 10 of ours the score stays near the middle, so two of our
+    # nets can be told apart). One game at a time; our helper threads sleep while the opponent thinks.
+    THREADS=${THREADS:-10}; OTHREADS=${OTHREADS:-1}; NET=${NET:-$WORK/site.bin}
+    [ -s "$NET" ] || { echo "no net: $NET"; exit 1; }
+    cp "$NET" "$WORK/clock-net.bin" 2>/dev/null || true; NH=$(od -An -t d4 -j 4 -N 4 clock-net.bin | tr -d ' ')
+    KPF=""; MAGIC=$(od -An -t x4 -N 4 clock-net.bin | tr -d ' ')
+    case "$MAGIC" in 4b45554e|4f45554e|4d45554e|5345554e) KPF="-DNUE_KB=$(od -An -t d4 -j 12 -N 4 clock-net.bin | tr -d ' ')";; esac
+    case "$MAGIC" in 4d45554e|5345554e) KPF="$KPF -DNUE_L1=$(od -An -t d4 -j 16 -N 4 clock-net.bin | tr -d ' ') -DNUE_L2=$(od -An -t d4 -j 20 -N 4 clock-net.bin | tr -d ' ') -DNUE_MI=$(od -An -t d4 -j 24 -N 4 clock-net.bin | tr -d ' ')";; esac
+    [ "$MAGIC" = 5345554e ] && KPF="$KPF -DNUE_MB=8"
+    cc -O3 -DNATIVE -DMT -DSEARCH2_MT -DTTM_BITS=16 -DNUE_H=$NH $KPF -w -o usimatch-clock "$HERE/usimatch.c" -lpthread
+    CT="clock-$(basename "$NET" | sed 's/[^A-Za-z0-9]/_/g')-t$THREADS-o$OTHREADS"
+    echo "== the site's engine + $(basename "$NET") on $THREADS threads vs YaneuraOu + $(basename "$MICRO") on $OTHREADS thread(s), both on the clock $FISCHER: $GAMES games (while it runs: tail -f $WORK/g-$CT.log)"
+    T0=$(date +%s)
+    ./usimatch-clock clock-net.bin 1000000 "$OYO" "$WORK" $GAMES --opt BookFile=no_book --opt USI_Hash=1024 --opt Threads=$OTHREADS --opt NetworkDelay=0 --opt NetworkDelay2=0 $OOPT \
+      --openings "$HERE/openings.txt" --fischer $FISCHER --threads $THREADS > "g-$CT.log" 2>&1 || true
+    grep "total" "g-$CT.log" | tail -1 | sed "s|^|$(basename "$NET") ($THREADS threads) vs YaneuraOu + $(basename "$MICRO") ($OTHREADS): |"; echo "($(( ($(date +%s) - T0) / 60 )) minutes; log: $WORK/g-$CT.log)"; exit 0
+  fi
   echo "== $WHAT, $NODES nodes a move, vs YaneuraOu + $(basename "$MICRO"), $ONODES nodes a move: $P processes x $GAMES games"
   T0=$(date +%s); i=1
   while [ $i -le $P ]; do

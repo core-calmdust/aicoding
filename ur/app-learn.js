@@ -72,7 +72,7 @@ function openRules(page) {
   try { localStorage.setItem('aicoding-ur-rules-seen', '1'); } catch (e) {}
   if (!window.UrTour) { $('#rulesBody').innerHTML = `<p style="padding:20px;color:var(--muted)">${esc(t('ls.fail'))}</p>`; return; }
   UrTour.open({ mount: '#rulesBody', lang: () => LANG, design: settings.design, pieces: settings.pieces, speed: SPD(), page: page,
-    onPlay: () => { closeRules(); openNewDialog(); }, onLessons: () => { closeRules(); openLessons(); }, onClose: () => closeRules(), sound: k => snd(k === 'move' ? 'place' : k) });
+    onPlay: () => { closeRules(); openNewDialog(); }, onClose: () => closeRules(), sound: k => snd(k === 'move' ? 'place' : k) });
 }
 function closeRules(quiet) { if (window.UrTour) try { UrTour.stop(); } catch (e) {} hideOverlay('#rulesOverlay'); }
 $('#btnRules').onclick = () => openRules();

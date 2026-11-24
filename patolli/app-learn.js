@@ -68,7 +68,7 @@ function openRules(page) {
   try { localStorage.setItem('aicoding-patolli-rules-seen', '1'); } catch (e) {}
   if (!window.PatolliTour) { $('#rulesBody').innerHTML = `<p style="padding:20px;color:var(--muted)">${esc(t('ls.fail'))}</p>`; return; }
   PatolliTour.open({ mount: '#rulesBody', lang: () => LANG, design: settings.design, pieces: settings.pieces, speed: SPD(), page: page,
-    onPlay: () => { closeRules(); openNewDialog(); }, onLessons: () => { closeRules(); openLessons(); }, onClose: () => closeRules(), sound: k => snd(k === 'move' ? 'place' : k) });
+    onPlay: () => { closeRules(); openNewDialog(); }, onClose: () => closeRules(), sound: k => snd(k === 'move' ? 'place' : k) });
 }
 function closeRules(quiet) { if (window.PatolliTour) try { PatolliTour.stop(); } catch (e) {} hideOverlay('#rulesOverlay'); }
 $('#btnRules').onclick = () => openRules();
