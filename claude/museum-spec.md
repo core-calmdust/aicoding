@@ -571,3 +571,4 @@
 - 2026-11-24 洗練ループ：読み物の文は atlas/museum/read-i18n.js で編集し、`node tools/museum-read-split.js` で言語ごとの atlas/museum/read-i18n/<lang>.js を作り直す（atlas/museum.js の READ_I18N_V を1上げる）。博物館は英語と表示中の言語のファイルだけを読み込む。
 - 2026-11-24 洗練ループ：描かれたゲームの文も同じ方式（paint-i18n.js で編集 → `node tools/museum-read-split.js` → atlas/museum/paint-i18n/<lang>.js、PAINT_I18N_V）。英語と表示中の言語だけ読み、約215KB → 約25KB。
 - 2026-11-24 洗練ループ：偶然の道具の文も同じ方式（chance-i18n.js → atlas/museum/chance-i18n/<lang>.js、CHANCE_I18N_V）。約96KB → 約15KB。
+- 2026-11-24 ユーザー指示：ブラウザの戻る（端からのスワイプ）で、物語 → 一覧 → 前の部屋 → 前のページと来た道を戻る。museum.js の hist / restore（AtlasMuseum.restore）、read.js の AtlasRead.show / showShelf / current。物語の図から開くビューアへの行き帰りは履歴を増やさない。

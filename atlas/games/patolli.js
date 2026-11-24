@@ -83,7 +83,118 @@
   const fmt = (s, v) => String(s).replace(/\{(\w+)\}/g, (_, k) => v && v[k] != null ? v[k] : '');
   const PAT = { 0: [0, 0, 0, 0, 0], 1: [0, 0, 1, 0, 0], 2: [1, 0, 0, 0, 1], 3: [1, 0, 1, 0, 1], 4: [1, 1, 0, 1, 1], 10: [1, 1, 1, 1, 1] };
 
+  /* ================= lesson mode (ctx.pz, 2026-11-24 担当C) =================
+     A position from patolli/lessons.json (Bell's rules) on the 3D mat for atlas/lessons3d.js (DATA.patolli, atlas/ls-patolli.js):
+     the five beans at rest showing the throw, the player moves one piece (tap it — or where it lands, the waiting tray to enter,
+     the home tray to bear off), ctx.pz.moved(from, info) judges it.
+       ctx.pz = { patolli: { s: { rule, pos }, n, marks, lock }, ready(), moved(from, info) }
+       api.pz = { load(spec), wait(), mark(list), play([from, to]) → Promise, undo(), reset(), moves(), state(), legal() }
+     Marks (lessons.json): { type: 'glow'|'ring'|'danger'|'text', r, c, text, color } and the answers { m: [from, to], cls: 'ok'|'ng' }
+     (a chain of dots along your road, the square it lands on — the home tray when it bears off). No AI, no throwing. */
+  function startPz(ctx) {
+    const T3 = ctx.Table3D, PZ = ctx.pz, TH = window.THREE;
+    const kit = window.PatolliKit.make(T3, { rule: 'bell', sfx: k => SND[k] && SND[k]() });
+    let E = null, st = null, st0 = null, n = null, on = false, busy = false, sel = -1, stopped = false, spec = null, extra = [], hist = [], gen = 0, loading = false, pending = null;
+    const timers = [], later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
+    const COL = { ok: 0x3df59a, ng: 0xff5d5d };
+    const hex = c => typeof c === 'number' ? c : parseInt(String(c || '#ffe27a').replace('#', ''), 16);
+    const RL = () => E.RULES.bell;
+    const rcOf = i => { const q = E.coords('bell', 0, i, 1); return q ? { r: q[0], c: q[1] } : null; };
+    const idxAt = (side, r, c) => { for (const p of st.pos[side]) { if (p < 1 || p > RL().L) continue; const q = E.coords('bell', side, p, 1); if (q[0] === r && q[1] === c) return p; } return -1; };
+    const legal = () => st && n ? E.legalMoves(st, n) : [];
+    const kOf = from => st.pos[0].findIndex(p => p === from);
+    const homeN = () => st0.pos[0].filter(p => p > RL().L).length;
+    function label(r, c, text, color) {   // a number on a square, facing up
+      const cv = document.createElement('canvas'); cv.width = 256; cv.height = 128; const g = cv.getContext('2d'), big = String(text).length <= 2;
+      g.font = '900 ' + (big ? 92 : 64) + 'px system-ui,sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineWidth = 14; g.strokeStyle = 'rgba(30,20,10,.88)'; g.strokeText(text, 128, 68); g.fillStyle = '#' + hex(color).toString(16).padStart(6, '0'); g.fillText(text, 128, 68);
+      const m = new TH.Mesh(new TH.PlaneGeometry(.9, .45), new TH.MeshBasicMaterial({ map: new TH.CanvasTexture(cv), transparent: true, depthWrite: false, depthTest: false, toneMapped: false }));
+      m.rotation.x = -Math.PI / 2; const [x, z] = kit.cellXZ(r, c); m.position.set(x, kit.Y + .6, z); m.renderOrder = 9; kit.marks.group.add(m); T3.kick(120);
+    }
+    function drawAns(m, cls) {   // an answer: where the piece starts (a square or the waiting tray), the dots along the road, where it lands
+      if (typeof m === 'number') { const x = E.legalMoves(st0, n || 0).find(y => y.from === m); if (!x) return; m = [x.from, x.to]; }
+      const [from, to] = m, col = COL[cls] || COL.ok;
+      if (from === 0) kit.marks.tray(0, 'start', col, 0); else { const q = rcOf(from); kit.marks.ring(q.r, q.c, col); }
+      kit.marks.path(0, from + 1, Math.min(to, RL().L), col, 1);
+      if (to > RL().L) kit.marks.tray(0, 'goal', col, homeN()); else { const q = rcOf(to); kit.marks.cell(q.r, q.c, col, .45); }
+    }
+    function marksNow() {
+      kit.marks.clear();
+      for (const x of (spec && spec.marks || []).concat(extra)) {
+        if (x.m != null) { drawAns(x.m, x.cls); continue; }
+        if (x.r == null) continue;
+        if (x.type === 'danger') { kit.marks.cell(x.r, x.c, 0xff5d5d, .38); kit.marks.ring(x.r, x.c, 0xff5d5d); if (x.text) label(x.r, x.c, String(x.text), 0xffd0c8); }
+        else if (x.type === 'glow') kit.marks.glow(x.r, x.c, hex(x.color || 0xffd65a), .5);
+        else if (x.type === 'ring') kit.marks.ring(x.r, x.c, hex(x.color || '#ff9b7a'));
+        else if (x.type === 'text') label(x.r, x.c, String(x.text), x.color || '#ffe27a');
+      }
+      if (on && !spec.lock) {   // the pieces that can move (and the selected one's landing square)
+        for (const m of legal()) { if (m.from === 0) kit.marks.tray(0, 'start', 0xffd65a, 0); else { const q = rcOf(m.from); kit.marks.ring(q.r, q.c, 0xffd65a); } }
+        for (const m of legal().filter(x => x.from === sel)) { const col = m.again ? 0x6ec8ff : m.pen ? 0xff5d5d : 0x3df59a; if (m.finish) kit.marks.tray(0, 'goal', col, homeN()); else { const q = rcOf(m.to); kit.marks.cell(q.r, q.c, col, .42); } }
+      }
+    }
+    function setSel(from) {
+      if (sel > 0 && kit.lift) { const k = kOf(sel); if (k >= 0) kit.lift(0, k, false); }
+      sel = from; if (sel > 0 && kit.lift) { const k = kOf(sel); if (k >= 0) kit.lift(0, k, true); }
+      marksNow();
+    }
+    const beans = () => kit.restBeans(n == null ? null : PAT[n].slice());
+    function load(sp) {
+      if (!E) { pending = sp || PZ.patolli; return; }   // (asked before the engine is ready: loaded then)
+      spec = Object.assign({}, sp || PZ.patolli); extra = []; hist = []; on = false; sel = -1; busy = false; gen++; loading = true;   // (gen: a move still walking from the last position is dropped)
+      kit.cancel();
+      st = { rule: 'bell', pos: spec.s.pos.map(a => a.slice()), turn: 0, winner: -1, gold: [16, 16], pool: 8, dir: [1, 1], round: 1 }; st0 = E.clone(st); n = spec.n == null ? null : +spec.n;
+      kit.sync(st); beans(); marksNow();
+      later(() => { loading = false; if (PZ.ready) PZ.ready(); }, 160);
+    }
+    async function commit(m, judge) {
+      busy = true; on = false; if (sel > 0 && kit.lift) { const k = kOf(sel); if (k >= 0) kit.lift(0, k, false); } sel = -1; extra = []; spec = Object.assign({}, spec, { marks: [] }); marksNow();
+      const g0 = gen;
+      await kit.move(0, m.from, m.to, { onStep: () => SND.hop && SND.hop(), onLand: () => { const f = m.finish ? SND.home : SND.put; if (f) f(); } });
+      if (stopped) return false;
+      if (g0 !== gen) { kit.sync(st); return false; }   // (another position was loaded while it walked)
+      const r = E.apply(st, m, n); st = r.state; st.turn = 0; hist.push([m.from, m.to]); kit.sync(st); busy = false;
+      if (m.again && SND.again) SND.again();
+      if (judge && PZ.moved) PZ.moved(m.from, { to: m.to, again: !!m.again, finish: !!m.finish, enter: !!m.enter });
+      return true;
+    }
+    function onClick(e) {
+      if (stopped || T3.wasDrag() || busy || !on || !st) return;
+      const h = kit.hit(e), ms = legal(); if (!h || h.dock) { if (sel >= 0) setSel(-1); return; }
+      if (h.tray) {
+        if (h.side !== 0) return;
+        if (h.tray === 'start') { const m = ms.find(x => x.from === 0); if (m) commit(m, true); return; }
+        if (h.tray === 'goal') { const c = ms.filter(x => x.finish && (sel < 0 || x.from === sel)); if (c.length === 1) commit(c[0], true); return; }
+        return;
+      }
+      const i = idxAt(0, h.r, h.c);
+      if (sel > 0 && i !== sel) { const m = ms.find(x => x.from === sel && !x.finish && (q => q.r === h.r && q.c === h.c)(rcOf(x.to))); if (m) { commit(m, true); return; } }
+      if (i > 0 && ms.some(x => x.from === i)) { const m = ms.find(x => x.from === i); commit(m, true); return; }   // (one throw, one move per piece: a tap on the piece moves it)
+      const c = ms.filter(x => !x.finish && (q => q.r === h.r && q.c === h.c)(rcOf(x.to)));   // its destination
+      if (c.length === 1) { commit(c[0], true); return; }
+      setSel(-1);
+    }
+    ctx.el.addEventListener('click', onClick);
+    const pzApi = {
+      load, wait() { if (!spec || spec.lock || !n) return; on = true; marksNow(); },
+      mark(list) { extra = (list || []).map(x => !Array.isArray(x) ? x : x[0] && typeof x[0] === 'object' && !Array.isArray(x[0]) ? (x[0].type ? x[0] : { m: x[0].m, cls: x[1] }) : { m: x[0], cls: x[1] }); marksNow(); },
+      async play(q) { const g0 = gen; for (let i = 0; i < 40 && (busy || loading); i++) await new Promise(r => setTimeout(r, 100)); if (g0 !== gen) return false; const f = Array.isArray(q) ? q[0] : q, m = legal().find(x => x.from === f && (!Array.isArray(q) || x.to === q[1])); if (!m || busy) return false; return commit(m, false); },
+      undo() { if (busy) return; kit.cancel(); st = E.clone(st0); hist = []; sel = -1; kit.sync(st); beans(); marksNow(); },
+      reset() { pzApi.undo(); }, moves: () => hist.slice(), state: () => st && { pos: st.pos.map(a => a.slice()), n },
+      legal: () => legal().map(m => [m.from, m.to]),
+      tap(from) { const m = legal().find(x => x.from === from); if (!m || !on || busy) return false; commit(m, true); return true; },   // (tests)
+    };
+    const api = {
+      human: 0, pz: pzApi, canUndo: () => false, canHint: () => false, canResign: () => false,
+      stop() { stopped = true; kit.stop(); timers.forEach(clearTimeout); ctx.el.removeEventListener('click', onClick); },
+      _debug: { st: () => st, kit: () => kit, cell: (r, c) => kit.projCell(r, c), slot: (s, kind, k) => kit.projSlot(s, kind, k) },
+    };
+    window.__ptTable = api;
+    window.Atlas3D.patolli._dbg = { state: () => ({ busy: busy || loading || !E, over: false, legal: legal().length, pzOn: on }) };   // (tools/lesson-progress.js waits while a piece walks or a position loads)
+    loadEngine().then(e => { if (stopped) return; E = e; load(pending || PZ.patolli); }).catch(err => console.error('[patolli pz]', err));
+    return api;
+  }
   function start(ctx) {
+    if (ctx.pz) return startPz(ctx);   // (the lessons on the 3D board, atlas/lessons3d.js)
     const T3 = ctx.Table3D, t = ctx.t, X = Object.assign({}, TX.en, TX[ctx.lang] || {});
     const L = { you: t('p.you'), ai: t('p.ai'), think: t('p.think'), win: t('res.win'), lose: t('res.lose') };
     const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6));
