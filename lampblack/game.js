@@ -256,10 +256,11 @@
   // choose a person from a grid
   function pickPerson(title, sub, ids, o) {
     o = o || {};
-    const btns = ids.map(id => `<button class="pb" data-id="${id}">${bust(id)}<span>${esc(nm(id))}</span>${o.mark ? `<i class="mk ${S.pl.notes[id] || ''}"></i>` : ''}</button>`).join('');
+    const off = o.off || {};
+    const btns = ids.map(id => off[id] ? `<button class="pb off" disabled>${bust(id)}<span>${esc(nm(id))}</span><small>${esc(off[id])}</small></button>` : `<button class="pb" data-id="${id}">${bust(id)}<span>${esc(nm(id))}</span>${o.mark ? `<i class="mk ${S.pl.notes[id] || ''}"></i>` : ''}</button>`).join('');
     return sheet(`<button class="ib x" data-x aria-label="閉じる"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button><h3>${title}</h3>${sub ? `<p>${sub}</p>` : ''}<div class="grid-pick">${btns}</div><div class="foot"><button class="btn" data-x>もどる</button></div>`, box => {
       box.querySelectorAll('[data-x]').forEach(b => b.onclick = () => closeSheet(null));
-      box.querySelectorAll('.pb').forEach(b => b.onclick = () => closeSheet(b.dataset.id));
+      box.querySelectorAll('.pb:not(.off)').forEach(b => b.onclick = () => closeSheet(b.dataset.id));
     });
   }
   function pickOpt(title, sub, opts) {
@@ -540,7 +541,9 @@
     if (!v) return hub();
     const it = st.items.find(x => x.id === v);
     if (it.kind === 'secret') {
-      const id = await pickPerson(`${esc(it.name)}で、誰のことを調べる？`, '', live().filter(p => p.secret && !p.secret.open).map(p => p.id));
+      const has = live().filter(p => p.secret), off = {};
+      has.forEach(p => { if (p.secret.open) off[p.id] = 'もう打ち明けた'; });
+      const id = await pickPerson(`${esc(it.name)}で、誰のことを調べる？`, '', has.map(p => p.id), { off });
       if (!id) return hub();
       S.pl.used[v] = 1; const p = person(id); p.secret.open = true;
       await say([{ text: fill(it.use, { name: nm(id) }) }, { who: id, text: ch(id).secret.confess }]);
