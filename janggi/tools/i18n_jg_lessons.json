@@ -37,7 +37,8 @@
   "ls.e_pawn.title": "卒の終盤",
   "ls.e_pawn.sub": "卒2つで将を追いつめる",
   "ls.e_pawn.intro": "卒は相手の九宮に入ると、<b>斜めの線にそって前にも</b>進めます。後ろには戻れないので、奥まで急いで進めすぎないのがコツです。",
-  "ls.b_escape.why": "{m} なら、ねらわれた駒を取られない場所へ逃がせます。"
+  "ls.b_escape.why": "{m} なら、ねらわれた駒を取られない場所へ逃がせます。",
+  "ls.t_check.why": "{m}：王手と同時に別の駒もねらう手。相手は王手を受けるのが先なので、どう受けても駒得が残ります。"
  },
  "en": {
   "ls.b_rook.title": "Capture with the chariot",
@@ -76,7 +77,8 @@
   "ls.e_rook.intro": "Working together, a chariot and a horse can mate a general defended by a guard. Use the chariot to <b>take away the general's points</b> and the horse to cover its escapes. The palace diagonals help too.",
   "ls.e_pawn.title": "Soldier endings",
   "ls.e_pawn.sub": "Two soldiers hunt the general",
-  "ls.e_pawn.intro": "Inside the enemy palace a soldier can also <b>step forward along the diagonals</b>. It can never go back, so do not rush it to the last rank too early."
+  "ls.e_pawn.intro": "Inside the enemy palace a soldier can also <b>step forward along the diagonals</b>. It can never go back, so do not rush it to the last rank too early.",
+  "ls.t_check.why": "{m}: a check that also attacks another piece. The opponent must answer the check first, so you come out ahead whatever the reply."
  },
  "zh": {
   "ls.b_rook.title": "用车吃子",
@@ -115,7 +117,8 @@
   "ls.e_rook.intro": "车和马配合，就能将死有士守护的将。用车<b>缩小将能走的点</b>，再用马封住退路。九宫的斜线也能利用。",
   "ls.e_pawn.title": "卒的残局",
   "ls.e_pawn.sub": "两个卒围困将",
-  "ls.e_pawn.intro": "卒进入对方九宫后，也能<b>沿斜线向前</b>走。卒不能后退，所以不要过早冲到底线。"
+  "ls.e_pawn.intro": "卒进入对方九宫后，也能<b>沿斜线向前</b>走。卒不能后退，所以不要过早冲到底线。",
+  "ls.t_check.why": "{m}：将军的同时还攻击另一个子。对方必须先应将，无论怎么应都会让你得子。"
  },
  "zh-TW": {
   "ls.b_rook.title": "用車吃子",
@@ -154,7 +157,8 @@
   "ls.e_rook.intro": "車和馬配合，就能將死有士守護的將。用車<b>縮小將能走的點</b>，再用馬封住退路。九宮的斜線也能利用。",
   "ls.e_pawn.title": "卒的殘局",
   "ls.e_pawn.sub": "兩個卒圍困將",
-  "ls.e_pawn.intro": "卒進入對方九宮後，也能<b>沿斜線向前</b>走。卒不能後退，所以不要過早衝到底線。"
+  "ls.e_pawn.intro": "卒進入對方九宮後，也能<b>沿斜線向前</b>走。卒不能後退，所以不要過早衝到底線。",
+  "ls.t_check.why": "{m}：將軍的同時還攻擊另一個子。對方必須先應將，無論怎麼應都會讓你得子。"
  },
  "ko": {
   "ls.b_rook.title": "차로 잡기",
@@ -194,7 +198,8 @@
   "ls.e_pawn.title": "졸의 종반",
   "ls.e_pawn.sub": "졸 두 개로 궁을 몰아붙인다",
   "ls.e_pawn.intro": "졸은 상대 궁성에 들어가면 <b>대각선을 따라 앞으로도</b> 갈 수 있습니다. 뒤로는 못 가므로 너무 서둘러 끝까지 밀지 않는 것이 요령입니다.",
-  "ls.b_escape.why": "{m} 로 노려지는 기물을 안전한 곳으로 피할 수 있습니다."
+  "ls.b_escape.why": "{m} 로 노려지는 기물을 안전한 곳으로 피할 수 있습니다.",
+  "ls.t_check.why": "{m}: 장군을 부르면서 다른 기물도 노리는 수. 상대는 먼저 장군을 받아야 하므로, 어떻게 받아도 기물 이득이 남습니다."
  },
  "es": {
   "ls.b_rook.title": "Capturar con el carro",
@@ -233,7 +238,8 @@
   "ls.e_rook.intro": "Juntos, un carro y un caballo pueden dar mate a un general defendido por una guardia. Usa el carro para <b>quitarle puntos al general</b> y el caballo para cerrar sus salidas. Las diagonales del palacio también ayudan.",
   "ls.e_pawn.title": "Finales de soldados",
   "ls.e_pawn.sub": "Dos soldados cazan al general",
-  "ls.e_pawn.intro": "Dentro del palacio rival, el soldado también puede <b>avanzar por las diagonales</b>. Nunca retrocede, así que no lo lleves a la última fila demasiado pronto."
+  "ls.e_pawn.intro": "Dentro del palacio rival, el soldado también puede <b>avanzar por las diagonales</b>. Nunca retrocede, así que no lo lleves a la última fila demasiado pronto.",
+  "ls.t_check.why": "{m}: un jaque que además ataca otra pieza. El rival debe atender primero el jaque, así que respondas lo que responda, sales ganando material."
  },
  "fr": {
   "ls.b_rook.title": "Prendre avec le char",
@@ -272,7 +278,8 @@
   "ls.e_rook.intro": "Ensemble, un char et un cheval peuvent mater un général défendu par un garde. Le char <b>retire des points au général</b>, le cheval ferme ses fuites. Les diagonales du palais aident aussi.",
   "ls.e_pawn.title": "Finales de soldats",
   "ls.e_pawn.sub": "Deux soldats traquent le général",
-  "ls.e_pawn.intro": "Dans le palais adverse, le soldat peut aussi <b>avancer le long des diagonales</b>. Il ne recule jamais : ne le poussez pas trop tôt jusqu'à la dernière rangée."
+  "ls.e_pawn.intro": "Dans le palais adverse, le soldat peut aussi <b>avancer le long des diagonales</b>. Il ne recule jamais : ne le poussez pas trop tôt jusqu'à la dernière rangée.",
+  "ls.t_check.why": "{m} : un échec qui attaque aussi une autre pièce. L'adversaire doit d'abord parer l'échec : quelle que soit sa réponse, vous gagnez du matériel."
  },
  "pt": {
   "ls.b_rook.title": "Capturar com o carro",
@@ -311,7 +318,8 @@
   "ls.e_rook.intro": "Juntos, um carro e um cavalo dão mate num general defendido por um guarda. Use o carro para <b>tirar pontos do general</b> e o cavalo para fechar as saídas. As diagonais do palácio também ajudam.",
   "ls.e_pawn.title": "Finais de soldados",
   "ls.e_pawn.sub": "Dois soldados caçam o general",
-  "ls.e_pawn.intro": "Dentro do palácio adversário, o soldado também pode <b>avançar pelas diagonais</b>. Ele nunca recua, então não o leve à última fila cedo demais."
+  "ls.e_pawn.intro": "Dentro do palácio adversário, o soldado também pode <b>avançar pelas diagonais</b>. Ele nunca recua, então não o leve à última fila cedo demais.",
+  "ls.t_check.why": "{m}: um xeque que também ataca outra peça. O adversário precisa responder ao xeque primeiro, então você ganha material qualquer que seja a resposta."
  },
  "de": {
   "ls.b_rook.title": "Mit dem Wagen schlagen",
@@ -350,7 +358,8 @@
   "ls.e_rook.intro": "Gemeinsam setzen Wagen und Pferd auch einen vom Wächter verteidigten General matt. Der Wagen <b>nimmt dem General Punkte</b>, das Pferd deckt seine Fluchtwege. Auch die Palastdiagonalen helfen.",
   "ls.e_pawn.title": "Soldatenendspiele",
   "ls.e_pawn.sub": "Zwei Soldaten jagen den General",
-  "ls.e_pawn.intro": "Im gegnerischen Palast darf der Soldat auch <b>entlang der Diagonalen vorwärts</b> ziehen. Er kann nie zurück – schiebe ihn also nicht zu früh bis zur letzten Reihe."
+  "ls.e_pawn.intro": "Im gegnerischen Palast darf der Soldat auch <b>entlang der Diagonalen vorwärts</b> ziehen. Er kann nie zurück – schiebe ihn also nicht zu früh bis zur letzten Reihe.",
+  "ls.t_check.why": "{m}: ein Schach, das zugleich eine andere Figur angreift. Der Gegner muss zuerst das Schach abwehren – egal wie, du gewinnst Material."
  },
  "ru": {
   "ls.b_rook.title": "Взятие колесницей",
@@ -389,7 +398,8 @@
   "ls.e_rook.intro": "Вместе колесница и конь могут заматовать генерала, которого защищает страж. Колесница <b>отнимает у генерала точки</b>, конь перекрывает пути отступления. Помогают и диагонали дворца.",
   "ls.e_pawn.title": "Эндшпиль с солдатами",
   "ls.e_pawn.sub": "Два солдата загоняют генерала",
-  "ls.e_pawn.intro": "Во дворце соперника солдат может ходить и <b>вперёд по диагоналям</b>. Назад он не ходит, поэтому не спешите продвигать его до последней горизонтали."
+  "ls.e_pawn.intro": "Во дворце соперника солдат может ходить и <b>вперёд по диагоналям</b>. Назад он не ходит, поэтому не спешите продвигать его до последней горизонтали.",
+  "ls.t_check.why": "{m}: шах, который заодно нападает на другую фигуру. Соперник сначала должен защититься от шаха, и при любом ответе вы выигрываете материал."
  },
  "tr": {
   "ls.b_rook.title": "Savaş arabasıyla al",
@@ -428,7 +438,8 @@
   "ls.e_rook.intro": "Birlikte çalışan savaş arabası ve at, muhafızın koruduğu generali mat edebilir. Araba ile <b>generalin noktalarını azaltın</b>, at ile kaçış yollarını kapatın. Sarayın köşegenleri de işe yarar.",
   "ls.e_pawn.title": "Asker oyunsonları",
   "ls.e_pawn.sub": "İki asker generali kıstırır",
-  "ls.e_pawn.intro": "Rakip sarayın içinde asker <b>köşegenler boyunca ileri</b> de gidebilir. Asla geri gitmediği için onu son sıraya çok erken sürmeyin."
+  "ls.e_pawn.intro": "Rakip sarayın içinde asker <b>köşegenler boyunca ileri</b> de gidebilir. Asla geri gitmediği için onu son sıraya çok erken sürmeyin.",
+  "ls.t_check.why": "{m}: Aynı anda başka bir taşa da saldıran şah. Rakip önce şahı karşılamak zorunda; nasıl karşılarsa karşılasın taş kazanırsınız."
  },
  "id": {
   "ls.b_rook.title": "Makan dengan kereta",
@@ -467,7 +478,8 @@
   "ls.e_rook.intro": "Bersama-sama, kereta dan kuda bisa memat jenderal yang dijaga pengawal. Gunakan kereta untuk <b>mengurangi titik jenderal</b> dan kuda untuk menutup jalan larinya. Diagonal istana juga membantu.",
   "ls.e_pawn.title": "Akhir permainan prajurit",
   "ls.e_pawn.sub": "Dua prajurit memburu jenderal",
-  "ls.e_pawn.intro": "Di dalam istana lawan, prajurit juga bisa <b>maju di sepanjang diagonal</b>. Ia tak pernah mundur, jadi jangan terburu-buru mendorongnya ke baris terakhir."
+  "ls.e_pawn.intro": "Di dalam istana lawan, prajurit juga bisa <b>maju di sepanjang diagonal</b>. Ia tak pernah mundur, jadi jangan terburu-buru mendorongnya ke baris terakhir.",
+  "ls.t_check.why": "{m}: skak yang sekaligus menyerang bidak lain. Lawan harus menangkis skak lebih dulu, jadi apa pun jawabannya kamu tetap untung bidak."
  },
  "hi": {
   "ls.b_rook.title": "रथ से मारें",
@@ -506,7 +518,8 @@
   "ls.e_rook.intro": "रथ और घोड़ा मिलकर रक्षक से बचाए गए जनरल को भी मात दे सकते हैं। रथ से <b>जनरल के बिंदु कम करें</b> और घोड़े से उसके भागने के रास्ते बंद करें। महल के विकर्ण भी मदद करते हैं।",
   "ls.e_pawn.title": "सिपाही के अंत-खेल",
   "ls.e_pawn.sub": "दो सिपाही जनरल को घेरते हैं",
-  "ls.e_pawn.intro": "विरोधी महल के अंदर सिपाही <b>विकर्णों पर आगे</b> भी जा सकता है। वह कभी पीछे नहीं जाता, इसलिए उसे बहुत जल्दी आख़िरी पंक्ति तक न धकेलें।"
+  "ls.e_pawn.intro": "विरोधी महल के अंदर सिपाही <b>विकर्णों पर आगे</b> भी जा सकता है। वह कभी पीछे नहीं जाता, इसलिए उसे बहुत जल्दी आख़िरी पंक्ति तक न धकेलें।",
+  "ls.t_check.why": "{m}: ऐसा शह जो साथ में दूसरे मोहरे पर भी हमला करता है। विरोधी को पहले शह का जवाब देना होगा, इसलिए जवाब कुछ भी हो, आपको मोहरे का फ़ायदा मिलता है।"
  },
  "ar": {
   "ls.b_rook.title": "الأسر بالعربة",
@@ -545,6 +558,7 @@
   "ls.e_rook.intro": "معًا تستطيع العربة والحصان إماتة جنرال يحميه حارس. استخدم العربة <b>لانتزاع نقاط الجنرال</b> والحصان لسد منافذه. وأقطار القصر تساعد أيضًا.",
   "ls.e_pawn.title": "نهايات الجنود",
   "ls.e_pawn.sub": "جنديان يطاردان الجنرال",
-  "ls.e_pawn.intro": "داخل قصر الخصم يستطيع الجندي أيضًا <b>التقدم على الأقطار</b>. لا يرجع أبدًا، فلا تدفعه إلى الصف الأخير مبكرًا."
+  "ls.e_pawn.intro": "داخل قصر الخصم يستطيع الجندي أيضًا <b>التقدم على الأقطار</b>. لا يرجع أبدًا، فلا تدفعه إلى الصف الأخير مبكرًا.",
+  "ls.t_check.why": "{m}: كشّ يهاجم قطعة أخرى في الوقت نفسه. على الخصم أن يردّ على الكشّ أولًا، فمهما كان ردّه تربح مادة."
  }
 }
