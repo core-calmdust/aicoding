@@ -40,6 +40,7 @@
     { id: 'konane', color: '#2f5a56', cover: { g: 'konane', s: 'konane' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'konaneJump' }, m1: { svg: 'konaneStart' }, m2: { svg: 'konaneSizes' } }, refs: ['James Cook, James King, A Voyage to the Pacific Ocean, vol. III (1784)', 'Stewart Culin, “Hawaiian Games”, American Anthropologist 1 (1899)', 'Michael D. Ernst, “Playing Konane Mathematically: A Combinatorial Game-Theoretic Analysis”, UMAP Journal 16(2) (1995); an earlier version with Elwyn Berlekamp (1993)', 'Alice Chan, Alice Tsai, “1×n Konane: A Summary of Results”, in More Games of No Chance (2002)', 'Robert A. Hearn, Games, Puzzles, and Computation (PhD thesis, MIT, 2006)', 'National Park Service, Puʻuhonua o Hōnaunau National Historical Park (papamū)'], links: [{ g: 'konane' }, { g: 'checkers' }, { g: 'peg' }] },
     { id: 'peg', color: '#5a3e78', cover: { g: 'peg', s: 'peg' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'pegJump' }, m1: { svg: 'pegBoards' }, m2: { svg: 'pegColors' } }, refs: ['Mercure galant, August 1697', 'Claude-Auguste Berey, engraving of Anne de Rohan-Chabot, princesse de Soubise, with a solitaire board (late 17th century)', 'G. W. Leibniz, a note on the game of solitaire (1710), as quoted in Winning Ways', 'E. R. Berlekamp, J. H. Conway, R. K. Guy, Winning Ways for your Mathematical Plays, vol. 2 (1982)', 'John D. Beasley, The Ins and Outs of Peg Solitaire (1985)', 'University of Waterloo, Elliott Avedon Virtual Museum of Games: Solitaire'], links: [{ g: 'peg' }, { g: 'foxgeese' }, { g: 'konane' }] },
     { id: 'fanorona', color: '#7a4a1e', cover: { g: 'fanorona', s: 'fanorona' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'fanoronaCapture' }, m1: { svg: 'fanoronaBoard' }, m2: { svg: 'fanoronaChain' } }, refs: ['Maarten P. D. Schadd, Mark H. M. Winands, Jos W. H. M. Uiterwijk, H. Jaap van den Herik, Maurice H. J. Bergsma, “Best Play in Fanorona Leads to Draw”, New Mathematics and Natural Computation 4(3) (2008)', 'H. J. R. Murray, A History of Board-Games Other Than Chess (1952)', 'Robert C. Bell, Board and Table Games from Many Civilizations (1960)', 'Maastricht University, Games and AI Group: Fanorona', 'Wikipedia, “Fanorona” (the legend of Ralambo and his sons)'], links: [{ g: 'fanorona' }, { g: 'alquerque' }, { g: 'checkers' }] },
+    { id: 'janggi', color: '#1f5e52', cover: { g: 'janggi', s: 'janggi' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'janggiBoard' }, m1: { svg: 'janggiElephant' }, m2: { svg: 'janggiCannon' } }, refs: ['Stewart Culin, Korean Games, with Notes on the Corresponding Games of China and Japan (1895)', '한국민족문화대백과사전 「장기」 / Encyclopedia of Korean Culture, “Janggi”', 'H. J. R. Murray, A History of Chess (1913)', 'University of Waterloo, Elliott Avedon Virtual Museum of Games: Changgi', 'Wikipedia, “Janggi” (setups, bikjang, scoring)'], links: [{ g: 'janggi' }, { g: 'xiangqi' }, { g: 'chess' }] },
   ];
   const src = p => p.s ? `../images/atlas/museum-story/${p.s}.webp?v=1` : p.g ? `../images/atlas/${p.g}.webp` : p.ex ? `../images/atlas/ex/${p.ex}.webp` : `../images/atlas/paint/${p.paint}-t.webp?v=1`;
   const ga = p => p && p.g && !p.s ? ' ga' : '';   // (a cover from the game's own art: a transparent icon, shown whole on the story's colour)
@@ -540,6 +541,54 @@
       g += `<path d="M${X(3) + 14} ${Y(2) + 2}L${X(4) - 4} ${Y(2) + 2}" stroke="#6a6258" stroke-width="2.6" stroke-dasharray="4 3"/><circle cx="${X(3) + 26}" cy="${Y(2) + 22}" r="9" fill="#4a423a"/><path d="M${X(3) + 22} ${Y(2) + 18}l8 8M${X(3) + 30} ${Y(2) + 18}l-8 8" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>`;
       [[2.5, 2, '1', -6, 19], [3, 1.5, '2', 19, 0], [2.5, 1, '3', 0, -19]].forEach(([c, r, n, dx, dy]) => { const x = X(c) + dx, y = Y(r) + dy; g += `<circle cx="${x}" cy="${y}" r="10" fill="#2a5a8a" stroke="#fff" stroke-width="1.5"/><text x="${x}" y="${y + 5}" font-size="15" font-weight="800" fill="#fff" text-anchor="middle">${n}</text>`; });
       return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit"><defs><marker id="fcA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2a5a8a"/></marker></defs>${g}</svg>`; },
+    // janggi: the 9 × 10 board without a river, the two palaces with their diagonals, the opening position. The dashed rings: the horse and
+    // elephant points each side may swap (four setups); here Han (top) and Cho (bottom) chose different ones
+    janggiBoard: () => { const C = 30, o = 22, W = o * 2 + C * 8, H = o * 2 + C * 9; let g = `<rect x="2" y="2" width="${W - 4}" height="${H - 4}" rx="8" fill="#ecd9ae" stroke="#9a7a48" stroke-width="2"/>`;
+      const X = c => o + c * C, Y = r => o + r * C;
+      for (let r = 0; r < 10; r++) g += `<line x1="${X(0)}" y1="${Y(r)}" x2="${X(8)}" y2="${Y(r)}" stroke="#5a4428" stroke-width="1.3"/>`;
+      for (let c = 0; c < 9; c++) g += `<line x1="${X(c)}" y1="${Y(0)}" x2="${X(c)}" y2="${Y(9)}" stroke="#5a4428" stroke-width="1.3"/>`;
+      [0, 7].forEach(r => { g += `<path d="M${X(3)} ${Y(r)}L${X(5)} ${Y(r + 2)}M${X(5)} ${Y(r)}L${X(3)} ${Y(r + 2)}" stroke="#5a4428" stroke-width="1.3"/>`; });
+      [[1, 0], [2, 0], [6, 0], [7, 0], [1, 9], [2, 9], [6, 9], [7, 9]].forEach(([c, r]) => { g += `<circle cx="${X(c)}" cy="${Y(r)}" r="14.6" fill="none" stroke="#2a5a8a" stroke-width="2" stroke-dasharray="4 3"/>`; });
+      const oct = (c, r, ch, han, R) => { const x = X(c), y = Y(r); let d = ''; for (let k = 0; k < 8; k++) { const a = Math.PI / 8 + k * Math.PI / 4; d += `${k ? 'L' : 'M'}${(x + R * Math.cos(a)).toFixed(1)} ${(y + R * Math.sin(a)).toFixed(1)}`; }
+        const col = han ? '#b8322a' : '#1f6e5a'; return `<path d="${d}Z" fill="#fbf3e2" stroke="${col}" stroke-width="1.6"/><text x="${x}" y="${y + R * .42}" font-size="${(R * 1.18).toFixed(1)}" font-weight="700" fill="${col}" text-anchor="middle">${ch}</text>`; };
+      const side = (han, back, setup) => { const r0 = han ? 0 : 9, f = han ? 1 : -1; let h = '';
+        h += oct(0, r0, '車', han, 12.5) + oct(8, r0, '車', han, 12.5) + oct(3, r0, '士', han, 10.5) + oct(5, r0, '士', han, 10.5) + oct(4, r0 + f, han ? '漢' : '楚', han, 14.5);
+        setup.forEach((ch, k) => { h += oct([1, 2, 6, 7][k], r0, ch, han, 12.5); });
+        h += oct(1, r0 + 2 * f, '包', han, 12.5) + oct(7, r0 + 2 * f, '包', han, 12.5);
+        [0, 2, 4, 6, 8].forEach(c => { h += oct(c, r0 + 3 * f, han ? '兵' : '卒', han, 10.5); }); return h; };
+      g += side(1, 0, ['馬', '象', '象', '馬']) + side(0, 9, ['象', '馬', '象', '馬']);
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit">${g}</svg>`; },
+    // the horse (left: one step straight, one diagonal) and the elephant (right: one straight, two diagonal); a piece on a point along the way
+    // blocks that direction (×)
+    janggiElephant: () => { const C = 21, o = 12, P = o * 2 + C * 6, W = P * 2 + 14; let g = '';
+      const panel = (ox, el) => { const X = c => ox + o + c * C, Y = r => o + r * C; let h = `<rect x="${ox + 1}" y="1" width="${P - 2}" height="${P - 2}" rx="8" fill="#ecd9ae" stroke="#9a7a48" stroke-width="1.6"/>`;
+        for (let k = 0; k < 7; k++) h += `<line x1="${X(0)}" y1="${Y(k)}" x2="${X(6)}" y2="${Y(k)}" stroke="#8a6a44" stroke-width="1"/><line x1="${X(k)}" y1="${Y(0)}" x2="${X(k)}" y2="${Y(6)}" stroke="#8a6a44" stroke-width="1"/>`;
+        const oct = (c, r, ch, col, R) => { const x = X(c), y = Y(r); let d = ''; for (let k = 0; k < 8; k++) { const a = Math.PI / 8 + k * Math.PI / 4; d += `${k ? 'L' : 'M'}${(x + R * Math.cos(a)).toFixed(1)} ${(y + R * Math.sin(a)).toFixed(1)}`; } return `<path d="${d}Z" fill="${ch ? '#fbf3e2' : col}" stroke="${col}" stroke-width="1.5"/>` + (ch ? `<text x="${x}" y="${y + R * .42}" font-size="${(R * 1.2).toFixed(1)}" font-weight="700" fill="${col}" text-anchor="middle">${ch}</text>` : ''); };
+        const a = el ? 2 : 1, b = el ? 3 : 2, T = []; [[a, b], [b, a]].forEach(([dx, dy]) => [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([sx, sy]) => T.push([3 + sx * dx, 3 + sy * dy])));
+        const blk = el ? [4, 1] : [3, 2], bad = el ? [[5, 0]] : [[2, 1], [4, 1]];
+        if (el) h += `<path d="M${X(3)} ${Y(3)}L${X(3)} ${Y(2)}L${X(4)} ${Y(1)}L${X(5)} ${Y(0)}" fill="none" stroke="#2a5a8a" stroke-width="2.6" stroke-dasharray="4 3"/><path d="M${X(3)} ${Y(3)}L${X(4)} ${Y(3)}L${X(5)} ${Y(4)}L${X(6)} ${Y(5)}" fill="none" stroke="#2a5a8a" stroke-width="2.6"/>`;
+        else h += `<path d="M${X(3)} ${Y(3)}L${X(3)} ${Y(2)}L${X(2)} ${Y(1)}" fill="none" stroke="#2a5a8a" stroke-width="2.6" stroke-dasharray="4 3"/><path d="M${X(3)} ${Y(3)}L${X(4)} ${Y(3)}L${X(5)} ${Y(4)}" fill="none" stroke="#2a5a8a" stroke-width="2.6"/>`;
+        T.forEach(([c, r]) => { if (bad.some(q => q[0] === c && q[1] === r)) h += `<circle cx="${X(c)}" cy="${Y(r)}" r="7.5" fill="#4a423a"/><path d="M${X(c) - 3.5} ${Y(r) - 3.5}l7 7M${X(c) + 3.5} ${Y(r) - 3.5}l-7 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/>`; else h += `<circle cx="${X(c)}" cy="${Y(r)}" r="6" fill="#2a5a8a"/>`; });
+        h += oct(blk[0], blk[1], '', '#1f6e5a', 8) + oct(3, 3, el ? '象' : '馬', '#b8322a', 11.2);
+        return h; };
+      g += panel(0, 0) + panel(P + 14, 1);
+      return `<svg viewBox="0 0 ${W} ${P}" role="img" style="font-family:inherit">${g}</svg>`; },
+    // the cannon: it moves and captures only over exactly one screen piece (top: over the soldier to any empty point beyond, or onto the chariot);
+    // a cannon cannot be the screen (middle) and cannot be captured by a cannon (bottom)
+    janggiCannon: () => { const C = 30, o = 22, W = o * 2 + C * 8, RS = 46, H = 18 + RS * 3; let g = '';
+      const X = c => o + c * C;
+      const oct = (c, y, ch, han, R) => { const x = X(c); let d = ''; for (let k = 0; k < 8; k++) { const a = Math.PI / 8 + k * Math.PI / 4; d += `${k ? 'L' : 'M'}${(x + R * Math.cos(a)).toFixed(1)} ${(y + R * Math.sin(a)).toFixed(1)}`; } const col = han ? '#b8322a' : '#1f6e5a'; return `<path d="${d}Z" fill="#fbf3e2" stroke="${col}" stroke-width="1.6"/><text x="${x}" y="${y + R * .42}" font-size="${(R * 1.18).toFixed(1)}" font-weight="700" fill="${col}" text-anchor="middle">${ch}</text>`; };
+      const no = (c, y) => `<circle cx="${X(c)}" cy="${y}" r="9" fill="#4a423a"/><path d="M${X(c) - 4} ${y - 4}l8 8M${X(c) + 4} ${y - 4}l-8 8" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>`;
+      const row = (k, pcs, dots, caps, nos) => { const y = 14 + RS * k + RS / 2; let h = `<rect x="2" y="${y - RS / 2 + 3}" width="${W - 4}" height="${RS - 6}" rx="8" fill="#ecd9ae"/><line x1="${X(0)}" y1="${y}" x2="${X(8)}" y2="${y}" stroke="#5a4428" stroke-width="1.4"/>`;
+        for (let c = 0; c < 9; c++) h += `<line x1="${X(c)}" y1="${y - 8}" x2="${X(c)}" y2="${y + 8}" stroke="#5a4428" stroke-width="1.2"/>`;
+        dots.forEach(c => { h += `<circle cx="${X(c)}" cy="${y}" r="6" fill="#2a5a8a"/>`; });
+        pcs.forEach(([c, ch, han]) => { h += oct(c, y, ch, han, 12); });
+        caps.forEach(c => { h += `<circle cx="${X(c)}" cy="${y}" r="15" fill="none" stroke="#2a5a8a" stroke-width="2.6"/>`; });
+        nos.forEach(c => { h += no(c, y + (pcs.some(p => p[0] === c) ? -16 : 0)); }); return h; };
+      g += row(0, [[0, '包', 0], [2, '卒', 0], [6, '車', 1]], [3, 4, 5], [6], []);
+      g += row(1, [[0, '包', 0], [2, '包', 1], [6, '車', 1]], [], [], [3]);
+      g += row(2, [[0, '包', 0], [2, '卒', 0], [5, '包', 1]], [3, 4], [], [5]);
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit">${g}</svg>`; },
     // four tetrahedral dice: how often each score comes (out of 16)
     tetraOdds: () => { const n = [1, 4, 6, 4, 1], W = 300, H = 150, bw = 40, gap = (W - 40 - bw * 5) / 4; let g = '';
       n.forEach((v, i) => { const x = 20 + i * (bw + gap), h = v / 6 * 96, y = 112 - h;
