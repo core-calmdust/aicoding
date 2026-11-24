@@ -19,7 +19,9 @@
     st.lex = Object.assign({}, st.lex, { book: hh.book });
     st.roles = Object.fromEntries(Object.entries(st.roles).map(([r, R]) => [r, Object.assign({}, R, hh.how && hh.how[r] ? { how: hh.how[r] } : {})]));
     st.text = Object.assign({}, st.text);
-    st.text.prologue = (st.text.prologue || []).flatMap(p => p.hero ? [{ bg: hh.bg || p.bg || st.locs[0].id, t: hh.intro }] : [p]);
+    const pro = st.text.prologue || [], core = pro.findIndex(p => p.core);
+    // a hero with an opening of their own starts the story their way; the shared part (from the page marked core) follows
+    st.text.prologue = hh.prologue && core > 0 ? hh.prologue.concat(pro.slice(core)) : pro.flatMap(p => p.hero ? [{ bg: hh.bg || p.bg || st.locs[0].id, t: hh.intro }] : [p]);
     if (hh.win) st.text.win = hh.win;
     if (st.arc) {
       const days = {};
