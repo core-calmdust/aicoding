@@ -7,6 +7,8 @@
 // (am-ls / i18n-am-ls.js). Positions are random but seeded, and checked by the conditions below.
 // (2026-11-24) the basics' scored problems are then made again by tools/gen_basics2.js (checked by tools/lesson-verify.js amazons):
 // run it after this one.
+// (2026-11-24 第2期) the strategy steps' scored problems were chosen again by tools/gen_strat2.js (checked by tools/lesson-verify.js amazons):
+// running this file replaces them — run gen_strat2.js and lesson-verify.js after it.
 'use strict';
 const path = require('path'), fs = require('fs');
 const E = require(path.join(__dirname, '..', 'engine.js'));
