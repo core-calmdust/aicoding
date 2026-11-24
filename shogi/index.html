@@ -1939,7 +1939,7 @@ html.atlas-skin #newOverlay #lvNote{display:none!important}   /* (the long note 
 <script src="strategy.js?v=20261107l14"></script>
 <script src="cpu-style.js?v=20261113pc"></script>
 <script src="lists-ui.js?v=20261113pc"></script>
-<script src="openings-ui.js?v=20261124ob"></script>
+<script src="openings-ui.js?v=20261124oc"></script>
 <script src="../shared/pzbook.js?v=9sk"></script>
 <script src="../shared/headerbar.js?v=64"></script>
 <script src="../shared/lessonkeys.js?v=3"></script>
@@ -4699,7 +4699,7 @@ function startTsume(si, k, dailyDate, dailyEasy) {
   loadProblem();
 }
 let OPEN = null;
-const openReady = fetch('openings.json?v=20261113pc').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
+const openReady = fetch('openings.json?v=20261124ol1').then(r => r.json()).then(d => (OPEN = d)).catch(() => {});
 const OSTORE = 'shogi-kaya-open-v1';
 let oprog = {};
 try { oprog = JSON.parse(localStorage.getItem(OSTORE) || '{}'); } catch (e) {}
