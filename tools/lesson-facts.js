@@ -712,6 +712,14 @@ const todo = games.length ? games : Object.keys(CHECKS);
   for (const g of todo) for (const d of [path.join(ROOT, g.split('/')[0]), path.join(ROOT, 'atlas'), path.join(ROOT, 'shared')]) { if (seen.has(d) || !fs.existsSync(d)) continue; seen.add(d);
     for (const f of fs.readdirSync(d)) { if (!/\.(html|js|json|css)$/.test(f)) continue;
       const t = fs.readFileSync(path.join(d, f), 'utf8'); if (/^(<{7}|>{7}) |^={7}$/m.test(t)) bad(g, '-', `追21 conflict markers left in ${path.relative(ROOT, path.join(d, f))}`); } } }
+// (2026-11-24 報告, 追62) #3575 merged claude/lesson-quality.md with its conflict markers and two different 追56 lines (担当B と担当C が同じ番号):
+// the specs (claude/*.md) and the checkers (tools/) carry no conflict marker, and each 追N of the 追加の基準 is defined once, in order
+{ for (const d of [path.join(ROOT, 'claude'), path.join(ROOT, 'tools')]) { if (!fs.existsSync(d)) continue;
+    for (const f of fs.readdirSync(d)) { if (!/\.(md|js|mjs|json)$/.test(f)) continue;
+      const t = fs.readFileSync(path.join(d, f), 'utf8'); if (/^(<{7}|>{7}) |^={7}$/m.test(t)) bad('spec', '-', `追62 conflict markers left in ${path.relative(ROOT, path.join(d, f))}`); } }
+  const lq = path.join(ROOT, 'claude', 'lesson-quality.md');
+  if (fs.existsSync(lq)) { const ns = [...fs.readFileSync(lq, 'utf8').matchAll(/^- \*\*追(\d+) /gm)].map(m => +m[1]);
+    ns.forEach((n, i) => { if (ns.indexOf(n) !== i) bad('spec', '-', `追62 追${n} is defined twice in claude/lesson-quality.md (renumber the later one)`); else if (i && n !== ns[i - 1] + 1) bad('spec', '-', `追62 追${n} follows 追${ns[i - 1]} in claude/lesson-quality.md (a number skipped or out of order)`); }); } }
 for (const g of todo) { if (!CHECKS[g]) { console.log(`${g}: no fact check yet`); continue; } try { CHECKS[g](); } catch (e) { bad(g, '-', 'the check failed: ' + e.message); } }
 let n = 0;
 for (const [g, ls] of Object.entries(out)) for (const [id, list] of Object.entries(ls)) for (const m of list) { console.log(`FAIL ${g} ${id}: ${m}`); n++; }

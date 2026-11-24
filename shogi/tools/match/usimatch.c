@@ -48,12 +48,61 @@ static int hist[400], nh;
 static void setStart(void) { for (int s = 0; s < 81; s++) setupBuf[s] = START[s]; for (int i = 0; i < 16; i++) setupBuf[81 + i] = 0; setupBuf[97] = 0; set_position(); }
 static void replay(void) { setStart(); for (int i = 0; i < nh; i++) play_move(hist[i]); }
 
+#ifdef NUE_KB
+/* a build for a net of gtrain / trainkp (NUEK / NUEO / NUEM / NUES; the flags come from the net: tools/nnue/build-kp.sh,
+   run-gikou.sh), and the site's NUEQ with NUE_KB=1 */
+static int loadKP(const char *path) {
+  FILE *f = fopen(path, "rb"); if (!f) { perror(path); return 0; }
+  int hd[4], nb = 1, mlp = 0; if (fread(hd, 4, 3, f) != 3) return 0;
+  if (hd[0] == 0x5145554E) {   /* NUEQ: the current format = one bucket */
+    if (NUE_KB != 1 || hd[1] != NUE_H || hd[2] != 2534) { fprintf(stderr, "%s: a NUEQ net needs a build with NUE_KB=1 NUE_H=%d\n", path, hd[1]); return 0; }
+    memset(nueKMap, 0, sizeof nueKMap);
+  } else {
+    if ((hd[0] != 0x4B45554E && hd[0] != 0x4F45554E && hd[0] != 0x4D45554E && hd[0] != 0x5345554E) || fread(hd + 3, 4, 1, f) != 1) { fprintf(stderr, "%s: not a NUEK / NUEO / NUEM / NUEQ net\n", path); return 0; }
+    if (hd[0] == 0x4D45554E || hd[0] == 0x5345554E) {   /* NUES: the same with output buckets and an MLP per bucket (-DNUE_MB=8). NUEM: an MLP beside the linear output (a build with -DNUE_L1 -DNUE_L2) */
+      int m[3]; if (fread(m, 4, 3, f) != 3) return 0;
+#ifdef NUE_L1
+      if (m[0] != NUE_L1 || m[1] != NUE_L2 || m[2] != NUE_MI) { fprintf(stderr, "%s: MLP %d-%d on %d units: rebuild with -DNUE_L1=%d -DNUE_L2=%d -DNUE_MI=%d\n", path, m[0], m[1], m[2], m[0], m[1], m[2]); return 0; }
+      mlp = 1;
+      if (hd[0] == 0x5345554E) { if (fread(&nb, 4, 1, f) != 1 || nb != NUE_NB || NUE_MB != NUE_NB) { fprintf(stderr, "%s: %d buckets with an MLP each: rebuild with -DNUE_MB=%d\n", path, nb, NUE_NB); return 0; } mlp = NUE_NB; }
+      else if (NUE_MB != 1) { fprintf(stderr, "%s: one MLP: rebuild without -DNUE_MB\n", path); return 0; }
+#else
+      fprintf(stderr, "%s: an MLP net needs a build with -DNUE_L1=%d -DNUE_L2=%d\n", path, m[0], m[1]); return 0;
+#endif
+    }
+    if (hd[0] == 0x4F45554E && (fread(&nb, 4, 1, f) != 1 || nb != NUE_NB)) { fprintf(stderr, "%s: %d output buckets (the engine has %d)\n", path, nb, NUE_NB); return 0; }   /* NUEO: output buckets */
+    if (hd[1] != NUE_H || hd[3] != NUE_KB || hd[2] != NUE_KB * 2534) { fprintf(stderr, "%s: H %d, %d buckets: rebuild with -DNUE_H=%d -DNUE_KB=%d\n", path, hd[1], hd[3], hd[1], hd[3]); return 0; }
+    if (fread(nueKMap, 1, 84, f) != 84) return 0;
+  }
+  if (fread(nueW1, 2, (size_t)NUE_IN * NUE_H, f) != (size_t)NUE_IN * NUE_H || fread(nueB1, 4, NUE_H, f) != NUE_H || fread(nueW2, 2, (size_t)nb * 2 * NUE_H, f) != (size_t)nb * 2 * NUE_H || fread(nueB2, 4, nb, f) != (size_t)nb) { fprintf(stderr, "short net\n"); return 0; }
+#ifdef NUE_L1
+  if (mlp) {
+    static i8 a8[NUE_L1 * 2 * NUE_MI], b8[NUE_L2 * NUE_L1];
+    for (int k = 0; k < mlp; k++) {
+      if (NUE_MB > 1) {   /* NUES: int16 weights */
+        if (fread(nueMA + k * NUE_L1 * 2 * NUE_MI, 2, NUE_L1 * 2 * NUE_MI, f) != NUE_L1 * 2 * NUE_MI || fread(nueMa + k * NUE_L1, 4, NUE_L1, f) != NUE_L1 || fread(nueMB + k * NUE_L2 * NUE_L1, 2, NUE_L2 * NUE_L1, f) != NUE_L2 * NUE_L1 || fread(nueMd + k * NUE_L2, 4, NUE_L2, f) != NUE_L2 || fread(nueMC + k * NUE_L2, 2, NUE_L2, f) != NUE_L2) { fprintf(stderr, "short net\n"); return 0; }
+        continue;
+      }
+      if (fread(a8, 1, sizeof a8, f) != sizeof a8 || fread(nueMa + k * NUE_L1, 4, NUE_L1, f) != NUE_L1 || fread(b8, 1, sizeof b8, f) != sizeof b8 || fread(nueMd + k * NUE_L2, 4, NUE_L2, f) != NUE_L2 || fread(nueMC + k * NUE_L2, 2, NUE_L2, f) != NUE_L2) { fprintf(stderr, "short net\n"); return 0; }
+      for (int i = 0; i < NUE_L1 * 2 * NUE_MI; i++) nueMA[k * NUE_L1 * 2 * NUE_MI + i] = a8[i];
+      for (int i = 0; i < NUE_L2 * NUE_L1; i++) nueMB[k * NUE_L2 * NUE_L1 + i] = b8[i];
+    }
+  } else { memset(nueMA, 0, sizeof nueMA); memset(nueMC, 0, sizeof nueMC); }
+  nue_mlp_init();
+#endif
+  (void)mlp; fclose(f); nue_set_nb(nb);
+  if (!nue_kinit()) { fprintf(stderr, "bad bucket map\n"); return 0; }
+  return 1;
+}
+static int loadNet(const char *path) { return loadKP(path); }
+#else
 static int loadNet(const char *path) {
   FILE *f = fopen(path, "rb"); if (!f) { perror(path); return 0; }
   int hd[3]; if (fread(hd, 4, 3, f) != 3 || hd[0] != 0x5145554E || hd[1] != NUE_H || hd[2] != NUE_IN) { fprintf(stderr, "%s: not a %d-wide net (rebuild with -DNUE_H=%d)\n", path, NUE_H, hd[1]); return 0; }
   if (fread(nueW1, 2, NUE_IN * NUE_H, f) != (size_t)(NUE_IN * NUE_H) || fread(nueB1, 4, NUE_H, f) != NUE_H || fread(nueW2, 2, 2 * NUE_H, f) != 2 * NUE_H || fread(nueB2, 4, 1, f) != 1) { fprintf(stderr, "short net\n"); return 0; }
   fclose(f); return 1;
 }
+#endif
 
 static FILE *toE, *fromE; static pid_t epid;
 static int nThreads = 1;

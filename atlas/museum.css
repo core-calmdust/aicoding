@@ -858,7 +858,8 @@ a.rdimg{text-decoration:none;color:inherit}
   box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 18px 50px rgba(20,12,4,.18),0 2px 6px rgba(20,12,4,.08)}
 .muwrap .musub,.muwrap .chlead,.muwrap .gxsub,.muwrap .trsub,.muwrap .ptcredit,.muwrap .trlegend,.muwrap .amsub,
 #pg-museum .muwrap .muhead h2.h{width:auto;padding:0;border-radius:0;background:none;box-shadow:none}
-.muwrap .chlead,.muwrap .gxsub,.muwrap .trsub,.muwrap .ptlead{max-width:100%;text-wrap:pretty;margin:0 0 16px;font-size:15px;font-weight:600;line-height:1.75;color:#5b5348}
+.muwrap .muroom[data-r=map] .amsub{width:auto;padding:0;border-radius:0;background:none;box-shadow:none}   /* (2026-11-24 ユーザー: 地図の説明文も他の部屋と同じに) */
+.muwrap .chlead,.muwrap .gxsub,.muwrap .trsub,.muwrap .ptlead,.muwrap .muroom[data-r=map] .amsub{max-width:100%;text-wrap:pretty;margin:0 0 16px;font-size:15px;font-weight:600;line-height:1.75;color:#5b5348}
 /* the head: title and its line on the left, the stamp card on the right */
 .muwrap .muhead{display:flex;flex-wrap:nowrap;align-items:center;gap:16px;margin:0 0 18px}
 .muwrap .mutt{flex:1 1 auto;min-width:0}
@@ -893,7 +894,7 @@ a.rdimg{text-decoration:none;color:inherit}
   .muwrap .murm[aria-selected=true]{background:none}
   .muwrap .murm[aria-selected=true] .mup{color:var(--ink);font-weight:800}
   .muwrap .murm::after{left:8px;right:8px}
-  .muwrap .chlead,.muwrap .gxsub,.muwrap .trsub,.muwrap .ptlead{font-size:14px;margin-bottom:12px}
+  .muwrap .chlead,.muwrap .gxsub,.muwrap .trsub,.muwrap .ptlead,.muwrap .muroom[data-r=map] .amsub{font-size:14px;margin-bottom:12px}
 }
 /* (2026-11-24 rubric: tapSmall) a finger's room: on a phone every control in the museum is at least 44px high */
 @media (max-width:819px){

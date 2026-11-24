@@ -21,11 +21,16 @@ NET=${NET:-$REPO/shogi/nnue.bin.gz}
 mkdir -p "$WORK"; cd "$WORK"
 gunzip -c "$NET" > net.bin 2>/dev/null || cp "$NET" net.bin
 H=$(od -An -t d4 -j 4 -N 4 net.bin | tr -d ' ')
+# (2026-11-24) NET may be a net of gtrain / trainkp in a new shape (e.g. 2048 -> 8 -> 64 in 8 sets): the build takes its sizes
+KPF=""; MAGIC=$(od -An -t x4 -N 4 net.bin | tr -d ' ')
+case "$MAGIC" in 4b45554e|4f45554e|4d45554e|5345554e) KPF="-DNUE_KB=$(od -An -t d4 -j 12 -N 4 net.bin | tr -d ' ')";; esac
+case "$MAGIC" in 4d45554e|5345554e) KPF="$KPF -DNUE_L1=$(od -An -t d4 -j 16 -N 4 net.bin | tr -d ' ') -DNUE_L2=$(od -An -t d4 -j 20 -N 4 net.bin | tr -d ' ') -DNUE_MI=$(od -An -t d4 -j 24 -N 4 net.bin | tr -d ' ')";; esac
+[ "$MAGIC" = 5345554e ] && KPF="$KPF -DNUE_MB=8"
 echo "== build the site's engine (net: $NET, hidden $H)"
-cc -O3 -DNATIVE -DNUE_H=$H -w -o usimatch "$HERE/usimatch.c"
+cc -O3 -DNATIVE -DNUE_H=$H $KPF -w -o usimatch "$HERE/usimatch.c"
 UM=./usimatch; MTOPT=""
 if [ "$THREADS" -gt 1 ]; then
-  cc -O3 -DNATIVE -DMT -DSEARCH2_MT -DTTM_BITS=16 -DNUE_H=$H -w -o usimatch-mt "$HERE/usimatch.c" -lpthread
+  cc -O3 -DNATIVE -DMT -DSEARCH2_MT -DTTM_BITS=16 -DNUE_H=$H $KPF -w -o usimatch-mt "$HERE/usimatch.c" -lpthread
   UM=./usimatch-mt; MTOPT="--threads $THREADS"
   echo "== what the threads give here (2 s per position)"
   ./usimatch net.bin bench 2000 1 "$HERE/openings.txt"

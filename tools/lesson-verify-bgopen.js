@@ -3,7 +3,7 @@
 // the strict criteria of claude/lesson-quality.md 第2期 ①〜⑨ and the 追N that apply:
 //  ① every listed play is a legal play of the roll at that position; the stored list holds every legal play whose 0-ply value is
 //    within 0.03 of the listed best at 0-ply (no strong play is left out of the judging); the answer = the best rolled-out play
-//  ② (追59) the right plays (within OPB.tol of the best rollout, 20 points) — and the closest wrong rolled-out play is behind the best by more
+//  ② (追63) the right plays (within OPB.tol of the best rollout, 20 points) — and the closest wrong rolled-out play is behind the best by more
 //    than the tolerance AND by 2 standard errors of the two rollouts (else the line between right and wrong is noise); a play judged
 //    on its 2-ply value only is behind the best's 2-ply value by more than the tolerance
 //  ③ 3+ legal plays, 2+ wrong listed plays, the right plays at most a third of the legal plays
