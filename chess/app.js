@@ -1629,7 +1629,7 @@ function loadLessonProblem() {
   enterSpecial(P.fen);
   // the stored moves are UCI strings: convert once for this position
   const pos = posAt(0).pos;
-  if (P.cand) { P._freq = new Map(P.cand.map(([u, c]) => [pos.fromUci(u), c])); P._best = pos.fromUci(P.cand[0][0]); P._sc = null; P._ok = null; }
+  if (P.cand) { P._freq = new Map(P.cand.map(([u, c]) => [pos.fromUci(u), c])); P._acc = P.acc ? new Set(P.acc.map(u => pos.fromUci(u))) : null; P._best = pos.fromUci(P.cand[0][0]); P._sc = null; P._ok = null; }
   else if (P.ok) { P._ok = new Set(P.ok.map(u => pos.fromUci(u))); P._best = pos.fromUci(P.ok[0]); P._sc = null; }
   else { P._sc = P.sc.map(([u, v]) => [pos.fromUci(u), v]); P._best = pos.fromUci(P.best); }
   lesson.answered = false; lesson.hinted = false;
@@ -1656,7 +1656,7 @@ function renderLessonCard() {
   $('#lsNext').disabled = !lesson.answered;
 }
 function problemPoints(P, m) {
-  if (P._freq) { const c = P._freq.get(m) || 0, top = P.cand[0][1]; return c >= top ? 20 : c ? Math.max(4, Math.round(20 * Math.sqrt(c / top))) : 0; }
+  if (P._freq) { if (P._acc && P._acc.has(m)) return 20; const c = P._freq.get(m) || 0, top = P.cand[0][1]; return c >= top ? 20 : c ? Math.max(4, Math.round(20 * Math.sqrt(c / top))) : 0; }
   if (P._ok) return P._ok.has(m) ? 20 : 0;
   const val = new Map(P._sc), best = Math.max(...P._sc.map(e => e[1])), mine = val.has(m) ? val.get(m) : -MATE;
   if (best > MATET && mine > MATET) return mine >= best ? 20 : 16;
@@ -1918,8 +1918,9 @@ $('#lsFb').addEventListener('click', e => {
   toast(t('op.playing'));
 });
 function startPractice(gi) {
-  const g = OPEN.sets[gi], pool = g.problems.slice();
-  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  const g = OPEN.sets[gi], shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  // (2026-11-24 第2期・担当B) the verified problems (openings.json drill, chess/tools/op_curate.js) in their easy → hard order
+  const pool = g.drill ? shuffle(g.drill.slice()).slice(0, 5).sort((a, b) => g.drill.indexOf(a) - g.drill.indexOf(b)).map(i => g.problems[i]) : shuffle(g.problems);
   hideOverlay('#lessonOverlay');
   stashGame(); puzzle = null; document.body.classList.remove('in-puzzle');
   lesson = { step: 0, gi, virt: { id: g.id, title: g.title, problems: pool.slice(0, 5) }, i: 0, results: [], answered: false, hinted: false, me: P1 };
@@ -1930,10 +1931,10 @@ function openingAnswer(P, m, pos) {
   const pts = problemPoints(P, m); lesson.results[lesson.i] = pts; renderLessonCard();
   const tot = P.cand.reduce((a, c) => a + c[1], 0), pc = c => Math.round(c * 100 / tot);
   const ms = pos.san(m), top = P.cand.slice(0, 3).map(([u, c]) => `<bdi>${pos.san(pos.fromUci(u))}</bdi> ${pc(c)}%`).join(' · ');
-  const c = P._freq.get(m) || 0, lbl = pts === 20 ? 'fb.perfect' : c ? 'fb.good' : 'fb.bad';
+  const c = P._freq.get(m) || 0, lbl = pts === 20 ? 'fb.perfect' : pts >= 16 ? 'fb.good' : 'fb.bad';   // (追3: 「惜しい」 only for a move worth 16 points or more)
   $('#lsFb').innerHTML = `<span class="pts ${pts >= 16 ? 'ok' : pts >= 10 ? 'mid' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${c ? 'ok' : 'ng'}">${t(lbl)}</b> ` + (c ? t('op.yourPct', { m: ms, p: pc(c) }) : t('op.rare', { m: ms })) + `<br><small style="color:var(--dim)">${t('op.top')}: ${top}</small>`;
   playChime(pts >= 10); playMove2(m);
-  lsAuto(!!c, moveDur() + 1100);
+  lsAuto(pts >= 16, moveDur() + 1100);   // (追3: only a right move goes on by itself)
   const tok = busyToken;
   setTimeout(() => {
     if (!lesson || tok !== busyToken) return;

@@ -31,8 +31,8 @@
     { id: 'patolli', color: '#8a3a2a', cover: { g: 'patolli', s: 'patolli' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'patolliBoard' }, m1: { svg: 'beanOdds' }, m2: { paint: 'chaupar' } }, refs: ['Diego Durán, Historia de las Indias de Nueva España e islas de la tierra firme (c. 1581)', 'Bernardino de Sahagún, Florentine Codex, Book 8 (c. 1577)', 'Codex Magliabechiano (16th century)', 'E. B. Tylor, “On the Game of Patolli in Ancient Mexico, and its Probably Asiatic Origin”, Journal of the Anthropological Institute 8 (1879)', 'Stewart Culin, Chess and Playing-Cards (1898)'], links: [{ g: 'patolli' }, { g: 'ludo' }, { paint: 'chaupar' }] },
     { id: 'xiangqi', color: '#8a1e1e', cover: { g: 'xiangqi', s: 'xiangqi' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'xiangqiBoard' }, m1: { svg: 'cannonJump' } }, refs: ['牛僧孺『玄怪錄』（9世紀） / Niu Sengru, Xuanguai lu (9th c.)', '『適情雅趣』(1570) / Shiqing yaqu', '朱晉楨『橘中秘』(1632) / Zhu Jinzhen, Juzhong mi', 'H. J. R. Murray, A History of Chess (1913)', 'H. T. Lau, Chinese Chess (1985)', 'David H. Li, The Genealogy of Chess (1998)'], links: [{ g: 'xiangqi' }, { g: 'janggi' }, { g: 'chess' }] },
     { id: 'backgammon', color: '#5c2f1f', cover: { g: 'backgammon', s: 'backgammon' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'bgBoard' }, m1: { svg: 'bgShots' }, m2: { paint: 'webb' } }, refs: ['Wizārišn ī čatrang ud nihišn ī nēw-ardaxšīr (Middle Persian, c. 6th–9th c.)', 'Edmond Hoyle, A Short Treatise on the Game of Back-Gammon (1743)', 'Oswald Jacoby & John R. Crawford, The Backgammon Book (1970)', 'Hans Berliner, “Backgammon Computer Program Beats World Champion”, Artificial Intelligence 14 (1980)', 'Gerald Tesauro, “Temporal Difference Learning and TD-Gammon”, Communications of the ACM 38 (1995)', 'The Metropolitan Museum of Art, The Backgammon Players (cabinet, 1861), 26.54'], links: [{ g: 'backgammon' }, { paint: 'webb' }, { ex: 'pyrgus' }] },
-    { id: 'hex', color: '#2e4a6e', cover: { g: 'hex', s: 'hex' }, mins: 3, sec: [null, null, null, null, null], links: [{ g: 'hex' }, { g: 'gomoku' }] },
-    { id: 'foxgeese', color: '#7a4a1e', cover: { g: 'foxgeese', s: 'foxgeese' }, mins: 3, sec: [null, null, null, null, null], links: [{ g: 'foxgeese' }, { g: 'peg' }, { g: 'tafl' }] },
+    { id: 'hex', color: '#2e4a6e', cover: { g: 'hex', s: 'hex' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'hexWin' }, m1: { svg: 'hexBridge' } }, refs: ['Piet Hein, “Polygon”, Politiken, 26 December 1942', 'Martin Gardner, “Mathematical Games”, Scientific American (July 1957)', 'David Gale, “The Game of Hex and the Brouwer Fixed-Point Theorem”, American Mathematical Monthly 86 (1979)', 'Cameron Browne, Hex Strategy: Making the Right Connections (2000)', 'Ryan B. Hayward & Bjarne Toft, Hex: The Full Story (2019)'], links: [{ g: 'hex' }, { g: 'gomoku' }] },
+    { id: 'foxgeese', color: '#7a4a1e', cover: { g: 'foxgeese', s: 'foxgeese' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'foxGeeseBoard' }, m1: { svg: 'huntFamily' } }, refs: ['Grettis saga Ásmundarsonar (14th c.)', 'H. J. R. Murray, A History of Board-Games Other Than Chess (1952)', 'R. C. Bell, Board and Table Games from Many Civilizations (1960)', 'Claude-Auguste Berey, the Princesse de Soubise playing solitaire (engraving, 1697)', 'John D. Beasley, The Ins and Outs of Peg Solitaire (1985)', 'Lim Yew Jin & Jürg Nievergelt, “Computing Tigers and Goats”, ICGA Journal 27 (2004)'], links: [{ g: 'foxgeese' }, { g: 'peg' }, { g: 'tafl' }] },
   ];
   const src = p => p.s ? `../images/atlas/museum-story/${p.s}.webp?v=1` : p.g ? `../images/atlas/${p.g}.webp` : p.ex ? `../images/atlas/ex/${p.ex}.webp` : `../images/atlas/paint/${p.paint}-t.webp?v=1`;
   const ga = p => p && p.g && !p.s ? ' ga' : '';   // (a cover from the game's own art: a transparent icon, shown whole on the story's colour)
@@ -68,7 +68,7 @@
         g += `<rect x="${X0 + c * C + 1.5}" y="${Y0 + r * C + 1.5}" width="${C - 3}" height="${C - 3}" rx="6" fill="${R ? '#f4e2b8' : '#fbf6ea'}" stroke="#2f4a6e" stroke-width="2"/>`;
         if (R) { let f = ''; for (let k = 0; k < 8; k++) { const t = k * Math.PI / 4; f += `<ellipse cx="${cx(c) + Math.cos(t) * 9}" cy="${cy(r) + Math.sin(t) * 9}" rx="7" ry="3.6" transform="rotate(${k * 45} ${cx(c) + Math.cos(t) * 9} ${cy(r) + Math.sin(t) * 9})" fill="#c0503a"/>`; } g += f + `<circle cx="${cx(c)}" cy="${cy(r)}" r="4.5" fill="#2f4a6e"/>`; } }
       g += `<defs><marker id="urA" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#2f7d4a"/></marker></defs><polyline points="${road.map(([r, c]) => cx(c) + ',' + cy(r)).join(' ')}" fill="none" stroke="#2f7d4a" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round" opacity=".7" marker-end="url(#urA)"/>`;
-      g += road.map(([r, c], i) => `<circle cx="${X0 + c * C + 12}" cy="${Y0 + r * C + 12}" r="9" fill="#2f7d4a" stroke="#fff" stroke-width="1.5"/><text x="${X0 + c * C + 12}" y="${Y0 + r * C + 16.2}" font-size="11.5" font-weight="800" fill="#fff" text-anchor="middle">${i + 1}</text>`).join('');
+      g += road.map(([r, c], i) => `<circle cx="${X0 + c * C + 13}" cy="${Y0 + r * C + 13}" r="11.5" fill="#2f7d4a" stroke="#fff" stroke-width="1.5"/><text x="${X0 + c * C + 13}" y="${Y0 + r * C + 18.6}" font-size="15.5" font-weight="800" fill="#fff" text-anchor="middle">${i + 1}</text>`).join('');
       return `<svg viewBox="0 0 ${X0 * 2 + C * 8} ${Y0 * 2 + C * 3}" role="img" style="font-family:inherit">${g}</svg>`; },
     // the liubo board's lines: a square in the middle with a T on each side, an L facing each T from the edge, a V in each corner
     tlv: () => { const S = 240, m = S / 2, k = 34, st = 'stroke="#5a2a18" stroke-width="5" fill="none" stroke-linecap="square"'; let g = `<rect x="6" y="6" width="${S - 12}" height="${S - 12}" rx="10" fill="#e9d3a6" stroke="#5a2a18" stroke-width="3"/><rect x="${m - k}" y="${m - k}" width="${k * 2}" height="${k * 2}" ${st}/>`;
@@ -105,14 +105,14 @@
       const pos = n => { const r = Math.floor((n - 1) / 10), k = (n - 1) % 10, c = r === 1 ? 9 - k : k; return [x0 + c * C, y0 + r * C]; };
       const mark = { 15: '☥', 26: '⌂', 27: '≈', 28: 'III', 29: 'II', 30: '☉' };
       for (let n = 1; n <= 30; n++) { const [x, y] = pos(n), sp = n >= 26 || n === 15; g += `<rect x="${x + 1.5}" y="${y + 1.5}" width="${C - 3}" height="${C - 3}" rx="3" fill="${n === 27 ? '#8fb6d8' : sp ? '#f2d98a' : '#ead7b0'}"/>`;
-        g += sp ? `<text x="${x + C / 2}" y="${y + C / 2 + 5}" font-size="${n === 26 ? 15 : 13}" font-weight="800" fill="#5a3a12" text-anchor="middle">${mark[n]}</text>` : `<text x="${x + 5}" y="${y + 12}" font-size="9" fill="#9a8460">${n}</text>`; }
+        g += sp ? `<text x="${x + C / 2}" y="${y + C / 2 + 6}" font-size="${n === 26 ? 18 : 15}" font-weight="800" fill="#5a3a12" text-anchor="middle">${mark[n]}</text>` : (n === 1 || n % 5 === 0) ? `<text x="${x + 4}" y="${y + 15}" font-size="14.5" font-weight="700" fill="#8a7450">${n}</text>` : ''; }
       const pts = []; for (let n = 1; n <= 30; n++) { const [x, y] = pos(n); pts.push((x + C / 2) + ',' + (y + C / 2 + (n >= 26 || n === 15 ? 10 : 6))); }
       g += `<defs><marker id="snA" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b0402a"/></marker></defs><polyline points="${pts.slice(0, 26).join(' ')}" fill="none" stroke="#b0402a" stroke-width="2.5" stroke-linejoin="round" opacity=".6" marker-end="url(#snA)"/>`;
       return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit">${g}</svg>`; },
     // the Lewis chessmen by kind (kings, queens, bishops, knights, warders, pawns), with the chess letters as labels
     lewisCount: () => { const n = [['K', 8], ['Q', 8], ['B', 16], ['N', 15], ['R', 12], ['P', 19]], W = 320, H = 150, bw = 36, gap = (W - 30 - bw * 6) / 5; let g = '';
       n.forEach(([k, v], i) => { const x = 15 + i * (bw + gap), h = v / 19 * 96, y = 112 - h;
-        g += `<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="5" fill="#3e4a5c"/><text x="${x + bw / 2}" y="${y - 6}" font-size="13" font-weight="800" fill="#2b2a28" text-anchor="middle">${v}</text><text x="${x + bw / 2}" y="134" font-size="20" fill="#2b2a28" text-anchor="middle">${'♔♕♗♘♖♙'[i]}</text>`; });
+        g += `<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="5" fill="#3e4a5c"/><text x="${x + bw / 2}" y="${y - 6}" font-size="14.5" font-weight="800" fill="#2b2a28" text-anchor="middle">${v}</text><text x="${x + bw / 2}" y="134" font-size="20" fill="#2b2a28" text-anchor="middle">${'♔♕♗♘♖♙'[i]}</text>`; });
       return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit"><line x1="8" y1="112.5" x2="${W - 8}" y2="112.5" stroke="#b8ad98" stroke-width="1.5"/>${g}</svg>`; },
     // the Ballinderry board as holes (7 × 7, centre and corners marked) with a brandubh start: king, 4 defenders, 8 attackers
     brandubh: () => { const C = 30, N = 7, o = 14, W = o * 2 + C * N; let g = `<rect x="3" y="3" width="${W - 6}" height="${W - 6}" rx="10" fill="#7a5530"/><rect x="9" y="9" width="${W - 18}" height="${W - 18}" rx="7" fill="none" stroke="#5a3c20" stroke-width="2"/>`;
@@ -144,12 +144,12 @@
       const gz = new Set([5, 9, 14, 18, 23, 27, 32, 36, 41, 45, 50, 54, 59]), col = n => n === 63 ? '#a8741c' : gz.has(n) ? '#9cc27a' : n === 6 ? '#8fb6d8' : [19, 31, 52].includes(n) ? '#efc98a' : [42, 58].includes(n) ? '#e59a86' : '#f4ead2';
       let g = `<rect x="1" y="1" width="${W - 2}" height="${H - 2}" rx="8" fill="#5a6e2a"/>`, pts = [];
       cells.forEach(([q, c], i) => { const n = i + 1, x = o + c * C, y = o + q * C; pts.push((x + C / 2) + ',' + (y + C / 2));
-        g += `<rect x="${x + 1.5}" y="${y + 1.5}" width="${C - 3}" height="${C - 3}" rx="4" fill="${col(n)}"${n === 63 ? ' stroke="#fff3cf" stroke-width="2"' : ''}/><text x="${x + C / 2}" y="${y + C / 2 + 4.5}" font-size="${n === 63 ? 14 : 12}" font-weight="800" fill="${n === 63 ? '#fff' : '#2b2a1c'}" text-anchor="middle">${n}</text>`; });
+        g += `<rect x="${x + 1.5}" y="${y + 1.5}" width="${C - 3}" height="${C - 3}" rx="4" fill="${col(n)}"${n === 63 ? ' stroke="#fff3cf" stroke-width="2"' : ''}/><text x="${x + C / 2}" y="${y + C / 2 + 4.5}" font-size="${n === 63 ? 15 : 13.5}" font-weight="800" fill="${n === 63 ? '#fff' : '#2b2a1c'}" text-anchor="middle">${n}</text>`; });
       return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit">${g}</svg>`; },
     // why the first throw of 9 is special: geese every 9 squares (in steps of 4 and 5), so a 9 would chain straight to 63
     gooseNine: () => { const W = 340, H = 120, x0 = 14, sx = (W - 28) / 63, y = 78, X = n => x0 + n * sx; let g = `<line x1="${X(0)}" y1="${y}" x2="${X(63)}" y2="${y}" stroke="#8a7a5a" stroke-width="2"/>`;
       const gz = [5, 9, 14, 18, 23, 27, 32, 36, 41, 45, 50, 54, 59];
-      for (let n = 0; n <= 63; n++) if (n % 9 === 0 || n === 63) g += `<text x="${X(n)}" y="${y + 24}" font-size="12" font-weight="800" fill="#2b2a28" text-anchor="middle">${n}</text>`;
+      for (let n = 0; n <= 63; n++) if (n % 9 === 0 || n === 63) g += `<text x="${X(n)}" y="${y + 26}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="middle">${n}</text>`;
       gz.forEach(n => { g += `<circle cx="${X(n)}" cy="${y}" r="5.5" fill="${n % 9 ? '#c9dcb4' : '#5a8a3a'}" stroke="#3a5a24" stroke-width="1.2"/>`; });
       for (let n = 0; n < 63; n += 9) g += `<path d="M${X(n)} ${y - 7} Q${X(n + 4.5)} ${y - 46} ${X(n + 9)} ${y - 7}" fill="none" stroke="#b0402a" stroke-width="2.2" marker-end="url(#gnA)"/>`;
       g += `<circle cx="${X(63)}" cy="${y}" r="8" fill="#e2b85c" stroke="#7a5a1a" stroke-width="1.5"/>`;
@@ -165,7 +165,7 @@
     // the big shogi variants drawn to scale from one corner: 9×9 (40 pieces), 12×12 (92), 15×15 (130), 25×25 (354), 36×36 (804)
     shogiSizes: () => { const u = 6, o = 8, B = 36 * u, W = o * 2 + B + 128, H = o * 2 + B; const v = [[36, 804, '#efe2c4'], [25, 354, '#e2cc9c'], [15, 130, '#cfae72'], [12, 92, '#b88c4e'], [9, 40, '#6b4a24']]; let g = '';
       v.forEach(([n, p, f]) => { const s = n * u; g += `<rect x="${o}" y="${H - o - s}" width="${s}" height="${s}" fill="${f}" stroke="#5a3c1c" stroke-width="1.5"/>`; });
-      v.forEach(([n, p, f], i) => { const y = o + 14 + i * 40, lx = o + B + 18; g += `<rect x="${lx}" y="${y - 12}" width="18" height="18" rx="3" fill="${f}" stroke="#5a3c1c" stroke-width="1.2"/><text x="${lx + 26}" y="${y + 2}" font-size="14" font-weight="800" fill="#2b2a28">${n}×${n}</text><text x="${lx + 26}" y="${y + 19}" font-size="12" fill="#5a4430">${p}</text>`; });
+      v.forEach(([n, p, f], i) => { const y = o + 14 + i * 40, lx = o + B + 18; g += `<rect x="${lx}" y="${y - 12}" width="18" height="18" rx="3" fill="${f}" stroke="#5a3c1c" stroke-width="1.2"/><text x="${lx + 26}" y="${y + 3}" font-size="15.5" font-weight="800" fill="#2b2a28">${n}×${n}</text><text x="${lx + 26}" y="${y + 21}" font-size="14.5" fill="#5a4430">${p}</text>`; });
       return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit">${g}</svg>`; },
     // a pachisi cross: four arms of 3 × 8 around the home square; one player's road: down the middle of their arm, round anticlockwise, back up the middle
     pachisiBoard: () => { const C = 14, o = 6, N = 19, W = o * 2 + C * N; let g = `<rect x="${o + C * 8}" y="${o + C * 8}" width="${C * 3}" height="${C * 3}" fill="#a0482a"/>`;
@@ -183,8 +183,8 @@
     // six cowries: how many land mouth up (0–6) and what that scores; chances out of 64 if each falls either way equally
     cowrieOdds: () => { const n = [1, 6, 15, 20, 15, 6, 1], sc = [25, 10, 2, 3, 4, 5, 6], W = 330, H = 170, bw = 32, gap = (W - 30 - bw * 7) / 6; let g = '';
       n.forEach((v, i) => { const x = 15 + i * (bw + gap), h = v / 20 * 90, y = 106 - h, hi = i < 2 || i === 6;
-        g += `<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="4" fill="${hi ? '#a0482a' : '#d8a68a'}"/><text x="${x + bw / 2}" y="${y - 5}" font-size="11" font-weight="700" fill="#2b2a28" text-anchor="middle">${v}/64</text>`;
-        g += `<text x="${x + bw / 2}" y="124" font-size="12" fill="#5a4a3a" text-anchor="middle">${i}</text><rect x="${x + 1}" y="134" width="${bw - 2}" height="24" rx="5" fill="${hi ? '#a0482a' : '#f2e3c6'}"/><text x="${x + bw / 2}" y="151" font-size="14" font-weight="800" fill="${hi ? '#fff' : '#3a2a1a'}" text-anchor="middle">${sc[i]}</text>`; });
+        g += `<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="4" fill="${hi ? '#a0482a' : '#d8a68a'}"/><text x="${x + bw / 2}" y="${y - 5}" font-size="13" font-weight="700" fill="#2b2a28" text-anchor="middle">${v}/64</text>`;
+        g += `<text x="${x + bw / 2}" y="125" font-size="13.5" fill="#5a4a3a" text-anchor="middle">${i}</text><rect x="${x + 1}" y="134" width="${bw - 2}" height="24" rx="5" fill="${hi ? '#a0482a' : '#f2e3c6'}"/><text x="${x + bw / 2}" y="151" font-size="14" font-weight="800" fill="${hi ? '#fff' : '#3a2a1a'}" text-anchor="middle">${sc[i]}</text>`; });
       return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit"><line x1="8" y1="106.5" x2="${W - 8}" y2="106.5" stroke="#b8ad98" stroke-width="1.5"/>${g}</svg>`; },
     // capture in go: a black stone with four liberties, then down to its last one, then taken
     goLiberty: () => { const C = 22, N = 5, pw = C * (N - 1), gap = 34, o = 14, W = o * 2 + pw * 3 + gap * 2, H = o * 2 + pw; let g = '';
@@ -285,9 +285,9 @@
     // five beans marked on one side: how often 0–5 marks land up (out of 32), if each falls either way equally
     beanOdds: () => { const n = [1, 5, 10, 10, 5, 1], W = 320, H = 150, bw = 38, gap = (W - 30 - bw * 6) / 5; let g = '';
       n.forEach((v, i) => { const x = 15 + i * (bw + gap), h = v / 10 * 90, y = 108 - h;
-        g += `<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="5" fill="${i === 5 ? '#8a3a2a' : '#d9a58e'}"/><text x="${x + bw / 2}" y="${y - 6}" font-size="12" font-weight="800" fill="#2b2a28" text-anchor="middle">${v}/32</text>`;
+        g += `<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="5" fill="${i === 5 ? '#8a3a2a' : '#d9a58e'}"/><text x="${x + bw / 2}" y="${y - 6}" font-size="13.5" font-weight="800" fill="#2b2a28" text-anchor="middle">${v}/32</text>`;
         for (let b = 0; b < 5; b++) g += `<ellipse cx="${x + 5 + b * 7}" cy="128" rx="3.2" ry="5" fill="${b < i ? '#8a3a2a' : '#e9d3b8'}" stroke="#6a2a1a" stroke-width=".8"/>`;
-        g += `<text x="${x + bw / 2}" y="148" font-size="12" font-weight="800" fill="#2b2a28" text-anchor="middle">${i}</text>`; });
+        g += `<text x="${x + bw / 2}" y="149" font-size="13.5" font-weight="800" fill="#2b2a28" text-anchor="middle">${i}</text>`; });
       return `<svg viewBox="0 0 ${W} ${H + 4}" role="img" style="font-family:inherit"><line x1="8" y1="108.5" x2="${W - 8}" y2="108.5" stroke="#b8ad98" stroke-width="1.5"/>${g}</svg>`; },
     // the xiangqi board in its starting position: 9 × 10 lines, the river across the middle, the two palaces with their diagonals
     xiangqiBoard: () => { const C = 30, o = 22, W = o * 2 + C * 8, H = o * 2 + C * 9, X = c => o + c * C, Y = r => o + r * C; let g = `<rect x="4" y="4" width="${W - 8}" height="${H - 8}" rx="8" fill="#f1d9a6"/>`;
@@ -316,13 +316,55 @@
       const ck = (pt, n, light) => { const top = pt > 12, i = top ? pt - 13 : 12 - pt, cx = px(i) + pw / 2; let s = '';
         for (let k = 0; k < n; k++) { const cy = top ? o + 11 + k * 19 : H - o - 11 - k * 19; s += `<circle cx="${cx}" cy="${cy}" r="10" fill="${light ? '#f7f1e3' : '#2a2420'}" stroke="${light ? '#7a6a50' : '#000'}" stroke-width="1.2"/>`; } return s; };
       [[24, 2], [13, 5], [8, 3], [6, 5]].forEach(([p, n]) => g += ck(p, n, 1)); [[1, 2], [12, 5], [17, 3], [19, 5]].forEach(([p, n]) => g += ck(p, n, 0));
-      [1, 6, 12, 13, 18, 24].forEach(p => { const top = p > 12, i = top ? p - 13 : 12 - p; g += `<text x="${px(i) + pw / 2}" y="${top ? o + th + 16 : H - o - th - 6}" font-size="11" font-weight="800" fill="#5c2f1f" text-anchor="middle">${p}</text>`; });
+      [1, 6, 12, 13, 18, 24].forEach(p => { const top = p > 12, i = top ? p - 13 : 12 - p; g += `<text x="${px(i) + pw / 2}" y="${top ? o + th + 16 : H - o - th - 6}" font-size="13.5" font-weight="800" fill="#5c2f1f" text-anchor="middle">${p}</text>`; });
       return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit">${g}</svg>`; },
     // direct shots: of 36 rolls of two dice, how many can hit a lone checker 1–12 points away (no blocking)
     bgShots: () => { const n = [11, 12, 14, 15, 15, 17, 6, 6, 5, 3, 2, 3], W = 330, H = 160, bw = 21, gap = (W - 24 - bw * 12) / 11; let g = '';
       n.forEach((v, i) => { const x = 12 + i * (bw + gap), h = v / 17 * 100, y = 124 - h;
-        g += `<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="4" fill="${i < 6 ? '#b0402a' : '#d9a58e'}"/><text x="${x + bw / 2}" y="${y - 5}" font-size="11" font-weight="800" fill="#2b2a28" text-anchor="middle">${v}</text><text x="${x + bw / 2}" y="142" font-size="12" font-weight="700" fill="#5a4a3a" text-anchor="middle">${i + 1}</text>`; });
+        g += `<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="4" fill="${i < 6 ? '#b0402a' : '#d9a58e'}"/><text x="${x + bw / 2}" y="${y - 5}" font-size="13.5" font-weight="800" fill="#2b2a28" text-anchor="middle">${v}</text><text x="${x + bw / 2}" y="143" font-size="13.5" font-weight="700" fill="#5a4a3a" text-anchor="middle">${i + 1}</text>`; });
       return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit"><line x1="6" y1="124.5" x2="${W - 6}" y2="124.5" stroke="#b8ad98" stroke-width="1.5"/>${g}</svg>`; },
+    // a 7 × 7 hex board: Red joins top and bottom, Blue left and right; here a red chain has joined its two edges
+    hexWin: () => { const N = 7, r = 15, dx = r * Math.sqrt(3), dy = r * 1.5, o = 26, W = Math.ceil(o * 2 + dx * (N + (N - 1) / 2)), H = Math.ceil(o * 2 + dy * (N - 1) + r * 2); let g = '';
+      const cen = (q, k) => [o + dx / 2 + q * dx + k * dx / 2, o + r + k * dy], hex = (cx, cy, f, st) => { let p = ''; for (let i = 0; i < 6; i++) { const a = Math.PI / 180 * (60 * i - 30); p += (cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1) + ' '; } return `<polygon points="${p}" fill="${f}" stroke="${st || '#8a7a5a'}" stroke-width="1.2"/>`; };
+      const [ax, ay] = cen(0, 0), [bx, by] = cen(N - 1, 0), [cx2, cy2] = cen(0, N - 1), [ex, ey] = cen(N - 1, N - 1);
+      g += `<path d="M${ax - dx / 2} ${ay - r - 6}L${bx + dx / 2} ${by - r - 6}" stroke="#c0392b" stroke-width="6" stroke-linecap="round"/><path d="M${cx2 - dx / 2} ${cy2 + r + 6}L${ex + dx / 2} ${ey + r + 6}" stroke="#c0392b" stroke-width="6" stroke-linecap="round"/>`;
+      g += `<path d="M${ax - dx / 2 - 6} ${ay}L${cx2 - dx / 2 - 6} ${cy2}" stroke="#2e6ab0" stroke-width="6" stroke-linecap="round"/><path d="M${bx + dx / 2 + 6} ${by}L${ex + dx / 2 + 6} ${ey}" stroke="#2e6ab0" stroke-width="6" stroke-linecap="round"/>`;
+      const red = new Set(['3,0', '3,1', '2,2', '2,3', '3,3', '1,4', '2,4', '1,5', '1,6', '5,2', '4,5']), blue = new Set(['4,1', '4,2', '3,2', '1,3', '0,4', '3,4', '4,4', '2,5', '0,6', '5,1', '6,3']), path = new Set(['3,0', '3,1', '2,2', '2,3', '2,4', '1,5', '1,6']);
+      for (let k = 0; k < N; k++) for (let q = 0; q < N; q++) { const [x, y] = cen(q, k), key = q + ',' + k; g += hex(x, y, '#f3ead6');
+        if (red.has(key)) g += `<circle cx="${x}" cy="${y}" r="10" fill="#c0392b" stroke="${path.has(key) ? '#ffd77a' : '#7a1a10'}" stroke-width="${path.has(key) ? 3 : 1.2}"/>`; else if (blue.has(key)) g += `<circle cx="${x}" cy="${y}" r="10" fill="#2e6ab0" stroke="#163a66" stroke-width="1.2"/>`; }
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit">${g}</svg>`; },
+    // the bridge: two red stones share two empty cells (marked); if Blue takes one, Red takes the other and stays joined
+    hexBridge: () => { const r = 20, dx = r * Math.sqrt(3), dy = r * 1.5, W = 330, H = 130; let g = '';
+      const hex = (cx, cy, f) => { let p = ''; for (let i = 0; i < 6; i++) { const a = Math.PI / 180 * (60 * i - 30); p += (cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1) + ' '; } return `<polygon points="${p}" fill="${f}" stroke="#8a7a5a" stroke-width="1.2"/>`; };
+      const panel = (ox, step) => { let s = ''; const c = (q, k) => [ox + q * dx + k * dx / 2, 30 + k * dy];
+        [[0, 0], [1, 0], [-1, 1], [0, 1], [1, 1], [-1, 2], [0, 2]].forEach(([q, k]) => { const [x, y] = c(q, k); s += hex(x, y, '#f3ead6'); });
+        const st = (q, k, col) => { const [x, y] = c(q, k); return `<circle cx="${x}" cy="${y}" r="13" fill="${col}" stroke="#00000055" stroke-width="1"/>`; };
+        s += st(1, 0, '#c0392b') + st(0, 2, '#c0392b');
+        if (step === 0) [[0, 1], [1, 1]].forEach(([q, k]) => { const [x, y] = c(q, k); s += `<circle cx="${x}" cy="${y}" r="6" fill="none" stroke="#c0392b" stroke-width="2.5" stroke-dasharray="3 3"/>`; });
+        else s += st(0, 1, '#2e6ab0') + st(1, 1, '#c0392b');
+        return s; };
+      g += panel(80, 0) + `<path d="M150 60h30" stroke="#8a7a5a" stroke-width="2.5" marker-end="url(#hbA)"/>` + panel(240, 1);
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit"><defs><marker id="hbA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8a7a5a"/></marker></defs>${g}</svg>`; },
+    // fox and geese: 33 points on a cross, 13 geese at the top, the fox in the middle jumping a goose that has an empty point behind it
+    foxGeeseBoard: () => { const C = 36, o = 18, W = o * 2 + C * 6, X = c => o + c * C; let g = `<rect x="2" y="2" width="${W - 4}" height="${W - 4}" rx="10" fill="#ecdcbc"/>`;
+      const on = (c, r) => (c >= 2 && c <= 4) || (r >= 2 && r <= 4), L = (a, b, c, d) => `<line x1="${X(a)}" y1="${X(b)}" x2="${X(c)}" y2="${X(d)}" stroke="#7a5a32" stroke-width="1.8"/>`;
+      for (let k = 2; k <= 4; k++) g += L(0, k, 6, k) + L(k, 0, k, 6);
+      [0, 1, 5, 6].forEach(k => { g += L(2, k, 4, k) + L(k, 2, k, 4); });
+      g += L(2, 0, 4, 2) + L(4, 0, 2, 2) + L(2, 4, 4, 6) + L(4, 4, 2, 6) + L(0, 2, 2, 4) + L(0, 4, 2, 2) + L(4, 2, 6, 4) + L(4, 4, 6, 2) + L(2, 2, 4, 4) + L(4, 2, 2, 4);
+      for (let r = 0; r <= 6; r++) for (let c = 0; c <= 6; c++) if (on(c, r)) g += `<circle cx="${X(c)}" cy="${X(r)}" r="3.5" fill="#7a5a32"/>`;
+      const goose = (c, r, op) => `<circle cx="${X(c)}" cy="${X(r)}" r="12" fill="#fbf7ee" stroke="#8a7a5a" stroke-width="1.6"${op ? ` opacity="${op}"` : ''}/>`;
+      const geese = []; for (let r = 0; r <= 1; r++) for (let c = 2; c <= 4; c++) geese.push([c, r]); for (let c = 0; c <= 6; c++) geese.push([c, 2]);
+      geese.pop(); geese.forEach(([c, r]) => { g += goose(c, r); });
+      g += goose(3, 4) + `<path d="M${X(3) - 7} ${X(4) - 7}L${X(3) + 7} ${X(4) + 7}M${X(3) + 7} ${X(4) - 7}L${X(3) - 7} ${X(4) + 7}" stroke="#e8453c" stroke-width="3"/>` + `<circle cx="${X(3)}" cy="${X(5)}" r="12.5" fill="#c4622d" stroke="#6a2a10" stroke-width="1.8"/>`;
+      g += `<path d="M${X(3) + 14} ${X(5) - 6}Q${X(3) + 40} ${X(4)} ${X(3) + 14} ${X(3) + 4}" fill="none" stroke="#c4622d" stroke-width="2.6" marker-end="url(#fgA)"/>`;
+      return `<svg viewBox="0 0 ${W} ${W}" role="img" style="font-family:inherit"><defs><marker id="fgA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#c4622d"/></marker></defs>${g}</svg>`; },
+    // hunt games side by side: hunters (dark) against prey (light): fox and geese 1:13 and 1:17, bagh-chal 4:20, asalto 2:24
+    huntFamily: () => { const rows = [[1, 13], [1, 17], [4, 20], [2, 24]], W = 330, H = 30 + rows.length * 44; let g = '';
+      rows.forEach(([a, b], i) => { const y = 26 + i * 44; let x = 10;
+        for (let k = 0; k < a; k++) { g += `<circle cx="${x + 7}" cy="${y}" r="7" fill="#c4622d"/>`; x += 16; }
+        g += `<text x="80" y="${y + 5}" font-size="15" font-weight="800" fill="#2b2a28">${a}:${b}</text>`; x = 136;
+        for (let k = 0; k < b; k++) g += `<circle cx="${x + (k % 12) * 15}" cy="${y - 7 + Math.floor(k / 12) * 14}" r="6" fill="#fbf7ee" stroke="#8a7a5a" stroke-width="1"/>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit">${g}</svg>`; },
     // four tetrahedral dice: how often each score comes (out of 16)
     tetraOdds: () => { const n = [1, 4, 6, 4, 1], W = 300, H = 150, bw = 40, gap = (W - 40 - bw * 5) / 4; let g = '';
       n.forEach((v, i) => { const x = 20 + i * (bw + gap), h = v / 6 * 96, y = 112 - h;
@@ -375,7 +417,7 @@
       ${x.tl && x.tl.length ? `<section class="rdtl"><h4>${esc(u('tlH'))}</h4><ol>${x.tl.map(([y, t]) => `<li><b>${esc(y)}</b><span>${esc(t)}</span></li>`).join('')}</ol></section>` : ''}
       <section class="rdq"><h4>${esc(u('quiz'))}</h4><div class="rdqs"></div></section>
       <div class="rdlinks"><h4>${esc(u('links'))}</h4><div>${S.links.map(linkHtml).join('')}</div></div>
-      ${S.refs ? `<section class="rdref"><h4>${esc(u('refH'))}</h4><ul>${S.refs.map(r => `<li>${esc(r)}</li>`).join('')}</ul></section>` : ''}
+      ${S.refs ? `<section class="rdref"><h4>${esc(u('refH'))}</h4><ul>${S.refs.map(r => `<li><bdi>${esc(r)}</bdi></li>`).join('')}</ul></section>` : ''}
       <nav class="rdnav">${i > 0 ? `<button type="button" class="btn ghost sm" data-go="${STORIES[i - 1].id}">‹ ${esc(st(STORIES[i - 1].id).title)}</button>` : '<span></span>'}${i < STORIES.length - 1 ? `<button type="button" class="btn ghost sm" data-go="${STORIES[i + 1].id}">${esc(st(STORIES[i + 1].id).title)} ›</button>` : ''}</nav>
     </article>`;
     host.querySelector('.rdback').onclick = () => { shelf(); top(); };
