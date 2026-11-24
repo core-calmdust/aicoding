@@ -104,7 +104,8 @@
     const R = rec();
     $('stories').innerHTML = ORDER.map(story).filter(Boolean).map(s => {
       const r = R[s.id];
-      const best = r ? `<div class="rec">最高評価 ${r.best}・解決 ${r.win}/${r.plays}</div>` : '';
+      const fl = window.WLFeats.list(s.id), got = fl.filter(f => ((r || {}).feats || {})[f.id]).length;
+      const best = `<div class="rec">${r ? `最高評価 ${r.best}・解決 ${r.win}/${r.plays}・` : ''}実績 ${got}/${fl.length}</div>`;
       return `<button class="sc" data-id="${s.id}" style="--p:${s.pal.paper};--l:${s.pal.lamp};--i:${s.pal.ink};--acc2:${s.pal.acc}">
         <div class="ph">${ART.scene(s.scene, s.locs[0].id, 3)}<span class="no">${esc(s.no)}</span></div>
         <div class="tx"><h3>${esc(s.title)}<small>${esc(s.kana)}</small></h3><div class="tg">${esc(s.tag)}</div><p>${esc(s.concept)}</p><div class="mood">${esc(s.mood)}</div>${best}</div></button>`;
@@ -115,14 +116,14 @@
 
   /* ---------- setup ---------- */
   function buildSetup() {
-    const base = story(G.storyId), HS = base.heroes || [];
-    if (!G.heroPick || !HS.some(h => h.id === G.heroPick)) G.heroPick = 'auto';
-    st = withHero(G.storyId, G.heroPick === 'auto' ? null : G.heroPick); palette(st);
+    const base = story(G.storyId);
+    G.heroPick = 'auto';   // who you are is always the story's choice
+    st = withHero(G.storyId, null); palette(st);
     $('setTitle').innerHTML = `<span style="font:400 1.3em var(--brush);letter-spacing:.06em">${esc(st.title)}</span>　<small style="font:700 15px var(--ui);color:var(--mute)">${esc(st.no)}</small>`;
     $('setConcept').textContent = st.concept;
-    const done = (rec()[base.id] || {}).heroes || {};
-    $('setHero').innerHTML = [`<button class="tile${G.heroPick === 'auto' ? ' on' : ''}" data-h="auto"><b>おまかせ</b><span>毎回ちがう立場で幕が開く。</span></button>`].concat(HS.map(h => `<button class="tile${G.heroPick === h.id ? ' on' : ''}" data-h="${h.id}"><b>${esc(h.job)}</b><span>${esc(h.pitch)}</span>${done[h.id] ? '<span class="done">解決ずみ</span>' : ''}</button>`)).join('');
-    $('setHero').querySelectorAll('.tile').forEach(b => b.onclick = () => { G.heroPick = b.dataset.h; buildSetup(); });
+    const fr = (rec()[base.id] || {}).feats || {}, fl = window.WLFeats.list(base.id);
+    $('setFeatN').textContent = `${fl.filter(f => fr[f.id]).length}/${fl.length}`;
+    $('setFeats').innerHTML = fl.map(f => `<div class="feat${fr[f.id] ? ' got' : ''}"><i>${fr[f.id] ? '★' : '☆'}</i><b>${esc(f.name)}</b><span>${esc(f.desc)}</span></div>`).join('');
     $('setDiff').innerHTML = DIFFN.map((d, i) => `<button class="tile${G.diff === i ? ' on' : ''}" data-d="${i}"><b>${d}</b><span class="cnt">${E.DIFF[i].size}人</span><span>${DIFFD[i]}</span></button>`).join('');
     const RR = E.setupOf(st, E.DIFF[G.diff].size);
     const roles = [['auto', 'おまかせ', '物語が決める'], ['villager', st.roles.villager.name, '調べる回数が多い'], ['seer', '占い師', '毎晩ひとりを占う'], ['medium', '霊媒師', '追放者の正体を知る']]
@@ -344,7 +345,7 @@
   async function start() {
     clearSave(); SND.music('story', 1);
     const HS = story(G.storyId).heroes || [];
-    const hid = G.heroPick && G.heroPick !== 'auto' ? G.heroPick : (HS.length ? HS[Math.floor(Math.random() * HS.length)].id : null);
+    const hid = HS.length ? HS[Math.floor(Math.random() * HS.length)].id : null;   // 主人公は毎回ランダム
     st = withHero(G.storyId, hid);
     S = E.newGame(st, { diff: G.diff, role: G.role });
     S.hero = st.heroId;
@@ -1017,16 +1018,19 @@
     const sc = E.score(S);
     // the record
     const rr = rec(); const k = st.id; rr[k] = rr[k] || { plays: 0, win: 0, best: '-' };
-    rr[k].plays++; if (R.win) { rr[k].win++; if (st.heroId) (rr[k].heroes = rr[k].heroes || {})[st.heroId] = 1; }
+    rr[k].plays++; if (R.win) rr[k].win++;
+    const fresh = window.WLFeats.earned(st.id, S, sc, R).filter(f => !(rr[k].feats || {})[f.id]);
+    for (const f of fresh) (rr[k].feats = rr[k].feats || {})[f.id] = Date.now();
     const order = ['S', 'A', 'B', 'C', 'D', '-'];
     if (order.indexOf(sc.rank) < order.indexOf(rr[k].best)) rr[k].best = sc.rank;
     try { localStorage.setItem(REC, JSON.stringify(rr)); } catch (e) {}
     clearSave();
-    const why = ({ cleared: '狼をすべて見つけ出した', overrun: '狼の数が、人の数に並んだ' }[R.why] || '') + (S.ghost ? '（あなたは幽霊として見届けた）' : '');
+    const why = ({ cleared: '狼をすべて見つけ出した', overrun: '狼の数が、人の数に並んだ', fox: '社の狐が生き残った' }[R.why] || '') + (S.ghost ? '（あなたは幽霊として見届けた）' : '');
     await sheet(`<h3 style="text-align:center">${R.win ? '解決' : '未解決'}　<small style="font:500 15px var(--ui);color:var(--mute)">${esc(why)}</small></h3>
       <div class="rank">${sc.rank}</div>
       ${scoreTable(sc)}
-      <p style="font-size:15px">人狼：${wolves.map(w => esc(nm(w.id))).join('、')}${mad ? `　狂人：${esc(nm(mad.id))}` : ''}</p>
+      ${fresh.length ? `<div class="newfeat"><b>新しい実績</b>${fresh.map(f => `<div class="feat got"><i>★</i><b>${esc(f.name)}</b><span>${esc(f.desc)}</span></div>`).join('')}</div>` : ''}
+      <p style="font-size:15px">人狼：${wolves.map(w => esc(nm(w.id))).join('、')}${mad ? `　狂人：${esc(nm(mad.id))}` : ''}${fox ? `　妖狐：${esc(nm(fox.id))}` : ''}</p>
       <div class="foot"><button class="btn" data-a="title">タイトルへ</button><button class="btn" data-a="select">ほかの物語へ</button><button class="btn pri" data-a="again">もう一度</button></div>`, box => box.querySelectorAll('[data-a]').forEach(b => b.onclick = () => closeSheet(b.dataset.a))).then(a => {
       if (a === 'again') { buildSetup(); } else if (a === 'select') buildSelect(); else buildTitle();
     });
