@@ -36,13 +36,14 @@
     { id: 'map', ready: () => !!window.AtlasMap, render: (el, c) => AtlasMap.render(el, c) },
     { id: 'tree', src: ['museum/tree.js?v=6'], ready: () => !!window.AtlasTree, render: (el, c) => AtlasTree.render(el, c) },
     { id: 'gallery', src: ['museum/gallery.js?v=151'], ready: () => !!window.AtlasGallery, render: (el, c) => AtlasGallery.render(el, c) },
-    { id: 'paint', src: () => ['museum/paint-i18n/en.js?v=' + PAINT_I18N_V, ...(rl() !== 'en' ? [`museum/paint-i18n/${rl()}.js?v=${PAINT_I18N_V}`] : []), 'museum/paint.js?v=12'], ready: () => !!(window.AtlasPaint && window.MUSEUM_PAINT_T && MUSEUM_PAINT_T.en && MUSEUM_PAINT_T[rl()]), render: (el, c) => AtlasPaint.render(el, c) },   // (per language, like the stories)
+    { id: 'paint', src: () => ['museum/paint-i18n/en.js?v=' + PAINT_I18N_V, ...(rl() !== 'en' ? [`museum/paint-i18n/${rl()}.js?v=${PAINT_I18N_V}`] : []), 'museum/paint.js?v=16'], ready: () => !!(window.AtlasPaint && window.MUSEUM_PAINT_T && MUSEUM_PAINT_T.en && MUSEUM_PAINT_T[rl()]), render: (el, c) => AtlasPaint.render(el, c) },   // (per language, like the stories)
     // (2026-11-24 audit pageKB) the stories' text in one file per language (museum/read-i18n/<lang>.js, made by tools/museum-read-split.js from
     // museum/read-i18n.js): English (the fallback for anything missing) and the page's language, not all fourteen (1.5 MB)
-    { id: 'read', src: () => ['museum/read-i18n/en.js?v=' + READ_I18N_V, ...(rl() !== 'en' ? [`museum/read-i18n/${rl()}.js?v=${READ_I18N_V}`] : []), 'museum/read.js?v=45'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T && MUSEUM_READ_T.en && MUSEUM_READ_T[rl()]), render: (el, c) => AtlasRead.render(el, c) },
+    // (2026-11-24 audit textKB) one file only: tools/museum-read-split.js fills each language's file with English for anything it lacks
+    { id: 'read', src: () => [`museum/read-i18n/${rl()}.js?v=${READ_I18N_V}`, 'museum/read.js?v=50'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T && MUSEUM_READ_T[rl()]), render: (el, c) => AtlasRead.render(el, c) },
     { id: 'chance', src: () => ['museum/chance-i18n/en.js?v=' + CHANCE_I18N_V, ...(rl() !== 'en' ? [`museum/chance-i18n/${rl()}.js?v=${CHANCE_I18N_V}`] : []), 'museum/chance.js?v=7'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T && MUSEUM_CHANCE_T.en && MUSEUM_CHANCE_T[rl()]), render: (el, c) => AtlasChance.render(el, c) },   // (per language)
   ];
-  const READ_I18N_V = 7, PAINT_I18N_V = 3, CHANCE_I18N_V = 1, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
+  const READ_I18N_V = 12, PAINT_I18N_V = 6, CHANCE_I18N_V = 1, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
   const KEY = 'atlas-museum-room';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const loaded = {};
@@ -219,6 +220,8 @@
     ar: ['بحث', 'الصفحة السابقة', 'الصفحة التالية', 'لم يُعثر على شيء', 'مسح البحث'],
   };
   const PG = {};
+  const PGN = { ja: '{n}ページ目（全{m}ページ）', en: 'Page {n} of {m}', zh: '第{n}页，共{m}页', 'zh-TW': '第{n}頁，共{m}頁', ko: '{m}페이지 중 {n}페이지', es: 'Página {n} de {m}', fr: 'Page {n} sur {m}', pt: 'Página {n} de {m}', de: 'Seite {n} von {m}', ru: 'Страница {n} из {m}', tr: 'Sayfa {n} / {m}', id: 'Halaman {n} dari {m}', hi: '{m} में से पेज {n}', ar: 'الصفحة {n} من {m}' };
+  const fmtP = (t, n, m) => (PGN[lang] || PGN.en).replace('{n}', n).replace('{m}', m);
   const norm = s => String(s || '').normalize('NFKC').toLowerCase().replace(/[ぁ-ゖ]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60)).replace(/[\s·・,，、。.()（）「」『』'’"“”-]+/g, '');
   const ARW = d => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d ? 'M9.5 5.5 16 12l-6.5 6.5' : 'M14.5 5.5 8 12l6.5 6.5'}"/></svg>`;
   function pager(grid, key, o) {
@@ -229,10 +232,10 @@
     if (!top || !top.classList.contains('mupg')) {
       top = document.createElement('div'); top.className = 'mupg';
       top.innerHTML = `<label class="mupg-s"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg><input type="search" enterkeyhint="search" autocomplete="off"><button type="button" class="mupg-x">×</button></label>
-        <div class="mupg-n"><button type="button" class="mupg-a" data-d="-1">${ARW(0)}</button><span class="mupg-i" dir="ltr"></span><button type="button" class="mupg-a" data-d="1">${ARW(1)}</button></div>`;
+        <div class="mupg-n"><button type="button" class="mupg-a" data-d="-1">${ARW(0)}</button><span class="mupg-i" dir="ltr"></span><span class="mupg-ns"></span><button type="button" class="mupg-a" data-d="1">${ARW(1)}</button></div>`;
       grid.parentNode.insertBefore(top, grid);
       bot = document.createElement('div'); bot.className = 'mupg mupg-b';
-      bot.innerHTML = `<div class="mupg-n"><button type="button" class="mupg-a" data-d="-1">${ARW(0)}</button><span class="mupg-i" dir="ltr"></span><button type="button" class="mupg-a" data-d="1">${ARW(1)}</button></div>`;
+      bot.innerHTML = `<div class="mupg-n"><button type="button" class="mupg-a" data-d="-1">${ARW(0)}</button><span class="mupg-i" dir="ltr"></span><span class="mupg-ns"></span><button type="button" class="mupg-a" data-d="1">${ARW(1)}</button></div>`;
       grid.parentNode.insertBefore(bot, grid.nextSibling);
     }
     const inp = top.querySelector('input'), none = grid.querySelector('.mupg-none') || grid.appendChild(Object.assign(document.createElement('p'), { className: 'mupg-none' }));
@@ -250,6 +253,16 @@
       [top, bot].forEach(b => { b.querySelector('.mupg-i').textContent = `${st.p + 1} / ${pages}`; b.querySelector('.mupg-n').classList.toggle('one', pages < 2);
         b.querySelectorAll('.mupg-a').forEach(a => { a.disabled = +a.dataset.d < 0 ? st.p <= 0 : st.p >= pages - 1; }); });
       bot.classList.toggle('on', many && pages > 1);
+      // PC: ‹ 1 2 3 4 › — jump straight to a page (2026-11-24 ユーザー; the phone keeps the short “2 / 5”)
+      const pc = innerWidth > 819 && pages > 1;
+      [top, bot].forEach(bar => { const ns = bar.querySelector('.mupg-ns'); bar.classList.toggle('nums', pc);
+      if (pc) {
+        const list = []; for (let k = 0; k < pages; k++) if (pages <= 7 || k === 0 || k === pages - 1 || Math.abs(k - st.p) <= 1 || (st.p <= 2 && k <= 4) || (st.p >= pages - 3 && k >= pages - 5)) list.push(k);
+        let html = '', prev = -1;
+        list.forEach(k => { if (k - prev > 1) html += '<span class="mupg-gap" aria-hidden="true">…</span>'; html += `<button type="button" class="mupg-p" data-p="${k}"${k === st.p ? ' aria-current="page"' : ''} aria-label="${esc(fmtP(t, k + 1, pages))}">${k + 1}</button>`; prev = k; });
+        ns.innerHTML = html; ns.setAttribute('dir', 'ltr');
+        ns.querySelectorAll('.mupg-p').forEach(b => b.onclick = () => go(+b.dataset.p - st.p, bar === bot));
+      } else ns.innerHTML = ''; });
     };
     const go = (d, scroll) => { const was = st.p; st.p += d; draw(); if (st.p !== was && scroll) { const r = top.getBoundingClientRect(); if (r.top < 70 || r.top > innerHeight * .6) scrollTo({ top: scrollY + r.top - 80, behavior: 'smooth' }); } };
     [top, bot].forEach(b => b.querySelectorAll('.mupg-a').forEach(a => a.onclick = () => go(+a.dataset.d, b === bot)));

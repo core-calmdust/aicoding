@@ -57,6 +57,8 @@
       name: N('バカラ', 'Baccarat', '百家乐', '바카라', 'Baccarat', 'Baccara', 'Bacará', 'Baccara', 'बैकारेट', 'باكارا', 'Баккара', '百家樂', 'Bakarat', 'Bakara') },
     { id: 'blackjack', cat: 'card', store: ['aicoding-blackjack'], href: 'blackjack/', color: '#d4a54a', released: '2026-11-04', tags: ['classic', 'card', 'lessons', 'variants', 'mobile'], total: { ls: 16 },
       name: N('ブラックジャック', 'Blackjack', '21点', '블랙잭', 'Blackjack', 'Blackjack', 'Blackjack', 'Blackjack', 'ब्लैकजैक', 'بلاك جاك', 'Блэкджек', '21點', 'Blackjack', 'Blackjack') },
+    { id: 'guandan', cat: 'card', store: ['aicoding-guandan'], href: 'guandan/', color: '#1f7d5e', alpha: true, released: '2026-11-24', tags: ['classic', 'card', 'ai', 'lessons', 'mobile'], total: { ls: 12 },
+      name: N('掼蛋', 'Guandan', '掼蛋', '관단', 'Guandan', 'Guandan', 'Guandan', 'Guandan', 'ग्वानदान', 'غواندان', 'Гуаньдань', '摜蛋', 'Guandan', 'Guandan') },
     { id: 'solitaire', cat: 'puzzle', store: ['aicoding-solitaire'], href: 'solitaire/', color: '#2f6b4f', released: '2026-10-28', tags: ['classic', 'card', 'daily', 'variants', 'mobile'], total: {},
       name: N('ソリティア', 'Solitaire', '纸牌接龙', '솔리테어', 'Solitario', 'Solitaire', 'Paciência', 'Solitär', 'सॉलिटेयर', 'سوليتير', 'Пасьянс', '接龍', 'Solitaire', 'Solitaire') },
     { id: 'peg', cat: 'puzzle', store: ['aicoding-peg'], href: 'atlas/#games/peg', only3d: true, color: '#7d5ba6', released: '2026-11-11', official: '2026-11-13', tags: ['classic', 'daily', 'puzzles', 'variants', 'mobile'], total: { pz: 497 },
@@ -287,6 +289,10 @@
       const D = J('aicoding-baccarat') || {}, st = D.stats || {};
       const hands = Object.values(st).reduce((a, v) => a + ((v && v.hands) || 0), 0);
       return { hd: hands, ls: cntClear(J('aicoding-baccarat-lessons'), 'pass'), ru: rules('baccarat'), nat: Object.values(st).reduce((a, v) => a + ((v && v.nat) || 0), 0), tie: Object.values(st).reduce((a, v) => a + ((v && v.bets && v.bets.T && v.bets.T.won) || 0), 0) };
+    },
+    guandan: () => {   // hands played, lessons passed
+      const st = (J('aicoding-guandan') || {}).stats || {};
+      return { hd: st.hands || 0, ls: cntClear(J('aicoding-guandan-lessons'), 'pass'), ru: rules('guandan') };
     },
     poker: () => {   // hands played (all games), lessons passed
       const D = J('aicoding-poker') || {}, st = D.stats || {};
