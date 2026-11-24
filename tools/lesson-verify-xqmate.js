@@ -30,7 +30,9 @@ function solver(E) {
   const noMv = q => !q.moves().length;
   const win = (q, n, th) => { if (n < 1) return false; for (const m of q.moves()) { const z = q.clone().play(m); if (noMv(z)) { if (!th || (z.inCheck() && th(z))) return true; continue; } if (n > 1 && z.moves().every(r => win(z.clone().play(r), n - 1, th))) return true; } return false; };
   const forces = (p, m, n, th) => { const z = p.clone().play(m); if (noMv(z)) return !th || (z.inCheck() && th(z)); return n > 1 && z.moves().every(r => win(z.clone().play(r), n - 1, th)); };
-  return { noMv, win, forces, firsts: (p, n, th) => p.moves().filter(m => forces(p, m, n, th)) };
+  const winC = (q, n) => { if (n < 1) return false; for (const m of q.moves()) { const z = q.clone().play(m); if (!z.inCheck()) continue; if (noMv(z)) return true; if (n > 1 && z.moves().every(r => winC(z.clone().play(r), n - 1))) return true; } return false; };   // (every move of ours a check)
+  const forcesC = (p, m, n) => { const z = p.clone().play(m); if (!z.inCheck()) return false; if (noMv(z)) return true; return n > 1 && z.moves().every(r => winC(z.clone().play(r), n - 1)); };
+  return { noMv, win, forces, forcesC, firsts: (p, n, th) => p.moves().filter(m => forces(p, m, n, th)) };
 }
 const IDS = ['m_hc', 'm_dc', 'm_face'], NAME = { m_hc: '馬後炮', m_dc: '重炮', m_face: '帥のにらみ' };
 function verify(c) {
@@ -75,10 +77,12 @@ function verify(c) {
       { const e = sayN(g); if (e) a(`⑧ the praise: ${e} 「${g}」`); }
       if (n > 1 && (chk ? /王手じゃなくても|静かな|王手をかけずに/.test(g) : /王手で受け方|王手を受けた|王手を続けて|王手の連続/.test(g))) a(`⑧ the praise does not match the answer (check ${chk}) 「${g}」`);
       for (const t of [Wd.ask, Wd.hintTx]) if (/\{|undefined|NaN/.test(t)) a(`⑧ 「${t}」`);
+      const allC = S.forcesC(p, A, n); for (const t of [g, Wd.hintTx]) if (/王手を続けて|王手の連続|王手、王手/.test(t) && !allC) a(`⑧ 「${t}」 but no mate in ${n} gives check on every move`);
       for (const u of all) { if (okS.has(u)) continue; const raw = plain(Wd.ng(u)), xn = nm(u), i1 = raw.indexOf('〈正〉'), t = i1 > 0 ? raw.slice(0, i1) : raw, tl = i1 > 0 ? raw.slice(i1) : '';
         if (/\{|undefined|NaN/.test(raw)) { a(`⑧ ${xn}: 「${raw}」`); continue; }
         if (!raw.includes('〈誤〉') || !raw.includes('〈正〉')) a(`⑦ ${xn}: the words do not name both moves 「${raw}」`);
         { const e = sayN(tl); if (e) a(`⑧ ${xn}: the answer's reason: ${e} 「${tl}」`); }
+        if (/王手を続けて|王手の連続/.test(tl) && !allC) a(`⑧ ${xn}: 「${tl}」 but no mate in ${n} gives check on every move`);
         if (!tl.includes(mn)) a(`④ ${xn}: the answer's reason does not name ${mn} 「${tl}」`);
         const q = p.clone().play(u), es = escOf(u), k = q.k[me ^ 1], to = mTo(u), isC = q.inCheck();
         const take = /取られて終わ|そのまま取られ|ぱくっと取られ|取られて消え|ただで取られる/.test(t), run = /逃げられ|逃げ道が残って|空いている点へ動いて|逃げ出せる|逃げ場がまだ|將が動いて|將が1歩動いて/.test(t), blk = /間に駒を入れ|はさんで防げ|合い駒|筋に駒を入れ|あいだをふさが/.test(t);

@@ -1513,7 +1513,7 @@ function shogi(opt) {
   if (!app.includes(MAT.replace(/P\./g, 'pr.').replace(/\bu\)/g, 'usi)'))) add('-', -1, '⑨ shogi/index.html movePoints (material) changed');
   if (!src.includes(MAT)) add('-', -1, '⑨ the 3D SHOGI.points (material) changed');
   // ⑦ a wrong capture of a small piece (a few points) is not praised 「いい線！」 on the 3D table
-  if (!src.includes("p.own ? (pts >= (id === 'shogi' ? 10 : 1) ? 'いい線！' : 'おしい！')")) add('-', -1, '⑦ the 3D says 「いい線！」 for a few points');
+  if (!src.includes("p.own ? (pts >= 10 ? 'いい線！' : '')")) add('-', -1, '⑦ the 3D says 「いい線！」 for a few points');   // (2026-11-25 担当A: 追66 made it 10 points for every game, and nothing under 10)
   // ⑥ both keep the pool's order (easy → hard) for the five problems drawn
   if (!/const probs = g\.rules \? g\.problems\.slice\(\) : shuffle\(\[\.\.\.std\.slice\(0, 5 - nTrap\), \.\.\.trap\.slice\(0, nTrap\)\]\)\.sort\(\(a, b\) => g\.problems\.indexOf\(a\) - g\.problems\.indexOf\(b\)\)/.test(app)) add('-', -1, '⑥ the 2D lesson does not keep the pool order');
   if (!/const probs = g\.rules \? pool : shuffle\(pool\)\.slice\(0, 5\)\.sort\(\(a, b\) => pool\.indexOf\(a\) - pool\.indexOf\(b\)\)/.test(src)) add('-', -1, '⑥ the 3D lesson does not keep the pool order');
