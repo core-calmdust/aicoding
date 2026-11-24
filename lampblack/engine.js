@@ -868,7 +868,7 @@
         if (gc.some(c => c.by === x)) v += gc.length === 1 ? -.22 * (p.persona.trust || .5) * 2 : .04;   // a lone guard is too precious to hang
         if (S.claims.some(c => c.by === x && c.role === 'cat')) v -= .16 * (1 - (p.persona.bold || .5));   // hang a cat and it takes someone along
         const sw = S.swayVote; if (sw && sw.day === S.day && sw.target === x && p.role !== 'wolf') v += sw.dir * .26 * (p.persona.trust || .5) * 2;   // what the player said after the claim
-        const wolfSide = p.role === 'wolf' || (p.role === 'madman' && S.fan);
+        const wolfSide = p.role === 'wolf' || (p.role === 'madman' && S.fan && S.diff > 0);   // on 入門 the fanatic lies but does not vote as a bloc
         if (wolfSide && isWolf(S, x)) {      // a partner: abandon only when they are surely lost
           v = (heat[x] || 0) >= alive(S).length / 2 ? 2 : -1;
         } else if (wolfSide && x === bloc) v += p.role === 'wolf' ? .6 : .4;
