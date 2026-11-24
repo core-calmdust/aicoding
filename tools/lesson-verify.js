@@ -394,6 +394,24 @@ function amazons(opt) {
   (PZ.themes || []).forEach(th => (th.puzzles || []).forEach((q, j) => pool.push([`puzzle ${th.id} ${j + 1}`, q.s.b])));
   const SYM = [(r, c) => [r, c], (r, c) => [r, 9 - c], (r, c) => [9 - r, c], (r, c) => [9 - r, 9 - c], (r, c) => [c, r], (r, c) => [c, 9 - r], (r, c) => [9 - c, r], (r, c) => [9 - c, 9 - r]];
   const dist = (a, b) => { let best = 99; for (const S of SYM) { let d = 0; for (let i = 0; i < 100 && d < best; i++) { const [r, c] = S((i / 10) | 0, i % 10); if (a[i] !== b[r * 10 + c]) d++; } best = Math.min(best, d); } return best; };
+  const rooms = sq => { const seen = new Int8Array(100).fill(-1), R = []; let w = 0, b = 0, sep = true;
+    for (let s0 = 0; s0 < 100; s0++) { if (sq[s0] === 3 || seen[s0] >= 0) continue; const Q = [s0]; seen[s0] = R.length;
+      for (let h = 0; h < Q.length; h++) { const [r, c] = RCo(Q[h]); for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = c + dc, t = rr * 10 + cc; if ((dr || dc) && rr >= 0 && rr < 10 && cc >= 0 && cc < 10 && seen[t] < 0 && sq[t] !== 3) { seen[t] = R.length; Q.push(t); } } }
+      const nw = Q.filter(q => sq[q] === 1).length, nb = Q.filter(q => sq[q] === 2).length, ne = Q.filter(q => !sq[q]).length; R.push({ nw, nb, ne });
+      if (nw && nb) sep = false; else if (nw) w += ne; else if (nb) b += ne; }
+    return { sep, w, b, R }; };
+  const nbr = i => { if (i == null || i < 0) return []; const [r, c] = RCo(i), o = []; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = c + dc; if ((dr || dc) && rr >= 0 && rr < 10 && cc >= 0 && cc < 10) o.push(rr * 10 + cc); } return o; };
+  const freeN = (sq, x) => nbr(x).filter(t => !sq[t]).length;
+  // the most moves an amazon on a can make alone (squares sq: 0 empty), brute force with a memo on the filled squares
+  const fillBF = (sq0, a0) => { const memo = new Map(), sq = Array.from(sq0); const key = a => sq.join('') + a;
+    const rec = a => { const k = key(a); if (memo.has(k)) return memo.get(k); let best = 0;
+      for (let d = 0; d < 8; d++) { const DR = [-1, -1, -1, 0, 0, 1, 1, 1][d], DC = [-1, 0, 1, -1, 1, -1, 0, 1][d]; let [r, c] = RCo(a);
+        for (;;) { r += DR; c += DC; if (r < 0 || r > 9 || c < 0 || c > 9) break; const t = r * 10 + c; if (sq[t]) break;
+          sq[a] = 0; sq[t] = 1;
+          for (let e = 0; e < 8; e++) { let [r2, c2] = [r, c]; for (;;) { r2 += [-1, -1, -1, 0, 0, 1, 1, 1][e]; c2 += [-1, 0, 1, -1, 1, -1, 0, 1][e]; if (r2 < 0 || r2 > 9 || c2 < 0 || c2 > 9) break; const u = r2 * 10 + c2; if (sq[u]) break; sq[u] = 3; best = Math.max(best, 1 + rec(t)); sq[u] = 0; } }
+          sq[t] = 0; sq[a] = 1; } }
+      memo.set(k, best); return best; };
+    return rec(a0); };
   L.steps.forEach((st, si) => { const id = st.id; if (!AM_DONE.has(id) || (only && !only.has(id))) return;
     if (id.startsWith('s_')) return amStrat(st);
     let prevD = -1, firstD = null;
@@ -478,24 +496,6 @@ function amazons(opt) {
   function amStrat(st) { const id = st.id; let prevD = -1, firstD = null;
     // 追18: a threshold the scoring uses (s_escape: 4 or more empty squares round it) is said in the 3D intro
     if (id === 's_escape' && !/4つ以上/.test(X.AMJ_LS.intro.s_escape || '')) add(id, -1, '追18 the 3D intro does not say the 4 empty squares the answer needs');
-    const rooms = sq => { const seen = new Int8Array(100).fill(-1), R = []; let w = 0, b = 0, sep = true;
-      for (let s0 = 0; s0 < 100; s0++) { if (sq[s0] === 3 || seen[s0] >= 0) continue; const Q = [s0]; seen[s0] = R.length;
-        for (let h = 0; h < Q.length; h++) { const [r, c] = RCo(Q[h]); for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = c + dc, t = rr * 10 + cc; if ((dr || dc) && rr >= 0 && rr < 10 && cc >= 0 && cc < 10 && seen[t] < 0 && sq[t] !== 3) { seen[t] = R.length; Q.push(t); } } }
-        const nw = Q.filter(q => sq[q] === 1).length, nb = Q.filter(q => sq[q] === 2).length, ne = Q.filter(q => !sq[q]).length; R.push({ nw, nb, ne });
-        if (nw && nb) sep = false; else if (nw) w += ne; else if (nb) b += ne; }
-      return { sep, w, b, R }; };
-    const nbr = i => { if (i == null || i < 0) return []; const [r, c] = RCo(i), o = []; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = c + dc; if ((dr || dc) && rr >= 0 && rr < 10 && cc >= 0 && cc < 10) o.push(rr * 10 + cc); } return o; };
-    const freeN = (sq, x) => nbr(x).filter(t => !sq[t]).length;
-    // the most moves an amazon on a can make alone (squares sq: 0 empty), brute force with a memo on the filled squares
-    const fillBF = (sq0, a0) => { const memo = new Map(), sq = Array.from(sq0); const key = a => sq.join('') + a;
-      const rec = a => { const k = key(a); if (memo.has(k)) return memo.get(k); let best = 0;
-        for (let d = 0; d < 8; d++) { const DR = [-1, -1, -1, 0, 0, 1, 1, 1][d], DC = [-1, 0, 1, -1, 1, -1, 0, 1][d]; let [r, c] = RCo(a);
-          for (;;) { r += DR; c += DC; if (r < 0 || r > 9 || c < 0 || c > 9) break; const t = r * 10 + c; if (sq[t]) break;
-            sq[a] = 0; sq[t] = 1;
-            for (let e = 0; e < 8; e++) { let [r2, c2] = [r, c]; for (;;) { r2 += [-1, -1, -1, 0, 0, 1, 1, 1][e]; c2 += [-1, 0, 1, -1, 1, -1, 0, 1][e]; if (r2 < 0 || r2 > 9 || c2 < 0 || c2 > 9) break; const u = r2 * 10 + c2; if (sq[u]) break; sq[u] = 3; best = Math.max(best, 1 + rec(t)); sq[u] = 0; } }
-            sq[t] = 0; sq[a] = 1; } }
-        memo.set(k, best); return best; };
-      return rec(a0); };
     st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), all = p.moves(), T = (P.mk || [])[0], W = whites(p), B = blacks(p), okS = new Set(P.ok), nm = m => E.name(p, m);
       if (P.s.side !== 1) a('① White is not to move');
       let kk = -1; for (let k = 0; k < 8; k++) if (p.q[k] === T) kk = k;
@@ -587,6 +587,106 @@ function amazons(opt) {
           if (/ちぎれ|切って/.test(t) && !(c > 0 && kc && +kc[1] === c)) a(`⑦ ${x}: 「${t}」 (${c} squares cut off)`); if (c > 0 && !/ちぎれ|切って/.test(t)) a(`⑦ ${x}: 「${t}」 (the room is cut: ${c})`); }
       }
     });
+  }
+  // (2026-11-24 第2期 追14) the warm-ups (ramp: the explanation with its marks and the "try" with its answers) of all eight lessons:
+  //  every move named is legal, the marks are the squares the words say, a try's answers are exactly the moves that reach its goal
+  //  (①②, the same goals as the problems), and the facts the 2D words (amazons/i18n-am-ls.js) and the 3D words (ケロ's AMJ_LS.ramp,
+  //  then atlas/nocoord/amazons.json) give — the squares, arrows, exits, rooms, counts, directions — are the board's (⑧).
+  amWarm();
+  function amWarm() {
+    const W2 = {}; try { const w = { I18N: {} }; new Function('window', 'I18N', fs.readFileSync(path.join(ROOT, 'amazons/i18n-am-ls.js'), 'utf8'))(w, w.I18N); Object.assign(W2, w.I18N.ja || {}); } catch (e) { add('-', -1, '追14 amazons/i18n-am-ls.js does not load'); }
+    let NC = {}; try { NC = JSON.parse(fs.readFileSync(path.join(ROOT, 'atlas/nocoord/amazons.json'), 'utf8')); } catch (e) {}
+    const SQ = '([a-j](?:10|[1-9]))', sqI = s => E.sqIdx(s), DIR8 = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]];
+    const ray = (sq, f, d) => { const o = []; let [r, c] = RCo(f); for (;;) { r += d[0]; c += d[1]; if (r < 0 || r > 9 || c < 0 || c > 9) break; const t = r * 10 + c; o.push(t); if (sq[t]) break; } return o; };   // (the last may be the blocker)
+    const reach = (sq, f) => DIR8.flatMap(d => ray(sq, f, d).filter(t => !sq[t]));
+    const far = (sq, f) => DIR8.map(d => ray(sq, f, d).filter(t => !sq[t]).pop()).filter(x => x != null);
+    const dirOf = (f, t) => { const [r1, c1] = RCo(f), [r2, c2] = RCo(t); return c1 === c2 ? (r2 < r1 ? '上' : '下') : r1 === r2 ? '横' : '斜め'; };
+    const roomCells = (sq, w) => { const R = new Set([w]), Q = [w]; for (let h = 0; h < Q.length; h++) for (const t of nbr(Q[h])) if (!R.has(t) && sq[t] !== 3 && sq[t] !== 2) { R.add(t); Q.push(t); } return R; };
+    L.steps.forEach(st => { const id = st.id; if (!AM_DONE.has(id) || (only && !only.has(id))) return;
+      (st.ramp || []).forEach((r, j) => { const a = m => add(id, -1, `warm-up ${j + 1} (${r.k}): ${m}`), p = E.Pos.from(r.s), all = p.moves(), nm = m => E.name(p, m), W = whites(p), B = blacks(p);
+        const T2 = ['t', 'body', 'g', 'h', 'y'].map(f => typeof r[f] === 'string' ? W2[r[f]] || '' : '').join(' ');
+        const T3 = ['t', 'body', 'g', 'h', 'y'].map(f => typeof r[f] !== 'string' ? '' : X.AMJ_LS.ramp[r[f]] || (NC[`${id}/${j}/${f}`] || {}).ja || W2[r[f]] || '').join(' ');
+        const texts = [['2D', T2], ['3D', T3]], mk = k => (r.marks || []).filter(x => x[1] === k).map(x => x[0] - 1), gm = (X.AMJ_LS && null) || null;
+        const same = (A, B2) => A.length === B2.length && [...A].every(x => B2.includes(x)), names = A => [...A].map(N).sort().join('・');
+        // the moves shown, then the position after them
+        let q = p.clone(); for (const s of (r.seq || [])) { const m = q.moves().find(x => E.name(q, x) === s); if (m == null) { a(`① the move ${s} is not legal`); return; } q.play(m); }
+        const m0 = (r.seq || []).length ? all.find(x => nm(x) === r.seq[0]) : null;
+        let G = null, look = (r.look || []).map(x => x - 1)[0];
+        if (r.k === 'try') { const okS = new Set((r.ok || []).map(n => all.find(m => nm(m) === n)).filter(x => x != null));
+          if (okS.size !== (r.ok || []).length) a(`① an answer is not legal (${r.ok.filter(n => !all.some(m => nm(m) === n))})`);
+          const T = look, after = m => p.clone().play(m);
+          if (id === 'b_queen' || id === 'b_block') G = all.filter(m => mTo(m) === T);
+          else if (id === 'b_arrow') G = all.filter(m => mArrow(m) === T);
+          else if (id === 'b_win') G = all.filter(m => !after(m).canMove(2));
+          else if (id === 's_trap') { const bk = B.filter(b => freeN(p.sq, b) === 1 && nbr(b).includes(T)); if (bk.length !== 1) a(`④ ${bk.length} black amazons with the one exit ${N(T)}`); G = all.filter(m => bk.length && freeN(after(m).sq, bk[0]) === 0); }
+          else if (id === 's_escape') { const boxable = q2 => q2.moves().some(r2 => { q2.play(r2); const v = freeN(q2.sq, mTo(r2) === T ? -1 : T) === 0; q2.unplay(r2); return v; });
+            G = all.filter(m => { if (mFrom(m) !== T) return false; const q2 = after(m), t2 = mTo(m); return freeN(q2.sq, t2) >= 4 && !q2.moves().some(r2 => { q2.play(r2); const v = freeN(q2.sq, t2) === 0; q2.unplay(r2); return v; }); }); }
+          else if (id === 's_wall') { const sc = all.map(m => { const rr = rooms(after(m).sq); return rr.sep ? rr.w - rr.b : -999; }), mx = Math.max(...sc); G = all.filter((m, i) => sc[i] === mx && mx > -999); }
+          else if (id === 's_fill') { const sc = all.map(m => fillBF(after(m).sq, mTo(m))), mx = Math.max(...sc); G = all.filter((m, i) => sc[i] === mx); }
+          if (G) { if (!G.length) a('① the goal cannot be reached'); okS.forEach(m => { if (!G.includes(m)) a(`① the answer ${nm(m)} does not reach the goal`); }); G.forEach(m => { if (!okS.has(m)) a(`② ${nm(m)} reaches the goal but is scored wrong`); }); }
+          if (look == null) a('⑧ no gold mark');
+        }
+        // the facts the words give
+        for (const [who, t] of texts) { if (!t.trim()) continue; const b = (re, ok, msg) => { const g = t.match(re); if (g && !ok(g)) a(`⑧ ${who} 「${g[0]}」: ${msg}`); };
+          if (/\{|undefined|NaN/.test(t)) a(`⑧ ${who}: 「${t.slice(0, 50)}」`);
+          // pieces and arrows named
+          for (const g of t.matchAll(new RegExp('(白|黒)の(?:アマゾン)?（?\\s*' + SQ, 'g'))) if (p.sq[sqI(g[2])] !== (g[1] === '白' ? 1 : 2)) a(`⑧ ${who} 「${g[0]}」: no ${g[1]} amazon on ${g[2]}`);
+          for (const g of t.matchAll(new RegExp(SQ + ' (?:の|から)(?:アマゾン|は|からは)', 'g'))) { const s = sqI(g[1]); if (p.sq[s] !== 1 && p.sq[s] !== 2 && !(r.seq || []).length) a(`⑧ ${who} 「${g[0]}」: no amazon on ${g[1]}`); }
+          for (const g of t.matchAll(new RegExp(SQ + '\\s*(?:に矢があ|に矢）|の矢)', 'g'))) if (p.sq[sqI(g[1])] !== 3) a(`⑧ ${who} 「${g[0]}」: no arrow on ${g[1]}`);
+          for (const g of t.matchAll(new RegExp('((?:' + SQ.slice(1, -1) + '・)+' + SQ.slice(1, -1) + ')\\s*が矢', 'g'))) g[1].split('・').forEach(s => { if (p.sq[sqI(s)] !== 3) a(`⑧ ${who} 「${g[0]}」: no arrow on ${s}`); });
+          // the move shown: from, to, arrow, the direction of the shot
+          if (m0 != null) { b(new RegExp(SQ + ' から ' + SQ + ' へ'), g => sqI(g[1]) === mFrom(m0) && sqI(g[2]) === mTo(m0), `the move is ${nm(m0)}`);
+            b(new RegExp(SQ + ' に刺し'), g => sqI(g[1]) === mArrow(m0), `the arrow is on ${N(mArrow(m0))}`);
+            b(/(縦|横|斜め)へ矢/, g => dirOf(mTo(m0), mArrow(m0)).replace(/上|下/, '縦') === g[1], `the arrow flies ${dirOf(mTo(m0), mArrow(m0))}`); }
+          // exits (the empty squares next to an amazon)
+          b(new RegExp('(?:隣|となり)の空きマスは\\s*((?:' + SQ.slice(1, -1) + '・)*' + SQ.slice(1, -1) + ')\\s*の(\\d)つだけ'), g => { const s = g[1].split('・').map(sqI), am = (r.marks || []).filter(x => x[1] === 'ng').map(x => x[0] - 1)[0];
+            return am != null && same(s, nbr(am).filter(x => !p.sq[x])) && +g[2] === s.length; }, 'not the empty squares next to the marked amazon');
+          b(/(?:隣|となり)の空きマスは(?:緑の印の)?(\d)つだけ|(?:隣|となり)の空きマスは1つだけ|出口は1つだけ|出口は1マスだけ/, g => { const n = +(g[1] || 1), am = (r.marks || []).filter(x => x[1] === 'ng').map(x => x[0] - 1)[0];
+            const tgt = am != null ? am : (look != null && B.some(x => nbr(x).includes(look)) ? B.find(x => nbr(x).includes(look)) : B[0]); return freeN(p.sq, tgt) === n; }, 'not the number of empty squares next to it');
+          b(new RegExp('出口は\\s*' + SQ + '\\s*だけ'), g => { const s = sqI(g[1]); return B.some(x => nbr(x).includes(s) && freeN(p.sq, x) === 1); }, 'not the only exit of a black amazon');
+          b(/([0-9])マスが矢でふさがれ|隣の([0-9])マスが矢/, g => { const n = +(g[1] || g[2]); return B.some(x => nbr(x).filter(y => p.sq[y] === 3).length === n); }, 'no black amazon with that many arrows next to it');
+          // after the move shown
+          if ((r.seq || []).length) { b(/もう1手も指せない|白の勝ち/, () => !q.canMove(2), 'Black can still move');
+            b(/ゲームは続き|もう1体のアマゾンが残る|アマゾンが残る/, () => q.canMove(2) && B.some(x => freeN(q.sq, x) === 0), 'not one black amazon shut in with the game going on'); }
+          // queen moves: the marks of b_queen / b_block
+          if (id === 'b_queen' && r.k === 'explain') { const ok = mk('ok'); b(/いちばん遠いマス|光っているマスのどれにでも/, () => W.length === 1 && same(ok, far(p.sq, W[0])), `the marks are not the farthest square each way (${names(far(p.sq, W[0]))})`); }
+          if (id === 'b_block' && r.k === 'explain') { const ok = mk('ok'), ng = mk('ng'), R0 = reach(p.sq, W[0]);
+            if (!ok.every(x => R0.includes(x) && far(p.sq, W[0]).includes(x)) || ng.some(x => R0.includes(x))) a(`⑧ the green marks are not reachable farthest squares / the red ones are reachable`);
+            for (const g of t.matchAll(new RegExp('(上|下|横|斜め)(?:へ)?は\\s*' + SQ + '\\s*まで（' + SQ, 'g'))) { const x = sqI(g[2]), y = sqI(g[3]);
+              if (!(far(p.sq, W[0]).includes(x) && dirOf(W[0], x).replace(/上|下/, g[1] === '横' || g[1] === '斜め' ? '縦' : '$&') === g[1] && p.sq[y] === 3 && nbr(x).includes(y) && al(W[0], y))) a(`⑧ ${who} 「${g[0]}」`); } }
+          if (id === 'b_queen' && r.k === 'try') { b(/縦の線|縦にまっすぐ/, () => G && G.length && G.every(m => dirOf(mFrom(m), mTo(m)).match(/上|下/)), 'the answer is not up / down a file');
+            b(/まっすぐ上/, () => G.every(m => dirOf(mFrom(m), mTo(m)) === '上'), 'not up'); b(/(\d+)マス、1手/, g => G.every(m => cheb(mFrom(m), mTo(m)) === +g[1]), 'not that many squares'); }
+          if (id === 'b_arrow' && r.k === 'try') { b(new RegExp(SQ + ' からは\\s*' + SQ + ' へ一直線ではありません'), g => !al(sqI(g[1]), sqI(g[2])) || blk(p.sq, sqI(g[1]), sqI(g[2])), 'they are in line');
+            b(/いまのマスからは金の印へ一直線ではありません|いまの場所からは、金の印へ一直線じゃない/, () => W.every(w => !al(w, look) || blk(p.sq, w, look)), 'the amazon is in line with the gold mark');
+            b(/元いた\s*(?:[a-j]\d+\s*)?に矢|元いたマスに矢|元のマス/, () => W.includes(look), 'the gold mark is not where the amazon stands'); }
+          if (id === 'b_block' && r.k === 'try') { const w = W[0], dirs = DIR8.filter(d => { const ry = ray(p.sq, w, d); return ry.includes(look); }), ry = dirs.length ? ray(p.sq, w, dirs[0]) : [];
+            if (!(ry.length && ry[ry.length - 1] !== look && p.sq[ry[ry.length - 1]] === 3 && ry[ry.length - 2] === look)) a('⑧ the gold square is not the last one before an arrow on the amazon\'s line');
+            b(/上へ行けるいちばん遠い|上には/, () => dirs.length && dirOf(w, look) === '上', 'not up'); b(new RegExp(SQ + '\\s*の矢の手前、\\s*' + SQ), g => p.sq[sqI(g[1])] === 3 && sqI(g[2]) === look && nbr(look).includes(sqI(g[1])), 'not the square before the arrow'); }
+          if (id === 's_escape') { const am = r.k === 'try' ? look : mk('ng')[0];
+            b(/隅/, () => [0, 9, 90, 99].includes(am), `${N(am)} is not a corner`);
+            b(/ほとんどふさがって/, () => freeN(p.sq, am) * 3 <= nbr(am).length, `${freeN(p.sq, am)} of the ${nbr(am).length} squares next to ${N(am)} are empty`);
+            b(/大きく動/, () => G && G.length && G.every(m => cheb(mFrom(m), mTo(m)) >= 2), 'the answers move one square');
+            b(/中央のほう|まん中のほう/, () => G && G.every(m => { const c = s => { const [rr, cc] = RCo(s); return Math.max(Math.abs(rr - 4.5), Math.abs(cc - 4.5)); }; return c(mTo(m)) < c(mFrom(m)); }), 'an answer does not go toward the centre');
+            if (r.k === 'explain') { const ok = mk('ok'); if (!same(ok, nbr(am).filter(x => !p.sq[x]))) a('⑧ the green marks are not the empty squares next to the amazon'); } }
+          if (id === 's_wall') { const ra = (r.seq || []).length ? rooms(q.sq) : null;
+            if (ra) { b(/白の部屋（(\d+)マス）は黒の部屋（(\d+)マス）/, g => ra.sep && +g[1] === ra.w && +g[2] === ra.b, `the rooms are ${ra.w} and ${ra.b}`); b(/盤を(?:左右に|二つに)分け/, () => ra.sep, 'the board is not split'); }
+            const wall = [...Array(100).keys()].filter(i => p.sq[i] === 3), col = wall.length ? RCo(wall[0])[1] : -1, gaps = [...Array(10).keys()].map(rr => rr * 10 + col).filter(i => !p.sq[i]);
+            b(/すき間は\s*([a-j](?:10|[1-9]))\s*だけ|すき間は1マスだけ/, g => gaps.length === 1 && (!g[1] || sqI(g[1]) === gaps[0]), `the gaps are ${names(gaps)}`);
+            b(/([a-j]) の列(?:に|の)/, g => 'abcdefghij'.indexOf(g[1]) === col, `the wall is on file ${'abcdefghij'[col]}`);
+            if (G) { b(/白のアマゾンは右側に残/, () => G.every(m => whites(p.clone().play(m)).every(x => RCo(x)[1] > col)), 'an answer leaves a white amazon on the left');
+              b(/ずっと広い/, () => G.every(m => { const rr = rooms(p.clone().play(m).sq); return rr.w - rr.b >= 10; }), 'the white room is not much bigger'); } }
+          if (id === 's_fill') { const w = W[0], R = roomCells(p.sq, w);
+            b(/(?:白の)?部屋は\s*(\d+)マス/, g => R.size === +g[1], `the room has ${R.size} squares`);
+            b(new RegExp('部屋は\\s*((?:' + SQ.slice(1, -1) + '・)+' + SQ.slice(1, -1) + ')'), g => same(g[1].split('・').map(sqI), [...R]), `the room is ${names(R)}`);
+            if (r.k === 'explain') { const ok = mk('ok'), sc = all.map(m => fillBF(p.clone().play(m).sq, mTo(m))), mx = Math.max(...sc);
+              if (sc[all.indexOf(m0)] !== mx) a(`① ${nm(m0)} does not keep the most moves`);
+              const left = [...roomCells(q.sq, mTo(m0))].filter(x => !q.sq[x]); if (!same(ok, left)) a(`⑧ the green marks are not the squares left (${names(left)})`);
+              b(/まだ全部行ける/, () => fillBF(q.sq, mTo(m0)) === left.length, 'not every square left can be used');
+              b(/元のマスに矢/, () => mArrow(m0) === mFrom(m0), 'the arrow is not on the square left'); }
+            else b(/元のマスか/, () => G && G.some(m => mArrow(m) === mFrom(m)), 'no answer shoots back'); }
+          if (id === 's_trap' && r.k === 'try' && G) b(/閉じ込め成功|閉じこめ成功/, () => true, '');
+        }
+      }); });
   }
   return out;
 }
@@ -1634,16 +1734,160 @@ function openLines(opt) {
     cross('checkers', L); }
   return out;
 }
+// (2026-11-24 第2期・担当B) chess openings (chess/openings.json, chess/open): the problems of set.drill (picked by chess/tools/op_curate.js
+// from the pool of positions of strong games, cand: [uci, games]), each against the rules (chess/engine.js), the site's engine (chess/tools/
+// wasm.js analyze, node-limited = deterministic) and the stored game counts: ① the answer is the most played move, legal, within 40 of the
+// engine's best; ② played 30 times or more, the second move 36% of it or less (= 12 points or less in the 2D problemPoints and the 3D
+// CHESS.points, so no other move is right or "close"); ③ 3+ legal moves, 2+ other moves played, 2+ other moves within 80 of the best (a
+// real choice), the answer not the only way out of a loss; ④ the mover is the opening's side, the position comes from the opening's
+// own moves (reached from set.prefix through the pool's moves), not decided (|v| < 150); ⑤ 5 squares or more (colours swapped too) from
+// every other chess problem (lessons, warm-ups, puzzles, the other openings' drills) and from every position of the study lines (追1:
+// not the line shown just before), one answer twice at most and one kind of move (chKind) three times at most in an opening; ⑥ easy →
+// hard (d = plies + 20 × second / first), both the 2D and the 3D keep set.drill's order; ⑦⑧ ナイトン's words (chOpJa) at every place
+// of the five for the answer and every legal wrong move: the side and the opening in the question, the share of games of the answer and
+// of yours, "hardly played" only when no move outside cand can have more than 5%, "taken" only when the engine shows the loss, "no more
+// castling" only with the right to castle, the reasons of the answer (take / take back / castle / pin / chase / develop) on the board;
+// ⑨ the 2D and the 3D score alike, and a move that is not right does not move on by itself in the 2D.
+let chW = null;
+function chessOpenCtx(OP) {
+  const fs = require('fs'), vm = require('vm'), E = require(path.join(ROOT, 'chess/engine.js'));
+  if (!chW) chW = require(path.join(ROOT, 'chess/tools/wasm.js'));
+  const src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8');
+  const pre = src.slice(src.indexOf('  const shSeed = '), src.indexOf('  const shPerm = ')) + src.slice(src.indexOf('  const shPerm = '), src.indexOf('\n', src.indexOf('  const shPerm = ')));
+  const X = vm.runInNewContext(pre + '\n' + src.slice(src.indexOf('  const CHJ_OP = {'), src.indexOf('  function chHits(')) + '\n;({ chFacts, chKind, chOpJa, chOpVoice, chStepNotesJa, CHJ_OP, CH_PN, CH_VAL })', { console });
+  OP = OP || JSON.parse(fs.readFileSync(path.join(ROOT, 'chess/openings.json'), 'utf8'));
+  const brd = fen => { const b = Array(64).fill('.'); String(fen).split(' ')[0].split('/').forEach((row, ri) => { let f = 0; for (const ch of row) { if (/\d/.test(ch)) f += +ch; else { b[(7 - ri) * 8 + f] = ch; f++; } } }); return b.join(''); };
+  const swap = b => { let o = ''; for (let r = 7; r >= 0; r--) for (let f = 0; f < 8; f++) { const c = b[r * 8 + f]; o += c === '.' ? c : c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase(); } return o; };
+  const dist = (a, b) => { let n = 0; for (let i = 0; i < 64; i++) if (a[i] !== b[i]) n++; return n; };
+  const key = fen => fen.split(' ').slice(0, 3).join(' ');   // (the en passant square is written differently by the pool and the engine)
+  // the fixed pool: lessons, warm-ups, puzzles and every position of every study line (追1)
+  const fixed = [], LS = JSON.parse(fs.readFileSync(path.join(ROOT, 'chess/lessons.json'), 'utf8')), PZ = JSON.parse(fs.readFileSync(path.join(ROOT, 'chess/puzzles.json'), 'utf8'));
+  LS.steps.forEach(st => { (st.problems || []).forEach((q, j) => q.fen && fixed.push([`lesson ${st.id} ${j + 1}`, brd(q.fen)])); (st.ramp || []).forEach((q, j) => q.fen && fixed.push([`warm-up ${st.id} ${j + 1}`, brd(q.fen)])); if (st.diagram && st.diagram.fen) fixed.push([`lesson ${st.id} diagram`, brd(st.diagram.fen)]); });
+  (PZ.levels || []).forEach(l => (l.puzzles || []).forEach((q, j) => fixed.push([`puzzle ${l.n} ${j + 1}`, brd(q.fen)])));
+  Object.entries(PZ.old || {}).forEach(([k, q]) => fixed.push([`puzzle old ${k}`, brd(q.fen)]));
+  const lineFens = {};
+  OP.sets.forEach(s => { const p = E.Pos.fromFEN(E.START), L = [p.fen()]; for (const [u] of (s.study && s.study.steps) || []) { const m = p.fromUci(u); if (!m) break; p.make(m); L.push(p.fen()); } lineFens[s.id] = L; L.forEach((f, k) => fixed.push([`study ${s.id} ply ${k}`, brd(f)])); });
+  // ④ the positions of each opening: from its prefix through the pool's moves
+  const reach = {};
+  OP.sets.forEach(s => { const byKey = new Map(s.problems.map(P => [key(P.fen), P])), p = E.Pos.fromFEN(E.START); for (const u of s.prefix.split(' ')) p.make(p.fromUci(u));
+    // (a pool position goes on by its played moves; one ply that is not in the pool — the reply the pool does not keep — by any legal move)
+    const seen = new Set([key(p.fen())]), Q = [[p.fen(), byKey.has(key(p.fen())) ? 0 : 1]];
+    while (Q.length) { const [f, gap] = Q.shift(), P = byKey.get(key(f)), z = E.Pos.fromFEN(f), us = P ? P.cand.map(c => c[0]) : z.legal().map(m => z.uci(m));
+      for (const u of us) { const q = E.Pos.fromFEN(f), m = q.fromUci(u); if (!m) continue; q.make(m); const k = key(q.fen()), inP = byKey.has(k); if (seen.has(k) || (!inP && gap)) continue; seen.add(k); Q.push([q.fen(), inP ? 0 : 1]); } }
+    reach[s.id] = seen; });
+  return { E, X, OP, brd, swap, dist, key, fixed, lineFens, reach, ana: {} };
+}
+const chessOpenD = P => { const f = P.fen.split(' '); return (+f[5] - 1) * 2 + (f[1] === 'b' ? 1 : 0) + 20 * ((P.cand[1] || [0, 0])[1] / P.cand[0][1]); };
+const chPts = (P, u) => { if (P.acc && P.acc.includes(u)) return 20; const c = (P.cand.find(x => x[0] === u) || [0, 0])[1], top = P.cand[0][1]; return c >= top ? 20 : c ? Math.max(4, Math.round(20 * Math.sqrt(c / top))) : 0; };   // (= chess/app.js problemPoints, the 3D CHESS.points)
+function chessOpenProblem(ctx, s, P, j, opt) {
+  const { E, X } = ctx, out = [], a = m => out.push(m), A = (P.cand[0] || [])[0], pos = E.Pos.fromFEN(P.fen), L = pos.legal(), U = new Set(L.map(m => pos.uci(m)));
+  // ①
+  if (!A || !U.has(A)) { a(`① the answer ${A} is not legal`); return out; }
+  P.cand.forEach(([u, n], k) => { if (!U.has(u)) a(`① cand ${u} is not legal`); if (k && n > P.cand[k - 1][1]) a('① cand is not most played first'); });
+  const r = ctx.ana[P.fen] || (ctx.ana[P.fen] = chW.analyze(P.fen, null, 4e5)), val = u => (r.find(x => x.uci === u) || { v: -1e9 }).v, best = r[0].v;
+  if (best - val(A) > 40) a(`① the engine puts the answer ${best - val(A)} below its best ${r[0].uci}`);
+  // ②
+  const n1 = P.cand[0][1], n2 = (P.cand[1] || [0, 0])[1], N = P.n || P.cand.reduce((x, c) => x + c[1], 0);
+  if (n1 < 30) a(`② played only ${n1} times`);
+  const acc = P.acc || [A]; if (acc[0] !== A || acc.length > 2) a(`② acc ${acc}: the most played first, two at most`);
+  acc.slice(1).forEach(u => { const c = (P.cand.find(x => x[0] === u) || [0, 0])[1]; if (!U.has(u) || c < 0.5 * n1 || best - val(u) > 40) a(`② ${u} is taken as right, but played ${c} times (the answer ${n1}) and ${best - val(u)} below the best`); });
+  for (const u of U) if (!acc.includes(u) && chPts(P, u) > 12) a(`② ${u} scores ${chPts(P, u)} (played ${(P.cand.find(x => x[0] === u) || [0, 0])[1]} times against ${n1})`);
+  if (P.cand.reduce((x, c) => x + c[1], 0) > N) a('⑧ the total is below the counts');
+  if (P.cand.some(c => c[1] < 0.03 * N) || P.cand.length > 5) a('⑧ cand is not the moves of 3% or more (five at most): "hardly played" cannot be told');   // (the pool lists every move of 3% or more, five at most)
+  // ③
+  if (L.length < 3) a(`③ ${L.length} legal moves`);
+  if (P.cand.length < acc.length + 1) a('③ no other move is played');
+  const near = r.filter(x => !acc.includes(x.uci) && best - x.v <= 80).length; if (near < 2) a(`③ only ${near} other moves within 80 of the best: no real choice`);
+  // ④
+  const side = P.fen.split(' ')[1]; if (side !== s.side) a(`④ the mover is ${side}, the opening is ${s.side}'s`);
+  if (!ctx.reach[s.id].has(ctx.key(P.fen))) a(`④ not reached from ${s.prefix} through the opening's moves`);
+  if (Math.abs(best) >= 150) a(`④ decided (${best})`);
+  if (pos.inCheck()) a('④ the mover is in check');
+  // ⑦⑧ the words at every place of the five
+  const white = side === 'w', who = white ? '白' : '黒', nm = String(s.title.ja), plain = t => String(t).replace(/<[^>]+>/g, '');
+  const pc = c => Math.max(1, Math.round(c / N * 100)), cnt = new Map(P.cand), rest = N - P.cand.reduce((x, c) => x + c[1], 0);
+  const FA = X.chFacts(P.fen, A), kA = X.chKind(FA, A, white), castleR = /[KQkq]/.test(P.fen.split(' ')[2]) && P.fen.split(' ')[2].split('').some(c => white ? c === c.toUpperCase() && c !== '-' : c === c.toLowerCase() && c !== '-');
+  const mat = (q, w) => { let t = 0; for (let i = 0; i < 128; i++) { if (i & 0x88) { i += 7; continue; } const pp = q.b[i]; if (pp && ((pp & 8) === 0) === w && (pp & 7) !== 6) t += [0, 1, 3, 3, 5, 9][pp & 7]; } return t; };
+  const after = u => { const q = E.Pos.fromFEN(P.fen); q.make(q.fromUci(u)); return q; };
+  { const q = after(A), d0 = mat(pos, white) - mat(pos, !white), d1 = mat(q, white) - mat(q, !white);
+    if (kA === 'recap' && !(d0 < 0 && d1 >= 0)) a(`⑧ the answer is called a take-back (material ${d0} → ${d1})`);
+    if (kA === 'pin' && !(FA.pin && (FA.pin[1] === 'キング' || X.CH_VAL[{ ポーン: 'p', ナイト: 'n', ビショップ: 'b', ルーク: 'r', クイーン: 'q', キング: 'k' }[FA.pin[1]]] > X.CH_VAL[FA.pc]))) a(`⑧ the pin of the answer wins nothing behind (${FA.pin})`);
+    if (kA === 'castle' && !(A === (white ? 'e1g1' : 'e8g8') || A === (white ? 'e1c1' : 'e8c8'))) a('⑧ the answer is called castling'); }
+  const steps = ((s.study && s.study.steps) || []).map(x => x[0]);
+  for (let i = 0; i < 5; i++) {
+    const CV = X.chOpVoice(s.id), intro = X.CHJ_OP.intro[s.id] || ''; CV.add(intro);
+    const notes = {}; Object.entries(X.CHJ_OP.notes[s.id] || {}).forEach(([k, v]) => { notes[k] = { ja: v }; }); X.chStepNotesJa(steps, notes, CV);
+    let Q; try { Q = X.chOpJa({ pos: P.fen, kind: 'best', P, ans: A }, nm, CV, i); } catch (er) { a(`⑧ the 3D words fail: ${er.message}`); break; }
+    const ask = plain(Q.ask); if (/\{|undefined|NaN/.test(ask) || !ask.includes(who) || /[白黒]の(番|一手|手番)/.test(ask.replace(who + 'の', '')) || (/『/.test(ask) && !ask.includes(`『${nm}』`))) a(`⑧ the question 「${ask}」`);
+    const hint = plain(Q.hintTx); if (/キングはまだ真ん中/.test(hint) && !(white ? pos.b[E.sqOf('e1')] === 6 : pos.b[E.sqOf('e8')] === 14)) a(`⑧ the hint: the king is not in the middle 「${hint}」`);
+    const g = plain(Q.good(A)), pp = [...g.matchAll(/(\d+)%/g)].map(x => +x[1]);
+    if (/\{|undefined|NaN/.test(g.replace(/\{[mx]\}/g, ''))) a(`⑧ the praise 「${g}」`);
+    if (!pp.length || pp.some(x => x !== pc(n1))) a(`⑧ the praise gives ${pp.join('/') || 'no'}% (the answer is ${pc(n1)}%) 「${g}」`);
+    acc.slice(1).forEach(u => { const t = plain(Q.good(u)), q2 = [...t.matchAll(/(\d+)%/g)].map(x => +x[1]); if (!t.includes('{x}') || q2.length !== 2 || q2[0] !== pc(cnt.get(u)) || q2[1] !== pc(n1)) a(`⑧ ${u} (also right): 「${t}」`); });
+    for (const u of U) { if (acc.includes(u)) continue; const w = plain(Q.ng(u)), bad = m => a(`⑦ ${u}: ${m} 「${w}」`);
+      if (/undefined|NaN/.test(w) || /\{(?![mx]\})/.test(w)) bad('a placeholder');
+      if (!w.includes('{x}') && !w.includes('{m}')) bad('names neither the answer nor yours');
+      const ps = [...w.matchAll(/(\d+)%/g)].map(x => +x[1]);
+      if (cnt.has(u)) { if (!ps.includes(pc(cnt.get(u))) || ps.some(x => x !== pc(cnt.get(u)) && x !== pc(n1))) bad(`the shares ${ps} (yours ${pc(cnt.get(u))}%, the answer ${pc(n1)}%)`);
+        if (/同じくらい|ほぼ同じ数/.test(w) && cnt.get(u) < 0.8 * n1) bad('"as often" but it is not'); }
+      else { if (ps.some(x => x !== pc(n1))) bad(`a share for a move outside the counts (${ps})`);
+        const lim = P.cand.length < 5 ? 0.03 : Math.min(...P.cand.map(c => c[1])) / N; const fk = w.match(/多く指される(\d+)つの手|よく選ぶ(\d+)つの手/); if (fk && +(fk[1] || fk[2]) !== P.cand.length) bad(`the record keeps ${P.cand.length} moves`); if (fk && P.cand.length < 5) bad('the record keeps every move of 3% — say it is hardly played'); if (/ほとんど指されない|めったにいない/.test(w) && lim > 0.05) bad(`"hardly played" but it may be played up to ${Math.round(lim * 100)}%`); }
+      const F = X.chFacts(P.fen, u), loss = best - val(u), q = after(u), to = u.slice(2, 4);
+      if (/に取られ|がねらえる|のえじき/.test(w)) { const by = q.legal().some(m => q.uci(m).slice(2, 4) === to); if (!by || loss < 50) bad(`not lost at once (taken: ${by}, the engine ${loss} below)`); }
+      if (/取り返しそびれ|取り返せず/.test(w) && !(kA === 'recap' && loss >= 50)) bad(`not a missed take-back (the engine ${loss} below)`);
+      if (/キャスリングできなくなる|キャスリングの権利がなくなる/.test(w) && !(castleR && F.king && !F.castle)) bad('no right to castle is lost');
+      if (/キャスリングが遅れ/.test(w) && kA !== 'castle') bad('the answer is not castling');
+      if (/クイーンを動かす|クイーンの出動/.test(w) && F.pc !== 'q') bad('not a queen move');
+      if (/ルーク/.test(w) && /\{x\}だとルーク|^[^。]*ルークは序盤/.test(w) && F.pc !== 'r') bad('not a rook move');
+      if (/同じ駒をもう一度|同じ駒で2手/.test(w) && !('nb'.includes(F.pc) && !F.dev)) bad('not a piece moved again');
+      if (/ポーンの手/.test(w) && F.pc !== 'p') bad('not a pawn move');
+      if (/端のポーン|端っこの手/.test(w) && !(F.pc === 'p' && F.flank)) bad('not a flank pawn');
+      if (/まだ出ていない駒/.test(w)) { let home = 0; for (const c of ['b', 'c', 'f', 'g']) { const pp2 = pos.b[E.sqOf(c + (white ? '1' : '8'))]; if (pp2 && ((pp2 & 8) === 0) === white && [2, 3].includes(pp2 & 7)) home++; } if (!home) bad('every minor piece is out already'); }
+    }
+  }
+  return out;
+}
+// ⑤ ⑥ of an opening's drill (picks: the other openings' drills, { id: [indices] })
+function chessOpenSet(ctx, s, drill, picks) {
+  const out = [], a = (j, m) => out.push(`q${j + 1} ${m}`), others = [];
+  ctx.fixed.forEach(([w, b]) => others.push([w, b]));
+  Object.entries(picks || {}).forEach(([id, d]) => { if (id === s.id) return; const g = ctx.OP.sets.find(x => x.id === id); d.forEach(k => others.push([`opening ${id} ${k}`, ctx.brd(g.problems[k].fen)])); });
+  const ans = new Map(), kinds = new Map(); let prevD = -1;
+  drill.forEach((k, j) => { const P = s.problems[k], B = ctx.brd(P.fen), Bs = ctx.swap(B), A = P.cand[0][0], white = P.fen.split(' ')[1] === 'w';
+    for (const [w, b] of others) { const d = Math.min(ctx.dist(B, b), ctx.dist(Bs, b)); if (d <= 4) { a(j, `⑤ ${d} squares from ${w}`); break; } }
+    drill.slice(0, j).forEach((k2, j2) => { const d = ctx.dist(B, ctx.brd(s.problems[k2].fen)); if (d <= 4) a(j, `⑤ ${d} squares from q${j2 + 1} of the same opening`); });
+    ans.set(A, (ans.get(A) || 0) + 1); if (ans.get(A) === 3) a(j, `⑤ the answer ${A} a third time`);
+    const kd = ctx.X.chKind(ctx.X.chFacts(P.fen, A), A, white); kinds.set(kd, (kinds.get(kd) || 0) + 1); if (kinds.get(kd) === 4 && kd !== 'other') a(j, `⑤ a ${kd} move a fourth time`);
+    const d = chessOpenD(P); if (d < prevD) a(j, `⑥ easier than the one before (d ${d.toFixed(1)} after ${prevD.toFixed(1)})`); prevD = Math.max(prevD, d); });
+  if (drill.length >= 2 && chessOpenD(s.problems[drill[drill.length - 1]]) <= chessOpenD(s.problems[drill[0]])) out.push('q0 ⑥ the last is not harder than the first');
+  return out;
+}
+function chessOpen() {
+  const fs = require('fs'), out = [], ctx = chessOpenCtx();
+  const src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), app = fs.readFileSync(path.join(ROOT, 'chess/app.js'), 'utf8');
+  // ⑨ the same points in both; ⑥ the drill's order in both; 追3 a move that is not right does not go on by itself in the 2D
+  if (!app.includes('if (P._freq) { if (P._acc && P._acc.has(m)) return 20; const c = P._freq.get(m) || 0, top = P.cand[0][1]; return c >= top ? 20 : c ? Math.max(4, Math.round(20 * Math.sqrt(c / top))) : 0; }')) out.push({ step: '-', q: 0, msg: '⑨ chess/app.js problemPoints (freq) changed' });
+  if (!src.includes('if (P.cand) { if (P.acc && P.acc.includes(u)) return 20; const c = (P.cand.find(x => x[0] === u) || [0, 0])[1], top = P.cand[0][1]; return c >= top ? 20 : c ? Math.max(4, Math.round(20 * Math.sqrt(c / top))) : 0; }')) out.push({ step: '-', q: 0, msg: '⑨ the 3D CHESS.points (cand) changed' });
+  if (!app.includes('const pool = g.drill ? shuffle(g.drill.slice()).slice(0, 5).sort((a, b) => g.drill.indexOf(a) - g.drill.indexOf(b)).map(i => g.problems[i])')) out.push({ step: '-', q: 0, msg: '⑥ the 2D practice does not keep the drill order' });
+  if (!src.includes('const probs = s.drill ? shuffle(s.drill.slice()).slice(0, 5).sort((a, b) => s.drill.indexOf(a) - s.drill.indexOf(b)).map(i => s.problems[i])')) out.push({ step: '-', q: 0, msg: '⑥ the 3D practice does not keep the drill order' });
+  if (!app.includes("lsAuto(pts >= 16, moveDur() + 1100)")) out.push({ step: '-', q: 0, msg: '追3 the 2D opening practice goes on by itself after a move that is not right' });
+  const picks = {}; ctx.OP.sets.forEach(s => { if (s.drill) picks[s.id] = s.drill; });
+  for (const s of ctx.OP.sets) { if (!s.drill) continue;
+    if (s.drill.length < 5) out.push({ step: s.id, q: 0, msg: `③ ${s.drill.length} problems in the drill (5 are drawn)` });
+    s.drill.forEach((k, j) => chessOpenProblem(ctx, s, s.problems[k], k).forEach(m => out.push({ step: s.id, q: j + 1, msg: m })));
+    chessOpenSet(ctx, s, s.drill, picks).forEach(m => out.push({ step: s.id, q: +m.slice(1, m.indexOf(' ')), msg: m.slice(m.indexOf(' ') + 1) })); }
+  return out;
+}
 // (2026-11-24 担当D) janggi on the 3D table: the puzzles (all themes) — tools/lesson-verify-janggi.js
-const janggi = () => require('./lesson-verify-janggi.js').puzzles();
+const janggi = () => { const J = require('./lesson-verify-janggi.js'); return J.puzzles().concat(J.lessons()); };
 const ur = () => require('./lesson-verify-ur.js')();   // (2026-11-24 担当C：ウルのレッスン、tools/lesson-verify-ur.js)
 const senet = () => require('./lesson-verify-senet.js')();   // (2026-11-24 担当C：セネトのレッスン、tools/lesson-verify-senet.js)
-const GAMES = { ur, senet, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines, janggi };
-module.exports = GAMES; GAMES.mancalaWords = mancalaWords; Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
+const GAMES = { chessOpen, ur, senet, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines, janggi };
+module.exports = GAMES; GAMES.mancalaWords = mancalaWords; Object.assign(GAMES, { chessOpenCtx, chessOpenProblem, chessOpenSet, chessOpenD }); Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
 if (require.main === module) {
-  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,openLines,janggi').split(',');
+  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,chessOpen,openLines,janggi').split(',');
   let bad = 0;
-  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'janggi' ? ' (パズル全問の①〜⑨・追19・追20)' : g === 'ur' ? ' (ウルのレッスン12本の①〜⑧・追7・追16)' : g === 'senet' ? ' (セネトの作り直したレッスン（v2）の①〜⑧・追7・追16・追22・追23。厳密な勝率は C で解き直し)' : g === 'openLines' ? ' (shogi・tafl・checkers の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
+  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'chessOpen' ? ' (チェスの定跡の drill の①〜⑨・追3・追25。drill のない定跡は pending)' : g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'janggi' ? ' (パズル全問・レッスン b_rook・b_horse・b_pawn の①〜⑨・追19・追20・追24)' : g === 'ur' ? ' (ウルのレッスン12本の①〜⑧・追7・追16)' : g === 'senet' ? ' (セネトの作り直したレッスン（v2）の①〜⑧・追7・追16・追22・追23。厳密な勝率は C で解き直し)' : g === 'openLines' ? ' (shogi・tafl・checkers の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
     bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
   process.exit(bad ? 1 : 0);
 }
