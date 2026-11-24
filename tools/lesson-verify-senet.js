@@ -2,7 +2,7 @@
 // ①② 手の問題は、その局面から到達できる全局面を senet/tools/senet_exact.c（gcc でその場でコンパイル）で解き直し、全合法手の勝率を保存値 ev と照合。
 //    C の手の生成が senet/engine.js と同じことも、小さい局面で JavaScript 版（senet_exact.solveJS）と照合する。
 // ③④⑤⑥⑦⑧・選択問題の答えと誤答の説明（追22）・確率の数え上げ（追23）・ヒントの印（追7）・勝率の文なし（追16）・14言語。
-// 追54・追61：数える問題の誤答は senet/tools/count_facts.js の「よくある誤り」の値（ほかの誤りと重ならない）で説明がその誤りを名指す。追59：問題ごとのヒント（2D・3D）が盤にあることだけを言う。
+// 追54・追64：数える問題の誤答は senet/tools/count_facts.js の「よくある誤り」の値（ほかの誤りと重ならない）で説明がその誤りを名指す。追59：問題ごとのヒント（2D・3D）が盤にあることだけを言う。
 // opt.noExact：①の解き直しを省く（壊したデータの検出テスト用。形・順・理由は確かめる）
 'use strict';
 const fs = require('fs'), path = require('path');
@@ -85,7 +85,7 @@ module.exports = function senet(opt = {}) {
         if (['c.lowNg', 'c.highNg', 'c.roll8Ng'].includes(g[0])) { bad(`誤答 ${val(x)} の説明が決まり文句（${g[0]}）で、数え方の誤りを名指していない`); return; }
         const es = ERR.filter(e => e.x === val(x));
         if (!es.length) { bad(`誤答 ${val(x)} がどの数え方の誤りの値でもない（説明 ${g[0]}）`); return; }
-        if (es.length > 1) add(L.id, where, `追61 誤答 ${val(x)} が2つ以上の誤り（${es.map(e => e.key).join('・')}）と同じ値で、説明がもう片方の誤りの子に合わない`);
+        if (es.length > 1) add(L.id, where, `追64 誤答 ${val(x)} が2つ以上の誤り（${es.map(e => e.key).join('・')}）と同じ値で、説明がもう片方の誤りの子に合わない`);
         if (val(x) === C.answerOf(q)) bad(`誤答 ${val(x)} が答えと同じ`);
         const e = es.find(f => f.key === g[0]);
         if (!e) { bad(`誤答 ${val(x)} の説明 ${g[0]} はこの値になる数え方の誤り（${es.map(f => f.key).join('・')}）でない`); return; }

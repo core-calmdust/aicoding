@@ -5,7 +5,7 @@
 //  もう一度：どれも1通り（c.againOneNg）・5 を忘れる（c.againNo5Ng）・1 だけ（c.again1Ng）。
 //  出目が出ない確率（c.notNg）。入れ替えられる確率：入れ替えられない確率（c.riskSafeNg）・近い駒だけ（c.riskNearNg）・前の相手の駒まで（c.riskAheadNg）・
 //  となりの距離の目（c.riskLookNg）・距離の数字をそのまま足す（c.riskDistNg）。残りのマス：マスの番号をそのまま足す（c.posNg）も。
-//  追61：誤答の値は、答えとも、ほかの誤りとも重ならないものだけ（重なると、説明がもう片方の誤りをした子に合わない）。誤りの一覧は count_facts.errors()。
+//  追64：誤答の値は、答えとも、ほかの誤りとも重ならないものだけ（重なると、説明がもう片方の誤りをした子に合わない）。誤りの一覧は count_facts.errors()。
 //  水に落ちない手：26→27 まで（c.wWaterNg）・ふさがった駒まで（c.wBlockNg）・盤の駒全部（c.wAllNg）・入れ替えを忘れる（c.wSwapNg）。
 //  残りのマス：30−位置（c.minus1Ng）・32−位置（c.plus1Ng）・もう片方の合計（c.oppSumNg / c.ownSumNg）・ゴール近くの駒を0（c.zeroNg）。
 //  リード：向きが逆（c.sideNg）・先頭の駒だけ（c.frontNg）・いちばん後ろの駒だけ（c.backNg）。
@@ -18,7 +18,7 @@ const fill = (t, v) => t.replace(/\{(\w+)\}/g, (_, k) => v[k] != null ? v[k] : `
 // ヒントの文（14言語）：部品をつないで1つの文にする。値は言語ごとの並べ方
 const hint = (...parts) => { const o = {}; for (const l of LANGS) o[l] = parts.filter(Boolean).map(([h, v]) => fill(T.H[h][l], typeof v === 'function' ? v(l) : v || {})).join(l === 'ja' || l === 'zh' || l === 'zh-TW' ? '' : ' '); return o; };
 const frac = m => m + '/16';
-// 誤答：使える誤り（答えともほかの誤りとも重ならない：追61）を、並べた順に3つまで。選択肢は小さい順（リードは きみ→相手、差の小さい順）
+// 誤答：使える誤り（答えともほかの誤りとも重ならない：追64）を、並べた順に3つまで。選択肢は小さい順（リードは きみ→相手、差の小さい順）
 function setOpts(q, lab) {
   const a = C.answerOf(q), errs = C.usable(q).slice(0, 3);
   if (errs.length < 2) throw new Error('fix_count_choice: too few distractors ' + JSON.stringify(q.why));

@@ -36,14 +36,14 @@
     { id: 'map', ready: () => !!window.AtlasMap, render: (el, c) => AtlasMap.render(el, c) },
     { id: 'tree', src: ['museum/tree.js?v=7'], ready: () => !!window.AtlasTree, render: (el, c) => AtlasTree.render(el, c) },
     { id: 'gallery', src: ['museum/gallery.js?v=151'], ready: () => !!window.AtlasGallery, render: (el, c) => AtlasGallery.render(el, c) },
-    { id: 'paint', src: () => ['museum/paint-i18n/en.js?v=' + PAINT_I18N_V, ...(rl() !== 'en' ? [`museum/paint-i18n/${rl()}.js?v=${PAINT_I18N_V}`] : []), 'museum/paint.js?v=22'], ready: () => !!(window.AtlasPaint && window.MUSEUM_PAINT_T && MUSEUM_PAINT_T.en && MUSEUM_PAINT_T[rl()]), render: (el, c) => AtlasPaint.render(el, c) },   // (per language, like the stories)
+    { id: 'paint', src: () => ['museum/paint-i18n/en.js?v=' + PAINT_I18N_V, ...(rl() !== 'en' ? [`museum/paint-i18n/${rl()}.js?v=${PAINT_I18N_V}`] : []), 'museum/paint.js?v=24'], ready: () => !!(window.AtlasPaint && window.MUSEUM_PAINT_T && MUSEUM_PAINT_T.en && MUSEUM_PAINT_T[rl()]), render: (el, c) => AtlasPaint.render(el, c) },   // (per language, like the stories)
     // (2026-11-24 audit pageKB) the stories' text in one file per language (museum/read-i18n/<lang>.js, made by tools/museum-read-split.js from
     // museum/read-i18n.js): English (the fallback for anything missing) and the page's language, not all fourteen (1.5 MB)
     // (2026-11-24 audit textKB) one file only: tools/museum-read-split.js fills each language's file with English for anything it lacks
-    { id: 'read', src: () => [`museum/read-i18n/${rl()}.js?v=${READ_I18N_V}`, 'museum/read.js?v=65'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T && MUSEUM_READ_T[rl()]), render: (el, c) => AtlasRead.render(el, c) },
+    { id: 'read', src: () => [`museum/read-i18n/${rl()}.js?v=${READ_I18N_V}`, 'museum/read.js?v=69'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T && MUSEUM_READ_T[rl()]), render: (el, c) => AtlasRead.render(el, c) },
     { id: 'chance', src: () => ['museum/chance-i18n/en.js?v=' + CHANCE_I18N_V, ...(rl() !== 'en' ? [`museum/chance-i18n/${rl()}.js?v=${CHANCE_I18N_V}`] : []), 'museum/chance.js?v=7'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T && MUSEUM_CHANCE_T.en && MUSEUM_CHANCE_T[rl()]), render: (el, c) => AtlasChance.render(el, c) },   // (per language)
   ];
-  const READ_I18N_V = 25, PAINT_I18N_V = 11, CHANCE_I18N_V = 1, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
+  const READ_I18N_V = 30, PAINT_I18N_V = 13, CHANCE_I18N_V = 1, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
   const KEY = 'atlas-museum-room';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const loaded = {};
@@ -130,7 +130,7 @@
   // (2026-11-24 ユーザー: 地図や系統樹とのつながり) the game a story is about → the story (keep in step with read.js STORIES' first link)
   const READ_OF = { ur: 'ur', senet: 'senet', latrunculi: 'latrunculi', foxgeese: 'foxgeese', patolli: 'patolli', backgammon: 'backgammon', go: 'go', shogi: 'shogi',
     chess: 'queen', tafl: 'tafl', ludo: 'pachisi', checkers: 'draughts', reversi: 'reversi', mancala: 'mancala', morris: 'morris', xiangqi: 'xiangqi', hex: 'hex',
-    amazons: 'amazons', konane: 'konane', peg: 'peg', fanorona: 'fanorona', janggi: 'janggi', gomoku: 'gomoku', carrom: 'carrom', crokinole: 'crokinole', ugolki: 'ugolki', agon: 'agon', connect4: 'dots', dots: 'dots', hitblow: 'hitblow', botao: 'botao', hockey: 'hockey' };
+    amazons: 'amazons', konane: 'konane', peg: 'peg', fanorona: 'fanorona', janggi: 'janggi', gomoku: 'gomoku', carrom: 'carrom', crokinole: 'crokinole', ugolki: 'ugolki', agon: 'agon', connect4: 'dots', dots: 'dots', hitblow: 'hitblow', botao: 'botao', hockey: 'hockey', solitaire: 'solitaire', sudoku: 'sudoku', shanghai: 'shanghai', samegame: 'samegame' };
   const readOf = g => READ_OF[g] || null;
   const rname = r => ((UI[lang] || UI.en)[r]) || UI.en[r] || r;
   // another room's game, picked there: the map or the tree opens with the game chosen (its card shows)

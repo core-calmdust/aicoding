@@ -35,7 +35,7 @@ function lead(pos) {
   const fr = Math.max(...on(0)) - Math.max(...on(1)), bk = Math.min(...on(0)) - Math.min(...on(1));   // (>0: あなたが前)
   return { a, b, d: b - a, front: fr, back: bk };
 }
-// 追54・追61：その問題の「よくある数え方の誤り」をすべて並べる（key・誤った答え x・説明の値 p）。
+// 追54・追64：その問題の「よくある数え方の誤り」をすべて並べる（key・誤った答え x・説明の値 p）。
 // 選択肢の誤答は、x が答えとも、ほかの誤りとも重ならないものだけを使う（重なると、説明がもう片方の誤りの子に合わない）。
 function errors(q) {
   const k = q.why[0], out = [], E1 = (key, x, p) => out.push({ key, x: String(x), p: Object.assign({ x: String(x) }, p || {}) }), fr = v => v + '/16';
