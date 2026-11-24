@@ -80,7 +80,6 @@ function setup() {
 }
 function start() {
   on = true; idx = 0; sp = 0;
-  try { localStorage.setItem('aicoding-guandan-tut', '1'); } catch (e) {}
   ['#tutOffer'].forEach(s => { const o = $(s); if (o) o.remove(); });
   ['#rulesOverlay', '#lessonOverlay', '#newOverlay'].forEach(s => { const o = $(s); if (o) o.classList.remove('show'); });
   if (tab0 === null) tab0 = (document.querySelector('.side') || {}).dataset ? (document.querySelector('.side').dataset.pt || '') : '';
@@ -113,7 +112,7 @@ function bot(S, seat) {
 }
 function next() {
   const st = cur(); if (!st) return;
-  if (st.last) { finish(); return; }
+  if (st.last) { try { localStorage.setItem(DONE, '1'); } catch (e) {} finish(); return; }
   A.sfx('flip'); idx++; show(); A.loop();
 }
 function finish() {
@@ -241,18 +240,22 @@ function hide() { if (layer) { layer.classList.remove('show'); box.innerHTML = '
 function shake() { if (!box) return; box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake'); A.sfx('bad'); }
 
 /* the first visit: offer the tutorial once */
-function offer() {
-  let ok = false; try { ok = !localStorage.getItem('aicoding-guandan-tut') && !localStorage.getItem('aicoding-guandan-rules-seen'); } catch (e) {}
-  if (!ok || on) return;
+// shown on every visit until the player ticks "don't show again" or finishes the tutorial (as in poker)
+const HIDE = 'aicoding-guandan-tut-hide', DONE = 'aicoding-guandan-tut-done';
+function offer(force) {
+  let hidden = false; try { hidden = !!(localStorage.getItem(HIDE) || localStorage.getItem(DONE)); } catch (e) {}
+  if ((!force && hidden) || on || $('#tutOffer')) return;
   const ov = document.createElement('div'); ov.className = 'overlay show'; ov.id = 'tutOffer';
   ov.innerHTML = `<div class="modal tut-offer"><div class="to-art">${A.gArt(2)}</div><h2>${esc(t('tu.offer.h'))}</h2><p>${esc(t('tu.offer.p'))}</p>` +
     `<ul class="to-list">${['1', '2', '3', '4'].map(k => `<li>${esc(t('tu.offer.' + k))}</li>`).join('')}</ul>` +
     `<label class="to-chk"><input type="checkbox" id="toNo"> ${esc(t('tu.offer.no'))}</label>` +
     `<div class="modal-actions half"><button class="mbtn" id="toLater">${esc(t('tu.offer.later'))}</button><button class="mbtn go" id="toGo">${esc(t('tu.offer.go'))}</button></div></div>`;
   document.body.appendChild(ov);
-  const close = () => { if ($('#toNo').checked) try { localStorage.setItem('aicoding-guandan-tut', '1'); } catch (e) {} ov.remove(); };
+  const close = () => { if ($('#toNo').checked) try { localStorage.setItem(HIDE, '1'); } catch (e) {} ov.remove(); };
   $('#toLater').onclick = close; $('#toGo').onclick = () => { ov.remove(); start(); };
 }
 window.GdTut = { start, on: () => on, hold, allow, after, bot, ev, finish, offer, STEPS };
+// first visit: the offer box once the page has settled (not over another dialog)
+setTimeout(() => { if (!document.querySelector('.overlay.show')) offer(false); }, 900);
 setTimeout(offer, 900);
 })();
