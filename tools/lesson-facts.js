@@ -96,6 +96,12 @@ const CHECKS = {
     // stored searches, the way there, no near board, the order of the 2D and the 3D, リバガメ's words for every legal move — tools/lesson-verify-rvopen.js
     require('./lesson-verify-rvopen.js')().forEach(fa => bad(G, fa.step, `q${fa.q}: ${fa.msg}`));
   },
+  // (2026-11-24 第2期・担当B) the backgammon openings ('backgammon/open', key = the item): the strict ①〜⑨ on every problem as the 3D
+  // table asks it — tools/lesson-verify-bgopen.js. The opening rolls that are also a problem of the lessons オープニング①② (one start
+  // position per roll: ⑤) are listed as pending, not failed, until they are made into other problems (claude/lesson-quality.md 進み具合)
+  'backgammon/open'() {
+    require('./lesson-verify-bgopen.js')().forEach(fa => bad('backgammon/open', fa.step, `q${fa.q}: ${fa.msg}`));   // (the pending ones are printed, not failed)
+  },
   // (2026-11-22 lesson loop) the gomoku openings (珠型, 'gomoku/open'): the line replays legally under renju (no forbidden black move,
   // no stone on a stone), every practice position loads, and its best answer is a legal move — not a black forbidden point, and when
   // the opponent has a four, the answer stops it (or makes five)

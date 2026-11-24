@@ -4448,6 +4448,7 @@
     cn: ['それに、', 'しかも、', 'おまけに、', 'そのうえ、'],
     plan: {
       enter: ['まずはバーの駒を入れ直すのが先だからね。', 'バーに駒があるうちは、ほかの駒は動かせないからね。', '最初にバーの駒を盤に戻すのが決まりワン。', 'バーの駒を入れないと、ほかの駒が動かせないんだ。', 'バーの駒がもどれば、また全部の駒が使えるね。'],
+      hitS: ['相手の駒をバーへ送れば、入り直すまで相手はほかの駒を動かせないからね。', 'ヒットすれば、相手はまずバーの駒を入れ直さないといけない。そのぶん手が遅れるワン。', '打たれた駒が入り直すまで、相手は自由に動けないんだ。'],   // (a hit that sends back only a few pips: the tempo, not the pips — 2026-11-24 担当B)
       hit: ['相手のブロットを打てば、約{n}ピップも戻せるからね。', 'ヒットで相手の駒をバーへ！ 約{n}ピップぶん戻されるワン。', '1枚だけの相手の駒を打って、約{n}ピップ後ろへ下げられるね。', '打たれた駒は、約{n}ピップの道のりをやり直しなんだ。', 'ここで打てば、相手は約{n}ピップのふり出しに逆もどり！', '相手の駒を打ち落として、約{n}ピップのリードをもらえるワン。'],
       hit2: ['相手の駒を{k}枚まとめて打てば、相手は反撃どころじゃなくなるワン。', '{k}枚まとめてヒット！ 相手はバーから出すので手いっぱいになるね。', '一度に{k}枚を打てば、相手に攻め返す余裕がなくなるんだ。', '{k}枚ともバーへ送れば、相手は入り直すだけで精いっぱい！'],
       dance: ['打たれた相手が入れずに休む確率も、約{d}%あるんだ。', '相手がバーから入れずにお休みする確率は約{d}%。', '約{d}%で、相手は入れずに1回お休み（ダンス）ワン。', '相手は約{d}%の確率で、バーから出られずに足止めだね。', 'ふさいだポイントが多いから、相手が入れない確率は約{d}%もあるんだ。'],
@@ -4539,7 +4540,7 @@
         if (pass < 2 ? !free(t) : sn(t).some(x => used.has(x))) continue; if (pass === 0 && avoid && rvEndOf((String(t).match(/[^。！？]+[。！？]*/) || [''])[0]) === avoid) continue; pick = t; break; }
       return mark(pick != null ? pick : arr[(seed + c - 1) % arr.length]); };
     const vTry = (key, arr) => { const c = cnt[key] = (cnt[key] || 0) + 1; for (let k = 0; k < arr.length; k++) { const t = arr[(seed + c - 1 + k) % arr.length]; if (free(t)) return mark(t); } return ''; };
-    let pn = 0; const ptName = (i, base) => { const L0 = i >= 1 && i <= 4 ? [base, `インナーで右から${i}つ目のポイント`, `右から${i}番目のインナーのポイント`] : i === 6 ? [base, 'インナーのいちばん左のポイント', 'バーのすぐ右のポイント'] : i === 20 ? [base, 'ゴールデンポイント（相手の陣地）', '相手の陣地の、ゴールデンポイント'] : [base]; return L0[(seed + pn++) % L0.length]; };   // (one point, said in other words in turn)
+    let pn = 0; const ptName = (i, base) => { const L0 = i >= 1 && i <= 4 ? [base, `インナーで右から${i}つ目のポイント`, `右から${i}番目のインナーのポイント`, i === 1 ? 'ゴールのすぐ手前のポイント' : `ゴールから数えて${i}つ目のマス`, i === 1 ? 'インナーのいちばん右はしのポイント' : `インナーのいちばん右から${i}番目`] : i === 6 ? [base, 'インナーのいちばん左のポイント', 'バーのすぐ右のポイント'] : i === 7 ? [base, 'バーのすぐ左のポイント（バーポイント）', 'インナーのすぐ外のポイント'] : i === 20 ? [base, 'ゴールデンポイント（相手の陣地）', '相手の陣地の、ゴールデンポイント'] : [base]; const c0 = pn++; for (let k = 0; k < L0.length; k++) { const t = L0[(seed + c0 + k) % L0.length]; if (free(t)) return t; } return L0[(seed + c0) % L0.length]; };   // (one point, said in other words in turn — a wording already said twice is passed over)
     const tic = t => { let n = 0; return String(t).replace(/ワン([。！])/g, (a, e) => n++ ? e : a); };   // (one ワン a bubble is enough)
     return { v, vTry, ptName, mark, free, seed, tic, cheer: i => O.cheer[pc[i % pc.length]], soft: i => O.soft[ps[i % ps.length]], push: i => O.push[pp[i % pp.length]] };
   }
@@ -4679,7 +4680,7 @@
       if (this.p) return this.p;
       const tx = window.AtlasBgTexts ? AtlasBgTexts() : Promise.resolve({});
       const bg = window.AtlasBgExplain ? AtlasBgExplain() : Promise.resolve();   // (the rules and the commentary engine: atlas/puzzles.js loads them — the same files and cache keys as the table)
-      return (this.p = Promise.all([getJ('../backgammon/lessons.json?v=30261124a1'), getJ('../backgammon/openings.json?v=20261021op'), tx, bg, getJ('../backgammon/ramps.json?v=3').catch(() => null)])
+      return (this.p = Promise.all([getJ('../backgammon/lessons.json?v=30261124a1'), getJ('../backgammon/openings.json?v=20261124op'), tx, bg, getJ('../backgammon/ramps.json?v=3').catch(() => null)])
         .then(([ls, op, I, _, rp]) => { this.I = I || {}; this.data = { ls, op, rp }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -4707,7 +4708,7 @@
     opItems() { const op = this.data.op; return op.cats.flatMap(c => c.items.map(id => ({ c: c.id, it: op.items[id] }))).filter(x => x.it); },
     // an opening's decisions: for a reply, the opponent's opening is already on the board (you are the near side, they the far one)
     opDecs(it) {
-      return it.lines.map(ln => {
+      return (it.kind === 'open' ? it.lines.slice(0, 1) : it.lines).map(ln => {   // (2026-11-24 担当B: an opening roll is one problem — its other lines are the same board and roll, as the 2D drill asks it once)
         const seq = ln.seq || [{ r: 0, d: it.d, m: ln.m }], k = it.kind === 'open' ? 0 : seq.length - 1, x = seq[k];
         let p = '0000005030000500000000002000000050300005000000000020'.split('').join('');   // (the starting position, as the json writes it)
         if (k > 0 && window.BG) { const q = bgDecP(p); for (let i = 0; i < k; i++) { const st = seq[i], sd = st.r === seq[k].r ? 0 : 1; for (let j = 0; j + 1 < st.m.length; j += 2) BG.apply(q, sd, st.m.charCodeAt(j) - 65, st.m.charCodeAt(j + 1) - 65); } p = Array.from(q).map(v => v.toString(16)).join(''); }
@@ -4767,8 +4768,9 @@
       const decs = this.opDecs(it), intro = (lang === 'ja' && BGJ_OP.intro[it.id]) || [T('d'), T('a')].filter(Boolean).join('<br>');
       const V = lang === 'ja' ? bgVoice('op:' + it.id) : null; if (V) V.mark(intro);   // (2026-11-23: one voice per opening, as the lessons — the intro is not said again)
       return { id: it.id, title: T('t') || it.id, intro, start: null, steps: [], notes: {},
-        probs: decs.map((x, j) => { const tol = this.data.op.tol || .02, R = x.plays.map(y => ({ m: y[0], e: y[3] != null ? y[3] : y[1], ro: y[3] != null, ply: y[2] })), rolled = R.some(y => y.ro), best = R.filter(y => !rolled || y.ro).reduce((a, b) => b.e > a.e ? b : a);
-          const P = { dice: x.d, plays: R.map(y => [y.m, y.e]), opTol: tol, opOk: R.filter(y => (rolled ? y.ro : y.ply === 2) && best.e - y.e <= tol + 1e-9).map(y => y.m), best: best.m };
+        probs: decs.map((x, j) => { const tol = this.data.op.tol || .02, R = x.plays.map(y => ({ m: y[0], e: y[3] != null ? y[3] : y[1], ro: y[3] != null, ply: y[2], se: y[4] || 0 })), rolled = R.some(y => y.ro), best = R.filter(y => !rolled || y.ro).reduce((a, b) => b.e > a.e ? b : a);
+          // right = within the tolerance of the best, or a rolled-out play the rollouts cannot tell from the best (behind by less than 2 standard errors) — = backgammon/op.js opRight
+          const P = { dice: x.d, plays: R.map(y => [y.m, y.e]), opTol: tol, opOk: R.filter(y => (rolled ? y.ro : y.ply === 2) && (best.e - y.e <= tol + 1e-9 || (y.ro && best.e - y.e < 2 * Math.hypot(best.se, y.se)))).map(y => y.m), best: best.m };
           const ask = this.tx('op.drillTurn', lang, { c: '<b>' + N.c + '</b>', d: x.d.join('') });
           const o = Object.assign(this.play(P, x.pos, ask, this.tx('op.hint', lang) || '', lang), { ans: [{ froms: best.m, cls: 'ring' }], best: () => best.m });
           if (lang === 'ja' && window.BGX && BGX.teach) { try { this.opJaV(o, it, j, j === decs.length - 1, V); } catch (e) { this.opJa(o, it, j); } }   // (ダイスン asks, hints and explains in the opening's own voice — bgVoice)
@@ -4809,10 +4811,10 @@
       const k0 = T0 && T0.plan[0] ? T0.plan[0].k.slice(3) : '', hk = BGV.hint[k0] ? k0 : /^pt|prime/.test(k0) ? 'pt' : /^anchor/.test(k0) ? 'anchor' : k0 === 'bold' ? 'build' : k0 === 'dance' ? 'hit' : 'def';
       const aE = bgEndLast(o.ask); o.ownHead = true;
       o.hintTx = bgFin(V, hint0 && V.free(hint0) ? V.mark(hint0) : V.v('h:' + hk, BGV.hint[hk], aE), aE);
-      const sayV = (x, strict) => { const grp = x.k.slice(0, 2) === 'tv' ? 'vs' : 'plan', L0 = BGV[grp][x.k.slice(3)]; if (!L0 || !L0.length) return '';
+      const sayV = (x, strict) => { const grp = x.k.slice(0, 2) === 'tv' ? 'vs' : 'plan', kk = x.k === 'tc.hit' && x.a && x.a.n != null && x.a.n < 5 ? 'hitS' : x.k.slice(3), L0 = BGV[grp][kk]; if (!L0 || !L0.length) return '';
         const a = Object.assign({}, x.a); if (a.P != null) a.P = '<b>' + V.ptName(a.P, J2.pt(a.P)) + '</b>'; if (a.a != null && a.b != null) a.c = a.a - a.b;
         const L1 = L0.map(t => fill(t, a)), L2 = strict === 'ng' && grp === 'plan' ? L1.filter(t => !/(た|たね|たワン|たんだ)[。！]|できたね|取れたね/.test(t)) : L1;   // (after a miss the green play's reason is said as what it does, not 「〜できたね」)
-        return strict ? V.vTry(grp + ':' + x.k.slice(3), L2) : V.v(grp + ':' + x.k.slice(3), L2); };
+        return strict ? V.vTry(grp + ':' + kk, L2) : V.v(grp + ':' + kk, L2); };
       // (strict: a reason already said in all its wordings is left out — the first reason of the praise is always said)
       const reasons = (T, max, n, strict) => { const out = []; let len = 0;
         for (const x of (T && T.plan) || []) { if (out.length >= n) break; if (out.length && len > max * .6) break; if (out.length && x.k === 'tc.enter') continue; const s = sayV(x, strict || (out.length > 0 && 1)); if (!s || (out.length && len + s.length > max)) continue; out.push(s); len += s.length; }
@@ -4826,7 +4828,10 @@
       o.ng = u => { let mine = null; try { mine = u && u.steps && u.steps.length ? mk(u.steps) : others.length ? mk(others[0]) : null; } catch (e) {}
         let T = T0; try { if (mine) T = BGX.teach(q0, 0, bestP, mine); } catch (e) {}
         let vx = ''; for (const x of (T && T.vs) || []) { vx = sayV(x); if (vx) break; } if (!vx) vx = V.v('vs:close', BGV.vs.close);
-        return bgFin(V, V.soft(pi) + ' ' + V.v('lead', BGV.lead) + reasons(T, 50, 1, 'ng') + vx, '!'); };
+        const pt = (() => { try { return u && u.key ? this.points(o.P, u, o) : 0; } catch (e) { return 0; } })(), N = /いい線|あと少し|あと一歩|おしい/;   // (追53: 「いい線・あと少し」 only for a play of 10 points or more — every wrong opening play is 0)
+        let so = o.P.opOk ? null : V.soft(pi); for (let k = 0; k < BGV.soft.length && so == null; k++) { const t = V.soft(pi + k); if ((pt >= 10 || !N.test(t)) && V.free(t)) so = t; }   // (the lesson's own order, a word not said yet in it)
+        if (so == null) so = BGV.soft.find(t => !N.test(t)); if (o.P.opOk) V.mark(so);   // (the openings only, every wrong play 0 points; the lessons' graded plays: 担当A)
+        return bgFin(V, so + ' ' + V.v('lead', BGV.lead) + reasons(T, 50, 1, 'ng') + vx, '!'); };
     },
     points(P, u, p) {   // = backgammon/app.js problemPoints (lessons) · op.js opSubmit (openings: right within the tolerance, else nothing)
       const mine = u && u.key, L = P.plays.map(([m, e]) => Object.assign(bgCodes(p.bgPos, m), { m, e }));
