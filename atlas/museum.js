@@ -40,10 +40,10 @@
     // (2026-11-24 audit pageKB) the stories' text in one file per language (museum/read-i18n/<lang>.js, made by tools/museum-read-split.js from
     // museum/read-i18n.js): English (the fallback for anything missing) and the page's language, not all fourteen (1.5 MB)
     // (2026-11-24 audit textKB) one file only: tools/museum-read-split.js fills each language's file with English for anything it lacks
-    { id: 'read', src: () => [`museum/read-i18n/${rl()}.js?v=${READ_I18N_V}`, 'museum/read.js?v=56'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T && MUSEUM_READ_T[rl()]), render: (el, c) => AtlasRead.render(el, c) },
+    { id: 'read', src: () => [`museum/read-i18n/${rl()}.js?v=${READ_I18N_V}`, 'museum/read.js?v=57'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T && MUSEUM_READ_T[rl()]), render: (el, c) => AtlasRead.render(el, c) },
     { id: 'chance', src: () => ['museum/chance-i18n/en.js?v=' + CHANCE_I18N_V, ...(rl() !== 'en' ? [`museum/chance-i18n/${rl()}.js?v=${CHANCE_I18N_V}`] : []), 'museum/chance.js?v=7'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T && MUSEUM_CHANCE_T.en && MUSEUM_CHANCE_T[rl()]), render: (el, c) => AtlasChance.render(el, c) },   // (per language)
   ];
-  const READ_I18N_V = 16, PAINT_I18N_V = 8, CHANCE_I18N_V = 1, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
+  const READ_I18N_V = 17, PAINT_I18N_V = 8, CHANCE_I18N_V = 1, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
   const KEY = 'atlas-museum-room';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const loaded = {};
@@ -130,7 +130,7 @@
   // (2026-11-24 ユーザー: 地図や系統樹とのつながり) the game a story is about → the story (keep in step with read.js STORIES' first link)
   const READ_OF = { ur: 'ur', senet: 'senet', latrunculi: 'latrunculi', foxgeese: 'foxgeese', patolli: 'patolli', backgammon: 'backgammon', go: 'go', shogi: 'shogi',
     chess: 'queen', tafl: 'tafl', ludo: 'pachisi', checkers: 'draughts', reversi: 'reversi', mancala: 'mancala', morris: 'morris', xiangqi: 'xiangqi', hex: 'hex',
-    amazons: 'amazons', konane: 'konane', peg: 'peg', fanorona: 'fanorona', janggi: 'janggi', gomoku: 'gomoku', carrom: 'carrom', crokinole: 'crokinole' };
+    amazons: 'amazons', konane: 'konane', peg: 'peg', fanorona: 'fanorona', janggi: 'janggi', gomoku: 'gomoku', carrom: 'carrom', crokinole: 'crokinole', ugolki: 'ugolki' };
   const readOf = g => READ_OF[g] || null;
   const rname = r => ((UI[lang] || UI.en)[r]) || UI.en[r] || r;
   // another room's game, picked there: the map or the tree opens with the game chosen (its card shows)

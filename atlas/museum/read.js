@@ -46,6 +46,7 @@
     { id: 'gomoku', region: 'asia', color: '#5a3a24', cover: { g: 'gomoku', s: 'gomoku' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'gomokuFive' }, m1: { svg: 'renjuForbidden' }, m2: { svg: 'gomokuSolved' } }, refs: ['黒岩涙香『萬朝報』（1899年12月6日） / Ruikō Kuroiwa, Yorozu chōhō (1899)', '『五目定石集』（1856） / Gomoku Jōseki Collection', 'L. Victor Allis, Searching for Solutions in Games and Artificial Intelligence (PhD thesis, University of Limburg, 1994)', 'János Wágner, István Virág, “Solving Renju”, ICGA Journal 24(1) (2001)', 'Renju International Federation (RIF), rules and history'], links: [{ g: 'gomoku' }, { g: 'go' }, { g: 'connect4' }] },
     { id: 'carrom', region: 'asia', color: '#8a4a22', cover: { g: 'carrom', s: 'carrom' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'carromBoard' }, m1: { svg: 'carromStrike' }, m2: { svg: 'carromFamily' } }, refs: ['International Carrom Federation, Laws of Carrom', 'Wikipedia, “Carrom” (Patiala palace board; early tournaments in India and Sri Lanka; North American carrom)', 'Wikipedia, “International Carrom Federation” (founded 1988, Chennai; world championships from 1991)', 'Wikipedia, “Novuss”', 'tradgames.org.uk, “Carrom: History and Information”'], links: [{ g: 'carrom' }, { g: 'crokinole' }, { g: 'ludo' }] },
     { id: 'crokinole', region: 'americas', color: '#6a4424', cover: { g: 'crokinole', s: 'crokinole' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'crokinoleBoard' }, m1: { svg: 'crokinoleShot' }, m2: { svg: 'crokinoleTime' } }, refs: ['Joseph Schneider Haus, Kitchener, Ontario: the Wettlaufer crokinole board (1876)', 'Joshua K. Ingalls, US Patent No. 226,615 (20 April 1880)', 'World Crokinole Championship, Tavistock, Ontario (since 1999)', 'National Crokinole Association (NCA)', 'Wikipedia, “Crokinole” (name, rules, origins)'], links: [{ g: 'crokinole' }, { g: 'carrom' }, { g: 'hockey' }] },
+    { id: 'ugolki', region: 'europe', color: '#1f4e9a', cover: { g: 'ugolki', s: 'ugolki' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'halmaJump' }, m1: { svg: 'ugolkiCorner' }, m2: { svg: 'halmaStar' } }, refs: ['George Howard Monks, US Patent No. 383,653 (Halma, 1888)', 'Bruce Whitehill, on the origins of Halma (as cited by tradgames.org.uk, “Halma”)', 'tradgames.org.uk, “Halma” (Hoppity, Thomas Hill, Stern-Halma 1892, J. Pressman & Co. 1928)', 'Wikipedia, “Halma”, “Chinese checkers”, “Ugolki”', 'И. Троицкий, учебник классических уголков / I. Troitsky, a textbook of classic ugolki (the 40/80-move rules)'], links: [{ g: 'ugolki' }, { g: 'checkers' }, { g: 'peg' }] },
   ];
   // pictures shown only beside a story's paragraph (not in another room): a museum's open-access photo (CC0), linked to the museum's page.
   // The name, in each language, is MUSEUM_READ_T[lang].pic[id]. Files images/atlas/museum-story/pic/<id>.webp (≤ 960 px).
@@ -735,6 +736,49 @@
       R.forEach(([yr, pl, ds], k) => { const y = o + 8 + RH * k;
         g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="15" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
         g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(pl)}</text><text x="${xn + 16}" y="${y + 19}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // halma and its family: a chain of hops — the white piece hops over a black, a white, a black and a white piece in turn (none is taken)
+    halmaJump: () => { const S = 44, o = 6, N = 6, W = S * N + o * 2; let g = `<rect x="${o}" y="${o}" width="${S * N}" height="${S * N}" fill="#f4f1ea" stroke="#1f4e9a" stroke-width="2"/>`;
+      for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if ((r + c) % 2) g += `<rect x="${o + c * S}" y="${o + r * S}" width="${S}" height="${S}" fill="#c9d6ee"/>`;
+      const P = (c, r) => [o + c * S + S / 2, o + r * S + S / 2], path = [[0, 5], [0, 3], [2, 3], [2, 1], [4, 1]], over = [[0, 4, 2], [1, 3, 1], [2, 2, 2], [3, 1, 1]];
+      const pc = (c, r, col, op) => { const [x, y] = P(c, r); return `<circle cx="${x}" cy="${y}" r="${S * .36}" fill="${col === 1 ? '#fff' : '#1f4e9a'}" stroke="${col === 1 ? '#1f4e9a' : '#0e2a5c'}" stroke-width="2.4"${op ? ` opacity="${op}"` : ''}/>`; };
+      over.forEach(([c, r, col]) => { g += pc(c, r, col); });
+      g += pc(0, 5, 1, .35);
+      for (let k = 1; k < path.length; k++) { const [x0, y0] = P(...path[k - 1]), [x1, y1] = P(...path[k]), dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, nx = dx ? 0 : -1, ny = dx ? -1 : 0, mx = (x0 + x1) / 2 + nx * 40, my = (y0 + y1) / 2 + ny * 40;
+        g += `<path d="M${x0 + ux * 10 + nx * 10} ${y0 + uy * 10 + ny * 10}Q${mx} ${my} ${x1 - ux * 12 + nx * 12} ${y1 - uy * 12 + ny * 12}" fill="none" stroke="#c0392b" stroke-width="3" marker-end="url(#hjA)"/>`; }
+      path.slice(1, -1).forEach(([c, r]) => { const [x, y] = P(c, r); g += `<circle cx="${x}" cy="${y}" r="${S * .36}" fill="none" stroke="#c0392b" stroke-width="2" stroke-dasharray="4 3"/>`; });
+      g += pc(4, 1, 1);
+      path.slice(1).forEach(([c, r], k) => { const [x, y] = P(c, r); g += `<circle cx="${x + 13}" cy="${y + 13}" r="9" fill="#c0392b"/><text x="${x + 13}" y="${y + 17.5}" font-size="12" font-weight="800" fill="#fff" text-anchor="middle">${k + 1}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${W}" role="img" style="font-family:inherit;direction:ltr"><defs><marker id="hjA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#c0392b"/></marker></defs>${g}</svg>`; },
+    // ugolki: the 8 × 8 board with the 3 × 4 corner camps — white starts bottom left (a1–d3), black top right (e6–h8), and each must fill the other's corner
+    ugolkiCorner: () => { const S = 34, ox = 22, oy = 6, W = ox + S * 8 + 8, H = oy + S * 8 + 22; let g = '';
+      for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) { const wc = r >= 5 && c <= 3, bc = r <= 2 && c >= 4; g += `<rect x="${ox + c * S}" y="${oy + r * S}" width="${S}" height="${S}" fill="${wc ? '#f2dcc0' : bc ? '#cfdcf2' : (r + c) % 2 ? '#e6e2d8' : '#f7f5ef'}"/>`; }
+      g += `<rect x="${ox}" y="${oy + 5 * S}" width="${S * 4}" height="${S * 3}" fill="none" stroke="#c0392b" stroke-width="2.6"/><rect x="${ox + 4 * S}" y="${oy}" width="${S * 4}" height="${S * 3}" fill="none" stroke="#1f4e9a" stroke-width="2.6"/><rect x="${ox}" y="${oy}" width="${S * 8}" height="${S * 8}" fill="none" stroke="#3a3428" stroke-width="1.6"/>`;
+      for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) { const wc = r >= 5 && c <= 3, bc = r <= 2 && c >= 4; if (!wc && !bc) continue; const x = ox + c * S + S / 2, y = oy + r * S + S / 2;
+        g += `<circle cx="${x}" cy="${y}" r="${S * .36}" fill="${wc ? '#fff' : '#1f4e9a'}" stroke="${wc ? '#1f4e9a' : '#0e2a5c'}" stroke-width="2"/>`; }
+      g += `<path d="M${ox + 4 * S + 6} ${oy + 5 * S - 6}L${ox + 5.4 * S} ${oy + 3.6 * S}" stroke="#c0392b" stroke-width="3" marker-end="url(#ucA)"/><path d="M${ox + 4 * S - 6} ${oy + 3 * S + 6}L${ox + 2.6 * S} ${oy + 4.4 * S}" stroke="#1f4e9a" stroke-width="3" marker-end="url(#ucB)"/>`;
+      for (let k = 0; k < 8; k++) g += `<text x="${ox + k * S + S / 2}" y="${oy + S * 8 + 16}" font-size="12" fill="#5a544a" text-anchor="middle">${'abcdefgh'[k]}</text><text x="${ox - 8}" y="${oy + k * S + S / 2 + 4}" font-size="12" fill="#5a544a" text-anchor="middle">${8 - k}</text>`;
+      const mk = (id, col) => `<marker id="${id}" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="${col}"/></marker>`;
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr"><defs>${mk('ucA', '#c0392b')}${mk('ucB', '#1f4e9a')}</defs>${g}</svg>`; },
+    // the halma family: a small board for each — halma's square board, the star board (Stern-Halma, then "Chinese checkers"), ugolki's 8 × 8 (text: the story's figL.fam — [year, name, place and board])
+    halmaStar: () => { const F = ((st('ugolki').figL || {}).fam) || [], W = 300, RH = 64, o = 8, H = o * 2 + RH * F.length; let g = '';
+      const sq = (x, y, s, n, k, col) => { let h = `<rect x="${x}" y="${y}" width="${s}" height="${s}" fill="#f7f5ef" stroke="#3a3428" stroke-width="1.2"/>`; const q = s / n;
+        for (let i = 1; i < n; i++) h += `<path d="M${x + i * q} ${y}V${y + s}M${x} ${y + i * q}H${x + s}" stroke="#cfc8b8" stroke-width=".6"/>`;
+        const rows = k === 5 ? [5, 5, 4, 3, 2] : [k, k, k];
+        rows.forEach((w, i) => { h += `<rect x="${x}" y="${y + s - (i + 1) * q}" width="${w * q}" height="${q}" fill="${col}" opacity=".85"/><rect x="${x + s - w * q}" y="${y + i * q}" width="${w * q}" height="${q}" fill="#1f4e9a" opacity=".85"/>`; }); return h; };
+      const star = (cx, cy, R, cols) => { const pt = a => [cx + R * Math.cos(a), cy + R * Math.sin(a)], tri = (a, col) => { const p = [pt(a), pt(a + 2 * Math.PI / 3), pt(a + 4 * Math.PI / 3)]; return `<path d="M${p.map(v => v.map(n => n.toFixed(1)).join(' ')).join('L')}Z" fill="${col}" stroke="#3a3428" stroke-width="1"/>`; };
+        let h = tri(-Math.PI / 2, '#f7f5ef') + tri(Math.PI / 2, '#f7f5ef'); const hx = R / 2;
+        for (let k = 0; k < 6; k++) { const a = -Math.PI / 2 + k * Math.PI / 3, tip = pt(a), b1 = [cx + R / Math.sqrt(3) * Math.cos(a - Math.PI / 6), cy + R / Math.sqrt(3) * Math.sin(a - Math.PI / 6)], b2 = [cx + R / Math.sqrt(3) * Math.cos(a + Math.PI / 6), cy + R / Math.sqrt(3) * Math.sin(a + Math.PI / 6)];
+          h += `<path d="M${tip.map(n => n.toFixed(1)).join(' ')}L${b1.map(n => n.toFixed(1)).join(' ')}L${b2.map(n => n.toFixed(1)).join(' ')}Z" fill="${cols[k]}" stroke="#3a3428" stroke-width="1"/>`; }
+        return h; };
+      const SC = ['#c0392b', '#e0a020', '#14864a', '#1f4e9a', '#6a3a8a', '#2b2a28'];
+      g += `<line x1="30" y1="${o + RH / 2}" x2="30" y2="${o + RH * (F.length - .5)}" stroke="#b8ad98" stroke-width="2.4" stroke-dasharray="4 4"/>`;
+      F.forEach(([yr, nm, ds], k) => { const y = o + RH * k, cy = y + RH / 2;
+        g += `<rect x="4" y="${cy - 26}" width="52" height="52" rx="8" fill="#fff" stroke="#d8d0c0"/>`;
+        if (k === 0) g += sq(9, cy - 21, 42, 16, 5, '#c0392b');
+        else if (k === F.length - 1) g += sq(9, cy - 21, 42, 8, 4, '#d9a066');
+        else g += star(30, cy + 1, 24, k === 1 ? SC.map((c, i) => i % 2 ? '#f7f5ef' : c) : SC);
+        g += `<text x="68" y="${cy - 6}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="68" y="${cy + 14}" font-size="13" fill="#5a544a"><tspan font-weight="800" fill="#c0392b">${esc(yr)}</tspan> · ${esc(ds)}</text>`; });
       return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
     // four tetrahedral dice: how often each score comes (out of 16)
     tetraOdds: () => { const n = [1, 4, 6, 4, 1], W = 300, H = 150, bw = 40, gap = (W - 40 - bw * 5) / 4; let g = '';
