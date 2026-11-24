@@ -4871,7 +4871,7 @@
       b_connect: 'ぼくはゴイシペン！ ヘックスは、六角形のマスに赤と青が交互に石を置くゲームなんだ。<br>自分の色の2つの辺を、自分の石で途切れずにつないだら勝ち！ となりのマスの石どうしは、つながっているペン。<br>まずは、1手で勝ちを決める練習から。',
       b_block: '今度は守る番！ 相手があと1マスでつながりそうなら、そのすき間に自分の石を置いてふさごう。<br>自分の道だけじゃなく、相手の道もときどき数えてみるクセをつけるペン。',
       b_bridge: '2つの石のあいだに空きマスが2つあって、どっちを通ってもつながる形を<b>ブリッジ</b>っていうんだ。<br>相手が片方をふさいでも、もう片方でつながる！ となり合わせとほとんど同じくらい強いペン。',
-      b_save: '相手がブリッジの片方に割りこんできたら、すぐもう片方に打てば、つながりは切れないんだ。<br>割りこみは、よそ見をさせるための手のことが多いペン。あわてず受けよう！',
+      b_save: '相手がブリッジの片方に割りこんできたら、すぐもう片方に打てば、つながりは切れないんだ。<br>自分の<b>辺</b>も、石と同じようにつながるよ。2段目の石と辺のあいだの2マスも、ブリッジなんだ。<br>割りこみは、よそ見をさせるための手のことが多いペン。あわてず受けよう！',
       b_edge: '自分の辺から2段目の石は、下の2マスが空いていれば、もう辺とつながっているのと同じ！ これを<b>辺のテンプレート</b>っていうんだ。<br>辺そのものに打つのは1手のむだ。2段目を上手に使うペン。',
       t_double: 'ここからは戦術！ 強い手は、つながる狙いを2つ同時に作るんだ。<br>相手は1手で片方しかふさげないから、狙いが2つ残れば勝ちペン。道ごとに、あと何手か数えてみよう。',
       t_stop: '相手が2手でつながりそうなとき、片方の道をふさぐだけでは足りないんだ。<br>2つの狙いが両方通る、弱いつなぎ目を探して切ろう！ ブリッジは切れないから、そこはねらわないペン。',
@@ -5028,7 +5028,7 @@
     LKEY: 'aicoding-hex-lessons', OKEY: 'aicoding-hex-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../hex/lessons.json?v=30261123b'), getJ('../hex/openings.json?v=1'), fetch('../hex/i18n.js?v=20261115').then(r => r.text()), hxEng().catch(() => null), getJ('../hex/ramps3d.json?v=1').catch(() => ({})), fetch('../hex/voice-pen-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../hex/lessons.json?v=30261123b'), getJ('../hex/openings.json?v=1'), fetch('../hex/i18n.js?v=20261124').then(r => r.text()), hxEng().catch(() => null), getJ('../hex/ramps3d.json?v=2').catch(() => ({})), fetch('../hex/voice-pen-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, , rt, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] hex texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; this.RT = rt || {};
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
@@ -5066,7 +5066,7 @@
           const o = { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1 }, kind: 'best', P, ask: T('goal'), ans: P.ok ? P.ok[0] : P.best, hintTx: T('hint'), hint: hxArea(P.s, P.ok ? P.ok[0] : P.best),
             good: () => T('why', { m: HXM('ok', lang), x: HXM('ng', lang) }), ng: () => { const t = T('ng', { m: HXM('ok', lang), x: HXM('ng', lang) }); return t && t !== 'undefined' ? t : T('why', { m: HXM('ok', lang), x: HXM('ng', lang) }); } };
           if (ja) try { Object.assign(o, hxLsJa(window.HexEngine, s, P, i, (Q, m) => this.points(Q, m))); } catch (e) { console.warn('[lessons3d] hex lesson', e); }
-          return o; }),
+          return o; }).filter((o, i) => !(ramp && i === 0)),   // (2026-11-24 第2期・追1: the warm-up's problem — shown with its answer, then turned 180° — is not asked again; lesson-verify.js hex hxWarm)
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= max * .75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
     },
     points(P, m) {   // = hex/app.js problemPoints

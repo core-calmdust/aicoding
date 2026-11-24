@@ -1945,16 +1945,90 @@ function chessOpen() {
     chessOpenSet(ctx, s, s.drill, picks).forEach(m => out.push({ step: s.id, q: +m.slice(1, m.indexOf(' ')), msg: m.slice(m.indexOf(' ') + 1) })); }
   return out;
 }
+// (2026-11-24 第2期・担当A、追14・追1) hex: the 3D warm-up (atlas/lessons3d.js HEX.lesson: explain = the step's problem 1 with its
+// answers green → try = the same problem turned 180°; texts hex/ramps3d.json ja and ゴイシペン's hex/voice-pen-ja.js ramp:<step>/*):
+// the green cells are the answers (hxOk) and legal, the turned try's answers are the turned cells and do the same job, the words of
+// the explain (body) and of the praise (y) are the board's facts (see below), and the warm-up's problem is not asked again in the 3D
+// problems (追1) — no other problem of the step is it or its 180° turn within 2 cells.
+function hex(opt) {
+  const fs = require('fs'), E = require(path.join(ROOT, 'hex/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'hex/lessons.json'), 'utf8'));
+  const RT = (opt && opt.ramps) || JSON.parse(fs.readFileSync(path.join(ROOT, 'hex/ramps3d.json'), 'utf8'));
+  const src = (opt && opt.src) || fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8');
+  const VP = (() => { const w = {}; new Function('window', fs.readFileSync(path.join(ROOT, 'hex/voice-pen-ja.js'), 'utf8'))(w); const o = w.I18N && (w.I18N['ja@pen'] || w.I18N.ja) || w; return (opt && opt.voice) || o; })();
+  const out = [], add = (id, m) => out.push({ step: id, q: 0, msg: 'warm-up: ' + m }), plain = t => String(t || '').replace(/<[^>]+>/g, '');
+  const hxOk = P => { if (P.ok) return P.ok.slice(); const best = Math.max(...P.sc.map(e => e[1])); return P.sc.filter(e => e[1] >= best - 15).sort((a, b) => b[1] - a[1]).map(e => e[0]); };
+  const h0 = src.indexOf('LKEY: \'aicoding-hex-lessons\''), HX = src.slice(h0, src.indexOf('points(P, m) {   // = hex/app.js problemPoints', h0));
+  if (!HX.includes('ok = hxOk(P0)') || !HX.includes("sr = Object.assign({}, sp, { b: String(sp.b).split('').reverse().join('') })")) add('-', 'the 3D warm-up is no longer problem 1 (explain) and its 180° turn (try): update this check');
+  if (!/\}\)\.filter\(\(o, i\) => !\(ramp && i === 0\)\)/.test(HX)) add('-', '追1 the 3D problems ask the warm-up\'s problem again (problem 1 = the explain)');
+  const dist = (a, b) => { let d = 0; for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) d++; return d; }, rev = b => String(b).split('').reverse().join('');
+  // 追32 (2026-11-24): the shapes the problems use are the ones the intro teaches — b_save: every answer is the other cell of an
+  // intruded bridge, between two stones or between a second-row stone and the edge; when the edge kind is asked, the intros
+  // (2D ja・en, 3D ゴイシペン) say that the edge links up like a stone
+  { const st = L.steps.find(x => x.id === 'b_save'), I = (() => { const w = {}; new Function('window', fs.readFileSync(path.join(ROOT, 'hex/i18n.js'), 'utf8'))(w); return w.I18N || {}; })();
+    const j3 = (src.match(/      b_save: '([^']*)',/) || [])[1] || ''; let edge = 0;
+    if (st) st.problems.forEach((P, j) => { const sp = P.s, n = sp.n, N = n * n, q = E.Pos.from(sp), me = sp.side, op = 3 - me, { NB } = E.geo(n), c = P.ok[0];
+      const d = x => me === 1 ? Math.min(Math.floor(x / n), n - 1 - Math.floor(x / n)) : Math.min(x % n, n - 1 - x % n);
+      let ss = false; for (let x = 0; x < N && !ss; x++) for (let y = x + 1; y < N; y++) if (q.at(x) === me && q.at(y) === me && !NB[x].includes(y)) { const cm = NB[x].filter(z => NB[y].includes(z)); if (cm.length === 2 && cm.includes(c) && cm.some(z => q.at(z) === op)) { ss = true; break; } }
+      const ed = d(c) === 0 && NB[c].some(x => q.at(x) === me && d(x) === 1 && NB[x].filter(z => d(z) === 0).length === 2 && NB[x].filter(z => d(z) === 0).every(z => z === c || q.at(z) === op));
+      if (!ss && !ed) out.push({ step: 'b_save', q: j + 1, msg: '追32 the answer is not the other cell of an intruded bridge' });
+      if (!ss && ed) edge++; });
+    if (edge) [['2D ja', /辺/, plain((I.ja || {})['ls.b_save.intro'])], ['2D en', /edge/i, plain((I.en || {})['ls.b_save.intro'])], ['3D ja', /辺/, plain(j3)]].forEach(([w, re, t]) => { if (!re.test(t)) out.push({ step: 'b_save', q: 0, msg: `追32 ${edge} problems are bridges to the edge, the ${w} intro does not say the edge links up: ${t}` }); }); }
+  L.steps.forEach(st => { const id = st.id, P0 = (st.problems || [])[0]; if (!P0) return;
+    const T = f => [plain((RT[id + '/' + f] || {}).ja), plain(VP['ramp:' + id + '/' + f])], a = m => add(id, m);
+    if (!(RT[id + '/t'] && RT[id + '/g'])) return;   // (no warm-up for this step)
+    if (!T('body')[1] || !T('y')[1]) a('ゴイシペン\'s words (voice-pen-ja.js ramp:' + id + '/body, y) missing');
+    const sp = P0.s, n = sp.n, N = n * n, q = E.Pos.from(sp), me = sp.side, op = 3 - me, { NB } = E.geo(n), ok = hxOk(P0), cells = ok.filter(c => c !== 1023);
+    const rq = E.Pos.from(Object.assign({}, sp, { b: rev(sp.b) })), rot = c => c === 1023 ? c : N - 1 - c, nm = c => E.nameOf(c, n);
+    if (q.winner()) a('the position is already won');
+    cells.forEach(c => { if (!q.legal(c)) a(`green ${nm(c)} is not an empty cell`); if (!rq.legal(rot(c))) a(`the turned try's answer ${nm(rot(c))} is not empty`); });
+    const sameJob = (Q, M, s) => { const W = Q.winCells(s).sort((x, y) => x - y).join(); return W; };
+    if (id === 'b_connect' || id === 'b_block') { const s = id === 'b_connect' ? me : op;
+      if (sameJob(q, 0, s) !== cells.slice().sort((x, y) => x - y).join()) a(`green ${cells.map(nm)} ≠ the cells that connect at once ${q.winCells(s).map(nm)}`);
+      if (sameJob(rq, 0, s) !== cells.map(rot).sort((x, y) => x - y).join()) a('the turned try: its answers do not connect / stop at once'); }
+    const d = c => me === 1 ? Math.min(Math.floor(c / n), n - 1 - Math.floor(c / n)) : Math.min(c % n, n - 1 - c % n);
+    const edgeCells = c => NB[c].filter(x => d(x) === 0 && d(c) === 1), common = (x, y) => NB[x].filter(z => NB[y].includes(z));
+    const after = c => { const r = q.clone(); r.b[c] = me; r._w = undefined; return r; };
+    const say = (re, cond, what) => T('body').forEach((t, j) => { if (re.test(t) !== cond) a(`${j ? 'voice' : 'ramps3d'} body ${cond ? 'does not say' : 'says'} ${what}: ${t}`); });
+    // how many green cells: the words for one cell never stand for two
+    say(/緑の印の点<?\/?b?>?は(2つ|ふたつ)/, cells.length + (ok.includes(1023) ? 1 : 0) >= 2 && id !== 'b_connect' && id !== 'b_block' && id !== 't_edge3' ? true : false, 'that there are two green cells');
+    if (id === 'b_bridge') { const c = cells[0], r = after(c), W = r.winCells(me);
+      if (W.length !== 2) a(`"つながり方が2通り": after the green cell ${W.length} cells connect at once`);
+      if (r.moves().some(x => { if (x === 1023) return false; const r2 = r.clone(); r2.b[x] = op; r2._w = undefined; return !r2.winCells(me).length; })) a('"相手は片方しか止められない": one reply stops both'); }
+    if (id === 'b_save') { const c = cells[0];
+      const ss = []; for (let x = 0; x < N; x++) for (let y = x + 1; y < N; y++) if (q.at(x) === me && q.at(y) === me && !NB[x].includes(y)) { const cm = common(x, y); if (cm.length === 2 && cm.includes(c) && cm.some(z => q.at(z) === op)) ss.push([x, y]); }
+      const ed = NB[c].filter(x => q.at(x) === me && d(x) === 1 && d(c) === 0 && edgeCells(x).includes(c) && edgeCells(x).some(z => q.at(z) === op));
+      if (!ss.length && !ed.length) a('green is not the other cell of an intruded bridge');
+      say(/2つの石/, ss.length > 0, '"2つの石" (a bridge between two stones)'); say(/辺/, !ss.length && ed.length > 0, '"辺" (the bridge to the edge)');
+      T('y').forEach((t, j) => { if (/辺/.test(t) !== (!ss.length && ed.length > 0)) a(`${j ? 'voice' : 'ramps3d'} y: ${t}`); }); }
+    if (id === 'b_edge' || id === 't_ladder' || id === 't_edge3') cells.forEach(c => { if (d(c) !== 1) a(`"2段目": green ${nm(c)} is on row ${d(c) + 1}`);
+      if (id !== 't_ladder' && edgeCells(c).some(x => q.at(x))) a(`"下の2マスが空いて": below ${nm(c)} is not empty`); });
+    if (id === 't_ladder') { if (![...q.b].some((v, i) => v === me && d(i) === 0 && !cells.some(c => NB[c].includes(i)))) a('"ラダーエスケープ": no own stone on the edge row ahead');
+      if (![...q.b].some((v, i) => v === op && d(i) === 0)) a('"相手が1段目をふさぐ": no opponent stone on the first row'); }
+    if (id === 't_edge3') { const z = [...q.b].map((v, i) => v === me && d(i) === 2 ? i : -1).filter(i => i >= 0); if (!z.length) a('"3段目の石": none');
+      cells.forEach(c => { if (!z.some(x => { const cm = common(x, c); return cm.length === 2 && cm.every(y => !q.at(y)); }) || edgeCells(c).some(x => q.at(x))) a(`"ブリッジか2段目のテンプレートが残る": not so at ${nm(c)}`); }); }
+    if (id === 't_stop') cells.forEach(c => { for (let x = 0; x < N; x++) for (let y = x + 1; y < N; y++) if (q.at(x) === op && q.at(y) === op && !NB[x].includes(y)) { const cm = common(x, y); if (cm.length === 2 && cm.includes(c) && cm.every(z => !q.at(z))) a(`"ブリッジではない1か所": green ${nm(c)} is inside a bridge`); } });
+    if (id === 's_center') { if (q.count(1) + q.count(2)) a('"1手目": the board is not empty');
+      cells.forEach(c => { const r = Math.floor(c / n), k = c % n; if (!(r + k === n - 1)) a(`"中央か短い対角線": ${nm(c)} is on neither`); });
+      if (cells.length === 2) say(/中央|まん中/, true, 'the centre'); }
+    if (id === 's_swap') { if (q.count(1) !== 1 || q.count(2) || me !== 2 || !sp.sw) a('"赤の1手目を見て": not one red stone with Blue to move under the swap rule');
+      if (ok.length !== 1 || ok[0] !== 1023) a('"スワップ…が正解": the swap is not the only green'); }
+    if (id === 's_block') cells.forEach(c => { if (NB[c].some(x => q.at(x) === op)) a(`"少し離れて": green ${nm(c)} touches an opponent stone`); });
+    if (id === 's_plan') cells.forEach(c => { const r = after(c); if (!(r.need(me) < q.need(me) && r.need(op) > q.need(op))) a(`"自分を助けて、相手をふさぐ": ${nm(c)} (${q.need(me)}→${r.need(me)}, ${q.need(op)}→${r.need(op)})`); });
+    // 追1: the other problems of the step are not the warm-up or its turn
+    st.problems.slice(1).forEach((p, j) => { if (p.s.n === n && Math.min(dist(p.s.b, sp.b), dist(p.s.b, rev(sp.b))) <= 2 && (q.count(1) + q.count(2) > 1)) a(`追1 problem ${j + 2} is the warm-up's position (or its turn) within 2 cells`); });
+  });
+  return out;
+}
 // (2026-11-24 担当D) janggi on the 3D table: the puzzles (all themes) — tools/lesson-verify-janggi.js
 const janggi = () => { const J = require('./lesson-verify-janggi.js'); return J.puzzles().concat(J.lessons()); };
 const ur = () => require('./lesson-verify-ur.js')();   // (2026-11-24 担当C：ウルのレッスン、tools/lesson-verify-ur.js)
 const senet = () => require('./lesson-verify-senet.js')();   // (2026-11-24 担当C：セネトのレッスン、tools/lesson-verify-senet.js)
-const GAMES = { chessOpen, ur, senet, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines, janggi };
+const GAMES = { chessOpen, ur, senet, hex, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines, janggi };
 module.exports = GAMES; GAMES.mancalaWords = mancalaWords; Object.assign(GAMES, { chessOpenCtx, chessOpenProblem, chessOpenSet, chessOpenD }); Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
 if (require.main === module) {
-  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,chessOpen,openLines,janggi').split(',');
+  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,chessOpen,openLines,janggi,hex').split(',');
   let bad = 0;
-  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'chessOpen' ? ' (チェスの定跡の drill の①〜⑨・追3・追25。drill のない定跡は pending)' : g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'senet' ? ' (セネトの作り直したレッスン（v2）の①〜⑧・追7・追16・追22・追23・追28。厳密な勝率は C で解き直し)' : g === 'janggi' ? ' (パズル全問・レッスン b_rook・b_horse・b_pawn・b_mate1・m_mate2・m_mate3・e_rook・e_pawn の①〜⑨・追19・追20・追24・追27・追31)' : g === 'ur' ? (require('fs').existsSync(require('path').join(process.env.UR_LUT_DIR || '/tmp/urlut', 'finkel.rgu')) ? ' (ウルのレッスン12本の①〜⑧・追7・追16)' : ' (ウルのレッスン12本の③〜⑧・追7・追16。①②は完全解析表なしで未照合＝追26)') : g === 'openLines' ? ' (shogi・tafl・checkers の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
+  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'chessOpen' ? ' (チェスの定跡の drill の①〜⑨・追3・追25。drill のない定跡は pending)' : g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'senet' ? ' (セネトの作り直したレッスン（v2）の①〜⑧・追7・追16・追22・追23・追28。厳密な勝率は C で解き直し)' : g === 'hex' ? ' (3D の準備13本：緑の印・半回転の try・説明と ほめ言葉の語が盤の事実・追1 準備の問題を本番で出さない)' : g === 'janggi' ? ' (パズル全問・レッスン b_rook・b_horse・b_pawn・b_mate1・m_mate2・m_mate3・e_rook・e_pawn の①〜⑨・追19・追20・追24・追27・追31)' : g === 'ur' ? (require('fs').existsSync(require('path').join(process.env.UR_LUT_DIR || '/tmp/urlut', 'finkel.rgu')) ? ' (ウルのレッスン12本の①〜⑧・追7・追16)' : ' (ウルのレッスン12本の③〜⑧・追7・追16。①②は完全解析表なしで未照合＝追26)') : g === 'openLines' ? ' (shogi・tafl・checkers の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
     bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
   process.exit(bad ? 1 : 0);
 }
