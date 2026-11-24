@@ -234,10 +234,15 @@
     t.innerHTML = chars.map(c => c[0] === '<' ? c : `<i>${c}</i>`).join('');
     const is = t.querySelectorAll('i'); let k = 0;
     const vo = G.talkVo, quiet = /[\s、。！？…—「」『』（）・\-]/;
-    G.typing = setInterval(() => { let say = false; for (let s = 0; s < 2 && k < is.length; s++) { const ch0 = is[k].textContent; if (!quiet.test(ch0)) say = true; is[k++].style.opacity = 1; } if (say) SND.talk(vo); if (k >= is.length) finishType(); }, sp * 2);
+    G.typing = setInterval(() => { if (G.paused) return; let say = false; for (let s = 0; s < 2 && k < is.length; s++) { const ch0 = is[k].textContent; if (!quiet.test(ch0)) say = true; is[k++].style.opacity = 1; } if (say) SND.talk(vo); if (k >= is.length) finishType(); }, sp * 2);
   }
   function finishType() { clearInterval(G.typing); G.typing = null; const t = $('tx').querySelector('.t'); t.querySelectorAll('i').forEach(i => i.style.opacity = 1); $('tx').classList.add('done'); }
   $('tx').addEventListener('click', nextPage);
+  // when the browser loses focus, the play stops (sound, lamp flicker, puppets, letters) until it comes back
+  function setPaused(p) { G.paused = !!p; document.body.classList.toggle('paused', G.paused); SND.pause(G.paused); }
+  window.addEventListener('blur', () => setPaused(true));
+  window.addEventListener('focus', () => setPaused(false));
+  document.addEventListener('visibilitychange', () => setPaused(document.hidden || !document.hasFocus()));
   document.addEventListener('keydown', e => {
     if (!$('sheet').classList.contains('hide')) { if (e.key === 'Escape') closeSheet(); return; }
     if (G.scr === 'play' && !$('tx').classList.contains('hide') && (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight')) { e.preventDefault(); nextPage(); }

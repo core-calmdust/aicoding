@@ -36,6 +36,7 @@ body.night #scrim .lamp{opacity:.25}
 body.night .pup,body.night .scn{color:#05070d}
 @keyframes flick{0%,100%{transform:scale(1);opacity:.95}8%{transform:scale(1.012);opacity:.9}11%{opacity:.98}23%{transform:scale(.996);opacity:.92}37%{opacity:.97;transform:scale(1.006)}52%{opacity:.9}61%{transform:scale(1.01);opacity:.99}78%{opacity:.93}88%{transform:scale(.998)}}
 body.anim-off #scrim .lamp{animation:none}
+body.paused *,body.paused *::before,body.paused *::after{animation-play-state:paused!important}
 
 #scene{position:absolute;left:0;right:0;top:0;bottom:calc(var(--dockH) - 16px);color:var(--ink);transition:opacity .5s}
 #scene .scn{position:absolute;inset:0;width:100%;height:100%}
@@ -478,7 +479,7 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 <script src="stories/tomoshibi.js?v=4"></script>
 <script src="stories/tomoshibi.tale.js?v=2"></script>
 <script src="stories/tomoshibi.who.js?v=1"></script>
-<script src="sound.js?v=3"></script>
-<script src="game.js?v=10"></script>
+<script src="sound.js?v=4"></script>
+<script src="game.js?v=11"></script>
 </body>
 </html>
