@@ -7,9 +7,16 @@
   const $ = id => document.getElementById(id);
   const PCQ = matchMedia('(hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4)');
   const KEY = 'wolflantern-save-v1', REC = 'wolflantern-rec-v1', PREF = 'wolflantern-pref-v1';
-  const ORDER = ['kirigane', 'hokushin', 'tomoshibi'];
+  const ORDER = ['kirigane', 'hokushin', 'tomoshibi', 'nekonaki', 'shirane'];
   const DIFFN = ['入門', '標準', '上級', '悪夢'];
-  const DIFFD = ['狼2匹。占い師と霊媒師がいる。はじめての夜に。', '狼2匹と狂人。狩人が加わり、嘘が増える。', '狼3匹と狂人。痕跡は少なく、物は罠になる。', '狼4匹と狂人。誰の言葉も信じきれない。'];
+  const DIFFT = ['はじめての夜に。', '嘘が増える。', '痕跡は少なく、物は罠になる。', '誰の言葉も信じきれない。'];
+  // the card's line follows the story's real cast for that size (the wolves and the roles differ story by story)
+  function diffDesc(s, i) {
+    const R = E.setupOf(s, E.DIFF[i].size);
+    const mad = R.madman ? `と${s.rules === 'fanatic' ? (s.roles.madman || {}).name || '狂信者' : '狂人'}` : '';
+    const ex = [R.guard && '狩人', R.mason && '共有者', R.cat && '猫又', R.fox && '妖狐', R.immoral && '背徳者'].filter(Boolean);
+    return `狼${R.wolf}匹${mad}。${ex.length ? ex.join('・') + 'がいる。' : ''}${DIFFT[i]}`;
+  }
   const NUM = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
   const ROLE_ICON = {
     auto: '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="11"/><path d="M12.5 12.5a3.6 3.6 0 1 1 4.8 3.4c-.9.4-1.3 1.1-1.3 2.1v.6M16 22.5v.2"/></svg>',
@@ -18,6 +25,7 @@
     medium: '<svg viewBox="0 0 32 32"><path d="M16 4c-5 6-8 10-8 14a8 8 0 0 0 16 0c0-4-3-8-8-14z"/><path d="M13 19a3 3 0 0 0 6 0"/></svg>',
     guard: '<svg viewBox="0 0 32 32"><path d="M16 4l10 4v7c0 6.6-4.3 11-10 13-5.7-2-10-6.4-10-13V8z"/><path d="M12 16l3 3 5-6"/></svg>',
     mason: '<svg viewBox="0 0 32 32"><circle cx="11" cy="11" r="4"/><circle cx="21" cy="11" r="4"/><path d="M4 26c0-5 3-8 7-8s7 3 7 8M14 26c0-5 3-8 7-8s7 3 7 8"/></svg>',
+    cat: '<svg viewBox="0 0 32 32"><path d="M8 27c0-7 3-12 8-12s8 5 8 12z"/><path d="M11 15l-2-7 5 4M21 15l2-7-5 4"/><path d="M24 26c4 0 5-4 3-6M24 26c3 2 6 0 6-3"/></svg>',
   };
   // what a result reads as, in words and in one letter
   const resWord = r => r === 'wolf' ? '人狼' : r === 'fox' ? '妖狐' : r === 'guard' ? '守った' : '人間';
@@ -102,6 +110,8 @@
   // the story's roles, in one line: the special ones stand out
   function roleLine(s) {
     if (s.rules === 'mason') return `特殊役職 <b>${esc(s.roles.mason.name)}</b>（狩人の代わりに2人）`;
+    if (s.rules === 'cat') return `特殊役職 <b>${esc(s.roles.cat.name)}</b>（村側・道連れ）`;
+    if (s.rules === 'fanatic') return `特殊役職 <b>${esc(s.roles.madman.name)}</b>（狼を知る裏切り者）`;
     if (s.rules === 'fox') return `特殊役職 <b>${esc(s.roles.fox.name)}</b>（第三の陣営）`;
     return '標準の役職（占い師・霊媒師・狩人・狂人）';
   }
@@ -130,10 +140,11 @@
     const fr = (rec()[base.id] || {}).feats || {}, fl = window.WLFeats.list(base.id);
     $('setFeatN').textContent = `${fl.filter(f => fr[f.id]).length}/${fl.length}`;
     $('setFeats').innerHTML = fl.map(f => `<div class="feat${fr[f.id] ? ' got' : ''}"><i>${fr[f.id] ? '★' : '☆'}</i><b>${esc(f.name)}</b><span>${esc(f.desc)}</span></div>`).join('');
-    $('setDiff').innerHTML = DIFFN.map((d, i) => `<button class="tile${G.diff === i ? ' on' : ''}" data-d="${i}"><b>${d}</b><span class="cnt">${E.DIFF[i].size}人</span><span>${DIFFD[i]}</span></button>`).join('');
+    $('setDiff').innerHTML = DIFFN.map((d, i) => `<button class="tile${G.diff === i ? ' on' : ''}" data-d="${i}"><b>${d}</b><span class="cnt">${E.DIFF[i].size}人</span><span>${diffDesc(st, i)}</span></button>`).join('');
     const RR = E.setupOf(st, E.DIFF[G.diff].size);
     const roles = [['auto', 'おまかせ', '物語が決める'], ['villager', st.roles.villager.name, '調べる回数が多い'], ['seer', '占い師', '毎晩ひとりを占う'], ['medium', '霊媒師', '追放者の正体を知る']]
-      .concat(st.rules === 'mason' ? [['mason', st.roles.mason.name, '相方と互いに人間だと知る']] : [['guard', '狩人', '毎晩ひとりを守る']]);
+      .concat(st.rules === 'mason' ? [['mason', st.roles.mason.name, '相方と互いに人間だと知る']] : [['guard', '狩人', '毎晩ひとりを守る']])
+      .concat(st.rules === 'cat' ? [['cat', st.roles.cat.name, '吊られても噛まれても道連れ']] : []);
     const can = r => r === 'auto' || r === 'villager' || RR[r] > 0;
     $('setRules').innerHTML = st.rulesNote ? `<b>この物語のしくみ</b>${esc(st.rulesNote)}` : '';
     $('setRules').classList.toggle('hide', !st.rulesNote);
@@ -153,25 +164,101 @@
     if (k === sceneKey) return;
     sceneKey = k;
     const el = $('scene');
-    el.classList.add('swap');
-    setTimeout(() => { el.innerHTML = ART.scene(st.scene, loc, 1); el.classList.remove('swap'); }, pref.anim ? 260 : 0);
+    el.classList.add('swap'); $('floor').classList.add('swap');
+    setTimeout(() => { el.innerHTML = ART.scene(st.scene, loc, 1); el.classList.remove('swap'); G.floorLoc = loc; drawFloor(); $('floor').classList.remove('swap'); }, pref.anim ? 260 : 0);
+  }
+  /* the stage floor, cut from paper and drawn for the real size (nothing stretches): what the way is made of, what lies beside it, what stands along it — one for each place, so it changes with the backdrop */
+  const FLOOR = {
+    tower: ['dirt', 'snow', 'post'], inn: ['dirt', 'snow', 'post'], forge: ['dirt', 'snow', 'rock'], mill: ['plank', 'water', 'post'], grave: ['dirt', 'snow', 'cross'],
+    engine: ['rail', 'grass', 'rock'], baggage: ['board', 0, 'crate'], third: ['aisle', 0, 0], dining: ['aisle', 0, 0], sleeper: ['aisle', 0, 0],
+    light: ['dirt', 'rock', 'rock'], harbor: ['plank', 'water', 'post'], net: ['dirt', 'sand', 'post'], clinic: ['dirt', 'grass', 'tuft'], shrine: ['flag', 'grass', 'lantern'],
+    bath: ['flag', 'grass', 'rock'], ryokan: ['flag', 'grass', 'lantern'], toji: ['dirt', 'grass', 'tuft'], mound: ['dirt', 'grass', 'rock'], spring: ['step', 'water', 'rock'],
+    chapel: ['flag', 'snow', 'cross'], scriptorium: ['board', 0, 0], cloister: ['flag', 'rock', 'col'], cellar: ['flag', 0, 'barrel'], hospice: ['dirt', 'snow', 'post'],
+  };
+  function drawFloor() {
+    const f = $('floor'); if (!f || !PCQ.matches) return;
+    if (!f.__l) { f.__l = 1; f.addEventListener('transitionend', e => { if (e.propertyName === 'top') drawFloor(); }); }
+    const w = Math.round(f.clientWidth), h = Math.round(f.clientHeight), key = w + 'x' + h + ':' + G.floorLoc;
+    if (!w || !h || f.__wh === key) return; f.__wh = key;
+    const [way, side, prop] = FLOOR[G.floorLoc] || ['dirt', 'grass', 'tuft'];
+    let sd = 7 + (G.floorLoc || '').length * 131; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+    const n0 = v => v.toFixed(0), cx = w / 2, hw = y => w * .11 + w * .62 * Math.pow(y / h, 1.15), X = (u, y) => cx + u * hw(y);
+    const rowY = (j, n) => h * Math.pow(j / n, 1.6);
+    const quad = (u0, u1, y0, y1, g) => `M${n0(X(u0, y0) + g)},${n0(y0 + g * .4)} L${n0(X(u1, y0) - g)},${n0(y0 + g * .4)} L${n0(X(u1, y1) - g)},${n0(y1 - g * .4)} L${n0(X(u0, y1) + g)},${n0(y1 - g * .4)} Z`;
+    const L = [], R = [];
+    for (let i = 0; i <= 14; i++) { const y = h * i / 14, j = (r() - .5) * w * .012 * (1 + i / 6); L.push([X(-1, y) + j, y]); R.push([X(1, y) - j, y]); }
+    const road = L.concat(R.slice().reverse()).map(p => n0(p[0]) + ',' + n0(p[1])).join(' ');
+    // the ground beside the way, its edge cut ragged (grass), lumpy (rock), round (snow) or smooth (sand)
+    const bank = (sg, kind) => { const P = sg < 0 ? L : R; let d = `M${sg < 0 ? -2 : w + 2},-2`;
+      for (let i = 0; i < P.length - 1; i++) { const [x0, y0] = P[i], [x1, y1] = P[i + 1]; const m = kind === 'grass' ? 6 : kind === 'sand' ? 1 : 3;
+        for (let k = 0; k < m; k++) { const t = k / m, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t, s = 3 + 16 * (y / h);
+          if (kind === 'grass') d += ` L${n0(x - sg * s * .2)},${n0(y)} L${n0(x + sg * s * (.6 + r() * .9))},${n0(y + s * .35)}`;
+          else if (kind === 'snow') d += ` Q${n0(x - sg * s * (.8 + r() * .6))},${n0(y + s * .5)} ${n0(x + sg * s * .3)},${n0(y + s * 1.1)}`;
+          else if (kind === 'rock') d += ` L${n0(x - sg * s * (.3 + r() * .8))},${n0(y + s * .3)} L${n0(x + sg * s * .2)},${n0(y + s * .9)}`;
+          else d += ` L${n0(x + sg * s * .2)},${n0(y)}`; } }
+      return d + ` L${n0(P[P.length - 1][0])},${h + 2} L${sg < 0 ? -2 : w + 2},${h + 2} Z`; };
+    let under = '', pave = '', dark = '', banks = '', bankCls = side === 'snow' ? 'snow' : side === 'sand' ? 'sand' : 'side', wave = '';
+    if (side === 'water') { under = `<rect class="water" x="0" y="0" width="${w}" height="${h}"/>`; for (let j = 1; j < 12; j++) { const y = rowY(j, 12), s = 6 + 22 * y / h; for (let x = (j % 2) * s * 2 - s * 2; x < w; x += s * 5.5) wave += `M${n0(x)},${n0(y)} q${n0(s * .7)},${n0(-s * .35)} ${n0(s * 1.4)},0 q${n0(s * .7)},${n0(s * .35)} ${n0(s * 1.4)},0 `; } }
+    else if (side) banks = bank(-1, side) + bank(1, side);
+    // what the way is made of
+    if (way === 'dirt' || way === 'flag' || way === 'rail') under += `<polygon class="road" points="${road}"/>`;
+    if (way === 'flag') for (let j = 0; j < 10; j++) { const y0 = rowY(j, 10), y1 = rowY(j + 1, 10), g = 1 + 4 * y1 / h, k = 2 + (j % 2); let u = -1; for (let i = 0; i < k; i++) { const u1 = i === k - 1 ? 1 : -1 + 2 * (i + .7 + r() * .6) / k; pave += quad(u, u1, y0, y1, g); u = u1; } }
+    if (way === 'plank') { for (let j = 0; j < 18; j++) { const y0 = rowY(j, 18), y1 = rowY(j + 1, 18); pave += quad(-1, 1, y0, y1, .6 + 2.4 * y1 / h); } for (const u of [-1.04, 1.04]) dark += quad(u - .04, u + .04, 0, h, 0); }
+    if (way === 'rail') { for (let j = 0; j < 16; j++) { const y0 = rowY(j, 16), y1 = rowY(j + 1, 16); pave += quad(-.8, .8, y0, y0 + (y1 - y0) * .45, 0); } for (const u of [-.46, .46]) dark += quad(u - .035, u + .035, 0, h, 0); }
+    if (way === 'step') for (let j = 1; j < 8; j++) { const y = rowY(j, 7.6), s = hw(y), ux = (j % 2 ? -.18 : .18) + (r() - .5) * .12; const rx = s * (.32 + r() * .08), ry = rx * (.22 + .1 * y / h); pave += `M${n0(X(ux, y) - rx)},${n0(y)} a${n0(rx)},${n0(ry)} 0 1,0 ${n0(rx * 2)},0 a${n0(rx)},${n0(ry)} 0 1,0 ${n0(-rx * 2)},0 Z`; }
+    if (way === 'board' || way === 'aisle') {   // floorboards: thin seams toward the far end, and the ends of the boards staggered
+      under += `<rect class="sand" x="0" y="0" width="${w}" height="${h}"/>`;
+      for (let u = -4; u <= 4; u += .5) { pave += quad(u - .012, u + .012, 0, h, 0); for (let j = 1; j < 9; j++) if ((j + Math.round(u * 2)) % 3 === 0) { const y0 = rowY(j, 9); pave += quad(u, u + .5, y0, y0 + 1 + 2 * y0 / h, 0); } }
+      if (way === 'aisle') { dark += quad(-.5, .5, 0, h, 0); under += `<path class="rug" d="${quad(-.5, .5, 0, h, 0)}"/>`; pave += quad(-.43, -.4, 0, h, 0) + quad(.4, .43, 0, h, 0); dark = ''; } }
+    // what stands along the way: tufts, stones, posts, crosses, lanterns, columns, barrels, crates
+    const tuft = (x, y, s) => { let d = `M${n0(x - s)},${n0(y)}`; const n = 5 + Math.floor(r() * 3); for (let k = 0; k <= n; k++) { const bx = x - s + 2 * s * k / n; d += ` L${n0(bx + (r() - .5) * s * .5)},${n0(y - s * (.9 + r() * 1.3))} L${n0(bx + s / n)},${n0(y - s * .15)}`; } return d + ` L${n0(x + s)},${n0(y)} Z`; };
+    const stone = (x, y, s) => `M${n0(x - s)},${n0(y)} Q${n0(x - s * .9)},${n0(y - s * .8)} ${n0(x - s * .1)},${n0(y - s * .75)} Q${n0(x + s * .9)},${n0(y - s * .6)} ${n0(x + s)},${n0(y)} Z`;
+    const rect = (x, y, ww, hh) => `M${n0(x)},${n0(y)} h${n0(ww)} v${n0(hh)} h${n0(-ww)} Z`;
+    const thing = (k, x, y, s) => {
+      if (k === 'post') return rect(x - s * .12, y - s * 2.4, s * .24, s * 2.4) + rect(x - s * .2, y - s * 2.5, s * .4, s * .16);
+      if (k === 'cross') return rect(x - s * .1, y - s * 2.2, s * .2, s * 2.2) + rect(x - s * .6, y - s * 1.7, s * 1.2, s * .2) + stone(x, y, s * .7);
+      if (k === 'lantern') return rect(x - s * .5, y - s * .3, s, s * .3) + rect(x - s * .16, y - s * 1.6, s * .32, s * 1.3) + rect(x - s * .45, y - s * 2.3, s * .9, s * .7) + `M${n0(x - s * .8)},${n0(y - s * 2.3)} L${n0(x)},${n0(y - s * 2.9)} L${n0(x + s * .8)},${n0(y - s * 2.3)} Z`;
+      if (k === 'col') return rect(x - s * .7, y - s * .4, s * 1.4, s * .4) + rect(x - s * .45, y - s * 4.2, s * .9, s * 3.8);
+      if (k === 'barrel') return `M${n0(x - s * .7)},${n0(y)} Q${n0(x - s)},${n0(y - s * .8)} ${n0(x - s * .7)},${n0(y - s * 1.6)} H${n0(x + s * .7)} Q${n0(x + s)},${n0(y - s * .8)} ${n0(x + s * .7)},${n0(y)} Z`;
+      if (k === 'crate') return rect(x - s * .8, y - s * 1.4, s * 1.6, s * 1.4);
+      if (k === 'rock') return stone(x, y, s * (.6 + r() * .5));
+      return tuft(x, y, s);
+    };
+    let near = '', far = '';
+    if (prop) { const tall = ['post', 'cross', 'lantern', 'col', 'barrel', 'crate'].includes(prop), N = tall ? 7 : 16;
+      for (const sg of [-1, 1]) for (let i = 0; i < N; i++) {
+        const t = (i + (tall ? .5 : .2 + r() * .6)) / N, y = h * Math.pow(t, 1.25), x = X(sg * (tall ? 1.12 : 1 + r() * .03), y), s = 5 + 30 * Math.pow(y / h, 1.1);
+        if (x < -s * 2 || x > w + s * 2) continue;
+        let d = thing(prop, x, y, s);
+        if (tall && side && side !== 'water' && r() < .6) d += thing(side === 'snow' || side === 'rock' ? 'rock' : 'tuft', X(sg * 1.3, y), y, s * .8);   // something small beside each post
+        if (y < h * .4) far += d; else near += d;
+      } }
+    f.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" class="w-${way} s-${side || 'none'}" aria-hidden="true">${under}<path class="wave" d="${wave}"/><path class="pave" d="${pave}"/><path class="dark" d="${dark}"/><path class="${bankCls}" d="${banks}"/><path class="far" d="${far}"/><path class="tuft" d="${near}"/></svg>`;
   }
   function layoutDock() {
     const pc = PCQ.matches;
     const strip = $('strip');
     let h = 0;
     if (pc) {
-      h = Math.max(250, strip.offsetHeight + 24);
+      h = Math.max(250, strip.offsetHeight + 24, Math.round(innerHeight * .42));   // the road below the backdrop: the same height for text and choices
       // while the text runs, the dock never shrinks (and starts tall enough for most lines): the backdrop keeps its size line to line
       if (!$('tx').classList.contains('hide')) { h = Math.max(h, Math.round(innerHeight * .42), G.dockText || 0); G.dockText = h; }
       else G.dockText = 0;
     }
     document.documentElement.style.setProperty('--dockH', (pc ? h : 0) + 'px');
+    // how far down the road the front row stands: fixed for the window, so nobody moves when the text strip changes
+    // the backdrop rises a little on a tall screen; the back row stands on the road just below it (not up in the air)
+    const dep = pc ? Math.max(0, Math.round(innerHeight * .42) - 250) : 0, raise = Math.round(dep * .45);
+    document.documentElement.style.setProperty('--raise', raise + 'px');
+    if (pc) document.documentElement.style.setProperty('--backB', Math.round(26 + raise - .2 * (h + 16 + raise)) + 'px');   // the back row stands on the far end of the road else document.documentElement.style.removeProperty('--backB');
+    document.documentElement.style.setProperty('--fs', pc ? '1.1' : '1');
+    document.documentElement.style.setProperty('--depth', (pc ? Math.max(0, Math.round(innerHeight * .42) - 250) : 0) + 'px');
     if (!pc) {
       const sh = Math.round(Math.min(innerHeight * .46, innerWidth * 1.05));
       document.documentElement.style.setProperty('--stageH', sh + 'px');
     }
     sizeCast();
+    requestAnimationFrame(drawFloor);
   }
   function sizeCast() {
     // the puppets' size does not follow the text strip: on PC it is reckoned from a fixed strip height, so it only changes with the window
@@ -192,7 +279,7 @@
       if (!el) {
         const cc = ch(id); if (!cc) return;
         el = document.createElement('div'); el.className = 'pp idle'; el.dataset.id = id;
-        el.style.setProperty('--d', (i * .37 % 3) + 's');
+        el.style.setProperty('--d', (-(i * 1.37 % 4.6)).toFixed(2) + 's');   // a negative delay: already mid-sway when it appears, no still pause then a jerk
         el.innerHTML = ART.puppet(cc.look, cc.color) + `<span class="nm">${esc(cc.name)}</span>`;
         el.style.left = (o.from === 'left' ? -10 : o.from === 'right' ? 110 : 50) + '%';
         if (!o.from) el.style.opacity = '0';
@@ -203,8 +290,8 @@
       el.classList.remove('lift', 'drop', 'fallen', 'speak', 'dim', 'sel', 'turn');
       const row = i < front ? 0 : 1, k = row ? i - front : i, m = row ? n - front : front;
       const x = m === 1 ? (o.x || 50) : (o.span ? o.span[0] : 10) + ((o.span ? o.span[1] - o.span[0] : 80) * (k + (row ? .5 : 0)) / Math.max(1, m - (row ? 0 : 1)));
-      el.classList.toggle('back', !!row); el.classList.toggle('front', !row);
-      requestAnimationFrame(() => { el.style.left = Math.min(94, Math.max(6, x)) + '%'; el.style.bottom = (row ? 12 : 0) + '%'; el.style.opacity = ''; });
+      el.classList.toggle('back', !!row); el.classList.toggle('front', !row); el.classList.toggle('mid', !!o.mid);   // the day's search: the people stand halfway up the road, above the menu, names showing
+      requestAnimationFrame(() => { el.style.left = Math.min(94, Math.max(6, x)) + '%'; el.style.bottom = ''; el.style.opacity = ''; });
       if (o.fallen === id) el.classList.add('fallen');
     });
     for (const id in have) { const e = have[id]; e.style.opacity = '0'; setTimeout(() => e.remove(), 600); }
@@ -303,7 +390,7 @@
   /* ---------- header ---------- */
   /* the roster: everyone, alive or not, with what has been said about them (like a village board) */
   const CIRC = ['', '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩', '⑪', '⑫'];
-  const SHORT = { seer: '占', medium: '霊', guard: '狩', mason: '共' };
+  const SHORT = { seer: '占', medium: '霊', guard: '狩', mason: '共', cat: '猫' };
   function tagsOf(id) {
     const g = G.gate, c = S.claims.find(c => c.by === id && (!g || g.co.has(c.by)));
     let cl = '';
@@ -343,7 +430,7 @@
     if (!on) return;
     const html = S.people.map(p => {
       const t = tagsOf(p.id), dead = !p.alive, mk = S.pl.notes[p.id] || '';
-      const dc = dead && p.death ? (p.death.cause === 'wolf' ? '噛' : p.death.cause === 'curse' ? '呪' : '吊') : '';
+      const dc = dead && p.death ? ({ wolf: '噛', curse: '呪', catw: '爪', cat: '連' }[p.death.cause] || '吊') : '';
       const rs = resultsOn(p.id), rcls = /class="k"/.test(rs) ? ' res-k' : /class="h"/.test(rs) ? ' res-h' : '';
       return `<div class="ro${p.isPlayer ? ' you' : ''}${dead ? ' dead' : ''}${mk ? ' mk-' + mk : ''}${rcls}" data-id="${p.id}">${bust(p.id)}<b class="${(p.isPlayer ? 'あなた' : p.name).length > 5 ? 'long' : ''}">${esc(p.isPlayer ? 'あなた' : p.name)}</b>${t.cl}${t.ht}<div class="rs">${rs}</div>${dead ? `<svg class="x" viewBox="0 0 44 44"><path d="M8 8L36 36M36 8L8 36"/></svg><span class="dc">${dc}</span>` : ''}</div>`;
     }).join('');
@@ -392,9 +479,10 @@
   async function prologue() {
     S.phase = 'prologue'; hud(); setCast([]);
     SND.windOn(.05);
+    let rung = false;
     for (const pg of st.text.prologue) {
       setScene(pg.bg || st.locs[0].id, pg.night);
-      if (pg.night) SND.bell(.5);   // the recording rings twice by itself
+      if (pg.night && !rung) { rung = true; SND.bell(.5); }   // once only: the recording rings twice by itself (night pages in a row must not ring it again)
       if (pg.cast) {
         const ids = S.people.filter(p => !p.isPlayer).map(p => p.id);
         await say([{ text: fill(pg.t, ctxVars()) }]);
@@ -460,7 +548,7 @@
   async function roleCard() {
     const r = S.pl.role, R = st.roles[r];
     await say([{ text: fill(st.text.role, { roleHow: R.how }) }]);
-    await sheet(`<div class="rolecard"><div class="em">${ROLE_ICON[r]}</div><p style="font:700 15px var(--ui);letter-spacing:.2em;color:var(--mute);margin:0">あなたの役</p><h3>${esc(R.name)}</h3><p>${esc(R.perk)}</p><p style="font-size:15px;color:var(--mute)">この${st.lex.village}には人狼が${S.wolves.length}匹${E.RS(S).madman ? '、狼に味方する狂人がひとり' : ''}${E.RS(S).fox ? '、社に棲む妖狐がひとり' : ''}${E.RS(S).mason ? '、互いを知る共有者がふたり' : ''}いる。全部で${S.size}人。</p>${st.rulesNote ? `<p style="font-size:14px;color:var(--mute)">${esc(st.rulesNote)}</p>` : ''}</div><div class="foot" style="justify-content:center"><button class="btn pri" data-ok>はじまる</button></div>`, box => box.querySelector('[data-ok]').onclick = () => closeSheet(true));
+    await sheet(`<div class="rolecard"><div class="em">${ROLE_ICON[r]}</div><p style="font:700 15px var(--ui);letter-spacing:.2em;color:var(--mute);margin:0">あなたの役</p><h3>${esc(R.name)}</h3><p>${esc(R.perk)}</p><p style="font-size:15px;color:var(--mute)">この${st.lex.village}には人狼が${S.wolves.length}匹${E.RS(S).madman ? (st.rules === 'fanatic' ? '、狼の正体を知る狂信者がひとり' : '、狼に味方する狂人がひとり') : ''}${E.RS(S).cat ? '、道連れの猫又がひとり' : ''}${E.RS(S).fox ? '、社に棲む妖狐がひとり' : ''}${E.RS(S).mason ? '、互いを知る共有者がふたり' : ''}いる。全部で${S.size}人。</p>${st.rulesNote ? `<p style="font-size:14px;color:var(--mute)">${esc(st.rulesNote)}</p>` : ''}</div><div class="foot" style="justify-content:center"><button class="btn pri" data-ok>はじまる</button></div>`, box => box.querySelector('[data-ok]').onclick = () => closeSheet(true));
   }
 
   /* morning: what the night left behind */
@@ -490,6 +578,8 @@
         if (N.saved === 'guard' && S.pl.role === 'guard') items.push({ text: `あなたが夜通し見張った戸口の前に、獣の爪の跡があった。${nm(N.target)}は、何も知らずに眠っていた。` });
         if (st.text.foxBite && N.killer && (N.saved === 'fox' || N.saved === 'guard') && N.target !== 'you' && S.pl.role !== 'guard') items.push({ text: st.text.foxBite });
       }
+      // the cat bitten: one of the wolves went with it
+      if (N.dragged) { const v = N.dragged; items.push({ text: fill(pickOne(st.text.catDrag || ['{name}も、冷たくなっていた。']), { name: nm(v), cat: N.target === 'you' ? 'あなた' : nm(N.target) }), fx: () => setCast([v], { fallen: v, x: 58 }) }); }
       // the fox burned by a reading
       if (N.cursed && N.cursed !== 'you') { const v = N.cursed; items.push({ text: fill(pickOne(st.text.curse || ['朝、{name}が見つかった。傷ひとつなかった。']), { name: nm(v) }), fx: () => setCast([v], { fallen: v, x: 58 }) }); }
       if (S.foxHunt && S.foxHunt.day === S.day) items.push({ text: st.text.foxHunt || '狼の気配が、島から消えた。けれど社の鈴は鳴りやまない。\n本土の船が着くのは明日の朝だ。今日のうちに狐を見つけなければ、この島は狐のものになる。' });
@@ -534,7 +624,7 @@
   }
   function hub(msg) {
     S.phase = 'invest'; hud();
-    setScene(G.loc); setCast(peopleAt(G.loc).slice(0, 4), { span: [22, 78] });
+    setScene(G.loc); setCast(peopleAt(G.loc).slice(0, 4), { span: [22, 78], mid: true });
     G.onPup = id => talk(id);
     const N = S.nights[S.nights.length - 1];
     const locs = st.locs.map(l => `<button class="loc${l.id === G.loc ? ' cur' : ''}" data-l="${l.id}" title="${esc(l.name)}から見えるのは：${E.near(st, l.id).map(locName).join('・')}">${ART.scene(st.scene, l.id, 1)}<b>${esc(l.name)}</b><i class="see">見える：${E.near(st, l.id).map(x => esc(locName(x))).join('・')}</i>${N && N.loc === l.id && N.killer ? '<em>現場</em>' : ''}</button>`).join('');
@@ -550,7 +640,7 @@
   }
   async function search(loc) {
     if (S.pl.ap <= 0) return hub('今日の行動は使いきった。');
-    G.loc = loc; setScene(loc); setCast(peopleAt(loc).slice(0, 4), { span: [22, 78] });
+    G.loc = loc; setScene(loc); setCast(peopleAt(loc).slice(0, 4), { span: [22, 78], mid: true });
     const r = E.search(S, st, loc);
     const L = st.locs.find(l => l.id === loc);
     const items = [];
@@ -653,7 +743,7 @@
     if (S.ghost) return ghostDebate();
     S.phase = 'meeting'; hud();
     G.onPup = id => talk(id, true).then(() => debate());
-    const canCo = (S.pl.role === 'seer' || S.pl.role === 'medium' || S.pl.role === 'guard' || S.pl.role === 'mason') && !S.pl.co;
+    const canCo = ['seer', 'medium', 'guard', 'mason', 'cat'].includes(S.pl.role) && !S.pl.co;
     const newRes = S.pl.co && S.pl.res.some(r => !S.claims.find(c => c.by === 'you').res.some(x => x.target === r.target) && (r.seer || r.medium));
     const unshown = S.pl.found.filter(k => !S.reports.some(r => r.by === 'you' && r.night === +k.split('|')[0] && r.cat === S.nights[+k.split('|')[0]].traces[+k.split('|')[1]].cat));
     const ac = S.pl.accuse ? `（${nm(S.pl.accuse.target)}を名指しした）` : '';
@@ -698,6 +788,11 @@
     const c = S.claims.find(c => c.by === 'you');
     const role = st.roles[S.pl.role].name;
     const lines = [];
+    if (S.pl.role === 'cat') {
+      lines.push({ who: 'you', text: `聞いてほしい。わたしは${role}だ。わたしを${st.lex.jail}へ送れば、誰かひとりを道連れにする。わたしを噛んだ狼も、ただでは済まない。` });
+      for (const o of S.claims.filter(o => o.role === 'cat' && o.by !== 'you' && person(o.by).alive)) lines.push({ who: o.by, text: SP.say(S, st, o.by, 'counter', { rival: st.hero.title, role }) });
+      return lines;
+    }
     if (S.pl.role === 'mason') {   // the pair speaks together
       const mate = c.res[0] && c.res[0].target, mp = mate && person(mate);
       lines.push({ who: 'you', text: `聞いてほしい。わたしは${role}だ。相方は${mate ? nm(mate) : '……もういない'}。ゆうべ、ひと晩じゅう目の前にいた。互いに、人間だと知っている。` });
@@ -785,6 +880,7 @@
   }
   function evText(e) {
     if (e.k === 'self') return { t: 'この話そのもの', s: 'いた場所からは見えないはずのものを見た、など。話の中だけで食い違っている。' };
+    if (e.k === 'said') return { t: `${nm(e.who)}は「${locName(e.loc)}にいた」と言った`, s: `${nightName(e.night)}。${nm(e.who)}本人の話。` };
     if (e.k === 'trace') return { t: `${locName(e.loc)}の痕跡「${SP.traceShort(st, e)}」`, s: `${nightName(e.night)}。あなたがこの目で見た。` };
     return { t: `${nm(e.who)}が${locName(e.loc)}にいた`, s: `${nightName(e.night)}。${e.by === 'you' ? 'あなたが見た' : nm(e.by) + 'の話'}。` };
   }
@@ -792,24 +888,33 @@
   function canClash() { return missLeft() > 0 && E.statements(S, st).length && E.evidence(S).length; }
   async function clash() {
     const SL = E.statements(S, st), EV = E.evidence(S);
+    // 1. whose words → 2. which night → 3. which part is wrong → 4. the evidence that breaks it (only what bears on that part)
     const who = await pickPerson('誰の発言を突く？', `的外れは今日あと${missLeft()}回まで。外せば、あなたの言葉が軽くなる。`, [...new Set(SL.map(x => x.who))], { mark: true });
     if (!who) return debate();
     const mine = SL.filter(x => x.who === who).sort((a, b) => b.night - a.night);
     let stmt = mine[0];
     if (mine.length > 1) { const v = await pickOpt(`${esc(nm(who))}の、どの夜の話？`, '', mine.map(x => ({ t: nightName(x.night), s: x.parts.map(q => partText(q, x)).join('。') + '。', v: x.id, ic: IC.talk }))); if (!v) return debate(); stmt = mine.find(x => x.id === v); }
-    const ev = await pickOpt('どの証拠をつきつける？', `${nm(who)}の話（${nightName(stmt.night)}）：${stmt.parts.map(q => partText(q, stmt)).join('。')}。`, EV.map(e => { const x = evText(e); return { t: x.t, s: x.s, v: e.id, ic: IC.show }; }));
-    if (!ev) return debate();
-    const part = stmt.parts.length === 1 ? 0 : await pickOpt('話の、どこがおかしい？', `つきつける証拠：${evText(EV.find(e => e.id === ev)).t}`, stmt.parts.map((p, i) => ({ t: `「${partText(p, stmt)}」`, v: String(i), ic: IC.clash })));
+    const told = `${nm(who)}の話（${nightName(stmt.night)}）：${stmt.parts.map(q => partText(q, stmt)).join('。')}。`;
+    const part = stmt.parts.length === 1 ? '0' : await pickOpt('話の、どこがおかしい？', told, stmt.parts.map((p, i) => ({ t: `「${partText(p, stmt)}」`, v: String(i), ic: IC.clash })));
     if (part == null) return debate();
-    const E1 = EV.find(e => e.id === ev), P1 = stmt.parts[+part];
+    const P1 = stmt.parts[+part], cand = E.clashEvidence(S, st, stmt.id, +part);
+    if (!cand.length) { await say([{ text: `「${partText(P1, stmt)}」——この言葉を崩せる証拠を、あなたはまだ持っていない。${P1.k === 'loc' ? `その夜${nm(who)}を別の場所で見たという話があれば、つきつけられる。` : P1.k === 'who' ? `その夜${nm(P1.who)}がどこにいたか、本人や誰かの話があれば、つきつけられる。` : 'その夜の現場で、同じ種類の痕跡を自分の目で見ていれば、つきつけられる。'}` }]); return debate(); }
+    const ev = await pickOpt('どの証拠をつきつける？', `おかしいのは：「${partText(P1, stmt)}」`, cand.map(e => { const x = evText(e); return { t: x.t, s: x.s, v: e.id, ic: IC.show }; }));
+    if (!ev) return debate();
+    const E1 = EV.find(e => e.id === ev);
     const lp = stmt.parts.find(p => p.k === 'loc');
-    const items = [{ who: 'you', text: E1.k === 'self' ? `${nm(who)}。${nightName(stmt.night)}、「${partText(P1, stmt)}」と言ったな。${lp ? `だが、${locName(lp.loc)}から見えるのは${E.near(st, lp.loc).map(locName).join('と')}だけだ。` : ''}話が、話の中で食い違っている。` : `${nm(who)}。${nightName(stmt.night)}、「${partText(P1, stmt)}」と言ったな。だが、${E1.k === 'trace' ? `わたしは${locName(E1.loc)}で、この目で「${SP.traceShort(st, E1)}」を見ている` : `${E1.by === 'you' ? 'わたしは' : nm(E1.by) + 'は'}その夜、${nm(E1.who)}を${locName(E1.loc)}で見ている`}。` }];
+    const items = [{ who: 'you', text: E1.k === 'self' ? `${nm(who)}。${nightName(stmt.night)}、「${partText(P1, stmt)}」と言ったな。${lp ? `だが、${locName(lp.loc)}から見えるのは${E.near(st, lp.loc).map(locName).join('と')}だけだ。` : ''}話が、話の中で食い違っている。` : `${nm(who)}。${nightName(stmt.night)}、「${partText(P1, stmt)}」と言ったな。だが、${E1.k === 'said' ? `${nm(E1.who)}は自分で、その夜は${locName(E1.loc)}にいたと言っている` : E1.k === 'trace' ? `わたしは${locName(E1.loc)}で、この目で「${SP.traceShort(st, E1)}」を見ている` : `${E1.by === 'you' ? 'わたしは' : nm(E1.by) + 'は'}その夜、${nm(E1.who)}を${locName(E1.loc)}で見ている`}。` }];
+    const r = E.judgeClash(S, st, stmt.id, +part, ev);
+    if (r.again) { await say([{ text: 'その食い違いは、もう皆の前で突いた。' }]); return debate(); }
     const t = pup(who); if (t) { t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); }
     openGate();
-    const r = E.judgeClash(S, st, stmt.id, +part, ev);
     if (!r.ok) G.gate.heat.you = 1;   // a miss turns the room on you as soon as it is said
+    if (r.ok && r.other) items.push({ text: '食い違いは、たしかにあった。だが、ほころびたのは別の口だった。' });
     for (const e of r.ev || []) { const l = lineOf(e); if (l) items.push(l); }
-    if (!r.ok) items.push({ text: `${st.lex.meet}のざわめきが、あなたのほうへ向いた。証拠は、その言葉を崩していなかった。${missLeft() > 0 ? '' : '\n今日はもう、うかつに人の言葉を突けない。'}` });
+    if (!r.ok) {
+      const WHY = { agree: P1.k === 'fig' ? 'その人影の特徴は、痕跡と食い違っていなかった。' : P1.k === 'trace' ? '報告された痕跡は、あなたが見たものと同じだった。' : '居場所は、その証拠と同じだった。', sees: 'その場所は、いた所から見える。話の中に食い違いはなかった。', kind: '痕跡の種類が違い、比べようがなかった。' };
+      items.push({ text: `${WHY[r.why] || '証拠は、その言葉を崩していなかった。'}${st.lex.meet}のざわめきが、あなたのほうへ向いた。${missLeft() > 0 ? '' : '\n今日はもう、うかつに人の言葉を突けない。'}` });
+    }
     await say(items);
     closeGate();
     log({ k: 'clash', ok: r.ok }); save(); renderRoster(); debate();
@@ -890,7 +995,7 @@
     // 回避CO: the one chosen may name a role to escape; then the village votes again
     if (!(S.dodged && S.dodged[S.day])) {
       let ev = [];
-      if (out === 'you' && !S.ghost && !S.pl.co && (S.pl.role === 'seer' || S.pl.role === 'medium' || S.pl.role === 'guard' || S.pl.role === 'mason')) {
+      if (out === 'you' && !S.ghost && !S.pl.co && ['seer', 'medium', 'guard', 'mason', 'cat'].includes(S.pl.role)) {
         const go = await pickOpt('票はあなたに集まった', `${st.roles[S.pl.role].name}だと名乗れば、票が変わるかもしれない。名乗れば、狼にも知られる。`, [{ t: `${st.roles[S.pl.role].name}だと名乗る`, v: 1, ic: IC.point }, { t: '名乗らずに受け入れる', v: 2, ic: IC.vote }]);
         if (go === 1) { (S.dodged = S.dodged || {})[S.day] = 'you'; $('fx').querySelector('.threads')?.remove(); await say([{ text: '扉へ向かう腕を振りほどいて、あなたは皆に向き直った。' }].concat(comingLines())); ev = [null]; }
       } else if (out !== 'you') {
@@ -930,8 +1035,10 @@
     }
     $('fx').querySelector('.threads')?.remove();
     E.exile(S, out, rounds, lot);
+    const dragged = S.votes[S.votes.length - 1].dragged;   // the nekomata does not go alone
+    const dragLine = () => dragged ? [{ text: fill(pickOne(st.text.catJail || ['{cat}の後を追うように、{name}が倒れた。']), { name: dragged === 'you' ? 'あなた' : nm(dragged), cat: out === 'you' ? 'あなた' : nm(out) }), fx: () => { if (dragged !== 'you') { const e = pup(dragged); if (e) e.classList.add('lift'); } SND.thud(); } }] : [];
     if (out === 'you') {
-      await say([{ text: `票の糸は、すべてあなたに結ばれていた。` }, { text: st.text.exiledYou }]);
+      await say([{ text: `票の糸は、すべてあなたに結ばれていた。` }, { text: st.text.exiledYou }].concat(dragLine()));
       if (E.check(S)) { S.phase = 'end'; save(); return end(); }
       await say([{ text: st.text.ghost }].concat(willLines()));
       S.phase = 'night'; save(); return night();
@@ -941,6 +1048,7 @@
     await say([{ text: fill(t, { name: c.name }) }, { who: out, text: c.last }]);
     const e = pup(out); if (e) { e.classList.add('lift'); SND.thud(); }
     await wait(900);
+    if (dragged) { await say(dragLine()); if (dragged === 'you') { await say([{ text: st.text.ghost }].concat(willLines())); if (E.check(S)) { S.phase = 'end'; save(); return end(); } S.phase = 'night'; save(); return night(); } }
     log({ k: 'exile', who: out });
     if (E.check(S)) { S.phase = 'end'; save(); return end(); }
     S.phase = 'night'; save();
@@ -1046,7 +1154,9 @@
       await say([{ who: w.id, text: ch(w.id).wolf }]);
     }
     const mad = S.people.find(p => p.role === 'madman');
-    if (mad) await say([{ text: `狼に心を寄せていた人間——狂人は、**${nm(mad.id)}**だった。` }]);
+    if (mad) await say([{ text: st.rules === 'fanatic' ? `狼の正体を知りながら、狼に仕えていた人間——狂信者は、**${nm(mad.id)}**だった。` : `狼に心を寄せていた人間——狂人は、**${nm(mad.id)}**だった。` }]);
+    const cat = S.people.find(p => p.role === 'cat');
+    if (cat) await say([{ text: `尾の裂けた猫——猫又は、**${nm(cat.id)}**だった。` }]);
     const fox = S.people.find(p => p.role === 'fox');
     if (fox) await say([{ text: `社に棲む狐——妖狐は、**${nm(fox.id)}**だった。${fox.alive ? '最後まで、誰にも見破られなかった。' : fox.death.cause === 'curse' ? '占いの鏡に映されて、燃え尽きた。' : `${st.lex.jail}へ送られて、正体を明かした。`}`, fx: () => { const e = pup(fox.id); if (e) { e.classList.remove('dim'); e.classList.add('shake'); } } }]);
     if (st.arc && st.arc.coda) await say([{ text: st.arc.coda }]);
@@ -1075,7 +1185,7 @@
       <div class="rank">${sc.rank}</div>
       ${scoreTable(sc)}
       ${fresh.length ? `<div class="newfeat"><b>新しい実績</b>${fresh.map(f => `<div class="feat got"><i>★</i><b>${esc(f.name)}</b><span>${esc(f.desc)}</span></div>`).join('')}</div>` : ''}
-      <p style="font-size:15px">人狼：${wolves.map(w => esc(nm(w.id))).join('、')}${mad ? `　狂人：${esc(nm(mad.id))}` : ''}${fox ? `　妖狐：${esc(nm(fox.id))}` : ''}</p>
+      <p style="font-size:15px">人狼：${wolves.map(w => esc(nm(w.id))).join('、')}${mad ? `　${esc(SP.roleName(st, 'madman'))}：${esc(nm(mad.id))}` : ''}${cat ? `　猫又：${esc(nm(cat.id))}` : ''}${fox ? `　妖狐：${esc(nm(fox.id))}` : ''}</p>
       <div class="foot"><button class="btn" data-a="title">タイトルへ</button><button class="btn" data-a="select">ほかの物語へ</button><button class="btn pri" data-a="again">もう一度</button></div>`, box => box.querySelectorAll('[data-a]').forEach(b => b.onclick = () => closeSheet(b.dataset.a))).then(a => {
       if (a === 'again') { buildSetup(); } else if (a === 'select') buildSelect(); else buildTitle();
     });
@@ -1109,7 +1219,7 @@
     const cats = E.CATS;
     return `<div class="nh">登場人物 ${S.size - 1}人</div>` + S.people.filter(p => !p.isPlayer).map(p => {
       const c = ch(p.id);
-      const st2 = !p.alive ? (p.death.cause === 'wolf' ? `犠牲（${dayName(p.death.day)}）` : p.death.cause === 'curse' ? `呪い死（${dayName(p.death.day)}）` : `追放（${dayName(p.death.day)}）`) : '';
+      const st2 = !p.alive ? (p.death.cause === 'wolf' ? `犠牲（${dayName(p.death.day)}）` : p.death.cause === 'curse' ? `呪い死（${dayName(p.death.day)}）` : p.death.cause === 'catw' ? `猫又の道連れ（${dayName(p.death.day)}）・人狼` : p.death.cause === 'cat' ? `猫又の道連れ（${dayName(p.death.day)}）` : `追放（${dayName(p.death.day)}）`) : '';
       const claim = S.claims.find(x => x.by === p.id);
       const fit = D.assist ? E.fitsTraces(S, p.id) : null;
       const chips = cats.map(cat => { let cls = ''; if (fit) { const hits = S.pl.found.map(k => k.split('|').map(Number)).filter(([ni, ti]) => S.nights[ni].traces[ti].cat === cat); if (hits.length) { const ok = hits.every(([ni, ti]) => { const tr = S.nights[ni].traces[ti]; return tr.neg ? p.traits[cat] !== tr.val : p.traits[cat] === tr.val; }); cls = ok ? ' hit' : ' miss'; } } return `<span class="chip${cls}">${esc(SP.trait(st, cat, p.traits[cat]))}</span>`; }).join('');

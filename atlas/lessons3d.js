@@ -1955,8 +1955,8 @@
     return rows.join('/') + ' w - - 0 1';
   }
   // one new ★ position for a drill lesson (problem i): the piece the lesson teaches (the capture / safety lessons: the pieces their stages use),
-  // ★ and black pieces at random — kept when the shortest route is 2–4 moves (the king 2–5), the first move has 1–2 right answers out of
-  // 3 or more (the pawn: 2 or more), no promotion on the first move, and the position is new (not a stage's, not an earlier problem's)
+  // ★ and black pieces at random — kept when the shortest route is 2–4 moves (the king 2–5), the first move has 1–2 right answers, a
+  // third of the moves at most (3 or more moves; 追72), no promotion on the first move, and the position is new (not a stage's, not an earlier problem's)
   const CD_SEEN = [];   // (every drill problem made on this page, as 64 squares — no two alike across the chess lessons)
   function cdGen(s, i, seen) {
     const stg = s.stages || [], sid = s.id, R = n => Math.floor(Math.random() * n), pcs = [...new Set(stg.map(g => (cdBoard(g.fen).find(c => c && c === c.toUpperCase()) || 'Q').toLowerCase()))];
@@ -1965,8 +1965,8 @@
       const pc = sid === 'b_capture' || sid === 'b_safety' ? pcs[(i + tr) % pcs.length] : pcs[0], occ = new Set(), blk = [], stars = [];
       let q0;
       if (pc === 'p') {   // a pawn on the 2nd–4th rank, black pieces just ahead to take, ★ on them or on a square ahead
-        const f = 1 + R(6), r = 1 + R(3); q0 = r * 8 + f; occ.add(q0);
-        const nb = 1 + R(2); for (let k = 0; k < nb; k++) { const rr = r + 1 + R(2), ff = f + R(5) - 2; if (rr > 6 || ff < 0 || ff > 7 || occ.has(rr * 8 + ff)) continue; occ.add(rr * 8 + ff); blk.push([rr * 8 + ff, 'pnb'[R(3)]]); }
+        const f = 1 + R(6), r = R(3) ? 1 : 1 + R(3); q0 = r * 8 + f; occ.add(q0);   // (追72: mostly from the 2nd rank — 3 moves or more to choose from)
+        const nb = 1 + R(3); for (let k = 0; k < nb; k++) { const rr = r + 1 + R(2), ff = f + R(5) - 2; if (rr > 6 || ff < 0 || ff > 7 || occ.has(rr * 8 + ff)) continue; occ.add(rr * 8 + ff); blk.push([rr * 8 + ff, 'pnb'[R(3)]]); }
         blk.forEach(([q]) => { if (R(3)) stars.push(q); }); if (!stars.length || R(2)) { const rr = Math.min(6, r + 2 + R(2)), ff = f + R(3) - 1; if (ff >= 0 && ff < 8 && !occ.has(rr * 8 + ff)) { occ.add(rr * 8 + ff); stars.push(rr * 8 + ff); } }
       } else {
         q0 = free(occ);
@@ -1989,9 +1989,9 @@
       if (CD_SEEN.some(o => { let d = 0; for (let k = 0; k < 64 && d < 5; k++) if (o[k] !== sq[k]) d++; return d < 5; })) continue;
       const memo = new Map(), d = cdDist(S, st, memo), hi = pc === 'k' ? 5 : 4;
       if (d < 2 || d > hi) continue;
-      const ms = cdMoves(S, st); if (ms.length < (pc === 'p' ? 2 : 3) || ms.some(m => m.promo)) continue;
+      const ms = cdMoves(S, st); if (ms.length < 3 || ms.some(m => m.promo)) continue;
       ms.forEach(m => { m.d = cdDist(S, m.st, memo); }); const ok = ms.filter(m => 1 + m.d === d);
-      if (!ok.length || ok.length > 2 || ok.length >= ms.length) continue;
+      if (!ok.length || ok.length > 2 || ok.length * 3 > ms.length) continue;   // (追72 2026-11-25: the right first moves are a third of the moves at most)
       seen.add(key); CD_SEEN.push(sq); if (CD_SEEN.length > 60) CD_SEEN.shift(); return { gi: i, step: 0, S, st, d, ms, ok, left: stars.length };
     }
     return null;
@@ -2006,7 +2006,7 @@
       for (let step = 0; st.sm && step < 12; step++) {
         const d = cdDist(S, st, memo), ms = cdMoves(S, st).map(m => Object.assign(m, { d: cdDist(S, m.st, memo) }));
         const ok = ms.filter(m => 1 + m.d === d);
-        if (ms.length >= 3 && ok.length < ms.length && !ms.some(m => m.promo)) cands.push({ gi, step, S, st, d, ms, ok, left: stars.filter((q, i) => st.sm >> i & 1).length });
+        if (ms.length >= 3 && ok.length && ok.length * 3 <= ms.length && !ms.some(m => m.promo)) cands.push({ gi, step, S, st, d, ms, ok, left: stars.filter((q, i) => st.sm >> i & 1).length });
         if (!ok.length) break; st = ok[0].st;
       }
     });
@@ -2045,7 +2045,7 @@
         if (x.cap) return T(V(W.cap), p);   // (a capture off the ★: a blocker taken — on a ★ it is the branch above)
         if (!reach(x)) return T(V(W.noReach), p);
         return T(V(W.off), p); };
-      const o = { pos: cdFen(c.S, c.st), kind: 'best', drill: { stars, safe: c.S.safe }, P: { ok: okU }, ans, hintTx,
+      const o = { pos: cdFen(c.S, c.st), kind: 'best', drill: { stars, safe: c.S.safe }, P: { ok: okU }, nLegal: c.ms.length, ans, hintTx,
         ask: C.askS ? C.askS[sid][i % 3] : V(sid === 'b_capture' ? C.askCap : sid === 'b_safety' ? C.askSafe : C.ask).replace('{p}', C.pk[pc]),
         good: u => { const m = (u && okU.includes(u) && by(u)) || c.ok[0]; return V(C.good)('{x}', whyR(m)); },
         ng: u0 => { const x = alt(u0); if (!x) return ''; return V(C.ng)('{m}', '{x}', whyW(c.ok[0], x)); } };
@@ -2456,7 +2456,7 @@
       let e = E(tok);
       if (e === p && e !== '!' && e !== 'x') {
         if (e === 'ね') tok = tok.replace(/(だね|よね|ね)([。！])(\s*)$/, (_, a, b, c) => (a === 'だね' ? 'だ' : '') + '！' + c);
-        else if (e === 'んだ') tok = tok.replace(/(なんだ|んだ)([。！])(\s*)$/, (_, a, b, c) => (a === 'なんだ' ? '' : '') + b + c);
+        else if (e === 'んだ') tok = tok.replace(/(なんだ|んだ)([。！])(\s*)$/, (_, a, b, c) => (a === 'なんだ' ? '' : 'んだよ') + b + c);   // (2026-11-25: 「進んだ！」 lost its verb as 「進！」 — a plain 〜んだ keeps it and ends in よ)
         e = E(tok);
       }
       p = e; return tok; });
@@ -2503,11 +2503,11 @@
     const v = off ? (k, arr) => { const a = arr.filter(t => !RXO.test(t)); return V.v(k + 'o', a.length ? a : arr); } : V.v;
     const { F, me } = rvOpFacts(o.pos), A = +o.ans, ks = Object.keys(F).map(Number), fa = F[A] || { n: 0, open: 0, oM: 0, oC: 0 };
     const minOf = k => Math.min(...ks.map(q => F[q][k])), maxOf = k => Math.max(...ks.map(q => F[q][k])), side = me === 1 ? '黒' : '白';
-    const SOFT = off ? RVJ_OP.soft.filter(t => !RXO.test(t)) : null, CHEER = off ? RVJ_OP.cheer.filter(t => !RXO.test(t)) : null;   // (off: no 「覚え」)
+    const SOFT = off ? RVJ_OP.soft.filter(t => !RXO.test(t)) : null, CHEER = off ? RVJ_OP.cheer.filter(t => !RXO.test(t)) : null, PSO = off ? shPerm((V.seed ^ 0x6a09e667) >>> 0, SOFT.length) : null;   // (2026-11-25: the soft words off the line in an order of their own per opening, like the cheers)   // (off: no 「覚え」)
     const NEAR = /おしい|あと少し|あと一歩|いい線/, ptsOf = u => { const e = o.P && o.P.ev; if (!e) return 0; const best = Math.max(...e.map(x => x[1])), m = e.find(x => rvSq(x[0]) === u); return m ? Math.max(0, Math.min(14, Math.round(14 - 2.5 * (best - m[1])))) : 0; };   // (= REVERSI.points for a move off the line)
-    const soft = (k, u) => { const near = u != null && ptsOf(u) >= 10, S = q => off ? SOFT[(V.seed + q) % SOFT.length] : V.soft(q), t = S(k); if (near || !NEAR.test(t)) return t;
+    const soft = (k, u) => { const near = u != null && ptsOf(u) >= 10, S = q => off ? SOFT[PSO[q % PSO.length]] : V.soft(q), t = S(k); if (near || !NEAR.test(t)) return t;
       const n = off ? SOFT.length : RVJ_OP.soft.length, U = [0, 1, 2, 3, 4].map(S), L = []; for (let q = 5; q < n + 5; q++) { const x = S(q); if (!NEAR.test(x) && !U.includes(x) && !L.includes(x)) L.push(x); }
-      const r = [0, 1, 2, 3, 4].slice(0, Math.min(k, 5)).filter(q => NEAR.test(S(q))).length; return L.length ? L[(r + Math.max(0, k - 5) + (V.seed >>> 3)) % L.length] : 'ドンマイ！'; }, cheer = k => off ? CHEER[(V.seed + k) % CHEER.length] : V.cheer(k);   // (追53: 「おしい・あと少し・あと一歩・いい線」 only for a move worth 10+ points, in the line's own problems too)
+      const r = [0, 1, 2, 3, 4].slice(0, Math.min(k, 5)).filter(q => NEAR.test(S(q))).length; return L.length ? L[(r + Math.max(0, k - 5) + (V.seed >>> 3)) % L.length] : 'ドンマイ！'; }, PCO = off ? shPerm((V.seed ^ 0x2c1b3c6d) >>> 0, CHEER.length) : null, cheer = k => off ? CHEER[PCO[k % PCO.length]] : V.cheer(k);   // (2026-11-25: off the line a permutation per opening — a rotation gave every lesson one of only CHEER.length orders)   // (追53: 「おしい・あと少し・あと一歩・いい線」 only for a move worth 10+ points, in the line's own problems too)
     const ask = off ? V.v('askO', RVJ_OP.askO.map(t => fill(t, { n: nmQ, s: me === 1 ? '黒' : '白' }))) : i === 0 || i === 3 ? v('askN', RVJ_OP.askN.map(t => fill(t, { n: name, s: side }).replace('『' + name + '』', nmQ))) : v('ask', RVJ_OP.ask.map(t => fill(t, { s: side })));
     const spread = k => ks.length > 1 && minOf(k) < maxOf(k);   // (a fact that tells the moves apart — on the first moves every move flips one disc)
     const O = () => v('opp', RV_OPP), MEM = off ? RVJ_OP.cmpO : ['さっき盤で見た手順を思い出してみて。相手の直前の手に、どう応じていたかな？', '石がどんな形に並んでいたか、思い出してみて。盤の絵がヒントになるかも！', 'あわてずに、手順の流れを頭の中でもう一度並べてみよう。', '最後にできあがる形を思いうかべると、次の一手が見えてくるかも？', '一手前の相手の石に、どう応じる流れだったっけ？', '手順の動画を巻きもどすつもりで、ゆっくり思い出してみて！'];
@@ -2543,8 +2543,8 @@
       if (off && fu.oC <= fa.oC && !(fu.x && !fa.x) && !(fu.cq && !fa.cq) && mU < mA) { out.push(v('nm', [`赤い枠だと、相手にうまく応じられたとき、きみの打てる場所は${mU}か所まで減っちゃう。緑の枠なら${mA}か所残るんだ。`, `相手のいちばんいやな応手のあと、打てる場所は赤い枠だと${mU}か所、緑の枠なら${mA}か所。赤い枠は自分の手が先に詰まっちゃうね。`, `赤い枠のあと、相手の応じ方しだいで、きみの打ち場所は${mU}か所だけ。緑の枠なら${mA}か所あって、手が詰まりにくいんだ。`])); return rvEnds(out.join(''), '!').t; }
       const N7 = off ? [`緑の枠は${fa.n}枚返して${O()}が${fa.oM}か所、赤い枠は${fu.n}枚で${fu.oM}か所。数は近いけど、相手のいちばんいやな応手のあとでも、緑の枠なら打てる場所が${mA}か所残るんだ。`, `どちらも数は近い手。でも緑の枠は、相手がどう応じても、きみの打てる場所が${mA}か所以上残る手なんだ。`] : [near ? `緑の枠は${fa.n}枚返して${O()}が${fa.oM}か所、赤い枠は${fu.n}枚で${fu.oM}か所。数は近くても、手順から外れると次の形が変わっちゃうんだ。` : fu.oM > fa.oM ? `緑の枠なら${O()}は${fa.oM}か所、赤い枠だと${fu.oM}か所。相手に選ぶ余地をあげちゃうからね。` : `赤い枠のほうが${O()}は少ない（${fu.oM}か所）けど、定石の手順から外れると、覚えた次の形が使えなくなるんだ。`, '赤い枠だと、定石で覚えたこの先の形にならないから、次の手を自分で考えることになるね。', fu.n !== fa.n ? `赤い枠は${fu.n}枚返し、緑の枠は${fa.n}枚返し。形が変わると、覚えた手順が使えなくなるからね。` : '返す枚数は同じでも、場所がちがえば形が変わる。覚えた手順が使えなくなるからね。', '赤い枠に打つと、この先は定石の外の形。そこからは手探りになっちゃう。'];
       if (fu.oC > fa.oC) out.push(v('n1', ['赤い枠だと、相手が隅に打てるようになっちゃう。隅は取られたら取り返せない場所なんだ。', '赤い枠では隅への道が開いて、相手に隅を取られちゃうね。', '赤い枠のあと、相手は隅に打てる。隅をあげると、辺までくずれていくからね。']));
-      else if (fu.x && !fa.x) out.push(v('n2', ['赤い枠は隅のななめ隣（X）。あとで相手に隅を取られる足場になりやすいんだ。', 'Xに打つと、その隅を相手にねらわれやすくなるからね。', '隅のななめ隣（X）に打つと、相手が隅に入る足場ができちゃうからね。']));
-      else if (fu.cq && !fa.cq) out.push(v('n3', ['赤い枠は隅のとなりのマス。辺の形がくずれるから、相手に隅をねらわれやすいね。', 'Cに打つと辺の形がくずれるから、隅をねらわれやすくなるんだ。', 'Cに打つと、となりの隅を相手に取られやすくなるから気をつけて！']));
+      else if (fu.x && !fa.x) out.push(v('n2', ['赤い枠は隅のななめ隣（X）。あとで相手に隅を取られる足場になりやすいんだ。', 'Xに打つと、その隅を相手にねらわれやすくなるからね。', '隅のななめ隣（X）に打つと、相手が隅に入る足場ができちゃうからね。', '赤い枠は隅のななめ隣のXのマス。そこに石があると、相手が隅に打つきっかけを作っちゃう。', '隅のななめ隣（X）は、相手に隅をあげる入り口になりやすいマス。緑の枠ならその心配がないね。']));
+      else if (fu.cq && !fa.cq) out.push(v('n3', ['赤い枠は隅のとなりのマス。辺の形がくずれるから、相手に隅をねらわれやすいね。', 'Cに打つと辺の形がくずれるから、隅をねらわれやすくなるんだ。', 'Cに打つと、となりの隅を相手に取られやすくなるから気をつけて！', '隅のとなり（C）に打つと、辺に相手の足がかりができて、隅まで取られやすくなるよ。', '赤い枠は隅のすぐ横のCのマス。辺がくずれると、相手に隅をわたしやすくなっちゃう。']));
       else if (fu.open > fa.open) out.push(v('n4', [`開放度は赤い枠が${fu.open}、緑の枠は${fa.open}。空きが多いと、相手の足場になっちゃうからね。`, `赤い枠だと、返した石のそばの空きが${fu.open}マス。緑の枠なら${fa.open}マスですむんだ。`, `緑の枠のほうが静かな手。赤い枠は空きを${fu.open}マスもかかえるから、相手に打ち場所をあげちゃう。`, `赤い枠は開放度${fu.open}で、外に石が出ちゃう。緑の枠なら${fa.open}にとどまるからね。`, `空きにふれるのは、緑の枠なら${fa.open}マス、赤い枠だと${fu.open}マス。そのぶん相手が打ちやすくなるんだ。`, ...(off ? [] : N7)]));
       else if (fu.oM > fa.oM) out.push(v('n5', [`打ったあとの${O()}は、赤い枠だと${fu.oM}か所、緑の枠なら${fa.oM}か所。相手の選択肢をふやしちゃうんだ。`, `赤い枠のあと、相手は${fu.oM}か所に打てる。緑の枠なら${fa.oM}か所にしぼれたね。`, `緑の枠なら${O()}は${fa.oM}か所なのに、赤い枠だと${fu.oM}か所にふえちゃうからね。`, ...(off ? [] : N7)]));
       else if (fu.n > fa.n) out.push(v('n6', [`赤い枠は${fu.n}枚も返すから、外がわの石がふえて、あとで苦しくなりやすいね。`, `${fu.n}枚も返すと、外に出た石が相手の足場になるんだ。`, `返しすぎの${fu.n}枚！ 外に出た石は、相手の打ち場所になるからね。`, ...(off ? [] : N7)]));
@@ -2557,7 +2557,7 @@
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261124p1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=2').catch(() => ({}))])
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261124p1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=3').catch(() => ({}))])
         .then(([ls, op, ev, wt, opp]) => { this.WT = wt || {}; this.OPP = opp || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
@@ -6981,7 +6981,7 @@
     load(lang) {
       const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261021L`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
       if (this.p) return this.p.then(() => T()).then(() => this);
-      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261123'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
+      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261125'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
         .then(([ls, X]) => { const w = {}; try { new Function('window', 'with (window) {' + X + '\n}')(w); } catch (e) { console.warn('[lessons3d] dots texts', e); } this.I = w.I18N || {}; this.data = { ls }; return T(); }).then(() => this)
         .catch(e => { this.p = null; throw e; }));
     },
@@ -7051,7 +7051,7 @@
     .catch(e => { this.p = null; throw e; })); } };
   /* kōnane (2026-11-25 担当C): the data, チェッカニ's words and the board facts are in atlas/ls-konane.js (loaded the first time; only the
      lessons checked and rebuilt for the 3D, AtlasLsKonane.READY — tools/lesson-verify-konane.js --lessons) */
-  const KONANE = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsKonane) return res(); const sc = document.createElement('script'); sc.src = 'ls-konane.js?v=2'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const KONANE = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsKonane) return res(); const sc = document.createElement('script'); sc.src = 'ls-konane.js?v=3'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsKonane.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   /* ugolki (2026-11-24 担当D): the data, モリフク's words and the board facts are in atlas/ls-ugolki.js (loaded the first time; only the

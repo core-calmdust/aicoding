@@ -38,7 +38,7 @@ body.night .pup,body.night .scn{color:#05070d}
 body.anim-off #scrim .lamp{animation:none}
 body.paused *,body.paused *::before,body.paused *::after{animation-play-state:paused!important}
 
-#scene{position:absolute;left:0;right:0;top:0;bottom:calc(var(--dockH) - 16px);color:var(--ink);transition:opacity .5s,bottom .45s ease;will-change:opacity;contain:layout paint}
+#scene{position:absolute;left:0;right:0;top:0;bottom:calc(var(--dockH) - 16px + var(--raise,0px));color:var(--ink);transition:opacity .5s,bottom .45s ease;will-change:opacity;contain:layout paint}
 #scene .scn{position:absolute;inset:0;width:100%;height:100%}
 #scene .far{opacity:.17;filter:blur(2.4px)}
 #scene .mid{opacity:.42;filter:blur(.8px)}
@@ -66,6 +66,26 @@ body.crowd #scene .near{opacity:.34;filter:blur(1px)}
 body.crowd #scene .glow{opacity:.5}
 
 /* the puppets */
+#floor{position:absolute;left:0;right:0;top:calc(100% - var(--dockH) - 16px - var(--raise,0px));bottom:0;pointer-events:none;transition:top .45s ease,opacity .5s;background:linear-gradient(to bottom,color-mix(in srgb,var(--ink) 14%,transparent),transparent 40%)}
+body:not(.scr-play) #floor{display:none}
+#floor svg{position:absolute;inset:0;width:100%;height:100%;color:var(--ink)}
+#floor .road{fill:currentColor;opacity:.09;filter:blur(1.2px)}
+#floor .tuft{fill:currentColor;opacity:.88;filter:blur(.5px)}
+#floor .side{fill:currentColor;opacity:.2;filter:blur(.9px)}
+#floor .far{fill:currentColor;opacity:.42;filter:blur(1px)}
+#floor.swap{opacity:0}
+#floor .pave{fill:currentColor;opacity:.13;filter:blur(.6px)}
+#floor .dark{fill:currentColor;opacity:.5;filter:blur(.5px)}
+#floor .water{fill:currentColor;opacity:.13}
+#floor .wave{fill:none;stroke:currentColor;stroke-width:1.5;opacity:.28;filter:blur(.4px)}
+#floor .snow{fill:#fffaf0;opacity:.55;stroke:currentColor;stroke-opacity:.25;stroke-width:1.5;filter:blur(.5px)}
+#floor .w-plank .pave,#floor .w-step .pave{opacity:.3}
+#floor .s-snow .road{opacity:.2}
+#floor .rug{fill:currentColor;opacity:.16;filter:blur(.6px)}
+#floor .sand{fill:currentColor;opacity:.1;filter:blur(1px)}
+body.night #floor .road{opacity:.13}
+.pp.back{bottom:var(--backB,12%)}
+.pp.front{bottom:calc(-1 * var(--depth,0px));width:calc(var(--pw,118px) * var(--fs,1))}
 #cast{position:absolute;left:0;right:0;bottom:calc(var(--dockH) - 10px);height:calc(100% - var(--dockH) - var(--hdH));pointer-events:none;transition:bottom .45s ease,height .45s ease}
 .pp{position:absolute;bottom:0;width:var(--pw,118px);transform:translateX(-50%);transition:left .7s cubic-bezier(.3,.7,.2,1),bottom .7s,transform .5s,opacity .6s,filter .6s;pointer-events:auto;cursor:pointer;-webkit-user-select:none;user-select:none}
 .pp .pup{display:block;width:100%;height:auto;color:var(--ink);overflow:visible;filter:blur(.35px);transition:filter .5s,transform .5s;transform-origin:50% 100%;will-change:transform}
@@ -85,8 +105,9 @@ body.show-names .pp .nm,.pp:hover .nm,.pp.speak .nm,.pp.sel .nm{opacity:1}
 .pp.idle .pup{animation:breathe 4.6s ease-in-out infinite;animation-delay:var(--d,0s)}
 body.anim-off .pp.idle .pup{animation:none}
 @keyframes breathe{0%,100%{rotate:-1.1deg;scale:1 1}30%{scale:1 1.014}50%{rotate:1.1deg;scale:1 1.006}80%{scale:1 1.016}}
-.pp.speak.idle .pup{animation-duration:1.6s}   /* the one speaking sways a little more quickly, like a rod puppet being worked */
 .pp.fallen .pup{transform:rotate(-86deg) translate(-30%,10%);filter:blur(.6px)}
+.pp.front.mid{bottom:calc(max(var(--backB,0px), 0px) * .4 + 3%);width:var(--pw,118px)}
+.pp.pp.fallen{bottom:calc(max(var(--backB,0px), 0px) + 9%)}   /* the dead lie a little way up the road, clear of the text */
 .pp.lift{bottom:120%!important;opacity:0;transition:bottom 1.6s cubic-bezier(.5,0,.6,1),opacity 1.6s}
 .pp.drop{transform:translateX(-50%) translateY(140%);opacity:0;transition:transform 1.2s cubic-bezier(.6,0,.8,.4),opacity 1.2s}
 .pp .badge{position:absolute;left:50%;top:-6px;transform:translate(-50%,-100%);white-space:nowrap;font:700 13px/1 var(--ui);padding:4px 8px;border-radius:999px;background:var(--ink);color:var(--paper)}
@@ -94,7 +115,7 @@ body.anim-off .pp.idle .pup{animation:none}
 .pp .tg{position:absolute;left:50%;top:-2px;transform:translate(-50%,-100%);display:flex;gap:3px;align-items:center;pointer-events:none;white-space:nowrap}
 .pp .tg:empty{display:none}
 .tg .cl,.ro .cl{font:800 15px/1 var(--ui);padding:4px 7px 5px;background:#6b35a8;color:#fff;border-radius:3px;box-shadow:0 1px 2px rgba(0,0,0,.35)}
-.tg .cl.medium,.ro .cl.medium{background:#1f5fa8}.tg .cl.mason,.ro .cl.mason{background:#8a5a1c}.tg .cl.guard,.ro .cl.guard{background:#23804f}
+.tg .cl.medium,.ro .cl.medium{background:#1f5fa8}.tg .cl.mason,.ro .cl.mason{background:#8a5a1c}.tg .cl.cat,.ro .cl.cat{background:#5d4a8a}.tg .cl.guard,.ro .cl.guard{background:#23804f}
 .tg .ht,.ro .ht{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border-radius:50%;background:#e07a10;color:#fff;font:800 15px/1 var(--ui);font-variant-numeric:tabular-nums;box-shadow:0 1px 3px rgba(0,0,0,.35)}
 #roster{position:absolute;top:calc(var(--hdH) + 6px);left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:6;pointer-events:auto;max-width:calc(100% - 20px)}
 #roster.hide{display:none}
@@ -381,6 +402,7 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
   body.scr-play #stage{bottom:auto;height:var(--stageH,46vh);height:var(--stageH,46lvh)}
   #scene{bottom:6px}
   #cast{bottom:10px;height:calc(100% - var(--hdH) - 24px)}
+  #floor{display:none}
   .pp{--pw:74px}
   #roster{top:calc(var(--hdH) + 6px);gap:5px 4px;width:calc(7 * 46px + 6 * 4px);max-width:calc(100% - 8px);flex-wrap:wrap;justify-content:center}
   .ro{width:46px;padding:4px 0 2px;border-width:1px}
@@ -437,6 +459,7 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 <div id="stage" aria-hidden="true">
   <div id="scrim"><i class="moonl"></i><i class="lamp"></i><i class="fiber"></i><i class="edge"></i></div>
   <div id="scene"></div>
+  <div id="floor"></div>
   <div id="cast"></div>
   <div id="roster" class="hide"></div>
   <div id="fx"></div>
@@ -467,7 +490,7 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 </section>
 
 <section class="scr hide" id="scrSelect">
-  <h2 class="scrh">幻灯の三幕</h2>
+  <h2 class="scrh">幻灯の五幕</h2>
   <p class="scrp">場所も、人も、狼のやり口も違う物語。どれから灯しますか。</p>
   <div class="stories" id="stories"></div>
   <div class="foot" style="width:min(1180px,100%);justify-content:flex-start;margin-top:18px"><button class="btn" id="selBack">もどる</button></div>
@@ -500,14 +523,14 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 
 <div id="sheet" class="hide" role="dialog" aria-modal="true"><div class="box" id="sheetBox"></div></div>
 
-<script src="engine.js?v=13"></script>
-<script src="voices.js?v=7"></script>
-<script src="speech.js?v=8"></script>
+<script src="engine.js?v=17"></script>
+<script src="voices.js?v=9"></script>
+<script src="speech.js?v=10"></script>
 <script src="art.js?v=2"></script>
-<script src="scenes.js?v=1"></script>
-<script src="scenes-pass.js?v=1"></script>
+<script src="scenes.js?v=2"></script>
+<script src="scenes-pass.js?v=2"></script>
 <script src="hero.js?v=2"></script>
-<script src="feats.js?v=1"></script>
+<script src="feats.js?v=3"></script>
 <script src="stories/kirigane.js?v=5"></script>
 <script src="stories/kirigane.tale.js?v=3"></script>
 <script src="stories/kirigane.who.js?v=2"></script>
@@ -520,7 +543,15 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 <script src="stories/tomoshibi.tale.js?v=3"></script>
 <script src="stories/tomoshibi.who.js?v=2"></script>
 <script src="stories/tomoshibi.who.open.js?v=1"></script>
-<script src="sound.js?v=9"></script>
-<script src="game.js?v=33"></script>
+<script src="stories/nekonaki.js?v=1"></script>
+<script src="stories/nekonaki.tale.js?v=1"></script>
+<script src="stories/nekonaki.who.js?v=1"></script>
+<script src="stories/nekonaki.who.open.js?v=1"></script>
+<script src="stories/shirane.js?v=1"></script>
+<script src="stories/shirane.tale.js?v=1"></script>
+<script src="stories/shirane.who.js?v=1"></script>
+<script src="stories/shirane.who.open.js?v=1"></script>
+<script src="sound.js?v=10"></script>
+<script src="game.js?v=42"></script>
 </body>
 </html>

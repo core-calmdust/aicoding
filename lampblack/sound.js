@@ -26,8 +26,10 @@
   // a cracked bronze bell: inharmonic partials, one slightly sour
   // the music steps back while a bell rings, and comes back when the last one fades
   let duckUntil = 0;
+  const END = { gameover: 1, clear: 1 };
   function duck(until) {
     if (!bgm || !ac) return;
+    if (cur && END[cur.name]) return;   // the ending song plays on at full voice, howl or no howl
     const now = ac.currentTime, back = Math.max(duckUntil, until);
     bgm.gain.cancelScheduledValues(now);
     bgm.gain.setTargetAtTime(musicOn ? BGM * .18 : 0, now, .12);
@@ -120,6 +122,7 @@
     if (cur && cur.name === name) { cur.g.gain.cancelScheduledValues(now); cur.g.gain.setTargetAtTime(level, now, .7); return; }
     if (cur) { const c = cur; c.stopped = true; clearTimeout(c.timer); c.g.gain.cancelScheduledValues(now); c.g.gain.setTargetAtTime(0, now, .6); setTimeout(() => { c.srcs.forEach(x => { try { x.stop(); } catch (e) {} }); c.g.disconnect(); }, 4000); }
     cur = null;
+    if (END[name] && bgm) { bgm.gain.cancelScheduledValues(now); bgm.gain.setTargetAtTime(musicOn ? BGM : 0, now, .3); duckUntil = 0; }   // lift any duck still holding the music down
     if (!name || !TRACK[name]) return;
     const g = a.createGain(); g.gain.value = 0; g.connect(bgm);
     const c = { name, g, srcs: [], stopped: false }; cur = c;

@@ -2,7 +2,7 @@
 // 「Nice! 1 moves left」「No mate within 1 moves」「Win by 1 discs or more」「Quedan 1 jugadas」「За 1 ходов」「1 चालों में」「1 نقلات」:
 // every text with the number placeholder {n} (the moves left / the limit / the margin / the empties of the 3D puzzles' guide) in
 //   - atlas/puzzles.js: every top-level `const X = { … }` block of words (TX, RV, C4X, MCX, MMX, TFX, AMX, HXX, CKX, XQX, JGX, BGX, GOX, GMX),
-//   - xiangqi/pzwhy.js: T and OWN (the words after a move off the solution, 3D and 2D),
+//   - xiangqi/pzwhy.js · hex/pzwhy.js: T and OWN (the words after a move off the solution, 3D and 2D),
 // by language:
 //   en      the word after the number ends in -s (moves, discs, squares, times…) or is "empty" (→ "empty squares");
 //   es · pt the word after ends in -s, or the verb before is plural (Quedan / Faltan / Faltam / Restan);
@@ -70,6 +70,8 @@ function verify(opt) {
   for (const need of ['TX', 'RV', 'C4X', 'MCX', 'MMX', 'TFX', 'AMX', 'HXX', 'CKX', 'XQX', 'JGX', 'BGX', 'GOX', 'GMX']) if (!B[need]) add(need, `atlas/puzzles.js has no ${need} (the check would see nothing)`);
   const XW = opt.xq || require(path.join(ROOT, 'xiangqi/pzwhy.js'));
   all.push(...texts('xiangqi/pzwhy.js T', XW.T), ...texts('xiangqi/pzwhy.js OWN', XW.OWN));
+  const HW = opt.hx || require(path.join(ROOT, 'hex/pzwhy.js'));   // (追88) 詰めヘックス's words after a move off the solution
+  all.push(...texts('hex/pzwhy.js T', HW.T), ...texts('hex/pzwhy.js OWN', HW.OWN));
   // 追61: the game's own 2D words (<game>/i18n.js, pz.*) that the 3D puzzle also says (B.tx: the goal 「mate within 1 moves」, the
   // solved line, the reason of a wrong move). The games in I18N_DONE are checked; the others are counted as pending (追61 未確認).
   const vm = require('vm'), pending = {};
