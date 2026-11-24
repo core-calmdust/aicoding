@@ -948,7 +948,7 @@ html.ptv-open,html.ptv-open body{overflow:hidden}
 .rdtl{margin:26px 0 0;padding:16px 18px;border:1px solid rgba(60,40,20,.14);border-radius:18px;background:#fffdf8}
 .rdtl ol{margin:0;padding:0;list-style:none;position:relative}
 .rdtl ol::before{content:"";position:absolute;inset-inline-start:7px;top:6px;bottom:6px;width:2px;background:color-mix(in srgb,var(--c) 45%,#e6dcc6)}
-.rdtl li{position:relative;display:grid;grid-template-columns:minmax(7.5em,auto) minmax(0,1fr);gap:4px 14px;padding:6px 0 6px 26px}
+.rdtl li{position:relative;display:grid;grid-template-columns:10.5em minmax(0,1fr);gap:4px 14px;padding:6px 0 6px 26px}
 .rdtl li::before{content:"";position:absolute;inset-inline-start:2px;top:12px;width:12px;height:12px;border-radius:50%;background:var(--c);box-shadow:0 0 0 3px #fffdf8}
 .rdtl li b{font:800 14px/1.6 var(--round);color:var(--ink)}
 .rdtl li span{font-size:15px;line-height:1.6}
@@ -962,3 +962,21 @@ html.ptv-open,html.ptv-open body{overflow:hidden}
   .rdtl li{grid-template-columns:minmax(0,1fr);gap:0}
 }
 [dir=rtl] .rdtl li{padding:6px 26px 6px 0}
+/* (2026-11-24 ユーザー: 画像なども使って読みやすく) figures in an article: beside the text on a wide screen, above it on a phone */
+.rdm.hf{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:22px;align-items:start}
+.rdm.hf h4{grid-column:1/-1}
+.rdm.hf .rdfigs{grid-column:2;grid-row:2/span 6;position:sticky;top:90px}
+.rdm.hf p{grid-column:1}
+.rdfigs{display:grid;gap:14px;margin:0 0 14px}
+.rdfig{margin:0}
+.rdfig img{display:block;width:100%;border-radius:14px;aspect-ratio:4/3;object-fit:cover;background:#2a2420}
+.rdfig.dg{padding:12px;border:1px solid rgba(60,40,20,.14);border-radius:14px;background:#fffdf8}
+.rdfig.dg svg{display:block;width:100%;height:auto}
+.rdfig figcaption{margin:6px 2px 0;font-size:13px;line-height:1.55;color:#5b5348;font-weight:600}
+.rdfb{position:relative;display:block;width:100%;padding:0;border:0;background:none;cursor:pointer;border-radius:14px}
+.rdfb span{position:absolute;inset-inline-end:10px;bottom:10px;padding:4px 10px;border-radius:99px;background:rgba(20,14,8,.72);color:#fff;font:800 12px var(--round)}
+@media (max-width:819px){
+  .rdm.hf{display:block}
+  .rdm.hf .rdfigs{position:static}
+}
+.rdfig.dg svg text{font-family:var(--round)}
