@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-/* 狼影灯 — 文章の採点（物語ごと100点から減点。合格は90点。くわしい基準は claude/wolflantern-spec.md「文章の基準」）
-   usage: node wolflantern/tools/text-quality.js [story] [--show]
+/* 狼影灯 — 文章の採点（物語ごと100点から減点。合格は90点。くわしい基準は claude/lampblack-spec.md「文章の基準」）
+   usage: node lampblack/tools/text-quality.js [story] [--show]
    見るもの：抜け・置き換えの崩れ、毎回変わる配役と矛盾する名指し、長すぎる文、同じ文末の連続、
    使い古された言い回し、感情を説明する言葉、五感の手ざわり、口調のぶれ、くり返し、画面に収まる長さ、声（voices.js）の抜けと重なり */
 const W = require('./load.js');
