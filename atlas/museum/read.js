@@ -43,6 +43,7 @@
     { id: 'janggi', region: 'asia', color: '#1f5e52', cover: { g: 'janggi', s: 'janggi' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'janggiBoard' }, m1: { svg: 'janggiElephant' }, m2: { svg: 'janggiCannon' } }, refs: ['Stewart Culin, Korean Games, with Notes on the Corresponding Games of China and Japan (1895)', '한국민족문화대백과사전 「장기」 / Encyclopedia of Korean Culture, “Janggi”', 'H. J. R. Murray, A History of Chess (1913)', 'University of Waterloo, Elliott Avedon Virtual Museum of Games: Changgi', 'Wikipedia, “Janggi” (setups, bikjang, scoring)'], links: [{ g: 'janggi' }, { g: 'xiangqi' }, { g: 'chess' }] },
     // (2026-11-24) mahjong is a page of its own (mahjong/, not in the Atlas's GAMES): the cover and the first link go there (href), named by the story's text (game)
     { id: 'mahjong', region: 'asia', color: '#1d6a4a', cover: { g: 'mahjong', s: 'mahjong', href: '../mahjong/' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'mahjongTiles' }, m1: { svg: 'mahjongHand' }, m2: { svg: 'mahjongSpread' } }, refs: ['沈一帆『圖畫麻雀牌譜』(1914) / Yifan Shen, Illustrated Mahjong Guide', 'William Henry Wilkinson, “Chinese Origin of Playing Cards”, American Anthropologist (1895)', 'Joseph Park Babcock, Rules of Mah-Jongg (1920)', '天野大三「報知ルール」（報知新聞、1952）', '中国国家体育总局『中国麻将竞赛规则』(1998) / Mahjong Competition Rules', 'Wikipedia, “Mahjong”, “Japanese mahjong”'], links: [{ g: 'mahjong', href: '../mahjong/' }, { g: 'shanghai' }, { g: 'xiangqi' }] },
+    { id: 'gomoku', region: 'asia', color: '#5a3a24', cover: { g: 'gomoku', s: 'gomoku' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'gomokuFive' }, m1: { svg: 'renjuForbidden' }, m2: { svg: 'gomokuSolved' } }, refs: ['黒岩涙香『萬朝報』（1899年12月6日） / Ruikō Kuroiwa, Yorozu chōhō (1899)', '『五目定石集』（1856） / Gomoku Jōseki Collection', 'L. Victor Allis, Searching for Solutions in Games and Artificial Intelligence (PhD thesis, University of Limburg, 1994)', 'János Wágner, István Virág, “Solving Renju”, ICGA Journal 24(1) (2001)', 'Renju International Federation (RIF), rules and history'], links: [{ g: 'gomoku' }, { g: 'go' }, { g: 'connect4' }] },
   ];
   // pictures shown only beside a story's paragraph (not in another room): a museum's open-access photo (CC0), linked to the museum's page.
   // The name, in each language, is MUSEUM_READ_T[lang].pic[id]. Files images/atlas/museum-story/pic/<id>.webp (≤ 960 px).
@@ -636,6 +637,37 @@
     mahjongSpread: () => { const R = mjL('spread'), W = 300, RH = 46, o = 14, H = o * 2 + RH * (R.length - 1) + 20, xn = 96; let g = '';
       const C = ['#c62828', '#1b4fa0', '#14864a', '#14864a', '#c62828'];
       g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * (R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
+      R.forEach(([yr, pl, ds], k) => { const y = o + 8 + RH * k;
+        g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="15" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
+        g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(pl)}</text><text x="${xn + 16}" y="${y + 19}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // gomoku: five in a row wins (left); a four-three (right): the starred stone makes a four across and an open three down at once — White can stop only one
+    gomokuFive: () => { const C = 18, o = 14, N = 8, P = o * 2 + C * (N - 1), W = P * 2 + 14; let g = '';
+      const panel = (ox, B, Wt, star, marks, line) => { const X = c => ox + o + c * C, Y = r => o + r * C; let h = `<rect x="${ox + 1}" y="1" width="${P - 2}" height="${P - 2}" rx="7" fill="#e6c27f" stroke="#a07a3a" stroke-width="1.5"/>`;
+        for (let k = 0; k < N; k++) h += `<line x1="${X(0)}" y1="${Y(k)}" x2="${X(N - 1)}" y2="${Y(k)}" stroke="#5a3a1a" stroke-width="1"/><line x1="${X(k)}" y1="${Y(0)}" x2="${X(k)}" y2="${Y(N - 1)}" stroke="#5a3a1a" stroke-width="1"/>`;
+        if (line) h += `<line x1="${X(line[0])}" y1="${Y(line[1])}" x2="${X(line[2])}" y2="${Y(line[3])}" stroke="#e0a52a" stroke-width="13" stroke-linecap="round" opacity=".55"/>`;
+        marks.forEach(([c, r, t]) => { h += `<circle cx="${X(c)}" cy="${Y(r)}" r="8" fill="#2a5a8a"/><text x="${X(c)}" y="${Y(r) + 5}" font-size="13" font-weight="800" fill="#fff" text-anchor="middle">${t}</text>`; });
+        B.forEach(([c, r]) => { h += `<circle cx="${X(c)}" cy="${Y(r)}" r="7.6" fill="#1d1b1b"/>`; }); Wt.forEach(([c, r]) => { h += `<circle cx="${X(c)}" cy="${Y(r)}" r="7.6" fill="#f7f4ec" stroke="#7a7466" stroke-width="1"/>`; });
+        if (star) h += `<circle cx="${X(star[0])}" cy="${Y(star[1])}" r="7.6" fill="#1d1b1b"/><circle cx="${X(star[0])}" cy="${Y(star[1])}" r="10.5" fill="none" stroke="#c0392b" stroke-width="2.4"/>`;
+        return h; };
+      g += panel(0, [[1, 6], [2, 5], [3, 4], [4, 3], [5, 2]], [[2, 4], [3, 5], [5, 3], [4, 1]], null, [], [1, 6, 5, 2]);
+      g += panel(P + 14, [[2, 4], [3, 4], [4, 4], [5, 2], [5, 3]], [[1, 4], [3, 2], [6, 6]], [5, 4], [[6, 4, '4'], [5, 1, '3'], [5, 5, '3']]);
+      return `<svg viewBox="0 0 ${W} ${P}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // renju: Black may not play a double three, a double four or an overline (six or more); the forbidden points are marked ×
+    renjuForbidden: () => { const C = 13, o = 9, N = 7, P = o * 2 + C * (N - 1), gap = 10, W = P * 3 + gap * 2, H = P + 26; let g = '';
+      const panel = (ox, B, x, lab) => { const X = c => ox + o + c * C, Y = r => o + r * C; let h = `<rect x="${ox + 1}" y="1" width="${P - 2}" height="${P - 2}" rx="6" fill="#e6c27f" stroke="#a07a3a" stroke-width="1.3"/>`;
+        for (let k = 0; k < N; k++) h += `<line x1="${X(0)}" y1="${Y(k)}" x2="${X(N - 1)}" y2="${Y(k)}" stroke="#5a3a1a" stroke-width=".9"/><line x1="${X(k)}" y1="${Y(0)}" x2="${X(k)}" y2="${Y(N - 1)}" stroke="#5a3a1a" stroke-width=".9"/>`;
+        B.forEach(([c, r]) => { h += `<circle cx="${X(c)}" cy="${Y(r)}" r="5.6" fill="#1d1b1b"/>`; });
+        h += `<circle cx="${X(x[0])}" cy="${Y(x[1])}" r="6.2" fill="#c0392b"/><path d="M${X(x[0]) - 3.2} ${Y(x[1]) - 3.2}l6.4 6.4M${X(x[0]) + 3.2} ${Y(x[1]) - 3.2}l-6.4 6.4" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>`;
+        return h + `<text x="${ox + P / 2}" y="${P + 19}" font-size="15" font-weight="800" fill="#2b2a28" text-anchor="middle">${lab}</text>`; };
+      g += panel(0, [[2, 4], [3, 4], [4, 2], [4, 3]], [4, 4], '3 · 3');
+      g += panel(P + gap, [[2, 4], [3, 4], [4, 4], [5, 1], [5, 2], [5, 3]], [5, 4], '4 · 4');
+      g += panel((P + gap) * 2, [[0, 3], [1, 3], [2, 3], [4, 3], [5, 3]], [3, 3], '6+');
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // gomoku and renju in time: Edo gomoku → the name renju (1899) → RIF (1988) → Allis (1994) → free renju solved (2001) (text: the story's figL.time)
+    gomokuSolved: () => { const R = ((st('gomoku').figL || {}).time) || [], W = 300, RH = 42, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 20, xn = 96; let g = '';
+      const C = ['#8a5a24', '#8a5a24', '#c0392b', '#2a5a8a', '#14864a', '#14864a'];
+      g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
       R.forEach(([yr, pl, ds], k) => { const y = o + 8 + RH * k;
         g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="15" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
         g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(pl)}</text><text x="${xn + 16}" y="${y + 19}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
