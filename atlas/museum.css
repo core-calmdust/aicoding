@@ -923,3 +923,29 @@ html.ptv-open,html.ptv-open body{overflow:hidden}
 /* (2026-11-24) a room that shows its stamps takes the card's whole width; the short rows (map, tree) pair up — no tall empty cells */
 .mupass-l{align-items:start}
 .mupass-r:has(.mupass-st){grid-column:1/-1}
+/* (2026-11-24 ユーザー: 1記事あたりの情報量が少ない) a fuller article: key points, sub-headed sections, a timeline, sources */
+.rdkf{margin:0 0 20px;padding:14px 18px 14px;border-radius:18px;background:#f8efdc;border-inline-start:5px solid var(--c)}
+.rdkf h4,.rdm h4,.rdtl h4,.rdref h4{margin:0 0 8px;font:800 17px/1.4 var(--font);color:var(--ink)}
+.rdkf h4{font-size:14px;letter-spacing:.04em;color:#7a5a2a}
+.rdkf ul{margin:0;padding-inline-start:1.2em}
+.rdkf li{margin:2px 0;font-size:15px;line-height:1.7;font-weight:600}
+.rdm{margin:26px 0 0}
+.rdm h4{padding-bottom:6px;border-bottom:2px solid color-mix(in srgb,var(--c) 35%,transparent)}
+.rdm p{margin:0 0 14px;font-size:16px;line-height:1.9}
+.rdtl{margin:26px 0 0;padding:16px 18px;border:1px solid rgba(60,40,20,.14);border-radius:18px;background:#fffdf8}
+.rdtl ol{margin:0;padding:0;list-style:none;position:relative}
+.rdtl ol::before{content:"";position:absolute;inset-inline-start:7px;top:6px;bottom:6px;width:2px;background:color-mix(in srgb,var(--c) 45%,#e6dcc6)}
+.rdtl li{position:relative;display:grid;grid-template-columns:minmax(7.5em,auto) minmax(0,1fr);gap:4px 14px;padding:6px 0 6px 26px}
+.rdtl li::before{content:"";position:absolute;inset-inline-start:2px;top:12px;width:12px;height:12px;border-radius:50%;background:var(--c);box-shadow:0 0 0 3px #fffdf8}
+.rdtl li b{font:800 14px/1.6 var(--round);color:var(--ink)}
+.rdtl li span{font-size:15px;line-height:1.6}
+.rdref{margin:22px 0 0}
+.rdref h4{font-size:14px;color:#6b6256}
+.rdref ul{margin:0;padding-inline-start:1.2em}
+.rdref li{font-size:13px;line-height:1.6;color:#5b5348}
+@media (max-width:819px){
+  .rdm p{font-size:15.5px}
+  .rdtl{padding:14px 14px}
+  .rdtl li{grid-template-columns:minmax(0,1fr);gap:0}
+}
+[dir=rtl] .rdtl li{padding:6px 26px 6px 0}

@@ -59,6 +59,9 @@ const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,
       if (process.env.DETAIL) { const d = await p.evaluate(() => window.__detail); for (const k in d) { const c = {}; d[k].forEach(x => { const key = x.replace(/ [\d.]+(px|x\d+)?$/, m => m); c[key] = (c[key] || 0) + 1; }); if (d[k].length) console.log(`  ${V.w} ${r} ${k}:`, JSON.stringify(c)); } }
       // 14 タブのキーボード操作: 部屋のタブで → を押すと次のタブにフォーカスが移るか
       m.tabKeys = await p.evaluate(() => { const t = [...document.querySelectorAll('#muRooms [role=tab]')]; if (t.length < 2) return 0; t[0].focus(); t[0].dispatchEvent(new KeyboardEvent('keydown', { key: getComputedStyle(t[0]).direction === 'rtl' ? 'ArrowLeft' : 'ArrowRight', bubbles: true })); const ok = document.activeElement === t[1]; document.activeElement.blur(); return ok ? 0 : 1; });
+      // 15 記事の情報量（読み物の部屋だけで数える）: 要点 3・見出しつきの節 3 以上・年表 4 以上・出典がそろっていない物語の数
+      m.thinStory = r !== 'read' ? 0 : await p.evaluate(() => { const T = window.MUSEUM_READ_T, l = document.documentElement.lang || 'ja', t = (T && (T[l] || T.ja)) || {};
+        return (window.AtlasRead ? AtlasRead.STORIES : []).filter(S => { const x = t[S.id] || {}; return !((x.kf || []).length >= 3 && (x.more || []).length >= 3 && (x.tl || []).length >= 4 && (S.refs || []).length >= 1); }).length; });
       if (r === 'pass') m.foldLate = 0;   // (the open card pushes the room down on purpose)
       rows.push({ view: `${V.w}x${V.h}${V.lang !== 'ja' ? ':' + V.lang : ''}`, room: r, ...m, js: errs.length });
     }
