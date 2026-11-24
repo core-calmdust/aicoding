@@ -75,6 +75,8 @@
     { id: 'vanmour', w: 2048, h: 1538, rijks: 'SK-A-2010', bg: '#3a2a22', spots: [[.69, .67], [.655, .5], [.115, .56], [.955, .63], [.31, .58], [.5, .66]], links: [{ g: 'poker' }, { g: 'solitaire' }] },
     // (2026-11-25) the Rijksmuseum: an Algiers studio photograph — two men at a rimmed board (probably backgammon)
     { id: 'algiers', w: 1461, h: 2048, rijks: 'RP-F-00-12306', bg: '#c9b994', spots: [[.4, .625], [.466, .28], [.23, .455], [.67, .48], [.43, .705], [.56, .6]], links: [{ g: 'backgammon' }, { ex: 'ottoman' }] },
+    // (2026-11-25) the Art Institute of Chicago: a Mexican street-sheet dice game, the circus with squares 2–12
+    { id: 'circo', w: 1686, h: 1244, aic: 52020, no: '1944.922', bg: '#cdbf9c', spots: [[.49, .55], [.14, .075], [.38, .19], [.115, .45], [.745, .41], [.86, .9]], links: [{ room: 'chance' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
