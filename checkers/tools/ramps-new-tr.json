@@ -406,18 +406,18 @@
   "ar": "نهايات الملوك: قليل من النقلات يحافظ على الفوز"
  },
  "e_kings/0/body": {
-  "zh": "<p>这是王对王的残局。即使是赢棋局面，能保住胜势的着法也可能很少。</p><p>这里保住胜势的一步是把发光的棋子走到<b>绿色格子</b>。诀窍是别让对方的王逃进角上的双角。</p>",
-  "zh-TW": "<p>這是王對王的殘局。即使是贏棋局面，能保住勝勢的著法也可能很少。</p><p>這裡保住勝勢的一步是把標示出來的棋子走到<b>綠色格子</b>。訣竅是別讓對方的王逃進角落的雙角。</p>",
-  "ko": "<p>킹끼리의 엔드게임입니다. 이기는 국면이라도 승리를 지키는 수는 적을 때가 있습니다.</p><p>여기서는 빛나는 말을 <b>초록색 칸</b>으로 옮기는 것이 승리를 지키는 수. 상대 킹을 구석의 더블 코너로 놓아주지 않는 것이 요령입니다.</p>",
-  "es": "<p>Un final de damas. Aunque vayas ganando, pocas jugadas mantienen la victoria.</p><p>Aquí es mover la pieza resaltada a la <b>casilla verde</b>. El truco es no dejar que la dama rival llegue a una esquina doble.</p>",
-  "fr": "<p>Une finale de dames. Même en position gagnante, peu de coups conservent le gain.</p><p>Ici, c’est jouer la pièce en surbrillance sur la <b>case verte</b>. L’astuce : ne pas laisser la dame adverse rejoindre un double coin.</p>",
-  "pt": "<p>Um final de damas. Mesmo ganhando, poucos lances mantêm a vitória.</p><p>Aqui é mover a peça destacada para a <b>casa verde</b>. O truque é não deixar a dama adversária chegar a um canto duplo.</p>",
-  "de": "<p>Ein Damenendspiel. Selbst wenn du auf Gewinn stehst, halten nur wenige Züge den Gewinn.</p><p>Hier ist es der markierte Stein auf das <b>grüne Feld</b>. Der Trick: Lass die gegnerische Dame nicht in eine Doppelecke entkommen.</p>",
-  "ru": "<p>Дамочное окончание. Даже в выигранной позиции выигрыш сохраняют лишь немногие ходы.</p><p>Здесь это ход выделенной шашкой на <b>зелёное поле</b>. Главное — не пустить дамку соперника в двойной угол.</p>",
-  "tr": "<p>Damaların kaldığı bir oyun sonu. Kazanan konumda bile kazancı koruyan hamle az olabilir.</p><p>Burada kazancı koruyan hamle, vurgulanan taşı <b>yeşil kareye</b> götürmek. Püf noktası, rakip damanın çift köşeye kaçmasına izin vermemek.</p>",
-  "id": "<p>Ini akhir permainan antarraja. Meski posisimu menang, langkah yang menjaga kemenangan bisa sedikit.</p><p>Di sini, langkah yang menjaga kemenangan adalah menggerakkan biji yang disorot ke <b>petak hijau</b>. Kuncinya: jangan biarkan raja lawan kabur ke sudut ganda.</p>",
-  "hi": "<p>यह राजाओं वाला एंडगेम है। जीती हुई स्थिति में भी जीत बनाए रखने वाली चालें कम हो सकती हैं।</p><p>यहाँ जीत बनाए रखने वाली चाल है चमकते मोहरे को <b>हरे खाने</b> पर ले जाना। तरकीब यह है कि विरोधी राजा को कोने के डबल कॉर्नर में भागने न दें।</p>",
-  "ar": "<p>نهاية بين الملوك. حتى في موضع رابح، قد تكون النقلات التي تحافظ على الفوز قليلة.</p><p>هنا هي تحريك القطعة المضيئة إلى <b>المربع الأخضر</b>. السر ألا تدع ملك الخصم يهرب إلى الزاوية المزدوجة.</p>"
+  "zh": "<p>这是王对王的残局。即使是赢棋局面，能保住胜势的着法也可能很少——这里5步中只有2步。</p><p>把发光的棋子走到<b>绿色格子</b>就是其中之一。另外3步都会走到对方王的旁边，被它跳过吃掉。</p>",
+  "zh-TW": "<p>這是王對王的殘局。即使是贏棋局面，能保住勝勢的著法也可能很少——這裡5步中只有2步。</p><p>把標示出來的棋子走到<b>綠色格子</b>就是其中之一。另外3步都會走到對方王的旁邊，被它跳過吃掉。</p>",
+  "ko": "<p>킹끼리의 엔드게임입니다. 이기는 국면이라도 승리를 지키는 수는 적을 때가 있습니다. 여기서는 5수 중 2수뿐.</p><p>빛나는 말을 <b>초록색 칸</b>으로 옮기는 것이 그중 하나. 나머지 3수는 모두 상대 킹 바로 옆으로 들어가서, 뛰어넘겨 잡히고 맙니다.</p>",
+  "es": "<p>Un final de damas. Aunque vayas ganando, pocas jugadas mantienen la victoria: aquí solo 2 de 5.</p><p>Llevar la pieza resaltada a la <b>casilla verde</b> es una de ellas. Las otras 3 jugadas se ponen junto a la dama rival, que salta por encima y la captura.</p>",
+  "fr": "<p>Une finale de dames. Même gagnant, peu de coups conservent le gain : ici seulement 2 sur 5.</p><p>Amener la pièce en surbrillance sur la <b>case verte</b> en est un. Les 3 autres coups se placent à côté de la dame adverse, qui saute par-dessus et la prend.</p>",
+  "pt": "<p>Um final de damas. Mesmo ganhando, poucos lances mantêm a vitória: aqui só 2 de 5.</p><p>Levar a peça destacada para a <b>casa verde</b> é um deles. Os outros 3 lances param ao lado da dama adversária, que salta por cima e a captura.</p>",
+  "de": "<p>Ein Damenendspiel. Auch in Gewinnstellung halten nur wenige Züge den Gewinn – hier nur 2 von 5.</p><p>Den leuchtenden Stein auf das <b>grüne Feld</b> zu ziehen, ist einer davon. Die anderen 3 Züge stellen sich neben die gegnerische Dame, die darüber springt und schlägt.</p>",
+  "ru": "<p>Дамочное окончание. Даже в выигранной позиции выигрыш сохраняют немногие ходы — здесь только 2 из 5.</p><p>Ход подсвеченной шашкой на <b>зелёное поле</b> — один из них. Остальные 3 хода встают рядом с дамкой соперника, и она перепрыгивает и бьёт.</p>",
+  "tr": "<p>Bir dama oyun sonu. Kazanırken bile kazancı koruyan hamle azdır: burada 5 hamleden yalnızca 2'si.</p><p>Parlayan taşı <b>yeşil kareye</b> götürmek bunlardan biri. Diğer 3 hamle rakip damanın yanına girer; rakip üstünden atlayıp alır.</p>",
+  "id": "<p>Akhir permainan raja. Meski sedang menang, sedikit langkah yang menjaga kemenangan: di sini hanya 2 dari 5.</p><p>Memindahkan bidak yang menyala ke <b>kotak hijau</b> adalah salah satunya. 3 langkah lainnya masuk tepat di samping raja lawan, lalu dilompati dan dimakan.</p>",
+  "hi": "<p>राजाओं वाला एंडगेम। जीतती स्थिति में भी जीत बनाए रखने वाली चालें कम होती हैं — यहाँ 5 में से सिर्फ़ 2।</p><p>चमकती गोटी को <b>हरे खाने</b> पर ले जाना उनमें से एक है। बाकी 3 चालें विरोधी राजा के ठीक बगल में जाती हैं, और वह कूदकर उसे ले लेता है।</p>",
+  "ar": "<p>نهاية ملوك. حتى وأنت فائز، قليل من النقلات يحافظ على الفوز: هنا 2 فقط من 5.</p><p>نقل القطعة المضيئة إلى <b>المربع الأخضر</b> واحدة منها. أما النقلات الثلاث الأخرى فتقف بجوار ملك الخصم، فيقفز فوقها ويأخذها.</p>"
  },
  "e_kings/1/g": {
   "zh": "同样的局面，颜色和方向对调。保住胜势吧。",
@@ -518,18 +518,18 @@
   "ar": "حتى وأنت متأخر، حافظ على التعادل"
  },
  "e_draw/0/body": {
-  "zh": "<p>即使处于劣势，走对了也可能守和。避免输棋的着法通常只有一两步。</p><p>这里要把发光的棋子走到<b>绿色格子</b>。王逃进角上的双角会更容易守住。</p>",
-  "zh-TW": "<p>即使處於劣勢，下對了也可能守和。避免輸棋的著法通常只有一兩步。</p><p>這裡要把標示出來的棋子走到<b>綠色格子</b>。王逃進角落的雙角會更容易守住。</p>",
-  "ko": "<p>열세인 국면이라도 올바르게 두면 무승부로 만들 수 있을 때가 있습니다. 패배를 피하는 수는 대개 한두 개뿐.</p><p>여기서는 빛나는 말을 <b>초록색 칸</b>으로. 킹은 구석의 더블 코너로 도망치면 버티기 쉬워집니다.</p>",
-  "es": "<p>Aunque estés peor, jugando bien a veces puedes salvar las tablas; normalmente solo una o dos jugadas evitan la derrota.</p><p>Aquí, la pieza resaltada a la <b>casilla verde</b>. Una dama que llega a una esquina doble es difícil de desalojar.</p>",
-  "fr": "<p>Même en position inférieure, un jeu correct peut parfois tenir la nulle — en général, seuls un ou deux coups évitent la défaite.</p><p>Ici, la pièce en surbrillance sur la <b>case verte</b>. Une dame réfugiée dans un double coin est difficile à déloger.</p>",
-  "pt": "<p>Mesmo estando pior, jogando certo às vezes dá para segurar o empate — geralmente só um ou dois lances evitam a derrota.</p><p>Aqui, a peça destacada para a <b>casa verde</b>. Uma dama que chega a um canto duplo é difícil de expulsar.</p>",
-  "de": "<p>Auch wenn du schlechter stehst, kann richtiges Spiel manchmal das Remis halten – meist vermeiden nur ein oder zwei Züge die Niederlage.</p><p>Hier: der markierte Stein auf das <b>grüne Feld</b>. Eine Dame in einer Doppelecke ist schwer zu vertreiben.</p>",
-  "ru": "<p>Даже в худшей позиции точная игра иногда удерживает ничью — обычно проигрыша избегают лишь один-два хода.</p><p>Здесь — выделенной шашкой на <b>зелёное поле</b>. Дамку в двойном углу выгнать трудно.</p>",
-  "tr": "<p>Kötü durumdayken bile doğru oynarsan beraberlik tutabilirsin; yenilgiden genelde yalnızca bir iki hamle kurtarır.</p><p>Burada vurgulanan taşı <b>yeşil kareye</b> götür. Çift köşeye kaçan dama zor yerinden edilir.</p>",
-  "id": "<p>Meski posisimu lebih buruk, permainan yang tepat kadang bisa bertahan seri — biasanya hanya satu atau dua langkah yang menghindari kekalahan.</p><p>Di sini, gerakkan biji yang disorot ke <b>petak hijau</b>. Raja yang berlindung di sudut ganda sulit diusir.</p>",
-  "hi": "<p>पीछे होने पर भी सही खेल से कभी-कभी बराबरी बचाई जा सकती है — आमतौर पर केवल एक-दो चालें ही हार से बचाती हैं।</p><p>यहाँ चमकते मोहरे को <b>हरे खाने</b> पर ले जाइए। डबल कॉर्नर में पहुँचे राजा को हटाना मुश्किल होता है।</p>",
-  "ar": "<p>حتى وأنت في وضع أسوأ، قد يحافظ اللعب الصحيح على التعادل — وعادةً نقلة أو اثنتان فقط تتجنبان الخسارة.</p><p>هنا حرّك القطعة المضيئة إلى <b>المربع الأخضر</b>. يصعب طرد الملك الذي يصل إلى الزاوية المزدوجة.</p>"
+  "zh": "<p>即使处于劣势，走对了也可能守和。避免输棋的着法通常只有一两步。</p><p>这里发光的兵快要被对方的王跳吃了。走到<b>绿色格子</b>，就能不被吃掉并升王。走别的棋，这个兵会被吃掉，然后输棋。</p>",
+  "zh-TW": "<p>即使處於劣勢，下對了也可能守和。避免輸棋的著法通常只有一兩步。</p><p>這裡標示出來的兵快要被對方的王跳吃了。走到<b>綠色格子</b>，就能不被吃掉並升王。走別的棋，這個兵會被吃掉，然後輸棋。</p>",
+  "ko": "<p>열세인 국면이라도 올바르게 두면 무승부로 만들 수 있을 때가 있습니다. 패배를 피하는 수는 대개 한두 개뿐.</p><p>여기서는 빛나는 맨이 상대 킹에게 뛰어넘겨 잡히기 직전입니다. <b>초록색 칸</b>으로 나아가면 잡히지 않고 킹이 됩니다. 다른 수를 두면 이 맨이 잡히고 지고 맙니다.</p>",
+  "es": "<p>Aunque estés peor, jugando bien a veces puedes salvar las tablas; normalmente solo una o dos jugadas evitan la derrota.</p><p>Aquí el peón resaltado está a punto de ser saltado por la dama rival. Si avanza a la <b>casilla verde</b>, corona sin ser capturado. Con cualquier otra jugada te lo capturan y pierdes.</p>",
+  "fr": "<p>Même moins bien, un jeu correct peut tenir la nulle ; en général, un ou deux coups seulement évitent la défaite.</p><p>Ici, le pion en surbrillance va être sauté par la dame adverse. En avançant sur la <b>case verte</b>, il va à dame sans être pris. Tout autre coup laisse prendre ce pion, et vous perdez.</p>",
+  "pt": "<p>Mesmo pior, jogando certo às vezes dá para segurar o empate; em geral só um ou dois lances evitam a derrota.</p><p>Aqui a pedra destacada está para ser saltada pela dama adversária. Avançando para a <b>casa verde</b>, ela vira dama sem ser capturada. Qualquer outro lance deixa essa pedra ser capturada, e você perde.</p>",
+  "de": "<p>Auch schlechter stehend kann richtiges Spiel das Remis halten – meist vermeiden nur ein oder zwei Züge die Niederlage.</p><p>Hier droht die gegnerische Dame, den leuchtenden Stein zu überspringen. Zieht er auf das <b>grüne Feld</b>, wird er Dame, ohne geschlagen zu werden. Nach jedem anderen Zug wird dieser Stein geschlagen, und du verlierst.</p>",
+  "ru": "<p>Даже в худшей позиции точная игра может удержать ничью — обычно поражения избегают лишь один-два хода.</p><p>Здесь подсвеченную простую вот-вот побьёт дамка соперника. Ход на <b>зелёное поле</b> проводит её в дамки, и её не бьют. После любого другого хода эту шашку бьют, и вы проигрываете.</p>",
+  "tr": "<p>Kötü durumda bile doğru oynarsan beraberliği tutabilirsin; yenilgiden kaçınan hamle genelde bir ya da iki tanedir.</p><p>Burada rakip dama, parlayan taşın üstünden atlamak üzere. <b>Yeşil kareye</b> ilerlerse alınmadan dama olur. Başka her hamlede bu taş alınır ve kaybedersin.</p>",
+  "id": "<p>Meski tertinggal, bermain tepat kadang bisa bertahan seri; biasanya hanya satu atau dua langkah yang menghindari kekalahan.</p><p>Di sini biji yang menyala hampir dilompati raja lawan. Jika maju ke <b>kotak hijau</b>, ia menjadi raja tanpa dimakan. Dengan langkah lain, biji itu dimakan dan kamu kalah.</p>",
+  "hi": "<p>पीछे होकर भी सही खेल से बराबरी बच सकती है — आमतौर पर हार से बचाने वाली चालें एक-दो ही होती हैं।</p><p>यहाँ चमकती गोटी को विरोधी राजा कूदकर लेने वाला है। <b>हरे खाने</b> पर बढ़ने से वह बिना पकड़े राजा बन जाती है। किसी और चाल पर यह गोटी ले ली जाती है और आप हार जाते हैं।</p>",
+  "ar": "<p>حتى وأنت متأخر، قد يحافظ اللعب الصحيح على التعادل؛ وعادةً لا يتجنب الخسارة إلا نقلة أو نقلتان.</p><p>هنا الجندي المضيء على وشك أن يقفز فوقه ملك الخصم. إن تقدّم إلى <b>المربع الأخضر</b> صار ملكًا دون أن يُؤخذ. وبأي نقلة أخرى يُؤخذ هذا الجندي وتخسر.</p>"
  },
  "e_draw/1/g": {
   "zh": "同样的局面，颜色和方向对调。走一步不会输的棋吧。",

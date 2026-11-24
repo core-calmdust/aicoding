@@ -777,7 +777,65 @@ function checkers(opt) {
         if (/二重コーナー/.test(t) && !f.oppDC) a(`⑦ ${nm(m)}: 「${t}」 — the opponent cannot reach a double corner`);
         if (/キングにな|王冠|キングを作/.test(t) && !f.oppCrown) a(`⑦ ${nm(m)}: 「${t}」 — the opponent cannot crown`); }
     }); });
+  ckWarm(opt, L, E, X, val, moveVal, add, only);
   return out;
+}
+// (2026-11-24 第2期 追14) the checkers warm-ups of CK_DONE (lessons.json step.ramp, the 2D words in ja and チェッカニ's 3D lines in
+//   checkers/voice-crab-ja.js 'ramp:<id>/<j>/<f>'): explain — the marked move (hl → ok) is legal and keeps the lesson's result (①), the
+//   words say 「その一つ」 when more moves keep it, every claim is the board's (the number of moves that keep it, 勝ち / 引き分け, a king
+//   jumped next to the enemy king, a man about to be jumped that crowns, a double corner, the enemy man caught when it comes on, the
+//   crowning moves that only draw), and at least one board reason is given (⑧); try — P.ok = the moves that keep the result (①②), the
+//   gold ring on their piece, 「色と向きを入れかえた同じ形」 is the explain's board turned round, the words' result is the lesson's.
+function ckWarm(opt, L, E, X, val, moveVal, add, only) {
+  const fs = require('fs');
+  let V = (opt && opt.voice) || null;
+  if (!V) { const w = {}; try { new Function('window', fs.readFileSync(path.join(ROOT, 'checkers/voice-crab-ja.js'), 'utf8'))(w); } catch (e) {} V = ((w.I18N || {})['ja@crab']) || {}; }
+  const ja = x => x == null ? '' : typeof x === 'string' ? x : String(x.ja || '');
+  const N = t => { const k = '〇一二三四五六七八九'.indexOf(t); return k >= 0 ? k : +t; };
+  L.steps.forEach(st => { const id = st.id; if (!CK_DONE.has(id) || (only && !only.has(id)) || !st.ramp) return;
+    const want = id === 'e_draw' ? 0 : 1, R = { 1: '勝ち', 0: '引き分け', '-1': '負け' };
+    st.ramp.forEach((r, j) => { const a = m => add(id, -1, `warm-up ${j + 1} (${r.k}): ${m}`), p = E.Pos.from(r.s), all = p.moves(), nm = m => E.name(p, m);
+      if (val(p, 8) !== want) { a(`① the position is ${R[val(p, 8)]} for the side to move, the lesson wants ${R[want]}`); return; }
+      const v = new Map(all.map(m => [m, moveVal(p, m)])), G = all.filter(m => v.get(m) === want), W = all.filter(m => !G.includes(m));
+      const F = new Map(all.map(m => [m, X.ckLF(E, p, m)]));
+      const T2 = ['t', 'body', 'g', 'h', 'y'].map(f => ja(r[f])).join(' '), T3 = ['t', 'body', 'g', 'h', 'y'].map(f => V[`ramp:${id}/${j}/${f}`] || (f === 'h' && r.src === 'turn' ? V['ls.' + id + '.hint'] : '') || '').join(' ');
+      const texts = [['2D', T2], ['3D', T3]].filter(x => x[1].trim());
+      const res = t => { if (/勝ちを保|勝ちにつなが|勝てる|勝ち切/.test(t) && want !== 1) a(`⑧ 「${t.slice(0, 40)}…」: the result is ${R[want]}`); if (/引き分けに(でき|持ちこ)|負けない手/.test(t) && want !== 0) a(`⑧ 「${t.slice(0, 40)}…」: the result is ${R[want]}`); };
+      if (r.k === 'explain') {
+        const hl = (r.marks || []).filter(x => x[1] === 'hl').map(x => x[0] - 1), to = (r.marks || []).filter(x => x[1] === 'ok').map(x => x[0] - 1);
+        const M = all.filter(m => hl.includes(E.mFrom(m)) && to.includes(E.mTo(m)));
+        if (hl.length !== 1 || to.length !== 1 || M.length !== 1) { a(`① the marks (hl ${hl.map(x => x + 1)} → ok ${to.map(x => x + 1)}) are not one legal move`); return; }
+        const m = M[0], f = F.get(m);
+        if (v.get(m) !== want) { a(`① the marked move ${nm(m)} is ${R[v.get(m)]}`); return; }
+        const after = f.after;
+        const caught = after.moves().some(r2 => { const fr = E.mFrom(r2), pc = after.at(fr); if (pc === 2 || pc === 4 || E.mCap(r2)) return false; const q = after.clone().play(r2); return q.caps().some(c => E.mCap(c) & E.bit(E.mTo(r2))); });
+        for (const [who, t] of texts) { res(t); let why = 0; const b = (re, ok, msg) => { if (re.test(t)) { if (ok) why++; else a(`⑧ ${who} 「${t.match(re)[0]}」: ${msg}`); } };
+          if (G.length > 1 && !/一つ|ひとつ/.test(t)) a(`⑧ ${who}: ${G.length} moves keep the result (${G.map(nm).join(' ')}), the words give the marked one as the only one`);
+          if (/少ない/.test(t) && !(G.length * 2 < all.length)) a(`⑧ ${who} 「少ない」: ${G.length} of ${all.length}`);
+          if (/一つか二つ/.test(t) && G.length > 2) a(`⑧ ${who} 「一つか二つ」: ${G.length}`);
+          const c = t.match(/([0-9〇一二三四五六七八九]+)つの手のうち([0-9〇一二三四五六七八九]+)つ/); if (c && (N(c[1]) !== all.length || N(c[2]) !== G.length)) a(`⑧ ${who} 「${c[0]}」: ${G.length} of ${all.length}`);
+          const c2 = t.match(/ほかの([0-9〇一二三四五六七八九]+)つの手/); if (c2 && N(c2[1]) !== W.length) a(`⑧ ${who} 「${c2[0]}」: ${W.length} other moves`);
+          b(/二重コーナーへ逃がさない|二重コーナーに逃がさない/, G.every(x => !F.get(x).oppDC) && W.some(x => F.get(x).oppDC), 'no wrong move lets the enemy king into a double corner (or a right one does)');
+          b(/二重コーナーへ逃げこむ|二重コーナーに逃げこむ/, (p.at(E.mFrom(m)) === 2 || p.at(E.mFrom(m)) === 4) && f.tDC, `the marked move ${nm(m)} is not a king going into a double corner`);
+          b(/となりに入/, W.length && W.every(x => F.get(x).near && F.get(x).net < 0) && G.every(x => !F.get(x).near), 'not every other move goes next to an enemy piece and is jumped (or a right one does)');
+          b(/取られて|取られちゃ|取られてしま|跳び越され(て|る)/, W.length && W.every(x => F.get(x).net < 0) && G.every(x => F.get(x).net >= 0), 'not every other move gives a piece away (or the right one does)');
+          b(/跳び越されそう|ねらわれて/, f.fled, `the marked piece is not under attack`);
+          b(/取られずにキング|キングになれば助か|キングになって逃げ/, f.crown && f.fled && f.net >= 0, `${nm(m)} does not crown a piece out of danger`);
+          b(/跳び越して取れる|相手のマンを止める/, caught, 'no enemy man that comes on can be taken');
+          b(/すぐキングになる手は、?引き分けどまり/, W.some(x => F.get(x).crown) && W.filter(x => F.get(x).crown).every(x => v.get(x) === 0), 'the crowning moves do not all only draw');
+          if (!why) a(`⑧ ${who}: no board reason for ${nm(m)} (why it keeps the result, what the others do)`); }
+      } else if (r.k === 'try') {
+        const okS = new Set((r.ok || []).map(n => all.find(m => nm(m) === n)).filter(x => x != null));
+        if (okS.size !== (r.ok || []).length) a(`① an answer is not legal (${r.ok})`);
+        G.forEach(m => { if (!okS.has(m)) a(`② ${nm(m)} keeps the result but is scored wrong`); });
+        okS.forEach(m => { if (!G.includes(m)) a(`① the answer ${nm(m)} is ${R[v.get(m)]}`); });
+        const look = (r.look || []).map(q => q - 1); if (look.length && ![...okS].every(m => look.includes(E.mFrom(m)))) a('⑧ the gold ring is not on the answer\'s piece');
+        const prev = st.ramp[j - 1];
+        for (const [who, t] of texts) { res(t);
+          if (/色と向きを入れかえた同じ形/.test(t) && !(prev && ckFlip(prev.s.b) === r.s.b && prev.s.side !== r.s.side)) a(`⑧ ${who} 「色と向きを入れかえた同じ形」: not the warm-up before turned round`);
+          if (/金の丸/.test(t) && !look.length) a(`⑧ ${who} 「金の丸」: no ring`); }
+      }
+    }); });
 }
 // (2026-11-24 第2期) tafl: the basics TF_DONE (b_move・b_cap・b_hostile), every problem with the rules (tafl/engine.js):
 //   ①② P.ok = the goal set exactly (b_move: the king's slides to a non-corner edge square; b_cap: every capture, all against a piece
@@ -1533,13 +1591,58 @@ function checkersOpen(opt) {
   }
   return out;
 }
+// (2026-11-24 第2期 担当B, 追15) the openings' own lines, every /open game with named lines (shogi・tafl・checkers; connect4's op1〜op3
+//  have no named lines, op3's main line is checked in lesson-facts.js): ① every move of the study line is legal from its start,
+//  ④ the line begins with the opening's named moves (tafl・checkers `moves`) or reaches the opening's own shape (shogi src `pat`, either
+//  wing when `mirror`), ⑤ two openings: the last position of one line is never a position of the other's line (the same line, its first
+//  half, or the other line run into at its end; tafl with the 8 symmetries) — differently named openings teach different lines.
+function openLines(opt) {
+  const fs = require('fs'), out = [], add = (id, m) => out.push({ step: id, q: 0, msg: m }), J = f => JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8'));
+  const cross = (game, L) => { const ids = Object.keys(L);
+    for (const a of ids) { const fin = L[a][L[a].length - 1]; for (const b of ids) { if (a === b) continue; const k = L[b].indexOf(fin);
+      if (k >= 0) add(`${game} ${a}`, `⑤ the line ends (ply ${L[a].length - 1}) in a position of ${b}'s line (ply ${k})${k === L[a].length - 1 && k === L[b].length - 1 ? ': the same line' : k === L[a].length - 1 ? ': its first half' : ''}`); } } };
+  { // shogi
+    const E = require(path.join(ROOT, 'shogi/engine.js')), CU = require(path.join(ROOT, 'shogi/tools/openings/curate.js'));
+    const CATS = ['beg', 'mid', 'adv', 'sp', 'new', 'castle'], sets = [];
+    CATS.forEach(c => J(`shogi/openings-${c}.json`).sets.forEach(s => sets.push(s)));
+    J('shogi/openings.json').sets.forEach(s => { if (!sets.some(x => x.id === s.id)) sets.push(s); });
+    if (opt && opt.shogi) opt.shogi.forEach(s => { const i = sets.findIndex(x => x.id === s.id); if (i >= 0) sets[i] = s; });
+    const SRC = {}; CATS.forEach(c => require(path.join(ROOT, `shogi/tools/openings/src/${c}.js`)).forEach(e => { SRC[e.id] = e; }));
+    const key = p => p.sfen().split(' ').slice(0, 3).join(' '), L = {};
+    for (const s of sets) { const st = s.study; if (!st || !st.steps || !st.steps.length) { add(`shogi ${s.id}`, '① no study line'); continue; }
+      const p = new E.Position(); p.setSfen(st.start); const ks = [key(p)], e = SRC[s.id], C = e && e.pat ? [CU.compile(e.pat, false)].concat(e.mirror ? [CU.compile(e.pat, true)] : []) : null; let shape = false;
+      for (const [u] of st.steps) { const m = p.legalMoves(true).find(x => p.toUsi(x) === u); if (!m) { add(`shogi ${s.id}`, `① move ${ks.length} ${u} is not legal`); break; } p.doMove(m); p.sp = 0; ks.push(key(p)); if (C && C.some(c => CU.match(p, c))) shape = true; }
+      if (C && !shape) add(`shogi ${s.id}`, `④ the line never reaches the opening's shape (${e.pat})`);
+      L[s.id] = ks; }
+    cross('shogi', L); }
+  { // tafl
+    const E = require(path.join(ROOT, 'tafl/engine.js')), O = (opt && opt.tafl) || J('tafl/openings.json'), L = {};
+    const SYM = [(r, c) => [r, c], (r, c) => [r, 10 - c], (r, c) => [10 - r, c], (r, c) => [10 - r, 10 - c], (r, c) => [c, r], (r, c) => [c, 10 - r], (r, c) => [10 - c, r], (r, c) => [10 - c, 10 - r]];
+    const can = q => SYM.map(S => { let o = ''; const b = q.spec().b; for (let i = 0; i < 121; i++) { const [r, c] = S((i / 11) | 0, i % 11); o += b[r * 11 + c]; } return o; }).sort()[0] + q.turn;
+    for (const g of O.sets) { let q = E.Pos.from(null, 'copenhagen'); const ks = [can(q)], defs = g.moves.split(' ');
+      g.study.line.forEach((m, k) => { if (!q) return; if (q.res || !q.moves().includes(m)) { add(`tafl ${g.id}`, `① move ${k + 1} is not legal`); q = null; return; }
+        if (k < defs.length && E.name(q, m).replace(/x.*/, '') !== defs[k]) add(`tafl ${g.id}`, `④ the line does not begin with ${g.moves}`); q = q.clone().play(m); ks.push(can(q)); });
+      L[g.id] = ks; }
+    cross('tafl', L); }
+  { // checkers
+    if (!ckW) ckW = require(path.join(ROOT, 'checkers/tools/wasm.js')).loadSync();
+    const E = ckW.E, O = (opt && opt.checkers) || J('checkers/openings.json'), L = {}, key = p => JSON.stringify(p.spec());
+    for (const g of O.sets) { let p = E.Pos.from(null); const ks = [key(p)], named = []; { let q = E.Pos.from(null); for (const t of g.moves.split(' ')) { const m = E.parse(q, t); named.push(m); q.play(m); } }
+      if (!named.every((m, k) => g.study.line[k] === m)) add(`checkers ${g.id}`, `④ the line does not begin with ${g.moves}`);
+      for (const [k, m] of g.study.line.entries()) { if (!p.moves().includes(m)) { add(`checkers ${g.id}`, `① move ${k + 1} is not legal`); break; } p = p.clone().play(m); ks.push(key(p)); }
+      L[g.id] = ks; }
+    cross('checkers', L); }
+  return out;
+}
+// (2026-11-24 担当D) janggi on the 3D table: the puzzles (all themes) — tools/lesson-verify-janggi.js
+const janggi = () => require('./lesson-verify-janggi.js').puzzles();
 const ur = () => require('./lesson-verify-ur.js')();   // (2026-11-24 担当C：ウルのレッスン、tools/lesson-verify-ur.js)
-const GAMES = { ur, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen };
+const GAMES = { ur, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines, janggi };
 module.exports = GAMES; GAMES.mancalaWords = mancalaWords; Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
 if (require.main === module) {
-  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen').split(',');
+  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,openLines,janggi').split(',');
   let bad = 0;
-  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'connect4' ? ' (count/endwin の⑦⑧)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'ur' ? ['ウルのレッスン12本'] : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
+  for (const g of games) { const f = GAMES[g](); if (!f.length) { console.log(`OK ${g}` + (g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'janggi' ? ' (パズル全問の①〜⑨・追19・追20)' : g === 'ur' ? ' (ウルのレッスン12本の①〜⑧・追7・追16)' : g === 'openLines' ? ' (shogi・tafl・checkers の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧)`)); continue; }
     bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
   process.exit(bad ? 1 : 0);
 }
