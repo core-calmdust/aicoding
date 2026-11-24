@@ -41,6 +41,8 @@
     { id: 'pvl', w: 1686, h: 1648, aic: 267692, no: '2023.52', bg: '#bdb6a8', spots: [[.617, .483], [.544, .428], [.36, .26], [.522, .25], [.69, .24], [.261, .822]], links: [{ room: 'chance' }] },
     { id: 'kiyohiro', w: 1387, h: 2048, aic: 19696, no: '1925.1907', bg: '#c9b48a', spots: [[.5, .709], [.367, .498], [.639, .566], [.622, .272], [.877, .573], [.966, .716]], links: [{ g: 'backgammon' }, { ex: 'sugoroku' }] },
     { id: 'talbot', w: 1591, h: 2048, aic: 27083, no: '1967.158', bg: '#5a4a3a', spots: [[.479, .583], [.307, .356], [.664, .456], [.771, .278], [.879, .711]], links: [{ g: 'chess' }] },
+    // (2026-11-24) the Met: Ingram after Boucher — xiangqi as 18th-century Paris imagined it
+    { id: 'ingram', w: 1552, h: 2252, met: 394687, no: '66.628.4(1)', bg: '#a89a7e', spots: [[.6, .53], [.47, .515], [.55, .4], [.73, .5], [.72, .19], [.5, .905]], links: [{ g: 'xiangqi' }] },
   ];
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   let host = null, ctx = null, lang = 'ja', el = {}, cur = null;
