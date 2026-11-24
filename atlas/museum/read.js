@@ -57,6 +57,7 @@
     { id: 'shanghai', region: 'americas', color: '#1f6a4c', cover: { g: 'shanghai', s: 'shanghai' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'shanghaiFree' }, m1: { svg: 'shanghaiTurtle' }, m2: { svg: 'shanghaiTimeline' } }, refs: ['Brodie Lockard, “Mah-Jongg” on the PLATO system (1981)', 'A home-computer release of 1986 that spread the name “Shanghai”', 'An analysis of ten million deals of the turtle layout (about 3 % unsolvable), as cited by Wikipedia', 'Wikipedia, “Mahjong solitaire”, “Shisen-Sho”'], links: [{ g: 'shanghai' }, { g: 'solitaire' }, { g: 'sudoku' }] },
     { id: 'samegame', region: 'asia', color: '#e2672e', cover: { g: 'samegame', s: 'samegame' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'samegameGroup' }, m1: { svg: 'samegameScore' }, m2: { svg: 'samegameTimeline' } }, refs: ['Kuniaki Moribe, “Chain Shot!” (1985), distributed through a Japanese computer magazine', 'Eiji Fukumoto, “SameGame” for Unix (1992)', 'Matthias Schüssler, “Clickomania!” (1998)', 'Therese C. Biedl et al., “The Complexity of Clickomania” (2001)', 'Wikipedia, “SameGame”'], links: [{ g: 'samegame' }, { g: 'shanghai' }, { g: 'jailbreak' }] },
     { id: 'cards', region: 'asia', color: '#8a2a3a', cover: { s: 'cards' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'cardsSuits' }, m1: { svg: 'cardsRoute' }, m2: { svg: 'cardsCourt' } }, refs: ['歐陽脩『歸田錄』（11世紀） / Ouyang Xiu, Guitian lu (11th c.), on the “leaf game”', 'L. A. Mayer, Mamluk Playing Cards, ed. R. Ettinghausen & O. Kurz (Leiden, 1971)', 'John of Rheinfelden, Tractatus de moribus et disciplina humanae conversationis (1377)', 'Michael Dummett, The Game of Tarot (1980)', 'David Parlett, The Oxford Guide to Card Games (1990)', 'Wikipedia, “Playing card”, “Mamluk playing cards”, “Karuta”, “Joker (playing card)”'], links: [{ g: 'poker' }, { g: 'solitaire' }, { g: 'blackjack' }] },
+    { id: 'machines', region: 'americas', color: '#2a4a6a', cover: { s: 'machines' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'machinesTimeline' }, m1: { svg: 'machinesTree' }, m2: { svg: 'machinesSolved' } }, refs: ['Claude E. Shannon, “Programming a Computer for Playing Chess”, Philosophical Magazine 41 (1950)', 'A. M. Turing, “Digital computers applied to games”, in B. V. Bowden (ed.), Faster than Thought (1953)', 'A. L. Samuel, “Some Studies in Machine Learning Using the Game of Checkers”, IBM Journal of Research and Development 3 (1959)', 'J. Schaeffer et al., “Checkers Is Solved”, Science 317 (2007)', 'M. Campbell, A. J. Hoane Jr., F. Hsu, “Deep Blue”, Artificial Intelligence 134 (2002)', 'D. Silver et al., “Mastering the game of Go with deep neural networks and tree search”, Nature 529 (2016)', 'D. Silver et al., “A general reinforcement learning algorithm that masters chess, shogi, and Go through self-play”, Science 362 (2018)', 'Wikipedia, “Mechanical Turk”, “El Ajedrecista”, “Computer chess”, “Solved game”, “Game complexity”'], links: [{ g: 'chess' }, { g: 'checkers' }, { g: 'go' }, { g: 'connect4' }] },
   ];
   // pictures shown only beside a story's paragraph (not in another room): a museum's open-access photo (CC0), linked to the museum's page.
   // The name, in each language, is MUSEUM_READ_T[lang].pic[id]. Files images/atlas/museum-story/pic/<id>.webp (≤ 960 px).
@@ -1116,6 +1117,43 @@
       g += `<rect x="152" y="${ly - 12}" width="14" height="16" rx="2" fill="#f3dc9a" stroke="#b8902a"/><text x="172" y="${ly + 1}" font-size="13" font-weight="800" fill="#2b2a28">${esc(L[1] || '')} 12</text>`;
       const jy = ly + 14; g += `<rect x="8" y="${jy}" width="30" height="42" rx="4" fill="#fffdf6" stroke="#6a3a8a" stroke-width="1.6"/><text x="23" y="${jy + 28}" font-size="20" fill="#6a3a8a" text-anchor="middle">★</text>`;
       g += `<text x="48" y="${jy + 17}" font-size="14" font-weight="800" fill="#6a3a8a">${esc(L[2] || '')}</text><text x="48" y="${jy + 36}" font-size="13" fill="#5a544a">${esc(L[3] || '')}</text>`;
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // machines that played games, in time (text: the story's figL.time — [year, name, note])
+    machinesTimeline: () => { const R = ((st('machines').figL || {}).time) || [], W = 300, RH = 46, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 58; let g = '';
+      const C = ['#8a8478', '#8a5a24', '#2a5a8a', '#14864a', '#7a2a2a', '#c0392b', '#33404a', '#6a3a8a'];
+      g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
+      R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
+        g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
+        g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="${xn + 16}" y="${y + 20}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // reading ahead: a tiny game tree — MAX (▲, the machine) picks the largest, MIN (▼, the opponent) the smallest; values come up from the leaves.
+    // After the middle branch shows a 2 (already worse than the 3 on the left), its other leaves need not be read (✂, alpha-beta pruning).
+    // (text: the story's figL.tree — [MAX, MIN, pruned])
+    machinesTree: () => { const L = ((st('machines').figL || {}).tree) || [], W = 300, H = 278, ry = 34, my = 112, ly = 186, lx = k => 22 + k * 32;
+      const leaves = [3, 12, 8, 2, 4, 6, 14, 5, 2], cut = { 4: 1, 5: 1 }, mins = [3, 2, 2], best = 0, hi = '#c0392b', ln = '#8a8478';
+      let g = ''; const mx = j => lx(j * 3 + 1);
+      for (let j = 0; j < 3; j++) { g += `<path d="M150 ${ry + 14}L${mx(j)} ${my - 16}" stroke="${j === best ? hi : ln}" stroke-width="${j === best ? 3.2 : 1.8}"/>`;
+        for (let i = 0; i < 3; i++) { const k = j * 3 + i, x = lx(k), on = j === best && leaves[k] === 3, c = cut[k];
+          g += `<path d="M${mx(j)} ${my + 14}L${x} ${ly - 14}" stroke="${on ? hi : ln}" stroke-width="${on ? 3.2 : 1.8}"${c ? ' stroke-dasharray="4 4" opacity=".55"' : ''}/>`;
+          if (k === 4) g += `<text x="${x + 8}" y="${(my + ly) / 2 + 8}" font-size="20" fill="#c0392b" text-anchor="middle">✂</text>`; } }
+      const tri = (x, y, up, col) => up ? `<path d="M${x} ${y - 17}L${x + 19} ${y + 14}H${x - 19}Z" fill="${col}"/>` : `<path d="M${x} ${y + 17}L${x + 19} ${y - 14}H${x - 19}Z" fill="${col}"/>`;
+      g += tri(150, ry, 1, hi) + `<text x="150" y="${ry + 10}" font-size="15" font-weight="800" fill="#fff" text-anchor="middle">3</text>`;
+      mins.forEach((v, j) => { g += tri(mx(j), my, 0, j === best ? '#2a5a8a' : '#8aa3c4') + `<text x="${mx(j)}" y="${my + 1}" font-size="14" font-weight="800" fill="#fff" text-anchor="middle">${j === 1 ? '≤' + v : v}</text>`; });
+      leaves.forEach((v, k) => { const x = lx(k), c = cut[k]; g += `<rect x="${x - 13}" y="${ly - 13}" width="26" height="26" rx="5" fill="${c ? '#efeae0' : '#fffdf6'}" stroke="${c ? '#c9c2b2' : '#5a544a'}" stroke-width="1.4"${c ? ' stroke-dasharray="3 3"' : ''}/><text x="${x}" y="${ly + 5}" font-size="14" font-weight="800" fill="${c ? '#b8ad98' : '#2b2a28'}" text-anchor="middle">${c ? '?' : v}</text>`; });
+      const lg = 222; g += `<path d="M18 ${lg - 9}L28 ${lg + 7}H8Z" fill="${hi}"/>`;
+      g += `<text x="36" y="${lg + 5}" font-size="13" font-weight="800" fill="#2b2a28">${esc(L[0] || '')}</text>`;
+      g += `<path d="M18 ${lg + 33}L28 ${lg + 17}H8Z" fill="#2a5a8a"/><text x="36" y="${lg + 29}" font-size="13" font-weight="800" fill="#2b2a28">${esc(L[1] || '')}</text>`;
+      g += `<text x="18" y="${lg + 54}" font-size="16" fill="#c0392b" text-anchor="middle">✂</text><text x="36" y="${lg + 53}" font-size="13" font-weight="800" fill="#2b2a28">${esc(L[2] || '')}</text>`;
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // how big games are: legal positions on a log scale (10^n), solved (✓) or not (?) — tic-tac-toe 5,478; connect four 4.5×10^12 (1988);
+    // checkers 5×10^20 (2007); Othello ~10^28 (2023); chess ~10^44; go 2.1×10^170 (text: the story's figL.solved — [name, note] per row)
+    machinesSolved: () => { const R = ((st('machines').figL || {}).solved) || [], W = 300, RH = 44, o = 6, x0 = 8, bw = W - 16, H = o * 2 + RH * 6 + 4;
+      const N = [[3.7, '3'], [12.7, '12'], [20.7, '20'], [28, '28'], [44.7, '44'], [170.3, '170']], ok = [1, 1, 1, 1, 0, 0]; let g = '';
+      N.forEach(([lg, ex], k) => { const y = o + RH * k, w = Math.max(10, bw * lg / 171), [nm, nt] = R[k] || ['', ''], c = ok[k] ? '#14864a' : '#8a8478';
+        g += `<text x="${x0}" y="${y + 15}" font-size="14" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="${W - 8}" y="${y + 15}" font-size="12" font-weight="800" fill="${c}" text-anchor="end">${ok[k] ? '✓ ' : '? '}${esc(nt)}</text>`;
+        g += `<rect x="${x0}" y="${y + 22}" width="${w}" height="14" rx="4" fill="${ok[k] ? '#8fd0a8' : '#c9c2b2'}"/>`;
+        const tx = w + x0 + 6 > W - 56 ? x0 + w - 6 : x0 + w + 6, an = tx < x0 + w ? 'end' : 'start';
+        g += `<text x="${tx}" y="${y + 34}" font-size="13" font-weight="800" fill="${an === 'end' ? '#2b2a28' : '#5a544a'}" text-anchor="${an}">10<tspan dy="-5" font-size="12">${ex}</tspan></text>`; });
       return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
     // four tetrahedral dice: how often each score comes (out of 16)
     tetraOdds: () => { const n = [1, 4, 6, 4, 1], W = 300, H = 150, bw = 40, gap = (W - 40 - bw * 5) / 4; let g = '';
