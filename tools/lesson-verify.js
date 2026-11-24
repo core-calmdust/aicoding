@@ -1410,7 +1410,7 @@ function shogi(opt) {
   if (!/const probs = g\.rules \? g\.problems\.slice\(\) : shuffle\(\[\.\.\.std\.slice\(0, 5 - nTrap\), \.\.\.trap\.slice\(0, nTrap\)\]\)\.sort\(\(a, b\) => g\.problems\.indexOf\(a\) - g\.problems\.indexOf\(b\)\)/.test(app)) add('-', -1, '⑥ the 2D lesson does not keep the pool order');
   if (!/const probs = g\.rules \? pool : shuffle\(pool\)\.slice\(0, 5\)\.sort\(\(a, b\) => pool\.indexOf\(a\) - pool\.indexOf\(b\)\)/.test(src)) add('-', -1, '⑥ the 3D lesson does not keep the pool order');
   const ctx = { fill: (s, v) => String(s).replace(/\{(\w+)\}/g, (_, k) => v[k] != null ? v[k] : ''), SHOGI: { points: (P, u) => { const best = P.cand[0][1], c = P.cand.find(x => x[0] === u); return c ? Math.round(20 * c[1] / best) : 0; } } };
-  const X = vm.runInNewContext(src.slice(src.indexOf('  const winP = (v, k) =>'), src.indexOf('  /* (2026-11-21 lesson loop) the shogi opening practice')) + '\n;({ shJaLesson, SH_KJ })', ctx);
+  const X = vm.runInNewContext(src.slice(src.indexOf('  const winP = (v, k) =>'), src.indexOf('  /* (2026-11-21 lesson loop) the shogi opening practice')) + '\n;({ shJaLesson, SH_KJ, SHJ2 })', ctx);
   const V = E.VALUE, T = E.typeOf, NM = ['', '歩', '香車', '桂馬', '銀', '角', '飛車', '金', '玉', 'と金', '成香', '成桂', '成銀', '馬', '竜'];
   const pos = sfen => { const p = new E.Position(); p.setSfen(sfen); return p; };
   const brd = sfen => { const a = []; for (const row of sfen.split(' ')[0].replace(/\+(.)/g, (_, c) => c === c.toUpperCase() ? '#' + c : '%' + c).split('/')) { let k = 0; const r = []; for (let i = 0; i < row.length; i++) { const ch = row[i]; if (/\d/.test(ch)) for (let n = 0; n < +ch; n++) r.push('.'); else if (ch === '#' || ch === '%') { r.push(ch + row[++i]); } else r.push(ch); } a.push(...r); } return a; };
@@ -1471,6 +1471,40 @@ function shogi(opt) {
         else if (!/取れない|取らない|駒得にならない|何も取れない|取っていない/.test(w)) a(`⑦ ${u}: takes nothing, the words do not say so 「${w}」`); }
     });
     if (movers.size < 5) add(id, -1, `⑤ only ${movers.size} kinds of piece take`);
+    // 追32 every kind of piece that can take in the problems and warm-ups (the moves the student has to read) has its move told in
+    // the intro: the 3D (ショウギツネ's SHJ2.intro, the warm-ups) and the 2D (grade.intro.ja, the warm-ups) — the name and a move word
+    // next to it; promoted pieces: 成 … 金と同じ, 馬, 龍. (k20: the 3D intro said only 「駒の動きは練習で見ていこう」 and the warm-ups showed the
+    // rook, the bishop and the silver, while the answers move a lance, a knight, a gold, a king, a pawn and a horse.)
+    const kinds = new Set(), MW = '[^。！？!?<]{0,14}?(前|横|斜め|ななめ|縦|まわり|周り|ジャンプ|跳|どこまでも)';
+    const KW = { 1: ['歩'], 2: ['香'], 3: ['桂'], 4: ['銀'], 5: ['角'], 6: ['飛'], 7: ['金'], 8: ['玉'], 9: ['成', '金と同じ'], 10: ['成', '金と同じ'], 11: ['成', '金と同じ'], 12: ['成', '金と同じ'], 13: ['馬'], 14: ['龍'] };
+    const scan = sfen => { const p = pos(sfen); p.legalMoves(true).forEach(m => { if (!E.isDrop(m) && p.board[E.mTo(m)]) kinds.add(T(p.board[E.mFrom(m)])); }); };
+    g.problems.forEach(P => scan(P.sfen)); (g.ramp || []).forEach(r => r.k === 'try' && scan(r.sfen));
+    const rampTx = (g.ramp || []).map(r => ['t', 'body', 'g', 'h', 'y'].map(f => r[f] && r[f].ja || '').join(' ')).join(' ');
+    const said = { '3D': plain(String((X.SHJ2.intro || {})[id] || '')) + ' ' + plain(rampTx), '2D': plain((g.intro && g.intro.ja || []).join(' ')) + ' ' + plain(rampTx) };
+    for (const [who, tx] of Object.entries(said)) for (const k of kinds) { const w = KW[k]; if (!w) continue;
+      const ok = k >= 9 && k <= 12 ? w.every(x => tx.includes(x)) : new RegExp(w[0] + MW).test(tx);
+      if (!ok) add(id, -1, `追32 the ${who} intro does not tell how the ${NM[k]} moves (a ${NM[k]} takes in the problems)`); }
+    // 追14 the warm-ups: an explain's arrows from a sliding piece end on the farthest square it reaches (no free square beyond);
+    // a try's words — the piece to move (「角で」), the piece to take (「金を取」), how many it can take (「取れる駒が2つ」), the praise
+    // naming what was taken — agree with the board and the ok moves; a move that does what the words ask is in ok (else they say 成).
+    (g.ramp || []).forEach((r, j) => { const a = m => add(id, -1, `追14 ramp ${j + 1}: ${m}`), p = pos(r.sfen), ms = p.legalMoves(true), U = m => p.toUsi(m), legal = new Set(ms.map(U));
+      const sq = q => [+q[0], q.charCodeAt(1) - 96], nm = ([f, k]) => f + String.fromCharCode(96 + k);
+      for (const [f0, t0] of r.arrows || []) { const A = sq(f0), B = sq(t0), df = Math.sign(B[0] - A[0]), dk = Math.sign(B[1] - A[1]);
+        if (!legal.has(f0 + t0) && !legal.has(f0 + t0 + '+')) { a(`the arrow ${f0}→${t0} is not a move`); continue; }
+        const pc = T(p.board[E.mFrom(p.fromUsi(f0 + t0) || p.fromUsi(f0 + t0 + '+'))]);
+        if ([2, 5, 6, 13, 14].includes(pc) && Math.max(Math.abs(B[0] - A[0]), Math.abs(B[1] - A[1])) > 1 && !p.board[E.mTo(p.fromUsi(f0 + t0) || p.fromUsi(f0 + t0 + '+'))]) {
+          const C = [B[0] + df, B[1] + dk]; if (C[0] >= 1 && C[0] <= 9 && C[1] >= 1 && C[1] <= 9 && (legal.has(f0 + nm(C)) || legal.has(f0 + nm(C) + '+'))) a(`the arrow ${f0}→${t0} stops short, the ${NM[pc]} reaches ${nm(C)}`); } }
+      if (r.k !== 'try') return;
+      const g0 = plain(r.g && r.g.ja || ''), y0 = plain(r.y && r.y.ja || ''), byN = NM.findIndex((x, i) => i && i <= 8 && g0.includes(x.slice(0, 1) + 'で')), tgN = NM.findIndex((x, i) => i && i <= 8 && new RegExp(x.slice(0, 1) + '[^で]{0,2}を取').test(g0));
+      const caps = ms.filter(m => !E.isDrop(m) && p.board[E.mTo(m)] && (byN < 0 || T(p.board[E.mFrom(m)]) === byN));
+      const mn = c => (c.match(/取れる駒が(\d)つ/) || [])[1];
+      if (mn(g0) && new Set(caps.map(m => E.mTo(m))).size !== +mn(g0)) a(`「${g0}」 but ${new Set(caps.map(m => E.mTo(m))).size} pieces can be taken`);
+      for (const u of r.ok) { const m = p.fromUsi(u); if (byN > 0 && T(p.board[E.mFrom(m)]) !== byN) a(`ok ${u} does not move the ${NM[byN]} 「${g0}」`); if (tgN > 0 && T(p.board[E.mTo(m)] || 0) !== tgN) a(`ok ${u} does not take the ${NM[tgN]} 「${g0}」`);
+        const tk = p.board[E.mTo(m)] ? NM[T(p.board[E.mTo(m)])] : ''; if (tk && /を取っ/.test(y0) && !y0.includes(tk.slice(0, 1))) a(`the praise 「${y0}」 does not name the ${tk}`);
+        if (/成っ|成る|成れ/.test(y0) && /成った|に成っ/.test(y0) && !u.endsWith('+')) a(`the praise says it promoted, ok ${u} does not`); }
+      if (byN > 0 && tgN > 0) { const want = caps.filter(m => T(p.board[E.mTo(m)]) === tgN).map(U);
+        const miss = want.filter(u => !r.ok.includes(u)); if (miss.length && !(/成/.test(g0) && miss.every(u => !u.endsWith('+')) && r.ok.every(u => u.endsWith('+')))) a(`${miss} does what 「${g0}」 asks but is judged wrong`); }
+    });
   }
   return out;
 }
