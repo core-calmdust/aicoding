@@ -182,7 +182,7 @@
     for (let i = 0; i <= 14; i++) { const y = h * i / 14, j = (r() - .5) * w * .012 * (1 + i / 6); L.push([X(-1, y) + j, y]); R.push([X(1, y) - j, y]); }
     const road = L.concat(R.slice().reverse()).map(p => n0(p[0]) + ',' + n0(p[1])).join(' ');
     // the ground beside the way, its edge cut ragged (grass), lumpy (rock), round (snow) or smooth (sand)
-    const bank = (sg, kind) => { const P = sg < 0 ? L : R.slice().reverse(); let d = `M${sg < 0 ? -2 : w + 2},-2`;
+    const bank = (sg, kind) => { const P = sg < 0 ? L : R; let d = `M${sg < 0 ? -2 : w + 2},-2`;
       for (let i = 0; i < P.length - 1; i++) { const [x0, y0] = P[i], [x1, y1] = P[i + 1]; const m = kind === 'grass' ? 6 : kind === 'sand' ? 1 : 3;
         for (let k = 0; k < m; k++) { const t = k / m, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t, s = 3 + 16 * (y / h);
           if (kind === 'grass') d += ` L${n0(x - sg * s * .2)},${n0(y)} L${n0(x + sg * s * (.6 + r() * .9))},${n0(y + s * .35)}`;
@@ -226,7 +226,7 @@
         if (tall && side && side !== 'water' && r() < .6) d += thing(side === 'snow' || side === 'rock' ? 'rock' : 'tuft', X(sg * 1.3, y), y, s * .8);   // something small beside each post
         if (y < h * .4) far += d; else near += d;
       } }
-    f.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" class="w-${way}" aria-hidden="true">${under}<path class="wave" d="${wave}"/><path class="pave" d="${pave}"/><path class="dark" d="${dark}"/><path class="${bankCls}" d="${banks}"/><path class="far" d="${far}"/><path class="tuft" d="${near}"/></svg>`;
+    f.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" class="w-${way} s-${side || 'none'}" aria-hidden="true">${under}<path class="wave" d="${wave}"/><path class="pave" d="${pave}"/><path class="dark" d="${dark}"/><path class="${bankCls}" d="${banks}"/><path class="far" d="${far}"/><path class="tuft" d="${near}"/></svg>`;
   }
   function layoutDock() {
     const pc = PCQ.matches;
@@ -880,25 +880,33 @@
   function canClash() { return missLeft() > 0 && E.statements(S, st).length && E.evidence(S).length; }
   async function clash() {
     const SL = E.statements(S, st), EV = E.evidence(S);
+    // 1. whose words → 2. which night → 3. which part is wrong → 4. the evidence that breaks it (only what bears on that part)
     const who = await pickPerson('誰の発言を突く？', `的外れは今日あと${missLeft()}回まで。外せば、あなたの言葉が軽くなる。`, [...new Set(SL.map(x => x.who))], { mark: true });
     if (!who) return debate();
     const mine = SL.filter(x => x.who === who).sort((a, b) => b.night - a.night);
     let stmt = mine[0];
     if (mine.length > 1) { const v = await pickOpt(`${esc(nm(who))}の、どの夜の話？`, '', mine.map(x => ({ t: nightName(x.night), s: x.parts.map(q => partText(q, x)).join('。') + '。', v: x.id, ic: IC.talk }))); if (!v) return debate(); stmt = mine.find(x => x.id === v); }
-    const ev = await pickOpt('どの証拠をつきつける？', `${nm(who)}の話（${nightName(stmt.night)}）：${stmt.parts.map(q => partText(q, stmt)).join('。')}。`, EV.map(e => { const x = evText(e); return { t: x.t, s: x.s, v: e.id, ic: IC.show }; }));
-    if (!ev) return debate();
-    const part = stmt.parts.length === 1 ? 0 : await pickOpt('話の、どこがおかしい？', `つきつける証拠：${evText(EV.find(e => e.id === ev)).t}`, stmt.parts.map((p, i) => ({ t: `「${partText(p, stmt)}」`, v: String(i), ic: IC.clash })));
+    const told = `${nm(who)}の話（${nightName(stmt.night)}）：${stmt.parts.map(q => partText(q, stmt)).join('。')}。`;
+    const part = stmt.parts.length === 1 ? '0' : await pickOpt('話の、どこがおかしい？', told, stmt.parts.map((p, i) => ({ t: `「${partText(p, stmt)}」`, v: String(i), ic: IC.clash })));
     if (part == null) return debate();
-    const E1 = EV.find(e => e.id === ev), P1 = stmt.parts[+part];
+    const P1 = stmt.parts[+part], cand = E.clashEvidence(S, st, stmt.id, +part);
+    if (!cand.length) { await say([{ text: `「${partText(P1, stmt)}」——この言葉を崩せる証拠を、あなたはまだ持っていない。${P1.k === 'loc' ? `その夜${nm(who)}を別の場所で見たという話があれば、つきつけられる。` : P1.k === 'who' ? `その夜${nm(P1.who)}がどこにいたか、本人や誰かの話があれば、つきつけられる。` : 'その夜の現場で、同じ種類の痕跡を自分の目で見ていれば、つきつけられる。'}` }]); return debate(); }
+    const ev = await pickOpt('どの証拠をつきつける？', `おかしいのは：「${partText(P1, stmt)}」`, cand.map(e => { const x = evText(e); return { t: x.t, s: x.s, v: e.id, ic: IC.show }; }));
+    if (!ev) return debate();
+    const E1 = EV.find(e => e.id === ev);
     const lp = stmt.parts.find(p => p.k === 'loc');
     const items = [{ who: 'you', text: E1.k === 'self' ? `${nm(who)}。${nightName(stmt.night)}、「${partText(P1, stmt)}」と言ったな。${lp ? `だが、${locName(lp.loc)}から見えるのは${E.near(st, lp.loc).map(locName).join('と')}だけだ。` : ''}話が、話の中で食い違っている。` : `${nm(who)}。${nightName(stmt.night)}、「${partText(P1, stmt)}」と言ったな。だが、${E1.k === 'said' ? `${nm(E1.who)}は自分で、その夜は${locName(E1.loc)}にいたと言っている` : E1.k === 'trace' ? `わたしは${locName(E1.loc)}で、この目で「${SP.traceShort(st, E1)}」を見ている` : `${E1.by === 'you' ? 'わたしは' : nm(E1.by) + 'は'}その夜、${nm(E1.who)}を${locName(E1.loc)}で見ている`}。` }];
+    const r = E.judgeClash(S, st, stmt.id, +part, ev);
+    if (r.again) { await say([{ text: 'その食い違いは、もう皆の前で突いた。' }]); return debate(); }
     const t = pup(who); if (t) { t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); }
     openGate();
-    const r = E.judgeClash(S, st, stmt.id, +part, ev);
     if (!r.ok) G.gate.heat.you = 1;   // a miss turns the room on you as soon as it is said
     if (r.ok && r.other) items.push({ text: '食い違いは、たしかにあった。だが、ほころびたのは別の口だった。' });
     for (const e of r.ev || []) { const l = lineOf(e); if (l) items.push(l); }
-    if (!r.ok) items.push({ text: `${st.lex.meet}のざわめきが、あなたのほうへ向いた。証拠は、その言葉を崩していなかった。${missLeft() > 0 ? '' : '\n今日はもう、うかつに人の言葉を突けない。'}` });
+    if (!r.ok) {
+      const WHY = { agree: P1.k === 'fig' ? 'その人影の特徴は、痕跡と食い違っていなかった。' : P1.k === 'trace' ? '報告された痕跡は、あなたが見たものと同じだった。' : '居場所は、その証拠と同じだった。', sees: 'その場所は、いた所から見える。話の中に食い違いはなかった。', kind: '痕跡の種類が違い、比べようがなかった。' };
+      items.push({ text: `${WHY[r.why] || '証拠は、その言葉を崩していなかった。'}${st.lex.meet}のざわめきが、あなたのほうへ向いた。${missLeft() > 0 ? '' : '\n今日はもう、うかつに人の言葉を突けない。'}` });
+    }
     await say(items);
     closeGate();
     log({ k: 'clash', ok: r.ok }); save(); renderRoster(); debate();
