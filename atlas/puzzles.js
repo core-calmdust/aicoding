@@ -704,7 +704,7 @@
      { '<theme>-<j>': stars }. Texts: foxgeese/i18n-fg.js + i18n-fg-more.js (a sandbox); on the 3D table ドミダック's words
      (atlas/games/foxgeese-pz.js AtlasFoxgeesePz). Checked by tools/lesson-verify-foxgeese.js. ---------- */
   BOOK.foxgeese = {
-    url: '../foxgeese/puzzles.json?v=5', KEY: 'aicoding-foxgeese-puzzles', LAST: 'aicoding-foxgeese-pz-last', data: null, I: null,
+    url: '../foxgeese/puzzles.json?v=6', KEY: 'aicoding-foxgeese-puzzles', LAST: 'aicoding-foxgeese-pz-last', data: null, I: null,
     ICO: { Win: '<circle cx="12" cy="12" r="3"/><path d="M12 4v4M12 16v4M4 12h4M16 12h4"/>', Tac: '<path d="M5 19L19 5M14 5h5v5"/>' },
     fetch() {
       const ld = u => fetch(u).then(r => r.text()).catch(() => '');
@@ -733,7 +733,7 @@
      konane/i18n-kn.js + i18n-kn-more.js (a sandbox, over the I18N the page builds from checkers/i18n.js); on the 3D table
      チェッカニ's words (atlas/games/konane-pz.js AtlasKonanePz). Checked by tools/lesson-verify-konane.js. ---------- */
   BOOK.konane = {
-    url: '../konane/puzzles.json?v=5', KEY: 'aicoding-konane-puzzles', LAST: 'aicoding-konane-pz-last', data: null, I: null,
+    url: '../konane/puzzles.json?v=6', KEY: 'aicoding-konane-puzzles', LAST: 'aicoding-konane-pz-last', data: null, I: null,
     ICO: { Win: '<path d="M5 18h14M6 18l-1-9 4 3 3-6 3 6 4-3-1 9"/>', Tac: '<path d="M13 3L5 14h6l-1 7 8-11h-6z"/>' },
     fetch() {
       const ld = u => fetch(u).then(r => r.text()).catch(() => '');
