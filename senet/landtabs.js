@@ -123,7 +123,7 @@ function relabel() {
     b.setAttribute('aria-label', l); b.title = l;
   });
   const row = (k, ic, desc) => `<button type="button" data-go="${k}">${ICON[ic]}<span>${tt('btn.' + k, k)}${desc ? `<small>${desc}</small>` : ''}</span></button>`;
-  const h = `<h3>${label('learn').replace('\n', ' / ')}</h3>` + row('rules', 'rules', tt('btn.rules.title', '')) + row('lesson', 'learn', tt('btn.lesson.title', ''));
+  const h = `<h3>${label('learn').replace('\n', ' / ')}</h3>` + row('rules', 'rules', tt('btn.rules.title', ''));   // (2026-11-24: lessons retired — dice race games have no lessons)
   if (learn.dataset.h !== h) { learn.dataset.h = h; learn.innerHTML = h; }
   const l = lang(), rh = rest.querySelector('span'), rp = rest.querySelector('p'), rt = REST[l] || REST.en;
   if (rh.textContent !== label('coach')) rh.textContent = label('coach');

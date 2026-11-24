@@ -5,7 +5,7 @@
 // Loaded after app.js (shares its globals: lesson, turn, view, render, …).
 'use strict';
 let OPB = null;
-const opReady = fetch('openings.json?v=20261021op').then(r => r.json()).then(d => (OPB = d)).catch(() => null);
+const opReady = fetch('openings.json?v=20261124op').then(r => r.json()).then(d => (OPB = d)).catch(() => null);
 const OP_STORE = STORE + '-open', OP_TAB = STORE + '-optab';
 function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{}'); } catch (e) { return {}; } }
 function opSave(p) { try { localStorage.setItem(OP_STORE, JSON.stringify(p)); } catch (e) {} }
@@ -390,13 +390,19 @@ async function opDrillLine() {
   L.answered = false; L.dec = x;
   render(); renderInfo(); opDrillCard();
 }
+// right = within OPB.tol of the best, or a rolled-out play the rollouts cannot tell from the best (behind by less than 2 standard
+// errors of the two rollouts) — the 3D lesson table judges the same way (atlas/lessons3d.js BACKGAMMON.opening, 2026-11-24)
+function opRight(mine, b, rolled) {
+  if (!mine || !(rolled ? mine.ro != null : mine.ply === 2)) return false;
+  const gap = b.e - mine.e; return gap <= OPB.tol + 1e-9 || (mine.ro != null && b.ro != null && gap < 2 * Math.hypot(b.se || 0, mine.se || 0));
+}
 function opSubmit(tt) {
   const L = lesson; if (!L || L.op !== 'drill' || L.answered) return;
   const it = L.it, ln = L.ln, x = L.dec, plays = opPlays(it, ln), R = opRank(plays), b = opBest(plays);
   const key = BG.key(tt.pos);
   const mine = R.find(y => BG.key(decMoves(x.before, x.s, y.m).pos) === key);
   const rolled = R.some(y => y.ro != null);
-  const ok = !!(mine && (rolled ? mine.ro != null : mine.ply === 2) && b.e - mine.e <= OPB.tol + 1e-9);
+  const ok = opRight(mine, b, rolled);
   L.answered = true;
   L.res.push(ok ? 1 : 0);
   L.fb = { ok, mine: mine ? mine.m : null, mineMoves: tt.steps.map(s => s.code), b };

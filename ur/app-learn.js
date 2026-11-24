@@ -5,11 +5,11 @@
 (function () {
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles', PZ_LAST = STORE + '-pz-last', PZ_TAB = STORE + '-pz-tab', LS_CAT = STORE + '-ls-cat';
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=6').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=7').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LL = o => o == null ? '' : typeof o === 'string' ? o : (o[LANG] !== undefined ? o[LANG] : o.en !== undefined ? o.en : o.ja || '');
 const fill = (s, v) => String(s).replace(/\{(\w+)\}/g, (_, k) => v && v[k] !== undefined ? v[k] : '');
 const UI = (D, k, v) => fill(D && D.ui && D.ui[k] ? LL(D.ui[k]) : k, v);
-const MSG = (D, w) => !w ? '' : fill(D && D.msg && D.msg[w[0]] ? LL(D.msg[w[0]]) : '', w[1] || {});
+const MSG = (D, w) => !w ? '' : fill(D && D.msg && D.msg[w[0]] ? LL(D.msg[w[0]]) : '', Object.fromEntries(Object.entries(w[1] || {}).map(([k, v]) => [k, v && typeof v === 'object' ? LL(v) : v])));   // (a value in 14 languages: the lead's option label)
 const diceOf = n => { const a = [0, 0, 0, 0]; for (let i = 0; i < Math.min(4, n || 0); i++) a[i] = 1; return a; };
 function prog(k) { try { return JSON.parse(localStorage.getItem(k) || '{}') || {}; } catch (e) { return {}; } }
 function progSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
@@ -72,7 +72,7 @@ function openRules(page) {
   try { localStorage.setItem('aicoding-ur-rules-seen', '1'); } catch (e) {}
   if (!window.UrTour) { $('#rulesBody').innerHTML = `<p style="padding:20px;color:var(--muted)">${esc(t('ls.fail'))}</p>`; return; }
   UrTour.open({ mount: '#rulesBody', lang: () => LANG, design: settings.design, pieces: settings.pieces, speed: SPD(), page: page,
-    onPlay: () => { closeRules(); openNewDialog(); }, onLessons: () => { closeRules(); openLessons(); }, onClose: () => closeRules(), sound: k => snd(k === 'move' ? 'place' : k) });
+    onPlay: () => { closeRules(); openNewDialog(); }, onClose: () => closeRules(), sound: k => snd(k === 'move' ? 'place' : k) });
 }
 function closeRules(quiet) { if (window.UrTour) try { UrTour.stop(); } catch (e) {} hideOverlay('#rulesOverlay'); }
 $('#btnRules').onclick = () => openRules();

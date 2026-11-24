@@ -35,6 +35,7 @@
     morris: { guide: '../images/atlas/g-owl.webp', name: { ja: 'モリフク', en: 'Millowl', zh: '方阵猫头鹰', 'zh-TW': '方陣貓頭鷹', ko: '모리후쿠', es: 'Millowl', fr: 'Millowl', pt: 'Millowl', de: 'Millowl', hi: 'मिलआउल', ar: 'ميل أول', ru: 'Миллоул', id: 'Millowl', tr: 'Millowl' } },
     tafl: { guide: '../images/atlas/g-puffin.webp', name: { ja: 'タフリン', en: 'Taflin', zh: '塔芙林', 'zh-TW': '塔芙林', ko: '타플린', es: 'Taflín', fr: 'Taflin', pt: 'Taflin', de: 'Taflin', hi: 'टैफ़लिन', ar: 'تافلين', ru: 'Тафлин', id: 'Taflin', tr: 'Taflin' } },
     amazons: { guide: '../images/atlas/av/frog-0.webp', name: { ja: 'ケロ', en: 'Kero', zh: '呱呱', 'zh-TW': '呱呱', ko: '케로', es: 'Kero', fr: 'Kero', pt: 'Kero', de: 'Kero', hi: 'केरो', ar: 'كيرو', ru: 'Керо', id: 'Kero', tr: 'Kero' } },
+    ugolki: { guide: '../images/atlas/g-owl.webp', name: { ja: 'モリフク', en: 'Millowl', zh: '方阵猫头鹰', 'zh-TW': '方陣貓頭鷹', ko: '모리후쿠', es: 'Millowl', fr: 'Millowl', pt: 'Millowl', de: 'Millowl', hi: 'मिलआउल', ar: 'ميل أول', ru: 'Миллоул', id: 'Millowl', tr: 'Millowl' } },   // (モリフク, the guide of atlas/rules/ugolki.js)
     konane: { guide: '../images/atlas/g-crab.webp', name: {"ja":"チェッカニ","en":"Checkrab","zh":"跳棋蟹","zh-TW":"跳棋蟹","ko":"체카니","es":"Checkrab","fr":"Checkrab","pt":"Checkrab","de":"Checkrab","hi":"चेकरैब","ar":"تشيكراب","ru":"Чекраб","id":"Checkrab","tr":"Checkrab"} },   // (the guide of atlas/rules/konane.js)
     foxgeese: { guide: '../images/atlas/av/duck-0.webp', name: {"ja":"ドミダック","en":"Dominoduck","zh":"骨牌鸭鸭","zh-TW":"骨牌鴨鴨","ko":"도미닥","es":"Dominoduck","fr":"Dominoduck","pt":"Dominoduck","de":"Dominoduck","hi":"डोमिनोडक","ar":"دومينو دك","ru":"Доминоутка","id":"Dominoduck","tr":"Dominoduck"} },   // (the guide of atlas/rules/foxgeese.js)
     peg: { guide: '../images/atlas/av/marble-2.webp', name: { ja: 'ビーユ', en: 'Bille', zh: '比尤', ko: '비유', es: 'Bille', fr: 'Bille', pt: 'Bille', de: 'Bille', hi: 'बिय', ar: 'بيّ', ru: 'Бий', 'zh-TW': '比尤', id: 'Bille', tr: 'Bille' } },
@@ -53,7 +54,7 @@
       goalMate: '{c} to move. <b>Checkmate in {n}</b> — can you find it?', goalMate1: '{c} to move. There\'s <b>mate in one</b>. Where is it?',
       goalTac: 'Your opponent just moved. {c} to play — find <b>the move that wins the most</b>!', goalTsume: '<b>Mate in {n}</b>. Keep checking and catch the king!',
       good: ['Nice!', 'Keep going!', 'Good one!'], left: '{n} to go.', wrong: 'Oops, not that one. The glowing move is the answer.', wrongNo: 'Hmm, it didn\'t quite work…',
-      notCheck: 'In tsume <b>every move must be a check</b>.', escaped: 'The king got away…', out: 'No mate within {n} moves…', retry: 'Tap "Retry" for a rematch!',
+      notCheck: 'In tsume <b>every move must be a check</b>.', escaped: 'The king got away…', out: 'No mate — move limit: {n}…', retry: 'Tap "Retry" for a rematch!',
       solved: ['Yes, solved!', 'Brilliant!', 'Spot on!'], solvedHelp: 'Cleared! Next time without a hint?', hintSay: 'Look at the glowing squares.', allDone: 'You\'ve cleared every puzzle here. Amazing!', loading: 'Setting up the puzzle…' },
     zh: { hint: '提示', again: '再试一次', next: '下一题', setMate: '{n}步杀', setTac: '战术 {a}–{b}', white: '白方', black: '黑方',
       hi: { chess: '你好，我是奈顿。用谜题来磨练眼力吧！', shogi: '你好，我是将棋狐。用诘将棋来锻炼计算力吧！' },
@@ -73,50 +74,50 @@
       hi: { chess: '¡Hola, soy Caballón! Afinemos la vista con unos problemas.', shogi: '¡Hola, soy Shogizorro! Entrenemos el cálculo con tsume.' },
       goalMate: 'Juegan {c}. ¿Encuentras el <b>mate en {n}</b>?', goalMate1: 'Juegan {c}. Hay <b>mate en una</b>. ¿Dónde?',
       goalTac: 'Tu rival acaba de mover. Juegan {c}: ¡busca <b>la jugada que más gana</b>!', goalTsume: '<b>Mate en {n}</b>. ¡Da jaque tras jaque y atrapa al rey!',
-      good: ['¡Bien!', '¡Sigue así!', '¡Buena!'], left: 'Quedan {n}.', wrong: 'Uy, esa no. La jugada que brilla es la solución.', wrongNo: 'Mmm, no ha salido…',
-      notCheck: 'En tsume <b>cada jugada debe ser jaque</b>.', escaped: 'El rey se escapó…', out: 'No hubo mate en {n} jugadas…', retry: '¡Pulsa «Reintentar» para la revancha!',
+      good: ['¡Bien!', '¡Sigue así!', '¡Buena!'], left: 'Jugadas restantes: {n}.', wrong: 'Uy, esa no. La jugada que brilla es la solución.', wrongNo: 'Mmm, no ha salido…',
+      notCheck: 'En tsume <b>cada jugada debe ser jaque</b>.', escaped: 'El rey se escapó…', out: 'No hubo mate — límite de jugadas: {n}…', retry: '¡Pulsa «Reintentar» para la revancha!',
       solved: ['¡Resuelto!', '¡Brillante!', '¡Perfecto!'], solvedHelp: '¡Superado! ¿La próxima sin pista?', hintSay: 'Fíjate en las casillas que brillan.', allDone: '¡Has resuelto todos los problemas! ¡Increíble!', loading: 'Preparando el problema…' },
     fr: { hint: 'Indice', again: 'Réessayer', next: 'Suivant', setMate: 'Mat en {n}', setTac: 'Tactique {a}–{b}', white: 'Blancs', black: 'Noirs',
       hi: { chess: 'Salut, c\'est Chevalou ! Aiguisons ton regard avec des problèmes.', shogi: 'Bonjour, je suis Shogirenard ! Entraînons le calcul avec des tsume.' },
       goalMate: 'Trait aux {c}. Trouve le <b>mat en {n}</b> !', goalMate1: 'Trait aux {c}. Il y a <b>mat en un</b>. Où ça ?',
       goalTac: 'Ton adversaire vient de jouer. Trait aux {c} : trouve <b>le coup qui gagne le plus</b> !', goalTsume: '<b>Mat en {n}</b>. Enchaîne les échecs et attrape le roi !',
       good: ['Bien !', 'Continue !', 'Joli !'], left: 'Encore {n}.', wrong: 'Oups, pas celui-là. Le coup qui brille est la solution.', wrongNo: 'Hmm, ça n\'a pas marché…',
-      notCheck: 'En tsume, <b>chaque coup doit faire échec</b>.', escaped: 'Le roi s\'est échappé…', out: 'Pas de mat en {n} coups…', retry: 'Touche « Réessayer » pour la revanche !',
+      notCheck: 'En tsume, <b>chaque coup doit faire échec</b>.', escaped: 'Le roi s\'est échappé…', out: 'Pas de mat — limite de coups : {n}…', retry: 'Touche « Réessayer » pour la revanche !',
       solved: ['Résolu !', 'Brillant !', 'Parfait !'], solvedHelp: 'Réussi ! La prochaine fois sans indice ?', hintSay: 'Regarde les cases qui brillent.', allDone: 'Tu as résolu tous les problèmes. Bravo !', loading: 'Préparation du problème…' },
     pt: { hint: 'Dica', again: 'Tentar de novo', next: 'Próximo', setMate: 'Mate em {n}', setTac: 'Tática {a}–{b}', white: 'Brancas', black: 'Pretas',
       hi: { chess: 'Oi, sou o Cavalinho! Vamos treinar o olhar com problemas.', shogi: 'Olá, sou a Shogiraposa! Vamos treinar o cálculo com tsume.' },
       goalMate: 'Vez das {c}. Encontre o <b>mate em {n}</b>!', goalMate1: 'Vez das {c}. Há <b>mate em um</b>. Onde?',
       goalTac: 'O adversário acabou de jogar. Vez das {c}: ache <b>o lance que mais ganha</b>!', goalTsume: '<b>Mate em {n}</b>. Dê xeque atrás de xeque e pegue o rei!',
-      good: ['Boa!', 'Continue!', 'Muito bem!'], left: 'Faltam {n}.', wrong: 'Ops, não é esse. O lance que brilha é a resposta.', wrongNo: 'Hmm, não deu certo…',
-      notCheck: 'No tsume <b>todo lance precisa ser xeque</b>.', escaped: 'O rei escapou…', out: 'Sem mate em {n} lances…', retry: 'Toque em «Tentar de novo» para a revanche!',
+      good: ['Boa!', 'Continue!', 'Muito bem!'], left: 'Lances restantes: {n}.', wrong: 'Ops, não é esse. O lance que brilha é a resposta.', wrongNo: 'Hmm, não deu certo…',
+      notCheck: 'No tsume <b>todo lance precisa ser xeque</b>.', escaped: 'O rei escapou…', out: 'Sem mate — limite de lances: {n}…', retry: 'Toque em «Tentar de novo» para a revanche!',
       solved: ['Resolvido!', 'Brilhante!', 'Perfeito!'], solvedHelp: 'Passou! Da próxima vez sem dica?', hintSay: 'Olhe as casas que brilham.', allDone: 'Você resolveu todos os problemas. Incrível!', loading: 'Preparando o problema…' },
     de: { hint: 'Tipp', again: 'Nochmal', next: 'Nächste', setMate: 'Matt in {n}', setTac: 'Taktik {a}–{b}', white: 'Weiß', black: 'Schwarz',
       hi: { chess: 'Hallo, ich bin Springolin! Schärfen wir deinen Blick mit Aufgaben.', shogi: 'Hallo, ich bin Shogifuchs! Trainieren wir das Rechnen mit Tsume.' },
       goalMate: '{c} am Zug. Finde das <b>Matt in {n}</b>!', goalMate1: '{c} am Zug. Es gibt ein <b>Matt in eins</b>. Wo?',
       goalTac: 'Dein Gegner hat gerade gezogen. {c} am Zug – finde <b>den Zug, der am meisten gewinnt</b>!', goalTsume: '<b>Matt in {n}</b>. Schach um Schach – fang den König!',
       good: ['Gut!', 'Weiter so!', 'Stark!'], left: 'Noch {n}.', wrong: 'Hoppla, der nicht. Der leuchtende Zug ist die Lösung.', wrongNo: 'Hm, das hat nicht geklappt…',
-      notCheck: 'Beim Tsume <b>muss jeder Zug Schach geben</b>.', escaped: 'Der König ist entwischt…', out: 'Kein Matt in {n} Zügen…', retry: 'Tippe auf „Nochmal“ zur Revanche!',
+      notCheck: 'Beim Tsume <b>muss jeder Zug Schach geben</b>.', escaped: 'Der König ist entwischt…', out: 'Kein Matt – Zuglimit: {n}…', retry: 'Tippe auf „Nochmal“ zur Revanche!',
       solved: ['Gelöst!', 'Brillant!', 'Volltreffer!'], solvedHelp: 'Geschafft! Nächstes Mal ohne Tipp?', hintSay: 'Schau auf die leuchtenden Felder.', allDone: 'Du hast alle Aufgaben gelöst. Super!', loading: 'Aufgabe wird vorbereitet…' },
     hi: { hint: 'संकेत', again: 'फिर से', next: 'अगली पहेली', setMate: '{n} में मात', setTac: 'चाल {a}–{b}', white: 'सफ़ेद', black: 'काला',
       hi: { chess: 'नमस्ते, मैं नाइटन! पहेलियों से नज़र तेज़ करें।', shogi: 'नमस्ते, मैं शोगी लोमड़ी! त्सुमे से गणना की ताकत बढ़ाएँ।' },
       goalMate: '{c} की बारी। <b>{n} चालों में मात</b> ढूँढो!', goalMate1: '{c} की बारी। <b>एक चाल में मात</b> है। कहाँ?',
       goalTac: 'विरोधी ने अभी चाल चली। {c} की बारी — <b>सबसे फ़ायदे वाली चाल</b> ढूँढो!', goalTsume: '<b>{n} में मात</b>। शह पर शह देकर राजा को पकड़ो!',
       good: ['बढ़िया!', 'ऐसे ही!', 'शानदार!'], left: 'अभी {n} बाकी।', wrong: 'अरे, यह नहीं। चमकती चाल सही जवाब है।', wrongNo: 'हम्म, बात नहीं बनी…',
-      notCheck: 'त्सुमे में <b>हर चाल शह होनी चाहिए</b>।', escaped: 'राजा बच निकला…', out: '{n} चालों में मात नहीं हुई…', retry: 'बदला लेने के लिए "फिर से" दबाओ!',
+      notCheck: 'त्सुमे में <b>हर चाल शह होनी चाहिए</b>।', escaped: 'राजा बच निकला…', out: 'मात नहीं हुई — चालों की सीमा: {n}…', retry: 'बदला लेने के लिए "फिर से" दबाओ!',
       solved: ['सही जवाब!', 'कमाल!', 'बिल्कुल सही!'], solvedHelp: 'पार! अगली बार बिना संकेत?', hintSay: 'चमकती जगहों को देखो।', allDone: 'तुमने सारी पहेलियाँ हल कर लीं। वाह!', loading: 'पहेली तैयार हो रही है…' },
     ar: { hint: 'تلميح', again: 'أعد المحاولة', next: 'اللغز التالي', setMate: 'مات في {n}', setTac: 'تكتيك {a}–{b}', white: 'الأبيض', black: 'الأسود',
       hi: { chess: 'مرحبًا، أنا فارسون! لنشحذ نظرك بالألغاز.', shogi: 'مرحبًا، أنا ثعلب الشوغي! لندرّب الحساب بالتسومي.' },
       goalMate: 'دور {c}. جد <b>المات في {n}</b>!', goalMate1: 'دور {c}. هناك <b>مات في نقلة</b>. أين؟',
       goalTac: 'لعب خصمك للتو. دور {c} — جد <b>النقلة الأكثر كسبًا</b>!', goalTsume: '<b>مات في {n}</b>. كِش بعد كِش وأمسك الملك!',
       good: ['أحسنت!', 'استمر!', 'رائع!'], left: 'بقي {n}.', wrong: 'عفوًا، ليست هذه. النقلة المضيئة هي الحل.', wrongNo: 'همم، لم تنجح…',
-      notCheck: 'في التسومي <b>كل نقلة يجب أن تكون كِشًّا</b>.', escaped: 'هرب الملك…', out: 'لا مات خلال {n} نقلات…', retry: 'اضغط «أعد المحاولة» للثأر!',
+      notCheck: 'في التسومي <b>كل نقلة يجب أن تكون كِشًّا</b>.', escaped: 'هرب الملك…', out: 'لا مات — حدّ النقلات: {n}…', retry: 'اضغط «أعد المحاولة» للثأر!',
       solved: ['أصبت!', 'مذهل!', 'تمامًا!'], solvedHelp: 'نجحت! هل تحاول المرة القادمة بلا تلميح؟', hintSay: 'انظر إلى المربعات المضيئة.', allDone: 'حللت كل الألغاز هنا. رائع!', loading: 'جارٍ تجهيز اللغز…' },
     ru: { hint: 'Подсказка', again: 'Ещё раз', next: 'Следующая', setMate: 'Мат в {n}', setTac: 'Тактика {a}–{b}', white: 'Белые', black: 'Чёрные',
       hi: { chess: 'Привет, я Найтон! Потренируем глаз на задачах.', shogi: 'Привет, я Сёгицунэ! Потренируем расчёт на цумэ.' },
       goalMate: 'Ход: {c}. Найди <b>мат в {n}</b>!', goalMate1: 'Ход: {c}. Есть <b>мат в один ход</b>. Где?',
       goalTac: 'Соперник только что сходил. Ход: {c} — найди <b>самый выгодный ход</b>!', goalTsume: '<b>Мат в {n}</b>. Шах за шахом — поймай короля!',
-      good: ['Отлично!', 'Так держать!', 'Здорово!'], left: 'Осталось {n}.', wrong: 'Ой, не этот. Светящийся ход — решение.', wrongNo: 'Хм, не получилось…',
-      notCheck: 'В цумэ <b>каждый ход должен быть шахом</b>.', escaped: 'Король ускользнул…', out: 'За {n} ходов мата нет…', retry: 'Нажми «Ещё раз», чтобы отыграться!',
+      good: ['Отлично!', 'Так держать!', 'Здорово!'], left: 'Осталось ходов: {n}.', wrong: 'Ой, не этот. Светящийся ход — решение.', wrongNo: 'Хм, не получилось…',
+      notCheck: 'В цумэ <b>каждый ход должен быть шахом</b>.', escaped: 'Король ускользнул…', out: 'Мата нет — лимит ходов: {n}…', retry: 'Нажми «Ещё раз», чтобы отыграться!',
       solved: ['Решено!', 'Блестяще!', 'В точку!'], solvedHelp: 'Пройдено! В следующий раз без подсказки?', hintSay: 'Посмотри на светящиеся поля.', allDone: 'Ты решил все задачи. Потрясающе!', loading: 'Готовим задачу…' },
     'zh-TW': { hint: '提示', again: '再試一次', next: '下一題', setMate: '{n}步殺', setTac: '戰術 {a}–{b}', white: '白方', black: '黑方',
       hi: { chess: '你好，我是奈頓。用謎題來磨練眼力吧！', shogi: '你好，我是將棋狐。用詰將棋來鍛鍊計算力吧！' },
@@ -143,17 +144,17 @@
   // reversi (2026-11-11): the goal (win / by N discs / wipe-out / at least a draw, played out to the end against the best defence)
   const RV = {
     ja: { hi: 'リバガメだよ。終盤の読み切りパズルに挑戦しよう！', gWin: '{c}の番。最後まで打って<b>勝って</b>みよう！', gMargin: '{c}の番。<b>{n}石差以上</b>で勝とう！', gWipe: '{c}の番。相手の石を<b>全滅</b>させよう！', gDraw: '{c}の番。<b>引き分け以上</b>にしよう！', miss: '{m}だと目標に届かないみたい。最善は{b}だよ。', empties: '空きマスはあと{n}。' },
-    en: { hi: 'Flipturtle here! Let\'s read endgames out to the last disc.', gWin: '{c} to move. Play it out and <b>win</b>!', gMargin: '{c} to move. Win by <b>{n} discs or more</b>!', gWipe: '{c} to move. <b>Wipe out</b> every opposing disc!', gDraw: '{c} to move. Get <b>at least a draw</b>!', miss: '{m} can\'t reach the goal. The best was {b}.', empties: '{n} empty squares left.' },
+    en: { hi: 'Flipturtle here! Let\'s read endgames out to the last disc.', gWin: '{c} to move. Play it out and <b>win</b>!', gMargin: '{c} to move. Win by <b>a margin of {n} or more</b>!', gWipe: '{c} to move. <b>Wipe out</b> every opposing disc!', gDraw: '{c} to move. Get <b>at least a draw</b>!', miss: '{m} can\'t reach the goal. The best was {b}.', empties: 'Empty squares left: {n}.' },
     zh: { hi: '我是翻翻龟！来挑战算清终盘的谜题吧！', gWin: '轮到{c}。下到最后<b>赢下来</b>吧！', gMargin: '轮到{c}。以<b>{n}子以上</b>的差距获胜！', gWipe: '轮到{c}。把对方的子<b>全部吃光</b>！', gDraw: '轮到{c}。至少下成<b>和棋</b>！', miss: '下{m}好像达不到目标。最佳是{b}。', empties: '还剩{n}个空格。' },
     'zh-TW': { hi: '我是翻翻龜！來挑戰算清終盤的謎題吧！', gWin: '輪到{c}。下到最後<b>贏下來</b>吧！', gMargin: '輪到{c}。以<b>{n}子以上</b>的差距獲勝！', gWipe: '輪到{c}。把對方的子<b>全部吃光</b>！', gDraw: '輪到{c}。至少下成<b>和棋</b>！', miss: '下{m}好像達不到目標。最佳是{b}。', empties: '還剩{n}個空格。' },
     ko: { hi: '리바거북이야! 종반을 끝까지 읽는 퍼즐에 도전하자!', gWin: '{c} 차례. 끝까지 두어 <b>이겨</b> 보자!', gMargin: '{c} 차례. <b>{n}개 차 이상</b>으로 이기자!', gWipe: '{c} 차례. 상대 돌을 <b>전멸</b>시키자!', gDraw: '{c} 차례. <b>무승부 이상</b>을 만들자!', miss: '{m}(으)로는 목표에 닿지 않아. 최선은 {b}야.', empties: '빈칸이 {n}개 남았어.' },
-    es: { hi: '¡Soy Tortugavuelta! Vamos a leer finales hasta la última ficha.', gWin: 'Juegan {c}. ¡Juega hasta el final y <b>gana</b>!', gMargin: 'Juegan {c}. ¡Gana por <b>{n} fichas o más</b>!', gWipe: 'Juegan {c}. ¡<b>Elimina</b> todas las fichas rivales!', gDraw: 'Juegan {c}. ¡Consigue <b>al menos tablas</b>!', miss: 'Con {m} no se llega al objetivo. Lo mejor era {b}.', empties: 'Quedan {n} casillas vacías.' },
-    fr: { hi: 'Ici Tortuflip ! Lisons les finales jusqu\'au dernier pion.', gWin: 'Aux {c}. Jouez jusqu\'au bout et <b>gagnez</b> !', gMargin: 'Aux {c}. Gagnez de <b>{n} pions ou plus</b> !', gWipe: 'Aux {c}. <b>Éliminez</b> tous les pions adverses !', gDraw: 'Aux {c}. Obtenez <b>au moins la nulle</b> !', miss: '{m} n\'atteint pas l\'objectif. Le meilleur était {b}.', empties: 'Encore {n} cases vides.' },
-    pt: { hi: 'Sou a Tartavira! Vamos ler finais até a última peça.', gWin: 'Jogam as {c}. Jogue até o fim e <b>vença</b>!', gMargin: 'Jogam as {c}. Vença por <b>{n} peças ou mais</b>!', gWipe: 'Jogam as {c}. <b>Elimine</b> todas as peças do rival!', gDraw: 'Jogam as {c}. Consiga <b>pelo menos um empate</b>!', miss: 'Com {m} não dá para chegar ao objetivo. O melhor era {b}.', empties: 'Faltam {n} casas vazias.' },
-    de: { hi: 'Hier ist Wendekröte! Rechnen wir Endspiele bis zum letzten Stein.', gWin: '{c} am Zug. Spiel bis zum Ende und <b>gewinne</b>!', gMargin: '{c} am Zug. Gewinne mit <b>{n} Steinen oder mehr</b>!', gWipe: '{c} am Zug. <b>Räume</b> alle gegnerischen Steine ab!', gDraw: '{c} am Zug. Hol <b>mindestens ein Remis</b>!', miss: 'Mit {m} ist das Ziel nicht erreichbar. Am besten war {b}.', empties: 'Noch {n} leere Felder.' },
-    hi: { hi: 'मैं पलटकछुआ हूँ! आओ, अंत के खेल को आख़िरी गोटी तक पढ़ें।', gWin: '{c} की बारी। अंत तक खेलकर <b>जीतो</b>!', gMargin: '{c} की बारी। <b>{n} गोटियों या ज़्यादा</b> के अंतर से जीतो!', gWipe: '{c} की बारी। विरोधी की सारी गोटियाँ <b>ख़त्म</b> करो!', gDraw: '{c} की बारी। <b>कम से कम ड्रॉ</b> करो!', miss: '{m} से लक्ष्य तक नहीं पहुँचा जा सकता। सबसे अच्छी चाल {b} थी।', empties: 'अभी {n} ख़ाली खाने बचे हैं।' },
-    ar: { hi: 'أنا سلحفاة القلب! لنقرأ النهايات حتى آخر قطعة.', gWin: 'دور {c}. العب حتى النهاية <b>واربح</b>!', gMargin: 'دور {c}. اربح بفارق <b>{n} قطعة أو أكثر</b>!', gWipe: 'دور {c}. <b>امحُ</b> كل قطع الخصم!', gDraw: 'دور {c}. احصل على <b>التعادل على الأقل</b>!', miss: 'لا يمكن بلوغ الهدف بـ{m}. الأفضل كان {b}.', empties: 'بقي {n} مربعات فارغة.' },
-    ru: { hi: 'Я Перевертуша! Давайте просчитывать эндшпили до последней фишки.', gWin: 'Ход: {c}. Доиграйте до конца и <b>победите</b>!', gMargin: 'Ход: {c}. Выиграйте с перевесом <b>в {n} фишек и больше</b>!', gWipe: 'Ход: {c}. <b>Уничтожьте</b> все фишки соперника!', gDraw: 'Ход: {c}. Добейтесь <b>хотя бы ничьей</b>!', miss: 'Ходом {m} цели не достичь. Лучшим был {b}.', empties: 'Пустых клеток: {n}.' },
+    es: { hi: '¡Soy Tortugavuelta! Vamos a leer finales hasta la última ficha.', gWin: 'Juegan {c}. ¡Juega hasta el final y <b>gana</b>!', gMargin: 'Juegan {c}. ¡Gana por <b>una diferencia de {n} o más</b>!', gWipe: 'Juegan {c}. ¡<b>Elimina</b> todas las fichas rivales!', gDraw: 'Juegan {c}. ¡Consigue <b>al menos tablas</b>!', miss: 'Con {m} no se llega al objetivo. Lo mejor era {b}.', empties: 'Casillas vacías restantes: {n}.' },
+    fr: { hi: 'Ici Tortuflip ! Lisons les finales jusqu\'au dernier pion.', gWin: 'Aux {c}. Jouez jusqu\'au bout et <b>gagnez</b> !', gMargin: 'Aux {c}. Gagnez avec <b>un écart de {n} ou plus</b> !', gWipe: 'Aux {c}. <b>Éliminez</b> tous les pions adverses !', gDraw: 'Aux {c}. Obtenez <b>au moins la nulle</b> !', miss: '{m} n\'atteint pas l\'objectif. Le meilleur était {b}.', empties: 'Cases vides restantes : {n}.' },
+    pt: { hi: 'Sou a Tartavira! Vamos ler finais até a última peça.', gWin: 'Jogam as {c}. Jogue até o fim e <b>vença</b>!', gMargin: 'Jogam as {c}. Vença por <b>uma diferença de {n} ou mais</b>!', gWipe: 'Jogam as {c}. <b>Elimine</b> todas as peças do rival!', gDraw: 'Jogam as {c}. Consiga <b>pelo menos um empate</b>!', miss: 'Com {m} não dá para chegar ao objetivo. O melhor era {b}.', empties: 'Casas vazias restantes: {n}.' },
+    de: { hi: 'Hier ist Wendekröte! Rechnen wir Endspiele bis zum letzten Stein.', gWin: '{c} am Zug. Spiel bis zum Ende und <b>gewinne</b>!', gMargin: '{c} am Zug. Gewinne mit <b>einem Vorsprung von {n} oder mehr</b>!', gWipe: '{c} am Zug. <b>Räume</b> alle gegnerischen Steine ab!', gDraw: '{c} am Zug. Hol <b>mindestens ein Remis</b>!', miss: 'Mit {m} ist das Ziel nicht erreichbar. Am besten war {b}.', empties: 'Leere Felder übrig: {n}.' },
+    hi: { hi: 'मैं पलटकछुआ हूँ! आओ, अंत के खेल को आख़िरी गोटी तक पढ़ें।', gWin: '{c} की बारी। अंत तक खेलकर <b>जीतो</b>!', gMargin: '{c} की बारी। <b>कम से कम {n} के अंतर</b> से जीतो!', gWipe: '{c} की बारी। विरोधी की सारी गोटियाँ <b>ख़त्म</b> करो!', gDraw: '{c} की बारी। <b>कम से कम ड्रॉ</b> करो!', miss: '{m} से लक्ष्य तक नहीं पहुँचा जा सकता। सबसे अच्छी चाल {b} थी।', empties: 'बचे ख़ाली खाने: {n}।' },
+    ar: { hi: 'أنا سلحفاة القلب! لنقرأ النهايات حتى آخر قطعة.', gWin: 'دور {c}. العب حتى النهاية <b>واربح</b>!', gMargin: 'دور {c}. اربح بفارق <b>{n} أو أكثر</b>!', gWipe: 'دور {c}. <b>امحُ</b> كل قطع الخصم!', gDraw: 'دور {c}. احصل على <b>التعادل على الأقل</b>!', miss: 'لا يمكن بلوغ الهدف بـ{m}. الأفضل كان {b}.', empties: 'المربعات الفارغة المتبقية: {n}.' },
+    ru: { hi: 'Я Перевертуша! Давайте просчитывать эндшпили до последней фишки.', gWin: 'Ход: {c}. Доиграйте до конца и <b>победите</b>!', gMargin: 'Ход: {c}. Выиграйте с перевесом <b>не меньше {n}</b>!', gWipe: 'Ход: {c}. <b>Уничтожьте</b> все фишки соперника!', gDraw: 'Ход: {c}. Добейтесь <b>хотя бы ничьей</b>!', miss: 'Ходом {m} цели не достичь. Лучшим был {b}.', empties: 'Пустых клеток: {n}.' },
     id: { hi: 'Aku Kurakura Balik! Ayo hitung akhir permainan sampai keping terakhir.', gWin: 'Giliran {c}. Mainkan sampai akhir dan <b>menang</b>!', gMargin: 'Giliran {c}. Menang dengan selisih <b>{n} keping atau lebih</b>!', gWipe: 'Giliran {c}. <b>Habiskan</b> semua keping lawan!', gDraw: 'Giliran {c}. Dapatkan <b>minimal seri</b>!', miss: 'Dengan {m} target tak tercapai. Terbaik adalah {b}.', empties: 'Sisa {n} petak kosong.' },
     tr: { hi: 'Ben Çevirkaplumbağa! Oyun sonlarını son taşa kadar hesaplayalım.', gWin: 'Sıra {c} tarafında. Sonuna kadar oyna ve <b>kazan</b>!', gMargin: 'Sıra {c} tarafında. <b>{n} taş ya da daha fazla</b> farkla kazan!', gWipe: 'Sıra {c} tarafında. Rakibin tüm taşlarını <b>sil</b>!', gDraw: 'Sıra {c} tarafında. <b>En az beraberlik</b> al!', miss: '{m} ile hedefe ulaşılamıyor. En iyisi {b} idi.', empties: '{n} boş kare kaldı.' },
   };
@@ -315,6 +316,16 @@
     let o = `<svg viewBox="0 0 84 84" aria-hidden="true"><rect width="84" height="84" rx="6" fill="#b98b55"/>`;
     for (let i = 0; i < N * N; i++) { const r = Math.floor(i / N), q = i % N, rr = fl ? N - 1 - r : r, qq = fl ? N - 1 - q : q, x = 2 + qq * c + c / 2, y = 2 + rr * c + c / 2, ch = b[i];
       o += ch === 'b' ? `<circle cx="${x}" cy="${y}" r="${c * .4}" fill="#2a2826" stroke="#0b0b0b" stroke-width=".6"/>` : ch === 'w' ? `<circle cx="${x}" cy="${y}" r="${c * .4}" fill="#f6f1e6" stroke="#8d8270" stroke-width=".6"/>` : `<circle cx="${x}" cy="${y}" r="${c * .12}" fill="#7a5530"/>`; }
+    return o + '</svg>';
+  };
+  // ugolki (2026-11-24): a ugolki/puzzles.json spec { b: 64 chars '.wb', side, n } — the two corners of c33 shaded, the board turned
+  // for Black to move (as the 3D table)
+  window.AtlasMini.ugolki = spec => {
+    const b = String(spec && spec.b || ''), fl = spec && spec.side === 2, c = 10;
+    let o = '<svg viewBox="0 0 84 84" aria-hidden="true"><rect width="84" height="84" rx="6" fill="#2f5aa8"/>';
+    for (let i = 0; i < 64; i++) { const r = i >> 3, q = i & 7, rr = fl ? 7 - r : r, qq = fl ? 7 - q : q, x = 2 + qq * c, y = 2 + rr * c, home = (r >= 5 && q <= 2) || (r <= 2 && q >= 5);
+      o += `<rect x="${x}" y="${y}" width="${c}" height="${c}" fill="${home ? '#c9d8f2' : (r + q) % 2 ? '#eef3fb' : '#dfe8f7'}"/>`;
+      const ch = b[i]; if (ch === 'w' || ch === 'b') o += `<circle cx="${x + c / 2}" cy="${y + c / 2}" r="${c * .38}" fill="${ch === 'w' ? '#fbfaf4' : '#1f2a44'}" stroke="${ch === 'w' ? '#7d8aa0' : '#05080f'}" stroke-width=".7"/>`; }
     return o + '</svg>';
   };
   window.AtlasMini.foxgeese = spec => {
@@ -592,19 +603,19 @@
   };
   const C4X = {
     ja: { hi: 'ポトンウサだよ！ 詰めコネクトフォーで、4つ並べる読みをきたえよう！', mid: 'いい調子！ あと{n}手。', out: '{n}手以内には4つ並ばなかった…', bl: 'おっと、それは悪手。' },
-    en: { hi: "Plopbun here! Let's sharpen your reading with Connect Four puzzles!", mid: 'Nice! {n} moves left.', out: "No four within {n} moves…", bl: 'Oops — that one is a mistake.' },
+    en: { hi: "Plopbun here! Let's sharpen your reading with Connect Four puzzles!", mid: 'Nice! Moves left: {n}.', out: "No four — move limit: {n}…", bl: 'Oops — that one is a mistake.' },
     zh: { hi: '我是叮咚兔！用四子棋谜题锻炼计算力吧！', mid: '不错！还剩{n}手。', out: '没能在{n}手内连成四个…', bl: '哎呀，这步是失误。' },
     'zh-TW': { hi: '我是叮咚兔！用四子棋謎題鍛鍊計算力吧！', mid: '不錯！還剩{n}手。', out: '沒能在{n}手內連成四個…', bl: '哎呀，這步是失誤。' },
     ko: { hi: '포통우사야! 커넥트 포 퍼즐로 수읽기를 단련하자!', mid: '좋아! {n}수 남았어.', out: '{n}수 안에 4개를 잇지 못했어…', bl: '앗, 그건 악수야.' },
-    es: { hi: '¡Soy Plopbun! Entrena tu cálculo con problemas de Conecta 4.', mid: '¡Bien! Quedan {n} jugadas.', out: 'No hubo cuatro en {n} jugadas…', bl: '¡Uy! Esa es un error.' },
-    fr: { hi: 'C’est Plopbun ! Entraîne ton calcul avec des problèmes de Puissance 4.', mid: 'Bien ! Encore {n} coups.', out: 'Pas de quatre en {n} coups…', bl: 'Oups, c’est une erreur.' },
-    pt: { hi: 'Aqui é o Plopbun! Treine o cálculo com problemas de Lig 4.', mid: 'Boa! Faltam {n} lances.', out: 'Nada de quatro em {n} lances…', bl: 'Ops, esse é um erro.' },
-    de: { hi: 'Hier ist Plopbun! Trainiere dein Rechnen mit Vier-gewinnt-Aufgaben.', mid: 'Gut! Noch {n} Züge.', out: 'Keine Vier in {n} Zügen…', bl: 'Hoppla, das ist ein Fehler.' },
-    ru: { hi: 'Это Плопбан! Тренируем расчёт на задачах «Четыре в ряд».', mid: 'Отлично! Осталось {n}.', out: 'За {n} ходов четвёрки нет…', bl: 'Ой, это ошибка.' },
+    es: { hi: '¡Soy Plopbun! Entrena tu cálculo con problemas de Conecta 4.', mid: '¡Bien! Jugadas restantes: {n}.', out: 'No hubo cuatro — límite de jugadas: {n}…', bl: '¡Uy! Esa es un error.' },
+    fr: { hi: 'C’est Plopbun ! Entraîne ton calcul avec des problèmes de Puissance 4.', mid: 'Bien ! Coups restants : {n}.', out: 'Pas de quatre — limite de coups : {n}…', bl: 'Oups, c’est une erreur.' },
+    pt: { hi: 'Aqui é o Plopbun! Treine o cálculo com problemas de Lig 4.', mid: 'Boa! Lances restantes: {n}.', out: 'Nada de quatro — limite de lances: {n}…', bl: 'Ops, esse é um erro.' },
+    de: { hi: 'Hier ist Plopbun! Trainiere dein Rechnen mit Vier-gewinnt-Aufgaben.', mid: 'Gut! Verbleibende Züge: {n}.', out: 'Keine Vier – Zuglimit: {n}…', bl: 'Hoppla, das ist ein Fehler.' },
+    ru: { hi: 'Это Плопбан! Тренируем расчёт на задачах «Четыре в ряд».', mid: 'Отлично! Осталось ходов: {n}.', out: 'Четвёрки нет — лимит ходов: {n}…', bl: 'Ой, это ошибка.' },
     tr: { hi: 'Ben Plopbun! Dört Bağlamaca bulmacalarıyla hesap gücünü geliştirelim.', mid: 'Güzel! {n} hamle kaldı.', out: '{n} hamlede dörtlü olmadı…', bl: 'Hay aksi, bu bir hata.' },
     id: { hi: 'Aku Plopbun! Ayo latih perhitungan dengan soal Connect Four.', mid: 'Bagus! Sisa {n} langkah.', out: 'Tidak ada empat dalam {n} langkah…', bl: 'Ups, itu langkah salah.' },
-    hi: { hi: 'मैं प्लॉपबन हूँ! कनेक्ट फ़ोर पहेलियों से गणना मज़बूत करें।', mid: 'बढ़िया! {n} चालें बाकी।', out: '{n} चालों में चार नहीं जुड़े…', bl: 'उफ़, यह गलती है।' },
-    ar: { hi: 'أنا بلوب بن! لنقوِّ الحساب بألغاز أربعة في صف.', mid: 'رائع! بقي {n}.', out: 'لا أربعة خلال {n} نقلات…', bl: 'عفوًا، هذه نقلة خاطئة.' },
+    hi: { hi: 'मैं प्लॉपबन हूँ! कनेक्ट फ़ोर पहेलियों से गणना मज़बूत करें।', mid: 'बढ़िया! बची चालें: {n}।', out: 'चार नहीं जुड़े — चालों की सीमा: {n}…', bl: 'उफ़, यह गलती है।' },
+    ar: { hi: 'أنا بلوب بن! لنقوِّ الحساب بألغاز أربعة في صف.', mid: 'رائع! بقي {n}.', out: 'لا أربعة — حدّ النقلات: {n}…', bl: 'عفوًا، هذه نقلة خاطئة.' },
   };
   /* ---------- amazons (2026-11-15): amazons/puzzles.json (themes of kind duel = immobilise the opponent in N, trap = box in the lit
      amazon in N, guard = keep yours free N times, read = read the ending out; all checked exactly by the engine — engine.js pzGood),
@@ -656,15 +667,15 @@
   };
   const MCX = {
     ja: { hi: 'マンカラビだよ。種の数を数えて、いちばんいい一手を探そう！', mid: 'いいね！ あと{n}手。', ok: '（金の丸）', ng: '（赤い丸）' },
-    en: { hi: "Gembeetle here! Count the seeds and find the best sowing.", mid: 'Nice! {n} moves left.' },
+    en: { hi: "Gembeetle here! Count the seeds and find the best sowing.", mid: 'Nice! Moves left: {n}.' },
     zh: { hi: '我是宝石甲虫！数一数种子，找出最好的一步吧！', mid: '不错！还剩{n}步。' },
     'zh-TW': { hi: '我是寶石甲蟲！數一數種子，找出最好的一步吧！', mid: '不錯！還剩{n}步。' },
     ko: { hi: '보석풍뎅이야! 씨앗을 세어서 최선의 한 수를 찾아보자!', mid: '좋아! {n}수 남았어.' },
-    es: { hi: '¡Soy Escarabajoya! Cuenta las semillas y busca la mejor siembra.', mid: '¡Bien! Quedan {n}.' },
+    es: { hi: '¡Soy Escarabajoya! Cuenta las semillas y busca la mejor siembra.', mid: '¡Bien! Jugadas restantes: {n}.' },
     fr: { hi: 'C’est Scarabijou ! Compte les graines et trouve le meilleur semis.', mid: 'Bien ! Encore {n}.' },
-    pt: { hi: 'Aqui é o Besourojoia! Conte as sementes e ache a melhor semeadura.', mid: 'Boa! Faltam {n}.' },
+    pt: { hi: 'Aqui é o Besourojoia! Conte as sementes e ache a melhor semeadura.', mid: 'Boa! Lances restantes: {n}.' },
     de: { hi: 'Hier ist Juwelkäfer! Zähl die Samen und finde den besten Zug.', mid: 'Gut! Noch {n}.' },
-    ru: { hi: 'Это Джембитл! Считай камни и ищи лучший посев.', mid: 'Отлично! Осталось {n}.' },
+    ru: { hi: 'Это Джембитл! Считай камни и ищи лучший посев.', mid: 'Отлично! Осталось ходов: {n}.' },
     tr: { hi: 'Ben Gembeetle! Taşları say, en iyi hamleyi bul.', mid: 'Güzel! {n} hamle kaldı.' },
     id: { hi: 'Aku Gembeetle! Hitung bijinya dan cari tebaran terbaik.', mid: 'Bagus! Sisa {n}.' },
     hi: { hi: 'मैं रत्नू भौंरा हूँ! बीज गिनो और सबसे अच्छी चाल ढूँढो।', mid: 'बढ़िया! {n} बाकी।' },
@@ -746,6 +757,35 @@
     look(i, lang) { const T = this.data.themes[i], P = T.puzzles[0]; return { desc: this.tx('pz.th.' + T.id + '.sub', lang), board: P ? 'kn:' + JSON.stringify(P.s) : '' }; },
     guide: '../images/atlas/g-crab.webp',
   };
+  /* ---------- ugolki (2026-11-24 担当D): ugolki/puzzles.json ("win within N": the race of the corners, the opponent defends with
+     its most stubborn reply — x2, w3 … b5; ugolki/app.js puzzleMove), the full game's records 'aicoding-ugolki-puzzles'
+     { '<theme>-<j>': stars }. Texts: ugolki/i18n-ug*.js (a sandbox); on the 3D table モリフク's words (atlas/games/ugolki-pz.js
+     AtlasUgolkiPz). Checked by tools/lesson-verify-ugolki.js. ---------- */
+  BOOK.ugolki = {
+    url: '../ugolki/puzzles.json?v=4', KEY: 'aicoding-ugolki-puzzles', LAST: 'aicoding-ugolki-pz-last', data: null, I: null,
+    ICO: { Step: '<path d="M12 21v-8M12 13c0-4 3-6 7-6 0 4-3 6-7 6zM12 15c0-3-2-5-6-5 0 3 2 5 6 5z"/>', Tac: '<path d="M13 3L5 14h6l-1 7 8-11h-6z"/>', End: '<path d="M5 18h14M6 18l-1-9 4 3 3-6 3 6 4-3-1 9"/>' },
+    fetch() {
+      const ld = u => fetch(u).then(r => r.text()).catch(() => '');
+      return Promise.all([fetch(this.url).then(r => r.json()), ld('../ugolki/i18n-ug.js?v=4lv'), ld('../ugolki/i18n-ug-more.js?v=4lv'), ld('../ugolki/i18n-ug-eu.js?v=4lvn'), ld('../ugolki/i18n-ug-hiar.js?v=4lv-l14'), ld('../ugolki/i18n-ug-pzwhy.js?v=2')]).then(([d, ...src]) => {
+        const w = { I18N: {} }; ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].forEach(l => { w.I18N[l] = {}; });
+        for (const tx of src) { try { new Function('window', 'I18N', tx)(w, w.I18N); } catch (e) {} }
+        this.I = w.I18N; d.levels = d.themes; return d;
+      });
+    },
+    tx(k, lang, v) { const I = this.I || {}; let x = I[lang] && I[lang][k]; if (x === undefined) x = I.en && I.en[k]; if (x === undefined) x = (I.ja && I.ja[k]) || ''; return v ? fill(x, v) : x; },
+    sv: x => x === true ? 3 : (+x || 0),
+    pr() { return store.get(this.KEY, {}) || {}; },
+    sets() { const pr = this.pr(); return this.data.themes.map((T, i) => ({ key: i, recs: T.puzzles.map((_, j) => this.sv(pr[T.id + '-' + j])), cat: T.grp })); },
+    title(i, lang) { return this.tx('pz.th.' + this.data.themes[i].id, lang); },
+    problem(i, j, X, lang) {
+      const T = this.data.themes[i], P = T.puzzles[j];
+      return { i, j, P, rk: T.id + '-' + j, kind: 'ug', th: T.id, spec: Object.assign({}, P.s), me: P.s.side === 2 ? 2 : 1, n: P.n, count: T.puzzles.length, set: this.title(i, lang) };
+    },
+    save(p, stars, daily) { const pr = this.pr(); pr[p.rk] = Math.max(this.sv(pr[p.rk]), stars); store.set(this.KEY, pr); if (!daily) store.set(this.LAST, String(p.i)); },
+    cats(lang) { return ['Step', 'Tac', 'End'].filter(k => this.data.themes.some(T => T.grp === k)).map(k => ({ k, name: this.tx('pz.grp' + k, lang), desc: this.tx('pz.grp' + k + 'Sub', lang), icon: `<svg viewBox="0 0 24 24">${this.ICO[k]}</svg>` })); },
+    look(i, lang) { const T = this.data.themes[i], P = T.puzzles[0]; return { desc: this.tx('pz.th.' + T.id + '.sub', lang), board: P ? 'ug:' + JSON.stringify(P.s) : '' }; },
+    guide: '../images/atlas/g-owl.webp',
+  };
   /* ---------- morris (2026-11-16): morris/puzzles(-six|-twelve).json ("win in N" / "mill in N", themes per rule set), the full game's
      records 'aicoding-morris-puzzles2' { '<six:|twelve:><theme>-<j>': stars } (morris/index.html pzKey). Texts: morris/i18n.js + i18n_more.js (a sandbox). */
   const MMV = ['nine', 'six', 'twelve'], MMPRE = v => v === 'nine' ? '' : v + ':';
@@ -824,84 +864,84 @@
   };
   const MMX = {
     ja: { hi: 'モリフクだよ。ミルの読みをきたえるパズルに挑戦しよう！', mid: 'いい手！ あと{n}手。', out: '{n}手では届かなかった…' },
-    en: { hi: "Millowl here! Let's sharpen your mill reading with morris puzzles.", mid: 'Good move! {n} moves left.', out: 'Not done within {n} moves…' },
+    en: { hi: "Millowl here! Let's sharpen your mill reading with morris puzzles.", mid: 'Good move! Moves left: {n}.', out: 'Not done — move limit: {n}…' },
     zh: { hi: '我是方阵猫头鹰！用直棋谜题锻炼成三的计算吧！', mid: '好棋！还剩{n}步。', out: '{n}步内没能完成……' },
     'zh-TW': { hi: '我是方陣貓頭鷹！用直棋謎題鍛鍊成三的計算吧！', mid: '好棋！還剩{n}步。', out: '{n}步內沒能完成……' },
     ko: { hi: '모리후쿠야! 모리스 퍼즐로 밀을 읽는 힘을 길러 보자!', mid: '좋은 수! {n}수 남았어.', out: '{n}수 안에 끝내지 못했어…' },
-    es: { hi: '¡Soy Millowl! Entrena el cálculo de molinos con problemas de molino.', mid: '¡Buena jugada! Quedan {n}.', out: 'No se logró en {n} jugadas…' },
-    fr: { hi: 'C’est Millowl ! Entraîne ton calcul des moulins avec des problèmes de marelle.', mid: 'Bon coup ! Encore {n}.', out: 'Pas réussi en {n} coups…' },
-    pt: { hi: 'Aqui é o Millowl! Treine o cálculo de moinhos com problemas de trilha.', mid: 'Boa jogada! Faltam {n}.', out: 'Não deu em {n} lances…' },
-    de: { hi: 'Hier ist Millowl! Trainiere dein Mühlen-Rechnen mit Mühle-Aufgaben.', mid: 'Guter Zug! Noch {n}.', out: 'In {n} Zügen nicht geschafft…' },
-    ru: { hi: 'Это Миллоул! Тренируй расчёт мельниц на задачах.', mid: 'Хороший ход! Осталось {n}.', out: 'За {n} ходов не вышло…' },
+    es: { hi: '¡Soy Millowl! Entrena el cálculo de molinos con problemas de molino.', mid: '¡Buena jugada! Jugadas restantes: {n}.', out: 'No se logró — límite de jugadas: {n}…' },
+    fr: { hi: 'C’est Millowl ! Entraîne ton calcul des moulins avec des problèmes de marelle.', mid: 'Bon coup ! Encore {n}.', out: 'Pas réussi — limite de coups : {n}…' },
+    pt: { hi: 'Aqui é o Millowl! Treine o cálculo de moinhos com problemas de trilha.', mid: 'Boa jogada! Lances restantes: {n}.', out: 'Não deu — limite de lances: {n}…' },
+    de: { hi: 'Hier ist Millowl! Trainiere dein Mühlen-Rechnen mit Mühle-Aufgaben.', mid: 'Guter Zug! Noch {n}.', out: 'Nicht geschafft – Zuglimit: {n}…' },
+    ru: { hi: 'Это Миллоул! Тренируй расчёт мельниц на задачах.', mid: 'Хороший ход! Осталось ходов: {n}.', out: 'Не вышло — лимит ходов: {n}…' },
     tr: { hi: 'Ben Millowl! Değirmen bulmacalarıyla hesap gücünü geliştir.', mid: 'İyi hamle! {n} kaldı.', out: '{n} hamlede olmadı…' },
     id: { hi: 'Aku Millowl! Latih perhitungan mill dengan soal morris.', mid: 'Langkah bagus! Sisa {n}.', out: 'Tidak berhasil dalam {n} langkah…' },
-    hi: { hi: 'मैं मिलआउल हूँ! मोरिस पहेलियों से मिल की गणना निखारो।', mid: 'बढ़िया चाल! {n} बाकी।', out: '{n} चालों में नहीं हुआ…' },
-    ar: { hi: 'أنا ميل أول! درّب حسابك للطواحين بألغاز المورِس.', mid: 'نقلة جيدة! بقي {n}.', out: 'لم ينجح خلال {n} نقلات…' },
+    hi: { hi: 'मैं मिलआउल हूँ! मोरिस पहेलियों से मिल की गणना निखारो।', mid: 'बढ़िया चाल! {n} बाकी।', out: 'नहीं हुआ — चालों की सीमा: {n}…' },
+    ar: { hi: 'أنا ميل أول! درّب حسابك للطواحين بألغاز المورِس.', mid: 'نقلة جيدة! بقي {n}.', out: 'لم ينجح — حدّ النقلات: {n}…' },
   };
   const TFX = {
     ja: { hi: 'タフリンだよ。詰めタフルで、王を逃がす読み・捕らえる読みをきたえよう！', mid: 'いい手！ あと{n}手。', out: '{n}手では決まらなかった…' },
-    en: { hi: "I'm Taflin! Sharpen your reading with tafl puzzles: free the king, or catch him.", mid: 'Good move! {n} moves left.', out: 'Not done within {n} moves…' },
+    en: { hi: "I'm Taflin! Sharpen your reading with tafl puzzles: free the king, or catch him.", mid: 'Good move! Moves left: {n}.', out: 'Not done — move limit: {n}…' },
     zh: { hi: '我是塔芙林！用塔夫棋谜题练习让国王逃脱或擒住国王的计算吧！', mid: '好棋！还剩{n}手。', out: '{n}手内没能完成……' },
     'zh-TW': { hi: '我是塔芙林！用塔夫棋謎題練習讓國王逃脫或擒住國王的計算吧！', mid: '好棋！還剩{n}手。', out: '{n}手內沒能完成……' },
     ko: { hi: '타플린이야! 타플 퍼즐로 왕을 탈출시키거나 잡는 수읽기를 단련하자!', mid: '좋은 수! {n}수 남았어.', out: '{n}수 안에 끝내지 못했어…' },
-    es: { hi: '¡Soy Taflín! Entrena el cálculo con problemas de tafl: libera al rey o atrápalo.', mid: '¡Buena jugada! Quedan {n}.', out: 'No se logró en {n} jugadas…' },
-    fr: { hi: 'Je suis Taflin ! Entraîne ton calcul avec des problèmes de tafl : libère le roi ou capture-le.', mid: 'Bon coup ! Encore {n}.', out: 'Pas réussi en {n} coups…' },
-    pt: { hi: 'Sou o Taflin! Treine o cálculo com problemas de tafl: liberte o rei ou capture-o.', mid: 'Boa jogada! Faltam {n}.', out: 'Não deu em {n} lances…' },
-    de: { hi: 'Ich bin Taflin! Trainiere dein Rechnen mit Tafl-Aufgaben: befreie den König oder fang ihn.', mid: 'Guter Zug! Noch {n}.', out: 'In {n} Zügen nicht geschafft…' },
-    ru: { hi: 'Я Тафлин! Тренируй расчёт на задачах тафла: выведи короля или поймай его.', mid: 'Хороший ход! Осталось {n}.', out: 'За {n} ходов не вышло…' },
+    es: { hi: '¡Soy Taflín! Entrena el cálculo con problemas de tafl: libera al rey o atrápalo.', mid: '¡Buena jugada! Jugadas restantes: {n}.', out: 'No se logró — límite de jugadas: {n}…' },
+    fr: { hi: 'Je suis Taflin ! Entraîne ton calcul avec des problèmes de tafl : libère le roi ou capture-le.', mid: 'Bon coup ! Encore {n}.', out: 'Pas réussi — limite de coups : {n}…' },
+    pt: { hi: 'Sou o Taflin! Treine o cálculo com problemas de tafl: liberte o rei ou capture-o.', mid: 'Boa jogada! Lances restantes: {n}.', out: 'Não deu — limite de lances: {n}…' },
+    de: { hi: 'Ich bin Taflin! Trainiere dein Rechnen mit Tafl-Aufgaben: befreie den König oder fang ihn.', mid: 'Guter Zug! Noch {n}.', out: 'Nicht geschafft – Zuglimit: {n}…' },
+    ru: { hi: 'Я Тафлин! Тренируй расчёт на задачах тафла: выведи короля или поймай его.', mid: 'Хороший ход! Осталось ходов: {n}.', out: 'Не вышло — лимит ходов: {n}…' },
     tr: { hi: 'Ben Taflin! Tafl bulmacalarıyla hesap gücünü geliştir: kralı kaçır ya da yakala.', mid: 'İyi hamle! {n} kaldı.', out: '{n} hamlede olmadı…' },
     id: { hi: 'Aku Taflin! Latih perhitungan dengan soal tafl: loloskan raja atau tangkap dia.', mid: 'Langkah bagus! Sisa {n}.', out: 'Tidak berhasil dalam {n} langkah…' },
-    hi: { hi: 'मैं टैफ़लिन हूँ! टैफ़्ल पहेलियों से गणना निखारो: राजा को भगाओ या पकड़ो।', mid: 'बढ़िया चाल! {n} बाकी।', out: '{n} चालों में नहीं हुआ…' },
-    ar: { hi: 'أنا تافلين! درّب حسابك بألغاز التافل: حرّر الملك أو أمسك به.', mid: 'نقلة جيدة! بقي {n}.', out: 'لم ينجح خلال {n} نقلات…' },
+    hi: { hi: 'मैं टैफ़लिन हूँ! टैफ़्ल पहेलियों से गणना निखारो: राजा को भगाओ या पकड़ो।', mid: 'बढ़िया चाल! {n} बाकी।', out: 'नहीं हुआ — चालों की सीमा: {n}…' },
+    ar: { hi: 'أنا تافلين! درّب حسابك بألغاز التافل: حرّر الملك أو أمسك به.', mid: 'نقلة جيدة! بقي {n}.', out: 'لم ينجح — حدّ النقلات: {n}…' },
   };
   const AMX = {
     ja: { hi: 'ケロだよ。アマゾンズのパズルで、相手を追いつめる読みをきたえるケロ！', mid: 'いい調子ケロ！ あと{n}手。', reply: '相手はこう答えたケロ。あと{n}手。', guard: '守れたケロ！ あと{n}回しのごう。' },
-    en: { hi: "Kero here! Let's sharpen your reading with Amazons puzzles.", mid: 'Good! {n} moves left.', reply: 'The opponent answered. {n} moves left.', guard: 'Held! Hold {n} more times.' },
+    en: { hi: "Kero here! Let's sharpen your reading with Amazons puzzles.", mid: 'Good! Moves left: {n}.', reply: 'The opponent answered. Moves left: {n}.', guard: 'Held! Times left to hold: {n}.' },
     zh: { hi: '我是呱呱！用亚马逊棋谜题锻炼计算力吧！', mid: '不错！还剩{n}手。', reply: '对手这样应对。还剩{n}手。', guard: '守住了！还要再守{n}次。' },
     'zh-TW': { hi: '我是呱呱！用亞馬遜棋謎題鍛鍊計算力吧！', mid: '不錯！還剩{n}手。', reply: '對手這樣應對。還剩{n}手。', guard: '守住了！還要再守{n}次。' },
     ko: { hi: '케로야! 아마존 퍼즐로 수읽기를 단련하자!', mid: '좋아! {n}수 남았어.', reply: '상대가 이렇게 받았어. {n}수 남았어.', guard: '막았어! {n}번 더 버티자.' },
-    es: { hi: '¡Soy Kero! Entrena tu cálculo con problemas de Amazonas.', mid: '¡Bien! Quedan {n} jugadas.', reply: 'El rival respondió. Quedan {n} jugadas.', guard: '¡Aguantaste! Resiste {n} veces más.' },
-    fr: { hi: 'C’est Kero ! Entraîne ton calcul avec des problèmes d’Amazones.', mid: 'Bien ! Encore {n} coups.', reply: 'L’adversaire a répondu. Encore {n} coups.', guard: 'Tenu ! Encore {n} fois.' },
-    pt: { hi: 'Aqui é o Kero! Treine o cálculo com problemas de Amazonas.', mid: 'Boa! Faltam {n} lances.', reply: 'O rival respondeu. Faltam {n} lances.', guard: 'Segurou! Mais {n} vezes.' },
-    de: { hi: 'Hier ist Kero! Trainiere dein Rechnen mit Amazonen-Aufgaben.', mid: 'Gut! Noch {n} Züge.', reply: 'Der Gegner hat geantwortet. Noch {n} Züge.', guard: 'Gehalten! Noch {n}-mal.' },
-    ru: { hi: 'Это Керо! Тренируем расчёт на задачах по амазонкам.', mid: 'Отлично! Осталось {n}.', reply: 'Соперник ответил. Осталось {n}.', guard: 'Удержали! Ещё {n} раз.' },
+    es: { hi: '¡Soy Kero! Entrena tu cálculo con problemas de Amazonas.', mid: '¡Bien! Jugadas restantes: {n}.', reply: 'El rival respondió. Jugadas restantes: {n}.', guard: '¡Aguantaste! Veces por resistir: {n}.' },
+    fr: { hi: 'C’est Kero ! Entraîne ton calcul avec des problèmes d’Amazones.', mid: 'Bien ! Coups restants : {n}.', reply: 'L’adversaire a répondu. Coups restants : {n}.', guard: 'Tenu ! Encore {n} fois.' },
+    pt: { hi: 'Aqui é o Kero! Treine o cálculo com problemas de Amazonas.', mid: 'Boa! Lances restantes: {n}.', reply: 'O rival respondeu. Lances restantes: {n}.', guard: 'Segurou! Vezes por segurar: {n}.' },
+    de: { hi: 'Hier ist Kero! Trainiere dein Rechnen mit Amazonen-Aufgaben.', mid: 'Gut! Verbleibende Züge: {n}.', reply: 'Der Gegner hat geantwortet. Verbleibende Züge: {n}.', guard: 'Gehalten! Noch {n}-mal.' },
+    ru: { hi: 'Это Керо! Тренируем расчёт на задачах по амазонкам.', mid: 'Отлично! Осталось ходов: {n}.', reply: 'Соперник ответил. Осталось ходов: {n}.', guard: 'Удержали! Осталось удержаний: {n}.' },
     tr: { hi: 'Ben Kero! Amazonlar bulmacalarıyla hesap gücünü geliştirelim.', mid: 'Güzel! {n} hamle kaldı.', reply: 'Rakip cevap verdi. {n} hamle kaldı.', guard: 'Dayandın! {n} kez daha.' },
     id: { hi: 'Aku Kero! Ayo latih perhitungan dengan soal Amazon.', mid: 'Bagus! Sisa {n} langkah.', reply: 'Lawan menjawab. Sisa {n} langkah.', guard: 'Bertahan! {n} kali lagi.' },
-    hi: { hi: 'मैं केरो हूँ! अमेज़न्स पहेलियों से गणना मज़बूत करें।', mid: 'बढ़िया! {n} चालें बाकी।', reply: 'विरोधी ने जवाब दिया। {n} चालें बाकी।', guard: 'टिके रहे! {n} बार और।' },
-    ar: { hi: 'أنا كيرو! لنقوِّ الحساب بألغاز الأمازونات.', mid: 'رائع! بقي {n}.', reply: 'ردّ الخصم. بقي {n}.', guard: 'صمدت! {n} مرات أخرى.' },
+    hi: { hi: 'मैं केरो हूँ! अमेज़न्स पहेलियों से गणना मज़बूत करें।', mid: 'बढ़िया! बची चालें: {n}।', reply: 'विरोधी ने जवाब दिया। बची चालें: {n}।', guard: 'टिके रहे! {n} बार और।' },
+    ar: { hi: 'أنا كيرو! لنقوِّ الحساب بألغاز الأمازونات.', mid: 'رائع! بقي {n}.', reply: 'ردّ الخصم. بقي {n}.', guard: 'صمدت! المرات المتبقية: {n}.' },
   };
   const HXX = {
     ja: { hi: 'ゴイシペンだよ。詰めヘックスで、つなぐ読みをきたえよう！', out: '{n}手以内にはつながらなかった…', mid: 'いい調子！ あと{n}手。' },
-    en: { hi: "Stoneguin here! Let's train your reading with Hex puzzles.", out: "Couldn't connect within {n} moves…", mid: 'Good! {n} moves left.' },
+    en: { hi: "Stoneguin here! Let's train your reading with Hex puzzles.", out: "Couldn't connect — move limit: {n}…", mid: 'Good! Moves left: {n}.' },
     zh: { hi: '我是棋石企鹅！用六贯棋谜题锻炼计算力吧！', out: '没能在{n}手内连通…', mid: '不错！还剩{n}手。' },
     'zh-TW': { hi: '我是棋子企鵝！用六貫棋謎題鍛鍊計算力吧！', out: '沒能在{n}手內連通…', mid: '不錯！還剩{n}手。' },
     ko: { hi: '바둑돌펭이야! 헥스 퍼즐로 수읽기를 단련하자!', out: '{n}수 안에 잇지 못했어…', mid: '좋아! {n}수 남았어.' },
-    es: { hi: '¡Soy Pingüipiedra! Entrena tu lectura con problemas de Hex.', out: 'No se conectó en {n} jugadas…', mid: '¡Bien! Quedan {n} jugadas.' },
-    fr: { hi: 'C’est Pingopierre ! Entraîne ta lecture avec des problèmes de Hex.', out: 'Pas connecté en {n} coups…', mid: 'Bien ! Encore {n} coups.' },
-    pt: { hi: 'Aqui é o Pinguipedra! Treine a leitura com problemas de Hex.', out: 'Não conectou em {n} lances…', mid: 'Boa! Faltam {n} lances.' },
-    de: { hi: 'Hier ist Steinguin! Trainiere dein Lesen mit Hex-Aufgaben.', out: 'In {n} Zügen nicht verbunden…', mid: 'Gut! Noch {n} Züge.' },
-    ru: { hi: 'Это Стоунгвин! Тренируем расчёт на задачах по хексу.', out: 'За {n} ходов соединить не удалось…', mid: 'Отлично! Осталось {n}.' },
+    es: { hi: '¡Soy Pingüipiedra! Entrena tu lectura con problemas de Hex.', out: 'No se conectó — límite de jugadas: {n}…', mid: '¡Bien! Jugadas restantes: {n}.' },
+    fr: { hi: 'C’est Pingopierre ! Entraîne ta lecture avec des problèmes de Hex.', out: 'Pas connecté — limite de coups : {n}…', mid: 'Bien ! Coups restants : {n}.' },
+    pt: { hi: 'Aqui é o Pinguipedra! Treine a leitura com problemas de Hex.', out: 'Não conectou — limite de lances: {n}…', mid: 'Boa! Lances restantes: {n}.' },
+    de: { hi: 'Hier ist Steinguin! Trainiere dein Lesen mit Hex-Aufgaben.', out: 'Nicht verbunden – Zuglimit: {n}…', mid: 'Gut! Verbleibende Züge: {n}.' },
+    ru: { hi: 'Это Стоунгвин! Тренируем расчёт на задачах по хексу.', out: 'Соединить не удалось — лимит ходов: {n}…', mid: 'Отлично! Осталось ходов: {n}.' },
     tr: { hi: 'Ben Stoneguin! Hex bulmacalarıyla okuma gücünü geliştirelim.', out: '{n} hamlede bağlanamadı…', mid: 'Güzel! {n} hamle kaldı.' },
     id: { hi: 'Aku Stoneguin! Ayo latih membaca dengan soal Hex.', out: 'Tidak tersambung dalam {n} langkah…', mid: 'Bagus! Sisa {n} langkah.' },
-    hi: { hi: 'मैं स्टोनगुइन हूँ! हेक्स पहेलियों से पढ़ने की क्षमता बढ़ाएँ।', out: '{n} चालों में जुड़ नहीं पाए…', mid: 'बढ़िया! {n} चालें बाकी।' },
-    ar: { hi: 'أنا بطريق الحجر! لنقوِّ القراءة بألغاز هيكس.', out: 'لم يتم الاتصال خلال {n} نقلات…', mid: 'رائع! بقي {n}.' },
+    hi: { hi: 'मैं स्टोनगुइन हूँ! हेक्स पहेलियों से पढ़ने की क्षमता बढ़ाएँ।', out: 'जुड़ नहीं पाए — चालों की सीमा: {n}…', mid: 'बढ़िया! बची चालें: {n}।' },
+    ar: { hi: 'أنا بطريق الحجر! لنقوِّ القراءة بألغاز هيكس.', out: 'لم يتم الاتصال — حدّ النقلات: {n}…', mid: 'رائع! بقي {n}.' },
   };
   // the guide's lines for 詰めチェッカー (the rest are the game's own texts)
   const CKX = {
     ja: { hi: 'チェッカニだよ！ 詰めチェッカーで読みをきたえよう！', out: '{n}手以内に目標に届かなかった…', mid: 'いい調子！ あと{n}手。' },
-    en: { hi: "Checkrab here! Let's sharpen your reading with checkers puzzles!", out: "Couldn't reach the goal within {n} moves…", mid: 'Nice! Moves left: {n}.' },
+    en: { hi: "Checkrab here! Let's sharpen your reading with checkers puzzles!", out: "Couldn't reach the goal — move limit: {n}…", mid: 'Nice! Moves left: {n}.' },
     zh: { hi: '我是跳棋蟹！用跳棋谜题锻炼计算力吧！', out: '没能在{n}步内达成目标……', mid: '不错！还剩{n}步。' },
     'zh-TW': { hi: '我是跳棋蟹！用跳棋謎題鍛鍊計算力吧！', out: '沒能在{n}步內達成目標……', mid: '不錯！還剩{n}步。' },
     ko: { hi: '체카니야! 체커 퍼즐로 수읽기를 단련하자!', out: '{n}수 안에 목표에 닿지 못했어…', mid: '좋아! {n}수 남았어.' },
-    es: { hi: '¡Soy Checkrab! Entrena tu cálculo con problemas de damas.', out: 'No se alcanzó el objetivo en {n} jugadas…', mid: '¡Bien! Jugadas restantes: {n}.' },
-    fr: { hi: 'C’est Checkrab ! Entraîne ton calcul avec des problèmes de dames.', out: 'Objectif non atteint en {n} coups…', mid: 'Bien ! Coups restants : {n}.' },
-    pt: { hi: 'Aqui é o Checkrab! Treine o cálculo com problemas de damas.', out: 'Não deu para chegar ao objetivo em {n} lances…', mid: 'Boa! Lances restantes: {n}.' },
-    de: { hi: 'Hier ist Checkrab! Trainiere dein Rechnen mit Dame-Aufgaben.', out: 'Ziel in {n} Zügen nicht erreicht…', mid: 'Gut! Verbleibende Züge: {n}.' },
-    ru: { hi: 'Это Чекраб! Тренируем расчёт на шашечных задачах.', out: 'За {n} ходов цель не достигнута…', mid: 'Отлично! Осталось {n}.' },
+    es: { hi: '¡Soy Checkrab! Entrena tu cálculo con problemas de damas.', out: 'No se alcanzó el objetivo — límite de jugadas: {n}…', mid: '¡Bien! Jugadas restantes: {n}.' },
+    fr: { hi: 'C’est Checkrab ! Entraîne ton calcul avec des problèmes de dames.', out: 'Objectif non atteint — limite de coups : {n}…', mid: 'Bien ! Coups restants : {n}.' },
+    pt: { hi: 'Aqui é o Checkrab! Treine o cálculo com problemas de damas.', out: 'Não deu para chegar ao objetivo — limite de lances: {n}…', mid: 'Boa! Lances restantes: {n}.' },
+    de: { hi: 'Hier ist Checkrab! Trainiere dein Rechnen mit Dame-Aufgaben.', out: 'Ziel nicht erreicht – Zuglimit: {n}…', mid: 'Gut! Verbleibende Züge: {n}.' },
+    ru: { hi: 'Это Чекраб! Тренируем расчёт на шашечных задачах.', out: 'Цель не достигнута — лимит ходов: {n}…', mid: 'Отлично! Осталось ходов: {n}.' },
     tr: { hi: 'Ben Checkrab! Dama bulmacalarıyla hesap gücünü geliştirelim.', out: '{n} hamlede hedefe ulaşılamadı…', mid: 'Güzel! {n} hamle kaldı.' },
     id: { hi: 'Aku Checkrab! Ayo latih perhitungan dengan soal dam.', out: 'Target tidak tercapai dalam {n} langkah…', mid: 'Bagus! Sisa {n} langkah.' },
-    hi: { hi: 'मैं चेकरैब हूँ! चेकर्स पहेलियों से गणना मज़बूत करें।', out: '{n} चालों में लक्ष्य तक नहीं पहुँचे…', mid: 'बढ़िया! बची चालें: {n}।' },
-    ar: { hi: 'أنا تشيكراب! لنقوِّ الحساب بألغاز الداما.', out: 'لم يتحقق الهدف خلال {n} نقلات…', mid: 'رائع! بقي {n}.' },
+    hi: { hi: 'मैं चेकरैब हूँ! चेकर्स पहेलियों से गणना मज़बूत करें।', out: 'लक्ष्य तक नहीं पहुँचे — चालों की सीमा: {n}…', mid: 'बढ़िया! बची चालें: {n}।' },
+    ar: { hi: 'أنا تشيكراب! لنقوِّ الحساب بألغاز الداما.', out: 'لم يتحقق الهدف — حدّ النقلات: {n}…', mid: 'رائع! بقي {n}.' },
   };
   /* ---------- xiangqi (2026-11-14): xiangqi/puzzles.json (500 mates: 10 themes × 50, "mate in N" / checks-only 連将), the full game's
      records 'aicoding-xiangqi-puzzles' { '<theme>-<j>': stars }, the last theme 'aicoding-xiangqi-pz-last'. Texts: xiangqi/i18n.js (a sandbox). */
@@ -943,7 +983,7 @@
      'aicoding-backgammon-pz-last', the daily 'aicoding-backgammon-v2-daily'. Texts: the game's i18n*.js (a sandbox). On the 3D table
      you always play the near side: a problem for the other side is turned round (the two halves of the position swapped — the
      plays are written in the mover's own numbering, so they stay as they are). Rules: backgammon/bg.js (window.BG, loaded by the table). ---------- */
-  const BG_TX = ['../backgammon/i18n.js?v=20261123m0', '../backgammon/i18n-x.js?v=20261111c8', '../backgammon/i18n-ls.js?v=20261107l14', '../backgammon/i18n-op.js?v=20261107l14', '../backgammon/i18n-teach.js?v=1', '../backgammon/i18n-ls2.js?v=3', '../backgammon/voice-dicepup-ja.js?v=3'];
+  const BG_TX = ['../backgammon/i18n.js?v=20261123m0', '../backgammon/i18n-x.js?v=20261111c8', '../backgammon/i18n-ls.js?v=20261107l14', '../backgammon/i18n-op.js?v=20261124op', '../backgammon/i18n-teach.js?v=1', '../backgammon/i18n-ls2.js?v=3', '../backgammon/voice-dicepup-ja.js?v=3'];
   const bgTexts = () => Promise.all(BG_TX.map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(L => { const w = {}; for (const tx of L) { try { new Function('window', 'var I18N = window.I18N || (window.I18N = {});\n' + tx.replace(/^\s*var I18N = window\.I18N = \{\};/m, ''))(w); } catch (e) { console.warn('[puzzles] backgammon texts', e); } } window.AtlasBgTeach = { name: w.BGTeachName, html: w.BGTeachHTML }; window.AtlasBgChoice = w.BGChoice; return w.I18N || {}; });
   // the commentary engine (backgammon/explain.js: what a play is for) — after the rules (it reads window.BG when it loads)
   const bgScript = (src, test) => test() ? Promise.resolve() : new Promise(res => { const sc = document.createElement('script'); sc.src = src; sc.onload = sc.onerror = () => res(); document.head.appendChild(sc); });
@@ -996,37 +1036,37 @@
   // the guide's lines for the xiangqi mates (the rest are the game's own texts)
   const XQX = {
     ja: { hi: 'ショウギツネだよ！ シャンチーの詰めで読みをきたえよう！', out: '{n}手以内に詰ませられなかった…', mid: 'いい調子！ あと{n}手。' },
-    en: { hi: "Shogitsune here! Let's train your reading with xiangqi mates!", out: "Couldn't mate within {n} moves…", mid: 'Nice! {n} moves left.' },
+    en: { hi: "Shogitsune here! Let's train your reading with xiangqi mates!", out: "Couldn't mate — move limit: {n}…", mid: 'Nice! Moves left: {n}.' },
     zh: { hi: '我是将棋狐！用象棋杀局锻炼计算力吧！', out: '没能在{n}步内将死……', mid: '不错！还剩{n}步。' },
     'zh-TW': { hi: '我是將棋狐！用象棋殺局鍛鍊計算力吧！', out: '沒能在{n}步內將死……', mid: '不錯！還剩{n}步。' },
     ko: { hi: '쇼기여우야! 샹치 묘수풀이로 수읽기를 단련하자!', out: '{n}수 안에 외통을 만들지 못했어…', mid: '좋아! {n}수 남았어.' },
-    es: { hi: '¡Soy Shogizorro! Entrena tu cálculo con mates de xiangqi.', out: 'No se logró el mate en {n} jugadas…', mid: '¡Bien! Quedan {n} jugadas.' },
-    fr: { hi: 'C’est Shogirenard ! Entraîne ton calcul avec des mats de xiangqi.', out: 'Pas de mat en {n} coups…', mid: 'Bien ! Encore {n} coups.' },
-    pt: { hi: 'Aqui é a Shogiraposa! Treine o cálculo com mates de xiangqi.', out: 'Não deu mate em {n} lances…', mid: 'Boa! Faltam {n} lances.' },
-    de: { hi: 'Hier ist Shogifuchs! Trainiere dein Rechnen mit Xiangqi-Mattaufgaben.', out: 'Kein Matt in {n} Zügen…', mid: 'Gut! Noch {n} Züge.' },
-    ru: { hi: 'Это Сёгицунэ! Тренируем расчёт на задачах на мат в сянци.', out: 'За {n} ходов мат не получился…', mid: 'Отлично! Осталось {n}.' },
+    es: { hi: '¡Soy Shogizorro! Entrena tu cálculo con mates de xiangqi.', out: 'No se logró el mate — límite de jugadas: {n}…', mid: '¡Bien! Jugadas restantes: {n}.' },
+    fr: { hi: 'C’est Shogirenard ! Entraîne ton calcul avec des mats de xiangqi.', out: 'Pas de mat — limite de coups : {n}…', mid: 'Bien ! Coups restants : {n}.' },
+    pt: { hi: 'Aqui é a Shogiraposa! Treine o cálculo com mates de xiangqi.', out: 'Não deu mate — limite de lances: {n}…', mid: 'Boa! Lances restantes: {n}.' },
+    de: { hi: 'Hier ist Shogifuchs! Trainiere dein Rechnen mit Xiangqi-Mattaufgaben.', out: 'Kein Matt – Zuglimit: {n}…', mid: 'Gut! Verbleibende Züge: {n}.' },
+    ru: { hi: 'Это Сёгицунэ! Тренируем расчёт на задачах на мат в сянци.', out: 'Мат не получился — лимит ходов: {n}…', mid: 'Отлично! Осталось ходов: {n}.' },
     tr: { hi: 'Ben Shogitsune! Xiangqi mat bulmacalarıyla hesap gücünü geliştirelim.', out: '{n} hamlede mat gelmedi…', mid: 'Güzel! {n} hamle kaldı.' },
     id: { hi: 'Aku Shogitsune! Ayo latih perhitungan dengan soal skakmat xiangqi.', out: 'Skakmat tidak tercapai dalam {n} langkah…', mid: 'Bagus! Sisa {n} langkah.' },
-    hi: { hi: 'मैं शोगित्सुने हूँ! शियांगची मात पहेलियों से गणना मज़बूत करें।', out: '{n} चालों में मात नहीं हुई…', mid: 'बढ़िया! {n} चालें बाकी।' },
-    ar: { hi: 'أنا شوغيتسوني! لنقوِّ الحساب بألغاز المات في الشيانغتشي.', out: 'لم يتحقق المات خلال {n} نقلات…', mid: 'رائع! بقي {n}.' },
+    hi: { hi: 'मैं शोगित्सुने हूँ! शियांगची मात पहेलियों से गणना मज़बूत करें।', out: 'मात नहीं हुई — चालों की सीमा: {n}…', mid: 'बढ़िया! बची चालें: {n}।' },
+    ar: { hi: 'أنا شوغيتسوني! لنقوِّ الحساب بألغاز المات في الشيانغتشي.', out: 'لم يتحقق المات — حدّ النقلات: {n}…', mid: 'رائع! بقي {n}.' },
   };
   // the guide's lines for the janggi mates (ショウギツネ, as atlas/rules/janggi.js; the rest are the game's own texts)
   // (mid also follows a move off the line — pz.stray — so it only counts the moves left, no praise: 2026-11-24 追20)
   const JGX = {
     ja: { hi: 'やあ、ショウギツネだよ！ チャンギの詰めで読みをきたえよう。', out: '{n}手以内には詰ませられなかった…', mid: '残りはあと{n}手だよ。' },
-    en: { hi: "Shogitsune here! Let's train your reading with janggi mates!", out: "Couldn't mate within {n} moves…", mid: '{n} moves left.' },
+    en: { hi: "Shogitsune here! Let's train your reading with janggi mates!", out: "Couldn't mate — move limit: {n}…", mid: 'Moves left: {n}.' },
     zh: { hi: '我是将棋狐！用韩国象棋杀局锻炼计算力吧！', out: '没能在{n}步内将死……', mid: '还剩{n}步。' },
     'zh-TW': { hi: '我是將棋狐！用韓國象棋殺局鍛鍊計算力吧！', out: '沒能在{n}步內將死……', mid: '還剩{n}步。' },
     ko: { hi: '쇼기츠네야! 장기 묘수풀이로 수읽기를 단련하자!', out: '{n}수 안에 외통을 만들지 못했어…', mid: '{n}수 남았어.' },
-    es: { hi: '¡Soy Shogitsune! Entrena tu cálculo con mates de janggi.', out: 'No se logró el mate en {n} jugadas…', mid: 'Quedan {n} jugadas.' },
-    fr: { hi: 'C’est Shogitsune ! Entraîne ton calcul avec des mats de janggi.', out: 'Pas de mat en {n} coups…', mid: 'Encore {n} coups.' },
-    pt: { hi: 'Aqui é a Shogitsune! Treine o cálculo com mates de janggi.', out: 'Não deu mate em {n} lances…', mid: 'Faltam {n} lances.' },
-    de: { hi: 'Hier ist Shogitsune! Trainiere dein Rechnen mit Janggi-Mattaufgaben.', out: 'Kein Matt in {n} Zügen…', mid: 'Noch {n} Züge.' },
-    ru: { hi: 'Это Сёгицунэ! Тренируем расчёт на задачах на мат в чанги.', out: 'За {n} ходов мат не получился…', mid: 'Осталось {n}.' },
+    es: { hi: '¡Soy Shogitsune! Entrena tu cálculo con mates de janggi.', out: 'No se logró el mate — límite de jugadas: {n}…', mid: 'Jugadas restantes: {n}.' },
+    fr: { hi: 'C’est Shogitsune ! Entraîne ton calcul avec des mats de janggi.', out: 'Pas de mat — limite de coups : {n}…', mid: 'Coups restants : {n}.' },
+    pt: { hi: 'Aqui é a Shogitsune! Treine o cálculo com mates de janggi.', out: 'Não deu mate — limite de lances: {n}…', mid: 'Lances restantes: {n}.' },
+    de: { hi: 'Hier ist Shogitsune! Trainiere dein Rechnen mit Janggi-Mattaufgaben.', out: 'Kein Matt – Zuglimit: {n}…', mid: 'Verbleibende Züge: {n}.' },
+    ru: { hi: 'Это Сёгицунэ! Тренируем расчёт на задачах на мат в чанги.', out: 'Мат не получился — лимит ходов: {n}…', mid: 'Осталось ходов: {n}.' },
     tr: { hi: 'Ben Shogitsune! Janggi mat bulmacalarıyla hesap gücünü geliştirelim.', out: '{n} hamlede mat gelmedi…', mid: '{n} hamle kaldı.' },
     id: { hi: 'Aku Shogitsune! Ayo latih perhitungan dengan soal skakmat janggi.', out: 'Skakmat tidak tercapai dalam {n} langkah…', mid: 'Sisa {n} langkah.' },
-    hi: { hi: 'मैं शोगित्सुने हूँ! जांग्गी मात पहेलियों से गणना मज़बूत करें।', out: '{n} चालों में मात नहीं हुई…', mid: 'अभी {n} चालें बाकी।' },
-    ar: { hi: 'أنا شوغيتسوني! لنقوِّ الحساب بألغاز المات في الجانغي.', out: 'لم يتحقق المات خلال {n} نقلات…', mid: 'بقي {n}.' },
+    hi: { hi: 'मैं शोगित्सुने हूँ! जांग्गी मात पहेलियों से गणना मज़बूत करें।', out: 'मात नहीं हुई — चालों की सीमा: {n}…', mid: 'बची चालें: {n}।' },
+    ar: { hi: 'أنا شوغيتسوني! لنقوِّ الحساب بألغاز المات في الجانغي.', out: 'لم يتحقق المات — حدّ النقلات: {n}…', mid: 'بقي {n}.' },
   };
   const BGX = {
     ja: { hi: 'ワン！ ダイスンだよ。バックギャモンのパズルで最善手を見つけよう！', mid: 'あと{n}つ動かそう。' },
@@ -1034,52 +1074,52 @@
     zh: { hi: '汪！我是骰子汪。来找出双陆棋谜题的最佳走法吧！', mid: '还要走{n}步。' },
     'zh-TW': { hi: '汪！我是骰子汪。來找出雙陸棋謎題的最佳走法吧！', mid: '還要走{n}步。' },
     ko: { hi: '멍! 다이슨이야. 백개먼 퍼즐에서 최선의 수를 찾아보자!', mid: '{n}번 더 움직이자.' },
-    es: { hi: '¡Guau! Soy Dicepup. ¡Busquemos la mejor jugada en problemas de backgammon!', mid: 'Faltan {n} movimientos.' },
-    fr: { hi: 'Ouaf ! C’est Dicepup. Trouvons les meilleurs coups dans des problèmes de backgammon !', mid: 'Encore {n} déplacements.' },
-    pt: { hi: 'Au! Aqui é o Dicepup. Vamos achar as melhores jogadas em problemas de gamão!', mid: 'Faltam {n} movimentos.' },
-    de: { hi: 'Wuff! Hier ist Dicepup. Finden wir die besten Züge in Backgammon-Aufgaben!', mid: 'Noch {n} Schritte.' },
+    es: { hi: '¡Guau! Soy Dicepup. ¡Busquemos la mejor jugada en problemas de backgammon!', mid: 'Movimientos restantes: {n}.' },
+    fr: { hi: 'Ouaf ! C’est Dicepup. Trouvons les meilleurs coups dans des problèmes de backgammon !', mid: 'Déplacements restants : {n}.' },
+    pt: { hi: 'Au! Aqui é o Dicepup. Vamos achar as melhores jogadas em problemas de gamão!', mid: 'Movimentos restantes: {n}.' },
+    de: { hi: 'Wuff! Hier ist Dicepup. Finden wir die besten Züge in Backgammon-Aufgaben!', mid: 'Verbleibende Schritte: {n}.' },
     ru: { hi: 'Гав! Это Дайспап. Найдём лучшие ходы в задачах по нардам!', mid: 'Осталось ходов: {n}.' },
     tr: { hi: 'Hav! Ben Dicepup. Tavla bulmacalarında en iyi hamleyi bulalım!', mid: '{n} hamle daha.' },
     id: { hi: 'Guk! Aku Dicepup. Ayo cari langkah terbaik di teka-teki backgammon!', mid: 'Tinggal {n} langkah.' },
-    hi: { hi: 'भौं! मैं डाइसपप हूँ। बैकगैमन पहेलियों में सबसे अच्छी चाल ढूँढें!', mid: 'अभी {n} चालें बाकी।' },
+    hi: { hi: 'भौं! मैं डाइसपप हूँ। बैकगैमन पहेलियों में सबसे अच्छी चाल ढूँढें!', mid: 'बची चालें: {n}।' },
     ar: { hi: 'هاو! أنا دايس باب. لنجد أفضل النقلات في ألغاز الطاولة!', mid: 'بقي {n}.' },
   };
   const GOX = {
     ja: { hi: 'ゴイシペンだよ。詰碁で読みをきたえよう！', out: '{n}手以内には達成できなかった…', mid: 'その調子！ あと{n}手。' },
-    en: { hi: "Stoneguin here! Let's train your reading with tsumego.", out: "Couldn't do it within {n} moves…", mid: 'Good! {n} moves left.' },
+    en: { hi: "Stoneguin here! Let's train your reading with tsumego.", out: "Couldn't do it — move limit: {n}…", mid: 'Good! Moves left: {n}.' },
     zh: { hi: '我是棋石企鹅！用死活题锻炼计算力吧！', out: '没能在{n}手内达成…', mid: '不错！还剩{n}手。' },
     'zh-TW': { hi: '我是棋子企鵝！用死活題鍛鍊計算力吧！', out: '沒能在{n}手內達成…', mid: '不錯！還剩{n}手。' },
     ko: { hi: '바둑돌펭이야! 사활 문제로 수읽기를 단련하자!', out: '{n}수 안에 해내지 못했어…', mid: '좋아! {n}수 남았어.' },
-    es: { hi: '¡Soy Pingüipiedra! Entrena tu lectura con tsumego.', out: 'No se logró en {n} jugadas…', mid: '¡Bien! Quedan {n} jugadas.' },
-    fr: { hi: 'C’est Pingopierre ! Entraîne ta lecture avec des tsumego.', out: 'Pas réussi en {n} coups…', mid: 'Bien ! Encore {n} coups.' },
-    pt: { hi: 'Aqui é o Pinguipedra! Treine a leitura com tsumego.', out: 'Não deu em {n} lances…', mid: 'Boa! Faltam {n} lances.' },
-    de: { hi: 'Hier ist Steinguin! Trainiere dein Lesen mit Tsumego.', out: 'In {n} Zügen nicht geschafft…', mid: 'Gut! Noch {n} Züge.' },
-    ru: { hi: 'Это Стоунгвин! Тренируем чтение на цумэго.', out: 'За {n} ходов не получилось…', mid: 'Отлично! Осталось {n}.' },
+    es: { hi: '¡Soy Pingüipiedra! Entrena tu lectura con tsumego.', out: 'No se logró — límite de jugadas: {n}…', mid: '¡Bien! Jugadas restantes: {n}.' },
+    fr: { hi: 'C’est Pingopierre ! Entraîne ta lecture avec des tsumego.', out: 'Pas réussi — limite de coups : {n}…', mid: 'Bien ! Coups restants : {n}.' },
+    pt: { hi: 'Aqui é o Pinguipedra! Treine a leitura com tsumego.', out: 'Não deu — limite de lances: {n}…', mid: 'Boa! Lances restantes: {n}.' },
+    de: { hi: 'Hier ist Steinguin! Trainiere dein Lesen mit Tsumego.', out: 'Nicht geschafft – Zuglimit: {n}…', mid: 'Gut! Verbleibende Züge: {n}.' },
+    ru: { hi: 'Это Стоунгвин! Тренируем чтение на цумэго.', out: 'Не получилось — лимит ходов: {n}…', mid: 'Отлично! Осталось ходов: {n}.' },
     tr: { hi: 'Ben Stoneguin! Tsumego ile okuma gücünü geliştirelim.', out: '{n} hamlede başarılamadı…', mid: 'Güzel! {n} hamle kaldı.' },
     id: { hi: 'Aku Stoneguin! Ayo latih membaca dengan tsumego.', out: 'Tidak berhasil dalam {n} langkah…', mid: 'Bagus! Sisa {n} langkah.' },
-    hi: { hi: 'मैं स्टोनगुइन हूँ! त्सुमेगो से पढ़ने की क्षमता बढ़ाएँ।', out: '{n} चालों में नहीं हो सका…', mid: 'बढ़िया! {n} चालें बाकी।' },
-    ar: { hi: 'أنا بطريق الحجر! لنقوِّ القراءة بمسائل التسوميغو.', out: 'لم يتحقق خلال {n} نقلات…', mid: 'رائع! بقي {n}.' },
+    hi: { hi: 'मैं स्टोनगुइन हूँ! त्सुमेगो से पढ़ने की क्षमता बढ़ाएँ।', out: 'नहीं हो सका — चालों की सीमा: {n}…', mid: 'बढ़िया! बची चालें: {n}।' },
+    ar: { hi: 'أنا بطريق الحجر! لنقوِّ القراءة بمسائل التسوميغو.', out: 'لم يتحقق — حدّ النقلات: {n}…', mid: 'رائع! بقي {n}.' },
   };
   // the guide's lines for 詰め連珠 (the rest are the game's own texts)
   const GMX = {
     ja: { hi: 'ゴイシペンだよ。詰め連珠で読みをきたえよう！', out: '{n}手以内に勝ちを決められなかった…', chk: '読んでいるよ…', mid: 'いい調子！ あと{n}手。', ans: '正解の手順を見せるね。', done: 'これが正解の手順だよ。「もう一度」で自分でも打ってみよう！' },
-    en: { hi: "Stoneguin here! Let's train your reading with renju puzzles.", out: "Couldn't settle it within {n} moves…", chk: 'Reading…', mid: 'Nice! {n} moves left.', ans: "Here's the solution.", done: 'That was the solution. Tap "Retry" and play it yourself!' },
+    en: { hi: "Stoneguin here! Let's train your reading with renju puzzles.", out: "Couldn't settle it — move limit: {n}…", chk: 'Reading…', mid: 'Nice! Moves left: {n}.', ans: "Here's the solution.", done: 'That was the solution. Tap "Retry" and play it yourself!' },
     zh: { hi: '我是棋石企鹅！用连珠诘题锻炼计算力吧！', out: '没能在{n}手内决出胜负…', chk: '正在计算…', mid: '不错！还剩{n}手。', ans: '给你看正解的手顺。', done: '这就是正解。点「再来一次」自己下一遍吧！' },
     'zh-TW': { hi: '我是棋子企鵝！用連珠詰題鍛鍊計算力吧！', out: '沒能在{n}手內決出勝負…', chk: '正在計算…', mid: '不錯！還剩{n}手。', ans: '給你看正解的手順。', done: '這就是正解。點「再來一次」自己下一遍吧！' },
     ko: { hi: '바둑돌펭이야! 연주 묘수풀이로 수읽기를 단련하자!', out: '{n}수 안에 승부를 내지 못했어…', chk: '수읽기 중…', mid: '좋아! {n}수 남았어.', ans: '정답 수순을 보여 줄게.', done: '이게 정답 수순이야. "다시"로 직접 두어 보자!' },
-    es: { hi: '¡Soy Pingüipiedra! Entrena tu cálculo con problemas de renju.', out: 'No se decidió en {n} jugadas…', chk: 'Calculando…', mid: '¡Bien! Quedan {n} jugadas.', ans: 'Te enseño la solución.', done: 'Esa era la solución. ¡Pulsa «Reintentar» y juégala tú!' },
-    fr: { hi: 'C’est Pingopierre ! Entraîne ton calcul avec des problèmes de renju.', out: 'Pas de victoire en {n} coups…', chk: 'Je calcule…', mid: 'Bien ! Encore {n} coups.', ans: 'Voici la solution.', done: 'C’était la solution. Touche « Réessayer » et joue-la toi-même !' },
-    pt: { hi: 'Aqui é o Pinguipedra! Treine o cálculo com problemas de renju.', out: 'Não deu para vencer em {n} lances…', chk: 'Calculando…', mid: 'Boa! Faltam {n} lances.', ans: 'Vou mostrar a solução.', done: 'Essa era a solução. Toque em "Repetir" e jogue você!' },
-    de: { hi: 'Hier ist Steinguin! Trainiere dein Rechnen mit Renju-Aufgaben.', out: 'In {n} Zügen nicht entschieden…', chk: 'Ich rechne…', mid: 'Gut! Noch {n} Züge.', ans: 'Ich zeige dir die Lösung.', done: 'Das war die Lösung. Tippe auf „Nochmal“ und spiel sie selbst!' },
-    ru: { hi: 'Это Стоунгвин! Тренируем расчёт на задачах рэндзю.', out: 'Не удалось выиграть за {n} ходов…', chk: 'Считаю…', mid: 'Отлично! Осталось {n}.', ans: 'Покажу решение.', done: 'Это было решение. Нажмите «Ещё раз» и сыграйте сами!' },
+    es: { hi: '¡Soy Pingüipiedra! Entrena tu cálculo con problemas de renju.', out: 'No se decidió — límite de jugadas: {n}…', chk: 'Calculando…', mid: '¡Bien! Jugadas restantes: {n}.', ans: 'Te enseño la solución.', done: 'Esa era la solución. ¡Pulsa «Reintentar» y juégala tú!' },
+    fr: { hi: 'C’est Pingopierre ! Entraîne ton calcul avec des problèmes de renju.', out: 'Pas de victoire — limite de coups : {n}…', chk: 'Je calcule…', mid: 'Bien ! Coups restants : {n}.', ans: 'Voici la solution.', done: 'C’était la solution. Touche « Réessayer » et joue-la toi-même !' },
+    pt: { hi: 'Aqui é o Pinguipedra! Treine o cálculo com problemas de renju.', out: 'Não deu para vencer — limite de lances: {n}…', chk: 'Calculando…', mid: 'Boa! Lances restantes: {n}.', ans: 'Vou mostrar a solução.', done: 'Essa era a solução. Toque em "Repetir" e jogue você!' },
+    de: { hi: 'Hier ist Steinguin! Trainiere dein Rechnen mit Renju-Aufgaben.', out: 'Nicht entschieden – Zuglimit: {n}…', chk: 'Ich rechne…', mid: 'Gut! Verbleibende Züge: {n}.', ans: 'Ich zeige dir die Lösung.', done: 'Das war die Lösung. Tippe auf „Nochmal“ und spiel sie selbst!' },
+    ru: { hi: 'Это Стоунгвин! Тренируем расчёт на задачах рэндзю.', out: 'Выиграть не удалось — лимит ходов: {n}…', chk: 'Считаю…', mid: 'Отлично! Осталось ходов: {n}.', ans: 'Покажу решение.', done: 'Это было решение. Нажмите «Ещё раз» и сыграйте сами!' },
     tr: { hi: 'Ben Stoneguin! Renju bulmacalarıyla hesap gücünü geliştirelim.', out: '{n} hamlede kazanılamadı…', chk: 'Hesaplıyorum…', mid: 'Güzel! {n} hamle kaldı.', ans: 'Çözümü göstereyim.', done: 'Çözüm buydu. "Tekrar" ile kendin oyna!' },
     id: { hi: 'Aku Stoneguin! Ayo latih perhitungan dengan soal renju.', out: 'Tidak bisa menang dalam {n} langkah…', chk: 'Menghitung…', mid: 'Bagus! Sisa {n} langkah.', ans: 'Aku tunjukkan solusinya.', done: 'Itulah solusinya. Ketuk "Ulangi" dan mainkan sendiri!' },
-    hi: { hi: 'मैं स्टोनगुइन हूँ! रेंजू पहेलियों से गणना मज़बूत करें।', out: '{n} चालों में जीत तय नहीं हुई…', chk: 'सोच रहा हूँ…', mid: 'बढ़िया! {n} चालें बाकी।', ans: 'हल दिखाता हूँ।', done: 'यही हल था। "फिर से" दबाकर खुद खेलें!' },
-    ar: { hi: 'أنا بطريق الحجر! لنقوِّ الحساب بألغاز الرنجو.', out: 'لم يُحسم الفوز خلال {n} نقلات…', chk: 'أحسب…', mid: 'رائع! بقي {n}.', ans: 'سأريك الحل.', done: 'هذا هو الحل. اضغط «مرة أخرى» والعبه بنفسك!' },
+    hi: { hi: 'मैं स्टोनगुइन हूँ! रेंजू पहेलियों से गणना मज़बूत करें।', out: 'जीत तय नहीं हुई — चालों की सीमा: {n}…', chk: 'सोच रहा हूँ…', mid: 'बढ़िया! बची चालें: {n}।', ans: 'हल दिखाता हूँ।', done: 'यही हल था। "फिर से" दबाकर खुद खेलें!' },
+    ar: { hi: 'أنا بطريق الحجر! لنقوِّ الحساب بألغاز الرنجو.', out: 'لم يُحسم الفوز — حدّ النقلات: {n}…', chk: 'أحسب…', mid: 'رائع! بقي {n}.', ans: 'سأريك الحل.', done: 'هذا هو الحل. اضغط «مرة أخرى» والعبه بنفسك!' },
   };
   /* ---------- the daily puzzles: the same problem of the day as the full games, and their streak record ---------- */
   const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  const DAILY = { dots: { d1: 'dots-daily-v1' }, morris: { d1: 'aicoding-morris-daily' }, mancala: { d1: 'aicoding-mancala-v1-daily' }, tafl: { d1: 'aicoding-tafl-daily' }, connect4: { d1: 'aicoding-connect4-v2-daily' }, amazons: { d1: 'aicoding-amazons-daily' }, hex: { d1: 'aicoding-hex-daily' }, backgammon: { d1: 'aicoding-backgammon-v2-daily' }, xiangqi: { d1: 'aicoding-xiangqi-daily' }, janggi: { d1: 'aicoding-janggi-daily' }, foxgeese: { d1: 'aicoding-foxgeese-daily' }, konane: { d1: 'aicoding-konane-daily' }, checkers: { d1: 'aicoding-checkers-daily' }, go: { d1: 'aicoding-go-daily' }, reversi: { d1: 'reversi-emerald-daily' }, chess: { d1: 'aicoding-chess-daily' }, shogi: { d1: 'shogi-kaya-daily', d2: 'shogi-kaya-daily-easy' }, peg: { d1: 'aicoding-peg-daily', d2: 'aicoding-peg-daily' } };
+  const DAILY = { dots: { d1: 'dots-daily-v1' }, morris: { d1: 'aicoding-morris-daily' }, mancala: { d1: 'aicoding-mancala-v1-daily' }, tafl: { d1: 'aicoding-tafl-daily' }, connect4: { d1: 'aicoding-connect4-v2-daily' }, amazons: { d1: 'aicoding-amazons-daily' }, hex: { d1: 'aicoding-hex-daily' }, backgammon: { d1: 'aicoding-backgammon-v2-daily' }, xiangqi: { d1: 'aicoding-xiangqi-daily' }, janggi: { d1: 'aicoding-janggi-daily' }, foxgeese: { d1: 'aicoding-foxgeese-daily' }, konane: { d1: 'aicoding-konane-daily' }, ugolki: { d1: 'aicoding-ugolki-daily' }, checkers: { d1: 'aicoding-checkers-daily' }, go: { d1: 'aicoding-go-daily' }, reversi: { d1: 'reversi-emerald-daily' }, chess: { d1: 'aicoding-chess-daily' }, shogi: { d1: 'shogi-kaya-daily', d2: 'shogi-kaya-daily-easy' }, peg: { d1: 'aicoding-peg-daily', d2: 'aicoding-peg-daily' } };
   function dailyPick(id, which) {
     const B = BOOK[id], now = new Date(), date = ymd(now), wd = now.getDay(), day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 864e5);
     if (id === 'reversi') {   // (reversi/index.html dailyPick: Mon–Tue level 2, Wed–Thu 3, Fri–Sat 4, Sun 5)
@@ -1095,7 +1135,7 @@
       const a = stage * STAGE, b = Math.min(n, a + STAGE);
       return { date, i: c, j: a + h % Math.max(1, b - a) };
     }
-    if (id === 'xiangqi' || id === 'janggi' || id === 'foxgeese' || id === 'konane') {   // (xiangqi/app.js · janggi/app.js · foxgeese/app.js · konane/app.js dailyPick: a theme per weekday)
+    if (id === 'xiangqi' || id === 'janggi' || id === 'foxgeese' || id === 'konane' || id === 'ugolki') {   // (xiangqi/app.js · janggi/app.js · foxgeese/app.js · konane/app.js dailyPick: a theme per weekday)
       const D = B.data; if (!D || !D.themes) return null;
       const ids = D.daily || D.themes.map(x => x.id), L = Math.max(0, D.themes.findIndex(x => x.id === ids[now.getDay() % ids.length]));
       let h = Math.imul(day, 2654435761) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13;
@@ -1167,7 +1207,7 @@
     const d = dailyPick(id, which); if (!d) return null;
     const B = BOOK[id]; let p;
     if (id === 'chess') p = B.problem(d.i, d.j, X);
-    else if (id === 'reversi' || id === 'go' || id === 'xiangqi' || id === 'janggi' || id === 'foxgeese' || id === 'konane' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'mancala' || id === 'morris' || id === 'dots') p = B.problem(d.i, d.j, X, lang);
+    else if (id === 'reversi' || id === 'go' || id === 'xiangqi' || id === 'janggi' || id === 'foxgeese' || id === 'konane' || id === 'ugolki' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'mancala' || id === 'morris' || id === 'dots') p = B.problem(d.i, d.j, X, lang);
     else if (id === 'checkers' || id === 'backgammon' || id === 'connect4') p = B.problem(d.i, d.j, X, lang, d.date);   // (the day's slot: an old puzzle for dates up to the cut)
     else if (id === 'peg') p = { i: -1, j: 0, P: d.P, kind: 'peg', cells: B.cells(d.P), n: d.P.n, count: 1, set: '' };
     else { const g = B.data.sets[d.i], P = (g.base || g.problems)[d.j]; p = { i: d.i, j: d.j, P, sfen: P.sfen, kind: 'tsume', n: P.n, count: g.problems.length, set: (g.title && (g.title[lang] || g.title.en)) || g.id }; }
@@ -1194,7 +1234,7 @@
   const catsOf = (id, lang) => loadBook(id).then(B => B.cats ? { cats: B.cats(lang), guide: B.guide } : null);
   function loadBook(id) {
     const B = BOOK[id]; if (B.data) return Promise.resolve(B);
-    return B.p || (B.p = Promise.all([B.fetch ? B.fetch() : fetch(B.url).then(r => r.json()), id === 'peg' ? fetch('../peg/daily.json?v=2').then(r => r.json()).catch(() => null) : id === 'gomoku' ? fetch('../gomoku/i18n.js?v=20261112c1').then(r => r.text()).catch(() => '') : id === 'go' ? fetch('../go/i18n.js?v=20261113').then(r => r.text()).catch(() => '') : id === 'checkers' ? fetch('../checkers/i18n.js?v=20261107l14-nd1').then(r => r.text()).catch(() => '') : id === 'hex' ? fetch('../hex/i18n.js?v=20261115').then(r => r.text()).catch(() => '') : id === 'connect4' ? Promise.all(['../connect4/i18n.js?v=20261107l14', '../connect4/learn.js?v=20261107l14'].map(f => fetch(f).then(r => r.text()).catch(() => ''))).then(L => L.join('\n')) : id === 'dots' ? Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(f => fetch(f).then(r => r.text()).catch(() => ''))).then(L => 'with (window) {' + L.join('\n;\n') + '\n}') : id === 'morris' ? Promise.all(['../morris/i18n.js?v=20261116', '../morris/i18n_more.js?v=20261116'].map(f => fetch(f).then(r => r.text()).catch(() => ''))).then(L => L.join('\n')) : id === 'tafl' ? fetch('../tafl/i18n.js?v=6ek-nd1-bm2').then(r => r.text()).catch(() => '') : id === 'mancala' ? Promise.all(['../mancala/i18n.js?v=20261107l15', '../mancala/i18n-pz.js?v=20261107l14'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')) : id === 'amazons' ? Promise.all(['../checkers/i18n.js?v=20261107l14-nd1', 'i18n-am.js?v=4', 'i18n-am-more.js?v=4', 'i18n-am-pz.js?v=3'].map(f => fetch(f[0] === '.' ? f : '../amazons/' + f).then(r => r.text()).catch(() => ''))).then(L => L[0] + '\nvar I18N = window.I18N = window.I18N || {};\n' + L.slice(1).join('\n')) : id === 'xiangqi' ? fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd1').then(r => r.text()).catch(() => '') : id === 'janggi' ? fetch('../janggi/i18n.js?v=3').then(r => r.text()).catch(() => '') : id === 'backgammon' ? Promise.all([AtlasBgTexts(), AtlasBgExplain()]).then(r => r[0]) : null]).then(([d, dl]) => {
+    return B.p || (B.p = Promise.all([B.fetch ? B.fetch() : fetch(B.url).then(r => r.json()), id === 'peg' ? fetch('../peg/daily.json?v=2').then(r => r.json()).catch(() => null) : id === 'gomoku' ? fetch('../gomoku/i18n.js?v=20261112c1').then(r => r.text()).catch(() => '') : id === 'go' ? fetch('../go/i18n.js?v=20261113').then(r => r.text()).catch(() => '') : id === 'checkers' ? fetch('../checkers/i18n.js?v=20261107l14-nd1').then(r => r.text()).catch(() => '') : id === 'hex' ? fetch('../hex/i18n.js?v=20261115').then(r => r.text()).catch(() => '') : id === 'connect4' ? Promise.all(['../connect4/i18n.js?v=20261107l14', '../connect4/learn.js?v=20261107l14'].map(f => fetch(f).then(r => r.text()).catch(() => ''))).then(L => L.join('\n')) : id === 'dots' ? Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(f => fetch(f).then(r => r.text()).catch(() => ''))).then(L => 'with (window) {' + L.join('\n;\n') + '\n}') : id === 'morris' ? Promise.all(['../morris/i18n.js?v=20261116', '../morris/i18n_more.js?v=20261116'].map(f => fetch(f).then(r => r.text()).catch(() => ''))).then(L => L.join('\n')) : id === 'tafl' ? fetch('../tafl/i18n.js?v=6ek-nd1-bm2').then(r => r.text()).catch(() => '') : id === 'mancala' ? Promise.all(['../mancala/i18n.js?v=20261107l15', '../mancala/i18n-pz.js?v=20261107l14'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')) : id === 'amazons' ? Promise.all(['../checkers/i18n.js?v=20261107l14-nd1', 'i18n-am.js?v=4', 'i18n-am-more.js?v=4', 'i18n-am-pz.js?v=3'].map(f => fetch(f[0] === '.' ? f : '../amazons/' + f).then(r => r.text()).catch(() => ''))).then(L => L[0] + '\nvar I18N = window.I18N = window.I18N || {};\n' + L.slice(1).join('\n')) : id === 'xiangqi' ? fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2').then(r => r.text()).catch(() => '') : id === 'janggi' ? fetch('../janggi/i18n.js?v=3').then(r => r.text()).catch(() => '') : id === 'backgammon' ? Promise.all([AtlasBgTexts(), AtlasBgExplain()]).then(r => r[0]) : null]).then(([d, dl]) => {
       B.data = id === 'shogi' || id === 'peg' || id === 'gomoku' || id === 'go' || id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'backgammon' || id === 'hex' || id === 'amazons' || id === 'connect4' || id === 'tafl' || id === 'mancala' || id === 'morris' || id === 'dots' ? B.prep(d) : d; if (id === 'peg') B.daily = dl;
       if (id === 'gomoku' || id === 'go' || id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'hex' || id === 'amazons' || id === 'connect4' || id === 'tafl' || id === 'mancala' || id === 'morris' || id === 'dots') { const w = {}; try { new Function('window', dl)(w); } catch (e) {} B.I = w.I18N || {}; }
       if (id === 'backgammon') B.I = dl || {};   // (a sandbox: the page's own words stay untouched)
@@ -1272,7 +1312,7 @@
     /* ---------- the guide's panel (the rules tour's .rgd) ---------- */
     const el = document.createElement('div'); el.className = 'rgd pzg';
     el.innerHTML = `<div class="rgd-in"><div class="pic"><img src="${GD.guide}" alt=""></div><div class="bub"><div class="nm">${name}<span class="pg"></span></div><div class="tx"></div><div class="rvn" hidden></div><div class="cnt"></div></div></div>
-      <div class="rgd-act"><button type="button" class="btn ghost sm ic" data-a="hint" aria-label="${X.hint}" title="${X.hint}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg><small>${X.hint}</small></button><button type="button" class="btn ghost sm ic" data-a="again" aria-label="${X.again}" title="${X.again}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5"/></svg><small>${X.again}</small></button>${ctx.onList ? `<button type="button" class="btn ghost sm ic" data-a="list" aria-label="${ctx.t ? ctx.t('bv.list') : ''}" title="${ctx.t ? ctx.t('bv.list') : ''}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg><small>${ctx.t ? ctx.t('bv.list') : ''}</small></button>` : ''}${id === 'reversi' || id === 'foxgeese' || id === 'konane' || id === 'tafl' || id === 'mancala' || id === 'morris' || id === 'dots' || id === 'gomoku' || id === 'go' || id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'backgammon' || id === 'hex' || id === 'amazons' || id === 'connect4' ? `<button type="button" class="btn ghost sm ic" data-a="ans" aria-label="${RVA.lb}" title="${RVA.lb}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><small>${RVA.lb}</small></button>` : ''}<span class="sp"></span><button type="button" class="btn big" data-a="next">${X.next} ▶</button></div>`;
+      <div class="rgd-act"><button type="button" class="btn ghost sm ic" data-a="hint" aria-label="${X.hint}" title="${X.hint}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg><small>${X.hint}</small></button><button type="button" class="btn ghost sm ic" data-a="again" aria-label="${X.again}" title="${X.again}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5"/></svg><small>${X.again}</small></button>${ctx.onList ? `<button type="button" class="btn ghost sm ic" data-a="list" aria-label="${ctx.t ? ctx.t('bv.list') : ''}" title="${ctx.t ? ctx.t('bv.list') : ''}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg><small>${ctx.t ? ctx.t('bv.list') : ''}</small></button>` : ''}${id === 'reversi' || id === 'foxgeese' || id === 'konane' || id === 'ugolki' || id === 'tafl' || id === 'mancala' || id === 'morris' || id === 'dots' || id === 'gomoku' || id === 'go' || id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'backgammon' || id === 'hex' || id === 'amazons' || id === 'connect4' ? `<button type="button" class="btn ghost sm ic" data-a="ans" aria-label="${RVA.lb}" title="${RVA.lb}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><small>${RVA.lb}</small></button>` : ''}<span class="sp"></span><button type="button" class="btn big" data-a="next">${X.next} ▶</button></div>`;
     ctx.panel.appendChild(el);
     const $ = s => el.querySelector(s);
     function say(html) {   // typed speech; a tap on the bubble shows it all
@@ -1317,6 +1357,7 @@
       if (p.kind === 'dt') return `<small>${p.spec.n}×${p.spec.n}</small><br><b>` + B.tx('pz.goal', ctx.lang, { a: p.target[0], b: p.target[1] }) + '</b>';
       if (p.kind === 'mm') return (p.spec.v !== 'nine' ? `<small>${B.tx('title.' + p.spec.v, ctx.lang)}</small><br>` : '') + '<b>' + B.tx(p.goal === 'mill' ? 'pz.goalMill' : 'pz.goal', ctx.lang, { c: B.tx(p.me === 1 ? 'p1' : 'p2', ctx.lang), n: p.n }) + '</b>';
       if (p.kind === 'fg') return fgT(p, p.goal === 'win' ? 'goalWin' : 'goalTake', { n: p.n });
+      if (p.kind === 'ug') return ugT(p, 'goal', { n: p.n, c: ugName(p.me) });
       if (p.kind === 'kn') return knT(p, p.th === 'stop' ? 'goalStop' : p.th === 'chain' ? 'goalChain' : p.n === 1 && KNP() && (KNP()[ctx.lang] || {}).goal1 ? 'goal1' : 'goalWin', { n: p.n, c: knName(p.me) });
       if (p.kind === 'tf') return '<b>' + B.tx(p.goal === 'cap' ? 'pz.goalCap' : 'pz.goalEsc', ctx.lang, { c: B.tx(p.me === 1 ? 'p1' : 'p2', ctx.lang), n: p.n }) + '</b>';
       if (p.kind === 'am') return '<b>' + B.tx(p.am === 'duel' ? 'pz.goal' : 'pz.goal.' + p.am, ctx.lang, { c: amName(p.me), n: p.n }) + '</b>';
@@ -1345,13 +1386,13 @@
           pz: Object.assign({ moves: p.moves, bg: p.bg, step: i => cur ? bgStep(cur, i) : true, fen: p.fen, sfen: p.sfen, sol: p.P.sol, cells: p.cells, toMove: p.toMove, me: p.me, start: p.start, spec: p.spec, view: p.view, marks: p.marks, rule: p.kind === 'gm' ? 'renju' : undefined, last: p.last, judge: p.kind === 'gm' ? (p.vcf ? 'vcf' : 'all') : undefined }, { ready: () => cur && cur.ready && cur.ready(), moved: (u, i) => cur && cur.moved && cur.moved(u, i) }) });
         ctx.Table3D.play(true);   // (after start(): the adapter's show() puts its board on the table in the showcase view)
       } else if (p.kind === 'gm') pz().load(p.start, 'renju', p.me, p.last, { judge: p.vcf ? 'vcf' : 'all' });
-      else if (p.kind === 'ck' || p.kind === 'xq' || p.kind === 'hx' || p.kind === 'am' || p.kind === 'tf' || p.kind === 'mc' || p.kind === 'mm' || p.kind === 'dt' || p.kind === 'fg' || p.kind === 'kn') pz().load(p.spec, p.me);
+      else if (p.kind === 'ck' || p.kind === 'xq' || p.kind === 'hx' || p.kind === 'am' || p.kind === 'tf' || p.kind === 'mc' || p.kind === 'mm' || p.kind === 'dt' || p.kind === 'fg' || p.kind === 'kn' || p.kind === 'ug') pz().load(p.spec, p.me);
       else if (p.kind === 'c4') pz().load(p.moves, p.me);
       else if (p.kind === 'bg') pz().load(p.bg);
       else if (p.kind === 'go') pz().load(p.spec, p.me, { view: p.view, marks: p.marks });
       else pz().load(p.fen || p.sfen || p.cells, p.P.sol, p.toMove, p.me);
       cur.ready = opts.ready; cur.moved = opts.moved;
-      say((first ? (line('hi') || X.hi[id] || (id === 'gomoku' ? GA.hi : id === 'go' ? GO.hi : id === 'checkers' ? CA.hi : id === 'xiangqi' || id === 'janggi' ? QA.hi : id === 'foxgeese' ? B.tx('hi', ctx.lang) : id === 'konane' ? knT(p, 'hi') : id === 'hex' ? HA.hi : id === 'tafl' ? TA.hi : id === 'morris' ? MO.hi : id === 'dots' ? DT.hi : id === 'mancala' ? MA.hi : id === 'amazons' ? AA.hi : id === 'connect4' ? C4.hi : id === 'backgammon' ? QB.hi : '') || PEG_HI[ctx.lang] || PEG_HI.en) : line('intro') || '') + ' ' + goal(p)); first = false;
+      say((first ? (line('hi') || X.hi[id] || (id === 'gomoku' ? GA.hi : id === 'go' ? GO.hi : id === 'checkers' ? CA.hi : id === 'xiangqi' || id === 'janggi' ? QA.hi : id === 'foxgeese' ? B.tx('hi', ctx.lang) : id === 'konane' ? knT(p, 'hi') : id === 'ugolki' ? ugT(p, 'hi') : id === 'hex' ? HA.hi : id === 'tafl' ? TA.hi : id === 'morris' ? MO.hi : id === 'dots' ? DT.hi : id === 'mancala' ? MA.hi : id === 'amazons' ? AA.hi : id === 'connect4' ? C4.hi : id === 'backgammon' ? QB.hi : '') || PEG_HI[ctx.lang] || PEG_HI.en) : line('intro') || '') + ' ' + goal(p)); first = false;
     }
     async function onReady(p) {
       if (p !== cur || stopped) return;
@@ -1363,6 +1404,7 @@
       if (p.kind === 'tf' && p.auto) return tfAuto(p);
       if (p.kind === 'fg' && p.auto) return fgAuto(p);
       if (p.kind === 'kn' && p.auto) return knAuto(p);
+      if (p.kind === 'ug' && p.auto) return ugAuto(p);
       if (p.kind === 'mm' && p.auto) return mmAuto(p);
       if (p.kind === 'dt' && p.auto) return dtAuto(p);
       if (p.kind === 'mc') { p.used = 0; p.slip = null; if (p.auto) return mcAuto(p); }
@@ -1391,6 +1433,7 @@
       if (p.kind === 'tf') return tfMoved(p, u, info);
       if (p.kind === 'fg') return fgMoved(p, u, info);
       if (p.kind === 'kn') return knMoved(p, u, info);
+      if (p.kind === 'ug') return ugMoved(p, u, info);
       if (p.kind === 'mm') return mmMoved(p, u, info);
       if (p.kind === 'dt') return dtMoved(p, u, info);
       if (p.kind === 'mc') return mcMoved(p, u, info);
@@ -2143,6 +2186,67 @@
       pz().mark([[E.mTo(r), 'hl']]);
       say(knT(p, 'mid', { n: p.n - p.used })); p.state = 'play'; pz().wait(); buttons();
     }
+    /* ウゴルキのパズル (2026-11-24 担当D; = ugolki/app.js puzzleMove): "win within N" — the race of the corners. The winning moves are the
+       engine's duelGood (the 2D asks the same, in the engine worker). The common rule of every 詰め problem: nothing is judged on the
+       way — after a winning move the defender answers with its most stubborn reply (duelReply, as the 2D) and the player goes on; the
+       result shows when the game is won, or once the win can no longer be reached: after a move off the solution the defender's reply
+       (the same duelReply) is played, marked red, and モリフク says what is on the board (AtlasUgolkiPz.why: far / block / slow / catch /
+       over — tools/lesson-verify-ugolki.js ⑦⑧); a last move that misses: the pieces still outside (red), or the opponent's own last
+       move into its corner (a draw). The right move is never shown by itself (「答え」). */
+    const UGP = () => window.AtlasUgolkiPz;
+    const ugN = {};
+    // モリフク's line k: its variants in turn (a counter per line, from the theme), so the same words do not come back puzzle after puzzle
+    const ugT = (p, k, v) => { const t = (p && p.i) | 0, o = ugN[k] = ugN[k] || { b: t * 2, s: 1 + Math.floor(t / 5), n: -1 }; o.n++; const F = UGP(), x = F && F.text(ctx.lang, k, o.b + o.n * o.s, v); return x != null ? x : B.tx(k, ctx.lang, v); };
+    const ugName = c => { const n = B.tx(c === 2 ? 'p2' : 'p1', ctx.lang); return n || (c === 2 ? '●' : '○'); };
+    const ugWon = p => { const s = pz().state(); return !!s.over && s.winner === p.me; };
+    function ugFail(p, html) { p.failed = true; p.state = 'fail'; streak = 0; chime(false); say(html + ' ' + ugT(p, 'ans')); buttons(); }
+    async function ugMoved(p, m, info) {
+      const left = p.n - p.used, E = pz().engine(), F = UGP();
+      const good = await pz().good(left, pz().moves().slice(0, -1)); if (p !== cur || stopped) return;
+      p.used++;
+      if (ugWon(p)) return solved(p);
+      const mid = pz().pos(), me = p.me;
+      if (!good.includes(m)) {
+        p.failed = true; p.off = true;
+        if (left <= 1) {   // the last move: the pieces still outside (red), or the opponent's last move into its corner (a draw)
+          const w = F.why({ last: true, mid, me, E });
+          if (w.k === 'lastDraw') { await sleep(300); if (p !== cur) return; const r = await pz().reply(0); if (p !== cur || stopped) return; if (r != null) { await pz().play(r); if (p !== cur) return; pz().mark([[E.mTo(r), 'ng']]); } }
+          else { const T0 = E.target(me), L = []; for (let i = 0; i < 64; i++) if (mid.owner(i) === me && !T0[i]) L.push([i, 'ng']); pz().mark(L); }
+          return ugFail(p, ugT(p, w.k, Object.assign({ c: ugName(me) }, w.v)));
+        }
+        await sleep(300); if (p !== cur) return;
+        const r = await pz().reply(left - 1); if (p !== cur || stopped) return;
+        if (r == null) { const w = F.why({ last: true, mid, me, E }); return ugFail(p, ugT(p, w.k, w.v)); }
+        await pz().play(r); if (p !== cur) return;
+        const z = pz().pos(), w = F.why({ mid, after: z, reply: r, left: left - 1, me, E });
+        pz().mark([[E.mTo(r), 'ng']]);
+        const v = Object.assign({ c: ugName(me) }, w.v); if (w.k === 'over') v.w = ugT(p, w.v.w === 'draw' ? 'wDraw' : 'wLose');
+        return ugFail(p, ugT(p, w.k, v));
+      }
+      await sleep(250); if (p !== cur) return;
+      const r = await pz().reply(p.n - p.used); if (p !== cur || stopped) return;
+      if (r == null) return solved(p);
+      await pz().play(r); if (p !== cur) return;
+      if (ugWon(p)) return solved(p);
+      pz().mark([[E.mTo(r), 'hl']]);
+      say(ugT(p, 'mid', { n: p.n - p.used })); p.state = 'play'; pz().wait(); buttons();
+    }
+    async function ugAuto(p) {   // 答え: the solver's line for both sides (ugolki/app.js pzAnswer)
+      p.state = 'busy'; buttons(); say(ugT(p, 'pz.showing'));
+      for (let step = 0; step < 8; step++) {
+        if (p !== cur || stopped) return;
+        const good = await pz().good(p.n - p.used); if (p !== cur || stopped) return;
+        if (!good.length) break;
+        await sleep(450); if (p !== cur) return; pz().mark([{ m: good[0], cls: 'ok' }]); await sleep(500); if (p !== cur) return;
+        if (!(await pz().play(good[0]))) break; if (p !== cur) return; p.used++;
+        if (ugWon(p)) break;
+        const r = await pz().reply(p.n - p.used); if (p !== cur || stopped) return; if (r == null) break;
+        await sleep(350); if (p !== cur) return;
+        if (!(await pz().play(r))) break; if (p !== cur) return; pz().mark([[pz().engine().mTo(r), 'hl']]);
+        if (ugWon(p)) break;
+      }
+      p.state = 'answer'; say(ugT(p, 'pz.answerDone')); buttons();
+    }
     async function knAuto(p) {   // 答え: the solver's line for both sides (konane/app.js pzAnswer)
       p.state = 'busy'; buttons(); say(knT(p, 'pz.showing'));
       for (let step = 0; step < 8; step++) {
@@ -2498,7 +2602,7 @@
     function solved(p) {
       const n = p.answered ? 1 : p.hinted || p.failed || p.off ? 2 : 3;   // (★3 first try · ★2 after a hint, a miss or leaving the line · ★1 after the answer — gomoku/app.js PZBook.starsFor)
       p.state = 'solved'; chime(true); stars(n);
-      if (p.daily) { dailySolved(p, p.hinted || p.failed); if (id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'foxgeese' || id === 'konane' || id === 'backgammon' || id === 'hex' || id === 'amazons' || id === 'connect4' || id === 'tafl' || id === 'mancala' || id === 'morris' || id === 'dots') B.save(p, n, true); if (id === 'reversi') { const pr = B.pr(); pr[p.rk] = Math.max(B.sv(pr[p.rk]), n); store.set(B.KEY, pr); } if (id === 'chess') { const pr = store.get(B.KEY, {}); pr[p.rk] = Math.max(B.sv(pr[p.rk]), n); store.set(B.KEY, pr); } if (id === 'go') { const pr = store.get(B.KEY, {}), v = pr[p.rk]; pr[p.rk] = Math.max(v === true ? 3 : +v || 0, n); store.set(B.KEY, pr); } }   // (as the full games: chess also keeps the stars, shogi only the streak)
+      if (p.daily) { dailySolved(p, p.hinted || p.failed); if (id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'foxgeese' || id === 'konane' || id === 'ugolki' || id === 'backgammon' || id === 'hex' || id === 'amazons' || id === 'connect4' || id === 'tafl' || id === 'mancala' || id === 'morris' || id === 'dots') B.save(p, n, true); if (id === 'reversi') { const pr = B.pr(); pr[p.rk] = Math.max(B.sv(pr[p.rk]), n); store.set(B.KEY, pr); } if (id === 'chess') { const pr = store.get(B.KEY, {}); pr[p.rk] = Math.max(B.sv(pr[p.rk]), n); store.set(B.KEY, pr); } if (id === 'go') { const pr = store.get(B.KEY, {}), v = pr[p.rk]; pr[p.rk] = Math.max(v === true ? 3 : +v || 0, n); store.set(B.KEY, pr); } }   // (as the full games: chess also keeps the stars, shogi only the streak)
       else B.save(p, n);
       streak = n === 3 ? streak + 1 : 0;
       say(n === 3 ? (streak >= 3 && line('streak', { n: streak })) || line('solved') || pick(X.solved) : line('help') || X.solvedHelp);
@@ -2553,6 +2657,13 @@
         const Z = pz(), good = (L || []).filter(x => x.need > 0 && x.need <= p.n - p.used); if (!good.length) return;
         p.hinted = true; Z.mark([...new Set(good.map(x => Z.mFrom(x.m) !== Z.NONE ? Z.mFrom(x.m) : Z.mTo(x.m)))].map(q => [q, 'ring'])); say(B.tx('pz.hintText', ctx.lang) || X.hintSay); return;
       }
+      if (p.kind === 'ug') {   // 1) the idea (ugolki/app.js pz.hint1) · 2) the pieces that start a solution (gold rings) · 3) the move
+        p.state = 'busy'; buttons(); const left = p.n - p.used, good = await pz().good(left); if (p !== cur) return; p.state = 'play'; pz().wait(); buttons();
+        if (!good.length) return; const E = pz().engine(); p.hinted = true; p.hl = Math.min(3, (p.hl || 0) + 1);
+        if (p.hl === 1) { say(ugT(p, 'pz.hint1', { n: left })); return; }
+        if (p.hl === 2) { pz().mark([...new Set(good.map(m => E.mFrom(m)))].map(q => [q, 'ring'])); say(ugT(p, 'pz.hintText')); return; }
+        pz().mark([{ m: good[0], cls: 'ok' }]); say(line('hint') || X.hintSay); return;
+      }
       if (p.kind === 'kn') {   // 1) the idea (konane/app.js pzHint) · 2) the stones that start a solution (gold rings) · 3) the move
         p.state = 'busy'; buttons(); const left = p.n - p.used, good = await pz().good(left); if (p !== cur) return; p.state = 'play'; pz().wait(); buttons();
         if (!good.length) return; const E = pz().engine(); p.hinted = true; p.hl = Math.min(3, (p.hl || 0) + 1);
@@ -2605,9 +2716,9 @@
     }
     $('[data-a=hint]').onclick = hint;
     if ($('[data-a=list]')) $('[data-a=list]').onclick = () => ctx.onList();   // 一覧 (the portal's list sheet: pick another problem)
-    $('[data-a=again]').onclick = () => { if (!cur) return; begin(cur.daily && (cur.kind === 'peg' || cur.kind === 'fg' || cur.kind === 'kn' || cur.kind === 'ck' || cur.kind === 'xq' || cur.kind === 'bg' || cur.kind === 'hx' || cur.kind === 'am' || cur.kind === 'c4' || cur.kind === 'tf' || cur.kind === 'mc' || cur.kind === 'mm' || cur.kind === 'dt') ? dailyProblem(id, cur.daily.which, X, ctx.lang) : B.problem(cur.i, cur.j, X, ctx.lang), false); const a = line('again'); if (a) say(a + ' ' + goal(cur)); };
+    $('[data-a=again]').onclick = () => { if (!cur) return; begin(cur.daily && (cur.kind === 'peg' || cur.kind === 'fg' || cur.kind === 'kn' || cur.kind === 'ug' || cur.kind === 'ck' || cur.kind === 'xq' || cur.kind === 'bg' || cur.kind === 'hx' || cur.kind === 'am' || cur.kind === 'c4' || cur.kind === 'tf' || cur.kind === 'mc' || cur.kind === 'mm' || cur.kind === 'dt') ? dailyProblem(id, cur.daily.which, X, ctx.lang) : B.problem(cur.i, cur.j, X, ctx.lang), false); const a = line('again'); if (a) say(a + ' ' + goal(cur)); };
     $('[data-a=next]').onclick = () => nextPuzzle();
-    if ($('[data-a=ans]')) $('[data-a=ans]').onclick = () => { if (!cur || (cur.kind !== 'rv' && cur.kind !== 'gm' && cur.kind !== 'go' && cur.kind !== 'ck' && cur.kind !== 'xq' && cur.kind !== 'bg' && cur.kind !== 'hx' && cur.kind !== 'am' && cur.kind !== 'c4' && cur.kind !== 'tf' && cur.kind !== 'mc' && cur.kind !== 'mm' && cur.kind !== 'dt' && cur.kind !== 'fg' && cur.kind !== 'kn')) return; const np = cur.daily && (cur.kind === 'fg' || cur.kind === 'kn' || cur.kind === 'ck' || cur.kind === 'xq' || cur.kind === 'bg' || cur.kind === 'hx' || cur.kind === 'am' || cur.kind === 'c4' || cur.kind === 'tf' || cur.kind === 'mc' || cur.kind === 'mm' || cur.kind === 'dt') ? dailyProblem(id, cur.daily.which, X, ctx.lang) : B.problem(cur.i, cur.j, X, ctx.lang); np.auto = true; begin(np, false); cur.failed = true; cur.answered = true; };
+    if ($('[data-a=ans]')) $('[data-a=ans]').onclick = () => { if (!cur || (cur.kind !== 'rv' && cur.kind !== 'gm' && cur.kind !== 'go' && cur.kind !== 'ck' && cur.kind !== 'xq' && cur.kind !== 'bg' && cur.kind !== 'hx' && cur.kind !== 'am' && cur.kind !== 'c4' && cur.kind !== 'tf' && cur.kind !== 'mc' && cur.kind !== 'mm' && cur.kind !== 'dt' && cur.kind !== 'fg' && cur.kind !== 'kn' && cur.kind !== 'ug')) return; const np = cur.daily && (cur.kind === 'fg' || cur.kind === 'kn' || cur.kind === 'ug' || cur.kind === 'ck' || cur.kind === 'xq' || cur.kind === 'bg' || cur.kind === 'hx' || cur.kind === 'am' || cur.kind === 'c4' || cur.kind === 'tf' || cur.kind === 'mc' || cur.kind === 'mm' || cur.kind === 'dt') ? dailyProblem(id, cur.daily.which, X, ctx.lang) : B.problem(cur.i, cur.j, X, ctx.lang); np.auto = true; begin(np, false); cur.failed = true; cur.answered = true; };
 
     requestAnimationFrame(() => el.classList.add('on'));
     say(X.loading); buttons();
