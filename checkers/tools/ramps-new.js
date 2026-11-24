@@ -1,4 +1,6 @@
-// Warm-ups for the checkers lessons that had none (2026-11-15). Each: explain (the lesson's first problem, the best move
+// Warm-ups for the checkers lessons that had none (2026-11-15). (2026-11-24 第2期 追14: the e_* warm-ups in lessons.json are the
+// verified ones — tools/lesson-verify.js checkers ckWarm; their lessons' problems were rebuilt after, so do not rebuild these from
+// problem 1: the warm-up would repeat it, 追1.) Each: explain (the lesson's first problem, the best move
 // marked: its piece gold-ringed, its landing square green) → try (the same problem turned 180° with the colours swapped —
 // a symmetry of checkers — so the player plays the other side; its answers are the problem's verified ones, turned).
 // Texts ja / en here; the other 12 languages in ramps-new-tr.json ({ "<step>/<index>/<field>": { zh, … } }); the try's hint
@@ -57,8 +59,8 @@ const TEXT = {
     y: P('正解！それが決め手です。', 'Right! That is the key move.') },
   e_kings: {
     t: P('キングの終盤は、勝ちを保つ手が少ない', 'King endings: few moves keep the win'),
-    body: P('<p>キングどうしの終盤です。勝てる局面でも、勝ちを保てる手は少ないことがあります。</p><p>ここでは、光っている駒を<b>緑のマス</b>へ動かすのが勝ちを保つ手。相手のキングを角の二重コーナーへ逃がさないのがコツです。</p>',
-      '<p>A king ending. Even when you are winning, few moves keep the win.</p><p>Here it is moving the glowing piece to the <b>green square</b>. The trick is not to let the enemy king reach a double corner.</p>'),
+    body: P('<p>キングどうしの終盤です。勝てる局面でも、勝ちを保てる手は少ないことがあります。ここでは5つの手のうち2つだけ。</p><p>光っている駒を<b>緑のマス</b>へ動かすのがその一つ。ほかの3つの手は、どれも相手のキングのとなりに入って跳び越され、キングを取られてしまいます。</p>',
+      '<p>A king ending. Even when you are winning, few moves keep the win — here only 2 of the 5.</p><p>Moving the glowing piece to the <b>green square</b> is one of them. The other 3 moves all step next to the enemy king, which jumps over and takes that king.</p>'),
     g: P('色と向きを入れかえた同じ形。勝ちを保とう。', 'The same shape, colours and sides swapped. Keep the win.'),
     y: P('正解！勝ちを保てました。', 'Right! The win is kept.') },
   e_men: {
@@ -69,8 +71,8 @@ const TEXT = {
     y: P('正解！これで勝ちにつながります。', 'Right! That wins.') },
   e_draw: {
     t: P('劣勢でも、引き分けに持ちこむ', 'Behind? Hold the draw'),
-    body: P('<p>劣勢の局面でも、正しく指せば引き分けにできることがあります。負けを避ける手は、たいてい一つか二つだけ。</p><p>ここでは光っている駒を<b>緑のマス</b>へ。キングは角の二重コーナーへ逃げこむと粘りやすくなります。</p>',
-      '<p>Even when behind, correct play can hold a draw — usually only one or two moves avoid the loss.</p><p>Here it is the glowing piece to the <b>green square</b>. A king that reaches a double corner is hard to dislodge.</p>'),
+    body: P('<p>劣勢の局面でも、正しく指せば引き分けにできることがあります。負けを避ける手は、たいてい一つか二つだけ。</p><p>ここでは光っているマンが、相手のキングに跳び越されそうです。<b>緑のマス</b>へ進めば、取られずにキングになれます。ほかの手では、このマンを取られて負けてしまいます。</p>',
+      '<p>Even when behind, correct play can hold a draw — usually only one or two moves avoid the loss.</p><p>Here the glowing man is about to be jumped by the enemy king. Moving it to the <b>green square</b> crowns it out of danger. Any other move lets that man be taken, and you lose.</p>'),
     g: P('色と向きを入れかえた同じ形。負けない手を指そう。', 'The same shape, colours and sides swapped. Play the move that does not lose.'),
     y: P('正解！これで引き分けに持ちこめます。', 'Right! That holds the draw.') },
 };
