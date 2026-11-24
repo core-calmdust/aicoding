@@ -12,7 +12,7 @@ const UI = {
   qChoice: O(['答えを選ぼう', 'Choose the answer', '选择答案', '답을 고르세요', 'Elige la respuesta', 'Choisissez la réponse', 'Escolha a resposta', 'Wähle die Antwort', 'उत्तर चुनें', 'اختر الإجابة']),
   roll: O(['出目 {n}', 'Throw {n}', '点数 {n}', '눈 {n}', 'Tirada {n}', 'Lancer {n}', 'Lance {n}', 'Wurf {n}', 'अंक {n}', 'الرمية {n}']),
   correct: O(['正解！', 'Correct!', '正确！', '정답!', '¡Correcto!', 'Correct !', 'Certo!', 'Richtig!', 'सही!', 'صحيح!']),
-  wrong: O(['おしい！', 'Not quite.', '差一点！', '아쉬워요!', 'Casi.', 'Presque.', 'Quase.', 'Fast.', 'लगभग।', 'ليس تمامًا.']),
+  wrong: O(['ざんねん！', 'Not this one!', '可惜！', '이번엔 아니에요!', '¡Esta no!', 'Pas celui-ci !', 'Este não!', 'Leider nicht!', 'यह नहीं!', 'ليست هذه!']),   // 追66：0点の見出しに「おしい」と言わない
   best: O(['最善手', 'Best move', '最佳一手', '최선수', 'Mejor jugada', 'Meilleur coup', 'Melhor lance', 'Bester Zug', 'सबसे अच्छी चाल', 'أفضل نقلة']),
   answer: O(['答えを見る', 'Show answer', '看答案', '답 보기', 'Ver respuesta', 'Voir la réponse', 'Ver resposta', 'Lösung zeigen', 'उत्तर देखें', 'أظهر الإجابة']),
   hint: O(['ヒント', 'Hint', '提示', '힌트', 'Pista', 'Indice', 'Dica', 'Hinweis', 'संकेत', 'تلميح']),

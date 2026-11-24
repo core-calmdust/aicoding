@@ -61,7 +61,7 @@
       },
       cheer: ['いいね！', 'ナイスだワン！', 'さすが！', 'お見事！', 'ばっちり！', 'その調子！', 'よく見つけた！', 'すごい！', 'やったね！', '上手！', '完璧！', 'いい目してるワン！'],
       push: ['次もこの調子でいこう！', 'どんどんいこう！', 'つぎも楽しみだワン！', 'その勢いで次へ！', 'まだまだいけるよ！'],
-      soft: ['おしい！', 'ドンマイ！', '大丈夫だワン！', 'あと一歩！', 'いい線！', '気にしない、気にしない！', '次はいけるワン！'],
+      soft: ['ドンマイ！', '大丈夫だワン！', 'いっしょに確かめよう！', '気にしない、気にしない！', '次はいけるワン！', 'ここで覚えちゃおう！', 'よくある見落としだワン！'],   /* 追68 (2026-11-24 担当C): said with a 0-point move — no 「おしい・あと一歩・いい線・あと少し」 (追66) */
       w: {
         'w.cap': ['相手の駒は<b>{k}マス</b>も進んでいたのに、スタートに逆戻り！', '取られた駒は振り出しから。<b>{k}マス</b>分がぜんぶ消えたワン。', 'ぴったり止まって取ったから、相手は<b>{k}マス</b>やり直しなんだ。', '<b>{k}マス目</b>まで来ていた駒をつかまえたよ。相手はまた最初から！', 'これで相手の<b>{k}マス</b>分が水のあわ。大きいね！'],
         'w.blitz': ['取ったうえに、ブリッツだから続けて振れるワン！', '相手の駒は<b>{k}マス</b>分をまるごと失って、きみはもう1回！', 'ブリッツの取りは2倍おいしい。追加の1振りに、相手はやり直しだね。', 'つかまえた駒は<b>{k}マス</b>進んでいたんだ。しかも続けて振れる！', '取ればもう一度。これがブリッツでいちばん強い手だね！'],
@@ -120,7 +120,12 @@
         'c.leadOff14Ng': ['<b>{x}</b>は、待っている駒を14歩と数えた答えだね。15歩で数えると、きみ<b>{a}</b>・相手<b>{b}</b> なんだ。', '待っている駒は1個15歩だから、きみ<b>{a}</b>・相手<b>{b}</b> になるワン。'],
         'c.leadGoalNg': ['<b>{x}</b>は、ゴールした駒も15歩と数えた答えだね。上がった駒は0歩だから、きみ<b>{a}</b>・相手<b>{b}</b> なんだ。', '上がった駒はもう歩かないから数えないワン。きみ<b>{a}</b>・相手<b>{b}</b> だよ。'],
         'c.mostNg': ['<b>{x}</b>が出るのは16通り中<b>{m}通り</b>。2の6通りにはかなわないんだ。', '<b>{x}</b>は<b>{m}通り</b>しかないワン。いちばん多いのは6通りの目だよ。'],
-        'c.rollNg': ['<b>{x}</b>は出目が<b>{v}</b>になる確率だから、ちがうんだ。', '<b>{x}</b>だと、<b>{v}</b>が出る確率になっちゃうワン。', '<b>{x}</b>なら<b>{v}</b>の出やすさだから、別の目だね。'], 'c.roll8Ng': ['<b>{x}</b>になる目はないから、ちがうワン。', '16通りで<b>{x}</b>になる目はひとつもないから、ちがうね。'], 'c.lowNg': ['<b>{x}</b>だと少なすぎるから、数え落としがあるね。', '<b>{x}</b>では足りないワン。足しわすれがあるみたい。', '<b>{x}</b>は小さすぎるから、まだ数えていないものがあるんだ。', 'それだと<b>{x}</b>。もう少し大きくなるはずだから、数え直してみて！'], 'c.highNg': ['<b>{x}</b>だと多すぎるから、数えなくていいものまで足しているね。', '<b>{x}</b>では大きすぎるワン。よけいに足したところがあるんだ。', '<b>{x}</b>は多いから、どこかで数えすぎているみたい。', 'それだと<b>{x}</b>。もっと小さくなるはずだから、見直してみて！'], 'c.sideNg': ['残り歩数が少ないほうがリードだから、逆なんだ。', 'ゴールに近いのは歩数が少ないほうだから、そっちじゃないワン。'] },
+        'c.rollNg': ['<b>{x}</b>は出目が<b>{v}</b>になる確率だから、ちがうんだ。', '<b>{x}</b>だと、<b>{v}</b>が出る確率になっちゃうワン。', '<b>{x}</b>なら<b>{v}</b>の出やすさだから、別の目だね。'], 'c.roll8Ng': ['<b>{x}</b>になる目はないから、ちがうワン。', '16通りで<b>{x}</b>になる目はひとつもないから、ちがうね。'], 'c.lowNg': ['<b>{x}</b>だと少なすぎるから、数え落としがあるね。', '<b>{x}</b>では足りないワン。足しわすれがあるみたい。', '<b>{x}</b>は小さすぎるから、まだ数えていないものがあるんだ。', 'それだと<b>{x}</b>。もう少し大きくなるはずだから、数え直してみて！'], 'c.highNg': ['<b>{x}</b>だと多すぎるから、数えなくていいものまで足しているね。', '<b>{x}</b>では大きすぎるワン。よけいに足したところがあるんだ。', '<b>{x}</b>は多いから、どこかで数えすぎているみたい。', 'それだと<b>{x}</b>。もっと小さくなるはずだから、見直してみて！'], 'c.sideNg': ['残り歩数が少ないほうがリードだから、逆なんだ。', 'ゴールに近いのは歩数が少ないほうだから、そっちじゃないワン。'],
+        /* 追64 (2026-11-24 担当C): the errors added so that each wrong number comes from exactly one mistake */
+        'c.notNg': ['<b>{x}</b>は、{n}が出ない確率（16−{m}）だね。聞いているのは出るほうだから、逆なんだ。', '16通りのうち{n}が出ないほうを数えちゃったワン。出るのは<b>{m}通り</b>だよ。'],
+        'c.farNg': ['<b>{x}</b>は、{d}マス後ろの駒だけを数えてるね。もっと近い<b>{e}マス</b>後ろの駒も、{e}が出れば届くんだ。', '遠い駒だけじゃないワン！ {e}マス後ろの駒も{e}が出れば届くから、その目も足すんだ。'],
+        'c.distNg': ['<b>{x}</b>は、距離の数字（{list}）をそのまま足しちゃってる。距離ごとに、その目が出る<b>通り数</b>を足すんだ。', '距離の数がそのまま通り数になるわけじゃないワン。その目が16通りのうち何通り出るかを足すんだ。'],
+        'c.leadPosNg': ['<b>{x}</b>は、いる場所の数を残り歩数のつもりで足した答えだね。15−位置で数えると、きみ<b>{a}</b>・相手<b>{b}</b> なんだ。', '何マス目かを足すと進んだ駒ほど大きくなっちゃうワン。あと何歩かで数えると、きみ<b>{a}</b>・相手<b>{b}</b> だよ。'] },
     };
     const ROT = (a, k) => a.map((_, i) => a[(i + k) % a.length]);
     // a lesson's voice: a line is not said twice in a lesson
@@ -143,7 +148,7 @@
       LKEY: 'aicoding-ur-lessons', data: null,
       load() {
         const eng = window.UrEngine ? Promise.resolve() : new Promise(res => { const sc = document.createElement('script'); sc.src = '../ur/engine.js?v=6'; sc.onload = res; sc.onerror = res; document.head.appendChild(sc); });
-        return this.p || (this.p = Promise.all([getJ('../ur/lessons.json?v=20261124e'), eng]).then(([d]) => { this.data = d; return this; }).catch(e => { this.p = null; throw e; }));
+        return this.p || (this.p = Promise.all([getJ('../ur/lessons.json?v=20261124f'), eng]).then(([d]) => { this.data = d; return this; }).catch(e => { this.p = null; throw e; }));
       },
       list(kind, lang) {
         if (kind === 'open') return [];
@@ -151,7 +156,7 @@
         return d.steps.map((s, i) => { const c = d.cats.find(x => x.steps.includes(s.id)) || {};
           return { key: String(i), cat: c.id || s.cat, catName: lang === 'ja' ? CAT[s.cat] || tx(c.name, lang) : tx(c.name, lang), title: tx(s.title, lang), sub: tx(s.tip, lang), svg: mini(s.diagram && s.diagram.s), st: pr[s.id] ? (pr[s.id].pass ? 'pass' : 'try') : '', full: false }; });
       },
-      msg(r, lang) { const t = r && this.data.msg[r[0]]; return t ? fill(tx(t, lang), r[1] || {}) : ''; },
+      msg(r, lang) { const t = r && this.data.msg[r[0]]; return t ? fill(tx(t, lang), Object.fromEntries(Object.entries(r[1] || {}).map(([k, v]) => [k, v && typeof v === 'object' ? tx(v, lang) : v]))) : ''; },   // (a value in 14 languages: the lead's option label)
       pos: (s, n, marks, lock, dn) => ({ ur: { s: s || EMPTY, n: n == null ? (dn == null ? null : dn) : n, marks: marks || [], lock: !!lock }, me: 1, dice: [n == null ? (dn == null ? -1 : dn) : n] }),   // (dice: the roll, as backgammon's — two problems with another roll are not the same problem)
       // the facts a Japanese line needs: how far the captured piece had come (its own track), the square the move lands on
       facts(q) {

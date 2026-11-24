@@ -57,6 +57,10 @@
     { id: 'vorsterman', w: 991, h: 768, aic: 21398, no: '1935.146', bg: '#3a332c', spots: [[.42, .68], [.605, .55], [.11, .36], [.2, .55], [.84, .5], [.08, .955]], links: [{ g: 'backgammon' }, { ex: 'ottoman' }] },
     // (2026-11-24) Chicago: Zorn's etching of chess players (the sheet trimmed to the plate and signature)
     { id: 'zorn', w: 911, h: 1319, aic: 41624, no: '1927.1839', bg: '#4a4640', spots: [[.7, .68], [.33, .24], [.6, .42], [.75, .22], [.3, .6], [.68, .89]], links: [{ g: 'chess' }] },
+    // (2026-11-24) Chicago: Harunobu's surimono — three young women at sugoroku
+    { id: 'harunobu-sugoroku', w: 1686, h: 2263, aic: 88979, no: '1928.904', bg: '#d8cbb0', spots: [[.47, .78], [.33, .56], [.71, .6], [.64, .38], [.3, .12], [.86, .27]], links: [{ g: 'backgammon' }, { ex: 'sugoroku' }] },
+    // (2026-11-24) Cleveland: a Kota shrine painting — a pachisi board laid out for Krishna
+    { id: 'kota', w: 1530, h: 2048, cma: '1978.71', bg: '#7a2a2a', spots: [[.5, .746], [.455, .718], [.485, .665], [.52, .56], [.3, .51], [.47, .32]], links: [{ g: 'ludo' }, { room: 'chance' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
