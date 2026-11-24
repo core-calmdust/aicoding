@@ -1,7 +1,7 @@
 /* World Board Game Atlas — 博物館の「描かれたゲーム」 (paintings room, 2026-11-24).
    Games as people painted, carved and printed them, 3,300 years of them: a wall of framed works; one opens in a viewer that can be zoomed
    and dragged, with numbered details to tap and the museum's record beside it, and links to the game or the piece of the collection.
-   Pictures: The Metropolitan Museum of Art, Open Access (CC0 — free for any use, commercial included); each record keeps its object number.
+   Pictures: The Metropolitan Museum of Art and The Cleveland Museum of Art, Open Access (CC0 — free for any use, commercial included); each record keeps its object number.
    Files images/atlas/paint/<id>.webp (≤ 2048 px) and <id>-t.webp (the wall). Texts: museum/paint-i18n.js (MUSEUM_PAINT_T[lang]).
    Facts and sources: claude/museum-spec.md (描かれたゲーム).
    AtlasPaint.render(box, ctx) — the museum (atlas/museum.js) calls it; ctx.open(gameId), ctx.goEx(exhibitId), ctx.goRoom(room). */
@@ -23,6 +23,10 @@
     { id: 'weiqi', w: 2002, h: 1500, met: 40217, no: '2015.500.1.33', bg: '#4a4744', spots: [[.506, .549], [.444, .534], [.628, .571], [.579, .356], [.5, .393], [.411, .8]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
     { id: 'webb', w: 1542, h: 2003, met: 195456, no: '26.54', bg: '#a7aab0', spots: [[.476, .324], [.375, .3], [.62, .344], [.317, .444], [.69, .233], [.505, .161]], links: [{ g: 'backgammon' }, { ex: 'ottoman' }] },
     { id: 'liberale', w: 2049, h: 1721, met: 436884, no: '43.98.8', bg: '#6b5a48', spots: [[.542, .541], [.344, .297], [.6, .288], [.447, .209], [.146, .2], [.893, .209]], links: [{ g: 'chess' }, { ex: 'lewis' }] },
+    // The Cleveland Museum of Art, Open Access (CC0) — cma: its accession number (its page)
+    { id: 'mirror', w: 992, h: 990, cma: '1940.1200', bg: '#5a5650', spots: [[.49, .564], [.404, .291], [.621, .321], [.681, .574], [.147, .402]], links: [{ g: 'chess' }, { ex: 'lewis' }] },
+    { id: 'morris', w: 1011, h: 992, cma: '1923.247', bg: '#d8d2c4', spots: [[.5, .494], [.188, .176], [.321, .312], [.5, .242], [.5, .1], [.084, .222]], links: [{ g: 'morris' }] },
+    { id: 'leifeng', w: 949, h: 992, cma: '2025.105', bg: '#b8463a', spots: [[.062, .617], [.414, .897], [.157, .897], [.194, .444], [.531, .353], [.499, .509]], links: [{ ex: 'goose' }, { g: 'ludo' }] },
   ];
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   let host = null, ctx = null, lang = 'ja', el = {}, cur = null;
@@ -70,8 +74,8 @@
       if (L.ex) { const mu = (window.ATLAS_MU || {})[L.ex], nm = (mu && mu.n && (mu.n[lang] || mu.n.en)) || (tx().ex || {})[L.ex] || ((T().en || {}).ex || {})[L.ex] || L.ex; return `<button type="button" class="chlk ex" data-ex="${L.ex}"><i>${esc(u('exhibit'))}</i>${esc(nm)}</button>`; }
       return `<button type="button" class="chlk rm" data-room="${L.room}"><i>${esc(u('room'))}</i>${esc(u('room_' + L.room))}</button>`; }).join('');
     ov.querySelector('.ptvrec').innerHTML = [[u('r_artist'), x.artist], [u('r_date'), x.date], [u('r_place'), x.place], [u('r_medium'), x.medium], [u('r_size'), x.size],
-      [u('r_museum'), u('met') + ' ' + W.no], [u('r_credit'), x.credit], [u('r_rights'), u('cc0')]].filter(r => r[1]).map(r => `<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join('')
-      + `<dt></dt><dd><a href="https://www.metmuseum.org/art/collection/search/${W.met}" target="_blank" rel="noopener">${esc(u('metlink'))} ↗</a></dd>`;
+      [u('r_museum'), W.cma ? u('cma') + ' ' + W.cma : u('met') + ' ' + W.no], [u('r_credit'), x.credit], [u('r_rights'), u('cc0')]].filter(r => r[1]).map(r => `<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join('')
+      + `<dt></dt><dd><a href="${W.cma ? 'https://www.clevelandart.org/art/' + W.cma : 'https://www.metmuseum.org/art/collection/search/' + W.met}" target="_blank" rel="noopener">${esc(u('metlink'))} ↗</a></dd>`;
     ov.querySelector('.ptvlinks').querySelectorAll('[data-g]').forEach(b => b.onclick = () => { window.AtlasPaint.onClose = null; close(true); ctx.open && ctx.open(b.dataset.g); });
     ov.querySelector('.ptvlinks').querySelectorAll('[data-ex]').forEach(b => b.onclick = () => { window.AtlasPaint.onClose = null; close(true); ctx.goEx && ctx.goEx(b.dataset.ex); });
     ov.querySelector('.ptvlinks').querySelectorAll('[data-room]').forEach(b => b.onclick = () => { window.AtlasPaint.onClose = null; close(true); ctx.goRoom && ctx.goRoom(b.dataset.room); });
