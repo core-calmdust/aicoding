@@ -707,7 +707,7 @@
           <span class="rdct2"><em>${esc(fmt(u('no'), { n: i + 1 }))} · ${esc(fmt(u('mins'), { n: mins(s) }))}${S[s.id] ? ` · <b class="rdok">✓ ${esc(u('stamped'))}</b>` : ''}</em><b>${esc(x.title)}</b><small>${esc(x.lead)}</small></span></button>`; }).join('')}</div></div>`;
     host.querySelectorAll('[data-s]').forEach(b => b.onclick = () => story(b.dataset.s, true));
     host.querySelectorAll('[data-reg]').forEach(b => b.onclick = () => { region = b.dataset.reg; try { localStorage.setItem('atlas-read-region', region); } catch (e) {} shelf(); const c = host.querySelector(`[data-reg="${region}"]`); if (c) c.focus(); });
-    if (window.AtlasMuseum && AtlasMuseum.pager) AtlasMuseum.pager(host.querySelector('.rdlist'), 'read' + (region === 'all' ? '' : '-' + region), { rows: { pc: 3, phone: 6 } });
+    if (window.AtlasMuseum && AtlasMuseum.pager) AtlasMuseum.pager(host.querySelector('.rdlist'), 'read' + (region === 'all' ? '' : '-' + region), { rows: { pc: 3, phone: 6 }, extra: host.querySelector('.rdreg') });
   }
 
   /* ---------- a story ---------- */
