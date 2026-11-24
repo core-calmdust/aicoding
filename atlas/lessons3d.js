@@ -3715,7 +3715,7 @@
     LKEY: 'aicoding-checkers-lessons', OKEY: 'aicoding-checkers-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=20261124'), getJ('../checkers/openings.json?v=3'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=20261124'), getJ('../checkers/openings.json?v=4'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vc]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] checkers texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vc)(v); this.V = ((v.I18N || {})['ja@crab']) || {}; } catch (e) { this.V = {}; }   // (チェッカニ's own lines, 3D, ja)
           return this; })
@@ -3749,7 +3749,7 @@
       const g = this.data.op.sets.find(x => x.id === key); if (!g) return null;
       const notes = {}; (g.study.notes || []).forEach((n, i) => { if (n) notes[String(i)] = L(n, lang); });
       const lx = ((this.data.lux || {}).openings || {})[g.id] || {}, hist = L((NC.checkers || {})['op:' + g.id + '/hist'] || lx.hist, lang);
-      const probs = shuffle(g.problems || []).slice(0, 5);
+      const probs = shuffle((g.problems || []).map((p, i) => i)).slice(0, 5).sort((a, b) => a - b).map(i => g.problems[i]);   // (2026-11-24 第2期: the pool is easy → hard; 5 drawn, kept in its order)
       const E = window.CheckersEngine, ja = lang === 'ja' && E;
       const CV = ja ? ckOpVoice(g.id) : null; let nj = null; if (ja) try { nj = ckNotesJa(E, g, notes, CV); } catch (e) { console.warn('[lessons3d] checkers notes', e); }
       return { id: g.id, title: L(g.title, lang), intro: ja && CKJ_OP.intro[g.id] ? CKJ_OP.intro[g.id] : hist, start: { spec: null, me: g.side === 2 ? 2 : 1 }, steps: g.study.line.slice(), notes: nj || notes,
