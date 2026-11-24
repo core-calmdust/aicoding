@@ -417,7 +417,8 @@ function amazons(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'amazons/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'amazons/lessons.json'), 'utf8'));
   const src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8');
-  const X = vm.runInNewContext('const AMAZONS = { data: null };' + src.slice(src.indexOf('  const AMM = '), src.indexOf('  const AMAZONS = {')) + '\n;({ AMJ_LS, amLsJa, AMAZONS })', {});
+  const X = vm.runInNewContext('const AMAZONS = { data: null };' + src.slice(src.indexOf('  const AMM = '), src.indexOf('  const AMAZONS = {')) + '\n;({ AMJ_LS, amLsJa, AMAZONS, AM_GM })', {});
+  const AMGM = X.AM_GM || {};
   X.AMAZONS.data = { ls: L };
   const out = [], only = opt && opt.only, add = (id, j, m) => out.push({ step: id, q: j + 1, msg: m });
   // ⑨ both versions score the same list
@@ -648,6 +649,9 @@ function amazons(opt) {
     const dirOf = (f, t) => { const [r1, c1] = RCo(f), [r2, c2] = RCo(t); return c1 === c2 ? (r2 < r1 ? '上' : '下') : r1 === r2 ? '横' : '斜め'; };
     const roomCells = (sq, w) => { const R = new Set([w]), Q = [w]; for (let h = 0; h < Q.length; h++) for (const t of nbr(Q[h])) if (!R.has(t) && sq[t] !== 3 && sq[t] !== 2) { R.add(t); Q.push(t); } return R; };
     L.steps.forEach(st => { const id = st.id; if (!AM_DONE.has(id) || (only && !only.has(id))) return;
+      (st.ramp || []).forEach((r, j) => { (r.marks || []).forEach(([x]) => { if (!(Number.isInteger(x) && x >= 1 && x <= 100)) add(id, -1, `warm-up ${j + 1}: 追75 the mark ${x} is not a square of the board`); });
+        (AMGM[id + '/' + j] || []).forEach(([q]) => { if (!(typeof q === 'string' && E.sqIdx(q) >= 0 && E.sqIdx(q) < 100 && N(E.sqIdx(q)) === q)) add(id, -1, `warm-up ${j + 1}: 追75 the 3D mark ${q} is not a square of the board`); });
+      });
       (st.ramp || []).forEach((r, j) => { const a = m => add(id, -1, `warm-up ${j + 1} (${r.k}): ${m}`), p = E.Pos.from(r.s), all = p.moves(), nm = m => E.name(p, m), W = whites(p), B = blacks(p);
         const T2 = ['t', 'body', 'g', 'h', 'y'].map(f => typeof r[f] === 'string' ? W2[r[f]] || '' : '').join(' ');
         const T3 = ['t', 'body', 'g', 'h', 'y'].map(f => typeof r[f] !== 'string' ? '' : X.AMJ_LS.ramp[r[f]] || (NC[`${id}/${j}/${f}`] || {}).ja || W2[r[f]] || '').join(' ');
@@ -670,6 +674,14 @@ function amazons(opt) {
           else if (id === 's_fill') { const sc = all.map(m => fillBF(after(m).sq, mTo(m))), mx = Math.max(...sc); G = all.filter((m, i) => sc[i] === mx); }
           if (G) { if (!G.length) a('① the goal cannot be reached'); okS.forEach(m => { if (!G.includes(m)) a(`① the answer ${nm(m)} does not reach the goal`); }); G.forEach(m => { if (!okS.has(m)) a(`② ${nm(m)} reaches the goal but is scored wrong`); }); }
           if (look == null) a('⑧ no gold mark');
+          // 追75 the warm-up can be answered on its board: answers named, every gold mark a square of this board
+          if (!(r.ok || []).length) a('追75 no answer');
+          (r.look || []).forEach(x => { if (!(Number.isInteger(x) && x >= 1 && x <= 100)) a(`追75 the gold mark ${x} is not a square of the board`); });
+          // 追72 the right moves are no more than a third of the legal moves
+          if (G && G.length * 3 > all.length) a(`追72 ${G.length} of ${all.length} moves are right`);
+          // ⑧ the squares the hint names as the places to aim at (「（a1 か f1）」) are all marked
+          { const h = String(W2[r.h] || ''), alt = h.match(/（\s*([a-j](?:10|[1-9]))\s*か\s*([a-j](?:10|[1-9]))\s*）/), lk = (r.look || []).map(x => x - 1);
+            if (alt) [alt[1], alt[2]].forEach(q => { if (!lk.includes(E.sqIdx(q))) a(`⑧ the hint names ${q} but the gold marks are ${lk.map(N).join('・')}`); }); }
         }
         // the facts the words give
         for (const [who, t] of texts) { if (!t.trim()) continue; const b = (re, ok, msg) => { const g = t.match(re); if (g && !ok(g)) a(`⑧ ${who} 「${g[0]}」: ${msg}`); };

@@ -1503,7 +1503,7 @@ function rtConfirm(after) {
 // Every right answer was computed from the rules (no engine opinion). Each step opens with a warm-up ramp (考え方 → 例題, not scored).
 // Texts are i18n keys (i18n-am-ls.js): ls.<step>.*, rp.<ramp>.*, ru.*, course.*.
 let LESSONS = null, introIdx = 0, openChoiceIdx = -1;
-const lessonsReady = fetch('lessons.json?v=6').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=7').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}') || {}; } catch (e) { return {}; } }
 const LL = o => !o ? '' : typeof o === 'string' ? t(o) : (o[LANG] !== undefined ? o[LANG] : o.en !== undefined ? o.en : o.ja);
