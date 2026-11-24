@@ -14,5 +14,15 @@ window.WL_SCENE_PASS = {
  "island/harbor": "ve6qu8",
  "island/net": "owm08x",
  "island/clinic": "1g35v00",
- "island/shrine": "lddyi6"
+ "island/shrine": "lddyi6",
+ "onsen/bath": "172n9xb",
+ "onsen/ryokan": "2ceuy8",
+ "onsen/toji": "152gvhe",
+ "onsen/mound": "15jem3p",
+ "onsen/spring": "e37j9d",
+ "abbey/chapel": "10o16p6",
+ "abbey/scriptorium": "7sgot7",
+ "abbey/cloister": "12noc1s",
+ "abbey/cellar": "nppnby",
+ "abbey/hospice": "1uhjzhw"
 };
