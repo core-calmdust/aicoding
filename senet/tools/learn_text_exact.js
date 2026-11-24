@@ -46,6 +46,7 @@ const Q = {
   you: LL('あなた', 'You', '你', '나', 'Tú', 'Vous', 'Você', 'Du', 'आप', 'أنت', 'Вы', '你', 'Anda', 'Sen'),
   rival: LL('相手', 'Rival', '对手', '상대', 'Rival', 'Adversaire', 'Rival', 'Gegner', 'विरोधी', 'الخصم', 'Соперник', '對手', 'Lawan', 'Rakip'),
 };
+const PROBT = LL('いちばん出やすい目は？', 'Which throw comes up most?', '最常出现的点数是？', '가장 잘 나오는 눈은?', '¿Qué tirada sale más?', 'Quel lancer sort le plus ?', 'Qual lance sai mais?', 'Welcher Wurf kommt am häufigsten?', 'कौन-सा अंक सबसे ज़्यादा आता है?', 'أي رمية تظهر أكثر؟', 'Какой бросок выпадает чаще всего?', '最常出現的點數是？', 'Lemparan mana yang paling sering?', 'En sık hangi atış gelir?');
 // レース（数え方）のレッスンの文言（題名・説明・ヒント・見本）
 const RACE = {
   title: LL('残りのマスを数える', 'Counting the race', '数剩余格数', '남은 칸 세기', 'Contar la carrera', 'Compter la course', 'Contar a corrida', 'Das Rennen zählen', 'दौड़ की गिनती', 'عدّ السباق', 'Считаем гонку', '數剩餘格數', 'Menghitung balapan', 'Yarışı saymak'),
@@ -57,4 +58,4 @@ const RACE = {
   exB: LL('<p>あなたの駒の上の数字が、それぞれの「上がりまでのマス」。足すと合計になります。</p>', '<p>The number on each of your pieces is its squares to bear off. Add them for the total.</p>', '<p>你棋子上的数字就是它到移出的格数。相加就是合计。</p>', '<p>내 말 위의 숫자가 각각 나갈 때까지의 칸이에요. 더하면 합계예요.</p>', '<p>El número de cada pieza tuya son sus casillas hasta salir. Súmalos para el total.</p>', '<p>Le nombre sur chacun de vos pions est son nombre de cases jusqu’à la sortie. Additionnez-les.</p>', '<p>O número em cada peça sua são as casas até sair. Some para o total.</p>', '<p>Die Zahl auf jeder deiner Figuren sind ihre Felder bis hinaus. Addieren ergibt die Summe.</p>', '<p>आपकी हर गोटी पर लिखी संख्या उसके बाहर तक के खाने हैं। जोड़ें तो कुल।</p>', '<p>الرقم على كل قطعة لك هو مربعاتها حتى الخروج. اجمعها لتحصل على المجموع.</p>', '<p>Число на каждой вашей фишке — её клетки до выхода. Сложите их.</p>', '<p>你棋子上的數字就是它到移出的格數。相加就是合計。</p>', '<p>Angka pada tiap bidak Anda adalah petaknya sampai keluar. Jumlahkan untuk totalnya.</p>', '<p>Taşlarının üzerindeki sayı, o taşın çıkışa kadar karesi. Toplamı için topla.</p>'),
   tryT: LL('合計はいくつ？', 'What is the total?', '合计多少？', '합계는?', '¿Cuál es el total?', 'Quel est le total ?', 'Qual é o total?', 'Wie viel ist die Summe?', 'कुल कितना?', 'كم المجموع؟', 'Сколько всего?', '合計多少？', 'Berapa totalnya?', 'Toplam kaç?'),
 };
-module.exports = { MSG, Q, RACE, LANGS, LL };
+module.exports = { MSG, Q, RACE, PROBT, LANGS, LL };

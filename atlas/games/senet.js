@@ -107,8 +107,8 @@
     function label(sq, text, color) {   // a number on a square (the squares left, a distance, the ways out of 16), facing up
       const cv = document.createElement('canvas'); cv.width = 256; cv.height = 128; const g = cv.getContext('2d'), big = String(text).length <= 2;
       g.font = '900 ' + (big ? 92 : 64) + 'px system-ui,sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineWidth = 14; g.strokeStyle = 'rgba(30,20,10,.88)'; g.strokeText(text, 128, 68); g.fillStyle = '#' + hex(color).toString(16).padStart(6, '0'); g.fillText(text, 128, 68);
-      const m = new TH.Mesh(new TH.PlaneGeometry(.96, .48), new TH.MeshBasicMaterial({ map: new TH.CanvasTexture(cv), transparent: true, depthWrite: false, toneMapped: false }));
-      m.rotation.x = -Math.PI / 2; const [x, z] = kit.cellXZ(sq); m.position.set(x, kit.Y + .34, z + .22); m.renderOrder = 6; kit.marks.group.add(m); T3.kick(120);
+      const m = new TH.Mesh(new TH.PlaneGeometry(.96, .48), new TH.MeshBasicMaterial({ map: new TH.CanvasTexture(cv), transparent: true, depthWrite: false, depthTest: false, toneMapped: false }));
+      m.rotation.x = -Math.PI / 2; const [x, z] = kit.cellXZ(sq); m.position.set(x, kit.Y + .9, z); m.renderOrder = 9; kit.marks.group.add(m); T3.kick(120);   // (above the pieces, drawn over them)
     }
     const toOf = m => m.finish ? 31 : m.water ? m.dest : m.to;
     function drawAns(m, cls) {   // an answer: the dots along the track from the piece to where it lands (the goal row when it bears off)
@@ -143,7 +143,9 @@
       marksNow();
     }
     function sticks() { kit.restSticks(0, n == null ? null : STK[n].slice()); }
+    let pending = null;
     function load(sp) {
+      if (!E || !kit) { pending = sp || PZ.senet; return; }   // (asked before the engine and the box are ready: loaded then)
       spec = Object.assign({}, sp || PZ.senet); extra = []; hist = []; on = false; sel = -1; busy = false; gen++; loading = true;   // (gen: a move still walking from the last position is dropped)
       st = { rule: 'std', pos: spec.s.pos.map(a => a.slice()), turn: 0, winner: -1 }; st0 = E.clone(st); n = spec.n == null ? null : +spec.n;
       kit.sync(st); sticks(); marksNow();
@@ -190,7 +192,7 @@
     loadJS(BASE + 'sprites.js?v=1', () => !!window.SENET_SPRITES).catch(() => null).then(() => loadJS(BASE + 'board2d.js?v=6', () => !!window.SenetBoard2D)).catch(() => null).then(loadEngine).then(e => {
       if (stopped) return; E = e;
       kit = window.SenetKit.make(T3, { design: dsg, pieces: look, sfx: k => SND[k] && SND[k]() });
-      load(PZ.senet);
+      load(pending || PZ.senet);
     }).catch(err => console.error('[senet pz]', err));
     return api;
   }

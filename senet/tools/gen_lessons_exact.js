@@ -161,7 +161,7 @@ function main() {
     const probs = [rollChoice(3), rollChoice(5), againChoice(), riskChoice([3], 20, { me: [15, 28], op: [11, 26] }), riskChoice([1, 2], 18, { me: [12, 29, 25], op: [22] })];
     steps.push({ id: 'prob', cat: 'basic', rule: 'std', title: O.title, tip: O.tip, body: O.body, diagram: { s: ex.s, marks: ex.marks },
       ramp: [{ k: 'explain', s: ex.s, n: null, seq: [], marks: ex.marks, t: O.ramp[0].t, body: O.ramp[0].body },
-        { k: 'try', kind: 'choice', opts: ['1', '2', '3', '4', '5'], ans: 1, t: O.ramp[0].t, h: O.hints[0], g: fillMsg('c.roll', { n: 2, m: 6 }), y: OLD.ui.rampRetry }],
+        { k: 'try', kind: 'choice', opts: ['1', '2', '3', '4', '5'], ans: 1, t: T.PROBT, h: O.hints[0], g: fillMsg('c.roll', { n: 2, m: 6 }), y: OLD.ui.rampRetry }],
       problems: probs, hints: O.hints });
   }
   // 作り直せないレッスン（基準を満たす局面がプールに足りない）は前の版をそのまま残し、v2 の印をつけない（3D の一覧に出さない・検証は「未」）。

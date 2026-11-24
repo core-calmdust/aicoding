@@ -217,7 +217,7 @@ function renderLessonCard() {
   else pr = `<p>${esc(it.kind === 'choice' ? (LL(it.q) || UI(D, 'qChoice')) : (it.q ? LL(it.q) : UI(D, 'qMove', { n: it.n })))}</p>`;
   $('#lsPrompt').innerHTML = pr;
   const ch = $('#lsChoices');
-  if (it.kind === 'choice') {   // (2026-11-24 追24: the warm-up's question with choices too — not scored, a miss can be tried again)
+  if (it.kind === 'choice') {   // (2026-11-24 追26: the warm-up's question with choices too — not scored, a miss can be tried again)
     ch.innerHTML = it.opts.map((o, i) => `<button data-i="${i}" class="${lesson.done && i === it.ans ? 'ok' : ''}">${esc(LL(o))}</button>`).join('');
     ch.onclick = e => { const b = e.target.closest('button'); if (!b || lesson.done) return; const i = +b.dataset.i;
       if (i === it.ans && ramp) { lesson.done = true; snd('ok'); fb(`<b class="ok">${esc(UI(D, 'rampGood'))}</b> ${esc(LL(it.g))}`); renderLessonCard(); return; }
