@@ -175,12 +175,13 @@ function tryItem(id, s, okFn, look) {
 const ex = (id, s, seq, marks) => ({ k: 'explain', s, seq: seq || [], marks: (marks || []).map(([q, c]) => [IX(q) + 1, c]), t: 'rp.' + id + '.t', body: 'rp.' + id + '.b' });
 const RAMPS = {
   b_queen: [
-    ex('q1', S(['e5'], ['a10']), [], [['e9', 'ok'], ['e1', 'ok'], ['a5', 'ok'], ['j5', 'ok'], ['a1', 'ok'], ['i9', 'ok'], ['b8', 'ok'], ['h2', 'ok']]),
+    ex('q1', S(['e5'], ['a10']), [], [['e10', 'ok'], ['e1', 'ok'], ['a5', 'ok'], ['j5', 'ok'], ['a1', 'ok'], ['j10', 'ok'], ['a9', 'ok'], ['i1', 'ok']]),
     tryItem('q2', S(['c3'], ['j10']), (m, p) => mTo(m) === IX('c8'), ['c8']),
   ],
   b_arrow: [
     ex('a1', S(['d4'], ['j10']), ['d4-d8/g8'], [['g8', 'ok']]),
-    tryItem('a2', S(['c2'], ['j9']), m => mArrow(m) === IX('h7'), ['h7']),
+    tryItem('a2', S(['b2'], ['j9'])   // (2026-11-24 追14: c2 was in line with h7 on the diagonal, the hint says it is not)
+     , m => mArrow(m) === IX('h7'), ['h7']),
     tryItem('a3', S(['e5'], ['j10']), m => mArrow(m) === mFrom(m), ['e5']),
   ],
   b_block: [
@@ -197,7 +198,8 @@ const RAMPS = {
   ],
   s_escape: [
     ex('e1', S(['a1', 'f6'], ['c4', 'h8'], ['a3', 'c1', 'c2']), [], [['a1', 'ng'], ['a2', 'ok'], ['b1', 'ok'], ['b2', 'ok']]),
-    tryItem('e2', S(['j10', 'c3'], ['f6', 'b8'], ['h10', 'j8', 'h8']), (m, p) => mFrom(m) === IX('j10') && free(p.clone().play(m), mTo(m)) >= 4, ['j10']),
+    // (2026-11-24 追14: the corner's neighbours were all empty and it could only step one square — the hint says nearly closed, a long move)
+    tryItem('e2', S(['j10', 'c3'], ['f6', 'b8'], ['i10', 'j9', 'h10', 'h9', 'i8', 'j8']), (m, p) => { if (mFrom(m) !== IX('j10')) return false; const q = p.clone().play(m), t = mTo(m); return free(q, t) >= 4 && !q.moves().some(r => { q.play(r); const v = free(q, t) === 0; q.unplay(r); return v; }); }, ['j10']),
   ],
   s_wall: [
     ex('l1', S(['b5', 'e6'], ['h8', 'i2'], ['f1', 'f2', 'f3', 'f4', 'f5', 'f7', 'f8', 'f9', 'f10']), ['e6-e7/f6'], [['f6', 'ok']]),

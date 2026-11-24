@@ -5365,8 +5365,8 @@
     LKEY: 'aicoding-amazons-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      const tx = ['../checkers/i18n.js?v=20261107l14-nd1', '../amazons/i18n-am.js?v=4', '../amazons/i18n-am-more.js?v=4', '../amazons/i18n-am-ls.js?v=2', '../amazons/i18n-am-ls-more.js?v=2', '../amazons/i18n-am-ls-more2.js?v=2'];
-      return (this.p = Promise.all([getJ('../amazons/lessons.json?v=4'), Promise.all(tx.map(u => fetch(u).then(r => r.text()).catch(() => ''))), amEng().catch(() => null)])
+      const tx = ['../checkers/i18n.js?v=20261107l14-nd1', '../amazons/i18n-am.js?v=4', '../amazons/i18n-am-more.js?v=4', '../amazons/i18n-am-ls.js?v=3', '../amazons/i18n-am-ls-more.js?v=3', '../amazons/i18n-am-ls-more2.js?v=3'];
+      return (this.p = Promise.all([getJ('../amazons/lessons.json?v=5'), Promise.all(tx.map(u => fetch(u).then(r => r.text()).catch(() => ''))), amEng().catch(() => null)])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T[0] + '\nvar I18N = window.I18N = window.I18N || {};\n' + T.slice(1).join('\n'))(w); } catch (e) { console.warn('[lessons3d] amazons texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
