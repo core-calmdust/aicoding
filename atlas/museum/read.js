@@ -41,6 +41,8 @@
     { id: 'peg', color: '#5a3e78', cover: { g: 'peg', s: 'peg' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'pegJump' }, m1: { svg: 'pegBoards' }, m2: { svg: 'pegColors' } }, refs: ['Mercure galant, August 1697', 'Claude-Auguste Berey, engraving of Anne de Rohan-Chabot, princesse de Soubise, with a solitaire board (late 17th century)', 'G. W. Leibniz, a note on the game of solitaire (1710), as quoted in Winning Ways', 'E. R. Berlekamp, J. H. Conway, R. K. Guy, Winning Ways for your Mathematical Plays, vol. 2 (1982)', 'John D. Beasley, The Ins and Outs of Peg Solitaire (1985)', 'University of Waterloo, Elliott Avedon Virtual Museum of Games: Solitaire'], links: [{ g: 'peg' }, { g: 'foxgeese' }, { g: 'konane' }] },
     { id: 'fanorona', color: '#7a4a1e', cover: { g: 'fanorona', s: 'fanorona' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'fanoronaCapture' }, m1: { svg: 'fanoronaBoard' }, m2: { svg: 'fanoronaChain' } }, refs: ['Maarten P. D. Schadd, Mark H. M. Winands, Jos W. H. M. Uiterwijk, H. Jaap van den Herik, Maurice H. J. Bergsma, “Best Play in Fanorona Leads to Draw”, New Mathematics and Natural Computation 4(3) (2008)', 'H. J. R. Murray, A History of Board-Games Other Than Chess (1952)', 'Robert C. Bell, Board and Table Games from Many Civilizations (1960)', 'Maastricht University, Games and AI Group: Fanorona', 'Wikipedia, “Fanorona” (the legend of Ralambo and his sons)'], links: [{ g: 'fanorona' }, { g: 'alquerque' }, { g: 'checkers' }] },
     { id: 'janggi', color: '#1f5e52', cover: { g: 'janggi', s: 'janggi' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'janggiBoard' }, m1: { svg: 'janggiElephant' }, m2: { svg: 'janggiCannon' } }, refs: ['Stewart Culin, Korean Games, with Notes on the Corresponding Games of China and Japan (1895)', '한국민족문화대백과사전 「장기」 / Encyclopedia of Korean Culture, “Janggi”', 'H. J. R. Murray, A History of Chess (1913)', 'University of Waterloo, Elliott Avedon Virtual Museum of Games: Changgi', 'Wikipedia, “Janggi” (setups, bikjang, scoring)'], links: [{ g: 'janggi' }, { g: 'xiangqi' }, { g: 'chess' }] },
+    // (2026-11-24) mahjong is a page of its own (mahjong/, not in the Atlas's GAMES): the cover and the first link go there (href), named by the story's text (game)
+    { id: 'mahjong', color: '#1d6a4a', cover: { g: 'mahjong', s: 'mahjong', href: '../mahjong/' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'mahjongTiles' }, m1: { svg: 'mahjongHand' }, m2: { svg: 'mahjongSpread' } }, refs: ['沈一帆『圖畫麻雀牌譜』(1914) / Yifan Shen, Illustrated Mahjong Guide', 'William Henry Wilkinson, “Chinese Origin of Playing Cards”, American Anthropologist (1895)', 'Joseph Park Babcock, Rules of Mah-Jongg (1920)', '天野大三「報知ルール」（報知新聞、1952）', '中国国家体育总局『中国麻将竞赛规则』(1998) / Mahjong Competition Rules', 'Wikipedia, “Mahjong”, “Japanese mahjong”'], links: [{ g: 'mahjong', href: '../mahjong/' }, { g: 'shanghai' }, { g: 'xiangqi' }] },
   ];
   // pictures shown only beside a story's paragraph (not in another room): a museum's open-access photo (CC0), linked to the museum's page.
   // The name, in each language, is MUSEUM_READ_T[lang].pic[id]. Files images/atlas/museum-story/pic/<id>.webp (≤ 960 px).
@@ -76,6 +78,21 @@
   }
   /* ---------- (2026-11-24 ユーザー: 画像なども使って読みやすく) figures inside an article: a museum piece, a painting, a story picture,
      or a diagram drawn here (svg) — each with its caption from the language's more[k].cap ---------- */
+  // (2026-11-24, story 29) a mahjong tile in plain SVG: kind m (characters) / p (dots) / s (bamboo) / z (an honour or flower, n = its character)
+  const MJ_NUM = '一二三四五六七八九', MJ_PAT = [[[.5, .5]], [[.5, .27], [.5, .73]], [[.25, .2], [.5, .5], [.75, .8]], [[.3, .27], [.7, .27], [.3, .73], [.7, .73]], [[.3, .22], [.7, .22], [.5, .5], [.3, .78], [.7, .78]],
+    [[.3, .2], [.7, .2], [.3, .5], [.7, .5], [.3, .8], [.7, .8]], [[.2, .14], [.5, .26], [.8, .38], [.3, .62], [.7, .62], [.3, .86], [.7, .86]], [[.3, .14], [.7, .14], [.3, .38], [.7, .38], [.3, .62], [.7, .62], [.3, .86], [.7, .86]],
+    [[.2, .18], [.5, .18], [.8, .18], [.2, .5], [.5, .5], [.8, .5], [.2, .82], [.5, .82], [.8, .82]]];
+  function mjTile(x, y, w, h, kind, n, col) {
+    let g = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3.5" fill="#fbf8ee" stroke="#9a9280" stroke-width="1"/><rect x="${x}" y="${y + h - 4}" width="${w}" height="4" rx="2" fill="#1d7a52"/>`;
+    const ix = x + 3, iy = y + 3, iw = w - 6, ih = h - 9;
+    if (kind === 'm') g += `<text x="${x + w / 2}" y="${y + h * .4}" font-size="13" font-weight="800" fill="#1d1b22" text-anchor="middle">${MJ_NUM[n - 1]}</text><text x="${x + w / 2}" y="${y + h * .78}" font-size="13" font-weight="800" fill="#c62828" text-anchor="middle">萬</text>`;
+    else if (kind === 'p' || kind === 's') { const P = MJ_PAT[n - 1], r = n === 1 ? iw * .32 : n <= 4 ? iw * .17 : iw * .13;
+      P.forEach(([u, v], q) => { const cx = ix + u * iw, cy = iy + v * ih, c = kind === 'p' ? (n === 5 && q === 2 || n === 1 ? '#c62828' : q % 2 ? '#c62828' : '#1b4fa0') : (n === 1 || (n === 5 || n === 9) && q === 4 || n === 7 && q === 0 ? '#c62828' : '#14864a');
+        g += kind === 'p' ? `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${c}" stroke-width="${n === 1 ? 2.2 : 1.5}"/><circle cx="${cx}" cy="${cy}" r="${r * .35}" fill="${c}"/>` : `<rect x="${cx - r * .55}" y="${cy - r * 1.15}" width="${r * 1.1}" height="${r * 2.3}" rx="${r * .4}" fill="${c}"/>`; }); }
+    else g += `<text x="${x + w / 2}" y="${y + h * .62}" font-size="${w > 25 ? 16 : 14}" font-weight="800" fill="${col || '#1d1b22'}" text-anchor="middle">${n}</text>`;
+    return g;
+  }
+  const mjL = k => ((st('mahjong').figL || {})[k]) || [];
   const DIAG = {
     // the twenty squares, the five rosettes, and one player's road (1 → 14) as the reconstructed rules run it
     urBoard: () => { const C = 46, X0 = 12, Y0 = 12, ex = (r, c) => r === 1 || c < 4 || c > 5, ros = [[0, 0], [2, 0], [1, 3], [0, 6], [2, 6]];
@@ -593,6 +610,30 @@
       g += row(1, [[0, '包', 0], [2, '包', 1], [6, '車', 1]], [], [], [3]);
       g += row(2, [[0, '包', 0], [2, '卒', 0], [5, '包', 1]], [3, 4], [], [5]);
       return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit">${g}</svg>`; },
+    // mahjong's tiles: three suits 1–9 (characters, dots, bamboo), the winds and dragons — four of each (136) — and eight flowers (144)
+    mahjongTiles: () => { const w = 26, h = 36, gx = 3, o = 6, W = o * 2 + 9 * (w + gx) + 34, RH = h + 7; let g = '';
+      ['m', 'p', 's'].forEach((k, r) => { for (let n = 1; n <= 9; n++) g += mjTile(o + (n - 1) * (w + gx), o + r * RH, w, h, k, n); });
+      const hz = [['東'], ['南'], ['西'], ['北'], [''], ['白'], ['發', '#14864a'], ['中', '#c62828']];
+      hz.forEach(([c, col], q) => { if (c) g += mjTile(o + q * (w + gx), o + 3 * RH, w, h, 'z', c === '白' ? '' : c, col); });
+      ['梅', '蘭', '菊', '竹', '春', '夏', '秋', '冬'].forEach((c, q) => { g += mjTile(o + q * (w + gx) + (q > 3 ? 6 : 0), o + 4 * RH, w, h, 'z', c, q > 3 ? '#1b4fa0' : '#c62828'); });
+      ['×4', '×4', '×4', '×4', '×1'].forEach((t, r) => { g += `<text x="${W - 4}" y="${o + r * RH + h * .64}" font-size="15" font-weight="800" fill="${r === 4 ? '#8a7a5a' : '#2b2a28'}" text-anchor="end">${t}</text>`; });
+      g += `<line x1="${o}" y1="${o + 4 * RH - 3.5}" x2="${W - o}" y2="${o + 4 * RH - 3.5}" stroke="#b8ad98" stroke-width="1.2" stroke-dasharray="4 3"/>`;
+      return `<svg viewBox="0 0 ${W} ${o * 2 + 5 * RH - 7}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // a winning hand: four sets and a pair — a run (chow), a triplet (pung), a quad (kong), another run, and the pair
+    mahjongHand: () => { const w = 24, h = 33, gx = 1.5, gg = 14, o = 8, L = mjL('hand'); let g = '', x = o;
+      const grp = (tiles, y, lab) => { const x0 = x; tiles.forEach(([k, n, col]) => { g += mjTile(x, y, w, h, k, n, col); x += w + gx; }); const x1 = x - gx;
+        g += `<path d="M${x0 + 2} ${y + h + 5}v4H${x1 - 2}v-4" fill="none" stroke="#2a5a8a" stroke-width="1.6"/><text x="${(x0 + x1) / 2}" y="${y + h + 24}" font-size="14" font-weight="800" fill="#2a5a8a" text-anchor="middle">${esc(lab || '')}</text>`; x += gg; };
+      grp([['m', 1], ['m', 2], ['m', 3]], o, L[0]); grp([['p', 5], ['p', 5], ['p', 5]], o, L[1]); grp([['z', '東'], ['z', '東'], ['z', '東'], ['z', '東']], o, L[2]);
+      const W = x - gg + o; x = o + 40; grp([['s', 7], ['s', 8], ['s', 9]], o + h + 34, L[3]); grp([['z', '中', '#c62828'], ['z', '中', '#c62828']], o + h + 34, L[4]);
+      return `<svg viewBox="0 0 ${W} ${o + 2 * (h + 34)}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // how mahjong spread: China (c. 1870) → the United States (1920s) → Japan (1920s; riichi rules 1952) → official Chinese rules (1998)
+    mahjongSpread: () => { const R = mjL('spread'), W = 300, RH = 46, o = 14, H = o * 2 + RH * (R.length - 1) + 20, xn = 96; let g = '';
+      const C = ['#c62828', '#1b4fa0', '#14864a', '#14864a', '#c62828'];
+      g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * (R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
+      R.forEach(([yr, pl, ds], k) => { const y = o + 8 + RH * k;
+        g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="15" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
+        g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(pl)}</text><text x="${xn + 16}" y="${y + 19}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
     // four tetrahedral dice: how often each score comes (out of 16)
     tetraOdds: () => { const n = [1, 4, 6, 4, 1], W = 300, H = 150, bw = 40, gap = (W - 40 - bw * 5) / 4; let g = '';
       n.forEach((v, i) => { const x = 20 + i * (bw + gap), h = v / 6 * 96, y = 112 - h;
