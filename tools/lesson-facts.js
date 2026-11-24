@@ -74,6 +74,8 @@ const CHECKS = {
       } else if (P.q === 'shots') { const v = P.qv || {}; if (Math.abs(Math.round(v.n / 36 * 100) - v.p) > 1) bad(G, id, `${w}: ${v.n} of 36 is not ${v.p}%`);
         const o = P.opts[P.ans]; if ((Array.isArray(o) ? o[1] : o) !== v.n) bad(G, id, `${w}: the right answer is not ${v.n}`); }
     }));
+    // (2026-11-24 第2期・担当A) the strict ①〜⑨・追22・追23・追40 of the choice questions (shots・race) — tools/lesson-verify-bg.js
+    require('./lesson-verify-bg.js')().forEach(fa => bad(G, String(LS.steps.findIndex(s => s.id === fa.step)), `${fa.step} q${fa.q}: ${fa.msg}`));
   },
   // (2026-11-22 lesson loop) the reversi openings ('reversi/open', key = the line's moves): every line replays legally from the start
   // (a side with no move passes), the 3D guide's fixed words hold — the first move is f5 (「4か所どこに打っても同じ形」), the second
@@ -111,6 +113,8 @@ const CHECKS = {
         if (!mine.length && theirs.length && !theirs.includes(best)) bad(G, g.id, `problem ${j}: the opponent has a four but the best answer ${sc[0][0]} does not stop it`);
       });
     });
+    // (2026-11-24 第2期・担当B) the verified openings (openings.json verified): the strict ①〜⑨ — tools/lesson-verify-gmopen.js
+    require('./lesson-verify-gmopen.js')().forEach(fa => bad(G, fa.step, `q${fa.q}: ${fa.msg}`));
   },
   // (2026-11-23 lesson loop) the gomoku lessons ('gomoku', key = the step's index): every position loads (rule: the problem's, else renju),
   // every answer point is empty, and what the step's words (atlas/lessons3d.js gmLsJa) say the answer does holds with the engine's exact

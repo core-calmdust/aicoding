@@ -41,7 +41,16 @@
     { id: 'pvl', w: 1686, h: 1648, aic: 267692, no: '2023.52', bg: '#bdb6a8', spots: [[.617, .483], [.544, .428], [.36, .26], [.522, .25], [.69, .24], [.261, .822]], links: [{ room: 'chance' }] },
     { id: 'kiyohiro', w: 1387, h: 2048, aic: 19696, no: '1925.1907', bg: '#c9b48a', spots: [[.5, .709], [.367, .498], [.639, .566], [.622, .272], [.877, .573], [.966, .716]], links: [{ g: 'backgammon' }, { ex: 'sugoroku' }] },
     { id: 'talbot', w: 1591, h: 2048, aic: 27083, no: '1967.158', bg: '#5a4a3a', spots: [[.479, .583], [.307, .356], [.664, .456], [.771, .278], [.879, .711]], links: [{ g: 'chess' }] },
+    // (2026-11-24) the Met: Ingram after Boucher — xiangqi as 18th-century Paris imagined it
+    { id: 'ingram', w: 1552, h: 2252, met: 394687, no: '66.628.4(1)', bg: '#a89a7e', spots: [[.6, .53], [.47, .515], [.55, .4], [.73, .5], [.72, .19], [.5, .905]], links: [{ g: 'xiangqi' }] },
+    // (2026-11-24) Chicago: Posada's Game of the Goose (Mexico) — the rules printed in the middle
+    { id: 'posada', w: 1686, h: 1239, aic: 52048, no: '1944.945', bg: '#cfc6a6', spots: [[.45, .417], [.325, .848], [.294, .733], [.294, .61], [.15, .72], [.647, .468]], links: [{ ex: 'goose' }, { g: 'ludo' }] },
   ];
+  // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
+  const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
+    talbot: 'europe', pvl: 'europe', ingram: 'europe', liubo: 'asia', chaupar: 'asia', shogi: 'asia', sugoroku: 'asia', weiqi: 'asia', leifeng: 'asia', tutinama: 'asia', imari: 'asia',
+    shoei: 'asia', umaya: 'asia', goryeo: 'asia', kangra: 'asia', kiyohiro: 'asia', eakins: 'americas' };
+  let region = (() => { try { return localStorage.getItem('atlas-paint-region') || 'all'; } catch (e) { return 'all'; } })();
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   let host = null, ctx = null, lang = 'ja', el = {}, cur = null;
   const zl = i => { const Z = window.AtlasZoomT || {}; return (Z[lang] || Z.en || ['+', '−', '⤢'])[i]; };   // (the zoom buttons' spoken names, from worldmap.js)
@@ -53,11 +62,16 @@
   /* ---------- the wall ---------- */
   function wall() {
     el.lead.textContent = u('lead');
-    el.grid.innerHTML = WORKS.map(W => { const x = wt(W.id);
+    const RG = ((window.AtlasMap && AtlasMap.REG) || ['all', 'asia', 'europe', 'mea', 'americas']), rl = k => window.AtlasMap && AtlasMap.label ? AtlasMap.label(k, lang) : k;
+    const cnt = k => WORKS.filter(W => k === 'all' || REGION[W.id] === k).length; if (region !== 'all' && !cnt(region)) region = 'all';
+    const chips = document.createElement('div'); chips.className = 'chips cats ptreg'; chips.setAttribute('role', 'group');
+    chips.innerHTML = RG.filter(k => cnt(k)).map(k => `<button type="button" class="chip cat" data-reg="${k}" aria-pressed="${k === region}">${esc(rl(k))}<em>${cnt(k)}</em></button>`).join('');
+    chips.querySelectorAll('[data-reg]').forEach(b => b.onclick = () => { region = b.dataset.reg; try { localStorage.setItem('atlas-paint-region', region); } catch (e) {} wall(); const c = el.grid.parentNode.querySelector(`.ptreg [data-reg="${region}"]`); if (c) c.focus(); });
+    el.grid.innerHTML = WORKS.filter(W => region === 'all' || REGION[W.id] === region).map(W => { const x = wt(W.id);
       return `<button type="button" class="ptc" data-w="${W.id}" style="--mat:${W.bg}"><span class="ptf"><img src="${IMG}${W.id}-t.webp?v=${V}" alt="${esc(x.title)}" loading="lazy" width="${W.w}" height="${W.h}"></span>
         <span class="ptl"><b>${esc(x.title)}</b><small>${esc(x.date)} · ${esc(x.place)}</small><em>${esc(x.game || '')}</em></span></button>`; }).join('');
     el.grid.querySelectorAll('[data-w]').forEach(b => b.onclick = () => openWork(b.dataset.w));
-    if (window.AtlasMuseum && AtlasMuseum.pager) AtlasMuseum.pager(el.grid, 'paint', { rows: { pc: 3, phone: 4 } });
+    if (window.AtlasMuseum && AtlasMuseum.pager) AtlasMuseum.pager(el.grid, 'paint' + (region === 'all' ? '' : '-' + region), { rows: { pc: 3, phone: 4 }, extra: chips });
     el.credit.innerHTML = esc(u('credit'));
     if (window.AtlasMuseum && AtlasMuseum.catalog) AtlasMuseum.catalog('paint', WORKS.map(W => ({ id: W.id, img: `${IMG}${W.id}-t.webp?v=${V}`, t: wt(W.id).title })));
   }

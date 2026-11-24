@@ -858,7 +858,7 @@ a.rdimg{text-decoration:none;color:inherit}
   box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 18px 50px rgba(20,12,4,.18),0 2px 6px rgba(20,12,4,.08)}
 .muwrap .musub,.muwrap .chlead,.muwrap .gxsub,.muwrap .trsub,.muwrap .ptcredit,.muwrap .trlegend,.muwrap .amsub,
 #pg-museum .muwrap .muhead h2.h{width:auto;padding:0;border-radius:0;background:none;box-shadow:none}
-.muwrap .chlead,.muwrap .gxsub,.muwrap .trsub,.muwrap .ptlead{max-width:min(100%,62em);margin:0 0 16px;font-size:15px;font-weight:600;line-height:1.75;color:#5b5348}
+.muwrap .chlead,.muwrap .gxsub,.muwrap .trsub,.muwrap .ptlead{max-width:100%;text-wrap:pretty;margin:0 0 16px;font-size:15px;font-weight:600;line-height:1.75;color:#5b5348}
 /* the head: title and its line on the left, the stamp card on the right */
 .muwrap .muhead{display:flex;flex-wrap:nowrap;align-items:center;gap:16px;margin:0 0 18px}
 .muwrap .mutt{flex:1 1 auto;min-width:0}
@@ -1027,3 +1027,10 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 /* (2026-11-24) phones: diagrams get a little more width so their labels stay at least 10px (audit: figTiny) */
 @media (max-width:520px){.rdfig.dg{padding:6px}}
 .rdreg{margin:0 0 14px}
+
+/* (2026-11-24) the search box and a room's filter chips in one row; on PC the page numbers only under the list */
+.mupg .mupg-s{flex:0 1 340px}
+.mupg-ex{flex:1 1 auto;min-width:0;display:flex;flex-wrap:wrap;gap:8px;margin:0!important}
+.mupg>.sgw{flex:1 1 auto;min-width:0;margin:0}   /* (the chips' scroll wrapper, when the page adds one) */
+.mupg.pc .mupg-n{display:none}
+@media (max-width:819px){.mupg.on{flex-wrap:wrap}.mupg .mupg-s{flex:1 1 0;max-width:none}.mupg>.sgw{order:3;flex:1 1 100%}.mupg-ex{order:3;flex:1 1 100%;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}.mupg-ex::-webkit-scrollbar{display:none}}

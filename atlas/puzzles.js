@@ -688,7 +688,7 @@
     ICO: { Win: '<circle cx="12" cy="12" r="3"/><path d="M12 4v4M12 16v4M4 12h4M16 12h4"/>', Tac: '<path d="M5 19L19 5M14 5h5v5"/>' },
     fetch() {
       const ld = u => fetch(u).then(r => r.text()).catch(() => '');
-      return Promise.all([fetch(this.url).then(r => r.json()), ld('../foxgeese/i18n-fg.js?v=9'), ld('../foxgeese/i18n-fg-more.js?v=13')]).then(([d, a, b]) => {
+      return Promise.all([fetch(this.url).then(r => r.json()), ld('../foxgeese/i18n-fg.js?v=10'), ld('../foxgeese/i18n-fg-more.js?v=14')]).then(([d, a, b]) => {
         const w = { I18N: {} }; ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].forEach(l => { w.I18N[l] = {}; });
         for (const tx of [a, b]) { try { new Function('window', 'I18N', tx)(w, w.I18N); } catch (e) {} }
         this.I = w.I18N; d.levels = d.themes; return d;
@@ -905,8 +905,8 @@
      'aicoding-backgammon-pz-last', the daily 'aicoding-backgammon-v2-daily'. Texts: the game's i18n*.js (a sandbox). On the 3D table
      you always play the near side: a problem for the other side is turned round (the two halves of the position swapped — the
      plays are written in the mover's own numbering, so they stay as they are). Rules: backgammon/bg.js (window.BG, loaded by the table). ---------- */
-  const BG_TX = ['../backgammon/i18n.js?v=20261123m0', '../backgammon/i18n-x.js?v=20261111c8', '../backgammon/i18n-ls.js?v=20261107l14', '../backgammon/i18n-op.js?v=20261107l14', '../backgammon/i18n-teach.js?v=1', '../backgammon/i18n-ls2.js?v=2', '../backgammon/voice-dicepup-ja.js?v=3'];
-  const bgTexts = () => Promise.all(BG_TX.map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(L => { const w = {}; for (const tx of L) { try { new Function('window', 'var I18N = window.I18N || (window.I18N = {});\n' + tx.replace(/^\s*var I18N = window\.I18N = \{\};/m, ''))(w); } catch (e) { console.warn('[puzzles] backgammon texts', e); } } window.AtlasBgTeach = { name: w.BGTeachName, html: w.BGTeachHTML }; return w.I18N || {}; });
+  const BG_TX = ['../backgammon/i18n.js?v=20261123m0', '../backgammon/i18n-x.js?v=20261111c8', '../backgammon/i18n-ls.js?v=20261107l14', '../backgammon/i18n-op.js?v=20261107l14', '../backgammon/i18n-teach.js?v=1', '../backgammon/i18n-ls2.js?v=3', '../backgammon/voice-dicepup-ja.js?v=3'];
+  const bgTexts = () => Promise.all(BG_TX.map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(L => { const w = {}; for (const tx of L) { try { new Function('window', 'var I18N = window.I18N || (window.I18N = {});\n' + tx.replace(/^\s*var I18N = window\.I18N = \{\};/m, ''))(w); } catch (e) { console.warn('[puzzles] backgammon texts', e); } } window.AtlasBgTeach = { name: w.BGTeachName, html: w.BGTeachHTML }; window.AtlasBgChoice = w.BGChoice; return w.I18N || {}; });
   // the commentary engine (backgammon/explain.js: what a play is for) — after the rules (it reads window.BG when it loads)
   const bgScript = (src, test) => test() ? Promise.resolve() : new Promise(res => { const sc = document.createElement('script'); sc.src = src; sc.onload = sc.onerror = () => res(); document.head.appendChild(sc); });
   window.AtlasBgExplain = window.AtlasBgExplain || (() => bgScript('../backgammon/bg.js?v=20261115p', () => window.BG && BG.genPlays).then(() => bgScript('../backgammon/explain.js?v=20261115t', () => window.BGX && BGX.teach)));

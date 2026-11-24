@@ -2768,6 +2768,15 @@
       const d = F.five >= 0 ? D(F.five) : F.open4.length ? D(F.open4[0]) : F.fours.length ? D(F.fours[0]) : F.threes.length ? D(F.threes[0]) : F.twos.length ? D(F.twos[0]) : D(F.b3d);
       return { c: GOP.side(s), f: GOP.side(3 - s), d, d3: D(F.threes[0]), d4: D(F.fours[0]), dd: two, bd: D(F.b3d), da: D(F.adjS[0]), do: D(F.adjO[0]) };
     },
+    // (2026-11-24 第2期・担当B) a practice move's points = gomoku/app.js problemPoints (the game's sOfV: tanh(v / 900) × 0.85) — the 2D and
+    // the 3D score every move the same (⑨); the words below pick their tone by it (追39・追53)
+    pts(sc, u) {
+      const W = 90000, sv = v => v > W ? 0.95 : v < -W ? -0.95 : Math.tanh(v / 900) * 0.85;
+      const val = new Map(sc), best = Math.max(...sc.map(e => e[1])), mine = val.has(u) ? val.get(u) : Math.min(...sc.map(e => e[1])) - 200;
+      if (best > W) return mine > W ? 20 : 0;
+      if (mine >= best - 25) return 20;
+      return Math.max(0, Math.round(20 * (1 - (sv(best) - sv(mine)) / 0.4)));
+    },
     // the line's notes, by what the move does
     n: {
       win: ['{c}の{d}に5つ並んで勝ち！ ぼく、思わず踊っちゃう。', 'これで{d}に五つ！ 最後まできれいな攻めだったペン。', '{d}に5つそろった！ {c}の勝ちが決まったね。'],
@@ -2812,7 +2821,8 @@
     },
     good: ['そうそう、それ！', 'ばっちりだペン！', 'いい目をしてるね！', 'やったね！', 'すてきな一手！', 'さすが、きみ！', 'いいね、その点！', 'よく見つけたね！', '完璧だペン！', '上手だね！'],
     push: ['この調子で次もいこう！', 'その勢いで、どんどん行こう！', '次も楽しみだペン！', 'まだまだいけるペン！'],
-    soft: ['あと少し！', '大丈夫、', 'ドンマイ！', 'あと一歩！', 'いい線いってた！', '気にしないで！', '次はいけるペン！', 'よくある迷い方！', '今度は見えるはず！', 'いっしょに見てみよう。'],
+    soft: ['ここから覚えよう！', '大丈夫、', 'ドンマイ！', 'ひとつずつ確かめよう！', '見直してみよう！', '気にしないで！', '次はいけるペン！', 'よくある迷い方！', '今度は見えるはず！', 'いっしょに見てみよう。'],   // (追39・追53: no 「あと少し」「いい線」 — a verified problem's other moves score 12 or less)
+    near: /^(あと少し|あと一歩|いい線)/,
     why: {
       win: ['{d}に5つ並んで勝ち！ 最後の一手を見逃さなかったね。', '5つそろって{c}の勝ちだペン。'],
       b4: ['ここを空けると、{f}に5つ並べられて負けていた。だから四を止めるのが先なんだ。', '{f}の四を見落とさなかった！ 止めないと次の一手で負けだったペン。'],
@@ -2838,14 +2848,16 @@
       foe: ['{f}の石に{do}からつく点', '{f}の{do}の先をおさえる点'], none: ['石がのびのび働く点', '広く使える点'] },
     rs: ['緑の点は、{r}だったペン。', '緑に光っているのが{r}！', '緑の点こそ、{r}なんだ。', '正解の緑の点は{r}。', 'いちばんの手は緑の点、{r}だペン！'],
     miss: {
-      lose5: ['きみの手だと、{f}に次の一手で5つ並べられて負けちゃう！', 'そこだと{f}の四が残って、すぐに5つ並べられちゃうんだ。'],
-      loseW: ['きみの手だと、{f}に{how}を打たれて、もう止められない。', 'そこに打つと、{f}の{how}が決まって負けになっちゃうペン。'],
+      lose5: ['きみの手だと、{f}に次の一手で5つ並べられて負けちゃう！', 'そこだと{f}の四が残って、すぐに5つ並べられちゃうんだ。', 'その手だと{f}の四がそのまま。次に5つ並べられちゃうペン。', 'きみの点では、{f}の5つ並びを止められないんだ。'],
+      loseW: ['きみの手だと、{f}に{how}を打たれて、もう止められない。', 'そこに打つと、{f}の{how}が決まって負けになっちゃうペン。', 'きみの点では、{f}に{how}を作られて勝ちを決められちゃうペン。', 'その手のあと、{f}は{how}で勝ちに行ける。止める手がなくなっちゃうね。', '残念、そこだと{f}が{how}を打って勝ち切っちゃう。'],
       win: ['きみの手だと5つ並ばず、勝ちを逃しちゃう。', 'そこでは勝ちが決まらず、{f}に立て直されちゃうね。'],
       left3: ['きみの手だと{f}の三が残るから、次に達四を作られちゃうペン。', 'そこだと{f}の三がそのまま。達四になったら止められないね。'],
       stop: ['きみの手だと攻めがとぎれて、{f}に先手が回っちゃう。', '攻めの手を休むと、{f}が反撃の形を作り始めるペン。', 'そこだと三も四もできず、{f}に自由に打たれちゃうね。'],
       far: ['きみの点はほかの石から離れていて、どの並びにも関われないんだ。', 'きみの石はぽつんと離れていて、{f}の形を止められないペン。'],
       free: ['{f}の{bd}の並びを放っておくと、次に三を作られやすくなる。', 'きみの手だと{f}の{bd}の線がのびのび使えちゃう。', 'そこだと{f}の{bd}の石がつながったまま。次に三へ伸ばされちゃうペン。', '{bd}の線を空けたままだと、{f}の攻めの足場が残るんだ。'],
       lone: ['きみの手は自分の石とつながらないから、次の三につながらないペン。', 'きみの石は並びを作れず、攻めの足場にならないね。', 'そこだと{c}の石どうしが離れたまま。三を作るのに手数がかかっちゃう。'],
+      weak: ['きみの点だと緑の点の役目（{r}）が果たせないから、そのまま{f}の番になっちゃうペン。', 'そこでは緑の点の役目（{r}）が果たせないので、{f}に手番が回っちゃうんだ。', 'きみの点は{r}じゃないから、そのまま{f}の番になっちゃうね。', '緑の点の役目は{r}。きみの点だとそれができないから、一歩おくれるペン。', '大事なのは{r}。きみの点だとそこが空いたままになるから、{f}に先に使われるかもしれないペン。'],
+      same: ['きみの点も形は似ているけど、緑の点のほうが次の攻めにつながるから一歩リードなんだ。', 'きみの手も同じねらいだね。でも緑の点なら石がよく働くから、先の戦いがずっと楽になるペン。', 'ねらいは同じでも、緑の点のほうが先の展開が良くなるから、そっちが正解なんだ。', '似た形でも置き場所で先の戦いが変わるから、緑の点のほうがずっと戦いやすいペン。'],
       close: ['きみの手も悪くないけど、緑の点だと石がもっとよく働くペン。', 'きみの点でも戦えるけど、緑の点なら石が2つの役目をするから一歩リード！', 'きみの石も役に立つけど、緑の点に比べると次の三が作りにくいんだ。', 'そこでもすぐには負けないよ。でも緑の点なら、先の攻めがずっと楽になるペン。', 'きみの点はちょっと控えめ。緑の点のほうが、相手のじゃまと自分の形を一度に作れるから強いんだ。'],
     },
     how: { open4: '達四', '44': '四四', '43': '四三', five: '五' },
@@ -2882,13 +2894,14 @@
         if (d) { const x = best % 15, y = Math.floor(best / 15); ring = []; for (const gg of [1, -1]) for (let k = 1; k <= 4; k++) { const a = x + d[0] * k * gg, c = y + d[1] * k * gg; if (a < 0 || c < 0 || a > 14 || c > 14) break; const v = G.bd[c * 15 + a]; if (v === who) ring.push(c * 15 + a); else if (v !== 0) break; } } }
       const whyB = fill(P.pk(GOP.why[kb], 'w' + kb), VB), roleB = fill(P.pk(GOP.role[kb], 'r' + kb), VB);
       const pickWrong = u => u !== best && u != null && u >= 0 ? u : (sc.slice().sort((x, y) => x[1] - y[1])[0] || [])[0];
-      const goodO = P.open(GOP.good, i, 0), softO = P.open(GOP.soft, i, 5), push = i === 1 || i === 3 ? ' ' + P.pk(GOP.push, 'push') : '', rsT = P.pk(GOP.rs, 'rs');
+      const goodO = P.open(GOP.good, i, 0), push = i === 1 || i === 3 ? ' ' + P.pk(GOP.push, 'push') : '', rsT = P.pk(GOP.rs, 'rs');
       const mp = k => P.pk(GOP.miss[k], 'm' + k);
       return { ask: fill(P.pk(GOP.ask, 'ask'), { s: sd }), hintTx: fill(P.pk(hk, 'h' + hkey, t => ring.length || !/光って/.test(t)), VB), hint: ring,
         good: u => { const other = u != null && u !== best && val.has(u) && val.get(u) >= b[1] - 25;
           return goodO + ' ' + (other ? 'きみの手も、緑の点と同じくらい良い一手だね。緑の点は' + roleB + '。' : whyB) + push; },
-        ng: u0 => { const u = pickWrong(u0); if (u == null) return softO + ' ' + fill(rsT, { r: roleB });
-          const FU = GOP.fx(G, u, s), ku = GOP.kind(FU), V = Object.assign({}, VB);
+        ng: u0 => { const u = pickWrong(u0), pu = u == null ? 0 : GOP.pts(sc, u), softO = P.open(GOP.soft, i, 5);
+          if (u == null) return softO + ' ' + fill(rsT, { r: roleB });
+          const FU = GOP.fx(G, u, s), ku = GOP.kind(FU), V = Object.assign({ r: roleB }, VB);
           G.bd[u] = s; const mine5 = G.fivePts(s).length, o5 = G.fivePts(3 - s), ow = mine5 ? [] : G.winPt(3 - s); G.bd[u] = 0;
           let why;
           if (kb === 'win') why = mp('win');
@@ -2899,7 +2912,8 @@
           else if (!FU.near) why = mp('far');
           else if (FB.blk.length && !FU.blk.includes(FB.blk[0])) why = mp('free');
           else if (FB.twos.length && !FU.twos.length && ku !== 'three') why = mp('lone');
-          else why = mp('close');
+          else if (pu >= 10 && !(() => { G.bd[u] = s; const w = G.winPt(3 - s).length > 0 || !!G.vcf(3 - s, 6); G.bd[u] = 0; return w; })()) why = mp('close');   // (「悪くない」「すぐには負けない」: 10+ points and no win for the opponent after it — 追53)
+          else why = mp(ku === kb ? 'same' : 'weak');
           return softO + ' ' + fill(rsT, { r: roleB }) + '<br>' + fill(why, V); } };
     },
   };
@@ -3136,7 +3150,7 @@
     LKEY: 'aicoding-gomoku-lessons', OKEY: 'aicoding-gomoku-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261123'), getJ('../gomoku/openings.json?v=20261113'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261123'), getJ('../gomoku/openings.json?v=20261124v1'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] gomoku texts', e); } this.I = w.I18N || {}; this.data = { ls, op };
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
@@ -3173,7 +3187,7 @@
       const ja = lang === 'ja', hs = g.id.length * 7 + g.no;
       const PJ = ja ? GOP.mk(this.data.op.sets.indexOf(g)) : null;
       if (ja) Object.assign(notes, GOMOKU_OP_JA.notes(g, PJ));   // (2026-11-22 lesson loop: ゴイシペン tells every move — see GOP)
-      const probs = shuffle(g.problems || []).slice(0, 5);
+      const probs = g.verified ? (g.problems || []).slice(0, 5) : shuffle(g.problems || []).slice(0, 5);   // (2026-11-24 第2期・担当B: a verified pool is its 5, easy → hard — tools/lesson-verify-gmopen.js)
       return { id: g.id, title: this.name(g, lang), intro: this.tx('op.read', lang, { k: g.kanji, r: g.kana, n: g.name }) + '<br>' + this.tx('op.d.' + g.id, lang) + (ja ? '<br>ぼくといっしょに、この珠型の流れを1手ずつ見ていこう！' : ''), start: { start: null, rule: 'renju', me: 1, last: -1 },
         steps, notes, probs: probs.map((P, i) => { const sc = (P.sc || []).map(([u, v]) => [GSQ(u), v]), b = sc.slice().sort((a, c) => c[1] - a[1])[0];
           const o = { pos: gPos(P, { rule: 'renju' }), kind: 'best', P: { sc }, ask: this.tx('op.goal', lang), ans: b ? b[0] : -1 };
@@ -3182,13 +3196,7 @@
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[g.id] || { best: 0, pass: false }, pass = pts >= 75; pr[g.id] = { best: Math.max(o.best || 0, pts), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
     },
     points(P, u) {   // = gomoku/app.js problemPoints
-      if (P.sc && P.sc.length) {
-        const val = new Map(P.sc), best = Math.max(...P.sc.map(e => e[1])), mine = val.has(u) ? val.get(u) : Math.min(...P.sc.map(e => e[1])) - 200, WINT = 9000;
-        if (best > WINT) return mine > WINT ? 20 : 0;
-        if (mine >= best - 25) return 20;
-        const sv = v => 2 / (1 + Math.exp(-v / 200)) - 1;   // (≈ the game's sOfV)
-        return Math.max(0, Math.round(20 * (1 - (sv(best) - sv(mine)) / 0.4)));
-      }
+      if (P.sc && P.sc.length) return GOP.pts(P.sc, u);   // (2026-11-24 第2期: the game's own sOfV, as the 2D — was a sigmoid of v / 200 and WINT 9000)
       return (P.ok || []).includes(u) ? 20 : 0;
     },
     // the warm-up: its position, its marks, whether a move is right
@@ -4544,6 +4552,9 @@
       take: [`${o2}がまたダブルしてきた！ テイクする？ パスする？`, 'この局面でダブルされたら、受ける？ 降りる？', `さて、次はどうする？ ${c}はテイク？ それともパス？`],
     };
     const LQ = { race: '最後の1問ワン！ リードしてるのはどっち？', shots: '最後の1問！ 印のブロットに当たる目は何通り？', double: '最後の1問ワン！ ダブルするか、待つか、決めてみて。', take: '最後の1問ワン！ テイクかパスか、決めてみて。' };
+    // (2026-11-24 担当A, 追7: the shots words from the board — the sums only when a sum reaches, two shooters, a blocked roll)
+    const sep = '・', dsD = (v.ds || []).filter(d => d <= 6), many = (v.ds || []).length > 1;
+    if (q === 'shots' && v.ds) AQ.shots = AQ.shots.filter(t => v.cn || !/足し算/.test(t));
     if (pi > 0 && AQ[q]) p.ask = last ? LQ[q] : V.v('ask:' + q, AQ[q]); V.mark(p.ask);
     const HQ = {
       race: ['いちばん奥の駒から順に、ゴールまでの残りを足してみて！', 'ゴールまでの残りマス × 駒の数を、ポイントごとに足していくワン。', '差が小さいときほど、ていねいに数えよう！'],
@@ -4551,14 +4562,32 @@
       double: ['勝つチャンスがどれくらいか、局面を見て考えてみて！', 'ダブルは「十分有利、でも相手がまだ受けられる」くらいがちょうどいいワン。', '有利すぎるなら、ダブルせずにギャモンをねらう手もあるワン。', '相手が受けたくなるか、降りたくなるか、相手の立場で考えてみよう！'],
       take: ['ギャモン負けが多いと、テイクは危なくなるワン。', 'パスなら1点、テイクして負ければ2点。どっちの損が小さいかな？', '相手のインナーの強さや、閉じ込められた駒の数も見てみて！', '勝ち目が4回に1回より多くありそうか、考えてみて。', 'ピップの差と、相手の壁の強さを見くらべてみよう！', 'もし受けたら、どれくらい逆転のチャンスがあるかな？'],
     };
+    if (q === 'shots' && v.ds) HQ.shots = ['36通りのうち、印のブロットに当たる目を1つずつ数えてみよう！'].concat(
+      !many && dsD.length ? [`いちばん近い相手の駒からブロットまで${v.d}つ。${v.d}が出る目だけで11通りはあるワン。`] : [],
+      many ? ['ブロットをねらえる相手の駒がいくつもあるね。同じ目で2つの駒が当てられても、1通りと数えよう。'] : [],
+      v.cn ? ['2つの目の合計やゾロ目で届く組み合わせも数えてね。'] : [],
+      v.bn ? ['途中にきみのポイントがあると、そこに止まる足し算の目は届かないワン。'] : []);
     const h0 = p.hintTx;
     p.hintTx = bgFin(V, pi === 0 && h0 && V.free(h0) && (q !== 'double' || sid === 'racecube') ? V.mark(h0) : HQ[q] ? V.v('h:' + q, HQ[q], bgEndLast(p.ask)) : h0, bgEndLast(p.ask));
     const pc = x => Math.round(+x || 0), lose = pc(v.l);
+    const shDir = () => { const D = dsD.join(sep); return !v.dn ? '' : V.v('sh:dir', dsD.length > 1
+      ? [`${D}のどれかが出る目は${v.dn}通り`, `${D}が1つでも入った目は${v.dn}通り`, `直接当たる${D}の目を数えると${v.dn}通り`, `${D}を含む組み合わせは${v.dn}通り`]
+      : [`${D}が出る目は${v.dn}通り`, `${D}が1つでも入った目は${v.dn}通り`, `直接当たる${D}の目を数えると${v.dn}通り`, `${D}を含む組み合わせは${v.dn}通り`]); };
+    const shSum = () => { const cl = (v.cl || []).join(sep); return V.v('sh:sum', [`そこに足し算・ゾロ目の${cl}が届いて${v.cn}通り`, `足し算・ゾロ目の${cl}でも届いて${v.cn}通り`, `目の合計で届く${cl}を加えて${v.cn}通り`, `${cl}は2つの目の合計で届くから、さらに${v.cn}通り`]); };
+    const shBlk = () => { const bl = (v.bl || []).join(sep); return V.v('sh:blk', [`${bl}は、止まるマスがきみのポイントでふさがって届かないね。`, `${bl}だけは、途中のきみのポイントに止まれないから当たらないんだ。`, `${bl}は、とちゅうで止まるところに、きみの駒が2枚以上いるから届かないワン。`, `ただし${bl}は、きみのポイントが通せんぼして当たらないんだ。`]); };
+    // the count from its parts (qv: backgammon/tools/shots_facts.js — checked by tools/lesson-verify-bg.js)
+    const shCore = pct => {
+      const dir = shDir();
+      let t = v.cn ? (dir ? `${dir}、` : '') + shSum() + `、合わせて${v.n}通り` : dir;
+      t += pct ? V.v('sh:p', [`。36通りのうち約${v.p}%で当たるんだ。`, `、約${v.p}%で当たるワン。`, `だから、当たるのは約${v.p}%なんだ。`, `。確率にすると約${v.p}%だね。`]) : '。';
+      if (v.bn) t += shBlk();
+      return t;
+    };
     const why = () => {
       if (q === 'race') { const d = Math.abs(v.a - v.b), L = v.a < v.b ? c : o2;
         return d ? V.v('w:race', [`ピップは${c}が${v.a}、${o2}が${v.b}。${L}が${d}ピップ少ない、つまりリードしてるんだ。`, `数えると${c}は${v.a}、${o2}は${v.b}ピップ。差の${d}ピップぶん、${L}が先を行ってるワン。`, `${L}のほうがゴールまで${d}ピップ近いね。${c}${v.a}、${o2}${v.b}で比べたとおり！`])
           : V.v('w:race0', [`どっちも${v.a}ピップで同じ。こういうときは、先にサイコロを振れる側がちょっと有利なんだ。`, `${v.a}ピップどうしの横並び！ 自分の番の側が少しだけ得ワン。`]); }
-      if (q === 'shots') return V.v('w:shots', [`ブロットまでの距離は${v.d}。直接の目と足し算の目を合わせて${v.n}通り、約${v.p}%で当たるんだ。`, `距離${v.d}のブロットに当たる目は${v.n}通り。36通りのうち約${v.p}%ワン。`, `直接の目に足し算の目も加えて、ちょうど${v.n}通り。距離${v.d}なら約${v.p}%で当たるね。`, `距離は${v.d}。数えると${v.n}通りだから、当たるのは約${v.p}%なんだ。`]);
+      if (q === 'shots') return v.ds ? shCore(true) : V.v('w:shots', [`ブロットまでの距離は${v.d}。直接の目と足し算の目を合わせて${v.n}通り、約${v.p}%で当たるんだ。`, `距離${v.d}のブロットに当たる目は${v.n}通り。36通りのうち約${v.p}%ワン。`, `直接の目に足し算の目も加えて、ちょうど${v.n}通り。距離${v.d}なら約${v.p}%で当たるね。`, `距離は${v.d}。数えると${v.n}通りだから、当たるのは約${v.p}%なんだ。`]);
       const w = P.why, p0 = v.p;
       if (w === 'nd') return V.v('w:nd', [`勝つチャンスは約${p0}%。まだダブルには早いから、待つのがいちばんなんだ。`, `約${p0}%なら、まだ様子見ワン。キューブは手元に置いておこう！`, `勝ち目は約${p0}%。もう少し有利になってからダブルしても遅くないね。`]);
       if (w === 'dt') return V.v('w:dt', [`勝つチャンスは約${p0}%。ダブルするならここ！ でも相手はまだテイクできる局面なんだ。`, `約${p0}%まで来たら、ダブルのタイミングワン！ 相手はまだ受けて戦えるね。`, `勝ち目は約${p0}%。相手がテイクしたくなる、ちょうどいいダブルなんだ。`]);
@@ -4580,6 +4609,17 @@
         const pre = k === ka ? V.v('n:race1', ['リードしてる側は合ってるワン。でも差の数がちがうね。', '先を行ってる側は正解！ 差の数だけずれちゃったね。']) : lead ? V.v('n:race2', [`正解は${lead}のリードワン。`, `先を行ってるのは${lead}のほうなんだ。`, `リードしてるのは${lead}だったね。`]) : '実は、どっちも同じピップなんだ。';
         const why2 = V.v('n:race3', ['見た目の駒の数だと、ゴールまでの残りの差を見落としちゃうからね。1枚ずつ足して比べるのがコツ！', '駒の数より、1枚ずつの残りの道のりを足すと、差がはっきりするワン。', '奥にいる駒ほどピップが大きいから、そこを数えもらすと差が変わっちゃうんだ。']);
         return bgFin(V, S + pre + `数えると${c}が${v.a}、${o2}が${v.b}` + (v.a === v.b ? 'で同じ。' : `で、差は${Math.abs(v.a - v.b)}ピップ。`) + why2, '!');
+      }
+      if (q === 'shots' && v.ds) {   // (2026-11-24 担当A, 追22: what the chosen count overlooks — the same kinds as the 2D, backgammon/i18n-ls2.js BGChoice)
+        const K = window.AtlasBgChoice ? AtlasBgChoice.kind(P, i) : (n < v.n ? 'low' : 'high'), d = Math.abs(v.n - n);
+        const T1 = { 1: 11, 2: 12, 3: 14, 4: 15, 5: 15, 6: 17, 7: 6, 8: 6, 9: 5, 10: 3, 11: 2, 12: 3 }, sl = (v.ds || []).map(x => `距離${x}で${T1[x] || 0}通り`).join(sep);
+        const D = dsD.join(sep);
+        const X = K === 'direct' ? `${n}通りは、直接当たる目だけの数ワン。足し算・ゾロ目の${(v.cl || []).join(sep)}でも届くから、${v.cn}通り増えて${v.n}通りになるんだ。`
+          : K === 'block' ? `${n}通りは、届かない目まで数えちゃったね。` + shBlk()
+          : K === 'dup' ? `${n}通りは、駒ごとの数（${sl}）を足した数。同じ目で2つの駒が当てられても、1通りと数えるんだ。` + `${D}のどれかが出る目を1つずつ数えると${v.n}通りワン。`
+          : K === 'low' ? V.v('n:shl', [`${n}通りだと、${d}通り足りないね。`, `${n}通りでは、まだ数え足りないワン。`, `${n}通りは少なめ。見落とした目があるから、${d}通り足りないんだ。`, `${n}通りだと、${d}通りぶん見落としてるね。`, `惜しい！ 数えもれがあると${n}通りになっちゃう。本当は${d}通り多いんだ。`]) + shCore(false)
+          : V.v('n:shh', [`${n}通りだと、${d}通り多すぎるね。`, `${n}通りは、当たらない目まで数えたから多すぎワン。`, `数えすぎると${n}通りになっちゃう。実際は${d}通り少ないんだ。`, `${n}通りでは、当たらない目まで入ってるね。`, `${d}通りぶん数えすぎだから、${n}通りにはならないね。`]) + shCore(false);
+        return bgFin(V, S + `正解は${v.n}通り。` + X, '!');
       }
       if (q === 'shots') return bgFin(V, S + `正解は${v.n}通り。` + V.v('n:shd', [`距離${v.d}のブロットだね。`, `ブロットまでは${v.d}つ。`, `相手の駒からブロットまで${v.d}つの距離ワン。`]) + (n < v.n ? V.v('n:sh1', ['直接の目だけじゃなく、2つの目の合計やゾロ目でも届くから、そのぶん増えるんだ。', '足し算の目やゾロ目も数えると、当たる目はもっと多くなるワン。', '直接の目だけだと少なくなっちゃう。合計で届く目も足すと答えになるね。', 'ゾロ目は4回動けるから、思ったより遠くまで届くんだ。', '2つの目の合計で止まれる組み合わせ、数えもれがあったかも？ そこを足すと答えになるワン。', '片方の目だけで届く目に、合計で届く目を加えると、数がそろうね。']) : V.v('n:sh2', ['途中にきみのポイントがあると、相手の足し算の目は届かないから、そのぶん減るんだ。', '少し数えすぎだね。ふさがった道を通る目は届かないから、数から引くワン。', '同じ組み合わせを二度数えていないかな？ 1通りずつ数えると答えになるね。', '合計で届く目でも、途中で止まる場所がふさがっていたら当たらないんだ。', '遠い組み合わせを入れすぎたかも？ 届かない目を引くと答えになるワン。'])), '!');
       const w = P.why, A = { nd: 'ノーダブル', dt: 'ダブル（相手はテイク）', dp: 'ダブル（相手はパス）', tg: 'ノーダブル', take: 'テイク', pass: 'パス' };
@@ -4617,7 +4657,7 @@
         const pre = k === ka ? 'リードしてる側は合ってるワン。でも差の数がちがうね。' : lead ? `リードしてるのは${lead}のほうワン。` : '実は、どっちも同じピップなんだ。';
         return pre + `数えると${c}が${v.a}、${o2}が${v.b}` + (v.a === v.b ? 'で同じ。' : `で、差は${Math.abs(v.a - v.b)}ピップ。`) + '見た目の駒の数だと、ゴールまでの残りの差を見落としちゃうからね。1枚ずつ足して比べるのがコツ！';
       }
-      if (P.q === 'shots') return `正解は${v.n}通りワン。` + (n < v.n ? '数えもれがあるね。直接の目だけじゃなく、2つの目の合計やゾロ目でも届くから、そのぶん増えるんだ。' : '少し数えすぎだね。途中が相手のポイントでふさがると、足し算の目は届かないから、そのぶん減るんだ。') + `ブロットまでの距離は${v.d}。`;
+      if (P.q === 'shots') return `正解は${v.n}通りワン。` + (n < v.n ? '数えもれがあるね。直接の目だけじゃなく、2つの目の合計やゾロ目でも届くから、そのぶん増えるんだ。' : '少し数えすぎだね。途中がきみのポイントでふさがると、足し算の目は届かないから、そのぶん減るんだ。') + `ブロットまでの距離は${v.d}。`;
       const w = P.why, A = { nd: 'ノーダブル', dt: 'ダブル（相手はテイク）', dp: 'ダブル（相手はパス）', tg: 'ノーダブル', take: 'テイク', pass: 'パス' };
       let x = '';
       if (w === 'nd') x = 'ここでダブルするのは早すぎるワン。相手にキューブを渡すと、2倍の点で逆転されるチャンスをあげちゃうんだ。';
@@ -4635,7 +4675,7 @@
       if (this.p) return this.p;
       const tx = window.AtlasBgTexts ? AtlasBgTexts() : Promise.resolve({});
       const bg = window.AtlasBgExplain ? AtlasBgExplain() : Promise.resolve();   // (the rules and the commentary engine: atlas/puzzles.js loads them — the same files and cache keys as the table)
-      return (this.p = Promise.all([getJ('../backgammon/lessons.json?v=30261123m0'), getJ('../backgammon/openings.json?v=20261021op'), tx, bg, getJ('../backgammon/ramps.json?v=3').catch(() => null)])
+      return (this.p = Promise.all([getJ('../backgammon/lessons.json?v=30261124a1'), getJ('../backgammon/openings.json?v=20261021op'), tx, bg, getJ('../backgammon/ramps.json?v=3').catch(() => null)])
         .then(([ls, op, I, _, rp]) => { this.I = I || {}; this.data = { ls, op, rp }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -4705,12 +4745,14 @@
             try { this.teachJaV(o, V, pi, last, pi === 0 ? T('hint') : ''); } catch (e) { o.hintTx = T('hint'); }
             return o;
           }
-          const qv = Object.assign({}, N, P.qv || {}); if (P.q === 'shots') qv.m = this.tx('ls.why.shotsD', lang, { d: (P.qv || {}).d });
+          const qv = Object.assign({}, N, P.qv || {}), C = window.AtlasBgChoice, tr = (k, v) => this.tx(k, lang, v);
+          if (P.q === 'shots') qv.m = C && (P.qv || {}).ds ? C.shotsWhy(P, tr, qv) : this.tx('ls.why.shotsD', lang, { d: (P.qv || {}).d });   // (2026-11-24 担当A: the count from its parts)
           const o = { pos: { bg: { pos, dice: null } }, kind: 'choice', P, ask: this.tx('ls.q.' + P.q, lang, qv), hintTx: P.q === 'take' ? this.tx('ls.takepoint.hint', lang) : P.q === 'double' ? this.tx('ls.racecube.hint', lang) : T('hint'), ans: [],
             marks: (P.mk || []).map(([sd, pt, c]) => ({ pt: (sd ^ P.side) === 0 ? pt : 25 - pt, cls: c === 'ok' ? 'ok' : 'hl' })),
             choices: P.opts.map(o => { const [ok, on] = Array.isArray(o) ? o : [o]; return this.tx('ls.opt.' + ok, lang, Object.assign({}, qv, { n: on })) || ok; }), right: P.ans,
             why: this.tx('ls.why.' + (P.why || P.q), lang, qv) };
           if (ja) { bgChJaV(o, N, V, pi, last, s.id); o.why = ''; }
+          else if (C && (P.q === 'shots' || P.q === 'race')) { const W = o.why; o.good = () => W; o.ng = u => { const x = C.ng(P, typeof u === 'number' && u !== P.ans ? u : P.opts.findIndex((_, i) => i !== P.ans), tr, qv); return (x ? x + ' ' : '') + W; }; o.why = ''; }   // (追22: what the wrong choice overlooks, in every language)
           return o;
         }),
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, pass: false }, pass = pts >= 75; pr[s.id] = { best: Math.max(o.best || 0, pts), pass: o.pass || pass }; put(this.LKEY, pr); return pass; } };
@@ -6971,7 +7013,11 @@
   const PATOLLI = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsPatolli) return res(); const sc = document.createElement('script'); sc.src = 'ls-patolli.js?v=1'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsPatolli.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
-  const DATA = { ur: UR, senet: SENET, patolli: PATOLLI, dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, janggi: JANGGI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
+  /* fox and geese (2026-11-24 担当C): the data, ドミダック's words and the board facts are in atlas/ls-foxgeese.js (loaded the first time) */
+  const FOXGEESE = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsFoxgeese) return res(); const sc = document.createElement('script'); sc.src = 'ls-foxgeese.js?v=1'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+    .then(() => { const U = AtlasLsFoxgeese.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
+    .catch(e => { this.p = null; throw e; })); } };
+  const DATA = { ur: UR, senet: SENET, patolli: PATOLLI, foxgeese: FOXGEESE, dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, janggi: JANGGI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
 
   function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(lang), ncLoad(id)]).then(() => D.list(kind, lang)); }
   function next(id, kind, lang) { return list(id, kind, lang).then(L2 => { const x = L2.find(i => !i.full && i.st !== 'pass') || L2.find(i => !i.full); return x ? x.key : null; }); }
@@ -7081,7 +7127,7 @@
             pz: Object.assign({ lesson: true, fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: () => id === 'reversi' && phase !== 'ramp' && !(phase === 'prob' && cur && cur.k >= RV_NUMS()), ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
           ctx.Table3D.play(true);
         } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks, lock: !!G.lock });
-        else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots')) pz().load(G.spec, G.me, { lock: !!G.lock });
+        else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots' || id === 'foxgeese')) pz().load(G.spec, G.me, { lock: !!G.lock });
         else if (G && id === 'mancala') pz().load(G.spec, G.me, { lock: !!G.lock, marks: G.marks });
         else if (G && id === 'connect4') pz().load(G.moves, G.me, { lock: !!G.lock });
         else if (G && id === 'backgammon') pz().load(G.bg);
@@ -7371,8 +7417,8 @@
           try { const q0 = bgDecP(p.bgPos), mk = mv => { const q = q0.slice(); mv.forEach(c => BG.apply(q, 0, BG.mvFrom(c), BG.mvTo(c))); return { moves: mv, pos: q }; };
             teach = AtlasBgTeach.html(BGX.teach(q0, 0, mk(bgCodes(p.bgPos, p.best()).moves), pts >= 20 ? null : mk(u.steps)), (k, v) => D.tx(k, ctx.lang, v), false, true); } catch (e) { console.warn(e); }
         }
-        const own = p.kind === 'bgplay' && typeof p.ng === 'function' && u && u.steps, chJa = p.kind === 'choice' && typeof p.ng === 'function';   // (ダイスン names the green play / the answer himself: the head stays short; p.ownHead (the lessons in bgVoice): his own praise / soft words open it, no head)
-        say(`${p.ownHead && (own || chJa) ? '' : chJa ? (right ? '' : 'おしい！') : right ? (own && pts >= 16 ? '' : line('solved') || pick(X.good)) : own ? String(pts > 0 ? X.partial : X.wrong).replace(/([！!]).*$/, '$1') : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (p.why ? '<br>' + p.why : '') + teach);
+        const own = p.kind === 'bgplay' && typeof p.ng === 'function' && u && u.steps, chJa = p.kind === 'choice' && typeof p.ng === 'function' && ctx.lang === 'ja';   /* (2026-11-24: the other languages' choice words (AtlasBgChoice) keep their own head, not 「おしい！」) */   // (ダイスン names the green play / the answer himself: the head stays short; p.ownHead (the lessons in bgVoice): his own praise / soft words open it, no head)
+        say(`${p.ownHead && (own || chJa) ? '' : chJa ? (right ? '' : 'おしい！') : right ? (own && pts >= 16 ? '' : line('solved') || pick(X.good)) : own || p.kind === 'choice' ? String(pts > 0 ? X.partial : X.wrong).replace(/([！!]).*$/, '$1') : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (p.why ? '<br>' + p.why : '') + teach);
         try { chime(right); } catch (e) {}
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
@@ -7407,11 +7453,11 @@
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;
       }
-      if ((id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
+      if ((id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots' || id === 'foxgeese') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
         const right = pts >= 16, k = cur.k;   // (p.own: the guide names the green arrow herself — the heading is only 「おしい！」)
         say(`${right ? (p.own && (id === 'morris' || id === 'janggi' || p.ckls) ? '' : line('solved') || pick(X.good)) : p.own ? (pts >= 10 ? 'いい線いってる！' : 'おしい！') : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
         try { chime(right); } catch (e) {}
-        later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark([...(right || p.ans == null ? [] : [[{ m: p.ans }, 'ok']]), [{ m: u }, right ? 'ok' : 'ng']]); }, 900);
+        later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark([...(right || p.ans == null ? [] : [[{ m: p.ans }, 'ok']]), [{ m: u }, right ? 'ok' : 'ng'], ...(!right && p._rp != null ? [[{ m: p._rp }, 'hl']] : [])]); }, 900);   // (foxgeese: the geese's covering step gold, p._rp)
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;
