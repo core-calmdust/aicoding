@@ -479,9 +479,10 @@
   async function prologue() {
     S.phase = 'prologue'; hud(); setCast([]);
     SND.windOn(.05);
+    let rung = false;
     for (const pg of st.text.prologue) {
       setScene(pg.bg || st.locs[0].id, pg.night);
-      if (pg.night) SND.bell(.5);   // the recording rings twice by itself
+      if (pg.night && !rung) { rung = true; SND.bell(.5); }   // once only: the recording rings twice by itself (night pages in a row must not ring it again)
       if (pg.cast) {
         const ids = S.people.filter(p => !p.isPlayer).map(p => p.id);
         await say([{ text: fill(pg.t, ctxVars()) }]);
