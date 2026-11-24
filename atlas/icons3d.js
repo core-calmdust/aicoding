@@ -923,6 +923,40 @@
       g0.add(at(card(M({ map: faceTex('9h', '9', 1), roughness: .35 })), -.3, .15, .55, 0, .12, 0));
       return g0;
     },
+    guandan() {   // a jade felt with a gold border: a bomb (four 5s fanned out), the big joker on top and a gold ★ token (the wild card)
+      const g0 = new T.Group();
+      const feltTex = X.canvasTex('ic-gdf', 512, 512, (c, W) => {
+        const r = 40; c.beginPath(); c.moveTo(r, 0); c.arcTo(W, 0, W, W, r); c.arcTo(W, W, 0, W, r); c.arcTo(0, W, 0, 0, r); c.arcTo(0, 0, W, 0, r); c.closePath();
+        const gr = c.createRadialGradient(W * .5, W * .4, 20, W * .5, W * .5, W * .75); gr.addColorStop(0, '#2f9a74'); gr.addColorStop(1, '#0b3a2b'); c.fillStyle = gr; c.fill();
+        c.strokeStyle = '#e3bf6a'; c.lineWidth = 6; c.save(); c.translate(16, 16); c.scale((W - 32) / W, (W - 32) / W); c.stroke(); c.restore();
+        c.strokeStyle = 'rgba(227,191,106,.45)'; c.lineWidth = 3; c.save(); c.translate(30, 30); c.scale((W - 60) / W, (W - 60) / W); c.stroke(); c.restore();
+      });
+      const top = mesh(new T.PlaneGeometry(3.86, 3.86), M({ map: feltTex, transparent: true, roughness: .85 })); top.rotation.x = -Math.PI / 2; top.position.y = .006; top.receiveShadow = true; g0.add(top);
+      const faceTex = (k, r, su) => X.canvasTex('ic-gd' + k, 256, 352, (c, W, H) => {
+        c.fillStyle = '#fbf6ea'; c.fillRect(0, 0, W, H); const red = su === 1 || su === 2; c.fillStyle = red ? '#c0232e' : '#1f1f26';
+        c.font = 'bold 104px Georgia, serif'; c.textBaseline = 'top'; c.textAlign = 'center'; c.fillText(r, 50, 10);
+        c.font = '78px serif'; c.fillText('♠♥♦♣'[su], 50, 116);   // the corner index (rank + suit) stays visible in the fan
+        c.font = '200px serif'; c.textBaseline = 'middle'; c.fillText('♠♥♦♣'[su], W / 2 + 30, H * .64);
+      });
+      const jokerTex = X.canvasTex('ic-gdj', 256, 352, (c, W, H) => {   // the site's own joker: a red jester's star, JOKER down the side
+        c.fillStyle = '#fbf6ea'; c.fillRect(0, 0, W, H);
+        c.fillStyle = '#c8243a'; c.font = 'bold 46px Georgia, serif'; c.textAlign = 'center'; c.textBaseline = 'top';
+        'JOKER'.split('').forEach((ch, i) => c.fillText(ch, 34, 16 + i * 46));
+        const st = (x, y, R, rr, col) => { c.fillStyle = col; c.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, q = i % 2 ? rr : R; c.lineTo(x + q * Math.cos(a), y + q * Math.sin(a)); } c.closePath(); c.fill(); };
+        st(W * .6, H * .52, 88, 38, '#c8243a'); st(W * .6, H * .52, 50, 22, '#e3bf6a');
+      });
+      const edge = C(0xf3ead6, { roughness: .4 });
+      const card = (mt) => { const b = rbox(1.4, .12, 1.96, .12, edge); const f = mesh(new T.PlaneGeometry(1.26, 1.82), mt); f.rotation.x = -Math.PI / 2; f.position.y = .125; return grp(b, f); };
+      // the bomb: four 5s fanned out, each a little higher
+      [[0, 's'], [1, 'h'], [2, 'c'], [3, 'd']].forEach(([i, k]) => g0.add(at(card(M({ map: faceTex('5' + k, '5', i), roughness: .35 })), -1.05 + i * .5, i * .125, .55 - i * .12, 0, .3 - i * .2, 0)));
+      // the big joker laid over the back of the fan
+      g0.add(at(card(M({ map: jokerTex, roughness: .35 })), .75, .5, -.55, 0, -.62, 0));
+      // the wild card's ★ token (vermilion with a gold star)
+      const coin = puck(.62, .18, C(0xc8243a, { roughness: .3 }), .3); g0.add(at(coin, 1.4, 0, 1.4));
+      const starTex = X.canvasTex('ic-gds', 256, 256, (c, W) => { c.fillStyle = '#f2d283'; c.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, q = i % 2 ? 46 : 104; c.lineTo(W / 2 + q * Math.cos(a), W / 2 + q * Math.sin(a)); } c.closePath(); c.fill(); });
+      const sf = mesh(new T.CircleGeometry(.6, 40), M({ map: starTex, transparent: true, roughness: .3, metalness: .5 })); g0.add(at(sf, 1.4, .185, 1.4, -Math.PI / 2, 0, .3));
+      return g0;
+    },
     blackjack() {   // a deep-teal blackjack felt: ivory printed arcs and a gold betting circle, a blackjack (A♠ + K♥) and black / gold chip stacks
       const g0 = new T.Group();
       const feltTex = X.canvasTex('ic-bjf', 512, 512, (c, W) => {
@@ -1605,7 +1639,7 @@
   };
 
   // post-process: pieces onto the thick base; scenes without a board get a square plinth
-  const PLINTH = { random: [0x9a7cff, 3.9], connect4: [0x1f5ed9, 5.2], mancala: [0xb37540, 4.6], sudoku: [0xf4efe6, 3.9], speedsudoku: [0xfff0e2, 3.9], samegame: [0xf2eadb, 3.9], jailbreak: [0x3a3f4a, 3.9], solitaire: [0x22704a, 3.9], poker: [0x1f1f24, 3.9], baccarat: [0x3d0f1a, 3.9], blackjack: [0x0b3a3a, 3.9] };
+  const PLINTH = { random: [0x9a7cff, 3.9], connect4: [0x1f5ed9, 5.2], mancala: [0xb37540, 4.6], sudoku: [0xf4efe6, 3.9], speedsudoku: [0xfff0e2, 3.9], samegame: [0xf2eadb, 3.9], jailbreak: [0x3a3f4a, 3.9], solitaire: [0x22704a, 3.9], poker: [0x1f1f24, 3.9], baccarat: [0x3d0f1a, 3.9], guandan: [0x14553f, 3.9], blackjack: [0x0b3a3a, 3.9] };
   const FIX = {};
   Object.keys(ICONS).forEach(id => {
     FIX[id] = () => {
