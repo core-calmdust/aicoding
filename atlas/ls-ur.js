@@ -61,7 +61,7 @@
       },
       cheer: ['いいね！', 'ナイスだワン！', 'さすが！', 'お見事！', 'ばっちり！', 'その調子！', 'よく見つけた！', 'すごい！', 'やったね！', '上手！', '完璧！', 'いい目してるワン！'],
       push: ['次もこの調子でいこう！', 'どんどんいこう！', 'つぎも楽しみだワン！', 'その勢いで次へ！', 'まだまだいけるよ！'],
-      soft: ['おしい！', 'ドンマイ！', '大丈夫だワン！', 'あと一歩！', 'いい線！', '気にしない、気にしない！', '次はいけるワン！'],
+      soft: ['ドンマイ！', '大丈夫だワン！', 'いっしょに確かめよう！', '気にしない、気にしない！', '次はいけるワン！', 'ここで覚えちゃおう！', 'よくある見落としだワン！'],   /* 追67 (2026-11-24 担当C): said with a 0-point move — no 「おしい・あと一歩・いい線・あと少し」 (追66) */
       w: {
         'w.cap': ['相手の駒は<b>{k}マス</b>も進んでいたのに、スタートに逆戻り！', '取られた駒は振り出しから。<b>{k}マス</b>分がぜんぶ消えたワン。', 'ぴったり止まって取ったから、相手は<b>{k}マス</b>やり直しなんだ。', '<b>{k}マス目</b>まで来ていた駒をつかまえたよ。相手はまた最初から！', 'これで相手の<b>{k}マス</b>分が水のあわ。大きいね！'],
         'w.blitz': ['取ったうえに、ブリッツだから続けて振れるワン！', '相手の駒は<b>{k}マス</b>分をまるごと失って、きみはもう1回！', 'ブリッツの取りは2倍おいしい。追加の1振りに、相手はやり直しだね。', 'つかまえた駒は<b>{k}マス</b>進んでいたんだ。しかも続けて振れる！', '取ればもう一度。これがブリッツでいちばん強い手だね！'],
@@ -156,7 +156,7 @@
         return d.steps.map((s, i) => { const c = d.cats.find(x => x.steps.includes(s.id)) || {};
           return { key: String(i), cat: c.id || s.cat, catName: lang === 'ja' ? CAT[s.cat] || tx(c.name, lang) : tx(c.name, lang), title: tx(s.title, lang), sub: tx(s.tip, lang), svg: mini(s.diagram && s.diagram.s), st: pr[s.id] ? (pr[s.id].pass ? 'pass' : 'try') : '', full: false }; });
       },
-      msg(r, lang) { const t = r && this.data.msg[r[0]]; return t ? fill(tx(t, lang), r[1] || {}) : ''; },
+      msg(r, lang) { const t = r && this.data.msg[r[0]]; return t ? fill(tx(t, lang), Object.fromEntries(Object.entries(r[1] || {}).map(([k, v]) => [k, v && typeof v === 'object' ? tx(v, lang) : v]))) : ''; },   // (a value in 14 languages: the lead's option label)
       pos: (s, n, marks, lock, dn) => ({ ur: { s: s || EMPTY, n: n == null ? (dn == null ? null : dn) : n, marks: marks || [], lock: !!lock }, me: 1, dice: [n == null ? (dn == null ? -1 : dn) : n] }),   // (dice: the roll, as backgammon's — two problems with another roll are not the same problem)
       // the facts a Japanese line needs: how far the captured piece had come (its own track), the square the move lands on
       facts(q) {

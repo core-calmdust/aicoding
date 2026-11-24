@@ -2449,6 +2449,13 @@ function near53() { const src = require('fs').readFileSync(path.join(ROOT, 'atla
       if (!/pts >= 1\d \? $/.test(pre)) out.push({ step: 'lessons3d', q: 0, msg: `追66 the heading 「${m[1]}」 is not under pts >= 10 (…${pre})` }); } } }
   { const tx = src.slice(src.indexOf('  const TX = {'), src.indexOf('  const OPCAT = ')), NEAR = /おしい|いい線|あと少し|Close|Casi|Presque|Quase|Knapp|करीब|قريب|Почти|Hampir|Az kaldı|아깝/;
     for (const m of tx.matchAll(/wrong: '([^']*)'/g)) if (NEAR.test(m[1])) out.push({ step: 'lessons3d', q: 0, msg: `追66 the 0-point heading TX.wrong says the move was close 「${m[1]}」` }); }
+  // 追67 (2026-11-24 担当C): the games' own 3D lesson files (atlas/ls-<game>.js) open a wrong answer with a line from their `soft` list,
+  // and the 2D lessons (<game>/lessons.json ui.wrong) head it — both on a 0-point answer, so neither says the answer was close
+  { const fs = require('fs'), NEAR = /おしい|惜しい|いい線|あと少し|あと一歩|Close|Almost|Casi|Presque|Quase|Knapp|^Fast\b|लगभग|قريب|Почти|Hampir|Az kaldı|아깝|差一点|差一點/;
+    for (const f of fs.readdirSync(path.join(ROOT, 'atlas')).filter(f => /^ls-.*\.js$/.test(f))) { const t = fs.readFileSync(path.join(ROOT, 'atlas', f), 'utf8');
+      for (const m of t.matchAll(/\bsoft: \[([^\]]*)\]/g)) for (const w of m[1].matchAll(/'([^']*)'/g)) if (NEAR.test(w[1])) out.push({ step: f, q: 0, msg: `追67 the 0-point opener 「${w[1]}」 (soft) says the answer was close` }); }
+    for (const d of fs.readdirSync(ROOT)) { const f = path.join(ROOT, d, 'lessons.json'); if (!fs.existsSync(f)) continue; let D; try { D = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { continue; }
+      const w = D && D.ui && D.ui.wrong; if (!w) continue; for (const [l, v] of Object.entries(typeof w === 'string' ? { '-': w } : w)) if (NEAR.test(v)) out.push({ step: d + '/lessons.json', q: 0, msg: `追67 the 2D 0-point heading ui.wrong.${l} 「${v}」 says the answer was close` }); } }
   return out; }
 function xiangqiOpen(opt) {
   const fs = require('fs'), CU = require(path.join(ROOT, 'xiangqi/tools/op_curate.js')), E = require(path.join(ROOT, 'xiangqi/engine.js'));

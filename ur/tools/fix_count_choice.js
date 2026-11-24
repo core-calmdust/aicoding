@@ -145,7 +145,7 @@ function fixLead(q, Q) { const L = leadErrs(q.s), eq = (x, y) => x[0] === y[0] &
   const lab = ([w, v]) => { const o = {}; for (const l of LANGS) o[l] = (w === 0 ? Q.you : Q.rival)[l] + ' +' + v; return o; };
   q.opts = raw.map(lab); q.ans = raw.findIndex(r => eq(r, L.ans));
   q.why = [L.ans[0] === 0 ? 'c.lead2y' : 'c.lead2r', { a: L.a, b: L.b, d: L.ans[1] }];
-  q.ngo = raw.map(r => { if (eq(r, L.ans)) return null; const g = got.find(x => eq(x.v, r)); return [g.k, { x: lab(r).ja, a: L.a, b: L.b }]; });
+  q.ngo = raw.map(r => { if (eq(r, L.ans)) return null; const g = got.find(x => eq(x.v, r)); return [g.k, { x: lab(r), a: L.a, b: L.b }]; });   // (x: the option's label in 14 languages — the 2D / 3D words pick the player's language)
   q.hints = [pipHints(q.s.pos), H2L];
 }
 // 取られる確率の3問の局面（追54：誤りが盤にある局面に作り直す）
