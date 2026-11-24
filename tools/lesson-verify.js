@@ -2289,6 +2289,22 @@ function hex(opt) {
     // 追1: the other problems of the step are not the warm-up or its turn
     st.problems.slice(1).forEach((p, j) => { if (p.s.n === n && Math.min(dist(p.s.b, sp.b), dist(p.s.b, rev(sp.b))) <= 2 && (q.count(1) + q.count(2) > 1)) a(`追1 problem ${j + 2} is the warm-up's position (or its turn) within 2 cells`); });
   });
+  // 追71 (2026-11-25 担当A): ゴイシペン's praise in the lessons (hxLsJa good) for every legal move worth 16 points or more that is not
+  // the answer — 「満点・変わらない・同じくらい」 only for a 20-point move; a 16〜19-point move hears that the best is better (いちばん /
+  // the green mark / the swap), and the 3D board then marks the best green and yours gold (not yours green). 追72: the moves that count
+  // as right (16+ points) are at most a third of the legal moves.
+  { const vm = require('vm'), line = t => src.slice(src.indexOf(t)).split('\n')[0] + '\n', sl = (x, y) => src.slice(src.indexOf(x), src.indexOf(y));
+    const pa = src.indexOf('    points(P, m) {   // = hex/app.js problemPoints'), pts = src.slice(pa + 4, src.indexOf('    opening(key, lang) {', pa));
+    const X = vm.runInContext(line('  const fill = ') + line('  const shSeed = ') + line('  const shPerm = ') + line('  const HEX_WINT = ') + line('  const HXM = ') + sl('  const HXA = (() => {', '  const HEX = {') + 'const HX = {' + pts + '};\n;({ hxLsJa, HX })', vm.createContext({ window: { HexEngine: E }, console }));
+    const pl = t => plain(t).replace(/[\u0001\u0002]/g, '');
+    if (!/\(\(right && \(pts >= 20 \|\| p\.ans === u\)\) \|\| !cell\(p\.ans\) \? \[\] : \[\[p\.ans, 'ok'\]\]\)/.test(src) || !/right \? \(pts >= 20 \|\| p\.ans === u \|\| !cell\(p\.ans\) \? 'ok' : 'hl'\)/.test(src)) out.push({ step: '-', q: 0, msg: '追71 the 3D board after a right move worth 16〜19 points does not mark the best green and yours gold' });
+    L.steps.forEach(st => (st.problems || []).forEach((P, j) => { const q = E.Pos.from(P.s), legal = q.moves().filter(m => m !== 1023 || P.s.sw), W = X.hxLsJa(E, st, P, j, (Q, m) => X.HX.points(Q, m));
+      const pt = legal.map(m => [m, X.HX.points(P, m)]), right = pt.filter(e => e[1] >= 16).length, ans = P.ok ? P.ok[0] : P.best;
+      if (right * 3 > legal.length) out.push({ step: st.id, q: j + 1, msg: `追72 ${right} of ${legal.length} legal moves count as right` });
+      for (const [u, v] of pt) { if (v < 16 || u === ans) continue; const g = pl(W.good.call({}, u)), nm = u === 1023 ? 'swap' : E.nameOf(u, P.s.n);
+        if (/\{|undefined|NaN/.test(g)) out.push({ step: st.id, q: j + 1, msg: `⑧ ${nm}: the praise 「${g}」` });
+        if (v < 20 && /満点|変わらない|同じくらい/.test(g)) out.push({ step: st.id, q: j + 1, msg: `⑧ 追71 ${nm} worth ${v} praised as the best 「${g}」` });
+        if (v < 20 && !/いちばん|緑の印|スワップ/.test(g)) out.push({ step: st.id, q: j + 1, msg: `⑧ 追71 ${nm} worth ${v}: the praise does not name the better move 「${g}」` }); } })); }
   return out;
 }
 // (2026-11-24 担当D) janggi on the 3D table: the puzzles (all themes) — tools/lesson-verify-janggi.js
