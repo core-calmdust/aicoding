@@ -150,6 +150,16 @@ function stray42(PZ, add, W0) {
   for (const k of ['cap', 'esc', 'block', 'run', 'move', 'pass', 'reach', 'noreach']) if (!(OWN[k] || []).length) add('-', -1, `追42 no ショウギツネ words ${k}`);
   const PRAISE = /調子|いいね|いい手|すごい|お見事|やったね|さすが|Nice|Good|Great/;
   for (const k in OWN) for (const x of OWN[k]) { if (PRAISE.test(x)) add('-', -1, `追42/追20 praise after a move off the line: ${x}`); if (/(です|ます|ません|ました)(?=[。！？]|$)/.test(x)) add('-', -1, `ショウギツネ: polite 「${x}」`); }
+  // (追84, 2026-11-25 担当D) the 3D says OWN[k][j % length] with j rising by 1 for each move off the line: a class with fewer than 5
+  //  variants repeats its line within a theme's 5 puzzles (mate2: 「王手じゃなかったから、将は…」 twice). Every class but pass has 5+, no two
+  //  variants of the reply classes open the same way (the first clause), and each line gives a reason (lesson-quality.js REASON) — the
+  //  wrong move's bubble is the fact + reach / noreach, and a bare 「相手は{b}を動かしたね。」 + 「まだ残ってるコン」 said no why (ck5 q3).
+  const REASON = /(から|ので|ため|と、|と相手|ると|れば|なら|だと|では|せいで|取られ|負け|逃げ|防げ|止め|ふさ|残る|残っちゃ|できない|届かない|ならない|損)/, open1 = {};
+  for (const k of ['cap', 'esc', 'block', 'run', 'move', 'reach', 'noreach']) {
+    if ((OWN[k] || []).length < 5) add('-', -1, `追84 ショウギツネ ${k}: ${(OWN[k] || []).length} variants (< 5, a line repeats within a theme)`);
+    for (const x of OWN[k] || []) { if (!REASON.test(x)) add('-', -1, `追84 ${k} 「${x}」 gives no reason`);
+      if (k !== 'reach' && k !== 'noreach') { const o = x.split(/[、。！]/)[0]; if (open1[o]) add('-', -1, `追84 ${k} 「${x}」 opens as ${open1[o]} does (「${o}」)`); open1[o] = k; } }
+  }
   // the ja words must claim exactly the class's fact: cap = 取; esc = 逃; block = 防|止; run/move = 動か; reach = まだ|残って; noreach = もう|ない
   const CLAIM = { cap: /取/, esc: /逃/, block: /防|止/, run: /動|寄せ/, move: /動|回し/, pass: /パス/, reach: /まだ|残って/, noreach: /もう|なく|ない/ };
   const NEVER = { cap: /逃げ|防/, esc: /取られ|取った/, block: /取られ|取った|逃げ/, run: /取られ|取った/, move: /取られ|取った/, reach: /詰まなく|ない/, noreach: /まだ/ };

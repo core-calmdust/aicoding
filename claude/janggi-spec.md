@@ -162,5 +162,6 @@
 - 2D（janggi/app.js puzzleMove）：見出し pz.stray のあとに14言語の文（pzwhy.js の T）、応手を赤い矢印と点で表示。3D（atlas/puzzles.js jgStray）：ショウギツネの日本語（atlas/games/janggi-pz.js `AtlasJanggiPz.why.ja`、言い回しを順に）、ほかの言語は pzwhy.js。
 - 機械チェック：`node tools/lesson-verify.js janggi`（lesson-verify-janggi.js stray42：2手以上の全問×外れた初手×相手の全応手で分類を盤から数え直し、名指しする駒・14言語の文の穴・ショウギツネの文の語（取／逃／防・止／動か、まだ／もう）・ほめ言葉や丁寧語なし、各問の最初の外れた手の全応手でソルバーの reach／noreach、3D・2D がソルバーに残り手数で聞くこと）。`node tools/lesson-verify.js stray` でチャンギは pz.stray だけの一覧から外れる。
 - 外れた手・届かなかったときの文に近さ・ほめの語を入れない（2026-11-25 担当D、追78）：3D（atlas/games/janggi-pz.js）の out は「{n}手では詰みまで届かなかったね。」、reach の頭は「まだ大丈夫！」（以前は「あと少し」）。機械チェック：`node tools/lesson-verify.js near53`。
+- 応手の文の言い方（2026-11-25 担当D、追84）：3D のショウギツネの応手の文（AtlasJanggiPz.why.ja の cap・esc・block・run・move・reach・noreach）は各5通り以上（外れた手ごとに1つずつ進むので、1テーマの5問で同じ文が出ない）、頭の言い方はすべて別、どの文にも盤の理由（王手でなかったので相手が自由に指せた・取られた・王手を止めた・まだ詰む筋がある〈ソルバー〉）を入れる。盤で言い切れないこと（ひもがない・逃げ道が広がった・守りを固めた）は書かない。`node tools/lesson-verify.js janggi` が検出する。
 - 2D レッスンの終わりの見出し（2026-11-25 担当D、追82）：75点未満のとき、あと1問（20点）で合格（n + 20 ≥ 75）なら ls.failed「もう一息！」、それより下は ls.failedFar「今回は不合格です。もう一度どうぞ！」（14言語、janggi/i18n.js?v=7）。定跡の練習の見出しも同じ。
 
