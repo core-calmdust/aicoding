@@ -38,7 +38,7 @@
     { id: 'gallery', src: ['museum/gallery.js?v=147'], ready: () => !!window.AtlasGallery, render: (el, c) => AtlasGallery.render(el, c) },
     { id: 'paint', src: ['museum/paint-i18n.js?v=3', 'museum/paint.js?v=7'], ready: () => !!(window.AtlasPaint && window.MUSEUM_PAINT_T), render: (el, c) => AtlasPaint.render(el, c) },
     { id: 'read', src: ['museum/read-i18n.js?v=6', 'museum/read.js?v=11'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T), render: (el, c) => AtlasRead.render(el, c) },
-    { id: 'chance', src: ['museum/chance-i18n.js?v=3', 'museum/chance.js?v=4'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T), render: (el, c) => AtlasChance.render(el, c) },
+    { id: 'chance', src: ['museum/chance-i18n.js?v=3', 'museum/chance.js?v=5'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T), render: (el, c) => AtlasChance.render(el, c) },
   ];
   const KEY = 'atlas-museum-room';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -131,8 +131,9 @@
     ctx = c; lang = UI[c.lang] ? c.lang : 'en';
     if (host !== sec || !sec.querySelector('.murooms')) {
       host = sec;
-      sec.innerHTML = `<div class="muhead"><h2 class="h" id="muTtl"></h2><p class="musub" id="muSub"></p><button type="button" class="mupbtn" id="muPass" aria-expanded="false"></button></div>
-        <div class="mupass" id="muPassP"></div><div class="murooms" id="muRooms" role="tablist"></div><div class="mustage" id="muStage"></div>`;
+      // (2026-11-24) the whole museum on one sheet of paper: the skin shows round it, never behind its text
+      sec.innerHTML = `<div class="muwrap"><div class="muhead"><div class="mutt"><h2 class="h" id="muTtl"></h2><p class="musub" id="muSub"></p></div><button type="button" class="mupbtn" id="muPass" aria-expanded="false"></button></div>
+        <div class="mupass" id="muPassP"></div><div class="murooms" id="muRooms" role="tablist"></div><div class="mustage" id="muStage"></div></div>`;
       el = { rooms: sec.querySelector('#muRooms'), stage: sec.querySelector('#muStage'), pass: sec.querySelector('#muPassP'), pbtn: sec.querySelector('#muPass') };
       el.pbtn.onclick = () => passToggle();
     }
