@@ -18,7 +18,7 @@ const srv = http.createServer((q, r) => { const u = decodeURIComponent(q.url.spl
   if (!f.startsWith(ROOT)) { r.writeHead(403); return r.end(); }
   fs.readFile(f, (e, d) => { if (e) { r.writeHead(404); return r.end(); } r.writeHead(200, { 'Content-Type': MIME[path.extname(f)] || 'application/octet-stream' }); r.end(d); }); });
 
-const TIC = { ur: /ワン/, patolli: /ワン/, amazons: /ケロ/, shogi: /コン(?![ト-ヾ])/, xiangqi: /コン(?![ト-ヾ])/, janggi: /コン(?![ト-ヾ])/, backgammon: /ワン/, chess: /ピョン/, go: /ペン(?!ギ)/, gomoku: /ペン(?!ギ)/, hex: /ペン(?!ギ)/, checkers: /カニ/, foxgeese: /クワ/, konane: /カニ/ };const plain = s => String(s || '').replace(/<br\s*\/?>/g, '\n').replace(/<[^>]+>/g, '').trim();
+const TIC = { ur: /ワン/, patolli: /ワン/, amazons: /ケロ/, shogi: /コン(?![ト-ヾ])/, xiangqi: /コン(?![ト-ヾ])/, janggi: /コン(?![ト-ヾ])/, backgammon: /ワン/, chess: /ピョン/, go: /ペン(?!ギ)/, gomoku: /ペン(?!ギ)/, hex: /ペン(?!ギ)/, checkers: /カニ/, foxgeese: /クワ/, konane: /カニ/, ugolki: /ホー/ };const plain = s => String(s || '').replace(/<br\s*\/?>/g, '\n').replace(/<[^>]+>/g, '').trim();
 const sents = s => (plain(s).match(/[^。！？\n]+[。！？]+|[^。！？\n]+$/gm) || []).map(x => x.trim()).filter(Boolean);
 const end = sn => { const b = sn.replace(/[。！？!?]+$/, '').replace(/[）)」]+$/, ''); for (const e of ['なんだ', 'んだ', 'だよ', 'だね', 'よね', 'かな', 'よう', 'ろう', 'よ', 'ね']) if (b.endsWith(e)) return e === 'だよ' ? 'よ' : e === 'なんだ' ? 'んだ' : e === 'だね' ? 'ね' : e; return /[！？]$/.test(sn) ? sn.slice(-1) : 'x'; };
 const REASON = /(から|ので|ため|と、|と相手|ると|れば|なら|だと|では|せいで|取られ|負け|逃げ|防げ|止め|ふさ|残る|残っちゃ|できない|届かない|ならない|損)/;
@@ -197,6 +197,29 @@ function knPuzzleTexts() {
     return { key: T.id, title: T.id, intro: F.text('ja', 'hi', 0), ramp: [], probs };
   });
 }
+// (2026-11-24 担当D) the 3D ugolki puzzles: per theme as a player meets it (atlas/puzzles.js ugMoved with モリフク's words,
+//  atlas/games/ugolki-pz.js): the greeting + goal, the hints, after a right move the reply line (no praise on the way: the 詰め rule)
+//  and the cheer when solved, and for each of the first 5 puzzles the words after its first wrong move (the engine's duelReply, the
+//  fact why() names) — scored as a lesson; whose move from the puzzle (side 1 = 白 / 2 = 黒)
+function ugPuzzleTexts() {
+  const F = require(path.join(ROOT, 'atlas/games/ugolki-pz.js')), E = require(path.join(ROOT, 'ugolki/engine.js')), PZ = JSON.parse(fs.readFileSync(path.join(ROOT, 'ugolki/puzzles.json'), 'utf8'));
+  E.setRule('c33');
+  const name = c => c === 2 ? '黒' : '白';
+  return PZ.themes.map((T, ti) => {
+    const N = {}, tx = (k, v) => F.text('ja', k, ti * 2 + (N[k] = N[k] == null ? 0 : N[k] + 1) * (1 + Math.floor(ti / 5)), v);   // (= atlas/puzzles.js ugT: each line's variants in turn)
+    const probs = T.puzzles.slice(0, 5).map(P => {
+      const pos = E.Pos.from(P.s), me = pos.turn, n = P.n, good = E.duelGood(P.s, [], n, 'c33') || [];
+      const m = pos.moves().find(x => !good.includes(x)), q = pos.clone().play(m);
+      let ng;
+      if (n <= 1) ng = tx('last', F.why({ last: true, mid: q, me, E }).v);
+      else { const r = E.duelReply(q.spec(), [], n - 1, 'c33').move, z = q.clone().play(r), w = F.why({ mid: q, after: z, reply: r, left: n - 1, me, E }); const v = Object.assign({ c: name(me) }, w.v); if (w.k === 'over') v.w = tx(w.v.w === 'draw' ? 'wDraw' : 'wLose'); ng = tx(w.k, v); }
+      const ask = tx('goal', { n, c: name(me) }), hint = tx('pz.hint1', { n }) + ' ' + tx('pz.hintText');
+      const gd = (n > 1 ? tx('mid', { n: n - 1 }) + ' ' : '') + tx('solved');
+      return { ask, hint, good: gd, ng: ng + ' ' + tx('ans'), tw: P.s.side === 2 ? 2 : 1 };
+    });
+    return { key: T.id, title: T.id, intro: F.text('ja', 'hi', 0), ramp: [], probs };
+  });
+}
 // (2026-11-24 担当D, 追42) the 3D janggi mates: per theme of 2 moves or more, the goal, the hint, the praise after a right move and, for the
 //  first 5 puzzles, ショウギツネ's words after the first wrong (not taken back) move: the engine's reply and its fact (janggi/pzwhy.js,
 //  AtlasJanggiPz.why.ja as atlas/puzzles.js jgStray says it), with reach / noreach from the solver — scored as a lesson
@@ -262,6 +285,7 @@ function jgPuzzleTexts() {
   //  first 5 puzzles the words after its first wrong move (the reply the 3D plays, the fact why() names) — scored as a lesson
   if (!games.length || games.includes('foxgeese')) R['foxgeese/pz'] = fgPuzzleTexts();
   if (!games.length || games.includes('konane')) R['konane/pz'] = knPuzzleTexts();
+  if (!games.length || games.includes('ugolki')) R['ugolki/pz'] = ugPuzzleTexts();
   if (!games.length || games.includes('janggi')) try { R['janggi/pz'] = jgPuzzleTexts(); } catch (e) { R['janggi/pz'] = [{ err: String(e) }]; }
   const TN = R.__TN || {}; delete R.__TN; turnNames = TN;
   const rep = {}; let sum = 0, n = 0;

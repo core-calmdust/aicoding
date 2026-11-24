@@ -5,7 +5,7 @@
 (function () {
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles', PZ_LAST = STORE + '-pz-last', PZ_TAB = STORE + '-pz-tab', LS_CAT = STORE + '-ls-cat';
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=7').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=8').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LL = o => o == null ? '' : typeof o === 'string' ? o : (o[LANG] !== undefined ? o[LANG] : o.en !== undefined ? o.en : o.ja || '');
 const fill = (s, v) => String(s).replace(/\{(\w+)\}/g, (_, k) => v && v[k] !== undefined ? v[k] : '');
 const UI = (D, k, v) => fill(D && D.ui && D.ui[k] ? LL(D.ui[k]) : k, v);
@@ -68,7 +68,7 @@ function openRules(page) {
   try { localStorage.setItem('aicoding-senet-rules-seen', '1'); } catch (e) {}
   if (!window.SenetTour) { $('#rulesBody').innerHTML = `<p style="padding:20px;color:var(--muted)">${esc(t('ls.fail'))}</p>`; return; }
   SenetTour.open({ mount: '#rulesBody', lang: () => LANG, design: settings.design, pieces: settings.pieces, speed: SPD(), page: page,
-    onPlay: () => { closeRules(); openNewDialog(); }, onLessons: () => { closeRules(); openLessons(); }, onClose: () => closeRules(), sound: k => snd(k === 'move' ? 'place' : k) });
+    onPlay: () => { closeRules(); openNewDialog(); }, onClose: () => closeRules(), sound: k => snd(k === 'move' ? 'place' : k) });
 }
 function closeRules(quiet) { if (window.SenetTour) try { SenetTour.stop(); } catch (e) {} hideOverlay('#rulesOverlay'); }
 $('#btnRules').onclick = () => openRules();

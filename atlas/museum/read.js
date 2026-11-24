@@ -56,6 +56,13 @@
     { id: 'sudoku', region: 'asia', color: '#3a8a5a', cover: { g: 'sudoku', s: 'sudoku' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'sudokuRules' }, m1: { svg: 'sudokuSeventeen' }, m2: { svg: 'sudokuTimeline' } }, refs: ['Le Siècle (Paris), 19 November 1892; La France, 6 July 1895', 'Number Place, an American puzzle magazine (1979), attributed to Howard Garns', 'The Japanese puzzle magazine that named the puzzle “sudoku” (1984)', 'Gary McGuire, Bastian Tugemann, Gilles Civario, “There is no 16-Clue Sudoku: Solving the Sudoku Minimum Number of Clues Problem”, arXiv:1201.0749 (2012)', 'Bertram Felgenhauer, Frazer Jarvis, “Enumerating possible Sudoku grids” (2005)', 'Wikipedia, “Sudoku”'], links: [{ g: 'sudoku' }, { g: 'speedsudoku' }, { g: 'hitblow' }] },
     { id: 'shanghai', region: 'americas', color: '#1f6a4c', cover: { g: 'shanghai', s: 'shanghai' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'shanghaiFree' }, m1: { svg: 'shanghaiTurtle' }, m2: { svg: 'shanghaiTimeline' } }, refs: ['Brodie Lockard, “Mah-Jongg” on the PLATO system (1981)', 'A home-computer release of 1986 that spread the name “Shanghai”', 'An analysis of ten million deals of the turtle layout (about 3 % unsolvable), as cited by Wikipedia', 'Wikipedia, “Mahjong solitaire”, “Shisen-Sho”'], links: [{ g: 'shanghai' }, { g: 'solitaire' }, { g: 'sudoku' }] },
     { id: 'samegame', region: 'asia', color: '#e2672e', cover: { g: 'samegame', s: 'samegame' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'samegameGroup' }, m1: { svg: 'samegameScore' }, m2: { svg: 'samegameTimeline' } }, refs: ['Kuniaki Moribe, “Chain Shot!” (1985), distributed through a Japanese computer magazine', 'Eiji Fukumoto, “SameGame” for Unix (1992)', 'Matthias Schüssler, “Clickomania!” (1998)', 'Therese C. Biedl et al., “The Complexity of Clickomania” (2001)', 'Wikipedia, “SameGame”'], links: [{ g: 'samegame' }, { g: 'shanghai' }, { g: 'jailbreak' }] },
+    { id: 'cards', region: 'asia', color: '#8a2a3a', cover: { s: 'cards' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'cardsSuits' }, m1: { svg: 'cardsRoute' }, m2: { svg: 'cardsCourt' } }, refs: ['歐陽脩『歸田錄』（11世紀） / Ouyang Xiu, Guitian lu (11th c.), on the “leaf game”', 'L. A. Mayer, Mamluk Playing Cards, ed. R. Ettinghausen & O. Kurz (Leiden, 1971)', 'John of Rheinfelden, Tractatus de moribus et disciplina humanae conversationis (1377)', 'Michael Dummett, The Game of Tarot (1980)', 'David Parlett, The Oxford Guide to Card Games (1990)', 'Wikipedia, “Playing card”, “Mamluk playing cards”, “Karuta”, “Joker (playing card)”'], links: [{ g: 'poker' }, { g: 'solitaire' }, { g: 'blackjack' }] },
+    { id: 'machines', region: 'americas', color: '#2a4a6a', cover: { s: 'machines' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'machinesTimeline' }, m1: { svg: 'machinesTree' }, m2: { svg: 'machinesSolved' } }, refs: ['Claude E. Shannon, “Programming a Computer for Playing Chess”, Philosophical Magazine 41 (1950)', 'A. M. Turing, “Digital computers applied to games”, in B. V. Bowden (ed.), Faster than Thought (1953)', 'A. L. Samuel, “Some Studies in Machine Learning Using the Game of Checkers”, IBM Journal of Research and Development 3 (1959)', 'J. Schaeffer et al., “Checkers Is Solved”, Science 317 (2007)', 'M. Campbell, A. J. Hoane Jr., F. Hsu, “Deep Blue”, Artificial Intelligence 134 (2002)', 'D. Silver et al., “Mastering the game of Go with deep neural networks and tree search”, Nature 529 (2016)', 'D. Silver et al., “A general reinforcement learning algorithm that masters chess, shogi, and Go through self-play”, Science 362 (2018)', 'Wikipedia, “Mechanical Turk”, “El Ajedrecista”, “Computer chess”, “Solved game”, “Game complexity”'], links: [{ g: 'chess' }, { g: 'checkers' }, { g: 'go' }, { g: 'connect4' }] },
+    { id: 'graffiti', region: 'europe', color: '#6a6052', cover: { s: 'graffiti' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'graffitiMap' }, m1: { svg: 'graffitiBoards' }, m2: { svg: 'graffitiDating' } }, refs: ['CIL VIII 17938 (the board in the forum of Timgad: “venari lavari ludere ridere occest vivere”)', 'R. C. Bell, Board and Table Games from Many Civilizations (1960)', 'Friedrich Berger, “From circle and square to the image of the world: a possible interpretation for some petroglyphs of merels boards”, Rock Art Research 21 (2004)', 'Matthew Champion, Medieval Graffiti: The Lost Voices of England’s Churches (2015)', 'Anthea Hawdon, “Gaming up the walls”, Raking Light (talk at the Making Your Mark graffiti symposium, Southampton, 2019)', 'Wikipedia, “Basilica Julia”, “Nine men’s morris”, “Mancala”'], links: [{ g: 'morris' }, { g: 'mancala' }, { g: 'latrunculi' }] },
+    { id: 'bans', region: 'asia', color: '#7a2e3a', cover: { s: 'bans' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'bansTimeline' }, m1: { svg: 'bansWhy' }, m2: { svg: 'bansOutcome' } }, refs: ['『日本書紀』持統天皇三年十二月条 / Nihon Shoki, Jitō 3, 12th month', 'Louis IX of France, ordinance against gambling (1254)', 'Florence, the ban on playing cards (1377)', 'Diego Durán, Historia de las Indias de Nueva España e islas de la tierra firme (c. 1581)', 'The Tokugawa shogunate’s ban on Tenshō karuta (1633)', 'Ruhollah Khomeini, ruling on chess played without gambling (1988)', 'Roger Sharpe’s called shot before New York City Council members (April 1976)', 'Wikipedia, “History of chess”, “Karuta”, “Playing card”, “Pinball”'], links: [{ g: 'backgammon' }, { g: 'patolli' }, { g: 'solitaire' }] },
+    { id: 'pieces', region: 'europe', color: '#3a2a1e', cover: { s: 'pieces' }, mins: 3, sec: [{ ex: 'nishapur' }, { ex: 'lewis' }, null, null, null], figs: { m0: { svg: 'piecesEvolution' }, m1: { svg: 'piecesBishop' }, m2: { svg: 'piecesTimeline' } }, refs: ['The Metropolitan Museum of Art, chess set from Nishapur, Iran (12th century), 1971.193a–ff', 'British Museum, “The Lewis Chessmen” (1831,1101.78–159)', 'Design registration of 1 March 1849 to Nathaniel Cooke (Ornamental Designs Act 1842); Illustrated London News, 8 September 1849', 'H. J. R. Murray, A History of Chess (1913)', 'FIDE Handbook, Standards of Chess Equipment', 'Wikipedia, “Chess piece”, “Staunton chess set”'], links: [{ g: 'chess' }, { ex: 'lewis' }, { ex: 'nishapur' }, { g: 'shogi' }] },
+    { id: 'tombs', region: 'mea', color: '#5a4632', cover: { s: 'tombs' }, mins: 3, sec: [{ ex: 'ur' }, { ex: 'senet' }, { ex: 'liubo' }, null, { ex: 'shosoin' }], figs: { m0: { svg: 'tombsMap' }, m1: { svg: 'tombsWhy' }, m2: { svg: 'tombsTimeline' } }, refs: ['C. L. Woolley, Ur Excavations II: The Royal Cemetery (1934)', 'Book of the Dead, chapter 17; Griffith Institute, Tutankhamun: Anatomy of an Excavation', 'Hunan Museum, the liubo set from Mawangdui tomb 3', 'P. Crummy et al., Stanway: An Élite Burial Site at Camulodunum (2007)', 'N. Nicolaysen, The Viking-Ship Discovered at Gokstad in Norway (1882)', 'C. Hedenstierna-Jonson et al., “A female Viking warrior confirmed by genomics”, American Journal of Physical Anthropology 164 (2017)', '宮内庁正倉院事務所 / Shōsōin Office, Imperial Household Agency', 'Wikipedia, “Hnefatafl”, “Birka female Viking warrior”'], links: [{ g: 'ur' }, { g: 'senet' }, { g: 'latrunculi' }, { ex: 'liubo' }] },
+    { id: 'nim', region: 'americas', color: '#2a5a8a', cover: { s: 'nim' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'nimHeaps' }, m1: { svg: 'nimNimatron' }, m2: { svg: 'nimFamily' } }, refs: ['Charles L. Bouton, “Nim, a game with a complete mathematical theory”, Annals of Mathematics 3 (1901–02)', 'E. U. Condon, G. L. Tawney, W. A. Derr, US patent 2,215,544, “Machine to Play Game of Nim” (1940)', 'R. P. Sprague, “Über mathematische Kampfspiele”, Tohoku Mathematical Journal 41 (1935–36)', 'P. M. Grundy, “Mathematics and games”, Eureka 2 (1939)', 'John H. Conway, On Numbers and Games (1976)', 'E. R. Berlekamp, J. H. Conway, R. K. Guy, Winning Ways for your Mathematical Plays (1982)', 'Wikipedia, “Nim”, “Nimatron”, “Sprague–Grundy theorem”'], links: [{ g: 'dots' }, { g: 'amazons' }, { g: 'hex' }] },
   ];
   // pictures shown only beside a story's paragraph (not in another room): a museum's open-access photo (CC0), linked to the museum's page.
   // The name, in each language, is MUSEUM_READ_T[lang].pic[id]. Files images/atlas/museum-story/pic/<id>.webp (≤ 960 px).
@@ -1072,6 +1079,269 @@
         g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
         g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="${xn + 16}" y="${y + 20}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
       return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // playing-card suits through time (roughly corresponding columns): Mamluk cups, coins, swords, polo sticks → Latin cups, coins, swords, batons
+    // → German hearts, bells, leaves, acorns → French ♥ ♦ ♠ ♣ (c. 1480). Row names and dates: the story's figL.suits — [name, date]
+    cardsSuits: () => { const R = ((st('cards').figL || {}).suits) || [], W = 300, RH = 62, o = 6, H = o * 2 + RH * 4 - 8, X = [126, 170, 214, 258]; let g = '';
+      const ic = {
+        cup: (x, y, c) => `<path d="M${x - 10} ${y - 12}H${x + 10}Q${x + 10} ${y + 2} ${x} ${y + 3}Q${x - 10} ${y + 2} ${x - 10} ${y - 12}Z" fill="${c}" stroke="#6a4a10" stroke-width="1.2"/><rect x="${x - 1.6}" y="${y + 3}" width="3.2" height="7" fill="${c}"/><ellipse cx="${x}" cy="${y + 11}" rx="7" ry="2.6" fill="${c}" stroke="#6a4a10" stroke-width="1"/>`,
+        coin: (x, y, c) => `<circle cx="${x}" cy="${y}" r="12" fill="${c}" stroke="#6a4a10" stroke-width="1.2"/><circle cx="${x}" cy="${y}" r="7.5" fill="none" stroke="#6a4a10" stroke-width="1"/><circle cx="${x}" cy="${y}" r="2.4" fill="#6a4a10"/>`,
+        sword: (x, y, c) => `<path d="M${x} ${y - 14}L${x + 2.6} ${y - 10}V${y + 5}H${x - 2.6}V${y - 10}Z" fill="${c}" stroke="#2f3a44" stroke-width="1"/><rect x="${x - 8}" y="${y + 5}" width="16" height="3" rx="1.5" fill="#8a6a2a"/><rect x="${x - 1.8}" y="${y + 8}" width="3.6" height="6" fill="#5a3a1a"/><circle cx="${x}" cy="${y + 15}" r="2.2" fill="#8a6a2a"/>`,
+        polo: (x, y, c) => `<path d="M${x + 8} ${y - 14}L${x - 4} ${y + 9}Q${x - 6} ${y + 14} ${x - 12} ${y + 12}" fill="none" stroke="${c}" stroke-width="3.4" stroke-linecap="round"/><circle cx="${x + 9}" cy="${y + 9}" r="3.4" fill="#fff" stroke="#8a8478" stroke-width="1"/>`,
+        baton: (x, y, c) => `<path d="M${x - 7} ${y + 13}L${x + 6} ${y - 11}" stroke="${c}" stroke-width="6" stroke-linecap="round"/><circle cx="${x + 2}" cy="${y - 3}" r="2" fill="${c}"/><circle cx="${x - 3}" cy="${y + 5}" r="2" fill="${c}"/><circle cx="${x + 6.5}" cy="${y - 11}" r="4.2" fill="${c}"/>`,
+        heart: (x, y, c) => `<path d="M${x} ${y + 11}C${x - 15} ${y + 1} ${x - 11} ${y - 13} ${x} ${y - 5}C${x + 11} ${y - 13} ${x + 15} ${y + 1} ${x} ${y + 11}Z" fill="${c}"/>`,
+        bell: (x, y, c) => `<path d="M${x - 10} ${y + 6}Q${x - 10} ${y - 11} ${x} ${y - 11}Q${x + 10} ${y - 11} ${x + 10} ${y + 6}Z" fill="${c}" stroke="#7a5a10" stroke-width="1.2"/><path d="M${x - 10} ${y + 1}H${x + 10}" stroke="#7a5a10" stroke-width="1"/><circle cx="${x}" cy="${y + 8}" r="3" fill="#7a5a10"/><circle cx="${x}" cy="${y - 13}" r="2.2" fill="none" stroke="#7a5a10" stroke-width="1.2"/>`,
+        leaf: (x, y, c) => `<path d="M${x} ${y - 13}C${x + 12} ${y - 6} ${x + 9} ${y + 7} ${x} ${y + 9}C${x - 9} ${y + 7} ${x - 12} ${y - 6} ${x} ${y - 13}Z" fill="${c}"/><path d="M${x} ${y - 9}V${y + 14}" stroke="#2a4a1a" stroke-width="1.4"/>`,
+        acorn: (x, y, c) => `<ellipse cx="${x}" cy="${y + 3}" rx="7" ry="9" fill="${c}"/><path d="M${x - 9} ${y - 3}Q${x} ${y - 13} ${x + 9} ${y - 3}Z" fill="#6a5a2a" stroke="#3a2a10" stroke-width="1"/><path d="M${x} ${y - 9}V${y - 15}" stroke="#3a2a10" stroke-width="2" stroke-linecap="round"/>`,
+        fr: (x, y, c, t) => `<text x="${x}" y="${y + 10}" font-size="30" fill="${c}" text-anchor="middle">${t}</text>` };
+      const rows = [[['cup', '#e0b040'], ['coin', '#e0b040'], ['sword', '#c8d0d8'], ['polo', '#8a5a24']], [['cup', '#e0b040'], ['coin', '#e0b040'], ['sword', '#c8d0d8'], ['baton', '#4a7a3a']],
+        [['heart', '#c0392b'], ['bell', '#e8c040'], ['leaf', '#4a8a3a'], ['acorn', '#a06a2a']], [['fr', '#c0392b', '♥'], ['fr', '#c0392b', '♦'], ['fr', '#1d1b1b', '♠'], ['fr', '#1d1b1b', '♣']]];
+      rows.forEach((r, k) => { const y = o + RH * k + 25, [nm, dt] = R[k] || ['', ''];
+        g += `<rect x="${X[0] - 24}" y="${y - 25}" width="${X[3] - X[0] + 48}" height="50" rx="8" fill="${k === 3 ? '#fffdf6' : '#f5efe2'}" stroke="#d8cfb8"/>`;
+        r.forEach(([t, c, ch], j) => { g += ic[t](X[j], y, c, ch); });
+        g += `<text x="6" y="${y - 2}" font-size="14" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="6" y="${y + 16}" font-size="12" fill="#5a544a">${esc(dt)}</text>`;
+        if (k < 3) g += `<path d="M${X[0] - 30} ${y + 18}v12" stroke="#8a2a3a" stroke-width="2.4" marker-end="url(#cdA)"/>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr"><defs><marker id="cdA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8a2a3a"/></marker></defs>${g}</svg>`; },
+    // the cards' journey: China → the Mamluk lands → Europe (1370s) → France (c. 1480) → Japan (16th c.); text: the story's figL.route — [date, place, note]
+    cardsRoute: () => { const R = ((st('cards').figL || {}).route) || [], W = 300, RH = 54, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 100; let g = '';
+      const C = ['#c0392b', '#c8962a', '#2a5a8a', '#6a3a8a', '#14864a'];
+      for (let k = 0; k < R.length - 1; k++) { const y = o + 8 + RH * k; g += `<path d="M${xn} ${y + 11}V${y + RH - 13}" stroke="#b8ad98" stroke-width="3" marker-end="url(#crA)"/>`; }
+      R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
+        g += `<rect x="${xn - 7}" y="${y - 10}" width="14" height="20" rx="2.5" fill="#fffdf6" stroke="${C[k % C.length]}" stroke-width="2.4"/><circle cx="${xn}" cy="${y}" r="3" fill="${C[k % C.length]}"/><text x="${xn - 14}" y="${y + 5}" font-size="13" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
+        g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="${C[k % C.length]}">${esc(nm)}</text><text x="${xn + 16}" y="${y + 20}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr"><defs><marker id="crA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b8ad98"/></marker></defs>${g}</svg>`; },
+    // the 52-card pack: four suits × thirteen ranks; J, Q, K are the twelve court cards (gold); the joker was added in the US in the mid-19th century
+    // (text: the story's figL.court — [number cards, court cards, joker, its note])
+    cardsCourt: () => { const L = ((st('cards').figL || {}).court) || [], W = 300, cw = 20, gx = 21.6, ox = (W - gx * 13 + 1.6) / 2, y0 = 34, ch = 28, gy = 31, H = 240; let g = '';
+      const RK = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'], SU = [['♠', '#1d1b1b'], ['♥', '#c0392b'], ['♦', '#c0392b'], ['♣', '#1d1b1b']];
+      g += `<text x="${W / 2}" y="18" font-size="16" font-weight="800" fill="#2b2a28" text-anchor="middle">4 × 13 = 52</text>`;
+      RK.forEach((r, i) => { g += `<text x="${ox + i * gx + cw / 2}" y="${y0 - 4}" font-size="12" font-weight="800" fill="${i > 9 ? '#9a6a10' : '#5a544a'}" text-anchor="middle">${r}</text>`; });
+      SU.forEach(([s, c], k) => RK.forEach((r, i) => { const x = ox + i * gx, y = y0 + k * gy;
+        g += `<rect x="${x}" y="${y}" width="${cw}" height="${ch}" rx="3" fill="${i > 9 ? '#f3dc9a' : '#fffdf6'}" stroke="${i > 9 ? '#b8902a' : '#c9c2b2'}" stroke-width="1"/><text x="${x + cw / 2}" y="${y + 19}" font-size="14" fill="${c}" text-anchor="middle">${s}</text>`; }));
+      const ly = y0 + gy * 4 + 18;
+      g += `<rect x="8" y="${ly - 12}" width="14" height="16" rx="2" fill="#fffdf6" stroke="#c9c2b2"/><text x="28" y="${ly + 1}" font-size="13" font-weight="800" fill="#2b2a28">${esc(L[0] || '')} 40</text>`;
+      g += `<rect x="152" y="${ly - 12}" width="14" height="16" rx="2" fill="#f3dc9a" stroke="#b8902a"/><text x="172" y="${ly + 1}" font-size="13" font-weight="800" fill="#2b2a28">${esc(L[1] || '')} 12</text>`;
+      const jy = ly + 14; g += `<rect x="8" y="${jy}" width="30" height="42" rx="4" fill="#fffdf6" stroke="#6a3a8a" stroke-width="1.6"/><text x="23" y="${jy + 28}" font-size="20" fill="#6a3a8a" text-anchor="middle">★</text>`;
+      g += `<text x="48" y="${jy + 17}" font-size="14" font-weight="800" fill="#6a3a8a">${esc(L[2] || '')}</text><text x="48" y="${jy + 36}" font-size="13" fill="#5a544a">${esc(L[3] || '')}</text>`;
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // machines that played games, in time (text: the story's figL.time — [year, name, note])
+    machinesTimeline: () => { const R = ((st('machines').figL || {}).time) || [], W = 300, RH = 46, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 58; let g = '';
+      const C = ['#8a8478', '#8a5a24', '#2a5a8a', '#14864a', '#7a2a2a', '#c0392b', '#33404a', '#6a3a8a'];
+      g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
+      R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
+        g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
+        g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="${xn + 16}" y="${y + 20}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // reading ahead: a tiny game tree — MAX (▲, the machine) picks the largest, MIN (▼, the opponent) the smallest; values come up from the leaves.
+    // After the middle branch shows a 2 (already worse than the 3 on the left), its other leaves need not be read (✂, alpha-beta pruning).
+    // (text: the story's figL.tree — [MAX, MIN, pruned])
+    machinesTree: () => { const L = ((st('machines').figL || {}).tree) || [], W = 300, H = 278, ry = 34, my = 112, ly = 186, lx = k => 22 + k * 32;
+      const leaves = [3, 12, 8, 2, 4, 6, 14, 5, 2], cut = { 4: 1, 5: 1 }, mins = [3, 2, 2], best = 0, hi = '#c0392b', ln = '#8a8478';
+      let g = ''; const mx = j => lx(j * 3 + 1);
+      for (let j = 0; j < 3; j++) { g += `<path d="M150 ${ry + 14}L${mx(j)} ${my - 16}" stroke="${j === best ? hi : ln}" stroke-width="${j === best ? 3.2 : 1.8}"/>`;
+        for (let i = 0; i < 3; i++) { const k = j * 3 + i, x = lx(k), on = j === best && leaves[k] === 3, c = cut[k];
+          g += `<path d="M${mx(j)} ${my + 14}L${x} ${ly - 14}" stroke="${on ? hi : ln}" stroke-width="${on ? 3.2 : 1.8}"${c ? ' stroke-dasharray="4 4" opacity=".55"' : ''}/>`;
+          if (k === 4) g += `<text x="${x + 8}" y="${(my + ly) / 2 + 8}" font-size="20" fill="#c0392b" text-anchor="middle">✂</text>`; } }
+      const tri = (x, y, up, col) => up ? `<path d="M${x} ${y - 17}L${x + 19} ${y + 14}H${x - 19}Z" fill="${col}"/>` : `<path d="M${x} ${y + 17}L${x + 19} ${y - 14}H${x - 19}Z" fill="${col}"/>`;
+      g += tri(150, ry, 1, hi) + `<text x="150" y="${ry + 10}" font-size="15" font-weight="800" fill="#fff" text-anchor="middle">3</text>`;
+      mins.forEach((v, j) => { g += tri(mx(j), my, 0, j === best ? '#2a5a8a' : '#8aa3c4') + `<text x="${mx(j)}" y="${my + 1}" font-size="14" font-weight="800" fill="#fff" text-anchor="middle">${j === 1 ? '≤' + v : v}</text>`; });
+      leaves.forEach((v, k) => { const x = lx(k), c = cut[k]; g += `<rect x="${x - 13}" y="${ly - 13}" width="26" height="26" rx="5" fill="${c ? '#efeae0' : '#fffdf6'}" stroke="${c ? '#c9c2b2' : '#5a544a'}" stroke-width="1.4"${c ? ' stroke-dasharray="3 3"' : ''}/><text x="${x}" y="${ly + 5}" font-size="14" font-weight="800" fill="${c ? '#b8ad98' : '#2b2a28'}" text-anchor="middle">${c ? '?' : v}</text>`; });
+      const lg = 222; g += `<path d="M18 ${lg - 9}L28 ${lg + 7}H8Z" fill="${hi}"/>`;
+      g += `<text x="36" y="${lg + 5}" font-size="13" font-weight="800" fill="#2b2a28">${esc(L[0] || '')}</text>`;
+      g += `<path d="M18 ${lg + 33}L28 ${lg + 17}H8Z" fill="#2a5a8a"/><text x="36" y="${lg + 29}" font-size="13" font-weight="800" fill="#2b2a28">${esc(L[1] || '')}</text>`;
+      g += `<text x="18" y="${lg + 54}" font-size="16" fill="#c0392b" text-anchor="middle">✂</text><text x="36" y="${lg + 53}" font-size="13" font-weight="800" fill="#2b2a28">${esc(L[2] || '')}</text>`;
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // how big games are: legal positions on a log scale (10^n), solved (✓) or not (?) — tic-tac-toe 5,478; connect four 4.5×10^12 (1988);
+    // checkers 5×10^20 (2007); Othello ~10^28 (2023); chess ~10^44; go 2.1×10^170 (text: the story's figL.solved — [name, note] per row)
+    machinesSolved: () => { const R = ((st('machines').figL || {}).solved) || [], W = 300, RH = 44, o = 6, x0 = 8, bw = W - 16, H = o * 2 + RH * 6 + 4;
+      const N = [[3.7, '3'], [12.7, '12'], [20.7, '20'], [28, '28'], [44.7, '44'], [170.3, '170']], ok = [1, 1, 1, 1, 0, 0]; let g = '';
+      N.forEach(([lg, ex], k) => { const y = o + RH * k, w = Math.max(10, bw * lg / 171), [nm, nt] = R[k] || ['', ''], c = ok[k] ? '#14864a' : '#8a8478';
+        g += `<text x="${x0}" y="${y + 15}" font-size="14" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="${W - 8}" y="${y + 15}" font-size="12" font-weight="800" fill="${c}" text-anchor="end">${ok[k] ? '✓ ' : '? '}${esc(nt)}</text>`;
+        g += `<rect x="${x0}" y="${y + 22}" width="${w}" height="14" rx="4" fill="${ok[k] ? '#8fd0a8' : '#c9c2b2'}"/>`;
+        const tx = w + x0 + 6 > W - 56 ? x0 + w - 6 : x0 + w + 6, an = tx < x0 + w ? 'end' : 'start';
+        g += `<text x="${tx}" y="${y + 34}" font-size="13" font-weight="800" fill="${an === 'end' ? '#2b2a28' : '#5a544a'}" text-anchor="${an}">10<tspan dy="-5" font-size="12">${ex}</tspan></text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // board graffiti — a small icon per kind (scratched lines): a Roman three-row board, a morris board, mancala pits
+    // famous places where boards were cut into public stone (text: the story's figL.map — [place, note]; icons by row: Roman board, Roman board, morris (date unsure), pits, morris, morris)
+    graffitiMap: () => { const R = ((st('graffiti').figL || {}).map) || [], K = ['tab', 'tab', 'mor', 'pit', 'mor', 'mor'], W = 300, RH = 50, o = 8, H = o * 2 + RH * R.length; let g = '';
+      const ic = (t, x, y) => { let s = `<rect x="${x - 18}" y="${y - 18}" width="36" height="36" rx="7" fill="#d9d2c3" stroke="#a89f8c"/>`, ln = 'stroke="#5a5040" stroke-width="1.6" fill="none"';
+        if (t === 'mor') s += `<rect x="${x - 13}" y="${y - 13}" width="26" height="26" ${ln}/><rect x="${x - 8.5}" y="${y - 8.5}" width="17" height="17" ${ln}/><rect x="${x - 4}" y="${y - 4}" width="8" height="8" ${ln}/><path d="M${x} ${y - 13}V${y - 4}M${x} ${y + 4}V${y + 13}M${x - 13} ${y}H${x - 4}M${x + 4} ${y}H${x + 13}" ${ln}/>`;
+        else if (t === 'tab') { for (let r = 0; r < 3; r++) for (let c = 0; c < 6; c++) s += `<path d="M${x - 13 + c * 4.4 + (c > 2 ? 2 : 0)} ${y - 10 + r * 9}v6" stroke="#5a5040" stroke-width="1.6"/>`; }
+        else for (let r = 0; r < 2; r++) for (let c = 0; c < 4; c++) s += `<circle cx="${x - 10.5 + c * 7}" cy="${y - 5 + r * 10}" r="2.8" fill="#8a8070" stroke="#5a5040"/>`;
+        return s; };
+      R.forEach(([nm, ds], k) => { const y = o + RH * k + 25;
+        g += ic(K[k], 26, y) + `<text x="54" y="${y - 3}" font-size="14" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="54" y="${y + 15}" font-size="13" fill="#5a544a">${esc(ds)}</text>`;
+        if (k === 2) g += `<circle cx="40" cy="${y - 14}" r="8" fill="#c0392b"/><text x="40" y="${y - 9.5}" font-size="12" font-weight="800" fill="#fff" text-anchor="middle">?</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // the three boards most often scratched into stone, drawn as cut lines on a slab: the morris board (24 points), the Roman
+    // three-row board (3 × 12 places, here as six-letter words: VENARI LAVARI LVDERE RIDERE OCCEST VIVERE, Timgad), and mancala pits (2 × 6)
+    // (text: the story's figL.boards — [name, note] × 3)
+    graffitiBoards: () => { const L = ((st('graffiti').figL || {}).boards) || [], W = 300, H = 292; let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="10" fill="#cfc7b6"/>`;
+      const cut = d => `<path d="${d}" fill="none" stroke="#f3eee2" stroke-width="2.6" transform="translate(.8 .8)"/><path d="${d}" fill="none" stroke="#6a604e" stroke-width="2.2" stroke-linecap="round"/>`;
+      const mx = 72, my = 70; let d = ''; [44, 29, 14].forEach(r => { d += `M${mx - r} ${my - r}H${mx + r}V${my + r}H${mx - r}Z`; }); d += `M${mx} ${my - 44}V${my - 14}M${mx} ${my + 14}V${my + 44}M${mx - 44} ${my}H${mx - 14}M${mx + 14} ${my}H${mx + 44}`;
+      g += cut(d); [44, 29, 14].forEach(r => [[-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0]].forEach(([a, b]) => { g += `<circle cx="${mx + a * r}" cy="${my + b * r}" r="2.6" fill="#6a604e"/>`; }));
+      const px = 162, py = 40; for (let r = 0; r < 2; r++) for (let c = 0; c < 6; c++) g += `<ellipse cx="${px + 10 + c * 22}" cy="${py + 12 + r * 30}" rx="9" ry="10" fill="#9a907c" stroke="#5a5040" stroke-width="1.6"/><ellipse cx="${px + 10 + c * 22 - 1}" cy="${py + 10 + r * 30}" rx="5" ry="4" fill="#857b68"/>`;
+      g += `<text x="${mx}" y="138" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="middle">${esc((L[0] || [])[0] || '')}</text><text x="${mx}" y="155" font-size="12" fill="#4a4436" text-anchor="middle">${esc((L[0] || [])[1] || '')}</text>`;
+      g += `<text x="${px + 64}" y="110" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="middle">${esc((L[2] || [])[0] || '')}</text><text x="${px + 64}" y="127" font-size="12" fill="#4a4436" text-anchor="middle">${esc((L[2] || [])[1] || '')}</text>`;
+      const WD = ['VENARI', 'LAVARI', 'LVDERE', 'RIDERE', 'OCCEST', 'VIVERE'], ty = 180, cw = 21.5, tx = (W - cw * 12) / 2;
+      g += cut(`M${tx - 4} ${ty - 16}H${W - tx + 4}V${ty + 60}H${tx - 4}Z`);
+      WD.forEach((w, k) => [...w].forEach((ch, i) => { const r = Math.floor(k / 2), c = (k % 2) * 6 + i; g += `<text x="${tx + c * cw + cw / 2}" y="${ty + 4 + r * 22}" font-size="15" font-weight="800" fill="#5a5040" text-anchor="middle" font-family="Georgia,serif">${ch}</text>`; }));
+      g += `<text x="${W / 2}" y="${ty + 80}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="middle">${esc((L[1] || [])[0] || '')}</text><text x="${W / 2}" y="${ty + 96}" font-size="12" fill="#4a4436" text-anchor="middle">${esc((L[1] || [])[1] || '')}</text>`;
+      return `<svg viewBox="0 0 ${W} ${H + 8}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // why a scratched board is hard to date: the stone can be far older than the lines (Kurna: a temple roof of c. 1400 BC with Coptic crosses
+    // among the diagrams — the boards could be cut at any time up to today), and a reused stone can carry a board older than the wall it sits in
+    // (text: the story's figL.dating — [date, text] × 3, then two lines for the wall)
+    graffitiDating: () => { const L = ((st('graffiti').figL || {}).dating) || [], R = L.slice(0, 3), Wl = L[3] || [], W = 300, RH = 46, x0 = 34; let g = '';
+      const C = ['#8a5a24', '#2a5a8a', '#14864a'];
+      g += `<path d="M14 18V${18 + RH * 2}" stroke="#c0392b" stroke-width="2.4" stroke-dasharray="5 4"/><path d="M14 18h6M14 ${18 + RH * 2}h6" stroke="#c0392b" stroke-width="2.4"/><circle cx="14" cy="${18 + RH}" r="9" fill="#c0392b"/><text x="14" y="${23 + RH}" font-size="13" font-weight="800" fill="#fff" text-anchor="middle">?</text>`;
+      g += `<line x1="${x0}" y1="18" x2="${x0}" y2="${18 + RH * 2}" stroke="#b8ad98" stroke-width="3"/>`;
+      R.forEach(([yr, tx], k) => { const y = 18 + RH * k; g += `<circle cx="${x0}" cy="${y}" r="7" fill="${C[k]}" stroke="#fff" stroke-width="2"/><text x="${x0 + 14}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28">${esc(yr)}</text><text x="${x0 + 14}" y="${y + 23}" font-size="13" fill="#5a544a">${esc(tx)}</text>`; });
+      const wy = 158, bw = 44, bh = 22; for (let r = 0; r < 3; r++) for (let c = -1; c < 6; c++) { const x = 40 + c * bw + (r % 2 ? bw / 2 : 0); if (x < 36 || x + bw > 266) continue; g += `<rect x="${x + 1}" y="${wy + r * bh + 1}" width="${bw - 2}" height="${bh - 2}" fill="#c9b79a" stroke="#9a8a6e"/>`; }
+      const sx = 128, sy = wy + bh; g += `<rect x="${sx}" y="${sy + 1}" width="${bw - 2}" height="${bh - 2}" fill="#a8a092" stroke="#6a604e" stroke-width="1.4"/>`;
+      g += `<g transform="translate(${sx + bw / 2 - 1} ${sy + bh / 2}) rotate(90)"><rect x="-8" y="-8" width="16" height="16" fill="none" stroke="#3a3428" stroke-width="1.2"/><rect x="-4.5" y="-4.5" width="9" height="9" fill="none" stroke="#3a3428" stroke-width="1.2"/><path d="M0 -8V-4.5M0 4.5V8M-8 0H-4.5M4.5 0H8" stroke="#3a3428" stroke-width="1.2"/></g>`;
+      g += `<text x="${W / 2}" y="${wy + bh * 3 + 22}" font-size="13" font-weight="800" fill="#2b2a28" text-anchor="middle">${esc(Wl[0] || '')}</text><text x="${W / 2}" y="${wy + bh * 3 + 40}" font-size="13" fill="#5a544a" text-anchor="middle">${esc(Wl[1] || '')}</text>`;
+      return `<svg viewBox="0 0 ${W} ${wy + bh * 3 + 48}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // games that rulers banned, in time (text: the story's figL.time — [year, what, where])
+    bansTimeline: () => { const R = ((st('bans').figL || {}).time) || [], W = 300, RH = 46, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 76; let g = '';
+      const C = ['#7a2e3a', '#2a4a7a', '#8a2a3a', '#8a3a2a', '#6b4a24', '#33404a', '#2a6a4a', '#c0392b'];
+      g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
+      R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k, lift = /✓/.test(nm);
+        g += lift ? `<circle cx="${xn}" cy="${y}" r="9" fill="#14864a" stroke="#fff" stroke-width="2"/><path d="M${xn - 4.5} ${y}l3 3.5 6-7" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`
+          : `<circle cx="${xn}" cy="${y}" r="9" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><path d="M${xn - 4} ${y - 4}l8 8" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>`;
+        g += `<text x="${xn - 15}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
+        g += `<text x="${xn + 17}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm.replace('✓', '').trim())}</text><text x="${xn + 17}" y="${y + 20}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // why games were banned: four reasons, each with examples; gambling (first, widest) is behind most bans
+    // (text: the story's figL.why — [reason, example, example] × 4)
+    bansWhy: () => { const R = ((st('bans').figL || {}).why) || [], W = 300, RH = 66, H = RH * R.length + 8, C = ['#c0392b', '#c8962a', '#6a3a8a', '#2a5a8a'];
+      let g = ''; R.forEach(([nm, a, b], k) => { const y = 6 + RH * k, w = k === 0 ? W - 8 : W - 8 - 0, c = C[k];
+        g += `<rect x="4" y="${y}" width="${w}" height="${RH - 8}" rx="10" fill="${c}" opacity="${k === 0 ? .16 : .1}" stroke="${c}" stroke-width="${k === 0 ? 2.4 : 1.2}"/>`;
+        g += `<rect x="4" y="${y}" width="8" height="${RH - 8}" rx="4" fill="${c}"/>`;
+        g += `<text x="22" y="${y + 22}" font-size="15" font-weight="800" fill="${c}">${esc(nm)}</text>`;
+        g += `<text x="22" y="${y + 44}" font-size="13" fill="#2b2a28">${esc(a)}${b ? ' · ' + esc(b) : ''}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // did the bans work? three stories as lines in time: sugoroku went on (the line continues), patolli all but vanished
+    // (the line stops at ×), cards kept spreading (the line branches) (text: the story's figL.out — [game, result] × 3)
+    bansOutcome: () => { const R = ((st('bans').figL || {}).out) || [], W = 300, RH = 66, H = RH * 3 + 10, x0 = 176, x1 = 292; let g = '';
+      R.forEach(([nm, rs], k) => { const y = 8 + RH * k + 26, xb = x0 + 34;
+        g += `<text x="6" y="${y - 4}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="6" y="${y + 16}" font-size="13" fill="#5a544a">${esc(rs)}</text>`;
+        g += `<path d="M${x0} ${y}H${xb}" stroke="#8a8478" stroke-width="4" stroke-linecap="round"/><path d="M${xb} ${y - 12}v24" stroke="#c0392b" stroke-width="3"/><path d="M${xb - 5} ${y - 16}h10" stroke="#c0392b" stroke-width="3"/>`;
+        if (k === 0) g += `<path d="M${xb} ${y}H${x1 - 8}" stroke="#14864a" stroke-width="4" stroke-linecap="round" marker-end="url(#boA)"/>`;
+        else if (k === 1) g += `<path d="M${xb} ${y}H${xb + 26}" stroke="#8a8478" stroke-width="4" stroke-dasharray="3 5" stroke-linecap="round"/><path d="M${xb + 32} ${y - 7}l12 12M${xb + 44} ${y - 7}l-12 12" stroke="#c0392b" stroke-width="3.2" stroke-linecap="round"/>`;
+        else [-20, 0, 20].forEach(d => { g += `<path d="M${xb} ${y}C${xb + 24} ${y} ${xb + 30} ${y + d} ${x1 - 8} ${y + d}" fill="none" stroke="#14864a" stroke-width="3.4" stroke-linecap="round" marker-end="url(#boA)"/>`; }); });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr"><defs><marker id="boA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#14864a"/></marker></defs>${g}</svg>`; },
+    // chess pieces, six kinds × three styles: abstract (Islamic world, like the Nishapur set), figurative (Europe, like the Lewis chessmen),
+    // Staunton (1849). Self-drawn silhouettes; text: the story's figL.evo — [three style names] and figL.names — [king … pawn]
+    piecesEvolution: () => { const F = st('pieces').figL || {}, E = F.evo || [], N = F.names || [], W = 300, x0 = 122, cw = 70, RH = 46, top = 30, H = top + RH * 6 + 6;
+      const ink = '#2b2a28', blue = '#2a5a8a', ivory = '#e9dcc0';
+      const AB = [   // abstract: throne, small throne, two tusks, a knob, a notched block, a dome
+        'M-14 0V-18H-7V-27H7V-18H14V0Z', 'M-11 0V-14H-5V-21H5V-14H11V0Z', 'M-13 0Q-13 -17 -6 -19L-9 -30L-2 -20H2L9 -30L6 -19Q13 -17 13 0Z',
+        'M-12 0Q-12 -15 -3 -17L1 -28L7 -25L6 -16Q12 -13 12 0Z', 'M-12 0V-25H-3L0 -17L3 -25H12V0Z', 'M-9 0Q-9 -14 0 -15Q9 -14 9 0Z'];
+      const FG = [   // figurative: seated king with crown, queen with veil, bishop with mitre, rider on a horse, warder with shield, slab pawn
+        'M-12 0V-20H12V0ZM-6 -20V-24A6 6 0 0 1 6 -24V-20ZM-6 -30L-4 -35L-1 -31L1 -35L4 -31L6 -35V-29H-6Z', 'M-11 0V-19H11V0ZM-7 -19Q-8 -33 0 -33Q8 -33 7 -19Z',
+        'M-11 0V-20H11V0ZM-5 -20V-24A5 5 0 0 1 5 -24V-20ZM-6 -27L0 -38L6 -27Z', 'M-13 0L-9 -14H-2L0 -24L-4 -26L2 -32L9 -26L6 -14H12L13 0Z',
+        'M-9 0V-22H9V0ZM-5 -22V-26A5 5 0 0 1 5 -26V-22ZM-14 -16A7 9 0 1 0 -14 -15Z', 'M-8 0V-17Q0 -23 8 -17V0Z'];
+      const base = w => `M${-w} 0H${w}L${w - 2} -4H${-w + 2}Z`;
+      const ST = [   // Staunton: base + stem + top
+        base(12) + 'M-7 -4L-4 -22H4L7 -4ZM-8 -22H8L6 -27H-6ZM-1.6 -27V-36H1.6V-27ZM-5 -32.5H5V-30.5H-5Z', base(11) + 'M-6 -4L-4 -20H4L6 -4ZM-8 -20H8L6 -25H-6ZM-6 -25L-7 -31L-3 -27L0 -32L3 -27L7 -31L6 -25Z',
+        base(10) + 'M-5 -4L-3 -15H3L5 -4ZM-6 -15H6L5 -17H-5ZM0 -31Q-7 -24 -5 -17H5Q7 -24 0 -31Z', base(11) + 'M-9 -4Q-9 -14 -4 -18L-8 -26Q-2 -33 5 -31Q10 -25 8 -14L9 -4Z',
+        base(11) + 'M-7 -4L-6 -20H6L7 -4ZM-8 -20V-27H-5V-24H-1.5V-27H1.5V-24H5V-27H8V-20Z', base(9) + 'M-4 -4L-2.5 -12H2.5L4 -4ZM-5 -12H5L4 -14H-4ZM0 -14A5.5 5.5 0 1 1 0 -24.9A5.5 5.5 0 1 1 0 -14Z'];
+      let g = '';
+      E.forEach((nm, j) => { g += `<text x="${x0 + cw * j}" y="16" font-size="12" font-weight="800" fill="${[blue, '#8a5a24', ink][j]}" text-anchor="middle">${esc(nm)}</text>`; });
+      for (let k = 0; k < 6; k++) { const y = top + RH * k + RH - 6;
+        if (k % 2 === 0) g += `<rect x="2" y="${y - RH + 8}" width="${W - 4}" height="${RH}" rx="6" fill="#f3ede0"/>`;
+        g += `<text x="8" y="${y - 12}" font-size="13" font-weight="800" fill="${ink}">${esc(N[k] || '')}</text>`;
+        g += `<path transform="translate(${x0} ${y})" d="${AB[k]}" fill="#3f6f9a" stroke="#1f3f5f" stroke-width="1.2"/>`;
+        g += `<path transform="translate(${x0 + cw} ${y})" d="${FG[k]}" fill="${ivory}" stroke="#8a6a3a" stroke-width="1.4"/>`;
+        g += `<path transform="translate(${x0 + cw * 2} ${y})" d="${ST[k]}" fill="#3a2a1e" stroke="#1a120c" stroke-width=".8"/>`; }
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr"><defs><marker id="peA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b8ad98"/></marker></defs>${g}</svg>`; },
+    // the elephant became a bishop (and a jester, a runner…), the chariot a tower: the pieces' names in some languages, each with its meaning
+    // (text: the story's figL.rows — [two row titles], figL.fil and figL.ruk — six meanings each, in the order of the words below)
+    piecesBishop: () => { const F = st('pieces').figL || {}, R = F.rows || [], FI = F.fil || [], RU = F.ruk || [], W = 300, H = 318; let g = '';
+      const WF = ['alfil', 'fou', 'Läufer', 'bishop', 'слон', 'alfiere'], WR = ['rook', 'torre', 'tour', 'Turm', 'ладья', '車'];
+      const row = (y, title, words, mean, icons) => { let s = `<text x="8" y="${y}" font-size="14" font-weight="800" fill="#2b2a28">${esc(title)}</text>`;
+        icons.forEach((d, i) => { const x = 50 + i * 100; s += `<path transform="translate(${x} ${y + 50})" d="${d}" fill="${['#8a8478', '#3f6f9a', '#3a2a1e'][i]}"/>`; if (i < 2) s += `<path d="M${x + 24} ${y + 36}H${x + 70}" stroke="#b8ad98" stroke-width="2.4" marker-end="url(#pbA)"/>`; });
+        words.forEach((w, i) => { const c = i % 2, r = Math.floor(i / 2), x = 8 + c * 148, yy = y + 74 + r * 22;
+          s += `<text x="${x}" y="${yy}" font-size="14" font-weight="800" fill="#7a2a3a">${esc(w)}</text><text x="${x + 58}" y="${yy}" font-size="12" fill="#5a544a">${esc(mean[i] || '')}</text>`; });
+        return s; };
+      const ELE = 'M-20 0V-12Q-22 -26 -6 -28Q10 -30 16 -20Q20 -12 22 -2L18 0L16 -8Q14 -4 10 -2V0H4V-6H-12V0Z', CAR = 'M-22 -6H14L20 -18H10V-26H-6V-14H-22ZM-12 0A6 6 0 1 0 -12 -0.1ZM8 0A6 6 0 1 0 8 -0.1Z';
+      const FIL = 'M-13 0Q-13 -17 -6 -19L-9 -30L-2 -20H2L9 -30L6 -19Q13 -17 13 0Z', BIS = 'M-10 0H10L8 -4H-8ZM-5 -4L-3 -15H3L5 -4ZM-6 -15H6L5 -17H-5ZM0 -33Q-8 -25 -6 -17H6Q8 -25 0 -33ZM-2 -22L3 -28L4 -27L-1 -21Z';
+      const RUK = 'M-12 0V-25H-3L0 -17L3 -25H12V0Z', ROK = 'M-11 0H11L9 -4H-9ZM-7 -4L-6 -20H6L7 -4ZM-8 -20V-27H-5V-24H-1.5V-27H1.5V-24H5V-27H8V-20Z';
+      g += row(18, R[0] || '', WF, FI, [ELE, FIL, BIS]) + row(170, R[1] || '', WR, RU, [CAR, RUK, ROK]);
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr"><defs><marker id="pbA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b8ad98"/></marker></defs>${g}</svg>`; },
+    // chess pieces in time (text: the story's figL.time — [year, name, note])
+    piecesTimeline: () => { const R = ((st('pieces').figL || {}).time) || [], W = 300, RH = 50, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 102; let g = '';
+      const C = ['#8a5a24', '#3f6f9a', '#8a6a3a', '#6a3a8a', '#3a2a1e', '#14864a'];
+      g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
+      R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
+        g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
+        g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="${xn + 16}" y="${y + 20}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // games found in graves, place by place (text: the story's figL.map — [place, date and what]); the last row, the Shōsōin, is a treasure house, not a grave
+    tombsMap: () => { const R = ((st('tombs').figL || {}).map) || [], K = ['ur', 'sen', 'liu', 'lat', 'taf', 'pcs', 'go'], W = 300, RH = 48, o = 8, H = o * 2 + RH * R.length + 4; let g = '';
+      const ic = (t, x, y) => { const ln = 'stroke="#5a4636" stroke-width="1.3" fill="none"'; let s = `<rect x="${x - 18}" y="${y - 18}" width="36" height="36" rx="7" fill="${t === 'go' ? '#e6ece4' : '#efe3c8'}" stroke="#b8a47c"/>`;
+        if (t === 'ur') { for (let c = 0; c < 8; c++) for (let r = 0; r < 3; r++) if (r === 1 || c < 4 || c > 5) s += `<rect x="${x - 14 + c * 3.5}" y="${y - 6 + r * 4}" width="3.2" height="3.6" fill="#2f5f9e" opacity="${(c + r) % 2 ? .55 : .95}"/>`; }
+        else if (t === 'sen') { for (let c = 0; c < 10; c++) for (let r = 0; r < 3; r++) s += `<rect x="${x - 15 + c * 3}" y="${y - 5 + r * 3.6}" width="2.7" height="3.2" fill="#a8823a"/>`; }
+        else if (t === 'liu') s += `<rect x="${x - 12}" y="${y - 12}" width="24" height="24" ${ln}/><rect x="${x - 4}" y="${y - 4}" width="8" height="8" ${ln}/><path d="M${x} ${y - 12}v4M${x} ${y + 12}v-4M${x - 12} ${y}h4M${x + 12} ${y}h-4M${x - 12} ${y - 12}l4 4M${x + 12} ${y - 12}l-4 4M${x - 12} ${y + 12}l4 -4M${x + 12} ${y + 12}l-4 -4" ${ln}/>`;
+        else if (t === 'lat') { s += `<rect x="${x - 12}" y="${y - 12}" width="24" height="24" ${ln}/>`; for (let i = 1; i < 6; i++) s += `<path d="M${x - 12 + i * 4} ${y - 12}v24M${x - 12} ${y - 12 + i * 4}h24" stroke="#8a7a5a" stroke-width=".7"/>`; [[-8, -8, '#2a5a8a'], [0, -8, '#2a5a8a'], [4, 4, '#f4efe2'], [-4, 8, '#f4efe2']].forEach(([a, b, c]) => { s += `<circle cx="${x + a}" cy="${y + b}" r="2" fill="${c}" stroke="#333" stroke-width=".5"/>`; }); }
+        else if (t === 'taf') { s += `<rect x="${x - 13}" y="${y - 13}" width="26" height="26" ${ln}/>`; for (let i = 1; i < 13; i++) s += `<path d="M${x - 13 + i * 2} ${y - 13}v26M${x - 13} ${y - 13 + i * 2}h26" stroke="#a89878" stroke-width=".4"/>`; s += `<circle cx="${x}" cy="${y}" r="3" fill="#c8962a" stroke="#5a4636" stroke-width=".8"/>`; }
+        else if (t === 'pcs') { [[-8, 4], [-2, 6], [4, 3], [-5, -4], [2, -3], [8, -5]].forEach(([a, b], i) => { s += `<path d="M${x + a - 3} ${y + b + 3}Q${x + a} ${y + b - 5} ${x + a + 3} ${y + b + 3}Z" fill="${i % 2 ? '#2f6a5a' : '#e8dcc0'}" stroke="#333" stroke-width=".5"/>`; }); s += `<rect x="${x + 7}" y="${y + 5}" width="6" height="6" rx="1" fill="#fff" stroke="#333" stroke-width=".6"/><circle cx="${x + 10}" cy="${y + 8}" r=".9" fill="#333"/>`; }
+        else s += `<path d="M${x - 13} ${y - 2}L${x} ${y - 13}L${x + 13} ${y - 2}Z" fill="#7a5a3a"/><rect x="${x - 10}" y="${y - 2}" width="20" height="13" fill="#a8825a"/><path d="M${x - 10} ${y + 2}h20M${x - 10} ${y + 6}h20" stroke="#7a5a3a" stroke-width="1"/>`;
+        return s; };
+      R.forEach(([nm, ds], k) => { const y = o + RH * k + 24 + (k === 6 ? 6 : 0);
+        if (k === 6) g += `<path d="M6 ${y - 30}H${W - 6}" stroke="#b8ad98" stroke-width="1.4" stroke-dasharray="5 4"/>`;
+        g += ic(K[k], 26, y) + `<text x="54" y="${y - 3}" font-size="14" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="54" y="${y + 15}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // why a game went into a grave: four answers proposed, each with an example (text: the story's figL.why — [reason, example] × 4)
+    tombsWhy: () => { const R = ((st('tombs').figL || {}).why) || [], W = 300, RH = 66, H = RH * R.length + 8, C = ['#7a5a1e', '#8a2a3a', '#2a5a8a', '#2f6a4a']; let g = '';
+      R.forEach(([nm, ex], k) => { const y = 6 + RH * k, c = C[k % C.length];
+        g += `<rect x="4" y="${y}" width="${W - 8}" height="${RH - 8}" rx="10" fill="${c}" opacity=".1" stroke="${c}" stroke-width="1.2"/><rect x="4" y="${y}" width="8" height="${RH - 8}" rx="4" fill="${c}"/>`;
+        g += `<text x="22" y="${y + 22}" font-size="15" font-weight="800" fill="${c}">${esc(nm)}</text><text x="22" y="${y + 44}" font-size="13" fill="#2b2a28">${esc(ex)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // games and graves in time (text: the story's figL.time — [date, place, what])
+    tombsTimeline: () => { const R = ((st('tombs').figL || {}).time) || [], W = 300, RH = 46, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 108; let g = '';
+      const C = ['#a8823a', '#2f5f9e', '#a8823a', '#8a3a26', '#5a4632', '#33404a', '#2f6a5a', '#6b4a24'];
+      g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
+      R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
+        g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="13" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
+        g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="${xn + 16}" y="${y + 20}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // Nim: heaps 3, 4, 5 in binary — count the 1s in each column; an odd column (the 2s) gives the nim-sum 010 = 2; taking 2 from the heap of 3
+    // leaves 1, 4, 5 and every column even (nim-sum 0) (text: the story's figL.heaps — [heap, 4s, 2s, 1s, nim-sum, the winning move])
+    nimHeaps: () => { const L = ((st('nim').figL || {}).heaps) || [], W = 300, hp = [3, 4, 5], nm = ['A', 'B', 'C'], bx = 132, cw = 52, ry = 42, rh = 40, H = ry + rh * 4 + 44; let g = '';
+      g += `<text x="10" y="${ry - 14}" font-size="12" font-weight="800" fill="#5a544a">${esc(L[0] || '')}</text>`;
+      [L[1], L[2], L[3]].forEach((t, j) => { g += `<text x="${bx + cw * j + cw / 2}" y="${ry - 14}" font-size="12" font-weight="800" fill="#5a544a" text-anchor="middle">${esc(t || '')}</text>`; });
+      g += `<rect x="${bx + cw - 2}" y="${ry - 6}" width="${cw + 4}" height="${rh * 4 + 4}" rx="6" fill="#f3c9c2" opacity=".55"/>`;
+      hp.forEach((n, i) => { const y = ry + rh * i;
+        g += `<text x="10" y="${y + 21}" font-size="15" font-weight="800" fill="#2b2a28">${nm[i]}</text>`;
+        for (let k = 0; k < n; k++) { const take = i === 0 && k >= 1, cx = 38 + k * 17; g += `<circle cx="${cx}" cy="${y + 15}" r="7.5" fill="${take ? '#f3c9c2' : '#e0b040'}" stroke="${take ? '#c0392b' : '#8a5a10'}" stroke-width="1.4"${take ? ' stroke-dasharray="3 2"' : ''}/>`; }
+        [4, 2, 1].forEach((b, j) => { const on = n & b; g += `<rect x="${bx + cw * j + 8}" y="${y}" width="${cw - 16}" height="${rh - 10}" rx="5" fill="${on ? '#2a5a8a' : '#eef1f4'}"/><text x="${bx + cw * j + cw / 2}" y="${y + 21}" font-size="15" font-weight="800" fill="${on ? '#fff' : '#9aa4ae'}" text-anchor="middle">${on ? 1 : 0}</text>`; }); });
+      const sy = ry + rh * 3 + 4; g += `<path d="M10 ${sy - 2}H${bx + cw * 3}" stroke="#2b2a28" stroke-width="2"/>`;
+      [0, 1, 0].forEach((v, j) => { g += `<text x="${bx + cw * j + cw / 2}" y="${sy + 24}" font-size="16" font-weight="800" fill="${v ? '#c0392b' : '#14864a'}" text-anchor="middle">${v}</text>`; });
+      g += `<text x="${bx - 10}" y="${sy + 23}" font-size="12" font-weight="800" fill="#c0392b" text-anchor="end">${esc(L[4] || '')}</text>`;
+      g += `<text x="${W / 2}" y="${H - 12}" font-size="13" font-weight="800" fill="#c0392b" text-anchor="middle">${esc(L[5] || '')}</text>`;
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // the Nimatron (1940): a large cabinet with four rows of seven lamps — four heaps of up to seven — shown at a world's fair (self-drawn, generic)
+    // (text: the story's figL.nima — [where and when, the lamps, the score])
+    nimNimatron: () => { const L = ((st('nim').figL || {}).nima) || [], W = 300, H = 268, ox = 40, oy = 14, cw = 220, ch = 170; let g = '';
+      g += `<rect x="${ox}" y="${oy}" width="${cw}" height="${ch}" rx="10" fill="#3a4250" stroke="#1f242c" stroke-width="2"/><rect x="${ox + 12}" y="${oy + 12}" width="${cw - 24}" height="${ch - 54}" rx="6" fill="#20252e"/>`;
+      const lit = [5, 3, 6, 2];
+      for (let r = 0; r < 4; r++) for (let c = 0; c < 7; c++) { const x = ox + 34 + c * 26, y = oy + 34 + r * 27, on = c < lit[r];
+        g += `<circle cx="${x}" cy="${y}" r="9" fill="${on ? '#ffd45a' : '#4a5260'}"${on ? ' stroke="#fff3c0" stroke-width="1.5"' : ''}/>`; }
+      for (let i = 0; i < 4; i++) g += `<rect x="${ox + 30 + i * 46}" y="${oy + ch - 32}" width="26" height="18" rx="4" fill="#c0392b" stroke="#7a1a12"/>`;
+      g += `<rect x="${ox + 20}" y="${oy + ch}" width="20" height="26" fill="#2b3038"/><rect x="${ox + cw - 40}" y="${oy + ch}" width="20" height="26" fill="#2b3038"/>`;
+      g += `<text x="${W / 2}" y="${oy + ch + 46}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="middle">${esc(L[0] || '')}</text>`;
+      g += `<text x="${W / 2}" y="${oy + ch + 64}" font-size="13" fill="#5a544a" text-anchor="middle">${esc(L[1] || '')}</text><text x="${W / 2}" y="${oy + ch + 81}" font-size="13" fill="#5a544a" text-anchor="middle">${esc(L[2] || '')}</text>`;
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // from Nim: the Sprague–Grundy theorem, Conway's numbers and games, and the games of the Atlas that the theory reaches
+    // (text: the story's figL.fam — [name, note] × 6: Nim, Sprague–Grundy, Conway, dots and boxes, amazons, hex)
+    nimFamily: () => { const L = ((st('nim').figL || {}).fam) || [], W = 300, H = 330; let g = '';
+      const box = (x, y, w, [t, s] = [], c) => `<rect x="${x - w / 2}" y="${y - 22}" width="${w}" height="46" rx="10" fill="${c}" opacity=".14" stroke="${c}" stroke-width="1.6"/><text x="${x}" y="${y - 3}" font-size="${w < 120 ? 12 : 14}" font-weight="800" fill="${c}" text-anchor="middle">${esc(t || '')}</text><text x="${x}" y="${y + 15}" font-size="12" fill="#2b2a28" text-anchor="middle">${esc(s || '')}</text>`;
+      const arr = (x1, y1, x2, y2, d) => `<path d="M${x1} ${y1}L${x2} ${y2}" stroke="#8a8478" stroke-width="2"${d ? ' stroke-dasharray="5 4"' : ''} marker-end="url(#nfA)"/>`;
+      g += arr(150, 50, 150, 80) + arr(150, 128, 150, 158) + arr(150, 206, 51, 254) + arr(150, 206, 150, 254);
+      g += `<path d="M250 28H292V254" fill="none" stroke="#8a8478" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#nfA)"/>`;
+      g += box(150, 28, 200, L[0], '#c0392b') + box(150, 106, 250, L[1], '#2a5a8a') + box(150, 184, 230, L[2], '#6a3a8a');
+      g += box(51, 280, 98, L[3], '#14864a') + box(150, 280, 98, L[4], '#8a5a24') + box(249, 280, 98, L[5], '#33404a');
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr"><defs><marker id="nfA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8a8478"/></marker></defs>${g}</svg>`; },
     // four tetrahedral dice: how often each score comes (out of 16)
     tetraOdds: () => { const n = [1, 4, 6, 4, 1], W = 300, H = 150, bw = 40, gap = (W - 40 - bw * 5) / 4; let g = '';
       n.forEach((v, i) => { const x = 20 + i * (bw + gap), h = v / 6 * 96, y = 112 - h;
@@ -1113,16 +1383,42 @@
   /* ---------- a story ---------- */
   // (2026-11-24) the minutes a story takes, from its own text: ~500 characters a minute (CJK) or ~200 words (others)
   function mins(S) {
-    const x = st(S.id), t = [x.lead, ...(x.s || []), ...(x.kf || []), ...((x.more || []).flatMap(m => [m.h, ...m.p])), ...((x.tl || []).map(r => r.join(' ')))].join(' ');
+    const x = st(S.id); if (x.mins != null) return Math.max(S.mins || 1, x.mins);   // (the index's minutes, worked out by tools/museum-read-split.js)
+    const t = [x.lead, ...(x.s || []), ...(x.kf || []), ...((x.more || []).flatMap(m => [m.h, ...m.p])), ...((x.tl || []).map(r => r.join(' ')))].join(' ');
     const cjk = (t.match(/[\u3000-\u9fff\uac00-\ud7af]/g) || []).length, words = t.replace(/[\u3000-\u9fff\uac00-\ud7af]/g, ' ').split(/\s+/).filter(Boolean).length;
     return Math.max(S.mins || 1, Math.round(cjk / 500 + words / 200));
   }
+  // (2026-11-24 audit textKB, per screen) a story's whole text is its own file, museum/read-i18n/<lang>/<id>.js, loaded when the story opens
+  // (the room loads only the index: titles, leads, minutes, names). need(id) → Promise<true|false>; a failed load can be tried again.
+  const want = {};
+  const has = id => Array.isArray((tx()[id] || {}).s);
+  const readV = () => (window.AtlasMuseum && AtlasMuseum.readV) || 1;
+  function need(id) {
+    if (has(id)) return Promise.resolve(true);
+    const k = lang + '/' + id; if (want[k]) return want[k];
+    return (want[k] = new Promise(res => { const sc = document.createElement('script'); sc.src = `museum/read-i18n/${lang}/${id}.js?v=${readV()}`;
+      sc.onload = () => { if (!has(id)) delete want[k]; res(has(id)); }; sc.onerror = () => { sc.remove(); delete want[k]; res(false); }; document.head.appendChild(sc); }));
+  }
+  const idle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 1500));
   function story(id, user) {
-    const S = STORIES.find(s => s.id === id); if (!S) return; cur = S; const x = st(id), i = STORIES.indexOf(S);
+    const S = STORIES.find(s => s.id === id); if (!S) return Promise.resolve(); cur = S;
     if (user && ctx.hist) ctx.hist({ room: 'read', story: id });
+    if (has(id)) { draw(S, user); return Promise.resolve(); }
+    // the text is not here yet: a short loading line (with the way back), then the story; on failure a button to try again
+    const i = STORIES.indexOf(S), h = host;
+    h.innerHTML = `<article class="rda" style="--c:${S.color}"><button type="button" class="btn ghost sm rdback">← ${esc(u('back'))}</button>
+      <div class="rdload" role="status" aria-live="polite"><p class="chlead">${esc(fmt(u('no'), { n: i + 1 }))} · ${esc(st(id).title || '')}</p><p class="chlead">${esc(u('loading'))}</p></div></article>`;
+    h.querySelector('.rdback').onclick = () => { shelf(); top(); if (ctx.hist) ctx.hist({ room: 'read' }); };
+    return need(id).then(ok => { if (cur !== S || host !== h || !h.querySelector('.rdload')) return;
+      if (ok) { draw(S, user); return; }
+      const box = h.querySelector('.rdload'); box.innerHTML = `<p class="chlead">${esc(u('loadErr'))}</p><button type="button" class="btn sun sm">${esc(u('loadRetry'))}</button>`;
+      const b = box.querySelector('button'); b.onclick = () => story(id, false).then(() => { const a = h.querySelector('.rdback'); if (a && !h.querySelector('.rdload')) top(); }); b.focus({ preventScroll: true }); });
+  }
+  function draw(S, user) {
+    const id = S.id, x = st(id), i = STORIES.indexOf(S);
     host.innerHTML = `<article class="rda" style="--c:${S.color}">
       <button type="button" class="btn ghost sm rdback">← ${esc(u('back'))}</button>
-      <div class="rdh"><button type="button" class="rdhimg${ga(S.cover)}" ${S.cover.href && !((ctx.games || []).some(q => q.id === S.cover.g)) ? `data-href="${S.cover.href}"` : S.cover.g ? `data-g="${S.cover.g}"` : S.cover.ex ? `data-ex="${S.cover.ex}"` : `data-paint="${S.cover.paint}"`}><img src="${src(S.cover)}" alt=""><span>${esc(S.cover.g ? u('game') : S.cover.ex ? u('exhibit') : u('art'))} · ${esc(S.cover.g ? gName(S.cover.g) : S.cover.ex ? exName(S.cover.ex) : paintName(S.cover.paint))} ›</span></button>
+      <div class="rdh">${S.cover.s && !S.cover.g && !S.cover.ex && !S.cover.paint ? `<div class="rdhimg" style="cursor:default"><img src="${src(S.cover)}" alt=""></div>` : `<button type="button" class="rdhimg${ga(S.cover)}" ${S.cover.href && !((ctx.games || []).some(q => q.id === S.cover.g)) ? `data-href="${S.cover.href}"` : S.cover.g ? `data-g="${S.cover.g}"` : S.cover.ex ? `data-ex="${S.cover.ex}"` : `data-paint="${S.cover.paint}"`}><img src="${src(S.cover)}" alt=""><span>${esc(S.cover.g ? u('game') : S.cover.ex ? u('exhibit') : u('art'))} · ${esc(S.cover.g ? gName(S.cover.g) : S.cover.ex ? exName(S.cover.ex) : paintName(S.cover.paint))} ›</span></button>`}
         <div class="rdht"><em>${esc(fmt(u('no'), { n: i + 1 }))} · ${esc(fmt(u('mins'), { n: mins(S) }))}</em><h3>${esc(x.title)}</h3><p>${esc(x.lead)}</p></div></div>
       ${x.kf && x.kf.length ? `<aside class="rdkf"><h4>${esc(u('kfH'))}</h4><ul>${x.kf.map(k => `<li>${esc(k)}</li>`).join('')}</ul></aside>` : ''}
       ${(x.s || []).map((p, k) => { const im = S.sec[k], flip = im && S.sec.slice(0, k).filter(Boolean).length % 2;
@@ -1140,6 +1436,7 @@
     wire(host.querySelector('.rda'));
     quiz(S);
     if (user) top();
+    idle(() => [STORIES[i + 1], STORIES[i - 1]].forEach(n => { if (n && cur === S) need(n.id); }));   // (the neighbours, for the ‹ › buttons)
   }
   const top = () => { const r = host.getBoundingClientRect(), y = r.top + scrollY - (innerWidth < 820 ? 70 : 90); if (Math.abs(scrollY - y) > 40 && scrollY > y) scrollTo({ top: Math.max(0, y), behavior: 'smooth' }); };
 
@@ -1176,5 +1473,5 @@
     if (host !== box) { host = box; cur = null; }
     if (cur) story(cur.id, false); else shelf();
   }
-  window.AtlasRead = { render, STORIES, V, open: id => story(id, true), show: id => { story(id, false); top(); }, showShelf: () => { shelf(); top(); }, current: () => (host && host.querySelector('.rda') && cur ? cur.id : null), _stamps: stamps };
+  window.AtlasRead = { render, STORIES, V, load: id => need(id), open: id => story(id, true), show: id => story(id, false).then(top), showShelf: () => { shelf(); top(); }, current: () => (host && host.querySelector('.rda') && cur ? cur.id : null), _stamps: stamps };
 })();

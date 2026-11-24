@@ -191,3 +191,6 @@ winProb(state, d)；evaluate(state, n, d) → [{ move, wp }]；think(state, n, l
 - **作り直したレッスン**（`v2: true`）：豆の確率・腕の先でもう一度・ちょうどの目で上がる。「1」が出たら入れる・まとめ・広く知られたルールの4本は前の版のまま（勝率の理由文・合法手2つ：3D卓の一覧に出さない）。広く知られたルールは取りと宝の破産・回の持ち越しがあり、勝ち負けの厳密な解き方は別に考える。
 - 2D：選ぶ問題の誤答で説明（ngo）を出す（追22）。`tools/check_lessons.js` は v2 のレッスンの手を2〜3投げ先の読みで確かめない（厳密な検証は lesson-verify.js）。
 - 3D卓：`atlas/games/patolli.js` のレッスンモード（`ctx.pz.patolli`・`api.pz`）、セリフ・データは `atlas/ls-patolli.js`（案内はルール説明と同じ**ダイスン**）。記録は `aicoding-patolli-lessons`（2D と共有）。
+
+## レッスン・パズルの廃止
+- **2026-11-24 レッスンも廃止**（ユーザー指示：双六系はマンカラ・バックギャモンのような戦略性の高いものを除いてレッスン・パズルを作らない。addendum「双六系のゲームにレッスン・パズルは作らない」）。2D のレッスンのボタン `#btnLesson`（hidden）・ルール／学ぶダイアログのレッスンのタブ（タブ列ごと hidden）・ルール解説の最後の「レッスンへ」・横向きの学ぶ欄のレッスンの行・HeaderBar の order、大百科（shared/atlas.js の tags 'lessons'・total）と 3D卓（atlas/lessons3d.js の DATA）、TOP（index.html の tags・facts・14言語の説明文）から外した。app-learn.js のレッスンのコード・lessons.json・3D のデータファイルは残してある（入口なし）。記録 `aicoding-patolli-lessons` は消さない。

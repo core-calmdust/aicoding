@@ -19,7 +19,7 @@ const fs = require('fs'), path = require('path');
 const ROOT = path.join(__dirname, '..');
 const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 const I18N_DONE = ['xiangqi', 'chess', 'hex', 'morris', 'connect4', 'reversi'];   // (追61) the games whose <game>/i18n.js pz.* words are checked (fixed)
-// (追65) the plural verb before the number is found in any case: 「Te toca (quedan {n})」「Sua vez (restam {n})」「Ваш ход (осталось {n})」 were missed
+// (追69) the plural verb before the number is found in any case: 「Te toca (quedan {n})」「Sua vez (restam {n})」「Ваш ход (осталось {n})」 were missed
 // because the rule only knew the capitalised Quedan / Restam / Осталось.
 const NUM = '\\{n\\}';   // ({g} is a piece in xiangqi/pzwhy.js: the general)
 const after = new RegExp(NUM + '[\\s\\u00a0]+([^\\s<>,.;:!?…()—–।\\-\'"]+)', 'g');

@@ -1337,7 +1337,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=3').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=4').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { let pr; try { pr = JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } return pzMigrate(pr); }
@@ -1804,7 +1804,7 @@ function startPractice(gi) {
 
 // ====================================================================== puzzles: win / win material within N moves (PZBook v2)
 let PUZZLES = null;
-const puzzlesReady = fetch('puzzles.json?v=3').then(r => r.json()).then(d => { PUZZLES = d; pzProgress(); return d; }).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=4').then(r => r.json()).then(d => { PUZZLES = d; pzProgress(); return d; }).catch(() => null);
 let pzLevel = 0;
 const pzKey = (id, j) => id + '-' + j;
 const starVal = x => x === true ? 3 : (+x || 0);
@@ -1952,15 +1952,26 @@ async function puzzleMove(m) {
   const before = posAt(cur).pos.clone(), dm = moveDur(m, before);
   playMove2(m); Pz.used++; renderPuzzleCard();
   if (!good.includes(m)) {
-    Pz.state = 'fail'; Pz.failed = true;
-    await sleep(dm + 350);
-    if (puzzle !== Pz) return;
-    moves = moves.slice(0, cur - 1); cur = moves.length; Pz.used--;
-    const p0 = posAt(cur).pos;
-    if (good[0] !== undefined) markMove(p0, good[0], 'ok'); markMove(p0, m, 'ng');
-    Pz.busy = false; Pz.state = 'play'; update(false); playChime(false); renderPuzzleCard();
-    pzStatus(`<b class="ng">${PZBook.t('blunder')}</b> ${t(left <= 1 ? 'pz.bl.last' : 'pz.bl.reach', { n: left, m: mvIn(before, m) })} ${t('pz.retry')}`);
-    return;
+    // the 詰め rule (claude/game-conventions-addendum.md, 2026-11-11): a move off the solution is played on, not taken back, and the right
+    // move is not shown by itself. The last move: the pieces still outside the corner (red) or the opponent's own last move into its
+    // corner (a draw); before it: the defender's most stubborn reply (duelReply, the same as the 3D) and what is on the board after it
+    // (pzWhy = atlas/games/ugolki-pz.js why(); tools/lesson-verify-ugolki.js ⑦⑧⑨)
+    Pz.failed = true;
+    await sleep(dm + 120);
+    if (puzzle !== Pz || tok !== busyToken) return;
+    const mid = posAt(cur).pos.clone();
+    if (left <= 1) {
+      const w = pzWhy(Pz, { last: true, mid });
+      if (w.k === 'lastDraw') { const r = await replyReq(1); if (r != null && puzzle === Pz && tok === busyToken) { await sleep(380); if (puzzle !== Pz) return; playMove2(r); await sleep(moveDur(r, mid) + 120); if (puzzle !== Pz) return; lessonMarks = [{ at: mTo(r), cls: 'ng' }]; } }
+      else lessonMarks = pzOutside(mid, Pz.me).map(f => ({ at: f, cls: 'ng' }));
+      return pzFail(Pz, w.text);
+    }
+    const r = await replyReq(left - 1);
+    if (r == null || puzzle !== Pz || tok !== busyToken) return;
+    await sleep(380); if (puzzle !== Pz || tok !== busyToken) return;
+    playMove2(r); await sleep(moveDur(r, mid) + 120); if (puzzle !== Pz) return;
+    lessonMarks = [{ at: mTo(r), cls: 'ng' }];
+    return pzFail(Pz, pzWhy(Pz, { mid, after: posAt(cur).pos, reply: r, left: left - 1 }).text);
   }
   await sleep(dm + 60);
   if (puzzle !== Pz || tok !== busyToken) return;
@@ -1968,6 +1979,20 @@ async function puzzleMove(m) {
   if (puzzle !== Pz || tok !== busyToken) return;
   Pz.busy = false; renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay());
   pzStatus(t('pz.reply', { m: Pz.lastReply || '', n: Pz.n - Pz.used }));
+}
+// the board's facts after a move off the solution (atlas/games/ugolki-pz.js why, the same as the 3D): far = more pieces outside the
+// corner than moves left; block = the opponent's pieces still on the corner; slow = alone it takes s moves; catch = alone s ≤ n, the
+// opponent's moves stop it; over = the reply ended the game; last / lastDraw after the last move
+function pzWhy(Pz, o) {
+  const F = window.AtlasUgolkiPz, w = F ? F.why(Object.assign({ me: Pz.me, E }, o)) : { k: o.last ? 'last' : 'far', v: {} };
+  const v = Object.assign({ c: pname(Pz.me), r: o.reply != null ? mvIn(o.mid, o.reply) : '' }, w.v);
+  if (w.k === 'over') v.w = t(w.v.w === 'draw' ? 'pz.why.wDraw' : 'pz.why.wLose');
+  return { k: w.k, text: t('pz.why.' + w.k, v) };
+}
+const pzOutside = (pos, me) => { const T = E.target(me), o = []; for (let i = 0; i < 64; i++) if (pos.owner(i) === me && !T[i]) o.push(i); return o; };
+function pzFail(Pz, why) {
+  Pz.state = 'fail'; Pz.busy = false; update(false); playChime(false); renderPuzzleCard();
+  pzStatus(`${why} ${t('pz.why.answer')}`);
 }
 function puzzleSolved() {
   const Pz = puzzle; if (!Pz) return;
