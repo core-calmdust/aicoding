@@ -6960,7 +6960,7 @@
     .then(() => { const U = AtlasLsUr.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   /* senet (2026-11-24 担当C): the data, セティ's words and the board hooks are in atlas/ls-senet.js (loaded the first time) */
-  const SENET = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsSenet) return res(); const sc = document.createElement('script'); sc.src = 'ls-senet.js?v=2'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const SENET = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsSenet) return res(); const sc = document.createElement('script'); sc.src = 'ls-senet.js?v=3'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsSenet.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   /* patolli (2026-11-24 担当C): the data, ダイスン's words and the board hooks are in atlas/ls-patolli.js (loaded the first time) */
@@ -7129,7 +7129,7 @@
         let box = $('.lsch'); if (!box) { box = document.createElement('div'); box.className = 'lsch bgch'; $('.bub').insertBefore(box, $('.cnt')); }
         box.hidden = false; box.innerHTML = it.choices.map((c, k) => `<button type="button" class="btn sm" data-ci="${k}">${c}</button>`).join('');
         box.onclick = e => { const b = e.target.closest('[data-ci]'); if (!b || ok || phase !== 'ramp' || cur.ri !== i) return; const k = +b.dataset.ci;
-          if (k === it.right) { box.querySelectorAll('button').forEach((x, j) => { x.disabled = true; x.classList.toggle('ok', j === k); }); rDone(); } else { b.classList.add('ng'); b.disabled = true; say(RU('ng')); try { chime(false); } catch (e2) {} } };
+          if (k === it.right) { box.querySelectorAll('button').forEach((x, j) => { x.disabled = true; x.classList.toggle('ok', j === k); }); rDone(); } else { b.classList.add('ng'); b.disabled = true; say((it.ngx ? it.ngx(k) + ' ' : '') + RU('ng')); try { chime(false); } catch (e2) {} } };   // (追47: senet's warm-up says why the choice is wrong)
       }
       onMoved = async (u, info) => {
         if (stopped || phase !== 'ramp' || cur.ri !== i) return;

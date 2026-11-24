@@ -13,7 +13,7 @@ const FILE = path.join(__dirname, '..', 'lessons.json');
 const OLD = JSON.parse(fs.readFileSync(FILE, 'utf8'));
 const LANGS = T.LANGS, SEEDS = +process.argv[2] || 24;
 const rng = E.mulberry32(20261124);
-const MSG = Object.assign({}, T.MSG);
+const MSG = Object.assign({}, T.MSG, require('./learn_text_water.js').MSG);   // (水の家の選ぶ問題・準備の選ぶ問題の文言、2026-11-24)
 const fillMsg = (key, p) => { const t = MSG[key], o = {}; for (const l of LANGS) o[l] = t[l].replace(/\{(\w+)\}/g, (_, k) => p[k] != null ? p[k] : ''); return o; };
 const fillQ = (Q, v) => { const o = {}; for (const l of LANGS) o[l] = Q[l].replace(/\{(\w+)\}/g, (_, x) => v[x]); return o; };
 const S = s => ({ rule: 'std', pos: s.pos.map(a => a.slice()), turn: 0 });
