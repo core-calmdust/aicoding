@@ -2555,13 +2555,23 @@ function near53(opt) { const src = require('fs').readFileSync(path.join(ROOT, 'a
   // 追81 (2026-11-25 担当A): the line after a wrong move in a warm-up (<game>/lessons.json rampUi.ng, every language, and the 3D voice
   //  <game>/voice-*-ja.js 'ui:ng') is said whatever the move, so it does not say the move was close (gomoku's 「おしい！」 after e10, a
   //  move nowhere near the three). The games done: N81_DONE; the others are 「追81 未確認」 in claude/lesson-quality.md.
-  { const fs = require('fs'), NEAR = /おしい|惜しい|いい線|あと少し|あと一歩|Close|Almost|Casi|Presque|Quase|Knapp|^Fast\b|लगभग|قريب|Почти|Hampir|Az kaldı|아깝|差一点|差一點/;
+  //  2026-11-25 担当A: all of 担当A's games (N81_DONE), and also hex/ramps3d.json ui/ng, amazons/i18n-am-ls.js ru.ng (every
+  //  language block), the generators <game>/tools/ramps.js and go/tools/data/lessons-i18n.json (so a rebuild does not bring the line
+  //  back); regret openers (可惜・اقتربت・Schade・Dommage・Жаль・Sayang) count too.
+  { const fs = require('fs'), NEAR = /おしい|惜しい|いい線|あと少し|あと一歩|Close|Almost|Casi|Presque|Quase|Knapp|^Fast\b|लगभग|قريب|اقترب|Почти|Жаль|Hampir|Sayang|Az kaldı|아깝|差一点|差一點|可惜|Schade|Dommage|Peccato|अफ़सोस/;
+    const NEAR_SRC = /(['"])(?:おしい！|惜しい！|差一点！|差一點！|還差一點！|可惜！|아깝다! |¡Casi! |Presque ! |Quase! |Fast! |लगभग! |قريب! |اقتربت! |Почти! |Hampir! |Az kaldı! |Close! )/;
     for (const d of N81_DONE) { let D = null; try { D = JSON.parse(fs.readFileSync(path.join(ROOT, d, 'lessons.json'), 'utf8')); } catch (e) {}
-      const w = D && D.rampUi && D.rampUi.ng; if (!w) out.push({ step: d + '/lessons.json', q: 0, msg: '追81 no rampUi.ng' });
-      else for (const [l, v] of Object.entries(typeof w === 'string' ? { '-': w } : w)) if (NEAR.test(v)) out.push({ step: d + '/lessons.json', q: 0, msg: `追81 the warm-up's wrong-move line rampUi.ng.${l} 「${v}」 says the move was close` });
+      const w = D && D.rampUi && D.rampUi.ng; if (!w && !N81_NO_RAMPUI.has(d)) out.push({ step: d + '/lessons.json', q: 0, msg: '追81 no rampUi.ng' });
+      else if (w) for (const [l, v] of Object.entries(typeof w === 'string' ? { '-': w } : w)) if (NEAR.test(v)) out.push({ step: d + '/lessons.json', q: 0, msg: `追81 the warm-up's wrong-move line rampUi.ng.${l} 「${v}」 says the move was close` });
+      for (const f of ['tools/ramps.js', 'tools/data/lessons-i18n.json']) { let t = ''; try { t = fs.readFileSync(path.join(ROOT, d, f), 'utf8'); } catch (e) { continue; }
+        for (const ln of t.split('\n')) if (NEAR_SRC.test(ln) && /もう一度考えて|もう一回考えて|局面を戻す|Think again|再想/.test(ln)) out.push({ step: d + '/' + f, q: 0, msg: `追81 the warm-up line source still opens with a closeness word 「${ln.trim().slice(0, 50)}」` }); }
+      if (d === 'hex') { let R = null; try { R = JSON.parse(fs.readFileSync(path.join(ROOT, 'hex/ramps3d.json'), 'utf8')); } catch (e) {}
+        const v = R && R['ui/ng']; if (!v) out.push({ step: 'hex/ramps3d.json', q: 0, msg: '追81 no ui/ng' }); else for (const [l, x] of Object.entries(v)) if (NEAR.test(x)) out.push({ step: 'hex/ramps3d.json', q: 0, msg: `追81 ui/ng.${l} 「${x}」 says the move was close` }); }
+      if (d === 'amazons') { const t = fs.readFileSync(path.join(ROOT, 'amazons/i18n-am-ls.js'), 'utf8'), m = [...t.matchAll(/'ru\.ng':\s*'((?:[^'\\]|\\.)*)'/g)];
+        if (!m.length) out.push({ step: 'amazons/i18n-am-ls.js', q: 0, msg: '追81 no ru.ng' }); for (const x of m) if (NEAR.test(x[1])) out.push({ step: 'amazons/i18n-am-ls.js', q: 0, msg: `追81 ru.ng 「${x[1]}」 says the move was close` }); }
       for (const f of fs.readdirSync(path.join(ROOT, d)).filter(f => /^voice-.*-ja\.js$/.test(f))) { const m = fs.readFileSync(path.join(ROOT, d, f), 'utf8').match(/'ui:ng':\s*'([^']*)'/); if (m && NEAR.test(m[1])) out.push({ step: d + '/' + f, q: 0, msg: `追81 the 3D warm-up's wrong-move line ui:ng 「${m[1]}」 says the move was close` }); } } }
   return out; }
-const N81_DONE = ['gomoku'];
+const N81_DONE = ['gomoku', 'amazons', 'checkers', 'chess', 'connect4', 'go', 'hex', 'mancala', 'morris', 'shogi', 'tafl', 'xiangqi'], N81_NO_RAMPUI = new Set(['amazons', 'hex']);
 function xiangqiOpen(opt) {
   const fs = require('fs'), CU = require(path.join(ROOT, 'xiangqi/tools/op_curate.js')), E = require(path.join(ROOT, 'xiangqi/engine.js'));
   const OP = (opt && opt.op) || JSON.parse(fs.readFileSync(path.join(ROOT, 'xiangqi/openings.json'), 'utf8'));
