@@ -1520,6 +1520,27 @@ function shogi(opt) {
     for (const [who, tx] of Object.entries(said)) for (const k of kinds) { const w = KW[k]; if (!w) continue;
       const ok = k >= 9 && k <= 12 ? w.every(x => tx.includes(x)) : new RegExp(w[0] + MW).test(tx);
       if (!ok) add(id, -1, `追32 the ${who} intro does not tell how the ${NM[k]} moves (a ${NM[k]} takes in the problems)`); }
+    // 追48 every piece the student has to weigh (each piece that can be taken in a problem or a try) has its value told before the
+    // problems — the 3D (ショウギツネ's intro, the warm-ups: k20's 3D intro told no value and the warm-up hint only 歩・銀・金・角・飛,
+    // while q3 asks 銀 or 香) and the 2D (intro and note, ja and en). 追45 with the told values the student's rule 「いちばん価値の高い駒」
+    // picks exactly the answer: a single top piece, the one accepted (else following the intro's tip would be wrong).
+    if (g.problems.some(P => P.mode === 'material')) {
+      const JN = { 1: '歩', 2: '香', 3: '桂', 4: '銀', 5: '角', 6: '飛', 7: '金' }, EN = { 1: 'pawn', 2: 'lance', 3: 'knight', 4: 'silver', 5: 'bishop', 6: 'rook', 7: 'gold' };
+      const told = (tx, nm) => { const v = {}; for (const [k, n] of Object.entries(nm)) { const m = tx.match(new RegExp(n + '(?:車|馬)?\\s*(\\d+)')); if (m) v[k] = +m[1]; } return v; };
+      const ramp = f => (g.ramp || []).map(r => ['t', 'body', 'g', 'h', 'y'].map(k => r[k] && r[k][f] || '').join(' ')).join(' ');
+      const tell = { '3D': told(plain(String((X.SHJ2.intro || {})[id] || '')) + ' ' + plain(ramp('ja')), JN), '2D ja': told(plain((g.intro && g.intro.ja || []).join(' ') + ' ' + (g.note && g.note.ja || '')) + ' ' + plain(ramp('ja')), JN),
+        '2D en': told(plain((g.intro && g.intro.en || []).join(' ') + ' ' + (g.note && g.note.en || '')) + ' ' + plain(ramp('en')), EN) };
+      const need = new Set(); const tops = [];
+      const look = (sfen, acc, tag) => { const p = pos(sfen), cs = p.legalMoves(true).filter(m => !E.isDrop(m) && p.board[E.mTo(m)]);
+        const tg = new Map(); cs.forEach(m => tg.set(E.mTo(m), T(p.board[E.mTo(m)]))); tg.forEach(t => need.add(t)); tops.push([tag, p, cs, tg, acc]); };
+      g.problems.forEach((P, j) => P.mode === 'material' && look(P.sfen, P.accept, `q${j + 1}`));
+      (g.ramp || []).forEach((r, j) => r.k === 'try' && /価値/.test(plain(r.g && r.g.ja || '')) && look(r.sfen, r.ok, `ramp ${j + 1}`));
+      for (const [who, v] of Object.entries(tell)) {
+        for (const t of need) if (JN[t] && v[t] == null) add(id, -1, `追48 the ${who} never tells the value of the ${NM[t]} (it can be taken in the problems)`);
+        const ks = Object.keys(v).map(Number); for (const a of ks) for (const b of ks) if (v[a] > v[b] && V[a] <= V[b]) add(id, -1, `追48 the ${who} says ${NM[a]} ${v[a]} > ${NM[b]} ${v[b]}, the engine does not`);
+        for (const [tag, p, cs, tg, acc] of tops) { const sc = [...tg.entries()].map(([sq, t]) => [sq, v[t]]).filter(x => x[1] != null).sort((x, y) => y[1] - x[1]);
+          if (!sc.length) continue; if (sc.length > 1 && sc[1][1] === sc[0][1]) { add(id, -1, `追45 ${tag}: by the ${who} values two pieces tie (${sc[0][1]})`); continue; }
+          const pick = cs.filter(m => E.mTo(m) === sc[0][0]).map(m => p.toUsi(m)); if (pick.some(u => !acc.includes(u))) add(id, -1, `追45 ${tag}: the ${who} values pick ${pick}, the answer is ${acc}`); } } }
     // 追14 the warm-ups: an explain's arrows from a sliding piece end on the farthest square it reaches (no free square beyond);
     // a try's words — the piece to move (「角で」), the piece to take (「金を取」), how many it can take (「取れる駒が2つ」), the praise
     // naming what was taken — agree with the board and the ok moves; a move that does what the words ask is in ok (else they say 成).
