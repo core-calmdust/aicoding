@@ -96,8 +96,9 @@
     const tall = innerHeight > innerWidth * 1.15;
     if (T3.fit) T3.fit(tall ? { w: U.W + .6, d: U.H + .8, y: Y + .2, pitch: 1.0 } : { w: U.W + .3, d: U.H + .5, y: Y + .2, pitch: 1.0 });
     const pvp = ctx.mode === 'pvp';
-    const human = pvp ? 1 : ctx.side === 2 ? 2 : 1, ai = 3 - human;   // 1 White (moves first, pale balls), 2 Black (ebony)
-    const flip = human === 2;                                           // the player's colour at the bottom (pvp: White)
+    const PZ = GG.id === 'fanorona' && ctx.pz || null;   // PZ: a puzzle position driven by atlas/puzzles.js (no AI: ctx.pz.moved decides; 2026-11-25 担当D)
+    let human = pvp ? 1 : PZ ? (PZ.me === 2 ? 2 : 1) : ctx.side === 2 ? 2 : 1, ai = 3 - human;   // 1 White (moves first, pale balls), 2 Black (ebony)
+    let flip = human === 2, START = PZ && PZ.spec || null;                                           // the player's colour at the bottom (pvp: White)
     const pname = c => X.n[c - 1];
     let E = null;
     // point (r * 9 + c) ↔ board: display column left → right, display row far → near
@@ -216,7 +217,7 @@
     }
 
     /* ---------- position ---------- */
-    function refresh() { const r = E.replay(null, moves); pos = r.pos; hashes = r.hashes; }
+    function refresh() { const r = E.replay(START, moves); pos = r.pos; hashes = r.hashes; }
     function status() { return E.judge(pos, hashes); }
     function hud(msg) {
       const side = c => `<span class="hs ${pos && pos.turn === c && !over ? 'on' : ''}"><i class="dk" style="${(GG.id === 'alquerque' ? DKA : DK)[c - 1]}"></i>${pvp ? pname(c) : c === human ? L.you : L.ai}<b>${pos ? pos.count(c) : GG.pcs}</b></span>`;
@@ -231,7 +232,7 @@
     function showMarks() {
       clear(hl); hintMv = null; hintJ++; mustMarks = [];
       if (moves.length) {
-        const m = moves[moves.length - 1], before = E.replay(null, moves.slice(0, -1)).pos, p = E.path(before, m).filter(q => q >= 0);
+        const m = moves[moves.length - 1], before = E.replay(START, moves.slice(0, -1)).pos, p = E.path(before, m).filter(q => q >= 0);
         if (p.length === 1) { mark(hl, GEO.ring, MAT.last, p[0], .01); showMust(); return; }   // (Telo: a ball put on the board)
         mark(hl, GEO.small, MAT.lastF, p[0], .01); mark(hl, GEO.ring, MAT.last, p[p.length - 1], .01);
         for (let j = 1; j < p.length - 1; j++) mark(hl, GEO.dot, MAT.lastF, p[j], .01);
@@ -297,7 +298,7 @@
       const nx = () => { if (stopped) return; if (k >= S.length) { showMarks(); later(done, caps ? 380 : 60); return; } const s = S[k++]; step3(s, () => later(nx, s.cap.length ? 160 : 0)); };
       nx();
     }
-    function commit(m, pre) { busy = true; play(m, pre, () => { busy = false; next(); }); }
+    function commit(m, pre) { if (PZ) { pzOn = false; busy = true; play(m, pre, () => { busy = false; pzAfter(); }); return; } busy = true; play(m, pre, () => { busy = false; next(); }); }
     function next() {
       if (stopped) return;
       const st = status();
@@ -349,7 +350,7 @@
       return r * 9 + c;
     }
     function onClick(e) {
-      if (over || busy || thinking || !pos || pos.turn !== mover() || T3.wasDrag()) return;
+      if (over || busy || thinking || !pos || pos.turn !== mover() || T3.wasDrag() || (PZ && !pzOn)) return;
       const i = pointOf(e), me = pos.turn;
       if (sel && sel.choose) {
         const pick = sel.choose.find(x => x.cap.includes(i));
@@ -377,6 +378,74 @@
     }
     ctx.el.addEventListener('click', onClick);
 
+    /* ---------- puzzle mode (ctx.pz, 2026-11-25 担当D): a position from fanorona/puzzles.json, no AI; atlas/puzzles.js judges each
+       move (ctx.pz.moved(m, info)) and plays the replies (api.pz.play). The solver is the game's own exhaustive puzzle search
+       (engine.c puzzle(), the 2D's request 'puzzle') in the engine worker; the defender's reply is fanorona/pzwhy.js pick (the 2D's).
+       Marks: points [i, 'ok'|'ng'|'hl'|'ring'] or a whole move { m, cls } (a ring where it starts, dots along its path, a disc where
+       it lands, crosses on what it takes). ---------- */
+    let pzOn = false, pzJ = 0;
+    const pzMk = new TH.Group(); board.add(pzMk);
+    const PZC = { ok: 0x2fd17a, ng: 0xff3b30, hl: 0xffb21a, ring: 0xffc928 }, pzMat = {};
+    const pm = (k, op) => pzMat[k + op] || (pzMat[k + op] = basic(PZC[k] != null ? PZC[k] : PZC.hl, op));
+    const lead = (p, c) => p.count(c) - p.count(3 - c);
+    function pzState() { const st = status(); return { over: !!st.over, winner: st.winner || 0, draw: !!st.draw, turn: pos.turn, n: moves.length, w: pos.count(1), b: pos.count(2), caps: pos.hasCaps() }; }
+    function pzAfter() { const m = moves[moves.length - 1]; showMust(); if (PZ.moved) PZ.moved(m, pzState()); }
+    function pzWait() { busy = false; over = !!(pos && status().over); pzOn = !PZ.lock && !over; showMust(); hud(''); }
+    function pzLoad(spec, me, o) {
+      PZ.spec = spec || null; PZ.me = me === 2 ? 2 : 1; PZ.lock = !!(o && o.lock); PZ.g = (o && o.g) || 0;
+      if (!E) return;   // (the engine is still loading: it starts from PZ)
+      timers.forEach(clearTimeout); timers.length = 0; jid++; pzJ++; pzOn = false; clear(pzMk); clear(mv); clear(hl); sel = null;
+      START = PZ.spec; human = PZ.me; ai = 3 - human; flip = human === 2;
+      moves = []; over = false; busy = true; refresh(); PZ.base = lead(pos, human); const wait = setup(); hud('');
+      later(() => { showMarks(); pzWait(); if (PZ.ready) PZ.ready(); }, wait + 150);
+    }
+    function pzMark(list) {
+      clear(pzMk); if (list == null || !pos) return;
+      const L0 = typeof list === 'number' ? [[list, 'ring']] : list;
+      for (const e0 of L0) {
+        const e = Array.isArray(e0) && e0[0] && typeof e0[0] === 'object' ? { m: e0[0].m, cls: e0[1] } : e0;
+        if (e && !Array.isArray(e) && e.m != null) {
+          const k = e.cls || 'ok', p = E.path(pos, e.m).filter(q => q >= 0); if (!p.length) continue;
+          mark(pzMk, GEO.ring, pm(k, .95), p[0], .05); p.slice(1, -1).forEach(q => mark(pzMk, GEO.dot, pm(k, .9), q, .04)); mark(pzMk, GEO.dot, pm(k, .95), p[p.length - 1], .04);
+          let caps = []; try { caps = E.capsOf(pos, e.m).flat(); } catch (x) {}
+          caps.forEach(i => [1, -1].forEach(sg => { const b = mark(pzMk, GEO.x, pm(k, .85), i, .05); b.rotation.y = sg * Math.PI / 4; }));
+          continue;
+        }
+        const [q, k] = Array.isArray(e) ? e : [e.at, e.cls]; if (!(q >= 0 && q < NPg)) continue;
+        if (k === 'ring') { mark(pzMk, GEO.ring, pm('ring', 1), q, .05); continue; }
+        mark(pzMk, GEO.ring, pm(k, .95), q, .05); mark(pzMk, GEO.dot, pm(k, k === 'hl' ? .5 : .6), q, .015);
+      }
+      kick(400);
+    }
+    // the engine worker's puzzle search (the 2D's request 'puzzle': [{ m, need }] for the side to move after `mvs`)
+    function pzAsk(n, defend, mvs) {
+      const j = ++pzJ, line = (mvs || moves).slice();
+      let goal = PZ.g; if (goal && !defend) goal = Math.max(1, goal - (lead(E.replay(START, line).pos, human) - PZ.base));
+      return new Promise(res => {
+        if (!worker) worker = newWorker();
+        const done = r => res(r && r.list ? r.list : []);
+        worker.onmessage = e => { const r = e.data; if (r.id === -j && r.type === 'result') done(r); };
+        worker.onerror = () => { worker = null; done(null); };
+        worker.postMessage({ type: 'puzzle', id: -j, start: START, moves: line, n, defend: !!defend, goal, base: PZ.base, rule: GG.rule });
+      });
+    }
+    const pzApi = {
+      load: (spec, me, o) => pzLoad(spec, me, o),
+      wait: pzWait,
+      play: m => new Promise(res => { if (!pos || !pos.steps(m)) return res(false); m = canon(m); pzOn = false; busy = true; clear(pzMk); clear(mv); sel = null; play(m, false, () => { busy = false; over = !!status().over; res(true); }); }),
+      undo(k = 1) { timers.forEach(clearTimeout); timers.length = 0; clear(mv); sel = null; moves.splice(Math.max(0, moves.length - k)); refresh(); over = false; rebuild(); clear(pzMk); showMarks(); },
+      moves: () => moves.slice(),
+      state: () => pos ? pzState() : {},
+      mark: pzMark,
+      pos: () => pos ? pos.clone() : null,
+      start: () => E.Pos.from(START),
+      engine: () => E,
+      // the first moves that reach the goal within `left` own moves whatever the reply (what the 2D accepts)
+      good: (left, mvs) => pzAsk(left, false, mvs).then(L => L.filter(x => x.need > 0 && x.need <= left).sort((a, b) => a.need - b.need).map(x => x.m)),
+      // the defender's reply (fanorona/pzwhy.js pick over the search's list), `left` = the attacker's moves left after it
+      reply: left => pzAsk(left, true).then(L => { const F = window.FanoronaPzWhy; return L.length ? (F ? F.pick(E, pos, L) : L[0].m) : null; }),
+    };
+
     function begin() {
       timers.forEach(clearTimeout); timers.length = 0; clear(mv); clear(hl);
       moves = []; over = false; busy = true; sel = null; thinking = false; jid++;
@@ -384,13 +453,14 @@
       later(() => { busy = false; showMarks(); next(); }, wait + 200);
     }
     hud('');
-    loadEngine().then(e => { if (stopped) return; E = e; E.setRule(GG.rule); if (!pvp) worker = newWorker(); begin(); }).catch(() => hud('⚠'));
+    loadEngine().then(e => { if (stopped) return; E = e; E.setRule(GG.rule); if (PZ) { worker = newWorker(); pzLoad(PZ.spec, PZ.me, { lock: PZ.lock, g: PZ.g }); return; } if (!pvp) worker = newWorker(); begin(); }).catch(() => hud('⚠'));
 
     // test hooks (positions on screen, state)
     const dbg = {
       at: i => { const [x, z] = xz(i); return T3.project(x, z, Y); },
-      state: () => ({ hint: hintMv, moves: moves.slice(), turn: pos && pos.turn, human, pvp, over, busy, thinking, sel: sel ? { from: sel.from, cur: selCur(), choose: !!sel.choose } : null, w: pos && pos.count(1), b: pos && pos.count(2), pieces: Object.keys(pcs).length, grooves: G.map(x => x.length) }),
+      state: () => ({ pzOn, hint: hintMv, moves: moves.slice(), turn: pos && pos.turn, human, pvp, over, busy, thinking, sel: sel ? { from: sel.from, cur: selCur(), choose: !!sel.choose } : null, w: pos && pos.count(1), b: pos && pos.count(2), pieces: Object.keys(pcs).length, grooves: G.map(x => x.length) }),
       legal: () => pos ? pos.moves() : [],
+      pz: () => PZ ? pzApi : null,
     };
     window.Atlas3D[GG.id]._dbg = dbg;
     /* ---------- 待った · 投了 · ヒント · time-out (the portal's action bar) ---------- */
@@ -408,7 +478,7 @@
       hud(L.lose); later(() => ctx.onEnd({ win: false, draw: false, level: ctx.level, score: r }), 200);
     }
     const api = {
-      human: human - 1,
+      human: human - 1, pz: PZ ? pzApi : null,
       canUndo: () => myTurn() && moves.length >= undoN() && (pvp || moves.length - undoN() >= (human === 2 ? 1 : 0)),
       undo() {
         if (!api.canUndo()) return;
@@ -460,7 +530,7 @@
         timers.forEach(clearTimeout); clearTimeout(toastT); if (toastEl) toastEl.remove();
         ctx.el.removeEventListener('click', onClick);
         if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null;
-        Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
+        Object.values(MAT).forEach(m => m.dispose()); Object.values(pzMat).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
         if (window.Atlas3D[GG.id]._dbg === dbg) delete window.Atlas3D[GG.id]._dbg;
       },
       _debug: dbg,

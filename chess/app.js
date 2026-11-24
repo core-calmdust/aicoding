@@ -1368,7 +1368,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261107i14').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=20261125n81').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
@@ -1735,7 +1735,7 @@ $('#lsNext').onclick = () => {
   if (lesson.virt) {
     const mk = s.id === 'mk', full = total * 20, ok = mk ? n >= full * 0.75 : pass;
     if (!mk) { const op = opProg(), old = op[s.id] || { best: 0, pass: false }; op[s.id] = { best: Math.max(old.best, n), pass: old.pass || pass }; try { localStorage.setItem(OP_STORE, JSON.stringify(op)); } catch (e) {} }
-    $('#ldTitle').textContent = mk ? t(ok ? 'mk.good' : 'mk.done') : t(pass ? 'op.pass' : 'ls.failed');
+    $('#ldTitle').textContent = mk ? t(ok ? 'mk.good' : 'mk.done') : t(pass ? 'op.pass' : n + 20 >= 75 ? 'ls.failed' : 'ls.failedFar');
     $('#ldSub').innerHTML = `<div class="ld-score ${ok ? 'ok' : 'ng'}">${t('u.pt', { n })}<small> / ${full}</small></div>` + lesson.results.map((x, k) => `${k + 1}: ${t('u.pt', { n: x })}`).join('　') + (ok || mk ? '' : `<br>${t('ls.needPass')}`);
     $('#btnLessonPlay').classList.add('hidden'); $('#btnLessonNextStep').classList.add('hidden');
     showLessonView('lessonDoneView'); showOverlay('#lessonOverlay');
@@ -1745,7 +1745,7 @@ $('#lsNext').onclick = () => {
   const pr = lsProgress(), old = pr[s.id] || { best: 0, clear: false };
   pr[s.id] = { best: Math.max(old.best, n), clear: old.clear || pass };
   try { localStorage.setItem(LS_STORE, JSON.stringify(pr)); } catch (e) {}
-  $('#ldTitle').textContent = t(pass ? 'ls.passed' : 'ls.failed');
+  $('#ldTitle').textContent = t(pass ? 'ls.passed' : n + 20 >= 75 ? 'ls.failed' : 'ls.failedFar');
   if (s.kind === 'drill') $('#ldSub').innerHTML = `<div class="ld-score ok">★ ${n}<small> / ${total * 3}</small></div>` + lesson.results.map((x, k) => `${k + 1}: ${'★'.repeat(x)}${'☆'.repeat(3 - x)}`).join('　') + `<br><small style="color:var(--dim)">${t('dr.more')}</small>`;
   else $('#ldSub').innerHTML = `<div class="ld-score ${pass ? 'ok' : 'ng'}">${t('u.pt', { n })}<small> / 100</small></div>` + lesson.results.map((x, k) => `${k + 1}: ${t('u.pt', { n: x })}`).join('　') + (pass ? '' : `<br>${t('ls.needPass')}`);
   const lastBasic = s.course === 'basics' && !(LESSONS.steps[lesson.step + 1] && LESSONS.steps[lesson.step + 1].course === 'basics');

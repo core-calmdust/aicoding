@@ -1335,7 +1335,7 @@ body.in-online:not(.ol-over) #coachCard{display:none!important}
   </div>
 </div>
 
-<script src="i18n.js?v=20261107l14-p61"></script>
+<script src="i18n.js?v=20261107l14-p61-f82"></script>
 <script src="i18n_more.js?v=20261107l14-nd1"></script>
 <script src="i18n_perfect.js?v=1"></script>
 <script src="i18n_coach.js?v=5sq-ls"></script>
@@ -2736,7 +2736,7 @@ function rtConfirm(after) {
 let LESSONS = null, lsVar = 'nine', pzVar = 'nine';
 const VSUF = v => v === 'nine' ? '' : '-' + v, VPRE = v => v === 'nine' ? '' : v + ':';
 const LSDATA = {}, PZDATA = {};
-function loadLs(v) { return LSDATA[v] || (LSDATA[v] = fetch(`lessons${VSUF(v)}.json?v=20261123lq`).then(r => r.json()).catch(() => null)); }
+function loadLs(v) { return LSDATA[v] || (LSDATA[v] = fetch(`lessons${VSUF(v)}.json?v=20261125n81`).then(r => r.json()).catch(() => null)); }
 function loadPz(v) { return PZDATA[v] || (PZDATA[v] = fetch(`puzzles${VSUF(v)}.json?v=20261104pzd`).then(r => r.json()).catch(() => null)); }
 const lessonsReady = loadLs('nine').then(d => (LESSONS = d));
 const lsKey = id => VPRE(lsVar) + id;
@@ -3037,7 +3037,7 @@ $('#lsNext').onclick = () => {
   if (lesson.virt) {
     const op = opProg(), old = op[s.id] || { best: 0, pass: false }; op[s.id] = { best: Math.max(old.best, n), pass: old.pass || pass };
     try { localStorage.setItem(OP_STORE, JSON.stringify(op)); } catch (e) {}
-    $('#ldTitle').textContent = t(pass ? 'op.pass' : 'ls.failed');
+    $('#ldTitle').textContent = t(pass ? 'op.pass' : n + 20 >= 75 ? 'ls.failed' : 'ls.failedFar');
     $('#ldSub').innerHTML = `<div class="ld-score ${pass ? 'ok' : 'ng'}">${t('u.pt', { n })}<small> / 100</small></div>` + lesson.results.map((x, k) => `${k + 1}: ${t('u.pt', { n: x })}`).join('　') + (pass ? '' : `<br>${t('ls.needPass')}`);
     $('#btnLessonNextStep').classList.add('hidden');
     showLessonView('lessonDoneView'); showOverlay('#lessonOverlay');
@@ -3047,7 +3047,7 @@ $('#lsNext').onclick = () => {
   const pr = lsProgress(), lk = VPRE(lesson.v || 'nine') + s.id; const old = pr[lk] || { best: 0, clear: false };
   pr[lk] = { best: Math.max(old.best, n), clear: old.clear || pass };
   try { localStorage.setItem(LS_STORE, JSON.stringify(pr)); } catch (e) {}
-  $('#ldTitle').textContent = t(pass ? 'ls.passed' : 'ls.failed');
+  $('#ldTitle').textContent = t(pass ? 'ls.passed' : n + 20 >= 75 ? 'ls.failed' : 'ls.failedFar');
   $('#ldSub').innerHTML = `<div class="ld-score ${pass ? 'ok' : 'ng'}">${t('u.pt', { n })}<small> / 100</small></div>` + lesson.results.map((x, k) => `${k + 1}: ${t('u.pt', { n: x })}`).join('　') + (pass ? '' : `<br>${t('ls.needPass')}`);
   $('#btnLessonNextStep').classList.toggle('hidden', lesson.step + 1 >= LESSONS.steps.length);
   const nx = LESSONS.steps[lesson.step + 1];

@@ -2666,3 +2666,21 @@ ar: {
     'lf.hole': 'بعد <b>{x}</b> يهرب الثعلب بـ <b>{r}</b>: يبقى مخرج واحد، لكن كل إوزة تدخله تترك للثعلب نقلة. الجواب <b>{m}</b>.',
     'lf.reach0': 'بعد <b>{x}</b> يهرب الثعلب بـ <b>{r}</b>: يبقى مخرج واحد، لكن لا إوزة تصل إليه في نقلة واحدة. الجواب <b>{m}</b>.' },
 }; for (const l in A) if (window.I18N && I18N[l]) Object.assign(I18N[l], A[l]); })();
+
+// 追82 (2026-11-25 担当C): the not-passed heading when more than one right answer short — no closeness word in any language
+(function (A) { for (const l in A) if (window.I18N) I18N[l] = Object.assign(I18N[l] || {}, A[l]); })({
+  "ja": { "ls.failedFar": "今回は不合格です。もう一度どうぞ！" },
+  "en": { "ls.failedFar": "Not passed — try again!" },
+  "zh": { "ls.failedFar": "这次没过关……再来一次！" },
+  "ko": { "ls.failedFar": "이번엔 불합격… 다시 도전!" },
+  "es": { "ls.failedFar": "No superada: ¡inténtalo otra vez!" },
+  "fr": { "ls.failedFar": "Pas encore réussie : réessaie !" },
+  "pt": { "ls.failedFar": "Não passou — tente de novo!" },
+  "de": { "ls.failedFar": "Nicht bestanden – noch einmal!" },
+  "hi": { "ls.failedFar": "इस बार पास नहीं — फिर कोशिश करें!" },
+  "ar": { "ls.failedFar": "لم تنجح هذه المرة — حاول مجددًا!" },
+  "ru": { "ls.failedFar": "Не зачтено — попробуйте ещё раз!" },
+  "zh-TW": { "ls.failedFar": "這次沒過關……再來一次！" },
+  "id": { "ls.failedFar": "Belum lulus — coba lagi!" },
+  "tr": { "ls.failedFar": "Geçemediniz — tekrar deneyin!" }
+});

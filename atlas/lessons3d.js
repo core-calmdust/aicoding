@@ -99,163 +99,163 @@
   const VOICE = {
     reversi: { ja: { partial: 'おしい！', wrong: 'ざんねん…。' } },   // (2026-11-21: the lesson's own words say which square was best and why)
     backgammon: {
-      ja: { hi: 'ワン！ ダイスンだよ。いっしょにバックギャモンのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の矢印の手なんだ。', wrong: 'ざんねん！ 緑の矢印が正解だよ。', hintSay: 'ヒント：青い輪の駒を動かしてみて。' },
+      ja: { hi: 'ワン！ ダイスンだよ。いっしょにバックギャモンのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の矢印の手なんだ。', wrong: 'ちがうみたい！ 緑の矢印が正解だよ。', hintSay: 'ヒント：青い輪の駒を動かしてみて。' },
       en: { hi: "Woof! Dicepup here. Let's study backgammon together.", partial: 'A nice play! But the green arrows are the best.', wrong: 'Not this one! The green arrows are the answer.', hintSay: 'Psst — move the checkers with the blue rings.' },
-      zh: { hi: '汪！我是骰子汪。一起来学双陆棋吧。', partial: '好棋！不过最好的是绿色箭头。', wrong: '可惜！绿色箭头才是正解。', hintSay: '提示：动一动蓝色圈住的棋子。' },
-      'zh-TW': { hi: '汪！我是骰子汪。一起來學雙陸棋吧。', partial: '好棋！不過最好的是綠色箭頭。', wrong: '可惜！綠色箭頭才是正解。', hintSay: '提示：動一動藍色圈住的棋子。' },
-      ko: { hi: '멍! 다이슨이야. 같이 백개먼을 공부하자.', partial: '좋은 수야! 하지만 최선은 초록 화살표야.', wrong: '이번엔 아니야! 정답은 초록 화살표야.', hintSay: '힌트: 파란 고리의 말을 움직여 봐.' },
-      es: { hi: '¡Guau! Soy Dicepup. Estudiemos backgammon juntos.', partial: '¡Buena jugada! Pero lo mejor son las flechas verdes.', wrong: '¡Ups, no! Las flechas verdes son la respuesta.', hintSay: 'Pista: mueve las fichas con aros azules.' },
-      fr: { hi: 'Ouaf ! C’est Dicepup. Étudions le backgammon ensemble.', partial: 'Joli coup ! Mais le meilleur, ce sont les flèches vertes.', wrong: 'Raté ! La réponse, ce sont les flèches vertes.', hintSay: 'Indice : bouge les pions aux anneaux bleus.' },
-      pt: { hi: 'Au! Aqui é o Dicepup. Vamos estudar gamão juntos.', partial: 'Boa jogada! Mas a melhor são as setas verdes.', wrong: 'Ops, não! A resposta são as setas verdes.', hintSay: 'Dica: mova as peças com anéis azuis.' },
-      de: { hi: 'Wuff! Hier ist Dicepup. Lernen wir zusammen Backgammon.', partial: 'Schöner Zug! Aber am besten sind die grünen Pfeile.', wrong: 'Leider nicht! Die grünen Pfeile sind die Lösung.', hintSay: 'Tipp: Zieh die Steine mit den blauen Ringen.' },
-      ru: { hi: 'Гав! Это Дайспап. Давайте изучать нарды вместе.', partial: 'Хороший ход! Но лучший — зелёные стрелки.', wrong: 'Увы, нет! Ответ — зелёные стрелки.', hintSay: 'Подсказка: ходи шашками с синими кольцами.' },
+      zh: { hi: '汪！我是骰子汪。一起来学双陆棋吧。', partial: '好棋！不过最好的是绿色箭头。', wrong: '不对哦！绿色箭头才是正解。', hintSay: '提示：动一动蓝色圈住的棋子。' },
+      'zh-TW': { hi: '汪！我是骰子汪。一起來學雙陸棋吧。', partial: '好棋！不過最好的是綠色箭頭。', wrong: '不對喔！綠色箭頭才是正解。', hintSay: '提示：動一動藍色圈住的棋子。' },
+      ko: { hi: '멍! 다이슨이야. 같이 백개먼을 공부하자.', partial: '좋은 수야! 하지만 최선은 초록 화살표야.', wrong: '아니에요! 정답은 초록 화살표야.', hintSay: '힌트: 파란 고리의 말을 움직여 봐.' },
+      es: { hi: '¡Guau! Soy Dicepup. Estudiemos backgammon juntos.', partial: '¡Buena jugada! Pero lo mejor son las flechas verdes.', wrong: '¡Esa no es! Las flechas verdes son la respuesta.', hintSay: 'Pista: mueve las fichas con aros azules.' },
+      fr: { hi: 'Ouaf ! C’est Dicepup. Étudions le backgammon ensemble.', partial: 'Joli coup ! Mais le meilleur, ce sont les flèches vertes.', wrong: 'Ce n’est pas ça ! La réponse, ce sont les flèches vertes.', hintSay: 'Indice : bouge les pions aux anneaux bleus.' },
+      pt: { hi: 'Au! Aqui é o Dicepup. Vamos estudar gamão juntos.', partial: 'Boa jogada! Mas a melhor são as setas verdes.', wrong: 'Não é essa! A resposta são as setas verdes.', hintSay: 'Dica: mova as peças com anéis azuis.' },
+      de: { hi: 'Wuff! Hier ist Dicepup. Lernen wir zusammen Backgammon.', partial: 'Schöner Zug! Aber am besten sind die grünen Pfeile.', wrong: 'Das ist es nicht! Die grünen Pfeile sind die Lösung.', hintSay: 'Tipp: Zieh die Steine mit den blauen Ringen.' },
+      ru: { hi: 'Гав! Это Дайспап. Давайте изучать нарды вместе.', partial: 'Хороший ход! Но лучший — зелёные стрелки.', wrong: 'Не то! Ответ — зелёные стрелки.', hintSay: 'Подсказка: ходи шашками с синими кольцами.' },
       tr: { hi: 'Hav! Ben Dicepup. Birlikte tavla çalışalım.', partial: 'Güzel hamle! Ama en iyisi yeşil oklar.', wrong: 'Bu değil! Cevap yeşil oklar.', hintSay: 'İpucu: mavi halkalı pulları oynat.' },
       id: { hi: 'Guk! Aku Dicepup. Ayo belajar backgammon bersama.', partial: 'Langkah bagus! Tapi yang terbaik panah hijau.', wrong: 'Bukan yang ini! Jawabannya panah hijau.', hintSay: 'Petunjuk: gerakkan bidak bercincin biru.' },
-      hi: { hi: 'भौं! मैं डाइसपप हूँ। चलो साथ में बैकगैमन सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छे हरे तीर हैं।', wrong: 'यह नहीं! हरे तीर सही जवाब हैं।', hintSay: 'संकेत: नीले घेरे वाली गोटियाँ चलाओ।' },
-      ar: { hi: 'هاو! أنا دايس باب. لنتعلم الطاولة معًا.', partial: 'نقلة جيدة! لكن الأفضل هي الأسهم الخضراء.', wrong: 'للأسف، لا! الجواب هو الأسهم الخضراء.', hintSay: 'تلميح: حرّك القطع ذات الحلقات الزرقاء.' },
+      hi: { hi: 'भौं! मैं डाइसपप हूँ। चलो साथ में बैकगैमन सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छे हरे तीर हैं।', wrong: 'बस ज़रा सा! हरे तीर सही जवाब हैं।', hintSay: 'संकेत: नीले घेरे वाली गोटियाँ चलाओ।' },
+      ar: { hi: 'هاو! أنا دايس باب. لنتعلم الطاولة معًا.', partial: 'نقلة جيدة! لكن الأفضل هي الأسهم الخضراء.', wrong: 'ليست هذه! الجواب هو الأسهم الخضراء.', hintSay: 'تلميح: حرّك القطع ذات الحلقات الزرقاء.' },
     },
     xiangqi: {
-      ja: { hi: 'ショウギツネだよ！ いっしょにシャンチーのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の矢印の手なんだ。', wrong: 'ざんねん！ 正解は緑の矢印の手だよ。', hintSay: 'ヒントだよ。金の丸の駒に注目してみて。', opGoal: 'この局面、いちばん良い次の一手はどれかな？' },
+      ja: { hi: 'ショウギツネだよ！ いっしょにシャンチーのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の矢印の手なんだ。', wrong: 'ちがうみたい！ 正解は緑の矢印の手だよ。', hintSay: 'ヒントだよ。金の丸の駒に注目してみて。', opGoal: 'この局面、いちばん良い次の一手はどれかな？' },
       en: { hi: "Shogitsune here! Let's study xiangqi together.", partial: 'A nice move! But the green arrow is the best.', wrong: 'Not this one! The green arrow is the answer.', hintSay: 'Psst — look at the pieces in the gold rings!', opGoal: 'What is the best next move here?' },
-      zh: { hi: '我是将棋狐！一起来学象棋吧。', partial: '好棋！不过最好的是绿色箭头那一步。', wrong: '可惜！正解是绿色箭头那一步。', hintSay: '提示：注意金色圆圈里的棋子。', opGoal: '这个局面，最好的下一步是哪一步？' },
-      'zh-TW': { hi: '我是將棋狐！一起來學象棋吧。', partial: '好棋！不過最好的是綠色箭頭那一步。', wrong: '可惜！正解是綠色箭頭那一步。', hintSay: '提示：注意金色圓圈裡的棋子。', opGoal: '這個局面，最好的下一步是哪一步？' },
-      ko: { hi: '쇼기여우야! 같이 샹치를 공부하자.', partial: '좋은 수야! 하지만 가장 좋은 건 초록 화살표 수야.', wrong: '이번엔 아니야! 정답은 초록 화살표 수야.', hintSay: '힌트: 금색 원 안의 말을 봐.', opGoal: '이 국면에서 가장 좋은 다음 수는?' },
-      es: { hi: '¡Soy Shogizorro! Estudiemos xiangqi juntos.', partial: '¡Buena jugada! Pero la mejor es la flecha verde.', wrong: '¡Ups, no! La respuesta es la flecha verde.', hintSay: 'Pista: mira las piezas con anillo dorado.', opGoal: '¿Cuál es la mejor jugada aquí?' },
-      fr: { hi: 'C’est Shogirenard ! Étudions le xiangqi ensemble.', partial: 'Joli coup ! Mais le meilleur, c’est la flèche verte.', wrong: 'Raté ! La réponse est la flèche verte.', hintSay: 'Indice : regarde les pièces dans les anneaux dorés.', opGoal: 'Quel est le meilleur coup ici ?' },
-      pt: { hi: 'Aqui é a Shogiraposa! Vamos estudar xiangqi juntos.', partial: 'Boa jogada! Mas a melhor é a seta verde.', wrong: 'Ops, não! A resposta é a seta verde.', hintSay: 'Dica: veja as peças nos anéis dourados.', opGoal: 'Qual é o melhor lance aqui?' },
-      de: { hi: 'Hier ist Shogifuchs! Lass uns zusammen Xiangqi lernen.', partial: 'Guter Zug! Aber am besten ist der grüne Pfeil.', wrong: 'Leider nicht! Die Antwort ist der grüne Pfeil.', hintSay: 'Tipp: Schau auf die Steine in den goldenen Ringen.', opGoal: 'Was ist hier der beste Zug?' },
-      ru: { hi: 'Это Сёгицунэ! Давай вместе изучать сянци.', partial: 'Хороший ход! Но лучший — зелёная стрелка.', wrong: 'Увы, нет! Ответ — зелёная стрелка.', hintSay: 'Подсказка: смотри на фигуры в золотых кольцах.', opGoal: 'Какой здесь лучший ход?' },
+      zh: { hi: '我是将棋狐！一起来学象棋吧。', partial: '好棋！不过最好的是绿色箭头那一步。', wrong: '不对哦！正解是绿色箭头那一步。', hintSay: '提示：注意金色圆圈里的棋子。', opGoal: '这个局面，最好的下一步是哪一步？' },
+      'zh-TW': { hi: '我是將棋狐！一起來學象棋吧。', partial: '好棋！不過最好的是綠色箭頭那一步。', wrong: '不對喔！正解是綠色箭頭那一步。', hintSay: '提示：注意金色圓圈裡的棋子。', opGoal: '這個局面，最好的下一步是哪一步？' },
+      ko: { hi: '쇼기여우야! 같이 샹치를 공부하자.', partial: '좋은 수야! 하지만 가장 좋은 건 초록 화살표 수야.', wrong: '아니에요! 정답은 초록 화살표 수야.', hintSay: '힌트: 금색 원 안의 말을 봐.', opGoal: '이 국면에서 가장 좋은 다음 수는?' },
+      es: { hi: '¡Soy Shogizorro! Estudiemos xiangqi juntos.', partial: '¡Buena jugada! Pero la mejor es la flecha verde.', wrong: '¡Esa no es! La respuesta es la flecha verde.', hintSay: 'Pista: mira las piezas con anillo dorado.', opGoal: '¿Cuál es la mejor jugada aquí?' },
+      fr: { hi: 'C’est Shogirenard ! Étudions le xiangqi ensemble.', partial: 'Joli coup ! Mais le meilleur, c’est la flèche verte.', wrong: 'Ce n’est pas ça ! La réponse est la flèche verte.', hintSay: 'Indice : regarde les pièces dans les anneaux dorés.', opGoal: 'Quel est le meilleur coup ici ?' },
+      pt: { hi: 'Aqui é a Shogiraposa! Vamos estudar xiangqi juntos.', partial: 'Boa jogada! Mas a melhor é a seta verde.', wrong: 'Não é essa! A resposta é a seta verde.', hintSay: 'Dica: veja as peças nos anéis dourados.', opGoal: 'Qual é o melhor lance aqui?' },
+      de: { hi: 'Hier ist Shogifuchs! Lass uns zusammen Xiangqi lernen.', partial: 'Guter Zug! Aber am besten ist der grüne Pfeil.', wrong: 'Das ist es nicht! Die Antwort ist der grüne Pfeil.', hintSay: 'Tipp: Schau auf die Steine in den goldenen Ringen.', opGoal: 'Was ist hier der beste Zug?' },
+      ru: { hi: 'Это Сёгицунэ! Давай вместе изучать сянци.', partial: 'Хороший ход! Но лучший — зелёная стрелка.', wrong: 'Не то! Ответ — зелёная стрелка.', hintSay: 'Подсказка: смотри на фигуры в золотых кольцах.', opGoal: 'Какой здесь лучший ход?' },
       tr: { hi: 'Ben Shogitsune! Birlikte xiangqi çalışalım.', partial: 'Güzel hamle! Ama en iyisi yeşil ok.', wrong: 'Bu değil! Cevap yeşil ok.', hintSay: 'İpucu: altın halkalardaki taşlara bak.', opGoal: 'Burada en iyi hamle hangisi?' },
       id: { hi: 'Aku Shogitsune! Ayo belajar xiangqi bersama.', partial: 'Langkah bagus! Tapi yang terbaik panah hijau.', wrong: 'Bukan yang ini! Jawabannya panah hijau.', hintSay: 'Petunjuk: lihat bidak di cincin emas.', opGoal: 'Langkah terbaik di sini yang mana?' },
-      hi: { hi: 'मैं शोगित्सुने हूँ! चलो साथ में शियांगची सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छी हरे तीर वाली है।', wrong: 'यह नहीं! जवाब हरे तीर वाली चाल है।', hintSay: 'संकेत: सुनहरे घेरे वाले मोहरे देखो।', opGoal: 'यहाँ सबसे अच्छी अगली चाल कौन सी है?' },
-      ar: { hi: 'أنا شوغيتسوني! لنتعلّم الشيانغتشي معًا.', partial: 'نقلة جيدة! لكن الأفضل هو السهم الأخضر.', wrong: 'للأسف، لا! الإجابة هي السهم الأخضر.', hintSay: 'تلميح: انظر إلى القطع داخل الحلقات الذهبية.', opGoal: 'ما أفضل نقلة هنا؟' },
+      hi: { hi: 'मैं शोगित्सुने हूँ! चलो साथ में शियांगची सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छी हरे तीर वाली है।', wrong: 'बस थोड़ा सा! जवाब हरे तीर वाली चाल है।', hintSay: 'संकेत: सुनहरे घेरे वाले मोहरे देखो।', opGoal: 'यहाँ सबसे अच्छी अगली चाल कौन सी है?' },
+      ar: { hi: 'أنا شوغيتسوني! لنتعلّم الشيانغتشي معًا.', partial: 'نقلة جيدة! لكن الأفضل هو السهم الأخضر.', wrong: 'ليست هذه! الإجابة هي السهم الأخضر.', hintSay: 'تلميح: انظر إلى القطع داخل الحلقات الذهبية.', opGoal: 'ما أفضل نقلة هنا؟' },
     },
     janggi: {   // (2026-11-24 担当D: as xiangqi, the game named)
-      ja: { hi: 'ショウギツネだよ！ いっしょにチャンギのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の矢印の手なんだ。', wrong: 'ざんねん！ 正解は緑の矢印の手だよ。', hintSay: 'ヒントだよ。金の丸の駒に注目してみて。', opGoal: 'この局面、いちばん良い次の一手はどれかな？' },
+      ja: { hi: 'ショウギツネだよ！ いっしょにチャンギのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の矢印の手なんだ。', wrong: 'ちがうみたい！ 正解は緑の矢印の手だよ。', hintSay: 'ヒントだよ。金の丸の駒に注目してみて。', opGoal: 'この局面、いちばん良い次の一手はどれかな？' },
       en: { hi: "Shogitsune here! Let's study janggi together.", partial: 'A nice move! But the green arrow is the best.', wrong: 'Not this one! The green arrow is the answer.', hintSay: 'Psst — look at the pieces in the gold rings!', opGoal: 'What is the best next move here?' },
-      zh: { hi: '我是将棋狐！一起来学韩国象棋吧。', partial: '好棋！不过最好的是绿色箭头那一步。', wrong: '可惜！正解是绿色箭头那一步。', hintSay: '提示：注意金色圆圈里的棋子。', opGoal: '这个局面，最好的下一步是哪一步？' },
-      'zh-TW': { hi: '我是將棋狐！一起來學韓國象棋吧。', partial: '好棋！不過最好的是綠色箭頭那一步。', wrong: '可惜！正解是綠色箭頭那一步。', hintSay: '提示：注意金色圓圈裡的棋子。', opGoal: '這個局面，最好的下一步是哪一步？' },
-      ko: { hi: '쇼기여우야! 같이 장기를 공부하자.', partial: '좋은 수야! 하지만 가장 좋은 건 초록 화살표 수야.', wrong: '이번엔 아니야! 정답은 초록 화살표 수야.', hintSay: '힌트: 금색 원 안의 말을 봐.', opGoal: '이 국면에서 가장 좋은 다음 수는?' },
-      es: { hi: '¡Soy Shogizorro! Estudiemos janggi juntos.', partial: '¡Buena jugada! Pero la mejor es la flecha verde.', wrong: '¡Ups, no! La respuesta es la flecha verde.', hintSay: 'Pista: mira las piezas con anillo dorado.', opGoal: '¿Cuál es la mejor jugada aquí?' },
-      fr: { hi: 'C’est Shogirenard ! Étudions le janggi ensemble.', partial: 'Joli coup ! Mais le meilleur, c’est la flèche verte.', wrong: 'Raté ! La réponse est la flèche verte.', hintSay: 'Indice : regarde les pièces dans les anneaux dorés.', opGoal: 'Quel est le meilleur coup ici ?' },
-      pt: { hi: 'Aqui é a Shogiraposa! Vamos estudar janggi juntos.', partial: 'Boa jogada! Mas a melhor é a seta verde.', wrong: 'Ops, não! A resposta é a seta verde.', hintSay: 'Dica: veja as peças nos anéis dourados.', opGoal: 'Qual é o melhor lance aqui?' },
-      de: { hi: 'Hier ist Shogifuchs! Lass uns zusammen Janggi lernen.', partial: 'Guter Zug! Aber am besten ist der grüne Pfeil.', wrong: 'Leider nicht! Die Antwort ist der grüne Pfeil.', hintSay: 'Tipp: Schau auf die Steine in den goldenen Ringen.', opGoal: 'Was ist hier der beste Zug?' },
-      ru: { hi: 'Это Сёгицунэ! Давай вместе изучать чанги.', partial: 'Хороший ход! Но лучший — зелёная стрелка.', wrong: 'Увы, нет! Ответ — зелёная стрелка.', hintSay: 'Подсказка: смотри на фигуры в золотых кольцах.', opGoal: 'Какой здесь лучший ход?' },
+      zh: { hi: '我是将棋狐！一起来学韩国象棋吧。', partial: '好棋！不过最好的是绿色箭头那一步。', wrong: '不对哦！正解是绿色箭头那一步。', hintSay: '提示：注意金色圆圈里的棋子。', opGoal: '这个局面，最好的下一步是哪一步？' },
+      'zh-TW': { hi: '我是將棋狐！一起來學韓國象棋吧。', partial: '好棋！不過最好的是綠色箭頭那一步。', wrong: '不對喔！正解是綠色箭頭那一步。', hintSay: '提示：注意金色圓圈裡的棋子。', opGoal: '這個局面，最好的下一步是哪一步？' },
+      ko: { hi: '쇼기여우야! 같이 장기를 공부하자.', partial: '좋은 수야! 하지만 가장 좋은 건 초록 화살표 수야.', wrong: '아니에요! 정답은 초록 화살표 수야.', hintSay: '힌트: 금색 원 안의 말을 봐.', opGoal: '이 국면에서 가장 좋은 다음 수는?' },
+      es: { hi: '¡Soy Shogizorro! Estudiemos janggi juntos.', partial: '¡Buena jugada! Pero la mejor es la flecha verde.', wrong: '¡Esa no es! La respuesta es la flecha verde.', hintSay: 'Pista: mira las piezas con anillo dorado.', opGoal: '¿Cuál es la mejor jugada aquí?' },
+      fr: { hi: 'C’est Shogirenard ! Étudions le janggi ensemble.', partial: 'Joli coup ! Mais le meilleur, c’est la flèche verte.', wrong: 'Ce n’est pas ça ! La réponse est la flèche verte.', hintSay: 'Indice : regarde les pièces dans les anneaux dorés.', opGoal: 'Quel est le meilleur coup ici ?' },
+      pt: { hi: 'Aqui é a Shogiraposa! Vamos estudar janggi juntos.', partial: 'Boa jogada! Mas a melhor é a seta verde.', wrong: 'Não é essa! A resposta é a seta verde.', hintSay: 'Dica: veja as peças nos anéis dourados.', opGoal: 'Qual é o melhor lance aqui?' },
+      de: { hi: 'Hier ist Shogifuchs! Lass uns zusammen Janggi lernen.', partial: 'Guter Zug! Aber am besten ist der grüne Pfeil.', wrong: 'Das ist es nicht! Die Antwort ist der grüne Pfeil.', hintSay: 'Tipp: Schau auf die Steine in den goldenen Ringen.', opGoal: 'Was ist hier der beste Zug?' },
+      ru: { hi: 'Это Сёгицунэ! Давай вместе изучать чанги.', partial: 'Хороший ход! Но лучший — зелёная стрелка.', wrong: 'Не то! Ответ — зелёная стрелка.', hintSay: 'Подсказка: смотри на фигуры в золотых кольцах.', opGoal: 'Какой здесь лучший ход?' },
       tr: { hi: 'Ben Shogitsune! Birlikte janggi çalışalım.', partial: 'Güzel hamle! Ama en iyisi yeşil ok.', wrong: 'Bu değil! Cevap yeşil ok.', hintSay: 'İpucu: altın halkalardaki taşlara bak.', opGoal: 'Burada en iyi hamle hangisi?' },
       id: { hi: 'Aku Shogitsune! Ayo belajar janggi bersama.', partial: 'Langkah bagus! Tapi yang terbaik panah hijau.', wrong: 'Bukan yang ini! Jawabannya panah hijau.', hintSay: 'Petunjuk: lihat bidak di cincin emas.', opGoal: 'Langkah terbaik di sini yang mana?' },
-      hi: { hi: 'मैं शोगित्सुने हूँ! चलो साथ में जांग्गी सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छी हरे तीर वाली है।', wrong: 'यह नहीं! जवाब हरे तीर वाली चाल है।', hintSay: 'संकेत: सुनहरे घेरे वाले मोहरे देखो।', opGoal: 'यहाँ सबसे अच्छी अगली चाल कौन सी है?' },
-      ar: { hi: 'أنا شوغيتسوني! لنتعلّم الجانغي معًا.', partial: 'نقلة جيدة! لكن الأفضل هو السهم الأخضر.', wrong: 'للأسف، لا! الإجابة هي السهم الأخضر.', hintSay: 'تلميح: انظر إلى القطع داخل الحلقات الذهبية.', opGoal: 'ما أفضل نقلة هنا؟' },
+      hi: { hi: 'मैं शोगित्सुने हूँ! चलो साथ में जांग्गी सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छी हरे तीर वाली है।', wrong: 'बस थोड़ा सा! जवाब हरे तीर वाली चाल है।', hintSay: 'संकेत: सुनहरे घेरे वाले मोहरे देखो।', opGoal: 'यहाँ सबसे अच्छी अगली चाल कौन सी है?' },
+      ar: { hi: 'أنا شوغيتسوني! لنتعلّم الجانغي معًا.', partial: 'نقلة جيدة! لكن الأفضل هو السهم الأخضر.', wrong: 'ليست هذه! الإجابة هي السهم الأخضر.', hintSay: 'تلميح: انظر إلى القطع داخل الحلقات الذهبية.', opGoal: 'ما أفضل نقلة هنا؟' },
     },
     checkers: {
-      ja: { hi: 'チェッカニだよ！ いっしょにチェッカーのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の矢印の手なんだ。', wrong: 'ざんねん！ 正解は緑の矢印の手だよ。', hintSay: 'ヒントだよ。金の丸の駒に注目してみて。', opGoal: 'この局面、いちばん良い次の一手はどれかな？' },
+      ja: { hi: 'チェッカニだよ！ いっしょにチェッカーのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の矢印の手なんだ。', wrong: 'ちがうみたい！ 正解は緑の矢印の手だよ。', hintSay: 'ヒントだよ。金の丸の駒に注目してみて。', opGoal: 'この局面、いちばん良い次の一手はどれかな？' },
       en: { hi: "Checkrab here! Let's study checkers together.", partial: 'A nice move! But the green arrow is the best.', wrong: 'Not this one! The green arrow is the answer.', hintSay: 'Psst — look at the pieces in the gold rings!', opGoal: 'What is the best next move here?' },
     },
     connect4: {
-      ja: { hi: 'ポトンウサだよ！ いっしょにコネクトフォーのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の印の列なんだ。', wrong: 'ざんねん！ 正解は緑の印の列だよ。', hintSay: 'ヒントだよ。印のマスをよく見てみて。' },
+      ja: { hi: 'ポトンウサだよ！ いっしょにコネクトフォーのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の印の列なんだ。', wrong: 'ちがうみたい！ 正解は緑の印の列だよ。', hintSay: 'ヒントだよ。印のマスをよく見てみて。' },
       en: { hi: "Plopbun here! Let's study Connect Four together.", partial: 'A nice move! But the green-marked column is the best.', wrong: 'Not this one! The green-marked column is the answer.', hintSay: 'Psst — look at the marked cells.' },
-      zh: { hi: '我是叮咚兔！一起来学四子棋吧。', partial: '好棋！不过最好的是绿色标记的那一列。', wrong: '可惜！正解是绿色标记的那一列。', hintSay: '提示：仔细看标记的格子。' },
-      'zh-TW': { hi: '我是叮咚兔！一起來學四子棋吧。', partial: '好棋！不過最好的是綠色標記的那一列。', wrong: '可惜！正解是綠色標記的那一列。', hintSay: '提示：仔細看標記的格子。' },
-      ko: { hi: '포통우사야! 같이 커넥트 포를 공부하자.', partial: '좋은 수야! 하지만 최선은 초록 표시 열이야.', wrong: '이번엔 아니야! 정답은 초록 표시 열이야.', hintSay: '힌트: 표시된 칸을 잘 봐.' },
-      es: { hi: '¡Soy Plopbun! Estudiemos Conecta 4 juntos.', partial: '¡Buena jugada! Pero la mejor es la columna verde.', wrong: '¡Ups, no! La respuesta es la columna verde.', hintSay: 'Pista: mira las casillas marcadas.' },
-      fr: { hi: 'C’est Plopbun ! Étudions le Puissance 4 ensemble.', partial: 'Joli coup ! Mais la meilleure est la colonne verte.', wrong: 'Raté ! La réponse est la colonne verte.', hintSay: 'Indice : regarde les cases marquées.' },
-      pt: { hi: 'Aqui é o Plopbun! Vamos estudar Lig 4 juntos.', partial: 'Boa jogada! Mas a melhor é a coluna verde.', wrong: 'Ops, não! A resposta é a coluna verde.', hintSay: 'Dica: veja as casas marcadas.' },
-      de: { hi: 'Hier ist Plopbun! Lass uns zusammen Vier gewinnt lernen.', partial: 'Guter Zug! Aber am besten ist die grüne Spalte.', wrong: 'Leider nicht! Die Antwort ist die grüne Spalte.', hintSay: 'Tipp: Schau dir die markierten Felder an.' },
-      ru: { hi: 'Это Плопбан! Давай вместе изучать «Четыре в ряд».', partial: 'Хороший ход! Но лучший — зелёный столбец.', wrong: 'Увы, нет! Ответ — зелёный столбец.', hintSay: 'Подсказка: посмотри на отмеченные клетки.' },
+      zh: { hi: '我是叮咚兔！一起来学四子棋吧。', partial: '好棋！不过最好的是绿色标记的那一列。', wrong: '不对哦！正解是绿色标记的那一列。', hintSay: '提示：仔细看标记的格子。' },
+      'zh-TW': { hi: '我是叮咚兔！一起來學四子棋吧。', partial: '好棋！不過最好的是綠色標記的那一列。', wrong: '不對喔！正解是綠色標記的那一列。', hintSay: '提示：仔細看標記的格子。' },
+      ko: { hi: '포통우사야! 같이 커넥트 포를 공부하자.', partial: '좋은 수야! 하지만 최선은 초록 표시 열이야.', wrong: '아니에요! 정답은 초록 표시 열이야.', hintSay: '힌트: 표시된 칸을 잘 봐.' },
+      es: { hi: '¡Soy Plopbun! Estudiemos Conecta 4 juntos.', partial: '¡Buena jugada! Pero la mejor es la columna verde.', wrong: '¡Esa no es! La respuesta es la columna verde.', hintSay: 'Pista: mira las casillas marcadas.' },
+      fr: { hi: 'C’est Plopbun ! Étudions le Puissance 4 ensemble.', partial: 'Joli coup ! Mais la meilleure est la colonne verte.', wrong: 'Ce n’est pas ça ! La réponse est la colonne verte.', hintSay: 'Indice : regarde les cases marquées.' },
+      pt: { hi: 'Aqui é o Plopbun! Vamos estudar Lig 4 juntos.', partial: 'Boa jogada! Mas a melhor é a coluna verde.', wrong: 'Não é essa! A resposta é a coluna verde.', hintSay: 'Dica: veja as casas marcadas.' },
+      de: { hi: 'Hier ist Plopbun! Lass uns zusammen Vier gewinnt lernen.', partial: 'Guter Zug! Aber am besten ist die grüne Spalte.', wrong: 'Das ist es nicht! Die Antwort ist die grüne Spalte.', hintSay: 'Tipp: Schau dir die markierten Felder an.' },
+      ru: { hi: 'Это Плопбан! Давай вместе изучать «Четыре в ряд».', partial: 'Хороший ход! Но лучший — зелёный столбец.', wrong: 'Не то! Ответ — зелёный столбец.', hintSay: 'Подсказка: посмотри на отмеченные клетки.' },
       tr: { hi: 'Ben Plopbun! Birlikte Dört Bağlamaca çalışalım.', partial: 'Güzel hamle! Ama en iyisi yeşil sütun.', wrong: 'Bu değil! Cevap yeşil sütun.', hintSay: 'İpucu: işaretli karelere bak.' },
       id: { hi: 'Aku Plopbun! Ayo belajar Connect Four bersama.', partial: 'Langkah bagus! Tapi yang terbaik kolom hijau.', wrong: 'Bukan yang ini! Jawabannya kolom hijau.', hintSay: 'Petunjuk: lihat kotak yang bertanda.' },
       hi: { hi: 'मैं प्लॉपबन हूँ! चलो साथ में कनेक्ट फ़ोर सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छा हरा स्तंभ है।', wrong: 'यह नहीं! जवाब हरा स्तंभ है।', hintSay: 'संकेत: निशान वाले खानों को देखो।' },
-      ar: { hi: 'أنا بلوب بن! لنتعلّم أربعة في صف معًا.', partial: 'نقلة جيدة! لكن الأفضل هو العمود الأخضر.', wrong: 'للأسف، لا! الجواب هو العمود الأخضر.', hintSay: 'تلميح: انظر إلى الخانات المعلّمة.' },
+      ar: { hi: 'أنا بلوب بن! لنتعلّم أربعة في صف معًا.', partial: 'نقلة جيدة! لكن الأفضل هو العمود الأخضر.', wrong: 'ليست هذه! الجواب هو العمود الأخضر.', hintSay: 'تلميح: انظر إلى الخانات المعلّمة.' },
     },
     mancala: {
-      ja: { hi: 'マンカラビだよ！ いっしょにマンカラのお勉強をしよう。', partial: 'いい手！ でもいちばんは金の丸の穴なんだ。', wrong: 'ざんねん！ 正解は金の丸の穴だよ。', hintSay: 'ヒント：種の数を数えてみて。' },
+      ja: { hi: 'マンカラビだよ！ いっしょにマンカラのお勉強をしよう。', partial: 'いい手！ でもいちばんは金の丸の穴なんだ。', wrong: 'ちがうみたい！ 正解は金の丸の穴だよ。', hintSay: 'ヒント：種の数を数えてみて。' },
       en: { hi: "Gembeetle here! Let's study mancala together.", partial: 'A nice move! But the gold-ringed pit is the best.', wrong: 'Not this one! The gold-ringed pit is the answer.', hintSay: 'Hint: count the seeds.' },
-      zh: { hi: '我是宝石甲虫！一起来学播棋吧。', partial: '好棋！不过最好的是金圈的坑。', wrong: '可惜！正解是金圈的坑。', hintSay: '提示：数一数种子。' },
-      'zh-TW': { hi: '我是寶石甲蟲！一起來學播棋吧。', partial: '好棋！不過最好的是金圈的洞。', wrong: '可惜！正解是金圈的洞。', hintSay: '提示：數一數種子。' },
-      ko: { hi: '보석풍뎅이야! 같이 만칼라를 공부하자.', partial: '좋은 수야! 하지만 최선은 금색 고리 구멍이야.', wrong: '이번엔 아니야! 정답은 금색 고리 구멍이야.', hintSay: '힌트: 씨앗 수를 세어 봐.' },
-      es: { hi: '¡Soy Escarabajoya! Estudiemos mancala juntos.', partial: '¡Buena jugada! Pero la mejor es el hoyo con anillo dorado.', wrong: '¡Ups, no! La respuesta es el hoyo con anillo dorado.', hintSay: 'Pista: cuenta las semillas.' },
-      fr: { hi: 'C’est Scarabijou ! Étudions le mancala ensemble.', partial: 'Joli coup ! Mais le meilleur est le trou cerclé d’or.', wrong: 'Raté ! La réponse est le trou cerclé d’or.', hintSay: 'Indice : compte les graines.' },
-      pt: { hi: 'Aqui é o Besourojoia! Vamos estudar mancala juntos.', partial: 'Boa jogada! Mas a melhor é a casa com anel dourado.', wrong: 'Ops, não! A resposta é a casa com anel dourado.', hintSay: 'Dica: conte as sementes.' },
-      de: { hi: 'Hier ist Juwelkäfer! Lass uns zusammen Mancala lernen.', partial: 'Guter Zug! Aber am besten ist die golden umrandete Mulde.', wrong: 'Leider nicht! Die Antwort ist die golden umrandete Mulde.', hintSay: 'Tipp: Zähl die Samen.' },
-      ru: { hi: 'Это Джембитл! Давай вместе изучать манкалу.', partial: 'Хороший ход! Но лучший — лунка с золотым кольцом.', wrong: 'Увы, нет! Ответ — лунка с золотым кольцом.', hintSay: 'Подсказка: посчитай камни.' },
+      zh: { hi: '我是宝石甲虫！一起来学播棋吧。', partial: '好棋！不过最好的是金圈的坑。', wrong: '不对哦！正解是金圈的坑。', hintSay: '提示：数一数种子。' },
+      'zh-TW': { hi: '我是寶石甲蟲！一起來學播棋吧。', partial: '好棋！不過最好的是金圈的洞。', wrong: '不對喔！正解是金圈的洞。', hintSay: '提示：數一數種子。' },
+      ko: { hi: '보석풍뎅이야! 같이 만칼라를 공부하자.', partial: '좋은 수야! 하지만 최선은 금색 고리 구멍이야.', wrong: '아니에요! 정답은 금색 고리 구멍이야.', hintSay: '힌트: 씨앗 수를 세어 봐.' },
+      es: { hi: '¡Soy Escarabajoya! Estudiemos mancala juntos.', partial: '¡Buena jugada! Pero la mejor es el hoyo con anillo dorado.', wrong: '¡Esa no es! La respuesta es el hoyo con anillo dorado.', hintSay: 'Pista: cuenta las semillas.' },
+      fr: { hi: 'C’est Scarabijou ! Étudions le mancala ensemble.', partial: 'Joli coup ! Mais le meilleur est le trou cerclé d’or.', wrong: 'Ce n’est pas ça ! La réponse est le trou cerclé d’or.', hintSay: 'Indice : compte les graines.' },
+      pt: { hi: 'Aqui é o Besourojoia! Vamos estudar mancala juntos.', partial: 'Boa jogada! Mas a melhor é a casa com anel dourado.', wrong: 'Não é essa! A resposta é a casa com anel dourado.', hintSay: 'Dica: conte as sementes.' },
+      de: { hi: 'Hier ist Juwelkäfer! Lass uns zusammen Mancala lernen.', partial: 'Guter Zug! Aber am besten ist die golden umrandete Mulde.', wrong: 'Das ist es nicht! Die Antwort ist die golden umrandete Mulde.', hintSay: 'Tipp: Zähl die Samen.' },
+      ru: { hi: 'Это Джембитл! Давай вместе изучать манкалу.', partial: 'Хороший ход! Но лучший — лунка с золотым кольцом.', wrong: 'Не то! Ответ — лунка с золотым кольцом.', hintSay: 'Подсказка: посчитай камни.' },
       tr: { hi: 'Ben Gembeetle! Birlikte mangala çalışalım.', partial: 'Güzel hamle! Ama en iyisi altın halkalı çukur.', wrong: 'Bu değil! Cevap altın halkalı çukur.', hintSay: 'İpucu: taşları say.' },
       id: { hi: 'Aku Gembeetle! Ayo belajar congklak bersama.', partial: 'Langkah bagus! Tapi yang terbaik lubang bercincin emas.', wrong: 'Bukan yang ini! Jawabannya lubang bercincin emas.', hintSay: 'Petunjuk: hitung bijinya.' },
-      hi: { hi: 'मैं रत्नू भौंरा हूँ! चलो साथ में मनकला सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छा सुनहरे घेरे वाला गड्ढा है।', wrong: 'यह नहीं! जवाब सुनहरे घेरे वाला गड्ढा है।', hintSay: 'संकेत: बीज गिनो।' },
-      ar: { hi: 'أنا خنفوس الجواهر! لنتعلّم المنقلة معًا.', partial: 'نقلة جيدة! لكن الأفضل هي الحفرة ذات الحلقة الذهبية.', wrong: 'للأسف، لا! الجواب هو الحفرة ذات الحلقة الذهبية.', hintSay: 'تلميح: عُدَّ البذور.' },
+      hi: { hi: 'मैं रत्नू भौंरा हूँ! चलो साथ में मनकला सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छा सुनहरे घेरे वाला गड्ढा है।', wrong: 'बहुत क़रीब! जवाब सुनहरे घेरे वाला गड्ढा है।', hintSay: 'संकेत: बीज गिनो।' },
+      ar: { hi: 'أنا خنفوس الجواهر! لنتعلّم المنقلة معًا.', partial: 'نقلة جيدة! لكن الأفضل هي الحفرة ذات الحلقة الذهبية.', wrong: 'ليست هذه! الجواب هو الحفرة ذات الحلقة الذهبية.', hintSay: 'تلميح: عُدَّ البذور.' },
     },
     dots: {
-      ja: { hi: 'ハコピヨだよ！ いっしょにドット・アンド・ボックスのお勉強をしよう。', partial: 'いい線！ でも、もっといい線があるんだ。', wrong: 'ざんねん！', hintSay: 'ヒント：金色の線を見てね。' },
+      ja: { hi: 'ハコピヨだよ！ いっしょにドット・アンド・ボックスのお勉強をしよう。', partial: 'いい線！ でも、もっといい線があるんだ。', wrong: 'ちがうみたい！', hintSay: 'ヒント：金色の線を見てね。' },
       en: { hi: "Boxchick here! Let's study dots and boxes together.", partial: 'A nice line! But the green one is the best.', wrong: 'Not this one! The green line is the answer.', hintSay: 'Hint: look at the gold lines.' },
-      zh: { hi: '我是方块小鸡！一起来学点格棋吧。', partial: '好线！不过最好的是绿色那条。', wrong: '可惜！正解是绿色那条线。', hintSay: '提示：看看金色的线。' },
-      'zh-TW': { hi: '我是方塊小雞！一起來學點格棋吧。', partial: '好線！不過最好的是綠色那條。', wrong: '可惜！正解是綠色那條線。', hintSay: '提示：看看金色的線。' },
-      ko: { hi: '하코피요야! 같이 도트 앤 박스를 공부하자.', partial: '좋은 선이야! 하지만 최선은 초록 선이야.', wrong: '이번엔 아니야! 정답은 초록 선이야.', hintSay: '힌트: 금색 선을 봐.' },
-      es: { hi: '¡Soy Boxchick! Estudiemos puntos y cajas juntos.', partial: '¡Buena línea! Pero la mejor es la verde.', wrong: '¡Ups, no! La respuesta es la línea verde.', hintSay: 'Pista: mira las líneas doradas.' },
-      fr: { hi: 'C’est Boxchick ! Étudions la pipopipette ensemble.', partial: 'Jolie ligne ! Mais la meilleure est la verte.', wrong: 'Raté ! La réponse est la ligne verte.', hintSay: 'Indice : regarde les lignes dorées.' },
-      pt: { hi: 'Aqui é o Boxchick! Vamos estudar pontinhos juntos.', partial: 'Boa linha! Mas a melhor é a verde.', wrong: 'Ops, não! A resposta é a linha verde.', hintSay: 'Dica: olhe as linhas douradas.' },
-      de: { hi: 'Hier ist Boxchick! Lass uns zusammen Käsekästchen lernen.', partial: 'Gute Linie! Aber am besten ist die grüne.', wrong: 'Leider nicht! Die Antwort ist die grüne Linie.', hintSay: 'Tipp: schau auf die goldenen Linien.' },
-      ru: { hi: 'Это Боксчик! Давай вместе изучать точки и квадраты.', partial: 'Хорошая линия! Но лучшая — зелёная.', wrong: 'Увы, нет! Ответ — зелёная линия.', hintSay: 'Подсказка: смотри на золотые линии.' },
+      zh: { hi: '我是方块小鸡！一起来学点格棋吧。', partial: '好线！不过最好的是绿色那条。', wrong: '不对哦！正解是绿色那条线。', hintSay: '提示：看看金色的线。' },
+      'zh-TW': { hi: '我是方塊小雞！一起來學點格棋吧。', partial: '好線！不過最好的是綠色那條。', wrong: '不對喔！正解是綠色那條線。', hintSay: '提示：看看金色的線。' },
+      ko: { hi: '하코피요야! 같이 도트 앤 박스를 공부하자.', partial: '좋은 선이야! 하지만 최선은 초록 선이야.', wrong: '아니에요! 정답은 초록 선이야.', hintSay: '힌트: 금색 선을 봐.' },
+      es: { hi: '¡Soy Boxchick! Estudiemos puntos y cajas juntos.', partial: '¡Buena línea! Pero la mejor es la verde.', wrong: '¡Esa no es! La respuesta es la línea verde.', hintSay: 'Pista: mira las líneas doradas.' },
+      fr: { hi: 'C’est Boxchick ! Étudions la pipopipette ensemble.', partial: 'Jolie ligne ! Mais la meilleure est la verte.', wrong: 'Ce n’est pas ça ! La réponse est la ligne verte.', hintSay: 'Indice : regarde les lignes dorées.' },
+      pt: { hi: 'Aqui é o Boxchick! Vamos estudar pontinhos juntos.', partial: 'Boa linha! Mas a melhor é a verde.', wrong: 'Não é essa! A resposta é a linha verde.', hintSay: 'Dica: olhe as linhas douradas.' },
+      de: { hi: 'Hier ist Boxchick! Lass uns zusammen Käsekästchen lernen.', partial: 'Gute Linie! Aber am besten ist die grüne.', wrong: 'Das ist es nicht! Die Antwort ist die grüne Linie.', hintSay: 'Tipp: schau auf die goldenen Linien.' },
+      ru: { hi: 'Это Боксчик! Давай вместе изучать точки и квадраты.', partial: 'Хорошая линия! Но лучшая — зелёная.', wrong: 'Не то! Ответ — зелёная линия.', hintSay: 'Подсказка: смотри на золотые линии.' },
       tr: { hi: 'Ben Boxchick! Birlikte noktalar ve kutular çalışalım.', partial: 'Güzel çizgi! Ama en iyisi yeşil olan.', wrong: 'Bu değil! Cevap yeşil çizgi.', hintSay: 'İpucu: altın çizgilere bak.' },
       id: { hi: 'Aku Boxchick! Ayo belajar titik dan kotak bersama.', partial: 'Garis bagus! Tapi yang terbaik yang hijau.', wrong: 'Bukan yang ini! Jawabannya garis hijau.', hintSay: 'Petunjuk: lihat garis emas.' },
       hi: { hi: 'मैं बॉक्सचिक हूँ! चलो साथ में डॉट्स एंड बॉक्सेस सीखें।', partial: 'अच्छी रेखा! पर सबसे अच्छी हरी वाली है।', wrong: 'यह नहीं! जवाब हरी रेखा है।', hintSay: 'संकेत: सुनहरी रेखाएँ देखो।' },
-      ar: { hi: 'أنا بوكس تشيك! لنتعلّم النقاط والمربعات معًا.', partial: 'خط جيد! لكن الأفضل هو الأخضر.', wrong: 'للأسف، لا! الجواب هو الخط الأخضر.', hintSay: 'تلميح: انظر إلى الخطوط الذهبية.' },
+      ar: { hi: 'أنا بوكس تشيك! لنتعلّم النقاط والمربعات معًا.', partial: 'خط جيد! لكن الأفضل هو الأخضر.', wrong: 'ليست هذه! الجواب هو الخط الأخضر.', hintSay: 'تلميح: انظر إلى الخطوط الذهبية.' },
     },
     morris: {
-      ja: { hi: 'モリフクだよ！ いっしょにモリスのお勉強をしよう。', partial: 'いい手！ でもいちばんは緑の印の手なんだ。', wrong: 'ざんねん！ 正解は緑の印の手だよ。', hintSay: 'ヒント：金の丸を見てね。' },
+      ja: { hi: 'モリフクだよ！ いっしょにモリスのお勉強をしよう。', partial: 'いい手！ でもいちばんは緑の印の手なんだ。', wrong: 'ちがうみたい！ 正解は緑の印の手だよ。', hintSay: 'ヒント：金の丸を見てね。' },
       en: { hi: "Millowl here! Let's study morris together.", partial: 'A nice move! But the green-marked move is the best.', wrong: 'Not this one! The green-marked move is the answer.', hintSay: 'Hint: look at the gold rings.' },
-      zh: { hi: '我是方阵猫头鹰！一起来学直棋吧。', partial: '好棋！不过最好的是绿色标记的那步。', wrong: '可惜！正解是绿色标记的那步。', hintSay: '提示：看看金色的圈。' },
-      'zh-TW': { hi: '我是方陣貓頭鷹！一起來學直棋吧。', partial: '好棋！不過最好的是綠色標記的那步。', wrong: '可惜！正解是綠色標記的那步。', hintSay: '提示：看看金色的圈。' },
-      ko: { hi: '모리후쿠야! 같이 모리스를 공부하자.', partial: '좋은 수야! 하지만 최선은 초록 표시 수야.', wrong: '이번엔 아니야! 정답은 초록 표시 수야.', hintSay: '힌트: 금색 고리를 봐.' },
-      es: { hi: '¡Soy Millowl! Estudiemos el molino juntos.', partial: '¡Buena jugada! Pero la mejor es la marcada en verde.', wrong: '¡Ups, no! La respuesta es la jugada marcada en verde.', hintSay: 'Pista: mira los anillos dorados.' },
-      fr: { hi: 'C’est Millowl ! Étudions la marelle ensemble.', partial: 'Joli coup ! Mais le meilleur est celui marqué en vert.', wrong: 'Raté ! La réponse est le coup marqué en vert.', hintSay: 'Indice : regarde les anneaux dorés.' },
-      pt: { hi: 'Aqui é o Millowl! Vamos estudar trilha juntos.', partial: 'Boa jogada! Mas a melhor é a marcada em verde.', wrong: 'Ops, não! A resposta é a jogada marcada em verde.', hintSay: 'Dica: olhe os anéis dourados.' },
-      de: { hi: 'Hier ist Millowl! Lass uns zusammen Mühle lernen.', partial: 'Guter Zug! Aber am besten ist der grün markierte.', wrong: 'Leider nicht! Die Antwort ist der grün markierte Zug.', hintSay: 'Tipp: schau auf die goldenen Ringe.' },
-      ru: { hi: 'Это Миллоул! Давай вместе изучать мельницу.', partial: 'Хороший ход! Но лучший — отмеченный зелёным.', wrong: 'Увы, нет! Ответ — ход, отмеченный зелёным.', hintSay: 'Подсказка: смотри на золотые кольца.' },
+      zh: { hi: '我是方阵猫头鹰！一起来学直棋吧。', partial: '好棋！不过最好的是绿色标记的那步。', wrong: '不对哦！正解是绿色标记的那步。', hintSay: '提示：看看金色的圈。' },
+      'zh-TW': { hi: '我是方陣貓頭鷹！一起來學直棋吧。', partial: '好棋！不過最好的是綠色標記的那步。', wrong: '不對喔！正解是綠色標記的那步。', hintSay: '提示：看看金色的圈。' },
+      ko: { hi: '모리후쿠야! 같이 모리스를 공부하자.', partial: '좋은 수야! 하지만 최선은 초록 표시 수야.', wrong: '아니에요! 정답은 초록 표시 수야.', hintSay: '힌트: 금색 고리를 봐.' },
+      es: { hi: '¡Soy Millowl! Estudiemos el molino juntos.', partial: '¡Buena jugada! Pero la mejor es la marcada en verde.', wrong: '¡Esa no es! La respuesta es la jugada marcada en verde.', hintSay: 'Pista: mira los anillos dorados.' },
+      fr: { hi: 'C’est Millowl ! Étudions la marelle ensemble.', partial: 'Joli coup ! Mais le meilleur est celui marqué en vert.', wrong: 'Ce n’est pas ça ! La réponse est le coup marqué en vert.', hintSay: 'Indice : regarde les anneaux dorés.' },
+      pt: { hi: 'Aqui é o Millowl! Vamos estudar trilha juntos.', partial: 'Boa jogada! Mas a melhor é a marcada em verde.', wrong: 'Não é essa! A resposta é a jogada marcada em verde.', hintSay: 'Dica: olhe os anéis dourados.' },
+      de: { hi: 'Hier ist Millowl! Lass uns zusammen Mühle lernen.', partial: 'Guter Zug! Aber am besten ist der grün markierte.', wrong: 'Das ist es nicht! Die Antwort ist der grün markierte Zug.', hintSay: 'Tipp: schau auf die goldenen Ringe.' },
+      ru: { hi: 'Это Миллоул! Давай вместе изучать мельницу.', partial: 'Хороший ход! Но лучший — отмеченный зелёным.', wrong: 'Не то! Ответ — ход, отмеченный зелёным.', hintSay: 'Подсказка: смотри на золотые кольца.' },
       tr: { hi: 'Ben Millowl! Birlikte dokuz taş çalışalım.', partial: 'Güzel hamle! Ama en iyisi yeşil işaretli olan.', wrong: 'Bu değil! Cevap yeşil işaretli hamle.', hintSay: 'İpucu: altın halkalara bak.' },
       id: { hi: 'Aku Millowl! Ayo belajar morris bersama.', partial: 'Langkah bagus! Tapi yang terbaik bertanda hijau.', wrong: 'Bukan yang ini! Jawabannya langkah bertanda hijau.', hintSay: 'Petunjuk: lihat cincin emas.' },
       hi: { hi: 'मैं मिलआउल हूँ! चलो साथ में मोरिस सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छी हरे निशान वाली है।', wrong: 'यह नहीं! जवाब हरे निशान वाली चाल है।', hintSay: 'संकेत: सुनहरे घेरे देखो।' },
-      ar: { hi: 'أنا ميل أول! لنتعلّم المورِس معًا.', partial: 'نقلة جيدة! لكن الأفضل هي المعلّمة بالأخضر.', wrong: 'للأسف، لا! الجواب هو النقلة المعلّمة بالأخضر.', hintSay: 'تلميح: انظر إلى الحلقات الذهبية.' },
+      ar: { hi: 'أنا ميل أول! لنتعلّم المورِس معًا.', partial: 'نقلة جيدة! لكن الأفضل هي المعلّمة بالأخضر.', wrong: 'ليست هذه! الجواب هو النقلة المعلّمة بالأخضر.', hintSay: 'تلميح: انظر إلى الحلقات الذهبية.' },
     },
     tafl: {
-      ja: { hi: 'タフリンだよ！ いっしょにタフルのお勉強をしよう。', partial: 'いい手！ でもいちばんは緑の印の手なんだ。', wrong: 'ざんねん！ 正解は緑の印の手だよ。', hintSay: 'ヒント：光っている駒から考えてみて。' },
+      ja: { hi: 'タフリンだよ！ いっしょにタフルのお勉強をしよう。', partial: 'いい手！ でもいちばんは緑の印の手なんだ。', wrong: 'ちがうみたい！ 正解は緑の印の手だよ。', hintSay: 'ヒント：光っている駒から考えてみて。' },
       en: { hi: "Taflin here! Let's study tafl together.", partial: 'A nice move! But the green-marked move is the best.', wrong: 'Not this one! The green-marked move is the answer.', hintSay: 'Hint: start from the glowing pieces.' },
-      zh: { hi: '我是塔芙林！一起来学塔夫棋吧。', partial: '好棋！不过最好的是绿色标记的那步。', wrong: '可惜！正解是绿色标记的那步。', hintSay: '提示：从发光的棋子想起。' },
-      'zh-TW': { hi: '我是塔芙林！一起來學塔夫棋吧。', partial: '好棋！不過最好的是綠色標記的那步。', wrong: '可惜！正解是綠色標記的那步。', hintSay: '提示：從發光的棋子想起。' },
-      ko: { hi: '타플린이야! 같이 타플을 공부하자.', partial: '좋은 수야! 하지만 최선은 초록 표시 수야.', wrong: '이번엔 아니야! 정답은 초록 표시 수야.', hintSay: '힌트: 빛나는 말부터 생각해 봐.' },
-      es: { hi: '¡Soy Taflín! Estudiemos tafl juntos.', partial: '¡Buena jugada! Pero la mejor es la marcada en verde.', wrong: '¡Ups, no! La respuesta es la jugada marcada en verde.', hintSay: 'Pista: empieza por las piezas que brillan.' },
-      fr: { hi: 'C’est Taflin ! Étudions le tafl ensemble.', partial: 'Joli coup ! Mais le meilleur est celui marqué en vert.', wrong: 'Raté ! La réponse est le coup marqué en vert.', hintSay: 'Indice : pars des pièces qui brillent.' },
-      pt: { hi: 'Aqui é o Taflin! Vamos estudar tafl juntos.', partial: 'Boa jogada! Mas a melhor é a marcada em verde.', wrong: 'Ops, não! A resposta é a jogada marcada em verde.', hintSay: 'Dica: comece pelas peças que brilham.' },
-      de: { hi: 'Hier ist Taflin! Lass uns zusammen Tafl lernen.', partial: 'Guter Zug! Aber am besten ist der grün markierte.', wrong: 'Leider nicht! Die Antwort ist der grün markierte Zug.', hintSay: 'Tipp: Fang bei den leuchtenden Steinen an.' },
-      ru: { hi: 'Это Тафлин! Давай вместе изучать тафл.', partial: 'Хороший ход! Но лучший — отмеченный зелёным.', wrong: 'Увы, нет! Ответ — ход, отмеченный зелёным.', hintSay: 'Подсказка: начни со светящихся фишек.' },
+      zh: { hi: '我是塔芙林！一起来学塔夫棋吧。', partial: '好棋！不过最好的是绿色标记的那步。', wrong: '不对哦！正解是绿色标记的那步。', hintSay: '提示：从发光的棋子想起。' },
+      'zh-TW': { hi: '我是塔芙林！一起來學塔夫棋吧。', partial: '好棋！不過最好的是綠色標記的那步。', wrong: '不對喔！正解是綠色標記的那步。', hintSay: '提示：從發光的棋子想起。' },
+      ko: { hi: '타플린이야! 같이 타플을 공부하자.', partial: '좋은 수야! 하지만 최선은 초록 표시 수야.', wrong: '아니에요! 정답은 초록 표시 수야.', hintSay: '힌트: 빛나는 말부터 생각해 봐.' },
+      es: { hi: '¡Soy Taflín! Estudiemos tafl juntos.', partial: '¡Buena jugada! Pero la mejor es la marcada en verde.', wrong: '¡Esa no es! La respuesta es la jugada marcada en verde.', hintSay: 'Pista: empieza por las piezas que brillan.' },
+      fr: { hi: 'C’est Taflin ! Étudions le tafl ensemble.', partial: 'Joli coup ! Mais le meilleur est celui marqué en vert.', wrong: 'Ce n’est pas ça ! La réponse est le coup marqué en vert.', hintSay: 'Indice : pars des pièces qui brillent.' },
+      pt: { hi: 'Aqui é o Taflin! Vamos estudar tafl juntos.', partial: 'Boa jogada! Mas a melhor é a marcada em verde.', wrong: 'Não é essa! A resposta é a jogada marcada em verde.', hintSay: 'Dica: comece pelas peças que brilham.' },
+      de: { hi: 'Hier ist Taflin! Lass uns zusammen Tafl lernen.', partial: 'Guter Zug! Aber am besten ist der grün markierte.', wrong: 'Das ist es nicht! Die Antwort ist der grün markierte Zug.', hintSay: 'Tipp: Fang bei den leuchtenden Steinen an.' },
+      ru: { hi: 'Это Тафлин! Давай вместе изучать тафл.', partial: 'Хороший ход! Но лучший — отмеченный зелёным.', wrong: 'Не то! Ответ — ход, отмеченный зелёным.', hintSay: 'Подсказка: начни со светящихся фишек.' },
       tr: { hi: 'Ben Taflin! Birlikte tafl çalışalım.', partial: 'Güzel hamle! Ama en iyisi yeşil işaretli olan.', wrong: 'Bu değil! Cevap yeşil işaretli hamle.', hintSay: 'İpucu: parlayan taşlardan başla.' },
       id: { hi: 'Aku Taflin! Ayo belajar tafl bersama.', partial: 'Langkah bagus! Tapi yang terbaik bertanda hijau.', wrong: 'Bukan yang ini! Jawabannya langkah bertanda hijau.', hintSay: 'Petunjuk: mulai dari bidak yang bersinar.' },
-      hi: { hi: 'मैं टैफ़लिन हूँ! चलो साथ में टैफ़्ल सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छी हरे निशान वाली है।', wrong: 'यह नहीं! जवाब हरे निशान वाली चाल है।', hintSay: 'संकेत: चमकती गोटियों से सोचो।' },
-      ar: { hi: 'أنا تافلين! لنتعلّم التافل معًا.', partial: 'نقلة جيدة! لكن الأفضل هي المعلّمة بالأخضر.', wrong: 'للأسف، لا! الجواب هو النقلة المعلّمة بالأخضر.', hintSay: 'تلميح: ابدأ من القطع المضيئة.' },
+      hi: { hi: 'मैं टैफ़लिन हूँ! चलो साथ में टैफ़्ल सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छी हरे निशान वाली है।', wrong: 'बहुत क़रीब! जवाब हरे निशान वाली चाल है।', hintSay: 'संकेत: चमकती गोटियों से सोचो।' },
+      ar: { hi: 'أنا تافلين! لنتعلّم التافل معًا.', partial: 'نقلة جيدة! لكن الأفضل هي المعلّمة بالأخضر.', wrong: 'ليست هذه! الجواب هو النقلة المعلّمة بالأخضر.', hintSay: 'تلميح: ابدأ من القطع المضيئة.' },
     },
     amazons: {
-      ja: { hi: 'ケロだよ！ いっしょにアマゾンズのお勉強をするケロ。', partial: 'いい手ケロ。でもいちばんは緑の印の手なんだ。', wrong: 'ざんねん！ 正解は緑の印の手ケロ。', hintSay: 'ヒントだケロ。光っているアマゾンから考えてみて。' },
+      ja: { hi: 'ケロだよ！ いっしょにアマゾンズのお勉強をするケロ。', partial: 'いい手ケロ。でもいちばんは緑の印の手なんだ。', wrong: 'ちがうみたい！ 正解は緑の印の手ケロ。', hintSay: 'ヒントだケロ。光っているアマゾンから考えてみて。' },
       en: { hi: "Kero here! Let's study Amazons together.", partial: 'A nice move! But the green-marked move is the best.', wrong: 'Not this one! The green-marked move is the answer.', hintSay: 'Psst — start from the glowing amazons.' },
-      zh: { hi: '我是呱呱！一起来学亚马逊棋吧。', partial: '好棋！不过最好的是绿色标记的那步。', wrong: '可惜！正解是绿色标记的那步。', hintSay: '提示：从发光的亚马逊想起。' },
-      'zh-TW': { hi: '我是呱呱！一起來學亞馬遜棋吧。', partial: '好棋！不過最好的是綠色標記的那步。', wrong: '可惜！正解是綠色標記的那步。', hintSay: '提示：從發光的亞馬遜想起。' },
-      ko: { hi: '케로야! 같이 아마존을 공부하자.', partial: '좋은 수야! 하지만 최선은 초록 표시 수야.', wrong: '이번엔 아니야! 정답은 초록 표시 수야.', hintSay: '힌트: 빛나는 아마존부터 생각해 봐.' },
-      es: { hi: '¡Soy Kero! Estudiemos Amazonas juntos.', partial: '¡Buena jugada! Pero la mejor es la marcada en verde.', wrong: '¡Ups, no! La respuesta es la jugada marcada en verde.', hintSay: 'Pista: empieza por las amazonas que brillan.' },
-      fr: { hi: 'C’est Kero ! Étudions les Amazones ensemble.', partial: 'Joli coup ! Mais le meilleur est celui marqué en vert.', wrong: 'Raté ! La réponse est le coup marqué en vert.', hintSay: 'Indice : pars des amazones qui brillent.' },
-      pt: { hi: 'Aqui é o Kero! Vamos estudar Amazonas juntos.', partial: 'Boa jogada! Mas a melhor é a marcada em verde.', wrong: 'Ops, não! A resposta é a jogada marcada em verde.', hintSay: 'Dica: comece pelas amazonas que brilham.' },
-      de: { hi: 'Hier ist Kero! Lass uns zusammen Amazonen lernen.', partial: 'Guter Zug! Aber am besten ist der grün markierte.', wrong: 'Leider nicht! Die Antwort ist der grün markierte Zug.', hintSay: 'Tipp: Fang bei den leuchtenden Amazonen an.' },
-      ru: { hi: 'Это Керо! Давай вместе изучать амазонок.', partial: 'Хороший ход! Но лучший — отмеченный зелёным.', wrong: 'Увы, нет! Ответ — ход, отмеченный зелёным.', hintSay: 'Подсказка: начни со светящихся амазонок.' },
+      zh: { hi: '我是呱呱！一起来学亚马逊棋吧。', partial: '好棋！不过最好的是绿色标记的那步。', wrong: '不对哦！正解是绿色标记的那步。', hintSay: '提示：从发光的亚马逊想起。' },
+      'zh-TW': { hi: '我是呱呱！一起來學亞馬遜棋吧。', partial: '好棋！不過最好的是綠色標記的那步。', wrong: '不對喔！正解是綠色標記的那步。', hintSay: '提示：從發光的亞馬遜想起。' },
+      ko: { hi: '케로야! 같이 아마존을 공부하자.', partial: '좋은 수야! 하지만 최선은 초록 표시 수야.', wrong: '아니에요! 정답은 초록 표시 수야.', hintSay: '힌트: 빛나는 아마존부터 생각해 봐.' },
+      es: { hi: '¡Soy Kero! Estudiemos Amazonas juntos.', partial: '¡Buena jugada! Pero la mejor es la marcada en verde.', wrong: '¡Esa no es! La respuesta es la jugada marcada en verde.', hintSay: 'Pista: empieza por las amazonas que brillan.' },
+      fr: { hi: 'C’est Kero ! Étudions les Amazones ensemble.', partial: 'Joli coup ! Mais le meilleur est celui marqué en vert.', wrong: 'Ce n’est pas ça ! La réponse est le coup marqué en vert.', hintSay: 'Indice : pars des amazones qui brillent.' },
+      pt: { hi: 'Aqui é o Kero! Vamos estudar Amazonas juntos.', partial: 'Boa jogada! Mas a melhor é a marcada em verde.', wrong: 'Não é essa! A resposta é a jogada marcada em verde.', hintSay: 'Dica: comece pelas amazonas que brilham.' },
+      de: { hi: 'Hier ist Kero! Lass uns zusammen Amazonen lernen.', partial: 'Guter Zug! Aber am besten ist der grün markierte.', wrong: 'Das ist es nicht! Die Antwort ist der grün markierte Zug.', hintSay: 'Tipp: Fang bei den leuchtenden Amazonen an.' },
+      ru: { hi: 'Это Керо! Давай вместе изучать амазонок.', partial: 'Хороший ход! Но лучший — отмеченный зелёным.', wrong: 'Не то! Ответ — ход, отмеченный зелёным.', hintSay: 'Подсказка: начни со светящихся амазонок.' },
       tr: { hi: 'Ben Kero! Birlikte Amazonlar çalışalım.', partial: 'Güzel hamle! Ama en iyisi yeşil işaretli olan.', wrong: 'Bu değil! Cevap yeşil işaretli hamle.', hintSay: 'İpucu: parlayan amazonlardan başla.' },
       id: { hi: 'Aku Kero! Ayo belajar Amazon bersama.', partial: 'Langkah bagus! Tapi yang terbaik bertanda hijau.', wrong: 'Bukan yang ini! Jawabannya langkah bertanda hijau.', hintSay: 'Petunjuk: mulai dari amazon yang bersinar.' },
       hi: { hi: 'मैं केरो हूँ! चलो साथ में अमेज़न्स सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छी हरे निशान वाली है।', wrong: 'यह नहीं! जवाब हरे निशान वाली चाल है।', hintSay: 'संकेत: चमकती अमेज़न से शुरू करो।' },
-      ar: { hi: 'أنا كيرو! لنتعلّم الأمازونات معًا.', partial: 'نقلة جيدة! لكن الأفضل هي المعلّمة بالأخضر.', wrong: 'للأسف، لا! الجواب هو النقلة المعلّمة بالأخضر.', hintSay: 'تلميح: ابدأ من الأمازونات المضيئة.' },
+      ar: { hi: 'أنا كيرو! لنتعلّم الأمازونات معًا.', partial: 'نقلة جيدة! لكن الأفضل هي المعلّمة بالأخضر.', wrong: 'ليست هذه! الجواب هو النقلة المعلّمة بالأخضر.', hintSay: 'تلميح: ابدأ من الأمازونات المضيئة.' },
     },
     hex: {
-      ja: { hi: 'ゴイシペンだよ！ いっしょにヘックスのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の印の点なんだ。', wrong: 'ざんねん！ 正解は緑の印の点だよ。', hintSay: 'ヒントだよ。印のあたりをよく見てみて。' },
+      ja: { hi: 'ゴイシペンだよ！ いっしょにヘックスのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の印の点なんだ。', wrong: 'ちがうみたい！ 正解は緑の印の点だよ。', hintSay: 'ヒントだよ。印のあたりをよく見てみて。' },
       en: { hi: "Stoneguin here! Let's study Hex together.", partial: 'A nice move! But the green mark is the best.', wrong: 'Not this one! The green mark is the answer.', hintSay: 'Psst — look around the marked cells.' },
     },
     gomoku: {
-      ja: { hi: 'ゴイシペンだよ！ いっしょに五目並べのお勉強をしよう。', partial: 'いい手だね。でもいちばんは光ってる点なんだ。', wrong: 'ざんねん！ 正解は光ってる点だよ。', hintSay: 'ヒントだよ。光ってるあたりに注目してみて。', opGoal: 'この局面、いちばん良い次の一手はどこかな？' },
+      ja: { hi: 'ゴイシペンだよ！ いっしょに五目並べのお勉強をしよう。', partial: 'いい手だね。でもいちばんは光ってる点なんだ。', wrong: 'ちがうみたい！ 正解は光ってる点だよ。', hintSay: 'ヒントだよ。光ってるあたりに注目してみて。', opGoal: 'この局面、いちばん良い次の一手はどこかな？' },
       en: { hi: "Stoneguin here! Let's study gomoku together.", partial: 'A nice move! But the glowing point is the best.', wrong: 'Not this one! The glowing point is the answer.', hintSay: 'Psst — look around the glowing points!', opGoal: 'What is the best next move here?' },
     },
     chess: {
-      ja: { hi: 'やあ、ナイトンだよ！ 今日のレッスン、いっしょにピョンピョンがんばろう！', partial: 'いい手だね！ でもいちばんは光ってる手なんだ。', wrong: 'ざんねん〜！ 正解は光ってる手だよ。',
+      ja: { hi: 'やあ、ナイトンだよ！ 今日のレッスン、いっしょにピョンピョンがんばろう！', partial: 'いい手だね！ でもいちばんは光ってる手なんだ。', wrong: 'ちがうみたい！ 正解は光ってる手だよ。',
         pass: 'やったね、合格！ {p} / {m}点。この調子で、次のレッスンも行こう！', fail: '{p} / {m}点。合格は{q}点だよ。もう一回いってみよう！', end: '手順はここまで！ 次は練習問題で腕だめしだ！',
         endOnly: '基本の手順はここまで。おつかれさま！', opGoal: 'この局面、強い人がいちばん指した手はどれだと思う？', hintSay: 'こっそり教えちゃう。光ってるところに注目！', escaped: 'あらら、キングに逃げられちゃった…' },
       en: { hi: 'Hi, Knighton here! Let\'s hop through today\'s lesson together!', partial: 'Nice move! But the glowing one is the best.', wrong: 'Not this one! The glowing move is the answer.',
@@ -263,7 +263,7 @@
         endOnly: 'That\'s the basic line. Great work!', opGoal: 'Which move do you think strong players chose most here?', hintSay: 'Psst — look at the glowing squares!', escaped: 'Oh no, the king slipped away…' },
     },
     shogi: {
-      ja: { hi: 'こんにちは、ショウギツネだコン！ いっしょに将棋のお勉強をしよう。', partial: 'いい手だね。でもいちばんは光ってる手だコン。', wrong: 'ざんねん！ 正解は光ってる手だよ。',
+      ja: { hi: 'こんにちは、ショウギツネだコン！ いっしょに将棋のお勉強をしよう。', partial: 'いい手だね。でもいちばんは光ってる手だコン。', wrong: 'ちがうみたい！ 正解は光ってる手だよ。',
         pass: '合格だコン！ {p} / {m}点。わたしもうれしい！', fail: '{p} / {m}点。合格は{q}点だよ。もう一回いってみよう！', end: '手順はここまで。つぎは練習問題に挑戦だコン！',
         endOnly: '基本の手順はここまで。おつかれさま！', opGoal: 'この局面、強い人がいちばん指した手はどれかな？', hintSay: 'ヒントだよ。光ってるところをよく見てね。',
         tsume: '<b>{n}手詰め</b>だよ。王手を続けて玉を詰ませよう！', escaped: '玉に逃げられちゃった…くやしいコン。' },
@@ -905,9 +905,9 @@
     LKEY: 'shogi-kaya-lessons-v1', OKEY: 'shogi-kaya-open-v1', CATS: ['beg', 'mid', 'adv', 'sp', 'new', 'castle', 'handi'], data: null,
     load() {
       if (this.p) return this.p;
-      const voice = fetch('../shogi/voice-fox-ja.js?v=4').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
+      const voice = fetch('../shogi/voice-fox-ja.js?v=5').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       const rep = getJ('../shogi/lesson-replies.json?v=2').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
-      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261124b'), getJ('../shogi/openings.json?v=20261124ol1'),
+      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261126b'), getJ('../shogi/openings.json?v=20261124ol1'),
         ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261124oc`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
@@ -2057,7 +2057,7 @@
     load() {
       if (this.p) return this.p;
       const txt = u => fetch(u).then(r => r.text());
-      return (this.p = Promise.all([getJ('../chess/lessons.json?v=30261107i14'), getJ('../chess/openings.json?v=20261107i14'), txt('../chess/i18n.js?v=20261107pro2-i14-p61'), txt('../chess/i18n_basics.js?v=20261019ol-i14'), txt('../chess/voice-knight-ja.js?v=3').catch(() => '')])
+      return (this.p = Promise.all([getJ('../chess/lessons.json?v=30261126i14'), getJ('../chess/openings.json?v=20261107i14'), txt('../chess/i18n.js?v=20261107pro2-i14-p61'), txt('../chess/i18n_basics.js?v=20261019ol-i14'), txt('../chess/voice-knight-ja.js?v=4').catch(() => '')])
         .then(([ls, op, a, b, vk]) => {
           const w = {}; try { new Function('window', a)(w); new Function('window', b)(w); } catch (e) { console.warn('[lessons3d] chess texts', e); }   // (a sandbox: the page's own I18N stays untouched)
           try { const v = {}; new Function('window', vk)(v); this.V = ((v.I18N || {})['ja@knight']) || {}; } catch (e) { this.V = {}; }   // (ナイトン's own lines, 3D, ja)
@@ -2527,7 +2527,7 @@
       if (spread('n') && fa.n === maxOf('n')) return v('w3', [`${fa.n}枚返して、形を整える手。ここは多めに返すのが定石なんだ。`, `思いきって${fa.n}枚！ この場面では、それが手順の手だね。`, ...W4()]);
       return v('w4', W4());
     };
-    const tail = () => v('tl', [`${nmQ}の形を作る大事な一手なんだ。`, 'この流れごと覚えておくと、次の手も見えてくるね。', '手順の意味がわかると、忘れにくくなるんだ。', 'これで形がまた一つ進んだ！', '定石の流れにぴったりの手。', '形がきれいに整ってきた！']);
+    const tail = () => off ? v('tlo', ['見慣れない形でも、ちゃんと見つけられたね。', 'こういう場面でも、数えて比べれば見つかるんだ。', '落ち着いて打てたのが大きいね。', '形が変わっても、考え方は同じなんだ。']) : v('tl', [`${nmQ}の形を作る大事な一手なんだ。`, 'この流れごと覚えておくと、次の手も見えてくるね。', '手順の意味がわかると、忘れにくくなるんだ。', 'これで形がまた一つ進んだ！', '定石の流れにぴったりの手。', '形がきれいに整ってきた！']);
     const good = () => { const w = why(), t = i % 2 === 0 && (w + '12345678901234567890').length <= 100 ? w + tail() : w, p = i % 2 === 1 || i === 4 ? V.push(i) : '';
       return rvEnds(cheer(i) + '<br>' + t + (p ? ' ' + p : ''), '!').t; };
     const pickWrong = u => {   // (no wrong move given — the checker passes the answer: the most telling one, the AI's lowest, else the most flips)
@@ -2543,11 +2543,11 @@
       if (off && fu.oC <= fa.oC && !(fu.x && !fa.x) && !(fu.cq && !fa.cq) && mU < mA) { out.push(v('nm', [`赤い枠だと、相手にうまく応じられたとき、きみの打てる場所は${mU}か所まで減っちゃう。緑の枠なら${mA}か所残るんだ。`, `相手のいちばんいやな応手のあと、打てる場所は赤い枠だと${mU}か所、緑の枠なら${mA}か所。赤い枠は自分の手が先に詰まっちゃうね。`, `赤い枠のあと、相手の応じ方しだいで、きみの打ち場所は${mU}か所だけ。緑の枠なら${mA}か所あって、手が詰まりにくいんだ。`])); return rvEnds(out.join(''), '!').t; }
       const N7 = off ? [`緑の枠は${fa.n}枚返して${O()}が${fa.oM}か所、赤い枠は${fu.n}枚で${fu.oM}か所。数は近いけど、相手のいちばんいやな応手のあとでも、緑の枠なら打てる場所が${mA}か所残るんだ。`, `どちらも数は近い手。でも緑の枠は、相手がどう応じても、きみの打てる場所が${mA}か所以上残る手なんだ。`] : [near ? `緑の枠は${fa.n}枚返して${O()}が${fa.oM}か所、赤い枠は${fu.n}枚で${fu.oM}か所。数は近くても、手順から外れると次の形が変わっちゃうんだ。` : fu.oM > fa.oM ? `緑の枠なら${O()}は${fa.oM}か所、赤い枠だと${fu.oM}か所。相手に選ぶ余地をあげちゃうからね。` : `赤い枠のほうが${O()}は少ない（${fu.oM}か所）けど、定石の手順から外れると、覚えた次の形が使えなくなるんだ。`, '赤い枠だと、定石で覚えたこの先の形にならないから、次の手を自分で考えることになるね。', fu.n !== fa.n ? `赤い枠は${fu.n}枚返し、緑の枠は${fa.n}枚返し。形が変わると、覚えた手順が使えなくなるからね。` : '返す枚数は同じでも、場所がちがえば形が変わる。覚えた手順が使えなくなるからね。', '赤い枠に打つと、この先は定石の外の形。そこからは手探りになっちゃう。'];
       if (fu.oC > fa.oC) out.push(v('n1', ['赤い枠だと、相手が隅に打てるようになっちゃう。隅は取られたら取り返せない場所なんだ。', '赤い枠では隅への道が開いて、相手に隅を取られちゃうね。', '赤い枠のあと、相手は隅に打てる。隅をあげると、辺までくずれていくからね。']));
-      else if (fu.x && !fa.x) out.push(v('n2', ['赤い枠は隅のななめ隣（X）。あとで相手に隅を取られる足場になりやすいんだ。', 'Xに打つと、その隅を相手にねらわれやすくなるからね。']));
-      else if (fu.cq && !fa.cq) out.push(v('n3', ['赤い枠は隅のとなりのマス。辺の形がくずれるから、相手に隅をねらわれやすいね。', 'Cに打つと辺の形がくずれて、隅をねらわれやすくなるんだ。']));
-      else if (fu.open > fa.open) out.push(v('n4', [`開放度は赤い枠が${fu.open}、緑の枠は${fa.open}。空きが多いと、相手の足場になっちゃうからね。`, `赤い枠だと、返した石のそばの空きが${fu.open}マス。緑の枠なら${fa.open}マスですむんだ。`, `緑の枠のほうが静かな手。赤い枠は空きを${fu.open}マスもかかえるから、相手に打ち場所をあげちゃう。`, `赤い枠は開放度${fu.open}で、外に石が出ちゃう。緑の枠なら${fa.open}にとどまるからね。`, `空きにふれるのは、緑の枠なら${fa.open}マス、赤い枠だと${fu.open}マス。そのぶん相手が打ちやすくなるんだ。`, ...N7]));
-      else if (fu.oM > fa.oM) out.push(v('n5', [`打ったあとの${O()}は、赤い枠だと${fu.oM}か所、緑の枠なら${fa.oM}か所。相手の選択肢をふやしちゃうんだ。`, `赤い枠のあと、相手は${fu.oM}か所に打てる。緑の枠なら${fa.oM}か所にしぼれたね。`, `緑の枠なら${O()}は${fa.oM}か所なのに、赤い枠だと${fu.oM}か所にふえちゃうからね。`, ...N7]));
-      else if (fu.n > fa.n) out.push(v('n6', [`赤い枠は${fu.n}枚も返すから、外がわの石がふえて、あとで苦しくなりやすいね。`, `${fu.n}枚も返すと、外に出た石が相手の足場になるんだ。`, `返しすぎの${fu.n}枚！ 外に出た石は、相手の打ち場所になるからね。`, ...N7]));
+      else if (fu.x && !fa.x) out.push(v('n2', ['赤い枠は隅のななめ隣（X）。あとで相手に隅を取られる足場になりやすいんだ。', 'Xに打つと、その隅を相手にねらわれやすくなるからね。', '隅のななめ隣（X）に打つと、相手が隅に入る足場ができちゃうからね。']));
+      else if (fu.cq && !fa.cq) out.push(v('n3', ['赤い枠は隅のとなりのマス。辺の形がくずれるから、相手に隅をねらわれやすいね。', 'Cに打つと辺の形がくずれるから、隅をねらわれやすくなるんだ。', 'Cに打つと、となりの隅を相手に取られやすくなるから気をつけて！']));
+      else if (fu.open > fa.open) out.push(v('n4', [`開放度は赤い枠が${fu.open}、緑の枠は${fa.open}。空きが多いと、相手の足場になっちゃうからね。`, `赤い枠だと、返した石のそばの空きが${fu.open}マス。緑の枠なら${fa.open}マスですむんだ。`, `緑の枠のほうが静かな手。赤い枠は空きを${fu.open}マスもかかえるから、相手に打ち場所をあげちゃう。`, `赤い枠は開放度${fu.open}で、外に石が出ちゃう。緑の枠なら${fa.open}にとどまるからね。`, `空きにふれるのは、緑の枠なら${fa.open}マス、赤い枠だと${fu.open}マス。そのぶん相手が打ちやすくなるんだ。`, ...(off ? [] : N7)]));
+      else if (fu.oM > fa.oM) out.push(v('n5', [`打ったあとの${O()}は、赤い枠だと${fu.oM}か所、緑の枠なら${fa.oM}か所。相手の選択肢をふやしちゃうんだ。`, `赤い枠のあと、相手は${fu.oM}か所に打てる。緑の枠なら${fa.oM}か所にしぼれたね。`, `緑の枠なら${O()}は${fa.oM}か所なのに、赤い枠だと${fu.oM}か所にふえちゃうからね。`, ...(off ? [] : N7)]));
+      else if (fu.n > fa.n) out.push(v('n6', [`赤い枠は${fu.n}枚も返すから、外がわの石がふえて、あとで苦しくなりやすいね。`, `${fu.n}枚も返すと、外に出た石が相手の足場になるんだ。`, `返しすぎの${fu.n}枚！ 外に出た石は、相手の打ち場所になるからね。`, ...(off ? [] : N7)]));
       else out.push(v('n7', N7));
       return rvEnds(out.join(''), '!').t;
     };
@@ -2557,7 +2557,7 @@
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261124p1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=1').catch(() => ({}))])
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261124p1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=2').catch(() => ({}))])
         .then(([ls, op, ev, wt, opp]) => { this.WT = wt || {}; this.OPP = opp || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
@@ -3155,7 +3155,7 @@
     LKEY: 'aicoding-gomoku-lessons', OKEY: 'aicoding-gomoku-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261125'), getJ('../gomoku/openings.json?v=20261124v1'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261125'), getJ('../gomoku/openings.json?v=20261125v2'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] gomoku texts', e); } this.I = w.I18N || {}; this.data = { ls, op };
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
@@ -3394,7 +3394,7 @@
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261123d'), getJ('../go/openings.json?v=4'), goRules(), fetch('../go/voice-pen-ja.js?v=6').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
+      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=4'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
         try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
         return this; }).catch(e => { this.p = null; throw e; }));
     },
@@ -3787,7 +3787,7 @@
     LKEY: 'aicoding-checkers-lessons', OKEY: 'aicoding-checkers-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=30261124b'), getJ('../checkers/openings.json?v=5'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=30261126b'), getJ('../checkers/openings.json?v=5'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vc]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] checkers texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vc)(v); this.V = ((v.I18N || {})['ja@crab']) || {}; } catch (e) { this.V = {}; }   // (チェッカニ's own lines, 3D, ja)
           return this; })
@@ -4251,7 +4251,7 @@
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261124xm3'), getJ('../xiangqi/openings.json?v=4'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=1').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xm3'), getJ('../xiangqi/openings.json?v=4'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vf]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vf)(v); this.V = ((v.I18N || {})['ja@fox']) || {}; } catch (e) { this.V = {}; }   // (ショウギツネ's own lines, 3D, ja)
           return this; })
@@ -4326,7 +4326,7 @@
     LKEY: 'aicoding-janggi-lessons', OKEY: null, data: null, I: null, V: {},
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../janggi/lessons.json?v=10'), fetch('../janggi/i18n.js?v=6').then(r => r.text()), jgScript(JG_ENG, () => window.JanggiEngine), jgScript('games/janggi-ls.js?v=9', () => window.AtlasJanggiLs), jgScript('games/janggi-pz.js?v=1', () => window.AtlasMini && window.AtlasMini.janggi)])
+      return (this.p = Promise.all([getJ('../janggi/lessons.json?v=10'), fetch('../janggi/i18n.js?v=7').then(r => r.text()), jgScript(JG_ENG, () => window.JanggiEngine), jgScript('games/janggi-ls.js?v=9', () => window.AtlasJanggiLs), jgScript('games/janggi-pz.js?v=3', () => window.AtlasMini && window.AtlasMini.janggi)])
         .then(([ls, tx]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] janggi texts', e); } this.I = w.I18N || {}; const D = (window.AtlasJanggiLs || {}).DONE || [];
           this.data = { ls: Object.assign({}, ls, { steps: ls.steps.filter(x => D.includes(x.id)) }) }; return this; })
         .catch(e => { this.p = null; throw e; }));
@@ -5171,7 +5171,7 @@
     LKEY: 'aicoding-hex-lessons', OKEY: 'aicoding-hex-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../hex/lessons.json?v=30261123b'), getJ('../hex/openings.json?v=1'), fetch('../hex/i18n.js?v=20261124-p61').then(r => r.text()), hxEng().catch(() => null), getJ('../hex/ramps3d.json?v=2').catch(() => ({})), fetch('../hex/voice-pen-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../hex/lessons.json?v=30261123b'), getJ('../hex/openings.json?v=1'), fetch('../hex/i18n.js?v=20261124-p61').then(r => r.text()), hxEng().catch(() => null), getJ('../hex/ramps3d.json?v=3').catch(() => ({})), fetch('../hex/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, , rt, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] hex texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; this.RT = rt || {};
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
@@ -5519,8 +5519,8 @@
     LKEY: 'aicoding-amazons-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      const tx = ['../checkers/i18n.js?v=20261107l14-nd1', '../amazons/i18n-am.js?v=4', '../amazons/i18n-am-more.js?v=4', '../amazons/i18n-am-ls.js?v=4', '../amazons/i18n-am-ls-more.js?v=4', '../amazons/i18n-am-ls-more2.js?v=4'];
-      return (this.p = Promise.all([getJ('../amazons/lessons.json?v=6'), Promise.all(tx.map(u => fetch(u).then(r => r.text()).catch(() => ''))), amEng().catch(() => null)])
+      const tx = ['../checkers/i18n.js?v=20261107l14-nd1', '../amazons/i18n-am.js?v=4', '../amazons/i18n-am-more.js?v=4', '../amazons/i18n-am-ls.js?v=6', '../amazons/i18n-am-ls-more.js?v=5', '../amazons/i18n-am-ls-more2.js?v=5'];
+      return (this.p = Promise.all([getJ('../amazons/lessons.json?v=7'), Promise.all(tx.map(u => fetch(u).then(r => r.text()).catch(() => ''))), amEng().catch(() => null)])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T[0] + '\nvar I18N = window.I18N = window.I18N || {};\n' + T.slice(1).join('\n'))(w); } catch (e) { console.warn('[lessons3d] amazons texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -5570,7 +5570,7 @@
     LKEY: 'aicoding-connect4-v2-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../connect4/lessons.json?v=30261124o1'), Promise.all(['../connect4/i18n.js?v=20261107l14-p61', '../connect4/learn.js?v=20261123l15'].map(u => fetch(u).then(r => r.text()).catch(() => '')))])
+      return (this.p = Promise.all([getJ('../connect4/lessons.json?v=30261126o1'), Promise.all(['../connect4/i18n.js?v=20261107l14-p61', '../connect4/learn.js?v=20261123l15'].map(u => fetch(u).then(r => r.text()).catch(() => '')))])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T.join('\n'))(w); } catch (e) { console.warn('[lessons3d] connect4 texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -6196,7 +6196,7 @@
     LKEY: 'aicoding-tafl-lessons', OKEY: 'aicoding-tafl-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=6'), fetch('../tafl/i18n.js?v=6ek-nd1-bm2').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261124o2').catch(() => null)])
+      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=7'), fetch('../tafl/i18n.js?v=6ek-nd1-bm2').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261124o2').catch(() => null)])
         .then(([ls, T, _, op]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] tafl texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -6512,7 +6512,7 @@
     LKEY: 'aicoding-mancala-v1-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../mancala/lessons.json?v=6'), Promise.all(['../mancala/i18n.js?v=20261107l15', '../mancala/i18n-learn.js?v=20261107l14'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mcEng().catch(() => null)])
+      return (this.p = Promise.all([getJ('../mancala/lessons.json?v=7'), Promise.all(['../mancala/i18n.js?v=20261107l15', '../mancala/i18n-learn.js?v=20261107l14'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mcEng().catch(() => null)])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] mancala texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -6788,7 +6788,7 @@
     LKEY: 'aicoding-morris-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([Promise.all(MMV.map(v => getJ(`../morris/lessons${v === 'nine' ? '' : '-' + v}.json?v=20261123`))), Promise.all(['../morris/i18n.js?v=20261116-p61', '../morris/i18n_more.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mrEng().catch(() => null)])
+      return (this.p = Promise.all([Promise.all(MMV.map(v => getJ(`../morris/lessons${v === 'nine' ? '' : '-' + v}.json?v=20261123-81`))), Promise.all(['../morris/i18n.js?v=20261116-p61', '../morris/i18n_more.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mrEng().catch(() => null)])
         .then(([L, T]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] morris texts', e); } this.I = w.I18N || {};
           const steps = []; L.forEach((d, k) => d.steps.forEach(s => { if (s.problems && s.problems.length) steps.push(Object.assign({ v: MMV[k] }, s)); })); this.data = { steps }; return this; })
         .catch(e => { this.p = null; throw e; }));
@@ -7051,7 +7051,7 @@
     .catch(e => { this.p = null; throw e; })); } };
   /* kōnane (2026-11-25 担当C): the data, チェッカニ's words and the board facts are in atlas/ls-konane.js (loaded the first time; only the
      lessons checked and rebuilt for the 3D, AtlasLsKonane.READY — tools/lesson-verify-konane.js --lessons) */
-  const KONANE = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsKonane) return res(); const sc = document.createElement('script'); sc.src = 'ls-konane.js?v=1'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const KONANE = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsKonane) return res(); const sc = document.createElement('script'); sc.src = 'ls-konane.js?v=2'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsKonane.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   /* ugolki (2026-11-24 担当D): the data, モリフク's words and the board facts are in atlas/ls-ugolki.js (loaded the first time; only the
@@ -7627,6 +7627,7 @@
         const E = { amazons: window.AmazonsEngine, checkers: window.CheckersEngine, xiangqi: window.XiangqiEngine }[id];   // (a warm-up named by notation: the engine's move with that name)
         if (E && it.s && D.rampOk) { const ms = E.Pos.from(it.s).moves(), m = ms.find(x => D.rampOk(it, x)); if (m !== undefined) u = m; }
         else if (D.rampOk && !D.rampOk(it, u) && D.rampAns) { const a = D.rampAns(it); if (a != null && typeof a !== 'object') u = a; } await pz().play(u); if (onMoved) await onMoved(u, {}); return true; },   // (test hook: a warm-up's guided move)   // (test hook: a chess ★ drill done — on to its route problems)
+      rampPlay: async u => { const it = cur && phase === 'ramp' && cur.ramp && cur.ramp[cur.ri]; if (!it || !pz()) return false; await pz().play(u); if (onMoved) await onMoved(u, {}); return true; },   // (test hook, 追81: any move in a warm-up, a wrong one too — its line is checked on the screen)
       answer: async u => { const p = cur && cur.probs[cur.k]; if (!p || !pz()) return;
         if (p.choices) { const b = el.querySelector(`[data-ci="${typeof u === 'number' ? u : p.right}"]`); if (b) b.click(); return; }   // (a question with choices: its button — 2026-11-22, backgammon's race / shots / cube)
         if (p.kind === 'bgplay') { const m = typeof u === 'string' ? u : p.best(), c = bgCodes(p.bgPos, m), q = bgDecP(p.bgPos); c.moves.forEach(x => BG.apply(q, 0, BG.mvFrom(x), BG.mvTo(x))); await pz().play(c.moves); return moved(p, { key: c.key, steps: c.moves, pos: q }); }   // (backgammon: a play by the json's letter pairs)

@@ -1,8 +1,8 @@
 // 狼影灯 — 背景（影絵の書き割り）の採点。
-// 使い方: node wolflantern/tools/scene-quality.js [--shots] [--write]
+// 使い方: node lampblack/tools/scene-quality.js [--shots] [--write]
 //   --shots  場面ごとの見え方（PC・スマホ・夜）を /tmp/wl-scenes/ に書き出す（目で見る審査のため）
 //   --write  合格した場面だけを scenes-pass.js に書く（ゲームはここに載った場面だけを使う）
-// 機械の採点（100点から減点、合格90点）と、目で見た審査（claude/wolflantern-scene-review.md）の両方に通ったものだけが合格。
+// 機械の採点（100点から減点、合格90点）と、目で見た審査（claude/lampblack-scene-review.md）の両方に通ったものだけが合格。
 // 目の審査は場面のハッシュに結びつく。絵を直すとハッシュが変わり、審査をやり直すまで合格にならない。
 const fs = require('fs'), path = require('path');
 const puppeteer = require(process.env.PUPPETEER || '/opt/npm-tools/node_modules/puppeteer-core');
@@ -12,7 +12,7 @@ global.window = global; require(path.join(DIR, 'art.js')); require(path.join(DIR
 const ART = global.WLArt, SC = global.WLScenes;
 const KINDS = { alps: 'kirigane', train: 'hokushin', island: 'tomoshibi' };
 const args = process.argv.slice(2);
-const REVIEW = path.resolve(DIR, '../claude/wolflantern-scene-review.md');
+const REVIEW = path.resolve(DIR, '../claude/lampblack-scene-review.md');
 
 const FILEHASH = require('crypto').createHash('sha1').update(fs.readFileSync(path.join(DIR, 'scenes.js'))).digest('hex').slice(0, 10);
 function readReview() {
@@ -99,7 +99,7 @@ function readReview() {
   if (args.includes('--shots')) {
     const out = '/tmp/wl-scenes'; fs.mkdirSync(out, { recursive: true });
     const q = await b.newPage();
-    await q.goto(process.env.URL || 'http://localhost:8765/wolflantern/', { waitUntil: 'load' });
+    await q.goto(process.env.URL || 'http://localhost:8765/lampblack/', { waitUntil: 'load' });
     for (const [w, h, mob, tag] of [[1280, 560, false, 'pc'], [390, 390, true, 'sp']]) {
       await q.setViewport({ width: w, height: h, isMobile: mob });
       for (const kind in SC) for (const loc in SC[kind]) for (const night of [false, true]) {

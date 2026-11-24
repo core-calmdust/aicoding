@@ -1,4 +1,4 @@
-/* 狼影灯 WOLF LANTERN — game engine (no DOM; shared by the page and the node tools in wolflantern/tools/)
+/* 狼影灯 LAMPBLACK WEREWOLF — game engine (no DOM; shared by the page and the node tools in lampblack/tools/)
    A single-player werewolf mystery. Every play deals new roles to the same story; the wolves leave traces,
    people talk, and the player finds the wolves by reasoning.
 
@@ -913,6 +913,18 @@
   // "seers and mediums, come forward": each holder decides for themself
   function callOut(S, story, roles) {
     const ev = [], day = S.day;
+    // asking the guard to show themselves out of the blue is what a wolf would want: who stands at the doors at night
+    if (roles.includes('guard')) {
+      const N = S.nights[S.nights.length - 1];
+      const reason = (N && N.saved === 'guard' && N.target !== 'first') || alive(S).length <= 6 || S.claims.some(c => c.role === 'guard');
+      if (!reason) {
+        S.exposed = S.exposed || {}; S.exposed.you = (S.exposed.you || 0) + .35;
+        (S.heat = S.heat || {}).you = (S.heat.you || 0) + 1;
+        S.pl.guardSus = (S.pl.guardSus || 0) + 1;
+        const w = pick(S, shuffle(S, alive(S).filter(p => !p.isPlayer)).sort((a, b) => b.persona.logic - a.persona.logic).slice(0, 3));
+        if (w) ev.push({ t: 'guardsus', by: w.id });
+      }
+    }
     S.req.calls[day] = (S.req.calls[day] || 0) + 1;
     const live = shuffle(S, alive(S).filter(p => !p.isPlayer && !S.claims.some(c => c.by === p.id)));
     const trustYou = id => 1 - analyze(S, id).p.you;

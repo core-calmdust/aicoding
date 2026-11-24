@@ -1686,7 +1686,7 @@ $('#lsNext').onclick = () => {
   if (lesson.virt) {
     const op = opProg(), old = op[s.id] || { best: 0, pass: false }; op[s.id] = { best: Math.max(old.best, n), pass: old.pass || pass };
     try { localStorage.setItem(OP_STORE, JSON.stringify(op)); } catch (e) {}
-    $('#ldTitle').textContent = t(pass ? 'op.pass' : 'ls.failed');
+    $('#ldTitle').textContent = t(pass ? 'op.pass' : n + 20 >= 75 ? 'ls.failed' : 'ls.failedFar');
     $('#ldSub').innerHTML = score;
     $('#btnLessonNextStep').classList.add('hidden');
     showLessonView('lessonDoneView'); showOverlay('#lessonOverlay');
@@ -1696,7 +1696,7 @@ $('#lsNext').onclick = () => {
   const pr = lsProgress(), old = pr[s.id] || { best: 0, clear: false };
   pr[s.id] = { best: Math.max(old.best, n), clear: old.clear || pass };
   try { localStorage.setItem(LS_STORE, JSON.stringify(pr)); } catch (e) {}
-  $('#ldTitle').textContent = t(pass ? 'ls.passed' : 'ls.failed');
+  $('#ldTitle').textContent = t(pass ? 'ls.passed' : n + 20 >= 75 ? 'ls.failed' : 'ls.failedFar');
   $('#ldSub').innerHTML = score;
   $('#btnLessonNextStep').classList.toggle('hidden', lesson.step + 1 >= LESSONS.steps.length);
   const nx = LESSONS.steps[lesson.step + 1];
@@ -1863,7 +1863,7 @@ function startPractice(gi) {
 
 // ====================================================================== puzzles: win / win material within N moves (PZBook v2)
 let PUZZLES = null;
-const puzzlesReady = fetch('puzzles.json?v=4').then(r => r.json()).then(d => { PUZZLES = d; pzProgress(); return d; }).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=5').then(r => r.json()).then(d => { PUZZLES = d; pzProgress(); return d; }).catch(() => null);
 let pzLevel = 0;
 const pzKey = (id, j) => id + '-' + j;
 const starVal = x => x === true ? 3 : (+x || 0);
@@ -2024,8 +2024,11 @@ function pzBlunder(Pz, before, m, list, left) {
   return null;
 }
 async function puzzleMove(m) {
+  // the 詰め rule (claude/game-conventions-addendum.md, 2026-11-25 担当D): nothing is judged on the way; a move off the solution is
+  // not taken back and the right move is not shown — the defender answers (fanorona/pzwhy.js pick, the same reply as the 3D table)
+  // and the result says what is on the board (FanoronaPzWhy.facts / pz.why words); the solution only with 「答えを見る」
   const Pz = puzzle; Pz.busy = true; lessonMarks = [];
-  const left = Pz.n - Pz.used, tok = busyToken;
+  const left = Pz.n - Pz.used, tok = busyToken, W = window.FanoronaPzWhy;
   pzStatus(t('pz.checking'));
   const list = await mateReq(left);       // values of the position before the move
   if (!list || puzzle !== Pz || tok !== busyToken) return;
@@ -2033,52 +2036,35 @@ async function puzzleMove(m) {
   playMove2(m);
   Pz.used++;
   renderPuzzleCard();
-  const e = list.find(x => x.m === m), dm = moveDur(m, before);
+  const dm = moveDur(m, before), good = list.filter(x => x.need > 0 && x.need <= left);
   if (pzReached(Pz, posAt(cur).pos)) { setTimeout(() => puzzleSolved(), dm + 200); return; }
-  const good = list.filter(x => x.need > 0 && x.need <= left).sort((a, b) => a.need - b.need);
-  const failBack = async html => {
-    Pz.state = 'fail'; Pz.busy = false; Pz.failed = true;
-    await sleep(dm + 300);
-    if (puzzle !== Pz) return;
-    moves = moves.slice(0, cur - 1); cur = moves.length; Pz.used--;
-    const p0 = posAt(cur).pos;
-    if (good[0]) markMove(p0, good[0].m, 'ok'); markMove(p0, m, 'ng');
-    update(false); playChime(false);
-    pzStatus(html); renderPuzzleCard();
-  };
-  if (!e || !(e.need > 0) || e.need > left) {
-    if (left <= 1) {
-      await failBack(good.length ? `<b class="ng">${t('pz.fail')}</b> ${t(Pz.goal === 'gain' ? 'pz.failGain' : 'pz.failWhy', { m: mvIn(before, m), b: mvIn(before, good[0].m), n: Pz.n, g: Pz.g })}`
-        : `<b class="ng">${t('pz.fail')}</b> ${PZBook.t('outOfMoves', { n: Pz.n })}`);
-      return;
-    }
-    const why = pzBlunder(Pz, before, m, list, left);
-    if (why) { await failBack(`<b class="ng">${PZBook.t('blunder')}</b> ${t('pz.bl.' + why, { n: Pz.n, m: mvIn(before, m) })}${good.length ? ' ' + t('pz.best', { b: mvIn(before, good[0].m) }) : ''}`); return; }
-    // not the solution, but play on: the defender answers with the engine's best move
+  if (!good.some(x => E.same(before, x.m, m))) {
     Pz.failed = true; Pz.strayed = true; (Pz.bad = Pz.bad || []).push(Pz.used - 1);
     renderPuzzleCard();
-    pzStatus(t('pz.checking'));
-    const res = await request('ai', { type: 'think', moves: moves.slice(0, cur), level: 17 });
-    if (!res || puzzle !== Pz || tok !== busyToken) return;
-    await sleep(Math.max(0, dm + 250));
-    if (puzzle !== Pz) return;
-    if (!res.move) { Pz.state = 'fail'; Pz.busy = false; renderPuzzleCard(); pzStatus(`<b class="ng">${t('pz.fail')}</b> ${PZBook.t('outOfMoves', { n: Pz.n })}`); return; }
-    const b2 = posAt(cur).pos; playMove2(res.move);
-    await sleep(moveDur(res.move, b2));
-    if (puzzle !== Pz) return;
-    Pz.busy = false;
-    if (statusAt(cur).over) { Pz.state = 'fail'; playChime(false); renderPuzzleCard(); pzStatus(`<b class="ng">${t('pz.fail')}</b> ${PZBook.t('outOfMoves', { n: Pz.n })}`); return; }
-    renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay());
-    pzStatus(`<b class="ng">${t('pz.stray')}</b> ${PZBook.t('movesLeft', { n: Pz.n - Pz.used })}`);
+    const mid = posAt(cur).pos.clone(), start = posAt(0).pos.clone(), me = Pz.me;
+    let after = null;
+    await sleep(dm + 250); if (puzzle !== Pz || tok !== busyToken) return;
+    if (left <= 1) {   // the last move: the balls still on the board (win), or the recapture (gain)
+      if (Pz.goal === 'gain' && mid.hasCaps()) { const r = W.recapture(E, mid); if (r) { playMove2(r); await sleep(moveDur(r, mid)); if (puzzle !== Pz) return; after = posAt(cur).pos.clone(); lessonMarks = [{ at: mTo(r), cls: 'ng' }]; } }
+      else if (Pz.goal !== 'gain') { for (let i = 0; i < 45; i++) if (mid.at(i) === 3 - me) lessonMarks.push({ at: i, cls: 'ng' }); }
+    } else {
+      pzStatus(t('pz.checking'));
+      const dl = await mateReq(left - 1, true);
+      if (!dl || puzzle !== Pz || tok !== busyToken) return;
+      const r = W.pick(E, mid, dl);
+      if (r) { playMove2(r); await sleep(moveDur(r, mid)); if (puzzle !== Pz) return; after = posAt(cur).pos.clone(); lessonMarks = [{ at: mTo(r), cls: 'ng' }]; }
+    }
+    const w = W.facts({ E, me, gain: Pz.goal === 'gain', g: Pz.g, start, mid, after, left: left - 1, last: left <= 1 });
+    Pz.state = 'fail'; Pz.busy = false; update(false); renderFx(); playChime(false); renderPuzzleCard();
+    pzStatus(`<b class="ng">${t('pz.fail')}</b> ${W.text(LANG, w.k, Object.assign({ c: pname(me) }, w.v))} ${W.text(LANG, 'answer')}`);
     return;
   }
-  pzStatus(t('pz.good'));
   const dl = await mateReq(Pz.n - Pz.used, true);
   if (!dl || puzzle !== Pz || tok !== busyToken) return;
   await sleep(Math.max(0, dm + 250));
   if (puzzle !== Pz) return;
   if (!dl.length) { puzzleSolved(); return; }
-  const r = await pickDefenceBest(dl), b3 = posAt(cur).pos;
+  const r = W.pick(E, posAt(cur).pos, dl), b3 = posAt(cur).pos;
   if (puzzle !== Pz || tok !== busyToken) return;
   playMove2(r);
   await sleep(moveDur(r, b3));
@@ -2132,7 +2118,7 @@ $('#pzAnswer').onclick = async () => {
     const att = toMoveAt(cur) === Pz.me, left = Pz.n - Pz.used;
     let m;
     if (att && step === 0) m = Pz.P.answer;
-    else { const list = await mateReq(left, !att); if (puzzle !== Pz || !list) return; m = att ? pickAttack(list, left) : (list.length ? await pickDefenceBest(list) : null); if (puzzle !== Pz) return; }
+    else { const list = await mateReq(left, !att); if (puzzle !== Pz || !list) return; m = att ? pickAttack(list, left) : (list.length ? window.FanoronaPzWhy.pick(E, pos, list) : null); if (puzzle !== Pz) return; }
     if (m == null) break;
     await sleep(700); if (puzzle !== Pz) return;
     playMove2(m); if (att) Pz.used++;

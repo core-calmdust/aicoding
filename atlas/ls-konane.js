@@ -62,7 +62,7 @@
       LKEY: 'aicoding-konane-lessons', data: null, I: null, JA, READY, kindOf,
       load() {
         const ld = u => fetch(u).then(r => r.text()).catch(() => '');
-        return this.p || (this.p = Promise.all([getJ('../konane/lessons.json?v=4'), ld('../konane/i18n-kn.js?v=3'), ld('../konane/i18n-kn-more.js?v=4-l14n'),
+        return this.p || (this.p = Promise.all([getJ('../konane/lessons.json?v=5'), ld('../konane/i18n-kn.js?v=3'), ld('../konane/i18n-kn-more.js?v=5-l14n'),
           loadJs('../konane/engine.js?v=10-v3nn', () => !!window.KonaneEngine).then(() => loadJs('../konane/ls-facts.js?v=1', () => !!window.KonaneLsFacts))])
           .then(([d, a, b]) => { const w = { I18N: {} }; LANGS.forEach(l => { w.I18N[l] = {}; }); for (const tx of [a, b]) { try { new Function('window', 'I18N', tx)(w, w.I18N); } catch (e) { console.warn('[lessons3d] konane texts', e); } }
             this.I = w.I18N; this.data = d; return this; })
