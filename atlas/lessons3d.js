@@ -3917,7 +3917,7 @@
   }
   const XQ_WHY = {   // why the move is played (the problems' praise / the line's notes): a few wordings each, with different endings
     recap: ['取られた駒をすぐ取り返して、駒の損を戻す手なの。', '{P}をすぐ取り返す！ ここで取らないと駒損のままだから。', '取り返しの一手だコン。これで駒の数は元どおり。', '{P}を取り返して、駒の数をそろえたの！', 'すかさず{P}を取り返す！ 取られっぱなしにはしないコン。'],
-    cap: ['相手の{P}を取る手。取り合いの始まりだね！', '{P}を取って、取り合いを始めるの。', '{P}を取る手。ここで取っておくのがこの形の本筋だコン。', '先に{P}を取る！ 取れるときに取っておくのが大事なの。', '{P}をいただき！ ここから駒の取り合いになるコン。'],
+    cap: ['相手の{P}を取る手。さあ、取り合いの始まり！', '{P}を取って、取り合いを始めるの。', '{P}を取る手。ここで取っておくのがこの形の本筋だコン。', '先に{P}を取る！ 取れるときに取っておくのが大事なの。', '{P}をいただき！ ここから駒の取り合いになるコン。'],
     rookOut: ['車を横に動かして、通り道の開いた筋へ出すの。車は早く働かせたい駒だコン。', '隅の車を、開いた筋へ出したね。これで車がよく働くよ。', '車を出して、縦の筋をにらむんだ。'],
     rookUp: ['車を1つ上げる「横車」。次に横へ回って、好きな筋へ出られるの。', '車を一歩上げて、横へ動ける道を作る手。', '一歩上がった車は、次に横へすべって好きな筋へ行けるコン。', 'ここは車をひとつ上げる手。横へ回る準備だコン！', '車を一歩前へ。これで横の道が開くよ。'],
     rookCross: ['車が川を渡って、相手の陣地へ入ったね！ 馬や卒を直接ねらえるの。', '車で相手の陣地に乗りこむ！ 相手は受けに手を取られるよ。', '川を越えた車は、相手にとってとってもこわい存在なんだ。'],
@@ -3969,7 +3969,7 @@
   function xqHintJa(F, k, V, avoid) {
     const kd = xqKind(F), rot = (A, o) => A.map((_, q) => A[(o + q) % A.length]);
     let H;
-    if (kd === 'recap') H = ['駒の数を数えてみて。取られたままの駒はない？', 'さっき取られた駒、そのままでいいのかな？', '駒の損を戻せる手がありそうだね。'];
+    if (kd === 'recap') H = ['駒の数を数えてみて。取られたままの駒はない？', 'さっき取られた駒、そのままでいいのかな？', '駒の損を戻せる手、ありそうじゃない？'];
     else if (kd === 'cap') H = ['取れる駒がないか、盤をよく見てみて！', '相手の駒で、ただで取れるものはない？', '取り合いが始まりそうな局面コン。', '目の前に取れる駒、ないかな？'].filter(x => !(F.retake && /ただで/.test(x)));
     else if (F.check) H = ['王さまに王手をかけられる駒がありそう。', '相手の王さまのまわり、すきはない？', '相手の王さまをおびやかす手、見えるかな？'];
     else if (F.aims.length) H = ['相手の駒で、ねらえそうなものはない？', '動かすと相手の駒をにらめる駒、どれかな？', '相手の大事な駒に、届きそうな手を探してみて。', '指したあと、相手の駒をねらえる手があるコン。'];
@@ -4251,7 +4251,7 @@
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261124xm3'), getJ('../xiangqi/openings.json?v=3'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=1').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261124xm3'), getJ('../xiangqi/openings.json?v=4'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=1').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vf]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vf)(v); this.V = ((v.I18N || {})['ja@fox']) || {}; } catch (e) { this.V = {}; }   // (ショウギツネ's own lines, 3D, ja)
           return this; })
