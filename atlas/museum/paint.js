@@ -69,6 +69,8 @@
     { id: 'stembus', w: 2048, h: 1565, rijks: 'RP-P-OB-89.857', bg: '#d8c89a', spots: [[.1, .12], [.27, .48], [.63, .53], [.905, .9], [.5, .88], [.63, .88]], links: [{ ex: 'goose' }] },
     // (2026-11-25) the Rijksmuseum: Koreans round a board (probably go), from Siebold's Nippon
     { id: 'koorai', w: 2048, h: 1402, rijks: 'RP-P-1939-1474', bg: '#d9d2bf', spots: [[.504, .554], [.367, .666], [.29, .4], [.64, .3], [.575, .5], [.5, .775]], links: [{ g: 'go' }, { g: 'janggi' }] },
+    // (2026-11-25) the Rijksmuseum: a Cairo street photograph — men round a board (probably chess)
+    { id: 'cairo', w: 2048, h: 1375, rijks: 'RP-F-F20042', bg: '#8fa3b0', spots: [[.56, .46], [.47, .14], [.26, .57], [.43, .66], [.69, .4], [.075, .5]], links: [{ g: 'chess' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
