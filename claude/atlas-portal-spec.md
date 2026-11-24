@@ -176,7 +176,7 @@ GAMES に追加（store 含む）→ i18n.js に hist.<id>（歴史・雑学、1
   - 3D卓アダプタ atlas/games/ur.js の `ctx.pz`（startPz）：局面 `{ ur: { s, n, marks, lock } }` をサイコロを n の目で止めて置き、駒→行き先（または行き先だけ）をタップで1手。`api.pz`：load・wait・mark（盤の印 danger/glow/ring/text/arrow と答えの道 { m: [from, to] | from, cls: ok/ng }）・play・undo・legal・tap。ブリッツは道が違うので盤を作り直す。
   - 正解・不正解のあと、問題の局面に戻して正解の道を緑・きみの手を赤で見せる。選択問題（確率・残り歩数）は吹き出しの下のボタン。準備（ramp）の選択問題も同じボタン（lessons3d.js の ramp に `it.choices`）。手番の行は数える問題（lock）では出さない。
 - セネト（2026-11-24、担当C）：**レッスンのみ**（`G.senet` は `noPz: true`、案内はルール説明と同じ**セティ**、`../images/atlas/av/camel-2.webp`）。
-  - フル版と同じ senet/lessons.json と記録（`aicoding-senet-lessons`）。データ・セリフ・盤の操作は **atlas/ls-senet.js**（lessons3d.js の `DATA.senet` は入口だけ）。一覧に出すのは作り直して検証したレッスン（`v2`）だけ（2026-11-24 時点で4本：投げ棒の確率・入れ替え・美の家・残りのマスを数える）。
+  - フル版と同じ senet/lessons.json と記録（`aicoding-senet-lessons`）。データ・セリフ・盤の操作は **atlas/ls-senet.js**（lessons3d.js の `DATA.senet` は入口だけ）。一覧に出すのは作り直して検証したレッスン（`v2`）だけ（2026-11-24 時点で8本：投げ棒の確率・入れ替え・ペアと壁・ねらわれた駒を逃がす・安全な手を選ぶ・美の家・出口と上がり・残りのマスを数える。水の家を避けるはまだ）。
   - 盤：`atlas/games/senet.js` のレッスンモード（`ctx.pz.senet = { s, n, marks, lock }`、`api.pz`：load・wait・mark・play・undo・moves・state・legal）。投げ棒は出目の向きで止まったまま、駒（糸巻き）をタップ → 行き先。印：入れ替えられる駒の赤（数字は16通り中の通り数）、美の家・水の家・出口の光、入れ替える相手の駒の輪、数える問題の数字。答え：緑の道（正解）と赤（選んだ手）。読み込み中・歩いている間の手は捨てる（`gen`）、`Atlas3D.senet._dbg.state()`（進行チェック用）。
   - lessons3d.js：見本の手順の途中で「次へ」を押したとき、次の段の盤で手順の続きを指さない（全ゲーム共通、追29）。
 

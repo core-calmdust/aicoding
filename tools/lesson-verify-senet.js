@@ -57,6 +57,9 @@ module.exports = function senet(opt = {}) {
     if (ok.length !== 1 || ok[0][0] !== best.from || ok[0][1] !== mvTo(best)) add(L.id, where, `①正解 ${JSON.stringify(ok)} が最善 ${best.from}→${mvTo(best)} でない（正解は1つだけ：追3）`);
     if (q.best && (q.best[0] !== best.from || q.best[1] !== mvTo(best))) add(L.id, where, '①best が最善でない');
     if (!F.themeOk(s, q.n, best, ms, th)) add(L.id, where, `④主題（${th}）の手でない`);
+    // 追34：正解の理由がそのレッスンの主題の理由（ほかのレッスンの主題＝入れ替え・上がりなどの理由で正解になっていない）
+    const WHYK = { swap: ['w.swap'], pair: ['w.pair', 'w.wall'], escape: ['w.escape', 'w.escape0'], safe: ['w.safe', 'w.safe0'], beauty: ['w.beauty'], water: ['w.water'], exit: ['w.home'] };
+    if (q.why && WHYK[L.id] && !WHYK[L.id].includes(q.why[0])) add(L.id, where, `追34 正解の理由 ${q.why[0]} がこのレッスン（${L.id}）の主題の理由でない`);
     if (q.why) { const w = F.whyOf(s, q.n, best, th); if (q.why[0] !== w[0] || JSON.stringify(q.why[1]) !== JSON.stringify(w[1])) add(L.id, where, `⑧正解の理由 ${JSON.stringify(q.why)} ≠ 盤の事実 ${JSON.stringify(w)}`); refOk(q.why, L.id); }
     else add(L.id, where, '⑧正解の理由がない');
     if (q.kind === 'move' || q.k === 'try') for (const m of ms) { if (m.from === best.from) continue; const k = F.ngKey(s, q.n, best, m), got = q.ng && q.ng[m.from];
