@@ -24,6 +24,8 @@
     bag: '<svg viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>',
     go: '<svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg>',
     show: '<svg viewBox="0 0 24 24"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.6"/></svg>',
+    call: '<svg viewBox="0 0 24 24"><path d="M4 10v4h3l5 4V6L7 10H4z"/><path d="M16 9c1.2 1.6 1.2 4.4 0 6M18.5 7c2.2 2.8 2.2 7.2 0 10"/></svg>',
+    clash: '<svg viewBox="0 0 24 24"><path d="M5 5l6 6M19 5l-6 6M12 13v7M8 20h8"/><path d="M4 4l2 0 0 2M20 4h-2v2"/></svg>',
     point: '<svg viewBox="0 0 24 24"><path d="M4 12h11M11 7l5 5-5 5"/><circle cx="19" cy="12" r="1.6"/></svg>',
     ask: '<svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M10.2 8.6a1.9 1.9 0 1 1 2.6 1.8c-.5.2-.8.6-.8 1.1v.4M12 13.6v.1"/></svg>',
     vote: '<svg viewBox="0 0 24 24"><path d="M5 11l4 4 10-10"/><path d="M4 20h16"/></svg>',
@@ -39,6 +41,7 @@
 
   /* ---------- helpers ---------- */
   const story = id => window.WL_STORIES[id];
+  const withHero = (id, h) => window.WLHero.apply(story(id), h);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   const nm = id => SP.name(S, st, id);
   const ch = id => st.chars.find(c => c.id === id);
@@ -106,9 +109,14 @@
 
   /* ---------- setup ---------- */
   function buildSetup() {
-    st = story(G.storyId); palette(st);
+    const base = story(G.storyId), HS = base.heroes || [];
+    if (!G.heroPick || !HS.some(h => h.id === G.heroPick)) G.heroPick = 'auto';
+    st = withHero(G.storyId, G.heroPick === 'auto' ? null : G.heroPick); palette(st);
     $('setTitle').innerHTML = `<span style="font:400 1.3em var(--brush);letter-spacing:.06em">${esc(st.title)}</span>　<small style="font:700 15px var(--ui);color:var(--mute)">${esc(st.no)}</small>`;
     $('setConcept').textContent = st.concept;
+    const done = (rec()[base.id] || {}).heroes || {};
+    $('setHero').innerHTML = [`<button class="tile${G.heroPick === 'auto' ? ' on' : ''}" data-h="auto"><b>おまかせ</b><span>毎回ちがう立場で幕が開く。</span></button>`].concat(HS.map(h => `<button class="tile${G.heroPick === h.id ? ' on' : ''}" data-h="${h.id}"><b>${esc(h.job)}</b><span>${esc(h.pitch)}</span>${done[h.id] ? '<span class="done">解決ずみ</span>' : ''}</button>`)).join('');
+    $('setHero').querySelectorAll('.tile').forEach(b => b.onclick = () => { G.heroPick = b.dataset.h; buildSetup(); });
     $('setDiff').innerHTML = DIFFN.map((d, i) => `<button class="tile${G.diff === i ? ' on' : ''}" data-d="${i}"><b>${d}</b><span class="cnt">${E.DIFF[i].size}人</span><span>${DIFFD[i]}</span></button>`).join('');
     const roles = [['auto', 'おまかせ', '物語が決める'], ['villager', '村人', '調べる回数が多い'], ['seer', '占い師', '毎晩ひとりを占う'], ['medium', '霊媒師', '追放者の正体を知る'], ['guard', '狩人', '毎晩ひとりを守る']];
     const can = r => r === 'auto' || r === 'villager' || E.SETUP[E.DIFF[G.diff].size][r] > 0;
@@ -250,7 +258,11 @@
   /* ---------- the game ---------- */
   async function start() {
     clearSave();
+    const HS = story(G.storyId).heroes || [];
+    const hid = G.heroPick && G.heroPick !== 'auto' ? G.heroPick : (HS.length ? HS[Math.floor(Math.random() * HS.length)].id : null);
+    st = withHero(G.storyId, hid);
     S = E.newGame(st, { diff: G.diff, role: G.role });
+    S.hero = st.heroId;
     S.phase = 'prologue'; S.pl.log = [];
     scr('play'); palette(st); hud();
     if (!pref.seen) { await showRules(true); pref.seen = true; savePref(); }
@@ -276,6 +288,7 @@
         }
         continue;
       }
+      if (pg.by) { setCast(castIn(pg.by).slice(0, 1), { x: 58 }); await say([pg.t ? { text: fill(pg.t, ctxVars()) } : null].concat(storyLine(pg))); setCast([]); continue; }
       await say([{ text: fill(pg.t, ctxVars()) }]);
     }
     // the role
@@ -283,6 +296,48 @@
     S.phase = 'morning'; save();
     await morning(true);
   }
+  /* ---------- the story around the game: speakers, interludes, night vignettes ---------- */
+  const castIn = ids => (ids || []).filter(id => { const p = person(id); return p && p.alive && !p.isPlayer; });
+  // a line spoken by the first of its candidates who is here and alive; else the narration
+  function storyLine(e) {
+    const id = castIn(e.by)[0];
+    if (id && e.alt && e.alt[id]) return [{ who: id, text: e.alt[id] }];
+    return e.n ? [{ text: e.n }] : [];
+  }
+  function arcItems(day) {
+    const A = st.arc; if (!A || !A.days || !A.days[day]) return [];
+    S.arcShown = S.arcShown || {}; if (S.arcShown[day]) return [];
+    S.arcShown[day] = 1;
+    const out = [];
+    for (const e of A.days[day]) { if (e.t) out.push({ text: e.t }); if (e.by || e.n) out.push(...storyLine(e)); }
+    return out;
+  }
+  // a scene between people of the village: everyone in it alive, and (for some) someone gone
+  function pickInter() {
+    S.interShown = S.interShown || [];
+    const dead = new Set(S.people.filter(p => !p.alive).map(p => p.id));
+    const ok = (st.inter || []).filter(x => !S.interShown.includes(x.id) && castIn(x.need).length === x.need.length && (!x.dead || x.dead.some(d => dead.has(d))));
+    if (!ok.length) return null;
+    const grief = ok.filter(x => x.dead);
+    const x = grief.length ? grief[0] : ok[Math.floor(Math.random() * ok.length)];
+    S.interShown.push(x.id);
+    return x;
+  }
+  async function interlude(when) {
+    const x = pickInter(); if (!x) return;
+    if (x.bg) setScene(x.bg);
+    setCast(x.need, { span: [32, 68] });
+    await say([{ title: when || '幕間', text: '' }].slice(0, 0).concat(x.lines.map(([w, t]) => w ? { who: w, text: t } : { text: t })));
+    log({ k: 'inter', id: x.id });
+  }
+  function vignette() {
+    S.vignShown = S.vignShown || [];
+    const c = castIn(live().map(p => p.id)).map(id => ch(id)).filter(c => c.vign && !S.vignShown.includes(c.id));
+    if (!c.length) return null;
+    const v = c[Math.floor(Math.random() * c.length)]; S.vignShown.push(v.id);
+    return { text: v.vign };
+  }
+
   async function roleCard() {
     const r = S.pl.role, R = st.roles[r];
     await say([{ text: fill(st.text.role, { roleHow: R.how }) }]);
@@ -305,7 +360,9 @@
         setCast(v === 'you' ? [] : [v], { fallen: v, x: 58 });
         SND.thud();
         items.push({ text: fill(SP.say ? pickOne(st.text.discover[N.loc] || st.text.discover[st.locs[0].id]) : '', { victim: nm(v), note: c ? c.note : '' }) });
-        const g = live().find(p => p.id !== v);
+        // the ones who loved them
+        let g = 0;
+        for (const cc of st.chars) for (const b of cc.bond || []) if (b.with === v && g < 2 && castIn([cc.id]).length) { g++; items.push({ who: cc.id, text: b.grief, fx: () => setCast([v, cc.id], { fallen: v, span: [40, 66] }) }); }
       } else {
         setCast([]);
         items.push({ text: fill(pickOne(st.text.peace), { loc: locName(N.loc) }) });
@@ -331,6 +388,7 @@
       if (r.seer) items.push({ text: `${st.roles.seer.name}の力が、**${nm(r.target)}**の影を映した。……${r.res === 'wolf' ? '**それは、狼の形をしていた。**' : '人の形のままだった。人間だ。'}` });
       if (r.medium) items.push({ text: `追放された**${nm(r.target)}**の影が、ゆっくりと浮かぶ。……${r.res === 'wolf' ? '**狼だった。**' : '人間だった。'}` });
     }
+    items.push(...arcItems(S.day));
     await say(items);
     if (E.check(S)) return end();
     if (S.ghost) return ghostDay();
@@ -339,6 +397,8 @@
     S.npcFound = E.npcSearch(S, st);
     S.phase = 'invest'; save();
     G.loc = (S.nights[S.nights.length - 1] || {}).loc || st.locs[0].id;
+    await interlude();
+    save();
     hub();
   }
   const pickOne = a => a[Math.floor(Math.random() * a.length)];
@@ -435,6 +495,7 @@
 
   /* the meeting */
   async function meeting() {
+    if (!(S.mtg && S.mtg.day === S.day) && (S.duskDay !== S.day)) { S.duskDay = S.day; await interlude(); }
     S.phase = 'meeting'; hud(); save();
     setScene(st.meetLoc || 'inn', false, true);
     const ids = live().map(p => p.id);
@@ -467,6 +528,8 @@
         ${newRes ? `<button class="btn acc" id="dRes">${IC.show}結果を伝える</button>` : ''}
         <button class="btn" id="dAsk" ${S.pl.asks > 0 ? '' : 'disabled'}>${IC.ask}聞き取り<small>残り${S.pl.asks}</small></button>
         <button class="btn" id="dAcc" ${S.pl.accuse ? 'disabled' : ''}>${IC.point}名指しする</button>
+        <button class="btn" id="dCall">${IC.call}呼びかける<small>${appealsLeft()}</small></button>
+        <button class="btn${E.contradictions(S, st).length ? ' acc' : ''}" id="dClash" ${E.contradictions(S, st).length ? '' : 'disabled'}>${IC.clash}矛盾を突く<small>${E.contradictions(S, st).length || ''}</small></button>
         <button class="btn pri" id="dVote">${IC.vote}投票へ</button>
       </div>`);
     const on = (id, f) => { const b = $(id); if (b) b.onclick = f; };
@@ -475,6 +538,8 @@
     on('dRes', coming);
     on('dAsk', async () => { const id = await pickPerson('誰に聞く？', `聞き取りは残り${S.pl.asks}回。行動は使わない。`, live().map(p => p.id), { mark: true }); if (!id) return debate(); S.pl.asks--; await talk(id, true); debate(); });
     on('dAcc', accuse);
+    on('dCall', appeal);
+    on('dClash', clash);
     on('dVote', vote);
     renderNb();
   }
@@ -504,6 +569,83 @@
     await say(lines);
     log({ k: 'co' });
     save(); debate();
+  }
+  /* 呼びかけ：村に頼む。皆が聞いている（狼も）。頼まれた側は、自分の損得で応じるか決める */
+  function appealUsed() { const u = (S.req.used = S.req.used || {}); return (u[S.day] = u[S.day] || {}); }
+  function appealsLeft() { const u = appealUsed(); return ['call', 'evid', 'div', 'guard'].filter(k => !u[k] && appealCan(k)).length || ''; }
+  function appealCan(k) {
+    const R = E.SETUP[S.size];
+    if (k === 'div') return S.claims.some(c => c.role === 'seer' && c.by !== 'you' && person(c.by).alive);
+    if (k === 'guard') return R.guard > 0 && S.pl.role !== 'guard';
+    return true;
+  }
+  async function appeal() {
+    const u = appealUsed(), R = E.SETUP[S.size];
+    const seerN = st.roles.seer.name, medN = st.roles.medium.name, grdN = st.roles.guard ? st.roles.guard.name : '';
+    const opts = [
+      { t: `${seerN}・${medN}は名乗り出てほしい`, s: '名乗るかどうかは本人が決める。何も見ていない者は、命を惜しんで黙るかもしれない。偽物が出てくることもある。', v: 'call:seer,medium', ic: IC.call, dis: u.call },
+      { t: `${seerN}だけ、名乗り出てほしい`, s: `${medN}はまだ隠れていてよい、という頼み方。`, v: 'call:seer', ic: IC.call, dis: u.call },
+      { t: '見たもの・見つけたものを、全部出してほしい', s: '黙っていた痕跡や、夜に出歩いていた者の話が出てくるかもしれない。ただし、嘘の報告も混ざる。', v: 'evid', ic: IC.call, dis: u.evid },
+      S.req.hide ? { t: `${seerN}は、もう隠れなくていい`, s: '先の頼みを取り下げる。', v: 'hide:0', ic: IC.call }
+        : { t: `${seerN}は、狼を見つけるまで隠れていてほしい`, s: '本物は名乗らずに占い続ける。ただし、偽物が先に名乗れば黙ってはいないだろう。', v: 'hide:1', ic: IC.call },
+    ];
+    if (appealCan('div')) opts.push({ t: `${seerN}へ：今夜はこの人を占ってほしい`, s: '名乗った全員に頼む。引き受けるかは、あなたをどれだけ信じているか次第。偽物も、たいてい引き受ける。', v: 'div', ic: IC.call, dis: u.div });
+    if (appealCan('guard')) opts.push({ t: `${grdN}へ：名乗らなくていい、この人を守ってほしい`, s: `${grdN}が誰かは、あなたにもわからない。守ってくれるかは本人次第。狼もこの頼みを聞いている。`, v: 'guard', ic: IC.call, dis: u.guard });
+    const v = await pickOpt('村に呼びかける', '集会の全員が聞いている。人狼も、だ。', opts);
+    if (!v) return debate();
+    let mine = '', ev = [];
+    if (v.startsWith('call:')) {
+      const roles = v.slice(5).split(',');
+      u.call = 1;
+      mine = roles.length > 1 ? `${seerN}と${medN}がいるなら、名乗り出てほしい。黙っていても、狼は待ってくれない。` : `${seerN}がいるなら、今、名乗り出てほしい。${medN}は、まだ出なくていい。`;
+      await say([{ who: 'you', text: mine }]);
+      ev = E.callOut(S, st, roles);
+    } else if (v === 'evid') {
+      u.evid = 1;
+      await say([{ who: 'you', text: '昨夜のことで、見たもの、見つけたものがあるなら、今ここで全部出してほしい。小さなことでもいい。黙っていれば、狼が得をするだけだ。' }]);
+      ev = E.callEvidence(S, st);
+    } else if (v.startsWith('hide:')) {
+      const on = v === 'hide:1';
+      E.askHide(S, on);
+      await say([{ who: 'you', text: on ? `${seerN}は、まだ名乗らないでほしい。狼を見つけるまでは、黙って占い続けてくれ。それがいちばん長く生き延びる道だ。` : `${seerN}は、もう隠れなくていい。見たものを、皆に聞かせてほしい。` }]);
+      log({ k: 'hide', on }); save(); return debate();
+    } else if (v === 'div') {
+      const t = await pickPerson(`${seerN}に、誰を占ってもらう？`, '頼みは皆に聞こえる。', live().map(p => p.id), { mark: true });
+      if (!t) return appeal();
+      u.div = 1;
+      await say([{ who: 'you', text: `${seerN}を名乗る者に頼みたい。今夜は、${nm(t)}を占ってくれないか。` }]);
+      ev = E.askDivine(S, st, t);
+    } else if (v === 'guard') {
+      const t = await pickPerson(`${grdN}に、誰を守ってもらう？`, '名乗らなくていい。返事もいらない。', live().filter(p => p.id !== 'you').map(p => p.id), { mark: true });
+      if (!t) return appeal();
+      u.guard = 1;
+      await say([{ who: 'you', text: `${grdN}がいるなら、名乗らなくていい。返事もいらない。今夜は、${nm(t)}の戸口に立ってほしい。` }]);
+      ev = E.askGuard(S, st, t);
+    }
+    const items = [];
+    for (const e of ev) { const x = SP.event(S, st, e); if (x && x.text) items.push({ who: e.by, text: x.text }); }
+    if (v.startsWith('call:') && !ev.some(e => e.t === 'co')) items.unshift({ text: '誰も、すぐには口を開かなかった。何人かが、目を伏せた。' });
+    if (items.length) await say(items);
+    log({ k: 'appeal', v }); save(); debate();
+  }
+  /* 矛盾を突く：あなたが知っていることどうしの食い違いを、皆の前で示す */
+  function clashText(c) {
+    const who = nm(c.who), when = c.night === 0 ? '最初の夜' : dayName(c.night) + 'の夜';
+    if (c.kind === 'trace') return { t: `${who}の報告と、あなたの見た痕跡`, s: `${who}は${when}の現場で「${SP.traceShort(st, c.said)}」を見たと言った。あなたが見た痕跡は「${SP.traceShort(st, c.seen)}」だった。`, say: `${who}。${when}、現場の痕跡は「${SP.traceShort(st, c.said)}」だったと言ったな。わたしはこの目で見た。「${SP.traceShort(st, c.seen)}」だった。` };
+    if (c.kind === 'fig') return { t: `${who}の見た人影と、痕跡`, s: `${who}は${when}、${SP.fig(st, c.said.cat, c.said.val)}を見たと言った。だが現場の痕跡は「${SP.traceShort(st, c.seen)}」を示している。`, say: `${who}は${when}、${SP.fig(st, c.said.cat, c.said.val)}を見たと言った。だが現場には「${SP.traceShort(st, c.seen)}」の痕跡があった。その人影は、どこから来た？` };
+    const by = c.seen.by === 'you' ? 'あなた自身' : nm(c.seen.by);
+    return { t: `${who}のいた場所`, s: `${who}は${when}、${locName(c.said.loc)}にいたと言った。だが${by}は、その夜${who}を${locName(c.seen.loc)}で見ている。`, say: `${who}は${when}、${locName(c.said.loc)}にいたと言った。だが${c.seen.by === 'you' ? 'わたしは' : by + 'は'}、その夜${who}を${locName(c.seen.loc)}で見ている。どちらが本当だ？` };
+  }
+  async function clash() {
+    const L = E.contradictions(S, st);
+    const v = await pickOpt('矛盾を突く', '話の食い違いを、皆の前で示す。嘘をついた者は、たいてい狼か、狼の味方だ。ただし、人が嘘をつくのは狼だからとは限らない。', L.map(c => { const x = clashText(c); return { t: x.t, s: x.s, v: c.id, ic: IC.clash }; }));
+    if (!v) return debate();
+    const c = L.find(x => x.id === v), x = clashText(c);
+    const items = [{ who: 'you', text: x.say }];
+    const t = pup(c.who); if (t) { t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); }
+    for (const e of E.pointOut(S, st, v)) { const y = SP.event(S, st, e); if (y && y.text) items.push({ who: e.by, text: y.text }); }
+    await say(items);
+    log({ k: 'clash', id: v }); save(); debate();
   }
   async function accuse() {
     const id = await pickPerson('誰を名指しする？', '名指しすると、あなたを信じる人がその人を疑いはじめる。外せば、あなたが疑われる。', live().map(p => p.id), { mark: true });
@@ -625,7 +767,7 @@
     S.phase = 'night'; hud();
     document.body.classList.add('night'); setScene(st.nightLoc || st.locs[0].id, true); setCast([]);
     SND.windOn(.09);
-    await say([{ text: pickOne(st.text.night) }]);
+    await say([{ text: pickOne(st.text.night) }, vignette()]);
     const act = {};
     const r = S.ghost ? null : S.pl.role;
     if (!S.ghost && S.pl.co) await say([{ text: `あなたは${st.roles[S.pl.role].name}だと名乗った。狼は、名乗った者の戸口を知っている。\n今夜、誰かがあなたを守ってくれるだろうか。` }]);
@@ -681,11 +823,19 @@
     }
     const mad = S.people.find(p => p.role === 'madman');
     if (mad) await say([{ text: `狼に心を寄せていた人間——狂人は、**${nm(mad.id)}**だった。` }]);
+    if (st.arc && st.arc.coda) await say([{ text: st.arc.coda }]);
     if (R.win || R.why === 'overrun') await say([{ text: R.win ? st.text.win : st.text.lose }]);
+    if (R.win && st.heroData && st.heroData.epi) await say([{ text: st.heroData.epi }]);
+    if (R.win) {
+      const surv = S.people.filter(p => p.alive && !p.isPlayer && p.role !== 'wolf' && ch(p.id).epi);
+      for (let i = surv.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [surv[i], surv[j]] = [surv[j], surv[i]]; }
+      const ep = surv.slice(0, 4).map(p => ch(p.id).epi);
+      if (ep.length) { setCast(surv.slice(0, 4).map(p => p.id)); await say(ep.map(t => ({ text: t }))); }
+    }
     const sc = E.score(S);
     // the record
     const rr = rec(); const k = st.id; rr[k] = rr[k] || { plays: 0, win: 0, best: '-' };
-    rr[k].plays++; if (R.win) rr[k].win++;
+    rr[k].plays++; if (R.win) { rr[k].win++; if (st.heroId) (rr[k].heroes = rr[k].heroes || {})[st.heroId] = 1; }
     const order = ['S', 'A', 'B', 'C', 'D', '-'];
     if (order.indexOf(sc.rank) < order.indexOf(rr[k].best)) rr[k].best = sc.rank;
     try { localStorage.setItem(REC, JSON.stringify(rr)); } catch (e) {}
@@ -779,7 +929,7 @@
       <div class="promise"><b>一、痕跡は嘘をつかない</b>現場に残った足跡・匂い・手の跡は、その夜に襲った人狼のもの。外れることはない。</div>
       <div class="promise"><b>二、物は嘘をつくことがある</b>現場に落ちていた持ち物は、本当に落としたのかもしれないし、狼が罪をなすりつけるために置いたのかもしれない。</div>
       <div class="promise"><b>三、人間は他人のことで嘘をつかない</b>人間が見たと言う人影や人の姿は本当のこと。ただし、秘密を隠すために自分がどこにいたかは偽ることがある。人狼と狂人は何でも偽る。</div>
-      <p><b>一日の流れ</b>　朝：夜の出来事 → 昼：場所を調べる・話を聞く（行動は1日3回、村人は4回）→ 集会：痕跡を示す・名乗る・聞き取り・名指し → 投票 → 夜：役の力を使う。</p>
+      <p><b>一日の流れ</b>　朝：夜の出来事 → 昼：場所を調べる・話を聞く（行動は1日3回、村人は4回）→ 集会：痕跡を示す・名乗る・聞き取り・名指し・呼びかけ・矛盾を突く → 投票 → 夜：役の力を使う。</p>
       <p><b>推理手帳</b>（右上の帳面）に、人物の特徴・痕跡・証言・投票が自動で書きとめられる。白・灰・黒の印は自分用のメモ。</p>
       <div class="foot"><button class="btn pri" data-x>${first ? '幕を開ける' : '閉じる'}</button></div>`, box => box.querySelectorAll('[data-x]').forEach(b => b.onclick = () => closeSheet(true)));
   }
@@ -809,7 +959,7 @@
   /* ---------- resume ---------- */
   async function resume() {
     const sv = loadSave(); if (!sv) return;
-    st = story(sv.story); S = sv.S; G.storyId = st.id; G.diff = S.diff;
+    S = sv.S; st = withHero(sv.story, S.hero); S.req = S.req || { divine: {}, guard: null, hide: false, calls: {} }; G.storyId = st.id; G.diff = S.diff;
     scr('play'); palette(st); hud();
     const ph = S.phase;
     if (ph === 'prologue') return prologue();

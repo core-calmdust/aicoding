@@ -275,7 +275,8 @@
     function pzMark(list) {
       clear(pzMk); if (list == null || !pos) return;
       const L = typeof list === 'number' ? [[list, 'ring']] : list;
-      for (const e of L) {
+      for (let e of L) {
+        if (Array.isArray(e) && e[0] && typeof e[0] === 'object' && e[0].m != null) e = { m: e[0].m, cls: e[1] };   // (the lessons' [{ m }, cls] — atlas/lessons3d.js, 2026-11-25)
         if (e && !Array.isArray(e) && e.m != null) { const k = e.cls || 'ok', p = E.path(pos, e.m).length > 1 ? E.path(pos, e.m) : e.path || [E.mFrom(e.m), E.mTo(e.m)]; mark(pzMk, GEO.ring, pm(k, .95), p[0], .05); p.slice(1, -1).forEach(q => mark(pzMk, GEO.dot, pm(k, .9), q, .03)); mark(pzMk, GEO.cup, pm(k, .55), p[p.length - 1], .012); continue; }
         const [q, k] = Array.isArray(e) ? e : [e.at, e.cls]; if (!(q >= 0 && q < N * N)) continue;
         if (k === 'ring') { mark(pzMk, GEO.cup, pm('hl', .45), q, .012); mark(pzMk, GEO.ring, pm('ring', 1), q, .05); continue; }

@@ -20,7 +20,7 @@
 //    goes in; b_finish: does not complete; b_jump: a farther jump exists).
 // (2026-11-25 担当D) s_block: ok = the moves after which Black's farthest reply is shortest (blackBest on every legal move);
 //  s_leave: ok = the moves after which White empties its starting corner by its 40th move whatever Black replies (leaveSafe);
-//  the 3D ask names the move (追75), the 2D shows the moves left; the 2D warm-ups of both say what their board does (追14).
+//  the 3D ask names the move (追77), the 2D shows the moves left; the 2D warm-ups of both say what their board does (追14).
 // Usage: node tools/lesson-verify-ugolki-ls.js [--selftest]   (also: node tools/lesson-verify.js ugolki)
 'use strict';
 const fs = require('fs'), path = require('path');
@@ -319,11 +319,28 @@ function verify(opt) {
     for (const k of ['intro']) if (!(UL.JA[k] && UL.JA[k][id])) add(id, -1, `⑧ no 3D ${k}`);
     if (!(UL.JA.ask[id] && UL.JA.ask[id].length >= 4) || !(UL.JA.hint[id] && UL.JA.hint[id].length >= 3)) add(id, -1, '追46 fewer than 4 asks / 3 hints');
   }
+  // 追75 (担当C, konane) every 2D warm-up of every step: the arrows / the right moves are moves of that board, a 'try' has its right
+  // set as the lesson counts it (b_step / b_jump / s_far / s_ladder / s_road), the second hint marks pieces (look, 1-based), and a
+  // square named by the hint is the start of a right move
+  const NAMES = (p) => real(p).map(m => E.name(p, m));
+  for (const st of LS.steps) (st.ramp || []).forEach((R, ri) => {
+    if (!R.s) return; const p = E.Pos.from(R.s), N = NAMES(p), tag = `ramp${ri + 1}`;
+    for (const n of (R.seq || []).slice(0, 1).concat(R.ok || [])) if (!N.includes(n)) add(st.id, -1, `追75 ${tag}: ${n} is not a move of its board`);
+    if (R.k !== 'try') return;
+    const ok = (R.ok || []).map(n => real(p).find(m => E.name(p, m) === n)).filter(m => m != null);
+    if (['b_step', 'b_jump', 's_far', 's_ladder', 's_road'].includes(st.id)) {
+      const F = real(p).map(m => [m, factOf(st.id, p, m)]), key = st.id === 's_road' ? 'nx' : 'g', cand = F.filter(([m, f]) => st.id !== 'b_step' || !f.h);
+      const mx = Math.max(...cand.map(([m, f]) => f[key])), want = st.id === 'b_step' ? cand.filter(([m, f]) => f.g > 0).map(x => x[0]) : cand.filter(([m, f]) => f[key] === mx).map(x => x[0]);
+      if (want.length !== ok.length || !want.every(m => ok.includes(m))) add(st.id, -1, `追75 ${tag}: the right moves ${R.ok.join(' ')} ≠ ${want.map(m => E.name(p, m)).join(' ')}`);
+    }
+    if (!(R.look || []).length || R.look.some(q => !p.sq[q - 1])) add(st.id, -1, `追75 ${tag}: the second hint marks ${JSON.stringify(R.look)} (no piece)`);
+    for (const l of Object.keys(R.h || {})) for (const c of (R.h[l].match(/[a-h][1-8]/g) || [])) if (!ok.some(m => E.sqName(E.mFrom(m)) === c)) add(st.id, -1, `追75 ${tag}: the hint (${l}) names ${c}, no right move starts there`);
+  });
   // the 3D lists only the checked steps; 2D app: a move in ok scores 20
   const app = fs.readFileSync(path.join(ROOT, 'ugolki/app.js'), 'utf8');
   if (!/if \(P\.ok\) return okAnswer\(P, s, m, pts\)/.test(app)) add('2D', -1, '⑨ ugolki/app.js does not answer ok problems with okAnswer');
-  // 追75: the 40-move limit is not on the 3D board: the 3D ask names the move (checked above), the 2D shows 'at home · moves left' in a lesson too
-  if (READY.includes('s_leave') && !/if \(home && \(!startSpec \|\| \(startSpec\.n && !startSpec\.free\)\)\)/.test(app)) add('2D', -1, '⑨追75 the 2D lesson does not show the moves left before the 40-move limit');
+  // 追77: the 40-move limit is not on the 3D board: the 3D ask names the move (checked above), the 2D shows 'at home · moves left' in a lesson too
+  if (READY.includes('s_leave') && !/if \(home && \(!startSpec \|\| \(startSpec\.n && !startSpec\.free\)\)\)/.test(app)) add('2D', -1, '⑨追77 the 2D lesson does not show the moves left before the 40-move limit');
   return { out, rows, ready: READY };
 }
 function load2D() {
@@ -351,6 +368,8 @@ function selftest() {
     ['s_leave: the 41st move (④)', d => { const P = d.steps.find(x => x.id === 's_leave').problems[0]; P.s = Object.assign({}, P.s, { n: P.s.n - 6 }); }, /④ White's move/],
     ['s_leave: Black still at home too (④)', d => { const P = d.steps.find(x => x.id === 's_leave').problems[2], a = P.s.b.split(''); const H = E.HOME()[2]; for (let i = 0; i < 64; i++) if (H[i] && a[i] === '.') { a[i] = 'b'; break; } P.s.b = a.join(''); }, /Black has a piece at home/],
     ['s_block warm-up: an arrow that does not block (追14)', d => { const R = d.steps.find(x => x.id === 's_block').ramp[0], p = E.Pos.from(R.s); R.seq = [E.name(p, real(p).find(m => !classify('s_block', p).ok.includes(m)))]; }, /追14 the warm-up arrow/],
+    ['a warm-up whose hint marks nothing (追75)', d => { d.steps.find(x => x.id === 'b_jump').ramp[2].look = []; }, /追75 ramp3: the second hint/],
+    ['a warm-up hint naming the wrong piece (追75)', d => { const r = d.steps.find(x => x.id === 'b_jump').ramp[2]; r.h = Object.assign({}, r.h, { ja: 'a2の駒から' }); }, /追75 ramp3: the hint \(ja\) names a2/],
     ['s_ladder: Black to move (追5)', d => { const P = d.steps.find(x => x.id === 's_ladder').problems[1]; P.s = Object.assign({}, P.s, { side: 2 }); }, /not White to move/],
   ];
   let bad = 0;

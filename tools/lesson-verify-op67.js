@@ -1,7 +1,7 @@
 // 追67（2026-11-24 第2期・担当B、claude/lesson-quality.md）：同じ局面で、本（定跡）によって正解が食い違わない。
 // 定跡（/open）の問題の局面が、どれかの本の手順（見本＝study の手順）の局面と同じ（対称・色の入れかえ込み）なら、その見本が
 // そこで指す手は、問題の正解（20点の手）に入っていなければならない（見本で「こう指す」と見せた手を、問題で不正解・16点にしない）。
-// 囲碁は tools/lesson-verify-goopen.js（変化も含む）。ここでは tafl・checkers・xiangqi・shogi・chess・gomoku の定跡と、
+// 囲碁は tools/lesson-verify-goopen.js（変化も含む）。ここでは tafl・checkers・xiangqi・shogi・chess・gomoku・reversi・hex・backgammon の定跡と、
 // connect4（定跡の本線 C4_MAIN とすべての問題）を見る。
 // 手の比べ方は「指したあとの局面」で（対称で写した手を作らなくてよい）：見本の手のあとの局面の正規形が、問題の正解のどれかの
 // あとの局面の正規形と同じなら一致。
@@ -95,11 +95,78 @@ const AD = {
       lines: [['C4_MAIN', [...MAIN].map(c => +c - 1)]],
       probs: L.steps.flatMap(st => (st.problems || []).map((P, j) => ({ set: st.id, q: j + 1, done: true, pos: P.moves, ok: P.answer.slice() }))) };
   },
+  reversi() {   // (2026-11-25 担当B) a position = the move string that reaches it (rvAfter: legal, a side with no move passes)
+    const RV = require('./lesson-verify-rvopen.js'), X = RV.rx(), ST = RV.steps(), OPP = J('reversi/opcourse-probs.json');
+    const SY = []; for (let t = 0; t < 8; t++) { const m = []; for (let q = 0; q < 64; q++) { let r = q >> 3, c = q & 7; if (t & 1) c = 7 - c; if (t & 2) r = 7 - r; if (t & 4) [r, c] = [c, r]; m.push(r * 8 + c); } SY.push(m); }
+    const memo = new Map(), at = s => { if (!memo.has(s)) memo.set(s, X.rvAfter(s)); return memo.get(s); };
+    // the key: the 8 symmetries and the colours swapped (with the side to move), the end of the game marked
+    const key = s => { const [cs, tm] = at(s).split(':'), sw = { 0: '0', 1: '2', 2: '1' }; const V = [];
+      for (const m of SY) { let a = '', b = ''; for (let q = 0; q < 64; q++) { a += cs[m[q]]; b += sw[cs[m[q]]]; } V.push(a + ':' + tm, b + ':' + sw[tm]); }
+      return minOf(V); };
+    const legal = (s, m) => { const [cs, tm] = at(s).split(':'); return X.rvLegal(cs.split('').map(Number), +tm).includes(X.rvSq(m)); };
+    const probs = [];
+    for (const st of ST) { const id = st.ln.moves, pool = (OPP[id] || []).length >= 5 ? OPP[id].slice(0, 5) : null;
+      if (pool) pool.forEach((P, j) => probs.push({ set: id, q: j + 1, done: true, pos: P.via, ok: [P.best] }));   // (= 3D REVERSI.opening / 2D poolOf: the best 20)
+      else st.ks.forEach((k, j) => probs.push({ set: id, q: j + 1, done: false, pos: st.mv.slice(0, k).join(''), ok: [st.mv[k]] })); }   // (the line's move 20, any other ≤14 in the 3D / 16 in the 2D)
+    return { key, after: (s, m) => s + m, start: () => '', legal, name: (s, m) => m, lines: ST.map(st => [st.ln.moves, st.mv]), probs };
+  },
+  hex() {   // (2026-11-25 担当B) the key: the board size, the 180° turn, the board flipped on its long diagonal with the colours swapped
+    const E = require(path.join(ROOT, 'hex/engine.js')), O = J('hex/openings.json'), WINT = 29000;
+    const key = p => { const n = p.n, b = p.spec().b, V = [], rot = [...b].reverse().join('');
+      V.push(b + p.side + (p.swapOk ? 's' : ''), rot + p.side + (p.swapOk ? 's' : ''));
+      if (!p.swapOk) { const sw = { '.': '.', r: 'b', b: 'r' }, tr = []; for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) tr.push(sw[b[c * n + r]]);
+        const t = tr.join(''); V.push(t + (3 - p.side), [...t].reverse().join('') + (3 - p.side)); }
+      return n + ':' + minOf(V) + (p.winner() ? '!' : ''); };
+    // the 20-point moves (= atlas/lessons3d.js HEX.points and hex/app.js problemPoints)
+    const pts = (P, m) => { if (P.ok) return P.ok.includes(m) ? 20 : 0;
+      const val = new Map(P.sc), best = Math.max(...P.sc.map(e => e[1])), mine = val.has(m) ? val.get(m) : (P.sc.length ? Math.min(...P.sc.map(e => e[1])) - 60 : -1000);
+      const wr = v => v > WINT ? 1 : v < -WINT ? 0 : Math.max(0, Math.min(1, (v + 1000) / 2000));
+      if (mine >= best - 15 && !(best > WINT && mine < best)) return 20; if (best > WINT && mine <= WINT) return mine > 400 ? 8 : 0; if (mine < -WINT && best >= -WINT) return 0;
+      return Math.max(0, Math.round(20 * (1 - (wr(best) - wr(mine)) / 0.25))); };
+    return { key, after: (p, m) => { const q = p.clone(); q._w = undefined; q.play(m); return q; }, start: st => new E.Pos(st.n, st.swap), legal: (p, m) => p.legal(m), name: (p, m) => (m === 1023 ? 'swap' : E.nameOf(m, p.n)),
+      lines: O.sets.map(g => [g.id, g.study.line, { n: g.n, swap: g.swap }]),
+      probs: O.sets.flatMap(g => (g.problems || []).map((P, j) => { const pos = E.Pos.from(P.s); return { set: g.id, q: j + 1, done: !!g.verified, pos, ok: pos.moves().filter(m => pts(P, m) === 20) }; })) };
+  },
+  backgammon() {   // (2026-11-25 担当B) a position seen by the side to move, with the roll; the lines = every item's lines (seq: the moves from the start)
+    const BV = require('./lesson-verify-bgopen.js'), { BG } = require(path.join(ROOT, 'backgammon/tools/load.js')), OP = J('backgammon/openings.json');
+    const START = '0000005030000500000000002000000050300005000000000020', hex = q => Array.from(q, v => v.toString(16)).join('');
+    const dec = s => { const q = new Int8Array(52); for (let i = 0; i < 52; i++) q[i] = parseInt(s[i], 16) || 0; return q; }, flip = q => { const o = new Int8Array(52); o.set(q.slice(26), 0); o.set(q.slice(0, 26), 26); return o; };
+    const play = (q, m) => { const r = q.slice(); for (let i = 0; i + 1 < m.length; i += 2) BG.apply(r, 0, m.charCodeAt(i) - 65, m.charCodeAt(i + 1) - 65); return r; };
+    const dk = d => d.slice().sort().join('');
+    const INTRO = (() => { const L = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), a = L.indexOf('  const BGJ_OP = {'), b = L.indexOf('\n  };', a), o = {};
+      for (const m of L.slice(a, b).matchAll(/\b([ordh]\d\d\w?): '([^']*)'/g)) o[m[1]] = m[2]; return o; })(), cmp = [];
+    const seen = [], probs = [], right = (y, b, rolled, tol) => (rolled ? y.ro : y.ply === 2) && (b.e - y.e <= tol + 1e-9 || (y.ro && b.e - y.e < 2 * Math.hypot(b.se, y.se)));
+    for (const id in OP.items) { const it = OP.items[id];
+      // an opening roll's 2nd, 3rd … lines are the book's comparison plays: the 2D book (backgammon/op.js opLineEval) shows each with its
+      // deficit to the best (op.diff) and the 3D asks only the first line. Such a line is not a sample (見本) of the roll — only when it is
+      // more than the tolerance behind on the same rollouts (so the book's own number says it is worse) AND the item's intro (BGJ_OP.intro,
+      // the 3D's only words before the problem) says a play falls short (落ちる・次点・危険・及ばない). Otherwise it is a sample like any other.
+      const ex = it.kind === 'open' ? (() => { const R = it.plays.map(y => ({ m: y[0], e: y[3] != null ? y[3] : y[1], ro: y[3] != null })), rolled = R.some(y => y.ro), b = R.filter(y => !rolled || y.ro).reduce((u, w) => (w.e > u.e ? w : u));
+        return m => { const y = R.find(z => z.m === m); return !!y && b.e - y.e > OP.tol + 1e-9 && /落ちる|次点|危険|及ばない/.test(INTRO[id] || ''); }; })() : () => false;
+      it.lines.forEach((ln, li) => { const seq = ln.seq || [{ r: 0, d: it.d, m: ln.m }]; let v = dec(START), r = 0;   // (v: seen by the side r)
+        if (li > 0 && ex(ln.m)) { cmp.push(`${id} ${ln.id}`); return; }
+        seq.forEach((st, k) => { if (st.r !== r) { v = flip(v); r = st.r; }
+          seen.push([hex(v) + ':' + dk(st.d), `${id} ${ln.id} の手順 ${k + 1}手目`, hex(play(v, st.m)), st.m]); v = play(v, st.m); }); });
+      // the problems as the 3D / 2D ask them (BACKGAMMON.opDecs), right = within the tolerance or the rollouts' 2 s.e. (= bgOpen)
+      const decs = (it.kind === 'open' ? it.lines.slice(0, 1) : it.lines).map(ln => { const seq = ln.seq || [{ r: 0, d: it.d, m: ln.m }], k = it.kind === 'open' ? 0 : seq.length - 1;
+        let v = dec(START), r = seq[k].r; for (let i = 0; i < k; i++) { const st = seq[i]; let w = st.r === r ? v : flip(v); w = play(w, st.m); v = st.r === r ? w : flip(w); }
+        return { ln, v, d: seq[k].d, plays: ln.plays || it.plays }; });
+      decs.forEach((x, j) => { const R = x.plays.map(y => ({ m: y[0], e: y[3] != null ? y[3] : y[1], ro: y[3] != null, se: y[4] || 0, ply: y[2] })), rolled = R.some(y => y.ro);
+        const best = R.filter(y => !rolled || y.ro).reduce((u, w) => (w.e > u.e ? w : u)), ok = R.filter(y => right(y, best, rolled, OP.tol)).map(y => y.m);
+        probs.push({ set: id, q: j + 1, done: !BV.PEND.has(id), pos: hex(x.v) + ':' + dk(x.d), ok, after: ok.map(m => hex(play(x.v, m))) }); }); }
+    return { seenList: seen, probs, cmp };
+  },
 };
 
 function check(game, A) {
   A = A || AD[game]();
   const out = [], pend = [], seen = new Map();   // key → [[who, afterKey, move name]]
+  if (A.seenList) {   // (backgammon: the positions with the roll and the positions after, already keyed)
+    for (const [K, who, ak, nm] of A.seenList) { if (!seen.has(K)) seen.set(K, []); seen.get(K).push([who, ak, nm]); }
+    for (const P of A.probs) { const t = seen.get(P.pos); if (!t) continue; const okK = new Set(P.after);
+      for (const [who, ak, nm] of t) if (!okK.has(ak)) { (P.done ? out : pend).push({ step: P.set, q: P.q, msg: `追67 同じ局面・同じ目で ${who}（${nm}）を、この問題は正解（20点）にしていない（本によって正解が食い違う）` }); break; } }
+    return { out, pend, n: A.probs.length, hit: A.probs.filter(P => seen.has(P.pos)).length };
+  }
   for (const [who, moves, st] of A.lines) { let p = A.start(st);
     for (let k = 0; k < moves.length; k++) { const m = moves[k]; if (!A.legal(p, m)) { out.push({ step: who, q: 0, msg: `追67 the study line's move ${k + 1} is not legal` }); break; }
       const K = A.key(p), q = A.after(p, m); if (!seen.has(K)) seen.set(K, []); seen.get(K).push([`${who} の見本 ${k + 1}手目`, A.key(q), A.name(p, m)]); p = q; } }

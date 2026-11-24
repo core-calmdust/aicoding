@@ -281,6 +281,8 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 .setup h3{font:800 18px var(--ui);letter-spacing:.12em;color:var(--mute);margin:4px 0 10px}
 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
 .tiles.r5{grid-template-columns:repeat(5,1fr)}
+.tiles.heroes{grid-template-columns:repeat(4,1fr)}
+.tile .done{font:700 12px var(--ui);color:var(--acc);letter-spacing:.08em}
 .tile{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px 13px;border:1.5px solid var(--line);border-radius:3px;background:#fbf6ea;text-align:left;min-height:96px}
 .tile b{font:800 19px/1.2 var(--prose)}
 .tile span{font:500 14px/1.55 var(--ui);color:var(--mute)}
@@ -340,7 +342,7 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
   .sc h3{font-size:28px}
   .scr{justify-content:flex-start;padding:64px 14px 30px}
   .setup{padding:18px 16px}
-  .tiles,.tiles.r5{grid-template-columns:repeat(2,1fr)}
+  .tiles,.tiles.r5,.tiles.heroes{grid-template-columns:repeat(2,1fr)}
   .tile{min-height:0}
   .row2{grid-template-columns:1fr}
   #sheet{padding:0;align-items:end}
@@ -394,6 +396,8 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
   <div class="setup">
     <h2 class="scrh" id="setTitle" style="text-align:left"></h2>
     <p class="scrp" id="setConcept" style="text-align:left;margin-bottom:16px"></p>
+    <h3>あなたは誰か</h3>
+    <div class="tiles heroes" id="setHero"></div>
     <h3>むずかしさ</h3>
     <div class="tiles" id="setDiff"></div>
     <h3>あなたの役</h3>
@@ -414,14 +418,21 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 
 <div id="sheet" class="hide" role="dialog" aria-modal="true"><div class="box" id="sheetBox"></div></div>
 
-<script src="engine.js?v=2"></script>
-<script src="voices.js?v=1"></script>
-<script src="speech.js?v=1"></script>
+<script src="engine.js?v=4"></script>
+<script src="voices.js?v=3"></script>
+<script src="speech.js?v=3"></script>
 <script src="art.js?v=1"></script>
-<script src="stories/kirigane.js?v=2"></script>
-<script src="stories/hokushin.js?v=2"></script>
-<script src="stories/tomoshibi.js?v=2"></script>
+<script src="hero.js?v=1"></script>
+<script src="stories/kirigane.js?v=4"></script>
+<script src="stories/kirigane.tale.js?v=2"></script>
+<script src="stories/kirigane.who.js?v=1"></script>
+<script src="stories/hokushin.js?v=4"></script>
+<script src="stories/hokushin.tale.js?v=2"></script>
+<script src="stories/hokushin.who.js?v=1"></script>
+<script src="stories/tomoshibi.js?v=4"></script>
+<script src="stories/tomoshibi.tale.js?v=2"></script>
+<script src="stories/tomoshibi.who.js?v=1"></script>
 <script src="sound.js?v=1"></script>
-<script src="game.js?v=2"></script>
+<script src="game.js?v=5"></script>
 </body>
 </html>
