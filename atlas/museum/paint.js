@@ -45,6 +45,8 @@
     { id: 'ingram', w: 1552, h: 2252, met: 394687, no: '66.628.4(1)', bg: '#a89a7e', spots: [[.6, .53], [.47, .515], [.55, .4], [.73, .5], [.72, .19], [.5, .905]], links: [{ g: 'xiangqi' }] },
     // (2026-11-24) Chicago: Posada's Game of the Goose (Mexico) — the rules printed in the middle
     { id: 'posada', w: 1686, h: 1239, aic: 52048, no: '1944.945', bg: '#cfc6a6', spots: [[.45, .417], [.325, .848], [.294, .733], [.294, .61], [.15, .72], [.647, .468]], links: [{ ex: 'goose' }, { g: 'ludo' }] },
+    // (2026-11-24) the Met: a Jin-dynasty relief tile, two women at a board (probably go)
+    { id: 'jintile', w: 1432, h: 1576, met: 65099, no: '2002.462', bg: '#6a625a', spots: [[.5, .56], [.42, .55], [.27, .42], [.6, .4], [.55, .18], [.5, .73]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
