@@ -5115,7 +5115,7 @@
         }
         if (mk.length) noteMarks[String(i)] = mk;
       });
-      const probs = shuffle(g.problems || []).slice(0, 5), used = {};   // (used: how often each kind of miss was explained, to vary the words)
+      const probs = g.verified ? shuffle((g.problems || []).map((p, i) => i)).slice(0, 5).sort((a, b) => a - b).map(i => g.problems[i]) : shuffle(g.problems || []).slice(0, 5), used = {};   // (2026-11-24 第2期・担当B: a verified pool is easy → hard, 5 drawn in its order) (used: how often each kind of miss was explained, to vary the words)
       const intro = lang === 'ja' && HXJ_OP.intro[g.id] ? HXJ_OP.intro[g.id] : NCH['op:' + g.id + '/intro'] ? L(NCH['op:' + g.id + '/intro'], lang) : this.tx('op.' + g.id + '.intro', lang);
       return { id: g.id, title: this.opTitle(g, lang), intro: String(intro || '').replace(/\n/g, '<br>'), start: { spec: { n, swap: g.swap }, me: g.side === 2 ? 2 : 1 }, steps: line, notes, noteMarks,
         probs: probs.map((P, i) => { const o = { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1 }, kind: 'best', P, ask: this.tx('op.goal', lang), ans: P.best, hintTx: this.tx('op.hint', lang), hint: hxArea(P.s, P.best),
@@ -5141,6 +5141,7 @@
         let b;
         if (kb === 'swap') b = uz('swap', ['強い赤石が、相手のまま残っちゃう', 'せっかくの強い石を、もらいそこねちゃう', '中央に近いいい石を、相手に持たせたままになる']);
         else if (ku === 'swap') b = uz('usw', ['もらっても得が小さい石を取って、中央を争う手番を逃しちゃう', 'ふちの弱い石をもらうだけで、いい点を先に打たれちゃう', 'うまみの少ない石と引きかえに、中央を相手にゆずっちゃう']);
+        else if (kb0 === 'save' && fu.save) b = uz('save2', ['そっちのブリッジは守れても、もう1つの割りこまれたほうが切られちゃう', '受ける場所がちがって、大事なほうのブリッジが切られちゃう']);   // (2026-11-24 第2期・担当B: two of our bridges are cut into — yours answers the other one)
         else if (kb0 === 'save') b = uz('save', ['ブリッジに受けていないから、そこで切られちゃう', '割りこみを放っておくと、もう片方もふさがれて切れちゃう', '受けそびれたブリッジが、次の一手で切られちゃう']);
         else if (stones && fu.dOpp >= 4 && fu.dOwn >= 4) b = uz('far', ['ほかの石から遠すぎて、いまの戦いに関われない', '戦いの場所から離れすぎて、働きが小さい', 'まわりに石がなくて、つなぐのにも止めるのにも役立たない']);
         else if (kb0 === 'intrude') b = uz('intr', ['相手のブリッジに割りこむ先手を逃しちゃう', '相手のすき間をつくチャンスが消えちゃう', '受けさせる一手を打てず、相手に形を整えられちゃう']);
