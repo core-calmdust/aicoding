@@ -215,7 +215,7 @@
     page = k; propSync(); document.documentElement.dataset.pg = k; requestAnimationFrame(() => AtlasVis.check());   // (phones: the updates ticker hides on the map and きせかえ)
     tabsEl.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b.dataset.k === k));
     document.querySelectorAll('section.pg').forEach(s => s.classList.toggle('on', s.id === 'pg-' + k));
-    if (push) history.replaceState(null, '', '#' + k);
+    if (push) history.replaceState(history.state, '', '#' + k);
     render(k);
     if (toShop && !isPhone()) requestAnimationFrame(() => $('shopSec').scrollIntoView({ behavior: push ? 'smooth' : 'auto', block: 'start' }));
     else if (push) window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -965,7 +965,7 @@
     // table play: やめる and the action bar's buttons take the HUD pill's height (--hudh), so the three read as one set (2026-11-09)
     if (window.ResizeObserver && !window.__hudRO) { window.__hudRO = new ResizeObserver(() => { const h = $('hud').offsetHeight; if (h >= 36) $('bv').style.setProperty('--hudh', h + 'px'); }); window.__hudRO.observe($('hud')); }
     document.body.style.overflow = 'hidden';
-    if (push) history.replaceState(null, '', '#' + page + '/' + id);
+    if (push) history.replaceState(history.state, '', '#' + page + '/' + id);
     if (initGL()) {
       // back from a game on the table: the board settles in softly and the camera glides back (ease-in-out) to the showcase view
       const show3d = () => {
@@ -2437,7 +2437,7 @@
     $('sheet').querySelector('[data-f]').onclick = () => { closeSheet(); location.href = '../' + g.href + '?skin=atlas'; };
   }
   landMQ.addEventListener('change', () => setTimeout(landNudge, 400));
-  function closeBoard() { if (renderPlace.close) renderPlace.close(); stopSession(); $('bv').classList.remove('on', 'playing'); document.body.style.overflow = ''; history.replaceState(null, '', '#' + page); render(page); }
+  function closeBoard() { if (renderPlace.close) renderPlace.close(); stopSession(); $('bv').classList.remove('on', 'playing'); document.body.style.overflow = ''; history.replaceState(history.state, '', '#' + page); render(page); }
   $('bvClose').onclick = closeBoard;
   // PC: the header's icons go into the 3D view while it is open (the same buttons, moved: their handlers come along) and back
   // when it closes; the × closes the view, or quits the game / rules tour being played (2026-11-10)
@@ -3333,5 +3333,37 @@
   else go(h0, false);
   history.replaceState(null, '', '#' + page);
   if (h1 && h0 !== 'museum') openBoard(h1);
+  /* ---------- phones: a left / right swipe moves between the pages (ホーム · ゲーム · 博物館 …, the tab bar's order) — 2026-11-24 user ----------
+     Before, a sideways swipe did nothing in the page and the browser's own edge swipe left the portal (back to CALMDUST). Now
+     · a quick sideways flick on a page (not on something that pans sideways itself — a map, a slider, a row that scrolls, the 3D views)
+       goes to the next / previous page, sliding in from that side;
+     · the edge "back" swipe goes to the previous page: from the first touch a marker entry sits on the history, a back lands below it,
+       and the page steps back instead of leaving (on ホーム, the first page, it leaves as before). Overlays that use the history
+       themselves (an exhibit, a painting) still close first. */
+  (function pageSwipe() {
+    const ok = () => isPhone() && !$('bv').classList.contains('on') && !$('ov').classList.contains('on') && !document.querySelector('.exv, .ptv.on, .lvsheet:not(.out), #recOv.on') && !document.documentElement.classList.contains('exv-open');
+    const step = d => { const i = TABS.indexOf(page), j = i + d; if (i < 0 || j < 0 || j >= TABS.length) return false;
+      const k = TABS[j]; go(k); const sec = $('pg-' + k); if (sec) { sec.classList.remove('pgL', 'pgR'); void sec.offsetWidth; sec.classList.add(d > 0 ? 'pgR' : 'pgL'); setTimeout(() => sec.classList.remove('pgL', 'pgR'), 400); } return true; };
+    const pansX = el => { for (let n = el; n && n !== document.body; n = n.parentElement) {
+      if (/^(TEXTAREA|SELECT|VIDEO)$/.test(n.tagName) || (n.tagName === 'INPUT' && (n.type === 'range' || n === document.activeElement)) || n.dataset.noswipe != null) return true;
+      const cs = getComputedStyle(n); if (/none|pan-y/.test(cs.touchAction) && !/pan-x/.test(cs.touchAction)) return true;
+      if (/(auto|scroll)/.test(cs.overflowX) && n.scrollWidth > n.clientWidth + 2) return true; } return false; };
+    let s0 = null, lastStep = 0;   // (lastStep: a browser that also takes the same swipe as "back" must not step twice)
+    addEventListener('touchstart', e => { s0 = null; if (e.touches.length !== 1 || !ok()) return; const t = e.touches[0];
+      if (t.clientX < 16 || t.clientX > innerWidth - 16 || pansX(e.target)) return;   // (the very edges: the browser's own gesture)
+      s0 = { x: t.clientX, y: t.clientY, t: e.timeStamp }; }, { passive: true });   // (the events' own times: a busy page (the gacha machine) handles them late)
+    addEventListener('touchmove', e => { if (s0 && e.touches.length > 1) s0 = null; }, { passive: true });
+    addEventListener('touchend', e => { if (!s0) return; const t = e.changedTouches[0], dx = t.clientX - s0.x, dy = t.clientY - s0.y, dt = e.timeStamp - s0.t; s0 = null;
+      if (dt > 700 || Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 2 || !ok()) return;
+      const rtl = document.documentElement.dir === 'rtl'; if (step((dx < 0) !== rtl ? 1 : -1)) lastStep = performance.now(); }, { passive: true });
+    // the history marker (pushed on the first touch: a browser skips history entries made without one)
+    const mark = () => { if (!isPhone() || (history.state && history.state.atab)) return; try { history.pushState(Object.assign({}, history.state, { atab: 1 }), '', location.hash); } catch (e) {} };
+    addEventListener('pointerdown', mark, { passive: true });
+    addEventListener('popstate', () => { if (!isPhone() || (history.state && (history.state.atab || history.state.exv || history.state.ptv))) return;
+      setTimeout(() => { if (history.state && history.state.atab) return;   // (an overlay's own handler put it back)
+        try { history.replaceState(history.state, '', '#' + page); } catch (e) {}   // (the entry below the marker still has the address of the first page)
+        if (!ok()) { document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); mark(); }   // (a board / sheet open: back closes it, as Esc does)
+        else if (performance.now() - lastStep < 900) mark(); else if (TABS.indexOf(page) > 0) { step(-1); mark(); } else history.back(); }, 0); });
+  })();
   welcome();
 })();
