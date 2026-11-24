@@ -37,6 +37,7 @@
     { id: 'amazons', color: '#7a3a22', cover: { g: 'amazons', s: 'amazons' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'amazonTurn' }, m1: { svg: 'amazonRooms' } }, refs: ['Walter Zamkauskas, El Juego de las Amazonas, El Acertijo (1988)', 'Elwyn Berlekamp, “Sums of N×2 Amazons”, in Game Theory, Optimal Stopping, Probability and Statistics (2000)', 'Patrick Hensgens, A Knowledge-Based Approach of the Game of Amazons (master’s thesis, Maastricht, 2001)', 'ICGA, Computer Olympiad results: Amazons'], links: [{ g: 'amazons' }, { g: 'chess' }, { g: 'go' }] },
     // (2026-11-24) Lines of Action is not in the Atlas yet (its own page loa/, ja / en): the cover and the link go there (href), named by the story's own text (game)
     { id: 'loa', color: '#4a2a4e', cover: { g: 'loa', s: 'loa', href: '../loa/' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'loaMove' }, m1: { svg: 'loaConnect' } }, refs: ['Sid Sackson, A Gamut of Games (1969) — the game by Claude Soucie', 'Mark H. M. Winands, Informed Search in Complex Games (PhD thesis, Universiteit Maastricht, 2004)', 'Mark H. M. Winands, “6×6 LOA is Solved”, ICGA Journal 31(4) (2008)', 'Maastricht University, Games and AI Group: Lines of Action (MIA, MC-LOA; Computer Olympiad 2003, 2004, 2006, 2009, 2013, 2015)', 'Mind Sports Olympiad, Lines of Action World Championship'], links: [{ g: 'loa', href: '../loa/' }, { g: 'checkers' }, { g: 'go' }] },
+    { id: 'konane', color: '#2f5a56', cover: { g: 'konane', s: 'konane' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'konaneJump' }, m1: { svg: 'konaneStart' }, m2: { svg: 'konaneSizes' } }, refs: ['James Cook, James King, A Voyage to the Pacific Ocean, vol. III (1784)', 'Stewart Culin, “Hawaiian Games”, American Anthropologist 1 (1899)', 'Michael D. Ernst, “Playing Konane Mathematically: A Combinatorial Game-Theoretic Analysis”, UMAP Journal 16(2) (1995); an earlier version with Elwyn Berlekamp (1993)', 'Alice Chan, Alice Tsai, “1×n Konane: A Summary of Results”, in More Games of No Chance (2002)', 'Robert A. Hearn, Games, Puzzles, and Computation (PhD thesis, MIT, 2006)', 'National Park Service, Puʻuhonua o Hōnaunau National Historical Park (papamū)'], links: [{ g: 'konane' }, { g: 'checkers' }, { g: 'peg' }] },
   ];
   const src = p => p.s ? `../images/atlas/museum-story/${p.s}.webp?v=1` : p.g ? `../images/atlas/${p.g}.webp` : p.ex ? `../images/atlas/ex/${p.ex}.webp` : `../images/atlas/paint/${p.paint}-t.webp?v=1`;
   const ga = p => p && p.g && !p.s ? ' ga' : '';   // (a cover from the game's own art: a transparent icon, shown whole on the story's colour)
@@ -440,6 +441,37 @@
       const pc = (c, r, w) => { const [x, y] = P(c, r); return `<circle cx="${x}" cy="${y}" r="11" fill="${w ? '#f7f1e3' : '#2b2622'}" stroke="${w ? (w === 2 ? '#e0a52a' : '#8a7a5a') : '#000'}" stroke-width="${w === 2 ? 3 : 1.5}"/><circle cx="${x}" cy="${y}" r="6" fill="none" stroke="${w ? '#c9bb9a' : '#4a423a'}" stroke-width="1.2"/>`; };
       Wp.forEach(a => g += pc(a[0], a[1], 2)); Bp.forEach(a => g += pc(a[0], a[1], 0));
       return `<svg viewBox="0 0 ${W} ${W}" role="img" style="font-family:inherit">${g}</svg>`; },
+    // kōnane on a stone board (papamū): a white stone jumps twice to the right in one turn, taking two black stones (blue); it may not
+    // turn on the way (the jump down from where it lands: ×)
+    konaneJump: () => { const C = 40, N = 6, o = 10, W = o * 2 + C * N; let g = `<rect x="2" y="2" width="${W - 4}" height="${W - 4}" rx="14" fill="#8f8a82" stroke="#5e5a54" stroke-width="2"/>`;
+      const P = (c, r) => [o + c * C + C / 2, o + r * C + C / 2];
+      for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) { const [x, y] = P(c, r); g += `<circle cx="${x}" cy="${y}" r="13" fill="#6f6a63"/><circle cx="${x}" cy="${y + 1.5}" r="11.5" fill="#7c776f"/>`; }
+      const st = (c, r, w, op) => { const [x, y] = P(c, r); return `<ellipse cx="${x}" cy="${y}" rx="14" ry="12.5" fill="${w ? '#f3efe6' : '#24211f'}" stroke="${w ? '#b9b2a2' : '#000'}" stroke-width="1.5"${op ? ` opacity="${op}"` : ''}/>`; };
+      const gone = (c, r) => { const [x, y] = P(c, r); return st(c, r, 0, .28) + `<path d="M${x - 7} ${y - 7}l14 14M${x + 7} ${y - 7}l-14 14" stroke="#c0392b" stroke-width="3" stroke-linecap="round"/>`; };
+      g += st(5, 0, 0) + st(4, 1, 1) + st(0, 4, 0) + st(1, 5, 1) + st(3, 5, 0) + st(5, 4, 1) + st(4, 3, 0);
+      g += st(0, 2, 1, .3) + gone(1, 2) + gone(3, 2) + st(4, 2, 1);
+      const hop = (c1, c2, r) => { const [a, y] = P(c1, r), [b] = P(c2, r); return `<path d="M${a + 6} ${y - 14}Q${(a + b) / 2} ${y - 46} ${b - 6} ${y - 14}" fill="none" stroke="#2a5a8a" stroke-width="3.2" marker-end="url(#knA)"/>`; };
+      g += hop(0, 2, 2) + hop(2, 4, 2);
+      { const [x, y] = P(4, 2), [, y2] = P(4, 4); g += `<path d="M${x + 18} ${y + 8}Q${x + 34} ${(y + y2) / 2} ${x + 14} ${y2 - 4}" fill="none" stroke="#6a6258" stroke-width="2.6" stroke-dasharray="5 4"/><circle cx="${x}" cy="${y2}" r="11" fill="#4a423a"/><path d="M${x - 5} ${y2 - 5}l10 10M${x + 5} ${y2 - 5}l-10 10" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>`; }
+      [[1, '1'], [3, '2']].forEach(([c, n]) => { const [x, y] = P(c, 2); g += `<circle cx="${x}" cy="${y - 30}" r="10" fill="#2a5a8a" stroke="#fff" stroke-width="1.5"/><text x="${x}" y="${y - 25}" font-size="14" font-weight="800" fill="#fff" text-anchor="middle">${n}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${W}" role="img" style="font-family:inherit"><defs><marker id="knA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2a5a8a"/></marker></defs>${g}</svg>`; },
+    // the two ways to open: Black lifts one of its stones from the centre four or a corner (1), White an orthogonal neighbour (2)
+    konaneStart: () => { const N = 6, C = 24, o = 8, B = o * 2 + C * N, W = B * 2 + 16; let g = '';
+      const bd = (ox, holes) => { let h = `<rect x="${ox + 1}" y="1" width="${B - 2}" height="${B - 2}" rx="10" fill="#8f8a82" stroke="#5e5a54" stroke-width="2"/>`;
+        for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) { const x = ox + o + c * C + C / 2, y = o + r * C + C / 2, k = holes.findIndex(q => q[0] === c && q[1] === r);
+          if (k >= 0) h += `<circle cx="${x}" cy="${y}" r="10.6" fill="${k ? '#2a5a8a' : '#c0392b'}" stroke="#fff" stroke-width="1.2"/><text x="${x}" y="${y + 5}" font-size="14" font-weight="800" fill="#fff" text-anchor="middle">${k + 1}</text>`;
+          else h += `<ellipse cx="${x}" cy="${y}" rx="9.4" ry="8.4" fill="${(r + c) % 2 ? '#f3efe6' : '#24211f'}" stroke="${(r + c) % 2 ? '#b9b2a2' : '#000'}" stroke-width="1"/>`; }
+        return h; };
+      g += bd(0, [[2, 2], [3, 2]]) + bd(B + 16, [[0, 0], [1, 0]]);
+      g += `<rect x="${o + 2 * C - 2}" y="${o + 2 * C - 2}" width="${2 * C + 4}" height="${2 * C + 4}" rx="6" fill="none" stroke="#e0a52a" stroke-width="2.2" stroke-dasharray="4 3"/>`;
+      return `<svg viewBox="0 0 ${W} ${B}" role="img" style="font-family:inherit">${g}</svg>`; },
+    // board sizes: the 14 × 17 board (238 places) in the account of Cook's voyage, and the 10 × 10, 8 × 8 and 6 × 6 boards of this Atlas
+    konaneSizes: () => { const d = 8, W = 380, H = 182, bot = 146; let g = '';
+      const grid = (x0, cols, rows, lab) => { const y0 = bot - rows * d; let h = `<rect x="${x0 - 5}" y="${y0 - 5}" width="${cols * d + 10}" height="${rows * d + 10}" rx="5" fill="#8f8a82" stroke="#5e5a54" stroke-width="1.5"/>`;
+        for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) h += `<circle cx="${x0 + c * d + d / 2}" cy="${y0 + r * d + d / 2}" r="${d * .38}" fill="${(r + c) % 2 ? '#f3efe6' : '#24211f'}"/>`;
+        return h + `<text x="${x0 + cols * d / 2}" y="${bot + 27}" font-size="16" font-weight="800" fill="#2b2a28" text-anchor="middle">${lab}</text>`; };
+      g += grid(10, 14, 17, '14×17 = 238') + grid(146, 10, 10, '10×10') + grid(242, 8, 8, '8×8') + grid(322, 6, 6, '6×6');
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit">${g}</svg>`; },
     // four tetrahedral dice: how often each score comes (out of 16)
     tetraOdds: () => { const n = [1, 4, 6, 4, 1], W = 300, H = 150, bw = 40, gap = (W - 40 - bw * 5) / 4; let g = '';
       n.forEach((v, i) => { const x = 20 + i * (bw + gap), h = v / 6 * 96, y = 112 - h;
