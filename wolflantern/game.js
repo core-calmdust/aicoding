@@ -299,6 +299,7 @@
       const rs = resultsOn(p.id), rcls = /class="k"/.test(rs) ? ' res-k' : /class="h"/.test(rs) ? ' res-h' : '';
       return `<div class="ro${p.isPlayer ? ' you' : ''}${dead ? ' dead' : ''}${mk ? ' mk-' + mk : ''}${rcls}" data-id="${p.id}">${bust(p.id)}<b class="${(p.isPlayer ? 'あなた' : p.name).length > 5 ? 'long' : ''}">${esc(p.isPlayer ? 'あなた' : p.name)}</b>${t.cl}${t.ht}<div class="rs">${rs}</div>${dead ? `<svg class="x" viewBox="0 0 44 44"><path d="M8 8L36 36M36 8L8 36"/></svg><span class="dc">${dc}</span>` : ''}</div>`;
     }).join('');
+    if (PCQ.matches) { const W0 = $('stage').clientWidth - 40, n = S.people.length; const w = Math.max(54, Math.min(84, Math.floor(W0 / n) - 5)); R.style.setProperty('--roW', w + 'px'); R.classList.toggle('tight', w < 70); } else R.style.removeProperty('--roW');
     R.querySelectorAll('.ro').forEach(e => e.onclick = () => { const id = e.dataset.id; const p = person(id); if (!p || !p.alive || p.isPlayer) return; if (G.onPup && !G.talking && $('sheet').classList.contains('hide') && $('tx').classList.contains('hide')) G.onPup(id); });
     // the same marks above the puppets' heads
     $('cast').querySelectorAll('.pp').forEach(e => { let g = e.querySelector('.tg'); if (!g) { g = document.createElement('div'); g.className = 'tg'; e.appendChild(g); } const t = tagsOf(e.dataset.id); g.innerHTML = t.cl + t.ht; });
@@ -310,6 +311,7 @@
     if (S.phase === 'invest') $('hbAp').innerHTML = `<span>残り</span>` + Array.from({ length: S.pl.apMax }, (_, i) => `<i class="${i < S.pl.ap ? '' : 'off'}"></i>`).join('');
     else $('hbAp').innerHTML = '';
     renderRoster();
+    autoNb();
   }
 
   /* ---------- the game ---------- */
@@ -470,7 +472,7 @@
     setScene(G.loc); setCast(peopleAt(G.loc).slice(0, 4), { span: [22, 78] });
     G.onPup = id => talk(id);
     const N = S.nights[S.nights.length - 1];
-    const locs = st.locs.map(l => `<button class="loc${l.id === G.loc ? ' cur' : ''}" data-l="${l.id}">${ART.scene(st.scene, l.id, 1)}<b>${esc(l.name)}</b>${N && N.loc === l.id && N.killer ? '<em>現場</em>' : ''}</button>`).join('');
+    const locs = st.locs.map(l => `<button class="loc${l.id === G.loc ? ' cur' : ''}" data-l="${l.id}" title="${esc(l.name)}から見えるのは：${E.near(st, l.id).map(locName).join('・')}">${ART.scene(st.scene, l.id, 1)}<b>${esc(l.name)}</b><i class="see">見える：${E.near(st, l.id).map(x => esc(locName(x))).join('・')}</i>${N && N.loc === l.id && N.killer ? '<em>現場</em>' : ''}</button>`).join('');
     const ppl = live().map(p => `<button class="pb${S.pl.talked[p.id] === S.day ? ' talked' : ''}" data-p="${p.id}">${bust(p.id)}<span>${esc(p.name)}</span><i class="mk ${S.pl.notes[p.id] || ''}"></i></button>`).join('');
     const items = S.pl.items.filter(i => !S.pl.used[i]);
     const hint = S.pl.ap > 0 ? `調べるか、話を聞く。どちらも行動を1つ使う（同じ人なら今日は何度でも聞ける）。` : '今日の行動は使いきった。集会へ向かおう。';
@@ -700,6 +702,7 @@
     return `現場の痕跡は「${SP.traceShort(st, p)}」だった`;
   }
   function evText(e) {
+    if (e.k === 'self') return { t: 'この話そのもの', s: 'いた場所からは見えないはずのものを見た、など。話の中だけで食い違っている。' };
     if (e.k === 'trace') return { t: `${locName(e.loc)}の痕跡「${SP.traceShort(st, e)}」`, s: `${nightName(e.night)}。あなたがこの目で見た。` };
     return { t: `${nm(e.who)}が${locName(e.loc)}にいた`, s: `${nightName(e.night)}。${e.by === 'you' ? 'あなたが見た' : nm(e.by) + 'の話'}。` };
   }
@@ -717,7 +720,8 @@
     const part = stmt.parts.length === 1 ? 0 : await pickOpt('話の、どこがおかしい？', `つきつける証拠：${evText(EV.find(e => e.id === ev)).t}`, stmt.parts.map((p, i) => ({ t: `「${partText(p)}」`, v: String(i), ic: IC.clash })));
     if (part == null) return debate();
     const E1 = EV.find(e => e.id === ev), P1 = stmt.parts[+part];
-    const items = [{ who: 'you', text: `${nm(who)}。${nightName(stmt.night)}、「${partText(P1)}」と言ったな。だが、${E1.k === 'trace' ? `わたしは${locName(E1.loc)}で、この目で「${SP.traceShort(st, E1)}」を見ている` : `${E1.by === 'you' ? 'わたしは' : nm(E1.by) + 'は'}その夜、${nm(E1.who)}を${locName(E1.loc)}で見ている`}。` }];
+    const lp = stmt.parts.find(p => p.k === 'loc');
+    const items = [{ who: 'you', text: E1.k === 'self' ? `${nm(who)}。${nightName(stmt.night)}、「${partText(P1)}」と言ったな。${lp ? `だが、${locName(lp.loc)}から見えるのは${E.near(st, lp.loc).map(locName).join('と')}だけだ。` : ''}話が、話の中で食い違っている。` : `${nm(who)}。${nightName(stmt.night)}、「${partText(P1)}」と言ったな。だが、${E1.k === 'trace' ? `わたしは${locName(E1.loc)}で、この目で「${SP.traceShort(st, E1)}」を見ている` : `${E1.by === 'you' ? 'わたしは' : nm(E1.by) + 'は'}その夜、${nm(E1.who)}を${locName(E1.loc)}で見ている`}。` }];
     const t = pup(who); if (t) { t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); }
     const r = E.judgeClash(S, st, stmt.id, +part, ev);
     for (const e of r.ev || []) { const y = SP.event(S, st, e); if (y && y.text) items.push({ who: e.by, text: y.text }); }
@@ -983,8 +987,17 @@
   }
 
   /* ---------- the notebook ---------- */
-  function setNb(open) { document.body.classList.toggle('nb-open', open); document.documentElement.style.setProperty('--nbW', open && PCQ.matches ? '400px' : '0px'); $('btnNb').classList.toggle('on', open); setTimeout(layoutDock, 380); if (open) renderNb(); }
-  $('btnNb').onclick = () => setNb(!document.body.classList.contains('nb-open'));
+  function setNb(open) { document.body.classList.toggle('nb-open', open); document.documentElement.style.setProperty('--nbW', open && PCQ.matches ? '400px' : '0px'); $('btnNb').classList.toggle('on', open); setTimeout(() => { layoutDock(); if (S) renderRoster(); }, 380); if (open) renderNb(); }
+  $('btnNb').onclick = () => { const o = !document.body.classList.contains('nb-open'); setNb(o); G.nbShut = !o ? S && S.day + S.phase : null; };
+  $('nbClose').addEventListener('click', () => { G.nbShut = S && S.day + S.phase; });
+  // in the phases of reasoning (the day's investigation, the meeting) the notebook opens by itself on a wide screen
+  function autoNb() {
+    if (!PCQ.matches || !S || G.scr !== 'play') return;
+    const think = S.phase === 'invest' || S.phase === 'meeting' || S.phase === 'vote';
+    const open = document.body.classList.contains('nb-open');
+    if (think && !open && G.nbShut !== S.day + S.phase) setNb(true);
+    if (!think && open && (S.phase === 'night' || S.phase === 'prologue' || S.phase === 'end')) setNb(false);
+  }
   $('nbClose').onclick = () => setNb(false);
   $('nbTabs').querySelectorAll('button').forEach(b => b.onclick = () => { G.nbTab = b.dataset.t; $('nbTabs').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); renderNb(); });
   function renderNb() {
@@ -1060,7 +1073,7 @@
       <p>あなたは、人狼が紛れこんだ閉ざされた場所に居合わせた。毎晩、人狼はひとりを襲う。昼のあいだに手がかりを集め、集会で投票し、人狼をひとりずつ追放していく。人狼をすべて追放すれば解決。人狼の数が人間の数に並べば、もう止められない。</p>
       <div class="promise"><b>一、痕跡は嘘をつかない</b>現場に残った足跡・匂い・手の跡は、その夜に襲った人狼のもの。外れることはない。</div>
       <div class="promise"><b>二、物は嘘をつくことがある</b>現場に落ちていた持ち物は、本当に落としたのかもしれないし、狼が罪をなすりつけるために置いたのかもしれない。</div>
-      <div class="promise"><b>三、人間は他人のことで嘘をつかない</b>人間が見たと言う人影や人の姿は本当のこと。ただし、秘密を隠すために自分がどこにいたかは偽ることがある。人狼と狂人は何でも偽る。</div>
+      <div class="promise"><b>三、人間は他人のことで嘘をつかない</b>人間が見たと言う人影や人の姿は本当のこと。ただし、秘密を隠すために自分がどこにいたかは偽ることがある。人狼と狂人は何でも偽る。夜の暗がりで見えるのは、自分のいる場所と、そのとなりの場所だけ（場所の札の「見える：」）。</div>
       <p><b>一日の流れ</b>　朝：夜の出来事 → 昼：場所を調べる・話を聞く（行動は1日3回、村人は4回）→ 集会：痕跡を示す・名乗る・聞き取り・名指し・呼びかけ・矛盾を突く → 投票 → 夜：役の力を使う。</p>
       <p><b>推理手帳</b>（右上の帳面）に、人物の特徴・痕跡・証言・投票が自動で書きとめられる。白・灰・黒の印は自分用のメモ。</p>
       <div class="foot"><button class="btn pri" data-x>${first ? '幕を開ける' : '閉じる'}</button></div>`, box => box.querySelectorAll('[data-x]').forEach(b => b.onclick = () => closeSheet(true)));
@@ -1074,8 +1087,7 @@
       <div class="set-row"><span>音</span><div class="seg" data-k="snd"><button data-v="1" class="${SND.on ? 'on' : ''}">あり</button><button data-v="0" class="${SND.on ? '' : 'on'}">なし</button></div></div>
       <div class="set-row"><span>音楽</span><div class="seg" data-k="bgm"><button data-v="1" class="${SND.musicOn ? 'on' : ''}">あり</button><button data-v="0" class="${SND.musicOn ? '' : 'on'}">なし</button></div></div>
       <div class="set-row"><span>話し声</span><div class="seg" data-k="talk"><button data-v="1" class="${SND.talkOn ? 'on' : ''}">あり</button><button data-v="0" class="${SND.talkOn ? '' : 'on'}">なし</button></div></div>
-      ${S && G.scr === 'play' ? '<div class="foot" style="justify-content:flex-start"><button class="btn" data-quit>この物語をやめてタイトルへ</button></div>' : ''}
-      <div class="foot"><button class="btn pri" data-x>閉じる</button></div>`, box => {
+      <div class="foot" style="justify-content:space-between;align-items:center">${S && G.scr === 'play' ? '<button class="btn" data-quit>この物語をやめてタイトルへ</button>' : '<span></span>'}<button class="btn pri" data-x>閉じる</button></div>`, box => {
       box.querySelectorAll('[data-x]').forEach(b => b.onclick = () => closeSheet());
       box.querySelectorAll('.seg').forEach(s => s.querySelectorAll('button').forEach(b => b.onclick = () => {
         const k = s.dataset.k, v = b.dataset.v;
