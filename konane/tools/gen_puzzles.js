@@ -45,7 +45,7 @@ for (let g = 0; g < G; g++) {
     if (longerLoses) tags.push('stop');
     if (E.hops(w) >= 2 && shorterLoses) tags.push('chain');
     if (greedyWins && !tags.length) continue;          // too easy: the move that leaves the fewest jumps wins
-    if (n === 1 && good.length * 3 > ms.length) continue;
+    if (good.length * 3 > ms.length) continue;          // 追72: a random move must be wrong with probability ≥ 2/3 (every N)
     // solving cost check (what the page does on every move)
     const t0 = Date.now(); E.duelGood(null, moves, n, 's8', 2e6); const ms0 = Date.now() - t0;
     if (ms0 > 900) continue;

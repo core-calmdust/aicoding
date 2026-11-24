@@ -3155,7 +3155,7 @@
     LKEY: 'aicoding-gomoku-lessons', OKEY: 'aicoding-gomoku-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261123'), getJ('../gomoku/openings.json?v=20261124v1'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261125'), getJ('../gomoku/openings.json?v=20261124v1'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] gomoku texts', e); } this.I = w.I18N || {}; this.data = { ls, op };
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
@@ -3917,7 +3917,7 @@
   }
   const XQ_WHY = {   // why the move is played (the problems' praise / the line's notes): a few wordings each, with different endings
     recap: ['取られた駒をすぐ取り返して、駒の損を戻す手なの。', '{P}をすぐ取り返す！ ここで取らないと駒損のままだから。', '取り返しの一手だコン。これで駒の数は元どおり。', '{P}を取り返して、駒の数をそろえたの！', 'すかさず{P}を取り返す！ 取られっぱなしにはしないコン。'],
-    cap: ['相手の{P}を取る手。取り合いの始まりだね！', '{P}を取って、取り合いを始めるの。', '{P}を取る手。ここで取っておくのがこの形の本筋だコン。', '先に{P}を取る！ 取れるときに取っておくのが大事なの。', '{P}をいただき！ ここから駒の取り合いになるコン。'],
+    cap: ['相手の{P}を取る手。さあ、取り合いの始まり！', '{P}を取って、取り合いを始めるの。', '{P}を取る手。ここで取っておくのがこの形の本筋だコン。', '先に{P}を取る！ 取れるときに取っておくのが大事なの。', '{P}をいただき！ ここから駒の取り合いになるコン。'],
     rookOut: ['車を横に動かして、通り道の開いた筋へ出すの。車は早く働かせたい駒だコン。', '隅の車を、開いた筋へ出したね。これで車がよく働くよ。', '車を出して、縦の筋をにらむんだ。'],
     rookUp: ['車を1つ上げる「横車」。次に横へ回って、好きな筋へ出られるの。', '車を一歩上げて、横へ動ける道を作る手。', '一歩上がった車は、次に横へすべって好きな筋へ行けるコン。', 'ここは車をひとつ上げる手。横へ回る準備だコン！', '車を一歩前へ。これで横の道が開くよ。'],
     rookCross: ['車が川を渡って、相手の陣地へ入ったね！ 馬や卒を直接ねらえるの。', '車で相手の陣地に乗りこむ！ 相手は受けに手を取られるよ。', '川を越えた車は、相手にとってとってもこわい存在なんだ。'],
@@ -3969,7 +3969,7 @@
   function xqHintJa(F, k, V, avoid) {
     const kd = xqKind(F), rot = (A, o) => A.map((_, q) => A[(o + q) % A.length]);
     let H;
-    if (kd === 'recap') H = ['駒の数を数えてみて。取られたままの駒はない？', 'さっき取られた駒、そのままでいいのかな？', '駒の損を戻せる手がありそうだね。'];
+    if (kd === 'recap') H = ['駒の数を数えてみて。取られたままの駒はない？', 'さっき取られた駒、そのままでいいのかな？', '駒の損を戻せる手、ありそうじゃない？'];
     else if (kd === 'cap') H = ['取れる駒がないか、盤をよく見てみて！', '相手の駒で、ただで取れるものはない？', '取り合いが始まりそうな局面コン。', '目の前に取れる駒、ないかな？'].filter(x => !(F.retake && /ただで/.test(x)));
     else if (F.check) H = ['王さまに王手をかけられる駒がありそう。', '相手の王さまのまわり、すきはない？', '相手の王さまをおびやかす手、見えるかな？'];
     else if (F.aims.length) H = ['相手の駒で、ねらえそうなものはない？', '動かすと相手の駒をにらめる駒、どれかな？', '相手の大事な駒に、届きそうな手を探してみて。', '指したあと、相手の駒をねらえる手があるコン。'];
@@ -4251,7 +4251,7 @@
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261124xm3'), getJ('../xiangqi/openings.json?v=3'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=1').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261124xm3'), getJ('../xiangqi/openings.json?v=4'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=1').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vf]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vf)(v); this.V = ((v.I18N || {})['ja@fox']) || {}; } catch (e) { this.V = {}; }   // (ショウギツネ's own lines, 3D, ja)
           return this; })
@@ -5140,8 +5140,11 @@
     const hint2 = id === 's_block' && HK[kb0] ? pk(HK[kb0], nth) : hintTx;
     const full = u => pts(P, u) >= 20;
     const wrongOf = u => u != null && u !== best && !full(u) ? u : (P.sc.slice().sort((a, c) => a[1] - c[1])[k % 2] || [])[0];
-    const good = function (u) { this._hl = []; const same = u != null && u !== best;
-      return [VC.good(k), same ? pk(['きみの手も、いちばんの手とほとんど同じくらいいい手！', 'その手も満点、いちばんの手と変わらないくらい強いペン！'], k) : f2(pk(C.why, k), { a: whyB(k) }), VC.push(k)].filter(Boolean).join(' '); };
+    const Mg = best === 1023 ? 'スワップ' : M;
+    const good = function (u) { this._hl = []; const same = u != null && u !== best, top = same && full(u);   // (追71: 「満点・変わらない強さ」 only for a 20-point move; 16〜19 points: a good move, but the best — marked green — is named with its reason)
+      return [VC.good(k), top ? pk(['きみの手も満点！ いちばんの手と変わらない強さなんだ。', 'その手も満点、いちばんの手と同じくらい強いペン！'], k)
+        : same ? f2(pk(['きみの手もいい手！ でも、いちばんは{m}。{a}んだ。', 'その手もなかなかだペン！ ただ、いちばんは{m}。{a}ペン。', '合格の一手！ でも{m}のほうがもっといい。そこなら{a}ね。'], k), { m: Mg, a: whyB(k) })
+        : f2(pk(C.why, k), { a: whyB(k) }), VC.push(k)].filter(Boolean).join(' '); };
     const ng = function (u0) { this._hl = []; const u = wrongOf(u0); if (u == null) return '';
       const fu = HXA.facts(sp, u), ku = HXA.kind(fu), mine = val.has(u) ? val.get(u) : null, d = mine == null ? null : Math.round((HXA.wr(vb) - HXA.wr(mine)) * 100);
       const Mb = best === 1023 ? 'スワップ' : M, Xu = u === 1023 ? 'スワップ' : X;
@@ -7053,7 +7056,7 @@
     .catch(e => { this.p = null; throw e; })); } };
   /* ugolki (2026-11-24 担当D): the data, モリフク's words and the board facts are in atlas/ls-ugolki.js (loaded the first time; only the
      lessons checked and rebuilt for the 3D, AtlasLsUgolki.READY — tools/lesson-verify-ugolki-ls.js) */
-  const UGOLKI = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUgolki) return res(); const sc = document.createElement('script'); sc.src = 'ls-ugolki.js?v=2'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const UGOLKI = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUgolki) return res(); const sc = document.createElement('script'); sc.src = 'ls-ugolki.js?v=4'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsUgolki.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   // (2026-11-24 ユーザー指示: ur・senet・patolli のレッスンは廃止 — 双六系はマンカラ・バックギャモンのような戦略性の高いものを除いてレッスン・パズルを作らない。
@@ -7508,7 +7511,7 @@
         const head = p.own ? (right ? '' : pts >= 10 ? 'おしい！' : '') : right ? okLine() || pick(X.good) : pts >= 10 ? X.partial : X.wrong;   // (p.own: ゴイシペン praises / names the green cell himself)
         say(`${head} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : '<br>' + p.ng(u)));
         try { chime(right); } catch (e) {}
-        later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark([...(right || !cell(p.ans) ? [] : [[p.ans, 'ok']]), ...(cell(u) ? [[u, right ? 'ok' : 'ng']] : []), ...(right ? [] : (p._hl || []).filter(q => cell(q) && q !== u && q !== p.ans).map(q => [q, 'hl']))]); }, 900);
+        later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark([...((right && (pts >= 20 || p.ans === u)) || !cell(p.ans) ? [] : [[p.ans, 'ok']]), ...(cell(u) ? [[u, right ? (pts >= 20 || p.ans === u || !cell(p.ans) ? 'ok' : 'hl') : 'ng']] : []), ...(right ? [] : (p._hl || []).filter(q => cell(q) && q !== u && q !== p.ans).map(q => [q, 'hl']))]); }, 900);
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;

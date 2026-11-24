@@ -65,6 +65,16 @@
     { id: 'coyote', w: 1686, h: 2143, aic: 52331, no: '1944.1047', bg: '#c9ccbe', spots: [[.47, .36], [.5, .58], [.45, .88], [.5, .07], [.17, .73], [.84, .2]], links: [{ g: 'foxgeese' }] },
     // (2026-11-25) the Rijksmuseum (public domain) — rijks: its object number (its page): a 1709 satire played as trictrac for the town of Mons
     { id: 'mons', w: 1057, h: 2048, rijks: 'RP-P-OB-83.374', bg: '#c8c2b4', spots: [[.65, .2], [.665, .13], [.775, .17], [.45, .14], [.2, .12], [.45, .62]], links: [{ g: 'backgammon' }, { ex: 'ottoman' }] },
+    // (2026-11-25) the Rijksmuseum: a political game of the goose, 1867 (64 squares, ending in Insulinde)
+    { id: 'stembus', w: 2048, h: 1565, rijks: 'RP-P-OB-89.857', bg: '#d8c89a', spots: [[.1, .12], [.27, .48], [.63, .53], [.905, .9], [.5, .88], [.63, .88]], links: [{ ex: 'goose' }] },
+    // (2026-11-25) the Rijksmuseum: Koreans round a board (probably go), from Siebold's Nippon
+    { id: 'koorai', w: 2048, h: 1402, rijks: 'RP-P-1939-1474', bg: '#d9d2bf', spots: [[.504, .554], [.367, .666], [.29, .4], [.64, .3], [.575, .5], [.5, .775]], links: [{ g: 'go' }, { g: 'janggi' }] },
+    // (2026-11-25) the Rijksmuseum: a Cairo street photograph — men round a board (probably chess)
+    { id: 'cairo', w: 2048, h: 1375, rijks: 'RP-F-F20042', bg: '#8fa3b0', spots: [[.56, .46], [.47, .14], [.26, .57], [.43, .66], [.69, .4], [.075, .5]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Rijksmuseum: Vanmour's Armenians at cards in Istanbul — the room's first card game
+    { id: 'vanmour', w: 2048, h: 1538, rijks: 'SK-A-2010', bg: '#3a2a22', spots: [[.69, .67], [.655, .5], [.115, .56], [.955, .63], [.31, .58], [.5, .66]], links: [{ g: 'poker' }, { g: 'solitaire' }] },
+    // (2026-11-25) the Rijksmuseum: an Algiers studio photograph — two men at a rimmed board (probably backgammon)
+    { id: 'algiers', w: 1461, h: 2048, rijks: 'RP-F-00-12306', bg: '#c9b994', spots: [[.4, .625], [.466, .28], [.23, .455], [.67, .48], [.43, .705], [.56, .6]], links: [{ g: 'backgammon' }, { ex: 'ottoman' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',

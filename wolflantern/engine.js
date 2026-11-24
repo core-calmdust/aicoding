@@ -24,11 +24,11 @@
   };
   // difficulty: size, action points, traces left per attack, how often the wolves come for the player,
   // how often they plant a belonging, how often the weather wipes a trace, how far a figure is seen
-  const DIFF = [
-    { id: 0, size: 8,  ap: 3, traces: 2, neg: .25, player: 0,    plant: 0,   drop: .25, erase: 0,   adj: .3,  npcFind: .3,  fakeSeer: .5, assist: true, wit: .3, sway: 1.2 },
-    { id: 1, size: 10, ap: 3, traces: 2, neg: .4,  player: .3,   plant: .35, drop: .15, erase: .2,  adj: .25, npcFind: .25, fakeSeer: .6, assist: false, wit: .32, sway: .8 },
-    { id: 2, size: 12, ap: 3, traces: 2, neg: .5,  player: .45,  plant: .4,  drop: .12, erase: .25, adj: .22, npcFind: .22, fakeSeer: .55, assist: false, wit: .5, sway: .7 },
-    { id: 3, size: 13, ap: 3, traces: 1, neg: .6,  player: .45,  plant: .55, drop: .1,  erase: .35, adj: .2,  npcFind: .2,  fakeSeer: .7, assist: false, wit: .6, sway: .55 },
+  const DIFF = [   // 2026-11-25：村まかせでも勝ててしまうので、村の推理を弱め、痕跡を減らした（あなたの働きで勝敗が決まるように）
+    { id: 0, size: 8,  ap: 3, traces: 1, neg: .35, player: 0,    plant: .15, drop: .2,  erase: .1,  adj: .25, npcFind: .22, fakeSeer: .6,  assist: true,  wit: .16, sway: 1.3 },
+    { id: 1, size: 10, ap: 3, traces: 1, neg: .5,  player: .3,   plant: .4,  drop: .12, erase: .3,  adj: .2,  npcFind: .1,  fakeSeer: .9,  assist: false, wit: .05, sway: 1.0 },
+    { id: 2, size: 12, ap: 3, traces: 1, neg: .6,  player: .45,  plant: .45, drop: .1,  erase: .35, adj: .17, npcFind: .15, fakeSeer: .8,  assist: false, wit: .16, sway: .9 },
+    { id: 3, size: 13, ap: 3, traces: 1, neg: .7,  player: .45,  plant: .55, drop: .08, erase: .45, adj: .15, npcFind: .12, fakeSeer: .85, assist: false, wit: .18, sway: .8 },
   ];
   const CATS = ['height', 'hand', 'foot', 'mark'];
 
@@ -83,6 +83,9 @@
     return S;
   }
 
+  // what can be seen from where: the same place, and the two next to it (the places stand in a ring)
+  function near(story, a) { const ring = story.locs.map(l => l.id), i = ring.indexOf(a); if (i < 0) return []; return [ring[(i + ring.length - 1) % ring.length], ring[(i + 1) % ring.length]]; }
+  const canSee = (story, from, to) => from === to || near(story, from).includes(to);
   const person = (S, id) => S.people.find(p => p.id === id);
   const alive = S => S.people.filter(p => p.alive);
   const isWolf = (S, id) => S.wolves.includes(id);
@@ -216,7 +219,7 @@
       }
       if (p.role === 'wolf' && rnd(S) < .2) {          // a made-up sighting of a person out at night
         const inn = alive(S).filter(q => q.role !== 'wolf' && q.id !== id && !q.isPlayer);
-        if (inn.length) { const q = pick(S, inn); T.saw.push({ kind: 'who', who: q.id, loc: pick(S, story.locs.map(l => l.id)), lie: true }); }
+        if (inn.length) { const q = pick(S, inn); const smart = rnd(S) < .5 + .13 * diffOf(S).id; T.saw.push({ kind: 'who', who: q.id, loc: smart ? pick(S, [p.home].concat(near(story, p.home))) : pick(S, story.locs.map(l => l.id)), lie: true }); }
       }
     } else {
       // an innocent: tells the truth about others; hides their own secret errand
@@ -301,6 +304,8 @@
           }
         }
       }
+      // lies the player exposed in front of everyone: a liar is most likely a wolf (or the madman)
+      if (S.exposed && (obs === 'pub' || obs === 'you' || (K.self && (K.self.persona.trust || .5) > .35))) for (const x in S.exposed) if (x !== obs && !Ws.has(x)) wt *= Math.pow(nM ? .45 : .22, S.exposed[x]);
       // claims: enumerate who is the real seer / medium; the rest of the non-wolf claimers must be the madman
       const nonW = arr => arr.filter(c => !Ws.has(c.by));
       const sNon = nonW(seerC), mNon = nonW(medC);
@@ -480,6 +485,8 @@
         if (!c && seerWants(S, p, black, day)) claim(S, p.id, 'seer', ev);
       } else if (p.role === 'medium' && !S.fake[p.id]) {
         if (!c && S.votes.some(v => v.out) && rnd(S) < .7 + .3 * p.persona.bold) claim(S, p.id, 'medium', ev);
+      } else if (p.role === 'guard') {
+        if (!c && rnd(S) < guardWants(S, p)) { claim(S, p.id, 'guard', ev); wolfCounterGuard(S, p.id, ev); }
       } else if (S.fake[p.id] && !c && day >= S.fake[p.id].from) {
         if (S.fake[p.id].role === 'medium' && !S.votes.some(v => v.out)) continue;
         claim(S, p.id, S.fake[p.id].role, ev);
@@ -489,6 +496,77 @@
     for (const c of S.claims) announce(S, c, day, ev);
     meetingRest(S, story, ev, day, n, N, live);
     return ev;
+  }
+  // who a guard claimer says they stood guard for, night by night (the real one tells the truth; a liar invents)
+  function guardHistory(S, p, c) {
+    const out = [], told = new Set(c.res.map(r => r.night));
+    for (const N of S.nights) {
+      if (N.n === 0 || told.has(N.n) || N.day == null || N.day >= S.day) continue;
+      let t = null;
+      if (p.role === 'guard') t = N.guarded;
+      else { const cand = S.people.filter(q => q.id !== p.id && (q.alive || (q.death && q.death.night === N.n))); const pick1 = cand.length ? cand[Math.floor(rnd(S) * cand.length)] : null; t = pick1 && pick1.id; }
+      if (t) out.push({ night: N.n, target: t, res: 'guard', day: S.day, fake: p.role !== 'guard' });
+    }
+    return out;
+  }
+  // the one the vote has chosen may name a role to escape the jail (回避CO): a real one tells the truth, a wolf may lie
+  function dodge(S, story, out) {
+    const p = person(S, out);
+    if (!p || p.isPlayer || !p.alive || S.claims.some(c => c.by === out)) return [];
+    S.dodged = S.dodged || {}; if (S.dodged[S.day]) return [];
+    const aliveClaims = r => S.claims.filter(c => c.role === r && person(S, c.by).alive);
+    let role = null;
+    if (p.role === 'seer' && !S.fake[p.id]) role = rnd(S) < .95 ? 'seer' : null;
+    else if (p.role === 'medium' && !S.fake[p.id]) role = rnd(S) < .9 ? 'medium' : null;
+    else if (p.role === 'guard') role = rnd(S) < .8 ? 'guard' : null;
+    else if (p.role === 'wolf' || p.role === 'madman') {
+      if (!aliveClaims('guard').length && rnd(S) < (p.role === 'wolf' ? .55 : .45)) role = 'guard';
+      else if (aliveClaims('seer').length < 2 && rnd(S) < .2) role = 'seer';
+    }
+    if (!role) return [];
+    S.dodged[S.day] = out;
+    const ev = [{ t: 'dodge', by: out }];
+    claim(S, out, role, ev);
+    ev.forEach(e => { if (e.t === 'co' && e.by === out) e.dodge = true; });
+    const c = S.claims.find(c => c.by === out); c.dodge = S.day;
+    announce(S, c, S.day, ev);
+    // the real guard, hidden, hears a lie in their own name
+    if (role === 'guard' && p.role !== 'guard') {
+      const g = alive(S).find(q => q.role === 'guard' && !q.isPlayer && !S.claims.some(x => x.by === q.id));
+      if (g && rnd(S) < .65) { claim(S, g.id, 'guard', ev); announce(S, S.claims.find(x => x.by === g.id), S.day, ev); }
+    }
+    return ev;
+  }
+  // the player speaks after someone dodged with a claim: believe it, doubt it, or call the real one out
+  function dodgeTalk(S, story, out, kind) {
+    const ev = [], c = S.claims.find(c => c.by === out);
+    if (kind === 'trust') S.swayVote = { day: S.day, target: out, dir: -1 };
+    if (kind === 'doubt') S.swayVote = { day: S.day, target: out, dir: .45 };
+    if (kind === 'counter' && c) {
+      const real = alive(S).find(q => q.role === c.role && !q.isPlayer && q.id !== out && !S.claims.some(x => x.by === q.id) && !S.fake[q.id]);
+      if (real && rnd(S) < (c.role === 'guard' ? .8 : .9)) { claim(S, real.id, c.role, ev); announce(S, S.claims.find(x => x.by === real.id), S.day, ev); }
+      else { const t = pick(S, alive(S).filter(q => !q.isPlayer && q.id !== out)); if (t) ev.push({ t: 'callnone', by: t.id }); }
+    }
+    return ev;
+  }
+  // should the real guard come forward? Mostly no — a known guard is the wolves' next meal.
+  // But a good guard (someone attacked and saved) proves the village right, and near the end every vote counts.
+  function guardWants(S, p) {
+    const N = S.nights[S.nights.length - 1];
+    const gj = N && N.saved === 'guard' && N.guarded && N.target !== 'first';
+    const few = alive(S).length <= 6;
+    let w = .02 + .05 * p.persona.bold;
+    if (gj) w += .4 + .25 * p.persona.bold;
+    if (few) w += .3;
+    if (S.req && S.req.guardCall === S.day) w += .25;
+    return Math.min(.9, w);
+  }
+  // a wolf may claim to be the guard too, to muddy a real one
+  function wolfCounterGuard(S, realId, ev) {
+    const w = alive(S).find(q => (q.role === 'wolf' || q.role === 'madman') && !q.isPlayer && !S.claims.some(x => x.by === q.id));
+    if (!w || rnd(S) > (w.role === 'wolf' ? .3 : .25)) return false;
+    claim(S, w.id, 'guard', ev); announce(S, S.claims.find(x => x.by === w.id), S.day, ev);
+    return true;
   }
   // should a real seer come forward now? (the player's "stay hidden" asks them to wait for a wolf)
   function seerWants(S, p, black, day) {
@@ -503,6 +581,11 @@
       const p = person(S, c.by);
       if (!p.alive || p.isPlayer) return;
       const fresh = [];
+      if (c.role === 'guard') {
+        const hist = guardHistory(S, p, c); for (const r of hist) c.res.push(r);
+        const last = hist[hist.length - 1]; if (last) ev.push({ t: 'result', by: p.id, role: 'guard', target: last.target, res: 'guard' });   // the rest is on the record
+        return;
+      }
       if (c.role === 'seer') {
         if (!S.fake[p.id] && p.role === 'seer') { for (const r of S.own[p.id] || []) if (!c.res.some(x => x.night === r.night)) fresh.push({ night: r.night, target: r.target, res: r.res, day }); }
         else { let k = 0; const R = S.req && S.req.divine[p.id]; while (c.res.length + fresh.length < day && k++ < 2) { const asked = R && R.ok && R.day === day - 1 && !c.res.some(x => x.target === R.target) && !fresh.some(x => x.target === R.target) && person(S, R.target).alive ? R.target : null; const r = fakeResult(S, p, 'seer', day, asked, fresh); if (r) fresh.push(r); else break; } }
@@ -652,6 +735,9 @@
       let best = null, bv = -1;
       for (const x of cand) {
         let v = sus[x] + (heat[x] || 0) * .06 * (1 - p.persona.logic) + (x === 'you' && S.pl.hit ? -.05 : 0);
+        const gc = S.claims.filter(c => c.role === 'guard' && person(S, c.by).alive);
+        if (gc.some(c => c.by === x)) v += gc.length === 1 ? -.22 * (p.persona.trust || .5) * 2 : .04;   // a lone guard is too precious to hang
+        const sw = S.swayVote; if (sw && sw.day === S.day && sw.target === x && p.role !== 'wolf') v += sw.dir * .26 * (p.persona.trust || .5) * 2;   // what the player said after the claim
         if (p.role === 'wolf' && isWolf(S, x)) {      // a partner: abandon only when they are surely lost
           v = (heat[x] || 0) >= alive(S).length / 2 ? 2 : -1;
         } else if (p.role === 'wolf' && x === bloc) v += .6;
@@ -697,15 +783,33 @@
     if (w >= h) return S.result = { win: false, why: 'overrun', ghost: !!S.ghost };
     return null;
   }
+  // the score is what the player did, not what the village did around them
   function score(S) {
     if (!S.result) return null;
     const lost = S.people.filter(p => !p.isPlayer && p.death && p.role !== 'wolf').length;
     const wrong = S.votes.filter(v => v.out && !isWolf(S, v.out)).length;
-    let pts = S.result.win ? 60 : 10;
-    pts += Math.max(0, 20 - 4 * wrong) + Math.max(0, 14 - 2 * lost) + (S.people[0].alive ? 6 : -8) - Math.max(0, S.day - 3) * 2;
-    pts += S.diff * 4;
-    const rank = pts >= 92 ? 'S' : pts >= 80 ? 'A' : pts >= 66 ? 'B' : pts >= 45 ? 'C' : 'D';
-    return { pts, rank, lost, wrong, days: S.day };
+    const L = S.pl.log || [];
+    // the player's own ballots (the last round of each day)
+    let wolfVotes = 0, badVotes = 0;
+    for (const v of S.votes) { const b = (v.rounds ? v.rounds[v.rounds.length - 1] : v).ballots || v.ballots; const t = b && b.you; if (!t) continue; if (isWolf(S, t)) wolfVotes++; else badVotes++; }
+    const acc = L.filter(x => x.k === 'accuse'), accHit = acc.filter(x => isWolf(S, x.who)).length, accMiss = acc.length - accHit;
+    const clashHit = L.filter(x => x.k === 'clash' && x.ok).length, clashMiss = L.filter(x => x.k === 'clash' && x.ok === false).length;
+    const shown = L.filter(x => x.k === 'show').length;
+    const mine = S.claims.find(c => c.by === 'you'), black = mine ? mine.res.filter(r => r.res === 'wolf' && isWolf(S, r.target)).length : 0;
+    const deathDay = S.people[0].death ? S.people[0].death.day : null;
+    const part = {
+      outcome: S.result.win ? 35 : 0,
+      votes: Math.min(24, wolfVotes * 8) - badVotes * 5,
+      accuse: Math.min(14, accHit * 7) - accMiss * 4,
+      clash: Math.min(10, clashHit * 5) - clashMiss * 2,
+      evidence: Math.min(4, shown) + Math.min(8, black * 4),
+      survival: deathDay == null ? 6 : deathDay <= 2 ? -10 : deathDay <= 3 ? -5 : 0,
+      losses: -2 * lost,
+      level: S.diff * 3,
+    };
+    const pts = Object.values(part).reduce((a, b) => a + b, 0);
+    const rank = pts >= 88 ? 'S' : pts >= 72 ? 'A' : pts >= 55 ? 'B' : pts >= 35 ? 'C' : 'D';
+    return { pts, rank, lost, wrong, days: S.day, part, wolfVotes, badVotes, accHit, accMiss, clashHit, clashMiss, shown, black, deathDay };
   }
 
   /* ---------- the player's actions ---------- */
@@ -790,13 +894,15 @@
   function playerClaim(S) {
     if (S.claims.some(c => c.by === 'you')) return null;
     const role = S.pl.role;
-    if (role !== 'seer' && role !== 'medium') return null;
-    const c = { by: 'you', role, day: S.day, res: S.pl.res.map(r => ({ target: r.target, res: r.res, day: S.day })) };
+    if (role !== 'seer' && role !== 'medium' && role !== 'guard') return null;
+    const res = role === 'guard' ? S.nights.filter(N => N.n > 0 && N.guarded).map(N => ({ night: N.n, target: N.guarded, res: 'guard', day: S.day })) : S.pl.res.map(r => ({ target: r.target, res: r.res, day: S.day }));
+    const c = { by: 'you', role, day: S.day, res };
     S.claims.push(c); S.pl.co = true;
     return c;
   }
   function playerResults(S) {   // new results after a claim go public at the meeting
     const c = S.claims.find(c => c.by === 'you'); if (!c) return [];
+    if (c.role === 'guard') { const fr = S.nights.filter(N => N.n > 0 && N.guarded && !c.res.some(x => x.night === N.n)).map(N => ({ night: N.n, target: N.guarded, res: 'guard', day: S.day })); c.res.push(...fr); return fr; }
     const fresh = S.pl.res.filter(r => !c.res.some(x => x.target === r.target));
     for (const r of fresh) c.res.push({ target: r.target, res: r.res, day: S.day });
     return fresh;
@@ -822,6 +928,10 @@
         const has = S.votes.some(v => v.out);
         w = has ? .55 + .3 * p.persona.bold : .12 + .2 * p.persona.bold;   // nothing to tell yet: better to wait
         role = 'medium'; why = has ? 'trust' : 'risk';
+      } else if (p.role === 'guard' && roles.includes('guard')) {
+        S.req.guardCall = day;
+        w = guardWants(S, p) + .1 * p.persona.bold + .2 * trustYou(p.id);
+        role = 'guard'; why = w < .45 ? 'risk' : 'trust';
       } else if (S.fake[p.id] && roles.includes(S.fake[p.id].role)) {
         const f = S.fake[p.id];
         if (f.role === 'medium' && !S.votes.some(v => v.out)) continue;
@@ -830,8 +940,10 @@
       } else continue;
       decide.push({ p, role, go: rnd(S) < Math.max(.03, Math.min(.97, w)), why });
     }
+    // asked for the guard: a wolf or the madman may step forward in the guard's name
+    if (roles.includes('guard')) for (const p of live) if ((p.role === 'wolf' || p.role === 'madman') && !S.fake[p.id] && !decide.some(d => d.p.id === p.id)) { decide.push({ p, role: 'guard', go: rnd(S) < .18, why: 'fake' }); break; }
     // a fake who sees the real one step forward is pushed to counter at once
-    for (const d of decide) if (!d.go && d.why === 'fake' && decide.some(x => x.go && x.role === d.role && x.why !== 'fake') && rnd(S) < .8) d.go = true;
+    for (const d of decide) if (!d.go && d.why === 'fake' && decide.some(x => x.go && x.role === d.role && x.why !== 'fake') && rnd(S) < (d.role === 'guard' ? .3 : .8)) d.go = true;
     // the real ones first speak, the fakes answer them
     decide.sort((a, b) => (a.why === 'fake') - (b.why === 'fake'));
     for (const d of decide) if (d.go) { claim(S, d.p.id, d.role, ev); const c = S.claims.find(c => c.by === d.p.id); if (c) announce(S, c, day, ev); }
@@ -902,6 +1014,115 @@
     if (!ev.length) { const t = pick(S, alive(S).filter(p => !p.isPlayer)); if (t) ev.push({ t: 'evnone', by: t.id }); }
     return ev;
   }
+  /* ---------- contradictions the player can point out (only from what the player knows) ---------- */
+  function contradictions(S, story) {
+    const out = [], fitsT = (v, t) => t.neg ? v !== t.val : v === t.val;
+    const done = new Set(S.pl.pointed || []);
+    const mine = {}; for (const k of S.pl.found) { const [ni, ti] = k.split('|').map(Number); const t = S.nights[ni].traces[ti]; (mine[ni] = mine[ni] || []).push(t); }
+    // 1. a report of a trace that differs from the trace the player saw with their own eyes
+    for (const r of S.reports) {
+      if (r.by === 'you' || !person(S, r.by).alive) continue;
+      const t = (mine[r.night] || []).find(t => t.cat === r.cat && t.neg === r.neg);
+      if (t && t.val !== r.val) out.push({ id: 'tr|' + r.by + '|' + r.night + '|' + r.cat, kind: 'trace', who: r.by, night: r.night, said: { cat: r.cat, val: r.val, neg: r.neg }, seen: { cat: t.cat, val: t.val, neg: t.neg } });
+    }
+    // 2. a figure someone says they saw, that no trace of that night allows
+    const figs = S.figs.map(f => Object.assign({ pub: true }, f)).concat(S.pl.told.filter(t => t.kind === 'fig'));
+    for (const f of figs) {
+      if (f.by === 'you' || !person(S, f.by).alive) continue;
+      const t = (mine[f.night] || []).find(t => t.cat === f.cat && !fitsT(f.val, t));
+      if (t && !out.some(o => o.kind === 'fig' && o.who === f.by && o.night === f.night)) out.push({ id: 'fg|' + f.by + '|' + f.night + '|' + f.cat, kind: 'fig', who: f.by, night: f.night, said: { cat: f.cat, val: f.val }, seen: { cat: t.cat, val: t.val, neg: t.neg } });
+    }
+    // 3. "I was at home" — but someone saw them out that night
+    for (const key in S.testi) {
+      const T = S.testi[key];
+      if (!(S.pl.log || []).some(x => x.k === 'night' && x.who === T.id && x.T && x.T.night === T.night)) continue;   // the player heard it
+      const P = person(S, T.id); if (!P.alive || (P.secret && P.secret.open)) continue;   // an errand already confessed explains the lie
+      const w = S.pl.told.find(t => t.kind === 'who' && t.who === T.id && t.night === T.night && t.loc !== T.loc && t.by !== T.id);
+      if (w) out.push({ id: 'wh|' + T.id + '|' + T.night, kind: 'where', who: T.id, night: T.night, said: { loc: T.loc }, seen: { loc: w.loc, by: w.by } });
+    }
+    // 4. a story that breaks itself: "I was at home" — yet saw someone where home cannot see
+    for (const x of S.pl.log || []) {
+      if (x.k !== 'night' || !x.T || x.T.night == null) continue;
+      const T = x.T, P = person(S, T.id); if (!P || !P.alive || (P.secret && P.secret.open && T.hid)) continue;
+      for (const sg of T.saw) if (sg.kind === 'who' && !canSee(story, T.loc, sg.loc) && !out.some(o => o.id === 'sf|' + T.id + '|' + T.night)) out.push({ id: 'sf|' + T.id + '|' + T.night, kind: 'self', who: T.id, night: T.night, said: { loc: T.loc }, seen: { who: sg.who, loc: sg.loc }, hid: !!T.hid });
+    }
+    return out.filter(o => !done.has(o.id));
+  }
+  /* ---------- 矛盾を突く, in three steps: whose words → what evidence → which part is wrong ---------- */
+  // everything a person has said about one night, that the player heard (to them, or in the meeting), split into parts
+  function statements(S, story) {
+    const by = {};
+    const get = (id, n) => { const k = id + '|' + n; return by[k] = by[k] || { id: k, who: id, night: n, parts: [] }; };
+    for (const x of S.pl.log || []) {
+      if (x.k !== 'night' || !x.T || x.T.night == null) continue;
+      const st = get(x.who, x.T.night);
+      if (!st.parts.some(p => p.k === 'loc')) st.parts.push({ k: 'loc', loc: x.T.loc });
+      for (const s of x.T.saw) {
+        if (s.kind === 'fig' && !st.parts.some(p => p.k === 'fig' && p.cat === s.cat)) st.parts.push({ k: 'fig', cat: s.cat, val: s.val });
+        if (s.kind === 'who' && !st.parts.some(p => p.k === 'who' && p.who === s.who)) st.parts.push({ k: 'who', who: s.who, loc: s.loc });
+      }
+    }
+    for (const r of S.reports) if (r.by !== 'you') { const st = get(r.by, r.night); if (!st.parts.some(p => p.k === 'trace' && p.cat === r.cat)) st.parts.push({ k: 'trace', cat: r.cat, val: r.val, neg: r.neg }); }
+    for (const f of S.figs) { const st = get(f.by, f.night); if (!st.parts.some(p => p.k === 'fig' && p.cat === f.cat)) st.parts.push({ k: 'fig', cat: f.cat, val: f.val }); }
+    return Object.values(by).filter(st => st.parts.length && person(S, st.who).alive);
+  }
+  // what the player can lay on the table
+  function evidence(S) {
+    const out = [];
+    for (const k of S.pl.found) { const [ni, ti] = k.split('|').map(Number); const t = S.nights[ni].traces[ti]; out.push({ id: 'tr|' + k, k: 'trace', night: ni, cat: t.cat, val: t.val, neg: t.neg, loc: S.nights[ni].loc }); }
+    out.push({ id: 'self', k: 'self' });
+    S.pl.told.filter(t => t.kind === 'who').forEach((t, i) => { if (!out.some(o => o.k === 'seen' && o.who === t.who && o.night === t.night && o.loc === t.loc)) out.push({ id: 'sw|' + i, k: 'seen', night: t.night, who: t.who, loc: t.loc, by: t.by }); });
+    return out;
+  }
+  // judge: does this evidence break this part? Only a real contradiction counts
+  function judgeClash(S, story, stmtId, partIdx, evId) {
+    const st = statements(S, story).find(x => x.id === stmtId), ev = evidence(S).find(x => x.id === evId);
+    if (!st || !ev) return { ok: false };
+    const part = st.parts[partIdx]; if (!part) return { ok: false };
+    let cid = null;
+    if (part.k === 'trace' && ev.k === 'trace' && ev.night === st.night) cid = 'tr|' + st.who + '|' + st.night + '|' + part.cat;
+    if (part.k === 'fig' && ev.k === 'trace' && ev.night === st.night) cid = 'fg|' + st.who + '|' + st.night + '|' + part.cat;
+    if (part.k === 'loc' && ev.k === 'seen' && ev.night === st.night && ev.who === st.who) cid = 'wh|' + st.who + '|' + st.night;
+    if (ev.k === 'self' && (part.k === 'loc' || (part.k === 'who' && !canSee(story, (st.parts.find(p => p.k === 'loc') || {}).loc, part.loc)))) cid = 'sf|' + st.who + '|' + st.night;
+    const c = cid && contradictions(S, story).find(o => o.id === cid && (o.kind !== 'trace' && o.kind !== 'fig' || (o.seen.cat === ev.cat && o.seen.val === ev.val && o.seen.neg === ev.neg)));
+    if (c) return { ok: true, ev: pointOut(S, story, c.id) };
+    // a miss: the village hears the player accuse someone with nothing — the player's word is worth a little less
+    S.exposed = S.exposed || {}; S.exposed.you = (S.exposed.you || 0) + .25;
+    (S.heat = S.heat || {}).you = ((S.heat || {}).you || 0) + 1;
+    S.pl.miss = S.pl.miss || {}; S.pl.miss[S.day] = (S.pl.miss[S.day] || 0) + 1;
+    return { ok: false, ev: [{ t: 'denyseen', by: st.who }] };
+  }
+  // point one out in the meeting: the liar is caught, a hidden errand comes out, or a false sighting turns on its teller
+  function pointOut(S, story, id) {
+    const c = contradictions(S, story).find(o => o.id === id);
+    if (!c) return [];
+    (S.pl.pointed = S.pl.pointed || []).push(id);
+    S.exposed = S.exposed || {};
+    const ev = [], p = person(S, c.who);
+    const bump = (x, w) => { S.exposed[x] = (S.exposed[x] || 0) + w; (S.heat = S.heat || {})[x] = (S.heat[x] || 0) + 1; };
+    const witness = () => pick(S, alive(S).filter(q => !q.isPlayer && q.id !== c.who && q.id !== (c.seen && c.seen.by)));
+    if (c.kind === 'self') {
+      if (c.hid && p.secret && !p.secret.open) { p.secret.open = true; ev.push({ t: 'confess', by: c.who }); }   // they were out on their errand, and told the truth about what they saw
+      else { bump(c.who, 1); ev.push({ t: 'caught', by: c.who }); const w = witness(); if (w) ev.push({ t: 'notice', by: w.id, target: c.who }); }
+      return ev;
+    }
+    if (c.kind !== 'where') {
+      // innocents tell what they saw; a trace or a figure that the player's own eyes deny is a lie
+      bump(c.who, 1); ev.push({ t: 'caught', by: c.who });
+      const w = witness(); if (w) ev.push({ t: 'notice', by: w.id, target: c.who });
+      return ev;
+    }
+    const N = S.nights[c.night];
+    if (N && N.pos[c.who] === c.seen.loc) {
+      if (p.secret && !p.secret.open && p.role !== 'wolf' && p.role !== 'madman') {   // the hidden errand: a human with a secret
+        p.secret.open = true; ev.push({ t: 'confess', by: c.who });
+      } else { bump(c.who, 1); ev.push({ t: 'caught', by: c.who }); const w = witness(); if (w) ev.push({ t: 'notice', by: w.id, target: c.who }); }
+    } else {   // the sighting was made up: the one who told it is the liar
+      ev.push({ t: 'denyseen', by: c.who });
+      if (c.seen.by !== 'you' && person(S, c.seen.by).alive) { bump(c.seen.by, .6); ev.push({ t: 'caught', by: c.seen.by }); }
+    }
+    return ev;
+  }
   // "seers, stay hidden until you find a wolf" (or lift it)
   function askHide(S, on) { S.req.hide = !!on; return []; }
 
@@ -914,5 +1135,5 @@
     return res;
   }
 
-  root.WLEngine = { ROLE, SETUP, DIFF, CATS, newGame, night, meeting, voteRound, exile, check, score, search, ask, present, playerClaim, playerResults, callOut, callEvidence, askDivine, askGuard, askHide, testimony, analyze, opinion, suspicion, npcSearch, canConfront, fitsTraces, person, alive, isWolf, rnd, pick, shuffle };
+  root.WLEngine = { ROLE, SETUP, DIFF, CATS, newGame, night, meeting, voteRound, exile, check, score, search, ask, present, playerClaim, playerResults, callOut, callEvidence, contradictions, pointOut, dodge, dodgeTalk, near, canSee, statements, evidence, judgeClash, askDivine, askGuard, askHide, testimony, analyze, opinion, suspicion, npcSearch, canConfront, fitsTraces, person, alive, isWolf, rnd, pick, shuffle };
 })(typeof window !== 'undefined' ? window : globalThis);
