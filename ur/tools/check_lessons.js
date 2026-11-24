@@ -40,7 +40,7 @@ function checkMove(id, q, deep) {
   }
   return s;
 }
-const deep = !process.argv.includes('--fast');
+const deep = process.argv.includes("--net");   // (2026-11-24: 正解の検証は完全解析表で tools/lesson-verify.js ur。評価ネットの深さ3は --net のときだけ)
 for (const k of ['ui', 'msg']) for (const x in D[k]) has10(D[k][x], k, x);
 if (!D.score || D.score.per !== 20 || D.score.pass !== 75) ng('score', 'per 20 / pass 75');
 const ids = new Set();
@@ -62,10 +62,10 @@ for (const L of D.steps) {
   if (L.problems.length !== 5) ng(L.id, 'problems ' + L.problems.length);
   for (const [i, q] of L.problems.entries()) {
     nP++; const pid = L.id + '#' + (i + 1);
-    if (!X.MSG[q.why[0]]) ng(pid, 'why key');
+    if (!D.msg[q.why[0]]) ng(pid, 'why key');
     if (q.kind === 'move') {
       const s = checkMove(pid, q, deep); checkWhy(pid, s, q.n, q.best, q.why[0]);
-      for (const f in q.ng || {}) if (!X.MSG[q.ng[f][0]]) ng(pid, 'ng key');
+      for (const f in q.ng || {}) if (!D.msg[q.ng[f][0]]) ng(pid, 'ng key');
     } else if (q.kind === 'choice') {
       has10(q.q, pid, 'q');
       if (!(q.ans >= 0 && q.ans < q.opts.length)) ng(pid, 'ans');
