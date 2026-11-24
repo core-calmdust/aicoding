@@ -39,6 +39,7 @@
     { id: 'loa', color: '#4a2a4e', cover: { g: 'loa', s: 'loa', href: '../loa/' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'loaMove' }, m1: { svg: 'loaConnect' } }, refs: ['Sid Sackson, A Gamut of Games (1969) — the game by Claude Soucie', 'Mark H. M. Winands, Informed Search in Complex Games (PhD thesis, Universiteit Maastricht, 2004)', 'Mark H. M. Winands, “6×6 LOA is Solved”, ICGA Journal 31(4) (2008)', 'Maastricht University, Games and AI Group: Lines of Action (MIA, MC-LOA; Computer Olympiad 2003, 2004, 2006, 2009, 2013, 2015)', 'Mind Sports Olympiad, Lines of Action World Championship'], links: [{ g: 'loa', href: '../loa/' }, { g: 'checkers' }, { g: 'go' }] },
     { id: 'konane', color: '#2f5a56', cover: { g: 'konane', s: 'konane' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'konaneJump' }, m1: { svg: 'konaneStart' }, m2: { svg: 'konaneSizes' } }, refs: ['James Cook, James King, A Voyage to the Pacific Ocean, vol. III (1784)', 'Stewart Culin, “Hawaiian Games”, American Anthropologist 1 (1899)', 'Michael D. Ernst, “Playing Konane Mathematically: A Combinatorial Game-Theoretic Analysis”, UMAP Journal 16(2) (1995); an earlier version with Elwyn Berlekamp (1993)', 'Alice Chan, Alice Tsai, “1×n Konane: A Summary of Results”, in More Games of No Chance (2002)', 'Robert A. Hearn, Games, Puzzles, and Computation (PhD thesis, MIT, 2006)', 'National Park Service, Puʻuhonua o Hōnaunau National Historical Park (papamū)'], links: [{ g: 'konane' }, { g: 'checkers' }, { g: 'peg' }] },
     { id: 'peg', color: '#5a3e78', cover: { g: 'peg', s: 'peg' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'pegJump' }, m1: { svg: 'pegBoards' }, m2: { svg: 'pegColors' } }, refs: ['Mercure galant, August 1697', 'Claude-Auguste Berey, engraving of Anne de Rohan-Chabot, princesse de Soubise, with a solitaire board (late 17th century)', 'G. W. Leibniz, a note on the game of solitaire (1710), as quoted in Winning Ways', 'E. R. Berlekamp, J. H. Conway, R. K. Guy, Winning Ways for your Mathematical Plays, vol. 2 (1982)', 'John D. Beasley, The Ins and Outs of Peg Solitaire (1985)', 'University of Waterloo, Elliott Avedon Virtual Museum of Games: Solitaire'], links: [{ g: 'peg' }, { g: 'foxgeese' }, { g: 'konane' }] },
+    { id: 'fanorona', color: '#7a4a1e', cover: { g: 'fanorona', s: 'fanorona' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'fanoronaCapture' }, m1: { svg: 'fanoronaBoard' }, m2: { svg: 'fanoronaChain' } }, refs: ['Maarten P. D. Schadd, Mark H. M. Winands, Jos W. H. M. Uiterwijk, H. Jaap van den Herik, Maurice H. J. Bergsma, “Best Play in Fanorona Leads to Draw”, New Mathematics and Natural Computation 4(3) (2008)', 'H. J. R. Murray, A History of Board-Games Other Than Chess (1952)', 'Robert C. Bell, Board and Table Games from Many Civilizations (1960)', 'Maastricht University, Games and AI Group: Fanorona', 'Wikipedia, “Fanorona” (the legend of Ralambo and his sons)'], links: [{ g: 'fanorona' }, { g: 'alquerque' }, { g: 'checkers' }] },
   ];
   const src = p => p.s ? `../images/atlas/museum-story/${p.s}.webp?v=1` : p.g ? `../images/atlas/${p.g}.webp` : p.ex ? `../images/atlas/ex/${p.ex}.webp` : `../images/atlas/paint/${p.paint}-t.webp?v=1`;
   const ga = p => p && p.g && !p.s ? ' ga' : '';   // (a cover from the game's own art: a transparent icon, shown whole on the story's colour)
@@ -498,6 +499,47 @@
         if (r === 3 && c === 3) g += `<circle cx="${x}" cy="${y}" r="11.5" fill="none" stroke="#2b2a28" stroke-width="2" stroke-dasharray="4 3"/>`; else { n[k]++; g += `<circle cx="${x}" cy="${y}" r="11" fill="${K[k]}" stroke="#00000055" stroke-width="1"/>`; } }
       n.forEach((v, k) => { const x = B / 2 + (k - 1) * 70; g += `<circle cx="${x - 14}" cy="${B + 22}" r="9" fill="${K[k]}"/><text x="${x + 4}" y="${B + 28}" font-size="17" font-weight="800" fill="#2b2a28">${v}</text>`; });
       return `<svg viewBox="0 0 ${B} ${H}" role="img" style="font-family:inherit">${g}</svg>`; },
+    // fanorona's two captures on one line: by approach (top: moving up to the first black takes it and every black behind it in a row) and
+    // by withdrawal (bottom: moving away from a black takes it and the blacks behind it)
+    fanoronaCapture: () => { const C = 36, o = 26, W = o * 2 + C * 8, RH = 78, H = RH * 2 + 4; let g = '';
+      const row = (y, pcs, from, to, caps) => { let h = `<line x1="${o}" y1="${y}" x2="${o + 8 * C}" y2="${y}" stroke="#5a3a1e" stroke-width="2.5"/>`;
+        for (let c = 0; c < 9; c++) h += `<circle cx="${o + c * C}" cy="${y}" r="3.5" fill="#5a3a1e"/>`;
+        pcs.forEach(([c, w]) => { const x = o + c * C, cap = caps.includes(c); h += `<circle cx="${x}" cy="${y}" r="13" fill="${w ? '#f2e6cc' : '#3a2418'}" stroke="${w ? '#a08860' : '#000'}" stroke-width="1.5"${cap ? ' opacity=".32"' : ''}/>`;
+          if (cap) h += `<path d="M${x - 7} ${y - 7}l14 14M${x + 7} ${y - 7}l-14 14" stroke="#c0392b" stroke-width="3.2" stroke-linecap="round"/>`; });
+        const x1 = o + from * C, x2 = o + to * C, s = Math.sign(x2 - x1); h += `<circle cx="${x1}" cy="${y}" r="13" fill="#f2e6cc" opacity=".3"/><circle cx="${x2}" cy="${y}" r="13" fill="#f2e6cc" stroke="#2a5a8a" stroke-width="3"/><path d="M${x1 + s * 6} ${y - 22}Q${(x1 + x2) / 2} ${y - 36} ${x2 - s * 6} ${y - 22}" fill="none" stroke="#2a5a8a" stroke-width="3" marker-end="url(#fnA)"/>`;
+        return h; };
+      g += `<rect x="2" y="2" width="${W - 4}" height="${RH - 4}" rx="10" fill="#d8b07a"/><rect x="2" y="${RH + 2}" width="${W - 4}" height="${RH - 4}" rx="10" fill="#d8b07a"/>`;
+      g += row(RH / 2 + 10, [[4, 0], [5, 0], [6, 0], [8, 1]], 2, 3, [4, 5, 6]);
+      g += row(RH * 1.5 + 12, [[0, 0], [1, 0], [7, 0]], 2, 3, [0, 1]);
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit"><defs><marker id="fnA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2a5a8a"/></marker></defs>${g}</svg>`; },
+    // the 9 × 5 board at the start (22 pieces a side, the centre empty); the two dashed squares are alquerque boards side by side
+    fanoronaBoard: () => { const C = 35, o = 30, W = o * 2 + C * 8, H = o * 2 + C * 4; let g = `<rect x="2" y="2" width="${W - 4}" height="${H - 4}" rx="12" fill="#d8b07a" stroke="#8a5a2a" stroke-width="2"/>`;
+      const X = c => o + c * C, Y = r => o + r * C;
+      g += `<rect x="${X(0) - 20}" y="${Y(0) - 20}" width="${4 * C + 34}" height="${4 * C + 40}" rx="10" fill="#2a8a7a" fill-opacity=".16" stroke="#1f6e62" stroke-width="3" stroke-dasharray="7 4"/><rect x="${X(4) - 14}" y="${Y(0) - 14}" width="${4 * C + 34}" height="${4 * C + 28}" rx="10" fill="#c0392b" fill-opacity=".13" stroke="#a83224" stroke-width="3" stroke-dasharray="7 4"/>`;
+      for (let r = 0; r < 5; r++) g += `<line x1="${X(0)}" y1="${Y(r)}" x2="${X(8)}" y2="${Y(r)}" stroke="#5a3a1e" stroke-width="2"/>`;
+      for (let c = 0; c < 9; c++) g += `<line x1="${X(c)}" y1="${Y(0)}" x2="${X(c)}" y2="${Y(4)}" stroke="#5a3a1e" stroke-width="2"/>`;
+      for (let c = 0; c < 8; c += 2) for (let r = 0; r < 4; r += 2) g += `<path d="M${X(c)} ${Y(r)}L${X(c + 2)} ${Y(r + 2)}M${X(c + 2)} ${Y(r)}L${X(c)} ${Y(r + 2)}" stroke="#5a3a1e" stroke-width="2"/>`;
+      const mid = [0, 1, 0, 1, -1, 0, 1, 0, 1];
+      for (let r = 0; r < 5; r++) for (let c = 0; c < 9; c++) { const w = r < 2 ? 0 : r > 2 ? 1 : mid[c]; if (w < 0) { g += `<circle cx="${X(c)}" cy="${Y(r)}" r="5" fill="#5a3a1e"/>`; continue; }
+        g += `<circle cx="${X(c)}" cy="${Y(r)}" r="10.5" fill="${w ? '#f2e6cc' : '#3a2418'}" stroke="${w ? '#a08860' : '#000'}" stroke-width="1.4"/>`; }
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit">${g}</svg>`; },
+    // a capturing chain: (1) approach to the right, (2) withdrawal upward, (3) approach to the left. Each step must change direction and may not
+    // return to a point already visited: going on to the right after (1) is not allowed (×)
+    fanoronaChain: () => { const C = 36, o = 26, W = o * 2 + C * 8, H = o * 2 + C * 4; let g = `<rect x="2" y="2" width="${W - 4}" height="${H - 4}" rx="12" fill="#d8b07a" stroke="#8a5a2a" stroke-width="2"/>`;
+      const X = c => o + c * C, Y = r => o + r * C;
+      for (let r = 0; r < 5; r++) g += `<line x1="${X(0)}" y1="${Y(r)}" x2="${X(8)}" y2="${Y(r)}" stroke="#7a5a3a" stroke-width="1.6"/>`;
+      for (let c = 0; c < 9; c++) g += `<line x1="${X(c)}" y1="${Y(0)}" x2="${X(c)}" y2="${Y(4)}" stroke="#7a5a3a" stroke-width="1.6"/>`;
+      for (let c = 0; c < 8; c += 2) for (let r = 0; r < 4; r += 2) g += `<path d="M${X(c)} ${Y(r)}L${X(c + 2)} ${Y(r + 2)}M${X(c + 2)} ${Y(r)}L${X(c)} ${Y(r + 2)}" stroke="#7a5a3a" stroke-width="1.6"/>`;
+      const pc = (c, r, w, op) => `<circle cx="${X(c)}" cy="${Y(r)}" r="11" fill="${w ? '#f2e6cc' : '#3a2418'}" stroke="${w ? '#a08860' : '#000'}" stroke-width="1.4"${op ? ` opacity="${op}"` : ''}/>`;
+      const cap = (c, r) => pc(c, r, 0, .3) + `<path d="M${X(c) - 7} ${Y(r) - 7}l14 14M${X(c) + 7} ${Y(r) - 7}l-14 14" stroke="#c0392b" stroke-width="3" stroke-linecap="round"/>`;
+      g += [[6, 0], [7, 1], [8, 0]].map(([c, r]) => pc(c, r, 0)).join('') + [[6, 3], [7, 4], [1, 4]].map(([c, r]) => pc(c, r, 1)).join('');
+      g += cap(4, 2) + cap(5, 2) + cap(3, 3) + cap(3, 4) + cap(1, 1) + cap(0, 1);
+      g += pc(2, 2, 1, .3) + pc(3, 2, 1, .3) + pc(3, 1, 1, .3) + `<circle cx="${X(2)}" cy="${Y(1)}" r="11" fill="#f2e6cc" stroke="#2a5a8a" stroke-width="3"/>`;
+      const leg = (c1, r1, c2, r2) => { const x1 = X(c1), y1 = Y(r1), x2 = X(c2), y2 = Y(r2), L = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / L, uy = (y2 - y1) / L; return `<path d="M${x1 + ux * 8} ${y1 + uy * 8}L${x2 - ux * 15} ${y2 - uy * 15}" stroke="#2a5a8a" stroke-width="3.4" marker-end="url(#fcA)"/>`; };
+      g += leg(2, 2, 3, 2) + leg(3, 2, 3, 1) + leg(3, 1, 2, 1);
+      g += `<path d="M${X(3) + 14} ${Y(2) + 2}L${X(4) - 4} ${Y(2) + 2}" stroke="#6a6258" stroke-width="2.6" stroke-dasharray="4 3"/><circle cx="${X(3) + 26}" cy="${Y(2) + 22}" r="9" fill="#4a423a"/><path d="M${X(3) + 22} ${Y(2) + 18}l8 8M${X(3) + 30} ${Y(2) + 18}l-8 8" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>`;
+      [[2.5, 2, '1', -6, 19], [3, 1.5, '2', 19, 0], [2.5, 1, '3', 0, -19]].forEach(([c, r, n, dx, dy]) => { const x = X(c) + dx, y = Y(r) + dy; g += `<circle cx="${x}" cy="${y}" r="10" fill="#2a5a8a" stroke="#fff" stroke-width="1.5"/><text x="${x}" y="${y + 5}" font-size="15" font-weight="800" fill="#fff" text-anchor="middle">${n}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit"><defs><marker id="fcA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2a5a8a"/></marker></defs>${g}</svg>`; },
     // four tetrahedral dice: how often each score comes (out of 16)
     tetraOdds: () => { const n = [1, 4, 6, 4, 1], W = 300, H = 150, bw = 40, gap = (W - 40 - bw * 5) / 4; let g = '';
       n.forEach((v, i) => { const x = 20 + i * (bw + gap), h = v / 6 * 96, y = 112 - h;
