@@ -1474,6 +1474,28 @@ function shogiOpen(opt) {
       }
     });
   }
+  // 追25 / 追26 over every freq problem of every shogi opening (the words are shared by all sets): the record (probs.js) keeps every move
+  // played 3 times or more, so a move outside it was played at most min(2, games left over) times — "hardly played" only when that is
+  // under 3%, "never played" only when no game is left over, the stated counts the same; and the games are Floodgate's (strong programs,
+  // rated 3000+), so no line may say "strong people" / "n% of people" / "popular" about them.
+  const PEOPLE = /強い人|%の人|の人が|の人は|選ぶ人|指す人|人も|人は|人気|プロ|棋士|愛好家/;
+  for (const s of sets) { const nm = String(s.title.ja), VO = X.shOpVoice(s.id), hs = s.id.length * 3;
+    (s.problems || []).forEach((P, j) => { if (P.mode !== 'freq') return; const a = m => add(s.id, j, m), C = P.cand || [], A = (P.accept || [])[0];
+      const sum = C.reduce((x, c) => x + c[1], 0), N = P.total || sum, rest = N - sum, k2 = Math.min(2, Math.max(0, rest)), cnt = new Map(C);
+      if (C.some(c => c[1] < 3) || sum > N || P.total == null) { a(`追25 the record is not as collected (every move 3+ times, the total kept): ${JSON.stringify(C)} / ${P.total}`); return; }
+      const p = new E.Position(); p.setSfen(P.sfen); const ms = p.legalMoves(true).map(m => p.toUsi(m));
+      for (let i = 0; i < 5; i++) { let Q; try { Q = X.shOpJa({ pos: P.sfen, kind: 'best', P, ans: A }, nm, hs, i, false, VO); } catch (er) { a(`⑧ the 3D words fail: ${er.message}`); break; }
+        const T = [['the question', plain(Q.ask)], ['the hint', plain(Q.hintTx || '')], ['the answer', plain(Q.good(A))]];
+        for (const u of ms) if (u !== A) T.push([u, plain(cnt.has(u) ? Q.good(u) + ' / ' + Q.ng(u) : Q.ng(u))]);
+        for (const [who, w] of T) { if (PEOPLE.test(w)) a(`追26 ${who}: the games are strong programs' (Floodgate), not people's 「${w}」`);
+          if (who.length < 6 && !cnt.has(who)) {   // (a move outside the record)
+            if (/ほとんど指されない|ほとんどない|めったに|ほとんど出てこない/.test(w) && !(k2 / N < 0.03)) a(`追25 ${who}: "hardly played" but it may be played ${k2} of ${N} (${Math.round(k2 / N * 100)}%) 「${w}」`);
+            if (/一度も|一つもない|どれにも出てこない|指されない手なの|では指されない手/.test(w) && rest !== 0) a(`追25 ${who}: "never played" but ${rest} games are outside the record 「${w}」`);
+            const mk = w.match(/(\d+)局のうち、?多くても(\d+)局|(\d+)局で多くても(\d+)局/); if (mk && (+(mk[1] || mk[3]) !== N || +(mk[2] || mk[4]) !== k2)) a(`追25 ${who}: the counts ${mk[0]} (N ${N}, at most ${k2})`);
+            const mn = w.match(/(\d+)局(で一度も|に一つも|では一度も|のどれにも)/); if (mn && +mn[1] !== N) a(`追25 ${who}: ${mn[1]} games, the record has ${N}`); } }
+      }
+    });
+  }
   return out;
 }
 // (2026-11-24 第2期・担当B) tafl openings (tafl/openings.json, <game>/open): the plans of TFO_DONE (sets marked verified), every problem
