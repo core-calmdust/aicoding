@@ -17,6 +17,8 @@ for f in sorted(glob.glob(D + '/res-*.json')):
         for it in rec['items']:
             x0, y0 = max(0, int(it['x'])), max(0, int(it['y'])); x1, y1 = min(W, int(it['x'] + it['w'])), min(H, int(it['y'] + it['h']))
             if x1 - x0 < 2 or y1 - y0 < 2: continue
+            if it['w'] <= 30 and it['h'] <= 30:   # a small round badge: its square box takes in the page at the corners; read the middle
+                dx, dy = (x1 - x0) // 5, (y1 - y0) // 5; x0, y0, x1, y1 = x0 + dx, y0 + dy, x1 - dx, y1 - dy
             n += 1
             px = list(im.crop((x0, y0, x1, y1)).resize((min(24, x1 - x0), min(12, y1 - y0))).getdata())
             col, a = parse(it['c'])

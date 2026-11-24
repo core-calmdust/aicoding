@@ -386,6 +386,8 @@
   function texts() {
     const T = tool, x = tt(T.id);
     el.tools.querySelectorAll('[data-t]').forEach(b => { const y = tt(b.dataset.t); b.querySelector('b').textContent = y.name || b.dataset.t; b.querySelector('small').textContent = y.short || ''; b.setAttribute('aria-selected', b.dataset.t === T.id); });
+    if (window.AtlasMuseum && AtlasMuseum.tabKeys) { AtlasMuseum.tabKeys(el.tools); AtlasMuseum.rove(el.tools); }
+    { const on = el.tools.querySelector('[aria-selected=true]'); if (on && el.tools.scrollWidth > el.tools.clientWidth) el.tools.scrollTo({ left: on.offsetLeft - (el.tools.clientWidth - on.offsetWidth) / 2, behavior: 'smooth' }); }   // (a phone's chip row: the chosen tool stays in sight)
     el.lead.textContent = u('lead');
     el.name.textContent = x.name || T.id; el.sub.textContent = x.sub || '';
     el.body.innerHTML = (x.p || []).map(p => `<p>${esc(p)}</p>`).join('');
@@ -443,6 +445,7 @@
 
   function render(box, c) {
     ctx = c; lang = (window.MUSEUM_CHANCE_T || {})[c.lang] ? c.lang : 'en'; MK('chance', null, TOOLS.length);
+    if (window.AtlasMuseum && AtlasMuseum.catalog) AtlasMuseum.catalog('chance', TOOLS.map(T => ({ id: T.id, img: null, t: tt(T.id).name || T.id })));
     if (host !== box || !box.querySelector('.chx')) { host = box; tool = null; build(box); }
     let id = null; try { id = localStorage.getItem('atlas-chance-tool'); } catch (e) {}
     if (!tool) choose(TOOLS.some(t => t.id === id) ? id : TOOLS[0].id); else texts();

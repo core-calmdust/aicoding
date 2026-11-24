@@ -5,9 +5,8 @@
 'use strict';
 (function () {
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles', PZ_LAST = STORE + '-pz-last', PZ_TAB = STORE + '-pz-tab', LS_CAT = STORE + '-ls-cat';
-let LESSONS = null, PUZZLES = null;
+let LESSONS = null;
 const lessonsReady = fetch('lessons.json?v=3').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
-const puzzlesReady = fetch('puzzles.json?v=3').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
 const LL = o => o == null ? '' : typeof o === 'string' ? o : (o[LANG] !== undefined ? o[LANG] : o.en !== undefined ? o.en : o.ja || '');
 const fill = (s, v) => String(s).replace(/\{(\w+)\}/g, (_, k) => v && v[k] !== undefined ? v[k] : '');
 const UI = (D, k, v) => fill(D && D.ui && D.ui[k] ? LL(D.ui[k]) : k, v);
@@ -44,16 +43,16 @@ function quitSpecial() { exitSpecial(); }
 function selTab(v) { $$('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v))); }
 // switching tabs: the new dialog is shown at once (no fade) on top of the old one, then the old one is hidden — so the dialog
 // never closes and opens again; the lists keep their DOM when nothing changed (setHtml) and the board pictures are preloaded
-const LIST_OV = ['#rulesOverlay', '#lessonOverlay', '#puzzleOverlay'];
+const LIST_OV = ['#rulesOverlay', '#lessonOverlay'];   // (パズルは 2026-11-24 に廃止：双六系にパズルは作らない)
 let tabSwitch = false;
 $$('.ls-tabs').forEach(g => g.addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b || b.classList.contains('sel')) return;
-  const v = b.dataset.v, want = v === 'rules' ? '#rulesOverlay' : v === 'lesson' ? '#lessonOverlay' : '#puzzleOverlay';
+  const v = b.dataset.v, want = v === 'rules' ? '#rulesOverlay' : '#lessonOverlay';
   const was = LIST_OV.filter(s => s !== want && $(s).classList.contains('show'));
   LIST_OV.forEach(s => $(s).classList.add('instant'));
   $(want).classList.add('ls-top'); was.forEach(s => $(s).classList.add('ls-under'));
   tabSwitch = true;
-  try { if (v === 'rules') openRules(); else if (v === 'lesson') await openLessons(); else await openPuzzles(); } finally { tabSwitch = false; }
+  try { if (v === 'rules') openRules(); else await openLessons(); } finally { tabSwitch = false; }
   // the old one goes once the new one has been painted
   requestAnimationFrame(() => requestAnimationFrame(() => {
     was.forEach(s => { if (s === '#rulesOverlay') closeRules(true); else hideOverlay(s); $(s).classList.remove('ls-under'); });
@@ -259,109 +258,12 @@ $('#btnLessonNextStep').onclick = () => { const nx = lesson && lesson.next; hide
 $('#lsList').onclick = () => { const id = lesson && lesson.id; exitSpecial(); openLessons(catOf(id)).then(() => { const el = id && $('#lessonList').querySelector(`[data-id="${id}"]`); if (el) el.scrollIntoView({ block: 'center' }); }); };
 $('#lsQuit').onclick = () => exitSpecial();
 
-// ---------------------------------------------------------------- puzzles (PZBook)
-const pzKey = (id, j) => id + '-' + j;
-function pzRecs(T, pr) { pr = pr || prog(PZ_STORE); return T.puzzles.map((_, j) => +pr[pzKey(T.id, j)] || 0); }
-function themeTier(i) { return Math.min(5, Math.floor(i * 6 / Math.max(1, PUZZLES.themes.length))); }
-const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-function dailyPick() {
-  const P = PUZZLES; if (!P.daily || !P.daily.length) return null;
-  const date = ymd(new Date()); let h = 0; for (const c of date) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  const id = P.daily[h % P.daily.length], L = P.themes.findIndex(T => T.id === id); if (L < 0) return null;
-  return { L, j: (h >>> 8) % P.themes[L].puzzles.length, date };
-}
-const PZ_IC = { basic: 'sprout', tactics: 'bolt', end: 'crown', vari: 'theme' };
-async function openPuzzles() {
-  const d = await puzzlesReady; selTab('puzzle');
-  if (!d) { toast(t('ls.fail')); return; }
-  PZBook.setLang(LANG);
-  const pr = prog(PZ_STORE), Ts = d.themes, idx = Ts.map((_, i) => i), cats = d.cats.map(c => c.id);
-  let cur = ''; try { cur = localStorage.getItem(PZ_TAB) || ''; } catch (e) {} if (!cats.includes(cur)) cur = cats[0];
-  const cont = PZBook.resume(idx.map(i => ({ key: String(i), recs: pzRecs(Ts[i], pr), cat: Ts[i].cat })), PZ_LAST);
-  const dl = dailyPick(), dd = prog(STORE + '-daily');
-  const th = (T, j) => { if (j < 0) j = T.puzzles.length - 1; const P = T.puzzles[j]; return P ? thumb(P.s, [], { cropMarks: [] }) : ''; };
-  setHtml($('#pzLevels'), PZBook.home({
-    title: t('pz.title'), lead: t('pz.desc'), all: idx.map(i => pzRecs(Ts[i], pr)),
-    cont: cont && { key: cont.key + ':' + cont.j, no: cont.j + 1, name: LL(Ts[+cont.key].name) },
-    daily: dl ? [{ key: '1', board: th(Ts[dl.L], dl.j), title: '★ ' + t('daily.title'), date: dl.date.slice(5).replace('-', '/'), done: !!dd[dl.date], go: t('daily.go'), sub: LL(Ts[dl.L].name) }] : [],
-    cats: d.cats.map(c => { const r = idx.filter(i => Ts[i].cat === c.id).map(i => pzRecs(Ts[i], pr)).flat(); return { key: c.id, icon: PZBook.icon(PZ_IC[c.id] || 'theme'), name: LL(c.name), done: r.filter(x => x > 0).length, total: r.length }; }),
-    cur,
-    cards: idx.filter(i => Ts[i].cat === cur).map(i => { const T = Ts[i], r = pzRecs(T, pr); return { key: i, badge: '', name: LL(T.name), desc: LL(T.desc), recs: r, tier: themeTier(i), board: th(T, PZBook.nextIndex(r)) }; }),
-  }));
-  PZBook.bindHome($('#pzLevels'), {
-    cat: k => { try { localStorage.setItem(PZ_TAB, k); } catch (e) {} openPuzzles(); },
-    cont: x => { const [i, j] = x.split(':'); startPuzzle(+i, +j); },
-    daily: () => { const dl = dailyPick(); if (dl) startPuzzle(dl.L, dl.j, dl.date); },
-    card: i => openPzGrid(+i),
-  });
-  showPzView('pzListView'); showOverlay('#puzzleOverlay');
-}
-function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
-let pzLevel = 0;
-function openPzGrid(i, cur) {
-  pzLevel = i; const T = PUZZLES.themes[i]; PZBook.setLang(LANG);
-  const c = PUZZLES.cats.find(x => x.id === T.cat);
-  $('#pzLevelHead').innerHTML = PZBook.ghead({ badge: '', name: LL(T.name), desc: LL(T.desc), chips: [c ? LL(c.name) : '', PZBook.t('count', { n: T.puzzles.length })], tier: themeTier(i) });
-  $('#pzGrid').innerHTML = PZBook.grid({ recs: pzRecs(T), cur });
-  $('#pzGrid').querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = T.puzzles[+el.dataset.j]; if (P) el.insertAdjacentHTML('afterbegin', `<span class="th">${thumb(P.s)}</span>`); });
-  showPzView('pzGridView'); showOverlay('#puzzleOverlay');
-}
-$('#pzGrid').onclick = e => { const b = e.target.closest('button[data-j]'); if (!b) return; if (b.getAttribute('aria-disabled')) { toast(PZBook.t('locked')); return; } startPuzzle(pzLevel, +b.dataset.j); };
-$('#pzBack').onclick = () => openPuzzles();
-$('#pzClose').onclick = () => hideOverlay('#puzzleOverlay');
-$('#btnPuzzle').onclick = () => openPuzzles();
-function startPuzzle(L, j, daily) {
-  hideOverlay('#puzzleOverlay');
-  const T = PUZZLES.themes[L], P = T.puzzles[j]; if (!P) return;
-  lesson = null; document.body.classList.remove('in-lesson');
-  if (!daily) PZBook.lastSet(PZ_LAST, L);
-  puzzle = { L, j, T, P, daily: daily || null, hinted: false, failed: false, answered: false, solved: false, hint: 0 };
-  document.body.classList.add('in-puzzle');
-  enterSpecial({ state: P.s, n: P.n, title: LL(T.name), check: m => puzzleMove(m), onMove: () => renderPuzzleCard() });
-  renderPuzzleCard(); pzStatus(esc(UI(PUZZLES, 'qMove', { n: P.n })));
-}
-function puzzleMove(m) {
-  const Pz = puzzle, D = PUZZLES; if (Pz.solved || animating) return false;
-  if (Pz.P.ok.some(a => sameMv(a, m))) {
-    Pz.solved = true; snd('ok');
-    const pr = prog(PZ_STORE), k = pzKey(Pz.T.id, Pz.j), before = pzRecs(Pz.T, pr), stars = PZBook.starsFor(Pz);
-    if (!Pz.daily) pr[k] = Math.max(+pr[k] || 0, stars); progSet(PZ_STORE, pr);
-    if (Pz.daily) { const dd = prog(STORE + '-daily'); dd[Pz.daily] = 1; progSet(STORE + '-daily', dd); }
-    const after = pzRecs(Pz.T, pr); PZBook.setLang(LANG);
-    special.marks = [];
-    pzStatus(`<b class="ok">${esc(UI(D, 'correct'))}</b> ${esc(MSG(D, Pz.P.why))}` + (Pz.daily ? '' : PZBook.solved({ stars, recs: after, j: Pz.j, events: PZBook.events(before, after, Pz.j) })));
-    renderPuzzleCard(); return true;
-  }
-  Pz.failed = true; snd('ng');
-  const ng = Pz.P.ng && Pz.P.ng[String(m.from)];
-  pzStatus(`<b class="ng">${esc(UI(D, 'wrong'))}</b> ${esc(ng ? MSG(D, ng) : UI(D, 'rampRetry'))}`);
-  renderPuzzleCard();   // ［やり直す］を押せるようにする
-  return false;
-}
-function pzStatus(h) { $('#pzStatus').innerHTML = h; }
-function renderPuzzleCard() {
-  const Pz = puzzle; if (!Pz) return;
-  $('#pzStep').textContent = Pz.daily ? `★ ${t('daily.title')} · ${Pz.daily.slice(5).replace('-', '/')}` : `${LL(Pz.T.name)} · ${PZBook.t('stage', { n: Math.floor(Pz.j / PZBook.STAGE) + 1 })} · No.${Pz.j + 1}`;
-  $('#pzTitle').textContent = t('pz.head');
-  $('#pzGoal').innerHTML = `<span class="pdisc p0"></span><span>${esc(UI(PUZZLES, 'roll', { n: Pz.P.n }))} — ${esc(t('pz.goal', { s: sideName(0) }))}</span>`;
-  $('#pzNext').disabled = !!Pz.daily || Pz.j + 1 >= Pz.T.puzzles.length || !PZBook.isOpen(pzRecs(Pz.T), Pz.j + 1);
-  $('#pzHint').disabled = Pz.solved; $('#pzAnswer').disabled = Pz.solved; $('#pzRetry').disabled = !Pz.solved && !Pz.failed;
-  if (HB) hbInfo();
-}
-$('#pzHint').onclick = () => { const Pz = puzzle; if (!Pz || Pz.solved) return; Pz.hinted = true; Pz.hint++; pzStatus(`💡 ${esc(LL(Pz.T.hint) || UI(PUZZLES, 'look'))}`); if (Pz.P.look && Pz.hint >= 1) { special.marks = Pz.P.look.slice(); update(); } };
-$('#pzAnswer').onclick = () => { const Pz = puzzle; if (!Pz || Pz.solved) return; Pz.answered = true; special.hint = arrowOf(special.state, Pz.P.best); update(); pzStatus(`${esc(UI(PUZZLES, 'ans', { m: mvName(special.state, Pz.P.best) }))} — ${esc(MSG(PUZZLES, Pz.P.why))}`); };
-$('#pzRetry').onclick = () => { const Pz = puzzle; if (!Pz) return; const keep = { hinted: Pz.hinted, failed: Pz.failed, answered: Pz.answered }; startPuzzle(Pz.L, Pz.j, Pz.daily); Object.assign(puzzle, keep); };
-$('#pzNext').onclick = () => { const Pz = puzzle; if (Pz && Pz.j + 1 < Pz.T.puzzles.length) startPuzzle(Pz.L, Pz.j + 1); };
-$('#pzList').onclick = () => { const L = puzzle ? puzzle.L : 0; exitSpecial(); openPzGrid(L); };
-$('#pzQuit').onclick = () => exitSpecial();
-
 window.PatolliLearn = {
-  openRules, closeRules, openLessons, openPuzzles, exitSpecial, startLesson, startPuzzle, lessonsReady, puzzlesReady,
+  openRules, closeRules, openLessons, exitSpecial, startLesson, lessonsReady,
   relang() {
     if (window.PatolliTour && $('#rulesOverlay').classList.contains('show')) PatolliTour.render();
-    if (lesson) renderLessonCard(); if (puzzle) renderPuzzleCard();
+    if (lesson) renderLessonCard();
     if ($('#lessonOverlay').classList.contains('show') && !$('#lessonListView').classList.contains('hidden')) openLessons();
-    if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }
   },
 };
 })();

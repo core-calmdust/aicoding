@@ -33,7 +33,7 @@
   .murm .mui{width:28px;height:28px;border-radius:50%;background:transparent}
   .murm .mui svg{width:21px;height:21px}
   .murm .mut{display:none}
-  .murm .mup{display:block;width:100%;padding:0 1px;font:700 10.5px/1.25 var(--round);white-space:nowrap;overflow:hidden;color:var(--ink)}
+  .murm .mup{display:block;width:100%;padding:0 1px;font:700 12px/1.25 var(--round);white-space:nowrap;overflow:hidden;color:var(--ink)}
   .murm[aria-selected=true]{background:var(--ink);box-shadow:none}
   .murm[aria-selected=true] .mui{background:transparent;color:var(--sun)}
   .murm[aria-selected=true] .mup{color:#fff}
@@ -91,7 +91,7 @@
 .trn b{font-size:14.5px;font-weight:900;white-space:nowrap}
 .trn small{font-size:12px;font-weight:700;color:var(--ink2);white-space:nowrap}
 .trn.x b{font-weight:800;color:color-mix(in srgb,var(--ink) 82%,#fff)}
-.trn em{font-style:normal;font:700 9.5px/1 var(--round);letter-spacing:.04em;color:#fff;background:var(--grape);padding:2px 5px;border-radius:99px;vertical-align:1px}
+.trn em{font-style:normal;font:700 12px/1 var(--round);letter-spacing:.04em;color:#fff;background:var(--grape);padding:2px 5px;border-radius:99px;vertical-align:1px}
 @media (hover:hover){.trn:hover{transform:translateY(-2px);z-index:2}.trn:hover .tra img{transform:scale(1.12) translateY(-2px)}}
 .trn:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
 .trn.on{z-index:3;border-color:var(--c);border-style:solid;box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 35%,transparent),0 3px 0 color-mix(in srgb,var(--c) 55%,#000)}
@@ -125,7 +125,7 @@
 .trhd .trd.big svg{width:36px;height:36px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .trfacts{display:flex;flex-wrap:wrap;gap:6px}
 .trfacts>span{display:inline-flex;align-items:center;gap:6px;padding:3px 11px 3px 4px;border-radius:99px;background:#f6eedb;font-weight:900;font-size:13px}
-.trfacts i{font-style:normal;font-size:11px;padding:2px 8px;border-radius:99px;background:#fff;color:var(--ink2)}
+.trfacts i{font-style:normal;font-size:12px;padding:2px 8px;border-radius:99px;background:#fff;color:var(--ink2)}
 .trdesc{grid-area:desc;margin:0;font-size:14.5px;line-height:1.75}
 .trrel{grid-area:rel;display:flex;flex-direction:column;gap:10px;padding-inline-start:20px;border-inline-start:2px solid var(--line);min-height:100%;box-sizing:border-box}
 .trrel>div>i{display:block;font-style:normal;font-size:12px;font-weight:900;color:var(--ink2);margin-bottom:5px}
@@ -137,7 +137,7 @@
 .trc .tra img{position:absolute;inset:-3px;width:calc(100% + 6px);height:calc(100% + 6px);object-fit:contain}
 .trc .tra img.flat{inset:3px;width:calc(100% - 6px);height:calc(100% - 6px)}
 .trc .trd{width:10px;height:10px;margin:0 4px 0 6px;border-radius:50%;background:var(--c)}
-.trc em{font-style:normal;font-size:10.5px;font-weight:900;color:var(--ink2);padding:1px 6px;border-radius:99px;background:#f6eedb}
+.trc em{font-style:normal;font-size:12px;font-weight:900;color:var(--ink2);padding:1px 6px;border-radius:99px;background:#f6eedb}
 .trc:active{transform:translateY(2px);box-shadow:none}
 .tracts{grid-area:acts;display:flex;flex-direction:column;justify-content:center;gap:10px;align-self:stretch;padding-inline-start:20px;border-inline-start:2px solid var(--line)}
 @media (max-width:819px){
@@ -148,15 +148,15 @@
   .trwrap{--trNW:76px}
   .trscroll{height:clamp(300px,calc(100svh - 420px),560px);min-height:0}
   .trruler{height:46px}
-  .trera{height:20px}.trera b{font-size:11.5px}
-  .trtick{top:24px;font-size:11px}
+  .trera{height:20px}.trera b{font-size:12px}
+  .trtick{top:24px;font-size:12px}
   .trname{padding:0 4px 0 6px}
   .trname span{flex-direction:column;align-items:flex-start;gap:3px}
   .trname i{width:24px;height:24px;border-radius:8px}.trname i svg{width:16px;height:16px}
-  .trname b{font-size:10.5px;line-height:1.15}
+  .trname b{font-size:12px;line-height:1.15}
   .trn{gap:6px;padding:0 10px 0 4px}
   .trn .tra{width:38px;height:38px}
-  .trn b{font-size:13.5px}.trn small{font-size:11.5px}
+  .trn b{font-size:13.5px}.trn small{font-size:12px}
   .trlegend{gap:4px 12px;font-size:12px}
   .trinfo{grid-template-columns:minmax(0,1fr);grid-template-areas:"hd" "desc" "rel" "acts";padding:14px;gap:8px;scroll-margin-bottom:calc(80px + env(safe-area-inset-bottom))}
   .trhd .tra.big,.trhd .trd.big{width:52px;height:52px;border-radius:16px}
@@ -177,7 +177,7 @@
 .gxpic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .35s cubic-bezier(.2,.7,.2,1)}
 .gxc.locked .gxpic img{filter:brightness(0) opacity(.55)}
 .gxlock{position:absolute;inset:0;display:grid;place-items:center}
-.gxplay{position:absolute;inset-inline-end:8px;bottom:8px;display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 9px 0 7px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:.04em;color:#22170a;background:#f3ead6;border:1px solid #c9a55a;box-shadow:0 2px 8px rgba(0,0,0,.45)}.gxplay svg{width:11px;height:11px;fill:#22170a}   /* 所蔵品で遊べる (2026-11-23 user) */
+.gxplay{position:absolute;inset-inline-end:8px;bottom:8px;display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 9px 0 7px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.04em;color:#22170a;background:#f3ead6;border:1px solid #c9a55a;box-shadow:0 2px 8px rgba(0,0,0,.45)}.gxplay svg{width:11px;height:11px;fill:#22170a}   /* 所蔵品で遊べる (2026-11-23 user) */
 .gxlock svg{width:46px;height:46px;fill:none;stroke:#f3dfb8;stroke-width:1.8;stroke-linecap:round;opacity:.85}
 .gxsp{position:absolute;left:10px;top:10px;padding:3px 10px;border-radius:99px;background:linear-gradient(135deg,#ffd76a,#d79a1c);color:#3a2408;font:700 12px var(--round);box-shadow:0 2px 0 #a8730f}
 .gxtx{display:flex;flex-direction:column;gap:3px;padding:12px 16px 14px}
@@ -327,7 +327,7 @@ html.exv-open{overflow:hidden}
    during a game the texts below go and the case takes the whole screen, and the buttons come back to the bottom right beside the small "stop" button */
 @media (max-width:819px){
   .expcard{flex-wrap:wrap;justify-content:center;bottom:30px;gap:6px 8px;padding:7px 10px 9px;border-radius:18px;max-width:calc(100% - 20px)}
-  .expcard>b{flex:1 1 100%;text-align:center;border:0;padding:0;font-size:11.5px;letter-spacing:.14em}
+  .expcard>b{flex:1 1 100%;text-align:center;border:0;padding:0;font-size:12px;letter-spacing:.14em}
   .expf>span{display:none}
   .expdd-b{height:36px;min-width:74px;padding:0 8px 0 12px;gap:6px}
   .expseg{height:36px}.expseg button{padding:0 11px;font-size:13px}
@@ -353,6 +353,9 @@ html.exv-open{overflow:hidden}
 .exhud button{pointer-events:auto;height:32px;padding:0 18px!important;border:1px solid rgba(212,175,95,.6)!important;border-radius:999px;background:rgba(243,234,214,.08)!important;color:#f3e4bf!important;font:inherit;font-size:13.5px!important;font-weight:800;letter-spacing:.08em;box-shadow:none!important;transform:none!important;cursor:pointer;white-space:nowrap}
 .exhud button:hover{background:rgba(243,234,214,.18)!important}
 .exhud button:disabled{opacity:.35;cursor:default}
+/* the roll / pass chip that follows the dice in the Ur exhibit (atlas/games/ur.js .urdk): the HUD's quiet gold-outlined style, not the portal's coral */
+body:has(.exv) .urdk{padding:0 20px!important;min-height:0!important;height:38px;border:1px solid rgba(212,175,95,.7)!important;background:rgba(24,18,14,.82)!important;color:#f3e4bf!important;font-size:14.5px!important;font-weight:800!important;letter-spacing:.08em;box-shadow:0 6px 16px rgba(0,0,0,.35)!important;animation:none!important;backdrop-filter:blur(4px)}
+body:has(.exv) .urdk:hover{background:rgba(52,40,28,.9)!important}
 @media (max-width:819px){.exhud{left:10px;right:58px;transform:none;margin:0 auto;width:fit-content;max-width:none;gap:4px;padding:4px 5px;font-size:12.5px}.exhud .hs{padding:4px 8px;gap:4px}.exhud .hs b{font-size:13px}.exhud .hm{padding:0 3px}.exhud button{padding:0 12px!important}}   /* (phones: clear of the close button at the top right) */
 .exv-play .exspots,.exv-play .exhint{display:none!important}
 .exv-play .exbtns [data-k="spin"],.exv-play .exbtns [data-k="reset"],.exv-play .exbtns [data-k="flip"],.exv-play .exbtns [data-k="wide"]{display:none!important}
@@ -376,7 +379,7 @@ html.exv-open{overflow:hidden}
 /* the game's own buttons in the card during a game (待った・投了・ヒント・向き・やめる): ivory line icons over a small label, the case's dark and gold */
 .expacts{display:flex;gap:4px;justify-content:center}.expacts[hidden]{display:none}
 .expa[hidden]{display:none!important}
-.expa{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:58px;height:52px;padding:0 6px;border:0;border-radius:12px;background:transparent;color:#efdcae;font:inherit;font-size:11.5px;font-weight:700;letter-spacing:.06em;cursor:pointer;transition:background .15s,opacity .15s}
+.expa{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:58px;height:52px;padding:0 6px;border:0;border-radius:12px;background:transparent;color:#efdcae;font:inherit;font-size:12px;font-weight:700;letter-spacing:.06em;cursor:pointer;transition:background .15s,opacity .15s}
 .expa:hover:not(:disabled){background:rgba(212,175,95,.14)}.expa:disabled{opacity:.32;cursor:default}
 .expa svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .expa span{white-space:nowrap}
@@ -394,6 +397,16 @@ html.exv-rot .urtoast{rotate:90deg}
 .exres b{display:block;font-size:30px;font-weight:900;letter-spacing:.16em;color:#f3e4bf;white-space:nowrap}
 .exres.win b{color:#f6d98a;text-shadow:0 0 18px rgba(246,217,138,.35)}
 .exres.lose b{color:#d9c7a4}
+.exres{cursor:default!important;text-align:center;min-width:250px}
+.exres small{display:block;margin-top:6px;font-size:13px;font-weight:700;letter-spacing:.08em;color:rgba(243,228,191,.7)}
+.exres-a{display:flex;gap:10px;justify-content:center;margin-top:16px}
+.exres-a button{height:38px;padding:0 20px;border:1px solid rgba(212,175,95,.6);border-radius:999px;background:rgba(243,234,214,.08);color:#f3e4bf;font:inherit;font-size:14px;font-weight:800;letter-spacing:.08em;cursor:pointer;white-space:nowrap}
+.exres-a button:hover{background:rgba(243,234,214,.18)}
+.exres-a button.go{background:#f3ead6;border-color:#f3ead6;color:#22170a}
+.exres-a button.go:hover{background:#fff6e2}
+.exres-x{position:absolute;top:6px;right:8px;width:28px;height:28px;border:0;border-radius:50%;background:none;color:rgba(243,228,191,.6);font-size:20px;line-height:28px;cursor:pointer}
+.exres-x:hover{color:#f3e4bf;background:rgba(243,234,214,.1)}
+@media (max-width:560px){.exres{padding:16px 22px 18px!important;min-width:0}.exres b{font-size:24px}}
 .exv-rot .exres.on{transform:translate(-50%,-50%) rotate(90deg)}.exv-rot .exres{transform:translate(-50%,-50%) rotate(90deg) scale(.9)}
 /* ---- ルールコース (museum/rules.js): ミュゼフクの案内パネル ---- */
 .exprul{position:relative;flex:none;display:flex;align-items:center;gap:6px;height:38px;padding:0 14px;border:1px solid rgba(212,175,95,.55);border-radius:999px;background:transparent;color:#efdcae;font:inherit;font-weight:700;font-size:13px;letter-spacing:.08em;cursor:pointer;white-space:nowrap;transition:background .15s}
@@ -434,13 +447,13 @@ html.exv-rot .urtoast{rotate:90deg}
 /* ---- 対局の相手：二人で対戦と、アトラモのボス（レベルごとの報酬）— ポータルのレベル表と同じ中身を博物館の色で ---- */
 .expdd-l{min-width:250px;max-height:min(340px,56vh)}
 .expdd-b .lvb:empty{display:none}.expdd-b .lvb img{display:block;width:24px;height:24px;margin-inline-start:-6px;object-fit:contain}
-.expdd-sec{padding:8px 10px 4px;font-size:11px;font-weight:700;letter-spacing:.14em;color:#d9b866;opacity:.85}
+.expdd-sec{padding:8px 10px 4px;font-size:12px;font-weight:700;letter-spacing:.14em;color:#d9b866;opacity:.85}
 .expdd-l button{display:flex!important;align-items:center;gap:8px}
 .expdd-l button b{flex:none;min-width:44px}
 .expdd-l button .nt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:600;font-size:12.5px;opacity:.8}
 .expdd-l button.pvp{padding:9px 12px}.expdd-l button.pvp svg{flex:none;width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
-.expdd-l button.pvp span{display:flex;flex-direction:column;gap:1px;white-space:normal}.expdd-l button.pvp small{font-size:11px;font-weight:600;opacity:.7}
-.expdd-l .rw{flex:none;min-width:24px;padding:1px 6px;border-radius:999px;font-style:normal;font-size:10.5px;font-weight:900;text-align:center;letter-spacing:.04em;color:#22170a}
+.expdd-l button.pvp span{display:flex;flex-direction:column;gap:1px;white-space:normal}.expdd-l button.pvp small{font-size:12px;font-weight:600;opacity:.7}
+.expdd-l .rw{flex:none;min-width:24px;padding:1px 6px;border-radius:999px;font-style:normal;font-size:12px;font-weight:900;text-align:center;letter-spacing:.04em;color:#22170a}
 .expdd-l .rw.r0{background:#c9c2b2}.expdd-l .rw.r1{background:#7fb8ff}.expdd-l .rw.r2{background:linear-gradient(135deg,#ffe08a,#e0a83a)}
 .expdd-l .rw.got{opacity:.38}
 .expdd-l .ck{flex:none;font-style:normal;color:#6fdc8c;font-weight:900}
@@ -448,7 +461,7 @@ html.exv-rot .urtoast{rotate:90deg}
 .expdd-boss{display:flex;align-items:center;gap:10px;margin:8px 4px 2px;padding:6px 8px;border-radius:12px;background:linear-gradient(90deg,rgba(212,175,95,.16),rgba(212,175,95,0));border-top:1px solid rgba(212,175,95,.28)}
 .expdd-boss img{flex:none;width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 .expdd-boss div{display:flex;flex-direction:column;min-width:0;white-space:normal}
-.expdd-boss b{font-size:13.5px;color:#f6e6bf}.expdd-boss small{font-size:11px;color:rgba(241,228,198,.6);line-height:1.35}
+.expdd-boss b{font-size:13.5px;color:#f6e6bf}.expdd-boss small{font-size:12px;color:rgba(241,228,198,.6);line-height:1.35}
 .expdd-boss.ur b{background:linear-gradient(90deg,#ffe08a,#ff9ad0,#9ad8ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 .expseg.off{opacity:.35;pointer-events:none}
 /* the Atlamo's talk during a game in the museum (npc/npc.js floatUI, put in the case): above the card */
@@ -499,7 +512,7 @@ html.exv-rot .urdk{rotate:90deg}
 .cht .chi svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .cht .chtt{min-width:0}
 .cht b{display:block;font:700 14px/1.25 var(--font);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.cht small{display:block;font-size:11.5px;font-weight:700;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cht small{display:block;font-size:12px;font-weight:700;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cht[aria-selected=true]{background:#2a1f17;border-color:#2a1f17;color:#fff;box-shadow:0 3px 0 #120c08}
 .cht[aria-selected=true] .chi{background:#c9a35a;color:#2a1f17}
 .cht[aria-selected=true] small{color:rgba(255,255,255,.7)}
@@ -511,7 +524,7 @@ html.exv-rot .urdk{rotate:90deg}
 .chstage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .chres{position:absolute;left:50%;top:12px;transform:translate(-50%,-6px);max-width:calc(100% - 24px);padding:7px 16px;border-radius:99px;background:rgba(20,13,8,.78);color:#fff3d6;font:800 16px/1.3 var(--font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;backdrop-filter:blur(4px)}
 .chres.on{opacity:1;transform:translate(-50%,0)}
-.chhint{position:absolute;left:0;right:0;bottom:8px;margin:0;text-align:center;font-size:11.5px;font-weight:700;color:rgba(255,240,220,.78);pointer-events:none}
+.chhint{position:absolute;left:0;right:0;bottom:8px;margin:0;text-align:center;font-size:12px;font-weight:700;color:rgba(255,240,220,.78);pointer-events:none}
 .chbadges{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .25s}
 .chbadges.on{opacity:1}
 .chb{position:absolute;left:0;top:0;margin:-13px 0 0 -17px;min-width:34px;height:26px;padding:0 8px;border-radius:99px;display:grid;place-items:center;background:#f4c95d;color:#2a1a08;font:800 14px/1 var(--round);box-shadow:0 2px 6px rgba(0,0,0,.45)}
@@ -530,7 +543,7 @@ html.exv-rot .urdk{rotate:90deg}
 .chlinks h4{margin:14px 0 6px;font-size:12.5px;color:var(--ink2)}
 .chlinks div{display:flex;flex-wrap:wrap;gap:6px}
 .chlk{display:inline-flex;align-items:center;gap:6px;padding:6px 12px 6px 6px;border:2px solid var(--line);border-radius:99px;background:#fff;font:700 13.5px var(--font);color:var(--ink);cursor:pointer}
-.chlk i{flex:none;white-space:nowrap;font-style:normal;font-size:11px;padding:2px 7px;border-radius:99px;background:var(--ink);color:#fff}
+.chlk i{flex:none;white-space:nowrap;font-style:normal;font-size:12px;padding:2px 7px;border-radius:99px;background:var(--ink);color:#fff}
 .chlk.ex i{background:#85592a}
 @media (hover:hover){.chlk:hover{border-color:#c9a35a}}
 .chchart{background:#fff;border:2px solid var(--line);border-radius:20px;padding:12px 14px 10px;box-shadow:var(--shadow)}
@@ -539,7 +552,7 @@ html.exv-rot .urdk{rotate:90deg}
 .chax{stroke:#cbbd9c;stroke-width:1.5}
 .chob{fill:#c9a35a;transition:height .35s,y .35s}
 .chex{stroke:#2a1f17;stroke-width:2.5;stroke-linecap:round}
-.chbl{font:700 11px var(--round);fill:var(--ink2);text-anchor:middle}
+.chbl{font:700 12px var(--round);fill:var(--ink2);text-anchor:middle}
 .chleg{display:flex;flex-wrap:wrap;gap:6px 14px;margin:4px 0 0;font-size:12px;font-weight:700;color:var(--ink2)}
 .chleg span{display:inline-flex;align-items:center;gap:6px}
 .chleg em{font-style:normal}
@@ -556,7 +569,7 @@ html.exv-rot .urdk{rotate:90deg}
   .cht .chi{width:28px;height:28px;border-radius:9px}
   .cht .chi svg{width:19px;height:19px}
   .cht .chtt{width:100%}
-  .cht b{font-size:11px;line-height:1.25}
+  .cht b{font-size:12px;line-height:1.25}
   .cht small{display:none}
   .chmain{grid-template-columns:minmax(0,1fr);gap:10px}
   .chl{position:static}
@@ -582,9 +595,9 @@ html.exv-rot .urdk{rotate:90deg}
 .ptl{display:block;flex:1;padding:9px 10px 10px;border-radius:0 0 10px 10px;background:#fffdf7;border:2px solid var(--line);border-top:0}
 .ptl b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font:800 15px/1.4 var(--font)}
 .ptl small{display:block;margin-top:3px;font-size:12px;font-weight:700;color:var(--ink2)}
-.ptl em{display:inline-block;margin-top:5px;padding:2px 9px;border-radius:99px;background:#f6eedb;font-style:normal;font-size:11.5px;font-weight:800;color:#7a5a36}
+.ptl em{display:inline-block;margin-top:5px;padding:2px 9px;border-radius:99px;background:#f6eedb;font-style:normal;font-size:12px;font-weight:800;color:#7a5a36}
 .ptcredit{margin:18px 0 0;font-size:12px;font-weight:700;color:var(--ink2)}
-@media (max-width:640px){.ptf img{inset:10px;max-width:calc(100% - 20px);max-height:calc(100% - 20px)}.ptl b{font-size:13.5px}.ptl small{font-size:11px}}
+@media (max-width:640px){.ptf img{inset:10px;max-width:calc(100% - 20px);max-height:calc(100% - 20px)}.ptl b{font-size:13.5px}.ptl small{font-size:12px}}
 /* the viewer */
 .ptv{position:fixed;inset:0;z-index:150;display:none;grid-template-columns:minmax(0,1fr) 380px;background:#141009;color:#f3ead8}
 .ptv.on{display:grid}
@@ -636,14 +649,14 @@ html.ptv-open,html.ptv-open body{overflow:hidden}
   .ptgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
   .ptf{padding:9px;box-shadow:inset 0 0 0 5px #3a2b1e,inset 0 0 0 6px #b8935a,inset 0 0 0 8px #2a1e14,0 8px 16px -10px rgba(40,20,0,.6)}
   .ptl b{font-size:13px}
-  .ptl small{font-size:11px}
+  .ptl small{font-size:12px}
   .ptv{grid-template-columns:minmax(0,1fr);grid-template-rows:58svh minmax(0,1fr)}
   .ptvside{border-inline-start:0;border-top:1px solid rgba(0,0,0,.2);padding:16px 16px calc(30px + env(safe-area-inset-bottom))}
   .ptvh{font-size:17px}
   .ptvtools{bottom:10px}
   .ptvtools button{width:34px;height:34px;font-size:18px}
   .ptvcap{bottom:60px}
-  .ptvhint{top:14px;font-size:11px;padding:0 60px}
+  .ptvhint{top:14px;font-size:12px;padding:0 60px}
   .ptsp{width:26px;height:26px;margin:-13px 0 0 -13px;font-size:12.5px}
 }
 
@@ -829,3 +842,123 @@ html.ptv-open,html.ptv-open body{overflow:hidden}
 .mupg-none{display:none;grid-column:1/-1;margin:0;padding:28px 12px;border-radius:16px;background:#fffaf0;border:2px dashed var(--line);text-align:center;font:700 15px var(--font);color:#4f4a44}
 .mupg-none.on{display:block}
 @media (max-width:819px){.mupg{gap:8px}.mupg-s{height:40px}.mupg-a{width:38px;height:38px}.mupg-i{min-width:52px;padding:4px 8px;font-size:13px}}
+
+/* ===== 2026-11-24 the museum as one page (ユーザー: 洗練されたWebページとして整理): one sheet of paper holds the title, the rooms' tabs and
+   the room, so the skin only frames it — the text no longer needs paper patches of its own ===== */
+.muwrap{max-width:1240px;margin:0 auto 28px;padding:26px 30px 32px;border:1px solid rgba(60,40,20,.10);border-radius:28px;background:#fffbf3;color:var(--ink);
+  box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 18px 50px rgba(20,12,4,.18),0 2px 6px rgba(20,12,4,.08)}
+.muwrap .musub,.muwrap .chlead,.muwrap .gxsub,.muwrap .trsub,.muwrap .ptcredit,.muwrap .trlegend,.muwrap .amsub,
+#pg-museum .muwrap .muhead h2.h{width:auto;padding:0;border-radius:0;background:none;box-shadow:none}
+.muwrap .chlead,.muwrap .gxsub,.muwrap .trsub,.muwrap .ptlead{max-width:72ch;margin:0 0 16px;font-size:15px;font-weight:600;line-height:1.75;color:#5b5348}
+/* the head: title and its line on the left, the stamp card on the right */
+.muwrap .muhead{display:flex;flex-wrap:nowrap;align-items:center;gap:16px;margin:0 0 18px}
+.muwrap .mutt{flex:1 1 auto;min-width:0}
+.muwrap .muhead h2.h{margin:0 0 2px}
+.muwrap .muhead .musub{margin:0;font-size:14.5px;font-weight:600;color:#6b6256}
+.muwrap .mupbtn{margin:0;flex:none;box-shadow:none;border-color:rgba(60,40,20,.14)}
+/* the rooms: a quiet row of tabs on a rule, not six buttons */
+.muwrap .murooms{display:flex;gap:4px;margin:0 0 24px;padding:0;border:0;border-bottom:1px solid rgba(60,40,20,.14);border-radius:0;background:none;box-shadow:none;overflow-x:auto;scrollbar-width:none}
+.muwrap .murooms::-webkit-scrollbar{display:none}
+.muwrap .murm{position:relative;flex:1 1 0;justify-content:center;gap:8px;padding:10px 10px 13px;border:0;border-radius:12px 12px 0 0;background:none;box-shadow:none;color:#6b6256}
+.muwrap .murm:active{transform:none;box-shadow:none}
+.muwrap .murm .mui{width:30px;height:30px;border-radius:9px;background:transparent;color:inherit}
+.muwrap .murm .mui svg{width:22px;height:22px}
+.muwrap .murm small{display:none}
+.muwrap .murm b{font-size:15px}
+.muwrap .murm::after{content:"";position:absolute;left:14px;right:14px;bottom:-1px;height:3px;border-radius:3px 3px 0 0;background:transparent}
+.muwrap .murm[aria-selected=true]{background:none;color:var(--ink);box-shadow:none}
+.muwrap .murm[aria-selected=true] .mui{background:none;color:#c0862a}
+.muwrap .murm[aria-selected=true]::after{background:var(--ink)}
+@media (hover:hover){.muwrap .murm:not([aria-selected=true]):hover{transform:none;box-shadow:none;color:var(--ink);background:rgba(60,40,20,.04)}}
+@media (max-width:1100px) and (min-width:820px){.muwrap .murm{flex-direction:column;gap:2px;padding:8px 4px 11px}.muwrap .murm b{font-size:13.5px}}
+@media (max-width:819px){
+  .muwrap{margin:0 -4px 16px;padding:16px 12px 20px;border-radius:22px}
+  .muwrap .muhead{gap:10px;margin-bottom:12px}
+  .muwrap .muhead .musub{display:none}
+  .muwrap .mupbtn{padding:3px 10px 3px 3px}
+  .muwrap .mupbtn img{width:30px;height:30px}
+  .muwrap .murooms{display:grid;gap:0;margin:0 -12px 16px;padding:0 6px}
+  .muwrap .murm{padding:6px 1px 9px;border-radius:10px 10px 0 0;background:none}
+  .muwrap .murm .mui{width:26px;height:26px}
+  .muwrap .murm .mup{color:inherit;font-size:12px}
+  .muwrap .murm[aria-selected=true]{background:none}
+  .muwrap .murm[aria-selected=true] .mup{color:var(--ink);font-weight:800}
+  .muwrap .murm::after{left:8px;right:8px}
+  .muwrap .chlead,.muwrap .gxsub,.muwrap .trsub,.muwrap .ptlead{font-size:14px;margin-bottom:12px}
+}
+/* (2026-11-24 rubric: tapSmall) a finger's room: on a phone every control in the museum is at least 44px high */
+@media (max-width:819px){
+  #pg-museum :is(.mupbtn,.chip,.btn,.chlk,.mupg-s,.rdback,.rdnav button){min-height:44px}
+  #pg-museum .mupg-a{width:44px;height:44px}
+  #pg-museum .mupg-s{height:44px}
+}
+@media (max-width:819px){#pg-museum .amzoom button{width:44px;height:44px}}
+/* (rubric: ellipsis) the map's list wraps a long name instead of cutting it */
+#pg-museum .amrow b,#pg-museum .amrow small{white-space:normal;overflow:visible;text-overflow:clip}
+.muwrap .chtext p,.muwrap .chbody p{max-width:42em}
+/* (2026-11-24 rubric U3) choosing a tool is a light act: a row of chips, not eight cards. PC/tablet wrap; a phone scrolls the row sideways */
+.muwrap .chtools{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+.muwrap .cht{flex:none;width:auto;min-height:44px;gap:8px;padding:5px 16px 5px 6px;border:1px solid rgba(60,40,20,.16);border-radius:99px;background:#fff;box-shadow:none;flex-direction:row}
+.muwrap .cht:active{transform:none;box-shadow:none}
+.muwrap .cht .chi{width:32px;height:32px;border-radius:50%}
+.muwrap .cht .chtt{width:auto}
+.muwrap .cht b{display:block;font-size:14px;white-space:nowrap;-webkit-line-clamp:unset;overflow:visible}
+.muwrap .cht small{display:none}
+.muwrap .cht[aria-selected=true]{background:var(--ink);border-color:var(--ink);box-shadow:none}
+.muwrap .cht[aria-selected=true] .chi{background:var(--sun);color:var(--ink)}
+@media (hover:hover){.muwrap .cht:not([aria-selected=true]):hover{border-color:#c9a35a}}
+@media (max-width:819px){
+  .muwrap .chtools{flex-wrap:nowrap;overflow-x:auto;margin:0 -12px 12px;padding:2px 12px 4px;scroll-padding:0 12px;scrollbar-width:none;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 12px,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(90deg,transparent 0,#000 12px,#000 calc(100% - 24px),transparent)}
+  .muwrap .chtools::-webkit-scrollbar{display:none}
+  .muwrap .cht{padding:4px 14px 4px 5px}
+  .muwrap .cht b{font-size:13.5px}
+}
+/* (rubric: the title never breaks inside a word) */
+.muwrap .muhead h2.h{white-space:nowrap}
+/* (2026-11-24) the stamp card shows every item's own stamp: a story, a work, a piece, a tool — pressed ones carry the item's picture */
+.mupass-st{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 2px}
+.mupass-s1{position:relative;width:40px;height:40px;padding:0;border-radius:50%;border:2px dashed #d6c7a4;background:#fffdf7;overflow:hidden;display:grid;place-items:center;cursor:pointer;font-family:var(--round)}
+.mupass-s1 i{position:relative;z-index:1;font-style:normal;font-size:12px;font-weight:800;color:#73633f}
+.mupass-s1 img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:sepia(.3) saturate(.85)}
+.mupass-s1.on{border:2px solid var(--ink);transform:rotate(-6deg)}
+.mupass-s1.on i{padding:0 4px;border-radius:99px;background:rgba(20,14,8,.55);color:#fff}
+.mupass-s1.on:not(:has(img)){background:#2b3044}
+@media (hover:hover){.mupass-s1:hover{border-color:#c9a35a}.mupass-s1.on:hover{transform:rotate(0) scale(1.06)}}
+.mupass-s1:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+@media (max-width:819px){.mupass-s1{width:44px;height:44px}}
+@media (max-width:819px){#pg-museum .mupass-x{width:44px;height:44px}}
+/* (rubric A1/A3) a focus ring the same everywhere in the museum, and no sliding about for those who ask for less motion */
+#pg-museum :focus-visible{outline:3px solid #2f6fd0;outline-offset:2px;border-radius:inherit}
+#pg-museum .murm:focus-visible{outline-offset:-3px}
+@media (prefers-reduced-motion:reduce){#pg-museum *,#pg-museum *::before,#pg-museum *::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
+.mupass-t .mupass-rwd{margin-top:1px;color:#8a5a22;font-size:12px;font-weight:800}
+/* (2026-11-24) a room that shows its stamps takes the card's whole width; the short rows (map, tree) pair up — no tall empty cells */
+.mupass-l{align-items:start}
+.mupass-r:has(.mupass-st){grid-column:1/-1}
+/* (2026-11-24 ユーザー: 1記事あたりの情報量が少ない) a fuller article: key points, sub-headed sections, a timeline, sources */
+.rdkf{margin:0 0 20px;padding:14px 18px 14px;border-radius:18px;background:#f8efdc;border-inline-start:5px solid var(--c)}
+.rdkf h4,.rdm h4,.rdtl h4,.rdref h4{margin:0 0 8px;font:800 17px/1.4 var(--font);color:var(--ink)}
+.rdkf h4{font-size:14px;letter-spacing:.04em;color:#7a5a2a}
+.rdkf ul{margin:0;padding-inline-start:1.2em}
+.rdkf li{margin:2px 0;font-size:15px;line-height:1.7;font-weight:600}
+.rdm{margin:26px 0 0}
+.rdm h4{padding-bottom:6px;border-bottom:2px solid color-mix(in srgb,var(--c) 35%,transparent)}
+.rdm p{margin:0 0 14px;font-size:16px;line-height:1.9}
+.rdtl{margin:26px 0 0;padding:16px 18px;border:1px solid rgba(60,40,20,.14);border-radius:18px;background:#fffdf8}
+.rdtl ol{margin:0;padding:0;list-style:none;position:relative}
+.rdtl ol::before{content:"";position:absolute;inset-inline-start:7px;top:6px;bottom:6px;width:2px;background:color-mix(in srgb,var(--c) 45%,#e6dcc6)}
+.rdtl li{position:relative;display:grid;grid-template-columns:minmax(7.5em,auto) minmax(0,1fr);gap:4px 14px;padding:6px 0 6px 26px}
+.rdtl li::before{content:"";position:absolute;inset-inline-start:2px;top:12px;width:12px;height:12px;border-radius:50%;background:var(--c);box-shadow:0 0 0 3px #fffdf8}
+.rdtl li b{font:800 14px/1.6 var(--round);color:var(--ink)}
+.rdtl li span{font-size:15px;line-height:1.6}
+.rdref{margin:22px 0 0}
+.rdref h4{font-size:14px;color:#6b6256}
+.rdref ul{margin:0;padding-inline-start:1.2em}
+.rdref li{font-size:13px;line-height:1.6;color:#5b5348}
+@media (max-width:819px){
+  .rdm p{font-size:15.5px}
+  .rdtl{padding:14px 14px}
+  .rdtl li{grid-template-columns:minmax(0,1fr);gap:0}
+}
+[dir=rtl] .rdtl li{padding:6px 26px 6px 0}

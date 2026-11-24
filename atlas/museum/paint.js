@@ -22,9 +22,11 @@
     // (2026-11-24) a carved-lacquer dish with immortals at go, and a Morris & Co. cabinet painted with backgammon players
     { id: 'weiqi', w: 2002, h: 1500, met: 40217, no: '2015.500.1.33', bg: '#4a4744', spots: [[.506, .549], [.444, .534], [.628, .571], [.579, .356], [.5, .393], [.411, .8]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
     { id: 'webb', w: 1542, h: 2003, met: 195456, no: '26.54', bg: '#a7aab0', spots: [[.476, .324], [.375, .3], [.62, .344], [.317, .444], [.69, .233], [.505, .161]], links: [{ g: 'backgammon' }, { ex: 'ottoman' }] },
+    { id: 'liberale', w: 2049, h: 1721, met: 436884, no: '43.98.8', bg: '#6b5a48', spots: [[.542, .541], [.344, .297], [.6, .288], [.447, .209], [.146, .2], [.893, .209]], links: [{ g: 'chess' }, { ex: 'lewis' }] },
   ];
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   let host = null, ctx = null, lang = 'ja', el = {}, cur = null;
+  const zl = i => { const Z = window.AtlasZoomT || {}; return (Z[lang] || Z.en || ['+', '−', '⤢'])[i]; };   // (the zoom buttons' spoken names, from worldmap.js)
   const T = () => window.MUSEUM_PAINT_T || {};
   const tx = () => T()[lang] || T().en || {};
   const u = k => (tx().ui && tx().ui[k]) || ((T().en || {}).ui || {})[k] || k;
@@ -39,6 +41,7 @@
     el.grid.querySelectorAll('[data-w]').forEach(b => b.onclick = () => openWork(b.dataset.w));
     if (window.AtlasMuseum && AtlasMuseum.pager) AtlasMuseum.pager(el.grid, 'paint', { rows: { pc: 2, phone: 4 } });
     el.credit.innerHTML = esc(u('credit'));
+    if (window.AtlasMuseum && AtlasMuseum.catalog) AtlasMuseum.catalog('paint', WORKS.map(W => ({ id: W.id, img: `${IMG}${W.id}-t.webp?v=${V}`, t: wt(W.id).title })));
   }
 
   /* ---------- the viewer ---------- */
@@ -111,7 +114,7 @@
     ov = document.createElement('div'); ov.className = 'ptv'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
     ov.innerHTML = `<div class="ptvstage"><div class="ptvframe"><img class="ptvimg" alt="" draggable="false"><div class="ptvspots"></div></div>
         <div class="ptvtools" dir="ltr"><button type="button" data-k="prev" aria-label="←">‹</button><span class="ptvcount"></span><button type="button" data-k="next" aria-label="→">›</button>
-          <span class="sep"></span><button type="button" data-k="out" aria-label="−">−</button><button type="button" data-k="fit" aria-label="⤢">⤢</button><button type="button" data-k="in" aria-label="+">+</button><span class="sep"></span><button type="button" data-k="spots" class="ptvnum" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/><path class="sl" d="M4 4l16 16"/></svg></button></div>
+          <span class="sep"></span><button type="button" data-k="out" aria-label="${zl(1)}">−</button><button type="button" data-k="fit" aria-label="${zl(2)}">⤢</button><button type="button" data-k="in" aria-label="${zl(0)}">+</button><span class="sep"></span><button type="button" data-k="spots" class="ptvnum" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/><path class="sl" d="M4 4l16 16"/></svg></button></div>
         <div class="ptvcap"></div><p class="ptvhint"></p><button type="button" class="ptvx" data-k="x" aria-label="×">×</button></div>
       <aside class="ptvside"><h3 class="ptvh"></h3><p class="ptvsub"></p><div class="ptvbody"></div>
         <h4 class="ptvsph"></h4><ol class="ptvspl"></ol><h4 class="ptvlinksh"></h4><div class="ptvlinks"></div><h4 class="ptvrech"></h4><dl class="ptvrec"></dl></aside>`;

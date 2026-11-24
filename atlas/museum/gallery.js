@@ -69,6 +69,7 @@
           <span class="gxpic"><img src="../images/atlas/ex/${e.id}.webp?v=${V}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">${op ? '' : `<span class="gxlock"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg></span>`}${e.lock ? `<span class="gxsp">${esc(ui(lang, 'special'))}</span>` : ''}${PLAY[e.id] && op ? `<span class="gxplay"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>${esc(ui(lang, 'playable'))}</span>` : ''}</span>
           <span class="gxtx"><b>${esc(t.name || e.id)}</b><small>${esc(t.date || '')} · ${esc(t.where || '')}</small><i>${esc(op ? (t.museum || '') : cond)}</i></span></button>`;
       }).join('');
+      if (window.AtlasMuseum && AtlasMuseum.catalog) AtlasMuseum.catalog('gallery', EX.map(e => ({ id: e.id, img: `../images/atlas/ex/${e.id}.webp?v=${V}`, t: ex(lang, e.id).name || e.id })));
       if (window.AtlasMuseum && AtlasMuseum.pager) AtlasMuseum.pager(sec.querySelector('.gxgrid'), 'gallery', { rows: { pc: 2, phone: 6 } });
       sec.querySelectorAll('.gxc').forEach(b => b.onclick = () => { const e = EX.find(x => x.id === b.dataset.id); if (isOpen(e)) open(e.id); else { b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); } });
     });
@@ -183,9 +184,14 @@
           try { const q = JSON.parse(localStorage.getItem(PK) || '{}'); q[pid] = { lv: +lvS.dataset.v, side: +sdS.dataset.v }; localStorage.setItem(PK, JSON.stringify(q)); } catch (x) {}
           Promise.all([load('museum/play.js?v=' + V), need()]).then(() => { pb.disabled = false; if (!V3 || V3.ov !== ov || !window.AtlasMuseumPlay) return;
             prePlay(); const lv = +lvS.dataset.v, ok = AtlasMuseumPlay.start(pid, { level: lv || 1, mode: lv ? 'ai' : 'pvp', side: +sdS.dataset.v, lang, t: tt, hud: h => { hudEl.innerHTML = h; }, onEnd: res => { const k = res.pvp ? 'win' : res.draw ? 'draw' : res.win ? 'win' : 'lose', tx = res.pvp ? (res.winnerText || ui(lang, 'p_draw')) : ui(lang, 'p_' + k); hudEl.innerHTML = `<span class="hm">${esc(tx)}</span>`;
-              // the result in the middle of the case (a plaque in the museum's manner), gone at a tap or when the game is left
-              const old = ov.querySelector('.exres'); if (old) old.remove(); const rb = document.createElement('div'); rb.className = 'exres ' + k; rb.innerHTML = `<b>${esc(tx)}</b>`;
-              rb.onclick = () => rb.remove(); ov.querySelector('.exstage').appendChild(rb); requestAnimationFrame(() => rb.classList.add('on')); } });
+              // the result in the middle of the case (a plaque in the museum's manner) with the portal's end-of-game choices (2026-11-24 user):
+              // やめる (back to the card: another level, the other side) · もう一局 (the same level and side again); its × puts it away to look at the board
+              const old = ov.querySelector('.exres'); if (old) old.remove(); const rb = document.createElement('div'); rb.className = 'exres ' + k;
+              const sc = String(res.score || '').replace(/<[^>]*>/g, '').trim(), sub = [res.pvp ? '' : lv ? (P.levels === 1 ? 'AI' : 'Lv.' + lv) : '', sc && sc !== tx ? sc : ''].filter(Boolean).join(' · ');
+              rb.innerHTML = `<button type="button" class="exres-x" data-r="x" aria-label="${esc(ui(lang, 'p_quit'))}">×</button><b>${esc(tx)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}<div class="exres-a"><button type="button" data-r="quit">${esc(I18('bv.quit') || ui(lang, 'p_quit'))}</button><button type="button" class="go" data-r="again">${esc(I18('bv.again') || ui(lang, 'p_start'))}</button></div>`;
+              rb.onclick = ev => { const b = ev.target.closest('[data-r]'); if (!b) return; ev.stopPropagation(); const r = b.dataset.r; rb.remove();
+                if (r === 'quit') quitGame(); else if (r === 'again') pb.onclick(); };
+              setTimeout(() => { if (!rb.isConnected && ov.isConnected && ov.classList.contains('exv-play') && !ov.querySelector('.exres')) { ov.querySelector('.exstage').appendChild(rb); requestAnimationFrame(() => rb.classList.add('on')); } }, 900); } });
             playing(!!ok); if (ok) ov.quitPlay = quitGame; }); }; } }
     const pb = ov.querySelector('.amplay'); if (pb) pb.onclick = () => { close(); setTimeout(() => ctx.open(g.id, null), 280); };
     V3 = { ov, e, close, spin: true };

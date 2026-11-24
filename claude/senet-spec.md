@@ -75,3 +75,7 @@
 
 ## 対局設定の Pro モード（2026-11-15）
 - `shared/proset.js`。項目：読みの深さ（1〜4 投げ先、レベルの既定 1〜3）、手のばらつき（でたらめな手の割合 rand：なし 0／小 0.05≈Lv.13／大 0.2≈Lv.8）。3投げ先以上はスレッド、時間の上限 20 秒。`engine.js` の `think(…, { cfg })`。保存は `settings.pro`／`pro2`、戦績は `ai:pro`。
+
+
+## パズルの廃止（2026-11-24、ユーザー指示）
+- 双六系のゲームにはパズルを作らない（addendum）。`senet/puzzles.json` と生成ツール、2D のパズルボタン・一覧のパズルタブ・パズルのカードと一覧ダイアログ（app-learn.js のパズル部分）、shared/atlas.js の puzzles タグとパズル数の集計を削除。記録 `aicoding-senet-puzzles` は消さない。レッスンはそのまま。
