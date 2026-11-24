@@ -40,7 +40,7 @@ console.error('pool', pools.finkel.length, pools.blitz.length);
 
 // ⑤ すでに使った局面（ルール説明の盤も）
 const used = UF.tourStates(path.join(__dirname, '..', '..'));
-const far = s => used.every(u => F.dist(u, s) >= UF.MIN_DIST);
+const far = (s, n) => used.every(u => F.dist(u, s) >= UF.MIN_DIST && UF.tokDiff(u, s, u.n, n) >= UF.MIN_TOK);
 const S = s => ({ rule: s.rule, pos: s.pos.map(a => a.slice()), turn: 0 });
 
 // 1局面を問題として調べる（不合格なら null）
@@ -69,11 +69,11 @@ function cands0(rule, th, minMoves, f) {
 }
 // 5問を差の幅から散らして選ぶ（⑤：互いと既存の局面から3つ以上ちがう）
 function pick(list, k, spread) {
-  const out = [], take = q => { out.push(q); used.push(S(q.s)); };
-  if (!spread) { for (const q of list) { if (out.length >= k) break; if (far(q.s)) take(q); } }
+  const out = [], take = q => { out.push(q); used.push(Object.assign(S(q.s), { n: q.n })); };
+  if (!spread) { for (const q of list) { if (out.length >= k) break; if (far(q.s, q.n)) take(q); } }
   else for (let i = 0; i < k; i++) {
     const top = Math.min(list.length, 40), at = Math.floor((i + 0.5) * top / k);   // (差の大きい上位40局面から散らす：答えがはっきりした問題)
-    for (let d = 0; d < list.length; d++) { const q = list[(at + d) % list.length]; if (!out.includes(q) && far(q.s)) { take(q); break; } }
+    for (let d = 0; d < list.length; d++) { const q = list[(at + d) % list.length]; if (!out.includes(q) && far(q.s, q.n)) { take(q); break; } }
   }
   if (out.length < k) throw new Error('not enough ' + (list[0] && list[0].th) + ' ' + out.length + '/' + k + ' of ' + list.length);
   return out.sort((a, b) => b.gap - a.gap);

@@ -3,7 +3,9 @@
 'use strict';
 const fs = require('fs'), path = require('path');
 const E = require('../engine.js');
-const MIN_GAP = 0.05, MIN_DIST = 3, RISK_D = 0.15;
+const MIN_GAP = 0.05, MIN_DIST = 3, MIN_TOK = 4, RISK_D = 0.15;
+// ⑤ 並べた駒の位置（降順）を1つずつくらべた違い＋出目の違い（3D の重なりの減点 tools/lesson-quality.js ⑨ と同じ見方：3つ以下は「同じ局面」）
+function tokDiff(a, b, na, nb) { if (a.rule !== b.rule || a.pos[0].length !== b.pos[0].length) return 99; let d = na !== nb ? 1 : 0; for (const sd of [0, 1]) { const x = a.pos[sd].slice().sort((p, q) => q - p), y = b.pos[sd].slice().sort((p, q) => q - p); x.forEach((v, i) => { if (v !== y[i]) d++; }); } return d; }
 const pct = x => Math.round(x * 100);
 function norm(s) { const t = E.clone(s); if (t.turn === 1) { t.pos = [t.pos[1], t.pos[0]]; t.turn = 0; } t.pos = t.pos.map(a => a.slice().sort((x, y) => y - x)); t.winner = -1; return t; }
 const st = s => Object.assign({ winner: -1 }, s, { turn: 0 });
@@ -40,7 +42,7 @@ function themeOk(s, n, best, ms, th) {
     case 'goal': return best.finish;
     case 'escape': { if (!plain) return false; const t = E.clone(st(s)); t.turn = 1; const r0 = E.hitRisk(t, 0)[t.pos[0].indexOf(best.from)] || 0;
       return best.from > 0 && r0 > 0.2 && pieceRiskAfter(s, best) + 0.05 < r0 && alt.every(m => riskAfter(s, m) >= rb + RISK_D); }
-    case 'safe': return plain && alt.every(m => riskAfter(s, m) >= rb + 0.2);
+    case 'safe': { const t = E.clone(st(s)); t.turn = 1; return plain && alt.every(m => riskAfter(s, m) >= rb + 0.2) && E.hitRisk(t, 0).some(r => r > 0.2); }   // (ヒントの「赤い印（危険な駒）」がある局面)
     case 'capture': return best.capture && alt.some(m => !m.capture);
     case 'nocap': return !best.capture && alt.some(m => m.capture);
     case 'blitz': return s.rule === 'blitz' && best.capture;
@@ -84,7 +86,7 @@ function lookMarks(s0, n, best, theme) {
   const s = st(s0), out = [];
   const t = E.clone(s); t.turn = 1; const risk = E.hitRisk(t, 0);
   s.pos[0].forEach((q, k) => { if (risk[k] > 0.2) { const c = rc(s.rule, 0, q); if (c) out.push(Object.assign(c, { type: 'danger', text: pct(risk[k]) + '%' })); } });
-  if (theme === 'rosette' || theme === 'center' || theme === 'hold') for (const i of E.RULES[s.rule].rosettes) { const c = rc(s.rule, 0, i); if (c) out.push(Object.assign(c, { type: 'glow' })); }
+  if (theme === 'rosette' || theme === 'center' || theme === 'hold') for (const i of (theme === 'center' ? [8] : E.RULES[s.rule].rosettes)) { const c = rc(s.rule, 0, i); if (c) out.push(Object.assign(c, { type: 'glow' })); }   // (中央：ヒントの「光る中央のマス」だけ光らせる)
   if (best.capture) out.push(Object.assign(rc(s.rule, 0, best.to), { type: 'ring', color: '#ff9b90' }));
   return out;
 }
@@ -99,4 +101,4 @@ function tourStates(root) {
   }
   return out;
 }
-module.exports = { MIN_GAP, MIN_DIST, RISK_D, pct, norm, rc, spot, riskAfter, pieceRiskAfter, rivalReaches8, themeOk, ngKey, whyOf, judge, lookMarks, riskBest, tourStates, WHY };
+module.exports = { tokDiff, MIN_TOK, MIN_GAP, MIN_DIST, RISK_D, pct, norm, rc, spot, riskAfter, pieceRiskAfter, rivalReaches8, themeOk, ngKey, whyOf, judge, lookMarks, riskBest, tourStates, WHY };

@@ -52,6 +52,9 @@ module.exports = function ur(opt = {}) {
     // 追7：ヒントの印（にげる＝ねらわれた駒に赤い印、取る＝取る駒に赤い輪）
     const look = q.look || q.marks || [], at = (i, type) => { const c = UF.rc(s.rule, 0, i); return c && look.some(x => x.type === type && x.r === c.r && x.c === c.c); };
     if (L.id === 'escape' && !at(best.from, 'danger')) add(L.id, where, '追7 ヒントの赤い印がねらわれた駒にない');
+    if (L.id === 'danger' && !look.some(x => x.type === 'danger')) add(L.id, where, '追7 ヒントの「赤い印（危険な駒）」が盤にない');
+    if (L.id === 'center' && look.some(x => x.type === 'glow' && !at(8, 'glow'))) add(L.id, where, '追7 ヒントは「光る中央のマス」なのに中央以外も光る');
+    if (L.id === 'center' && look.filter(x => x.type === 'glow').length !== 1) add(L.id, where, '追7 光るのは中央のロゼットだけ');
     if (best.capture && (L.id === 'capture' || L.id === 'blitz') && !at(best.to, 'ring')) add(L.id, where, '追7 ヒントの赤い輪が取る駒にない');
     return gap;
   }
@@ -89,6 +92,9 @@ module.exports = function ur(opt = {}) {
     });
     (L.ramp || []).forEach((r, i) => { if (r.k === 'try' && r.kind !== 'choice') move(L, r, 'ramp' + i, 2); if (r.k === 'explain' && r.seq && r.seq.length) move(L, Object.assign({}, r, { ok: r.seq }), 'ramp' + i, 2); });
   }
+  // ⑤ 問題どうし：駒の並び（降順）を1つずつくらべて4つ以上ちがう（出目の違いも1つ。3D の重なりの見方と同じ）
+  const PS = []; D.steps.forEach(L => L.problems.forEach((q, i) => { if (q.kind === 'move') PS.push({ s: q.s, n: q.n, where: L.id + '#' + (i + 1) }); }));
+  for (let i = 0; i < PS.length; i++) for (let j = i + 1; j < PS.length; j++) { const t = UF.tokDiff(PS[i].s, PS[j].s, PS[i].n, PS[j].n); if (t < UF.MIN_TOK) add(PS[i].where.split('#')[0], 0, `⑤ ${PS[i].where} と ${PS[j].where} の駒の並びが${t}か所しかちがわない`); }
   // ⑤ 重なり（駒3つ以上ちがう。見本の盤＝準備の explain は同じでよい）
   for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) {
     const a = items[i], b = items[j]; if (a.where.startsWith('tour:') && b.where.startsWith('tour:')) continue;
