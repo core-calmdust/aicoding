@@ -880,7 +880,8 @@
       if (u && u !== A && cnt.has(u)) return shJoin(ch, cp ? `{x}も悪くない手コン。でも{m}なら${sh}から、ほんの少し上なの。` : `{x}もよく指される手！ 実戦では${pc(cnt.get(u))}%、いちばん多い{m}も${pc(cnt.get(A))}%で、どっちも本筋なの。`);
       return shFit(shJoin(ch, w, t), pu); };
     const ng = u0 => {
-      let u = u0; if (!u || u === A) u = (C.find(x => x[0] !== A) || [])[0]; const L = x => shJoin(so, shJoin(lead, x));
+      let u = u0; if (!u || u === A) u = (C.find(x => x[0] !== A) || [])[0];
+      const so2 = (pt => { const N = /いい線|あと少し|あと一歩/, t0 = V.soft(i); if (pt >= 10 || !N.test(t0)) return t0; const U = [0, 1, 2, 3, 4].map(q => V.soft(q)), L = []; for (let q = 5; q < 24; q++) { const t = V.soft(q); if (!N.test(t) && !U.includes(t) && !L.includes(t)) L.push(t); } const r = [0, 1, 2, 3, 4].slice(0, Math.min(i, 5)).filter(q => N.test(V.soft(q))).length; return L.length ? L[(r + Math.max(0, i - 5)) % L.length] : 'ドンマイ！'; })(u && V.pts ? V.pts(P, u) : 0), L = x => shJoin(so2, shJoin(lead, x));   // (追53: the near words only for a move worth 10+ points)
       if (!u) return L(w);
       let F; try { F = shFacts(o.pos, u); } catch (e) { F = {}; }
       const best = C.length ? C[0][1] : 0, mine = cnt.has(u) ? cnt.get(u) : null;
@@ -950,7 +951,7 @@
       const nc = NC.shogi || {}, notes = Object.assign({}, s.study && s.study.notes || {}); Object.keys(nc).forEach(k => { const m = k.match(/^op:(.+)\/n(\d+)$/); if (m && m[1] === s.id) notes[m[2]] = nc[k]; });   // (3D: the notes without coordinates)
       const ja = lang === 'ja', nm = L(s.title, 'ja'), hs = s.id.length * 3, sh = String(L(nc['op:' + s.id + '/short'] || s.short, lang) || '');
       const intro = !ja ? sh : s.handi ? `『${nm}』の練習だコン！<br>${sh}` : SHJ_OP.intro[hs % SHJ_OP.intro.length].replace('{n}', nm).replace('{t}', sh.replace(/[。！]$/, ''));   // (2026-11-21 lesson loop: ショウギツネ introduces it)
-      const VO = ja ? shOpVoice(s.id) : null;
+      const VO = ja ? shOpVoice(s.id) : null; if (VO) VO.pts = (P, u) => SHOGI.points(P, u);   // (追53)
       if (ja && s.study && s.study.start) try { const gen = shStepNotesJa(s.study.start, s.study.steps.map(x => x[0]), notes, VO.pk); Object.keys(gen).forEach(k => { notes[k] = gen[k]; }); } catch (e) { console.warn('[lessons3d] shogi step notes', e); }
       return { id: s.id, title: L(s.title, lang), intro, start: s.study && s.study.start, steps: (s.study && s.study.steps || []).map(x => x[0]), notes,
         probs: probs.map((p, i) => { const o = { pos: p.sfen, kind: 'best', P: p, ans: (p.mode === 'line' ? p.pv : p.accept || p.pv || (p.cand && [p.cand[0][0]]) || [])[0] };
@@ -1184,7 +1185,7 @@
     const good = u => { if (u && u !== A && cnt.has(u)) return chJoin(V.cheer(i + 1), `{x}も人気の手！ 実戦では${pc(cnt.get(u))}%、いちばん多い{m}も${pc(cnt.get(A))}%で、どっちも本筋なんだ。`); return goodTx; };
     const ngOf = u0 => {
       let u = u0; if (!u || u === A) u = (C.find(x => x[0] !== A) || [])[0];
-      const head = chJoin(V.soft(i), V.lead(i)), pk = (L, v) => V.pick(L.flatMap(t => shorts.map(w => chF(fl(t, w), v || {}))), j, V.endOf(head));
+      const head = chJoin((pt => { const N = /いい線|あと少し|あと一歩/, t0 = V.soft(i); if (pt >= 10 || !N.test(t0)) return t0; const U = [0, 1, 2, 3, 4].map(q => V.soft(q)), L = []; for (let q = 5; q < 24; q++) { const t = V.soft(q); if (!N.test(t) && !U.includes(t) && !L.includes(t)) L.push(t); } const r = [0, 1, 2, 3, 4].slice(0, Math.min(i, 5)).filter(q => N.test(V.soft(q))).length; return L.length ? L[(r + Math.max(0, i - 5)) % L.length] : 'ドンマイ！'; })(u != null && V.pts ? V.pts(P, u) : 0), V.lead(i)), pk = (L, v) => V.pick(L.flatMap(t => shorts.map(w => chF(fl(t, w), v || {}))), j, V.endOf(head));
       if (!u) return chJoin(head, V.pick((CH_WHY[kd] || CH_WHY.other).map(x => chF(x, vv)), j + 1));
       const fl = (s, w) => s.replace(/\{b\}/g, cnt.has(u) ? pc(cnt.get(u)) : 0).replace(/\{a\}/g, pc(cnt.get(A) || 0)).replace(/\{w\}/g, w);
       if (cnt.has(u)) { const b = pc(cnt.get(u)), a = pc(cnt.get(A)); return chJoin(head, pk(b >= a ? CH_NG.near : b * 2 >= a ? CH_NG.half : CH_NG.low)); }
@@ -2098,7 +2099,8 @@
       const IN = nc['op:' + s.id + '/intro'] || s.intro, ja = lang === 'ja';
       if (ja && CHJ_OP.notes[s.id]) Object.entries(CHJ_OP.notes[s.id]).forEach(([k, v]) => { notes[k] = { ja: v }; });   // (2026-11-21 lesson loop: ナイトン's own lines)
       const intro = ja && CHJ_OP.intro[s.id] ? CHJ_OP.intro[s.id] : (L(IN, lang) || []).join ? L(IN, lang).join('<br>') : L(IN, lang);
-      const CV = ja ? chOpVoice(s.id) : null; if (CV) { CV.add(intro); try { Object.assign(notes, chStepNotesJa((s.study && s.study.steps || []).map(x => x[0]), notes, CV)); } catch (e) { console.warn('[lessons3d] chess step notes', e); } }   // (2026-11-22 lesson loop: a word on every move)
+      const CV = ja ? chOpVoice(s.id) : null; if (CV) CV.pts = (P, u) => CHESS.points(P, u);   // (追53: the ng headline's tone by the move's points)
+      if (CV) { CV.add(intro); try { Object.assign(notes, chStepNotesJa((s.study && s.study.steps || []).map(x => x[0]), notes, CV)); } catch (e) { console.warn('[lessons3d] chess step notes', e); } }   // (2026-11-22 lesson loop: a word on every move)
       return { id: s.id, title: L(s.title, lang), intro, start: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
         steps: (s.study && s.study.steps || []).map(x => x[0]), notes,
         probs: probs.map((p, i) => { const o = { pos: p.fen, kind: 'best', P: p, ans: p.cand && p.cand[0][0] }; if (ja && o.ans) try { Object.assign(o, chOpJa(o, L(s.title, 'ja'), CV, i)); } catch (e) { console.warn('[lessons3d] chess opening', e); } return o; }),
@@ -3570,7 +3572,7 @@
     const ng = u0 => {
       let u = u0; if (u == null || u === A) u = ((P.sc || []).find(x => x[0] !== A && best - x[1] > 6) || (P.sc || []).find(x => x[0] !== A) || [])[0];   // (no move given: a real miss, as the tool asks)
       const pk = A0 => xqPick(V, ckRot(A0, j));
-      const out = [V.soft(i), V.lead(i), pk(CKJ_OP.so.map(x => x.replace('{a}', sh)))];
+      const out = [(pt => { const N = /いい線|あと少し|あと一歩/, t0 = V.soft(i); if (pt >= 10 || !N.test(t0)) return t0; const U = [0, 1, 2, 3, 4].map(q => V.soft(q)), L = []; for (let q = 5; q < 24; q++) { const t = V.soft(q); if (!N.test(t) && !U.includes(t) && !L.includes(t)) L.push(t); } const r = [0, 1, 2, 3, 4].slice(0, Math.min(i, 5)).filter(q => N.test(V.soft(q))).length; return L.length ? L[(r + Math.max(0, i - 5)) % L.length] : 'ドンマイ！'; })(u != null && V.pts ? V.pts(P, u) : 0), V.lead(i), pk(CKJ_OP.so.map(x => x.replace('{a}', sh)))];   // (追53: 「いい線・あと少し・あと一歩」 only for a move worth 10+ points — V.pts = the game's points)
       if (u == null) return f(xqJoin(...out));
       let F = null; try { F = ckFacts(E, pos, u); } catch (e) {}
       const d = sc.has(u) ? best - sc.get(u) : null, n0 = out.length;
@@ -3592,7 +3594,7 @@
       }
       if (out.length === n0) { const g2 = ckOppShot(E, pos, u);   // (2026-11-24 第2期) the opponent's shot that your move allows, from the board
         if (g2 > 0) out.push(pk([`{x}だと、相手がわざと駒を取らせてから跳び返す「ショット」を打てるの。差し引き${g2}枚の損になっちゃう！`, `{x}のあとは、相手に「ショット」があるカニ。1枚取らされたあと連続で跳ばれて、差し引き${g2}枚へっちゃう。`])); }
-      if (out.length === n0) out.push(d != null && d <= 6 ? pk(['{x}も悪くないけど、定跡の本筋はこっちなの。', '{x}もありだけど、よく指されるのはこっちだカニ。']) : pk(CKJ_OP.gap));   // (2026-11-22: no "the AI says" — the right move's aim)
+      if (out.length === n0) out.push(d != null && d <= 6 && (!V.pts || V.pts(P, u) >= 10) ? pk(['{x}も悪くないけど、定跡の本筋はこっちなの。', '{x}もありだけど、よく指されるのはこっちだカニ。']) : pk(CKJ_OP.gap));   // (2026-11-22: no "the AI says" — the right move's aim)
       return f(xqJoin(...out));
     };
     return { ask, hintTx: ckHintJa(FA, k, V), good, ng, own: true };
@@ -3818,7 +3820,8 @@
       const lx = ((this.data.lux || {}).openings || {})[g.id] || {}, hist = L((NC.checkers || {})['op:' + g.id + '/hist'] || lx.hist, lang);
       const probs = shuffle((g.problems || []).map((p, i) => i)).slice(0, 5).sort((a, b) => a - b).map(i => g.problems[i]);   // (2026-11-24 第2期: the pool is easy → hard; 5 drawn, kept in its order)
       const E = window.CheckersEngine, ja = lang === 'ja' && E;
-      const CV = ja ? ckOpVoice(g.id) : null; let nj = null; if (ja) try { nj = ckNotesJa(E, g, notes, CV); } catch (e) { console.warn('[lessons3d] checkers notes', e); }
+      const CV = ja ? ckOpVoice(g.id) : null; if (CV) CV.pts = (P, m) => CHECKERS.points(P, m);   // (追53)
+      let nj = null; if (ja) try { nj = ckNotesJa(E, g, notes, CV); } catch (e) { console.warn('[lessons3d] checkers notes', e); }
       return { id: g.id, title: L(g.title, lang), intro: ja && CKJ_OP.intro[g.id] ? CKJ_OP.intro[g.id] : hist, start: { spec: null, me: g.side === 2 ? 2 : 1 }, steps: g.study.line.slice(), notes: nj || notes,
         probs: probs.map((P, i) => { const o = { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1 }, kind: 'best', P, ask: this.tx('op.goal', lang), ans: P.best, hintTx: this.tx('op.hint', lang), hint: E ? [E.mFrom(P.best)] : null, ng: () => this.tx('op.why', lang, { m: CKM('ok', lang) }) };
           if (ja) try { Object.assign(o, ckOpJa(E, P, L(g.title, 'ja'), g.id.charCodeAt(1) * 2 + i, k => CKM(k, lang), CV, i)); } catch (e) { console.warn('[lessons3d] checkers opening', e); }
@@ -4020,7 +4023,7 @@
       return goodTx; };
     const ng = u0 => {
       let u = u0; if (u == null || u === A) u = ((P.sc || []).find(x => x[0] !== A && best - x[1] > 10) || (P.sc || []).find(x => x[0] !== A) || [])[0];   // (no move given: a real miss, as the tool asks)
-      const rot = (A, o) => A.map((_, q) => A[(o + q) % A.length]); let out = [V.soft(i), V.lead(i)];
+      const rot = (A, o) => A.map((_, q) => A[(o + q) % A.length]); let out = [(pt => { const N = /いい線|あと少し|あと一歩/, t0 = V.soft(i); if (pt >= 10 || !N.test(t0)) return t0; const U = [0, 1, 2, 3, 4].map(q => V.soft(q)), L = []; for (let q = 5; q < 24; q++) { const t = V.soft(q); if (!N.test(t) && !U.includes(t) && !L.includes(t)) L.push(t); } const r = [0, 1, 2, 3, 4].slice(0, Math.min(i, 5)).filter(q => N.test(V.soft(q))).length; return L.length ? L[(r + Math.max(0, i - 5)) % L.length] : 'ドンマイ！'; })(u != null && V.pts ? V.pts(P, u) : 0), V.lead(i)];   // (追53: 「いい線・あと少し・あと一歩」 only for a move worth 10+ points — V.pts = the game's points)
       const pk = A0 => xqPick(V, rot(A0, j), xqLastEnd(out[out.length - 1] || ''));
       out.push(pk(XQJ_OP.so.map(x => x.replace('{a}', sh))));
       if (u == null) return f(xqJoin(...out));
@@ -4036,7 +4039,7 @@
       else if (NF.k === 'aim') out.push(pk([`{x}だと、{m}のように相手の${XQN(NF.T, pos.side ^ 1)}をねらう形にならないの。`, `{x}では相手の${XQN(NF.T, pos.side ^ 1)}に手が届かないコン。`]));
       else if (NF.k === 'check') out.push(pk(['{x}だと王手にならないの。{m}の王手なら、相手は受けに手を使うことになるのに。', '{x}では王手がかからず、相手に自由に指されちゃう。']));
       if (out.length === n0 && F && /^rook/.test(FA.k) && !FA.cap && F.ty !== 5) out.push(pk(XQJ_OP.late));
-      if (out.length === n0) out.push(d != null && d <= 10 ? pk(['{x}も悪くないけど、定跡の本筋はこっちなの。', '{x}もありだけど、よく指されるのはこっちコン。']) : pk(XQJ_OP.gap));   // (2026-11-22: no "the AI says")
+      if (out.length === n0) out.push(d != null && d <= 10 && (!V.pts || V.pts(P, u) >= 10) ? pk(['{x}も悪くないけど、定跡の本筋はこっちなの。', '{x}もありだけど、よく指されるのはこっちコン。']) : pk(XQJ_OP.gap));   // (2026-11-22: no "the AI says")
       return f(xqJoin(...out));
     };
     return { ask, hintTx: FA.flee && !FA.cap ? xqPick(V, ['相手にねらわれている駒はないかな？', '取られそうな駒がないか、先に確かめてみて！', 'まずは自分の駒を見回してみて。ねらわれている駒がいるよ。', '相手の駒がどこをにらんでいるか、たどってみよう！'].map((_, q, a) => a[(k + q) % a.length]), xqLastEnd(ask)) : xqHintJa(FA, k, V, xqLastEnd(ask)), good, ng, own: true };
@@ -4265,7 +4268,8 @@
       const notes = {}; (g.study.notes || []).forEach((n, i) => { if (n) notes[String(i)] = L(n, lang); });
       const it = g.intro && (g.intro[lang] || g.intro.en), hist = Array.isArray(it) ? it.join(' ') : it || '';
       const probs = shuffle((g.problems || []).map((p, i) => i)).slice(0, 5).sort((a, b) => a - b).map(i => g.problems[i]), E = window.XiangqiEngine, ja = lang === 'ja' && E;   // (2026-11-24 第2期・担当B: 5 drawn, in the pool's order = easy → hard, 追9)
-      const XV = ja ? xqOpVoice(g.id) : null; let nj = null; if (ja) try { nj = xqNotesJa(E, g, notes, XV); } catch (e) { console.warn('[lessons3d] xiangqi notes', e); }
+      const XV = ja ? xqOpVoice(g.id) : null; if (XV) XV.pts = (P, m) => XIANGQI.points(P, m);   // (追53)
+      let nj = null; if (ja) try { nj = xqNotesJa(E, g, notes, XV); } catch (e) { console.warn('[lessons3d] xiangqi notes', e); }
       return { id: g.id, title: L(g.title, lang), intro: ja && XQJ_OP.intro[g.id] ? XQJ_OP.intro[g.id] : hist, start: { spec: null, me: g.side === 2 ? 2 : 1 }, steps: g.study.line.slice(), notes: nj || notes,
         probs: probs.map((P, i) => { const o = { pos: { spec: P.s, me: xqMe(P.s) }, kind: 'best', P, ask: this.tx('op.goal', lang), ans: P.best, hintTx: this.tx('op.hint', lang), hint: E ? [E.mFrom(P.best)] : null, ng: () => this.tx('op.why', lang, { m: CKM('ok', lang) }) };
           if (ja) try { Object.assign(o, xqOpJa(E, P, L(g.title, 'ja'), g.id.length * 2 + i, k => CKM(k, lang), XV, i)); } catch (e) { console.warn('[lessons3d] xiangqi opening', e); }
@@ -5929,7 +5933,7 @@
     const ng = u0 => {
       let u = u0; if (u == null || u === A) u = ((P.sc || []).find(x => x[0] !== A && best - x[1] > 15) || (P.sc || []).find(x => x[0] !== A) || [])[0];
       const pk = L => xqPick(V, tfRot(L, j));
-      const out = [V.soft(i), V.lead(i), pk(TFV_OP.so.map(x => x.replace('{a}', sh)))];
+      const out = [(pt => { const N = /いい線|あと少し|あと一歩/, t0 = V.soft(i); if (pt >= 10 || !N.test(t0)) return t0; const U = [0, 1, 2, 3, 4].map(q => V.soft(q)), L = []; for (let q = 5; q < 24; q++) { const t = V.soft(q); if (!N.test(t) && !U.includes(t) && !L.includes(t)) L.push(t); } const r = [0, 1, 2, 3, 4].slice(0, Math.min(i, 5)).filter(q => N.test(V.soft(q))).length; return L.length ? L[(r + Math.max(0, i - 5)) % L.length] : 'ドンマイ！'; })(u != null && V.pts ? V.pts(P, u) : 0), V.lead(i), pk(TFV_OP.so.map(x => x.replace('{a}', sh)))];   // (追53: 「いい線・あと少し・あと一歩」 only for a move worth 10+ points — V.pts = the game's points)
       if (u == null) return f(xqJoin(...out));
       let F = null; try { F = tfFacts(E, pos, u); } catch (e) {}
       const d = sc.has(u) ? best - sc.get(u) : null, n0 = out.length; let tgtU = 0;
@@ -5949,7 +5953,7 @@
         else if (F.k === FA.k && !FA.att && F.km1 < FA.km1) out.push(pk([`{x}も同じような手だけど、王の動けるマスは${F.km1}どまり。{m}なら${FA.km1}まで広がるの！`, `{x}だと王は${F.km1}マスしか動けないの。{m}なら${FA.km1}マス！`]));
         else if (F.k === FA.k && (tgtA || (tgtA = tfTargets(E, pos, A))) > (tgtU = tfTargets(E, pos, u))) out.push(pk(tgtU ? [`{x}だと、次にはさんで取れる相手の駒は${tgtU}つ。{m}なら${tgtA}つもねらえるの！`, `{x}でねらえる相手の駒は${tgtU}つだけ。{m}なら${tgtA}つ！`] : [`{x}だと、次にはさんで取れる相手の駒がないの。{m}なら${tgtA}つねらえる！`, `{x}では、次にはさめる相手の駒が生まれないの。{m}なら${tgtA}つ！`]));
       }
-      if (out.length === n0) out.push(d != null && d <= 15 ? pk(['{x}も悪くないけど、この作戦の本筋はこっちなの。', '{x}もありだけど、作戦の流れからは少しはずれるの。']) : pk(TFV_OP.gap));   // (a move of the same kind: the verified plans have none left without a board difference — tools/lesson-verify.js taflOpen)
+      if (out.length === n0) out.push(d != null && d <= 15 && (!V.pts || V.pts(P, u) >= 10) ? pk(['{x}も悪くないけど、この作戦の本筋はこっちなの。', '{x}もありだけど、作戦の流れからは少しはずれるの。']) : pk(TFV_OP.gap));   // (a move of the same kind: the verified plans have none left without a board difference — tools/lesson-verify.js taflOpen)
       return f(xqJoin(...out));
     };
     return { ask, hintTx, good, ng, own: true };
@@ -6215,7 +6219,8 @@
       const it = g.intro && (g.intro[lang] || g.intro.en), hist = Array.isArray(it) ? it[0] : it || '';
       const probs = shuffle((g.problems || []).map((p, i) => i)).slice(0, 5).sort((a, b) => a - b).map(i => g.problems[i]), E = window.TaflEngine, ja = lang === 'ja' && E;   // (2026-11-24 第2期: the pool's easy → hard order kept)
       const start = { v: 'copenhagen', b: E && E.START && E.START.copenhagen ? E.START.copenhagen : null, side: 1 };
-      const TV = ja ? tfOpVoice(g.id) : null; let nj = null; if (ja) try { nj = tfNotesJa(E, g, notes, start, TV); } catch (e) { console.warn('[lessons3d] tafl notes', e); }
+      const TV = ja ? tfOpVoice(g.id) : null; if (TV) TV.pts = (P, m) => TAFL.points(P, m);   // (追53)
+      let nj = null; if (ja) try { nj = tfNotesJa(E, g, notes, start, TV); } catch (e) { console.warn('[lessons3d] tafl notes', e); }
       return { id: g.id, title: L(g.title, lang), intro: ja && TFJ_OP.intro[g.id] ? TFJ_OP.intro[g.id] : hist, start: { spec: start, me: g.side === 2 ? 2 : 1 }, steps: g.study.line.slice(), notes: nj || notes,
         probs: probs.map((P, i) => { const o = { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1 }, kind: 'best', P, ask: this.tx('op.goal', lang), ans: P.best, hintTx: this.tx('op.hint', lang), hint: E ? [E.mFrom(P.best)] : null, ng: () => this.tx('op.why', lang, { m: TFM('ok', lang) }) };
           if (ja) try { Object.assign(o, tfOpJaV(E, P, L(g.title, 'ja'), k => TFM(k, lang), TV, i)); } catch (e) { console.warn('[lessons3d] tafl opening', e); }
@@ -7002,7 +7007,7 @@
     return ja ? (id === 'backgammon' ? `きみは<b>${nm}</b>。` : `<b>${nm}</b>の手番だよ。`) : `<b>${nm}</b> to move. `;
   }
   /* ur (2026-11-24 担当C): the data, ダイスン's words and the board hooks are in atlas/ls-ur.js (loaded the first time) */
-  const UR = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUr) return res(); const sc = document.createElement('script'); sc.src = 'ls-ur.js?v=2'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const UR = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUr) return res(); const sc = document.createElement('script'); sc.src = 'ls-ur.js?v=3'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsUr.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   /* senet (2026-11-24 担当C): the data, セティ's words and the board hooks are in atlas/ls-senet.js (loaded the first time) */
@@ -7418,7 +7423,7 @@
             teach = AtlasBgTeach.html(BGX.teach(q0, 0, mk(bgCodes(p.bgPos, p.best()).moves), pts >= 20 ? null : mk(u.steps)), (k, v) => D.tx(k, ctx.lang, v), false, true); } catch (e) { console.warn(e); }
         }
         const own = p.kind === 'bgplay' && typeof p.ng === 'function' && u && u.steps, chJa = p.kind === 'choice' && typeof p.ng === 'function' && ctx.lang === 'ja';   /* (2026-11-24: the other languages' choice words (AtlasBgChoice) keep their own head, not 「おしい！」) */   // (ダイスン names the green play / the answer himself: the head stays short; p.ownHead (the lessons in bgVoice): his own praise / soft words open it, no head)
-        say(`${p.ownHead && (own || chJa) ? '' : chJa ? (right ? '' : 'おしい！') : right ? (own && pts >= 16 ? '' : line('solved') || pick(X.good)) : own || p.kind === 'choice' ? String(pts > 0 ? X.partial : X.wrong).replace(/([！!]).*$/, '$1') : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (p.why ? '<br>' + p.why : '') + teach);
+        say(`${p.ownHead && (own || chJa) ? '' : chJa ? (right ? '' : 'おしい！') : right ? (own && pts >= 16 ? '' : line('solved') || pick(X.good)) : own || p.kind === 'choice' ? String(pts >= 10 ? X.partial : X.wrong).replace(/([！!]).*$/, '$1') : pts >= 10 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (p.why ? '<br>' + p.why : '') + teach);
         try { chime(right); } catch (e) {}
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
@@ -7435,7 +7440,7 @@
       }
       if (id === 'mancala' && typeof u === 'number') {   // (back to the problem: the answer's pit in gold, yours red, every pit's value)
         const right = pts >= 16, k = cur.k, P = p.P;
-        say(`${p.own ? (right ? '' : pts >= 10 ? 'いい線！' : 'おしい！') : right ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b><br>` + (right ? p.good(u) : p.ng(u)) + (p.sow ? '' : '<br><small>' + D.tx('fb.values', ctx.lang, { a: mcFmt(P.sc[u], false), b: mcFmt(P.sc[P.best], false) }).replace('あなたの手', 'きみの手') + '</small>'));   // (p.own: マンカラビ praises / names the gold pit himself)
+        say(`${p.own ? (right ? '' : pts >= 10 ? 'いい線！' : 'おしい！') : right ? line('solved') || pick(X.good) : pts >= 10 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b><br>` + (right ? p.good(u) : p.ng(u)) + (p.sow ? '' : '<br><small>' + D.tx('fb.values', ctx.lang, { a: mcFmt(P.sc[u], false), b: mcFmt(P.sc[P.best], false) }).replace('あなたの手', 'きみの手') + '</small>'));   // (p.own: マンカラビ praises / names the gold pit himself)
         try { chime(right); } catch (e) {}
         later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().load(p.pos.spec, 1, { lock: true });
           const best = Math.max(...P.sc.filter(v => v !== null));
@@ -7455,7 +7460,7 @@
       }
       if ((id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots' || id === 'foxgeese') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
         const right = pts >= 16, k = cur.k;   // (p.own: the guide names the green arrow herself — the heading is only 「おしい！」)
-        say(`${right ? (p.own && (id === 'morris' || id === 'janggi' || p.ckls) ? '' : line('solved') || pick(X.good)) : p.own ? (pts >= 10 ? 'いい線いってる！' : 'おしい！') : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
+        say(`${right ? (p.own && (id === 'morris' || id === 'janggi' || p.ckls) ? '' : line('solved') || pick(X.good)) : p.own ? (pts >= 10 ? 'いい線いってる！' : 'おしい！') : pts >= 10 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
         try { chime(right); } catch (e) {}
         later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark([...(right || p.ans == null ? [] : [[{ m: p.ans }, 'ok']]), [{ m: u }, right ? 'ok' : 'ng'], ...(!right && p._rp != null ? [[{ m: p._rp }, 'hl']] : [])]); }, 900);   // (foxgeese: the geese's covering step gold, p._rp)
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
@@ -7464,7 +7469,7 @@
       }
       if (id === 'hex' && typeof u === 'number' && typeof p.ng === 'function') {   // (2026-11-21 lesson loop: ゴイシペン's why / what your move misses; back to the problem with the right cell green, yours red)
         const right = pts >= 16, k = cur.k, N = p.pos.spec.n * p.pos.spec.n, cell = q => q >= 0 && q < N;
-        const head = p.own ? (right ? '' : 'おしい！') : right ? okLine() || pick(X.good) : pts > 0 ? X.partial : X.wrong;   // (p.own: ゴイシペン praises / names the green cell himself)
+        const head = p.own ? (right ? '' : 'おしい！') : right ? okLine() || pick(X.good) : pts >= 10 ? X.partial : X.wrong;   // (p.own: ゴイシペン praises / names the green cell himself)
         say(`${head} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : '<br>' + p.ng(u)));
         try { chime(right); } catch (e) {}
         later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark([...(right || !cell(p.ans) ? [] : [[p.ans, 'ok']]), ...(cell(u) ? [[u, right ? 'ok' : 'ng']] : []), ...(right ? [] : (p._hl || []).filter(q => cell(q) && q !== u && q !== p.ans).map(q => [q, 'hl']))]); }, 900);
@@ -7475,7 +7480,7 @@
       if (id === 'reversi' && u != null && u !== '' && !isNaN(+u) && p.P && (p.P.f || (p.P.rv === 'op' && p.good))) { u = +u;   // (openings too, 2026-11-21)
           // (2026-11-21: back to the problem — the best squares green, yours red; why, in the guide's words)
         const right = pts >= 16, k = cur.k, okA = p.oks || [+p.ans], tx = right ? p.good(u) : p.ng(u);
-        say(`${p.own ? (right ? '' : pts > 0 ? 'いい線！' : 'おしい！') : right ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (tx ? '<br>' + tx : right ? '' : '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: SP('ok', ctx.lang) })));   // (p.own: リバガメ praises / names the green square himself)
+        say(`${p.own ? (right ? '' : pts >= 10 ? 'いい線！' : 'おしい！') : right ? line('solved') || pick(X.good) : pts >= 10 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (tx ? '<br>' + tx : right ? '' : '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: SP('ok', ctx.lang) })));   // (p.own: リバガメ praises / names the green square himself)
         try { chime(right); } catch (e) {}
         later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1);
           const danger = right && cur.id === 'corner' ? Object.entries(p.P.f).filter(x => x[1][4] && +x[0] !== u).map(x => [+x[0], 'ng']) : [];
@@ -7488,7 +7493,7 @@
         const okA = (p.P.ok && p.P.ok.length ? p.P.ok : [p.ans]).filter(q => q >= 0);
         const said = pts >= 16 ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: SP('ok', ctx.lang) });   // (no coordinates: the points are named by their marks)
         pz().mark([...okA.filter(q => q !== u).slice(0, 4).map(q => [q, 'ok']), [u, pts >= 16 ? 'ok' : 'ng'], ...(p._hl || []).filter(q => q !== u && !okA.includes(q)).map(q => [q, 'hl'])]);
-        say(`${p.own ? (pts >= 16 ? '' : pts > 0 ? 'いい線！' : 'おしい！') : pts >= 16 ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + said + (id === 'go' && pts < 20 && p.ans >= 0 && !said.includes(SP('ok', ctx.lang)) ? '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: SP('ok', ctx.lang) }) : ''));
+        say(`${p.own ? (pts >= 16 ? '' : pts >= 10 ? 'いい線！' : 'おしい！') : pts >= 16 ? line('solved') || pick(X.good) : pts >= 10 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + said + (id === 'go' && pts < 20 && p.ans >= 0 && !said.includes(SP('ok', ctx.lang)) ? '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: SP('ok', ctx.lang) }) : ''));
         if (id === 'go' && p.line && p.line.length > 1) { const k = cur.k; later(async () => { if (!cur || cur.k !== k || phase !== 'prob') return; pz().undo(9); for (const q of p.line) { await sleep(700); if (!cur || cur.k !== k || phase !== 'prob' || stopped) return; await pz().play(q); } }, 900); }   // (go: the right line played out, as the full game)
         try { chime(pts >= 16); } catch (e) {}
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
@@ -7499,7 +7504,7 @@
       const Wm = t => t && /\{[mx]\}/.test(t) ? fill(t, { m: '<b>' + (moveName(p.pos, p.ans) || SP('ok', ctx.lang)) + '</b>', x: '<b>' + (moveName(p.pos, u) || '') + '</b>' }) : t;
       const whyR = Wm((id === 'chess' || id === 'shogi') && typeof p.good === 'function' ? p.good(u) : p.why), whyW = Wm(((id === 'shogi' || id === 'chess') && p.ng ? p.ng(u) : '') || p.ngTx || (p.why || '').replace(/^\s*(正解|Correct|Right)[！!]\s*/, ''));   // (shogi: why the move played falls short, 2026-11-21)
       if (pts >= 16) say(`${p.own ? '' : (p.kind === 'tsume' ? line('solved') : okLine()) || pick(X.good)} <b>${fill(X.pts, { n })}</b>${whyR ? '<br>' + whyR : ''}`);
-      else { if (p.ans) { if (p.drill) pz().undo(1); pz().mark(p.ans); } const mvN0 = p.kind !== 'tsume' && p.ans ? moveName(p.pos, p.ans) : '', nm = p.kind !== 'tsume' && p.ans && !(mvN0 && whyW && whyW.replace(/<[^>]+>|\s/g, '').includes(mvN0.replace(/\s/g, ''))), mvN = nm ? mvN0 : ''; say(`${msg || (p.own ? (pts >= (id === 'shogi' ? 10 : 1) ? 'いい線！' : 'おしい！') : pts > 0 ? X.partial : X.wrong)} <b>${fill(X.pts, { n })}</b>${nm ? '<br>' + (mvN ? fill(ANSW[ctx.lang] || ANSW.en, { m: '<b>' + mvN + '</b>' }) : (ANSP[ctx.lang] || ANSP.en)) : ''}${whyW ? '<br>' + whyW : ''}`);
+      else { if (p.ans) { if (p.drill) pz().undo(1); pz().mark(p.ans); } const mvN0 = p.kind !== 'tsume' && p.ans ? moveName(p.pos, p.ans) : '', nm = p.kind !== 'tsume' && p.ans && !(mvN0 && whyW && whyW.replace(/<[^>]+>|\s/g, '').includes(mvN0.replace(/\s/g, ''))), mvN = nm ? mvN0 : ''; say(`${msg || (p.own ? (pts >= (id === 'shogi' ? 10 : 1) ? 'いい線！' : 'おしい！') : pts >= 10 ? X.partial : X.wrong)} <b>${fill(X.pts, { n })}</b>${nm ? '<br>' + (mvN ? fill(ANSW[ctx.lang] || ANSW.en, { m: '<b>' + mvN + '</b>' }) : (ANSP[ctx.lang] || ANSP.en)) : ''}${whyW ? '<br>' + whyW : ''}`);
         if (nm && !mvN) { const k = cur.k, mk = p.ans; later(async () => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz() || !pz().play) return; try { let r = await pz().play(mk); if (r === false) { pz().undo(1); await sleep(250); r = await pz().play(mk); } if (r === false) return; await sleep(1600); if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark(mk); } catch (e) { console.warn('[lessons] show move', e); } }, 1000); } }   // (the move is shown on the board, not named: no coordinates, 2026-11-14)
       try { chime(pts >= 16); } catch (e) {}
       act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
