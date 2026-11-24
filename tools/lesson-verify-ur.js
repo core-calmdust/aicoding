@@ -100,5 +100,12 @@ module.exports = function ur(opt = {}) {
     const a = items[i], b = items[j]; if (a.where.startsWith('tour:') && b.where.startsWith('tour:')) continue;
     const d = F.dist(a.s, b.s); if (d < UF.MIN_DIST) add(a.where.split(/[#/]/)[0], 0, `⑤ ${a.where} と ${b.where} が駒${d}つ違いの局面`);
   }
+  // 追26（2026-11-24）：「相手の次の1振りで取られる確率」は、手のあと相手が振るときだけ（ロゼット・ブリッツの取りでもう一度振るなら言えない）
+  for (const L of D.steps) for (const [i, q] of (L.problems || []).concat(L.ramp || []).entries()) {
+    if (q.kind === 'choice' || !q.s || q.n == null) continue;
+    const s = S(q.s), ms = E.legalMoves(s, q.n), ag = m => !m || (r => r.again || r.state.turn === 0)(E.apply(s, m)), b = ms.find(m => m.from === (q.best || (q.ok || [[]])[0])[0]);
+    if (q.why && ['w.safe', 'w.escape'].includes(q.why[0]) && ag(b)) add(L.id, i + 1, '追26 もう一度振る手なのに相手の次の1振りの確率を言う');
+    for (const f in q.ng || {}) if (['n.risk', 'n.capRisk'].includes(q.ng[f][0]) && (ag(ms.find(x => x.from === +f)) || ag(b))) add(L.id, i + 1, `追26 ${f} はもう一度振る手なのに相手の次の1振りの確率を言う`);
+  }
   return out;
 };

@@ -5,7 +5,7 @@
 (function () {
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles', PZ_LAST = STORE + '-pz-last', PZ_TAB = STORE + '-pz-tab', LS_CAT = STORE + '-ls-cat';
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=3').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=4').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LL = o => o == null ? '' : typeof o === 'string' ? o : (o[LANG] !== undefined ? o[LANG] : o.en !== undefined ? o.en : o.ja || '');
 const fill = (s, v) => String(s).replace(/\{(\w+)\}/g, (_, k) => v && v[k] !== undefined ? v[k] : '');
 const UI = (D, k, v) => fill(D && D.ui && D.ui[k] ? LL(D.ui[k]) : k, v);
@@ -209,15 +209,16 @@ function renderLessonCard() {
   $('#lsDots').innerHTML = ramp ? '' : s.problems.map((_, i) => { const v = lesson.scores[i]; return `<i class="${v == null ? '' : v >= 20 ? 'ok' : v > 0 ? 'part' : 'ng'} ${i === lesson.i ? 'cur' : ''}"></i>`; }).join('');
   $('#lsTitle').textContent = ramp ? LL(it.t) : LL(s.title);
   let pr = '';
-  if (ramp) pr = it.k === 'explain' ? LL(it.body) : `<p>${esc(LL(it.t))}</p>` + (it.n != null ? `<p><b>${esc(UI(D, 'roll', { n: it.n }))}</b></p>` : '') + `<p style="font-size:12px;color:var(--dim)">${esc(UI(D, 'rampNote'))}</p>`;
+  if (ramp) pr = it.k === 'explain' ? LL(it.body) : `<p>${esc(LL(it.t))}</p>` + (it.q ? `<p>${esc(LL(it.q))}</p>` : '') + (it.n != null ? `<p><b>${esc(UI(D, 'roll', { n: it.n }))}</b></p>` : '') + `<p style="font-size:12px;color:var(--dim)">${esc(UI(D, 'rampNote'))}</p>`;
   else pr = `<p>${esc(it.kind === 'choice' ? (LL(it.q) || UI(D, 'qChoice')) : (it.q ? LL(it.q) : UI(D, 'qMove', { n: it.n })))}</p>`;
   $('#lsPrompt').innerHTML = pr;
   const ch = $('#lsChoices');
-  if (!ramp && it.kind === 'choice') {
+  if (it.kind === 'choice' && (!ramp || it.k === 'try')) {   // (2026-11-24: a warm-up with choices too; a wrong choice says why — ngo)
     ch.innerHTML = it.opts.map((o, i) => `<button data-i="${i}" class="${lesson.done && i === it.ans ? 'ok' : ''}">${esc(LL(o))}</button>`).join('');
     ch.onclick = e => { const b = e.target.closest('button'); if (!b || lesson.done) return; const i = +b.dataset.i;
+      if (i === it.ans && ramp) { lesson.done = true; snd('ok'); fb(`<b class="ok">${esc(UI(D, 'rampGood'))}</b> ${esc(MSG(D, it.why))}`); renderLessonCard(); return; }
       if (i === it.ans) { lesson.done = true; const pts = score(); lesson.scores[lesson.i] = pts; snd('ok'); fb(`<b class="ok">${esc(UI(D, 'correct'))}</b> ${esc(MSG(D, it.why))} <b>${esc(UI(D, 'score', { n: pts }))}</b>`); renderLessonCard(); if (window.CardBar) CardBar.autoNext({ ok: () => lesson && lesson.done, btn: '#lsNext', ms: 1800 }); }
-      else { lesson.wrong = true; b.classList.add('ng'); snd('ng'); fb(`<b class="ng">${esc(UI(D, 'wrong'))}</b> ${esc(UI(D, 'rampRetry'))}`); } };
+      else { lesson.wrong = true; b.classList.add('ng'); snd('ng'); fb(`<b class="ng">${esc(UI(D, 'wrong'))}</b> ${esc(it.ngo && it.ngo[i] ? MSG(D, it.ngo[i]) + ' ' + UI(D, 'rampRetry') : UI(D, 'rampRetry'))}`); } };
   } else { ch.innerHTML = ''; ch.onclick = null; }
   if (!lesson.done && !lesson.wrong && lesson.hint === 0) fb('');
   const nx = $('#lsNext');

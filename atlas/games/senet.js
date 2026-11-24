@@ -86,7 +86,114 @@
 
   // 種目 (2026-11-15): the full game's two rule sets; the card's "size" value names one (1 standard, 5 pieces · 2 long, 7 pieces)
   const RIDS = ['std', 'long'], RN = {"ja": {"n": ["標準（5枚）", "ロング（7枚）"], "d": ["ケンドールの復元に基づく、いま最も広く遊ばれるルール。各5枚を1〜10に交互に並べて始める。", "ケンドールが1979年に最初に発表した枚数。各7枚を1〜14に交互に並べる、長い勝負。"], "L": "ルール"}, "en": {"n": ["Standard (5)", "Long (7)"], "d": ["The most widely played reconstruction, after Kendall: five pieces each, alternating on squares 1–10.", "The number of pieces in Kendall’s first 1979 rules: seven each on squares 1–14, a longer game."], "L": "Rules"}, "zh": {"n": ["标准（5枚）", "长局（7枚）"], "d": ["依据肯德尔复原、如今最普及的规则。各5枚，交替排在1〜10格。", "肯德尔1979年最初发表的棋子数。各7枚交替排在1〜14格，对局更长。"], "L": "规则"}, "ko": {"n": ["표준 (5개)", "롱 (7개)"], "d": ["켄들의 복원을 따른 가장 널리 쓰이는 규칙. 각 5개를 1~10칸에 번갈아 놓고 시작.", "켄들이 1979년 처음 발표한 개수. 각 7개를 1~14칸에 번갈아 놓는 긴 승부."], "L": "규칙"}, "es": {"n": ["Estándar (5)", "Larga (7)"], "d": ["La reconstrucción más jugada, según Kendall: cinco piezas cada uno, alternadas en 1–10.", "El número de piezas de las primeras reglas de Kendall (1979): siete cada uno en 1–14."], "L": "Reglas"}, "fr": {"n": ["Standard (5)", "Longue (7)"], "d": ["La reconstitution la plus jouée, d’après Kendall : cinq pions chacun, alternés sur 1–10.", "Le nombre de pions des premières règles de Kendall (1979) : sept chacun sur 1–14."], "L": "Règles"}, "pt": {"n": ["Padrão (5)", "Longa (7)"], "d": ["A reconstrução mais jogada, segundo Kendall: cinco peças cada, alternadas em 1–10.", "O número de peças das primeiras regras de Kendall (1979): sete cada em 1–14."], "L": "Regras"}, "de": {"n": ["Standard (5)", "Lang (7)"], "d": ["Die meistgespielte Rekonstruktion nach Kendall: je fünf Figuren abwechselnd auf 1–10.", "Die Figurenzahl aus Kendalls ersten Regeln von 1979: je sieben auf 1–14."], "L": "Regeln"}, "hi": {"n": ["मानक (5)", "लंबा (7)"], "d": ["केंडल के पुनर्निर्माण पर आधारित सबसे प्रचलित नियम: हर ओर 5 गोटियाँ, 1–10 पर बारी-बारी।", "केंडल के 1979 के पहले नियमों की संख्या: हर ओर 7 गोटियाँ, 1–14 पर।"], "L": "नियम"}, "ar": {"n": ["قياسي (5)", "طويل (7)"], "d": ["أكثر إعادة بناء شيوعًا وفق كيندال: خمس قطع لكل لاعب متناوبة على 1–10.", "عدد القطع في قواعد كيندال الأولى (1979): سبع لكل لاعب على 1–14."], "L": "القواعد"}, "ru": {"n": ["Стандарт (5)", "Длинная (7)"], "d": ["Самая распространённая реконструкция, по Кендаллу: по пять фишек, поочерёдно на клетках 1–10.", "Число фишек в первых правилах Кендалла 1979 года: по семь на клетках 1–14, партия длиннее."], "L": "Правила"}, "zh-TW": {"n": ["標準（5 枚）", "長局（7 枚）"], "d": ["最廣為流行的復原版，依肯德爾：各 5 枚，交錯排在第 1～10 格。", "肯德爾 1979 年最初規則的棋子數：各 7 枚排在第 1～14 格，對局較長。"], "L": "規則"}, "id": {"n": ["Standar (5)", "Panjang (7)"], "d": ["Rekonstruksi yang paling banyak dimainkan, menurut Kendall: lima bidak masing-masing, berselang-seling di petak 1–10.", "Jumlah bidak dalam aturan pertama Kendall 1979: tujuh masing-masing di petak 1–14, permainan lebih panjang."], "L": "Aturan"}, "tr": {"n": ["Standart (5)", "Uzun (7)"], "d": ["En yaygın oynanan yeniden kurgu, Kendall'a göre: her biri beş taş, 1–10. karelere sırayla dizilir.", "Kendall'ın ilk 1979 kurallarındaki taş sayısı: 1–14. karelerde her biri yedi, daha uzun bir oyun."], "L": "Kurallar"}}, rn = l => RN[l] || RN.en;
+  /* ================= lesson mode (ctx.pz, 2026-11-24 担当C) =================
+     A position from senet/lessons.json on the 3D box for atlas/lessons3d.js (DATA.senet, atlas/ls-senet.js): the sticks at rest
+     showing the throw, the player moves one spool (tap it, then where it goes — or the square itself), ctx.pz.moved(from, info) judges.
+       ctx.pz = { ur: { s: { rule, pos }, n, marks, lock }, ready(), moved(from, info) }   (the same shape as ur's: a dice-race position)
+       api.pz = { load(spec), wait(), mark(list), play([from, to]) → Promise, undo(), reset(), moves(), state(), legal(), rule(), tap(from) }
+     Marks (lessons.json): { type: 'danger'|'glow'|'ring'|'text'|'arrow', r, c, text, color, from, to } and the answers
+     { m: [from, to] | from, cls: 'ok'|'ng' } (the route's dots, the square it lands on / the borne-off row). No AI, no throwing. */
+  function startPz(ctx) {
+    const T3 = ctx.Table3D, PZ = ctx.pz, TH = window.THREE;
+    let look = 'tut', dsg = 'tut'; try { const S = (JSON.parse(localStorage.getItem('aicoding-senet') || '{}') || {}).settings || {}; look = S.pieces || 'tut'; dsg = S.design || 'tut'; } catch (e) {}
+    let kit = null, E = null, st = null, st0 = null, n = null, on = false, busy = false, sel = -1, stopped = false, spec = null, extra = [], hist = [];
+    const timers = [], later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
+    const sqOf = (r, c) => r * 10 + (r === 1 ? 9 - c : c) + 1;
+    const legal = () => st && n ? E.legalMoves(st, n) : [];
+    const kOf = from => st.pos[0].findIndex(p => p === from);
+    const COL = { ok: 0x3df59a, ng: 0xff5d5d };
+    const hex = c => typeof c === 'number' ? c : parseInt(String(c || '#ffe27a').replace('#', ''), 16);
+    const offK = s => s.pos[0].filter(p => p >= 31).length;
+    function label(sq, text, color) {   // a number on a square (a distance, a square's number), facing up
+      const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d');
+      g.font = '900 ' + (String(text).length > 2 ? 54 : 78) + 'px system-ui,sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineWidth = 12; g.strokeStyle = 'rgba(30,20,10,.85)'; g.strokeText(text, 64, 68); g.fillStyle = '#' + hex(color).toString(16).padStart(6, '0'); g.fillText(text, 64, 68);
+      const tx = new TH.CanvasTexture(cv), m = new TH.Mesh(new TH.PlaneGeometry(.56, .56), new TH.MeshBasicMaterial({ map: tx, transparent: true, depthWrite: false, toneMapped: false }));
+      m.rotation.x = -Math.PI / 2; const [x, z] = kit.cellXZ(sq); m.position.set(x + .26, kit.Y + .3, z - .26); m.renderOrder = 6; kit.marks.group.add(m); T3.kick(120);
+    }
+    function drawAns(m, cls) {   // an answer: the route's dots from the piece to where it lands, the landing square / the borne-off row
+      if (typeof m === 'number') { const x = E.legalMoves(st0, n || 0).find(y => y.from === m); if (!x) return; m = [x.from, x.to]; }
+      const [from, to] = m, col = COL[cls] || COL.ok, mv = E.legalMoves(st0, n || 0).find(y => y.from === from && y.to === to);
+      kit.marks.ring(from, col);
+      kit.marks.path(from + 1, Math.min(to, 30), col);
+      if (to >= 31) kit.marks.tray(0, col, offK(st0)); else kit.marks.cell(mv && mv.water ? mv.dest : to, col, .45);
+    }
+    function marksNow() {
+      kit.marks.clear();
+      for (const x of (spec && spec.marks || []).concat(extra)) {
+        if (x.m != null) { drawAns(x.m, x.cls); continue; }
+        if (x.type === 'arrow') { const f = sqOf(x.from.r, x.from.c), t = x.to.tray ? 31 : sqOf(x.to.r, x.to.c); drawAns([f, t], 'ok'); continue; }
+        if (x.r == null) continue;
+        const q = sqOf(x.r, x.c);
+        if (x.type === 'danger') { kit.marks.cell(q, 0xff5d5d, .38); kit.marks.ring(q, 0xff5d5d); if (x.text) label(q, String(x.text), 0xffd0c8); }
+        else if (x.type === 'glow') kit.marks.glow(q, hex(x.color || '#6ec8ff'), .45);
+        else if (x.type === 'ring') kit.marks.ring(q, hex(x.color || '#ff9b90'));
+        else if (x.type === 'text') label(q, String(x.text), x.color || '#ffe27a');
+      }
+      if (on && !spec.lock) {   // the pieces that can move (and the selected one's landing square)
+        for (const m of legal()) kit.marks.ring(m.from, 0xffd65a);
+        for (const m of legal().filter(x => x.from === sel)) { const col = m.capture ? 0xff5d5d : m.water ? 0x4da3ff : 0x3df59a; if (m.finish) kit.marks.tray(0, col, offK(st)); else { kit.marks.cell(m.to, col, .42); kit.marks.ring(m.to, col); } kit.marks.path(m.from + 1, Math.min(m.to, 30), 0xfff3b0); }
+      }
+    }
+    function setSel(from) {
+      if (sel >= 0) { const k = kOf(sel); if (k >= 0) kit.lift(0, k, false); }
+      sel = from; if (sel >= 0) { const k = kOf(sel); if (k >= 0) kit.lift(0, k, true); }
+      marksNow();
+    }
+    const PATN = k => { const a = [0, 0, 0, 0]; if (k && k < 5) for (let i = 0; i < k; i++) a[[1, 3, 0, 2][i]] = 1; return a; };   // (the throw's sticks: k light sides up, 5 = all dark)
+    function sticks() { kit.restSticks(0, n == null ? null : PATN(n)); }
+    let pending = null;
+    function load(sp) {
+      if (!E || !kit) { pending = sp || PZ.ur; return; }   // (a position asked for before the engine / the box are ready: placed when they are)
+      spec = Object.assign({}, sp || PZ.ur); extra = []; hist = []; on = false; sel = -1; busy = false;
+      st = { rule: 'std', pos: spec.s.pos.map(a => a.slice()), turn: 0, winner: -1 }; st0 = E.clone(st); n = spec.n == null ? null : +spec.n;
+      kit.sync(st); sticks(); marksNow();
+      later(() => { if (PZ.ready) PZ.ready(); }, 160);
+    }
+    async function commit(m, judge) {
+      busy = true; on = false; if (sel >= 0) { const k = kOf(sel); if (k >= 0) kit.lift(0, k, false); } sel = -1; extra = []; spec = Object.assign({}, spec, { marks: [] }); marksNow();
+      await kit.move(0, m, { onStep: () => SND.hop(), onHit: () => SND.take(), onWater: () => SND.water(), onLand: () => (m.finish ? SND.home : SND.put)() });
+      if (stopped) return false;
+      const r = E.apply(st, m, n); st = r.state; st.turn = 0; hist.push([m.from, m.to]); kit.sync(st); busy = false;
+      if (r.again && !m.water) SND.ros();
+      if (judge && PZ.moved) PZ.moved(m.from, { to: m.to, capture: !!m.capture, water: !!m.water, finish: !!m.finish, again: !!r.again });
+      return true;
+    }
+    function onClick(e) {
+      if (stopped || T3.wasDrag() || busy || !on || !st || !kit) return;
+      const h = kit.hit(e), ms = legal(); if (!h || h.sticks) { if (sel >= 0) setSel(-1); return; }
+      if (sel >= 0) { const m = ms.find(x => x.from === sel && (h.tray ? x.finish && h.side === 0 : !x.finish && x.to === h.sq)); if (m) { commit(m, true); return; } }
+      let from = -1;
+      if (h.sq && st.pos[0].includes(h.sq)) from = h.sq;
+      if (from < 0 && h.sq) { const c = ms.filter(x => !x.finish && x.to === h.sq); if (c.length === 1) { commit(c[0], true); return; } }
+      if (from < 0 && h.tray && h.side === 0) { const c = ms.filter(x => x.finish); if (c.length === 1) { commit(c[0], true); return; } }
+      if (from >= 0 && ms.some(x => x.from === from)) { if (sel === from) { const only = ms.filter(x => x.from === from); if (only.length === 1) { commit(only[0], true); return; } } setSel(from === sel ? -1 : from); return; }
+      setSel(-1);
+    }
+    ctx.el.addEventListener('click', onClick);
+    const pzApi = {
+      load, wait() { if (!spec || spec.lock || !n || !kit) return; on = true; marksNow(); },
+      mark(list) { if (!kit) return; extra = (list || []).map(x => !Array.isArray(x) ? x : x[0] && typeof x[0] === 'object' && !Array.isArray(x[0]) ? (x[0].type ? x[0] : { m: x[0].m, cls: x[1] }) : { m: x[0], cls: x[1] }); marksNow(); },
+      async play(q) { const f = Array.isArray(q) ? q[0] : q, m = legal().find(x => x.from === f && (!Array.isArray(q) || x.to === q[1])); if (!m || busy) return false; return commit(m, false); },
+      undo() { if (busy || !E || !st0) return; st = E.clone(st0); hist = []; sel = -1; kit.sync(st); sticks(); marksNow(); },
+      reset() { pzApi.undo(); }, moves: () => hist.slice(), state: () => st && { pos: st.pos.map(a => a.slice()), n },
+      legal: () => legal().map(m => [m.from, m.to]), rule: () => 'std',
+      tap(from) { const m = legal().find(x => x.from === from); if (!m || !on || busy) return false; commit(m, true); return true; },   // (tests)
+    };
+    const api = {
+      human: 0, pz: pzApi, canUndo: () => false, canHint: () => false, canResign: () => false,
+      stop() { stopped = true; if (kit) kit.stop(); timers.forEach(clearTimeout); ctx.el.removeEventListener('click', onClick); },
+      _debug: { st: () => st, kit: () => kit, cell: sq => kit && kit.projCell(sq), piece: (s, k) => kit && kit.projPiece(s, k) },
+    };
+    window.__senetTable = api;
+    loadJS(BASE + 'sprites.js?v=1', () => !!window.SENET_SPRITES).catch(() => null).then(() => loadJS(BASE + 'board2d.js?v=6', () => !!window.SenetBoard2D)).catch(() => null).then(loadEngine).then(e => {
+      if (stopped) return; E = e;
+      kit = window.SenetKit.make(T3, { design: dsg, pieces: look, sfx: k => SND[k] && SND[k]() });
+      load(pending || PZ.ur);
+    }).catch(err => console.error('[senet pz]', err));
+    return api;
+  }
   function start(ctx) {
+    if (ctx.pz) return startPz(ctx);   // (the lessons on the 3D box, atlas/lessons3d.js)
     const T3 = ctx.Table3D, t = ctx.t, X = Object.assign({}, TX.en, TX[ctx.lang] || {});
     const L = { you: t('p.you'), ai: t('p.ai'), think: t('p.think'), win: t('res.win'), lose: t('res.lose') };
     const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6));
