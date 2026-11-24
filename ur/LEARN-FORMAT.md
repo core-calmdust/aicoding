@@ -1,6 +1,6 @@
 # ウル王朝のゲーム — 「学ぶ」ファイルの形式と入口（担当L → 本体担当A）
 
-担当L が作るファイル：`ur/tour.js`（ルールのチュートリアル）、`ur/lessons.json`（レッスン）、`ur/puzzles.json`（次の一手パズル）。
+担当L が作るファイル：`ur/tour.js`（ルールのチュートリアル）、`ur/lessons.json`（レッスン）、`ur/puzzles.json`（次の一手パズル。2026-11-24 廃止）。
 生成・点検：`ur/tools/gen_lessons.js`・`check_lessons.js`・`gen_puzzles.js`・`audit_puzzles.js`、確認用 `ur/tools/tour-demo.html`。
 
 座標・駒の位置はすべて **エンジンの path index**（0＝盤外, 1〜14＝盤上, 15＝ゴール）。局面 `s` は
@@ -91,7 +91,7 @@ UrTour.PAGES                  // ページ id の配列
 **blitz のレッスン（id 'blitz'）は s.rule='blitz'（各5枚、goal=17）**。
 
 ---------------------------------------------------------------------
-## 3. パズル `ur/puzzles.json`（PZBook 形式、201問・8テーマ）
+## 3. パズル `ur/puzzles.json`（**2026-11-24 廃止**。以下は記録として残す）
 
 ```jsonc
 {
@@ -113,7 +113,6 @@ UrTour.PAGES                  // ページ id の配列
 ---------------------------------------------------------------------
 ## 4. 作り直し・点検
 ```
-node ur/tools/gen_puzzles.js  [--cache DIR]   // 先に（レッスンはパズルと同じ局面を避ける）
 node ur/tools/gen_lessons.js  [--cache DIR]
 node ur/tools/audit_puzzles.js [--deep]       // 合法性・深さ3での最善一致・重複・10言語・易しい順
 node ur/tools/check_lessons.js                // 同上＋choice の答えを hitRisk / raceCount で再計算・理由文と手の性質の一致

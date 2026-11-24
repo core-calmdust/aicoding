@@ -1,4 +1,4 @@
-// ur/tools/ur_facts.js — ウルのパズル・レッスンの検証と理由文の共通部品（2026-11-24、担当C）。
+// ur/tools/ur_facts.js — ウルのレッスンの検証と理由文の共通部品（2026-11-24、担当C。パズルは同日廃止）。
 // 完全解析表（lut.js）で全合法手の勝率を出し、①②③を数値で確かめる。理由文は盤の事実だけ（勝率の％を書かない）。
 'use strict';
 const L = require('./learn_common.js'), X = require('./learn_text.js');
