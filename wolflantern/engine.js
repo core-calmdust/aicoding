@@ -24,11 +24,11 @@
   };
   // difficulty: size, action points, traces left per attack, how often the wolves come for the player,
   // how often they plant a belonging, how often the weather wipes a trace, how far a figure is seen
-  const DIFF = [
-    { id: 0, size: 8,  ap: 3, traces: 2, neg: .25, player: 0,    plant: 0,   drop: .25, erase: 0,   adj: .3,  npcFind: .3,  fakeSeer: .5, assist: true, wit: .3, sway: 1.2 },
-    { id: 1, size: 10, ap: 3, traces: 2, neg: .4,  player: .3,   plant: .35, drop: .15, erase: .2,  adj: .25, npcFind: .25, fakeSeer: .6, assist: false, wit: .32, sway: .8 },
-    { id: 2, size: 12, ap: 3, traces: 2, neg: .5,  player: .45,  plant: .4,  drop: .12, erase: .25, adj: .22, npcFind: .22, fakeSeer: .55, assist: false, wit: .5, sway: .7 },
-    { id: 3, size: 13, ap: 3, traces: 1, neg: .6,  player: .45,  plant: .55, drop: .1,  erase: .35, adj: .2,  npcFind: .2,  fakeSeer: .7, assist: false, wit: .6, sway: .55 },
+  const DIFF = [   // 2026-11-25：村まかせでも勝ててしまうので、村の推理を弱め、痕跡を減らした（あなたの働きで勝敗が決まるように）
+    { id: 0, size: 8,  ap: 3, traces: 1, neg: .35, player: 0,    plant: .15, drop: .2,  erase: .1,  adj: .25, npcFind: .22, fakeSeer: .6,  assist: true,  wit: .16, sway: 1.3 },
+    { id: 1, size: 10, ap: 3, traces: 1, neg: .5,  player: .3,   plant: .4,  drop: .12, erase: .3,  adj: .2,  npcFind: .1,  fakeSeer: .9,  assist: false, wit: .05, sway: 1.0 },
+    { id: 2, size: 12, ap: 3, traces: 1, neg: .6,  player: .45,  plant: .45, drop: .1,  erase: .35, adj: .17, npcFind: .15, fakeSeer: .8,  assist: false, wit: .16, sway: .9 },
+    { id: 3, size: 13, ap: 3, traces: 1, neg: .7,  player: .45,  plant: .55, drop: .08, erase: .45, adj: .15, npcFind: .12, fakeSeer: .85, assist: false, wit: .18, sway: .8 },
   ];
   const CATS = ['height', 'hand', 'foot', 'mark'];
 
@@ -780,15 +780,33 @@
     if (w >= h) return S.result = { win: false, why: 'overrun', ghost: !!S.ghost };
     return null;
   }
+  // the score is what the player did, not what the village did around them
   function score(S) {
     if (!S.result) return null;
     const lost = S.people.filter(p => !p.isPlayer && p.death && p.role !== 'wolf').length;
     const wrong = S.votes.filter(v => v.out && !isWolf(S, v.out)).length;
-    let pts = S.result.win ? 60 : 10;
-    pts += Math.max(0, 20 - 4 * wrong) + Math.max(0, 14 - 2 * lost) + (S.people[0].alive ? 6 : -8) - Math.max(0, S.day - 3) * 2;
-    pts += S.diff * 4;
-    const rank = pts >= 92 ? 'S' : pts >= 80 ? 'A' : pts >= 66 ? 'B' : pts >= 45 ? 'C' : 'D';
-    return { pts, rank, lost, wrong, days: S.day };
+    const L = S.pl.log || [];
+    // the player's own ballots (the last round of each day)
+    let wolfVotes = 0, badVotes = 0;
+    for (const v of S.votes) { const b = (v.rounds ? v.rounds[v.rounds.length - 1] : v).ballots || v.ballots; const t = b && b.you; if (!t) continue; if (isWolf(S, t)) wolfVotes++; else badVotes++; }
+    const acc = L.filter(x => x.k === 'accuse'), accHit = acc.filter(x => isWolf(S, x.who)).length, accMiss = acc.length - accHit;
+    const clashHit = L.filter(x => x.k === 'clash' && x.ok).length, clashMiss = L.filter(x => x.k === 'clash' && x.ok === false).length;
+    const shown = L.filter(x => x.k === 'show').length;
+    const mine = S.claims.find(c => c.by === 'you'), black = mine ? mine.res.filter(r => r.res === 'wolf' && isWolf(S, r.target)).length : 0;
+    const deathDay = S.people[0].death ? S.people[0].death.day : null;
+    const part = {
+      outcome: S.result.win ? 35 : 0,
+      votes: Math.min(24, wolfVotes * 8) - badVotes * 5,
+      accuse: Math.min(14, accHit * 7) - accMiss * 4,
+      clash: Math.min(10, clashHit * 5) - clashMiss * 2,
+      evidence: Math.min(4, shown) + Math.min(8, black * 4),
+      survival: deathDay == null ? 6 : deathDay <= 2 ? -10 : deathDay <= 3 ? -5 : 0,
+      losses: -2 * lost,
+      level: S.diff * 3,
+    };
+    const pts = Object.values(part).reduce((a, b) => a + b, 0);
+    const rank = pts >= 88 ? 'S' : pts >= 72 ? 'A' : pts >= 55 ? 'B' : pts >= 35 ? 'C' : 'D';
+    return { pts, rank, lost, wrong, days: S.day, part, wolfVotes, badVotes, accHit, clashHit };
   }
 
   /* ---------- the player's actions ---------- */
