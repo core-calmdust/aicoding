@@ -10,7 +10,7 @@ const fs = require('fs'), path = require('path'), ROOT = path.join(__dirname, '.
 const RO = require(path.join(ROOT, 'tools/lesson-verify-rvopen.js')), X = RO.rx(), E = RO.eng(), ST = RO.steps();
 const OUT = path.join(ROOT, 'reversi/opcourse-probs.json'), res = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, 'utf8')) : {};
 const EV = JSON.parse(fs.readFileSync(path.join(ROOT, 'reversi/opcourse-evals.json'), 'utf8'));
-const GAP = 1.2;   // (every other move 1.2+ discs below in both searches: ≤ 11 points)
+const GAP = 1.5, DEC = 5;   // (every other move 1.5+ discs below in both searches — ≤ 10 points; the checker's line is 1.2 / ≤ 11 — and |best| ≤ 5 where the checker says 6: a margin for the timed searches, 追26)
 const sqn = q => 'abcdefgh'[q & 7] + ((q >> 3) + 1);
 const want = new Set(process.argv[2].split(','));
 const shown = []; ST.forEach(s => { for (let k = 0; k <= s.mv.length; k++) shown.push(X.rvAfter(s.mv.slice(0, k).join('')).split(':')[0]); });
@@ -34,7 +34,9 @@ for (const s of ST) { const key = s.ln.moves; if (!want.has(key) && !want.has(s.
         if (shown.some(z => RO.dist(b, z) <= 3) || kept.some(z => RO.dist(b, z) <= 3) || cand.some(z => RO.dist(b, z.pos.split(':')[0]) <= 3)) { ST0.near++; continue; }
         const lg = X.rvLegal(cur, side); if (lg.length < 4) { ST0.few++; continue; }
         const e1 = E(Q, 300), e2 = E(Q, 1500); if (e1[0][0] !== e2[0][0]) { ST0.unstable++; continue; }
-        if (Math.abs(e2[0][1]) > 6 || Math.abs(e1[0][1]) > 6) { ST0.decided++; continue; } if (e1[1][1] > e1[0][1] - GAP || e2[1][1] > e2[0][1] - GAP) { ST0.gap++; continue; }
+        if (Math.abs(e2[0][1]) > DEC || Math.abs(e1[0][1]) > DEC) { ST0.decided++; continue; } if (e1[1][1] > e1[0][1] - GAP || e2[1][1] > e2[0][1] - GAP) { ST0.gap++; continue; }
+        // (追26: the searches are timed — read both again from a cleared table, as the checker's --deep does, and keep only when the second reads agree)
+        { const r1 = E(Q, 300), r2 = E(Q, 1500); if (r1[0][0] !== e2[0][0] || r2[0][0] !== e2[0][0] || Math.abs(r1[0][1]) > DEC || Math.abs(r2[0][1]) > DEC || r1[1][1] > r1[0][1] - GAP || r2[1][1] > r2[0][1] - GAP) { ST0.unstable++; continue; } }
         // (⑦ every wrong move has a reason on the board in リバガメ's words: a corner given, X / C, openness, the opponent's moves, the
         // flips or the moves left after the reply — not the 「数は近いけど」 line with no difference to show)
         { const W = X.rvOpJa({ pos: Q, ans: String(X.rvSq(e2[0][0])), P: { rv: 'op', ev: e2 } }, 'x', 0, X.rvOpVoice('cur'), true);

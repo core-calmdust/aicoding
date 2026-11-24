@@ -79,6 +79,18 @@
     { id: 'circo', w: 1686, h: 1244, aic: 52020, no: '1944.922', bg: '#cdbf9c', spots: [[.49, .55], [.14, .075], [.38, .19], [.115, .45], [.745, .41], [.86, .9]], links: [{ room: 'chance' }] },
     // (2026-11-25) the Art Institute of Chicago: Posada's lotería sheet — 38 named pictures for the calling game
     { id: 'loteria', w: 1686, h: 1274, aic: 51998, no: '1944.912', bg: '#c9b48e', spots: [[.5, .77], [.095, .18], [.55, .18], [.21, .655], [.44, .655], [.325, .82]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: a 10×10 draughts board sheet, 'jeu polonais'
+    { id: 'jeupol', w: 2048, h: 1655, rijks: 'RP-P-OB-203.257', bg: '#e8e4da', spots: [[.557, .021], [.743, .021], [.086, .513], [.93, .51], [.507, .513], [.5, .3]], links: [{ g: 'checkers' }] },
+    // (2026-11-25) the Rijksmuseum: Brepols sheet of 28 dominoes and 32 cards to cut out
+    { id: 'dkaart', w: 2048, h: 1723, rijks: 'RP-P-OB-201.901', bg: '#e6e1d4', spots: [[.27, .062], [.27, .156], [.45, .838], [.55, .237], [.655, .237], [.455, .938]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Quirin Boel after Teniers: two monkeys at trictrac
+    { id: 'apen', w: 2048, h: 1505, rijks: 'RP-P-BI-1933', bg: '#ddd8cc', spots: [[.5, .65], [.2, .55], [.42, .41], [.686, .3], [.4, .8], [.236, .914]], links: [{ g: 'backgammon' }, { ex: 'ottoman' }] },
+    // (2026-11-25) the Rijksmuseum: anonymous stereograph, men playing dominoes ('Het dominospel')
+    { id: 'dstereo', w: 2048, h: 970, rijks: 'RP-F-F09942', bg: '#d9cfb8', spots: [[.26, .5], [.41, .33], [.34, .22], [.15, .37], [.045, .6], [.7, .55]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: hand-coloured photograph, two women at a go board (from a Manila travel album)
+    { id: 'gojo', w: 1692, h: 1234, rijks: 'RP-F-F01161-K', bg: '#c9c6bd', spots: [[.52, .6], [.42, .59], [.28, .33], [.69, .38], [.5, .8], [.49, .27]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
+    // (2026-11-25) the Art Institute of Chicago: Meade brothers daguerreotype, two men at chess
+    { id: 'meade', w: 1686, h: 1403, aic: 250084, no: '2019.462', bg: '#3a2a24', spots: [[.5, .66], [.4, .43], [.64, .38], [.66, .57], [.52, .77], [.1, .5]], links: [{ g: 'chess' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
