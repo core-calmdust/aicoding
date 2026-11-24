@@ -157,33 +157,76 @@
     if (k === sceneKey) return;
     sceneKey = k;
     const el = $('scene');
-    el.classList.add('swap');
-    setTimeout(() => { el.innerHTML = ART.scene(st.scene, loc, 1); el.classList.remove('swap'); }, pref.anim ? 260 : 0);
+    el.classList.add('swap'); $('floor').classList.add('swap');
+    setTimeout(() => { el.innerHTML = ART.scene(st.scene, loc, 1); el.classList.remove('swap'); G.floorLoc = loc; drawFloor(); $('floor').classList.remove('swap'); }, pref.anim ? 260 : 0);
   }
-  /* the road on the stage floor, cut from paper: a strip that widens toward us, grass and stones along its edges (drawn for the real size, so nothing stretches) */
+  /* the stage floor, cut from paper and drawn for the real size (nothing stretches): what the way is made of, what lies beside it, what stands along it — one for each place, so it changes with the backdrop */
+  const FLOOR = {
+    tower: ['dirt', 'snow', 'post'], inn: ['dirt', 'snow', 'post'], forge: ['dirt', 'snow', 'rock'], mill: ['plank', 'water', 'post'], grave: ['dirt', 'snow', 'cross'],
+    engine: ['rail', 'grass', 'rock'], baggage: ['board', 0, 'crate'], third: ['aisle', 0, 0], dining: ['aisle', 0, 0], sleeper: ['aisle', 0, 0],
+    light: ['dirt', 'rock', 'rock'], harbor: ['plank', 'water', 'post'], net: ['dirt', 'sand', 'post'], clinic: ['dirt', 'grass', 'tuft'], shrine: ['flag', 'grass', 'lantern'],
+    bath: ['flag', 'grass', 'rock'], ryokan: ['flag', 'grass', 'lantern'], toji: ['dirt', 'grass', 'tuft'], mound: ['dirt', 'grass', 'rock'], spring: ['step', 'water', 'rock'],
+    chapel: ['flag', 'snow', 'cross'], scriptorium: ['board', 0, 0], cloister: ['flag', 'rock', 'col'], cellar: ['flag', 0, 'barrel'], hospice: ['dirt', 'snow', 'post'],
+  };
   function drawFloor() {
     const f = $('floor'); if (!f || !PCQ.matches) return;
-    if (!f.__l) { f.__l = 1; f.addEventListener('transitionend', drawFloor); }
-    const w = Math.round(f.clientWidth), h = Math.round(f.clientHeight);
-    if (!w || !h || f.__wh === w + 'x' + h) return; f.__wh = w + 'x' + h;
-    let sd = 7; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
-    const cx = w / 2, edge = (y, side) => cx + side * (w * .11 + (w * .62) * Math.pow(y / h, 1.15));
+    if (!f.__l) { f.__l = 1; f.addEventListener('transitionend', e => { if (e.propertyName === 'top') drawFloor(); }); }
+    const w = Math.round(f.clientWidth), h = Math.round(f.clientHeight), key = w + 'x' + h + ':' + G.floorLoc;
+    if (!w || !h || f.__wh === key) return; f.__wh = key;
+    const [way, side, prop] = FLOOR[G.floorLoc] || ['dirt', 'grass', 'tuft'];
+    let sd = 7 + (G.floorLoc || '').length * 131; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+    const n0 = v => v.toFixed(0), cx = w / 2, hw = y => w * .11 + w * .62 * Math.pow(y / h, 1.15), X = (u, y) => cx + u * hw(y);
+    const rowY = (j, n) => h * Math.pow(j / n, 1.6);
+    const quad = (u0, u1, y0, y1, g) => `M${n0(X(u0, y0) + g)},${n0(y0 + g * .4)} L${n0(X(u1, y0) - g)},${n0(y0 + g * .4)} L${n0(X(u1, y1) - g)},${n0(y1 - g * .4)} L${n0(X(u0, y1) + g)},${n0(y1 - g * .4)} Z`;
     const L = [], R = [];
-    for (let i = 0; i <= 14; i++) { const y = h * i / 14, j = (r() - .5) * w * .012 * (1 + i / 6); L.push([edge(y, -1) + j, y]); R.push([edge(y, 1) - j, y]); }
-    const pts = L.concat(R.reverse()).map(p => p[0].toFixed(0) + ',' + p[1].toFixed(0)).join(' ');
-    // a tuft of grass: blades from a base, sized by how near it is
-    const tuft = (x, y, s) => { let d = `M${(x - s).toFixed(0)},${y.toFixed(0)}`; const n = 5 + Math.floor(r() * 3); for (let k = 0; k <= n; k++) { const bx = x - s + 2 * s * k / n; d += ` L${(bx + (r() - .5) * s * .5).toFixed(0)},${(y - s * (.9 + r() * 1.3)).toFixed(0)} L${(bx + s / n).toFixed(0)},${(y - s * .15).toFixed(0)}`; } return d + ` L${(x + s).toFixed(0)},${y.toFixed(0)} Z`; };
-    const stone = (x, y, s) => `M${(x - s).toFixed(0)},${y.toFixed(0)} Q${(x - s * .9).toFixed(0)},${(y - s * .8).toFixed(0)} ${(x - s * .1).toFixed(0)},${(y - s * .75).toFixed(0)} Q${(x + s * .9).toFixed(0)},${(y - s * .6).toFixed(0)} ${(x + s).toFixed(0)},${y.toFixed(0)} Z`;
-    // the ground beside the road: a darker cut-paper sheet whose edge is a ragged row of grass
-    const side = sg => { const P = (sg < 0 ? L.slice() : R.slice().reverse()); let d = `M${sg < 0 ? -2 : w + 2},-2`; for (let i = 0; i < P.length - 1; i++) { const [x0, y0] = P[i], [x1, y1] = P[i + 1]; for (let k = 0; k < 6; k++) { const t = k / 6, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t, s = 3 + 16 * (y / h); d += ` L${(x - sg * s * .2).toFixed(0)},${y.toFixed(0)} L${(x + sg * s * (.6 + r() * .9)).toFixed(0)},${(y + s * .35).toFixed(0)}`; } } return d + ` L${P[P.length - 1][0].toFixed(0)},${h + 2} L${sg < 0 ? -2 : w + 2},${h + 2} Z`; };
+    for (let i = 0; i <= 14; i++) { const y = h * i / 14, j = (r() - .5) * w * .012 * (1 + i / 6); L.push([X(-1, y) + j, y]); R.push([X(1, y) - j, y]); }
+    const road = L.concat(R.slice().reverse()).map(p => n0(p[0]) + ',' + n0(p[1])).join(' ');
+    // the ground beside the way, its edge cut ragged (grass), lumpy (rock), round (snow) or smooth (sand)
+    const bank = (sg, kind) => { const P = sg < 0 ? L : R; let d = `M${sg < 0 ? -2 : w + 2},-2`;
+      for (let i = 0; i < P.length - 1; i++) { const [x0, y0] = P[i], [x1, y1] = P[i + 1]; const m = kind === 'grass' ? 6 : kind === 'sand' ? 1 : 3;
+        for (let k = 0; k < m; k++) { const t = k / m, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t, s = 3 + 16 * (y / h);
+          if (kind === 'grass') d += ` L${n0(x - sg * s * .2)},${n0(y)} L${n0(x + sg * s * (.6 + r() * .9))},${n0(y + s * .35)}`;
+          else if (kind === 'snow') d += ` Q${n0(x - sg * s * (.8 + r() * .6))},${n0(y + s * .5)} ${n0(x + sg * s * .3)},${n0(y + s * 1.1)}`;
+          else if (kind === 'rock') d += ` L${n0(x - sg * s * (.3 + r() * .8))},${n0(y + s * .3)} L${n0(x + sg * s * .2)},${n0(y + s * .9)}`;
+          else d += ` L${n0(x + sg * s * .2)},${n0(y)}`; } }
+      return d + ` L${n0(P[P.length - 1][0])},${h + 2} L${sg < 0 ? -2 : w + 2},${h + 2} Z`; };
+    let under = '', pave = '', dark = '', banks = '', bankCls = side === 'snow' ? 'snow' : side === 'sand' ? 'sand' : 'side', wave = '';
+    if (side === 'water') { under = `<rect class="water" x="0" y="0" width="${w}" height="${h}"/>`; for (let j = 1; j < 12; j++) { const y = rowY(j, 12), s = 6 + 22 * y / h; for (let x = (j % 2) * s * 2 - s * 2; x < w; x += s * 5.5) wave += `M${n0(x)},${n0(y)} q${n0(s * .7)},${n0(-s * .35)} ${n0(s * 1.4)},0 q${n0(s * .7)},${n0(s * .35)} ${n0(s * 1.4)},0 `; } }
+    else if (side) banks = bank(-1, side) + bank(1, side);
+    // what the way is made of
+    if (way === 'dirt' || way === 'flag' || way === 'rail') under += `<polygon class="road" points="${road}"/>`;
+    if (way === 'flag') for (let j = 0; j < 10; j++) { const y0 = rowY(j, 10), y1 = rowY(j + 1, 10), g = 1 + 4 * y1 / h, k = 2 + (j % 2); let u = -1; for (let i = 0; i < k; i++) { const u1 = i === k - 1 ? 1 : -1 + 2 * (i + .7 + r() * .6) / k; pave += quad(u, u1, y0, y1, g); u = u1; } }
+    if (way === 'plank') { for (let j = 0; j < 18; j++) { const y0 = rowY(j, 18), y1 = rowY(j + 1, 18); pave += quad(-1, 1, y0, y1, .6 + 2.4 * y1 / h); } for (const u of [-1.04, 1.04]) dark += quad(u - .04, u + .04, 0, h, 0); }
+    if (way === 'rail') { for (let j = 0; j < 16; j++) { const y0 = rowY(j, 16), y1 = rowY(j + 1, 16); pave += quad(-.8, .8, y0, y0 + (y1 - y0) * .45, 0); } for (const u of [-.46, .46]) dark += quad(u - .035, u + .035, 0, h, 0); }
+    if (way === 'step') for (let j = 1; j < 8; j++) { const y = rowY(j, 7.6), s = hw(y), ux = (j % 2 ? -.18 : .18) + (r() - .5) * .12; const rx = s * (.32 + r() * .08), ry = rx * (.22 + .1 * y / h); pave += `M${n0(X(ux, y) - rx)},${n0(y)} a${n0(rx)},${n0(ry)} 0 1,0 ${n0(rx * 2)},0 a${n0(rx)},${n0(ry)} 0 1,0 ${n0(-rx * 2)},0 Z`; }
+    if (way === 'board' || way === 'aisle') {   // floorboards: thin seams toward the far end, and the ends of the boards staggered
+      under += `<rect class="sand" x="0" y="0" width="${w}" height="${h}"/>`;
+      for (let u = -4; u <= 4; u += .5) { pave += quad(u - .012, u + .012, 0, h, 0); for (let j = 1; j < 9; j++) if ((j + Math.round(u * 2)) % 3 === 0) { const y0 = rowY(j, 9); pave += quad(u, u + .5, y0, y0 + 1 + 2 * y0 / h, 0); } }
+      if (way === 'aisle') { dark += quad(-.5, .5, 0, h, 0); under += `<path class="rug" d="${quad(-.5, .5, 0, h, 0)}"/>`; pave += quad(-.43, -.4, 0, h, 0) + quad(.4, .43, 0, h, 0); dark = ''; } }
+    // what stands along the way: tufts, stones, posts, crosses, lanterns, columns, barrels, crates
+    const tuft = (x, y, s) => { let d = `M${n0(x - s)},${n0(y)}`; const n = 5 + Math.floor(r() * 3); for (let k = 0; k <= n; k++) { const bx = x - s + 2 * s * k / n; d += ` L${n0(bx + (r() - .5) * s * .5)},${n0(y - s * (.9 + r() * 1.3))} L${n0(bx + s / n)},${n0(y - s * .15)}`; } return d + ` L${n0(x + s)},${n0(y)} Z`; };
+    const stone = (x, y, s) => `M${n0(x - s)},${n0(y)} Q${n0(x - s * .9)},${n0(y - s * .8)} ${n0(x - s * .1)},${n0(y - s * .75)} Q${n0(x + s * .9)},${n0(y - s * .6)} ${n0(x + s)},${n0(y)} Z`;
+    const rect = (x, y, ww, hh) => `M${n0(x)},${n0(y)} h${n0(ww)} v${n0(hh)} h${n0(-ww)} Z`;
+    const thing = (k, x, y, s) => {
+      if (k === 'post') return rect(x - s * .12, y - s * 2.4, s * .24, s * 2.4) + rect(x - s * .2, y - s * 2.5, s * .4, s * .16);
+      if (k === 'cross') return rect(x - s * .1, y - s * 2.2, s * .2, s * 2.2) + rect(x - s * .6, y - s * 1.7, s * 1.2, s * .2) + stone(x, y, s * .7);
+      if (k === 'lantern') return rect(x - s * .5, y - s * .3, s, s * .3) + rect(x - s * .16, y - s * 1.6, s * .32, s * 1.3) + rect(x - s * .45, y - s * 2.3, s * .9, s * .7) + `M${n0(x - s * .8)},${n0(y - s * 2.3)} L${n0(x)},${n0(y - s * 2.9)} L${n0(x + s * .8)},${n0(y - s * 2.3)} Z`;
+      if (k === 'col') return rect(x - s * .7, y - s * .4, s * 1.4, s * .4) + rect(x - s * .45, y - s * 4.2, s * .9, s * 3.8);
+      if (k === 'barrel') return `M${n0(x - s * .7)},${n0(y)} Q${n0(x - s)},${n0(y - s * .8)} ${n0(x - s * .7)},${n0(y - s * 1.6)} H${n0(x + s * .7)} Q${n0(x + s)},${n0(y - s * .8)} ${n0(x + s * .7)},${n0(y)} Z`;
+      if (k === 'crate') return rect(x - s * .8, y - s * 1.4, s * 1.6, s * 1.4);
+      if (k === 'rock') return stone(x, y, s * (.6 + r() * .5));
+      return tuft(x, y, s);
+    };
     let near = '', far = '';
-    for (const sg of [-1, 1]) for (let i = 0; i < 16; i++) {
-      const t = (i + .2 + r() * .6) / 16, y = h * Math.pow(t, 1.25), x = edge(y, sg) - sg * (r() * .02 * w), s = 5 + 30 * Math.pow(y / h, 1.1);
-      if (x < -s || x > w + s) continue;
-      const d = r() < .25 ? stone(x, y, s * .7) : tuft(x, y, s);
-      if (y < h * .4) far += d; else near += d;
-    }
-    f.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><polygon class="road" points="${pts}"/><path class="side" d="${side(-1)}${side(1)}"/><path class="far" d="${far}"/><path class="tuft" d="${near}"/></svg>`;
+    if (prop) { const tall = ['post', 'cross', 'lantern', 'col', 'barrel', 'crate'].includes(prop), N = tall ? 7 : 16;
+      for (const sg of [-1, 1]) for (let i = 0; i < N; i++) {
+        const t = (i + (tall ? .5 : .2 + r() * .6)) / N, y = h * Math.pow(t, 1.25), x = X(sg * (tall ? 1.12 : 1 + r() * .03), y), s = 5 + 30 * Math.pow(y / h, 1.1);
+        if (x < -s * 2 || x > w + s * 2) continue;
+        let d = thing(prop, x, y, s);
+        if (tall && side && side !== 'water' && r() < .6) d += thing(side === 'snow' || side === 'rock' ? 'rock' : 'tuft', X(sg * 1.3, y), y, s * .8);   // something small beside each post
+        if (y < h * .4) far += d; else near += d;
+      } }
+    f.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" class="w-${way} s-${side || 'none'}" aria-hidden="true">${under}<path class="wave" d="${wave}"/><path class="pave" d="${pave}"/><path class="dark" d="${dark}"/><path class="${bankCls}" d="${banks}"/><path class="far" d="${far}"/><path class="tuft" d="${near}"/></svg>`;
   }
   function layoutDock() {
     const pc = PCQ.matches;
@@ -197,10 +240,10 @@
     }
     document.documentElement.style.setProperty('--dockH', (pc ? h : 0) + 'px');
     // how far down the road the front row stands: fixed for the window, so nobody moves when the text strip changes
-    // the backdrop rises a little on a tall screen, and the back row stands on its ground line (not up in the air)
-    const dep = pc ? Math.max(0, Math.round(innerHeight * .42) - 250) : 0, raise = Math.round(dep * .45), sceneH = innerHeight - (h - 16 + raise);
+    // the backdrop rises a little on a tall screen; the back row stands on the road just below it (not up in the air)
+    const dep = pc ? Math.max(0, Math.round(innerHeight * .42) - 250) : 0, raise = Math.round(dep * .45);
     document.documentElement.style.setProperty('--raise', raise + 'px');
-    if (pc) document.documentElement.style.setProperty('--backB', Math.round(raise - 6 + sceneH * .035) + 'px'); else document.documentElement.style.removeProperty('--backB');
+    if (pc) document.documentElement.style.setProperty('--backB', Math.round(26 + raise - .2 * (h + 16 + raise)) + 'px');   // the back row stands on the far end of the road else document.documentElement.style.removeProperty('--backB');
     document.documentElement.style.setProperty('--fs', pc ? '1.1' : '1');
     document.documentElement.style.setProperty('--depth', (pc ? Math.max(0, Math.round(innerHeight * .42) - 250) : 0) + 'px');
     if (!pc) {
@@ -837,25 +880,33 @@
   function canClash() { return missLeft() > 0 && E.statements(S, st).length && E.evidence(S).length; }
   async function clash() {
     const SL = E.statements(S, st), EV = E.evidence(S);
+    // 1. whose words → 2. which night → 3. which part is wrong → 4. the evidence that breaks it (only what bears on that part)
     const who = await pickPerson('誰の発言を突く？', `的外れは今日あと${missLeft()}回まで。外せば、あなたの言葉が軽くなる。`, [...new Set(SL.map(x => x.who))], { mark: true });
     if (!who) return debate();
     const mine = SL.filter(x => x.who === who).sort((a, b) => b.night - a.night);
     let stmt = mine[0];
     if (mine.length > 1) { const v = await pickOpt(`${esc(nm(who))}の、どの夜の話？`, '', mine.map(x => ({ t: nightName(x.night), s: x.parts.map(q => partText(q, x)).join('。') + '。', v: x.id, ic: IC.talk }))); if (!v) return debate(); stmt = mine.find(x => x.id === v); }
-    const ev = await pickOpt('どの証拠をつきつける？', `${nm(who)}の話（${nightName(stmt.night)}）：${stmt.parts.map(q => partText(q, stmt)).join('。')}。`, EV.map(e => { const x = evText(e); return { t: x.t, s: x.s, v: e.id, ic: IC.show }; }));
-    if (!ev) return debate();
-    const part = stmt.parts.length === 1 ? 0 : await pickOpt('話の、どこがおかしい？', `つきつける証拠：${evText(EV.find(e => e.id === ev)).t}`, stmt.parts.map((p, i) => ({ t: `「${partText(p, stmt)}」`, v: String(i), ic: IC.clash })));
+    const told = `${nm(who)}の話（${nightName(stmt.night)}）：${stmt.parts.map(q => partText(q, stmt)).join('。')}。`;
+    const part = stmt.parts.length === 1 ? '0' : await pickOpt('話の、どこがおかしい？', told, stmt.parts.map((p, i) => ({ t: `「${partText(p, stmt)}」`, v: String(i), ic: IC.clash })));
     if (part == null) return debate();
-    const E1 = EV.find(e => e.id === ev), P1 = stmt.parts[+part];
+    const P1 = stmt.parts[+part], cand = E.clashEvidence(S, st, stmt.id, +part);
+    if (!cand.length) { await say([{ text: `「${partText(P1, stmt)}」——この言葉を崩せる証拠を、あなたはまだ持っていない。${P1.k === 'loc' ? `その夜${nm(who)}を別の場所で見たという話があれば、つきつけられる。` : P1.k === 'who' ? `その夜${nm(P1.who)}がどこにいたか、本人や誰かの話があれば、つきつけられる。` : 'その夜の現場で、同じ種類の痕跡を自分の目で見ていれば、つきつけられる。'}` }]); return debate(); }
+    const ev = await pickOpt('どの証拠をつきつける？', `おかしいのは：「${partText(P1, stmt)}」`, cand.map(e => { const x = evText(e); return { t: x.t, s: x.s, v: e.id, ic: IC.show }; }));
+    if (!ev) return debate();
+    const E1 = EV.find(e => e.id === ev);
     const lp = stmt.parts.find(p => p.k === 'loc');
     const items = [{ who: 'you', text: E1.k === 'self' ? `${nm(who)}。${nightName(stmt.night)}、「${partText(P1, stmt)}」と言ったな。${lp ? `だが、${locName(lp.loc)}から見えるのは${E.near(st, lp.loc).map(locName).join('と')}だけだ。` : ''}話が、話の中で食い違っている。` : `${nm(who)}。${nightName(stmt.night)}、「${partText(P1, stmt)}」と言ったな。だが、${E1.k === 'said' ? `${nm(E1.who)}は自分で、その夜は${locName(E1.loc)}にいたと言っている` : E1.k === 'trace' ? `わたしは${locName(E1.loc)}で、この目で「${SP.traceShort(st, E1)}」を見ている` : `${E1.by === 'you' ? 'わたしは' : nm(E1.by) + 'は'}その夜、${nm(E1.who)}を${locName(E1.loc)}で見ている`}。` }];
+    const r = E.judgeClash(S, st, stmt.id, +part, ev);
+    if (r.again) { await say([{ text: 'その食い違いは、もう皆の前で突いた。' }]); return debate(); }
     const t = pup(who); if (t) { t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); }
     openGate();
-    const r = E.judgeClash(S, st, stmt.id, +part, ev);
     if (!r.ok) G.gate.heat.you = 1;   // a miss turns the room on you as soon as it is said
     if (r.ok && r.other) items.push({ text: '食い違いは、たしかにあった。だが、ほころびたのは別の口だった。' });
     for (const e of r.ev || []) { const l = lineOf(e); if (l) items.push(l); }
-    if (!r.ok) items.push({ text: `${st.lex.meet}のざわめきが、あなたのほうへ向いた。証拠は、その言葉を崩していなかった。${missLeft() > 0 ? '' : '\n今日はもう、うかつに人の言葉を突けない。'}` });
+    if (!r.ok) {
+      const WHY = { agree: P1.k === 'fig' ? 'その人影の特徴は、痕跡と食い違っていなかった。' : P1.k === 'trace' ? '報告された痕跡は、あなたが見たものと同じだった。' : '居場所は、その証拠と同じだった。', sees: 'その場所は、いた所から見える。話の中に食い違いはなかった。', kind: '痕跡の種類が違い、比べようがなかった。' };
+      items.push({ text: `${WHY[r.why] || '証拠は、その言葉を崩していなかった。'}${st.lex.meet}のざわめきが、あなたのほうへ向いた。${missLeft() > 0 ? '' : '\n今日はもう、うかつに人の言葉を突けない。'}` });
+    }
     await say(items);
     closeGate();
     log({ k: 'clash', ok: r.ok }); save(); renderRoster(); debate();
