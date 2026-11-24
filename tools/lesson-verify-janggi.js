@@ -133,13 +133,123 @@ function puzzles(opt) {
   return opt && opt.facts ? { out, facts } : out;
 }
 
-module.exports = { puzzles, checkOne, engine, brd, dist, pieces, THEME };
+// (2026-11-24 担当D) the lessons on the 3D table (atlas/games/janggi-ls.js DONE: the capture basics b_rook・b_horse・b_pawn), as
+// xiangqi's (tools/lesson-verify.js xiangqi): every problem, ①〜⑨ and 追1〜:
+//  ① the goal set read from the rules = captures by the step's piece that no legal reply can take back (not the general) — the answer
+//    alone; the stored values (sc, = janggi/app.js problemPoints · 3D JANGGI.points) put it alone on top, and a fresh engine search
+//    (--deep ms) agrees. ② the second move is 100 or more worse and scores under 16. ③ 3 legal moves or more, another capture to be
+//    tempted by, and from problem 3 a trap (a capture by the step's piece — for the pawn, any capture at a loss — that is taken back).
+//  ④ the answer takes a piece worth 3 or more (not a 兵), the mover is not in check, no other free capture takes as much; a lesson's
+//    answers take two kinds of piece or more. ⑤ no position within 4 points (mirrored too) of another lesson problem, the lessons'
+//    reserve, a janggi puzzle or a xiangqi lesson / puzzle. ⑥ d = wrong captures + traps grows, the last above the first.
+//  ⑦⑧ ショウギツネ's words for the answer and every legal wrong move, read back against the board: the piece taken and its points,
+//    「取り返され」 only for a capture that is taken back (and the piece of yours that is lost), a smaller capture's points, 「取れない」
+//    only for a move that takes nothing; both arrows named; no polite form, no other game's words, no placeholders.
+//  ⑨ every legal move valued once; the 2D problemPoints and the 3D JANGGI.points are the same; the 3D lists only the checked steps.
+function lessons(opt) {
+  const E = engine(), vm = require('vm'), out = [], add = (id, j, m) => out.push({ step: 'lesson ' + id, q: j + 1, msg: m });
+  const LS = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'janggi/lessons.json'), 'utf8'));
+  const PZ = JSON.parse(fs.readFileSync(path.join(ROOT, 'janggi/puzzles.json'), 'utf8'));
+  const XL = JSON.parse(fs.readFileSync(path.join(ROOT, 'xiangqi/lessons.json'), 'utf8')), XP = JSON.parse(fs.readFileSync(path.join(ROOT, 'xiangqi/puzzles.json'), 'utf8'));
+  const app = fs.readFileSync(path.join(ROOT, 'janggi/app.js'), 'utf8'), src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8');
+  const lsSrc = (opt && opt.lsSrc) || fs.readFileSync(path.join(ROOT, 'atlas/games/janggi-ls.js'), 'utf8');
+  const w = {}; try { vm.runInNewContext(lsSrc, { window: w }); } catch (e) { add('-', -1, '⑧ atlas/games/janggi-ls.js: ' + e.message); return out; }
+  const JL = w.AtlasJanggiLs, DONE = JL.DONE || [];
+  // ⑨ one scoring: 2D problemPoints = 3D JANGGI.points (the same lines, janggi's sOfV with 800)
+  const body = t => { const i = t.indexOf('if (P.ok) return P.ok.includes(m) ? 20 : 0;'); return i < 0 ? '' : t.slice(i, t.indexOf('/ 0.5)', i)).replace(/\/\/[^\n]*/g, '').replace(/\s+/g, ' '); };
+  const b2 = body(app.slice(app.indexOf('function problemPoints(P, m)'))), b3 = body(src.slice(src.indexOf('points(P, m) {   // = janggi/app.js problemPoints')));
+  if (!b2 || b2.replace(/sOfV\(best\) - sOfV\(mine\)|const loss = |loss/g, '') .length < 50) add('-', -1, '⑨ janggi/app.js problemPoints not found');
+  if (!/Math\.tanh\(v \/ 800\)/.test(app) || !/const jgS = [^\n]*Math\.tanh\(v \/ 800\)/.test(src)) add('-', -1, '⑨ the 2D sOfV and the 3D jgS differ');
+  for (const k of ['mine >= best - 10 && !(best > WINT && mine < best)) return 20', 'best > WINT && mine > WINT) return 16', "mine > -WINT && mine >= 300 ? 8 : mine > -100 ? 4 : 0", 'mine < -WINT && best >= -WINT) return 0'])
+    if (!b2.includes(k) || !b3.includes(k)) add('-', -1, '⑨ the 2D / 3D scoring differs: ' + k);
+  if (!/janggi: JANGGI/.test(src)) add('-', -1, '⑨ the 3D table has no DATA.janggi');
+  if (!/steps: ls\.steps\.filter\(x => D\.includes\(x\.id\)\)/.test(src)) add('-', -1, '⑨ the 3D table lists steps that are not checked');
+  const WIN = E.WIN, WINT = E.WINT, sOfV = v => v > WINT ? 0.9 + 0.1 * Math.min(1, 6 / (WIN - v + 1)) : v < -WINT ? -(0.9 + 0.1 * Math.min(1, 6 / (WIN + v + 1))) : v > WINT - 1000 ? 0.88 : v < -(WINT - 1000) ? -0.88 : Math.tanh(v / 800) * 0.82;
+  const pts = (P, m) => { const val = new Map(P.sc), best = Math.max(...P.sc.map(e => e[1])), mine = val.has(m) ? val.get(m) : -WIN;
+    if (mine >= best - 10 && !(best > WINT && mine < best)) return 20; if (best > WINT && mine > WINT) return 16; return Math.max(0, Math.round(20 * (1 - (sOfV(best) - sOfV(mine)) / 0.5))); };
+  const T = E.typeOf, mTo = E.mTo, mFrom = E.mFrom, PTS = [0, 0, 3, 3, 5, 13, 7, 2];
+  const takeBack = (p, m) => { const q = p.clone().play(m); return q.moves().some(x => mTo(x) === mTo(m)); };
+  const caps = p => p.moves().filter(m => !E.isPass(m) && p.at(mTo(m)));
+  // ⑤ the pool
+  const pool = [];
+  LS.steps.forEach(st => st.problems.forEach((q, j) => pool.push([`lesson ${st.id} q${j + 1}`, brd(q.s)])));
+  for (const f of ['lesson_mate1.json', 'lesson_mate2.json']) { try { JSON.parse(fs.readFileSync(path.join(ROOT, 'janggi/tools', f), 'utf8')).forEach((q, j) => pool.push([`${f} ${j + 1}`, brd(q.s)])); } catch (e) {} }
+  PZ.themes.forEach(th => th.puzzles.forEach((q, j) => pool.push([`puzzle ${th.id} ${j + 1}`, brd(q.s)])));
+  XL.steps.forEach(st => st.problems.forEach((q, j) => pool.push([`xiangqi lesson ${st.id} ${j + 1}`, brd(q.s)])));
+  XP.themes.forEach(th => th.puzzles.forEach((q, j) => pool.push([`xiangqi ${th.id} ${j + 1}`, brd(q.s)])));
+  const plain = t => String(t).replace(/<[^>]+>/g, '').replace(/[\u0001\u0002]/g, '');
+  const deep = opt && opt.deep;
+  LS.steps.forEach((st, si) => { const id = st.id; if (!DONE.includes(id)) return; const K = JL.KIND[id];
+    if (!K) { add(id, -1, '④ no piece kind for the step'); return; }
+    if (!JL.INTRO[id]) add(id, -1, '⑧ no 3D intro');
+    let prevD = -1, firstD = null; const capT = new Set(), asks = new Set();
+    st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), all = p.moves(), nm = m => E.name(p, m);
+      if (p.side !== 0) a('⑧ the side to move is not 楚');
+      const sm = new Map(P.sc || []); if (sm.size !== (P.sc || []).length) a('⑨ a move is valued twice');
+      all.forEach(m => { if (!sm.has(m)) a(`⑨ ${nm(m)} has no value`); }); (P.sc || []).forEach(([m]) => { if (!all.includes(m)) a(`⑨ a valued move ${m} is not legal`); });
+      if (!all.includes(P.best)) { a('① the answer is not legal'); return; }
+      const goal = caps(p).filter(m => T(p.at(mFrom(m))) === K && T(p.at(mTo(m))) !== E.KING && !takeBack(p, m));
+      if (!goal.includes(P.best)) a(`① the answer ${nm(P.best)} is not a capture by the step's piece that cannot be taken back`);
+      goal.filter(m => m !== P.best).forEach(m => a(`② ${nm(m)} also takes a piece that cannot be taken back`));
+      const S = P.sc.slice().sort((x, y) => y[1] - x[1]);
+      if (S[0][0] !== P.best) a(`① the stored values prefer ${nm(S[0][0])}`);
+      else if (S.length > 1) { if (S[0][1] - S[1][1] < 100) a(`② the second move ${nm(S[1][0])} is only ${S[0][1] - S[1][1]} worse`); if (pts(P, S[1][0]) >= 16) a(`② the second move ${nm(S[1][0])} scores ${pts(P, S[1][0])}`); }
+      if (Math.abs(S[0][1]) > WINT - 1000) a('④ a won / lost position (mate in the values)');
+      if (deep) { const r = E.analyze(P.s, [], deep).list.sort((x, y) => y.v - x.v); if (r[0].m !== P.best) a(`① a fresh search (${deep} ms) prefers ${nm(r[0].m)}`); else if (r.length > 1 && r[0].v - r[1].v < 100) a(`② a fresh search: the second move is only ${r[0].v - r[1].v} worse`); }
+      const wrongCaps = caps(p).filter(m => m !== P.best && T(p.at(mTo(m))) !== E.KING);
+      const trapK = wrongCaps.filter(m => takeBack(p, m) && (K === 7 ? PTS[T(p.at(mFrom(m)))] > PTS[T(p.at(mTo(m)))] : T(p.at(mFrom(m))) === K));
+      if (all.length < 3) a(`③ ${all.length} legal moves`);
+      if (!wrongCaps.length) a('③ the answer is the only capture on the board');
+      if (j >= 2 && !trapK.length) a(`③ problem ${j + 1}: no capture that is taken back (the lesson's trap)`);
+      const ct = T(p.at(mTo(P.best))), cv = PTS[ct];
+      if (cv < 3) a('④ the answer takes a 兵'); if (p.inCheck()) a('④ the mover is in check');
+      caps(p).filter(m => m !== P.best && !takeBack(p, m) && PTS[T(p.at(mTo(m)))] >= cv && T(p.at(mTo(m))) !== E.KING).forEach(m => a(`④ ${nm(m)} takes as much for nothing`));
+      capT.add(ct);
+      const B = brd(P.s); for (const [who, b] of pool) { if (who === `lesson ${id} q${j + 1}`) continue; const e = dist(B, b); if (e <= 4) a(`⑤ ${e} points from ${who}`); }
+      const d = wrongCaps.length + trapK.length;
+      if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
+      if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`);
+      // ⑦⑧ the 3D words
+      let W; try { W = JL.lsJa(E, st, P, j, k => k === 'ok' ? '〈正〉' : '〈誤〉', si); } catch (e) { a('⑧ the words fail: ' + e.message); return; }
+      asks.add(plain(W.ask));
+      const AC = JL.NM(ct, false), NMv = ['車', '馬', '包', '象', '士', '卒', '兵', '将'];
+      const BAD = t => { const x = plain(t); if (/\{|undefined|NaN|null/.test(x)) a(`⑧ 「${x}」`); if (/(です|ます|ません|ました|でしょう)(?=[。！？]|$)/m.test(x)) a(`⑧ polite 「${x}」`); if (/シャンチー|チェス|帥|炮|仕|相（|九宮の外/.test(x)) a(`⑧ another game's words 「${x}」`); };
+      [W.ask, W.hintTx].forEach(BAD);
+      if (!plain(W.hintTx).includes(JL.NM(K, true))) a(`⑧ the hint does not name the step's piece 「${plain(W.hintTx)}」`);
+      const g = plain(W.good(P.best)); BAD(g);
+      if (!g.includes(AC) || !g.includes(PTS[ct] + '点')) a(`⑧ the praise 「${g}」 does not name the ${AC} (${PTS[ct]}点) taken`);
+      for (const n2 of NMv) if (n2 !== AC && g.includes(n2)) a(`⑧ the praise 「${g}」 names a ${n2}`);
+      for (const u of all.concat([P.best])) { const raw = plain(W.ng(u)), x = u === P.best ? '(the answer)' : nm(u); BAD(raw);
+        if (!raw.includes('〈誤〉') || !raw.includes('〈正〉')) { a(`⑦ ${x}: the words do not name both moves 「${raw}」`); continue; }
+        const uu = u === P.best ? null : u; if (uu == null) continue;
+        const t = raw.slice(0, raw.indexOf('〈正〉')), took = !E.isPass(u) && !!p.at(mTo(u)), c = took ? T(p.at(mTo(u))) : 0, mt = T(p.at(mFrom(u)));
+        const back = t.match(/きみの(.)を取り返され|すぐに(.)が取り返され|取った(.)がそのまま取り返され/);
+        if (back) { const b1 = back[1] || back[2] || back[3]; if (!took || !takeBack(p, u) || b1 !== JL.NM(mt, true)) a(`⑦ ${x}: 「${t}」 (no ${b1} of yours is taken back)`); }
+        else if (took && takeBack(p, u)) a(`⑦ ${x}: taken back, the words do not say it 「${t}」`);
+        if (/駒を取れない|取る手じゃない|取りそこね/.test(t) && took) a(`⑦ ${x}: 「${t}」 (it does take)`);
+        if (!took && !/駒を取れない|取る手じゃない|取りそこね/.test(t)) a(`⑦ ${x}: takes nothing, the words do not say it 「${t}」`);
+        const sm2 = t.match(/(.)は(\d+)点で?、(.)は(\d+)点|\((.)?(\d+)点\)止まり|（(\d+)点）止まり/);
+        if (took && !takeBack(p, u)) { if (!sm2) a(`⑦ ${x}: a smaller free capture, the points are not said 「${t}」`); else if (!t.includes(JL.NM(c, false) + '（' + PTS[c] + '点）') && !t.includes(JL.NM(c, false) + 'は' + PTS[c] + '点')) a(`⑦ ${x}: the points of the ${JL.NM(c, false)} 「${t}」`);
+          if (PTS[c] >= cv) a(`⑦ ${x}: 「${t}」 (it does not take less)`); }
+        if (!raw.slice(raw.indexOf('〈正〉')).includes(AC)) a(`⑦ ${x}: the right move's piece is not named 「${raw}」`);
+      }
+    });
+    if (capT.size < 2) add(id, 4, '④ every answer takes the same kind of piece');
+    if (asks.size < st.problems.length) add(id, -1, '⑧ the same question twice in a lesson');
+  });
+  return out;
+}
+
+module.exports = { puzzles, lessons, checkOne, engine, brd, dist, pieces, THEME };
 if (require.main === module) {
-  const out = puzzles(), json = process.argv.indexOf('--json');
+  const dp = process.argv.indexOf('--deep'), out = puzzles().concat(lessons({ deep: dp > 0 ? +process.argv[dp + 1] : 0 })), json = process.argv.indexOf('--json');
   if (json > 0) fs.writeFileSync(process.argv[json + 1], JSON.stringify(out, null, 1));
   const by = {}; for (const o of out) (by[o.step + ' ' + o.q] = by[o.step + ' ' + o.q] || []).push(o.msg);
   for (const k in by) console.log(k + ': ' + by[k].join(' / '));
-  const P = JSON.parse(fs.readFileSync(path.join(ROOT, 'janggi/puzzles.json'), 'utf8')), tot = P.themes.reduce((a, t) => a + t.puzzles.length, 0), badN = new Set(out.filter(o => o.q > 0).map(o => o.step + o.q)).size;
+  const P = JSON.parse(fs.readFileSync(path.join(ROOT, 'janggi/puzzles.json'), 'utf8')), tot = P.themes.reduce((a, t) => a + t.puzzles.length, 0), badN = new Set(out.filter(o => o.q > 0 && /^puzzle /.test(o.step)).map(o => o.step + o.q)).size;
   console.log(`janggi puzzles: ${tot - badN}/${tot} pass` + (out.some(o => o.q <= 0) ? ' · general: ' + out.filter(o => o.q <= 0).length : ''));
+  { const LS = JSON.parse(fs.readFileSync(path.join(ROOT, 'janggi/lessons.json'), 'utf8')), w = {}; require('vm').runInNewContext(fs.readFileSync(path.join(ROOT, 'atlas/games/janggi-ls.js'), 'utf8'), { window: w });
+    const D = w.AtlasJanggiLs.DONE, n = LS.steps.filter(s => D.includes(s.id)).reduce((a, s) => a + s.problems.length, 0), b = new Set(out.filter(o => /^lesson /.test(o.step) && o.q > 0).map(o => o.step + o.q)).size;
+    console.log(`janggi lessons (${D.join('・')}): ${n - b}/${n} pass`); }
   process.exitCode = out.length ? 1 : 0;
 }
