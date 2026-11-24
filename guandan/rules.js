@@ -110,7 +110,7 @@ function setupPage(P, api) {
 function build() {
   if (tour) return tour;
   const m = document.createElement('div'); m.className = 'rt-mount'; $('#rulesBody').appendChild(m);
-  const pages = [{ id: 'intro', title: () => esc(t('title')) + ` <small class="rt-py">guàndàn</small>`, body: () => '', html: () => overview() + RuleTour.intro({ img: IMG, origin: esc(t('r.origin')), players: esc(t('r.players')), time: esc(t('r.time')), history: esc(t('r.hist')), win: esc(t('r.win')), culture: esc(t('r.cult')), lang: A.LANG }) }];
+  const pages = [{ id: 'intro', title: () => esc(t('title')) + ` <small class="rt-py">guàndàn</small>`, body: () => '', html: () => overview() + RuleTour.intro({ img: IMG, origin: esc(t('r.origin')), players: esc(t('r.players')), time: esc(t('r.time')), history: esc(t('r.hist')), win: esc(t('r.howwin')), culture: esc(t('r.cult')), lang: A.LANG }) }];
   PAGES.forEach(P => pages.push({ id: P.id, title: () => esc(R(P.id, 't')), body: () => esc(R(P.id, 'b')), task: () => esc(R(P.id, 'task')), setup: api => setupPage(P, api), teardown() {} }));
   tour = RuleTour.create({ mount: m, store: 'aicoding-guandan-rules', lang: () => A.LANG, aspect: 1.45, sound: k => A.sfx(k),
     close: () => A.closeOv('#rulesOverlay'),
