@@ -2609,7 +2609,16 @@ function near53(opt) { const src = require('fs').readFileSync(path.join(ROOT, 'a
       if (/'ls\.failed'/.test(app) && !/n \+ 20 >= 75 \? 'ls\.failed' : 'ls\.failedFar'/.test(app)) out.push({ step: g + '/' + A80, q: 0, msg: '追82 the not-passed heading ls.failed is said whatever the points' });
       bare.forEach(m => out.push({ step: g + '/' + A80, q: 0, msg: `追82 a lesson end heading not under n + 20 >= 75: ${m[0].slice(0, 60)}` }));
       const fa = [...i18.matchAll(/(["'])ls\.failedFar\1\s*:\s*(["'])((?:(?!\2).)*)\2/g)].map(m => [m[0], m[3]]); if (fa.length < 14) out.push({ step: g + '/' + I80, q: 0, msg: `追82 ls.failedFar in ${fa.length} of 14 languages` });
-      fa.forEach(m => { if (NEARF.test(m[1])) out.push({ step: g + '/' + I80, q: 0, msg: `追82 ls.failedFar says it was close 「${m[1]}」` }); }); } }
+      fa.forEach(m => { if (NEARF.test(m[1])) out.push({ step: g + '/' + I80, q: 0, msg: `追82 ls.failedFar says it was close 「${m[1]}」` }); }); }
+    // (2026-11-25 05:50 担当B) reversi/opcourse.js — the openings course: its steps have 1〜5 problems (picks/poolOf), so 「one more right answer」 is
+    //  20 points on the step's total: near = (sum + 20) on 20 × the number of problems reaches 75. The heading must be ls.failed only when near.
+    { const oc = (opt && opt.oc80) || fs.readFileSync(path.join(ROOT, 'reversi/opcourse.js'), 'utf8');
+      if (!/'ls\.failed'/.test(oc)) out.push({ step: 'reversi/opcourse.js', q: 0, msg: '追82 the openings course end heading ls.failed not found (moved?)' });
+      [...oc.matchAll(/t\(pass \? '[\w.]+' : ([^)]*)\)/g)].filter(m => !/^near \? 'ls\.failed' : 'ls\.failedFar'$/.test(m[1].trim())).forEach(m => out.push({ step: 'reversi/opcourse.js', q: 0, msg: `追82 the openings course end heading not under near: ${m[0].slice(0, 60)}` }));
+      if (!/near = Math\.round\(\(sum \+ 20\) \* 100 \/ \(20 \* L\.ks\.length\)\) >= 75/.test(oc)) out.push({ step: 'reversi/opcourse.js', q: 0, msg: '追82 the openings course: near is not 「one more right answer (20 points) passes」' });
+      // and its numbers: for every step size 1〜5 and every total, near ⇔ one more full answer passes (the far heading never on a step one answer from passing)
+      for (let k = 1; k <= 5; k++) for (let sum = 0; sum <= 20 * k; sum++) { const n = Math.round(sum * 100 / (20 * k)), near = Math.round((sum + 20) * 100 / (20 * k)) >= 75;
+        if (n < 75 && near !== (Math.round(Math.min(20 * k, sum + 20) * 100 / (20 * k)) >= 75)) out.push({ step: 'reversi/opcourse.js', q: 0, msg: `追82 near wrong at ${k} problems, ${sum} points` }); } } }
   return out; }
 const N81_DONE = ['gomoku', 'amazons', 'checkers', 'chess', 'connect4', 'go', 'hex', 'mancala', 'morris', 'shogi', 'tafl', 'xiangqi', 'konane'], N81_NO_RAMPUI = new Set(['amazons', 'hex']);
 function xiangqiOpen(opt) {
