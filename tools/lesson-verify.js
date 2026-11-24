@@ -777,7 +777,65 @@ function checkers(opt) {
         if (/二重コーナー/.test(t) && !f.oppDC) a(`⑦ ${nm(m)}: 「${t}」 — the opponent cannot reach a double corner`);
         if (/キングにな|王冠|キングを作/.test(t) && !f.oppCrown) a(`⑦ ${nm(m)}: 「${t}」 — the opponent cannot crown`); }
     }); });
+  ckWarm(opt, L, E, X, val, moveVal, add, only);
   return out;
+}
+// (2026-11-24 第2期 追14) the checkers warm-ups of CK_DONE (lessons.json step.ramp, the 2D words in ja and チェッカニ's 3D lines in
+//   checkers/voice-crab-ja.js 'ramp:<id>/<j>/<f>'): explain — the marked move (hl → ok) is legal and keeps the lesson's result (①), the
+//   words say 「その一つ」 when more moves keep it, every claim is the board's (the number of moves that keep it, 勝ち / 引き分け, a king
+//   jumped next to the enemy king, a man about to be jumped that crowns, a double corner, the enemy man caught when it comes on, the
+//   crowning moves that only draw), and at least one board reason is given (⑧); try — P.ok = the moves that keep the result (①②), the
+//   gold ring on their piece, 「色と向きを入れかえた同じ形」 is the explain's board turned round, the words' result is the lesson's.
+function ckWarm(opt, L, E, X, val, moveVal, add, only) {
+  const fs = require('fs');
+  let V = (opt && opt.voice) || null;
+  if (!V) { const w = {}; try { new Function('window', fs.readFileSync(path.join(ROOT, 'checkers/voice-crab-ja.js'), 'utf8'))(w); } catch (e) {} V = ((w.I18N || {})['ja@crab']) || {}; }
+  const ja = x => x == null ? '' : typeof x === 'string' ? x : String(x.ja || '');
+  const N = t => { const k = '〇一二三四五六七八九'.indexOf(t); return k >= 0 ? k : +t; };
+  L.steps.forEach(st => { const id = st.id; if (!CK_DONE.has(id) || (only && !only.has(id)) || !st.ramp) return;
+    const want = id === 'e_draw' ? 0 : 1, R = { 1: '勝ち', 0: '引き分け', '-1': '負け' };
+    st.ramp.forEach((r, j) => { const a = m => add(id, -1, `warm-up ${j + 1} (${r.k}): ${m}`), p = E.Pos.from(r.s), all = p.moves(), nm = m => E.name(p, m);
+      if (val(p, 8) !== want) { a(`① the position is ${R[val(p, 8)]} for the side to move, the lesson wants ${R[want]}`); return; }
+      const v = new Map(all.map(m => [m, moveVal(p, m)])), G = all.filter(m => v.get(m) === want), W = all.filter(m => !G.includes(m));
+      const F = new Map(all.map(m => [m, X.ckLF(E, p, m)]));
+      const T2 = ['t', 'body', 'g', 'h', 'y'].map(f => ja(r[f])).join(' '), T3 = ['t', 'body', 'g', 'h', 'y'].map(f => V[`ramp:${id}/${j}/${f}`] || (f === 'h' && r.src === 'turn' ? V['ls.' + id + '.hint'] : '') || '').join(' ');
+      const texts = [['2D', T2], ['3D', T3]].filter(x => x[1].trim());
+      const res = t => { if (/勝ちを保|勝ちにつなが|勝てる|勝ち切/.test(t) && want !== 1) a(`⑧ 「${t.slice(0, 40)}…」: the result is ${R[want]}`); if (/引き分けに(でき|持ちこ)|負けない手/.test(t) && want !== 0) a(`⑧ 「${t.slice(0, 40)}…」: the result is ${R[want]}`); };
+      if (r.k === 'explain') {
+        const hl = (r.marks || []).filter(x => x[1] === 'hl').map(x => x[0] - 1), to = (r.marks || []).filter(x => x[1] === 'ok').map(x => x[0] - 1);
+        const M = all.filter(m => hl.includes(E.mFrom(m)) && to.includes(E.mTo(m)));
+        if (hl.length !== 1 || to.length !== 1 || M.length !== 1) { a(`① the marks (hl ${hl.map(x => x + 1)} → ok ${to.map(x => x + 1)}) are not one legal move`); return; }
+        const m = M[0], f = F.get(m);
+        if (v.get(m) !== want) { a(`① the marked move ${nm(m)} is ${R[v.get(m)]}`); return; }
+        const after = f.after;
+        const caught = after.moves().some(r2 => { const fr = E.mFrom(r2), pc = after.at(fr); if (pc === 2 || pc === 4 || E.mCap(r2)) return false; const q = after.clone().play(r2); return q.caps().some(c => E.mCap(c) & E.bit(E.mTo(r2))); });
+        for (const [who, t] of texts) { res(t); let why = 0; const b = (re, ok, msg) => { if (re.test(t)) { if (ok) why++; else a(`⑧ ${who} 「${t.match(re)[0]}」: ${msg}`); } };
+          if (G.length > 1 && !/一つ|ひとつ/.test(t)) a(`⑧ ${who}: ${G.length} moves keep the result (${G.map(nm).join(' ')}), the words give the marked one as the only one`);
+          if (/少ない/.test(t) && !(G.length * 2 < all.length)) a(`⑧ ${who} 「少ない」: ${G.length} of ${all.length}`);
+          if (/一つか二つ/.test(t) && G.length > 2) a(`⑧ ${who} 「一つか二つ」: ${G.length}`);
+          const c = t.match(/([0-9〇一二三四五六七八九]+)つの手のうち([0-9〇一二三四五六七八九]+)つ/); if (c && (N(c[1]) !== all.length || N(c[2]) !== G.length)) a(`⑧ ${who} 「${c[0]}」: ${G.length} of ${all.length}`);
+          const c2 = t.match(/ほかの([0-9〇一二三四五六七八九]+)つの手/); if (c2 && N(c2[1]) !== W.length) a(`⑧ ${who} 「${c2[0]}」: ${W.length} other moves`);
+          b(/二重コーナーへ逃がさない|二重コーナーに逃がさない/, G.every(x => !F.get(x).oppDC) && W.some(x => F.get(x).oppDC), 'no wrong move lets the enemy king into a double corner (or a right one does)');
+          b(/二重コーナーへ逃げこむ|二重コーナーに逃げこむ/, (p.at(E.mFrom(m)) === 2 || p.at(E.mFrom(m)) === 4) && f.tDC, `the marked move ${nm(m)} is not a king going into a double corner`);
+          b(/となりに入/, W.length && W.every(x => F.get(x).near && F.get(x).net < 0) && G.every(x => !F.get(x).near), 'not every other move goes next to an enemy piece and is jumped (or a right one does)');
+          b(/取られて|取られちゃ|取られてしま|跳び越され(て|る)/, W.length && W.every(x => F.get(x).net < 0) && G.every(x => F.get(x).net >= 0), 'not every other move gives a piece away (or the right one does)');
+          b(/跳び越されそう|ねらわれて/, f.fled, `the marked piece is not under attack`);
+          b(/取られずにキング|キングになれば助か|キングになって逃げ/, f.crown && f.fled && f.net >= 0, `${nm(m)} does not crown a piece out of danger`);
+          b(/跳び越して取れる|相手のマンを止める/, caught, 'no enemy man that comes on can be taken');
+          b(/すぐキングになる手は、?引き分けどまり/, W.some(x => F.get(x).crown) && W.filter(x => F.get(x).crown).every(x => v.get(x) === 0), 'the crowning moves do not all only draw');
+          if (!why) a(`⑧ ${who}: no board reason for ${nm(m)} (why it keeps the result, what the others do)`); }
+      } else if (r.k === 'try') {
+        const okS = new Set((r.ok || []).map(n => all.find(m => nm(m) === n)).filter(x => x != null));
+        if (okS.size !== (r.ok || []).length) a(`① an answer is not legal (${r.ok})`);
+        G.forEach(m => { if (!okS.has(m)) a(`② ${nm(m)} keeps the result but is scored wrong`); });
+        okS.forEach(m => { if (!G.includes(m)) a(`① the answer ${nm(m)} is ${R[v.get(m)]}`); });
+        const look = (r.look || []).map(q => q - 1); if (look.length && ![...okS].every(m => look.includes(E.mFrom(m)))) a('⑧ the gold ring is not on the answer\'s piece');
+        const prev = st.ramp[j - 1];
+        for (const [who, t] of texts) { res(t);
+          if (/色と向きを入れかえた同じ形/.test(t) && !(prev && ckFlip(prev.s.b) === r.s.b && prev.s.side !== r.s.side)) a(`⑧ ${who} 「色と向きを入れかえた同じ形」: not the warm-up before turned round`);
+          if (/金の丸/.test(t) && !look.length) a(`⑧ ${who} 「金の丸」: no ring`); }
+      }
+    }); });
 }
 // (2026-11-24 第2期) tafl: the basics TF_DONE (b_move・b_cap・b_hostile), every problem with the rules (tafl/engine.js):
 //   ①② P.ok = the goal set exactly (b_move: the king's slides to a non-corner edge square; b_cap: every capture, all against a piece
