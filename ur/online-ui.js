@@ -574,7 +574,7 @@ function olGuard(sel) {
     if (sel !== '#btnNew' || net.spectate || net.done) olDetach();
   }, true);
 }
-['#btnNew', '#btnLesson', '#btnPuzzle', '#btnStart'].forEach(olGuard);
+['#btnNew', '#btnLesson', '#btnStart'].forEach(olGuard);
 // a lesson or puzzle started from the lessons / puzzles dialog (rules tab, lists) leaves the online game the same way
 ['startLesson', 'startPuzzle'].forEach(fn => {
   const orig = window[fn]; if (typeof orig !== 'function') return;
