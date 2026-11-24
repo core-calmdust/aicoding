@@ -110,7 +110,7 @@
     const close = () => { if (!V3 || V3.ov !== ov) return; removeEventListener('popstate', onPop); if (hist) { hist = false; try { history.back(); } catch (x) {} }
       if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); teardown(); ov.classList.remove('on'); document.documentElement.classList.remove('exv-open'); setTimeout(() => ov.remove(), 260);
       // (2026-11-24 audit) opened from a story's figure: back to the story; otherwise focus returns to what opened the case
-      const f = window.AtlasGallery.onClose; window.AtlasGallery.onClose = null; if (f) f(); else if (ret && ret.isConnected && ret.offsetParent) ret.focus({ preventScroll: true }); };
+      const f = window.AtlasGallery.onClose; window.AtlasGallery.onClose = null; if (f) f(); else setTimeout(() => { const b = ret && ret.isConnected && ret.offsetParent ? ret : document.querySelector(`.muroom.on .gxc[data-id="${id}"]`); if (b) b.focus({ preventScroll: true }); }, 150); };   // (after the history step back, which may redraw the room)
     ov.querySelector('.exclose').onclick = () => { if (ov.quitPlay && ov.classList.contains('exv-play')) ov.quitPlay(); else close(); };   // (during a game the × at the top right ends the game — as in the portal's 3D games — and a second one closes the case)
     { const pb = ov.querySelector('[data-k="play"]'); let P = PLAY[id], pid = id;   // (pid: the board's key in museum/play.js and museum/rules.js — a two-sided exhibit has a second game, P.alt)
       const need = () => Promise.resolve(window.AtlasLazy ? AtlasLazy.need(P.game) : 0).then(() => P.src ? load(P.src + '?v=' + V) : 0);     // 所蔵品で遊ぶ: a game on this board, here in the museum (museum/play.js)
