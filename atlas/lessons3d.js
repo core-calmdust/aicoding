@@ -647,7 +647,7 @@
     lead: ['{m}が定跡の手。', '正解は{m}だったコン。', 'ここは{m}を指したかったね。', '本筋は{m}なの。', 'いちばんは{m}！', '定跡は{m}だったの。', 'ここは{m}が本筋コン。', '答えは{m}！'],
     // (2026-11-22 lesson loop) the praise, the soft words after a miss, the push on — each opening takes them in its own order (shOpVoice)
     cheer: ['いいね！', 'さすが！', 'お見事！', 'ばっちり！', 'その調子！', '上手！', 'ナイス！', 'よく見つけたね！', 'すばらしい！', 'そうそう、それ！', 'いい手だね！', '完璧！'],
-    soft: ['おしい！', 'ドンマイ！', 'あと少しだった！', 'いい線いってたコン！', '大丈夫、ここで覚えちゃおう！', '気にしない、気にしない！', 'よくある迷いだから平気！', 'だいじょうぶ、次はきっと指せるコン！', 'あと一歩！', '今度はもう覚えたでしょ？'],
+    soft: ['平気平気！', 'ドンマイ！', 'もう1回！', '一緒に確認！', '大丈夫、ここで覚えちゃおう！', '気にしない、気にしない！', 'よくある迷いだから平気！', 'だいじょうぶ、次はきっと指せるコン！', '次は見えるよ！', '今度はもう覚えたでしょ？'],
     push: ['次もこの調子でいこう！', 'どんどん行こう！', 'その勢いで次へ進もう！', 'まだまだいけるね！', 'この感じで続けよう！', '次も楽しみだコン！'],
     // (2026-11-21) the line's next move (lineProbs: the castles, 鬼殺し, 立石流 … — problems made from the line itself)
     askL: ['手順の続き、{s}の次の一手はどれかな？', '{s}の番だコン。完成の形を目指して、ここで何を指す？', 'さあ、手順を思い出して！ {s}の一手は？', '『{n}』の続きだね。{s}ならここでどう指す？', '{s}の一手コン。手順どおりに指してみて！'],
@@ -1120,7 +1120,7 @@
     pct: ['強い人の対局の{a}%で、この手が選ばれている。', '実戦では{a}%がこの手。いちばん人気！', '強い人の{a}%が指した、定跡の本筋の手。', 'この場面では{a}%の人がこれを選ぶ。覚えておこう！', 'たくさんの対局のうち{a}%で、この手が指されている。', '{a}%の人がこの手を選んでいる、王道の一手なんだ。'],
     cheer: ['いいね！', 'さすが！', 'お見事！', 'ナイス！', 'その調子！', 'ばっちりピョン！', 'すごい、正解！', 'いい手を選んだね！', 'よく見つけたね！', '上手！', '完璧ピョン！', 'やったね！'],
     push: ['次もこの調子で行こう！', 'どんどん進もう！', 'まだまだいけるピョン！', '次の問題も楽しみだね！', 'その勢いで続けよう！', '次もいけるはず！'],
-    soft: ['おしい！', '大丈夫、', 'ドンマイ！', 'いい線いってたね。', 'ここはよくある迷いどころだね。', '気にしない、気にしない！', 'あと一歩！', '今度こそいけるピョン！', 'これで覚えちゃおう！', 'みんな一度は迷うところ。'],
+    soft: ['平気平気！', '大丈夫、', 'ドンマイ！', '一緒に確認ね。', 'ここはよくある迷いどころだね。', '気にしない、気にしない！', '次は見えるよ！', '今度こそいけるピョン！', 'みんな通る道！', 'みんな一度は迷うところ。'],
     lead: ['正解は{m}。', 'ここは{m}が本筋ピョン。', '{m}が定跡の手なんだ。', '光っていたのは{m}。', '{m}を指したかったところ！', 'ここでは{m}がいちばん人気。'],
   };
   const CH_NG = {   // what yours gives up ({b} / {a}: % of games, {w}: what the right move does)
@@ -1252,7 +1252,7 @@
     ask: [''], pct: [''],
     cheer: ['いいね！', 'さすが！', 'お見事！', 'ナイス！', 'その調子！', 'ばっちりピョン！', 'すごい、正解！', 'いい手を選んだね！', 'よく見つけたね！', '上手！', '完璧ピョン！', 'やったね！'],
     push: ['次もこの調子で行こう！', 'どんどん進もう！', 'まだまだいけるピョン！', '次の問題も楽しみだね！', 'その勢いで続けよう！', '次もいけるはず！'],
-    soft: ['おしい！', '大丈夫、', 'ドンマイ！', 'いい線いってたね。', 'ここはよくある迷いどころだね。', '気にしない、気にしない！', 'あと一歩！', '今度こそいけるピョン！', 'これで覚えちゃおう！', 'みんな一度は迷うところ。'],
+    soft: ['平気平気！', '大丈夫、', 'ドンマイ！', '一緒に確認ね。', 'ここはよくある迷いどころだね。', '気にしない、気にしない！', '次は見えるよ！', '今度こそいけるピョン！', 'みんな通る道！', 'みんな一度は迷うところ。'],
     lead: ['正解は{m}。', '答えは{m}。', 'ここは{m}を指したかった！', '{m}が決め手だったピョン。', 'いちばんの手は{m}。', '{m}が正解。'],
     hint: ['動ける駒を、ひとつずつ確かめてみて！', '相手の次の一手も想像してみようピョン。', 'あせらずに、候補の手をくらべてみて！', '指したあと、取られる駒がないかも確かめよう！', 'いちばん強い手から考えるのがコツだピョン！', '相手の駒の利きを、1つずつなぞってみて。', 'チェック、駒取り、ねらいの順に探すと見つかりやすい！'],
   };
@@ -1433,7 +1433,7 @@
         cap: '取ったあとの位置から、次の駒もねらえる？', safe: '赤いしましまのマスには入れないピョン。ねらわれていないマスを伝っていこう！',
       },
       good: [(x, R) => `いいね、${x}で正解！ ${R} この調子で次も行こう！`, (x, R) => `お見事！ ${x}が最短コースだピョン。${R}`, (x, R) => `さすが、よく見つけたね！ ${x}、ばっちり。${R} どんどん上手になってるピョン！`],
-      ng: [(m, x, W) => `大丈夫、ここで覚えればいい！ ${m}が近道だったピョン。${x}だと、${W}`, (m, x, W) => `あと少し！ 正解は${m}。${x}では、${W}`, (m, x, W) => `${m}を選べたら満点だったね。${x}にすると、${W} 次はいけるはず！`],
+      ng: [(m, x, W) => `大丈夫、ここで覚えればいい！ ${m}が近道だったピョン。${x}だと、${W}`, (m, x, W) => `次は大丈夫！ 正解は${m}。${x}では、${W}`, (m, x, W) => `${m}を選べたら満点だったね。${x}にすると、${W} 次はいけるはず！`],
       R: {
         last: ['最後の★までひとっ飛び、これで全部集まったね。', '残っていた★を一気に回収！ 手数もぴったり。', 'これで★はゼロ。ムダな手がひとつもなかった！'],
         cap: [p => `黒い${p.cp}を取って、次の★へも${p.how}がつながる。残りあと${p.r}手！`, p => `${p.cp}を取ったマスが、そのまま次への近道になってる。`, p => `${p.cp}を取りつつ、次の★まで${p.r}手。順番がばっちり！`],
@@ -2260,7 +2260,7 @@
   const RV_CH = {
     good: ['いい感じ！', 'さすが！', 'お見事！', 'ばっちり！', 'やった！', 'いい目してる！', 'すごいすごい！', 'そうそう、それ！'],
     push: [null, 'この調子で次も行こう！', null, 'どんどん行こう！', 'その勢いで次へ！'],
-    soft: ['大丈夫！', 'ドンマイ！', 'あと少しだった！', '気にしない、気にしない！', 'あと一歩！', '平気、平気！', 'よくある見落とし！', 'いっしょに見てみよう！'],
+    soft: ['大丈夫！', 'ドンマイ！', 'もう1回！', '気にしない、気にしない！', '次は見えるよ！', '平気、平気！', 'よくある見落とし！', 'いっしょに見てみよう！'],
     tail: [null, null, 'これで覚えちゃおう！', null, '次はきっと見つけられる！'],
     green: ['正解は緑の枠のマス。', '緑の枠が、いちばんいい手。', 'いちばんは緑の枠！', '答えは緑の枠のところ。', '緑の枠に打てばよかったんだ。'],
   };
@@ -2826,7 +2826,7 @@
     },
     good: ['そうそう、それ！', 'ばっちりだペン！', 'いい目をしてるね！', 'やったね！', 'すてきな一手！', 'さすが、きみ！', 'いいね、その点！', 'よく見つけたね！', '完璧だペン！', '上手だね！'],
     push: ['この調子で次もいこう！', 'その勢いで、どんどん行こう！', '次も楽しみだペン！', 'まだまだいけるペン！'],
-    soft: ['ここから覚えよう！', '大丈夫、', 'ドンマイ！', 'ひとつずつ確かめよう！', '見直してみよう！', '気にしないで！', '次はいけるペン！', 'よくある迷い方！', '今度は見えるはず！', 'いっしょに見てみよう。'],   // (追39・追53: no 「あと少し」「いい線」 — a verified problem's other moves score 12 or less)
+    soft: ['ここから覚えよう！', '大丈夫、', 'ドンマイ！', '一緒に確認！', '見直してみよう！', '気にしないで！', '次はいけるペン！', 'よくある迷い方！', '今度は見えるはず！', 'いっしょに見てみよう。'],   // (追39・追53: no 「あと少し」「いい線」 — a verified problem's other moves score 12 or less)
     near: /^(あと少し|あと一歩|いい線)/,
     why: {
       win: ['{d}に5つ並んで勝ち！ 最後の一手を見逃さなかったね。', '5つそろって{c}の勝ちだペン。'],
@@ -2982,7 +2982,7 @@
   // the hints and every reason below have five wordings, taken by the problem's number, so no line comes twice in a lesson
   const GM_V = {
     cheer: ['いいね、その一手！', 'さすがだペン！', 'ばっちり！', 'お見事！', 'やった、正解！', 'ナイス！', 'すごい、大正解だペン！', 'そうそう、そこ！', 'いい目してる！', '上手！', '完璧だペン！', 'よく見つけた！'],
-    soft: ['あと少しだったね！', '大丈夫だペン！', 'ドンマイ！', 'あと一歩だった！', 'いい線いってたペン！', '次は見つけられるはず！', '気にしない、気にしない！', 'よくある見落としなんだ。', 'いっしょに確かめよう！', 'これで覚えちゃおう！', '今度こそいけるペン！'],
+    soft: ['もう1回！', '大丈夫だペン！', 'ドンマイ！', '次は見えるよ！', '一緒に確認！', '次は見つけられるはず！', '気にしない、気にしない！', 'よくある見落としなんだ。', 'いっしょに確かめよう！', 'これで覚えちゃおう！', '今度こそいけるペン！'],
     push: ['この調子で次も行こう！', 'どんどん行こうペン！', 'その勢いで次へ！', '次も見せて！', 'まだまだいけるペン！', 'わかってきたね、続けよう！'],
   };
   function gmVoice(n) { const a = [1, 5, 7, 11][Math.floor(n / 12) % 4], b = (n * 5) % 12, a2 = 1 + (n * 3) % 10, b2 = (n * 4) % 11;
@@ -3258,7 +3258,7 @@
     good: ['いい手！', 'さすが！', 'お見事！', 'ばっちりだペン！', 'やった！', 'すごい！', 'その通り！', 'よく見つけた！'],
     near: ['その手もいい手だね！', 'それも十分いい手ペン！', 'その手でもOK！'],
     push: [null, '次もこの調子で行こう！', null, 'どんどん行こう！', 'その勢いで次へ行こうペン！'],
-    soft: ['大丈夫！', 'ドンマイだペン！', '気にしない、気にしない！', 'あと一歩！', '平気、平気！', 'おしかった！', 'いっしょに確認！', 'よくある見落としペン！'],
+    soft: ['大丈夫！', 'ドンマイだペン！', '気にしない、気にしない！', '次は見えるよ！', '平気、平気！', '次は大丈夫！', 'いっしょに確認！', 'よくある見落としペン！'],
     half: ['きみの手も悪くないね。', 'その手も一つの考え方だペン。', 'いい線いってるね！'],
     right: ['正解は{m}。', '答えは{m}だったんだ。', 'ここは{m}が正解ペン。', 'いちばんいいのは{m}！', '{m}を見てみて。'],
     tail: [null, 'これで覚えちゃおう！', null, '次はきっと見つけられるペン！', null],
@@ -3295,7 +3295,7 @@
     good: ['いいね！', 'さすが！', 'お見事！', 'ばっちりだペン！', 'やった！', 'すごい！', 'その通り！', 'よく見つけた！', 'ナイス！', 'いい手ペン！', '上手！'],
     near: ['その手もいい手だね！', 'それも十分いい手ペン！', 'その手でもバッチリ！'],
     push: [null, '次もこの調子で行こう！', null, 'どんどん行こう！', 'その勢いで次へ行こうペン！', null, 'まだまだ行けるね！'],
-    soft: ['大丈夫！', 'ドンマイだペン！', '気にしない、気にしない！', 'あと一歩！', '平気、平気！', 'いっしょに確認しよう！', 'よくある見落としペン！', 'だいじょうぶ、ここは難しいところ！', 'おしい！', '次は見つけられるね！', 'いい線いってたよ！'],
+    soft: ['大丈夫！', 'ドンマイだペン！', '気にしない、気にしない！', '次は見えるよ！', '平気、平気！', 'いっしょに確認しよう！', 'よくある見落としペン！', 'だいじょうぶ、ここは難しいところ！', '平気平気！', '次は見つけられるね！', '一緒に確認！'],
     half: ['きみの手も悪くないね。', 'その手も一つの考え方だペン。', 'いい線いってるね！'],
     right: ['正解は{m}。', '答えは{m}だったんだ。', 'ここは{m}が正解ペン。', 'いちばんの手は{m}！', '{m}を見てみて。'],
     tail: [null, 'これで覚えちゃおう！', null, '次はきっと見つけられるペン！', null, 'もう一回並べれば、すぐ覚えられるよ。'],
@@ -3515,7 +3515,7 @@
     gap: ['{x}だと、そのよさが出ないの。', '{x}だと、その形が作れないの。', '{x}だと、相手に先に良い場所を取られちゃう。', '{x}では駒の働きが一歩遅れて、相手に先を越されるの。'],
     // (2026-11-23 lesson loop) the praise, the soft words after a miss, the push on — each opening takes them in its own order (ckOpVoice)
     cheer: ['いいね！', 'さすが！', 'お見事！', 'ばっちり！', 'その調子！', '上手！', 'ナイスだカニ！', 'よく見つけたね！', 'すばらしい！', 'そうそう、それ！', 'いい手だね！', '完璧！'],
-    soft: ['おしい！', 'ドンマイ！', 'あと少しだった！', 'いい線いってたカニ！', '大丈夫、ここで覚えちゃおう！', '気にしない、気にしない！', 'よくある迷いだから平気！', 'だいじょうぶ、次はきっと指せるカニ！', 'あと一歩！', 'みんな一度は迷う場面なの。'],
+    soft: ['平気平気！', 'ドンマイ！', 'もう1回！', '一緒に確認！', '大丈夫、ここで覚えちゃおう！', '気にしない、気にしない！', 'よくある迷いだから平気！', 'だいじょうぶ、次はきっと指せるカニ！', '次は見えるよ！', 'みんな一度は迷う場面なの。'],
     push: ['次もこの調子でいこう！', 'どんどん行こう！', 'その勢いで次へ進もう！', 'まだまだいけるね！', 'この感じで続けよう！', '次も楽しみだカニ！'],
     pr: ['きみの手で{a}の。', 'これで{a}ね！', '{a}のが、この手のねらいだカニ。', 'その手なら{a}。形がわかってきたね！', '{a}から、ここはこの一手なの。', 'ちゃんと{a}手を選べたね。'],
     deg: d => d <= 10 ? 'ほんの少し' : d <= 40 ? '少し' : d <= 150 ? 'はっきり' : 'かなり',
@@ -3676,7 +3676,7 @@
   const CK_CH = {
     good: ['いいね！', 'さすが！', 'お見事！', 'ばっちり！', 'やったね！', 'いい目してるカニ！', 'すごいすごい！', 'そうそう、それ！'],
     push: [null, '次もこの調子で行こう！', null, 'どんどん行こう！', 'その勢いで次のレッスンへ！'],
-    soft: ['大丈夫！', 'ドンマイだカニ！', 'あと少しだったね！', '気にしない、気にしない！', 'あと一歩カニ！', '平気、平気！', 'よくある見落としだよ。', 'いっしょに見てみよう！'],
+    soft: ['大丈夫！', 'ドンマイだカニ！', 'もう1回！', '気にしない、気にしない！', '大丈夫カニ！', '平気、平気！', 'よくある見落としだよ。', 'いっしょに見てみよう！'],
     tail: [null, null, 'これで覚えちゃおう！', null, '次はきっと見つけられるカニ！'],
     right: ['{m}なら、{a}の。', '{m}が正解！ {a}カニ。', 'ここは{m}。それなら{a}から！', '{m}を見て。あの手なら{a}の！', '答えは{m}だった。{a}んだ。'],
     why: ['{a}！', 'その手なら{a}の。', '{a}カニ！', 'ほら、{a}でしょ？', 'これで{a}んだ。'],
@@ -3894,7 +3894,7 @@
       '{x}では、いちばん強い車がまだ戦いに入れないコン。', '{x}だと、車を出すのがもう1手あとになっちゃう。', '{x}では車の筋が開かないまま。せっかくの車がもったいない！', '{x}を指しているあいだに、相手の駒が先にそろっちゃうの。', '{x}だと車が働き出すのが遅くて、序盤の1手を損しちゃう。'],
     // (2026-11-22 lesson loop) the praise, the soft words after a miss, the push on — each opening takes them in its own order (xqOpVoice)
     cheer: ['いいね！', 'さすが！', 'お見事！', 'ばっちり！', 'その調子！', '上手！', 'ナイスだコン！', 'よく見つけたね！', 'すばらしい！', 'そうそう、それ！', 'いい手だね！', '完璧！'],
-    soft: ['おしい！', 'ドンマイ！', 'あと少しだった！', 'いい線いってたコン！', '大丈夫、ここで覚えちゃおう！', '気にしない、気にしない！', 'よくある迷いだから平気！', 'だいじょうぶ、次はきっと指せるコン！', 'あと一歩！', 'みんな一度は迷う場面なの。'],
+    soft: ['平気平気！', 'ドンマイ！', 'もう1回！', '一緒に確認！', '大丈夫、ここで覚えちゃおう！', '気にしない、気にしない！', 'よくある迷いだから平気！', 'だいじょうぶ、次はきっと指せるコン！', '次は見えるよ！', 'みんな一度は迷う場面なの。'],
     push: ['次もこの調子でいこう！', 'どんどん行こう！', 'その勢いで次へ進もう！', 'まだまだいけるね！', 'この感じで続けよう！', '次も楽しみだコン！'],
     // the praise's own words (never the line's note again): {a} = what the move does
     pr: ['きみの手で{a}の。', 'これで{a}ね。定跡の本筋どおり！', '{a}のが、この手のねらいコン。', 'その手なら{a}。形がわかってきたね！', '{a}から、ここはこの一手なの。', 'ちゃんと{a}手を選べたね。'],
@@ -4115,14 +4115,14 @@
       t_defend: ['相手の車や炮が、次にどの駒を取れるか見てみて。', '守るか、間に駒を入れるか、逃げるか。3つの方法があるの。', '相手の次の1手を、先に指してみるつもりで考えて！', 'ひもを付けるだけでも、守りになるコン。', '取られそうな駒を、まず見つけよう！'],
       m_mate2: ['相手の受け方を、ひとつずつ考えてみて。', '次の詰みの形を、先に思いうかべてみて！', '相手がどう受けても詰む。そんな形を探そう！', '相手に残る受けが、どれも詰みにつながる手は？', '最初の手のあと、相手の受けを全部ためしてみて。'],
       m_hc: ['將・馬・炮が、同じ筋に縦に並ぶ形を思い出して！', '馬が炮台になって、炮が王手する形だね。', '馬は將の横の逃げ道も押さえてくれるコン。', '炮を將の筋へ回す道はある？', '先に馬を置くか、先に炮を回すか、順番が大事なの。'],
-      m_dc: ['前の炮が台になって、後ろの炮で王手する形だね。', '炮を2つ、將の筋に縦に重ねられない？', '前の炮は取られにくい場所に置きたいコン。', 'まず1つ目の炮で王手、それとも先に重ねる？', '炮を重ねると、間に駒を入れても受けられないの。'],
+      m_dc: ['前の炮が台になって、後ろの炮で王手する形だね。', '炮を2つ、將の筋に縦に重ねられない？', '前の炮は取られにくい場所に置きたいコン。', '王手で將の動きをしぼってから、炮を重ねる手順もあるコン。', '炮を重ねると、間に駒を入れても受けられないの。'],
       m_face: ['將が横へ逃げると、帥と向かい合わない？', '帥のいる筋は、將にとって通れない壁だコン。', '帥と將が同じ筋に並ぶ手は指せないルールなの。', '車や馬の王手に、帥のにらみを組み合わせてみて！', '將の逃げ道を、帥がいくつ消しているか数えてみて。'],
       e_rook: ['帥のにらみと車の通せんぼ、両方使うのがコツだコン。', '將が動ける点を数えて、いちばん減る手を探して！', '車は遠くから、將の段や筋をふさげるの。', 'あせって王手を続けるより、包囲を狭めるのが近道なの。', '士を取れるタイミングがないかも見てみて！'],
       e_pawn: ['兵は戻れないから、進めすぎに気をつけるコン。', '帥のにらみで、將の行き場をしぼってみて。', '兵が九宮に入ると、將のとなりをおさえられるの。', '將が動ける点を数えて、いちばん減る手を探そう！', '兵を急がせず、帥を先に動かす手もあるの。'],
     },
     // ショウギツネ's voice for one lesson, each lesson in an order of its own (xqLsVoice)
     cheer: ['お見事！', 'いい手！', 'そのとおり！', 'ばっちりだコン！', 'さすが！', 'ナイス！', 'やったね！', 'すごい、正解！', 'よく見つけた！', 'そうそう、それ！', '上手だコン！', 'いい目してる！'],
-    soft: ['おしい！', '大丈夫！', 'ドンマイだコン！', 'あと一歩だった！', 'いい線いってたの！', '気にしない、気にしない！', 'よくある見落としなの。', '次は見つけられるコン！', 'いっしょに確かめよう！', 'これで覚えちゃおう！', '今度こそいけるコン！'],
+    soft: ['平気平気！', '大丈夫！', 'ドンマイだコン！', '次は見えるよ！', '一緒に確認！', '気にしない、気にしない！', 'よくある見落としなの。', '次は見つけられるコン！', 'みんな通る道！', '平気、平気！', '今度こそいけるコン！'],
     push: ['この調子で次もいこう！', 'どんどん行こう！', 'その勢いで次へ！', '次も期待してるコン！', 'まだまだいけるコン！', 'わかってきたみたい、続けよう！'],
     lead: ['{m}なら、', '正解の{m}だと、', '{m}を選んでいれば、', 'こっちの{m}なら、', '{m}を指すと、'],
     tail: ['から。', 'からなの。', 'んだコン。', 'の。', 'んだ！'],
@@ -4209,21 +4209,32 @@
     };
     // (2026-11-24 第2期 m_mate2) the misses name a reply that really escapes (after it no move wins at once); the hint and the
     // praise follow the answer (a check / a quiet move that takes squares from the general)
-    const M2 = id === 'm_mate2' && P.ok ? (() => { const win1 = q => q.moves().some(x => !q.clone().play(x).moves().length);
+    // (2026-11-24 第2期 m_mate2・担当A m_hc・m_dc・m_face) the mate problems of n moves (n = how soon the answer forces the mate, read
+    // from the rules: 1〜3): the misses name a reply that really escapes (after it no move wins within n − 1); the hint and the praise
+    // follow the answer (a check / a quiet move that takes squares from the general) and say when the mate comes (n)
+    const MN = XQ_MATE[id];
+    const M2 = (id === 'm_mate2' || MN) && P.ok ? (() => { const winN = (q, k) => k > 0 && q.moves().some(x => { const z = q.clone().play(x); return !z.moves().length || (k > 1 && z.moves().every(r => winN(z.clone().play(r), k - 1))); });
       const kMoves = q => { const kk = q.k[q.side]; return q.moves().filter(x => E.mFrom(x) === kk).length; };
       const before = kMoves(E.Pos.from(P.s.replace(/ [wb]$/, me ? ' w' : ' b'))), afA = pos.clone().play(A);
-      return { esc: u => { const q = pos.clone().play(u); return q.moves().filter(r => !win1(q.clone().play(r))).map(r => ({ r, q })); }, shut: kMoves(afA) < before, chk: afA.inCheck() }; })() : null;
+      let n = 1; if (afA.moves().length) for (n = 2; n < 4; n++) if (afA.moves().every(r => winN(afA.clone().play(r), n - 1))) break;
+      return { n, esc: u => { const q = pos.clone().play(u); return q.moves().filter(r => !winN(q.clone().play(r), n - 1)).map(r => ({ r, q })); }, shut: kMoves(afA) < before, chk: afA.inCheck() }; })() : null;
+    const nx = () => M2.n === 3 ? V(['詰みまで届かなくなるの。', '詰みの流れが切れちゃう。', 'とどめまでの道が消えるの。']) : V(['次の手で詰まないよ。', '次で詰まなくなるの。', '次の詰みが消えちゃう。']);
     const why2 = (Q, u) => { const es = M2.esc(u); if (!es.length) return ''; const q = es[0].q, kk = q.k[me ^ 1], to = E.mTo(u);
       if (Q.check) { const o = es.some(e => E.mTo(e.r) === to) ? 'take' : es.some(e => E.mFrom(e.r) === kk) ? 'run' : 'block';
-        return o === 'take' ? V(['{x}の王手は、その駒を取られて終わっちゃう。', '{x}で王手しても、王手した駒がそのまま取られて、次で詰まないの。', '{x}だと、王手の駒を相手にぱくっと取られちゃう。', '{x}の王手は、相手に駒を取られて消えちゃうの。', '{x}だと、王手した駒がただで取られるね。'])
-          : o === 'run' ? V(['{x}の王手だと、將に逃げられて、次で詰まないの。', '{x}では將に逃げ道が残って、かわされるの。', '{x}の王手は、將が空いている点へ動いてかわせちゃう。', '{x}だと、將がするりと逃げ出せるね。', '{x}の王手では、將の逃げ場がまだあるの。'])
-          : V(['{x}の王手は、間に駒を入れて受けられるの。', '{x}だと、相手が間に駒をはさんで防げるの。', '{x}の王手は、合い駒ひとつで止まっちゃう。', '{x}だと、王手の筋に駒を入れられて終わりなの。', '{x}の王手は、あいだをふさがれて効かないね。']); }
+        return o === 'take' ? V(['{x}の王手は、その駒を取られて終わっちゃう。', '{x}で王手しても、王手した駒がそのまま取られるの。', '{x}だと、王手の駒を相手にぱくっと取られちゃう。', '{x}と王手しても、相手に駒を取られて消えちゃうの。', '{x}だと、王手した駒がただで取られるね。'])
+          : o === 'run' ? V(['{x}で王手しても、將に逃げられちゃうの。', '{x}では將に逃げ道が残って、かわされるの。', '{x}と王手しても、將が空いている点へ動いてかわせちゃう。', '{x}だと、將がするりと逃げ出せるね。', '{x}の王手では、將の逃げ場がまだあるの。'])
+          : V(['{x}の王手は、間に駒を入れて受けられるの。', '{x}だと、相手が間に駒をはさんで防げるの。', '{x}で王手しても、合い駒ひとつで止まっちゃう。', '{x}だと、王手の筋に駒を入れられて終わりなの。', '{x}と王手しても、あいだをふさがれて効かないね。']); }
+      if (M2.n === 1) return V(['{x}は王手じゃないから、この1手では詰まないの。', '{x}だと王手にならなくて、將はまだつかまらないの。', '{x}は王手じゃないね。1手で詰ませるには王手が要るの。']);
       const e = es.find(x => E.mFrom(x.r) === kk) || es.find(x => q.at(E.mTo(x.r))) || es[0], pre = M2.chk ? '{x}は王手じゃないから、' : '{x}だと、';
-      if (E.mFrom(e.r) === kk) return pre + V(['將が動いて逃げ道を作れるの。次の手で詰まないよ。', '將が1歩動いて、詰みの形から外れちゃう。', '將に逃げられて、次で詰まなくなるの。']);
-      if (q.at(E.mTo(e.r))) return pre + V([`相手に${N(E.typeOf(q.at(E.mTo(e.r))))}を取られて、詰みが消えちゃう。`, `きみの${N(E.typeOf(q.at(E.mTo(e.r))))}が取られて、次で詰まなくなるの。`]);
-      return pre + V([`相手の${NO(E.typeOf(q.at(E.mFrom(e.r))))}が動いて受けられて、次で詰まなくなるの。`, `相手に${NO(E.typeOf(q.at(E.mFrom(e.r))))}で守りの1手を指されて、詰みが消えちゃう。`]); };
-    const plus2 = () => M2.chk ? ['どう受けても、次の手で詰みが待っている', '相手の受けは、どれも次の詰みにつながる', '王手で受け方をしぼって、次で仕上げられる', '王手を受けたあとに、とどめの手が残っている', '王手を受けた形が、そのまま詰みの形になる']
-      : ['王手じゃなくても、相手に詰みを防ぐ手がない', '静かな手なのに、次の詰みをもう止められない', M2.shut ? '將の逃げ道を先にふさいで、次で詰ませられる' : '相手が受けに使える手を、先に消しておける', '相手が何を指しても、次の手で詰む形になる', '王手をかけずに、相手の受けを先に消しておける'];
+      if (E.mFrom(e.r) === kk) return pre + V(['將が動いて逃げ道を作れるの。', '將が1歩動いて、詰みの形から外れちゃう。', '將に逃げられちゃうの。']) + nx();
+      if (q.at(E.mTo(e.r))) return pre + V([`相手に${N(E.typeOf(q.at(E.mTo(e.r))))}を取られて、`, `きみの${N(E.typeOf(q.at(E.mTo(e.r))))}が取られて、`]) + nx();
+      return pre + V([`相手の${NO(E.typeOf(q.at(E.mFrom(e.r))))}が動いて受けられて、`, `相手に${NO(E.typeOf(q.at(E.mFrom(e.r))))}で守りの1手を指されて、`]) + nx(); };
+    const plus2 = () => { const w = MN ? MN + 'の' : '';
+      if (M2.n === 1) return [`${MN}が決まって、將はもう動けなくなる`, `${MN}の形で、王手をはずす手が相手にもう1つもない`, `將が逃げても、取っても、間に駒を入れても、${MN}は防げない`, `たった1手で、${MN}が九宮の將をつかまえる`, `${MN}で、將の逃げ道が全部なくなる`];
+      if (M2.n === 3) return M2.chk ? [`王手で受け方をしぼって、そのあと${w}詰みまで届く`, `相手がどう受けても、3手目で${w}詰みになる`, `王手を続けて、最後は${w}形で仕上げられる`, `どの受けにも、${w}詰みへの続きがある`, `王手の連続で、將を${w}形へ追いこめる`]
+        : [`王手じゃなくても、どの受けのあとも${MN ? MN + 'まで' : '詰みまで'}届く形になる`, `静かな一手で、${w}詰みへの道を先に作れる`, M2.shut ? `將の逃げ道を先にふさいで、${w}詰みまで届く` : `相手の受けを先に消して、${w}詰みまで届く`, `相手が何を指しても、${w}詰みへの続きがある`, `王手をかけずに、${w}形を先に用意できる`];
+      return M2.chk ? [`どう受けても、次の手で${w}詰みが待っている`, `相手の受けは、どれも次の${w}詰みにつながる`, `王手で受け方をしぼって、次で${MN ? MN + 'の形に' : ''}仕上げられる`, `王手を受けたあとに、${MN ? MN + 'の' : ''}とどめの手が残っている`, `王手を受けた形が、そのまま${MN ? MN + 'の' : ''}詰みの形になる`]
+        : [`王手じゃなくても、相手に${w}詰みを防ぐ手がない`, `静かな手なのに、次の${w}詰みをもう止められない`, M2.shut ? `將の逃げ道を先にふさいで、次で${w}詰みにできる` : (MN ? `相手が受けに使える手を先に消して、次で${MN}を決められる` : '相手が受けに使える手を、先に消しておける'), `相手が何を指しても、次で${MN ? MN + 'が決まる' : '詰む'}形になる`, (MN ? `王手をかけずに受けを先に消して、次の${MN}を止められなくできる` : '王手をかけずに、相手の受けを先に消しておける')]; };
     const pu = i % 2 === 1 || i === (s.problems || []).length - 1;
     const say = u0 => { let u = u0; if (u == null || right(u)) u = pickWrong(id === 'b_mate1' || P.ok ? Q => Q.check : FA.cap ? Q => Q.cap || Q.hang.length : null);
       const Q = u != null ? FF(u) : null, w = Q ? (M2 ? why2(Q, u) : why(Q, u)) : '';
@@ -4232,7 +4243,7 @@
       if (sc && U !== A && sc.get(U) < best) s0 += best > WT ? V([' いちばん早い詰みより、ほんの少し遠回りだけどね。', ' 最短の詰みには、あと一歩だったけどね。']) : V([' これもいい手だコン。', ' これも十分いい手なの。']);
       if (pu) s0 += ' ' + VO.push(i);
       return f(s0); };
-    const H2 = M2 ? (M2.chk ? ['王手をかけて、相手の受け方をしぼってみて。', '王手のあと、相手に残る受けは少ないほどいいコン。', '王手した駒が取られないかも、確かめてね。', '王手のあとの受けを、ひとつずつ追ってみて！', '王手を受けた形に、とどめの手はある？']
+    const H2 = M2 && !MN ? (M2.chk ? ['王手をかけて、相手の受け方をしぼってみて。', '王手のあと、相手に残る受けは少ないほどいいコン。', '王手した駒が取られないかも、確かめてね。', '王手のあとの受けを、ひとつずつ追ってみて！', '王手を受けた形に、とどめの手はある？']
       : ['王手をかけなくてもいいの。相手の受けをなくす手を探そう。', M2.shut ? '將の逃げ道になりそうな点を、先に消しておけない？' : '相手が受けに使えそうな手を、先に消しておけない？', '相手が何を指しても詰む形、思いうかぶ？', '王手はどれも受けられちゃう。静かな一手を探してみて。', '相手の受け方を、ひとつずつ考えてみて。']) : null;
     return { ask: pick(A0), hintTx: H2 ? H2[(i + n) % 5] : H.length ? H[(i + n) % H.length] : '', good, ng: say, own: true };
   }
@@ -4240,7 +4251,7 @@
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261124xm2'), getJ('../xiangqi/openings.json?v=3'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=1').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261124xm3'), getJ('../xiangqi/openings.json?v=3'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=1').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vf]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vf)(v); this.V = ((v.I18N || {})['ja@fox']) || {}; } catch (e) { this.V = {}; }   // (ショウギツネ's own lines, 3D, ja)
           return this; })
@@ -4443,7 +4454,7 @@
      their own questions, hints and reasons from the problem's values (bgChJa). */
   const BGV = {
     cheer: ['いいね！', 'ナイス！', 'さすが！', 'ばっちり！', 'お見事ワン！', 'その調子！', '上手！', 'やった！', '完璧！', 'そうそう、それ！', 'いい手！', 'よく見えてるね、すごい！'],
-    soft: ['おしい！', 'ドンマイ！', 'あと少しだったワン！', 'いい線いってた！', '大丈夫、ここで覚えちゃおう！', '気にしない、気にしない！', 'よくある迷いだから平気！', 'だいじょうぶ、次はきっと当たる！', 'あと一歩！', '今度はいっしょに確かめよう！'],
+    soft: ['平気平気！', 'ドンマイ！', 'もう1回ワン！', '一緒に確認！', '大丈夫、ここで覚えちゃおう！', '気にしない、気にしない！', 'よくある迷いだから平気！', 'だいじょうぶ、次はきっと当たる！', '次は見えるよ！', '今度はいっしょに確かめよう！'],
     push: ['次もこの調子でいこう！', 'どんどん行こうワン！', 'その勢いで次へ進もう！', 'まだまだいけるね！', 'この感じで続けよう！', '次も楽しみだね！'],
     lead: ['正解は緑の矢印の手ワン。', '緑の矢印が、いちばん良い手。', 'ここは緑の矢印の動かし方が正解！', '緑の矢印のほうを見てみて。', '答えは緑の矢印の手だったワン。', '強い人なら緑の矢印の手を選ぶね。', 'ここは緑の矢印に動かしたかった！'],
     ask: ['{d}が出たワン。いちばん良い動かし方はどれかな？', '次は{d}。きみならどう動かす？', 'さあ、{d}をどう使う？', 'ここで{d}が出た！ どの駒を動かすワン？', '{d}か……。いちばん得な手を探してみて！', '{d}の目、きみならどこへ進める？', 'お次は{d}！ 強い人の手を当ててみて！', '{d}が出た！ 落ち着いて考えてみよう。'],
@@ -5073,7 +5084,7 @@
   const HX_CH = {   // (2026-11-23 lesson loop: each lesson its own order of praise / soft words / push / tail — hxVoice; the same order in every lesson read as a stamp)
     good: ['いいね！', 'さすが！', 'お見事！', 'ばっちりだペン！', 'やったね！', 'すごい、よく見つけたね！', 'いい目をしてる！', 'その感じ！', 'ナイスな一手！', '冴えてるペン！', 'いい手だね！', 'そうそう、それ！'],
     push: [null, '次もこの調子で行こう！', null, 'どんどん行こう！', 'その勢いで次へ行こうペン！', null, 'まだまだ行けるペン！'],
-    soft: ['大丈夫！', 'ドンマイだペン！', 'おしい！', '気にしない、気にしない！', 'あと少しだった！', '平気平気、ここで覚えよう！', 'いい線いってたペン！', 'よくある見落とし、大丈夫！', 'ドンマイ！', 'いっしょに見てみよう！'],
+    soft: ['大丈夫！', 'ドンマイだペン！', '平気だよ！', '気にしない、気にしない！', 'もう1回！', '平気平気、ここで覚えよう！', '一緒に確認！', 'よくある見落とし、大丈夫！', 'ドンマイ！', 'いっしょに見てみよう！'],
     tail: [null, null, 'これで覚えちゃおう！', null, '次はきっと見つけられるペン！', null, 'ここ、大事なところだペン！'],
     right: ['{m}なら、{a}んだ。', '{m}が正解！ {a}ペン。', 'ここは{m}。そこなら{a}から！', '{m}を見て。あそこなら{a}でしょ？', '答えは{m}だった。{a}んだ。'],
     why: ['{a}！', 'その手なら{a}ね。', '{a}ペン！', 'ほら、{a}でしょ？', 'これで{a}んだ。'],
@@ -5346,7 +5357,7 @@
   const AM_CH = {
     good: ['いいね！', 'さすが！', 'お見事！', 'ばっちりケロ！', 'やったね！', 'いい目してる！', 'すごいすごい！', 'そうそう、それ！'],
     push: [null, '次もこの調子で行こう！', null, 'どんどん行こうケロ！', 'その勢いで次へ！'],
-    soft: ['大丈夫！', 'ドンマイケロ！', 'あと少しだったね！', '気にしない、気にしない！', 'あと一歩ケロ！', '平気、平気！', 'よくある見落としだね。', 'いっしょに見てみよう！'],
+    soft: ['大丈夫！', 'ドンマイケロ！', 'もう1回！', '気にしない、気にしない！', '大丈夫ケロ！', '平気、平気！', 'よくある見落としだね。', 'いっしょに見てみよう！'],
     tail: [null, null, 'これで覚えちゃおう！', null, '次はきっと見つけられるケロ！'],
     right: ['{m}なら、{a}！', '{m}が正解、{a}ケロ。', '{m}を選べば、{a}から！', '{m}にすると、{a}でしょ？', '答えは{m}で、{a}んだ。'],
     why: ['{a}！', 'つまり、{a}！', '{a}ケロ！', 'ほら、{a}でしょ？', 'これで{a}！'],
@@ -5679,7 +5690,7 @@
     },
     // ポトンウサ's voice for one lesson, each lesson in an order of its own (c4Voice)
     cheer: ['いい感じ！', 'ナイス！', 'さすが！', 'やった！', 'すごい！', 'お見事！', 'ばっちり！', 'ぴょこっ、上手！', 'よく見つけた！', 'そうそう、それ！', 'いい手！', '完璧！'],
-    soft: ['おしい！', '大丈夫！', 'ドンマイ！', 'あと一歩だった！', 'いい線いってたの！', '気にしない、気にしない！', 'よくある見落としなの。', '次は見つけられるはず！', 'いっしょに確かめよう！', 'これで覚えちゃおう！', '今度こそいけるって！'],
+    soft: ['平気平気！', '大丈夫！', 'ドンマイ！', '次は見えるよ！', '一緒に確認！', '気にしない、気にしない！', 'よくある見落としなの。', '次は見つけられるはず！', 'みんな通る道！', '平気、平気！', '今度こそいけるって！'],
     push: ['この調子で次もいこう！', 'どんどん行こう！', 'その勢いで次へ！', '次もこの調子！', 'まだまだいけるよ！', 'わかってきたみたい、続けよう！'],
     lead: ['{m}なら、', '正解の{m}だと、', '{m}を選んでいれば、', 'こっちの{m}なら、', '{m}に置くと、'],
     tail: ['から。', 'からなの。', 'んだ。', 'の。', 'んだよ。'],
@@ -5887,7 +5898,7 @@
     askN: '『{n}』の続き！ {s}の次の一手はどれだと思う？',
     ask: ['{s}の番！ ここはどう指す？', '{s}として、いちばん働く手を当ててみて！', 'さあ、{s}ならここで何を指す？', 'この場面、{s}の一手を考えてみよう！', '{s}になったつもりで、次の手を選んでみて！', 'ここは{s}の腕の見せどころ。どの駒をどこへ？', '{s}の作戦を思い出して。次はどこかな？', '盤をよく見て！ {s}の最善手はどれ？'],
     cheer: ['いいね、その手！', 'さすが！', 'ばっちり！', 'お見事！', 'やった、正解！', 'ナイス！', 'すごい、大正解！', 'そうそう、それ！', 'いい目してる！', '上手！', '完璧！', 'よく見つけたね！'],
-    soft: ['おしい、あと少し！', '大丈夫！', 'ドンマイ！', 'あと一歩だったの！', 'いい線いってた！', '気にしない、気にしない！', 'よくある迷いだから平気！', '次はきっと見つけられる！', 'いっしょに確かめよう！', 'ここで覚えちゃおう！'],
+    soft: ['次は大丈夫！', '大丈夫！', 'ドンマイ！', '次は見えるよ！', '一緒に確認！', '気にしない、気にしない！', 'よくある迷いだから平気！', '次はきっと見つけられる！', 'みんな通る道！', 'ここで覚えちゃおう！'],
     push: ['この調子で次も行こう！', 'どんどん行こう！', 'その勢いで次へ！', '次も見せてね！', 'まだまだいける！', 'わかってきたね、続けよう！'],
     lead: ['正解は{m}だったの。', 'ここは{m}がいちばん！', '{m}を見てみて！', '本筋は{m}なんだ。', 'ここで指したいのは{m}。', '作戦どおりなら{m}！'],
     so: ['こっちは{a}から。', '{a}のが、この手のいいところ。', 'この手なら{a}の。', 'これで{a}んだ。', '{a}、それが決め手。', 'こう指せば{a}わけ。'],
@@ -6056,7 +6067,7 @@
   // every line below has five wordings, taken by the problem's number, so no line comes twice in a lesson
   const TF_V = {
     cheer: ['いいね、その手！', 'さすが！', 'ばっちり！', 'お見事！', 'やった！ 正解！', 'ナイス！', 'すごい、大正解！', 'そうそう、それ！', 'いい目してる！', '上手！', '完璧！', 'よく見つけたね！'],
-    soft: ['おしい、あと少し！', '大丈夫！', 'ドンマイ！', 'あと一歩だったの！', 'いい線いってた！', '今度こそいけるよ！', '気にしない、気にしない！', 'よくある見落としなの。', '次は見つけられるはず！', 'いっしょに確かめよう！', 'これで覚えちゃおう！'],
+    soft: ['次は大丈夫！', '大丈夫！', 'ドンマイ！', '次は見えるよ！', '一緒に確認！', '今度こそいけるよ！', '気にしない、気にしない！', 'よくある見落としなの。', '次は見つけられるはず！', 'みんな通る道！', 'これで覚えちゃおう！'],
     push: ['この調子で次も行こう！', 'どんどん行こう！', 'その勢いで次へ！', '次も見せてね！', 'まだまだいける！', 'わかってきたね、続けよう！'],
   };
   function tfVoice(n) { const a = [1, 5, 7, 11][Math.floor(n / 12) % 4], b = n % 12, a2 = 1 + Math.floor(n / 11) % 10, b2 = n % 11;
@@ -6354,7 +6365,7 @@
   // miss have lists of their own, so the same problem's two answers never share a line either)
   const MC_V = {
     cheer: ['ブーン！ いい手！', 'さすが！', 'ばっちり！', 'お見事！', 'やった〜！', 'ナイス！', 'すごい、正解！', 'そうそう、それ！', 'いい読み、さすが！', '上手！', '完璧！', 'よく見つけた！'],
-    soft: ['おしい！', '大丈夫！', 'ドンマイ！', 'あと一歩！', 'あと少し！', '今度こそ！', '気にしない、気にしない！', 'よくある見落とし！', '次は見つけられるはず！', 'いっしょに確かめよう！', 'これで覚えちゃおう！'],
+    soft: ['平気平気！', '大丈夫！', 'ドンマイ！', '次は見えるよ！', 'もう1回！', '今度こそ！', '気にしない、気にしない！', 'よくある見落とし！', '次は見つけられるはず！', 'いっしょに確かめよう！', 'みんな通る道！'],
     push: ['この調子で次も行こう！', 'どんどん行こう！', 'その勢いで次へ！', '次も見せて！', 'まだまだいける！', 'わかってきたね、続けよう！'],
   };
   function mcVoice(n) { const a = [1, 5, 7, 11][Math.floor(n / 12) % 4], b = n % 12, a2 = 1 + Math.floor(n / 11) % 10, b2 = n % 11;
@@ -6651,7 +6662,7 @@
   // every sentence below has five wordings, taken by the problem's number, so no line comes twice in a lesson
   const MR_V = {
     cheer: ['ホー、いいね、それ！', 'さすが！', 'ばっちり！', 'お見事！', 'やった！ 正解！', 'ナイス！', 'すごい、正解！', 'そうそう、それ！', 'いい目してる！', 'ホー、上手！', '完璧！', 'よく見つけた！'],
-    soft: ['そこも見えてたら、あと少し！', '大丈夫！', 'ドンマイ！', 'あと一歩！', 'いい線いってた！', 'ホー、今度こそ！', '気にしない、気にしない！', 'よくある見落とし！', '次は見つけられるはず！', 'いっしょに確かめよう！', 'これで覚えちゃおう！'],
+    soft: ['今度こそ！', '大丈夫！', 'ドンマイ！', '次は見えるよ！', '一緒に確認！', 'ホー、今度こそ！', '気にしない、気にしない！', 'よくある見落とし！', '次は見つけられるはず！', 'みんな通る道！', 'これで覚えちゃおう！'],
     push: ['この調子で次も行こう！', 'どんどん行こう！', 'その勢いで次へ！', '次も見せて！', 'まだまだいける！', 'わかってきたね、続けよう！'],
   };
   function mrVoice(n) { const a = [1, 5, 7, 11][Math.floor(n / 12) % 4], b = n % 12, a2 = 1 + Math.floor(n / 11) % 10, b2 = n % 11;
@@ -6885,7 +6896,7 @@
   const DT_CH = {
     good: ['いいね！', 'さすが！', 'お見事！', 'ばっちりピヨ！', 'やったね！', 'いい目してる！', 'すごいすごい！', 'そうそう、それ！'],
     push: [null, '次もこの調子で行こう！', null, 'どんどん行こう！', 'その勢いで次へ！'],
-    soft: ['大丈夫！', 'ドンマイ！', 'あと少しだったね！', '気にしない、気にしない！', 'あと一歩ピヨ！', '平気、平気！', 'よくある見落としだね。', 'いっしょに見てみよう！'],
+    soft: ['大丈夫！', 'ドンマイ！', 'もう1回！', '気にしない、気にしない！', '大丈夫ピヨ！', '平気、平気！', 'よくある見落としだね。', 'いっしょに見てみよう！'],
     tail: [null, null, 'これで覚えちゃおう！', null, '次はきっと見つけられる！'],
     loss: ['最後に{L}箱の差がつく。', '全部で{L}箱の差になっちゃう。', '結果は{L}箱ちがってくる。', '{L}箱ぶん、もったいない！', '終わってみると{L}箱の差になる。'],
     // why a right line is good (5 ways each; {k} boxes taken, {m} boxes handed over, {n} safe lines left)
@@ -6996,8 +7007,8 @@
   /* whose move it is (2026-11-23 user: every problem — the warm-up's too — must say which side the player moves, 「黒の手番だよ」).
      turnOf: 1 / 2 from the position (an object's me, reversi "…:1", a chess FEN's w / b, a shogi SFEN's b / w), 0 = no sides (dots),
      null = not known. turnLine: the line put before the question, '' when the question already names the side (the same side). */
-  const TURN_N = { ja: { ur: ['白', '黒'], senet: ['糸巻き', '円錐'], patolli: ['手前', '奥'], morris: ['金', '銀'], tafl: ['攻め手', '守り手'], chess: ['白', '黒'], reversi: ['●黒', '○白'], gomoku: ['●黒', '○白'], go: ['●黒', '○白'], checkers: ['黒', '白'], xiangqi: ['赤', '黒'], janggi: ['楚', '漢'], hex: ['赤', '青'], amazons: ['白', '黒'], connect4: ['金', '銀'], shogi: ['☗先手', '☖後手'], backgammon: ['金', '金'] },
-    en: { ur: ['Light', 'Dark'], senet: ['Spools', 'Cones'], patolli: ['Near', 'Far'], morris: ['Gold', 'Silver'], tafl: ['Attackers', 'Defenders'], chess: ['White', 'Black'], reversi: ['● Black', '○ White'], gomoku: ['● Black', '○ White'], go: ['● Black', '○ White'], checkers: ['Black', 'White'], xiangqi: ['Red', 'Black'], janggi: ['Cho', 'Han'], hex: ['Red', 'Blue'], amazons: ['White', 'Black'], connect4: ['Gold', 'Silver'], shogi: ['☗ Sente', '☖ Gote'], backgammon: ['Gold', 'Gold'] } };
+  const TURN_N = { ja: { ur: ['白', '黒'], senet: ['糸巻き', '円錐'], patolli: ['手前', '奥'], morris: ['金', '銀'], tafl: ['攻め手', '守り手'], chess: ['白', '黒'], reversi: ['●黒', '○白'], gomoku: ['●黒', '○白'], go: ['●黒', '○白'], checkers: ['黒', '白'], konane: ['黒', '白'], xiangqi: ['赤', '黒'], janggi: ['楚', '漢'], hex: ['赤', '青'], amazons: ['白', '黒'], connect4: ['金', '銀'], shogi: ['☗先手', '☖後手'], backgammon: ['金', '金'] },
+    en: { ur: ['Light', 'Dark'], senet: ['Spools', 'Cones'], patolli: ['Near', 'Far'], morris: ['Gold', 'Silver'], tafl: ['Attackers', 'Defenders'], chess: ['White', 'Black'], reversi: ['● Black', '○ White'], gomoku: ['● Black', '○ White'], go: ['● Black', '○ White'], checkers: ['Black', 'White'], konane: ['Black', 'White'], xiangqi: ['Red', 'Black'], janggi: ['Cho', 'Han'], hex: ['Red', 'Blue'], amazons: ['White', 'Black'], connect4: ['Gold', 'Silver'], shogi: ['☗ Sente', '☖ Gote'], backgammon: ['Gold', 'Gold'] } };
   function turnOf(id, pos) {
     if (id === 'dots') return 0;
     if (id === 'mancala') return 1;   // (the player's row is always the near one)
@@ -7035,6 +7046,11 @@
   const FOXGEESE = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsFoxgeese) return res(); const sc = document.createElement('script'); sc.src = 'ls-foxgeese.js?v=2'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsFoxgeese.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
+  /* kōnane (2026-11-25 担当C): the data, チェッカニ's words and the board facts are in atlas/ls-konane.js (loaded the first time; only the
+     lessons checked and rebuilt for the 3D, AtlasLsKonane.READY — tools/lesson-verify-konane.js --lessons) */
+  const KONANE = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsKonane) return res(); const sc = document.createElement('script'); sc.src = 'ls-konane.js?v=1'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+    .then(() => { const U = AtlasLsKonane.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
+    .catch(e => { this.p = null; throw e; })); } };
   /* ugolki (2026-11-24 担当D): the data, モリフク's words and the board facts are in atlas/ls-ugolki.js (loaded the first time; only the
      lessons checked and rebuilt for the 3D, AtlasLsUgolki.READY — tools/lesson-verify-ugolki-ls.js) */
   const UGOLKI = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUgolki) return res(); const sc = document.createElement('script'); sc.src = 'ls-ugolki.js?v=2'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
@@ -7042,7 +7058,7 @@
     .catch(e => { this.p = null; throw e; })); } };
   // (2026-11-24 ユーザー指示: ur・senet・patolli のレッスンは廃止 — 双六系はマンカラ・バックギャモンのような戦略性の高いものを除いてレッスン・パズルを作らない。
   //  UR・SENET・PATOLLI とそのファイルは残すが、DATA に載せない＝AtlasLessons.has が false でタブに出ない)
-  const DATA = { foxgeese: FOXGEESE, ugolki: UGOLKI, dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, janggi: JANGGI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
+  const DATA = { foxgeese: FOXGEESE, konane: KONANE, ugolki: UGOLKI, dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, janggi: JANGGI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
 
   function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(lang), ncLoad(id)]).then(() => D.list(kind, lang)); }
   function next(id, kind, lang) { return list(id, kind, lang).then(L2 => { const x = L2.find(i => !i.full && i.st !== 'pass') || L2.find(i => !i.full); return x ? x.key : null; }); }
@@ -7152,7 +7168,7 @@
             pz: Object.assign({ lesson: true, fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: () => id === 'reversi' && phase !== 'ramp' && !(phase === 'prob' && cur && cur.k >= RV_NUMS()), ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
           ctx.Table3D.play(true);
         } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks, lock: !!G.lock });
-        else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots' || id === 'foxgeese' || id === 'ugolki')) pz().load(G.spec, G.me, { lock: !!G.lock });
+        else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots' || id === 'foxgeese' || id === 'konane' || id === 'ugolki')) pz().load(G.spec, G.me, { lock: !!G.lock });
         else if (G && id === 'mancala') pz().load(G.spec, G.me, { lock: !!G.lock, marks: G.marks });
         else if (G && id === 'connect4') pz().load(G.moves, G.me, { lock: !!G.lock });
         else if (G && id === 'backgammon') pz().load(G.bg);
@@ -7478,7 +7494,7 @@
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;
       }
-      if ((id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots' || id === 'foxgeese' || id === 'ugolki') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
+      if ((id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots' || id === 'foxgeese' || id === 'konane' || id === 'ugolki') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
         const right = pts >= 16, k = cur.k;   // (p.own: the guide names the green arrow herself — the heading is only 「おしい！」)
         say(`${right ? (p.own && (id === 'morris' || id === 'janggi' || p.ckls) ? '' : line('solved') || pick(X.good)) : p.own ? (pts >= 10 ? 'いい線いってる！' : '') : pts >= 10 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
         try { chime(right); } catch (e) {}

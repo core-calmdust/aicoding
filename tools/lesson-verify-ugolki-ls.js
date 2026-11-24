@@ -40,17 +40,29 @@ function factOf(id, p, m) {
   if (id === 'b_step') o.k = g > 0 ? 'step' : g < 0 ? 'back' : h ? 'jump0' : 'side';
   else if (id === 'b_jump') o.k = !h ? 'step' : 'jump';
   else if (id === 'b_enter') o.k = !o.inF && o.inT ? 'in' : o.inF && o.inT ? 'inside' : o.inF ? 'leave' : g > 0 ? 'near' : 'none';
-  else o.k = q.done(me) ? 'done' : o.inF && o.inT ? 'inside' : o.inF ? 'leave' : g > 0 ? 'near' : 'none';
+  else if (id === 'b_finish') o.k = q.done(me) ? 'done' : o.inF && o.inT ? 'inside' : o.inF ? 'leave' : g > 0 ? 'near' : 'none';
+  else if (id === 's_far' || id === 's_ladder') { o.opp = overOpp(p, m); o.k = !h ? (g > 0 ? 'step' : g < 0 ? 'back' : 'side') : g > 0 ? 'jump' : g < 0 ? 'jback' : 'jside'; }
+  else if (id === 's_road') { const n = nextBest(q); o.nx = n.g; o.nh = n.h; o.k = h ? 'jump' : 'step'; }
   return o;
 }
+// the black pieces a jump chain hops over
+function overOpp(p, m) { if (!E.isJump(p, m)) return 0; const P = E.path(p, m); let n = 0; for (let i = 1; i < P.length; i++) if (p.sq[(P[i - 1] + P[i]) / 2] === 2) n++; return n; }
+// s_road: White moves again (Black stands still): the farthest next move { g, h, m }
+function nextBest(q) { const r = q.clone(); r.side = 0; let b = { g: -99, h: 0, m: -1 }; for (const m of real(r)) { const g = gainOf(r, m); if (g > b.g || (g === b.g && hops(r, m) > b.h)) b = { g, h: hops(r, m), m }; } b.pos = r; return b; }
 // the numbers the words must say for a move (right: the answer's own; wrong: what the red move does and the green one's gain)
 function expectNums(id, p, P, m) {
   const f = factOf(id, p, m), fb = factOf(id, p, P.best), right = (P.ok || []).includes(m);
-  if (right) return id === 'b_step' ? { n: P.ok.length } : id === 'b_jump' ? Object.assign({ G: f.g }, f.h > 1 ? { h: f.h } : {}) : id === 'b_enter' ? { a: f.home } : { nine: 9 };
+  if (right && id[0] === 'b') return id === 'b_step' ? { n: P.ok.length } : id === 'b_jump' ? Object.assign({ G: f.g }, f.h > 1 ? { h: f.h } : {}) : id === 'b_enter' ? { a: f.home } : { nine: 9 };
   if (id === 'b_step') return f.g < 0 ? { k: -f.g } : {};
   if (id === 'b_jump') return Object.assign({ G: fb.g }, f.h && f.g > 0 ? { g: f.g } : {}, f.g < 0 && f.h ? { k: -f.g } : {});
   if (id === 'b_enter') return f.k === 'near' ? { g: f.g } : f.k === 'inside' ? { a: p.inTarget(1) } : f.k === 'leave' ? { a: f.home } : {};
-  return f.k === 'near' ? { g: f.g } : f.k === 'leave' ? { holes: f.holes } : {};
+  if (id === 'b_finish') return f.k === 'near' ? { g: f.g } : f.k === 'leave' ? { holes: f.holes } : {};
+  if (id === 's_far' || id === 's_ladder') {
+    if (right) return Object.assign({ G: f.g, h: f.h }, id === 's_ladder' ? { o: f.opp } : {});
+    return Object.assign({ G: fb.g }, f.g > 0 ? { g: f.g } : f.g < 0 ? { k: -f.g } : {});
+  }
+  if (id === 's_road') return right ? { N: f.nx, nh: f.nh } : Object.assign({ N: fb.nx }, f.nx > 0 ? { nx: f.nx } : {});
+  return {};
 }
 // the goal's set and the problem's numbers
 function classify(id, p, slot) {
@@ -93,6 +105,47 @@ function classify(id, p, slot) {
     r.jump = ok.some(m => hops(p, m)); r.hole = ok.length ? E.mTo(ok[0]) : -1;
     r.d = ok.length ? hops(p, ok[0]) * 10 + mine.length : 0; r.order = r.d;
   }
+  else if (id === 's_far' || id === 's_ladder') {
+    const G = Math.max(...F.map(x => x.g)); ok = L.filter((m, i) => F[i].g === G);
+    if (ok.length > 2) r.why.push(`② ${ok.length} farthest moves`);
+    if (G < 4) r.why.push(`④ the farthest move gains ${G} (4 or more)`);
+    if (!ok.every(m => hops(p, m) >= 2)) r.why.push('④ the farthest move is not a chain (2 hops or more)');
+    const second = Math.max(...L.filter(m => !ok.includes(m)).map(m => gainOf(p, m))); r.gap = G - second; r.G = G;
+    if (r.gap < 2) r.why.push(`② the gap is ${r.gap}`);
+    const lure = L.filter((m, i) => !ok.includes(m) && F[i].h && F[i].g >= 2); r.lure = lure.length;
+    if (!lure.length) r.why.push('③ no shorter forward jump to compare');
+    const D = DIST[me], mineD = []; for (let i = 0; i < 64; i++) if (p.sq[i] === me && !T[i]) mineD.push(D[i]);
+    const fa = ok.length ? D[E.mFrom(ok[0])] : 0;
+    if (id === 's_far') {
+      if (!ok.every(m => F[L.indexOf(m)].opp === 0)) r.why.push('④ s_far: the answer hops over Black (that is s_ladder)');
+      // check every piece: the answer's piece is behind, a piece nearer the corner has a forward jump (the lure)
+      if (!lure.some(m => D[E.mFrom(m)] < fa)) r.why.push('④ no piece in front with a jump (the lure)');
+      if (mineD.filter(x => x > fa).length > mineD.filter(x => x < fa).length) r.why.push('④ the answer\'s piece is not in the back half');
+      r.d = G * 10 + Math.min(r.lure, 9); r.order = r.d;
+    } else {
+      if (!ok.every(m => F[L.indexOf(m)].opp >= 1)) r.why.push('④ s_ladder: the answer does not hop over Black');
+      const own = L.filter((m, i) => F[i].opp === 0).map(m => gainOf(p, m)); r.own = Math.max(...own);
+      if (r.own > G - 2) r.why.push(`④ hopping over White only gains ${r.own} (the ladder gains ${G})`);
+      if (!lure.some(m => F[L.indexOf(m)].opp === 0)) r.why.push('③ no own-pieces jump to compare');
+      const spr = new Set(); for (const m of L) if (hops(p, m) && gainOf(p, m) >= 2) { const Q = E.path(p, m); for (let i = 1; i < Q.length; i++) if (p.sq[(Q[i - 1] + Q[i]) / 2] === 2) spr.add((Q[i - 1] + Q[i]) / 2); }
+      if (spr.size < 2) r.why.push('追52 fewer than 2 black springboards to mark');
+      r.d = G * 10 + Math.min(r.lure, 9); r.order = r.d;
+    }
+  } else if (id === 's_road') {
+    if (L.some((m, i) => F[i].h && F[i].g > 0)) r.why.push('④ a jump already goes forward');
+    const N = Math.max(...F.map(x => x.nx)); ok = L.filter((m, i) => F[i].nx === N);
+    if (ok.length > 2) r.why.push(`② ${ok.length} moves build the longest road`);
+    if (!ok.every(m => !hops(p, m))) r.why.push('④ the answer is not a step');
+    if (N < 4) r.why.push(`④ the road gains ${N} (4 or more)`);
+    if (!ok.every((m, i) => F[L.indexOf(m)].nh >= 2)) r.why.push('④ the next move is not a chain');
+    // the road: the stepped piece is a rung of the next chain (not the jumper itself)
+    for (const m of ok) { const q = p.clone().play(m), n = nextBest(q), P2 = E.path(n.pos, n.m); if (E.mFrom(n.m) === E.mTo(m) || !P2.some((x, i) => i && (P2[i - 1] + x) / 2 === E.mTo(m))) r.why.push('④ the stepped piece is not a rung of the next chain'); r.jumper = E.mFrom(n.m); if (ok.some(o => E.mFrom(o) === r.jumper)) r.why.push('追52 a jumper is a stepped piece'); }
+    const second = Math.max(...L.filter(m => !ok.includes(m)).map(m => F[L.indexOf(m)].nx)); r.gap = N - second;
+    if (r.gap < 2) r.why.push(`② the gap is ${r.gap}`);
+    r.lure = L.filter((m, i) => !ok.includes(m) && F[i].nx >= 2).length; r.N = N;
+    if (r.lure < 1) r.why.push('③ no shorter road to compare');
+    r.d = N * 10 + Math.min(r.lure, 9); r.order = r.d;
+  }
   const wrong = L.length - ok.length;
   if (L.length < 12) r.why.push(`③ ${L.length} legal moves`);
   if (wrong < 3) r.why.push(`③ ${wrong} wrong moves`);
@@ -104,6 +157,9 @@ const RULES = {
   b_step: { count: 5, slotOk: () => true },
   b_jump: { count: 5, slotOk: (C, c) => c.hops === 1 ? C.filter(x => x.hops === 1).length < 2 : C.filter(x => x.hops > 1).length < 3 },
   b_enter: { count: 5, slotOk: (C, c) => C.filter(x => x.jump === c.jump).length < 3 },
+  s_far: { count: 5, slotOk: () => true },
+  s_ladder: { count: 5, slotOk: () => true },
+  s_road: { count: 5, slotOk: () => true },
   b_finish: { count: 5, slotOk: (C, c) => C.filter(x => x.jump === c.jump).length < (c.jump ? 3 : 2) && C.filter(x => x.hole === c.hole).length < 2 },
 };
 function verify(opt) {
@@ -136,7 +192,7 @@ function verify(opt) {
       const V = UL.voice(j * 7 + 3);
       if (real(p).includes(P.best)) for (const m of real(p)) {
         const want = factOf(id, p, m), got = UL.fact(E, id, P.s, m), right = ok.includes(m);
-        if (!got || got.k !== want.k || ['g', 'h', 'home', 'holes'].some(x => got[x] !== want[x])) { add(id, j, `⑧ the facts of ${E.name(p, m)}: ${JSON.stringify(got)} ≠ ${JSON.stringify(want)}`); continue; }
+        if (!got || got.k !== want.k || ['g', 'h', 'home', 'holes', 'opp', 'nx', 'nh'].some(x => got[x] !== want[x])) { add(id, j, `⑧ the facts of ${E.name(p, m)}: ${JSON.stringify(got)} ≠ ${JSON.stringify(want)}`); continue; }
         const html = UL.say(E, id, P, m, 'ja', V, false, x => x).html;
         if (!html || /\{[a-z]+\}|undefined|NaN/.test(html)) { add(id, j, `⑧ the words for ${E.name(p, m)}: ${html}`); continue; }
         if (right !== /^(<[^>]*>)?\S*(正解|お見事|ばっちり|そのとおり|さすが|いいね|すごい|やったね)/.test(html.replace(/^\s+/, ''))) add(id, j, `⑦ ${E.name(p, m)} ${right ? 'right' : 'wrong'} but the words ${right ? 'do not praise' : 'praise'}: ${html.slice(0, 40)}`);
@@ -147,12 +203,31 @@ function verify(opt) {
           if (id === 'b_jump' && want.g >= fb.g) add(id, j, '⑧ a wrong move goes as far');
           if (id === 'b_enter' && want.k === 'in') add(id, j, '⑧ a wrong move goes in');
           if (id === 'b_finish' && want.k === 'done') add(id, j, '⑧ a wrong move completes');
+          if ((id === 's_far' || id === 's_ladder') && want.g >= fb.g) add(id, j, '⑧ a wrong move goes as far');
+          if (id === 's_road' && want.nx >= fb.nx) add(id, j, '⑧ a wrong move builds as long a road');
+          // the kind the words name: front / own pieces / stopped on the way / back / step
+          if ((id === 's_far' || id === 's_ladder')) {
+            const D = DIST[1], stop = E.mFrom(m) === E.mFrom(P.best) && E.path(p, P.best).slice(1, -1).includes(E.mTo(m));
+            if (/前の駒|前にいる駒/.test(html) && !(want.h && D[E.mFrom(m)] < D[E.mFrom(P.best)])) add(id, j, `⑧ ${E.name(p, m)}: the words say a piece in front`);
+            if (/自分の駒だけ/.test(html) && !(want.h && want.opp === 0)) add(id, j, `⑧ ${E.name(p, m)}: the words say it hops over White only`);
+            if (/途中/.test(html) !== stop) add(id, j, `⑧ ${E.name(p, m)}: stopped on the way ${stop}, the words ${/途中/.test(html)}`);
+            if (/遠ざか|下が/.test(html) !== (want.g < 0)) add(id, j, `⑧ ${E.name(p, m)}: gain ${want.g}, the words on going back disagree`);
+            if (/1歩/.test(html) !== !want.h) add(id, j, `⑧ ${E.name(p, m)}: a step ${!want.h}, the words disagree`);
+          }
+          if (id === 's_road') { if (/ジャンプ/.test(html.split('緑')[0]) !== !!want.h) add(id, j, `⑧ ${E.name(p, m)}: a jump ${!!want.h}, the words disagree`); if (/前へ進める手がない|近づけない/.test(html) !== (want.nx <= 0)) add(id, j, `⑧ ${E.name(p, m)}: next gain ${want.nx}, the words disagree`); }
+        } else {
+          if (id === 's_ladder' && !/黒/.test(html)) add(id, j, '⑧ the praise does not say Black was used');
+          if (id === 's_road' && /下が/.test(html) !== (want.g < 0)) add(id, j, `⑧ the praise on stepping back disagrees (gain ${want.g})`);
         }
       }
       const hp = real(p).includes(P.best) ? UL.hintPts(E, id, P) : [];
       if (!hp.length) add(id, j, '追52 the hint marks nothing');
       if (id === 'b_enter' || id === 'b_finish') { const T = E.target(1); if (hp.some(x => !T[x] || p.sq[x] !== 0)) add(id, j, '追52 the hint should mark the empty squares of the corner'); }
       if (id === 'b_finish' && hp.length !== 1) add(id, j, '⑧ the hint should mark the one hole');
+      if (id === 's_far') { const D = DIST[1], fw = real(p).filter(x => hops(p, x) && gainOf(p, x) >= 2).map(E.mFrom); if (hp.length < 2 || !hp.every(x => p.sq[x] === 1 && fw.includes(x)) || !fw.every(x => hp.includes(x))) add(id, j, '追52 the hint should mark every piece with a forward jump (2 or more)'); }
+      if (id === 's_ladder') { if (hp.length < 2 || !hp.every(x => p.sq[x] === 2)) add(id, j, '追52 the hint should mark the black springboards (2 or more)'); const Q = E.path(p, P.best); if (!Q.some((x, i) => i && hp.includes((Q[i - 1] + x) / 2))) add(id, j, '⑧ the answer hops over none of the marked black pieces'); }
+      if (id === 's_road' && /下がる1歩/.test((UL.JA.intro.s_road || '') + UL.JA.hint.s_road.join('')) && !LS.steps.find(x => x.id === 's_road').problems.some(Q => { const q = E.Pos.from(Q.s); return Q.ok.some(m => gainOf(q, m) < 0); })) add(id, j, '追70 the intro / hints speak of a step back, no answer steps back');
+      if (id === 's_road') { if (!hp.length || hp.some(x => P.ok.some(m => E.mFrom(m) === x)) || hp.some(x => p.sq[x] !== 1)) add(id, j, '追52 the hint should mark the jumper (not the stepped piece)'); }
       rows.push({ id, q: j + 1, legal: c.legal, ok: c.ok.length, d: c.d, best: real(p).includes(P.best) ? E.name(p, P.best) : "—" });
     });
     // ⑥ easy → hard
@@ -179,6 +254,8 @@ function load2D() {
   }
   return w.I18N || {};
 }
+// (the old s_far problem 4, before 2026-11-25: d4:h4 hops over Black)
+const ORIG = { steps: [{ id: 's_far', problems: [0, 0, 0, { s: { b: '......ww.....ww..b......b.....b.b.www.b.bb...bw.w....b..........', side: 1, n: 44 }, ok: [2531], best: 2531 }] }] };
 function selftest() {
   const base = JSON.parse(fs.readFileSync(path.join(ROOT, 'ugolki/lessons.json'), 'utf8'));
   const cases = [
@@ -188,6 +265,9 @@ function selftest() {
     ['a mirrored copy (⑤)', d => { const s = d.steps.find(x => x.id === 'b_finish'), P = s.problems[0]; s.problems[3] = { s: { b: symB(P.s.b, SYM[1][0], false), side: 1, n: P.s.n }, ok: [], best: -1 }; }, /^⑤/],
     ['the same answer twice (追27)', d => { const s = d.steps.find(x => x.id === 'b_step'); s.problems[2] = JSON.parse(JSON.stringify(s.problems[1])); }, /追27/],
     ['Black completes next: not a win (④)', d => { const P = d.steps.find(x => x.id === 'b_finish').problems[1], a = P.s.b.split('').map(c => c === 'b' ? '.' : c); const H = E.target(2); let k = 0; for (let i = 0; i < 64; i++) if (H[i] && a[i] === '.' && k < 8) { a[i] = 'b'; k++; } for (let i = 63; i >= 0; i--) if (H[i] && a[i] === '.') { const r = i >> 3, c = i & 7; const nb = [[r, c + 1], [r - 1, c]].map(([y, x]) => y * 8 + x).find(q => q >= 0 && !H[q] && a[q] === '.'); if (nb != null) { a[nb] = 'b'; break; } } P.s.b = a.join(''); }, /④ Black could complete/],
+    ['s_road: a shorter road as the answer (①② 追74)', d => { const P = d.steps.find(x => x.id === 's_road').problems[2], p = E.Pos.from(P.s); const w = real(p).find(m => !P.ok.includes(m) && !hops(p, m)); P.ok = [w]; P.best = w; }, /^①②/],
+    ['s_far: the answer hops over Black (④ 追36)', d => { const s = d.steps.find(x => x.id === 's_far'); s.problems[3] = JSON.parse(JSON.stringify(ORIG.steps.find(x => x.id === 's_far').problems[3])); }, /④ s_far: the answer hops over Black/],
+    ['s_ladder: Black to move (追5)', d => { const P = d.steps.find(x => x.id === 's_ladder').problems[1]; P.s = Object.assign({}, P.s, { side: 2 }); }, /not White to move/],
   ];
   let bad = 0;
   for (const [name, f, re] of cases) { const d = JSON.parse(JSON.stringify(base)); f(d); const r = verify({ data: d }); const hit = r.out.some(o => re.test(o.msg)); console.log((hit ? 'detected  ' : 'MISSED    ') + name); if (!hit) bad++; }
