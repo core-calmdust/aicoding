@@ -160,6 +160,31 @@
     el.classList.add('swap');
     setTimeout(() => { el.innerHTML = ART.scene(st.scene, loc, 1); el.classList.remove('swap'); }, pref.anim ? 260 : 0);
   }
+  /* the road on the stage floor, cut from paper: a strip that widens toward us, grass and stones along its edges (drawn for the real size, so nothing stretches) */
+  function drawFloor() {
+    const f = $('floor'); if (!f || !PCQ.matches) return;
+    if (!f.__l) { f.__l = 1; f.addEventListener('transitionend', drawFloor); }
+    const w = Math.round(f.clientWidth), h = Math.round(f.clientHeight);
+    if (!w || !h || f.__wh === w + 'x' + h) return; f.__wh = w + 'x' + h;
+    let sd = 7; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+    const cx = w / 2, edge = (y, side) => cx + side * (w * .11 + (w * .62) * Math.pow(y / h, 1.15));
+    const L = [], R = [];
+    for (let i = 0; i <= 14; i++) { const y = h * i / 14, j = (r() - .5) * w * .012 * (1 + i / 6); L.push([edge(y, -1) + j, y]); R.push([edge(y, 1) - j, y]); }
+    const pts = L.concat(R.reverse()).map(p => p[0].toFixed(0) + ',' + p[1].toFixed(0)).join(' ');
+    // a tuft of grass: blades from a base, sized by how near it is
+    const tuft = (x, y, s) => { let d = `M${(x - s).toFixed(0)},${y.toFixed(0)}`; const n = 5 + Math.floor(r() * 3); for (let k = 0; k <= n; k++) { const bx = x - s + 2 * s * k / n; d += ` L${(bx + (r() - .5) * s * .5).toFixed(0)},${(y - s * (.9 + r() * 1.3)).toFixed(0)} L${(bx + s / n).toFixed(0)},${(y - s * .15).toFixed(0)}`; } return d + ` L${(x + s).toFixed(0)},${y.toFixed(0)} Z`; };
+    const stone = (x, y, s) => `M${(x - s).toFixed(0)},${y.toFixed(0)} Q${(x - s * .9).toFixed(0)},${(y - s * .8).toFixed(0)} ${(x - s * .1).toFixed(0)},${(y - s * .75).toFixed(0)} Q${(x + s * .9).toFixed(0)},${(y - s * .6).toFixed(0)} ${(x + s).toFixed(0)},${y.toFixed(0)} Z`;
+    // the ground beside the road: a darker cut-paper sheet whose edge is a ragged row of grass
+    const side = sg => { const P = (sg < 0 ? L.slice() : R.slice().reverse()); let d = `M${sg < 0 ? -2 : w + 2},-2`; for (let i = 0; i < P.length - 1; i++) { const [x0, y0] = P[i], [x1, y1] = P[i + 1]; for (let k = 0; k < 6; k++) { const t = k / 6, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t, s = 3 + 16 * (y / h); d += ` L${(x - sg * s * .2).toFixed(0)},${y.toFixed(0)} L${(x + sg * s * (.6 + r() * .9)).toFixed(0)},${(y + s * .35).toFixed(0)}`; } } return d + ` L${P[P.length - 1][0].toFixed(0)},${h + 2} L${sg < 0 ? -2 : w + 2},${h + 2} Z`; };
+    let near = '', far = '';
+    for (const sg of [-1, 1]) for (let i = 0; i < 16; i++) {
+      const t = (i + .2 + r() * .6) / 16, y = h * Math.pow(t, 1.25), x = edge(y, sg) - sg * (r() * .02 * w), s = 5 + 30 * Math.pow(y / h, 1.1);
+      if (x < -s || x > w + s) continue;
+      const d = r() < .25 ? stone(x, y, s * .7) : tuft(x, y, s);
+      if (y < h * .4) far += d; else near += d;
+    }
+    f.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><polygon class="road" points="${pts}"/><path class="side" d="${side(-1)}${side(1)}"/><path class="far" d="${far}"/><path class="tuft" d="${near}"/></svg>`;
+  }
   function layoutDock() {
     const pc = PCQ.matches;
     const strip = $('strip');
@@ -172,6 +197,10 @@
     }
     document.documentElement.style.setProperty('--dockH', (pc ? h : 0) + 'px');
     // how far down the road the front row stands: fixed for the window, so nobody moves when the text strip changes
+    // the backdrop rises a little on a tall screen, and the back row stands on its ground line (not up in the air)
+    const dep = pc ? Math.max(0, Math.round(innerHeight * .42) - 250) : 0, raise = Math.round(dep * .45), sceneH = innerHeight - (h - 16 + raise);
+    document.documentElement.style.setProperty('--raise', raise + 'px');
+    if (pc) document.documentElement.style.setProperty('--backB', Math.round(raise - 6 + sceneH * .035) + 'px'); else document.documentElement.style.removeProperty('--backB');
     document.documentElement.style.setProperty('--fs', pc ? '1.1' : '1');
     document.documentElement.style.setProperty('--depth', (pc ? Math.max(0, Math.round(innerHeight * .42) - 250) : 0) + 'px');
     if (!pc) {
@@ -179,6 +208,7 @@
       document.documentElement.style.setProperty('--stageH', sh + 'px');
     }
     sizeCast();
+    requestAnimationFrame(drawFloor);
   }
   function sizeCast() {
     // the puppets' size does not follow the text strip: on PC it is reckoned from a fixed strip height, so it only changes with the window
@@ -211,7 +241,7 @@
       const row = i < front ? 0 : 1, k = row ? i - front : i, m = row ? n - front : front;
       const x = m === 1 ? (o.x || 50) : (o.span ? o.span[0] : 10) + ((o.span ? o.span[1] - o.span[0] : 80) * (k + (row ? .5 : 0)) / Math.max(1, m - (row ? 0 : 1)));
       el.classList.toggle('back', !!row); el.classList.toggle('front', !row);
-      requestAnimationFrame(() => { el.style.left = Math.min(94, Math.max(6, x)) + '%'; el.style.bottom = row ? '12%' : ''; el.style.opacity = ''; });
+      requestAnimationFrame(() => { el.style.left = Math.min(94, Math.max(6, x)) + '%'; el.style.bottom = ''; el.style.opacity = ''; });
       if (o.fallen === id) el.classList.add('fallen');
     });
     for (const id in have) { const e = have[id]; e.style.opacity = '0'; setTimeout(() => e.remove(), 600); }
