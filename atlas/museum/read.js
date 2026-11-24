@@ -60,6 +60,7 @@
     { id: 'machines', region: 'americas', color: '#2a4a6a', cover: { s: 'machines' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'machinesTimeline' }, m1: { svg: 'machinesTree' }, m2: { svg: 'machinesSolved' } }, refs: ['Claude E. Shannon, “Programming a Computer for Playing Chess”, Philosophical Magazine 41 (1950)', 'A. M. Turing, “Digital computers applied to games”, in B. V. Bowden (ed.), Faster than Thought (1953)', 'A. L. Samuel, “Some Studies in Machine Learning Using the Game of Checkers”, IBM Journal of Research and Development 3 (1959)', 'J. Schaeffer et al., “Checkers Is Solved”, Science 317 (2007)', 'M. Campbell, A. J. Hoane Jr., F. Hsu, “Deep Blue”, Artificial Intelligence 134 (2002)', 'D. Silver et al., “Mastering the game of Go with deep neural networks and tree search”, Nature 529 (2016)', 'D. Silver et al., “A general reinforcement learning algorithm that masters chess, shogi, and Go through self-play”, Science 362 (2018)', 'Wikipedia, “Mechanical Turk”, “El Ajedrecista”, “Computer chess”, “Solved game”, “Game complexity”'], links: [{ g: 'chess' }, { g: 'checkers' }, { g: 'go' }, { g: 'connect4' }] },
     { id: 'graffiti', region: 'europe', color: '#6a6052', cover: { s: 'graffiti' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'graffitiMap' }, m1: { svg: 'graffitiBoards' }, m2: { svg: 'graffitiDating' } }, refs: ['CIL VIII 17938 (the board in the forum of Timgad: “venari lavari ludere ridere occest vivere”)', 'R. C. Bell, Board and Table Games from Many Civilizations (1960)', 'Friedrich Berger, “From circle and square to the image of the world: a possible interpretation for some petroglyphs of merels boards”, Rock Art Research 21 (2004)', 'Matthew Champion, Medieval Graffiti: The Lost Voices of England’s Churches (2015)', 'Anthea Hawdon, “Gaming up the walls”, Raking Light (talk at the Making Your Mark graffiti symposium, Southampton, 2019)', 'Wikipedia, “Basilica Julia”, “Nine men’s morris”, “Mancala”'], links: [{ g: 'morris' }, { g: 'mancala' }, { g: 'latrunculi' }] },
     { id: 'bans', region: 'asia', color: '#7a2e3a', cover: { s: 'bans' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'bansTimeline' }, m1: { svg: 'bansWhy' }, m2: { svg: 'bansOutcome' } }, refs: ['『日本書紀』持統天皇三年十二月条 / Nihon Shoki, Jitō 3, 12th month', 'Louis IX of France, ordinance against gambling (1254)', 'Florence, the ban on playing cards (1377)', 'Diego Durán, Historia de las Indias de Nueva España e islas de la tierra firme (c. 1581)', 'The Tokugawa shogunate’s ban on Tenshō karuta (1633)', 'Ruhollah Khomeini, ruling on chess played without gambling (1988)', 'Roger Sharpe’s called shot before New York City Council members (April 1976)', 'Wikipedia, “History of chess”, “Karuta”, “Playing card”, “Pinball”'], links: [{ g: 'backgammon' }, { g: 'patolli' }, { g: 'solitaire' }] },
+    { id: 'pieces', region: 'europe', color: '#3a2a1e', cover: { s: 'pieces' }, mins: 3, sec: [{ ex: 'nishapur' }, { ex: 'lewis' }, null, null, null], figs: { m0: { svg: 'piecesEvolution' }, m1: { svg: 'piecesBishop' }, m2: { svg: 'piecesTimeline' } }, refs: ['The Metropolitan Museum of Art, chess set from Nishapur, Iran (12th century), 1971.193a–ff', 'British Museum, “The Lewis Chessmen” (1831,1101.78–159)', 'Design registration of 1 March 1849 to Nathaniel Cooke (Ornamental Designs Act 1842); Illustrated London News, 8 September 1849', 'H. J. R. Murray, A History of Chess (1913)', 'FIDE Handbook, Standards of Chess Equipment', 'Wikipedia, “Chess piece”, “Staunton chess set”'], links: [{ g: 'chess' }, { ex: 'lewis' }, { ex: 'nishapur' }, { g: 'shogi' }] },
   ];
   // pictures shown only beside a story's paragraph (not in another room): a museum's open-access photo (CC0), linked to the museum's page.
   // The name, in each language, is MUSEUM_READ_T[lang].pic[id]. Files images/atlas/museum-story/pic/<id>.webp (≤ 960 px).
@@ -1226,6 +1227,53 @@
         else if (k === 1) g += `<path d="M${xb} ${y}H${xb + 26}" stroke="#8a8478" stroke-width="4" stroke-dasharray="3 5" stroke-linecap="round"/><path d="M${xb + 32} ${y - 7}l12 12M${xb + 44} ${y - 7}l-12 12" stroke="#c0392b" stroke-width="3.2" stroke-linecap="round"/>`;
         else [-20, 0, 20].forEach(d => { g += `<path d="M${xb} ${y}C${xb + 24} ${y} ${xb + 30} ${y + d} ${x1 - 8} ${y + d}" fill="none" stroke="#14864a" stroke-width="3.4" stroke-linecap="round" marker-end="url(#boA)"/>`; }); });
       return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr"><defs><marker id="boA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#14864a"/></marker></defs>${g}</svg>`; },
+    // chess pieces, six kinds × three styles: abstract (Islamic world, like the Nishapur set), figurative (Europe, like the Lewis chessmen),
+    // Staunton (1849). Self-drawn silhouettes; text: the story's figL.evo — [three style names] and figL.names — [king … pawn]
+    piecesEvolution: () => { const F = st('pieces').figL || {}, E = F.evo || [], N = F.names || [], W = 300, x0 = 122, cw = 70, RH = 46, top = 30, H = top + RH * 6 + 6;
+      const ink = '#2b2a28', blue = '#2a5a8a', ivory = '#e9dcc0';
+      const AB = [   // abstract: throne, small throne, two tusks, a knob, a notched block, a dome
+        'M-14 0V-18H-7V-27H7V-18H14V0Z', 'M-11 0V-14H-5V-21H5V-14H11V0Z', 'M-13 0Q-13 -17 -6 -19L-9 -30L-2 -20H2L9 -30L6 -19Q13 -17 13 0Z',
+        'M-12 0Q-12 -15 -3 -17L1 -28L7 -25L6 -16Q12 -13 12 0Z', 'M-12 0V-25H-3L0 -17L3 -25H12V0Z', 'M-9 0Q-9 -14 0 -15Q9 -14 9 0Z'];
+      const FG = [   // figurative: seated king with crown, queen with veil, bishop with mitre, rider on a horse, warder with shield, slab pawn
+        'M-12 0V-20H12V0ZM-6 -20V-24A6 6 0 0 1 6 -24V-20ZM-6 -30L-4 -35L-1 -31L1 -35L4 -31L6 -35V-29H-6Z', 'M-11 0V-19H11V0ZM-7 -19Q-8 -33 0 -33Q8 -33 7 -19Z',
+        'M-11 0V-20H11V0ZM-5 -20V-24A5 5 0 0 1 5 -24V-20ZM-6 -27L0 -38L6 -27Z', 'M-13 0L-9 -14H-2L0 -24L-4 -26L2 -32L9 -26L6 -14H12L13 0Z',
+        'M-9 0V-22H9V0ZM-5 -22V-26A5 5 0 0 1 5 -26V-22ZM-14 -16A7 9 0 1 0 -14 -15Z', 'M-8 0V-17Q0 -23 8 -17V0Z'];
+      const base = w => `M${-w} 0H${w}L${w - 2} -4H${-w + 2}Z`;
+      const ST = [   // Staunton: base + stem + top
+        base(12) + 'M-7 -4L-4 -22H4L7 -4ZM-8 -22H8L6 -27H-6ZM-1.6 -27V-36H1.6V-27ZM-5 -32.5H5V-30.5H-5Z', base(11) + 'M-6 -4L-4 -20H4L6 -4ZM-8 -20H8L6 -25H-6ZM-6 -25L-7 -31L-3 -27L0 -32L3 -27L7 -31L6 -25Z',
+        base(10) + 'M-5 -4L-3 -15H3L5 -4ZM-6 -15H6L5 -17H-5ZM0 -31Q-7 -24 -5 -17H5Q7 -24 0 -31Z', base(11) + 'M-9 -4Q-9 -14 -4 -18L-8 -26Q-2 -33 5 -31Q10 -25 8 -14L9 -4Z',
+        base(11) + 'M-7 -4L-6 -20H6L7 -4ZM-8 -20V-27H-5V-24H-1.5V-27H1.5V-24H5V-27H8V-20Z', base(9) + 'M-4 -4L-2.5 -12H2.5L4 -4ZM-5 -12H5L4 -14H-4ZM0 -14A5.5 5.5 0 1 1 0 -24.9A5.5 5.5 0 1 1 0 -14Z'];
+      let g = '';
+      E.forEach((nm, j) => { g += `<text x="${x0 + cw * j}" y="16" font-size="12" font-weight="800" fill="${[blue, '#8a5a24', ink][j]}" text-anchor="middle">${esc(nm)}</text>`; });
+      for (let k = 0; k < 6; k++) { const y = top + RH * k + RH - 6;
+        if (k % 2 === 0) g += `<rect x="2" y="${y - RH + 8}" width="${W - 4}" height="${RH}" rx="6" fill="#f3ede0"/>`;
+        g += `<text x="8" y="${y - 12}" font-size="13" font-weight="800" fill="${ink}">${esc(N[k] || '')}</text>`;
+        g += `<path transform="translate(${x0} ${y})" d="${AB[k]}" fill="#3f6f9a" stroke="#1f3f5f" stroke-width="1.2"/>`;
+        g += `<path transform="translate(${x0 + cw} ${y})" d="${FG[k]}" fill="${ivory}" stroke="#8a6a3a" stroke-width="1.4"/>`;
+        g += `<path transform="translate(${x0 + cw * 2} ${y})" d="${ST[k]}" fill="#3a2a1e" stroke="#1a120c" stroke-width=".8"/>`; }
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr"><defs><marker id="peA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b8ad98"/></marker></defs>${g}</svg>`; },
+    // the elephant became a bishop (and a jester, a runner…), the chariot a tower: the pieces' names in some languages, each with its meaning
+    // (text: the story's figL.rows — [two row titles], figL.fil and figL.ruk — six meanings each, in the order of the words below)
+    piecesBishop: () => { const F = st('pieces').figL || {}, R = F.rows || [], FI = F.fil || [], RU = F.ruk || [], W = 300, H = 318; let g = '';
+      const WF = ['alfil', 'fou', 'Läufer', 'bishop', 'слон', 'alfiere'], WR = ['rook', 'torre', 'tour', 'Turm', 'ладья', '車'];
+      const row = (y, title, words, mean, icons) => { let s = `<text x="8" y="${y}" font-size="14" font-weight="800" fill="#2b2a28">${esc(title)}</text>`;
+        icons.forEach((d, i) => { const x = 50 + i * 100; s += `<path transform="translate(${x} ${y + 50})" d="${d}" fill="${['#8a8478', '#3f6f9a', '#3a2a1e'][i]}"/>`; if (i < 2) s += `<path d="M${x + 24} ${y + 36}H${x + 70}" stroke="#b8ad98" stroke-width="2.4" marker-end="url(#pbA)"/>`; });
+        words.forEach((w, i) => { const c = i % 2, r = Math.floor(i / 2), x = 8 + c * 148, yy = y + 74 + r * 22;
+          s += `<text x="${x}" y="${yy}" font-size="14" font-weight="800" fill="#7a2a3a">${esc(w)}</text><text x="${x + 58}" y="${yy}" font-size="12" fill="#5a544a">${esc(mean[i] || '')}</text>`; });
+        return s; };
+      const ELE = 'M-20 0V-12Q-22 -26 -6 -28Q10 -30 16 -20Q20 -12 22 -2L18 0L16 -8Q14 -4 10 -2V0H4V-6H-12V0Z', CAR = 'M-22 -6H14L20 -18H10V-26H-6V-14H-22ZM-12 0A6 6 0 1 0 -12 -0.1ZM8 0A6 6 0 1 0 8 -0.1Z';
+      const FIL = 'M-13 0Q-13 -17 -6 -19L-9 -30L-2 -20H2L9 -30L6 -19Q13 -17 13 0Z', BIS = 'M-10 0H10L8 -4H-8ZM-5 -4L-3 -15H3L5 -4ZM-6 -15H6L5 -17H-5ZM0 -33Q-8 -25 -6 -17H6Q8 -25 0 -33ZM-2 -22L3 -28L4 -27L-1 -21Z';
+      const RUK = 'M-12 0V-25H-3L0 -17L3 -25H12V0Z', ROK = 'M-11 0H11L9 -4H-9ZM-7 -4L-6 -20H6L7 -4ZM-8 -20V-27H-5V-24H-1.5V-27H1.5V-24H5V-27H8V-20Z';
+      g += row(18, R[0] || '', WF, FI, [ELE, FIL, BIS]) + row(170, R[1] || '', WR, RU, [CAR, RUK, ROK]);
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr"><defs><marker id="pbA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b8ad98"/></marker></defs>${g}</svg>`; },
+    // chess pieces in time (text: the story's figL.time — [year, name, note])
+    piecesTimeline: () => { const R = ((st('pieces').figL || {}).time) || [], W = 300, RH = 50, o = 14, H = o * 2 + RH * Math.max(0, R.length - 1) + 24, xn = 102; let g = '';
+      const C = ['#8a5a24', '#3f6f9a', '#8a6a3a', '#6a3a8a', '#3a2a1e', '#14864a'];
+      g += `<line x1="${xn}" y1="${o + 8}" x2="${xn}" y2="${o + 8 + RH * Math.max(0, R.length - 1)}" stroke="#b8ad98" stroke-width="3"/>`;
+      R.forEach(([yr, nm, ds], k) => { const y = o + 8 + RH * k;
+        g += `<circle cx="${xn}" cy="${y}" r="8" fill="${C[k % C.length]}" stroke="#fff" stroke-width="2"/><text x="${xn - 14}" y="${y + 5}" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="end">${esc(yr)}</text>`;
+        g += `<text x="${xn + 16}" y="${y + 1}" font-size="15" font-weight="800" fill="#2b2a28">${esc(nm)}</text><text x="${xn + 16}" y="${y + 20}" font-size="13" fill="#5a544a">${esc(ds)}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
     // four tetrahedral dice: how often each score comes (out of 16)
     tetraOdds: () => { const n = [1, 4, 6, 4, 1], W = 300, H = 150, bw = 40, gap = (W - 40 - bw * 5) / 4; let g = '';
       n.forEach((v, i) => { const x = 20 + i * (bw + gap), h = v / 6 * 96, y = 112 - h;
