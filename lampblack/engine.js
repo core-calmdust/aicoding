@@ -881,7 +881,7 @@
         if (S.claims.some(c => c.by === x && c.role === 'cat')) v -= .16 * (1 - (p.persona.bold || .5));   // hang a cat and it takes someone along
         const sw = S.swayVote; if (sw && sw.day === S.day && sw.target === x && p.role !== 'wolf') v += sw.dir * .26 * (p.persona.trust || .5) * 2;   // what the player said after the claim
         const wolfSide = p.role === 'wolf' || (p.role === 'madman' && S.fan && S.diff > 0);   // on 入門 the fanatic lies but does not vote as a bloc
-        if (p.role === 'immoral' && isFox(S, x)) v = -1;   // never against the fox
+        if (p.role === 'immoral' && isFox(S, x) && S.diff > 0) v = -1;   // never against the fox (on 入門 it does not shield it)
         if (wolfSide && isWolf(S, x)) {      // a partner: abandon only when they are surely lost
           v = (heat[x] || 0) >= alive(S).length / 2 ? 2 : -1;
         } else if (wolfSide && x === bloc) v += p.role === 'wolf' ? .6 : .4;
