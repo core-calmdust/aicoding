@@ -2502,7 +2502,7 @@ function xiangqiOpen(opt) {
 // (2026-11-24 担当C, 追42) the 3D 詰め puzzles that play on after a move off the solution: the words after it must say what happened on
 // the board (the reply took / escaped / defended, why the goal is now out of reach), not only 「正解手順から外れました。相手は最善で
 //応じます。」 (pz.stray). Lists the runners in atlas/puzzles.js that still say pz.stray (foxgeese's fgMoved names the fact: AtlasFoxgeesePz.why).
-const STRAY_KIND = { ckMoved: 'checkers', hxMoved: 'hex', tfMoved: 'tafl', mmMoved: 'morris', xqMoved: 'xiangqi・janggi', goMoved: 'go', fgMoved: 'foxgeese', knMoved: 'konane' };
+const STRAY_KIND = { ckMoved: 'checkers', hxMoved: 'hex', tfMoved: 'tafl', mmMoved: 'morris', xqMoved: 'xiangqi・janggi', goMoved: 'go', fgMoved: 'foxgeese', knMoved: 'konane', ugMoved: 'ugolki' };
 function stray() {
   const src = require('fs').readFileSync(path.join(ROOT, 'atlas/puzzles.js'), 'utf8'), out = [];
   const fns = [...src.matchAll(/async function (\w+Moved)\(/g)].map(m => ({ name: m[1], at: m.index }));
@@ -2513,10 +2513,12 @@ function stray() {
 const foxgeese = () => require('./lesson-verify-foxgeese.js').verify().out.map(o => ({ step: o.theme, q: o.q, msg: o.msg }));
 // (2026-11-24 担当C) kōnane on the 3D table: the puzzles (7 themes) — tools/lesson-verify-konane.js
 const konane = () => require('./lesson-verify-konane.js').verify().out.map(o => ({ step: o.theme, q: o.q, msg: o.msg }));
+// (2026-11-24 担当D) ugolki on the 3D table: the "win within N" puzzles (7 themes) — tools/lesson-verify-ugolki.js
+const ugolki = () => require('./lesson-verify-ugolki.js').verify().out.map(o => ({ step: o.theme, q: o.q, msg: o.msg }));
 const reversiOpen = opt => require('./lesson-verify-rvopen.js')(opt);   // (2026-11-24 担当B：リバーシの定跡、tools/lesson-verify-rvopen.js)
 const patolli = () => require('./lesson-verify-patolli.js')();   // (2026-11-24 担当C：パトリのレッスン（ベルの復元 v2）、tools/lesson-verify-patolli.js)
 const gomokuOpen = opt => require('./lesson-verify-gmopen.js')(opt);   // (2026-11-24 担当B：五目並べの定跡（珠型）、tools/lesson-verify-gmopen.js)
-const GAMES = { backgammon, gomokuOpen, chessOpen, xiangqiOpen, reversiOpen, ur, senet, patolli, foxgeese, konane, stray, hex, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines, janggi, hexOpen };
+const GAMES = { backgammon, gomokuOpen, chessOpen, xiangqiOpen, reversiOpen, ur, senet, patolli, foxgeese, konane, ugolki, stray, hex, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines, janggi, hexOpen };
 module.exports = GAMES; GAMES.mancalaWords = mancalaWords; Object.assign(GAMES, { chessOpenCtx, chessOpenProblem, chessOpenSet, chessOpenD }); Object.defineProperty(GAMES, '_hex', { value: { ctx: hxCtx, near: hxNear, problem: hxProblem, d: hxD, pts: hxPts, kind: (sp, m) => { const X = hxX(); return X.HXA.kind(X.HXA.facts(sp, m)); } } }); Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
 Object.defineProperty(GAMES, '_xqStray', { value: xqStray42 });   // (the xiangqi 追42 check alone, with a broken pzwhy for tests)
 if (require.main === module) {
