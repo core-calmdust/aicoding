@@ -181,7 +181,8 @@
       // (2026-11-24 ユーザー：スマホでは盤面を可能な限り左右いっぱいに) phones: the grid across the screen, a thin margin only
       // 詰将棋 (ctx.pz) on phones: the defender's pieces in hand (the row above the board) must be read — more room at the top
       if (PZ && pzFit()) { T3.kick(400); return; }
-      if (T3.fit) T3.fit(Object.assign(tall ? { w: (FW + .3) * SC, d: (PZ ? FH + .5 : BDd + 2 * 1.05) * SC, y: Y * SC, pitch: 1.53, cz: PZ ? -.15 * SC : 0 } : { w: (FW + 8.2) * SC, d: Math.max(FH + 3.2, 12.4) * SC, y: Y * SC, pitch: 1.53 }, PZ && zEase ? { ease: true, ek: .14 } : {}));
+      const LSC = !!(PZ && PZ.lesson);   // (lessons: the ranks 一…九 on the right margin stay on screen — the grid a little narrower, 2026-11-24)
+      if (T3.fit) T3.fit(Object.assign(tall ? { w: (FW + .3 + (LSC ? .5 : 0)) * SC, d: (PZ ? FH + .5 : BDd + 2 * 1.05) * SC, y: Y * SC, pitch: 1.53, cz: PZ ? -.15 * SC : 0, cx: LSC ? .25 * SC : 0 } : { w: (FW + 8.2) * SC, d: Math.max(FH + 3.2, 12.4) * SC, y: Y * SC, pitch: 1.53 }, PZ && zEase ? { ease: true, ek: .14 } : {}));
       T3.kick(400);
     }
     const HS = () => tall ? .9 : 1.08;   // a piece in hand (was .82 everywhere)
@@ -233,7 +234,28 @@
       strip.innerHTML = (P.king[hc] >= 0 ? row(1, S.hOpp || STR.en.hOpp) : '') + row(0, S.hMe || STR.en.hMe);
       if (window.__fitStage) requestAnimationFrame(() => window.__fitStage());   // (the portal frames the board below the chips on phones)
     }
+    /* ---------- lessons (2026-11-24 user): the files and ranks on the board's margin — ９…１ along the top, 一…九 down the right as in a
+       kifu diagram (the gote view turns them with the board) — so a move named ☗２二銀 in the guide's lines can be found ---------- */
+    let coordG = null;
+    function coordsDraw() {
+      if (coordG) { board.remove(coordG); coordG.children.forEach(m => { m.material.map.dispose(); m.material.dispose(); m.geometry.dispose(); }); coordG = null; }
+      if (!PZ || !PZ.lesson || stopped) return;
+      const ZEN = '０１２３４５６７８９', KAN = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九'], MG = .25;   // MG: the middle of the margin (models/shogi.js MARGIN .5)
+      const ink = board.userData.look === 'ink' ? 'rgba(232,206,140,.95)' : 'rgba(40,24,10,.82)';   // (the black lacquer board: its gold lines' colour)
+      coordG = new TH.Group();
+      const lab = (txt, x, z) => {
+        const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
+        g.font = '700 84px "Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = ink; g.fillText(txt, 64, 70);
+        const tx = new TH.CanvasTexture(c); tx.encoding = TH.sRGBEncoding; tx.anisotropy = 4;
+        const m = new TH.Mesh(new TH.PlaneGeometry(.42, .42), new TH.MeshBasicMaterial({ map: tx, transparent: true, depthWrite: false, toneMapped: false }));
+        m.rotation.x = -Math.PI / 2; m.position.set(x, Y + .004, z); m.renderOrder = 1; coordG.add(m);
+      };
+      for (let c = 0; c < NW; c++) lab(ZEN[9 - sqAt(c, 0) % 9], -FW / 2 + CW * (c + .5), -FH / 2 - MG);
+      for (let r = 0; r < NH; r++) lab(KAN[((sqAt(NW - 1, r) / 9) | 0) + 1], FW / 2 + MG, -FH / 2 + CH * (r + .5));
+      board.add(coordG); T3.kick(200);
+    }
     function buildBoard(fallIn) {
+      coordsDraw();
       Object.values(pcs).forEach(g => board.remove(g)); pcs = {}; let i = 0;
       for (let sq = 0; sq < 81; sq++) { const code = P.board[sq]; if (!code) continue;
         const g = mk(code), [x, z] = cellXZ(sq); g.position.set(x, Y, z); board.add(g); pcs[sq] = g;
