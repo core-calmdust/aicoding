@@ -67,6 +67,7 @@
       case 'caught': return { by: e.by, kind: 'defend', text: say(S, story, e.by, 'caught') };
       case 'notice': return { by: e.by, kind: 'accuse', target: e.target, text: say(S, story, e.by, 'notice', { target: N(e.target) }) };
       case 'confess': { const c = charOf(story, e.by); return { by: e.by, kind: 'grief', text: c && c.secret ? c.secret.confess : '' }; }
+      case 'guardsus': return { by: e.by, kind: 'accuse', target: 'you', text: say(S, story, e.by, 'guardsus') };
       case 'callnone': return { by: e.by, kind: 'grief', text: say(S, story, e.by, 'callnone') };
       case 'reqok': return { by: e.by, kind: 'co', text: say(S, story, e.by, 'reqok', { target: N(e.target) }) };
       case 'reqno': return { by: e.by, kind: 'co', text: say(S, story, e.by, 'reqno_' + (e.why || 'trust'), { target: N(e.target) }) };
