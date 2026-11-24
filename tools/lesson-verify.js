@@ -1635,6 +1635,12 @@ function shogiOpen(opt) {
         const pcs = [...g.matchAll(/(\d+)%/g)].map(x => +x[1]); if (!pcs.length || pcs.some(x => x !== pc(n1))) a(`⑧ the praise gives ${pcs.join('/') || 'no'}% (the answer is ${pc(n1)}%) 「${g}」`);
         if (/角道を(開け|開く|通す)|角道が開/.test(g) && !(FA.b1 > FA.b0 + 1)) a(`⑦ the answer: the bishop's line is not opened 「${g}」`);
         if (/取る手|取り返|いただく/.test(g) && !FA.cap) a(`⑦ the answer takes nothing 「${g}」`);
+        { // 追41: the answer moves a piece the opponent could win (SEE > 0 if it stayed), to a square where it cannot be won — the praise says so, and only then
+          const hit = (sf, side, sq) => { const y = new E.Position(); y.setSfen(sf.replace(/ [bw] /, ` ${side ? 'w' : 'b'} `)); return y.legalMoves(true).some(mm => !E.isDrop(mm) && E.mTo(mm) === sq && y.see(mm) > 0); };
+          const qa = new E.Position(); qa.setSfen(P.sfen); qa.doMove(qa.fromUsi(A));
+          const flee = !FA.drop && !FA.cap && hit(P.sfen, 1 - p.side, FA.fr) && !hit(qa.sfen(), 1 - p.side, FA.to);
+          if (flee && !/ねらわれ|取られそう|逃げ|かわ/.test(g)) a(`追41 the answer moves a threatened piece away, the praise does not say so 「${g}」`);
+          if (!flee && /ねらわれていた|ねらわれた/.test(g)) a(`追41 the praise says a piece was threatened 「${g}」`); }
         if (/打つ手|打って/.test(g) && !FA.drop) a(`⑦ the answer is not a drop 「${g}」`);
         if (/玉を(飛車と反対|囲い|安全|戦い)|玉が/.test(g) && FA.pt !== 8) a(`⑦ the answer is not a king move 「${g}」`);
         // the way the answer's piece went (not for a knight's jump or a drop)
@@ -1759,6 +1765,11 @@ function taflOpen(opt) {
         if (/角のとなりを固める|角の入口に門番|角へのななめの道に駒|角のそばにふた|四隅への入口に/.test(gd) && !(me === 1 && BLOCK.has(E.mTo(P.best)))) a(`⑦ the answer is not a corner guard 「${gd}」`);
         if (/次の一手で取れる形|次に1枚取れる形|はさむ準備ができた|はさみ取りをねらう|はさんで取るねらい/.test(gd) && !(aimA > aim0)) a(`⑦ the answer makes no capture threat 「${gd}」`);
         if (/駒を助ける|よける手|かわしておく|逃がして|避難|かわす、身軽|先に駒をどかす|先に守る/.test(gd) && !(thr0 > 0 && oppA < thr0)) a(`⑦ the answer saves nothing 「${gd}」`);
+        { // 追41: the answer moves a piece the opponent could take, to a square where it cannot be taken — the praise says so (and the words above only when it saves something)
+          const hit = (q, s) => { if (q.res) return false; const f = flip(q, 3 - me); return f.moves().some(r => f.clone().play(r).lastCaps.includes(s)); };
+          const flee = !capA && hit(p, E.mFrom(P.best)) && !hit(qA, E.mTo(P.best));
+          if (flee && !/ねらわれ|駒を助ける|よける手|かわしておく|逃がして|避難|かわす、身軽|先に駒をどかす|先に守る/.test(gd)) a(`追41 the answer moves a threatened piece away, the praise does not say so 「${gd}」`);
+          }
         if (/王さま自身が動く|王を外へ動かして|王さまが前へ出る|王さまみずから|王を動かして|王さまが自分で|王が動いて|王さまのお出かけ|王が一歩外へ|王さまで攻め手/.test(gd) && p.at(E.mFrom(P.best)) !== 3) a(`⑦ the answer is not a king move 「${gd}」`);
         for (const u of all) { if (acc.includes(u)) continue; const w = plain(W.ng(u)), x = E.name(p, u), bad = m => a(`⑦ ${x}: ${m} 「${w}」`);
           if (/undefined|NaN|\{(?![mx]\})/.test(w)) { bad('a placeholder'); continue; }
@@ -1869,6 +1880,12 @@ function checkersOpen(opt) {
           if (/2枚(いただく|取れる)/.test(g) && gget !== 2) a(`⑦ the shot takes ${gget} back, the words say 2 「${g}」`);
           if (/まとめて跳ぶ|連続で跳び返す/.test(g) && gget < 2) a(`⑦ the shot takes only ${gget} 「${g}」`); }
         if (/キング|王冠/.test(g) && !/キングを防ぐ|キングに(なられ|成られ)/.test(g) && !p.promotes(A)) a(`⑦ the answer does not crown 「${g}」`);
+        { // 追41: a piece the opponent could jump before the answer, none after (a quiet answer) — the praise says so, and only then
+          const fl = q => { const r = q.clone(); r.side ^= 1; r.rehash(); return r; }, af = p.clone().play(A);
+          const flee = swing(fl(p), 0) > 0 && E.popc(E.mCap(A)) === 0 && !af.caps().length;
+          const says = /ねらわれ|跳び越えられそう|取られそう|ピンチの駒|取るねらいを、先に/.test(g);
+          if (flee && !says) a(`追41 the answer saves a piece the opponent could jump, the praise does not say so 「${g}」`);
+          if (!flee && says) a(`追41 the praise says a piece was in danger, none was 「${g}」`); }
         if (/取り返され(?!ない)/.test(g) && !(nA < E.popc(E.mCap(A)))) a(`⑦ the answer is not taken back 「${g}」`);
         if (/わざと1枚を取らせる|1枚を差し出|1枚あげ|1枚差し出|損を承知/.test(g) && !(nA < 0)) a(`⑦ the answer gives no piece (net ${nA}) 「${g}」`);
         if (nA < 0) a(`④ the answer drops a piece (net ${nA}): a sacrifice the words cannot explain from the board`);
@@ -1957,7 +1974,7 @@ function chessOpenCtx(OP) {
   if (!chW) chW = require(path.join(ROOT, 'chess/tools/wasm.js'));
   const src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8');
   const pre = src.slice(src.indexOf('  const shSeed = '), src.indexOf('  const shPerm = ')) + src.slice(src.indexOf('  const shPerm = '), src.indexOf('\n', src.indexOf('  const shPerm = ')));
-  const X = vm.runInNewContext(pre + '\n' + src.slice(src.indexOf('  const CHJ_OP = {'), src.indexOf('  function chHits(')) + '\n;({ chFacts, chKind, chOpJa, chOpVoice, chStepNotesJa, CHJ_OP, CH_PN, CH_VAL })', { console });
+  const X = vm.runInNewContext(pre + '\n' + src.slice(src.indexOf('  const CHJ_OP = {'), src.indexOf('  function chHits(')) + '\n;({ chFacts, chKind, chOpJa, chOpVoice, chStepNotesJa, CHJ_OP, CH_PN, CH_VAL, chBoard, chAtt, chMove })', { console });
   OP = OP || JSON.parse(fs.readFileSync(path.join(ROOT, 'chess/openings.json'), 'utf8'));
   const brd = fen => { const b = Array(64).fill('.'); String(fen).split(' ')[0].split('/').forEach((row, ri) => { let f = 0; for (const ch of row) { if (/\d/.test(ch)) f += +ch; else { b[(7 - ri) * 8 + f] = ch; f++; } } }); return b.join(''); };
   const swap = b => { let o = ''; for (let r = 7; r >= 0; r--) for (let f = 0; f < 8; f++) { const c = b[r * 8 + f]; o += c === '.' ? c : c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase(); } return o; };
@@ -2026,6 +2043,12 @@ function chessOpenProblem(ctx, s, P, j, opt) {
     const g = plain(Q.good(A)), pp = [...g.matchAll(/(\d+)%/g)].map(x => +x[1]);
     if (/\{|undefined|NaN/.test(g.replace(/\{[mx]\}/g, ''))) a(`⑧ the praise 「${g}」`);
     if (!pp.length || pp.some(x => x !== pc(n1))) a(`⑧ the praise gives ${pp.join('/') || 'no'}% (the answer is ${pc(n1)}%) 「${g}」`);
+    { // 追41: the answer moves a piece the opponent could win (attacked and undefended, or by a cheaper piece) to a square where it is safe — the praise says so, and only then
+      const thr = (b, q) => { const ch = b[q], lo = (ch || '').toLowerCase(); if (!ch || lo === 'k') return false; const at = X.chAtt(b, q, !white, true), df = X.chAtt(b, q, white, true); return !!at && (!df || X.CH_VAL[at.toLowerCase()] < X.CH_VAL[lo]); };
+      const sq = t => (t.charCodeAt(1) - 49) * 8 + (t.charCodeAt(0) - 97), b0 = X.chBoard(P.fen);
+      const flee = !FA.cap && thr(b0, sq(A.slice(0, 2))) && !thr(X.chMove(b0, A), sq(A.slice(2, 4)));
+      if (flee && !/ねらわれ|逃が|逃げ|かわ/.test(g)) a(`追41 the answer moves a threatened piece away, the praise does not say so 「${g}」`);
+      if (!flee && /ねらわれていた|ねらわれた/.test(g)) a(`追41 the praise says a piece was threatened 「${g}」`); }
     acc.slice(1).forEach(u => { const t = plain(Q.good(u)), q2 = [...t.matchAll(/(\d+)%/g)].map(x => +x[1]); if (!t.includes('{x}') || q2.length !== 2 || q2[0] !== pc(cnt.get(u)) || q2[1] !== pc(n1)) a(`⑧ ${u} (also right): 「${t}」`); });
     for (const u of U) { if (acc.includes(u)) continue; const w = plain(Q.ng(u)), bad = m => a(`⑦ ${u}: ${m} 「${w}」`);
       if (/undefined|NaN/.test(w) || /\{(?![mx]\})/.test(w)) bad('a placeholder');

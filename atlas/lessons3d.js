@@ -1173,11 +1173,14 @@
     const nm = /[a-h][1-8]/.test(name) ? '' : name;
     const asks = [0, 1, 2, 3, 4, 5, 6, 7].map(q => V.ask(i + q)).filter(t => nm || !/\{n\}/.test(t)).map(t => t.replace('{n}', nm).replace('{s}', side));
     const ask = V.pick(asks, 0); V.add(ask);
-    const hk = (CH_HINT[kd] || []).map(x => chF(x, vv)), hintTx = V.pick([...hk.map((_, q) => hk[(j + q) % hk.length]), ...CH_HINT.other], 0); V.add(hintTx);
+    // (追41) the answer takes a piece the opponent could win (attacked and undefended, or by a cheaper piece) to a safe square: the hint and the praise say so
+    const chThr = (b, q) => { const c0 = b[q], lo = (c0 || '').toLowerCase(); if (!c0 || lo === 'k') return false; const at = chAtt(b, q, !white, true), df = chAtt(b, q, white, true); return !!at && (!df || CH_VAL[at.toLowerCase()] < CH_VAL[lo]); };
+    const flee = (() => { try { const b0 = chBoard(o.pos); return !FA.cap && chThr(b0, chSq(A)) && !chThr(chMove(b0, A), chSq(A.slice(2, 4))); } catch (e) { return false; } })();
+    const hk = (CH_HINT[kd] || []).map(x => chF(x, vv)), hintTx = flee ? V.pick(['相手にねらわれている駒はないかな？ まずはそこを確かめてピョン。', 'いま、ただで取られそうな駒はない？ 安全なマスを探してあげて！'], i) : V.pick([...hk.map((_, q) => hk[(j + q) % hk.length]), ...CH_HINT.other], 0); V.add(hintTx);
     const shorts = CH_SHORT[kd] || CH_SHORT.other;
     // the praise: a cheer, why (in words the line's notes have not used), the share of games, now and then a push on
     const ch = V.cheer(i), wk = (CH_WHY[kd] || []).map(x => chF(x, vv)), why = V.pick([...wk.map((_, q) => wk[(j + q) % wk.length]), ...CH_WHY.other], 0, V.endOf(ch)), pct = V.pick([0, 1, 2, 3, 4, 5].map(q => V.pct(i + q).replace('{a}', pc(cnt.get(A) || 0))), 0, V.endOf(why));
-    const goodTx = chJoin(ch, why, pct, i % 2 ? V.push(i) : ''); V.add(goodTx);
+    const goodTx = chJoin(ch, flee ? `ねらわれていた${CH_PN[FA.pc]}を、取られないマスへ逃がしたね。` : '', why, pct, i % 2 ? V.push(i) : ''); V.add(goodTx);
     const good = u => { if (u && u !== A && cnt.has(u)) return chJoin(V.cheer(i + 1), `{x}も人気の手！ 実戦では${pc(cnt.get(u))}%、いちばん多い{m}も${pc(cnt.get(A))}%で、どっちも本筋なんだ。`); return goodTx; };
     const ngOf = u0 => {
       let u = u0; if (!u || u === A) u = (C.find(x => x[0] !== A) || [])[0];
@@ -3551,6 +3554,7 @@
     // the praise: the cheer, why — in words the line's notes have not used — and now and then a push on
     let why; { const L = CK_WHY[FA.k] || CK_WHY.dev, fresh = L.filter(x => xqSn(x).every(y => !V.used.has(y.trim())));
       why = fresh.length ? ckWhyJa(FA, j, V) : xqPick(V, [0, 1, 2, 3, 4, 5].map(q => V.pr(i + q).replace('{a}', sh2))); }
+    if (FA.save && FA.k !== 'save') why = xqJoin(why, 'それに、ねらわれていた駒も助かるカニ。');   // (追41: the answer also saves a piece the opponent could jump — say so)
     if (FA.thrAfter && !FA.win) why = xqJoin(why, xqPick(V, ckRot(['しかも次に跳び越えるねらいもあるカニ！', 'おまけに、次は相手の駒を跳べる形！', 'そのうえ相手の駒をひとつ、ねらっているね。'], j)));
     const pu = i % 2 ? [0, 1, 2].map(q => V.push(i + q)).find(x => xqEnd(xqSn(x)[0]) !== xqLastEnd(why)) || V.push(i) : '', goodTx = xqJoin(V.cheer(i), why, pu);
     const good = u => { if (u != null && u !== A && sc.has(u)) return f(best - sc.get(u) <= 6 ? xqJoin(V.cheer(i), '{x}もいい手だカニ！ {m}と同じくらいよく働くの。') : xqJoin('悪くない手だね！', `でも{m}なら${sh2}から、そっちが本筋なの。`));
