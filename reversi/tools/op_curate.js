@@ -34,11 +34,15 @@ for (const s of ST) { const key = s.ln.moves; if (!want.has(key) && !want.has(s.
         if (shown.some(z => RO.dist(b, z) <= 3) || kept.some(z => RO.dist(b, z) <= 3) || cand.some(z => RO.dist(b, z.pos.split(':')[0]) <= 3)) { ST0.near++; continue; }
         const lg = X.rvLegal(cur, side); if (lg.length < 4) { ST0.few++; continue; }
         const e1 = E(Q, 300), e2 = E(Q, 1500); if (e1[0][0] !== e2[0][0]) { ST0.unstable++; continue; }
-        if (Math.abs(e2[0][1]) > 6 || Math.abs(e1[0][1]) > 6) { ST0.decided++; continue; } if (e1[1][1] > e1[0][1] - GAP || e2[1][1] > e2[0][1] - GAP) { ST0.gap++; continue; }
+        if (Math.abs(e2[0][1]) > 5 || Math.abs(e1[0][1]) > 5) { ST0.decided++; continue; }   // (≤ 5: ≤ 6 is checked again in a fresh search, keep 1 disc of room, 2026-11-25)
+        if (e1[1][1] > e1[0][1] - GAP || e2[1][1] > e2[0][1] - GAP) { ST0.gap++; continue; }
         // (⑦ every wrong move has a reason on the board in リバガメ's words: a corner given, X / C, openness, the opponent's moves, the
         // flips or the moves left after the reply — not the 「数は近いけど」 line with no difference to show)
-        { const W = X.rvOpJa({ pos: Q, ans: String(X.rvSq(e2[0][0])), P: { rv: 'op', ev: e2 } }, 'x', 0, X.rvOpVoice('cur'), true);
-          if (lg.some(u => u !== X.rvSq(e2[0][0]) && /数は近い/.test(W.ng(u)))) { ST0.words++; continue; } }
+        // (2026-11-25: with the line's own name and voice, at every place 1〜5 it may be asked — the words vary with them, as the verifier reads them)
+        { const A = X.rvSq(e2[0][0]); let wb = false;
+          for (let j = 0; j < 5 && !wb; j++) { const W = X.rvOpJa({ pos: Q, kind: 'best', ans: String(A), P: { rv: 'op', ans: A, ev: e2 } }, String(s.ln.name.ja), j, X.rvOpVoice(key), true);
+            if (lg.some(u => u !== A && /数は近い/.test(String(W.ng(u))))) wb = true; }
+          if (wb) { ST0.words++; continue; } }
         const near = e2.filter(x => x[1] >= e2[0][1] - 4).length;
         cand.push({ pos: Q, via: path, k, dev: m, ply, best: e2[0][0], sc: e2, sc2: e1, d: near * 100 + lg.length }); }
     } }
