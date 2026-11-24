@@ -224,7 +224,7 @@
   }
 
   /* ---------- common renderers ---------- */
-  const R3 = new Set(['peg', 'reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak', 'solitaire', 'poker', 'baccarat', 'blackjack', 'fanorona', 'alquerque', 'ur', 'ugolki', 'agon', 'konane', 'senet', 'janggi', 'ludo', 'carrom', 'crokinole', 'hockey', 'botao', 'hitblow', 'amazons', 'shanghai', 'latrunculi', 'foxgeese', 'patolli']);   // images/atlas/<id>.webp exists
+  const R3 = new Set(['peg', 'reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak', 'solitaire', 'poker', 'baccarat', 'blackjack', 'guandan', 'fanorona', 'alquerque', 'ur', 'ugolki', 'agon', 'konane', 'senet', 'janggi', 'ludo', 'carrom', 'crokinole', 'hockey', 'botao', 'hitblow', 'amazons', 'shanghai', 'latrunculi', 'foxgeese', 'patolli']);   // images/atlas/<id>.webp exists
   const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${g.id === 'hitblow' ? 13 : g.id === 'foxgeese' ? 13 : g.id === 'latrunculi' ? 13 : g.id === 'patolli' ? 12 : g.id === 'fanorona' || g.id === 'janggi' || g.id === 'morris' || g.id === 'peg' || g.id === 'shanghai' ? 11 : 10}` : `../${g.icon}`;
   const artImg = (g, extra = '') => `<img src="${artSrc(g)}" alt="" loading="lazy" decoding="async"${R3.has(g.id) ? '' : ' class="flat"'}${extra}>`;
   const g3 = g => `<span class="g3" style="--c:${g.color}">${artImg(g)}</span>`;
@@ -787,7 +787,7 @@
   /* ---------- 3D board viewer ---------- */
   let glOK = false, bvGame = null, session = null;
   // card games are 2D only, like the puzzle games (no 3D table): the board card says so and Play opens the game
-  const CARD2D = { poker: true, blackjack: true, baccarat: true, solitaire: true };
+  const CARD2D = { poker: true, blackjack: true, baccarat: true, guandan: true, solitaire: true };
   const pref = (() => { try { return JSON.parse(localStorage.getItem('atlas-play') || '{}'); } catch (e) { return {}; } })();
   // reversi's AI ladder: 2026-11-11 its 25 levels became 28 (Lv.17–27 by depth, the strongest is Lv.28). The saved choice moves to
   // the new level of about the same strength (reversi/index.html LV_25TO28); 'reversi:lvV' 2 = the 25-level ladder (also when unset), 3 = 28.

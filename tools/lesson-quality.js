@@ -190,7 +190,7 @@ function jgPuzzleTexts() {
     let ng = '';
     if (m != null) { const mid = pos.clone().play(m), r = E.think(P.s, [m], 6).move, R = E.puzzle(P.s, [m, r], P.n - 1, false, ck) || [];
       ng = W.say('ja', W.why(E, mid, r), R.some(e => e.need > 0 && e.need <= P.n - 1), P.n - 1, OWN, jn++); }
-    return { ask, hint, good: gd, ng, tw: null };
+    return { ask, hint, good: gd, ng, tw: pos.side === 0 ? 1 : 2 };   // (2026-11-24 報告: whose move from the board — side 0 = 楚 — so ⑫ does not fire on a known turn and ⑬ checks the ask)
   }) }));
 }
 (async () => {
@@ -198,8 +198,10 @@ function jgPuzzleTexts() {
   const puppeteer = require(PUP);
   const b = await puppeteer.launch({ executablePath: CHROME, args: ['--no-sandbox'] });
   const pg = await b.newPage();
+  await pg.setRequestInterception(true);   // (fonts / CDNs: not needed, and they hang where the network is closed — as tools/lesson-progress.js)
+  pg.on('request', q => { const u = q.url(); if (u.startsWith(`http://127.0.0.1:${port}/`) || u.startsWith('data:') || u.startsWith('blob:')) q.continue(); else q.abort(); });
   await pg.goto(`http://127.0.0.1:${port}/atlas/`, { waitUntil: 'domcontentloaded' }); await new Promise(r => setTimeout(r, 4000));
-  const pgGames = games.filter(g => g !== 'foxgeese'), onlyPz = games.length && !pgGames.length;   // (foxgeese: the puzzles only, scored below)
+  const pgGames = games, onlyPz = false;   // (foxgeese: the lessons (atlas/ls-foxgeese.js) and the puzzles, scored below)
   const R = onlyPz ? {} : await pg.evaluate(async games => {
     let src = await (await fetch('lessons3d.js?x=' + Date.now())).text();
     src = src.replace('  window.AtlasGuideJa = guideJa;', '  window.AtlasGuideJa = guideJa; let LSVD = null; const lsvX = (h, id) => { const m = (LSVD || {})[id]; if (!m) return h; for (const k of Object.keys(m).sort((a, b) => b.length - a.length)) if (h.includes(k)) h = h.split(k).join(m[k]); return h; }; window.__setLSV = d => { LSVD = d; };')

@@ -284,6 +284,8 @@
     el.info.querySelectorAll('.trc').forEach(b => b.onclick = () => { select(b.dataset.id); });
     const pb = el.info.querySelector('.amplay'); if (pb) pb.onclick = () => { if (g.ex) { ctx.goEx && ctx.goEx(g.ex); return; } const im = el.info.querySelector('.trhd .tra img'); ctx.open(g.id, im, n.play || null); };
     const hb = el.info.querySelector('.amhist'); if (hb) hb.onclick = () => window.Historia.open(g.id);
+    { const M = window.AtlasMuseum, sid = g && M && M.readOf && M.readOf(g.id), acts = el.info.querySelector('.tracts');   // (2026-11-24 ユーザー: 読み物とのつながり)
+      if (sid && acts) { acts.insertAdjacentHTML('beforeend', `<button type="button" class="amhist amread" style="--c:${g.color}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h9l3 3v13H6z"/><path d="M9 10h6M9 13h6M9 16h4"/></svg>${esc(M.rname('read'))}</button>`); acts.querySelector('.amread').onclick = () => M.openItem('read', sid); } }
   }
   function select(id, scroll = true) {
     sel = id; mark(); info();
@@ -397,5 +399,5 @@
       if (first && document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (host && host.isConnected && el.scroll.offsetParent) draw(); });
     });
   }
-  window.AtlasTree = { render, N, E, FAM, yl };
+  window.AtlasTree = { render, N, E, FAM, yl, pick: id => { if (!el.info || !el.info.isConnected || !N.some(n => n[0] === id)) return false; select(id); return true; } };
 })();

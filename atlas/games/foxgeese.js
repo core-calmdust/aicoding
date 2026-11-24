@@ -316,7 +316,8 @@
       clear(pzMk); if (list == null || !pos) return;
       const L = typeof list === 'number' ? [[list, 'ring']] : list;
       for (const e of L) {
-        if (e && !Array.isArray(e) && e.m != null) { const k = e.cls || 'ok', p = E.path(e.m); mark(pzMk, GEO.ring, pm(k, .95), p[0], .05); p.slice(1, -1).forEach(q => mark(pzMk, GEO.dot, pm(k, .9), q, .03)); mark(pzMk, GEO.cup, pm(k, .55), p[p.length - 1], .012); continue; }
+        const W = Array.isArray(e) && e[0] && typeof e[0] === 'object' && e[0].m != null ? { m: e[0].m, cls: e[1] } : e;   // ([{ m }, cls]: a whole move, as the lessons mark it)
+        if (W && !Array.isArray(W) && W.m != null) { const e = W; const k = e.cls || 'ok', p = E.path(e.m); mark(pzMk, GEO.ring, pm(k, .95), p[0], .05); p.slice(1, -1).forEach(q => mark(pzMk, GEO.dot, pm(k, .9), q, .03)); mark(pzMk, GEO.cup, pm(k, .55), p[p.length - 1], .012); continue; }
         const [q, k] = Array.isArray(e) ? e : [e.at, e.cls]; if (!(q >= 0 && q < 49) || !E.ON[q]) continue;
         if (k === 'ring') { mark(pzMk, GEO.cup, pm('hl', .45), q, .012); mark(pzMk, GEO.ring, pm('ring', 1), q, .05); continue; }
         mark(pzMk, GEO.cup, pm(k, k === 'hl' ? .45 : .55), q, .012);
