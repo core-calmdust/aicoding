@@ -240,3 +240,13 @@ bash tools/nnue/match-kp.sh g2048s.bin 80000 20 10      # 今の評価関数と�
 
 - エンジンの評価値が、ファイルを NumPy で独立に計算した値と一致することを確認済み（300局面、差 0.08 以内）。
 - サイトの wasm はこの形に未対応（ネイティブの試験用のみ。`-DNUE_MB=8 -DNUE_L1 -DNUE_L2`）。強さが確かめられてから対応する。
+
+### 評価値の付け直し（relabel.py、2026-11-25）
+
+USI エンジンの読みで、学習データの評価値を付け直す道具（教師として使うだけで、サイトには載せない）。並列で動かし、Ctrl+C で止めても同じコマンドで続きから再開する。
+
+```
+python3 relabel.py in.bin out.bin --engine ~/shogi-yo-ours/yo-SFNN_ka2_2048_8_64_progress8 --opt EvalDir=$HOME/shogi-yo-ours/eval-SFNN_ka2_2048_8_64_progress8 --opt FV_SCALE=24 --nodes 1000 --count 300000000 --procs 10
+```
+
+つようら王11micro を教師にする案は、見本で確かめて見送った（2万局面読ませて今のデータと同じ精度。`claude/shogi-search-comparison.md` 0.33）。
