@@ -28,6 +28,7 @@ function playBot(story, diff, seed, smart) {
     while (S.pl.ap > 0) {
       if (smart && NN.killer && NN.traces.some((t, i) => !t.gone && !S.pl.found.includes(n + '|' + i))) { E.search(S, story, NN.loc); continue; }
       if (smart && S.items.some(it => !it.taken && S.day >= it.day) && W.WL_STORIES && Math.random() < .3) { const it = S.items.find(x => !x.taken && S.day >= x.day); E.search(S, story, it.loc); continue; }
+      if (smart && story.foxLoc && !S.foxGone && !S.pl.foxLook) { const r = E.search(S, story, story.foxLoc); if (!['trace', 'item', 'got', 'gone'].includes(r.k)) S.pl.foxLook = 1; continue; }   // a player searches the shrine until it gives up its signs
       const ppl = E.alive(S).filter(p => !p.isPlayer && !(S.pl.talked[p.id] === S.day));
       if (!ppl.length) break;
       const p = ppl[Math.floor(Math.random() * ppl.length)];
@@ -36,13 +37,16 @@ function playBot(story, diff, seed, smart) {
     // meeting
     if (smart && !dead) { for (const k of S.pl.found) E.present(S, story, k); if ((S.pl.role === 'seer' || S.pl.role === 'medium') && (day >= 2 || S.pl.res.some(r => r.res === 'wolf'))) E.playerClaim(S); E.playerResults(S); }
     E.meeting(S, story);
-    if (smart && (!dead || (S.ghost && S.ghost.whisper))) { const A = E.analyze(S, 'you'); const t = E.alive(S).filter(p => !p.isPlayer).sort((a, b) => A.p[b.id] - A.p[a.id])[0]; if (t && A.p[t.id] > .3) { S.pl.accuse = { day, target: t.id, ev: S.pl.found.length > 0 }; if (dead) S.ghost.whisper = 0; } }
+    if (smart && !dead && story.rules === 'fox') for (const c of E.contradictions(S, story)) E.pointOut(S, story, c.id);   // the fox is found by its lie about the night
+    if (smart && (!dead || (S.ghost && S.ghost.whisper))) { const A = E.analyze(S, 'you'); if (S.foxHunt) { const fv = E.foxView(S, story, 'you') || {}; for (const k in A.p) A.p[k] = (fv[k] || 0) * 1.5; } const t = E.alive(S).filter(p => !p.isPlayer).sort((a, b) => A.p[b.id] - A.p[a.id])[0]; if (t && A.p[t.id] > .3) { S.pl.accuse = { day, target: t.id, ev: S.pl.found.length > 0 }; if (dead) S.ghost.whisper = 0; } }
     // vote
     const live = E.alive(S).filter(p => !p.isPlayer);
     let pv;
     if (smart) {
-      const A = E.analyze(S, 'you');
-      pv = live.slice().sort((a, b) => A.p[b.id] - A.p[a.id])[0].id;
+      const A = E.analyze(S, 'you'), fv = E.foxView(S, story, 'you');
+      const gone = S.people.filter(p => p.death && p.death.cause === 'exile' && S.pl.res.concat(...S.claims.filter(c => c.role === 'medium').map(c => c.res)).some(r => r.target === p.id && r.res === 'wolf')).length;
+      const sc = id => (S.foxHunt ? 0 : A.p[id]) + (fv ? (fv[id] || 0) * (.2 + .8 * gone / S.wolves.length) : 0);   // the fox has to go too
+      pv = live.slice().sort((a, b) => sc(b.id) - sc(a.id))[0].id;
       if (day === 1) day1conf = Math.max(...live.map(p => A.p[p.id]));
     } else pv = live[Math.floor(Math.random() * live.length)].id;
     let r = E.voteRound(S, story, pv);
@@ -59,7 +63,7 @@ function playBot(story, diff, seed, smart) {
     E.night(S, story, act);
     if (S.nights[S.nights.length - 1].saved) guard++;
     if (E.check(S)) break;
-    S.pl.ap = S.pl.apMax; S.pl.asks = 3;
+    S.pl.ap = S.pl.apMax; S.pl.asks = 3; S.pl.foxLook = 0;
   }
   return { S, win: S.result && S.result.win, why: (S.result && S.result.why) + (S.ghost ? '+ghost' : ''), days: S.day, day1conf, guard, seerDead: S.pl.role === 'seer' && S.pl.co && S.ghost ? 1 : 0, seerCo: S.pl.role === 'seer' && S.pl.co ? 1 : 0 };
 }

@@ -89,11 +89,11 @@ body.anim-off .pp.idle .pup{animation:none}
 .pp.lift{bottom:120%!important;opacity:0;transition:bottom 1.6s cubic-bezier(.5,0,.6,1),opacity 1.6s}
 .pp.drop{transform:translateX(-50%) translateY(140%);opacity:0;transition:transform 1.2s cubic-bezier(.6,0,.8,.4),opacity 1.2s}
 .pp .badge{position:absolute;left:50%;top:-6px;transform:translate(-50%,-100%);white-space:nowrap;font:700 13px/1 var(--ui);padding:4px 8px;border-radius:999px;background:var(--ink);color:var(--paper)}
-.pp .badge.w{background:var(--acc);color:#fff}
+.pp .badge.w{background:var(--acc);color:#fff}.pp .badge.f{background:#b8862a;color:#fff}
 .pp .tg{position:absolute;left:50%;top:-2px;transform:translate(-50%,-100%);display:flex;gap:3px;align-items:center;pointer-events:none;white-space:nowrap}
 .pp .tg:empty{display:none}
 .tg .cl,.ro .cl{font:800 15px/1 var(--ui);padding:4px 7px 5px;background:#6b35a8;color:#fff;border-radius:3px;box-shadow:0 1px 2px rgba(0,0,0,.35)}
-.tg .cl.medium,.ro .cl.medium{background:#1f5fa8}.tg .cl.guard,.ro .cl.guard{background:#23804f}
+.tg .cl.medium,.ro .cl.medium{background:#1f5fa8}.tg .cl.mason,.ro .cl.mason{background:#8a5a1c}.tg .cl.guard,.ro .cl.guard{background:#23804f}
 .tg .ht,.ro .ht{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border-radius:50%;background:#e07a10;color:#fff;font:800 15px/1 var(--ui);font-variant-numeric:tabular-nums;box-shadow:0 1px 3px rgba(0,0,0,.35)}
 #roster{position:absolute;top:calc(var(--hdH) + 6px);left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:6;pointer-events:auto;max-width:calc(100% - 20px)}
 #roster.hide{display:none}
@@ -106,7 +106,7 @@ body.anim-off .pp.idle .pup{animation:none}
 .ro .ht{position:absolute;right:-8px;top:-11px}
 .ro .rs{display:flex;gap:2px;justify-content:center;flex-wrap:wrap;margin-top:2px;min-height:0}
 .ro .rs i{font:800 13px/1 var(--ui);font-style:normal;padding:4px 5px;border-radius:3px;background:#fff;color:#1f5fa8;border:1.5px solid #1f5fa8}
-.ro .rs i.k{background:#c62828;color:#fff;border-color:#c62828}.ro .rs i.g{background:#23804f;color:#fff;border-color:#23804f}
+.ro .rs i.k{background:#c62828;color:#fff;border-color:#c62828}.ro .rs i.f{background:#b8862a;color:#fff;border-color:#b8862a}.ro .rs i.g{background:#23804f;color:#fff;border-color:#23804f}
 .ro.mk-w{border-color:var(--acc);box-shadow:inset 0 0 0 1.5px var(--acc)}.ro.mk-h{border-color:#2f6d4a;box-shadow:inset 0 0 0 1.5px #2f6d4a}.ro.mk-g{border-color:#999;box-shadow:inset 0 0 0 1.5px #999}
 .ro.you{background:rgba(255,248,236,.95)}
 .ro.dead .bust,.ro.dead b{opacity:.45}
@@ -246,7 +246,8 @@ body.nb-open #nb{transform:none}
 .chip.hit{background:var(--acc);color:#fff}
 .chip.miss{opacity:.35;text-decoration:line-through}
 .chip.role{background:var(--ink);color:#f6eedb}
-.chip.w{background:var(--acc);color:#fff}.chip.h{background:#2f6d4a;color:#fff}
+.chip.w{background:var(--acc);color:#fff}.chip.f{background:#b8862a;color:#fff}
+.setrules{margin:12px 0 20px;padding:10px 14px;border-left:3px solid var(--acc);background:rgba(27,18,12,.05);font:15px/1.7 var(--prose);color:var(--ink)}.setrules b{display:block;font:700 13px var(--ui);letter-spacing:.12em;color:var(--mute);margin-bottom:2px}.setrules.hide{display:none}.chip.h{background:#2f6d4a;color:#fff}
 .marks{display:flex;gap:4px;margin-left:auto;flex:none}
 .marks button{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);background:#fff;font:800 13px var(--ui)}
 .marks button.on.w{background:var(--acc);border-color:var(--acc);color:#fff}
@@ -323,13 +324,20 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 .sc h3 small{font:700 14px var(--ui);letter-spacing:.1em;margin-left:10px;color:var(--mute)}
 .sc .tg{font:800 16.5px/1.5 var(--prose);color:var(--acc2,var(--acc))}
 .sc p{margin:0;font:500 15.5px/1.75 var(--prose)}
-.sc .mood{margin-top:auto;font:700 13.5px var(--ui);color:var(--mute);letter-spacing:.08em}
+.sc .mood{margin-top:auto;font:700 13.5px var(--ui);color:var(--mute);letter-spacing:.08em}.sc .mood b{color:var(--acc2,var(--acc));font-size:15px}
 .sc .rec{font:700 13.5px var(--ui);color:#2f6d4a}
 .setup{width:min(900px,100%);background:var(--sheet);border-radius:4px;box-shadow:0 14px 50px rgba(0,0,0,.4);padding:24px 28px}
 .setup h3{font:800 18px var(--ui);letter-spacing:.12em;color:var(--mute);margin:4px 0 10px}
 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
 .tiles.r5{grid-template-columns:repeat(5,1fr)}
 .tiles.heroes{grid-template-columns:repeat(4,1fr)}
+.feats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.feat{display:grid;grid-template-columns:22px 1fr;column-gap:8px;padding:9px 12px;border:1.5px solid rgba(27,18,12,.16);border-radius:3px;background:rgba(246,238,219,.55);color:var(--mute);text-align:left}
+.feat i{grid-row:1/3;font-style:normal;font-size:18px;line-height:1.2;color:rgba(27,18,12,.3)}
+.feat b{font:700 15px/1.35 var(--prose)}.feat span{font:13px/1.5 var(--ui)}
+.feat.got{border-color:var(--acc);background:rgba(246,238,219,.95);color:var(--ink)}.feat.got i{color:var(--acc)}
+.newfeat{margin:10px 0;display:grid;gap:6px}.newfeat>b{font:700 13px var(--ui);letter-spacing:.14em;color:var(--acc)}
+@media (max-width:620px){.feats{grid-template-columns:1fr}}
 .tile .done{font:700 12px var(--ui);color:var(--acc);letter-spacing:.08em}
 .tile{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px 13px;border:1.5px solid var(--line);border-radius:3px;background:#fbf6ea;text-align:left;min-height:96px}
 .tile b{font:800 19px/1.2 var(--prose)}
@@ -472,8 +480,9 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
     <div class="tiles" id="setDiff"></div>
     <h3>あなたの役</h3>
     <div class="tiles r5" id="setRole"></div>
-    <h3>あなたは誰か</h3>
-    <div class="tiles heroes" id="setHero"></div>
+    <p class="setrules hide" id="setRules"></p>
+    <h3>実績 <small id="setFeatN" style="font:700 14px var(--ui);color:var(--mute);letter-spacing:.06em"></small></h3>
+    <div class="feats" id="setFeats"></div>
     <div class="foot"><button class="btn" id="setBack">もどる</button><button class="btn pri" id="setGo">幕を開ける</button></div>
   </div>
 </section>
@@ -490,26 +499,27 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 
 <div id="sheet" class="hide" role="dialog" aria-modal="true"><div class="box" id="sheetBox"></div></div>
 
-<script src="engine.js?v=12"></script>
-<script src="voices.js?v=6"></script>
-<script src="speech.js?v=7"></script>
+<script src="engine.js?v=13"></script>
+<script src="voices.js?v=7"></script>
+<script src="speech.js?v=8"></script>
 <script src="art.js?v=2"></script>
 <script src="scenes.js?v=1"></script>
 <script src="scenes-pass.js?v=1"></script>
 <script src="hero.js?v=2"></script>
+<script src="feats.js?v=1"></script>
 <script src="stories/kirigane.js?v=5"></script>
 <script src="stories/kirigane.tale.js?v=3"></script>
 <script src="stories/kirigane.who.js?v=2"></script>
 <script src="stories/kirigane.who.open.js?v=1"></script>
-<script src="stories/hokushin.js?v=5"></script>
+<script src="stories/hokushin.js?v=6"></script>
 <script src="stories/hokushin.tale.js?v=3"></script>
-<script src="stories/hokushin.who.js?v=2"></script>
+<script src="stories/hokushin.who.js?v=3"></script>
 <script src="stories/hokushin.who.open.js?v=1"></script>
-<script src="stories/tomoshibi.js?v=5"></script>
+<script src="stories/tomoshibi.js?v=6"></script>
 <script src="stories/tomoshibi.tale.js?v=3"></script>
 <script src="stories/tomoshibi.who.js?v=2"></script>
 <script src="stories/tomoshibi.who.open.js?v=1"></script>
-<script src="sound.js?v=5"></script>
-<script src="game.js?v=22"></script>
+<script src="sound.js?v=9"></script>
+<script src="game.js?v=31"></script>
 </body>
 </html>

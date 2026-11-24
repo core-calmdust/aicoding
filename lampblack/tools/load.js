@@ -4,6 +4,6 @@ const DIR = path.resolve(__dirname, '..');
 const win = { };
 win.window = win; win.globalThis = win;
 const ctx = vm.createContext(win);
-for (const f of ['voices.js', 'speech.js', 'engine.js', 'hero.js'].concat(fs.readdirSync(path.join(DIR, 'stories')).filter(f => f.endsWith('.js')).map(f => 'stories/' + f)))
+for (const f of ['voices.js', 'speech.js', 'engine.js', 'hero.js', 'feats.js'].concat(fs.readdirSync(path.join(DIR, 'stories')).filter(f => f.endsWith('.js')).map(f => 'stories/' + f)))
   vm.runInContext(fs.readFileSync(path.join(DIR, f), 'utf8'), ctx, { filename: f });
 module.exports = win;
