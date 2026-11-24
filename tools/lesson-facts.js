@@ -559,6 +559,9 @@ const CHECKS = {
         check(id, `${w} best`, q, P.best, null);
         (P.sc || []).forEach(([m]) => { if (m !== P.best && q.moves().includes(m)) check(id, `${w} ${m}`, q, m, null); }); });
     });
+    // (2026-11-24 第2期・担当B) the strict ①〜⑨ of the practice problems (CKO_DONE: all 19) — the engine again at a fixed depth, a clear
+    // first, the opening's own path, the pool, the order of the 2D and the 3D and チェッカニ's words for every legal move — tools/lesson-verify.js checkersOpen
+    require('./lesson-verify.js').checkersOpen().forEach(fa => bad(G, fa.step, `q${fa.q}: ${fa.msg}`));
   },
   // (2026-11-23 lesson loop) the chess lessons ('chess', key = the step's id): every answer and every listed move is legal, and what
   // ナイトン says about the answer (atlas/lessons3d.js chLsF → chLsJa) holds on the engine's board (chess/engine.js): a check gives check,
