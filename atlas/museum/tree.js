@@ -101,6 +101,9 @@
   ];
   // uncollected games that can still be played inside an Atlas game (2026-11-21 user: パチーシはルドーの種目で遊べる)
   // (2026-11-21 user: エアホッケーはテーブルホッケーの台のバリエーションにあるので、この台も遊べる — board: the table chosen when it opens)
+  // (2026-11-24 ユーザー: 盤双六は遊べるようになった) a node played on a museum piece (所蔵品で遊ぶ): it links to the exhibit
+  const EXP = { sugoroku: { ex: 'sugoroku', color: '#6a3a22' } };
+  const art = g => g.ex ? `<img class="trex" src="../images/atlas/ex/${g.ex}.webp" alt="" loading="lazy">` : ctx.art(g);
   const PLAY = { pachisi: { game: 'ludo', rule: 'pachisi', size: 14 }, airhockey: { game: 'hockey', board: 'air' } };
   /* ---------- the lines: [from, to, sure] (sure 0 = a theory / an influence / a shared board: dashed) ---------- */
   const E = [
@@ -182,7 +185,7 @@
   function layout() {
     const P = phone(), ROW = P ? 56 : 64, NH = P ? 44 : 50, LP = P ? 8 : 12, PAD = P ? 90 : 150;
     const famList = FAM.filter(f => fam === 'all' || f.k === fam);
-    const nodes = N.map(([id, f, y, L, fl = '']) => ({ id, fam: f, y, L, g: fl.includes('g') ? gameOf(id) : PLAY[id] ? gameOf(PLAY[id].game) : null, play: PLAY[id] || null, orig: fl.includes('o') }));
+    const nodes = N.map(([id, f, y, L, fl = '']) => ({ id, fam: f, y, L, g: EXP[id] ? { id: 'mu-' + id, color: EXP[id].color, ex: EXP[id].ex } : fl.includes('g') ? gameOf(id) : PLAY[id] ? gameOf(PLAY[id].game) : null, play: PLAY[id] || EXP[id] || null, orig: fl.includes('o') }));
     const byId = {}; nodes.forEach(n => byId[n.id] = n);
     const lanes = []; let top = 0;
     famList.forEach(f => {
@@ -234,7 +237,7 @@
     el.nodes.innerHTML = B.nodes.map(n => {
       const c = famC(n.fam);
       return `<button type="button" class="trn${n.g ? ' g' : ' x'}${n.orig ? ' o' : ''}" data-id="${n.id}" style="left:${n.x}px;top:${n.top}px;min-width:${n.w}px;height:${n.h}px;--c:${n.g ? n.g.color : c};--f:${c}" aria-label="${esc(n.name + ' · ' + n.label)}">`
-        + (n.g ? `<span class="tra">${ctx.art(n.g)}</span>` : `<span class="trd"></span>`)
+        + (n.g ? `<span class="tra">${art(n.g)}</span>` : `<span class="trd"></span>`)
         + `<span class="trt" dir="auto"><b>${esc(n.name)}</b><small>${esc(n.label)}${n.orig ? ' <em>ORIGINAL</em>' : ''}</small></span></button>`;
     }).join('');
     el.nodes.querySelectorAll('.trn').forEach(b => b.onclick = () => { if (dragged) return; select(b.dataset.id === sel ? null : b.dataset.id); });
@@ -267,19 +270,19 @@
   function rel(id, dir) {
     return E.filter(e => (dir ? e[0] : e[1]) === id).map(e => ({ id: dir ? e[1] : e[0], sure: e[2] })).filter(r => built.byId[r.id]);
   }
-  function chipHtml(r) { const n = built.byId[r.id]; return `<button type="button" class="trc${r.sure ? '' : ' maybe'}" data-id="${r.id}" style="--c:${n.g ? n.g.color : famC(n.fam)}">${n.g ? `<span class="tra">${ctx.art(n.g)}</span>` : '<span class="trd"></span>'}${esc(nodeName(n))}${r.sure ? '' : `<em>${esc(TT(lang, 'maybe'))}</em>`}</button>`; }
+  function chipHtml(r) { const n = built.byId[r.id]; return `<button type="button" class="trc${r.sure ? '' : ' maybe'}" data-id="${r.id}" style="--c:${n.g ? n.g.color : famC(n.fam)}">${n.g ? `<span class="tra">${art(n.g)}</span>` : '<span class="trd"></span>'}${esc(nodeName(n))}${r.sure ? '' : `<em>${esc(TT(lang, 'maybe'))}</em>`}</button>`; }
   function info() {
     const n = sel && built.byId[sel];
     if (!n) { el.info.innerHTML = `<div class="trempty"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="2.4"/><circle cx="6" cy="18" r="2.4"/><circle cx="18" cy="12" r="2.4"/><path d="M8.4 6h2.1c1.6 0 2.5.8 2.5 2.4v1.2c0 1.6.9 2.4 2.5 2.4h.1M8.4 18h2.1c1.6 0 2.5-.8 2.5-2.4v-1.2c0-1.6.9-2.4 2.5-2.4"/></svg><p>${esc(TT(lang, 'pick'))}</p></div>`; return; }
     const g = n.g, c = g ? g.color : famC(n.fam), F = (tx(lang).fam || {})[n.fam] || (tx('en').fam || {})[n.fam] || [n.fam];
     const up = rel(n.id, 0), dn = rel(n.id, 1);
-    el.info.innerHTML = `<div class="trhd" style="--c:${c}">${g ? `<span class="tra big">${ctx.art(g)}</span>` : `<span class="trd big" style="--f:${famC(n.fam)}"><svg viewBox="0 0 24 24" aria-hidden="true">${FAM.find(f => f.k === n.fam).i}</svg></span>`}
+    el.info.innerHTML = `<div class="trhd" style="--c:${c}">${g ? `<span class="tra big">${art(g)}</span>` : `<span class="trd big" style="--f:${famC(n.fam)}"><svg viewBox="0 0 24 24" aria-hidden="true">${FAM.find(f => f.k === n.fam).i}</svg></span>`}
         <div><small>${esc(F[0])}${g ? '' : ` · ${esc(TT(lang, 'notin'))}`}</small><b>${esc(nodeName(n))}</b><span class="trfacts"><span><i>${esc(TT(lang, 'when'))}</i>${esc(n.label)}</span><span><i>${esc(TT(lang, 'where'))}</i>${esc(nodeTx(n, 1))}</span></span></div></div>
       <p class="trdesc">${esc(nodeTx(n, 2))}</p>
       <div class="trrel">${up.length ? `<div><i>${esc(TT(lang, 'from'))}</i><span>${up.map(chipHtml).join('')}</span></div>` : ''}${dn.length ? `<div><i>${esc(TT(lang, 'to'))}</i><span>${dn.map(chipHtml).join('')}</span></div>` : ''}${!up.length && !dn.length ? `<div class="solo"><i>${esc(TT(lang, 'solo'))}</i></div>` : ''}</div>
       ${g ? `<div class="tracts"><button type="button" class="amplay" style="--c:${g.color}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>${esc(TT(lang, 'play'))}</button>${window.Historia && Historia.has && Historia.has(g.id) ? `<button type="button" class="amhist" style="--c:${g.color}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.7 1.5 1.5z"/></svg>${esc(TT(lang, 'hist'))}</button>` : ''}</div>` : ''}`;
     el.info.querySelectorAll('.trc').forEach(b => b.onclick = () => { select(b.dataset.id); });
-    const pb = el.info.querySelector('.amplay'); if (pb) pb.onclick = () => { const im = el.info.querySelector('.trhd .tra img'); ctx.open(g.id, im, n.play || null); };
+    const pb = el.info.querySelector('.amplay'); if (pb) pb.onclick = () => { if (g.ex) { ctx.goEx && ctx.goEx(g.ex); return; } const im = el.info.querySelector('.trhd .tra img'); ctx.open(g.id, im, n.play || null); };
     const hb = el.info.querySelector('.amhist'); if (hb) hb.onclick = () => window.Historia.open(g.id);
   }
   function select(id, scroll = true) {

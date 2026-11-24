@@ -29,7 +29,7 @@ const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,
         const small = ctl.filter(e => { const r = (e.tagName === 'INPUT' && e.closest('label') || e).getBoundingClientRect(); return (r.width < minT - .5 || r.height < minT - .5) && !e.closest('.ptsp,.exspot,.exspots,.ptvspots,canvas,.amap,.ammap,.trscroll'); });
         out.tapSmall = small.length; window.__detail = { tapSmall: small.map(e => (e.className || e.tagName) + ' ' + Math.round(e.getBoundingClientRect().width) + 'x' + Math.round(e.getBoundingClientRect().height)) };
         // 3 小さすぎる文字: 12px 未満
-        const tiny = all.filter(e => [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()) && parseFloat(getComputedStyle(e).fontSize) < 12);
+        const tiny = all.filter(e => [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()) && parseFloat(getComputedStyle(e).fontSize) < 12 && !e.matches('.trn em'));   // (.trn em: the ORIGINAL tag, kept small on purpose — ユーザー 2026-11-24)
         out.tinyText = tiny.length; window.__detail.tinyText = tiny.map(e => (e.className || e.tagName) + ' ' + getComputedStyle(e).fontSize);
         // 4 名前のないボタン（文字も aria-label も title もない）
         const nn = ctl.filter(e => !(e.textContent.trim() || e.getAttribute('aria-label') || e.getAttribute('title') || e.querySelector('img[alt]:not([alt=""])')));
