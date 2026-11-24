@@ -223,6 +223,9 @@ function ugPuzzleTexts() {
 // (2026-11-24 担当D, 追42) the 3D janggi mates: per theme of 2 moves or more, the goal, the hint, the praise after a right move and, for the
 //  first 5 puzzles, ショウギツネ's words after the first wrong (not taken back) move: the engine's reply and its fact (janggi/pzwhy.js,
 //  AtlasJanggiPz.why.ja as atlas/puzzles.js jgStray says it), with reach / noreach from the solver — scored as a lesson
+// (2026-11-25 報告, 追84) the engine's reply is drawn with a fixed seed: level 6 has noise and slips (Math.random), and the same main
+//  scored janggi/pz 98.3 and 95.8 (mate2 98 ↔ 88) on two runs. The same data must give the same score.
+const seeded = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };   // (mulberry32)
 function jgPuzzleTexts() {
   const V = require('./lesson-verify-janggi.js'), E = V.engine(), W = require(path.join(ROOT, 'janggi/pzwhy.js')), PZ = JSON.parse(fs.readFileSync(path.join(ROOT, 'janggi/puzzles.json'), 'utf8'));
   const w = {}; new Function('window', fs.readFileSync(path.join(ROOT, 'atlas/games/janggi-pz.js'), 'utf8'))(w);
@@ -234,7 +237,7 @@ function jgPuzzleTexts() {
     const ask = L.intro[(ti + i) % L.intro.length] + ' ' + fill(tx(ck ? 'pz.goalCk' : 'pz.goal'), { c: '楚', n: P.n }), hint = tx('pz.hintText');   // (the 3D hint for the mates: the gold rings and this line only)
     const gd = tx('pz.good') + ' ' + L.mid[(ti + i) % L.mid.length];
     let ng = '';
-    if (m != null) { const mid = pos.clone().play(m), r = E.think(P.s, [m], 6).move, R = E.puzzle(P.s, [m, r], P.n - 1, false, ck) || [];
+    if (m != null) { const mid = pos.clone().play(m), r = E.think(P.s, [m], 6, seeded(ti * 97 + i + 1)).move, R = E.puzzle(P.s, [m, r], P.n - 1, false, ck) || [];
       ng = W.say('ja', W.why(E, mid, r), R.some(e => e.need > 0 && e.need <= P.n - 1), P.n - 1, OWN, jn++); }
     return { ask, hint, good: gd, ng, tw: pos.side === 0 ? 1 : 2 };   // (2026-11-24 報告: whose move from the board — side 0 = 楚 — so ⑫ does not fire on a known turn and ⑬ checks the ask)
   }) }));

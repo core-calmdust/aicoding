@@ -256,10 +256,11 @@
   // choose a person from a grid
   function pickPerson(title, sub, ids, o) {
     o = o || {};
-    const btns = ids.map(id => `<button class="pb" data-id="${id}">${bust(id)}<span>${esc(nm(id))}</span>${o.mark ? `<i class="mk ${S.pl.notes[id] || ''}"></i>` : ''}</button>`).join('');
+    const off = o.off || {};
+    const btns = ids.map(id => off[id] ? `<button class="pb off" disabled>${bust(id)}<span>${esc(nm(id))}</span><small>${esc(off[id])}</small></button>` : `<button class="pb" data-id="${id}">${bust(id)}<span>${esc(nm(id))}</span>${o.mark ? `<i class="mk ${S.pl.notes[id] || ''}"></i>` : ''}</button>`).join('');
     return sheet(`<button class="ib x" data-x aria-label="閉じる"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button><h3>${title}</h3>${sub ? `<p>${sub}</p>` : ''}<div class="grid-pick">${btns}</div><div class="foot"><button class="btn" data-x>もどる</button></div>`, box => {
       box.querySelectorAll('[data-x]').forEach(b => b.onclick = () => closeSheet(null));
-      box.querySelectorAll('.pb').forEach(b => b.onclick = () => closeSheet(b.dataset.id));
+      box.querySelectorAll('.pb:not(.off)').forEach(b => b.onclick = () => closeSheet(b.dataset.id));
     });
   }
   function pickOpt(title, sub, opts) {
@@ -292,6 +293,7 @@
     const R = $('roster'); if (!R) return;
     const on = S && G.scr === 'play' && S.phase !== 'prologue' && S.phase !== 'end';
     R.classList.toggle('hide', !on); document.body.classList.toggle('has-roster', !!on);
+    if ($('rmap')) $('rmap').classList.toggle('hide', !on);
     if (!on) return;
     R.innerHTML = S.people.map(p => {
       const t = tagsOf(p.id), dead = !p.alive, mk = S.pl.notes[p.id] || '';
@@ -300,9 +302,19 @@
       return `<div class="ro${p.isPlayer ? ' you' : ''}${dead ? ' dead' : ''}${mk ? ' mk-' + mk : ''}${rcls}" data-id="${p.id}">${bust(p.id)}<b class="${(p.isPlayer ? 'あなた' : p.name).length > 5 ? 'long' : ''}">${esc(p.isPlayer ? 'あなた' : p.name)}</b>${t.cl}${t.ht}<div class="rs">${rs}</div>${dead ? `<svg class="x" viewBox="0 0 44 44"><path d="M8 8L36 36M36 8L8 36"/></svg><span class="dc">${dc}</span>` : ''}</div>`;
     }).join('');
     if (PCQ.matches) { const W0 = $('stage').clientWidth - 40, n = S.people.length; const w = Math.max(54, Math.min(84, Math.floor(W0 / n) - 5)); R.style.setProperty('--roW', w + 'px'); R.classList.toggle('tight', w < 70); } else R.style.removeProperty('--roW');
+    renderMap(R);
     R.querySelectorAll('.ro').forEach(e => e.onclick = () => { const id = e.dataset.id; const p = person(id); if (!p || !p.alive || p.isPlayer) return; if (G.onPup && !G.talking && $('sheet').classList.contains('hide') && $('tx').classList.contains('hide')) G.onPup(id); });
     // the same marks above the puppets' heads
     $('cast').querySelectorAll('.pp').forEach(e => { let g = e.querySelector('.tg'); if (!g) { g = document.createElement('div'); g.className = 'tg'; e.appendChild(g); } const t = tagsOf(e.dataset.id); g.innerHTML = t.cl + t.ht; });
+  }
+  /* the ring of places under the roster: neighbours see each other, and the two ends meet */
+  function renderMap(R) {
+    let M = $('rmap'); if (!M) { M = document.createElement('div'); M.id = 'rmap'; R.parentNode.insertBefore(M, R.nextSibling); }
+    const N = S.nights[S.nights.length - 1], me = S.people.find(p => p.isPlayer);
+    const mine = N && N.pos && me && N.pos[me.id], seen = mine ? E.near(st, mine) : [], crime = N && N.killer ? N.loc : null;
+    const chip = l => `<span class="rc${l.id === mine ? ' me' : seen.includes(l.id) ? ' see' : ''}" title="${esc(l.name)}：となりの${E.near(st, l.id).map(x => esc(locName(x))).join('・')}が見える">${esc(l.name)}${l.id === crime ? '<i class="cr">現場</i>' : ''}${l.id === mine ? '<i class="yo">あなた</i>' : ''}</span>`;
+    M.innerHTML = `<div class="rrow">${st.locs.map(chip).join('<s></s>')}</div><div class="rback" title="両端もとなり同士"></div>`;
+    M.style.top = (R.offsetTop + R.offsetHeight + 8) + 'px';
   }
   function hud() {
     if (S.ghost) document.body.classList.add('ghost');
@@ -540,7 +552,9 @@
     if (!v) return hub();
     const it = st.items.find(x => x.id === v);
     if (it.kind === 'secret') {
-      const id = await pickPerson(`${esc(it.name)}で、誰のことを調べる？`, '', live().filter(p => p.secret && !p.secret.open).map(p => p.id));
+      const has = live().filter(p => p.secret), off = {};
+      has.forEach(p => { if (p.secret.open) off[p.id] = 'もう打ち明けた'; });
+      const id = await pickPerson(`${esc(it.name)}で、誰のことを調べる？`, '', has.map(p => p.id), { off });
       if (!id) return hub();
       S.pl.used[v] = 1; const p = person(id); p.secret.open = true;
       await say([{ text: fill(it.use, { name: nm(id) }) }, { who: id, text: ch(id).secret.confess }]);
@@ -649,7 +663,7 @@
     const opts = [
       { t: `${seerN}・${medN}は名乗り出てほしい`, s: '名乗るかどうかは本人が決める。何も見ていない者は、命を惜しんで黙るかもしれない。偽物が出てくることもある。', v: 'call:seer,medium', ic: IC.call, dis: u.call },
       { t: `${seerN}だけ、名乗り出てほしい`, s: `${medN}はまだ隠れていてよい、という頼み方。`, v: 'call:seer', ic: IC.call, dis: u.call },
-      ...(R.guard ? [{ t: `${grdN}も、名乗り出てほしい`, s: `${grdN}は名乗れば狼に狙われる。守りが当たった夜のあとや、残りが少ないときほど出てきやすい。偽物が出ることもある。`, v: 'call:guard', ic: IC.call, dis: u.call }] : []),
+      ...(R.guard ? [{ t: `${grdN}も、名乗り出てほしい`, s: `${grdN}は名乗れば狼に狙われる。守りが当たった夜のあとや、残りが少ないときほど出てきやすい。わけもなく頼むと、狩人を探す狼だと疑われる。`, v: 'call:guard', ic: IC.call, dis: u.call }] : []),
       { t: '見たもの・見つけたものを、全部出してほしい', s: '黙っていた痕跡や、夜に出歩いていた者の話が出てくるかもしれない。ただし、嘘の報告も混ざる。', v: 'evid', ic: IC.call, dis: u.evid },
       S.req.hide ? { t: `${seerN}は、もう隠れなくていい`, s: '先の頼みを取り下げる。', v: 'hide:0', ic: IC.call }
         : { t: `${seerN}は、狼を見つけるまで隠れていてほしい`, s: '本物は名乗らずに占い続ける。ただし、偽物が先に名乗れば黙ってはいないだろう。', v: 'hide:1', ic: IC.call },
@@ -1125,7 +1139,7 @@
   $('selBack').onclick = buildTitle;
   $('setBack').onclick = buildSelect;
   $('setGo').onclick = () => { SND.unlock(); start(); };
-  addEventListener('resize', () => { if (G.scr === 'play') { if (!PCQ.matches) document.documentElement.style.setProperty('--nbW', '0px'); else if (document.body.classList.contains('nb-open')) document.documentElement.style.setProperty('--nbW', '400px'); layoutDock(); } });
+  addEventListener('resize', () => { if (G.scr === 'play') { if (!PCQ.matches) document.documentElement.style.setProperty('--nbW', '0px'); else if (document.body.classList.contains('nb-open')) document.documentElement.style.setProperty('--nbW', '400px'); layoutDock(); if (S) renderRoster(); } });
   PCQ.addEventListener?.('change', () => layoutDock());
   window.WLGame = { get S() { return S; }, get st() { return st; }, G, buildSelect, buildSetup, start, hub, meeting, debate, vote, night, end, setNb, resume };
   buildTitle();

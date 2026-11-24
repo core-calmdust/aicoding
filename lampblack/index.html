@@ -112,7 +112,20 @@ body.anim-off .pp.idle .pup{animation:none}
 .ro.dead .bust,.ro.dead b{opacity:.45}
 .ro .x{position:absolute;left:50%;top:4px;width:56px;height:56px;transform:translateX(-50%);fill:none;stroke:#c2272d;stroke-width:5.5;stroke-linecap:round;pointer-events:none}
 .ro .dc{position:absolute;left:50%;top:44px;transform:translateX(-50%);font:800 13px/1 var(--ui);padding:3px 5px!important;color:#fff;background:#c2272d;padding:2px 3px;border-radius:2px}
-body.has-roster #cast{height:calc(100% - var(--dockH) - var(--hdH) - 150px)}
+#rmap{position:absolute;left:50%;transform:translateX(-50%);z-index:5;width:min(460px,calc(100% - 20px));pointer-events:auto}
+#rmap.hide{display:none}
+#rmap .rrow{display:flex;align-items:center;position:relative;z-index:1}
+#rmap .rrow s{flex:0 0 10px;height:2px;background:rgba(27,18,12,.45)}
+#rmap .rc{position:relative;flex:1 1 0;min-width:0;text-align:center;font:700 12.5px/1 var(--prose);padding:6px 2px;background:rgba(246,238,219,.92);border:1.5px solid rgba(27,18,12,.25);border-radius:3px;color:var(--ink);white-space:nowrap;overflow:visible;cursor:default}
+#rmap .rc.see{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+#rmap .rc.me{background:var(--ink);color:#f6eedb;border-color:var(--ink)}
+#rmap .rc i{position:absolute;top:-9px;font:800 9.5px/1 var(--ui);font-style:normal;padding:2px 4px;border-radius:2px;color:#fff}
+#rmap .rc i{left:50%;transform:translateX(-50%);white-space:nowrap}
+#rmap .rc .cr{background:#c62828}
+#rmap .rc .yo{background:#6b5a48}
+#rmap .rc .cr+.yo{transform:translateX(5%)}#rmap .rc .cr:has(+.yo){transform:translateX(-105%)}
+#rmap .rback{height:8px;margin:-1px 10% 0;border:2px solid rgba(27,18,12,.45);border-top:none;border-radius:0 0 6px 6px}
+body.has-roster #cast{height:calc(100% - var(--dockH) - var(--hdH) - 196px)}
 .pp .wolfshade{position:absolute;left:50%;bottom:0;width:260%;transform:translateX(-50%) scale(.2);transform-origin:50% 100%;opacity:0;color:var(--ink);transition:transform 1.6s cubic-bezier(.2,.7,.2,1),opacity 1.4s;filter:blur(2px);pointer-events:none}
 .pp.turn .wolfshade{transform:translateX(-50%) scale(1);opacity:.9}
 .pp.turn .pup{opacity:.15;filter:blur(3px)}
@@ -206,6 +219,7 @@ body.night #hb .ap{color:#f1e8d2}
 .pb:hover{border-color:var(--line);background:rgba(27,18,12,.05)}
 .pb.talked span{color:var(--mute)}
 .pb.dead{opacity:.32;pointer-events:none}
+.pb.off{cursor:default}.pb.off:hover{border-color:transparent;background:none}.pb.off .bust,.pb.off span{opacity:.35}.pb.off small{font:11px/1.2 var(--prose);color:var(--mute);margin-top:2px;white-space:nowrap}
 .pb.sel{border-color:var(--acc);background:rgba(194,65,45,.08)}
 .pb .mk{width:9px;height:9px;border-radius:50%;margin-top:3px;background:transparent}
 .pb .mk.w{background:var(--acc)}.pb .mk.h{background:#2f6d4a}.pb .mk.g{background:#999}
@@ -369,7 +383,8 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
   .ro .x{width:32px;height:32px;top:3px;stroke-width:6}
   .ro.res-k{box-shadow:inset 0 -4px 0 #c62828}.ro.res-h{box-shadow:inset 0 -4px 0 #1f5fa8}
   .ro .dc{display:none}
-  body.has-roster #cast{height:calc(100% - var(--hdH) - 24px - 96px)}
+  body.has-roster #cast{height:calc(100% - var(--hdH) - 24px - 140px)}
+  #rmap .rc{font-size:11px;padding:5px 1px}#rmap .rrow s{flex-basis:6px}
   .tg .cl{font-size:12px}
   .tg .cl{font-size:10px;padding:2px 4px 3px}.tg .ht{width:16px;height:16px;font-size:10px;line-height:14px}
   .pp .nm{font-size:12.5px;padding:3px 6px 4px}
@@ -475,9 +490,9 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 
 <div id="sheet" class="hide" role="dialog" aria-modal="true"><div class="box" id="sheetBox"></div></div>
 
-<script src="engine.js?v=11"></script>
-<script src="voices.js?v=5"></script>
-<script src="speech.js?v=6"></script>
+<script src="engine.js?v=12"></script>
+<script src="voices.js?v=6"></script>
+<script src="speech.js?v=7"></script>
 <script src="art.js?v=2"></script>
 <script src="scenes.js?v=1"></script>
 <script src="scenes-pass.js?v=1"></script>
@@ -495,6 +510,6 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 <script src="stories/tomoshibi.who.js?v=2"></script>
 <script src="stories/tomoshibi.who.open.js?v=1"></script>
 <script src="sound.js?v=5"></script>
-<script src="game.js?v=19"></script>
+<script src="game.js?v=22"></script>
 </body>
 </html>
