@@ -79,6 +79,7 @@ function poolCheck(opt, ST, pool, add) {   // the verified lines: the 5 problems
       const pl = t => String(t).replace(/<[^>]+>/g, ''), ask = pl(W.ask), hint = pl(W.hintTx), gd = pl(W.good(A));
       for (const [nm, t] of [['question', ask], ['hint', hint], ['praise', gd]]) { if (/\{|undefined|NaN/.test(t)) a(`⑧ the ${nm} 「${t}」`); if (RXO.test(t.replace(/手順(から|を)外れ/g, ''))) a(`⑧ the ${nm} speaks of the line's moves 「${t}」`); }
       if (!ask.includes(me === 1 ? '黒' : '白')) a(`⑧ the question does not name the side 「${ask}」`);
+      if (/の形を作る|形がまた一つ進|形が(きれいに)?整って|流れにぴったり|この流れごと/.test(gd)) a(`追85 the praise says the move builds the line's shape, off the line 「${gd}」`);   // (追85: a problem off the study line — its answer is not a move of the line)
       const { F } = X.rvOpFacts(P.pos), fa = F[A], mA = X.rvReplyMob(P.pos, A), vA = new Map(P.sc).get(P.best);
       if (/隅を取った|隅は取ったら/.test(gd) && !fa.cn) a('⑦ the praise: not a corner');
       { const m1 = gd.match(/開放度は?(\d+)|空きは(\d+)マス/); if (m1 && +(m1[1] || m1[2]) !== fa.open) a(`⑦ the praise: openness ${fa.open} 「${gd}」`); }
