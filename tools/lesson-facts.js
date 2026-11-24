@@ -678,10 +678,19 @@ const CHECKS = {
     // (2026-11-24 第2期・担当B) the openings (shogi/open): the strict ①〜⑨ of the verified sets (SHO_DONE: nakabisha・mukai・migishiken) —
     // the most played move and the engine, a clear first, the set's pattern and side, the pool, the order and ショウギツネ's words
     require('./lesson-verify.js').shogiOpen().forEach(fa => bad('shogi/open', fa.step, `q${fa.q}: ${fa.msg}`));
+    // (2026-11-24 第2期・担当B, 追15) the openings' own lines of shogi・tafl・checkers: legal, the named moves / shape, and no two named
+    // openings with the same line, one the other's first half, or one ending where the other goes (tools/lesson-verify.js openLines)
+    require('./lesson-verify.js').openLines().forEach(fa => bad(fa.step.split(' ')[0] + '/open', fa.step.split(' ')[1], fa.msg));
   },
 };
 
 const todo = games.length ? games : Object.keys(CHECKS);
+// (2026-11-24 第2期・担当B, 追21) a merge left its conflict markers in a page (tafl/index.html loaded app.js twice: the 2D tafl stopped with
+// 「Identifier 'P2' has already been declared」): no line of the games' and the 3D table's pages, scripts and data starts with one
+{ const seen = new Set();
+  for (const g of todo) for (const d of [path.join(ROOT, g.split('/')[0]), path.join(ROOT, 'atlas'), path.join(ROOT, 'shared')]) { if (seen.has(d) || !fs.existsSync(d)) continue; seen.add(d);
+    for (const f of fs.readdirSync(d)) { if (!/\.(html|js|json|css)$/.test(f)) continue;
+      const t = fs.readFileSync(path.join(d, f), 'utf8'); if (/^(<{7}|>{7}) |^={7}$/m.test(t)) bad(g, '-', `追21 conflict markers left in ${path.relative(ROOT, path.join(d, f))}`); } } }
 for (const g of todo) { if (!CHECKS[g]) { console.log(`${g}: no fact check yet`); continue; } try { CHECKS[g](); } catch (e) { bad(g, '-', 'the check failed: ' + e.message); } }
 let n = 0;
 for (const [g, ls] of Object.entries(out)) for (const [id, list] of Object.entries(ls)) for (const m of list) { console.log(`FAIL ${g} ${id}: ${m}`); n++; }

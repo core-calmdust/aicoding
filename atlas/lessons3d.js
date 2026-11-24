@@ -902,8 +902,8 @@
       if (this.p) return this.p;
       const voice = fetch('../shogi/voice-fox-ja.js?v=4').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       const rep = getJ('../shogi/lesson-replies.json?v=2').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
-      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=20261124a'), getJ('../shogi/openings.json?v=20261107l14'),
-        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261124ob`).catch(() => ({ sets: [] })))])
+      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=20261124a'), getJ('../shogi/openings.json?v=20261124ol1'),
+        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261124oc`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
           sets.forEach(s => { if (!s.cat) s.cat = s.handi ? 'handi' : 'mid'; });
@@ -3741,7 +3741,7 @@
     LKEY: 'aicoding-checkers-lessons', OKEY: 'aicoding-checkers-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=20261124b'), getJ('../checkers/openings.json?v=4'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=20261124b'), getJ('../checkers/openings.json?v=5'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vc]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] checkers texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vc)(v); this.V = ((v.I18N || {})['ja@crab']) || {}; } catch (e) { this.V = {}; }   // (チェッカニ's own lines, 3D, ja)
           return this; })
@@ -6042,7 +6042,7 @@
     LKEY: 'aicoding-tafl-lessons', OKEY: 'aicoding-tafl-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=6'), fetch('../tafl/i18n.js?v=6ek-nd1-bm2').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261124o1').catch(() => null)])
+      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=6'), fetch('../tafl/i18n.js?v=6ek-nd1-bm2').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261124o2').catch(() => null)])
         .then(([ls, T, _, op]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] tafl texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -6855,8 +6855,8 @@
   /* whose move it is (2026-11-23 user: every problem — the warm-up's too — must say which side the player moves, 「黒の手番だよ」).
      turnOf: 1 / 2 from the position (an object's me, reversi "…:1", a chess FEN's w / b, a shogi SFEN's b / w), 0 = no sides (dots),
      null = not known. turnLine: the line put before the question, '' when the question already names the side (the same side). */
-  const TURN_N = { ja: { morris: ['金', '銀'], tafl: ['攻め手', '守り手'], chess: ['白', '黒'], reversi: ['●黒', '○白'], gomoku: ['●黒', '○白'], go: ['●黒', '○白'], checkers: ['黒', '白'], xiangqi: ['赤', '黒'], janggi: ['楚', '漢'], hex: ['赤', '青'], amazons: ['白', '黒'], connect4: ['金', '銀'], shogi: ['☗先手', '☖後手'], backgammon: ['金', '金'] },
-    en: { morris: ['Gold', 'Silver'], tafl: ['Attackers', 'Defenders'], chess: ['White', 'Black'], reversi: ['● Black', '○ White'], gomoku: ['● Black', '○ White'], go: ['● Black', '○ White'], checkers: ['Black', 'White'], xiangqi: ['Red', 'Black'], janggi: ['Cho', 'Han'], hex: ['Red', 'Blue'], amazons: ['White', 'Black'], connect4: ['Gold', 'Silver'], shogi: ['☗ Sente', '☖ Gote'], backgammon: ['Gold', 'Gold'] } };
+  const TURN_N = { ja: { ur: ['白', '黒'], morris: ['金', '銀'], tafl: ['攻め手', '守り手'], chess: ['白', '黒'], reversi: ['●黒', '○白'], gomoku: ['●黒', '○白'], go: ['●黒', '○白'], checkers: ['黒', '白'], xiangqi: ['赤', '黒'], janggi: ['楚', '漢'], hex: ['赤', '青'], amazons: ['白', '黒'], connect4: ['金', '銀'], shogi: ['☗先手', '☖後手'], backgammon: ['金', '金'] },
+    en: { ur: ['Light', 'Dark'], morris: ['Gold', 'Silver'], tafl: ['Attackers', 'Defenders'], chess: ['White', 'Black'], reversi: ['● Black', '○ White'], gomoku: ['● Black', '○ White'], go: ['● Black', '○ White'], checkers: ['Black', 'White'], xiangqi: ['Red', 'Black'], janggi: ['Cho', 'Han'], hex: ['Red', 'Blue'], amazons: ['White', 'Black'], connect4: ['Gold', 'Silver'], shogi: ['☗ Sente', '☖ Gote'], backgammon: ['Gold', 'Gold'] } };
   function turnOf(id, pos) {
     if (id === 'dots') return 0;
     if (id === 'mancala') return 1;   // (the player's row is always the near one)
@@ -6869,6 +6869,7 @@
   }
   function turnLine(id, pos, ask, lang) {
     const w = turnOf(id, pos); if (!w) return '';
+    if (id === 'ur' && pos && pos.ur && pos.ur.lock) return '';   // (ur: a question to count on a board for looking — no move to make)
     const ja = lang === 'ja', a = String(ask || '').replace(/<[^>]+>/g, '');
     if (id === 'mancala') return ja ? (/手前/.test(a) ? '' : '<b>手前の列</b>がきみの穴だよ。') : '';
     const N = (TURN_N[ja ? 'ja' : 'en'] || {})[id]; if (!N) return '';
@@ -6877,7 +6878,11 @@
     if (!ja && /to (move|play)|You play/i.test(a)) return '';
     return ja ? (id === 'backgammon' ? `きみは<b>${nm}</b>。` : `<b>${nm}</b>の手番だよ。`) : `<b>${nm}</b> to move. `;
   }
-  const DATA = { dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, janggi: JANGGI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
+  /* ur (2026-11-24 担当C): the data, ダイスン's words and the board hooks are in atlas/ls-ur.js (loaded the first time) */
+  const UR = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUr) return res(); const sc = document.createElement('script'); sc.src = 'ls-ur.js?v=1'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+    .then(() => { const U = AtlasLsUr.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; return this; }); })
+    .catch(e => { this.p = null; throw e; })); } };
+  const DATA = { ur: UR, dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, janggi: JANGGI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
 
   function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(lang), ncLoad(id)]).then(() => D.list(kind, lang)); }
   function next(id, kind, lang) { return list(id, kind, lang).then(L2 => { const x = L2.find(i => !i.full && i.st !== 'pass') || L2.find(i => !i.full); return x ? x.key : null; }); }
@@ -6978,7 +6983,8 @@
         onReady = res;
         const G = pos && typeof pos === 'object' ? pos : null;   // (gomoku: { start, rule, me, last, pick, noForbid } · go: { spec, me, view, marks })
         if (sess && (id === 'go' || id === 'hex') && G && pz() && pz().n !== (G.spec.n || 9)) { sess.stop(); sess = null; }
-        if (sess && id === 'dots' && G && pz() && pz().n !== G.spec.n) { sess.stop(); sess = null; }   // (dots: another board size)
+        if (sess && id === 'dots' && G && pz() && pz().n !== G.spec.n) { sess.stop(); sess = null; }
+        if (sess && id === 'ur' && G && G.ur && pz() && pz().rule() !== ((G.ur.s && G.ur.s.rule) || 'finkel')) { sess.stop(); sess = null; }   // (ur: Blitz is another track — a new board)   // (dots: another board size)
         if (sess && id === 'morris' && G && pz() && pz().v !== G.spec.v) { sess.stop(); sess = null; }   // (morris: another rule set's board)
         if (sess && id === 'tafl' && G && G.spec && G.spec.b && pz() && pz().n !== Math.round(Math.sqrt(String(G.spec.b).length))) { sess.stop(); sess = null; }   // (tafl: another rule set's board)   // (go / hex: another board size — a new board)
         if (!sess) {
@@ -6990,6 +6996,7 @@
         else if (G && id === 'mancala') pz().load(G.spec, G.me, { lock: !!G.lock, marks: G.marks });
         else if (G && id === 'connect4') pz().load(G.moves, G.me, { lock: !!G.lock });
         else if (G && id === 'backgammon') pz().load(G.bg);
+        else if (G && id === 'ur') pz().load(G.ur);
         else if (G) pz().load(G.start, G.rule, G.me, G.last, { pick: G.pick, noForbid: G.noForbid, lock: !!G.lock });
         else if (drill && pz().drill) pz().drill(Object.assign({ fen: pos }, drill));
         else if (id === 'shogi') pz().load(pos, sol || [], { lock: !!lock });
@@ -7005,12 +7012,14 @@
       head(cur.title + ' · ' + RU('step', { i: i + 1, n: cur.ramp.length }));
       const goOn = () => (last ? (cur.k = 0, prob()) : ramp(i + 1));
       const RT = x => D.rampTx ? D.rampTx(L(x, ctx.lang), ctx.lang) : L(x, ctx.lang);   // (connect4: the disc names in the lines)
+      choices(null);
       if (it.k === 'explain') say(`💡 <b>${RT(it.t)}</b><br>${D.rampBody ? D.rampBody(it, ctx.lang) : L(it.b, ctx.lang)}`);
       else say((it.k === 'try' ? turnLine(id, D.rampPos ? D.rampPos(it) : it.fen, RT(it.g), ctx.lang) : '') + RT(it.g) + (cur.ramp.findIndex(x => x.k === 'try') === i ? `<br><small>${RU('note')}</small>` : ''));   // (2026-11-23: whose move, on every try)   // (the note once: on the first try)
       act(last ? RU('main') : RU('next'), { hint: it.k === 'try', nextOn: it.k === 'explain' });
       $('[data-a=next]').onclick = goOn;
       $('[data-a=hint]').onclick = () => {
         if (it.k !== 'try' || ok || !pz()) return; rh = Math.min(3, rh + 1);
+        if (it.choices) { if (rh < 3) say(RT(it.h)); else { say(RU('ans', { m: '<b>' + it.choices[it.right] + '</b>' })); const b = el.querySelector(`.lsch [data-ci="${it.right}"]`); if (b) b.classList.add('ok'); } return; }   // (ur: a warm-up with choices)
         if (D.rampMarks) {   // gomoku: marks on points
           if (rh === 1) { say(RT(it.h)); pz().mark(D.rampMarks(it)); }
           else if (rh === 2) { say(RT(it.h) + '<br>' + RU('look')); pz().mark(D.rampMarks(it).concat(D.rampLook(it))); }
@@ -7031,6 +7040,12 @@
         act(last ? RU('main') : RU('next'), {});
         autoGo(2600, () => cur && phase === 'ramp' && cur.ri === i && !more.length, goOn);
       };
+      if (it.k === 'try' && it.choices) {   // (ur, 2026-11-24: a warm-up question with choices — the buttons under the words; a miss can be tried again)
+        let box = $('.lsch'); if (!box) { box = document.createElement('div'); box.className = 'lsch bgch'; $('.bub').insertBefore(box, $('.cnt')); }
+        box.hidden = false; box.innerHTML = it.choices.map((c, k) => `<button type="button" class="btn sm" data-ci="${k}">${c}</button>`).join('');
+        box.onclick = e => { const b = e.target.closest('[data-ci]'); if (!b || ok || phase !== 'ramp' || cur.ri !== i) return; const k = +b.dataset.ci;
+          if (k === it.right) { box.querySelectorAll('button').forEach((x, j) => { x.disabled = true; x.classList.toggle('ok', j === k); }); rDone(); } else { b.classList.add('ng'); b.disabled = true; say(RU('ng')); try { chime(false); } catch (e2) {} } };
+      }
       onMoved = async (u, info) => {
         if (stopped || phase !== 'ramp' || cur.ri !== i) return;
         if (it.k === 'try' && it.goal === 'mate' && it.n > 1 && pz().defend && (rLine || it.ok.includes(u))) {   // (shogi's mates in 3+: played out to the end, 2026-11-15)
@@ -7045,7 +7060,7 @@
         if (it.k === 'explain') { if (D.rampUndo) D.rampUndo(pz()); else pz().undo(1); marks0(); pz().wait(); return; }   // (the explanation's board is for looking)
         if (D.rampOk ? D.rampOk(it, u) : it.ok.includes(u)) return rDone();   // (right: on to the next step by itself, the meter on 次へ)
         say(RU('ng')); try { chime(false); } catch (e) {}
-        if (D.rampMarks && !['checkers', 'xiangqi', 'janggi', 'backgammon', 'tafl', 'amazons', 'connect4'].includes(id)) pz().mark([[u, 'ng']]);   // (checkers / xiangqi: a move number, not a square — the miss is taken back below)
+        if (D.rampMarks && !['checkers', 'xiangqi', 'janggi', 'backgammon', 'tafl', 'amazons', 'connect4'].includes(id)) pz().mark((id === 'ur' ? D.rampMarks(it) : []).concat([[u, 'ng']]));   // (checkers / xiangqi: a move number, not a square — the miss is taken back below)
         later(() => { if (cur && phase === 'ramp' && cur.ri === i && !ok) { if (D.rampUndo) D.rampUndo(pz()); else if (!(it.pick)) pz().undo(1); marks0(); pz().wait(); } }, 1100);
       };
       pz().wait();
@@ -7274,6 +7289,15 @@
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;
       }
+      if (id === 'ur') {   // (2026-11-24: ダイスン's reason from the board; a move: back to the problem, the best move's route green, yours red)
+        const right = pts >= 16, k = cur.k, mv = p.kind !== 'choice';
+        say(`${p.own ? '' : right ? pick(X.good) : X.wrong} <b>${fill(X.pts, { n })}</b><br>` + (right ? p.good(u) : p.ng(u)));
+        try { chime(right); } catch (e) {}
+        if (mv) later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(); pz().mark([...(right ? [] : [[p.ans, 'ok']]), [u, right ? 'ok' : 'ng']]); }, 900);
+        act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
+        if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
+        return;
+      }
       if (id === 'mancala' && typeof u === 'number') {   // (back to the problem: the answer's pit in gold, yours red, every pit's value)
         const right = pts >= 16, k = cur.k, P = p.P;
         say(`${p.own ? (right ? '' : pts >= 10 ? 'いい線！' : 'おしい！') : right ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b><br>` + (right ? p.good(u) : p.ng(u)) + (p.sow ? '' : '<br><small>' + D.tx('fb.values', ctx.lang, { a: mcFmt(P.sc[u], false), b: mcFmt(P.sc[P.best], false) }).replace('あなたの手', 'きみの手') + '</small>'));   // (p.own: マンカラビ praises / names the gold pit himself)
@@ -7416,7 +7440,7 @@
       seqAns: async () => { const p = cur && cur.probs[cur.k]; if (!p || p.kind !== 'tfseq' || !pz()) return null; const pre = pz().moves().slice(), left = p.n - (Math.ceil((pre.length + 1) / 2) - 1);   // (test hook, tafl's N-move problems: a move that keeps the forced escape / capture, as tfSeq checks it)
         const L = await pz().puzzle(left, false, pre), g = (L || []).filter(x => x.need > 0 && x.need <= left).sort((x, y) => x.need - y.need); return g[0] ? g[0].m : null; },
       drillEnd: () => { if (cur && cur.drill) drillDone(); },
-      rampAnswer: async () => { const it = cur && phase === 'ramp' && cur.ramp && cur.ramp[cur.ri]; if (!it || !pz()) return false; if (id === 'backgammon' && it.k === 'try' && window.BG) {   // (backgammon: a legal play of the roll that the warm-up's ok accepts, as the player moves — 2026-11-22: it.ok is a rule, not a move)
+      rampAnswer: async () => { const it = cur && phase === 'ramp' && cur.ramp && cur.ramp[cur.ri]; if (!it || !pz()) return false; if (it.choices) { const b = el.querySelector(`.lsch [data-ci="${it.right}"]`); if (b) b.click(); return !!b; } if (id === 'backgammon' && it.k === 'try' && window.BG) {   // (backgammon: a legal play of the roll that the warm-up's ok accepts, as the player moves — 2026-11-22: it.ok is a rule, not a move)
           const q0 = bgDecP(it.pos), pl = BG.genPlays(q0, 0, it.dice[0], it.dice[1]).find(x => D.rampOk(it, { pos: x.pos, steps: x.moves })); if (!pl) return false;
           await pz().play(pl.moves); if (onMoved) await onMoved({ key: BG.key(pl.pos), steps: pl.moves, pos: pl.pos }, {}); return true; }
         let u = it.ok ? it.ok[0] : D.rampAns ? D.rampAns(it) : it.ans; if (u == null) return false;   // (reversi: the warm-up's answer is it.ans, no it.ok)

@@ -163,6 +163,8 @@ function lessons(opt) {
   for (const k of ['mine >= best - 10 && !(best > WINT && mine < best)) return 20', 'best > WINT && mine > WINT) return 16', "mine > -WINT && mine >= 300 ? 8 : mine > -100 ? 4 : 0", 'mine < -WINT && best >= -WINT) return 0'])
     if (!b2.includes(k) || !b3.includes(k)) add('-', -1, '⑨ the 2D / 3D scoring differs: ' + k);
   if (!/janggi: JANGGI/.test(src)) add('-', -1, '⑨ the 3D table has no DATA.janggi');
+  // 追24 the heading over a right answer: not the puzzle mode's lines (AtlasPuzzleLines.janggi.solved「きれいに詰んだ！」) on a capture lesson
+  if (!/p\.own && \(id === 'morris' \|\| id === 'janggi' \|\| p\.ckls\) \? '' : line\('solved'\)/.test(src)) add('-', -1, '追24 a right answer in a janggi lesson is headed by the puzzle lines (詰んだ)');
   if (!/steps: ls\.steps\.filter\(x => D\.includes\(x\.id\)\)/.test(src)) add('-', -1, '⑨ the 3D table lists steps that are not checked');
   const WIN = E.WIN, WINT = E.WINT, sOfV = v => v > WINT ? 0.9 + 0.1 * Math.min(1, 6 / (WIN - v + 1)) : v < -WINT ? -(0.9 + 0.1 * Math.min(1, 6 / (WIN + v + 1))) : v > WINT - 1000 ? 0.88 : v < -(WINT - 1000) ? -0.88 : Math.tanh(v / 800) * 0.82;
   const pts = (P, m) => { const val = new Map(P.sc), best = Math.max(...P.sc.map(e => e[1])), mine = val.has(m) ? val.get(m) : -WIN;

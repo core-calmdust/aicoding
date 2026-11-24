@@ -1,0 +1,204 @@
+/* =====================================================================
+   The Royal Game of Ur — the lessons on the 3D board (atlas/lessons3d.js DATA.ur, 2026-11-24 担当C).
+   ur/lessons.json (rebuilt with the exact RoyalUr.net tables: ur/tools/gen_lessons_lut.js, checked by tools/lesson-verify.js ur)
+   on the British Museum board, told by ダイスン (the rules tour's guide, atlas/rules/ur.js). Progress = the full game's
+   aicoding-ur-lessons { id: { best, pass } }.
+   Japanese: ダイスン's own words — every reason is a fact of the board (a capture, a rosette, the exact roll home, the chance
+   the rival's next throw can hit you, counted over the 16 ways the dice land); never a win chance. Other languages: the 2D texts.
+   AtlasLsUr.make(H) → the DATA object (H: the helpers of lessons3d.js — getJ, J, put, L, fill).
+   ===================================================================== */
+(function () {
+  'use strict';
+  const PAT = n => n;
+  function make(H) {
+    const { getJ, J, put, L, fill } = H;
+    const tx = (o, lang) => L(o, lang);
+    const plain = h => String(h || '').replace(/<[^>]+>/g, '');
+    // ---------- ダイスン's words (ja) ----------
+    // each list: one is picked per use, never twice in a lesson (V.v)
+    const JA = {
+      intro: {
+        prob: 'ワン！ ぼくは<b>ダイスン</b>。ウルは4個のサイコロで駒を進めて、<b>7枚を先にゴールさせたら勝ち</b>のゲームなんだ。<br>まずは目の出やすさ！ 4個の出方は16通りで、2がいちばん出やすいよ。',
+        rosette: '道の<b>4・8・14マス目</b>には花の模様のロゼットがあるんだ。<br>そこに止まると<b>もう一度振れる</b>！ 1回の番で2回動けるのは、すごく得だワン。',
+        center: '真ん中の列のロゼット、道の<b>8マス目</b>はとくべつ！<br>そこにいる駒は<b>取られない</b>し、もう一度振れるし、相手はそこに止まれないんだ。',
+        hold: '中央のロゼットに駒がいるときのお話だワン。<br>あそこの駒は取られないうえに、相手の道をふさいでいる。<b>ほかの駒で目を使えるなら、動かさない</b>のが基本なんだ。',
+        enter: '道の最初の4マスは<b>きみだけの列</b>。相手は入ってこないから、そこでは取られないんだ。<br>新しい駒を入れるか、盤の駒を進めるか、くらべてみよう！',
+        danger: '危ないマスを見分けよう！<br>自分の列と中央のロゼットは安全地帯。真ん中の列で<b>相手の駒の1〜4マス先</b>にいると、その目が出たら取られちゃうワン。',
+        escape: '相手の駒のすぐ前にいる駒は、ねらわれているんだ。<br><b>5マス以上先</b>や、中央のロゼット、自分の列の最後の2マスまで行けば、もう届かないよ！',
+        capture: '相手の駒にぴったり止まると、その駒を<b>取れる</b>！<br>取られた駒はスタートに戻って、進んだ分がぜんぶ消える。遠くまで来た駒ほど大きいワン。',
+        choose: '取れるときでも、取るのがいちばんとは限らない！<br>取った駒が相手の駒のすぐ前に出ると、<b>取り返される</b>かもしれないんだ。ほかの手ともくらべてみよう！',
+        goal: '終盤のお話！ ゴールには<b>ちょうどの目</b>でしか入れないんだ。<br>14マス目なら1、13マス目なら2がぴったり。上がった駒はもう取られないワン。',
+        race: 'どっちがゴールに近いか、数えてみよう！<br>駒ごとの<b>残り歩数＝15−いる場所</b>（スタートは15、ゴールは0）。足して少ないほうがリードなんだ。',
+        blitz: 'ルールを変えて<b>ブリッツ</b>！ 駒は5枚、道は16マス。<br>ブリッツでは<b>取るともう一度振れる</b>！ ロゼットも安全じゃないから、取り合いが熱いワン。',
+      },
+      ramp: {
+        prob: { et: '距離を数えてみよう！', eb: '赤い印の駒は、相手の駒の<b>2マス先</b>。相手が2を出したら取られるから、16通り中6通りなんだ。', tt: 'いちばん出やすい目は？', g: '4個のサイコロで、いちばん出やすい目を選んでみて！', h: '出やすさは0〜4の順に、1・4・6・4・1通りだよ。', y: 'そのとおり！ 2は6通りでトップだね。' },
+        rosette: { et: 'ロゼットに止まろう！', eb: '光っているマスがロゼット。この目でぴったり止まる駒を動かせば、追加でもう1回振れるんだ。', tt: 'ロゼットに止まる駒は？', g: 'この目で花のマスに止まれる駒を動かしてみて！', h: 'いる場所に目を足して、4・8・14になる駒はどれかな？', y: '止まった！ 続けてもう一度振れるよ！' },
+        center: { et: '中央のロゼットへ！', eb: 'この目で真ん中のロゼットに届く駒がいるんだ。入れば安全で、もう1回振れるよ。', tt: '真ん中に入ろう！', g: '中央のロゼットまで届く駒を動かしてね。', h: '8から目を引いたマスにいる駒を探そう！', y: '入った！ そこは安全地帯なんだ。' },
+        hold: { et: '居すわる手！', eb: '中央の花のマスにいる駒は動かさず、目はべつの駒で使ったんだ。', tt: 'ほかの駒で目を使おう！', g: '中央のロゼットの駒は動かさずに、いい手を選んでみて。', h: '真ん中を空けると、相手がそこを使えちゃうよ。', y: 'ばっちり！ 真ん中はしっかり守れたね。' },
+        enter: { et: '入れる？ 進める？', eb: 'くらべると、ここはこの手がいちばん。動かした駒が危なくならないんだ。', tt: 'どっちがいいかな？', g: '入れるか進めるか、選んでみて！', h: '動かした駒が、相手の駒の目の届くマスに出ないか確かめよう。', y: 'いい判断！ 危ないマスには出なかったワン。' },
+        danger: { et: '危険を減らそう！', eb: '赤い印は取られるかもしれない駒。動かしたあと、いちばん取られにくい手を選ぶんだ。', tt: '取られにくい手は？', g: '相手の次の1振りで取られにくくなる手を選んでみて！', h: '動かしたあと、その駒は相手の駒の何マス先になる？', y: 'うまい！ 相手の目が届きにくくなったワン。' },
+        escape: { et: '逃げよう！', eb: '赤い印の駒がねらわれているんだ。この目で、相手の届かないところへ動かすよ。', tt: 'ねらわれた駒を逃がそう！', g: '赤い印の駒を、相手の駒から引きはなしてみて。', h: '相手の駒の5マス以上先か、安全なマスに入れるかな？', y: 'ナイス！ 逃げきったワン。' },
+        capture: { et: '取ってみよう！', eb: 'この目で相手の駒にちょうど届く駒がいるんだ。取ったら相手の駒はスタートに逆戻り！', tt: '相手の駒を取ろう！', g: '相手の駒をつかまえられる駒を動かしてみて！', h: '真ん中の列の相手の駒まで、目の数だけ離れている駒は？', y: '取った！ 相手は最初からやり直しだ！' },
+        choose: { et: 'くらべて選ぼう！', eb: '取る手とほかの手の、動かしたあとの安全さをくらべると、ここはこの手なんだ。', tt: 'いちばんいい手は？', g: '取る手もふくめて、いちばんの手を選んでみて！', h: '取った駒のすぐうしろに、相手の駒は残っていない？', y: 'お見事！ よくくらべられたワン。' },
+        goal: { et: 'ゴールさせよう！', eb: 'この目で、ちょうど上がれる駒がいるよ。ゴールに入れば、もう誰にもつかまらない！', tt: '終盤のいちばんの手は？', g: '終盤だね。いちばんいい手を選んでみて！', h: '15から場所を引いた数が、出た目と同じ駒はどれ？', y: 'ゴール！ これで1枚安心だ！' },
+        race: { et: '数えてみよう！', eb: '白の駒の上の数字が、それぞれの残り歩数。盤の外で待っている駒もちゃんと足していくんだ。', tt: '残り歩数を数えよう！', g: 'きみの駒の残り歩数、合計はいくつかな？', h: '数字の書いてある駒と、まだ出ていない駒を合わせてね！', y: '正解！ 数え方はばっちりだワン。' },
+        blitz: { et: '取ってもう一回！', eb: 'ブリッツでは、取る手がそのまま「もう一度振れる手」なんだ。', tt: 'ブリッツのいい手は？', g: 'ブリッツのルールで、いちばんの手を選んでみて！', h: '取れる駒はいるかな？ 取れば続けて振れるよ。', y: 'やったね！ 取ってもう一回だワン。' },
+      },
+      ask: ['出目は<b>{n}</b>！ どの駒を動かすのがいちばんかな？', 'サイコロは<b>{n}</b>が出たワン。きみならどう動かす？', '<b>{n}</b>が出たよ。いちばんいい手を探してみて！', 'さあ、出目は<b>{n}</b>。ここはどの駒でいく？', '今度の目は<b>{n}</b>だね。よく見て選んでみよう！', '<b>{n}</b>が出た！ さて、どの駒を進めようか？', '出目は<b>{n}</b>。盤をじっくり見てから決めよう！'],
+      askLast: ['これで最後！ 出目は<b>{n}</b>、いちばんの手はどれ？', 'ラストの問題だワン。<b>{n}</b>が出たよ、どうする？'],
+      hint: {
+        rosette: ['光っているマスに、ちょうど<b>{n}</b>マスで届く駒はどれかな？', '駒の場所に<b>{n}</b>を足して、花のマスになるのは？', '花のマスまであと<b>{n}</b>の駒を探そう！', 'ロゼットの手前<b>{n}</b>マスにいるのは、どの駒だろう？', '追加の1振りがもらえる駒、見つかるかな？'],
+        center: ['光っている真ん中のマスに、<b>{n}</b>で届く駒はいる？', '道の8マス目から<b>{n}</b>マス戻ったところを見てね！', '中央まであと<b>{n}</b>の駒、いるかな？', '真ん中の花のマスに入れる駒を探してみよう！', 'スタートの駒も数に入れて考えてみて！'],
+        hold: ['真ん中の駒はそのまま！ ほかの駒の手をくらべてみて。', '中央の駒を動かしたら、相手が入れるようになっちゃうかも？', 'ほかの駒で、花のマスに止まれる手はある？', '中央の駒以外で、取られにくい手を探してみよう！', '真ん中は守ったまま、目を使える駒はどれかな？'],
+        enter: ['盤の駒を進めると、相手の駒の目の届くマスに出ない？', '入れた駒は自分の列で安全。進める手とくらべてみて！', '<b>{n}</b>マス進めた先は安全かな？', '新しい駒を入れる手も候補だよ！', 'どの手のあとがいちばん取られにくいかな？'],
+        danger: ['赤い印の駒に注目！ 動かしたら、相手の駒から何マス先になる？', '相手の駒の1〜4マス先は危険地帯。避けられる手は？', '<b>{n}</b>マス動かした先に、相手の目は届くかな？', '自分の列や真ん中の花のマスは、取られない場所だよ！', 'どの手なら、相手が取れる目がいちばん少なくなる？'],
+        escape: ['赤い印の駒がねらわれているよ。どこまで逃げられる？', '相手の駒から5マス以上離れられるかな？', '<b>{n}</b>マス逃げた先は安全？ 数えてみて！', '真ん中の花のマスや、自分の列の最後の2マスは安全だよ！', 'ねらわれた駒を、相手の目の届かないところへ！'],
+        capture: ['赤い輪の相手の駒に、ちょうど<b>{n}</b>マスで届く駒は？', '相手の駒の<b>{n}</b>マス手前にいるのは、どの駒かな？', '真ん中の列の相手の駒まで、何マスか数えてみて！', 'ぴったり止まれば取れる！ 届く駒を探そう。', '赤い輪をよく見て！ そこに止まれる駒は？'],
+        choose: ['取ったあと、その駒は取り返されやすくならない？', 'ロゼットや安全なマスに行く手ともくらべよう！', '取る手のあと、相手の駒の何マス先になるかな？', 'どの手のあとが、いちばん取られにくい？', '<b>{n}</b>で行ける先を、ひとつずつくらべてみて！'],
+        goal: ['15から場所を引いた数が<b>{n}</b>の駒はいる？', 'ちょうど<b>{n}</b>マスでゴールに届く駒を探そう！', 'ゴールの手前<b>{n}</b>マスにいる駒は？', 'ゴールした駒は取られない。上がれる駒はどれかな？', '道の最後の2マスにいる駒をよく見て！'],
+        blitz: ['赤い輪の相手の駒をねらえるかな？', '取ればもう一回振れる！ <b>{n}</b>で届く相手の駒は？', '相手の駒の<b>{n}</b>マス手前にいる駒を探してみて！', 'ブリッツでは取るのが大きいワン。取れる駒はいる？', '赤い輪に止まれる駒、見つかるかな？'],
+      },
+      cheer: ['いいね！', 'ナイスだワン！', 'さすが！', 'お見事！', 'ばっちり！', 'その調子！', 'よく見つけた！', 'すごい！', 'やったね！', '上手！', '完璧！', 'いい目してるワン！'],
+      push: ['次もこの調子でいこう！', 'どんどんいこう！', 'つぎも楽しみだワン！', 'その勢いで次へ！', 'まだまだいけるよ！'],
+      soft: ['おしい！', 'ドンマイ！', '大丈夫だワン！', 'あと一歩！', 'いい線！', '気にしない、気にしない！', '次はいけるワン！'],
+      w: {
+        'w.cap': ['相手の駒は<b>{k}マス</b>も進んでいたのに、スタートに逆戻り！', '取られた駒は振り出しから。<b>{k}マス</b>分がぜんぶ消えたワン。', 'ぴったり止まって取ったから、相手は<b>{k}マス</b>やり直しなんだ。', '<b>{k}マス目</b>まで来ていた駒をつかまえたよ。相手はまた最初から！', 'これで相手の<b>{k}マス</b>分が水のあわ。大きいね！'],
+        'w.blitz': ['取ったうえに、ブリッツだから続けて振れるワン！', '相手の駒は<b>{k}マス</b>分をまるごと失って、きみはもう1回！', 'ブリッツの取りは2倍おいしい。追加の1振りに、相手はやり直しだね。', 'つかまえた駒は<b>{k}マス</b>進んでいたんだ。しかも続けて振れる！', '取ればもう一度。これがブリッツでいちばん強い手だね！'],
+        'w.ros': ['<b>{t}マス目</b>の花のマスに止まったから、もう一回振れるね！', 'ロゼットで止まって、続けてもう一度。1回の番で2回動けるんだ！', '<b>{t}マス目</b>はロゼット。ここで止まれば追加の1振りだワン。', 'ぴったり花のマス！ サイコロをもう一度振れるよ。', 'この目でロゼットに届く駒はそれだけ。おまけの1振りをゲット！'],
+        'w.center': ['中央のロゼットに入ったね。取られないうえに、もう一回振れるんだ！', '真ん中の花のマスは安全地帯。しかも相手はそこに止まれないワン。', '中央を取った！ 取られない・もう一度・相手をふさぐの三拍子だね。', '真ん中に入ったから、続けて振れるうえに相手の道もふさげたね！', '安全で、おまけの1振りもつく。いちばん大事なマスを取ったよ。'],
+        'w.hold': ['真ん中の駒はそのまま。相手の通り道をふさぎ続けているね！', '中央の駒は動かさずに、ほかの駒で目を使えたね。', '居すわり成功！ 相手は真ん中で止まれないままなんだ。', '中央をキープしたまま、ほかの駒でうまく進めたワン。', '真ん中の駒を残したから、相手はまだあそこを使えないね。'],
+        'w.enter': ['新しい駒を入れたね。自分の列なら取られる心配はないんだ。', '入れた駒は安全な自分の列。使える駒が増えたね！', 'ここは入れるのが正解。動かせる駒が増えるワン。', '新しい駒を出して、次の目の使い道を増やしたね！', '自分の列に1枚追加！ 選べる手が増えるのは強いよ。'],
+        'w.adv': ['ここは入れるより、盤の駒を進めるほうがいい場面だったね。', '新しい駒は入れずに、盤の駒をうまく前へ出したワン。', '入れる手もあったけど、進めても危なくならない形なんだ。', '盤の駒を前へ！ 入れるのは次でも間に合うね。', '進める手を選べたね。駒の場所がぐっとよくなったよ。'],
+        'w.goal': ['ちょうどの目でゴール！ 上がった駒は二度と取られないんだ。', '<b>{f}マス目</b>の駒がぴったり上がった！ これで1枚安心。', '上がれる目を逃さなかったワン。終盤はこれが大事！', 'ゴールした駒はもう安全。ちょうどの目を使い切った！', 'ゴールに1枚追加！ 勝ちにまた1歩近づいたよ。'],
+        'w.escape': ['逃げたあと、相手の次の1振りで取られる確率は<b>{r}%</b>まで下がったね。', 'ねらわれていた駒を逃がしたワン。危険は<b>{r}%</b>だけ。', 'うまく逃げた！ 相手の目が当たるのは<b>{r}%</b>しかないよ。', '相手の届かないところへ逃げたね。残る危険は<b>{r}%</b>！', '逃げきり成功！ つかまる確率は<b>{r}%</b>にとどまったんだ。'],
+        'w.safe': ['この手のあと、相手に取られる確率は<b>{r}%</b>。いちばん低いんだ。', '危険をいちばん小さくできたね。残るのは<b>{r}%</b>！', 'どの手よりも安全！ 相手の目が当たるのは<b>{r}%</b>だけだワン。', '危ないマスを避けられたね。つかまる確率は<b>{r}%</b>にとどまるよ。', 'いちばん取られにくい手だね。確率でいうと<b>{r}%</b>しかないんだ。'],
+      },
+      w0: ['この手なら、相手がどの目を出しても取られないんだ！', '相手の目はどれも届かない。危険ゼロの手だワン！', '動かしたあと、取られる目はひとつもないよ。', 'これで相手は何が出ても取れない！', '危ないマスを全部さけて、つかまる心配なし！'],
+      n: {
+        'n.noCap': ['緑の道の駒なら、相手の駒にぴったり止まって<b>取れた</b>んだ。', '緑の手は相手の駒をつかまえる手。取ればスタートに戻せたから、見逃しはもったいない！', '緑の駒は、ちょうどこの目で相手の駒に届いていたワン。だから取れたんだ。', '取れる駒がいたよ。緑の道の先に相手の駒があるから、見てみて！', 'この目なら緑の駒で取れたから、そっちが正解なんだ。'],
+        'n.leave8': ['中央のロゼットを空けると、相手の駒がそこに入れちゃうワン。緑の手なら居すわったままだよ。', '真ん中の駒を動かすと、相手の通り道があいちゃうんだ。緑の手は中央をキープするよ。', '中央を明けわたすと相手に使われるから、もったいない！ 緑の手なら守れたね。', '真ん中から出ると、次は相手がそこに入れる目があるんだ。緑は動かさない手だよ。', 'その手だと中央がからっぽ。相手に取られるから、緑の手で居すわろう！'],
+        'n.noGoal': ['緑の駒は、ちょうどの目でゴールできたんだ。上がれば二度と取られないよ。', 'ゴールできる緑の手があったワン。上がれば1枚安全だったから、そっちが先なんだ。', 'この目なら緑の駒がぴったり上がれたんだ。ゴールの駒はもう狙われないから大きいワン。', '緑の手ならゴールに1枚。上がりのチャンスは逃さないで！', 'ちょうどの目が出たから、緑の駒で上がるのが正解なんだ。'],
+        'n.noCenter': ['緑の駒は中央のロゼットに入れたんだ。そこなら取られないし、もう一回振れるよ。', '真ん中に届く緑の手があったワン。入れば安全なうえに、おまけの1振り！', '緑の道の先が中央のロゼット。入ると相手もそこに止まれなかったんだ。', '緑の駒で真ん中を取れたから、そっちが大事だったんだ。', '中央に入る緑の手なら、取られなくなるうえに続けて振れたワン。', 'この目なら緑の駒が真ん中に届いたから、見のがしはもったいない！'],
+        'n.noRos': ['緑の駒は花のマスに止まれたんだ。止まればもう一回振れたよ。', '花のマスに届く緑の手があったワン。止まるとおまけの1振りがもらえたんだ。', '緑の道の先はロゼット。止まると追加でもう一度だから、そっちが得なんだ。', '緑の手ならロゼットにぴったり。2回動けるチャンスだったんだ！', 'この目で花のマスに届くのは緑の駒。だから緑が正解なんだ。', '緑の駒を動かせば、ロゼットに止まってもう1回振れたから、そっちが得だワン。'],
+        'n.risk': ['その手だと、相手の次の1振りで取られる確率が<b>{r}%</b>。緑の手なら<b>{q}%</b>で済むんだ。', '赤の手のあとは<b>{r}%</b>の確率でつかまっちゃう。緑の手は<b>{q}%</b>だよ。', '相手の目が当たる確率をくらべると、赤は<b>{r}%</b>、緑は<b>{q}%</b>。だから緑なんだ。', '赤の手だと相手の駒の届くマスに出ちゃう。危険は<b>{r}%</b>、緑なら<b>{q}%</b>なんだ。', 'そのマスは危ないから、取られるのが<b>{r}%</b>。緑の手なら<b>{q}%</b>ですむよ。'],
+        'n.capRisk': ['取れはするけど、取った駒が次に取り返される確率が<b>{r}%</b>。緑の手なら<b>{q}%</b>なんだ。', '取ったあと、その駒は相手の駒のすぐ前。<b>{r}%</b>で取り返されちゃうから、緑の<b>{q}%</b>のほうがいいね。', 'その取りは取り返されるのが<b>{r}%</b>もあるワン。緑の手なら<b>{q}%</b>ですむんだ。', '取った駒が逆につかまる確率は<b>{r}%</b>。緑なら<b>{q}%</b>だから、取らないほうが得だね。', '取ると相手の目の届くマスに出ちゃう。危険は<b>{r}%</b>、緑の手は<b>{q}%</b>なんだ。'],
+      },
+      n0: { 'n.risk': ['その手だと、相手の次の1振りで取られる確率が<b>{r}%</b>になっちゃうんだ。', '赤の手のあとは<b>{r}%</b>の確率でつかまるから、危ないんだ。', '赤の手だと相手の駒の届くマスに出ちゃうから、危険が<b>{r}%</b>もあるワン。', 'そのマスは相手の目が当たるから、<b>{r}%</b>で取られちゃう。', '赤の手のあと、つかまる確率は<b>{r}%</b>。危ない橋なんだ。'],
+        'n.capRisk': ['取れはするけど、取った駒が次に取り返される確率が<b>{r}%</b>もあるんだ。', '取ったあと、その駒は相手の駒のすぐ前だから、<b>{r}%</b>で取り返されちゃう。', '取ると逆につかまる確率が<b>{r}%</b>。それはもったいないね。'] },
+      zero: ['緑の手なら取られる心配はゼロだったよ。', '緑の手のあとは、相手の目がどれも届かないんだ。', '緑なら相手が取れる目はひとつもないワン。', '緑の手だと、どの目が出ても取られないんだ。', '緑なら危険はまったくなし！', '緑の手のあとは安全そのものだったワン！'],
+      cq: { roll: ['出目が<b>{n}</b>になる確率は？ 16通りで考えてみて！', '今度は<b>{n}</b>。16通りのうち何通りかな？'],
+        risk: ['赤い印の駒が、相手の次の1振りで取られる確率は？', '黄色の数字は相手の駒からの距離。赤い印の駒に相手の目が当たる確率は？', 'これで最後！ 赤い印の駒がつかまる確率はいくつかな？'],
+        pips: ['きみ（白）の駒の残り歩数、合計はいくつ？', '白の駒の残り歩数を、ぜんぶ足してみて！'], rpips: ['今度は相手（黒）の駒！ 残り歩数の合計は？'], lead2: ['レースはどっちが何歩リードしている？', 'さあ数えて！ リードしているのはどっちで、何歩かな？'] },
+      chint: { roll: ['青い印の向きの組み合わせを、ひとつずつ数えてみて！', '4個ぜんぶの向きが決まる出方は、16通りのうちいくつかな？'],
+        prob: ['0〜4の出方は、16通りのうち1・4・6・4・1通りだよ！', '相手の駒から何マス先か、黄色の数字を見てね！', '届く距離の目だけ、出やすさを足すんだ！', '距離が1なら4通り、2なら6通り、3なら4通り、4なら1通りだワン。', '青い印が何個上を向くか、組み合わせを数えてみて！', '黄色の数字の目が出たら取られる。その出やすさを合わせよう！'],
+        race: ['駒の上の数字を見ながら、ひとつずつ足してみて！', 'まだ盤に出ていない駒も、1枚ずつ数に入れてね！', '道の何マス目にいるかを見れば、あと何歩かわかるよ！', '上がった駒は数えなくていいワン！'],
+        lead2: ['両方の合計を出して、差を見てみよう！', '少ないほうがゴールに近いんだ。差はいくつかな？'] },
+      cw: { 'c.roll': ['4個のうち青い印が<b>{n}個</b>上を向く出方は、16通り中<b>{m}通り</b>なんだ。', '<b>{n}</b>が出るのは16通りのうち<b>{m}通り</b>。覚えておくと便利だワン！', '<b>{n}</b>の出方は<b>{m}通り</b>あるから、確率は<b>{m}/16</b>！', '16通りのうち<b>{n}</b>になるのは<b>{m}通り</b>だよ。'],
+        'c.risk': ['相手の駒からの距離の目を足すんだ。{list} で、合わせて<b>{m}/16</b>！', '届く目の出やすさを足すと {list}、つまり<b>{m}/16</b>だね。', '{list} と足して、<b>{m}/16</b>になるワン。', '距離の目ごとに数えると {list}、合計<b>{m}/16</b>なんだ。', '当たる目を拾っていくと {list}。全部で<b>{m}/16</b>！', '{list} を合わせた<b>{m}/16</b>が、つかまる確率だよ。'],
+        'c.pips': ['ひとつずつ足すと、合計<b>{m}</b>歩なんだ。', '残り歩数を足していくと<b>{m}</b>。数え方はばっちりだワン！', '白の駒をぜんぶ合わせて<b>{m}</b>歩。これが答え！', '合計は<b>{m}</b>歩になるんだ。'],
+        'c.rpips': ['相手の駒も同じように数えるよ。合計<b>{m}</b>歩！', '黒の駒をぜんぶ合わせると<b>{m}</b>歩になるんだ。', '相手の残りは合わせて<b>{m}</b>歩だワン。'],
+        'c.lead2y': ['残り歩数は きみ<b>{a}</b>・相手<b>{b}</b>。<b>{d}歩</b>差で、きみがリードしているんだ！', 'きみ<b>{a}</b>歩、相手<b>{b}</b>歩。少ないきみが<b>{d}歩</b>リードだね！', '<b>{a}</b>対<b>{b}</b>で、きみのほうが<b>{d}歩</b>ゴールに近いワン！'],
+        'c.lead2r': ['残り歩数は きみ<b>{a}</b>・相手<b>{b}</b>。<b>{d}歩</b>差で、相手がリードしているんだ。', 'きみ<b>{a}</b>歩、相手<b>{b}</b>歩。少ない相手が<b>{d}歩</b>リードしているね。', '<b>{a}</b>対<b>{b}</b>で、相手のほうが<b>{d}歩</b>ゴールに近いワン。'] },
+      cn: { 'c.rollNg': ['<b>{x}</b>は出目が<b>{v}</b>になる確率だから、ちがうんだ。', '<b>{x}</b>だと、<b>{v}</b>が出る確率になっちゃうワン。', '<b>{x}</b>なら<b>{v}</b>の出やすさだから、別の目だね。'], 'c.roll8Ng': ['<b>{x}</b>になる目はないから、ちがうワン。', '16通りで<b>{x}</b>になる目はひとつもないから、ちがうね。'], 'c.lowNg': ['<b>{x}</b>だと少なすぎるから、数え落としがあるね。', '<b>{x}</b>では足りないワン。足しわすれがあるみたい。', '<b>{x}</b>は小さすぎるから、まだ数えていないものがあるんだ。', 'それだと<b>{x}</b>。もう少し大きくなるはずだから、数え直してみて！'], 'c.highNg': ['<b>{x}</b>だと多すぎるから、数えなくていいものまで足しているね。', '<b>{x}</b>では大きすぎるワン。よけいに足したところがあるんだ。', '<b>{x}</b>は多いから、どこかで数えすぎているみたい。', 'それだと<b>{x}</b>。もっと小さくなるはずだから、見直してみて！'], 'c.sideNg': ['残り歩数が少ないほうがリードだから、逆なんだ。', 'ゴールに近いのは歩数が少ないほうだから、そっちじゃないワン。'] },
+    };
+    const ROT = (a, k) => a.map((_, i) => a[(i + k) % a.length]);
+    // a lesson's voice: a line is not said twice in a lesson
+    function voice(seed) {   // each list in its own order per lesson (a seeded shuffle), a line never twice in a lesson while unused ones are left
+      const used = new Set(), perm = new Map();
+      const order = list => { let o = perm.get(list); if (o) return o; let h = seed * 2654435761 % 4294967296 + list.length * 97; o = list.slice(); for (let i = o.length - 1; i > 0; i--) { h = (h * 1103515245 + 12345) % 2147483648; const j = h % (i + 1); [o[i], o[j]] = [o[j], o[i]]; } perm.set(list, o); return o; };
+      return { v(list) { const o = order(list), x = o.find(t => !used.has(t)) || o[0]; used.add(x); return x; } };
+    }
+    const CAT = { basic: '基本', tactics: '戦術', end: '終盤', vari: 'ルールを変えて' };
+    function mini(s) {   // a small picture of the board for the list (the 3 × 8 grid, Light's pieces white, Dark's black)
+      if (!s || !window.UrEngine) return '';
+      const E = window.UrEngine, cells = [];
+      for (let r = 0; r < 3; r++) for (let c = 0; c < 8; c++) { if (r !== 1 && (c === 4 || c === 5)) continue; cells.push(`<rect x="${2 + c * 12}" y="${2 + r * 12}" width="11" height="11" rx="2" fill="${[[0, 0], [2, 0], [1, 3], [0, 6], [2, 6]].some(([a, b]) => a === r && b === c) ? '#c89b5a' : '#7a5a3a'}"/>`); }
+      const pc = [];
+      for (const side of [0, 1]) for (const p of s.pos[side]) { const q = E.coords(s.rule, side, p); if (q) pc.push(`<circle cx="${7.5 + q[1] * 12}" cy="${7.5 + q[0] * 12}" r="4.2" fill="${side ? '#2a2c31' : '#f4ecd8'}" stroke="#000" stroke-width=".6"/>`); }
+      return `<svg viewBox="0 0 100 40" xmlns="http://www.w3.org/2000/svg">${cells.join('')}${pc.join('')}</svg>`;
+    }
+    const EMPTY = { rule: 'finkel', pos: [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]] };
+    const D = {
+      LKEY: 'aicoding-ur-lessons', data: null,
+      load() {
+        const eng = window.UrEngine ? Promise.resolve() : new Promise(res => { const sc = document.createElement('script'); sc.src = '../ur/engine.js?v=6'; sc.onload = res; sc.onerror = res; document.head.appendChild(sc); });
+        return this.p || (this.p = Promise.all([getJ('../ur/lessons.json?v=20261124c'), eng]).then(([d]) => { this.data = d; return this; }).catch(e => { this.p = null; throw e; }));
+      },
+      list(kind, lang) {
+        if (kind === 'open') return [];
+        const pr = J(this.LKEY, {}), d = this.data;
+        return d.steps.map((s, i) => { const c = d.cats.find(x => x.steps.includes(s.id)) || {};
+          return { key: String(i), cat: c.id || s.cat, catName: lang === 'ja' ? CAT[s.cat] || tx(c.name, lang) : tx(c.name, lang), title: tx(s.title, lang), sub: tx(s.tip, lang), svg: mini(s.diagram && s.diagram.s), st: pr[s.id] ? (pr[s.id].pass ? 'pass' : 'try') : '', full: false }; });
+      },
+      msg(r, lang) { const t = r && this.data.msg[r[0]]; return t ? fill(tx(t, lang), r[1] || {}) : ''; },
+      pos: (s, n, marks, lock, dn) => ({ ur: { s: s || EMPTY, n: n == null ? (dn == null ? null : dn) : n, marks: marks || [], lock: !!lock }, me: 1, dice: [n == null ? (dn == null ? -1 : dn) : n] }),   // (dice: the roll, as backgammon's — two problems with another roll are not the same problem)
+      // the facts a Japanese line needs: how far the captured piece had come (its own track), the square the move lands on
+      facts(q) {
+        const E = window.UrEngine, s = Object.assign({ winner: -1 }, q.s, { turn: 0 }), m = E.legalMoves(s, q.n).find(x => x.from === q.best[0]);
+        let k = 0; if (m && m.capture) { const rc = E.coords(s.rule, 0, m.to); for (let i = 1; i <= E.RULES[s.rule].pathLen; i++) { const c2 = E.coords(s.rule, 1, i); if (c2 && c2[0] === rc[0] && c2[1] === rc[1]) k = i; } }
+        return { k, t: m ? m.to : 0, m };
+      },
+      lesson(key, lang) {
+        const d = this.data, s = d.steps[+key]; if (!s) return null;
+        const ja = lang === 'ja', kk = +key, V = voice(kk * 3 + 1), id = s.id;
+        const R = ja ? JA.ramp[id] : null;
+        const RUI = { step: d.ui.rampStep, main: d.ui.rampMain, next: d.ui.next, note: d.ui.rampNote, look: d.ui.look, ans: d.ui.ans, ng: d.ui.rampRetry, cont: d.ui.next };
+        const RU = (k, v) => ja && k === 'ng' ? V.v(['ちがうみたい。もう一回考えてみよう！', 'うーん、もう一度！ 困ったら「ヒント」を押してね。', 'あと少し！ もう一回やってみよう。']) : ja && k === 'note' ? '準備は点数に入らないから、何回でも試していいワン。' : fill(tx(RUI[k], lang), v || {});
+        const ramp = (s.ramp || []).map(r => {
+          const o = { k: r.k, s: r.s, n: r.n, seq: r.seq, marks: r.marks || [], look: r.look || [], ok: r.ok, kind: r.kind, opts: r.opts, ans: r.ans };
+          if (r.k === 'explain') { o.t = ja ? R.et : tx(r.t, lang); o.b = ja ? R.eb : tx(r.body, lang); }
+          else { o.t = ja ? R.tt : tx(r.t, lang); o.g = ja ? R.g : tx(r.t, lang); o.h = ja ? R.h : tx(r.h, lang); o.y = ja ? R.y : tx(r.g, lang) || tx(d.ui.rampGood, lang); }
+          if (r.kind === 'choice') { o.choices = r.opts.map(x => tx(x, lang)); o.right = r.ans; }
+          return o;
+        });
+        const intro = ja ? JA.intro[id] : tx(s.body, lang);
+        const N = s.problems.length;
+        const probs = s.problems.map((q, pi) => {
+          const last = pi === N - 1;
+          if (q.kind === 'choice') {
+            const KO = { 'c.roll': 'roll', 'c.risk': 'risk', 'c.pips': 'pips', 'c.rpips': 'rpips', 'c.lead2y': 'lead2', 'c.lead2r': 'lead2' }, kind = KO[q.why[0]];
+            const lab = x => { const t = tx(x, lang); return ja ? t.replace('あなた', 'きみ').replace('相手', '相手') : t; };
+            const o = { kind: 'choice', P: q, pos: this.pos(q.s || EMPTY, null, q.marks || [], true, q.why[0] === 'c.roll' ? q.why[1].n : null), marks: q.marks || [], choices: q.opts.map(lab), right: q.ans, ans: q.ans, dHint: true, hint: [], own: ja,
+              ask: ja ? fill(JA.cq[kind][Math.min(JA.cq[kind].length - 1, s.problems.slice(0, pi).filter(x => x.why && KO[x.why[0]] === kind).length)], q.why[1] || {}) : tx(q.q, lang),   /* (in order: 「今度は」 never first, 「これで最後」 last) */ hintTx: ja ? V.v(JA.chint[kind === 'roll' ? 'roll' : kind === 'lead2' ? 'lead2' : id] || JA.chint.prob) : tx(s.hints[pi % 2], lang) };
+            const why0 = this.msg(q.why, lang), why = () => ja ? fill(V.v(JA.cw[q.why[0]]), q.why[1]) : why0;
+            o.good = () => ja ? `${V.v(JA.cheer)} ${why()}${last ? ' ' + V.v(JA.push) : ''}` : why0;
+            o.ng = u => { const i = typeof u === 'number' && u !== q.ans ? u : q.ans === 0 ? 1 : 0, g = q.ngo && q.ngo[i];
+              if (!ja) return (g ? this.msg(g, lang) + ' ' : '') + why0;
+              const gx = g ? fill(V.v(JA.cn[g[0]]), Object.assign({}, g[1], { x: plain(lab(q.opts[i])) })) : '';
+              return `${V.v(JA.soft)} ${gx} ${fill(V.v(['正解は<b>{a}</b>。', '正解は<b>{a}</b>だよ。', '<b>{a}</b>が正解！', 'ほんとうの正解は<b>{a}</b>なんだ。', '正解はこっち、<b>{a}</b>。']), { a: plain(lab(q.opts[q.ans])) })}${why()}`; };
+            return o;
+          }
+          const F = this.facts(q), wv = Object.assign({}, q.why[1], { k: F.k, t: F.t, f: q.best[0] });
+          const ask = ja ? fill(V.v(last ? JA.askLast : JA.ask, pi), { n: q.n }) : fill(tx(d.ui.qMove, lang), { n: q.n });
+          const o = { kind: 'urmove', P: q, pos: this.pos(q.s, q.n, [], false), ans: q.best[0], ok: [q.best[0]], dHint: true, hint: (q.look || []).slice(), own: ja, ask,
+            hintTx: ja ? fill(V.v(JA.hint[id] || JA.hint.choose, pi), { n: q.n }) : tx(s.hints[pi % 2], lang) };
+          const whyJa = () => { const key0 = q.why[0] === 'w.cap' && s.rule === 'blitz' ? 'w.blitz' : q.why[0]; if ((key0 === 'w.safe' || key0 === 'w.escape') && wv.r === 0) return V.v(JA.w0); return fill(V.v(JA.w[key0] || JA.w['w.safe']), wv); };   // (nothing can hit it: said as such, not 「0%」)
+          o.good = () => ja ? `${V.v(JA.cheer, pi * 5 + kk)} ${whyJa()}${pi % 2 || last ? ' ' + V.v(JA.push, pi + kk) : ''}` : this.msg(q.why, lang);
+          o.ng = u => { const from = Array.isArray(u) ? u[0] : u, f = q.ng && q.ng[from] ? from : Object.keys(q.ng || {})[0], r = q.ng && q.ng[f];
+            if (!ja) return this.msg(r, lang);
+            const z = r && JA.n0[r[0]] && r[1] && r[1].q === 0;   // (the green move leaves nothing to hit: said as such, not 「0%で済む」)
+            const t = !r ? '' : z ? fill(V.v(JA.n0[r[0]], pi), r[1]) + ' ' + V.v(JA.zero, pi) : fill(V.v(JA.n[r[0]] || JA.n['n.risk'], pi), r[1] || {});
+            return `${V.v(JA.soft, pi * 5 + kk)} ${t}`; };
+          return o;
+        });
+        return { id, title: tx(s.title, lang), intro, ramp, RU, probs, first: +key === 0,
+          save: pts => { const pr = J(this.LKEY, {}), o = pr[id] || { best: 0, pass: false }, pass = pts >= 75; pr[id] = { best: Math.max(o.best || 0, pts), pass: !!o.pass || pass }; put(this.LKEY, pr); return pass; } };
+      },
+      points(P, u, p) { const from = Array.isArray(u) ? u[0] : u; return from === p.ans ? 20 : 0; },   // (= ur/app-learn.js: only the best move is right — 追3)
+      introPos(c) { const s = this.data.steps.find(x => x.id === c.id); if (!s || !s.diagram) return null; return { pos: this.pos(s.diagram.s, null, s.diagram.marks || [], true) }; },
+      // the warm-up
+      rampPos(it) { return D.pos(it.s || (it.kind === 'choice' ? null : EMPTY), it.k === 'try' && it.kind !== 'choice' ? it.n : it.k === 'explain' ? it.n : null, [], it.k !== 'try' || it.kind === 'choice'); },
+      rampBody: (it, lang) => it.b,
+      rampSeq: it => (it.seq || []).map(x => x.slice()),
+      rampMarks: it => (it.k === 'explain' ? it.marks : []).slice(),
+      rampLook: it => (it.look || []).slice(),
+      rampAns: it => it.ok ? it.ok[0][0] : it.right,
+      rampAnsMk: it => it.ok ? [{ m: it.ok[0].slice(), cls: 'ok' }] : [],
+      rampOk: (it, u) => { const from = Array.isArray(u) ? u[0] : u; return !!(it.ok && it.ok.some(x => x[0] === from)); },
+      rampUndo: P => P.undo(),
+    };
+    return D;
+  }
+  window.AtlasLsUr = { make };
+})();

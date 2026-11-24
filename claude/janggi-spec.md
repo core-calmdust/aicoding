@@ -25,6 +25,7 @@
   - 2026-11-24 の検証（3D対応、担当D）：`node tools/lesson-verify-janggi.js`（= `tools/lesson-verify.js janggi`）で全問を詰み探索から確かめる。答えはただ1つの初手・n はちょうど・合法手3以上、1手詰めと連続王手は王手3つ以上、ほかは正解以外の王手か取りが2つ以上（静かな正解なら1つ以上）、レッスン・シャンチーのパズルを含めて鏡像込み4点以内の重なりなし、テーマの中は10問の段ごとに盤の駒の数（平均）が増える。不合格の105問は新しく集めた候補（`jg mates`）で同じ番号の場所に差し替え（記録 `aicoding-janggi-puzzles` の番号を保つ）。puzzles.json?v=3。
   - 3D卓（ポータル）でも同じ問題・同じ記録で解ける（atlas/puzzles.js BOOK.janggi、案内はショウギツネ。claude/atlas-portal-spec.md）。
 - レッスン：15ステップ×5問（はじめて7：車・馬・象・包・卒で取る／逃げる／1手詰め、戦術4：得な交換・両取り・王手で得・守る、詰み2：2手・3手詰め、終盤2：車と馬・卒2つ）。`jg dump`（自己対局の局面）→ `node janggi/tools/gen_lessons.js dump.txt tools/mates/run2.txt,tools/mates/run1.txt` で自動生成・エンジン検証（パズルと重複なし）。文言は tools/i18n_jg_lessons.json（14言語）。準備ステップ（ramp）はなし。
+  - 2026-11-24 の検証（3D対応、担当D）：車・馬・卒で取るの3本15問を `tools/lesson-verify-janggi.js`（lessons()）で検証し、全問を作り直し（答え＝その駒で取って取り返されない唯一の取り・エンジンで単独1位で2番目と100以上差・ほかの取りがあり3問目からは取り返される取り（わな）がある・取る駒は3点以上で2種類以上・パズルやシャンチーと重ならない・ほかの取り＋わなの数が増える順）。lessons.json?v=2。3D卓でも同じ問題・同じ記録（claude/atlas-portal-spec.md）。残り12本は未検証（3D の一覧に出さない）。
 
 ## オンライン
 - Firebase は将棋のプロジェクト（shogi-multiplay）を共用（2026-11-16 統合）。データはすべて `janggi/` 配下（FIREBASE_ROOT）。

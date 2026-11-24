@@ -170,7 +170,11 @@ GAMES に追加（store 含む）→ i18n.js に hist.<id>（歴史・雑学、1
   - スマホのあそぶシート（PS_GAMES）はまだ将棋・チェスのみ。
 - チャンギ（2026-11-24、担当D、3D未対応ゲームの対応）：
   - パズル：フル版と同じ janggi/puzzles.json（1〜3手詰め・連続王手4手・5手以上、289問）と記録（`aicoding-janggi-puzzles`・`aicoding-janggi-pz-last`・今日のパズル `aicoding-janggi-daily`、選び方はフル版の dailyPick＝曜日ごとのテーマ）。判定はシャンチーの詰めと同じ（puzzles.js の kind `xq`：エンジンの詰み探索で残り手数以内に詰む手なら相手が最も粘る手で応じて続行、外れた手は相手のエンジンの手で続行、すぐ詰まされる手・連続王手で王手でない手はその場で戻す）。案内はルール説明と同じショウギツネ。日本語のセリフ・ゲームの文言（pz.*）のキャラの言い方・一覧の小さい盤（川なし・九宮の斜め線・八角駒）は `atlas/games/janggi-pz.js`（lazy.js の janggi の組で読む）、`BOOK.janggi` は `BOOK.xiangqi` を元に URL・記録・文言・カテゴリ（Pattern なし）だけ差し替え。3D卓アダプタ `atlas/games/janggi.js` に `ctx.pz`・`api.pz`（games/xiangqi.js から移植）。全問を tools/lesson-verify-janggi.js（`node tools/lesson-verify.js janggi`）で検証。
-  - レッスン：まだ（atlas/lessons3d.js の DATA にないので、レッスンタブはフル機能へ）。
+  - レッスン（2026-11-24 一部）：フル版と同じ janggi/lessons.json・記録 `aicoding-janggi-lessons`・採点（2D problemPoints＝3D JANGGI.points）。atlas/lessons3d.js の DATA.janggi（シャンチーの XIANGQI をもとに、エンジンは janggi/engine.js?v=7）。日本語はショウギツネのセリフ atlas/games/janggi-ls.js（AtlasJanggiLs：導入・問いかけ・ヒント・ほめ言葉・まちがいの説明を盤の事実から）、ほかの言語は janggi/i18n.js の ls.*。一覧に出すのは検証済みのステップだけ（AtlasJanggiLs.DONE：車・馬・卒で取る）。定跡はないので「定跡」タブは出さない（app.js NO_OPEN3D）。正解の見出しはパズルのセリフを使わない（追24）。検証 `node tools/lesson-verify.js janggi`。
+- ウル（2026-11-24、担当C、3D未対応ゲームの対応）：**レッスンのみ**（双六系にパズルは作らない。puzzles.js の `G.ur` は `noPz: true` で案内キャラだけ、`AtlasPuzzles.has('ur')` は false）。
+  - レッスン：フル版と同じ ur/lessons.json（12本×5問、満点20・合格75）と記録（`aicoding-ur-lessons` { id: { best, pass } }）。データ・セリフ・盤の操作は **atlas/ls-ur.js**（lessons3d.js の `DATA.ur` は最初に開いたときこれを読む小さな入口だけ）。案内はルール説明と同じ**ダイスン**（ワン）。日本語のセリフは盤の事実（取った駒が何マス進んでいたか・ロゼット・ちょうどの目・相手の次の1振りで取られる確率（出目の数え上げ）・取り返される確率）だけで、勝率は言わない。ほかの言語は 2D の文言（14言語）。
+  - 3D卓アダプタ atlas/games/ur.js の `ctx.pz`（startPz）：局面 `{ ur: { s, n, marks, lock } }` をサイコロを n の目で止めて置き、駒→行き先（または行き先だけ）をタップで1手。`api.pz`：load・wait・mark（盤の印 danger/glow/ring/text/arrow と答えの道 { m: [from, to] | from, cls: ok/ng }）・play・undo・legal・tap。ブリッツは道が違うので盤を作り直す。
+  - 正解・不正解のあと、問題の局面に戻して正解の道を緑・きみの手を赤で見せる。選択問題（確率・残り歩数）は吹き出しの下のボタン。準備（ramp）の選択問題も同じボタン（lessons3d.js の ramp に `it.choices`）。手番の行は数える問題（lock）では出さない。
 
 ## 将棋の種目（2026-11-12）
 - 3Dビューの将棋カード（PC の対戦タブ・スマホのあそぶシート）に「種目」の行。AI戦と二人で対戦のとき出す（レート戦は本将棋のみ）。
