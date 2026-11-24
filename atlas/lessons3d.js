@@ -6880,8 +6880,8 @@
   /* whose move it is (2026-11-23 user: every problem — the warm-up's too — must say which side the player moves, 「黒の手番だよ」).
      turnOf: 1 / 2 from the position (an object's me, reversi "…:1", a chess FEN's w / b, a shogi SFEN's b / w), 0 = no sides (dots),
      null = not known. turnLine: the line put before the question, '' when the question already names the side (the same side). */
-  const TURN_N = { ja: { ur: ['白', '黒'], senet: ['糸巻き', '円錐'], morris: ['金', '銀'], tafl: ['攻め手', '守り手'], chess: ['白', '黒'], reversi: ['●黒', '○白'], gomoku: ['●黒', '○白'], go: ['●黒', '○白'], checkers: ['黒', '白'], xiangqi: ['赤', '黒'], janggi: ['楚', '漢'], hex: ['赤', '青'], amazons: ['白', '黒'], connect4: ['金', '銀'], shogi: ['☗先手', '☖後手'], backgammon: ['金', '金'] },
-    en: { ur: ['Light', 'Dark'], senet: ['Spools', 'Cones'], morris: ['Gold', 'Silver'], tafl: ['Attackers', 'Defenders'], chess: ['White', 'Black'], reversi: ['● Black', '○ White'], gomoku: ['● Black', '○ White'], go: ['● Black', '○ White'], checkers: ['Black', 'White'], xiangqi: ['Red', 'Black'], janggi: ['Cho', 'Han'], hex: ['Red', 'Blue'], amazons: ['White', 'Black'], connect4: ['Gold', 'Silver'], shogi: ['☗ Sente', '☖ Gote'], backgammon: ['Gold', 'Gold'] } };
+  const TURN_N = { ja: { ur: ['白', '黒'], senet: ['糸巻き', '円錐'], patolli: ['手前', '奥'], morris: ['金', '銀'], tafl: ['攻め手', '守り手'], chess: ['白', '黒'], reversi: ['●黒', '○白'], gomoku: ['●黒', '○白'], go: ['●黒', '○白'], checkers: ['黒', '白'], xiangqi: ['赤', '黒'], janggi: ['楚', '漢'], hex: ['赤', '青'], amazons: ['白', '黒'], connect4: ['金', '銀'], shogi: ['☗先手', '☖後手'], backgammon: ['金', '金'] },
+    en: { ur: ['Light', 'Dark'], senet: ['Spools', 'Cones'], patolli: ['Near', 'Far'], morris: ['Gold', 'Silver'], tafl: ['Attackers', 'Defenders'], chess: ['White', 'Black'], reversi: ['● Black', '○ White'], gomoku: ['● Black', '○ White'], go: ['● Black', '○ White'], checkers: ['Black', 'White'], xiangqi: ['Red', 'Black'], janggi: ['Cho', 'Han'], hex: ['Red', 'Blue'], amazons: ['White', 'Black'], connect4: ['Gold', 'Silver'], shogi: ['☗ Sente', '☖ Gote'], backgammon: ['Gold', 'Gold'] } };
   function turnOf(id, pos) {
     if (id === 'dots') return 0;
     if (id === 'mancala') return 1;   // (the player's row is always the near one)
@@ -6894,7 +6894,7 @@
   }
   function turnLine(id, pos, ask, lang) {
     const w = turnOf(id, pos); if (!w) return '';
-    if ((id === 'ur' || id === 'senet') && pos && pos[id] && pos[id].lock) return '';   // (ur: a question to count on a board for looking — no move to make)
+    if ((id === 'ur' || id === 'senet' || id === 'patolli') && pos && pos[id] && pos[id].lock) return '';   // (ur: a question to count on a board for looking — no move to make)
     const ja = lang === 'ja', a = String(ask || '').replace(/<[^>]+>/g, '');
     if (id === 'mancala') return ja ? (/手前/.test(a) ? '' : '<b>手前の列</b>がきみの穴だよ。') : '';
     const N = (TURN_N[ja ? 'ja' : 'en'] || {})[id]; if (!N) return '';
@@ -6911,7 +6911,11 @@
   const SENET = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsSenet) return res(); const sc = document.createElement('script'); sc.src = 'ls-senet.js?v=2'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsSenet.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
-  const DATA = { ur: UR, senet: SENET, dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, janggi: JANGGI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
+  /* patolli (2026-11-24 担当C): the data, ダイスン's words and the board hooks are in atlas/ls-patolli.js (loaded the first time) */
+  const PATOLLI = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsPatolli) return res(); const sc = document.createElement('script'); sc.src = 'ls-patolli.js?v=1'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+    .then(() => { const U = AtlasLsPatolli.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; return this; }); })
+    .catch(e => { this.p = null; throw e; })); } };
+  const DATA = { ur: UR, senet: SENET, patolli: PATOLLI, dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, janggi: JANGGI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
 
   function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(lang), ncLoad(id)]).then(() => D.list(kind, lang)); }
   function next(id, kind, lang) { return list(id, kind, lang).then(L2 => { const x = L2.find(i => !i.full && i.st !== 'pass') || L2.find(i => !i.full); return x ? x.key : null; }); }
@@ -7025,7 +7029,7 @@
         else if (G && id === 'mancala') pz().load(G.spec, G.me, { lock: !!G.lock, marks: G.marks });
         else if (G && id === 'connect4') pz().load(G.moves, G.me, { lock: !!G.lock });
         else if (G && id === 'backgammon') pz().load(G.bg);
-        else if (G && (id === 'ur' || id === 'senet')) pz().load(G[id]);
+        else if (G && (id === 'ur' || id === 'senet' || id === 'patolli')) pz().load(G[id]);
         else if (G) pz().load(G.start, G.rule, G.me, G.last, { pick: G.pick, noForbid: G.noForbid, lock: !!G.lock });
         else if (drill && pz().drill) pz().drill(Object.assign({ fen: pos }, drill));
         else if (id === 'shogi') pz().load(pos, sol || [], { lock: !!lock });
@@ -7089,7 +7093,7 @@
         if (it.k === 'explain') { if (D.rampUndo) D.rampUndo(pz()); else pz().undo(1); marks0(); pz().wait(); return; }   // (the explanation's board is for looking)
         if (D.rampOk ? D.rampOk(it, u) : it.ok.includes(u)) return rDone();   // (right: on to the next step by itself, the meter on 次へ)
         say(RU('ng')); try { chime(false); } catch (e) {}
-        if (D.rampMarks && !['checkers', 'xiangqi', 'janggi', 'backgammon', 'tafl', 'amazons', 'connect4'].includes(id)) pz().mark((id === 'ur' || id === 'senet' ? D.rampMarks(it) : []).concat([[u, 'ng']]));   // (checkers / xiangqi: a move number, not a square — the miss is taken back below)
+        if (D.rampMarks && !['checkers', 'xiangqi', 'janggi', 'backgammon', 'tafl', 'amazons', 'connect4'].includes(id)) pz().mark((id === 'ur' || id === 'senet' || id === 'patolli' ? D.rampMarks(it) : []).concat([[u, 'ng']]));   // (checkers / xiangqi: a move number, not a square — the miss is taken back below)
         later(() => { if (cur && phase === 'ramp' && cur.ri === i && !ok) { if (D.rampUndo) D.rampUndo(pz()); else if (!(it.pick)) pz().undo(1); marks0(); pz().wait(); } }, 1100);
       };
       pz().wait();
@@ -7318,7 +7322,7 @@
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;
       }
-      if (id === 'ur' || id === 'senet') {   // (2026-11-24: ダイスン's / セティ's reason from the board; a move: back to the problem, the best move's route green, yours red)
+      if (id === 'ur' || id === 'senet' || id === 'patolli') {   // (2026-11-24: ダイスン's / セティ's reason from the board; a move: back to the problem, the best move's route green, yours red)
         const right = pts >= 16, k = cur.k, mv = p.kind !== 'choice';
         say(`${p.own ? '' : right ? pick(X.good) : X.wrong} <b>${fill(X.pts, { n })}</b><br>` + (right ? p.good(u) : p.ng(u)));
         try { chime(right); } catch (e) {}

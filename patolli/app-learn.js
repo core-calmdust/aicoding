@@ -6,7 +6,7 @@
 (function () {
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles', PZ_LAST = STORE + '-pz-last', PZ_TAB = STORE + '-pz-tab', LS_CAT = STORE + '-ls-cat';
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=3').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=4').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LL = o => o == null ? '' : typeof o === 'string' ? o : (o[LANG] !== undefined ? o[LANG] : o.en !== undefined ? o.en : o.ja || '');
 const fill = (s, v) => String(s).replace(/\{(\w+)\}/g, (_, k) => v && v[k] !== undefined ? v[k] : '');
 const UI = (D, k, v) => fill(D && D.ui && D.ui[k] ? LL(D.ui[k]) : k, v);
@@ -208,7 +208,7 @@ function renderLessonCard() {
         renderLessonCard(); if (window.CardBar) CardBar.autoNext({ ok: () => lesson && lesson.done, btn: '#lsNext', ms: 1800 });
       }
       // 選ぶ問題は「手」ではないので「もっと良い手があります」とは言わない
-      else { lesson.wrong = true; lesson.tries++; b.classList.add('ng'); snd('ng'); fb(`<b class="ng">${esc(UI(D, 'wrongChoice'))}</b>`); } };   // （「もう一度考えてみよう」は同じ意味の文が続くので足さない）
+      else { lesson.wrong = true; lesson.tries++; b.classList.add('ng'); snd('ng'); const g = it.ngo && it.ngo[i]; fb(`<b class="ng">${esc(UI(D, 'wrongChoice'))}</b>` + (g ? ' ' + esc(MSG(D, [g[0], Object.assign({ x: LL(it.opts[i]) }, g[1])])) : '')); } };   // (2026-11-24 追22: why that choice is wrong — counted from the 32 ways)   // （「もう一度考えてみよう」は同じ意味の文が続くので足さない）
   } else { ch.innerHTML = ''; ch.onclick = null; }
   if (!lesson.done && !lesson.wrong && lesson.hint === 0) fb('');
   const nx = $('#lsNext');
