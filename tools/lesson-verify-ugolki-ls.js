@@ -21,6 +21,10 @@
 // (2026-11-25 担当D) s_block: ok = the moves after which Black's farthest reply is shortest (blackBest on every legal move);
 //  s_leave: ok = the moves after which White empties its starting corner by its 40th move whatever Black replies (leaveSafe);
 //  the 3D ask names the move (追77), the 2D shows the moves left; the 2D warm-ups of both say what their board does (追14).
+// (2026-11-25 担当D) s_deep (fill the corner fast, Black standing still: 追74): an exact solver (deepDist: the fewest White moves to
+//  fill the corner, Black frozen; IDA* with a shared lower-bound table) is run after every legal move: ok = the moves with
+//  1 + dist = the fewest; the stored dn (the 3D reads it) = the solver's count for every legal move; every wrong move finite and
+//  slower; a move into the corner that is slower tempts (the intro says so: 追70); the words' counts and kinds on the board.
 // Usage: node tools/lesson-verify-ugolki-ls.js [--selftest]   (also: node tools/lesson-verify.js ugolki)
 'use strict';
 const fs = require('fs'), path = require('path');
@@ -47,8 +51,20 @@ function factOf(id, p, m) {
   else if (id === 's_far' || id === 's_ladder') { o.opp = overOpp(p, m); o.k = !h ? (g > 0 ? 'step' : g < 0 ? 'back' : 'side') : g > 0 ? 'jump' : g < 0 ? 'jback' : 'jside'; }
   else if (id === 's_road') { const n = nextBest(q); o.nx = n.g; o.nh = n.h; o.k = h ? 'jump' : 'step'; }
   else if (id === 's_block') { const b = blackBest(q), b0 = blackBest(p); o.b = b.g; o.b0 = b0.g; o.k = b.g >= b0.g ? (b.g > b0.g ? 'more' : 'still') : 'part'; o.land = b0.all.some(x => x.path.slice(1).includes(t)); o.spring = b0.all.some(x => x.mid.includes(f)); }
+  else if (id === 's_deep') { o.n = 1 + deepDist(q); o.k = !o.inF && o.inT ? 'in' : o.inF && o.inT ? 'inside' : o.inF ? 'leave' : g > 0 ? 'fwd' : g < 0 ? 'back' : 'side'; }
   else if (id === 's_leave') { o.c = q.inHome(me); o.left = E.R.limit - p.movesOf(me) - 1; o.safe = o.left <= 1 ? leaveSafe(q, o.left) : null; o.homeF = !!HOME1[f]; o.homeT = !!HOME1[t]; o.k = o.safe ? 'out' : o.homeF && o.homeT ? 'inside' : o.c > o.left ? 'few' : 'block'; }
   return o;
+}
+// s_deep: the fewest White moves to fill its corner with Black standing still (exact; one table per Black placement)
+const TGT1 = E.target(1), SOLV = new Map();
+const outside1 = sq => { let n = 0; for (let i = 0; i < 64; i++) if (sq[i] === 1 && !TGT1[i]) n++; return n; };
+function deepDist(p0, cap) {
+  let bk = ''; for (let i = 0; i < 64; i++) bk += p0.sq[i] === 2 ? 'b' : '.';
+  let LB = SOLV.get(bk); if (!LB) { if (SOLV.size > 64) SOLV.clear(); LB = new Map(); SOLV.set(bk, LB); }
+  const key = sq => { let a = 0, b = 0; for (let i = 0; i < 32; i++) if (sq[i] === 1) a |= 1 << i; for (let i = 32; i < 64; i++) if (sq[i] === 1) b |= 1 << (i - 32); return a + ',' + b; };
+  const can = (p, r) => { const h = outside1(p.sq); if (!h) return true; if (h > r) return false; const k = key(p.sq); if ((LB.get(k) || 0) > r) return false;
+    for (const m of p.moves()) { if (m === E.PASS) continue; const q = p.clone().play(m); q.side = 0; if (can(q, r - 1)) return true; } LB.set(k, r + 1); return false; };
+  const p = p0.clone(); p.side = 0; for (let r = outside1(p.sq); r <= (cap || 12); r++) if (can(p, r)) return r; return Infinity;
 }
 // s_block: Black's farthest move in a position (Black to move; with White to move, as if White passed): { g, all: the moves that
 // go that far with their landing squares (path) and the pieces they hop over (mid) }
@@ -72,7 +88,7 @@ function overOpp(p, m) { if (!E.isJump(p, m)) return 0; const P = E.path(p, m); 
 // s_road: White moves again (Black stands still): the farthest next move { g, h, m }
 function nextBest(q) { const r = q.clone(); r.side = 0; let b = { g: -99, h: 0, m: -1 }; for (const m of real(r)) { const g = gainOf(r, m); if (g > b.g || (g === b.g && hops(r, m) > b.h)) b = { g, h: hops(r, m), m }; } b.pos = r; return b; }
 // the numbers the words must say for a move (right: the answer's own; wrong: what the red move does and the green one's gain)
-function expectNums(id, p, P, m) {
+function expectNums(id, p, P, m, c) {
   const f = factOf(id, p, m), fb = factOf(id, p, P.best), right = (P.ok || []).includes(m);
   if (right && id[0] === 'b') return id === 'b_step' ? { n: P.ok.length } : id === 'b_jump' ? Object.assign({ G: f.g }, f.h > 1 ? { h: f.h } : {}) : id === 'b_enter' ? { a: f.home } : { nine: 9 };
   if (id === 'b_step') return f.g < 0 ? { k: -f.g } : {};
@@ -85,6 +101,7 @@ function expectNums(id, p, P, m) {
   }
   if (id === 's_road') return right ? { N: f.nx, nh: f.nh } : Object.assign({ N: fb.nx }, f.nx > 0 ? { nx: f.nx } : {});
   if (id === 's_block') return right ? Object.assign({ b0: f.b0, B: f.b }, f.g < 0 ? { d: f.b0 - f.b } : {}) : Object.assign({ b: f.b, B: fb.b }, f.k === 'still' && f.g >= 2 ? { g: f.g } : {});
+  if (id === 's_deep') return right ? { N: f.n, S: c.second } : Object.assign({ x: f.n, N: fb.n }, f.k === 'back' ? { k: -f.g } : f.k === 'fwd' ? { g: f.g } : {});
   if (id === 's_leave') return right ? (f.left === 0 ? { t: E.R.limit } : f.c && !(f.homeF && f.homeT) ? { c: f.c } : {}) : (f.left === 1 && f.c <= 1 && f.k === 'inside' ? {} : { c: f.c });
   return {};
 }
@@ -170,6 +187,26 @@ function classify(id, p, slot) {
     if (r.lure < 1) r.why.push('③ no shorter road to compare');
     r.d = N * 10 + Math.min(r.lure, 9); r.order = r.d;
   }
+  else if (id === 's_deep') {
+    // Black standing still (追74): the fewest White moves to fill the corner now (N, 3–6), after every legal move 1 + dist; the
+    // answer = the moves that keep N (1–2); every other move finite and slower; a move into the corner is slower (the lure: the
+    // intro says going in is not always fastest, 追70); no Black piece in White's corner; no starting-corner piece of White
+    // (the 40-move rule); the count limit (80 moves each) far away
+    const N = deepDist(p); r.N = N;
+    if (!(N >= 3 && N <= 6)) r.why.push(`④ the corner needs ${N} moves (3–6)`);
+    if ([...Array(64).keys()].some(i => TGT1[i] && p.sq[i] === 2)) r.why.push('④ a black piece sits in White\'s corner');
+    if (p.inHome(1)) r.why.push('④ a white piece still in its starting corner (the 40-move rule)');
+    if (p.ply + 2 * N + 2 > 2 * E.R.cap) r.why.push('④ the 80-move count is near');
+    if (F.some(x => !isFinite(x.n))) r.why.push('⑧ a move after which the corner cannot be filled (Black frozen)');
+    ok = L.filter((m, i) => F[i].n === N);
+    if (!ok.length || F.some(x => x.n < N)) r.why.push('① the solver disagrees with itself');
+    if (ok.length > 2) r.why.push(`② ${ok.length} fastest moves`);
+    const lure = L.filter((m, i) => !ok.includes(m) && F[i].k === 'in'); r.lure = lure.length;
+    if (!lure.length) r.why.push('③④追70 no slower move into the corner (the lure the intro speaks of)');
+    r.jump = ok.some(m => hops(p, m)); r.inAns = ok.some(m => F[L.indexOf(m)].k === 'in');
+    r.second = Math.min(...F.filter(x => x.n > N).map(x => x.n));
+    r.d = N * 10 + Math.min(lure.length * 2 + L.filter((m, i) => !ok.includes(m) && F[i].n === N + 1).length / 4, 9); r.order = r.d;
+  }
   else if (id === 's_block') {
     // Black's longest move now (as if White passed) is a chain of 2 hops or more gaining 4 or more; the answer = the moves after
     // which Black's farthest reply is shortest (1–2 of them), 2 shorter than after any other move and 2 shorter than now
@@ -220,6 +257,7 @@ const RULES = {
   s_ladder: { count: 5, slotOk: () => true },
   s_road: { count: 5, slotOk: () => true },
   s_block: { count: 5, slotOk: (C, c) => C.filter(x => x.kind === c.kind).length < 3 },
+  s_deep: { count: 5, slotOk: (C, c) => C.filter(x => x.N === c.N).length < 2 && C.filter(x => x.jump === c.jump).length < 3 },
   s_leave: { count: 5, slotOk: (C, c) => C.filter(x => x.kind === c.kind).length < 2 },
   b_finish: { count: 5, slotOk: (C, c) => C.filter(x => x.jump === c.jump).length < (c.jump ? 3 : 2) && C.filter(x => x.hole === c.hole).length < 2 },
 };
@@ -246,18 +284,19 @@ function verify(opt) {
       const ok = P.ok || [];
       if (!(ok.length === c.ok.length && ok.every(m => c.ok.includes(m)))) add(id, j, `①② the stored ok (${ok.map(m => E.name(p, m)).join(' ')}) ≠ the goal's set (${c.ok.map(m => E.name(p, m)).join(' ')})`);
       if (!ok.includes(P.best)) add(id, j, '① best is not in ok');
+      if (id === 's_deep') { const dn = new Map(P.dn || []); for (const m of real(p)) { const w = factOf(id, p, m).n; if (dn.get(m) !== w) { add(id, j, `① the stored count of ${E.name(p, m)} (${dn.get(m)}) ≠ the solver's ${w}`); break; } } if (dn.size !== real(p).length) add(id, j, '① the stored counts are not every legal move'); }
       if (keys.has(P.best)) add(id, j, '④追27 the same answer twice in the lesson'); keys.add(P.best);
       for (const A of pool) { if (A.id === id && A.j === j) continue; if (near(A.b, P.s.b)) add(id, j, `⑤ within 4 squares of ${A.tag}`); }
       C.push(c);
       // ⑦⑧ the words for every legal move (ja) and the hint
       const V = UL.voice(j * 7 + 3);
       if (real(p).includes(P.best)) for (const m of real(p)) {
-        const want = factOf(id, p, m), got = UL.fact(E, id, P.s, m), right = ok.includes(m);
-        if (!got || got.k !== want.k || ['g', 'h', 'home', 'holes', 'opp', 'nx', 'nh'].some(x => got[x] !== want[x])) { add(id, j, `⑧ the facts of ${E.name(p, m)}: ${JSON.stringify(got)} ≠ ${JSON.stringify(want)}`); continue; }
+        const want = factOf(id, p, m), got = UL.fact(E, id, P.s, m, P), right = ok.includes(m);
+        if (!got || got.k !== want.k || ['g', 'h', 'home', 'holes', 'opp', 'nx', 'nh', 'n'].some(x => got[x] !== want[x])) { add(id, j, `⑧ the facts of ${E.name(p, m)}: ${JSON.stringify(got)} ≠ ${JSON.stringify(want)}`); continue; }
         const html = UL.say(E, id, P, m, 'ja', V, false, x => x).html;
         if (!html || /\{[a-z]+\}|undefined|NaN/.test(html)) { add(id, j, `⑧ the words for ${E.name(p, m)}: ${html}`); continue; }
         if (right !== /^(<[^>]*>)?\S*(正解|お見事|ばっちり|そのとおり|さすが|いいね|すごい|やったね)/.test(html.replace(/^\s+/, ''))) add(id, j, `⑦ ${E.name(p, m)} ${right ? 'right' : 'wrong'} but the words ${right ? 'do not praise' : 'praise'}: ${html.slice(0, 40)}`);
-        const nums = expectNums(id, p, P, m); if (!right && /途中/.test(html) && !(E.mFrom(m) === E.mFrom(P.best) && E.path(p, P.best).slice(1, -1).includes(E.mTo(m)))) add(id, j, `⑧ ${E.name(p, m)}: the words say it stopped on the way`); if (/陣地の外/.test(html) && want.inT) add(id, j, `⑧ ${E.name(p, m)} lands in the corner, the words say outside`); for (const [k, v] of Object.entries(nums)) if (!html.includes(String(v))) add(id, j, `⑧ the words for ${E.name(p, m)} miss ${k}=${v}: ${html}`);
+        const nums = expectNums(id, p, P, m, c); if (!right && /途中/.test(html) && !(E.mFrom(m) === E.mFrom(P.best) && E.path(p, P.best).slice(1, -1).includes(E.mTo(m)))) add(id, j, `⑧ ${E.name(p, m)}: the words say it stopped on the way`); if (/陣地の外/.test(html) && want.inT) add(id, j, `⑧ ${E.name(p, m)} lands in the corner, the words say outside`); for (const [k, v] of Object.entries(nums)) if (!html.includes(String(v))) add(id, j, `⑧ the words for ${E.name(p, m)} miss ${k}=${v}: ${html}`);
         const fb = factOf(id, p, P.best);
         if (!right) {
           if (id === 'b_step' && want.k === 'step') add(id, j, '⑧ a wrong move gets closer');
@@ -279,12 +318,14 @@ function verify(opt) {
           if (id === 's_block' && want.b < 4) add(id, j, `⑨ the 2D ng says Black still jumps far, ${E.name(p, m)} leaves ${want.b}`);
           if (id === 's_leave' && want.safe) add(id, j, '⑧ a wrong move empties the corner in time');
           if (id === 's_block') { const red = html.split('緑')[0]; if (/そのまま|ふさがらず|変わらない|残って/.test(red) !== (want.k === 'still')) add(id, j, `⑧ ${E.name(p, m)}: Black's move unchanged ${want.k === 'still'}, the words disagree`); if (/伸び|新しい跳び台/.test(red) !== (want.k === 'more')) add(id, j, `⑧ ${E.name(p, m)}: longer ${want.k === 'more'}, the words disagree`); if (/縮む/.test(red) !== (want.k === 'part')) add(id, j, `⑧ ${E.name(p, m)}: shorter ${want.k === 'part'}, the words disagree`); }
+          if (id === 's_deep') { if (want.n <= fb.n) add(id, j, '⑧ a wrong move fills the corner as fast'); const red = html.split('緑')[0]; if (/陣地に入る|陣地に入って|陣地に1こ入/.test(red) !== (want.k === 'in')) add(id, j, `⑧ ${E.name(p, m)}: into the corner ${want.k === 'in'}, the words disagree`); if (/中で動いた/.test(red) !== (want.k === 'inside')) add(id, j, `⑧ ${E.name(p, m)}: inside the corner ${want.k === 'inside'}, the words disagree`); if (/陣地から出/.test(red) !== (want.k === 'leave')) add(id, j, `⑧ ${E.name(p, m)}: out of the corner ${want.k === 'leave'}, the words disagree`); if (/遠ざか/.test(red) !== (want.k === 'back')) add(id, j, `⑧ ${E.name(p, m)}: going back ${want.k === 'back'}, the words disagree`); if (!html.includes(`${want.n - fb.n}手`)) add(id, j, `⑧ ${E.name(p, m)}: the words miss the moves lost (${want.n - fb.n})`); }
           if (id === 's_leave') { const left = want.left; if (/ふさ/.test(html.split('緑')[0]) !== (left === 1 && want.c <= left)) add(id, j, `⑧ ${E.name(p, m)}: Black's block is the reason ${left === 1 && want.c <= left}, the words disagree`); if (/隅の中で動いた/.test(html) !== (left === 1 && want.c <= left && want.k === 'inside')) add(id, j, `⑧ ${E.name(p, m)}: moved inside the corner, the words disagree`); if (/40手目が終わる/.test(html.split('緑')[0]) !== (left === 0)) add(id, j, `⑧ ${E.name(p, m)}: the 40th move ${left === 0}, the words disagree`); }
           if (id === 's_road') { if (/ジャンプ/.test(html.split('緑')[0]) !== !!want.h) add(id, j, `⑧ ${E.name(p, m)}: a jump ${!!want.h}, the words disagree`); if (/前へ進める手がない|近づけない/.test(html) !== (want.nx <= 0)) add(id, j, `⑧ ${E.name(p, m)}: next gain ${want.nx}, the words disagree`); }
         } else {
           if (id === 's_ladder' && !/黒/.test(html)) add(id, j, '⑧ the praise does not say Black was used');
           if (id === 's_road' && /下が/.test(html) !== (want.g < 0)) add(id, j, `⑧ the praise on stepping back disagrees (gain ${want.g})`);
           if (id === 's_block') { if (/着地/.test(html) !== want.land || (!want.land && !/跳び台/.test(html))) add(id, j, `⑧ the praise: landing ${want.land}, springboard ${want.spring}`); if (/下が/.test(html) !== (want.g < 0)) add(id, j, `⑧ the praise on stepping back disagrees (gain ${want.g})`); }
+          if (id === 's_deep') { if (/陣地に入/.test(html) !== (want.k === 'in')) add(id, j, `⑧ the praise: into the corner ${want.k === 'in'}, the words disagree`); if (/ジャンプ|跳/.test(html) !== !!want.h) add(id, j, `⑧ the praise: a jump ${!!want.h}, the words disagree`); }
           if (id === 's_leave') { if (/隅の中/.test(html) !== (want.left === 1 && want.c > 0 && want.homeF && want.homeT)) add(id, j, '⑧ the praise: still inside the corner disagrees'); if (/空っぽ/.test(html) !== (want.c === 0)) add(id, j, `⑧ the praise: the corner empty ${want.c === 0}, the words disagree`); }
         }
       }
@@ -297,6 +338,7 @@ function verify(opt) {
       if (id === 's_road' && /下がる1歩/.test((UL.JA.intro.s_road || '') + UL.JA.hint.s_road.join('')) && !LS.steps.find(x => x.id === 's_road').problems.some(Q => { const q = E.Pos.from(Q.s); return Q.ok.some(m => gainOf(q, m) < 0); })) add(id, j, '追70 the intro / hints speak of a step back, no answer steps back');
       if (id === 's_block') { const b0 = blackBest(p); if (!hp.length || hp.some(x => p.sq[x] !== 2) || !b0.all.every(x => hp.includes(x.path[0]))) add(id, j, '追52 the hint should mark the black pieces with the longest move'); }
       if (id === 's_leave') { const o = []; for (let i = 0; i < 64; i++) if (HOME1[i] && p.sq[i] === 1) o.push(i); if (hp.length !== o.length || !o.every(x => hp.includes(x))) add(id, j, '追52 the hint should mark the pieces in the starting corner'); const ask = UL.askOf(E, id, P, UL.voice(j), j === st.problems.length - 1); if (!ask.includes(String(p.movesOf(1) + 1)) && !ask.includes(String(E.R.limit - p.movesOf(1)))) add(id, j, '⑧ the ask does not say which move it is: ' + ask); }
+      if (id === 's_deep') { const T = E.target(1), holes = []; for (let i = 0; i < 64; i++) if (T[i] && !p.sq[i]) holes.push(i); if (hp.length !== holes.length || !holes.every(x => hp.includes(x))) add(id, j, '追52 the hint should mark the empty squares of the corner'); const ask = UL.askOf(E, id, P, UL.voice(j), j === st.problems.length - 1); if (!/黒/.test(ask) || !/動かない/.test(ask)) add(id, j, '追74 the ask does not say Black stands still: ' + ask); }
       if (id === 's_road') { if (!hp.length || hp.some(x => P.ok.some(m => E.mFrom(m) === x)) || hp.some(x => p.sq[x] !== 1)) add(id, j, '追52 the hint should mark the jumper (not the stepped piece)'); }
       rows.push({ id, q: j + 1, legal: c.legal, ok: c.ok.length, d: c.d, best: real(p).includes(P.best) ? E.name(p, P.best) : "—" });
     });
@@ -304,6 +346,7 @@ function verify(opt) {
     for (let j = 1; j < C.length; j++) if (C[j].d < C[j - 1].d) add(id, j, `⑥ d ${C[j].d} after ${C[j - 1].d}`);
     if (id === 'b_jump' && !(C.slice(0, 2).every(c => c.hops === 1) && C.slice(2).every(c => c.hops >= 3))) add(id, -1, '④ the lesson promises single hops first, then chains');
     if (id === 'b_enter' && !(C.some(c => c.jump) && C.some(c => !c.jump))) add(id, -1, '④追27 the answers should be steps and jumps');
+    if (id === 's_deep') { if (!(C.some(c => c.jump) && C.some(c => !c.jump))) add(id, -1, '④追27 the answers should be steps and jumps'); if (!(C.some(c => c.inAns) && C.some(c => !c.inAns))) add(id, -1, '④追27 the answers should both go in and stay outside'); }
     if (id === 'b_finish') { if (!(C.some(c => c.jump) && C.some(c => !c.jump))) add(id, -1, '④追27 the answers should be steps and jumps'); if (new Set(C.map(c => c.hole)).size < 3) add(id, -1, '④追27 fewer than 3 holes'); }
     // 追14 the 2D warm-up (explain) of s_block / s_leave says what its board does: the arrow is a right move, the numbers are the board's
     if (id === 's_block' || id === 's_leave') for (const R of st.ramp || []) {
@@ -312,6 +355,18 @@ function verify(opt) {
       const c = classify(id, p); if (!c || !c.ok.includes(m)) add(id, -1, `追14 the warm-up arrow ${R.seq[0]} is not a right move (${c ? c.ok.map(x => E.name(p, x)).join(' ') : '—'})`);
       if (id === 's_block' && c) { const b0 = blackBest(p), ja = (R.body || {}).ja || ''; for (const x of [E.sqName(b0.all[0].path[0]), String(b0.all[0].path.length - 1), String(c.G0), String(c.B), R.seq[0]]) if (!ja.includes(x)) add(id, -1, `追14 the warm-up words miss ${x}`); if (!factOf(id, p, m).land && /着地/.test(ja)) add(id, -1, '追14 the warm-up says landing square, the arrow does not land on it'); }
       if (id === 's_leave') { const mk = (R.marks || []).map(x => x[0]); if (!real(p).every(x => mk.includes(E.mFrom(x)) || !factOf(id, p, x).safe)) add(id, -1, '追14 the warm-up says the marked piece must move now, another move is safe'); const ja = (R.body || {}).ja || ''; if (!ja.includes(String(p.movesOf(1) + 1))) add(id, -1, '追14 the warm-up does not say which move it is'); }
+    }
+    // s_deep: the 2D warm-up's arrow is a fastest move of its board, its words name the counts (N, the slower move's count) and a
+    // marked square is where a slower move goes in; the intros (3D and 2D) claim only what every problem shows (追70)
+    if (id === 's_deep') {
+      for (const R of st.ramp || []) { if (!R.s || !R.seq || !R.seq.length) continue; const p = E.Pos.from(R.s), m = real(p).find(x => E.name(p, x) === R.seq[0]); if (m == null) { add(id, -1, `追14 the warm-up arrow ${R.seq[0]} is not a legal move`); continue; }
+        const N = deepDist(p), f = factOf(id, p, m); if (f.n !== N) add(id, -1, `追14 the warm-up arrow ${R.seq[0]} needs ${f.n} moves, the fewest is ${N}`);
+        const ja = (R.body || {}).ja || '', ng = (R.marks || []).filter(x => x[1] === 'ng').map(x => x[0]);
+        const slow = real(p).filter(x => factOf(id, p, x).k === 'in' && factOf(id, p, x).n > N);
+        if (!ng.length || !ng.every(q => slow.some(x => E.mTo(x) === q))) add(id, -1, '追14 the warm-up marks (ng) are not where a slower move goes in');
+        for (const x of [String(N), R.seq[0]].concat(slow.filter(x => ng.includes(E.mTo(x))).slice(0, 1).map(x => String(factOf(id, p, x).n)))) if (!ja.includes(x)) add(id, -1, `追14 the warm-up words miss ${x}`); }
+      for (const l of LANGS) if (/奥から|from the back|desde el fondo|par le fond|pelo fundo|von hinten|पीछे से|من العمق|с дальних|深處|从里|dari belakang|arkadan|안쪽부터/i.test(['intro', 'sub', 'hint'].map(k => (I18N[l] || {})['ls.s_deep.' + k] || '').join(' ') + ' ' + ((st.ramp || [])[0] && st.ramp[0].t ? st.ramp[0].t[l] || '' : '') + ' ' + ((st.ramp || [])[0] && st.ramp[0].body ? st.ramp[0].body[l] || '' : ''))) add(id, -1, `追70 the 2D intro / sub / hint / warm-up (${l}) says fill from the back (not what every answer does)`);
+      if (/奥から/.test(UL.JA.intro.s_deep || '')) add(id, -1, '追70 the 3D intro says fill from the back');
     }
     // ⑨ the 2D words
     for (const l of LANGS) for (const k of ['title', 'intro', 'goal', 'hint', 'why', 'ng']) if (!(I18N[l] && I18N[l]['ls.' + id + '.' + k])) add(id, -1, `⑨ ls.${id}.${k} missing in ${l}`);
@@ -370,18 +425,23 @@ function selftest() {
     ['s_block warm-up: an arrow that does not block (追14)', d => { const R = d.steps.find(x => x.id === 's_block').ramp[0], p = E.Pos.from(R.s); R.seq = [E.name(p, real(p).find(m => !classify('s_block', p).ok.includes(m)))]; }, /追14 the warm-up arrow/],
     ['a warm-up whose hint marks nothing (追75)', d => { d.steps.find(x => x.id === 'b_jump').ramp[2].look = []; }, /追75 ramp3: the second hint/],
     ['a warm-up hint naming the wrong piece (追75)', d => { const r = d.steps.find(x => x.id === 'b_jump').ramp[2]; r.h = Object.assign({}, r.h, { ja: 'a2の駒から' }); }, /追75 ramp3: the hint \(ja\) names a2/],
+    ['s_deep: a slower move as the answer (①② 追74)', d => { const P = d.steps.find(x => x.id === 's_deep').problems[1], p = E.Pos.from(P.s); const w = real(p).find(m => !P.ok.includes(m)); P.ok = [w]; P.best = w; }, /^①②/],
+    ['s_deep: a stored count off by one (①)', d => { const P = d.steps.find(x => x.id === 's_deep').problems[2]; P.dn = P.dn.map(([m, n], i) => [m, i ? n : n + 1]); }, /^① the stored count/],
+    ['s_deep: swapped order (⑥)', d => { const s = d.steps.find(x => x.id === 's_deep'); [s.problems[0], s.problems[4]] = [s.problems[4], s.problems[0]]; }, /^⑥/],
+    ['s_deep: the old warm-up title (from the back, 追70)', d => { d.steps.find(x => x.id === 's_deep').ramp[0].t.en = 'Fill the house from the back'; }, /追70/],
+    ['s_deep: the warm-up arrow a slower move (追14)', d => { const R = d.steps.find(x => x.id === 's_deep').ramp[0], p = E.Pos.from(R.s), N = deepDist(p); R.seq = [E.name(p, real(p).find(m => factOf('s_deep', p, m).n > N))]; }, /追14 the warm-up arrow/],
     ['s_ladder: Black to move (追5)', d => { const P = d.steps.find(x => x.id === 's_ladder').problems[1]; P.s = Object.assign({}, P.s, { side: 2 }); }, /not White to move/],
   ];
   let bad = 0;
   for (const [name, f, re] of cases) { const d = JSON.parse(JSON.stringify(base)); f(d); const r = verify({ data: d }); const hit = r.out.some(o => re.test(o.msg)); console.log((hit ? 'detected  ' : 'MISSED    ') + name); if (!hit) bad++; }
   // the words: a fact that lies
-  const UL = require(path.join(ROOT, 'atlas/ls-ugolki.js')), lie = Object.assign({}, UL, { fact: (E2, id, s, m) => { const f = UL.fact(E2, id, s, m); return f && Object.assign({}, f, { g: f.g + 1 }); } });
+  const UL = require(path.join(ROOT, 'atlas/ls-ugolki.js')), lie = Object.assign({}, UL, { fact: (E2, id, s, m, P) => { const f = UL.fact(E2, id, s, m, P); return f && Object.assign({}, f, { g: f.g + 1 }); } });
   { const r = verify({ ul: lie }); const hit = r.out.some(o => /^⑧ the facts/.test(o.msg)); console.log((hit ? 'detected  ' : 'MISSED    ') + 'the 3D facts lie (⑧)'); if (!hit) bad++; }
   const mute = Object.assign({}, UL, { say: (...a) => { const r = UL.say(...a); return { html: r.html.replace(/\d+/g, '') }; } });
   { const r = verify({ ul: mute }); const hit = r.out.some(o => /miss/.test(o.msg)); console.log((hit ? 'detected  ' : 'MISSED    ') + 'the words without the numbers (⑧)'); if (!hit) bad++; }
   return bad;
 }
-module.exports = { verify, selftest, classify, factOf, near, RULES, SYM, symB };
+module.exports = { verify, selftest, classify, factOf, near, RULES, SYM, symB, deepDist };
 if (require.main === module) {
   if (process.argv.includes('--selftest')) process.exit(selftest() ? 1 : 0);
   const r = verify();

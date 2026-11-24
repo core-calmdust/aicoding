@@ -3155,7 +3155,7 @@
     LKEY: 'aicoding-gomoku-lessons', OKEY: 'aicoding-gomoku-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261123'), getJ('../gomoku/openings.json?v=20261124v1'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261125'), getJ('../gomoku/openings.json?v=20261124v1'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] gomoku texts', e); } this.I = w.I18N || {}; this.data = { ls, op };
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
@@ -7056,7 +7056,7 @@
     .catch(e => { this.p = null; throw e; })); } };
   /* ugolki (2026-11-24 担当D): the data, モリフク's words and the board facts are in atlas/ls-ugolki.js (loaded the first time; only the
      lessons checked and rebuilt for the 3D, AtlasLsUgolki.READY — tools/lesson-verify-ugolki-ls.js) */
-  const UGOLKI = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUgolki) return res(); const sc = document.createElement('script'); sc.src = 'ls-ugolki.js?v=3'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const UGOLKI = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUgolki) return res(); const sc = document.createElement('script'); sc.src = 'ls-ugolki.js?v=4'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsUgolki.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   // (2026-11-24 ユーザー指示: ur・senet・patolli のレッスンは廃止 — 双六系はマンカラ・バックギャモンのような戦略性の高いものを除いてレッスン・パズルを作らない。

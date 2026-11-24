@@ -21,7 +21,7 @@ function scoreStory(st) {
   // 1. completeness
   const need = { prologue: 5, day: 6, peace: 2, exile: 2, night: 2, climax: 2 };
   for (const k in need) if (!T[k] || T[k].length < need[k]) add(10, `text.${k} が${need[k]}つ未満`);
-  for (const k of ['meet', 'vote', 'role', 'win', 'lose', 'dead', 'exiledYou', 'ghost']) if (!T[k]) add(10, `text.${k} がない`);
+  for (const k of ['meet', 'vote', 'role', 'win', 'lose', 'winGhost', 'loseGhost', 'dead', 'exiledYou', 'ghost']) if (!T[k]) add(10, `text.${k} がない`);
   for (const l of st.locs) { if (!(T.discover || {})[l.id] || T.discover[l.id].length < 2) add(6, `発見の文（${l.name}）が2つ未満`); if (!l.none || l.none.length < 2) add(3, `空振りの文（${l.name}）が2つ未満`); }
   if (st.locs.length !== 5) add(10, '場所が5つでない');
   if (st.chars.length !== 12) add(15, '人物が12人でない');
@@ -40,7 +40,7 @@ function scoreStory(st) {
   const fixed = [];
   (T.prologue || []).forEach((p, i) => fixed.push(['prologue' + i, p.t]));
   for (const k of ['day', 'peace', 'exile', 'night', 'climax']) (T[k] || []).forEach((t, i) => fixed.push([k + i, t]));
-  for (const k of ['meet', 'vote', 'role', 'win', 'lose', 'dead', 'exiledYou', 'ghost']) if (T[k]) fixed.push([k, T[k]]);
+  for (const k of ['meet', 'vote', 'role', 'win', 'lose', 'winGhost', 'loseGhost', 'dead', 'exiledYou', 'ghost']) if (T[k]) fixed.push([k, T[k]]);
   for (const l in T.discover || {}) T.discover[l].forEach((t, i) => fixed.push(['discover.' + l + i, t]));
   st.locs.forEach(l => { fixed.push(['loc.' + l.id, l.desc]); l.none.forEach((t, i) => fixed.push(['none.' + l.id + i, t])); });
   st.items.forEach(it => fixed.push(['item.' + it.id, it.found + it.desc + (it.use || '')]));
@@ -192,14 +192,14 @@ function scoreHeroes(base) {
   const homes = new Set(H.map(h => h.home)); if (homes.size < 3) add(4, `主人公の居場所が${homes.size}か所しかない（3以上）`);
   const tr = new Set(H.map(h => JSON.stringify(h.traits))); if (tr.size < H.length) add(4, '特徴がまったく同じ主人公がいる');
   for (const h of H) {
-    for (const f of ['id', 'job', 'you', 'book', 'pitch', 'home', 'traits', 'intro', 'open', 'close', 'win', 'epi']) if (!h[f]) add(5, `${h.job}：${f} がない`);
+    for (const f of ['id', 'job', 'you', 'book', 'pitch', 'home', 'traits', 'intro', 'open', 'close', 'win', 'epi', 'epiGhost']) if (!h[f]) add(5, `${h.job}：${f} がない`);
     for (const r of ['villager', 'guard']) if (!(h.how || {})[r]) add(3, `${h.job}：役 ${r} の由来がない`);
-    const own = Object.values(h.arc || {}).flat(); if (own.length < 2) add(4, `${h.job}：自分の糸（本筋の自分の場面）が${own.length}（2以上）`);
+    const ownArc = Object.values(h.arc || {}).flat(); if (ownArc.length < 2) add(4, `${h.job}：自分の糸（本筋の自分の場面）が${ownArc.length}（2以上）`);
     if (!base.locs.some(l => l.id === h.home)) add(6, `${h.job}：居場所がない`);
     for (const c of ['height', 'hand', 'foot', 'mark']) if (!h.traits || !base.traits[c].v[h.traits[c]]) add(6, `${h.job}：特徴 ${c} が物語にない値`);
     if (String(h.pitch).length > 48) add(2, `${h.job}：紹介が長い（${h.pitch.length}/48字）`);
     // the hero's own words: same prose rules
-    const T = [h.intro, h.open, h.close, h.win, h.epi].concat(own.map(e => e.t)).filter(Boolean);
+    const T = [h.intro, h.open, h.close, h.win, h.epi, h.epiGhost].concat(ownArc.map(e => e.t)).filter(Boolean);
     let long = 0; for (const t of T) for (const x of sents(t)) if (x.length > 72) long++; if (long) add(long * 1.5, `${h.job}：長すぎる文 ${long}`);
     for (const c of CLICHE) if (T.join('').includes(c)) add(4, `${h.job}：使い古された言い回し「${c}」`);
     const flat = T.filter(t => !SENSE.test(t)); if (flat.length > 1) add(flat.length, `${h.job}：五感の手ざわりのない文 ${flat.length}`);
@@ -209,6 +209,22 @@ function scoreHeroes(base) {
     const shared = JSON.stringify(Object.assign({}, st, { heroes: null, heroData: null, hero: null }));
     const left = shared.match(/\{(job|you|book)\}/g); if (left) add(5, `${h.job}：置き換え漏れ ${left[0]}`);
     for (const j of jobs) if (j !== h.job && !h.job.includes(j) && shared.includes(j) && !/^(先生|医者|学生)$/.test(j)) add(4, `${h.job}で遊ぶと、ほかの主人公の肩書き「${j}」が出てくる`);
+  }
+  // each hero starts the story their own way: an opening of their own before the shared core
+  const pro = (base.text.prologue || []), core = pro.findIndex(p => p.core);
+  if (core < 0) add(6, '序幕に共通部分の印（core）がない');
+  const baseSetups = pro.slice(0, Math.max(0, core)).map(p => p.setup).filter(Boolean);
+  const own = H.filter(h => h.prologue);
+  if (own.length < H.length - 1) add((H.length - 1 - own.length) * 5, `自分の序幕の入りを持つ主人公 ${own.length}人（${H.length - 1}人以上）`);
+  const firsts = new Set();
+  for (const h of own) {
+    const P2 = h.prologue;
+    if (P2.length < 3) add(4, `${h.job}：序幕の入りが${P2.length}頁（3以上）`);
+    const sp = P2.filter(p => p.by); if (sp.length < 2) add(3, `${h.job}：序幕の入りで人物が話す頁が${sp.length}（2以上）`);
+    for (const p of sp) { if (p.by.length < 2) add(1, `${h.job}：序幕の話し手に代わりがいない`); if (!p.n) add(1, `${h.job}：序幕に話し手がいないときの地の文がない`); for (const id of p.by) if (!(p.alt || {})[id]) add(2, `${h.job}：序幕の ${id} の文がない`); }
+    for (const su of baseSetups) if (!P2.some(p => p.setup === su)) add(4, `${h.job}：序幕の入りに伏線「${su}」がない`);
+    const bgs = new Set(P2.map(p => p.bg)); if (bgs.size < 2) add(2, `${h.job}：序幕の入りの場所が1つだけ`);
+    const k = P2[0].bg + '|' + P2.slice(1).map(p => p.bg).join(','); if (firsts.has(k)) add(3, `${h.job}：ほかの主人公と同じ場所の順で始まる`); firsts.add(k);
   }
   // each hero must score on the story's own rubrics too
   let worst = 100, wn = '';
