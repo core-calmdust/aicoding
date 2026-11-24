@@ -278,7 +278,7 @@
     let cl = '';
     if (c) { const same = S.claims.filter(x => x.role === c.role); cl = `<span class="cl ${c.role}">${SHORT[c.role] || ''}${same.length > 1 ? same.indexOf(c) + 1 : ''}</span>`; }
     const heat = (S.phase === 'meeting' || S.phase === 'vote') && S.mtg && S.mtg.day === S.day ? (S.heat || {})[id] || 0 : 0;
-    const ht = heat ? `<span class="ht" title="今日の集会で${heat}回名指しされた">疑${heat}</span>` : '';
+    const ht = heat ? `<span class="ht" title="今日の集会で${heat}回名指しされた">${heat}</span>` : '';
     return { cl, ht };
   }
   function resultsOn(id) {
