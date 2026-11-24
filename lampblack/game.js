@@ -174,7 +174,9 @@
     sizeCast();
   }
   function sizeCast() {
-    const c = $('cast'); const h = c.clientHeight;
+    // the puppets' size does not follow the text strip: on PC it is reckoned from a fixed strip height, so it only changes with the window
+    const c = $('cast');
+    const h = PCQ.matches ? Math.max(120, $('stage').clientHeight - Math.max(250, Math.round(innerHeight * .42)) - 56 - 120) : c.clientHeight;   // one size with or without the name boards above, so nobody grows or shrinks between scenes
     const pw = Math.max(54, Math.min(150, h * .66 * 120 / 250));
     c.style.setProperty('--pw', pw + 'px');
   }
@@ -303,37 +305,54 @@
   const CIRC = ['', '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩', '⑪', '⑫'];
   const SHORT = { seer: '占', medium: '霊', guard: '狩', mason: '共' };
   function tagsOf(id) {
-    const c = S.claims.find(c => c.by === id);
+    const g = G.gate, c = S.claims.find(c => c.by === id && (!g || g.co.has(c.by)));
     let cl = '';
     if (c) { const same = S.claims.filter(x => x.role === c.role); cl = `<span class="cl ${c.role}">${SHORT[c.role] || ''}${same.length > 1 && c.role !== 'mason' ? same.indexOf(c) + 1 : ''}</span>`; }
-    const heat = (S.phase === 'meeting' || S.phase === 'vote') && S.mtg && S.mtg.day === S.day ? (S.heat || {})[id] || 0 : 0;
+    const heat = g ? (g.base[id] || 0) + (g.heat[id] || 0) : (S.phase === 'meeting' || S.phase === 'vote') && S.mtg && S.mtg.day === S.day ? (S.heat || {})[id] || 0 : 0;
     const ht = heat ? `<span class="ht" title="今日の集会で${heat}回名指しされた">${heat}</span>` : '';
     return { cl, ht };
   }
   function resultsOn(id) {
     const out = [];
-    S.claims.forEach(c => { const same = S.claims.filter(x => x.role === c.role); const k = (SHORT[c.role] || '') + (same.length > 1 && c.role !== 'mason' ? same.indexOf(c) + 1 : '');
-      for (const r of c.res) if (r.target === id) out.push(r.res === 'guard' ? `<i class="g" title="${esc(nm(c.by))}が守った">${k} 守</i>` : `<i class="${resCls(r.res)}" title="${esc(nm(c.by))}：${resWord(r.res)}">${k} ${resMark(r.res)}</i>`); });
+    const g = G.gate;
+    S.claims.forEach(c => { if (g && !g.co.has(c.by)) return; const same = S.claims.filter(x => x.role === c.role); const k = (SHORT[c.role] || '') + (same.length > 1 && c.role !== 'mason' ? same.indexOf(c) + 1 : '');
+      for (const r of c.res) if (r.target === id && (!g || g.res.has(c.by + '|' + r.target))) out.push(r.res === 'guard' ? `<i class="g" title="${esc(nm(c.by))}が守った">${k} 守</i>` : `<i class="${resCls(r.res)}" title="${esc(nm(c.by))}：${resWord(r.res)}">${k} ${resMark(r.res)}</i>`); });
     for (const r of S.pl.res) if (r.target === id && !(S.claims.find(c => c.by === 'you') || { res: [] }).res.some(x => x.target === id)) out.push(`<i class="${resCls(r.res)}" title="あなたが知った">${r.mason ? '相方' : '自 ' + resMark(r.res)}</i>`);
     return out.join('');
   }
+  // what has been said aloud so far: while a scene plays, the board shows a claim, a result or a name only once its line is read
+  function openGate(base) { G.gate = { co: new Set(S.claims.map(c => c.by)), res: new Set(S.claims.flatMap(c => c.res.map(r => c.by + '|' + r.target))), heat: {}, base: base || Object.assign({}, S.heat || {}) }; }
+  function reveal(e) {
+    const g = G.gate; if (!g || !e) return;
+    const up = id => { if (id) g.heat[id] = (g.heat[id] || 0) + 1; };
+    if (e.t === 'co' || e.t === 'co2') g.co.add(e.by);
+    if (e.t === 'result') g.res.add(e.by + '|' + e.target);
+    if (e.t === 'accuse' || e.t === 'agree') up(e.target);
+    if (e.t === 'guardsus') up('you');
+    if (e.t === 'whoseen') up(e.who);
+    if (e.t === 'caught') up(e.by);
+    renderRoster();
+  }
+  function closeGate() { G.gate = null; renderRoster(); }
+  const lineOf = (e, extra) => { const x = SP.event(S, st, e); return x && x.text ? Object.assign({ who: e.by, text: x.text, fx: () => reveal(e) }, extra || {}) : null; };
   function renderRoster() {
     const R = $('roster'); if (!R) return;
     const on = S && G.scr === 'play' && S.phase !== 'prologue' && S.phase !== 'end';
     R.classList.toggle('hide', !on); document.body.classList.toggle('has-roster', !!on);
     if ($('rmap')) $('rmap').classList.toggle('hide', !on);
     if (!on) return;
-    R.innerHTML = S.people.map(p => {
+    const html = S.people.map(p => {
       const t = tagsOf(p.id), dead = !p.alive, mk = S.pl.notes[p.id] || '';
       const dc = dead && p.death ? (p.death.cause === 'wolf' ? '噛' : p.death.cause === 'curse' ? '呪' : '吊') : '';
       const rs = resultsOn(p.id), rcls = /class="k"/.test(rs) ? ' res-k' : /class="h"/.test(rs) ? ' res-h' : '';
       return `<div class="ro${p.isPlayer ? ' you' : ''}${dead ? ' dead' : ''}${mk ? ' mk-' + mk : ''}${rcls}" data-id="${p.id}">${bust(p.id)}<b class="${(p.isPlayer ? 'あなた' : p.name).length > 5 ? 'long' : ''}">${esc(p.isPlayer ? 'あなた' : p.name)}</b>${t.cl}${t.ht}<div class="rs">${rs}</div>${dead ? `<svg class="x" viewBox="0 0 44 44"><path d="M8 8L36 36M36 8L8 36"/></svg><span class="dc">${dc}</span>` : ''}</div>`;
     }).join('');
+    if (R.__html !== html) { R.innerHTML = html; R.__html = html; R.__bound = false; }   // re-drawn only when something changed
     if (PCQ.matches) { const W0 = $('stage').clientWidth - 40, n = S.people.length; const w = Math.max(54, Math.min(84, Math.floor(W0 / n) - 5)); R.style.setProperty('--roW', w + 'px'); R.classList.toggle('tight', w < 70); } else R.style.removeProperty('--roW');
     renderMap(R);
-    R.querySelectorAll('.ro').forEach(e => e.onclick = () => { const id = e.dataset.id; const p = person(id); if (!p || !p.alive || p.isPlayer) return; if (G.onPup && !G.talking && $('sheet').classList.contains('hide') && $('tx').classList.contains('hide')) G.onPup(id); });
+    if (!R.__bound) R.__bound = true, R.querySelectorAll('.ro').forEach(e => e.onclick = () => { const id = e.dataset.id; const p = person(id); if (!p || !p.alive || p.isPlayer) return; if (G.onPup && !G.talking && $('sheet').classList.contains('hide') && $('tx').classList.contains('hide')) G.onPup(id); });
     // the same marks above the puppets' heads
-    $('cast').querySelectorAll('.pp').forEach(e => { let g = e.querySelector('.tg'); if (!g) { g = document.createElement('div'); g.className = 'tg'; e.appendChild(g); } const t = tagsOf(e.dataset.id); g.innerHTML = t.cl + t.ht; });
+    $('cast').querySelectorAll('.pp').forEach(e => { let g = e.querySelector('.tg'); if (!g) { g = document.createElement('div'); g.className = 'tg'; e.appendChild(g); } const t = tagsOf(e.dataset.id), th = t.cl + t.ht; if (g.__html !== th) { g.innerHTML = th; g.__html = th; } });
   }
   /* the ring of places under the roster: neighbours see each other, and the two ends meet */
   function renderMap(R) {
@@ -341,7 +360,8 @@
     const N = S.nights[S.nights.length - 1], me = S.people.find(p => p.isPlayer);
     const mine = N && N.pos && me && N.pos[me.id], seen = mine ? E.near(st, mine) : [], crime = N && N.killer ? N.loc : null;
     const chip = l => `<span class="rc${l.id === mine ? ' me' : seen.includes(l.id) ? ' see' : ''}" title="${esc(l.name)}：となりの${E.near(st, l.id).map(x => esc(locName(x))).join('・')}が見える">${esc(l.name)}${l.id === crime ? '<i class="cr">現場</i>' : ''}${l.id === mine ? '<i class="yo">あなた</i>' : ''}</span>`;
-    M.innerHTML = `<div class="rrow">${st.locs.map(chip).join('<s></s>')}</div><div class="rback" title="両端もとなり同士"></div>`;
+    const mh = `<div class="rrow">${st.locs.map(chip).join('<s></s>')}</div><div class="rback" title="両端もとなり同士"></div>`;
+    if (M.__html !== mh) { M.innerHTML = mh; M.__html = mh; }
     M.style.top = (R.offsetTop + R.offsetHeight + 8) + 'px';
   }
   function hud() {
@@ -615,14 +635,17 @@
     setCast(ids);
     G.onPup = null;
     await say([{ text: st.text.meet }]);
-    let ev = S.mtg && S.mtg.day === S.day ? [] : E.meeting(S, st);
+    const fresh = !(S.mtg && S.mtg.day === S.day);
+    if (fresh) openGate({});
+    let ev = fresh ? E.meeting(S, st) : [];
     const items = [];
     for (const e of ev) {
       const x = SP.event(S, st, e); if (!x || !x.text) continue;
-      items.push({ who: e.by, text: x.text, fx: () => { if (e.target) { const t = pup(e.target); if (t && (e.t === 'accuse' || (e.t === 'result' && e.res === 'wolf'))) { t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); } } } });
+      items.push({ who: e.by, text: x.text, fx: () => { reveal(e); if (e.target) { const t = pup(e.target); if (t && (e.t === 'accuse' || (e.t === 'result' && e.res === 'wolf'))) { t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); } } } });
     }
     if (!items.length) items.push({ text: '誰も、最初に口を開こうとしない。' });
     await say(items);
+    closeGate();
     save();
     debate();
   }
@@ -715,6 +738,7 @@
     if (appealCan('guard')) opts.push({ t: `${grdN}へ：名乗らなくていい、この人を守ってほしい`, s: `${grdN}が誰かは、あなたにもわからない。守ってくれるかは本人次第。狼もこの頼みを聞いている。`, v: 'guard', ic: IC.call, dis: u.guard });
     const v = await pickOpt('村に呼びかける', '集会の全員が聞いている。人狼も、だ。', opts);
     if (!v) return debate();
+    openGate();
     let mine = '', ev = [];
     if (v.startsWith('call:')) {
       const roles = v.slice(5).split(',');
@@ -745,9 +769,10 @@
       ev = E.askGuard(S, st, t);
     }
     const items = [];
-    for (const e of ev) { const x = SP.event(S, st, e); if (x && x.text) items.push({ who: e.by, text: x.text }); }
+    for (const e of ev) { const l = lineOf(e); if (l) items.push(l); }
     if (v.startsWith('call:') && !ev.some(e => e.t === 'co')) items.unshift({ text: '誰も、すぐには口を開かなかった。何人かが、目を伏せた。' });
     if (items.length) await say(items);
+    closeGate();
     log({ k: 'appeal', v }); save(); debate();
   }
   /* 矛盾を突く：誰の発言か → どの証拠をつきつけるか → 発言のどこがおかしいか。正しく突けば嘘が暴かれ、外せばあなたの言葉が軽くなる */
@@ -780,10 +805,13 @@
     const lp = stmt.parts.find(p => p.k === 'loc');
     const items = [{ who: 'you', text: E1.k === 'self' ? `${nm(who)}。${nightName(stmt.night)}、「${partText(P1, stmt)}」と言ったな。${lp ? `だが、${locName(lp.loc)}から見えるのは${E.near(st, lp.loc).map(locName).join('と')}だけだ。` : ''}話が、話の中で食い違っている。` : `${nm(who)}。${nightName(stmt.night)}、「${partText(P1, stmt)}」と言ったな。だが、${E1.k === 'trace' ? `わたしは${locName(E1.loc)}で、この目で「${SP.traceShort(st, E1)}」を見ている` : `${E1.by === 'you' ? 'わたしは' : nm(E1.by) + 'は'}その夜、${nm(E1.who)}を${locName(E1.loc)}で見ている`}。` }];
     const t = pup(who); if (t) { t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); }
+    openGate();
     const r = E.judgeClash(S, st, stmt.id, +part, ev);
-    for (const e of r.ev || []) { const y = SP.event(S, st, e); if (y && y.text) items.push({ who: e.by, text: y.text }); }
+    if (!r.ok) G.gate.heat.you = 1;   // a miss turns the room on you as soon as it is said
+    for (const e of r.ev || []) { const l = lineOf(e); if (l) items.push(l); }
     if (!r.ok) items.push({ text: `${st.lex.meet}のざわめきが、あなたのほうへ向いた。証拠は、その言葉を崩していなかった。${missLeft() > 0 ? '' : '\n今日はもう、うかつに人の言葉を突けない。'}` });
     await say(items);
+    closeGate();
     log({ k: 'clash', ok: r.ok }); save(); renderRoster(); debate();
   }
   async function accuse() {
@@ -866,12 +894,14 @@
         const go = await pickOpt('票はあなたに集まった', `${st.roles[S.pl.role].name}だと名乗れば、票が変わるかもしれない。名乗れば、狼にも知られる。`, [{ t: `${st.roles[S.pl.role].name}だと名乗る`, v: 1, ic: IC.point }, { t: '名乗らずに受け入れる', v: 2, ic: IC.vote }]);
         if (go === 1) { (S.dodged = S.dodged || {})[S.day] = 'you'; $('fx').querySelector('.threads')?.remove(); await say([{ text: '扉へ向かう腕を振りほどいて、あなたは皆に向き直った。' }].concat(comingLines())); ev = [null]; }
       } else if (out !== 'you') {
+        openGate();
         ev = E.dodge(S, st, out);
+        if (!ev.length) G.gate = null;
         if (ev.length) {
           $('fx').querySelector('.threads')?.remove();
           const items = [];
-          for (const e of ev) { if (e.t === 'dodge') { items.push({ text: `${st.lex.jail}の扉が開けられたとき、**${nm(e.by)}**が声を上げた。`, fx: () => { const t = pup(e.by); if (t) { t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); } } }); continue; } const x = SP.event(S, st, e); if (x && x.text) items.push({ who: e.by, text: x.text }); }
-          await say(items); renderRoster();
+          for (const e of ev) { if (e.t === 'dodge') { items.push({ text: `${st.lex.jail}の扉が開けられたとき、**${nm(e.by)}**が声を上げた。`, fx: () => { const t = pup(e.by); if (t) { t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); } } }); continue; } const l = lineOf(e); if (l) items.push(l); }
+          await say(items); closeGate();
           // the player may speak before the vote is cast again
           const dc = S.claims.find(c => c.by === out), rn = dc ? st.roles[dc.role].name : '';
           const talkV = dc && dc.role === 'mason' ? 'none' : await pickOpt('名乗りを聞いて、何か言う？', '言わなくてもいい。あなたを信じる人ほど、その言葉に動かされる。', [
@@ -881,10 +911,11 @@
             { t: '何も言わない', v: 'none', ic: IC.vote }]);
           if (talkV && talkV !== 'none') {
             const line = { trust: `${nm(out)}を信じる。${rn}を${st.lex.jail}へ送るわけにはいかない。票は、ほかの誰かに入れよう。`, doubt: `今になって${rn}だと？ 本物なら、もっと早く名乗っていたはずだ。わたしは信じない。`, counter: `本物の${rn}がいるなら、今ここで名乗ってほしい。黙っていれば、偽物が生き残る。` }[talkV];
+            openGate();
             const ev2 = E.dodgeTalk(S, st, out, talkV), it2 = [{ who: 'you', text: line }];
-            for (const e of ev2) { const x = SP.event(S, st, e); if (x && x.text) it2.push({ who: e.by, text: x.text }); }
+            for (const e of ev2) { const l = lineOf(e); if (l) it2.push(l); }
             if (talkV === 'counter' && !ev2.some(e => e.t === 'co')) it2.push({ text: '誰も、続いて名乗り出なかった。' });
-            await say(it2); renderRoster();
+            await say(it2); closeGate();
           }
         }
       }
