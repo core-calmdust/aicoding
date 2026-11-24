@@ -1731,14 +1731,19 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
        its history; past the move-count limit the remaining quiet moves are dropped. */
     if (P[91] && ply > 0 && legal > 0 && best > -MATE + MAXPLY) {
       const int di = depth < 63 ? depth : 63, mi = mc < 63 ? mc : 63;
-      if (mc >= (3 + depth * depth) * (P[43] ? P[43] : 100) / 100 / (2 - improving)) { skipQuiets = 1; if (quiet && inChk) continue; }
+      /* (fixed 2026-11-25) not in check: the move-count limit used to drop the quiet evasions too (at depth 1 after the first
+         one or two), so a checked king often had no escape read; Stockfish / YaneuraOu skip the quiet stage only, and the
+         evasions are not in it. P[122] = 1: the old behaviour, to compare. */
+      if (mc >= (3 + depth * depth) * (P[43] ? P[43] : 100) / 100 / (2 - improving)) { if (!inChk) skipQuiets = 1; else if (P[122]) { skipQuiets = 1; if (quiet) continue; } }
       int rb = LMRX[di][mi]; if (!improving) rb += rb * P[86] / 100; rb += P[88] * 10; if (pvNode) rb -= 512; if (ttPv) rb += 900;
       int ld = depth - 1 - rb / 1024;
       int gc = givesCheckPre(m); if (gc && !chkFast) { doMove(m); gc = inCheck(); undoMove(); }
       if (!quiet || gc) {
         const int ch = cap && (m & 127) <= 80 ? capH[capIdx(m)] : 0;
         if (!gc && !inChk && cap && ld < 8 && rawEval + P[99] + P[100] * ld + VALUE[typeOf(cap)] + ch / 8 <= alpha) continue;
-        if (alpha >= 0 && m != ttm && see(m) < -(P[101] * depth + ch / 32)) continue;
+        /* (fixed 2026-11-25) at every alpha: the test "alpha >= 0" was a misreading of Stockfish's stalemate exception (which
+           shogi does not have) and switched this pruning off in half of the nodes */
+        if ((alpha >= 0 || !P[122]) && m != ttm && see(m) < -(P[101] * depth + ch / 32)) continue;
       } else if (!pvNode || mc > 1) {
         if (P[98] && contHist(m) < -P[98] * depth) continue;
         ld += hv / (P[81] ? P[81] : 2000);
