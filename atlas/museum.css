@@ -903,3 +903,15 @@ html.ptv-open,html.ptv-open body{overflow:hidden}
 }
 /* (rubric: the title never breaks inside a word) */
 .muwrap .muhead h2.h{white-space:nowrap}
+/* (2026-11-24) the stamp card shows every item's own stamp: a story, a work, a piece, a tool — pressed ones carry the item's picture */
+.mupass-st{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 2px}
+.mupass-s1{position:relative;width:40px;height:40px;padding:0;border-radius:50%;border:2px dashed #d6c7a4;background:#fffdf7;overflow:hidden;display:grid;place-items:center;cursor:pointer;font-family:var(--round)}
+.mupass-s1 i{position:relative;z-index:1;font-style:normal;font-size:12px;font-weight:800;color:#73633f}
+.mupass-s1 img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:sepia(.3) saturate(.85)}
+.mupass-s1.on{border:2px solid var(--ink);transform:rotate(-6deg)}
+.mupass-s1.on i{padding:0 4px;border-radius:99px;background:rgba(20,14,8,.55);color:#fff}
+.mupass-s1.on:not(:has(img)){background:#2b3044}
+@media (hover:hover){.mupass-s1:hover{border-color:#c9a35a}.mupass-s1.on:hover{transform:rotate(0) scale(1.06)}}
+.mupass-s1:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+@media (max-width:819px){.mupass-s1{width:44px;height:44px}}
+@media (max-width:819px){#pg-museum .mupass-x{width:44px;height:44px}}

@@ -4,7 +4,7 @@
 // 各部屋 × 各画面幅で、測れる指標を数えて一覧にする（0 が合格。数字は問題の件数）。PW / CHROME / BASE で場所を変えられる。
 const PW = process.env.PW || '/opt/npm-tools/node_modules/playwright', CHROME = process.env.CHROME || '/usr/bin/google-chrome', BASE = process.env.BASE || 'http://localhost:8765';
 const { chromium } = require(PW);
-const rooms = (process.argv[2] || 'map,tree,gallery,paint,read,chance').split(',');
+const rooms = (process.argv[2] || 'map,tree,gallery,paint,read,chance,pass').split(',');
 const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,1440x900').split(',').map(v => { const [wh, lang] = v.split(':'); const [w, h] = wh.split('x').map(Number); return { w, h, lang: lang || 'ja' }; });
 (async () => {
   const b = await chromium.launch({ executablePath: CHROME, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--no-sandbox'] });
@@ -16,7 +16,7 @@ const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,
     await p.goto(BASE + '/atlas/index.html#museum', { waitUntil: 'load' }); await p.waitForTimeout(4500);
     await p.evaluate(() => { const o = document.querySelector('#ov.on'); if (o) o.classList.remove('on'); });
     for (const r of rooms) {
-      await p.evaluate(r => AtlasMuseum.go(r), r); await p.waitForTimeout(r === 'chance' || r === 'gallery' ? 3500 : 2200); await p.evaluate(() => scrollTo(0, 0)); await p.waitForTimeout(250);
+      if (r === 'pass') { await p.evaluate(() => { const b = document.querySelector('#muPass'); if (b.getAttribute('aria-expanded') !== 'true') b.click(); }); } else { await p.evaluate(() => { const b = document.querySelector('#muPass'); if (b && b.getAttribute('aria-expanded') === 'true') b.click(); }); await p.evaluate(r => AtlasMuseum.go(r), r); } await p.waitForTimeout(r === 'chance' || r === 'gallery' ? 3500 : 2200); await p.evaluate(() => scrollTo(0, 0)); await p.waitForTimeout(250);
       const m = await p.evaluate(phone => {
         const root = document.querySelector('#pg-museum'), vis = e => { const r = e.getBoundingClientRect(), s = getComputedStyle(e); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none' && !e.closest('[hidden],.mupg-off'); };
         const all = [...root.querySelectorAll('*')].filter(vis);
@@ -54,6 +54,7 @@ const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,
       }, phone);
       // 12 キーボード: Tab 6 回で部屋のタブにたどり着けるか（たどり着いた要素が博物館の中か）
       if (process.env.DETAIL) { const d = await p.evaluate(() => window.__detail); for (const k in d) { const c = {}; d[k].forEach(x => { const key = x.replace(/ [\d.]+(px|x\d+)?$/, m => m); c[key] = (c[key] || 0) + 1; }); if (d[k].length) console.log(`  ${V.w} ${r} ${k}:`, JSON.stringify(c)); } }
+      if (r === 'pass') m.foldLate = 0;   // (the open card pushes the room down on purpose)
       rows.push({ view: `${V.w}x${V.h}${V.lang !== 'ja' ? ':' + V.lang : ''}`, room: r, ...m, js: errs.length });
     }
     await p.close();
