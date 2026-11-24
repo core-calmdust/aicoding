@@ -18,8 +18,7 @@ const srv = http.createServer((q, r) => { const u = decodeURIComponent(q.url.spl
   if (!f.startsWith(ROOT)) { r.writeHead(403); return r.end(); }
   fs.readFile(f, (e, d) => { if (e) { r.writeHead(404); return r.end(); } r.writeHead(200, { 'Content-Type': MIME[path.extname(f)] || 'application/octet-stream' }); r.end(d); }); });
 
-const TIC = { ur: /ワン/, patolli: /ワン/, amazons: /ケロ/, shogi: /コン(?![ト-ヾ])/, xiangqi: /コン(?![ト-ヾ])/, janggi: /コン(?![ト-ヾ])/, backgammon: /ワン/, chess: /ピョン/, go: /ペン(?!ギ)/, gomoku: /ペン(?!ギ)/, hex: /ペン(?!ギ)/, checkers: /カニ/ };
-const plain = s => String(s || '').replace(/<br\s*\/?>/g, '\n').replace(/<[^>]+>/g, '').trim();
+const TIC = { ur: /ワン/, patolli: /ワン/, amazons: /ケロ/, shogi: /コン(?![ト-ヾ])/, xiangqi: /コン(?![ト-ヾ])/, janggi: /コン(?![ト-ヾ])/, backgammon: /ワン/, chess: /ピョン/, go: /ペン(?!ギ)/, gomoku: /ペン(?!ギ)/, hex: /ペン(?!ギ)/, checkers: /カニ/, foxgeese: /クワ/ };const plain = s => String(s || '').replace(/<br\s*\/?>/g, '\n').replace(/<[^>]+>/g, '').trim();
 const sents = s => (plain(s).match(/[^。！？\n]+[。！？]+|[^。！？\n]+$/gm) || []).map(x => x.trim()).filter(Boolean);
 const end = sn => { const b = sn.replace(/[。！？!?]+$/, '').replace(/[）)」]+$/, ''); for (const e of ['なんだ', 'んだ', 'だよ', 'だね', 'よね', 'かな', 'よう', 'ろう', 'よ', 'ね']) if (b.endsWith(e)) return e === 'だよ' ? 'よ' : e === 'なんだ' ? 'んだ' : e === 'だね' ? 'ね' : e; return /[！？]$/.test(sn) ? sn.slice(-1) : 'x'; };
 const REASON = /(から|ので|ため|と、|と相手|ると|れば|なら|だと|では|せいで|取られ|負け|逃げ|防げ|止め|ふさ|残る|残っちゃ|できない|届かない|ならない|損)/;
@@ -158,13 +157,31 @@ function gameLevel(raw, ls) {
   ls.forEach(l => { l.score = Math.max(0, 100 - l.pen.reduce((a, [n]) => a + n, 0)); });
 }
 
+function fgPuzzleTexts() {
+  const F = require(path.join(ROOT, 'atlas/games/foxgeese-pz.js')), E = require(path.join(ROOT, 'foxgeese/engine.js')), PZ = JSON.parse(fs.readFileSync(path.join(ROOT, 'foxgeese/puzzles.json'), 'utf8'));
+  E.setRule(PZ.rule);
+  return PZ.themes.map((T, ti) => {
+    const N = {}, tx = (k, v) => F.text('ja', k, N[k] = N[k] == null ? ti * 2 : N[k] + 1, v);   // (= atlas/puzzles.js fgT: each line's variants in turn)
+    const probs = T.puzzles.slice(0, 5).map(P => {
+      const pos = E.Pos.from(P.s), goal = P.g, n = P.n, good = E.goalGood(P.s, [], n, { goal }, PZ.rule) || [];
+      const m = pos.moves().find(x => !good.includes(x)), q = pos.clone().play(m);
+      const r = F.pickReply(q, n - 1, goal, (z, k) => !!E.goalGood(z.spec(), [], k, { goal }, PZ.rule)), z = q.clone().play(r);
+      const w = F.why({ goal, before: pos, mid: q, after: z, m, reply: r, left: n - 1, E });
+      const ask = tx(goal === 'win' ? 'goalWin' : 'goalTake', { n }), hint = tx('pz.hint1', { n }) + ' ' + tx('pz.hintText');
+      const ng = tx(w.key, { n: n - 1, k: z.cap - q.cap }), gd = tx('good') + ' ' + tx(goal === 'win' ? 'midWin' : 'midTake', { n: n - 1 });
+      return { ask, hint, good: gd, ng, tw: null };
+    });
+    return { key: T.id, title: T.id, intro: F.text('ja', 'hi', 0), ramp: [], probs };
+  });
+}
 (async () => {
   await new Promise(r => srv.listen(0, r)); const port = srv.address().port;
   const puppeteer = require(PUP);
   const b = await puppeteer.launch({ executablePath: CHROME, args: ['--no-sandbox'] });
   const pg = await b.newPage();
   await pg.goto(`http://127.0.0.1:${port}/atlas/`, { waitUntil: 'domcontentloaded' }); await new Promise(r => setTimeout(r, 4000));
-  const R = await pg.evaluate(async games => {
+  const pgGames = games.filter(g => g !== 'foxgeese'), onlyPz = games.length && !pgGames.length;   // (foxgeese: the puzzles only, scored below)
+  const R = onlyPz ? {} : await pg.evaluate(async games => {
     let src = await (await fetch('lessons3d.js?x=' + Date.now())).text();
     src = src.replace('  window.AtlasGuideJa = guideJa;', '  window.AtlasGuideJa = guideJa; let LSVD = null; const lsvX = (h, id) => { const m = (LSVD || {})[id]; if (!m) return h; for (const k of Object.keys(m).sort((a, b) => b.length - a.length)) if (h.includes(k)) h = h.split(k).join(m[k]); return h; }; window.__setLSV = d => { LSVD = d; };')
       .replace('window.AtlasLessons = {', 'window.__LD = DATA; window.__NC = { load: ncLoad, apply: ncApply }; window.__V = (h, id) => varyJa(lsvX(guideJa(h, id), id), id); window.__X = id => Object.assign({}, TX.ja, (VOICE[id] || {}).ja || {}); window.AtlasLessons = {');
@@ -194,8 +211,12 @@ function gameLevel(raw, ls) {
           probs: (s.probs || []).map(p => ({ ask: say(p.ask || X.opGoal, id), hint: say(p.hintTx, id), good: say(f(p.good, p) || f(p.why, p), id), ng: say(f(p.ng, p) || p.ngTx, id), tw: TW(id, p.pos) })), nostart: !!(s.steps && s.steps.length && s.start == null) }); } } catch (e) { out[oid].push({ err: String(e) }); } }
     out.__TN = window.__TN && window.__TN.ja;
     return out;
-  }, games);
+  }, pgGames);
   await b.close(); srv.close();
+  // (2026-11-24 担当C) the 3D puzzles of fox and geese: one bubble set per theme as a player meets it (atlas/puzzles.js fgMoved with
+  //  ドミダック's words, atlas/games/foxgeese-pz.js): the greeting + goal, the hints, the praise after a right move, and for each of the
+  //  first 5 puzzles the words after its first wrong move (the reply the 3D plays, the fact why() names) — scored as a lesson
+  if (!games.length || games.includes('foxgeese')) R['foxgeese/pz'] = fgPuzzleTexts();
   const TN = R.__TN || {}; delete R.__TN; turnNames = TN;
   const rep = {}; let sum = 0, n = 0;
   // (2026-11-22) the board facts (tools/lesson-facts.js): a lesson whose marks / answers / claims do not hold on the board fails

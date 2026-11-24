@@ -89,6 +89,10 @@ const CHECKS = {
       if (mv[0] !== 'f5') bad(G, K, 'the first move is not f5'); if (mv[1] && !['d6', 'f6', 'f4'].includes(mv[1])) bad(G, K, 'the second move is not d6 / f6 / f4');
       for (let i = 0; i < mv.length; i++) { if (!any(b, me)) me = 3 - me; const q = sq(mv[i]), f = flips(b, q, me);
         if (!f.length) { bad(G, K, `move ${i + 1}: ${mv[i]} is not legal`); return; } b[q] = me; f.forEach(z => { b[z] = me; }); me = 3 - me; } }));
+
+    // (2026-11-24 第2期・担当B) the verified lines (reversi/opcourse-probs.json: 5 problems off the study line, 追1): the strict ①〜⑨, the two
+    // stored searches, the way there, no near board, the order of the 2D and the 3D, リバガメ's words for every legal move — tools/lesson-verify-rvopen.js
+    require('./lesson-verify-rvopen.js')().forEach(fa => bad(G, fa.step, `q${fa.q}: ${fa.msg}`));
   },
   // (2026-11-22 lesson loop) the gomoku openings (珠型, 'gomoku/open'): the line replays legally under renju (no forbidden black move,
   // no stone on a stone), every practice position loads, and its best answer is a legal move — not a black forbidden point, and when

@@ -33,6 +33,7 @@
     { id: 'backgammon', color: '#5c2f1f', cover: { g: 'backgammon', s: 'backgammon' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'bgBoard' }, m1: { svg: 'bgShots' }, m2: { paint: 'webb' } }, refs: ['Wizārišn ī čatrang ud nihišn ī nēw-ardaxšīr (Middle Persian, c. 6th–9th c.)', 'Edmond Hoyle, A Short Treatise on the Game of Back-Gammon (1743)', 'Oswald Jacoby & John R. Crawford, The Backgammon Book (1970)', 'Hans Berliner, “Backgammon Computer Program Beats World Champion”, Artificial Intelligence 14 (1980)', 'Gerald Tesauro, “Temporal Difference Learning and TD-Gammon”, Communications of the ACM 38 (1995)', 'The Metropolitan Museum of Art, The Backgammon Players (cabinet, 1861), 26.54'], links: [{ g: 'backgammon' }, { paint: 'webb' }, { ex: 'pyrgus' }] },
     { id: 'hex', color: '#2e4a6e', cover: { g: 'hex', s: 'hex' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'hexWin' }, m1: { svg: 'hexBridge' } }, refs: ['Piet Hein, “Polygon”, Politiken, 26 December 1942', 'Martin Gardner, “Mathematical Games”, Scientific American (July 1957)', 'David Gale, “The Game of Hex and the Brouwer Fixed-Point Theorem”, American Mathematical Monthly 86 (1979)', 'Cameron Browne, Hex Strategy: Making the Right Connections (2000)', 'Ryan B. Hayward & Bjarne Toft, Hex: The Full Story (2019)'], links: [{ g: 'hex' }, { g: 'gomoku' }] },
     { id: 'foxgeese', color: '#7a4a1e', cover: { g: 'foxgeese', s: 'foxgeese' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'foxGeeseBoard' }, m1: { svg: 'huntFamily' } }, refs: ['Grettis saga Ásmundarsonar (14th c.)', 'H. J. R. Murray, A History of Board-Games Other Than Chess (1952)', 'R. C. Bell, Board and Table Games from Many Civilizations (1960)', 'Claude-Auguste Berey, the Princesse de Soubise playing solitaire (engraving, 1697)', 'John D. Beasley, The Ins and Outs of Peg Solitaire (1985)', 'Lim Yew Jin & Jürg Nievergelt, “Computing Tigers and Goats”, ICGA Journal 27 (2004)'], links: [{ g: 'foxgeese' }, { g: 'peg' }, { g: 'tafl' }] },
+    { id: 'latrunculi', color: '#6a4a2a', cover: { g: 'latrunculi', s: 'latrunculi' }, mins: 3, sec: [null, null, null, null, null], figs: { m0: { svg: 'latCapture' }, m1: { svg: 'latTwoSided' }, m2: { ex: 'pyrgus' } }, refs: ['Varro, De lingua Latina 10.22', 'Laus Pisonis, lines 190–208 (1st c.)', 'Seneca, De tranquillitate animi 14.7', 'Martial, Epigrams 14.17', 'P. Crummy et al., Stanway: An Élite Burial Site at Camulodunum (2007)', 'U. Schädler, „Latrunculi – ein verlorenes strategisches Brettspiel der Römer“, Homo Ludens 4 (1994)'], links: [{ g: 'latrunculi' }, { g: 'tafl' }, { ex: 'pyrgus' }] },
   ];
   const src = p => p.s ? `../images/atlas/museum-story/${p.s}.webp?v=1` : p.g ? `../images/atlas/${p.g}.webp` : p.ex ? `../images/atlas/ex/${p.ex}.webp` : `../images/atlas/paint/${p.paint}-t.webp?v=1`;
   const ga = p => p && p.g && !p.s ? ' ga' : '';   // (a cover from the game's own art: a transparent icon, shown whole on the story's colour)
@@ -53,8 +54,8 @@
   // (2026-11-24 audit: a figure opened from a story brings the reader back) closing the painting or the case returns to the read room, the same
   // place in the story and the button that opened it
   function backTo(btn) { const y = scrollY, k = btn && (btn.dataset.paint ? `[data-paint="${btn.dataset.paint}"]` : btn.dataset.ex ? `[data-ex="${btn.dataset.ex}"]` : ''), cls = btn && btn.className.split(' ')[0];
-    return () => { if (ctx.goRoom) ctx.goRoom('read'); setTimeout(() => { scrollTo(0, y); const b = btn && btn.isConnected ? btn : k && (document.querySelector(`.muroom[data-r="read"] .${cls}${k}`) || document.querySelector(`.muroom[data-r="read"] ${k}`)); if (b) b.focus({ preventScroll: true }); }, 60); }; }
-  function openPaint(id, btn) { if (!ctx.goRoom) return; const back = backTo(btn); ctx.goRoom('paint'); let n = 0; const t = () => { if (window.AtlasPaint && document.querySelector('.muroom[data-r="paint"] .ptc')) { AtlasPaint.onClose = back; AtlasPaint.open(id); } else if (++n < 100) setTimeout(t, 100); }; t(); }
+    return () => { if (ctx.goRoom) ctx.goRoom('read', { replace: 1 }); setTimeout(() => { scrollTo(0, y); const b = btn && btn.isConnected ? btn : k && (document.querySelector(`.muroom[data-r="read"] .${cls}${k}`) || document.querySelector(`.muroom[data-r="read"] ${k}`)); if (b) b.focus({ preventScroll: true }); }, 60); }; }
+  function openPaint(id, btn) { if (!ctx.goRoom) return; const back = backTo(btn); ctx.goRoom('paint', { replace: 1 }); let n = 0; const t = () => { if (window.AtlasPaint && document.querySelector('.muroom[data-r="paint"] .ptc')) { AtlasPaint.onClose = back; AtlasPaint.open(id); } else if (++n < 100) setTimeout(t, 100); }; t(); }
   function openEx(id, btn) { if (!ctx.goEx) return; const back = backTo(btn); ctx.goEx(id); let n = 0; const t = () => { if (window.AtlasGallery) AtlasGallery.onClose = back; else if (++n < 100) setTimeout(t, 100); }; t(); }
   function linkHtml(L) {
     if (L.g) { const g = (ctx.games || []).find(q => q.id === L.g); return g ? `<button type="button" class="chlk" data-g="${L.g}"><i>${esc(u('game'))}</i>${esc(ctx.gname ? ctx.gname(g) : L.g)}</button>` : ''; }
@@ -370,6 +371,28 @@
         g += `<text x="80" y="${y + 5}" font-size="15" font-weight="800" fill="#2b2a28">${a}:${b}</text>`; x = 136;
         for (let k = 0; k < b; k++) g += `<circle cx="${x + (k % 12) * 15}" cy="${y - 7 + Math.floor(k / 12) * 14}" r="6" fill="#fbf7ee" stroke="#8a7a5a" stroke-width="1"/>`; });
       return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit">${g}</svg>`; },
+    // latrunculi: a piece caught between two enemies on a line is taken; on the right, a lone piece walled in so it cannot move
+    latCapture: () => { const C = 32, o = 10, N = 6, B = C * N, gap = 30, W = o * 2 + B * 2 + gap, H = o * 2 + B; let g = '';
+      const bd = ox => { let s = `<rect x="${ox}" y="${o}" width="${B}" height="${B}" fill="#e7d8b8"/>`; for (let k = 0; k <= N; k++) s += `<line x1="${ox}" y1="${o + k * C}" x2="${ox + B}" y2="${o + k * C}" stroke="#7a6446" stroke-width="1.4"/><line x1="${ox + k * C}" y1="${o}" x2="${ox + k * C}" y2="${o + B}" stroke="#7a6446" stroke-width="1.4"/>`; return s; };
+      const pc = (ox, c, r, w, x) => { const cx = ox + c * C + C / 2, cy = o + r * C + C / 2; return `<circle cx="${cx}" cy="${cy}" r="11" fill="${w ? '#f5efe2' : '#2b2622'}" stroke="${w ? '#8a7a5a' : '#000'}" stroke-width="1.4"/>` + (x ? `<path d="M${cx - 7} ${cy - 7}L${cx + 7} ${cy + 7}M${cx + 7} ${cy - 7}L${cx - 7} ${cy + 7}" stroke="#e8453c" stroke-width="3"/>` : ''); };
+      const L = o, R = o + B + gap;
+      g += bd(L) + pc(L, 1, 2, 0) + pc(L, 2, 2, 1, 1) + pc(L, 3, 4, 0);
+      g += `<path d="M${L + 3 * C + C / 2} ${o + 4 * C + 4}V${o + 3 * C - 2}" stroke="#2a5a8a" stroke-width="2.6" marker-end="url(#lcA)"/>`;
+      g += `<circle cx="${L + 3 * C + C / 2}" cy="${o + 2 * C + C / 2}" r="11" fill="none" stroke="#2a5a8a" stroke-width="2" stroke-dasharray="3 3"/>`;
+      g += bd(R) + pc(R, 0, 0, 1) + pc(R, 1, 0, 0) + pc(R, 0, 1, 0) + pc(R, 3, 3, 1) + pc(R, 2, 3, 0) + pc(R, 4, 3, 0) + pc(R, 3, 2, 0) + pc(R, 3, 4, 0);
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit"><defs><marker id="lcA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2a5a8a"/></marker></defs>${g}</svg>`; },
+    // a two-sided Roman board as Martial describes: the race game of twelve lines on one face, the soldiers' grid on the other
+    latTwoSided: () => { const W = 340, H = 170; let g = '';
+      g += `<rect x="8" y="14" width="150" height="120" rx="6" fill="#d9c49a" stroke="#6a5232" stroke-width="2"/>`;
+      for (let r = 0; r < 3; r++) for (let c = 0; c < 12; c++) g += `<circle cx="${20 + c * 11.5 + (c >= 6 ? 4 : 0)}" cy="${40 + r * 34}" r="3.6" fill="#6a5232"/>`;
+      g += `<path d="M${84} 22V126" stroke="#6a5232" stroke-width="1.2" stroke-dasharray="3 3"/>`;
+      [[30, 74], [62, 108], [110, 40]].forEach(([x, y], i) => { g += `<rect x="${x - 6}" y="${y - 6}" width="12" height="12" rx="2" fill="#fbf7ee" stroke="#3a2a14" stroke-width="1.2"/><circle cx="${x}" cy="${y}" r="1.6" fill="#3a2a14"/>`; });
+      g += `<path d="M168 74h24" stroke="#8a7a5a" stroke-width="2.5" marker-end="url(#ltA)" marker-start="url(#ltB)"/>`;
+      g += `<rect x="202" y="14" width="130" height="120" rx="6" fill="#d9c49a" stroke="#6a5232" stroke-width="2"/>`;
+      for (let k = 0; k <= 8; k++) g += `<line x1="${210 + k * 14.25}" y1="22" x2="${210 + k * 14.25}" y2="126" stroke="#6a5232" stroke-width="1.1"/><line x1="210" y1="${22 + k * 13}" x2="324" y2="${22 + k * 13}" stroke="#6a5232" stroke-width="1.1"/>`;
+      [[1, 1, 0], [2, 1, 0], [4, 5, 1], [5, 5, 1], [3, 3, 0], [4, 3, 1]].forEach(([c, r, w]) => { g += `<circle cx="${210 + c * 14.25 + 7}" cy="${22 + r * 13 + 6.5}" r="5.2" fill="${w ? '#f5efe2' : '#2b6aa0'}" stroke="#3a2a14" stroke-width=".8"/>`; });
+      g += `<text x="83" y="158" font-size="15" font-weight="800" fill="#2b2a28" text-anchor="middle">XII</text><text x="267" y="158" font-size="15" font-weight="800" fill="#2b2a28" text-anchor="middle">⚔</text>`;
+      return `<svg viewBox="0 0 ${W} ${H}" role="img" style="font-family:inherit"><defs><marker id="ltA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8a7a5a"/></marker><marker id="ltB" viewBox="0 0 10 10" refX="4" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8a7a5a"/></marker></defs>${g}</svg>`; },
     // four tetrahedral dice: how often each score comes (out of 16)
     tetraOdds: () => { const n = [1, 4, 6, 4, 1], W = 300, H = 150, bw = 40, gap = (W - 40 - bw * 5) / 4; let g = '';
       n.forEach((v, i) => { const x = 20 + i * (bw + gap), h = v / 6 * 96, y = 112 - h;
@@ -410,6 +433,7 @@
   }
   function story(id, user) {
     const S = STORIES.find(s => s.id === id); if (!S) return; cur = S; const x = st(id), i = STORIES.indexOf(S);
+    if (user && ctx.hist) ctx.hist({ room: 'read', story: id });
     host.innerHTML = `<article class="rda" style="--c:${S.color}">
       <button type="button" class="btn ghost sm rdback">← ${esc(u('back'))}</button>
       <div class="rdh"><button type="button" class="rdhimg${ga(S.cover)}" ${S.cover.g ? `data-g="${S.cover.g}"` : S.cover.ex ? `data-ex="${S.cover.ex}"` : `data-paint="${S.cover.paint}"`}><img src="${src(S.cover)}" alt=""><span>${esc(S.cover.g ? u('game') : S.cover.ex ? u('exhibit') : u('art'))} · ${esc(S.cover.g ? gName(S.cover.g) : S.cover.ex ? exName(S.cover.ex) : paintName(S.cover.paint))} ›</span></button>
@@ -425,7 +449,7 @@
       ${S.refs ? `<section class="rdref"><h4>${esc(u('refH'))}</h4><ul>${S.refs.map(r => `<li><bdi>${esc(r)}</bdi></li>`).join('')}</ul></section>` : ''}
       <nav class="rdnav">${i > 0 ? `<button type="button" class="btn ghost sm" data-go="${STORIES[i - 1].id}">‹ ${esc(st(STORIES[i - 1].id).title)}</button>` : '<span></span>'}${i < STORIES.length - 1 ? `<button type="button" class="btn ghost sm" data-go="${STORIES[i + 1].id}">${esc(st(STORIES[i + 1].id).title)} ›</button>` : ''}</nav>
     </article>`;
-    host.querySelector('.rdback').onclick = () => { shelf(); top(); };
+    host.querySelector('.rdback').onclick = () => { shelf(); top(); if (ctx.hist) ctx.hist({ room: 'read' }); };
     host.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { story(b.dataset.go, true); top(); });
     wire(host.querySelector('.rda'));
     quiz(S);
@@ -466,5 +490,5 @@
     if (host !== box) { host = box; cur = null; }
     if (cur) story(cur.id, false); else shelf();
   }
-  window.AtlasRead = { render, STORIES, V, open: id => story(id, true), _stamps: stamps };
+  window.AtlasRead = { render, STORIES, V, open: id => story(id, true), show: id => { story(id, false); top(); }, showShelf: () => { shelf(); top(); }, current: () => (host && host.querySelector('.rda') && cur ? cur.id : null), _stamps: stamps };
 })();

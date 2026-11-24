@@ -39,10 +39,10 @@
     { id: 'paint', src: () => ['museum/paint-i18n/en.js?v=' + PAINT_I18N_V, ...(rl() !== 'en' ? [`museum/paint-i18n/${rl()}.js?v=${PAINT_I18N_V}`] : []), 'museum/paint.js?v=10'], ready: () => !!(window.AtlasPaint && window.MUSEUM_PAINT_T && MUSEUM_PAINT_T.en && MUSEUM_PAINT_T[rl()]), render: (el, c) => AtlasPaint.render(el, c) },   // (per language, like the stories)
     // (2026-11-24 audit pageKB) the stories' text in one file per language (museum/read-i18n/<lang>.js, made by tools/museum-read-split.js from
     // museum/read-i18n.js): English (the fallback for anything missing) and the page's language, not all fourteen (1.5 MB)
-    { id: 'read', src: () => ['museum/read-i18n/en.js?v=' + READ_I18N_V, ...(rl() !== 'en' ? [`museum/read-i18n/${rl()}.js?v=${READ_I18N_V}`] : []), 'museum/read.js?v=38'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T && MUSEUM_READ_T.en && MUSEUM_READ_T[rl()]), render: (el, c) => AtlasRead.render(el, c) },
+    { id: 'read', src: () => ['museum/read-i18n/en.js?v=' + READ_I18N_V, ...(rl() !== 'en' ? [`museum/read-i18n/${rl()}.js?v=${READ_I18N_V}`] : []), 'museum/read.js?v=40'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T && MUSEUM_READ_T.en && MUSEUM_READ_T[rl()]), render: (el, c) => AtlasRead.render(el, c) },
     { id: 'chance', src: () => ['museum/chance-i18n/en.js?v=' + CHANCE_I18N_V, ...(rl() !== 'en' ? [`museum/chance-i18n/${rl()}.js?v=${CHANCE_I18N_V}`] : []), 'museum/chance.js?v=7'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T && MUSEUM_CHANCE_T.en && MUSEUM_CHANCE_T[rl()]), render: (el, c) => AtlasChance.render(el, c) },   // (per language)
   ];
-  const READ_I18N_V = 1, PAINT_I18N_V = 1, CHANCE_I18N_V = 1, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
+  const READ_I18N_V = 2, PAINT_I18N_V = 1, CHANCE_I18N_V = 1, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
   const KEY = 'atlas-museum-room';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const loaded = {};
@@ -80,8 +80,18 @@
   }
   addEventListener('resize', () => fitBar());
   try { document.fonts && document.fonts.ready.then(() => fitBar()); } catch (e) {}
-  function open(id, user) {
+  // (2026-11-24 user: the browser's back walks back) a room the user opens, and a story, is a history entry { pg: 'museum', mu: { room, story } };
+  // app.js hands a popped entry back to restore().
+  function hist(mu, replace) { try { const st = { pg: 'museum', mu }; if (replace) history.replaceState(st, '', '#museum'); else history.pushState(st, '', '#museum'); dispatchEvent(new Event('atlas-hist')); } catch (e) {} }
+  function restore(mu) {
+    if (!mu || !host) return; const cs = window.AtlasRead && AtlasRead.current ? AtlasRead.current() : null;
+    if (mu.room !== room) open(mu.room, false);
+    if (mu.room !== 'read') return; if (cs === (mu.story || null) && mu.room === room) return;
+    let n = 0; const t = () => { if (window.AtlasRead && host.querySelector('.muroom[data-r="read"] .rdc, .muroom[data-r="read"] .rda')) { mu.story ? AtlasRead.show(mu.story) : AtlasRead.showShelf(); } else if (++n < 100) setTimeout(t, 100); }; t();
+  }
+  function open(id, user, replace) {
     const R = ROOMS.find(r => r.id === id) || ROOMS[0];
+    if (user && !replace && R.id !== room) hist({ room: R.id });   // (replace: a room passed through on the way to / back from a viewer — the history is left as it is)
     room = R.id; host.dataset.room = room;
     try { localStorage.setItem(KEY, room); } catch (e) {}
     el.rooms.querySelectorAll('[data-r]').forEach(b => b.setAttribute('aria-selected', b.dataset.r === room)); rove(el.rooms);
@@ -174,11 +184,11 @@
   function passToggle(on) { const o = on == null ? !el.pass.classList.contains('on') : on; if (o) passPanel(); el.pass.classList.toggle('on', o); el.pbtn.setAttribute('aria-expanded', o); }
   // what a room is given: the portal's ctx, and goEx(id) — open a piece of the collection (from another room's link)
   // (2026-11-24 audit backLost) a case opened from another room (the tree's node, a story's link) closes back into that room and its button
-  function goEx(id) { const from = room, btn = document.activeElement, y = scrollY; open('gallery', true); let n = 0;
+  function goEx(id) { const from = room, btn = document.activeElement, y = scrollY; open('gallery', true, true); let n = 0;
     const key = btn && btn.tagName === 'BUTTON' ? `.muroom[data-r="${from}"] button${btn.classList[0] ? '.' + btn.classList[0] : ''}${Object.keys(btn.dataset).map(k => `[data-${k.replace(/[A-Z]/g, c => '-' + c.toLowerCase())}="${btn.dataset[k]}"]`).join('')}` : '';
-    const back = () => { open(from, true); setTimeout(() => { scrollTo(0, y); const b = btn && btn.isConnected && btn.offsetParent ? btn : key && host.querySelector(key); if (b) b.focus({ preventScroll: true }); }, 150); };
+    const back = () => { open(from, true, true); setTimeout(() => { scrollTo(0, y); const b = btn && btn.isConnected && btn.offsetParent ? btn : key && host.querySelector(key); if (b) b.focus({ preventScroll: true }); }, 150); };
     const t = () => { if (window.AtlasGallery && host.querySelector('.muroom[data-r="gallery"] .gxgrid .gxc')) { if (from !== 'gallery' && !AtlasGallery.onClose) AtlasGallery.onClose = back; AtlasGallery.open(id); } else if (++n < 100) setTimeout(t, 100); }; t(); }
-  const rctx = () => Object.assign({}, ctx, { goEx, goRoom: r => open(r, true) });
+  const rctx = () => Object.assign({}, ctx, { goEx, goRoom: (r, o) => open(r, true, !!(o && o.replace)), hist });
   function render(sec, c) {
     ctx = c; lang = UI[c.lang] ? c.lang : 'en';
     if (host !== sec || !sec.querySelector('.murooms')) {
@@ -192,6 +202,7 @@
     sec.querySelector('#muTtl').textContent = u('title'); sec.querySelector('#muSub').textContent = u('sub');
     const want = c.room || room || saved() || 'map';
     room = want; bar(); passBtn(); if (el.pass.classList.contains('on')) passPanel(); open(want, false);
+    if (!(history.state && history.state.mu)) hist({ room: want }, true);
   }
 
   /* ---------- (2026-11-24) the page-turner and search for a room's grid of cards: when the cards run past a page, a bar
@@ -259,5 +270,5 @@
     if (!f.length) return; const i = f.indexOf(document.activeElement);
     if (i < 0 || (e.shiftKey && i === 0) || (!e.shiftKey && i === f.length - 1)) { e.preventDefault(); f[e.shiftKey ? (i <= 0 ? f.length - 1 : i - 1) : (i < 0 || i === f.length - 1 ? 0 : i + 1)].focus(); }
   }, true);
-  window.AtlasMuseum = { render, room: () => room, ROOMS, V, goEx, go: r => open(r, true), mark, prog, pager, catalog, tabKeys, rove };
+  window.AtlasMuseum = { restore, render, room: () => room, ROOMS, V, goEx, go: r => open(r, true), mark, prog, pager, catalog, tabKeys, rove };
 })();
