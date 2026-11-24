@@ -99,6 +99,11 @@ const CHECKS = {
   // (2026-11-24 第2期・担当B) the backgammon openings ('backgammon/open', key = the item): the strict ①〜⑨ on every problem as the 3D
   // table asks it — tools/lesson-verify-bgopen.js. The opening rolls that are also a problem of the lessons オープニング①② (one start
   // position per roll: ⑤) are listed as pending, not failed, until they are made into other problems (claude/lesson-quality.md 進み具合)
+  // (2026-11-24 第2期・担当B) the go joseki / fuseki practice ('go/open'): the strict ①〜⑨ for the verified sets — tools/lesson-verify-goopen.js
+  // (the other sets are pending: `node tools/lesson-verify-goopen.js --all` lists every problem's failures)
+  'go/open'() {
+    require('./lesson-verify-goopen.js')().forEach(fa => bad('go/open', fa.step, `q${fa.q}: ${fa.msg}`));
+  },
   'backgammon/open'() {
     require('./lesson-verify-bgopen.js')().forEach(fa => bad('backgammon/open', fa.step, `q${fa.q}: ${fa.msg}`));   // (the pending ones are printed, not failed)
   },
