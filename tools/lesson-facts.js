@@ -113,6 +113,8 @@ const CHECKS = {
         if (!mine.length && theirs.length && !theirs.includes(best)) bad(G, g.id, `problem ${j}: the opponent has a four but the best answer ${sc[0][0]} does not stop it`);
       });
     });
+    // (2026-11-24 第2期・担当B) the verified openings (openings.json verified): the strict ①〜⑨ — tools/lesson-verify-gmopen.js
+    require('./lesson-verify-gmopen.js')().forEach(fa => bad(G, fa.step, `q${fa.q}: ${fa.msg}`));
   },
   // (2026-11-23 lesson loop) the gomoku lessons ('gomoku', key = the step's index): every position loads (rule: the problem's, else renju),
   // every answer point is empty, and what the step's words (atlas/lessons3d.js gmLsJa) say the answer does holds with the engine's exact

@@ -2768,6 +2768,15 @@
       const d = F.five >= 0 ? D(F.five) : F.open4.length ? D(F.open4[0]) : F.fours.length ? D(F.fours[0]) : F.threes.length ? D(F.threes[0]) : F.twos.length ? D(F.twos[0]) : D(F.b3d);
       return { c: GOP.side(s), f: GOP.side(3 - s), d, d3: D(F.threes[0]), d4: D(F.fours[0]), dd: two, bd: D(F.b3d), da: D(F.adjS[0]), do: D(F.adjO[0]) };
     },
+    // (2026-11-24 第2期・担当B) a practice move's points = gomoku/app.js problemPoints (the game's sOfV: tanh(v / 900) × 0.85) — the 2D and
+    // the 3D score every move the same (⑨); the words below pick their tone by it (追39・追53)
+    pts(sc, u) {
+      const W = 90000, sv = v => v > W ? 0.95 : v < -W ? -0.95 : Math.tanh(v / 900) * 0.85;
+      const val = new Map(sc), best = Math.max(...sc.map(e => e[1])), mine = val.has(u) ? val.get(u) : Math.min(...sc.map(e => e[1])) - 200;
+      if (best > W) return mine > W ? 20 : 0;
+      if (mine >= best - 25) return 20;
+      return Math.max(0, Math.round(20 * (1 - (sv(best) - sv(mine)) / 0.4)));
+    },
     // the line's notes, by what the move does
     n: {
       win: ['{c}の{d}に5つ並んで勝ち！ ぼく、思わず踊っちゃう。', 'これで{d}に五つ！ 最後まできれいな攻めだったペン。', '{d}に5つそろった！ {c}の勝ちが決まったね。'],
@@ -2812,7 +2821,8 @@
     },
     good: ['そうそう、それ！', 'ばっちりだペン！', 'いい目をしてるね！', 'やったね！', 'すてきな一手！', 'さすが、きみ！', 'いいね、その点！', 'よく見つけたね！', '完璧だペン！', '上手だね！'],
     push: ['この調子で次もいこう！', 'その勢いで、どんどん行こう！', '次も楽しみだペン！', 'まだまだいけるペン！'],
-    soft: ['あと少し！', '大丈夫、', 'ドンマイ！', 'あと一歩！', 'いい線いってた！', '気にしないで！', '次はいけるペン！', 'よくある迷い方！', '今度は見えるはず！', 'いっしょに見てみよう。'],
+    soft: ['ここから覚えよう！', '大丈夫、', 'ドンマイ！', 'ひとつずつ確かめよう！', '見直してみよう！', '気にしないで！', '次はいけるペン！', 'よくある迷い方！', '今度は見えるはず！', 'いっしょに見てみよう。'],   // (追39・追53: no 「あと少し」「いい線」 — a verified problem's other moves score 12 or less)
+    near: /^(あと少し|あと一歩|いい線)/,
     why: {
       win: ['{d}に5つ並んで勝ち！ 最後の一手を見逃さなかったね。', '5つそろって{c}の勝ちだペン。'],
       b4: ['ここを空けると、{f}に5つ並べられて負けていた。だから四を止めるのが先なんだ。', '{f}の四を見落とさなかった！ 止めないと次の一手で負けだったペン。'],
@@ -2838,14 +2848,16 @@
       foe: ['{f}の石に{do}からつく点', '{f}の{do}の先をおさえる点'], none: ['石がのびのび働く点', '広く使える点'] },
     rs: ['緑の点は、{r}だったペン。', '緑に光っているのが{r}！', '緑の点こそ、{r}なんだ。', '正解の緑の点は{r}。', 'いちばんの手は緑の点、{r}だペン！'],
     miss: {
-      lose5: ['きみの手だと、{f}に次の一手で5つ並べられて負けちゃう！', 'そこだと{f}の四が残って、すぐに5つ並べられちゃうんだ。'],
-      loseW: ['きみの手だと、{f}に{how}を打たれて、もう止められない。', 'そこに打つと、{f}の{how}が決まって負けになっちゃうペン。'],
+      lose5: ['きみの手だと、{f}に次の一手で5つ並べられて負けちゃう！', 'そこだと{f}の四が残って、すぐに5つ並べられちゃうんだ。', 'その手だと{f}の四がそのまま。次に5つ並べられちゃうペン。', 'きみの点では、{f}の5つ並びを止められないんだ。'],
+      loseW: ['きみの手だと、{f}に{how}を打たれて、もう止められない。', 'そこに打つと、{f}の{how}が決まって負けになっちゃうペン。', 'きみの点では、{f}に{how}を作られて勝ちを決められちゃうペン。', 'その手のあと、{f}は{how}で勝ちに行ける。止める手がなくなっちゃうね。', '残念、そこだと{f}が{how}を打って勝ち切っちゃう。'],
       win: ['きみの手だと5つ並ばず、勝ちを逃しちゃう。', 'そこでは勝ちが決まらず、{f}に立て直されちゃうね。'],
       left3: ['きみの手だと{f}の三が残るから、次に達四を作られちゃうペン。', 'そこだと{f}の三がそのまま。達四になったら止められないね。'],
       stop: ['きみの手だと攻めがとぎれて、{f}に先手が回っちゃう。', '攻めの手を休むと、{f}が反撃の形を作り始めるペン。', 'そこだと三も四もできず、{f}に自由に打たれちゃうね。'],
       far: ['きみの点はほかの石から離れていて、どの並びにも関われないんだ。', 'きみの石はぽつんと離れていて、{f}の形を止められないペン。'],
       free: ['{f}の{bd}の並びを放っておくと、次に三を作られやすくなる。', 'きみの手だと{f}の{bd}の線がのびのび使えちゃう。', 'そこだと{f}の{bd}の石がつながったまま。次に三へ伸ばされちゃうペン。', '{bd}の線を空けたままだと、{f}の攻めの足場が残るんだ。'],
       lone: ['きみの手は自分の石とつながらないから、次の三につながらないペン。', 'きみの石は並びを作れず、攻めの足場にならないね。', 'そこだと{c}の石どうしが離れたまま。三を作るのに手数がかかっちゃう。'],
+      weak: ['きみの点だと緑の点の役目（{r}）が果たせないから、そのまま{f}の番になっちゃうペン。', 'そこでは緑の点の役目（{r}）が果たせないので、{f}に手番が回っちゃうんだ。', 'きみの点は{r}じゃないから、そのまま{f}の番になっちゃうね。', '緑の点の役目は{r}。きみの点だとそれができないから、一歩おくれるペン。', '大事なのは{r}。きみの点だとそこが空いたままになるから、{f}に先に使われるかもしれないペン。'],
+      same: ['きみの点も形は似ているけど、緑の点のほうが次の攻めにつながるから一歩リードなんだ。', 'きみの手も同じねらいだね。でも緑の点なら石がよく働くから、先の戦いがずっと楽になるペン。', 'ねらいは同じでも、緑の点のほうが先の展開が良くなるから、そっちが正解なんだ。', '似た形でも置き場所で先の戦いが変わるから、緑の点のほうがずっと戦いやすいペン。'],
       close: ['きみの手も悪くないけど、緑の点だと石がもっとよく働くペン。', 'きみの点でも戦えるけど、緑の点なら石が2つの役目をするから一歩リード！', 'きみの石も役に立つけど、緑の点に比べると次の三が作りにくいんだ。', 'そこでもすぐには負けないよ。でも緑の点なら、先の攻めがずっと楽になるペン。', 'きみの点はちょっと控えめ。緑の点のほうが、相手のじゃまと自分の形を一度に作れるから強いんだ。'],
     },
     how: { open4: '達四', '44': '四四', '43': '四三', five: '五' },
@@ -2882,13 +2894,14 @@
         if (d) { const x = best % 15, y = Math.floor(best / 15); ring = []; for (const gg of [1, -1]) for (let k = 1; k <= 4; k++) { const a = x + d[0] * k * gg, c = y + d[1] * k * gg; if (a < 0 || c < 0 || a > 14 || c > 14) break; const v = G.bd[c * 15 + a]; if (v === who) ring.push(c * 15 + a); else if (v !== 0) break; } } }
       const whyB = fill(P.pk(GOP.why[kb], 'w' + kb), VB), roleB = fill(P.pk(GOP.role[kb], 'r' + kb), VB);
       const pickWrong = u => u !== best && u != null && u >= 0 ? u : (sc.slice().sort((x, y) => x[1] - y[1])[0] || [])[0];
-      const goodO = P.open(GOP.good, i, 0), softO = P.open(GOP.soft, i, 5), push = i === 1 || i === 3 ? ' ' + P.pk(GOP.push, 'push') : '', rsT = P.pk(GOP.rs, 'rs');
+      const goodO = P.open(GOP.good, i, 0), push = i === 1 || i === 3 ? ' ' + P.pk(GOP.push, 'push') : '', rsT = P.pk(GOP.rs, 'rs');
       const mp = k => P.pk(GOP.miss[k], 'm' + k);
       return { ask: fill(P.pk(GOP.ask, 'ask'), { s: sd }), hintTx: fill(P.pk(hk, 'h' + hkey, t => ring.length || !/光って/.test(t)), VB), hint: ring,
         good: u => { const other = u != null && u !== best && val.has(u) && val.get(u) >= b[1] - 25;
           return goodO + ' ' + (other ? 'きみの手も、緑の点と同じくらい良い一手だね。緑の点は' + roleB + '。' : whyB) + push; },
-        ng: u0 => { const u = pickWrong(u0); if (u == null) return softO + ' ' + fill(rsT, { r: roleB });
-          const FU = GOP.fx(G, u, s), ku = GOP.kind(FU), V = Object.assign({}, VB);
+        ng: u0 => { const u = pickWrong(u0), pu = u == null ? 0 : GOP.pts(sc, u), softO = P.open(GOP.soft, i, 5);
+          if (u == null) return softO + ' ' + fill(rsT, { r: roleB });
+          const FU = GOP.fx(G, u, s), ku = GOP.kind(FU), V = Object.assign({ r: roleB }, VB);
           G.bd[u] = s; const mine5 = G.fivePts(s).length, o5 = G.fivePts(3 - s), ow = mine5 ? [] : G.winPt(3 - s); G.bd[u] = 0;
           let why;
           if (kb === 'win') why = mp('win');
@@ -2899,7 +2912,8 @@
           else if (!FU.near) why = mp('far');
           else if (FB.blk.length && !FU.blk.includes(FB.blk[0])) why = mp('free');
           else if (FB.twos.length && !FU.twos.length && ku !== 'three') why = mp('lone');
-          else why = mp('close');
+          else if (pu >= 10 && !(() => { G.bd[u] = s; const w = G.winPt(3 - s).length > 0 || !!G.vcf(3 - s, 6); G.bd[u] = 0; return w; })()) why = mp('close');   // (「悪くない」「すぐには負けない」: 10+ points and no win for the opponent after it — 追53)
+          else why = mp(ku === kb ? 'same' : 'weak');
           return softO + ' ' + fill(rsT, { r: roleB }) + '<br>' + fill(why, V); } };
     },
   };
@@ -3136,7 +3150,7 @@
     LKEY: 'aicoding-gomoku-lessons', OKEY: 'aicoding-gomoku-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261123'), getJ('../gomoku/openings.json?v=20261113'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261123'), getJ('../gomoku/openings.json?v=20261124v1'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] gomoku texts', e); } this.I = w.I18N || {}; this.data = { ls, op };
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
@@ -3173,7 +3187,7 @@
       const ja = lang === 'ja', hs = g.id.length * 7 + g.no;
       const PJ = ja ? GOP.mk(this.data.op.sets.indexOf(g)) : null;
       if (ja) Object.assign(notes, GOMOKU_OP_JA.notes(g, PJ));   // (2026-11-22 lesson loop: ゴイシペン tells every move — see GOP)
-      const probs = shuffle(g.problems || []).slice(0, 5);
+      const probs = g.verified ? (g.problems || []).slice(0, 5) : shuffle(g.problems || []).slice(0, 5);   // (2026-11-24 第2期・担当B: a verified pool is its 5, easy → hard — tools/lesson-verify-gmopen.js)
       return { id: g.id, title: this.name(g, lang), intro: this.tx('op.read', lang, { k: g.kanji, r: g.kana, n: g.name }) + '<br>' + this.tx('op.d.' + g.id, lang) + (ja ? '<br>ぼくといっしょに、この珠型の流れを1手ずつ見ていこう！' : ''), start: { start: null, rule: 'renju', me: 1, last: -1 },
         steps, notes, probs: probs.map((P, i) => { const sc = (P.sc || []).map(([u, v]) => [GSQ(u), v]), b = sc.slice().sort((a, c) => c[1] - a[1])[0];
           const o = { pos: gPos(P, { rule: 'renju' }), kind: 'best', P: { sc }, ask: this.tx('op.goal', lang), ans: b ? b[0] : -1 };
@@ -3182,13 +3196,7 @@
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[g.id] || { best: 0, pass: false }, pass = pts >= 75; pr[g.id] = { best: Math.max(o.best || 0, pts), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
     },
     points(P, u) {   // = gomoku/app.js problemPoints
-      if (P.sc && P.sc.length) {
-        const val = new Map(P.sc), best = Math.max(...P.sc.map(e => e[1])), mine = val.has(u) ? val.get(u) : Math.min(...P.sc.map(e => e[1])) - 200, WINT = 9000;
-        if (best > WINT) return mine > WINT ? 20 : 0;
-        if (mine >= best - 25) return 20;
-        const sv = v => 2 / (1 + Math.exp(-v / 200)) - 1;   // (≈ the game's sOfV)
-        return Math.max(0, Math.round(20 * (1 - (sv(best) - sv(mine)) / 0.4)));
-      }
+      if (P.sc && P.sc.length) return GOP.pts(P.sc, u);   // (2026-11-24 第2期: the game's own sOfV, as the 2D — was a sigmoid of v / 200 and WINT 9000)
       return (P.ok || []).includes(u) ? 20 : 0;
     },
     // the warm-up: its position, its marks, whether a move is right

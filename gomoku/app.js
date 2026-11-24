@@ -1623,7 +1623,7 @@ $('#btnLessonPlay').onclick = () => {
 
 // ====================================================================== openings (26 珠型): study a line, then practice
 let OPEN = null, openChoiceIdx = -1;
-const openReady = fetch('openings.json?v=20261019a').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
+const openReady = fetch('openings.json?v=20261124v1').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
   .then(() => { if (!OPEN) document.querySelectorAll('.ls-tabs button[data-v=open]').forEach(b => b.remove()); });
 const OP_STORE = STORE + '-open';
 function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{}'); } catch (e) { return {}; } }
@@ -1753,7 +1753,7 @@ $('#lsFb').addEventListener('click', e => {
 });
 function startPractice(gi) {
   const g = OPEN.sets[gi], pool = g.problems.slice();
-  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  if (!g.verified) for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }   // (2026-11-24 第2期: a verified pool is its 5, easy → hard — tools/lesson-verify-gmopen.js)
   hideOverlay('#lessonOverlay');
   stashGame(); puzzle = null; document.body.classList.remove('in-puzzle');
   lesson = { step: 0, gi, virt: { id: g.id, title: { ja: g.kanji, en: g.name }, problems: pool.slice(0, 5) }, i: 0, results: [], answered: false, hinted: false, me: P1 };
