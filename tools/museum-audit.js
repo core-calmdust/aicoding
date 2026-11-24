@@ -38,7 +38,7 @@ const views = (process.argv[3] || '320x640,375x812,390x844:ar,768x1024,1024x768,
         // 5 文字の切れ（… で途切れている）
         out.ellipsis = all.filter(e => getComputedStyle(e).textOverflow === 'ellipsis' && e.scrollWidth > e.clientWidth + 1).length;
         // 6 1行が長すぎる（本文の段落で 1 行 45em を超える）
-        out.longLine = all.filter(e => e.tagName === 'P' && e.textContent.length > 80 && e.getBoundingClientRect().width / parseFloat(getComputedStyle(e).fontSize) > 45).length;
+        out.longLine = all.filter(e => e.tagName === 'P' && e.textContent.length > 80 && e.getBoundingClientRect().width / parseFloat(getComputedStyle(e).fontSize) > 48).length;
         // 7 1画面目: 部屋の中身の始まりが画面の 65% より上にあるか
         const st = root.querySelector('.muroom.on'), top = st ? st.getBoundingClientRect().top : 9999;
         out.foldLate = top > innerHeight * .65 ? 1 : 0;

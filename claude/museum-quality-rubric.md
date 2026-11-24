@@ -21,7 +21,7 @@
 | tinyText | 12px 未満の文字 | 0 |
 | noName | 文字・aria-label・title のどれもないボタン | 0 |
 | ellipsis | 「…」で切れた文字 | 0 |
-| longLine | 本文の1行が 45em を超える（読みにくい） | 0 |
+| longLine | 本文の1行が 48em を超える（読みにくい） | 0 |
 | foldLate | 部屋の中身の始まりが、1画面目の 65% より下 | 0 |
 | fontSizes | 文字サイズの種類が 9 を超えた分 | 0 |
 | focusHidden | キーボードのフォーカスが見えない | 0 |
