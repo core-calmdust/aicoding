@@ -49,6 +49,8 @@
     { id: 'jintile', w: 1432, h: 1576, met: 65099, no: '2002.462', bg: '#6a625a', spots: [[.5, .56], [.42, .55], [.27, .42], [.6, .4], [.55, .18], [.5, .73]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
     // (2026-11-24) Cleveland: Kawanabe Kyōsai's sketch album — a go game blown away
     { id: 'kyosai', w: 2048, h: 1618, cma: '1991.125.k', bg: '#d6cdb8', spots: [[.33, .6], [.77, .32], [.62, .32], [.85, .47], [.75, .72], [.4, .75]], links: [{ g: 'go' }] },
+    // (2026-11-24) Chicago: a Yokuts gambling tray, woven with its own dice game
+    { id: 'yokuts', w: 1686, h: 1262, aic: 132674, no: '1994.312a-b', bg: '#cfcac2', spots: [[.415, .125], [.43, .287], [.325, .587], [.52, .507], [.7, .53], [.45, .43]], links: [{ room: 'chance' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
