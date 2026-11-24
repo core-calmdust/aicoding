@@ -986,8 +986,9 @@
     return `<table class="sct">${rows.map(([k, d, n]) => `<tr><th>${k}</th><td>${esc(d())}</td><td class="${n > 0 ? 'p' : n < 0 ? 'm' : ''}">${sg(n)}</td></tr>`).join('')}<tr class="tot"><th>合計</th><td>S 88以上・A 72以上・B 55以上・C 35以上</td><td>${sc.pts}</td></tr></table>`;
   }
   async function end() {
-    S.phase = 'end'; hud(); save(); SND.music('story', .85); renderRoster();
+    S.phase = 'end'; hud(); save(); renderRoster();
     const R = S.result || E.check(S);
+    SND.music(R && R.win ? 'story' : 'gameover', .85);   // the wolves won: the losing song
     const wolves = S.people.filter(p => p.role === 'wolf');
     document.body.classList.remove('night');
     setScene(st.meetLoc || 'inn', false, true);

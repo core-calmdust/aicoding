@@ -107,7 +107,7 @@
   }
 
   /* ---------- music: two tracks, crossfaded at their ends so they loop without a seam ---------- */
-  const TRACK = { story: { src: 'audio/story.mp3?v=1', from: 0, to: 108.2 }, meeting: { src: 'audio/meeting.mp3?v=1', from: .6, to: 92.6 } };
+  const TRACK = { story: { src: 'audio/story.mp3?v=1', from: 0, to: 108.2 }, meeting: { src: 'audio/meeting.mp3?v=1', from: .6, to: 92.6 }, gameover: { src: 'audio/gameover.mp3?v=1', from: 0, to: 149.3 } };
   const bufs = {}; let cur = null, want = null;
   function load(name) {
     if (!bufs[name]) bufs[name] = fetch(TRACK[name].src).then(r => r.arrayBuffer()).then(b => new Promise((res, rej) => ac.decodeAudioData(b, res, rej))).catch(() => { delete bufs[name]; return null; });
