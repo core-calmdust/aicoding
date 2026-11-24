@@ -5,8 +5,9 @@
   let ac = null, master = null, sfx = null, bgm = null, wind = null, on = true, musicOn = true, talkOn = true;
   try { on = localStorage.getItem('wolflantern-snd') !== '0'; musicOn = localStorage.getItem('wolflantern-bgm') !== '0'; talkOn = localStorage.getItem('wolflantern-talk') !== '0'; } catch (e) {}
   const SFX = 1.0, BGM = .34;
+  let paused = false;
   function ctx() {
-    if (!on) return null;
+    if (!on || paused) return null;
     if (!ac) {
       const C = root.AudioContext || root.webkitAudioContext; if (!C) return null;
       ac = new C(); master = ac.createGain(); master.gain.value = .95;
@@ -15,7 +16,7 @@
       sfx = ac.createGain(); sfx.gain.value = SFX; sfx.connect(master);
       bgm = ac.createGain(); bgm.gain.value = musicOn ? BGM : 0; bgm.connect(master);
       if (want) { const w = want; want = null; music(w.name, w.level); }
-      document.addEventListener('visibilitychange', () => { if (!ac) return; if (document.hidden) ac.suspend(); else if (on) ac.resume(); });
+      document.addEventListener('visibilitychange', () => { if (!ac) return; if (document.hidden) ac.suspend(); else if (on && !paused) ac.resume(); });
     }
     if (ac.state === 'suspended' && !document.hidden) ac.resume();
     return ac;
@@ -117,6 +118,8 @@
   function setMusic(v) { musicOn = !!v; try { localStorage.setItem('wolflantern-bgm', musicOn ? '1' : '0'); } catch (e) {} if (bgm && ac) bgm.gain.setTargetAtTime(musicOn ? BGM : 0, ac.currentTime, .3); }
   function setTalk(v) { talkOn = !!v; try { localStorage.setItem('wolflantern-talk', talkOn ? '1' : '0'); } catch (e) {} }
 
+  // the window lost focus: everything stops until it comes back
+  function pause(p) { paused = !!p; if (!ac) return; if (paused) ac.suspend(); else if (on && !document.hidden) ac.resume(); }
   function set(v) { on = !!v; try { localStorage.setItem('wolflantern-snd', on ? '1' : '0'); } catch (e) {} if (!on) { windOff(); if (ac) ac.suspend(); } else if (ac) ac.resume(); }
-  root.WLSound = { bell, howl, windOn, windOff, pluck, page, ok, thud, talk, music, set, setMusic, setTalk, get on() { return on; }, get musicOn() { return musicOn; }, get talkOn() { return talkOn; }, unlock: ctx };
+  root.WLSound = { pause, bell, howl, windOn, windOff, pluck, page, ok, thud, talk, music, set, setMusic, setTalk, get on() { return on; }, get musicOn() { return musicOn; }, get talkOn() { return talkOn; }, unlock: ctx };
 })(window);
