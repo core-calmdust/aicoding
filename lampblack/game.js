@@ -374,7 +374,7 @@
     SND.windOn(.05);
     for (const pg of st.text.prologue) {
       setScene(pg.bg || st.locs[0].id, pg.night);
-      if (pg.night) { SND.bell(.5); SND.bell(.4, 2.6); SND.bell(.35, 5.2); }
+      if (pg.night) SND.bell(.5);   // the recording rings twice by itself
       if (pg.cast) {
         const ids = S.people.filter(p => !p.isPlayer).map(p => p.id);
         await say([{ text: fill(pg.t, ctxVars()) }]);
