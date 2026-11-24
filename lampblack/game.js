@@ -799,6 +799,7 @@
   }
   function evText(e) {
     if (e.k === 'self') return { t: 'この話そのもの', s: 'いた場所からは見えないはずのものを見た、など。話の中だけで食い違っている。' };
+    if (e.k === 'said') return { t: `${nm(e.who)}は「${locName(e.loc)}にいた」と言った`, s: `${nightName(e.night)}。${nm(e.who)}本人の話。` };
     if (e.k === 'trace') return { t: `${locName(e.loc)}の痕跡「${SP.traceShort(st, e)}」`, s: `${nightName(e.night)}。あなたがこの目で見た。` };
     return { t: `${nm(e.who)}が${locName(e.loc)}にいた`, s: `${nightName(e.night)}。${e.by === 'you' ? 'あなたが見た' : nm(e.by) + 'の話'}。` };
   }
@@ -817,11 +818,12 @@
     if (part == null) return debate();
     const E1 = EV.find(e => e.id === ev), P1 = stmt.parts[+part];
     const lp = stmt.parts.find(p => p.k === 'loc');
-    const items = [{ who: 'you', text: E1.k === 'self' ? `${nm(who)}。${nightName(stmt.night)}、「${partText(P1, stmt)}」と言ったな。${lp ? `だが、${locName(lp.loc)}から見えるのは${E.near(st, lp.loc).map(locName).join('と')}だけだ。` : ''}話が、話の中で食い違っている。` : `${nm(who)}。${nightName(stmt.night)}、「${partText(P1, stmt)}」と言ったな。だが、${E1.k === 'trace' ? `わたしは${locName(E1.loc)}で、この目で「${SP.traceShort(st, E1)}」を見ている` : `${E1.by === 'you' ? 'わたしは' : nm(E1.by) + 'は'}その夜、${nm(E1.who)}を${locName(E1.loc)}で見ている`}。` }];
+    const items = [{ who: 'you', text: E1.k === 'self' ? `${nm(who)}。${nightName(stmt.night)}、「${partText(P1, stmt)}」と言ったな。${lp ? `だが、${locName(lp.loc)}から見えるのは${E.near(st, lp.loc).map(locName).join('と')}だけだ。` : ''}話が、話の中で食い違っている。` : `${nm(who)}。${nightName(stmt.night)}、「${partText(P1, stmt)}」と言ったな。だが、${E1.k === 'said' ? `${nm(E1.who)}は自分で、その夜は${locName(E1.loc)}にいたと言っている` : E1.k === 'trace' ? `わたしは${locName(E1.loc)}で、この目で「${SP.traceShort(st, E1)}」を見ている` : `${E1.by === 'you' ? 'わたしは' : nm(E1.by) + 'は'}その夜、${nm(E1.who)}を${locName(E1.loc)}で見ている`}。` }];
     const t = pup(who); if (t) { t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); }
     openGate();
     const r = E.judgeClash(S, st, stmt.id, +part, ev);
     if (!r.ok) G.gate.heat.you = 1;   // a miss turns the room on you as soon as it is said
+    if (r.ok && r.other) items.push({ text: '食い違いは、たしかにあった。だが、ほころびたのは別の口だった。' });
     for (const e of r.ev || []) { const l = lineOf(e); if (l) items.push(l); }
     if (!r.ok) items.push({ text: `${st.lex.meet}のざわめきが、あなたのほうへ向いた。証拠は、その言葉を崩していなかった。${missLeft() > 0 ? '' : '\n今日はもう、うかつに人の言葉を突けない。'}` });
     await say(items);
