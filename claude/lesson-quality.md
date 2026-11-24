@@ -122,7 +122,7 @@
 | backgammon/open | 未 | 一部の事実チェックのみ | |
 | hex/open | 未 | 一部の事実チェックのみ | |
 | tafl/open | 一部（担当B：a3 斜めの壁）。ほかの7本は厳しい基準を満たす問題が2〜4問で5問に届かず次回（候補を広げる：分岐を深く・別の手順から） | lesson-verify.js taflOpen（openings.json の verified の本：①保存値＝エンジン（engine.wasm values、根の全手を全幅で、毎回新しいインスタンス＝決定的）深さ6の値・P.best が首位②20点の手（1〜3個、すべて正解）が深さ5と6で同じ・それ以外の最善は12点以下③合法手3以上・全合法手に値・正解は3分の1以下④P.mv が初形から本の初手で始まり局面に着く・手番が本の側・決着していない⑤ほかの全タフル問題（レッスン・準備・パズル・定跡）と8対称で5マス以上違う・同じ答え2回まで・同じ種類の手3回まで・本どうしの手順が同一でない⑥易→難（手数＋2番目の点）と2D・3D とも並び順のまま⑦⑧タフリンのセリフを5つの出題位置・全不正解手で生成し、取る／取られる／王の脱出・捕獲／王の動けるマス数／角固め／はさむねらいの数を盤で照合、「そのよさがない」は別の種類の手だけ、理由のない文は不合格⑨2D・3D の採点式。候補の生成・選別は tafl/tools/curate_openings.js（gen → pick --write --check）） | 担当B 本PR・追15 未確認 |
-| ur（3D対応） | 未（担当C） | — | 2D：lessons.json・puzzles.json |
+| ur（3D対応） | 未（担当C） | — | 2D：lessons.json・puzzles.json・作業中（担当C・2026-11-24 09:32 JST） |
 | senet（3D対応） | 未（担当C） | — | 2D：lessons.json・puzzles.json |
 | patolli（3D対応） | 未（担当C） | — | 2D：lessons.json・puzzles.json |
 | ludo（3D対応・レッスンのみ） | 未（担当C） | — | 2D：lessons.json |
