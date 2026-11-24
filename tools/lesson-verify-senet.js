@@ -120,7 +120,7 @@ module.exports = function senet(opt = {}) {
       else if (q.kind === 'choice') { const c = choice(L, q, w); if (prev != null && c < prev) add(L.id, w, `⑥数える数 ${c} が前の問題 ${prev} より少ない`); prev = c; }
       else add(L.id, w, 'kind');
     });
-    (L.ramp || []).forEach((r, i) => { if (r.k === 'try' && r.kind !== 'choice') move(L, r, 'ramp' + i, 2); if (r.k === 'try' && r.kind === 'choice') { if (!r.why || !r.ngo) add(L.id, 'ramp' + i, '追46 準備の選ぶ問題に答えの理由（why）か誤答の説明（ngo）がない'); else choice(L, r, 'ramp' + i); } if (r.k === 'explain' && r.seq && r.seq.length) move(L, Object.assign({}, r, { ok: r.seq }), 'ramp' + i, 3); });
+    (L.ramp || []).forEach((r, i) => { if (r.k === 'try' && r.kind !== 'choice') move(L, r, 'ramp' + i, 2); if (r.k === 'try' && r.kind === 'choice') { if (!r.why || !r.ngo) add(L.id, 'ramp' + i, '追47 準備の選ぶ問題に答えの理由（why）か誤答の説明（ngo）がない'); else choice(L, r, 'ramp' + i); } if (r.k === 'explain' && r.seq && r.seq.length) move(L, Object.assign({}, r, { ok: r.seq }), 'ramp' + i, 3); });
   }
   // 追28：準備に選択問題があるゲームの2D（senet・ur の app-learn.js）は、選択肢の描画を本番の問題だけに絞らない
   for (const g of ['senet', 'ur']) { const L = JSON.parse(fs.readFileSync(path.join(ROOT, g, 'lessons.json'), 'utf8')); if (!L.steps.some(x => (x.ramp || []).some(r => r.kind === 'choice'))) continue;

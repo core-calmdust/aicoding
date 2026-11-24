@@ -7129,7 +7129,7 @@
         let box = $('.lsch'); if (!box) { box = document.createElement('div'); box.className = 'lsch bgch'; $('.bub').insertBefore(box, $('.cnt')); }
         box.hidden = false; box.innerHTML = it.choices.map((c, k) => `<button type="button" class="btn sm" data-ci="${k}">${c}</button>`).join('');
         box.onclick = e => { const b = e.target.closest('[data-ci]'); if (!b || ok || phase !== 'ramp' || cur.ri !== i) return; const k = +b.dataset.ci;
-          if (k === it.right) { box.querySelectorAll('button').forEach((x, j) => { x.disabled = true; x.classList.toggle('ok', j === k); }); rDone(); } else { b.classList.add('ng'); b.disabled = true; say((it.ngx ? it.ngx(k) + ' ' : '') + RU('ng')); try { chime(false); } catch (e2) {} } };   // (追46: senet's warm-up says why the choice is wrong)
+          if (k === it.right) { box.querySelectorAll('button').forEach((x, j) => { x.disabled = true; x.classList.toggle('ok', j === k); }); rDone(); } else { b.classList.add('ng'); b.disabled = true; say((it.ngx ? it.ngx(k) + ' ' : '') + RU('ng')); try { chime(false); } catch (e2) {} } };   // (追47: senet's warm-up says why the choice is wrong)
       }
       onMoved = async (u, info) => {
         if (stopped || phase !== 'ramp' || cur.ri !== i) return;

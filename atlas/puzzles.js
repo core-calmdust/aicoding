@@ -893,7 +893,8 @@
      wording (atlas/games/janggi-pz.js AtlasJanggiPz). Checked by tools/lesson-verify-janggi.js. ---------- */
   BOOK.janggi = Object.assign({}, BOOK.xiangqi, {
     url: '../janggi/puzzles.json?v=3', KEY: 'aicoding-janggi-puzzles', LAST: 'aicoding-janggi-pz-last', data: null, I: null,
-    tx(k, lang, v) { const V = (window.AtlasJanggiPz || {})[lang]; let x = V && V[k]; if (x === undefined) return BOOK.xiangqi.tx.call(this, k, lang, v); return v ? fill(x, v) : x; },
+    tx(k, lang, v) { const V = (window.AtlasJanggiPz || {})[lang]; let x = V && V[k]; if (x === undefined) return BOOK.xiangqi.tx.call(this, k, lang, v); if (Array.isArray(x)) x = x[(this.txN[k] = ((this.txN[k] == null ? -1 : this.txN[k]) + 1)) % x.length];   /* (ショウギツネ's variants in turn) */ return v ? fill(x, v) : x; },
+    txN: {},
     cats(lang) { const has = new Set(this.data.themes.map(T => T.grp)); return BOOK.xiangqi.cats.call(this, lang).filter(c => has.has(c.k)); },
     look(i, lang) { const T = this.data.themes[i], P = T.puzzles[0]; return { desc: this.tx('pz.th.' + T.id + '.sub', lang), board: P ? 'xq:jg|' + P.s : '' }; },
   });
@@ -2229,7 +2230,9 @@
         const r = await pz().think(17); if (p !== cur || stopped) return;
         await sleep(250); if (p !== cur) return;
         if (r == null) return xqOut(p);
+        const mid = pz().pos();
         await pz().play(r); if (p !== cur) return;
+        if (id === 'janggi' && window.JanggiPzWhy) return jgStray(p, mid, r);   // (追42: the reply's fact, not pz.stray)
         if (pz().state().over || p.used >= p.n) return xqOut(p);
         say(B.tx('pz.stray', ctx.lang) + ' ' + fill(QA.mid, { n: p.n - p.used })); p.state = 'play'; pz().wait(); buttons(); return;
       }
@@ -2240,6 +2243,18 @@
       const r = await ckDefence(dl); if (p !== cur || stopped) return;
       await pz().play(r); if (p !== cur) return;
       say(line('mid') || fill(QA.mid, { n: p.n - p.used })); p.state = 'play'; pz().wait(); buttons();
+    }
+    /* (2026-11-24 担当D, 追42) janggi: after a move off the solution the defender's reply is marked red and ショウギツネ says what it did on
+       the board (took a piece of yours / the general stepped out / a piece blocked the check / moved — janggi/pzwhy.js) and, from the
+       solver, whether a mate is still there in the moves left (checked by tools/lesson-verify-janggi.js 追42). */
+    let jgN = 0;
+    async function jgStray(p, mid, r) {
+      const E = pz().engine(), W = window.JanggiPzWhy, w = W.why(E, mid, r), left = p.n - p.used, own = ((window.AtlasJanggiPz || {}).why || {})[ctx.lang];
+      pz().mark(w.k === 'pass' ? null : [[{ m: r }, 'ng'], [E.mTo(r), 'ng']]);   // (the reply: a red arrow and its point)
+      if (pz().state().over || left <= 0) { p.failed = true; p.state = 'fail'; streak = 0; chime(false); say(W.say(ctx.lang, w, null, 0, own, jgN++) + ' ' + fill(QA.out, { n: p.n }) + ' ' + (line('retry') || X.retry)); buttons(); return; }
+      const L = await xqReq(p, left, false); if (p !== cur || stopped) return;
+      const reach = (L || []).some(e => e.need > 0 && e.need <= left);
+      say(W.say(ctx.lang, w, reach, left, own, jgN++)); p.state = 'play'; pz().wait(); buttons();
     }
     async function xqAuto(p) {   // 答え: the stored first move, then the solver's best line for both sides (xiangqi/app.js pzAnswer)
       p.state = 'busy'; buttons(); say(B.tx('pz.showing', ctx.lang));
