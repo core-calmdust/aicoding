@@ -270,6 +270,33 @@ function gomoku(opt) {
       if (d < prevD) add(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
       if (j === st.problems.length - 1 && !(d > firstD)) add(`⑥ the last problem is no harder than the first (d ${d} vs ${firstD})`);
       const A = st2(P); for (const [who, B, Q] of PS) { if (Q === P) continue; const e = dist(A, B); if (e <= 3) add(`⑤ ${e} stones from ${who}`); }
+      // 追72 (2026-11-25 担当A): the right points are a third of the legal points at most
+      if (P.ok.length * 3 > lg.length) add(`追72 ${P.ok.length} of the ${lg.length} legal points are right (more than a third)`);
+    });
+    // 追75 (2026-11-25 担当A): every warm-up try can be answered on its own board — its answers (it.ok: the 2D and the 3D rampOk both
+    //  compare the cell names) are legal empty points there and exactly the points that reach its goal (①②, the problems' goals:
+    //  five = the mover's five points, block = the opponent's, block3 = the points after which the opponent has no win (k ≤ 3, VCF),
+    //  sfour = the open fours, fourthree = the fastest wins in 3), the 2nd hint's ring (look) is on stones of that board, and the right
+    //  points are a third of the legal points at most (追72)
+    (st.ramp || []).forEach((r, j) => { if (r.k !== 'try') return; const a = m => out.push({ step: id, q: 0, msg: `warm-up ${j + 1}: ${m}` });
+      const s = r.side, o = 3 - s, pos = E.setup(r.rule || 'free', { b: cells(r.b), w: cells(r.w), side: s }), lg = pos.legal(), lgN = new Set(lg.map(nm));
+      (r.ok || []).forEach(q => { if (!lgN.has(q)) a(`追75 the answer ${q} is not a legal point of this board`); });
+      if (!(r.ok || []).length) a('追75 no answer');
+      (r.look || []).forEach(q => { const m = E.sqOf(q); if (!(m >= 0) || !pos.b[E.M2I[m]]) a(`追75 the 2nd hint's ring ${q} is on no stone`); });
+      if (!(r.look || []).length) a("追75 the 2nd hint shows nothing");
+      const cls = (c, m) => pos.cls[c][E.M2I[m]], fv = c => pos.fives(c).map(i => nm(E.I2M[i])).sort();
+      let want = null;
+      if (r.goal === 'five') want = fv(s);
+      else if (r.goal === 'block') want = fv(o);
+      else if (r.goal === 'block3') { want = []; for (const m of lg) { pos.make(m); const w = G.win(pos, 2) || G.win(pos, 3) || G.vcf(pos); pos.unmake(); if (!w) want.push(nm(m)); } }
+      else if (r.goal === 'sfour') want = lg.filter(m => cls(s, m) === C.F4).map(nm);
+      else if (r.goal === 'fourthree') { const lv = lg.filter(m => cls(s, m) >= C.F3).map(m => [m, G.level(pos, m)]).filter(x => x[1]); const mn = lv.length ? Math.min(...lv.map(x => x[1])) : 0; if (mn !== 3) a(`① the fastest win takes ${mn || 'no'} moves (the try's: 3)`); want = lv.filter(x => x[1] === mn).map(x => nm(x[0])); }
+      else a(`the goal ${r.goal} is not checked`);
+      if (want) { want.sort(); const ok = (r.ok || []).slice().sort(); if (want.join() !== ok.join()) a(`①② the answers are ${ok}, the goal's points ${want}`); }
+      if ((r.ok || []).length * 3 > lg.length) a(`追72 ${r.ok.length} of the ${lg.length} legal points are right`);
+      // 追80 (2026-11-25 担当A): a try that asks to stop the opponent (block・block3・defend) where the mover has a win of its own (a five
+      //  point, an open four to make, a VCF) — the old three warm-up 3 gave Black f9 g8 h7, an open three: e10 / i6 made an open four
+      if (/^(block|block3|defend)$/.test(r.goal) && (fv(s).length || lg.some(m => cls(s, m) === C.F4) || G.vcf(pos))) a(`追80 the try asks to stop the opponent, but the mover wins by its own threat`);
     }); });
   return out;
 }
@@ -446,7 +473,7 @@ function amazons(opt) {
       const nw = Q.filter(q => sq[q] === 1).length, nb = Q.filter(q => sq[q] === 2).length, ne = Q.filter(q => !sq[q]).length; R.push({ nw, nb, ne });
       if (nw && nb) sep = false; else if (nw) w += ne; else if (nb) b += ne; }
     return { sep, w, b, R }; };
-  const nbr = i => { if (i == null || i < 0) return []; const [r, c] = RCo(i), o = []; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = c + dc; if ((dr || dc) && rr >= 0 && rr < 10 && cc >= 0 && cc < 10) o.push(rr * 10 + cc); } return o; };
+  const nbr = i => { if (i == null || i < 0 || i > 99) return []; const [r, c] = RCo(i), o = []; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = c + dc; if ((dr || dc) && rr >= 0 && rr < 10 && cc >= 0 && cc < 10) o.push(rr * 10 + cc); } return o; };
   const freeN = (sq, x) => nbr(x).filter(t => !sq[t]).length;
   // the most moves an amazon on a can make alone (squares sq: 0 empty), brute force with a memo on the filled squares
   const fillBF = (sq0, a0) => { const memo = new Map(), sq = Array.from(sq0); const key = a => sq.join('') + a;
@@ -674,11 +701,8 @@ function amazons(opt) {
           else if (id === 's_fill') { const sc = all.map(m => fillBF(after(m).sq, mTo(m))), mx = Math.max(...sc); G = all.filter((m, i) => sc[i] === mx); }
           if (G) { if (!G.length) a('① the goal cannot be reached'); okS.forEach(m => { if (!G.includes(m)) a(`① the answer ${nm(m)} does not reach the goal`); }); G.forEach(m => { if (!okS.has(m)) a(`② ${nm(m)} reaches the goal but is scored wrong`); }); }
           if (look == null) a('⑧ no gold mark');
-          // 追75 the warm-up can be answered on its board: answers named, every gold mark a square of this board
+          // 追75 (2026-11-25 03:20 担当A, beside the checks below): a try has an answer
           if (!(r.ok || []).length) a('追75 no answer');
-          (r.look || []).forEach(x => { if (!(Number.isInteger(x) && x >= 1 && x <= 100)) a(`追75 the gold mark ${x} is not a square of the board`); });
-          // 追72 the right moves are no more than a third of the legal moves
-          if (G && G.length * 3 > all.length) a(`追72 ${G.length} of ${all.length} moves are right`);
           // ⑧ the squares the hint names as the places to aim at (「（a1 か f1）」) are all marked
           { const h = String(W2[r.h] || ''), alt = h.match(/（\s*([a-j](?:10|[1-9]))\s*か\s*([a-j](?:10|[1-9]))\s*）/), lk = (r.look || []).map(x => x - 1);
             if (alt) [alt[1], alt[2]].forEach(q => { if (!lk.includes(E.sqIdx(q))) a(`⑧ the hint names ${q} but the gold marks are ${lk.map(N).join('・')}`); }); }
@@ -745,6 +769,23 @@ function amazons(opt) {
         }
         // ③ for a try (2026-11-24 担当A): 「いちばん多く動ける手を選んで」 with every legal move right is no choice (s_fill's old try: 14 of 14)
         if (r.k === 'try' && G && G.length * 2 > all.length) a(`③ ${G.length} of the ${all.length} legal moves are right — nothing to choose`);
+        // 追72 (2026-11-25 担当A): a try whose answers are a set of moves — the right ones are a third of the legal moves at most
+        //  (the problems: ③ above, 3 in 10 at most)
+        if (r.k === 'try' && G && G.length * 3 > all.length) a(`追72 ${G.length} of the ${all.length} legal moves are right (more than a third)`);
+        // 追75 (2026-11-25 担当A): a try can be answered on its own board — its answers are legal moves there (① above, by the names the
+        //  2D rampMove and the 3D rampOk compare), the 2nd hint's mark (look) is a square of the board, and the 3D marks the goal names
+        //  (AM_GM: 「金の印」 a square, 「赤い印」 an amazon) are there: a mark the words name but the board does not show, or on the
+        //  wrong piece, leaves the try unanswerable in 3D.
+        if (r.k === 'try') { const lk = r.look || [], gm = (X.AM_GM || {})[`${id}/${j}`] || [], gi = gm.map(([s0, c]) => [E.sqIdx(s0), c]);
+          if (!lk.length || lk.some(x => !(x >= 1 && x <= 100))) a(`追75 the 2nd hint's mark ${JSON.stringify(r.look)} is not a square of the board`);
+          gi.forEach(([x, c], k) => { if (!(x >= 0 && x < 100)) a(`追75 the 3D mark ${gm[k][0]} is not a square`); else if (c === 'ng' && p.sq[x] !== 1 && p.sq[x] !== 2) a(`追75 the 3D red mark ${gm[k][0]} is on no amazon`);
+            else if (c === 'hl' && x !== look && !(p.sq[x] === 3 && nbr(look).includes(x))) a(`追75 the 3D gold mark ${gm[k][0]} is not the 2nd hint's square ${N(look)} (or the arrow next to it)`); });
+          const t3 = ['g', 'h'].map(f => typeof r[f] === 'string' ? X.AMJ_LS.ramp[r[f]] || '' : '').join(' ');
+          if (/金の印/.test(t3) && !gi.some(([, c]) => c === 'hl')) a('追75 the 3D words name a gold mark the board does not show');
+          if (/赤い印/.test(t3) && !gi.some(([, c]) => c === 'ng')) a('追75 the 3D words name a red mark the board does not show');
+          const rd = gi.find(([, c]) => c === 'ng');
+          if (rd && /赤い印の黒|黒の[^。！]*赤い印/.test(t3) && p.sq[rd[0]] !== 2) a('追75 the 3D red mark is not on a black amazon');
+          if (rd && /白のアマゾン（赤い印）|赤い印の白/.test(t3) && p.sq[rd[0]] !== 1) a('追75 the 3D red mark is not on a white amazon'); }
       }); });
   }
   // 追32 (2026-11-24 担当A): the shapes the answers use are taught — by the intro or the warm-up, in the 2D (ja・en) and the 3D (ケロ).
@@ -2481,6 +2522,8 @@ const senet = () => require('./lesson-verify-senet.js')();   // (2026-11-24 担�
 const SOFT53 = /いい線|あと少し|あと一歩|おしい|惜しい|悪くない|まだ戦える|でも戦える|すぐには負けない|もありだけど/;   // (追66: おしい too — 「close」 to a move far from the answer)
 const soft53 = (t, pts, lost) => { const m = String(t).match(SOFT53); return m && (pts < 10 || lost) ? `追53 「${m[0]}」 for a move worth ${pts} points${lost ? ' that loses' : ''}` : null; };
 // 追53 (common): the 3D result line (atlas/lessons3d.js) says 「いい手だね…」(X.partial) / 「いい線！」 only for 10+ points, not for any points
+// 追78: closeness / regret openers in the 14 languages (the 3D puzzles' words after a move off the solution)
+const NEAR78 = /おしい|惜しい|おしかった|あと少し|あと一歩|いい線|So close|Almost|One step short|Too bad|差一|可惜|아깝|모자라|Casi|Por poco|Por un paso|Presque|À un pas|Dommage|Quase|Por pouco|Por um passo|Knapp|Schade|Schritt zu wenig|Почти|Чуть-чуть|Жаль|Az kaldı|Çok yakın|adım eksik|Hampir|Sayang|selangkah|लगभग|थोड़ा सा|बस एक कदम|अफ़सोस|اقتربت|خسارة|قريب|خطوة واحدة/;
 function near53(opt) { const src = require('fs').readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), out = [];
   for (const m of src.matchAll(/pts\s*(>|>=)\s*(\d+)\s*\?\s*(X\.partial|'いい線[^']*')/g)) if (!(m[1] === '>=' ? +m[2] >= 10 : +m[2] >= 9)) out.push({ step: 'lessons3d', q: 0, msg: `追53 ${m[0]}: the soft headline for a move under 10 points` });
   if (!/X\.partial/.test(src)) out.push({ step: 'lessons3d', q: 0, msg: '追53 the check finds no X.partial (changed?)' });
@@ -2491,6 +2534,13 @@ function near53(opt) { const src = require('fs').readFileSync(path.join(ROOT, 'a
       if (!/pts >= 1\d \? $/.test(pre)) out.push({ step: 'lessons3d', q: 0, msg: `追66 the heading 「${m[1]}」 is not under pts >= 10 (…${pre})` }); } } }
   { const tx = src.slice(src.indexOf('  const TX = {'), src.indexOf('  const OPCAT = ')), NEAR = /おしい|いい線|あと少し|Close|Casi|Presque|Quase|Knapp|करीब|قريب|Почти|Hampir|Az kaldı|아깝/;
     for (const m of tx.matchAll(/wrong: '([^']*)'/g)) if (NEAR.test(m[1])) out.push({ step: 'lessons3d', q: 0, msg: `追66 the 0-point heading TX.wrong says the move was close 「${m[1]}」` }); }
+  // 追82 (2026-11-25 担当A): the characters' own 0-point heading VOICE[<game>][<lang>].wrong — X = Object.assign(TX, VOICE[id]), so it
+  //  replaces TX.wrong (追66 looked at TX only) and is said on every 0-point answer whose words are not the character's own (p.own: ja
+  //  only), e.g. the English 3D lesson of amazons: 「So close! The green-marked move is the answer.」 after any wrong move
+  { const a = src.indexOf('  const VOICE = {'), b = a < 0 ? -1 : src.indexOf('\n  };\n', a), NEAR = /おしい|惜しい|いい線|あと少し|あと一歩|close|almost|Casi|Presque|Quase|Knapp|^Fast\b|लगभग|करीब|قريب|اقترب|Почти|Hampir|Az kaldı|아깝|差一点|差一點/i;
+    if (a < 0 || b < 0) out.push({ step: 'lessons3d', q: 0, msg: '追82 VOICE not found' });
+    else { let n = 0; for (const m of src.slice(a, b).matchAll(/wrong: '([^']*)'/g)) { n++; if (NEAR.test(m[1])) out.push({ step: 'lessons3d', q: 0, msg: `追82 the character's 0-point heading VOICE…wrong says the move was close 「${m[1]}」` }); }
+      if (n < 100) out.push({ step: 'lessons3d', q: 0, msg: `追82 only ${n} VOICE wrong lines found (changed?)` }); } }
   // 追68 (2026-11-24 担当C): the games' own 3D lesson files (atlas/ls-<game>.js) open a wrong answer with a line from their `soft` list,
   // and the 2D lessons (<game>/lessons.json ui.wrong) head it — both on a 0-point answer, so neither says the answer was close
   { const fs = require('fs'), NEAR = /おしい|惜しい|いい線|あと少し|あと一歩|Close|Almost|Casi|Presque|Quase|Knapp|^Fast\b|लगभग|قريب|Почти|Hampir|Az kaldı|아깝|差一点|差一點/;
@@ -2511,8 +2561,27 @@ function near53(opt) { const src = require('fs').readFileSync(path.join(ROOT, 'a
   { const fs = require('fs'), NEAR = /おしい|惜しい|おしかった|あと少し|あと一歩|いい線/, DONE = (opt && opt.done76) || ['foxgeese', 'konane'];
     for (const g of DONE) { const f = path.join(ROOT, 'atlas/games', g + '-pz.js'); if (!fs.existsSync(f)) { out.push({ step: g + '-pz.js', q: 0, msg: '追78 file not found' }); continue; }
       const t = (opt && opt.src76 && opt.src76[g]) || fs.readFileSync(f, 'utf8'), a = t.search(/\n\s*ja: \{/), b = t.indexOf('en: {', a); if (a < 0 || b < 0) { out.push({ step: g + '-pz.js', q: 0, msg: '追78 the ja block not found' }); continue; }
-      for (const m of t.slice(a, b).matchAll(/(['"])((?:(?!\1)[^\n])*)\1/g)) if (NEAR.test(m[2])) out.push({ step: g + '-pz.js', q: 0, msg: `追78 the words after a move off the solution say the move was close 「${m[2].slice(0, 40)}」` }); } }
+      for (const m of t.slice(a, b).matchAll(/(['"])((?:(?!\1)[^\n])*)\1/g)) if (NEAR.test(m[2])) out.push({ step: g + '-pz.js', q: 0, msg: `追78 the words after a move off the solution say the move was close 「${m[2].slice(0, 40)}」` });
+      // 追78 (2026-11-25 03:32 担当C): the other 13 languages too — the module's T[lang] for the keys said after a move off the solution
+      // (foxgeese cap・farWin・trap・farTake・lastWin・lastTake, konane stuck・far・last): no closeness or regret opener in any language
+      let P; try { const M = { exports: {} }; new Function('module', 'window', t)(M, undefined); P = M.exports; } catch (e) { out.push({ step: g + '-pz.js', q: 0, msg: '追78 the module does not load: ' + e.message }); continue; }
+      const KEYS = g === 'konane' ? ['stuck', 'far', 'last'] : ['cap', 'farWin', 'trap', 'farTake', 'lastWin', 'lastTake'];
+      for (const l of ['en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar']) { if (!P[l]) { out.push({ step: g + '-pz.js', q: 0, msg: `追78 no ${l} block` }); continue; }
+        for (const k of KEYS) for (const x of [].concat(P[l][k] == null ? [] : P[l][k])) if (NEAR78.test(x)) out.push({ step: g + '-pz.js', q: 0, msg: `追78 ${l}.${k} says the move was close 「${String(x).slice(0, 40)}」` }); } } }
+  // 追81 (2026-11-25 担当A): the line after a wrong move in a warm-up (<game>/lessons.json rampUi.ng, every language, and the 3D voice
+  //  <game>/voice-*-ja.js 'ui:ng') is said whatever the move, so it does not say the move was close (gomoku's 「おしい！」 after e10, a
+  //  move nowhere near the three). The games done: N81_DONE; the others are 「追81 未確認」 in claude/lesson-quality.md.
+  { const fs = require('fs'), NEAR = /おしい|惜しい|いい線|あと少し|あと一歩|Close|Almost|Casi|Presque|Quase|Knapp|^Fast\b|लगभग|करीब|قريب|اقترب|Почти|Hampir|Az kaldı|아깝|差一点|差一點/i;
+    for (const d of N81_DONE) { let D = null; try { D = JSON.parse(fs.readFileSync(path.join(ROOT, d, 'lessons.json'), 'utf8')); } catch (e) {}
+      const w = D && D.rampUi && D.rampUi.ng; if (!w) out.push({ step: d + '/lessons.json', q: 0, msg: '追81 no rampUi.ng' });
+      else for (const [l, v] of Object.entries(typeof w === 'string' ? { '-': w } : w)) if (NEAR.test(v)) out.push({ step: d + '/lessons.json', q: 0, msg: `追81 the warm-up's wrong-move line rampUi.ng.${l} 「${v}」 says the move was close` });
+      for (const f of fs.readdirSync(path.join(ROOT, d)).filter(f => /^voice-.*-ja\.js$/.test(f))) { const m = fs.readFileSync(path.join(ROOT, d, f), 'utf8').match(/'ui:ng':\s*'([^']*)'/); if (m && NEAR.test(m[1])) out.push({ step: d + '/' + f, q: 0, msg: `追81 the 3D warm-up's wrong-move line ui:ng 「${m[1]}」 says the move was close` }); } } }
+    // amazons (2026-11-25 03:20 担当A): the warm-up's wrong-move line is ru.ng of amazons/i18n-am-ls*.js (2D app.js rampMove and the 3D RU('ng'), every language)
+    { const fs = require('fs'), NEAR = /おしい|惜しい|いい線|あと少し|あと一歩|Close|Almost|Casi|Presque|Quase|Knapp|^Fast\b|लगभग|करीब|قريب|اقترب|Почти|Hampir|Az kaldı|아깝|差一点|差一點/i, w = { I18N: {} }; try { ['i18n-am-ls.js', 'i18n-am-ls-more.js', 'i18n-am-ls-more2.js'].forEach(f => new Function('window', 'I18N', fs.readFileSync(path.join(ROOT, 'amazons', f), 'utf8'))(w, w.I18N)); } catch (e) { out.push({ step: 'amazons/i18n-am-ls', q: 0, msg: '追81 does not load' }); }
+      const L = Object.keys(w.I18N); if (L.length < 14) out.push({ step: 'amazons/i18n-am-ls', q: 0, msg: `追81 ${L.length} languages` });
+      for (const l of L) { const v = (w.I18N[l] || {})['ru.ng']; if (!v) out.push({ step: 'amazons/i18n-am-ls', q: 0, msg: `追81 no ru.ng in ${l}` }); else if (NEAR.test(v)) out.push({ step: 'amazons/i18n-am-ls', q: 0, msg: `追81 the warm-up's wrong-move line ru.ng.${l} 「${v}」 says the move was close` }); } }
   return out; }
+const N81_DONE = ['gomoku'];
 function xiangqiOpen(opt) {
   const fs = require('fs'), CU = require(path.join(ROOT, 'xiangqi/tools/op_curate.js')), E = require(path.join(ROOT, 'xiangqi/engine.js'));
   const OP = (opt && opt.op) || JSON.parse(fs.readFileSync(path.join(ROOT, 'xiangqi/openings.json'), 'utf8'));
