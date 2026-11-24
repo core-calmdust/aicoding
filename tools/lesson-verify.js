@@ -445,6 +445,7 @@ function amazons(opt) {
   const E = require(path.join(ROOT, 'amazons/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'amazons/lessons.json'), 'utf8'));
   const src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8');
   const X = vm.runInNewContext('const AMAZONS = { data: null };' + src.slice(src.indexOf('  const AMM = '), src.indexOf('  const AMAZONS = {')) + '\n;({ AMJ_LS, amLsJa, AMAZONS, AM_GM })', {});
+  const AMGM = X.AM_GM || {};
   X.AMAZONS.data = { ls: L };
   const out = [], only = opt && opt.only, add = (id, j, m) => out.push({ step: id, q: j + 1, msg: m });
   // ⑨ both versions score the same list
@@ -472,7 +473,7 @@ function amazons(opt) {
       const nw = Q.filter(q => sq[q] === 1).length, nb = Q.filter(q => sq[q] === 2).length, ne = Q.filter(q => !sq[q]).length; R.push({ nw, nb, ne });
       if (nw && nb) sep = false; else if (nw) w += ne; else if (nb) b += ne; }
     return { sep, w, b, R }; };
-  const nbr = i => { if (i == null || i < 0) return []; const [r, c] = RCo(i), o = []; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = c + dc; if ((dr || dc) && rr >= 0 && rr < 10 && cc >= 0 && cc < 10) o.push(rr * 10 + cc); } return o; };
+  const nbr = i => { if (i == null || i < 0 || i > 99) return []; const [r, c] = RCo(i), o = []; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = c + dc; if ((dr || dc) && rr >= 0 && rr < 10 && cc >= 0 && cc < 10) o.push(rr * 10 + cc); } return o; };
   const freeN = (sq, x) => nbr(x).filter(t => !sq[t]).length;
   // the most moves an amazon on a can make alone (squares sq: 0 empty), brute force with a memo on the filled squares
   const fillBF = (sq0, a0) => { const memo = new Map(), sq = Array.from(sq0); const key = a => sq.join('') + a;
@@ -675,6 +676,9 @@ function amazons(opt) {
     const dirOf = (f, t) => { const [r1, c1] = RCo(f), [r2, c2] = RCo(t); return c1 === c2 ? (r2 < r1 ? '上' : '下') : r1 === r2 ? '横' : '斜め'; };
     const roomCells = (sq, w) => { const R = new Set([w]), Q = [w]; for (let h = 0; h < Q.length; h++) for (const t of nbr(Q[h])) if (!R.has(t) && sq[t] !== 3 && sq[t] !== 2) { R.add(t); Q.push(t); } return R; };
     L.steps.forEach(st => { const id = st.id; if (!AM_DONE.has(id) || (only && !only.has(id))) return;
+      (st.ramp || []).forEach((r, j) => { (r.marks || []).forEach(([x]) => { if (!(Number.isInteger(x) && x >= 1 && x <= 100)) add(id, -1, `warm-up ${j + 1}: 追75 the mark ${x} is not a square of the board`); });
+        (AMGM[id + '/' + j] || []).forEach(([q]) => { if (!(typeof q === 'string' && E.sqIdx(q) >= 0 && E.sqIdx(q) < 100 && N(E.sqIdx(q)) === q)) add(id, -1, `warm-up ${j + 1}: 追75 the 3D mark ${q} is not a square of the board`); });
+      });
       (st.ramp || []).forEach((r, j) => { const a = m => add(id, -1, `warm-up ${j + 1} (${r.k}): ${m}`), p = E.Pos.from(r.s), all = p.moves(), nm = m => E.name(p, m), W = whites(p), B = blacks(p);
         const T2 = ['t', 'body', 'g', 'h', 'y'].map(f => typeof r[f] === 'string' ? W2[r[f]] || '' : '').join(' ');
         const T3 = ['t', 'body', 'g', 'h', 'y'].map(f => typeof r[f] !== 'string' ? '' : X.AMJ_LS.ramp[r[f]] || (NC[`${id}/${j}/${f}`] || {}).ja || W2[r[f]] || '').join(' ');
@@ -697,6 +701,11 @@ function amazons(opt) {
           else if (id === 's_fill') { const sc = all.map(m => fillBF(after(m).sq, mTo(m))), mx = Math.max(...sc); G = all.filter((m, i) => sc[i] === mx); }
           if (G) { if (!G.length) a('① the goal cannot be reached'); okS.forEach(m => { if (!G.includes(m)) a(`① the answer ${nm(m)} does not reach the goal`); }); G.forEach(m => { if (!okS.has(m)) a(`② ${nm(m)} reaches the goal but is scored wrong`); }); }
           if (look == null) a('⑧ no gold mark');
+          // 追75 (2026-11-25 03:20 担当A, beside the checks below): a try has an answer
+          if (!(r.ok || []).length) a('追75 no answer');
+          // ⑧ the squares the hint names as the places to aim at (「（a1 か f1）」) are all marked
+          { const h = String(W2[r.h] || ''), alt = h.match(/（\s*([a-j](?:10|[1-9]))\s*か\s*([a-j](?:10|[1-9]))\s*）/), lk = (r.look || []).map(x => x - 1);
+            if (alt) [alt[1], alt[2]].forEach(q => { if (!lk.includes(E.sqIdx(q))) a(`⑧ the hint names ${q} but the gold marks are ${lk.map(N).join('・')}`); }); }
         }
         // the facts the words give
         for (const [who, t] of texts) { if (!t.trim()) continue; const b = (re, ok, msg) => { const g = t.match(re); if (g && !ok(g)) a(`⑧ ${who} 「${g[0]}」: ${msg}`); };
@@ -2525,6 +2534,13 @@ function near53(opt) { const src = require('fs').readFileSync(path.join(ROOT, 'a
       if (!/pts >= 1\d \? $/.test(pre)) out.push({ step: 'lessons3d', q: 0, msg: `追66 the heading 「${m[1]}」 is not under pts >= 10 (…${pre})` }); } } }
   { const tx = src.slice(src.indexOf('  const TX = {'), src.indexOf('  const OPCAT = ')), NEAR = /おしい|いい線|あと少し|Close|Casi|Presque|Quase|Knapp|करीब|قريب|Почти|Hampir|Az kaldı|아깝/;
     for (const m of tx.matchAll(/wrong: '([^']*)'/g)) if (NEAR.test(m[1])) out.push({ step: 'lessons3d', q: 0, msg: `追66 the 0-point heading TX.wrong says the move was close 「${m[1]}」` }); }
+  // 追83 (2026-11-25 担当A, 作業時は追82): the characters' own 0-point heading VOICE[<game>][<lang>].wrong — X = Object.assign(TX, VOICE[id]), so it
+  //  replaces TX.wrong (追66 looked at TX only) and is said on every 0-point answer whose words are not the character's own (p.own: ja
+  //  only), e.g. the English 3D lesson of amazons: 「So close! The green-marked move is the answer.」 after any wrong move
+  { const a = src.indexOf('  const VOICE = {'), b = a < 0 ? -1 : src.indexOf('\n  };\n', a), NEAR = /おしい|惜しい|いい線|あと少し|あと一歩|close|almost|Casi|Presque|Quase|Knapp|^Fast\b|लगभग|करीब|قريب|اقترب|Почти|Hampir|Az kaldı|아깝|差一点|差一點/i;
+    if (a < 0 || b < 0) out.push({ step: 'lessons3d', q: 0, msg: '追83 VOICE not found' });
+    else { let n = 0; for (const m of src.slice(a, b).matchAll(/wrong: '([^']*)'/g)) { n++; if (NEAR.test(m[1])) out.push({ step: 'lessons3d', q: 0, msg: `追83 the character's 0-point heading VOICE…wrong says the move was close 「${m[1]}」` }); }
+      if (n < 100) out.push({ step: 'lessons3d', q: 0, msg: `追83 only ${n} VOICE wrong lines found (changed?)` }); } }
   // 追68 (2026-11-24 担当C): the games' own 3D lesson files (atlas/ls-<game>.js) open a wrong answer with a line from their `soft` list,
   // and the 2D lessons (<game>/lessons.json ui.wrong) head it — both on a 0-point answer, so neither says the answer was close
   { const fs = require('fs'), NEAR = /おしい|惜しい|いい線|あと少し|あと一歩|Close|Almost|Casi|Presque|Quase|Knapp|^Fast\b|लगभग|قريب|Почти|Hampir|Az kaldı|아깝|差一点|差一點/;
@@ -2555,11 +2571,15 @@ function near53(opt) { const src = require('fs').readFileSync(path.join(ROOT, 'a
   // 追81 (2026-11-25 担当A): the line after a wrong move in a warm-up (<game>/lessons.json rampUi.ng, every language, and the 3D voice
   //  <game>/voice-*-ja.js 'ui:ng') is said whatever the move, so it does not say the move was close (gomoku's 「おしい！」 after e10, a
   //  move nowhere near the three). The games done: N81_DONE; the others are 「追81 未確認」 in claude/lesson-quality.md.
-  { const fs = require('fs'), NEAR = /おしい|惜しい|いい線|あと少し|あと一歩|Close|Almost|Casi|Presque|Quase|Knapp|^Fast\b|लगभग|قريب|Почти|Hampir|Az kaldı|아깝|差一点|差一點/;
+  { const fs = require('fs'), NEAR = /おしい|惜しい|いい線|あと少し|あと一歩|Close|Almost|Casi|Presque|Quase|Knapp|^Fast\b|लगभग|करीब|قريب|اقترب|Почти|Hampir|Az kaldı|아깝|差一点|差一點/i;
     for (const d of N81_DONE) { let D = null; try { D = JSON.parse(fs.readFileSync(path.join(ROOT, d, 'lessons.json'), 'utf8')); } catch (e) {}
       const w = D && D.rampUi && D.rampUi.ng; if (!w) out.push({ step: d + '/lessons.json', q: 0, msg: '追81 no rampUi.ng' });
       else for (const [l, v] of Object.entries(typeof w === 'string' ? { '-': w } : w)) if (NEAR.test(v)) out.push({ step: d + '/lessons.json', q: 0, msg: `追81 the warm-up's wrong-move line rampUi.ng.${l} 「${v}」 says the move was close` });
       for (const f of fs.readdirSync(path.join(ROOT, d)).filter(f => /^voice-.*-ja\.js$/.test(f))) { const m = fs.readFileSync(path.join(ROOT, d, f), 'utf8').match(/'ui:ng':\s*'([^']*)'/); if (m && NEAR.test(m[1])) out.push({ step: d + '/' + f, q: 0, msg: `追81 the 3D warm-up's wrong-move line ui:ng 「${m[1]}」 says the move was close` }); } } }
+    // amazons (2026-11-25 03:20 担当A): the warm-up's wrong-move line is ru.ng of amazons/i18n-am-ls*.js (2D app.js rampMove and the 3D RU('ng'), every language)
+    { const fs = require('fs'), NEAR = /おしい|惜しい|いい線|あと少し|あと一歩|Close|Almost|Casi|Presque|Quase|Knapp|^Fast\b|लगभग|करीब|قريب|اقترب|Почти|Hampir|Az kaldı|아깝|差一点|差一點/i, w = { I18N: {} }; try { ['i18n-am-ls.js', 'i18n-am-ls-more.js', 'i18n-am-ls-more2.js'].forEach(f => new Function('window', 'I18N', fs.readFileSync(path.join(ROOT, 'amazons', f), 'utf8'))(w, w.I18N)); } catch (e) { out.push({ step: 'amazons/i18n-am-ls', q: 0, msg: '追81 does not load' }); }
+      const L = Object.keys(w.I18N); if (L.length < 14) out.push({ step: 'amazons/i18n-am-ls', q: 0, msg: `追81 ${L.length} languages` });
+      for (const l of L) { const v = (w.I18N[l] || {})['ru.ng']; if (!v) out.push({ step: 'amazons/i18n-am-ls', q: 0, msg: `追81 no ru.ng in ${l}` }); else if (NEAR.test(v)) out.push({ step: 'amazons/i18n-am-ls', q: 0, msg: `追81 the warm-up's wrong-move line ru.ng.${l} 「${v}」 says the move was close` }); } }
   // 追78 (2026-11-25 担当D): janggi・ugolki -pz.js in every language (ugolki has 14; janggi only ja — the others use the runner's and
   // janggi/i18n.js pz.* lines): no string says the move was close or praises the moves before it (the 'out' line of a missed count, the
   // 'reach' line after a move off the line, ugolki's far・block・slow・catch・over・last・lastDraw). The comments are not read.

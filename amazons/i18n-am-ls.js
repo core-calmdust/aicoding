@@ -6,7 +6,7 @@ ja: {
   'course.basics': 'はじめてのアマゾンズ', 'course.basics.sub': 'クイーンの動き・矢を放つ・飛び越えられない・動けなくしたら勝ち。',
   'course.strategy': '作戦', 'course.strategy.sub': '閉じ込める・囲まれる前に逃げる・壁を作る・部屋を無駄なく埋める。',
   'course.graduate': '🎉「はじめてのアマゾンズ」修了！ もう対局できます。まずはAIのLv.1–6と対局してみましょう。',
-  'ru.step': '準備 {i}/{n}', 'ru.next': '次へ', 'ru.main': '本番の問題へ', 'ru.skip': '準備をとばす', 'ru.note': '（準備の問題は採点しません）', 'ru.look': '光っているマスを見てみよう。', 'ru.ans': '答え：{m}', 'ru.ng': 'おしい！ 局面を戻すので、もう一度考えてみよう。',
+  'ru.step': '準備 {i}/{n}', 'ru.next': '次へ', 'ru.main': '本番の問題へ', 'ru.skip': '準備をとばす', 'ru.note': '（準備の問題は採点しません）', 'ru.look': '光っているマスを見てみよう。', 'ru.ans': '答え：{m}', 'ru.ng': 'ちがうみたい！ 局面を戻すので、もう一度考えてみよう。',
 
   'ls.b_queen.title': 'クイーンのように動く', 'ls.b_queen.sub': '縦・横・斜めに何マスでも',
   'ls.b_queen.intro': '<p>アマゾンズの駒は「アマゾン」。白と黒が4体ずつ持ち、白が先に指します。1手で<b>自分のアマゾンを1体</b>、チェスのクイーンと同じように<b>縦・横・斜めのどれか1方向へ、好きなだけ</b>進めます。途中で曲がることはできません。</p><p>入力は3回のタップ：①動かすアマゾン → ②行き先（黄緑の点）→ ③矢を放つマス（オレンジのひし形）。このステップでは矢はどこに放ってもかまいません。</p>',
@@ -80,7 +80,7 @@ en: {
   'course.basics': 'First steps in Amazons', 'course.basics.sub': 'Move like a queen, shoot the arrow, no jumping, leave them no move.',
   'course.strategy': 'Strategy', 'course.strategy.sub': 'Trap, escape before you are boxed in, build walls, fill your room without waste.',
   'course.graduate': '🎉 “First steps in Amazons” completed! You can play now — try the AI at Lv.1–6 first.',
-  'ru.step': 'Warm-up {i}/{n}', 'ru.next': 'Next', 'ru.main': 'To the problems', 'ru.skip': 'Skip the warm-up', 'ru.note': '(Warm-ups are not scored)', 'ru.look': 'Look at the glowing square.', 'ru.ans': 'Answer: {m}', 'ru.ng': 'Close! The position is set back — think again.',
+  'ru.step': 'Warm-up {i}/{n}', 'ru.next': 'Next', 'ru.main': 'To the problems', 'ru.skip': 'Skip the warm-up', 'ru.note': '(Warm-ups are not scored)', 'ru.look': 'Look at the glowing square.', 'ru.ans': 'Answer: {m}', 'ru.ng': 'Not this one! The position is set back — think again.',
 
   'ls.b_queen.title': 'Move like a queen', 'ls.b_queen.sub': 'Straight or diagonal, as far as you like',
   'ls.b_queen.intro': '<p>The pieces are “amazons”: White and Black have four each, and White moves first. A turn moves <b>one of your amazons</b> like a chess queen: <b>in one direction — straight or diagonal — as many squares as you like</b>. It cannot turn on the way.</p><p>A move is three taps: ① the amazon → ② where it goes (green dots) → ③ where its arrow lands (orange diamonds). In this step the arrow can go anywhere.</p>',
