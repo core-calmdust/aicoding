@@ -50,7 +50,12 @@
   const exName = id => nm('ex', id), paintName = id => nm('paint', id);
   const gName = id => { const g = ((ctx && ctx.games) || []).find(q => q.id === id); return g && ctx.gname ? ctx.gname(g) : id; };
   // a painting: open the paintings room, then the work in its viewer
-  function openPaint(id) { if (!ctx.goRoom) return; ctx.goRoom('paint'); let n = 0; const t = () => { if (window.AtlasPaint && document.querySelector('.muroom[data-r="paint"] .ptc')) AtlasPaint.open(id); else if (++n < 100) setTimeout(t, 100); }; t(); }
+  // (2026-11-24 audit: a figure opened from a story brings the reader back) closing the painting or the case returns to the read room, the same
+  // place in the story and the button that opened it
+  function backTo(btn) { const y = scrollY, k = btn && (btn.dataset.paint ? `[data-paint="${btn.dataset.paint}"]` : btn.dataset.ex ? `[data-ex="${btn.dataset.ex}"]` : ''), cls = btn && btn.className.split(' ')[0];
+    return () => { if (ctx.goRoom) ctx.goRoom('read'); setTimeout(() => { scrollTo(0, y); const b = btn && btn.isConnected ? btn : k && (document.querySelector(`.muroom[data-r="read"] .${cls}${k}`) || document.querySelector(`.muroom[data-r="read"] ${k}`)); if (b) b.focus({ preventScroll: true }); }, 60); }; }
+  function openPaint(id, btn) { if (!ctx.goRoom) return; const back = backTo(btn); ctx.goRoom('paint'); let n = 0; const t = () => { if (window.AtlasPaint && document.querySelector('.muroom[data-r="paint"] .ptc')) { AtlasPaint.onClose = back; AtlasPaint.open(id); } else if (++n < 100) setTimeout(t, 100); }; t(); }
+  function openEx(id, btn) { if (!ctx.goEx) return; const back = backTo(btn); ctx.goEx(id); let n = 0; const t = () => { if (window.AtlasGallery) AtlasGallery.onClose = back; else if (++n < 100) setTimeout(t, 100); }; t(); }
   function linkHtml(L) {
     if (L.g) { const g = (ctx.games || []).find(q => q.id === L.g); return g ? `<button type="button" class="chlk" data-g="${L.g}"><i>${esc(u('game'))}</i>${esc(ctx.gname ? ctx.gname(g) : L.g)}</button>` : ''; }
     if (L.ex) return `<button type="button" class="chlk ex" data-ex="${L.ex}"><i>${esc(u('exhibit'))}</i>${esc(exName(L.ex))}</button>`;
@@ -380,8 +385,8 @@
   }
   function wire(el) {
     el.querySelectorAll('[data-g]').forEach(b => b.onclick = () => ctx.open && ctx.open(b.dataset.g));
-    el.querySelectorAll('[data-ex]').forEach(b => b.onclick = () => ctx.goEx && ctx.goEx(b.dataset.ex));
-    el.querySelectorAll('[data-paint]').forEach(b => b.onclick = () => openPaint(b.dataset.paint));
+    el.querySelectorAll('[data-ex]').forEach(b => b.onclick = () => openEx(b.dataset.ex, b));
+    el.querySelectorAll('[data-paint]').forEach(b => b.onclick = () => openPaint(b.dataset.paint, b));
     el.querySelectorAll('[data-room]').forEach(b => b.onclick = () => ctx.goRoom && ctx.goRoom(b.dataset.room));
   }
 
