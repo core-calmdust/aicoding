@@ -173,7 +173,7 @@
         el.style.left = (o.from === 'left' ? -10 : o.from === 'right' ? 110 : 50) + '%';
         if (!o.from) el.style.opacity = '0';
         c.appendChild(el);
-        el.onclick = () => { if (G.onPup) G.onPup(id); };
+        el.onclick = () => { if (G.onPup && !G.talking && $('sheet').classList.contains('hide') && $('tx').classList.contains('hide')) G.onPup(id); };
       }
       delete have[id];
       el.classList.remove('lift', 'drop', 'fallen', 'speak', 'dim', 'sel', 'turn');
@@ -442,6 +442,11 @@
   }
   async function talk(id, inMeeting) {
     const p = person(id); if (!p || !p.alive) return;
+    if (inMeeting && S.pl.asks <= 0) { await say([{ text: '今日の聞き取りは使いきった。' }]); return; }
+    G.talking = true;
+    try { return await talkIn(id, inMeeting); } finally { G.talking = false; }
+  }
+  async function talkIn(id, inMeeting) {
     const free = inMeeting || S.pl.talked[id] === S.day;
     if (!inMeeting && !free && S.pl.ap <= 0) return hub('今日の行動は使いきった。');
     const opts = [
@@ -454,6 +459,7 @@
     if (!q) return inMeeting ? null : hub();
     let target = null;
     if (q === 'about') { target = await pickPerson(`${esc(nm(id))}に、誰のことを聞く？`, '', E.alive(S).map(x => x.id).filter(x => x !== id)); if (!target) return inMeeting ? null : hub(); }
+    if (inMeeting) S.pl.asks--;   // the interview is used when a question is put, however it was opened
     const r = E.ask(S, st, id, q, target, inMeeting || free);
     if (!inMeeting && !free) { /* the ap was used inside ask */ }
     G.loc = G.loc; setCast(inMeeting ? E.alive(S).filter(x => !x.isPlayer).map(x => x.id) : [id], inMeeting ? {} : { x: 58 });
@@ -536,7 +542,7 @@
     on('dShow', showEvidence);
     on('dCo', coming);
     on('dRes', coming);
-    on('dAsk', async () => { const id = await pickPerson('誰に聞く？', `聞き取りは残り${S.pl.asks}回。行動は使わない。`, live().map(p => p.id), { mark: true }); if (!id) return debate(); S.pl.asks--; await talk(id, true); debate(); });
+    on('dAsk', async () => { const id = await pickPerson('誰に聞く？', `聞き取りは残り${S.pl.asks}回。行動は使わない。`, live().map(p => p.id), { mark: true }); if (!id) return debate(); await talk(id, true); debate(); });
     on('dAcc', accuse);
     on('dCall', appeal);
     on('dClash', clash);
