@@ -2097,7 +2097,7 @@
     const knN = {};
     // チェッカニ's line k: its variants in turn (a counter per line, from 2 × the theme), so the same words do not come back puzzle after
     // puzzle (tools/lesson-quality.js reads them the same way)
-    const knT = (p, k, v) => { const c = knN[k] = knN[k] == null ? ((p && p.i) | 0) * 2 : knN[k] + 1, F = KNP(), x = F && F.text(ctx.lang, k, c, v); return x != null ? x : B.tx(k, ctx.lang, v); };
+    const knT = (p, k, v) => { const t = (p && p.i) | 0, o = knN[k] = knN[k] || { b: t * 2, s: 1 + Math.floor(t / 5), n: -1 }; o.n++; const F = KNP(), x = F && F.text(ctx.lang, k, o.b + o.n * o.s, v); return x != null ? x : B.tx(k, ctx.lang, v); };   // (the 6th theme on steps by 2: no two themes say the variants in the same order)
     const knName = c => { const n = B.tx(c === 2 ? 'p2' : 'p1', ctx.lang); return n || (c === 2 ? '○' : '●'); };
     const knWon = p => { const q = pz().pos(); return !!q && q.turn !== p.me && !q.moves().length; };
     function knFail(p, html) { p.failed = true; p.state = 'fail'; streak = 0; chime(false); say(html + ' ' + knT(p, 'ans')); buttons(); }

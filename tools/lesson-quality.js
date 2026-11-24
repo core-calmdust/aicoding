@@ -183,7 +183,7 @@ function knPuzzleTexts() {
   E.setRule(PZ.rule);
   const name = c => c === 2 ? '白' : '黒';
   return PZ.themes.map((T, ti) => {
-    const N = {}, tx = (k, v) => F.text('ja', k, N[k] = N[k] == null ? ti * 2 : N[k] + 1, v);   // (= atlas/puzzles.js knT: each line's variants in turn)
+    const N = {}, tx = (k, v) => F.text('ja', k, ti * 2 + (N[k] = N[k] == null ? 0 : N[k] + 1) * (1 + Math.floor(ti / 5)), v);   // (= atlas/puzzles.js knT: each line's variants in turn, the 6th theme on by 2)
     const probs = T.puzzles.slice(0, 5).map(P => {
       const pos = E.Pos.from(P.s), me = pos.turn, n = P.n, good = E.duelGood(P.s, [], n, PZ.rule) || [];
       const m = pos.moves().find(x => !good.includes(x)), q = pos.clone().play(m);
