@@ -1664,3 +1664,6 @@ html[data-back=crimson] .bk{background:radial-gradient(circle at 50% 50%,rgba(22
 @media not all and (hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4){
   .gd-tut{top:calc(var(--rail) + 15%)}.gd-tut .tut-box{padding:10px 12px 9px}.gd-tut .tut-box p{font-size:13.5px;line-height:1.6}
 }
+
+/* the statistics sheet takes only the height it needs (the empty state is one line) */
+.gd .stats-modal{height:auto;max-height:min(calc(100dvh - 32px),900px)}
