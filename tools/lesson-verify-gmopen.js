@@ -12,7 +12,7 @@
 //   ⑦⑧ ゴイシペンの文（atlas/lessons3d.js GOMOKU_OP_JA.prob を vm で実行）を全合法手で作り、盤の事実と照合：
 //      「5つ並べられて負け」＝その手のあと相手に5の点があり自分にない／「{how}を打たれて、もう止められない」＝相手のその手が
 //      本当に勝ち（エンジンの VCF・その点の形）／「三が残る」＝相手に達四の点が残る／「悪くない・戦える・すぐには負けない」は
-//      その手が10点以上で、相手に四追いの勝ちがないときだけ（追48）／見出しの「いい線いってた！」「あと少し！」「あと一歩！」は
+//      その手が10点以上で、相手に四追いの勝ちがないときだけ（追53）／見出しの「いい線いってた！」「あと少し！」「あと一歩！」は
 //      10点以上のときだけ（追39）／ほめ言葉の「同じくらい良い一手」は出ない（②）／問いかけ・ヒントの前提（「四が作れる」など）が盤と合う
 //   ⑨ 2D の点（problemPoints）と 3D の点（GOMOKU.points）が全合法手で同じ
 'use strict';
@@ -143,7 +143,7 @@ function verifySet(g, opt) {
       if (mk === 'mlose5') { pos.make(u); const ok = pos.fives(oo).length && !pos.fives(s).length; pos.unmake(); if (!ok) add(q, `⑦ ${E.sqName(u)}: 「5つ並べられて負け」 but the opponent has no five point`); }
       if (mk === 'mloseW' && !winAfter(u)) add(q, `⑦ ${E.sqName(u)}: 「もう止められない」 but the engine finds no win for the opponent`);
       if (mk === 'mleft3') { pos.make(u); const C = E.C; let f4 = false; for (let m = 0; m < 225; m++) { const i = E.M2I[m]; if (pos.b[i] === 0 && pos.cls[oo][i] === C.F4 && (oo !== 1 || pos.isLegal(m))) f4 = true; } pos.unmake(); if (!f4) add(q, `⑦ ${E.sqName(u)}: 「三が残る（達四を作られる）」 but the opponent has no open-four point`); }
-      if (mk === 'mclose' && (p2 < 10 || winAfter(u))) add(q, `⑦ ${E.sqName(u)} (${p2} points): 「悪くない・すぐには負けない」 (追48)`);
+      if (mk === 'mclose' && (p2 < 10 || winAfter(u))) add(q, `⑦ ${E.sqName(u)} (${p2} points): 「悪くない・すぐには負けない」 (追53)`);
     }
   });
   return out;

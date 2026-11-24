@@ -66,6 +66,8 @@ module.exports = function ur(opt = {}) {
     const k = q.why && q.why[0], s = q.s && S(q.s);
     let right = null, cnt = 1;
     if (k === 'c.roll') { right = [1, 4, 6, 4, 1][q.why[1].n] + '/16'; }
+    // 追47（2026-11-24）：準備の「いちばん出やすい出目は？」— 16通りの数え上げで最大の目、誤答は c.mostNg でその目の通り数
+    if (k === 'c.most') { const W = [1, 4, 6, 4, 1]; right = String(W.indexOf(Math.max(...W))); o.forEach((x, i) => { const g = (q.ngo || [])[i]; if (i !== q.ans && g && (g[0] !== 'c.mostNg' || g[1].m !== W[+x])) add(L.id, where, `⑦誤答 ${x} の説明 ${JSON.stringify(g)} が通り数 ${W[+x]} と合わない`); }); }
     if (k === 'c.risk') { const t = E.clone(s); t.turn = 1; right = Math.round(Math.max(...E.hitRisk(t, 0)) * 16) + '/16'; cnt = String(q.why[1].list).split('+').length; }
     if (k === 'c.pips' || k === 'c.rpips') { const sd = k === 'c.pips' ? 0 : 1; right = String(E.raceCount(s).pips[sd]); cnt = s.pos[sd].filter(x => x >= 1 && x <= 14).length; }
     if (k === 'c.lead2y' || k === 'c.lead2r') { const r = E.raceCount(s).pips, d = r[1] - r[0]; right = (d > 0 ? 'you' : 'rival') + Math.abs(d); if ((k === 'c.lead2y') !== (d > 0)) add(L.id, where, `⑧理由 ${k} のリードの側が違う`); if (q.why[1].d !== Math.abs(d) || q.why[1].a !== r[0] || q.why[1].b !== r[1]) add(L.id, where, '⑧理由の歩数が違う'); cnt = s.pos[0].filter(x => x >= 1 && x <= 14).length + 1;
@@ -90,7 +92,7 @@ module.exports = function ur(opt = {}) {
       else if (q.kind === 'choice') { const c = choice(L, q, w); if (prev != null && c < prev) add(L.id, w, `⑥数える数 ${c} が前の問題 ${prev} より少ない`); prev = c; }
       else add(L.id, w, 'kind');
     });
-    (L.ramp || []).forEach((r, i) => { if (r.k === 'try' && r.kind !== 'choice') move(L, r, 'ramp' + i, 2); if (r.k === 'explain' && r.seq && r.seq.length) move(L, Object.assign({}, r, { ok: r.seq }), 'ramp' + i, 2); });
+    (L.ramp || []).forEach((r, i) => { if (r.k === 'try' && r.kind !== 'choice') move(L, r, 'ramp' + i, 2); if (r.k === 'try' && r.kind === 'choice') { if (!r.why || !r.ngo) add(L.id, 'ramp' + i, '追47 準備の選ぶ問題に答えの理由（why）か誤答の説明（ngo）がない'); else choice(L, r, 'ramp' + i); } if (r.k === 'explain' && r.seq && r.seq.length) move(L, Object.assign({}, r, { ok: r.seq }), 'ramp' + i, 2); });
   }
   // ⑤ 問題どうし：駒の並び（降順）を1つずつくらべて4つ以上ちがう（出目の違いも1つ。3D の重なりの見方と同じ）
   const PS = []; D.steps.forEach(L => L.problems.forEach((q, i) => { if (q.kind === 'move') PS.push({ s: q.s, n: q.n, where: L.id + '#' + (i + 1) }); }));

@@ -417,7 +417,7 @@
      stored engine values (cand). The plain texts stay for the 2D game and the other languages. */
   const SHJ2 = {
     intro: {
-      k20: '駒の動きは、準備の練習でひとつずつ見ていこう。問題では、取れる駒の中で<b>いちばん大きな駒</b>を取ってね！',
+      k20: '駒の動きは準備で見ていこう。問題では<b>いちばん大きな駒</b>を取ってね！<br>目安は歩1・香3・桂4・銀5・金6・角8・飛10だコン。',
       k15: '次は<b>タダの駒</b>（取り返されない駒）を見つける練習だコン。価値の目安は、歩1・香3・桂4・銀5・金6・角8・飛10くらい。<br>取る前に「取り返されない？」と確かめるのがコツ！',
       k12: '王手をかけられたら、<b>逃げる・取る・合駒</b>のどれかで防ぐの。<br>でも、どれでもいいわけじゃないコン。かわしたあとに安全な形になる受けを選ぼう！',
       k10: '<b>詰み</b>は、玉がどう逃げても取られちゃう形のこと。<br>持ち駒を打つ手と盤の駒を動かす手、両方を考えて、1手で詰ませてみよう！',
@@ -2769,7 +2769,7 @@
       return { c: GOP.side(s), f: GOP.side(3 - s), d, d3: D(F.threes[0]), d4: D(F.fours[0]), dd: two, bd: D(F.b3d), da: D(F.adjS[0]), do: D(F.adjO[0]) };
     },
     // (2026-11-24 第2期・担当B) a practice move's points = gomoku/app.js problemPoints (the game's sOfV: tanh(v / 900) × 0.85) — the 2D and
-    // the 3D score every move the same (⑨); the words below pick their tone by it (追39・追48)
+    // the 3D score every move the same (⑨); the words below pick their tone by it (追39・追53)
     pts(sc, u) {
       const W = 90000, sv = v => v > W ? 0.95 : v < -W ? -0.95 : Math.tanh(v / 900) * 0.85;
       const val = new Map(sc), best = Math.max(...sc.map(e => e[1])), mine = val.has(u) ? val.get(u) : Math.min(...sc.map(e => e[1])) - 200;
@@ -2821,7 +2821,7 @@
     },
     good: ['そうそう、それ！', 'ばっちりだペン！', 'いい目をしてるね！', 'やったね！', 'すてきな一手！', 'さすが、きみ！', 'いいね、その点！', 'よく見つけたね！', '完璧だペン！', '上手だね！'],
     push: ['この調子で次もいこう！', 'その勢いで、どんどん行こう！', '次も楽しみだペン！', 'まだまだいけるペン！'],
-    soft: ['ここから覚えよう！', '大丈夫、', 'ドンマイ！', 'ひとつずつ確かめよう！', '見直してみよう！', '気にしないで！', '次はいけるペン！', 'よくある迷い方！', '今度は見えるはず！', 'いっしょに見てみよう。'],   // (追39・追48: no 「あと少し」「いい線」 — a verified problem's other moves score 12 or less)
+    soft: ['ここから覚えよう！', '大丈夫、', 'ドンマイ！', 'ひとつずつ確かめよう！', '見直してみよう！', '気にしないで！', '次はいけるペン！', 'よくある迷い方！', '今度は見えるはず！', 'いっしょに見てみよう。'],   // (追39・追53: no 「あと少し」「いい線」 — a verified problem's other moves score 12 or less)
     near: /^(あと少し|あと一歩|いい線)/,
     why: {
       win: ['{d}に5つ並んで勝ち！ 最後の一手を見逃さなかったね。', '5つそろって{c}の勝ちだペン。'],
@@ -2912,7 +2912,7 @@
           else if (!FU.near) why = mp('far');
           else if (FB.blk.length && !FU.blk.includes(FB.blk[0])) why = mp('free');
           else if (FB.twos.length && !FU.twos.length && ku !== 'three') why = mp('lone');
-          else if (pu >= 10 && !(() => { G.bd[u] = s; const w = G.winPt(3 - s).length > 0 || !!G.vcf(3 - s, 6); G.bd[u] = 0; return w; })()) why = mp('close');   // (「悪くない」「すぐには負けない」: 10+ points and no win for the opponent after it — 追48)
+          else if (pu >= 10 && !(() => { G.bd[u] = s; const w = G.winPt(3 - s).length > 0 || !!G.vcf(3 - s, 6); G.bd[u] = 0; return w; })()) why = mp('close');   // (「悪くない」「すぐには負けない」: 10+ points and no win for the opponent after it — 追53)
           else why = mp(ku === kb ? 'same' : 'weak');
           return softO + ' ' + fill(rsT, { r: roleB }) + '<br>' + fill(why, V); } };
     },
@@ -4308,7 +4308,7 @@
     LKEY: 'aicoding-janggi-lessons', OKEY: null, data: null, I: null, V: {},
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../janggi/lessons.json?v=7'), fetch('../janggi/i18n.js?v=4').then(r => r.text()), jgScript(JG_ENG, () => window.JanggiEngine), jgScript('games/janggi-ls.js?v=6', () => window.AtlasJanggiLs), jgScript('games/janggi-pz.js?v=1', () => window.AtlasMini && window.AtlasMini.janggi)])
+      return (this.p = Promise.all([getJ('../janggi/lessons.json?v=8'), fetch('../janggi/i18n.js?v=4').then(r => r.text()), jgScript(JG_ENG, () => window.JanggiEngine), jgScript('games/janggi-ls.js?v=7', () => window.AtlasJanggiLs), jgScript('games/janggi-pz.js?v=1', () => window.AtlasMini && window.AtlasMini.janggi)])
         .then(([ls, tx]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] janggi texts', e); } this.I = w.I18N || {}; const D = (window.AtlasJanggiLs || {}).DONE || [];
           this.data = { ls: Object.assign({}, ls, { steps: ls.steps.filter(x => D.includes(x.id)) }) }; return this; })
         .catch(e => { this.p = null; throw e; }));
@@ -6968,7 +6968,7 @@
     return ja ? (id === 'backgammon' ? `きみは<b>${nm}</b>。` : `<b>${nm}</b>の手番だよ。`) : `<b>${nm}</b> to move. `;
   }
   /* ur (2026-11-24 担当C): the data, ダイスン's words and the board hooks are in atlas/ls-ur.js (loaded the first time) */
-  const UR = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUr) return res(); const sc = document.createElement('script'); sc.src = 'ls-ur.js?v=1'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const UR = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUr) return res(); const sc = document.createElement('script'); sc.src = 'ls-ur.js?v=2'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsUr.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   /* senet (2026-11-24 担当C): the data, セティ's words and the board hooks are in atlas/ls-senet.js (loaded the first time) */
@@ -6979,7 +6979,11 @@
   const PATOLLI = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsPatolli) return res(); const sc = document.createElement('script'); sc.src = 'ls-patolli.js?v=1'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsPatolli.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
-  const DATA = { ur: UR, senet: SENET, patolli: PATOLLI, dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, janggi: JANGGI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
+  /* fox and geese (2026-11-24 担当C): the data, ドミダック's words and the board facts are in atlas/ls-foxgeese.js (loaded the first time) */
+  const FOXGEESE = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsFoxgeese) return res(); const sc = document.createElement('script'); sc.src = 'ls-foxgeese.js?v=1'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+    .then(() => { const U = AtlasLsFoxgeese.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
+    .catch(e => { this.p = null; throw e; })); } };
+  const DATA = { ur: UR, senet: SENET, patolli: PATOLLI, foxgeese: FOXGEESE, dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, janggi: JANGGI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
 
   function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(lang), ncLoad(id)]).then(() => D.list(kind, lang)); }
   function next(id, kind, lang) { return list(id, kind, lang).then(L2 => { const x = L2.find(i => !i.full && i.st !== 'pass') || L2.find(i => !i.full); return x ? x.key : null; }); }
@@ -7089,7 +7093,7 @@
             pz: Object.assign({ lesson: true, fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: () => id === 'reversi' && phase !== 'ramp' && !(phase === 'prob' && cur && cur.k >= RV_NUMS()), ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
           ctx.Table3D.play(true);
         } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks, lock: !!G.lock });
-        else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots')) pz().load(G.spec, G.me, { lock: !!G.lock });
+        else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots' || id === 'foxgeese')) pz().load(G.spec, G.me, { lock: !!G.lock });
         else if (G && id === 'mancala') pz().load(G.spec, G.me, { lock: !!G.lock, marks: G.marks });
         else if (G && id === 'connect4') pz().load(G.moves, G.me, { lock: !!G.lock });
         else if (G && id === 'backgammon') pz().load(G.bg);
@@ -7415,11 +7419,11 @@
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;
       }
-      if ((id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
+      if ((id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots' || id === 'foxgeese') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
         const right = pts >= 16, k = cur.k;   // (p.own: the guide names the green arrow herself — the heading is only 「おしい！」)
         say(`${right ? (p.own && (id === 'morris' || id === 'janggi' || p.ckls) ? '' : line('solved') || pick(X.good)) : p.own ? (pts >= 10 ? 'いい線いってる！' : 'おしい！') : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
         try { chime(right); } catch (e) {}
-        later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark([...(right || p.ans == null ? [] : [[{ m: p.ans }, 'ok']]), [{ m: u }, right ? 'ok' : 'ng']]); }, 900);
+        later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark([...(right || p.ans == null ? [] : [[{ m: p.ans }, 'ok']]), [{ m: u }, right ? 'ok' : 'ng'], ...(!right && p._rp != null ? [[{ m: p._rp }, 'hl']] : [])]); }, 900);   // (foxgeese: the geese's covering step gold, p._rp)
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;
