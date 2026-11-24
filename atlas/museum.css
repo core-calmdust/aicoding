@@ -706,6 +706,7 @@ html.ptv-open,html.ptv-open body{overflow:hidden}
 .rds.fl .rdimg{order:2}
 .rdimg{display:block;padding:0;border:2px solid var(--line);border-radius:16px;background:#fff;overflow:hidden;cursor:pointer;font-family:var(--font);text-align:start}
 .rdimg img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#2a1f17}
+a.rdimg{text-decoration:none;color:inherit}
 .rdimg span{display:block;padding:6px 10px;font-size:12px;font-weight:800;color:var(--ink2);line-height:1.4}
 @media (hover:hover){.rdimg:hover{border-color:var(--c)}}
 .rdq{margin:24px 0 0;padding:16px 18px 18px;border:2px solid var(--line);border-radius:22px;background:#fbf3e2}
