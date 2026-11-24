@@ -31,7 +31,8 @@ URL: https://core-calmdust.github.io/aicoding/ugolki/ ／ トップは「チェ�
 - コーチ（coach.js / coach-i18n.js 10言語）。
 - オンライン：Firebase はチェッカーのプロジェクト checkers-multiplay の節 ugolki/（2026-11-16 統合）、ルールは shared/tools/secrules.py の ugolki → checkers/database.rules.json。
 - レッスン「はじめて」4本の作り直し（2026-11-24 23:02、担当D、3D対応）：tools/lesson-verify-ugolki-ls.js で旧20問を検証し、15問が不合格（追17 正解が多すぎる（1歩で10〜14通り）・追27 同じ答えの手（陣地に入る 4問が e7-f7、完成 3問が g5-g6）・⑤ ほかの問題と盤の対称込み4マス以内・⑥ 易→難でない・③ 前へ進んで入らない手が少ない）。ugolki/tools/fix_lessons.js（自己対戦の局面から、合法手12以上・不正解3以上・正解は合法手の3分の1以下・答えの重なりなし・パズルとレッスンと準備から4マス以上離れたものを選ぶ）で20問を作り直し：b_step（近づく1歩2〜6通り・近づくジャンプなし）、b_jump（1・2問目は1回のジャンプ＝ほかのジャンプと比べる、3〜5問目は3回以上の連続ジャンプ＝2マス以上の短いジャンプと2マス以上の差）、b_enter（入る手1〜2・前へ進んで入らない手3以上・答えに1歩とジャンプ）、b_finish（陣地8こ・完成の手1つ・外の駒にほかの手2以上・黒は次の1手で完成できない＝完成で勝ち・答えに1歩2問とジャンプ3問・空きマス5通り）。2D の文（ls.b_*.why／ng、14言語）は全不正解手で正しいことを機械で確認。作戦7本は未（次回）。
-- 3D（ポータルのフル機能版）：パズルは3D卓に対応（2026-11-24、atlas-portal-spec.md「ウゴルキ」）。レッスンは「はじめて」4本を対応（atlas/ls-ugolki.js）、作戦7本は未。ポータルのアイコンは atlas/icons3d.js の ugolki()（グジェリ盤と gzhelPiece）。
+- レッスン作戦3本の作り直し（2026-11-25 00:03、担当D、3D対応）：旧15問を検証し、13問が不合格（s_ladder 5問すべてが黒番＝3D は白番・追5、s_road 5問中5問：前へ跳べる手がすでにある 4・同じだけ長い道を作る手がほかにもあり答えが1つでない（②・追74）・答えの駒が次に跳ぶ駒自身で道でない、s_far 3問：答えが黒を跳ぶ＝相手の駒を使うの主題（追36）・前の駒に跳びがない）→ ugolki/tools/fix_lessons_s.js で自己対局の局面から作り直し（s_far と s_ladder は進むマス数 G（4〜12）、s_road は次の手のマス数で易→難）。
+- 3D（ポータルのフル機能版）：パズルは3D卓に対応（2026-11-24、atlas-portal-spec.md「ウゴルキ」）。レッスンは「はじめて」4本と作戦3本（いちばん遠くへ・相手の駒を使う・道を作る）を対応（atlas/ls-ugolki.js）、作戦の残り4本（相手の道をふさぐ・40手ルール・陣地を速く埋める・レースを読む）は未。ポータルのアイコンは atlas/icons3d.js の ugolki()（グジェリ盤と gzhelPiece）。
 
 ## 保存キー
 - aicoding-ugolki（設定・対局）、-lessons、-puzzles、-open、-daily、-rated、-rules、aicoding-ugolki-rules-seen、ugolki-online-name。
