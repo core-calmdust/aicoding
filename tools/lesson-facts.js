@@ -685,12 +685,12 @@ const CHECKS = {
 };
 
 const todo = games.length ? games : Object.keys(CHECKS);
-// (2026-11-24 第2期・担当B, 追19) a merge left its conflict markers in a page (tafl/index.html loaded app.js twice: the 2D tafl stopped with
+// (2026-11-24 第2期・担当B, 追21) a merge left its conflict markers in a page (tafl/index.html loaded app.js twice: the 2D tafl stopped with
 // 「Identifier 'P2' has already been declared」): no line of the games' and the 3D table's pages, scripts and data starts with one
 { const seen = new Set();
   for (const g of todo) for (const d of [path.join(ROOT, g.split('/')[0]), path.join(ROOT, 'atlas'), path.join(ROOT, 'shared')]) { if (seen.has(d) || !fs.existsSync(d)) continue; seen.add(d);
     for (const f of fs.readdirSync(d)) { if (!/\.(html|js|json|css)$/.test(f)) continue;
-      const t = fs.readFileSync(path.join(d, f), 'utf8'); if (/^(<{7}|>{7}) |^={7}$/m.test(t)) bad(g, '-', `追19 conflict markers left in ${path.relative(ROOT, path.join(d, f))}`); } } }
+      const t = fs.readFileSync(path.join(d, f), 'utf8'); if (/^(<{7}|>{7}) |^={7}$/m.test(t)) bad(g, '-', `追21 conflict markers left in ${path.relative(ROOT, path.join(d, f))}`); } } }
 for (const g of todo) { if (!CHECKS[g]) { console.log(`${g}: no fact check yet`); continue; } try { CHECKS[g](); } catch (e) { bad(g, '-', 'the check failed: ' + e.message); } }
 let n = 0;
 for (const [g, ls] of Object.entries(out)) for (const [id, list] of Object.entries(ls)) for (const m of list) { console.log(`FAIL ${g} ${id}: ${m}`); n++; }
