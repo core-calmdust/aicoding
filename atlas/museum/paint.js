@@ -50,8 +50,10 @@
   const noSpots = () => { try { return localStorage.getItem(NOSP) === '1'; } catch (e) { return false; } };
   let ov = null, vs = null;   // the overlay; the view: { s (scale), x, y (translation, px), W, H (the picture at s = 1), fit }
   const MK = (r, ids, n) => { try { if (window.AtlasMuseum && AtlasMuseum.mark) AtlasMuseum.mark(r, ids, n); } catch (e) {} };   // (館内スタンプ帳)
+  let ret = null;
   function openWork(id, n, keep) {
     const W = WORKS.find(w => w.id === id); if (!W) return; MK('paint', id, WORKS.length); const was = !!cur; cur = W;
+    if (!was) ret = document.activeElement;   // (focus goes back here when the viewer closes)
     if (!keep && !was) try { history.pushState({ ptv: 1 }, ''); } catch (e) {}   // (the back button closes the viewer)
     if (!ov) build();
     const x = wt(W.id);
@@ -70,9 +72,9 @@
     ov.querySelector('.ptvrec').innerHTML = [[u('r_artist'), x.artist], [u('r_date'), x.date], [u('r_place'), x.place], [u('r_medium'), x.medium], [u('r_size'), x.size],
       [u('r_museum'), u('met') + ' ' + W.no], [u('r_credit'), x.credit], [u('r_rights'), u('cc0')]].filter(r => r[1]).map(r => `<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join('')
       + `<dt></dt><dd><a href="https://www.metmuseum.org/art/collection/search/${W.met}" target="_blank" rel="noopener">${esc(u('metlink'))} ↗</a></dd>`;
-    ov.querySelector('.ptvlinks').querySelectorAll('[data-g]').forEach(b => b.onclick = () => { close(true); ctx.open && ctx.open(b.dataset.g); });
-    ov.querySelector('.ptvlinks').querySelectorAll('[data-ex]').forEach(b => b.onclick = () => { close(true); ctx.goEx && ctx.goEx(b.dataset.ex); });
-    ov.querySelector('.ptvlinks').querySelectorAll('[data-room]').forEach(b => b.onclick = () => { close(true); ctx.goRoom && ctx.goRoom(b.dataset.room); });
+    ov.querySelector('.ptvlinks').querySelectorAll('[data-g]').forEach(b => b.onclick = () => { window.AtlasPaint.onClose = null; close(true); ctx.open && ctx.open(b.dataset.g); });
+    ov.querySelector('.ptvlinks').querySelectorAll('[data-ex]').forEach(b => b.onclick = () => { window.AtlasPaint.onClose = null; close(true); ctx.goEx && ctx.goEx(b.dataset.ex); });
+    ov.querySelector('.ptvlinks').querySelectorAll('[data-room]').forEach(b => b.onclick = () => { window.AtlasPaint.onClose = null; close(true); ctx.goRoom && ctx.goRoom(b.dataset.room); });
     ov.querySelectorAll('[data-n]').forEach(b => b.onclick = e => { e.stopPropagation(); spot(+b.dataset.n); });
     ov.querySelector('.ptvlinksh').textContent = u('links'); ov.querySelector('.ptvsph').textContent = u('details'); ov.querySelector('.ptvrech').textContent = u('record');
     ov.querySelector('.ptvhint').textContent = u('hint');
@@ -82,9 +84,12 @@
     ov.querySelector('.ptvside').scrollTop = 0;
     ov.classList.add('on'); document.documentElement.classList.add('ptv-open');
     vs = { s: 1, x: 0, y: 0, W: 0, H: 0, fit: 1 }; hiSpot(-1);
-    requestAnimationFrame(() => { fitView(); if (n != null) spot(n); });
+    requestAnimationFrame(() => { fitView(); if (n != null) spot(n); if (!was) { const x = ov.querySelector('[data-k="x"]'); if (x) x.focus({ preventScroll: true }); } });
   }
-  function close(nohist) { if (!ov || !ov.classList.contains('on')) return; ov.classList.remove('on'); document.documentElement.classList.remove('ptv-open'); cur = null; if (!nohist) try { if (history.state && history.state.ptv) history.back(); } catch (e) {} }
+  function close(nohist) { if (!ov || !ov.classList.contains('on')) return; ov.classList.remove('on'); document.documentElement.classList.remove('ptv-open'); cur = null; if (!nohist) try { if (history.state && history.state.ptv) history.back(); } catch (e) {}
+    // (2026-11-24 audit: back where you were) a room that opened the viewer from elsewhere (a story's figure) takes the reader back; otherwise focus returns to what opened it
+    const f = window.AtlasPaint && AtlasPaint.onClose; if (window.AtlasPaint) AtlasPaint.onClose = null; const r0 = ret; ret = null;
+    if (f) f(); else if (r0 && r0.isConnected && r0.offsetParent) r0.focus({ preventScroll: true }); }
   function fitView() {
     if (!cur) return; const st = ov.querySelector('.ptvstage'), sw = st.clientWidth, sh = st.clientHeight, pad = innerWidth < 820 ? 12 : 28;
     const k = Math.min((sw - pad * 2) / cur.w, (sh - pad * 2) / cur.h);
