@@ -10,7 +10,7 @@ const DIR = path.resolve(__dirname, '..');
 const W = require('./load.js');
 global.window = global; require(path.join(DIR, 'art.js')); require(path.join(DIR, 'scenes.js'));
 const ART = global.WLArt, SC = global.WLScenes;
-const KINDS = { alps: 'kirigane', train: 'hokushin', island: 'tomoshibi', onsen: 'nekonaki', abbey: 'shirane' };
+const KINDS = { alps: 'kirigane', train: 'hokushin', island: 'tomoshibi', onsen: 'nekonaki', abbey: 'shirane', theater: 'kiteki' };
 const args = process.argv.slice(2);
 const REVIEW = path.resolve(DIR, '../claude/lampblack-scene-review.md');
 

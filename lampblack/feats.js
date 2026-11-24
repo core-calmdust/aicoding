@@ -19,6 +19,8 @@
     foxSign: S => S.pl.told.some(t => t.sign),
     catBite: S => S.nights.some(N => N.dragged),
     fanaticJail: S => S.votes.some(v => v.out && (S.people.find(p => p.id === v.out) || {}).role === 'madman'),
+    followDeath: S => S.people.some(p => p.role === 'immoral' && p.death && p.death.cause === 'follow'),
+    immoralJail: S => S.votes.some(v => v.out && (S.people.find(p => p.id === v.out) || {}).role === 'immoral'),
     catJailWolf: S => S.votes.some(v => v.dragged && S.wolves.includes(v.dragged)),
   };
   const F = {
@@ -81,6 +83,18 @@
       { id: 'fast', name: '三日で開いた峰', desc: '標準以上で、三日目までに解決する', c: ['fast'] },
       { id: 'ghost', name: '祈りの声のひとつ', desc: '幽霊になっても、修道院を解決へ導く', c: ['ghost'] },
       { id: 'rankS', name: '聖人の目', desc: '評価Sを取る', c: ['rankS'] },
+    ],
+    kiteki: [
+      { id: 'clear1', name: '初日の幕', desc: '標準以上で解決する', c: ['win', 1] },
+      { id: 'clear2', name: '桟敷の目', desc: '上級以上で解決する', c: ['win', 2] },
+      { id: 'clear3', name: '霧の晴れる朝', desc: '悪夢で解決する', c: ['win', 3] },
+      { id: 'curse', name: '鏡に映る狐', desc: '占いで、妖狐を燃やす', c: ['foxCurse'] },
+      { id: 'follow', name: '後追いの幕引き', desc: '妖狐が死に、背徳者がその後を追う', c: ['followDeath'] },
+      { id: 'immoral', name: '魂を売った者', desc: '背徳者を道具倉へ送る', c: ['immoralJail'] },
+      { id: 'sign', name: '奈落の温もり', desc: '奈落で、夜通し座っていた者の跡を見つける', c: ['foxSign'] },
+      { id: 'clean', name: '道具倉は空のまま', desc: '標準以上で、罪のない者を一度も道具倉へ送らずに解決する', c: ['noWrong'] },
+      { id: 'ghost', name: '客席の幽霊', desc: '幽霊になっても、劇場を解決へ導く', c: ['ghost'] },
+      { id: 'rankS', name: '鳴りやまない喝采', desc: '評価Sを取る', c: ['rankS'] },
     ],
   };
   const list = id => F[id] || [];

@@ -7,7 +7,7 @@
   const $ = id => document.getElementById(id);
   const PCQ = matchMedia('(hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4)');
   const KEY = 'wolflantern-save-v1', REC = 'wolflantern-rec-v1', PREF = 'wolflantern-pref-v1';
-  const ORDER = ['kirigane', 'hokushin', 'tomoshibi', 'nekonaki', 'shirane'];
+  const ORDER = ['kirigane', 'hokushin', 'tomoshibi', 'nekonaki', 'shirane', 'kiteki'];
   const DIFFN = ['入門', '標準', '上級', '悪夢'];
   const DIFFT = ['はじめての夜に。', '嘘が増える。', '痕跡は少なく、物は罠になる。', '誰の言葉も信じきれない。'];
   // the card's line follows the story's real cast for that size (the wolves and the roles differ story by story)
@@ -175,6 +175,7 @@
     light: ['dirt', 'rock', 'rock'], harbor: ['plank', 'water', 'post'], net: ['dirt', 'sand', 'post'], clinic: ['dirt', 'grass', 'tuft'], shrine: ['flag', 'grass', 'lantern'],
     bath: ['flag', 'grass', 'rock'], ryokan: ['flag', 'grass', 'lantern'], toji: ['dirt', 'grass', 'tuft'], mound: ['dirt', 'grass', 'rock'], spring: ['step', 'water', 'rock'],
     chapel: ['flag', 'snow', 'cross'], scriptorium: ['board', 0, 0], cloister: ['flag', 'rock', 'col'], cellar: ['flag', 0, 'barrel'], hospice: ['dirt', 'snow', 'post'],
+    stage: ['board', 0, 0], trap: ['board', 0, 'crate'], green: ['aisle', 0, 0], quay: ['flag', 'water', 'post'], box: ['aisle', 0, 0],
   };
   function drawFloor() {
     const f = $('floor'); if (!f || !PCQ.matches) return;
