@@ -9,8 +9,8 @@
   const name = (S, story, id) => id === 'you' ? story.hero.name : id === 'first' ? story.first.name : (charOf(story, id) || { name: id }).name;
   const nameSan = (S, story, id, reg) => id === 'you' ? story.hero.title : name(S, story, id);   // NPCs call the player by title
   const loc = (story, id) => { const l = story.locs.find(l => l.id === id); return l ? l.name : id; };
-  const roleName = (story, r) => r === 'wolf' ? '人狼' : r === 'madman' ? '狂人' : (story.roles[r] || { name: r }).name;
-  const roleShort = r => ({ seer: '占い', medium: '霊視', guard: '護衛' })[r] || r;
+  const roleName = (story, r) => r === 'wolf' ? '人狼' : r === 'madman' ? ((story.roles || {}).madman || { name: '狂人' }).name : r === 'fox' ? '妖狐' : (story.roles[r] || { name: r }).name;
+  const roleShort = r => ({ seer: '占い', medium: '霊視', guard: '護衛', mason: '共有', cat: '猫又' })[r] || r;
   const trait = (story, cat, val) => story.traits[cat].v[val];
   const fig = (story, cat, val) => (story.traits[cat].fig || {})[val] || ('「' + trait(story, cat, val) + '」人影');
   const traceText = (story, t) => t.neg ? (story.traits[t.cat].ntr[t.val] || (trait(story, t.cat, t.val) + 'ではない。')) : story.traits[t.cat].tr[t.val];
@@ -36,6 +36,7 @@
     const c = charOf(story, id); const reg = (V()[c.voice] || {}).reg || 'plain';
     const T = WHY()[reg] || WHY().plain;
     if (!w || w.k === 'gut') return (V()[c.voice] || {}).gut || T.gut;
+    if (w.by && w.by === id) w = { k: 'divined' };   // a speaker never names themself as a third person
     const o = { role: w.role ? roleShort(w.role) : '', by: w.by ? (w.by === 'you' ? story.hero.title : name(S, story, w.by)) : '' };
     if (w.k === 'counter') o.role = roleName(story, w.role);
     if (w.k === 'trace') o.trait = trait(story, w.cat, w.val);
@@ -51,8 +52,9 @@
   function event(S, story, e) {
     const N = n => callName(S, story, e.by, n);
     switch (e.t) {
-      case 'co': return { by: e.by, kind: 'co', text: say(S, story, e.by, 'co_' + e.role + (e.dodge && e.role === 'guard' ? '_dodge' : '')) };
-      case 'result': return { by: e.by, kind: 'result', res: e.res, text: e.role === 'guard' ? say(S, story, e.by, 'rg', { target: N(e.target) }) : say(S, story, e.by, (e.role === 'seer' ? 'rs_' : 'rm_') + (e.res === 'wolf' ? 'w' : 'h'), { target: N(e.target) }) };
+      case 'co': return { by: e.by, kind: 'co', text: say(S, story, e.by, 'co_' + e.role + (e.dodge && ['guard', 'mason', 'cat'].includes(e.role) ? '_dodge' : ''), { mate: e.mate ? N(e.mate) : '' }) };
+      case 'co2': return { by: e.by, kind: 'co', text: say(S, story, e.by, 'co_mason2', { mate: N(e.mate) }) };
+      case 'result': return { by: e.by, kind: 'result', res: e.res, text: e.role === 'guard' ? say(S, story, e.by, 'rg', { target: N(e.target) }) : say(S, story, e.by, (e.role === 'seer' ? 'rs_' : 'rm_') + (e.res === 'wolf' ? 'w' : e.res === 'fox' ? 'f' : 'h'), { target: N(e.target) }) };
       case 'report': return { by: e.by, kind: 'report', text: say(S, story, e.by, 'report', { loc: loc(story, S.nights[e.night].loc), trace: traceText(story, e) }) };
       case 'itemfound': return { by: e.by, kind: 'report', text: say(S, story, e.by, 'item', { loc: loc(story, S.nights[e.night].loc), owner: N(e.owner), belong: charOf(story, e.owner).belong }) };
       case 'fig': return { by: e.by, kind: 'fig', text: say(S, story, e.by, 'fig', { fig: fig(story, e.cat, e.val) }) };

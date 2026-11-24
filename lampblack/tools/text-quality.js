@@ -6,7 +6,7 @@
 const W = require('./load.js');
 const show = process.argv.includes('--show');
 const only = process.argv.slice(2).find(a => !a.startsWith('--'));
-const ACTS = ['hello', 'home', 'fig', 'who', 'none', 'sus', 'nosus', 'okay', 'bad', 'seen', 'co_seer', 'co_medium', 'rs_w', 'rs_h', 'rm_w', 'rm_h', 'report', 'item', 'accuse', 'agree', 'defend', 'grief', 'deny', 'counter', 'thanks'];
+const ACTS = ['hello', 'home', 'fig', 'who', 'none', 'sus', 'nosus', 'okay', 'bad', 'seen', 'co_seer', 'co_medium', 'rs_w', 'rs_h', 'rm_w', 'rm_h', 'co_mason', 'co_mason2', 'rm_f', 'co_cat', 'co_cat_dodge', 'report', 'item', 'accuse', 'agree', 'defend', 'grief', 'deny', 'counter', 'thanks'];
 const CLICHE = ['背筋が凍', '血の気が引', '息を呑ん', '静寂が支配', '闇に包まれ', '不穏な空気', '戦慄が走', '嫌な予感', '心臓が早鐘', '悪寒が走', '凍りつい', '時が止まった'];
 const TELL = ['恐ろしい', '恐怖', '不気味', '悲しい', '怖かった', '怖い', '寂しい', 'ぞっと', '戦慄'];
 const SENSE = /吹雪|息|燭|炭|靴|跡|音|匂|香|冷た|温|白|黒|赤|光|灯|湯気|雪|雨|風|霜|煤|湿|濡|鳴|響|揺|軋|きし|ぬく|凍|潮|波|火|煙|錆|鉄|硝子|銀|真鍮|木|石|砂|泥|毛|爪|紙|インク|墨|針|糸|指|青銅|花|色|湯呑|鎖|網|線香/;
@@ -26,7 +26,12 @@ function scoreStory(st) {
   if (st.locs.length !== 5) add(10, '場所が5つでない');
   if (st.chars.length !== 12) add(15, '人物が12人でない');
   const voices = new Set(st.chars.map(c => c.voice)); if (voices.size !== 12) add(10, `声が重なっている（${12 - voices.size}組）`);
-  for (const r of ['villager', 'seer', 'medium', 'guard']) if (!st.roles[r] || !st.roles[r].how || !st.roles[r].perk) add(5, `役 ${r} の文がない`);
+  const RR = W.WLEngine.setupOf(st, 13), roleSet = ['villager', 'seer', 'medium', 'guard', 'mason', 'cat'].filter(r => r === 'villager' || RR[r]);
+  if (st.rules === 'cat' && (!T.catDrag || !T.catJail)) add(8, '猫又の文（噛まれた道連れ・追放の道連れ）がない');
+  if (st.rules === 'fanatic' && (!st.roles.madman || !st.roles.madman.perk)) add(8, '狂信者の役の文がない');
+  for (const r of roleSet) if (!st.roles[r] || !st.roles[r].how || !st.roles[r].perk) add(5, `役 ${r} の文がない`);
+  if (st.rules && !st.rulesNote) add(5, '物語のしくみ（rulesNote）の説明がない');
+  if (RR.fox && (!st.roles.fox || !st.roles.fox.perk || !T.loseFox || !T.curse || !T.foxBite || !T.foxSign)) add(8, '妖狐の文（役・敗北・呪い死・牙の空振り・社の跡）がそろっていない');
   const kinds = new Set(st.items.map(i => i.kind)); for (const k of ['stake', 'secret', 'ward', 'test']) if (!kinds.has(k)) add(5, `道具 ${k} がない`);
   for (const cat of ['height', 'hand', 'foot', 'mark']) { const t = st.traits[cat]; if (!t) { add(10, `特徴 ${cat} がない`); continue; } for (const v in t.v) { if (!t.tr[v]) add(4, `痕跡の文 ${cat}.${v} がない`); if (cat !== 'hand' && !t.ntr[v]) add(3, `否定の痕跡 ${cat}.${v} がない`); if (cat !== 'mark' && !t.fig[v]) add(3, `人影 ${cat}.${v} がない`); } }
   // trait combos must tell people apart
@@ -193,7 +198,7 @@ function scoreHeroes(base) {
   const tr = new Set(H.map(h => JSON.stringify(h.traits))); if (tr.size < H.length) add(4, '特徴がまったく同じ主人公がいる');
   for (const h of H) {
     for (const f of ['id', 'job', 'you', 'book', 'pitch', 'home', 'traits', 'intro', 'open', 'close', 'win', 'epi', 'epiGhost']) if (!h[f]) add(5, `${h.job}：${f} がない`);
-    for (const r of ['villager', 'guard']) if (!(h.how || {})[r]) add(3, `${h.job}：役 ${r} の由来がない`);
+    for (const r of ['villager', base.rules === 'mason' ? 'mason' : 'guard']) if (!(h.how || {})[r]) add(3, `${h.job}：役 ${r} の由来がない`);
     const ownArc = Object.values(h.arc || {}).flat(); if (ownArc.length < 2) add(4, `${h.job}：自分の糸（本筋の自分の場面）が${ownArc.length}（2以上）`);
     if (!base.locs.some(l => l.id === h.home)) add(6, `${h.job}：居場所がない`);
     for (const c of ['height', 'hand', 'foot', 'mark']) if (!h.traits || !base.traits[c].v[h.traits[c]]) add(6, `${h.job}：特徴 ${c} が物語にない値`);
@@ -274,7 +279,7 @@ function composed() {
 const BAR = 90;
 for (const id of Object.keys(W.WL_STORIES)) {
   if (only && only !== id && only !== 'voices') continue;
-  const base = W.WL_STORIES[id], st = W.WLHero.apply(base, null), r = scoreStory(st);
+  const hi = process.argv.indexOf('--hero'), base = W.WL_STORIES[id], st = W.WLHero.apply(base, hi > 0 ? process.argv[hi + 1] : null), r = scoreStory(st);   // --hero <id>: the story as that hero plays it
   if (r.score < BAR) fail++;
   console.log(`${r.score >= BAR ? 'OK ' : 'NG '} ${String(r.score).padStart(3)}  ${st.title}`);
   if (show || r.score < BAR) for (const [n, w] of r.ded) console.log(`      -${n}  ${w}`);

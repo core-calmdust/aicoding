@@ -9,7 +9,7 @@
 //   node gomoku/tools/op-curate.js <id,id…>        (writes gomoku/openings.json: verified: true, problems = the 5)
 'use strict';
 const fs = require('fs'), path = require('path');
-const OUT = path.join(__dirname, '..', 'openings.json');
+const OUT = process.env.GM_OUT || path.join(__dirname, '..', 'openings.json');   // GM_OUT: a copy to write (two runs in parallel)
 const ids = (process.argv[2] || '').split(',').filter(Boolean);
 const N = require('./op-engine.js');           // the core + net (its own copy of the engine module)
 delete require.cache[require.resolve('../engine.js')];

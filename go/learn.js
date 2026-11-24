@@ -146,7 +146,7 @@ $('#rulesClose').onclick = () => closeRules();
 let LESSONS = null;
 // (2026-11-15) read when the lessons are first opened, not with the page (0.9MB)
 let lessonsP = null;
-const lessonsLoad = () => lessonsP || (lessonsP = fetch('lessons.json?v=20261123d').then(r => r.json()).then(d => (LESSONS = d)).catch(() => { lessonsP = null; return null; }));
+const lessonsLoad = () => lessonsP || (lessonsP = fetch('lessons.json?v=20261125n81').then(r => r.json()).then(d => (LESSONS = d)).catch(() => { lessonsP = null; return null; }));
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
@@ -423,7 +423,7 @@ $('#lsNext').onclick = () => {
   if (lesson.virt) {
     const op = opProg(), old = op[s.id] || { best: 0, pass: false }; op[s.id] = { best: Math.max(old.best, n), pass: old.pass || pass };
     try { localStorage.setItem(OP_STORE, JSON.stringify(op)); } catch (e) {}
-    $('#ldTitle').textContent = t(pass ? 'op.pass' : 'ls.failed');
+    $('#ldTitle').textContent = t(pass ? 'op.pass' : n + 20 >= 75 ? 'ls.failed' : 'ls.failedFar');
     $('#ldSub').innerHTML = score;
     $('#btnLessonNextStep').classList.add('hidden');
     showLessonView('lessonDoneView'); showOverlay('#lessonOverlay');
@@ -433,7 +433,7 @@ $('#lsNext').onclick = () => {
   const pr = lsProgress(), old = pr[s.id] || { best: 0, clear: false };
   pr[s.id] = { best: Math.max(old.best, n), clear: old.clear || pass };
   try { localStorage.setItem(LS_STORE, JSON.stringify(pr)); } catch (e) {}
-  $('#ldTitle').textContent = t(pass ? 'ls.passed' : 'ls.failed');
+  $('#ldTitle').textContent = t(pass ? 'ls.passed' : n + 20 >= 75 ? 'ls.failed' : 'ls.failedFar');
   $('#ldSub').innerHTML = score;
   $('#btnLessonNextStep').classList.toggle('hidden', lesson.step + 1 >= LESSONS.steps.length);
   showLessonView('lessonDoneView'); showOverlay('#lessonOverlay');

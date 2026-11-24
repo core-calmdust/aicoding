@@ -112,7 +112,7 @@ function steps() {
   return STEPS;
 }
 const loadEv = () => evP || (evP = Promise.all([fetch('opcourse-evals.json?v=1').then(r => r.json()).then(d => (EV = d)).catch(() => (EV = {})),
-  fetch('opcourse-probs.json?v=2').then(r => r.json()).then(d => (OPP = d || {})).catch(() => (OPP = {}))]));   // (2026-11-24 第2期・担当B) + the verified pools off the line (= the 3D)
+  fetch('opcourse-probs.json?v=3').then(r => r.json()).then(d => (OPP = d || {})).catch(() => (OPP = {}))]));   // (2026-11-24 第2期・担当B) + the verified pools off the line (= the 3D)
 const poolOf = moves => (OPP[moves] || []).length >= 5 ? OPP[moves].slice(0, 5) : null;
 // the named line a sequence grows out of: the longest other named line (or a base opening) that is a strict prefix
 function parentOf(moves) {
@@ -360,10 +360,10 @@ function card() {
 function next() {
   const L = lesson; if (!L || !L.opc || !L.answered) return;
   if (L.i < L.ks.length - 1) { L.i++; loadProb(); return; }
-  const sum = L.results.reduce((a, b) => a + (b || 0), 0), n = Math.round(sum * 100 / (20 * L.ks.length)), pass = n >= 75, id = stepId(L.st);
+  const sum = L.results.reduce((a, b) => a + (b || 0), 0), n = Math.round(sum * 100 / (20 * L.ks.length)), pass = n >= 75, near = Math.round((sum + 20) * 100 / (20 * L.ks.length)) >= 75, id = stepId(L.st);   // 追82: 「不合格…」(ls.failed) only when one more right answer (20 points) passes
   const pr = progressOf(id); pr.best = Math.max(pr.best, n); pr.clear = pr.clear || pass; pr.v = 2; lessonProgress[id] = pr; saveLessonProgress();
   introIdx = L.idx;
-  $('#ldTitle').textContent = t(pass ? 'ls.passed' : 'ls.failed');
+  $('#ldTitle').textContent = t(pass ? 'ls.passed' : near ? 'ls.failed' : 'ls.failedFar');
   $('#ldSub').innerHTML = `<div class="ld-score ${pass ? 'ok' : 'ng'}">${t('u.pt', { n })}<small> / 100</small></div>` + L.results.map((x, k) => `${k + 1}: ${t('u.pt', { n: x })}`).join('　') + (pass ? '' : `<br>${tx('pass')}`);
   $('#btnLessonNextStep').style.display = introIdx + 1 < steps().length ? '' : 'none';
   if (L.results.every(x => x >= 16)) { sfxFanfare(0.05); confetti(); } else if (pass) playChime(true);

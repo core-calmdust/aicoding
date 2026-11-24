@@ -1333,7 +1333,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=4').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=6').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { let pr; try { pr = JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } return pzMigrate(pr); }
@@ -1592,9 +1592,11 @@ function okAnswer(P, s, m, pts) {
   lesson.results[lesson.i] = pts; renderLessonCard();
   const best = P.ok.includes(m) ? m : P.best;
   // (2026-11-25 担当C) b_double / b_win: the words say what the move did on the board (konane/ls-facts.js, the same as the 3D)
-  const F = window.KonaneLsFacts && !lesson.virt && /^b_(double|win)$/.test(s.id) ? KonaneLsFacts.fact(E, s.id, P.s, m) : null;
-  const ngKey = !F ? '.ng' : F.k === 'stop' ? '.ng.stop' : F.k === 'other' ? '.ng.other' : F.k === 'left' ? (F.j === 1 ? '.ng1' : '.ng') : '.ng';
-  $('#lsFb').innerHTML = `<span class="pts ${pts ? 'ok' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts ? 'ok' : 'ng'}">${t(pts ? 'fb.perfect' : 'fb.bad')}</b> ` + (pts ? t('ls.' + s.id + '.why', { m: mvIn(pos0, m) }) : t('ls.' + s.id + ngKey, { m: mvIn(pos0, best), x: mvIn(pos0, m), j: F && F.j }));
+  // (2026-11-25 05:33 担当C) s_count / s_stop: the opponent's winning reply {r} and your jumps after it {e} (an exact solve)
+  const F = window.KonaneLsFacts && !lesson.virt && /^(b_(double|win)|s_(count|stop))$/.test(s.id) ? KonaneLsFacts.fact(E, s.id, P.s, m) : null;
+  const ST = F && ['more', 'go', 'lose'].includes(F.k);
+  const ngKey = !F ? '.ng' : ST ? '.ng.' + (F.k === 'go' && F.spring ? 'goS' : F.k) + (F.e ? 'N' : '0') : F.k === 'stop' ? '.ng.stop' : F.k === 'other' ? '.ng.other' : F.k === 'left' ? (F.j === 1 ? '.ng1' : '.ng') : '.ng';
+  $('#lsFb').innerHTML = `<span class="pts ${pts ? 'ok' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts ? 'ok' : 'ng'}">${t(pts ? 'fb.perfect' : 'fb.bad')}</b> ` + (pts ? t('ls.' + s.id + '.why', { m: mvIn(pos0, m), j: F && F.j, c: F && F.c, n: F && F.n }) : t('ls.' + s.id + ngKey, { m: mvIn(pos0, best), x: mvIn(pos0, m), j: F && F.j, j0: F && F.j0, e: F && F.e, r: ST && F.r != null ? mvIn(pos0, F.r) : '' }));
   playChime(!!pts); playMove2(m);
   lsAuto(!!pts, moveDur(m, pos0) + 1100);
   const tok = busyToken;
@@ -1602,6 +1604,7 @@ function okAnswer(P, s, m, pts) {
     if (!lesson || tok !== busyToken) return;
     moves = []; cur = 0; sel = null; lessonMarks = [];
     markMove(pos0, best, 'ok'); if (!pts) markMove(pos0, m, 'ng');
+    if (!pts && ST && F.draw) markMove(pos0, F.r, 'hl');   // (the opponent's winning reply, named {r} in the words)
     update(false);
   }, moveDur(m, pos0) + 700);
 }
@@ -1614,7 +1617,7 @@ $('#lsHint').onclick = () => {
   lessonMarks = [];
   const good = P.ok || [P.best];
   // (2026-11-25 担当C) b_double: every stone that can jump · b_win: the opponent's stones that could jump now (not the answer's stone, 追52)
-  const hp = window.KonaneLsFacts && !lesson.virt && /^b_(double|win)$/.test(s.id) ? KonaneLsFacts.hint(E, s.id, P.s) : null;
+  const hp = window.KonaneLsFacts && !lesson.virt && /^(b_(double|win)|s_(count|stop))$/.test(s.id) ? KonaneLsFacts.hint(E, s.id, P.s) : null;
   for (const f of hp || new Set(good.map(mFrom))) lessonMarks.push({ at: f, cls: 'ok' });
   $('#lsFb').innerHTML = lesson.virt ? t('op.hint') : t('ls.' + s.id + '.hint');
   renderFx();
@@ -1630,7 +1633,7 @@ $('#lsNext').onclick = () => {
   if (lesson.virt) {
     const op = opProg(), old = op[s.id] || { best: 0, pass: false }; op[s.id] = { best: Math.max(old.best, n), pass: old.pass || pass };
     try { localStorage.setItem(OP_STORE, JSON.stringify(op)); } catch (e) {}
-    $('#ldTitle').textContent = t(pass ? 'op.pass' : 'ls.failed');
+    $('#ldTitle').textContent = t(pass ? 'op.pass' : n + 20 >= 75 ? 'ls.failed' : 'ls.failedFar');
     $('#ldSub').innerHTML = score;
     $('#btnLessonNextStep').classList.add('hidden');
     showLessonView('lessonDoneView'); showOverlay('#lessonOverlay');
@@ -1640,7 +1643,7 @@ $('#lsNext').onclick = () => {
   const pr = lsProgress(), old = pr[s.id] || { best: 0, clear: false };
   pr[s.id] = { best: Math.max(old.best, n), clear: old.clear || pass };
   try { localStorage.setItem(LS_STORE, JSON.stringify(pr)); } catch (e) {}
-  $('#ldTitle').textContent = t(pass ? 'ls.passed' : 'ls.failed');
+  $('#ldTitle').textContent = t(pass ? 'ls.passed' : n + 20 >= 75 ? 'ls.failed' : 'ls.failedFar');
   $('#ldSub').innerHTML = score;
   $('#btnLessonNextStep').classList.toggle('hidden', lesson.step + 1 >= LESSONS.steps.length);
   const nx = LESSONS.steps[lesson.step + 1];

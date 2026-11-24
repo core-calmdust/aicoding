@@ -102,7 +102,7 @@ TABLES['v6'] = TABLES['sing'] + [
     ('seeQuiet',  105,   23,    8,   60,   3),     # ... quiet moves losing more than this x reduced depth squared
     ('histPrune',  81, 2000,  600, 8000, 250),     # ... the history's weight in the depth a move is judged at (divisor)
     ('histLmr',     9, 5049, 1500, 16000, 500),
-    ('lmpScale',   43,  100,   50,  400,  12),
+    ('lmpScale',   43,  300,   80,  700,  20),     # (2026-11-25: from 300, not YaneuraOu's 100: at 100 pruning v2 lost 4-23-1 to the default search, at 300 it won 19-6-3)
     ('lmrDiv',     17,  214,  130,  320,  12),
 ]
 PARAMS = TABLES['v4']
