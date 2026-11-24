@@ -397,6 +397,16 @@ html.exv-rot .urtoast{rotate:90deg}
 .exres b{display:block;font-size:30px;font-weight:900;letter-spacing:.16em;color:#f3e4bf;white-space:nowrap}
 .exres.win b{color:#f6d98a;text-shadow:0 0 18px rgba(246,217,138,.35)}
 .exres.lose b{color:#d9c7a4}
+.exres{cursor:default!important;text-align:center;min-width:250px}
+.exres small{display:block;margin-top:6px;font-size:13px;font-weight:700;letter-spacing:.08em;color:rgba(243,228,191,.7)}
+.exres-a{display:flex;gap:10px;justify-content:center;margin-top:16px}
+.exres-a button{height:38px;padding:0 20px;border:1px solid rgba(212,175,95,.6);border-radius:999px;background:rgba(243,234,214,.08);color:#f3e4bf;font:inherit;font-size:14px;font-weight:800;letter-spacing:.08em;cursor:pointer;white-space:nowrap}
+.exres-a button:hover{background:rgba(243,234,214,.18)}
+.exres-a button.go{background:#f3ead6;border-color:#f3ead6;color:#22170a}
+.exres-a button.go:hover{background:#fff6e2}
+.exres-x{position:absolute;top:6px;right:8px;width:28px;height:28px;border:0;border-radius:50%;background:none;color:rgba(243,228,191,.6);font-size:20px;line-height:28px;cursor:pointer}
+.exres-x:hover{color:#f3e4bf;background:rgba(243,234,214,.1)}
+@media (max-width:560px){.exres{padding:16px 22px 18px!important;min-width:0}.exres b{font-size:24px}}
 .exv-rot .exres.on{transform:translate(-50%,-50%) rotate(90deg)}.exv-rot .exres{transform:translate(-50%,-50%) rotate(90deg) scale(.9)}
 /* ---- ルールコース (museum/rules.js): ミュゼフクの案内パネル ---- */
 .exprul{position:relative;flex:none;display:flex;align-items:center;gap:6px;height:38px;padding:0 14px;border:1px solid rgba(212,175,95,.55);border-radius:999px;background:transparent;color:#efdcae;font:inherit;font-weight:700;font-size:13px;letter-spacing:.08em;cursor:pointer;white-space:nowrap;transition:background .15s}
