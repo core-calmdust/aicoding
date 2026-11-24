@@ -10,9 +10,9 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const DONE = ['b_rook', 'b_horse', 'b_pawn', 'b_mate1', 'm_mate2', 'm_mate3'];   // (verified: tools/lesson-verify-janggi.js; the rest are not listed yet)
+  const DONE = ['b_rook', 'b_horse', 'b_pawn', 'b_mate1', 'm_mate2', 'm_mate3', 'e_rook', 'e_pawn'];   // (verified: tools/lesson-verify-janggi.js; the rest are not listed yet)
   const KIND = { b_rook: 5, b_horse: 4, b_elephant: 3, b_cannon: 6, b_pawn: 7 };
-  const MATE = { b_mate1: 1, m_mate2: 2, m_mate3: 3 };   // (the mate steps: P.ok = the one first move that mates within n)
+  const MATE = { b_mate1: 1, m_mate2: 2, m_mate3: 3, e_rook: 'n', e_pawn: 'n' };   // (the mate steps: P.ok = the one first move that mates within n; 'n' = the endgames: n is the problem's own P.n, the fastest mate)
   const PTS = [0, 0, 3, 3, 5, 13, 7, 2];
   // the side to move is always 楚 (Cho) in the lessons: its pawn is 卒, the opponent's (漢) is 兵
   const NM = (t, cho) => ['', '将', '士', '象', '馬', '車', '包', cho ? '卒' : '兵'][t] || '駒';
@@ -23,6 +23,8 @@
     b_pawn: '<b>卒</b>（相手は<b>兵</b>）は、前かヨコに1歩ずつ進む駒。<br>チャンギには川がないから、はじめからヨコにも動けるんだ。<br>2点の小さな駒だけど、大きな駒をただで取れることもあるコン！',
     b_mate1: 'ここからは<b>詰み</b>の練習だコン。<br>王手をかけて、相手がどう動いても王手をはずせなければ<b>詰み</b>、きみの勝ち！<br>将は<b>九宮</b>から出られないし、九宮の<b>ななめの線</b>も通り道になるの。1手で詰ませてみよう！',
     m_mate2: '今度は<b>2手で詰ます</b>問題。<br>最初の1手のあと、相手がどう受けても<b>次の手で必ず詰む</b>手を探してね。<br>王手から始まるとは限らないよ。逃げ道を先にふさぐ、静かな手もあるんだコン！',
+    e_rook: 'ここからは<b>終盤</b>。駒が少なくなったら、残った駒で将を詰ませにいくの。<br>きみには<b>車と馬</b>、相手の将には<b>士</b>がついてる。車で将の<b>動ける点を減らして</b>、馬で逃げ道をふさぐのがコツ。<br>九宮のななめの線も通り道だよ。<b>いちばん早く詰む</b>手を探そうコン！',
+    e_pawn: '今度は<b>卒2つ</b>の終盤だよ。<br>卒は相手の九宮に入ると、<b>ななめの線にそって前へ</b>も進めるの。でも後ろには戻れないから、急いで奥まで進めすぎないでね。<br>自分の<b>将</b>も、相手の将の動きをふさぐ大事な駒。<b>いちばん早く詰む</b>手を探してみてコン！',
     m_mate3: 'いよいよ<b>3手で詰ます</b>問題だよ。<br>最初の1手のあと、相手のどの受けにも<b>3手目までに必ず詰む</b>続きがある手を選んでね。<br>相手の受けを1つずつ読むのがコツ。自分の将が詰まされないかも、ちゃんと見てね！',
   };
   const ASK = {
@@ -32,6 +34,8 @@
     b_mate1: ['1手で詰ませてみて！', 'どの王手なら、将がどこへも逃げられない？', '王手をはずす手がなくなる1手はどれかな？', '逃げ道も、王手を防ぐ手もなくす王手を探してね！', '1手で詰む王手、見つけられるかなコン？'],
     m_mate2: ['2手で詰ます最初の1手は？', '相手がどう受けても、次で詰む1手はどれ？', '王手とは限らないよ。次に必ず詰む形を作る手は？', '逃げ道を先にふさぐ手はあるかな？ 2手で詰ませよう！', 'どの受けにも次の詰みが残る1手を探してね！'],
     m_mate3: ['3手で詰ます最初の1手は？', '相手のどの受けにも、3手目までに詰む手はどれ？', '受けを1つずつ読んで、3手で詰ませよう！', '最初の1手のあと、相手はどう受ける？ 3手で詰む手を探してね！', '3手目までに必ず詰む1手、見つけられるかなコン？'],
+    e_rook: [N => `車と馬で、${N}手で詰ませてみて！`, N => `いちばん早く詰む1手は？ この形は${N}手で詰むよ。`, N => `相手がどう受けても${N}手目までに詰む、最初の1手はどれ？`, N => `将の動ける点を減らす手はどれかな？ ${N}手で詰ませよう！`, N => `車と馬の協力で${N}手の詰み、見つけられるかなコン？`],
+    e_pawn: [N => `卒2つで、${N}手で詰ませてみて！`, N => `いちばん早く詰む1手は？ この形は${N}手で詰むよ。`, N => `相手がどう受けても${N}手目までに詰む、最初の1手はどれ？`, N => `将の逃げ道を先にふさぐ手はあるかな？ ${N}手で詰ませよう！`, N => `卒と将の協力で${N}手の詰み、見つけられるかなコン？`],
     b_pawn: ['卒で駒を取ってみて！', '卒の前とヨコに、ただの駒はある？', 'どの駒なら卒で取っても取り返されない？', '小さな卒で、得をする取り方は？', '卒でただ取りできる駒を探してね！'],
   };
   const HINT = {
@@ -64,6 +68,8 @@
     3: [M => `金の輪の${M}から始めてみて。相手の受けを1つずつ読もう！`, M => `金の輪の${M}の1手のあと、相手がいちばん粘る受けは？ それでも3手目までに詰む？`, M => `金の輪の${M}を使うよ。王手で追うか、静かに包むか、どっちだろう？`, M => `相手の受けのあと、2手目と3手目で詰む形になるか確かめてね。金の輪の${M}からだコン！`, M => `金の輪の${M}で始めよう。手を抜くと、相手に詰まされることもあるから気をつけて！`],
   };
   // praise: the mating piece and a fact of the problem (how many checks there were / how many replies the opponent has after it)
+  // the endgames (n = the problem's fastest mate, 2〜5)
+  const EHINT = [(M, N) => `金の輪の${M}から始めてみて。相手の将が動ける点を数えて、${N}手で消せるかな？`, (M, N) => `金の輪の${M}の1手のあと、相手がいちばん粘る受けを考えよう。それでも${N}手目までに詰む？`, (M, N) => `急がば回れ、王手だけが近道とは限らないの。金の輪の${M}で、${N}手の詰みの形を作ろう！`, (M, N) => `相手の将の逃げ道はどこ？ 金の輪の${M}で、先に1つふさいでみて。${N}手で詰むよ！`, (M, N) => `金の輪の${M}を使うよ。受けを1つずつ読んで、${N}手目までの詰みを確かめてねコン。`];
   const MGOOD = {
     1: [(M, c) => `正解！ ${M}で詰み。王手は${c}通りあったけど、どうやってもはずせないのはこれだけなの。その調子！`, (M, c) => `お見事！ ${c}つの王手から、詰む${M}の1手を選べたね。逃げ道も防ぐ手も残ってないコン。`, M => `やったね！ ${M}の王手で詰み、将は九宮のどこへも動けないの。次もこの目でいこう！`, (M, c) => `すごい！ ${M}で詰ませたね。ほかの${c - 1}つの王手は、相手にかわされちゃう形だったんだ。`, M => `さすが！ ${M}の1手で詰み、勝負ありだね。どんどん詰ませていこうコン！`],
     q: [(M, n, r) => `正解！ 王手じゃない静かな${M}の1手。相手の受けは${r}通りあるけど、どれでも${n}手目までに詰むの！`, (M, n, r) => `お見事！ 王手をかけずに${M}を動かすのが正解。相手は${r}通りの手のどれを選んでも、詰みを防げないんだコン。`, M => `やったね！ 静かな${M}の1手で、相手はもう詰みから助からないの。次もこの読みでいこう！`, (M, n) => `すごい！ 王手をかけない${M}で、${n}手の詰みを読み切ったね。その調子！`, (M, n, r) => `さすが！ 静かな${M}のあと、相手の${r}通りの受けは、ぜんぶ詰みにつながるの。どんどんいこうコン！`],
@@ -75,13 +81,15 @@
   };
   const MOPEN = ['ドンマイ！ ', 'ここは読みどころ、いっしょに見よう。', '気にしない、詰みは慣れだコン。', '詰みの形は、覚えておけば次は見えるよ。', 'いっしょに読んでみよう。'];
   function mateJa(E, s, P, i, ck, n) {
-    const N = MATE[s.id], v = (L, o) => L[(i + n + (o || 0)) % L.length], T = E.typeOf, p = E.Pos.from(P.s), A = P.best, M = ck('ok'), X = ck('ng');
+    const N = MATE[s.id] === 'n' ? P.n : MATE[s.id], v = (L, o) => L[(i + n + (o || 0)) % L.length], T = E.typeOf, p = E.Pos.from(P.s), A = P.best, M = ck('ok'), X = ck('ng');
     const mover = m => NM(T(p.at(E.mFrom(m))), true), AM = mover(A), ckd = m => p.clone().play(m).inCheck(), aq = !ckd(A);
     // how the general gets out of the check u gives (the opponent's legal replies)
     const esc = u => { const q = p.clone().play(u), R = q.moves().filter(x => !E.isPass(x));
       if (R.some(x => T(q.at(E.mFrom(x))) === E.KING)) return '将が逃げられ';
       if (R.some(x => E.mTo(x) === E.mTo(u))) return `王手した${mover(u)}を取られ`;
       return 'ほかの駒を動かして王手を防がれ'; };
+    // a quiet move that leaves a piece of yours to be taken: the most valuable one the opponent can capture (0 = none)
+    const hang = u => { const q = p.clone().play(u); let t = 0; for (const x of q.moves()) { if (E.isPass(x) || !q.at(E.mTo(x))) continue; const k = T(q.at(E.mTo(x))); if (PTS[k] > PTS[t]) t = k; } return t; };
     const lose = u => { const q = p.clone().play(u); return q.moves().some(x => q.clone().play(x).status() === -1); };
     const nCk = p.moves().filter(ckd).length, nRe = p.clone().play(A).moves().filter(x => !E.isPass(x)).length;
     const good = () => N === 1 ? v(MGOOD[1])(AM, nCk) : v(MGOOD[aq ? 'q' : 'c'])(AM, N, nRe);
@@ -90,6 +98,7 @@
     const ng = u0 => { const u = wrongOf(u0); let w = '';
       if (u != null) {
         if (N > 1 && lose(u)) w = v([`${X}だと、相手に1手で詰まされちゃう！ 自分の将の守りも見てね。`, `${X}のあと、相手には1手で詰ませる手があるの。こっちの将が先に詰んじゃう！`], 1);
+        else if (!ckd(u) && N > 1 && hang(u)) { const H = NM(hang(u), true); w = v([`${X}だと、相手に${H}を取られる手があって、${N}手では詰まないの。`, `${X}のあと、きみの${H}が取られる形になるの。それで${N}手では詰まないんだ。`], 1); }
         else if (!ckd(u)) w = N === 1 ? v([`${X}は王手になっていないから、詰みにならないの。`, `${X}だと王手がかからないね。1手で詰ますには王手が必要だコン。`], 1)
           : v([`${X}だと、相手にうまく受けられて、${N}手では詰まないの。`, `${X}のあとは、相手にしのぐ受けがあって、${N}手では詰まないんだ。`], 1);
         else { const e = esc(u); w = N === 1 ? v([`${X}は王手だけど、${e}ちゃうから詰みじゃないの。`, `${X}で王手しても、${e}るの。それだと詰みにならないね。`, `${X}の王手は惜しいけど、${e}るから詰まないんだ。`, `${X}は王手をかけても、${e}ちゃう形。だから詰みにならないコン。`, `${X}だと王手はかかるけど、${e}るから、まだ詰みじゃないの。`], 3)
@@ -97,7 +106,8 @@
       }
       const R = N === 1 ? v(MRIGHT[1], 2)(M, AM, nCk) : v(MRIGHT[2], 2)(M, AM, N, aq);
       return v(MOPEN) + w + R; };   // (the mate steps' own openers: not the capture steps' in the same order)
-    return { ask: v(ASK[s.id]), hintTx: v(MHINT[N])(AM), good, ng, own: true };
+    const q0 = v(ASK[s.id]), ask = typeof q0 === 'function' ? q0(N) : q0;
+    return { ask, hintTx: MATE[s.id] === 'n' ? v(EHINT)(AM, N) : v(MHINT[N])(AM), good, ng, own: true };
   }
   function lsJa(E, s, P, i, ck, n) {
     if (MATE[s.id] && ASK[s.id]) return mateJa(E, s, P, i, ck, n || 0);
