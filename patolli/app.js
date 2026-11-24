@@ -40,7 +40,7 @@ function applyI18n() {
   document.title = t('meta.title');
   $('#brandTitle').textContent = t('title');
   $('#langSel').value = LANG;
-  const tt = { btnNew: 'btn.new.title', btnUndo: 'btn.undo.title', btnHint: 'btn.hint.title', btnRules: 'btn.rules.title', btnLesson: 'btn.lesson.title', btnPuzzle: 'btn.puzzle.title', btnSound: 'btn.sound.title' };
+  const tt = { btnNew: 'btn.new.title', btnUndo: 'btn.undo.title', btnHint: 'btn.hint.title', btnRules: 'btn.rules.title', btnLesson: 'btn.lesson.title', btnSound: 'btn.sound.title' };
   for (const id in tt) { const el = document.getElementById(id); if (el) el.title = t(tt[id]); }
   $('#btnResign span').textContent = window.Resign ? Resign.label(LANG) : t('btn.resign');
   $('#btnRoll span').textContent = t('roll');
@@ -916,7 +916,7 @@ function rtStatsHtml() {
   return html + '</div>';
 }
 // leaving a rated game in progress asks first (the game is then lost)
-const RT_GUARD = '#btnNew, #btnLesson, #btnPuzzle, #btnStart';
+const RT_GUARD = '#btnNew, #btnLesson, #btnStart';
 let rtPass = false;
 document.addEventListener('click', e => {
   if (rtPass || !rtLive() || !game.plies.length) return;
@@ -1088,7 +1088,7 @@ mqV.addEventListener ? mqV.addEventListener('change', () => relayout()) : mqV.ad
 
 // ====================================================================== dialogs: outside click, title, tabs
 function dismissOverlay(o) {
-  const OUT = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', puzzleOverlay: '#pzClose', resumeOverlay: '#rsCancel', copyOverlay: '#copyClose', olOverlay: '#olClose', rtConfirm: '#rtConfirmNo' };
+  const OUT = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', resumeOverlay: '#rsCancel', copyOverlay: '#copyClose', olOverlay: '#olClose', rtConfirm: '#rtConfirmNo' };
   if (o.id === 'rulesOverlay') { if (window.PatolliLearn) PatolliLearn.closeRules(); else o.classList.remove('show'); return; }
   if (o.id === 'lessonOverlay') { const b = $('#lessonDoneView:not(.hidden)') ? $('#btnLessonQuit2') : $('#btnLessonClose'); if (b) b.click(); return; }
   const b = OUT[o.id] && $(OUT[o.id]); if (b) b.click(); else o.classList.remove('show');
@@ -1126,7 +1126,7 @@ function fixRulesOffer() { const sp = document.querySelector('#newOverlay .rules
 new MutationObserver(fixRulesOffer).observe($('#newOverlay'), { attributes: true, attributeFilter: ['class'] }); fixRulesOffer();
 if (window.GameRecord) GameRecord.init({ game: GID, lang: () => LANG, menu: '.controls', sides: () => [t('first'), t('second')], variant: () => ({ k: game.rule, n: t('rule.' + game.rule) }), variants: () => RULES, variantName: k => t('rule.' + k), defVariant: 'bell' });
 if (window.PatolliCoach) PatolliCoach.init();
-HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
+HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson'], lang: () => LANG }) : null;
 if (HB) HB.onChange(() => relayout(true));
 if (window.RecordExport) RecordExport.attach({ btn: '#btnShare', key: GID, title: t('meta.title'), lang: () => LANG, toast: m => toast(m), empty: () => !game.plies.length,
   formats: () => [{ id: 'txt', label: t('fmt.txt'), ext: 'txt', meta: 'self', text: () => recordText() }],

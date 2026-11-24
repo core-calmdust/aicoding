@@ -353,6 +353,9 @@ html.exv-open{overflow:hidden}
 .exhud button{pointer-events:auto;height:32px;padding:0 18px!important;border:1px solid rgba(212,175,95,.6)!important;border-radius:999px;background:rgba(243,234,214,.08)!important;color:#f3e4bf!important;font:inherit;font-size:13.5px!important;font-weight:800;letter-spacing:.08em;box-shadow:none!important;transform:none!important;cursor:pointer;white-space:nowrap}
 .exhud button:hover{background:rgba(243,234,214,.18)!important}
 .exhud button:disabled{opacity:.35;cursor:default}
+/* the roll / pass chip that follows the dice in the Ur exhibit (atlas/games/ur.js .urdk): the HUD's quiet gold-outlined style, not the portal's coral */
+body:has(.exv) .urdk{padding:0 20px!important;min-height:0!important;height:38px;border:1px solid rgba(212,175,95,.7)!important;background:rgba(24,18,14,.82)!important;color:#f3e4bf!important;font-size:14.5px!important;font-weight:800!important;letter-spacing:.08em;box-shadow:0 6px 16px rgba(0,0,0,.35)!important;animation:none!important;backdrop-filter:blur(4px)}
+body:has(.exv) .urdk:hover{background:rgba(52,40,28,.9)!important}
 @media (max-width:819px){.exhud{left:10px;right:58px;transform:none;margin:0 auto;width:fit-content;max-width:none;gap:4px;padding:4px 5px;font-size:12.5px}.exhud .hs{padding:4px 8px;gap:4px}.exhud .hs b{font-size:13px}.exhud .hm{padding:0 3px}.exhud button{padding:0 12px!important}}   /* (phones: clear of the close button at the top right) */
 .exv-play .exspots,.exv-play .exhint{display:none!important}
 .exv-play .exbtns [data-k="spin"],.exv-play .exbtns [data-k="reset"],.exv-play .exbtns [data-k="flip"],.exv-play .exbtns [data-k="wide"]{display:none!important}
