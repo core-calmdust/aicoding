@@ -1267,13 +1267,39 @@
   /* ---------- a story ---------- */
   // (2026-11-24) the minutes a story takes, from its own text: ~500 characters a minute (CJK) or ~200 words (others)
   function mins(S) {
-    const x = st(S.id), t = [x.lead, ...(x.s || []), ...(x.kf || []), ...((x.more || []).flatMap(m => [m.h, ...m.p])), ...((x.tl || []).map(r => r.join(' ')))].join(' ');
+    const x = st(S.id); if (x.mins != null) return Math.max(S.mins || 1, x.mins);   // (the index's minutes, worked out by tools/museum-read-split.js)
+    const t = [x.lead, ...(x.s || []), ...(x.kf || []), ...((x.more || []).flatMap(m => [m.h, ...m.p])), ...((x.tl || []).map(r => r.join(' ')))].join(' ');
     const cjk = (t.match(/[\u3000-\u9fff\uac00-\ud7af]/g) || []).length, words = t.replace(/[\u3000-\u9fff\uac00-\ud7af]/g, ' ').split(/\s+/).filter(Boolean).length;
     return Math.max(S.mins || 1, Math.round(cjk / 500 + words / 200));
   }
+  // (2026-11-24 audit textKB, per screen) a story's whole text is its own file, museum/read-i18n/<lang>/<id>.js, loaded when the story opens
+  // (the room loads only the index: titles, leads, minutes, names). need(id) → Promise<true|false>; a failed load can be tried again.
+  const want = {};
+  const has = id => Array.isArray((tx()[id] || {}).s);
+  const readV = () => (window.AtlasMuseum && AtlasMuseum.readV) || 1;
+  function need(id) {
+    if (has(id)) return Promise.resolve(true);
+    const k = lang + '/' + id; if (want[k]) return want[k];
+    return (want[k] = new Promise(res => { const sc = document.createElement('script'); sc.src = `museum/read-i18n/${lang}/${id}.js?v=${readV()}`;
+      sc.onload = () => { if (!has(id)) delete want[k]; res(has(id)); }; sc.onerror = () => { sc.remove(); delete want[k]; res(false); }; document.head.appendChild(sc); }));
+  }
+  const idle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 1500));
   function story(id, user) {
-    const S = STORIES.find(s => s.id === id); if (!S) return; cur = S; const x = st(id), i = STORIES.indexOf(S);
+    const S = STORIES.find(s => s.id === id); if (!S) return Promise.resolve(); cur = S;
     if (user && ctx.hist) ctx.hist({ room: 'read', story: id });
+    if (has(id)) { draw(S, user); return Promise.resolve(); }
+    // the text is not here yet: a short loading line (with the way back), then the story; on failure a button to try again
+    const i = STORIES.indexOf(S), h = host;
+    h.innerHTML = `<article class="rda" style="--c:${S.color}"><button type="button" class="btn ghost sm rdback">← ${esc(u('back'))}</button>
+      <div class="rdload" role="status" aria-live="polite"><p class="chlead">${esc(fmt(u('no'), { n: i + 1 }))} · ${esc(st(id).title || '')}</p><p class="chlead">${esc(u('loading'))}</p></div></article>`;
+    h.querySelector('.rdback').onclick = () => { shelf(); top(); if (ctx.hist) ctx.hist({ room: 'read' }); };
+    return need(id).then(ok => { if (cur !== S || host !== h || !h.querySelector('.rdload')) return;
+      if (ok) { draw(S, user); return; }
+      const box = h.querySelector('.rdload'); box.innerHTML = `<p class="chlead">${esc(u('loadErr'))}</p><button type="button" class="btn sun sm">${esc(u('loadRetry'))}</button>`;
+      const b = box.querySelector('button'); b.onclick = () => story(id, false).then(() => { const a = h.querySelector('.rdback'); if (a && !h.querySelector('.rdload')) top(); }); b.focus({ preventScroll: true }); });
+  }
+  function draw(S, user) {
+    const id = S.id, x = st(id), i = STORIES.indexOf(S);
     host.innerHTML = `<article class="rda" style="--c:${S.color}">
       <button type="button" class="btn ghost sm rdback">← ${esc(u('back'))}</button>
       <div class="rdh">${S.cover.s && !S.cover.g && !S.cover.ex && !S.cover.paint ? `<div class="rdhimg" style="cursor:default"><img src="${src(S.cover)}" alt=""></div>` : `<button type="button" class="rdhimg${ga(S.cover)}" ${S.cover.href && !((ctx.games || []).some(q => q.id === S.cover.g)) ? `data-href="${S.cover.href}"` : S.cover.g ? `data-g="${S.cover.g}"` : S.cover.ex ? `data-ex="${S.cover.ex}"` : `data-paint="${S.cover.paint}"`}><img src="${src(S.cover)}" alt=""><span>${esc(S.cover.g ? u('game') : S.cover.ex ? u('exhibit') : u('art'))} · ${esc(S.cover.g ? gName(S.cover.g) : S.cover.ex ? exName(S.cover.ex) : paintName(S.cover.paint))} ›</span></button>`}
@@ -1294,6 +1320,7 @@
     wire(host.querySelector('.rda'));
     quiz(S);
     if (user) top();
+    idle(() => [STORIES[i + 1], STORIES[i - 1]].forEach(n => { if (n && cur === S) need(n.id); }));   // (the neighbours, for the ‹ › buttons)
   }
   const top = () => { const r = host.getBoundingClientRect(), y = r.top + scrollY - (innerWidth < 820 ? 70 : 90); if (Math.abs(scrollY - y) > 40 && scrollY > y) scrollTo({ top: Math.max(0, y), behavior: 'smooth' }); };
 
@@ -1330,5 +1357,5 @@
     if (host !== box) { host = box; cur = null; }
     if (cur) story(cur.id, false); else shelf();
   }
-  window.AtlasRead = { render, STORIES, V, open: id => story(id, true), show: id => { story(id, false); top(); }, showShelf: () => { shelf(); top(); }, current: () => (host && host.querySelector('.rda') && cur ? cur.id : null), _stamps: stamps };
+  window.AtlasRead = { render, STORIES, V, load: id => need(id), open: id => story(id, true), show: id => story(id, false).then(top), showShelf: () => { shelf(); top(); }, current: () => (host && host.querySelector('.rda') && cur ? cur.id : null), _stamps: stamps };
 })();
