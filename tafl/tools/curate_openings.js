@@ -49,7 +49,7 @@ LS.steps.forEach(st => { (st.problems || []).forEach(q => pool.push(['ls ' + st.
 (PZ.themes || []).forEach(th => (th.puzzles || []).forEach(q => pool.push(['pz ' + th.id, q.s.b])));
 const START = E.Pos.from(null, V).spec().b;
 const tops = (moves, k) => values(moves, 4).slice(0, k).map(x => x[0]);
-const mode = process.argv[2] || 'pick', TMP = path.join(__dirname, '.curate');
+const mode = process.argv[2] || 'pick', TMP = path.join(__dirname, '.curate'), GROW = +(process.env.GROW || 0);
 if (mode === 'gen') { fs.mkdirSync(TMP, { recursive: true });
   for (const g of OP.sets.filter(x => (process.argv[3] || '').split(',').includes(x.id))) {
     const side = g.side, line = g.study.line, nDef = g.moves.split(' ').length, seen = new Set(), cands = [];
@@ -58,7 +58,10 @@ if (mode === 'gen') { fs.mkdirSync(TMP, { recursive: true });
     for (let i = nDef; i <= line.length; i++) { const pre = line.slice(0, i); if (!ok(pre)) break;
       const { pos } = E.replay(null, pre, V);
       const mine = pos.turn === side ? [pre] : tops(pre, 4).map(r => pre.concat([r])).filter(ok);
-      for (const a of mine) { consider(a); for (const b of tops(a, 2)) { const ab = a.concat([b]); if (!ok(ab)) continue; for (const r2 of tops(ab, 3)) consider(ab.concat([r2])); } } }
+      for (const a of mine) { consider(a); for (const b of tops(a, 2)) { const ab = a.concat([b]); if (!ok(ab)) continue; for (const r2 of tops(ab, 3)) { const abr = ab.concat([r2]); consider(abr);
+        // (2026-11-25 担当B) GROW=1: one more pair of plies (the opponent's 2 best, then the plan side's 2 best again) — the plans that had 2〜4
+        // problems on the near branches get candidates further from the line (the same ①〜⑥ test below)
+        if (GROW > 0 && ok(abr)) for (const c of tops(abr, 2)) { const abrc = abr.concat([c]); if (!ok(abrc)) continue; for (const r3 of tops(abrc, 2)) consider(abrc.concat([r3])); } } } } }
     // the depth-4 values as a quick sieve (the test itself is depth 5 and 6)
     const pre4 = cands.filter(mv => { const s4 = values(mv, 4); return s4.length >= 3 && Math.abs(s4[0][1]) < 2500 && s4.filter(x => points(s4, x[0]) >= 16).length <= 5; });
     const good = [];
@@ -72,6 +75,7 @@ for (const id in out) { out[id] = out[id].filter(c => { if (c.fresh) return true
 // ⑤ across the plans: greedy, easy first, every kept problem 5+ squares from the lessons / puzzles and from each other
 let BAD = new Set(); try { BAD = new Set(JSON.parse(fs.readFileSync(path.join(TMP, 'bad.json'), 'utf8'))); } catch (e) {}   // (positions whose words fail ⑦⑧ in tools/lesson-verify.js taflOpen)
 const kept = {}, all = [];
+for (const g of OP.sets) if (!out[g.id].length && g.verified) (g.problems || []).forEach(q => all.push({ s: q.s }));   // (2026-11-25 担当B: the verified plans not picked again keep their problems; ⑤ against them too)
 for (const g of OP.sets) { const L = out[g.id].sort((a, b) => a.d - b.d), K = [], ans = new Map(), kd = new Map();
   for (const c of L) { if (BAD.has(c.s.b)) continue; if (pool.some(([, b]) => dist(c.s.b, b) <= 4)) continue; if (all.some(o => dist(c.s.b, o.s.b) <= 4)) continue;
     if ((ans.get(c.name) || 0) >= 2 || (kd.get(c.k) || 0) >= 3) continue;
