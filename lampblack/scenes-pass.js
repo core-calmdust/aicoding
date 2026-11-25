@@ -25,9 +25,9 @@ window.WL_SCENE_PASS = {
  "abbey/cloister": "12noc1s",
  "abbey/cellar": "nppnby",
  "abbey/hospice": "1uhjzhw",
- "theater/stage": "vqiw0b",
+ "theater/stage": "1e4bbj8",
  "theater/trap": "js9hh9",
  "theater/green": "q9kqj",
  "theater/quay": "1ymbke0",
- "theater/box": "1wdbhz0"
+ "theater/box": "h4c9ax"
 };

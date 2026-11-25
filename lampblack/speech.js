@@ -26,7 +26,10 @@
     const k = id + ':' + act;
     const i = ((h32(S.seed + k) % 97) + (S.vc[k] = (S.vc[k] || 0) + 1)) % list.length;
     const add = name => (vo.reg === 'plain' || vo.reg === 'kid' && false) ? name : name;
-    const out = fill(list[i], Object.assign({ you: story.hero.title, god: story.lex.god || '神さま', godCall: story.lex.godCall || '神さま', blessing: story.lex.blessing || 'ようこそ' }, vars || {}));
+    // the last day of the fox hunt: the wolves are gone, the talk is of the fox (before the reason is put in, so the reason's own words stay)
+    let line = list[i];
+    if (S.foxHunt && ['defend', 'accuse', 'sus', 'bad', 'agree', 'rs_w', 'rm_w'].includes(act)) line = String(line).replace(/人狼/g, ((story.roles || {}).fox || {}).name || '妖狐').replace(/狼/g, '狐');
+    const out = fill(line, Object.assign({ you: story.hero.title, god: story.lex.god || '神さま', godCall: story.lex.godCall || '神さま', blessing: story.lex.blessing || 'ようこそ' }, vars || {}));
     // the hero's title with an honorific becomes how people really call them (先生さん → 先生, 医者さん → お医者さま)
     const H = story.hero;
     return H && H.you && H.title ? out.split(H.title + 'さん').join(H.you) : out;
@@ -40,6 +43,7 @@
     const o = { role: w.role ? roleShort(w.role) : '', by: w.by ? (w.by === 'you' ? story.hero.title : name(S, story, w.by)) : '' };
     if (w.k === 'counter') o.role = roleName(story, w.role);
     if (w.k === 'trace') o.trait = trait(story, w.cat, w.val);
+    if (w.k === 'den') o.den = loc(story, story.foxLoc);
     return fill(T[w.k] || T.gut, o);
   }
   // NPCs say "〜さん" in polite registers; plain voices drop it
@@ -106,5 +110,20 @@
     return parts;
   }
 
-  root.WLSpeech = { fill, say, why, event, night, opinion, about, name, loc, roleName, trait, fig, traceText, traceShort, charOf, callName };
+  // the morning's narration (the same words the game shows; text-quality.js reads them too)
+  const pickOne = (S, a, k) => Array.isArray(a) ? a[h32(S.seed + ':' + k) % a.length] : a;
+  function peace(S, story, N) {
+    return N.loc ? fill(pickOne(S, story.text.peace, 'pc' + N.n), { loc: loc(story, N.loc) }) : '朝が来た。誰も死ななかった。\nどの戸口にも、爪の跡はひとつもない。';   // no one was attacked at all: no place to name
+  }
+  function morning(S, story, N) {
+    const out = [], T = story.text, nm = id => id === 'you' ? story.hero.title : name(S, story, id);
+    if (N.died && N.target !== 'you') { const c = charOf(story, N.target); out.push(fill(pickOne(S, T.discover[N.loc] || T.discover[story.locs[0].id], 'dc' + N.n), { victim: nm(N.target), note: c ? c.note : '' })); }
+    else if (!N.died) out.push(peace(S, story, N));
+    if (N.dragged) out.push(fill(pickOne(S, T.catDrag || ['{name}も、冷たくなっていた。'], 'cd' + N.n), { name: nm(N.dragged), cat: N.target === 'you' ? 'あなた' : nm(N.target) }));
+    if (N.cursed && N.cursed !== 'you') out.push(fill(pickOne(S, T.curse || [''], 'cu' + N.n), { name: nm(N.cursed) }));
+    if (N.followed && N.followed !== 'you') out.push(fill(pickOne(S, T.follow || [''], 'fo' + N.n), { name: nm(N.followed) }));
+    if (S.foxHunt && S.foxHunt.day === S.day && T.foxHunt) out.push(T.foxHunt);
+    return out.filter(Boolean);
+  }
+  root.WLSpeech = { fill, say, peace, morning, why, event, night, opinion, about, name, loc, roleName, trait, fig, traceText, traceShort, charOf, callName };
 })(typeof window !== 'undefined' ? window : globalThis);

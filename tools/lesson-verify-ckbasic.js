@@ -1,0 +1,123 @@
+// (2026-11-25 第2期 担当A) checkers: the basics b_move・b_jump・b_multi — every problem and warm-up, every legal move, checked on the board.
+//   ①② P.ok = the lesson's goal set exactly:
+//       b_move  — no capture on the board; the right moves give nothing away (ckLF net ≥ 0, no shot for the opponent), are not an
+//                 exchange (trade) nor a sacrifice that wins back (shot), and the moved piece is not next to an enemy that could jump it
+//                 unless the square behind is filled; every other move gives a piece away for nothing (net < 0)
+//       b_jump  — every capture takes one piece; the right one is the only capture not taken back (net 1, no shot after, no enemy man
+//                 next to the landing square); every other capture is taken back (net ≤ 0, and at net 0 the landing piece itself)
+//       b_multi — the right one is the only capture that takes the most (≥ 2); its piece has another way to capture
+//     and the engine agrees: at two depths (8 and 12, 追4) every right move is ≥ 60 above every wrong one
+//   ③ ≥ 3 legal moves, right ≤ a third of them (追72), b_jump ≥ 2 pieces that can capture
+//   ④ the theme above; no move ends the game
+//   ⑤ (追1・追2) no position within 3 squares (the colour-swapped turn too) of any lesson problem, warm-up, puzzle or opening
+//   ⑥ the number of wrong moves never drops, the last > the first
+//   ⑦⑧ the 2D words (one per lesson: the claims hold for every move by ①) and チェッカニ's 3D words (ckLsJa) for every move: the
+//       pieces given away, taken back, the count of pieces, the edge / the filled square / no enemy near
+//   ⑧ the hint ring (the answers' pieces): b_jump — every capture of a ringed piece is right (「金の丸の駒で取ると、取り返されにくい」)
+//   warm-ups: explain — the marked move (hl → ok) is a right move; try — ok = the goal set, right ≤ a third (追72)
+const path = require('path');
+const CKB_DONE = new Set(['b_move', 'b_jump', 'b_multi']);
+function goal(E, X, p, id) {   // → { G: the right moves, F: facts per move, bad: [move, why] } (bad: the position does not fit the lesson)
+  const all = p.moves(), F = new Map(all.map(m => [m, X.ckLF(E, p, m)])), bad = [];
+  const retook = m => { const f = F.get(m); return f.after.caps().some(c => E.mCap(c) & E.bit(f.t)); };
+  let G = [];
+  if (all.some(m => F.get(m).win)) bad.push('④ a move ends the game');
+  if (/[BW]/.test(p.spec().b)) bad.push('④ 追32: a king on the board (kings come in b_king)');
+  all.forEach(m => { if (F.get(m).crown) bad.push(`④ 追32: ${E.name(p, m)} crowns (kings come in b_king)`); });
+  if (id === 'b_move') {
+    if (p.hasCaps()) bad.push('④ a capture is on the board');
+    all.forEach(m => { const f = F.get(m); if (f.trade || f.shot) bad.push(`④ ${E.name(p, m)} is an exchange / a shot (neither safe nor given away)`); });
+    G = all.filter(m => { const f = F.get(m); return f.net >= 0 && f.oppShot <= 0 && !f.trade && !f.shot && (!f.near || f.blocked); });
+    all.filter(m => !G.includes(m)).forEach(m => { if (F.get(m).net >= 0) bad.push(`④⑦ ${E.name(p, m)} is not safe but gives nothing away at once (the words: 取られてしまいます)`); });
+  } else if (id === 'b_jump') {
+    if (!p.hasCaps()) bad.push('④ no capture');
+    all.forEach(m => { if (F.get(m).capN !== 1) bad.push(`④ ${E.name(p, m)} takes ${F.get(m).capN} (the jump lesson: one each — counting is b_multi)`); });
+    G = all.filter(m => { const f = F.get(m); return f.net === 1 && f.oppShot <= 0 && !f.near; });
+    all.filter(m => !G.includes(m)).forEach(m => { const f = F.get(m); if (f.net > 0) bad.push(`④⑦ ${E.name(p, m)} is not taken back (net ${f.net})`); else if (f.net === 0 && !retook(m)) bad.push(`⑦ ${E.name(p, m)}: the piece taken back is not the one that landed (the words: 着地した駒)`); });
+    if (new Set(all.map(E.mFrom)).size < 2) bad.push('③ one piece can capture (no choice of piece)');
+  } else if (id === 'b_multi') {
+    if (!p.hasCaps()) bad.push('④ no capture');
+    const mx = Math.max(...all.map(m => F.get(m).capN)); G = all.filter(m => F.get(m).capN === mx);
+    if (mx < 2) bad.push('④ no multiple jump');
+  }
+  return { all, F, G, bad };
+}
+function verify(o) {
+  const fs = require('fs'), { E, W, X, L, pool, ckDist } = o, only = o.only, out = [], add = (id, j, m) => out.push({ step: id, q: j + 1, msg: m });
+  const V = o.voice || (() => { const w = {}; try { new Function('window', fs.readFileSync(path.join(__dirname, '..', 'checkers/voice-crab-ja.js'), 'utf8'))(w); } catch (e) {} return ((w.I18N || {})['ja@crab']) || {}; })();
+  const plain = t => String(t).replace(/[\u0001\u0002]/g, '');
+  const evalAt = (spec, d) => { W.newGame(); return new Map(W.analyzeDepth(spec, d).list.map(x => [x.m, x.v])); };   // (追84: a cleared table each time — the same reading whatever ran before)
+  L.steps.forEach(st => { const id = st.id; if (!CKB_DONE.has(id) || (only && !only.has(id))) return;
+    let prevD = -1, firstD = null;
+    st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), nm = m => E.name(p, m);
+      const { all, F, G, bad } = goal(E, X, p, id); bad.forEach(a);
+      const okS = new Set(P.ok || []);
+      (P.ok || []).forEach(m => { if (!all.includes(m)) a(`① the answer ${m} is not legal`); else if (!G.includes(m)) a(`① the answer ${nm(m)} does not meet the lesson's goal`); });
+      G.forEach(m => { if (!okS.has(m)) a(`② ${nm(m)} meets the goal but is scored wrong`); });
+      if (!okS.has(P.best)) a('① best is not an answer');
+      if (id !== 'b_move' && G.length !== 1) a(`② ${G.length} moves meet the goal (one answer)`);
+      // ③ (追72)
+      if (all.length < 3) a(`③ only ${all.length} legal moves`);
+      if (okS.size * 3 > all.length) a(`③ 追72: ${okS.size} of ${all.length} moves are right (more than a third)`);
+      if (!G.length) return;
+      // ①② the engine agrees, at two depths (追4)
+      const W8 = all.filter(m => !okS.has(m));
+      for (const d of [8, 12]) { const ev = evalAt(P.s, d), lo = Math.min(...[...okS].map(m => ev.get(m))), hi = Math.max(...W8.map(m => ev.get(m)));
+        if (!(lo - hi >= 60)) a(`①② depth ${d}: a right move ${lo}, the best wrong move ${hi} (gap < 60)`); }
+      // b_multi: the ringed piece has another way; b_jump: every capture of a ringed piece is right (the hint's words)
+      const ring = new Set([...okS].map(E.mFrom));
+      if (id === 'b_multi' && all.filter(m => ring.has(E.mFrom(m))).length < 2) a('⑧ 追52: the gold ring\'s piece has one way to capture (the ring gives the answer away, 「続けて跳べる道をたどって」)');
+      if (id === 'b_jump' && all.some(m => ring.has(E.mFrom(m)) && !okS.has(m))) a('⑧ the ringed piece has a capture that is taken back (「金の丸の駒で取ると、取り返されにくい」)');
+      // ⑤
+      for (const [who, b, o2] of pool) { if (o2 === P) continue; const e = ckDist(P.s.b, b); if (e <= 3) a(`⑤ ${e} square(s) from ${who}`); }
+      // ⑥
+      const d = all.length - okS.size;
+      if (d < prevD) a(`⑥ easier than the problem before (${d} wrong moves after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
+      if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (${d} wrong moves vs ${firstD})`);
+      // ⑦⑧ チェッカニ's words (3D) for every move
+      let Wd; try { Wd = X.ckLsJa(E, st, P, j); } catch (e) { a('⑧ the words fail: ' + e.message); return; }
+      for (const t of [Wd.ask, Wd.hintTx]) if (!t || /\{|undefined|NaN/.test(t)) a(`⑧ the question / hint 「${t}」`);
+      { const h = String(Wd.hintTx), oF = [...okS].map(m => F.get(m)), pa = E.path(p, P.best) || [];
+        const turn = pa.slice(2).some((q, i) => { const [r0, c0] = E.RC[pa[i]], [r1, c1] = E.RC[pa[i + 1]], [r2, c2] = E.RC[q]; return Math.sign(r1 - r0) !== Math.sign(r2 - r1) || Math.sign(c1 - c0) !== Math.sign(c2 - c1); });
+        if (/盤の端/.test(h) && !oF.some(f => f.edge)) a(`⑧ 追7: the hint 「${h}」 — no right move goes to the edge`);
+        if (/後ろに味方/.test(h) && !oF.some(f => f.near && f.blocked)) a(`⑧ 追7: the hint 「${h}」 — no right move is blocked behind`);
+        if (/離れたマス/.test(h) && !oF.some(f => !f.near && !f.edge)) a(`⑧ 追7: the hint 「${h}」 — no right move away from the enemy`);
+        if (/向きを変えて/.test(h) && !turn) a(`⑧ 追7: the hint 「${h}」 — the answer's jumps do not turn`); }
+      for (const m of all) { const f = F.get(m);
+        if (okS.has(m)) { const g = plain(Wd.good(m));
+          if (!g || /\{|undefined|NaN/.test(g)) { a(`⑧ the praise of ${nm(m)} 「${g}」`); continue; }
+          if (id === 'b_move') { if (/端/.test(g) && !f.edge) a(`⑧ ${nm(m)} 「${g}」: not on the edge`);
+            if (/ふさが|埋まって|背中のマス|着地するマスがない|跳ぶ先のマス/.test(g) && !(f.near && f.blocked)) a(`⑧ ${nm(m)} 「${g}」: no filled square behind an enemy`);
+            if (/いなくて|いないから|心配がない|危ない駒がいない|届く相手の駒がない/.test(g) && f.near && !/端/.test(g)) a(`⑧ ${nm(m)} 「${g}」: an enemy piece is next to it`); }
+          if (id === 'b_jump') { const n = g.match(/(\d+)枚まるまる/); if (n && +n[1] !== f.net) a(`⑧ ${nm(m)} 「${g}」: net ${f.net}`); if (/まわりに危険がない/.test(g) && f.near) a(`⑧ ${nm(m)} 「${g}」: an enemy next to the landing square`); }
+          if (id === 'b_multi') { const n = g.match(/(\d+)枚/); if (!n || +n[1] !== f.capN) a(`⑧ ${nm(m)} 「${g}」: takes ${f.capN}`); }
+          continue; }
+        const raw = plain(Wd.ng(m)), i0 = raw.indexOf('赤い矢印の手'), t = i0 >= 0 ? raw.slice(i0) : '';
+        if (!t) { a(`⑦ ${nm(m)}: the words do not name the move 「${raw}」`); continue; }
+        if (/\{|undefined|NaN/.test(raw)) a(`⑧ ${nm(m)}: 「${raw}」`);
+        if (id === 'b_move' && !new RegExp(`${-f.net}枚(タダで取られ|の損)|タダで${-f.net}枚`).test(t)) a(`⑦ ${nm(m)} gives ${-f.net} away, the words: 「${t}」`);
+        if (id === 'b_jump' && !(f.net < 0 ? (f.crown ? /(キングになった|王冠をかぶった|成った駒を).*(取られ|跳び越え)/ : /かえって損|差し引きで損|駒ごと取り返されて損/) : /取り返され/).test(t)) a(`⑦ ${nm(m)} (net ${f.net}), the words: 「${t}」`);
+        if (id === 'b_multi' && !new RegExp(`${f.capN}枚(しか|だけ|どまり)`).test(t)) a(`⑦ ${nm(m)} takes ${f.capN}, the words: 「${t}」`); }
+    });
+    // the warm-ups
+    (st.ramp || []).forEach((r, j) => { const a = m => add(id, -1, `warm-up ${j + 1} (${r.k}): ${m}`), p = E.Pos.from(r.s), nm = m => E.name(p, m);
+      const { all, G, F, bad } = goal(E, X, p, id); bad.forEach(x => a(x));
+      if (r.k === 'explain') { const hl = (r.marks || []).filter(x => x[1] === 'hl').map(x => x[0] - 1), to = (r.marks || []).filter(x => x[1] === 'ok').map(x => x[0] - 1);
+        const M = all.filter(m => hl.includes(E.mFrom(m)) && to.includes(E.mTo(m)));
+        if (M.length !== 1) a(`① the marks are not one legal move`); else if (!G.includes(M[0])) a(`① the marked move ${nm(M[0])} does not meet the goal`);
+        else { const f = F.get(M[0]);
+          if (id === 'b_move' && !(f.edge || (f.near && f.blocked))) a(`⑧ 「跳び越えた先のマスがないか、ふさがっている」: ${nm(M[0])} is not on the edge nor blocked behind`);
+          if (id === 'b_jump' && all.some(m => m !== M[0] && F.get(m).net !== 0)) a('⑧ 「ほかの取り方だと…得が帳消し」: a wrong capture does not come out even'); } }
+      if (r.k === 'try') { const okS = new Set((r.ok || []).map(n => all.find(m => nm(m) === n)).filter(x => x != null));
+        if (okS.size !== (r.ok || []).length) a(`① an answer is not legal (${r.ok})`);
+        G.forEach(m => { if (!okS.has(m)) a(`② ${nm(m)} meets the goal but is scored wrong`); }); okS.forEach(m => { if (!G.includes(m)) a(`① ${nm(m)} does not meet the goal`); });
+        if (all.length < 3) a(`③ ${all.length} legal moves`); if (okS.size * 3 > all.length) a(`③ 追72: ${okS.size} of ${all.length} moves are right`);
+        const look = (r.look || []).map(q => q - 1); if (look.length && ![...okS].every(m => look.includes(E.mFrom(m)))) a('⑧ the gold ring is not on the answer\'s piece'); }
+      for (const [who, b, o2] of pool) { if (o2 === r) continue; const e = ckDist(r.s.b, b); if (e <= 3 && !(who.startsWith(id + ' warm-up'))) a(`⑤ 追1: ${e} square(s) from ${who}`); }
+      const T3 = ['t', 'body', 'g', 'h', 'y'].map(f => V[`ramp:${id}/${j}/${f}`] || '').join(' ');
+      if (/\{|undefined/.test(T3)) a(`⑧ the 3D words 「${T3}」`);
+    });
+  });
+  return out;
+}
+module.exports = { verify, goal, CKB_DONE };
