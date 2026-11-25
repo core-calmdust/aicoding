@@ -268,7 +268,7 @@
     if (PCQ.matches) return;
     const d = $('dock');
     let h = d.classList.contains('hide') ? 0 : d.offsetHeight;
-    if (h && !$('tx').classList.contains('hide')) { h = Math.max(h, G.dockTextM || 0); G.dockTextM = h; } else G.dockTextM = 0;
+    if (h && !$('tx').classList.contains('hide')) { h = Math.max(h, G.dockTextM || 0); G.dockTextM = h; d.style.minHeight = h + 'px'; } else { G.dockTextM = 0; d.style.minHeight = ''; }   // the held height is the box's own, so no gap opens above it
     const sh = Math.max(Math.round(innerHeight * .46), innerHeight - h);
     if (G.stageHM !== sh) { G.stageHM = sh; document.documentElement.style.setProperty('--stageH', sh + 'px'); requestAnimationFrame(drawFloor); }
   }
@@ -1172,18 +1172,40 @@
     E.night(S, st, act);
     S.day++;
     save();
-    // the wolf crosses the screen
-    await wolfRun();
+    // the wolf crosses the screen; if it bit the nekomata, the cat's curse catches it on the way
+    const N = S.nights[S.nights.length - 1];
+    await wolfRun(N && N.dragged ? N : null);
     SND.windOff();
-    if (E.check(S)) { S.phase = 'end'; save(); return end(); }
+    if (E.check(S)) {
+      // the bite that ended it: show the morning before the end, so the curse is seen to land
+      if (N && N.dragged) {
+        const lines = [];
+        if (N.target !== 'you') lines.push({ text: `夜が明けた。${nm(N.target)}が、雪の中で冷たくなっていた。`, fx: () => setCast([N.target], { fallen: N.target, x: 42 }) });
+        lines.push({ text: fill(pickOne(st.text.catDrag || ['{name}も、冷たくなっていた。']), { name: nm(N.dragged), cat: N.target === 'you' ? 'あなた' : nm(N.target) }), fx: () => setCast(N.target !== 'you' ? [N.target, N.dragged] : [N.dragged], { fallen: N.dragged, x: 58 }) });
+        await say(lines);
+      }
+      S.phase = 'end'; save(); return end();
+    }
     await morning(false);
   }
-  async function wolfRun() {
+  async function wolfRun(N) {
     const fx = $('fx');
     const d = document.createElement('div'); d.className = 'run'; d.innerHTML = ART.wolf(); fx.appendChild(d);
-    SND.howl(.3); SND.door(1.3);   // far off a howl, then a door creaks open somewhere close
-    await wait(2900);
-    d.remove();
+    SND.howl(.3);
+    if (!N) { SND.door(1.3); await wait(2900); d.remove(); return; }   // far off a howl, then a door creaks open somewhere close
+    // the nekomata's curse: the wolf comes back from its kill; the cat's eyes open behind it, it cries,
+    // four claws of pale fire tear across the wolf, and the shadow falls apart in the dark
+    d.classList.add('cursed');
+    const c = document.createElement('div'); c.className = 'nekomata'; c.innerHTML = ART.cat(); fx.appendChild(c);
+    const k = document.createElement('div'); k.className = 'claws';
+    k.innerHTML = '<svg viewBox="0 0 200 160" aria-hidden="true">' + [0, 1, 2, 3].map(i => `<path d="M${40 + i * 30},${18 + i * 4} C${60 + i * 30},${60 + i * 2} ${70 + i * 30},${100 - i * 2} ${78 + i * 32},${146 - i * 4}" style="--d:${i * .07}s"/>`).join('') + '</svg>';
+    const fl = document.createElement('div'); fl.className = 'curseflash'; fx.appendChild(fl);
+    fx.appendChild(k);
+    SND.cat(1.5);
+    await wait(3300);
+    SND.thud();
+    await wait(1500);
+    [d, c, k, fl].forEach(x => x.remove());
   }
 
   /* the end: who they were */
@@ -1418,6 +1440,6 @@
   $('setGo').onclick = () => { SND.unlock(); start(); };
   addEventListener('resize', () => { if (G.scr === 'play') { if (!PCQ.matches) document.documentElement.style.setProperty('--nbW', '0px'); else if (document.body.classList.contains('nb-open')) document.documentElement.style.setProperty('--nbW', '400px'); layoutDock(); if (S) renderRoster(); } });
   PCQ.addEventListener?.('change', () => layoutDock());
-  window.WLGame = { get S() { return S; }, get st() { return st; }, G, buildSelect, buildSetup, start, hub, meeting, debate, vote, night, end, setNb, resume };
+  window.WLGame = { get S() { return S; }, get st() { return st; }, G, buildSelect, buildSetup, start, hub, meeting, debate, vote, night, end, setNb, resume, wolfRun };
   buildTitle();
 })();
