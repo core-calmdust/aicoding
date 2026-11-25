@@ -1079,6 +1079,12 @@ static int mate3(void) {
 #ifdef SEARCH_STATS   /* (tools/match/usimatch.c "stat": counters of the one-thread search; no effect on the search) */
 static long long stCutK[3][8], stCutD[3], stCutDS[3];   /* cut-offs: [table move / capture or promotion / quiet][place 1, 2, 3, 4-6, 7-10, 11-20, 21-40, 41+]; quiet cuts by depth 1-3 / 4-7 / 8+: count, sum of places */
 static long long stHR[3][6];   /* quiet cut-offs by depth class: count, moves with more history than the cutting one, quiet moves, with history 0, the cutting move's history > 0, it was a killer */
+static long long stCat[3][4], stNdc[3][2];
+static double stF[8];
+static long long stTT[3][4], stQr[2][8]; static int stQSeen[256];   /* quiet cut-offs by the move's place among the quiet moves, depth 1-2 / 3+ */
+static long long stPr[3][6];   /* moves pruned by pruning v2's rules: [node type][- / capture futility / capture-check SEE / history / quiet futility / quiet SEE] */
+static long long stQ0, stQ0c;   /* quiescence searches entered from the main search, and those in check */
+static long long stMv[3][16], stNd[3][16], stLr[3][16], stLd[3][16];   /* moves searched, nodes, reduced moves and their plies: by node type (PV / cut / all) and depth */
 static long long stQ, stProbe, stHit, stTTcut, stCut, stCut1, stCutTT, stCutIdx, stChkExt, stNull, stNullOk, stLmr, stLmrRe, stStore, stEvict, stRfp, stPv, stMoves;
 #define ST(x) (x)
 #else
@@ -1525,6 +1531,9 @@ static void order2Caps(i32 *moves, i32 *scores, int n, int ttm) {
   }
 }
 static double qsearch2(double alpha, double beta, int ply, int pvNode, int qd) {
+#ifdef SEARCH_STATS
+  stQ0 += (qd == 0); if (qd == 0) stQ0c += inCheck() ? 1 : 0;
+#endif
   nodes++; ST(stQ++);
   if (timeUp()) return 0;
   const int inChk = inCheck();
@@ -1669,6 +1678,10 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
   i32 *moves = moveBuf[ply], *scores = scoreBuf[ply], *qmoves = quietBuf[ply], *qscores = quietScore[ply], *tq = triedQ[ply];
   int tc[32], ntc = 0;
   double best = -INF; int bestMove = 0, legal = 0, nq = 0, mc = 0, skipQuiets = 0;
+#ifdef SEARCH_STATS
+  stQSeen[ply] = 0;
+#endif
+  int nPr = 0;
   const double origAlpha = alpha;
   const int us = side;
   int stage = 0, i1 = 0, n1 = 0, i2 = 0, n2 = 0, bad = 0;
@@ -1724,6 +1737,9 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
     if (m == ex) continue;
     const int to = (m >> 7) & 127, cap = board[to], quiet = !cap && !((m >> 14) & 1);
     mc++;
+#ifdef SEARCH_STATS
+    if (quiet && m != ttm) stQSeen[ply]++;
+#endif
     int hv = 0;
     if (quiet) hv = quietHist(us, m);
     /* pruning v2 (P91; search v6, 2026-11-20): at every node but the root, in check too; a move that gives check is judged
@@ -1734,23 +1750,27 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
       /* (fixed 2026-11-25) not in check: the move-count limit used to drop the quiet evasions too (at depth 1 after the first
          one or two), so a checked king often had no escape read; Stockfish / YaneuraOu skip the quiet stage only, and the
          evasions are not in it. P[122] = 1: the old behaviour, to compare. */
-      if (mc >= (3 + depth * depth) * (P[43] ? P[43] : 100) / 100 / (2 - improving)) { if (!inChk) skipQuiets = 1; else if (P[122]) { skipQuiets = 1; if (quiet) continue; } }
+      /* (probe) P[124]: the limit's percent at depth 1-2 (0: P[43] there too); P[125] = 1: count legal moves only (as YaneuraOu's moveCount), not every move the picker gave */
+      if ((P[125] ? legal + nPr : mc) >= (3 + depth * depth) * (depth <= 2 && P[124] ? P[124] : P[43] ? P[43] : 100) / 100 / (2 - improving)) { if (!inChk) skipQuiets = 1; else if (P[122]) { skipQuiets = 1; if (quiet) continue; } }
       int rb = LMRX[di][mi]; if (!improving) rb += rb * P[86] / 100; rb += P[88] * 10; if (pvNode) rb -= 512; if (ttPv) rb += 900;
       int ld = depth - 1 - rb / 1024;
       int gc = givesCheckPre(m); if (gc && !chkFast) { doMove(m); gc = inCheck(); undoMove(); }
       if (!quiet || gc) {
         const int ch = cap && (m & 127) <= 80 ? capH[capIdx(m)] : 0;
-        if (!gc && !inChk && cap && ld < 8 && rawEval + P[99] + P[100] * ld + VALUE[typeOf(cap)] + ch / 8 <= alpha) continue;
-        /* (fixed 2026-11-25) at every alpha: the test "alpha >= 0" was a misreading of Stockfish's stalemate exception (which
-           shogi does not have) and switched this pruning off in half of the nodes */
-        if ((alpha >= 0 || !P[122]) && m != ttm && see(m) < -(P[101] * depth + ch / 32)) continue;
+        if (!gc && !inChk && cap && ld < 8 && rawEval + P[99] + P[100] * ld + VALUE[typeOf(cap)] + ch / 8 <= alpha) { ST(stPr[pvNode ? 0 : cutNode ? 1 : 2][1]++); nPr++; continue; }
+        /* only when alpha >= 0, as YaneuraOu has it (2026-11-25: for a few hours this test was dropped as "a misreading of
+           Stockfish's stalemate exception"; YaneuraOu keeps it on purpose, so it is back. P[123] = 1: at every alpha) */
+        if ((alpha >= 0 || P[123]) && m != ttm && see(m) < -(P[101] * depth + ch / 32)) { ST(stPr[pvNode ? 0 : cutNode ? 1 : 2][2]++); nPr++; continue; }
       } else if (!pvNode || mc > 1) {
-        if (P[98] && contHist(m) < -P[98] * depth) continue;
+        if (P[98] && contHist(m) < -P[98] * depth) { ST(stPr[pvNode ? 0 : cutNode ? 1 : 2][3]++); nPr++; continue; }
         ld += hv / (P[81] ? P[81] : 2000);
         const double fv = rawEval + P[102] + P[103] * ld + (rawEval > alpha ? P[104] : 0);
-        if (!inChk && ld < 12 && fv <= alpha) { if (best <= fv && fv < MATE - MAXPLY) best = fv; continue; }
+#ifdef SEARCH_STATS
+        if (!pvNode && !cutNode && depth >= 5 && depth <= 8 && !inChk) { double g_ = alpha - rawEval; stF[0]++; stF[1] += ld; stF[2] += (rawEval > alpha); stF[3] += g_ < -2000 ? -2000 : g_ > 2000 ? 2000 : g_; stF[4] += mc; stF[5] += depth - 1 - rb / 1024; }
+#endif
+        if (!inChk && ld < 12 && fv <= alpha) { if (best <= fv && fv < MATE - MAXPLY) best = fv; ST(stPr[pvNode ? 0 : cutNode ? 1 : 2][4]++); nPr++; continue; }
         if (ld < 0) ld = 0;
-        if (see(m) < -P[105] * ld * ld) continue;
+        if (see(m) < -P[105] * ld * ld) { ST(stPr[pvNode ? 0 : cutNode ? 1 : 2][5]++); nPr++; continue; }
       }
     } else
     /* pruning in the move loop: one legal move is in, the node is not a lost one */
@@ -1778,8 +1798,9 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
       doMove(m);
       if (!legalAfter(m, 0)) { undoMove(); continue; }
     }
-    legal++; ST(stMoves++);
+    legal++; ST(stMoves++); ST(stMv[pvNode ? 0 : cutNode ? 1 : 2][depth < 15 ? depth : 15]++); ST(stNd[pvNode ? 0 : cutNode ? 1 : 2][depth < 15 ? depth : 15] += (legal == 1));
     const int givesChk = inCheck();
+    ST(stTT[pvNode ? 0 : cutNode ? 1 : 2][(depth >= 3 ? 2 : 0) + (ttm ? 1 : 0)] += (legal == 1)); ST(stNdc[pvNode ? 0 : cutNode ? 1 : 2][inChk ? 1 : 0] += (legal == 1)); ST(stCat[pvNode ? 0 : cutNode ? 1 : 2][inChk ? 0 : cap ? 1 : givesChk ? 2 : 3]++);
     int ext = !P[55] && givesChk && ply < rootDepth * 2 && (P[11] || seeAfterCheck(m) >= 0) ? 1 : 0;
     if (m == ttm && sgExt) { if (sgExt > ext) ext = sgExt; else if (sgExt < 0 && !ext) ext = sgExt; }
     int nd = depth - 1 + ext;
@@ -1803,6 +1824,7 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
       if (depth >= 2 && legal > 1) {
         const int lim = ply < rootDepth * 2 ? P[92] : 0, e = -r / 1024;
         int d = nd + (e < lim ? e : lim); if (d < 1) d = 1; d += pvNode; ST(stLmr += (d < nd));
+        ST(stLr[pvNode ? 0 : cutNode ? 1 : 2][depth < 15 ? depth : 15]++); ST(stLd[pvNode ? 0 : cutNode ? 1 : 2][depth < 15 ? depth : 15] += nd - d);
         v = -search2(d, -alpha - 1, -alpha, ply + 1, 0, 1);
         if (v > alpha) {
           nd += (d < nd && v > best + P[95]) - (v < best + P[96]);
@@ -1827,6 +1849,7 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
       if (inChk) r--;
       if (r < 0) r = 0;
       int d = nd - r; if (d < 1) d = 1; ST(stLmr += (d < nd));
+      ST(stLr[pvNode ? 0 : cutNode ? 1 : 2][depth < 15 ? depth : 15]++); ST(stLd[pvNode ? 0 : cutNode ? 1 : 2][depth < 15 ? depth : 15] += nd - d);
       v = -search2(d, -alpha - 1, -alpha, ply + 1, 0, 1);
       if (v > alpha && d < nd) { ST(stLmrRe++); v = -search2(nd, -alpha - 1, -alpha, ply + 1, 0, !cutNode); if (P[71] && quiet) { int b = (P[42] ? P[42] : 170) * nd - 80; if (b > 1600) b = 1600; lmrB = v >= beta ? b : v <= alpha ? -b : 0; } }
       full = pvNode && v > alpha;
@@ -1847,6 +1870,7 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
         if (v >= beta) {
           ST(stCut++); ST(stCut1 += (legal == 1)); ST(stCutTT += (m == ttm)); ST(stCutIdx += legal);
 #ifdef SEARCH_STATS
+          if (quiet && m != ttm && !inChk) { const int q_ = stQSeen[ply], c_ = q_ <= 3 ? q_ - 1 : q_ <= 6 ? 3 : q_ <= 10 ? 4 : q_ <= 20 ? 5 : q_ <= 40 ? 6 : 7; stQr[depth >= 3 ? 1 : 0][c_ < 0 ? 0 : c_]++; }
           { const int pl = mc, b_ = pl <= 3 ? pl - 1 : pl <= 6 ? 3 : pl <= 10 ? 4 : pl <= 20 ? 5 : pl <= 40 ? 6 : 7, k_ = m == ttm ? 0 : !quiet ? 1 : 2;
             stCutK[k_][b_ < 0 ? 0 : b_]++; if (k_ == 2) { const int d_ = depth < 4 ? 0 : depth < 8 ? 1 : 2; stCutD[d_]++; stCutDS[d_] += pl; }
             if (k_ == 2 && n2 > 1 && !inChk) { int hm = quietHist(us, m), above = 0, zero = 0; for (int q_ = 0; q_ < n2; q_++) { int hq = quietHist(us, qmoves[q_]); above += hq > hm; zero += hq == 0; } const int d_ = depth < 4 ? 0 : depth < 8 ? 1 : 2; stHR[d_][0]++; stHR[d_][1] += above; stHR[d_][2] += n2; stHR[d_][3] += zero; stHR[d_][4] += hm > 0; stHR[d_][5] += (m == killers[ply * 2] || m == killers[ply * 2 + 1]); } }
