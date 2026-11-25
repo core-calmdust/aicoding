@@ -3138,7 +3138,7 @@ try { lessonProgress = JSON.parse(localStorage.getItem(LESSON_STORE) || '{}'); }
 const CORNER_OF = { 9: 0, 14: 7, 49: 56, 54: 63, 1: 0, 8: 0, 6: 7, 15: 7, 48: 56, 57: 56, 55: 63, 62: 63 };
 async function loadLessons() {
   if (lessonData) return lessonData;
-  try { lessonData = await fetch('lessons.json?v=20261125r2').then(r => r.json()); } catch (e) { lessonData = { lessons: [] }; }
+  try { lessonData = await fetch('lessons.json?v=20261125r3').then(r => r.json()); } catch (e) { lessonData = { lessons: [] }; }
   return lessonData;
 }
 const LT = l => l.text ? Object.assign({}, l.text.ja, l.text.en, l.text[LANG]) : l;  // per-field fallback: LANG → en → ja
@@ -5948,7 +5948,7 @@ accRender();
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/seqprac.js?v=3"></script><script src="opcourse.js?v=11"></script>
+<script src="../shared/seqprac.js?v=3"></script><script src="opcourse.js?v=12"></script>
 <script src="../shared/atlas.js?v=20261124dl" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261109ac2l14as1" defer></script>

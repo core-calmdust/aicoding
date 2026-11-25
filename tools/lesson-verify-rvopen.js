@@ -61,7 +61,7 @@ function poolCheck(opt, ST, pool, add) {   // the verified lines: the 5 problems
       if (!lg.includes(A)) { a('① the answer is not legal'); return; }
       if (lg.length < 4) a(`③ ${lg.length} legal moves`);
       // ① ② the two stored searches (and again with --deep)
-      const evs = [['1.5 s', P.sc], ['0.3 s', P.sc2]]; if (opt.deep) for (let r = 1; r <= 2; r++) evs.push(['deep' + r + ' 1.5 s', eng()(P.pos, 1500)], ['deep' + r + ' 0.3 s', eng()(P.pos, 300)]);   // (追84: the timed searches sway — both of two re-reads must pass)
+      const evs = [['1.5 s', P.sc], ['0.3 s', P.sc2]]; if (opt.deep) for (let r = 1; r <= 2; r++) evs.push(['deep' + r + ' 1.5 s', eng()(P.pos, 1500)], ['deep' + r + ' 0.3 s', eng()(P.pos, 300)]); if (opt.deep) evs.push(['deep 5 s', eng()(P.pos, 5000)]);   // (追84: the timed searches sway — both of two re-reads must pass; 2026-11-25 担当B: and one deeper read, 5 s — 金田流 q3 had c6 and h4 equal there, ライトニングボルト q5 e7 within 0.6, りんご q3 f7 the best)
       for (const [nm, e] of evs) { if (!e) { a(`① ${nm}: no values`); continue; } const v = new Map(e), best = Math.max(...e.map(x => x[1]));
         if (e.length !== lg.length || lg.some(q => !v.has(sqn(q)))) a(`① ${nm}: the values do not cover the legal moves`);
         if (v.get(P.best) < best) a(`① ${nm}: ${P.best} is not the best (${e[0][0]})`);

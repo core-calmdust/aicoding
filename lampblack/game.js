@@ -268,7 +268,7 @@
     if (PCQ.matches) return;
     const d = $('dock');
     let h = d.classList.contains('hide') ? 0 : d.offsetHeight;
-    if (h && !$('tx').classList.contains('hide')) { h = Math.max(h, G.dockTextM || 0); G.dockTextM = h; } else G.dockTextM = 0;
+    if (h && !$('tx').classList.contains('hide')) { h = Math.max(h, G.dockTextM || 0); G.dockTextM = h; d.style.minHeight = h + 'px'; } else { G.dockTextM = 0; d.style.minHeight = ''; }   // the held height is the box's own, so no gap opens above it
     const sh = Math.max(Math.round(innerHeight * .46), innerHeight - h);
     if (G.stageHM !== sh) { G.stageHM = sh; document.documentElement.style.setProperty('--stageH', sh + 'px'); requestAnimationFrame(drawFloor); }
   }
@@ -867,6 +867,7 @@
     ];
     if (appealCan('div')) opts.push({ t: `${seerN}へ：今夜はこの人を占ってほしい`, s: '名乗った全員に頼む。引き受けるかは、あなたをどれだけ信じているか次第。偽物も、たいてい引き受ける。', v: 'div', ic: IC.call, dis: u.div });
     if (appealCan('guard')) opts.push({ t: `${grdN}へ：名乗らなくていい、この人を守ってほしい`, s: `${grdN}が誰かは、あなたにもわからない。守ってくれるかは本人次第。狼もこの頼みを聞いている。`, v: 'guard', ic: IC.call, dis: u.guard });
+    if (appealCan('guard')) opts.push({ t: `${grdN}へ：今夜は、わたしを守ってほしい`, s: `自分の戸口を頼む。名乗り出ていれば聞き入れられやすいが、名乗りもなく頼めば、身勝手にも聞こえる。狼もこの頼みを聞いている。`, v: 'guardme', ic: IC.call, dis: u.guard });
     const v = await pickOpt('村に呼びかける', '集会の全員が聞いている。人狼も、だ。', opts);
     if (!v) return debate();
     openGate();
@@ -898,6 +899,10 @@
       u.guard = 1;
       await say([{ who: 'you', text: `${grdN}がいるなら、名乗らなくていい。返事もいらない。今夜は、${nm(t)}の戸口に立ってほしい。` }]);
       ev = E.askGuard(S, st, t);
+    } else if (v === 'guardme') {
+      u.guard = 1;
+      await say([{ who: 'you', text: S.pl.co ? `${grdN}がいるなら、名乗らなくていい。今夜は、わたしの戸口に立ってほしい。わたしが倒れれば、見たものも一緒に消える。` : `${grdN}がいるなら、名乗らなくていい。身勝手な頼みなのはわかっている。それでも今夜は、わたしの戸口に立ってほしい。` }]);
+      ev = E.askGuard(S, st, 'you');
     }
     const items = [];
     for (const e of ev) { const l = lineOf(e); if (l) items.push(l); }
@@ -1157,7 +1162,8 @@
     await say([{ text: pickOne(st.text.night) }, vignette()]);
     const act = {};
     const r = S.ghost ? null : S.pl.role;
-    if (!S.ghost && S.pl.co) await say([{ text: `あなたは${st.roles[S.pl.role].name}だと名乗った。狼は、名乗った者の戸口を知っている。\n${E.RS(S).guard ? "今夜、誰かがあなたを守ってくれるだろうか。" : `この${st.lex.village}に、扉を守ってくれる者はいない。`}` }]);
+    const wolves = E.alive(S).some(p => p.role === 'wolf');   // the fox hunt: the wolves are gone, the night is quiet
+    if (!S.ghost && S.pl.co && wolves) await say([{ text: `あなたは${st.roles[S.pl.role].name}だと名乗った。狼は、名乗った者の戸口を知っている。\n${E.RS(S).guard ? "今夜、誰かがあなたを守ってくれるだろうか。" : `この${st.lex.village}に、扉を守ってくれる者はいない。`}` }]);
     if (r === 'seer') {
       const done = new Set(S.pl.res.filter(x => x.seer).map(x => x.target));
       act.divine = await pickPerson('今夜、誰を占う？', '朝に結果がわかる。', live().filter(p => !done.has(p.id)).map(p => p.id), { mark: true }) || pickOne(live()).id;
@@ -1172,18 +1178,41 @@
     E.night(S, st, act);
     S.day++;
     save();
-    // the wolf crosses the screen
-    await wolfRun();
+    // the wolf crosses the screen; if it bit the nekomata, the cat's curse catches it on the way
+    const N = S.nights[S.nights.length - 1];
+    if (wolves) await wolfRun(N && N.dragged ? N : null);
+    else { await wait(600); await say([{ text: '遠吠えは、もう聞こえなかった。かわりに、どこか近くで、狐が細く、ひと声だけ鳴いた。' }]); }
     SND.windOff();
-    if (E.check(S)) { S.phase = 'end'; save(); return end(); }
+    if (E.check(S)) {
+      // the bite that ended it: show the morning before the end, so the curse is seen to land
+      if (N && N.dragged) {
+        const lines = [];
+        if (N.target !== 'you') lines.push({ text: `夜が明けた。${nm(N.target)}が、雪の中で冷たくなっていた。`, fx: () => setCast([N.target], { fallen: N.target, x: 42 }) });
+        lines.push({ text: fill(pickOne(st.text.catDrag || ['{name}も、冷たくなっていた。']), { name: nm(N.dragged), cat: N.target === 'you' ? 'あなた' : nm(N.target) }), fx: () => setCast(N.target !== 'you' ? [N.target, N.dragged] : [N.dragged], { fallen: N.dragged, x: 58 }) });
+        await say(lines);
+      }
+      S.phase = 'end'; save(); return end();
+    }
     await morning(false);
   }
-  async function wolfRun() {
+  async function wolfRun(N) {
     const fx = $('fx');
     const d = document.createElement('div'); d.className = 'run'; d.innerHTML = ART.wolf(); fx.appendChild(d);
-    SND.howl(.3); SND.door(1.3);   // far off a howl, then a door creaks open somewhere close
-    await wait(2900);
-    d.remove();
+    SND.howl(.3);
+    if (!N) { SND.door(1.3); await wait(2900); d.remove(); return; }   // far off a howl, then a door creaks open somewhere close
+    // the nekomata's curse: the wolf comes back from its kill; the cat's eyes open behind it, it cries,
+    // four claws of pale fire tear across the wolf, and the shadow falls apart in the dark
+    d.classList.add('cursed');
+    const c = document.createElement('div'); c.className = 'nekomata'; c.innerHTML = ART.cat(); fx.appendChild(c);
+    const k = document.createElement('div'); k.className = 'claws';
+    k.innerHTML = '<svg viewBox="0 0 200 160" aria-hidden="true">' + [0, 1, 2, 3].map(i => `<path d="M${40 + i * 30},${18 + i * 4} C${60 + i * 30},${60 + i * 2} ${70 + i * 30},${100 - i * 2} ${78 + i * 32},${146 - i * 4}" style="--d:${i * .07}s"/>`).join('') + '</svg>';
+    const fl = document.createElement('div'); fl.className = 'curseflash'; fx.appendChild(fl);
+    fx.appendChild(k);
+    SND.cat(1.5);
+    await wait(3300);
+    SND.thud();
+    await wait(1500);
+    [d, c, k, fl].forEach(x => x.remove());
   }
 
   /* the end: who they were */
@@ -1418,6 +1447,6 @@
   $('setGo').onclick = () => { SND.unlock(); start(); };
   addEventListener('resize', () => { if (G.scr === 'play') { if (!PCQ.matches) document.documentElement.style.setProperty('--nbW', '0px'); else if (document.body.classList.contains('nb-open')) document.documentElement.style.setProperty('--nbW', '400px'); layoutDock(); if (S) renderRoster(); } });
   PCQ.addEventListener?.('change', () => layoutDock());
-  window.WLGame = { get S() { return S; }, get st() { return st; }, G, buildSelect, buildSetup, start, hub, meeting, debate, vote, night, end, setNb, resume };
+  window.WLGame = { get S() { return S; }, get st() { return st; }, G, buildSelect, buildSetup, start, hub, meeting, debate, vote, night, end, setNb, resume, wolfRun };
   buildTitle();
 })();
