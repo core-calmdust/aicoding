@@ -69,7 +69,29 @@ function connect4() {
 //   ⑥ no easier than the problem before: d = the other pits within 6 seeds of the best + (the greedy haul picks another pit ? 1 : 0)
 //      never goes down, and the last is harder than the first (sow: d = the answer's seeds + 2 when the target is past the store)
 //   ⑦ a wrong pit: what the 3D words say it does is read from the engine's own sowing (atlas/lessons3d.js mcF; lesson-facts.js mancala)
-const MC_DONE = new Set(['sow', 'extra', 'capture', 'defend', 'chain', 'endgame']);
+// (2026-11-26 担当A) ④ of the kalah middle-game lessons (the lesson's intro and hints, 2D and 3D): '' when the gold pit A is the lesson's move
+//   k_combo: A gives another turn and the biggest capture of the turn it starts (3+ seeds) is bigger than any capture right now
+//   k_tempo: A's seeds all stay in your own pits (no store, no capture), at most 2 such quiet pits, 2+ pits that feed the opponent
+//   k_hoard: the pit by the store holds the biggest pile (8+), sowing it sends 4+ seeds across, A keeps it (A ≠ 5)
+//   k_starve: the opponent has at most 6 seeds on the row and you at least twice as many; A drops no seed on their side, at most
+//     2 such pits, 2+ pits that feed them   k_count: at most 22 seeds on the board (the end is read exactly)
+function mcTopic(id, b, A, E, R) {
+  const tr = k => E.trace(Int8Array.from(b), 0, k, R), L0 = E.legal(Int8Array.from(b), 0, R), T = tr(A);
+  const opp = k => tr(k).events.filter(e => e.t === 'drop' && e.at >= 7 && e.at <= 12).length;
+  const onB = b.reduce((s, v, i) => i % 7 === 6 ? s : s + v, 0), mine = b.slice(0, 6).reduce((s, v) => s + v, 0), theirs = b.slice(7, 13).reduce((s, v) => s + v, 0);
+  const turnCap = (bb, k) => { const t = E.trace(Int8Array.from(bb), 0, k, R); if (t.cap) return t.cap; if (!t.extra || t.over) return 0; let m = 0; for (const q of E.legal(t.board, 0, R)) m = Math.max(m, turnCap(Array.from(t.board), q)); return m; };
+  if (id === 'k_combo') { if (!T.extra || T.over) return '④ the gold pit gives no extra turn'; const c = turnCap(b, A), now = Math.max(0, ...L0.map(k => tr(k).cap || 0));
+    if (c < 3 || c <= now) return `④ the capture of the answer's turn (${c}) is not bigger than one right now (${now})`; }
+  if (id === 'k_tempo') { const quiet = k => { const t = tr(k); return !t.extra && !t.cap && t.events.filter(e => e.t === 'drop').every(e => e.at <= 5); };
+    if (!quiet(A)) return '④ the gold pit is no quiet move (its seeds leave your row, or it captures / gives another turn)';
+    if (L0.filter(quiet).length > 2) return '④ more than 2 quiet pits'; if (L0.filter(k => opp(k) > 0).length < 2) return '④ fewer than 2 pits feed the opponent'; }
+  if (id === 'k_hoard') { if (!(b[5] >= 8 && b[5] === Math.max(...b.slice(0, 6)) && L0.includes(5) && opp(5) >= 4)) return '④ no big pile by the store that sowing would spread'; if (A === 5) return '④ the gold pit breaks the pile'; }
+  if (id === 'k_starve') { if (!(theirs <= 6 && mine >= 2 * theirs)) return `④ the opponent's row (${theirs}) is not short against yours (${mine})`;
+    if (opp(A) > 0) return '④ the gold pit feeds the opponent'; if (L0.filter(k => opp(k) === 0).length > 2) return '④ more than 2 pits feed no seed'; if (L0.filter(k => opp(k) > 0).length < 2) return '④ fewer than 2 pits feed the opponent'; }
+  if (id === 'k_count' && onB > 22) return '④ too many seeds for an endgame read to the end';
+  return '';
+}
+const MC_DONE = new Set(['sow', 'extra', 'capture', 'defend', 'chain', 'endgame', 'k_combo', 'k_tempo', 'k_hoard', 'k_starve', 'k_count']);
 function mancala(opt) {
   const E = require(path.join(ROOT, 'mancala/engine.js')), L = require(path.join(ROOT, 'mancala/lessons.json')), PZ = require(path.join(ROOT, 'mancala/puzzles.json'));
   const out = [], pend = [], only = opt && opt.only;
@@ -107,6 +129,7 @@ function mancala(opt) {
         if (id === 'defend' && !(caps(b).length && !T.extra && !caps(Array.from(T.board)).length)) add('④ the gold pit does not take away the opponent\'s capture');
         if (id === 'chain') { const c = chain(b, P.best); if (c < 2 || L0.some(k => k !== P.best && chain(b, k) >= c)) add(`④ the gold pit's chain ${c} is not the only longest`); }
         if (id === 'endgame' && !(P.exact && s.exact)) add('④ an endgame problem not solved exactly');
+        if (/^k_(combo|tempo|hoard|starve|count)$/.test(id)) { const t = mcTopic(id, b, P.best, E, R); if (t) add(t); if (id === 'k_count' && !(P.exact && s.exact)) add('④ an endgame problem not solved exactly'); }
         const g = E.turnMaxFirst(Int8Array.from(b), 0, R), gm = Math.max(...g.filter(x => x !== null));
         d = V.filter(x => x.m !== P.best && x.v >= top - 6).length + (g[P.best] === gm ? 0 : 1);
       }
@@ -173,7 +196,7 @@ function mancalaWords(opt) {
       const th3 = leg.length && E.legal(b, 1, R).map(k => ({ k, t: E.trace(b, 1, k, R) })).filter(x => x.t.cap >= 3), drops = T.events.filter(e => e.t === 'drop').map(e => e.at);
       const H8 = [[/1粒だけの穴はない/, P.b[5] === 1 && A === 5], [/ぴったりの穴が2つあったら|候補がいくつかあるなら|遠い穴を先にまくと/, ready.length >= 2 && near], [/ストアに近い穴から順に/, near],
         [/ねらわれた山を動かせば/, th3.some(x => x.t.capFrom === A)], [/空の穴に、種を落としてうめる/, th3.some(x => drops.includes(x.t.land))], [/相手の穴に1粒足して/, th3.some(x => drops.includes(7 + x.k))],
-        [/もう一回で手番を重ねられる/, ready.length > 0], [/ストアをまたぐ/, P.target > 6], [/向かいに大きな山/, T.cap >= 4]];
+        [/もう一回で手番を重ねられる/, ready.length > 0], [/ストアをまたぐ/, P.target > 6], [/向かいに大きな山/, T.cap >= 4], [/少ない種で、手番だけわたす/, P.b[A] <= 4 && !T.extra && !T.cap && drops.every(x => x <= 5)]];
       H8.forEach(([re, ok]) => { if (re.test(ht) && !ok) add(id, j, `⑧ the hint "${ht}" does not hold on this board`); });
       if (/いちばん長くつなげる/.test(plain(o.ask))) { const all = E.turnMax(b, 0, R).lines, mx = Math.max(...all.map(exN)); if (!lines.some(l => exN(l) === mx)) add(id, j, `⑧ asked for the longest run of extra turns, the answer's is shorter (max ${mx})`); }
       if (j >= 2 && st.problems.slice(0, j).some((Q, q) => { try { return plain(X.mcLsJa(E, st, Q, q, R, pts, si).hintTx) === ht; } catch (e) { return false; } })) add(id, j, '⑧ the same hint as an earlier problem');
@@ -181,6 +204,7 @@ function mancalaWords(opt) {
       const gc = gt.match(/(\d+)粒を(横取り|まるごと|ひと息)|向かいの(\d+)粒|相手の山(\d+)粒/); if (gc && +(gc[1] || gc[3] || gc[4]) !== T.cap) add(id, j, `⑧ the praise says ${gc[0]}, the answer captures ${T.cap}`);
       leg.forEach(u => { if (u === A) return; const t = plain(o.ng(u)), G = tr(u);
         if (/ほとんど同じ|ほぼ互角|差はほんのちょっと|ほとんど変わらない|ほぼ同じ働き/.test(t)) add(id, j, `⑦ pit ${u}: said to be about as good as the answer`);
+        if (/悪くない|わるくない|少し負ける|ちょっと多く入る|わずかに得|一手だけど|考えられる手/.test(t) && P.sc[A] - P.sc[u] >= 5) add(id, j, `⑦ pit ${u}: said to be nearly as good, ${(P.sc[A] - P.sc[u]).toFixed(1)} seeds behind`);   // (2026-11-26)
         if (/負けになっちゃう|きみの負け|相手が上回っちゃう|負けに変わる|相手のほうが多くなる/.test(t) && !(D2 && D2.exact && D2.v[u] < 0)) add(id, j, `⑦ pit ${u}: said to lose, the engine gives ${D2 && D2.v[u]}`);
         const dd = t.match(/差が(\d+)粒|(\d+)粒ぶん損|(\d+)粒もったいない|(\d+)粒へっちゃう|差が(\d+)粒少ない/); if (dd) { const n = +(dd[1] || dd[2] || dd[3] || dd[4] || dd[5]); if (!(D2 && D2.exact && Math.round(D2.v[A] - D2.v[u]) === n)) add(id, j, `⑦ pit ${u}: says ${n} seeds lost, the engine gives ${D2 && D2.v[A] - D2.v[u]}`); }
         if (/もう一回がない|ストアの手前で止まっちゃう|ストアまで\d+粒足りない|ストアを通りすぎ|ストアを越えて|ストアの先|ぴったりにならない|ストアを通りこして|ストアに\d+つ届かない|あと\d+粒あればストア/.test(t) && G.extra) add(id, j, `⑦ pit ${u}: said to miss the store, it gives another turn`);
@@ -1558,7 +1582,7 @@ function tafl(opt) {
 // b_cannon・b_pawn). The goal set is read from the rules (a capture by that kind on which no legal move of the opponent can take back),
 // the engine values stored in sc (= xiangqi/app.js problemPoints, the 3D XIANGQI.points) must put that capture alone on top, and
 // ショウギツネ's words (atlas/lessons3d.js xqLsJa) are read back against the board for the answer and every wrong move.
-const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn', 'b_escape', 'b_mate1', 'm_mate2', 'm_hc', 'm_dc', 'm_face', 'e_rook']);
+const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn', 'b_escape', 'b_mate1', 'm_mate2', 'm_hc', 'm_dc', 'm_face', 'e_rook', 't_capture']);
 function xiangqi(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'xiangqi/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'xiangqi/lessons.json'), 'utf8'));
@@ -1779,6 +1803,8 @@ function xiangqi(opt) {
   require('./lesson-verify-xqescape.js').verify({ E, L, X, pool, dist, brd, plain, add, pts, only: XQ_DONE });
   // (2026-11-25 第2期 担当A) e_rook「車の終盤」— tools/lesson-verify-xqend.js
   require('./lesson-verify-xqend.js').verify({ E, L, X, pool, dist, brd, plain, add, only: XQ_DONE });
+  // (2026-11-26 第2期 担当A) t_capture「得な交換」— tools/lesson-verify-xqtrade.js
+  require('./lesson-verify-xqtrade.js').verify({ E, L, X, pool, dist, brd, plain, add, pts, only: XQ_DONE });
   // 追72 (2026-11-25 担当A): the moves that count as right (P.ok, or 16 points or more from P.sc) and a warm-up try's ok are a third of the
   // legal moves at most
   L.steps.forEach(st => { if (!XQ_DONE.has(st.id)) return;
@@ -3204,7 +3230,7 @@ function morris72(opt) {
   return out;
 }
 const GAMES = { pz88, dupkey89, chessDrill, morris72, near53, goOpen, open67, plural58, backgammon, gomokuOpen, bgOpen, chessOpen, xiangqiOpen, reversiOpen, ur, senet, patolli, foxgeese, konane, ugolki, fanorona, stray, hex, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines, janggi, hexOpen };
-module.exports = GAMES; Object.defineProperty(GAMES, '_gm', { value: { gmForbid } }); GAMES.mancalaWords = mancalaWords; Object.assign(GAMES, { chessOpenCtx, chessOpenProblem, chessOpenSet, chessOpenD }); Object.defineProperty(GAMES, '_hex', { value: { deep1: hxDeep1, ctx: hxCtx, near: hxNear, problem: hxProblem, d: hxD, pts: hxPts, kind: (sp, m) => { const X = hxX(); return X.HXA.kind(X.HXA.facts(sp, m)); } } }); Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
+module.exports = GAMES; Object.defineProperty(GAMES, '_gm', { value: { gmForbid } }); GAMES.mancalaWords = mancalaWords; Object.assign(GAMES, { chessOpenCtx, chessOpenProblem, chessOpenSet, chessOpenD }); Object.defineProperty(GAMES, '_hex', { value: { deep1: hxDeep1, ctx: hxCtx, near: hxNear, problem: hxProblem, d: hxD, pts: hxPts, kind: (sp, m) => { const X = hxX(); return X.HXA.kind(X.HXA.facts(sp, m)); } } }); Object.defineProperty(GAMES, '_mc', { value: { topic: mcTopic } }); Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
 Object.defineProperty(GAMES, '_xqStray', { value: xqStray42 });   // (the xiangqi 追42 check alone, with a broken pzwhy for tests)
 if (require.main === module) {
   const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'pz88,dupkey89,chessDrill,near53,plural58,backgammon,reversiOpen,gomokuOpen,goOpen,open67,connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,chessOpen,xiangqiOpen,openLines,janggi,foxgeese,konane,fanorona,ugolki,hex,hexOpen,bgOpen').split(',');

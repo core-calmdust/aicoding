@@ -75,6 +75,7 @@
   /* ---------- screens ---------- */
   function scr(name) {
     G.scr = name;
+    if (!G.tut) { $('nbTut')?.remove(); document.querySelectorAll('.tut-hl').forEach(e => e.classList.remove('tut-hl')); }   // the tutorial's notes leave with it
     if (name !== 'play') { $('roster')?.classList.add('hide'); document.body.classList.remove('has-roster'); }
     for (const id of ['scrTitle', 'scrSelect', 'scrSetup']) $(id).classList.toggle('hide', id !== 'scr' + name[0].toUpperCase() + name.slice(1));
     document.body.className = document.body.className.replace(/\bscr-\w+/g, '').trim() + ' scr-' + name;
@@ -452,7 +453,7 @@
     const R = $('roster'); if (!R) return;
     // on a phone the faces at the top are only needed in the meeting and the vote (the day's search lists the people below)
     const on = S && G.scr === 'play' && S.phase !== 'prologue' && S.phase !== 'end';
-    const faces = on && (PCQ.matches || S.phase === 'meeting' || S.phase === 'vote');   // the map shows all day long; the faces only in the meeting and the vote on a phone
+    const faces = on && (PCQ.matches || S.phase === 'meeting' || S.phase === 'vote' || !!S.tut);   // the tutorial points at the faces all day   // the map shows all day long; the faces only in the meeting and the vote on a phone
     R.classList.toggle('hide', !on); document.body.classList.toggle('has-roster', !!on);
     if ($('rmap')) $('rmap').classList.toggle('hide', !on);
     if ($('rdock')) $('rdock').classList.toggle('hide', !faces || PCQ.matches);
@@ -1328,7 +1329,7 @@
       });
       B.insertAdjacentHTML('beforeend', '<div class="memo-note">メモ：怪しいと思う痕跡や証言を押すと、打ち消し線を引ける。もう一度押すと消える。あなたのための印で、推理や結果は変わらない。</div>');
     }
-    B.querySelectorAll('.marks button').forEach(b => b.onclick = () => { const id = b.dataset.id, m = b.dataset.m; S.pl.notes[id] = S.pl.notes[id] === m ? '' : m; save(); renderNb(); renderRoster(); if (S.phase === 'invest') hub(); });
+    B.querySelectorAll('.marks button').forEach(b => b.onclick = () => { const id = b.dataset.id, m = b.dataset.m; S.pl.notes[id] = S.pl.notes[id] === m ? '' : m; save(); renderNb(); renderRoster(); if (S.phase === 'invest' && !G.tut) hub(); });
   }
   function nbPeople() {
     const D = E.DIFF[S.diff];
@@ -1450,7 +1451,7 @@
   $('setGo').onclick = () => { SND.unlock(); start(); };
   addEventListener('resize', () => { if (G.scr === 'play') { if (!PCQ.matches) document.documentElement.style.setProperty('--nbW', '0px'); else if (document.body.classList.contains('nb-open')) document.documentElement.style.setProperty('--nbW', '400px'); layoutDock(); if (S) renderRoster(); } });
   PCQ.addEventListener?.('change', () => layoutDock());
-  const TUT = { G, $, esc, bust, wait, scr, palette, hud: null, setScene, setCast, say, sheet, closeSheet, pickPerson, pickOpt, wolfRun, renderRoster, SND, ART, GUIDE_SVG,
+  const TUT = { G, $, esc, bust, wait, scr, palette, hud: null, setScene, setCast, say, sheet, closeSheet, pickPerson, pickOpt, wolfRun, renderRoster, setNb, renderNb, SND, ART, GUIDE_SVG,
     get S() { return S; }, set S(v) { S = v; }, get st() { return st; }, set st(v) { st = v; sceneKey = null; }, title: () => { G.tut = false; S = null; buildTitle(); }, select: () => { G.tut = false; S = null; buildSelect(); } };
   $('tTut').onclick = () => { SND.unlock(); G.tut = true; window.WLTutorial(TUT); };
   window.WLGame = { get S() { return S; }, get st() { return st; }, G, buildSelect, buildSetup, start, hub, meeting, debate, vote, night, end, setNb, resume, wolfRun };
