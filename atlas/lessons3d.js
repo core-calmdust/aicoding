@@ -2949,7 +2949,8 @@
           else if ((kb === 'b3' || kb === 'b3t') && !FU.b3) why = mp('left3');
           else if (/^(f4|ft|four|three|b3t)$/.test(kb) && !FU.fours.length && !FU.threes.length) why = mp('stop');
           else if (!FU.near) why = mp('far');
-          else if (FB.blk.length && !FU.blk.some(i => GOP.DN[i] === GOP.DN[FB.blk[0]])) why = mp('free');   // (追90: not when the move blocks the other ナナメ — the words name only 「ナナメ」)
+          else if (FB.blk.length && !FU.blk.some(i => GOP.DN[i] === GOP.DN[FB.blk[0]])) { why = mp('free');   // (追90: not when the move blocks the other ナナメ — the words name only 「ナナメ」)
+            if (!FB.blk.some(i => GOP.DN[i] === V.bd) || FU.blk.some(i => GOP.DN[i] === V.bd)) V.bd = GOP.DN[FB.blk[0]]; }   // (the line named is one the green point blocks and the move leaves open — 浦月 q3: not the ナナメ the move blocks too)
           else if (FB.twos.length && !FU.twos.length && ku !== 'three') why = P.pk(GOP.miss.lone, 'mlone', t => FU.adjS.length ? !/つながらない|離れたまま/.test(t) : !/となりに置いても/.test(t));   // (追90: a stone next to its own is not 「つながらない」)
           else if (pu >= 10 && !(() => { G.bd[u] = s; const w = G.winPt(3 - s).length > 0 || !!G.vcf(3 - s, 6); G.bd[u] = 0; return w; })()) why = mp('close');   // (「悪くない」「すぐには負けない」: 10+ points and no win for the opponent after it — 追53)
           else why = mp(ku === kb ? 'same' : 'weak');
@@ -3188,7 +3189,7 @@
     LKEY: 'aicoding-gomoku-lessons', OKEY: 'aicoding-gomoku-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261126a'), getJ('../gomoku/openings.json?v=20261125v5'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261126a'), getJ('../gomoku/openings.json?v=20261126v6'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] gomoku texts', e); } this.I = w.I18N || {}; this.data = { ls, op };
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
@@ -4477,6 +4478,7 @@
      (the 3D board has none), a varied question, a hint from what the best play is for (never where), and after the answer a short
      reason built from backgammon/explain.js teach (the plan of the best play, and what yours gives up) instead of its long list. */
   const BGJ_OP = {
+    rqNote: '問題は2手目！ 相手が先に動いたあとの{d}ワン。',   // (2026-11-26: it.rq — short, the intro's bubble stays within 4 pages on a phone)
     intro: {
       o31: '3と1は、最初の一手でゴールデンポイント（インナーの右から5番目）が作れる目ワン！ ほかの手とは大きな差があるから、迷わなくていいんだ。',
       o42: '4と2なら、インナーの右から4番目にポイントが作れるね。ゴールデンポイントの次に大事な場所で、ほかの手より明らかに得ワン。',
@@ -4492,7 +4494,7 @@
       o62: '6と2は、6で後ろの駒を相手のバーポイントへ、2で中盤から材料を下ろすのがいちばんワン。1枚を逃がす手や、ゴールデンポイントに置く手は少し落ちるね。',
       o63: '6と3は、相手のバーポイントに出て材料を置くか、後ろの1枚を逃がすか。ほとんど互角だけど、前のほうがわずかに上ワン。',
       o64: '6と4は、考え方の違う手が3つあるね。ポイントを作る、後ろの1枚を逃がす、相手のバーポイントに出て材料を置く。どれを選んでも大きな差はないワン。',
-      o65: '6と5は、後ろの1枚を相手の陣地からミッドポイントまで一気に逃がすワン！ 「ラバーズリープ」と呼ばれる有名な手で、ほかの手よりずっと上なんだ。6と5を分けて使う手は次点ワン。後ろの1枚が相手のバーポイントで1枚だけになって打たれやすいぶん、落ちるんだ。',
+      o65: '6と5は、後ろの1枚を相手の陣地からミッドポイントまで一気に逃がすワン！ 「ラバーズリープ」と呼ばれる有名な手で、ほかの手よりずっと上なんだ。6と5を分けて使う手は、後ろの1枚が打たれやすいぶん落ちるワン。',
       r31: '相手がゴールデンポイントを作ると、そこには駒を出せないね。だから応手も少し変わるワン。ポイントを作れる目なら、こっちも作るのがいちばんなんだ。',
       r42: '相手がインナーの4番目にポイントを作った後の応手ワン。いつもの手が使えない目もあるけど、ポイントを作れる目なら、やっぱり作るのがいちばんだね。',
       r61: '相手がバーポイントを作ると、6の目で後ろの駒を出せなくなるね。2つの目を合わせて走る手が多いけど、走らずに材料を置くのが良い目もあるワン。',
@@ -4796,7 +4798,7 @@
       if (this.p) return this.p;
       const tx = window.AtlasBgTexts ? AtlasBgTexts() : Promise.resolve({});
       const bg = window.AtlasBgExplain ? AtlasBgExplain() : Promise.resolve();   // (the rules and the commentary engine: atlas/puzzles.js loads them — the same files and cache keys as the table)
-      return (this.p = Promise.all([getJ('../backgammon/lessons.json?v=30261124a1'), getJ('../backgammon/openings.json?v=20261124op'), tx, bg, getJ('../backgammon/ramps.json?v=3').catch(() => null)])
+      return (this.p = Promise.all([getJ('../backgammon/lessons.json?v=30261124a1'), getJ('../backgammon/openings.json?v=20261126rq'), tx, bg, getJ('../backgammon/ramps.json?v=3').catch(() => null)])
         .then(([ls, op, I, _, rp]) => { this.I = I || {}; this.data = { ls, op, rp }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -4824,8 +4826,11 @@
     opItems() { const op = this.data.op; return op.cats.flatMap(c => c.items.map(id => ({ c: c.id, it: op.items[id] }))).filter(x => x.it); },
     // an opening's decisions: for a reply, the opponent's opening is already on the board (you are the near side, they the far one)
     opDecs(it) {
-      return (it.kind === 'open' ? it.lines.slice(0, 1) : it.lines).map(ln => {   // (2026-11-24 担当B: an opening roll is one problem — its other lines are the same board and roll, as the 2D drill asks it once)
-        const seq = ln.seq || [{ r: 0, d: it.d, m: ln.m }], k = it.kind === 'open' ? 0 : seq.length - 1, x = seq[k];
+      // (2026-11-24 担当B: an opening roll is one problem — its other lines are the same board and roll, as the 2D drill asks it once.
+      //  2026-11-26 担当B: an opening roll that the lessons オープニング①② also ask at the start position is asked as the second move —
+      //  it.rq: the opponent opens first, the item's book play stays the one right answer there; = backgammon/op.js opDrillLines)
+      return (it.kind === 'open' ? (it.rq ? [Object.assign({ rq: true, m: it.rq.seq[1].m }, it.rq)] : it.lines.slice(0, 1)) : it.lines).map(ln => {
+        const seq = ln.seq || [{ r: 0, d: it.d, m: ln.m }], k = it.kind === 'open' && !ln.rq ? 0 : seq.length - 1, x = seq[k];
         let p = '0000005030000500000000002000000050300005000000000020'.split('').join('');   // (the starting position, as the json writes it)
         if (k > 0 && window.BG) { const q = bgDecP(p); for (let i = 0; i < k; i++) { const st = seq[i], sd = st.r === seq[k].r ? 0 : 1; for (let j = 0; j + 1 < st.m.length; j += 2) BG.apply(q, sd, st.m.charCodeAt(j) - 65, st.m.charCodeAt(j + 1) - 65); } p = Array.from(q).map(v => v.toString(16)).join(''); }
         return { ln, pos: p, d: x.d, plays: ln.plays || it.plays };
@@ -4881,7 +4886,8 @@
     opening(key, lang) {
       const it = this.data.op.items[key]; if (!it || !window.BG) return null;
       const T = f => this.tx('op.i.' + it.id + '.' + f, lang), N = this.names(lang);
-      const decs = this.opDecs(it), intro = (lang === 'ja' && BGJ_OP.intro[it.id]) || [T('d'), T('a')].filter(Boolean).join('<br>');
+      const decs = this.opDecs(it), rqN = it.rq ? (lang === 'ja' ? fill(BGJ_OP.rqNote, { d: BGJ_OP.dice(it.d) }) : this.tx('op.rqNote', lang, { d: it.d.join('') })) : '';
+      const intro = ((lang === 'ja' && BGJ_OP.intro[it.id]) || [T('d'), T('a')].filter(Boolean).join('<br>')) + (rqN ? '<br>' + rqN : '');   // (the problem is the second move: it.rq)
       const V = lang === 'ja' ? bgVoice('op:' + it.id) : null; if (V) V.mark(intro);   // (2026-11-23: one voice per opening, as the lessons — the intro is not said again)
       return { id: it.id, title: T('t') || it.id, intro, start: null, steps: [], notes: {},
         probs: decs.map((x, j) => { const tol = this.data.op.tol || .02, R = x.plays.map(y => ({ m: y[0], e: y[3] != null ? y[3] : y[1], ro: y[3] != null, ply: y[2], se: y[4] || 0 })), rolled = R.some(y => y.ro), best = R.filter(y => !rolled || y.ro).reduce((a, b) => b.e > a.e ? b : a);

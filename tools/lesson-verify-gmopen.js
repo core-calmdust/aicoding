@@ -144,6 +144,8 @@ function verifySet(g, opt) {
       if (/\{\w+\}|undefined|NaN/.test(t)) add(q, `⑧ ${E.sqName(u)}: a placeholder: ${t.slice(0, 60)}`);
       if (/^(あと少し|あと一歩|いい線)/.test(t) && p2 < 10) add(q, `⑦ ${E.sqName(u)} (${p2} points) opens with 「${t.slice(0, 6)}」 (追39)`);
       const mk = keys.filter(k => /^m/.test(k)).pop() || ''; { const ar = /^m/.test(keys[keys.length - 1] || '') ? keys.arr : [], ok2 = ar.filter(x => !keys.ok || keys.ok(x)); MK.push([u, mk, ok2.length ? ok2 : ar]); }
+      if (mk === 'mfree') { const m = t.match(/(?:黒|白)の(ヨコ|タテ|ナナメ)の(?:並び|線|石)|(ヨコ|タテ|ナナメ)の線を空けた/), G1 = X.GML.mk({ b: cells(P.b), w: cells(P.w), side: s }, 'renju'), FB1 = X.GOP.fx(G1, b[0], s), FU1 = X.GOP.fx(G1, u, s), dn = m && (m[1] || m[2]);   // (the words as said)
+        if (dn && (!FB1.blk.some(i => X.GOP.DN[i] === dn) || FU1.blk.some(i => X.GOP.DN[i] === dn))) add(q, `⑦ 追90 ${E.sqName(u)}: 「${t.slice(0, 40)}」 names the ${dn} line, not one the green point blocks and the move leaves open`); }
       if (mk === 'mlose5') { pos.make(u); const ok = pos.fives(oo).length && !pos.fives(s).length; pos.unmake(); if (!ok) add(q, `⑦ ${E.sqName(u)}: 「5つ並べられて負け」 but the opponent has no five point`); }
       if (mk === 'mloseW' && !winAfter(u)) add(q, `⑦ ${E.sqName(u)}: 「もう止められない」 but the engine finds no win for the opponent`);
       if (mk === 'mleft3') { pos.make(u); const C = E.C; let f4 = false; for (let m = 0; m < 225; m++) { const i = E.M2I[m]; if (pos.b[i] === 0 && pos.cls[oo][i] === C.F4 && (oo !== 1 || pos.isLegal(m))) f4 = true; } pos.unmake(); if (!f4) add(q, `⑦ ${E.sqName(u)}: 「三が残る（達四を作られる）」 but the opponent has no open-four point`); }
@@ -159,7 +161,8 @@ function verifySet(g, opt) {
       X.GOP.hint[hkey].forEach(h => { if (/四が作れる|四を作って|四が作れそう/.test(h) && !/^(four|ft|f4)$/.test(KB)) add(q, `⑧ 追90 the hint 「${h.slice(0, 20)}」 says a four, the answer (${KB}) makes none`); });
       const V0 = Object.assign(X.GOP.vars(FB, s), { s: X.GOP.side(s), r: '' }), fillT = (t, v) => t.replace(/\{(\w+)\}/g, (m, k) => v[k] != null ? v[k] : m);
       for (const [u, mk, arr] of MK) { const FU = X.GOP.fx(G, u, s);   // arr: the sentences the voice can pick for this move (its filter, if any)
-        arr.forEach(t0 => { const t = fillT(t0, V0), tag = `⑦ 追90 ${E.sqName(u)} (${mk}): 「${t.slice(0, 36)}」`;
+        const Vu = mk === 'mfree' && (!FB.blk.some(i => D(i) === V0.bd) || FU.blk.some(i => D(i) === V0.bd)) ? Object.assign({}, V0, { bd: D(FB.blk[0]) }) : V0;   // (the voice names the line the green point blocks and the move leaves open)
+        arr.forEach(t0 => { const t = fillT(t0, Vu), tag = `⑦ 追90 ${E.sqName(u)} (${mk}): 「${t.slice(0, 36)}」`;
           if (/2つの役目/.test(t) && !/^(b3t|twob|two2|ft)$/.test(KB)) add(q, `${tag} — the green point (${KB}) has no two roles`);
           if (/相手のじゃまと自分の形/.test(t) && !/^(b3t|twob)$/.test(KB)) add(q, `${tag} — the green point (${KB}) does not block and build at once`);
           if (/次の三が作りにくい/.test(t) && !/^(two|two2|twob|own|three|b3t)$/.test(KB)) add(q, `${tag} — the green point (${KB}) builds no next three`);
