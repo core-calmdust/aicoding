@@ -337,7 +337,7 @@ function renderLessonCard() {
   $('#lsStep').textContent = lesson.virt ? t('op.practiceStep', { i: lesson.i + 1, n }) : t('ls.stepq', { s: stepNo(lesson.step), i: lesson.i + 1, n });
   $('#lsTitle').textContent = lesson.virt ? LL(s.title) : stepTitle(s);
   const me = lesson.me;
-  $('#lsPrompt').innerHTML = `<div class="ls-goal"><span class="pdisc p${me}"></span><span>${t('ls.turn', { c: pname(me) })} ${lesson.virt ? t('op.goal') : LL(s.goal)}</span></div>`;
+  $('#lsPrompt').innerHTML = `<div class="ls-goal"><span class="pdisc p${me}"></span><span>${t('ls.turn', { c: pname(me) })} ${lesson.virt ? t((s.problems[lesson.i] || {}).off ? 'op.goalOff' : 'op.goal') : LL(s.goal)}</span></div>`;
   $('#lsHint').textContent = t('ls.hint');
   $('#lsDots').innerHTML = s.problems.map((_, i) => { const r = lesson.results[i]; return `<i class="${r === undefined ? '' : r >= 16 ? 'ok' : r >= 10 ? 'mid' : 'ng'} ${i === lesson.i ? 'cur' : ''}"></i>`; }).join('');
   $('#lsNext').textContent = lesson.i + 1 < n ? t('ls.next') : t('ls.result');
@@ -368,7 +368,7 @@ async function lessonAnswer(m) {
   const okm = gtps(P.ok, n)[0];
   const lbl = pts_ === 20 ? 'fb.perfect' : pts_ >= 16 ? 'fb.good' : pts_ >= 10 ? 'fb.ng' : 'fb.bad';
   let fb = `<span class="pts ${pts_ >= 16 ? 'ok' : pts_ >= 10 ? 'mid' : 'ng'}">+${t('u.pt', { n: pts_ })}</span> <b class="${pts_ >= 16 ? 'ok' : 'ng'}">${t(lbl)}</b> `;
-  if (lesson.virt) fb += t('op.why', { m: '<bdi>' + mvName(okm) + '</bdi>' });
+  if (lesson.virt) fb += t(P.off ? 'op.whyOff' : 'op.why', { m: '<bdi>' + mvName(okm) + '</bdi>' });
   else fb += pts_ >= 16 ? LL(P.why) : (LL(P.ng) || LL(P.why));
   if (pts_ < 20 && okm != null) fb += `<br><small style="color:var(--dim)">${t('fb.answer', { m: '<bdi>' + mvName(okm) + '</bdi>' })}</small>`;
   $('#lsFb').innerHTML = fb;
@@ -408,7 +408,7 @@ $('#lsHint').onclick = () => {
   // the area of the answer (3x3 around it), not the point itself
   const okm = gtps(P.ok, game.n)[0];
   if (okm != null) { const n = game.n, x = okm % n, y = Math.floor(okm / n); for (const [dx, dy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const xx = x + dx, yy = y + dy; if (xx >= 0 && yy >= 0 && xx < n && yy < n && !posAt(0).b[yy * n + xx]) lessonMarks.push({ at: yy * n + xx, cls: 'tri' }); } }
-  $('#lsFb').innerHTML = lesson.virt ? t('op.hint') : (LL(s.hint) || t('ls.hintArea'));
+  $('#lsFb').innerHTML = lesson.virt ? t((curStep().problems[lesson.i] || {}).off ? 'op.hintOff' : 'op.hint') : (LL(s.hint) || t('ls.hintArea'));
   renderFx();
 };
 $('#lsNext').onclick = () => {
@@ -446,12 +446,13 @@ $('#lsList').onclick = () => { if (!lesson) return; if (lesson.study || lesson.v
 let OPEN = null, openChoiceIdx = -1;
 // (2026-11-15) read when the openings are first opened, not with the page (1.6MB)
 let openP = null;
-const openLoad = () => openP || (openP = fetch('openings.json?v=3').then(r => r.json()).then(d => (OPEN = d)).catch(() => { openP = null; return null; }));
+const openLoad = () => openP || (openP = fetch('openings.json?v=4').then(r => r.json()).then(d => (OPEN = d)).catch(() => { openP = null; return null; }));
 const OP_STORE = STORE + '-open';
 function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{}'); } catch (e) { return {}; } }
 let opCatSel = '';
 function opLine(g) { return gtps(g.line, g.n || 19); }
 function opStart(g) { return g.start ? specFrom(Object.assign({ n: g.n || 19 }, g.start)) : g.handi ? handicapSpec(g.n || 19, g.handi) : { n: g.n || 19 }; }
+function opSpecMv(g, mv) { let p = R.Pos.from(opStart(g)); for (const m of gtps(mv, g.n || 19)) { const r = p.tryPlay(m); if (!r) break; p = r.pos; } return p.spec(); }   // (a practice position off the line: P.mv, 2026-11-26)
 function opSpecAt(g, k) { let p = R.Pos.from(opStart(g)); for (const m of opLine(g).slice(0, k)) { const r = p.tryPlay(m); if (!r) break; p = r.pos; } return p.spec(); }
 function opThumb(g) {
   const L = opLine(g), k = Math.min(L.length, g.show || L.length), sp = opSpecAt(g, k);
@@ -599,7 +600,7 @@ $('#lsFb').addEventListener('click', e => {
 function startPractice(gi) {
   const g = OPEN.sets[gi], L = opLine(g), pool = (g.problems || []).slice();
   for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
-  const probs = pool.slice(0, 5).sort((a, b) => a.at - b.at).map(p => ({ s: opSpecAt(g, p.at), ok: p.ok, good: p.good, half: p.half, view: g.view, komi: g.komi != null ? g.komi : (g.handi ? 0.5 : R.defaultKomi(g.n || 19, 'jp')), last: L[p.at - 1] }));
+  const probs = pool.slice(0, 5).sort((a, b) => a.at - b.at).map(p => ({ s: p.mv ? opSpecMv(g, p.mv) : opSpecAt(g, p.at), ok: p.ok, good: p.good, half: p.half, view: g.view, komi: g.komi != null ? g.komi : (g.handi ? 0.5 : R.defaultKomi(g.n || 19, 'jp')), last: p.mv ? gtp(p.mv[p.mv.length - 1], g.n || 19) : L[p.at - 1], off: !!p.mv }));
   hideOverlay('#lessonOverlay');
   stashGame(); puzzle = null; document.body.classList.remove('in-puzzle');
   lesson = { step: 0, gi, virt: { id: g.id, title: g.title, problems: probs }, i: 0, results: [], answered: false, hinted: false };
