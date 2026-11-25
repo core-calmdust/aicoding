@@ -47,7 +47,9 @@ function decide(p0, d, N, T, quiet) {
 }
 const row = x => [x.m, +x.e2.toFixed(4), 2, x.ro != null ? +x.ro.toFixed(4) : null, x.ro != null ? +x.se.toFixed(4) : null];
 const [cmd, arg] = process.argv.slice(2), write = process.argv.includes('--write');
-const roR = OP.roR || { N: 1296, T: 8 };
+const roR = Object.assign({}, OP.roR || { N: 1296, T: 8 });
+const NARG = +((process.argv.find(a => a.startsWith('--n=')) || '').slice(4) || 0);   // (o21・o41: the candidates are close, so more games: --n=2592 halves the variance; the N used is stored as it.rq.N)
+if (NARG) roR.N = NARG;
 if (cmd === 'check') {
   const [id, li] = arg.split(':'), it = OP.items[id], ln = it.lines[+li], seq = ln.seq;
   let p = dec(START); seq.slice(0, -1).forEach(st => { p = applyM(p, 1, st.m); });
@@ -82,13 +84,13 @@ if (cmd === 'check') {
   out.sort((x, y) => y.margin - x.margin);
   console.log(JSON.stringify(out.map(x => [x.o.d.join(''), x.o.m, +x.gap.toFixed(4)])));
   if (out.length) {
-    const c = out[0]; it.rq = { seq: [{ r: 0, d: c.o.d, m: c.o.m }, { r: 1, d: it.d, m: c.R.filter(y => y.ro != null).sort((x, y) => y.ro - x.ro)[0].m }], plays: c.R.filter(y => y.ro != null || c.R.indexOf(y) < 12).map(row) };
+    const c = out[0]; it.rq = { N: roR.N, seq: [{ r: 0, d: c.o.d, m: c.o.m }, { r: 1, d: it.d, m: c.R.filter(y => y.ro != null).sort((x, y) => y.ro - x.ro)[0].m }], plays: c.R.filter(y => y.ro != null || c.R.indexOf(y) < 12).map(row) };
     console.log('RQ ' + JSON.stringify(it.rq)); if (!write) return;
     const F = JSON.parse(fs.readFileSync(OPF, 'utf8')); F.items[arg].rq = it.rq; fs.writeFileSync(OPF, JSON.stringify(F)); console.log('wrote', arg, 'rq', JSON.stringify(it.rq.seq));
   }
 }
 if (cmd === 'recheck') {   // the stored it.rq rolled out again with other dice (--seed=…): the right plays and the closest wrong play must stay as stored
-  const it = OP.items[arg], tol = OP.tol; let p = dec(START); p = applyM(p, 1, it.rq.seq[0].m);
+  const it = OP.items[arg], tol = OP.tol; if (it.rq.N && !NARG) roR.N = it.rq.N; let p = dec(START); p = applyM(p, 1, it.rq.seq[0].m);
   const R = decide(p, it.d, roR.N, roR.T, true), ro = R.filter(y => y.ro != null).sort((x, y) => y.ro - x.ro), b = ro[0];
   const ok = ro.filter(y => b.ro - y.ro <= tol + 1e-9 || b.ro - y.ro < 2 * Math.hypot(b.se, y.se)).map(y => y.m).sort();
   const st = it.rq.plays.filter(y => y[3] != null).sort((x, y) => y[3] - x[3]), sb = st[0];
