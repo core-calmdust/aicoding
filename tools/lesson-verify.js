@@ -2189,11 +2189,14 @@ function taflOpen(opt) {
       const d = pre.length + p2; if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d);
       // ⑦⑧ the words, at each place of the lesson
       const qA = p.clone().play(P.best), capA = qA.lastCaps.length, oppA = maxCap(qA), kmA = kRoom(qA), km0 = kRoom(p), thr0 = maxCap(flip(p, 3 - me)), aimA = maxCap(flip(qA, me)), aim0 = maxCap(flip(p, me));
-      for (let i = 0; i < 5; i++) { const V = X.tfOpVoice(id); V.pts = (Q, m) => CU.points(Q.sc, m); let W; try { W = X.tfOpJaV(E, P, nm, k => X.TFM(k, 'ja'), V, i); } catch (e) { a('⑧ the words fail: ' + e.message); break; }
+      // (追90, 2026-11-25 担当B) the 5 places with a fresh voice each, then 8 problems in a row in ONE voice (the wordings it has said are skipped,
+      // so every wording a reason can take comes out): every praise and every wrong move's words of all 13 are checked on the board
+      const V90 = X.tfOpVoice(id); V90.pts = (Q, m) => CU.points(Q.sc, m);
+      for (let i0 = 0; i0 < 13; i0++) { const i = i0 < 5 ? i0 : i0 - 5, t90 = i0 < 5 ? '' : ' 追90', a = m => add(id, j, m + t90); const V = i0 < 5 ? X.tfOpVoice(id) : V90; V.pts = (Q, m) => CU.points(Q.sc, m); let W; try { W = X.tfOpJaV(E, P, nm, k => X.TFM(k, 'ja'), V, i); } catch (e) { a('⑧ the words fail: ' + e.message); break; }
         const ask = plain(W.ask); if (/\{|undefined|NaN/.test(ask) || !ask.includes(sideJ) || (/『/.test(ask) && !ask.includes(`『${nm}』`))) a(`⑧ the question 「${ask}」`);
         const gd = plain(W.good(P.best));
         if (/undefined|NaN|\{/.test(gd)) a(`⑧ the praise 「${gd}」`);
-        if (/はさんで取る|はさみ取りが決まった|1枚いただく|1枚取って|取れる駒をいただく|駒を1つ取る|取れる駒をしっかり/.test(gd) && !capA) a(`⑦ the answer takes nothing 「${gd}」`);
+        if (/はさんで取る(?!ねらい)|はさみ取りが決まった|1枚いただく|1枚取って|取れる駒をいただく|駒を1つ取る|取れる駒をしっかり/.test(gd) && !capA) a(`⑦ the answer takes nothing 「${gd}」`);
         { const mm = gd.match(/(\d+)から(\d+)に/); if (mm && (+mm[1] !== km0 || +mm[2] !== kmA)) a(`⑦ the king's room is ${km0} → ${kmA} 「${gd}」`); }
         if (/角のとなりを固める|角の入口に門番|角へのななめの道に駒|角のそばにふた|四隅への入口に/.test(gd) && !(me === 1 && BLOCK.has(E.mTo(P.best)))) a(`⑦ the answer is not a corner guard 「${gd}」`);
         if (/次の一手で取れる形|次に1枚取れる形|はさむ準備ができた|はさみ取りをねらう|はさんで取るねらい/.test(gd) && !(aimA > aim0)) a(`⑦ the answer makes no capture threat 「${gd}」`);
