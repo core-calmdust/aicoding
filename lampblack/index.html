@@ -476,7 +476,7 @@ body.scr-play{-webkit-user-select:none;user-select:none}
   .scrh{font-size:20px}
   .scrp{font-size:13px;margin-bottom:14px}
   /* the actions left: out of the header, a small pill at the stage's top-left (the header keeps its title and buttons) */
-  #hb .ap{position:fixed;top:calc(var(--hdH) + 6px);left:10px;z-index:6;padding:5px 10px;font-size:12.5px;gap:5px}
+  #hb .ap{position:fixed;top:calc(var(--hdH) + 46px);left:10px;z-index:6;padding:5px 10px;font-size:12.5px;gap:5px}
   #hb .ap i{width:11px;height:15px}
   /* the faces and the map in the text strip, under the words */
   #rdock{margin:14px -4px 0;padding-top:12px;border-top:1px dashed rgba(27,18,12,.18)}
@@ -549,7 +549,6 @@ body.scr-play{-webkit-user-select:none;user-select:none}
   #rdock .ro .x{width:24px;height:24px}
   #rdock .ro .cl{font-size:9px;padding:1px 3px 2px;left:-2px;top:-6px}
   #rdock .ro .ht{width:15px;height:15px;font-size:9px;line-height:13px;right:-3px;top:-6px}
-  #rdock #rmap{margin:8px auto 2px}
   #rmap .rc{font-size:10.5px;padding:4px 1px}
   /* the day's search: tighter headings, people five to a row, the hint shorter */
   .hub{gap:6px}
@@ -575,6 +574,13 @@ body.scr-play{-webkit-user-select:none;user-select:none}
   body:not(.scr-play) #hb{background:linear-gradient(to bottom,var(--paper) 72%,transparent)}
   .setrules{font-size:12.5px!important;line-height:1.65!important;padding:8px 10px!important}
   .setrules b{font-size:11.5px!important}
+}
+@media (max-width:620px){
+  /* the map at the top of the stage, under the header */
+  #stage > #rmap{top:calc(var(--hdH) + 4px)!important;width:calc(100% - 16px)}
+  /* the back row's names over their heads, so they do not sit on the front row */
+  .pp.back .nm{bottom:auto;top:-2px;transform:translate(-50%,-100%)}
+  .pp.back .tg{top:-24px}
 }
 </style>
 </head>
@@ -679,6 +685,6 @@ body.scr-play{-webkit-user-select:none;user-select:none}
 <script src="stories/kiteki.who.js?v=1"></script>
 <script src="stories/kiteki.who.open.js?v=1"></script>
 <script src="sound.js?v=11"></script>
-<script src="game.js?v=54"></script>
+<script src="game.js?v=55"></script>
 </body>
 </html>
