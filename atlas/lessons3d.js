@@ -4441,6 +4441,7 @@
      (the 3D board has none), a varied question, a hint from what the best play is for (never where), and after the answer a short
      reason built from backgammon/explain.js teach (the plan of the best play, and what yours gives up) instead of its long list. */
   const BGJ_OP = {
+    rqNote: 'でも問題は2手目ワン。相手が先に動かしたあとで、きみに{d}が出た場面なんだ。相手の駒の位置も見てから決めてね。',
     intro: {
       o31: '3と1は、最初の一手でゴールデンポイント（インナーの右から5番目）が作れる目ワン！ ほかの手とは大きな差があるから、迷わなくていいんだ。',
       o42: '4と2なら、インナーの右から4番目にポイントが作れるね。ゴールデンポイントの次に大事な場所で、ほかの手より明らかに得ワン。',
@@ -4760,7 +4761,7 @@
       if (this.p) return this.p;
       const tx = window.AtlasBgTexts ? AtlasBgTexts() : Promise.resolve({});
       const bg = window.AtlasBgExplain ? AtlasBgExplain() : Promise.resolve();   // (the rules and the commentary engine: atlas/puzzles.js loads them — the same files and cache keys as the table)
-      return (this.p = Promise.all([getJ('../backgammon/lessons.json?v=30261124a1'), getJ('../backgammon/openings.json?v=20261124op'), tx, bg, getJ('../backgammon/ramps.json?v=3').catch(() => null)])
+      return (this.p = Promise.all([getJ('../backgammon/lessons.json?v=30261124a1'), getJ('../backgammon/openings.json?v=20261126rq'), tx, bg, getJ('../backgammon/ramps.json?v=3').catch(() => null)])
         .then(([ls, op, I, _, rp]) => { this.I = I || {}; this.data = { ls, op, rp }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -4788,8 +4789,11 @@
     opItems() { const op = this.data.op; return op.cats.flatMap(c => c.items.map(id => ({ c: c.id, it: op.items[id] }))).filter(x => x.it); },
     // an opening's decisions: for a reply, the opponent's opening is already on the board (you are the near side, they the far one)
     opDecs(it) {
-      return (it.kind === 'open' ? it.lines.slice(0, 1) : it.lines).map(ln => {   // (2026-11-24 担当B: an opening roll is one problem — its other lines are the same board and roll, as the 2D drill asks it once)
-        const seq = ln.seq || [{ r: 0, d: it.d, m: ln.m }], k = it.kind === 'open' ? 0 : seq.length - 1, x = seq[k];
+      // (2026-11-24 担当B: an opening roll is one problem — its other lines are the same board and roll, as the 2D drill asks it once.
+      //  2026-11-26 担当B: an opening roll that the lessons オープニング①② also ask at the start position is asked as the second move —
+      //  it.rq: the opponent opens first, the item's book play stays the one right answer there; = backgammon/op.js opDrillLines)
+      return (it.kind === 'open' ? (it.rq ? [Object.assign({ rq: true, m: it.rq.seq[1].m }, it.rq)] : it.lines.slice(0, 1)) : it.lines).map(ln => {
+        const seq = ln.seq || [{ r: 0, d: it.d, m: ln.m }], k = it.kind === 'open' && !ln.rq ? 0 : seq.length - 1, x = seq[k];
         let p = '0000005030000500000000002000000050300005000000000020'.split('').join('');   // (the starting position, as the json writes it)
         if (k > 0 && window.BG) { const q = bgDecP(p); for (let i = 0; i < k; i++) { const st = seq[i], sd = st.r === seq[k].r ? 0 : 1; for (let j = 0; j + 1 < st.m.length; j += 2) BG.apply(q, sd, st.m.charCodeAt(j) - 65, st.m.charCodeAt(j + 1) - 65); } p = Array.from(q).map(v => v.toString(16)).join(''); }
         return { ln, pos: p, d: x.d, plays: ln.plays || it.plays };
@@ -4845,7 +4849,8 @@
     opening(key, lang) {
       const it = this.data.op.items[key]; if (!it || !window.BG) return null;
       const T = f => this.tx('op.i.' + it.id + '.' + f, lang), N = this.names(lang);
-      const decs = this.opDecs(it), intro = (lang === 'ja' && BGJ_OP.intro[it.id]) || [T('d'), T('a')].filter(Boolean).join('<br>');
+      const decs = this.opDecs(it), rqN = it.rq ? (lang === 'ja' ? fill(BGJ_OP.rqNote, { d: BGJ_OP.dice(it.d) }) : this.tx('op.rqNote', lang, { d: it.d.join('') })) : '';
+      const intro = ((lang === 'ja' && BGJ_OP.intro[it.id]) || [T('d'), T('a')].filter(Boolean).join('<br>')) + (rqN ? '<br>' + rqN : '');   // (the problem is the second move: it.rq)
       const V = lang === 'ja' ? bgVoice('op:' + it.id) : null; if (V) V.mark(intro);   // (2026-11-23: one voice per opening, as the lessons — the intro is not said again)
       return { id: it.id, title: T('t') || it.id, intro, start: null, steps: [], notes: {},
         probs: decs.map((x, j) => { const tol = this.data.op.tol || .02, R = x.plays.map(y => ({ m: y[0], e: y[3] != null ? y[3] : y[1], ro: y[3] != null, ply: y[2], se: y[4] || 0 })), rolled = R.some(y => y.ro), best = R.filter(y => !rolled || y.ro).reduce((a, b) => b.e > a.e ? b : a);

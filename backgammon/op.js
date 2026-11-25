@@ -5,7 +5,7 @@
 // Loaded after app.js (shares its globals: lesson, turn, view, render, …).
 'use strict';
 let OPB = null;
-const opReady = fetch('openings.json?v=20261124op').then(r => r.json()).then(d => (OPB = d)).catch(() => null);
+const opReady = fetch('openings.json?v=20261126rq').then(r => r.json()).then(d => (OPB = d)).catch(() => null);
 const OP_STORE = STORE + '-open', OP_TAB = STORE + '-optab';
 function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{}'); } catch (e) { return {}; } }
 function opSave(p) { try { localStorage.setItem(OP_STORE, JSON.stringify(p)); } catch (e) {} }
@@ -24,7 +24,10 @@ function opRank(plays) {
 }
 function opBest(plays) { const r = opRank(plays).filter(x => x.ro != null); return r.length ? r.reduce((a, b) => (b.e > a.e ? b : a)) : opRank(plays)[0]; }
 // the decision of a line: index in seq of the move the learner makes
-function opDecIdx(it, ln) { return it.kind === 'open' ? 0 : ln.seq.length - 1; }
+function opDecIdx(it, ln) { return it.kind === 'open' && !ln.rq ? 0 : ln.seq.length - 1; }
+// (2026-11-26 担当B) an opening roll that the lessons also ask at the start position is drilled as the second move: the opponent
+// opens first (it.rq: the opponent's opening and the item's roll, rolled out) — the same play stays the one right answer there
+function opDrillLines(it) { return it.kind === 'open' && it.rq ? [Object.assign({ rq: true, id: 'rq', m: it.rq.seq[1].m }, it.rq)] : it.lines; }
 function opNt(p, side, m) { return BG.notation(decMoves(p, side, m).moves); }
 // line positions: start position and the position after each step of seq (moves relative to the side that plays them)
 function opWalk(seq, os) {
@@ -141,7 +144,7 @@ function openOpItem(id) {
   let h = `<div class="op-hero"><span class="oh-b">${heroBoard}</span><div class="oh-t"><p class="op-lead">${opT(it, 'k')}</p><div class="oh-chips">${chips}</div>`
     + `<details class="op-more"><summary>${t('op.more')}</summary><p>${opT(it, 'd')}</p><p class="note">${t('op.drillNote', { tol: OPB.tol.toFixed(2) })}</p></details>`
     + `<div class="op-dr"><button data-odr="0"><span class="pdisc p0"></span>${t('op.drillAs', { c: pname(0) })}</button><button data-odr="1"><span class="pdisc p1"></span>${t('op.drillAs', { c: pname(1) })}</button></div>`
-    + `<p class="op-role">${t(it.kind === 'open' ? 'op.roleOpen' : 'op.roleRep')}</p></div></div>`;
+    + `<p class="op-role">${it.kind === 'open' && it.rq ? t('op.rqNote', { d: it.d.join('') }) : t(it.kind === 'open' ? 'op.roleOpen' : 'op.roleRep')}</p></div></div>`;
   h += `<div class="op-book">` + it.lines.map((ln, li) => {
     const w = opWalk(ln.seq, 0), k = opDecIdx(it, ln), st = w[k], ev = opLineEval(it, ln);
     const thumb = bgThumb(st.before, st.s, st.d, { arrows: [{ side: st.s, moves: st.moves }] });
@@ -348,16 +351,16 @@ function startOpDrill(id, col) {
   if (!keep) stashGame();
   puzzle = null; document.body.classList.remove('in-puzzle'); $('#toast').classList.remove('show');
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = -1; rvOpen = false; opStop();
-  const os = it.kind === 'open' ? col : 1 - col;
+  const lines = opDrillLines(it), os = it.kind === 'open' && !it.rq ? col : 1 - col;
   const order = it.kind === 'open' ? [0] : it.lines.map((_, i) => i);
-  lesson = { op: 'drill', it, col, os, order, oi: 0, res: [], answered: true, done: false, side: col, minH: 0 };
+  lesson = { op: 'drill', it, lines, col, os, order, oi: 0, res: [], answered: true, done: false, side: col, minH: 0 };
   document.body.classList.add('in-lesson'); document.body.classList.remove('in-study');
   if (G.FLAT) { scrollTo(0, 0); document.body.scrollTop = 0; }
   opDrillLine();
 }
 async function opDrillLine() {
   const L = lesson; if (!L || L.op !== 'drill') return;
-  const it = L.it, ln = it.lines[L.order[L.oi]], w = opWalk(ln.seq, L.os), k = opDecIdx(it, ln);
+  const it = L.it, ln = (L.lines || it.lines)[L.order[L.oi]], w = opWalk(ln.seq, L.os), k = opDecIdx(it, ln);
   L.ln = ln; L.w = w; L.fb = null; L.answered = true;
   setupProblem(BG.initial(), L.col, [1, 2]); turn = null; lesson.posOverride = BG.initial(); view = L.col;
   marks = []; extraArrows = [];
@@ -433,7 +436,7 @@ function opDrillCard() {
   const L = lesson; if (!L || L.op !== 'drill') return;
   const it = L.it, ln = L.ln, n = L.order.length;
   $('#lsStep').textContent = `${t('op.drill')} · ${opT(it, 't')}`;
-  $('#lsTitle').textContent = it.kind === 'open' ? t('op.drillOpenT', { d: it.d.join('') }) : opT(it, 't');
+  $('#lsTitle').textContent = it.kind === 'open' ? t(ln && ln.rq ? 'op.drillOpenRT' : 'op.drillOpenT', { d: it.d.join('') }) : opT(it, 't');
   $('#lsDots').innerHTML = n > 1 ? L.order.map((_, i) => { const r = L.res[i]; return `<i class="${r === undefined ? '' : r ? 'ok' : 'ng'} ${i === L.oi ? 'cur' : ''}"></i>`; }).join('') : '';
   $('#lsChoices').innerHTML = '';
   const x = L.w && L.w[opDecIdx(it, ln)];
@@ -441,6 +444,7 @@ function opDrillCard() {
   if (!L.answered && x) pr = `<div class="ls-goal"><span class="pdisc p${x.s}"></span><span>${t('op.drillTurn', { c: pname(x.s), d: x.d.join('') })}</span></div>`;
   else if (!L.fb && x) pr = `<div class="ls-goal"><span class="pdisc p${1 - L.col}"></span><span>${t('op.drillWait', { c: pname(1 - L.col) })}</span></div>`;
   if (x && n > 1) pr += `<div class="op-ctx">${t('op.drillCtx', { i: L.oi + 1, n })} ${opSeqText(it, { seq: ln.seq.slice(0, opDecIdx(it, ln)) }, L.os)}</div>`;
+  else if (x && ln.rq) pr += `<div class="op-ctx">${opSeqText(it, { seq: ln.seq.slice(0, opDecIdx(it, ln)) }, L.os)}</div>`;
   $('#lsPrompt').innerHTML = pr;
   let fb = '';
   const F = L.fb;
@@ -452,7 +456,7 @@ function opDrillCard() {
     else if (F.ok) fb += t('op.okNear', { m: mvb(BG.notation(F.mineMoves)), b: mvb(bn), d: (F.b.e - mine.e).toFixed(3) });
     else fb += t('op.ngText', { m: mvb(BG.notation(F.mineMoves)), b: mvb(bn), e: OPE(F.b.e), me: mine ? OPE(mine.e) : t('op.lower'), d: mine ? (F.b.e - mine.e).toFixed(3) : '—' });
     // the aim of the best play: the matching line of the item, else its features
-    const bl = it.kind === 'open' ? it.lines.find(l => l.m === F.b.m) : ln;
+    const bl = ln.rq ? null : it.kind === 'open' ? it.lines.find(l => l.m === F.b.m) : ln;   // (the second move, it.rq: the play's own features on this board — a hit is said)
     fb += `<div class="op-info op-cm"><div class="op-aim">${bl ? opLineAim(it, bl) : opTagText(opTags({ before: x.before, s: x.s, moves: decMoves(x.before, x.s, F.b.m).moves, after: decMoves(x.before, x.s, F.b.m).pos }), false)}</div>${bl && opLineNote(it, bl) ? `<p class="op-note">${opLineNote(it, bl)}</p>` : ''}</div>`;
     opPlaysTable.pos = x.before; opPlaysTable.side = x.s; opPlaysTable.open = true;
     fb += opPlaysTable(opPlays(it, ln), F.mine || '', t('op.cands', { d: x.d.join('') }));
