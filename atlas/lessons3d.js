@@ -1337,9 +1337,16 @@
       hints = { castle: [long ? 'キングを、ルークのいる左へ2マス。ルークがキングを飛びこえて、となりに来るんだ。' : 'キングを横に2マス動かすと、ルークがとなりに来るピョン。'], ep: ['黒のポーンが、いま真横に並んだところ。ナナメ前のあいたマスに注目してね！', 'となりに並んだ相手のポーン。その後ろのマスへ、ナナメに進めないかな？'], promo: ['ポーンが奥の段に着いたら、いちばん強い駒に成れるね。'] }[kd];
       goods = { castle: long ? ['クイーン側へのキャスリング！ キングは端へ、ルークは真ん中の近くへ出てきた。', '{x}は長いほうのキャスリング！ ルークがキングを飛びこえて、真ん中で働きはじめる。'] : ['{x}でキャスリング！ キングは端の安全な場所へ、ルークは真ん中へ出てきたピョン。', '{x}で、キングとルークがいっぺんに動いた！ キングは隅で安心、ルークも戦える。'],
         ep: ['{x}でアンパッサン！ 真横のポーンを、ナナメ前に進んで取れた。', '{x}、アンパッサン成功！ 横を通りすぎようとしたポーンをつかまえたピョン。'], promo: ['{x}でクイーンに昇格！ いちばん強い駒が、もう1つ増えたピョン。'] }[kd];
-      rights = { castle: ['{m}のキャスリングなら、キングの避難とルークの出動が1手でできるピョン。', '{m}なら、キングは隅で安全に、ルークは真ん中で戦えた。'], ep: ['{m}のアンパッサンは、ポーンが2歩で進んできた直後の一手でしかできない。いまが取りどきだった！', 'アンパッサンができるのは、いまこの一手だけ。{m}で、横のポーンを取れたんだ。'], promo: ['{m}でポーンを奥の段へ進めてクイーンに成れば、いちばん強い駒が増えるから。'] }[kd];
-      xpart = G => kd === 'castle' ? [G ? '{x}だとキングが真ん中に残って、ルークも出にくいまま。' : 'ほかの手だとキングが真ん中に残って、ルークも出にくいまま。', G ? '{x}では、キングがまだ危ない真ん中にいる。' : 'ほかの手では、キングがまだ危ない真ん中にいる。']
-        : kd === 'ep' ? (G ? ['{x}だと、次の手ではもうアンパッサンできない。', '{x}を指すと、横のポーンを取る権利が消えちゃう。'] : []) : G && G.promo && G.promo !== 'q' ? ['{x}だとクイーンより弱い駒になっちゃう。'] : [];
+      rights = { castle: long ? ['{m}のキャスリングなら、キングは端のc1へ、ルークはd1へ。1手で両方動かせたピョン。', '{m}なら、キングが真ん中のe1から離れて、ルークも戦いに出られた。'] : ['{m}のキャスリングなら、キングは隅のg1へ、ルークはf1へ。1手で両方動かせたピョン。', '{m}なら、キングが真ん中のe1から離れて、ルークも戦いに出られた。'],
+        ep: ['{m}のアンパッサンは、ポーンが2歩で進んできた直後の一手でしかできない。いまが取りどきだった！', 'アンパッサンができるのは、いまこの一手だけ。{m}で、横のポーンを取れたんだ。'], promo: ['{m}でポーンを奥の段へ進めてクイーンに成れば、いちばん強い駒が増えるから。', '{m}なら、奥の段に着いたポーンがクイーンに変身できた。'] }[kd];
+      // (2026-11-26 第2期 担当A) each wrong move by what it does on the board: the king or the castling rook moved (the right is gone), the pawn
+      // that could take en passant pushed / another move (the right ends now), an under-promotion, a move that does not promote, a piece left to be taken
+      xpart = (G, u) => { if (!G || !u) return []; const fr = u.slice(0, 2), hang = G.hang && !G.promo ? [`{x}だと、動いた${N[G.pc]}が${G.hang}に取られて損しちゃう。`] : [];
+        if (kd === 'castle') return G.pc === 'k' ? ['{x}でキングが動くと、もうキャスリングはできなくなっちゃう。', '{x}のようにキングを1マス動かすと、キャスリングの権利が消えちゃう。']
+          : G.pc === 'r' && (fr === 'a1' || fr === 'h1') ? [`{x}で${fr}のルークが動くと、そちら側のキャスリングはできなくなる。`]
+          : hang.length ? hang : ['{x}だと、キングはe1の真ん中に残ったまま。', '{x}では、キングがまだ真ん中のe1にいる。'];
+        if (kd === 'ep') return hang.length ? hang : fr === ans.slice(0, 2) && !G.cap ? ['{x}と前へ進めると、横のポーンはもう取れなくなる。'] : ['{x}を指すと、アンパッサンの権利はこの一手で消えちゃう。', '{x}だと、次の手ではもうアンパッサンできない。'];
+        return G.promo && G.promo !== 'q' ? ['{x}だとクイーンより弱い駒になっちゃう。'] : ['{x}では、ポーンは奥の段に着かないまま。', '{x}を指しても、ポーンはまだ成れていない。']; };
     } else if (sid === 'b_draw') {
       const m1 = best >= 29999;
       hints = m1 ? ['黒のキングの逃げ道を数えてみて。チェックしながら全部ふさげるマスがあるね。', 'チェックをかけて、逃げ道もなくせるマスは？ 王手を忘れずに！'] : ['すぐには詰まない形。黒のキングに動けるマスを残しながら、せまい所へ追いこもう！', 'あわてて詰ませなくていい。黒のキングに1マスだけ逃げ道を残してみて。'];
@@ -2077,7 +2084,7 @@
     load() {
       if (this.p) return this.p;
       const txt = u => fetch(u).then(r => r.text());
-      return (this.p = Promise.all([getJ('../chess/lessons.json?v=30261126i15'), getJ('../chess/openings.json?v=20261126o2'), txt('../chess/i18n.js?v=20261107pro2-i14-p61'), txt('../chess/i18n_basics.js?v=20261019ol-i14'), txt('../chess/voice-knight-ja.js?v=4').catch(() => '')])
+      return (this.p = Promise.all([getJ('../chess/lessons.json?v=30261126sp1'), getJ('../chess/openings.json?v=20261126o2'), txt('../chess/i18n.js?v=20261107pro2-i14-p61'), txt('../chess/i18n_basics.js?v=20261019ol-i14'), txt('../chess/voice-knight-ja.js?v=4').catch(() => '')])
         .then(([ls, op, a, b, vk]) => {
           const w = {}; try { new Function('window', a)(w); new Function('window', b)(w); } catch (e) { console.warn('[lessons3d] chess texts', e); }   // (a sandbox: the page's own I18N stays untouched)
           try { const v = {}; new Function('window', vk)(v); this.V = ((v.I18N || {})['ja@knight']) || {}; } catch (e) { this.V = {}; }   // (ナイトン's own lines, 3D, ja)

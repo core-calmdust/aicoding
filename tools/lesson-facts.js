@@ -596,7 +596,7 @@ const CHECKS = {
     const E = require(path.join(ROOT, 'chess/engine.js')), LS = J('chess/lessons.json'), G = 'chess', vm = require('vm');
     // 追72 (2026-11-25 担当A): the 3D ★ drill problems (chDrillQs, seeded) — the right first moves a third of the moves at most: tools/lesson-verify.js chessDrill
     require('./lesson-verify.js').chessDrill().forEach(fa => bad(G, fa.step, fa.msg));
-    // (2026-11-26 第2期 担当A) b_check・b_escape・b_mate: the strict ①〜⑧ — tools/lesson-verify-chbasic.js
+    // (2026-11-26 第2期 担当A) b_check・b_escape・b_mate・b_special: the strict ①〜⑧ — tools/lesson-verify-chbasic.js
     require('./lesson-verify-chbasic.js').verify().forEach(fa => bad(G, fa.step, `q${fa.q}: ${fa.msg}`));
     const src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), a = src.indexOf('  const CH_PN = '), b = src.indexOf('  const CHJ_LS = ');
     const X = vm.runInNewContext(src.slice(a, b) + '\n;({ chFacts, chLsF, CH_PN })', {});
