@@ -420,7 +420,7 @@
       k20: '駒の動きは準備で見ていこう。問題では<b>いちばん大きな駒</b>を取ってね！<br>目安は歩1・香3・桂4・銀5・金6・角8・飛10だコン。',
       k15: '次は<b>タダの駒</b>（取り返されない駒）を見つける練習だコン。価値の目安は歩1・香3・桂4・銀5・金6・角8・飛10。<br>動きは、歩・香は前、桂は前へジャンプ、銀は前と斜め、金は前・横・後ろ、玉はまわり、角は斜め、飛は縦横だよ。<br>取る前に「取り返されない？」と確かめてね！',
       k12: '王手をかけられたら、<b>逃げる・取る・合駒</b>のどれかで防ぐの。<br>でも、どれでもいいわけじゃないコン。かわしたあとに安全な形になる受けを選ぼう！',
-      k10: '<b>詰み</b>は、玉がどう逃げても取られちゃう形のこと。<br>持ち駒を打つ手と盤の駒を動かす手、両方を考えて、1手で詰ませてみよう！',
+      k10: '<b>詰み</b>は、玉がどう逃げても取られちゃう形のこと。<br>持ち駒を打つ手と盤の駒を動かす手、両方を考えて、1手で詰ませてみよう！<br>成った角の馬は斜めどこまでも＋縦横1マス、成った飛車の竜（龍）は縦横どこまでも＋斜め1マス動けるコン。',
       k8: '今度は王手のかけ方がいろいろある局面だよ。<br>王手でも、<b>逃げ道が残る手</b>や<b>取られる手</b>は詰みにならないの。玉のまわりを1マスずつ確かめてみて！',
       k6: '3手詰は<b>王手・相手の受け・詰み</b>の3手。<br>相手がいちばんねばる受けを考えて、どう受けても詰む王手を探すコン！',
       k5: '中盤は<b>駒得</b>が大事！ 代表的な手筋は、1手で2つをねらう<b>両取り</b>なの。<br>桂・銀・角は両取りをかけやすい駒だから、よく見てね。',
@@ -920,7 +920,7 @@
       if (this.p) return this.p;
       const voice = fetch('../shogi/voice-fox-ja.js?v=5').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       const rep = getJ('../shogi/lesson-replies.json?v=4').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
-      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261126k12'), getJ('../shogi/openings.json?v=20261124ol1'),
+      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261126k10b'), getJ('../shogi/openings.json?v=20261124ol1'),
         ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261125sb`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
@@ -7512,7 +7512,7 @@
       if (p.kind === 'tsume') {   // mate within the count; the defender answers from the stored line, else the engine's defence
         const mv = pz().moves();
         if (info.mate) return scored(p, PTS);
-        const remain = p.n - mv.length; if (remain <= 0) return scored(p, 0, X.escaped);
+        const remain = p.n - mv.length; if (remain <= 0) return p.n === 1 && typeof p.ng === 'function' ? scored(p, 0, undefined, mv[0]) : scored(p, 0, X.escaped);   // (2026-11-26 第2期 k10: a mate in one missed — the move played is named and what the defender does to it is said (p.ng), not 「玉に逃げられちゃった」 for a move that is no check or is blocked)
         const sol = p.sol || [], onLine = mv.every((x, i) => x === sol[i]);
         let reply = onLine && sol[mv.length] ? sol[mv.length] : null;
         if (!reply && pz().defend) { const r = await pz().defend(remain); if (stopped) return; reply = r && r.reply; }
