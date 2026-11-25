@@ -433,7 +433,7 @@ function gomoku(opt) {
 //   ⑦⑧ ハコピヨ's words (atlas/lessons3d.js dotsJa, run here) against the board: the boxes the red line hands over (≥1 when the
 //      words say so) and the boxes lost ((best − v) / 2), no 「開く」 for a line that takes, the question's 「1本」 / 「広い盤」 and the
 //      2D example's 「緑の点線も安全な線で、どれを選んでも同じ結果」 (problem 0 has other safe lines, all best)
-const DT_DONE = new Set(['safe', 'third', 'take', 'chain']);
+const DT_DONE = new Set(['safe', 'third', 'take', 'chain', 'hard', 'double']);
 function dots(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'dots/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'dots/lessons.json'), 'utf8'));
@@ -483,6 +483,26 @@ function dots(opt) {
         if (!B.every(e => m(e) === mn)) a(`④ a best line hands over ${B.map(m)} boxes, the fewest is ${mn}`);
         if (lg.every(e => m(e) === mn)) a('④ every line hands over as few boxes');
         d = E.components(p, false).length;
+      } else if (id === 'hard' || id === 'double') {
+        // (2026-11-25 担当A) hard = no safe line, nothing to take, the best lines are exactly the middle lines of a 2-chain (F: give,
+        // m 2, not ret) and an end line of it (ret) is worse; double = a box to take, no safe line, the best lines are exactly the
+        // declines that leave 2 (F: decline, m 2) and a take line is worse. Both: no loops (the words say 鎖), and after the best line
+        // a chain of 3+ is still on the board (「長い鎖より、まず2箱の鎖」「次の長い鎖も、きみが取れる」「残りに長い鎖があるとき」)
+        const comps = E.components(p, true);
+        if (F.ns) a(`④ ${F.ns} safe lines`);
+        if (comps.some(c => c.loop)) a('④ a loop on the board (the words say 鎖)');
+        if (id === 'hard') {
+          if (cap) a('④ a box to take');
+          if (!B.every(e => { const f = F.of(e); return f.cls === 'give' && f.m === 2 && !f.ret; })) a(`④ a best line is not the middle of a 2-chain (${B})`);
+          if (!worse.some(x => F.of(x.m).ret)) a('④ no end line of a 2-chain among the worse lines');
+          if (!comps.some(c => c.n >= 3)) a('④ no chain of 3+ (「長い鎖より、まず2箱の鎖」)');
+        } else {
+          if (!cap) a('④ no box to take');
+          if (!B.every(e => { const f = F.of(e); return f.cls === 'decline' && f.m === 2; })) a(`④ a best line does not leave 2 boxes (${B})`);
+          if (!worse.some(x => F.of(x.m).cls === 'take')) a('④ no take line among the worse lines');
+          if (!comps.some(c => c.n >= 3 && !c.boxes.some(bx => p.cnt[bx] === 3))) a('④ no other chain of 3+ (「次の長い鎖」)');
+        }
+        d = comps.length;
       }
       // ⑥ (problem 0 is the worked example)
       if (j >= 1) { if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;

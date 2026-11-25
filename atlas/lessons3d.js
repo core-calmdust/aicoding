@@ -2443,7 +2443,7 @@
   const RVJ_OP = {
     intro: ['まずは手順を盤で見てみよう。そのあと、続きを打ってもらうね！', '手順をひととおり見たら、次はきみの番。覚えられるかな？', 'ゆっくり手順を並べるから、形をよく見ておいてね。', '一手ずつ並べていくよ。どんな形になるか、いっしょに見よう！', 'まずは盤で手順を追いかけよう。そのあとで、きみに打ってもらうね。'],
     askO: ['{n}の手順から外れた局面！ {s}の番、いちばん良い手はどこかな？', 'ここで{s}が打つ、いちばんの手はどこ？ 盤をよく見て！', '手順を外れた形。{s}なら、どこに打つ？', '{s}の番！ ここでいちばん良い一手を見つけて！', '形が変わったところで{s}の一手。きみならどこに置く？'],
-    cmpO: ['返す枚数、まわりの空き、打ったあとの相手の打ち場所を、手ごとにくらべてみて。', '隅のまわり（XやC）に打つ手は、相手に隅をあげないか確かめよう。', '相手がどう応じたら、自分の打てる場所がいくつ残るかを考えてみて！', '外がわに石を出しすぎない手はどれかな？'],
+    cmpO: ['返す枚数、まわりの空き、打ったあとの相手の打ち場所を、手ごとにくらべてみて。', '隅のまわり（XやC）に打つ手は、相手に隅をあげないか確かめよう。', '相手がどう応じたら、自分の打てる場所がいくつ残るかを考えてみて！', '外がわに石を出しすぎない手はどれかな？', '打ったあと、外がわに面した石がいくつ増えるかに注目してみて！', '相手の打てる場所がいちばん少なくなる手を、数えてくらべてみよう。', '一手ずつ、打ったあとの盤を思いうかべてから決めよう！'],
     leadO: ['いちばん良い手は緑の枠。', 'ここは緑の枠がいちばん！', '正解は緑の枠だった！', '緑の枠に打ちたかった！', '答えは緑の枠のマス。'],
     askN: ['『{n}』の続き、{s}の次の一手はどこかな？', '{s}の番！ 『{n}』の手順を思い出して打ってみて！', 'ここで{s}が打つ、『{n}』の一手はどこだと思う？', '『{n}』はこの先どう進むんだっけ？ {s}の手を打ってみよう！', '次は{s}。『{n}』なら、どこに打つ？'],
     ask: ['さあ{s}の一手！ 定石どおりに打てるかな？', '{s}の番！ さっきの手順、覚えてるかな？', '{s}の一手、きみならどこに置く？', '続けて{s}の番。手順の次はどこだっけ？', 'お次は{s}！ 盤の形から思い出せるかな？', '{s}ならここでどう打つ？ 落ち着いていこう！'],
@@ -2531,7 +2531,7 @@
     const soft = (k, u) => { const near = u != null && ptsOf(u) >= 10, S = q => off ? SOFT[PSO[q % PSO.length]] : V.soft(q), t = S(k); if (near || !NEAR.test(t)) return t;
       const n = off ? SOFT.length : RVJ_OP.soft.length, U = [0, 1, 2, 3, 4].map(S), L = []; for (let q = 5; q < n + 5; q++) { const x = S(q); if (!NEAR.test(x) && !U.includes(x) && !L.includes(x)) L.push(x); }
       const r = [0, 1, 2, 3, 4].slice(0, Math.min(k, 5)).filter(q => NEAR.test(S(q))).length; return L.length ? L[(r + Math.max(0, k - 5) + (V.seed >>> 3)) % L.length] : 'ドンマイ！'; }, PCO = off ? shPerm((V.seed ^ 0x2c1b3c6d) >>> 0, CHEER.length) : null, cheer = k => off ? CHEER[PCO[k % PCO.length]] : V.cheer(k);   // (2026-11-25: off the line a permutation per opening — a rotation gave every lesson one of only CHEER.length orders)   // (追53: 「おしい・あと少し・あと一歩・いい線」 only for a move worth 10+ points, in the line's own problems too)
-    const ask = off ? V.v('askO', RVJ_OP.askO.map(t => fill(t, { n: nmQ, s: me === 1 ? '黒' : '白' }))) : i === 0 || i === 3 ? v('askN', RVJ_OP.askN.map(t => fill(t, { n: name, s: side }).replace('『' + name + '』', nmQ))) : v('ask', RVJ_OP.ask.map(t => fill(t, { s: side })));
+    const ask = off ? V.v('askO', RVJ_OP.askO.map(t => fill(t, { n: nmQ, s: me === 1 ? '黒' : '白' }).replace('この定石の手順から外れ', '手順から外れ'))) : i === 0 || i === 3 ? v('askN', RVJ_OP.askN.map(t => fill(t, { n: name, s: side }).replace('『' + name + '』', nmQ))) : v('ask', RVJ_OP.ask.map(t => fill(t, { s: side })));
     const spread = k => ks.length > 1 && minOf(k) < maxOf(k);   // (a fact that tells the moves apart — on the first moves every move flips one disc)
     const O = () => v('opp', RV_OPP), MEM = off ? RVJ_OP.cmpO : ['さっき盤で見た手順を思い出してみて。相手の直前の手に、どう応じていたかな？', '石がどんな形に並んでいたか、思い出してみて。盤の絵がヒントになるかも！', 'あわてずに、手順の流れを頭の中でもう一度並べてみよう。', '最後にできあがる形を思いうかべると、次の一手が見えてくるかも？', '一手前の相手の石に、どう応じる流れだったっけ？', '手順の動画を巻きもどすつもりで、ゆっくり思い出してみて！'];
     let hint;
@@ -2580,7 +2580,7 @@
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261125r1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=5').catch(() => ({}))])
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261125r1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=6').catch(() => ({}))])
         .then(([ls, op, ev, wt, opp]) => { this.WT = wt || {}; this.OPP = opp || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
@@ -6961,7 +6961,7 @@
     yGive: ['赤い線は箱の3本目になって、相手に{xm}箱取られちゃう。', '赤い線を引くと、{xm}箱が相手のものに。', '赤い線のとなりの箱は2本引いてあったから、そこが3本目になって{xm}箱取られる。', '赤い線だと、相手が{xm}箱をぺろり！', '赤い線は2本の箱にさわったから、相手に{xm}箱が渡る。'],
     yPar: ['赤い線だと長い鎖の本数が合わなくて、最後に長い鎖を開かされる。', '赤い線も安全だけど、それだと鎖の形がきみに不利になる。', '赤い線だと、長い鎖の本数がずれちゃう。', '赤い線では、最後に長い鎖を開くのがきみになる。', '赤い線だと、手数の偶数・奇数が相手に合っちゃう。'],
     ySafe: ['安全な赤い線だと、最後に長い鎖を開くのがきみになっちゃう。', '赤い線は安全でも、手番の偶数・奇数がきみに合わないから負け筋。', '赤い線で安全に逃げても、最後の長い鎖を相手に取られる。', '赤い線のままだと、長鎖ルールで負けちゃう。', '安全な線でしのいでも、最後に大きく取られる形なんだ。'],
-    yAll: ['赤い線で取り切ると、次の鎖を開くのはきみになっちゃう。', '全部取ると、あとの長い鎖を相手に取られる！', '取り切った赤い線だと、自分で次の鎖を開くはめになる。', '赤い線は目の前の箱に飛びついたから、主導権が相手に移る。', '赤い線で取りすぎると、手番を返せない。'],
+    yAll: ['赤い線で取り切ると、次に箱をあげる番はきみになっちゃう。', '全部取ると、あとの長い鎖を相手に取られる！', '取り切った赤い線だと、自分から次の鎖を差し出すはめになる。', '赤い線は目の前の箱に飛びついたから、主導権が相手に移る。', '赤い線で取りすぎると、手番を返せない。'],
     yKeep: ['赤い線で{xm}箱残しても、あとの鎖が小さいから取り返せない。', '残した{xm}箱は相手のもの。取り返す大きな鎖がないから損なんだ。', 'この先は小さな鎖だけ。赤い線の残しは{xm}箱の損になる。', '赤い線の2つ残しは、ここではもったいない。', '主導権を守っても、あとに取る鎖がなければ意味がない。'],
     yMiss: ['赤い線だと、相手に{xm}箱取られちゃう。', '赤い線を引くと、その箱は相手が取る。{xm}箱のプレゼントになる。', '見のがすと、相手に{xm}箱と手番まで渡しちゃう。', '赤い線では、取れたはずの箱が相手のものに。', '赤い線のあと、相手は{xm}箱をまとめて取れる。'],
     yMore: ['赤い線だと{xm}箱も相手にあげることになる。', '赤い線の所で手を止めると、残る箱が{xm}箱にふえちゃう。', '赤い線は残しすぎ！ {xm}箱も渡るから損が大きい。', '赤い線では、相手に{xm}箱をまとめて取られる。', '赤い線では取り方の順番がずれて、{xm}箱あげることになる。'],
@@ -7016,7 +7016,7 @@
     load(lang) {
       const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261021L`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
       if (this.p) return this.p.then(() => T()).then(() => this);
-      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261125f'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
+      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261125h'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
         .then(([ls, X]) => { const w = {}; try { new Function('window', 'with (window) {' + X + '\n}')(w); } catch (e) { console.warn('[lessons3d] dots texts', e); } this.I = w.I18N || {}; this.data = { ls }; return T(); }).then(() => this)
         .catch(e => { this.p = null; throw e; }));
     },
