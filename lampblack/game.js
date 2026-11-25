@@ -969,7 +969,7 @@
     S.pl.accuse = { day: S.day, target: id, ev: fits };
     const others = live().filter(p => p.id !== id);
     const ag = others.filter(p => { const o = E.opinion(S, st, p.id); return o && o.target === id; });
-    await say([{ who: 'you', text: `わたしは、${nm(id)}が狼だと思う。` }, { who: id, text: SP.say(S, st, id, 'defend'), fx: () => { const e = pup(id); if (e) e.classList.add('shake'); } }, ag.length ? { who: ag[0].id, text: SP.say(S, st, ag[0].id, 'agree', { with: st.hero.title, target: SP.callName(S, st, ag[0].id, id) }) } : null]);
+    await say([{ who: 'you', text: `わたしは、${nm(id)}が${S.foxHunt ? '狐' : '狼'}だと思う。` }, { who: id, text: SP.say(S, st, id, 'defend'), fx: () => { const e = pup(id); if (e) e.classList.add('shake'); } }, ag.length ? { who: ag[0].id, text: SP.say(S, st, ag[0].id, 'agree', { with: st.hero.title, target: SP.callName(S, st, ag[0].id, id) }) } : null]);
     log({ k: 'accuse', who: id });
     save(); debate();
   }

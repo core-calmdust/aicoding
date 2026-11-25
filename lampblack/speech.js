@@ -26,7 +26,10 @@
     const k = id + ':' + act;
     const i = ((h32(S.seed + k) % 97) + (S.vc[k] = (S.vc[k] || 0) + 1)) % list.length;
     const add = name => (vo.reg === 'plain' || vo.reg === 'kid' && false) ? name : name;
-    const out = fill(list[i], Object.assign({ you: story.hero.title, god: story.lex.god || '神さま', godCall: story.lex.godCall || '神さま', blessing: story.lex.blessing || 'ようこそ' }, vars || {}));
+    // the last day of the fox hunt: the wolves are gone, the talk is of the fox (before the reason is put in, so the reason's own words stay)
+    let line = list[i];
+    if (S.foxHunt && ['defend', 'accuse', 'sus', 'bad', 'agree', 'rs_w', 'rm_w'].includes(act)) line = String(line).replace(/人狼/g, ((story.roles || {}).fox || {}).name || '妖狐').replace(/狼/g, '狐');
+    const out = fill(line, Object.assign({ you: story.hero.title, god: story.lex.god || '神さま', godCall: story.lex.godCall || '神さま', blessing: story.lex.blessing || 'ようこそ' }, vars || {}));
     // the hero's title with an honorific becomes how people really call them (先生さん → 先生, 医者さん → お医者さま)
     const H = story.hero;
     return H && H.you && H.title ? out.split(H.title + 'さん').join(H.you) : out;
@@ -40,6 +43,7 @@
     const o = { role: w.role ? roleShort(w.role) : '', by: w.by ? (w.by === 'you' ? story.hero.title : name(S, story, w.by)) : '' };
     if (w.k === 'counter') o.role = roleName(story, w.role);
     if (w.k === 'trace') o.trait = trait(story, w.cat, w.val);
+    if (w.k === 'den') o.den = loc(story, story.foxLoc);
     return fill(T[w.k] || T.gut, o);
   }
   // NPCs say "〜さん" in polite registers; plain voices drop it
