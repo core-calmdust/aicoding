@@ -1972,48 +1972,48 @@
    "course": "renju",
    "problems": [
     {
-     "b": "g6 f7 h7 e8 g8 h8 f9",
-     "w": "i6 j6 g7 f8 d9 j9 g10",
+     "b": "h11 h12 h13 g10 e10 f7 e7 h6 f8",
+     "w": "h14 f6 c7 c10 d8 g9 h8 j13 i6",
      "side": 1,
-     "last": "i6",
+     "last": "g9",
      "ok": [
-      "h5"
+      "h10"
      ]
     },
     {
-     "b": "f8 h8 i8 i9 g10 g11 h11 i11",
-     "w": "g7 h7 e8 h9 j9 f10 i10 f11",
+     "b": "h5 j7 l9 h6 j6 f7 f9 g9 e7",
+     "w": "j9 h8 l6 m7 c7 c8 j8 h9 j5",
+     "side": 1,
+     "last": "j5",
+     "ok": [
+      "i6"
+     ]
+    },
+    {
+     "b": "j8 h10 f12 h9 f9 k10 k12 l10",
+     "w": "f10 f11 j11 j12 i10 e13 f7 d11",
      "side": 1,
      "last": "i10",
      "ok": [
-      "j8"
+      "i9"
      ]
     },
     {
-     "b": "h6 i6 g7 i7 h8 j8 f9 i9",
-     "w": "h7 g8 i8 h9 k9 f10 j10 g11",
+     "b": "j10 h12 g13 g9 f8 e9 i8 k6",
+     "w": "f14 j6 i12 k13 l8 i7 i14 e12",
      "side": 1,
-     "last": "i8",
+     "last": "i12",
      "ok": [
-      "f6"
+      "i11"
      ]
     },
     {
-     "b": "j6 k6 f7 j7 k7 h8 j8 k8 g9 f12",
-     "w": "j5 g7 i7 f8 l8 f9 k9 f10 h10 f11",
+     "b": "f9 h11 j13 g9 g7 j8 k8 j7 k6",
+     "w": "e10 k10 j5 h7 l6 h6 j6 e6",
      "side": 1,
-     "last": "k9",
+     "last": "e10",
      "ok": [
-      "i8"
-     ]
-    },
-    {
-     "b": "m4 h6 i6 g7 l7 h8 k8 h9 j9 k9 h10 i10 j10 k10 g11",
-     "w": "i5 l5 f6 k6 m6 h7 i7 j7 k7 i8 g9 i9 g10 l10 h11",
-     "side": 1,
-     "last": "m6",
-     "ok": [
-      "k12"
+      "g10"
      ]
     }
    ],

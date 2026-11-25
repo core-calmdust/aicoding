@@ -216,7 +216,13 @@ function mancalaWords(opt) {
 //      above the first   ⑦⑧ ゴイシペン's words (atlas/lessons3d.js gmLsJa, run here) for every other empty point against the engine:
 //      a point said to make a four-three / one three / no three (no four) / a five makes exactly that, and the green point's words say
 //      the answer's kind (overline / 4-4)   the warm-up tries: the answer = the forbidden points of the lesson's kind
-const GM_DONE = new Set(['five', 'block', 'three', 'sfour', 'fourthree', 'forbid33', 'forbid44']);
+//   (2026-11-25 担当A) fourthreeB (renju, Black to move; gmFourThreeB): ① the answers = the moves that win fastest (in 3, renju — a
+//      forbidden point is no legal move) ② no other move wins in 3 ④ every answer a four-three (one four, one real three), the board has a
+//      forbidden point (the ×) and one of them wins in 3 in the free rule (the trap the lesson is about) ⑥ d as fourthree ⑦⑧ the 3D words
+//      for every other legal point: 「三のほうが達四になれない」 = the point's threes are not real (no legal open-four point), 「四だけ…止め
+//      られたら攻めが終わる」 = after the four and its block Black has no VCF, 「三だけ」 = a three and no four, 「四も三もできない」 = neither;
+//      the praise's lines = the answer's four and three; the hint 「×のとなり」 = the answer touches a forbidden point
+const GM_DONE = new Set(['five', 'block', 'three', 'sfour', 'fourthree', 'forbid33', 'forbid44', 'fourthreeB']);
 function gmJa() { const fs = require('fs'), vm = require('vm'), src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), f0 = src.indexOf('  const fill = ');
   return vm.runInNewContext(src.slice(f0, src.indexOf('\n', f0)) + '\n' + src.slice(src.indexOf('  const GML = '), src.indexOf('  const GOMOKU = {')) + '\n;({ GML, gmLsJa, GMW })', {}); }
 function gmWin(E) {
@@ -291,6 +297,47 @@ function gmForbid(E, id, P, j, st, add, six) {
     if (/並びから外れ|並びが伸びない/.test(t) && onLine) bad('said to be off the lines (a black stone is on its line within 4)');
   }
 }
+function gmFourThreeB(E, G, P, j, st, add, six) {
+  const C = E.C, cells = a => String(a || '').split(/\s+/).filter(Boolean).map(E.sqOf), nm = m => E.sqName(m);
+  if ((P.rule || 'renju') !== 'renju') add(`rule ${P.rule} (the lesson is renju's)`);
+  if (P.side !== 1) add('the side to move is not Black');
+  const B = cells(P.b), Wt = cells(P.w), pos = E.setup('renju', { b: B, w: Wt, side: 1 }), lg = pos.legal(), okM = P.ok.map(E.sqOf);
+  const cls = (c, m) => pos.cls[c][E.M2I[m]];
+  if (pos.fives(1).length || pos.fives(2).length) add('① a five point on the board');
+  if (lg.length < 3) add(`③ only ${lg.length} legal moves`);
+  const lv = new Map(lg.map(m => [m, G.level(pos, m)])), mine = lg.filter(m => lv.get(m)), mn = mine.length ? Math.min(...mine.map(m => lv.get(m))) : 0;
+  if (mn !== 3) add(`① the fastest win takes ${mn || 'no'} moves (the lesson's: 3)`);
+  const want = lg.filter(m => lv.get(m) === 3).map(nm).sort(), ok = P.ok.slice().sort();
+  if (want.join() !== ok.join()) add(`①② the answers are ${ok}, the goal's moves ${want}`);
+  if (!okM.every(m => cls(1, m) === C.F43 && !pos.forbidden(m))) add('④ an answer is not a legal four-three');
+  const fl = pos.forbiddenList(); if (!fl.length) add('④ no forbidden point on the board (the × the lesson is about)');
+  const pf = E.setup('free', { b: B, w: Wt, side: 1 });
+  if (!fl.some(f => G.level(pf, f.m))) add('④ no forbidden point that would win in the free rule (no trap)');
+  if (P.ok.length * 3 > lg.length) add(`追72 ${P.ok.length} of the ${lg.length} legal points are right`);
+  six(lg.filter(m => !P.ok.includes(nm(m)) && (cls(1, m) >= C.F3 || cls(2, m) >= C.B4)).length);
+  // ⑦⑧ the 3D words
+  const X = gmJa(), L = require(path.join(ROOT, 'gomoku/lessons.json')), key = L.steps.findIndex(s => s.id === 'fourthreeB'), W = X.GMW.fourthree;
+  const J = X.gmLsJa('fourthreeB', { b: B, w: Wt, side: 1 }, 'renju', okM, j, key); if (!J) { add('⑧ no 3D words'); return; }
+  const Gm = X.GML.mk({ b: B, w: Wt }, 'renju'), DIR = [[1, 0], [0, 1], [1, 1], [1, -1]];
+  const realThrees = u => { const r = Gm.info(u, 1); let n = 0; Gm.bd[u] = 1; const p2 = E.setup('renju', { b: B.concat([u]), w: Wt, side: 1 });
+    r.threes.forEach(di => { const d = DIR[di], x = u % 15, y = Math.floor(u / 15); let hit = false;
+      for (let k = -4; k <= 4 && !hit; k++) { const a = x + d[0] * k, b = y + d[1] * k; if (a < 0 || b < 0 || a > 14 || b > 14) continue; const c = b * 15 + a; if (Gm.bd[c] !== 0) continue; if (Gm.info(c, 1).open4.includes(di) && !p2.forbidden(c)) hit = true; }
+      if (hit) n++; }); Gm.bd[u] = 0; return n; };
+  const has = (t, k) => (W[k] || []).some(x => typeof x === 'string' && t.includes(x));
+  const ra = okM[0], RA = Gm.info(ra, 1);
+  if (!(RA.fours.length === 1 && RA.threes.length === 1 && realThrees(ra) === 1)) add(`⑧ the answer is not one four and one real three (the praise names one of each) — fours ${RA.fours.length}, threes ${RA.threes.length}`);
+  const h = J.hintTx || '', near = (a, b) => Math.abs(a % 15 - b % 15) <= 1 && Math.abs(Math.floor(a / 15) - Math.floor(b / 15)) <= 1;
+  if (/×のとなり/.test(h) && !fl.some(f => near(f.m, ra))) add(`⑧ the hint says the answer is next to a × — ${h}`);
+  if (/×/.test(J.ask || '') && !fl.length) add('⑧ the question names the × (none on the board)');
+  for (const u of lg) { if (okM.includes(u)) continue; const t = J.ng.call({}, u), r = Gm.info(u, 1), bad = m => add(`⑧ ${nm(u)}: ${m} — ${t}`);
+    if (has(t, 't43') && !(r.fours.length && r.threes.length && realThrees(u) === 0)) bad(`said to be a four-three whose three is not real (fours ${r.fours.length}, threes ${r.threes.length}, real ${realThrees(u)})`);
+    if (has(t, 't4')) { if (!(r.fours.length && !r.threes.length)) bad('said to make a four only');
+      else { pos.make(u); const f = pos.fives(1); let cont = false; if (f.length === 1) { pos.make(E.I2M[f[0]]); cont = G.vcf(pos); pos.unmake(); } pos.unmake(); if (cont) bad('said that the attack ends once the four is blocked, Black still wins by fours'); } }
+    if (has(t, 't3') && !(r.threes.length && !r.fours.length)) bad('said to make a three only');
+    if (has(t, 't0') && (r.threes.length || r.fours.length)) bad('said to make neither a four nor a three');
+    if (!/緑の点/.test(t)) bad('the green point (the answer) is not named');
+  }
+}
 function gomoku(opt) {
   const E = require(path.join(ROOT, 'gomoku/engine.js')), L = require(path.join(ROOT, 'gomoku/lessons.json')), PZ = require(path.join(ROOT, 'gomoku/puzzles.json'));
   const C = E.C, G = gmWin(E), only = opt && opt.only, out = [];
@@ -310,6 +357,10 @@ function gomoku(opt) {
     let prevD = -1, firstD = null;
     st.problems.forEach((P, j) => { const add = m => out.push({ step: id, q: j + 1, msg: m });
       if (/^forbid/.test(id)) { gmForbid(E, id, P, j, st, add, D => { if (D < prevD) add(`⑥ easier than the problem before (d ${D} after ${prevD})`); prevD = Math.max(prevD, D); if (firstD === null) firstD = D;
+          if (j === st.problems.length - 1 && !(D > firstD)) add(`⑥ the last problem is no harder than the first (d ${D} vs ${firstD})`); });
+        const A = st2(P); for (const [who, B, Q] of PS) { if (Q === P) continue; const e = dist(A, B); if (e <= 3) add(`⑤ ${e} stones from ${who}`); }
+        return; }
+      if (id === 'fourthreeB') { gmFourThreeB(E, G, P, j, st, add, D => { if (D < prevD) add(`⑥ easier than the problem before (d ${D} after ${prevD})`); prevD = Math.max(prevD, D); if (firstD === null) firstD = D;
           if (j === st.problems.length - 1 && !(D > firstD)) add(`⑥ the last problem is no harder than the first (d ${D} vs ${firstD})`); });
         const A = st2(P); for (const [who, B, Q] of PS) { if (Q === P) continue; const e = dist(A, B); if (e <= 3) add(`⑤ ${e} stones from ${who}`); }
         return; }
