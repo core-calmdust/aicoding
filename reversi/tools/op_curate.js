@@ -8,7 +8,7 @@
 // usage: node reversi/tools/op_curate.js <set id or line moves>,…  → reversi/opcourse-probs.json { "<line moves>": [ problem… ] }
 const fs = require('fs'), path = require('path'), ROOT = path.join(__dirname, '..', '..');
 const RO = require(path.join(ROOT, 'tools/lesson-verify-rvopen.js')), X = RO.rx(), E = RO.eng(), ST = RO.steps();
-const OUT = path.join(ROOT, 'reversi/opcourse-probs.json'), res = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, 'utf8')) : {};
+const IN = path.join(ROOT, 'reversi/opcourse-probs.json'), OUT = process.env.OP_OUT || IN, res = fs.existsSync(IN) ? JSON.parse(fs.readFileSync(IN, 'utf8')) : {};   // (2026-11-25 担当B: OP_OUT=<file> to run two sets of lines side by side and merge after; written after every line)
 const EV = JSON.parse(fs.readFileSync(path.join(ROOT, 'reversi/opcourse-evals.json'), 'utf8'));
 const GAP = 1.5, DEC = 4;   // (every other move 1.5+ discs below in both searches — ≤ 10 points; the checker's line is 1.2 / ≤ 11 — and |best| ≤ 4 where the checker says 6: a margin for the timed searches, 追26; 4 from 2026-11-25: a 4.9 read 6.9 once, 追84)
 const sqn = q => 'abcdefgh'[q & 7] + ((q >> 3) + 1);
@@ -39,6 +39,8 @@ for (const s of ST) { const key = s.ln.moves; if (!want.has(key) && !want.has(s.
         // (追26: the searches are timed — read both again from a cleared table, as the checker's --deep does, and keep only when the second reads agree)
         // (2026-11-25 担当B: five times over from 12:50 — 谷田 q3 passed three and the checker's --deep then read c6 within 0.4; three times over — ノーカン q4 passed one reread and then failed the checker's --deep (a3 within 0.5 of d1 at 0.3 s))
         let rr = false; for (let t = 0; t < 5 && !rr; t++) { const r1 = E(Q, 300), r2 = E(Q, 1500); if (r1[0][0] !== e2[0][0] || r2[0][0] !== e2[0][0] || Math.abs(r1[0][1]) > DEC || Math.abs(r2[0][1]) > DEC || r1[1][1] > r1[0][1] - GAP || r2[1][1] > r2[0][1] - GAP) rr = true; } if (rr) { ST0.unstable++; continue; }
+        // (2026-11-25 担当B: and once deeper (5 s) — 金田流 q2 passed the timed reads with e2 1.7 discs ahead and read only 1.1 ahead at 5 s (② ≤ 11 points needs 1.2))
+        { const r5 = E(Q, 5000); if (r5[0][0] !== e2[0][0] || Math.abs(r5[0][1]) > DEC || r5[1][1] > r5[0][1] - 1.2) { ST0.unstable++; continue; } }
         // (⑦ every wrong move has a reason on the board in リバガメ's words: a corner given, X / C, openness, the opponent's moves, the
         // flips or the moves left after the reply — not the 「数は近いけど」 line with no difference to show)
         // (2026-11-25: with the line's own name and voice, at every place 1〜5 it may be asked — the words vary with them, as the verifier reads them)
@@ -53,5 +55,5 @@ for (const s of ST) { const key = s.ln.moves; if (!want.has(key) && !want.has(s.
   for (const c of cand) { if (pick.length >= 5) break; if (pick.some(p => p.k === c.k) || pick.filter(p => p.best === c.best).length >= 2) continue; pick.push(c); }
   for (const c of cand) { if (pick.length >= 5) break; if (pick.includes(c) || pick.filter(p => p.best === c.best).length >= 2) continue; pick.push(c); }
   pick.sort((a, b) => a.d - b.d); res[key] = pick; pick.forEach(p => kept.push(p.pos.split(':')[0]));
-  console.log(key, s.ln.name.ja, 'candidates', cand.length, 'kept', pick.length, JSON.stringify(ST0)); }
+  console.log(key, s.ln.name.ja, 'candidates', cand.length, 'kept', pick.length, JSON.stringify(ST0)); fs.writeFileSync(OUT, JSON.stringify(res)); }
 fs.writeFileSync(OUT, JSON.stringify(res));
