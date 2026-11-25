@@ -6921,10 +6921,10 @@
     const cnt = (on, bx) => be(bx).filter(e => on.has(e)).length, cap = on => { for (let bx = 0; bx < n * n; bx++) if (cnt(on, bx) === 3) return bx; return -1; };
     const run = on => { on = new Set(on); let t = 0, bx; while ((bx = cap(on)) >= 0) { const e = be(bx).find(x => !on.has(x)); t += ob[e].filter(b => cnt(on, b) === 3).length; on.add(e); } return t; };
     const on0 = new Set(edges); let ns = 0; for (let e = 0; e < E; e++) if (!on0.has(e) && ob[e].every(bx => cnt(on0, bx) < 2)) ns++;
-    const hasCap = cap(on0) >= 0;
+    const hasCap = cap(on0) >= 0, r0 = run(on0); let three0 = 0; for (let bx = 0; bx < n * n; bx++) if (cnt(on0, bx) === 3) three0++;
     return { hasCap, ns, of(e) { const k = ob[e].filter(bx => cnt(on0, bx) === 3).length, on = new Set(on0); on.add(e); let three = 0; for (let bx = 0; bx < n * n; bx++) if (cnt(on, bx) === 3) three++;
       const m = k ? 0 : run(on), cls = k ? 'take' : hasCap ? 'decline' : m ? 'give' : 'safe'; let n2 = 0; for (let f = 0; f < E; f++) if (!on.has(f) && ob[f].every(bx => cnt(on, bx) < 2)) n2++;
-      return { k, m, cls, ret: cls === 'give' && m === 2 && three === 1, edge: ob[e].length === 1, n2 }; } };   // (edge: an outer line, one box; n2: the safe lines left after it)
+      return { k, m, cls, ret: cls === 'give' && m === 2 && three === 1, dd: cls === 'decline' && m === r0 && three > three0, edge: ob[e].length === 1, n2 }; } };   // (edge: an outer line, one box; n2: the safe lines left after it; dd: the double-deal itself — it hands over just the boxes already open and turns the last of them into a domino (2026-11-25 担当A: a line that opens another chain beside them is not 「残し」))
   };
   /* (2026-11-22 lesson loop) ハコピヨ's own words for each step: a short intro, five questions and five hints (DTJ), and after the
      answer his praise + why, or for a miss a soft word, the green line's point and what the red one costs — read from the board
@@ -6950,7 +6950,7 @@
       hint: ['全部取ったら、次に鎖を開くのはだれかな？', '最後の2箱の先の線を引くと、どうなる？', '2箱をあげて、次の長い鎖をもらう作戦！', 'あとに残っている鎖の長さを見てみよう。', '相手は2箱をもらうけど、そのあと鎖を開くのは相手！'] },
     control: { intro: '2つ残し（ループなら4つ残し）は、いつでも正しいわけじゃない。残すたびに、2箱（4箱）を相手にあげるからね。<br><b>残りの鎖が小さい</b>ときや<b>最後の鎖</b>なら、全部取るのが正解。大きな長い鎖が残っていれば、残して主導権をキープ！',
       ask: ['取れる箱がある。全部取る？ 残す？', 'さて、取り切る？ 2つ残す？', '残りの鎖を見て決めよう。どの線？', '主導権、守る？ 手放す？', 'ラスト！ 取るか残すか、決めて！'],
-      hint: ['残りの鎖の長さを数えてみて！', 'あげた2箱を、あとで取り返せるかな？', 'これが最後の鎖なら、残す意味はある？', '大きな鎖が残ってるなら、主導権が大事！', '小さな鎖ばかりなら、目の前の箱をいただこう！'] },
+      hint: ['残りの鎖の長さを数えてみて！', 'あげた2箱を、あとで取り返せるかな？', 'いま取れる2箱のほかに、3箱以上の鎖は残ってる？', '取り切る線と、最後の2箱の先の線。2つをくらべよう！', '長い鎖が残っていれば2つ残し、小さな鎖だけなら取り切り！'] },
     parity: { intro: '安全な線がつきたとき、最初に長い鎖を開かされた側はたいてい負け。だれが開くかは、手数の偶数・奇数で決まるんだ。<br><b>長鎖ルール</b>：3×3なら先手は長い鎖を偶数本に、4×4なら奇数本にしたい（後手はその逆）。鎖をつなげたり切ったりしよう！',
       ask: ['安全な線はまだあるけど、どれでも同じじゃない。いちばんいい線は？', '長い鎖の数を考えて、1本えらんでみて！', '鎖をつなぐ？ 切る？ どの線にする？', '先を読んで、きみに合う1本は？', 'ラスト！ 長鎖ルールで勝てる線は？'],
       hint: ['その線で、鎖はつながる？ 分かれる？', '長い鎖は、いま何本になりそうかな？', '3×3は偶数本、4×4は奇数本が先手のねらい！', '金色の輪の線の中から、鎖の形が変わるものを探そう！', '安全な線を全部使い切ったとき、手番はどっち？'] },
@@ -7042,7 +7042,7 @@
       const x = F.of(u), loss = (best - V.get(u)) / 2, o = { bm: b.m, xm: x.m };
       let R, Y;
       if (b.cls === 'safe') { R = x.cls === 'safe' ? DT_CH.rPar : DT_CH.rSafe; Y = x.cls === 'safe' ? DT_CH.yPar : DT_CH.yGive; }
-      else if (b.cls === 'take') { const e = x.cls === 'decline' && DT_END.test(s.id) && (x.m === 2 || x.m === 4); R = e ? DT_CH.rTakeE : DT_CH.rTake; Y = e ? DT_CH.yKeep : x.cls === 'decline' ? DT_CH.yMiss : DT_CH.yOrd; }
+      else if (b.cls === 'take') { const e = x.dd && DT_END.test(s.id) && (x.m === 2 || x.m === 4); R = e ? DT_CH.rTakeE : DT_CH.rTake; Y = e ? DT_CH.yKeep : x.cls === 'decline' ? DT_CH.yMiss : DT_CH.yOrd; }
       else if (b.cls === 'decline') { R = DT_CH.rDec; Y = x.cls === 'take' ? DT_CH.yAll : DT_CH.yMore; }
       else if (x.cls === 'safe') { R = DT_CH.rSac; Y = DT_CH.ySafe; }
       else if (x.ret && !b.ret && b.m === 2) { R = DT_CH.rMid; Y = DT_CH.yEnd; }
@@ -7061,7 +7061,7 @@
     load(lang) {
       const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261021L`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
       if (this.p) return this.p.then(() => T()).then(() => this);
-      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261125h'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
+      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261125i'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
         .then(([ls, X]) => { const w = {}; try { new Function('window', 'with (window) {' + X + '\n}')(w); } catch (e) { console.warn('[lessons3d] dots texts', e); } this.I = w.I18N || {}; this.data = { ls }; return T(); }).then(() => this)
         .catch(e => { this.p = null; throw e; }));
     },
