@@ -10,7 +10,7 @@ const fs = require('fs'), path = require('path'), ROOT = path.join(__dirname, '.
 const RO = require(path.join(ROOT, 'tools/lesson-verify-rvopen.js')), X = RO.rx(), E = RO.eng(), ST = RO.steps();
 const OUT = path.join(ROOT, 'reversi/opcourse-probs.json'), res = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, 'utf8')) : {};
 const EV = JSON.parse(fs.readFileSync(path.join(ROOT, 'reversi/opcourse-evals.json'), 'utf8'));
-const GAP = 1.5, DEC = 5;   // (every other move 1.5+ discs below in both searches — ≤ 10 points; the checker's line is 1.2 / ≤ 11 — and |best| ≤ 5 where the checker says 6: a margin for the timed searches, 追26)
+const GAP = 1.5, DEC = 4;   // (every other move 1.5+ discs below in both searches — ≤ 10 points; the checker's line is 1.2 / ≤ 11 — and |best| ≤ 4 where the checker says 6: a margin for the timed searches, 追26; 4 from 2026-11-25: a 4.9 read 6.9 once, 追84)
 const sqn = q => 'abcdefgh'[q & 7] + ((q >> 3) + 1);
 const want = new Set(process.argv[2].split(','));
 const shown = []; ST.forEach(s => { for (let k = 0; k <= s.mv.length; k++) shown.push(X.rvAfter(s.mv.slice(0, k).join('')).split(':')[0]); });
