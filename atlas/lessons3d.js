@@ -2949,7 +2949,8 @@
           else if ((kb === 'b3' || kb === 'b3t') && !FU.b3) why = mp('left3');
           else if (/^(f4|ft|four|three|b3t)$/.test(kb) && !FU.fours.length && !FU.threes.length) why = mp('stop');
           else if (!FU.near) why = mp('far');
-          else if (FB.blk.length && !FU.blk.some(i => GOP.DN[i] === GOP.DN[FB.blk[0]])) why = mp('free');   // (追90: not when the move blocks the other ナナメ — the words name only 「ナナメ」)
+          else if (FB.blk.length && !FU.blk.some(i => GOP.DN[i] === GOP.DN[FB.blk[0]])) { why = mp('free');   // (追90: not when the move blocks the other ナナメ — the words name only 「ナナメ」)
+            if (!FB.blk.some(i => GOP.DN[i] === V.bd) || FU.blk.some(i => GOP.DN[i] === V.bd)) V.bd = GOP.DN[FB.blk[0]]; }   // (the line named is one the green point blocks and the move leaves open — 浦月 q3: not the ナナメ the move blocks too)
           else if (FB.twos.length && !FU.twos.length && ku !== 'three') why = P.pk(GOP.miss.lone, 'mlone', t => FU.adjS.length ? !/つながらない|離れたまま/.test(t) : !/となりに置いても/.test(t));   // (追90: a stone next to its own is not 「つながらない」)
           else if (pu >= 10 && !(() => { G.bd[u] = s; const w = G.winPt(3 - s).length > 0 || !!G.vcf(3 - s, 6); G.bd[u] = 0; return w; })()) why = mp('close');   // (「悪くない」「すぐには負けない」: 10+ points and no win for the opponent after it — 追53)
           else why = mp(ku === kb ? 'same' : 'weak');
@@ -3096,8 +3097,7 @@
       n: ['緑の点から四を続ければ勝ちだったんだ。', '正解は緑の点。そこから四を打ち続けて勝ち切れたペン。', '四追いの入り口は緑の点。ここから相手は受け続けるしかないんだ。', '緑の点の四から始めれば、最後は止められない形だったね。', '緑の点から四を重ねれば、相手は一度も反撃できなかったペン。'],
       tN: ['きみの手は四じゃないから、相手は止めずに反撃できちゃうペン。', 'その手は四になっていないから、相手に自由な一手をあげちゃう。', '四じゃない手だと、相手は受けなくていいんだ。', 'いまの手では相手に休む時間ができちゃう。', '四で押さないと、相手が先に攻めてくるペン。'],
       tC: ['きみの四だと、止めたオレンジの印の石で相手に四ができて、逆に攻められちゃう。', 'オレンジの印の止め石が、相手の四になっちゃうんだ。', 'きみの四を止めたオレンジの印の石から、相手の反撃が始まっちゃうペン。', '止め石のオレンジの印で相手に四ができて、攻守が入れかわっちゃう。', 'オレンジの印で止められると、そこが相手の四になっちゃう。'],
-      tO: ['きみの四も悪くないけど、順番がちがうと勝ち切れないことがあるペン。', 'きみの四からでも続くけど、緑の点から行くのが確実なんだ。', 'その四も筋はいい。でも順番しだいで相手に逃げられちゃう。', 'いまの四でも攻められるけど、近道は緑の点のほうだ。', '順番を入れかえると、止め石が攻めのじゃまをすることがあるペン。'],
-      tE: ['きみの四は止められたあと、続く四がなくて攻めが切れちゃう。', 'その四をふさがれると、次の四が作れないんだ。', 'きみの四は一発で終わり。続きの四がないペン。', 'その四のあと、攻めがつながらない。', '止められたら次がない四だと、相手に番が回っちゃう。'] },
+      tE: ['きみの四は止められたら、四を続けても勝てないペン。', 'ふさがれたら、もう四追いで勝てないんだ。', 'きみの四は一発で終わり。四追いが続かない。', 'その四のあと、勝ちにつながらない。', '止められたら勝てない四だと、相手に番が回っちゃう。'] },
     defend: { g: ['相手の四三の点を先にふさいで、勝ち筋を消せたね。', '急所をおさえたから、相手の攻めはもう続かないペン。', 'そこを先に取れば、相手のねらいが空振りになるんだ。', '相手の一番打ちたい点を先取り！ これで攻めが止まったね。', '先回りの守り、みごとだペン。相手の作戦がくずれたね。'],
       cnt: [n => `止められる点は${n}か所あったんだ。`, n => `ちなみに、守れる点は全部で${n}つあったペン。`, n => `受ける点はほかにもあって、${n}か所だ。`],
       n: [f => `緑の点なら${f}のねらいを消せたんだ。`, f => `正解は緑の点。${f}の攻めの急所だったペン。`, f => `緑の点を先に取れば、${f}は勝ち筋を失っていたね。`, f => `${f}が打ちたかったのは緑の点。そこを先にふさぐんだ。`, f => `守りの急所は緑の点。${f}の攻めの線が交わっていたペン。`],
@@ -3163,9 +3163,9 @@
         good = () => pk(W.g);
         ng = function (u) { const r = G.info(u, s); this._hl = [];
           if (!r.fours.length) return pk(W.n) + pk(W.tN, 1);
-          const f = r.fp[0]; G.bd[u] = s; G.bd[f] = o; const ctr = G.fivePts(o), cont = !ctr.length && G.vcf(s, 7); G.bd[f] = 0; G.bd[u] = 0;
+          const f = r.fp[0]; G.bd[u] = s; G.bd[f] = o; const ctr = G.fivePts(o); G.bd[f] = 0; G.bd[u] = 0;
           if (ctr.length) { this._hl = [f]; return pk(W.n) + pk(W.tC, 2); }
-          return pk(W.n) + (cont ? pk(W.tO, 3) : pk(W.tE, 4)); };
+          return pk(W.n) + pk(W.tE, 4); };   // (2026-11-26 担当A: a four that still wins is an answer — lesson-verify.js gmVcf ①; no 「順番がちがうと」 line)
         break;
       case 'defend':
         good = () => pk(W.g) + (ok.length > 1 && i % 2 === 0 ? pk(W.cnt)(ok.length) : '');
@@ -3189,7 +3189,7 @@
     LKEY: 'aicoding-gomoku-lessons', OKEY: 'aicoding-gomoku-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261125g'), getJ('../gomoku/openings.json?v=20261125v5'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261126a'), getJ('../gomoku/openings.json?v=20261126v6'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] gomoku texts', e); } this.I = w.I18N || {}; this.data = { ls, op };
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })

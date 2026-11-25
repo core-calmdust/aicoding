@@ -250,3 +250,11 @@ python3 relabel.py in.bin out.bin --engine ~/shogi-yo-ours/yo-SFNN_ka2_2048_8_64
 ```
 
 つようら王11micro を教師にする案は、見本で確かめて見送った（2万局面読ませて今のデータと同じ精度。`claude/shogi-search-comparison.md` 0.33）。
+
+### 働いていないユニットを取り除く（prune.py）と、続きから学習（--init）（2026-11-26）
+
+```
+python3 prune.py g2048s.bin train.bin p1536.bin --keep 1536      # 1層目のうち、ほとんど働かないものを除く（16の倍数）。評価値はほぼ同じで約2割速い
+python3 gtrain.py train.bin g2048s2.bin --hidden 2048 --ob 8 --l1 8 --l2 64 --passes 1 --init g2048s.bin.ckpt --lr 0.0002 --lr-end 0.00002   # 前の学習の重みから、歩幅を下げてもう1周
+```
+

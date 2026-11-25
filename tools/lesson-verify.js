@@ -246,7 +246,7 @@ function mancalaWords(opt) {
 //      for every other legal point: 「三のほうが達四になれない」 = the point's threes are not real (no legal open-four point), 「四だけ…止め
 //      られたら攻めが終わる」 = after the four and its block Black has no VCF, 「三だけ」 = a three and no four, 「四も三もできない」 = neither;
 //      the praise's lines = the answer's four and three; the hint 「×のとなり」 = the answer touches a forbidden point
-const GM_DONE = new Set(['five', 'block', 'three', 'sfour', 'fourthree', 'forbid33', 'forbid44', 'fourthreeB']);
+const GM_DONE = new Set(['five', 'block', 'three', 'sfour', 'fourthree', 'forbid33', 'forbid44', 'fourthreeB', 'vcf']);
 function gmJa() { const fs = require('fs'), vm = require('vm'), src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), f0 = src.indexOf('  const fill = ');
   return vm.runInNewContext(src.slice(f0, src.indexOf('\n', f0)) + '\n' + src.slice(src.indexOf('  const GML = '), src.indexOf('  const GOMOKU = {')) + '\n;({ GML, gmLsJa, GMW })', {}); }
 function gmWin(E) {
@@ -362,6 +362,75 @@ function gmFourThreeB(E, G, P, j, st, add, six) {
     if (!/緑の点/.test(t)) bad('the green point (the answer) is not named');
   }
 }
+// (2026-11-26 担当A) vcf 四追い (renju, Black to move; gmVcf): ① the answers = the moves that start a win by fours alone (the engine's
+//      Solver.vcf after the four and its forced block, every legal four of Black's tried) ② no non-four move keeps the game: after
+//      each one White wins (a five point or White's VCF) — so the answers are the only winning moves, and ゴイシペン's 「四じゃないから、
+//      相手は止めずに反撃できちゃう」 is the board's fact ③ at least 2 other fours (tempting), 追72 ④ the answer is a four (not an open
+//      four, not a five) and Black needs at least two more fours after its block (VCF length ≥ 3: no plain four-three), White threatens
+//      a win if Black does not attack (相手に休ませない) ⑥ d = the answer's VCF length (iterative depth) never goes down, the last above
+//      the first ⑦⑧ the 3D words (atlas/lessons3d.js gmLsJa) for every other legal point: tN = not a four, tC = White's block makes a
+//      White five point (the orange ring = that block), tE = no VCF after the block; tO (「順番がちがうと…」: it still wins) never
+function gmVcf(E, P, j, add, six) {
+  const C = E.C, cells = a => String(a || '').split(/\s+/).filter(Boolean).map(E.sqOf), nm = m => E.sqName(m);
+  if ((P.rule || 'renju') !== 'renju') add(`rule ${P.rule} (the lesson is renju's)`);
+  if (P.side !== 1) add('the side to move is not Black');
+  const B = cells(P.b), Wt = cells(P.w), pos = E.setup('renju', { b: B, w: Wt, side: 1 }), lg = pos.legal(), okM = P.ok.map(E.sqOf);
+  const vlen = (p, max) => { for (let d = 1; d <= max; d++) { const S = new E.Solver(); S.limit = 2e5; if (S.vcf(p, d) >= 0) return d; } return 0; };
+  const wWin = p => p.fives(2).length > 0 || vlen(p, 14) > 0;   // p: White to move
+  if (pos.fives(1).length || pos.fives(2).length) add('① a five point on the board');
+  if (lg.length < 3) add(`③ only ${lg.length} legal moves`);
+  const four = new Map();   // m → { win, len, ctr, block }
+  for (const m of lg) { pos.make(m); const mf = pos.fives(1);
+    if (mf.length) { const r = { win: false, len: 0, ctr: 0, block: -1 };
+      if (mf.length >= 2) { r.win = true; r.len = 1; }
+      else if (!pos.fives(2).length) { const q = E.I2M[mf[0]]; r.block = q; pos.make(q); r.ctr = pos.fives(2).length; if (!r.ctr) { const L = vlen(pos, 25); if (L) { r.win = true; r.len = L + 1; } } pos.unmake(); }
+      four.set(m, r); }
+    else if (!wWin(pos)) add(`② ${nm(m)} is no four and White then has no win (the answer is not the only way; 「反撃できちゃう」 is false)`);
+    pos.unmake(); }
+  const want = [...four].filter(([, r]) => r.win).map(([m]) => nm(m)).sort(), ok = P.ok.slice().sort();
+  if (want.join() !== ok.join()) add(`①② the answers are ${ok}, the moves that start a VCF ${want}`);
+  const wrongF = [...four.keys()].filter(m => !okM.includes(m)).length; if (wrongF < 2) add(`③ only ${wrongF} other fours (nothing tempting)`);
+  if (P.ok.length * 3 > lg.length) add(`追72 ${P.ok.length} of the ${lg.length} legal points are right`);
+  const ra = okM[0], R = four.get(ra);
+  if (!R) add('④ the answer is not a four');
+  else if (R.win) { if (pos.cls[1][E.M2I[ra]] === C.F4 || R.len < 3) add(`④ the answer wins at once (VCF length ${R.len}: an open four / a four-three, not a chase of fours)`); six(R.len); }
+  { const pw = E.setup('renju', { b: B, w: Wt, side: 2 }); if (!wWin(pw)) add('④ White has no win if Black does not attack (「相手に休ませない」 has no point)'); }
+  // ⑦⑧ the 3D words
+  const X = gmJa(), L = require(path.join(ROOT, 'gomoku/lessons.json')), key = L.steps.findIndex(s => s.id === 'vcf'), W = X.GMW.vcf;
+  const J = X.gmLsJa('vcf', { b: B, w: Wt, side: 1 }, 'renju', okM, j, key); if (!J) { add('⑧ no 3D words'); return; }
+  const has = (t, k) => (W[k] || []).some(x => typeof x === 'string' && t.includes(x));
+  for (const m of lg) { if (okM.includes(m)) continue; const th = {}, t = J.ng.call(th, m), r = four.get(m), bad = s => add(`⑧ ${nm(m)}: ${s} — ${t}`);
+    if (!/緑の点/.test(t)) bad('the green point (the answer) is not named');
+    if (!r) { if (!has(t, 'tN')) bad('no four, the words are not 「四じゃない」'); continue; }
+    if (r.win) continue;   // (a winning four left out: ①② above)
+    if (has(t, 'tN')) bad('a four, said to be no four');
+    if (has(t, 'tO')) bad('said to win in another order (it does not: no VCF)');
+    if (r.ctr) { if (!has(t, 'tC')) bad("White's block makes a White four — not said"); else if ((th._hl || [])[0] !== r.block) bad(`the orange ring ${(th._hl || []).map(nm)} is not White's block ${nm(r.block)}`); }
+    else if (has(t, 'tC')) bad("said that White's block makes a White four (it does not)");
+    else if (!has(t, 'tE')) bad('a four with no VCF after the block — not said'); }
+}
+// the vcf warm-up: the explain line (Black's moves are fours, White's the forced block, the last a five) and the tries (the answers =
+// the moves that start a VCF; the hint's 「ヨコ／ナナメの三つ並び」 = the answer's four line, 「タテ」 = two more Black stones on its column)
+function gmVcfRamp(E, r, a) {
+  const C = E.C, cells = x => String(x || '').split(/\s+/).filter(Boolean).map(E.sqOf), nm = m => E.sqName(m), DIRS = [[1, 0], [0, 1], [1, 1], [1, -1]];
+  const pos = E.setup(r.rule || 'renju', { b: cells(r.b), w: cells(r.w), side: r.side || 1 });
+  if (r.seq) { let ok = true; r.seq.forEach((q, i) => { if (!ok) return; const m = E.sqOf(q), s = pos.side;
+      if (!pos.isLegal(m)) { a(`⑧ the line's move ${i + 1} ${q} is not legal`); ok = false; return; }
+      if (s === 1) { if (i === r.seq.length - 1) { if (pos.cls[1][E.M2I[m]] !== C.FIVE) a(`⑧ the line's last move ${q} is not a five`); }
+        else { pos.make(m); const n = pos.fives(1).length; if (!n) a(`⑧ the line's move ${i + 1} ${q} is not a four`); if (n >= 2 && i !== r.seq.length - 3) a(`⑧ the line's move ${i + 1} ${q} is an open four before the end`); pos.unmake(); } }
+      else { const f = pos.fives(1).map(x => nm(E.I2M[x])); if (!f.includes(q) || pos.fives(2).length) a(`⑧ White's move ${i + 1} ${q} is not a block of Black's four (${f})`); }
+      pos.make(m); }); return; }
+  const lg = pos.legal(), want = [];
+  for (const m of lg) { pos.make(m); const mf = pos.fives(1); let w = false;
+    if (mf.length >= 2) w = true; else if (mf.length === 1 && !pos.fives(2).length) { pos.make(E.I2M[mf[0]]); if (!pos.fives(2).length) { const S = new E.Solver(); S.limit = 2e6; w = S.vcf(pos, 25) >= 0; } pos.unmake(); }
+    pos.unmake(); if (w) want.push(nm(m)); }
+  want.sort(); if (want.join() !== (r.ok || []).slice().sort().join()) a(`①② the answers are ${r.ok}, the moves that start a VCF ${want}`);
+  const h = (r.h && r.h.ja) || '', u = E.sqOf((r.ok || [])[0]), x = u % 15, y = Math.floor(u / 15), bd = d => { const X = x + d[0], Y = y + d[1]; return X >= 0 && Y >= 0 && X < 15 && Y < 15 ? pos.b[E.M2I[Y * 15 + X]] : -1; };
+  const run = (di) => { let n = 0; for (const g of [1, -1]) for (let k = 1; k <= 4; k++) { const v = bd([DIRS[di][0] * k * g, DIRS[di][1] * k * g]); if (v === 1) n++; else if (v !== 0) break; } return n; };
+  if (/ヨコの三つ並び/.test(h) && run(0) < 3) a(`⑧ the hint says the four is on a row of three (ヨコ) — ${h}`);
+  if (/ナナメの三つ並び/.test(h) && run(2) < 3 && run(3) < 3) a(`⑧ the hint says the four is on a diagonal three — ${h}`);
+  if (/タテ/.test(h) && run(1) < 2) a(`⑧ the hint says the stone joins a column (タテ) — ${h}`);
+}
 function gomoku(opt) {
   const E = require(path.join(ROOT, 'gomoku/engine.js')), L = require(path.join(ROOT, 'gomoku/lessons.json')), PZ = require(path.join(ROOT, 'gomoku/puzzles.json'));
   const C = E.C, G = gmWin(E), only = opt && opt.only, out = [];
@@ -382,6 +451,10 @@ function gomoku(opt) {
     st.problems.forEach((P, j) => { const add = m => out.push({ step: id, q: j + 1, msg: m });
       if (/^forbid/.test(id)) { gmForbid(E, id, P, j, st, add, D => { if (D < prevD) add(`⑥ easier than the problem before (d ${D} after ${prevD})`); prevD = Math.max(prevD, D); if (firstD === null) firstD = D;
           if (j === st.problems.length - 1 && !(D > firstD)) add(`⑥ the last problem is no harder than the first (d ${D} vs ${firstD})`); });
+        const A = st2(P); for (const [who, B, Q] of PS) { if (Q === P) continue; const e = dist(A, B); if (e <= 3) add(`⑤ ${e} stones from ${who}`); }
+        return; }
+      if (id === 'vcf') { gmVcf(E, P, j, add, D => { if (D < prevD) add(`⑥ easier than the problem before (VCF length ${D} after ${prevD})`); prevD = Math.max(prevD, D); if (firstD === null) firstD = D;
+          if (j === st.problems.length - 1 && !(D > firstD)) add(`⑥ the last problem is no harder than the first (VCF length ${D} vs ${firstD})`); });
         const A = st2(P); for (const [who, B, Q] of PS) { if (Q === P) continue; const e = dist(A, B); if (e <= 3) add(`⑤ ${e} stones from ${who}`); }
         return; }
       if (id === 'fourthreeB') { gmFourThreeB(E, G, P, j, st, add, D => { if (D < prevD) add(`⑥ easier than the problem before (d ${D} after ${prevD})`); prevD = Math.max(prevD, D); if (firstD === null) firstD = D;
@@ -418,7 +491,8 @@ function gomoku(opt) {
     //  five = the mover's five points, block = the opponent's, block3 = the points after which the opponent has no win (k ≤ 3, VCF),
     //  sfour = the open fours, fourthree = the fastest wins in 3), the 2nd hint's ring (look) is on stones of that board, and the right
     //  points are a third of the legal points at most (追72)
-    (st.ramp || []).forEach((r, j) => { if (r.k !== 'try') return; const a = m => out.push({ step: id, q: 0, msg: `warm-up ${j + 1}: ${m}` });
+    if (id === 'vcf') (st.ramp || []).forEach((r, j) => gmVcfRamp(E, r, m => out.push({ step: id, q: 0, msg: `warm-up ${j + 1}: ${m}` })));
+    (st.ramp || []).forEach((r, j) => { if (r.k !== 'try' || id === 'vcf') return; const a = m => out.push({ step: id, q: 0, msg: `warm-up ${j + 1}: ${m}` });
       const s = r.side, o = 3 - s, pos = E.setup(r.rule || 'free', { b: cells(r.b), w: cells(r.w), side: s }), lg = pos.legal(), lgN = new Set(lg.map(nm));
       if (r.goal === 'forbid') { lgN.clear(); for (let m = 0; m < 225; m++) if (pos.b[E.M2I[m]] === 0) lgN.add(nm(m)); }   // (a forbidden point is no legal move for Black: the try asks to tap it — any empty point)
       (r.ok || []).forEach(q => { if (!lgN.has(q)) a(`追75 the answer ${q} is not a legal point of this board`); });
