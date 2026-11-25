@@ -97,6 +97,7 @@ body.night #floor .road{opacity:.13}
 .pup .rod{stroke:rgba(20,12,6,.38);stroke-width:1.3;fill:none}
 .pp .nm{position:absolute;left:50%;bottom:10px;transform:translate(-50%,0);white-space:nowrap;font:700 14px/1 var(--prose);padding:4px 9px 5px;border-radius:3px;background:rgba(246,238,219,.86);color:var(--ink);box-shadow:0 1px 0 rgba(0,0,0,.12);opacity:0;transition:opacity .3s;pointer-events:none}
 body.show-names .pp .nm,.pp:hover .nm,.pp.speak .nm,.pp.sel .nm{opacity:1}
+body.show-names .pp .nm,.pp.sel .nm{pointer-events:auto}   /* a name on show picks its person, like the figure itself */
 .pp.speak .pup{transform:scale(1.1) translateY(-6px) rotate(-1.5deg);filter:blur(.9px) drop-shadow(0 0 10px color-mix(in srgb,var(--cel,#fff) 40%,transparent))}
 .pp.sel .pup{filter:blur(.2px) drop-shadow(0 0 6px var(--acc))}
 .pp.dim{opacity:.38}
