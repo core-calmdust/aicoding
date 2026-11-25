@@ -75,7 +75,7 @@ function verify({ E, L, X, pool, dist, brd, plain, add, only }) {
     if (j === st.problems.length - 1 && !(key(K, firstK) > 0)) a('⑥ the last problem is no harder than problem 1');
     // ⑦ ⑧ the 3D words
     let W; try { W = X.xqLsJa(E, st, P, j, k => k === 'ok' ? '〈正〉' : '〈誤〉', si); } catch (e) { a('⑧ the words fail: ' + e.message); return; }
-    const FAST = /いちばん早く|最短|いちばん少な|回り道しないで/;
+    const FAST = /いちばん早く|最短|いちばん少な|いちばん短|回り道しないで/;
     if (!FAST.test(W.ask)) a(`⑧ the ask does not say the fastest 「${W.ask}」`);
     const g = plain(W.good(A)); if (/\{|undefined|NaN/.test(g)) a(`⑧ the praise 「${g}」`); if (!FAST.test(g)) a(`⑧ the praise does not say the fastest 「${g}」`);
     if (/遠回り|少し長く/.test(g)) a(`⑧ the praise calls the answer slow 「${g}」`);
