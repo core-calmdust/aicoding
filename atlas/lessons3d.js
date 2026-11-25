@@ -2949,7 +2949,8 @@
           else if ((kb === 'b3' || kb === 'b3t') && !FU.b3) why = mp('left3');
           else if (/^(f4|ft|four|three|b3t)$/.test(kb) && !FU.fours.length && !FU.threes.length) why = mp('stop');
           else if (!FU.near) why = mp('far');
-          else if (FB.blk.length && !FU.blk.some(i => GOP.DN[i] === GOP.DN[FB.blk[0]])) why = mp('free');   // (追90: not when the move blocks the other ナナメ — the words name only 「ナナメ」)
+          else if (FB.blk.length && !FU.blk.some(i => GOP.DN[i] === GOP.DN[FB.blk[0]])) { why = mp('free');   // (追90: not when the move blocks the other ナナメ — the words name only 「ナナメ」)
+            if (!FB.blk.some(i => GOP.DN[i] === V.bd) || FU.blk.some(i => GOP.DN[i] === V.bd)) V.bd = GOP.DN[FB.blk[0]]; }   // (the line named is one the green point blocks and the move leaves open — 浦月 q3: not the ナナメ the move blocks too)
           else if (FB.twos.length && !FU.twos.length && ku !== 'three') why = P.pk(GOP.miss.lone, 'mlone', t => FU.adjS.length ? !/つながらない|離れたまま/.test(t) : !/となりに置いても/.test(t));   // (追90: a stone next to its own is not 「つながらない」)
           else if (pu >= 10 && !(() => { G.bd[u] = s; const w = G.winPt(3 - s).length > 0 || !!G.vcf(3 - s, 6); G.bd[u] = 0; return w; })()) why = mp('close');   // (「悪くない」「すぐには負けない」: 10+ points and no win for the opponent after it — 追53)
           else why = mp(ku === kb ? 'same' : 'weak');
@@ -3188,7 +3189,7 @@
     LKEY: 'aicoding-gomoku-lessons', OKEY: 'aicoding-gomoku-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261126a'), getJ('../gomoku/openings.json?v=20261125v5'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261126a'), getJ('../gomoku/openings.json?v=20261126v6'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] gomoku texts', e); } this.I = w.I18N || {}; this.data = { ls, op };
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
