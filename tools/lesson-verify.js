@@ -433,7 +433,7 @@ function gomoku(opt) {
 //   ⑦⑧ ハコピヨ's words (atlas/lessons3d.js dotsJa, run here) against the board: the boxes the red line hands over (≥1 when the
 //      words say so) and the boxes lost ((best − v) / 2), no 「開く」 for a line that takes, the question's 「1本」 / 「広い盤」 and the
 //      2D example's 「緑の点線も安全な線で、どれを選んでも同じ結果」 (problem 0 has other safe lines, all best)
-const DT_DONE = new Set(['safe', 'third', 'take', 'chain', 'hard', 'double']);
+const DT_DONE = new Set(['safe', 'third', 'take', 'chain', 'hard', 'double', 'control']);
 function dots(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'dots/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'dots/lessons.json'), 'utf8'));
@@ -503,6 +503,24 @@ function dots(opt) {
           if (!comps.some(c => c.n >= 3 && !c.boxes.some(bx => p.cnt[bx] === 3))) a('④ no other chain of 3+ (「次の長い鎖」)');
         }
         d = comps.length;
+      } else if (id === 'control') {
+        // (2026-11-25 担当A) control = ハコピヨ's rule (DTJ.control.intro / ls.control.body: 「残りの鎖が小さい…なら全部取る…大きな長い
+        // 鎖が残っていれば、残して主導権をキープ」) on the board: no safe line, no loop, one box to take, in an opened chain of 2 (the
+        // hint 「いま取れる2箱」), every other part a plain chain; the choice is the take line or the double-deal line (dd, E.captureMoves);
+        // the best line is exactly the take when no chain of 3+ is left (the praise 「残りの鎖が小さいから」, the red dd 「あとの鎖が小さい
+        // から取り返せない」) and exactly the dd when one is (「次の長い鎖も、きみが取れる」, the red take 「あとの長い鎖を相手に取られる」),
+        // and the other of the two is worse.
+        const comps = E.components(p, true), cur = comps.filter(c => c.boxes.some(bx => p.cnt[bx] === 3)), rest = comps.filter(c => !cur.includes(c));
+        if (F.ns) a(`④ ${F.ns} safe lines`);
+        if (comps.some(c => c.loop)) a('④ a loop on the board (the words say 鎖)');
+        if (cur.length !== 1 || cur[0].n !== 2 || [...p.cnt].filter(c => c === 3).length !== 1) a(`④ the boxes to take are not one opened chain of 2 (${cur.map(c => c.n)})`);
+        if (rest.some(c => !c.simple)) a('④ a part with a junction box (not a plain chain)');
+        const cm = E.captureMoves(p), long = rest.some(c => c.n >= 3);
+        if (cm.forced !== undefined || cm.moves.length !== 1 || cm.declines.length !== 1) a('④ not one take line and one double-deal line');
+        else { const tk = cm.moves[0], dd = cm.declines[0], want = long ? dd : tk, other = long ? tk : dd;
+          if (B.length !== 1 || B[0] !== want) a(`④ the best lines ${B}: with ${long ? 'a chain of 3+' : 'only small chains'} left the answer is the ${long ? 'double-deal' : 'take'} line ${want}`);
+          if (V.get(other) >= best) a(`④ the ${long ? 'take' : 'double-deal'} line ${other} is as good as the best`); }
+        d = comps.length;
       }
       // ⑥ (problem 0 is the worked example)
       if (j >= 1) { if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
@@ -524,7 +542,9 @@ function dots(opt) {
           if (/(^|[^\d])0箱/.test(t)) a(`⑦ line ${x.m}: 「${t}」 (0 boxes)`);
           const g2 = t.match(/相手に(\d+)箱|(\d+)箱が相手|(\d+)箱をぺろり|(\d+)箱が渡る|(\d+)箱を丸ごと|(\d+)箱の鎖|(\d+)箱あげる|(\d+)箱を渡す|(\d+)箱をまとめて|(\d+)箱をごっそり/);
           if (g2) { const k = +g2.slice(1).find(Boolean); if (k !== fx.m) a(`⑦ line ${x.m}: the words say ${g2[0]}, the line hands over ${fx.m}`); }
-          if (fx.cls === 'take' && /開/.test(t)) a(`⑦ line ${x.m} takes a box, the words say it opens: 「${t}」`); } }
+          if (fx.cls === 'take' && /開/.test(t)) a(`⑦ line ${x.m} takes a box, the words say it opens: 「${t}」`);
+          // (2026-11-25 担当A, control) the red line's 「残し」 (yKeep) only for the double-deal itself (F.dd), not for a line that opens another chain
+          if (/赤い線で\d+箱残しても|残した\d+箱|赤い線の残し|赤い線の2つ残し|主導権を守っても/.test(t) && !fx.dd) a(`⑦ line ${x.m} opens another chain (hands over ${fx.m}), the words call it the leave: 「${t}」`); } }
     }); });
   dtIntro(L, X, E, lj, add, only);
   return out;
@@ -1510,7 +1530,7 @@ function tafl(opt) {
 // b_cannon・b_pawn). The goal set is read from the rules (a capture by that kind on which no legal move of the opponent can take back),
 // the engine values stored in sc (= xiangqi/app.js problemPoints, the 3D XIANGQI.points) must put that capture alone on top, and
 // ショウギツネ's words (atlas/lessons3d.js xqLsJa) are read back against the board for the answer and every wrong move.
-const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn', 'b_escape', 'b_mate1', 'm_mate2', 'm_hc', 'm_dc', 'm_face']);
+const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn', 'b_escape', 'b_mate1', 'm_mate2', 'm_hc', 'm_dc', 'm_face', 'e_rook']);
 function xiangqi(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'xiangqi/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'xiangqi/lessons.json'), 'utf8'));
@@ -1729,6 +1749,8 @@ function xiangqi(opt) {
   require('./lesson-verify-xqmate.js').verify({ E, L, X, pool, dist, brd, plain, add, only: XQ_DONE });
   // (2026-11-25 第2期 担当A) b_escape「ねらわれた駒を逃げる」— tools/lesson-verify-xqescape.js
   require('./lesson-verify-xqescape.js').verify({ E, L, X, pool, dist, brd, plain, add, pts, only: XQ_DONE });
+  // (2026-11-25 第2期 担当A) e_rook「車の終盤」— tools/lesson-verify-xqend.js
+  require('./lesson-verify-xqend.js').verify({ E, L, X, pool, dist, brd, plain, add, only: XQ_DONE });
   // 追72 (2026-11-25 担当A): the moves that count as right (P.ok, or 16 points or more from P.sc) and a warm-up try's ok are a third of the
   // legal moves at most
   L.steps.forEach(st => { if (!XQ_DONE.has(st.id)) return;
