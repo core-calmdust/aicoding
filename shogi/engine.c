@@ -313,10 +313,15 @@ static void nueRefresh(void) {
 #define NUE_MS (NUE_MB > 1 ? 10 : 6)   /* the MLP's weights: x 64 (int8 in the NUEM file), or x 1024 (int16, the NUES file: x 64 lost about 10% of the evaluation's spread to rounding) */
 static i16 nueMA[NUE_MB * NUE_L1 * 2 * NUE_MI], nueMB[NUE_MB * NUE_L2 * NUE_L1];   /* (int8 in the file, widened for the SIMD products; NUE_L1 a multiple of 8) */ static i32 nueMa[NUE_MB * NUE_L1], nueMd[NUE_MB * NUE_L2]; static i16 nueMC[NUE_MB * NUE_L2];
 static i16 nueMAT[NUE_MB * 2 * NUE_MI * NUE_L1];   /* nueMA by input: [set][input][NUE_L1] (nue_mlp_init, after the net is loaded) */
+static i16 nueMBP[NUE_MB * (NUE_L1 / 2) * (NUE_L2 / 4) * 8] __attribute__((aligned(16)));   /* nueMB by pairs of inputs: [set][input pair][4 outputs][w(out, in), w(out, in + 1)] x 4 */
 static u8 nueBitPos[256][8], nueBitCnt[256];   /* [mask of 8 inputs]: the positions of its bits, and how many */
 static void nue_mlp_init(void) {
   for (int m = 0; m < 256; m++) { int n = 0; for (int k = 0; k < 8; k++) if (m >> k & 1) nueBitPos[m][n++] = (u8)k; nueBitCnt[m] = (u8)n; }
-  for (int m = 0; m < NUE_MB; m++) for (int j = 0; j < NUE_L1; j++) for (int i = 0; i < 2 * NUE_MI; i++) nueMAT[(m * 2 * NUE_MI + i) * NUE_L1 + j] = nueMA[(m * NUE_L1 + j) * 2 * NUE_MI + i]; }
+  for (int m = 0; m < NUE_MB; m++) for (int j = 0; j < NUE_L1; j++) for (int i = 0; i < 2 * NUE_MI; i++) nueMAT[(m * 2 * NUE_MI + i) * NUE_L1 + j] = nueMA[(m * NUE_L1 + j) * 2 * NUE_MI + i]; 
+  for (int m = 0; m < NUE_MB; m++) for (int p = 0; p < NUE_L1 / 2; p++) for (int q = 0; q < NUE_L2 / 4; q++) for (int e = 0; e < 4; e++) for (int t = 0; t < 2; t++)
+    nueMBP[((m * (NUE_L1 / 2) + p) * (NUE_L2 / 4) + q) * 8 + 2 * e + t] = nueMB[(m * NUE_L2 + 4 * q + e) * NUE_L1 + 2 * p + t];
+}
+
 static i32 nueMlp(const i16 *a, const i16 *b, int mb) {
   const i16 *const MTc = nueMAT + mb * 2 * NUE_MI * NUE_L1, *const MB = nueMB + mb * NUE_L2 * NUE_L1, *const MC = nueMC + mb * NUE_L2; const i32 *const Ma = nueMa + mb * NUE_L1, *const Md = nueMd + mb * NUE_L2;
   i16 h1[NUE_L1] __attribute__((aligned(16))); i32 m = 0;
@@ -329,8 +334,15 @@ static i32 nueMlp(const i16 *a, const i16 *b, int mb) {
 #if defined(NUE_NEON)
     int32x4_t hv[NUE_L1 / 4]; for (int j = 0; j < NUE_L1 / 4; j++) hv[j] = vld1q_s32(h + 4 * j);
 #define NUE_MLP_IN(i) { const i16 x = v[i] > NUE_QA ? NUE_QA : v[i]; const i16 *const c = col + (i) * NUE_L1; for (int j = 0; j < NUE_L1 / 8; j++) { const int16x8_t cv = vld1q_s16(c + 8 * j); hv[2 * j] = vmlal_n_s16(hv[2 * j], vget_low_s16(cv), x); hv[2 * j + 1] = vmlal_n_s16(hv[2 * j + 1], vget_high_s16(cv), x); } }
+#elif defined(__wasm_simd128__)
+    v128_t hv[NUE_L1 / 4]; for (int j = 0; j < NUE_L1 / 4; j++) hv[j] = wasm_v128_load(h + 4 * j);
+    /* two inputs at a time: their columns interleaved, times (x1, x2) pairs: one dot product gives 4 sums of both */
+#define NUE_MLP_IN2(i1, i2, x1, x2) { const v128_t xv = wasm_i32x4_splat((int)(((unsigned)(x2) << 16) | (unsigned)(x1))); const i16 *const c1 = col + (i1) * NUE_L1, *const c2 = col + (i2) * NUE_L1; for (int j = 0; j < NUE_L1 / 8; j++) { const v128_t u = wasm_v128_load(c1 + 8 * j), w_ = wasm_v128_load(c2 + 8 * j); \
+  hv[2 * j] = wasm_i32x4_add(hv[2 * j], wasm_i32x4_dot_i16x8(wasm_i16x8_shuffle(u, w_, 0, 8, 1, 9, 2, 10, 3, 11), xv)); hv[2 * j + 1] = wasm_i32x4_add(hv[2 * j + 1], wasm_i32x4_dot_i16x8(wasm_i16x8_shuffle(u, w_, 4, 12, 5, 13, 6, 14, 7, 15), xv)); } }
 #elif defined(NUE_SSE2)
     __m128i hv[NUE_L1 / 4]; for (int j = 0; j < NUE_L1 / 4; j++) hv[j] = _mm_load_si128((const __m128i *)(h + 4 * j));
+#define NUE_MLP_IN2(i1, i2, x1, x2) { const __m128i xv = _mm_set1_epi32((int)(((unsigned)(x2) << 16) | (unsigned)(x1))); const i16 *const c1 = col + (i1) * NUE_L1, *const c2 = col + (i2) * NUE_L1; for (int j = 0; j < NUE_L1 / 8; j++) { const __m128i u = _mm_loadu_si128((const __m128i *)(c1 + 8 * j)), w_ = _mm_loadu_si128((const __m128i *)(c2 + 8 * j)); \
+  hv[2 * j] = _mm_add_epi32(hv[2 * j], _mm_madd_epi16(_mm_unpacklo_epi16(u, w_), xv)); hv[2 * j + 1] = _mm_add_epi32(hv[2 * j + 1], _mm_madd_epi16(_mm_unpackhi_epi16(u, w_), xv)); } }
 #define NUE_MLP_IN(i) { const __m128i xv = _mm_set1_epi16(v[i] > NUE_QA ? NUE_QA : v[i]); const i16 *const c = col + (i) * NUE_L1; for (int j = 0; j < NUE_L1 / 8; j++) { const __m128i cv = _mm_loadu_si128((const __m128i *)(c + 8 * j)), lo = _mm_mullo_epi16(cv, xv), hi = _mm_mulhi_epi16(cv, xv); \
   hv[2 * j] = _mm_add_epi32(hv[2 * j], _mm_unpacklo_epi16(lo, hi)); hv[2 * j + 1] = _mm_add_epi32(hv[2 * j + 1], _mm_unpackhi_epi16(lo, hi)); } }
 #else
@@ -346,6 +358,12 @@ static i32 nueMlp(const i16 *a, const i16 *b, int mb) {
           const unsigned mk = vaddvq_u16(vandq_u16(vcgtq_s16(vld1q_s16(v + i0), vdupq_n_s16(0)), bv));
           vst1q_u16(idx + n, vaddq_u16(vmovl_u8(vld1_u8(nueBitPos[mk])), vdupq_n_u16((unsigned short)i0))); n += nueBitCnt[mk];
         } }
+#elif defined(__wasm_simd128__)
+      { const v128_t z = wasm_i16x8_splat(0);
+        for (int i0 = 0; i0 < NUE_MI; i0 += 8) {
+          const unsigned mk = (unsigned)wasm_i16x8_bitmask(wasm_i16x8_gt(wasm_v128_load(v + i0), z));
+          wasm_v128_store(idx + n, wasm_i16x8_add(wasm_u16x8_load8x8(nueBitPos[mk]), wasm_i16x8_splat((i16)i0))); n += nueBitCnt[mk];
+        } }
 #elif defined(NUE_SSE2)
       { const __m128i z = _mm_setzero_si128();
         for (int i0 = 0; i0 < NUE_MI; i0 += 8) {
@@ -355,14 +373,43 @@ static i32 nueMlp(const i16 *a, const i16 *b, int mb) {
 #else
       for (int i = 0; i < NUE_MI; i++) { idx[n] = (unsigned short)i; n += v[i] > 0; }
 #endif
+#ifdef NUE_MLP_IN2
+      { int k = 0;
+        for (; k + 1 < n; k += 2) { const int i1 = idx[k], i2 = idx[k + 1]; const int x1 = v[i1] > NUE_QA ? NUE_QA : v[i1], x2 = v[i2] > NUE_QA ? NUE_QA : v[i2]; NUE_MLP_IN2(i1, i2, x1, x2) }
+        if (k < n) { const int i1 = idx[k]; const int x1 = v[i1] > NUE_QA ? NUE_QA : v[i1]; NUE_MLP_IN2(i1, i1, x1, 0) } }
+#else
       for (int k = 0; k < n; k++) { const int i = idx[k]; NUE_MLP_IN(i) }
+#endif
     }
 #if defined(NUE_NEON)
     for (int j = 0; j < NUE_L1 / 4; j++) vst1q_s32(h + 4 * j, hv[j]);
+#elif defined(__wasm_simd128__)
+    for (int j = 0; j < NUE_L1 / 4; j++) wasm_v128_store(h + 4 * j, hv[j]);
 #elif defined(NUE_SSE2)
     for (int j = 0; j < NUE_L1 / 4; j++) _mm_store_si128((__m128i *)(h + 4 * j), hv[j]);
 #endif
     for (int j = 0; j < NUE_L1; j++) { const i32 zz = h[j] >> NUE_MS; h1[j] = zz < 0 ? 0 : zz > NUE_QA ? NUE_QA : zz; } }
+#if (defined(__wasm_simd128__) || (defined(NUE_SSE2) && !defined(NUE_NEON))) && NUE_L2 % 8 == 0 && NUE_L1 % 2 == 0
+  /* (2026-11-26) the second layer 4 outputs at a time: for each pair of inputs, one product-and-add gives 4 outputs' sums
+     (the weights are laid out for that in nueMBP); then the shift, the clip and the last weights 8 at a time. The same
+     integer sums as the plain loop below. */
+  { const i16 *const MP = nueMBP + mb * (NUE_L1 / 2) * (NUE_L2 / 4) * 8;
+#ifdef __wasm_simd128__
+    v128_t acc[NUE_L2 / 4], ms = wasm_i32x4_splat(0); for (int q = 0; q < NUE_L2 / 4; q++) acc[q] = wasm_v128_load(Md + 4 * q);
+    for (int p_ = 0; p_ < NUE_L1 / 2; p_++) { const v128_t hp = wasm_i32x4_splat((int)(((unsigned)h1[2 * p_ + 1] << 16) | (unsigned)h1[2 * p_])); const i16 *const wp = MP + p_ * (NUE_L2 / 4) * 8;
+      for (int q = 0; q < NUE_L2 / 4; q++) acc[q] = wasm_i32x4_add(acc[q], wasm_i32x4_dot_i16x8(wasm_v128_load(wp + 8 * q), hp)); }
+    for (int q = 0; q < NUE_L2 / 4; q += 2) { v128_t z = wasm_i16x8_narrow_i32x4(wasm_i32x4_shr(acc[q], NUE_MS), wasm_i32x4_shr(acc[q + 1], NUE_MS)); z = wasm_i16x8_min(wasm_i16x8_max(z, wasm_i16x8_splat(0)), wasm_i16x8_splat(NUE_QA)); ms = wasm_i32x4_add(ms, wasm_i32x4_dot_i16x8(z, wasm_v128_load(MC + 4 * q))); }
+    m = wasm_i32x4_extract_lane(ms, 0) + wasm_i32x4_extract_lane(ms, 1) + wasm_i32x4_extract_lane(ms, 2) + wasm_i32x4_extract_lane(ms, 3);
+#else
+    __m128i acc[NUE_L2 / 4], ms = _mm_setzero_si128(); for (int q = 0; q < NUE_L2 / 4; q++) acc[q] = _mm_loadu_si128((const __m128i *)(Md + 4 * q));
+    for (int p_ = 0; p_ < NUE_L1 / 2; p_++) { const __m128i hp = _mm_set1_epi32((int)(((unsigned)h1[2 * p_ + 1] << 16) | (unsigned)h1[2 * p_])); const i16 *const wp = MP + p_ * (NUE_L2 / 4) * 8;
+      for (int q = 0; q < NUE_L2 / 4; q++) acc[q] = _mm_add_epi32(acc[q], _mm_madd_epi16(_mm_load_si128((const __m128i *)(wp + 8 * q)), hp)); }
+    for (int q = 0; q < NUE_L2 / 4; q += 2) { __m128i z = _mm_packs_epi32(_mm_srai_epi32(acc[q], NUE_MS), _mm_srai_epi32(acc[q + 1], NUE_MS)); z = _mm_min_epi16(_mm_max_epi16(z, _mm_setzero_si128()), _mm_set1_epi16(NUE_QA)); ms = _mm_add_epi32(ms, _mm_madd_epi16(z, _mm_loadu_si128((const __m128i *)(MC + 4 * q)))); }
+    { i32 t[4]; _mm_storeu_si128((__m128i *)t, ms); m = t[0] + t[1] + t[2] + t[3]; }
+#endif
+  }
+  if (0)
+#endif
   for (int k = 0; k < NUE_L2; k++) {
     const i16 *w = MB + k * NUE_L1; i32 zz = Md[k];
 #if defined(NUE_NEON)
