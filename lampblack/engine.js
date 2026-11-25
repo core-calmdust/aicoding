@@ -29,19 +29,19 @@
   const SETUPS = {
     std: SETUP,
     mason: {
-      8:  { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 0, mason: 2 },
+      8:  { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 0, mason: 2 },   // 2026-11-26：入門は狂人なし（標準より易しく）
       10: { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 0, mason: 2 },
       12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 0, mason: 2 },
       13: { wolf: 4, madman: 1, seer: 1, medium: 1, guard: 0, mason: 2 },
     },
     immoral: {   // 霧笛座: the fox and the one who serves it (背徳者). When the fox dies, the immoral follows it the same night
-      8:  { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 1, fox: 1, immoral: 1 },
+      8:  { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 1, fox: 1, immoral: 0 },   // 2026-11-26：入門は背徳者なし（背徳者入りでは標準よりむずかしかった）
       10: { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 1, fox: 1, immoral: 1 },
       12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1, immoral: 1 },
       13: { wolf: 4, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1, immoral: 1 },
     },
     fox: {
-      8:  { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 0, fox: 1 },
+      8:  { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 1, fox: 1 },   // 2026-11-26：入門にも狩人（なしでは標準とむずかしさが変わらなかった）
       10: { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1 },
       12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1 },
       13: { wolf: 4, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1 },
@@ -51,13 +51,13 @@
     cat: {
       8:  { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 0, cat: 1 },   // the cat helps the village: a madman more on 入門, a third wolf on 標準
       10: { wolf: 3, madman: 0, seer: 1, medium: 1, guard: 1, cat: 1 },
-      12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1, cat: 1 },
-      13: { wolf: 4, madman: 1, seer: 1, medium: 1, guard: 1, cat: 1 },
+      12: { wolf: 4, madman: 0, seer: 1, medium: 1, guard: 1, cat: 1 },   // 2026-11-26：狂人入りの3匹では標準より易しかった（探偵92%）。4匹にして上級らしく
+      13: { wolf: 4, madman: 2, seer: 1, medium: 1, guard: 1, cat: 1 },   // 上級より一段むずかしく：狂人がふたり
     },
     //   fanatic — 白嶺修道院: the madman is a fanatic (狂信者) who knows the wolves (they do not know them).
     //             Its lies cover the wolves; it is there from the easiest level.
     fanatic: {
-      8:  { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 0 },
+      8:  { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 0 },   // 2026-11-26：入門は狂信者なし（狼2匹＋狂信者では標準よりむずかしかった。狼1匹では易しすぎた）
       10: { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 1 },
       12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1 },
       13: { wolf: 4, madman: 1, seer: 1, medium: 1, guard: 1 },

@@ -313,10 +313,15 @@ static void nueRefresh(void) {
 #define NUE_MS (NUE_MB > 1 ? 10 : 6)   /* the MLP's weights: x 64 (int8 in the NUEM file), or x 1024 (int16, the NUES file: x 64 lost about 10% of the evaluation's spread to rounding) */
 static i16 nueMA[NUE_MB * NUE_L1 * 2 * NUE_MI], nueMB[NUE_MB * NUE_L2 * NUE_L1];   /* (int8 in the file, widened for the SIMD products; NUE_L1 a multiple of 8) */ static i32 nueMa[NUE_MB * NUE_L1], nueMd[NUE_MB * NUE_L2]; static i16 nueMC[NUE_MB * NUE_L2];
 static i16 nueMAT[NUE_MB * 2 * NUE_MI * NUE_L1];   /* nueMA by input: [set][input][NUE_L1] (nue_mlp_init, after the net is loaded) */
+static i16 nueMBP[NUE_MB * (NUE_L1 / 2) * (NUE_L2 / 4) * 8] __attribute__((aligned(16)));   /* nueMB by pairs of inputs: [set][input pair][4 outputs][w(out, in), w(out, in + 1)] x 4 */
 static u8 nueBitPos[256][8], nueBitCnt[256];   /* [mask of 8 inputs]: the positions of its bits, and how many */
 static void nue_mlp_init(void) {
   for (int m = 0; m < 256; m++) { int n = 0; for (int k = 0; k < 8; k++) if (m >> k & 1) nueBitPos[m][n++] = (u8)k; nueBitCnt[m] = (u8)n; }
-  for (int m = 0; m < NUE_MB; m++) for (int j = 0; j < NUE_L1; j++) for (int i = 0; i < 2 * NUE_MI; i++) nueMAT[(m * 2 * NUE_MI + i) * NUE_L1 + j] = nueMA[(m * NUE_L1 + j) * 2 * NUE_MI + i]; }
+  for (int m = 0; m < NUE_MB; m++) for (int j = 0; j < NUE_L1; j++) for (int i = 0; i < 2 * NUE_MI; i++) nueMAT[(m * 2 * NUE_MI + i) * NUE_L1 + j] = nueMA[(m * NUE_L1 + j) * 2 * NUE_MI + i]; 
+  for (int m = 0; m < NUE_MB; m++) for (int p = 0; p < NUE_L1 / 2; p++) for (int q = 0; q < NUE_L2 / 4; q++) for (int e = 0; e < 4; e++) for (int t = 0; t < 2; t++)
+    nueMBP[((m * (NUE_L1 / 2) + p) * (NUE_L2 / 4) + q) * 8 + 2 * e + t] = nueMB[(m * NUE_L2 + 4 * q + e) * NUE_L1 + 2 * p + t];
+}
+
 static i32 nueMlp(const i16 *a, const i16 *b, int mb) {
   const i16 *const MTc = nueMAT + mb * 2 * NUE_MI * NUE_L1, *const MB = nueMB + mb * NUE_L2 * NUE_L1, *const MC = nueMC + mb * NUE_L2; const i32 *const Ma = nueMa + mb * NUE_L1, *const Md = nueMd + mb * NUE_L2;
   i16 h1[NUE_L1] __attribute__((aligned(16))); i32 m = 0;
@@ -329,8 +334,15 @@ static i32 nueMlp(const i16 *a, const i16 *b, int mb) {
 #if defined(NUE_NEON)
     int32x4_t hv[NUE_L1 / 4]; for (int j = 0; j < NUE_L1 / 4; j++) hv[j] = vld1q_s32(h + 4 * j);
 #define NUE_MLP_IN(i) { const i16 x = v[i] > NUE_QA ? NUE_QA : v[i]; const i16 *const c = col + (i) * NUE_L1; for (int j = 0; j < NUE_L1 / 8; j++) { const int16x8_t cv = vld1q_s16(c + 8 * j); hv[2 * j] = vmlal_n_s16(hv[2 * j], vget_low_s16(cv), x); hv[2 * j + 1] = vmlal_n_s16(hv[2 * j + 1], vget_high_s16(cv), x); } }
+#elif defined(__wasm_simd128__)
+    v128_t hv[NUE_L1 / 4]; for (int j = 0; j < NUE_L1 / 4; j++) hv[j] = wasm_v128_load(h + 4 * j);
+    /* two inputs at a time: their columns interleaved, times (x1, x2) pairs: one dot product gives 4 sums of both */
+#define NUE_MLP_IN2(i1, i2, x1, x2) { const v128_t xv = wasm_i32x4_splat((int)(((unsigned)(x2) << 16) | (unsigned)(x1))); const i16 *const c1 = col + (i1) * NUE_L1, *const c2 = col + (i2) * NUE_L1; for (int j = 0; j < NUE_L1 / 8; j++) { const v128_t u = wasm_v128_load(c1 + 8 * j), w_ = wasm_v128_load(c2 + 8 * j); \
+  hv[2 * j] = wasm_i32x4_add(hv[2 * j], wasm_i32x4_dot_i16x8(wasm_i16x8_shuffle(u, w_, 0, 8, 1, 9, 2, 10, 3, 11), xv)); hv[2 * j + 1] = wasm_i32x4_add(hv[2 * j + 1], wasm_i32x4_dot_i16x8(wasm_i16x8_shuffle(u, w_, 4, 12, 5, 13, 6, 14, 7, 15), xv)); } }
 #elif defined(NUE_SSE2)
     __m128i hv[NUE_L1 / 4]; for (int j = 0; j < NUE_L1 / 4; j++) hv[j] = _mm_load_si128((const __m128i *)(h + 4 * j));
+#define NUE_MLP_IN2(i1, i2, x1, x2) { const __m128i xv = _mm_set1_epi32((int)(((unsigned)(x2) << 16) | (unsigned)(x1))); const i16 *const c1 = col + (i1) * NUE_L1, *const c2 = col + (i2) * NUE_L1; for (int j = 0; j < NUE_L1 / 8; j++) { const __m128i u = _mm_loadu_si128((const __m128i *)(c1 + 8 * j)), w_ = _mm_loadu_si128((const __m128i *)(c2 + 8 * j)); \
+  hv[2 * j] = _mm_add_epi32(hv[2 * j], _mm_madd_epi16(_mm_unpacklo_epi16(u, w_), xv)); hv[2 * j + 1] = _mm_add_epi32(hv[2 * j + 1], _mm_madd_epi16(_mm_unpackhi_epi16(u, w_), xv)); } }
 #define NUE_MLP_IN(i) { const __m128i xv = _mm_set1_epi16(v[i] > NUE_QA ? NUE_QA : v[i]); const i16 *const c = col + (i) * NUE_L1; for (int j = 0; j < NUE_L1 / 8; j++) { const __m128i cv = _mm_loadu_si128((const __m128i *)(c + 8 * j)), lo = _mm_mullo_epi16(cv, xv), hi = _mm_mulhi_epi16(cv, xv); \
   hv[2 * j] = _mm_add_epi32(hv[2 * j], _mm_unpacklo_epi16(lo, hi)); hv[2 * j + 1] = _mm_add_epi32(hv[2 * j + 1], _mm_unpackhi_epi16(lo, hi)); } }
 #else
@@ -346,6 +358,12 @@ static i32 nueMlp(const i16 *a, const i16 *b, int mb) {
           const unsigned mk = vaddvq_u16(vandq_u16(vcgtq_s16(vld1q_s16(v + i0), vdupq_n_s16(0)), bv));
           vst1q_u16(idx + n, vaddq_u16(vmovl_u8(vld1_u8(nueBitPos[mk])), vdupq_n_u16((unsigned short)i0))); n += nueBitCnt[mk];
         } }
+#elif defined(__wasm_simd128__)
+      { const v128_t z = wasm_i16x8_splat(0);
+        for (int i0 = 0; i0 < NUE_MI; i0 += 8) {
+          const unsigned mk = (unsigned)wasm_i16x8_bitmask(wasm_i16x8_gt(wasm_v128_load(v + i0), z));
+          wasm_v128_store(idx + n, wasm_i16x8_add(wasm_u16x8_load8x8(nueBitPos[mk]), wasm_i16x8_splat((i16)i0))); n += nueBitCnt[mk];
+        } }
 #elif defined(NUE_SSE2)
       { const __m128i z = _mm_setzero_si128();
         for (int i0 = 0; i0 < NUE_MI; i0 += 8) {
@@ -355,14 +373,43 @@ static i32 nueMlp(const i16 *a, const i16 *b, int mb) {
 #else
       for (int i = 0; i < NUE_MI; i++) { idx[n] = (unsigned short)i; n += v[i] > 0; }
 #endif
+#ifdef NUE_MLP_IN2
+      { int k = 0;
+        for (; k + 1 < n; k += 2) { const int i1 = idx[k], i2 = idx[k + 1]; const int x1 = v[i1] > NUE_QA ? NUE_QA : v[i1], x2 = v[i2] > NUE_QA ? NUE_QA : v[i2]; NUE_MLP_IN2(i1, i2, x1, x2) }
+        if (k < n) { const int i1 = idx[k]; const int x1 = v[i1] > NUE_QA ? NUE_QA : v[i1]; NUE_MLP_IN2(i1, i1, x1, 0) } }
+#else
       for (int k = 0; k < n; k++) { const int i = idx[k]; NUE_MLP_IN(i) }
+#endif
     }
 #if defined(NUE_NEON)
     for (int j = 0; j < NUE_L1 / 4; j++) vst1q_s32(h + 4 * j, hv[j]);
+#elif defined(__wasm_simd128__)
+    for (int j = 0; j < NUE_L1 / 4; j++) wasm_v128_store(h + 4 * j, hv[j]);
 #elif defined(NUE_SSE2)
     for (int j = 0; j < NUE_L1 / 4; j++) _mm_store_si128((__m128i *)(h + 4 * j), hv[j]);
 #endif
     for (int j = 0; j < NUE_L1; j++) { const i32 zz = h[j] >> NUE_MS; h1[j] = zz < 0 ? 0 : zz > NUE_QA ? NUE_QA : zz; } }
+#if (defined(__wasm_simd128__) || (defined(NUE_SSE2) && !defined(NUE_NEON))) && NUE_L2 % 8 == 0 && NUE_L1 % 2 == 0
+  /* (2026-11-26) the second layer 4 outputs at a time: for each pair of inputs, one product-and-add gives 4 outputs' sums
+     (the weights are laid out for that in nueMBP); then the shift, the clip and the last weights 8 at a time. The same
+     integer sums as the plain loop below. */
+  { const i16 *const MP = nueMBP + mb * (NUE_L1 / 2) * (NUE_L2 / 4) * 8;
+#ifdef __wasm_simd128__
+    v128_t acc[NUE_L2 / 4], ms = wasm_i32x4_splat(0); for (int q = 0; q < NUE_L2 / 4; q++) acc[q] = wasm_v128_load(Md + 4 * q);
+    for (int p_ = 0; p_ < NUE_L1 / 2; p_++) { const v128_t hp = wasm_i32x4_splat((int)(((unsigned)h1[2 * p_ + 1] << 16) | (unsigned)h1[2 * p_])); const i16 *const wp = MP + p_ * (NUE_L2 / 4) * 8;
+      for (int q = 0; q < NUE_L2 / 4; q++) acc[q] = wasm_i32x4_add(acc[q], wasm_i32x4_dot_i16x8(wasm_v128_load(wp + 8 * q), hp)); }
+    for (int q = 0; q < NUE_L2 / 4; q += 2) { v128_t z = wasm_i16x8_narrow_i32x4(wasm_i32x4_shr(acc[q], NUE_MS), wasm_i32x4_shr(acc[q + 1], NUE_MS)); z = wasm_i16x8_min(wasm_i16x8_max(z, wasm_i16x8_splat(0)), wasm_i16x8_splat(NUE_QA)); ms = wasm_i32x4_add(ms, wasm_i32x4_dot_i16x8(z, wasm_v128_load(MC + 4 * q))); }
+    m = wasm_i32x4_extract_lane(ms, 0) + wasm_i32x4_extract_lane(ms, 1) + wasm_i32x4_extract_lane(ms, 2) + wasm_i32x4_extract_lane(ms, 3);
+#else
+    __m128i acc[NUE_L2 / 4], ms = _mm_setzero_si128(); for (int q = 0; q < NUE_L2 / 4; q++) acc[q] = _mm_loadu_si128((const __m128i *)(Md + 4 * q));
+    for (int p_ = 0; p_ < NUE_L1 / 2; p_++) { const __m128i hp = _mm_set1_epi32((int)(((unsigned)h1[2 * p_ + 1] << 16) | (unsigned)h1[2 * p_])); const i16 *const wp = MP + p_ * (NUE_L2 / 4) * 8;
+      for (int q = 0; q < NUE_L2 / 4; q++) acc[q] = _mm_add_epi32(acc[q], _mm_madd_epi16(_mm_load_si128((const __m128i *)(wp + 8 * q)), hp)); }
+    for (int q = 0; q < NUE_L2 / 4; q += 2) { __m128i z = _mm_packs_epi32(_mm_srai_epi32(acc[q], NUE_MS), _mm_srai_epi32(acc[q + 1], NUE_MS)); z = _mm_min_epi16(_mm_max_epi16(z, _mm_setzero_si128()), _mm_set1_epi16(NUE_QA)); ms = _mm_add_epi32(ms, _mm_madd_epi16(z, _mm_loadu_si128((const __m128i *)(MC + 4 * q)))); }
+    { i32 t[4]; _mm_storeu_si128((__m128i *)t, ms); m = t[0] + t[1] + t[2] + t[3]; }
+#endif
+  }
+  if (0)
+#endif
   for (int k = 0; k < NUE_L2; k++) {
     const i16 *w = MB + k * NUE_L1; i32 zz = Md[k];
 #if defined(NUE_NEON)
@@ -1192,16 +1239,25 @@ static TLS int rootDepth = 1;
 #else
 #define S5 1
 #endif
-static int useMate1 = 1, rfpDepth = S5 ? 11 : 8, rfpMargin = S5 ? 73 : 112, nullAdapt = 1, histMalus = 0;   /* (2026-11-17: SPSA at 100 ms per move, tools/match/spsa.py: depth 6 -> 8, margin 90 -> 112, [9] 6000 -> 6749, [12] 4 -> 7, [16] 100 -> 123, [23] 200 -> 162, [27] 60 -> 85, LMR divisor 2.0 -> 2.03: +22 Elo at 300 ms over 1440 games) */
+static int useMate1 = 1, rfpDepth = S5 ? 18 : 8, rfpMargin = S5 ? 67 : 112, nullAdapt = 1, histMalus = 0;   /* (2026-11-17: SPSA at 100 ms per move, tools/match/spsa.py: depth 6 -> 8, margin 90 -> 112, [9] 6000 -> 6749, [12] 4 -> 7, [16] 100 -> 123, [23] 200 -> 162, [27] 60 -> 85, LMR divisor 2.0 -> 2.03: +22 Elo at 300 ms over 1440 games) */
 /* before:   /* (2026-11: margin 120 -> 90, adaptive null move on, LMP count P[12] 6 -> 4: +190 Elo at 200k nodes) */
 /* (2026-11-18: search v4's switches on, measured together on the Mac against the search before: +73 Elo at 300k nodes and +70
    at 300 ms per move, 480 different games each. 24 improving, 28 = 4 null move reduction, 29 + 43 = 300 late move pruning at
    every depth, 30 = 8 futility by the reduced depth, 35 = 6 a ply less without a table move, 37 = 1 reductions from the second
    move, 38 losing captures reduced, 40 losing captures after the quiet moves, 42 = 170 history bonus linear in the depth.) */
-static int P[128] = {[5] = 1, [7] = 1, [9] = S5 ? 5049 : 6749, [12] = 7, [14] = 1, [16] = 123, [22] = 1, [23] = 162, [27] = S5 ? 57 : 85,
-                    [24] = 1, [28] = 4, [29] = 1, [30] = 8, [35] = 6, [37] = 1, [38] = 1, [40] = 1, [42] = S5 ? 297 : 170, [43] = S5 ? 246 : 300,
+static int P[128] = {[5] = 1, [7] = 1, [9] = S5 ? 6247 : 6749, [12] = 7, [14] = 1, [16] = 123, [22] = 1, [23] = 162, [27] = S5 ? 57 : 85,
+                    [24] = 1, [28] = 4, [29] = 1, [30] = 8, [35] = 6, [37] = 1, [38] = 1, [40] = 1, [42] = S5 ? 297 : 170, [43] = S5 ? 379 : 300,
                     [44] = S5, [45] = S5, [46] = S5 ? 8 : 0, [47] = S5 ? 131 : 0, [48] = S5 ? 43 : 0, [52] = S5 ? 6 : 0, [53] = S5 ? 2 : 0, [58] = S5 ? 346 : 0, [62] = S5,
-                    [75] = S5 ? 5 : 0, [76] = S5 ? 90 : 0, [77] = S5 ? 40 : 0, [79] = S5 ? 2 : 0};   /* (2026-11-20: the singular extension) */   /* (2026-11-08 search v3: [22] history v2, [23] ProbCut, rfpDepth 3 -> 6) */
+                    [75] = S5 ? 4 : 0, [76] = S5 ? 83 : 0, [77] = S5 ? 110 : 0, [79] = S5 ? 3 : 0,   /* (2026-11-20: the singular extension; 2026-11-26: retuned with search v6) */
+                    /* (2026-11-26) search v6: fractional reductions (85-89, 92-97), pruning in the move loop at every node (91, 98-105, 81),
+                       and the pruning before the loop, the table cut-off and the quiescence search re-balanced with it (110, 112-116,
+                       rfpDepth 11 -> 18, rfpMargin 73 -> 67, the LMR divisor 2.14 -> 1.82): tuned together against YaneuraOu's search
+                       (spsa.py --table v6all). Against it 57 -> 82 wins of 200, Gikou 2 25-23 -> 31-17 (MODEL_CARD.md).
+                       Search v5 again: PARAMS="85=0,91=0,92=0,55=0,110=0,113=0,115=0,75=5,76=90,77=40,79=2,9=5049,43=246,17=214,2=73,1=11,112=0,114=0,116=0,81=0,86=0,87=0,88=0,89=0,93=0,95=0,96=0,97=0,98=0,99=0,100=0,101=0,102=0,103=0,104=0,105=0" */
+                    [55] = S5, [85] = S5, [91] = S5, [92] = S5 ? 2 : 0, [110] = S5, [113] = S5, [115] = S5 ? 2 : 0,
+                    [86] = S5 ? 31 : 0, [88] = S5 ? 169 : 0, [87] = S5 ? 163 : 0, [89] = S5 ? 315 : 0, [93] = S5 ? 400 : 0, [95] = S5 ? 62 : 0, [96] = S5 ? 3 : 0, [97] = S5 ? 1087 : 0,
+                    [98] = S5 ? 3261 : 0, [99] = S5 ? 207 : 0, [100] = S5 ? 297 : 0, [101] = S5 ? 179 : 0, [102] = S5 ? 81 : 0, [103] = S5 ? 98 : 0, [104] = S5 ? 85 : 0, [105] = S5 ? 29 : 0,
+                    [81] = S5 ? 1935 : 0, [112] = S5 ? 391 : 0, [114] = S5 ? 220 : 0, [116] = S5 ? 239 : 0};   /* (2026-11-08 search v3: [22] history v2, [23] ProbCut, rfpDepth 3 -> 6) */
 static void lmrInit(double div);
 EXPORT(set_param) void set_param(int k, int v) { if (k == 0) useMate1 = v; else if (k == 1) rfpDepth = v; else if (k == 2) rfpMargin = v; else if (k == 3) nullAdapt = v; else if (k == 4) histMalus = v; if (k >= 0 && k < 128) P[k] = v; if (k == 17 && v > 0) lmrInit(v / 100.0); }
 /* experimental features (all off by default):
@@ -2713,7 +2769,7 @@ EXPORT(init) void init(void) {
     A1[c][p * 8 + d] = STEP[p * 8 + d] || SLIDE[p * 8 + d]; AS[c][p * 8 + d] = SLIDE[p * 8 + d];
   }
   for (int p = 0; p < 32; p++) { NDIRS[p] = 0; for (int d = 0; d < 8; d++) { if (STEP[p * 8 + d]) DIRS[p][NDIRS[p]++] = d; if (SLIDE[p * 8 + d]) DIRS[p][NDIRS[p]++] = d | 8; } }
-  lmrInit(S5 ? 2.14 : 2.03);
+  lmrInit(S5 ? 1.82 : 2.03);   /* (2.14 until search v6) */
   zseed = 0x2545F4914F6CDD1DULL;
   for (int i = 0; i < 81 * 32; i++) { const unsigned long long r = rnd64(); ZB_L[i] = (i32)r; ZB_H[i] = (i32)(r >> 32); }
   for (int i = 0; i < 2 * 8 * 20; i++) { const unsigned long long r = rnd64(); ZHD_L[i] = (i32)r; ZHD_H[i] = (i32)(r >> 32); }
