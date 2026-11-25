@@ -209,7 +209,16 @@ function mancalaWords(opt) {
 //   ⑦⑧ what the 3D words (atlas/lessons3d.js gmLsJa) say holds: block — after the answer the opponent has no win within 3 nor by fours
 //      (「これで負けの心配は消えた」); sfour — no other move wins within 3 (「止められたら終わり」 of a closed four / three); three and
 //      fourthree — every other move loses / does not win (= ①); five — a four elsewhere is called 「四まで」 only (no claim it is stopped)
-const GM_DONE = new Set(['five', 'block', 'three', 'sfour', 'fourthree']);
+//   (2026-11-25 担当A) the renju lessons forbid33 / forbid44 (black's forbidden points, 'pick' problems — tap the point):
+//   ① the answers are exactly black's forbidden points of the lesson's kind (the engine's exact test: forbid33 = 3-3, forbid44 = 4-4 or
+//      overline)   ② there is exactly one forbidden point on the board (of any kind) and no five point for either side
+//   ⑥ d = the look-alike points (black's legal points that make a real three or a four, white's four points) never goes down, the last
+//      above the first   ⑦⑧ ゴイシペン's words (atlas/lessons3d.js gmLsJa, run here) for every other empty point against the engine:
+//      a point said to make a four-three / one three / no three (no four) / a five makes exactly that, and the green point's words say
+//      the answer's kind (overline / 4-4)   the warm-up tries: the answer = the forbidden points of the lesson's kind
+const GM_DONE = new Set(['five', 'block', 'three', 'sfour', 'fourthree', 'forbid33', 'forbid44']);
+function gmJa() { const fs = require('fs'), vm = require('vm'), src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), f0 = src.indexOf('  const fill = ');
+  return vm.runInNewContext(src.slice(f0, src.indexOf('\n', f0)) + '\n' + src.slice(src.indexOf('  const GML = '), src.indexOf('  const GOMOKU = {')) + '\n;({ GML, gmLsJa, GMW })', {}); }
 function gmWin(E) {
   const C = E.C;
   function win(pos, k) { const X = pos.side, Y = 3 - X;
@@ -231,6 +240,57 @@ function gmWin(E) {
   const vcf = pos => { const S = new E.Solver(); S.limit = 2e6; return S.vcf(pos, 20) >= 0; };
   return { win, after, level, vcf };
 }
+function gmForbid(E, id, P, j, st, add, six) {
+  const C = E.C, cells = a => String(a || '').split(/\s+/).filter(Boolean).map(E.sqOf), nm = m => E.sqName(m);
+  if ((P.rule || 'renju') !== 'renju') add(`rule ${P.rule} (the forbidden points are renju's)`);
+  if (P.side !== 1) add('the side to move is not Black');
+  const B = cells(P.b), Wt = cells(P.w), pos = E.setup('renju', { b: B, w: Wt, side: 1 }), fl = pos.forbiddenList(), K = id === 'forbid33' ? [1] : [2, 3];
+  if (fl.length !== 1) add(`② ${fl.length} forbidden points on the board (${fl.map(f => nm(f.m) + ':' + f.k)})`);
+  const want = fl.filter(f => K.includes(f.k)).map(f => nm(f.m)).sort(), ok = P.ok.slice().sort();
+  if (want.join() !== ok.join()) add(`①② the answers are ${ok}, the forbidden points of the lesson's kind ${want}`);
+  if (pos.fives(1).length || pos.fives(2).length) add('② a five point on the board');
+  const okM = P.ok.map(E.sqOf), emp = []; for (let m = 0; m < 225; m++) if (pos.b[E.M2I[m]] === 0) emp.push(m);
+  if (emp.length < 3) add('③ fewer than 3 empty points');
+  if (P.ok.length * 3 > emp.length) add('追72 too many right points');
+  const cls = (c, m) => pos.cls[c][E.M2I[m]];
+  six(emp.filter(m => !okM.includes(m) && !pos.forbidden(m) && (cls(1, m) >= C.F3 || cls(2, m) >= C.B4)).length);
+  // ⑦⑧ the 3D words for every other empty point
+  const X = gmJa(), L = require(path.join(ROOT, 'gomoku/lessons.json')), key = L.steps.findIndex(s => s.id === id), W = X.GMW[id];
+  const J = X.gmLsJa(id, { b: B, w: Wt, side: 1 }, 'renju', okM, j, key); if (!J) { add('⑧ no 3D words'); return; }
+  const G = X.GML.mk({ b: B, w: Wt }, 'renju'), DIR = [[1, 0], [0, 1], [1, 1], [1, -1]];
+  const realThrees = u => { const r = G.info(u, 1); let n = 0; G.bd[u] = 1; const p2 = E.setup('renju', { b: B.concat([u]), w: Wt, side: 1 });
+    r.threes.forEach(di => { const d = DIR[di], x = u % 15, y = Math.floor(u / 15); let hit = false;
+      for (let k = -4; k <= 4 && !hit; k++) { const a = x + d[0] * k, b = y + d[1] * k; if (a < 0 || b < 0 || a > 14 || b > 14) continue; const c = b * 15 + a; if (G.bd[c] !== 0) continue; if (G.info(c, 1).open4.includes(di) && !p2.forbidden(c)) hit = true; }
+      if (hit) n++; }); G.bd[u] = 0; return n; };
+  const has = (t, k) => (W[k] || []).some(x => typeof x === 'string' && t.includes(x));
+  const ra = okM[0], over = ra != null && G.over(ra, 1), RA = ra != null ? G.info(ra, 1) : null, h = J.hintTx || '';
+  // the hint fits the answer's shape: 「交差点」 = fours (threes) in two lines, 「6つ以上」 = an overline, 「1本の列に…飛び飛び」 = two fours on one line
+  if (RA && /交差点|交わる点/.test(h) && !(id === 'forbid33' ? RA.threes.length >= 2 : RA.fours.length >= 2)) add(`⑧ the hint says a crossing — ${h}`);
+  if (RA && id === 'forbid44' && /6つ以上/.test(h) && !over) add(`⑧ the hint points at an overline, the answer is a 4-4 — ${h}`);
+  if (RA) { const gt = J.good.call({}, ra);   // the praise names the answer's lines: forbid33 — the real threes only; forbid44 — 「同じ列」 exactly for two fours on one line
+    if (id === 'forbid33' && RA.threes.length !== realThrees(ra)) add(`⑧ the praise names ${RA.threes.length} threes, ${realThrees(ra)} are real — ${gt}`);
+    if (id === 'forbid44' && !over && (RA.fours.length === 1) !== /同じ列/.test(gt)) add(`⑧ the praise's lines (fours in ${RA.fours.length} lines) — ${gt}`);
+    if (id === 'forbid44' && !over && RA.fours.length >= 2 && /2つの列/.test(gt) === false && !/と|2本の/.test(gt)) add(`⑧ the praise names no lines — ${gt}`); }
+  if (RA && id === 'forbid44' && /1本の列/.test(h) && !(RA.fours.length === 1 && !over)) add(`⑧ the hint points at two fours on one line — ${h}`);
+  for (const u of emp) { if (okM.includes(u)) continue; const t = J.ng.call({}, u), r = G.info(u, 1), n3 = realThrees(u), f4 = r.fours.length, bad = m => add(`⑧ ${nm(u)}: ${m} — ${t}`);
+    if (id === 'forbid33') {
+      if (!has(t, 'n')) bad('the green point is not said to be the 3-3');
+      if (has(t, 't43') && !(f4 && n3)) bad('said to be a four-three');
+      if (has(t, 't33') && !(r.threes.length >= 2 && n3 < 2)) bad('said to be a false 3-3');
+      if (has(t, 't3') && !(r.threes.length === 1 && !f4)) bad(`said to make one three (threes ${r.threes.length}, fours ${f4})`);
+      if (has(t, 't0') && (r.threes.length || n3)) bad('said to make no three');
+      if (has(t, 't4') && !(f4 && !r.threes.length)) bad('said to make a four only');
+    } else {
+      if (!has(t, over ? 'nL' : 'nF')) bad(`the green point is not said to be the ${over ? 'overline' : '4-4'}`);
+      if (has(t, 't5') && !(r.five >= 0)) bad('said to make five');
+      if (has(t, 't4') && !(f4 === 1 && r.five < 0)) bad(`said to make one four (fours ${f4})`);
+      if (has(t, 't0') && (f4 || r.five >= 0)) bad('said to make no four');
+      if (has(t, 't3') && !(r.threes.length && !f4 && r.five < 0)) bad('said to make a three only');
+    }
+    const onLine = DIR.some(d => [1, -1].some(g => { for (let k = 1; k <= 4; k++) { const x = u % 15 + d[0] * k * g, y = Math.floor(u / 15) + d[1] * k * g; if (x < 0 || y < 0 || x > 14 || y > 14) return false; const v = G.bd[y * 15 + x]; if (v === 1) return true; if (v === 2) return false; } return false; }));
+    if (/並びから外れ|並びが伸びない/.test(t) && onLine) bad('said to be off the lines (a black stone is on its line within 4)');
+  }
+}
 function gomoku(opt) {
   const E = require(path.join(ROOT, 'gomoku/engine.js')), L = require(path.join(ROOT, 'gomoku/lessons.json')), PZ = require(path.join(ROOT, 'gomoku/puzzles.json'));
   const C = E.C, G = gmWin(E), only = opt && opt.only, out = [];
@@ -238,6 +298,7 @@ function gomoku(opt) {
   const pool = []; L.steps.forEach(st => { st.problems.forEach((P, j) => pool.push([`${st.id} q${j + 1}`, P])); (st.ramp || []).forEach((r, j) => { if (r.b || r.w) pool.push([`${st.id} warm-up ${j + 1}`, r]); }); });
   const walk = (o, pre) => { if (Array.isArray(o)) o.forEach((x, i) => walk(x, pre + '/' + i)); else if (o && typeof o === 'object') { if (typeof o.b === 'string' && typeof o.w === 'string' && o.side) pool.push(['puzzle' + pre, o]); else for (const k in o) walk(o[k], pre + '/' + k); } };
   walk(PZ.cats, ''); walk(PZ.old || {}, '/old');
+  require(path.join(ROOT, 'gomoku/openings.json')).sets.forEach(g => (g.problems || []).forEach((q, j) => pool.push([`opening ${g.id} ${j + 1}`, q])));   // (⑤ 追1: the openings' problems too, 2026-11-25 担当A)
   const st2 = P => { const s = []; cells(P.b).forEach(m => s.push([1, m % 15, Math.floor(m / 15)])); cells(P.w).forEach(m => s.push([2, m % 15, Math.floor(m / 15)])); return s; };
   const SY = [(x, y) => [x, y], (x, y) => [-x, y], (x, y) => [x, -y], (x, y) => [-x, -y], (x, y) => [y, x], (x, y) => [-y, x], (x, y) => [y, -x], (x, y) => [-y, -x]];
   const dist = (A, B) => { if (Math.abs(A.length - B.length) > 3) return 99; const Bs = new Set(B.map(([c, x, y]) => c + ',' + x + ',' + y)); let best = 99;
@@ -248,6 +309,10 @@ function gomoku(opt) {
   L.steps.forEach(st => { const id = st.id; if (!GM_DONE.has(id) || (only && !only.has(id))) return;
     let prevD = -1, firstD = null;
     st.problems.forEach((P, j) => { const add = m => out.push({ step: id, q: j + 1, msg: m });
+      if (/^forbid/.test(id)) { gmForbid(E, id, P, j, st, add, D => { if (D < prevD) add(`⑥ easier than the problem before (d ${D} after ${prevD})`); prevD = Math.max(prevD, D); if (firstD === null) firstD = D;
+          if (j === st.problems.length - 1 && !(D > firstD)) add(`⑥ the last problem is no harder than the first (d ${D} vs ${firstD})`); });
+        const A = st2(P); for (const [who, B, Q] of PS) { if (Q === P) continue; const e = dist(A, B); if (e <= 3) add(`⑤ ${e} stones from ${who}`); }
+        return; }
       if (P.rule !== 'free') { add(`rule ${P.rule} (the verified lessons are free-rule)`); return; }
       const s = P.side, o = 3 - s, pos = E.setup('free', { b: cells(P.b), w: cells(P.w), side: s }), lg = pos.legal(), ok = P.ok.slice().sort();
       const cls = (c, m) => pos.cls[c][E.M2I[m]], fv = c => pos.fives(c).map(i => nm(E.I2M[i])).sort();
@@ -280,6 +345,7 @@ function gomoku(opt) {
     //  points are a third of the legal points at most (追72)
     (st.ramp || []).forEach((r, j) => { if (r.k !== 'try') return; const a = m => out.push({ step: id, q: 0, msg: `warm-up ${j + 1}: ${m}` });
       const s = r.side, o = 3 - s, pos = E.setup(r.rule || 'free', { b: cells(r.b), w: cells(r.w), side: s }), lg = pos.legal(), lgN = new Set(lg.map(nm));
+      if (r.goal === 'forbid') { lgN.clear(); for (let m = 0; m < 225; m++) if (pos.b[E.M2I[m]] === 0) lgN.add(nm(m)); }   // (a forbidden point is no legal move for Black: the try asks to tap it — any empty point)
       (r.ok || []).forEach(q => { if (!lgN.has(q)) a(`追75 the answer ${q} is not a legal point of this board`); });
       if (!(r.ok || []).length) a('追75 no answer');
       (r.look || []).forEach(q => { const m = E.sqOf(q); if (!(m >= 0) || !pos.b[E.M2I[m]]) a(`追75 the 2nd hint's ring ${q} is on no stone`); });
@@ -289,6 +355,8 @@ function gomoku(opt) {
       if (r.goal === 'five') want = fv(s);
       else if (r.goal === 'block') want = fv(o);
       else if (r.goal === 'block3') { want = []; for (const m of lg) { pos.make(m); const w = G.win(pos, 2) || G.win(pos, 3) || G.vcf(pos); pos.unmake(); if (!w) want.push(nm(m)); } }
+      else if (r.goal === 'forbid') { const K = id === 'forbid33' ? [1] : id === 'forbid44' ? [2, 3] : [1, 2, 3], fl = pos.forbiddenList();
+        if (fl.length !== 1) a(`② ${fl.length} forbidden points on the board`); want = fl.filter(f => K.includes(f.k)).map(f => nm(f.m)); }
       else if (r.goal === 'sfour') want = lg.filter(m => cls(s, m) === C.F4).map(nm);
       else if (r.goal === 'fourthree') { const lv = lg.filter(m => cls(s, m) >= C.F3).map(m => [m, G.level(pos, m)]).filter(x => x[1]); const mn = lv.length ? Math.min(...lv.map(x => x[1])) : 0; if (mn !== 3) a(`① the fastest win takes ${mn || 'no'} moves (the try's: 3)`); want = lv.filter(x => x[1] === mn).map(x => nm(x[0])); }
       else a(`the goal ${r.goal} is not checked`);
@@ -2817,7 +2885,7 @@ function morris72(opt) {
   return out;
 }
 const GAMES = { pz88, dupkey89, chessDrill, morris72, near53, goOpen, open67, plural58, backgammon, gomokuOpen, bgOpen, chessOpen, xiangqiOpen, reversiOpen, ur, senet, patolli, foxgeese, konane, ugolki, fanorona, stray, hex, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines, janggi, hexOpen };
-module.exports = GAMES; GAMES.mancalaWords = mancalaWords; Object.assign(GAMES, { chessOpenCtx, chessOpenProblem, chessOpenSet, chessOpenD }); Object.defineProperty(GAMES, '_hex', { value: { deep1: hxDeep1, ctx: hxCtx, near: hxNear, problem: hxProblem, d: hxD, pts: hxPts, kind: (sp, m) => { const X = hxX(); return X.HXA.kind(X.HXA.facts(sp, m)); } } }); Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
+module.exports = GAMES; Object.defineProperty(GAMES, '_gm', { value: { gmForbid } }); GAMES.mancalaWords = mancalaWords; Object.assign(GAMES, { chessOpenCtx, chessOpenProblem, chessOpenSet, chessOpenD }); Object.defineProperty(GAMES, '_hex', { value: { deep1: hxDeep1, ctx: hxCtx, near: hxNear, problem: hxProblem, d: hxD, pts: hxPts, kind: (sp, m) => { const X = hxX(); return X.HXA.kind(X.HXA.facts(sp, m)); } } }); Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
 Object.defineProperty(GAMES, '_xqStray', { value: xqStray42 });   // (the xiangqi 追42 check alone, with a broken pzwhy for tests)
 if (require.main === module) {
   const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'pz88,dupkey89,chessDrill,near53,plural58,backgammon,reversiOpen,gomokuOpen,goOpen,open67,connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,chessOpen,xiangqiOpen,openLines,janggi,foxgeese,konane,fanorona,ugolki,hex,hexOpen,bgOpen').split(',');
