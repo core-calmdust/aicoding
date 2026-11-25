@@ -382,7 +382,7 @@ function gomoku(opt) {
 //   ⑦⑧ ハコピヨ's words (atlas/lessons3d.js dotsJa, run here) against the board: the boxes the red line hands over (≥1 when the
 //      words say so) and the boxes lost ((best − v) / 2), no 「開く」 for a line that takes, the question's 「1本」 / 「広い盤」 and the
 //      2D example's 「緑の点線も安全な線で、どれを選んでも同じ結果」 (problem 0 has other safe lines, all best)
-const DT_DONE = new Set(['safe', 'third', 'take', 'chain']);
+const DT_DONE = new Set(['safe', 'third', 'take', 'chain', 'hard', 'double']);
 function dots(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'dots/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'dots/lessons.json'), 'utf8'));
@@ -432,6 +432,26 @@ function dots(opt) {
         if (!B.every(e => m(e) === mn)) a(`④ a best line hands over ${B.map(m)} boxes, the fewest is ${mn}`);
         if (lg.every(e => m(e) === mn)) a('④ every line hands over as few boxes');
         d = E.components(p, false).length;
+      } else if (id === 'hard' || id === 'double') {
+        // (2026-11-25 担当A) hard = no safe line, nothing to take, the best lines are exactly the middle lines of a 2-chain (F: give,
+        // m 2, not ret) and an end line of it (ret) is worse; double = a box to take, no safe line, the best lines are exactly the
+        // declines that leave 2 (F: decline, m 2) and a take line is worse. Both: no loops (the words say 鎖), and after the best line
+        // a chain of 3+ is still on the board (「長い鎖より、まず2箱の鎖」「次の長い鎖も、きみが取れる」「残りに長い鎖があるとき」)
+        const comps = E.components(p, true);
+        if (F.ns) a(`④ ${F.ns} safe lines`);
+        if (comps.some(c => c.loop)) a('④ a loop on the board (the words say 鎖)');
+        if (id === 'hard') {
+          if (cap) a('④ a box to take');
+          if (!B.every(e => { const f = F.of(e); return f.cls === 'give' && f.m === 2 && !f.ret; })) a(`④ a best line is not the middle of a 2-chain (${B})`);
+          if (!worse.some(x => F.of(x.m).ret)) a('④ no end line of a 2-chain among the worse lines');
+          if (!comps.some(c => c.n >= 3)) a('④ no chain of 3+ (「長い鎖より、まず2箱の鎖」)');
+        } else {
+          if (!cap) a('④ no box to take');
+          if (!B.every(e => { const f = F.of(e); return f.cls === 'decline' && f.m === 2; })) a(`④ a best line does not leave 2 boxes (${B})`);
+          if (!worse.some(x => F.of(x.m).cls === 'take')) a('④ no take line among the worse lines');
+          if (!comps.some(c => c.n >= 3 && !c.boxes.some(bx => p.cnt[bx] === 3))) a('④ no other chain of 3+ (「次の長い鎖」)');
+        }
+        d = comps.length;
       }
       // ⑥ (problem 0 is the worked example)
       if (j >= 1) { if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
@@ -1393,7 +1413,7 @@ function tafl(opt) {
 // b_cannon・b_pawn). The goal set is read from the rules (a capture by that kind on which no legal move of the opponent can take back),
 // the engine values stored in sc (= xiangqi/app.js problemPoints, the 3D XIANGQI.points) must put that capture alone on top, and
 // ショウギツネ's words (atlas/lessons3d.js xqLsJa) are read back against the board for the answer and every wrong move.
-const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn', 'b_mate1', 'm_mate2', 'm_hc', 'm_dc', 'm_face']);
+const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn', 'b_escape', 'b_mate1', 'm_mate2', 'm_hc', 'm_dc', 'm_face']);
 function xiangqi(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'xiangqi/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'xiangqi/lessons.json'), 'utf8'));
@@ -1610,6 +1630,8 @@ function xiangqi(opt) {
   });
   // (2026-11-24 第2期 担当A) 詰みの形 m_hc・m_dc・m_face: n手（1〜3）の詰みの最初の1手 — tools/lesson-verify-xqmate.js
   require('./lesson-verify-xqmate.js').verify({ E, L, X, pool, dist, brd, plain, add, only: XQ_DONE });
+  // (2026-11-25 第2期 担当A) b_escape「ねらわれた駒を逃げる」— tools/lesson-verify-xqescape.js
+  require('./lesson-verify-xqescape.js').verify({ E, L, X, pool, dist, brd, plain, add, pts, only: XQ_DONE });
   // 追72 (2026-11-25 担当A): the moves that count as right (P.ok, or 16 points or more from P.sc) and a warm-up try's ok are a third of the
   // legal moves at most
   L.steps.forEach(st => { if (!XQ_DONE.has(st.id)) return;

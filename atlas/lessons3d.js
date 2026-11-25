@@ -4138,7 +4138,7 @@
       b_horse: ['馬の跳び先は、最大で8つ。順番に見ていこう！', '馬の足、つまり最初のまっすぐの点はふさがってない？', '「日」の字の反対の角が、馬の行き先だコン。', '跳んだ先の駒を、相手が取り返せないかも確かめてね。', '足がふさがった方向は、候補から外していいの。'],
       b_cannon: ['炮が取るときは、間にちょうど1つの駒が必要なの。', '炮台は敵の駒でも味方の駒でもいいんだコン。', '炮の筋に、駒が2つ並んでいるところはない？', '間に駒が0こや2こだと、炮は取れないね。', '取ったあと、取り返されないかも見てみて！'],
       b_pawn: ['兵は前に1つ。川を渡っていれば、横にも1つ動けるの。', '兵のすぐとなりと前に、相手の駒はいない？', '小さな兵で大きな駒を取れたら、大もうけだコン！', '兵は後ろの駒は取れないから、前と横だけ見ればいいね。', '取ったあとで、兵が取り返されないかも確かめて！'],
-      b_escape: ['ねらっている相手の駒の利きを、たどってみて。', '逃げた先が、相手の車や炮の筋にないか確かめるコン。', '逃げ先の候補を全部並べて、安全なのを選ぼう！', '馬の跳び先にも気をつけてね。', '相手の炮は、間に1つ駒があると取れるのを忘れずに！'],
+      b_escape: ['ねらっている相手の駒の利きを、たどってみて。', '逃げた先が、相手の車や炮の筋にないか確かめるコン。', '逃げ先の候補を全部並べて、安全なのを選ぼう！', '相手の車の筋は、端から端まで届くのを忘れずにね。', '相手の炮は、間に1つ駒があると取れるのを忘れずに！'],
       b_mate1: ['將が動ける点を、先に数えてみて。', '王手をかけたあと、將の逃げ先は残ってない？', '九宮の中だけ見れば、將の行き先は少ないの。', '王手の駒が取られないかも、確かめるコン。', '間に駒を入れて防がれない王手はどれ？'],
       t_capture: ['駒の値打ちの目安を思い出して、比べてみて！', '取り返されても、取った駒のほうが高ければ得なの。', '安い駒で高い駒を取れるところはない？', '取ったあとの交換まで、足し算と引き算だコン。', '守られている駒でも、取る値打ちがあることがあるの。'],
       t_fork: ['1手で2つの駒に届く点を探してみて。', '馬の両取りは、とくによく出てくるコン。', '相手の大きな駒どうしの、ちょうど間あたりがねらい目なの。', '動かした駒から、相手の駒が2つ見える？', '王手と駒取りを同時にかけるのも、両取りのひとつだね。'],
@@ -4226,8 +4226,12 @@
         : V(['{x}だと詰みを逃して、相手に粘られちゃう。', '{x}だと詰みまでの道すじが消えて、長引いちゃうの。', '{x}では將に息をつかせて、詰ませにくくなるの。', '{x}のあとは、すぐには詰まない形になっちゃう。', '{x}を指すと、せっかく追いつめた將がひと息ついちゃう。']);
       if (Q.lossy) { const c = NO(Q.cap), t = N(Q.ty); return V([`{x}で${c}を取っても、きみの${t}を取り返されて損しちゃう！`, `{x}は${c}を取れるけど、代わりに${t}を取られて差し引き損なの。`, `{x}だと${c}と引きかえに、もっと大きい${t}を失うの。`]); }
       if (FA.cap && Q.cap && XQV[Q.cap] < XQV[FA.cap] && !Q.hang.length) { const qc = NO(Q.cap), ac = NO(FA.cap); return V([`{x}で取れる${qc}より、${ac}のほうが大きい駒なの。`, `{x}の${qc}取りは、${ac}取りより得が小さいの。`, `{x}だと${qc}止まり。値打ちの高い${ac}が残っちゃう。`]); }
-      if (Q.hang.length && (FA.hang.length < Q.hang.length)) { const h = N(Q.hang[0]);
-        return Q.hang0.length && !Q.saved && (id === 'b_escape' || id === 't_defend') ? V([`{x}のあとも、ねらわれた${h}は取られたままなの。`, `{x}だと、${h}へのねらいが消えないの。`, `{x}では${h}が助からないね。`, `{x}を指しても、${h}はまだねらわれてるの。`, `{x}だと、${h}が次に取られちゃう。`])
+      if (Q.hang.length && (FA.hang.length < Q.hang.length)) {
+        // (2026-11-25 第2期 担当A b_escape) the piece that was chased, if it still is (where it stands after the move), comes first; when it
+        // got away but another piece of ours is chased now, that one is named in the plain wording (not 「ねらわれた X」)
+        const h0s = Q.hang0.length === 1 ? (E.mFrom(u) === Q.hang0[0] ? E.mTo(u) : Q.hang0[0]) : -1, still = h0s >= 0 && Q.hangSq.includes(h0s);
+        const h = N(still ? pos.at(Q.hang0[0]) & 7 : Q.hang[0]);
+        return Q.hang0.length && !Q.saved && (id === 'b_escape' || id === 't_defend') && (still || Q.hang0.length > 1) ? V([`{x}のあとも、ねらわれた${h}は取られたままなの。`, `{x}だと、${h}へのねらいが消えないの。`, `{x}では${h}が助からないね。`, `{x}を指しても、${h}はまだねらわれてるの。`, `{x}だと、${h}が次に取られちゃう。`])
           : V([`{x}だと、きみの${h}が取られちゃう。`, `{x}のあと、相手に${h}をねらわれるの。`, `{x}を指すと、${h}が取られる形が残るの。`, `{x}だと、${h}が相手の駒の利きに入っちゃう。`, `{x}では、${h}がただで取られそうなの。`]); }
       if (FA.cap && !Q.cap) { const ac = NO(FA.cap); return V([`{x}では駒を取れないね。取れる${ac}を見のがしちゃう。`, `{x}だと、せっかくの${ac}を取りそこねるの。`, `{x}は取る手じゃないから、${ac}がそのまま残るの。`, `{x}を指すと、${ac}を取るチャンスが消えちゃう。`, `{x}だと、${ac}に手が届かないの。`]); }
       if (FA.check && !Q.check && id === 't_check') return V(['{x}は王手じゃないから、相手に立て直す時間をあげちゃう。', '{x}だと王手にならず、相手に守りを固められるの。', '{x}では相手を忙しくできなくて、駒得のチャンスが消えるの。', '{x}のあと、相手は自由に1手指せるから、駒を逃がされちゃう。', 'その{x}だと、相手の手番をうばえないの。']);
@@ -4282,7 +4286,7 @@
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xm3'), getJ('../xiangqi/openings.json?v=5'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xe1'), getJ('../xiangqi/openings.json?v=5'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vf]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vf)(v); this.V = ((v.I18N || {})['ja@fox']) || {}; } catch (e) { this.V = {}; }   // (ショウギツネ's own lines, 3D, ja)
           return this; })
@@ -6957,7 +6961,7 @@
     yGive: ['赤い線は箱の3本目になって、相手に{xm}箱取られちゃう。', '赤い線を引くと、{xm}箱が相手のものに。', '赤い線のとなりの箱は2本引いてあったから、そこが3本目になって{xm}箱取られる。', '赤い線だと、相手が{xm}箱をぺろり！', '赤い線は2本の箱にさわったから、相手に{xm}箱が渡る。'],
     yPar: ['赤い線だと長い鎖の本数が合わなくて、最後に長い鎖を開かされる。', '赤い線も安全だけど、それだと鎖の形がきみに不利になる。', '赤い線だと、長い鎖の本数がずれちゃう。', '赤い線では、最後に長い鎖を開くのがきみになる。', '赤い線だと、手数の偶数・奇数が相手に合っちゃう。'],
     ySafe: ['安全な赤い線だと、最後に長い鎖を開くのがきみになっちゃう。', '赤い線は安全でも、手番の偶数・奇数がきみに合わないから負け筋。', '赤い線で安全に逃げても、最後の長い鎖を相手に取られる。', '赤い線のままだと、長鎖ルールで負けちゃう。', '安全な線でしのいでも、最後に大きく取られる形なんだ。'],
-    yAll: ['赤い線で取り切ると、次の鎖を開くのはきみになっちゃう。', '全部取ると、あとの長い鎖を相手に取られる！', '取り切った赤い線だと、自分で次の鎖を開くはめになる。', '赤い線は目の前の箱に飛びついたから、主導権が相手に移る。', '赤い線で取りすぎると、手番を返せない。'],
+    yAll: ['赤い線で取り切ると、次に箱をあげる番はきみになっちゃう。', '全部取ると、あとの長い鎖を相手に取られる！', '取り切った赤い線だと、自分から次の鎖を差し出すはめになる。', '赤い線は目の前の箱に飛びついたから、主導権が相手に移る。', '赤い線で取りすぎると、手番を返せない。'],
     yKeep: ['赤い線で{xm}箱残しても、あとの鎖が小さいから取り返せない。', '残した{xm}箱は相手のもの。取り返す大きな鎖がないから損なんだ。', 'この先は小さな鎖だけ。赤い線の残しは{xm}箱の損になる。', '赤い線の2つ残しは、ここではもったいない。', '主導権を守っても、あとに取る鎖がなければ意味がない。'],
     yMiss: ['赤い線だと、相手に{xm}箱取られちゃう。', '赤い線を引くと、その箱は相手が取る。{xm}箱のプレゼントになる。', '見のがすと、相手に{xm}箱と手番まで渡しちゃう。', '赤い線では、取れたはずの箱が相手のものに。', '赤い線のあと、相手は{xm}箱をまとめて取れる。'],
     yMore: ['赤い線だと{xm}箱も相手にあげることになる。', '赤い線の所で手を止めると、残る箱が{xm}箱にふえちゃう。', '赤い線は残しすぎ！ {xm}箱も渡るから損が大きい。', '赤い線では、相手に{xm}箱をまとめて取られる。', '赤い線では取り方の順番がずれて、{xm}箱あげることになる。'],
@@ -7012,7 +7016,7 @@
     load(lang) {
       const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261021L`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
       if (this.p) return this.p.then(() => T()).then(() => this);
-      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261125f'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
+      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261125h'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
         .then(([ls, X]) => { const w = {}; try { new Function('window', 'with (window) {' + X + '\n}')(w); } catch (e) { console.warn('[lessons3d] dots texts', e); } this.I = w.I18N || {}; this.data = { ls }; return T(); }).then(() => this)
         .catch(e => { this.p = null; throw e; }));
     },
