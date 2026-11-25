@@ -311,6 +311,8 @@ int main(int argc, char **argv) {
       hist[nh++] = m;
     }
     if (result > 0) w++; else if (result < 0) l++; else d++;
+    { const char *kf = getenv("KIFU");   /* KIFU=<file>: every game's moves are appended (tools/match/blunders.py reads them) */
+      if (kf) { FILE *k = fopen(kf, "a"); if (k) { fprintf(k, "%d %d %d", weBlack, result, nh0); for (int i = 0; i < nh; i++) { char u[8]; toUsi(hist[i], u); fprintf(k, " %s", u); } fprintf(k, "\n"); fclose(k); } } }
     if (fBase) printf("  %d plies, per move: ours %.1f s, engine %.1f s%s\n", nh, nO ? usedO / nO / 1000 : 0, nE ? usedE / nE / 1000 : 0, flag == 1 ? " (we lost on time)" : flag == 2 ? " (the engine lost on time)" : "");
     printf("game %d (%s): %s   total +%d -%d =%d  score %.3f\n", g + 1, weBlack ? "we sente" : "we gote", result > 0 ? "win" : result < 0 ? "loss" : "draw", w, l, d, (w + d * .5) / (g + 1));
     fflush(stdout);
