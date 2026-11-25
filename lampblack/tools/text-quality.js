@@ -188,6 +188,67 @@ function scoreNarr(st) {
   if (mech > 3) add(mech - 3, `物語の文に仕組みの言葉 ${mech}`);
   return { score: Math.max(0, Math.round(100 - ded.reduce((a, d) => a + d[0], 0))), ded };
 }
+
+// 9. 序幕の筆致（2026-11-25 ユーザー：導入部の個々人の発言や状況描写が淡白で短い。文学賞に届くディティールへ）
+//   既定の序幕と、主人公ごとの序幕の入りを、事件が起きるまでの1本ずつとして読む。測るもの：
+//   地の文の頁の厚み・人物のせりふの厚み（その人の暮らしや来歴がにじむ長さ）・話し手のいないときの地の文・
+//   五感の幅（見る・聞く・嗅ぐ・触れる・味わう）・比喩・場面の具体物（固有の物の名）・文末の単調さ
+const SENSES = { 見: /光|灯|影|色|白|黒|赤|青|金|銀|墨|煤|霧|湯気|煙|輝|ちらつ|透け|映|揺れ/, 聞: /音|声|鳴|響|軋|きし|鈴|囁|ささや|唸|はぜ|沈黙|静か|聞こえ|耳/, 嗅: /匂|香|臭|におい|硫黄|松脂|獣臭/, 触: /冷た|温|熱|ぬく|凍|濡|湿|ざらつ|かじか|指先|手のひら|頬|肌|重み|痺れ/, 味: /味|甘|苦|しょっぱ|塩|酸っぱ|スープ|茶|酒|葡萄酒|蜜|飲|啜|舌/ };
+const FIG = /ように|ような|みたいに|みたいな|かのよう|まるで/g;
+function prologueRuns(base) {
+  const pro = base.text.prologue || [], core = pro.findIndex(p => p.core), kill = pro.findIndex(p => /\{first\}/.test(p.t || ''));
+  const runs = [['既定の入り', pro.slice(0, kill < 0 ? pro.length : kill).filter(p => !p.hero)]];
+  for (const h of base.heroes || []) if (h.prologue) runs.push([h.job, h.prologue.concat(pro.slice(core, kill < 0 ? pro.length : kill))]);
+  return runs;
+}
+function scorePrologue(base) {
+  const ded = [], add = (n, why) => ded.push([n, why]);
+  for (const [who, P] of prologueRuns(base)) {
+    const T = P.map(p => p.t || '').filter(Boolean), L = P.flatMap(p => Object.values(p.alt || {})), N = P.map(p => p.n).filter(Boolean);
+    const avg = a => a.length ? a.reduce((x, y) => x + y.length, 0) / a.length : 0;
+    const shortT = T.filter(t => t.length < 70).length; if (shortT) add(shortT * .6, `${who}：薄い地の文の頁 ${shortT}（70字未満）`);
+    if (avg(T) < 95) add((95 - avg(T)) / 6, `${who}：地の文の頁の平均 ${Math.round(avg(T))}字（95字以上）`);
+    const shortL = L.filter(t => t.length < 60).length; if (shortL) add(shortL * .4, `${who}：短いせりふ ${shortL}（60字未満）`);
+    if (L.length && avg(L) < 78) add((78 - avg(L)) / 6, `${who}：せりふの平均 ${Math.round(avg(L))}字（78字以上）`);
+    const shortN = N.filter(t => t.length < 48).length; if (shortN) add(shortN * .4, `${who}：話し手のいないときの地の文が薄い ${shortN}（48字未満）`);
+    const huge = T.concat(L, N).filter(t => t.length > 210).length; if (huge) add(huge * 2, `${who}：画面に収まらない長さ ${huge}（210字まで）`);
+    const all = T.concat(L, N).join('\n');
+    const miss = Object.keys(SENSES).filter(k => !SENSES[k].test(all)); if (miss.length) add(miss.length * 2, `${who}：五感が足りない（${miss.join('・')}）`);
+    const fig = (all.match(FIG) || []).length; if (fig < 3) add((3 - fig) * 1.5, `${who}：比喩 ${fig}（3以上）`);
+    const S = T.concat(N).flatMap(sents); const ta = S.filter(x => /た[。」]*$/.test(x)).length;
+    if (S.length && ta / S.length > .72) add(((ta / S.length) - .72) * 20, `${who}：文末が「た」ばかり（${Math.round(ta / S.length * 100)}%）`);
+  }
+  return { score: Math.max(0, Math.round(100 - ded.reduce((a, d) => a + d[0], 0))), ded };
+}
+
+// 10. 物語全体の筆致（2026-11-25 ユーザー：序章だけでなくストーリー全体にテコ入れを）
+//   序幕のあと、遊ぶあいだずっと読む文を測る：朝の書き出し・本筋の場面（地の文・せりふ・話し手のいないときの文）・
+//   幕間（1場面の厚みと、地の文で場を見せること）・夜の点景・後日談・発見の文。五感の幅・比喩・文末の単調さも見る
+function scoreWhole(st) {
+  const ded = [], add = (n, why) => ded.push([n, why]);
+  const T = st.text || {}, A = st.arc || {}, avg = a => a.length ? a.reduce((x, y) => x + y.length, 0) / a.length : 0;
+  const thin = (arr, min, mean, what, w) => { const s = arr.filter(t => t.length < min).length; if (s) add(s * w, `${what}が薄い ${s}（${min}字未満）`); if (arr.length && avg(arr) < mean) add((mean - avg(arr)) / 6, `${what}の平均 ${Math.round(avg(arr))}字（${mean}字以上）`); };
+  thin(T.day || [], 60, 75, '朝の書き出し', .5);
+  const days = Object.values(A.days || {}).flat();
+  thin(days.map(e => e.t).filter(Boolean), 60, 90, '本筋の地の文', .5);
+  thin(days.flatMap(e => Object.values(e.alt || {})), 55, 75, '本筋のせりふ', .3);
+  thin(days.map(e => e.n).filter(Boolean), 45, 55, '本筋の話し手のいないときの文', .3);
+  const I = st.inter || [], len = x => x.lines.reduce((a, l) => a + l[1].length, 0);
+  const sI = I.filter(x => len(x) < 230).length; if (sI) add(sI * .4, `薄い幕間 ${sI}（230字未満）`);
+  const mI = I.length ? I.reduce((a, x) => a + len(x), 0) / I.length : 0; if (mI < 260) add((260 - mI) / 8, `幕間の平均 ${Math.round(mI)}字（260字以上）`);
+  const bare = I.filter(x => x.lines.filter(l => !l[0]).length < 2).length; if (bare) add(bare * .3, `地の文が1行以下の幕間 ${bare}（場を見せる地の文を2行以上）`);
+  thin(st.chars.map(c => c.vign || ''), 55, 65, '夜の点景', .3);
+  thin(st.chars.map(c => c.epi || ''), 55, 68, '後日談', .3);
+  thin(Object.values(T.discover || {}).flat(), 45, 60, '発見の文', .2);
+  const arcTxt = days.flatMap(e => [e.t || '', e.n || ''].concat(Object.values(e.alt || {}))).join('\n'), intTxt = I.flatMap(x => x.lines.map(l => l[1])).join('\n');
+  const miss = Object.keys(SENSES).filter(k => !SENSES[k].test(arcTxt + intTxt)); if (miss.length) add(miss.length * 2, `本筋と幕間に五感が足りない（${miss.join('・')}）`);
+  const fa = (arcTxt.match(FIG) || []).length, fi = (intTxt.match(FIG) || []).length;
+  if (fa < 6) add((6 - fa) * .7, `本筋の比喩 ${fa}（6以上）`); if (fi < 8) add((8 - fi) * .5, `幕間の比喩 ${fi}（8以上）`);
+  const S = days.flatMap(e => [e.t, e.n]).concat(T.day || [], st.chars.map(c => c.vign), I.flatMap(x => x.lines.filter(l => !l[0]).map(l => l[1]))).filter(Boolean).flatMap(sents);
+  const ta = S.filter(x => /た[。」]*$/.test(x)).length; if (S.length && ta / S.length > .72) add(((ta / S.length) - .72) * 20, `地の文の文末が「た」ばかり（${Math.round(ta / S.length * 100)}%）`);
+  const huge = days.flatMap(e => [e.t, e.n].concat(Object.values(e.alt || {}))).concat(I.flatMap(x => x.lines.map(l => l[1]))).filter(t => t && t.length > 240).length; if (huge) add(huge * 2, `画面に収まらない長さ ${huge}（240字まで）`);
+  return { score: Math.max(0, Math.round(100 - ded.reduce((a, d) => a + d[0], 0))), ded };
+}
 // story text that the prose checks also read (the voiced lines checked against each speaker's voice)
 // 8. the heroes: every story has many "you"s, each with a way in, a thread of their own, and an ending
 function scoreHeroes(base) {
@@ -288,6 +349,12 @@ for (const id of Object.keys(W.WL_STORIES)) {
   const q = scoreNarr(st); if (q.score < BAR) fail++;
   console.log(`${q.score >= BAR ? 'OK ' : 'NG '} ${String(q.score).padStart(3)}  ${st.title}（物語の厚み）`);
   if (show || q.score < BAR) for (const [n, w] of q.ded) console.log(`      -${n}  ${w}`);
+  const pq = scorePrologue(base); if (pq.score < BAR) fail++;
+  console.log(`${pq.score >= BAR ? 'OK ' : 'NG '} ${String(pq.score).padStart(3)}  ${st.title}（序幕の筆致）`);
+  if (show || pq.score < BAR) for (const [n, w] of pq.ded) console.log(`      -${n.toFixed ? +n.toFixed(1) : n}  ${w}`);
+  const wq = scoreWhole(st); if (wq.score < BAR) fail++;
+  console.log(`${wq.score >= BAR ? 'OK ' : 'NG '} ${String(wq.score).padStart(3)}  ${st.title}（物語全体の筆致）`);
+  if (show || wq.score < BAR) for (const [n, w] of wq.ded) console.log(`      -${+n.toFixed(1)}  ${w}`);
   const hq = scoreHeroes(base); if (hq.score < BAR) fail++;
   console.log(`${hq.score >= BAR ? 'OK ' : 'NG '} ${String(hq.score).padStart(3)}  ${st.title}（主人公 ${(base.heroes || []).length}人）`);
   if (show || hq.score < BAR) for (const [n, w] of hq.ded) console.log(`      -${n}  ${w}`);

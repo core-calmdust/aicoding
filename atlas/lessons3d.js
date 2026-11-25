@@ -2586,7 +2586,7 @@
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261125r3'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=7').catch(() => ({}))])
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261125r3'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=8').catch(() => ({}))])
         .then(([ls, op, ev, wt, opp]) => { this.WT = wt || {}; this.OPP = opp || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
@@ -4061,7 +4061,7 @@
     let why; { const L = XQ_WHY[kd] || XQ_WHY.cannon, P0 = XQN(FA.cap || FA.ty, FA.cap ? FA.c ^ 1 : FA.c);
       const fresh = L.map(x => x.replace(/\{P\}/g, P0)).filter(x => xqSn(x).every(y => !V.used.has(xqKey(y))));
       why = fresh.length ? xqWhyJa(FA, j, V, xqLastEnd(V.cheer(i))) : xqPick(V, [0, 1, 2, 3, 4, 5].map(q => V.pr(i + q).replace('{a}', sh2)), xqLastEnd(V.cheer(i))); }
-    if (FA.flee) why = FA.cap ? xqJoin(why, `しかも、ねらわれていた${FP}もこれで安全なの。`) : xqPick(V, FLEE.why.map((_, q) => FLEE.why[(j + q) % FLEE.why.length]), xqLastEnd(V.cheer(i)));
+    if (FA.flee) why = FA.cap ? xqJoin(why, xqPick(V, [`しかも、ねらわれていた${FP}もこれで安全なの。`, `ついでに、ねらわれていた${FP}も逃がせたコン！`, `おまけに、ねらわれていた${FP}も取られずに済むね。`].map((_, q, A) => A[(j + q) % A.length]), xqLastEnd(why))) : xqPick(V, FLEE.why.map((_, q) => FLEE.why[(j + q) % FLEE.why.length]), xqLastEnd(V.cheer(i)));
     const pu = i % 2 ? [0, 1, 2].map(q => V.push(i + q)).find(x => xqEnd(xqSn(x)[0]) !== xqLastEnd(why)) || V.push(i) : '', goodTx = xqJoin(V.cheer(i), why, pu);
     const good = u => { if (u != null && u !== A && sc.has(u)) return f(best - sc.get(u) <= 10 ? xqJoin(V.cheer(i), '{x}もいい手だコン！ {m}と同じくらいよく働くの。') : xqJoin('悪くない手だね！', `でも{m}なら${sh2}から、そっちが本筋なの。`));
       return goodTx; };
@@ -4079,7 +4079,7 @@
       else if (NF.k === 'lostTrade') out.push(`{x}で${XQN(NF.cp, pos.side ^ 1)}を取っても、きみの${me}を取られて損しちゃう！`);
       else if (NF.k === 'free') out.push(pk(NF.was ? [`{x}だと、ねらわれていた${me}がそのまま。ただで取られちゃう！`, `{x}では${me}を助けられず、ただで取られてしまうの。`] : [`{x}だと、きみの${me}がただで取られちゃう！`, `{x}では${me}の守りが外れて、ただで取られてしまうの。`]));
       else if (NF.k === 'lost') out.push(pk(NF.was ? [`{x}だと、ねらわれていた${me}がそのまま。相手に取られて損しちゃう！`] : [`{x}だと、${me}が相手のねらいに残っちゃう！`, `{x}では${me}が相手に取られる形になって、損しちゃうの。`]));
-      else if (NF.k === 'miss') out.push(pk(NF.retake ? [`{x}だと、取れる${XP}を見のがしちゃう。`, `{x}では、{m}で取れた${XP}がそのまま残るの。`] : [`{x}だと、取れる${XP}を見のがしちゃう。`, `{x}では、ただで取れた${XP}がそのまま残るの。`]));
+      else if (NF.k === 'miss') out.push(pk(NF.retake ? [`{x}だと、取れる${XP}を見のがしちゃう。`, `{x}では、{m}で取れた${XP}がそのまま残るの。`, `{x}では${XP}を取りそこねちゃうコン。`] : [`{x}だと、取れる${XP}を見のがしちゃう。`, `{x}では、ただで取れた${XP}がそのまま残るの。`, `{x}では${XP}を取りそこねて、駒得のチャンスを逃しちゃう。`]));
       else if (NF.k === 'aim') out.push(pk([`{x}だと、{m}のように相手の${XQN(NF.T, pos.side ^ 1)}をねらう形にならないの。`, `{x}では相手の${XQN(NF.T, pos.side ^ 1)}に手が届かないコン。`]));
       else if (NF.k === 'check') out.push(pk(['{x}だと王手にならないの。{m}の王手なら、相手は受けに手を使うことになるのに。', '{x}では王手がかからず、相手に自由に指されちゃう。']));
       if (out.length === n0 && F && /^rook/.test(FA.k) && !FA.cap && F.ty !== 5) out.push(pk(XQJ_OP.late));
@@ -4317,7 +4317,7 @@
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xe1-er1'), getJ('../xiangqi/openings.json?v=5'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xe1-er1'), getJ('../xiangqi/openings.json?v=6'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vf]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vf)(v); this.V = ((v.I18N || {})['ja@fox']) || {}; } catch (e) { this.V = {}; }   // (ショウギツネ's own lines, 3D, ja)
           return this; })
