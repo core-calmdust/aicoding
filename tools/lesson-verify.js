@@ -216,7 +216,13 @@ function mancalaWords(opt) {
 //      above the first   ⑦⑧ ゴイシペン's words (atlas/lessons3d.js gmLsJa, run here) for every other empty point against the engine:
 //      a point said to make a four-three / one three / no three (no four) / a five makes exactly that, and the green point's words say
 //      the answer's kind (overline / 4-4)   the warm-up tries: the answer = the forbidden points of the lesson's kind
-const GM_DONE = new Set(['five', 'block', 'three', 'sfour', 'fourthree', 'forbid33', 'forbid44']);
+//   (2026-11-25 担当A) fourthreeB (renju, Black to move; gmFourThreeB): ① the answers = the moves that win fastest (in 3, renju — a
+//      forbidden point is no legal move) ② no other move wins in 3 ④ every answer a four-three (one four, one real three), the board has a
+//      forbidden point (the ×) and one of them wins in 3 in the free rule (the trap the lesson is about) ⑥ d as fourthree ⑦⑧ the 3D words
+//      for every other legal point: 「三のほうが達四になれない」 = the point's threes are not real (no legal open-four point), 「四だけ…止め
+//      られたら攻めが終わる」 = after the four and its block Black has no VCF, 「三だけ」 = a three and no four, 「四も三もできない」 = neither;
+//      the praise's lines = the answer's four and three; the hint 「×のとなり」 = the answer touches a forbidden point
+const GM_DONE = new Set(['five', 'block', 'three', 'sfour', 'fourthree', 'forbid33', 'forbid44', 'fourthreeB']);
 function gmJa() { const fs = require('fs'), vm = require('vm'), src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), f0 = src.indexOf('  const fill = ');
   return vm.runInNewContext(src.slice(f0, src.indexOf('\n', f0)) + '\n' + src.slice(src.indexOf('  const GML = '), src.indexOf('  const GOMOKU = {')) + '\n;({ GML, gmLsJa, GMW })', {}); }
 function gmWin(E) {
@@ -291,6 +297,47 @@ function gmForbid(E, id, P, j, st, add, six) {
     if (/並びから外れ|並びが伸びない/.test(t) && onLine) bad('said to be off the lines (a black stone is on its line within 4)');
   }
 }
+function gmFourThreeB(E, G, P, j, st, add, six) {
+  const C = E.C, cells = a => String(a || '').split(/\s+/).filter(Boolean).map(E.sqOf), nm = m => E.sqName(m);
+  if ((P.rule || 'renju') !== 'renju') add(`rule ${P.rule} (the lesson is renju's)`);
+  if (P.side !== 1) add('the side to move is not Black');
+  const B = cells(P.b), Wt = cells(P.w), pos = E.setup('renju', { b: B, w: Wt, side: 1 }), lg = pos.legal(), okM = P.ok.map(E.sqOf);
+  const cls = (c, m) => pos.cls[c][E.M2I[m]];
+  if (pos.fives(1).length || pos.fives(2).length) add('① a five point on the board');
+  if (lg.length < 3) add(`③ only ${lg.length} legal moves`);
+  const lv = new Map(lg.map(m => [m, G.level(pos, m)])), mine = lg.filter(m => lv.get(m)), mn = mine.length ? Math.min(...mine.map(m => lv.get(m))) : 0;
+  if (mn !== 3) add(`① the fastest win takes ${mn || 'no'} moves (the lesson's: 3)`);
+  const want = lg.filter(m => lv.get(m) === 3).map(nm).sort(), ok = P.ok.slice().sort();
+  if (want.join() !== ok.join()) add(`①② the answers are ${ok}, the goal's moves ${want}`);
+  if (!okM.every(m => cls(1, m) === C.F43 && !pos.forbidden(m))) add('④ an answer is not a legal four-three');
+  const fl = pos.forbiddenList(); if (!fl.length) add('④ no forbidden point on the board (the × the lesson is about)');
+  const pf = E.setup('free', { b: B, w: Wt, side: 1 });
+  if (!fl.some(f => G.level(pf, f.m))) add('④ no forbidden point that would win in the free rule (no trap)');
+  if (P.ok.length * 3 > lg.length) add(`追72 ${P.ok.length} of the ${lg.length} legal points are right`);
+  six(lg.filter(m => !P.ok.includes(nm(m)) && (cls(1, m) >= C.F3 || cls(2, m) >= C.B4)).length);
+  // ⑦⑧ the 3D words
+  const X = gmJa(), L = require(path.join(ROOT, 'gomoku/lessons.json')), key = L.steps.findIndex(s => s.id === 'fourthreeB'), W = X.GMW.fourthree;
+  const J = X.gmLsJa('fourthreeB', { b: B, w: Wt, side: 1 }, 'renju', okM, j, key); if (!J) { add('⑧ no 3D words'); return; }
+  const Gm = X.GML.mk({ b: B, w: Wt }, 'renju'), DIR = [[1, 0], [0, 1], [1, 1], [1, -1]];
+  const realThrees = u => { const r = Gm.info(u, 1); let n = 0; Gm.bd[u] = 1; const p2 = E.setup('renju', { b: B.concat([u]), w: Wt, side: 1 });
+    r.threes.forEach(di => { const d = DIR[di], x = u % 15, y = Math.floor(u / 15); let hit = false;
+      for (let k = -4; k <= 4 && !hit; k++) { const a = x + d[0] * k, b = y + d[1] * k; if (a < 0 || b < 0 || a > 14 || b > 14) continue; const c = b * 15 + a; if (Gm.bd[c] !== 0) continue; if (Gm.info(c, 1).open4.includes(di) && !p2.forbidden(c)) hit = true; }
+      if (hit) n++; }); Gm.bd[u] = 0; return n; };
+  const has = (t, k) => (W[k] || []).some(x => typeof x === 'string' && t.includes(x));
+  const ra = okM[0], RA = Gm.info(ra, 1);
+  if (!(RA.fours.length === 1 && RA.threes.length === 1 && realThrees(ra) === 1)) add(`⑧ the answer is not one four and one real three (the praise names one of each) — fours ${RA.fours.length}, threes ${RA.threes.length}`);
+  const h = J.hintTx || '', near = (a, b) => Math.abs(a % 15 - b % 15) <= 1 && Math.abs(Math.floor(a / 15) - Math.floor(b / 15)) <= 1;
+  if (/×のとなり/.test(h) && !fl.some(f => near(f.m, ra))) add(`⑧ the hint says the answer is next to a × — ${h}`);
+  if (/×/.test(J.ask || '') && !fl.length) add('⑧ the question names the × (none on the board)');
+  for (const u of lg) { if (okM.includes(u)) continue; const t = J.ng.call({}, u), r = Gm.info(u, 1), bad = m => add(`⑧ ${nm(u)}: ${m} — ${t}`);
+    if (has(t, 't43') && !(r.fours.length && r.threes.length && realThrees(u) === 0)) bad(`said to be a four-three whose three is not real (fours ${r.fours.length}, threes ${r.threes.length}, real ${realThrees(u)})`);
+    if (has(t, 't4')) { if (!(r.fours.length && !r.threes.length)) bad('said to make a four only');
+      else { pos.make(u); const f = pos.fives(1); let cont = false; if (f.length === 1) { pos.make(E.I2M[f[0]]); cont = G.vcf(pos); pos.unmake(); } pos.unmake(); if (cont) bad('said that the attack ends once the four is blocked, Black still wins by fours'); } }
+    if (has(t, 't3') && !(r.threes.length && !r.fours.length)) bad('said to make a three only');
+    if (has(t, 't0') && (r.threes.length || r.fours.length)) bad('said to make neither a four nor a three');
+    if (!/緑の点/.test(t)) bad('the green point (the answer) is not named');
+  }
+}
 function gomoku(opt) {
   const E = require(path.join(ROOT, 'gomoku/engine.js')), L = require(path.join(ROOT, 'gomoku/lessons.json')), PZ = require(path.join(ROOT, 'gomoku/puzzles.json'));
   const C = E.C, G = gmWin(E), only = opt && opt.only, out = [];
@@ -310,6 +357,10 @@ function gomoku(opt) {
     let prevD = -1, firstD = null;
     st.problems.forEach((P, j) => { const add = m => out.push({ step: id, q: j + 1, msg: m });
       if (/^forbid/.test(id)) { gmForbid(E, id, P, j, st, add, D => { if (D < prevD) add(`⑥ easier than the problem before (d ${D} after ${prevD})`); prevD = Math.max(prevD, D); if (firstD === null) firstD = D;
+          if (j === st.problems.length - 1 && !(D > firstD)) add(`⑥ the last problem is no harder than the first (d ${D} vs ${firstD})`); });
+        const A = st2(P); for (const [who, B, Q] of PS) { if (Q === P) continue; const e = dist(A, B); if (e <= 3) add(`⑤ ${e} stones from ${who}`); }
+        return; }
+      if (id === 'fourthreeB') { gmFourThreeB(E, G, P, j, st, add, D => { if (D < prevD) add(`⑥ easier than the problem before (d ${D} after ${prevD})`); prevD = Math.max(prevD, D); if (firstD === null) firstD = D;
           if (j === st.problems.length - 1 && !(D > firstD)) add(`⑥ the last problem is no harder than the first (d ${D} vs ${firstD})`); });
         const A = st2(P); for (const [who, B, Q] of PS) { if (Q === P) continue; const e = dist(A, B); if (e <= 3) add(`⑤ ${e} stones from ${who}`); }
         return; }
@@ -382,7 +433,7 @@ function gomoku(opt) {
 //   ⑦⑧ ハコピヨ's words (atlas/lessons3d.js dotsJa, run here) against the board: the boxes the red line hands over (≥1 when the
 //      words say so) and the boxes lost ((best − v) / 2), no 「開く」 for a line that takes, the question's 「1本」 / 「広い盤」 and the
 //      2D example's 「緑の点線も安全な線で、どれを選んでも同じ結果」 (problem 0 has other safe lines, all best)
-const DT_DONE = new Set(['safe', 'third', 'take', 'chain']);
+const DT_DONE = new Set(['safe', 'third', 'take', 'chain', 'hard', 'double']);
 function dots(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'dots/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'dots/lessons.json'), 'utf8'));
@@ -432,6 +483,26 @@ function dots(opt) {
         if (!B.every(e => m(e) === mn)) a(`④ a best line hands over ${B.map(m)} boxes, the fewest is ${mn}`);
         if (lg.every(e => m(e) === mn)) a('④ every line hands over as few boxes');
         d = E.components(p, false).length;
+      } else if (id === 'hard' || id === 'double') {
+        // (2026-11-25 担当A) hard = no safe line, nothing to take, the best lines are exactly the middle lines of a 2-chain (F: give,
+        // m 2, not ret) and an end line of it (ret) is worse; double = a box to take, no safe line, the best lines are exactly the
+        // declines that leave 2 (F: decline, m 2) and a take line is worse. Both: no loops (the words say 鎖), and after the best line
+        // a chain of 3+ is still on the board (「長い鎖より、まず2箱の鎖」「次の長い鎖も、きみが取れる」「残りに長い鎖があるとき」)
+        const comps = E.components(p, true);
+        if (F.ns) a(`④ ${F.ns} safe lines`);
+        if (comps.some(c => c.loop)) a('④ a loop on the board (the words say 鎖)');
+        if (id === 'hard') {
+          if (cap) a('④ a box to take');
+          if (!B.every(e => { const f = F.of(e); return f.cls === 'give' && f.m === 2 && !f.ret; })) a(`④ a best line is not the middle of a 2-chain (${B})`);
+          if (!worse.some(x => F.of(x.m).ret)) a('④ no end line of a 2-chain among the worse lines');
+          if (!comps.some(c => c.n >= 3)) a('④ no chain of 3+ (「長い鎖より、まず2箱の鎖」)');
+        } else {
+          if (!cap) a('④ no box to take');
+          if (!B.every(e => { const f = F.of(e); return f.cls === 'decline' && f.m === 2; })) a(`④ a best line does not leave 2 boxes (${B})`);
+          if (!worse.some(x => F.of(x.m).cls === 'take')) a('④ no take line among the worse lines');
+          if (!comps.some(c => c.n >= 3 && !c.boxes.some(bx => p.cnt[bx] === 3))) a('④ no other chain of 3+ (「次の長い鎖」)');
+        }
+        d = comps.length;
       }
       // ⑥ (problem 0 is the worked example)
       if (j >= 1) { if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
@@ -1393,7 +1464,7 @@ function tafl(opt) {
 // b_cannon・b_pawn). The goal set is read from the rules (a capture by that kind on which no legal move of the opponent can take back),
 // the engine values stored in sc (= xiangqi/app.js problemPoints, the 3D XIANGQI.points) must put that capture alone on top, and
 // ショウギツネ's words (atlas/lessons3d.js xqLsJa) are read back against the board for the answer and every wrong move.
-const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn', 'b_mate1', 'm_mate2', 'm_hc', 'm_dc', 'm_face']);
+const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn', 'b_escape', 'b_mate1', 'm_mate2', 'm_hc', 'm_dc', 'm_face']);
 function xiangqi(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'xiangqi/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'xiangqi/lessons.json'), 'utf8'));
@@ -1610,6 +1681,8 @@ function xiangqi(opt) {
   });
   // (2026-11-24 第2期 担当A) 詰みの形 m_hc・m_dc・m_face: n手（1〜3）の詰みの最初の1手 — tools/lesson-verify-xqmate.js
   require('./lesson-verify-xqmate.js').verify({ E, L, X, pool, dist, brd, plain, add, only: XQ_DONE });
+  // (2026-11-25 第2期 担当A) b_escape「ねらわれた駒を逃げる」— tools/lesson-verify-xqescape.js
+  require('./lesson-verify-xqescape.js').verify({ E, L, X, pool, dist, brd, plain, add, pts, only: XQ_DONE });
   // 追72 (2026-11-25 担当A): the moves that count as right (P.ok, or 16 points or more from P.sc) and a warm-up try's ok are a third of the
   // legal moves at most
   L.steps.forEach(st => { if (!XQ_DONE.has(st.id)) return;
@@ -1692,7 +1765,7 @@ function xqStray42(PZ, add, W0) {
 // capture, its value), the engine (depth 3: the answer on top, every other move 250 or more worse), the pool (lessons.json problems
 // and warm-ups of every step, tsume.json; mirrored too), the order (both the 2D and the 3D keep the pool's order) and ショウギツネ's
 // words for every legal move.
-const SH_DONE = new Set(['k20']);
+const SH_DONE = new Set(['k20', 'k15']);
 function shogi(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'shogi/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'shogi/lessons.json'), 'utf8'));
@@ -1718,11 +1791,78 @@ function shogi(opt) {
   L.grades.forEach(g => { g.problems.forEach((q, j) => pool.push([`${g.id} q${j + 1}`, brd(q.sfen)])); (g.ramp || []).forEach((r, j) => r.sfen && pool.push([`${g.id} ramp ${j + 1}`, brd(r.sfen)])); });
   (TS.sets || []).forEach(s => (s.problems || []).forEach((q, j) => q.sfen && pool.push([`tsume ${s.id} ${j + 1}`, brd(q.sfen)])));
   const plain = t => String(t).replace(/<[^>]+>/g, '');
+  // (2026-11-25 第2期 担当A) k15「タダの駒を取る」(mode free): take the one piece that cannot be taken back. The goal set from the board
+  // (every capture, the opponent's legal recaptures after it: the free target is the only one with none, and one piece takes it),
+  // the theme (a bigger piece than the free one is guarded, every guarded capture gives up a piece worth more than it takes), the
+  // stored values (cand = every capture, the lesson value won less the mover when it is taken back), the engine (depth 3: the answer
+  // on top, every other move 250 or more worse, no mate), the pool and the order (as k20), and ショウギツネ's words for every legal
+  // move (the piece taken, who takes the mover back, or that nothing is taken) — and the 2D's reason (shogi/index.html case 'free').
+  const LVv = { 1: 1, 2: 3, 3: 4, 4: 5, 5: 8, 6: 10, 7: 6 }, FREE2D = ["case 'free': {", "t('r.recap', { m: M, p: a, r: rec[0], q: NAME[E.typeOf(p.board[E.mFrom(m)])] })", "if (pr.mode === 'free') { const best = pr.cand[0][1], c = pr.cand.find(x => x[0] === usi); return c ? Math.max(0, Math.round(PTS * c[1] / best)) : 0; }"];
+  FREE2D.forEach(x => { if (!app.includes(x)) add('k15', -1, '⑨ shogi/index.html (free) changed: ' + x.slice(0, 40)); });
+  if (!src.includes("if (P.mode === 'free') { const best = P.cand[0][1], c = P.cand.find(x => x[0] === u); return c ? Math.max(0, Math.round(PTS * c[1] / best)) : 0; }")) add('k15', -1, '⑨ the 3D SHOGI.points (free) changed');
+  const I18 = fs.readFileSync(path.join(ROOT, 'shogi/i18n.js'), 'utf8'); for (const k of ['r.freeOk', 'r.recap', 'r.couldFree', 'r.noCap']) { const n = (I18.match(new RegExp(`["']${k.replace('.', '\\.')}["']:`, 'g')) || []).length; if (n < 14) add('k15', -1, `⑨ the 2D words ${k} in ${n} of 14 languages`); }
+  const freeX = { pairs: new Map(), movers: new Set(), prevD: -1 };
+  function shFree(P, j, a, p, ms, U) {
+    if (P.kind !== 'best' || P.mode !== 'free' || P.src !== 'free') { a('④ not a free-piece problem'); return; }
+    if (p.inCheck()) a('④ the mover is in check');
+    if (ms.length < 3) a(`③ ${ms.length} legal moves`);
+    const caps = ms.filter(m => !E.isDrop(m) && p.board[E.mTo(m)]).map(m => { const u = U(m), q = pos(P.sfen); q.doMove(q.fromUsi(u));
+      const rec = q.legalMoves(true).filter(y => !E.isDrop(y) && E.mTo(y) === E.mTo(m)).map(y => T(q.board[E.mFrom(y)]));
+      return { u, from: E.mFrom(m), to: E.mTo(m), t: T(p.board[E.mTo(m)]), mv: T(p.board[E.mFrom(m)]), rec }; });
+    if (caps.some(c => c.u.endsWith('+'))) a('④ a capture can promote');
+    caps.forEach(c => { if (!LVv[c.t]) a(`④ ${c.u} takes a piece without a lesson value (type ${c.t})`); });
+    const tg = new Set(caps.map(c => c.to)); if (tg.size < 3) { a(`③ only ${tg.size} pieces can be taken`); return; }
+    const free = caps.filter(c => !c.rec.length), fto = new Set(free.map(c => c.to));
+    if (fto.size !== 1) { a(`② ${fto.size} free pieces`); return; }
+    if (free.length !== 1) a('② two of your pieces can take the free piece');
+    const goal = free.map(c => c.u).sort(); if (goal.join() !== (P.accept || []).slice().sort().join()) a(`① accept ${P.accept} but the free capture is ${goal}`);
+    const fv = LVv[free[0].t], guarded = caps.filter(c => c.rec.length);
+    if (!guarded.some(c => LVv[c.t] > fv)) a('④ no bigger piece is guarded (then it is k20: take the biggest)');
+    guarded.forEach(c => { if (!(LVv[c.mv] > LVv[c.t])) a(`④ ${c.u}: the ${NM[c.mv]} takes the guarded ${NM[c.t]} worth ${LVv[c.t]} — taking it back gives up less than it wins`); });
+    // ⑨ cand: every capture with its net value, best first
+    const cs = new Map(P.cand || []); if (cs.size !== (P.cand || []).length || cs.size !== caps.length) a('⑨ cand is not every capture once');
+    caps.forEach(c => { const v = LVv[c.t] - (c.rec.length ? LVv[c.mv] : 0); if (cs.get(c.u) !== v) a(`⑨ cand ${c.u} = ${cs.get(c.u)}, the board says ${v}`); });
+    for (let k = 1; k < (P.cand || []).length; k++) if (P.cand[k][1] > P.cand[k - 1][1]) a('⑨ cand is not best first');
+    if ((P.cand || [[]])[0][0] !== P.accept[0]) a('⑨ cand[0] is not the answer');
+    const pts = u => { const c = (P.cand || []).find(x => x[0] === u); return c ? Math.max(0, Math.round(20 * c[1] / P.cand[0][1])) : 0; };
+    ms.forEach(m => { const u = U(m); if (u !== P.accept[0] && pts(u) > 14) a(`② ${u} scores ${pts(u)}`); });
+    if ((P.pv || [])[0] !== P.accept[0]) a('⑧ pv[0] is not the answer');
+    const r = new E.Searcher(p).analyze({ depth: 3, time: 60000 }), best = r[0].s;
+    if (U(r[0].m) !== P.accept[0]) a(`① the engine prefers ${U(r[0].m)} (${best})`);
+    const near = r.filter(x => U(x.m) !== P.accept[0] && x.s > best - 250); if (near.length) a(`② close to the answer: ${near.map(x => U(x.m) + ' ' + (best - x.s)).join(', ')}`);
+    if (Math.abs(best) > 20000) a('④ a mate in the values');
+    const B = brd(P.sfen); for (const [who, b] of pool) { if (who === `k15 q${j + 1}`) continue; const e = dist(B, b); if (e <= 6) a(`⑤ ${e} squares from ${who}`); }
+    const key = free[0].mv + '>' + free[0].t; freeX.pairs.set(key, (freeX.pairs.get(key) || 0) + 1); freeX.movers.add(free[0].mv);
+    if (freeX.pairs.get(key) > 2) a(`⑤ the same capture (${key}) a third time`);
+    const u0 = P.accept[0], far = Math.max(Math.abs(+u0[0] - +u0[2]), Math.abs(u0.charCodeAt(1) - u0.charCodeAt(3))) >= 3;
+    const d = tg.size * 3 + ms.length / 8 + (far ? 4 : 0) + (free[0].mv === E.KE ? 3 : 0) + P.sfen.split(' ')[0].replace(/[^A-Za-z]/g, '').length / 2;
+    if (d < freeX.prevD) a(`⑥ easier than the problem before (d ${d.toFixed(1)} after ${freeX.prevD.toFixed(1)})`); freeX.prevD = Math.max(freeX.prevD, d);
+    // ⑦⑧ the 3D words
+    const top = NM[free[0].t], NMk = t => NM[t], bigT = guarded.reduce((b, c) => !b || LVv[c.t] > LVv[b] ? c.t : b, 0);
+    for (let k = 0; k < 5; k++) {   // (the problem at each of the five places of a lesson: every wording it can get)
+    const pr5 = [0, 1, 2, 3, 4].map(() => ({ P, kind: 'best', why: '', ng: null })); X.shJaLesson(freeX.g, pr5); const Q = pr5[k];
+    for (const t of [Q.ask, Q.hintTx]) if (/\{|undefined|NaN|わな|罠/.test(t)) a(`⑧ 「${t}」`);
+    { const gd = plain(Q.good(P.accept[0]));
+      if (/undefined|NaN|\{x\}/.test(gd) || !gd.includes(top)) a(`⑧ the praise 「${gd}」 does not name the ${top}`);
+      for (const nm of NM.slice(1, 8)) if (nm !== top && nm !== NM[bigT] && !top.includes(nm) && gd.includes(nm)) a(`⑧ the praise 「${gd}」 names a ${nm}`);
+      if (gd.includes(NM[bigT]) && !/守られ/.test(gd)) a(`⑧ the praise names the ${NM[bigT]} without saying it is guarded`); }
+    for (const m of ms) { const u = U(m); if (u === P.accept[0]) continue; const w = plain(Q.ng(u)), c = caps.find(x => x.u === u);
+      if (/undefined|NaN|わな|罠/.test(w)) { a(`⑧ ${u}: 「${w}」`); continue; }
+      if (!w.includes(top) || !w.includes('{m}') && !/タダ|守りのない|守られていない/.test(w)) a(`⑦ ${u}: the words do not name the answer and its ${top} 「${w}」`);
+      if (c) { if (!w.includes(NMk(c.t))) a(`⑦ ${u}: takes a ${NMk(c.t)}, the words do not say so 「${w}」`);
+        if (!w.includes(NMk(c.mv))) a(`⑦ ${u}: the words do not name the ${NMk(c.mv)} taken back 「${w}」`);
+        if (!c.rec.some(t => w.includes(NMk(t)))) a(`⑦ ${u}: the words do not name a piece that takes back (${c.rec.map(NMk)}) 「${w}」`);
+        if (!/取り返/.test(w)) a(`⑦ ${u}: the words do not say it is taken back 「${w}」`); }
+      else if (!/取れない|取らない|駒得にならない|何も取れない|取っていない/.test(w)) a(`⑦ ${u}: takes nothing, the words do not say so 「${w}」`); }
+    }
+  }
   for (const g of L.grades) { const id = g.id; if (!SH_DONE.has(id)) continue;
     let prevD = -1; const pairs = new Map(), movers = new Set();
     const probs = g.problems.map(P => ({ P, kind: 'best', why: '', ng: null }));
     try { X.shJaLesson(g, probs); } catch (e) { add(id, -1, '⑧ the 3D words fail: ' + e.message); continue; }
+    if (id === 'k15') { freeX.g = g; if (g.trapNote) add(id, -1, '④ a trapNote but no trap problem'); if (/罠|わな|poison/i.test(JSON.stringify(g.prompt) + JSON.stringify(X.SHJ2.intro.k15 || ''))) add(id, -1, '④ the prompt / intro speaks of traps'); }
     g.problems.forEach((P, j) => { const a = m => add(id, j, m), p = pos(P.sfen), ms = p.legalMoves(true), U = m => p.toUsi(m);
+      if (id === 'k15') { shFree(P, j, a, p, ms, U); return; }
       if (P.kind !== 'best' || P.mode !== 'material') { a('④ not a material problem'); return; }
       if (p.inCheck()) a('④ the mover is in check');
       if (ms.length < 3) a(`③ ${ms.length} legal moves`);
@@ -1769,7 +1909,7 @@ function shogi(opt) {
         if (c) { const x = NM[c.t]; if (!w.includes(x)) a(`⑦ ${u}: takes a ${x}, the words do not say so 「${w}」`); if (/取れない|取らない|駒得にならない|何も取れない|取っていない/.test(w)) a(`⑦ ${u}: it does take 「${w}」`); }
         else if (!/取れない|取らない|駒得にならない|何も取れない|取っていない/.test(w)) a(`⑦ ${u}: takes nothing, the words do not say so 「${w}」`); }
     });
-    if (movers.size < 5) add(id, -1, `⑤ only ${movers.size} kinds of piece take`);
+    if ((id === 'k15' ? freeX.movers : movers).size < 5) add(id, -1, `⑤ only ${(id === 'k15' ? freeX.movers : movers).size} kinds of piece take`);
     // 追32 every kind of piece that can take in the problems and warm-ups (the moves the student has to read) has its move told in
     // the intro: the 3D (ショウギツネ's SHJ2.intro, the warm-ups) and the 2D (grade.intro.ja, the warm-ups) — the name and a move word
     // next to it; promoted pieces: 成 … 金と同じ, 馬, 龍. (k20: the 3D intro said only 「駒の動きは練習で見ていこう」 and the warm-ups showed the
@@ -1787,7 +1927,7 @@ function shogi(opt) {
     // problems — the 3D (ショウギツネ's intro, the warm-ups: k20's 3D intro told no value and the warm-up hint only 歩・銀・金・角・飛,
     // while q3 asks 銀 or 香) and the 2D (intro and note, ja and en). 追45 with the told values the student's rule 「いちばん価値の高い駒」
     // picks exactly the answer: a single top piece, the one accepted (else following the intro's tip would be wrong).
-    if (g.problems.some(P => P.mode === 'material')) {
+    if (g.problems.some(P => P.mode === 'material' || P.mode === 'free')) {
       const JN = { 1: '歩', 2: '香', 3: '桂', 4: '銀', 5: '角', 6: '飛', 7: '金' }, EN = { 1: 'pawn', 2: 'lance', 3: 'knight', 4: 'silver', 5: 'bishop', 6: 'rook', 7: 'gold' };
       const told = (tx, nm) => { const v = {}; for (const [k, n] of Object.entries(nm)) { const m = tx.match(new RegExp(n + '(?:車|馬)?\\s*(\\d+)')); if (m) v[k] = +m[1]; } return v; };
       const ramp = f => (g.ramp || []).map(r => ['t', 'body', 'g', 'h', 'y'].map(k => r[k] && r[k][f] || '').join(' ')).join(' ');
