@@ -1162,7 +1162,8 @@
     await say([{ text: pickOne(st.text.night) }, vignette()]);
     const act = {};
     const r = S.ghost ? null : S.pl.role;
-    if (!S.ghost && S.pl.co) await say([{ text: `あなたは${st.roles[S.pl.role].name}だと名乗った。狼は、名乗った者の戸口を知っている。\n${E.RS(S).guard ? "今夜、誰かがあなたを守ってくれるだろうか。" : `この${st.lex.village}に、扉を守ってくれる者はいない。`}` }]);
+    const wolves = E.alive(S).some(p => p.role === 'wolf');   // the fox hunt: the wolves are gone, the night is quiet
+    if (!S.ghost && S.pl.co && wolves) await say([{ text: `あなたは${st.roles[S.pl.role].name}だと名乗った。狼は、名乗った者の戸口を知っている。\n${E.RS(S).guard ? "今夜、誰かがあなたを守ってくれるだろうか。" : `この${st.lex.village}に、扉を守ってくれる者はいない。`}` }]);
     if (r === 'seer') {
       const done = new Set(S.pl.res.filter(x => x.seer).map(x => x.target));
       act.divine = await pickPerson('今夜、誰を占う？', '朝に結果がわかる。', live().filter(p => !done.has(p.id)).map(p => p.id), { mark: true }) || pickOne(live()).id;
@@ -1179,7 +1180,8 @@
     save();
     // the wolf crosses the screen; if it bit the nekomata, the cat's curse catches it on the way
     const N = S.nights[S.nights.length - 1];
-    await wolfRun(N && N.dragged ? N : null);
+    if (wolves) await wolfRun(N && N.dragged ? N : null);
+    else { await wait(600); await say([{ text: '遠吠えは、もう聞こえなかった。かわりに、どこか近くで、狐が細く、ひと声だけ鳴いた。' }]); }
     SND.windOff();
     if (E.check(S)) {
       // the bite that ended it: show the morning before the end, so the curse is seen to land
