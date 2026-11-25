@@ -473,6 +473,9 @@ body.scr-play{-webkit-user-select:none;user-select:none}
   .scr{padding:58px 12px 24px}
   .scrh{font-size:20px}
   .scrp{font-size:13px;margin-bottom:14px}
+  /* the actions left: out of the header, a small pill at the stage's top-left (the header keeps its title and buttons) */
+  #hb .ap{position:fixed;top:calc(var(--hdH) + 6px);left:10px;z-index:6;padding:5px 10px;font-size:12.5px;gap:5px}
+  #hb .ap i{width:11px;height:15px}
   /* the story cards: two to a row, a small picture, the title and the special role only */
   .stories{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .sc{box-shadow:0 6px 18px rgba(0,0,0,.22)}
@@ -623,6 +626,6 @@ body.scr-play{-webkit-user-select:none;user-select:none}
 <script src="stories/kiteki.who.js?v=1"></script>
 <script src="stories/kiteki.who.open.js?v=1"></script>
 <script src="sound.js?v=11"></script>
-<script src="game.js?v=50"></script>
+<script src="game.js?v=51"></script>
 </body>
 </html>

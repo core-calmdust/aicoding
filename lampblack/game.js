@@ -438,7 +438,8 @@
   const lineOf = (e, extra) => { const x = SP.event(S, st, e); return x && x.text ? Object.assign({ who: e.by, text: x.text, fx: () => reveal(e) }, extra || {}) : null; };
   function renderRoster() {
     const R = $('roster'); if (!R) return;
-    const on = S && G.scr === 'play' && S.phase !== 'prologue' && S.phase !== 'end';
+    // on a phone the faces at the top are only needed in the meeting and the vote (the day's search lists the people below)
+    const on = S && G.scr === 'play' && S.phase !== 'prologue' && S.phase !== 'end' && (PCQ.matches || S.phase === 'meeting' || S.phase === 'vote');
     R.classList.toggle('hide', !on); document.body.classList.toggle('has-roster', !!on);
     if ($('rmap')) $('rmap').classList.toggle('hide', !on);
     if (!on) return;
