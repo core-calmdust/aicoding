@@ -2704,6 +2704,35 @@ EXPORT(nue_kinit) int nue_kinit(void) {
   return 1;
 }
 #endif
+#if defined(NUE_L1) && defined(NUE_KB) && NUE_MB > 1
+/* (2026-11-26) a NUES net (gtrain --ob 8 --l1 --l2; tools/nnue/prune.py) read by the engine itself: the page copies the
+   file's bytes to nue_file_ptr() and calls nue_file_load(length); 1 = loaded (the sizes are this build's), 0 = not this
+   build's net. One loader for every page (the game, the PRO page, the helpers share the memory). */
+#define NUE_FILE_MAX (116 + NUE_IN * NUE_H * 2 + NUE_H * 4 + NUE_NB * 2 * NUE_H * 2 + NUE_NB * 4 + NUE_MB * (NUE_L1 * 2 * NUE_MI * 2 + NUE_L1 * 4 + NUE_L2 * NUE_L1 * 2 + NUE_L2 * 4 + NUE_L2 * 2))
+static unsigned char nueFile[NUE_FILE_MAX] __attribute__((aligned(16)));
+EXPORT(nue_file_ptr) unsigned char *nue_file_ptr(void) { return nueFile; }
+EXPORT(nue_file_max) int nue_file_max(void) { return NUE_FILE_MAX; }
+static int nueRd32(const unsigned char *p) { return (int)((unsigned)p[0] | (unsigned)p[1] << 8 | (unsigned)p[2] << 16 | (unsigned)p[3] << 24); }
+static int nueRd16(const unsigned char *p) { return (i16)((unsigned)p[0] | (unsigned)p[1] << 8); }
+EXPORT(nue_file_load) int nue_file_load(int n) {
+  const unsigned char *p = nueFile;
+  if (n != NUE_FILE_MAX || nueRd32(p) != 0x5345554E || nueRd32(p + 4) != NUE_H || nueRd32(p + 8) != NUE_IN || nueRd32(p + 12) != NUE_KB || nueRd32(p + 16) != NUE_L1 || nueRd32(p + 20) != NUE_L2 || nueRd32(p + 24) != NUE_MI || nueRd32(p + 28) != NUE_NB) return 0;
+  p += 32; for (int i = 0; i < 84; i++) nueKMap[i] = (i8)p[i]; p += 84;
+  for (int i = 0; i < NUE_IN * NUE_H; i++, p += 2) nueW1[i] = (i16)nueRd16(p);
+  for (int i = 0; i < NUE_H; i++, p += 4) nueB1[i] = nueRd32(p);
+  for (int i = 0; i < NUE_NB * 2 * NUE_H; i++, p += 2) nueW2[i] = (i16)nueRd16(p);
+  for (int i = 0; i < NUE_NB; i++, p += 4) nueB2[i] = nueRd32(p);
+  for (int k = 0; k < NUE_MB; k++) {
+    for (int i = 0; i < NUE_L1 * 2 * NUE_MI; i++, p += 2) nueMA[k * NUE_L1 * 2 * NUE_MI + i] = (i16)nueRd16(p);
+    for (int i = 0; i < NUE_L1; i++, p += 4) nueMa[k * NUE_L1 + i] = nueRd32(p);
+    for (int i = 0; i < NUE_L2 * NUE_L1; i++, p += 2) nueMB[k * NUE_L2 * NUE_L1 + i] = (i16)nueRd16(p);
+    for (int i = 0; i < NUE_L2; i++, p += 4) nueMd[k * NUE_L2 + i] = nueRd32(p);
+    for (int i = 0; i < NUE_L2; i++, p += 2) nueMC[k * NUE_L2 + i] = (i16)nueRd16(p);
+  }
+  nue_mlp_init(); nue_set_nb(NUE_NB);
+  return nue_kinit() ? 1 : 0;
+}
+#endif
 EXPORT(nue_enable) void nue_enable(int on) {
   nueOn = on;
   /* nueEval may sum in int32 when every lane total stays below 2^31: (NUE_H * 2 / 4) products of at most QA^2 * max|w2| */
