@@ -634,6 +634,14 @@ body.scr-play{-webkit-user-select:none;user-select:none}
 .tut-roles dt{font-weight:800}.tut-roles dd{margin:0}
 .tut-sum{text-align:left;font-size:15px;line-height:1.7}
 .tut-sum b{display:block;font:800 14px var(--ui);letter-spacing:.12em;color:var(--acc)}
+.tut-hl{position:relative;z-index:3;outline:3px solid #ffd84a!important;outline-offset:2px;border-radius:4px;animation:tutHl 1.4s ease-in-out infinite}
+@keyframes tutHl{50%{outline-color:rgba(255,216,74,.35);box-shadow:0 0 16px 4px rgba(255,216,74,.55)}}
+#nbTut{display:flex;gap:10px;align-items:flex-start;margin:10px 12px 0;padding:10px 12px;border-radius:4px;background:linear-gradient(90deg,rgba(255,207,134,.45),rgba(255,207,134,.15));box-shadow:inset 4px 0 0 var(--acc)}
+#nbTut.hide{display:none}
+#nbTut .bust{width:44px;height:52px;flex:none}
+#nbTut b{display:block;font:800 13px var(--ui);color:var(--acc);letter-spacing:.06em}
+#nbTut .task{display:inline-block;background:#ffd84a;color:#4a2c10;font:800 13px/1.3 var(--ui);padding:3px 10px;border-radius:999px;margin:3px 0 2px;animation:tkGlow 1.8s ease-in-out infinite}
+#nbTut p{margin:3px 0 0;font:500 15px/1.65 var(--prose)}
 @media (max-width:620px){.tut-roles{grid-template-columns:1fr}.rolecard.tut h3{font-size:30px!important}#tx .name .task{font-size:13.5px}}
 </style>
 </head>
@@ -738,8 +746,8 @@ body.scr-play{-webkit-user-select:none;user-select:none}
 <script src="stories/kiteki.tale.js?v=3"></script>
 <script src="stories/kiteki.who.js?v=2"></script>
 <script src="stories/kiteki.who.open.js?v=2"></script>
-<script src="tutorial.js?v=2"></script>
+<script src="tutorial.js?v=6"></script>
 <script src="sound.js?v=13"></script>
-<script src="game.js?v=63"></script>
+<script src="game.js?v=64"></script>
 </body>
 </html>
