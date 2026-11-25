@@ -1199,20 +1199,34 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
   // WebAssembly SIMD (needed for the NNUE evaluation to be fast): engine_simd.wasm + nnue.bin.gz, otherwise engine.wasm with the linear evaluation
   const simdOK = (() => { try { return WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { return false; } })();
   // the net is fetched first: its hidden size picks the build (engine_simd.wasm: 256, engine_simd512.wasm: 512)
-  async function fetchNNUE() {
+  // (2026-11-26) the net of 2026-11: 1280 hidden units, then 8 -> 64 in 8 sets ("NUES", tools/nnue: gtrain.py, prune.py) with
+  // its own build (engine_simd_s1280.wasm; several threads: engine_mt_s1280.wasm). It is tried first; a page or a build
+  // that does not know it (an older page still in a cache, with engine_mt.wasm) keeps the 512 net.
+  // USE_S = false for now: the levels are rating anchors, and their node counts must first be re-measured for the stronger
+  // engine (tools/nnue/calib-levels.sh); the net, the pages' several-thread build and the new counts go out together.
+  const NUEQ = 0x5145554E, NUES = 0x5345554E, NET_S = 'nnue-s1280.bin.gz', WASM_S = 'engine_simd_s1280.wasm', USE_S = false;
+  async function fetchNNUE(name, magic) {
     if (typeof DecompressionStream === 'undefined') return null;
-    const res = await fetch(new URL('nnue.bin.gz' + QS, self.location.href));
+    const res = await fetch(new URL((name || 'nnue.bin.gz') + QS, self.location.href));
     if (!res.ok) return null;
     let buf = new Uint8Array(await res.arrayBuffer());
     if (buf[0] === 0x1f && buf[1] === 0x8b) buf = new Uint8Array(await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
     const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
-    return dv.getUint32(0, true) === 0x5145554E ? buf : null;
+    return dv.getUint32(0, true) === (magic || NUEQ) ? buf : null;
   }
   function loadNNUE(x, buf) {
     if (!buf) return;
     const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+    if (dv.getUint32(0, true) === NUES) {   // the engine names its arrays in the file's order (engine.c nue_seg_ptr): the bytes are copied as they are
+      if (!x.nue_hdr) return;
+      for (let h = 0; h < 8; h++) if (dv.getInt32(4 * h, true) !== x.nue_hdr(h)) return;
+      const u = new Uint8Array(MEM.buffer); let o = 32;
+      for (let sg = 0; x.nue_seg_len(sg); sg++) { const n = x.nue_seg_len(sg); if (o + n > buf.length) return; u.set(buf.subarray(o, o + n), x.nue_seg_ptr(sg)); o += n; }
+      if (o !== buf.length || !x.nue_file_done()) return;
+      nueReady = true; return;
+    }
     const H = dv.getInt32(4, true), NIN = dv.getInt32(8, true), b = buf.buffer;
-    if (x.nue_h && x.nue_h() !== H) return;
+    if (x.nue_hdr || (x.nue_h && x.nue_h() !== H)) return;
     let o = buf.byteOffset + 12;
     new Int16Array(MEM.buffer, x.nue_w1_ptr(), NIN * H).set(new Int16Array(b.slice(o, o + NIN * H * 2))); o += NIN * H * 2;
     new Int32Array(MEM.buffer, x.nue_b1_ptr(), H).set(new Int32Array(b.slice(o, o + H * 4))); o += H * 4;
@@ -1224,9 +1238,14 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
   function nueUse(on) { on = !!(on && nueReady); if (on !== nueCur) { X.nue_enable(on ? 1 : 0); X.tt_clear(); nueCur = on; } }
   let wReady = Promise.resolve();   // the wasm engine (and its NNUE) loaded, or failed
   try {
-    wReady = (simdOK ? fetchNNUE().catch(() => null) : Promise.resolve(null)).then(net => {
-      const H = net ? new DataView(net.buffer, net.byteOffset, net.byteLength).getInt32(4, true) : 256;
-      const file = !simdOK ? 'engine.wasm' : H === 512 ? 'engine_simd512.wasm' : 'engine_simd.wasm';
+    // which net: several threads: the one the page's module is built for; one thread: the new one, else the 512 one
+    const pickNet = !simdOK ? Promise.resolve(null)
+      : MTL ? mtInit.then(m => WebAssembly.Module.exports(m.module).some(e => e.name === 'nue_hdr') ? fetchNNUE(NET_S, NUES) : fetchNNUE())
+      : USE_S ? fetchNNUE(NET_S, NUES).catch(() => null).then(n => n || fetchNNUE()) : fetchNNUE();
+    wReady = pickNet.catch(() => null).then(net => {
+      const ndv = net ? new DataView(net.buffer, net.byteOffset, net.byteLength) : null;
+      const isS = !!ndv && ndv.getUint32(0, true) === NUES, H = ndv ? ndv.getInt32(4, true) : 256;
+      const file = !simdOK ? 'engine.wasm' : isS ? WASM_S : H === 512 ? 'engine_simd512.wasm' : 'engine_simd.wasm';
       const url = new URL(file + QS, self.location.href);
       const env = { now: () => Date.now(), progress: (d, s, n, p, l) => wProgress && wProgress(d, s, n, p, l), aprogress: (d, n, mp, sp) => wAProgress && wAProgress(d, n, mp, sp) };
       const inst = MTL ? mtInit.then(m => { MEM = m.mem; const x = new WebAssembly.Instance(m.module, { env: Object.assign(env, { memory: MEM }) }).exports; x.mt_stack(m.top); x.mt_thread(m.tls, 0); return { instance: { exports: x } }; })
