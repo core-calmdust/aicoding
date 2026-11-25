@@ -1313,7 +1313,7 @@ function ckWarm(opt, L, E, X, val, moveVal, add, only) {
 //   縦と横) and for every wrong move (the king or not, a blocker on the way, a capture or not, a piece of yours taken next), the question
 //   and the hint (a corner / the throne named is in an answer)
 //   ⑨ the 2D (tafl/app.js problemPoints) and the 3D (TAFL.points) both score P.ok
-const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe']);
+const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield']);
 function tafl(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'tafl/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'tafl/lessons.json'), 'utf8'));
@@ -1462,9 +1462,35 @@ function tafl(opt) {
       if (said !== want) a(`⑦ ${x0}: 「${tx}」 says ${said}, the board: ${want}`);
       if (want === 'other' && ![...Z.xs].some(c => c !== x && c !== t)) a(`⑦ ${x0}: no other piece is taken`); }
     return d; };
+  // (2026-11-25 第2期 担当A) t_shield「シールドウォール」(tools/lesson-verify-tfshield.js): ①② P.ok = the moves that take the most, two
+  // or more, and no wrong move takes more than one ③ ≥3 legal moves, the answers ≤ a third, d ≥ 1 (a wrong move that takes one: not the
+  // only move that does anything) ④ every answer closes a shield wall on the edge (each man with a piece of yours in front, the other end a
+  // corner or a piece of yours), takes the wall less the king; no win / loss at once, no wrong move lets the opponent win ⑤ the pool (five)
+  // and no two problems with the same wall (the taken count, the other end, the way in, the king in it) ⑥ d never down, last > first
+  // ⑦⑧ タフリン's words: the praise names the count taken (and the king left when he is in the wall), every wrong move: the count it takes
+  // (しか / どまり / だけ) or the lid left open, never a count when it takes none; the hint names a corner only when the wall ends in one
+  const SH = require(path.join(ROOT, 'tools/lesson-verify-tfshield.js')), shSig = new Map();
+  const shieldOne = (st, si, P, j, a) => { const f = SH.shieldFacts(E, P), nm = m => E.name(f.p, m); f.bad.forEach(a);
+    five(st.id, j, P, f.me, nm, a);
+    if (f.sig) { if (shSig.has(f.sig)) a(`⑤ the same wall as ${shSig.get(f.sig)} (${f.sig})`); else shSig.set(f.sig, `q${j + 1}`); }
+    let W; try { W = X_.tfLsJa(E, st, P, j, k => X_.TFM(k, 'ja'), si); } catch (e) { a('⑧ the words fail: ' + e.message); return f.d; }
+    for (const t of [W.ask, W.hintTx]) if (!t || /\{|undefined|NaN/.test(t)) a(`⑧ 「${t}」`);
+    if (f.W && /角/.test(W.hintTx) && f.W.end !== 'corner') a(`⑧ the hint 「${W.hintTx}」 names a corner, the wall ends in a piece`);
+    if (f.W && /角/.test(W.ask) && f.W.end !== 'corner') a(`⑧ the question 「${W.ask}」 names a corner`);
+    for (const u of P.ok) { const g = plain(W.good(u)), k = g.match(/(\d+)枚/); if (!f.W) break;
+      if (!k || +k[1] !== f.W.taken) a(`⑧ the praise 「${g}」: ${f.W.taken} are taken`);
+      if (/王/.test(g) !== !!f.W.king) a(`⑧ the praise 「${g}」: the king is ${f.W.king ? '' : 'not '}in the wall`); }
+    for (const m of f.wrong) { const raw = plain(W.ng(m)), x0 = nm(m), i0 = raw.indexOf('赤い印の手'), i1 = raw.indexOf('緑の印の手'), c = f.C.get(m).caps.length;
+      if (/\{|undefined|NaN/.test(raw) || i0 < 0 || i1 < 0) { a(`⑦ ${x0}: 「${raw}」 (your move / the right move not named)`); continue; }
+      const tx = raw.slice(i0, i1), tm = raw.slice(i1), k = tx.match(/(\d+)枚/);
+      if (c && !(k && +k[1] === c && /しか|どまり|だけ|取れても/.test(tx))) a(`⑦ ${x0} takes ${c}: 「${tx}」`);
+      if (!c && (k || !/ふた|はし|端の列/.test(tx))) a(`⑦ ${x0} takes none: 「${tx}」`);
+      const k2 = tm.match(/(\d+)枚/); if (f.W && k2 && +k2[1] !== f.W.taken) a(`⑧ ${x0}: 「${tm}」 — the right move takes ${f.W.taken}`);
+      if (f.W && /王/.test(tm) && !f.W.king) a(`⑧ ${x0}: 「${tm}」 — no king in the wall`); }
+    return f.d; };
   L.steps.forEach((st, si) => { const id = st.id; if (!TF_DONE.has(id)) return;
     let prevD = -1, firstD = null;
-    if (id === 'b_safe') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = safeOne(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
+    if (id === 'b_safe' || id === 't_shield') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
     st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), me = p.turn, all = p.moves(), nm = m => E.name(p, m);
       if (P.n > 1) { const d = seqCheck(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
         if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); seqWords(st, si, P, j, a); return; }
