@@ -73,7 +73,8 @@ module.exports = function shEvade({ ROOT, E, L, X, pool, brd, dist, add, src, ap
     if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d);
     kinds[kd.get(ans)] = (kinds[kd.get(ans)] || 0) + 1; movers.add(who(am).startsWith('d') ? who(am) : T(p.board[E.mFrom(am)]));
     // ⑦⑧ the 3D words at each of the five places
-    const KL = u => { const m = p.fromUsi(u), k = kd.get(u), tk = !E.isDrop(m) && p.board[E.mTo(m)]; return k === 'capture' ? NM[T(p.board[E.mTo(m)])] + 'を取る受け' : k === 'flee' ? (tk ? NM[T(tk)] + 'を取りながら玉が逃げる受け' : '玉が逃げる受け') : NM[E.isDrop(m) ? E.dropType(m) : T(p.board[E.mFrom(m)])] + 'の合駒'; };
+    const KL = u => { const m = p.fromUsi(u), k = kd.get(u), tk = !E.isDrop(m) && p.board[E.mTo(m)];   // (the kind of defence in the words: 取る＝the checker named, 逃げる＝the king (and the piece it takes on the way), 合駒＝the piece put between)
+      return k === 'capture' ? new RegExp('\\{x\\}(は|で)(王手(の|している))?' + NM[T(tk)] + 'を取(る|った|って)') : k === 'flee' ? (tk ? new RegExp('\\{x\\}(は|で)(玉が)?' + NM[T(tk)] + 'を取(りながら|って|りつつ)(玉が|玉を)?逃') : /\{x\}(は|で)玉(が逃げ|を逃が|をよけ)/) : new RegExp('\\{x\\}(は|で)' + NM[E.isDrop(m) ? E.dropType(m) : T(p.board[E.mFrom(m)])] + '(の合駒|を間に|で王手をさえぎ)'); };
     for (let k = 0; k < 5; k++) { const pr5 = [0, 1, 2, 3, 4].map(() => ({ P, kind: 'best', why: '', ng: null })); X.shJaLesson(g, pr5); const Q = pr5[k];
       for (const t of [Q.ask, Q.hintTx]) if (!t || /\{|undefined|NaN/.test(t)) a(`⑧ 「${t}」`);
       if (!/光っている駒/.test(Q.hintTx)) a(`追7 the hint does not point to the lit piece 「${Q.hintTx}」`);
@@ -86,7 +87,7 @@ module.exports = function shEvade({ ROOT, E, L, X, pool, brd, dist, add, src, ap
       for (const u of us) { if (u === ans) continue; const w = plain(Q.ng(u)), f = fact[u]; if (!f) continue;
         if (/undefined|NaN/.test(w)) { a(`⑧ ${u}: 「${w}」`); continue; }
         if (!w.includes('{m}')) a(`⑦ ${u}: the words do not name the answer 「${w}」`);
-        if (!w.includes('{x}は' + KL(u))) a(`⑦ ${u}: the words do not say 「${KL(u)}」 「${w}」`);
+        if (!KL(u).test(w)) a(`⑦ ${u}: the words do not say the kind of defence (${KL(u)}) 「${w}」`);
         if (!w.includes(sqJ(f.r))) a(`⑦ ${u}: the words do not name the reply ${f.r} 「${w}」`);
         if (f.mate && !/詰[まん]/.test(w)) a(`⑦ ${u}: mated, the words do not say so 「${w}」`);
         if (f.take && !(w.includes(f.take) && /取られ/.test(w))) a(`⑦ ${u}: the ${f.take} is taken, the words do not say so 「${w}」`);
