@@ -2148,6 +2148,9 @@
     for (let k = 1; k < 8; k++) o += `<path d="M${2 + k * 10} 2V82M2 ${2 + k * 10}H82" stroke="#1f6b42" stroke-width=".8"/>`;
     for (let q = 0; q < 64; q++) if (c[q] === '1' || c[q] === '2') o += `<circle cx="${7 + (q & 7) * 10}" cy="${7 + (q >> 3) * 10}" r="4.1" fill="${c[q] === '1' ? '#17181c' : '#f6f2e6'}"${c[q] === '2' ? ' stroke="#bdb6a2" stroke-width=".6"' : ''}/>`;
     return o + '</svg>'; };
+  // (2026-11-25 第2期 ⑧) the flips of a move by direction: [{ nm: 縦|横|ななめ, n }] — the rules lesson's words say what the board shows
+  const rvDirs = (c, sq, me) => { const o = 3 - me, out = []; for (const [dr, dc] of [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]) { let r = (sq >> 3) + dr, k = (sq & 7) + dc, n = 0; while (r >= 0 && r < 8 && k >= 0 && k < 8 && c[r * 8 + k] === o) { n++; r += dr; k += dc; } if (n && r >= 0 && r < 8 && k >= 0 && k < 8 && c[r * 8 + k] === me) out.push({ nm: dr === 0 ? '横' : dc === 0 ? '縦' : 'ななめ', n }); } return out; };
+  const rvDirTx = D => D.map(x => `${x.nm}に${x.n}枚`).join('と');
   const rvLegal = (c, me) => { const a = Array.isArray(c) ? c : String(c).split('').map(Number), out = []; for (let q = 0; q < 64; q++) if (rvFlips(a, q, me).length) out.push(q); return out; };
   const RV_MK = { focus: 'hl', danger: 'ng', flip: 'ok', front: 'ok', best: 'ok' };
   function rvAid(it) {   // = reversi/index.html warmFacts + warmAids: what the step tells the player to look at
@@ -2284,11 +2287,18 @@
     const c = String(P.cells).split('').map(Number), exact = P.type === 'exact';
     const xc = q => RV_X[q] != null && !c[RV_X[q]] ? 'X' : RV_C[q] != null && !c[RV_C[q]] ? 'C' : '';
     const res = n => n > 0 ? `${n}石差で勝ち` : n < 0 ? `${-n}石差で負け` : '引き分け';
-    const H = RVJ_LS.hint[kind] || [''], hintTx = pk(H, i) + (marks ? ' ' + pk(kind === 'wall' ? RVJ_LS.rfWall : RVJ_LS.rf, i + 2) : '');
+    const DB = kind === 'rules' && bs.length ? rvDirs(c, bs[0], P.toMove) : [], dg = DB.some(x => x.nm === 'ななめ');
+    const H = kind === 'rules' ? (DB.length > 1 ? ['1つの向きだけじゃなく、ほかの向きでも返せないか見てね。', '2つ以上の向きで、いっぺんにはさめる場所もあるんだ。', '向きごとの枚数を、足し算してみて！', '1つのマスから、何本の線ではさめるかな？', 'いくつかの向きの合計で、いちばんを決めてね。']
+      : dg ? ['ななめの列は、見落としやすいんだ！', 'ななめの向きも、指でなぞって数えてみて。', 'ななめに続く相手の石に、目を向けてごらん。', '縦と横だけで終わらせず、ななめも見てね。', 'ななめの線の先に、自分の石はないかな？']
+      : top >= 3 ? ['遠くの自分の石とも、はさめることがあるね。', '自分の石まで、相手の石が何枚続くか数えてみて。', '長く続く相手の石の列を探してごらん。', '列の端から端まで、ていねいに数えてみて！', '1本の列で、何枚まで返せるかな？']
+      : ['縦・横・ななめ、8つの向きにはさめる石を数えてみて。', '自分の石まで、相手の石が何枚続くか数えてみて。', 'マスごとに、返る石を1枚ずつ数えてね。', '打てる場所を、ひとつずつ確かめてみて！', 'どのマスも、8つの向きをぐるっと見てみて。']) : RVJ_LS.hint[kind] || [''], hintTx = pk(H, i) + (marks ? ' ' + pk(kind === 'wall' ? RVJ_LS.rfWall : RVJ_LS.rf, i + 2) : '');
     const reasonGood = u => {
       const fu = F[u], out = [];
       switch (kind) {
-        case 'rules': { const n = fu[1]; out.push(pk([`${n}枚、ちゃんと数えられた！`, `いちばん多い${n}枚を見つけたんだ。8つの向きを、ちゃんと見てたね。`, `${n}枚返る場所だよ。縦も横もななめも、のこさず見られたんだ。`, `${n}枚いっぺんに返った！ 数えまちがいもなかったね。`, `石が${n}枚ひっくり返った！ 遠くの石まで目が届いてたんだ。`], k)); break; }
+        case 'rules': { const n = fu[1], D = rvDirs(c, u, P.toMove), dn = D.length === 1 ? D[0].nm : '';
+          out.push(D.length > 1 ? pk([`${rvDirTx(D)}、合わせて${n}枚！ 1つの向きで終わらせずに数えられたね。`, `${D.length}つの向きで同時にはさんで${n}枚。${rvDirTx(D)}なんだ。`, `いちばん多い${n}枚！ ${rvDirTx(D)}、ちゃんと足し算できたね。`, `${rvDirTx(D)}で${n}枚いっぺんに返った！ ほかの向きも見てたんだ。`, `${n}枚返る場所だよ。${D.length}つの向きを、のこさず見られたね。`], k)
+            : dn === 'ななめ' ? pk([`ななめの1列で${n}枚！ 見落としやすい向きまで、ちゃんと見てたね。`, `ななめに${n}枚続く列を見つけたんだ。`, `いちばん多いのは、ななめの${n}枚。よく数えられたね。`, `ななめにはさんで${n}枚！ 数えまちがいもなかったね。`, `${n}枚、ななめの列でひっくり返った！`], k)
+            : pk([`${dn}に${n}枚、まっすぐ続く列を見つけたね。`, `${dn}の1列で${n}枚！ 数えまちがいもなかったね。`, `いちばん多い${n}枚は、${dn}の列だったんだ。`, `${dn}にはさんで${n}枚！ ` + (n >= 3 ? '遠くの石まで目が届いてたね。' : 'ちゃんと数えられたね。'), `${n}枚いっぺんに返った！ ${dn}の列をきちんと見てたんだ。`], k)); break; }
         case 'corner':
           if (RV_CN.includes(u)) out.push(pk(['隅を取ったよ。隅の石はもう返されないから、ここから辺に確定石が広がっていくんだ。', '隅をしっかり確保！ 二度と返されない石は、終盤までたよれる味方になるよ。', '角の石は、もうだれにも返せない。ここを足場に辺を固めていけるね。', '隅、ゲット！ ここから続く辺の石も、どんどん確定していくんだ。', '取れる隅を、ちゃんと取れた！ 確定石の第一歩だよ。'], k));
           else if (P.trap) out.push(pk(['この場面は隅が取れない。だから、相手に隅への道を作らない手がいちばんなんだ。', '取れる隅がないときは、守りが大事！ 隅への通り道を作らない手を選べたね。', '隅が取れない場面で、ちゃんと安全な手を選べた！', '隅がないなら、隅を渡さない。その考え方がぴったりの場面だよ。', '隅に打てない場面でも、あわてずに守れたんだ。'], k));
@@ -2361,7 +2371,8 @@
       const lead = kind !== 'parity' && kind !== 'finish' && kind !== 'rules' ? (fu[4] ? pk(['赤い枠だと、次に相手が隅を取れるようになっちゃう。', 'きみの手だと、相手に隅への道が開いちゃうんだ。', 'その手を打つと、相手は隅に打てるようになるよ。', '赤い枠だと、隅をプレゼントしちゃう！', '打ったあと、相手に隅を取られちゃうんだ。'], k)
         : xc(u) ? pk([`赤い枠は空いた隅のとなりの${xc(u)}だから、隅への通り道になりやすい。`, `隅が空いているうちは${xc(u)}のマスは危ない。相手に隅を取られやすいんだ。`, `赤い枠は${xc(u)}だから、あとで隅を取られる種になりやすいよ。`, `${xc(u)}に打つと、空いた隅を相手にねらわれるんだ。`, `赤い枠は${xc(u)}のマス。隅が空いてると、取られる心配があるね。`], k) : '') : '';
       switch (kind) {
-        case 'rules': out.push(pk([`赤い枠は${fu[1]}枚、緑の枠なら${fb[1]}枚返せたんだ。`, `きみの手は${fu[1]}枚。緑の枠なら${fb[1]}枚だよ。`, `赤い枠だと${fu[1]}枚どまり。緑の枠なら${fb[1]}枚もひっくり返る！`, `緑の枠なら${fb[1]}枚、きみの手だと${fu[1]}枚なんだ。`, `赤い枠では${fu[1]}枚、緑の枠では${fb[1]}枚返るよ。`], k), pk(['ななめの列を見落としたのかも？', '次は8つの向きを順番に指でなぞってみて！', 'もう一度、緑の枠から8方向をたどってみよう！', '向きごとに数えると、見落としがへるよ。', '縦・横・ななめ、全部の線を確かめてみて！'], k + 1)); break;
+        case 'rules': out.push(pk([`赤い枠は${fu[1]}枚、緑の枠なら${fb[1]}枚返せたんだ。`, `きみの手は${fu[1]}枚。緑の枠なら${fb[1]}枚だよ。`, `赤い枠だと${fu[1]}枚どまり。緑の枠なら${fb[1]}枚もひっくり返る！`, `緑の枠なら${fb[1]}枚、きみの手だと${fu[1]}枚なんだ。`, `赤い枠では${fu[1]}枚、緑の枠では${fb[1]}枚返るよ。`], k), (D => D.length > 1 ? pk([`緑の枠は${rvDirTx(D)}、${D.length}つの向きで同時にはさめたんだ。`, `緑の枠なら${rvDirTx(D)}。向きを足すと多くなるね。`, `緑の枠は、${D.length}本の線で同時に返せるマスだったよ。${rvDirTx(D)}。`, `${rvDirTx(D)}、合わせると緑の枠がいちばん！`, `緑の枠からは${D.length}つの向きにはさめる。${rvDirTx(D)}なんだ。`], k + 1)
+          : pk([`緑の枠は、${D[0].nm}に${D[0].n}枚続いていたんだ。`, `緑の枠からは、${D[0].nm}の列に${D[0].n}枚並んでたよ。`, `緑の枠の${D[0].nm}の列には、相手の石が${D[0].n}枚続いてたね。`, `${D[0].nm}に${D[0].n}枚、緑の枠ならまとめて返せたんだ。`, `緑の枠は${D[0].nm}の1列だけで${D[0].n}枚！`], k + 1))(rvDirs(c, b, P.toMove))); break;
         case 'corner':
           if (lead) out.push(lead); else if (RV_CN.includes(b)) out.push(pk(['取れる隅があったんだ。隅の石は二度と返されないから、取れるときに取っておきたいね。', '隅が空いてた！ 二度と返されない石だから、見のがすのはもったいない。', '角に打てるチャンスだった！ 確定石の始まりになるからね。', '隅を取れば、そこから確定石がふえていくんだ。', '隅に打てたのに見送ると、相手に取られるかもしれないよ。'], k)); else out.push(loss());
           if (lead && RV_CN.includes(b)) out.push(pk(['緑の枠の隅を取れば、二度と返されない石が手に入ったね。', '緑の枠は隅そのもの。そっちが先だったんだ。', '隅を先に取れば、相手の心配もいらなかったよ。', '緑の枠の隅なら、もう返されない！', '先に隅を取っていれば安心だったね。'], k + 1));
@@ -2569,7 +2580,7 @@
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261124p1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=4').catch(() => ({}))])
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261125r1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=5').catch(() => ({}))])
         .then(([ls, op, ev, wt, opp]) => { this.WT = wt || {}; this.OPP = opp || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
@@ -2617,6 +2628,7 @@
         take(std.filter(p => !probs.includes(p) && !this.near(cs(P0), cs(p))), 5 - probs.length);
       }
       // (2026-11-24 第2期 ⑥) the exact endgames from easy to hard: fewer empties (= a shorter read) first, the exception (trap) last
+      if (probs.length && probs.every(p => p.type === 'flips')) probs.sort((a, b) => (a.d || 0) - (b.d || 0));   // (2026-11-25 第2期 ⑥: counting from easy to hard, = reversi/index.html)
       if (probs.length && probs.every(p => p.type === 'exact')) probs.sort((a, b) => (a.trap ? 1 : 0) - (b.trap ? 1 : 0) || rvEmpt(a) - rvEmpt(b));
       if (!ramp.every(it => (it.k === 'explain' ? it.b : it.g))) ramp = [];   // (texts missing: no warm-up rather than an empty one)
       const look = W('look'), RU = (k, v) => fill(k === 'look' && look ? L(look, lang) : L(WT['ui/' + k], lang) || '', v || {});
@@ -2662,6 +2674,7 @@
       }
       const F = P.f || {}, all = Object.values(F).map(x => x[0]), mine = F[u] ? F[u][0] : -1e9, best = Math.max(...all);   // = reversi/index.html problemPoints
       if (all.length <= 1 || mine >= best - 1e-9) return PTS;
+      if (P.type === 'flips' || P.type === 'exact') return Math.max(0, Math.round((P.type === 'exact' ? 8 : 12) * (all.length - 1 - all.filter(v => v > mine + 1e-9).length) / (all.length - 1)));   // (2026-11-25 第2期 ①②⑨: one answer — another move is never 「正解」)
       return Math.max(0, Math.round(PTS * (all.length - 1 - all.filter(v => v > mine + 1e-9).length) / (all.length - 1)));
     },
   };
@@ -3167,7 +3180,7 @@
     LKEY: 'aicoding-gomoku-lessons', OKEY: 'aicoding-gomoku-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261125f'), getJ('../gomoku/openings.json?v=20261125v2'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261125f'), getJ('../gomoku/openings.json?v=20261125v3'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] gomoku texts', e); } this.I = w.I18N || {}; this.data = { ls, op };
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
