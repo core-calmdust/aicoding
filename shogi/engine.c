@@ -1741,9 +1741,9 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
       if (!quiet || gc) {
         const int ch = cap && (m & 127) <= 80 ? capH[capIdx(m)] : 0;
         if (!gc && !inChk && cap && ld < 8 && rawEval + P[99] + P[100] * ld + VALUE[typeOf(cap)] + ch / 8 <= alpha) continue;
-        /* (fixed 2026-11-25) at every alpha: the test "alpha >= 0" was a misreading of Stockfish's stalemate exception (which
-           shogi does not have) and switched this pruning off in half of the nodes */
-        if ((alpha >= 0 || !P[122]) && m != ttm && see(m) < -(P[101] * depth + ch / 32)) continue;
+        /* only when alpha >= 0, as YaneuraOu has it (2026-11-25: for a few hours this test was dropped as "a misreading of
+           Stockfish's stalemate exception"; YaneuraOu keeps it on purpose, so it is back. P[123] = 1: at every alpha) */
+        if ((alpha >= 0 || P[123]) && m != ttm && see(m) < -(P[101] * depth + ch / 32)) continue;
       } else if (!pvNode || mc > 1) {
         if (P[98] && contHist(m) < -P[98] * depth) continue;
         ld += hv / (P[81] ? P[81] : 2000);
