@@ -839,6 +839,11 @@
   }
   function reason(S, story, id, t, A) {
     const p = person(S, id);
+    // the last day of the fox hunt: the reasons are about the fox — seen going to its lair, or too calm now the wolves are gone
+    if (S.foxHunt && S.foxLoc) {
+      const den = S.pl.told.concat(Object.entries(S.gossip || {}).flatMap(([by, L]) => L.map(g => ({ by, who: g.who, loc: g.loc })))).some(g => g.who === t && g.loc === S.foxLoc);
+      return { k: den ? 'den' : ['fox', 'fox2', 'fox3'][Math.floor(hash01(S.seed + 'fx' + id + t) * 3)] };
+    }
     const own = (S.own[id] || []).find(r => r.target === t && r.res === 'wolf');
     if (own && p.role === 'seer') return { k: 'divined' };
     const mine = S.claims.find(c => c.by === id && c.res.some(r => r.target === t && r.res === 'wolf'));
