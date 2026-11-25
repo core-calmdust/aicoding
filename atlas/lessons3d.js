@@ -4191,7 +4191,44 @@
   }
   function xqLsVoice(n) { const a = [1, 5, 7, 11][Math.floor(n / 12) % 4], b = n % 12, a2 = 1 + Math.floor(n / 11) % 10, b2 = n % 11, X = XQJ_LS;
     return { cheer: i => X.cheer[(a * i + b) % 12], soft: i => X.soft[(a2 * i + b2) % 11], push: i => X.push[(i + n) % 6] }; }
+  // (2026-11-26 第2期 担当A) t_capture「得な交換」: the answer takes a guarded 車・馬・炮 with a cheaper piece; the opponent takes it back and
+  // we are still ahead (the value taken − the opponent's best exchange afterwards = the net; the lesson's values 車9・炮4.5・馬4・仕と相2・
+  // 兵1、川を渡ると2). Every other move wins nothing: the words say what the board does after it — the piece taken back (both values, the
+  // net), another piece lost and its taker, a quiet move, or a mate in 1 — counted again by tools/lesson-verify-xqtrade.js.
+  const XQT_ASK = ['得になる取り方を見つけてみよう！', '取り返されても損をしない取り方はどれ？', '安い駒で高い駒を取れるところはある？', '駒の値打ちを比べてみて。差し引きで得をする手は？', 'ここは駒得のチャンスだコン！ どの駒で、どれを取る？'];
+  const XQT_HINT = [M => `光っている${M}で取れる駒を見てみて。取り返されても、取った駒のほうが高いのはどれ？`, M => `光っている${M}を使うよ。取ったあと取り返されるときの、足し算と引き算をしてみてね！`, M => `守られている駒でも、光っている${M}より値打ちが高ければ得になるの。ねらいはどれかな？`, M => `高い駒で取ると、取り返されて損をすることがあるの。光っている${M}みたいな安い駒で取れないかなコン？`, M => `光っている${M}から、取れる駒を1つずつ数えてみて。差し引きで得をするのは1つだけだよ。`];
+  const XQT_GOOD = [(MA, W, AC, V, g) => `正解！ ${W}点の${MA}で${V}点の${AC}を取ったね。相手に取り返されても、${g}点のおつりがくるの。その調子！`, (MA, W, AC, V, g) => `お見事！ ${AC}（${V}点）と${MA}（${W}点）の取りかえっこで、${g}点のもうけだコン。この計算、忘れないでね！`, (MA, W, AC, V, g) => `やったね！ 守られている${AC}でも、${MA}で取れば${g}点の得。値打ちを比べる目、ばっちりだよ！`, (MA, W, AC, V, g) => `すごい！ ${MA}（${W}点）を取り返されても、${AC}は${V}点。差し引き${g}点、きみの得だね。次もこの目でいこう！`, (MA, W, AC, V, g) => `さすが！ 安い${MA}で高い${AC}を取る、いちばん得な交換だね。${g}点のもうけ、どんどんいこうコン！`];
+  const XQT_OPEN = ['ここは計算どころ、いっしょに見よう。', '惜しかったね、いっしょに数えよう。', '', '大丈夫、交換の計算は慣れだコン。', '値打ちを比べてみよう。'];
+  const XQT_RIGHT = [(K, MA, W, AC, V, g) => `正解は${K}。${MA}で${AC}を取れば、${g}点の得だったの。`, (K, MA, W, AC, V, g) => `${K}なら、${MA}を取り返されても${AC}のほうが高かったよ。次は見つかるね！`, (K, MA, W, AC, V, g) => `答えは${K}。${MA}と${AC}の交換で、${g}点もうかったんだコン。`, (K, MA, W, AC, V, g) => `いちばんは${K}、${MA}で${AC}を取る得な交換だったの。`, (K, MA, W, AC, V, g) => `${K}がよかったね。${AC}は${MA}より${g}点も高いんだ。`];
+  const xqtNum = v => String(Math.round(v * 10) / 10);
+  function xqTradeJa(E, s, P, i, ck, n) {
+    const v = (L, o) => L[(i + n + (o || 0)) % L.length], T = E.typeOf, C = E.colorOf, mTo = E.mTo, mFrom = E.mFrom, p = E.Pos.from(P.s), me = p.side, A = P.best, M = ck('ok'), X = ck('ng');
+    const N = t => XQN(t, me), NO = t => XQN(t, me ^ 1);
+    const val = (q, sq) => { const x = q.at(sq), t = T(x); return t === E.PAWN ? ((C(x) ? sq >= 45 : sq < 45) ? 2 : 1) : XQV[t]; };
+    const cheap = (q, L) => L.reduce((a, y) => val(q, mFrom(y)) < val(q, mFrom(a)) ? y : a, L[0]);
+    const exch = (q, sq) => { const gs = []; let r = q.clone(); if (!r.at(sq) || T(r.at(sq)) === E.KING || C(r.at(sq)) === r.side) return 0;
+      for (let k = 0; k < 14; k++) { const L = r.moves().filter(m => mTo(m) === sq); if (!L.length) break; gs.push(val(r, sq)); r = r.clone().play(cheap(r, L)); }
+      let g = 0; for (let k = gs.length - 1; k >= 0; k--) g = Math.max(0, gs[k] - g); return g; };
+    const danger = q => { const o = []; for (let sq = 0; sq < 90; sq++) { const x = q.at(sq); if (!x || C(x) === q.side || T(x) === E.KING) continue; const g = exch(q, sq);
+      if (g > 0) o.push({ s: sq, t: T(x), g, by: T(q.at(mFrom(cheap(q, q.moves().filter(m => mTo(m) === sq))))) }); } return o.sort((a, b) => b.g - a.g || XQV[b.t] - XQV[a.t]); };
+    const act = u => { const c = p.at(mTo(u)) ? T(p.at(mTo(u))) : 0, cv = c ? val(p, mTo(u)) : 0, q = p.clone().play(u);
+      if (q.moves().some(x => q.clone().play(x).status() === -1)) return { q, c, cv, m1: true, net: -99, dd: null };
+      const D = danger(q); return { q, c, cv, m1: false, dd: D[0] || null, net: cv - (D[0] ? D[0].g : 0) }; };
+    const a0 = act(A), MA = N(T(p.at(mFrom(A)))), W = xqtNum(val(p, mFrom(A))), AC = NO(a0.c), V = xqtNum(a0.cv), g = xqtNum(a0.net);
+    const sayNet = x => x < 0 ? `差し引き${xqtNum(-x)}点の損になっちゃう` : '差し引きとんとんで、得にならない';
+    const ng = u0 => { const L = p.moves(), u = u0 != null && u0 !== A && L.includes(u0) ? u0 : L.find(x => x !== A && p.at(mTo(x))) || L.find(x => x !== A); let w = '';
+      if (u != null) { const r = act(u), c = r.c, Cn = c ? NO(c) : '', CV = xqtNum(r.cv), MT = N(T(p.at(mFrom(u)))), MV = xqtNum(val(r.q, mTo(u))), dd = r.dd;
+        if (r.m1) w = v([`${X}だと、相手に1手で詰まされちゃう！ 自分の王さまの守りも見てね。`, `${X}のあと、相手には1手で詰ませる手があるの。こっちが先に詰んじゃう！`], 1);
+        else if (c && dd && dd.s === mTo(u)) { const B = NO(dd.by); w = v([`${X}で${Cn}（${CV}点）を取ると、きみの${MT}（${MV}点）を相手の${B}に取り返されて、${sayNet(r.net)}の。`, `${X}だと${Cn}（${CV}点）は取れるけど、${MT}（${MV}点）が相手の${B}に取り返されるの。${sayNet(r.net)}んだ。`, `${X}の${Cn}（${CV}点）取りは、${MT}（${MV}点）を相手の${B}に取り返される形。${sayNet(r.net)}コン。`], 1); }
+        else if (c && dd) { const Lp = N(dd.t), B = NO(dd.by); w = v([`${X}で${Cn}（${CV}点）は取れるけど、こんどは${Lp}を相手の${B}に取られちゃう。${sayNet(r.net)}の。`, `${X}だと${Cn}（${CV}点）を取っても、${Lp}が相手の${B}に取られる形になるの。${sayNet(r.net)}んだ。`], 1); }
+        else if (c) w = `${X}で${Cn}（${CV}点）を取れるの。`;
+        else if (dd) { const Lp = N(dd.t), B = NO(dd.by); w = v([`${X}は駒を取らない手で、しかも${Lp}を相手の${B}に取られる形になるの。`, `${X}だと駒を取れないうえに、${Lp}が相手の${B}に取られちゃう。`], 1); }
+        else w = v([`${X}では駒を取れないの。せっかくの駒得のチャンスを逃しちゃう。`, `${X}は駒を取る手じゃないね。得をするチャンスがそのまま残っちゃう。`, `${X}だと、得な交換をしそこねちゃう。`], 1); }
+      return v(XQT_OPEN) + w + v(XQT_RIGHT, 2)(M, MA, W, AC, V, g); };
+    return { ask: v(XQT_ASK), hintTx: v(XQT_HINT)(MA), good: () => v(XQT_GOOD)(MA, W, AC, V, g), ng, own: true };
+  }
   function xqLsJa(E, s, P, i, ck, n) {   // n: the lesson's number (each lesson words its praise / misses in an order of its own)
+    if (s.id === 't_capture') return xqTradeJa(E, s, P, i, ck, n || 0);
     const id = s.id, A0 = XQJ_LS.ask[id]; if (!A0) return null; n = n || 0;
     const k = i + id.length, pick = L => L[k % L.length], H = XQJ_LS.hint[id] || [], VO = xqLsVoice(n);
     const vi = (i + n) % 5, V = (L, o) => L[(i + n + (o || 0)) % L.length];   // (the problem's own wording: five problems, five wordings)
@@ -4317,7 +4354,7 @@
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xe1-er1'), getJ('../xiangqi/openings.json?v=6'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xe1-er1-tc1'), getJ('../xiangqi/openings.json?v=6'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vf]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vf)(v); this.V = ((v.I18N || {})['ja@fox']) || {}; } catch (e) { this.V = {}; }   // (ショウギツネ's own lines, 3D, ja)
           return this; })
