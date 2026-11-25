@@ -453,6 +453,11 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
   .stat{grid-template-columns:repeat(2,1fr)}
   .rank{font-size:90px}
 }
+.li.memo{cursor:pointer;border-radius:4px;transition:background .15s}
+.li.memo:hover{background:color-mix(in srgb,var(--ink) 5%,transparent)}
+.li.strike{opacity:.5;text-decoration:line-through;text-decoration-color:var(--acc);text-decoration-thickness:2px}
+.li.strike .src{text-decoration:line-through;text-decoration-color:var(--acc)}
+.memo-note{margin:16px 2px 6px;padding:10px 12px;border-top:1px dashed color-mix(in srgb,var(--ink) 25%,transparent);font-size:13px;line-height:1.7;color:var(--mute)}
 </style>
 </head>
 <body class="scr-title">
@@ -556,6 +561,6 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 <script src="stories/kiteki.who.js?v=1"></script>
 <script src="stories/kiteki.who.open.js?v=1"></script>
 <script src="sound.js?v=10"></script>
-<script src="game.js?v=43"></script>
+<script src="game.js?v=44"></script>
 </body>
 </html>

@@ -1218,6 +1218,17 @@
     else if (t === 'ev') B.innerHTML = nbEvidence();
     else if (t === 'say') B.innerHTML = nbSay();
     else B.innerHTML = nbVotes();
+    // a memo: tap a trace or a testimony you doubt to strike it through (only for you; the reasoning is not changed)
+    if (t === 'ev' || t === 'say') {
+      const SK = S.pl.strike = S.pl.strike || {};
+      B.querySelectorAll('.li').forEach(li => {
+        const k = li.textContent.replace(/\s+/g, '').slice(0, 80);
+        if (!k || /^(まだ|残りの痕跡)/.test(k) || li.closest('.promise')) return;
+        li.classList.add('memo'); li.classList.toggle('strike', !!SK[k]); li.title = '押すと打ち消し線（メモ）';
+        li.onclick = () => { if (SK[k]) delete SK[k]; else SK[k] = 1; li.classList.toggle('strike', !!SK[k]); save(); };
+      });
+      B.insertAdjacentHTML('beforeend', '<div class="memo-note">メモ：怪しいと思う痕跡や証言を押すと、打ち消し線を引ける。もう一度押すと消える。あなたのための印で、推理や結果は変わらない。</div>');
+    }
     B.querySelectorAll('.marks button').forEach(b => b.onclick = () => { const id = b.dataset.id, m = b.dataset.m; S.pl.notes[id] = S.pl.notes[id] === m ? '' : m; save(); renderNb(); renderRoster(); if (S.phase === 'invest') hub(); });
   }
   function nbPeople() {
