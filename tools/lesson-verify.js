@@ -1767,7 +1767,7 @@ function xqStray42(PZ, add, W0) {
 // capture, its value), the engine (depth 3: the answer on top, every other move 250 or more worse), the pool (lessons.json problems
 // and warm-ups of every step, tsume.json; mirrored too), the order (both the 2D and the 3D keep the pool's order) and ショウギツネ's
 // words for every legal move.
-const SH_DONE = new Set(['k20', 'k15']);
+const SH_DONE = new Set(['k20', 'k15', 'k12']);   // (k12: tools/lesson-verify-shevade.js)
 function shogi(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'shogi/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'shogi/lessons.json'), 'utf8'));
@@ -1783,8 +1783,11 @@ function shogi(opt) {
   // ⑥ both keep the pool's order (easy → hard) for the five problems drawn
   if (!/const probs = g\.rules \? g\.problems\.slice\(\) : shuffle\(\[\.\.\.std\.slice\(0, 5 - nTrap\), \.\.\.trap\.slice\(0, nTrap\)\]\)\.sort\(\(a, b\) => g\.problems\.indexOf\(a\) - g\.problems\.indexOf\(b\)\)/.test(app)) add('-', -1, '⑥ the 2D lesson does not keep the pool order');
   if (!/const probs = g\.rules \? pool : shuffle\(pool\)\.slice\(0, 5\)\.sort\(\(a, b\) => pool\.indexOf\(a\) - pool\.indexOf\(b\)\)/.test(src)) add('-', -1, '⑥ the 3D lesson does not keep the pool order');
-  const ctx = { fill: (s, v) => String(s).replace(/\{(\w+)\}/g, (_, k) => v[k] != null ? v[k] : ''), SHOGI: { points: (P, u) => { const best = P.cand[0][1], c = P.cand.find(x => x[0] === u); return c ? Math.round(20 * c[1] / best) : 0; } } };
-  const X = vm.runInNewContext(src.slice(src.indexOf('  const winP = (v, k) =>'), src.indexOf('  /* (2026-11-21 lesson loop) the shogi opening practice')) + '\n;({ shJaLesson, SH_KJ, SHJ2 })', ctx);
+  const ctx = { fill: (s, v) => String(s).replace(/\{(\w+)\}/g, (_, k) => v[k] != null ? v[k] : ''), SHOGI: { points: (P, u) => { const best = P.cand[0][1], c = P.cand.find(x => x[0] === u);   // (= the 3D SHOGI.points: material, free, the answer, cp — k12)
+    if (P.mode === 'material' || P.mode === 'freq') return c ? Math.round(20 * c[1] / best) : 0; if (P.mode === 'free') return c ? Math.max(0, Math.round(20 * c[1] / best)) : 0;
+    if ((P.accept || []).includes(u)) return 20; if (P.mode === 'cp') { const s = c ? c[1] : P.floor; return Math.max(0, Math.min(19, Math.round(20 * (1 - (best - s) / 500)))); } return c ? Math.round(20 * c[1] / best) : 0; } } };
+  ctx.SH_V = vm.runInNewContext('(' + src.match(/const SH_V = (\{[^}]*\})/)[1] + ')');   // (the piece values shReplyCore reads, defined after the slice)
+  const X = vm.runInNewContext(src.slice(src.indexOf('  const winP = (v, k) =>'), src.indexOf('  /* (2026-11-21 lesson loop) the shogi opening practice')) + '\n;({ shJaLesson, SH_KJ, SHJ2, setRep: j => { SH_REP = j; } })', ctx);
   const V = E.VALUE, T = E.typeOf, NM = ['', '歩', '香車', '桂馬', '銀', '角', '飛車', '金', '玉', 'と金', '成香', '成桂', '成銀', '馬', '竜'];
   const pos = sfen => { const p = new E.Position(); p.setSfen(sfen); return p; };
   const brd = sfen => { const a = []; for (const row of sfen.split(' ')[0].replace(/\+(.)/g, (_, c) => c === c.toUpperCase() ? '#' + c : '%' + c).split('/')) { let k = 0; const r = []; for (let i = 0; i < row.length; i++) { const ch = row[i]; if (/\d/.test(ch)) for (let n = 0; n < +ch; n++) r.push('.'); else if (ch === '#' || ch === '%') { r.push(ch + row[++i]); } else r.push(ch); } a.push(...r); } return a; };
@@ -1865,6 +1868,7 @@ function shogi(opt) {
     if (id === 'k15') { freeX.g = g; if (g.trapNote) add(id, -1, '④ a trapNote but no trap problem'); if (/罠|わな|poison/i.test(JSON.stringify(g.prompt) + JSON.stringify(X.SHJ2.intro.k15 || ''))) add(id, -1, '④ the prompt / intro speaks of traps'); }
     g.problems.forEach((P, j) => { const a = m => add(id, j, m), p = pos(P.sfen), ms = p.legalMoves(true), U = m => p.toUsi(m);
       if (id === 'k15') { shFree(P, j, a, p, ms, U); return; }
+      if (id === 'k12') return;   // (tools/lesson-verify-shevade.js, below)
       if (P.kind !== 'best' || P.mode !== 'material') { a('④ not a material problem'); return; }
       if (p.inCheck()) a('④ the mover is in check');
       if (ms.length < 3) a(`③ ${ms.length} legal moves`);
@@ -1911,7 +1915,7 @@ function shogi(opt) {
         if (c) { const x = NM[c.t]; if (!w.includes(x)) a(`⑦ ${u}: takes a ${x}, the words do not say so 「${w}」`); if (/取れない|取らない|駒得にならない|何も取れない|取っていない/.test(w)) a(`⑦ ${u}: it does take 「${w}」`); }
         else if (!/取れない|取らない|駒得にならない|何も取れない|取っていない/.test(w)) a(`⑦ ${u}: takes nothing, the words do not say so 「${w}」`); }
     });
-    if ((id === 'k15' ? freeX.movers : movers).size < 5) add(id, -1, `⑤ only ${(id === 'k15' ? freeX.movers : movers).size} kinds of piece take`);
+    if (id !== 'k12' && (id === 'k15' ? freeX.movers : movers).size < 5) add(id, -1, `⑤ only ${(id === 'k15' ? freeX.movers : movers).size} kinds of piece take`);
     // 追32 every kind of piece that can take in the problems and warm-ups (the moves the student has to read) has its move told in
     // the intro: the 3D (ショウギツネ's SHJ2.intro, the warm-ups) and the 2D (grade.intro.ja, the warm-ups) — the name and a move word
     // next to it; promoted pieces: 成 … 金と同じ, 馬, 龍. (k20: the 3D intro said only 「駒の動きは練習で見ていこう」 and the warm-ups showed the
@@ -1922,6 +1926,8 @@ function shogi(opt) {
     g.problems.forEach(P => scan(P.sfen)); (g.ramp || []).forEach(r => r.k === 'try' && scan(r.sfen));
     const rampTx = (g.ramp || []).map(r => ['t', 'body', 'g', 'h', 'y'].map(f => r[f] && r[f].ja || '').join(' ')).join(' ');
     const said = { '3D': plain(String((X.SHJ2.intro || {})[id] || '')) + ' ' + plain(rampTx), '2D': plain((g.intro && g.intro.ja || []).join(' ')) + ' ' + plain(rampTx) };
+    if (id === 'k12') { const g0 = L.grades.find(x => x.id === 'k20'), r0 = (g0.ramp || []).map(r => ['t', 'body', 'g', 'h', 'y'].map(f => r[f] && r[f].ja || '').join(' ')).join(' ');   // (k12: the moves were taught before the problems, in k20「駒の動きと価値」 — the lesson before; its intro and warm-ups count)
+      said['3D'] += ' ' + plain(String((X.SHJ2.intro || {}).k20 || '')) + ' ' + plain(r0); said['2D'] += ' ' + plain((g0.intro && g0.intro.ja || []).join(' ')) + ' ' + plain(r0); }
     for (const [who, tx] of Object.entries(said)) for (const k of kinds) { const w = KW[k]; if (!w) continue;
       const ok = k >= 9 && k <= 12 ? w.every(x => tx.includes(x)) : new RegExp(w[0] + MW).test(tx);
       if (!ok) add(id, -1, `追32 the ${who} intro does not tell how the ${NM[k]} moves (a ${NM[k]} takes in the problems)`); }
@@ -1968,6 +1974,7 @@ function shogi(opt) {
         const miss = want.filter(u => !r.ok.includes(u)); if (miss.length && !(/成/.test(g0) && miss.every(u => !u.endsWith('+')) && r.ok.every(u => u.endsWith('+')))) a(`${miss} does what 「${g0}」 asks but is judged wrong`); }
     });
   }
+  if (SH_DONE.has('k12')) require('./lesson-verify-shevade.js')({ ROOT, E, L, X, pool, brd, dist, add, src, app });
   // 追72 (2026-11-25 担当A): the moves that count as right (16 points or more of 20) and a warm-up try's ok are a third of the legal moves at most
   for (const g of L.grades) { if (!SH_DONE.has(g.id)) continue;
     g.problems.forEach((P, j) => { const p = pos(P.sfen), ms = p.legalMoves(true), r = ms.filter(m => ctx.SHOGI.points(P, p.toUsi(m)) >= 16).length;
