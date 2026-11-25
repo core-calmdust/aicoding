@@ -13,7 +13,7 @@
   // the card's line follows the story's real cast for that size (the wolves and the roles differ story by story)
   function diffDesc(s, i) {
     const R = E.setupOf(s, E.DIFF[i].size);
-    const mad = R.madman ? `と${s.rules === 'fanatic' ? (s.roles.madman || {}).name || '狂信者' : '狂人'}` : '';
+    const mad = R.madman ? `と${s.rules === 'fanatic' ? (s.roles.madman || {}).name || '狂信者' : '狂人'}${R.madman > 1 ? R.madman + '人' : ''}` : '';
     const ex = [R.guard && '狩人', R.mason && '共有者', R.cat && '猫又', R.fox && '妖狐', R.immoral && '背徳者'].filter(Boolean);
     return `狼${R.wolf}匹${mad}。${ex.length ? ex.join('・') + 'がいる。' : ''}${DIFFT[i]}`;
   }
@@ -75,6 +75,7 @@
   /* ---------- screens ---------- */
   function scr(name) {
     G.scr = name;
+    if (!G.tut) { $('nbTut')?.remove(); document.querySelectorAll('.tut-hl').forEach(e => e.classList.remove('tut-hl')); }   // the tutorial's notes leave with it
     if (name !== 'play') { $('roster')?.classList.add('hide'); document.body.classList.remove('has-roster'); }
     for (const id of ['scrTitle', 'scrSelect', 'scrSetup']) $(id).classList.toggle('hide', id !== 'scr' + name[0].toUpperCase() + name.slice(1));
     document.body.className = document.body.className.replace(/\bscr-\w+/g, '').trim() + ' scr-' + name;
@@ -452,7 +453,7 @@
     const R = $('roster'); if (!R) return;
     // on a phone the faces at the top are only needed in the meeting and the vote (the day's search lists the people below)
     const on = S && G.scr === 'play' && S.phase !== 'prologue' && S.phase !== 'end';
-    const faces = on && (PCQ.matches || S.phase === 'meeting' || S.phase === 'vote');   // the map shows all day long; the faces only in the meeting and the vote on a phone
+    const faces = on && (PCQ.matches || S.phase === 'meeting' || S.phase === 'vote' || !!S.tut);   // the tutorial points at the faces all day   // the map shows all day long; the faces only in the meeting and the vote on a phone
     R.classList.toggle('hide', !on); document.body.classList.toggle('has-roster', !!on);
     if ($('rmap')) $('rmap').classList.toggle('hide', !on);
     if ($('rdock')) $('rdock').classList.toggle('hide', !faces || PCQ.matches);
@@ -582,7 +583,7 @@
   async function roleCard() {
     const r = S.pl.role, R = st.roles[r];
     await say([{ text: fill(st.text.role, { roleHow: R.how }) }]);
-    await sheet(`<div class="rolecard"><div class="em">${ROLE_ICON[r]}</div><p style="font:700 15px var(--ui);letter-spacing:.2em;color:var(--mute);margin:0">あなたの役</p><h3>${esc(R.name)}</h3><p>${esc(R.perk)}</p><p style="font-size:15px;color:var(--mute)">この${st.lex.village}には人狼が${S.wolves.length}匹${E.RS(S).madman ? (st.rules === 'fanatic' ? '、狼の正体を知る狂信者がひとり' : '、狼に味方する狂人がひとり') : ''}${E.RS(S).cat ? '、道連れの猫又がひとり' : ''}${E.RS(S).fox ? `、${st.roles.fox.tag || '社に棲む妖狐'}がひとり` : ''}${E.RS(S).immoral ? `、${st.roles.immoral.tag || '妖狐に仕える背徳者'}がひとり` : ''}${E.RS(S).mason ? '、互いを知る共有者がふたり' : ''}いる。全部で${S.size}人。</p>${st.rulesNote ? `<p style="font-size:14px;color:var(--mute)">${esc(st.rulesNote)}</p>` : ''}</div><div class="foot" style="justify-content:center"><button class="btn pri" data-ok>はじまる</button></div>`, box => box.querySelector('[data-ok]').onclick = () => closeSheet(true));
+    await sheet(`<div class="rolecard"><div class="em">${ROLE_ICON[r]}</div><p style="font:700 15px var(--ui);letter-spacing:.2em;color:var(--mute);margin:0">あなたの役</p><h3>${esc(R.name)}</h3><p>${esc(R.perk)}</p><p style="font-size:15px;color:var(--mute)">この${st.lex.village}には人狼が${S.wolves.length}匹${E.RS(S).madman ? (st.rules === 'fanatic' ? '、狼の正体を知る狂信者がひとり' : `、狼に味方する狂人が${E.RS(S).madman > 1 ? NUM[E.RS(S).madman] + '人' : 'ひとり'}`) : ''}${E.RS(S).cat ? '、道連れの猫又がひとり' : ''}${E.RS(S).fox ? `、${st.roles.fox.tag || '社に棲む妖狐'}がひとり` : ''}${E.RS(S).immoral ? `、${st.roles.immoral.tag || '妖狐に仕える背徳者'}がひとり` : ''}${E.RS(S).mason ? '、互いを知る共有者がふたり' : ''}いる。全部で${S.size}人。</p>${st.rulesNote ? `<p style="font-size:14px;color:var(--mute)">${esc(st.rulesNote)}</p>` : ''}</div><div class="foot" style="justify-content:center"><button class="btn pri" data-ok>はじまる</button></div>`, box => box.querySelector('[data-ok]').onclick = () => closeSheet(true));
   }
 
   /* morning: what the night left behind */
@@ -1328,7 +1329,7 @@
       });
       B.insertAdjacentHTML('beforeend', '<div class="memo-note">メモ：怪しいと思う痕跡や証言を押すと、打ち消し線を引ける。もう一度押すと消える。あなたのための印で、推理や結果は変わらない。</div>');
     }
-    B.querySelectorAll('.marks button').forEach(b => b.onclick = () => { const id = b.dataset.id, m = b.dataset.m; S.pl.notes[id] = S.pl.notes[id] === m ? '' : m; save(); renderNb(); renderRoster(); if (S.phase === 'invest') hub(); });
+    B.querySelectorAll('.marks button').forEach(b => b.onclick = () => { const id = b.dataset.id, m = b.dataset.m; S.pl.notes[id] = S.pl.notes[id] === m ? '' : m; save(); renderNb(); renderRoster(); if (S.phase === 'invest' && !G.tut) hub(); });
   }
   function nbPeople() {
     const D = E.DIFF[S.diff];
@@ -1450,7 +1451,7 @@
   $('setGo').onclick = () => { SND.unlock(); start(); };
   addEventListener('resize', () => { if (G.scr === 'play') { if (!PCQ.matches) document.documentElement.style.setProperty('--nbW', '0px'); else if (document.body.classList.contains('nb-open')) document.documentElement.style.setProperty('--nbW', '400px'); layoutDock(); if (S) renderRoster(); } });
   PCQ.addEventListener?.('change', () => layoutDock());
-  const TUT = { G, $, esc, bust, wait, scr, palette, hud: null, setScene, setCast, say, sheet, closeSheet, pickPerson, pickOpt, wolfRun, renderRoster, SND, ART, GUIDE_SVG,
+  const TUT = { G, $, esc, bust, wait, scr, palette, hud: null, setScene, setCast, say, sheet, closeSheet, pickPerson, pickOpt, wolfRun, renderRoster, setNb, renderNb, SND, ART, GUIDE_SVG,
     get S() { return S; }, set S(v) { S = v; }, get st() { return st; }, set st(v) { st = v; sceneKey = null; }, title: () => { G.tut = false; S = null; buildTitle(); }, select: () => { G.tut = false; S = null; buildSelect(); } };
   $('tTut').onclick = () => { SND.unlock(); G.tut = true; window.WLTutorial(TUT); };
   window.WLGame = { get S() { return S; }, get st() { return st; }, G, buildSelect, buildSetup, start, hub, meeting, debate, vote, night, end, setNb, resume, wolfRun };

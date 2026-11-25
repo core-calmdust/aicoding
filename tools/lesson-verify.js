@@ -69,7 +69,29 @@ function connect4() {
 //   ⑥ no easier than the problem before: d = the other pits within 6 seeds of the best + (the greedy haul picks another pit ? 1 : 0)
 //      never goes down, and the last is harder than the first (sow: d = the answer's seeds + 2 when the target is past the store)
 //   ⑦ a wrong pit: what the 3D words say it does is read from the engine's own sowing (atlas/lessons3d.js mcF; lesson-facts.js mancala)
-const MC_DONE = new Set(['sow', 'extra', 'capture', 'defend', 'chain', 'endgame']);
+// (2026-11-26 担当A) ④ of the kalah middle-game lessons (the lesson's intro and hints, 2D and 3D): '' when the gold pit A is the lesson's move
+//   k_combo: A gives another turn and the biggest capture of the turn it starts (3+ seeds) is bigger than any capture right now
+//   k_tempo: A's seeds all stay in your own pits (no store, no capture), at most 2 such quiet pits, 2+ pits that feed the opponent
+//   k_hoard: the pit by the store holds the biggest pile (8+), sowing it sends 4+ seeds across, A keeps it (A ≠ 5)
+//   k_starve: the opponent has at most 6 seeds on the row and you at least twice as many; A drops no seed on their side, at most
+//     2 such pits, 2+ pits that feed them   k_count: at most 22 seeds on the board (the end is read exactly)
+function mcTopic(id, b, A, E, R) {
+  const tr = k => E.trace(Int8Array.from(b), 0, k, R), L0 = E.legal(Int8Array.from(b), 0, R), T = tr(A);
+  const opp = k => tr(k).events.filter(e => e.t === 'drop' && e.at >= 7 && e.at <= 12).length;
+  const onB = b.reduce((s, v, i) => i % 7 === 6 ? s : s + v, 0), mine = b.slice(0, 6).reduce((s, v) => s + v, 0), theirs = b.slice(7, 13).reduce((s, v) => s + v, 0);
+  const turnCap = (bb, k) => { const t = E.trace(Int8Array.from(bb), 0, k, R); if (t.cap) return t.cap; if (!t.extra || t.over) return 0; let m = 0; for (const q of E.legal(t.board, 0, R)) m = Math.max(m, turnCap(Array.from(t.board), q)); return m; };
+  if (id === 'k_combo') { if (!T.extra || T.over) return '④ the gold pit gives no extra turn'; const c = turnCap(b, A), now = Math.max(0, ...L0.map(k => tr(k).cap || 0));
+    if (c < 3 || c <= now) return `④ the capture of the answer's turn (${c}) is not bigger than one right now (${now})`; }
+  if (id === 'k_tempo') { const quiet = k => { const t = tr(k); return !t.extra && !t.cap && t.events.filter(e => e.t === 'drop').every(e => e.at <= 5); };
+    if (!quiet(A)) return '④ the gold pit is no quiet move (its seeds leave your row, or it captures / gives another turn)';
+    if (L0.filter(quiet).length > 2) return '④ more than 2 quiet pits'; if (L0.filter(k => opp(k) > 0).length < 2) return '④ fewer than 2 pits feed the opponent'; }
+  if (id === 'k_hoard') { if (!(b[5] >= 8 && b[5] === Math.max(...b.slice(0, 6)) && L0.includes(5) && opp(5) >= 4)) return '④ no big pile by the store that sowing would spread'; if (A === 5) return '④ the gold pit breaks the pile'; }
+  if (id === 'k_starve') { if (!(theirs <= 6 && mine >= 2 * theirs)) return `④ the opponent's row (${theirs}) is not short against yours (${mine})`;
+    if (opp(A) > 0) return '④ the gold pit feeds the opponent'; if (L0.filter(k => opp(k) === 0).length > 2) return '④ more than 2 pits feed no seed'; if (L0.filter(k => opp(k) > 0).length < 2) return '④ fewer than 2 pits feed the opponent'; }
+  if (id === 'k_count' && onB > 22) return '④ too many seeds for an endgame read to the end';
+  return '';
+}
+const MC_DONE = new Set(['sow', 'extra', 'capture', 'defend', 'chain', 'endgame', 'k_combo', 'k_tempo', 'k_hoard', 'k_starve', 'k_count']);
 function mancala(opt) {
   const E = require(path.join(ROOT, 'mancala/engine.js')), L = require(path.join(ROOT, 'mancala/lessons.json')), PZ = require(path.join(ROOT, 'mancala/puzzles.json'));
   const out = [], pend = [], only = opt && opt.only;
@@ -107,6 +129,7 @@ function mancala(opt) {
         if (id === 'defend' && !(caps(b).length && !T.extra && !caps(Array.from(T.board)).length)) add('④ the gold pit does not take away the opponent\'s capture');
         if (id === 'chain') { const c = chain(b, P.best); if (c < 2 || L0.some(k => k !== P.best && chain(b, k) >= c)) add(`④ the gold pit's chain ${c} is not the only longest`); }
         if (id === 'endgame' && !(P.exact && s.exact)) add('④ an endgame problem not solved exactly');
+        if (/^k_(combo|tempo|hoard|starve|count)$/.test(id)) { const t = mcTopic(id, b, P.best, E, R); if (t) add(t); if (id === 'k_count' && !(P.exact && s.exact)) add('④ an endgame problem not solved exactly'); }
         const g = E.turnMaxFirst(Int8Array.from(b), 0, R), gm = Math.max(...g.filter(x => x !== null));
         d = V.filter(x => x.m !== P.best && x.v >= top - 6).length + (g[P.best] === gm ? 0 : 1);
       }
@@ -173,7 +196,7 @@ function mancalaWords(opt) {
       const th3 = leg.length && E.legal(b, 1, R).map(k => ({ k, t: E.trace(b, 1, k, R) })).filter(x => x.t.cap >= 3), drops = T.events.filter(e => e.t === 'drop').map(e => e.at);
       const H8 = [[/1粒だけの穴はない/, P.b[5] === 1 && A === 5], [/ぴったりの穴が2つあったら|候補がいくつかあるなら|遠い穴を先にまくと/, ready.length >= 2 && near], [/ストアに近い穴から順に/, near],
         [/ねらわれた山を動かせば/, th3.some(x => x.t.capFrom === A)], [/空の穴に、種を落としてうめる/, th3.some(x => drops.includes(x.t.land))], [/相手の穴に1粒足して/, th3.some(x => drops.includes(7 + x.k))],
-        [/もう一回で手番を重ねられる/, ready.length > 0], [/ストアをまたぐ/, P.target > 6], [/向かいに大きな山/, T.cap >= 4]];
+        [/もう一回で手番を重ねられる/, ready.length > 0], [/ストアをまたぐ/, P.target > 6], [/向かいに大きな山/, T.cap >= 4], [/少ない種で、手番だけわたす/, P.b[A] <= 4 && !T.extra && !T.cap && drops.every(x => x <= 5)]];
       H8.forEach(([re, ok]) => { if (re.test(ht) && !ok) add(id, j, `⑧ the hint "${ht}" does not hold on this board`); });
       if (/いちばん長くつなげる/.test(plain(o.ask))) { const all = E.turnMax(b, 0, R).lines, mx = Math.max(...all.map(exN)); if (!lines.some(l => exN(l) === mx)) add(id, j, `⑧ asked for the longest run of extra turns, the answer's is shorter (max ${mx})`); }
       if (j >= 2 && st.problems.slice(0, j).some((Q, q) => { try { return plain(X.mcLsJa(E, st, Q, q, R, pts, si).hintTx) === ht; } catch (e) { return false; } })) add(id, j, '⑧ the same hint as an earlier problem');
@@ -181,6 +204,7 @@ function mancalaWords(opt) {
       const gc = gt.match(/(\d+)粒を(横取り|まるごと|ひと息)|向かいの(\d+)粒|相手の山(\d+)粒/); if (gc && +(gc[1] || gc[3] || gc[4]) !== T.cap) add(id, j, `⑧ the praise says ${gc[0]}, the answer captures ${T.cap}`);
       leg.forEach(u => { if (u === A) return; const t = plain(o.ng(u)), G = tr(u);
         if (/ほとんど同じ|ほぼ互角|差はほんのちょっと|ほとんど変わらない|ほぼ同じ働き/.test(t)) add(id, j, `⑦ pit ${u}: said to be about as good as the answer`);
+        if (/悪くない|わるくない|少し負ける|ちょっと多く入る|わずかに得|一手だけど|考えられる手/.test(t) && P.sc[A] - P.sc[u] >= 5) add(id, j, `⑦ pit ${u}: said to be nearly as good, ${(P.sc[A] - P.sc[u]).toFixed(1)} seeds behind`);   // (2026-11-26)
         if (/負けになっちゃう|きみの負け|相手が上回っちゃう|負けに変わる|相手のほうが多くなる/.test(t) && !(D2 && D2.exact && D2.v[u] < 0)) add(id, j, `⑦ pit ${u}: said to lose, the engine gives ${D2 && D2.v[u]}`);
         const dd = t.match(/差が(\d+)粒|(\d+)粒ぶん損|(\d+)粒もったいない|(\d+)粒へっちゃう|差が(\d+)粒少ない/); if (dd) { const n = +(dd[1] || dd[2] || dd[3] || dd[4] || dd[5]); if (!(D2 && D2.exact && Math.round(D2.v[A] - D2.v[u]) === n)) add(id, j, `⑦ pit ${u}: says ${n} seeds lost, the engine gives ${D2 && D2.v[A] - D2.v[u]}`); }
         if (/もう一回がない|ストアの手前で止まっちゃう|ストアまで\d+粒足りない|ストアを通りすぎ|ストアを越えて|ストアの先|ぴったりにならない|ストアを通りこして|ストアに\d+つ届かない|あと\d+粒あればストア/.test(t) && G.extra) add(id, j, `⑦ pit ${u}: said to miss the store, it gives another turn`);
@@ -222,7 +246,7 @@ function mancalaWords(opt) {
 //      for every other legal point: 「三のほうが達四になれない」 = the point's threes are not real (no legal open-four point), 「四だけ…止め
 //      られたら攻めが終わる」 = after the four and its block Black has no VCF, 「三だけ」 = a three and no four, 「四も三もできない」 = neither;
 //      the praise's lines = the answer's four and three; the hint 「×のとなり」 = the answer touches a forbidden point
-const GM_DONE = new Set(['five', 'block', 'three', 'sfour', 'fourthree', 'forbid33', 'forbid44', 'fourthreeB']);
+const GM_DONE = new Set(['five', 'block', 'three', 'sfour', 'fourthree', 'forbid33', 'forbid44', 'fourthreeB', 'vcf']);
 function gmJa() { const fs = require('fs'), vm = require('vm'), src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), f0 = src.indexOf('  const fill = ');
   return vm.runInNewContext(src.slice(f0, src.indexOf('\n', f0)) + '\n' + src.slice(src.indexOf('  const GML = '), src.indexOf('  const GOMOKU = {')) + '\n;({ GML, gmLsJa, GMW })', {}); }
 function gmWin(E) {
@@ -338,6 +362,75 @@ function gmFourThreeB(E, G, P, j, st, add, six) {
     if (!/緑の点/.test(t)) bad('the green point (the answer) is not named');
   }
 }
+// (2026-11-26 担当A) vcf 四追い (renju, Black to move; gmVcf): ① the answers = the moves that start a win by fours alone (the engine's
+//      Solver.vcf after the four and its forced block, every legal four of Black's tried) ② no non-four move keeps the game: after
+//      each one White wins (a five point or White's VCF) — so the answers are the only winning moves, and ゴイシペン's 「四じゃないから、
+//      相手は止めずに反撃できちゃう」 is the board's fact ③ at least 2 other fours (tempting), 追72 ④ the answer is a four (not an open
+//      four, not a five) and Black needs at least two more fours after its block (VCF length ≥ 3: no plain four-three), White threatens
+//      a win if Black does not attack (相手に休ませない) ⑥ d = the answer's VCF length (iterative depth) never goes down, the last above
+//      the first ⑦⑧ the 3D words (atlas/lessons3d.js gmLsJa) for every other legal point: tN = not a four, tC = White's block makes a
+//      White five point (the orange ring = that block), tE = no VCF after the block; tO (「順番がちがうと…」: it still wins) never
+function gmVcf(E, P, j, add, six) {
+  const C = E.C, cells = a => String(a || '').split(/\s+/).filter(Boolean).map(E.sqOf), nm = m => E.sqName(m);
+  if ((P.rule || 'renju') !== 'renju') add(`rule ${P.rule} (the lesson is renju's)`);
+  if (P.side !== 1) add('the side to move is not Black');
+  const B = cells(P.b), Wt = cells(P.w), pos = E.setup('renju', { b: B, w: Wt, side: 1 }), lg = pos.legal(), okM = P.ok.map(E.sqOf);
+  const vlen = (p, max) => { for (let d = 1; d <= max; d++) { const S = new E.Solver(); S.limit = 2e5; if (S.vcf(p, d) >= 0) return d; } return 0; };
+  const wWin = p => p.fives(2).length > 0 || vlen(p, 14) > 0;   // p: White to move
+  if (pos.fives(1).length || pos.fives(2).length) add('① a five point on the board');
+  if (lg.length < 3) add(`③ only ${lg.length} legal moves`);
+  const four = new Map();   // m → { win, len, ctr, block }
+  for (const m of lg) { pos.make(m); const mf = pos.fives(1);
+    if (mf.length) { const r = { win: false, len: 0, ctr: 0, block: -1 };
+      if (mf.length >= 2) { r.win = true; r.len = 1; }
+      else if (!pos.fives(2).length) { const q = E.I2M[mf[0]]; r.block = q; pos.make(q); r.ctr = pos.fives(2).length; if (!r.ctr) { const L = vlen(pos, 25); if (L) { r.win = true; r.len = L + 1; } } pos.unmake(); }
+      four.set(m, r); }
+    else if (!wWin(pos)) add(`② ${nm(m)} is no four and White then has no win (the answer is not the only way; 「反撃できちゃう」 is false)`);
+    pos.unmake(); }
+  const want = [...four].filter(([, r]) => r.win).map(([m]) => nm(m)).sort(), ok = P.ok.slice().sort();
+  if (want.join() !== ok.join()) add(`①② the answers are ${ok}, the moves that start a VCF ${want}`);
+  const wrongF = [...four.keys()].filter(m => !okM.includes(m)).length; if (wrongF < 2) add(`③ only ${wrongF} other fours (nothing tempting)`);
+  if (P.ok.length * 3 > lg.length) add(`追72 ${P.ok.length} of the ${lg.length} legal points are right`);
+  const ra = okM[0], R = four.get(ra);
+  if (!R) add('④ the answer is not a four');
+  else if (R.win) { if (pos.cls[1][E.M2I[ra]] === C.F4 || R.len < 3) add(`④ the answer wins at once (VCF length ${R.len}: an open four / a four-three, not a chase of fours)`); six(R.len); }
+  { const pw = E.setup('renju', { b: B, w: Wt, side: 2 }); if (!wWin(pw)) add('④ White has no win if Black does not attack (「相手に休ませない」 has no point)'); }
+  // ⑦⑧ the 3D words
+  const X = gmJa(), L = require(path.join(ROOT, 'gomoku/lessons.json')), key = L.steps.findIndex(s => s.id === 'vcf'), W = X.GMW.vcf;
+  const J = X.gmLsJa('vcf', { b: B, w: Wt, side: 1 }, 'renju', okM, j, key); if (!J) { add('⑧ no 3D words'); return; }
+  const has = (t, k) => (W[k] || []).some(x => typeof x === 'string' && t.includes(x));
+  for (const m of lg) { if (okM.includes(m)) continue; const th = {}, t = J.ng.call(th, m), r = four.get(m), bad = s => add(`⑧ ${nm(m)}: ${s} — ${t}`);
+    if (!/緑の点/.test(t)) bad('the green point (the answer) is not named');
+    if (!r) { if (!has(t, 'tN')) bad('no four, the words are not 「四じゃない」'); continue; }
+    if (r.win) continue;   // (a winning four left out: ①② above)
+    if (has(t, 'tN')) bad('a four, said to be no four');
+    if (has(t, 'tO')) bad('said to win in another order (it does not: no VCF)');
+    if (r.ctr) { if (!has(t, 'tC')) bad("White's block makes a White four — not said"); else if ((th._hl || [])[0] !== r.block) bad(`the orange ring ${(th._hl || []).map(nm)} is not White's block ${nm(r.block)}`); }
+    else if (has(t, 'tC')) bad("said that White's block makes a White four (it does not)");
+    else if (!has(t, 'tE')) bad('a four with no VCF after the block — not said'); }
+}
+// the vcf warm-up: the explain line (Black's moves are fours, White's the forced block, the last a five) and the tries (the answers =
+// the moves that start a VCF; the hint's 「ヨコ／ナナメの三つ並び」 = the answer's four line, 「タテ」 = two more Black stones on its column)
+function gmVcfRamp(E, r, a) {
+  const C = E.C, cells = x => String(x || '').split(/\s+/).filter(Boolean).map(E.sqOf), nm = m => E.sqName(m), DIRS = [[1, 0], [0, 1], [1, 1], [1, -1]];
+  const pos = E.setup(r.rule || 'renju', { b: cells(r.b), w: cells(r.w), side: r.side || 1 });
+  if (r.seq) { let ok = true; r.seq.forEach((q, i) => { if (!ok) return; const m = E.sqOf(q), s = pos.side;
+      if (!pos.isLegal(m)) { a(`⑧ the line's move ${i + 1} ${q} is not legal`); ok = false; return; }
+      if (s === 1) { if (i === r.seq.length - 1) { if (pos.cls[1][E.M2I[m]] !== C.FIVE) a(`⑧ the line's last move ${q} is not a five`); }
+        else { pos.make(m); const n = pos.fives(1).length; if (!n) a(`⑧ the line's move ${i + 1} ${q} is not a four`); if (n >= 2 && i !== r.seq.length - 3) a(`⑧ the line's move ${i + 1} ${q} is an open four before the end`); pos.unmake(); } }
+      else { const f = pos.fives(1).map(x => nm(E.I2M[x])); if (!f.includes(q) || pos.fives(2).length) a(`⑧ White's move ${i + 1} ${q} is not a block of Black's four (${f})`); }
+      pos.make(m); }); return; }
+  const lg = pos.legal(), want = [];
+  for (const m of lg) { pos.make(m); const mf = pos.fives(1); let w = false;
+    if (mf.length >= 2) w = true; else if (mf.length === 1 && !pos.fives(2).length) { pos.make(E.I2M[mf[0]]); if (!pos.fives(2).length) { const S = new E.Solver(); S.limit = 2e6; w = S.vcf(pos, 25) >= 0; } pos.unmake(); }
+    pos.unmake(); if (w) want.push(nm(m)); }
+  want.sort(); if (want.join() !== (r.ok || []).slice().sort().join()) a(`①② the answers are ${r.ok}, the moves that start a VCF ${want}`);
+  const h = (r.h && r.h.ja) || '', u = E.sqOf((r.ok || [])[0]), x = u % 15, y = Math.floor(u / 15), bd = d => { const X = x + d[0], Y = y + d[1]; return X >= 0 && Y >= 0 && X < 15 && Y < 15 ? pos.b[E.M2I[Y * 15 + X]] : -1; };
+  const run = (di) => { let n = 0; for (const g of [1, -1]) for (let k = 1; k <= 4; k++) { const v = bd([DIRS[di][0] * k * g, DIRS[di][1] * k * g]); if (v === 1) n++; else if (v !== 0) break; } return n; };
+  if (/ヨコの三つ並び/.test(h) && run(0) < 3) a(`⑧ the hint says the four is on a row of three (ヨコ) — ${h}`);
+  if (/ナナメの三つ並び/.test(h) && run(2) < 3 && run(3) < 3) a(`⑧ the hint says the four is on a diagonal three — ${h}`);
+  if (/タテ/.test(h) && run(1) < 2) a(`⑧ the hint says the stone joins a column (タテ) — ${h}`);
+}
 function gomoku(opt) {
   const E = require(path.join(ROOT, 'gomoku/engine.js')), L = require(path.join(ROOT, 'gomoku/lessons.json')), PZ = require(path.join(ROOT, 'gomoku/puzzles.json'));
   const C = E.C, G = gmWin(E), only = opt && opt.only, out = [];
@@ -358,6 +451,10 @@ function gomoku(opt) {
     st.problems.forEach((P, j) => { const add = m => out.push({ step: id, q: j + 1, msg: m });
       if (/^forbid/.test(id)) { gmForbid(E, id, P, j, st, add, D => { if (D < prevD) add(`⑥ easier than the problem before (d ${D} after ${prevD})`); prevD = Math.max(prevD, D); if (firstD === null) firstD = D;
           if (j === st.problems.length - 1 && !(D > firstD)) add(`⑥ the last problem is no harder than the first (d ${D} vs ${firstD})`); });
+        const A = st2(P); for (const [who, B, Q] of PS) { if (Q === P) continue; const e = dist(A, B); if (e <= 3) add(`⑤ ${e} stones from ${who}`); }
+        return; }
+      if (id === 'vcf') { gmVcf(E, P, j, add, D => { if (D < prevD) add(`⑥ easier than the problem before (VCF length ${D} after ${prevD})`); prevD = Math.max(prevD, D); if (firstD === null) firstD = D;
+          if (j === st.problems.length - 1 && !(D > firstD)) add(`⑥ the last problem is no harder than the first (VCF length ${D} vs ${firstD})`); });
         const A = st2(P); for (const [who, B, Q] of PS) { if (Q === P) continue; const e = dist(A, B); if (e <= 3) add(`⑤ ${e} stones from ${who}`); }
         return; }
       if (id === 'fourthreeB') { gmFourThreeB(E, G, P, j, st, add, D => { if (D < prevD) add(`⑥ easier than the problem before (d ${D} after ${prevD})`); prevD = Math.max(prevD, D); if (firstD === null) firstD = D;
@@ -394,7 +491,8 @@ function gomoku(opt) {
     //  five = the mover's five points, block = the opponent's, block3 = the points after which the opponent has no win (k ≤ 3, VCF),
     //  sfour = the open fours, fourthree = the fastest wins in 3), the 2nd hint's ring (look) is on stones of that board, and the right
     //  points are a third of the legal points at most (追72)
-    (st.ramp || []).forEach((r, j) => { if (r.k !== 'try') return; const a = m => out.push({ step: id, q: 0, msg: `warm-up ${j + 1}: ${m}` });
+    if (id === 'vcf') (st.ramp || []).forEach((r, j) => gmVcfRamp(E, r, m => out.push({ step: id, q: 0, msg: `warm-up ${j + 1}: ${m}` })));
+    (st.ramp || []).forEach((r, j) => { if (r.k !== 'try' || id === 'vcf') return; const a = m => out.push({ step: id, q: 0, msg: `warm-up ${j + 1}: ${m}` });
       const s = r.side, o = 3 - s, pos = E.setup(r.rule || 'free', { b: cells(r.b), w: cells(r.w), side: s }), lg = pos.legal(), lgN = new Set(lg.map(nm));
       if (r.goal === 'forbid') { lgN.clear(); for (let m = 0; m < 225; m++) if (pos.b[E.M2I[m]] === 0) lgN.add(nm(m)); }   // (a forbidden point is no legal move for Black: the try asks to tap it — any empty point)
       (r.ok || []).forEach(q => { if (!lgN.has(q)) a(`追75 the answer ${q} is not a legal point of this board`); });
@@ -1558,7 +1656,7 @@ function tafl(opt) {
 // b_cannon・b_pawn). The goal set is read from the rules (a capture by that kind on which no legal move of the opponent can take back),
 // the engine values stored in sc (= xiangqi/app.js problemPoints, the 3D XIANGQI.points) must put that capture alone on top, and
 // ショウギツネ's words (atlas/lessons3d.js xqLsJa) are read back against the board for the answer and every wrong move.
-const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn', 'b_escape', 'b_mate1', 'm_mate2', 'm_hc', 'm_dc', 'm_face', 'e_rook']);
+const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn', 'b_escape', 'b_mate1', 'm_mate2', 'm_hc', 'm_dc', 'm_face', 'e_rook', 't_capture']);
 function xiangqi(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'xiangqi/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'xiangqi/lessons.json'), 'utf8'));
@@ -1779,6 +1877,8 @@ function xiangqi(opt) {
   require('./lesson-verify-xqescape.js').verify({ E, L, X, pool, dist, brd, plain, add, pts, only: XQ_DONE });
   // (2026-11-25 第2期 担当A) e_rook「車の終盤」— tools/lesson-verify-xqend.js
   require('./lesson-verify-xqend.js').verify({ E, L, X, pool, dist, brd, plain, add, only: XQ_DONE });
+  // (2026-11-26 第2期 担当A) t_capture「得な交換」— tools/lesson-verify-xqtrade.js
+  require('./lesson-verify-xqtrade.js').verify({ E, L, X, pool, dist, brd, plain, add, pts, only: XQ_DONE });
   // 追72 (2026-11-25 担当A): the moves that count as right (P.ok, or 16 points or more from P.sc) and a warm-up try's ok are a third of the
   // legal moves at most
   L.steps.forEach(st => { if (!XQ_DONE.has(st.id)) return;
@@ -3204,7 +3304,7 @@ function morris72(opt) {
   return out;
 }
 const GAMES = { pz88, dupkey89, chessDrill, morris72, near53, goOpen, open67, plural58, backgammon, gomokuOpen, bgOpen, chessOpen, xiangqiOpen, reversiOpen, ur, senet, patolli, foxgeese, konane, ugolki, fanorona, stray, hex, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines, janggi, hexOpen };
-module.exports = GAMES; Object.defineProperty(GAMES, '_gm', { value: { gmForbid } }); GAMES.mancalaWords = mancalaWords; Object.assign(GAMES, { chessOpenCtx, chessOpenProblem, chessOpenSet, chessOpenD }); Object.defineProperty(GAMES, '_hex', { value: { deep1: hxDeep1, ctx: hxCtx, near: hxNear, problem: hxProblem, d: hxD, pts: hxPts, kind: (sp, m) => { const X = hxX(); return X.HXA.kind(X.HXA.facts(sp, m)); } } }); Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
+module.exports = GAMES; Object.defineProperty(GAMES, '_gm', { value: { gmForbid } }); GAMES.mancalaWords = mancalaWords; Object.assign(GAMES, { chessOpenCtx, chessOpenProblem, chessOpenSet, chessOpenD }); Object.defineProperty(GAMES, '_hex', { value: { deep1: hxDeep1, ctx: hxCtx, near: hxNear, problem: hxProblem, d: hxD, pts: hxPts, kind: (sp, m) => { const X = hxX(); return X.HXA.kind(X.HXA.facts(sp, m)); } } }); Object.defineProperty(GAMES, '_mc', { value: { topic: mcTopic } }); Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
 Object.defineProperty(GAMES, '_xqStray', { value: xqStray42 });   // (the xiangqi 追42 check alone, with a broken pzwhy for tests)
 if (require.main === module) {
   const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'pz88,dupkey89,chessDrill,near53,plural58,backgammon,reversiOpen,gomokuOpen,goOpen,open67,connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,chessOpen,xiangqiOpen,openLines,janggi,foxgeese,konane,fanorona,ugolki,hex,hexOpen,bgOpen').split(',');

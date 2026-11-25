@@ -2586,7 +2586,7 @@
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261125r3'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=8').catch(() => ({}))])
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261125r3'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=9').catch(() => ({}))])
         .then(([ls, op, ev, wt, opp]) => { this.WT = wt || {}; this.OPP = opp || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
@@ -3097,8 +3097,7 @@
       n: ['緑の点から四を続ければ勝ちだったんだ。', '正解は緑の点。そこから四を打ち続けて勝ち切れたペン。', '四追いの入り口は緑の点。ここから相手は受け続けるしかないんだ。', '緑の点の四から始めれば、最後は止められない形だったね。', '緑の点から四を重ねれば、相手は一度も反撃できなかったペン。'],
       tN: ['きみの手は四じゃないから、相手は止めずに反撃できちゃうペン。', 'その手は四になっていないから、相手に自由な一手をあげちゃう。', '四じゃない手だと、相手は受けなくていいんだ。', 'いまの手では相手に休む時間ができちゃう。', '四で押さないと、相手が先に攻めてくるペン。'],
       tC: ['きみの四だと、止めたオレンジの印の石で相手に四ができて、逆に攻められちゃう。', 'オレンジの印の止め石が、相手の四になっちゃうんだ。', 'きみの四を止めたオレンジの印の石から、相手の反撃が始まっちゃうペン。', '止め石のオレンジの印で相手に四ができて、攻守が入れかわっちゃう。', 'オレンジの印で止められると、そこが相手の四になっちゃう。'],
-      tO: ['きみの四も悪くないけど、順番がちがうと勝ち切れないことがあるペン。', 'きみの四からでも続くけど、緑の点から行くのが確実なんだ。', 'その四も筋はいい。でも順番しだいで相手に逃げられちゃう。', 'いまの四でも攻められるけど、近道は緑の点のほうだ。', '順番を入れかえると、止め石が攻めのじゃまをすることがあるペン。'],
-      tE: ['きみの四は止められたあと、続く四がなくて攻めが切れちゃう。', 'その四をふさがれると、次の四が作れないんだ。', 'きみの四は一発で終わり。続きの四がないペン。', 'その四のあと、攻めがつながらない。', '止められたら次がない四だと、相手に番が回っちゃう。'] },
+      tE: ['きみの四は止められたら、四を続けても勝てないペン。', 'ふさがれたら、もう四追いで勝てないんだ。', 'きみの四は一発で終わり。四追いが続かない。', 'その四のあと、勝ちにつながらない。', '止められたら勝てない四だと、相手に番が回っちゃう。'] },
     defend: { g: ['相手の四三の点を先にふさいで、勝ち筋を消せたね。', '急所をおさえたから、相手の攻めはもう続かないペン。', 'そこを先に取れば、相手のねらいが空振りになるんだ。', '相手の一番打ちたい点を先取り！ これで攻めが止まったね。', '先回りの守り、みごとだペン。相手の作戦がくずれたね。'],
       cnt: [n => `止められる点は${n}か所あったんだ。`, n => `ちなみに、守れる点は全部で${n}つあったペン。`, n => `受ける点はほかにもあって、${n}か所だ。`],
       n: [f => `緑の点なら${f}のねらいを消せたんだ。`, f => `正解は緑の点。${f}の攻めの急所だったペン。`, f => `緑の点を先に取れば、${f}は勝ち筋を失っていたね。`, f => `${f}が打ちたかったのは緑の点。そこを先にふさぐんだ。`, f => `守りの急所は緑の点。${f}の攻めの線が交わっていたペン。`],
@@ -3164,9 +3163,9 @@
         good = () => pk(W.g);
         ng = function (u) { const r = G.info(u, s); this._hl = [];
           if (!r.fours.length) return pk(W.n) + pk(W.tN, 1);
-          const f = r.fp[0]; G.bd[u] = s; G.bd[f] = o; const ctr = G.fivePts(o), cont = !ctr.length && G.vcf(s, 7); G.bd[f] = 0; G.bd[u] = 0;
+          const f = r.fp[0]; G.bd[u] = s; G.bd[f] = o; const ctr = G.fivePts(o); G.bd[f] = 0; G.bd[u] = 0;
           if (ctr.length) { this._hl = [f]; return pk(W.n) + pk(W.tC, 2); }
-          return pk(W.n) + (cont ? pk(W.tO, 3) : pk(W.tE, 4)); };
+          return pk(W.n) + pk(W.tE, 4); };   // (2026-11-26 担当A: a four that still wins is an answer — lesson-verify.js gmVcf ①; no 「順番がちがうと」 line)
         break;
       case 'defend':
         good = () => pk(W.g) + (ok.length > 1 && i % 2 === 0 ? pk(W.cnt)(ok.length) : '');
@@ -3190,7 +3189,7 @@
     LKEY: 'aicoding-gomoku-lessons', OKEY: 'aicoding-gomoku-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261125g'), getJ('../gomoku/openings.json?v=20261126v6'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261126a'), getJ('../gomoku/openings.json?v=20261126v6'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] gomoku texts', e); } this.I = w.I18N || {}; this.data = { ls, op };
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
@@ -4192,7 +4191,44 @@
   }
   function xqLsVoice(n) { const a = [1, 5, 7, 11][Math.floor(n / 12) % 4], b = n % 12, a2 = 1 + Math.floor(n / 11) % 10, b2 = n % 11, X = XQJ_LS;
     return { cheer: i => X.cheer[(a * i + b) % 12], soft: i => X.soft[(a2 * i + b2) % 11], push: i => X.push[(i + n) % 6] }; }
+  // (2026-11-26 第2期 担当A) t_capture「得な交換」: the answer takes a guarded 車・馬・炮 with a cheaper piece; the opponent takes it back and
+  // we are still ahead (the value taken − the opponent's best exchange afterwards = the net; the lesson's values 車9・炮4.5・馬4・仕と相2・
+  // 兵1、川を渡ると2). Every other move wins nothing: the words say what the board does after it — the piece taken back (both values, the
+  // net), another piece lost and its taker, a quiet move, or a mate in 1 — counted again by tools/lesson-verify-xqtrade.js.
+  const XQT_ASK = ['得になる取り方を見つけてみよう！', '取り返されても損をしない取り方はどれ？', '安い駒で高い駒を取れるところはある？', '駒の値打ちを比べてみて。差し引きで得をする手は？', 'ここは駒得のチャンスだコン！ どの駒で、どれを取る？'];
+  const XQT_HINT = [M => `光っている${M}で取れる駒を見てみて。取り返されても、取った駒のほうが高いのはどれ？`, M => `光っている${M}を使うよ。取ったあと取り返されるときの、足し算と引き算をしてみてね！`, M => `守られている駒でも、光っている${M}より値打ちが高ければ得になるの。ねらいはどれかな？`, M => `高い駒で取ると、取り返されて損をすることがあるの。光っている${M}みたいな安い駒で取れないかなコン？`, M => `光っている${M}から、取れる駒を1つずつ数えてみて。差し引きで得をするのは1つだけだよ。`];
+  const XQT_GOOD = [(MA, W, AC, V, g) => `正解！ ${W}点の${MA}で${V}点の${AC}を取ったね。相手に取り返されても、${g}点のおつりがくるの。その調子！`, (MA, W, AC, V, g) => `お見事！ ${AC}（${V}点）と${MA}（${W}点）の取りかえっこで、${g}点のもうけだコン。この計算、忘れないでね！`, (MA, W, AC, V, g) => `やったね！ 守られている${AC}でも、${MA}で取れば${g}点の得。値打ちを比べる目、ばっちりだよ！`, (MA, W, AC, V, g) => `すごい！ ${MA}（${W}点）を取り返されても、${AC}は${V}点。差し引き${g}点、きみの得だね。次もこの目でいこう！`, (MA, W, AC, V, g) => `さすが！ 安い${MA}で高い${AC}を取る、いちばん得な交換だね。${g}点のもうけ、どんどんいこうコン！`];
+  const XQT_OPEN = ['ここは計算どころ、いっしょに見よう。', '惜しかったね、いっしょに数えよう。', '', '大丈夫、交換の計算は慣れだコン。', '値打ちを比べてみよう。'];
+  const XQT_RIGHT = [(K, MA, W, AC, V, g) => `正解は${K}。${MA}で${AC}を取れば、${g}点の得だったの。`, (K, MA, W, AC, V, g) => `${K}なら、${MA}を取り返されても${AC}のほうが高かったよ。次は見つかるね！`, (K, MA, W, AC, V, g) => `答えは${K}。${MA}と${AC}の交換で、${g}点もうかったんだコン。`, (K, MA, W, AC, V, g) => `いちばんは${K}、${MA}で${AC}を取る得な交換だったの。`, (K, MA, W, AC, V, g) => `${K}がよかったね。${AC}は${MA}より${g}点も高いんだ。`];
+  const xqtNum = v => String(Math.round(v * 10) / 10);
+  function xqTradeJa(E, s, P, i, ck, n) {
+    const v = (L, o) => L[(i + n + (o || 0)) % L.length], T = E.typeOf, C = E.colorOf, mTo = E.mTo, mFrom = E.mFrom, p = E.Pos.from(P.s), me = p.side, A = P.best, M = ck('ok'), X = ck('ng');
+    const N = t => XQN(t, me), NO = t => XQN(t, me ^ 1);
+    const val = (q, sq) => { const x = q.at(sq), t = T(x); return t === E.PAWN ? ((C(x) ? sq >= 45 : sq < 45) ? 2 : 1) : XQV[t]; };
+    const cheap = (q, L) => L.reduce((a, y) => val(q, mFrom(y)) < val(q, mFrom(a)) ? y : a, L[0]);
+    const exch = (q, sq) => { const gs = []; let r = q.clone(); if (!r.at(sq) || T(r.at(sq)) === E.KING || C(r.at(sq)) === r.side) return 0;
+      for (let k = 0; k < 14; k++) { const L = r.moves().filter(m => mTo(m) === sq); if (!L.length) break; gs.push(val(r, sq)); r = r.clone().play(cheap(r, L)); }
+      let g = 0; for (let k = gs.length - 1; k >= 0; k--) g = Math.max(0, gs[k] - g); return g; };
+    const danger = q => { const o = []; for (let sq = 0; sq < 90; sq++) { const x = q.at(sq); if (!x || C(x) === q.side || T(x) === E.KING) continue; const g = exch(q, sq);
+      if (g > 0) o.push({ s: sq, t: T(x), g, by: T(q.at(mFrom(cheap(q, q.moves().filter(m => mTo(m) === sq))))) }); } return o.sort((a, b) => b.g - a.g || XQV[b.t] - XQV[a.t]); };
+    const act = u => { const c = p.at(mTo(u)) ? T(p.at(mTo(u))) : 0, cv = c ? val(p, mTo(u)) : 0, q = p.clone().play(u);
+      if (q.moves().some(x => q.clone().play(x).status() === -1)) return { q, c, cv, m1: true, net: -99, dd: null };
+      const D = danger(q); return { q, c, cv, m1: false, dd: D[0] || null, net: cv - (D[0] ? D[0].g : 0) }; };
+    const a0 = act(A), MA = N(T(p.at(mFrom(A)))), W = xqtNum(val(p, mFrom(A))), AC = NO(a0.c), V = xqtNum(a0.cv), g = xqtNum(a0.net);
+    const sayNet = x => x < 0 ? `差し引き${xqtNum(-x)}点の損になっちゃう` : '差し引きとんとんで、得にならない';
+    const ng = u0 => { const L = p.moves(), u = u0 != null && u0 !== A && L.includes(u0) ? u0 : L.find(x => x !== A && p.at(mTo(x))) || L.find(x => x !== A); let w = '';
+      if (u != null) { const r = act(u), c = r.c, Cn = c ? NO(c) : '', CV = xqtNum(r.cv), MT = N(T(p.at(mFrom(u)))), MV = xqtNum(val(r.q, mTo(u))), dd = r.dd;
+        if (r.m1) w = v([`${X}だと、相手に1手で詰まされちゃう！ 自分の王さまの守りも見てね。`, `${X}のあと、相手には1手で詰ませる手があるの。こっちが先に詰んじゃう！`], 1);
+        else if (c && dd && dd.s === mTo(u)) { const B = NO(dd.by); w = v([`${X}で${Cn}（${CV}点）を取ると、きみの${MT}（${MV}点）を相手の${B}に取り返されて、${sayNet(r.net)}の。`, `${X}だと${Cn}（${CV}点）は取れるけど、${MT}（${MV}点）が相手の${B}に取り返されるの。${sayNet(r.net)}んだ。`, `${X}の${Cn}（${CV}点）取りは、${MT}（${MV}点）を相手の${B}に取り返される形。${sayNet(r.net)}コン。`], 1); }
+        else if (c && dd) { const Lp = N(dd.t), B = NO(dd.by); w = v([`${X}で${Cn}（${CV}点）は取れるけど、こんどは${Lp}を相手の${B}に取られちゃう。${sayNet(r.net)}の。`, `${X}だと${Cn}（${CV}点）を取っても、${Lp}が相手の${B}に取られる形になるの。${sayNet(r.net)}んだ。`], 1); }
+        else if (c) w = `${X}で${Cn}（${CV}点）を取れるの。`;
+        else if (dd) { const Lp = N(dd.t), B = NO(dd.by); w = v([`${X}は駒を取らない手で、しかも${Lp}を相手の${B}に取られる形になるの。`, `${X}だと駒を取れないうえに、${Lp}が相手の${B}に取られちゃう。`], 1); }
+        else w = v([`${X}では駒を取れないの。せっかくの駒得のチャンスを逃しちゃう。`, `${X}は駒を取る手じゃないね。得をするチャンスがそのまま残っちゃう。`, `${X}だと、得な交換をしそこねちゃう。`], 1); }
+      return v(XQT_OPEN) + w + v(XQT_RIGHT, 2)(M, MA, W, AC, V, g); };
+    return { ask: v(XQT_ASK), hintTx: v(XQT_HINT)(MA), good: () => v(XQT_GOOD)(MA, W, AC, V, g), ng, own: true };
+  }
   function xqLsJa(E, s, P, i, ck, n) {   // n: the lesson's number (each lesson words its praise / misses in an order of its own)
+    if (s.id === 't_capture') return xqTradeJa(E, s, P, i, ck, n || 0);
     const id = s.id, A0 = XQJ_LS.ask[id]; if (!A0) return null; n = n || 0;
     const k = i + id.length, pick = L => L[k % L.length], H = XQJ_LS.hint[id] || [], VO = xqLsVoice(n);
     const vi = (i + n) % 5, V = (L, o) => L[(i + n + (o || 0)) % L.length];   // (the problem's own wording: five problems, five wordings)
@@ -4318,7 +4354,7 @@
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xe1-er1'), getJ('../xiangqi/openings.json?v=6'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xe1-er1-tc1'), getJ('../xiangqi/openings.json?v=6'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vf]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vf)(v); this.V = ((v.I18N || {})['ja@fox']) || {}; } catch (e) { this.V = {}; }   // (ショウギツネ's own lines, 3D, ja)
           return this; })
@@ -6413,7 +6449,7 @@
       endgame: ['それぞれの手のあと、相手がどう返すかまで数えてみて。', 'きみの列に残った種は、さいごにきみのものになるの。'],
       k_open: ['まずストアにぴったり届く穴をさがして！', 'もう一回のあとは、相手に「もう一回」をあげない手をね。'],
       k_open6: ['6粒なら、ストアからいちばん遠い穴がぴったりの数！', '相手の穴に1粒足すと、相手のぴったりがずれることもあるの。'],
-      k_combo: ['もう一回で穴を空けると、そこが横取りの着地点になるの。', '赤い丸は取れそうな相手の山。どの順番なら届くかな？'],
+      k_combo: ['もう一回で穴を空けると、そこが横取りの着地点になるの。', '赤い丸は取れそうな相手の山。どの順番なら届くかな？', 'まずは、さいごの1粒がストアに入る穴をさがしてみて。', 'まいたあとの空っぽの穴は、次の手の着地点になるの！', 'もう一回を何回つなげたら、どの山まで届く？'],   // (2026-11-26: five of its own — the group's 「向かいに大きな山がある空き穴」 speaks of a capture right now)
       k_tempo: ['相手の側に種が入らない手をさがしてみて。', 'きみの側の中だけで終わる、少ない種の穴はどれかな？'],
       k_hoard: ['ストアのとなりの山をまくと、何粒が相手の側へ行くか数えてみて。', '大きな山は、持っているだけで得点になることもあるの。'],
       k_starve: ['相手の側に種を落とさない手はどれかな？', '相手に種をわたすと、相手を助けることになっちゃう。'],
@@ -6481,6 +6517,7 @@
     cap: [(E, Q, R) => mcTurnCap(E, Q, R) > 0, (E, Q, R) => mcTurnCap(E, Q, R) >= 4, (E, Q, R) => mcTurnCap(E, Q, R) > 0],
     def: [(E, Q, R) => mcDef(E, Q, R).mv, (E, Q, R) => mcDef(E, Q, R).fill, (E, Q, R) => mcDef(E, Q, R).shift],
     end: [null, null, (E, Q, R) => mcReady(E, Q, R).length > 0],
+    keep: [null, (E, Q, R) => { const t = E.trace(Int8Array.from(Q.b), 0, Q.best, R); return Q.b[Q.best] <= 4 && !t.extra && !t.cap && t.events.filter(e => e.t === 'drop').every(e => e.at <= 5); }, null],   // (2026-11-26: 「少ない種で、手番だけわたす」 = the answer is a quiet move of 4 seeds or fewer)
   };
   const mcNear = (E, Q, R) => { const r = mcReady(E, Q, R); return r.length >= 1 && r.every(k => k <= Q.best); }, mcNear2 = (E, Q, R) => mcReady(E, Q, R).length >= 2 && mcNear(E, Q, R);
   const MCJ_HFIT = { extra: [null, mcNear2], chain: [mcNear, mcNear2] };   // (the lessons' own two hints: 「候補がいくつかあるなら…」「遠い穴を先にまくと…」 need two ready pits)
@@ -6489,6 +6526,7 @@
     extra: ['さいごの1粒がどこに落ちるか、指でなぞって確かめよう！', 'ストアまでの穴の数を、右から順に数えてみて。', 'まいたあと、手番がきみに残る穴はどこ？'],
     cap: ['相手の大きな山の向かいは、空いていない？', 'さいごの1粒が空の穴に入る手を探してみて。', '取れる粒の数を、穴ごとにくらべよう！'],
     def: ['相手の番に、どの穴の種がどこで止まるか追いかけてみて！', 'いちばん大きな山がねらわれていないか、先に確かめて。', '守ったあとに相手が取れる粒の数を、くらべてみよう。'],
+    keep: ['まく前に、さいごの1粒がどこで止まるか追ってみよう。', '相手の列に何粒わたるか、穴ごとにくらべてみて。', 'まいたあと、相手に横取りの穴ができないかも見てね。'],   // (2026-11-26)
     end: ['さいごまで数えて、いちばん多く残る手をえらんでね！', '相手の列が空になったら、残りの種はどうなる？', 'あと何手でおしまいか、先に数えておくといいの。'],
   };
   // why the red pit falls short — five wordings each (by the problem's number)
@@ -6512,6 +6550,7 @@
     diff: d => [`赤い丸の穴だと、さいごまで読むと差が${d}粒ちぢまるの。`, `赤い丸をまくと、おしまいの差が${d}粒へっちゃう。`, `赤い丸では、さいごに${d}粒ぶん損するの。`, `赤い丸の手だと、数えきったときの差が${d}粒少ないの。`, `赤い丸だと、おしまいまでに${d}粒もったいないの。`],
     oppMore: (b, w) => [`赤い丸の穴のあと、相手が次に取れる種が${b}粒になるの（金の丸なら${w}粒）。`, `赤い丸をまくと、相手の次のかせぎが${b}粒。金の丸なら${w}粒ですんだの。`, `赤い丸では、相手に${b}粒取れる形が残るの。金の丸なら${w}粒。`, `赤い丸の手だと、相手の次の番は${b}粒。金の丸より${b - w}粒多いの。`, `赤い丸だと、相手が次に${b}粒入れられるの。金の丸なら${w}粒だけ。`],
     toOpp2: c => [`赤い丸の穴だと、種が${c}粒、相手の列へ流れちゃう。`, `赤い丸をまくと、${c}粒が相手の側へ行くの。`, `赤い丸では、相手の列に${c}粒わたすことになるの。`, `赤い丸の手だと、相手の側に${c}粒落ちちゃう。`, `赤い丸だと、相手に${c}粒わたしちゃうの。`],
+    far: () => ['赤い丸の穴は、何手か先まで数えると金の丸よりずっと少なくなっちゃうの。', '赤い丸だと、この先のかせぎが金の丸より大きくへっちゃう。', '赤い丸をまくと、先の数え合いで金の丸に大きく引きはなされるの。', '赤い丸の手は、数手先で金の丸よりかなり種が少ないの。', '赤い丸からだと、先まで見て金の丸との差が大きく開くの。'],   // (2026-11-26: 5 seeds or more behind — never 「悪くない」「少し」)
     okish: () => ['赤い丸の穴も悪くないけど、金の丸のほうが、この先の種の入り方がいいの。', '赤い丸も一手だけど、何手か先の種の入り方で金の丸に少し負けるの。', '赤い丸でも戦えるけど、先まで数えると金の丸がちょっと多く入るの。', '赤い丸も考えられる手。でも、この先のかせぎは金の丸が上なの。', '赤い丸もわるくない手。先の数え合いで、金の丸がわずかに得なの。'],
     near: () => ['赤い丸の穴もいい線！ 金の丸とほとんど同じなの。', '赤い丸もほぼ互角の手！ 金の丸がほんの少しだけ上なの。', '赤い丸もかなりいい手！ 差はほんのちょっと。', '赤い丸でもほとんど変わらないの！ 金の丸がわずかに上。', '赤い丸もおしい！ 金の丸とほぼ同じ働きなの。'],
   };
@@ -6552,7 +6591,7 @@
       if (exact) return { t: v(W_.diff(n1(dv))), weak: true };
       if (G.oppBest > W.oppBest) return T(v(W_.oppMore(G.oppBest, W.oppBest)));
       if (G.toOpp > W.toOpp) return T(v(W_.toOpp2(G.toOpp)));
-      return { t: v(dv >= 1.5 ? W_.okish() : W_.near()), weak: true };   // (2026-11-22: never "the AI says")
+      return { t: v(dv >= 5 ? W_.far() : dv >= 1.5 ? W_.okish() : W_.near()), weak: true };   // (2026-11-22: never "the AI says")
     };
     const plus = (W, Q, side) => { const o = [], at = (k, x) => v(MCJ_PLUS[k][side](x));
       if (W.over && W.margin > 0) o.push(at('win'));
@@ -6598,7 +6637,7 @@
     LKEY: 'aicoding-mancala-v1-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../mancala/lessons.json?v=7'), Promise.all(['../mancala/i18n.js?v=20261107l15', '../mancala/i18n-learn.js?v=20261107l14'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mcEng().catch(() => null)])
+      return (this.p = Promise.all([getJ('../mancala/lessons.json?v=20261126km1'), Promise.all(['../mancala/i18n.js?v=20261107l15', '../mancala/i18n-learn.js?v=20261107l14'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mcEng().catch(() => null)])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] mancala texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
