@@ -1192,16 +1192,25 @@ static TLS int rootDepth = 1;
 #else
 #define S5 1
 #endif
-static int useMate1 = 1, rfpDepth = S5 ? 11 : 8, rfpMargin = S5 ? 73 : 112, nullAdapt = 1, histMalus = 0;   /* (2026-11-17: SPSA at 100 ms per move, tools/match/spsa.py: depth 6 -> 8, margin 90 -> 112, [9] 6000 -> 6749, [12] 4 -> 7, [16] 100 -> 123, [23] 200 -> 162, [27] 60 -> 85, LMR divisor 2.0 -> 2.03: +22 Elo at 300 ms over 1440 games) */
+static int useMate1 = 1, rfpDepth = S5 ? 18 : 8, rfpMargin = S5 ? 67 : 112, nullAdapt = 1, histMalus = 0;   /* (2026-11-17: SPSA at 100 ms per move, tools/match/spsa.py: depth 6 -> 8, margin 90 -> 112, [9] 6000 -> 6749, [12] 4 -> 7, [16] 100 -> 123, [23] 200 -> 162, [27] 60 -> 85, LMR divisor 2.0 -> 2.03: +22 Elo at 300 ms over 1440 games) */
 /* before:   /* (2026-11: margin 120 -> 90, adaptive null move on, LMP count P[12] 6 -> 4: +190 Elo at 200k nodes) */
 /* (2026-11-18: search v4's switches on, measured together on the Mac against the search before: +73 Elo at 300k nodes and +70
    at 300 ms per move, 480 different games each. 24 improving, 28 = 4 null move reduction, 29 + 43 = 300 late move pruning at
    every depth, 30 = 8 futility by the reduced depth, 35 = 6 a ply less without a table move, 37 = 1 reductions from the second
    move, 38 losing captures reduced, 40 losing captures after the quiet moves, 42 = 170 history bonus linear in the depth.) */
-static int P[128] = {[5] = 1, [7] = 1, [9] = S5 ? 5049 : 6749, [12] = 7, [14] = 1, [16] = 123, [22] = 1, [23] = 162, [27] = S5 ? 57 : 85,
-                    [24] = 1, [28] = 4, [29] = 1, [30] = 8, [35] = 6, [37] = 1, [38] = 1, [40] = 1, [42] = S5 ? 297 : 170, [43] = S5 ? 246 : 300,
+static int P[128] = {[5] = 1, [7] = 1, [9] = S5 ? 6247 : 6749, [12] = 7, [14] = 1, [16] = 123, [22] = 1, [23] = 162, [27] = S5 ? 57 : 85,
+                    [24] = 1, [28] = 4, [29] = 1, [30] = 8, [35] = 6, [37] = 1, [38] = 1, [40] = 1, [42] = S5 ? 297 : 170, [43] = S5 ? 379 : 300,
                     [44] = S5, [45] = S5, [46] = S5 ? 8 : 0, [47] = S5 ? 131 : 0, [48] = S5 ? 43 : 0, [52] = S5 ? 6 : 0, [53] = S5 ? 2 : 0, [58] = S5 ? 346 : 0, [62] = S5,
-                    [75] = S5 ? 5 : 0, [76] = S5 ? 90 : 0, [77] = S5 ? 40 : 0, [79] = S5 ? 2 : 0};   /* (2026-11-20: the singular extension) */   /* (2026-11-08 search v3: [22] history v2, [23] ProbCut, rfpDepth 3 -> 6) */
+                    [75] = S5 ? 4 : 0, [76] = S5 ? 83 : 0, [77] = S5 ? 110 : 0, [79] = S5 ? 3 : 0,   /* (2026-11-20: the singular extension; 2026-11-26: retuned with search v6) */
+                    /* (2026-11-26) search v6: fractional reductions (85-89, 92-97), pruning in the move loop at every node (91, 98-105, 81),
+                       and the pruning before the loop, the table cut-off and the quiescence search re-balanced with it (110, 112-116,
+                       rfpDepth 11 -> 18, rfpMargin 73 -> 67, the LMR divisor 2.14 -> 1.82): tuned together against YaneuraOu's search
+                       (spsa.py --table v6all). Against it 57 -> 82 wins of 200, Gikou 2 25-23 -> 31-17 (MODEL_CARD.md).
+                       Search v5 again: PARAMS="85=0,91=0,92=0,55=0,110=0,113=0,115=0,75=5,76=90,77=40,79=2,9=5049,43=246,17=214,2=73,1=11,112=0,114=0,116=0,81=0,86=0,87=0,88=0,89=0,93=0,95=0,96=0,97=0,98=0,99=0,100=0,101=0,102=0,103=0,104=0,105=0" */
+                    [55] = S5, [85] = S5, [91] = S5, [92] = S5 ? 2 : 0, [110] = S5, [113] = S5, [115] = S5 ? 2 : 0,
+                    [86] = S5 ? 31 : 0, [88] = S5 ? 169 : 0, [87] = S5 ? 163 : 0, [89] = S5 ? 315 : 0, [93] = S5 ? 400 : 0, [95] = S5 ? 62 : 0, [96] = S5 ? 3 : 0, [97] = S5 ? 1087 : 0,
+                    [98] = S5 ? 3261 : 0, [99] = S5 ? 207 : 0, [100] = S5 ? 297 : 0, [101] = S5 ? 179 : 0, [102] = S5 ? 81 : 0, [103] = S5 ? 98 : 0, [104] = S5 ? 85 : 0, [105] = S5 ? 29 : 0,
+                    [81] = S5 ? 1935 : 0, [112] = S5 ? 391 : 0, [114] = S5 ? 220 : 0, [116] = S5 ? 239 : 0};   /* (2026-11-08 search v3: [22] history v2, [23] ProbCut, rfpDepth 3 -> 6) */
 static void lmrInit(double div);
 EXPORT(set_param) void set_param(int k, int v) { if (k == 0) useMate1 = v; else if (k == 1) rfpDepth = v; else if (k == 2) rfpMargin = v; else if (k == 3) nullAdapt = v; else if (k == 4) histMalus = v; if (k >= 0 && k < 128) P[k] = v; if (k == 17 && v > 0) lmrInit(v / 100.0); }
 /* experimental features (all off by default):
@@ -2713,7 +2722,7 @@ EXPORT(init) void init(void) {
     A1[c][p * 8 + d] = STEP[p * 8 + d] || SLIDE[p * 8 + d]; AS[c][p * 8 + d] = SLIDE[p * 8 + d];
   }
   for (int p = 0; p < 32; p++) { NDIRS[p] = 0; for (int d = 0; d < 8; d++) { if (STEP[p * 8 + d]) DIRS[p][NDIRS[p]++] = d; if (SLIDE[p * 8 + d]) DIRS[p][NDIRS[p]++] = d | 8; } }
-  lmrInit(S5 ? 2.14 : 2.03);
+  lmrInit(S5 ? 1.82 : 2.03);   /* (2.14 until search v6) */
   zseed = 0x2545F4914F6CDD1DULL;
   for (int i = 0; i < 81 * 32; i++) { const unsigned long long r = rnd64(); ZB_L[i] = (i32)r; ZB_H[i] = (i32)(r >> 32); }
   for (int i = 0; i < 2 * 8 * 20; i++) { const unsigned long long r = rnd64(); ZHD_L[i] = (i32)r; ZHD_H[i] = (i32)(r >> 32); }
