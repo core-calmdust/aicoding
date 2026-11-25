@@ -246,7 +246,7 @@ function mancalaWords(opt) {
 //      for every other legal point: 「三のほうが達四になれない」 = the point's threes are not real (no legal open-four point), 「四だけ…止め
 //      られたら攻めが終わる」 = after the four and its block Black has no VCF, 「三だけ」 = a three and no four, 「四も三もできない」 = neither;
 //      the praise's lines = the answer's four and three; the hint 「×のとなり」 = the answer touches a forbidden point
-const GM_DONE = new Set(['five', 'block', 'three', 'sfour', 'fourthree', 'forbid33', 'forbid44', 'fourthreeB', 'vcf']);
+const GM_DONE = new Set(['five', 'block', 'three', 'sfour', 'fourthree', 'forbid33', 'forbid44', 'fourthreeB', 'vcf', 'defend']);
 function gmJa() { const fs = require('fs'), vm = require('vm'), src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), f0 = src.indexOf('  const fill = ');
   return vm.runInNewContext(src.slice(f0, src.indexOf('\n', f0)) + '\n' + src.slice(src.indexOf('  const GML = '), src.indexOf('  const GOMOKU = {')) + '\n;({ GML, gmLsJa, GMW })', {}); }
 function gmWin(E) {
@@ -431,6 +431,72 @@ function gmVcfRamp(E, r, a) {
   if (/ナナメの三つ並び/.test(h) && run(2) < 3 && run(3) < 3) a(`⑧ the hint says the four is on a diagonal three — ${h}`);
   if (/タテ/.test(h) && run(1) < 2) a(`⑧ the hint says the stone joins a column (タテ) — ${h}`);
 }
+// (2026-11-26 担当A) defend 守りの急所 (renju; gmDefend): the mover stops an attack before it starts.
+//   ① the answers = the mover's legal moves after which the opponent has no forced win (the engine's threat search Solver.attack, fours
+//      and threes, up to 11 of its moves, 3e6 nodes; an unsettled search is an error) ② = ① ③ at least 3 legal moves, 追72
+//   ④ the opponent (to move now) wins by a four-three or by fours (a VCF — the intro's 「四三や四追い」), has no five point and no open
+//      three (no open-four point: the three lesson), and the mover has no win of its own (no five point, no VCF, no VCT within 9)
+//   ⑥ d = the tempting points (wrong legal moves on the opponent's three / four points or making the mover's own four) never goes down,
+//      the last above the first   ⑦⑧ the 3D words (atlas/lessons3d.js gmLsJa) for every other legal point, against the engine:
+//      tW (「オレンジの点に四三／四四／達四を打たれて／5つ並べられて負けちゃう」) = the orange point is a legal move of that kind for the
+//      opponent and wins at once (every defence loses within 3 of its moves); tV (「オレンジの印の点から四追いで」) = no such point, the
+//      orange point is a four that starts a VCF; t0 (「三と四で追いこまれる」) = no such point and no VCF, the opponent wins with threes;
+//      the praise 「相手の四三の点を先にふさいで」 = the answer is the opponent's four-three point, 「相手の一番打ちたい点を先取り」 = the
+//      answer starts the opponent's win; 「攻めの線が交わっていた」 and the hint 「2本の線が交わる点」 = the opponent has two lines there
+//      (a 3-3 / 4-3 / 4-4 / open-four class), the question 「相手の四三の点を探して」 = the opponent has a four-three point; the 2D
+//      ls.defend.ng 「{x} では相手に勝たれてしまいます」 = ①
+function gmDefend(E, P, j, add, six) {
+  const C = E.C, cells = a => String(a || '').split(/\s+/).filter(Boolean).map(E.sqOf), nm = m => E.sqName(m);
+  const rule = P.rule || 'renju', s = P.side, o = 3 - s;
+  if (rule !== 'renju') add(`rule ${rule} (the tactics lessons are renju's)`);
+  const B = cells(P.b), Wt = cells(P.w), pos = E.setup(rule, { b: B, w: Wt, side: s }), lg = pos.legal(), okM = P.ok.map(E.sqOf);
+  const winT = (p, maxT) => { const S = new E.Solver(); S.limit = 3e6; for (let t = 1; t <= maxT; t += 2) { if (S.attack(p, t) >= 0) return t; if (S.nodes > S.limit) return -1; } return 0; };
+  const vcfOf = p => { const S = new E.Solver(); S.limit = 2e6; return S.vcf(p, 30) >= 0; };
+  if (lg.length < 3) add(`③ only ${lg.length} legal moves`);
+  if (P.ok.length * 3 > lg.length) add(`追72 ${P.ok.length} of the ${lg.length} legal points are right`);
+  // ④ the threat
+  const po = E.setup(rule, { b: B, w: Wt, side: o }), clsO = m => po.cls[o][E.M2I[m]], lgO = po.legal();
+  if (pos.fives(s).length || pos.fives(o).length) add('④ a five point on the board (the block lesson)');
+  { const Gx = gmJa().GML.mk({ b: B, w: Wt }, rule); if (lgO.some(m => Gx.info(m, o).open4.length)) add('④ the opponent has an open three (an open-four point: the three lesson)'); }
+  if (!vcfOf(po)) add('④ the opponent has no win by four-three or fours (VCF) — 「四三や四追いのねらい」 is false');
+  if (vcfOf(pos) || winT(pos, 9)) add('④ the mover has a win of its own');
+  const o43 = lgO.filter(m => clsO(m) === C.F43 && (() => { po.make(m); const w = new E.Solver(); w.limit = 2e6; const r = w.defend(po, 3); po.unmake(); return r; })());
+  // ① ②
+  const lose = new Map();
+  for (const m of lg) { pos.make(m); const t = pos.fives(s).length ? 0 : winT(pos, 11); pos.unmake(); if (t < 0) add(`① ${nm(m)}: the search did not settle`); lose.set(m, t); }
+  const want = lg.filter(m => lose.get(m) === 0).map(nm).sort(), ok = P.ok.slice().sort();
+  if (want.join() !== ok.join()) add(`①② the answers are ${ok}, the moves after which the opponent has no forced win ${want}`);
+  six(lg.filter(m => !okM.includes(m) && (clsO(m) >= C.F3 || pos.cls[s][E.M2I[m]] >= C.B4)).length);
+  // ⑦⑧ the 3D words
+  const X = gmJa(), L = require(path.join(ROOT, 'gomoku/lessons.json')), key = L.steps.findIndex(x => x.id === 'defend'), W = X.GMW.defend;
+  const J = X.gmLsJa('defend', { b: B, w: Wt, side: s }, rule, okM, j, key); if (!J) { add('⑧ no 3D words'); return; }
+  const has = (t, k) => (W[k] || []).some(x => typeof x === 'string' && t.includes(x));
+  const hasF = (t, k, args) => (W[k] || []).some(f => typeof f === 'function' && args.some(a => t.includes(f(a))));
+  const cross = m => clsO(m) >= C.F33;
+  const ra = okM[0], gt = J.good.call({}, ra);
+  if (/相手の四三の点を先にふさいで/.test(gt) && !o43.includes(ra)) add(`⑧ the praise says the answer is the opponent's four-three point — ${gt}`);
+  if (/相手の一番打ちたい点を先取り/.test(gt)) { if (!(o43.includes(ra) || clsO(ra) >= C.B4)) add(`⑧ the praise says the answer is the point the opponent wants most (no four there) — ${gt}`); }
+  if (/2本の線が交わる/.test(J.hintTx || '') && !okM.every(cross)) add(`⑧ the hint says the answer is where two of the opponent's lines cross — ${J.hintTx}`);
+  if (/四三の点を探して/.test(J.ask || '') && !o43.length) add(`⑧ the question asks for the opponent's four-three point (none) — ${J.ask}`);
+  if (/次に打つと四三や四追いになる点を探して、先にふさぐ/.test(J.hintTx || '') && !okM.some(m => o43.includes(m) || clsO(m) >= C.B4)) add(`⑧ the hint says to take the opponent's four-three / four point first (no answer is one) — ${J.hintTx}`);
+  if (/四三の点そのもの|四三の点のほか/.test(gt) && !(o43.length && !o43.includes(ra))) add(`⑧ the praise says the answer is not the opponent's four-three point — ${gt}`);
+  const kindOk = { '5つ並べられて': [C.FIVE], '達四を作られて': [C.F4], '四四を打たれて': [C.F4], '四三を打たれて': [C.F43] };
+  for (const u of lg) { if (okM.includes(u)) continue; const th = {}, t = J.ng.call(th, u), bad = m => add(`⑧ ${nm(u)}: ${m} — ${t}`);
+    if (!/緑の点/.test(t)) bad('the green point (the answer) is not named');
+    if (/攻めの線が交わっていた/.test(t) && !cross(ra)) bad("said that the opponent's lines cross at the answer");
+    if (/打ちたかったのは緑の点/.test(t) && !o43.includes(ra)) bad("said that the opponent wanted to play the answer (it is not the opponent's four-three point)");
+    pos.make(u); const hl = (th._hl || [])[0];
+    const winAt = q => { if (q == null || !pos.isLegal(q)) return false; if (pos.cls[o][E.M2I[q]] === C.FIVE) return true; pos.make(q); const S = new E.Solver(); S.limit = 2e6; const r = S.defend(pos, 3); pos.unmake(); return r; };
+    const how = Object.keys(kindOk).find(h => t.includes(h));
+    const anyWinPt = lg.concat([u]).some(q => q !== u && pos.isLegal(q) && pos.cls[o][E.M2I[q]] >= C.F43 && winAt(q));
+    if (how) { if (hl == null || !kindOk[how].includes(pos.cls[o][E.M2I[hl]]) || !winAt(hl)) bad(`the orange point ${hl == null ? '-' : nm(hl)} is not a winning ${how} for the opponent`); }
+    else if (has(t, 'tV')) { if (anyWinPt) bad('the opponent has a winning point at once (not a chase of fours)');
+      let v = false; if (hl != null && pos.isLegal(hl)) { pos.make(hl); const f = pos.fives(o); if (f.length >= 2) v = true; else if (f.length === 1 && !pos.fives(s).length) { pos.make(E.I2M[f[0]]); v = !pos.fives(s).length && vcfOf(pos); pos.unmake(); } pos.unmake(); }
+      if (!v) bad(`the orange point ${hl == null ? '-' : nm(hl)} does not start a chase of fours`); }
+    else if (has(t, 't0')) { if (/三/.test(t) && vcfOf(pos)) bad('the opponent wins by fours (not 「三と四で」)'); }   // (t0: the opponent still wins = ①)
+    else bad('no reason for the loss');
+    pos.unmake(); }
+}
 function gomoku(opt) {
   const E = require(path.join(ROOT, 'gomoku/engine.js')), L = require(path.join(ROOT, 'gomoku/lessons.json')), PZ = require(path.join(ROOT, 'gomoku/puzzles.json'));
   const C = E.C, G = gmWin(E), only = opt && opt.only, out = [];
@@ -450,6 +516,10 @@ function gomoku(opt) {
     let prevD = -1, firstD = null;
     st.problems.forEach((P, j) => { const add = m => out.push({ step: id, q: j + 1, msg: m });
       if (/^forbid/.test(id)) { gmForbid(E, id, P, j, st, add, D => { if (D < prevD) add(`⑥ easier than the problem before (d ${D} after ${prevD})`); prevD = Math.max(prevD, D); if (firstD === null) firstD = D;
+          if (j === st.problems.length - 1 && !(D > firstD)) add(`⑥ the last problem is no harder than the first (d ${D} vs ${firstD})`); });
+        const A = st2(P); for (const [who, B, Q] of PS) { if (Q === P) continue; const e = dist(A, B); if (e <= 3) add(`⑤ ${e} stones from ${who}`); }
+        return; }
+      if (id === 'defend') { gmDefend(E, P, j, add, D => { if (D < prevD) add(`⑥ easier than the problem before (d ${D} after ${prevD})`); prevD = Math.max(prevD, D); if (firstD === null) firstD = D;
           if (j === st.problems.length - 1 && !(D > firstD)) add(`⑥ the last problem is no harder than the first (d ${D} vs ${firstD})`); });
         const A = st2(P); for (const [who, B, Q] of PS) { if (Q === P) continue; const e = dist(A, B); if (e <= 3) add(`⑤ ${e} stones from ${who}`); }
         return; }
@@ -491,6 +561,17 @@ function gomoku(opt) {
     //  five = the mover's five points, block = the opponent's, block3 = the points after which the opponent has no win (k ≤ 3, VCF),
     //  sfour = the open fours, fourthree = the fastest wins in 3), the 2nd hint's ring (look) is on stones of that board, and the right
     //  points are a third of the legal points at most (追72)
+    // (2026-11-26 担当A) the defend warm-up (explain): the red mark (ng) is the opponent's four-three point and its move there wins; each
+    //  green mark (ok) and the red point itself, taken first, leave the opponent no four-three point and no VCF (「その点に先に打つ」「片方
+    //  を先に弱らせる」); the body's 「赤い丸（xx）」 names the red mark
+    if (id === 'defend') (st.ramp || []).forEach((r, j) => { if (!r.marks) return; const a = m => out.push({ step: id, q: 0, msg: `warm-up ${j + 1}: ${m}` });
+      const s = r.side, o = 3 - s, rl = r.rule || 'renju', B = cells(r.b), Wt = cells(r.w), po = E.setup(rl, { b: B, w: Wt, side: o });
+      const red = r.marks.filter(x => x[1] === 'ng').map(x => x[0]), green = r.marks.filter(x => x[1] === 'ok').map(x => x[0]);
+      red.forEach(q => { const m = E.sqOf(q); if (!po.isLegal(m) || po.cls[o][E.M2I[m]] !== C.F43) a(`⑧ the red point ${q} is not the opponent's four-three point`);
+        else { po.make(m); const S = new E.Solver(); S.limit = 2e6; if (!S.defend(po, 3)) a(`⑧ the opponent's four-three at ${q} does not win`); po.unmake(); } });
+      red.concat(green).forEach(q => { const p = E.setup(rl, { b: s === 1 ? B.concat([E.sqOf(q)]) : B, w: s === 2 ? Wt.concat([E.sqOf(q)]) : Wt, side: o }), S = new E.Solver(); S.limit = 2e6;
+        if (S.vcf(p, 30) >= 0 || p.legal().some(m => p.cls[o][E.M2I[m]] >= C.F43)) a(`⑧ after ${q} the opponent still has a four-three / VCF`); });
+      const body = (r.body && r.body.ja) || '', mm = body.match(/赤い丸<\/b>（([a-o]\d+)）/); if (mm && !red.includes(mm[1])) a(`⑧ the body names the red point ${mm[1]}, the mark is ${red}`); });
     if (id === 'vcf') (st.ramp || []).forEach((r, j) => gmVcfRamp(E, r, m => out.push({ step: id, q: 0, msg: `warm-up ${j + 1}: ${m}` })));
     (st.ramp || []).forEach((r, j) => { if (r.k !== 'try' || id === 'vcf') return; const a = m => out.push({ step: id, q: 0, msg: `warm-up ${j + 1}: ${m}` });
       const s = r.side, o = 3 - s, pos = E.setup(r.rule || 'free', { b: cells(r.b), w: cells(r.w), side: s }), lg = pos.legal(), lgN = new Set(lg.map(nm));
@@ -506,6 +587,7 @@ function gomoku(opt) {
       else if (r.goal === 'block3') { want = []; for (const m of lg) { pos.make(m); const w = G.win(pos, 2) || G.win(pos, 3) || G.vcf(pos); pos.unmake(); if (!w) want.push(nm(m)); } }
       else if (r.goal === 'forbid') { const K = id === 'forbid33' ? [1] : id === 'forbid44' ? [2, 3] : [1, 2, 3], fl = pos.forbiddenList();
         if (fl.length !== 1) a(`② ${fl.length} forbidden points on the board`); want = fl.filter(f => K.includes(f.k)).map(f => nm(f.m)); }
+      else if (r.goal === 'defend') { want = []; for (const m of lg) { pos.make(m); const S = new E.Solver(); S.limit = 2e6; let w = 0; for (let t = 1; t <= (r.T || 5); t += 2) if (S.attack(pos, t) >= 0) { w = 1; break; } if (S.nodes > S.limit) a(`① ${nm(m)}: the search did not settle`); pos.unmake(); if (!w) want.push(nm(m)); } }   // (2026-11-26 担当A: the defend tries — no win for the opponent within r.T of its moves)
       else if (r.goal === 'sfour') want = lg.filter(m => cls(s, m) === C.F4).map(nm);
       else if (r.goal === 'fourthree') { const lv = lg.filter(m => cls(s, m) >= C.F3).map(m => [m, G.level(pos, m)]).filter(x => x[1]); const mn = lv.length ? Math.min(...lv.map(x => x[1])) : 0; if (mn !== 3) a(`① the fastest win takes ${mn || 'no'} moves (the try's: 3)`); want = lv.filter(x => x[1] === mn).map(x => nm(x[0])); }
       else a(`the goal ${r.goal} is not checked`);
@@ -2694,8 +2776,12 @@ function chessOpenProblem(ctx, s, P, j, opt) {
     if (kA === 'pin' && !(FA.pin && (FA.pin[1] === 'キング' || X.CH_VAL[{ ポーン: 'p', ナイト: 'n', ビショップ: 'b', ルーク: 'r', クイーン: 'q', キング: 'k' }[FA.pin[1]]] > X.CH_VAL[FA.pc]))) a(`⑧ the pin of the answer wins nothing behind (${FA.pin})`);
     if (kA === 'castle' && !(A === (white ? 'e1g1' : 'e8g8') || A === (white ? 'e1c1' : 'e8c8'))) a('⑧ the answer is called castling'); }
   const steps = ((s.study && s.study.steps) || []).map(x => x[0]);
-  for (let i = 0; i < 5; i++) {
-    const CV = X.chOpVoice(s.id), intro = X.CHJ_OP.intro[s.id] || ''; CV.add(intro); CV.pts = chPts;
+  // 追90: the five places of the drill with the voice's own choices, then every candidate of every word list (pick forced to the
+  // k-th one from its start, k up to the longest list) — a line the voice may pick at some point must be right on this board too
+  let KF = 1;
+  for (let it = 0; it < 5 + KF; it++) {
+    const i = it < 5 ? it : (it - 5) % 5, CV = X.chOpVoice(s.id), intro = X.CHJ_OP.intro[s.id] || ''; CV.add(intro); CV.pts = chPts;
+    if (it >= 5) { const k = it - 5; CV.pick = (list, start) => { KF = Math.max(KF, list.length); return list[((start || 0) + k) % list.length]; }; }
     const notes = {}; Object.entries(X.CHJ_OP.notes[s.id] || {}).forEach(([k, v]) => { notes[k] = { ja: v }; }); X.chStepNotesJa(steps, notes, CV);
     let Q; try { Q = X.chOpJa({ pos: P.fen, kind: 'best', P, ans: A }, nm, CV, i); } catch (er) { a(`⑧ the 3D words fail: ${er.message}`); break; }
     const ask = plain(Q.ask); if (/\{|undefined|NaN/.test(ask) || !ask.includes(who) || /[白黒]の(番|一手|手番)/.test(ask.replace(who + 'の', '')) || (/『/.test(ask) && !ask.includes(`『${nm}』`))) a(`⑧ the question 「${ask}」`);
@@ -2732,7 +2818,7 @@ function chessOpenProblem(ctx, s, P, j, opt) {
       if (/まだ出ていない駒/.test(w)) { let home = 0; for (const c of ['b', 'c', 'f', 'g']) { const pp2 = pos.b[E.sqOf(c + (white ? '1' : '8'))]; if (pp2 && ((pp2 & 8) === 0) === white && [2, 3].includes(pp2 & 7)) home++; } if (!home) bad('every minor piece is out already'); }
     }
   }
-  return out;
+  return [...new Set(out)];
 }
 // ⑤ ⑥ of an opening's drill (picks: the other openings' drills, { id: [indices] })
 function chessOpenSet(ctx, s, drill, picks) {
@@ -3305,12 +3391,14 @@ function morris72(opt) {
         if (R.ok.length * 3 > ms.length) out.push({ step: `${v} ${st.id}`, q: 0, msg: `追72 warm-up ${j + 1}: ${R.ok.length} of the ${ms.length} legal moves are right` }); }); }); }
   return out;
 }
-const GAMES = { pz88, dupkey89, chessDrill, morris72, near53, goOpen, open67, plural58, backgammon, gomokuOpen, bgOpen, chessOpen, xiangqiOpen, reversiOpen, ur, senet, patolli, foxgeese, konane, ugolki, fanorona, stray, hex, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines, janggi, hexOpen };
+// (2026-11-26 第2期 担当A) chess b_check・b_escape・b_mate — tools/lesson-verify-chbasic.js
+function chessBasic(opt) { return require('./lesson-verify-chbasic.js').verify(opt); }
+const GAMES = { pz88, dupkey89, chessDrill, chessBasic, morris72, near53, goOpen, open67, plural58, backgammon, gomokuOpen, bgOpen, chessOpen, xiangqiOpen, reversiOpen, ur, senet, patolli, foxgeese, konane, ugolki, fanorona, stray, hex, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines, janggi, hexOpen };
 module.exports = GAMES; Object.defineProperty(GAMES, '_gm', { value: { gmForbid } }); GAMES.mancalaWords = mancalaWords; Object.assign(GAMES, { chessOpenCtx, chessOpenProblem, chessOpenSet, chessOpenD }); Object.defineProperty(GAMES, '_hex', { value: { deep1: hxDeep1, ctx: hxCtx, near: hxNear, problem: hxProblem, d: hxD, pts: hxPts, kind: (sp, m) => { const X = hxX(); return X.HXA.kind(X.HXA.facts(sp, m)); } } }); Object.defineProperty(GAMES, '_mc', { value: { topic: mcTopic } }); Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
 Object.defineProperty(GAMES, '_xqStray', { value: xqStray42 });   // (the xiangqi 追42 check alone, with a broken pzwhy for tests)
 if (require.main === module) {
-  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'pz88,dupkey89,chessDrill,near53,plural58,backgammon,reversiOpen,gomokuOpen,goOpen,open67,connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,chessOpen,xiangqiOpen,openLines,janggi,foxgeese,konane,fanorona,ugolki,hex,hexOpen,bgOpen').split(',');
+  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'pz88,dupkey89,chessDrill,chessBasic,near53,plural58,backgammon,reversiOpen,gomokuOpen,goOpen,open67,connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,chessOpen,xiangqiOpen,openLines,janggi,foxgeese,konane,fanorona,ugolki,hex,hexOpen,bgOpen').split(',');
   let bad = 0;
-  for (const g of games) { const f = GAMES[g]((g === 'hexOpen' || g === 'reversiOpen' || g === 'gomokuOpen') && a.includes('--deep') ? { deep: true } : undefined); if (!f.length) { console.log(`OK ${g}` + (g === 'chessDrill' ? ' (チェスの駒の動き8本：3D の★の問題を種を固定して生成、各3問・追72 正解は手の1/3以下)' : g === 'ugolki' ? ' (勝ち切りパズル全問の①〜⑨・追16・追65、tools/lesson-verify-ugolki.js ＋ 3D のレッスン（READY）全問の①〜⑨・追17・追27・追52、tools/lesson-verify-ugolki-ls.js)' : g === 'bgOpen' ? ' (バックギャモンの定跡 34項目99問の①〜⑨・追63（評価の誤差）・追53、3D の出し方どおり。⑤ レッスンと同じ盤だった10問のうち8問は2手目の問題 it.rq に（追90：言い回し全部を照合）、残り o21・o41 の2問は pending)' : g === 'open67' ? ' (追67：tafl・checkers・xiangqi・shogi・chess・gomoku・reversi・hex・backgammon の定跡と connect4 の問題の局面が、どの本の見本の局面と同じでも、見本の手が正解（20点）に入っている。検証済みの本は NG、ほかは pending＝node tools/lesson-verify-op67.js --all)' : g === 'goOpen' ? ` (囲碁の定石・布石 ${require('./lesson-verify-goopen.js').DONE().join('・') || 'なし'} の①〜⑨・追4・追9。ほかの本は pending、--all で全問の不合格の内訳)` : g === 'gomokuOpen' ? ` (五目並べの定跡（珠型） ${require('./lesson-verify-gmopen.js').DONE().join('・') || 'なし'} の5問の①〜⑨・追1・追39・追53・追90。①は保存した2つの読みと net の最善で照合、--deep で読み直し)` : g === 'reversiOpen' ? ` (リバーシの定跡 ${[...require('./lesson-verify-rvopen.js').DONE].join('・') || 'なし'} の手順の外の5問の①〜⑨・追1・追43、全定跡の不正解の文の頭＝追53` + (a.includes('--deep') ? '。①②はエンジンで読み直し)' : '。①②は保存した2つの読みで照合、読み直しは --deep)') : g === 'xiangqiOpen' ? ` (シャンチーの定跡 ${JSON.parse(require('fs').readFileSync(path.join(ROOT, 'xiangqi/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id).join('・')} の①〜⑨・追3・追4・追5・追8・追9・追41。ほかの定跡は pending)` : g === 'chessOpen' ? ' (チェスの定跡の drill の①〜⑨・追3・追25。drill のない定跡は pending、プールの全問で追53・追66)' : g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'patolli' ? ' (パトリの作り直したレッスン（v2：豆の確率・腕の先・上がり）の①〜⑧・追7・追16・追22・追23・追40。厳密な勝率は C で解き直し)' : g === 'senet' ? ' (セネトのレッスン9本（v2）の①〜⑧・追7・追16・追22・追23・追28・追36・追40・追47・追54・追59・追64。厳密な勝率は C で解き直し、水の家の選ぶ問題は engine.js で数え直し)' : g === 'backgammon' ? ' (選ぶ問題 shots・race の①〜⑨・追22・追23・追40・追54：36通りをルールで数え直し、誤答ごとの説明を14言語で)' : g === 'hex' ? ' (3D の準備13本：緑の印・半回転の try・説明と ほめ言葉の語が盤の事実・追1 準備の問題を本番で出さない)' : g === 'hexOpen' ? ` (ヘックスの定跡 ${JSON.parse(require('fs').readFileSync(path.join(ROOT, 'hex/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id).join('・') || 'なし'} の①〜⑨、全定跡の不正解の文の頭＝追53・16〜19点のほめ言葉＝追71` + (a.includes('--deep') ? '。①②はエンジンで2回読み直し、両方で合格＝追26・追84)' : '。①②は保存した2つの読みで照合、読み直しは --deep＝追26)') : g === 'foxgeese' ? ' (パズル全250問の①〜⑨・追6・追13・追16：厳密なソルバーで手数・正解の集まり・全段階の全不正解手の応手と文、2D の外れた手の文／3D のレッスン（狐：取れるガチョウ・続けて取る・2羽を同時に／ガチョウ：跳ばれない・閉じ込める・2手で閉じ込める）30問の①〜⑧・追3・追7・追16・追52・追70：正解の集まり・全合法手の盤の事実と14言語の文・ヒントの印)' : g === 'konane' ? ' (コナネのパズル全問の①〜⑨・追13・追16・追56：厳密なソルバーで手数・正解の集まり・テーマ（止まる・続けて跳ぶ）を正解手の全部で・全段階の全不正解手の応手と文、2D の外れた手の文。レッスン（3D の READY）：跳び方を数え直して正解の集まり・全不正解手の盤の事実・ヒントの印・準備の手・14言語)' : g === 'janggi' ? ' (パズル全問・レッスン b_rook・b_horse・b_elephant・b_cannon・b_pawn・b_escape・b_mate1・t_capture・t_fork・t_check・t_defend・m_mate2・m_mate3・e_rook・e_pawn の①〜⑨・追19・追20・追24・追27・追31・追34・追38・追39・追42・追44・追51・追55・追60)' : g === 'ur' ? (require('fs').existsSync(require('path').join(process.env.UR_LUT_DIR || '/tmp/urlut', 'finkel.rgu')) ? ' (ウルのレッスン12本の①〜⑧・追7・追16)' : ' (ウルのレッスン12本の③〜⑧・追7・追16。①②は完全解析表なしで未照合＝追26)') : g === 'plural58' ? ' (全ゲームの3Dパズルの案内文 atlas/puzzles.js とシャンチーの外れた手の文 xiangqi/pzwhy.js、追61 の <game>/i18n.js pz.*（xiangqi・chess・hex・morris・connect4・reversi）：1になりうる数のとなりに複数形の語がない＝追58、前の動詞（quedan・restam・осталось）は大文字小文字を問わない＝追69、en・es・fr・pt・de・ru・hi・ar)' : g === 'pz88' ? ' (追88：2D の詰めパズル（<game>/app.js puzzleMove・blockMove）が外れた手を戻さない・正解の手を出さない・途中で pz.good を言わない（hex・fanorona、ほかは pending）、詰めヘックス全403問の全段階の全外れ手×守りの応手で 2D・3D の文が盤の事実（あと何個・残り何手・相手がつながった・止まらない）と合う。追91：3D の詰めパズルの途中の文 <X>.mid にほめ言葉なし（HXX、ほかは pending）)' : g === 'dupkey89' ? ' (追89：3D のレッスン・パズルの文とデータ（atlas/ls-*.js・games/*-pz.js・lessons3d.js・puzzles.js・lsvoice-ja.js・<game>/ls-facts.js）の1つの辞書に同じ鍵が2度ない＝あとの鍵が前のセリフを黙って上書きしない)' : g === 'near53' ? ' (3D の結果の見出し「いい手だね…」「いい線！」「おしい！」は10点以上だけ＝追53・追57・追66、0点の見出し TX.wrong は14言語とも「惜しい」と言わない、3D レッスン本文の不正解の文の頭 soft にも近さの語なし＝追73、3D パズルの外れた手の文（foxgeese・konane の -pz.js の ja、janggi・ugolki の -pz.js の全言語）にも＝追78、2D レッスンの不合格の見出し「もう一息」は あと1問で合格のときだけ（janggi・fanorona・konane・foxgeese・checkers・chess・go・hex・morris・reversi・tafl・xiangqi）＝追82、2D の準備の外れた手の文 rampUi.ng（gomoku・konane）＝追81)': g === 'openLines' ? ' (shogi・tafl・checkers・xiangqi の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧${g === 'xiangqi' ? '、詰め233問の外れた手の文＝追20・追42' : g === 'checkers' ? '、基本 b_move・b_jump・b_multi・b_king の全問・準備（lesson-verify-ckbasic.js）、詰めチェッカー527問の外れた手×全応手の文＝追20・追42・追58' : ''})`)); continue; }    bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
+  for (const g of games) { const f = GAMES[g]((g === 'hexOpen' || g === 'reversiOpen' || g === 'gomokuOpen') && a.includes('--deep') ? { deep: true } : undefined); if (!f.length) { console.log(`OK ${g}` + (g === 'chessBasic' ? ' (チェスのはじめて b_check・b_escape・b_mate・b_special の①〜⑧・追1・追2・追4・追17・追19・追27・追34・追45・追72：ルールで全合法手、b_escape は材料の読みとエンジン2回、ナイトンの文を全合法手の盤の事実で)' : g === 'chessDrill' ? ' (チェスの駒の動き8本：3D の★の問題を種を固定して生成、各3問・追72 正解は手の1/3以下)' : g === 'ugolki' ? ' (勝ち切りパズル全問の①〜⑨・追16・追65、tools/lesson-verify-ugolki.js ＋ 3D のレッスン（READY）全問の①〜⑨・追17・追27・追52、tools/lesson-verify-ugolki-ls.js)' : g === 'bgOpen' ? ' (バックギャモンの定跡 34項目99問の①〜⑨・追63（評価の誤差）・追53、3D の出し方どおり。⑤ レッスンと同じ盤だった10問のうち9問は2手目の問題 it.rq に（追90：言い回し全部を照合）、残り o41 の1問は pending)' : g === 'open67' ? ' (追67：tafl・checkers・xiangqi・shogi・chess・gomoku・reversi・hex・backgammon の定跡と connect4 の問題の局面が、どの本の見本の局面と同じでも、見本の手が正解（20点）に入っている。検証済みの本は NG、ほかは pending＝node tools/lesson-verify-op67.js --all)' : g === 'goOpen' ? ` (囲碁の定石・布石 ${require('./lesson-verify-goopen.js').DONE().join('・') || 'なし'} の①〜⑨・追4・追9。ほかの本は pending、--all で全問の不合格の内訳)` : g === 'gomokuOpen' ? ` (五目並べの定跡（珠型） ${require('./lesson-verify-gmopen.js').DONE().join('・') || 'なし'} の5問の①〜⑨・追1・追39・追53・追90。①は保存した2つの読みと net の最善で照合、--deep で読み直し)` : g === 'reversiOpen' ? ` (リバーシの定跡 ${[...require('./lesson-verify-rvopen.js').DONE].join('・') || 'なし'} の手順の外の5問の①〜⑨・追1・追43、全定跡の不正解の文の頭＝追53` + (a.includes('--deep') ? '。①②はエンジンで読み直し)' : '。①②は保存した2つの読みで照合、読み直しは --deep)') : g === 'xiangqiOpen' ? ` (シャンチーの定跡 ${JSON.parse(require('fs').readFileSync(path.join(ROOT, 'xiangqi/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id).join('・')} の①〜⑨・追3・追4・追5・追8・追9・追41。ほかの定跡は pending)` : g === 'chessOpen' ? ' (チェスの定跡の drill の①〜⑨・追3・追25。drill のない定跡は pending、プールの全問で追53・追66)' : g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'patolli' ? ' (パトリの作り直したレッスン（v2：豆の確率・腕の先・上がり）の①〜⑧・追7・追16・追22・追23・追40。厳密な勝率は C で解き直し)' : g === 'senet' ? ' (セネトのレッスン9本（v2）の①〜⑧・追7・追16・追22・追23・追28・追36・追40・追47・追54・追59・追64。厳密な勝率は C で解き直し、水の家の選ぶ問題は engine.js で数え直し)' : g === 'backgammon' ? ' (選ぶ問題 shots・race の①〜⑨・追22・追23・追40・追54：36通りをルールで数え直し、誤答ごとの説明を14言語で)' : g === 'hex' ? ' (3D の準備13本：緑の印・半回転の try・説明と ほめ言葉の語が盤の事実・追1 準備の問題を本番で出さない)' : g === 'hexOpen' ? ` (ヘックスの定跡 ${JSON.parse(require('fs').readFileSync(path.join(ROOT, 'hex/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id).join('・') || 'なし'} の①〜⑨、全定跡の不正解の文の頭＝追53・16〜19点のほめ言葉＝追71` + (a.includes('--deep') ? '。①②はエンジンで2回読み直し、両方で合格＝追26・追84)' : '。①②は保存した2つの読みで照合、読み直しは --deep＝追26)') : g === 'foxgeese' ? ' (パズル全250問の①〜⑨・追6・追13・追16：厳密なソルバーで手数・正解の集まり・全段階の全不正解手の応手と文、2D の外れた手の文／3D のレッスン（狐：取れるガチョウ・続けて取る・2羽を同時に／ガチョウ：跳ばれない・閉じ込める・2手で閉じ込める）30問の①〜⑧・追3・追7・追16・追52・追70：正解の集まり・全合法手の盤の事実と14言語の文・ヒントの印)' : g === 'konane' ? ' (コナネのパズル全問の①〜⑨・追13・追16・追56：厳密なソルバーで手数・正解の集まり・テーマ（止まる・続けて跳ぶ）を正解手の全部で・全段階の全不正解手の応手と文、2D の外れた手の文。レッスン（3D の READY）：跳び方を数え直して正解の集まり・全不正解手の盤の事実・ヒントの印・準備の手・14言語)' : g === 'janggi' ? ' (パズル全問・レッスン b_rook・b_horse・b_elephant・b_cannon・b_pawn・b_escape・b_mate1・t_capture・t_fork・t_check・t_defend・m_mate2・m_mate3・e_rook・e_pawn の①〜⑨・追19・追20・追24・追27・追31・追34・追38・追39・追42・追44・追51・追55・追60)' : g === 'ur' ? (require('fs').existsSync(require('path').join(process.env.UR_LUT_DIR || '/tmp/urlut', 'finkel.rgu')) ? ' (ウルのレッスン12本の①〜⑧・追7・追16)' : ' (ウルのレッスン12本の③〜⑧・追7・追16。①②は完全解析表なしで未照合＝追26)') : g === 'plural58' ? ' (全ゲームの3Dパズルの案内文 atlas/puzzles.js とシャンチーの外れた手の文 xiangqi/pzwhy.js、追61 の <game>/i18n.js pz.*（xiangqi・chess・hex・morris・connect4・reversi）：1になりうる数のとなりに複数形の語がない＝追58、前の動詞（quedan・restam・осталось）は大文字小文字を問わない＝追69、en・es・fr・pt・de・ru・hi・ar)' : g === 'pz88' ? ' (追88：2D の詰めパズル（<game>/app.js puzzleMove・blockMove）が外れた手を戻さない・正解の手を出さない・途中で pz.good を言わない（hex・fanorona、ほかは pending）、詰めヘックス全403問の全段階の全外れ手×守りの応手で 2D・3D の文が盤の事実（あと何個・残り何手・相手がつながった・止まらない）と合う。追91：3D の詰めパズルの途中の文 <X>.mid にほめ言葉なし（HXX、ほかは pending）)' : g === 'dupkey89' ? ' (追89：3D のレッスン・パズルの文とデータ（atlas/ls-*.js・games/*-pz.js・lessons3d.js・puzzles.js・lsvoice-ja.js・<game>/ls-facts.js）の1つの辞書に同じ鍵が2度ない＝あとの鍵が前のセリフを黙って上書きしない)' : g === 'near53' ? ' (3D の結果の見出し「いい手だね…」「いい線！」「おしい！」は10点以上だけ＝追53・追57・追66、0点の見出し TX.wrong は14言語とも「惜しい」と言わない、3D レッスン本文の不正解の文の頭 soft にも近さの語なし＝追73、3D パズルの外れた手の文（foxgeese・konane の -pz.js の ja、janggi・ugolki の -pz.js の全言語）にも＝追78、2D レッスンの不合格の見出し「もう一息」は あと1問で合格のときだけ（janggi・fanorona・konane・foxgeese・checkers・chess・go・hex・morris・reversi・tafl・xiangqi）＝追82、2D の準備の外れた手の文 rampUi.ng（gomoku・konane）＝追81)': g === 'openLines' ? ' (shogi・tafl・checkers・xiangqi の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧${g === 'xiangqi' ? '、詰め233問の外れた手の文＝追20・追42' : g === 'checkers' ? '、基本 b_move・b_jump・b_multi・b_king・b_safe・b_win の全問・準備（lesson-verify-ckbasic.js）、詰めチェッカー527問の外れた手×全応手の文＝追20・追42・追58' : ''})`)); continue; }    bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
   process.exit(bad ? 1 : 0);
 }
