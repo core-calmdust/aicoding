@@ -2891,7 +2891,7 @@
       stop: ['きみの手だと攻めがとぎれて、{f}に先手が回っちゃう。', '攻めの手を休むと、{f}が反撃の形を作り始めるペン。', 'そこだと三も四もできず、{f}に自由に打たれちゃうね。'],
       far: ['きみの点はほかの石から離れていて、どの並びにも関われないんだ。', 'きみの石はぽつんと離れていて、{f}の形を止められないペン。'],
       free: ['{f}の{bd}の並びを放っておくと、次に三を作られやすくなる。', 'きみの手だと{f}の{bd}の線がのびのび使えちゃう。', 'そこだと{f}の{bd}の石がつながったまま。次に三へ伸ばされちゃうペン。', '{bd}の線を空けたままだと、{f}の攻めの足場が残るんだ。'],
-      lone: ['きみの手は自分の石とつながらないから、次の三につながらないペン。', 'きみの石は並びを作れず、攻めの足場にならないね。', 'そこだと{c}の石どうしが離れたまま。三を作るのに手数がかかっちゃう。'],
+      lone: ['きみの手は自分の石とつながらないから、次の三につながらないペン。', 'きみの石は並びを作れず、攻めの足場にならないね。', 'そこだと{c}の石どうしが離れたまま。三を作るのに手数がかかっちゃう。', '{c}の石のとなりに置いても、三へ伸ばせる並びにはならないペン。'],
       weak: ['きみの点だと緑の点の役目（{r}）が果たせないから、そのまま{f}の番になっちゃうペン。', 'そこでは緑の点の役目（{r}）が果たせないので、{f}に手番が回っちゃうんだ。', 'きみの点は{r}じゃないから、そのまま{f}の番になっちゃうね。', '緑の点の役目は{r}。きみの点だとそれができないから、一歩おくれるペン。', '大事なのは{r}。きみの点だとそこが空いたままになるから、{f}に先に使われるかもしれないペン。'],
       same: ['きみの点も形は似ているけど、緑の点のほうが次の攻めにつながるから一歩リードなんだ。', 'きみの手も同じねらいだね。でも緑の点なら石がよく働くから、先の戦いがずっと楽になるペン。', 'ねらいは同じでも、緑の点のほうが先の展開が良くなるから、そっちが正解なんだ。', '似た形でも置き場所で先の戦いが変わるから、緑の点のほうがずっと戦いやすいペン。'],
       close: ['きみの手も悪くないけど、緑の点だと石がもっとよく働くペン。', 'きみの点でも戦えるけど、緑の点なら石が2つの役目をするから一歩リード！', 'きみの石も役に立つけど、緑の点に比べると次の三が作りにくいんだ。', 'そこでもすぐには負けないよ。でも緑の点なら、先の攻めがずっと楽になるペン。', 'きみの点はちょっと控えめ。緑の点のほうが、相手のじゃまと自分の形を一度に作れるから強いんだ。'],
@@ -2901,8 +2901,8 @@
     mk(j) {
       const cnt = {}, a = j % 10, st = 1 + Math.floor(j / 10) % 3;
       const used = {};
-      const pk = (arr, key, ok) => { const u = used[key] = used[key] || new Set(); cnt[key] = (cnt[key] || 0) + 1; const st0 = j * 3 + cnt[key] - 1;
-        for (let pass = 0; pass < 2; pass++) { for (let k = 0; k < arr.length; k++) { const ix = (st0 + k) % arr.length; if (u.has(ix) || (ok && !ok(arr[ix]))) continue; u.add(ix); return arr[ix]; } u.clear(); }
+      const pk = (arr, key, ok, ok2) => { const u = used[key] = used[key] || new Set(); cnt[key] = (cnt[key] || 0) + 1; const st0 = j * 3 + cnt[key] - 1;   // (ok2: a looser test, tried on the unused lines before any repeats)
+        for (let pass = 0; pass < 2; pass++) { for (const f of ok2 ? [ok, ok2] : [ok]) for (let k = 0; k < arr.length; k++) { const ix = (st0 + k) % arr.length; if (u.has(ix) || (f && !f(arr[ix]))) continue; u.add(ix); return arr[ix]; } u.clear(); }
         return arr[st0 % arr.length]; };
       return { pk, open: (arr, i, off) => arr[(a + off + st * i) % arr.length] };
     },
@@ -2932,7 +2932,8 @@
       const pickWrong = u => u !== best && u != null && u >= 0 ? u : (sc.slice().sort((x, y) => x[1] - y[1])[0] || [])[0];
       const goodO = P.open(GOP.good, i, 0), push = i === 1 || i === 3 ? ' ' + P.pk(GOP.push, 'push') : '', rsT = P.pk(GOP.rs, 'rs');
       const mp = k => P.pk(GOP.miss[k], 'm' + k);
-      return { ask: fill(P.pk(GOP.ask, 'ask'), { s: sd }), hintTx: fill(P.pk(hk, 'h' + hkey, t => ring.length || !/光って/.test(t)), VB), hint: ring,
+      const askT = fill(P.pk(GOP.ask, 'ask'), { s: sd }), eOf = t => ((t || '').replace(/[。！？!?\s]+$/, '').match(/(よう|ろう|かな|ね|よ|んだ)$/) || [''])[0], askE = eOf(askT.split(/(?<=[。！？])\s*/).pop());   // (the hint does not open on the ask's ending — 〜ね！ then 〜ね。)
+      return { ask: askT, hintTx: fill((() => { const okR = t => ring.length || !/光って/.test(t), okE = t => okR(t) && (!askE || eOf(t.split(/(?<=[。！？])/)[0]) !== askE); return P.pk(hk, 'h' + hkey, okE, okR); })(), VB), hint: ring,
         good: u => { const other = u != null && u !== best && val.has(u) && val.get(u) >= b[1] - 25;
           return goodO + ' ' + (other ? 'きみの手も、緑の点と同じくらい良い一手だね。緑の点は' + roleB + '。' : whyB) + push; },
         ng: u0 => { const u = pickWrong(u0), pu = u == null ? 0 : GOP.pts(sc, u), softO = P.open(GOP.soft, i, 5);
@@ -2946,8 +2947,8 @@
           else if ((kb === 'b3' || kb === 'b3t') && !FU.b3) why = mp('left3');
           else if (/^(f4|ft|four|three|b3t)$/.test(kb) && !FU.fours.length && !FU.threes.length) why = mp('stop');
           else if (!FU.near) why = mp('far');
-          else if (FB.blk.length && !FU.blk.includes(FB.blk[0])) why = mp('free');
-          else if (FB.twos.length && !FU.twos.length && ku !== 'three') why = mp('lone');
+          else if (FB.blk.length && !FU.blk.some(i => GOP.DN[i] === GOP.DN[FB.blk[0]])) why = mp('free');   // (追90: not when the move blocks the other ナナメ — the words name only 「ナナメ」)
+          else if (FB.twos.length && !FU.twos.length && ku !== 'three') why = P.pk(GOP.miss.lone, 'mlone', t => FU.adjS.length ? !/つながらない|離れたまま/.test(t) : !/となりに置いても/.test(t));   // (追90: a stone next to its own is not 「つながらない」)
           else if (pu >= 10 && !(() => { G.bd[u] = s; const w = G.winPt(3 - s).length > 0 || !!G.vcf(3 - s, 6); G.bd[u] = 0; return w; })()) why = mp('close');   // (「悪くない」「すぐには負けない」: 10+ points and no win for the opponent after it — 追53)
           else why = mp(ku === kb ? 'same' : 'weak');
           return softO + ' ' + fill(rsT, { r: roleB }) + '<br>' + fill(why, V); } };
@@ -3186,7 +3187,7 @@
     LKEY: 'aicoding-gomoku-lessons', OKEY: 'aicoding-gomoku-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261125g'), getJ('../gomoku/openings.json?v=20261125v3'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261125g'), getJ('../gomoku/openings.json?v=20261125v4'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] gomoku texts', e); } this.I = w.I18N || {}; this.data = { ls, op };
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
