@@ -249,6 +249,26 @@ function scoreWhole(st) {
   const huge = days.flatMap(e => [e.t, e.n].concat(Object.values(e.alt || {}))).concat(I.flatMap(x => x.lines.map(l => l[1]))).filter(t => t && t.length > 240).length; if (huge) add(huge * 2, `画面に収まらない長さ ${huge}（240字まで）`);
   return { score: Math.max(0, Math.round(100 - ded.reduce((a, d) => a + d[0], 0))), ded };
 }
+
+// 11. 主人公と人物の筆致（2026-11-26 ユーザー：続けて＝主人公ごとの場面・人物の言葉も）
+//   主人公ごとの本筋の入り・自分の糸・結びの文・後日談（生きて／幽霊で）と、人物の名乗り・最後の言葉・狼の告白の厚み
+function scoreCast(base) {
+  const ded = [], add = (n, why) => ded.push([n, why]);
+  const H = base.heroes || [], avg = a => a.length ? a.reduce((x, y) => x + y.length, 0) / a.length : 0;
+  const thin = (arr, min, mean, what, w) => { const s = arr.filter(t => t.length < min).length; if (s) add(s * w, `${what}が薄い ${s}（${min}字未満）`); if (arr.length && avg(arr) < mean) add((mean - avg(arr)) / 5, `${what}の平均 ${Math.round(avg(arr))}字（${mean}字以上）`); };
+  thin(H.map(h => h.open || ''), 85, 100, '主人公の本筋の入り', .4);
+  thin(H.map(h => h.close || ''), 80, 95, '主人公の結びの文', .4);
+  thin(H.flatMap(h => Object.values(h.arc || {}).flat()).map(e => e.t || ''), 90, 110, '主人公の自分の糸', .4);
+  thin(H.map(h => h.epi || ''), 65, 80, '主人公の後日談', .4);
+  thin(H.map(h => h.epiGhost || ''), 50, 65, '主人公の幽霊の後日談', .4);
+  thin(base.chars.map(c => c.intro || ''), 34, 42, '人物の名乗り', .3);
+  thin(base.chars.map(c => c.last || ''), 40, 50, '人物の最後の言葉', .3);
+  thin(base.chars.map(c => c.wolf || ''), 95, 115, '狼の告白', .4);
+  const all = H.flatMap(h => [h.open, h.close, h.epi, h.epiGhost].concat(Object.values(h.arc || {}).flat().map(e => e.t))).filter(Boolean).join('\n');
+  const miss = Object.keys(SENSES).filter(k => !SENSES[k].test(all)); if (miss.length) add(miss.length * 2, `主人公の文に五感が足りない（${miss.join('・')}）`);
+  const fig = (all.match(FIG) || []).length; if (fig < 6) add((6 - fig) * .7, `主人公の文の比喩 ${fig}（6以上）`);
+  return { score: Math.max(0, Math.round(100 - ded.reduce((a, d) => a + d[0], 0))), ded };
+}
 // story text that the prose checks also read (the voiced lines checked against each speaker's voice)
 // 8. the heroes: every story has many "you"s, each with a way in, a thread of their own, and an ending
 function scoreHeroes(base) {
@@ -355,6 +375,9 @@ for (const id of Object.keys(W.WL_STORIES)) {
   const wq = scoreWhole(st); if (wq.score < BAR) fail++;
   console.log(`${wq.score >= BAR ? 'OK ' : 'NG '} ${String(wq.score).padStart(3)}  ${st.title}（物語全体の筆致）`);
   if (show || wq.score < BAR) for (const [n, w] of wq.ded) console.log(`      -${+n.toFixed(1)}  ${w}`);
+  const cq = scoreCast(base); if (cq.score < BAR) fail++;
+  console.log(`${cq.score >= BAR ? 'OK ' : 'NG '} ${String(cq.score).padStart(3)}  ${st.title}（主人公と人物の筆致）`);
+  if (show || cq.score < BAR) for (const [n, w] of cq.ded) console.log(`      -${+n.toFixed(1)}  ${w}`);
   const hq = scoreHeroes(base); if (hq.score < BAR) fail++;
   console.log(`${hq.score >= BAR ? 'OK ' : 'NG '} ${String(hq.score).padStart(3)}  ${st.title}（主人公 ${(base.heroes || []).length}人）`);
   if (show || hq.score < BAR) for (const [n, w] of hq.ded) console.log(`      -${n}  ${w}`);
