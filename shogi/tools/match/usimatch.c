@@ -204,6 +204,8 @@ int main(int argc, char **argv) {
     { const char *kn[3] = {"table move", "capture", "quiet"}, *bn[8] = {"1", "2", "3", "4-6", "7-10", "11-20", "21-40", "41+"}; long long tot = 0;
       for (int k = 0; k < 3; k++) for (int b = 0; b < 8; b++) tot += stCutK[k][b];
       for (int k = 0; k < 3; k++) { long long n = 0; for (int b = 0; b < 8; b++) n += stCutK[k][b]; printf("cut by %-10s %5.1f%% of cuts; place", kn[k], 100.0 * n / (tot ? tot : 1)); for (int b = 0; b < 8; b++) printf(" %s: %4.1f%%", bn[b], 100.0 * stCutK[k][b] / (n ? n : 1)); printf("\n"); } }
+    for (int k = 0; k < 2; k++) { long long n = 0; for (int b = 0; b < 8; b++) n += stQr[k][b]; printf("quiet cut-offs at depth %s: its place among the quiet moves 1: %.1f%% 2: %.1f%% 3: %.1f%% 4-6: %.1f%% 7-10: %.1f%% 11-20: %.1f%% 21+: %.1f%%\n", k ? "3+" : "1-2", 100.0 * stQr[k][0] / (n + 1), 100.0 * stQr[k][1] / (n + 1), 100.0 * stQr[k][2] / (n + 1), 100.0 * stQr[k][3] / (n + 1), 100.0 * stQr[k][4] / (n + 1), 100.0 * stQr[k][5] / (n + 1), 100.0 * (stQr[k][6] + stQr[k][7]) / (n + 1)); }
+    printf("quiets at the futility test (all nodes, depth 5-8): %.0f; mean reduced depth %.2f (before the history shift %.2f), static eval above alpha %.0f%%, mean alpha - eval %.0f, mean move number %.1f\n", stF[0], stF[1] / (stF[0] + 1), stF[5] / (stF[0] + 1), 100.0 * stF[2] / (stF[0] + 1), stF[3] / (stF[0] + 1), stF[4] / (stF[0] + 1));
     printf("qsearch nodes %lld: entered from the main search %lld (in check %lld), so %.2f further nodes an entry\n", stQ, stQ0, stQ0c, stQ0 ? (double)(stQ - stQ0) / stQ0 : 0);
     return 0;
   }
