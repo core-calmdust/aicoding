@@ -37,7 +37,7 @@ function playBot(story, diff, seed, smart) {
     // meeting
     if (smart && !dead) { for (const k of S.pl.found) E.present(S, story, k); if ((S.pl.role === 'seer' || S.pl.role === 'medium') && (day >= 2 || S.pl.res.some(r => r.res === 'wolf'))) E.playerClaim(S); E.playerResults(S); }
     E.meeting(S, story);
-    if (smart && !dead && story.rules === 'fox') for (const c of E.contradictions(S, story)) E.pointOut(S, story, c.id);   // the fox is found by its lie about the night
+    if (smart && !dead && story.foxLoc) for (const c of E.contradictions(S, story)) E.pointOut(S, story, c.id);   // the fox is found by its lie about the night
     if (smart && (!dead || (S.ghost && S.ghost.whisper))) { const A = E.analyze(S, 'you'); if (S.foxHunt) { const fv = E.foxView(S, story, 'you') || {}; for (const k in A.p) A.p[k] = (fv[k] || 0) * 1.5; } const t = E.alive(S).filter(p => !p.isPlayer).sort((a, b) => A.p[b.id] - A.p[a.id])[0]; if (t && A.p[t.id] > .3) { S.pl.accuse = { day, target: t.id, ev: S.pl.found.length > 0 }; if (dead) S.ghost.whisper = 0; } }
     // vote
     const live = E.alive(S).filter(p => !p.isPlayer);
