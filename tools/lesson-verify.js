@@ -2317,7 +2317,7 @@ function taflOpen(opt) {
 // legal move: a piece jumped for nothing / taken back / N pieces lost — the opponent's captures after it win that much; the crown,
 // the threatened piece, the back row, the exchange, the centre — on the board; no move is explained only by the vague 「先に良い場所を
 // 取られる」 kind of line; ⑨ the 2D and the 3D share problemPoints.
-const CKO_DONE = new Set(['cross', 'old14', 'alma', 'souter', 'fife', 'whilter', 'edinburgh', 'double', 'dcross', 'pioneer', 'denny', 'kelso', 'bristol', 'bcross', 'dundee']);   // (single・ayrshire・glasgow・laird: only shots were found — 次回)
+const CKO_DONE = new Set(['cross', 'old14', 'alma', 'souter', 'fife', 'whilter', 'edinburgh', 'double', 'dcross', 'pioneer', 'denny', 'kelso', 'bristol', 'bcross', 'dundee', 'single', 'ayrshire', 'glasgow', 'laird']);   // (all 19; single・ayrshire・glasgow・laird 2026-11-25: at most 4 shots each)
 function checkersOpen(opt) {
   const fs = require('fs'), vm = require('vm');
   if (!ckW) ckW = require(path.join(ROOT, 'checkers/tools/wasm.js')).loadSync();
@@ -2327,7 +2327,7 @@ function checkersOpen(opt) {
   const cut = (a, b) => src.slice(src.indexOf(a), src.indexOf(b));
   const line = a => src.slice(src.indexOf(a), src.indexOf('\n', src.indexOf(a)) + 1);
   const X = vm.runInNewContext(line('  const shSeed = ') + line('  const shPerm = ') + cut('  const xqSn = ', '  const XQ_TAIL = ') + cut('  const xqJoin = ', '  function xqOpJa(')
-    + cut('  const CKM = ', '  const CK_EG = ') + '\n;({ ckOpJa, ckOpVoice, ckFacts, CKJ_OP })', {});
+    + cut('  const CKM = ', '  const CK_EG = ') + '\n;({ ckOpJa, ckOpVoice, ckFacts, CKJ_OP, CK_WHY, CK_SHORT, ckSh })', {});
   // ⑨ ⑥ the scoring and the order in both
   const PTS = 'if (mine >= best - 6 && !(best > WINT && mine < best)) return 20;';
   if (!app.includes(PTS) || !src.includes(PTS.replace(/WINT/g, 'CK_WINT'))) add('-', -1, '⑨ problemPoints changed in the 2D or the 3D');
@@ -2382,26 +2382,35 @@ function checkersOpen(opt) {
       for (let i = 0; i < 5; i++) { const V = X.ckOpVoice(id); V.pts = (Q, m) => pts(Q.sc, m); let Q;
         try { Q = X.ckOpJa(E, P, name, id.charCodeAt(1) * 2 + i, k => k === 'ok' ? '{M}' : '{X}', V, i); } catch (e) { a(`⑧ the words fail: ${e.message}`); break; }
         for (const t of [Q.ask, Q.hintTx, Q.good(A)]) if (!t || /\{(?!M\}|X\})|undefined|NaN/.test(t)) a(`⑧ 「${t}」`);
+        // (2026-11-25 担当B) 「安全にN枚取れる」: N = the pieces the move it speaks of takes (the answer, or {X} when the sentence names your move)
+        const nTake = (t, u) => t.split(/[。！？]/).forEach(x => { const mm = x.match(/安全に(\d+)枚取れる/); if (!mm) return; const mv = x.includes('{X}') ? u : A, c = E.popc(E.mCap(mv)); if (+mm[1] !== c) a(`⑦ ${E.name(p, mv)} takes ${c}, the words say ${mm[1]} 「${t}」`); });
         const g = plain(Q.good(A));
-        if (/ショット|跳び返す|2枚取れる|2枚いただく/.test(g) && !(FA.capN === 0 && nA > 0)) a(`⑦ the answer is no shot (net ${nA}) 「${g}」`);
-        if (FA.capN === 0 && nA > 0) { const af = p.clone().play(A); let t = 0, bv = -99; for (const c of af.caps()) { const v = E.popc(E.mCap(c)) - swing(af.clone().play(c), 0); if (v > bv) { bv = v; t = E.popc(E.mCap(c)); } }
-          const gget = t + nA;   // (the opponent takes t, then the shot takes back t + the gain)
-          if (/1枚(わざと)?取らせ|1枚捨て|えさの駒を1枚/.test(g) && t !== 1) a(`⑦ the shot gives ${t} pieces, the words say 1 「${g}」`);
-          if (/2枚(いただく|取れる)/.test(g) && gget !== 2) a(`⑦ the shot takes ${gget} back, the words say 2 「${g}」`);
-          if (/まとめて跳ぶ|連続で跳び返す/.test(g) && gget < 2) a(`⑦ the shot takes only ${gget} 「${g}」`); }
-        if (/キング|王冠/.test(g) && !/キングを防ぐ|キングに(なられ|成られ)/.test(g) && !p.promotes(A)) a(`⑦ the answer does not crown 「${g}」`);
-        { // 追41: a piece the opponent could jump before the answer, none after (a quiet answer) — the praise says so, and only then
-          const fl = q => { const r = q.clone(); r.side ^= 1; r.rehash(); return r; }, af = p.clone().play(A);
-          const flee = swing(fl(p), 0) > 0 && E.popc(E.mCap(A)) === 0 && !af.caps().length;
-          const says = /ねらわれ|跳び越えられそう|取られそう|ピンチの駒|取るねらいを、先に/.test(g);
-          if (flee && !says) a(`追41 the answer saves a piece the opponent could jump, the praise does not say so 「${g}」`);
-          if (!flee && says) a(`追41 the praise says a piece was in danger, none was 「${g}」`); }
-        if (/取り返され(?!ない)/.test(g) && !(nA < E.popc(E.mCap(A)))) a(`⑦ the answer is not taken back 「${g}」`);
-        if (/わざと1枚を取らせる|1枚を差し出|1枚あげ|1枚差し出|損を承知/.test(g) && !(nA < 0)) a(`⑦ the answer gives no piece (net ${nA}) 「${g}」`);
+        const chkG = (g, full) => {   // (full: the praise said; else 追90 — every wording the praise can take)
+          if (/ショット|跳び返す|(?<!安全に)2枚取れる|2枚いただく/.test(g) && !(FA.capN === 0 && nA > 0)) a(`⑦ the answer is no shot (net ${nA}) 「${g}」`);
+          if (FA.capN === 0 && nA > 0) { const af = p.clone().play(A); let t = 0, bv = -99; for (const c of af.caps()) { const v = E.popc(E.mCap(c)) - swing(af.clone().play(c), 0); if (v > bv) { bv = v; t = E.popc(E.mCap(c)); } }
+            const gget = t + nA;   // (the opponent takes t, then the shot takes back t + the gain)
+            if (/1枚(わざと)?取らせ|1枚捨て|えさの駒を1枚/.test(g) && t !== 1) a(`⑦ the shot gives ${t} pieces, the words say 1 「${g}」`);
+            if (/2枚(いただく|取れる)/.test(g) && gget !== 2) a(`⑦ the shot takes ${gget} back, the words say 2 「${g}」`);
+            if (/まとめて跳ぶ|連続で跳び返す/.test(g) && gget < 2) a(`⑦ the shot takes only ${gget} 「${g}」`); }
+          if (/キング|王冠/.test(g) && !/キングを防ぐ|キングに(なられ|成られ)/.test(g) && !p.promotes(A)) a(`⑦ the answer does not crown 「${g}」`);
+          nTake(g, A);
+          { // 追41: a piece the opponent could jump before the answer, none after (a quiet answer) — the praise says so, and only then
+            const fl = q => { const r = q.clone(); r.side ^= 1; r.rehash(); return r; }, af = p.clone().play(A);
+            const flee = swing(fl(p), 0) > 0 && E.popc(E.mCap(A)) === 0 && !af.caps().length;
+            const says = /ねらわれ|跳び越えられそう|取られそう|ピンチの駒|取るねらいを、先に/.test(g);
+            if (full && flee && !says) a(`追41 the answer saves a piece the opponent could jump, the praise does not say so 「${g}」`);
+            if (!flee && says) a(`追41 the praise says a piece was in danger, none was 「${g}」`); }
+          if (/取り返され(?!ない)/.test(g) && !(nA < E.popc(E.mCap(A)))) a(`⑦ the answer is not taken back 「${g}」`);
+          if (/わざと1枚を取らせる|1枚を差し出|1枚あげ|1枚差し出|損を承知/.test(g) && !(nA < 0)) a(`⑦ the answer gives no piece (net ${nA}) 「${g}」`);
+        };
+        chkG(g, true);
+        if (i === 0) { const KW = X.CK_WHY[FA.k] || X.CK_WHY.dev, KS = X.CK_SHORT[FA.k] || X.CK_SHORT.dev;   // 追90: all the praise's wordings for this kind, on this board
+          KW.forEach(w => chkG(w, false)); KS.forEach((w, q) => { const t = X.ckSh(FA.k, q, null, FA.capN); chkG(t, false); nTake(t, A); }); }
         if (nA < 0) a(`④ the answer drops a piece (net ${nA}): a sacrifice the words cannot explain from the board`);
         for (const u of ms) { if (u === A) continue; const w = plain(Q.ng(u)), nu = net(p, u), lost = -nu;
           { const e = soft53(w, pts(P.sc, u), (new Map(P.sc).get(u) ?? -WIN) < -(WINT - 1000)); if (e) a(`⑦ ${E.name(p, u)}: ${e} 「${w}」`); }
           if (/\{(?!M\}|X\})|undefined|NaN/.test(w)) a(`⑧ ${E.name(p, u)}: 「${w}」`);
+          nTake(w, u);
           if (!w.includes('{X}')) a(`⑦ ${E.name(p, u)}: does not name your move 「${w}」`);
           if ([...VAGUE].some(x => w.includes(x.replace('{x}', '{X}')))) a(`⑦ ${E.name(p, u)}: only a vague reason 「${w}」`);
           const m2 = w.match(/連続で跳ばれて(\d+)枚/); if (m2 && lost !== +m2[1]) a(`⑦ ${E.name(p, u)}: says ${m2[1]} pieces lost, the board ${lost} 「${w}」`);

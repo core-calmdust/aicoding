@@ -3571,9 +3571,9 @@
     dev: ['駒を進めて、形を整える手だカニ。', '仲間の駒とくっつくように進める手なの。', 'すぐ後ろが空かないように、駒を進めておく手！', '駒どうしを斜めにつなげて進む手。つながった駒は取られにくいカニ！', 'あわてず一歩進める手。形がくずれないのがいちばんなの。', '次の動きにそなえて、駒の位置を整える手だカニ！'],
   };
   const CK_SHORT = { gambit: ['1枚差し出して形を先に作れる', '損を承知で陣形を整えられる'], win: ['勝ちが決まる', '相手を動けなくできる'], shot: ['取らせてから跳び返して得をする', '捨てた分より多く取り返せる', '相手に取らせたあと跳び返せる', 'えさの駒で相手をさそい出せる', '取るしかない相手を逆に跳び越せる'], recap: ['駒の数をそろえられる', '取られた分を取り戻せる'], cap: ['取ったあとも取り返されない', '安全に1枚取れる'],
-    xchg: ['ルールどおり取って交換にできる', '取り合いをおあいこにできる'], crown: ['キングになれる', '後ろにも動ける駒が作れる'], save: ['ねらわれた駒を守れる', '取られそうな駒を助けられる'], trade: ['交換で形を整えられる', '取り合いで相手の形をくずせる', '盤をすっきりさせられる'],
+    xchg: ['ルールどおり取って交換にできる', '取り合いをおあいこにできる', '取って1枚ずつの交換にできる'], crown: ['キングになれる', '後ろにも動ける駒が作れる'], save: ['ねらわれた駒を守れる', '取られそうな駒を助けられる'], trade: ['交換で形を整えられる', '取り合いで相手の形をくずせる', '盤をすっきりさせられる', '1枚ずつの取り合いに持ちこめる', '自分から交換をしかけられる', '駒をぶつけて取り合いにできる'],
     back: ['前の味方を支えられる', '控えの駒を戦いに加えられる', '奥の駒も戦力にできる', '守りの駒を前線に回せる'], center: ['中央をおさえられる', 'まん中で動ける道が広がる', '相手が前へ進みにくくなる', '相手より先にまん中に立てる'], edge: ['端で安全に駒を進められる', '跳ばれる心配なく進める', 'へりで守りをかためられる'], dev: ['形をくずさずに進められる', '駒どうしがつながる', 'すきを作らずに前へ出られる'] };
-  const ckSh = (kd, n, V) => { const A = CK_SHORT[kd] || CK_SHORT.dev; if (!V) return A[n % A.length]; const c = V.sh || (V.sh = {}); c[kd] = (c[kd] || 0) + 1; return A[(n + c[kd]) % A.length]; };   // (V: each use moves on, so one opening does not say the same phrase three times)
+  const ckSh = (kd, n, V, cn) => { const A = CK_SHORT[kd] || CK_SHORT.dev, t = !V ? A[n % A.length] : (() => { const c = V.sh || (V.sh = {}); c[kd] = (c[kd] || 0) + 1; return A[(n + c[kd]) % A.length]; })(); return kd === 'cap' && cn > 1 ? t.replace('1枚', cn + '枚') : t; };   // (2026-11-25 担当B: a capture of 2+ pieces is not 「1枚取れる」)   // (V: each use moves on, so one opening does not say the same phrase three times)
   const ckRot = (A, o) => A.map((_, q) => A[(o + q) % A.length]);
   function ckWhyJa(F, k, V) { const L = CK_WHY[F.k] || CK_WHY.dev; return V ? xqPick(V, ckRot(L, k)) : L[k % L.length]; }
   const CK_HINT = { gambit: ['1枚取らせてでも、形を作りにいく手があるかも？', '駒を差し出す、思い切った手も考えてみて！'], win: ['相手を動けなくする手、ないかな？', '一気に決められる手がありそう！', 'とどめを刺せる駒、さがしてみて！'], shot: ['わざと取らせたら、そのあと跳び返せる道はない？', '損して得とれ！ 取らせてから跳び返す手、さがしてみて。', '捨て駒から始まる跳び返しを見つけよう！', '相手が取るしかない場面を、自分で作ってみよう！', 'わざと駒を差し出したら、相手の駒はどこに着地する？'],
@@ -3597,7 +3597,7 @@
     V = V || ckOpVoice(name); i = i || 0;
     const pos = E.Pos.from(P.s), A = P.best, sc = new Map(P.sc || []), best = sc.has(A) ? sc.get(A) : Math.max(...(P.sc || [[0, 0]]).map(x => x[1]));
     const FA = ckFacts(E, pos, A), M = ck('ok'), X = ck('ng'), f = s => s.replace(/\{m\}/g, M).replace(/\{x\}/g, X);
-    const ask = i === 0 ? CKJ_OP.askN.replace('{n}', name) : V.ask(i), j = i + V.seed % 7, sh = ckSh(FA.k, j, V), sh2 = ckSh(FA.k, j, V);
+    const ask = i === 0 ? CKJ_OP.askN.replace('{n}', name) : V.ask(i), j = i + V.seed % 7, sh = ckSh(FA.k, j, V, FA.capN), sh2 = ckSh(FA.k, j, V, FA.capN);
     // the praise: the cheer, why — in words the line's notes have not used — and now and then a push on
     let why; { const L = CK_WHY[FA.k] || CK_WHY.dev, fresh = L.filter(x => xqSn(x).every(y => !V.used.has(y.trim())));
       why = fresh.length ? ckWhyJa(FA, j, V) : xqPick(V, [0, 1, 2, 3, 4, 5].map(q => V.pr(i + q).replace('{a}', sh2))); }
@@ -3627,7 +3627,7 @@
         else if (FA.thrAfter && !F.thrAfter) out.push(pk(['{x}だと、相手の駒をねらう形が作れないの。', '{x}では、次に跳び越えるねらいが生まれないカニ。']));
         else if (FA.center && F.edge) out.push(pk(['{x}は端へ寄る手。安全だけど、まん中を相手に先に取られちゃう。', '{x}だと駒が端へ行って、中央が相手のものになりやすいの。']));
         else if (FA.center && !F.center && !F.capN) out.push(pk(['{x}だと、中央への進出が遅れちゃう。', '{x}では、まん中のマスを相手にゆずることになるの。', '{x}だと、まん中が空いたままで、相手に先に入られちゃう。', '{x}では中央の駒が足りなくなって、相手に押しこまれるカニ。']));
-        else if (F.k !== FA.k && CK_SHORT[F.k]) out.push(pk([`{x}だと${ckSh(F.k, j, V)}けど、いまはそれより急ぐ手があるの。`, `{x}も${ckSh(F.k, j, V)}手。だけど、この場面では一歩おそいカニ。`, `{x}なら${ckSh(F.k, j, V)}。ただ、それだと先にやるべきことが後回しになるの。`, `{x}で${ckSh(F.k, j, V)}のは、あとからでも間に合うんだ。`, `{x}だと${ckSh(F.k, j, V)}。でも、それはもう少しあとの話だカニ。`]));
+        else if (F.k !== FA.k && CK_SHORT[F.k]) out.push(pk([`{x}だと${ckSh(F.k, j, V, F.capN)}けど、いまはそれより急ぐ手があるの。`, `{x}も${ckSh(F.k, j, V, F.capN)}手。だけど、この場面では一歩おそいカニ。`, `{x}なら${ckSh(F.k, j, V, F.capN)}。ただ、それだと先にやるべきことが後回しになるの。`, `{x}で${ckSh(F.k, j, V, F.capN)}のは、あとからでも間に合うんだ。`, `{x}だと${ckSh(F.k, j, V, F.capN)}。でも、それはもう少しあとの話だカニ。`]));
       }
       if (out.length === n0) { const g2 = ckOppShot(E, pos, u);   // (2026-11-24 第2期) the opponent's shot that your move allows, from the board
         if (g2 > 0) out.push(pk([`{x}だと、相手がわざと駒を取らせてから跳び返す「ショット」を打てるの。差し引き${g2}枚の損になっちゃう！`, `{x}のあとは、相手に「ショット」があるカニ。1枚取らされたあと連続で跳ばれて、差し引き${g2}枚へっちゃう。`])); }
@@ -3828,7 +3828,7 @@
     LKEY: 'aicoding-checkers-lessons', OKEY: 'aicoding-checkers-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=30261126bk1'), getJ('../checkers/openings.json?v=5'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1-bk1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=5').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=30261126bk1'), getJ('../checkers/openings.json?v=6'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1-bk1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=5').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vc]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] checkers texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vc)(v); this.V = ((v.I18N || {})['ja@crab']) || {}; } catch (e) { this.V = {}; }   // (チェッカニ's own lines, 3D, ja)
           return this; })
