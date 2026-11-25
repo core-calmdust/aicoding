@@ -8,12 +8,12 @@ const E = W.WLEngine;
 const args = process.argv.slice(2);
 const opt = k => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : null; };
 const N = +(opt('n') || 300);
-const diffs = (opt('diff') || '0,1,2,3').split(',').map(Number);
+const diffs = (opt('diff') || '0,1,2,3,4').split(',').map(Number);
 const stories = args[0] && !args[0].startsWith('--') ? [args[0]] : Object.keys(W.WL_STORIES);
 const verbose = args.includes('--verbose');
 
 // the bar: detective win rate per difficulty, and the random voter must lose clearly more often
-const BAR = { det: [[.85, 1], [.7, 1], [.6, .95], [.55, .85]], rnd: [.5, .38, .25, .15], gap: .3, day1: .9 };   // 2026-11-25：村まかせ（でたらめ投票）で勝てないことを基準に加えた   // 2026-11-25：死んでも幽霊で続くので上限を広げた   // the bot reasons perfectly: a person wins less
+const BAR = { det: [[.85, 1], [.7, 1], [.65, 1], [.6, .95], [.55, .85]], rnd: [.5, .38, .32, .25, .15], gap: .3, day1: .9 };   // 2026-11-25：村まかせ（でたらめ投票）で勝てないことを基準に加えた   // 2026-11-25：死んでも幽霊で続くので上限を広げた   // the bot reasons perfectly: a person wins less
 
 function playBot(story, diff, seed, smart, naive) {   // naive: 調べて痕跡も示すが、推理はせず、占いの黒と村の空気に従って投票する（推理の難しさを測る）
   const S = E.newGame(story, { diff, seed });
@@ -92,7 +92,7 @@ for (const sid of stories) {
     const [lo, hi] = BAR.det[d];
     const ok = det >= lo && det <= hi && det - rnd >= BAR.gap && rnd <= BAR.rnd[d] && c1 <= BAR.day1;
     if (!ok) fail++;
-    console.log(`  ${['入門', '標準', '上級', '悪夢'][d]}(${E.DIFF[d].size}人)  探偵 ${(det * 100).toFixed(0)}%  素直 ${(nw / N * 100).toFixed(0)}%  でたらめ ${(rnd * 100).toFixed(0)}%  平均${(days / N).toFixed(1)}日  初日の確信 ${(c1 * 100).toFixed(0)}%  護衛成功 ${(gd / N).toFixed(2)}/局  名乗った占い師の死 ${sd}/${sc}  結末 ${JSON.stringify(why)}  ${ok ? 'OK' : '★基準外'}  (${((Date.now() - t0) / N / 2).toFixed(0)}ms/局)`);
+    console.log(`  ${['入門', '標準', '中級', '上級', '悪夢'][d]}(${E.DIFF[d].size}人)  探偵 ${(det * 100).toFixed(0)}%  素直 ${(nw / N * 100).toFixed(0)}%  でたらめ ${(rnd * 100).toFixed(0)}%  平均${(days / N).toFixed(1)}日  初日の確信 ${(c1 * 100).toFixed(0)}%  護衛成功 ${(gd / N).toFixed(2)}/局  名乗った占い師の死 ${sd}/${sc}  結末 ${JSON.stringify(why)}  ${ok ? 'OK' : '★基準外'}  (${((Date.now() - t0) / N / 2).toFixed(0)}ms/局)`);
   }
 }
 process.exit(fail ? 1 : 0);
