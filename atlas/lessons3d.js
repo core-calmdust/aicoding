@@ -4139,7 +4139,7 @@
       m_hc: ['馬後炮で詰ませる、最初の手はどれかな？', '馬と炮を將の筋に並べるには？', '馬後炮の形を作る一手、わかる？', '馬を台にして炮で詰ませよう！ 最初の手は？', '馬後炮のチャンスだコン！ どこから始める？'],
       m_dc: ['重炮で詰ませる、最初の手はどれかな？', '2つの炮を縦に重ねるには、どう指す？', '重炮の形を作る一手、わかる？', '重炮のチャンスだコン！ 最初の手は？', '炮を台にして炮で詰ませる。どこから始める？'],
       m_face: ['帥の力も使って、詰ませてみよう！', '帥と將のにらみ合いを使う一手はどれかな？', '帥のいる筋は、將は通れない。それを使うと？', '帥も攻めに参加させるコン！ 決め手は？', '帥のにらみを生かす詰め方、わかる？'],
-      e_rook: ['詰みへの近道になる手はどれかな？', '將の動ける場所を減らす一手は？', '車と帥で、どう追いつめる？', 'いちばん早く詰むコースを探してみて！', 'ここが腕の見せどころだコン！'],
+      e_rook: ['いちばん早く詰む手はどれ？', '最短で詰ませる一手を探してみて！', '詰みまでの手数がいちばん少ない手は？', 'いちばん早く詰むコースを探してみよう！', '最短の詰み、見つけられる？'],
       e_pawn: ['詰みへの近道になる手はどれかな？', '兵をどこまで進める？ いちばん良い手は？', '帥と兵で、どう追いつめる？', 'いちばん早く詰むコースを探してみて！', '兵の進め方が勝負だコン！'],
     },
     hint: {
@@ -4157,7 +4157,13 @@
       m_hc: ['將・馬・炮が、同じ筋に縦に並ぶ形を思い出して！', '馬が炮台になって、炮が王手する形だね。', '馬は將の横の逃げ道も押さえてくれるコン。', '炮を將の筋へ回す道はある？', '先に馬を置くか、先に炮を回すか、順番が大事なの。'],
       m_dc: ['前の炮が台になって、後ろの炮で王手する形だね。', '炮を2つ、將の筋に縦に重ねられない？', '前の炮は取られにくい場所に置きたいコン。', '王手で將の動きをしぼってから、炮を重ねる手順もあるコン。', '炮を重ねると、間に駒を入れても受けられないの。'],
       m_face: ['將が横へ逃げると、帥と向かい合わない？', '帥のいる筋は、將にとって通れない壁だコン。', '帥と將が同じ筋に並ぶ手は指せないルールなの。', '車や馬の王手に、帥のにらみを組み合わせてみて！', '將の逃げ道を、帥がいくつ消しているか数えてみて。'],
-      e_rook: ['帥のにらみと車の通せんぼ、両方使うのがコツだコン。', '將が動ける点を数えて、いちばん減る手を探して！', '車は遠くから、將の段や筋をふさげるの。', 'あせって王手を続けるより、包囲を狭めるのが近道なの。', '士を取れるタイミングがないかも見てみて！'],
+      // (2026-11-25 第2期 担当A) e_rook: the hint follows the answer (a move of the general that shuts a flight by the face-off / a check of
+      // the chariot / a quiet chariot move) — chosen in xqLsJa from these three lists
+      e_rook: ['帥を動かして、將と向かい合う筋をにらんでみて。', '帥のにらみで、將の行き場を1つ消してみて！'],
+      e_rookM: ['帥を真ん中の筋へ動かして、將が使える点を減らしてみて。', '帥で真ん中の筋をにらむと、將はその筋に出られないの。'],
+      e_rookP: ['帥を動かして、將との間にいる士を動けなくしてみて。', '帥と將の間に士が1つ。帥で向かい合うと、その士はどうなる？'],
+      e_rookC: ['車の王手から入ってみて。', '王手で將を動かして、追いこんでいこう。'],
+      e_rookQ: ['王手を急がず、車で將の通り道をふさいでみて。', 'あせって王手するより、將の行き場を先に消すのが近道なの。'],
       e_pawn: ['兵は戻れないから、進めすぎに気をつけるコン。', '帥のにらみで、將の行き場をしぼってみて。', '兵が九宮に入ると、將のとなりをおさえられるの。', '將が動ける点を数えて、いちばん減る手を探そう！', '兵を急がせず、帥を先に動かす手もあるの。'],
     },
     // ショウギツネ's voice for one lesson, each lesson in an order of its own (xqLsVoice)
@@ -4199,11 +4205,12 @@
     // why the right move works: five wordings of one short clause (plain form, no ending)
     const plus = (Fm, u) => {
       if (Fm.mate) { const mn = XQ_MATE[id]; return [mn ? `${mn}が決まって、將はもう動けなくなる` : '將の行き場がひとつも残らなくなる', '王手をはずす手が、相手にもう1つもない', '將が逃げても、取っても、間に駒を入れても防げない', 'たった1手で、九宮の將がつかまる', '將の逃げ道が全部なくなる']; }
+      // (2026-11-25 第2期 担当A) the endgames come before the ok kinds: e_rook is an ok kind (the fastest mate alone), worded by its speed
+      const v = sc && sc.has(u) ? sc.get(u) : best;
+      if (id === 'e_rook' || id === 'e_pawn') return v > WT ? (v === best ? ['いちばん早く詰ませられる', '最短の道で將を追いつめられる', '回り道しないで詰みまで行ける', '相手に粘るすきを与えない、最短コースになる', '將を詰ませるまでの道のりが、いちばん短くなる'] : ['ちゃんと詰みまで行ける', '少し長くても、詰みまでたどり着ける', '詰みの道すじは消えない', '將を逃がさずに追いつめられる', '詰みまでの流れはちゃんと残る'])
+        : ['將の動ける場所をせばめられる', '將の行き場を1つずつ減らせる', '帥と組んで、將をすみへ追いこめる', '將の逃げ道をじわじわ消せる', '包囲の輪を、ひとまわり小さくできる'];
       if (P.ok) return Fm.check ? ['どう受けても、次の手で詰みが待っている', '相手の受けは、どれも次の詰みにつながる', '王手で受け方をしぼって、次で仕上げられる', '相手がどこへ逃げても、とどめの手がある', '王手を受けた形が、そのまま詰みの形になる']
         : ['王手じゃなくても、相手に詰みを防ぐ手がない', '静かな手なのに、次の詰みをもう止められない', '將の逃げ道を先にふさいで、次で詰ませられる', '相手が何を指しても、次の手で詰む形になる', '王手をかけずに、相手の受けを先に消しておける'];
-      const v = sc && sc.has(u) ? sc.get(u) : best;
-      if (id === 'e_rook' || id === 'e_pawn') return v > WT ? (v === best ? ['いちばん早く詰ませられる', '最短の道で將を追いつめられる', '回り道しないで詰みまで行ける', '相手に粘るすきを与えない、最短コースになる', '詰みまでの手数がいちばん少なくなる'] : ['ちゃんと詰みまで行ける', '少し長くても、詰みまでたどり着ける', '詰みの道すじは消えない', '將を逃がさずに追いつめられる', '詰みまでの流れはちゃんと残る'])
-        : ['將の動ける場所をせばめられる', '將の行き場を1つずつ減らせる', '帥と組んで、將をすみへ追いこめる', '將の逃げ道をじわじわ消せる', '包囲の輪を、ひとまわり小さくできる'];
       const two = (a, b) => a === b ? `2つの${NO(a)}` : `${NO(a)}と${NO(b)}`;
       if (Fm.saved && !Fm.cap) { const nm = N(pos.at(E.mFrom(Fm.m)) & 7); return [`ねらわれた${nm}が、取られない点へ逃げられる`, `${nm}を、もうねらわれない点へ移せる`, `${nm}の逃げた先には、相手の駒が届かない`, `取られそうだった${nm}を助けられる`, `${nm}が、相手のどの駒のねらいからも外れる`]; }
       if (Fm.cap && !Fm.recap) { const c = NO(Fm.cap); return [`${c}をただで取れる`, `${c}を取っても、取り返されない`, `守りのない${c}をいただける`, `${c}を取ったあと、相手に取り返す駒がない`, `ひもの付いていない${c}を取れる`]; }
@@ -4224,6 +4231,13 @@
     // what the wrong move misses (most telling first), worded per problem
     const why = (Q, u) => {
       const v = sc && sc.has(u) ? sc.get(u) : null, d = v == null ? null : best - v;
+      // (2026-11-25 第2期 担当A) e_rook (ok kind: the fastest mate alone is right): what the miss does on the board — the chariot is taken
+      // (a draw: no mate is left with the general alone), a slower win (the engine still sees a mate), or the mate is put off (no win
+      // within one move more than the answer: tools/lesson-verify-xqend.js)
+      if (id === 'e_rook') { const q = pos.clone().play(u), lost = q.moves().some(r => q.at(E.mTo(r)) && E.typeOf(q.at(E.mTo(r))) === E.ROOK);
+        return lost ? V(['{x}だと車を取られて、引き分けになっちゃう。', '{x}では車がただで取られて、もう詰ませられないの。'])
+          : v != null && v > WT ? V(['{x}でも勝てるけど、詰みまで少し遠回りになるの。', '{x}も勝ちまで行けるけど、手数が多くかかるの。'])
+          : V(['{x}だと詰みが遠のいて、相手に粘られちゃう。', '{x}では將に息をつかせて、詰みまで長引くの。', '{x}のあとは、すぐには詰まない形になっちゃう。']); }
       if (P.ok) { const o = Q.out();
         return Q.mate ? '' : o === 'take' ? V(['{x}の王手は、その駒を取られて終わっちゃう。', '{x}で王手しても、王手した駒がそのまま取られるの。', '{x}だと、王手の駒を相手にぱくっと取られちゃう。', '{x}の王手は、相手に駒を取られて消えちゃうの。', '{x}だと、王手した駒がただで取られるね。'])
           : o === 'run' ? V(['{x}の王手だと、將に逃げられちゃうの。', '{x}では將に逃げ道が残って、かわされるの。', '{x}の王手は、將が空いている点へ動いてかわせちゃう。', '{x}だと、將がするりと逃げ出せるね。', '{x}の王手では、將の逃げ場がまだあるの。'])
@@ -4289,13 +4303,20 @@
       return f(s0); };
     const H2 = M2 && !MN ? (M2.chk ? ['王手をかけて、相手の受け方をしぼってみて。', '王手のあと、相手に残る受けは少ないほどいいコン。', '王手した駒が取られないかも、確かめてね。', '王手のあとの受けを、ひとつずつ追ってみて！', '王手を受けた形に、とどめの手はある？']
       : ['王手をかけなくてもいいの。相手の受けをなくす手を探そう。', M2.shut ? '將の逃げ道になりそうな点を、先に消しておけない？' : '相手が受けに使えそうな手を、先に消しておけない？', '相手が何を指しても詰む形、思いうかぶ？', '王手はどれも受けられちゃう。静かな一手を探してみて。', '相手の受け方を、ひとつずつ考えてみて。']) : null;
-    return { ask: pick(A0), hintTx: H2 ? H2[(i + n) % 5] : H.length ? H[(i + n) % H.length] : '', good, ng: say, own: true };
+    // (2026-11-25 第2期 担当A) e_rook: the hint names how the answer works (the general / a chariot check / a quiet chariot move)
+    const pin = () => { const z = pos.clone().play(A), a0 = z.k[me], b0 = z.k[me ^ 1]; if (a0 % 9 !== b0 % 9) return false; const S0 = [];
+      for (let r = Math.min(a0, b0) + 9; r < Math.max(a0, b0); r += 9) if (z.at(r)) S0.push(z.at(r)); return S0.length === 1 && E.colorOf(S0[0]) !== me && E.typeOf(S0[0]) === E.ADVISOR; };
+    const clear = (z, a0, t) => { for (let r = Math.min(a0, t) + 9; r < Math.max(a0, t); r += 9) if (z.at(r)) return false; return true; };
+    const shut = () => { const z = pos.clone().play(A), a0 = z.k[me], b0 = z.k[me ^ 1];   // a flight next to the enemy general shut by our general's face-off
+      return [b0 - 9, b0 + 9, b0 - 1, b0 + 1].some(t => t >= 0 && t < 90 && Math.abs(t % 9 - b0 % 9) + Math.abs(((t / 9) | 0) - ((b0 / 9) | 0)) === 1 && t % 9 >= 3 && t % 9 <= 5 && (me ? (t / 9 | 0) >= 7 : (t / 9 | 0) <= 2) && !z.at(t) && t % 9 === a0 % 9 && clear(z, a0, t)); };
+    const HE = id === 'e_rook' ? (E.typeOf(pos.at(E.mFrom(A))) === E.KING ? (pin() ? XQJ_LS.hint.e_rookP : shut() ? XQJ_LS.hint.e_rook : XQJ_LS.hint.e_rookM) : FA && FA.check ? XQJ_LS.hint.e_rookC : XQJ_LS.hint.e_rookQ) : null;
+    return { ask: pick(A0), hintTx: HE ? HE[((i + n) >> 1) % HE.length] : H2 ? H2[(i + n) % 5] : H.length ? H[(i + n) % H.length] : '', good, ng: say, own: true };
   }
   const XIANGQI = {
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xe1'), getJ('../xiangqi/openings.json?v=5'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xe1-er1'), getJ('../xiangqi/openings.json?v=5'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vf]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vf)(v); this.V = ((v.I18N || {})['ja@fox']) || {}; } catch (e) { this.V = {}; }   // (ショウギツネ's own lines, 3D, ja)
           return this; })
