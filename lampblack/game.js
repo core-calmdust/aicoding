@@ -258,18 +258,26 @@
     if (pc) document.documentElement.style.setProperty('--backB', Math.round(26 + raise - .2 * (h + 16 + raise)) + 'px');   // the back row stands on the far end of the road else document.documentElement.style.removeProperty('--backB');
     document.documentElement.style.setProperty('--fs', pc ? '1.1' : '1');
     document.documentElement.style.setProperty('--depth', (pc ? Math.max(0, Math.round(innerHeight * .42) - 250) : 0) + 'px');
-    if (!pc) {
-      const sh = Math.round(Math.max(innerHeight * .46, Math.min(innerHeight - 270, innerWidth * 1.6)));   // the text strip keeps about 270px at the bottom; the stage gets the rest, so the people do not crowd
-      document.documentElement.style.setProperty('--stageH', sh + 'px');
-    }
+    if (!pc) fitStage();
     sizeCast();
     requestAnimationFrame(drawFloor);
   }
+  // a phone: the dock at the bottom is only as tall as what it holds; the stage takes all the rest
+  // while lines run, the dock never shrinks (the box holds its size from line to line)
+  function fitStage() {
+    if (PCQ.matches) return;
+    const d = $('dock');
+    let h = d.classList.contains('hide') ? 0 : d.offsetHeight;
+    if (h && !$('tx').classList.contains('hide')) { h = Math.max(h, G.dockTextM || 0); G.dockTextM = h; } else G.dockTextM = 0;
+    const sh = Math.max(Math.round(innerHeight * .46), innerHeight - h);
+    if (G.stageHM !== sh) { G.stageHM = sh; document.documentElement.style.setProperty('--stageH', sh + 'px'); requestAnimationFrame(drawFloor); }
+  }
+  if (window.ResizeObserver) new ResizeObserver(() => { if (G.scr === 'play') fitStage(); }).observe($('dock'));
   function sizeCast() {
     // the puppets' size does not follow the text strip: on PC it is reckoned from a fixed strip height, so it only changes with the window
     const c = $('cast');
     const h = PCQ.matches ? Math.max(120, $('stage').clientHeight - Math.max(250, Math.round(innerHeight * .42)) - 56 - 120) : c.clientHeight;   // one size with or without the name boards above, so nobody grows or shrinks between scenes
-    const pw = PCQ.matches ? Math.max(54, Math.min(150, h * .66 * 120 / 250)) : Math.max(64, Math.min(100, h * .26, innerWidth * .26));   // a phone: as tall as the stage allows, narrow enough for a row of four or five
+    const pw = PCQ.matches ? Math.max(54, Math.min(150, h * .66 * 120 / 250)) : Math.max(64, Math.min(100, (innerHeight - 270 - 60) * .26, innerWidth * .26));   // a phone: as tall as the stage allows, narrow enough for a row of four or five
     c.style.setProperty('--pw', pw + 'px');
   }
   // the people on the stage: ids, and how to stand them
@@ -469,7 +477,7 @@
     const mh = `<div class="rrow">${st.locs.map(chip).join('<s></s>')}</div><div class="rback" title="両端もとなり同士"></div>`;
     if (M.__html !== mh) { M.innerHTML = mh; M.__html = mh; }
     // a phone: the faces and the map sit at the bottom of the text strip (it has room under the words), not over the stage
-    const home = PCQ.matches ? $('stage') : (() => { let D = $('rdock'); if (!D) { D = document.createElement('div'); D.id = 'rdock'; } if (D.parentNode !== $('strip')) $('strip').appendChild(D); return D; })();
+    const home = PCQ.matches ? $('stage') : (() => { let D = $('rdock'); if (!D) { D = document.createElement('div'); D.id = 'rdock'; } if (D.parentNode !== $('strip') || $('strip').firstChild !== D) $('strip').insertBefore(D, $('strip').firstChild); return D; })();
     if (R.parentNode !== home) { if (PCQ.matches) home.insertBefore(R, $('fx')); else home.appendChild(R); }
     if (M.parentNode !== $('stage')) $('stage').insertBefore(M, $('fx'));   // the map stays on the stage, at the top (on a phone too)
     M.style.top = PCQ.matches ? (R.offsetTop + R.offsetHeight + 8) + 'px' : '';   // a phone: CSS puts it just under the header
