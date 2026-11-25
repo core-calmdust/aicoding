@@ -476,6 +476,11 @@ body.scr-play{-webkit-user-select:none;user-select:none}
   /* the actions left: out of the header, a small pill at the stage's top-left (the header keeps its title and buttons) */
   #hb .ap{position:fixed;top:calc(var(--hdH) + 6px);left:10px;z-index:6;padding:5px 10px;font-size:12.5px;gap:5px}
   #hb .ap i{width:11px;height:15px}
+  /* the faces and the map in the text strip, under the words */
+  #rdock{margin:14px -4px 0;padding-top:12px;border-top:1px dashed rgba(27,18,12,.18)}
+  #rdock #roster{position:static;transform:none;margin:0 auto;width:auto;max-width:100%}
+  #rdock #rmap{position:static;transform:none;margin:14px auto 4px;width:100%}
+  body.has-roster #cast{height:calc(100% - var(--hdH) - 24px)}
   /* the story cards: two to a row, a small picture, the title and the special role only */
   .stories{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .sc{box-shadow:0 6px 18px rgba(0,0,0,.22)}
@@ -626,6 +631,6 @@ body.scr-play{-webkit-user-select:none;user-select:none}
 <script src="stories/kiteki.who.js?v=1"></script>
 <script src="stories/kiteki.who.open.js?v=1"></script>
 <script src="sound.js?v=11"></script>
-<script src="game.js?v=51"></script>
+<script src="game.js?v=52"></script>
 </body>
 </html>
