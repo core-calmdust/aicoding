@@ -589,6 +589,14 @@ body.scr-play{-webkit-user-select:none;user-select:none}
   .loc b{left:2px;right:2px;top:auto;bottom:2px;text-align:center;font-size:12px;padding:2px 0 3px;background:rgba(246,238,219,.94);white-space:nowrap;overflow:hidden}
   .loc em{top:2px;right:2px;bottom:auto;font-size:9.5px;padding:2px 4px}
 }
+@media (max-width:620px){
+  /* the dock: only as tall as what it holds (the stage takes the rest); the faces sit right above the text */
+  #dock{top:auto!important;max-height:58lvh}
+  #dock .strip{max-height:58lvh;padding-top:10px;padding-bottom:12px}
+  #tx{min-height:96px}
+  #rdock{margin:0 -4px 8px!important;padding:0 0 8px!important;border-top:0!important;border-bottom:1px dashed rgba(27,18,12,.18)}
+  body.scr-play #stage{transition:height .25s ease}
+}
 </style>
 </head>
 <body class="scr-title">
@@ -692,6 +700,6 @@ body.scr-play{-webkit-user-select:none;user-select:none}
 <script src="stories/kiteki.who.js?v=1"></script>
 <script src="stories/kiteki.who.open.js?v=1"></script>
 <script src="sound.js?v=11"></script>
-<script src="game.js?v=55"></script>
+<script src="game.js?v=56"></script>
 </body>
 </html>
