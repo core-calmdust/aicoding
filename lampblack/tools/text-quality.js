@@ -32,6 +32,7 @@ function scoreStory(st) {
   for (const r of roleSet) if (!st.roles[r] || !st.roles[r].how || !st.roles[r].perk) add(5, `役 ${r} の文がない`);
   if (st.rules && !st.rulesNote) add(5, '物語のしくみ（rulesNote）の説明がない');
   if (RR.fox && (!st.roles.fox || !st.roles.fox.perk || !T.loseFox || !T.curse || !T.foxBite || !T.foxSign)) add(8, '妖狐の文（役・敗北・呪い死・牙の空振り・社の跡）がそろっていない');
+  if (RR.immoral && (!st.roles.immoral || !st.roles.immoral.perk || !T.follow)) add(8, '背徳者の文（役・後追いの朝）がそろっていない');
   const kinds = new Set(st.items.map(i => i.kind)); for (const k of ['stake', 'secret', 'ward', 'test']) if (!kinds.has(k)) add(5, `道具 ${k} がない`);
   for (const cat of ['height', 'hand', 'foot', 'mark']) { const t = st.traits[cat]; if (!t) { add(10, `特徴 ${cat} がない`); continue; } for (const v in t.v) { if (!t.tr[v]) add(4, `痕跡の文 ${cat}.${v} がない`); if (cat !== 'hand' && !t.ntr[v]) add(3, `否定の痕跡 ${cat}.${v} がない`); if (cat !== 'mark' && !t.fig[v]) add(3, `人影 ${cat}.${v} がない`); } }
   // trait combos must tell people apart
