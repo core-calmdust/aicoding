@@ -3716,7 +3716,7 @@
         case 'b_move': return F.edge ? pk(['端のマスなら跳び越えられない', '盤の端は跳ばれる心配がない', '端っこは安全地帯', '端に寄せれば向こう側にマスがない', '盤のふちなら跳び越す先がない'], j)
           : F.trade ? pk(['取られても、すぐ取り返せる', '1枚取られても取り返せて損がない', '取り合いになっても五分', '相手が取ったら、こっちも取り返せる', '取られた分はすぐ取り戻せる'], j)
           : F.near && F.blocked ? pk(['すぐ後ろがふさがっていて跳べない', '跳ぶ先のマスが空いていない', '後ろが埋まっていて取られない', '背中のマスに駒がいて、跳び越せない', '着地するマスがないから跳ばれない'], j)
-          : pk(['跳び越えてくる相手の駒がいなくて安全', 'ねらってくる相手の駒がいないから取られない', '相手の駒に跳ばれる心配がない', 'となりに危ない駒がいない', 'そこまで届く相手の駒がない'], j);
+          : pk(['跳び越えてくる相手の駒がいなくて安全', 'ねらう駒がそばにいないから取られない', '相手の駒に跳ばれる心配がない', 'となりに危ない駒がいない', 'そこまで届く相手の駒がない'], j);
         case 'b_jump': return pk(['取ったあとも取り返されない', '着地した駒が安全なまま', `${g >= 2 ? g + '枚' : '1枚'}まるまる得できる`, '着地点のまわりに危険がない', '取ったあと相手にお返しされない'], j);
         case 'b_multi': return pk([`続けて跳んで${n}枚も取れる`, `${n}枚まとめて取れる`, `${n}枚取りの大ジャンプになる`, `一気に${n}枚も持っていける`, `連続ジャンプで${n}枚ゲットできる`], j);
         case 'b_king': return pk(['キングになれて、すぐには取られない', '王冠をかぶって、しかも安全', '安全なマスでキングに成れる', '成った駒をねらう相手がいない', '成ったあとも跳び越えられない'], j);
@@ -3781,13 +3781,19 @@
     const ng = u0 => { const u = wrongOf(u0); let F = null; try { F = ckLF(E, pos, u); } catch (e) {}
       const out = [pk(CK_CH.soft, o8), fill2(CK_CH.right[(k + 2) % 5], why(FA, k + 2))]; if (F) out.push(fill2(CK_CH.you[(k + 3) % 5], loss(F, u, k + 2)));
       if (CK_CH.tail[k]) out.push(CK_CH.tail[k]); return out.filter(Boolean).join(' '); };
-    return { ask: pk(CKJ_LS.ask[id] || [''], k), hintTx: pk(CKJ_LS.hint[id] || [''], k), good, ng, own: true, ckls: true };   // (ckls: チェッカニ praises himself — no heading line)
+    // (2026-11-25 第2期) a hint whose premise is the board's: 盤の端 only when a right move goes to the edge, 後ろに味方 only when one is
+    //   blocked behind, 離れたマス only when one has no enemy next to it, 向きを変えて only when the answer's jumps turn
+    const okF = ok.map(m => m === A ? FA : ckLF(E, pos, m)), turns = (() => { const pa = E.path(pos, A) || []; let t = false; for (let q = 2; q < pa.length; q++) { const [r0, c0] = E.RC[pa[q - 2]], [r1, c1] = E.RC[pa[q - 1]], [r2, c2] = E.RC[pa[q]]; if (Math.sign(r1 - r0) !== Math.sign(r2 - r1) || Math.sign(c1 - c0) !== Math.sign(c2 - c1)) t = true; } return t; })();
+    const hintOk = { b_move: [1, okF.some(f => f.edge)], b_move3: [3, okF.some(f => f.near && f.blocked)], b_move4: [4, okF.some(f => !f.near && !f.edge)], b_multi: [3, turns] };
+    const HALT = { b_move: { 1: '相手の駒が、どこへ跳べるかを想像してみて。', 3: '駒ごとに行き先をくらべてみて。安全な手は少ないカニ。', 4: '跳ばれたら着地するマスはどこか、たどってみて。' }, b_multi: { 3: 'ジャンプの道を、最後の着地まで数えてみるカニ。' } };
+    const hBad = Object.keys(hintOk).some(key => key.replace(/\d$/, '') === id && hintOk[key][0] === k && !hintOk[key][1]);
+    return { ask: pk(CKJ_LS.ask[id] || [''], k), hintTx: hBad ? HALT[id][k] : pk(CKJ_LS.hint[id] || [''], k), good, ng, own: true, ckls: true };   // (ckls: チェッカニ praises himself — no heading line)
   }
   const CHECKERS = {
     LKEY: 'aicoding-checkers-lessons', OKEY: 'aicoding-checkers-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=30261126b'), getJ('../checkers/openings.json?v=5'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=30261126c'), getJ('../checkers/openings.json?v=5'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vc]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] checkers texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vc)(v); this.V = ((v.I18N || {})['ja@crab']) || {}; } catch (e) { this.V = {}; }   // (チェッカニ's own lines, 3D, ja)
           return this; })
