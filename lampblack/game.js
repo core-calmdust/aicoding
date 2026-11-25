@@ -276,7 +276,7 @@
     const c = $('cast');
     const have = {}; c.querySelectorAll('.pp').forEach(e => have[e.dataset.id] = e);
     const n = ids.length;
-    const front = o.rows === false || n <= 7 ? n : Math.ceil(n / 2) + (n % 2 ? 0 : 1);
+    const front = o.rows === false || n <= 3 ? n : Math.ceil(n / 2);   // about half and half: the front row has one more when the count is odd
     ids.forEach((id, i) => {
       let el = have[id];
       if (!el) {
