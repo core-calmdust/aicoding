@@ -112,7 +112,7 @@ function steps() {
   return STEPS;
 }
 const loadEv = () => evP || (evP = Promise.all([fetch('opcourse-evals.json?v=1').then(r => r.json()).then(d => (EV = d)).catch(() => (EV = {})),
-  fetch('opcourse-probs.json?v=7').then(r => r.json()).then(d => (OPP = d || {})).catch(() => (OPP = {}))]));   // (2026-11-24 第2期・担当B) + the verified pools off the line (= the 3D)
+  fetch('opcourse-probs.json?v=8').then(r => r.json()).then(d => (OPP = d || {})).catch(() => (OPP = {}))]));   // (2026-11-24 第2期・担当B) + the verified pools off the line (= the 3D)
 const poolOf = moves => (OPP[moves] || []).length >= 5 ? OPP[moves].slice(0, 5) : null;
 // the named line a sequence grows out of: the longest other named line (or a base opening) that is a strict prefix
 function parentOf(moves) {

@@ -2586,7 +2586,7 @@
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261125r2'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=7').catch(() => ({}))])
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261125r2'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=8').catch(() => ({}))])
         .then(([ls, op, ev, wt, opp]) => { this.WT = wt || {}; this.OPP = opp || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
