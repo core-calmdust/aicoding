@@ -2420,7 +2420,7 @@
   const RVJ_OP = {
     intro: ['まずは手順を盤で見てみよう。そのあと、続きを打ってもらうね！', '手順をひととおり見たら、次はきみの番。覚えられるかな？', 'ゆっくり手順を並べるから、形をよく見ておいてね。', '一手ずつ並べていくよ。どんな形になるか、いっしょに見よう！', 'まずは盤で手順を追いかけよう。そのあとで、きみに打ってもらうね。'],
     askO: ['{n}の手順から外れた局面！ {s}の番、いちばん良い手はどこかな？', 'ここで{s}が打つ、いちばんの手はどこ？ 盤をよく見て！', '手順を外れた形。{s}なら、どこに打つ？', '{s}の番！ ここでいちばん良い一手を見つけて！', '形が変わったところで{s}の一手。きみならどこに置く？'],
-    cmpO: ['返す枚数、まわりの空き、打ったあとの相手の打ち場所を、手ごとにくらべてみて。', '隅のまわり（XやC）に打つ手は、相手に隅をあげないか確かめよう。', '相手がどう応じたら、自分の打てる場所がいくつ残るかを考えてみて！', '外がわに石を出しすぎない手はどれかな？'],
+    cmpO: ['返す枚数、まわりの空き、打ったあとの相手の打ち場所を、手ごとにくらべてみて。', '隅のまわり（XやC）に打つ手は、相手に隅をあげないか確かめよう。', '相手がどう応じたら、自分の打てる場所がいくつ残るかを考えてみて！', '外がわに石を出しすぎない手はどれかな？', '打ったあと、外がわに面した石がいくつ増えるかに注目してみて！', '相手の打てる場所がいちばん少なくなる手を、数えてくらべてみよう。', '一手ずつ、打ったあとの盤を思いうかべてから決めよう！'],
     leadO: ['いちばん良い手は緑の枠。', 'ここは緑の枠がいちばん！', '正解は緑の枠だった！', '緑の枠に打ちたかった！', '答えは緑の枠のマス。'],
     askN: ['『{n}』の続き、{s}の次の一手はどこかな？', '{s}の番！ 『{n}』の手順を思い出して打ってみて！', 'ここで{s}が打つ、『{n}』の一手はどこだと思う？', '『{n}』はこの先どう進むんだっけ？ {s}の手を打ってみよう！', '次は{s}。『{n}』なら、どこに打つ？'],
     ask: ['さあ{s}の一手！ 定石どおりに打てるかな？', '{s}の番！ さっきの手順、覚えてるかな？', '{s}の一手、きみならどこに置く？', '続けて{s}の番。手順の次はどこだっけ？', 'お次は{s}！ 盤の形から思い出せるかな？', '{s}ならここでどう打つ？ 落ち着いていこう！'],
@@ -2508,7 +2508,7 @@
     const soft = (k, u) => { const near = u != null && ptsOf(u) >= 10, S = q => off ? SOFT[PSO[q % PSO.length]] : V.soft(q), t = S(k); if (near || !NEAR.test(t)) return t;
       const n = off ? SOFT.length : RVJ_OP.soft.length, U = [0, 1, 2, 3, 4].map(S), L = []; for (let q = 5; q < n + 5; q++) { const x = S(q); if (!NEAR.test(x) && !U.includes(x) && !L.includes(x)) L.push(x); }
       const r = [0, 1, 2, 3, 4].slice(0, Math.min(k, 5)).filter(q => NEAR.test(S(q))).length; return L.length ? L[(r + Math.max(0, k - 5) + (V.seed >>> 3)) % L.length] : 'ドンマイ！'; }, PCO = off ? shPerm((V.seed ^ 0x2c1b3c6d) >>> 0, CHEER.length) : null, cheer = k => off ? CHEER[PCO[k % PCO.length]] : V.cheer(k);   // (2026-11-25: off the line a permutation per opening — a rotation gave every lesson one of only CHEER.length orders)   // (追53: 「おしい・あと少し・あと一歩・いい線」 only for a move worth 10+ points, in the line's own problems too)
-    const ask = off ? V.v('askO', RVJ_OP.askO.map(t => fill(t, { n: nmQ, s: me === 1 ? '黒' : '白' }))) : i === 0 || i === 3 ? v('askN', RVJ_OP.askN.map(t => fill(t, { n: name, s: side }).replace('『' + name + '』', nmQ))) : v('ask', RVJ_OP.ask.map(t => fill(t, { s: side })));
+    const ask = off ? V.v('askO', RVJ_OP.askO.map(t => fill(t, { n: nmQ, s: me === 1 ? '黒' : '白' }).replace('この定石の手順から外れ', '手順から外れ'))) : i === 0 || i === 3 ? v('askN', RVJ_OP.askN.map(t => fill(t, { n: name, s: side }).replace('『' + name + '』', nmQ))) : v('ask', RVJ_OP.ask.map(t => fill(t, { s: side })));
     const spread = k => ks.length > 1 && minOf(k) < maxOf(k);   // (a fact that tells the moves apart — on the first moves every move flips one disc)
     const O = () => v('opp', RV_OPP), MEM = off ? RVJ_OP.cmpO : ['さっき盤で見た手順を思い出してみて。相手の直前の手に、どう応じていたかな？', '石がどんな形に並んでいたか、思い出してみて。盤の絵がヒントになるかも！', 'あわてずに、手順の流れを頭の中でもう一度並べてみよう。', '最後にできあがる形を思いうかべると、次の一手が見えてくるかも？', '一手前の相手の石に、どう応じる流れだったっけ？', '手順の動画を巻きもどすつもりで、ゆっくり思い出してみて！'];
     let hint;
@@ -2557,7 +2557,7 @@
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261124p1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=4').catch(() => ({}))])
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261124p1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=5').catch(() => ({}))])
         .then(([ls, op, ev, wt, opp]) => { this.WT = wt || {}; this.OPP = opp || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });

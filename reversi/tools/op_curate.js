@@ -17,6 +17,7 @@ const shown = []; ST.forEach(s => { for (let k = 0; k <= s.mv.length; k++) shown
 const LS = JSON.parse(fs.readFileSync(path.join(ROOT, 'reversi/lessons.json'), 'utf8')), PZ = JSON.parse(fs.readFileSync(path.join(ROOT, 'reversi/puzzles.json'), 'utf8'));
 LS.lessons.forEach(l => { l.problems.forEach(p => shown.push(String(p.cells))); (l.warm || []).forEach(w => shown.push(String(w.cells))); });
 (PZ.levels || []).forEach(lv => lv.puzzles.forEach(p => shown.push(String(p.cells))));
+(process.env.OP_SKIP || '').split(',').filter(Boolean).forEach(z => shown.push(z.split(':')[0]));   // (2026-11-25 担当B: boards the checker's --deep failed, to leave out on a rerun)
 const ST0 = { n: 0, near: 0, few: 0, unstable: 0, decided: 0, gap: 0, words: 0 }, kept = []; for (const k in res) if (!want.has(k)) res[k].forEach(p => kept.push(p.pos.split(':')[0]));
 for (const s of ST) { const key = s.ln.moves; if (!want.has(key) && !want.has(s.set.id)) continue;
   const parent = ST.filter(x => x.ln.moves.length < key.length && key.startsWith(x.ln.moves)).reduce((a, x) => !a || x.ln.moves.length > a.length ? x.ln.moves : a, '');
