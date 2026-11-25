@@ -105,6 +105,17 @@ TABLES['v6'] = TABLES['sing'] + [
     ('lmpScale',   43,  300,   80,  700,  20),     # (2026-11-25: from 300, not YaneuraOu's 100: at 100 pruning v2 lost 4-23-1 to the default search, at 300 it won 19-6-3)
     ('lmrDiv',     17,  214,  130,  320,  12),
 ]
+# search v6 with the pruning before the move loop, the table cut-off and the quiescence search in YaneuraOu's manner too, so
+# that the tuning can trade pruning before the loop against pruning in it (2026-11-25): --table v6all --base V6ALL_BASE
+V6ALL_BASE = '85=1,91=1,92=2,55=1,110=1,113=1,115=2'
+TABLES['v6all'] = TABLES['v6'] + [
+    ('rfpMargin',   2,   91,   40,  220,  10),     # static cut: margin per depth (YaneuraOu's region; the site's own default is 73 up to depth 11)
+    ('rfpDepth',    1,   18,    6,   24,   1),
+    ('nullEval',  112,  390,  100,  700,  30),     # null move at expected cut nodes: the static evaluation this far above beta - 13 * depth
+    ('razorAll',  114,  342,  150,  700,  30),     # razoring at expected all-nodes: this much below alpha per depth
+    ('qsFut',     116,  350,  100,  700,  30),     # quiescence: a capture that cannot reach alpha with this margin is skipped
+]
+
 PARAMS = TABLES['v4']
 
 THREADS = 1; THREADS_VS = 0      # (--threads-vs: the threads of the defaults' side in test, when not the same)

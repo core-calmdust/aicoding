@@ -2,7 +2,7 @@
  * categorized puzzles (詰めドット) and the daily puzzle. Loaded before the main script; uses its globals at run time.
  * All positions and move values come from the exact solvers (see the repository notes); nothing here is heuristic. */
 'use strict';
-const LV = '?v=20261125M';
+const LV = '?v=20261125N';
 const LSTORE2 = 'dots-lessons-v2', PSTORE2 = 'dots-puzzles-v2', PKEEP = 'dots-pz-keep-v1', OSTORE = 'dots-openings-v1', RSTORE = 'dots-rules-v1';
 const K64L = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 const decE = s => [...s].map(c => K64L.indexOf(c));
