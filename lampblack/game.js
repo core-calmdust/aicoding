@@ -36,6 +36,7 @@
     talk: '<svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>',
     bag: '<svg viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>',
     go: '<svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg>',
+    shield: '<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>',
     show: '<svg viewBox="0 0 24 24"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.6"/></svg>',
     call: '<svg viewBox="0 0 24 24"><path d="M4 10v4h3l5 4V6L7 10H4z"/><path d="M16 9c1.2 1.6 1.2 4.4 0 6M18.5 7c2.2 2.8 2.2 7.2 0 10"/></svg>',
     clash: '<svg viewBox="0 0 24 24"><path d="M5 5l6 6M19 5l-6 6M12 13v7M8 20h8"/><path d="M4 4l2 0 0 2M20 4h-2v2"/></svg>',
@@ -760,6 +761,7 @@
         <button class="btn" id="dAcc" ${S.pl.accuse ? 'disabled' : ''}>${IC.point}名指しする</button>
         <button class="btn" id="dCall">${IC.call}呼びかける<small>${appealsLeft()}</small></button>
         <button class="btn" id="dClash" ${canClash() ? '' : 'disabled'}>${IC.clash}矛盾を突く</button>
+        <button class="btn" id="dDef" ${S.pl.defend === S.day || missLeft() <= 0 ? 'disabled' : ''}>${IC.shield}かばう</button>
         <button class="btn pri" id="dVote">${IC.vote}投票へ</button>
       </div>`);
     const on = (id, f) => { const b = $(id); if (b) b.onclick = f; };
@@ -770,6 +772,7 @@
     on('dAcc', accuse);
     on('dCall', appeal);
     on('dClash', clash);
+    on('dDef', defend);
     on('dVote', vote);
     renderNb();
   }
@@ -922,6 +925,41 @@
     await say(items);
     closeGate();
     log({ k: 'clash', ok: r.ok }); save(); renderRoster(); debate();
+  }
+  /* かばう：誰を → どの証拠で。その人に合わない痕跡、襲われた夜に別の場所で見たという話、あなた自身の占い・霊媒の結果。
+     本当にその人を外せる証拠なら、あなたを信じる人の疑いがその人から離れる。外せば、あなたの言葉が軽くなる（的外れは矛盾を突くと合わせて1日2回まで） */
+  async function defend() {
+    const id = await pickPerson('誰をかばう？', `1日に1度。外せば、あなたの言葉が軽くなる（的外れは今日あと${missLeft()}回まで）。`, live().map(p => p.id), { mark: true });
+    if (!id) return debate();
+    const EV = E.defendEvidence(S, st, id);
+    if (!EV.length) { await say([{ text: `${nm(id)}をかばえる材料を、あなたはまだ持っていない。その人に合わない痕跡、襲われた夜に別の場所で見たという話、あなた自身の${st.roles.seer.name}の結果などがあれば、かばえる。` }]); return debate(); }
+    const how = { seer: '占い', medium: '霊媒', test: '銀の道具', mason: '相方' };
+    const text = e => e.k === 'trace' ? { t: `${locName(e.loc)}の痕跡「${SP.traceShort(st, e)}」`, s: `${nightName(e.night)}。あなたがこの目で見た。${nm(id)}の特徴は「${esc(st.traits[e.cat].v[person(id).traits[e.cat]])}」。` }
+      : e.k === 'seen' ? { t: `${nm(id)}が${locName(e.loc)}にいた`, s: `${nightName(e.night)}（現場は${locName(S.nights[e.night].loc)}）。${e.by === 'you' ? 'あなたが見た' : nm(e.by) + 'の話'}。` }
+      : { t: `あなたの${how[e.how]}の結果：${resWord(e.res)}`, s: '自分の力で確かめたこと。' };
+    const ev = await pickOpt(`${esc(nm(id))}をかばう証拠は？`, '本当にその人を外せる証拠でなければ、通らない。', EV.map(e => { const x = text(e); return { t: x.t, s: x.s, v: e.id, ic: IC.shield }; }));
+    if (!ev) return debate();
+    const E1 = EV.find(e => e.id === ev);
+    const line = E1.k === 'trace' ? `${nightName(E1.night)}、${locName(E1.loc)}には「${SP.traceShort(st, E1)}」が残っていた。${nm(id)}の特徴は「${st.traits[E1.cat].v[person(id).traits[E1.cat]]}」。その夜の狼ではない。`
+      : E1.k === 'seen' ? `${nightName(E1.night)}、${nm(id)}は${locName(E1.loc)}にいた。${E1.by === 'you' ? 'わたしがこの目で見ている' : nm(E1.by) + 'が見ている'}。襲われたのは${locName(S.nights[E1.night].loc)}だ。`
+      : `${nm(id)}のことは、わたしが自分で確かめた。${resWord(E1.res)}だ。`;
+    const r = E.judgeDefend(S, st, id, ev);
+    if (r.again) { await say([{ text: 'その証拠では、もう皆の前でかばった。' }]); return debate(); }
+    S.pl.defend = S.day;
+    openGate();
+    const items = [{ who: 'you', text: `${nm(id)}は狼じゃない。${line}` }];
+    if (r.ok) {
+      items.push({ who: id, text: SP.say(S, st, id, 'thanks') });
+      if (r.agree) items.push({ who: r.agree, text: SP.say(S, st, r.agree, 'okay', { target: SP.callName(S, st, r.agree, id) }) });
+      items.push({ text: `${st.lex.meet}のざわめきが、${nm(id)}から少し離れた。` });
+    } else {
+      G.gate.heat.you = 1;
+      const WHY = { fits: `けれど、${nm(id)}はその痕跡と食い違っていなかった。`, scene: `けれど、それは襲われた場所そのものだった。かばうどころか、疑いを深める話だ。`, lie: 'けれど、その話は、どこかがおかしかった。誰も頷かなかった。' };
+      items.push({ text: `${WHY[r.why] || ''}${st.lex.meet}のざわめきが、あなたのほうへ向いた。${missLeft() > 0 ? '' : '\n今日はもう、うかつに人をかばえない。'}` });
+    }
+    await say(items);
+    closeGate();
+    log({ k: 'defend', who: id, ok: r.ok }); save(); renderRoster(); debate();
   }
   async function accuse() {
     const id = await pickPerson('誰を名指しする？', '名指しすると、あなたを信じる人がその人を疑いはじめる。外せば、あなたが疑われる。', live().map(p => p.id), { mark: true });
