@@ -465,6 +465,11 @@
       const cred = S.ghost && S.ghost.cause === 'wolf' ? 1 : 1 - (A.p.you || 0) * 2.2;
       sus[acc] += Math.max(0, cred) * (.12 + .3 * p.persona.trust) * (S.pl.accuse.ev ? 1.6 : 1) * D.sway;
     }
+    // the player spoke up for someone with evidence: those who trust the player doubt that one less (the wolves do not care)
+    if (S.vouch && p.role !== 'wolf' && p.role !== 'madman') {
+      const cred = Math.max(0, 1 - (A.p.you || 0) * 2.2);
+      for (const q in S.vouch) if (sus[q] != null) sus[q] *= Math.max(.3, 1 - S.vouch[q] * cred * (.35 + .4 * p.persona.trust));
+    }
     return { sus, A };
   }
   // who might be the fox, as this person sees it (nothing, once its death is known)
@@ -1322,6 +1327,43 @@
     else { bump(liar, 1); out.push({ t: 'caught', by: liar }); const w = pick(S, alive(S).filter(q => !q.isPlayer && q.id !== liar && q.id !== st.who)); if (w) out.push({ t: 'notice', by: w.id, target: liar }); }
     return { ok: true, ev: out, liar, other: liar !== st.who };
   }
+  /* ---------- かばう: lay down evidence that someone did not do it ---------- */
+  // what could speak for this person: a trace their body does not fit, a sighting of them elsewhere on a night of an attack, your own reading of them
+  function defendEvidence(S, story, id) {
+    const p = person(S, id); if (!p) return [];
+    const out = [];
+    for (const k of S.pl.found) { const [ni, ti] = k.split('|').map(Number); const t = S.nights[ni].traces[ti]; out.push({ id: 'tr|' + k, k: 'trace', night: ni, cat: t.cat, val: t.val, neg: t.neg, loc: S.nights[ni].loc }); }
+    S.pl.told.forEach((t, i) => { if (t.kind === 'who' && t.who === id && S.nights[t.night] && S.nights[t.night].killer && !out.some(o => o.k === 'seen' && o.night === t.night && o.loc === t.loc && o.by === t.by)) out.push({ id: 'sw|' + i, k: 'seen', night: t.night, loc: t.loc, by: t.by }); });
+    for (const r of S.pl.res) if (r.target === id && r.res !== 'wolf') out.push({ id: 'rs|' + (r.test ? 'test' : r.seer ? 'seer' : r.mason ? 'mason' : 'medium') + '|' + r.night, k: 'res', res: r.res, how: r.test ? 'test' : r.seer ? 'seer' : r.mason ? 'mason' : 'medium' });
+    return out;
+  }
+  // judge: does it really speak for them? The truth of the night decides (a made-up sighting cannot clear the killer)
+  function judgeDefend(S, story, id, evId) {
+    const p = person(S, id), ev = defendEvidence(S, story, id).find(e => e.id === evId);
+    if (!p || !ev) return { ok: false, why: 'none' };
+    const key = 'df|' + id + '|' + evId;
+    if ((S.pl.defended || []).includes(key)) return { ok: false, again: true };
+    const fitsT = (v, t) => t.neg ? v !== t.val : v === t.val;
+    let ok = false, why = '', w = 0;
+    if (ev.k === 'trace') { ok = !fitsT(p.traits[ev.cat], ev); why = ok ? 'trace' : 'fits'; w = .5; }
+    else if (ev.k === 'seen') {
+      const N = S.nights[ev.night];
+      if (ev.loc === N.loc) { why = 'scene'; }                            // seen at the very place of the attack: that speaks against them
+      else if (N.killer === id) { why = 'lie'; }                          // the sighting was made up (or wrong): they were the one
+      else { ok = true; why = 'seen'; w = ev.by === 'you' ? .7 : .45; }
+    } else if (ev.k === 'res') { ok = true; why = 'res'; w = ev.how === 'mason' ? 1 : .8; }
+    if (!ok) {
+      S.exposed = S.exposed || {}; S.exposed.you = (S.exposed.you || 0) + .2;
+      (S.heat = S.heat || {}).you = ((S.heat || {}).you || 0) + 1;
+      S.pl.miss = S.pl.miss || {}; S.pl.miss[S.day] = (S.pl.miss[S.day] || 0) + 1;
+      return { ok: false, why };
+    }
+    (S.pl.defended = S.pl.defended || []).push(key);
+    S.vouch = S.vouch || {}; S.vouch[id] = Math.min(1.2, (S.vouch[id] || 0) + w);
+    if (S.heat && S.heat[id]) S.heat[id] = Math.max(0, S.heat[id] - 1);
+    const ag = pick(S, alive(S).filter(q => !q.isPlayer && q.id !== id && q.role !== 'wolf'));
+    return { ok: true, why, agree: ag ? ag.id : null };
+  }
   // point one out in the meeting: the liar is caught, a hidden errand comes out, or a false sighting turns on its teller
   function pointOut(S, story, id, over) {
     let c = contradictions(S, story).find(o => o.id === id);
@@ -1367,5 +1409,5 @@
   }
 
   const isFox = (S, id) => (person(S, id) || {}).role === 'fox';
-  root.WLEngine = { ROLE, SETUP, SETUPS, setupOf, RS, isFox, foxView, DIFF, CATS, newGame, night, meeting, voteRound, exile, check, score, search, ask, present, playerClaim, playerResults, callOut, callEvidence, contradictions, pointOut, dodge, dodgeTalk, near, canSee, statements, evidence, clashEvidence, judgeClash, askDivine, askGuard, askHide, testimony, analyze, opinion, suspicion, npcSearch, canConfront, fitsTraces, person, alive, isWolf, rnd, pick, shuffle };
+  root.WLEngine = { ROLE, SETUP, SETUPS, setupOf, RS, isFox, foxView, DIFF, CATS, newGame, night, meeting, voteRound, exile, check, score, search, ask, present, playerClaim, playerResults, callOut, callEvidence, contradictions, pointOut, dodge, dodgeTalk, near, canSee, statements, evidence, clashEvidence, judgeClash, defendEvidence, judgeDefend, askDivine, askGuard, askHide, testimony, analyze, opinion, suspicion, npcSearch, canConfront, fitsTraces, person, alive, isWolf, rnd, pick, shuffle };
 })(typeof window !== 'undefined' ? window : globalThis);
