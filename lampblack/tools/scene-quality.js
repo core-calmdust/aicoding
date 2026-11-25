@@ -55,7 +55,7 @@ function readReview() {
       const ink = new Uint8Array(W * H); for (let i = 0; i < W * H; i++) ink[i] = near[i * 4] < 120 ? 1 : 0;
       const frac = (x0, y0, x1, y1) => { let n = 0, t = 0; for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) { t++; n += ink[y * W + x]; } return n / t; };
       const sx = v => Math.round(v / 4), sy = v => Math.round((v + 112) / 4);
-      const all = frac(0, 0, W, H), center = frac(sx(440), sy(430), sx(1160), sy(752)), mobile = frac(sx(350), 0, sx(1250), H);
+      const head = frac(0, 0, sx(760), sy(260)), all = frac(0, 0, W, H), center = frac(sx(440), sy(430), sx(1160), sy(752)), mobile = frac(sx(350), 0, sx(1250), H);
       // edge density: how much outline the ink has (a slab has little)
       let edge = 0, inkN = 0; for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) { const i = y * W + x; if (!ink[i]) continue; inkN++; if (!ink[i - 1] || !ink[i + 1] || !ink[i - W] || !ink[i + W]) edge++; }
       // slabs: big solid blobs that fill their bounding box
@@ -74,13 +74,14 @@ function readReview() {
       const comp = await raster(`.far{opacity:.17}.mid{opacity:.42}.near{opacity:.94}.scn{color:#1b120c}.cut{fill:#efe3c8}.glow{fill:#ffcf86}.snow,.snowland,.ice{fill:#efe3c8}.moonc{fill:#fff4dc}.pane{fill:#8a92a8}`);
       const hist = new Array(16).fill(0); for (let i = 0; i < W * H; i++) hist[Math.min(15, (comp[i * 4] + comp[i * 4 + 1] + comp[i * 4 + 2]) / 3 / 16 | 0)]++;
       const tones = hist.filter(n => n > W * H * .01).length;
-      return { all, center, mobile, edge: edge / Math.max(1, inkN), slabs, mid: midInk / (W * H), tones };
+      return { head, all, center, mobile, edge: edge / Math.max(1, inkN), slabs, mid: midInk / (W * H), tones };
     }, svg);
     const cuts = (svg.match(/class="cut"[^>]*d="[^"]*"/g) || []).reduce((n, t) => n + (t.match(/M/g) || []).length, 0);   // every cut-out shape counts
     const ded = [], add = (n, w) => ded.push([n, w]);
     if (m.all < .06) add(10, `近景の墨が少なすぎる ${(m.all * 100).toFixed(1)}%`);
     if (m.all > .42) add(10, `近景の墨が多すぎる ${(m.all * 100).toFixed(1)}%`);
     if (m.center > .12) add(Math.round((m.center - .12) * 100), `人形の立つ中央に近景が重なる ${(m.center * 100).toFixed(1)}%（12%まで）`);
+    if (m.head > .12) add(Math.round((m.head - .12) * 200), `左上の見出しの下に近景の墨が重なる ${(m.head * 100).toFixed(1)}%（12%まで。題や日付が読めなくなる）`);
     if (m.mobile < .04) add(6, `スマホの幅（中央）で近景が見えない ${(m.mobile * 100).toFixed(1)}%`);
     if (m.edge < .07) add(Math.round((.07 - m.edge) * 300), `輪郭が少ない（のっぺりした塊）${m.edge.toFixed(3)}`);
     if (m.slabs.length) add(m.slabs.length * 8, `四角い大きな墨の塊 ${m.slabs.length}：${m.slabs.map(x => x.at.join(',')).join(' / ')}`);
