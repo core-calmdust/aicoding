@@ -141,6 +141,7 @@
     $('setTitle').innerHTML = `<span style="font:400 1.3em var(--brush);letter-spacing:.06em">${esc(st.title)}</span>　<small style="font:700 15px var(--ui);color:var(--mute)">${esc(st.no)}</small>`;
     $('setConcept').textContent = st.concept;
     const fr = (rec()[base.id] || {}).feats || {}, fl = window.WLFeats.list(base.id);
+    $('setFeatH').onclick = () => $('setFeatH').closest('.setup').classList.toggle('feats-open');   // (only folds on a phone)
     $('setFeatN').textContent = `${fl.filter(f => fr[f.id]).length}/${fl.length}`;
     $('setFeats').innerHTML = fl.map(f => `<div class="feat${fr[f.id] ? ' got' : ''}"><i>${fr[f.id] ? '★' : '☆'}</i><b>${esc(f.name)}</b><span>${esc(f.desc)}</span></div>`).join('');
     $('setDiff').innerHTML = DIFFN.map((d, i) => `<button class="tile${G.diff === i ? ' on' : ''}" data-d="${i}"><b>${d}</b><span class="cnt">${E.DIFF[i].size}人</span><span>${diffDesc(st, i)}</span></button>`).join('');

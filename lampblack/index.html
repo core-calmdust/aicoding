@@ -564,6 +564,18 @@ body.scr-play{-webkit-user-select:none;user-select:none}
   .hubfoot .hint{font-size:11px;line-height:1.4;min-width:0}
   .hubfoot .btn{min-height:38px;font-size:13px}
 }
+#setFeatH .fold-mark{display:none}
+@media (max-width:620px){
+  /* the feats fold away on a phone: tap the heading to open them */
+  #setFeatH{display:flex;align-items:center;gap:8px;cursor:pointer;padding:9px 10px;margin:4px 0 8px;border:1px solid rgba(27,18,12,.18);border-radius:4px;background:rgba(246,238,219,.6)}
+  #setFeatH .fold-mark{display:inline;margin-left:auto;font:700 12px var(--ui);font-style:normal;color:var(--acc);letter-spacing:.06em}
+  #setFeatH .fold-mark::after{content:'ひらく ▾'}
+  .setup.feats-open #setFeatH .fold-mark::after{content:'とじる ▴'}
+  .setup:not(.feats-open) #setFeats{display:none}
+  body:not(.scr-play) #hb{background:linear-gradient(to bottom,var(--paper) 72%,transparent)}
+  .setrules{font-size:12.5px!important;line-height:1.65!important;padding:8px 10px!important}
+  .setrules b{font-size:11.5px!important}
+}
 </style>
 </head>
 <body class="scr-title">
@@ -616,7 +628,7 @@ body.scr-play{-webkit-user-select:none;user-select:none}
     <h3>あなたの役</h3>
     <div class="tiles r5" id="setRole"></div>
     <p class="setrules hide" id="setRules"></p>
-    <h3>実績 <small id="setFeatN" style="font:700 14px var(--ui);color:var(--mute);letter-spacing:.06em"></small></h3>
+    <h3 id="setFeatH">実績 <small id="setFeatN" style="font:700 14px var(--ui);color:var(--mute);letter-spacing:.06em"></small><em class="fold-mark"></em></h3>
     <div class="feats" id="setFeats"></div>
     <div class="foot"><button class="btn" id="setBack">もどる</button><button class="btn pri" id="setGo">幕を開ける</button></div>
   </div>
@@ -667,6 +679,6 @@ body.scr-play{-webkit-user-select:none;user-select:none}
 <script src="stories/kiteki.who.js?v=1"></script>
 <script src="stories/kiteki.who.open.js?v=1"></script>
 <script src="sound.js?v=11"></script>
-<script src="game.js?v=53"></script>
+<script src="game.js?v=54"></script>
 </body>
 </html>
