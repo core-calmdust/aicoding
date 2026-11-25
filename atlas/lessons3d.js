@@ -2205,7 +2205,7 @@
         g: 'まずは隅を取ってみよう！ 白が打てる隅は、ひとつだけ。', gok: '隅、ゲット！ 隅の石と、そこから続く辺の石は、もう返されないね。赤い枠のXに打っていたら、相手に隅を渡すところだったんだ。',
         pp: ['次は練習問題！ いちばんいい場所はどこかな？', 'もう1問いこう！ 隅とX・Cに目を配ってね。'],
         h: ['盤の4つの角を順に見てごらん。白で黒をはさめる角はどこかな？', '取れる隅がないか、まず探してみて！', '打ったあと、相手が隅に手をのばせないかも確かめよう。'],
-        p1ok: 'そう、隅が正解！ ほかの手は、相手に打てる場所をたくさんあげちゃうんだ。', p2ok: 'ばっちり！ 赤い枠は相手に隅を渡す手、ほかの手は外がわの石を大きくふやす手だったね。' },
+        p1ok: 'そう、隅が正解！ ほかの2手は、空いている隅のとなりのXとCだったんだ。', p2ok: 'ばっちり！ 赤い枠は相手に隅を渡す手、ほかの手は外がわの石を大きくふやす手だったね。' },
       mobility: { t1: '相手の打てる場所を減らそう', c1: '赤い点は、いま<b>相手が打てる場所</b>で、14か所あるね。少ないほど、相手は打ちたくないマスに追いこまれるんだ。<br>白が金の枠に打つと、相手の打てる場所は<b>8か所</b>に減る！ 赤い枠の手だと<b>15か所</b>にふえちゃう。',
         g: '数字は「そこに打ったあと、相手が打てる場所の数」。いちばん小さい手に打ってみよう！', gok: '相手の打てる場所が14から8に減ったね！ 返したのがほとんど内がわの石だから、新しい足場をあげなかったんだ。',
         pp: ['さあ練習！ どこに打つのが得かな？', 'もう1問！ 相手をきゅうくつにする手をさがそう。'],
@@ -2281,6 +2281,8 @@
   };
   const RV_CN = [0, 7, 56, 63], RV_X = { 9: 0, 14: 7, 49: 56, 54: 63 }, RV_C = { 1: 0, 8: 0, 6: 7, 15: 7, 48: 56, 57: 56, 55: 63, 62: 63 };
   const rvEmpt = p => (String(Array.isArray(p.cells) ? p.cells.join('') : p.cells).match(/0/g) || []).length;   // (empty squares = how deep an exact read goes)
+  const RV_HCS = ['まず、4つの角に打てるかどうかを見てごらん。', 'きみの石で相手をはさめる角は、どこかにないかな？', '盤の4すみを、ひとつずつ確かめてみて！', '二度と返されないマスに、打てるチャンスがあるよ。', '角のマスで、はさめる線がないか探してみて。'];
+  const RV_HCT = ['どの角にも打てない場面。打ったあと、相手が角に届かないかを確かめてね。', '隅が取れないときは、隅の隣のマス（XとC）に要注意！', '打ったあと、相手の石が隅に届く線ができないか考えてみて。', '隅のななめ隣（X）と、辺で隅の隣（C）をよけて考えよう。', '隅を渡さず、XにもCにも打たない手は、ひとつだけ。よく探してみて！'];
   function rvLsJa(kind, P, i, li, marks) {
     const F = P.f || {}, ks = Object.keys(F).map(Number), v = q => F[q][0], top = Math.max(...ks.map(v)), bs = ks.filter(q => v(q) >= top - 1e-9);
     const k = i % 5, o8 = li % 8 + i * [1, 3, 5, 7][(li >> 3) % 4], pk = (L, j) => L[((j % L.length) + L.length) % L.length];
@@ -2291,7 +2293,9 @@
     const H = kind === 'rules' ? (DB.length > 1 ? ['1つの向きだけじゃなく、ほかの向きでも返せないか見てね。', '2つ以上の向きで、いっぺんにはさめる場所もあるんだ。', '向きごとの枚数を、足し算してみて！', '1つのマスから、何本の線ではさめるかな？', 'いくつかの向きの合計で、いちばんを決めてね。']
       : dg ? ['ななめの列は、見落としやすいんだ！', 'ななめの向きも、指でなぞって数えてみて。', 'ななめに続く相手の石に、目を向けてごらん。', '縦と横だけで終わらせず、ななめも見てね。', 'ななめの線の先に、自分の石はないかな？']
       : top >= 3 ? ['遠くの自分の石とも、はさめることがあるね。', '自分の石まで、相手の石が何枚続くか数えてみて。', '長く続く相手の石の列を探してごらん。', '列の端から端まで、ていねいに数えてみて！', '1本の列で、何枚まで返せるかな？']
-      : ['縦・横・ななめ、8つの向きにはさめる石を数えてみて。', '自分の石まで、相手の石が何枚続くか数えてみて。', 'マスごとに、返る石を1枚ずつ数えてね。', '打てる場所を、ひとつずつ確かめてみて！', 'どのマスも、8つの向きをぐるっと見てみて。']) : RVJ_LS.hint[kind] || [''], hintTx = pk(H, i) + (marks ? ' ' + pk(kind === 'wall' ? RVJ_LS.rfWall : RVJ_LS.rf, i + 2) : '');
+      : ['縦・横・ななめ、8つの向きにはさめる石を数えてみて。', '自分の石まで、相手の石が何枚続くか数えてみて。', 'マスごとに、返る石を1枚ずつ数えてね。', '打てる場所を、ひとつずつ確かめてみて！', 'どのマスも、8つの向きをぐるっと見てみて。'])
+      : kind === 'corner' && P.d != null ? (P.trap ? RV_HCT : RV_HCS)   // (2026-11-25 第2期 ⑧ 担当A: a corner to take, or none — the hint says which the board has)
+      : RVJ_LS.hint[kind] || [''], hintTx = pk(H, i) + (marks ? ' ' + pk(kind === 'wall' ? RVJ_LS.rfWall : RVJ_LS.rf, i + 2) : '');
     const reasonGood = u => {
       const fu = F[u], out = [];
       switch (kind) {
@@ -2580,7 +2584,7 @@
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261125r1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=6').catch(() => ({}))])
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261125r2'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=6').catch(() => ({}))])
         .then(([ls, op, ev, wt, opp]) => { this.WT = wt || {}; this.OPP = opp || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
@@ -2630,6 +2634,7 @@
       // (2026-11-24 第2期 ⑥) the exact endgames from easy to hard: fewer empties (= a shorter read) first, the exception (trap) last
       if (probs.length && probs.every(p => p.type === 'flips')) probs.sort((a, b) => (a.d || 0) - (b.d || 0));   // (2026-11-25 第2期 ⑥: counting from easy to hard, = reversi/index.html)
       if (probs.length && probs.every(p => p.type === 'exact')) probs.sort((a, b) => (a.trap ? 1 : 0) - (b.trap ? 1 : 0) || rvEmpt(a) - rvEmpt(b));
+      if (probs.length && probs.every(p => p.type === 'eval' && p.d != null)) probs.sort((a, b) => (a.trap ? 1 : 0) - (b.trap ? 1 : 0) || a.d - b.d);   // (2026-11-25 第2期 ⑥ 担当A: corner from easy to hard, the exception last, = reversi/index.html)
       if (!ramp.every(it => (it.k === 'explain' ? it.b : it.g))) ramp = [];   // (texts missing: no warm-up rather than an empty one)
       const look = W('look'), RU = (k, v) => fill(k === 'look' && look ? L(look, lang) : L(WT['ui/' + k], lang) || '', v || {});
       return { id: l.id, title: T.title || l.id, intro: ja && RVJ_LS.intro[l.id] ? RVJ_LS.intro[l.id] : (Array.isArray(T.intro) ? T.intro.join('<br>') : T.intro || ''), ramp: ramp.length ? ramp : null, RU,
@@ -2674,6 +2679,7 @@
       }
       const F = P.f || {}, all = Object.values(F).map(x => x[0]), mine = F[u] ? F[u][0] : -1e9, best = Math.max(...all);   // = reversi/index.html problemPoints
       if (all.length <= 1 || mine >= best - 1e-9) return PTS;
+      if (P.type === 'eval' && P.d != null) return Math.max(0, Math.round(12 * (all.length - 1 - all.filter(v => v > mine + 1e-9).length) / (all.length - 1)));   // (2026-11-25 第2期 ②⑨ 担当A: a verified engine-value step — corner — has one answer)
       if (P.type === 'flips' || P.type === 'exact') return Math.max(0, Math.round((P.type === 'exact' ? 8 : 12) * (all.length - 1 - all.filter(v => v > mine + 1e-9).length) / (all.length - 1)));   // (2026-11-25 第2期 ①②⑨: one answer — another move is never 「正解」)
       return Math.max(0, Math.round(PTS * (all.length - 1 - all.filter(v => v > mine + 1e-9).length) / (all.length - 1)));
     },
