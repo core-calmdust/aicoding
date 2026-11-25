@@ -28,7 +28,7 @@
     const add = name => (vo.reg === 'plain' || vo.reg === 'kid' && false) ? name : name;
     // the last day of the fox hunt: the wolves are gone, the talk is of the fox (before the reason is put in, so the reason's own words stay)
     let line = list[i];
-    if (S.foxHunt && ['defend', 'accuse', 'sus', 'bad', 'agree', 'rs_w', 'rm_w'].includes(act)) line = String(line).replace(/人狼/g, ((story.roles || {}).fox || {}).name || '妖狐').replace(/狼/g, '狐');
+    if (S.foxHunt && ['defend', 'accuse', 'sus', 'bad', 'agree', 'rs_w'].includes(act)) line = String(line).replace(/人狼/g, ((story.roles || {}).fox || {}).name || '妖狐').replace(/狼/g, '狐');
     const out = fill(line, Object.assign({ you: story.hero.title, god: story.lex.god || '神さま', godCall: story.lex.godCall || '神さま', blessing: story.lex.blessing || 'ようこそ' }, vars || {}));
     // the hero's title with an honorific becomes how people really call them (先生さん → 先生, 医者さん → お医者さま)
     const H = story.hero;
@@ -77,6 +77,7 @@
       case 'callnone': return { by: e.by, kind: 'grief', text: say(S, story, e.by, 'callnone') };
       case 'reqok': return { by: e.by, kind: 'co', text: say(S, story, e.by, 'reqok', { target: N(e.target) }) };
       case 'reqno': return { by: e.by, kind: 'co', text: say(S, story, e.by, 'reqno_' + (e.why || 'trust'), { target: N(e.target) }) };
+      case 'guardself': return { by: e.by, kind: 'grief', text: say(S, story, e.by, 'guardself', {}) };
       case 'guardheard': return { by: e.by, kind: 'grief', text: say(S, story, e.by, 'guardheard', { target: N(e.target) }) };
     }
     return null;

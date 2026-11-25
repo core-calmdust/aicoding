@@ -867,6 +867,7 @@
     ];
     if (appealCan('div')) opts.push({ t: `${seerN}へ：今夜はこの人を占ってほしい`, s: '名乗った全員に頼む。引き受けるかは、あなたをどれだけ信じているか次第。偽物も、たいてい引き受ける。', v: 'div', ic: IC.call, dis: u.div });
     if (appealCan('guard')) opts.push({ t: `${grdN}へ：名乗らなくていい、この人を守ってほしい`, s: `${grdN}が誰かは、あなたにもわからない。守ってくれるかは本人次第。狼もこの頼みを聞いている。`, v: 'guard', ic: IC.call, dis: u.guard });
+    if (appealCan('guard')) opts.push({ t: `${grdN}へ：今夜は、わたしを守ってほしい`, s: `自分の戸口を頼む。名乗り出ていれば聞き入れられやすいが、名乗りもなく頼めば、身勝手にも聞こえる。狼もこの頼みを聞いている。`, v: 'guardme', ic: IC.call, dis: u.guard });
     const v = await pickOpt('村に呼びかける', '集会の全員が聞いている。人狼も、だ。', opts);
     if (!v) return debate();
     openGate();
@@ -898,6 +899,10 @@
       u.guard = 1;
       await say([{ who: 'you', text: `${grdN}がいるなら、名乗らなくていい。返事もいらない。今夜は、${nm(t)}の戸口に立ってほしい。` }]);
       ev = E.askGuard(S, st, t);
+    } else if (v === 'guardme') {
+      u.guard = 1;
+      await say([{ who: 'you', text: S.pl.co ? `${grdN}がいるなら、名乗らなくていい。今夜は、わたしの戸口に立ってほしい。わたしが倒れれば、見たものも一緒に消える。` : `${grdN}がいるなら、名乗らなくていい。身勝手な頼みなのはわかっている。それでも今夜は、わたしの戸口に立ってほしい。` }]);
+      ev = E.askGuard(S, st, 'you');
     }
     const items = [];
     for (const e of ev) { const l = lineOf(e); if (l) items.push(l); }
@@ -1157,7 +1162,8 @@
     await say([{ text: pickOne(st.text.night) }, vignette()]);
     const act = {};
     const r = S.ghost ? null : S.pl.role;
-    if (!S.ghost && S.pl.co) await say([{ text: `あなたは${st.roles[S.pl.role].name}だと名乗った。狼は、名乗った者の戸口を知っている。\n${E.RS(S).guard ? "今夜、誰かがあなたを守ってくれるだろうか。" : `この${st.lex.village}に、扉を守ってくれる者はいない。`}` }]);
+    const wolves = E.alive(S).some(p => p.role === 'wolf');   // the fox hunt: the wolves are gone, the night is quiet
+    if (!S.ghost && S.pl.co && wolves) await say([{ text: `あなたは${st.roles[S.pl.role].name}だと名乗った。狼は、名乗った者の戸口を知っている。\n${E.RS(S).guard ? "今夜、誰かがあなたを守ってくれるだろうか。" : `この${st.lex.village}に、扉を守ってくれる者はいない。`}` }]);
     if (r === 'seer') {
       const done = new Set(S.pl.res.filter(x => x.seer).map(x => x.target));
       act.divine = await pickPerson('今夜、誰を占う？', '朝に結果がわかる。', live().filter(p => !done.has(p.id)).map(p => p.id), { mark: true }) || pickOne(live()).id;
@@ -1174,7 +1180,8 @@
     save();
     // the wolf crosses the screen; if it bit the nekomata, the cat's curse catches it on the way
     const N = S.nights[S.nights.length - 1];
-    await wolfRun(N && N.dragged ? N : null);
+    if (wolves) await wolfRun(N && N.dragged ? N : null);
+    else { await wait(600); await say([{ text: '遠吠えは、もう聞こえなかった。かわりに、どこか近くで、狐が細く、ひと声だけ鳴いた。' }]); }
     SND.windOff();
     if (E.check(S)) {
       // the bite that ended it: show the morning before the end, so the curse is seen to land

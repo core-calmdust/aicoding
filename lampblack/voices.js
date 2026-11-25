@@ -627,3 +627,22 @@ window.WL_WHY = {
   };
   for (const k in add) if (V[k]) Object.assign(V[k], add[k]);
 })(window.WL_VOICES);
+
+/* guardself 自分を守ってほしいという頼みを聞いた誰かのひとこと */
+(function (V) {
+  const add = {
+    elder: { guardself: ['自分の戸口を、か。……{you}、狼も同じことを頼むものじゃぞ。'] },
+    polite: { guardself: ['ご自分の戸口を、ですか。……お気持ちは、わかりますけれど。'] },
+    rough: { guardself: ['てめえの身を守れ、ってか。……ま、誰だって死にたかねえわな。'] },
+    cheer: { guardself: ['{you}、自分を守ってって？ ……うん、怖いもんね。わかるよ。'] },
+    cool: { guardself: ['自分を守らせる頼みか。生かす価値があると、皆に示せればいいがね。'] },
+    timid: { guardself: ['じ、自分のことを頼むなんて……ぼくには、言えないや。'] },
+    noble: { guardself: ['己の身を守れ、とはね。……正直ではあるな、{you}。'] },
+    sister: { guardself: ['自分の戸口を頼むかい。……度胸があるのか、怖いのか、どっちだろうね。'] },
+    child: { guardself: ['{you}、こわいの？ ……ぼくも、ちょっとこわい。'] },
+    pious: { guardself: ['ご自分のための願いも、願いには違いありません。……届きますように。'] },
+    merchant: { guardself: ['ご自分の戸口を、と。……商いなら、まず値踏みされるところでございますな。'] },
+    blunt: { guardself: ['……自分の戸口か。……聞こえた。'] },
+  };
+  for (const k in add) Object.assign(V[k] = V[k] || {}, add[k]);
+})(window.WL_VOICES);
