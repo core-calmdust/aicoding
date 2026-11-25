@@ -7,7 +7,7 @@
   tag: '霧の港の劇場で、狼の芝居の幕が上がる',
   concept: '霧の港町の古い劇場、霧笛座。三十年前、初日の晩に火を出して封じられた芝居『霧の狼』が、ふたたび稽古に入った。初日の前夜、港は霧に閉ざされ、舞台の上でプロンプターが冷たくなった。',
   mood: '霧・劇場・港',
-  pal: { paper: '#e2ddd2', lamp: '#ffd98f', ink: '#16141a', night: '#1a2030', moon: '#b8c0d4', acc: '#a8323c' },
+  pal: { paper: '#e2ddd2', lamp: '#ffd98f', ink: '#16141a', night: '#1a2030', moon: '#b8c0d4', acc: '#56772a' },
   scene: 'theater',
   rules: 'immoral',
   foxLoc: 'trap',

@@ -7,7 +7,7 @@
   tag: '灯台の灯が消えた夜、海から狼が帰ってくる',
   concept: '本土から船で半日の小さな島。あなたが島に着いた晩、嵐が来て、灯台の灯が消えた。島には言い伝えがある。嵐の夜、海で死んだ者の顔を借りて、狼が帰ってくると。',
   mood: '嵐・灯台・帰郷',
-  pal: { paper: '#e6e2d3', lamp: '#ffe2a0', ink: '#10171b', night: '#0f2230', moon: '#a9c6d4', acc: '#c75b3f' },
+  pal: { paper: '#e6e2d3', lamp: '#ffe2a0', ink: '#10171b', night: '#0f2230', moon: '#a9c6d4', acc: '#2d6497' },
   scene: 'island',
   rules: 'fox',
   foxLoc: 'shrine',
