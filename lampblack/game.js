@@ -440,10 +440,12 @@
   function renderRoster() {
     const R = $('roster'); if (!R) return;
     // on a phone the faces at the top are only needed in the meeting and the vote (the day's search lists the people below)
-    const on = S && G.scr === 'play' && S.phase !== 'prologue' && S.phase !== 'end' && (PCQ.matches || S.phase === 'meeting' || S.phase === 'vote');
+    const on = S && G.scr === 'play' && S.phase !== 'prologue' && S.phase !== 'end';
+    const faces = on && (PCQ.matches || S.phase === 'meeting' || S.phase === 'vote');   // the map shows all day long; the faces only in the meeting and the vote on a phone
     R.classList.toggle('hide', !on); document.body.classList.toggle('has-roster', !!on);
     if ($('rmap')) $('rmap').classList.toggle('hide', !on);
-    if ($('rdock')) $('rdock').classList.toggle('hide', !on || PCQ.matches);
+    if ($('rdock')) $('rdock').classList.toggle('hide', !faces || PCQ.matches);
+    R.classList.toggle('hide', !faces);
     if (!on) return;
     const html = S.people.map(p => {
       const t = tagsOf(p.id), dead = !p.alive, mk = S.pl.notes[p.id] || '';
@@ -468,8 +470,9 @@
     if (M.__html !== mh) { M.innerHTML = mh; M.__html = mh; }
     // a phone: the faces and the map sit at the bottom of the text strip (it has room under the words), not over the stage
     const home = PCQ.matches ? $('stage') : (() => { let D = $('rdock'); if (!D) { D = document.createElement('div'); D.id = 'rdock'; } if (D.parentNode !== $('strip')) $('strip').appendChild(D); return D; })();
-    if (R.parentNode !== home) { if (PCQ.matches) { home.insertBefore(R, $('fx')); home.insertBefore(M, $('fx')); } else { home.appendChild(R); home.appendChild(M); } }
-    M.style.top = PCQ.matches ? (R.offsetTop + R.offsetHeight + 8) + 'px' : '';
+    if (R.parentNode !== home) { if (PCQ.matches) home.insertBefore(R, $('fx')); else home.appendChild(R); }
+    if (M.parentNode !== $('stage')) $('stage').insertBefore(M, $('fx'));   // the map stays on the stage, at the top (on a phone too)
+    M.style.top = PCQ.matches ? (R.offsetTop + R.offsetHeight + 8) + 'px' : '';   // a phone: CSS puts it just under the header
   }
   function hud() {
     if (S.ghost) document.body.classList.add('ghost');
