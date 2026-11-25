@@ -14,6 +14,9 @@
 //      本当に勝ち（エンジンの VCF・その点の形）／「三が残る」＝相手に達四の点が残る／「悪くない・戦える・すぐには負けない」は
 //      その手が10点以上で、相手に四追いの勝ちがないときだけ（追53）／見出しの「いい線いってた！」「あと少し！」「あと一歩！」は
 //      10点以上のときだけ（追39）／ほめ言葉の「同じくらい良い一手」は出ない（②）／問いかけ・ヒントの前提（「四が作れる」など）が盤と合う
+//   追90 外れた手ごとに、声が選びうる理由の文すべて（選び方の条件つき）とヒントの文すべてを盤の事実と照合：「2つの役目」「じゃまと自分の形」
+//      「次の三」＝緑の点の働き／「つながらない」「離れたまま」＝自分の石がとなりにない／「となりに置いても」＝となりにある／「{f}の<向き>の…」＝緑の点が
+//      ふさぎ、きみの手がふさがない向き（ナナメは2本とも同じ名前なので、どちらかをふさいでいれば言わない）
 //   ⑨ 2D の点（problemPoints）と 3D の点（GOMOKU.points）が全合法手で同じ
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm');
@@ -126,7 +129,7 @@ function verifySet(g, opt) {
     // ⑦⑧ the words
     const GSQ = x => E.sqOf(x), sc = P.sc.map(([u, v]) => [GSQ(u), v]), b = sc.slice().sort((x, y) => y[1] - x[1])[0];
     const o = { pos: { start: { b: cells(P.b), w: cells(P.w), side: P.side } }, P: { sc } }, PJ = X.GOP.mk(si), keys = [];
-    const PJw = Object.assign({}, PJ, { pk: (arr, key, ok) => { keys.push(key); return PJ.pk(arr, key, ok); } });
+    const PJw = Object.assign({}, PJ, { pk: (arr, key, ok, ok2) => { keys.push(key); keys.arr = arr; keys.ok = ok && ok2 ? x => ok(x) || ok2(x) : ok; return PJ.pk(arr, key, ok, ok2); } });
     const T = X.GOMOKU_OP_JA.prob(g, o, sc, b, j, PJw);
     const pos = E.setup('renju', { b: cells(P.b), w: cells(P.w), side: P.side }), s = P.side, oo = 3 - s;
     const plain = t => String(t).replace(/<[^>]+>/g, '');
@@ -134,17 +137,37 @@ function verifySet(g, opt) {
     const kb = kindOf(P); if (/四が作れる|四を作って/.test(T.hintTx) && !/^(four|ft)$/.test(kb)) add(q, '⑧ the hint says a four can be made, the answer makes none');
     const gt = plain(T.good(b[0])); if (/同じくらい良い/.test(gt)) add(q, '⑧ the praise of the answer says 「同じくらい良い」');
     const winAfter = u => { pos.make(u); let w = false; if (pos.fives(oo).length && !pos.fives(s).length) w = true; else { const R = new E.Engine().rootList(pos, 1e9, null, 24, 6).list; w = R.some(e => e.v > W); } pos.unmake(); return w; };
+    const MK = [];
     for (const u of pos.legal()) { if (u === b[0]) continue;
       keys.length = 0; const t = plain(T.ng(u)), p2 = pts(P.sc, E.sqName(u), W), p3 = pts3(sc, u);
       if (p2 !== p3) add(q, `⑨ ${E.sqName(u)}: 2D ${p2} points, 3D ${p3}`);
       if (/\{\w+\}|undefined|NaN/.test(t)) add(q, `⑧ ${E.sqName(u)}: a placeholder: ${t.slice(0, 60)}`);
       if (/^(あと少し|あと一歩|いい線)/.test(t) && p2 < 10) add(q, `⑦ ${E.sqName(u)} (${p2} points) opens with 「${t.slice(0, 6)}」 (追39)`);
-      const mk = keys.filter(k => /^m/.test(k)).pop() || '';
+      const mk = keys.filter(k => /^m/.test(k)).pop() || ''; { const ar = /^m/.test(keys[keys.length - 1] || '') ? keys.arr : [], ok2 = ar.filter(x => !keys.ok || keys.ok(x)); MK.push([u, mk, ok2.length ? ok2 : ar]); }
       if (mk === 'mlose5') { pos.make(u); const ok = pos.fives(oo).length && !pos.fives(s).length; pos.unmake(); if (!ok) add(q, `⑦ ${E.sqName(u)}: 「5つ並べられて負け」 but the opponent has no five point`); }
       if (mk === 'mloseW' && !winAfter(u)) add(q, `⑦ ${E.sqName(u)}: 「もう止められない」 but the engine finds no win for the opponent`);
       if (mk === 'mleft3') { pos.make(u); const C = E.C; let f4 = false; for (let m = 0; m < 225; m++) { const i = E.M2I[m]; if (pos.b[i] === 0 && pos.cls[oo][i] === C.F4 && (oo !== 1 || pos.isLegal(m))) f4 = true; } pos.unmake(); if (!f4) add(q, `⑦ ${E.sqName(u)}: 「三が残る（達四を作られる）」 but the opponent has no open-four point`); }
       if (mk === 'mclose' && (p2 < 10 || winAfter(u))) add(q, `⑦ ${E.sqName(u)} (${p2} points): 「悪くない・すぐには負けない」 (追53)`);
     }
+    // 追90: every wording the voice can pick for a move (the rotation picks one of the reason's sentences by the order the moves are
+    // asked), not only the one the stored order picks — every sentence of the reason each wrong move gets, and every hint sentence of the
+    // answer's kind, checked against the board: the green point's role (「2つの役目」「じゃまと自分の形」「次の三」), the player's stone
+    // (「つながらない」「離れたまま」 = no own stone next to it), the opponent's line named in 「{f}の<向き>の…」 (one the green point blocks and
+    // the player's move leaves open), the hint's 「四」
+    { const G = X.GML.mk({ b: cells(P.b), w: cells(P.w), side: s }, 'renju'), FB = X.GOP.fx(G, b[0], s), KB = X.GOP.kind(FB), D = i => X.GOP.DN[i];
+      const hkey = X.GOP.hint[KB] ? KB : KB === 'two2' || KB === 'own' ? 'two' : KB === 'foe' ? 'blk' : 'shape';
+      X.GOP.hint[hkey].forEach(h => { if (/四が作れる|四を作って|四が作れそう/.test(h) && !/^(four|ft|f4)$/.test(KB)) add(q, `⑧ 追90 the hint 「${h.slice(0, 20)}」 says a four, the answer (${KB}) makes none`); });
+      const V0 = Object.assign(X.GOP.vars(FB, s), { s: X.GOP.side(s), r: '' }), fillT = (t, v) => t.replace(/\{(\w+)\}/g, (m, k) => v[k] != null ? v[k] : m);
+      for (const [u, mk, arr] of MK) { const FU = X.GOP.fx(G, u, s);   // arr: the sentences the voice can pick for this move (its filter, if any)
+        arr.forEach(t0 => { const t = fillT(t0, V0), tag = `⑦ 追90 ${E.sqName(u)} (${mk}): 「${t.slice(0, 36)}」`;
+          if (/2つの役目/.test(t) && !/^(b3t|twob|two2|ft)$/.test(KB)) add(q, `${tag} — the green point (${KB}) has no two roles`);
+          if (/相手のじゃまと自分の形/.test(t) && !/^(b3t|twob)$/.test(KB)) add(q, `${tag} — the green point (${KB}) does not block and build at once`);
+          if (/次の三が作りにくい/.test(t) && !/^(two|two2|twob|own|three|b3t)$/.test(KB)) add(q, `${tag} — the green point (${KB}) builds no next three`);
+          if (/自分の石とつながらない|石どうしが離れたまま/.test(t) && FU.adjS.length) add(q, `${tag} — the stone touches its own (${FU.adjS.map(D).join('・')})`);
+          if (/となりに置いても/.test(t) && !FU.adjS.length) add(q, `${tag} — the stone touches none of its own`);
+          const m = t.match(/(?:黒|白)の(ヨコ|タテ|ナナメ)の(?:並び|線|石)|(ヨコ|タテ|ナナメ)の線を空けた/);
+          if (m && mk === 'mfree') { const dn = m[1] || m[2];
+            if (!FB.blk.some(i => D(i) === dn) || FU.blk.some(i => D(i) === dn)) add(q, `${tag} — the ${dn} line is not one the green point blocks and the move leaves open`); } }); } }
   });
   return out;
 }
