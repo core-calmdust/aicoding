@@ -576,7 +576,7 @@
       } else {
         setCast([]);
         // no one was attacked at all (the wolves are gone, only the fox is left): no place to name
-        items.push({ text: N.loc ? fill(pickOne(st.text.peace), { loc: locName(N.loc) }) : '朝が来た。誰も死ななかった。\nどの戸口にも、爪の跡はひとつもない。' });
+        items.push({ text: SP.peace(S, st, N) });
         if (N.saved === 'ward') items.push({ text: '枕もとの鈴が、夜中にひとりでに鳴った。あの音がなければ、あなたは今ここにいない。' });
         if (N.saved === 'guard' && N.target === 'you') items.push({ text: `戸口の前の床に、獣の爪の跡が残っていた。あなたの部屋の前まで来て、そこで引き返している。\n誰かが一晩じゅう、**あなたを守っていた**のだ。` });
         if (N.saved === 'guard' && S.pl.role === 'guard') items.push({ text: `あなたが夜通し見張った戸口の前に、獣の爪の跡があった。${nm(N.target)}は、何も知らずに眠っていた。` });

@@ -256,7 +256,7 @@ function composed() {
     for (let g = 0; g < 12; g++) {
       const st = W.WLHero.apply(W.WL_STORIES[id], H.length ? H[g % H.length].id : null);
       const S = E.newGame(st, { diff: g % 4, seed: 77 + g });
-      for (let d = 1; d < 5 && !S.result; d++) {
+      for (let d = 1; d < 10 && !S.result; d++) {
         E.npcSearch(S, st);
         const lines = [];
         for (const p of E.alive(S).filter(p => !p.isPlayer)) {
@@ -265,9 +265,10 @@ function composed() {
           const t2 = E.alive(S).find(q => q.id !== p.id); const r = E.ask(S, st, p.id, 'about', t2.id, true); if (r.k === 'about') SP.about(S, st, p.id, r).forEach(t => lines.push([p.id, t]));
         }
         for (const e of E.meeting(S, st)) { const x = SP.event(S, st, e); if (x) lines.push([e.by, x.text]); }
+        for (const t of SP.morning(S, st, S.nights[S.nights.length - 1])) lines.push(['朝', t]);   // the morning's narration, a night with no attack included
         for (const [who, t] of lines) {
           const plain = t.replace(/\*\*/g, '');
-          if (/\{\w+\}|undefined|null|NaN/.test(plain) || /。。|、。|。、|さんさん|！。|？。/.test(plain) || plain.length > 96) bad.push(`${st.title}/${who}: ${plain}`);
+          if (/\{\w+\}|undefined|null|NaN/.test(plain) || /。。|、。|。、|さんさん|！。|？。/.test(plain) || (who !== '朝' && plain.length > 96)) bad.push(`${st.title}/${who}: ${plain}`);
           if (samples.length < 400) samples.push(`${st.title}/${who}: ${plain}`);
         }
         const r = E.voteRound(S, st, E.alive(S).find(p => !p.isPlayer).id); E.exile(S, r.top[0], [r]); if (E.check(S)) break; E.night(S, st, {}); S.day++; if (E.check(S)) break;

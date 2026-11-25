@@ -110,5 +110,20 @@
     return parts;
   }
 
-  root.WLSpeech = { fill, say, why, event, night, opinion, about, name, loc, roleName, trait, fig, traceText, traceShort, charOf, callName };
+  // the morning's narration (the same words the game shows; text-quality.js reads them too)
+  const pickOne = (S, a, k) => Array.isArray(a) ? a[h32(S.seed + ':' + k) % a.length] : a;
+  function peace(S, story, N) {
+    return N.loc ? fill(pickOne(S, story.text.peace, 'pc' + N.n), { loc: loc(story, N.loc) }) : '朝が来た。誰も死ななかった。\nどの戸口にも、爪の跡はひとつもない。';   // no one was attacked at all: no place to name
+  }
+  function morning(S, story, N) {
+    const out = [], T = story.text, nm = id => id === 'you' ? story.hero.title : name(S, story, id);
+    if (N.died && N.target !== 'you') { const c = charOf(story, N.target); out.push(fill(pickOne(S, T.discover[N.loc] || T.discover[story.locs[0].id], 'dc' + N.n), { victim: nm(N.target), note: c ? c.note : '' })); }
+    else if (!N.died) out.push(peace(S, story, N));
+    if (N.dragged) out.push(fill(pickOne(S, T.catDrag || ['{name}も、冷たくなっていた。'], 'cd' + N.n), { name: nm(N.dragged), cat: N.target === 'you' ? 'あなた' : nm(N.target) }));
+    if (N.cursed && N.cursed !== 'you') out.push(fill(pickOne(S, T.curse || [''], 'cu' + N.n), { name: nm(N.cursed) }));
+    if (N.followed && N.followed !== 'you') out.push(fill(pickOne(S, T.follow || [''], 'fo' + N.n), { name: nm(N.followed) }));
+    if (S.foxHunt && S.foxHunt.day === S.day && T.foxHunt) out.push(T.foxHunt);
+    return out.filter(Boolean);
+  }
+  root.WLSpeech = { fill, say, peace, morning, why, event, night, opinion, about, name, loc, roleName, trait, fig, traceText, traceShort, charOf, callName };
 })(typeof window !== 'undefined' ? window : globalThis);
