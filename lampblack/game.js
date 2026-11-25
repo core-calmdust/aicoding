@@ -867,6 +867,7 @@
     ];
     if (appealCan('div')) opts.push({ t: `${seerN}へ：今夜はこの人を占ってほしい`, s: '名乗った全員に頼む。引き受けるかは、あなたをどれだけ信じているか次第。偽物も、たいてい引き受ける。', v: 'div', ic: IC.call, dis: u.div });
     if (appealCan('guard')) opts.push({ t: `${grdN}へ：名乗らなくていい、この人を守ってほしい`, s: `${grdN}が誰かは、あなたにもわからない。守ってくれるかは本人次第。狼もこの頼みを聞いている。`, v: 'guard', ic: IC.call, dis: u.guard });
+    if (appealCan('guard')) opts.push({ t: `${grdN}へ：今夜は、わたしを守ってほしい`, s: `自分の戸口を頼む。名乗り出ていれば聞き入れられやすいが、名乗りもなく頼めば、身勝手にも聞こえる。狼もこの頼みを聞いている。`, v: 'guardme', ic: IC.call, dis: u.guard });
     const v = await pickOpt('村に呼びかける', '集会の全員が聞いている。人狼も、だ。', opts);
     if (!v) return debate();
     openGate();
@@ -898,6 +899,10 @@
       u.guard = 1;
       await say([{ who: 'you', text: `${grdN}がいるなら、名乗らなくていい。返事もいらない。今夜は、${nm(t)}の戸口に立ってほしい。` }]);
       ev = E.askGuard(S, st, t);
+    } else if (v === 'guardme') {
+      u.guard = 1;
+      await say([{ who: 'you', text: S.pl.co ? `${grdN}がいるなら、名乗らなくていい。今夜は、わたしの戸口に立ってほしい。わたしが倒れれば、見たものも一緒に消える。` : `${grdN}がいるなら、名乗らなくていい。身勝手な頼みなのはわかっている。それでも今夜は、わたしの戸口に立ってほしい。` }]);
+      ev = E.askGuard(S, st, 'you');
     }
     const items = [];
     for (const e of ev) { const l = lineOf(e); if (l) items.push(l); }
