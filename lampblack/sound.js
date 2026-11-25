@@ -18,8 +18,9 @@
       if (want) { const w = want; want = null; music(w.name, w.level); }
       loadSample('bell'); loadSample('wolf'); loadSample('door');
       document.addEventListener('visibilitychange', () => { if (!ac) return; if (document.hidden) ac.suspend(); else if (on && !paused) ac.resume(); });
+      ac.addEventListener && ac.addEventListener('statechange', () => { if (ac.state === 'interrupted' && !document.hidden && on && !paused) ac.resume().catch(() => {}); });
     }
-    if (ac.state === 'suspended' && !document.hidden) ac.resume();
+    if ((ac.state === 'suspended' || ac.state === 'interrupted') && !document.hidden && on && !paused) ac.resume();   // iOS leaves the context 'interrupted' after a call or the app switcher
     return ac;
   }
   function noiseBuf(a, sec) { const b = a.createBuffer(1, a.sampleRate * sec, a.sampleRate), d = b.getChannelData(0); let l = 0; for (let i = 0; i < d.length; i++) { const w = Math.random() * 2 - 1; l = (l + .02 * w) / 1.02; d[i] = l * 3.2; } return b; }
