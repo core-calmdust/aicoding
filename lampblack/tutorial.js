@@ -103,6 +103,7 @@
       /* ---------- 一日目の朝 ---------- */
       T.S.day = 1; head(1, '朝'); phase('morning');
       out('hannah', 'wolf');
+      T.S.nights.push({ n: 0, killer: 'marco', target: 'hannah', loc: 'mill', died: true, pos: { you: 'inn' } }); T.renderRoster();   // 名札の下の場所の札に「現場」
       scene('mill', false);
       ok(); T.SND.thud && T.SND.thud();
       cast(['hannah'], { fallen: 'hannah', x: 58 });
@@ -112,7 +113,7 @@
       ]);
       cast(['oscar', 'hannah'], { fallen: 'hannah', span: [36, 64] });
       await say([w('oscar', 'ハンナ……。春には嫁ぐと、昨日まで笑っておったのに。……誰の仕業じゃ。この村の、誰の。')]);
-      await say([g('朝、夜に襲われた人がわかる。名札の×が、いなくなった人のしるし。ここからは昼の時間。まずは調べてみよう。')]);
+      await say([g('朝、夜に襲われた人がわかる。名札の×が、いなくなった人のしるし。場所の札の「現場」が、襲われた場所だよ。さあ、調べてみよう。')]);
 
       /* ---------- 昼：現場を調べる ---------- */
       head(1, '昼'); phase('invest'); cast([]);
@@ -210,7 +211,7 @@
       T.SND.windOff();
 
       /* ---------- 二日目の朝 ---------- */
-      T.S.day = 2; head(2, '朝'); phase('morning'); scene('inn', false); cast([]);
+      T.S.day = 2; T.S.nights.push({ n: 1, killer: 'marco', target: 'berta', loc: 'inn', died: false, saved: 'guard', pos: { you: 'inn' } }); head(2, '朝'); phase('morning'); scene('inn', false); cast([]);
       await say([
         n('朝が来た。食堂に、ひとり、またひとりと村人が降りてくる。誰も欠けていなかった。ベルタが、震える手で湯気の立つ鍋をかき混ぜていた。'),
         g('誰も死なない朝は、狩人の守りが当たったしるし。狼が狙ったのは、たぶん……名乗り出た占い師だね。', '👆 狼が来た場所を調べよう'),
