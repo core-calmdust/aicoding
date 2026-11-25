@@ -121,6 +121,7 @@ def tensors(c, dev, lam, lend, lply):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('train', nargs='+'); ap.add_argument('--bench', action='store_true')
+    ap.add_argument('--init', default='')   # another run's <out>.ckpt: start from its weights (a second pass at a lower --lr; the optimizer and the count start afresh)
     ap.add_argument('--hidden', type=int, default=512); ap.add_argument('--ob', type=int, default=1)
     ap.add_argument('--l1', type=int, default=0); ap.add_argument('--l2', type=int, default=32); ap.add_argument('--mi', type=int, default=0)
     ap.add_argument('--passes', type=float, default=1.0); ap.add_argument('--max', type=int, default=0)
@@ -145,6 +146,8 @@ def main():
     if ck and os.path.exists(ck):
         st = torch.load(ck, map_location=dev); net.load_state_dict(st['net']); opt.load_state_dict(st['opt']); step, seen, t_run = st['step'], st['seen'], st.get('t', 0.0)
         print(f'continuing from {ck}: {seen / 1e6:.0f} million positions done', flush=True)
+    elif a.init:
+        net.load_state_dict(torch.load(a.init, map_location=dev)['net']); print('starting from the weights of', a.init, flush=True)
     data = Data(paths, CH, a.threads, start=seen, limit=a.max)
     total = int(data.total * a.passes)
     print(f'{dev}, {data.total / 1e6:.1f} million positions x {a.passes} passes, hidden {a.hidden}' + (f', MLP {a.l1}-{a.l2}' if a.l1 else '') + (f', {a.ob} output buckets' if a.ob > 1 else '') + f', first layer: {a.ft}', flush=True)
