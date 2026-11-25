@@ -20,7 +20,7 @@
     8:  { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 0 },
     10: { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 1 },
     12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1 },
-    13: { wolf: 4, madman: 1, seer: 1, medium: 1, guard: 1 },
+    13: { wolf: 3, madman: 2, seer: 1, medium: 1, guard: 1 },   // 2026-11-26：悪夢は狼を3匹に減らし（運の要素を減らす）、狂人ふたりと嘘・罠で推理をむずかしくする
   };
   // the stories' variations (story.rules): 霧鐘村 is the standard village.
   //   mason — 北辰号: no guard; two who share a compartment know each other to be human (共有者)
@@ -32,27 +32,27 @@
       8:  { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 0, mason: 2 },   // 2026-11-26：入門は狂人なし（標準より易しく）
       10: { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 0, mason: 2 },
       12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 0, mason: 2 },
-      13: { wolf: 4, madman: 1, seer: 1, medium: 1, guard: 0, mason: 2 },
+      13: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 0, mason: 2 },   // 2026-11-26：悪夢は狼を3匹に減らし（運の要素を減らす）、嘘と罠で推理をむずかしくする
     },
     immoral: {   // 霧笛座: the fox and the one who serves it (背徳者). When the fox dies, the immoral follows it the same night
       8:  { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 1, fox: 1, immoral: 0 },   // 2026-11-26：入門は背徳者なし（背徳者入りでは標準よりむずかしかった）
       10: { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 1, fox: 1, immoral: 1 },
       12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1, immoral: 1 },
-      13: { wolf: 4, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1, immoral: 1 },
+      13: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1, immoral: 1 },   // 2026-11-26：悪夢は狼を3匹に減らし（運の要素を減らす）、嘘と罠で推理をむずかしくする
     },
     fox: {
       8:  { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 1, fox: 1 },   // 2026-11-26：入門にも狩人（なしでは標準とむずかしさが変わらなかった）
       10: { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1 },
       12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1 },
-      13: { wolf: 4, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1 },
+      13: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1 },   // 2026-11-26：悪夢は狼を3匹に減らし（運の要素を減らす）、嘘と罠で推理をむずかしくする
     },
     //   cat     — 猫鳴き湯: a nekomata (猫又) on the village side. Sent to the jail, it drags one of those who voted for it;
     //             bitten, it drags one of the wolves.
     cat: {
       8:  { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 0, cat: 1 },   // the cat helps the village: a madman more on 入門, a third wolf on 標準
       10: { wolf: 3, madman: 0, seer: 1, medium: 1, guard: 1, cat: 1 },
-      12: { wolf: 4, madman: 0, seer: 1, medium: 1, guard: 1, cat: 1 },   // 2026-11-26：狂人入りの3匹では標準より易しかった（探偵92%）。4匹にして上級らしく
-      13: { wolf: 4, madman: 2, seer: 1, medium: 1, guard: 1, cat: 1 },   // 上級より一段むずかしく：狂人がふたり
+      12: { wolf: 3, madman: 2, seer: 1, medium: 1, guard: 1, cat: 1 },   // 2026-11-26：狼3匹＋狂人ふたり（狼4匹は運の要素が大きい。上級から嘘つきが手ごわくなる）
+      13: { wolf: 3, madman: 2, seer: 1, medium: 1, guard: 1, cat: 1 },   // 2026-11-26：悪夢は上級と同じ顔ぶれで、嘘と罠がさらに手ごわい
     },
     //   fanatic — 白嶺修道院: the madman is a fanatic (狂信者) who knows the wolves (they do not know them).
     //             Its lies cover the wolves; it is there from the easiest level.
@@ -60,7 +60,7 @@
       8:  { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 0 },   // 2026-11-26：入門は狂信者なし（狼2匹＋狂信者では標準よりむずかしかった。狼1匹では易しすぎた）
       10: { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 1 },
       12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1 },
-      13: { wolf: 4, madman: 1, seer: 1, medium: 1, guard: 1 },
+      13: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1 },   // 2026-11-26：悪夢は狼を3匹に減らし（運の要素を減らす）、嘘と罠で推理をむずかしくする
     },
   };
   const setupOf = (story, size) => Object.assign({ mason: 0, fox: 0, immoral: 0, cat: 0 }, (SETUPS[story && story.rules] || SETUP)[size]);
@@ -68,10 +68,10 @@
   // difficulty: size, action points, traces left per attack, how often the wolves come for the player,
   // how often they plant a belonging, how often the weather wipes a trace, how far a figure is seen
   const DIFF = [   // 2026-11-25：村まかせでも勝ててしまうので、村の推理を弱め、痕跡を減らした（あなたの働きで勝敗が決まるように）
-    { id: 0, size: 8,  ap: 3, traces: 1, neg: .35, player: 0,    plant: .15, drop: .2,  erase: .1,  adj: .25, npcFind: .22, fakeSeer: .6,  assist: true,  wit: .16, sway: 1.3 },
-    { id: 1, size: 10, ap: 3, traces: 1, neg: .5,  player: .3,   plant: .4,  drop: .12, erase: .3,  adj: .2,  npcFind: .1,  fakeSeer: .9,  assist: false, wit: .05, sway: 1.0 },
-    { id: 2, size: 12, ap: 3, traces: 1, neg: .6,  player: .45,  plant: .45, drop: .1,  erase: .35, adj: .17, npcFind: .15, fakeSeer: .8,  assist: false, wit: .16, sway: .9 },
-    { id: 3, size: 13, ap: 3, traces: 1, neg: .7,  player: .45,  plant: .55, drop: .08, erase: .45, adj: .15, npcFind: .12, fakeSeer: .85, assist: false, wit: .18, sway: .8 },
+    { id: 0, cunning: 0, size: 8,  ap: 3, traces: 1, neg: .35, player: 0,    plant: .15, drop: .2,  erase: .1,  adj: .25, npcFind: .22, fakeSeer: .6,  assist: true,  wit: .16, sway: 1.3 },
+    { id: 1, cunning: 0, size: 10, ap: 3, traces: 1, neg: .5,  player: .3,   plant: .4,  drop: .12, erase: .3,  adj: .2,  npcFind: .1,  fakeSeer: .9,  assist: false, wit: .05, sway: 1.0 },
+    { id: 2, cunning: .7, size: 12, ap: 3, traces: 1, neg: .6,  player: .45,  plant: .45, drop: .1,  erase: .35, adj: .17, npcFind: .15, fakeSeer: .8,  assist: false, wit: .16, sway: .9 },
+    { id: 3, cunning: 1, size: 13, ap: 3, traces: 1, neg: .85, player: .45, plant: .75, drop: .08, erase: .3,  adj: .15, npcFind: .12, fakeSeer: 1,   assist: false, wit: .08, sway: .7 },
   ];
   const CATS = ['height', 'hand', 'foot', 'mark'];
 
@@ -252,6 +252,12 @@
     return rec;
   }
 
+  // 2026-11-26（ユーザー：狂人が二つ三つと喋りたがって即バレるのは、上級以上では通用しない）
+  // cunning（上級 .7・悪夢 1）：嘘つきは、すぐに見破られる嘘を避ける。誰か（あなたを含む）が同じ痕跡を見ていれば、その痕跡については本当のことを言う。
+  // 作り話の人影は、その夜の本物の痕跡と食い違わない形にする。名乗りで嘘をつく者は、ほかの嘘を重ねない。
+  const sly = S => rnd(S) < (diffOf(S).cunning || 0);
+  const seenByOthers = (S, id, n, i) => S.pl.found.includes(n + '|' + i) || S.people.some(q => q.id !== id && q.alive && ((S.known[q.id] || { tr: [] }).tr.includes(n + '|' + i)));
+  const fitsNight = (S, n, cat, val) => { const N = S.nights[n]; return !N || !N.traces || N.traces.every(t => t.cat !== cat || (t.neg ? t.val !== val : t.val === val)); };
   /* ---------- the wolves' plans: who will pretend to be a seer or a medium ---------- */
   function planFakes(S) {
     const D = diffOf(S);
@@ -273,18 +279,23 @@
     if (p.role === 'wolf' || p.role === 'madman') {
       T.loc = p.home;                                  // "I was at home"
       // a made-up figure, shaped like someone they want hanged
-      if (rnd(S) < (p.role === 'madman' ? .55 : .45)) {
+      const cun = sly(S), claimed = S.claims.some(c => c.by === id) || S.fake[id];
+      if (rnd(S) < (p.role === 'madman' ? .55 : .45) * (cun ? (claimed ? 0 : .5) : 1)) {   // a cunning liar who already lies with a claim adds no more lies, and says less
         const inn = alive(S).filter(q => q.role !== 'wolf' && q.id !== id);
         const frame = inn.length ? pick(S, inn) : null;
         if (frame) {
-          const c = pick(S, ['height', 'hand', 'foot']);
-          const v = p.role === 'madman' && !S.fan ? pick(S, Object.keys(story.traits[c].v)) : frame.traits[c];   // the fanatic knows whom to frame
-          T.saw.push({ kind: 'fig', cat: c, val: v, lie: true });
+          let c = pick(S, ['height', 'hand', 'foot']);
+          let v = p.role === 'madman' && !S.fan ? pick(S, Object.keys(story.traits[c].v)) : frame.traits[c];   // the fanatic knows whom to frame
+          if (cun && !fitsNight(S, n, c, v)) {   // made up to fit the night's real traces: an innocent who shares the wolf's trait
+            const ok = ['height', 'hand', 'foot'].map(k => [k, frame.traits[k]]).filter(([k, x]) => fitsNight(S, n, k, x));
+            if (ok.length) [c, v] = pick(S, ok); else c = null;
+          }
+          if (c) T.saw.push({ kind: 'fig', cat: c, val: v, lie: true });
         }
       }
       if (p.role === 'wolf' && rnd(S) < .2) {          // a made-up sighting of a person out at night
         const inn = alive(S).filter(q => q.role !== 'wolf' && q.id !== id && !q.isPlayer);
-        if (inn.length) { const q = pick(S, inn); const smart = rnd(S) < .5 + .13 * diffOf(S).id; T.saw.push({ kind: 'who', who: q.id, loc: smart ? pick(S, [p.home].concat(near(story, p.home))) : pick(S, story.locs.map(l => l.id)), lie: true }); }
+        if (inn.length) { const q = pick(S, inn); const smart = cun || rnd(S) < .5 + .13 * diffOf(S).id; T.saw.push({ kind: 'who', who: q.id, loc: smart ? pick(S, [p.home].concat(near(story, p.home))) : pick(S, story.locs.map(l => l.id)), lie: true }); }
       }
     } else {
       // an innocent: tells the truth about others; hides their own secret errand
@@ -735,7 +746,8 @@
         for (const key of k) {
           const t = N.traces[+key.split('|')[1]];
           let r = { cat: t.cat, val: t.val, neg: t.neg };
-          if ((p.role === 'wolf' && rnd(S) < .55) || (p.role === 'madman' && rnd(S) < .5)) {   // a false report
+          const careful = sly(S) && (seenByOthers(S, p.id, n, +key.split('|')[1]) || S.claims.some(c => c.by === p.id));   // a cunning liar does not lie where it would be caught
+          if (!careful && ((p.role === 'wolf' && rnd(S) < .55) || (p.role === 'madman' && rnd(S) < .5))) {   // a false report
             const vals = Object.keys(story.traits[t.cat].v).filter(v => v !== t.val);
             r = { cat: t.cat, val: pick(S, vals), neg: t.neg, lie: true };
           }
@@ -1185,7 +1197,8 @@
         const t = N.traces[+key.split('|')[1]];
         if (S.reports.some(x => x.by === p.id && x.night === n && x.cat === t.cat)) continue;
         let r = { cat: t.cat, val: t.val, neg: t.neg };
-        if ((p.role === 'wolf' && rnd(S) < .6) || (p.role === 'madman' && rnd(S) < .5)) r = { cat: t.cat, val: pick(S, Object.keys(story.traits[t.cat].v).filter(v => v !== t.val)), neg: t.neg, lie: true };
+        const careful = sly(S) && (seenByOthers(S, p.id, n, +key.split('|')[1]) || S.claims.some(c => c.by === p.id));
+        if (!careful && ((p.role === 'wolf' && rnd(S) < .6) || (p.role === 'madman' && rnd(S) < .5))) r = { cat: t.cat, val: pick(S, Object.keys(story.traits[t.cat].v).filter(v => v !== t.val)), neg: t.neg, lie: true };
         S.reports.push(Object.assign({ by: p.id, night: n, day }, r));
         ev.push(Object.assign({ t: 'report', by: p.id, night: n }, r));
       }

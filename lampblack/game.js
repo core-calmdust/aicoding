@@ -9,7 +9,7 @@
   const KEY = 'wolflantern-save-v1', REC = 'wolflantern-rec-v1', PREF = 'wolflantern-pref-v1';
   const ORDER = ['kirigane', 'hokushin', 'tomoshibi', 'nekonaki', 'shirane', 'kiteki'];
   const DIFFN = ['入門', '標準', '上級', '悪夢'];
-  const DIFFT = ['はじめての夜に。', '嘘が増える。', '痕跡は少なく、物は罠になる。', '誰の言葉も信じきれない。'];
+  const DIFFT = ['はじめての夜に。', '嘘が増える。', '嘘つきが、ぼろを出さなくなる。', '嘘と罠ばかり。誰の言葉も信じきれない。'];
   // the card's line follows the story's real cast for that size (the wolves and the roles differ story by story)
   function diffDesc(s, i) {
     const R = E.setupOf(s, E.DIFF[i].size);
@@ -1246,36 +1246,56 @@
       await say([{ text: pickOne(st.text.climax) }]);
     }
     document.body.classList.remove('ghost');
-    // the truth
-    const all = S.people.filter(p => !p.isPlayer).map(p => p.id);
-    setCast(all);
-    await wait(300);
-    for (const p of S.people) if (!p.isPlayer) { const e = pup(p.id); if (!e) continue; const b = document.createElement('span'); b.className = 'badge' + (p.role === 'wolf' || p.role === 'madman' ? ' w' : p.role === 'fox' || p.role === 'immoral' ? ' f' : ''); b.textContent = SP.roleName(st, p.role); e.appendChild(b); if (!p.alive) e.classList.add('dim'); }
-    await say([{ text: `幕の向こうで、灯りがひとつ強くなった。\nすべての影が、本当の形を映しはじめる。` }]);
+    // the truth: first the wolves' side alone, then the third side, then the village — a few figures at a time (a phone must not crowd)
+    const badge = id => { const p = person(id), e = pup(id); if (!p || !e || e.querySelector('.badge')) return; const b = document.createElement('span'); b.className = 'badge' + (p.role === 'wolf' || p.role === 'madman' ? ' w' : p.role === 'fox' || p.role === 'immoral' ? ' f' : ''); b.textContent = SP.roleName(st, p.role); e.appendChild(b); if (!p.alive) e.classList.add('dim'); };
+    const show = async (ids, o) => { setCast(ids, o); await wait(60); ids.forEach(badge); };
+    const mad = S.people.find(p => p.role === 'madman');
+    const madAll = S.people.filter(p => p.role === 'madman');
+    await show(wolves.map(w => w.id), { span: [22, 78] });
+    await say([{ text: `幕の向こうで、灯りがひとつ強くなった。\nまず、狼の影が本当の形を映しはじめる。` }]);
     for (const w of wolves) {
       const e = pup(w.id);
       if (e) { const s = document.createElement('div'); s.className = 'wolfshade'; s.innerHTML = ART.wolf(); e.appendChild(s); e.classList.remove('dim'); requestAnimationFrame(() => e.classList.add('turn')); SND.howl(.1); }
       await say([{ who: w.id, text: ch(w.id).wolf }]);
     }
-    const mad = S.people.find(p => p.role === 'madman');
-    if (mad) await say([{ text: st.rules === 'fanatic' ? `狼の正体を知りながら、狼に仕えていた人間——狂信者は、**${nm(mad.id)}**だった。` : `狼に心を寄せていた人間——狂人は、**${nm(mad.id)}**だった。` }]);
-    const cat = S.people.find(p => p.role === 'cat');
-    if (cat) await say([{ text: `尾の裂けた猫——猫又は、**${nm(cat.id)}**だった。` }]);
+    if (madAll.length) {
+      await show(madAll.map(p => p.id), { span: [30, 70] });
+      await say([{ text: st.rules === 'fanatic' ? `狼の正体を知りながら、狼に仕えていた人間——狂信者は、**${nm(mad.id)}**だった。` : `狼に心を寄せていた人間——狂人は、${madAll.map(p => `**${nm(p.id)}**`).join('と')}だった。` }]);
+    }
     const fox = S.people.find(p => p.role === 'fox');
-    if (fox) await say([{ text: `${st.roles.fox.reveal || '社に棲む狐'}——${st.roles.fox.name}は、**${nm(fox.id)}**だった。${fox.alive ? '最後まで、誰にも見破られなかった。' : fox.death.cause === 'curse' ? '占いの鏡に映されて、燃え尽きた。' : `${st.lex.jail}へ送られて、正体を明かした。`}`, fx: () => { const e = pup(fox.id); if (e) { e.classList.remove('dim'); e.classList.add('shake'); } } }]);
     const imm = S.people.find(p => p.role === 'immoral');
-    if (imm) await say([{ text: `${st.roles.fox.name}に仕えていた${st.roles.immoral.name}は、**${nm(imm.id)}**だった。${imm.alive ? '主を失うことなく、幕が下りた。' : imm.death.cause === 'follow' ? '主のあとを追って、ひとりで幕を引いた。' : `${st.lex.jail}へ送られて、何も語らなかった。`}`, fx: () => { const e = pup(imm.id); if (e) { e.classList.remove('dim'); e.classList.add('shake'); } } }]);
+    if (fox) {
+      await show([fox.id].concat(imm ? [imm.id] : []), { span: [32, 68] });
+      await say([{ text: `${st.roles.fox.reveal || '社に棲む狐'}——${st.roles.fox.name}は、**${nm(fox.id)}**だった。${fox.alive ? '最後まで、誰にも見破られなかった。' : fox.death.cause === 'curse' ? '占いの鏡に映されて、燃え尽きた。' : `${st.lex.jail}へ送られて、正体を明かした。`}`, fx: () => { const e = pup(fox.id); if (e) { e.classList.remove('dim'); e.classList.add('shake'); } } }]);
+      if (imm) await say([{ text: `${st.roles.fox.name}に仕えていた${st.roles.immoral.name}は、**${nm(imm.id)}**だった。${imm.alive ? '主を失うことなく、幕が下りた。' : imm.death.cause === 'follow' ? '主のあとを追って、ひとりで幕を引いた。' : `${st.lex.jail}へ送られて、何も語らなかった。`}`, fx: () => { const e = pup(imm.id); if (e) { e.classList.remove('dim'); e.classList.add('shake'); } } }]);
+    }
+    setCast([]);
     if (st.arc && st.arc.coda) await say([{ text: st.arc.coda }]);
     const gone = !S.people[0].alive;   // the player died: the ending must not have them write or walk
     if (R.why === 'fox' && st.text.loseFox) await say([{ text: fill(st.text.loseFox, { book: st.lex.book }) }]);
     if (R.win || R.why === 'overrun') await say([{ text: fill(R.win ? (gone && st.text.winGhost || st.text.win) : (gone && st.text.loseGhost || st.text.lose), { book: st.lex.book }) }]);
     if (R.win && st.heroData) { const ep = gone ? st.heroData.epiGhost : st.heroData.epi; if (ep) await say([{ text: ep }]); }
-    if (R.win) {
-      const surv = S.people.filter(p => p.alive && !p.isPlayer && p.role !== 'wolf' && ch(p.id).epi);
-      for (let i = surv.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [surv[i], surv[j]] = [surv[j], surv[i]]; }
-      const ep = surv.slice(0, 4).map(p => ch(p.id).epi);
-      if (ep.length) { setCast(surv.slice(0, 4).map(p => p.id)); await say(ep.map(t => ({ text: t }))); }
+    // the village: those with a role, one by one; then the villagers — each with what became of them (when the village won)
+    const epiOf = id => R.win && person(id).alive && ch(id).epi ? [{ text: ch(id).epi }] : [];
+    const ROLEL = { seer: '夜ごとに真実を見ていた', medium: '死者の影を見ていた', guard: '夜の戸口に立ち続けた', cat: '尾の裂けた猫' };
+    for (const r of ['seer', 'medium', 'guard', 'mason', 'cat']) {
+      const ps = S.people.filter(p => p.role === r && !p.isPlayer);
+      if (!ps.length) continue;
+      await show(ps.map(p => p.id), { span: [34, 66] });
+      const rn = SP.roleName(st, r);
+      const lead = r === 'mason' ? `互いを人間だと知っていた${rn}は、` : r === 'cat' ? `${ROLEL.cat}——${rn}は、` : `${ROLEL[r]}${rn}は、`;
+      await say([{ text: `${lead}${ps.map(p => `**${nm(p.id)}**`).join('と')}だった。` }].concat(...ps.map(p => epiOf(p.id))));
     }
+    const vil = S.people.filter(p => p.role === 'villager' && !p.isPlayer);
+    if (vil.length) {
+      const alive = vil.filter(p => p.alive), rest = vil.filter(p => !p.alive);
+      const ids = alive.concat(rest).map(p => p.id).slice(0, 4);
+      await show(ids, { span: [16, 84] });
+      const epi = R.win ? alive.slice().sort(() => Math.random() - .5).slice(0, 3).flatMap(p => epiOf(p.id)) : [];
+      await say([{ text: `そして、何の力も持たずに夜を越えた村人たち——${vil.map(p => nm(p.id)).join('、')}。` }].concat(epi));
+    }
+    setCast([]);
+    const cat = S.people.find(p => p.role === 'cat');
     const sc = E.score(S);
     // the record
     const rr = rec(); const k = st.id; rr[k] = rr[k] || { plays: 0, win: 0, best: '-' };

@@ -1782,7 +1782,7 @@ function drillMove(m) {
 
 // ====================================================================== openings: study a main line, then practice the moves strong players choose
 let OPEN = null, openChoiceIdx = -1;
-const openReady = fetch('openings.json?v=20261107i14').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
+const openReady = fetch('openings.json?v=20261126o2').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
   .then(() => { if (!OPEN) document.querySelectorAll('.ls-tabs button[data-v=open]').forEach(b => b.remove()); });
 const OP_STORE = STORE + '-open';
 function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{}'); } catch (e) { return {}; } }
