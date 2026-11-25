@@ -17,10 +17,16 @@
 //           b_check does not check; in b_mate a check that does not mate is said taken / run from / blocked as the board allows; in
 //           b_escape a piece said to hang is taken by that piece for nothing, a move said to lose a piece loses material, a missed
 //           capture is a move that does not take the checker
+//  b_special (2026-11-26 担当A) castling / en passant / promotion: ① ok = the moves of the rule on the board (castles, en passant captures,
+//           queen promotions), exactly one; the answer loses nothing (material search) and the engine's best at 2 node budgets (追4)
+//           ② the next 100 or more worse ③ 6 legal moves or more, the 2D gold-framed piece (the answer's) 3 moves or more, 追72 ④ both castles,
+//           en passant and promotion in the lesson; the en passant pawn just moved two squares; the words' squares (e1 / g1 / c1) ⑥ legal moves
+//           never go down ⑦⑧ ナイトン's words for every wrong move say what it does (the king / the castling rook moved, the king stays on e1,
+//           taken by that piece for a loss, the en passant pawn pushed / the right ends, an under-promotion, no promotion), none unexplained
 'use strict';
 const path = require('path'), fs = require('fs'), vm = require('vm');
 const ROOT = path.join(__dirname, '..');
-const DONE = new Set(['b_check', 'b_escape', 'b_mate']);
+const DONE = new Set(['b_check', 'b_escape', 'b_mate', 'b_special']);
 const MV = [0, 1, 3, 3, 5, 9, 0];
 function lib() {
   const E = require(path.join(ROOT, 'chess/engine.js'));
@@ -111,6 +117,38 @@ function verify(opt) {
         if (JSON.stringify([...P.ok].sort()) !== JSON.stringify(mate.slice().sort())) a(`① ok ${P.ok} ≠ the mates ${mate}`);
         if (mate.length !== 1) a(`② ${mate.length} mates`);
         if (chk.length < 3) a(`③ 追19 ${chk.length} checks (3 or more)`);
+      } else if (sid === 'b_special') {
+        // (2026-11-26 担当A) castling / en passant / promotion. The special moves on the board = the castles, the en passant captures, the promotions
+        const pc = u => p.b[E.sqOf(u.slice(0, 2))] & 7, fx = u => E.sqOf(u.slice(0, 2)) & 7, tx = u => E.sqOf(u.slice(2, 4)) & 7;
+        const isC = u => pc(u) === 6 && Math.abs(fx(u) - tx(u)) === 2, isE = u => pc(u) === 1 && fx(u) !== tx(u) && !p.b[E.sqOf(u.slice(2, 4))], isP = u => u.length === 5;
+        const spec = legal.filter(u => isC(u) || isE(u) || isP(u)), kd = isC(ans) ? (tx(ans) === 6 ? 'castle-short' : 'castle-long') : isE(ans) ? 'ep' : isP(ans) ? 'promo' : '?';
+        kinds.add(kd); d = legal.length;
+        if (kd === '?') a(`④ the answer ${ans} uses no special rule`);
+        right = kd === 'promo' ? spec.filter(u => u.endsWith('q')) : spec;
+        if (kd === 'promo' && spec.some(u => !isP(u))) a(`④ a castle / en passant on the promotion board: ${spec.filter(u => !isP(u))}`);
+        if (JSON.stringify([...P.ok].sort()) !== JSON.stringify(right.slice().sort())) a(`① ok ${P.ok} ≠ the moves of the rule ${right}`);
+        if (right.length !== 1) a(`② ${right.length} moves of the rule (one answer wanted): ${right}`);
+        if (kd.startsWith('castle') && ans !== (kd === 'castle-short' ? 'e1g1' : 'e1c1')) a(`⑧ the words name e1 / g1 / c1, the answer is ${ans}`);
+        if (kd === 'ep') { const f = P.fen.split(' ')[3], z = E.sqOf(f), pw = Lb.pos(P.fen); if (f === '-' || ans.slice(2, 4) !== f || (pw.b[z - 16] & 7) !== 1 || pw.b[z] || pw.b[z + 16]) a(`⑧ the pawn did not just move two squares (ep ${f})`); }
+        if (kd === 'promo' && ans[1] !== '7') a('⑧ the pawn is not one step from the last rank');
+        const m0 = Lb.mat(p, me); if (Lb.keep(P.fen, ans) < m0) a('① the answer loses material');
+        if (legal.length < 6) a(`③ ${legal.length} legal moves`);
+        const own = legal.filter(u => u.slice(0, 2) === ans.slice(0, 2)).length; if (own < 3) a(`③ the framed piece (2D gold frame) has ${own} moves (3 or more)`);
+        if (!(opt && opt.fast)) for (const nodes of [2e5, 8e5]) { const R = eng(P.fen, nodes); if (!R.length || R[0].uci !== ans) a(`① 追4 the engine (${nodes} nodes) prefers ${R[0] && R[0].uci}`); else if (R[1] && R[0].v - R[1].v < 100) a(`② 追4 the next (${R[1].uci}) only ${R[0].v - R[1].v} worse (${nodes} nodes)`); }
+        // ⑦⑧ ナイトン's words for every wrong move, every wording
+        let Rs = []; try { Rs = [...Array(12).keys()].map(off => W.X.chLsJa(sid, { pos: P.fen, ans, P }, j, W.mkV(off))); } catch (e) { a('⑦ chLsJa threw ' + e.message); }
+        const keepOf = new Map();
+        Rs.length && legal.filter(u => !right.includes(u)).forEach(u => [...new Set(Rs.map(R => R.ng(u)))].forEach(t => { let known = 0; const T = t;
+          if (/キャスリングはできなくなっちゃう|キャスリングの権利が消え/.test(T)) { known++; if (pc(u) !== 6) a(`⑦ ${u}: said the king moved`); }
+          if (/ルークが動くと、そちら側/.test(T)) { known++; if (pc(u) !== 4 || !['a1', 'h1'].includes(u.slice(0, 2)) || !P.fen.split(' ')[2].includes(u[0] === 'a' ? 'Q' : 'K')) a(`⑦ ${u}: said a castling rook moved`); }
+          if (/真ん中に残ったまま|まだ真ん中のe1/.test(T)) { known++; if (pc(u) === 6 || p.ksq[me] !== E.sqOf('e1')) a(`⑦ ${u}: said the king stays on e1`); }
+          if (/取られて損/.test(T)) { known++; if (!keepOf.has(u)) keepOf.set(u, Lb.keep(P.fen, u)); const G = W.X.chLsF(P.fen, u), by = G.hang && Object.entries(W.X.CH_PN).find(([, v]) => v === G.hang)[0], z = Lb.after(P.fen, u);
+            if (!by || !z.legal().some(m => z.uci(m).slice(2, 4) === u.slice(2, 4) && 'xpnbrqk'[z.b[(m & 127)] & 7] === by)) a(`⑦ ${u}: said taken by the ${G.hang}, it cannot`); if (m0 - keepOf.get(u) < 1) a(`⑦ ${u}: said to lose, keeps the material`); }
+          if (/もう取れなくなる/.test(T)) { known++; if (u.slice(0, 2) !== ans.slice(0, 2) || fx(u) !== tx(u)) a(`⑦ ${u}: said the en passant pawn pushed`); }
+          if (/アンパッサンの権利|もうアンパッサンできない/.test(T)) { known++; if (kd !== 'ep' || isE(u)) a(`⑦ ${u}: said the en passant right ends`); }
+          if (/クイーンより弱い/.test(T)) { known++; if (!isP(u) || u.endsWith('q')) a(`⑦ ${u}: said an under-promotion`); }
+          if (/奥の段に着かない|まだ成れていない/.test(T)) { known++; if (isP(u)) a(`⑦ ${u}: said it does not promote`); }
+          if (!known) a(`⑦ ${u}: the words do not say what the move does: ${t}`); }));
       } else {
         d = legal.length; if (legal.length < 3) a(`③ ${legal.length} legal moves`);
         const m0 = Lb.mat(p, me), keep = Object.fromEntries(legal.map(u => [u, Lb.keep(P.fen, u)]));
@@ -137,7 +175,7 @@ function verify(opt) {
           if (/逃げ/.test(t.split('。')[0]) && kind(u) !== 'run') a(`⑦ ${u}: said to run, it ${kind(u)}s`);
           if (/合い駒|あいだに置いた/.test(t.split('。')[0]) && kind(u) !== 'block') a(`⑦ ${u}: said to block, it ${kind(u)}s`); }));
       }
-      if (sid !== 'b_escape') {
+      if (sid === 'b_check' || sid === 'b_mate') {
         let Rs = []; try { Rs = [...Array(12).keys()].map(off => W.X.chLsJa(sid, { pos: P.fen, ans, P }, j, W.mkV(off))); } catch (e) { a('⑦ chLsJa threw ' + e.message); }
         Rs.length && legal.filter(u => !right.includes(u)).forEach(u => [...new Set(Rs.map(R => R.ng(u)))].forEach(t => { const z = Lb.after(P.fen, u);
           if (sid === 'b_check' && z.inCheck()) a(`⑦ ${u} checks`);
@@ -169,7 +207,8 @@ function verify(opt) {
       if (d < prevD) a(`⑥ d ${d} after ${prevD}`); prevD = Math.max(prevD, d); if (firstD == null) firstD = d; lastD = d;
     });
     if (lastD <= firstD) add(sid, 0, `⑥ the last (d ${lastD}) not harder than the first (${firstD})`);
-    if (kinds.size < 2) add(sid, 0, `追27 one kind of answer piece`);
+    if (sid !== 'b_special' && kinds.size < 2) add(sid, 0, `追27 one kind of answer piece`);
+    if (sid === 'b_special' && ['castle-short', 'castle-long', 'ep', 'promo'].some(k => !kinds.has(k))) add(sid, 0, `④ the three rules (both castles, en passant, promotion): ${[...kinds]}`);
     if (sid === 'b_escape' && defs.size < 3) add(sid, 0, `④ the three ways (take / run / block): ${[...defs]}`);
   }
   return out;
