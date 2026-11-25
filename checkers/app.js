@@ -1289,7 +1289,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261125bk1').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=20261126bk1').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { let pr; try { pr = JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } return pzMigrate(pr); }
@@ -1564,8 +1564,9 @@ $('#lsHint').onclick = () => {
   const s = curStep(), P = lessonProblem();
   lessonMarks = [];
   const good = P.ok || [P.best], p0 = E.Pos.from(P.s);
-  // (b_king: the gold ring on every man that can crown — 「金の丸の駒は、どれも奥の段まであと1マス」, not the answer's piece alone)
-  for (const f of new Set(s.id === 'b_king' ? p0.moves().filter(m => p0.promotes(m)).map(mFrom) : good.map(mFrom))) lessonMarks.push({ at: f, cls: 'ok' });
+  // (b_king: the gold ring on every man that can crown — 「金の丸の駒は、どれも奥の段まであと1マス」, not the answer's piece alone;
+  //  b_win with a capture on the board: on every piece that can capture — the answer's piece has one capture, its ring alone would give it away)
+  for (const f of new Set(s.id === 'b_king' ? p0.moves().filter(m => p0.promotes(m)).map(mFrom) : s.id === 'b_win' && p0.hasCaps() ? p0.moves().map(mFrom) : good.map(mFrom))) lessonMarks.push({ at: f, cls: 'ok' });
   $('#lsFb').innerHTML = lesson.virt ? t('op.hint') : t('ls.' + s.id + '.hint');
   renderFx();
 };
