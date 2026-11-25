@@ -1987,7 +1987,7 @@ function shogi(opt) {
 // side and the name in the question, the percentages from the stored counts, and each claim about the board checked on the board
 // (swing names, the bishop's line opened / shut, captures, recaptures, king moves, edge pawns, a piece left to be taken: the opponent
 // wins material at once by SEE and the engine puts the move 100+ below the answer); ⑨ the 2D and the 3D score a freq problem alike.
-const SHO_DONE = new Set(['nakabisha', 'mukai', 'migishiken']);
+const SHO_DONE = new Set(['nakabisha', 'mukai', 'migishiken', 'sanken', 'koshikake', 'gokigen', 'chousoku', 'yoko85', 'direct']);
 let shoW = null;
 function shogiOpen(opt) {
   const fs = require('fs'), vm = require('vm');

@@ -205,6 +205,7 @@ static int cmd_usi(void) {
   return 0;
 }
 int main(int argc, char **argv) {
+  { const char *ps = getenv("KPPARAMS"); int k, v, q; while (ps && sscanf(ps, "%d=%d%n", &k, &v, &q) == 2) { set_param(k, v); ps += q; if (*ps == ',') ps++; } }   /* KPPARAMS="91=1,43=300": search parameters of this engine (not PARAMS: that one is usimatch's side in a match between the two) */
   init();
   if (argc > 1 && !strcmp(argv[1], "evalpos")) return cmd_eval(argc, argv);
   if (argc > 1 && !strcmp(argv[1], "walk")) return cmd_walk(argc, argv);

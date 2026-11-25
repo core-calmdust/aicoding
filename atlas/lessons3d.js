@@ -718,7 +718,7 @@
     if (!drop && (pc === 's' || pc === 'g')) { F.guard = kd(z) < kd(a) && kd(z) <= 2; F.up = s ? z < a - 1 : z > a + 1; }
     if (pc === 'k' && !drop) F.castle = Math.abs(z % 9 - 4) > Math.abs(a % 9 - 4) || ((z / 9) | 0) !== ((a / 9) | 0);
     const at = pc === 'k' ? 99 : shAtk(nb, z, !s), df = shAtk(nb, z, s), val = SH_V[pc];
-    if (pc !== 'p' && pc !== 'k' && at < 99 && (df === 99 || at < val) && !(cap && SH_V[cap] >= val)) F.hang = Object.keys(SH_V).find(k => SH_V[k] === at);
+    if (pc !== 'p' && pc !== 'k' && at < 99 && (df === 99 || at < val) && !(cap && SH_V[cap] >= val)) { F.hang = Object.keys(SH_V).find(k => SH_V[k] === at); F.hangDef = df !== 99; }   // (hangDef: defended, so not "for free" — only the trade loses)
     return F;
   }
   const SH_PN = { p: '歩', l: '香車', n: '桂馬', s: '銀', g: '金', b: '角', r: '飛車', k: '玉' };
@@ -734,7 +734,7 @@
     pw: [['歩を突いて、駒の通り道を作る手。', '歩を一つ進めて、うしろの駒が出られるようにする手コン。', '小さな歩の一手だけど、駒組みの下ごしらえなの！', '銀や桂が上がる道を、歩で作っておく手。', '歩をちょんと突いて、陣形をととのえる手！', '次の駒組みに向けて、歩を一歩前へ出すコン。', '駒の出口を作っておく、地味な歩の一手。', '歩をすすめて、形を広げていくところ！'],
       ['次に出ていく駒の準備なの。', 'あとで駒がのびのび動けるの！', '', '地味だけど、じわじわ効く一手コン。', 'こういう準備の手が大事！', '', 'ここから形が広がるの。', '', '一歩ずつ形を作っていくコン！', '']],
     gd: [['{X}を玉のそばに寄せて、囲いを固める手コン。', '{X}を玉の近くへ動かして、守りを厚くする手！', '{X}が玉の守りに加わる手。', '玉のとなりへ{X}を寄せる手。', '{X}で玉のまわりをしっかりガードするコン！', '守りの{X}を玉に近づける手。', '{X}を玉の横へつける手！', '{X}を玉の守り役に回す手なの。'],
-      ['囲いがまた一段かたくなったね。', 'これで玉がぐっと安心なの。', '', '囲いの形が見えてきたコン！', '守りの駒どうしがくっつくと強いの！', '', '金銀が玉を守る、いい形なの。', '', 'すき間がひとつ減ったコン！', '']],
+      ['囲いがまた一段かたくなったね。', 'これで守りがぐっと安心なの。', '', '囲いの形が見えてきたコン！', '守りの駒どうしがくっつくと強いの！', '', '金銀が玉を守る、いい形なの。', '', 'すき間がひとつ減ったコン！', '']],
     up: [['{X}を上がって、陣形を作っていく手。', '{X}を一つ上げて、形をととのえる手コン！', '{X}を前へ出して、駒どうしのつながりを作る手。', '{X}を一段上げる手！', '{X}を前へ進めて、陣地を広げるコン。', '{X}を上へ持ちあげる手。', '{X}をすっと上がるところ！', '{X}を一歩前へ出しておく手なの。'],
       ['守りにも攻めにも使える位置なの！', '', '上がった駒が、あとで役に立つコン。', '駒が前に出ると、陣形が厚くなるの。', '', 'ここから働き場所を探すの！', '', '駒どうしが手をつなぐ形コン！', '']],
     kc: [['玉を、囲いのほうへ一歩寄せる手。', '玉が囲いの中へお引っこし！', '玉を戦場から遠ざける手コン。', '玉を一歩、守りの駒のほうへ動かす手！', '玉をすみのほうへ寄せていく手。', '玉の引っこしを一歩進める手。', '玉を安全地帯へ向かわせるコン！', '玉を囲いの奥へ近づける手なの。'],
@@ -748,7 +748,7 @@
     cl: [['歩を相手の歩にぶつけて、戦いを始める手コン！', '歩と歩がぶつかった！', '相手の歩の目の前へ歩を進める手。', '歩をぶつけて、相手に「取る？ 取らない？」と問いかける手！'], ['取る・取らないで、相手に決断をせまるの。', 'ここから戦いが始まるね。', '仕掛けの合図コン！', '']],
     ed: [['端の歩を突く手。', '盤のはしっこの歩を一つ進める手！', '端歩を突いて、様子を見る手コン。', '端の歩を伸ばす手。', '一番はしの筋の歩を進める手！', '端の歩をひとつ前へ出すところ。'],
       ['端の歩は、あとで玉の逃げ道にも、攻めの足がかりにもなるコン。', '玉の逃げ道が広くなるの。', '終盤で差がつく一手なの。', '', 'いざというとき、端から攻めることもできるの！', '']],
-    rk: [['歩を伸ばして、盤の真ん中に「位」を取る手。', '歩をぐいっと前へ！', '歩を高く進めて、相手の駒をおさえる手。', '前へ出た歩で、相手の駒の動ける場所をせまくする手！'], ['陣地が広くなって、駒が動きやすくなるの。', '自分の陣地が広がるコン。', '陣地を広げる作戦だね。', '']],
+    rk: [['歩を伸ばして、盤の真ん中で「位」を張る手。', '歩をぐいっと前へ！', '歩を高く進めて、相手の駒をおさえる手。', '前へ出た歩で、相手の駒の動ける場所をせまくする手！'], ['陣地が広くなって、駒が動きやすくなるの。', '自分の陣地が広がるコン。', '陣地を広げる作戦だね。', '']],
     sa: [['銀を前に出して、飛車といっしょに攻める準備をする手。', '攻めの銀がぐいっと前進！', '銀を飛車の前のほうへ進める手。', '銀を攻めに使う手！', '銀を相手の陣地へ向かわせる手コン。'], ['飛車と組んで相手陣をねらうコン。', '', '攻めの形ができてきたの！', '飛車の応援に向かうの。', '', '銀が出ると攻めに厚みが出るコン！', '']],
     gs: [['{X}の位置を整えて、形を作る手なの。', '{X}を動かして、陣形のすき間をうめる手コン。', '{X}の場所を変えて、囲いの形に合わせる手。', '{X}を横へずらす手！', '{X}の居場所を決める手。'], ['', '駒のつながりがよくなるの。', '']],
     n: [['桂馬を跳ねて、攻めに参加させる手コン！', '桂馬がぴょんと前へ！', '桂を跳ねて、相手の駒をねらう手。', '桂馬を一段跳ねておく手。'], ['', '攻めの駒がふえたね。', '桂は跳ねると働きだすの！']],
@@ -870,7 +870,7 @@
       if (!u) return L(shWhyJa(FA, v));
       let F; try { F = shFacts(o.pos, u); } catch (e) { F = {}; }
       const mine = val.has(u) ? val.get(u) : P.floor != null ? P.floor : ref - 600, d = winP(ref, 600) - winP(mine, 600);
-      if (F.hang && !FA.hang && d > .05) return L(`{x}だと、その${SH_PN[F.pc]}を相手の${SH_PN[F.hang]}にタダで取られちゃう！`);
+      if (F.hang && !FA.hang && d > .05) return L(F.hangDef ? `{x}だと、その${SH_PN[F.pc]}が相手の${SH_PN[F.hang]}の利きに入っちゃう。安い駒と交換されると駒損なの。` : `{x}だと、その${SH_PN[F.pc]}を相手の${SH_PN[F.hang]}にタダで取られちゃう！`);
       if (FA.cap && FA.behind && !F.cap) return L('{x}だと取り返しそびれて、駒損のままになっちゃう。');
       if ((later || []).includes(u)) return L(N('{x}も『{n}』で指す手だけど、いまはまだ早いの。先に{m}を指しておかないと、形がくずれちゃう') + kon);
       const rw = shStaticWhyJa(o.pos, u, k); if (rw) return L(rw);
@@ -897,7 +897,7 @@
       let F; try { F = shFacts(o.pos, u); } catch (e) { F = {}; }
       const best = C.length ? C[0][1] : 0, mine = cnt.has(u) ? cnt.get(u) : null;
       const dd = cp ? winP(best, 600) - winP(mine != null ? mine : P.floor != null ? P.floor : best - 600, 600) : 1;
-      if (F.hang && !FA.hang && (cp ? dd > .12 : mine == null)) return L(`{x}だと、その${SH_PN[F.pc]}を相手の${SH_PN[F.hang]}にタダで取られちゃう！`);
+      if (F.hang && !FA.hang && (cp ? dd > .12 : mine == null)) return L(F.hangDef ? `{x}だと、その${SH_PN[F.pc]}が相手の${SH_PN[F.hang]}の利きに入っちゃう。安い駒と交換されると駒損なの。` : `{x}だと、その${SH_PN[F.pc]}を相手の${SH_PN[F.hang]}にタダで取られちゃう！`);
       if (FA.cap && FA.behind && !F.cap) return L('{x}だと取り返しそびれて、駒損のままになっちゃう。');
       if (!cp && mine != null) { const b = pc(mine), a = pc(cnt.get(A));
         return L((b * 2 >= a ? [`{x}もよく指される手（${b}%）。でも{m}なら${a}%で、こっちがいちばんの本筋なの。`, `{x}も${b}%ある手。でも{m}なら${sh}から、${a}%の対局がこっちを選ぶの。`, `{x}も悪くない（${b}%）けど、{m}は${sh}ので、${a}%の対局で指されているの。`, `{x}を選ぶ対局も${b}%あるコン。それでも{m}なら${sh}から、${a}%でいちばん多いの。`]
@@ -919,7 +919,7 @@
       const voice = fetch('../shogi/voice-fox-ja.js?v=5').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       const rep = getJ('../shogi/lesson-replies.json?v=3').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
       return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261126c'), getJ('../shogi/openings.json?v=20261124ol1'),
-        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261124oc`).catch(() => ({ sets: [] })))])
+        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261125sb`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
           sets.forEach(s => { if (!s.cat) s.cat = s.handi ? 'handi' : 'mid'; });
@@ -2460,7 +2460,7 @@
     let h = shSeed('rv' + id); h = Math.imul(h ^ (h >>> 16), 0x45d9f3b) >>> 0; h = Math.imul(h ^ (h >>> 13), 0x45d9f3b) >>> 0; const seed = (h ^ (h >>> 16)) >>> 0;
     const O = RVJ_OP, pc = shPerm(seed, O.cheer.length), ps = shPerm((seed ^ 0x7f4a7c15) >>> 0, O.soft.length), pp = shPerm((seed ^ 0x51ed27f1) >>> 0, O.push.length);
     // (a wording is skipped while one of its sentences, or a 10-letter run of it already in two bubbles, has been said in this opening)
-    const cnt = {}, used = new Set(), gram = new Map(), sn = t => (String(t).replace(/<[^>]+>/g, '').match(/[^。！？]+[。！？]*/g) || []).map(x => x.trim()).filter(x => x.length >= 5);
+    const cnt = {}, used = new Set(), gram = new Map(), sn = t => (String(t).replace(/<[^>]+>/g, '').match(/[^。！？]+[。！？]*/g) || []).map(x => x.trim()).filter(x => x.length >= 5).flatMap(x => { const y = x.replace(/^[^、！]{1,5}(、|！ ?)/, '').trim(); return y !== x && y.length >= 8 ? [x, y] : [x]; });   // (2026-11-25 担当B: and the sentence without a short head 「1枚返して、」 — 「2枚返して、相手の打てるマスは9か所になる手。」 is the same line to the reader (闘牛・鼠))
     const gr = t => { const x = String(t).replace(/<[^>]+>/g, '').replace(/[\s、。！？!?「」（）()・…〜♪]/g, ''), g = new Set(); for (let k = 0; k + 10 <= x.length; k++) g.add(x.slice(k, k + 10)); return g; };
     const v = (key, arr) => { const c = cnt[key] = (cnt[key] || 0) + 1;
       for (let k = 0; k < arr.length; k++) { const t = arr[(seed + c - 1 + k) % arr.length], G = gr(t); if (sn(t).some(x => used.has(x)) || [...G].some(g => (gram.get(g) || 0) >= 2)) continue;
@@ -2567,7 +2567,7 @@
     const ng = u0 => {
       const u = pickWrong(+u0), out = [soft(i, u), v('lead', LEAD)]; if (u == null) return out.join('');
       const fu = F[u], near = Math.abs(fu.oM - fa.oM) <= 1 && Math.abs(fu.n - fa.n) <= 1, mA = off ? rvReplyMob(o.pos, A) : 0, mU = off ? rvReplyMob(o.pos, u) : 0;
-      if (off && fu.oC <= fa.oC && !(fu.x && !fa.x) && !(fu.cq && !fa.cq) && mU < mA) { out.push(v('nm', [`赤い枠だと、相手にうまく応じられたとき、きみの打てる場所は${mU}か所まで減っちゃう。緑の枠なら${mA}か所残るんだ。`, `相手のいちばんいやな応手のあと、打てる場所は赤い枠だと${mU}か所、緑の枠なら${mA}か所。赤い枠は自分の手が先に詰まっちゃうね。`, `赤い枠のあと、相手の応じ方しだいで、きみの打ち場所は${mU}か所だけ。緑の枠なら${mA}か所あって、手が詰まりにくいんだ。`])); return rvEnds(out.join(''), '!').t; }
+      if (off && fu.oC <= fa.oC && !(fu.x && !fa.x) && !(fu.cq && !fa.cq) && mU < mA) { out.push(v('nm', [`赤い枠だと、相手にうまく応じられたとき、きみの打てる場所は${mU}か所まで減っちゃう。緑の枠なら${mA}か所残るんだ。`, `相手のいちばんいやな応手のあと、打てる場所は赤い枠だと${mU}か所、緑の枠なら${mA}か所。赤い枠は自分の手が先に詰まっちゃうね。`, `赤い枠のあと、相手の応じ方しだいで、きみの打ち場所は${mU}か所だけ。緑の枠なら${mA}か所あって、手が詰まりにくいんだ。`, `赤い枠に打つと、相手のうまい応手で、きみの次の打ち場所は${mU}か所に減る。緑の枠なら${mA}か所。打てる場所が多いほうが、あとで楽なんだ。`, `緑の枠なら、相手がどう応じても、きみの打てる場所は少なくとも${mA}か所。赤い枠だと${mU}か所しか残らなくて、苦しい手を打たされやすいね。`])); return rvEnds(out.join(''), '!').t; }   // (2026-11-25 担当B: 5 wordings of nm — ベン・ハー asked it 4 times and said one twice)
       const N7 = off ? [`緑の枠は${fa.n}枚返して${O()}が${fa.oM}か所、赤い枠は${fu.n}枚で${fu.oM}か所。数は近いけど、相手のいちばんいやな応手のあとでも、緑の枠なら打てる場所が${mA}か所残るんだ。`, `どちらも数は近い手。でも緑の枠は、相手がどう応じても、きみの打てる場所が${mA}か所以上残る手なんだ。`] : [near ? `緑の枠は${fa.n}枚返して${O()}が${fa.oM}か所、赤い枠は${fu.n}枚で${fu.oM}か所。数は近くても、手順から外れると次の形が変わっちゃうんだ。` : fu.oM > fa.oM ? `緑の枠なら${O()}は${fa.oM}か所、赤い枠だと${fu.oM}か所。相手に選ぶ余地をあげちゃうからね。` : `赤い枠のほうが${O()}は少ない（${fu.oM}か所）けど、定石の手順から外れると、覚えた次の形が使えなくなるんだ。`, '赤い枠だと、定石で覚えたこの先の形にならないから、次の手を自分で考えることになるね。', fu.n !== fa.n ? `赤い枠は${fu.n}枚返し、緑の枠は${fa.n}枚返し。形が変わると、覚えた手順が使えなくなるからね。` : '返す枚数は同じでも、場所がちがえば形が変わる。覚えた手順が使えなくなるからね。', '赤い枠に打つと、この先は定石の外の形。そこからは手探りになっちゃう。'];
       if (fu.oC > fa.oC) out.push(v('n1', ['赤い枠だと、相手が隅に打てるようになっちゃう。隅は取られたら取り返せない場所なんだ。', '赤い枠では隅への道が開いて、相手に隅を取られちゃうね。', '赤い枠のあと、相手は隅に打てる。隅をあげると、辺までくずれていくからね。', '赤い枠に打つと、相手に隅への入り口ができる。隅の石は、もう二度と返らないんだ。', '赤い枠のあとは、空いた隅が相手の打ち場所に入っちゃう。隅をゆずるのは大きな損だよ。']));
       else if (fu.x && !fa.x) out.push(v('n2', ['赤い枠は隅のななめ隣（X）。あとで相手に隅を取られる足場になりやすいんだ。', 'Xに打つと、その隅を相手にねらわれやすくなるからね。', '隅のななめ隣（X）に打つと、相手が隅に入る足場ができちゃうからね。', '赤い枠は隅のななめ隣のXのマス。そこに石があると、相手が隅に打つきっかけを作っちゃう。', '隅のななめ隣（X）は、相手に隅をあげる入り口になりやすいマス。緑の枠ならその心配がないね。']));
@@ -2584,7 +2584,7 @@
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261125r2'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=6').catch(() => ({}))])
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261125r2'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=7').catch(() => ({}))])
         .then(([ls, op, ev, wt, opp]) => { this.WT = wt || {}; this.OPP = opp || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
