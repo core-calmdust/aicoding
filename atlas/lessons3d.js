@@ -2542,7 +2542,7 @@
       const fu = F[u], near = Math.abs(fu.oM - fa.oM) <= 1 && Math.abs(fu.n - fa.n) <= 1, mA = off ? rvReplyMob(o.pos, A) : 0, mU = off ? rvReplyMob(o.pos, u) : 0;
       if (off && fu.oC <= fa.oC && !(fu.x && !fa.x) && !(fu.cq && !fa.cq) && mU < mA) { out.push(v('nm', [`赤い枠だと、相手にうまく応じられたとき、きみの打てる場所は${mU}か所まで減っちゃう。緑の枠なら${mA}か所残るんだ。`, `相手のいちばんいやな応手のあと、打てる場所は赤い枠だと${mU}か所、緑の枠なら${mA}か所。赤い枠は自分の手が先に詰まっちゃうね。`, `赤い枠のあと、相手の応じ方しだいで、きみの打ち場所は${mU}か所だけ。緑の枠なら${mA}か所あって、手が詰まりにくいんだ。`])); return rvEnds(out.join(''), '!').t; }
       const N7 = off ? [`緑の枠は${fa.n}枚返して${O()}が${fa.oM}か所、赤い枠は${fu.n}枚で${fu.oM}か所。数は近いけど、相手のいちばんいやな応手のあとでも、緑の枠なら打てる場所が${mA}か所残るんだ。`, `どちらも数は近い手。でも緑の枠は、相手がどう応じても、きみの打てる場所が${mA}か所以上残る手なんだ。`] : [near ? `緑の枠は${fa.n}枚返して${O()}が${fa.oM}か所、赤い枠は${fu.n}枚で${fu.oM}か所。数は近くても、手順から外れると次の形が変わっちゃうんだ。` : fu.oM > fa.oM ? `緑の枠なら${O()}は${fa.oM}か所、赤い枠だと${fu.oM}か所。相手に選ぶ余地をあげちゃうからね。` : `赤い枠のほうが${O()}は少ない（${fu.oM}か所）けど、定石の手順から外れると、覚えた次の形が使えなくなるんだ。`, '赤い枠だと、定石で覚えたこの先の形にならないから、次の手を自分で考えることになるね。', fu.n !== fa.n ? `赤い枠は${fu.n}枚返し、緑の枠は${fa.n}枚返し。形が変わると、覚えた手順が使えなくなるからね。` : '返す枚数は同じでも、場所がちがえば形が変わる。覚えた手順が使えなくなるからね。', '赤い枠に打つと、この先は定石の外の形。そこからは手探りになっちゃう。'];
-      if (fu.oC > fa.oC) out.push(v('n1', ['赤い枠だと、相手が隅に打てるようになっちゃう。隅は取られたら取り返せない場所なんだ。', '赤い枠では隅への道が開いて、相手に隅を取られちゃうね。', '赤い枠のあと、相手は隅に打てる。隅をあげると、辺までくずれていくからね。']));
+      if (fu.oC > fa.oC) out.push(v('n1', ['赤い枠だと、相手が隅に打てるようになっちゃう。隅は取られたら取り返せない場所なんだ。', '赤い枠では隅への道が開いて、相手に隅を取られちゃうね。', '赤い枠のあと、相手は隅に打てる。隅をあげると、辺までくずれていくからね。', '赤い枠に打つと、相手に隅への入り口ができる。隅の石は、もう二度と返らないんだ。', '赤い枠のあとは、空いた隅が相手の打ち場所に入っちゃう。隅をゆずるのは大きな損だよ。']));
       else if (fu.x && !fa.x) out.push(v('n2', ['赤い枠は隅のななめ隣（X）。あとで相手に隅を取られる足場になりやすいんだ。', 'Xに打つと、その隅を相手にねらわれやすくなるからね。', '隅のななめ隣（X）に打つと、相手が隅に入る足場ができちゃうからね。', '赤い枠は隅のななめ隣のXのマス。そこに石があると、相手が隅に打つきっかけを作っちゃう。', '隅のななめ隣（X）は、相手に隅をあげる入り口になりやすいマス。緑の枠ならその心配がないね。']));
       else if (fu.cq && !fa.cq) out.push(v('n3', ['赤い枠は隅のとなりのマス。辺の形がくずれるから、相手に隅をねらわれやすいね。', 'Cに打つと辺の形がくずれるから、隅をねらわれやすくなるんだ。', 'Cに打つと、となりの隅を相手に取られやすくなるから気をつけて！', '隅のとなり（C）に打つと、辺に相手の足がかりができて、隅まで取られやすくなるよ。', '赤い枠は隅のすぐ横のCのマス。辺がくずれると、相手に隅をわたしやすくなっちゃう。']));
       else if (fu.open > fa.open) out.push(v('n4', [`開放度は赤い枠が${fu.open}、緑の枠は${fa.open}。空きが多いと、相手の足場になっちゃうからね。`, `赤い枠だと、返した石のそばの空きが${fu.open}マス。緑の枠なら${fa.open}マスですむんだ。`, `緑の枠のほうが静かな手。赤い枠は空きを${fu.open}マスもかかえるから、相手に打ち場所をあげちゃう。`, `赤い枠は開放度${fu.open}で、外に石が出ちゃう。緑の枠なら${fa.open}にとどまるからね。`, `空きにふれるのは、緑の枠なら${fa.open}マス、赤い枠だと${fu.open}マス。そのぶん相手が打ちやすくなるんだ。`, ...(off ? [] : N7)]));
@@ -2557,7 +2557,7 @@
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261124p1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=4').catch(() => ({}))])
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261124p1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=5').catch(() => ({}))])
         .then(([ls, op, ev, wt, opp]) => { this.WT = wt || {}; this.OPP = opp || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
@@ -3044,15 +3044,15 @@
     forbid33: { g: [d => `${d}に三が2つできる、三三の点だね！ 黒はそこに打てないんだ。`, d => `そこは${d}の三が同時にできるから、黒には禁手だペン。`, d => `${d}、2本の三が交わる点を見抜いたね。黒が打つと反則になるんだ。`, d => `三三の禁手、しっかり見つけた！ ${d}に三がそろう点だね。`, d => `黒には打てない点、大当たり！ ${d}で三が2つになるからだペン。`],
       n: ['禁手は緑の点。三が2つ同時にできるからね。', '答えは緑の点。打つと三が2本いっぺんにできるペン。', '緑の点に黒が打つと、三三になるんだ。', '三三になるのは緑の点のほう。2本の三が交わっているね。', '緑の点こそ黒が打てない点。三が2つそろっちゃうからだペン。'],
       t43: ['きみの点は四と三が1つずつの四三だから、禁手じゃないペン。', 'きみの選んだ点は四三。黒も打っていい勝ちの形なんだ。', 'その点は四1つと三1つ。三三とはちがうから打てる。', 'きみの点だと四三になって、黒の反則にはならないんだ。', '四と三の組み合わせは禁手じゃない。むしろ黒の勝ち方だペン！'],
-      t33: ['きみの点は三が2つに見えるけど、片方は達四になれないから禁手じゃないんだ。', 'きみの点の三の1本は、はしがふさがっていて本物の三じゃないペン。', 'その点は三が2つに見えて、じつは1つ。だから打っていいんだ。', '片方の並びは伸ばしても達四にならないね。だから禁手じゃないんだ。', 'きみの点の2本目の三は、相手の石にじゃまされているペン。'],
+      t33: ['きみの点は三が2つに見えるけど、片方は達四にする点が黒の禁手。だから本物の三は1つで、禁手じゃないんだ。', 'きみの点の三の1本は、達四にする点が黒には打てない点。本物の三じゃないペン。', 'その点は三が2つに見えて、じつは1つ。片方は達四にする点が禁手だから、打っていいんだ。', '片方の並びは、達四にする点が禁手で伸ばせないね。だから禁手じゃないんだ。', 'きみの点の2本目の三は、達四にする点が黒の禁手になる、にせものの三だペン。'],
       t3: ['きみの点だと三は1つだけ。だから打ってもいい点なんだ。', 'その点で三ができるのは1本だけ。禁手にはならないペン。', 'きみの点は三1本。2本そろわないと三三じゃない。', '三がひとつなら、黒は堂々と打っていいんだ。', 'その点だと、できる三は1本きりだペン。'],
-      t0: ['きみの点だと三ができないから、禁手にはならないペン。', 'その点に打っても三が生まれないから、黒は打てるんだ。', 'きみの点は並びから外れていて、三にならない。', 'その点だと黒の2つ並びが伸びないから、禁手じゃないんだ。', 'きみの点では三が1本もできないペン。'] },
-    forbid44: { g: [{ L: 'ぴったり6つ以上つながる、長連の点だね！ 黒はちょうど5つじゃないとだめなんだ。', F: d => `${d}に四が2つできる、四四の点だね！ 黒はそこに打てないんだ。` }, { L: '6つ以上つながっちゃう点を見抜いた！ 黒の長連は反則なんだ。', F: d => `${d}で四が2本いっぺん、四四の禁手を見抜いたペン。` }, { L: '長連の点、大当たり！ 黒が並べすぎると負けなんだ。', F: d => `四四の点、大当たり！ ${d}の四が同時にできるからね。` }, { L: '黒が打つと6つ以上並ぶ、長連の点だペン！', F: d => `${d}、2本の四が重なる点を見つけたね。黒には禁手なんだ。` }, { L: 'そこは長連になる点。黒は5つちょうどでしか勝てないね。', F: d => `黒が打つと${d}に四が2つ。四四だから打てないペン！` }],
+      t0: ['きみの点だと三ができないから、禁手にはならないペン。', 'その点に打っても三が生まれないから、黒は打てるんだ。', 'きみの点では両はしのあいた三ができない。だから打っていいんだ。', 'その点に打っても三にならないから、禁手じゃないんだ。', 'きみの点では三が1本もできないペン。'] },
+    forbid44: { g: [{ L: '打つと6つ以上つながる、長連の点だね！ 黒はちょうど5つじゃないとだめなんだ。', F: d => `${d}に四が2つできる、四四の点だね！ 黒はそこに打てないんだ。` }, { L: '6つ以上つながっちゃう点を見抜いた！ 黒の長連は反則なんだ。', F: d => `${d}で四が2本いっぺん、四四の禁手を見抜いたペン。` }, { L: '長連の点、大当たり！ 黒が並べすぎると負けなんだ。', F: d => `四四の点、大当たり！ ${d}の四が同時にできるからね。` }, { L: '黒が打つと6つ以上並ぶ、長連の点だペン！', F: d => `${d}、2本の四が重なる点を見つけたね。黒には禁手なんだ。` }, { L: 'そこは長連になる点。黒は5つちょうどでしか勝てないね。', F: d => `黒が打つと${d}に四が2つ。四四だから打てないペン！` }],
       nL: ['禁手は緑の点。6つ以上つながる長連になるからね。', '答えは緑の点。打つと石が6つ以上並ぶペン。', '緑の点に黒が打つと長連、つまり反則なんだ。', '6つ以上並ぶのは緑の点のほうだね。', '緑の点こそ長連の点。黒は並べすぎちゃだめなんだ。'],
       nF: ['禁手は緑の点。四が2つ同時にできるからね。', '答えは緑の点。打つと四が2本いっぺんにできるペン。', '緑の点に黒が打つと、四四になるんだ。', '四四になるのは緑の点のほう。四が2つ重なっているね。', '緑の点こそ黒が打てない点。四が2つそろっちゃうからだペン。'],
       t5: ['きみの点はちょうど5つで、黒の勝ちになるペン。', 'その点は5つぴったり。禁手どころか勝ちの点なんだ。', 'きみの点だと五が完成。黒はちょうど5つならOKだ。', 'その点は長連じゃなくて五。黒の勝ちだペン！', 'きみの点に打つと、きっちり5つで黒の勝ちなんだ。'],
-      t4: ['きみの点だと四は1つだけ。だから禁手じゃないんだ。', 'その点でできる四は1本だけ。黒は打てるペン。', 'きみの点は四が1本きり。四四にはならない。', '四がひとつなら、黒は堂々と打っていいんだ。', 'その点だと四は1つ。2つそろわないと禁手じゃないペン。'],
-      t0: ['きみの点だと四ができないから、禁手にはならないペン。', 'その点に打っても四が生まれないから、黒は打てるんだ。', 'きみの点は並びから外れていて、四にならない。', 'その点だと黒の並びが伸びないから、禁手じゃないんだ。', 'きみの点では四が1本もできないペン。'] },
+      t4: ['きみの点だと四は1つだけ。だから禁手じゃないんだ。', 'その点でできる四は1本だけだから、黒は打てるペン。', 'きみの点は四が1本きり。四四にはならない。', '四がひとつなら、黒は堂々と打っていいんだ。', 'その点だと四は1つ。2つそろわないと禁手じゃないペン。'],
+      t0: ['きみの点だと四ができないから、禁手にはならないペン。', 'その点に打っても四が生まれないから、黒は打てるんだ。', 'きみの点は四にも長連にもならない。だから打っていいんだ。', 'その点に打っても四にならないから、禁手じゃないんだ。', 'きみの点では四が1本もできないペン。'] },
     trap: { g: [d => `${d}に四ができたね。止める点は黒の禁手だから、黒はふさげないペン。`, d => `白の${d}の四、止める場所は黒の×の点！ 黒は守れないんだ。`, d => `禁手を味方にした攻め！ ${d}の四を、黒は止められないね。`, d => `${d}に四を作って、止め場所を禁手にした！ 連珠らしい勝ち方だペン。`, d => `黒が止めたい点は打てない点。${d}の四で勝負ありだね！`],
       n: ['緑の点なら、四の止め場所が黒の禁手になったんだ。', '正解は緑の点。そこで作る四は、黒が×の点でしか止められないペン。', '緑の点に打てば、黒はふさぐ点が禁手で手も足も出なかったね。', '緑の点の四は、止める場所が三三か四四になる形だったんだ。', '緑の点から四を作れば、黒は禁手のせいで守れなかったペン。'],
       tF: ['きみの四は、オレンジの印の点で黒にふさがれちゃう。そこは禁手じゃないから。', 'オレンジの印の点は黒が打てる点。そこで四を止められちゃうペン。', 'きみの四の止め場所はオレンジの印。そこなら黒も堂々と打てるんだ。', '黒はオレンジの印の点で受けられる。禁手になっていないから。', 'きみの四は、オレンジの印の点に黒が置いて止まっちゃう。'],
@@ -3117,7 +3117,7 @@
         ng = u => { const r = G.info(u, 1); return pk(W.n) + (r.fours.length && r.threes.length ? pk(W.t43, 1) : r.threes.length >= 2 ? pk(W.t33, 2) : r.threes.length ? pk(W.t3, 3) : pk(W.t0, 4)); };
         break;
       case 'forbid44':
-        good = u => { const r = G.info(u, 1), g = pk(W.g); return G.over(u, 1) ? g.L : g.F(D2(r.fours)); };
+        good = u => { const r = G.info(u, 1), g = pk(W.g); return G.over(u, 1) ? g.L : g.F(r.fours.length === 1 ? D(r.fours[0]) + 'の同じ列' : D2(r.fours)); };   // (2026-11-25 担当A: two fours on one line — not 「2つの列」)
         ng = u => { const r = G.info(u, 1); return pk(G.over(ra, 1) ? W.nL : W.nF) + (r.five >= 0 ? pk(W.t5, 1) : r.fours.length ? pk(W.t4, 2) : pk(W.t0, 3)); };
         break;
       case 'trap':
@@ -3155,7 +3155,7 @@
     LKEY: 'aicoding-gomoku-lessons', OKEY: 'aicoding-gomoku-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261125'), getJ('../gomoku/openings.json?v=20261125v2'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261125f'), getJ('../gomoku/openings.json?v=20261125v2'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] gomoku texts', e); } this.I = w.I18N || {}; this.data = { ls, op };
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
@@ -3716,7 +3716,7 @@
         case 'b_move': return F.edge ? pk(['端のマスなら跳び越えられない', '盤の端は跳ばれる心配がない', '端っこは安全地帯', '端に寄せれば向こう側にマスがない', '盤のふちなら跳び越す先がない'], j)
           : F.trade ? pk(['取られても、すぐ取り返せる', '1枚取られても取り返せて損がない', '取り合いになっても五分', '相手が取ったら、こっちも取り返せる', '取られた分はすぐ取り戻せる'], j)
           : F.near && F.blocked ? pk(['すぐ後ろがふさがっていて跳べない', '跳ぶ先のマスが空いていない', '後ろが埋まっていて取られない', '背中のマスに駒がいて、跳び越せない', '着地するマスがないから跳ばれない'], j)
-          : pk(['跳び越えてくる相手の駒がいなくて安全', 'ねらってくる相手の駒がいないから取られない', '相手の駒に跳ばれる心配がない', 'となりに危ない駒がいない', 'そこまで届く相手の駒がない'], j);
+          : pk(['跳び越えてくる相手の駒がいなくて安全', 'ねらう駒がそばにいないから取られない', '相手の駒に跳ばれる心配がない', 'となりに危ない駒がいない', 'そこまで届く相手の駒がない'], j);
         case 'b_jump': return pk(['取ったあとも取り返されない', '着地した駒が安全なまま', `${g >= 2 ? g + '枚' : '1枚'}まるまる得できる`, '着地点のまわりに危険がない', '取ったあと相手にお返しされない'], j);
         case 'b_multi': return pk([`続けて跳んで${n}枚も取れる`, `${n}枚まとめて取れる`, `${n}枚取りの大ジャンプになる`, `一気に${n}枚も持っていける`, `連続ジャンプで${n}枚ゲットできる`], j);
         case 'b_king': return pk(['キングになれて、すぐには取られない', '王冠をかぶって、しかも安全', '安全なマスでキングに成れる', '成った駒をねらう相手がいない', '成ったあとも跳び越えられない'], j);
@@ -3781,13 +3781,19 @@
     const ng = u0 => { const u = wrongOf(u0); let F = null; try { F = ckLF(E, pos, u); } catch (e) {}
       const out = [pk(CK_CH.soft, o8), fill2(CK_CH.right[(k + 2) % 5], why(FA, k + 2))]; if (F) out.push(fill2(CK_CH.you[(k + 3) % 5], loss(F, u, k + 2)));
       if (CK_CH.tail[k]) out.push(CK_CH.tail[k]); return out.filter(Boolean).join(' '); };
-    return { ask: pk(CKJ_LS.ask[id] || [''], k), hintTx: pk(CKJ_LS.hint[id] || [''], k), good, ng, own: true, ckls: true };   // (ckls: チェッカニ praises himself — no heading line)
+    // (2026-11-25 第2期) a hint whose premise is the board's: 盤の端 only when a right move goes to the edge, 後ろに味方 only when one is
+    //   blocked behind, 離れたマス only when one has no enemy next to it, 向きを変えて only when the answer's jumps turn
+    const okF = ok.map(m => m === A ? FA : ckLF(E, pos, m)), turns = (() => { const pa = E.path(pos, A) || []; let t = false; for (let q = 2; q < pa.length; q++) { const [r0, c0] = E.RC[pa[q - 2]], [r1, c1] = E.RC[pa[q - 1]], [r2, c2] = E.RC[pa[q]]; if (Math.sign(r1 - r0) !== Math.sign(r2 - r1) || Math.sign(c1 - c0) !== Math.sign(c2 - c1)) t = true; } return t; })();
+    const hintOk = { b_move: [1, okF.some(f => f.edge)], b_move3: [3, okF.some(f => f.near && f.blocked)], b_move4: [4, okF.some(f => !f.near && !f.edge)], b_multi: [3, turns] };
+    const HALT = { b_move: { 1: '相手の駒が、どこへ跳べるかを想像してみて。', 3: '駒ごとに行き先をくらべてみて。安全な手は少ないカニ。', 4: '跳ばれたら着地するマスはどこか、たどってみて。' }, b_multi: { 3: 'ジャンプの道を、最後の着地まで数えてみるカニ。' } };
+    const hBad = Object.keys(hintOk).some(key => key.replace(/\d$/, '') === id && hintOk[key][0] === k && !hintOk[key][1]);
+    return { ask: pk(CKJ_LS.ask[id] || [''], k), hintTx: hBad ? HALT[id][k] : pk(CKJ_LS.hint[id] || [''], k), good, ng, own: true, ckls: true };   // (ckls: チェッカニ praises himself — no heading line)
   }
   const CHECKERS = {
     LKEY: 'aicoding-checkers-lessons', OKEY: 'aicoding-checkers-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=30261126b'), getJ('../checkers/openings.json?v=5'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=30261126c'), getJ('../checkers/openings.json?v=5'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vc]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] checkers texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vc)(v); this.V = ((v.I18N || {})['ja@crab']) || {}; } catch (e) { this.V = {}; }   // (チェッカニ's own lines, 3D, ja)
           return this; })
@@ -4251,7 +4257,7 @@
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xm3'), getJ('../xiangqi/openings.json?v=4'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xm3'), getJ('../xiangqi/openings.json?v=5'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vf]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vf)(v); this.V = ((v.I18N || {})['ja@fox']) || {}; } catch (e) { this.V = {}; }   // (ショウギツネ's own lines, 3D, ja)
           return this; })
@@ -6981,7 +6987,7 @@
     load(lang) {
       const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261021L`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
       if (this.p) return this.p.then(() => T()).then(() => this);
-      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261125'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
+      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261125f'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
         .then(([ls, X]) => { const w = {}; try { new Function('window', 'with (window) {' + X + '\n}')(w); } catch (e) { console.warn('[lessons3d] dots texts', e); } this.I = w.I18N || {}; this.data = { ls }; return T(); }).then(() => this)
         .catch(e => { this.p = null; throw e; }));
     },

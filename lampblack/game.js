@@ -47,8 +47,9 @@
     moon: '<svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>',
   };
 
-  let pref = { speed: 1, anim: true, names: true, seen: false };
+  let pref = { speed: 2, anim: true, names: true, seen: false };
   try { Object.assign(pref, JSON.parse(localStorage.getItem(PREF) || '{}')); } catch (e) {}
+  if (!pref.speedSet) pref.speed = 2;   // the default is now はやい (2026-11-25); only a speed the player chose stays
   const savePref = () => { try { localStorage.setItem(PREF, JSON.stringify(pref)); } catch (e) {} };
   let st = null, S = null;
   const G = { scr: 'title', storyId: null, diff: 1, role: 'auto', q: [], typing: null, loc: null, nbTab: 'ppl' };
@@ -140,6 +141,7 @@
     $('setTitle').innerHTML = `<span style="font:400 1.3em var(--brush);letter-spacing:.06em">${esc(st.title)}</span>　<small style="font:700 15px var(--ui);color:var(--mute)">${esc(st.no)}</small>`;
     $('setConcept').textContent = st.concept;
     const fr = (rec()[base.id] || {}).feats || {}, fl = window.WLFeats.list(base.id);
+    $('setFeatH').onclick = () => $('setFeatH').closest('.setup').classList.toggle('feats-open');   // (only folds on a phone)
     $('setFeatN').textContent = `${fl.filter(f => fr[f.id]).length}/${fl.length}`;
     $('setFeats').innerHTML = fl.map(f => `<div class="feat${fr[f.id] ? ' got' : ''}"><i>${fr[f.id] ? '★' : '☆'}</i><b>${esc(f.name)}</b><span>${esc(f.desc)}</span></div>`).join('');
     $('setDiff').innerHTML = DIFFN.map((d, i) => `<button class="tile${G.diff === i ? ' on' : ''}" data-d="${i}"><b>${d}</b><span class="cnt">${E.DIFF[i].size}人</span><span>${diffDesc(st, i)}</span></button>`).join('');
@@ -179,7 +181,7 @@
     stage: ['board', 0, 0], trap: ['board', 0, 'crate'], green: ['aisle', 0, 0], quay: ['flag', 'water', 'post'], box: ['aisle', 0, 0],
   };
   function drawFloor() {
-    const f = $('floor'); if (!f || !PCQ.matches) return;
+    const f = $('floor'); if (!f) return;
     if (!f.__l) { f.__l = 1; f.addEventListener('transitionend', e => { if (e.propertyName === 'top') drawFloor(); }); }
     const w = Math.round(f.clientWidth), h = Math.round(f.clientHeight), key = w + 'x' + h + ':' + G.floorLoc;
     if (!w || !h || f.__wh === key) return; f.__wh = key;
@@ -256,18 +258,26 @@
     if (pc) document.documentElement.style.setProperty('--backB', Math.round(26 + raise - .2 * (h + 16 + raise)) + 'px');   // the back row stands on the far end of the road else document.documentElement.style.removeProperty('--backB');
     document.documentElement.style.setProperty('--fs', pc ? '1.1' : '1');
     document.documentElement.style.setProperty('--depth', (pc ? Math.max(0, Math.round(innerHeight * .42) - 250) : 0) + 'px');
-    if (!pc) {
-      const sh = Math.round(Math.min(innerHeight * .46, innerWidth * 1.05));
-      document.documentElement.style.setProperty('--stageH', sh + 'px');
-    }
+    if (!pc) fitStage();
     sizeCast();
     requestAnimationFrame(drawFloor);
   }
+  // a phone: the dock at the bottom is only as tall as what it holds; the stage takes all the rest
+  // while lines run, the dock never shrinks (the box holds its size from line to line)
+  function fitStage() {
+    if (PCQ.matches) return;
+    const d = $('dock');
+    let h = d.classList.contains('hide') ? 0 : d.offsetHeight;
+    if (h && !$('tx').classList.contains('hide')) { h = Math.max(h, G.dockTextM || 0); G.dockTextM = h; } else G.dockTextM = 0;
+    const sh = Math.max(Math.round(innerHeight * .46), innerHeight - h);
+    if (G.stageHM !== sh) { G.stageHM = sh; document.documentElement.style.setProperty('--stageH', sh + 'px'); requestAnimationFrame(drawFloor); }
+  }
+  if (window.ResizeObserver) new ResizeObserver(() => { if (G.scr === 'play') fitStage(); }).observe($('dock'));
   function sizeCast() {
     // the puppets' size does not follow the text strip: on PC it is reckoned from a fixed strip height, so it only changes with the window
     const c = $('cast');
     const h = PCQ.matches ? Math.max(120, $('stage').clientHeight - Math.max(250, Math.round(innerHeight * .42)) - 56 - 120) : c.clientHeight;   // one size with or without the name boards above, so nobody grows or shrinks between scenes
-    const pw = Math.max(54, Math.min(150, h * .66 * 120 / 250));
+    const pw = PCQ.matches ? Math.max(54, Math.min(150, h * .66 * 120 / 250)) : Math.max(64, Math.min(100, (innerHeight - 270 - 60) * .26, innerWidth * .26));   // a phone: as tall as the stage allows, narrow enough for a row of four or five
     c.style.setProperty('--pw', pw + 'px');
   }
   // the people on the stage: ids, and how to stand them
@@ -351,11 +361,21 @@
   }
   function finishType() { clearInterval(G.typing); G.typing = null; const t = $('tx').querySelector('.t'); t.querySelectorAll('i').forEach(i => i.style.opacity = 1); $('tx').classList.add('done'); }
   $('tx').addEventListener('click', nextPage);
+  // the whole stage and the strip around the text turn the page too (a phone's thumb should not have to find the box)
+  document.addEventListener('click', e => {
+    if ($('tx').classList.contains('hide') || !$('sheet').classList.contains('hide') || G.scr !== 'play') return;
+    const t = e.target; if (!t.closest || t.closest('#tx') || !t.closest('#stage,#dock')) return;
+    if (t.closest('#roster button,#roster .ro')) return;
+    e.stopPropagation(); e.preventDefault(); nextPage();
+  }, true);
   // when the browser loses focus, the play stops (sound, lamp flicker, puppets, letters) until it comes back
   function setPaused(p) { G.paused = !!p; document.body.classList.toggle('paused', G.paused); SND.pause(G.paused); }
   window.addEventListener('blur', () => setPaused(true));
   window.addEventListener('focus', () => setPaused(false));
-  document.addEventListener('visibilitychange', () => setPaused(document.hidden || !document.hasFocus()));
+  document.addEventListener('visibilitychange', () => setPaused(document.hidden));   // phones often give no focus event on coming back: being visible again is enough
+  window.addEventListener('pageshow', () => setPaused(document.hidden));
+  // any touch brings the play (and the sound) back, in case the browser kept it stopped
+  document.addEventListener('pointerdown', () => { if (G.paused && !document.hidden) setPaused(false); SND.unlock(); }, true);
   document.addEventListener('keydown', e => {
     // F: full screen on / off (not while typing, not with a modifier)
     if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target || {}).tagName || '')) {
@@ -427,9 +447,13 @@
   const lineOf = (e, extra) => { const x = SP.event(S, st, e); return x && x.text ? Object.assign({ who: e.by, text: x.text, fx: () => reveal(e) }, extra || {}) : null; };
   function renderRoster() {
     const R = $('roster'); if (!R) return;
+    // on a phone the faces at the top are only needed in the meeting and the vote (the day's search lists the people below)
     const on = S && G.scr === 'play' && S.phase !== 'prologue' && S.phase !== 'end';
+    const faces = on && (PCQ.matches || S.phase === 'meeting' || S.phase === 'vote');   // the map shows all day long; the faces only in the meeting and the vote on a phone
     R.classList.toggle('hide', !on); document.body.classList.toggle('has-roster', !!on);
     if ($('rmap')) $('rmap').classList.toggle('hide', !on);
+    if ($('rdock')) $('rdock').classList.toggle('hide', !faces || PCQ.matches);
+    R.classList.toggle('hide', !faces);
     if (!on) return;
     const html = S.people.map(p => {
       const t = tagsOf(p.id), dead = !p.alive, mk = S.pl.notes[p.id] || '';
@@ -452,7 +476,11 @@
     const chip = l => `<span class="rc${l.id === mine ? ' me' : seen.includes(l.id) ? ' see' : ''}" title="${esc(l.name)}：となりの${E.near(st, l.id).map(x => esc(locName(x))).join('・')}が見える">${esc(l.name)}${l.id === crime ? '<i class="cr">現場</i>' : ''}${l.id === mine ? '<i class="yo">あなた</i>' : ''}</span>`;
     const mh = `<div class="rrow">${st.locs.map(chip).join('<s></s>')}</div><div class="rback" title="両端もとなり同士"></div>`;
     if (M.__html !== mh) { M.innerHTML = mh; M.__html = mh; }
-    M.style.top = (R.offsetTop + R.offsetHeight + 8) + 'px';
+    // a phone: the faces and the map sit at the bottom of the text strip (it has room under the words), not over the stage
+    const home = PCQ.matches ? $('stage') : (() => { let D = $('rdock'); if (!D) { D = document.createElement('div'); D.id = 'rdock'; } if (D.parentNode !== $('strip') || $('strip').firstChild !== D) $('strip').insertBefore(D, $('strip').firstChild); return D; })();
+    if (R.parentNode !== home) { if (PCQ.matches) home.insertBefore(R, $('fx')); else home.appendChild(R); }
+    if (M.parentNode !== $('stage')) $('stage').insertBefore(M, $('fx'));   // the map stays on the stage, at the top (on a phone too)
+    M.style.top = PCQ.matches ? (R.offsetTop + R.offsetHeight + 8) + 'px' : '';   // a phone: CSS puts it just under the header
   }
   function hud() {
     if (S.ghost) document.body.classList.add('ghost');
@@ -576,7 +604,7 @@
       } else {
         setCast([]);
         // no one was attacked at all (the wolves are gone, only the fox is left): no place to name
-        items.push({ text: N.loc ? fill(pickOne(st.text.peace), { loc: locName(N.loc) }) : '朝が来た。誰も死ななかった。\nどの戸口にも、爪の跡はひとつもない。' });
+        items.push({ text: SP.peace(S, st, N) });
         if (N.saved === 'ward') items.push({ text: '枕もとの鈴が、夜中にひとりでに鳴った。あの音がなければ、あなたは今ここにいない。' });
         if (N.saved === 'guard' && N.target === 'you') items.push({ text: `戸口の前の床に、獣の爪の跡が残っていた。あなたの部屋の前まで来て、そこで引き返している。\n誰かが一晩じゅう、**あなたを守っていた**のだ。` });
         if (N.saved === 'guard' && S.pl.role === 'guard') items.push({ text: `あなたが夜通し見張った戸口の前に、獣の爪の跡があった。${nm(N.target)}は、何も知らずに眠っていた。` });
@@ -1354,7 +1382,7 @@
       box.querySelectorAll('[data-x]').forEach(b => b.onclick = () => closeSheet());
       box.querySelectorAll('.seg').forEach(s => s.querySelectorAll('button').forEach(b => b.onclick = () => {
         const k = s.dataset.k, v = b.dataset.v;
-        if (k === 'snd') SND.set(v === '1'); else if (k === 'bgm') SND.setMusic(v === '1'); else if (k === 'talk') SND.setTalk(v === '1'); else pref[k] = v === 'true' ? true : v === 'false' ? false : +v;
+        if (k === 'snd') SND.set(v === '1'); else if (k === 'bgm') SND.setMusic(v === '1'); else if (k === 'talk') SND.setTalk(v === '1'); else { pref[k] = v === 'true' ? true : v === 'false' ? false : +v; if (k === 'speed') pref.speedSet = true; }
         savePref(); s.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
         document.body.classList.toggle('anim-off', !pref.anim); document.body.classList.toggle('show-names', !!pref.names);
       }));

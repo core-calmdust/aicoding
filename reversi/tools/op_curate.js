@@ -35,8 +35,9 @@ for (const s of ST) { const key = s.ln.moves; if (!want.has(key) && !want.has(s.
         const lg = X.rvLegal(cur, side); if (lg.length < 4) { ST0.few++; continue; }
         const e1 = E(Q, 300), e2 = E(Q, 1500); if (e1[0][0] !== e2[0][0]) { ST0.unstable++; continue; }
         if (Math.abs(e2[0][1]) > DEC || Math.abs(e1[0][1]) > DEC) { ST0.decided++; continue; } if (e1[1][1] > e1[0][1] - GAP || e2[1][1] > e2[0][1] - GAP) { ST0.gap++; continue; }
-        // (追26 / 追84: the searches are timed — read both again from a cleared table three times (the checker's --deep reads twice), and keep only when every re-read agrees)
-        { let bad = false; for (let rr = 0; rr < 3 && !bad; rr++) { const r1 = E(Q, 300), r2 = E(Q, 1500); if (r1[0][0] !== e2[0][0] || r2[0][0] !== e2[0][0] || Math.abs(r1[0][1]) > DEC || Math.abs(r2[0][1]) > DEC || r1[1][1] > r1[0][1] - GAP || r2[1][1] > r2[0][1] - GAP) bad = true; } if (bad) { ST0.unstable++; continue; } }
+        // (追26: the searches are timed — read both again from a cleared table, as the checker's --deep does, and keep only when the second reads agree)
+        // (2026-11-25 担当B: three times over — ノーカン q4 passed one reread and then failed the checker's --deep (a3 within 0.5 of d1 at 0.3 s))
+        let rr = false; for (let t = 0; t < 3 && !rr; t++) { const r1 = E(Q, 300), r2 = E(Q, 1500); if (r1[0][0] !== e2[0][0] || r2[0][0] !== e2[0][0] || Math.abs(r1[0][1]) > DEC || Math.abs(r2[0][1]) > DEC || r1[1][1] > r1[0][1] - GAP || r2[1][1] > r2[0][1] - GAP) rr = true; } if (rr) { ST0.unstable++; continue; }
         // (⑦ every wrong move has a reason on the board in リバガメ's words: a corner given, X / C, openness, the opponent's moves, the
         // flips or the moves left after the reply — not the 「数は近いけど」 line with no difference to show)
         // (2026-11-25: with the line's own name and voice, at every place 1〜5 it may be asked — the words vary with them, as the verifier reads them)
