@@ -126,7 +126,8 @@ function verify() {
 }
 // the opening rolls that are also a problem of the lessons オープニング①② (one start position per roll: ⑤) — pending, not failed, until they
 // are made into other problems (claude/lesson-quality.md 検証の進み具合: backgammon/open)
-const PEND = new Set(['o21', 'o41']);   // (2026-11-26 担当B: o31 o42 o53 o61 o51 o62 o64 o65 are asked as the second move, it.rq; these 2 are still the start position — the rollouts of their candidates did not keep the same right plays when run again)
+const PEND = new Set(['o41']);   // (2026-11-26 04:50 担当B: o21 is asked as the second move after the opponent's 65 (it.rq, rolled out with N=2592 — it.rq.N — three times, same right plays NLGF・NLYX))
+   // (2026-11-26 担当B: o31 o42 o53 o61 o51 o62 o64 o65 are asked as the second move, it.rq; these 2 are still the start position — the rollouts of their candidates did not keep the same right plays when run again)
 const isPend = fa => PEND.has(fa.step) && /^⑤ the same position and roll as lesson open[12] /.test(fa.msg);
 module.exports = () => { const o = verify().out, p = o.filter(isPend); if (p.length && !process.env.C4_QUIET) console.log(`bgOpen: ${p.length} pending (⑤ the same board and roll as a lesson problem): ${p.map(x => x.step).join(' ')}`); return o.filter(x => !isPend(x)); };
 module.exports.PEND = PEND; module.exports.isPend = isPend;
