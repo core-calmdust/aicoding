@@ -2263,7 +2263,7 @@
     hint: {
       rules: ['縦・横・ななめ、8つの向きにはさめる石を数えてみて。', 'ななめの列は、見落としやすいんだ！', '1つの向きだけじゃなく、ほかの向きでも返せないか見てね。', '自分の石まで、相手の石が何枚続くか数えよう！', '遠くの自分の石とも、はさめることがあるね。'],
       corner: ['まず、4つの角に打てるかどうかを見てごらん。', '隅が取れないときは、隅の隣のマスに要注意！', '打ったあと、相手の石が隅に届く線ができないか考えてみて。', '隅のななめ隣（X）は、とくに危ないマスなんだ。', '安全な手は、隅から離れたところにあることが多いね！'],
-      mobility: ['手ごとに、打ったあとの相手の打てる場所を数えてみよう。', 'いちばん多く返す手は、ちょっと要注意！', '外がわの石を返すと、相手の足場がふえがちなんだ。', '内がわの石を返す手が、ねらい目かも？', '相手がいま打てる場所を、ふさげる手はある？'],
+      mobility: ['手ごとに、打ったあとの相手の打てる場所を数えてみよう。', 'いちばん多く返す手は、ちょっと要注意！', '外がわの石を返すと、相手の足場がふえがちなんだ。', '返す石の数より、打ったあとの相手の打ち場所をくらべてね。', '相手がいま打てる場所を、ふさげる手はある？'],
       quiet: ['返す石のまわりに、空きマスが少ない手を探そう。', '空きにふれない石だけを返せたら、中割り！', '空きにふれる石を返すと、そこが相手の足場になるんだ。', '開放度が小さくても、隅を渡す手はだめ！', '静かな手が見つからないときは、相手の次の手まで考えてみて。'],
       wall: ['外がわに一列に石が並ぶ手は、よけよう。', 'きみだけが打てる場所は、今すぐ使わなくてもいいかもしれないね。', '内がわの石を返す手を探してみて！', '打ったあと、きみの石のまわりに空きがどれだけ残るか想像してみて。', '相手も打てる場所から先に使うと、貯金が残るね！'],
       edge: ['相手の石と石のあいだに、1マスだけ空いた辺はない？', 'すき間に打てば、横から返される心配がないんだ！', '上下左右、4本の辺を順番に見てね。', '付け手は、相手の辺をまっぷたつにする手！', '辺の手でも、相手に隅をあげないかは確かめよう。'],
@@ -2315,7 +2315,7 @@
           const n = fu[3], mn = Math.min(...ks.map(q => F[q][3])), mf = ks.reduce((a, q) => F[q][1] > F[a][1] ? q : a, ks[0]);
           out.push(n <= mn ? pk([`相手の打てる場所は${n}か所。いちばん少なく抑えられたよ。`, `相手に残る打ち場所は${n}か所だけ！ これより少なくなる手はないんだ。`, `これで相手の候補は${n}か所に。いちばんきゅうくつにできたね。`, `相手が次に打てるのは${n}か所。どの手よりも少ない！`, `相手の打てるマスを${n}か所まで絞れたんだ。`], k)
             : pk([`相手の打てる場所は${n}か所。うまく抑えられたよ。`, `相手に残る打ち場所は${n}か所。形もいいね。`, `相手の候補を${n}か所に抑えつつ、先まで読めた手！`, `相手が次に打てるのは${n}か所。先の形まで考えた手なんだ。`, `相手の打てるマスは${n}か所。これなら苦しくない！`], k));
-          if (mf !== u && F[mf][3] > n) out.push(pk([`いちばん多く返す手だと、${F[mf][3]}か所にふえちゃうんだ。`, `たくさん返す手を選んでいたら、相手は${F[mf][3]}か所も打てたね。`, `欲ばって多く返すと、相手の打ち場所が${F[mf][3]}か所になるところだった。`, `多く返す手なら、相手の候補は${F[mf][3]}か所。返す数だけで選ばなかったのが大きいよ。`, `石をたくさん返すと、相手が${F[mf][3]}か所に打てちゃうんだ。`], k));
+          if (mf !== u && F[mf][3] > n) out.push(pk([`いちばん多く返す手だと、${F[mf][3]}か所にふえちゃうんだ。`, `たくさん返す手を選んでいたら、相手は${F[mf][3]}か所も打てたね。`, `欲ばって多く返すと、相手の打ち場所が${F[mf][3]}か所になるところだった。`, `多く返す手なら、相手の候補は${F[mf][3]}か所。返す数だけで選ばなかったのが大きいよ。`, `石をたくさん返していたら、相手が${F[mf][3]}か所に打てるところだった！`], k));
           break;
         }
         case 'quiet': {
@@ -2373,7 +2373,7 @@
       const loss = () => exact ? pk([`最後は、赤い枠だと${res(v(u))}、緑の枠なら${res(v(b))}になるんだ。`, `読みきると、きみの手は${res(v(u))}。緑の枠は${res(v(b))}だよ。`, `終局まで読むと、赤い枠は${res(v(u))}。いっぽう緑の枠は${res(v(b))}だね。`, `きみの手だと${res(v(u))}。緑の枠を選べば${res(v(b))}！`, `完全読みでは、赤い枠が${res(v(u))}で、緑の枠が${res(v(b))}なんだ。`], k)
         : d <= 2 ? pk(['赤い枠も悪くないけど、緑の枠のほうが少しだけ得。差は小さいから、気にしすぎなくていいよ。', 'きみの手との差はほんの少し。でも緑の枠なら、ちょっとだけ得なんだ。', '差はわずかだから安心して！ 緑の枠のほうが、ほんの少し形がいいだけ。', 'おしい手だよ。緑の枠と比べると、ほんの少し損なだけ。', 'きみの手でも戦える！ ただ緑の枠なら、もうちょっと得なんだ。'], k)
         : pk([`赤い枠だと、最後に${d}石ほど差がつきやすい形になっちゃうんだ。`, `きみの手だと、このあとの打ち合いで${d}石ほど損しやすいね。`, `その手だと、終盤までに${d}石ぶんくらい差がつきやすいの。`], k);   // (2026-11-22: never "the AI says")
-      const mob = () => pk([`相手の打てる場所は、赤い枠だと${fu[3]}か所、緑の枠なら${fb[3]}か所。`, `きみの手のあと、相手には${fu[3]}か所も打ち場所が残る。緑の枠なら${fb[3]}か所だね。`, `相手の候補は、赤い枠で${fu[3]}か所。緑の枠なら${fb[3]}か所ですむ。`, `赤い枠だと相手は${fu[3]}か所に打てる。緑の枠なら${fb[3]}か所だよ。`, `緑の枠なら相手は${fb[3]}か所、きみの手だと${fu[3]}か所に打てちゃうんだ。`], k);
+      const mob = () => pk([`相手の打てる場所は、赤い枠だと${fu[3]}か所、緑の枠なら${fb[3]}か所。`, `きみの手のあと、相手には${fu[3]}か所も打ち場所が残る。緑の枠なら${fb[3]}か所だね。`, `相手の候補は、赤い枠で${fu[3]}か所。緑の枠なら${fb[3]}か所ですむ。`, `赤い枠だと相手は${fu[3]}か所に打てる。緑の枠なら${fb[3]}か所だよ。`, `緑の枠なら相手は${fb[3]}か所。きみの手だと${fu[3]}か所に打てちゃう！`], k);
       const lead = kind !== 'parity' && kind !== 'finish' && kind !== 'rules' ? (fu[4] ? pk(['赤い枠だと、次に相手が隅を取れるようになっちゃう。', 'きみの手だと、相手に隅への道が開いちゃうんだ。', 'その手を打つと、相手は隅に打てるようになるよ。', '赤い枠だと、隅をプレゼントしちゃう！', '打ったあと、相手に隅を取られちゃうんだ。'], k)
         : xc(u) ? pk([`赤い枠は空いた隅のとなりの${xc(u)}だから、隅への通り道になりやすい。`, `隅が空いているうちは${xc(u)}のマスは危ない。相手に隅を取られやすいんだ。`, `赤い枠は${xc(u)}だから、あとで隅を取られる種になりやすいよ。`, `${xc(u)}に打つと、空いた隅を相手にねらわれるんだ。`, `赤い枠は${xc(u)}のマス。隅が空いてると、取られる心配があるね。`], k) : '') : '';
       switch (kind) {
@@ -2385,7 +2385,7 @@
           break;
         case 'mobility':
           if (lead) out.push(lead + (fu[3] > fb[3] ? mob() : ''));
-          else if (fu[3] > fb[3]) out.push(mob() + (fu[1] > fb[1] ? pk([`${fu[1]}枚も返すと外がわの石がふえて、相手の足場になっちゃうんだ。`, `多めに返した${fu[1]}枚が、相手の足場になるからね。`, `${fu[1]}枚返すぶん、外がわに石が出ちゃうから損なんだ。`, `返しすぎた${fu[1]}枚が、相手の打ち場所をふやすよ。`, `${fu[1]}枚も返すと、相手に足がかりをあげちゃう！`], k) : pk(['相手に打てる場所をあげるほど、こちらは苦しくなるからね。', '相手の選べる手がふえると、こっちの打ち場所が減っていくんだ。', '相手の候補がふえるほど、こっちは不利になるよ。', '相手に選ぶ余地をあげると、あとで苦しくなるんだ。', '打ち場所の差が、そのまま形勢の差になるからね。'], k)));
+          else if (fu[3] > fb[3]) out.push(mob() + (fu[1] > fb[1] ? pk([`${fu[1]}枚も返すと外がわの石がふえて、相手の足場になっちゃうんだ。`, `多めに返した${fu[1]}枚が、そのまま相手の足場になっちゃう！`, `${fu[1]}枚返すぶん、外がわに石が出ちゃうから損なんだ。`, `返しすぎた${fu[1]}枚のせいで、相手の打ち場所がふえるんだ。`, `${fu[1]}枚も返すと、相手に足がかりをあげちゃう！`], k) : pk(['相手に打てる場所をあげるほど、こちらは苦しくなるからね。', '相手の選べる手がふえると、こっちの打ち場所が減っていくんだ。', '相手の候補がふえるほど、こっちは不利になるよ。', '相手に選ぶ余地をあげると、あとで苦しくなるんだ。', '打てる場所が少ないほど、相手はイヤなマスに追いこまれやすい。'], k)));
           else out.push(loss());
           break;
         case 'quiet': {
@@ -2586,7 +2586,7 @@
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261125r2'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=8').catch(() => ({}))])
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261125r3'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=8').catch(() => ({}))])
         .then(([ls, op, ev, wt, opp]) => { this.WT = wt || {}; this.OPP = opp || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
@@ -4061,7 +4061,7 @@
     let why; { const L = XQ_WHY[kd] || XQ_WHY.cannon, P0 = XQN(FA.cap || FA.ty, FA.cap ? FA.c ^ 1 : FA.c);
       const fresh = L.map(x => x.replace(/\{P\}/g, P0)).filter(x => xqSn(x).every(y => !V.used.has(xqKey(y))));
       why = fresh.length ? xqWhyJa(FA, j, V, xqLastEnd(V.cheer(i))) : xqPick(V, [0, 1, 2, 3, 4, 5].map(q => V.pr(i + q).replace('{a}', sh2)), xqLastEnd(V.cheer(i))); }
-    if (FA.flee) why = FA.cap ? xqJoin(why, `しかも、ねらわれていた${FP}もこれで安全なの。`) : xqPick(V, FLEE.why.map((_, q) => FLEE.why[(j + q) % FLEE.why.length]), xqLastEnd(V.cheer(i)));
+    if (FA.flee) why = FA.cap ? xqJoin(why, xqPick(V, [`しかも、ねらわれていた${FP}もこれで安全なの。`, `ついでに、ねらわれていた${FP}も逃がせたコン！`, `おまけに、ねらわれていた${FP}も取られずに済むね。`].map((_, q, A) => A[(j + q) % A.length]), xqLastEnd(why))) : xqPick(V, FLEE.why.map((_, q) => FLEE.why[(j + q) % FLEE.why.length]), xqLastEnd(V.cheer(i)));
     const pu = i % 2 ? [0, 1, 2].map(q => V.push(i + q)).find(x => xqEnd(xqSn(x)[0]) !== xqLastEnd(why)) || V.push(i) : '', goodTx = xqJoin(V.cheer(i), why, pu);
     const good = u => { if (u != null && u !== A && sc.has(u)) return f(best - sc.get(u) <= 10 ? xqJoin(V.cheer(i), '{x}もいい手だコン！ {m}と同じくらいよく働くの。') : xqJoin('悪くない手だね！', `でも{m}なら${sh2}から、そっちが本筋なの。`));
       return goodTx; };
@@ -4079,7 +4079,7 @@
       else if (NF.k === 'lostTrade') out.push(`{x}で${XQN(NF.cp, pos.side ^ 1)}を取っても、きみの${me}を取られて損しちゃう！`);
       else if (NF.k === 'free') out.push(pk(NF.was ? [`{x}だと、ねらわれていた${me}がそのまま。ただで取られちゃう！`, `{x}では${me}を助けられず、ただで取られてしまうの。`] : [`{x}だと、きみの${me}がただで取られちゃう！`, `{x}では${me}の守りが外れて、ただで取られてしまうの。`]));
       else if (NF.k === 'lost') out.push(pk(NF.was ? [`{x}だと、ねらわれていた${me}がそのまま。相手に取られて損しちゃう！`] : [`{x}だと、${me}が相手のねらいに残っちゃう！`, `{x}では${me}が相手に取られる形になって、損しちゃうの。`]));
-      else if (NF.k === 'miss') out.push(pk(NF.retake ? [`{x}だと、取れる${XP}を見のがしちゃう。`, `{x}では、{m}で取れた${XP}がそのまま残るの。`] : [`{x}だと、取れる${XP}を見のがしちゃう。`, `{x}では、ただで取れた${XP}がそのまま残るの。`]));
+      else if (NF.k === 'miss') out.push(pk(NF.retake ? [`{x}だと、取れる${XP}を見のがしちゃう。`, `{x}では、{m}で取れた${XP}がそのまま残るの。`, `{x}では${XP}を取りそこねちゃうコン。`] : [`{x}だと、取れる${XP}を見のがしちゃう。`, `{x}では、ただで取れた${XP}がそのまま残るの。`, `{x}では${XP}を取りそこねて、駒得のチャンスを逃しちゃう。`]));
       else if (NF.k === 'aim') out.push(pk([`{x}だと、{m}のように相手の${XQN(NF.T, pos.side ^ 1)}をねらう形にならないの。`, `{x}では相手の${XQN(NF.T, pos.side ^ 1)}に手が届かないコン。`]));
       else if (NF.k === 'check') out.push(pk(['{x}だと王手にならないの。{m}の王手なら、相手は受けに手を使うことになるのに。', '{x}では王手がかからず、相手に自由に指されちゃう。']));
       if (out.length === n0 && F && /^rook/.test(FA.k) && !FA.cap && F.ty !== 5) out.push(pk(XQJ_OP.late));
@@ -4317,7 +4317,7 @@
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xe1-er1'), getJ('../xiangqi/openings.json?v=5'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xe1-er1'), getJ('../xiangqi/openings.json?v=6'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vf]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vf)(v); this.V = ((v.I18N || {})['ja@fox']) || {}; } catch (e) { this.V = {}; }   // (ショウギツネ's own lines, 3D, ja)
           return this; })
