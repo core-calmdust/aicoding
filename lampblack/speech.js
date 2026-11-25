@@ -77,6 +77,7 @@
       case 'callnone': return { by: e.by, kind: 'grief', text: say(S, story, e.by, 'callnone') };
       case 'reqok': return { by: e.by, kind: 'co', text: say(S, story, e.by, 'reqok', { target: N(e.target) }) };
       case 'reqno': return { by: e.by, kind: 'co', text: say(S, story, e.by, 'reqno_' + (e.why || 'trust'), { target: N(e.target) }) };
+      case 'guardself': return { by: e.by, kind: 'grief', text: say(S, story, e.by, 'guardself', {}) };
       case 'guardheard': return { by: e.by, kind: 'grief', text: say(S, story, e.by, 'guardheard', { target: N(e.target) }) };
     }
     return null;

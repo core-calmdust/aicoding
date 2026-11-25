@@ -512,7 +512,8 @@
     const R = S.req && S.req.guard;
     if (R && R.day === S.day && cand.some(p => p.id === R.target)) {
       // the guard weighs the request: do they trust the one who asked, and the one to be guarded?
-      const follow = .15 + .55 * (1 - A.p.you) * (1 - A.p[R.target]) + .15 * (g.persona.trust || .5);
+      // asking for yourself: the guard trusts it less, unless you have come forward with a role worth guarding
+      const follow = .15 + .55 * (1 - A.p.you) * (1 - A.p[R.target]) + .15 * (g.persona.trust || .5) + (R.target === 'you' ? (S.pl.co ? .1 : -.1) : 0);
       R.follow = rnd(S) < follow;
       if (R.follow) return R.target;
     }
@@ -1168,7 +1169,7 @@
   function askGuard(S, story, target) {
     S.req.guard = { target, day: S.day };
     const by = pick(S, alive(S).filter(p => !p.isPlayer && p.id !== target));
-    return by ? [{ t: 'guardheard', by: by.id, target }] : [];
+    return by ? [{ t: target === 'you' ? 'guardself' : 'guardheard', by: by.id, target }] : [];
   }
   // "everything you found or saw, say it now": each weighs it — the shy fear the eyes on them, those with a secret fear the questions
   function callEvidence(S, story) {
