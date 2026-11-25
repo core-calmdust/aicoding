@@ -39,8 +39,11 @@ for (const s of ST) { const key = s.ln.moves; if (!want.has(key) && !want.has(s.
         { const r1 = E(Q, 300), r2 = E(Q, 1500); if (r1[0][0] !== e2[0][0] || r2[0][0] !== e2[0][0] || Math.abs(r1[0][1]) > DEC || Math.abs(r2[0][1]) > DEC || r1[1][1] > r1[0][1] - GAP || r2[1][1] > r2[0][1] - GAP) { ST0.unstable++; continue; } }
         // (⑦ every wrong move has a reason on the board in リバガメ's words: a corner given, X / C, openness, the opponent's moves, the
         // flips or the moves left after the reply — not the 「数は近いけど」 line with no difference to show)
-        { const W = X.rvOpJa({ pos: Q, ans: String(X.rvSq(e2[0][0])), P: { rv: 'op', ev: e2 } }, 'x', 0, X.rvOpVoice('cur'), true);
-          if (lg.some(u => u !== X.rvSq(e2[0][0]) && /数は近い/.test(W.ng(u)))) { ST0.words++; continue; } }
+        // (2026-11-25: with the line's own name and voice, at every place 1〜5 it may be asked — the words vary with them, as the verifier reads them)
+        { const A = X.rvSq(e2[0][0]); let wb = false;
+          for (let j = 0; j < 5 && !wb; j++) { const W = X.rvOpJa({ pos: Q, kind: 'best', ans: String(A), P: { rv: 'op', ans: A, ev: e2 } }, String(s.ln.name.ja), j, X.rvOpVoice(key), true);
+            if (lg.some(u => u !== A && /数は近い/.test(String(W.ng(u))))) wb = true; }
+          if (wb) { ST0.words++; continue; } }
         const near = e2.filter(x => x[1] >= e2[0][1] - 4).length;
         cand.push({ pos: Q, via: path, k, dev: m, ply, best: e2[0][0], sc: e2, sc2: e1, d: near * 100 + lg.length }); }
     } }

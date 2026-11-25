@@ -899,5 +899,198 @@
     },
   };
 
-  root.WLScenes = { alps: ALPS, train: TRAIN, island: ISLAND, onsen: ONSEN, abbey: ABBEY };
+
+  /* ================= 霧笛座（霧の港の劇場） ================= */
+  const fogFar = r => P('M0,900L0,560C260,552 520,566 800,558C1080,550 1340,564 1600,556L1600,900Z') + P('M120,560L120,380L128,380L128,560Z M100,420L150,420L150,426L100,426Z M1380,556L1380,330L1388,330L1388,556Z M1350,380L1420,380L1420,386L1350,386Z M1460,556L1460,400L1466,400L1466,556Z') + P(circ(1240, 110, 30), 'moonc') + S('M180,160q70,-18 140,0q60,-14 110,6 M860,120q60,-16 120,0q50,-12 90,6', 3);
+  const hallFar = r => P('M0,900L0,0L1600,0L1600,900Z');
+  const boards = r => P('M0,900L0,756L1600,756L1600,900Z') + P(planks(0, 756, 1600, 140, 16) + (() => { let c = ''; for (let x = 60; x < 1600; x += 140 + r() * 60) c += rect(x, 760, 2, 120); return c; })(), 'cut');
+  const cobbles = r => { let c = ''; for (let y = 770; y < 900; y += 22) for (let x = (y / 22 % 2) * 30; x < 1600; x += 60) c += ell(x + 26, y + 8, 24, 8); return P('M0,900L0,756C400,750 800,762 1200,754C1400,750 1500,758 1600,754L1600,900Z') + P(c, 'cut'); };
+  // a gas lamp on a post: a glass globe and a cross-bar
+  function gasLamp(x, y, h) { return rect(x - 5, y - h, 10, h) + rect(x - 16, y - 10, 32, 10) + rect(x - 22, y - h - 6, 44, 6) + poly([[x - 14, y - h - 6], [x - 18, y - h - 44], [x + 18, y - h - 44], [x + 14, y - h - 6]]) + poly([[x - 22, y - h - 44], [x, y - h - 62], [x + 22, y - h - 44]]); }
+  const gasGlow = (x, y, h) => poly([[x - 10, y - h - 10], [x - 13, y - h - 40], [x + 13, y - h - 40], [x + 10, y - h - 10]]);
+  // a swag of curtain: gathered folds falling from a top bar
+  function drape(x, w, y0, y1, side) { let d = '', c = ''; d += `M${x},${y0}L${x + w},${y0}C${x + w - side * 10},${(y0 + y1) / 2} ${x + w - side * 40},${y1 - 80} ${x + (side > 0 ? w * .55 : w * .45)},${y1}L${x + (side > 0 ? 0 : w)},${y1}Z`; for (let i = 1; i < 5; i++) c += S(`M${x + w * i / 5},${y0 + 10}q${side * 6},${(y1 - y0) * .4} ${-side * 4},${(y1 - y0) * .8}`, 3, 'cut'); return { d, c }; }
+
+  const THEATER = {
+    stage: {
+      props: ['霧の港を描いた背景幕', '奥へ重なる袖の書き割り', '房のついた一文字幕', '吊りもののガス灯', '寄せた緞帳と房', '書き割りの支えと砂袋'],
+      far: hallFar,
+      mid(r) {
+        let d = '', c = '', g = '';
+        // the painted backdrop: a foggy harbour with a lighthouse and a ship, painted in paper on the cloth
+        d += rect(300, 200, 1000, 560);
+        c += 'M300,620C420,600 560,640 700,618C860,594 1000,640 1140,616C1220,604 1270,612 1300,608L1300,760L300,760Z';
+        c += rect(1110, 360, 34, 250) + poly([[1102, 360], [1127, 330], [1152, 360]]) + rect(1098, 610, 58, 10);
+        c += poly([[560, 600], [760, 600], [740, 630], [580, 630]]) + rect(640, 450, 6, 150) + poly([[650, 460], [720, 590], [650, 590]]) + poly([[636, 470], [586, 590], [636, 590]]);
+        g += poly([[1144, 380], [1290, 340], [1290, 400], [1144, 392]]) + rect(1114, 364, 26, 18);
+        c += S('M340,250q50,-16 100,0q40,-12 80,4 M900,240q60,-16 120,0 M460,300q30,-10 60,0', 4, 'cut');
+        c += 'M300,560L380,500L440,530L520,470L600,520L640,500L700,540L700,580L300,590Z' + 'M860,560L940,520L1010,546L1080,510L1080,580L860,584Z';
+        c += S('M330,660q40,-10 80,0 M470,690q50,-12 100,0 M820,670q40,-10 80,0 M960,700q50,-12 100,0 M1180,664q40,-10 80,0', 3, 'cut');
+        c += S('M820,330l14,-8l14,8 M870,300l12,-7l12,7 M480,380l10,-6l10,6', 3, 'cut');
+        d += rect(296, 196, 1008, 8) + rect(296, 756, 1008, 4);
+        // the wings: three flats a side, stepping inward, their edges cut like leaves of a stage forest
+        for (let i = 0; i < 3; i++) {
+          const L = 120 + i * 70, R = 1480 - i * 70, top = 120 + i * 30;
+          d += `M${L - 90},760L${L - 90},${top}L${L},${top}C${L + 20},${top + 90} ${L - 10},${top + 160} ${L + 14},${top + 240}C${L + 30},${top + 320} ${L - 4},${top + 420} ${L + 10},760Z`;
+          d += `M${R + 90},760L${R + 90},${top}L${R},${top}C${R - 20},${top + 90} ${R + 10},${top + 160} ${R - 14},${top + 240}C${R - 30},${top + 320} ${R + 4},${top + 420} ${R - 10},760Z`;
+          c += rect(L - 70, top + 40, 4, 600 - top) + rect(R + 66, top + 40, 4, 600 - top);
+          c += S(`M${L - 2},${top + 6}C${L + 16},${top + 92} ${L - 14},${top + 160} ${L + 8},${top + 240}C${L + 24},${top + 320} ${L - 10},${top + 420} ${L + 2},752`, 3, 'cut');
+          c += S(`M${R + 2},${top + 6}C${R - 16},${top + 92} ${R + 14},${top + 160} ${R - 8},${top + 240}C${R - 24},${top + 320} ${R + 10},${top + 420} ${R - 2},752`, 3, 'cut');
+          for (let k = 0; k < 4; k++) c += ell(L - 40 + (k % 2) * 16, top + 90 + k * 120, 14, 22) + ell(R + 40 - (k % 2) * 16, top + 150 + k * 120, 14, 22);
+        }
+        // the border across the top: a scalloped valance with tassels, and a batten of gas lamps under it
+        let v = 'M180,120L1420,120L1420,170'; for (let x = 1420; x > 180; x -= 62) v += `Q${x - 31},${212} ${x - 62},170`; d += v + 'Z';
+        for (let x = 211; x < 1420; x += 62) { d += rect(x - 1.5, 196, 3, 14); c += circ(x, 214, 5); }
+        d += rect(260, 236, 1080, 6); for (let x = 320; x < 1300; x += 120) { d += rect(x - 2, 242, 4, 20) + poly([[x - 12, 262], [x + 12, 262], [x + 8, 280], [x - 8, 280]]); g += ell(x, 286, 7, 9); }
+        return P(d) + P(g, 'glow') + P(c, 'cut');
+      },
+      near(r) {
+        let d = '', c = '', g = '';
+        // left (kept below the title): a ladder of the fly gallery, a sandbag on its line, a coil of rope
+        d += rect(80, 300, 10, 460) + rect(170, 300, 10, 460); for (let y = 330; y < 760; y += 52) d += rect(80, y, 100, 7);
+        d += rect(300, 0, 3, 520) + `M276,560Q276,526 301,522Q326,526 326,560L322,604Q301,616 280,604Z`; c += S('M284,574q17,8 34,0 M286,592q15,6 30,0', 2.4, 'cut');
+        d += ell(360, 744, 46, 16); c += ell(360, 744, 33, 10) + ell(360, 744, 18, 5);
+        // right: the house curtain gathered to the side, deep folds, a tie-back with a tassel
+        d += 'M1600,0L1340,0C1360,120 1400,230 1450,330C1420,400 1430,520 1470,620C1500,690 1530,730 1560,760L1600,760Z';
+        for (const x of [1380, 1420, 1460, 1500, 1540]) c += S(`M${x},10C${x + 10},120 ${x + 30},220 ${x + 50},${300 + (x - 1380) * .2}`, 3, 'cut');
+        c += S('M1470,360C1490,460 1500,560 1530,700 M1510,350C1520,460 1540,580 1570,700', 3, 'cut');
+        d += rect(1430, 322, 60, 12) + 'M1452,334L1468,334L1476,384L1444,384Z'; c += rect(1448, 352, 24, 3);
+        // the prompter's hood at the front edge, footlights glowing in their shells
+        d += 'M720,760L720,730Q800,692 880,730L880,760Z'; c += rect(760, 736, 80, 6);
+        for (let x = 470; x < 1150; x += 70) { if (x > 690 && x < 900) continue; d += 'M' + x + ',760L' + x + ',748Q' + (x + 15) + ',736 ' + (x + 30) + ',748L' + (x + 30) + ',760Z'; g += ell(x + 15, 742, 9, 5); }
+        return P(d) + P(g, 'glow') + P(c, 'cut') + boards(r);
+      },
+    },
+    trap: {
+      props: ['頭上の梁と根太', '大きな滑車と綱', 'せり台の枠', '小道具の箱の山', '吊るした狐の面', 'はしごとカンテラ'],
+      far: r => P('M0,900L0,0L1600,0L1600,900Z'),
+      mid(r) {
+        let d = '', c = '', g = '';
+        // the joists of the stage floor overhead, the posts that hold them
+        d += rect(0, 90, 1600, 40); for (let x = 20; x < 1600; x += 110) { d += rect(x, 130, 26, 36); c += rect(x + 4, 96, 18, 4); }
+        for (const x of [520, 1060]) { d += rect(x, 130, 34, 630); c += rect(x + 8, 160, 4, 580); }
+        // the lift: a frame with its platform, ropes up to a big spoked pulley
+        d += rect(620, 260, 16, 500) + rect(964, 260, 16, 500) + rect(610, 250, 380, 18) + rect(636, 600, 328, 22);
+        c += lattice(640, 620, 320, 140, 8, 1, 3) + bar(640, 270, 960, 600, 3) + bar(960, 270, 640, 600, 3);
+        const w = wheelSpoked(800, 200, 70, 8, 12); d += w.rim + w.spokes; c += w.hole;
+        d += rect(728, 200, 4, 400) + rect(868, 200, 4, 400);
+        return P(d) + P(g, 'glow') + P(c, 'cut');
+      },
+      near(r) {
+        let d = '', c = '', g = '';
+        // left: crates of old props stacked, a fox mask hanging from a nail
+        for (const [x, y, w, h] of [[40, 640, 160, 120], [210, 670, 120, 90], [70, 540, 120, 100], [220, 590, 90, 80]]) { d += rect(x, y, w, h); c += bar(x + 8, y + 8, x + w - 8, y + h - 8, 3) + rect(x + 6, y + h / 2, w - 12, 3); }
+        d += rect(150, 300, 3, 140) + 'M120,440L186,440L196,470Q154,540 112,470Z M120,440L110,410L136,432Z M186,440L196,410L170,432Z';
+        c += ell(138, 462, 7, 4) + ell(170, 462, 7, 4) + 'M150,490L158,490L154,498Z';
+        // right: a ladder going up, a lantern, a coil of rope on the floor
+        d += rect(1300, 120, 10, 640) + rect(1390, 120, 10, 640); for (let y = 160; y < 760; y += 56) d += rect(1300, y, 100, 8);
+        d += rect(1470, 330, 120, 6) + rect(1520, 336, 3, 40) + lantern(1522, 420, 1.2); g += lanternGlow(1522, 420, 1.2);
+        d += ell(1490, 744, 50, 16); c += ell(1490, 744, 36, 10) + ell(1490, 744, 20, 5);
+        return P(d) + P(g, 'glow') + P(c, 'cut') + boards(r);
+      },
+    },
+    green: {
+      props: ['電球に囲まれた鏡の列', '衣装の掛かった竿', '鏡台と白粉の壺', 'かつらの台', '衣装箱', '外套と帽子の掛け具'],
+      far: hallFar,
+      mid(r) {
+        let d = '', c = '', g = '';
+        // a long wall of mirrors ringed with bulbs, a shelf under them
+        d += rect(380, 200, 840, 300) + rect(370, 500, 860, 16);
+        for (let i = 0; i < 4; i++) { const x = 410 + i * 205; c += rect(x, 240, 160, 220); for (let k = 0; k < 6; k++) { g += circ(x - 10, 250 + k * 40, 7) + circ(x + 170, 250 + k * 40, 7); } }
+        // a rail of costumes hanging below the mirrors
+        d += rect(420, 560, 760, 8) + rect(420, 568, 8, 192) + rect(1172, 568, 8, 192);
+        for (let i = 0; i < 9; i++) { const x = 450 + i * 80; d += S(`M${x + 20},568l0,16`, 3) + poly([[x, 584], [x + 40, 584], [x + 50, 700 - (i % 3) * 30], [x - 10, 700 - (i % 3) * 30]]); c += rect(x + 18, 600, 4, 70 - (i % 3) * 30); }
+        return P(d) + P(g, 'glow') + P(c, 'cut');
+      },
+      near(r) {
+        let d = '', c = '', g = '';
+        // left: a dressing table with a round mirror, jars of powder, a wig on its stand
+        d += rect(60, 600, 260, 20) + rect(70, 620, 14, 140) + rect(296, 620, 14, 140) + rect(120, 620, 150, 60);
+        d += circ(190, 470, 90) + rect(182, 556, 16, 46); c += circ(190, 470, 74);
+        for (let i = 0; i < 3; i++) { d += rect(100 + i * 50, 570, 30, 30) + rect(96 + i * 50, 562, 38, 10); c += rect(104 + i * 50, 582, 22, 4); }
+        d += rect(350, 560, 8, 200) + rect(330, 750, 48, 10) + 'M320,560C320,500 390,500 390,560L384,600C372,580 336,580 326,600Z';
+        c += S('M334,540q20,-14 40,0 M330,560q24,-12 50,0', 2.4, 'cut');
+        // right: a coat stand with a cloak and a top hat, a costume trunk
+        d += rect(1340, 260, 10, 500) + rect(1310, 750, 70, 10) + rect(1300, 260, 90, 8);
+        d += 'M1310,268L1380,268L1400,520L1290,520Z' + rect(1386, 230, 40, 30) + rect(1376, 258, 60, 6);
+        c += rect(1340, 290, 10, 220) + bar(1300, 500, 1390, 500, 3);
+        d += rect(1440, 640, 150, 120) + 'M1440,640Q1515,590 1590,640Z';
+        c += rect(1450, 690, 130, 4) + rect(1508, 650, 14, 20) + rect(1460, 650, 4, 100) + rect(1566, 650, 4, 100);
+        return P(d) + P(g, 'glow') + P(c, 'cut') + boards(r);
+      },
+    },
+    quay: {
+      props: ['劇場の裏の煉瓦の壁', '楽屋口とガス灯', '霧の中の帆柱', '係船柱と綱', '霧笛のラッパ', '樽と木箱'],
+      far: fogFar,
+      mid(r) {
+        let d = '', c = '', g = '';
+        // the back of the theater: brick wall, a row of high windows, the stage door with its lamp and sign
+        const X = 560, W = 600;
+        d += rect(X, 240, W, 520) + poly([[X - 20, 244], [X + W / 2, 170], [X + W + 20, 244]]);
+        c += bricks(X, 250, W, 500, 40, 20);
+        for (let i = 0; i < 5; i++) { const x = X + 40 + i * 115; g += roundArch(x, 400, 60, 100); c += rect(x + 28, 300, 4, 100); }
+        g += rect(X + W / 2 - 50, 560, 100, 200); c += rect(X + W / 2 - 4, 560, 8, 200) + rect(X + W / 2 - 50, 640, 100, 6);
+        d += rect(X + W / 2 - 90, 500, 180, 40); c += rect(X + W / 2 - 80, 508, 160, 4) + rect(X + W / 2 - 80, 524, 160, 4);
+        d += rect(X + W / 2 + 80, 520, 6, 60) + lantern(X + W / 2 + 120, 600, 1); g += lanternGlow(X + W / 2 + 120, 600, 1);
+        return P(d) + P(g, 'glow') + P(c, 'cut');
+      },
+      near(r) {
+        let d = '', c = '', g = '';
+        // left: an iron bollard with a rope, crates and a barrel, a gas street lamp
+        d += 'M140,760L150,690Q150,670 170,670L210,670Q230,670 230,690L240,760Z' + rect(134, 664, 112, 14);
+        c += S('M152,700q40,20 80,0 M150,720q42,20 84,0', 4, 'cut');
+        d += S('M240,700Q320,740 400,720', 8);
+        for (const [x, y, w, h] of [[20, 650, 100, 110], [40, 560, 80, 90]]) { d += rect(x, y, w, h); c += bar(x + 6, y + 6, x + w - 6, y + h - 6, 3) + rect(x + 6, y + h / 2, w - 12, 3); }
+        d += barrel(300, 650, 80, 110); c += rect(306, 680, 68, 4) + rect(306, 726, 68, 4);
+        d += gasLamp(450, 760, 300); g += gasGlow(450, 760, 300);
+        // right: the foghorn hut on piles, its great horn pointing out to sea
+        d += rect(1300, 500, 220, 180) + poly([[1280, 504], [1410, 420], [1540, 504]]) + rect(1310, 680, 14, 80) + rect(1496, 680, 14, 80);
+        c += planks(1300, 500, 220, 180, 18) + rect(1360, 560, 50, 70);
+        d += 'M1520,560L1600,520L1600,640L1520,600Z' + rect(1500, 556, 24, 48);
+        return P(d) + P(g, 'glow') + P(c, 'cut') + cobbles(r);
+      },
+    },
+    box: {
+      props: ['馬蹄形に重なる桟敷の列', '遠くの舞台と緞帳', '水晶の下がるシャンデリア', '寄せたビロードの幕', '手すりの手すり子とオペラグラス', '金の背の椅子'],
+      far: hallFar,
+      mid(r) {
+        let d = '', c = '', g = '';
+        // the tiers of boxes, curving round the hall like a horseshoe, with little lit lamps between the boxes
+        for (const [y, sag] of [[300, 60], [450, 80], [600, 100]]) {
+          d += `M120,${y}Q800,${y + sag} 1480,${y}L1480,${y + 26}Q800,${y + sag + 26} 120,${y + 26}Z`;
+          d += `M120,${y + 26}Q800,${y + sag + 26} 1480,${y + 26}L1480,${y + 40}Q800,${y + sag + 40} 120,${y + 40}Z`;
+          for (let i = 0; i <= 10; i++) { const t = i / 10, x = 120 + t * 1360, yy = y + 26 + sag * 4 * t * (1 - t) * .5 * 2; c += rect(x - 3, yy + 2, 6, 10); if (i % 2) g += ell(x, yy - 70, 5, 7); }
+          for (let i = 0; i < 10; i++) { const t = (i + .5) / 10, x = 120 + t * 1360, yy = y - 110 + sag * 4 * t * (1 - t); c += roundArch(x - 40, yy + 110, 80, 96); }
+        }
+        // far below, the stage: a gold frame and the curtain, lit from the footlights
+        d += rect(560, 640, 480, 14) + rect(560, 654, 16, 106) + rect(1024, 654, 16, 106); g += rect(576, 654, 448, 106); c += S('M620,660q10,50 0,100 M700,660q10,50 0,100 M780,660q10,50 0,100 M860,660q10,50 0,100 M940,660q10,50 0,100', 3, 'cut');
+        // the chandelier: a chain, two rings of candles, hanging drops
+        d += rect(797, 0, 6, 60) + 'M690,96Q800,170 910,96L900,84Q800,150 700,84Z' + 'M730,140Q800,196 870,140L862,130Q800,178 738,130Z' + rect(780, 60, 40, 30);
+        for (let i = 0; i < 9; i++) { const x = 700 + i * 25; d += rect(x - 1.5, 70, 3, 18); g += ell(x, 64, 4, 7); c += circ(x, 114 + 14 * Math.sin(i / 8 * Math.PI), 3); }
+        for (let i = 0; i < 7; i++) { const x = 740 + i * 20; d += bar(x, 150, x, 176, 2); g += ell(x, 182, 3, 5); }
+        return P(d) + P(g, 'glow') + P(c, 'cut');
+      },
+      near(r) {
+        let d = '', c = '', g = '';
+        // our own box: the velvet rail across the front with its turned balusters (kept off the title, left and right)
+        d += rect(0, 640, 380, 22) + rect(0, 742, 380, 18) + rect(1220, 640, 380, 22) + rect(1220, 742, 380, 18);
+        for (let x = 10; x < 380; x += 32) d += rect(x + 4, 662, 8, 80) + ell(x + 8, 700, 10, 14);
+        for (let x = 1230; x < 1600; x += 32) d += rect(x + 4, 662, 8, 80) + ell(x + 8, 700, 10, 14);
+        c += rect(0, 646, 380, 3) + rect(1220, 646, 380, 3);
+        // a gilt chair with a carved back on the left, opera glasses on the right rail
+        // a theatre armchair: a rounded padded back, arms, a deep seat, turned legs
+        d += 'M216,600L216,500Q216,450 270,446Q324,450 324,500L324,600Z' + 'M196,560Q196,540 214,540L214,604L196,604Z M344,560Q344,540 326,540L326,604L344,604Z' + rect(196, 598, 148, 22) + rect(204, 620, 10, 20) + rect(326, 620, 10, 20);
+        c += 'M234,584L234,506Q234,472 270,468Q306,472 306,506L306,584Z' + rect(204, 606, 132, 3);
+        d += circ(270, 530, 4);
+        d += rect(1330, 620, 32, 20) + rect(1370, 620, 32, 20) + rect(1358, 626, 16, 6); c += circ(1346, 630, 6) + circ(1386, 630, 6);
+        // the curtain of the box, tied back on the right side
+        d += 'M1600,0L1420,0C1440,150 1470,280 1520,380C1490,450 1500,560 1530,640L1600,640Z';
+        for (const x of [1450, 1490, 1530, 1570]) c += S(`M${x},10C${x + 6},120 ${x + 20},240 ${x + 40},${340 + (x - 1450) * .2}`, 3, 'cut');
+        d += rect(1500, 372, 50, 10) + 'M1516,382L1530,382L1536,420L1510,420Z';
+        return P(d) + P(g, 'glow') + P(c, 'cut') + boards(r);
+      },
+    },
+  };
+
+  root.WLScenes = { alps: ALPS, train: TRAIN, island: ISLAND, onsen: ONSEN, abbey: ABBEY, theater: THEATER };
 })(typeof window !== 'undefined' ? window : globalThis);

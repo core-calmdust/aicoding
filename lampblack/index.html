@@ -106,6 +106,7 @@ body.show-names .pp .nm,.pp:hover .nm,.pp.speak .nm,.pp.sel .nm{opacity:1}
 body.anim-off .pp.idle .pup{animation:none}
 @keyframes breathe{0%,100%{rotate:-1.1deg;scale:1 1}30%{scale:1 1.014}50%{rotate:1.1deg;scale:1 1.006}80%{scale:1 1.016}}
 .pp.fallen .pup{transform:rotate(-86deg) translate(-30%,10%);filter:blur(.6px)}
+.pp.front.mid{bottom:calc(max(var(--backB,0px), 0px) * .4 + 3%);width:var(--pw,118px)}
 .pp.pp.fallen{bottom:calc(max(var(--backB,0px), 0px) + 9%)}   /* the dead lie a little way up the road, clear of the text */
 .pp.lift{bottom:120%!important;opacity:0;transition:bottom 1.6s cubic-bezier(.5,0,.6,1),opacity 1.6s}
 .pp.drop{transform:translateX(-50%) translateY(140%);opacity:0;transition:transform 1.2s cubic-bezier(.6,0,.8,.4),opacity 1.2s}
@@ -402,7 +403,6 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
   #scene{bottom:6px}
   #cast{bottom:10px;height:calc(100% - var(--hdH) - 24px)}
   #floor{display:none}
-  .pp{--pw:74px}
   #roster{top:calc(var(--hdH) + 6px);gap:5px 4px;width:calc(7 * 46px + 6 * 4px);max-width:calc(100% - 8px);flex-wrap:wrap;justify-content:center}
   .ro{width:46px;padding:4px 0 2px;border-width:1px}
   .ro .bust{width:34px;height:36px}
@@ -452,6 +452,82 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
   .stat{grid-template-columns:repeat(2,1fr)}
   .rank{font-size:90px}
 }
+.li.memo{cursor:pointer;border-radius:4px;transition:background .15s}
+.li.memo:hover{background:color-mix(in srgb,var(--ink) 5%,transparent)}
+.li.strike{opacity:.5;text-decoration:line-through;text-decoration-color:var(--acc);text-decoration-thickness:2px}
+.li.strike .src{text-decoration:line-through;text-decoration-color:var(--acc)}
+.memo-note{margin:16px 2px 6px;padding:10px 12px;border-top:1px dashed color-mix(in srgb,var(--ink) 25%,transparent);font-size:13px;line-height:1.7;color:var(--mute)}
+body.scr-play{-webkit-user-select:none;user-select:none}
+
+/* スマホ：全体を小さく、すっきり（2026-11-25） */
+@media (max-width:620px){
+  html{-webkit-text-size-adjust:100%}
+  #hb .logo{font-size:19px}
+  #hb .where{font-size:13.5px}
+  .ib{width:38px;height:38px}
+  .title-logo{font-size:60px}
+  .title-en{font-size:11px;letter-spacing:.5em}
+  .title-sub{font-size:13.5px;margin-bottom:22px}
+  .tmenu{width:min(280px,100%);gap:8px}
+  .tmenu .btn{min-height:44px;font-size:15px}
+  .scr{padding:58px 12px 24px}
+  .scrh{font-size:20px}
+  .scrp{font-size:13px;margin-bottom:14px}
+  /* the actions left: out of the header, a small pill at the stage's top-left (the header keeps its title and buttons) */
+  #hb .ap{position:fixed;top:calc(var(--hdH) + 6px);left:10px;z-index:6;padding:5px 10px;font-size:12.5px;gap:5px}
+  #hb .ap i{width:11px;height:15px}
+  /* the faces and the map in the text strip, under the words */
+  #rdock{margin:14px -4px 0;padding-top:12px;border-top:1px dashed rgba(27,18,12,.18)}
+  #rdock #roster{position:static;transform:none;margin:0 auto;width:auto;max-width:100%}
+  #rdock #rmap{position:static;transform:none;margin:14px auto 4px;width:100%}
+  body.has-roster #cast{height:calc(100% - var(--hdH) - 24px)}
+  /* the story cards: two to a row, a small picture, the title and the special role only */
+  .stories{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .sc{box-shadow:0 6px 18px rgba(0,0,0,.22)}
+  .sc:hover{transform:none}
+  .sc .ph{height:78px}
+  .sc .no{font-size:10.5px;left:7px;top:6px;padding:2px 6px;letter-spacing:.12em}
+  .sc .tx{padding:9px 10px 10px;gap:4px}
+  .sc h3{font-size:21px}
+  .sc h3 small{display:block;margin:3px 0 0;font-size:10px}
+  .sc .tg{font-size:12px;line-height:1.45}
+  .sc p{display:none}
+  .sc .mood{font-size:11px;line-height:1.45;letter-spacing:0}.sc .mood b{font-size:11.5px}
+  .sc .rec{font-size:11px}
+  /* the setup sheet */
+  .setup{padding:14px 12px}
+  .setup h3{font-size:12.5px;margin:2px 0 7px}
+  .tiles,.tiles.r5,.tiles.heroes{gap:6px;margin-bottom:12px}
+  .tiles.r5{grid-template-columns:repeat(3,1fr)}
+  .tile{padding:8px 9px;gap:2px}
+  .tile b{font-size:15px}
+  .tile span{font-size:11.5px;line-height:1.45}
+  .tile .cnt{font-size:11.5px}
+  .tile svg{width:22px;height:22px}
+  .feat{padding:6px 9px;column-gap:6px}.feat b{font-size:13px}.feat span{font-size:11.5px}.feat i{font-size:15px}
+  .promise{font-size:13.5px;line-height:1.65}.promise b{font-size:14px}
+  /* the text strip and the menus */
+  #tx .t,#tx.narr .t{font-size:15.5px;line-height:1.75;min-height:3.5em}
+  #tx .name{font-size:13.5px;margin-bottom:5px}
+  #tx .who{width:46px}
+  #tx .who .bust{width:40px;height:46px}
+  #tx .who b{font-size:12px}
+  #menu .q{font-size:14.5px;line-height:1.55}
+  #menu .q small{font-size:12px}
+  .btn{min-height:42px;padding:0 10px;font-size:13.5px;gap:6px}
+  .btn svg{width:17px;height:17px}
+  .btn small{font-size:11px}
+  .pb{width:54px}.pb .bust{width:36px;height:42px}.pb span{font-size:11px}
+  .loc{height:54px}.loc b{font-size:11.5px}.loc em{font-size:10px}
+  .pp .nm{font-size:11px;padding:2px 5px 3px}
+  /* the notebook */
+  .nh{font-size:12.5px;margin:12px 0 5px}
+  .li{font-size:13.5px;line-height:1.6}
+  .card{padding:8px 10px;margin-bottom:8px}
+  .chip{font-size:11.5px;padding:4px 6px}
+  #sheet .box{font-size:14px}
+  #sheet .box h3{font-size:17px}
+}
 </style>
 </head>
 <body class="scr-title">
@@ -489,7 +565,7 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 </section>
 
 <section class="scr hide" id="scrSelect">
-  <h2 class="scrh">幻灯の五幕</h2>
+  <h2 class="scrh">幻灯の六幕</h2>
   <p class="scrp">場所も、人も、狼のやり口も違う物語。どれから灯しますか。</p>
   <div class="stories" id="stories"></div>
   <div class="foot" style="width:min(1180px,100%);justify-content:flex-start;margin-top:18px"><button class="btn" id="selBack">もどる</button></div>
@@ -522,14 +598,14 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 
 <div id="sheet" class="hide" role="dialog" aria-modal="true"><div class="box" id="sheetBox"></div></div>
 
-<script src="engine.js?v=17"></script>
-<script src="voices.js?v=9"></script>
-<script src="speech.js?v=10"></script>
+<script src="engine.js?v=20"></script>
+<script src="voices.js?v=10"></script>
+<script src="speech.js?v=13"></script>
 <script src="art.js?v=2"></script>
-<script src="scenes.js?v=2"></script>
-<script src="scenes-pass.js?v=2"></script>
+<script src="scenes.js?v=4"></script>
+<script src="scenes-pass.js?v=4"></script>
 <script src="hero.js?v=2"></script>
-<script src="feats.js?v=3"></script>
+<script src="feats.js?v=4"></script>
 <script src="stories/kirigane.js?v=5"></script>
 <script src="stories/kirigane.tale.js?v=3"></script>
 <script src="stories/kirigane.who.js?v=2"></script>
@@ -550,7 +626,11 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 <script src="stories/shirane.tale.js?v=1"></script>
 <script src="stories/shirane.who.js?v=1"></script>
 <script src="stories/shirane.who.open.js?v=1"></script>
-<script src="sound.js?v=9"></script>
-<script src="game.js?v=39"></script>
+<script src="stories/kiteki.js?v=1"></script>
+<script src="stories/kiteki.tale.js?v=1"></script>
+<script src="stories/kiteki.who.js?v=1"></script>
+<script src="stories/kiteki.who.open.js?v=1"></script>
+<script src="sound.js?v=11"></script>
+<script src="game.js?v=52"></script>
 </body>
 </html>

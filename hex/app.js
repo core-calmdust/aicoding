@@ -1707,69 +1707,40 @@ async function pickDefenceBest(list) {
 }
 function pickAttack(list, left) { let best = null; for (const e of list) if (e.need > 0 && e.need <= left && (!best || e.need < best.need)) best = e; return best && best.m; }
 const pzReached = (Pz, pos) => pos.winner() === Pz.me;
-// ---- puzzles v2: a wrong move does not end the puzzle at once. The defender (the engine's best reply) answers and the
-// player may keep going until the puzzle's move count is used up; reaching the goal within it still counts (★★).
-// "Obvious mistake" (flagged at once; the move is taken back and the correct move shown):
-//   1. losing at once: after the move the opponent connects with its very next move;
-//   2. goal out of reach: the connection now needs more empty cells than the moves left.
-function pzBlunder(Pz, before, m, left) {
-  const after = before.clone().play(m);
-  if (after.winner()) return null;
-  if (after.winCells(3 - Pz.me).length) return 'lose';
-  if (after.need(Pz.me) > left - 1) return 'reach';
-  return null;
-}
 async function puzzleMove(m) {
+  // the 詰め rule (claude/game-conventions-addendum.md, 2026-11-25 担当A 追88): nothing is judged on the way; a move off the solution
+  // is not taken back and the right move is not shown — the defender answers (hex/pzwhy.js reply, the same reply as the 3D table)
+  // and the result says what is on the board (HexPzWhy.facts / T words); the solution only with 「答えを見る」
   const Pz = puzzle; Pz.busy = true; lessonMarks = [];
   if (Pz.goal === 'block') return blockMove(m);
-  const left = Pz.n - Pz.used, tok = busyToken;
+  const left = Pz.n - Pz.used, tok = busyToken, W = window.HexPzWhy, me = Pz.me;
   pzStatus(t('pz.checking'));
   const list = await mateReq(left);       // values of the position before the move
   if (!list || puzzle !== Pz || tok !== busyToken) return;
-  const before = posAt(cur).pos.clone();
   playMove2(m);
   Pz.used++;
   renderPuzzleCard();
   const e = list.find(x => x.m === m), dm = moveDur();
   if (pzReached(Pz, posAt(cur).pos)) { sConnect(dm); setTimeout(() => puzzleSolved(), dm + 300); return; }
-  const good = list.filter(x => x.need > 0 && x.need <= left).sort((a, b) => a.need - b.need);
-  const failBack = async html => {
-    Pz.state = 'fail'; Pz.busy = false; Pz.failed = true;
-    await sleep(dm + 300);
-    if (puzzle !== Pz) return;
-    moves = moves.slice(0, cur - 1); cur = moves.length; Pz.used--;
-    const p0 = posAt(cur).pos;
-    if (good[0]) markMove(p0, good[0].m, 'ok'); markMove(p0, m, 'ng');
-    update(false); playChime(false);
-    pzStatus(html); renderPuzzleCard();
-  };
   if (!e || !(e.need > 0) || e.need > left) {
-    if (left <= 1) {
-      await failBack(good.length ? `<b class="ng">${t('pz.fail')}</b> ${t('pz.failWhy', { m: mvIn(before, m), b: mvIn(before, good[0].m), n: Pz.n })}`
-        : `<b class="ng">${t('pz.fail')}</b> ${PZBook.t('outOfMoves', { n: Pz.n })}`);
-      return;
-    }
-    const why = pzBlunder(Pz, before, m, left);
-    if (why) { await failBack(`<b class="ng">${PZBook.t('blunder')}</b> ${t('pz.bl.' + why, { n: Pz.n, m: mvIn(before, m) })}${good.length ? ' ' + t('pz.best', { b: mvIn(before, good[0].m) }) : ''}`); return; }
-    // not the solution, but play on: the defender answers with the engine's best move
     Pz.failed = true; Pz.strayed = true; (Pz.bad = Pz.bad || []).push(Pz.used - 1);
     renderPuzzleCard();
-    pzStatus(t('pz.checking'));
-    const res = await request('ai', { type: 'think', moves: moves.slice(0, cur), level: 16 });
-    if (!res || puzzle !== Pz || tok !== busyToken) return;
-    await sleep(Math.max(0, dm + 250));
+    const mid = posAt(cur).pos.clone();
+    let after = null;
+    if (left > 1) {
+      const dl = await mateReq(left - 1, true);
+      if (!dl || puzzle !== Pz || tok !== busyToken) return;
+      const r = W.reply(mid, dl, me);
+      await sleep(dm + 250); if (puzzle !== Pz) return;
+      if (r != null) { playMove2(r); await sleep(dm); if (puzzle !== Pz) return; after = posAt(cur).pos.clone(); markMove(mid, r, 'ng'); }
+    } else await sleep(dm + 250);
     if (puzzle !== Pz) return;
-    if (res.move === undefined || res.move < 0) { Pz.state = 'fail'; Pz.busy = false; renderPuzzleCard(); pzStatus(`<b class="ng">${t('pz.fail')}</b> ${PZBook.t('outOfMoves', { n: Pz.n })}`); return; }
-    playMove2(res.move);
-    await sleep(dm);
-    if (puzzle !== Pz) return;
-    Pz.busy = false;
-    if (statusAt(cur).over) { Pz.state = 'fail'; playChime(false); renderPuzzleCard(); pzStatus(`<b class="ng">${t('pz.fail')}</b> ${PZBook.t('outOfMoves', { n: Pz.n })}`); return; }
-    renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay());
-    pzStatus(`<b class="ng">${t('pz.stray')}</b> ${PZBook.t('movesLeft', { n: Pz.n - Pz.used })}`);
+    const w = W.facts({ me, mid, after, left: left - 1 });
+    Pz.state = 'fail'; Pz.busy = false; update(false); renderFx(); playChime(false); renderPuzzleCard();
+    pzStatus(`<b class="ng">${t('pz.fail')}</b> ${W.text(LANG, w.k, w.v)} ${W.text(LANG, 'answer', { a: t('pz.answer') })}`);
     return;
   }
-  pzStatus(t('pz.good'));
+  pzStatus(t('pz.checking'));
   const dl = await mateReq(Pz.n - Pz.used, true);
   if (!dl || puzzle !== Pz || tok !== busyToken) return;
   await sleep(Math.max(0, dm + 250));
@@ -1784,27 +1755,26 @@ async function puzzleMove(m) {
   renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay());
   pzStatus(t('pz.yourMove', { n: Pz.n - Pz.used }));
 }
-// "stop the connection": one move; it must leave the opponent without a forced connection within k moves
+// "stop the connection": one move; it must leave the opponent without a forced connection within k moves. A wrong move stays on
+// the board: the opponent plays its quickest attack (hex/pzwhy.js attack, red) and the words say what it leaves (block)
 async function blockMove(m) {
-  const Pz = puzzle, tok = busyToken;
+  const Pz = puzzle, tok = busyToken, W = window.HexPzWhy;
   pzStatus(t('pz.checking'));
   const list = await mateReq(Pz.k, true);
   if (!list || puzzle !== Pz || tok !== busyToken) return;
-  const before = posAt(cur).pos.clone();
   playMove2(m); Pz.used = 1; renderPuzzleCard();
-  const e = list.find(x => x.m === m), good = list.filter(x => x.need === 0), dm = moveDur();
+  const e = list.find(x => x.m === m), dm = moveDur();
   await sleep(dm + 250); if (puzzle !== Pz) return;
   if (e && e.need === 0) { puzzleSolved(); return; }
-  Pz.state = 'fail'; Pz.busy = false; Pz.failed = true;
-  // show how the opponent connects after the wrong move, then go back
-  const att = await mateReq(Math.max(1, e && e.need > 0 ? e.need : Pz.k));
-  if (puzzle !== Pz) return;
-  const a = att && pickAttack(att, Pz.k + 1);
-  if (a != null && a >= 0) { playMove2(a); await sleep(dm + 500); if (puzzle !== Pz) return; }
-  moves = []; cur = 0; Pz.used = 0;
-  if (good[0]) markMove(before, good[0].m, 'ok'); markMove(before, m, 'ng');
-  update(false); playChime(false);
-  pzStatus(`<b class="ng">${t('pz.fail')}</b> ${t('pz.failBlock', { m: mvIn(before, m), b: good[0] ? mvIn(before, good[0].m) : '—', k: Pz.k, o: pname(3 - Pz.me) })}`);
+  Pz.failed = true; (Pz.bad = Pz.bad || []).push(0);
+  const j = e && e.need > 0 ? e.need : Pz.k;
+  const att = await mateReq(j);
+  if (!att || puzzle !== Pz || tok !== busyToken) return;
+  const a = W.attack(att, j), mid = posAt(cur).pos.clone();
+  let w = { k: 'bLine', v: { j: Math.max(1, j - 1) } };
+  if (a != null) { playMove2(a); await sleep(dm + 200); if (puzzle !== Pz) return; markMove(mid, a, 'ng'); w = W.block({ me: Pz.me, after: posAt(cur).pos, j: j - 1 }); }
+  Pz.state = 'fail'; Pz.busy = false; update(false); renderFx(); playChime(false);
+  pzStatus(`<b class="ng">${t('pz.fail')}</b> ${W.text(LANG, w.k, w.v)} ${W.text(LANG, 'answer', { a: t('pz.answer') })}`);
   renderPuzzleCard();
 }
 function playMove2(m) { moves = moves.slice(0, cur); moves.push(m); cur = moves.length; hintList = null; update(true); }
