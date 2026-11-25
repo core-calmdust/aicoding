@@ -16,7 +16,7 @@
 "lv.dan3": "3 dan",
 "lv.dan4": "4 dan",
 "lv.dan5": "5 dan",
-"lvd": ["New to Go", "Know the rules", "Regular players", "Strong players", "Strong players"],
+"lvd": ["New to Go","Know the rules","Regular players","Strong players","Strong players"],
 "u.pts": "{n} points",
 "u.pt": "{n} pts",
 "u.ro": "×",
@@ -377,5 +377,9 @@
 "lv.top4": "Strongest III",
 "lv.top5": "Strongest IV",
 "lvd.t": "All cores · {s} s/move",
-"lv.top6": "Strongest V"
+"lv.top6": "Strongest V",
+"op.goalOff": "Your opponent has left the joseki. What is the next move?",
+"op.whyOff": "After this deviation, {m} is the best move.",
+"op.hintOff": "Look at the move that left the joseki and find the point that became vital.",
+"ls.failedFar": "Not passed — try again!"
 }

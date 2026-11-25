@@ -16,7 +16,7 @@
 "lv.dan3": "3 dan",
 "lv.dan4": "4 dan",
 "lv.dan5": "5 dan",
-"lvd": ["Go'ya yeni başlayanlar", "Kuralları bilenler", "Düzenli oynayanlar", "Güçlü oyuncular", "Yüksek danlar"],
+"lvd": ["Go'ya yeni başlayanlar","Kuralları bilenler","Düzenli oynayanlar","Güçlü oyuncular","Yüksek danlar"],
 "u.pts": "{n} puan",
 "u.pt": "{n} puan",
 "u.ro": "×",
@@ -377,5 +377,9 @@
 "lv.top4": "En güçlü III",
 "lv.top5": "En güçlü IV",
 "lvd.t": "Tüm çekirdekler · hamle başı {s} sn",
-"lv.top6": "En güçlü V"
+"lv.top6": "En güçlü V",
+"op.goalOff": "Rakip josekiden ayrıldı. Sıradaki hamle ne?",
+"op.whyOff": "Bu sapmadan sonra en iyi hamle {m}.",
+"op.hintOff": "Josekiden ayrılan hamleye bak ve önemli hâle gelen noktayı bul.",
+"ls.failedFar": "Geçemediniz — tekrar deneyin!"
 }
