@@ -2692,8 +2692,12 @@ function chessOpenProblem(ctx, s, P, j, opt) {
     if (kA === 'pin' && !(FA.pin && (FA.pin[1] === 'キング' || X.CH_VAL[{ ポーン: 'p', ナイト: 'n', ビショップ: 'b', ルーク: 'r', クイーン: 'q', キング: 'k' }[FA.pin[1]]] > X.CH_VAL[FA.pc]))) a(`⑧ the pin of the answer wins nothing behind (${FA.pin})`);
     if (kA === 'castle' && !(A === (white ? 'e1g1' : 'e8g8') || A === (white ? 'e1c1' : 'e8c8'))) a('⑧ the answer is called castling'); }
   const steps = ((s.study && s.study.steps) || []).map(x => x[0]);
-  for (let i = 0; i < 5; i++) {
-    const CV = X.chOpVoice(s.id), intro = X.CHJ_OP.intro[s.id] || ''; CV.add(intro); CV.pts = chPts;
+  // 追90: the five places of the drill with the voice's own choices, then every candidate of every word list (pick forced to the
+  // k-th one from its start, k up to the longest list) — a line the voice may pick at some point must be right on this board too
+  let KF = 1;
+  for (let it = 0; it < 5 + KF; it++) {
+    const i = it < 5 ? it : (it - 5) % 5, CV = X.chOpVoice(s.id), intro = X.CHJ_OP.intro[s.id] || ''; CV.add(intro); CV.pts = chPts;
+    if (it >= 5) { const k = it - 5; CV.pick = (list, start) => { KF = Math.max(KF, list.length); return list[((start || 0) + k) % list.length]; }; }
     const notes = {}; Object.entries(X.CHJ_OP.notes[s.id] || {}).forEach(([k, v]) => { notes[k] = { ja: v }; }); X.chStepNotesJa(steps, notes, CV);
     let Q; try { Q = X.chOpJa({ pos: P.fen, kind: 'best', P, ans: A }, nm, CV, i); } catch (er) { a(`⑧ the 3D words fail: ${er.message}`); break; }
     const ask = plain(Q.ask); if (/\{|undefined|NaN/.test(ask) || !ask.includes(who) || /[白黒]の(番|一手|手番)/.test(ask.replace(who + 'の', '')) || (/『/.test(ask) && !ask.includes(`『${nm}』`))) a(`⑧ the question 「${ask}」`);
@@ -2730,7 +2734,7 @@ function chessOpenProblem(ctx, s, P, j, opt) {
       if (/まだ出ていない駒/.test(w)) { let home = 0; for (const c of ['b', 'c', 'f', 'g']) { const pp2 = pos.b[E.sqOf(c + (white ? '1' : '8'))]; if (pp2 && ((pp2 & 8) === 0) === white && [2, 3].includes(pp2 & 7)) home++; } if (!home) bad('every minor piece is out already'); }
     }
   }
-  return out;
+  return [...new Set(out)];
 }
 // ⑤ ⑥ of an opening's drill (picks: the other openings' drills, { id: [indices] })
 function chessOpenSet(ctx, s, drill, picks) {
