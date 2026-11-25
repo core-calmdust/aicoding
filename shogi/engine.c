@@ -2704,6 +2704,31 @@ EXPORT(nue_kinit) int nue_kinit(void) {
   return 1;
 }
 #endif
+#if defined(NUE_L1) && defined(NUE_KB) && NUE_MB > 1
+/* (2026-11-26) a NUES net (gtrain --ob 8 --l1 --l2; tools/nnue/prune.py) loaded by the page without a parser: the file is a
+   32-byte header (8 ints: nue_hdr(0..7) are this build's) and then the arrays below in this order, each in the engine's own
+   layout (little-endian int16 / int32), so the page copies the file's bytes after the header to nue_seg_ptr(i), nue_seg_len(i)
+   bytes each, i = 0, 1, ... until the length is 0, and calls nue_file_done() (1 = ready). No second copy of the net in memory. */
+EXPORT(nue_hdr) int nue_hdr(int i) { static const int h[8] = {0x5345554E, NUE_H, NUE_IN, NUE_KB, NUE_L1, NUE_L2, NUE_MI, NUE_NB}; return i >= 0 && i < 8 ? h[i] : 0; }
+static unsigned char *nueSeg(int i, int *len) {
+  if (i == 0) { *len = 84; return (unsigned char *)nueKMap; }
+  if (i == 1) { *len = NUE_IN * NUE_H * 2; return (unsigned char *)nueW1; }
+  if (i == 2) { *len = NUE_H * 4; return (unsigned char *)nueB1; }
+  if (i == 3) { *len = NUE_NB * 2 * NUE_H * 2; return (unsigned char *)nueW2; }
+  if (i == 4) { *len = NUE_NB * 4; return (unsigned char *)nueB2; }
+  i -= 5; const int k = i / 5; *len = 0; if (i < 0 || k >= NUE_MB) return 0;
+  switch (i % 5) {
+    case 0: *len = NUE_L1 * 2 * NUE_MI * 2; return (unsigned char *)(nueMA + k * NUE_L1 * 2 * NUE_MI);
+    case 1: *len = NUE_L1 * 4; return (unsigned char *)(nueMa + k * NUE_L1);
+    case 2: *len = NUE_L2 * NUE_L1 * 2; return (unsigned char *)(nueMB + k * NUE_L2 * NUE_L1);
+    case 3: *len = NUE_L2 * 4; return (unsigned char *)(nueMd + k * NUE_L2);
+    default: *len = NUE_L2 * 2; return (unsigned char *)(nueMC + k * NUE_L2);
+  }
+}
+EXPORT(nue_seg_ptr) unsigned char *nue_seg_ptr(int i) { int n; return nueSeg(i, &n); }
+EXPORT(nue_seg_len) int nue_seg_len(int i) { int n; nueSeg(i, &n); return n; }
+EXPORT(nue_file_done) int nue_file_done(void) { nue_mlp_init(); nue_set_nb(NUE_NB); return nue_kinit() ? 1 : 0; }
+#endif
 EXPORT(nue_enable) void nue_enable(int on) {
   nueOn = on;
   /* nueEval may sum in int32 when every lane total stays below 2^31: (NUE_H * 2 / 4) products of at most QA^2 * max|w2| */

@@ -9,7 +9,7 @@
   const KEY = 'wolflantern-save-v1', REC = 'wolflantern-rec-v1', PREF = 'wolflantern-pref-v1';
   const ORDER = ['kirigane', 'hokushin', 'tomoshibi', 'nekonaki', 'shirane', 'kiteki'];
   const DIFFN = ['入門', '標準', '上級', '悪夢'];
-  const DIFFT = ['はじめての夜に。', '嘘が増える。', '痕跡は少なく、物は罠になる。', '誰の言葉も信じきれない。'];
+  const DIFFT = ['はじめての夜に。', '嘘が増える。', '嘘つきが、ぼろを出さなくなる。', '嘘と罠ばかり。誰の言葉も信じきれない。'];
   // the card's line follows the story's real cast for that size (the wolves and the roles differ story by story)
   function diffDesc(s, i) {
     const R = E.setupOf(s, E.DIFF[i].size);
