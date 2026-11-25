@@ -72,6 +72,26 @@
     o.connect(f); f.connect(v); o2.connect(v2); v2.connect(v); v.connect(sfx);
     [o, o2, lfo].forEach(x => { x.start(t); x.stop(t + 3.2); });
   }
+  // the nekomata's cry: a long, rising yowl (two voices a little apart, through a throat-like filter), then a hiss
+  function cat(when) {
+    const a = ctx(); if (!a) return; const t = a.currentTime + (when || 0);
+    duck(t + 2.2, t);
+    const v = a.createGain(), f = a.createBiquadFilter(), f2 = a.createBiquadFilter(), lfo = a.createOscillator(), lg = a.createGain();
+    f.type = 'bandpass'; f.Q.value = 3.5; f.frequency.setValueAtTime(900, t); f.frequency.linearRampToValueAtTime(1700, t + .5); f.frequency.linearRampToValueAtTime(1100, t + 1.3);
+    f2.type = 'lowpass'; f2.frequency.value = 3200;
+    lfo.frequency.value = 6.5; lg.gain.value = 14; lfo.connect(lg);
+    [0, 7].forEach(dt => { const o = a.createOscillator(); o.type = 'sawtooth'; o.detune.value = dt;
+      o.frequency.setValueAtTime(420, t); o.frequency.linearRampToValueAtTime(760, t + .45); o.frequency.linearRampToValueAtTime(690, t + 1.0); o.frequency.exponentialRampToValueAtTime(380, t + 1.5);
+      lg.connect(o.frequency); o.connect(f); o.start(t); o.stop(t + 1.6); });
+    v.gain.setValueAtTime(0, t); v.gain.linearRampToValueAtTime(.16, t + .12); v.gain.linearRampToValueAtTime(.13, t + 1.0); v.gain.linearRampToValueAtTime(0, t + 1.55);
+    f.connect(f2); f2.connect(v); v.connect(sfx); lfo.start(t); lfo.stop(t + 1.6);
+    // the hiss, as the claws strike
+    const n = a.createBufferSource(), nf = a.createBiquadFilter(), ng = a.createGain(), b = a.createBuffer(1, a.sampleRate * .7, a.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    n.buffer = b; nf.type = 'highpass'; nf.frequency.value = 3000; const h = t + 1.7;
+    ng.gain.setValueAtTime(0, h); ng.gain.linearRampToValueAtTime(.09, h + .05); ng.gain.exponentialRampToValueAtTime(.001, h + .65);
+    n.connect(nf); nf.connect(ng); ng.connect(sfx); n.start(h); n.stop(h + .7);
+  }
   // an old wooden door, slowly opening: the wolf is coming (a recording only; silent until it loads)
   function door(when, vol) { const a = ctx(); if (!a) return; playSample('door', (vol || 1) * .45, a.currentTime + (when || 0)); }
   function windOn(level) {
@@ -152,5 +172,5 @@
   // the window lost focus: everything stops until it comes back
   function pause(p) { paused = !!p; if (!ac) return; if (paused) ac.suspend(); else if (on && !document.hidden) ac.resume(); }
   function set(v) { on = !!v; try { localStorage.setItem('wolflantern-snd', on ? '1' : '0'); } catch (e) {} if (!on) { windOff(); if (ac) ac.suspend(); } else if (ac) ac.resume(); }
-  root.WLSound = { pause, bell, howl, door, windOn, windOff, pluck, page, ok, thud, talk, music, set, setMusic, setTalk, get on() { return on; }, get musicOn() { return musicOn; }, get talkOn() { return talkOn; }, get bgmLevel() { return bgm ? bgm.gain.value : null; }, unlock: ctx };
+  root.WLSound = { pause, bell, howl, door, cat, windOn, windOff, pluck, page, ok, thud, talk, music, set, setMusic, setTalk, get on() { return on; }, get musicOn() { return musicOn; }, get talkOn() { return talkOn; }, get bgmLevel() { return bgm ? bgm.gain.value : null; }, unlock: ctx };
 })(window);

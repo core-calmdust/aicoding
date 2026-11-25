@@ -114,6 +114,10 @@
   function wolf() {
     return `<svg class="wolfsil" viewBox="0 0 300 170" aria-hidden="true"><path fill="currentColor" d="M10,66 C30,58 52,62 66,72 C96,60 140,54 172,58 C190,50 206,42 216,40 L220,20 L228,35 L235,22 L239,40 C251,46 267,56 289,68 C281,74 269,77 257,78 C251,84 241,92 231,96 C223,104 215,110 209,116 L215,164 L203,164 L196,124 C186,124 178,120 170,118 C150,120 130,120 116,116 L120,140 C121,150 118,158 112,164 L100,164 C104,158 106,150 104,142 L96,124 C90,124 84,128 80,134 L74,164 L62,164 L68,130 C62,118 60,106 62,96 C48,90 30,86 10,80 C3,76 3,70 10,66 Z"/><path d="M262,70 L270,72 L262,73 Z" fill="var(--paper,#efe3c8)" opacity=".5"/><circle cx="242" cy="52" r="2.4" class="eye"/></svg>`;
   }
+  // the nekomata: a sitting cat with a split tail, facing left (toward the wolf); its eyes burn
+  function cat() {
+    return `<svg class="catsil" viewBox="0 0 250 220" aria-hidden="true"><g fill="currentColor"><path d="M50,64 L42,18 L66,40 Q76,36 86,40 L100,18 L100,62 Q106,82 98,96 Q132,110 150,148 Q168,184 160,206 L50,208 Q40,198 52,190 L56,150 Q50,118 58,100 Q46,88 50,64 Z"/><path d="M58,206 L50,214 L74,214 L70,204 Z M104,206 L98,214 L122,214 L118,204 Z"/></g><g fill="none" stroke="currentColor" stroke-width="11" stroke-linecap="round"><path d="M152,198 Q196,184 190,134 Q186,104 204,88"/><path d="M150,204 Q210,204 216,152 Q220,122 240,112"/></g><path d="M56,62 Q62,57 68,62 Q62,66 56,62 Z M76,62 Q82,57 88,62 Q82,66 76,62 Z" class="eye"/><path d="M61,60 L62,64 M81,60 L82,64" stroke="#2a1600" stroke-width="1.4"/></svg>`;
+  }
   /* ---------- backdrops ---------- */
   const R = s => { let x = s; return () => (x = (x * 16807) % 2147483647) / 2147483647; };
   function ridge(r, y0, amp, step, w) { let d = `M0,900 L0,${y0}`; for (let x = 0; x <= w; x += step) d += ` L${x},${(y0 - amp * (r() * .9 + .1) * (Math.sin(x / 260) * .5 + .7)).toFixed(0)}`; return d + ` L${w},900 Z`; }
@@ -191,5 +195,5 @@
       <g class="near" fill="currentColor">${near}</g></g></svg>`;
   }
 
-  root.WLArt = { puppet, bust, wolf, scene, sceneNew, sceneHash, INK };
+  root.WLArt = { puppet, bust, wolf, cat, scene, sceneNew, sceneHash, INK };
 })(typeof window !== 'undefined' ? window : globalThis);
