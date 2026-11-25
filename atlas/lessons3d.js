@@ -2444,7 +2444,7 @@
     let h = shSeed('rv' + id); h = Math.imul(h ^ (h >>> 16), 0x45d9f3b) >>> 0; h = Math.imul(h ^ (h >>> 13), 0x45d9f3b) >>> 0; const seed = (h ^ (h >>> 16)) >>> 0;
     const O = RVJ_OP, pc = shPerm(seed, O.cheer.length), ps = shPerm((seed ^ 0x7f4a7c15) >>> 0, O.soft.length), pp = shPerm((seed ^ 0x51ed27f1) >>> 0, O.push.length);
     // (a wording is skipped while one of its sentences, or a 10-letter run of it already in two bubbles, has been said in this opening)
-    const cnt = {}, used = new Set(), gram = new Map(), sn = t => (String(t).replace(/<[^>]+>/g, '').match(/[^。！？]+[。！？]*/g) || []).map(x => x.trim()).filter(x => x.length >= 5);
+    const cnt = {}, used = new Set(), gram = new Map(), sn = t => (String(t).replace(/<[^>]+>/g, '').match(/[^。！？]+[。！？]*/g) || []).map(x => x.trim()).filter(x => x.length >= 5).flatMap(x => { const y = x.replace(/^[^、！]{1,5}(、|！ ?)/, '').trim(); return y !== x && y.length >= 8 ? [x, y] : [x]; });   // (2026-11-25 担当B: and the sentence without a short head 「1枚返して、」 — 「2枚返して、相手の打てるマスは9か所になる手。」 is the same line to the reader (闘牛・鼠))
     const gr = t => { const x = String(t).replace(/<[^>]+>/g, '').replace(/[\s、。！？!?「」（）()・…〜♪]/g, ''), g = new Set(); for (let k = 0; k + 10 <= x.length; k++) g.add(x.slice(k, k + 10)); return g; };
     const v = (key, arr) => { const c = cnt[key] = (cnt[key] || 0) + 1;
       for (let k = 0; k < arr.length; k++) { const t = arr[(seed + c - 1 + k) % arr.length], G = gr(t); if (sn(t).some(x => used.has(x)) || [...G].some(g => (gram.get(g) || 0) >= 2)) continue;
@@ -2551,7 +2551,7 @@
     const ng = u0 => {
       const u = pickWrong(+u0), out = [soft(i, u), v('lead', LEAD)]; if (u == null) return out.join('');
       const fu = F[u], near = Math.abs(fu.oM - fa.oM) <= 1 && Math.abs(fu.n - fa.n) <= 1, mA = off ? rvReplyMob(o.pos, A) : 0, mU = off ? rvReplyMob(o.pos, u) : 0;
-      if (off && fu.oC <= fa.oC && !(fu.x && !fa.x) && !(fu.cq && !fa.cq) && mU < mA) { out.push(v('nm', [`赤い枠だと、相手にうまく応じられたとき、きみの打てる場所は${mU}か所まで減っちゃう。緑の枠なら${mA}か所残るんだ。`, `相手のいちばんいやな応手のあと、打てる場所は赤い枠だと${mU}か所、緑の枠なら${mA}か所。赤い枠は自分の手が先に詰まっちゃうね。`, `赤い枠のあと、相手の応じ方しだいで、きみの打ち場所は${mU}か所だけ。緑の枠なら${mA}か所あって、手が詰まりにくいんだ。`])); return rvEnds(out.join(''), '!').t; }
+      if (off && fu.oC <= fa.oC && !(fu.x && !fa.x) && !(fu.cq && !fa.cq) && mU < mA) { out.push(v('nm', [`赤い枠だと、相手にうまく応じられたとき、きみの打てる場所は${mU}か所まで減っちゃう。緑の枠なら${mA}か所残るんだ。`, `相手のいちばんいやな応手のあと、打てる場所は赤い枠だと${mU}か所、緑の枠なら${mA}か所。赤い枠は自分の手が先に詰まっちゃうね。`, `赤い枠のあと、相手の応じ方しだいで、きみの打ち場所は${mU}か所だけ。緑の枠なら${mA}か所あって、手が詰まりにくいんだ。`, `赤い枠に打つと、相手のうまい応手で、きみの次の打ち場所は${mU}か所に減る。緑の枠なら${mA}か所。打てる場所が多いほうが、あとで楽なんだ。`, `緑の枠なら、相手がどう応じても、きみの打てる場所は少なくとも${mA}か所。赤い枠だと${mU}か所しか残らなくて、苦しい手を打たされやすいね。`])); return rvEnds(out.join(''), '!').t; }   // (2026-11-25 担当B: 5 wordings of nm — ベン・ハー asked it 4 times and said one twice)
       const N7 = off ? [`緑の枠は${fa.n}枚返して${O()}が${fa.oM}か所、赤い枠は${fu.n}枚で${fu.oM}か所。数は近いけど、相手のいちばんいやな応手のあとでも、緑の枠なら打てる場所が${mA}か所残るんだ。`, `どちらも数は近い手。でも緑の枠は、相手がどう応じても、きみの打てる場所が${mA}か所以上残る手なんだ。`] : [near ? `緑の枠は${fa.n}枚返して${O()}が${fa.oM}か所、赤い枠は${fu.n}枚で${fu.oM}か所。数は近くても、手順から外れると次の形が変わっちゃうんだ。` : fu.oM > fa.oM ? `緑の枠なら${O()}は${fa.oM}か所、赤い枠だと${fu.oM}か所。相手に選ぶ余地をあげちゃうからね。` : `赤い枠のほうが${O()}は少ない（${fu.oM}か所）けど、定石の手順から外れると、覚えた次の形が使えなくなるんだ。`, '赤い枠だと、定石で覚えたこの先の形にならないから、次の手を自分で考えることになるね。', fu.n !== fa.n ? `赤い枠は${fu.n}枚返し、緑の枠は${fa.n}枚返し。形が変わると、覚えた手順が使えなくなるからね。` : '返す枚数は同じでも、場所がちがえば形が変わる。覚えた手順が使えなくなるからね。', '赤い枠に打つと、この先は定石の外の形。そこからは手探りになっちゃう。'];
       if (fu.oC > fa.oC) out.push(v('n1', ['赤い枠だと、相手が隅に打てるようになっちゃう。隅は取られたら取り返せない場所なんだ。', '赤い枠では隅への道が開いて、相手に隅を取られちゃうね。', '赤い枠のあと、相手は隅に打てる。隅をあげると、辺までくずれていくからね。', '赤い枠に打つと、相手に隅への入り口ができる。隅の石は、もう二度と返らないんだ。', '赤い枠のあとは、空いた隅が相手の打ち場所に入っちゃう。隅をゆずるのは大きな損だよ。']));
       else if (fu.x && !fa.x) out.push(v('n2', ['赤い枠は隅のななめ隣（X）。あとで相手に隅を取られる足場になりやすいんだ。', 'Xに打つと、その隅を相手にねらわれやすくなるからね。', '隅のななめ隣（X）に打つと、相手が隅に入る足場ができちゃうからね。', '赤い枠は隅のななめ隣のXのマス。そこに石があると、相手が隅に打つきっかけを作っちゃう。', '隅のななめ隣（X）は、相手に隅をあげる入り口になりやすいマス。緑の枠ならその心配がないね。']));
@@ -2568,7 +2568,7 @@
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261125r1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=5').catch(() => ({}))])
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261125r1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=6').catch(() => ({}))])
         .then(([ls, op, ev, wt, opp]) => { this.WT = wt || {}; this.OPP = opp || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
