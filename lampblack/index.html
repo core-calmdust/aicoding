@@ -400,9 +400,11 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
   .ib{width:42px;height:42px}
   #stage{right:0}
   body.scr-play #stage{bottom:auto;height:var(--stageH,46vh);height:var(--stageH,46lvh)}
-  #scene{bottom:6px}
+  /* a phone: the backdrop on the upper part, the road below it; the front row on the near road, the back row at its far end */
+  #scene{bottom:26%}
+  #floor{top:calc(74% - 10px);bottom:0}
   #cast{bottom:10px;height:calc(100% - var(--hdH) - 24px)}
-  #floor{display:none}
+  .pp.back{bottom:21%}
   #roster{top:calc(var(--hdH) + 6px);gap:5px 4px;width:calc(7 * 46px + 6 * 4px);max-width:calc(100% - 8px);flex-wrap:wrap;justify-content:center}
   .ro{width:46px;padding:4px 0 2px;border-width:1px}
   .ro .bust{width:34px;height:36px}
@@ -665,6 +667,6 @@ body.scr-play{-webkit-user-select:none;user-select:none}
 <script src="stories/kiteki.who.js?v=1"></script>
 <script src="stories/kiteki.who.open.js?v=1"></script>
 <script src="sound.js?v=11"></script>
-<script src="game.js?v=52"></script>
+<script src="game.js?v=53"></script>
 </body>
 </html>
