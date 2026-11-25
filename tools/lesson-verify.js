@@ -3059,7 +3059,10 @@ function xiangqiOpen(opt) {
         { const flee = E.threats(p, opp).has(E.mFrom(P.best)) && !thA.has(E.mTo(P.best));   // 追41: the answer saves an attacked piece — the praise says so (and only then)
           if (flee && !/ねらわれ/.test(gd)) a(`追41 the answer moves an attacked piece away, the praise does not say so 「${gd}」`);
           if (!flee && /ねらわれていた|ねらわれた/.test(gd)) a(`追41 the praise says a piece was attacked 「${gd}」`); }
-        for (const u of legal) { if (A8.includes(u)) continue; const t0 = w.ng(u), t = t0.slice(Math.max(0, t0.indexOf('{x}'))), x = E.name(p, u), bad = m => a(`⑦ ${x}: ${m} 「${t0}」`);   // (t: the fact, from the sentence naming yours)
+        // 追90 (2026-11-25 担当B): every wording the voice can pick, not only the first — one voice hears the same wrong move 8 times
+        // (the lines it has said are used up, so the other wordings come out), each one checked against the board
+        const ngAll = u => { const S = new Set([w.ng(u)]), V2 = W.xqOpVoice(id); V2.pts = V.pts; const w2 = W.xqOpJa(E, P, nm, id.length * 2 + i, ck, V2, i); for (let r = 0; r < 8; r++) S.add(w2.ng(u)); return [...S]; };
+        for (const u of legal) { if (A8.includes(u)) continue; for (const t0 of ngAll(u)) { const t = t0.slice(Math.max(0, t0.indexOf('{x}'))), x = E.name(p, u), bad = m => a(`⑦ ${x}: ${m} 「${t0}」`);   // (t: the fact, from the sentence naming yours)
           { const e = soft53(t0, CU.points(P.sc, u), st.get(u) < -29000); if (e) bad(e); }
           if (/undefined|NaN|\{(?![mx]\})/.test(t0)) { bad('a placeholder'); continue; }
           if (!t0.includes('{x}')) bad('does not name the move');
@@ -3078,7 +3081,7 @@ function xiangqiOpen(opt) {
           if (am) { const v = VAL[nmJ(am[1])], aimsU = [...E.threats(qu, p.side)].filter(k => !E.threats(p, p.side).has(k)).map(k => VAL[E.typeOf(qu.at(k))]);
             if (!aimsA.includes(v) || Math.max(0, ...aimsU) >= Math.max(...aimsA)) bad('the answer attacks no such piece, or yours attacks as much'); }
           if (/王手にならない|王手がかからず/.test(t) && !(qa.inCheck() && !qu.inCheck())) bad('the check is not as said');
-        } }
+        } } }
     });
   }
   return out;
