@@ -268,7 +268,7 @@
     if (PCQ.matches) return;
     const d = $('dock');
     let h = d.classList.contains('hide') ? 0 : d.offsetHeight;
-    if (h && !$('tx').classList.contains('hide')) { h = Math.max(h, G.dockTextM || 0); G.dockTextM = h; } else G.dockTextM = 0;
+    if (h && !$('tx').classList.contains('hide')) { h = Math.max(h, G.dockTextM || 0); G.dockTextM = h; d.style.minHeight = h + 'px'; } else { G.dockTextM = 0; d.style.minHeight = ''; }   // the held height is the box's own, so no gap opens above it
     const sh = Math.max(Math.round(innerHeight * .46), innerHeight - h);
     if (G.stageHM !== sh) { G.stageHM = sh; document.documentElement.style.setProperty('--stageH', sh + 'px'); requestAnimationFrame(drawFloor); }
   }
