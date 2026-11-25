@@ -65,8 +65,9 @@
   const person = id => E.person(S, id);
   const live = () => E.alive(S).filter(p => !p.isPlayer);
   const fill = (t, o) => SP.fill(t, o);
+  const GUIDE_SVG = '<svg class="bust gd" viewBox="0 0 66 76"><g fill="#1b120c"><circle cx="33" cy="42" r="21"/><circle cx="17" cy="33" r="7"/><circle cx="49" cy="31" r="8"/><circle cx="25" cy="22" r="7"/><circle cx="41" cy="21" r="6"/><circle cx="14" cy="49" r="6"/><circle cx="52" cy="50" r="6"/><circle cx="33" cy="12" r="3"/><circle cx="44" cy="8" r="1.8"/><path d="M24 61l-3 9M42 61l3 9" stroke="#1b120c" stroke-width="3.2" stroke-linecap="round"/></g><ellipse cx="25.5" cy="40" rx="6.4" ry="7.4" fill="#fff6dc"/><ellipse cx="40.5" cy="40" rx="6.4" ry="7.4" fill="#fff6dc"/><circle cx="27" cy="41.5" r="3.3" fill="#1b120c"/><circle cx="42" cy="41.5" r="3.3" fill="#1b120c"/><circle cx="28.2" cy="40" r="1.1" fill="#fff"/><circle cx="43.2" cy="40" r="1.1" fill="#fff"/><path d="M29 51q4 3 8 0" stroke="#ffcf86" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="20" cy="49" r="2.3" fill="#c2412d" opacity=".55"/><circle cx="46" cy="49" r="2.3" fill="#c2412d" opacity=".55"/></svg>';
   function bust(id) { if (id === 'you') return '<svg class="bust" viewBox="30 0 66 76"><circle cx="60" cy="40" r="16" fill="currentColor" opacity=".18"/><path d="M42 74c2-10 10-14 18-14s16 4 18 14" fill="currentColor" opacity=".18"/></svg>'; const c = ch(id); return c ? ART.bust(c.look, c.color) : ''; }
-  function save() { if (!S) return; try { localStorage.setItem(KEY, JSON.stringify({ S, story: st.id, ui: { phase: S.phase } })); } catch (e) {} }
+  function save() { if (!S || G.tut) return; try { localStorage.setItem(KEY, JSON.stringify({ S, story: st.id, ui: { phase: S.phase } })); } catch (e) {} }
   function clearSave() { try { localStorage.removeItem(KEY); } catch (e) {} }
   function loadSave() { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { return null; } }
   const wait = ms => new Promise(r => setTimeout(r, pref.anim ? ms : Math.min(ms, 80)));
@@ -74,6 +75,7 @@
   /* ---------- screens ---------- */
   function scr(name) {
     G.scr = name;
+    if (!G.tut) { $('nbTut')?.remove(); document.querySelectorAll('.tut-hl').forEach(e => e.classList.remove('tut-hl')); }   // the tutorial's notes leave with it
     if (name !== 'play') { $('roster')?.classList.add('hide'); document.body.classList.remove('has-roster'); }
     for (const id of ['scrTitle', 'scrSelect', 'scrSetup']) $(id).classList.toggle('hide', id !== 'scr' + name[0].toUpperCase() + name.slice(1));
     document.body.className = document.body.className.replace(/\bscr-\w+/g, '').trim() + ' scr-' + name;
@@ -324,6 +326,8 @@
     if (it.fx) it.fx();
     const tx = $('tx'), who = tx.querySelector('.who'), nmEl = tx.querySelector('.name');
     const id = it.who;
+    tx.classList.toggle('guide', !!it.guide);
+    if (it.guide) { who.classList.remove('none'); who.innerHTML = GUIDE_SVG + `<b>${esc(it.guide === true ? 'すすけ' : it.guide)}</b>`; nmEl.innerHTML = it.task ? `<span class="task">${esc(it.task)}</span>` : ''; speakPup(null); tx.classList.remove('narr'); G.talkVo = { f: 520, wave: 'sine', mouth: 1.3, range: 3, glide: 2, vol: .55, len: .045 }; type(it.text); renderRoster(); SND.page(); return; }
     if (id && id !== 'you') { who.classList.remove('none'); who.innerHTML = bust(id) + `<b>${esc(nm(id))}</b>`; nmEl.textContent = ''; speakPup(id); }
     else if (id === 'you') { who.classList.add('none'); nmEl.textContent = st.hero.name; speakPup(null); }
     else { who.classList.add('none'); nmEl.textContent = it.title || ''; speakPup(null); }
@@ -397,7 +401,7 @@
   function pickPerson(title, sub, ids, o) {
     o = o || {};
     const off = o.off || {};
-    const btns = ids.map(id => off[id] ? `<button class="pb off" disabled>${bust(id)}<span>${esc(nm(id))}</span><small>${esc(off[id])}</small></button>` : `<button class="pb" data-id="${id}">${bust(id)}<span>${esc(nm(id))}</span>${o.mark ? `<i class="mk ${S.pl.notes[id] || ''}"></i>` : ''}</button>`).join('');
+    const btns = ids.map(id => off[id] ? `<button class="pb off" disabled>${bust(id)}<span>${esc(nm(id))}</span><small>${esc(off[id])}</small></button>` : `<button class="pb" data-id="${id}">${bust(id)}<span>${esc(nm(id))}</span>${o.cap && o.cap[id] ? `<small class="cap">${esc(o.cap[id])}</small>` : ''}${o.mark ? `<i class="mk ${S.pl.notes[id] || ''}"></i>` : ''}</button>`).join('');
     return sheet(`<button class="ib x" data-x aria-label="閉じる"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button><h3>${title}</h3>${sub ? `<p>${sub}</p>` : ''}<div class="grid-pick">${btns}</div><div class="foot"><button class="btn" data-x>もどる</button></div>`, box => {
       box.querySelectorAll('[data-x]').forEach(b => b.onclick = () => closeSheet(null));
       box.querySelectorAll('.pb:not(.off)').forEach(b => b.onclick = () => closeSheet(b.dataset.id));
@@ -449,7 +453,7 @@
     const R = $('roster'); if (!R) return;
     // on a phone the faces at the top are only needed in the meeting and the vote (the day's search lists the people below)
     const on = S && G.scr === 'play' && S.phase !== 'prologue' && S.phase !== 'end';
-    const faces = on && (PCQ.matches || S.phase === 'meeting' || S.phase === 'vote');   // the map shows all day long; the faces only in the meeting and the vote on a phone
+    const faces = on && (PCQ.matches || S.phase === 'meeting' || S.phase === 'vote' || !!S.tut);   // the tutorial points at the faces all day   // the map shows all day long; the faces only in the meeting and the vote on a phone
     R.classList.toggle('hide', !on); document.body.classList.toggle('has-roster', !!on);
     if ($('rmap')) $('rmap').classList.toggle('hide', !on);
     if ($('rdock')) $('rdock').classList.toggle('hide', !faces || PCQ.matches);
@@ -1325,7 +1329,7 @@
       });
       B.insertAdjacentHTML('beforeend', '<div class="memo-note">メモ：怪しいと思う痕跡や証言を押すと、打ち消し線を引ける。もう一度押すと消える。あなたのための印で、推理や結果は変わらない。</div>');
     }
-    B.querySelectorAll('.marks button').forEach(b => b.onclick = () => { const id = b.dataset.id, m = b.dataset.m; S.pl.notes[id] = S.pl.notes[id] === m ? '' : m; save(); renderNb(); renderRoster(); if (S.phase === 'invest') hub(); });
+    B.querySelectorAll('.marks button').forEach(b => b.onclick = () => { const id = b.dataset.id, m = b.dataset.m; S.pl.notes[id] = S.pl.notes[id] === m ? '' : m; save(); renderNb(); renderRoster(); if (S.phase === 'invest' && !G.tut) hub(); });
   }
   function nbPeople() {
     const D = E.DIFF[S.diff];
@@ -1415,12 +1419,12 @@
         savePref(); s.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
         document.body.classList.toggle('anim-off', !pref.anim); document.body.classList.toggle('show-names', !!pref.names);
       }));
-      const q = box.querySelector('[data-quit]'); if (q) q.onclick = () => { closeSheet(); save(); buildTitle(); };
+      const q = box.querySelector('[data-quit]'); if (q) q.onclick = () => { closeSheet(); save(); G.tut = false; buildTitle(); };
     });
   }
   $('btnHelp').onclick = () => showRules(false);
   $('btnOpt').onclick = showOpts;
-  $('hbLogo').onclick = e => { e.preventDefault(); if (G.scr === 'play') save(); buildTitle(); };
+  $('hbLogo').onclick = e => { e.preventDefault(); if (G.scr === 'play') save(); G.tut = false; buildTitle(); };
 
   /* ---------- resume ---------- */
   async function resume() {
@@ -1447,6 +1451,9 @@
   $('setGo').onclick = () => { SND.unlock(); start(); };
   addEventListener('resize', () => { if (G.scr === 'play') { if (!PCQ.matches) document.documentElement.style.setProperty('--nbW', '0px'); else if (document.body.classList.contains('nb-open')) document.documentElement.style.setProperty('--nbW', '400px'); layoutDock(); if (S) renderRoster(); } });
   PCQ.addEventListener?.('change', () => layoutDock());
+  const TUT = { G, $, esc, bust, wait, scr, palette, hud: null, setScene, setCast, say, sheet, closeSheet, pickPerson, pickOpt, wolfRun, renderRoster, setNb, renderNb, SND, ART, GUIDE_SVG,
+    get S() { return S; }, set S(v) { S = v; }, get st() { return st; }, set st(v) { st = v; sceneKey = null; }, title: () => { G.tut = false; S = null; buildTitle(); }, select: () => { G.tut = false; S = null; buildSelect(); } };
+  $('tTut').onclick = () => { SND.unlock(); G.tut = true; window.WLTutorial(TUT); };
   window.WLGame = { get S() { return S; }, get st() { return st; }, G, buildSelect, buildSetup, start, hub, meeting, debate, vote, night, end, setNb, resume, wolfRun };
   buildTitle();
 })();

@@ -61,7 +61,7 @@ function poolCheck(opt, ST, pool, add) {   // the verified lines: the 5 problems
       if (!lg.includes(A)) { a('① the answer is not legal'); return; }
       if (lg.length < 4) a(`③ ${lg.length} legal moves`);
       // ① ② the two stored searches (and again with --deep)
-      const evs = [['1.5 s', P.sc], ['0.3 s', P.sc2]]; if (opt.deep) for (let r = 1; r <= 2; r++) evs.push(['deep' + r + ' 1.5 s', eng()(P.pos, 1500)], ['deep' + r + ' 0.3 s', eng()(P.pos, 300)]); if (opt.deep) evs.push(['deep 5 s', eng()(P.pos, 5000)]);   // (追84: the timed searches sway — both of two re-reads must pass; 2026-11-25 担当B: and one deeper read, 5 s — 金田流 q3 had c6 and h4 equal there, ライトニングボルト q5 e7 within 0.6, りんご q3 f7 the best)
+      const evs = [['1.5 s', P.sc], ['0.3 s', P.sc2]]; const dp = opt.deep && (!opt.only || opt.only.has(id)); if (dp) for (let r = 1; r <= 2; r++) evs.push(['deep' + r + ' 1.5 s', eng()(P.pos, 1500)], ['deep' + r + ' 0.3 s', eng()(P.pos, 300)]); if (dp) evs.push(['deep 5 s', eng()(P.pos, 5000)]);   // (追84: the timed searches sway — both of two re-reads must pass; 2026-11-25 担当B: and one deeper read, 5 s — 金田流 q3 had c6 and h4 equal there, ライトニングボルト q5 e7 within 0.6, りんご q3 f7 the best)
       for (const [nm, e] of evs) { if (!e) { a(`① ${nm}: no values`); continue; } const v = new Map(e), best = Math.max(...e.map(x => x[1]));
         if (e.length !== lg.length || lg.some(q => !v.has(sqn(q)))) a(`① ${nm}: the values do not cover the legal moves`);
         if (v.get(P.best) < best) a(`① ${nm}: ${P.best} is not the best (${e[0][0]})`);
@@ -166,6 +166,6 @@ function reversiOpen(opt) {
   return out;
 }
 module.exports = reversiOpen; reversiOpen.steps = steps; reversiOpen.rx = rx; reversiOpen.eng = eng; reversiOpen.dist = dist; reversiOpen.pts = pts; reversiOpen.DONE = RVO_DONE;
-if (require.main === module) { const a = process.argv.slice(2), f = reversiOpen({ all: a.includes('--all'), deep: a.includes('--deep') });
+if (require.main === module) { const a = process.argv.slice(2), f = reversiOpen({ all: a.includes('--all'), deep: a.includes('--deep'), only: a.includes('--only') ? new Set(a[a.indexOf('--only') + 1].split(',')) : null });   // (--only k,…: the --deep rereads for those lines only, e.g. the ones just remade; every other check still runs on all lines — 2026-11-25 担当B)
   if (a.includes('--sum')) { const by = {}, pr = new Set(); f.forEach(x => { const k = x.msg.replace(/^(\S+).*/, '$1'); by[k] = by[k] || new Set(); by[k].add(x.step + ' ' + x.q); pr.add(x.step + ' ' + x.q); }); for (const k in by) console.log(k, by[k].size); console.log('problems failing', pr.size); }
   else f.forEach(x => console.log(`NG ${x.step} q${x.q}: ${x.msg}`)); }

@@ -2586,7 +2586,7 @@
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261125r3'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=8').catch(() => ({}))])
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261125r3'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=9').catch(() => ({}))])
         .then(([ls, op, ev, wt, opp]) => { this.WT = wt || {}; this.OPP = opp || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
@@ -3189,7 +3189,7 @@
     LKEY: 'aicoding-gomoku-lessons', OKEY: 'aicoding-gomoku-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261125g'), getJ('../gomoku/openings.json?v=20261125v4'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261125g'), getJ('../gomoku/openings.json?v=20261125v5'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] gomoku texts', e); } this.I = w.I18N || {}; this.data = { ls, op };
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
@@ -6449,7 +6449,7 @@
       endgame: ['それぞれの手のあと、相手がどう返すかまで数えてみて。', 'きみの列に残った種は、さいごにきみのものになるの。'],
       k_open: ['まずストアにぴったり届く穴をさがして！', 'もう一回のあとは、相手に「もう一回」をあげない手をね。'],
       k_open6: ['6粒なら、ストアからいちばん遠い穴がぴったりの数！', '相手の穴に1粒足すと、相手のぴったりがずれることもあるの。'],
-      k_combo: ['もう一回で穴を空けると、そこが横取りの着地点になるの。', '赤い丸は取れそうな相手の山。どの順番なら届くかな？'],
+      k_combo: ['もう一回で穴を空けると、そこが横取りの着地点になるの。', '赤い丸は取れそうな相手の山。どの順番なら届くかな？', 'まずは、さいごの1粒がストアに入る穴をさがしてみて。', 'まいたあとの空っぽの穴は、次の手の着地点になるの！', 'もう一回を何回つなげたら、どの山まで届く？'],   // (2026-11-26: five of its own — the group's 「向かいに大きな山がある空き穴」 speaks of a capture right now)
       k_tempo: ['相手の側に種が入らない手をさがしてみて。', 'きみの側の中だけで終わる、少ない種の穴はどれかな？'],
       k_hoard: ['ストアのとなりの山をまくと、何粒が相手の側へ行くか数えてみて。', '大きな山は、持っているだけで得点になることもあるの。'],
       k_starve: ['相手の側に種を落とさない手はどれかな？', '相手に種をわたすと、相手を助けることになっちゃう。'],
@@ -6517,6 +6517,7 @@
     cap: [(E, Q, R) => mcTurnCap(E, Q, R) > 0, (E, Q, R) => mcTurnCap(E, Q, R) >= 4, (E, Q, R) => mcTurnCap(E, Q, R) > 0],
     def: [(E, Q, R) => mcDef(E, Q, R).mv, (E, Q, R) => mcDef(E, Q, R).fill, (E, Q, R) => mcDef(E, Q, R).shift],
     end: [null, null, (E, Q, R) => mcReady(E, Q, R).length > 0],
+    keep: [null, (E, Q, R) => { const t = E.trace(Int8Array.from(Q.b), 0, Q.best, R); return Q.b[Q.best] <= 4 && !t.extra && !t.cap && t.events.filter(e => e.t === 'drop').every(e => e.at <= 5); }, null],   // (2026-11-26: 「少ない種で、手番だけわたす」 = the answer is a quiet move of 4 seeds or fewer)
   };
   const mcNear = (E, Q, R) => { const r = mcReady(E, Q, R); return r.length >= 1 && r.every(k => k <= Q.best); }, mcNear2 = (E, Q, R) => mcReady(E, Q, R).length >= 2 && mcNear(E, Q, R);
   const MCJ_HFIT = { extra: [null, mcNear2], chain: [mcNear, mcNear2] };   // (the lessons' own two hints: 「候補がいくつかあるなら…」「遠い穴を先にまくと…」 need two ready pits)
@@ -6525,6 +6526,7 @@
     extra: ['さいごの1粒がどこに落ちるか、指でなぞって確かめよう！', 'ストアまでの穴の数を、右から順に数えてみて。', 'まいたあと、手番がきみに残る穴はどこ？'],
     cap: ['相手の大きな山の向かいは、空いていない？', 'さいごの1粒が空の穴に入る手を探してみて。', '取れる粒の数を、穴ごとにくらべよう！'],
     def: ['相手の番に、どの穴の種がどこで止まるか追いかけてみて！', 'いちばん大きな山がねらわれていないか、先に確かめて。', '守ったあとに相手が取れる粒の数を、くらべてみよう。'],
+    keep: ['まく前に、さいごの1粒がどこで止まるか追ってみよう。', '相手の列に何粒わたるか、穴ごとにくらべてみて。', 'まいたあと、相手に横取りの穴ができないかも見てね。'],   // (2026-11-26)
     end: ['さいごまで数えて、いちばん多く残る手をえらんでね！', '相手の列が空になったら、残りの種はどうなる？', 'あと何手でおしまいか、先に数えておくといいの。'],
   };
   // why the red pit falls short — five wordings each (by the problem's number)
@@ -6548,6 +6550,7 @@
     diff: d => [`赤い丸の穴だと、さいごまで読むと差が${d}粒ちぢまるの。`, `赤い丸をまくと、おしまいの差が${d}粒へっちゃう。`, `赤い丸では、さいごに${d}粒ぶん損するの。`, `赤い丸の手だと、数えきったときの差が${d}粒少ないの。`, `赤い丸だと、おしまいまでに${d}粒もったいないの。`],
     oppMore: (b, w) => [`赤い丸の穴のあと、相手が次に取れる種が${b}粒になるの（金の丸なら${w}粒）。`, `赤い丸をまくと、相手の次のかせぎが${b}粒。金の丸なら${w}粒ですんだの。`, `赤い丸では、相手に${b}粒取れる形が残るの。金の丸なら${w}粒。`, `赤い丸の手だと、相手の次の番は${b}粒。金の丸より${b - w}粒多いの。`, `赤い丸だと、相手が次に${b}粒入れられるの。金の丸なら${w}粒だけ。`],
     toOpp2: c => [`赤い丸の穴だと、種が${c}粒、相手の列へ流れちゃう。`, `赤い丸をまくと、${c}粒が相手の側へ行くの。`, `赤い丸では、相手の列に${c}粒わたすことになるの。`, `赤い丸の手だと、相手の側に${c}粒落ちちゃう。`, `赤い丸だと、相手に${c}粒わたしちゃうの。`],
+    far: () => ['赤い丸の穴は、何手か先まで数えると金の丸よりずっと少なくなっちゃうの。', '赤い丸だと、この先のかせぎが金の丸より大きくへっちゃう。', '赤い丸をまくと、先の数え合いで金の丸に大きく引きはなされるの。', '赤い丸の手は、数手先で金の丸よりかなり種が少ないの。', '赤い丸からだと、先まで見て金の丸との差が大きく開くの。'],   // (2026-11-26: 5 seeds or more behind — never 「悪くない」「少し」)
     okish: () => ['赤い丸の穴も悪くないけど、金の丸のほうが、この先の種の入り方がいいの。', '赤い丸も一手だけど、何手か先の種の入り方で金の丸に少し負けるの。', '赤い丸でも戦えるけど、先まで数えると金の丸がちょっと多く入るの。', '赤い丸も考えられる手。でも、この先のかせぎは金の丸が上なの。', '赤い丸もわるくない手。先の数え合いで、金の丸がわずかに得なの。'],
     near: () => ['赤い丸の穴もいい線！ 金の丸とほとんど同じなの。', '赤い丸もほぼ互角の手！ 金の丸がほんの少しだけ上なの。', '赤い丸もかなりいい手！ 差はほんのちょっと。', '赤い丸でもほとんど変わらないの！ 金の丸がわずかに上。', '赤い丸もおしい！ 金の丸とほぼ同じ働きなの。'],
   };
@@ -6588,7 +6591,7 @@
       if (exact) return { t: v(W_.diff(n1(dv))), weak: true };
       if (G.oppBest > W.oppBest) return T(v(W_.oppMore(G.oppBest, W.oppBest)));
       if (G.toOpp > W.toOpp) return T(v(W_.toOpp2(G.toOpp)));
-      return { t: v(dv >= 1.5 ? W_.okish() : W_.near()), weak: true };   // (2026-11-22: never "the AI says")
+      return { t: v(dv >= 5 ? W_.far() : dv >= 1.5 ? W_.okish() : W_.near()), weak: true };   // (2026-11-22: never "the AI says")
     };
     const plus = (W, Q, side) => { const o = [], at = (k, x) => v(MCJ_PLUS[k][side](x));
       if (W.over && W.margin > 0) o.push(at('win'));
@@ -6634,7 +6637,7 @@
     LKEY: 'aicoding-mancala-v1-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../mancala/lessons.json?v=7'), Promise.all(['../mancala/i18n.js?v=20261107l15', '../mancala/i18n-learn.js?v=20261107l14'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mcEng().catch(() => null)])
+      return (this.p = Promise.all([getJ('../mancala/lessons.json?v=20261126km1'), Promise.all(['../mancala/i18n.js?v=20261107l15', '../mancala/i18n-learn.js?v=20261107l14'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mcEng().catch(() => null)])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] mancala texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
