@@ -4126,7 +4126,7 @@
       b_horse: ['馬の跳び先は、最大で8つ。順番に見ていこう！', '馬の足、つまり最初のまっすぐの点はふさがってない？', '「日」の字の反対の角が、馬の行き先だコン。', '跳んだ先の駒を、相手が取り返せないかも確かめてね。', '足がふさがった方向は、候補から外していいの。'],
       b_cannon: ['炮が取るときは、間にちょうど1つの駒が必要なの。', '炮台は敵の駒でも味方の駒でもいいんだコン。', '炮の筋に、駒が2つ並んでいるところはない？', '間に駒が0こや2こだと、炮は取れないね。', '取ったあと、取り返されないかも見てみて！'],
       b_pawn: ['兵は前に1つ。川を渡っていれば、横にも1つ動けるの。', '兵のすぐとなりと前に、相手の駒はいない？', '小さな兵で大きな駒を取れたら、大もうけだコン！', '兵は後ろの駒は取れないから、前と横だけ見ればいいね。', '取ったあとで、兵が取り返されないかも確かめて！'],
-      b_escape: ['ねらっている相手の駒の利きを、たどってみて。', '逃げた先が、相手の車や炮の筋にないか確かめるコン。', '逃げ先の候補を全部並べて、安全なのを選ぼう！', '馬の跳び先にも気をつけてね。', '相手の炮は、間に1つ駒があると取れるのを忘れずに！'],
+      b_escape: ['ねらっている相手の駒の利きを、たどってみて。', '逃げた先が、相手の車や炮の筋にないか確かめるコン。', '逃げ先の候補を全部並べて、安全なのを選ぼう！', '相手の車の筋は、端から端まで届くのを忘れずにね。', '相手の炮は、間に1つ駒があると取れるのを忘れずに！'],
       b_mate1: ['將が動ける点を、先に数えてみて。', '王手をかけたあと、將の逃げ先は残ってない？', '九宮の中だけ見れば、將の行き先は少ないの。', '王手の駒が取られないかも、確かめるコン。', '間に駒を入れて防がれない王手はどれ？'],
       t_capture: ['駒の値打ちの目安を思い出して、比べてみて！', '取り返されても、取った駒のほうが高ければ得なの。', '安い駒で高い駒を取れるところはない？', '取ったあとの交換まで、足し算と引き算だコン。', '守られている駒でも、取る値打ちがあることがあるの。'],
       t_fork: ['1手で2つの駒に届く点を探してみて。', '馬の両取りは、とくによく出てくるコン。', '相手の大きな駒どうしの、ちょうど間あたりがねらい目なの。', '動かした駒から、相手の駒が2つ見える？', '王手と駒取りを同時にかけるのも、両取りのひとつだね。'],
@@ -4214,8 +4214,12 @@
         : V(['{x}だと詰みを逃して、相手に粘られちゃう。', '{x}だと詰みまでの道すじが消えて、長引いちゃうの。', '{x}では將に息をつかせて、詰ませにくくなるの。', '{x}のあとは、すぐには詰まない形になっちゃう。', '{x}を指すと、せっかく追いつめた將がひと息ついちゃう。']);
       if (Q.lossy) { const c = NO(Q.cap), t = N(Q.ty); return V([`{x}で${c}を取っても、きみの${t}を取り返されて損しちゃう！`, `{x}は${c}を取れるけど、代わりに${t}を取られて差し引き損なの。`, `{x}だと${c}と引きかえに、もっと大きい${t}を失うの。`]); }
       if (FA.cap && Q.cap && XQV[Q.cap] < XQV[FA.cap] && !Q.hang.length) { const qc = NO(Q.cap), ac = NO(FA.cap); return V([`{x}で取れる${qc}より、${ac}のほうが大きい駒なの。`, `{x}の${qc}取りは、${ac}取りより得が小さいの。`, `{x}だと${qc}止まり。値打ちの高い${ac}が残っちゃう。`]); }
-      if (Q.hang.length && (FA.hang.length < Q.hang.length)) { const h = N(Q.hang[0]);
-        return Q.hang0.length && !Q.saved && (id === 'b_escape' || id === 't_defend') ? V([`{x}のあとも、ねらわれた${h}は取られたままなの。`, `{x}だと、${h}へのねらいが消えないの。`, `{x}では${h}が助からないね。`, `{x}を指しても、${h}はまだねらわれてるの。`, `{x}だと、${h}が次に取られちゃう。`])
+      if (Q.hang.length && (FA.hang.length < Q.hang.length)) {
+        // (2026-11-25 第2期 担当A b_escape) the piece that was chased, if it still is (where it stands after the move), comes first; when it
+        // got away but another piece of ours is chased now, that one is named in the plain wording (not 「ねらわれた X」)
+        const h0s = Q.hang0.length === 1 ? (E.mFrom(u) === Q.hang0[0] ? E.mTo(u) : Q.hang0[0]) : -1, still = h0s >= 0 && Q.hangSq.includes(h0s);
+        const h = N(still ? pos.at(Q.hang0[0]) & 7 : Q.hang[0]);
+        return Q.hang0.length && !Q.saved && (id === 'b_escape' || id === 't_defend') && (still || Q.hang0.length > 1) ? V([`{x}のあとも、ねらわれた${h}は取られたままなの。`, `{x}だと、${h}へのねらいが消えないの。`, `{x}では${h}が助からないね。`, `{x}を指しても、${h}はまだねらわれてるの。`, `{x}だと、${h}が次に取られちゃう。`])
           : V([`{x}だと、きみの${h}が取られちゃう。`, `{x}のあと、相手に${h}をねらわれるの。`, `{x}を指すと、${h}が取られる形が残るの。`, `{x}だと、${h}が相手の駒の利きに入っちゃう。`, `{x}では、${h}がただで取られそうなの。`]); }
       if (FA.cap && !Q.cap) { const ac = NO(FA.cap); return V([`{x}では駒を取れないね。取れる${ac}を見のがしちゃう。`, `{x}だと、せっかくの${ac}を取りそこねるの。`, `{x}は取る手じゃないから、${ac}がそのまま残るの。`, `{x}を指すと、${ac}を取るチャンスが消えちゃう。`, `{x}だと、${ac}に手が届かないの。`]); }
       if (FA.check && !Q.check && id === 't_check') return V(['{x}は王手じゃないから、相手に立て直す時間をあげちゃう。', '{x}だと王手にならず、相手に守りを固められるの。', '{x}では相手を忙しくできなくて、駒得のチャンスが消えるの。', '{x}のあと、相手は自由に1手指せるから、駒を逃がされちゃう。', 'その{x}だと、相手の手番をうばえないの。']);
@@ -4270,7 +4274,7 @@
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xm3'), getJ('../xiangqi/openings.json?v=5'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xe1'), getJ('../xiangqi/openings.json?v=5'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vf]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vf)(v); this.V = ((v.I18N || {})['ja@fox']) || {}; } catch (e) { this.V = {}; }   // (ショウギツネ's own lines, 3D, ja)
           return this; })
