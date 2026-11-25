@@ -28,12 +28,13 @@
   // the music steps back while a bell rings, and comes back when the last one fades
   let duckUntil = 0;
   const END = { gameover: 1, clear: 1 };
-  function duck(until) {
+  function duck(until, from) {
     if (!bgm || !ac) return;
     if (cur && END[cur.name]) return;   // the ending song plays on at full voice, howl or no howl
-    const now = ac.currentTime, back = Math.max(duckUntil, until);
+    const now = ac.currentTime, at = Math.max(now, from || now), back = Math.max(duckUntil, until);   // the music steps back when the sound starts, not before
     bgm.gain.cancelScheduledValues(now);
-    bgm.gain.setTargetAtTime(musicOn ? BGM * .18 : 0, now, .12);
+    if (at > now) bgm.gain.setValueAtTime(bgm.gain.value, now);
+    bgm.gain.setTargetAtTime(musicOn ? BGM * .18 : 0, at, .12);
     bgm.gain.setTargetAtTime(musicOn ? BGM : 0, back, .9);
     duckUntil = back;
   }
@@ -48,8 +49,8 @@
   function bell(vol, when) {
     const a = ctx(); if (!a) return; const t = a.currentTime + (when || 0);
     const d = playSample('bell', (vol || .5) * 1.3, t);   // the recording is loudness-matched (-18 LUFS): a bell sits above the music
-    if (d) { duck(t + d * .8); return; }
-    duck(t + 4.2);
+    if (d) { duck(t + d * .8, t); return; }
+    duck(t + 4.2, t);
     [[.56, 1], [.92, .7], [1.19, .55], [1.71, .35], [2.0, .3], [2.74, .2], [3.76, .12]].forEach(([r, g], i) => {
       const o = a.createOscillator(), v = a.createGain(); o.frequency.value = 196 * r * (i === 3 ? 1.013 : 1);
       v.gain.setValueAtTime(0, t); v.gain.linearRampToValueAtTime(g * (vol || .5) * .62, t + .01); v.gain.exponentialRampToValueAtTime(.0005, t + 4.5 - i * .35);
