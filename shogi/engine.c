@@ -2705,33 +2705,29 @@ EXPORT(nue_kinit) int nue_kinit(void) {
 }
 #endif
 #if defined(NUE_L1) && defined(NUE_KB) && NUE_MB > 1
-/* (2026-11-26) a NUES net (gtrain --ob 8 --l1 --l2; tools/nnue/prune.py) read by the engine itself: the page copies the
-   file's bytes to nue_file_ptr() and calls nue_file_load(length); 1 = loaded (the sizes are this build's), 0 = not this
-   build's net. One loader for every page (the game, the PRO page, the helpers share the memory). */
-#define NUE_FILE_MAX (116 + NUE_IN * NUE_H * 2 + NUE_H * 4 + NUE_NB * 2 * NUE_H * 2 + NUE_NB * 4 + NUE_MB * (NUE_L1 * 2 * NUE_MI * 2 + NUE_L1 * 4 + NUE_L2 * NUE_L1 * 2 + NUE_L2 * 4 + NUE_L2 * 2))
-static unsigned char nueFile[NUE_FILE_MAX] __attribute__((aligned(16)));
-EXPORT(nue_file_ptr) unsigned char *nue_file_ptr(void) { return nueFile; }
-EXPORT(nue_file_max) int nue_file_max(void) { return NUE_FILE_MAX; }
-static int nueRd32(const unsigned char *p) { return (int)((unsigned)p[0] | (unsigned)p[1] << 8 | (unsigned)p[2] << 16 | (unsigned)p[3] << 24); }
-static int nueRd16(const unsigned char *p) { return (i16)((unsigned)p[0] | (unsigned)p[1] << 8); }
-EXPORT(nue_file_load) int nue_file_load(int n) {
-  const unsigned char *p = nueFile;
-  if (n != NUE_FILE_MAX || nueRd32(p) != 0x5345554E || nueRd32(p + 4) != NUE_H || nueRd32(p + 8) != NUE_IN || nueRd32(p + 12) != NUE_KB || nueRd32(p + 16) != NUE_L1 || nueRd32(p + 20) != NUE_L2 || nueRd32(p + 24) != NUE_MI || nueRd32(p + 28) != NUE_NB) return 0;
-  p += 32; for (int i = 0; i < 84; i++) nueKMap[i] = (i8)p[i]; p += 84;
-  for (int i = 0; i < NUE_IN * NUE_H; i++, p += 2) nueW1[i] = (i16)nueRd16(p);
-  for (int i = 0; i < NUE_H; i++, p += 4) nueB1[i] = nueRd32(p);
-  for (int i = 0; i < NUE_NB * 2 * NUE_H; i++, p += 2) nueW2[i] = (i16)nueRd16(p);
-  for (int i = 0; i < NUE_NB; i++, p += 4) nueB2[i] = nueRd32(p);
-  for (int k = 0; k < NUE_MB; k++) {
-    for (int i = 0; i < NUE_L1 * 2 * NUE_MI; i++, p += 2) nueMA[k * NUE_L1 * 2 * NUE_MI + i] = (i16)nueRd16(p);
-    for (int i = 0; i < NUE_L1; i++, p += 4) nueMa[k * NUE_L1 + i] = nueRd32(p);
-    for (int i = 0; i < NUE_L2 * NUE_L1; i++, p += 2) nueMB[k * NUE_L2 * NUE_L1 + i] = (i16)nueRd16(p);
-    for (int i = 0; i < NUE_L2; i++, p += 4) nueMd[k * NUE_L2 + i] = nueRd32(p);
-    for (int i = 0; i < NUE_L2; i++, p += 2) nueMC[k * NUE_L2 + i] = (i16)nueRd16(p);
+/* (2026-11-26) a NUES net (gtrain --ob 8 --l1 --l2; tools/nnue/prune.py) loaded by the page without a parser: the file is a
+   32-byte header (8 ints: nue_hdr(0..7) are this build's) and then the arrays below in this order, each in the engine's own
+   layout (little-endian int16 / int32), so the page copies the file's bytes after the header to nue_seg_ptr(i), nue_seg_len(i)
+   bytes each, i = 0, 1, ... until the length is 0, and calls nue_file_done() (1 = ready). No second copy of the net in memory. */
+EXPORT(nue_hdr) int nue_hdr(int i) { static const int h[8] = {0x5345554E, NUE_H, NUE_IN, NUE_KB, NUE_L1, NUE_L2, NUE_MI, NUE_NB}; return i >= 0 && i < 8 ? h[i] : 0; }
+static unsigned char *nueSeg(int i, int *len) {
+  if (i == 0) { *len = 84; return (unsigned char *)nueKMap; }
+  if (i == 1) { *len = NUE_IN * NUE_H * 2; return (unsigned char *)nueW1; }
+  if (i == 2) { *len = NUE_H * 4; return (unsigned char *)nueB1; }
+  if (i == 3) { *len = NUE_NB * 2 * NUE_H * 2; return (unsigned char *)nueW2; }
+  if (i == 4) { *len = NUE_NB * 4; return (unsigned char *)nueB2; }
+  i -= 5; const int k = i / 5; *len = 0; if (i < 0 || k >= NUE_MB) return 0;
+  switch (i % 5) {
+    case 0: *len = NUE_L1 * 2 * NUE_MI * 2; return (unsigned char *)(nueMA + k * NUE_L1 * 2 * NUE_MI);
+    case 1: *len = NUE_L1 * 4; return (unsigned char *)(nueMa + k * NUE_L1);
+    case 2: *len = NUE_L2 * NUE_L1 * 2; return (unsigned char *)(nueMB + k * NUE_L2 * NUE_L1);
+    case 3: *len = NUE_L2 * 4; return (unsigned char *)(nueMd + k * NUE_L2);
+    default: *len = NUE_L2 * 2; return (unsigned char *)(nueMC + k * NUE_L2);
   }
-  nue_mlp_init(); nue_set_nb(NUE_NB);
-  return nue_kinit() ? 1 : 0;
 }
+EXPORT(nue_seg_ptr) unsigned char *nue_seg_ptr(int i) { int n; return nueSeg(i, &n); }
+EXPORT(nue_seg_len) int nue_seg_len(int i) { int n; nueSeg(i, &n); return n; }
+EXPORT(nue_file_done) int nue_file_done(void) { nue_mlp_init(); nue_set_nb(NUE_NB); return nue_kinit() ? 1 : 0; }
 #endif
 EXPORT(nue_enable) void nue_enable(int on) {
   nueOn = on;
