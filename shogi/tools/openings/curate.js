@@ -13,7 +13,7 @@ const fs = require('fs'), path = require('path');
 const DIR = path.join(__dirname, '../..');
 const E = require(path.join(DIR, 'engine.js'));
 const ids = (process.argv[2] || '').split(',').filter(Boolean);
-const OUT = path.join(__dirname, 'verified.json');
+const OUT = process.env.CUR_OUT || path.join(__dirname, 'verified.json');
 const START = 'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1';
 const PC = { P: 1, L: 2, N: 3, S: 4, B: 5, R: 6, G: 7, K: 8 };
 function compile(pat, mir) {

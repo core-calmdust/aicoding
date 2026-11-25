@@ -23,5 +23,55 @@
   "l2gk2nl/1r4g2/2np1sbpp/p1psppp2/1p5P1/2P1SPP2/PPBPP3P/2GS1R3/LNK1G2NL b - 1",
   "ln2k2nl/1r2g1gb1/3pss1pp/p1p1ppp2/1p7/2P1SPPP1/PPBPP3P/2GS1R3/LNK2G1NL b - 1",
   "ln2k2nl/1r2g1g2/4ssbpp/2ppppp2/pp5P1/2P1SPP2/PPBPP1N1P/2GS1R3/LNK1G3L b - 1"
+ ],
+ "chousoku": [
+  "lnsg1gsnl/2k1r4/pppp1pbpp/6p2/4p2P1/2P3P2/PP1PPPS1P/1B1K3R1/LNSG1G1NL b - 1",
+  "ln1g1gsnl/1r3k1b1/p1sppp1pp/2p3p2/1p2P4/2P6/PPBPSPPPP/4RK3/LN1G1GSNL w - 1",
+  "ln1g1g1nl/1r3skb1/p1sppp1p1/2p3p1p/1p2P4/2PS4P/PPBP1PPP1/4R1K2/LN1G1GSNL w - 1",
+  "lnsg3nl/2k1rsg2/1ppp1pbpp/6p2/p3p2P1/2P2SP2/PP1PPP2P/1BKSG2R1/LN1G3NL b - 1",
+  "lnsg1g1nl/2k1r4/1ppp1pbpp/p4sp2/4p2P1/2P2SP2/PP1PPP2P/1BKSG2R1/LN1G3NL b - 1",
+  "ln3g1nl/1r2gskb1/p2ppp1p1/2ps2p1p/1p2P4/2PS4P/PPBP1PPP1/4R1SK1/LN1G1G1NL w - 1"
+ ],
+ "direct": [
+  "lnsg1gsnl/5k3/ppp1pp1pp/6p2/2Pr5/9/PP2PPPPP/1R3K3/LNSG1GSNL b BPbp 1",
+  "ln1g1g1nl/1r1s1ks2/p1pppp1pp/6p2/1p7/2P6/PPNPPPPPP/1R4K2/L1SG1GSNL b Bb 1",
+  "ln1gkg1nl/1r5s1/p2spp1pp/2pp2p2/1p6P/2P6/PPSPPPPP1/1R3K3/LN1G1GSNL b Bb 1",
+  "lnsg1g1nl/3k1s1r1/1ppppp1pp/p5p2/7P1/P1P6/1P1PPPP1P/1SK2S1R1/LN1G1G1NL w Bb 1",
+  "lnsg2snl/3k3r1/1pppppgpp/p5p2/7P1/2P6/PPKPPPP1P/2G3SR1/LNS2G1NL w Bb 1",
+  "ln3gsnl/1r2gk3/p1pspp1pp/3p2p2/1p6P/2PP5/PPG1PPPP1/1R3K3/LNS2GSNL b Bb 1",
+  "lnsg1g1nl/2k4r1/1pppppspp/p5p2/9/P1P2PPP1/1P1PPS2P/1S1K3R1/LN1G1G1NL w Bb 1",
+  "lnsg1g1nl/2k4r1/1pppppspp/6p2/p6P1/2P2PP2/PP1PPS2P/1S1KG2R1/LN1G3NL w Bb 1",
+  "ln1g3nl/1ks1g2r1/1pppppspp/6p2/p6P1/1PP2PP2/P2PPSN1P/1SK1G2R1/LN1G4L w Bb 1"
+ ],
+ "gokigen": [
+  "ln1g1k1nl/1r1s1sgb1/pppppp1p1/6p1p/4P4/2P5P/PP1P1PPP1/1B2RK3/LNSG1GSNL b - 1",
+  "lnsg1gsnl/3kr2b1/pppp1p2p/6pR1/4p4/2P6/PP1PPPP1P/1B1K1S3/LNSG1G1NL w Pp 1",
+  "ln1g1g1nl/1r1s1skb1/p1pppp1pp/1p4p2/4P4/2P6/PP1P1PPPP/1B2R1K2/LNSG1GSNL b - 1",
+  "ln1g1k1nl/1r1s2gb1/ppppppspp/6p2/4P4/2P6/PP1P1PPPP/1B2R1K2/LNSG1GSNL b - 1",
+  "ln1g1g1nl/1r1s1skb1/p1pp1p1p1/1p2p1p1p/4P4/2P5P/PP1P1PPP1/1B1SR1K2/LN1G1GSNL b - 1",
+  "ln1g1ksnl/1r1s3b1/pppppp1p1/5gp1p/4P4/2P5P/PP1P1PPP1/1B1SRK3/LN1G1GSNL b - 1",
+  "ln3gsnl/1r1sg1kb1/p1pppp1p1/1p4p1p/4P4/2P5P/PP1P1PPP1/1B2R1K2/LNSG1GSNL b - 1"
+ ],
+ "koshikake": [
+  "lr5nl/3g1kg2/2nsppsp1/p1p3p1p/1p1p3P1/P1P1SPP1P/1PSPP1N2/2G1G2R1/LNK5L b Bb 1",
+  "lr5nl/4gkg2/2nsppsp1/p1pp2p2/1p5Pp/P1PPSPP2/1PS1P1N1P/2G1G2R1/LNK5L b Bb 1",
+  "l6nl/1r1g1kg2/2nsppsp1/p1pp2p1p/1p5P1/P1P1SPP2/1PSPP1N1P/2GKG2R1/LN6L b Bb 1",
+  "lr5nl/3g1kg2/2n1ppsp1/p1pps1p1p/1p5P1/P1PPSPP2/1PS1P1N1P/2G1G2R1/LNK5L b Bb 1",
+  "l5knl/1r2g1g2/p1n1p1sp1/2ppspp1p/Pp5P1/2P2PP1P/1PSPPSN2/2GK1G3/LN5RL w Bb 1"
+ ],
+ "sanken": [
+  "lnsg1gsnl/2k3r2/ppppp1bpp/5pp2/7P1/2P6/PPBPPPP1P/2K2S1R1/LNSG1G1NL w - 1",
+  "lnsg1g1nl/3k1sr2/ppppp1bpp/5pp2/7P1/2P6/PP1PPPP1P/1BK1GS1R1/LNSG3NL w - 1",
+  "ln1g1gsnl/1r1s2kb1/p1pp1p1pp/4p1p2/1p6P/2PP5/PPB1PPPP1/2RS5/LN1GKGSNL b - 1",
+  "ln3gsnl/1r1sg1k2/p1pp1pbpp/4p1p2/1p6P/2PP5/PPBSPPPP1/2R3S2/LN1GKG1NL b - 1",
+  "lnsg1gsnl/3k2r2/1pppp1bpp/p4pp2/7P1/P1P6/1P1PPPP1P/1BK2S1R1/LNSG1G1NL w - 1",
+  "ln1g1gsnl/1r1s2kb1/p1pppp1pp/6p2/1p7/2PP5/PPB1PPPPP/2RS1K3/LN1G1GSNL b - 1"
+ ],
+ "yoko85": [
+  "lnsgk2nl/6gs1/p1ppppb1p/9/1r7/2P4R1/PP1PPPP1P/1BG6/LNS1KGSNL w 2P2p 1",
+  "lnsgk1snl/6gb1/p1pppp1pp/1r4p2/7R1/9/P1BPPPP1P/1SGK5/LN3GSNL b 2P2p 1",
+  "ln1gk1snl/3r2gb1/p1p1pp1pp/2sp2p2/1p5R1/2PP5/PPB1PPP1P/1SG1G4/LN2K1SNL b P 1",
+  "lnsgk1snl/6g2/p1ppppb1p/6R2/1r7/2P3P2/P2PPP2P/1BGK5/LNS2GSNL w 3P2p 1",
+  "ln1g2snl/2s2kg2/p3ppb1p/2pp3p1/1r7/P5P1R/1PPPPPN1P/1BGK2S2/LNS2G2L w 2Pp 1"
  ]
 }

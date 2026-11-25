@@ -17,6 +17,7 @@ const shown = []; ST.forEach(s => { for (let k = 0; k <= s.mv.length; k++) shown
 const LS = JSON.parse(fs.readFileSync(path.join(ROOT, 'reversi/lessons.json'), 'utf8')), PZ = JSON.parse(fs.readFileSync(path.join(ROOT, 'reversi/puzzles.json'), 'utf8'));
 LS.lessons.forEach(l => { l.problems.forEach(p => shown.push(String(p.cells))); (l.warm || []).forEach(w => shown.push(String(w.cells))); });
 (PZ.levels || []).forEach(lv => lv.puzzles.forEach(p => shown.push(String(p.cells))));
+(process.env.OP_SKIP || '').split(',').filter(Boolean).forEach(z => shown.push(z.split(':')[0]));   // (2026-11-25 担当B: boards the checker's --deep failed, to leave out on a rerun)
 const ST0 = { n: 0, near: 0, few: 0, unstable: 0, decided: 0, gap: 0, words: 0 }, kept = []; for (const k in res) if (!want.has(k)) res[k].forEach(p => kept.push(p.pos.split(':')[0]));
 for (const s of ST) { const key = s.ln.moves; if (!want.has(key) && !want.has(s.set.id)) continue;
   const parent = ST.filter(x => x.ln.moves.length < key.length && key.startsWith(x.ln.moves)).reduce((a, x) => !a || x.ln.moves.length > a.length ? x.ln.moves : a, '');
@@ -36,8 +37,8 @@ for (const s of ST) { const key = s.ln.moves; if (!want.has(key) && !want.has(s.
         const e1 = E(Q, 300), e2 = E(Q, 1500); if (e1[0][0] !== e2[0][0]) { ST0.unstable++; continue; }
         if (Math.abs(e2[0][1]) > DEC || Math.abs(e1[0][1]) > DEC) { ST0.decided++; continue; } if (e1[1][1] > e1[0][1] - GAP || e2[1][1] > e2[0][1] - GAP) { ST0.gap++; continue; }
         // (追26: the searches are timed — read both again from a cleared table, as the checker's --deep does, and keep only when the second reads agree)
-        // (2026-11-25 担当B: three times over — ノーカン q4 passed one reread and then failed the checker's --deep (a3 within 0.5 of d1 at 0.3 s))
-        let rr = false; for (let t = 0; t < 3 && !rr; t++) { const r1 = E(Q, 300), r2 = E(Q, 1500); if (r1[0][0] !== e2[0][0] || r2[0][0] !== e2[0][0] || Math.abs(r1[0][1]) > DEC || Math.abs(r2[0][1]) > DEC || r1[1][1] > r1[0][1] - GAP || r2[1][1] > r2[0][1] - GAP) rr = true; } if (rr) { ST0.unstable++; continue; }
+        // (2026-11-25 担当B: five times over from 12:50 — 谷田 q3 passed three and the checker's --deep then read c6 within 0.4; three times over — ノーカン q4 passed one reread and then failed the checker's --deep (a3 within 0.5 of d1 at 0.3 s))
+        let rr = false; for (let t = 0; t < 5 && !rr; t++) { const r1 = E(Q, 300), r2 = E(Q, 1500); if (r1[0][0] !== e2[0][0] || r2[0][0] !== e2[0][0] || Math.abs(r1[0][1]) > DEC || Math.abs(r2[0][1]) > DEC || r1[1][1] > r1[0][1] - GAP || r2[1][1] > r2[0][1] - GAP) rr = true; } if (rr) { ST0.unstable++; continue; }
         // (⑦ every wrong move has a reason on the board in リバガメ's words: a corner given, X / C, openness, the opponent's moves, the
         // flips or the moves left after the reply — not the 「数は近いけど」 line with no difference to show)
         // (2026-11-25: with the line's own name and voice, at every place 1〜5 it may be asked — the words vary with them, as the verifier reads them)

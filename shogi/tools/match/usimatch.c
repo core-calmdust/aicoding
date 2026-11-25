@@ -187,6 +187,28 @@ int main(int argc, char **argv) {
   nue_enable(1);
   { const char *ps = getenv("PARAMS"); int k, v, q; while (ps && sscanf(ps, "%d=%d%n", &k, &v, &q) == 2) { set_param(k, v); ps += q; if (*ps == ',') ps++; } }   /* PARAMS="44=1,45=1": search parameters of our side, in every mode */
 #ifdef SEARCH_STATS
+  if (!strcmp(argv[2], "stat2")) {   /* usimatch <net> stat2 <nodes> <file of move lists>: moves searched a node, by node type and depth (to set beside the same count in another engine) */
+    int lim = atoi(argv[3]); FILE *f = fopen(argv[4], "r"); char ln[4096]; if (!f) return 1;
+    while (fgets(ln, sizeof ln, f)) {
+      setStart(); nh = 0; char *p = ln, tok[16]; int q;
+      while (sscanf(p, " %15s%n", tok, &q) == 1) { p += q; int m = fromUsi(tok); if (!m) break; hist[nh++] = m; play_move(m); }
+      tt_clear(); reset_search(); replay(); root_search(0, 0, lim);
+    }
+    const char *nm[3] = {"PV ", "cut", "all"};
+    for (int t = 0; t < 3; t++) { long long n = 0, m = 0; for (int d = 0; d < 16; d++) { n += stNd[t][d]; m += stMv[t][d]; }
+      printf("%s nodes %lld moves %lld (%.1f a node) |", nm[t], n, m, n ? (double)m / n : 0);
+      for (int d = 1; d < 16; d += 2) { long long a = stNd[t][d] + (d < 15 ? stNd[t][d + 1] : 0), b = stMv[t][d] + (d < 15 ? stMv[t][d + 1] : 0), l = stLr[t][d] + (d < 15 ? stLr[t][d + 1] : 0), ld = stLd[t][d] + (d < 15 ? stLd[t][d + 1] : 0); printf(" d%d-%d: %lld x %.1f r%.1f", d, d + 1, a, a ? (double)b / a : 0, l ? (double)ld / l : 0); }
+      printf("\n   nodes with a table move: depth 1-2 %.0f%%, depth 3+ %.0f%%", 100.0 * stTT[t][1] / (stTT[t][0] + stTT[t][1] + 1), 100.0 * stTT[t][3] / (stTT[t][2] + stTT[t][3] + 1));
+      printf("\n   pruned a node: capture futility %.2f, capture/check SEE %.2f, history %.2f, quiet futility %.2f, quiet SEE %.2f", (double)stPr[t][1] / (n ? n : 1), (double)stPr[t][2] / (n ? n : 1), (double)stPr[t][3] / (n ? n : 1), (double)stPr[t][4] / (n ? n : 1), (double)stPr[t][5] / (n ? n : 1));
+      printf("\n   nodes in check %lld (moves there %lld), not in check %lld: captures %lld, quiet checks %lld, other quiets %lld\n", stNdc[t][1], stCat[t][0], stNdc[t][0], stCat[t][1], stCat[t][2], stCat[t][3]); }
+    { const char *kn[3] = {"table move", "capture", "quiet"}, *bn[8] = {"1", "2", "3", "4-6", "7-10", "11-20", "21-40", "41+"}; long long tot = 0;
+      for (int k = 0; k < 3; k++) for (int b = 0; b < 8; b++) tot += stCutK[k][b];
+      for (int k = 0; k < 3; k++) { long long n = 0; for (int b = 0; b < 8; b++) n += stCutK[k][b]; printf("cut by %-10s %5.1f%% of cuts; place", kn[k], 100.0 * n / (tot ? tot : 1)); for (int b = 0; b < 8; b++) printf(" %s: %4.1f%%", bn[b], 100.0 * stCutK[k][b] / (n ? n : 1)); printf("\n"); } }
+    for (int k = 0; k < 2; k++) { long long n = 0; for (int b = 0; b < 8; b++) n += stQr[k][b]; printf("quiet cut-offs at depth %s: its place among the quiet moves 1: %.1f%% 2: %.1f%% 3: %.1f%% 4-6: %.1f%% 7-10: %.1f%% 11-20: %.1f%% 21+: %.1f%%\n", k ? "3+" : "1-2", 100.0 * stQr[k][0] / (n + 1), 100.0 * stQr[k][1] / (n + 1), 100.0 * stQr[k][2] / (n + 1), 100.0 * stQr[k][3] / (n + 1), 100.0 * stQr[k][4] / (n + 1), 100.0 * stQr[k][5] / (n + 1), 100.0 * (stQr[k][6] + stQr[k][7]) / (n + 1)); }
+    printf("quiets at the futility test (all nodes, depth 5-8): %.0f; mean reduced depth %.2f (before the history shift %.2f), static eval above alpha %.0f%%, mean alpha - eval %.0f, mean move number %.1f\n", stF[0], stF[1] / (stF[0] + 1), stF[5] / (stF[0] + 1), 100.0 * stF[2] / (stF[0] + 1), stF[3] / (stF[0] + 1), stF[4] / (stF[0] + 1));
+    printf("qsearch nodes %lld: entered from the main search %lld (in check %lld), so %.2f further nodes an entry\n", stQ, stQ0, stQ0c, stQ0 ? (double)(stQ - stQ0) / stQ0 : 0);
+    return 0;
+  }
   if (!strcmp(argv[2], "stat")) {   /* usimatch <net> stat <nodes | dN> <openings> [positions]: what the one-thread search does (build with -DSEARCH_STATS) */
     int lim = argv[3][0] == 'd' ? 0 : atoi(argv[3]), dep = argv[3][0] == 'd' ? atoi(argv[3] + 1) : 0, np = argc > 5 ? atoi(argv[5]) : 8;
     FILE *f = fopen(argv[4], "r"); if (!f) { perror(argv[4]); return 1; }
@@ -311,6 +333,8 @@ int main(int argc, char **argv) {
       hist[nh++] = m;
     }
     if (result > 0) w++; else if (result < 0) l++; else d++;
+    { const char *kf = getenv("KIFU");   /* KIFU=<file>: every game's moves are appended (tools/match/blunders.py reads them) */
+      if (kf) { FILE *k = fopen(kf, "a"); if (k) { fprintf(k, "%d %d %d", weBlack, result, nh0); for (int i = 0; i < nh; i++) { char u[8]; toUsi(hist[i], u); fprintf(k, " %s", u); } fprintf(k, "\n"); fclose(k); } } }
     if (fBase) printf("  %d plies, per move: ours %.1f s, engine %.1f s%s\n", nh, nO ? usedO / nO / 1000 : 0, nE ? usedE / nE / 1000 : 0, flag == 1 ? " (we lost on time)" : flag == 2 ? " (the engine lost on time)" : "");
     printf("game %d (%s): %s   total +%d -%d =%d  score %.3f\n", g + 1, weBlack ? "we sente" : "we gote", result > 0 ? "win" : result < 0 ? "loss" : "draw", w, l, d, (w + d * .5) / (g + 1));
     fflush(stdout);
