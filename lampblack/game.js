@@ -560,7 +560,7 @@
     const N = S.nights[S.nights.length - 1];
     const items = [];
     if (!first) {
-      setScene(N.loc);
+      setScene(N.loc || st.meetLoc || st.locs[0].id);   // a night with no attack has no scene of its own
       items.push({ text: st.text.day[Math.min(S.day - 1, st.text.day.length - 1)] });
       if (N.died && N.target === 'you') {
         setCast([]); SND.door(0, 1.1); SND.thud();
@@ -575,7 +575,8 @@
         for (const cc of st.chars) for (const b of cc.bond || []) if (b.with === v && g < 2 && castIn([cc.id]).length) { g++; items.push({ who: cc.id, text: b.grief, fx: () => setCast([v, cc.id], { fallen: v, span: [40, 66] }) }); }
       } else {
         setCast([]);
-        items.push({ text: fill(pickOne(st.text.peace), { loc: locName(N.loc) }) });
+        // no one was attacked at all (the wolves are gone, only the fox is left): no place to name
+        items.push({ text: N.loc ? fill(pickOne(st.text.peace), { loc: locName(N.loc) }) : '朝が来た。誰も死ななかった。\nどの戸口にも、爪の跡はひとつもない。' });
         if (N.saved === 'ward') items.push({ text: '枕もとの鈴が、夜中にひとりでに鳴った。あの音がなければ、あなたは今ここにいない。' });
         if (N.saved === 'guard' && N.target === 'you') items.push({ text: `戸口の前の床に、獣の爪の跡が残っていた。あなたの部屋の前まで来て、そこで引き返している。\n誰かが一晩じゅう、**あなたを守っていた**のだ。` });
         if (N.saved === 'guard' && S.pl.role === 'guard') items.push({ text: `あなたが夜通し見張った戸口の前に、獣の爪の跡があった。${nm(N.target)}は、何も知らずに眠っていた。` });
@@ -1289,7 +1290,7 @@
     let h = `<div class="promise"><b>この物語の約束</b>痕跡は嘘をつかない。物は嘘をつくことがある。人間は他人のことで嘘をつかない——ただし、秘密を隠すために自分の居場所は偽る。狼と狂人は何でも偽る。</div>${st.rulesNote ? `<div class="promise"><b>この物語のしくみ</b>${esc(st.rulesNote)}</div>` : ''}`;
     for (const N of S.nights.slice().reverse()) {
       const vic = N.target === 'first' ? st.first.name : N.target ? nm(N.target) : '—';
-      h += `<div class="nh">${N.n === 0 ? '序幕の夜' : dayName(N.n) + 'の夜'} ― ${esc(locName(N.loc))}・${esc(vic)}${N.died ? '' : '（未遂）'}</div>`;
+      h += `<div class="nh">${N.n === 0 ? '序幕の夜' : dayName(N.n) + 'の夜'} ― ${N.loc ? `${esc(locName(N.loc))}・${esc(vic)}${N.died ? '' : '（未遂）'}` : '襲われた者はいない'}</div>`;
       const rows = [];
       N.traces.forEach((t, i) => { if (S.pl.found.includes(N.n + '|' + i)) rows.push(`<div class="li mine"><b>${esc(SP.traceShort(st, t))}</b>　<span class="src">あなたが見た</span><br>${esc(SP.traceText(st, t))}</div>`); });
       for (const r of S.reports.filter(r => r.night === N.n && r.by !== 'you')) rows.push(`<div class="li"><b>${esc(SP.traceShort(st, r))}</b>　<span class="src">${esc(nm(r.by))}の報告</span></div>`);
