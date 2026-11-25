@@ -51,8 +51,8 @@
     cat: {
       8:  { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 0, cat: 1 },   // the cat helps the village: a madman more on 入門, a third wolf on 標準
       10: { wolf: 3, madman: 0, seer: 1, medium: 1, guard: 1, cat: 1 },
-      12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1, cat: 1 },
-      13: { wolf: 4, madman: 1, seer: 1, medium: 1, guard: 1, cat: 1 },
+      12: { wolf: 4, madman: 0, seer: 1, medium: 1, guard: 1, cat: 1 },   // 2026-11-26：狂人入りの3匹では標準より易しかった（探偵92%）。4匹にして上級らしく
+      13: { wolf: 4, madman: 2, seer: 1, medium: 1, guard: 1, cat: 1 },   // 上級より一段むずかしく：狂人がふたり
     },
     //   fanatic — 白嶺修道院: the madman is a fanatic (狂信者) who knows the wolves (they do not know them).
     //             Its lies cover the wolves; it is there from the easiest level.
