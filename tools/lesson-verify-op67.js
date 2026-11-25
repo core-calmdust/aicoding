@@ -24,7 +24,7 @@ const AD = {
   },
   checkers() {
     const E = require(path.join(ROOT, 'checkers/tools/wasm.js')).loadSync().E, O = J('checkers/openings.json');
-    const DONE = new Set(['cross', 'old14', 'alma', 'souter', 'fife', 'whilter', 'edinburgh', 'double', 'dcross', 'pioneer', 'denny', 'kelso', 'bristol', 'bcross', 'dundee']);   // (= lesson-verify.js CKO_DONE)
+    const DONE = new Set(['cross', 'old14', 'alma', 'souter', 'fife', 'whilter', 'edinburgh', 'double', 'dcross', 'pioneer', 'denny', 'kelso', 'bristol', 'bcross', 'dundee', 'single', 'ayrshire', 'glasgow', 'laird']);   // (= lesson-verify.js CKO_DONE)
     const sw = { b: 'w', w: 'b', B: 'W', W: 'B', '.': '.' };
     const key = p => { const s = p.spec(), a = s.b + s.side, r = [...s.b].reverse().map(c => sw[c] || c).join('') + (3 - s.side); return a < r ? a : r; };
     const WIN = 30000, WINT = 29000, pts20 = (sc, m) => { const v = new Map(sc), best = Math.max(...sc.map(e => e[1])), mine = v.has(m) ? v.get(m) : -WIN; return mine >= best - 6 && !(best > WINT && mine < best); };
