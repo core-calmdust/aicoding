@@ -897,7 +897,7 @@ function amazons(opt) {
 // (2026-11-24 第2期) reversi: the exact endgames (parity・finish) — every legal move solved again by an independent exact solver
 // (empties to the winner), the step's shape, no near-duplicates across everything the game shows, the easy-to-hard order of a
 // draw, and リバガメ's words for every move of every problem at every place of a draw (3D: lessons3d rvLsJa).
-const RV_DONE = new Set(['parity', 'finish']);
+const RV_DONE = new Set(['rules', 'parity', 'finish']);
 function rvSolver() {
   const DIRS = [-9, -8, -7, -1, 1, 7, 8, 9], ok = (p, d) => p >= 0 && p < 64 && Math.abs((p & 7) - ((p - d) & 7)) <= 1;
   const flips = (b, q, s) => { const o = 3 - s, out = []; for (const d of DIRS) { let p = q + d; const t = []; while (ok(p, d) && b[p] === o) { t.push(p); p += d; } if (t.length && ok(p, d) && b[p] === s) out.push(...t); } return out; };
@@ -932,7 +932,66 @@ function reversi(opt) {
   const pool = []; L.lessons.forEach(l => { l.problems.forEach((p, j) => pool.push([`${l.id} q${j + 1}`, String(p.cells), p])); (l.warm || []).forEach((w, j) => pool.push([`${l.id} warm ${j + 1}`, String(w.cells), w])); });
   const PZ = JSON.parse(fs.readFileSync(path.join(ROOT, 'reversi/puzzles.json'), 'utf8')); (PZ.levels || []).forEach(lv => lv.puzzles.forEach((p, j) => pool.push([`puzzle ${lv.id} ${j + 1}`, String(p.cells), p])));
   const nums = t => [...String(t).matchAll(/(\d+)石差で(勝ち|負け)|引き分け/g)].map(m => m[0] === '引き分け' ? 0 : m[2] === '勝ち' ? +m[1] : -m[1]);
-  L.lessons.forEach((l, li) => { const id = l.id; if (!RV_DONE.has(id) || (only && !only.has(id))) return;
+  // (2026-11-25 第2期・担当A) rules（ルールと石の返し方）: counting the flips — ① the stored counts are the board's for every legal move,
+  // ② one move flips the most (2D/3D: any other move below 16 points), ③ 3+ legal moves, ④ the answer flips 2+, ⑤ no position within 3
+  // squares (8 symmetries) of any other the game shows (lessons, warm-ups, puzzles, the openings' lines and practice), ⑥ P.d stored and
+  // both versions sort by it, the pool spans easy and hard, ⑦⑧ リバガメ's question, hint, praise and every wrong move's words (each place
+  // of a draw) say the board's counts and directions.
+  { const l = L.lessons.find(x => x.id === 'rules'), li = L.lessons.indexOf(l);
+    if (l && RV_DONE.has('rules') && !(only && !only.has('rules'))) { const id = 'rules', DIRS = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+      const dirs = (b, q, s) => { const o = 3 - s, out = []; for (const [dr, dc] of DIRS) { let r = (q >> 3) + dr, c = (q & 7) + dc, n = 0; while (r >= 0 && r < 8 && c >= 0 && c < 8 && b[r * 8 + c] === o) { n++; r += dr; c += dc; } if (n && r >= 0 && r < 8 && c >= 0 && c < 8 && b[r * 8 + c] === s) out.push({ nm: dr === 0 ? '横' : dc === 0 ? '縦' : 'ななめ', n }); } return out; };
+      const OP = JSON.parse(fs.readFileSync(path.join(ROOT, 'reversi/openings.json'), 'utf8')), opp = (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'reversi/opcourse-probs.json'), 'utf8')); } catch (e) { return {}; } })();
+      const others = pool.filter(([nm]) => !nm.startsWith('rules q')).map(([nm, c]) => [nm, c]);
+      for (const st of OP.sets) for (const ln of st.lines) { const b = new Array(64).fill(0); b[27] = 2; b[28] = 1; b[35] = 1; b[36] = 2; let s = 1;
+        for (const m of ln.moves.match(/../g) || []) { const q = (m.charCodeAt(0) - 97) + (+m[1] - 1) * 8; let f = S.flips(b, q, s); if (!f.length) { s = 3 - s; f = S.flips(b, q, s); } if (!f.length) break; b[q] = s; f.forEach(x => { b[x] = s; }); s = 3 - s; others.push([`opening ${ln.moves.slice(0, 2 * 10)}…`, b.join('')]); } }
+      for (const k in opp) (opp[k] || []).forEach((p, j) => others.push([`opening practice ${k} ${j + 1}`, String(p.pos).split(':')[0]]));
+      if (!/probs\.every\(p => p\.type === 'flips'\)\) probs\.sort\(\(a, b\) => \(a\.d \|\| 0\) - \(b\.d \|\| 0\)\)/.test(src)) add(id, -1, '⑥ the 3D REVERSI.lesson does not sort the counting problems by P.d');
+      if (!/probs\.every\(p => p\.type === 'flips'\)\) probs\.sort\(\(a, b\) => \(a\.d \|\| 0\) - \(b\.d \|\| 0\)\)/.test(app)) add(id, -1, '⑥⑨ reversi/index.html startLesson does not sort the counting problems by P.d');
+      if (!/if \(pr && \(pr\.type === 'flips' \|\| pr\.type === 'exact'\)\) return Math\.max\(0, Math\.round\(\(pr\.type === 'exact' \? 8 : 12\) \*/.test(app)) add(id, -1, '②⑨ reversi/index.html problemPoints gives a 2nd count 16+ points');
+      if (!/if \(P\.type === 'flips' \|\| P\.type === 'exact'\) return Math\.max\(0, Math\.round\(\(P\.type === 'exact' \? 8 : 12\) \*/.test(src)) add(id, -1, '②⑨ the 3D REVERSI.points gives a 2nd count 16+ points');
+      const ds = [];
+      if (!l.problems.length || l.problems[0].d !== 1) add(id, -1, '追14 the 3D warm-up plays problem 1 with the counts shown: it should be the easiest kind (d 1, one straight line)');
+      if (l.problems.length < 20) add(id, -1, `⑤ only ${l.problems.length} problems: too few to draw 5 different ones`);
+      l.problems.forEach((P, j) => { const a = m => add(id, j, m), b = String(P.cells).split('').map(Number), s = P.toMove, F = P.f || {};
+        if (P.type !== 'flips') { a('① not a counting problem'); return; }
+        const lg = S.legal(b, s), ks = Object.keys(F).map(Number).sort((x, y) => x - y);
+        if (lg.join() !== ks.join()) { a(`① the stored moves ${ks} are not the legal moves ${lg}`); return; }
+        for (const q of lg) { const n = S.flips(b, q, s).length; if (F[q][0] !== n || F[q][1] !== n) a(`① move ${q}: stored ${F[q][0]}/${F[q][1]}, ${n} on the board`); }
+        const v = q => S.flips(b, q, s).length, srt = lg.map(v).sort((x, y) => y - x), bs = lg.filter(q => v(q) === srt[0]), best = bs[0];
+        if (bs.length > 1) a(`② ${bs.length} moves flip the most (${srt[0]})`);
+        if (lg.length < 3) a(`③ only ${lg.length} legal moves`);
+        if (srt[0] < 2) a('④ the answer flips only 1');
+        const D = dirs(b, best, s), close = lg.filter(q => v(q) === srt[0] - 1).length, d = D.length + (D.some(x => x.nm === 'ななめ') ? 1 : 0) + (close >= 2 ? 1 : 0);
+        if (P.d !== d) a(`⑥ stored d ${P.d}, the board ${d}`); ds.push(d);
+        for (const [nm, c2] of others) { const dd = dist(String(P.cells), c2); if (dd <= 3) a(`⑤ ${dd} square(s) from ${nm}`); }
+        l.problems.forEach((Q, k) => { if (k > j) { const dd = dist(String(P.cells), String(Q.cells)); if (dd <= 3) a(`⑤ ${dd} square(s) from rules q${k + 1}`); } });
+        // ②⑨ the points both versions give
+        const pt = q => { const mine = v(q), n = lg.length; if (mine >= srt[0]) return 20; const r = lg.filter(z => v(z) > mine).length; return Math.round(12 * (n - 1 - r) / (n - 1)); };
+        lg.forEach(q => { if (q !== best && pt(q) >= 16) a(`② move ${q} (${v(q)} flips) would score ${pt(q)}`); });
+        // ⑦⑧ the words
+        const DT = x => x.map(y => `${y.nm}に${y.n}枚`).join('と');
+        for (let i = 0; i < 5; i++) { const W = X.rvLsJa(id, P, i, li, false);
+          for (const t of [W.ask, W.hintTx]) if (!t || /\{|undefined|NaN/.test(t)) a(`⑧ the question / hint 「${t}」`);
+          if (/数字/.test(W.ask) && i >= 1) a(`⑧ #${i + 1}: the question points at the numbers, hidden from the 2nd problem (3D: 2 problems, RV_NUMS 1)`);
+          if (/ななめ.*見落とし|ななめの向きも/.test(W.hintTx) && !D.some(x => x.nm === 'ななめ')) a(`⑧ #${i + 1}: the hint points at a diagonal, the answer has none`);
+          if (/ほかの向き|2つ以上の向き/.test(W.hintTx) && D.length < 2) a(`⑧ #${i + 1}: the hint points at more directions, the answer flips in one`);
+          if (/遠くの自分の石/.test(W.hintTx) && srt[0] < 3) a(`⑧ #${i + 1}: the hint says a far stone, the answer flips ${srt[0]}`);
+          const g = String(W.good(best));
+          if (!g.includes(`${srt[0]}枚`)) a(`⑧ #${i + 1}: the praise 「${g}」 does not say ${srt[0]}`);
+          if (D.length > 1 && !g.includes(DT(D)) && !g.includes(`${D.length}つの向き`)) a(`⑧ #${i + 1}: the praise 「${g}」 does not say the directions`);
+          if (D.length === 1 && !g.includes(D[0].nm)) a(`⑧ #${i + 1}: the praise 「${g}」 does not name the ${D[0].nm} line`);
+          for (const m of g.matchAll(/(縦|横|ななめ)に(\d+)枚/g)) if (!D.some(x => x.nm === m[1] && x.n === +m[2])) a(`⑧ #${i + 1}: the praise says ${m[0]}, not on the board`);
+          if (/遠くの石/.test(g) && srt[0] < 3) a(`⑧ #${i + 1}: the praise says a far stone`);
+          for (const q of lg) { if (q === best) continue; const t = String(W.ng(q));
+            if (!t || /\{|undefined|NaN/.test(t)) { a(`⑧ move ${q} (#${i + 1}): 「${t}」`); continue; }
+            const nums = [...t.matchAll(/(\d+)枚/g)].map(m => +m[1]);
+            if (!nums.includes(v(q)) || !nums.includes(srt[0])) a(`⑦ move ${q} (#${i + 1}): 「${t}」 — not ${v(q)} and ${srt[0]}`);
+            for (const m of t.matchAll(/(縦|横|ななめ)に(\d+)枚/g)) if (!D.some(x => x.nm === m[1] && x.n === +m[2])) a(`⑧ move ${q} (#${i + 1}): says ${m[0]} for the green square, not on the board`);
+            if (/見落としたのかも|かも？/.test(t)) a(`⑦ move ${q} (#${i + 1}): guesses why (「${t.slice(0, 40)}」), not the board`); } } });
+      // ⑥ the pool spans easy and hard: a draw can rise
+      const hs = new Set(ds); if (hs.size < 3 || ds.filter(x => x <= 2).length < 6 || ds.filter(x => x >= 3).length < 6) add(id, -1, `⑥ the difficulties ${[...hs]} cannot make a rising draw`);
+    } }
+  L.lessons.forEach((l, li) => { const id = l.id; if (id === 'rules' || !RV_DONE.has(id) || (only && !only.has(id))) return;
     if (l.problems.length < 8 || l.problems.filter(p => p.trap).length < 2) add(id, -1, '⑤ the pool is too small to draw 5 different problems');
     l.problems.forEach((P, j) => { const a = m => add(id, j, m), b = String(P.cells).split('').map(Number), s = P.toMove, F = P.f || {};
       if (P.type !== 'exact') a('① not an exact problem');
