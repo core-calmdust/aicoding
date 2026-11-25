@@ -38,9 +38,9 @@ function facts(p, m) {   // what m (by p.turn) does
     if (v === c) { dOwn = Math.min(dOwn, d); if ((dx === 2 && !dy) || (!dx && dy === 2)) { const mid = ((Math.floor(i / N) + y) / 2) * N + (i % N + x) / 2; if (!p.b[mid]) jump = true; }
       if (dx === 1 && dy === 1) diag = true; if ((dx === 1 && dy === 2) || (dx === 2 && dy === 1)) keima = true; } else dOpp = Math.min(dOpp, d); }
   // the opponent's groups that had 2 liberties and are touched (for the atari hint)
-  const opp2 = [...oppG].some(k => p.group(k).libs === 2);
+  const opp2 = [...oppG].some(k => p.group(k).libs === 2), ownLibs0 = Math.max(0, ...[...ownG].map(k => p.group(k).libs));
   return { cap: r.captured.length, libs: q.group(m).libs, line: Math.min(ln(x), ln(y)), own: ownG.size, opp: oppG.size, save: savedFrom && q.group(m).libs >= 2, atari: ataris.length > 0 && !r.captured.length,
-    ataris, oppLibs, opp2, sansan: ln(x) === 3 && ln(y) === 3, dOwn, dOpp, jump: jump && !ownG.size, diag: diag && !ownG.size, keima: keima && !ownG.size };
+    ataris, oppLibs, opp2, ownLibs0, sansan: ln(x) === 3 && ln(y) === 3, dOwn, dOpp, jump: jump && !ownG.size, diag: diag && !ownG.size, keima: keima && !ownG.size };
 }
 const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const themT = t => t.replace(/\{m\}/g, 'そこ').replace(/^そこは/, 'そこは、').replace('そこを先に打たれて', '先にそこを打たれて');   // (as goOpJa's themOf writes them)
@@ -64,7 +64,7 @@ function whyTrue(kind, F, v) {   // the claim of a `why` sentence about the answ
     case 'jump': return F.jump;
     case 'diag': return F.diag;
     case 'keima': return F.keima;
-    case 'nobi': return F.own >= 1 && (l == null || l === F.libs);
+    case 'nobi': return F.own >= 1 && (l == null || l === F.libs) && F.libs > F.ownLibs0;   // (追90: some of its wordings say the liberties grew — every wording of the kind must hold)
     case 'approach': return F.dOpp <= 3;
     case 'ext': return F.dOwn >= 3 && F.dOwn <= 5 && F.line >= 3 && F.line <= 4;
     case 'open': return F.dOwn >= 4 && F.dOpp >= 4;
@@ -100,7 +100,9 @@ function checkProblem(o, p0, ok) {
   // the praise
   const g = o.good(ok), wf = matchKind(H.why, g);
   if (!wf) bad.push(`⑧ 正解の文に理由（why）がない：${g}`);
-  else { if (!whyTrue(wf.kind, F, wf)) bad.push(`⑧ 正解の理由（${wf.kind}）が盤と合わない：${g}`);
+  // 追90: the other wordings of the same kind (the lesson picks them in turn) — each one's numbers and claim on this board
+  else { (H.why[wf.kind] || []).forEach(t => { if (!t.includes('{k}') && !t.includes('{l}')) return; if (wf.kind === 'cap' && !(F.cap > 0)) bad.push(`追90 ${t}`); });
+    if (!whyTrue(wf.kind, F, wf)) bad.push(`⑧ 正解の理由（${wf.kind}）が盤と合わない：${g}`);
     for (const nm of ['ハネ', 'オサエ', 'ツケ', 'キリ', 'アテ', 'ハイ', 'オシ', 'ノゾキ']) if (['この{n}で、', '{n}を打って、', '{n}がぴったり。', 'ここで{n}！'].some(t => g.includes(t.replace('{n}', nm))) && !(F.opp >= 1)) bad.push(`⑧ 手の名前「${nm}」が相手の石に接しない手：${g}`); }
   // every legal wrong move
   for (let u = 0; u < N * N; u++) { if (u === ok) continue; const r = p0.tryPlay(u); if (!r) continue;
