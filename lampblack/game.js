@@ -442,6 +442,7 @@
     const on = S && G.scr === 'play' && S.phase !== 'prologue' && S.phase !== 'end' && (PCQ.matches || S.phase === 'meeting' || S.phase === 'vote');
     R.classList.toggle('hide', !on); document.body.classList.toggle('has-roster', !!on);
     if ($('rmap')) $('rmap').classList.toggle('hide', !on);
+    if ($('rdock')) $('rdock').classList.toggle('hide', !on || PCQ.matches);
     if (!on) return;
     const html = S.people.map(p => {
       const t = tagsOf(p.id), dead = !p.alive, mk = S.pl.notes[p.id] || '';
@@ -464,7 +465,10 @@
     const chip = l => `<span class="rc${l.id === mine ? ' me' : seen.includes(l.id) ? ' see' : ''}" title="${esc(l.name)}：となりの${E.near(st, l.id).map(x => esc(locName(x))).join('・')}が見える">${esc(l.name)}${l.id === crime ? '<i class="cr">現場</i>' : ''}${l.id === mine ? '<i class="yo">あなた</i>' : ''}</span>`;
     const mh = `<div class="rrow">${st.locs.map(chip).join('<s></s>')}</div><div class="rback" title="両端もとなり同士"></div>`;
     if (M.__html !== mh) { M.innerHTML = mh; M.__html = mh; }
-    M.style.top = (R.offsetTop + R.offsetHeight + 8) + 'px';
+    // a phone: the faces and the map sit at the bottom of the text strip (it has room under the words), not over the stage
+    const home = PCQ.matches ? $('stage') : (() => { let D = $('rdock'); if (!D) { D = document.createElement('div'); D.id = 'rdock'; } if (D.parentNode !== $('strip')) $('strip').appendChild(D); return D; })();
+    if (R.parentNode !== home) { if (PCQ.matches) { home.insertBefore(R, $('fx')); home.insertBefore(M, $('fx')); } else { home.appendChild(R); home.appendChild(M); } }
+    M.style.top = PCQ.matches ? (R.offsetTop + R.offsetHeight + 8) + 'px' : '';
   }
   function hud() {
     if (S.ghost) document.body.classList.add('ghost');
