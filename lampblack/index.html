@@ -306,7 +306,7 @@ body.nb-open #nb{transform:none}
 
 /* ---------- sheets (modal) ---------- */
 #sheet{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:rgba(13,9,6,.55);padding:20px}
-#sheet .box{width:min(760px,100%);max-height:min(88vh,860px);overflow:auto;background:var(--sheet);border-radius:4px;box-shadow:0 20px 70px rgba(0,0,0,.5);padding:24px 26px;position:relative}
+#sheet .box{width:min(760px,100%);max-height:min(88vh,860px);max-height:min(88svh,860px);overflow:auto;background:var(--sheet);border-radius:4px;box-shadow:0 20px 70px rgba(0,0,0,.5);padding:24px 26px;position:relative}
 #sheet h3{margin:0 0 12px;font:800 23px/1.35 var(--prose)}
 #sheet p{font:500 16.5px/1.8 var(--prose);margin:0 0 12px}
 #sheet .x{position:absolute;right:10px;top:10px}
@@ -464,7 +464,7 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
   .tile{min-height:0}
   .row2{grid-template-columns:1fr}
   #sheet{padding:0;align-items:end}
-  #sheet .box{width:100%;max-height:92vh;border-radius:10px 10px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom))}
+  #sheet .box{width:100%;max-height:92vh;max-height:calc(100svh - 12px);border-radius:10px 10px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom))}
   .foot .btn{flex:1;min-width:0}
   .stat{grid-template-columns:repeat(2,1fr)}
   .rank{font-size:90px}
@@ -692,7 +692,7 @@ body.scr-play{-webkit-user-select:none;user-select:none}
     <h2 class="scrh" id="setTitle" style="text-align:left"></h2>
     <p class="scrp" id="setConcept" style="text-align:left;margin-bottom:16px"></p>
     <h3>むずかしさ</h3>
-    <div class="tiles" id="setDiff"></div>
+    <div class="tiles r5" id="setDiff"></div>
     <h3>あなたの役</h3>
     <div class="tiles r5" id="setRole"></div>
     <p class="setrules hide" id="setRules"></p>
@@ -714,14 +714,14 @@ body.scr-play{-webkit-user-select:none;user-select:none}
 
 <div id="sheet" class="hide" role="dialog" aria-modal="true"><div class="box" id="sheetBox"></div></div>
 
-<script src="engine.js?v=24"></script>
+<script src="engine.js?v=25"></script>
 <script src="voices.js?v=11"></script>
 <script src="speech.js?v=15"></script>
 <script src="art.js?v=3"></script>
 <script src="scenes.js?v=4"></script>
 <script src="scenes-pass.js?v=4"></script>
 <script src="hero.js?v=2"></script>
-<script src="feats.js?v=4"></script>
+<script src="feats.js?v=5"></script>
 <script src="stories/kirigane.js?v=8"></script>
 <script src="stories/kirigane.tale.js?v=6"></script>
 <script src="stories/kirigane.who.js?v=3"></script>
@@ -738,7 +738,7 @@ body.scr-play{-webkit-user-select:none;user-select:none}
 <script src="stories/nekonaki.tale.js?v=3"></script>
 <script src="stories/nekonaki.who.js?v=2"></script>
 <script src="stories/nekonaki.who.open.js?v=2"></script>
-<script src="stories/shirane.js?v=6"></script>
+<script src="stories/shirane.js?v=7"></script>
 <script src="stories/shirane.tale.js?v=4"></script>
 <script src="stories/shirane.who.js?v=2"></script>
 <script src="stories/shirane.who.open.js?v=2"></script>
@@ -748,6 +748,6 @@ body.scr-play{-webkit-user-select:none;user-select:none}
 <script src="stories/kiteki.who.open.js?v=2"></script>
 <script src="tutorial.js?v=6"></script>
 <script src="sound.js?v=13"></script>
-<script src="game.js?v=68"></script>
+<script src="game.js?v=69"></script>
 </body>
 </html>

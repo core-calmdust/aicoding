@@ -19,6 +19,7 @@
   const SETUP = {
     8:  { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 0 },
     10: { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 1 },
+    11: { wolf: 3, madman: 0, seer: 1, medium: 1, guard: 1 },   // 2026-11-26：中級
     12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1 },
     13: { wolf: 3, madman: 2, seer: 1, medium: 1, guard: 1 },   // 2026-11-26：悪夢は狼を3匹に減らし（運の要素を減らす）、狂人ふたりと嘘・罠で推理をむずかしくする
   };
@@ -31,18 +32,21 @@
     mason: {
       8:  { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 0, mason: 2 },   // 2026-11-26：入門は狂人なし（標準より易しく）
       10: { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 0, mason: 2 },
+      11: { wolf: 3, madman: 0, seer: 1, medium: 1, guard: 0, mason: 2 },   // 2026-11-26：中級
       12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 0, mason: 2 },
       13: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 0, mason: 2 },   // 2026-11-26：悪夢は狼を3匹に減らし（運の要素を減らす）、嘘と罠で推理をむずかしくする
     },
     immoral: {   // 霧笛座: the fox and the one who serves it (背徳者). When the fox dies, the immoral follows it the same night
       8:  { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 1, fox: 1, immoral: 0 },   // 2026-11-26：入門は背徳者なし（背徳者入りでは標準よりむずかしかった）
       10: { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 1, fox: 1, immoral: 1 },
+      11: { wolf: 3, madman: 0, seer: 1, medium: 1, guard: 1, fox: 1, immoral: 1 },   // 2026-11-26：中級
       12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1, immoral: 1 },
       13: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1, immoral: 1 },   // 2026-11-26：悪夢は狼を3匹に減らし（運の要素を減らす）、嘘と罠で推理をむずかしくする
     },
     fox: {
       8:  { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 1, fox: 1 },   // 2026-11-26：入門にも狩人（なしでは標準とむずかしさが変わらなかった）
       10: { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1 },
+      11: { wolf: 3, madman: 0, seer: 1, medium: 1, guard: 1, fox: 1 },   // 2026-11-26：中級
       12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1 },
       13: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1, fox: 1 },   // 2026-11-26：悪夢は狼を3匹に減らし（運の要素を減らす）、嘘と罠で推理をむずかしくする
     },
@@ -51,6 +55,7 @@
     cat: {
       8:  { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 0, cat: 1 },   // the cat helps the village: a madman more on 入門, a third wolf on 標準
       10: { wolf: 3, madman: 0, seer: 1, medium: 1, guard: 1, cat: 1 },
+      11: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 0, cat: 1 },   // 2026-11-26：中級
       12: { wolf: 3, madman: 2, seer: 1, medium: 1, guard: 1, cat: 1 },   // 2026-11-26：狼3匹＋狂人ふたり（狼4匹は運の要素が大きい。上級から嘘つきが手ごわくなる）
       13: { wolf: 3, madman: 2, seer: 1, medium: 1, guard: 1, cat: 1 },   // 2026-11-26：悪夢は上級と同じ顔ぶれで、嘘と罠がさらに手ごわい
     },
@@ -59,6 +64,7 @@
     fanatic: {
       8:  { wolf: 2, madman: 0, seer: 1, medium: 1, guard: 0 },   // 2026-11-26：入門は狂信者なし（狼2匹＋狂信者では標準よりむずかしかった。狼1匹では易しすぎた）
       10: { wolf: 2, madman: 1, seer: 1, medium: 1, guard: 1 },
+      11: { wolf: 2, madman: 2, seer: 1, medium: 1, guard: 0 },   // 2026-11-26：中級は狂信者ふたり（狼3匹では上級と変わらず、狼2匹＋狂信者ひとりでは標準より易しかった）
       12: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1 },
       13: { wolf: 3, madman: 1, seer: 1, medium: 1, guard: 1 },   // 2026-11-26：悪夢は狼を3匹に減らし（運の要素を減らす）、嘘と罠で推理をむずかしくする
     },
@@ -70,8 +76,9 @@
   const DIFF = [   // 2026-11-25：村まかせでも勝ててしまうので、村の推理を弱め、痕跡を減らした（あなたの働きで勝敗が決まるように）
     { id: 0, cunning: 0, size: 8,  ap: 3, traces: 1, neg: .35, player: 0,    plant: .15, drop: .2,  erase: .1,  adj: .25, npcFind: .22, fakeSeer: .6,  assist: true,  wit: .16, sway: 1.3 },
     { id: 1, cunning: 0, size: 10, ap: 3, traces: 1, neg: .5,  player: .3,   plant: .4,  drop: .12, erase: .3,  adj: .2,  npcFind: .1,  fakeSeer: .9,  assist: false, wit: .05, sway: 1.0 },
-    { id: 2, cunning: .7, size: 12, ap: 3, traces: 1, neg: .6,  player: .45,  plant: .45, drop: .1,  erase: .35, adj: .17, npcFind: .15, fakeSeer: .8,  assist: false, wit: .16, sway: .9 },
-    { id: 3, cunning: 1, size: 13, ap: 3, traces: 1, neg: .85, player: .45, plant: .75, drop: .08, erase: .3,  adj: .15, npcFind: .12, fakeSeer: 1,   assist: false, wit: .08, sway: .7 },
+    { id: 2, cunning: .2, size: 11, ap: 3, traces: 1, neg: .55, player: .35, plant: .42, drop: .11, erase: .3, adj: .19, npcFind: .14, fakeSeer: .85, assist: false, wit: .2, sway: 1.0 },   // 2026-11-26：中級（標準と上級のあいだ）
+    { id: 3, cunning: .7, size: 12, ap: 3, traces: 1, neg: .6,  player: .45,  plant: .45, drop: .1,  erase: .35, adj: .17, npcFind: .15, fakeSeer: .8,  assist: false, wit: .16, sway: .9 },
+    { id: 4, cunning: 1, size: 13, ap: 3, traces: 1, neg: .85, player: .45, plant: .75, drop: .08, erase: .3,  adj: .15, npcFind: .12, fakeSeer: 1,   assist: false, wit: .08, sway: .7 },
   ];
   const CATS = ['height', 'hand', 'foot', 'mark'];
 
@@ -87,7 +94,7 @@
   function newGame(story, opts) {
     opts = opts || {};
     const D = DIFF[opts.diff != null ? opts.diff : 1];
-    const S = { v: 1, story: story.id, diff: D.id, size: D.size, rs: (opts.seed >>> 0) || ((Math.random() * 2 ** 31) | 0), day: 1, phase: 'prologue' };
+    const S = { v: 1, dv: 2, story: story.id, diff: D.id, size: D.size, rs: (opts.seed >>> 0) || ((Math.random() * 2 ** 31) | 0), day: 1, phase: 'prologue' };
     S.seed = S.rs;
     const cast = shuffle(S, story.chars.map((c, i) => i)).slice(0, D.size - 1).sort((a, b) => a - b);
     const P = [{ id: 'you', ci: -1, isPlayer: true, name: story.hero.name, traits: story.hero.traits, home: story.hero.home, alive: true, persona: { logic: .7, bold: .5, trust: .5, talk: .5 } }];
@@ -264,7 +271,7 @@
     const w = S.people.filter(p => p.role === 'wolf'), m = S.people.find(p => p.role === 'madman');
     if (m && rnd(S) < (S.fan ? (D.id === 0 ? .5 : .8) : .62)) S.fake[m.id] = { role: 'seer', from: S.fan && D.id > 0 || rnd(S) < .7 ? 1 : 2 };   // the fanatic comes forward early (less so on 入門)
     else if (w.length && (w.length > 1 || m) && rnd(S) < D.fakeSeer) { const f = pick(S, w); S.fake[f.id] = { role: 'seer', from: rnd(S) < .6 ? 1 : 2 }; }
-    if (w.length > 1 && rnd(S) < (D.id >= 3 ? .45 : .22)) { const f = pick(S, w.filter(x => !S.fake[x.id]) || w); if (f) S.fake[f.id] = { role: 'medium', from: 2 }; }
+    if (w.length > 1 && rnd(S) < (D.id >= 4 ? .45 : .22)) { const f = pick(S, w.filter(x => !S.fake[x.id]) || w); if (f) S.fake[f.id] = { role: 'medium', from: 2 }; }
   }
 
   /* ---------- testimony: what a person says about a night (fixed once said) ---------- */
@@ -295,7 +302,7 @@
       }
       if (p.role === 'wolf' && rnd(S) < .2) {          // a made-up sighting of a person out at night
         const inn = alive(S).filter(q => q.role !== 'wolf' && q.id !== id && !q.isPlayer);
-        if (inn.length) { const q = pick(S, inn); const smart = cun || rnd(S) < .5 + .13 * diffOf(S).id; T.saw.push({ kind: 'who', who: q.id, loc: smart ? pick(S, [p.home].concat(near(story, p.home))) : pick(S, story.locs.map(l => l.id)), lie: true }); }
+        if (inn.length) { const q = pick(S, inn); const smart = cun || rnd(S) < .5 + .1 * diffOf(S).id; T.saw.push({ kind: 'who', who: q.id, loc: smart ? pick(S, [p.home].concat(near(story, p.home))) : pick(S, story.locs.map(l => l.id)), lie: true }); }
       }
     } else {
       // an innocent: tells the truth about others; hides their own secret errand
@@ -984,7 +991,7 @@
       evidence: Math.min(4, shown) + Math.min(8, black * 4),
       survival: deathDay == null ? 6 : deathDay <= 2 ? -10 : deathDay <= 3 ? -5 : 0,
       losses: -2 * lost,
-      level: S.diff * 3,
+      level: [0, 3, 5, 7, 9][S.diff] || 0,
     };
     const pts = Object.values(part).reduce((a, b) => a + b, 0);
     const rank = pts >= 88 ? 'S' : pts >= 72 ? 'A' : pts >= 55 ? 'B' : pts >= 35 ? 'C' : 'D';
