@@ -364,7 +364,7 @@
   const SHJ = {
     ask: {
       k20: ['取れる駒の中で、いちばん価値が高いのはどれかな？', '盤をぐるっと見わたして、いちばん大きな駒を取ってみて。', 'どの駒を取るのがいちばん得だと思う？ 価値の高い駒をねらうコン。'],
-      k15: ['タダで取れる駒はどれかな？ 取り返されないかも確かめてね。', '取り返されずに取れる駒を探してみて。わなの駒には気をつけてね。', 'いちばん得をする一手を指してみて。取ったあとのことも考えるコン。'],
+      k15: ['タダで取れる駒はどれかな？ 取り返されないかも確かめてね。', '取り返されずに取れる駒を探してみて。大きい駒ほど守られているかも？', 'いちばん得をする一手を指してみて。取ったあとのことも考えるコン。'],
       k12: ['王手をかわす、いちばん良い手はどれかな？', '王手されちゃった！ 逃げる・取る・合駒、どれがいちばん？', 'かわしたあとの形まで考えて、いちばん良い受けを選んでね。'],
       k5: ['いちばん良い一手を指してみて！ 2つをねらえる手はないかな？', '駒得できる手筋をさがそう。両取りがかかる場所はどこかな？', 'この局面、いちばん良い手はどれだと思う？'],
       k3: ['相手の詰みのねらいを防いでね。', '相手は次に詰ませようとしているの。どう受ける？', '玉のまわりをよく見て、詰めろを消す手を指してみて。'],
@@ -418,7 +418,7 @@
   const SHJ2 = {
     intro: {
       k20: '駒の動きは準備で見ていこう。問題では<b>いちばん大きな駒</b>を取ってね！<br>目安は歩1・香3・桂4・銀5・金6・角8・飛10だコン。',
-      k15: '次は<b>タダの駒</b>（取り返されない駒）を見つける練習だコン。価値の目安は、歩1・香3・桂4・銀5・金6・角8・飛10くらい。<br>取る前に「取り返されない？」と確かめるのがコツ！',
+      k15: '次は<b>タダの駒</b>（取り返されない駒）を見つける練習だコン。価値の目安は歩1・香3・桂4・銀5・金6・角8・飛10。<br>動きは、歩・香は前、桂は前へジャンプ、銀は前と斜め、金は前・横・後ろ、玉はまわり、角は斜め、飛は縦横だよ。<br>取る前に「取り返されない？」と確かめてね！',
       k12: '王手をかけられたら、<b>逃げる・取る・合駒</b>のどれかで防ぐの。<br>でも、どれでもいいわけじゃないコン。かわしたあとに安全な形になる受けを選ぼう！',
       k10: '<b>詰み</b>は、玉がどう逃げても取られちゃう形のこと。<br>持ち駒を打つ手と盤の駒を動かす手、両方を考えて、1手で詰ませてみよう！',
       k8: '今度は王手のかけ方がいろいろある局面だよ。<br>王手でも、<b>逃げ道が残る手</b>や<b>取られる手</b>は詰みにならないの。玉のまわりを1マスずつ確かめてみて！',
@@ -435,7 +435,7 @@
     },
     ask: {
       k20: ['取れる駒の中で、いちばん価値が高いのはどれかな？', '盤をぐるっと見わたして！ いちばんの大物はどれ？', 'どの駒を取るのがいちばん得だと思う？', '駒の価値を思い出して！ 取るならどれ？', '大きな駒が取れそうだコン。見つけられる？'],
-      k15: ['タダで取れる駒はどれかな？', '取り返されずに取れる駒、探してみて！', 'いちばん得をする一手は？ わなの駒には気をつけてね。', 'この局面、ただで駒得できる手はあるかな？', '取ったあとも安全な駒はどれだと思う？'],
+      k15: ['タダで取れる駒はどれかな？', '取り返されずに取れる駒、探してみて！', 'いちばん得をする一手は？ 守られている駒には気をつけてね。', 'この局面、ただで駒得できる手はあるかな？', '取ったあとも安全な駒はどれだと思う？'],
       k12: ['王手をかわす、いちばん良い手はどれかな？', '王手されちゃった！ 逃げる・取る・合駒、どれがいい？', 'かわしたあとの形まで考えて、受けを選んでみて！', 'ピンチだコン！ いちばん安全な受けは？', 'この王手、どう防ぐのが正解だと思う？'],
       k5: ['いちばん良い一手を指してみて！', '駒得できる手筋はどこかな？', '1手で2つをねらえる手はないかな？', 'この局面、きみならどう指す？', '相手の駒がねらえそうだコン。いちばんの手は？'],
       k3: ['相手の詰みのねらいを防いでね！', '相手は次に詰ませようとしているの。どう受ける？', '玉があぶないコン！ 詰めろを消す手は？', 'まずは守り！ いちばんの受けはどれかな？', '相手の詰み筋、先回りして消せる？'],
@@ -446,7 +446,7 @@
     },
     hint: {
       k20: ['自分の駒ひとつずつ、取れる相手の駒を数えてみて！', '光っているのが動かす駒と行き先。取れる駒を比べてみよう！', '光っている手を見て！ 価値の目安は飛・角・金・銀の順だコン。', '取れる駒が2つ以上あるなら、大きいほうを選ぼう！', 'ヒントは光っている手。どの駒が取れるかな？'],
-      k15: ['光っているのが答えの手。取ったあと、相手の駒が届くかな？', '取り返す駒がいないか、相手の駒の利きをたどってみて！', 'ヒントは光っている手だコン。どうしてタダなのか考えてみよう！', '光っている手を見て！ わなの駒はどれか、わかる？', '取ったあとのマスに相手の利きがないか、確かめてみて！'],
+      k15: ['光っているのが答えの手。取ったあと、相手の駒が届くかな？', '取り返す駒がいないか、相手の駒の利きをたどってみて！', 'ヒントは光っている手だコン。どうしてタダなのか考えてみよう！', '光っている手を見て！ 守られている駒はどれか、わかる？', '取ったあとのマスに相手の利きがないか、確かめてみて！'],
       k12: ['光っている手で王手をかわせるの。逃げる・取る・合駒、どれかな？', 'かわしたあと、また王手されない形になる？', 'ヒントは光っている手！ 逃げた先も安全かな？', '王手している駒を取れないか、まず見てみよう！', '光っている受けなら、相手の攻めが続かないコン。'],
       k5: ['光っている手を見て！ 相手のどの駒とどの駒をねらえる？', '桂・銀・角で2つをねらう形がないか探してみて！', 'ヒントは光っている手だコン。取ったあとの反撃も読んでみよう！', '王手と同時に何かをねらえないかな？', '光っている手のあと、相手はぜんぶを守れるかな？'],
       k3: ['光っている手で受けられるの。相手はどこから詰ませにくる？', '相手の王手を1つずつ思いうかべてみて！', 'ヒントは光っている手。玉の逃げ道を広げる手もあるコン！', '相手が打ちたいマスに、先に駒を利かせられないかな？', '光っている受けのあと、まだ詰む王手は残るかな？'],
@@ -486,7 +486,7 @@
     let esc = 0; if (kr >= 0) { const B2 = B.map(r => r.slice()); B2[kr][kc] = null; for (const [dr, dc] of SH_MV.k) { const y = kr + dr, x = kc + dc; if (y < 0 || y > 8 || x < 0 || x > 8 || (B2[y][x] && B2[y][x].w !== me)) continue; if (!shLBy(B2, y, x, me).length) esc++; } }   // (the squares the king can step to)
     return { B, to: [tr, tc], piece, took, drop, check, esc, takers, kingTakes: takers.some(P => P.t === 'k') && !guards.length && Math.abs(kr - tr) <= 1 && Math.abs(kc - tc) <= 1, guarded: guards.length > 0 };
   }
-  const shLNm = t => SH_KJ[t] || '駒';
+  const shLNm = t => SH_KJ[t] || '駒', SH_LV = { p: 1, l: 3, n: 4, s: 5, g: 6, b: 8, r: 10 };
   function shLFacts(p, u) { try { const S = shLB(p.sfen); return shLPlay(S, u); } catch (e) { return null; } }
   function shJaLesson(g, probs) {   // probs (lesson()) → the Japanese words of the 3D lesson
     const gid = g.id, T = SHJ2, o = { k20: 0, k15: 1, k12: 2, k10: 3, k8: 4, k6: 5, k5: 6, k4: 0, k3: 1, k2: 2, k1: 3, d1: 4, d2: 5, d3: 6, rx: 0 }[gid] || 0;
@@ -528,6 +528,11 @@
       }
       core = A.join('');
     } else if (P.mode === 'material' && gid === 'k20') core = at([`{m}で${px}を取ったね。ここで取れる駒の中では一番の大物なの。`, `${px}をゲット！ 盤の上でいちばんおいしい駒だったコン。`, `{m}で${px}！ 大きい駒から取るのが基本なの。`, `${px}を取れたね。ほかに取れる駒より値打ちが上でしょ？`, `大物の${px}を見のがさなかったね。`]);
+    else if (P.mode === 'free') {   // (2026-11-25 第2期 k15: the free piece, and the bigger piece that was guarded)
+      let big = ''; (P.cand || []).forEach(([v]) => { const f = shLFacts(P, v); if (f && f.took && f.takers.length && (!big || (SH_LV[f.took.t] || 0) > (SH_LV[big] || 0))) big = f.took.t; });
+      const bn = big ? shLNm(big) : '';
+      core = at([`{m}で${px}をタダで取れたね。取ったマスに、相手の駒は届かないの。`, bn ? `${px}はだれにも守られていなかったコン。${bn}は守られていたから、取ると取り返されちゃうの。` : `${px}はだれにも守られていなかったコン。`, `取り返されない${px}、まるもうけだコン！`, bn ? `${bn}は守られているから、守りのない${px}が正解なの。` : `守りのない${px}が正解なの。`, `ただの${px}を見のがさなかった！ 取り返す駒がいないの。`]);
+    }
     else if (P.trap && P.bait) { const b = shLFacts(P, P.bait), bx = b && b.took ? shLNm(b.took.t) : '駒'; core = at([`取りたくなる${bx}は、わなだったの。`, `${bx}に飛びつかなかったのがえらいコン。`, `${bx}を取るのはわなだって、見ぬいたね。`, `わなの${bx}をスルーできたね。`, `${bx}は取ると損する駒だったの。`]) + (P.src === 'trap' && /王様/.test(ex) ? at(['玉が危ないときは、まず守りが先だね。', '玉の安全が先、よくわかってるコン。', '守りを先にしたのが正解なの。', 'あわてず玉を守れたね。', '攻めより守り、ばっちりなの。']) : at(['取ったあとの相手の手まで読めているね。', '一手先の反撃まで見えていたコン。', '目の前の駒より、先を読んだね。', '取られたあとの手まで読めてるの。', 'あまい誘いにのらなかったね。'])); }
     else if (P.src === 'capture') core = at([`${px}をタダで取れたね。取り返す駒がいないの。`, `${px}はだれにも守られていなかったコン。`, `取り返されない${px}、まるもうけだね。`, `${px}を取ったマスに、相手の駒は届かないの。`, `ただの${px}を見のがさなかったね。`]);
     else if (P.src === 'evade') { const k = F.piece && F.piece.t === 'k' ? 0 : F.took ? 1 : 2; core = [at(['玉が逃げるのが正解。逃げた先は安全なの。', '玉をかわす受けがいちばんだったコン。', '逃げる受けで、相手の攻めが続かないね。', '玉が安全な場所へ移れたね。', '逃げた先で、もう追われない形なの。']), at([`王手している${px}を取るのが正解だったね。`, `${px}を取って、王手ごと消したコン。`, `王手の${px}を取れば、攻めが止まるの。`, `${px}を取る受けで、駒得にもなったね。`, `取る受けがいちばん。${px}がいなくなったの。`]), at([`${nm}の合駒が正解！ 玉を動かさずに守れたね。`, `間に${nm}を入れて、王手をさえぎったコン。`, `合駒の${nm}で、守りの形がくずれないの。`, `${nm}を間に置く受けが、いちばん安全だったね。`, `合駒でしのいだね。`])][k]; }
@@ -616,6 +621,12 @@
       const back = F && F.took && F.takers.length > 0, rw = u ? shReplyWhyJa(gid, P, u, ans, ex, i + o) : '';
       if (P.mode === 'material' && gid === 'k20') why = px ? at([`{x}で取れるのは${px}。{m}なら${pm}が取れて、そっちが大きいの。`, `{x}の${px}より、{m}で取れる${pm}のほうが価値が高いから損なの。`, `${px}もいいけど、{m}なら${pm}が取れたの。`, `{x}だと${px}どまり。{m}で${pm}を取れば、もっと得だったね。`, `取れる駒を比べると、${px}より${pm}が上だから、{m}が正解なの。`])
         : at([`{x}だと駒が取れないの。{m}なら${pm}が取れるよ。`, `{x}は駒を取らない手。${pm}を取れたのにもったいない！`, `{x}では駒得にならないの。${pm}が取れたコン。`, `{x}だと何も取れないの。${pm}を取るのが得だったね。`, `${pm}が取れたのに、{x}は駒を取っていないの。`]);
+      else if (P.mode === 'free') {   // (k15: what the move takes and who takes the mover back — the board)
+        const rec = F && F.took ? F.takers.filter(t => t.t !== 'k' || !F.guarded)[0] : null, mv = F && F.piece ? shLNm(F.piece.t) : '';
+        why = !px ? at([`{x}だと駒が取れないの。{m}なら${pm}をタダで取れたよ。`, `{x}は駒を取らない手だから、もったいない！ ${pm}がタダで取れたの。`, `{x}では駒得にならないの。{m}で${pm}を取れたコン。`, `{x}だと何も取れないの。守りのない${pm}を取るのが得だったね。`, `{x}では何も取れないの。${pm}がタダだったコン。`])
+          : rec ? at([`{x}で${px}を取ると、${shLNm(rec.t)}に${mv}を取り返されちゃうの。{m}の${pm}ならタダだよ。`, `{x}の${px}は${shLNm(rec.t)}が守っているから、${mv}を取り返されるコン。${pm}は守られていないの。`, `${px}を取っても、${shLNm(rec.t)}で${mv}を取り返されて損なの。{m}なら${pm}がタダだったコン。`, `{x}で${px}を取っても、${mv}が${shLNm(rec.t)}に取り返されるから損なの。タダなのは${pm}だよ。`, `${px}には${shLNm(rec.t)}の守りがついていたの。{x}だと${mv}を取り返されるから、{m}で${pm}を取ろうね。`])
+          : `{x}で${px}は取れるけど、{m}なら${pm}をタダで取れたの。`;
+      }
       else if (gid === 'rx' && P.mode === 'material') why = '{x}だと、入玉宣言の条件がそろわないの。';
       else if (P.trap && P.bait && u === P.bait) why = /詰まされ/.test(ex) ? at([`{x}で取れる${px || '駒'}はわな！ 取ると詰まされちゃうの。`, `${px || '駒'}を取ると、そのすきに玉が詰まされるコン。`]) : at([`{x}で取れる${px || '駒'}はわなだったの。取ったあと、相手に強い手があるの。`, `${px || '駒'}に飛びつくと、あとで大損しちゃうコン。`, `{x}の${px || '駒'}取りは、相手の反撃が待っているの。`]);
       else if (rw && gid !== 'k12' && gid !== 'k3' && !(back && !/取られちゃう|取られる|取られて/.test(rw))) why = rw;   // (2026-11-22: what the opponent's answer does to the move played)
@@ -906,8 +917,8 @@
     load() {
       if (this.p) return this.p;
       const voice = fetch('../shogi/voice-fox-ja.js?v=5').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
-      const rep = getJ('../shogi/lesson-replies.json?v=2').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
-      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261126b'), getJ('../shogi/openings.json?v=20261124ol1'),
+      const rep = getJ('../shogi/lesson-replies.json?v=3').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
+      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261126c'), getJ('../shogi/openings.json?v=20261124ol1'),
         ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261124oc`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
@@ -964,6 +975,7 @@
     points(P, u) {   // = shogi/index.html movePoints (without the engine's runtime score)
       if (P.mode === 'line') { if (P.accept.includes(u)) return PTS; const ref = Math.max(...P.cand.filter(c => P.accept.includes(c[0])).map(c => c[1])), c = P.cand.find(x => x[0] === u), s = c ? c[1] : P.floor; return Math.max(0, Math.min(12, Math.round(12 * (1 - (ref - s) / 500)))); }   // (the line's next move, 3D only: another move is partial at most)
       if (P.mode === 'material' || P.mode === 'freq') { const best = P.cand[0][1], c = P.cand.find(x => x[0] === u); return c ? Math.round(PTS * c[1] / best) : 0; }
+      if (P.mode === 'free') { const best = P.cand[0][1], c = P.cand.find(x => x[0] === u); return c ? Math.max(0, Math.round(PTS * c[1] / best)) : 0; }
       if ((P.accept || []).includes(u)) return PTS;
       if (P.mode === 'cp') { const best = P.cand[0][1], c = P.cand.find(x => x[0] === u), s = c ? c[1] : P.floor; return Math.max(0, Math.min(PTS - 1, Math.round(PTS * (1 - (best - s) / 500)))); }
       if (P.cand) { const best = P.cand[0][1], c = P.cand.find(x => x[0] === u), s = c ? c[1] : Math.min(P.floor !== undefined ? P.floor : best - 2000, best); return Math.max(0, Math.min(PTS - 1, Math.round(PTS * (1 - (winP(best, 600) - winP(s, 600)) / .3)))); }
@@ -2136,6 +2148,9 @@
     for (let k = 1; k < 8; k++) o += `<path d="M${2 + k * 10} 2V82M2 ${2 + k * 10}H82" stroke="#1f6b42" stroke-width=".8"/>`;
     for (let q = 0; q < 64; q++) if (c[q] === '1' || c[q] === '2') o += `<circle cx="${7 + (q & 7) * 10}" cy="${7 + (q >> 3) * 10}" r="4.1" fill="${c[q] === '1' ? '#17181c' : '#f6f2e6'}"${c[q] === '2' ? ' stroke="#bdb6a2" stroke-width=".6"' : ''}/>`;
     return o + '</svg>'; };
+  // (2026-11-25 第2期 ⑧) the flips of a move by direction: [{ nm: 縦|横|ななめ, n }] — the rules lesson's words say what the board shows
+  const rvDirs = (c, sq, me) => { const o = 3 - me, out = []; for (const [dr, dc] of [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]) { let r = (sq >> 3) + dr, k = (sq & 7) + dc, n = 0; while (r >= 0 && r < 8 && k >= 0 && k < 8 && c[r * 8 + k] === o) { n++; r += dr; k += dc; } if (n && r >= 0 && r < 8 && k >= 0 && k < 8 && c[r * 8 + k] === me) out.push({ nm: dr === 0 ? '横' : dc === 0 ? '縦' : 'ななめ', n }); } return out; };
+  const rvDirTx = D => D.map(x => `${x.nm}に${x.n}枚`).join('と');
   const rvLegal = (c, me) => { const a = Array.isArray(c) ? c : String(c).split('').map(Number), out = []; for (let q = 0; q < 64; q++) if (rvFlips(a, q, me).length) out.push(q); return out; };
   const RV_MK = { focus: 'hl', danger: 'ng', flip: 'ok', front: 'ok', best: 'ok' };
   function rvAid(it) {   // = reversi/index.html warmFacts + warmAids: what the step tells the player to look at
@@ -2272,11 +2287,18 @@
     const c = String(P.cells).split('').map(Number), exact = P.type === 'exact';
     const xc = q => RV_X[q] != null && !c[RV_X[q]] ? 'X' : RV_C[q] != null && !c[RV_C[q]] ? 'C' : '';
     const res = n => n > 0 ? `${n}石差で勝ち` : n < 0 ? `${-n}石差で負け` : '引き分け';
-    const H = RVJ_LS.hint[kind] || [''], hintTx = pk(H, i) + (marks ? ' ' + pk(kind === 'wall' ? RVJ_LS.rfWall : RVJ_LS.rf, i + 2) : '');
+    const DB = kind === 'rules' && bs.length ? rvDirs(c, bs[0], P.toMove) : [], dg = DB.some(x => x.nm === 'ななめ');
+    const H = kind === 'rules' ? (DB.length > 1 ? ['1つの向きだけじゃなく、ほかの向きでも返せないか見てね。', '2つ以上の向きで、いっぺんにはさめる場所もあるんだ。', '向きごとの枚数を、足し算してみて！', '1つのマスから、何本の線ではさめるかな？', 'いくつかの向きの合計で、いちばんを決めてね。']
+      : dg ? ['ななめの列は、見落としやすいんだ！', 'ななめの向きも、指でなぞって数えてみて。', 'ななめに続く相手の石に、目を向けてごらん。', '縦と横だけで終わらせず、ななめも見てね。', 'ななめの線の先に、自分の石はないかな？']
+      : top >= 3 ? ['遠くの自分の石とも、はさめることがあるね。', '自分の石まで、相手の石が何枚続くか数えてみて。', '長く続く相手の石の列を探してごらん。', '列の端から端まで、ていねいに数えてみて！', '1本の列で、何枚まで返せるかな？']
+      : ['縦・横・ななめ、8つの向きにはさめる石を数えてみて。', '自分の石まで、相手の石が何枚続くか数えてみて。', 'マスごとに、返る石を1枚ずつ数えてね。', '打てる場所を、ひとつずつ確かめてみて！', 'どのマスも、8つの向きをぐるっと見てみて。']) : RVJ_LS.hint[kind] || [''], hintTx = pk(H, i) + (marks ? ' ' + pk(kind === 'wall' ? RVJ_LS.rfWall : RVJ_LS.rf, i + 2) : '');
     const reasonGood = u => {
       const fu = F[u], out = [];
       switch (kind) {
-        case 'rules': { const n = fu[1]; out.push(pk([`${n}枚、ちゃんと数えられた！`, `いちばん多い${n}枚を見つけたんだ。8つの向きを、ちゃんと見てたね。`, `${n}枚返る場所だよ。縦も横もななめも、のこさず見られたんだ。`, `${n}枚いっぺんに返った！ 数えまちがいもなかったね。`, `石が${n}枚ひっくり返った！ 遠くの石まで目が届いてたんだ。`], k)); break; }
+        case 'rules': { const n = fu[1], D = rvDirs(c, u, P.toMove), dn = D.length === 1 ? D[0].nm : '';
+          out.push(D.length > 1 ? pk([`${rvDirTx(D)}、合わせて${n}枚！ 1つの向きで終わらせずに数えられたね。`, `${D.length}つの向きで同時にはさんで${n}枚。${rvDirTx(D)}なんだ。`, `いちばん多い${n}枚！ ${rvDirTx(D)}、ちゃんと足し算できたね。`, `${rvDirTx(D)}で${n}枚いっぺんに返った！ ほかの向きも見てたんだ。`, `${n}枚返る場所だよ。${D.length}つの向きを、のこさず見られたね。`], k)
+            : dn === 'ななめ' ? pk([`ななめの1列で${n}枚！ 見落としやすい向きまで、ちゃんと見てたね。`, `ななめに${n}枚続く列を見つけたんだ。`, `いちばん多いのは、ななめの${n}枚。よく数えられたね。`, `ななめにはさんで${n}枚！ 数えまちがいもなかったね。`, `${n}枚、ななめの列でひっくり返った！`], k)
+            : pk([`${dn}に${n}枚、まっすぐ続く列を見つけたね。`, `${dn}の1列で${n}枚！ 数えまちがいもなかったね。`, `いちばん多い${n}枚は、${dn}の列だったんだ。`, `${dn}にはさんで${n}枚！ ` + (n >= 3 ? '遠くの石まで目が届いてたね。' : 'ちゃんと数えられたね。'), `${n}枚いっぺんに返った！ ${dn}の列をきちんと見てたんだ。`], k)); break; }
         case 'corner':
           if (RV_CN.includes(u)) out.push(pk(['隅を取ったよ。隅の石はもう返されないから、ここから辺に確定石が広がっていくんだ。', '隅をしっかり確保！ 二度と返されない石は、終盤までたよれる味方になるよ。', '角の石は、もうだれにも返せない。ここを足場に辺を固めていけるね。', '隅、ゲット！ ここから続く辺の石も、どんどん確定していくんだ。', '取れる隅を、ちゃんと取れた！ 確定石の第一歩だよ。'], k));
           else if (P.trap) out.push(pk(['この場面は隅が取れない。だから、相手に隅への道を作らない手がいちばんなんだ。', '取れる隅がないときは、守りが大事！ 隅への通り道を作らない手を選べたね。', '隅が取れない場面で、ちゃんと安全な手を選べた！', '隅がないなら、隅を渡さない。その考え方がぴったりの場面だよ。', '隅に打てない場面でも、あわてずに守れたんだ。'], k));
@@ -2349,7 +2371,8 @@
       const lead = kind !== 'parity' && kind !== 'finish' && kind !== 'rules' ? (fu[4] ? pk(['赤い枠だと、次に相手が隅を取れるようになっちゃう。', 'きみの手だと、相手に隅への道が開いちゃうんだ。', 'その手を打つと、相手は隅に打てるようになるよ。', '赤い枠だと、隅をプレゼントしちゃう！', '打ったあと、相手に隅を取られちゃうんだ。'], k)
         : xc(u) ? pk([`赤い枠は空いた隅のとなりの${xc(u)}だから、隅への通り道になりやすい。`, `隅が空いているうちは${xc(u)}のマスは危ない。相手に隅を取られやすいんだ。`, `赤い枠は${xc(u)}だから、あとで隅を取られる種になりやすいよ。`, `${xc(u)}に打つと、空いた隅を相手にねらわれるんだ。`, `赤い枠は${xc(u)}のマス。隅が空いてると、取られる心配があるね。`], k) : '') : '';
       switch (kind) {
-        case 'rules': out.push(pk([`赤い枠は${fu[1]}枚、緑の枠なら${fb[1]}枚返せたんだ。`, `きみの手は${fu[1]}枚。緑の枠なら${fb[1]}枚だよ。`, `赤い枠だと${fu[1]}枚どまり。緑の枠なら${fb[1]}枚もひっくり返る！`, `緑の枠なら${fb[1]}枚、きみの手だと${fu[1]}枚なんだ。`, `赤い枠では${fu[1]}枚、緑の枠では${fb[1]}枚返るよ。`], k), pk(['ななめの列を見落としたのかも？', '次は8つの向きを順番に指でなぞってみて！', 'もう一度、緑の枠から8方向をたどってみよう！', '向きごとに数えると、見落としがへるよ。', '縦・横・ななめ、全部の線を確かめてみて！'], k + 1)); break;
+        case 'rules': out.push(pk([`赤い枠は${fu[1]}枚、緑の枠なら${fb[1]}枚返せたんだ。`, `きみの手は${fu[1]}枚。緑の枠なら${fb[1]}枚だよ。`, `赤い枠だと${fu[1]}枚どまり。緑の枠なら${fb[1]}枚もひっくり返る！`, `緑の枠なら${fb[1]}枚、きみの手だと${fu[1]}枚なんだ。`, `赤い枠では${fu[1]}枚、緑の枠では${fb[1]}枚返るよ。`], k), (D => D.length > 1 ? pk([`緑の枠は${rvDirTx(D)}、${D.length}つの向きで同時にはさめたんだ。`, `緑の枠なら${rvDirTx(D)}。向きを足すと多くなるね。`, `緑の枠は、${D.length}本の線で同時に返せるマスだったよ。${rvDirTx(D)}。`, `${rvDirTx(D)}、合わせると緑の枠がいちばん！`, `緑の枠からは${D.length}つの向きにはさめる。${rvDirTx(D)}なんだ。`], k + 1)
+          : pk([`緑の枠は、${D[0].nm}に${D[0].n}枚続いていたんだ。`, `緑の枠からは、${D[0].nm}の列に${D[0].n}枚並んでたよ。`, `緑の枠の${D[0].nm}の列には、相手の石が${D[0].n}枚続いてたね。`, `${D[0].nm}に${D[0].n}枚、緑の枠ならまとめて返せたんだ。`, `緑の枠は${D[0].nm}の1列だけで${D[0].n}枚！`], k + 1))(rvDirs(c, b, P.toMove))); break;
         case 'corner':
           if (lead) out.push(lead); else if (RV_CN.includes(b)) out.push(pk(['取れる隅があったんだ。隅の石は二度と返されないから、取れるときに取っておきたいね。', '隅が空いてた！ 二度と返されない石だから、見のがすのはもったいない。', '角に打てるチャンスだった！ 確定石の始まりになるからね。', '隅を取れば、そこから確定石がふえていくんだ。', '隅に打てたのに見送ると、相手に取られるかもしれないよ。'], k)); else out.push(loss());
           if (lead && RV_CN.includes(b)) out.push(pk(['緑の枠の隅を取れば、二度と返されない石が手に入ったね。', '緑の枠は隅そのもの。そっちが先だったんだ。', '隅を先に取れば、相手の心配もいらなかったよ。', '緑の枠の隅なら、もう返されない！', '先に隅を取っていれば安心だったね。'], k + 1));
@@ -2557,7 +2580,7 @@
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261124p1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=5').catch(() => ({}))])
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261125r1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=6').catch(() => ({}))])
         .then(([ls, op, ev, wt, opp]) => { this.WT = wt || {}; this.OPP = opp || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
@@ -2605,6 +2628,7 @@
         take(std.filter(p => !probs.includes(p) && !this.near(cs(P0), cs(p))), 5 - probs.length);
       }
       // (2026-11-24 第2期 ⑥) the exact endgames from easy to hard: fewer empties (= a shorter read) first, the exception (trap) last
+      if (probs.length && probs.every(p => p.type === 'flips')) probs.sort((a, b) => (a.d || 0) - (b.d || 0));   // (2026-11-25 第2期 ⑥: counting from easy to hard, = reversi/index.html)
       if (probs.length && probs.every(p => p.type === 'exact')) probs.sort((a, b) => (a.trap ? 1 : 0) - (b.trap ? 1 : 0) || rvEmpt(a) - rvEmpt(b));
       if (!ramp.every(it => (it.k === 'explain' ? it.b : it.g))) ramp = [];   // (texts missing: no warm-up rather than an empty one)
       const look = W('look'), RU = (k, v) => fill(k === 'look' && look ? L(look, lang) : L(WT['ui/' + k], lang) || '', v || {});
@@ -2650,6 +2674,7 @@
       }
       const F = P.f || {}, all = Object.values(F).map(x => x[0]), mine = F[u] ? F[u][0] : -1e9, best = Math.max(...all);   // = reversi/index.html problemPoints
       if (all.length <= 1 || mine >= best - 1e-9) return PTS;
+      if (P.type === 'flips' || P.type === 'exact') return Math.max(0, Math.round((P.type === 'exact' ? 8 : 12) * (all.length - 1 - all.filter(v => v > mine + 1e-9).length) / (all.length - 1)));   // (2026-11-25 第2期 ①②⑨: one answer — another move is never 「正解」)
       return Math.max(0, Math.round(PTS * (all.length - 1 - all.filter(v => v > mine + 1e-9).length) / (all.length - 1)));
     },
   };
@@ -3155,7 +3180,7 @@
     LKEY: 'aicoding-gomoku-lessons', OKEY: 'aicoding-gomoku-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261125f'), getJ('../gomoku/openings.json?v=20261125v2'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261125f'), getJ('../gomoku/openings.json?v=20261125v3'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] gomoku texts', e); } this.I = w.I18N || {}; this.data = { ls, op };
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
