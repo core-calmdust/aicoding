@@ -47,8 +47,9 @@
     moon: '<svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>',
   };
 
-  let pref = { speed: 1, anim: true, names: true, seen: false };
+  let pref = { speed: 2, anim: true, names: true, seen: false };
   try { Object.assign(pref, JSON.parse(localStorage.getItem(PREF) || '{}')); } catch (e) {}
+  if (!pref.speedSet) pref.speed = 2;   // the default is now はやい (2026-11-25); only a speed the player chose stays
   const savePref = () => { try { localStorage.setItem(PREF, JSON.stringify(pref)); } catch (e) {} };
   let st = null, S = null;
   const G = { scr: 'title', storyId: null, diff: 1, role: 'auto', q: [], typing: null, loc: null, nbTab: 'ppl' };
@@ -257,7 +258,7 @@
     document.documentElement.style.setProperty('--fs', pc ? '1.1' : '1');
     document.documentElement.style.setProperty('--depth', (pc ? Math.max(0, Math.round(innerHeight * .42) - 250) : 0) + 'px');
     if (!pc) {
-      const sh = Math.round(Math.min(innerHeight * .46, innerWidth * 1.05));
+      const sh = Math.round(Math.max(innerHeight * .46, Math.min(innerHeight - 270, innerWidth * 1.6)));   // the text strip keeps about 270px at the bottom; the stage gets the rest, so the people do not crowd
       document.documentElement.style.setProperty('--stageH', sh + 'px');
     }
     sizeCast();
@@ -267,7 +268,7 @@
     // the puppets' size does not follow the text strip: on PC it is reckoned from a fixed strip height, so it only changes with the window
     const c = $('cast');
     const h = PCQ.matches ? Math.max(120, $('stage').clientHeight - Math.max(250, Math.round(innerHeight * .42)) - 56 - 120) : c.clientHeight;   // one size with or without the name boards above, so nobody grows or shrinks between scenes
-    const pw = Math.max(54, Math.min(150, h * .66 * 120 / 250));
+    const pw = PCQ.matches ? Math.max(54, Math.min(150, h * .66 * 120 / 250)) : Math.max(64, Math.min(100, h * .26, innerWidth * .26));   // a phone: as tall as the stage allows, narrow enough for a row of four or five
     c.style.setProperty('--pw', pw + 'px');
   }
   // the people on the stage: ids, and how to stand them
@@ -351,11 +352,21 @@
   }
   function finishType() { clearInterval(G.typing); G.typing = null; const t = $('tx').querySelector('.t'); t.querySelectorAll('i').forEach(i => i.style.opacity = 1); $('tx').classList.add('done'); }
   $('tx').addEventListener('click', nextPage);
+  // the whole stage and the strip around the text turn the page too (a phone's thumb should not have to find the box)
+  document.addEventListener('click', e => {
+    if ($('tx').classList.contains('hide') || !$('sheet').classList.contains('hide') || G.scr !== 'play') return;
+    const t = e.target; if (!t.closest || t.closest('#tx') || !t.closest('#stage,#dock')) return;
+    if (t.closest('#roster button,#roster .ro')) return;
+    e.stopPropagation(); e.preventDefault(); nextPage();
+  }, true);
   // when the browser loses focus, the play stops (sound, lamp flicker, puppets, letters) until it comes back
   function setPaused(p) { G.paused = !!p; document.body.classList.toggle('paused', G.paused); SND.pause(G.paused); }
   window.addEventListener('blur', () => setPaused(true));
   window.addEventListener('focus', () => setPaused(false));
-  document.addEventListener('visibilitychange', () => setPaused(document.hidden || !document.hasFocus()));
+  document.addEventListener('visibilitychange', () => setPaused(document.hidden));   // phones often give no focus event on coming back: being visible again is enough
+  window.addEventListener('pageshow', () => setPaused(document.hidden));
+  // any touch brings the play (and the sound) back, in case the browser kept it stopped
+  document.addEventListener('pointerdown', () => { if (G.paused && !document.hidden) setPaused(false); SND.unlock(); }, true);
   document.addEventListener('keydown', e => {
     // F: full screen on / off (not while typing, not with a modifier)
     if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target || {}).tagName || '')) {
@@ -1354,7 +1365,7 @@
       box.querySelectorAll('[data-x]').forEach(b => b.onclick = () => closeSheet());
       box.querySelectorAll('.seg').forEach(s => s.querySelectorAll('button').forEach(b => b.onclick = () => {
         const k = s.dataset.k, v = b.dataset.v;
-        if (k === 'snd') SND.set(v === '1'); else if (k === 'bgm') SND.setMusic(v === '1'); else if (k === 'talk') SND.setTalk(v === '1'); else pref[k] = v === 'true' ? true : v === 'false' ? false : +v;
+        if (k === 'snd') SND.set(v === '1'); else if (k === 'bgm') SND.setMusic(v === '1'); else if (k === 'talk') SND.setTalk(v === '1'); else { pref[k] = v === 'true' ? true : v === 'false' ? false : +v; if (k === 'speed') pref.speedSet = true; }
         savePref(); s.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
         document.body.classList.toggle('anim-off', !pref.anim); document.body.classList.toggle('show-names', !!pref.names);
       }));
