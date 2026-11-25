@@ -1930,12 +1930,12 @@ html.atlas-skin #newOverlay #lvNote{display:none!important}   /* (the long note 
 <div class="mt-strip" id="mtStrip" role="button"></div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
-<script src="i18n.js?v=20261125k12"></script>
+<script src="i18n.js?v=20261126k10"></script>
 <script src="rules-i18n.js?v=20261107l14"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="../shared/export.js?v=9l14"></script>
 <script src="../shared/rulesoffer.js?v=17l14j"></script>
-<script src="engine.js?v=20261126v7"></script>
+<script src="engine.js?v=20261126v8"></script>
 <script src="strategy.js?v=20261107l14"></script>
 <script src="cpu-style.js?v=20261113pc"></script>
 <script src="lists-ui.js?v=20261113pc"></script>
@@ -2125,7 +2125,7 @@ const weightsReady = (async () => {
   return weights;
 })();
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=20261126v7');
+  const w = new Worker('engine.js?v=20261126v8');
   w.onmessage = onmsg;
   w.onerror = e => {
     console.warn('engine worker error', e.message);
@@ -2153,7 +2153,7 @@ aiWorker = makeWorker(aiMsg); anaWorker = makeWorker(anaMsg);
 // device) and stay on the one-thread workers; the timed top steps 七段〜九段 (rated games too: the user's decision 2026-11-08,
 // device differences accepted) and PRO time limits use the pool.
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=14', lead: 'engine.js?v=20261126v7&mt=1', helper: 'mt-helper.js?v=3', slot: 8 << 20, initial: 1536, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=14', lead: 'engine.js?v=20261126v8&mt=1', helper: 'mt-helper.js?v=3', slot: 8 << 20, initial: 1536, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {}, aprogress: () => {} } }),
   after: async (X, mem, ws) => { const wt = await weightsReady; if (wt) ws[0].postMessage({ type: 'weights', buffer: wt.slice(0) }); },
   help: m => { const p = new E.Position(); p.setSfen(m.sfen); const board = Array.from(p.board), hand = Array.from(p.hand), side = p.side, moves = [];
@@ -4544,7 +4544,7 @@ let LESSONS = null;
 // they are addressed by negative indices (-1 = LESSONS.rules[0]) — see gradeAt()
 // (2026-11-15) read when the lessons are first opened, not with the page (0.5MB)
 let lessonsP = null;
-const lessonsLoad = () => lessonsP || (lessonsP = fetch('lessons.json?v=20261125k12').then(r => r.json()).then(d => { d.rules = d.grades.filter(g => g.rules); d.grades = d.grades.filter(g => !g.rules); return (LESSONS = d); }).catch(e => { lessonsP = null; console.warn('lessons unavailable', e); }));
+const lessonsLoad = () => lessonsP || (lessonsP = fetch('lessons.json?v=20261126k10').then(r => r.json()).then(d => { d.rules = d.grades.filter(g => g.rules); d.grades = d.grades.filter(g => !g.rules); return (LESSONS = d); }).catch(e => { lessonsP = null; console.warn('lessons unavailable', e); }));
 let lprog = {};
 try { lprog = JSON.parse(localStorage.getItem(LSTORE) || '{}'); } catch (e) {}
 const L = o => (o && (o[LANG] || o.en || o.ja)) || '';
@@ -5348,7 +5348,7 @@ async function lessonMove(m) {
     if (!p.inCheck()) return fail(t('ts.notCheck'), pr.n > 1);
     if (!p.legalMoves(false).length) return lessonScored(Math.max(0, PTS - pen), { solved: true, alt: !!lesson.offline });
     const remain = pr.n - moves.length;
-    if (remain <= 0) return fail(pr.n === 1 ? t('ls.notMate') : PZBook.t('outOfMoves', { n: pr.n }));
+    if (remain <= 0) return fail(pr.n === 1 ? t('ls.notMate') + mate1Why(pr.sfen, usi) : PZBook.t('outOfMoves', { n: pr.n }));
     const onLine = !lesson.offline && moves.every((u, i) => u === pr.sol[i]);
     if (!onLine && !lesson.offline) { lesson.offline = true; lesson.dev = moves.length - 1; }
     // composed problems (u): unique solution, and the stored line already holds the defender's longest non-futile
@@ -5608,6 +5608,18 @@ function seqHint() {
   const p0 = posAt(cur), bk = seqBook(p0, lesson.cur, S.i === 0);
   if (bk) go(bk[0].u);
   else if (S.ana) S.ana.p.then(list => { if (list[0]) go(list[0].move); });
+}
+// (2026-11-26 第2期 k10「1手詰（基本）」) a check that does not mate: the defender's answer on the board — the king takes the checking
+// piece, the king steps away, another piece takes it, or a piece is put in between (the first such legal reply, in that order)
+function mate1Why(sfen, usi) {
+  try {
+    const p = new E.Position(); p.setSfen(sfen); const m = p.fromUsi(usi), to = E.mTo(m); p.doMove(m); const sf = p.sfen();
+    const rs = p.legalMoves(true), kq = p.king[p.side], M = kan1(sfen, usi), ch = p.attackers(kq, p.side ^ 1), c = ch.includes(to) ? to : ch[0], PN = NAME[E.typeOf(p.board[c])];
+    const kt = rs.find(y => !E.isDrop(y) && E.mFrom(y) === kq && E.mTo(y) === c); if (kt) return ' ' + t('r.m1KTake', { m: M, p: PN });
+    const ke = rs.find(y => !E.isDrop(y) && E.mFrom(y) === kq); if (ke) return ' ' + t('r.m1Esc', { m: M, r: kan1(sf, p.toUsi(ke)) });
+    const tk = rs.find(y => !E.isDrop(y) && E.mTo(y) === c); if (tk) return ' ' + t('r.m1Take', { m: M, p: PN, r: kan1(sf, p.toUsi(tk)) });
+    const bl = rs[0]; return bl ? ' ' + t('r.m1Block', { m: M, r: kan1(sf, p.toUsi(bl)) }) : '';
+  } catch (e) { return ''; }
 }
 // step-specific explanation (cf. reversi lessonReason)
 function lessonReason(pr, usi) {

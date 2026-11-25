@@ -16,7 +16,7 @@
 "lv.dan3": "3 dan",
 "lv.dan4": "4 dan",
 "lv.dan5": "5 dan",
-"lvd": ["Débutants au go", "Connaissent les règles", "Joueurs réguliers", "Joueurs forts", "Joueurs forts"],
+"lvd": ["Débutants au go","Connaissent les règles","Joueurs réguliers","Joueurs forts","Joueurs forts"],
 "u.pts": "{n} points",
 "u.pt": "{n} pts",
 "u.ro": "×",
@@ -377,5 +377,9 @@
 "lv.top4": "Le plus fort III",
 "lv.top5": "Le plus fort IV",
 "lvd.t": "Tous les cœurs · {s} s/coup",
-"lv.top6": "Le plus fort V"
+"lv.top6": "Le plus fort V",
+"op.goalOff": "Ton adversaire a quitté le joseki. Quel est le coup suivant ?",
+"op.whyOff": "Après cet écart, {m} est le meilleur coup.",
+"op.hintOff": "Regarde le coup qui a quitté le joseki et trouve le point devenu vital.",
+"ls.failedFar": "Pas encore réussie : réessaie !"
 }

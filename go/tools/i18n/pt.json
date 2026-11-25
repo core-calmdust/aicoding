@@ -16,7 +16,7 @@
 "lv.dan3": "3 dan",
 "lv.dan4": "4 dan",
 "lv.dan5": "5 dan",
-"lvd": ["Novos no Go", "Conhecem as regras", "Jogadores frequentes", "Jogadores fortes", "Jogadores fortes"],
+"lvd": ["Novos no Go","Conhecem as regras","Jogadores frequentes","Jogadores fortes","Jogadores fortes"],
 "u.pts": "{n} pontos",
 "u.pt": "{n} pts",
 "u.ro": "×",
@@ -377,5 +377,9 @@
 "lv.top4": "O mais forte III",
 "lv.top5": "O mais forte IV",
 "lvd.t": "Todos os núcleos · {s} s/lance",
-"lv.top6": "O mais forte V"
+"lv.top6": "O mais forte V",
+"op.goalOff": "O adversário saiu do joseki. Qual é a próxima jogada?",
+"op.whyOff": "Depois desse desvio, {m} é a melhor jogada.",
+"op.hintOff": "Veja a jogada que saiu do joseki e encontre o ponto que se tornou vital.",
+"ls.failedFar": "Não passou — tente de novo!"
 }
