@@ -51,6 +51,7 @@ for (const id of ids) {
     if (pick.some(Q => Q.sc[0][0] === P.sc[0][0] && Q.side === P.side)) continue;
     if (pick.filter(Q => G.kind(Q) === G.kind(P)).length >= 2) continue;
     if (pick.some(Q => G.dist(Q, P) < 4)) continue;
+    if (O.sets.some(h => h.verified && h.id !== id && h.problems.some(Q => G.dist(Q, P) < 4))) continue;   // (⑤ the other verified sets' problems too: check() skips them with skipOwn — 2026-11-25 suigetsu q1 = ugetsu q1)
     pick.push(P); }
   console.log(JSON.stringify(WHYS)); console.log(id, 'candidates', cands.length, 'picked', pick.length, ((Date.now() - t0) / 1000).toFixed(0) + 's');
   if (pick.length < 5) continue;
