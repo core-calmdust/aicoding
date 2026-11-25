@@ -180,7 +180,7 @@
     stage: ['board', 0, 0], trap: ['board', 0, 'crate'], green: ['aisle', 0, 0], quay: ['flag', 'water', 'post'], box: ['aisle', 0, 0],
   };
   function drawFloor() {
-    const f = $('floor'); if (!f || !PCQ.matches) return;
+    const f = $('floor'); if (!f) return;
     if (!f.__l) { f.__l = 1; f.addEventListener('transitionend', e => { if (e.propertyName === 'top') drawFloor(); }); }
     const w = Math.round(f.clientWidth), h = Math.round(f.clientHeight), key = w + 'x' + h + ':' + G.floorLoc;
     if (!w || !h || f.__wh === key) return; f.__wh = key;
