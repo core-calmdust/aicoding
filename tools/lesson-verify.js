@@ -1493,7 +1493,7 @@ function ckWarm(opt, L, E, X, val, moveVal, add, only) {
 //   縦と横) and for every wrong move (the king or not, a blocker on the way, a capture or not, a piece of yours taken next), the question
 //   and the hint (a corner / the throne named is in an answer)
 //   ⑨ the 2D (tafl/app.js problemPoints) and the 3D (TAFL.points) both score P.ok
-const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield']);
+const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield', 't_tuichi']);
 function tafl(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'tafl/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'tafl/lessons.json'), 'utf8'));
@@ -1668,9 +1668,39 @@ function tafl(opt) {
       const k2 = tm.match(/(\d+)枚/); if (f.W && k2 && +k2[1] !== f.W.taken) a(`⑧ ${x0}: 「${tm}」 — the right move takes ${f.W.taken}`);
       if (f.W && /王/.test(tm) && !f.W.king) a(`⑧ ${x0}: 「${tm}」 — no king in the wall`); }
     return f.d; };
-  L.steps.forEach((st, si) => { const id = st.id; if (!TF_DONE.has(id)) return;
+  // (2026-11-26 第2期 担当A) t_tuichi「トゥイチ」(tools/lesson-verify-tftuichi.js): ①② P.ok = the moves after which every attacker reply
+  // leaves the king a corner at once (a full search of the replies) ③ ≥3 legal moves, the answers ≤ a third, the king ≥3 wrong moves,
+  // d ≥ 1 (a king move that opens just one line: a ライチ) ④ the defender to move, no escape now, no line open now, no attacker win now,
+  // every answer a king move opening two lines, no king move opening two lines the attacker can still stop ⑤ the pool (five) and no two
+  // problems with the same shape (tuichiSig: how far each answer lands from the nearer corner) ⑥ d×10 − the answers never down, last >
+  // first ⑦⑧ タフリン's
+  // words: the praise and the right move name the lines it opens, every wrong move: the king caught (only when the attacker takes him), one
+  // line (routes 1), not the king (opens nothing), no line: a piece in the way only on the edge, 「端に出ていない」 only off it; the hints
+  // and the question hold on every problem (no 「縦にも横にも」, no corner-side square); the 2D hint likewise; the warm-up try = the goal set
+  const TU = require(path.join(ROOT, 'tools/lesson-verify-tftuichi.js')), tuSig = new Map();
+  const tuichiOne = (st, si, P, j, a) => { const f = TU.tuichiFacts(E, P), nm = m => E.name(f.p, m); f.bad.forEach(a);
+    five(st.id, j, P, f.me, nm, a);
+    { const sig = TU.tuichiSig(E, P); if (tuSig.has(sig)) a(`⑤ the king lands as far from the corners (${sig}) as in ${tuSig.get(sig)}`); else tuSig.set(sig, `q${j + 1}`); }
+    let W; try { W = X_.tfLsJa(E, st, P, j, k => X_.TFM(k, 'ja'), si); } catch (e) { a('⑧ the words fail: ' + e.message); return f.d; }
+    for (const t of [W.ask, W.hintTx]) if (!t || /\{|undefined|NaN/.test(t)) a(`⑧ 「${t}」`);
+    if (/縦にも横にも|2つの辺|角のそば|角に近い/.test(W.hintTx + W.ask)) a(`⑧ 「${W.hintTx}」: the two lines run both ways along one edge`);
+    for (const u of P.ok || []) { const g = plain(W.good(u)), R = f.C.get(u), k = g.replace(/1本しか止め/g, '').match(/(\d+)(本|方向)/); if (!R) continue;
+      if (!k || +k[1] !== R.routes) a(`⑧ the praise 「${g}」: the king has ${R.routes} lines`); }
+    for (const m of f.wrong) { const raw = plain(W.ng(m)), x0 = nm(m), i0 = raw.indexOf('赤い印の手'), i1 = raw.indexOf('緑の印の手'), R = f.C.get(m);
+      if (/\{|undefined|NaN/.test(raw) || i0 < 0 || i1 < 0) { a(`⑦ ${x0}: 「${raw}」 (your move / the right move not named)`); continue; }
+      const tx = raw.slice(i0, i1), tm = raw.slice(i1);
+      const want = R.capKing ? 'caught' : R.king && R.routes === 1 ? 'one' : !R.king ? 'notking' : R.edge ? 'blocked' : 'inside';
+      const said = /はさまれ|つかま|危ない/.test(tx) ? 'caught' : /1本|1方向|ライチ|その1本/.test(tx) ? 'one' : /王じゃない|王さまじゃない|守り手の駒|その場のまま|道が増えない/.test(tx) ? 'notking' : /端に出ていない|内側|端に着かない|端まで出られていない/.test(tx) ? 'inside' : /立ちふさが|あいだに駒|道がない|見通せない|ひとつもできない/.test(tx) ? 'blocked' : '?';
+      if (said !== want && !(want === 'inside' && said === 'blocked' && !/立ちふさが|あいだに駒/.test(tx))) a(`⑦ ${x0}: 「${tx}」 says ${said}, the board: ${want}`);
+      const k2 = tm.replace(/1本しか止め/g, '').match(/(\d+)(本|方向)/), A = f.C.get(P.best); if (A && k2 && +k2[1] !== A.routes) a(`⑧ ${x0}: 「${tm}」 — the right move opens ${A.routes}`); }
+    return f.d * 10 - (P.ok || []).length; };   // (⑥ the ライチ traps, then fewer answers is harder)
+  { const st = L.steps.find(s => s.id === 't_tuichi'), w = {}; vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'tafl/i18n.js'), 'utf8'), { window: w });
+    for (const lg of Object.keys(w.I18N)) { const h = w.I18N[lg]['ls.t_tuichi.hint'] || ''; if (/2つの辺|角に近い|two sides|near a corner/.test(h)) add('t_tuichi', -1, `⑧ the 2D hint (${lg}) 「${h}」: the two lines run both ways along one edge`); }
+    (st && st.ramp || []).forEach((r, k) => { if (r.k !== 'try') return; const f = TU.tuichiFacts(E, { s: r.s, ok: r.ok, best: r.ok[0] }); f.bad.filter(b => /^[①②④]/.test(b)).forEach(b => add('t_tuichi', -1, `warm-up ${k + 1}: ${b}`));
+      if (r.ok.length * 3 > f.all.length) add('t_tuichi', -1, `warm-up ${k + 1}: ③ ${r.ok.length} of ${f.all.length} moves are right`); }); }
+  L.steps.forEach((st, si) => { const id = st.id; if (!TF_DONE.has(id) || (opt && opt.only && !opt.only.includes(id))) return;   // (opt.only: the mutation tests of one lesson)
     let prevD = -1, firstD = null;
-    if (id === 'b_safe' || id === 't_shield') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
+    if (id === 'b_safe' || id === 't_shield' || id === 't_tuichi') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : id === 't_tuichi' ? tuichiOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
     st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), me = p.turn, all = p.moves(), nm = m => E.name(p, m);
       if (P.n > 1) { const d = seqCheck(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
         if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); seqWords(st, si, P, j, a); return; }
