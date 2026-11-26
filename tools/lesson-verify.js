@@ -89,14 +89,23 @@ function mcTopic(id, b, A, E, R) {
   if (id === 'k_starve') { if (!(theirs <= 6 && mine >= 2 * theirs)) return `④ the opponent's row (${theirs}) is not short against yours (${mine})`;
     if (opp(A) > 0) return '④ the gold pit feeds the opponent'; if (L0.filter(k => opp(k) === 0).length > 2) return '④ more than 2 pits feed no seed'; if (L0.filter(k => opp(k) > 0).length < 2) return '④ fewer than 2 pits feed the opponent'; }
   if (id === 'k_count' && onB > 22) return '④ too many seeds for an endgame read to the end';
+  if (id === 'k_open' || id === 'k_open6') { const tot = b.reduce((s, v) => s + v, 0), sd = id === 'k_open' ? 4 : 6, ex = L0.filter(k => tr(k).extra && !tr(k).over);
+    const oppEx = k => { const t = tr(k); if (t.extra || t.over) return 0; return E.legal(t.board, 1, R).filter(q => { const u = E.trace(t.board, 1, q, R); return u.extra && !u.over; }).length; };
+    if (tot !== 12 * sd) return `④ not a ${sd}-seed board (${tot} seeds)`;
+    if (b[6] + b[13] > (sd === 4 ? 10 : 14)) return `④ no opening: ${b[6] + b[13]} seeds already in the stores`;
+    // (2026-11-26 担当A) the lesson's two rules (intro and hint, 2D and 3D): an extra turn first; with none, leave the opponent no exact pit
+    if (ex.length) { if (!ex.includes(A)) return '④ a pit gives another turn, the gold pit does not'; if (ex.length < 2) return '④ only one pit gives another turn (no choice to make)'; }
+    else { if (oppEx(A)) return '④ the gold pit leaves the opponent an exact pit'; if (L0.filter(k => k !== A && oppEx(k)).length < 2) return '④ fewer than 2 other pits leave the opponent an exact pit'; } }
   return '';
 }
-const MC_DONE = new Set(['sow', 'extra', 'capture', 'defend', 'chain', 'endgame', 'k_combo', 'k_tempo', 'k_hoard', 'k_starve', 'k_count']);
+const MC_DONE = new Set(['sow', 'extra', 'capture', 'defend', 'chain', 'endgame', 'k_open', 'k_open6', 'k_combo', 'k_tempo', 'k_hoard', 'k_starve', 'k_count']);
 function mancala(opt) {
   const E = require(path.join(ROOT, 'mancala/engine.js')), L = require(path.join(ROOT, 'mancala/lessons.json')), PZ = require(path.join(ROOT, 'mancala/puzzles.json'));
   const out = [], pend = [], only = opt && opt.only;
   const pool = []; L.steps.forEach(st => { st.problems.forEach((P, j) => pool.push([`${st.id} q${j + 1}`, P.b, st.rules || L.rules || 'kalah']));
-    (st.ramp || []).forEach((r, j) => pool.push([`${st.id} warm-up ${j + 1}`, r.b])); });
+    (st.ramp || []).forEach((r, j) => pool.push([`${st.id} warm-up ${j + 1}`, r.b]));
+    if (st.line && st.line.moves) { let b = E.initial(st.line.seeds || st.seeds || 4), s = 0; pool.push([`${st.id} line 0`, Array.from(b)]);   // (2026-11-26 担当A: the opening line shown in the 2D intro, every board of it)
+      st.line.moves.forEach((k, j) => { const t = E.trace(b, s, k, st.rules || L.rules || 'kalah'); b = t.board; s = t.next; pool.push([`${st.id} line ${j + 1}`, Array.from(b)]); }); } });
   PZ.cats.forEach(c => c.themes.forEach(t => t.puzzles.forEach((p, j) => pool.push([`puzzle ${c.id}/${t.id} #${j + 1}`, p.b]))));
   const l1 = (a, b) => a.reduce((s, x, i) => s + Math.abs(x - b[i]), 0);
   const dist = (from, to) => { let c = 0, x = from; while (x !== to && c < 30) { x = x === 13 ? 0 : x + 1; if (x !== 13) c++; } return c; };
@@ -135,6 +144,8 @@ function mancala(opt) {
       }
       if (d < prevD) add(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
       if (j === st.problems.length - 1 && !(d > firstD)) add(`⑥ the last problem is no harder than the first (d ${d} vs ${firstD})`);
+      if (/^k_open6?$/.test(id) && j === st.problems.length - 1) { const exK = Q => E.legal(Int8Array.from(Q.b), 0, R).some(k => { const t = tr(Q.b, 0, k); return t.extra && !t.over; });   // (2026-11-26 担当A) both of the lesson's rules come up
+        const nx = st.problems.filter(exK).length; if (nx < 1 || nx > 4) add(`④ ${nx} of the 5 problems take another turn (both rules — another turn / no exact pit for the opponent — should come up)`); }
       const me = `${id} q${j + 1}`, S1 = succ(b), S2 = [].concat(...S1.map(succ));
       for (const [who, y] of pool) { if (who === me) continue;
         const e = l1(b, y); if (e <= 6) { add(`⑤ ${e} seeds from ${who}`); continue; }
@@ -193,10 +204,14 @@ function mancalaWords(opt) {
       const D2 = id === 'sow' ? null : deep(P.b, R), gt = plain(o.good(A));
       // ⑧ the question and the hint hold on this board
       const ht = plain(o.hintTx), ready = leg.filter(k => tr(k).extra), near = ready.length >= 1 && ready.every(k => k <= A);
+      const oppExA = T.extra || T.over ? 0 : E.legal(T.board, 1, R).filter(k => { const u = E.trace(T.board, 1, k, R); return u.extra && !u.over; }).length;
       const th3 = leg.length && E.legal(b, 1, R).map(k => ({ k, t: E.trace(b, 1, k, R) })).filter(x => x.t.cap >= 3), drops = T.events.filter(e => e.t === 'drop').map(e => e.at);
       const H8 = [[/1粒だけの穴はない/, P.b[5] === 1 && A === 5], [/ぴったりの穴が2つあったら|候補がいくつかあるなら|遠い穴を先にまくと/, ready.length >= 2 && near], [/ストアに近い穴から順に/, near],
         [/ねらわれた山を動かせば/, th3.some(x => x.t.capFrom === A)], [/空の穴に、種を落としてうめる/, th3.some(x => drops.includes(x.t.land))], [/相手の穴に1粒足して/, th3.some(x => drops.includes(7 + x.k))],
-        [/もう一回で手番を重ねられる/, ready.length > 0], [/ストアをまたぐ/, P.target > 6], [/向かいに大きな山/, T.cap >= 4], [/少ない種で、手番だけわたす/, P.b[A] <= 4 && !T.extra && !T.cap && drops.every(x => x <= 5)]];
+        [/もう一回で手番を重ねられる/, ready.length > 0], [/ストアをまたぐ/, P.target > 6], [/向かいに大きな山/, T.cap >= 4], [/少ない種で、手番だけわたす/, P.b[A] <= 4 && !T.extra && !T.cap && drops.every(x => x <= 5)],
+        // (2026-11-26 担当A) the opening hints: an exact pit to look for / none, so leave the opponent none / pit 1's six seeds / a seed added to the opponent's exact pit
+        [/まずストアにぴったり届く穴|まずはもう一回。/, ready.length > 0 && ready.includes(A)], [/もう一回がないときは|相手にぴったりの穴ができない/, !ready.length && !oppExA],
+        [/ぴったりの穴が2つ以上あるの/, ready.length >= 2 && ready.includes(A)], [/もう一回がない番/, !ready.length], [/ストアからいちばん遠い穴がぴったり/, A === 0 && P.b[0] === 6 && ready.includes(0)], [/相手の穴に1粒足すと、相手のぴったりがずれる/, !ready.length && E.legal(b, 1, R).some(k => E.trace(b, 1, k, R).extra && drops.includes(7 + k))]];
       H8.forEach(([re, ok]) => { if (re.test(ht) && !ok) add(id, j, `⑧ the hint "${ht}" does not hold on this board`); });
       if (/いちばん長くつなげる/.test(plain(o.ask))) { const all = E.turnMax(b, 0, R).lines, mx = Math.max(...all.map(exN)); if (!lines.some(l => exN(l) === mx)) add(id, j, `⑧ asked for the longest run of extra turns, the answer's is shorter (max ${mx})`); }
       if (j >= 2 && st.problems.slice(0, j).some((Q, q) => { try { return plain(X.mcLsJa(E, st, Q, q, R, pts, si).hintTx) === ht; } catch (e) { return false; } })) add(id, j, '⑧ the same hint as an earlier problem');
@@ -210,7 +225,9 @@ function mancalaWords(opt) {
         if (/もう一回がない|ストアの手前で止まっちゃう|ストアまで\d+粒足りない|ストアを通りすぎ|ストアを越えて|ストアの先|ぴったりにならない|ストアを通りこして|ストアに\d+つ届かない|あと\d+粒あればストア/.test(t) && G.extra) add(id, j, `⑦ pit ${u}: said to miss the store, it gives another turn`);
         if (/横取りできないの|横取りはなし|取れないの|向かいの山に手が届かない|種のある穴に落ち/.test(t) && G.cap) add(id, j, `⑦ pit ${u}: said to capture nothing, it captures ${G.cap}`);
         const cs = t.match(/横取りは(\d+)粒|(\d+)粒しか入らない|横取りできるのは(\d+)粒|(\d+)粒どまり。|山が(\d+)粒しかない/); if (cs && /横取り|向かいの山/.test(t) && +(cs[1] || cs[2] || cs[3] || cs[4] || cs[5]) !== G.cap) add(id, j, `⑦ pit ${u}: says it captures ${cs[0]}, it captures ${G.cap}`);
-        if (/相手に横取りされて|相手の横取りで|横取りが待って|横取りの的/.test(t) && (G.extra || !E.legal(G.board, 1, R).some(k => E.trace(G.board, 1, k, R).cap))) add(id, j, `⑦ pit ${u}: said to be captured next, the opponent cannot capture`);
+        if (/相手に横取りされて|相手の横取りで|横取りが待って|横取りの的/.test(t)) { let q = G.board;   // (2026-11-26 担当A: a pit with another turn — 「もう一回を使いきっても」 and the board after the turn's best run)
+          if (G.extra && !G.over) { if (!/もう一回を使いきっても/.test(t)) add(id, j, `⑦ pit ${u}: said to be captured next, it gives another turn first`); for (const x of (E.turnMax(G.board, 0, R).lines[0] || [])) { const r = E.trace(q, 0, x, R); q = r.board; if (r.over) break; } }
+          if (!E.legal(q, 1, R).some(k => E.trace(q, 1, k, R).cap)) add(id, j, `⑦ pit ${u}: said to be captured next, the opponent cannot capture`); }
         if (id === 'sow') { const m = t.match(/目標の(\d+)つ手前|目標まで(\d+)つ足りない|目標に(\d+)つ届かない|あと(\d+)つのところ|目標を(\d+)つ通りすぎ|目標より(\d+)つ先|目標の(\d+)つ先|(\d+)つ多すぎ|目標を(\d+)つ追いこし/);
           const off = P.b[u] - dist(u, P.target); if (!m || +(m.slice(1).find(x => x)) !== Math.abs(off) || (off < 0) !== /手前|足りない|届かない|ところ/.test(m[0])) add(id, j, `⑦ pit ${u}: the words "${m && m[0]}" vs ${off} from the target`); }
       });
