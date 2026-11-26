@@ -469,7 +469,7 @@
   "ls.defend.ng": "{x} sonrası rakip yine kazanır. {m}'de kapat.",
   "ls.vct.title": "Üçlülerle saldırı (VCT)",
   "ls.vct.sub": "Üçlü ve dörtlüleri birleştir",
-  "ls.vct.intro": "<p>Yalnızca dörtlüler değil <b>üçlüler</b> de saldırıdır: kapatılmazsa açık dörtlü olurlar. Cevapları zorlamak için üçlü ve dörtlüleri birleştirip sonunda dört-üç yapmak <b>VCT</b>'dir — art arda tehditlerle kazanç.</p><p>Bir üçlü birkaç şekilde kapatılabilir; her kapatmaya karşı kazanan hamleyi seç.</p>",
+  "ls.vct.intro": "<p>Yalnızca dörtlüler değil <b>üçlüler</b> de saldırıdır: kapatılmazsa açık dörtlü olurlar. Cevapları zorlamak için üçlü ve dörtlüleri birleştirip sonunda durdurulamaz bir şekil (dört-üç, açık dörtlü…) yapmak <b>VCT</b>'dir — art arda tehditlerle kazanç.</p><p>Bir üçlü birkaç şekilde kapatılabilir; her kapatmaya karşı kazanan hamleyi seç.</p>",
   "ls.vct.goal": "Kazandıran saldırının ilk hamlesini oyna (üçlüler serbest).",
   "ls.vct.hint": "Üçlü yap, kapatmayı zorla ve kapatan taşların rakibe yardım etmediği sırayı seç.",
   "ls.vct.why": "{m} ile başlayan üçlü ve dörtlüler kazandırır.",

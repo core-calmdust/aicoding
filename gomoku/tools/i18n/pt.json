@@ -163,7 +163,7 @@
   "ls.defend.ng": "Após {x} o adversário ainda vence. Bloqueie em {m}.",
   "ls.vct.title": "Ataque com três (VCT)",
   "ls.vct.sub": "Combine três e quatros",
-  "ls.vct.intro": "<p>Não só os quatros: os <b>três</b> também são ataques, pois se não forem bloqueados viram quatros abertos. Combinar três e quatros para forçar respostas e terminar com um quatro-três é um <b>VCT</b>: vitória por ameaças contínuas.</p><p>Um três pode ser bloqueado de várias formas, então escolha um lance que vença contra todos os bloqueios.</p>",
+  "ls.vct.intro": "<p>Não só os quatros: os <b>três</b> também são ataques, pois se não forem bloqueados viram quatros abertos. Combinar três e quatros para forçar respostas e terminar com uma forma imparável (quatro-três, quatro aberto…) é um <b>VCT</b>: vitória por ameaças contínuas.</p><p>Um três pode ser bloqueado de várias formas, então escolha um lance que vença contra todos os bloqueios.</p>",
   "ls.vct.goal": "Jogue o primeiro lance de um ataque vencedor (três são permitidos).",
   "ls.vct.hint": "Faça um três, force um bloqueio e escolha uma ordem em que as pedras de bloqueio não ajudem o adversário.",
   "ls.vct.why": "Começando em {m}, três e quatros vencem.",
