@@ -45,8 +45,9 @@ if (process.argv.includes('--merge')) {   // OUT=dir node op_curate.js c9,e9 --m
     const NB = E.geo(n).NB, intrusions = q => { const me = 3 - q.side, out = new Set();   // (the carriers of the mover's opponent's — our — bridges, both empty)
       for (let a = 0; a < n * n; a++) for (let b = a + 1; b < n * n; b++) { if (q.b[a] !== me || q.b[b] !== me || NB[a].includes(b)) continue; const cm = NB[a].filter(x => NB[b].includes(x)); if (cm.length === 2 && cm.every(x => !q.b[x])) cm.forEach(x => out.add(x)); }
       return [...out]; };
-    const cands = [], seenB = new Set();
-    for (let k = 2; k < Math.min(line.length, 12); k++) {
+    const cands = [], seenB = new Set(), CF = (process.argv.find(x => x.startsWith('--cands=')) || '').slice(8).replace('%', id), SH = (process.argv.find(x => x.startsWith('--shard=')) || '').slice(8).split('/').map(Number);   // (--cands=f%.json: the candidates of an earlier run — % is the id — are read again instead of searched; --shard=i/k: only every k-th from the i-th, to read on several cores. Speed-ups only)
+    if (CF && fs.existsSync(CF)) cands.push(...JSON.parse(fs.readFileSync(CF, 'utf8')));
+    else for (let k = 2; k < Math.min(line.length, 12); k++) {
       const p0 = replay(line.slice(0, k)); if (p0.side === side || p0.winner()) continue;   // (the opponent leaves the line)
       await N.setpos(p0.spec()); const a = await N.analyze(ms, 0, WIDER ? 10 : 6);
       for (const e of a.list) { if (e.m === line[k] || e.m === E.SWAP) continue;
@@ -59,6 +60,8 @@ if (process.argv.includes('--merge')) {   // OUT=dir node op_curate.js c9,e9 --m
           if (c % 2 === 1) push(mv);
           else if (!WIDE) { const q = replay(mv); if (!q.winner()) for (const x of intrusions(q)) push(mv.concat([x])); } } }   // (the opponent cuts into one of our bridges: we answer; --wide leaves these out — the earlier runs gave only 'save' problems)
     }
+    if (CF && !fs.existsSync(CF)) fs.writeFileSync(CF, JSON.stringify(cands));
+    if (SH.length === 2) { const mine = cands.filter((_, i) => i % SH[1] === SH[0]); cands.length = 0; cands.push(...mine); }
     console.error(id, 'candidates', cands.length);
     const keep = [];
     for (const mv of cands) {

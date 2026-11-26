@@ -116,6 +116,12 @@ TABLES['v6all'] = TABLES['v6'] + [
     ('qsFut',     116,  350,  100,  700,  30),     # quiescence: a capture that cannot reach alpha with this margin is skipped
 ]
 
+# (2026-11-27) the same parameters starting from the values adopted as search v6 (engine.c's defaults, tuned with the 512 net),
+# to tune again with the site's new net: --table v6b --base V6ALL_BASE
+V6_ADOPTED = {75: 4, 76: 83, 77: 110, 79: 3, 86: 31, 88: 169, 87: 163, 89: 315, 93: 400, 95: 62, 96: 3, 97: 1087, 98: 3261, 99: 207, 100: 297, 101: 179,
+              102: 81, 103: 98, 104: 85, 105: 29, 81: 1935, 9: 6247, 43: 379, 17: 182, 2: 67, 1: 18, 112: 391, 114: 220, 116: 239}
+TABLES['v6b'] = [(n, k, V6_ADOPTED.get(k, d), min(lo, V6_ADOPTED.get(k, d)), max(hi, V6_ADOPTED.get(k, d)), st) for n, k, d, lo, hi, st in TABLES['v6all']]
+
 PARAMS = TABLES['v4']
 
 THREADS = 1; THREADS_VS = 0      # (--threads-vs: the threads of the defaults' side in test, when not the same)
