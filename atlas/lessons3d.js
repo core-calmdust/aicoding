@@ -422,7 +422,7 @@
       k12: '王手をかけられたら、<b>逃げる・取る・合駒</b>のどれかで防ぐの。<br>でも、どれでもいいわけじゃないコン。かわしたあとに安全な形になる受けを選ぼう！',
       k10: '<b>詰み</b>は、玉がどう逃げても取られちゃう形のこと。<br>持ち駒を打つ手と盤の駒を動かす手、両方を考えて、1手で詰ませてみよう！<br>成った角の馬は斜めどこまでも＋縦横1マス、成った飛車の竜（龍）は縦横どこまでも＋斜め1マス動けるコン。',
       k8: '今度は王手のかけ方がいろいろある局面だよ。<br>王手でも、<b>逃げ道が残る手</b>や<b>取られる手</b>は詰みにならないの。玉のまわりを1マスずつ確かめてみて！<br>竜（龍）は縦横どこまでも＋斜め1マス動けるコン。',
-      k6: '3手詰は<b>王手・相手の受け・詰み</b>の3手。<br>相手がいちばんねばる受けを考えて、どう受けても詰む王手を探すコン！',
+      k6: '3手詰は<b>王手・相手の受け・詰み</b>の3手。<br>王手のあと、玉が<b>逃げる</b>・王手の駒を<b>取る</b>・<b>合駒</b>をする、ぜんぶの受けを確かめて、どう受けても次で詰む王手を探すコン！<br>竜（龍）は縦横どこまでも＋斜め1マス動けるの。',
       k5: '中盤は<b>駒得</b>が大事！ 代表的な手筋は、1手で2つをねらう<b>両取り</b>なの。<br>桂・銀・角は両取りをかけやすい駒だから、よく見てね。',
       k4: '今度の3手詰は、<b>駒を捨てる</b>王手が正解になりやすいの。<br>「取られるから指さない」じゃなくて「取らせて詰ます」。この発想を練習しよう！',
       k3: '相手が「次に詰ませるぞ」とねらう形を<b>詰めろ</b>っていうの。<br>攻める前に、まず自分の玉の安全を確かめるコン。相手の詰み筋を消す手を探してね！',
@@ -488,7 +488,7 @@
     return { B, to: [tr, tc], piece, took, drop, check, esc, takers, kingTakes: takers.some(P => P.t === 'k') && !guards.length && Math.abs(kr - tr) <= 1 && Math.abs(kc - tc) <= 1, guarded: guards.length > 0 };
   }
   const shLNm = t => SH_KJ[t] || '駒', SH_LV = { p: 1, l: 3, n: 4, s: 5, g: 6, b: 8, r: 10 };
-  function shLFacts(p, u) { try { const S = shLB(p.sfen); return shLPlay(S, u); } catch (e) { return null; } }
+  function shLFacts(p, u) { try { let S = shLB(p.sfen); for (const k of p.pre || []) { const R = shLPlay(S, k); S = { B: R.B, w: !S.w }; } return shLPlay(S, u); } catch (e) { return null; } }   // (p.pre: the moves already played — a later move of a mate in 3, 2026-11-26 第2期 k6)
   function shJaLesson(g, probs) {   // probs (lesson()) → the Japanese words of the 3D lesson
     const gid = g.id, T = SHJ2, o = { k20: 0, k15: 1, k12: 2, k10: 3, k8: 4, k6: 5, k5: 6, k4: 0, k3: 1, k2: 2, k1: 3, d1: 4, d2: 5, d3: 6, rx: 0 }[gid] || 0;
     let nUchi = 0, nHandi = 0;
@@ -502,7 +502,9 @@
       const why0 = q.why;
       q.good = u => shGoodJa(gid, P, u, i, o, why0, ex);
       const ng0 = q.ng;
-      q.ng = u => shNgJa(gid, P, u, i, o, ex) || (ng0 ? ng0(u) : '');
+      q.ng = u => { const pre = q.pre; q.pre = null;   // (2026-11-26 第2期 k6: a later move of a mate in 3 — judged on the board it was played on, as a mate in one; no coordinates for it)
+        if (pre && pre.length) return String(shNgJa(gid, Object.assign({}, P, { pre, n: 1, sol: [] }), u, i, o, ex)).replace(/\{x\}の/g, 'その').replace(/\{x\}/g, 'その手');
+        return shNgJa(gid, P, u, i, o, ex) || (ng0 ? ng0(u) : ''); };
     });
     return probs;
   }
@@ -608,12 +610,20 @@
     if (!u || acc.includes(u) || (P.sol && u === P.sol[0])) { const w = C.find(x => !acc.includes(x[0])); u = w ? w[0] : ''; }
     const F = u ? shLFacts(P, u) : null;
     const partial = P.kind === 'best' && u && SHOGI.points(P, u) > 0;
-    const od = shOrd(gid, i), right = partial ? '' : od(['{m}が正解の手なの。', '答えは{m}だったコン。', 'ここは{m}を指したかったね。', '正解は{m}！ ', 'いちばんは{m}なの。']);
+    const od = shOrd(gid, i), right = partial || (P.pre && P.pre.length) ? '' : od(['{m}が正解の手なの。', '答えは{m}だったコン。', 'ここは{m}を指したかったね。', '正解は{m}！ ', 'いちばんは{m}なの。']);
     let why = '';
     if (P.kind === 'tsume') {
       if (!F) why = at(['ほかの王手だと、玉に逃げ道が残っちゃうの。', '別の手からだと、相手に受けられて詰まないコン。', 'ほかの手では、玉をつかまえきれないの。', '最初の一手をまちがえると、玉が逃げ出しちゃうの。', 'ほかの王手だと、受けがきいちゃうから詰まないの。']);
       else if (gid === 'rx' && F.drop && F.piece.t === 'p' && F.check) why = '{x}は歩を打って詰ませる「打ち歩詰め」で、反則なの。';
       else if (!F.check) why = at(['{x}は王手じゃないから、相手に一手もらっちゃうの。', '{x}だと王手にならないの。詰将棋は王手の連続だコン。', '{x}は王手じゃないの。そのすきに受けられちゃう。', '王手でない{x}だと、相手に余裕を与えるの。', '{x}では王手がかからないから、詰まないの。']);
+      else if (P.n > 1 && P.ref && P.ref[u]) {   // (2026-11-26 第2期 k6: a wrong check of a mate in 3 — the defender's stored answer P.ref (after it no check mates), said from the board)
+        const R = (() => { try { const S = shLB(P.sfen), A = shLPlay(S, u); return shLPlay({ B: A.B, w: !S.w }, P.ref[u]); } catch (e) { return null; } })(), pn = shLNm(F.piece.t);
+        const k = !R ? 4 : R.piece.t === 'k' ? (R.took ? 0 : 1) : R.took ? 2 : 3, rn = R ? shLNm(R.piece.t) : '';
+        why = [at([`{x}の${pn}は、玉に取られちゃうの。そのあと詰ませる王手がないコン。`, `{x}だと、玉が${pn}を取って逃げるの。次の一手では詰まないの。`, `{x}の${pn}は、玉が取れるの。取られたら、もう詰まないコン。`, `玉が{x}の${pn}を取っちゃうの。それで詰みが消えるの。`, `{x}の${pn}は、玉に取られて詰みまで届かないの。`]),
+          at(['{x}の王手だと、玉に逃げられて、次の一手では詰まないの。', '{x}だと、玉が空いたマスへ逃げるの。そこからは詰まないコン。', '{x}の王手は、玉が逃げてかわせるの。次の王手で詰まないの。', '{x}だと玉に逃げ道が残るの。逃げたあと、詰ませる手がないコン。', '{x}の王手では、玉が逃げ出して詰みが消えるの。']),
+          at([`{x}の${pn}は、相手の${rn}に取られちゃうの。そのあと詰ませる王手がないコン。`, `{x}だと、${rn}で${pn}を取られるの。それで詰みが消えるの。`, `{x}の${pn}は、${rn}が取れるの。取られたら、もう詰まないコン。`, `相手が${rn}で{x}の${pn}を取って受けるの。次の一手では詰まないの。`, `{x}の${pn}は、${rn}に取られて詰みまで届かないの。`]),
+          at([`{x}の王手は、${rn}の合駒で受けられて、詰みまで届かないの。`, `{x}だと、間に${rn}を入れて受けられるの。そのあと詰まないコン。`, `{x}の王手は、${rn}を間に置かれて止まるの。次の一手では詰まないの。`, `相手が${rn}の合駒で受けるの。{x}からは詰まないコン。`, `{x}だと、${rn}の合駒がきいて、詰みが消えるの。`]),
+          at(['{x}の王手は、うまく受けられて詰みまで届かないの。', '{x}だと、相手のいちばんの受けで詰みが消えるの。', '{x}からだと、玉をつかまえきれないの。', '{x}の王手では、どこかで受けがきいちゃうコン。', '{x}だと、相手に受けの余裕が残るの。'])][k]; }
       else if (F.kingTakes) why = at([`{x}の${shLNm(F.piece.t)}は、玉にそのまま取られちゃうの。`, `{x}だと、守りのない${shLNm(F.piece.t)}を玉に取られるコン。`, `{x}の${shLNm(F.piece.t)}は、ひもがついていないから玉が取れるの。`, `玉が{x}の${shLNm(F.piece.t)}を取って逃げちゃうの。`, `{x}だと${shLNm(F.piece.t)}を玉に取られて、王手が消えるの。`]);
       else if (P.n === 1 || (P.sol || []).length === 1) why = F.esc ? at([`{x}も王手だけど、玉の逃げ道が${F.esc}つ残るの。`, `{x}の王手だと、玉に${F.esc === 1 ? '1マス' : F.esc + 'マス'}逃げ場が残るコン。`, `{x}だと、玉が空いたマスへ逃げられるの。`, `{x}の王手では、玉のまわりに逃げ道が残っちゃう。`, `{x}は惜しい王手。でも玉の逃げ道がふさがっていないの。`])
         : at(['{x}も王手だけど、王手の駒を取られるか、合駒で受けられるの。', '{x}の王手は、取るか合駒でかわされちゃうコン。', '{x}だと、玉は逃げられなくても、ほかの駒で受けられるの。', '{x}の王手では、相手の受けが残るから詰まないの。', '{x}は惜しい王手。でも取るか合駒の受けがあるの。']);
@@ -920,7 +930,7 @@
       if (this.p) return this.p;
       const voice = fetch('../shogi/voice-fox-ja.js?v=5').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       const rep = getJ('../shogi/lesson-replies.json?v=4').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
-      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261126k8'), getJ('../shogi/openings.json?v=20261124ol1'),
+      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261126k6'), getJ('../shogi/openings.json?v=20261124ol1'),
         ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261125sb`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
@@ -3346,7 +3356,7 @@
       cap: ['相手の石のダメ（空いている点）を数えてみて。あと1つの石はないかな？', '取れる石が盤の上にないか、じっくり見てみるペン！', 'ダメが1つしかない相手の石、見つかるかな？'],
       save: ['自分の石のダメを数えてみて。あと1つしかない石はない？', 'アタリになっている石はないかな？ まずは助けるのが先ペン！', '取られそうな石がないか、先に確かめてみよう！'],
       atari: ['相手の石のダメを数えてみて。2つしかない石はどれかな？', '相手の石を追いつめる手があるペン。ダメを減らしてみよう！', '相手に「逃げなきゃ！」と思わせる手はどこかな？'],
-      connect: ['自分の石のつながりを確かめてみて。切られそうなところはないかな？', '石と石のあいだに、すきが空いてないかな？ そこが急所ペン！'],
+      connect: ['自分の石のつながりを確かめてみて。切られそうなところはないかな？', '石と石のあいだに、すきが空いてないかな？ そこが急所ペン！', '2つに分かれそうな仲間の石はどれかな？', 'つながりの弱い場所を、先に守る手があるペン。', '相手に割りこまれたら困る点はどこだと思う？'],
       cut: ['相手の石のつなぎ目を探してみて。割りこめそうなところはない？', '相手の石は、ちゃんとつながってるかな？ すきを探してみよう！', '相手の石を2つに分けられたら、攻めやすくなるよね？'],
       sansan: ['隅の奥がまだ空いてるね。そこが気にならない？', '隅のいちばん奥の、地になりやすい場所を考えてみるペン。', '隅で生きるなら、どこに入るのがいいかな？'],
       contact: ['相手の石にくっつける手を考えてみて。どっちからおさえるかがポイント！', '相手の石のすぐとなりが急所ペン。伸びたい方向をふさごう！', '相手の石の頭はどっちかな？ そこをおさえる手を探してみて。', '相手の石が伸びたいのは、どっちの方向かな？', 'となりにつけて、相手の形を決めさせる手があるペン！'],
@@ -3366,10 +3376,10 @@
       cap: ['{n}相手の石を{k}子取った！ 形がいっぺんに軽くなるペン。', '{n}{k}子をしっかり取りきった。もう取られる心配もないね！'],
       save: ['{n}アタリの石を助けた！ ダメが{l}つに増えて、ひと安心ペン。', '{n}あと1つだったダメが{l}つになった。取られずにすんだね！'],
       atari: ['{n}相手の石をアタリにした！ 相手は逃げるのに手をとられるペン。', '{n}相手の石のダメがあと1つ。先手で相手に受けさせる手なんだ！'],
-      connect: ['{n}自分の石どうしをつないだ！ もう切られる心配はないペン。', '{n}離れそうだった石がつながった。しっかりした形だね！', '{n}つなぎ目をふさいで、石がひとつにまとまった！'],
+      connect: ['{n}自分の石どうしをつないだ！ もう切られる心配はないペン。', '{n}離れそうだった石がつながった。しっかりした形だね！', '{n}つなぎ目をふさいで、石がひとつにまとまった！', '{n}切れそうな所を先につないだ。これで仲間がひとかたまりペン！', '{n}分かれかけた石を1つにした。もう割りこまれないね！'],
       cut: ['{n}相手の石のあいだに割りこんだ！ 相手は2つに分かれて苦しいペン。', '{n}相手の石のつなぎ目に入った。片方ずつ攻められるね！'],
       sansan: ['{n}隅のいちばん奥、三々に入った！ 隅の地をそっくり持っていく手ペン。', '{n}三々にすべりこんで、隅で生きる足場ができた！'],
-      contact: ['{n}相手の石にぴったりつけた！ 伸びたい方向をおさえたペン。', '{n}相手の石のすぐとなりで、行く手をふさいだ！', '{n}相手の石に体をくっつけて、形を決めにいった！', '{n}相手とがっぷり組んで、強い形を作りにいったペン！'],
+      contact: ['{n}相手の石にぴったりつけた！ 伸びたい方向をおさえたペン。', '{n}相手の石のすぐとなりで、行く手をふさいだ！', '{n}相手の石に体をくっつけて、形を決めにいった！', '{n}相手とがっぷり組んで、強い形を作りにいったペン！', '{n}相手の石にぴたっと寄りそって、動きを止めた！', '{n}相手の石にくっついて、進む道をおさえこんだペン！'],
       jump: ['{n}自分の石から一間とんで、軽く広がった！ 切られにくい形ペン。', '{n}一歩とびで、相手より先に広い方へ顔を出した！', '{n}ひとつあけて軽くとんだ。足の速い形だね！'],
       diag: ['{n}ななめにつないだ。切られずに、しっかり広がる形ペン！', '{n}コスミの形で、すきなく一歩のびた！', '{n}ななめに一歩。じょうぶで、むだのない形だね！'],
       keima: ['{n}ケイマの形で、自分の石と連絡しながら広がった！', '{n}ケイマにひらいて、足を軽くのばしたペン！', '{n}桂馬の形で、ふわっと広がった。軽くて速い一手！'],
@@ -3458,7 +3468,7 @@
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=10'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
+      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=11'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
         try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
         return this; }).catch(e => { this.p = null; throw e; }));
     },
@@ -7553,8 +7563,15 @@
       if (p.kind === 'tsume') {   // mate within the count; the defender answers from the stored line, else the engine's defence
         const mv = pz().moves();
         if (info.mate) return scored(p, PTS);
-        const remain = p.n - mv.length; if (remain <= 0) return p.n === 1 && typeof p.ng === 'function' ? scored(p, 0, undefined, mv[0]) : scored(p, 0, X.escaped);   // (2026-11-26 第2期 k10: a mate in one missed — the move played is named and what the defender does to it is said (p.ng), not 「玉に逃げられちゃった」 for a move that is no check or is blocked)
+        const remain = p.n - mv.length;
         const sol = p.sol || [], onLine = mv.every((x, i) => x === sol[i]);
+        if (p.n > 1 && p.P && p.P.ref && typeof p.ng === 'function') {   // (2026-11-26 第2期 k6: a move that is no check fails at once, said for that move (= the 2D ts.notCheck); a wrong first check is answered by the stored defence P.ref and the words say what it does; a later move that does not mate is judged on its board)
+          const last = mv[mv.length - 1], F = shLFacts({ sfen: p.P.sfen, pre: mv.slice(0, -1) }, last);
+          if (F && !F.check) { p.pre = mv.slice(0, -1); return scored(p, 0, undefined, last); }
+          if (remain <= 0) { if (mv[0] !== sol[0]) return scored(p, 0, undefined, mv[0]); p.pre = mv.slice(0, -1); return scored(p, 0, undefined, last); }
+          if (mv.length === 1 && !onLine && p.P.ref[mv[0]]) { await sleep(120); await pz().play(p.P.ref[mv[0]]); if (stopped) return; pz().wait(); return; }
+        }
+        if (remain <= 0) return p.n === 1 && typeof p.ng === 'function' ? scored(p, 0, undefined, mv[0]) : scored(p, 0, X.escaped);   // (2026-11-26 第2期 k10: a mate in one missed — the move played is named and what the defender does to it is said (p.ng), not 「玉に逃げられちゃった」 for a move that is no check or is blocked)
         let reply = onLine && sol[mv.length] ? sol[mv.length] : null;
         if (!reply && pz().defend) { const r = await pz().defend(remain); if (stopped) return; reply = r && r.reply; }
         if (!reply) return scored(p, 0, X.escaped);
