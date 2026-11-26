@@ -322,7 +322,7 @@ body.nb-open #nb{transform:none}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .foot{display:flex;gap:12px;justify-content:flex-end;margin-top:10px}
 .foot .btn{min-width:150px}
-.set-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px dashed var(--line)}
+.set-row{display:flex;align-items:center;gap:12px;padding:12px 0}
 .set-row > span{flex:1;font:700 16px var(--ui)}
 .seg{display:flex;border:1.5px solid var(--ink);border-radius:3px;overflow:hidden}
 .seg button{border:0;background:none;padding:10px 12px;font:700 14.5px var(--ui);white-space:nowrap}
@@ -671,6 +671,16 @@ body.scr-play{-webkit-user-select:none;user-select:none}
 .card .sec{font:500 13px/1.5 var(--ui);color:var(--acc);margin-top:4px}
 .card .bel{font:500 13px/1.5 var(--ui);color:var(--mute);margin-top:4px}
 .sc.soon{opacity:.55;cursor:default} .sc.soon .ph{background:#e6dcc6}
+
+/* 2026-11-27 settings: volume sliders */
+.set-row>span small{display:block;font:500 12.5px var(--ui);color:var(--mute);letter-spacing:0;margin-top:1px}
+.vol{-webkit-appearance:none;appearance:none;width:min(240px,52vw);height:30px;background:transparent;cursor:pointer;margin:0;--p:100%}
+.vol::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--ink) var(--p),rgba(0,0,0,.16) var(--p))}
+.vol::-moz-range-track{height:6px;border-radius:3px;background:rgba(0,0,0,.16)}
+.vol::-moz-range-progress{height:6px;border-radius:3px;background:var(--ink)}
+.vol::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--paper,#f3ecd9);border:2.5px solid var(--ink);margin-top:-8px}
+.vol::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--paper,#f3ecd9);border:2.5px solid var(--ink)}
+.vol:focus-visible{outline:2px solid var(--acc);outline-offset:4px}
 </style>
 </head>
 <body class="scr-title">
@@ -742,11 +752,11 @@ body.scr-play{-webkit-user-select:none;user-select:none}
 <div id="sheet" class="hide" role="dialog" aria-modal="true"><div class="box" id="sheetBox"></div></div>
 
 <script src="../lampblack/art.js?v=3"></script>
-<script src="sound.js?v=1"></script>
+<script src="sound.js?v=2"></script>
 <script src="manor.js?v=1"></script>
 <script src="cases/karasuba.js?v=1"></script>
 <script src="cases/karasuba.story.js?v=1"></script>
 <script src="engine.js?v=1"></script>
-<script src="game.js?v=1"></script>
+<script src="game.js?v=2"></script>
 </body>
 </html>

@@ -1356,7 +1356,8 @@ static inline int timeUp(void) {
     if (!stopFlag) mtCheck();
 #endif
   }
-#ifdef NODE_EXACT   /* (the node limit to the node: without it the limit is only looked at every 1024 nodes, so 260, 520 and 1000 all stop at 1024) */
+#ifndef NODE_COARSE   /* the node limit to the node (2026-11-27). Before, it was only looked at every 1024 nodes, so the levels of 260, 520 and
+                         1000 nodes all stopped at 1024 and played the same; -DNODE_COARSE = that engine (calib-levels.sh, the old side) */
   else if (nodeLimit && nodes > nodeLimit) stopFlag = 1;
 #endif
   return stopFlag;
