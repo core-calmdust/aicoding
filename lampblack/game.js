@@ -9,14 +9,22 @@
   const KEY = 'wolflantern-save-v1', REC = 'wolflantern-rec-v1', PREF = 'wolflantern-pref-v1';
   const ORDER = ['kirigane', 'hokushin', 'tomoshibi', 'nekonaki', 'shirane', 'kiteki'];
   const DIFFN = ['入門', '標準', '中級', '上級', '悪夢'];
-  const DIFFT = ['はじめての夜に。', '嘘が増える。', '嘘つきが、少し手ごわくなる。', '嘘つきが、ぼろを出さなくなる。', '嘘と罠ばかり。誰の言葉も信じきれない。'];
+  const DIFFT = ['はじめての夜に。嘘をつく者がいる。', '嘘つきが、ぼろを出しにくくなる。', '嘘つきが、ぼろを出さなくなる。', '嘘つきは悪夢なみ。', '嘘と罠ばかり。誰の言葉も信じきれない。'];
   // the card's line follows the story's real cast for that size (the wolves and the roles differ story by story)
   function diffDesc(s, i) {
     const R = E.setupOf(s, E.DIFF[i].size);
+    if (E.DIFF[i].hide) return `狼${R.wolf}匹。ほかに誰がいるかは、わからない。${DIFFT[i]}`;
     const mad = R.madman ? `と${s.rules === 'fanatic' ? (s.roles.madman || {}).name || '狂信者' : '狂人'}${R.madman > 1 ? R.madman + '人' : ''}` : '';
     const ex = [R.guard && '狩人', R.mason && '共有者', R.cat && '猫又', R.fox && '妖狐', R.immoral && '背徳者'].filter(Boolean);
     return `狼${R.wolf}匹${mad}。${ex.length ? ex.join('・') + 'がいる。' : ''}${DIFFT[i]}`;
   }
+  // the role card's line on who is in the village
+  function castLine() {
+    if (S.hid) return `この${st.lex.village}には人狼が${S.wolves.length}匹いる。ほかに誰がいるかは、わからない――${hidList()}が、いるかもしれないし、いないかもしれない。全部で${S.size}人。`;
+    return `この${st.lex.village}には人狼が${S.wolves.length}匹${E.RS(S).madman ? (st.rules === 'fanatic' ? `、狼の正体を知る狂信者が${E.RS(S).madman > 1 ? NUM[E.RS(S).madman] + '人' : 'ひとり'}` : `、狼に味方する狂人が${E.RS(S).madman > 1 ? NUM[E.RS(S).madman] + '人' : 'ひとり'}`) : ''}${E.RS(S).cat ? '、道連れの猫又がひとり' : ''}${E.RS(S).fox ? `、${st.roles.fox.tag || '社に棲む妖狐'}がひとり` : ''}${E.RS(S).immoral ? `、${st.roles.immoral.tag || '妖狐に仕える背徳者'}がひとり` : ''}${E.RS(S).mason ? '、互いを知る共有者がふたり' : ''}いる。全部で${S.size}人。`;
+  }
+  // 上級・悪夢：いるかもしれない役（数は伏せる）
+  function hidList() { const P = E.PUB(S), mad = st.rules === 'fanatic' ? (st.roles.madman || {}).name || '狂信者' : '狂人'; return [P.seer && st.roles.seer.name, P.medium && st.roles.medium.name, P.guard && (st.roles.guard || {}).name, P.mason && st.roles.mason.name, P.cat && st.roles.cat.name, P.fox && st.roles.fox.name, P.immoral && st.roles.immoral.name, P.madman && mad].filter(Boolean).join('・'); }
   const NUM = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
   const ROLE_ICON = {
     auto: '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="11"/><path d="M12.5 12.5a3.6 3.6 0 1 1 4.8 3.4c-.9.4-1.3 1.1-1.3 2.1v.6M16 22.5v.2"/></svg>',
@@ -584,7 +592,7 @@
   async function roleCard() {
     const r = S.pl.role, R = st.roles[r];
     await say([{ text: fill(st.text.role, { roleHow: R.how }) }]);
-    await sheet(`<div class="rolecard"><div class="em">${ROLE_ICON[r]}</div><p style="font:700 15px var(--ui);letter-spacing:.2em;color:var(--mute);margin:0">あなたの役</p><h3>${esc(R.name)}</h3><p>${esc(R.perk)}</p><p style="font-size:15px;color:var(--mute)">この${st.lex.village}には人狼が${S.wolves.length}匹${E.RS(S).madman ? (st.rules === 'fanatic' ? `、狼の正体を知る狂信者が${E.RS(S).madman > 1 ? NUM[E.RS(S).madman] + '人' : 'ひとり'}` : `、狼に味方する狂人が${E.RS(S).madman > 1 ? NUM[E.RS(S).madman] + '人' : 'ひとり'}`) : ''}${E.RS(S).cat ? '、道連れの猫又がひとり' : ''}${E.RS(S).fox ? `、${st.roles.fox.tag || '社に棲む妖狐'}がひとり` : ''}${E.RS(S).immoral ? `、${st.roles.immoral.tag || '妖狐に仕える背徳者'}がひとり` : ''}${E.RS(S).mason ? '、互いを知る共有者がふたり' : ''}いる。全部で${S.size}人。</p>${st.rulesNote ? `<p style="font-size:14px;color:var(--mute)">${esc(st.rulesNote)}</p>` : ''}</div><div class="foot" style="justify-content:center"><button class="btn pri" data-ok>はじまる</button></div>`, box => box.querySelector('[data-ok]').onclick = () => closeSheet(true));
+    await sheet(`<div class="rolecard"><div class="em">${ROLE_ICON[r]}</div><p style="font:700 15px var(--ui);letter-spacing:.2em;color:var(--mute);margin:0">あなたの役</p><h3>${esc(R.name)}</h3><p>${esc(R.perk)}</p><p style="font-size:15px;color:var(--mute)">${castLine()}</p>${st.rulesNote ? `<p style="font-size:14px;color:var(--mute)">${esc(st.rulesNote)}${S.hid ? '（ただし、このむずかしさでは、いるとは限らない）' : ''}</p>` : ''}</div><div class="foot" style="justify-content:center"><button class="btn pri" data-ok>はじまる</button></div>`, box => box.querySelector('[data-ok]').onclick = () => closeSheet(true));
   }
 
   /* morning: what the night left behind */
@@ -853,13 +861,13 @@
   function appealUsed() { const u = (S.req.used = S.req.used || {}); return (u[S.day] = u[S.day] || {}); }
   function appealsLeft() { const u = appealUsed(); return ['call', 'evid', 'div', 'guard'].filter(k => !u[k] && appealCan(k)).length || ''; }
   function appealCan(k) {
-    const R = E.RS(S);
+    const R = E.PUB(S);
     if (k === 'div') return S.claims.some(c => c.role === 'seer' && c.by !== 'you' && person(c.by).alive);
     if (k === 'guard') return R.guard > 0 && S.pl.role !== 'guard';
     return true;
   }
   async function appeal() {
-    const u = appealUsed(), R = E.RS(S);
+    const u = appealUsed(), R = E.PUB(S);
     const seerN = st.roles.seer.name, medN = st.roles.medium.name, grdN = st.roles.guard ? st.roles.guard.name : '';
     const opts = [
       { t: `${seerN}・${medN}は名乗り出てほしい`, s: '名乗るかどうかは本人が決める。何も見ていない者は、命を惜しんで黙るかもしれない。偽物が出てくることもある。', v: 'call:seer,medium', ic: IC.call, dis: u.call },
@@ -1168,7 +1176,7 @@
     const act = {};
     const r = S.ghost ? null : S.pl.role;
     const wolves = E.alive(S).some(p => p.role === 'wolf');   // the fox hunt: the wolves are gone, the night is quiet
-    if (!S.ghost && S.pl.co && wolves) await say([{ text: `あなたは${st.roles[S.pl.role].name}だと名乗った。狼は、名乗った者の戸口を知っている。\n${E.RS(S).guard ? "今夜、誰かがあなたを守ってくれるだろうか。" : `この${st.lex.village}に、扉を守ってくれる者はいない。`}` }]);
+    if (!S.ghost && S.pl.co && wolves) await say([{ text: `あなたは${st.roles[S.pl.role].name}だと名乗った。狼は、名乗った者の戸口を知っている。\n${S.hid && E.PUB(S).guard ? "扉を守ってくれる者が、この村にいるのかどうか。" : E.RS(S).guard ? "今夜、誰かがあなたを守ってくれるだろうか。" : `この${st.lex.village}に、扉を守ってくれる者はいない。`}` }]);
     if (r === 'seer') {
       const done = new Set(S.pl.res.filter(x => x.seer).map(x => x.target));
       act.divine = await pickPerson('今夜、誰を占う？', '朝に結果がわかる。', live().filter(p => !done.has(p.id)).map(p => p.id), { mark: true }) || pickOne(live()).id;
@@ -1312,7 +1320,7 @@
       <div class="rank">${sc.rank}</div>
       ${scoreTable(sc)}
       ${fresh.length ? `<div class="newfeat"><b>新しい実績</b>${fresh.map(f => `<div class="feat got"><i>★</i><b>${esc(f.name)}</b><span>${esc(f.desc)}</span></div>`).join('')}</div>` : ''}
-      <p style="font-size:15px">人狼：${wolves.map(w => esc(nm(w.id))).join('、')}${mad ? `　${esc(SP.roleName(st, 'madman'))}：${esc(nm(mad.id))}` : ''}${cat ? `　猫又：${esc(nm(cat.id))}` : ''}${fox ? `　妖狐：${esc(nm(fox.id))}` : ''}${S.people.find(p => p.role === 'immoral') ? `　${esc(SP.roleName(st, 'immoral'))}：${esc(nm(S.people.find(p => p.role === 'immoral').id))}` : ''}</p>
+      <p style="font-size:15px">人狼：${wolves.map(w => esc(nm(w.id))).join('、')}${mad ? `　${esc(SP.roleName(st, 'madman'))}：${S.people.filter(p => p.role === 'madman').map(p => esc(nm(p.id))).join('、')}` : ''}${cat ? `　猫又：${esc(nm(cat.id))}` : ''}${fox ? `　妖狐：${esc(nm(fox.id))}` : ''}${S.people.find(p => p.role === 'immoral') ? `　${esc(SP.roleName(st, 'immoral'))}：${esc(nm(S.people.find(p => p.role === 'immoral').id))}` : ''}${S.hid ? `<br><span style="color:var(--mute)">今回の顔ぶれ：${['seer', 'medium', 'guard', 'mason', 'cat', 'fox', 'immoral', 'madman'].filter(r => E.PUB(S)[r]).map(r => `${esc(SP.roleName(st, r))}${E.RS(S)[r] ? (E.RS(S)[r] > 1 ? '×' + E.RS(S)[r] : '') : '（いなかった）'}`).join('・')}</span>` : ''}</p>
       <div class="foot"><button class="btn" data-a="title">タイトルへ</button><button class="btn" data-a="select">ほかの物語へ</button><button class="btn pri" data-a="again">もう一度</button></div>`, box => box.querySelectorAll('[data-a]').forEach(b => b.onclick = () => closeSheet(b.dataset.a))).then(a => {
       if (a === 'again') { buildSetup(); } else if (a === 'select') buildSelect(); else buildTitle();
     });
@@ -1455,7 +1463,7 @@
   /* ---------- resume ---------- */
   async function resume() {
     const sv = loadSave(); if (!sv) return;
-    S = sv.S; if (!S.dv) { if (S.diff >= 2) S.diff++; S.dv = 2; }   // saves from before 中級 (2026-11-26): 上級・悪夢 moved up one
+    S = sv.S; if (!S.dv) { if (S.diff >= 2) S.diff++; S.dv = 2; } if (S.dv === 2) { S.diff = [0, 0, 1, 2, 4][S.diff]; S.dv = 3; }   // 2026-11-27：一段ずつ下がった（旧悪夢は役を伏せないまま悪夢で続ける）   // saves from before 中級 (2026-11-26): 上級・悪夢 moved up one
     st = withHero(sv.story, S.hero); S.req = S.req || { divine: {}, guard: null, hide: false, calls: {} }; G.storyId = st.id; G.diff = S.diff;
     scr('play'); palette(st); hud();
     const ph = S.phase;
