@@ -18,6 +18,8 @@ const WIDE = args.includes('--wide'), DEPTH = +opt('--depth', 1);
 const PMIN = +opt('--pmin', WIDE ? 0.03 : 0.05), PN = +opt('--pn', WIDE ? 5 : 3);
 // --low（2026-11-26 19路の定石）：外れ方を方策1%以上3%未満の手（相手のはっきりした悪手寄り）から5つまで。19路の定石は外れ方が自然な手だと手抜きなど同じくらいの手が並ぶため
 const LOW = args.includes('--low');
+// --wide2（2026-11-26 19路の定石 other_*）：--stage2 で相手の応手を方策3%以上・4つまでに広げる（合否の条件は変えない）。手順の短い定石は候補の局面が少ないため
+const WIDE2 = args.includes('--wide2');
 const O = JSON.parse(fs.readFileSync(path.join(DIR, '..', 'openings.json'), 'utf8'));
 function specFrom(o) { const n = o.n || 19, a = Array(n * n).fill('.'); for (const s of o.ab || []) a[R.parseCoord(s, n)] = 'b'; for (const s of o.aw || []) a[R.parseCoord(s, n)] = 'w'; return { n, stones: a.join(''), turn: o.turn || 1 }; }
 function startOf(g) { const n = g.n || 19; if (g.start) return specFrom(Object.assign({ n }, g.start));
@@ -52,8 +54,9 @@ for (const g of O.sets) { if (SETS.length && !SETS.includes(g.id)) continue; con
 if (args.includes('--stage2')) { jobs.length = 0; const all = {}; for (const f of fs.readdirSync(path.join(DIR, 'data'))) if (/^op-cand.*\.json$/.test(f)) Object.assign(all, JSON.parse(fs.readFileSync(path.join(DIR, 'data', f), 'utf8')));
   const seen = new Set(Object.keys(all));
   for (const [k, c] of Object.entries(all)) { if (c.dev == null || c.mv.length !== c.dev + 2 * DEPTH - 1) continue; const g = O.sets.find(x => x.id === c.id); if (!g || (SETS.length && !SETS.includes(g.id))) continue;
+    if (c.dev === 0 && !/^fuseki_/.test(g.id) && (g.n || 19) >= 19) continue;   // (19路の定石：相手が1手目から外れた局面は ④ で落ちるので広げない)
     const n = g.n || 19, mv1 = c.mv.concat([c.top[0][0]]), pol = policy(E, startOf(g), mv1.map(s => R.parseCoord(s, n)), komiOf(g), 8);
-    pol.list.filter(e => e.m >= 0 && e.p >= 0.05).slice(0, 2).forEach(e => { const mv = mv1.concat([R.coord(e.m, n)]), kk = g.id + ':' + mv.join(' '); if (!seen.has(kk)) { seen.add(kk); jobs.push({ g, mv, k: kk, dev: c.dev }); } }); } }
+    pol.list.filter(e => e.m >= 0 && e.p >= (WIDE2 ? 0.03 : 0.05)).slice(0, WIDE2 ? 4 : 2).forEach(e => { const mv = mv1.concat([R.coord(e.m, n)]), kk = g.id + ':' + mv.join(' '); if (!seen.has(kk)) { seen.add(kk); jobs.push({ g, mv, k: kk, dev: c.dev }); } }); } }
 console.log('jobs', jobs.length);
 let c = 0;
 for (let j = 0; j < jobs.length; j++) { if (j % OF !== PART) continue; const { g, mv, k, dev } = jobs[j];

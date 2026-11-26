@@ -40,7 +40,38 @@
 //       crowning said only when the last jump crowns; try — ok = the goal set, the ring on his capturing piece, the sacrifice square
 //       and our jumping piece, 「同じ局面」 = the warm-up before
 const path = require('path');
-const CKB_DONE = new Set(['b_move', 'b_jump', 'b_multi', 'b_king', 'b_safe', 'b_win', 't_shot1', 't_shot2']);
+//   (2026-11-26 第2期 担当A) the defence t_defend 「ただ一つの受け」 — what the opponent wins after each of our moves (ckDefLoss: every reply of his,
+//       ckShot's two- and three-move lines, his plain captures too): no capture on the board; exactly one move gives nothing away (loss ≤ 0),
+//       every other move loses ≥ 1 and ≥ 2 of them to a shot (his first move a quiet sacrifice: 「相手にショットのねらい」); ckLF agrees with the
+//       count (his shot F.oppShot = the loss, or the piece left F.net = −loss: the 3D words' numbers); the answer's piece has another move (追52);
+//       the engine (depths 8 and 12, 追4) ≥ 60 apart; チェッカニ's praise never speaks of a loss, every wrong move's words name the pieces lost
+//       (ショット／捨て駒 when his best is a shot, 取られ／跳び越え when the piece is left); the 2D ls.t_defend.ng says 損; the hints' premises
+//       (no 「ふさげ」: the answer need not block); the warm-ups: explain — seq[0] is a wrong move and the rest his best forced line (each of our
+//       moves our only capture), the red frames on that line and the ok mark on the answer's piece, the words' moves on the board; try — ok = the
+//       goal set, the ring on the answer's piece, 「ほかの手はどれも…ショット」 only when every wrong move loses to a shot
+//   (2026-11-26 第2期 担当A) the clearly best move t_best 「決め手を探す」 — near the endgame (6〜10 pieces), no capture on the board; the
+//       answer's kind (ckBestKind) is one of the intro's three: crown (a safe crowning), shot (交換で得: a quiet move that wins material, ckLF
+//       shot, his best shot nothing), stop (相手の駒を止める: a safe quiet move after which none of his men can crown, while ≥ 2 other moves let
+//       one crown); the goal set = the safe moves of that kind = the answer alone; the engine (depths 8 and 12, 追4・追84) ≥ 60 apart and P.sc
+//       = the depth-12 reading (the 3D words read it); every wrong move has a loss on the board — a piece given away (n枚), his shot (n枚),
+//       the crowning / the shot missed, or his man let through to crown — and チェッカニ's words say that one (never 「悪くない」 nor the vague
+//       「良いマスを取られて」); the praise names the kind; the hint 「先に成った方が」 only when the answer crowns; the warm-ups: explain's
+//       marks are the answer, try = the explain position with the colours and the board turned (「色と向きを入れかえた同じ形」), ok = its goal set
+const CKB_DONE = new Set(['b_move', 'b_jump', 'b_multi', 'b_king', 'b_safe', 'b_win', 't_shot1', 't_shot2', 't_defend', 't_best']);
+// t_best: the kind of a move (null: none of the three) — F: ckLF facts of every move
+function ckBestKind(F, all, m) {
+  const f = F.get(m); if (!f || f.capN || f.net < 0 || f.oppShot > 0 || f.win) return null;
+  if (f.crown) return 'crown'; if (f.shot) return 'shot';
+  if (!f.oppCrown && all.filter(u => u !== m && F.get(u).oppCrown).length >= 2) return 'stop';
+  return null;
+}
+// t_defend: what the opponent wins after our move m (material; his replies' two- and three-move lines) → { g, how: his best reply, shot }
+function ckDefLoss(E, p, m) {
+  const q = p.clone().play(m), R = q.moves(); if (!R.length) return { g: -50, how: null, shot: false, q };
+  const S = ckShot(E, q); let g = -99, how = null;
+  for (const r of R) { const v = Math.max(S.gain(r, 0), S.gain(r, 1)); if (v > g) { g = v; how = r; } }
+  return { g, how, shot: how != null && !E.mCap(how) && g > 0, q, S };
+}
 // the shots: material only (a man = a king = 1), the opponent moves only while he must capture (a free move ends the line)
 function ckShot(E, p) {
   const qs = (q, d) => { const c = q.caps(); if (!c.length || d > 10) return 0; let b = -99; for (const x of c) b = Math.max(b, E.popc(E.mCap(x)) - qs(q.clone().play(x), d + 1)); return b; };
@@ -67,7 +98,7 @@ function goal(E, X, p, id) {   // → { G: the right moves, F: facts per move, b
   const retook = m => { const f = F.get(m); return f.after.caps().some(c => E.mCap(c) & E.bit(f.t)); };
   let G = [];
   if (id !== 'b_win' && all.some(m => F.get(m).win)) bad.push('④ a move ends the game');
-  const kingsOk = ['b_king', 'b_safe', 'b_win', 't_shot1', 't_shot2'].includes(id);   // (b_safe・b_win come after b_king: kings may be on the board)
+  const kingsOk = ['b_king', 'b_safe', 'b_win', 't_shot1', 't_shot2', 't_defend', 't_best'].includes(id);   // (b_safe・b_win come after b_king: kings may be on the board)
   if (!kingsOk && /[BW]/.test(p.spec().b)) bad.push('④ 追32: a king on the board (kings come in b_king)');
   if (!kingsOk) all.forEach(m => { if (F.get(m).crown) bad.push(`④ 追32: ${E.name(p, m)} crowns (kings come in b_king)`); });
   if (id === 'b_move') {
@@ -114,6 +145,20 @@ function goal(E, X, p, id) {   // → { G: the right moves, F: facts per move, b
         if (g3.get(m) !== 1) bad.push(`⑧ ${E.name(p, m)} wins ${g3.get(m)} (the words: 差し引き1枚)`);
         if (Ln.length !== 5 || op.some(x => x.alt !== 1 || x.n !== 1) || Ln[2].n || Ln[4].n !== 3 || !(Ln[4].cap & E.bit(Ln[3].to))) bad.push(`④ ${E.name(p, m)}: not 「2回捨てて3枚取る」 (each of his moves his only capture of one piece, then our jump of three through his landing square: ${Ln.map(x => x.name + (x.alt > 1 ? '(' + x.alt + ')' : '')).join(' ')})`); });
     }
+  } else if (id === 't_defend') {
+    if (p.hasCaps()) bad.push('④ a capture is on the board (the defence is a quiet move)');
+    const D = new Map(all.map(m => [m, ckDefLoss(E, p, m)]));
+    G = all.filter(m => D.get(m).g <= 0);
+    all.filter(m => !G.includes(m)).forEach(m => { const d = D.get(m), f = F.get(m);
+      if (!(f.oppShot > 0 ? f.oppShot === d.g : f.net < 0 && -f.net === d.g)) bad.push(`⑦ ${E.name(p, m)} loses ${d.g} (his best ${E.name(d.q, d.how)}), the words' count: shot ${f.oppShot}, left ${-f.net}`); });
+    if (all.filter(m => !G.includes(m) && D.get(m).shot).length < 2) bad.push('④ fewer than two moves lose to a shot (「相手にショットのねらい」)');
+    G.forEach(m => { if (E.mCap(m) || p.promotes(m)) bad.push(`④ ${E.name(p, m)} captures / crowns (the defence: a quiet move)`); });
+  } else if (id === 't_best') {
+    if (p.hasCaps()) bad.push('④ a capture is on the board (the clearly best move is a quiet move here)');
+    const pc = E.popc(p.b | p.w); if (pc < 6 || pc > 10) bad.push(`④ ${pc} pieces (「終盤に近い局面」: 6〜10)`);
+    const K = new Map(all.map(m => [m, ckBestKind(F, all, m)])), kinds = new Set([...K.values()].filter(Boolean));
+    G = all.filter(m => K.get(m));
+    if (kinds.size > 1) bad.push(`② moves of different kinds are all safe (${[...kinds].join(', ')})`);
   } else if (id === 'b_multi') {
     if (!p.hasCaps()) bad.push('④ no capture');
     const mx = Math.max(...all.map(m => F.get(m).capN)); G = all.filter(m => F.get(m).capN === mx);
@@ -146,13 +191,21 @@ function verify(o) {
       const W8 = all.filter(m => !okS.has(m));
       if (id !== 'b_win') for (const d of [8, 12]) { const ev = evalAt(P.s, d), lo = Math.min(...[...okS].map(m => ev.get(m))), hi = Math.max(...W8.map(m => ev.get(m)));
         if (!(lo - hi >= 60)) a(`①② depth ${d}: a right move ${lo}, the best wrong move ${hi} (gap < 60)`); }
+      if (id === 't_best') { const e12 = evalAt(P.s, 12), sc = new Map(P.sc || []);
+        // (new_game clears the table but not the history / killers: a reading moves by a few tens — P.sc must agree in what the words use)
+        const lose = v => v < -(E.WINT - 1000), oth = all.filter(m => m !== P.best);
+        // (the words say 負け only where P.sc has a forced loss: every such loss must be in the reading; a loss the reading finds and P.sc
+        //  leaves out only makes the words name the board's loss of pieces instead — still true)
+        if (!P.sc || P.sc.length !== all.length || all.some(m => !sc.has(m) || (lose(sc.get(m)) && !lose(e12.get(m))))) a('① P.sc is not the depth-12 reading of every move (a loss where the reading has none, or a move missing)');
+        else if (!(sc.get(P.best) - Math.max(...oth.map(m => sc.get(m))) >= 60)) a('①② P.sc: the answer is not ≥ 60 above every other move');
+        if (Math.abs(Math.max(...P.sc.map(x => x[1]))) > 5000) a('④ the game is already decided (a forced result: not 「はっきり良い一手」)'); }
       // b_multi: the ringed piece has another way; b_jump: every capture of a ringed piece is right (the hint's words)
       const ring = new Set([...okS].map(E.mFrom));
       if (id === 'b_multi' && all.filter(m => ring.has(E.mFrom(m))).length < 2) a('⑧ 追52: the gold ring\'s piece has one way to capture (the ring gives the answer away, 「続けて跳べる道をたどって」)');
       if (id === 'b_jump' && all.some(m => ring.has(E.mFrom(m)) && !okS.has(m))) a('⑧ the ringed piece has a capture that is taken back (「金の丸の駒で取ると、取り返されにくい」)');
       if (id === 'b_king') { const cr = new Set(all.filter(m => F.get(m).crown).map(E.mFrom));
         if (!all.some(m => cr.has(E.mFrom(m)) && !okS.has(m))) a('⑧ 追52: every move of the ringed men is right (the ring gives the answer away)'); }
-      if ((id === 'b_safe' || id === 't_shot1' || id === 't_shot2') && !all.some(m => ring.has(E.mFrom(m)) && !okS.has(m))) a('⑧ 追52: every move of the ringed piece is right (the ring gives the answer away)');
+      if ((id === 'b_safe' || id === 't_shot1' || id === 't_shot2' || id === 't_defend' || id === 't_best') && !all.some(m => ring.has(E.mFrom(m)) && !okS.has(m))) a('⑧ 追52: every move of the ringed piece is right (the ring gives the answer away)');
       if (id === 't_shot1' || id === 't_shot2') { const Ln = ckShot(E, p).line(P.best, id === 't_shot1' ? 0 : 1), last = Ln[Ln.length - 1], T2 = ckT2(id);
         if (id === 't_shot1' && !(/2枚続けて取り返/.test(T2) && last.n === 2)) a(`⑧ the 2D words 「${T2}」: the jump back takes ${last.n}`);
         if (id === 't_shot2' && !(/2回捨てると、最後に3枚続けて/.test(T2) && last.n === 3 && Ln.length === 5)) a(`⑧ the 2D words 「${T2}」: the line ${Ln.map(x => x.name).join(' ')}`); }
@@ -167,6 +220,9 @@ function verify(o) {
       // ⑦⑧ チェッカニ's words (3D) for every move
       let Wd; try { Wd = X.ckLsJa(E, st, P, j); } catch (e) { a('⑧ the words fail: ' + e.message); return; }
       for (const t of [Wd.ask, Wd.hintTx]) if (!t || /\{|undefined|NaN/.test(t)) a(`⑧ the question / hint 「${t}」`);
+      if (id === 't_defend') { const h = String(Wd.hintTx); if (/ふさげ|ふさい/.test(h)) a(`⑧ 追7: the hint 「${h}」 — the answer need not block a path`);
+        const T2 = ckT2(id); if (!/損/.test(T2)) a(`⑧ the 2D ls.t_defend.ng 「${T2}」 does not say material is lost`); }
+      if (id === 't_best') { const h = String(Wd.hintTx); if (/先に成った/.test(h) && !F.get(P.best).crown) a(`⑧ 追7: the hint 「${h}」 — the answer does not crown`); }
       if (id === 'b_safe') { const h = String(Wd.hintTx);
         if (/ふさぐ/.test(h) && ![...okS].some(m => F.get(m).plug && !F.get(m).fled)) a(`⑧ 追7: the hint 「${h}」 — no right move fills the landing square`);
         if (/取り返せる形/.test(h) && ![...okS].some(m => F.get(m).trade)) a(`⑧ 追7: the hint 「${h}」 — no right move lets the capture be taken back`);
@@ -205,6 +261,10 @@ function verify(o) {
             (g.match(/\d+(?=枚)/g) || []).forEach(x => { if (!(id === 't_shot1' ? ['1', '2'] : ['1', '2', '3']).includes(x)) a(`⑧ ${nm(m)} 「${g}」: ${x}枚 (the line gives ${id === 't_shot1' ? '1, takes 2' : '2, takes 3'})`); });
             if (/倍になって|2枚取/.test(g) && !(id === 't_shot1' && last.n === 2)) a(`⑧ ${nm(m)} 「${g}」: the jump back takes ${last.n}`);
             if (/3枚|2回/.test(g) && !(id === 't_shot2' && last.n === 3 && Ln.length === 5)) a(`⑧ ${nm(m)} 「${g}」: the line ${Ln.map(x => x.name).join(' ')}`); }
+          if (id === 't_defend' && /損|被害|傷|ましな|\d+枚/.test(g)) a(`⑧ ${nm(m)} 「${g}」: the answer loses nothing`);
+          if (id === 't_best') { const kd = ckBestKind(F, all, m), RE = { crown: /キング|王冠|成って|奥の段|後ろにも動ける/, shot: /ショット|取らせ|捨て駒|1枚あげ|取りを利用/, stop: /キングにさせない|王冠への道|奥の段へ入れない|キングを作らせ|成りを止め/ };
+            if (!kd || !RE[kd].test(g)) a(`⑧ ${nm(m)} 「${g}」: the praise does not name the kind (${kd})`);
+            if (/負け|損|被害/.test(g)) a(`⑧ ${nm(m)} 「${g}」: the answer loses nothing`); }
           if (id === 'b_win') { if (/取り切|最後の駒まで|駒がひとつも残らない|いなくなる|まとめて取/.test(g) ? f.oppLeft !== 0 : !(f.oppLeft > 0 && f.oppN === 0)) a(`⑧ ${nm(m)} 「${g}」: pieces left ${f.oppLeft}, moves ${f.oppN}`); }
           continue; }
         let raw; try { raw = plain(Wd.ng(m)); } catch (e) { a(`⑧ the words of ${nm(m)} fail: ${e.message}`); continue; }
@@ -218,6 +278,13 @@ function verify(o) {
         if (id === 't_shot1' || id === 't_shot2') {
           if (/悪くない|ほんの少し|わずかに/.test(t)) a(`⑦ ${nm(m)} misses the shot (≥ 60 below), the words: 「${t}」`);
           if (f.oppShot > 0 ? !new RegExp(`ショット.*${f.oppShot}枚|捨て駒.*${f.oppShot}枚`).test(t) : f.net < 0 ? !(new RegExp(`${-f.net}枚`).test(t) && /取られ|跳び越え/.test(t)) : !/見のがし|手順に入れない|利用できない/.test(t)) a(`⑦ ${nm(m)} (net ${f.net}, his shot ${f.oppShot}), the words: 「${t}」`); }
+        if (id === 't_defend') { const d = ckDefLoss(E, p, m);
+          if (!(new RegExp(`${d.g}枚`).test(t) && (d.shot ? /ショット|捨て駒/ : /取られ|跳び越え/).test(t)) || /悪くない|ほんの少し|わずかに/.test(t)) a(`⑦ ${nm(m)} loses ${d.g}${d.shot ? ' to a shot' : ''}, the words: 「${t}」`); }
+        if (id === 't_best') { const kA = ckBestKind(F, all, P.best), v = new Map(P.sc || []).get(m), lose = v != null && v < -(E.WINT - 1000);
+          const conc = lose ? /負け/.test(t) : f.oppShot > 0 ? new RegExp(`(ショット|捨て駒).*${f.oppShot}枚`).test(t) : f.net < 0 ? new RegExp(`${-f.net}枚`).test(t) && /取られ|跳び越え/.test(t)
+            : kA === 'crown' ? !f.crown && /キングになるチャンス|先に成るチャンス|王冠への近道/.test(t) : kA === 'shot' ? !f.shot && /ショットのチャンス|駒得できる手順|取る手を利用/.test(t)
+            : kA === 'stop' ? f.oppCrown && /キングになられ|王冠への道をあけ|奥の段へ入って/.test(t) : false;
+          if (!conc || /悪くない|ほんの少し|わずかに|良いマスを取られ|動きやすく/.test(t) || (/負け/.test(t) && !lose)) a(`⑦ ${nm(m)} (net ${f.net}, his shot ${f.oppShot}, crown ${f.crown}, his crown ${f.oppCrown}, ${v}), the words: 「${t}」`); }
         if (id === 'b_win') { const n = t.match(/(\d+)通り/); if (f.win || (n ? +n[1] !== f.oppN : !/まだ動けちゃう|勝負がつかない|勝ちを見のがし|決着が先/.test(t))) a(`⑦ ${nm(m)} leaves ${f.oppN} moves, the words: 「${t}」`); }
         if (id === 'b_king') {
           if (/成った駒を|直後に取られ|とたん取られ|キングを取られ/.test(t)) a(`⑦ ${nm(m)}: 「${t}」 — the crowned man on the far row cannot be jumped`);
@@ -229,6 +296,8 @@ function verify(o) {
     (st.ramp || []).forEach((r, j) => { const a = m => add(id, -1, `warm-up ${j + 1} (${r.k}): ${m}`), p = E.Pos.from(r.s), nm = m => E.name(p, m);
       const { all, G, F, bad } = goal(E, X, p, id); bad.forEach(x => a(x));
       if ((id === 't_shot1' || id === 't_shot2') && (r.k === 'explain' || r.k === 'try')) { ckShotWarm(E, X, st, r, j, p, all, G, a, V); }
+      else if (id === 't_defend') ckDefWarm(E, st, r, j, p, all, G, a, V);
+      else if (id === 't_best') ckBestWarm(E, W, st, r, j, p, all, G, a, V, evalAt);
       else if (r.k === 'explain') { const hl = (r.marks || []).filter(x => x[1] === 'hl').map(x => x[0] - 1), to = (r.marks || []).filter(x => x[1] === 'ok').map(x => x[0] - 1);
         const M = all.filter(m => hl.includes(E.mFrom(m)) && to.includes(E.mTo(m)));
         if (M.length !== 1) a(`① the marks are not one legal move`); else if (!G.includes(M[0])) a(`① the marked move ${nm(M[0])} does not meet the goal`);
@@ -236,7 +305,7 @@ function verify(o) {
           if (id === 'b_move' && !(f.edge || (f.near && f.blocked))) a(`⑧ 「跳び越えた先のマスがないか、ふさがっている」: ${nm(M[0])} is not on the edge nor blocked behind`);
           if (id === 'b_jump' && all.some(m => m !== M[0] && F.get(m).net !== 0)) a('⑧ 「ほかの取り方だと…得が帳消し」: a wrong capture does not come out even');
           if (id === 'b_win' && !(f.oppLeft > 0 && f.oppN === 0)) a('⑧ 「相手はもう動かせる手がありません」: the marked move does not leave the opponent\'s pieces without a move'); } }
-      if (r.k === 'try' && !(id === 't_shot1' || id === 't_shot2')) { const okS = new Set((r.ok || []).map(n => all.find(m => nm(m) === n)).filter(x => x != null));
+      if (r.k === 'try' && !(id === 't_shot1' || id === 't_shot2' || id === 't_defend' || id === 't_best')) { const okS = new Set((r.ok || []).map(n => all.find(m => nm(m) === n)).filter(x => x != null));
         if (okS.size !== (r.ok || []).length) a(`① an answer is not legal (${r.ok})`);
         G.forEach(m => { if (!okS.has(m)) a(`② ${nm(m)} meets the goal but is scored wrong`); }); okS.forEach(m => { if (!G.includes(m)) a(`① ${nm(m)} does not meet the goal`); });
         if (all.length < 3) a(`③ ${all.length} legal moves`); if (okS.size * 3 > all.length) a(`③ 追72: ${okS.size} of ${all.length} moves are right`);
@@ -292,4 +361,59 @@ function ckShotWarm(E, X, st, r, j, p, all, G, a, V) {
     const n = t.match(/(\d+)の(黒|白)/g) || []; n.forEach(x => { const q = +x.match(/\d+/)[0], c = p.at(q - 1); if (!c || ((c <= 2) !== /黒/.test(x))) a(`⑧ ${who} 「${x}」: square ${q} holds ${'.bBwW'[c]}`); });
   }
 }
-module.exports = { verify, goal, CKB_DONE, ckShot };
+// t_best's warm-ups (see the head of the file)
+function ckBestWarm(E, W, st, r, j, p, all, G, a, V, evalAt) {
+  const id = st.id, nm = m => E.name(p, m), ja = x => x == null ? '' : typeof x === 'string' ? x : String(x.ja || '');
+  const T2 = ['t', 'body', 'g', 'h', 'y'].map(f => ja(r[f])).join(' '), T3 = ['t', 'body', 'g', 'h', 'y'].map(f => V[`ramp:${id}/${j}/${f}`] || '').join(' ');
+  if (G.length !== 1) { a(`② ${G.length} moves meet the goal`); return; }
+  const A = G[0], ev = evalAt(r.s, 8), ev12 = evalAt(r.s, 12);
+  for (const e of [ev, ev12]) { const hi = Math.max(...all.filter(m => m !== A).map(m => e.get(m))); if (!(e.get(A) - hi >= 60)) a(`①② the engine: the answer ${e.get(A)}, the best other ${hi} (gap < 60)`); }
+  if (all.length < 3) a(`③ ${all.length} legal moves`);
+  if (r.k === 'explain') { const hl = (r.marks || []).filter(x => x[1] === 'hl').map(x => x[0] - 1), to = (r.marks || []).filter(x => x[1] === 'ok').map(x => x[0] - 1);
+    if (hl.join() !== String(E.mFrom(A)) || to.join() !== String(E.mTo(A))) a(`① the marks ${hl}→${to} are not the answer ${nm(A)}`); }
+  else { const okS = (r.ok || []).map(n => all.find(x => nm(x) === n)); if (okS.length !== 1 || okS[0] !== A) a(`① ok ${r.ok} is not the goal set ${nm(A)}`);
+    const look = r.look || []; if (look.join() !== String(E.mFrom(A) + 1)) a(`⑧ the gold ring ${look} is not the answer's piece ${E.mFrom(A) + 1}`);
+    if (!all.some(m => m !== A && E.mFrom(m) === E.mFrom(A))) a('⑧ 追52: every move of the ringed piece is right');
+    const prev = st.ramp[j - 1], flip = b => [...b].reverse().map(c => ({ b: 'w', w: 'b', B: 'W', W: 'B' })[c] || c).join('');
+    if (/色と向きを入れかえた同じ形/.test(T2 + T3) && !(prev && prev.k === 'explain' && flip(prev.s.b) === r.s.b && prev.s.side !== r.s.side)) a('⑧ 「色と向きを入れかえた同じ形」: not the warm-up before turned'); }
+  for (const [who, t] of [['2D', T2], ['3D', T3]]) if (/\{|undefined/.test(t)) a(`⑧ ${who} 「${t}」`);
+}
+// t_defend's warm-ups (see the head of the file)
+function ckDefWarm(E, st, r, j, p, all, G, a, V) {
+  const id = st.id, nm = m => E.name(p, m), ja = x => x == null ? '' : typeof x === 'string' ? x : String(x.ja || '');
+  const T2 = ['t', 'body', 'g', 'h', 'y'].map(f => ja(r[f])).join(' '), T3 = ['t', 'body', 'g', 'h', 'y'].map(f => V[`ramp:${id}/${j}/${f}`] || '').join(' ');
+  if (G.length !== 1) { a(`② ${G.length} moves give nothing away`); return; }
+  const A = G[0], names = new Set();
+  if (r.k === 'explain') {
+    const m = all.find(x => nm(x) === (r.seq || [])[0]);
+    if (m == null || G.includes(m)) { a(`① seq[0] ${(r.seq || [])[0]} is not a wrong legal move`); return; }
+    const d = ckDefLoss(E, p, m); let q = p.clone().play(m); names.add(nm(m));
+    const sq = new Set();
+    for (let i = 1; i < r.seq.length; i++) { const M = q.moves(), x = M.find(y => E.name(q, y) === r.seq[i]);
+      if (x == null) { a(`① seq ${r.seq[i]} is not legal`); return; }
+      if (i === 1 && x !== d.how) a(`① seq ${r.seq[i]} is not his best reply ${E.name(d.q, d.how)}`);
+      if (i > 1 && M.length !== 1) a(`④ seq ${r.seq[i]}: not forced (${M.length} moves)`);
+      (E.path(q, x) || [E.mFrom(x), E.mTo(x)]).forEach(s => sq.add(s + 1)); sq.add(E.mFrom(x) + 1); names.add(r.seq[i]); q = q.clone().play(x); }
+    const ng = (r.marks || []).filter(x => x[1] === 'ng').map(x => x[0]), ok = (r.marks || []).filter(x => x[1] === 'ok').map(x => x[0]);
+    ng.forEach(x => { if (!sq.has(x)) a(`⑧ the red frame on ${x} is off the line ${r.seq.join(' ')}`); });
+    if (ok.join() !== String(E.mFrom(A) + 1)) a(`⑧ the ok mark ${ok} is not the answer's piece ${E.mFrom(A) + 1}`);
+    if (/2枚取られ/.test(T2 + T3) && !(d.g === 1 && /x\d+x\d+$/.test(r.seq[r.seq.length - 1]))) a('⑧ 「2枚取られ」: his last jump does not take two');
+    if (/1枚ずつの交換/.test(T2 + T3) && ckDefLoss(E, p, A).g !== 0) a('⑧ 「1枚ずつの交換」: after the answer he wins material');
+  } else {
+    const okS = (r.ok || []).map(n => all.find(x => nm(x) === n));
+    if (okS.length !== 1 || okS[0] !== A) a(`① ok ${r.ok} is not the goal set ${nm(A)}`);
+    const look = r.look || [], on = new Set();   // (the ring: where to look — squares on his winning lines after the wrong moves)
+    all.filter(m => m !== A).forEach(m => { const d = ckDefLoss(E, p, m); if (d.how == null) return; [0, 1].forEach(k => d.S.line(d.how, k).forEach(x => { on.add(E.mFrom(x.mv) + 1); (x.path || []).forEach(s2 => on.add(s2 + 1)); on.add(E.mTo(x.mv) + 1); })); });
+    look.forEach(x => { if (!on.has(x)) a(`⑧ the gold ring on ${x}: not on his winning lines`); });
+    if (/ほかの手はどれも.{0,6}ショットで/.test(T2 + T3) && all.some(m => m !== A && !ckDefLoss(E, p, m).shot)) a('⑧ 「ほかの手はどれも…ショットで」: a wrong move just leaves a piece');
+    const prev = st.ramp[j - 1]; if (/同じ局面/.test(T2 + T3) && !(prev && prev.s.b === r.s.b && prev.s.side === r.s.side)) a('⑧ 「同じ局面」: not the warm-up before');
+    all.forEach(m => names.add(nm(m)));
+  }
+  for (const [who, t] of [['2D', T2], ['3D', T3]]) {
+    if (/\{|undefined/.test(t)) a(`⑧ ${who} 「${t}」`);
+    if (/ふさ/.test(t)) a(`⑧ ${who}: 「ふさ…」 — the answer moves the second victim away, it blocks nothing 「${t.slice(0, 80)}」`);
+    if (r.k === 'explain') (t.match(/\b\d+[-x]\d+(x\d+)*\b/g) || []).forEach(x => { if (!names.has(x) && x !== nm(A)) a(`⑧ ${who}: the move ${x} is not on the line`); });
+    (t.match(/(\d+)の(黒|白)/g) || []).forEach(x => { const q = +x.match(/\d+/)[0], c = p.at(q - 1); if (!c || ((c <= 2) !== /黒/.test(x))) a(`⑧ ${who} 「${x}」: square ${q}`); });
+  }
+}
+module.exports = { verify, goal, CKB_DONE, ckShot, ckDefLoss };
