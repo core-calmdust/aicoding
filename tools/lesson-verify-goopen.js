@@ -101,6 +101,10 @@ function verify(opt = {}) {
         // after the other side left the line: the side's moves are the reading's first move there (its stored reading), the other side's are any
         for (let k = dv + 1; k < P.mv.length; k++) if ((k % 2 ? 3 - st.turn : st.turn) === side) { const r0 = RD && RD.pos && RD.pos[g.id + '@' + P.mv.slice(0, k).join(' ')];
           if (!r0 || !r0.top.length || r0.top[0][0] !== P.mv[k]) bad(q, `④ 手順を外れたあとの本の側の手 ${P.mv[k]}（${k + 1}手目）が読みの首位でない（${r0 && r0.top.length ? r0.top[0][0] : '読みなし'}）`); } }
+      // ④ 19路の定石（布石・置碁以外）：答えが定石の隅（本筋・変化の石から4路以内）にある。手を抜いた別の隅の問題は定石の主題でない（2026-11-26 担当B）
+      if (!/^fuseki_/.test(g.id) && N >= 19) { const pts = [].concat(...[g.line].concat((g.vars || []).map(v => v.line))).map(m => R.parseCoord(m, N)).filter(i => i >= 0);
+        for (const a of ok) { const i = R.parseCoord(a, N), ax = i % N, ay = Math.floor(i / N);
+          if (!pts.some(j => Math.max(Math.abs(j % N - ax), Math.abs(Math.floor(j / N) - ay)) <= 4)) bad(q, `④ 答え ${a} が定石の隅から離れている（本筋・変化の石から5路以上＝別の隅の問題）`); } }
       if (mover !== side) bad(q, `④ 手番が本の側でない（${mover === 1 ? '黒' : '白'}の手を当てさせる、本は${side === 1 ? '黒' : '白'}）`);
       if (ans != null && !ok.includes(ans)) bad(q, `④ 手順の手 ${ans} が正解に入っていない（正解 ${ok.join(' ')}）`);
       if ((P.good || []).length) bad(q, `② 16点の手（good）${P.good.join(' ')}：正解か不正解かはっきりしない（12点を超える）`);
