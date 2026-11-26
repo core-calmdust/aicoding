@@ -14,8 +14,11 @@
 //    the stored line that does not mate: the words of that board (no check / the king takes / the king escapes / taken or blocked);
 //  ⑨ the 2D: the same pool, mate in n judged by the rules, a move that is no check fails at once; the warm-ups (every try's ok = every
 //    first move that mates in three; the explain's line mates).
-module.exports = function shMate3({ E, L, X, pool, brd, dist, add, src, app }) {
-  const GID = 'k6', g = L.grades.find(x => x.id === GID); if (!g) return;
+// k4「3手詰（応用）」(2026-11-26 担当A) uses the same checks with the theme turned round (SAC): the answer is a sacrifice — a
+//    defence can take the piece just played and the stored line sol[1] takes it (取らせて詰ます), 3〜15 checks, the praise speaks of
+//    the sacrifice, the 3D intro says the idea and the moves of the promoted pieces in its problems (追32).
+module.exports = function shMate3({ E, L, X, pool, brd, dist, add, src, app }, GID = 'k6') {
+  const SAC = GID === 'k4', CMAX = SAC ? 15 : 12, g = L.grades.find(x => x.id === GID); if (!g) return;
   const T = E.typeOf, NM = ['', '歩', '香車', '桂馬', '銀', '角', '飛車', '金', '玉', 'と金', '成香', '成桂', '成銀', '馬', '竜'];
   const plain = t => String(t).replace(/<[^>]+>/g, '');
   const pos = s => { const p = new E.Position(); p.setSfen(s); return p; };
@@ -41,7 +44,7 @@ module.exports = function shMate3({ E, L, X, pool, brd, dist, add, src, app }) {
     if (goal.length !== 1) a(`② ${goal.length} first moves mate in three: ${goal}`);
     const checks = ms.filter(m => isChk(p, m));
     if (ms.length < 3) a(`③ ${ms.length} legal moves`);
-    if (checks.length < 3 || checks.length > 12) a(`③④ ${checks.length} checks (3〜12)`);
+    if (checks.length < 3 || checks.length > CMAX) a(`③④ ${checks.length} checks (3〜${CMAX})`);
     const m0 = p.fromUsi(ans), drop = E.isDrop(m0), pc = drop ? E.dropType(m0) : T(p.board[E.mFrom(m0)]);
     nDrop[drop ? 0 : 1]++; kinds.add(pc);
     const ksq = p.king[p.side ^ 1], to = E.mTo(m0), side = p.side === 0 ? 1 : -1;
@@ -49,7 +52,9 @@ module.exports = function shMate3({ E, L, X, pool, brd, dist, add, src, app }) {
     shapes.set(sh, (shapes.get(sh) || 0) + 1); if (shapes.get(sh) > 2) a(`⑤ the same first-move shape (${sh}) a third time`);
     p.doMove(m0); const rs = p.legalMoves(true), rsU = rs.map(r => p.toUsi(r));
     if (rs.length < 2) a(`④ ${rs.length} defence after the answer (2 or more: the defence has to be read)`);
-    if (rs.some(r => !E.isDrop(r) && E.mTo(r) === to)) a('④ the answer\'s piece can be taken (a sacrifice: k4)');
+    if (!SAC && rs.some(r => !E.isDrop(r) && E.mTo(r) === to)) a('④ the answer\'s piece can be taken (a sacrifice: k4)');
+    if (SAC && !rs.some(r => !E.isDrop(r) && E.mTo(r) === to)) a('④ the answer\'s piece cannot be taken (not a sacrifice)');
+    if (SAC && P.sol[1].slice(2, 4) !== ans.slice(2, 4)) a(`④ the stored defence ${P.sol[1]} does not take the sacrificed piece`);
     if (!rsU.includes(P.sol[1])) a(`① ${P.sol[1]} is not a legal defence`);
     else { const r = p.fromUsi(P.sol[1]); p.doMove(r); const f = mates1(p); if (!f.includes(P.sol[2])) a(`① ${P.sol[2]} does not mate after ${P.sol[1]} (${f})`); if (f.length !== 1) a(`② ${f.length} moves mate after ${P.sol[1]}: ${f}`); p.undoMove(); }
     p.undoMove();
@@ -73,7 +78,8 @@ module.exports = function shMate3({ E, L, X, pool, brd, dist, add, src, app }) {
       const lm = q2.fromUsi(P.sol[2]), ln = NM[E.isDrop(lm) ? E.dropType(lm) : T(q2.board[E.mFrom(lm)])];
       if (/undefined|NaN|\{/.test(gd) || !gd.includes(pn) || !gd.includes(ln)) a(`⑧ the praise 「${gd}」 does not name the ${pn} and the last ${ln}`);
       if (drop ? !/打|持ち駒の/.test(gd) : /打|持ち駒の/.test(gd)) a(`⑧ the praise 「${gd}」 does not say ${drop ? 'a drop' : 'a board move'}`);
-      if (/捨て/.test(gd)) a(`⑧ the praise 「${gd}」 speaks of a sacrifice`);
+      if (!SAC && /捨て/.test(gd)) a(`⑧ the praise 「${gd}」 speaks of a sacrifice`);
+      if (SAC && !/捨て|取らせ|取られる場所|ただで渡/.test(gd)) a(`⑧ the praise 「${gd}」 does not speak of the sacrifice`);
       for (const m of ms) { const u = U(m); if (u === ans) continue; const w = plain(Q.ng(u));
         if (/undefined|NaN/.test(w) || !w.includes('{x}')) { a(`⑧ ${u}: 「${w}」`); continue; }
         if (!isChk(p, m)) { if (!NOCHK.test(w)) a(`⑦ ${u} is no check, the words do not say so 「${w}」`); continue; }
