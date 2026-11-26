@@ -150,7 +150,9 @@
   const alive = S => S.people.filter(p => p.alive);
   const isWolf = (S, id) => S.wolves.includes(id);
   const wolvesAlive = S => S.people.filter(p => p.alive && p.role === 'wolf');
-  const diffOf = S => DIFF[S.diff];
+  // 物語ごとの手直し（2026-11-26 ユーザー：霧鐘村・北辰号の中級がまだ易しい）。配役は変えず、嘘の巧さと村の推理だけを締める
+  const TUNE = { kirigane: { 2: { cunning: .6, wit: .08, npcFind: .1 } }, hokushin: { 2: { cunning: .6, wit: .08, npcFind: .1 } } }, TD = {};
+  const diffOf = S => { const t = TUNE[S.story] && TUNE[S.story][S.diff]; if (!t) return DIFF[S.diff]; const k = S.story + S.diff; return TD[k] || (TD[k] = Object.assign({}, DIFF[S.diff], t)); };
 
   /* ---------- the night ---------- */
   // actions: { prologue, divine:id, guard:id, stake:locId }
