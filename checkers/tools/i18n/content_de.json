@@ -68,6 +68,7 @@
  "ls.t_best.goal": "Finde den besten Zug.",
  "ls.t_best.hint": "Der beste Zug wird mit dem Stein mit goldenem Ring gespielt.",
  "ls.t_best.why": "{m} ist die Gewinnidee.",
+ "ls.t_best.ng": "{x} ist nicht die Gewinnidee. {m} ist klar besser.",
  "ls.e_kings.title": "Damenendspiele",
  "ls.e_kings.sub": "Den Sieg nicht verschenken",
  "ls.e_kings.intro": "<p>Endspiele mit Damen. Selbst in einer Gewinnstellung <b>halten nur wenige Züge den Gewinn</b>.</p><p class=\"note\">Zwei Damen schlagen eine Dame, aber eine einzelne Dame in einer „Doppelecke“ (1 und 5 oder 28 und 32) ist mühsam zu vertreiben. Die Lösungen wurden mit den Endspieldatenbanken geprüft.</p>",

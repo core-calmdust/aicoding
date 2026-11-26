@@ -68,6 +68,7 @@
  "ls.t_best.goal": "Encuentra la mejor jugada.",
  "ls.t_best.hint": "La mejor jugada usa la pieza del anillo dorado.",
  "ls.t_best.why": "{m} es la idea ganadora.",
+ "ls.t_best.ng": "{x} no es la idea ganadora. {m} es claramente mejor.",
  "ls.e_kings.title": "Finales de damas",
  "ls.e_kings.sub": "No dejes escapar la victoria",
  "ls.e_kings.intro": "<p>Finales con damas. Incluso en una posición ganada, <b>pocas jugadas mantienen la victoria</b>.</p><p class=\"note\">Dos damas ganan a una, pero una dama sola en una «esquina doble» (1 y 5, o 28 y 32) cuesta sacarla de ahí. Las respuestas se comprobaron con las bases de datos de finales.</p>",
