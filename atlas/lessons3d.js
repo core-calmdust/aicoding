@@ -2246,7 +2246,7 @@
         g: '数字は「打ったあと、きみの外がわの石がいくつになるか」。いちばん少なくなる手に打ってみよう！', gok: '外がわの石は9個で、ほかの手より少ないね！ 壁を作らない手は、自分の打てる場所を守ってくれるんだ。',
         pp: ['さあ練習！ 壁にならない手はどこ？', 'もう1問！ 外がわの石の数に注目してみて。'],
         h: ['いちばん小さい数字のマスを探してみて。', '内がわの石を返す手を選ぶと、壁ができにくいね。', '辺の石と石のあいだに、割りこめる手もあるかも？', '緑の枠はあとでも打てるから、今はそれ以外で安全な手を探してね。'],
-        p1ok: '正解！ 外がわの石が12個まで減る、内がわの静かな手だね。', p2ok: 'ばっちり！ 外がわの石が減って、しかも辺の白石2つのあいだに割りこむ手なんだ。',
+        p1ok: '正解！ 外がわの石が12個まで減る、内がわの静かな手だね。', p2ok: 'ばっちり！ 外がわの石は10個で、ほかの手（12個か13個）より少ない。隅のとなりの手は、相手に隅を渡しちゃうんだ。',
         t2: '自分だけが打てる場所は、貯金', c2: 'もうひとつの考え方が<b>余裕手</b>。緑の枠は、<b>白だけが打てて、黒は打てない場所</b>なんだ。黒に消される心配がないから、急がずに「貯金」として残しておける！<br>赤い点は黒の打てる場所。金の枠は黒も打てるから、先に使っておく価値があるね。',
         g2: '緑の枠の余裕手はとっておいて、ほかの安全な手を打とう。赤い枠は、相手に隅を渡す手！', g2ok: '正解！ 余裕手は残したまま。赤い枠の手だと、相手に隅を渡すところだったね。' },
       edge: { t1: '辺のすき間に打ちこむ', c1: '上の辺を見て。緑の枠に白石が2つあって、そのあいだの金の枠が空いてるね。相手の石2つにはさまれた辺の空きに打つ手を<b>付け手</b>（くさび）っていうんだ。<br>黒がここに打つと白の辺が分かれる！ しかも両側が白だから、横から返されることもないんだ。',
@@ -2312,6 +2312,14 @@
   // (2026-11-26 第2期 ⑧ 担当A) quiet's exception (trap): the quietest move is not the best — the question and the hint point at the opponent's moves after
   const RV_AQT = ['いちばんいい手を探そう。打ったあとの相手の手まで考えてみて！', '静かな手で本当にいい？ 相手が次に何か所に打てるかも見てね。', 'この場面、いちばん得な手はどこだろう？', '開放度だけで決めていい？ じっくり考えてみて。', '相手に足場をあげない手、見つけてみて！'];
   const RV_HQT = ['開放度だけでなく、打ったあと相手が何か所に打てるかもくらべてみて。', 'いちばん静かな手のあと、相手の打てる場所がふえないか確かめて！', '数字が小さくても、相手の打ち場所がふえる手は損なんだ。', '打ったあとの相手の打てる場所を、手ごとに数えてみて！', '静かさより、相手の次の手の数が大事な場面もあるんだ。'];
+  // (2026-11-26 第2期 ⑧ 担当A) wall（壁と余裕手）: the standard problems have no reserve move (only the wall), the exception (trap) has one to keep
+  const RV_AWS = ['いちばんいい手に打ってみよう。外がわに石を並べないようにね！', '壁を作らない手はどれかな？', '外がわの石をふやさない手、見つけられる？', 'この場面、どこに打つのがいちばん得だろう？', '内がわを返す手、探してみよう！'];
+  const RV_AWT = ['余裕手、とっておけるかな？ いちばん得な手はどこ？', 'きみだけが打てる場所があるね。今使う？ それとも？', 'この場面、いちばん得な手はどこだろう？ 余裕手にも気をつけてね。', '貯金の余裕手、どうする？ いちばんいい手を探そう！', '余裕手のある場面！ どこに打つのがいちばん得かな？'];
+  const RV_HWS = ['外がわに一列に石が並ぶ手は、よけよう。', '内がわの石を返す手がねらい目！', '打ったあと、空きマスにふれるきみの石がいくつになるか数えてみて。', '外がわの石がいちばん少なくなる手を探してね。', '石を外へ広げない手を探してね。'];
+  const RV_HWT = ['きみだけが打てる場所（余裕手）は、今すぐ使わなくても相手に消されないんだ。', '相手も打てる場所から先に使うと、貯金が残るね！', '余裕手はとっておいて、外がわの石をふやさない手を探そう。', '相手が打てないマスは、あわてて使わなくていいよ。', '余裕手のほかで、壁を作らない手を探そう！'];
+  const rvFrontAfter = (c, u, me) => { const n = c.slice(); n[u] = me; rvFlips(c, u, me).forEach(q => { n[q] = me; }); let f = 0;
+    for (let q = 0; q < 64; q++) if (n[q] === me) { const r = q >> 3, k = q & 7; let e = false; for (let a = -1; a <= 1 && !e; a++) for (let b = -1; b <= 1; b++) { const rr = r + a, cc = k + b; if ((a || b) && rr >= 0 && rr < 8 && cc >= 0 && cc < 8 && !n[rr * 8 + cc]) { e = true; break; } } if (e) f++; }
+    return f; };
   function rvLsJa(kind, P, i, li, marks) {
     const F = P.f || {}, ks = Object.keys(F).map(Number), v = q => F[q][0], top = Math.max(...ks.map(v)), bs = ks.filter(q => v(q) >= top - 1e-9);
     const k = i % 5, o8 = li % 8 + i * [1, 3, 5, 7][(li >> 3) % 4], pk = (L, j) => L[((j % L.length) + L.length) % L.length];
@@ -2325,6 +2333,7 @@
       : ['縦・横・ななめ、8つの向きにはさめる石を数えてみて。', '自分の石まで、相手の石が何枚続くか数えてみて。', 'マスごとに、返る石を1枚ずつ数えてね。', '打てる場所を、ひとつずつ確かめてみて！', 'どのマスも、8つの向きをぐるっと見てみて。'])
       : kind === 'corner' && P.d != null ? (P.trap ? RV_HCT : RV_HCS)   // (2026-11-25 第2期 ⑧ 担当A: a corner to take, or none — the hint says which the board has)
       : kind === 'quiet' && P.d != null && P.trap ? RV_HQT   // (2026-11-26 第2期 ⑧ 担当A: quiet's exception — the opponent's moves after)
+      : kind === 'wall' && P.d != null ? (P.trap ? RV_HWT : RV_HWS)   // (2026-11-26 第2期 ⑧ 担当A: wall — a reserve move to keep, or only the wall)
       : RVJ_LS.hint[kind] || [''], hintTx = pk(H, i) + (marks ? ' ' + pk(kind === 'wall' ? RVJ_LS.rfWall : RVJ_LS.rf, i + 2) : '');
     const reasonGood = u => {
       const fu = F[u], out = [];
@@ -2355,10 +2364,14 @@
           else out.push(pk([`返した石のまわりの空きは${n}マス。静かな手だから、相手に足場をあげないんだ。`, `開放度${n}の静かな手！ 相手に足がかりをほとんどあげないね。`, `空きにふれるのは${n}マスだけ。相手は手がかりを作りにくいんだ。`, `開放度は${n}。静かに打てたから、相手は打ち場所がふえないよ。`, `${n}マスしか空きにふれない手！ 相手の足場がふえないね。`], k));
           break;
         }
-        case 'wall':
-          if (P.trap) out.push(pk(['あわてて余裕手を使わなかったね。自分だけが打てる場所は、貯金としてとっておけるんだ。', '余裕手を温存できた！ あとで困ったときの切り札になるよ。', '貯金の余裕手には、手をつけずにすんだ！', '余裕手はまだ使わない、が正解の場面だよ。ちゃんと残せたね。', 'きみだけが打てる場所は、最後までとっておける。いい判断なんだ。'], k));
+        case 'wall': {
+          const fr = rvFrontAfter(c, u, P.toMove);
+          if (P.trap) out.push(pk(['あわてて余裕手を使わなかったね。自分だけが打てる場所は、貯金としてとっておけるんだ。', '余裕手を温存できた！ あとで困ったときの切り札になるよ。', '貯金の余裕手には、手をつけずにすんだ！', '余裕手はまだ使わない、が正解の場面だよ。ちゃんと残せたね。', 'きみだけが打てる場所は、相手に消されずに残るんだ。いい判断！'], k)
+            + (P.d != null ? ' ' + pk([`外がわの石も${fr}個ですむ手なんだ。`, `しかも外がわの石は${fr}個で、いちばん少ないね。`, `外がわの石は${fr}個で、壁も作らない！`, `打ったあとの外がわの石は${fr}個だけ！`, `外がわの石を${fr}個に抑えた手だね。`], k) : ''));
+          else if (P.d != null) out.push(pk([`外がわの石は${fr}個で、どの手よりも少ない！ 相手が打てる場所は${fu[3]}か所なんだ。`, `壁を作らない、内がわの手だよ。外がわの石は${fr}個、相手の打てる場所は${fu[3]}か所に抑えられるね。`, `外がわの石を${fr}個に抑えられたね。相手は${fu[3]}か所にしか打てないんだ。`, `壁を作らずに打てた！ 外がわの石は${fr}個、相手の候補も${fu[3]}か所ですむんだ。`, `内がわを返す、静かな手だね。外がわの石は${fr}個、相手の打ち場所は${fu[3]}か所！`], k));
           else out.push(pk([`外がわに石を並べずにすんだ！ 相手が打てる場所は${fu[3]}か所なんだ。`, `壁を作らない、内がわの手だよ。相手の打てる場所は${fu[3]}か所に抑えられるね。`, `外がわの石をふやさずにすんだね。相手は${fu[3]}か所にしか打てないんだ。`, `壁を作らずに打てた！ 相手の候補も${fu[3]}か所ですむよ。`, `内がわを返す、静かな手だね。相手の打ち場所は${fu[3]}か所！`], k));
           break;
+        }
         case 'edge':
           if ((P.wedge || []).includes(u)) out.push(pk(['相手の石2つのあいだに打つ付け手！ 相手の辺の形がくずれて、隅をねらいやすくなるんだ。', '辺のすき間に打つ付け手だよ。相手はもう、きれいな辺を作れないね。', '付け手がずばり決まった！ 両側が相手の石だから、横から返されないんだ。', 'くさびを打ちこめた！ 相手の辺が、まっぷたつに分かれたよ。', 'すき間を見のがさなかったね。付け手で、相手の辺はばらばらなんだ。'], k));
           else out.push(pk([`辺の形をよく見られたね。相手の打てる場所は${fu[3]}か所に抑えられるんだ。`, `辺のバランスをくずさない手！ 相手の打ち場所は${fu[3]}か所だよ。`, `辺をうまく守れたんだ。相手の候補は${fu[3]}か所！`, `辺の読みがばっちり！ 相手は${fu[3]}か所にしか打てないね。`, `辺に気をくばった手だよ。相手の打てる場所も${fu[3]}か所ですむんだ。`], k));
@@ -2427,11 +2440,13 @@
           break;
         }
         case 'wall': {
-          const opL = rvLegal(c, 3 - P.toMove);
-          if ((P.wall || []).includes(u)) out.push(pk(['赤い枠は外がわに石を並べて、壁を作っちゃう手。壁ができると、その外は相手だけが打てる場所になるからね。', 'きみの手だと、外がわに壁ができちゃう。壁の外は、相手だけの打ち場所なんだ。', '赤い枠だと壁が厚くなって、こっちの打てる場所がどんどん減っていくよ。', '外がわに石が並ぶと、相手の足場がふえるから損なんだ。', '赤い枠では壁ができちゃう！ 相手だけが打てる場所がふえるね。'], k));
-          else if (P.trap && !opL.includes(u)) out.push(pk(['赤い枠は、きみだけが打てる余裕手。今使うと損だから、貯金としてとっておこうね。', 'その手は余裕手。今使うと損だから、ほかに打てるうちはとっておきたいんだ。', '余裕手は、使わずにおけば最後まで残る貯金だよ。', '赤い枠は相手が打てない場所。あわてて使うと損なんだ。', 'きみだけの打ち場所を、ここで使うのはもったいないから損！'], k));
+          const opL = rvLegal(c, 3 - P.toMove), fU = rvFrontAfter(c, u, P.toMove), fB = rvFrontAfter(c, b, P.toMove);
+          const frs = P.d != null ? pk([`外がわの石は、赤い枠だと${fU}個、緑の枠なら${fB}個。`, `きみの手だと外がわの石が${fU}個。緑の枠なら${fB}個なんだ。`, `外がわの石は赤い枠で${fU}個、緑の枠で${fB}個なんだ。`, `緑の枠なら外がわの石は${fB}個。赤い枠だと${fU}個になる！`, `赤い枠のあと外がわの石は${fU}個。緑の枠なら${fB}個ですむ。`], k + 1) + ' ' : '';
+          if ((P.wall || []).includes(u)) out.push(frs + pk(['赤い枠は外がわに石を一列に並べて、壁を作っちゃう手。壁ができると、その外は相手の打ち場所になるからね。', 'きみの手だと、外がわに石が一列に並んで壁ができちゃう。壁の外は、相手の打ち場所なんだ。', '赤い枠だと外がわに石が並んで、壁が厚くなっちゃう。', '外がわに石が一列に並んで壁になると、相手の足場がふえるから損なんだ。', '赤い枠では外がわに壁ができちゃう！'], k) + (P.d != null ? ' ' + pk([`相手の打てる場所も、緑の枠の${fb[3]}か所から${fu[3]}か所にふえるんだ。`, `相手の打てる場所は${fu[3]}か所。緑の枠なら${fb[3]}か所だね。`, `相手は${fu[3]}か所に打てるようになる。緑の枠なら${fb[3]}か所ですむんだ。`, `緑の枠なら相手は${fb[3]}か所、赤い枠だと${fu[3]}か所に打てちゃう。`, `相手の候補が${fu[3]}か所に。緑の枠なら${fb[3]}か所ですむよ。`], k + 2) : ''));
+          else if (P.trap && !opL.includes(u)) out.push(pk(['赤い枠は、きみだけが打てる余裕手。相手には打てないから、急いで使わずに貯金としてとっておこうね。', 'その手は余裕手。相手に消されない場所だから、ほかに打てるうちはとっておきたいんだ。', '余裕手は、使わずにおけば相手に消されずに残る貯金なんだ。', '赤い枠は相手が打てない場所。あわてて使わなくても、なくならないんだ。', 'きみだけの打ち場所を、ここで使うのはもったいない！'], k)
+            + (P.d != null ? ' ' + (fU > fB ? frs : '') + pk([`緑の枠のあとも、その余裕手は相手に打たれないまま残るよ。`, `緑の枠を打っても、余裕手は消えないんだ。`, `緑の枠なら、余裕手を残したまま打てたね。`, `緑の枠を打てば、余裕手はとっておける！`, `緑の枠のあとでも、相手はその余裕手に打てないんだ。`], k + 3) : ''));
           else if (lead) out.push(lead);
-          else if (fu[3] > fb[3]) out.push(mob() + pk(['外がわの石がふえると、相手の打てる場所もふえちゃうんだ。', '相手に足場をあげちゃう形だから損なんだ。', '外がわの石は、相手の打ち場所になるからね。', '相手の候補がふえるほど、こっちが苦しくなるよ。', '外がわに出た石が、相手の足場になるんだ。'], k));
+          else if (fu[3] > fb[3]) out.push(frs + mob() + pk(['外がわの石がふえると、相手の打てる場所もふえちゃうんだ。', '相手に足場をあげちゃう形だから損なんだ。', '外がわの石は、相手の打ち場所になるからね。', '相手の候補がふえるほど、こっちが苦しくなるよ。', '外がわに出た石が、相手の足場になるんだ。'], k));
           else out.push(loss());
           break;
         }
@@ -2461,7 +2476,7 @@
       if (RV_CH.tail[k]) out.push(RV_CH.tail[k]);
       return out.join(' ');
     };
-    return { ask: pk(kind === 'quiet' && P.d != null && P.trap ? RV_AQT : RVJ_LS.ask[kind] || [''], i), hintTx, good, ng, own: true };
+    return { ask: pk(kind === 'quiet' && P.d != null && P.trap ? RV_AQT : kind === 'wall' && P.d != null ? (P.trap ? RV_AWT : RV_AWS) : RVJ_LS.ask[kind] || [''], i), hintTx, good, ng, own: true };
   }
   /* (2026-11-21 lesson loop; 2026-11-22 rewritten) the reversi opening practice in リバガメ's words, Japanese: the texts without
      coordinates (atlas/nocoord reversi.json op:<moves>/aim|info, Japanese only — the sentences that give the engine's opinion
@@ -2616,7 +2631,7 @@
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261126q1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=2').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=9').catch(() => ({}))])
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261126w1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=3').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=9').catch(() => ({}))])
         .then(([ls, op, ev, wt, opp]) => { this.WT = wt || {}; this.OPP = opp || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
@@ -3452,7 +3467,10 @@
       const t = goOpF(q, ok); if (!t) return [fill(pk(H.them.gen, i), { m: 'そこ' }), u];
       const k = t.kind === 'cap' ? 'cap' : t.atari ? 'atari' : t.kind === 'save' ? 'save' : t.cut ? 'cut' : t.connect ? 'connect' : t.sansan && t.dOpp <= 2 ? 'sansan' : t.contact && t.red === 2 ? 'reduce' : t.contact ? 'contact' : 'gen';
       return [fill(uz('t' + k, H.them[k]), { m: 'そこ', k: t.cap, l: t.red }).replace(/^そこは/, 'そこは、').replace('そこを先に打たれて', '先にそこを打たれて'), u]; };
-    o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good, oi) : pk(H.near, i), why, pk(H.push, LI + i)].filter(Boolean).join(' '); };
+    // (2026-11-26 担当B) the closing push line never ends like the reason before it (「…強くなったね！ まだまだ行けるね！」): the next one in the list, or none
+    const goEnd = t => { const sn = String(t || '').split(/(?<=[。！？])\s*/).filter(Boolean).pop() || '', b = sn.replace(/[。！？!?]+$/, ''); for (const e of ['んだ', 'よね', 'かな', 'よう', 'ろう', 'よ', 'ね', 'ペン']) if (b.endsWith(e)) return e; return ''; };
+    const goPush = (w, j) => { const e = goEnd(w); for (let q = 0; q < H.push.length; q++) { const x = pk(H.push, j + q); if (!x) return q ? '' : x; if (!e || goEnd(x) !== e) return x; } return ''; };
+o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good, oi) : pk(H.near, i), why, goPush(why, LI + i)].filter(Boolean).join(' '); };
     o.ng = function (u) { this._hl = []; const part = (o.P.good || []).concat(o.P.half || []).includes(u), right = fill(pk(H.right, LI + i + 1), { m: OKM });
       if (part) return [pk(H.half, i), right, why, pk(H.you.half, LI + i)].join(' ');
       const [th, uu] = themOf(u); let ex = null;
@@ -3470,7 +3488,7 @@
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=14'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
+      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=15'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
         try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
         return this; }).catch(e => { this.p = null; throw e; }));
     },
