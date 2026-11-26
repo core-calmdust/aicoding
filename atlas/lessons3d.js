@@ -3380,7 +3380,7 @@
     hint: {
       cap: ['相手の石のダメ（空いている点）を数えてみて。あと1つの石はないかな？', '取れる石が盤の上にないか、じっくり見てみるペン！', 'ダメが1つしかない相手の石、見つかるかな？'],
       save: ['自分の石のダメを数えてみて。あと1つしかない石はない？', 'アタリになっている石はないかな？ まずは助けるのが先ペン！', '取られそうな石がないか、先に確かめてみよう！'],
-      atari: ['相手の石のダメを数えてみて。2つしかない石はどれかな？', '相手の石を追いつめる手があるペン。ダメを減らしてみよう！', '相手に「逃げなきゃ！」と思わせる手はどこかな？'],
+      atari: ['相手の石のダメを数えてみて。2つしかない石はどれかな？', '相手の石を追いつめる手があるペン。ダメを減らしてみよう！', '相手に「逃げなきゃ！」と思わせる手はどこかな？', 'ダメが2つの相手の石に、もう1つせまる手を探してみて！', '相手の石をアタリにして、逃げ道を一本にしぼってみるペン！'],
       connect: ['自分の石のつながりを確かめてみて。切られそうなところはないかな？', '石と石のあいだに、すきが空いてないかな？ そこが急所ペン！', '2つに分かれそうな仲間の石はどれかな？', 'つながりの弱い場所を、先に守る手があるペン。', '相手に割りこまれたら困る点はどこだと思う？'],
       cut: ['相手の石のつなぎ目を探してみて。割りこめそうなところはない？', '相手の石は、ちゃんとつながってるかな？ すきを探してみよう！', '相手の石を2つに分けられたら、攻めやすくなるよね？'],
       sansan: ['隅の奥がまだ空いてるね。そこが気にならない？', '隅のいちばん奥の、地になりやすい場所を考えてみるペン。', '隅で生きるなら、どこに入るのがいいかな？'],
@@ -3497,7 +3497,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=18'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
+      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=19'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
         try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
         return this; }).catch(e => { this.p = null; throw e; }));
     },
