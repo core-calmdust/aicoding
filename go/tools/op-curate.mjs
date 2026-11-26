@@ -11,6 +11,8 @@ import { load, analyze, policy, R } from './golib.mjs';
 const DIR = path.dirname(new URL(import.meta.url).pathname), OUT = path.join(DIR, 'data', 'op-cand' + (process.env.OC_TAG || '') + '.json');
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
 const VIS = +opt('--visits', 300), DEEP = +opt('--deep', 1000), PART = +opt('--part', 0), OF = +opt('--of', 1), SETS = (opt('--sets', '') || '').split(',').filter(Boolean);
+// --wide (2026-11-26 13路)：外れ方を方策3%以上・5つまでに広げる。--stage2 --depth D：外れたあと D 組先まで（D=2 は --stage2 で読んだ局面からもう1組）
+const WIDE = args.includes('--wide'), DEPTH = +opt('--depth', 1);
 const O = JSON.parse(fs.readFileSync(path.join(DIR, '..', 'openings.json'), 'utf8'));
 function specFrom(o) { const n = o.n || 19, a = Array(n * n).fill('.'); for (const s of o.ab || []) a[R.parseCoord(s, n)] = 'b'; for (const s of o.aw || []) a[R.parseCoord(s, n)] = 'w'; return { n, stones: a.join(''), turn: o.turn || 1 }; }
 function startOf(g) { const n = g.n || 19; if (g.start) return specFrom(Object.assign({ n }, g.start));
@@ -38,13 +40,13 @@ for (const g of O.sets) { if (SETS.length && !SETS.includes(g.id)) continue; con
     if (mover === side) { const k = g.id + ':' + pre.join(' '); if (!seen.has(k)) { seen.add(k); jobs.push({ g, mv: pre, k }); } continue; }
     // the other side leaves the line here: its likely moves (policy >= 5%) that are not the line's
     const pol = policy(E, st, pre.map(s => R.parseCoord(s, n)), komiOf(g), 8);
-    pol.list.filter(e => e.m >= 0 && e.p >= 0.05 && R.coord(e.m, n) !== L[at]).slice(0, 3).forEach(e => { const mv = pre.concat([R.coord(e.m, n)]), k = g.id + ':' + mv.join(' ');
+    pol.list.filter(e => e.m >= 0 && e.p >= (WIDE ? 0.03 : 0.05) && R.coord(e.m, n) !== L[at]).slice(0, WIDE ? 5 : 3).forEach(e => { const mv = pre.concat([R.coord(e.m, n)]), k = g.id + ':' + mv.join(' ');
       if (!seen.has(k)) { seen.add(k); jobs.push({ g, mv, k, dev: at }); } }); } }
 // --stage2: one more pair off the line — after each position where the other side left it, the side's best reply (the reading's first
 // move) and the other side's likely answers (policy >= 5%, up to 2): the side to move again
 if (args.includes('--stage2')) { jobs.length = 0; const all = {}; for (const f of fs.readdirSync(path.join(DIR, 'data'))) if (/^op-cand.*\.json$/.test(f)) Object.assign(all, JSON.parse(fs.readFileSync(path.join(DIR, 'data', f), 'utf8')));
   const seen = new Set(Object.keys(all));
-  for (const [k, c] of Object.entries(all)) { if (c.dev == null || c.mv.length !== c.dev + 1) continue; const g = O.sets.find(x => x.id === c.id); if (!g || (SETS.length && !SETS.includes(g.id))) continue;
+  for (const [k, c] of Object.entries(all)) { if (c.dev == null || c.mv.length !== c.dev + 2 * DEPTH - 1) continue; const g = O.sets.find(x => x.id === c.id); if (!g || (SETS.length && !SETS.includes(g.id))) continue;
     const n = g.n || 19, mv1 = c.mv.concat([c.top[0][0]]), pol = policy(E, startOf(g), mv1.map(s => R.parseCoord(s, n)), komiOf(g), 8);
     pol.list.filter(e => e.m >= 0 && e.p >= 0.05).slice(0, 2).forEach(e => { const mv = mv1.concat([R.coord(e.m, n)]), kk = g.id + ':' + mv.join(' '); if (!seen.has(kk)) { seen.add(kk); jobs.push({ g, mv, k: kk, dev: c.dev }); } }); } }
 console.log('jobs', jobs.length);
