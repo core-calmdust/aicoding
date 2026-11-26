@@ -43,7 +43,8 @@ for (const id of SETS) { const g = O.sets.find(x => x.id === id), N = g.n || 19,
   if (WRITE && pick.length === 5) { g.problems = pick.map(x => { const on = g.line.slice(0, x.c.mv.length).join(' ') === x.c.mv.join(' ');
       if (on) RD.pos[id + '@' + x.c.mv.length] = { turn: x.c.turn, pol: x.c.pol, top: x.c.top, deep: { pol: x.c.deep.pol, top: x.c.deep.top } };
       else RD.pos[id + '@' + x.c.mv.join(' ')] = { turn: x.c.turn, pol: x.c.pol, top: x.c.top, deep: { pol: x.c.deep.pol, top: x.c.deep.top } };
-      const dv = x.c.dev; for (let k = dv + 1; k < x.c.mv.length; k++) { const kk = id + ':' + x.c.mv.slice(0, k).join(' '); if (C[kk] && C[kk].top[0][0] === x.c.mv[k]) RD.pos[id + '@' + x.c.mv.slice(0, k).join(' ')] = { turn: C[kk].turn, pol: C[kk].pol, top: C[kk].top }; }
+      const dv = x.c.dev;   // 途中の局面の読みで、先に入れた問題の2つの読み（deep）を上書きしない（2026-11-26 19路）
+      for (let k = dv + 1; k < x.c.mv.length; k++) { const kk = id + ':' + x.c.mv.slice(0, k).join(' '); const rk = id + '@' + x.c.mv.slice(0, k).join(' '); if (C[kk] && C[kk].top[0][0] === x.c.mv[k] && !(RD.pos[rk] && RD.pos[rk].deep)) RD.pos[rk] = { turn: C[kk].turn, pol: C[kk].pol, top: C[kk].top }; }
       return on ? { at: x.c.mv.length, ok: [x.c.top[0][0]] } : { at: x.c.mv.length, mv: x.c.mv, ok: [x.c.top[0][0]] }; });
     g.verified = true; }
 }
