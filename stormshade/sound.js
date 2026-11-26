@@ -3,7 +3,14 @@
 (function (root) {
   'use strict';
   let ac = null, master = null, sfx = null, bgm = null, wind = null, on = true, musicOn = true, talkOn = true;
-  try { on = localStorage.getItem('stormshade-snd') !== '0'; musicOn = localStorage.getItem('stormshade-bgm') !== '0'; talkOn = localStorage.getItem('stormshade-talk') !== '0'; } catch (e) {}
+  // 2026-11-27：音量は「音楽」「効果音（話し声を含む）」の2本のつまみ（0〜1）。以前の あり/なし の設定は 0 か 1 に読みかえる
+  let mv = 1, fv = 1;
+  try {
+    const g = k => localStorage.getItem('stormshade-' + k), n = (k, d) => { const x = parseFloat(g(k)); return isNaN(x) ? d : Math.max(0, Math.min(1, x)); };
+    const off = g('snd') === '0';
+    mv = n('bgmv', off || g('bgm') === '0' ? 0 : 1); fv = n('sfxv', off ? 0 : 1);
+  } catch (e) {}
+  musicOn = mv > 0; on = true;
   const SFX = 1.0, BGM = .34;
   let paused = false;
   function ctx() {
@@ -13,8 +20,8 @@
       ac = new C(); master = ac.createGain(); master.gain.value = .95;
       const comp = ac.createDynamicsCompressor(); comp.threshold.value = -14; comp.knee.value = 10; comp.ratio.value = 4; comp.attack.value = .004; comp.release.value = .25;
       master.connect(comp); comp.connect(ac.destination);
-      sfx = ac.createGain(); sfx.gain.value = SFX; sfx.connect(master);
-      bgm = ac.createGain(); bgm.gain.value = musicOn ? BGM : 0; bgm.connect(master);
+      sfx = ac.createGain(); sfx.gain.value = SFX * fv; sfx.connect(master);
+      bgm = ac.createGain(); bgm.gain.value = BGM * mv; bgm.connect(master);
       if (want) { const w = want; want = null; music(w.name, w.level); }
       loadSample('bell'); loadSample('wolf'); loadSample('door');
       document.addEventListener('visibilitychange', () => { if (!ac) return; if (document.hidden) ac.suspend(); else if (on && !paused) ac.resume(); });
@@ -34,8 +41,8 @@
     const now = ac.currentTime, at = Math.max(now, from || now), back = Math.max(duckUntil, until);   // the music steps back when the sound starts, not before
     bgm.gain.cancelScheduledValues(now);
     if (at > now) bgm.gain.setValueAtTime(bgm.gain.value, now);
-    bgm.gain.setTargetAtTime(musicOn ? BGM * .18 : 0, at, .12);
-    bgm.gain.setTargetAtTime(musicOn ? BGM : 0, back, .9);
+    bgm.gain.setTargetAtTime(BGM * mv * .18, at, .12);
+    bgm.gain.setTargetAtTime(BGM * mv, back, .9);
     duckUntil = back;
   }
   // the recorded bell and howl (../lampblack/audio/); the synthesised ones below stand in until they load
@@ -118,7 +125,7 @@
   const NOISE = {};
   let lastTalk = 0;
   function talk(vo) {
-    if (!talkOn || !vo) return; const a = ctx(); if (!a) return;   // narration stays silent
+    if (!talkOn || !vo || !fv) return; const a = ctx(); if (!a) return;   // narration stays silent
     const t = a.currentTime; if (t - lastTalk < .06) return; lastTalk = t;
     // one plain, soft blip: the speaker's pitch, a hair of variation
     const o = a.createOscillator(), v = a.createGain();
@@ -144,7 +151,7 @@
     if (cur && cur.name === name) { cur.g.gain.cancelScheduledValues(now); cur.g.gain.setTargetAtTime(level, now, .7); return; }
     if (cur) { const c = cur; c.stopped = true; clearTimeout(c.timer); c.g.gain.cancelScheduledValues(now); c.g.gain.setTargetAtTime(0, now, .6); setTimeout(() => { c.srcs.forEach(x => { try { x.stop(); } catch (e) {} }); c.g.disconnect(); }, 4000); }
     cur = null;
-    if (END[name] && bgm) { bgm.gain.cancelScheduledValues(now); bgm.gain.setTargetAtTime(musicOn ? BGM : 0, now, .3); duckUntil = 0; }   // lift any duck still holding the music down
+    if (END[name] && bgm) { bgm.gain.cancelScheduledValues(now); bgm.gain.setTargetAtTime(BGM * mv, now, .3); duckUntil = 0; }   // lift any duck still holding the music down
     if (!name || !TRACK[name]) return;
     const g = a.createGain(); g.gain.value = 0; g.connect(bgm);
     const c = { name, g, srcs: [], stopped: false }; cur = c;
@@ -166,11 +173,14 @@
     const next = t + D - X;
     c.timer = setTimeout(() => { if (!c.stopped) play(c, next, false); }, Math.max(0, (next - a.currentTime - 1.5) * 1000));
   }
-  function setMusic(v) { musicOn = !!v; try { localStorage.setItem('stormshade-bgm', musicOn ? '1' : '0'); } catch (e) {} if (bgm && ac) { bgm.gain.cancelScheduledValues(ac.currentTime); bgm.gain.setTargetAtTime(musicOn ? BGM : 0, ac.currentTime, .3); duckUntil = 0; } }
-  function setTalk(v) { talkOn = !!v; try { localStorage.setItem('stormshade-talk', talkOn ? '1' : '0'); } catch (e) {} }
+  function setMusic(v) { setMusicVol(v ? 1 : 0); }
+  function setTalk(v) { talkOn = !!v; }
+  function save() { try { localStorage.setItem('stormshade-bgmv', String(mv)); localStorage.setItem('stormshade-sfxv', String(fv)); localStorage.removeItem('stormshade-snd'); localStorage.removeItem('stormshade-bgm'); localStorage.removeItem('stormshade-talk'); } catch (e) {} }
+  function setMusicVol(x) { mv = Math.max(0, Math.min(1, +x || 0)); musicOn = mv > 0; save(); if (!on) set(true); if (bgm && ac) { bgm.gain.cancelScheduledValues(ac.currentTime); bgm.gain.setTargetAtTime(BGM * mv, ac.currentTime, .15); duckUntil = 0; } }
+  function setSfxVol(x) { fv = Math.max(0, Math.min(1, +x || 0)); save(); if (!on) set(true); if (sfx && ac) sfx.gain.setTargetAtTime(SFX * fv, ac.currentTime, .05); }
 
   // the window lost focus: everything stops until it comes back
   function pause(p) { paused = !!p; if (!ac) return; if (paused) ac.suspend(); else if (on && !document.hidden) ac.resume(); }
-  function set(v) { on = !!v; try { localStorage.setItem('stormshade-snd', on ? '1' : '0'); } catch (e) {} if (!on) { windOff(); if (ac) ac.suspend(); } else if (ac) ac.resume(); }
-  root.WLSound = { pause, bell, howl, door, cat, windOn, windOff, pluck, page, ok, thud, talk, music, set, setMusic, setTalk, get on() { return on; }, get musicOn() { return musicOn; }, get talkOn() { return talkOn; }, get bgmLevel() { return bgm ? bgm.gain.value : null; }, unlock: ctx };
+  function set(v) { on = !!v; if (!on) { windOff(); if (ac) ac.suspend(); } else if (ac) ac.resume(); }
+  root.WLSound = { pause, bell, howl, door, cat, windOn, windOff, pluck, page, ok, thud, talk, music, set, setMusic, setTalk, get on() { return on; }, get musicOn() { return musicOn; }, get talkOn() { return talkOn; }, get bgmLevel() { return bgm ? bgm.gain.value : null; }, get musicVol() { return mv; }, get sfxVol() { return fv; }, setMusicVol, setSfxVol, unlock: ctx };
 })(window);
