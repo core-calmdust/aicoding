@@ -123,11 +123,13 @@ def build(work):
     os.makedirs(work, exist_ok=True)
     mt = ['-DMT', '-DSEARCH2_MT', '-lpthread'] if max(THREADS, THREADS_VS) > 1 else []     # (--threads: the MT build, with search v5 in it)
     site = os.path.join(work, 'site.bin')
-    subprocess.run(f'gzip -dc "{SHOGI}/nnue.bin.gz" > "{site}"', shell=True, check=True)
-    h = int.from_bytes(open(site, 'rb').read(8)[4:8], 'little')
+    net = os.environ.get('NET', f'{SHOGI}/nnue-s1280.bin.gz')     # the site's net since 2026-11-27 (NET=.../nnue.bin.gz: the 512 net before it)
+    subprocess.run(f'gzip -dc "{net}" > "{site}" 2>/dev/null || cp "{net}" "{site}"', shell=True, check=True)
+    hd = [int.from_bytes(open(site, 'rb').read(32)[4 * i:4 * i + 4], 'little') for i in range(8)]; h = hd[1]
+    nf = [f'-DNUE_H={h}'] + ([f'-DNUE_MB=8', f'-DNUE_L1={hd[4]}', f'-DNUE_L2={hd[5]}', f'-DNUE_MI={hd[6]}'] if hd[0] == 0x5345554E else [])
     um, kp = os.path.join(work, 'usimatch'), os.path.join(work, 'kptool')
-    subprocess.run(['cc', '-O3', '-DNATIVE', f'-DNUE_H={h}', '-w', '-o', um, os.path.join(HERE, 'usimatch.c')] + mt, check=True)
-    subprocess.run(['cc', '-O3', '-DNATIVE', '-DNUE_KB=1', f'-DNUE_H={h}', '-w', '-o', kp, os.path.join(SHOGI, 'tools', 'nnue', 'kptool.c')] + mt, check=True)
+    subprocess.run(['cc', '-O3', '-DNATIVE'] + nf + (['-DNUE_KB=1'] if len(nf) > 1 else []) + ['-w', '-o', um, os.path.join(HERE, 'usimatch.c')] + mt, check=True)
+    subprocess.run(['cc', '-O3', '-DNATIVE', '-DNUE_KB=1'] + nf + ['-w', '-o', kp, os.path.join(SHOGI, 'tools', 'nnue', 'kptool.c')] + mt, check=True)
     return site, um, kp
 
 def play(work, site, um, kp, ms, setA, setB, games, opening_lines, tag, thA=0, thB=0):
