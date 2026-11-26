@@ -55,6 +55,7 @@ module.exports = function shMate3({ E, L, X, pool, brd, dist, add, src, app }, G
     if (!SAC && rs.some(r => !E.isDrop(r) && E.mTo(r) === to)) a('④ the answer\'s piece can be taken (a sacrifice: k4)');
     if (SAC && !rs.some(r => !E.isDrop(r) && E.mTo(r) === to)) a('④ the answer\'s piece cannot be taken (not a sacrifice)');
     if (SAC && P.sol[1].slice(2, 4) !== ans.slice(2, 4)) a(`④ the stored defence ${P.sol[1]} does not take the sacrificed piece`);
+    if (SAC && !P.u) a('⑨ P.u is not set: the 2D would answer the sacrifice with the engine\'s defence, not the stored capture sol[1]');
     if (!rsU.includes(P.sol[1])) a(`① ${P.sol[1]} is not a legal defence`);
     else { const r = p.fromUsi(P.sol[1]); p.doMove(r); const f = mates1(p); if (!f.includes(P.sol[2])) a(`① ${P.sol[2]} does not mate after ${P.sol[1]} (${f})`); if (f.length !== 1) a(`② ${f.length} moves mate after ${P.sol[1]}: ${f}`); p.undoMove(); }
     p.undoMove();
@@ -75,7 +76,7 @@ module.exports = function shMate3({ E, L, X, pool, brd, dist, add, src, app }, G
       for (const t of [Q.ask, Q.hintTx]) if (/\{|undefined|NaN/.test(t) || !t) a(`⑧ 「${t}」`);
       if (!/3手詰め/.test(Q.ask)) a(`⑧ the question 「${Q.ask}」 does not say mate in 3`);
       const gd = plain(Q.good(ans)), pn = NM[pc], q2 = pos(P.sfen); q2.doMove(q2.fromUsi(P.sol[0])); q2.doMove(q2.fromUsi(P.sol[1]));
-      const lm = q2.fromUsi(P.sol[2]), ln = NM[E.isDrop(lm) ? E.dropType(lm) : T(q2.board[E.mFrom(lm)])];
+      const lm = q2.fromUsi(P.sol[2]), ln = NM[E.isDrop(lm) ? E.dropType(lm) : T(q2.board[E.mFrom(lm)]) + (P.sol[2].endsWith('+') ? 8 : 0)];   // (the mating piece as it stands after the move: a rook that promotes mates as a 竜)
       if (/undefined|NaN|\{/.test(gd) || !gd.includes(pn) || !gd.includes(ln)) a(`⑧ the praise 「${gd}」 does not name the ${pn} and the last ${ln}`);
       if (drop ? !/打|持ち駒の/.test(gd) : /打|持ち駒の/.test(gd)) a(`⑧ the praise 「${gd}」 does not say ${drop ? 'a drop' : 'a board move'}`);
       if (!SAC && /捨て/.test(gd)) a(`⑧ the praise 「${gd}」 speaks of a sacrifice`);
