@@ -424,7 +424,7 @@
       k8: '今度は王手のかけ方がいろいろある局面だよ。<br>王手でも、<b>逃げ道が残る手</b>や<b>取られる手</b>は詰みにならないの。玉のまわりを1マスずつ確かめてみて！<br>竜（龍）は縦横どこまでも＋斜め1マス動けるコン。',
       k6: '3手詰は<b>王手・相手の受け・詰み</b>の3手。<br>王手のあと、玉が<b>逃げる</b>・王手の駒を<b>取る</b>・<b>合駒</b>をする、ぜんぶの受けを確かめて、どう受けても次で詰む王手を探すコン！<br>竜（龍）は縦横どこまでも＋斜め1マス動けるの。',
       k5: '中盤は<b>駒得</b>が大事！ 代表的な手筋は、1手で2つをねらう<b>両取り</b>なの。<br>桂・銀・角は両取りをかけやすい駒だから、よく見てね。',
-      k4: '今度の3手詰は、<b>駒を捨てる</b>王手が正解になりやすいの。<br>「取られるから指さない」じゃなくて「取らせて詰ます」。この発想を練習しよう！',
+      k4: '今度の3手詰は、<b>駒を捨てる</b>王手が正解なの。わざと取られる場所へ駒を打つか動かして、取らせてから詰ませるコン。<br>「取られるから指さない」じゃなくて「取らせて詰ます」。王手のあとの受けを、ぜんぶ確かめてね！<br>竜（龍）は縦横どこまでも＋斜め1マス動けるの。',
       k3: '相手が「次に詰ませるぞ」とねらう形を<b>詰めろ</b>っていうの。<br>攻める前に、まず自分の玉の安全を確かめるコン。相手の詰み筋を消す手を探してね！',
       k2: '5手詰は、王手と受けを2回くり返してから詰ませるよ。<br>頭の中で盤を動かす力の勝負！ 受けが何通りかあるときは、どれでも詰むか確かめよう。',
       k1: 'ここからは<b>浅い読みでは見つからない手</b>が正解。<br>候補手をいくつか出して、相手のいちばんの応手まで読み比べてみようね！',
@@ -524,7 +524,8 @@
       else if (n === 1) A.push(F.drop ? at([`持ち駒の${nm}を打って、玉の逃げ道がなくなったの。`, `${nm}を打つ一手で、ぴったり詰み！`, `打った${nm}で、玉の行き場がなくなったコン。`, `持ち駒の${nm}がよく働いたね。`, `${nm}を打った場所が急所だったの。`])
         : at([`${nm}を動かして王手、玉はもう逃げられないの。`, `盤の${nm}で詰み！ 持ち駒だけが答えじゃないコン。`, `${nm}の王手で、玉の逃げ場がなくなったね。`, `動かした${nm}を、玉は取れないの。`, `${nm}で決まり！ 逃げ道をきれいに消せたね。`]));
       else {
-        A.push(sac ? at([`最初の${nm}は、取らせて玉をおびき出す捨て駒だったの。`, `${nm}を捨てて取らせるのがポイントだコン。`, `取られる場所への${nm}が、じつは急所だったね。`, `${nm}をただで渡して、玉の形をくずしたの。`, `捨て駒の${nm}で、玉を逃げにくいマスへさそったね。`])
+        A.push(sac ? (F.drop ? at([`持ち駒の${nm}を打って取らせる、捨て駒の王手だったの。`, `${nm}を打って、わざと取らせるのがポイントだコン。`, `取られる場所へ${nm}を打つのが、じつは急所だったね。`, `打った${nm}をただで渡して、玉の形をくずしたの。`, `捨て駒の${nm}を打って、玉を逃げにくいマスへさそったね。`])   // (2026-11-26 第2期 k4: a dropped sacrifice says it is dropped, a board one that it is moved)
+          : at([`最初に${nm}を動かして取らせる、捨て駒の王手だったの。`, `盤の${nm}を捨てて取らせるのがポイントだコン。`, `取られる場所へ${nm}を動かすのが、じつは急所だったね。`, `${nm}を動かしてただで渡し、玉の形をくずしたの。`, `盤の${nm}を捨て駒にして、玉を逃げにくいマスへさそったね。`]))
           : F.drop ? at([`持ち駒の${nm}から王手していったね。`, `最初に${nm}を打って、玉を追いこんだの。`, `${nm}を打つ王手で、逃げ道をせまくしたコン。`, `打った${nm}が、玉の退路を切ったね。`, `${nm}を打つところから、ぴったりの手順！`])
           : at([`${nm}を動かす王手から、きれいに追いこんだね。`, `盤の${nm}を使った王手がスタートだったの。`, `${nm}の王手で、玉をせまい方へ追ったコン。`, `${nm}を動かして、逃げ道を先に消したね。`, `${nm}の一手目で、流れが決まったの。`]));
         if (lastNm) A.push(at([`最後は${lastNm}で詰み！`, `しめくくりは${lastNm}だったね。`, `とどめは${lastNm}！`, `${lastNm}で最後に詰ませたコン。`, `${n}手目の${lastNm}で詰み！`]));
@@ -928,9 +929,9 @@
     LKEY: 'shogi-kaya-lessons-v1', OKEY: 'shogi-kaya-open-v1', CATS: ['beg', 'mid', 'adv', 'sp', 'new', 'castle', 'handi'], data: null,
     load() {
       if (this.p) return this.p;
-      const voice = fetch('../shogi/voice-fox-ja.js?v=5').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
+      const voice = fetch('../shogi/voice-fox-ja.js?v=6').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       const rep = getJ('../shogi/lesson-replies.json?v=4').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
-      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261126k6'), getJ('../shogi/openings.json?v=20261124ol1'),
+      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261126k4'), getJ('../shogi/openings.json?v=20261124ol1'),
         ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261125sb`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));

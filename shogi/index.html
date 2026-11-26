@@ -4544,7 +4544,7 @@ let LESSONS = null;
 // they are addressed by negative indices (-1 = LESSONS.rules[0]) — see gradeAt()
 // (2026-11-15) read when the lessons are first opened, not with the page (0.5MB)
 let lessonsP = null;
-const lessonsLoad = () => lessonsP || (lessonsP = fetch('lessons.json?v=20261126k6').then(r => r.json()).then(d => { d.rules = d.grades.filter(g => g.rules); d.grades = d.grades.filter(g => !g.rules); return (LESSONS = d); }).catch(e => { lessonsP = null; console.warn('lessons unavailable', e); }));
+const lessonsLoad = () => lessonsP || (lessonsP = fetch('lessons.json?v=20261126k4').then(r => r.json()).then(d => { d.rules = d.grades.filter(g => g.rules); d.grades = d.grades.filter(g => !g.rules); return (LESSONS = d); }).catch(e => { lessonsP = null; console.warn('lessons unavailable', e); }));
 let lprog = {};
 try { lprog = JSON.parse(localStorage.getItem(LSTORE) || '{}'); } catch (e) {}
 const L = o => (o && (o[LANG] || o.en || o.ja)) || '';
