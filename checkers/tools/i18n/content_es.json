@@ -61,6 +61,7 @@
  "ls.t_defend.goal": "Encuentra la jugada que no pierde nada.",
  "ls.t_defend.hint": "Lo correcto es mover la pieza del anillo dorado.",
  "ls.t_defend.why": "{m} es la defensa correcta.",
+ "ls.t_defend.ng": "{x} pierde material. Con {m} no te quitan ninguna pieza.",
  "ls.t_best.title": "Encontrar la idea ganadora",
  "ls.t_best.sub": "La jugada claramente mejor",
  "ls.t_best.intro": "<p>Cerca del final hay una jugada <b>claramente mejor que las demás</b>: coronar, frenar un peón rival, ganar un cambio… ¿cuál es?</p>",

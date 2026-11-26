@@ -61,6 +61,7 @@
  "ls.t_defend.goal": "Encontre o lance que não perde nada.",
  "ls.t_defend.hint": "O certo é mover a peça do anel dourado.",
  "ls.t_defend.why": "{m} é a defesa correta.",
+ "ls.t_defend.ng": "{x} perde material. Com {m}, nenhuma peça é tomada.",
  "ls.t_best.title": "Encontrando a ideia vencedora",
  "ls.t_best.sub": "O lance claramente melhor",
  "ls.t_best.intro": "<p>Perto do final há um lance <b>claramente melhor que os outros</b>: fazer dama, parar uma pedra adversária, ganhar uma troca… qual é?</p>",

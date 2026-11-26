@@ -61,6 +61,7 @@
  "ls.t_defend.goal": "Temukan langkah yang tidak rugi apa pun.",
  "ls.t_defend.hint": "Menggerakkan biji bercincin emas adalah jawaban yang benar.",
  "ls.t_defend.why": "{m} adalah pertahanan yang tepat.",
+ "ls.t_defend.ng": "{x} rugi biji. Dengan {m}, tidak ada biji yang dimakan.",
  "ls.t_best.title": "Menemukan ide menang",
  "ls.t_best.sub": "Langkah yang jelas terbaik",
  "ls.t_best.intro": "<p>Menjelang akhir permainan ada satu langkah yang <b>jelas lebih baik dari yang lain</b>: menjadi raja, menghentikan biji lawan, memenangkan tukar biji… yang mana?</p>",
