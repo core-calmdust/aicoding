@@ -3372,6 +3372,7 @@
       nobi: ['{n}自分の石からまっすぐ伸びた！ ダメが{l}つに増えて、じょうぶな形ペン。', '{n}仲間の石にくっつけて伸びた。これで石が強くなったね！', '{n}あわてずに一歩伸びて、ダメを{l}つにした！'],
       local: ['{n}ここで形を整えた！ 次の戦いにそなえる一手ペン。', '{n}石の働きを広げる、大事な一手だね！', '{n}まわりの石と協力できる場所に打った！'],
       open: ['{n}空いている大きな場所を先に取った！', '{n}広いところに先に石を置いたペン。あとで大きく働くね！', '{n}まだだれもいない場所へ。大場を取る手なんだ！'] },
+    whyMore: { contact: ['{n}相手の石にがっちり接して、自由にさせない一手だよ！', '{n}相手の石と肩をならべて、一歩も引かずに受けて立った！', '{n}相手の石にくっついて、戦いの主導権をにぎったペン。'] },   // (more lines for a kind asked more often in one set than H.why has: uzw)
     // what the other side does with the green point if it is left
     them: {
       cap: ['そのままだと、相手が{m}に打って、石を{k}子取られちゃう。', '相手が{m}に打つと、きみの石が{k}子取られちゃうんだ。', 'もし{m}を後回しにすると、そこで{k}子を取られちゃうペン。'],
@@ -3424,9 +3425,10 @@
     const p0 = pos(); const fb = goOpF(p0, ok) || { kind: 'open' }, first = (String(note || '').match(/[^。！？]+/) || [''])[0];
     const nmH = H.names.find(([re]) => re.test(first)), nm = nmH && goOpNameOk(nmH[1], fb) ? nmH[1] : '', kind = /^(jump|diag|keima|nobi|local)$/.test(fb.kind) ? 'shape' : fb.kind;
     const seen = o.__seen, uz = (key, arr) => { const c = seen[key] = (seen[key] || 0) + 1; return pk(arr, c + LI); };
+    const uzw = (key, arr, more) => { const c = seen[key] = (seen[key] || 0) + 1; return c > arr.length && more && more.length ? pk(more, c - arr.length - 1) : pk(arr, c + LI); };   // (2026-11-26 担当B: a kind asked more often in one set than its lines — komoku_nikentaka's 5 contact answers — takes the extra lines instead of saying the first one again)
     o.ask = fill(pk(P.off ? H.askOff : H.ask, LI * 3 + i), { s: H.side(sd) });
     o.hintTx = uz('h' + kind, H.hint[kind] || H.hint.open);
-    const why = fill(uz('w' + fb.kind, H.why[fb.kind] || H.why.open), { n: nm && fb.kind !== 'sansan' && !(H.why[fb.kind] || []).join('').includes(nm) ? fill(uz('nm', ['この{n}で、', '{n}を打って、', '{n}がぴったり。', '', 'ここで{n}！ ']), { n: nm }) : '', k: fb.cap, l: fb.libs });
+    const why = fill(uzw('w' + fb.kind, H.why[fb.kind] || H.why.open, (H.whyMore || {})[fb.kind]), { n: nm && fb.kind !== 'sansan' && !(H.why[fb.kind] || []).join('').includes(nm) ? fill(uz('nm', ['この{n}で、', '{n}を打って、', '{n}がぴったり。', '', 'ここで{n}！ ']), { n: nm }) : '', k: fb.cap, l: fb.libs });
     const themOf = u => {   // the other side's use of the green point (after the player's move u, or now)
       let q = p0; if (u != null && u !== ok) { const r = p0.tryPlay(u); if (r) q = r.pos; else u = null; } if (u == null || u === ok) { q = p0.tryPlay(-1).pos; u = null; }
       const t = goOpF(q, ok); if (!t) return [fill(pk(H.them.gen, i), { m: 'そこ' }), u];
@@ -3450,7 +3452,7 @@
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=6'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
+      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=7'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
         try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
         return this; }).catch(e => { this.p = null; throw e; }));
     },
