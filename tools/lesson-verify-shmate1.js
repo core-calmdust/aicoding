@@ -13,8 +13,14 @@
 //  ⑨ the 2D: the same pool, n 1 judged by the rules, the reason after a check that does not mate (mate1Why: the king takes / the king
 //    escapes / another piece takes / a block — 14 languages) and the warm-ups (every try's ok = every mate in one of its board).
 const path = require('path'), fs = require('fs');
-module.exports = function shMate1({ ROOT, E, L, X, pool, brd, dist, add, src, app }) {
-  const T = E.typeOf, g = L.grades.find(x => x.id === 'k10'); if (!g) return;
+// (2026-11-26 13:20 担当A) the same checks for k8「1手詰（応用）」(GID 'k8'): ④ 9〜20 checks (the intro: 王手の候補がたくさんある局面),
+//  3+ of the wrong checks leave the king a way out and 3+ are taken or blocked (the intro: 逃げ道が残る手・取られてしまう手), 4+ kinds of
+//  piece mate; ⑤ 7+ squares from every other problem (k10 included) and no mating shape of k10 twice; the rest as k10.
+module.exports = function shMate1(o) { shMate1One(o, 'k10'); shMate1One(o, 'k8'); };
+function shMate1One({ ROOT, E, L, X, pool, brd, dist, add: add0, src, app }, GID) {
+  const add = (id, j, m) => add0(id === 'k10' ? GID : id, j, m);
+  const T = E.typeOf, g = L.grades.find(x => x.id === GID); if (!g) return;
+  const HARD = GID === 'k8', CMIN = HARD ? 9 : 3, CMAX = HARD ? 20 : 8;
   const NM = ['', '歩', '香車', '桂馬', '銀', '角', '飛車', '金', '玉', 'と金', '成香', '成桂', '成銀', '馬', '竜'];
   const plain = t => String(t).replace(/<[^>]+>/g, '');
   const pos = s => { const p = new E.Position(); p.setSfen(s); return p; };
@@ -27,6 +33,7 @@ module.exports = function shMate1({ ROOT, E, L, X, pool, brd, dist, add, src, ap
   let why2 = null; try { const i = app.indexOf('function mate1Why'), k = app.indexOf('// step-specific explanation', i);
     why2 = new Function('E', 'NAME', 'kan1', 't', app.slice(i, k) + ';return mate1Why;')(E, ['', '歩', '香', '桂', '銀', '角', '飛', '金', '玉', 'と', '成香', '成桂', '成銀', '馬', '龍'], (s, u) => u, (k, v) => k + JSON.stringify(v)); } catch (e) { add('k10', -1, '⑨ mate1Why does not run: ' + e.message); }
   const nDrop = [0, 0], kinds = new Set(), shapes = new Map(); let prevD = -1;
+  if (HARD) for (const sh of shapesOf(E, L.grades.find(x => x.id === 'k10'))) shapes.set(sh, (shapes.get(sh) || 0) + 1);
   g.problems.forEach((P, j) => {
     const a = m => add('k10', j, m);
     if (P.kind !== 'tsume' || P.n !== 1 || !P.sol || P.sol.length !== 1) { a('④ not a mate in one'); return; }
@@ -38,14 +45,14 @@ module.exports = function shMate1({ ROOT, E, L, X, pool, brd, dist, add, src, ap
     const checks = ms.filter(m => { p.doMove(m); const c = p.inCheck(); p.undoMove(); return c; });
     if (ms.length < 3) a(`③ ${ms.length} legal moves`);
     if (checks.length < 3) a(`③ 追19 only ${checks.length} checks`);
-    if (checks.length > 8) a(`④ ${checks.length} checks (basic: 3〜8; 9 or more is k8)`);
+    if (checks.length > CMAX || checks.length < CMIN) a(`④ ${checks.length} checks (${GID}: ${CMIN}〜${CMAX})`);
     const m0 = p.fromUsi(ans), drop = E.isDrop(m0), pc = drop ? E.dropType(m0) : T(p.board[E.mFrom(m0)]);
     if (drop && pc === E.FU) a('④ a pawn drop mates (打ち歩詰め)');
     nDrop[drop ? 0 : 1]++; kinds.add(pc);
     const ksq = p.king[p.side ^ 1], to = E.mTo(m0), side = p.side === 0 ? 1 : -1;
     const sh = `${pc}${drop ? '*' : '-'}${(E.sqFile(to) - E.sqFile(ksq)) * side},${(E.sqRank(to) - E.sqRank(ksq)) * side}`;
     shapes.set(sh, (shapes.get(sh) || 0) + 1); if (shapes.get(sh) > 2) a(`⑤ the same mating shape (${sh}) a third time`);
-    const B = brd(P.sfen); for (const [who, b] of pool) { if (who === `k10 q${j + 1}`) continue; const e = dist(B, b); if (e <= 6) a(`⑤ ${e} squares from ${who}`); }
+    const B = brd(P.sfen); for (const [who, b] of pool) { if (who === `${GID} q${j + 1}`) continue; const e = dist(B, b); if (e <= 6) a(`⑤ ${e} squares from ${who}`); }
     const d = checks.length + ms.length / 100; if (d < prevD) a(`⑥ easier than the problem before (d ${d.toFixed(2)} after ${prevD.toFixed(2)})`); prevD = Math.max(prevD, d);
     // ⑦⑧ the 3D words at each of the five places
     for (let k = 0; k < 5; k++) {
@@ -55,6 +62,7 @@ module.exports = function shMate1({ ROOT, E, L, X, pool, brd, dist, add, src, ap
       const gd = plain(Q.good(ans)), pn = NM[pc];
       if (/undefined|NaN|\{/.test(gd) || !gd.includes(pn)) a(`⑧ the praise 「${gd}」 does not name the ${pn}`);
       if (drop ? !/打|持ち駒の/.test(gd) : /打|持ち駒の/.test(gd)) a(`⑧ the praise 「${gd}」 does not say ${drop ? 'a drop' : 'a board move'}`);
+      let nEsc = 0, nTB = 0;
       for (const m of ms) { const u = U(m); if (u === ans) continue; const w = plain(Q.ng(u));
         if (/undefined|NaN/.test(w) || !w.includes('{m}')) { a(`⑧ ${u}: 「${w}」`); continue; }
         p.doMove(m); const chk = p.inCheck(), rs = chk ? p.legalMoves(true) : [], kq = p.king[p.side], mto = E.mTo(m);
@@ -64,6 +72,7 @@ module.exports = function shMate1({ ROOT, E, L, X, pool, brd, dist, add, src, ap
           const want = kTake ? 'r.m1KTake' : kMoves.size ? 'r.m1Esc' : ''; if (!key || want && key !== want || !want && !/r\.m1(Take|Block)/.test(key)) a(`⑦ ${u}: the 2D reason ${key || 'none'}, the board wants ${want || 'r.m1Take / r.m1Block'}`); }
         if (!chk) { if (!/王手じゃない|王手にならない|王手でない|王手がかからない/.test(w)) a(`⑦ ${u} is no check, the words do not say so 「${w}」`); continue; }
         if (/王手じゃない|王手にならない|王手でない|王手がかからない/.test(w)) { a(`⑦ ${u} is a check, the words say it is not 「${w}」`); continue; }
+        if (kTake || kMoves.size) nEsc++; else nTB++;
         if (kTake) { if (!/玉(に|が)[^。]*取/.test(w) || !w.includes(mvN)) a(`⑦ ${u}: the king takes the checking piece, the words 「${w}」`); continue; }
         if (/玉に(そのまま)?取られ|玉が取れる|玉が[^。]*を取って/.test(w)) { a(`⑦ ${u}: the king cannot take it, the words say so 「${w}」`); continue; }
         const nm = (w.match(/逃げ道が(\d)つ|(\d)マス逃げ場/) || []).slice(1).find(Boolean);
@@ -71,12 +80,16 @@ module.exports = function shMate1({ ROOT, E, L, X, pool, brd, dist, add, src, ap
           else if (nm && +nm !== kMoves.size) a(`⑦ ${u}: the words say ${nm} escape squares, the king has ${kMoves.size} 「${w}」`);
           else if (!/逃げ/.test(w)) a(`⑦ ${u}: the king escapes, the words do not say so 「${w}」`); }
         else if (!/取るか合駒|ほかの駒で受け|合駒で受け|受けがある|受けが残る/.test(w)) a(`⑦ ${u}: no king move, the words do not say it is taken or blocked 「${w}」`); }
+      if (HARD && k === 0 && (nEsc < 3 || nTB < 3)) a(`④ the wrong checks: the king gets away ${nEsc}, taken or blocked ${nTB} (both 3 or more)`);
     }
   });
   if (!nDrop[0] || !nDrop[1] || Math.min(...nDrop) < 3) add('k10', -1, `④ drops ${nDrop[0]}, board moves ${nDrop[1]} (both 3 or more)`);
-  if (kinds.size < 3) add('k10', -1, `追27 only ${kinds.size} kinds of piece mate`);
+  if (kinds.size < (HARD ? 4 : 3)) add('k10', -1, `追27 only ${kinds.size} kinds of piece mate`);
   // the warm-ups: every try's ok is every mate in one of its board; an explain's seq mates
   (g.ramp || []).forEach((R, j) => { if (!R.sfen) return; const p = pos(R.sfen), goal = mates1(p).sort();
     if (R.k === 'try' && goal.join() !== (R.ok || []).slice().sort().join()) add('k10', -1, `追14 warm-up ${j + 1}: ok ${R.ok}, the mates ${goal}`);
     if (R.k === 'explain' && R.seq && R.seq.length === 1 && !goal.includes(R.seq[0])) add('k10', -1, `追14 warm-up ${j + 1}: the arrow ${R.seq[0]} does not mate`); });
-};
+}
+// the mating shapes of a step's answers (piece, drop or move, where it lands from the king)
+function shapesOf(E, g) { const o = []; if (!g) return o; for (const P of g.problems) { if (!P.sol) continue; const p = new E.Position(); p.setSfen(P.sfen); const m0 = p.fromUsi(P.sol[0]), drop = E.isDrop(m0), pc = drop ? E.dropType(m0) : E.typeOf(p.board[E.mFrom(m0)]);
+  const ksq = p.king[p.side ^ 1], to = E.mTo(m0), side = p.side === 0 ? 1 : -1; o.push(`${pc}${drop ? '*' : '-'}${(E.sqFile(to) - E.sqFile(ksq)) * side},${(E.sqRank(to) - E.sqRank(ksq)) * side}`); } return o; }
