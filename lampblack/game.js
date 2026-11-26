@@ -50,6 +50,7 @@
   let pref = { speed: 2, anim: true, names: true, seen: false };
   try { Object.assign(pref, JSON.parse(localStorage.getItem(PREF) || '{}')); } catch (e) {}
   if (!pref.speedSet) pref.speed = 2;   // the default is now はやい (2026-11-25); only a speed the player chose stays
+  pref.names = true; if (!(pref.speed >= 1)) pref.speed = 1;   // 2026-11-27：名札はいつも出す。文字の速さは ゆっくり(1)・ふつう(2)・はやい(3)。以前の「ゆっくり(0)」はゆっくりへ
   const savePref = () => { try { localStorage.setItem(PREF, JSON.stringify(pref)); } catch (e) {} };
   let st = null, S = null;
   const G = { scr: 'title', storyId: null, diff: 1, role: 'auto', q: [], typing: null, loc: null, nbTab: 'ppl' };
@@ -1422,23 +1423,28 @@
       <p><b>キー</b>　Enter・スペース：文章を送る　F：フルスクリーンの入／切</p>
       <div class="foot"><button class="btn pri" data-x>${first ? '幕を開ける' : '閉じる'}</button></div>`, box => box.querySelectorAll('[data-x]').forEach(b => b.onclick = () => closeSheet(true)));
   }
+  // フルスクリーン（設定とFキー）。iPhone の Safari のように使えない環境では設定に出さない
+  const FS = () => !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+  const isFS = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+  function toggleFS(want) { const d = document, el = d.documentElement; try { if (want === undefined) want = !isFS(); if (!want && isFS()) (d.exitFullscreen || d.webkitExitFullscreen).call(d); else if (want && !isFS()) (el.requestFullscreen || el.webkitRequestFullscreen).call(el); } catch (err) {} }
+  ['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => document.querySelectorAll('.seg[data-k="fs"] button').forEach(b => b.classList.toggle('on', (b.dataset.v === '1') === isFS()))));
   function showOpts() {
     const seg = (k, vals) => `<div class="seg" data-k="${k}">${vals.map(([v, t]) => `<button data-v="${v}" class="${String(pref[k]) === String(v) ? 'on' : ''}">${t}</button>`).join('')}</div>`;
     sheet(`<h3>設定</h3>
-      <div class="set-row"><span>文字の速さ</span>${seg('speed', [[0, 'ゆっくり'], [1, 'ふつう'], [2, 'はやい'], [3, '一瞬']])}</div>
-      <div class="set-row"><span>動き</span>${seg('anim', [[true, 'あり'], [false, 'なし']])}</div>
-      <div class="set-row"><span>人形の名札</span>${seg('names', [[true, 'いつも'], [false, '話すとき']])}</div>
-      <div class="set-row"><span>音</span><div class="seg" data-k="snd"><button data-v="1" class="${SND.on ? 'on' : ''}">あり</button><button data-v="0" class="${SND.on ? '' : 'on'}">なし</button></div></div>
-      <div class="set-row"><span>音楽</span><div class="seg" data-k="bgm"><button data-v="1" class="${SND.musicOn ? 'on' : ''}">あり</button><button data-v="0" class="${SND.musicOn ? '' : 'on'}">なし</button></div></div>
-      <div class="set-row"><span>話し声</span><div class="seg" data-k="talk"><button data-v="1" class="${SND.talkOn ? 'on' : ''}">あり</button><button data-v="0" class="${SND.talkOn ? '' : 'on'}">なし</button></div></div>
+      <div class="set-row"><span>文字の速さ</span>${seg('speed', [[1, 'ゆっくり'], [2, 'ふつう'], [3, 'はやい']])}</div>
+      <div class="set-row"><span>アニメーション</span>${seg('anim', [[true, 'あり'], [false, 'なし']])}</div>
+      <div class="set-row"><span>音楽</span><input type="range" class="vol" data-vol="bgm" min="0" max="100" step="5" value="${Math.round(SND.musicVol * 100)}" aria-label="音楽の音量"></div>
+      <div class="set-row"><span>効果音<small>話し声も含む</small></span><input type="range" class="vol" data-vol="sfx" min="0" max="100" step="5" value="${Math.round(SND.sfxVol * 100)}" aria-label="効果音の音量"></div>
+      ${FS() ? `<div class="set-row"><span>フルスクリーン</span><div class="seg" data-k="fs"><button data-v="1" class="${isFS() ? 'on' : ''}">オン</button><button data-v="0" class="${isFS() ? '' : 'on'}">オフ</button></div></div>` : ''}
       <div class="foot" style="justify-content:space-between;align-items:center">${S && G.scr === 'play' ? '<button class="btn" data-quit>この物語をやめてタイトルへ</button>' : '<span></span>'}<button class="btn pri" data-x>閉じる</button></div>`, box => {
       box.querySelectorAll('[data-x]').forEach(b => b.onclick = () => closeSheet());
       box.querySelectorAll('.seg').forEach(s => s.querySelectorAll('button').forEach(b => b.onclick = () => {
         const k = s.dataset.k, v = b.dataset.v;
-        if (k === 'snd') SND.set(v === '1'); else if (k === 'bgm') SND.setMusic(v === '1'); else if (k === 'talk') SND.setTalk(v === '1'); else { pref[k] = v === 'true' ? true : v === 'false' ? false : +v; if (k === 'speed') pref.speedSet = true; }
+        if (k === 'fs') { toggleFS(v === '1'); return; } else { pref[k] = v === 'true' ? true : v === 'false' ? false : +v; if (k === 'speed') pref.speedSet = true; }
         savePref(); s.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
-        document.body.classList.toggle('anim-off', !pref.anim); document.body.classList.toggle('show-names', !!pref.names);
+        document.body.classList.toggle('anim-off', !pref.anim);
       }));
+      box.querySelectorAll('.vol').forEach(r => { r.style.setProperty('--p', r.value + '%'); r.oninput = () => { r.style.setProperty('--p', r.value + '%'); (r.dataset.vol === 'bgm' ? SND.setMusicVol : SND.setSfxVol)(r.value / 100); }; r.onchange = () => { if (r.dataset.vol === 'sfx') SND.page(); }; });
       const q = box.querySelector('[data-quit]'); if (q) q.onclick = () => { closeSheet(); save(); G.tut = false; buildTitle(); };
     });
   }

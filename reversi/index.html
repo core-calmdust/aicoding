@@ -3138,7 +3138,7 @@ try { lessonProgress = JSON.parse(localStorage.getItem(LESSON_STORE) || '{}'); }
 const CORNER_OF = { 9: 0, 14: 7, 49: 56, 54: 63, 1: 0, 8: 0, 6: 7, 15: 7, 48: 56, 57: 56, 55: 63, 62: 63 };
 async function loadLessons() {
   if (lessonData) return lessonData;
-  try { lessonData = await fetch('lessons.json?v=20261126w1').then(r => r.json()); } catch (e) { lessonData = { lessons: [] }; }
+  try { lessonData = await fetch('lessons.json?v=20261127e1').then(r => r.json()); } catch (e) { lessonData = { lessons: [] }; }
   return lessonData;
 }
 const LT = l => l.text ? Object.assign({}, l.text.ja, l.text.en, l.text[LANG]) : l;  // per-field fallback: LANG → en → ja
@@ -3959,6 +3959,7 @@ function lessonReason(kind, pr, F, sq, bm, ok, p) {
       break;
     case 'edge':
       if (pr.wedge && pr.wedge.includes(bm)) out.push(t('r.wedge', { m: nm(bm) }));
+      if (!ok && !me[4] && !xc) out.push(t('r.mob') + cmp(3, 'u.place'));   // (2026-11-27 第2期 ⑦ 担当A: a wrong move that gives no corner and is no X/C — the opponent's moves after, = atlas lessons3d)
       break;
     case 'exception':
       if (!pr.trap && [0, 7, 56, 63].includes(sq) && !ok) out.push(t('r.cornerTrap', { n: t('u.place', { n: me[3] }) }));
