@@ -426,7 +426,7 @@
       k5: '中盤は<b>駒得</b>が大事！ 代表的な手筋は、1手で2つをねらう<b>両取り</b>なの。<br>桂・銀・角は両取りをかけやすい駒だから、よく見てね。',
       k4: '今度の3手詰は、<b>駒を捨てる</b>王手が正解なの。わざと取られる場所へ駒を打つか動かして、取らせてから詰ませるコン。<br>「取られるから指さない」じゃなくて「取らせて詰ます」。王手のあとの受けを、ぜんぶ確かめてね！<br>竜（龍）は縦横どこまでも＋斜め1マス動けるの。',
       k3: '相手が「次に詰ませるぞ」とねらう形を<b>詰めろ</b>っていうの。<br>攻める前に、まず自分の玉の安全を確かめるコン。相手の詰み筋を消す手を探してね！',
-      k2: '5手詰は、王手と受けを2回くり返してから詰ませるよ。<br>頭の中で盤を動かす力の勝負！ 受けが何通りかあるときは、どれでも詰むか確かめよう。',
+      k2: '5手詰は、王手と受けを2回くり返してから詰ませるよ。<br>頭の中で盤を動かす力の勝負！ 受けが何通りかあるときは、どれでも詰むか確かめよう。<br>竜（龍）は縦横どこまでも＋斜め1マス、馬は斜めどこまでも＋縦横1マス動けるコン。',
       k1: 'ここからは<b>浅い読みでは見つからない手</b>が正解。<br>候補手をいくつか出して、相手のいちばんの応手まで読み比べてみようね！',
       d1: '7手詰は、有段者の入り口っていわれるの。<b>捨て駒・空き王手・逃げ道封鎖</b>を組み合わせるコン。<br>最後の詰み形を思いうかべて、逆から考えるのもおすすめ！',
       d2: '9手詰では、<b>持ち駒を使う順番</b>をまちがえると詰まなくなっちゃう。<br>一手ずつ、相手のいちばんの受けを考えながら進めよう！',
@@ -929,9 +929,9 @@
     LKEY: 'shogi-kaya-lessons-v1', OKEY: 'shogi-kaya-open-v1', CATS: ['beg', 'mid', 'adv', 'sp', 'new', 'castle', 'handi'], data: null,
     load() {
       if (this.p) return this.p;
-      const voice = fetch('../shogi/voice-fox-ja.js?v=6').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
+      const voice = fetch('../shogi/voice-fox-ja.js?v=7').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       const rep = getJ('../shogi/lesson-replies.json?v=4').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
-      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261126k4'), getJ('../shogi/openings.json?v=20261124ol1'),
+      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261127k2'), getJ('../shogi/openings.json?v=20261124ol1'),
         ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261125sb`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
