@@ -263,7 +263,7 @@ function mancalaWords(opt) {
 //      for every other legal point: 「三のほうが達四になれない」 = the point's threes are not real (no legal open-four point), 「四だけ…止め
 //      られたら攻めが終わる」 = after the four and its block Black has no VCF, 「三だけ」 = a three and no four, 「四も三もできない」 = neither;
 //      the praise's lines = the answer's four and three; the hint 「×のとなり」 = the answer touches a forbidden point
-const GM_DONE = new Set(['five', 'block', 'three', 'sfour', 'fourthree', 'forbid33', 'forbid44', 'fourthreeB', 'vcf', 'defend']);
+const GM_DONE = new Set(['five', 'block', 'three', 'sfour', 'fourthree', 'forbid33', 'forbid44', 'fourthreeB', 'vcf', 'defend', 'trap']);
 function gmJa() { const fs = require('fs'), vm = require('vm'), src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), f0 = src.indexOf('  const fill = ');
   return vm.runInNewContext(src.slice(f0, src.indexOf('\n', f0)) + '\n' + src.slice(src.indexOf('  const GML = '), src.indexOf('  const GOMOKU = {')) + '\n;({ GML, gmLsJa, GMW })', {}); }
 function gmWin(E) {
@@ -514,6 +514,59 @@ function gmDefend(E, P, j, add, six) {
     else bad('no reason for the loss');
     pos.unmake(); }
 }
+// (2026-11-26 担当A) trap 白の禁手攻め (renju, White to move; gmTrap): White makes a four whose only blocking point is Black's forbidden
+//   point, so Black cannot block. ① the answers = White's legal moves that win next move (a four Black cannot block — every five point of
+//   White's is a forbidden point for Black — and Black has no five point), = the fastest wins ② = ① (no other move wins next move: no
+//   open four, no four-four) ③ at least 2 other White fours (tempting: a four Black can block), 追72 ④ every answer is a four with one
+//   five point, that point is Black's forbidden point (3-3 / 4-4, the engine's exact test), and in the free rule (no forbidden points)
+//   that four would be blocked (the lesson's point); no five point on the board, the stones Black = White + 1 ⑥ d = the other White fours
+//   + Black's other forbidden points (look-alike ×) never goes down, the last above the first ⑦⑧ the 3D words (atlas/lessons3d.js
+//   gmLsJa) for every other legal point: tF (「オレンジの印の点で黒にふさがれちゃう…禁手じゃない」) = a four, the orange ring = its only
+//   five point, legal for Black (and the 3D's rough GML.forb agrees with the engine there); tX (「黒が先に勝つ」) only when Black has a
+//   five point; t0 (「四にならない」) = no four; the praise's line = the answer's four line, 「三三か四四」 = the forbidden point's kind;
+//   the 2D ls.trap.ng 「{x}だと黒に止められちゃう」 = the move does not win next move (①)
+function gmTrap(E, P, j, add, six) {
+  const C = E.C, cells = a => String(a || '').split(/\s+/).filter(Boolean).map(E.sqOf), nm = m => E.sqName(m);
+  if ((P.rule || 'renju') !== 'renju') add(`rule ${P.rule} (the lesson is renju's)`);
+  if (P.side !== 2) add('the side to move is not White');
+  const B = cells(P.b), Wt = cells(P.w), pos = E.setup('renju', { b: B, w: Wt, side: 2 }), lg = pos.legal(), okM = P.ok.map(E.sqOf);
+  if (B.length !== Wt.length + 1) add(`④ ${B.length} black and ${Wt.length} white stones (White to move: Black one more)`);
+  if (pos.fives(1).length || pos.fives(2).length) add('④ a five point on the board');
+  if (lg.length < 3) add(`③ only ${lg.length} legal moves`);
+  const pb = E.setup('renju', { b: B, w: Wt, side: 1 }), fl = pb.forbiddenList(), fk = new Map(fl.map(f => [f.m, f.k]));
+  const four = new Map();   // m → { fp: White's five points after m, win }
+  for (const m of lg) { pos.make(m); const fp = pos.fives(2).map(i => E.I2M[i]);
+    if (fp.length) four.set(m, { fp, win: !pos.fives(1).length && fp.every(q => !pos.isLegal(q)) });
+    pos.unmake(); }
+  const want = [...four].filter(([, r]) => r.win).map(([m]) => nm(m)).sort(), ok = P.ok.slice().sort();
+  if (want.join() !== ok.join()) add(`①② the answers are ${ok}, the moves that win next move ${want}`);
+  const other = [...four.keys()].filter(m => !okM.includes(m)); if (other.length < 2) add(`③ only ${other.length} other White fours (nothing tempting)`);
+  if (P.ok.length * 3 > lg.length) add(`追72 ${P.ok.length} of the ${lg.length} legal points are right`);
+  const used = new Set();
+  for (const a of okM) { const r = four.get(a); if (!r) { add(`④ the answer ${nm(a)} is not a four`); continue; }
+    if (r.fp.length !== 1) add(`④ the answer ${nm(a)} makes ${r.fp.length} five points (an open four / 4-4, not the forbidden-point trap)`);
+    r.fp.forEach(q => { used.add(q); if (!fk.has(q)) add(`④ the block ${nm(q)} of ${nm(a)} is not Black's forbidden point`); });
+    const pf = E.setup('free', { b: B, w: Wt, side: 2 }); pf.make(a); if (!r.fp.some(q => pf.isLegal(q))) add(`④ in the free rule ${nm(a)} is not blockable either (no trap)`); }
+  six(other.length + fl.filter(f => !used.has(f.m)).length);
+  // ⑦⑧ the 3D words
+  const X = gmJa(), L = require(path.join(ROOT, 'gomoku/lessons.json')), key = L.steps.findIndex(x => x.id === 'trap'), W = X.GMW.trap;
+  const J = X.gmLsJa('trap', { b: B, w: Wt, side: 2 }, 'renju', okM, j, key); if (!J) { add('⑧ no 3D words'); return; }
+  const Gm = X.GML.mk({ b: B, w: Wt }, 'renju'), has = (t, k) => (W[k] || []).some(x => typeof x === 'string' && t.includes(x));
+  for (const q of new Set([].concat(...[...four.values()].map(r => r.fp)))) if (Gm.forb(q) !== fk.has(q)) add(`⑧ the 3D's forbidden test at ${nm(q)} (${Gm.forb(q)}) is not the engine's (${fk.has(q)})`);
+  const ra = okM[0], RA = four.get(ra);
+  if (RA) { for (let i = 0; i < 5; i++) { const g = X.gmLsJa('trap', { b: B, w: Wt, side: 2 }, 'renju', okM, i, key).good.call({}, ra), d = X.GML.DN[Gm.info(ra, 2).fours[0]];
+      if (!g.includes(d)) add(`⑧ the praise does not name the four's line ${d} — ${g}`); } }
+  if (RA && RA.fp.some(q => ![1, 2].includes(fk.get(q)))) { const nt = W.n.find(x => /三三か四四/.test(x)); if (nt) add('⑧ the words say the block is a 3-3 or a 4-4 (it is an overline)'); }
+  for (const u of lg) { if (okM.includes(u)) continue; const th = {}, t = J.ng.call(th, u), r = four.get(u), bad = m => add(`⑧ ${nm(u)}: ${m} — ${t}`);
+    if (!/緑の点/.test(t)) bad('the green point (the answer) is not named');
+    if (has(t, 'tX')) bad('said that Black wins first (Black has no five point)');
+    if (!r) { if (!has(t, 't0')) bad('no four, the words are not 「四にならない」'); continue; }
+    if (r.win) continue;
+    if (has(t, 't0')) bad('a four, said to be no four');
+    if (!has(t, 'tF')) bad('a blockable four — 「オレンジの印の点でふさがれる」 not said');
+    else { const hl = (th._hl || [])[0]; if (!r.fp.includes(hl)) bad(`the orange ring ${hl == null ? '-' : nm(hl)} is not White's five point ${r.fp.map(nm)}`);
+      else if (fk.has(hl)) bad(`the orange ring ${nm(hl)} is a forbidden point (「禁手じゃない」 is false)`); } }
+}
 function gomoku(opt) {
   const E = require(path.join(ROOT, 'gomoku/engine.js')), L = require(path.join(ROOT, 'gomoku/lessons.json')), PZ = require(path.join(ROOT, 'gomoku/puzzles.json'));
   const C = E.C, G = gmWin(E), only = opt && opt.only, out = [];
@@ -537,6 +590,10 @@ function gomoku(opt) {
         const A = st2(P); for (const [who, B, Q] of PS) { if (Q === P) continue; const e = dist(A, B); if (e <= 3) add(`⑤ ${e} stones from ${who}`); }
         return; }
       if (id === 'defend') { gmDefend(E, P, j, add, D => { if (D < prevD) add(`⑥ easier than the problem before (d ${D} after ${prevD})`); prevD = Math.max(prevD, D); if (firstD === null) firstD = D;
+          if (j === st.problems.length - 1 && !(D > firstD)) add(`⑥ the last problem is no harder than the first (d ${D} vs ${firstD})`); });
+        const A = st2(P); for (const [who, B, Q] of PS) { if (Q === P) continue; const e = dist(A, B); if (e <= 3) add(`⑤ ${e} stones from ${who}`); }
+        return; }
+      if (id === 'trap') { gmTrap(E, P, j, add, D => { if (D < prevD) add(`⑥ easier than the problem before (d ${D} after ${prevD})`); prevD = Math.max(prevD, D); if (firstD === null) firstD = D;
           if (j === st.problems.length - 1 && !(D > firstD)) add(`⑥ the last problem is no harder than the first (d ${D} vs ${firstD})`); });
         const A = st2(P); for (const [who, B, Q] of PS) { if (Q === P) continue; const e = dist(A, B); if (e <= 3) add(`⑤ ${e} stones from ${who}`); }
         return; }
@@ -589,6 +646,19 @@ function gomoku(opt) {
       red.concat(green).forEach(q => { const p = E.setup(rl, { b: s === 1 ? B.concat([E.sqOf(q)]) : B, w: s === 2 ? Wt.concat([E.sqOf(q)]) : Wt, side: o }), S = new E.Solver(); S.limit = 2e6;
         if (S.vcf(p, 30) >= 0 || p.legal().some(m => p.cls[o][E.M2I[m]] >= C.F43)) a(`⑧ after ${q} the opponent still has a four-three / VCF`); });
       const body = (r.body && r.body.ja) || '', mm = body.match(/赤い丸<\/b>（([a-o]\d+)）/); if (mm && !red.includes(mm[1])) a(`⑧ the body names the red point ${mm[1]}, the mark is ${red}`); });
+    // (2026-11-26 担当A) the trap warm-up (explain): the glowing point (hl2) makes White's four whose only five point is the red mark (ng),
+    //  Black's forbidden point of the kind the body names (三三 / 四四), and the t4 marks are the four's other stones; the try's × (forb) =
+    //  Black's forbidden points
+    if (id === 'trap') (st.ramp || []).forEach((r, j) => { const a = m => out.push({ step: id, q: 0, msg: `warm-up ${j + 1}: ${m}` }), B = cells(r.b), Wt = cells(r.w);
+      const pb = E.setup('renju', { b: B, w: Wt, side: 1 }), fl = pb.forbiddenList(), mk = k => (r.marks || []).filter(x => x[1] === k).map(x => x[0]);
+      const fx = mk('forb'); if (fx.length && fx.slice().sort().join() !== fl.map(f => nm(f.m)).sort().join()) a(`⑧ the × marks ${fx} are not Black's forbidden points ${fl.map(f => nm(f.m))}`);
+      if (r.k !== 'explain') return; const hl = mk('hl2'), red = mk('ng'), t4 = mk('t4');
+      if (hl.length !== 1 || red.length !== 1) { a('⑧ the explain has no glowing point / red mark'); return; }
+      const pw = E.setup('renju', { b: B, w: Wt, side: 2 }); pw.make(E.sqOf(hl[0])); const fp = pw.fives(2).map(i => nm(E.I2M[i]));
+      if (fp.join() !== red[0]) a(`⑧ the glowing point ${hl[0]} makes White's five points ${fp}, the red mark is ${red[0]}`);
+      const f = fl.find(x => nm(x.m) === red[0]); if (!f) a(`⑧ the red mark ${red[0]} is not Black's forbidden point`);
+      const body = (r.body && r.body.ja) || ''; if (f && /三三/.test(body) && f.k !== 1) a('⑧ the body says 三三, the forbidden point is not a 3-3');
+      t4.forEach(q => { if (!Wt.includes(E.sqOf(q))) a(`⑧ the mark ${q} is no White stone`); }); });
     if (id === 'vcf') (st.ramp || []).forEach((r, j) => gmVcfRamp(E, r, m => out.push({ step: id, q: 0, msg: `warm-up ${j + 1}: ${m}` })));
     (st.ramp || []).forEach((r, j) => { if (r.k !== 'try' || id === 'vcf') return; const a = m => out.push({ step: id, q: 0, msg: `warm-up ${j + 1}: ${m}` });
       const s = r.side, o = 3 - s, pos = E.setup(r.rule || 'free', { b: cells(r.b), w: cells(r.w), side: s }), lg = pos.legal(), lgN = new Set(lg.map(nm));
@@ -605,6 +675,7 @@ function gomoku(opt) {
       else if (r.goal === 'forbid') { const K = id === 'forbid33' ? [1] : id === 'forbid44' ? [2, 3] : [1, 2, 3], fl = pos.forbiddenList();
         if (fl.length !== 1) a(`② ${fl.length} forbidden points on the board`); want = fl.filter(f => K.includes(f.k)).map(f => nm(f.m)); }
       else if (r.goal === 'defend') { want = []; for (const m of lg) { pos.make(m); const S = new E.Solver(); S.limit = 2e6; let w = 0; for (let t = 1; t <= (r.T || 5); t += 2) if (S.attack(pos, t) >= 0) { w = 1; break; } if (S.nodes > S.limit) a(`① ${nm(m)}: the search did not settle`); pos.unmake(); if (!w) want.push(nm(m)); } }   // (2026-11-26 担当A: the defend tries — no win for the opponent within r.T of its moves)
+      else if (r.goal === 'win') { const lv = lg.map(m => [m, G.level(pos, m)]).filter(x => x[1] && x[1] <= 2), mn = lv.length ? Math.min(...lv.map(x => x[1])) : 0; if (mn !== 2) a(`① the fastest win takes ${mn || 'more than 2'} moves (the try's: 2, a four Black cannot block)`); want = lv.filter(x => x[1] === mn).map(x => nm(x[0])); }   // (2026-11-26 担当A: the trap tries)
       else if (r.goal === 'sfour') want = lg.filter(m => cls(s, m) === C.F4).map(nm);
       else if (r.goal === 'fourthree') { const lv = lg.filter(m => cls(s, m) >= C.F3).map(m => [m, G.level(pos, m)]).filter(x => x[1]); const mn = lv.length ? Math.min(...lv.map(x => x[1])) : 0; if (mn !== 3) a(`① the fastest win takes ${mn || 'no'} moves (the try's: 3)`); want = lv.filter(x => x[1] === mn).map(x => nm(x[0])); }
       else a(`the goal ${r.goal} is not checked`);
@@ -3445,7 +3516,7 @@ function morrisBasic(opt) { return require('./lesson-verify-mmbasic.js').verify(
 // (2026-11-26 第2期 担当A) chess b_check・b_escape・b_mate — tools/lesson-verify-chbasic.js
 function chessBasic(opt) { return require('./lesson-verify-chbasic.js').verify(opt); }
 const GAMES = { pz88, dupkey89, chessDrill, chessBasic, morrisBasic, morris72, near53, goOpen, open67, plural58, backgammon, gomokuOpen, bgOpen, chessOpen, xiangqiOpen, reversiOpen, ur, senet, patolli, foxgeese, konane, ugolki, fanorona, stray, hex, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines, janggi, hexOpen };
-module.exports = GAMES; Object.defineProperty(GAMES, '_gm', { value: { gmForbid } }); GAMES.mancalaWords = mancalaWords; Object.assign(GAMES, { chessOpenCtx, chessOpenProblem, chessOpenSet, chessOpenD }); Object.defineProperty(GAMES, '_hex', { value: { deep1: hxDeep1, ctx: hxCtx, near: hxNear, problem: hxProblem, d: hxD, pts: hxPts, kind: (sp, m) => { const X = hxX(); return X.HXA.kind(X.HXA.facts(sp, m)); } } }); Object.defineProperty(GAMES, '_mc', { value: { topic: mcTopic } }); Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
+module.exports = GAMES; Object.defineProperty(GAMES, '_gm', { value: { gmForbid, gmTrap } }); GAMES.mancalaWords = mancalaWords; Object.assign(GAMES, { chessOpenCtx, chessOpenProblem, chessOpenSet, chessOpenD }); Object.defineProperty(GAMES, '_hex', { value: { deep1: hxDeep1, ctx: hxCtx, near: hxNear, problem: hxProblem, d: hxD, pts: hxPts, kind: (sp, m) => { const X = hxX(); return X.HXA.kind(X.HXA.facts(sp, m)); } } }); Object.defineProperty(GAMES, '_mc', { value: { topic: mcTopic } }); Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
 Object.defineProperty(GAMES, '_xqStray', { value: xqStray42 });   // (the xiangqi 追42 check alone, with a broken pzwhy for tests)
 if (require.main === module) {
   const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'pz88,dupkey89,chessDrill,chessBasic,morrisBasic,near53,plural58,backgammon,reversiOpen,gomokuOpen,goOpen,open67,connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,chessOpen,xiangqiOpen,openLines,janggi,foxgeese,konane,fanorona,ugolki,hex,hexOpen,bgOpen').split(',');

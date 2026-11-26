@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700;800&family=Yuji+Mai&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
 <style>
+:root{--wolf:#c62828}   /* 「黒」（人狼）の印の色：物語のテーマ色にかかわらず赤。PC・スマホ共通 */
 /* 狼影灯 — 影絵芝居の舞台。和紙のスクリーンを後ろから灯りで照らし、切り絵の人形の影を映す。
    色は物語ごと（--paper 紙、--lamp 灯り、--ink 影、--night 夜の光、--acc 差し色）。 */
 :root{
@@ -406,7 +407,7 @@ body.anim-off #scrTitle .cyl{animation-duration:400s}
 
 /* ---------- phones ---------- */
 @media not ((hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4)){
-  :root{--hdH:52px;--wolf:#c62828}
+  :root{--hdH:52px}
   #hb{padding:0 8px 0 12px;gap:8px;right:0}
   #hb .logo{font-size:22px}
   #hb .where{font-size:15px}
