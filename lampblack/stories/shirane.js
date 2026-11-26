@@ -10,7 +10,7 @@
   pal: { paper: '#e9e6df', lamp: '#ffd9a0', ink: '#16151a', night: '#151c2e', moon: '#b8c4dc', acc: '#8c6414' },
   scene: 'abbey',
   rules: 'fanatic',
-  rulesNote: 'この修道院には「狂信者」がまぎれている（入門にはいない。中級はふたり）。人間だが、狼が誰かを知っていて、狼のために嘘をつく。偽の占いで狼を白と言い、村人を黒と言う。狼は、狂信者が誰かを知らない。',
+  rulesNote: 'この修道院には「狂信者」がまぎれている（人数は、むずかしさによって変わる）。人間だが、狼が誰かを知っていて、狼のために嘘をつく。偽の占いで狼を白と言い、村人を黒と言う。狼は、狂信者が誰かを知らない。',
   meetLoc: 'chapel',
   nightLoc: 'cloister',
   hero: { name: 'あなた', title: '巡礼者', home: 'hospice', traits: { height: 'mid', hand: 'R', foot: 'boots', mark: 'ink' } },
