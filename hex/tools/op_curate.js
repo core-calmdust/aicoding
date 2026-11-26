@@ -13,7 +13,8 @@ const fs = require('fs'), path = require('path');
 const ROOT = path.join(__dirname, '..', '..');
 const E = require('../engine.js');
 const CHK = require(path.join(ROOT, 'tools/lesson-verify.js'))._hex;
-const ids = (process.argv[2] || '').split(',').filter(Boolean), WRITE = process.argv.includes('--write'), WIDE = process.argv.includes('--wide');
+const ids = (process.argv[2] || '').split(',').filter(Boolean), WRITE = process.argv.includes('--write'), WIDE = process.argv.includes('--wide') || process.argv.includes('--wider'), WIDER = process.argv.includes('--wider');
+const SKIPK = ((process.argv.find(x => x.startsWith('--skip=')) || '').slice(7)).split(',').filter(Boolean);   // (--skip=save: kinds the set already has enough of — 3 of one kind at most — are not read further; a speed-up only)
 const OF = path.join(ROOT, 'hex/openings.json'), O = JSON.parse(fs.readFileSync(OF, 'utf8'));
 const MS = { 7: 1500, 9: 2000, 11: 2500 };
 function choose(keep, id) {   // easy → hard (hxD); ⑤ an answer cell at most twice, one kind of move at most 3 times, more than two moves apart
@@ -47,13 +48,13 @@ if (process.argv.includes('--merge')) {   // OUT=dir node op_curate.js c9,e9 --m
     const cands = [], seenB = new Set();
     for (let k = 2; k < Math.min(line.length, 12); k++) {
       const p0 = replay(line.slice(0, k)); if (p0.side === side || p0.winner()) continue;   // (the opponent leaves the line)
-      await N.setpos(p0.spec()); const a = await N.analyze(ms, 0, 6);
+      await N.setpos(p0.spec()); const a = await N.analyze(ms, 0, WIDER ? 10 : 6);
       for (const e of a.list) { if (e.m === line[k] || e.m === E.SWAP) continue;
         let mv = line.slice(0, k).concat([e.m]);
         const push = m2 => { const q = replay(m2); if (q.side === side && !q.winner() && !seenB.has(q.spec().b)) { seenB.add(q.spec().b); cands.push(m2.slice()); } };
         if (WIDE) push(mv);   // (--wide: right after the opponent leaves the line)
         for (let c = 0; c < 4; c++) { const p = replay(mv); if (p.winner()) break; await N.setpos(p.spec());
-          if (WIDE && c % 2 === 1) { const a2 = await N.analyze(Math.round(ms * .6), 0, 4); for (const x of a2.list.slice(1)) if (x.m !== E.SWAP) push(mv.concat([x.m])); }   // (--wide: the opponent's 2nd–4th moves too — not only answers to an intrusion)
+          if (WIDE && c % 2 === 1) { const a2 = await N.analyze(Math.round(ms * .6), 0, WIDER ? 6 : 4); for (const x of a2.list.slice(1)) if (x.m !== E.SWAP) push(mv.concat([x.m])); }   // (--wide: the opponent's 2nd–4th moves too — not only answers to an intrusion)
           await N.setpos(p.spec()); const b = await N.best(0, Math.round(ms * .6), 0, 3); mv = mv.concat([b.m]);
           if (c % 2 === 1) push(mv);
           else if (!WIDE) { const q = replay(mv); if (!q.winner()) for (const x of intrusions(q)) push(mv.concat([x])); } } }   // (the opponent cuts into one of our bridges: we answer; --wide leaves these out — the earlier runs gave only 'save' problems)
@@ -64,6 +65,7 @@ if (process.argv.includes('--merge')) {   // OUT=dir node op_curate.js c9,e9 --m
       const p = replay(mv), spec = p.spec(); if (p.swapOk) spec.sw = 1;
       if (CHK.near(ctx, spec, id, []) <= 2) continue;
       await N.setpos(spec); const a = await N.analyze(ms * 2, 0, 3); if (a.list.length < 2 || a.list[0].v - a.list[1].v < 150 || Math.abs(a.list[0].v) > 600) continue;
+      if (SKIPK.length && SKIPK.includes(CHK.kind(spec, a.list[0].m))) continue;
       const A = await scored(spec, ms, 12), B = await scored(spec, ms * 2, 12);
       const P = { s: spec, best: B.sc[0][0], sc: B.sc, sc2: A.sc, mv }, P2 = { s: spec, best: A.sc[0][0], sc: A.sc };
       const why = CHK.problem(P, P2);
