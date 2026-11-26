@@ -6,6 +6,8 @@
 const fs = require('fs'), path = require('path');
 const ROOT = path.resolve(__dirname, '..', '..'), R = require(path.join(ROOT, 'go/rules.js'));
 const args = process.argv.slice(2), SETS = (args[args.indexOf('--sets') + 1] || '').split(','), WRITE = args.includes('--write');
+// --skip 'id:手,手;…'（2026-11-26 担当B）：同じ形の答え（同じ手筋）が2問にならないよう、候補を外して選ぶ
+const SKIP = new Set((args.includes('--skip') ? args[args.indexOf('--skip') + 1] : '').split(';').filter(Boolean));
 const J = f => JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8'));
 const C = {}; for (const f of fs.readdirSync(path.join(ROOT, 'go/tools/data'))) if (/^op-cand.*\.json$/.test(f)) Object.assign(C, J('go/tools/data/' + f));
 const O = J('go/openings.json');
@@ -36,6 +38,7 @@ for (const id of SETS) { const g = O.sets.find(x => x.id === id), N = g.n || 19,
   const pick = [];
   for (const x of cand) { const near = pool.find(o => dist(x.S, N, o.S, o.n) <= 2), mine = pick.concat(PICKED).find(o => dist(x.S, N, o.S, o.N || N) <= 2);
     const onVar = (g.vars || []).some(v => { const L = g.line.slice(0, v.at).concat(v.line); return x.c.mv.length <= L.length && L.slice(0, x.c.mv.length).join(' ') === x.c.mv.join(' '); });   // ④ 変化の手順の上（見本で見せた局面）は手順の外でない（2026-11-26 担当B）
+    if (SKIP.has(x.k)) { console.log(id, x.c.mv.join(' '), '→', x.c.top[0][0], '--skip'); continue; }
     if (onVar) { console.log(id, x.c.mv.join(' '), '→', x.c.top[0][0], '④ 変化の手順の上'); continue; }
     const far = farOf(g, x.c.top[0][0]);   // ④ 19路の定石：答えが定石の隅（本筋・変化の石から4路以内）
     console.log(id, x.c.mv.join(' '), '→', x.c.top[0][0], far ? '④ 定石の隅から離れている' : near ? '⑤ ' + near.who : mine ? '⑤ 同じ本 ' + mine.c.mv.join(' ') : 'ok'); if (!far && !near && !mine && pick.length < 5) pick.push(x); }
