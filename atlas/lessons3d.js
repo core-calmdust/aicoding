@@ -3208,7 +3208,7 @@
     LKEY: 'aicoding-gomoku-lessons', OKEY: 'aicoding-gomoku-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261126b'), getJ('../gomoku/openings.json?v=20261126v7'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261126b'), getJ('../gomoku/openings.json?v=20261126v8'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] gomoku texts', e); } this.I = w.I18N || {}; this.data = { ls, op };
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
@@ -3450,7 +3450,7 @@
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=5'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
+      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=6'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
         try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
         return this; }).catch(e => { this.p = null; throw e; }));
     },
@@ -6177,7 +6177,7 @@
       b_kingcap: ['光ってる駒から動かすの。まずは王の逃げ道をよく見てね。', '王が逃げられるマスを先につぶしてから、かこみを閉じよう！', '王のまわり4方向、まだ空いているのはどこ？', '王が動けるマスを数えてみて。その数を減らせる手から考えよう。', '王が逃げた先でも、かこめるかな？ 2手先まで読んでみて。'],
       b_safe: ['金の丸の駒に、どの駒も取られなくなる動かし方があるの。', 'いま相手にはさまれそうな駒はどれ？ 相手が入れる反対側のマスに注目してね。', '逃げるなら、逃げた先の両どなりも確かめてね。', '相手が次に置けるマスを想像してみて。そこで取られる駒は？', 'よけるだけじゃなく、相手の置き場所をふさぐのも守りなの。'],
       t_shield: ['並んだ駒の前はもう埋まってるの。残ってるのは、列のはしの「ふた」だね。', '列の両はしを見てみて。片方はもう閉じているの。あいているのはどっち？', '端に並んだ相手の駒、何枚あるか数えてみて。', 'まとめ取りは、列の両はしと前がそろったとき。足りないのは1か所！', '金の丸の駒で、列のはしへ入ってみよう。'],
-      t_tuichi: ['王を、2つの辺が見通せるマス（角に近い辺の上など）へ動かしてね。金の丸が王さま！', '王が着いた先から、角へまっすぐ行ける道は何本あるかな？ 2本ならトゥイチ！', '1本だけの道は、すぐふさがれちゃう。2本同時がねらい目なの。', '角のそばの空いたマス、王さまが行けるのはどこ？', '縦にも横にも、角まで駒がない場所をさがそう。'],
+      t_tuichi: ['王を盤の端へ出して、その辺の両側の角まで駒がないマスをさがしてね。金の丸が王さま！', '王が着いた先から、角へまっすぐ行ける道は何本あるかな？ 2本ならトゥイチ！', '1本だけの道は、すぐふさがれちゃう。2本同時がねらい目なの。', '王さまが出られる端はいくつかあるね。着いた辺の両側が、角まで空いているのはどこ？', '辺の1列が、王さまのほかは角から角まで空っぽになる場所はどこかな？'],
       t_block: ['王から角（端）までの道の上に、攻め手を1つ入れるの。金の丸がその駒！', 'ふさいだあと、王が別のマスで2本の道を作れないかも見てね。', '王さまが次に動く先も想像してみて。', '道のどこでふさぐかで、そのあとが変わるの。', 'ふさぎに行く駒が、はさまれないかも確かめて！'],
       t_fort: ['王のまわりの壁に、1か所だけ穴があいてるの。金の丸の駒でふさいでね。', '壁の駒が、攻め手にはさまれない形になるかも確かめて！', '砦は端にくっついた守りの壁。どこが欠けてる？', '王さまが中で動けるスペースも残しておいてね。', '攻め手が入ってこられる入口、ひとつだけあるの。'],
       t_encircle: ['輪に1か所だけすき間があるの。金の丸の駒で閉じてね。', '守り手の駒が端へ出られる道をたどってみて。どこで切れるかな？', '輪はななめにつながっていてもOK！', '外へぬける穴をひとつ探そう。そこに入れば完成なの。', '閉じる駒が、はさまれない場所かも見ておいてね。'],
@@ -6314,7 +6314,8 @@
       ng = u => say(u, G => G.king && !G.win && G.routes < 2, G => G.win ? '' : G.scan().w ? pk(['{x}だと、王が攻め手にはさまれちゃう！', '{x}のあと、王さまがつかまっちゃう。', '{x}だと、王が攻め手につかまる場所なの。', '{x}では、王さまが危ないマスに入っちゃう。', '{x}のあと、攻め手が王をはさめるの。'])
         : G.routes === 1 ? pk([`{x}だと${goal}への道は1本だけ。攻め手にすぐふさがれちゃう。`, '{x}では道が1本しかできないの。1手でふさがれるね。', '{x}だと見通せるのは1方向だけ。それだとライチどまり。', `{x}の場所からは、${goal}への道が1本きり。`, '{x}だと、攻め手はその1本をふさぐだけでいいの。'])
         : !G.king ? pk(['{x}は王じゃない駒を動かしてるの。', '{x}で動いたのは王さまじゃないね。', '{x}は守り手の駒。動かしたいのは王さま！', '{x}だと、王さまはその場のまま。', '{x}では王さまの道が増えないの。'])
-        : pk([`{x}だと、王から${goal}へまっすぐ通る道がないの。`, `{x}の場所からは、${goal}まで見通せないね。`, `{x}だと、${goal}への道がひとつもできないの。`, `{x}では、王さまの前に駒が立ちふさがってるね。`, `{x}だと、王から${goal}までのあいだに駒がいるの。`]),
+        : G.edge || id === 'v_tablut' ? pk([`{x}だと、王から${goal}へまっすぐ通る道がないの。`, `{x}の場所からは、${goal}まで見通せないね。`, `{x}だと、${goal}への道がひとつもできないの。`, `{x}では、辺の上で王さまの両側に駒が立ちふさがってるね。`, `{x}だと、王から${goal}までのあいだに駒がいるの。`])
+        : pk([`{x}だと王さまは端に出ていないから、${goal}へまっすぐ通る道がないの。`, `{x}の場所は盤の内側。そこからは${goal}まで見通せないね。`, `{x}だと、王が端に着かないから${goal}への道がひとつもできないの。`, `{x}では、王さまが端まで出られていないの。`, `{x}だと、王は内側にいて${goal}への道ができないの。`]),
         FA.win ? pk([`{m}なら、そのまま${goal}へ着けたから。`, `正解の{m}は、${goal}まで一直線の道。`, `{m}を選べば、その場で脱出できたの。`, `こっちの{m}だったら、${goal}まで止まらずに行けたね。`, `{m}だと、そのまま勝ちだったんだ。`])
           : pk([`{m}なら道が${r}本できて、攻め手は1手じゃふさぎきれないから。`, `正解の{m}は、${goal}への道を${r}本ひらく場所。`, '{m}を選べば、攻め手は1本しか止められなかったの。', 'こっちの{m}だったら、トゥイチになっていたね。', `{m}だと、${r}方向に道が通っていたんだ。`]));
     } else if (id === 't_block') {
@@ -6346,7 +6347,7 @@
     LKEY: 'aicoding-tafl-lessons', OKEY: 'aicoding-tafl-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=9'), fetch('../tafl/i18n.js?v=6ek-nd1-bm2-bs1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261125o').catch(() => null)])
+      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=10'), fetch('../tafl/i18n.js?v=6ek-nd1-bm2-bs1-tu1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261125o').catch(() => null)])
         .then(([ls, T, _, op]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] tafl texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
