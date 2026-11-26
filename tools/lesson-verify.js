@@ -1294,7 +1294,7 @@ function amazons(opt) {
 // (2026-11-24 第2期) reversi: the exact endgames (parity・finish) — every legal move solved again by an independent exact solver
 // (empties to the winner), the step's shape, no near-duplicates across everything the game shows, the easy-to-hard order of a
 // draw, and リバガメ's words for every move of every problem at every place of a draw (3D: lessons3d rvLsJa).
-const RV_DONE = new Set(['rules', 'corner', 'mobility', 'quiet', 'wall', 'parity', 'finish']);   // (corner: tools/lesson-verify-rvcorner.js, mobility: tools/lesson-verify-rvmob.js, 2026-11-25 担当A; quiet: tools/lesson-verify-rvquiet.js, wall: tools/lesson-verify-rvwall.js, 2026-11-26 担当A)
+const RV_DONE = new Set(['rules', 'corner', 'mobility', 'quiet', 'wall', 'edge', 'parity', 'finish']);   // (corner: tools/lesson-verify-rvcorner.js, mobility: tools/lesson-verify-rvmob.js, 2026-11-25 担当A; quiet: tools/lesson-verify-rvquiet.js, wall: tools/lesson-verify-rvwall.js, 2026-11-26 担当A; edge: tools/lesson-verify-rvedge.js, 2026-11-27 担当A)
 function rvSolver() {
   const DIRS = [-9, -8, -7, -1, 1, 7, 8, 9], ok = (p, d) => p >= 0 && p < 64 && Math.abs((p & 7) - ((p - d) & 7)) <= 1;
   const flips = (b, q, s) => { const o = 3 - s, out = []; for (const d of DIRS) { let p = q + d; const t = []; while (ok(p, d) && b[p] === o) { t.push(p); p += d; } if (t.length && ok(p, d) && b[p] === s) out.push(...t); } return out; };
@@ -1396,7 +1396,9 @@ function reversi(opt) {
   if (RV_DONE.has('quiet') && !(only && !only.has('quiet'))) out.push(...require('./lesson-verify-rvquiet.js')(opt && opt.lessons ? { lessons: opt.lessons } : undefined));
   // (2026-11-26 21:20 第2期・担当A) wall（壁と余裕手）: the engine re-read twice, the fewest outer discs, the wall moves and the reserve, the words — tools/lesson-verify-rvwall.js
   if (RV_DONE.has('wall') && !(only && !only.has('wall'))) out.push(...require('./lesson-verify-rvwall.js')(opt && opt.lessons ? { lessons: opt.lessons } : undefined));
-  L.lessons.forEach((l, li) => { const id = l.id; if (id === 'rules' || id === 'corner' || id === 'mobility' || id === 'quiet' || id === 'wall' || !RV_DONE.has(id) || (only && !only.has(id))) return;
+  // (2026-11-27 00:20 第2期・担当A) edge（辺の攻め：付け手）: the engine re-read twice, the one wedge, the reasons of the wrong moves, the words — tools/lesson-verify-rvedge.js
+  if (RV_DONE.has('edge') && !(only && !only.has('edge'))) out.push(...require('./lesson-verify-rvedge.js')(opt && opt.lessons ? { lessons: opt.lessons } : undefined));
+  L.lessons.forEach((l, li) => { const id = l.id; if (id === 'rules' || id === 'corner' || id === 'mobility' || id === 'quiet' || id === 'wall' || id === 'edge' || !RV_DONE.has(id) || (only && !only.has(id))) return;
     if (l.problems.length < 8 || l.problems.filter(p => p.trap).length < 2) add(id, -1, '⑤ the pool is too small to draw 5 different problems');
     l.problems.forEach((P, j) => { const a = m => add(id, j, m), b = String(P.cells).split('').map(Number), s = P.toMove, F = P.f || {};
       if (P.type !== 'exact') a('① not an exact problem');
