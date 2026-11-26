@@ -68,6 +68,7 @@
  "ls.t_best.goal": "En iyi hamleyi bul.",
  "ls.t_best.hint": "En iyi hamle altın halkalı taşla yapılır.",
  "ls.t_best.why": "{m} kazandıran fikirdir.",
+ "ls.t_best.ng": "{x} kazandıran fikir değil. {m} açıkça daha iyi.",
  "ls.e_kings.title": "Dama oyun sonları",
  "ls.e_kings.sub": "Galibiyeti kaçırma",
  "ls.e_kings.intro": "<p>Damalı oyun sonları. Kazanılmış pozisyonda bile <b>galibiyeti koruyan hamle azdır</b>.</p><p class=\"note\">İki dama bir damayı yener ama \"çift köşedeki\" (1 ve 5 ya da 28 ve 32) tek damayı çıkarmak emek ister. Cevaplar oyun sonu veritabanlarıyla kontrol edildi.</p>",
