@@ -9,7 +9,7 @@ const args = process.argv.slice(2), SETS = (args[args.indexOf('--sets') + 1] || 
 // --skip 'id:手,手;…'（2026-11-26 担当B）：同じ形の答え（同じ手筋）が2問にならないよう、候補を外して選ぶ
 const SKIP = new Set((args.includes('--skip') ? args[args.indexOf('--skip') + 1] : '').split(';').filter(Boolean));
 const J = f => JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8'));
-const C = {}; for (const f of fs.readdirSync(path.join(ROOT, 'go/tools/data'))) if (/^op-cand.*\.json$/.test(f)) Object.assign(C, J('go/tools/data/' + f));
+const C = {}, ALL = []; for (const f of fs.readdirSync(path.join(ROOT, 'go/tools/data'))) if (/^op-cand.*\.json$/.test(f)) { const o = J('go/tools/data/' + f); ALL.push(o); Object.assign(C, o); }
 const O = J('go/openings.json');
 function specFrom(o) { const n = o.n || 19, a = Array(n * n).fill('.'); for (const s of o.ab || []) a[R.parseCoord(s, n)] = 'b'; for (const s of o.aw || []) a[R.parseCoord(s, n)] = 'w'; return { n, stones: a.join(''), turn: o.turn || 1 }; }
 function startOf(g) { const n = g.n || 19; if (g.start) return specFrom(Object.assign({ n }, g.start)); if (g.handi) { const a = Array(n * n).fill('.'); R.handicapPoints(n, g.handi).forEach(i => { a[i] = 'b'; }); return { n, stones: a.join(''), turn: 2 }; } return { n, stones: '.'.repeat(n * n), turn: 1 }; }
@@ -40,6 +40,14 @@ for (const id of SETS) { const g = O.sets.find(x => x.id === id), N = g.n || 19,
     const onVar = (g.vars || []).some(v => { const L = g.line.slice(0, v.at).concat(v.line); return x.c.mv.length <= L.length && L.slice(0, x.c.mv.length).join(' ') === x.c.mv.join(' '); });   // ④ 変化の手順の上（見本で見せた局面）は手順の外でない（2026-11-26 担当B）
     if (SKIP.has(x.k)) { console.log(id, x.c.mv.join(' '), '→', x.c.top[0][0], '--skip'); continue; }
     if (onVar) { console.log(id, x.c.mv.join(' '), '→', x.c.top[0][0], '④ 変化の手順の上'); continue; }
+    // ④ 外れたあとの本の側の手がすべて読みの首位（lesson-verify-goopen.js と同じ。同じ局面の読みがファイルによって食い違う＝ゆれる手も落とす、2026-11-27 担当B）
+    const chain = (() => { if (x.c.dev == null) return null; for (let k = x.c.dev + 1; k < x.c.mv.length; k += 2) { const kk = id + ':' + x.c.mv.slice(0, k).join(' ');
+      const rs = ALL.filter(o => o[kk]).map(o => o[kk].top[0][0]); if (!rs.length) return (k + 1) + '手目 読みなし'; if (rs.some(t => t !== x.c.mv[k])) return (k + 1) + '手目 ' + x.c.mv[k] + ' が首位でない（' + rs.join('/') + '）'; } return null; })();
+    // ④ 手順（本筋・変化のどれか）を最初に外れた手が相手の手（lesson-verify-goopen.js と同じ。変化の上で本の側が別の手を選んだ道は落とす、2026-11-27 担当B）
+    { const st0 = startOf(g), Ls = [g.line].concat((g.vars || []).map(v => g.line.slice(0, v.at).concat(v.line)));
+      const dv = Math.max(...Ls.map(L => { let k = 0; while (k < L.length && k < x.c.mv.length && L[k] === x.c.mv[k]) k++; return k; }));
+      if (dv < x.c.mv.length && (dv % 2 ? 3 - st0.turn : st0.turn) === side) { console.log(id, x.c.mv.join(' '), '→', x.c.top[0][0], '④ 手順を外れた手が本の側の手（' + (dv + 1) + '手目）'); continue; } }
+    if (chain) { console.log(id, x.c.mv.join(' '), '→', x.c.top[0][0], '④ ' + chain); continue; }
     const far = farOf(g, x.c.top[0][0]);   // ④ 19路の定石：答えが定石の隅（本筋・変化の石から4路以内）
     const d0 = x.c.dev === 0 && !/^fuseki_/.test(g.id) && (g.n || 19) >= 19;   // ④ 19路の定石：相手が1手目から外れると定石が始まっていない（2026-11-26 担当B）
     console.log(id, x.c.mv.join(' '), '→', x.c.top[0][0], d0 ? '④ 相手が1手目から外れている' : far ? '④ 定石の隅から離れている' : near ? '⑤ ' + near.who : mine ? '⑤ 同じ本 ' + mine.c.mv.join(' ') : 'ok'); if (!d0 && !far && !near && !mine && pick.length < 5) pick.push(x); }
