@@ -3,7 +3,7 @@
 (() => {
   'use strict';
   const S = window.ShogiEngine;
-  const VER = '?v=16';
+  const VER = '?v=17';
   const LANG = (() => { try { return (localStorage.getItem('aicoding-lang') || 'ja') === 'ja' ? 'ja' : 'en'; } catch (e) { return 'ja'; } })();
   const T = {
     ja: { game: '将棋', back: '← 将棋', ttl: '最強解析', depth: '深さ', nps: '局面/秒', threads: 'スレッド', sel: 'スレッド数', ana: '解析', stop: '停止', play: 'AIに指させる',
@@ -39,12 +39,12 @@
   }
 
   // ------------------------------------------------------------------ the multi-thread engine
-  const SLOT = 8 << 20;   // per thread: TLS block (move buffers, accumulators) + stack
+  const SLOT = 12 << 20;   // per thread: TLS block (move buffers, accumulators) + stack
   const HC = navigator.hardwareConcurrency || 4, MAXT = Math.max(1, Math.min(32, HC));
   const MT = { X: null, mem: null, module: null, base: 0, workers: [] };
   const gunzip = async url => { const res = await fetch(url); return new Uint8Array(await new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()); };
   async function initMT() {
-    MT.module = await WebAssembly.compileStreaming(fetch('../engine_mt.wasm' + VER));
+    MT.module = await WebAssembly.compileStreaming(fetch('../engine_mt_s1280.wasm' + VER));
     MT.mem = new WebAssembly.Memory({ initial: 1536, maximum: 16384, shared: true });   // maximum = engine_mt.wasm's (1 GiB)
     const X = (await WebAssembly.instantiate(MT.module, { env: { memory: MT.mem, now: () => Date.now(), progress: () => {}, aprogress: () => {} } })).exports;
     MT.base = Math.ceil(X.mt_heap_base() / 65536) * 65536;
@@ -54,14 +54,12 @@
     X.init();
     const w = await gunzip('../weights.bin.gz?v=20261018ol');
     if (w.byteLength === S.NFEAT * 2) new Int16Array(MT.mem.buffer, X.weights_ptr(), S.NFEAT).set(new Int16Array(w.buffer, w.byteOffset, S.NFEAT));
-    const buf = await gunzip('../nnue.bin.gz' + VER), dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
-    if (dv.getUint32(0, true) !== 0x5145554E) throw new Error('nnue');
-    const H = dv.getInt32(4, true), NIN = dv.getInt32(8, true), b = buf.buffer; let o = buf.byteOffset + 12;
-    if (X.nue_h() !== H) throw new Error('nnue H ' + H);
-    new Int16Array(MT.mem.buffer, X.nue_w1_ptr(), NIN * H).set(new Int16Array(b.slice(o, o + NIN * H * 2))); o += NIN * H * 2;
-    new Int32Array(MT.mem.buffer, X.nue_b1_ptr(), H).set(new Int32Array(b.slice(o, o + H * 4))); o += H * 4;
-    new Int16Array(MT.mem.buffer, X.nue_w2_ptr(), 2 * H).set(new Int16Array(b.slice(o, o + H * 4))); o += H * 4;
-    X.nue_set_b2(dv.getInt32(o - buf.byteOffset, true)); X.nue_enable(1); X.tt_clear();
+    const buf = await gunzip('../nnue-s1280.bin.gz' + VER), dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);   // (engine.js loadNNUE)
+    for (let h = 0; h < 8; h++) if (dv.getInt32(4 * h, true) !== X.nue_hdr(h)) throw new Error('nnue');
+    { const u = new Uint8Array(MT.mem.buffer); let o = 32;
+      for (let sg = 0; X.nue_seg_len(sg); sg++) { const n = X.nue_seg_len(sg); u.set(buf.subarray(o, o + n), X.nue_seg_ptr(sg)); o += n; }
+      if (o !== buf.length || !X.nue_file_done()) throw new Error('nnue'); }
+    X.nue_enable(1); X.tt_clear();
     MT.X = X;
   }
   async function setThreads(n) {
@@ -101,7 +99,7 @@
   let FB = null;
   function goFB(ms) {
     if (!FB) {
-      FB = new Worker('../engine.js?v=20261126v8');
+      FB = new Worker('../engine.js?v=20261127v9');
       gunzip('../weights.bin.gz?v=20261018ol').then(w => FB.postMessage({ type: 'weights', buffer: w.buffer.slice(w.byteOffset, w.byteOffset + w.byteLength) })).catch(() => {});
     }
     return new Promise(res => { FB.onmessage = e => { if (e.data.type === 'result') res(e.data); }; FB.postMessage({ type: 'think', id: 1, sfen: startSfen, moves: line.slice(), opts: { time: ms } }); });

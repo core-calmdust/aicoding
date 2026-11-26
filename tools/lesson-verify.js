@@ -1902,7 +1902,7 @@ function tafl(opt) {
 // b_cannon・b_pawn). The goal set is read from the rules (a capture by that kind on which no legal move of the opponent can take back),
 // the engine values stored in sc (= xiangqi/app.js problemPoints, the 3D XIANGQI.points) must put that capture alone on top, and
 // ショウギツネ's words (atlas/lessons3d.js xqLsJa) are read back against the board for the answer and every wrong move.
-const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn', 'b_escape', 'b_mate1', 'm_mate2', 'm_hc', 'm_dc', 'm_face', 'e_rook', 't_capture', 't_fork', 'e_pawn', 't_check']);
+const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn', 'b_escape', 'b_mate1', 'm_mate2', 'm_hc', 'm_dc', 'm_face', 'e_rook', 't_capture', 't_fork', 'e_pawn', 't_check', 't_defend']);
 function xiangqi(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'xiangqi/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'xiangqi/lessons.json'), 'utf8'));
@@ -2131,6 +2131,8 @@ function xiangqi(opt) {
   require('./lesson-verify-xqfork.js').verify({ E, L, X, pool, dist, brd, plain, add, pts, only: XQ_DONE });
   // (2026-11-26 第2期 担当A) t_check「王手で得をする」— tools/lesson-verify-xqcheck.js
   require('./lesson-verify-xqcheck.js').verify({ E, L, X, pool, dist, brd, plain, add, pts, only: XQ_DONE });
+  // (2026-11-27 第2期 担当A) t_defend「守る」— tools/lesson-verify-xqdefend.js
+  require('./lesson-verify-xqdefend.js').verify({ E, L, X, pool, dist, brd, plain, add, pts, only: XQ_DONE });
   // 追72 (2026-11-25 担当A): the moves that count as right (P.ok, or 16 points or more from P.sc) and a warm-up try's ok are a third of the
   // legal moves at most
   L.steps.forEach(st => { if (!XQ_DONE.has(st.id)) return;

@@ -7,13 +7,13 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../shogi/', EV = '?v=20261126v8';   // the full game's engine version (shogi/index.html)
+  const BASE = '../shogi/', EV = '?v=20261127v9';   // the full game's engine version (shogi/index.html)
   // the full game's AI steps (shogi/index.html LEVELS), index = level - 1
   const LEVELS = [{ depth: 2, noise: 95, greedy: 1 },
     { depth: 2, noise: 60, greedy: 1 }, { depth: 3, noise: 80 }, { depth: 3, noise: 55 }, { depth: 3, noise: 35 },
     { nodes: 8000, linear: 1 }, { nodes: 15000, linear: 1 }, { nodes: 27000, linear: 1 }, { nodes: 48000, linear: 1 },
-    { nodes: 260 }, { nodes: 520 }, { nodes: 1000 }, { nodes: 2000 }, { nodes: 3100 }, { nodes: 5000 }, { nodes: 7700 }, { nodes: 10000 },
-    { nodes: 18000, time: 12000 }, { nodes: 29000, time: 15000 }, { nodes: 50000, time: 15000 }, { nodes: 100000, time: 15000 }, { nodes: 250000, time: 20000 }, { nodes: 1500000, time: 20000 },
+    { nodes: 210, nodes0: 260 }, { nodes: 430, nodes0: 520 }, { nodes: 820, nodes0: 1000 }, { nodes: 1420, nodes0: 2000 }, { nodes: 2470, nodes0: 3100 }, { nodes: 2950, nodes0: 5000 }, { nodes: 4300, nodes0: 7700 }, { nodes: 5130, nodes0: 10000 },
+    { nodes: 8050, nodes0: 18000, time: 12000 }, { nodes: 11800, nodes0: 29000, time: 15000 }, { nodes: 18200, nodes0: 50000, time: 15000 }, { nodes: 31600, nodes0: 100000, time: 15000 }, { nodes: 65600, nodes0: 250000, time: 20000 }, { nodes: 274000, nodes0: 1500000, time: 20000 },
     { time: 4000, mt: 1 }, { time: 9000, mt: 1 }, { time: 20000, mt: 1 }];   // 七段〜九段 (time only; on the table: one worker thread)
   const START = 'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1';
   /* ---------- 種目 (2026-11-12): the full game's variants (shogi/variants/) on the table — their rules (mini.js · hasami.js · vshogi.js) here,

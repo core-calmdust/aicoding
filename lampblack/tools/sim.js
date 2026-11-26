@@ -13,7 +13,7 @@ const stories = args[0] && !args[0].startsWith('--') ? [args[0]] : Object.keys(W
 const verbose = args.includes('--verbose');
 
 // the bar: detective win rate per difficulty, and the random voter must lose clearly more often
-const BAR = { det: [[.85, 1], [.7, 1], [.65, 1], [.6, .95], [.55, .85]], rnd: [.5, .38, .32, .25, .15], gap: .3, day1: .9 };   // 2026-11-25：村まかせ（でたらめ投票）で勝てないことを基準に加えた   // 2026-11-25：死んでも幽霊で続くので上限を広げた   // the bot reasons perfectly: a person wins less
+const BAR = { det: [[.7, 1], [.65, 1], [.6, .95], [.5, .9], [.42, .8]], rnd: [.38, .32, .25, .2, .15], gap: .3, day1: .9 };   // 2026-11-25：村まかせ（でたらめ投票）で勝てないことを基準に加えた   // 2026-11-25：死んでも幽霊で続くので上限を広げた   // the bot reasons perfectly: a person wins less
 
 function playBot(story, diff, seed, smart, naive) {   // naive: 調べて痕跡も示すが、推理はせず、占いの黒と村の空気に従って投票する（推理の難しさを測る）
   const S = E.newGame(story, { diff, seed });

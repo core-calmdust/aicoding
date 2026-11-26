@@ -3497,7 +3497,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=16'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
+      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=17'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
         try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
         return this; }).catch(e => { this.p = null; throw e; }));
     },
@@ -4192,7 +4192,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       t_capture: '守られている駒でも、自分の駒より価値が高ければ、取る値打ちがあるの。<br>目安は、車9・炮4.5・馬4・仕と相2・兵1（川を渡ると2）くらい。<br>取り返されても得をする取り方を、探してみよう！',
       t_fork: '1つの駒で2つの駒を同時にねらうのが<b>両取り</b>。相手は1手で片方しか助けられないの。<br>得は駒の値打ちで数えるよ：車9・炮4.5・馬4・仕と相2・兵1（川を渡ると2）。ねらう駒が守られていても、動いた駒より高ければ得になるコン！',
       t_check: '王手をかけられたら、相手は必ず受けないといけないよね。<br>だから、王手のついでに別の駒もねらえる手は、とっても強いの。相手を忙しくさせちゃおう！',
-      t_defend: '相手の次の手を、先に読んでみよう。<br>ただで取られそうな駒があったら、守る（ひもをつける）か、間に駒を入れて防ぐの。守りも攻めと同じくらい大切だコン。',
+      t_defend: '相手の次の手を、先に読んでみよう。<br>ただで取られそうな駒があったら、守る（ひもをつける）か、間に駒を入れて防ぐの。<br>値打ちの目安は、車9・炮4.5・馬4・仕と相2・兵1（川を渡ると2）。守りも攻めと同じくらい大切だコン。',
       m_mate2: '相手がどう受けても、次の手で必ず詰む。そんな最初の1手を見つけよう！<br>王手から始まるとはかぎらないの。静かな一手が決め手になることもあるんだコン。',
       m_hc: '將と同じ筋に馬を置いて、その後ろから炮で王手。これが<b>馬後炮</b>なの。<br>馬が炮台になって、將の逃げ道まで押さえちゃう。シャンチーでいちばん有名な詰め方のひとつだコン！',
       m_dc: '2つの炮を將と同じ筋に縦に並べると、前の炮が後ろの炮の炮台になるの。これが<b>重炮</b>。<br>前の炮を取るのも、間に駒を入れるのも難しい、強い詰め方なんだ。',
@@ -4398,10 +4398,42 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       return v(XQC_OPEN) + w + v(XQC_RIGHT, 2)(M, MA, TA); };
     return { ask: v(XQC_ASK), hintTx: v(XQC_HINT)(MA), good: () => v(XQC_GOOD)(MA, TA, g), ng, own: true };
   }
+  // (2026-11-27 第2期 担当A) t_defend「守る」: one piece of ours (worth 2 or more) is threatened = the opponent wins it next by the
+  // exchange count; the answer alone loses nothing for sure (xqForkF fork ≥ 0, three plies = 追51): a quiet move (no capture, no check)
+  // that does not move the threatened piece but guards it (ひも: a take is answered by a take back) or steps in between (間に入れる:
+  // the line is cut). The words name the piece moved, the piece guarded and the attacker; for a wrong move what the board does: a
+  // mate in 1, the threatened piece still taken, an escape after which another piece (or the same on its new point) is taken, a
+  // capture taken back (the net) — counted again by tools/lesson-verify-xqdefend.js (tools/xqfork-facts.js).
+  const XQD_ASK = ['相手のねらいを先に防いでみよう！', '取られそうな駒、どうやって守る？', 'ここは守りどころだコン。損をしない受けはどれかな？', 'ただで取られそうな駒があるよ。正しい守り方は？', '逃げるだけが守りじゃないの。いちばんいい受けは？'];
+  const XQD_HINT = [(M, H) => `光っている${M}を使うよ。ねらわれている${H}を、取られない形にできる点を探してみて。`, (M, H) => `ねらわれているのは${H}。光っている${M}で、ひもをつけるか、間に入れるかを考えてみて。`, (M, H) => `光っている${M}の行き先を1つずつ確かめよう。そのあと相手は${H}を取れる？ ほかの駒は大丈夫？`, (M, H) => `${H}を逃がすと、ほかの駒があぶなくならないかな？ 光っている${M}で守る手を探してみて。`, (M, H) => `相手の次の1手を先に指すつもりで考えてね。光っている${M}で${H}を守れる点はどこかな？`];
+  const XQD_GOOD = [(M, H, B, k) => k ? `正解！ ${M}を間に入れて、相手の${B}の筋を止めたね。これで${H}は取られないし、ほかの駒も無事だコン。その調子！` : `正解！ ${M}で${H}にひもをつけたね。相手の${B}が取っても取り返せるから、相手は手が出せないの。その調子！`, (M, H, B, k) => k ? `やったね！ ${M}が間に入ったから、相手の${B}はもう${H}に届かないの。逃げずに守れたね！` : `やったね！ ${M}が${H}を守ってるから、${B}で取ったら取り返されちゃう。逃げずに守れたね！`, (M, H, B, k) => k ? `お見事！ ${M}で相手の${B}の通り道をふさいだよ。${H}を動かさなくても、ねらいが消えたね。` : `お見事！ ${M}のひもで${H}が守られたよ。相手の${B}のねらいが、これで空振りだコン。`, (M, H, B, k) => k ? `さすが！ ${M}を間に入れる受けで、${H}へのねらいが消えたの。ほかの駒も取られない、ただ一つの受けだね。次もこの目でいこう！` : `さすが！ ${M}で${H}にひもをつける受け。ほかの駒も取られない、ただ一つの受けだね。次もこの目でいこう！`, (M, H, B, k) => k ? `ばっちり！ ${M}が壁になって、相手の${B}は${H}を取れなくなったよ。守りの一手、決まったね！` : `ばっちり！ ${M}が${H}の後ろだてになったから、相手の${B}は取れないの。守りの一手、決まったね！`];
+  const XQD_OPEN = ['いっしょに確かめよう。', 'ここは盤をよく見よう。', '', '大丈夫、守りの手は慣れだコン。', 'これで覚えちゃおう！ '];
+  const XQD_RIGHT = [(K, M, H, B, k) => k ? `正解は${K}。${M}を間に入れると、相手の${B}が${H}に届かなくなったの。` : `正解は${K}。${M}で${H}にひもをつければ、相手の${B}は取れなかったの。`, (K, M, H, B, k) => k ? `${K}なら、${M}が${B}の筋をふさいで${H}を守れたよ。次はきっと見つかるね！` : `${K}なら、${M}のひもで${H}を守れたよ。次はきっと見つかるね！`, (K, M, H, B, k) => k ? `答えは${K}。${M}を間に入れて、${B}のねらいを止める手だったんだコン。` : `答えは${K}。${M}で${H}を守って、${B}のねらいを止める手だったんだコン。`, (K, M, H, B, k) => k ? `いちばんは${K}、${M}で相手の${B}の通り道をふさいで、${H}を守る受けだったの。` : `いちばんは${K}、${M}で${H}にひもをつける受けだったの。`, (K, M, H, B, k) => k ? `${K}がよかったね。${M}が壁になれば、${H}は取られなかったんだ。` : `${K}がよかったね。${M}が守っていれば、${H}は取られなかったんだ。`];
+  function xqDefendJa(E, s, P, i, ck, n) {
+    const v = (L, o) => L[(i + n + (o || 0)) % L.length], T = E.typeOf, mTo = E.mTo, mFrom = E.mFrom, p = E.Pos.from(P.s), me = p.side, A = P.best, M = ck('ok'), X = ck('ng'), F = xqForkF(E);
+    const N = t => XQN(t, me), NO = t => XQN(t, me ^ 1), qa = p.clone().play(A), H0 = F.danger(F.turned(p))[0] || {};
+    const MA = N(T(p.at(mFrom(A)))), HN = N(H0.t), BY = NO(H0.by), blk = !qa.moves().some(x => mTo(x) === H0.s) ? 1 : 0;
+    const sayNet = x => x < 0 ? `差し引き${xqtNum(-x)}点の損になっちゃう` : '差し引きとんとんで、得にならない';
+    const ng = u0 => { const L = p.moves(), u = u0 != null && u0 !== A && L.includes(u0) ? u0 : L.find(x => x !== A && mFrom(x) === H0.s) || L.find(x => x !== A); let w = '';
+      if (u != null) { const q = p.clone().play(u), c = p.at(mTo(u)) ? T(p.at(mTo(u))) : 0, Cn = c ? NO(c) : '', CV = xqtNum(F.capV(p, u)), MT = N(T(p.at(mFrom(u)))), MV = xqtNum(F.val(q, mTo(u)));
+        if (F.mate1(q)) w = v([`${X}だと、相手に1手で詰まされちゃう！ 自分の王さまの守りも見てね。`, `${X}のあと、相手には1手で詰ませる手があるの。こっちが先に詰んじゃう！`], 1);
+        else { const D = F.danger(q), dd = D[0], nt = F.capV(p, u) - (dd ? dd.g : 0);
+          if (!dd) w = `${X}でも駒は取られないけど、相手のねらいは残っているの。`;
+          else if (c && dd.s === mTo(u)) w = v([`${X}で${Cn}（${CV}点）を取ると、きみの${MT}（${MV}点）を相手の${NO(dd.by)}に取り返されて、${sayNet(nt)}の。`, `${X}だと${Cn}（${CV}点）は取れるけど、${MT}（${MV}点）が相手の${NO(dd.by)}に取り返されるの。${sayNet(nt)}んだ。`], 1);
+          else if (c) w = v([`${X}で${Cn}（${CV}点）は取れるけど、こんどは${N(dd.t)}を相手の${NO(dd.by)}に取られちゃう。${sayNet(nt)}の。`, `${X}だと${Cn}（${CV}点）を取っても、${N(dd.t)}が相手の${NO(dd.by)}に取られる形になるの。${sayNet(nt)}んだ。`], 1);
+          else if (mFrom(u) === H0.s && dd.s === mTo(u)) w = v([`${X}で${HN}を逃がしても、行った先でまた相手の${NO(dd.by)}に取られちゃうの。`, `${X}だと、逃げた${HN}が行った先で相手の${NO(dd.by)}に取られる形なの。`, `${X}は逃げ道に見えるけど、行った先にも相手の${NO(dd.by)}が届いていて、${HN}は助からないの。`, `${X}で${HN}を動かすと、行った先で相手の${NO(dd.by)}が待ってるの。逃げ場所になっていないんだ。`, `${X}の逃げ方だと、行った先の${HN}を相手の${NO(dd.by)}に取られちゃう。`], 1);
+          else if (mFrom(u) === H0.s) w = v([`${X}で${HN}は逃げられるけど、こんどは${N(dd.t)}を相手の${NO(dd.by)}に取られちゃう。`, `${X}で${HN}を逃がして助けても、${N(dd.t)}が相手の${NO(dd.by)}に取られる形になるの。`, `${X}で逃げると、${HN}がいなくなったすきに、${N(dd.t)}が相手の${NO(dd.by)}にねらわれちゃうの。`, `${X}は${HN}を逃がす手。でもそのあと、${N(dd.t)}を相手の${NO(dd.by)}に取られちゃう。`, `${X}で${HN}が逃げても、代わりに${N(dd.t)}が相手の${NO(dd.by)}に取られる形なの。`], 1);
+          else if (dd.s === mTo(u)) w = v([`${X}だと、動かした${MT}が相手の${NO(dd.by)}に取られちゃう。行き先が安全かも確かめてね。`, `${X}では、動かした${MT}が行った先で相手の${NO(dd.by)}に取られる形なの。`], 1);
+          else if (dd.s === H0.s) w = v([`${X}だと、${HN}は相手の${NO(dd.by)}に取られたままなの。ねらいを防げていないね。`, `${X}では、${HN}への相手の${NO(dd.by)}のねらいが消えないの。`, `${X}を指しても、${HN}は相手の${NO(dd.by)}に取られたままだよ。`, `${X}は${HN}を守る手になっていないの。相手の${NO(dd.by)}のねらいが消えないね。`, `${X}のあとも、相手の${NO(dd.by)}のねらいが消えないから、${HN}が取られちゃう。`], 1);
+          else w = v([`${X}のあと、こんどは${N(dd.t)}が相手の${NO(dd.by)}に取られる形になるの。`, `${X}だと、きみの${N(dd.t)}を相手の${NO(dd.by)}に取られちゃう。`], 1); } }
+      return v(XQD_OPEN) + w + v(XQD_RIGHT, 2)(M, MA, HN, BY, blk); };
+    return { ask: v(XQD_ASK), hintTx: v(XQD_HINT)(MA, HN), good: () => v(XQD_GOOD)(MA, HN, BY, blk), ng, own: true };
+  }
   function xqLsJa(E, s, P, i, ck, n) {   // n: the lesson's number (each lesson words its praise / misses in an order of its own)
     if (s.id === 't_capture') return xqTradeJa(E, s, P, i, ck, n || 0);
     if (s.id === 't_fork') return xqForkJa(E, s, P, i, ck, n || 0);
     if (s.id === 't_check') return xqCheckJa(E, s, P, i, ck, n || 0);
+    if (s.id === 't_defend') return xqDefendJa(E, s, P, i, ck, n || 0);
     const id = s.id, A0 = XQJ_LS.ask[id]; if (!A0) return null; n = n || 0;
     const k = i + id.length, pick = L => L[k % L.length], H = XQJ_LS.hint[id] || [], VO = xqLsVoice(n);
     const vi = (i + n) % 5, V = (L, o) => L[(i + n + (o || 0)) % L.length];   // (the problem's own wording: five problems, five wordings)
@@ -4537,7 +4569,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xe1-er1-tc1-tf1-ep1-ck1'), getJ('../xiangqi/openings.json?v=6'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xe1-er1-tc1-tf1-ep1-ck1-df1'), getJ('../xiangqi/openings.json?v=6'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vf]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vf)(v); this.V = ((v.I18N || {})['ja@fox']) || {}; } catch (e) { this.V = {}; }   // (ショウギツネ's own lines, 3D, ja)
           return this; })
