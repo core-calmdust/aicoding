@@ -185,6 +185,8 @@ int main(int argc, char **argv) {
   init();
   if (!loadNet(argv[1])) return 1;
   nue_enable(1);
+  { const char *lf = getenv("LINEAR");   /* LINEAR=<weights.bin, unpacked>: the linear evaluation of the site's 12-9 kyu levels instead of the net */
+    if (lf) { FILE *w = fopen(lf, "rb"); if (!w) { fprintf(stderr, "LINEAR: no %s\n", lf); return 1; } fread(weights_ptr(), 2, NFEAT, w); fclose(w); nue_enable(0); tt_clear(); } }
   { const char *ps = getenv("PARAMS"); int k, v, q; while (ps && sscanf(ps, "%d=%d%n", &k, &v, &q) == 2) { set_param(k, v); ps += q; if (*ps == ',') ps++; } }   /* PARAMS="44=1,45=1": search parameters of our side, in every mode */
 #ifdef SEARCH_STATS
   if (!strcmp(argv[2], "stat2")) {   /* usimatch <net> stat2 <nodes> <file of move lists>: moves searched a node, by node type and depth (to set beside the same count in another engine) */

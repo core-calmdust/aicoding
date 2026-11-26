@@ -8,12 +8,12 @@
 # crosses 50% is that level's scale. Node-limited, so it can run beside other work. A level may carry its own factors:
 #   "1000:0.6,0.8,1 5000:0.45,0.55,0.65"
 # The old side looks at its node limit every 1024 nodes, as the site did (260, 520 and 1000 all stopped at 1024, 3100 at
-# 4096); the new side stops at the node (build-kp.sh EXACT=1 = -DNODE_EXACT).
+# 4096); the new side stops at the node (build-kp.sh COARSE=1 = the old side with -DNODE_COARSE).
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd); SHOGI=$(cd "$HERE/../.." && pwd)
 NET=$(cd "$(dirname "$1")" && pwd)/$(basename "$1"); LEVELS=${2:-"1000 5000 18000 100000"}; FACTORS=${3:-"0.12 0.2 0.33"}; G=${4:-10}; P=${5:-10}
 WORK=${WORK:-$HOME/shogi-kp-work}; mkdir -p "$WORK"
-KP=$(EXACT=1 bash "$HERE/build-kp.sh" "$WORK" "$NET" | tail -1)
+KP=$(COARSE=1 bash "$HERE/build-kp.sh" "$WORK" "$NET" | tail -1)
 CUR=${CUR:-$SHOGI/nnue.bin.gz}; gzip -dc "$CUR" > "$WORK/cur.bin" 2>/dev/null || cp "$CUR" "$WORK/cur.bin"
 # search v5 (engine.c, the note at P[]): the old side
 V5="85=0,91=0,92=0,55=0,110=0,113=0,115=0,75=5,76=90,77=40,79=2,9=5049,43=246,17=214,2=73,1=11,112=0,114=0,116=0,81=0,86=0,87=0,88=0,89=0,93=0,95=0,96=0,97=0,98=0,99=0,100=0,101=0,102=0,103=0,104=0,105=0"
