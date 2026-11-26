@@ -35,13 +35,16 @@ for (const id of SETS) { const g = O.sets.find(x => x.id === id), N = g.n || 19,
     .map(([k, c]) => { const p = play(g, c.mv); return { k, c, p, S: stonesOf(p) }; }).sort((a, b) => a.c.mv.length - b.c.mv.length);
   const pick = [];
   for (const x of cand) { const near = pool.find(o => dist(x.S, N, o.S, o.n) <= 2), mine = pick.concat(PICKED).find(o => dist(x.S, N, o.S, o.N || N) <= 2);
+    const onVar = (g.vars || []).some(v => { const L = g.line.slice(0, v.at).concat(v.line); return x.c.mv.length <= L.length && L.slice(0, x.c.mv.length).join(' ') === x.c.mv.join(' '); });   // ④ 変化の手順の上（見本で見せた局面）は手順の外でない（2026-11-26 担当B）
+    if (onVar) { console.log(id, x.c.mv.join(' '), '→', x.c.top[0][0], '④ 変化の手順の上'); continue; }
     const far = farOf(g, x.c.top[0][0]);   // ④ 19路の定石：答えが定石の隅（本筋・変化の石から4路以内）
     console.log(id, x.c.mv.join(' '), '→', x.c.top[0][0], far ? '④ 定石の隅から離れている' : near ? '⑤ ' + near.who : mine ? '⑤ 同じ本 ' + mine.c.mv.join(' ') : 'ok'); if (!far && !near && !mine && pick.length < 5) pick.push(x); }
   console.log(id, '選んだ', pick.length); if (pick.length === 5) pick.forEach(x => PICKED.push(Object.assign(x, { N })));
   if (WRITE && pick.length === 5) { g.problems = pick.map(x => { const on = g.line.slice(0, x.c.mv.length).join(' ') === x.c.mv.join(' ');
       if (on) RD.pos[id + '@' + x.c.mv.length] = { turn: x.c.turn, pol: x.c.pol, top: x.c.top, deep: { pol: x.c.deep.pol, top: x.c.deep.top } };
       else RD.pos[id + '@' + x.c.mv.join(' ')] = { turn: x.c.turn, pol: x.c.pol, top: x.c.top, deep: { pol: x.c.deep.pol, top: x.c.deep.top } };
-      const dv = x.c.dev; for (let k = dv + 1; k < x.c.mv.length; k++) { const kk = id + ':' + x.c.mv.slice(0, k).join(' '); if (C[kk] && C[kk].top[0][0] === x.c.mv[k]) RD.pos[id + '@' + x.c.mv.slice(0, k).join(' ')] = { turn: C[kk].turn, pol: C[kk].pol, top: C[kk].top }; }
+      const dv = x.c.dev;   // 途中の局面の読みで、先に入れた問題の2つの読み（deep）を上書きしない（2026-11-26 19路）
+      for (let k = dv + 1; k < x.c.mv.length; k++) { const kk = id + ':' + x.c.mv.slice(0, k).join(' '); const rk = id + '@' + x.c.mv.slice(0, k).join(' '); if (C[kk] && C[kk].top[0][0] === x.c.mv[k] && !(RD.pos[rk] && RD.pos[rk].deep)) RD.pos[rk] = { turn: C[kk].turn, pol: C[kk].pol, top: C[kk].top }; }
       return on ? { at: x.c.mv.length, ok: [x.c.top[0][0]] } : { at: x.c.mv.length, mv: x.c.mv, ok: [x.c.top[0][0]] }; });
     g.verified = true; }
 }
