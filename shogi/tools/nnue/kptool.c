@@ -177,6 +177,8 @@ static int kpSearch(double ms, int nodeLim) { return root_search(ms, 0, nodeLim)
 static int cmd_usi(void) {
   const char *net = getenv("KPNET"); if (!net || !loadKP(net)) { fprintf(stderr, "KPNET=<net file> is needed\n"); return 1; }
   nue_enable(1);
+  { const char *lf = getenv("LINEAR");   /* LINEAR=<weights.bin, unpacked>: the linear evaluation of the site's 12-9 kyu levels instead of the net */
+    if (lf) { FILE *w = fopen(lf, "rb"); if (!w) { fprintf(stderr, "LINEAR: no %s\n", lf); return 1; } fread(weights_ptr(), 2, NFEAT, w); fclose(w); nue_enable(0); tt_clear(); } }
   int nodeLim = 0, timeMs = 0; static char line[1 << 16];
   setStart(); nh = 0;
   while (fgets(line, sizeof line, stdin)) {

@@ -109,12 +109,11 @@
     if (D.hide) {   // 上級・悪夢：狼の数のほかは、毎回くじ。何がありうるかは S.pub（その物語の顔ぶれ）
       const H = D.hide, yes = p => rnd(S) < p;
       S.hid = true; S.pub = Object.assign({}, R, { madman: H.mad.reduce((m, w, k) => w > 0 ? k : m, 0) });
-      R.madman = wpick(S, [0, 1, 2, 3], k => (H.mad[k] || 0) * (story.rules === 'fanatic' && k > 2 ? 0 : 1));   // 狼を知る狂信者が三人は重すぎる
+      // 物語の看板の役（妖狐・背徳者・猫又・共有者・狂信者）は必ずいる（2026-11-27）。狂信者は人数だけがくじ
+      R.madman = wpick(S, [0, 1, 2, 3], k => (H.mad[k] || 0) * (story.rules === 'fanatic' && (k > 2 || k < 1) ? 0 : 1));   // 狼を知る狂信者が三人は重すぎる
       R.seer = yes(H.seer) ? 1 : 0; R.medium = yes(H.medium) ? 1 : 0;
       if (R.guard) R.guard = yes(H.guard) ? 1 : 0;
-      if (R.mason) R.mason = yes(H.mason) ? 2 : 0;
-      if (R.fox) { R.fox = yes(H.fox) ? 1 : 0; if (R.immoral) R.immoral = R.fox && yes(H.immoral) ? 1 : 0; }
-      if (R.cat) R.cat = yes(H.cat) ? 1 : 0;
+
       const want = opts.role && opts.role !== 'auto' && opts.role !== 'villager' ? opts.role : null;   // the role the player chose is always there
       if (want && S.pub[want] && !R[want]) R[want] = want === 'mason' ? 2 : 1;
     }
@@ -168,8 +167,8 @@
   const isWolf = (S, id) => S.wolves.includes(id);
   const wolvesAlive = S => S.people.filter(p => p.alive && p.role === 'wolf');
   // 物語ごとの手直し（2026-11-26 ユーザー：霧鐘村・北辰号の中級がまだ易しい）。配役は変えず、嘘の巧さと村の推理だけを締める
-  const TUNE = { kirigane: { 1: { wit: .1, npcFind: .12 } }, hokushin: { 1: { wit: .1, npcFind: .12 } }, nekonaki: { 1: { cunning: .4, wit: .22, npcFind: .16, sway: 1.05 }, 3: { wit: .08, sway: .7 }, 4: { wit: .05, sway: .6, hide: { mad: [0, 2, 4, 2] } } },
-    kiteki: { 4: { neg: .75, plant: .6, hide: { mad: [2, 4, 2, 0], fox: .6 } } }, shirane: { 4: { neg: .75, plant: .6, hide: { mad: [3, 5, 1, 0] } } } }, TD = {};
+  const TUNE = { kirigane: { 1: { wit: .1, npcFind: .12 } }, hokushin: { 1: { wit: .1, npcFind: .12 }, 3: { wit: .1, sway: .75 }, 4: { wit: .07, sway: .65 } }, nekonaki: { 1: { cunning: .4, wit: .22, npcFind: .16, sway: 1.05 }, 3: { wit: .08, sway: .7 }, 4: { wit: .05, sway: .6, hide: { mad: [0, 2, 4, 2] } } },
+    kiteki: { 3: { neg: .65, plant: .5, hide: { mad: [2, 4, 1, 0] } }, 4: { cunning: .9, neg: .7, plant: .5, hide: { mad: [3, 4, 1, 0] } } }, shirane: { 4: { neg: .75, plant: .6, hide: { mad: [3, 5, 1, 0] } } } }, TD = {};
   function tuneOf(story, i) { const t = TUNE[story] && TUNE[story][i]; if (!t) return DIFF[i]; const k = story + i; return TD[k] || (TD[k] = Object.assign({}, DIFF[i], t, t.hide ? { hide: Object.assign({}, DIFF[i].hide, t.hide) } : {})); }
   const diffOf = S => tuneOf(S.story, S.diff);
 
