@@ -3466,7 +3466,10 @@
       const t = goOpF(q, ok); if (!t) return [fill(pk(H.them.gen, i), { m: 'そこ' }), u];
       const k = t.kind === 'cap' ? 'cap' : t.atari ? 'atari' : t.kind === 'save' ? 'save' : t.cut ? 'cut' : t.connect ? 'connect' : t.sansan && t.dOpp <= 2 ? 'sansan' : t.contact && t.red === 2 ? 'reduce' : t.contact ? 'contact' : 'gen';
       return [fill(uz('t' + k, H.them[k]), { m: 'そこ', k: t.cap, l: t.red }).replace(/^そこは/, 'そこは、').replace('そこを先に打たれて', '先にそこを打たれて'), u]; };
-    o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good, oi) : pk(H.near, i), why, pk(H.push, LI + i)].filter(Boolean).join(' '); };
+    // (2026-11-26 担当B) the closing push line never ends like the reason before it (「…強くなったね！ まだまだ行けるね！」): the next one in the list, or none
+    const goEnd = t => { const sn = String(t || '').split(/(?<=[。！？])\s*/).filter(Boolean).pop() || '', b = sn.replace(/[。！？!?]+$/, ''); for (const e of ['んだ', 'よね', 'かな', 'よう', 'ろう', 'よ', 'ね', 'ペン']) if (b.endsWith(e)) return e; return ''; };
+    const goPush = (w, j) => { const e = goEnd(w); for (let q = 0; q < H.push.length; q++) { const x = pk(H.push, j + q); if (!x) return q ? '' : x; if (!e || goEnd(x) !== e) return x; } return ''; };
+o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good, oi) : pk(H.near, i), why, goPush(why, LI + i)].filter(Boolean).join(' '); };
     o.ng = function (u) { this._hl = []; const part = (o.P.good || []).concat(o.P.half || []).includes(u), right = fill(pk(H.right, LI + i + 1), { m: OKM });
       if (part) return [pk(H.half, i), right, why, pk(H.you.half, LI + i)].join(' ');
       const [th, uu] = themOf(u); let ex = null;
