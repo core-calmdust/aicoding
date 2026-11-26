@@ -22,8 +22,8 @@ CUR_H=$(gzip -dc "$SHOGI/nnue.bin.gz" | od -An -t d4 -j 4 -N 4 | tr -d ' ')
 cc -O3 -w -o "$OUT/prep" "$HERE/prep.c"
 cc -O3 -w -o "$OUT/trainkp" "$HERE/trainkp.c" -lpthread -lm
 cc -O3 -DNATIVE -DNUE_H=$CUR_H -w -o "$OUT/usimatch" "$SHOGI/tools/match/usimatch.c"
-cc -O3 -DNATIVE -DNUE_KB=$KB -DNUE_H=$H $MLP -w -o "$OUT/kptool-$KB-$H$MTAG" "$HERE/kptool.c"
+cc -O3 -DNATIVE -DNUE_KB=$KB -DNUE_H=$H $MLP ${EXACT:+-DNODE_EXACT} -w -o "$OUT/kptool-$KB-$H$MTAG${EXACT:+-x}" "$HERE/kptool.c"   # EXACT=1: the node limit to the node (calib-levels.sh)
 if [ -n "$WASM" ]; then
   clang --target=wasm32 -O3 -nostdlib -fno-builtin -w -Wl,--no-entry -Wl,--export-dynamic -msimd128 -DNUE_KB=$KB -DNUE_H=$H -o "$OUT/engine_kp.wasm" "$SHOGI/engine.c"
 fi
-echo "$OUT/kptool-$KB-$H$MTAG"
+echo "$OUT/kptool-$KB-$H$MTAG${EXACT:+-x}"
