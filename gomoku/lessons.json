@@ -2963,48 +2963,48 @@
    "course": "tactics",
    "problems": [
     {
-     "b": "i6 i7 h8 i8 f9 l9 k10",
-     "w": "j7 k7 k8 i9 j9 k9",
+     "b": "g7 i7 f8 h8 i8 j8",
+     "w": "f7 g8 g9 h10 h11",
      "side": 2,
-     "last": "k10",
+     "last": "i8",
+     "ok": [
+      "i10"
+     ]
+    },
+    {
+     "b": "h7 h8 i8 j8 h9 f10 j10",
+     "w": "g8 f9 g10 h10 i10 f11",
+     "side": 2,
+     "last": "f10",
+     "ok": [
+      "h11"
+     ]
+    },
+    {
+     "b": "h8 i8 j8 g9 i9 h10",
+     "w": "g7 h7 g8 g10 g11",
+     "side": 2,
+     "last": "i8",
+     "ok": [
+      "f7"
+     ]
+    },
+    {
+     "b": "i7 k7 h8 j9 k9 i10",
+     "w": "g5 j6 h7 i8 f9",
+     "side": 2,
+     "last": "i10",
+     "ok": [
+      "i6"
+     ]
+    },
+    {
+     "b": "i6 g7 f8 h8 f10",
+     "w": "j6 h7 i9 h10",
+     "side": 2,
+     "last": "f10",
      "ok": [
       "j8"
-     ]
-    },
-    {
-     "b": "k4 l5 d6 g6 k6 j7 e8 h8 i8 e9 f9 j9 i10 g11 i11",
-     "w": "m4 h5 i5 i6 j6 e7 h7 f8 g8 k8 g9 h9 i9 h10",
-     "side": 2,
-     "last": "k4",
-     "ok": [
-      "g5"
-     ]
-    },
-    {
-     "b": "h3 i3 j3 g4 h4 f5 h5 j5 g6 f7 f8 h8 i8 j8 k8 f9 k9 g10",
-     "w": "i2 g3 i4 k4 i5 f6 h6 i6 h7 e8 g8 l8 g9 h9 i9 j9 f10 i11",
-     "side": 1,
-     "last": "g3",
-     "ok": [
-      "j4"
-     ]
-    },
-    {
-     "b": "d5 h5 e6 f6 f7 d8 g8 h8 e9 i9",
-     "w": "c4 i5 g7 h7 e8 f8 f9 g9 h9 e10",
-     "side": 1,
-     "last": "f8",
-     "ok": [
-      "b6"
-     ]
-    },
-    {
-     "b": "f7 i7 j7 k7 f8 h8 j9 g10 h10 i10",
-     "w": "h6 g7 l7 e8 g8 j8 g9 i9 f10 h11",
-     "side": 1,
-     "last": "l7",
-     "ok": [
-      "i8"
      ]
     }
    ],
@@ -3045,20 +3045,20 @@
       "tr": "Üçlü de saldırıdır"
      },
      "body": {
-      "ja": "<p>白番。<b>1</b>は三（止めないと達四）なので、黒は<b>2</b>で止めます。<b>3</b>は四、<b>5</b>は三が2つ。黒が止めても、<b>7</b>で四三、<b>9</b>で五つです。</p><p>四だけでは足りないとき、<b>三で相手の手を限定</b>しながら形を作ります。三の止め方は複数あるので、<b>どう止められても</b>次の攻めが続くかを確かめるのがコツです。</p>",
-      "en": "<p>White to play. <b>1</b> is a three (an open four next unless blocked), so Black blocks at <b>2</b>. <b>3</b> is a four, <b>5</b> makes two threes. Whatever Black does, <b>7</b> is a four-three and <b>9</b> makes five.</p><p>When fours alone are not enough, use <b>threes to limit the replies</b> while you build. A three can be blocked in several ways, so check that your attack continues <b>whichever block</b> is chosen.</p>",
-      "zh": "<p>白棋走。<b>1</b> 是活三（不挡就成活四），黑在 <b>2</b> 挡。<b>3</b> 冲四，<b>5</b> 成双三。黑怎么挡，<b>7</b> 都是四三，<b>9</b> 成五。</p><p>只靠冲四不够时，用<b>活三限制对方应手</b>来造形。活三有多种挡法，要确认<b>无论怎么挡</b>攻击都能继续。</p>",
-      "ko": "<p>백 차례. <b>1</b>은 삼(막지 않으면 열린 사)이라 흑은 <b>2</b>로 막습니다. <b>3</b>은 사, <b>5</b>는 삼이 둘. 흑이 막아도 <b>7</b>이 사삼, <b>9</b>로 오목.</p><p>사만으로 부족할 때는 <b>삼으로 상대 응수를 제한</b>하면서 모양을 만듭니다. 삼은 막는 법이 여러 가지라, <b>어떻게 막혀도</b> 공격이 이어지는지 확인하세요.</p>",
-      "es": "<p>Juegan blancas. <b>1</b> es un tres (cuatro abierto si no se tapa); las negras tapan en <b>2</b>. <b>3</b> es un cuatro y <b>5</b> hace dos treses. Hagan lo que hagan, <b>7</b> es cuatro-tres y <b>9</b> hace cinco.</p><p>Si los cuatros no bastan, usa <b>treses para limitar las respuestas</b>. Un tres se tapa de varias formas: comprueba que el ataque sigue <b>con cualquier bloqueo</b>.</p>",
-      "fr": "<p>Blanc joue. <b>1</b> est un trois (quatre ouvert s’il n’est pas bloqué) ; Noir bloque en <b>2</b>. <b>3</b> est un quatre, <b>5</b> fait deux trois. Quoi que fasse Noir, <b>7</b> est un quatre-trois et <b>9</b> fait cinq.</p><p>Quand les quatre ne suffisent pas, utilisez des <b>trois pour limiter les réponses</b>. Un trois se bloque de plusieurs façons : vérifiez que l’attaque continue <b>quel que soit le blocage</b>.</p>",
-      "pt": "<p>Jogam as brancas. <b>1</b> é um três (quatro aberto se não bloqueado); as pretas bloqueiam em <b>2</b>. <b>3</b> é um quatro, <b>5</b> faz dois três. Seja como for, <b>7</b> é quatro-três e <b>9</b> faz cinco.</p><p>Quando só quatros não bastam, use <b>três para limitar as respostas</b>. Um três pode ser bloqueado de vários jeitos: confira que o ataque continua <b>com qualquer bloqueio</b>.</p>",
-      "de": "<p>Weiß am Zug. <b>1</b> ist eine Drei (sonst offene Vier), Schwarz blockt mit <b>2</b>. <b>3</b> ist eine Vier, <b>5</b> bildet zwei Dreien. Wie Schwarz auch spielt: <b>7</b> ist Vier-Drei, <b>9</b> macht Fünf.</p><p>Reichen Vieren allein nicht, nutze <b>Dreien, um die Antworten einzuschränken</b>. Eine Drei kann man auf mehrere Arten blocken – prüfe, dass der Angriff <b>bei jedem Block</b> weitergeht.</p>",
-      "hi": "<p>सफ़ेद की चाल। <b>1</b> एक तीन है (न रोका तो खुला चार), काला <b>2</b> पर रोकता है। <b>3</b> चार है, <b>5</b> दो तीन बनाता है। काला कुछ भी करे, <b>7</b> चार-तीन और <b>9</b> पाँच।</p><p>जब केवल चार काफ़ी न हों, <b>तीन से जवाब सीमित</b> करते हुए आकार बनाइए। तीन को कई तरह रोका जा सकता है, इसलिए जाँचें कि <b>हर रोक</b> के बाद हमला जारी रहे।</p>",
-      "ar": "<p>دور الأبيض. <b>1</b> ثلاثية (تصير رباعية مفتوحة إن لم تُسدّ)، فيسدّ الأسود في <b>2</b>. <b>3</b> رباعية و<b>5</b> تصنع ثلاثيتين. مهما فعل الأسود، <b>7</b> رباعية-ثلاثية و<b>9</b> خمسة.</p><p>حين لا تكفي الرباعيات، استخدم <b>الثلاثيات لتقييد الردود</b>. للثلاثية عدة طرق سدّ، فتأكد أن الهجوم يستمر <b>مع أي سدّ</b>.</p>",
-      "ru": "<p>Ход белых. <b>1</b> — тройка (если не закрыть, будет открытая четвёрка), и чёрные закрываются на <b>2</b>. <b>3</b> — четвёрка, <b>5</b> даёт две тройки. Что бы ни сделали чёрные, <b>7</b> — вилка 4-3, а <b>9</b> — пятёрка.</p><p>Когда одних четвёрок мало, <b>ограничивайте ответы тройками</b>, пока строите позицию. Тройку можно закрыть по-разному, поэтому проверьте, что атака продолжается <b>при любой защите</b>.</p>",
-      "zh-TW": "<p>白棋的回合。<b>1</b> 是活三（不擋就成活四），黑棋在 <b>2</b> 擋。<b>3</b> 衝四，<b>5</b> 形成兩個三。無論黑棋怎麼下，<b>7</b> 都是四三，<b>9</b> 成五。</p><p>只靠衝四不夠時，就<b>用活三限制對手的應手</b>，一邊佈局。活三有好幾種擋法，所以要確認<b>不管怎麼擋</b>攻勢都能延續。</p>",
-      "id": "<p>Giliran Putih. <b>1</b> adalah tiga (jika tak ditutup jadi empat terbuka), maka Hitam menutup di <b>2</b>. <b>3</b> adalah empat, <b>5</b> membuat dua tiga. Apa pun langkah Hitam, <b>7</b> adalah empat-tiga dan <b>9</b> membuat lima.</p><p>Jika empat saja tidak cukup, <b>batasi jawaban lawan dengan tiga</b> sambil membangun. Tiga bisa ditutup dengan beberapa cara, jadi pastikan seranganmu berlanjut <b>apa pun tutupannya</b>.</p>",
-      "tr": "<p>Sıra Beyaz'da. <b>1</b> bir üçlüdür (kapatılmazsa açık dörtlü olur), Siyah <b>2</b>'de kapatır. <b>3</b> dörtlüdür, <b>5</b> iki üçlü yapar. Siyah ne yaparsa yapsın <b>7</b> dört-üç, <b>9</b> beşlidir.</p><p>Yalnızca dörtlüler yetmediğinde, kurarken <b>cevapları üçlülerle sınırla</b>. Bir üçlü birkaç şekilde kapatılabilir; saldırının <b>her kapatmada</b> sürdüğünü kontrol et.</p>"
+      "ja": "<p>白番。<b>1</b>は三（止めないと達四）なので、黒は<b>2</b>で止めます。<b>3</b>は四、<b>5</b>は三が2つ。黒が止めても、<b>7</b>で達四、<b>9</b>で五つです。</p><p>四だけでは足りないとき、<b>三で相手の手を限定</b>しながら形を作ります。三の止め方は複数あるので、<b>どう止められても</b>次の攻めが続くかを確かめるのがコツです。</p>",
+      "en": "<p>White to play. <b>1</b> is a three (an open four next unless blocked), so Black blocks at <b>2</b>. <b>3</b> is a four, <b>5</b> makes two threes. Whatever Black does, <b>7</b> is an open four and <b>9</b> makes five.</p><p>When fours alone are not enough, use <b>threes to limit the replies</b> while you build. A three can be blocked in several ways, so check that your attack continues <b>whichever block</b> is chosen.</p>",
+      "zh": "<p>白棋走。<b>1</b> 是活三（不挡就成活四），黑在 <b>2</b> 挡。<b>3</b> 冲四，<b>5</b> 成双三。黑怎么挡，<b>7</b> 都是活四，<b>9</b> 成五。</p><p>只靠冲四不够时，用<b>活三限制对方应手</b>来造形。活三有多种挡法，要确认<b>无论怎么挡</b>攻击都能继续。</p>",
+      "ko": "<p>백 차례. <b>1</b>은 삼(막지 않으면 열린 사)이라 흑은 <b>2</b>로 막습니다. <b>3</b>은 사, <b>5</b>는 삼이 둘. 흑이 막아도 <b>7</b>이 열린 사, <b>9</b>로 오목.</p><p>사만으로 부족할 때는 <b>삼으로 상대 응수를 제한</b>하면서 모양을 만듭니다. 삼은 막는 법이 여러 가지라, <b>어떻게 막혀도</b> 공격이 이어지는지 확인하세요.</p>",
+      "es": "<p>Juegan blancas. <b>1</b> es un tres (cuatro abierto si no se tapa); las negras tapan en <b>2</b>. <b>3</b> es un cuatro y <b>5</b> hace dos treses. Hagan lo que hagan, <b>7</b> es un cuatro abierto y <b>9</b> hace cinco.</p><p>Si los cuatros no bastan, usa <b>treses para limitar las respuestas</b>. Un tres se tapa de varias formas: comprueba que el ataque sigue <b>con cualquier bloqueo</b>.</p>",
+      "fr": "<p>Blanc joue. <b>1</b> est un trois (quatre ouvert s’il n’est pas bloqué) ; Noir bloque en <b>2</b>. <b>3</b> est un quatre, <b>5</b> fait deux trois. Quoi que fasse Noir, <b>7</b> est un quatre ouvert et <b>9</b> fait cinq.</p><p>Quand les quatre ne suffisent pas, utilisez des <b>trois pour limiter les réponses</b>. Un trois se bloque de plusieurs façons : vérifiez que l’attaque continue <b>quel que soit le blocage</b>.</p>",
+      "pt": "<p>Jogam as brancas. <b>1</b> é um três (quatro aberto se não bloqueado); as pretas bloqueiam em <b>2</b>. <b>3</b> é um quatro, <b>5</b> faz dois três. Seja como for, <b>7</b> é um quatro aberto e <b>9</b> faz cinco.</p><p>Quando só quatros não bastam, use <b>três para limitar as respostas</b>. Um três pode ser bloqueado de vários jeitos: confira que o ataque continua <b>com qualquer bloqueio</b>.</p>",
+      "de": "<p>Weiß am Zug. <b>1</b> ist eine Drei (sonst offene Vier), Schwarz blockt mit <b>2</b>. <b>3</b> ist eine Vier, <b>5</b> bildet zwei Dreien. Wie Schwarz auch spielt: <b>7</b> ist eine offene Vier, <b>9</b> macht Fünf.</p><p>Reichen Vieren allein nicht, nutze <b>Dreien, um die Antworten einzuschränken</b>. Eine Drei kann man auf mehrere Arten blocken – prüfe, dass der Angriff <b>bei jedem Block</b> weitergeht.</p>",
+      "hi": "<p>सफ़ेद की चाल। <b>1</b> एक तीन है (न रोका तो खुला चार), काला <b>2</b> पर रोकता है। <b>3</b> चार है, <b>5</b> दो तीन बनाता है। काला कुछ भी करे, <b>7</b> खुला चार और <b>9</b> पाँच।</p><p>जब केवल चार काफ़ी न हों, <b>तीन से जवाब सीमित</b> करते हुए आकार बनाइए। तीन को कई तरह रोका जा सकता है, इसलिए जाँचें कि <b>हर रोक</b> के बाद हमला जारी रहे।</p>",
+      "ar": "<p>دور الأبيض. <b>1</b> ثلاثية (تصير رباعية مفتوحة إن لم تُسدّ)، فيسدّ الأسود في <b>2</b>. <b>3</b> رباعية و<b>5</b> تصنع ثلاثيتين. مهما فعل الأسود، <b>7</b> رباعية مفتوحة و<b>9</b> خمسة.</p><p>حين لا تكفي الرباعيات، استخدم <b>الثلاثيات لتقييد الردود</b>. للثلاثية عدة طرق سدّ، فتأكد أن الهجوم يستمر <b>مع أي سدّ</b>.</p>",
+      "ru": "<p>Ход белых. <b>1</b> — тройка (если не закрыть, будет открытая четвёрка), и чёрные закрываются на <b>2</b>. <b>3</b> — четвёрка, <b>5</b> даёт две тройки. Что бы ни сделали чёрные, <b>7</b> — открытая четвёрка, а <b>9</b> — пятёрка.</p><p>Когда одних четвёрок мало, <b>ограничивайте ответы тройками</b>, пока строите позицию. Тройку можно закрыть по-разному, поэтому проверьте, что атака продолжается <b>при любой защите</b>.</p>",
+      "zh-TW": "<p>白棋的回合。<b>1</b> 是活三（不擋就成活四），黑棋在 <b>2</b> 擋。<b>3</b> 衝四，<b>5</b> 形成兩個三。無論黑棋怎麼下，<b>7</b> 都是活四，<b>9</b> 成五。</p><p>只靠衝四不夠時，就<b>用活三限制對手的應手</b>，一邊佈局。活三有好幾種擋法，所以要確認<b>不管怎麼擋</b>攻勢都能延續。</p>",
+      "id": "<p>Giliran Putih. <b>1</b> adalah tiga (jika tak ditutup jadi empat terbuka), maka Hitam menutup di <b>2</b>. <b>3</b> adalah empat, <b>5</b> membuat dua tiga. Apa pun langkah Hitam, <b>7</b> adalah empat terbuka dan <b>9</b> membuat lima.</p><p>Jika empat saja tidak cukup, <b>batasi jawaban lawan dengan tiga</b> sambil membangun. Tiga bisa ditutup dengan beberapa cara, jadi pastikan seranganmu berlanjut <b>apa pun tutupannya</b>.</p>",
+      "tr": "<p>Sıra Beyaz'da. <b>1</b> bir üçlüdür (kapatılmazsa açık dörtlü olur), Siyah <b>2</b>'de kapatır. <b>3</b> dörtlüdür, <b>5</b> iki üçlü yapar. Siyah ne yaparsa yapsın <b>7</b> açık dörtlü, <b>9</b> beşlidir.</p><p>Yalnızca dörtlüler yetmediğinde, kurarken <b>cevapları üçlülerle sınırla</b>. Bir üçlü birkaç şekilde kapatılabilir; saldırının <b>her kapatmada</b> sürdüğünü kontrol et.</p>"
      }
     },
     {
@@ -3066,8 +3066,11 @@
      "goal": "win",
      "T": 5,
      "ok": [
+      "g10",
       "h8",
-      "i7"
+      "i7",
+      "i8",
+      "k6"
      ],
      "look": [
       "g9",
@@ -3096,36 +3099,36 @@
       "tr": "Şemadaki pozisyon: üçlülerle saldırının ilk hamlesi."
      },
      "h": {
-      "ja": "g9・h9・j7・j6…白の石は1本のナナメの線に近く並んでいます。その線の空き点に打つと三になります。",
-      "en": "g9, h9, j7, j6… several white stones sit near one diagonal. Filling an empty point on it makes a three.",
-      "zh": "g9、h9、j7、j6……白子靠近同一条斜线。在线上的空点落子就成三。",
-      "ko": "g9·h9·j7·j6… 백 돌이 한 대각선 근처에 있어요. 그 선의 빈 점에 두면 삼이 됩니다.",
-      "es": "g9, h9, j7, j6… varias piedras blancas están cerca de una diagonal. Llenar un punto vacío en ella da un tres.",
-      "fr": "g9, h9, j7, j6… plusieurs pierres blanches sont près d’une diagonale. Remplir un point vide dessus fait un trois.",
-      "pt": "g9, h9, j7, j6… várias pedras brancas estão perto de uma diagonal. Preencher um ponto vazio nela faz um três.",
-      "de": "g9, h9, j7, j6 … mehrere weiße Steine liegen an einer Diagonale. Ein freier Punkt darauf ergibt eine Drei.",
-      "hi": "g9, h9, j7, j6… कई सफ़ेद पत्थर एक तिरछी रेखा के पास हैं। उस पर ख़ाली बिंदु भरने से तीन बनता है।",
-      "ar": "g9 وh9 وj7 وj6… عدة أحجار بيضاء قرب قطر واحد. ملء نقطة فارغة عليه يصنع ثلاثية.",
-      "ru": "g9, h9, j7, j6… несколько белых камней стоят у одной диагонали. Заполнив на ней пустой пункт, вы получите тройку.",
-      "zh-TW": "g9、h9、j7、j6……好幾顆白子集中在一條斜線附近。在那條線上補一個空點就成三。",
-      "id": "g9, h9, j7, j6… beberapa batu Putih berada dekat satu diagonal. Mengisi titik kosong di sana membuat tiga.",
-      "tr": "g9, h9, j7, j6… birkaç beyaz taş aynı çaprazın yakınında. Üzerindeki boş bir noktayı doldurmak üçlü yapar."
+      "ja": "g9・j6 と h9・j7…白の石が2つずつ並んだ2本のナナメの線があります。どちらかの線の空き点に打つと三になります。",
+      "en": "g9–j6 and h9–j7… two diagonals each hold two white stones. Filling an empty point on either one makes a three.",
+      "zh": "g9・j6 和 h9・j7……有两条斜线各有两颗白子。在任一条线的空点落子就成三。",
+      "ko": "g9·j6 과 h9·j7… 백 돌이 2개씩 놓인 대각선이 2개 있어요. 어느 한 선의 빈 점에 두면 삼이 됩니다.",
+      "es": "g9–j6 y h9–j7… hay dos diagonales con dos piedras blancas cada una. Llenar un punto vacío de cualquiera da un tres.",
+      "fr": "g9–j6 et h9–j7… deux diagonales portent chacune deux pierres blanches. Remplir un point vide de l’une fait un trois.",
+      "pt": "g9–j6 e h9–j7… há duas diagonais com duas pedras brancas cada. Preencher um ponto vazio de qualquer uma faz um três.",
+      "de": "g9–j6 und h9–j7 … zwei Diagonalen tragen je zwei weiße Steine. Ein freier Punkt auf einer davon ergibt eine Drei.",
+      "hi": "g9–j6 और h9–j7… दो तिरछी रेखाओं पर दो-दो सफ़ेद पत्थर हैं। किसी एक पर ख़ाली बिंदु भरने से तीन बनता है।",
+      "ar": "g9–j6 وh9–j7… على قطرين حجران أبيضان في كلٍّ منهما. ملء نقطة فارغة على أيٍّ منهما يصنع ثلاثية.",
+      "ru": "g9–j6 и h9–j7… на двух диагоналях по два белых камня. Заполните пустой пункт на любой — получится тройка.",
+      "zh-TW": "g9・j6 和 h9・j7……有兩條斜線各有兩顆白子。在任一條線的空點落子就成三。",
+      "id": "g9–j6 dan h9–j7… ada dua diagonal yang masing-masing berisi dua batu Putih. Mengisi titik kosong di salah satunya membuat tiga.",
+      "tr": "g9–j6 ve h9–j7… iki çaprazda ikişer beyaz taş var. Birindeki boş bir noktayı doldurmak üçlü yapar."
      },
      "y": {
-      "ja": "正解！三で黒に止めさせ、四・三三・四三と攻めが続きます。",
-      "en": "Right! The three forces a block, then four, double three and four-three follow.",
-      "zh": "正确！用三逼黑挡，接着冲四、双三、四三连续进攻。",
-      "ko": "정답! 삼으로 막게 하고 사·삼삼·사삼으로 공격이 이어집니다.",
-      "es": "¡Bien! El tres obliga a tapar y siguen cuatro, doble tres y cuatro-tres.",
-      "fr": "Exact ! Le trois force un blocage, puis quatre, double trois et quatre-trois.",
-      "pt": "Certo! O três força o bloqueio, depois quatro, duplo três e quatro-três.",
-      "de": "Richtig! Die Drei erzwingt einen Block, dann folgen Vier, Doppeldrei und Vier-Drei.",
-      "hi": "सही! तीन से रोक मजबूर, फिर चार, दोहरा तीन और चार-तीन।",
-      "ar": "صحيح! الثلاثية تفرض السدّ، ثم رباعية وثلاثيتان ورباعية-ثلاثية.",
-      "ru": "Верно! Тройка вынуждает защиту, дальше — четвёрка, двойная тройка и вилка 4-3.",
-      "zh-TW": "正確！活三逼對手擋，接著是衝四、三三，然後四三。",
-      "id": "Benar! Tiga memaksa tutupan, lalu menyusul empat, tiga ganda, dan empat-tiga.",
-      "tr": "Doğru! Üçlü kapatmayı zorlar, ardından dörtlü, çift üçlü ve dört-üç gelir."
+      "ja": "正解！三で黒に止めさせ、そのあとも三と四で攻めが続いて勝ち切れます。",
+      "en": "Right! The three forces a block, and threes and fours keep coming until you win.",
+      "zh": "正确！用三逼黑挡，之后三和四的攻击不断，直到取胜。",
+      "ko": "정답! 삼으로 막게 하고, 그 뒤에도 삼과 사로 공격이 이어져 이깁니다.",
+      "es": "¡Bien! El tres obliga a tapar, y los treses y cuatros siguen hasta ganar.",
+      "fr": "Exact ! Le trois force un blocage, et trois et quatre s’enchaînent jusqu’à la victoire.",
+      "pt": "Certo! O três força o bloqueio, e três e quatros seguem até a vitória.",
+      "de": "Richtig! Die Drei erzwingt einen Block, und Dreien und Vieren folgen bis zum Sieg.",
+      "hi": "सही! तीन से रोक मजबूर, फिर तीन और चार से हमला जीत तक चलता है।",
+      "ar": "صحيح! الثلاثية تفرض السدّ، ثم تتوالى الثلاثيات والرباعيات حتى الفوز.",
+      "ru": "Верно! Тройка вынуждает защиту, а дальше тройки и четвёрки идут до самой победы.",
+      "zh-TW": "正確！用三逼黑棋擋，之後三和四的攻擊不斷，直到取勝。",
+      "id": "Benar! Tiga memaksa tutupan, lalu tiga dan empat terus menyusul sampai menang.",
+      "tr": "Doğru! Üçlü kapatmayı zorlar, ardından üçlü ve dörtlüler kazanana kadar sürer."
      }
     },
     {
@@ -3133,8 +3136,11 @@
      "goal": "win",
      "T": 5,
      "ok": [
+      "f7",
       "h8",
-      "i9"
+      "h9",
+      "i9",
+      "j11"
      ],
      "look": [
       "g7",
@@ -3163,36 +3169,36 @@
       "tr": "Alıştırma: aynı şekil, döndürülmüş. Şimdi sıra sende."
      },
      "h": {
-      "ja": "白の石が集まっている1本の線を探そう。そこを三にすれば、黒は止めるしかありません。",
-      "en": "Find the line where the white stones gather. Make a three there and Black must block.",
-      "zh": "找白子聚集的那条线，在那里成三，黑只能挡。",
-      "ko": "백 돌이 모인 한 줄을 찾으세요. 거기서 삼을 만들면 흑은 막을 수밖에 없어요.",
-      "es": "Busca la línea donde se juntan las piedras blancas. Haz allí un tres y las negras deben tapar.",
-      "fr": "Cherchez la ligne où se groupent les pierres blanches. Faites-y un trois : Noir doit bloquer.",
-      "pt": "Ache a linha onde as pedras brancas se juntam. Faça um três ali e as pretas precisam bloquear.",
-      "de": "Suche die Linie, auf der sich die weißen Steine sammeln. Eine Drei dort zwingt Schwarz zum Blocken.",
-      "hi": "वह रेखा खोजें जहाँ सफ़ेद पत्थर इकट्ठा हैं। वहाँ तीन बनाइए, काले को रोकना पड़ेगा।",
-      "ar": "ابحث عن الخط الذي تتجمع فيه الأحجار البيضاء. اصنع ثلاثية هناك فيضطر الأسود للسدّ.",
-      "ru": "Найдите линию, где собрались белые камни. Сделайте там тройку — и чёрным придётся закрываться.",
-      "zh-TW": "找出白子聚集的那條線。在那裡做出三，黑棋就必須擋。",
-      "id": "Temukan garis tempat batu Putih berkumpul. Buat tiga di sana dan Hitam harus menutup.",
-      "tr": "Beyaz taşların toplandığı çizgiyi bul. Orada üçlü yap, Siyah kapatmak zorunda kalsın."
+      "ja": "白の石が2つずつ並んだナナメの線が2本あります。どちらかを三にすれば、黒は止めるしかありません。",
+      "en": "Two diagonals each hold two white stones. Make a three on either and Black must block.",
+      "zh": "有两条斜线各有两颗白子。在任一条上成三，黑只能挡。",
+      "ko": "백 돌이 2개씩 놓인 대각선이 2개 있어요. 어느 쪽이든 삼을 만들면 흑은 막을 수밖에 없어요.",
+      "es": "Dos diagonales tienen dos piedras blancas cada una. Haz un tres en cualquiera y las negras deben tapar.",
+      "fr": "Deux diagonales portent chacune deux pierres blanches. Faites un trois sur l’une : Noir doit bloquer.",
+      "pt": "Duas diagonais têm duas pedras brancas cada. Faça um três em qualquer uma e as pretas precisam bloquear.",
+      "de": "Zwei Diagonalen tragen je zwei weiße Steine. Eine Drei auf einer davon zwingt Schwarz zum Blocken.",
+      "hi": "दो तिरछी रेखाओं पर दो-दो सफ़ेद पत्थर हैं। किसी एक पर तीन बनाइए, काले को रोकना पड़ेगा।",
+      "ar": "على قطرين حجران أبيضان في كلٍّ منهما. اصنع ثلاثية على أيٍّ منهما فيضطر الأسود للسدّ.",
+      "ru": "На двух диагоналях по два белых камня. Сделайте тройку на любой — и чёрным придётся закрываться.",
+      "zh-TW": "有兩條斜線各有兩顆白子。在任一條上做出三，黑棋就必須擋。",
+      "id": "Dua diagonal masing-masing berisi dua batu Putih. Buat tiga di salah satunya dan Hitam harus menutup.",
+      "tr": "İki çaprazda ikişer beyaz taş var. Birinde üçlü yap, Siyah kapatmak zorunda kalsın."
      },
      "y": {
-      "ja": "正解！三で黒に止めさせ、四・三三・四三と攻めが続きます。",
-      "en": "Right! The three forces a block, then four, double three and four-three follow.",
-      "zh": "正确！用三逼黑挡，接着冲四、双三、四三连续进攻。",
-      "ko": "정답! 삼으로 막게 하고 사·삼삼·사삼으로 공격이 이어집니다.",
-      "es": "¡Bien! El tres obliga a tapar y siguen cuatro, doble tres y cuatro-tres.",
-      "fr": "Exact ! Le trois force un blocage, puis quatre, double trois et quatre-trois.",
-      "pt": "Certo! O três força o bloqueio, depois quatro, duplo três e quatro-três.",
-      "de": "Richtig! Die Drei erzwingt einen Block, dann folgen Vier, Doppeldrei und Vier-Drei.",
-      "hi": "सही! तीन से रोक मजबूर, फिर चार, दोहरा तीन और चार-तीन।",
-      "ar": "صحيح! الثلاثية تفرض السدّ، ثم رباعية وثلاثيتان ورباعية-ثلاثية.",
-      "ru": "Верно! Тройка вынуждает защиту, дальше — четвёрка, двойная тройка и вилка 4-3.",
-      "zh-TW": "正確！活三逼對手擋，接著是衝四、三三，然後四三。",
-      "id": "Benar! Tiga memaksa tutupan, lalu menyusul empat, tiga ganda, dan empat-tiga.",
-      "tr": "Doğru! Üçlü kapatmayı zorlar, ardından dörtlü, çift üçlü ve dört-üç gelir."
+      "ja": "正解！三で黒に止めさせ、そのあとも三と四で攻めが続いて勝ち切れます。",
+      "en": "Right! The three forces a block, and threes and fours keep coming until you win.",
+      "zh": "正确！用三逼黑挡，之后三和四的攻击不断，直到取胜。",
+      "ko": "정답! 삼으로 막게 하고, 그 뒤에도 삼과 사로 공격이 이어져 이깁니다.",
+      "es": "¡Bien! El tres obliga a tapar, y los treses y cuatros siguen hasta ganar.",
+      "fr": "Exact ! Le trois force un blocage, et trois et quatre s’enchaînent jusqu’à la victoire.",
+      "pt": "Certo! O três força o bloqueio, e três e quatros seguem até a vitória.",
+      "de": "Richtig! Die Drei erzwingt einen Block, und Dreien und Vieren folgen bis zum Sieg.",
+      "hi": "सही! तीन से रोक मजबूर, फिर तीन और चार से हमला जीत तक चलता है।",
+      "ar": "صحيح! الثلاثية تفرض السدّ، ثم تتوالى الثلاثيات والرباعيات حتى الفوز.",
+      "ru": "Верно! Тройка вынуждает защиту, а дальше тройки и четвёрки идут до самой победы.",
+      "zh-TW": "正確！用三逼黑棋擋，之後三和四的攻擊不斷，直到取勝。",
+      "id": "Benar! Tiga memaksa tutupan, lalu tiga dan empat terus menyusul sampai menang.",
+      "tr": "Doğru! Üçlü kapatmayı zorlar, ardından üçlü ve dörtlüler kazanana kadar sürer."
      },
      "marks": []
     }

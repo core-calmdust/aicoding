@@ -263,7 +263,7 @@ function mancalaWords(opt) {
 //      for every other legal point: 「三のほうが達四になれない」 = the point's threes are not real (no legal open-four point), 「四だけ…止め
 //      られたら攻めが終わる」 = after the four and its block Black has no VCF, 「三だけ」 = a three and no four, 「四も三もできない」 = neither;
 //      the praise's lines = the answer's four and three; the hint 「×のとなり」 = the answer touches a forbidden point
-const GM_DONE = new Set(['five', 'block', 'three', 'sfour', 'fourthree', 'forbid33', 'forbid44', 'fourthreeB', 'vcf', 'defend', 'trap']);
+const GM_DONE = new Set(['five', 'block', 'three', 'sfour', 'fourthree', 'forbid33', 'forbid44', 'fourthreeB', 'vcf', 'defend', 'trap', 'vct']);
 function gmJa() { const fs = require('fs'), vm = require('vm'), src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), f0 = src.indexOf('  const fill = ');
   return vm.runInNewContext(src.slice(f0, src.indexOf('\n', f0)) + '\n' + src.slice(src.indexOf('  const GML = '), src.indexOf('  const GOMOKU = {')) + '\n;({ GML, gmLsJa, GMW })', {}); }
 function gmWin(E) {
@@ -567,6 +567,71 @@ function gmTrap(E, P, j, add, six) {
     else { const hl = (th._hl || [])[0]; if (!r.fp.includes(hl)) bad(`the orange ring ${hl == null ? '-' : nm(hl)} is not White's five point ${r.fp.map(nm)}`);
       else if (fk.has(hl)) bad(`the orange ring ${nm(hl)} is a forbidden point (「禁手じゃない」 is false)`); } }
 }
+// (2026-11-27 担当A) vct 三を使った攻め (renju; gmVct): the mover wins by threes and fours, and only by the answer.
+//   ① the answers = the mover's threats (a three or a four, the engine's class ≥ F3) after which every defence loses (Solver.defend,
+//      threes and fours, up to 19 plies of both sides, 2e7 nodes; an unsettled search is an error) ② no other threat wins within 19, and
+//      after every quiet move (no three, no four) the opponent wins by its own threats (Solver.attack within 13) — so a quiet move gives
+//      the game away (ゴイシペン's 「相手に反撃の時間をあげちゃう」) and cannot win ③ at least 2 other threats (tempting), 追72
+//   ④ the answer is a three (class F3: the lesson's 「三を使った攻め」, not a four), the mover has no VCF (fours alone do not win:
+//      「四だけじゃ足りない」), the opponent has no VCF and no open three (the mover's three is forcing) and no five point
+//   ⑥ d = the answer's win length (plies) never goes down, the last above the first   ⑦⑧ the 3D words (atlas/lessons3d.js gmLsJa) for
+//      every other legal point: t4 = a four (engine class B4 / F43 / F4), t3 = a three (F3 / F33), t0 = neither; the green point named
+function gmVct(E, P, j, add, six) {
+  const C = E.C, cells = a => String(a || '').split(/\s+/).filter(Boolean).map(E.sqOf), nm = m => E.sqName(m);
+  if ((P.rule || 'renju') !== 'renju') add(`rule ${P.rule} (the lesson is renju's)`);
+  const s = P.side, o = 3 - s, B = cells(P.b), Wt = cells(P.w), pos = E.setup('renju', { b: B, w: Wt, side: s }), po = E.setup('renju', { b: B, w: Wt, side: o });
+  const lg = pos.legal(), okM = P.ok.map(E.sqOf), cls = m => pos.cls[s][E.M2I[m]];
+  if (B.length !== Wt.length + (s === 2 ? 1 : 0)) add(`④ ${B.length} black and ${Wt.length} white stones for ${s === 1 ? 'Black' : 'White'} to move`);
+  if (pos.fives(1).length || pos.fives(2).length) add('④ a five point on the board');
+  if (lg.length < 3) add(`③ only ${lg.length} legal moves`);
+  if (P.ok.length * 3 > lg.length) add(`追72 ${P.ok.length} of the ${lg.length} legal points are right`);
+  const vcfOf = p => { const S = new E.Solver(); S.limit = 2e6; const r = S.vcf(p, 30) >= 0; return S.nodes > S.limit ? null : r; };
+  if (vcfOf(pos) !== false) add('④ the mover wins by fours alone (a VCF: the vcf lesson, not 「四だけじゃ足りない」)');
+  if (vcfOf(po) !== false) add('④ the opponent has a VCF (the mover\'s three is not forcing)');
+  { const S = new E.Solver(); if (S.attack(po, 1) >= 0) add('④ the opponent has an open three / a winning point now'); }
+  const win = new Map(), So = new E.Solver();
+  for (const m of lg) { const k = cls(m); pos.make(m);
+    if (k >= C.F3) { const S = new E.Solver(); S.limit = 2e7; let w = 0; for (let t = -1; t <= 17; t += 2) { if (S.defend(pos, t)) { w = t + 2; break; } if (S.nodes > S.limit) { w = -1; break; } }
+      if (w < 0) add(`① ${nm(m)}: the search did not settle`); win.set(m, w); }
+    else { So.nodes = 0; So.limit = 3e6; let ow = 0; for (let t = 1; t <= 13; t += 2) { if (So.attack(pos, t) >= 0) { ow = t; break; } if (So.nodes > So.limit) { ow = -1; break; } }
+      if (ow <= 0) add(`② ${nm(m)} is no three and no four and the opponent then has no win (${ow < 0 ? 'unsettled' : 'none within 13'}): 「反撃の時間をあげちゃう」 is false`); }
+    pos.unmake(); }
+  const want = [...win].filter(([, w]) => w > 0).map(([m]) => nm(m)).sort(), ok = P.ok.slice().sort();
+  if (want.join() !== ok.join()) add(`①② the answers are ${ok}, the threats that win ${want}`);
+  const other = [...win.keys()].filter(m => !okM.includes(m)).length; if (other < 2) add(`③ only ${other} other threes / fours (nothing tempting)`);
+  const ra = okM[0]; if (cls(ra) !== C.F3) add(`④ the answer ${nm(ra)} is not a three (class ${cls(ra)})`);
+  if (win.get(ra) > 0) six(win.get(ra));
+  // ⑦⑧ the 3D words
+  const X = gmJa(), L = require(path.join(ROOT, 'gomoku/lessons.json')), key = L.steps.findIndex(x => x.id === 'vct'), W = X.GMW.vct;
+  const J = X.gmLsJa('vct', { b: B, w: Wt, side: s }, 'renju', okM, j, key); if (!J) { add('⑧ no 3D words'); return; }
+  const has = (t, k) => (W[k] || []).some(x => typeof x === 'string' && t.includes(x));
+  const gt = J.good.call({}, ra); if (/で止めさせ/.test(gt) && !/三で止めさせ/.test(gt)) add(`⑧ the praise names the answer's kind wrongly (it is a three) — ${gt}`);
+  for (const u of lg) { if (okM.includes(u)) continue; const t = J.ng.call({}, u), k = cls(u), bad = m => add(`⑧ ${nm(u)}: ${m} — ${t}`);
+    if (!/緑の点/.test(t)) bad('the green point (the answer) is not named');
+    const four = k === C.B4 || k === C.F43 || k === C.F4, three = k === C.F3 || k === C.F33;
+    if (four) { if (!has(t, 't4')) bad('a four, the words are not t4'); }
+    else if (three) { if (!has(t, 't3')) bad('a three, the words are not t3'); }
+    else if (!has(t, 't0')) bad('no three and no four, the words are not t0'); }
+}
+// the vct warm-up: the explain line (the body's 「<b>N</b>は三／は四／は三が2つ／で四三／で達四／で五つ」 = the class of move N; every
+//  move of the attacker forcing, the attacker wins at the end) and the tries (the answers = the threats that win, as gmVct ①)
+function gmVctRamp(E, r, a) {
+  const C = E.C, cells = x => String(x || '').split(/\s+/).filter(Boolean).map(E.sqOf), nm = m => E.sqName(m);
+  const pos = E.setup(r.rule || 'renju', { b: cells(r.b), w: cells(r.w), side: r.side }), s = r.side;
+  if (r.seq) { const K = { '三': [C.F3], '三が2つ': [C.F33], '四': [C.B4, C.F43, C.F4], '四三': [C.F43], '達四': [C.F4], '五つ': [C.FIVE] }, ks = [];
+    r.seq.forEach((q, i) => { const m = E.sqOf(q), c = pos.side; if (!pos.isLegal(m)) { a(`⑧ the line's move ${i + 1} ${q} is not legal`); return; } ks.push(pos.cls[c][E.M2I[m]]); pos.make(m);
+      if (c === s && i < r.seq.length - 1) { const S = new E.Solver(); S.limit = 4e6; let w = false; for (let t = -1; t <= 15 && !w; t += 2) w = S.defend(pos, t); if (!w) a(`⑧ the attacker's move ${i + 1} ${q} does not keep the win`); } });
+    if (ks[ks.length - 1] !== C.FIVE) a('⑧ the line does not end with a five');
+    const body = (r.body && r.body.ja) || ''; for (const mm of body.matchAll(/<b>(\d+)<\/b>(?:は|で)(三が2つ|四三|達四|五つ|三|四)/g)) { const n = +mm[1]; if (!(K[mm[2]] || []).includes(ks[n - 1])) a(`⑧ the body says ${n} is ${mm[2]}, the move's class is ${ks[n - 1]}`); }
+    return; }
+  const want = [];
+  for (const m of pos.legal()) { if (pos.cls[s][E.M2I[m]] < C.F3) continue; pos.make(m); const S = new E.Solver(); S.limit = 1e7; let w = false; for (let t = -1; t <= 17 && !w; t += 2) w = S.defend(pos, t); pos.unmake(); if (w) want.push(nm(m)); }
+  want.sort(); if (want.join() !== (r.ok || []).slice().sort().join()) a(`①② the answers are ${r.ok}, the threats that win ${want}`);
+  (r.look || []).forEach(q => { const m = E.sqOf(q); if (!(m >= 0) || !pos.b[E.M2I[m]]) a(`追75 the 2nd hint's ring ${q} is on no stone`); }); if (!(r.look || []).length) a("追75 the 2nd hint shows nothing");
+  const h = (r.h && r.h.ja) || ''; if (/2本のナナメ/.test(h)) for (const q of r.ok || []) { const u = E.sqOf(q), x = u % 15, y = Math.floor(u / 15); let d = false;
+    for (const [dx, dy] of [[1, 1], [1, -1]]) { let n = 0; for (let k = -4; k <= 4; k++) { const X = x + dx * k, Y = y + dy * k; if (k && X >= 0 && Y >= 0 && X < 15 && Y < 15 && pos.b[E.M2I[Y * 15 + X]] === s) n++; } if (n >= 2) d = true; }
+    if (!d) a(`⑧ the hint says the answers are on the diagonals — ${q} is not`); }
+}
 function gomoku(opt) {
   const E = require(path.join(ROOT, 'gomoku/engine.js')), L = require(path.join(ROOT, 'gomoku/lessons.json')), PZ = require(path.join(ROOT, 'gomoku/puzzles.json'));
   const C = E.C, G = gmWin(E), only = opt && opt.only, out = [];
@@ -595,6 +660,10 @@ function gomoku(opt) {
         return; }
       if (id === 'trap') { gmTrap(E, P, j, add, D => { if (D < prevD) add(`⑥ easier than the problem before (d ${D} after ${prevD})`); prevD = Math.max(prevD, D); if (firstD === null) firstD = D;
           if (j === st.problems.length - 1 && !(D > firstD)) add(`⑥ the last problem is no harder than the first (d ${D} vs ${firstD})`); });
+        const A = st2(P); for (const [who, B, Q] of PS) { if (Q === P) continue; const e = dist(A, B); if (e <= 3) add(`⑤ ${e} stones from ${who}`); }
+        return; }
+      if (id === 'vct') { gmVct(E, P, j, add, D => { if (D < prevD) add(`⑥ easier than the problem before (win length ${D} after ${prevD})`); prevD = Math.max(prevD, D); if (firstD === null) firstD = D;
+          if (j === st.problems.length - 1 && !(D > firstD)) add(`⑥ the last problem is no harder than the first (win length ${D} vs ${firstD})`); });
         const A = st2(P); for (const [who, B, Q] of PS) { if (Q === P) continue; const e = dist(A, B); if (e <= 3) add(`⑤ ${e} stones from ${who}`); }
         return; }
       if (id === 'vcf') { gmVcf(E, P, j, add, D => { if (D < prevD) add(`⑥ easier than the problem before (VCF length ${D} after ${prevD})`); prevD = Math.max(prevD, D); if (firstD === null) firstD = D;
@@ -659,8 +728,9 @@ function gomoku(opt) {
       const f = fl.find(x => nm(x.m) === red[0]); if (!f) a(`⑧ the red mark ${red[0]} is not Black's forbidden point`);
       const body = (r.body && r.body.ja) || ''; if (f && /三三/.test(body) && f.k !== 1) a('⑧ the body says 三三, the forbidden point is not a 3-3');
       t4.forEach(q => { if (!Wt.includes(E.sqOf(q))) a(`⑧ the mark ${q} is no White stone`); }); });
+    if (id === 'vct') (st.ramp || []).forEach((r, j) => gmVctRamp(E, r, m => out.push({ step: id, q: 0, msg: `warm-up ${j + 1}: ${m}` })));
     if (id === 'vcf') (st.ramp || []).forEach((r, j) => gmVcfRamp(E, r, m => out.push({ step: id, q: 0, msg: `warm-up ${j + 1}: ${m}` })));
-    (st.ramp || []).forEach((r, j) => { if (r.k !== 'try' || id === 'vcf') return; const a = m => out.push({ step: id, q: 0, msg: `warm-up ${j + 1}: ${m}` });
+    (st.ramp || []).forEach((r, j) => { if (r.k !== 'try' || id === 'vcf' || id === 'vct') return; const a = m => out.push({ step: id, q: 0, msg: `warm-up ${j + 1}: ${m}` });
       const s = r.side, o = 3 - s, pos = E.setup(r.rule || 'free', { b: cells(r.b), w: cells(r.w), side: s }), lg = pos.legal(), lgN = new Set(lg.map(nm));
       if (r.goal === 'forbid') { lgN.clear(); for (let m = 0; m < 225; m++) if (pos.b[E.M2I[m]] === 0) lgN.add(nm(m)); }   // (a forbidden point is no legal move for Black: the try asks to tap it — any empty point)
       (r.ok || []).forEach(q => { if (!lgN.has(q)) a(`追75 the answer ${q} is not a legal point of this board`); });
@@ -1627,7 +1697,7 @@ function ckWarm(opt, L, E, X, val, moveVal, add, only) {
 //   縦と横) and for every wrong move (the king or not, a blocker on the way, a capture or not, a piece of yours taken next), the question
 //   and the hint (a corner / the throne named is in an answer)
 //   ⑨ the 2D (tafl/app.js problemPoints) and the 3D (TAFL.points) both score P.ok
-const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield', 't_tuichi']);
+const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield', 't_tuichi', 't_block']);
 function tafl(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'tafl/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'tafl/lessons.json'), 'utf8'));
@@ -1832,9 +1902,41 @@ function tafl(opt) {
     for (const lg of Object.keys(w.I18N)) { const h = w.I18N[lg]['ls.t_tuichi.hint'] || ''; if (/2つの辺|角に近い|two sides|near a corner/.test(h)) add('t_tuichi', -1, `⑧ the 2D hint (${lg}) 「${h}」: the two lines run both ways along one edge`); }
     (st && st.ramp || []).forEach((r, k) => { if (r.k !== 'try') return; const f = TU.tuichiFacts(E, { s: r.s, ok: r.ok, best: r.ok[0] }); f.bad.filter(b => /^[①②④]/.test(b)).forEach(b => add('t_tuichi', -1, `warm-up ${k + 1}: ${b}`));
       if (r.ok.length * 3 > f.all.length) add('t_tuichi', -1, `warm-up ${k + 1}: ③ ${r.ok.length} of ${f.all.length} moves are right`); }); }
+  // (2026-11-27 第2期 担当A) t_block「逃げ道をふさぐ」(tools/lesson-verify-tfblock.js): the attackers to move, the king with one open line
+  // ①② P.ok = the moves after which the defender cannot force a win within his 2 moves (a full search of his moves and every reply)
+  // ③ ≥3 blocks onto the line, the answers ≤ a third of the moves and ≤ half of the blocks, d ≥ 1 (a block that still loses), 追17 the
+  // ringed pieces ≥2 wrong moves ④ one line (a ライチ), no move ends the game, every answer on the line, no loss to another defender's move,
+  // no fort deciding ⑤ the pool (five) and no two problems with the same shape (blockSig) ⑥ d×10 − the answers never down, last > first
+  // ⑦⑧ タフリン's words: every wrong move by what follows it (the line left open / another line opened / a トゥイチ / the blocker taken by
+  // the king / a king move nobody
+  // can reach / ...), the praise (no king move to two lines after the answer), the hints (a トゥイチ trap and a good block on every
+  // problem, a blocker taken by the king when the hint says「はさまれないか」); the explain / the try / the diagram: the block shown holds (追14)
+  const BK = require(path.join(ROOT, 'tools/lesson-verify-tfblock.js')), bkSig = new Map();
+  const blockOne = (st, si, P, j, a) => { const f = BK.blockFacts(E, P), nm = m => E.name(f.p, m); f.bad.forEach(a);
+    five(st.id, j, P, f.me, nm, a);
+    { const sig = BK.blockSig(E, P); if (bkSig.has(sig)) a(`⑤ the same shape (${sig}) as ${bkSig.get(sig)}`); else bkSig.set(sig, `q${j + 1}`); }
+    if (!f.wrong.some(m => f.C.get(m).on && f.C.get(m).tuF)) a('⑧ the hint「2本の道を作れないかも」: no block loses to a トゥイチ here');
+    let W; try { W = X_.tfLsJa(E, st, P, j, k => X_.TFM(k, 'ja'), si); } catch (e) { a('⑧ the words fail: ' + e.message); return f.d; }
+    for (const t of [W.ask, W.hintTx, plain(W.good())]) if (!t || /\{|undefined|NaN/.test(t)) a(`⑧ 「${t}」`);
+    if (/はさまれない/.test(W.hintTx) && !f.wrong.some(m => f.C.get(m).takenF)) a(`⑧ 「${W.hintTx}」: no block here loses its piece to the king`);
+    for (const m of f.wrong) { const raw = plain(W.ng(m)), x0 = nm(m), i0 = raw.indexOf('赤い印の手'), i1 = raw.indexOf('緑の印の手'), R = f.C.get(m);
+      if (/\{|undefined|NaN/.test(raw) || i0 < 0 || i1 < 0) { a(`⑦ ${x0}: 「${raw}」 (your move / the right move not named)`); continue; }
+      const tx = raw.slice(i0, i1);
+      const want = R.esc1 ? (R.on ? 'opened' : 'open') : R.tuF ? 'tuichi' : R.takenF ? 'taken' : R.f2 && R.f2.how === 'king' ? 'king' : 'other';
+      const said = /王に取られ|王にはさまれて取られ|駒を取っちゃう|駒が取られ/.test(tx) ? 'taken' : /別の角への道|別の道|別の逃げ道|新しい道ができ/.test(tx) ? 'opened' : /そのまま|ふさがらな|駒が入らない/.test(tx) ? 'open' : /2本|トゥイチ|2方向/.test(tx) ? 'tuichi' : /届かない|間に合わない|ふさげない|ふさぎに行けない|ふさげる攻め手がいない/.test(tx) ? 'king' : '?';
+      if (said !== want && !(want === 'other' && said === '?')) a(`⑦ ${x0}: 「${tx}」 says ${said}, the board: ${want}`); }
+    return f.d * 10 - (P.ok || []).length; };
+  { const st = L.steps.find(s => s.id === 't_block');
+    (st && st.ramp || []).forEach((r, k) => { if (r.k === 'try') { const f = BK.blockFacts(E, { s: r.s, ok: r.ok, best: r.ok[0] }); f.bad.filter(b => /^[①②④]/.test(b)).forEach(b => add('t_block', -1, `warm-up ${k + 1}: ${b}`));
+        if (r.ok.length * 3 > f.all.length) add('t_block', -1, `warm-up ${k + 1}: ③ ${r.ok.length} of ${f.all.length} moves are right`); }
+      if (r.k === 'explain') (r.seq || []).forEach(([mv]) => { const p = E.Pos.from(r.s), m = E.parse(p, mv); if (m == null) { add('t_block', -1, `warm-up ${k + 1}: 追14 ${mv} is not legal`); return; }
+        const f = BK.blockFacts(E, { s: r.s, ok: [m], best: m }); f.bad.filter(b => /^[①②]|one line/.test(b)).forEach(b => add('t_block', -1, `warm-up ${k + 1}: 追14 ${b}`));
+        const nmK = E.sqName(p.king, 11); if (!(r.body && r.body.ja || '').includes(nmK)) add('t_block', -1, `warm-up ${k + 1}: 追14 the words do not name the king's square ${nmK}`); }); });
+    if (st && st.diagram) { const D = st.diagram, p = E.Pos.from(D.s); (D.arrows || []).forEach(([fr, to]) => { const m = E.parse(p, fr + '-' + to); if (m == null) { add('t_block', -1, `diagram: 追14 ${fr}-${to} is not legal`); return; }
+      const f = BK.blockFacts(E, { s: D.s, ok: [m], best: m }); f.bad.filter(b => /^[①]|one line/.test(b)).forEach(b => add('t_block', -1, `diagram: 追14 ${b}`)); }); } }
   L.steps.forEach((st, si) => { const id = st.id; if (!TF_DONE.has(id) || (opt && opt.only && !opt.only.includes(id))) return;   // (opt.only: the mutation tests of one lesson)
     let prevD = -1, firstD = null;
-    if (id === 'b_safe' || id === 't_shield' || id === 't_tuichi') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : id === 't_tuichi' ? tuichiOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
+    if (id === 'b_safe' || id === 't_shield' || id === 't_tuichi' || id === 't_block') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : id === 't_tuichi' ? tuichiOne : id === 't_block' ? blockOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
     st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), me = p.turn, all = p.moves(), nm = m => E.name(p, m);
       if (P.n > 1) { const d = seqCheck(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
         if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); seqWords(st, si, P, j, a); return; }
