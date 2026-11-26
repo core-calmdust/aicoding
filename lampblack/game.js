@@ -9,14 +9,23 @@
   const KEY = 'wolflantern-save-v1', REC = 'wolflantern-rec-v1', PREF = 'wolflantern-pref-v1';
   const ORDER = ['kirigane', 'hokushin', 'tomoshibi', 'nekonaki', 'shirane', 'kiteki'];
   const DIFFN = ['入門', '標準', '中級', '上級', '悪夢'];
-  const DIFFT = ['はじめての夜に。', '嘘が増える。', '嘘つきが、少し手ごわくなる。', '嘘つきが、ぼろを出さなくなる。', '嘘と罠ばかり。誰の言葉も信じきれない。'];
+  const DIFFT = ['はじめての夜に。嘘をつく者がいる。', '嘘つきが、ぼろを出しにくくなる。', '嘘つきが、ぼろを出さなくなる。', '嘘つきは悪夢なみ。', '嘘と罠ばかり。誰の言葉も信じきれない。'];
   // the card's line follows the story's real cast for that size (the wolves and the roles differ story by story)
   function diffDesc(s, i) {
     const R = E.setupOf(s, E.DIFF[i].size);
+    if (E.DIFF[i].hide) return `狼${R.wolf}匹。${E.DIFF[i].hide.seer >= 1 ? '占い師は必ずいるが、' : ''}ほかに誰がいるかは、わからない。${DIFFT[i]}`;
     const mad = R.madman ? `と${s.rules === 'fanatic' ? (s.roles.madman || {}).name || '狂信者' : '狂人'}${R.madman > 1 ? R.madman + '人' : ''}` : '';
     const ex = [R.guard && '狩人', R.mason && '共有者', R.cat && '猫又', R.fox && '妖狐', R.immoral && '背徳者'].filter(Boolean);
     return `狼${R.wolf}匹${mad}。${ex.length ? ex.join('・') + 'がいる。' : ''}${DIFFT[i]}`;
   }
+  // the role card's line on who is in the village
+  function castLine() {
+    if (S.hid) return `この${st.lex.village}には人狼が${S.wolves.length}匹いる。${seerSure() ? `${st.roles.seer.name}は必ずいるが、` : ''}ほかに誰がいるかは、わからない――${hidList()}が、いるかもしれないし、いないかもしれない。全部で${S.size}人。`;
+    return `この${st.lex.village}には人狼が${S.wolves.length}匹${E.RS(S).madman ? (st.rules === 'fanatic' ? `、狼の正体を知る狂信者が${E.RS(S).madman > 1 ? NUM[E.RS(S).madman] + '人' : 'ひとり'}` : `、狼に味方する狂人が${E.RS(S).madman > 1 ? NUM[E.RS(S).madman] + '人' : 'ひとり'}`) : ''}${E.RS(S).cat ? '、道連れの猫又がひとり' : ''}${E.RS(S).fox ? `、${st.roles.fox.tag || '社に棲む妖狐'}がひとり` : ''}${E.RS(S).immoral ? `、${st.roles.immoral.tag || '妖狐に仕える背徳者'}がひとり` : ''}${E.RS(S).mason ? '、互いを知る共有者がふたり' : ''}いる。全部で${S.size}人。`;
+  }
+  const seerSure = () => ((E.DIFF[S.diff].hide || {}).seer || 0) >= 1;
+  // 上級・悪夢：いるかもしれない役（数は伏せる）
+  function hidList() { const P = E.PUB(S), mad = st.rules === 'fanatic' ? (st.roles.madman || {}).name || '狂信者' : '狂人'; return [P.seer && !seerSure() && st.roles.seer.name, P.medium && st.roles.medium.name, P.guard && (st.roles.guard || {}).name, P.madman && st.rules !== 'fanatic' && mad].filter(Boolean).join('・'); }
   const NUM = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
   const ROLE_ICON = {
     auto: '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="11"/><path d="M12.5 12.5a3.6 3.6 0 1 1 4.8 3.4c-.9.4-1.3 1.1-1.3 2.1v.6M16 22.5v.2"/></svg>',
@@ -50,6 +59,7 @@
   let pref = { speed: 2, anim: true, names: true, seen: false };
   try { Object.assign(pref, JSON.parse(localStorage.getItem(PREF) || '{}')); } catch (e) {}
   if (!pref.speedSet) pref.speed = 2;   // the default is now はやい (2026-11-25); only a speed the player chose stays
+  pref.names = true; if (!(pref.speed >= 1)) pref.speed = 1;   // 2026-11-27：名札はいつも出す。文字の速さは ゆっくり(1)・ふつう(2)・はやい(3)。以前の「ゆっくり(0)」はゆっくりへ
   const savePref = () => { try { localStorage.setItem(PREF, JSON.stringify(pref)); } catch (e) {} };
   let st = null, S = null;
   const G = { scr: 'title', storyId: null, diff: 1, role: 'auto', q: [], typing: null, loc: null, nbTab: 'ppl' };
@@ -152,7 +162,7 @@
       .concat(st.rules === 'mason' ? [['mason', st.roles.mason.name, '相方と互いに人間だと知る']] : [['guard', '狩人', '毎晩ひとりを守る']])
       .concat(st.rules === 'cat' ? [['cat', st.roles.cat.name, '吊られても噛まれても道連れ']] : []);
     const can = r => r === 'auto' || r === 'villager' || RR[r] > 0;
-    $('setRules').innerHTML = st.rulesNote ? `<b>この物語のしくみ</b>${esc(st.rulesNote)}` : '';
+    $('setRules').innerHTML = st.rulesNote ? `<b>この物語のしくみ</b>${esc(st.rulesNote)}${E.DIFF[G.diff].hide ? '（上級・悪夢でも、この物語の役は必ずいる。ほかの役は、いるとは限らない）' : ''}` : '';
     $('setRules').classList.toggle('hide', !st.rulesNote);
     if (!can(G.role)) G.role = 'auto';
     $('setRole').innerHTML = roles.map(([r, n, d]) => `<button class="tile${G.role === r ? ' on' : ''}" data-r="${r}" ${can(r) ? '' : 'disabled style="opacity:.35"'}>${ROLE_ICON[r]}<b>${n}</b><span>${can(r) ? d : 'この人数にはいない'}</span></button>`).join('');
@@ -583,7 +593,7 @@
   async function roleCard() {
     const r = S.pl.role, R = st.roles[r];
     await say([{ text: fill(st.text.role, { roleHow: R.how }) }]);
-    await sheet(`<div class="rolecard"><div class="em">${ROLE_ICON[r]}</div><p style="font:700 15px var(--ui);letter-spacing:.2em;color:var(--mute);margin:0">あなたの役</p><h3>${esc(R.name)}</h3><p>${esc(R.perk)}</p><p style="font-size:15px;color:var(--mute)">この${st.lex.village}には人狼が${S.wolves.length}匹${E.RS(S).madman ? (st.rules === 'fanatic' ? `、狼の正体を知る狂信者が${E.RS(S).madman > 1 ? NUM[E.RS(S).madman] + '人' : 'ひとり'}` : `、狼に味方する狂人が${E.RS(S).madman > 1 ? NUM[E.RS(S).madman] + '人' : 'ひとり'}`) : ''}${E.RS(S).cat ? '、道連れの猫又がひとり' : ''}${E.RS(S).fox ? `、${st.roles.fox.tag || '社に棲む妖狐'}がひとり` : ''}${E.RS(S).immoral ? `、${st.roles.immoral.tag || '妖狐に仕える背徳者'}がひとり` : ''}${E.RS(S).mason ? '、互いを知る共有者がふたり' : ''}いる。全部で${S.size}人。</p>${st.rulesNote ? `<p style="font-size:14px;color:var(--mute)">${esc(st.rulesNote)}</p>` : ''}</div><div class="foot" style="justify-content:center"><button class="btn pri" data-ok>はじまる</button></div>`, box => box.querySelector('[data-ok]').onclick = () => closeSheet(true));
+    await sheet(`<div class="rolecard"><div class="em">${ROLE_ICON[r]}</div><p style="font:700 15px var(--ui);letter-spacing:.2em;color:var(--mute);margin:0">あなたの役</p><h3>${esc(R.name)}</h3><p>${esc(R.perk)}</p><p style="font-size:15px;color:var(--mute)">${castLine()}</p>${st.rulesNote ? `<p style="font-size:14px;color:var(--mute)">${esc(st.rulesNote)}</p>` : ''}</div><div class="foot" style="justify-content:center"><button class="btn pri" data-ok>はじまる</button></div>`, box => box.querySelector('[data-ok]').onclick = () => closeSheet(true));
   }
 
   /* morning: what the night left behind */
@@ -852,13 +862,13 @@
   function appealUsed() { const u = (S.req.used = S.req.used || {}); return (u[S.day] = u[S.day] || {}); }
   function appealsLeft() { const u = appealUsed(); return ['call', 'evid', 'div', 'guard'].filter(k => !u[k] && appealCan(k)).length || ''; }
   function appealCan(k) {
-    const R = E.RS(S);
+    const R = E.PUB(S);
     if (k === 'div') return S.claims.some(c => c.role === 'seer' && c.by !== 'you' && person(c.by).alive);
     if (k === 'guard') return R.guard > 0 && S.pl.role !== 'guard';
     return true;
   }
   async function appeal() {
-    const u = appealUsed(), R = E.RS(S);
+    const u = appealUsed(), R = E.PUB(S);
     const seerN = st.roles.seer.name, medN = st.roles.medium.name, grdN = st.roles.guard ? st.roles.guard.name : '';
     const opts = [
       { t: `${seerN}・${medN}は名乗り出てほしい`, s: '名乗るかどうかは本人が決める。何も見ていない者は、命を惜しんで黙るかもしれない。偽物が出てくることもある。', v: 'call:seer,medium', ic: IC.call, dis: u.call },
@@ -1167,7 +1177,7 @@
     const act = {};
     const r = S.ghost ? null : S.pl.role;
     const wolves = E.alive(S).some(p => p.role === 'wolf');   // the fox hunt: the wolves are gone, the night is quiet
-    if (!S.ghost && S.pl.co && wolves) await say([{ text: `あなたは${st.roles[S.pl.role].name}だと名乗った。狼は、名乗った者の戸口を知っている。\n${E.RS(S).guard ? "今夜、誰かがあなたを守ってくれるだろうか。" : `この${st.lex.village}に、扉を守ってくれる者はいない。`}` }]);
+    if (!S.ghost && S.pl.co && wolves) await say([{ text: `あなたは${st.roles[S.pl.role].name}だと名乗った。狼は、名乗った者の戸口を知っている。\n${S.hid && E.PUB(S).guard ? "扉を守ってくれる者が、この村にいるのかどうか。" : E.RS(S).guard ? "今夜、誰かがあなたを守ってくれるだろうか。" : `この${st.lex.village}に、扉を守ってくれる者はいない。`}` }]);
     if (r === 'seer') {
       const done = new Set(S.pl.res.filter(x => x.seer).map(x => x.target));
       act.divine = await pickPerson('今夜、誰を占う？', '朝に結果がわかる。', live().filter(p => !done.has(p.id)).map(p => p.id), { mark: true }) || pickOne(live()).id;
@@ -1311,7 +1321,7 @@
       <div class="rank">${sc.rank}</div>
       ${scoreTable(sc)}
       ${fresh.length ? `<div class="newfeat"><b>新しい実績</b>${fresh.map(f => `<div class="feat got"><i>★</i><b>${esc(f.name)}</b><span>${esc(f.desc)}</span></div>`).join('')}</div>` : ''}
-      <p style="font-size:15px">人狼：${wolves.map(w => esc(nm(w.id))).join('、')}${mad ? `　${esc(SP.roleName(st, 'madman'))}：${esc(nm(mad.id))}` : ''}${cat ? `　猫又：${esc(nm(cat.id))}` : ''}${fox ? `　妖狐：${esc(nm(fox.id))}` : ''}${S.people.find(p => p.role === 'immoral') ? `　${esc(SP.roleName(st, 'immoral'))}：${esc(nm(S.people.find(p => p.role === 'immoral').id))}` : ''}</p>
+      <p style="font-size:15px">人狼：${wolves.map(w => esc(nm(w.id))).join('、')}${mad ? `　${esc(SP.roleName(st, 'madman'))}：${S.people.filter(p => p.role === 'madman').map(p => esc(nm(p.id))).join('、')}` : ''}${cat ? `　猫又：${esc(nm(cat.id))}` : ''}${fox ? `　妖狐：${esc(nm(fox.id))}` : ''}${S.people.find(p => p.role === 'immoral') ? `　${esc(SP.roleName(st, 'immoral'))}：${esc(nm(S.people.find(p => p.role === 'immoral').id))}` : ''}${S.hid ? `<br><span style="color:var(--mute)">今回の顔ぶれ：${['seer', 'medium', 'guard', 'mason', 'cat', 'fox', 'immoral', 'madman'].filter(r => E.PUB(S)[r]).map(r => `${esc(SP.roleName(st, r))}${E.RS(S)[r] ? (E.RS(S)[r] > 1 ? '×' + E.RS(S)[r] : '') : '（いなかった）'}`).join('・')}</span>` : ''}</p>
       <div class="foot"><button class="btn" data-a="title">タイトルへ</button><button class="btn" data-a="select">ほかの物語へ</button><button class="btn pri" data-a="again">もう一度</button></div>`, box => box.querySelectorAll('[data-a]').forEach(b => b.onclick = () => closeSheet(b.dataset.a))).then(a => {
       if (a === 'again') { buildSetup(); } else if (a === 'select') buildSelect(); else buildTitle();
     });
@@ -1422,23 +1432,28 @@
       <p><b>キー</b>　Enter・スペース：文章を送る　F：フルスクリーンの入／切</p>
       <div class="foot"><button class="btn pri" data-x>${first ? '幕を開ける' : '閉じる'}</button></div>`, box => box.querySelectorAll('[data-x]').forEach(b => b.onclick = () => closeSheet(true)));
   }
+  // フルスクリーン（設定とFキー）。iPhone の Safari のように使えない環境では設定に出さない
+  const FS = () => !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+  const isFS = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+  function toggleFS(want) { const d = document, el = d.documentElement; try { if (want === undefined) want = !isFS(); if (!want && isFS()) (d.exitFullscreen || d.webkitExitFullscreen).call(d); else if (want && !isFS()) (el.requestFullscreen || el.webkitRequestFullscreen).call(el); } catch (err) {} }
+  ['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => document.querySelectorAll('.seg[data-k="fs"] button').forEach(b => b.classList.toggle('on', (b.dataset.v === '1') === isFS()))));
   function showOpts() {
     const seg = (k, vals) => `<div class="seg" data-k="${k}">${vals.map(([v, t]) => `<button data-v="${v}" class="${String(pref[k]) === String(v) ? 'on' : ''}">${t}</button>`).join('')}</div>`;
     sheet(`<h3>設定</h3>
-      <div class="set-row"><span>文字の速さ</span>${seg('speed', [[0, 'ゆっくり'], [1, 'ふつう'], [2, 'はやい'], [3, '一瞬']])}</div>
-      <div class="set-row"><span>動き</span>${seg('anim', [[true, 'あり'], [false, 'なし']])}</div>
-      <div class="set-row"><span>人形の名札</span>${seg('names', [[true, 'いつも'], [false, '話すとき']])}</div>
-      <div class="set-row"><span>音</span><div class="seg" data-k="snd"><button data-v="1" class="${SND.on ? 'on' : ''}">あり</button><button data-v="0" class="${SND.on ? '' : 'on'}">なし</button></div></div>
-      <div class="set-row"><span>音楽</span><div class="seg" data-k="bgm"><button data-v="1" class="${SND.musicOn ? 'on' : ''}">あり</button><button data-v="0" class="${SND.musicOn ? '' : 'on'}">なし</button></div></div>
-      <div class="set-row"><span>話し声</span><div class="seg" data-k="talk"><button data-v="1" class="${SND.talkOn ? 'on' : ''}">あり</button><button data-v="0" class="${SND.talkOn ? '' : 'on'}">なし</button></div></div>
+      <div class="set-row"><span>文字の速さ</span>${seg('speed', [[1, 'ゆっくり'], [2, 'ふつう'], [3, 'はやい']])}</div>
+      <div class="set-row"><span>アニメーション</span>${seg('anim', [[true, 'あり'], [false, 'なし']])}</div>
+      <div class="set-row"><span>音楽</span><input type="range" class="vol" data-vol="bgm" min="0" max="100" step="5" value="${Math.round(SND.musicVol * 100)}" aria-label="音楽の音量"></div>
+      <div class="set-row"><span>効果音<small>話し声も含む</small></span><input type="range" class="vol" data-vol="sfx" min="0" max="100" step="5" value="${Math.round(SND.sfxVol * 100)}" aria-label="効果音の音量"></div>
+      ${FS() ? `<div class="set-row"><span>フルスクリーン</span><div class="seg" data-k="fs"><button data-v="1" class="${isFS() ? 'on' : ''}">オン</button><button data-v="0" class="${isFS() ? '' : 'on'}">オフ</button></div></div>` : ''}
       <div class="foot" style="justify-content:space-between;align-items:center">${S && G.scr === 'play' ? '<button class="btn" data-quit>この物語をやめてタイトルへ</button>' : '<span></span>'}<button class="btn pri" data-x>閉じる</button></div>`, box => {
       box.querySelectorAll('[data-x]').forEach(b => b.onclick = () => closeSheet());
       box.querySelectorAll('.seg').forEach(s => s.querySelectorAll('button').forEach(b => b.onclick = () => {
         const k = s.dataset.k, v = b.dataset.v;
-        if (k === 'snd') SND.set(v === '1'); else if (k === 'bgm') SND.setMusic(v === '1'); else if (k === 'talk') SND.setTalk(v === '1'); else { pref[k] = v === 'true' ? true : v === 'false' ? false : +v; if (k === 'speed') pref.speedSet = true; }
+        if (k === 'fs') { toggleFS(v === '1'); return; } else { pref[k] = v === 'true' ? true : v === 'false' ? false : +v; if (k === 'speed') pref.speedSet = true; }
         savePref(); s.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
-        document.body.classList.toggle('anim-off', !pref.anim); document.body.classList.toggle('show-names', !!pref.names);
+        document.body.classList.toggle('anim-off', !pref.anim);
       }));
+      box.querySelectorAll('.vol').forEach(r => { r.style.setProperty('--p', r.value + '%'); r.oninput = () => { r.style.setProperty('--p', r.value + '%'); (r.dataset.vol === 'bgm' ? SND.setMusicVol : SND.setSfxVol)(r.value / 100); }; r.onchange = () => { if (r.dataset.vol === 'sfx') SND.page(); }; });
       const q = box.querySelector('[data-quit]'); if (q) q.onclick = () => { closeSheet(); save(); G.tut = false; buildTitle(); };
     });
   }
@@ -1449,7 +1464,7 @@
   /* ---------- resume ---------- */
   async function resume() {
     const sv = loadSave(); if (!sv) return;
-    S = sv.S; if (!S.dv) { if (S.diff >= 2) S.diff++; S.dv = 2; }   // saves from before 中級 (2026-11-26): 上級・悪夢 moved up one
+    S = sv.S; if (!S.dv) { if (S.diff >= 2) S.diff++; S.dv = 2; } if (S.dv === 2) { S.diff = [0, 0, 1, 2, 4][S.diff]; S.dv = 3; }   // 2026-11-27：一段ずつ下がった（旧悪夢は役を伏せないまま悪夢で続ける）   // saves from before 中級 (2026-11-26): 上級・悪夢 moved up one
     st = withHero(sv.story, S.hero); S.req = S.req || { divine: {}, guard: null, hide: false, calls: {} }; G.storyId = st.id; G.diff = S.diff;
     scr('play'); palette(st); hud();
     const ph = S.phase;

@@ -1294,7 +1294,7 @@ function amazons(opt) {
 // (2026-11-24 第2期) reversi: the exact endgames (parity・finish) — every legal move solved again by an independent exact solver
 // (empties to the winner), the step's shape, no near-duplicates across everything the game shows, the easy-to-hard order of a
 // draw, and リバガメ's words for every move of every problem at every place of a draw (3D: lessons3d rvLsJa).
-const RV_DONE = new Set(['rules', 'corner', 'mobility', 'quiet', 'wall', 'parity', 'finish']);   // (corner: tools/lesson-verify-rvcorner.js, mobility: tools/lesson-verify-rvmob.js, 2026-11-25 担当A; quiet: tools/lesson-verify-rvquiet.js, wall: tools/lesson-verify-rvwall.js, 2026-11-26 担当A)
+const RV_DONE = new Set(['rules', 'corner', 'mobility', 'quiet', 'wall', 'edge', 'exception', 'parity', 'finish']);   // (corner: tools/lesson-verify-rvcorner.js, mobility: tools/lesson-verify-rvmob.js, 2026-11-25 担当A; quiet: tools/lesson-verify-rvquiet.js, wall: tools/lesson-verify-rvwall.js, 2026-11-26 担当A; edge: tools/lesson-verify-rvedge.js, exception: tools/lesson-verify-rvexc.js, 2026-11-27 担当A)
 function rvSolver() {
   const DIRS = [-9, -8, -7, -1, 1, 7, 8, 9], ok = (p, d) => p >= 0 && p < 64 && Math.abs((p & 7) - ((p - d) & 7)) <= 1;
   const flips = (b, q, s) => { const o = 3 - s, out = []; for (const d of DIRS) { let p = q + d; const t = []; while (ok(p, d) && b[p] === o) { t.push(p); p += d; } if (t.length && ok(p, d) && b[p] === s) out.push(...t); } return out; };
@@ -1396,7 +1396,11 @@ function reversi(opt) {
   if (RV_DONE.has('quiet') && !(only && !only.has('quiet'))) out.push(...require('./lesson-verify-rvquiet.js')(opt && opt.lessons ? { lessons: opt.lessons } : undefined));
   // (2026-11-26 21:20 第2期・担当A) wall（壁と余裕手）: the engine re-read twice, the fewest outer discs, the wall moves and the reserve, the words — tools/lesson-verify-rvwall.js
   if (RV_DONE.has('wall') && !(only && !only.has('wall'))) out.push(...require('./lesson-verify-rvwall.js')(opt && opt.lessons ? { lessons: opt.lessons } : undefined));
-  L.lessons.forEach((l, li) => { const id = l.id; if (id === 'rules' || id === 'corner' || id === 'mobility' || id === 'quiet' || id === 'wall' || !RV_DONE.has(id) || (only && !only.has(id))) return;
+  // (2026-11-27 00:20 第2期・担当A) edge（辺の攻め：付け手）: the engine re-read twice, the one wedge, the reasons of the wrong moves, the words — tools/lesson-verify-rvedge.js
+  if (RV_DONE.has('edge') && !(only && !only.has('edge'))) out.push(...require('./lesson-verify-rvedge.js')(opt && opt.lessons ? { lessons: opt.lessons } : undefined));
+  // (2026-11-27 02:20 第2期・担当A) exception（隅は絶対ではない）: the engine re-read twice, the corner to postpone or the safe X, the reasons of the wrong moves, the words — tools/lesson-verify-rvexc.js
+  if (RV_DONE.has('exception') && !(only && !only.has('exception'))) out.push(...require('./lesson-verify-rvexc.js')(opt && opt.lessons ? { lessons: opt.lessons } : undefined));
+  L.lessons.forEach((l, li) => { const id = l.id; if (id === 'rules' || id === 'corner' || id === 'mobility' || id === 'quiet' || id === 'wall' || id === 'edge' || id === 'exception' || !RV_DONE.has(id) || (only && !only.has(id))) return;
     if (l.problems.length < 8 || l.problems.filter(p => p.trap).length < 2) add(id, -1, '⑤ the pool is too small to draw 5 different problems');
     l.problems.forEach((P, j) => { const a = m => add(id, j, m), b = String(P.cells).split('').map(Number), s = P.toMove, F = P.f || {};
       if (P.type !== 'exact') a('① not an exact problem');
@@ -1898,7 +1902,7 @@ function tafl(opt) {
 // b_cannon・b_pawn). The goal set is read from the rules (a capture by that kind on which no legal move of the opponent can take back),
 // the engine values stored in sc (= xiangqi/app.js problemPoints, the 3D XIANGQI.points) must put that capture alone on top, and
 // ショウギツネ's words (atlas/lessons3d.js xqLsJa) are read back against the board for the answer and every wrong move.
-const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn', 'b_escape', 'b_mate1', 'm_mate2', 'm_hc', 'm_dc', 'm_face', 'e_rook', 't_capture', 't_fork', 'e_pawn', 't_check']);
+const XQ_DONE = new Set(['b_rook', 'b_horse', 'b_cannon', 'b_pawn', 'b_escape', 'b_mate1', 'm_mate2', 'm_hc', 'm_dc', 'm_face', 'e_rook', 't_capture', 't_fork', 'e_pawn', 't_check', 't_defend']);
 function xiangqi(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'xiangqi/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'xiangqi/lessons.json'), 'utf8'));
@@ -2127,6 +2131,8 @@ function xiangqi(opt) {
   require('./lesson-verify-xqfork.js').verify({ E, L, X, pool, dist, brd, plain, add, pts, only: XQ_DONE });
   // (2026-11-26 第2期 担当A) t_check「王手で得をする」— tools/lesson-verify-xqcheck.js
   require('./lesson-verify-xqcheck.js').verify({ E, L, X, pool, dist, brd, plain, add, pts, only: XQ_DONE });
+  // (2026-11-27 第2期 担当A) t_defend「守る」— tools/lesson-verify-xqdefend.js
+  require('./lesson-verify-xqdefend.js').verify({ E, L, X, pool, dist, brd, plain, add, pts, only: XQ_DONE });
   // 追72 (2026-11-25 担当A): the moves that count as right (P.ok, or 16 points or more from P.sc) and a warm-up try's ok are a third of the
   // legal moves at most
   L.steps.forEach(st => { if (!XQ_DONE.has(st.id)) return;

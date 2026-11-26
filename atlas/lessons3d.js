@@ -2258,10 +2258,10 @@
         g: '左下の隅はあとでも取れる。今は、相手の打てる場所を減らす金の枠に打ってみよう！', gok: '正解！ 白は隅を取れないから、隅は残ったまま。赤い枠のCに打つと、白に隅を取らせちゃうところだったんだ。',
         pp: ['さあ練習！ 隅にとびつかずに考えてみよう。', 'もう1問！ X・Cでも、だめとはかぎらないからね。'],
         h: ['金の枠に打てば、隅は残したままにできるね。', '取れる隅があっても、相手がその隅を取れないなら急がなくていいかも？', '金の枠に打っても、白はその隅に届かないんだ。', '打ったあと、相手の石が隅まで届くかどうか、手ごとに確かめてみて！'],
-        p1ok: 'いいね！ 隅は白には取れないから、急がなくていいんだ。この手は静かに相手の打てる場所を減らすね。',
+        p1ok: 'いいね！ 左下の隅は白には取れないから、急がなくていいんだ。この手は静かに相手の打てる場所を減らすね。',
         t2: 'Xに打っていい場面もある', c2: 'Xに打つのが正しい場面もあるんだ。矢印の対角線を見て。金の枠のXに黒が打つと、その線はずっと黒石で、先は空き。だから白は隅（赤い枠）を取れない！<br><b>「XやCは危ない」は目安。</b>打ったあと相手が隅を取れるか、確かめよう。',
-        g2: '金の枠のX打ちは安全！ 赤い枠（隅を渡す手）をよけて、ここに打ってみよう。', g2ok: '正解！ 白は隅を取れないね。ほかの手だと、白が隅を取れるようになっていたんだ。',
-        p2ok: 'お見事！ Xだけど、白はこのあと隅を取れない。赤い枠のCは、隅を渡しちゃう手だったね。' },
+        g2: '金の枠のX打ちは安全！ 赤い枠（隅を渡す手）をよけて、ここに打ってみよう。', g2ok: '正解！ 白は隅を取れないね。赤い枠の手だと、白が隅を取れるようになっていたんだ。',
+        p2ok: 'お見事！ Xだけど、白はこのあと左上の隅を取れない。赤い枠のCは、隅を渡しちゃう手だったね。' },
       parity: { t1: '空きの塊を数える', c1: '終盤の空きマスは、いくつかの<b>塊</b>に分かれる。数字は、そのマスが入っている塊の大きさ。ここには6マスの塊と、1マスだけの塊（金の枠）があるね。<br><b>奇数の塊に自分から入る</b>と、その塊の最後の1手を自分が打てる！ 1マスの塊に白が打てば、黒はそこに何も返せないんだ。',
         g: '数字は空きの塊の大きさ。奇数の塊の空きに打ってみよう！', gok: '正解！ 1マスの塊を白が埋めたから、黒は返し返しができないね。',
         pp: ['さあ練習！ 塊の大きさを数えてみて。', 'もう1問いこう！'],
@@ -2310,6 +2310,11 @@
   const RV_HCS = ['まず、4つの角に打てるかどうかを見てごらん。', 'きみの石で相手をはさめる角は、どこかにないかな？', '盤の4すみを、ひとつずつ確かめてみて！', '二度と返されないマスに、打てるチャンスがあるよ。', '角のマスで、はさめる線がないか探してみて。'];
   const RV_HCT = ['どの角にも打てない場面。打ったあと、相手が角に届かないかを確かめてね。', '隅が取れないときは、隅の隣のマス（XとC）に要注意！', '打ったあと、相手の石が隅に届く線ができないか考えてみて。', '隅のななめ隣（X）と、辺で隅の隣（C）をよけて考えよう。', '隅を渡さず、XにもCにも打たない手は、ひとつだけ。よく探してみて！'];
   // (2026-11-26 第2期 ⑧ 担当A) quiet's exception (trap): the quietest move is not the best — the question and the hint point at the opponent's moves after
+  // (2026-11-27 第2期 ⑧ 担当A) exception（隅は絶対ではない）: the standard problems have a corner to postpone, the exception (trap) has none — the X is the answer
+  const RV_AES = ['隅は取るべきかな？ いちばんいい手をじっくりさがそう。', 'いつもの格言どおりでいいのかな？ 打ったあとのことを考えてみて！', '取れる隅があるね。いまが取りどき？', '手番をにぎれる手はどこだろう？', '格言にまどわされずに、いい手を見つけてみて！'];
+  const RV_AET = ['取れる隅はない場面。Xのマスも候補に入れて、いちばんいい手をさがそう！', '「Xは危ない」は本当かな？ 打ったあとのことを考えてみて！', 'Xにも例外がある！ この場面のいちばんいい手は？', '隅のななめ隣、ここではどうだろう？', '格言にまどわされずに、いい手を見つけてみて！'];
+  const RV_HES = ['隅を取ったあと、相手が何か所に打てるか数えてみて。', '取れる隅があっても、相手がその隅を取れないなら急がなくていいんだ。', '隅に打った場合とほかの手の場合で、相手の打てる場所をくらべてみて！', '相手に取られない隅は、あとでも間に合うよ。', '隅を取ると、相手に打ち場所をたくさんあげていないかな？'];
+  const RV_HET = ['Xでも、打ったあと相手が隅に届かないなら安全なこともあるんだ。', 'Xに打ったあと、相手がその隅を取れるか確かめてみて。', '「Xは危ない」は目安。打ったあとの相手の手を見てね。', '隅のななめ隣でも、相手に隅への線ができないことがあるよ。', '打ったあと、相手は何か所に打てる？ 隅には届く？'];
   const RV_AQT = ['いちばんいい手を探そう。打ったあとの相手の手まで考えてみて！', '静かな手で本当にいい？ 相手が次に何か所に打てるかも見てね。', 'この場面、いちばん得な手はどこだろう？', '開放度だけで決めていい？ じっくり考えてみて。', '相手に足場をあげない手、見つけてみて！'];
   const RV_HQT = ['開放度だけでなく、打ったあと相手が何か所に打てるかもくらべてみて。', 'いちばん静かな手のあと、相手の打てる場所がふえないか確かめて！', '数字が小さくても、相手の打ち場所がふえる手は損なんだ。', '打ったあとの相手の打てる場所を、手ごとに数えてみて！', '静かさより、相手の次の手の数が大事な場面もあるんだ。'];
   // (2026-11-26 第2期 ⑧ 担当A) wall（壁と余裕手）: the standard problems have no reserve move (only the wall), the exception (trap) has one to keep
@@ -2332,6 +2337,7 @@
       : top >= 3 ? ['遠くの自分の石とも、はさめることがあるね。', '自分の石まで、相手の石が何枚続くか数えてみて。', '長く続く相手の石の列を探してごらん。', '列の端から端まで、ていねいに数えてみて！', '1本の列で、何枚まで返せるかな？']
       : ['縦・横・ななめ、8つの向きにはさめる石を数えてみて。', '自分の石まで、相手の石が何枚続くか数えてみて。', 'マスごとに、返る石を1枚ずつ数えてね。', '打てる場所を、ひとつずつ確かめてみて！', 'どのマスも、8つの向きをぐるっと見てみて。'])
       : kind === 'corner' && P.d != null ? (P.trap ? RV_HCT : RV_HCS)   // (2026-11-25 第2期 ⑧ 担当A: a corner to take, or none — the hint says which the board has)
+      : kind === 'exception' && P.d != null ? (P.trap ? RV_HET : RV_HES)   // (2026-11-27 第2期 ⑧ 担当A: a corner to postpone, or the X)
       : kind === 'quiet' && P.d != null && P.trap ? RV_HQT   // (2026-11-26 第2期 ⑧ 担当A: quiet's exception — the opponent's moves after)
       : kind === 'wall' && P.d != null ? (P.trap ? RV_HWT : RV_HWS)   // (2026-11-26 第2期 ⑧ 担当A: wall — a reserve move to keep, or only the wall)
       : RVJ_LS.hint[kind] || [''], hintTx = pk(H, i) + (marks ? ' ' + pk(kind === 'wall' ? RVJ_LS.rfWall : RVJ_LS.rf, i + 2) : '');
@@ -2373,12 +2379,14 @@
           break;
         }
         case 'edge':
-          if ((P.wedge || []).includes(u)) out.push(pk(['相手の石2つのあいだに打つ付け手！ 相手の辺の形がくずれて、隅をねらいやすくなるんだ。', '辺のすき間に打つ付け手だよ。相手はもう、きれいな辺を作れないね。', '付け手がずばり決まった！ 両側が相手の石だから、横から返されないんだ。', 'くさびを打ちこめた！ 相手の辺が、まっぷたつに分かれたよ。', 'すき間を見のがさなかったね。付け手で、相手の辺はばらばらなんだ。'], k));
+          if ((P.wedge || []).includes(u)) out.push(pk(['相手の石2つのあいだに打つ付け手！ 相手の辺が2つに分かれて、きれいにつながらなくなるんだ。', '辺のすき間に打つ付け手だよ。相手はもう、その辺をきれいにつなげられないね。', '付け手がずばり決まった！ 両側が相手の石だから、辺にそっては返されないんだ。', 'くさびを打ちこめた！ 相手の辺が、まっぷたつに分かれたよ。', 'すき間を見のがさなかったね。付け手で、相手の辺はばらばらなんだ。'], k));
           else out.push(pk([`辺の形をよく見られたね。相手の打てる場所は${fu[3]}か所に抑えられるんだ。`, `辺のバランスをくずさない手！ 相手の打ち場所は${fu[3]}か所だよ。`, `辺をうまく守れたんだ。相手の候補は${fu[3]}か所！`, `辺の読みがばっちり！ 相手は${fu[3]}か所にしか打てないね。`, `辺に気をくばった手だよ。相手の打てる場所も${fu[3]}か所ですむんだ。`], k));
           break;
-        case 'exception':
-          if (RV_X[u] != null) out.push(pk(['X打ちが正解の場面だったよ。隅への通り道ができても、相手はそこを取れないか、取っても得をしないんだ。', 'Xに打つ勇気、すばらしい！ 相手はその隅を、すぐには取れないんだ。', 'あえてのX打ち！ 相手が隅に届かないのを、ちゃんと見ぬけたね。', '「Xは危ない」の例外を見つけた！ ここは相手が隅を取れないんだ。', 'こわがらずにXへ！ この場面なら、隅を取られる心配はないよ。'], k));
-          else if (ks.some(q => RV_CN.includes(q)) && !RV_CN.includes(u)) out.push(pk(['あえて隅を後回しにできたね。この場面は、隅より手番のほうが大事なんだ。', '隅にとびつかなかった！ ここで隅を取ると、相手に好きな所を打たれちゃう。', '格言にまどわされなかった！ 今は隅より、手番を守るほうが得な場面なんだ。', '隅はあとでも取れる、と見ぬけたね。いまは手番が先だよ。', '隅をがまんできた！ 強い人のやり方なんだ。'], k));
+        case 'exception':   // (2026-11-27 第2期 ⑧ 担当A: the board's facts — the X's corner stays out of reach, or the corner waits and the opponent's moves are fewer)
+          if (RV_X[u] != null) out.push(pk(['X打ちが正解の場面だったよ。打ったあとも、相手はその隅に打てないんだ。', 'Xに打つ勇気、すばらしい！ 相手はその隅を、すぐには取れないんだ。', 'あえてのX打ち！ 相手が隅に届かないのを、ちゃんと見ぬけたね。', '「Xは危ない」の例外を見つけた！ ここは相手が隅を取れないんだ。', 'こわがらずにXへ！ この場面なら、すぐに隅を取られる心配はないよ。'], k) + (P.d != null ? ' ' + pk([`相手の打てる場所は${fu[3]}か所だよ。`, `打ったあと、相手は${fu[3]}か所にしか打てないね。`, `相手の候補も${fu[3]}か所ですむんだ。`, `相手の打ち場所は${fu[3]}か所！`, `相手が打てるのは${fu[3]}か所だね。`], k + 1) : ''));
+          else if (ks.some(q => RV_CN.includes(q)) && !RV_CN.includes(u)) { const mc = Math.min(...ks.filter(q => RV_CN.includes(q)).map(q => F[q][3]));
+            out.push(P.d != null ? pk([`あえて隅を後回しにできたね。隅を取ると相手は${mc}か所に打てるけど、この手なら${fu[3]}か所なんだ。`, `隅にとびつかなかった！ 隅だと相手の打てる場所は${mc}か所、この手なら${fu[3]}か所ですむよ。`, `格言にまどわされなかった！ この手のあと相手は${fu[3]}か所、隅なら${mc}か所も打てたんだ。`, `隅は相手に取られないから、あとでも取れる。隅なら相手は${mc}か所に打てるけど、この手なら${fu[3]}か所に抑えられるね。`, `隅をがまんできた！ 相手の打ち場所は、隅なら${mc}か所、この手なら${fu[3]}か所なんだ。`], k)
+              : pk(['あえて隅を後回しにできたね。この場面は、隅より手番のほうが大事なんだ。', '隅にとびつかなかった！ ここで隅を取ると、相手に好きな所を打たれちゃう。', '格言にまどわされなかった！ 今は隅より、手番を守るほうが得な場面なんだ。', '隅はあとでも取れる、と見ぬけたね。いまは手番が先だよ。', '隅をがまんできた！ 強い人のやり方なんだ。'], k)); }
           else out.push(pk(['格言より「打ったあとに何が起きるか」で選べたね。それが強くなる近道なんだ。', '打ったあとのことまで考えられた！ その読みが強さのもとだよ。', '目安より局面を見て選べたんだ。', '先の形まで見通せた手！', '格言どおりじゃない正解を見つけたね。'], k));
           break;
         case 'parity': {
@@ -2450,14 +2458,15 @@
           else out.push(loss());
           break;
         }
-        case 'edge':
-          if ((P.wedge || []).includes(b)) out.push(pk(['緑の枠は、相手の石2つのあいだのすき間に打つ付け手。相手の辺の形をくずせるから、隅や辺をうばうきっかけになるんだ。', '緑の枠は辺のすき間！ そこに入れれば、相手の辺がまっぷたつになったね。', '付け手のチャンスが緑の枠にあったんだ。両側が相手の石だから、返される心配もないよ。', '緑の枠なら相手の辺を分けられた！ すき間に打つと、横から返されないからね。', '辺のすき間に打てば、相手の辺の形がくずれたから、隅もねらえたんだ。'], k));
-          if (lead) out.push(lead); else if (!(P.wedge || []).includes(b)) out.push(loss());
+        case 'edge':   // (2026-11-27 第2期 ⑦ 担当A: the wedge, then what the red move gives — a corner, an X/C, or more moves for the opponent; never the engine's value)
+          if ((P.wedge || []).includes(b)) out.push(pk(['緑の枠は、相手の石2つのあいだのすき間に打つ付け手。相手の辺の形をくずせたんだ。', '緑の枠は辺のすき間！ そこに入れれば、相手の辺がまっぷたつになったね。', '付け手のチャンスが緑の枠にあったんだ。両側が相手の石だから、辺にそって返される心配もないよ。', '緑の枠なら相手の辺を分けられた！ すき間に打つと、辺にそっては返されないからね。', '辺のすき間に打てば、相手の辺の形をくずせたんだ。'], k));
+          out.push(lead || (fu[3] > fb[3] ? mob() : loss()));
           break;
-        case 'exception':
-          if (RV_CN.includes(u)) out.push(pk([`隅は取れるけど、そのあと相手に${fu[3]}か所も打つ場所が残るから、主導権をにぎられちゃうんだ。`, `隅を取っても、相手には${fu[3]}か所の打ち場所が残る。相手の思うつぼになるんだ。`, `隅に打つと、相手の候補が${fu[3]}か所も残っちゃうよ。`, `隅を急ぐと、相手に${fu[3]}か所の打ち場所が残って損なんだ。`, `赤い枠の隅だと、相手は${fu[3]}か所に打てるから、手番を取られるよ。`], k));
-          else if (RV_X[b] != null) out.push(pk(['ここは緑の枠のX打ちがいちばん。相手はその隅をすぐには取れないから、Xでも損をしないんだ。', '正解は緑の枠のX！ 相手はその隅に届かないから、安心して打てたんだ。', '緑の枠のXが正解。相手が隅を取れないから、こわくないんだ。', 'ここは緑の枠のXへ！ 隅に届く線が相手にないから安全だよ。', '答えは緑の枠のX。この場面は、相手が隅を取れないからね。'], k));
-          else out.push(lead || loss());
+        case 'exception':   // (2026-11-27 第2期 ⑦ 担当A: what the red move does on the board — the opponent's moves after it against the green one, or the corner it gives; never the engine's value)
+          if (RV_CN.includes(u)) out.push(P.d != null ? pk([`隅は取れるけど、そのあと相手に${fu[3]}か所も打つ場所が残るんだ。緑の枠なら${fb[3]}か所ですむよ。`, `隅を取っても、相手には${fu[3]}か所の打ち場所が残る。緑の枠なら${fb[3]}か所なんだ。`, `隅に打つと、相手の候補が${fu[3]}か所も残っちゃう。緑の枠なら${fb[3]}か所だね。`, `隅を急ぐと、相手に${fu[3]}か所の打ち場所が残って損なんだ。緑の枠なら${fb[3]}か所！`, `赤い枠の隅だと、相手は${fu[3]}か所に打てる。緑の枠なら${fb[3]}か所で、隅もあとで取れるよ。`], k)
+            : pk([`隅は取れるけど、そのあと相手に${fu[3]}か所も打つ場所が残るから、主導権をにぎられちゃうんだ。`, `隅を取っても、相手には${fu[3]}か所の打ち場所が残る。相手の思うつぼになるんだ。`, `隅に打つと、相手の候補が${fu[3]}か所も残っちゃうよ。`, `隅を急ぐと、相手に${fu[3]}か所の打ち場所が残って損なんだ。`, `赤い枠の隅だと、相手は${fu[3]}か所に打てるから、手番を取られるよ。`], k));
+          else if (RV_X[b] != null) out.push(pk(['ここは緑の枠のX打ちがいちばん。相手はその隅をすぐには取れないから、Xでも損をしないんだ。', '正解は緑の枠のX！ 相手はその隅に届かないから、安心して打てたんだ。', '緑の枠のXが正解。相手が隅を取れないから、こわくないんだ。', 'ここは緑の枠のXへ！ 隅に届く線が相手にないから安全だよ。', '答えは緑の枠のX。この場面は、相手が隅を取れないからね。'], k) + (P.d != null ? ' ' + (fu[4] ? lead : mob()) : ''));
+          else out.push(lead || (P.d != null ? mob() : loss()));
           break;
         case 'parity': {
           const par = n => n % 2 ? '奇数' : '偶数';
@@ -2476,7 +2485,7 @@
       if (RV_CH.tail[k]) out.push(RV_CH.tail[k]);
       return out.join(' ');
     };
-    return { ask: pk(kind === 'quiet' && P.d != null && P.trap ? RV_AQT : kind === 'wall' && P.d != null ? (P.trap ? RV_AWT : RV_AWS) : RVJ_LS.ask[kind] || [''], i), hintTx, good, ng, own: true };
+    return { ask: pk(kind === 'exception' && P.d != null ? (P.trap ? RV_AET : RV_AES) : kind === 'quiet' && P.d != null && P.trap ? RV_AQT : kind === 'wall' && P.d != null ? (P.trap ? RV_AWT : RV_AWS) : RVJ_LS.ask[kind] || [''], i), hintTx, good, ng, own: true };
   }
   /* (2026-11-21 lesson loop; 2026-11-22 rewritten) the reversi opening practice in リバガメ's words, Japanese: the texts without
      coordinates (atlas/nocoord reversi.json op:<moves>/aim|info, Japanese only — the sentences that give the engine's opinion
@@ -2631,7 +2640,7 @@
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261126w1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=3').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=9').catch(() => ({}))])
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261127x1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=4').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=9').catch(() => ({}))])
         .then(([ls, op, ev, wt, opp]) => { this.WT = wt || {}; this.OPP = opp || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
@@ -3488,7 +3497,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=16'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
+      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=18'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
         try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
         return this; }).catch(e => { this.p = null; throw e; }));
     },
@@ -4183,7 +4192,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       t_capture: '守られている駒でも、自分の駒より価値が高ければ、取る値打ちがあるの。<br>目安は、車9・炮4.5・馬4・仕と相2・兵1（川を渡ると2）くらい。<br>取り返されても得をする取り方を、探してみよう！',
       t_fork: '1つの駒で2つの駒を同時にねらうのが<b>両取り</b>。相手は1手で片方しか助けられないの。<br>得は駒の値打ちで数えるよ：車9・炮4.5・馬4・仕と相2・兵1（川を渡ると2）。ねらう駒が守られていても、動いた駒より高ければ得になるコン！',
       t_check: '王手をかけられたら、相手は必ず受けないといけないよね。<br>だから、王手のついでに別の駒もねらえる手は、とっても強いの。相手を忙しくさせちゃおう！',
-      t_defend: '相手の次の手を、先に読んでみよう。<br>ただで取られそうな駒があったら、守る（ひもをつける）か、間に駒を入れて防ぐの。守りも攻めと同じくらい大切だコン。',
+      t_defend: '相手の次の手を、先に読んでみよう。<br>ただで取られそうな駒があったら、守る（ひもをつける）か、間に駒を入れて防ぐの。<br>値打ちの目安は、車9・炮4.5・馬4・仕と相2・兵1（川を渡ると2）。守りも攻めと同じくらい大切だコン。',
       m_mate2: '相手がどう受けても、次の手で必ず詰む。そんな最初の1手を見つけよう！<br>王手から始まるとはかぎらないの。静かな一手が決め手になることもあるんだコン。',
       m_hc: '將と同じ筋に馬を置いて、その後ろから炮で王手。これが<b>馬後炮</b>なの。<br>馬が炮台になって、將の逃げ道まで押さえちゃう。シャンチーでいちばん有名な詰め方のひとつだコン！',
       m_dc: '2つの炮を將と同じ筋に縦に並べると、前の炮が後ろの炮の炮台になるの。これが<b>重炮</b>。<br>前の炮を取るのも、間に駒を入れるのも難しい、強い詰め方なんだ。',
@@ -4389,10 +4398,42 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       return v(XQC_OPEN) + w + v(XQC_RIGHT, 2)(M, MA, TA); };
     return { ask: v(XQC_ASK), hintTx: v(XQC_HINT)(MA), good: () => v(XQC_GOOD)(MA, TA, g), ng, own: true };
   }
+  // (2026-11-27 第2期 担当A) t_defend「守る」: one piece of ours (worth 2 or more) is threatened = the opponent wins it next by the
+  // exchange count; the answer alone loses nothing for sure (xqForkF fork ≥ 0, three plies = 追51): a quiet move (no capture, no check)
+  // that does not move the threatened piece but guards it (ひも: a take is answered by a take back) or steps in between (間に入れる:
+  // the line is cut). The words name the piece moved, the piece guarded and the attacker; for a wrong move what the board does: a
+  // mate in 1, the threatened piece still taken, an escape after which another piece (or the same on its new point) is taken, a
+  // capture taken back (the net) — counted again by tools/lesson-verify-xqdefend.js (tools/xqfork-facts.js).
+  const XQD_ASK = ['相手のねらいを先に防いでみよう！', '取られそうな駒、どうやって守る？', 'ここは守りどころだコン。損をしない受けはどれかな？', 'ただで取られそうな駒があるよ。正しい守り方は？', '逃げるだけが守りじゃないの。いちばんいい受けは？'];
+  const XQD_HINT = [(M, H) => `光っている${M}を使うよ。ねらわれている${H}を、取られない形にできる点を探してみて。`, (M, H) => `ねらわれているのは${H}。光っている${M}で、ひもをつけるか、間に入れるかを考えてみて。`, (M, H) => `光っている${M}の行き先を1つずつ確かめよう。そのあと相手は${H}を取れる？ ほかの駒は大丈夫？`, (M, H) => `${H}を逃がすと、ほかの駒があぶなくならないかな？ 光っている${M}で守る手を探してみて。`, (M, H) => `相手の次の1手を先に指すつもりで考えてね。光っている${M}で${H}を守れる点はどこかな？`];
+  const XQD_GOOD = [(M, H, B, k) => k ? `正解！ ${M}を間に入れて、相手の${B}の筋を止めたね。これで${H}は取られないし、ほかの駒も無事だコン。その調子！` : `正解！ ${M}で${H}にひもをつけたね。相手の${B}が取っても取り返せるから、相手は手が出せないの。その調子！`, (M, H, B, k) => k ? `やったね！ ${M}が間に入ったから、相手の${B}はもう${H}に届かないの。逃げずに守れたね！` : `やったね！ ${M}が${H}を守ってるから、${B}で取ったら取り返されちゃう。逃げずに守れたね！`, (M, H, B, k) => k ? `お見事！ ${M}で相手の${B}の通り道をふさいだよ。${H}を動かさなくても、ねらいが消えたね。` : `お見事！ ${M}のひもで${H}が守られたよ。相手の${B}のねらいが、これで空振りだコン。`, (M, H, B, k) => k ? `さすが！ ${M}を間に入れる受けで、${H}へのねらいが消えたの。ほかの駒も取られない、ただ一つの受けだね。次もこの目でいこう！` : `さすが！ ${M}で${H}にひもをつける受け。ほかの駒も取られない、ただ一つの受けだね。次もこの目でいこう！`, (M, H, B, k) => k ? `ばっちり！ ${M}が壁になって、相手の${B}は${H}を取れなくなったよ。守りの一手、決まったね！` : `ばっちり！ ${M}が${H}の後ろだてになったから、相手の${B}は取れないの。守りの一手、決まったね！`];
+  const XQD_OPEN = ['いっしょに確かめよう。', 'ここは盤をよく見よう。', '', '大丈夫、守りの手は慣れだコン。', 'これで覚えちゃおう！ '];
+  const XQD_RIGHT = [(K, M, H, B, k) => k ? `正解は${K}。${M}を間に入れると、相手の${B}が${H}に届かなくなったの。` : `正解は${K}。${M}で${H}にひもをつければ、相手の${B}は取れなかったの。`, (K, M, H, B, k) => k ? `${K}なら、${M}が${B}の筋をふさいで${H}を守れたよ。次はきっと見つかるね！` : `${K}なら、${M}のひもで${H}を守れたよ。次はきっと見つかるね！`, (K, M, H, B, k) => k ? `答えは${K}。${M}を間に入れて、${B}のねらいを止める手だったんだコン。` : `答えは${K}。${M}で${H}を守って、${B}のねらいを止める手だったんだコン。`, (K, M, H, B, k) => k ? `いちばんは${K}、${M}で相手の${B}の通り道をふさいで、${H}を守る受けだったの。` : `いちばんは${K}、${M}で${H}にひもをつける受けだったの。`, (K, M, H, B, k) => k ? `${K}がよかったね。${M}が壁になれば、${H}は取られなかったんだ。` : `${K}がよかったね。${M}が守っていれば、${H}は取られなかったんだ。`];
+  function xqDefendJa(E, s, P, i, ck, n) {
+    const v = (L, o) => L[(i + n + (o || 0)) % L.length], T = E.typeOf, mTo = E.mTo, mFrom = E.mFrom, p = E.Pos.from(P.s), me = p.side, A = P.best, M = ck('ok'), X = ck('ng'), F = xqForkF(E);
+    const N = t => XQN(t, me), NO = t => XQN(t, me ^ 1), qa = p.clone().play(A), H0 = F.danger(F.turned(p))[0] || {};
+    const MA = N(T(p.at(mFrom(A)))), HN = N(H0.t), BY = NO(H0.by), blk = !qa.moves().some(x => mTo(x) === H0.s) ? 1 : 0;
+    const sayNet = x => x < 0 ? `差し引き${xqtNum(-x)}点の損になっちゃう` : '差し引きとんとんで、得にならない';
+    const ng = u0 => { const L = p.moves(), u = u0 != null && u0 !== A && L.includes(u0) ? u0 : L.find(x => x !== A && mFrom(x) === H0.s) || L.find(x => x !== A); let w = '';
+      if (u != null) { const q = p.clone().play(u), c = p.at(mTo(u)) ? T(p.at(mTo(u))) : 0, Cn = c ? NO(c) : '', CV = xqtNum(F.capV(p, u)), MT = N(T(p.at(mFrom(u)))), MV = xqtNum(F.val(q, mTo(u)));
+        if (F.mate1(q)) w = v([`${X}だと、相手に1手で詰まされちゃう！ 自分の王さまの守りも見てね。`, `${X}のあと、相手には1手で詰ませる手があるの。こっちが先に詰んじゃう！`], 1);
+        else { const D = F.danger(q), dd = D[0], nt = F.capV(p, u) - (dd ? dd.g : 0);
+          if (!dd) w = `${X}でも駒は取られないけど、相手のねらいは残っているの。`;
+          else if (c && dd.s === mTo(u)) w = v([`${X}で${Cn}（${CV}点）を取ると、きみの${MT}（${MV}点）を相手の${NO(dd.by)}に取り返されて、${sayNet(nt)}の。`, `${X}だと${Cn}（${CV}点）は取れるけど、${MT}（${MV}点）が相手の${NO(dd.by)}に取り返されるの。${sayNet(nt)}んだ。`], 1);
+          else if (c) w = v([`${X}で${Cn}（${CV}点）は取れるけど、こんどは${N(dd.t)}を相手の${NO(dd.by)}に取られちゃう。${sayNet(nt)}の。`, `${X}だと${Cn}（${CV}点）を取っても、${N(dd.t)}が相手の${NO(dd.by)}に取られる形になるの。${sayNet(nt)}んだ。`], 1);
+          else if (mFrom(u) === H0.s && dd.s === mTo(u)) w = v([`${X}で${HN}を逃がしても、行った先でまた相手の${NO(dd.by)}に取られちゃうの。`, `${X}だと、逃げた${HN}が行った先で相手の${NO(dd.by)}に取られる形なの。`, `${X}は逃げ道に見えるけど、行った先にも相手の${NO(dd.by)}が届いていて、${HN}は助からないの。`, `${X}で${HN}を動かすと、行った先で相手の${NO(dd.by)}が待ってるの。逃げ場所になっていないんだ。`, `${X}の逃げ方だと、行った先の${HN}を相手の${NO(dd.by)}に取られちゃう。`], 1);
+          else if (mFrom(u) === H0.s) w = v([`${X}で${HN}は逃げられるけど、こんどは${N(dd.t)}を相手の${NO(dd.by)}に取られちゃう。`, `${X}で${HN}を逃がして助けても、${N(dd.t)}が相手の${NO(dd.by)}に取られる形になるの。`, `${X}で逃げると、${HN}がいなくなったすきに、${N(dd.t)}が相手の${NO(dd.by)}にねらわれちゃうの。`, `${X}は${HN}を逃がす手。でもそのあと、${N(dd.t)}を相手の${NO(dd.by)}に取られちゃう。`, `${X}で${HN}が逃げても、代わりに${N(dd.t)}が相手の${NO(dd.by)}に取られる形なの。`], 1);
+          else if (dd.s === mTo(u)) w = v([`${X}だと、動かした${MT}が相手の${NO(dd.by)}に取られちゃう。行き先が安全かも確かめてね。`, `${X}では、動かした${MT}が行った先で相手の${NO(dd.by)}に取られる形なの。`], 1);
+          else if (dd.s === H0.s) w = v([`${X}だと、${HN}は相手の${NO(dd.by)}に取られたままなの。ねらいを防げていないね。`, `${X}では、${HN}への相手の${NO(dd.by)}のねらいが消えないの。`, `${X}を指しても、${HN}は相手の${NO(dd.by)}に取られたままだよ。`, `${X}は${HN}を守る手になっていないの。相手の${NO(dd.by)}のねらいが消えないね。`, `${X}のあとも、相手の${NO(dd.by)}のねらいが消えないから、${HN}が取られちゃう。`], 1);
+          else w = v([`${X}のあと、こんどは${N(dd.t)}が相手の${NO(dd.by)}に取られる形になるの。`, `${X}だと、きみの${N(dd.t)}を相手の${NO(dd.by)}に取られちゃう。`], 1); } }
+      return v(XQD_OPEN) + w + v(XQD_RIGHT, 2)(M, MA, HN, BY, blk); };
+    return { ask: v(XQD_ASK), hintTx: v(XQD_HINT)(MA, HN), good: () => v(XQD_GOOD)(MA, HN, BY, blk), ng, own: true };
+  }
   function xqLsJa(E, s, P, i, ck, n) {   // n: the lesson's number (each lesson words its praise / misses in an order of its own)
     if (s.id === 't_capture') return xqTradeJa(E, s, P, i, ck, n || 0);
     if (s.id === 't_fork') return xqForkJa(E, s, P, i, ck, n || 0);
     if (s.id === 't_check') return xqCheckJa(E, s, P, i, ck, n || 0);
+    if (s.id === 't_defend') return xqDefendJa(E, s, P, i, ck, n || 0);
     const id = s.id, A0 = XQJ_LS.ask[id]; if (!A0) return null; n = n || 0;
     const k = i + id.length, pick = L => L[k % L.length], H = XQJ_LS.hint[id] || [], VO = xqLsVoice(n);
     const vi = (i + n) % 5, V = (L, o) => L[(i + n + (o || 0)) % L.length];   // (the problem's own wording: five problems, five wordings)
@@ -4528,7 +4569,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xe1-er1-tc1-tf1-ep1-ck1'), getJ('../xiangqi/openings.json?v=6'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xe1-er1-tc1-tf1-ep1-ck1-df1'), getJ('../xiangqi/openings.json?v=6'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vf]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vf)(v); this.V = ((v.I18N || {})['ja@fox']) || {}; } catch (e) { this.V = {}; }   // (ショウギツネ's own lines, 3D, ja)
           return this; })

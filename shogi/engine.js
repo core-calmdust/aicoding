@@ -1202,9 +1202,9 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
   // (2026-11-26) the net of 2026-11: 1280 hidden units, then 8 -> 64 in 8 sets ("NUES", tools/nnue: gtrain.py, prune.py) with
   // its own build (engine_simd_s1280.wasm; several threads: engine_mt_s1280.wasm). It is tried first; a page or a build
   // that does not know it (an older page still in a cache, with engine_mt.wasm) keeps the 512 net.
-  // USE_S = false for now: the levels are rating anchors, and their node counts must first be re-measured for the stronger
-  // engine (tools/nnue/calib-levels.sh); the net, the pages' several-thread build and the new counts go out together.
-  const NUEQ = 0x5145554E, NUES = 0x5345554E, NET_S = 'nnue-s1280.bin.gz', WASM_S = 'engine_simd_s1280.wasm', USE_S = false;
+  // The levels' node counts (the pages' LEVELS) were re-measured for this net and search v6 (2026-11-27, tools/nnue/calib-levels.sh);
+  // nodes0 = a level's count for the 512 net (used when the new net could not be loaded).
+  const NUEQ = 0x5145554E, NUES = 0x5345554E, NET_S = 'nnue-s1280.bin.gz', WASM_S = 'engine_simd_s1280.wasm', USE_S = true;
   async function fetchNNUE(name, magic) {
     if (typeof DecompressionStream === 'undefined') return null;
     const res = await fetch(new URL((name || 'nnue.bin.gz') + QS, self.location.href));
@@ -1214,6 +1214,7 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
     const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
     return dv.getUint32(0, true) === (magic || NUEQ) ? buf : null;
   }
+  let netS = false;
   function loadNNUE(x, buf) {
     if (!buf) return;
     const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
@@ -1223,7 +1224,7 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
       const u = new Uint8Array(MEM.buffer); let o = 32;
       for (let sg = 0; x.nue_seg_len(sg); sg++) { const n = x.nue_seg_len(sg); if (o + n > buf.length) return; u.set(buf.subarray(o, o + n), x.nue_seg_ptr(sg)); o += n; }
       if (o !== buf.length || !x.nue_file_done()) return;
-      nueReady = true; return;
+      nueReady = true; netS = true; return;
     }
     const H = dv.getInt32(4, true), NIN = dv.getInt32(8, true), b = buf.buffer;
     if (x.nue_hdr || (x.nue_h && x.nue_h() !== H)) return;
@@ -1235,7 +1236,14 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
     nueReady = true;
   }
   // the NNUE evaluation for normal play, hints and analysis; the beginner levels (noise) keep the linear evaluation they were tuned with
-  function nueUse(on) { on = !!(on && nueReady); if (on !== nueCur) { X.nue_enable(on ? 1 : 0); X.tt_clear(); nueCur = on; } }
+  // The search follows the evaluation (2026-11-27): search v6 was tuned with the net; with the linear evaluation (12〜9級 and the
+  // beginner levels) it measured about 100 Elo below search v5 at 27000 and 48000 nodes (120 games each), so those levels keep
+  // search v5, the search their node counts were set with. (engine.c P[]: the two sets of numbers)
+  const SV5 = '85=0,91=0,92=0,55=0,110=0,113=0,115=0,75=5,76=90,77=40,79=2,9=5049,43=246,17=214,2=73,1=11,112=0,114=0,116=0,81=0,86=0,87=0,88=0,89=0,93=0,95=0,96=0,97=0,98=0,99=0,100=0,101=0,102=0,103=0,104=0,105=0';
+  const SV6 = '85=1,91=1,92=2,55=1,110=1,113=1,115=2,75=4,76=83,77=110,79=3,86=31,88=169,87=163,89=315,93=400,95=62,96=3,97=1087,98=3261,99=207,100=297,101=179,102=81,103=98,104=85,105=29,81=1935,9=6247,43=379,17=182,2=67,1=18,112=391,114=220,116=239';
+  let srchCur = 6;
+  function srchUse(v) { if (v === srchCur || !X.set_param) return; for (const kv of (v === 5 ? SV5 : SV6).split(',')) { const [k, x] = kv.split('='); X.set_param(+k, +x); } X.tt_clear(); srchCur = v; }
+  function nueUse(on) { on = !!(on && nueReady); if (on !== nueCur) { X.nue_enable(on ? 1 : 0); X.tt_clear(); nueCur = on; } srchUse(on ? 6 : 5); }
   let wReady = Promise.resolve();   // the wasm engine (and its NNUE) loaded, or failed
   try {
     // which net: several threads: the one the page's module is built for; one thread: the new one, else the 512 one
@@ -1316,7 +1324,7 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
         nueUse(!o.linear); wsetup(d);
         wProgress = (depth, score, nodes, pp, pl) => self.postMessage({ type: 'progress', id: d.id, depth, score, pv: Array.from(new Int32Array(MEM.buffer, pp, pl), m => pos.toUsi(m)), nodes });
         const t0 = Date.now();
-        const mv = X.root_search(o.time || 0, o.depth || 0, o.nodes || 0);
+        const mv = X.root_search(o.time || 0, o.depth || 0, (!netS && o.nodes0) || o.nodes || 0);
         wProgress = null;
         const r = new Int32Array(MEM.buffer, X.res_ptr(), 4 + 64);
         self.postMessage({ type: 'result', id: d.id, move: mv ? pos.toUsi(mv) : null, score: X.res_score(), depth: r[1], pv: Array.from(r.subarray(4, 4 + r[3]), m => pos.toUsi(m)), nodes: r[2], time: Date.now() - t0, wasm: true, nnue: nueCur });

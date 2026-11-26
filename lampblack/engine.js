@@ -71,14 +71,19 @@
   };
   const setupOf = (story, size) => Object.assign({ mason: 0, fox: 0, immoral: 0, cat: 0 }, (SETUPS[story && story.rules] || SETUP)[size]);
   const RS = S => S.R || setupOf(null, S.size);
+  const PUB = S => S.hid ? S.pub : RS(S);   // the roles everyone can count on (on 上級・悪夢: only what might be there)
   // difficulty: size, action points, traces left per attack, how often the wolves come for the player,
   // how often they plant a belonging, how often the weather wipes a trace, how far a figure is seen
   const DIFF = [   // 2026-11-25：村まかせでも勝ててしまうので、村の推理を弱め、痕跡を減らした（あなたの働きで勝敗が決まるように）
-    { id: 0, cunning: 0, size: 8,  ap: 3, traces: 1, neg: .35, player: 0,    plant: .15, drop: .2,  erase: .1,  adj: .25, npcFind: .22, fakeSeer: .6,  assist: true,  wit: .16, sway: 1.3 },
-    { id: 1, cunning: 0, size: 10, ap: 3, traces: 1, neg: .5,  player: .3,   plant: .4,  drop: .12, erase: .3,  adj: .2,  npcFind: .1,  fakeSeer: .9,  assist: false, wit: .05, sway: 1.0 },
-    { id: 2, cunning: .7, size: 11, ap: 3, traces: 1, neg: .52, player: .35, plant: .4, drop: .12, erase: .3, adj: .2, npcFind: .14, fakeSeer: .85, assist: false, wit: .16, sway: 1.0 },   // 2026-11-26：中級（標準と上級のあいだ）。嘘つきの「いつもの口ぶり」が透けないよう、巧い嘘つきは上級と同じ割合。そのぶん痕跡・目撃・村の推理は標準なみ
-    { id: 3, cunning: .7, size: 12, ap: 3, traces: 1, neg: .6,  player: .45,  plant: .45, drop: .1,  erase: .35, adj: .17, npcFind: .15, fakeSeer: .8,  assist: false, wit: .16, sway: .9 },
-    { id: 4, cunning: 1, size: 13, ap: 3, traces: 1, neg: .85, player: .45, plant: .75, drop: .08, erase: .3,  adj: .15, npcFind: .12, fakeSeer: 1,   assist: false, wit: .08, sway: .7 },
+    // 2026-11-27：むずかしさを一段ずつ下げ（旧標準→入門・旧中級→標準・旧上級→中級）、上級と悪夢は「狼の数のほかは、誰がいるかわからない」にした
+    { id: 0, cunning: 0, size: 10, ap: 3, traces: 1, neg: .5,  player: .3,   plant: .4,  drop: .12, erase: .3,  adj: .2,  npcFind: .1,  fakeSeer: .9,  assist: false, wit: .05, sway: 1.0 },
+    { id: 1, cunning: .7, size: 11, ap: 3, traces: 1, neg: .52, player: .35, plant: .4, drop: .12, erase: .3, adj: .2, npcFind: .14, fakeSeer: .85, assist: false, wit: .16, sway: 1.0 },   // 嘘つきの「いつもの口ぶり」が透けないよう、巧い嘘つきは中級と同じ割合。そのぶん痕跡・目撃・村の推理はやさしい
+    { id: 2, cunning: .7, size: 12, ap: 3, traces: 1, neg: .6,  player: .45,  plant: .45, drop: .1,  erase: .35, adj: .17, npcFind: .15, fakeSeer: .8,  assist: false, wit: .16, sway: .9 },
+    // hide: 役の伏せ方。狼の数だけは知らされ、ほかの役はくじ（mad: 狂人 0〜3人の重み、ほかは登場する確率）
+    { id: 3, cunning: .85, size: 13, ap: 3, traces: 1, neg: .7, player: .45, plant: .55, drop: .1, erase: .32, adj: .16, npcFind: .13, fakeSeer: .9, assist: false, wit: .12, sway: .8,
+      hide: { mad: [1, 3, 3, 0], seer: .9, medium: .75, guard: .65, mason: .8, fox: .8, immoral: .65, cat: .8 } },
+    { id: 4, cunning: 1, size: 13, ap: 3, traces: 1, neg: .85, player: .45, plant: .75, drop: .08, erase: .3,  adj: .15, npcFind: .12, fakeSeer: 1,   assist: false, wit: .08, sway: .7, nightmare: true,
+      hide: { mad: [1, 3, 3, 1], seer: .85, medium: .7, guard: .6, mason: .7, fox: .75, immoral: .6, cat: .75 } },
   ];
   const CATS = ['height', 'hand', 'foot', 'mark'];
 
@@ -93,14 +98,25 @@
   // opts: { size | diff, role: 'auto'|'villager'|'seer'|'medium'|'guard', seed }
   function newGame(story, opts) {
     opts = opts || {};
-    const D = DIFF[opts.diff != null ? opts.diff : 1];
-    const S = { v: 1, dv: 2, story: story.id, diff: D.id, size: D.size, rs: (opts.seed >>> 0) || ((Math.random() * 2 ** 31) | 0), day: 1, phase: 'prologue' };
+    const D = tuneOf(story.id, opts.diff != null ? opts.diff : 1);
+    const S = { v: 1, dv: 3, story: story.id, diff: D.id, size: D.size, rs: (opts.seed >>> 0) || ((Math.random() * 2 ** 31) | 0), day: 1, phase: 'prologue' };
     S.seed = S.rs;
     const cast = shuffle(S, story.chars.map((c, i) => i)).slice(0, D.size - 1).sort((a, b) => a - b);
     const P = [{ id: 'you', ci: -1, isPlayer: true, name: story.hero.name, traits: story.hero.traits, home: story.hero.home, alive: true, persona: { logic: .7, bold: .5, trust: .5, talk: .5 } }];
     cast.forEach(ci => { const c = story.chars[ci]; P.push({ id: c.id, ci, name: c.name, traits: c.traits, home: c.home, alive: true, persona: c.persona, secret: c.secret ? { loc: c.secret.loc, p: c.secret.p != null ? c.secret.p : .45, open: false } : null }); });
     // roles
     const R = S.R = setupOf(story, D.size), bag = [];
+    if (D.hide) {   // 上級・悪夢：狼の数のほかは、毎回くじ。何がありうるかは S.pub（その物語の顔ぶれ）
+      const H = D.hide, yes = p => rnd(S) < p;
+      S.hid = true; S.pub = Object.assign({}, R, { madman: H.mad.reduce((m, w, k) => w > 0 ? k : m, 0) });
+      // 物語の看板の役（妖狐・背徳者・猫又・共有者・狂信者）は必ずいる（2026-11-27）。狂信者は人数だけがくじ
+      R.madman = wpick(S, [0, 1, 2, 3], k => (H.mad[k] || 0) * (story.rules === 'fanatic' && (k > 2 || k < 1) ? 0 : 1));   // 狼を知る狂信者が三人は重すぎる
+      R.seer = yes(H.seer) ? 1 : 0; R.medium = yes(H.medium) ? 1 : 0;
+      if (R.guard) R.guard = yes(H.guard) ? 1 : 0;
+
+      const want = opts.role && opts.role !== 'auto' && opts.role !== 'villager' ? opts.role : null;   // the role the player chose is always there
+      if (want && S.pub[want] && !R[want]) R[want] = want === 'mason' ? 2 : 1;
+    }
     S.rules = story.rules || 'std'; S.foxLoc = story.foxLoc || null; S.fan = story.rules === 'fanatic';
     for (const r of ['wolf', 'madman', 'seer', 'medium', 'guard', 'mason', 'fox', 'immoral', 'cat']) for (let i = 0; i < R[r]; i++) bag.push(r);
     while (bag.length < D.size) bag.push('villager');
@@ -151,8 +167,10 @@
   const isWolf = (S, id) => S.wolves.includes(id);
   const wolvesAlive = S => S.people.filter(p => p.alive && p.role === 'wolf');
   // 物語ごとの手直し（2026-11-26 ユーザー：霧鐘村・北辰号の中級がまだ易しい）。配役は変えず、嘘の巧さと村の推理だけを締める
-  const TUNE = { kirigane: { 2: { wit: .1, npcFind: .12 } }, hokushin: { 2: { wit: .1, npcFind: .12 } }, nekonaki: { 2: { cunning: .4, wit: .22, npcFind: .16, sway: 1.05 } } }, TD = {};
-  const diffOf = S => { const t = TUNE[S.story] && TUNE[S.story][S.diff]; if (!t) return DIFF[S.diff]; const k = S.story + S.diff; return TD[k] || (TD[k] = Object.assign({}, DIFF[S.diff], t)); };
+  const TUNE = { kirigane: { 1: { wit: .1, npcFind: .12 } }, hokushin: { 1: { wit: .1, npcFind: .12 }, 3: { wit: .1, sway: .75 }, 4: { wit: .07, sway: .65 } }, nekonaki: { 1: { cunning: .4, wit: .22, npcFind: .16, sway: 1.05 }, 3: { wit: .08, sway: .7 }, 4: { wit: .05, sway: .6, hide: { mad: [0, 2, 4, 2] } } },
+    kiteki: { 3: { neg: .65, plant: .5, hide: { mad: [2, 4, 1, 0] } }, 4: { cunning: .9, neg: .7, plant: .5, hide: { mad: [3, 4, 1, 0] } } }, shirane: { 4: { neg: .75, plant: .6, hide: { mad: [3, 5, 1, 0] } } } }, TD = {};
+  function tuneOf(story, i) { const t = TUNE[story] && TUNE[story][i]; if (!t) return DIFF[i]; const k = story + i; return TD[k] || (TD[k] = Object.assign({}, DIFF[i], t, t.hide ? { hide: Object.assign({}, DIFF[i].hide, t.hide) } : {})); }
+  const diffOf = S => tuneOf(S.story, S.diff);
 
   /* ---------- the night ---------- */
   // actions: { prologue, divine:id, guard:id, stake:locId }
@@ -166,7 +184,7 @@
     for (const p of live) {
       pos[p.id] = p.home;
       if (p.secret && !p.isPlayer && rnd(S) < p.secret.p) pos[p.id] = p.secret.loc;
-      if (p.role === 'fox') pos[p.id] = story.foxLoc && rnd(S) < (S.rules === 'immoral' && diffOf(S).id === 0 ? .95 : .85) ? story.foxLoc : p.home;   // (霧笛座の入門: the fox keeps to its lair almost every night)   // the fox keeps its own night at the shrine
+      if (p.role === 'fox') pos[p.id] = story.foxLoc && rnd(S) < (S.rules === 'immoral' && diffOf(S).easy ? .95 : .85) ? story.foxLoc : p.home;   // (霧笛座の入門: the fox keeps to its lair almost every night)   // the fox keeps its own night at the shrine
     }
     if (act.stake) pos.you = act.stake;
     // the wolves choose
@@ -271,9 +289,9 @@
   function planFakes(S) {
     const D = diffOf(S);
     const w = S.people.filter(p => p.role === 'wolf'), m = S.people.find(p => p.role === 'madman');
-    if (m && rnd(S) < (S.fan ? (D.id === 0 ? .5 : .8) : .62)) S.fake[m.id] = { role: 'seer', from: S.fan && D.id > 0 || rnd(S) < .7 ? 1 : 2 };   // the fanatic comes forward early (less so on 入門)
+    if (m && rnd(S) < (S.fan ? (D.easy ? .5 : .8) : .62)) S.fake[m.id] = { role: 'seer', from: S.fan && !D.easy || rnd(S) < .7 ? 1 : 2 };   // the fanatic comes forward early (less so on 入門)
     else if (w.length && (w.length > 1 || m) && rnd(S) < D.fakeSeer) { const f = pick(S, w); S.fake[f.id] = { role: 'seer', from: rnd(S) < .6 ? 1 : 2 }; }
-    if (w.length > 1 && rnd(S) < (D.id >= 4 ? .45 : .22)) { const f = pick(S, w.filter(x => !S.fake[x.id]) || w); if (f) S.fake[f.id] = { role: 'medium', from: 2 }; }
+    if (w.length > 1 && rnd(S) < (D.nightmare ? .45 : .22)) { const f = pick(S, w.filter(x => !S.fake[x.id]) || w); if (f) S.fake[f.id] = { role: 'medium', from: 2 }; }
   }
 
   /* ---------- testimony: what a person says about a night (fixed once said) ---------- */
@@ -313,7 +331,7 @@
       for (const s of mine) T.saw.push(Object.assign({}, s));
       // the immoral covers for the fox: "I saw them at home" — while the fox sat at its lair
       const fx = p.role === 'immoral' && S.people.find(q => q.role === 'fox' && q.alive);
-      if (fx && N.pos[fx.id] !== fx.home && !T.saw.some(s => s.who === fx.id) && rnd(S) < (diffOf(S).id === 0 ? 0 : .6)) T.saw.push({ kind: 'who', who: fx.id, loc: fx.home, lie: true });
+      if (fx && N.pos[fx.id] !== fx.home && !T.saw.some(s => s.who === fx.id) && rnd(S) < (diffOf(S).easy ? 0 : .6)) T.saw.push({ kind: 'who', who: fx.id, loc: fx.home, lie: true });
     }
     S.testi[key] = T;
     return T;
@@ -340,7 +358,7 @@
   function analyze(S, obs, opt) {
     opt = opt || {};
     const K = know(S, obs);
-    const nW = S.wolves.length, nM = RS(S).madman;
+    const nW = S.wolves.length, nM = S.hid && !(K.role === 'wolf' || (K.role === 'madman' && S.fan)) ? PUB(S).madman : RS(S).madman;
     const ids = S.people.map(p => p.id);
     const deadByWolf = new Set(S.people.filter(p => p.death && (p.death.cause === 'wolf' || p.death.cause === 'curse' || p.death.cause === 'follow')).map(p => p.id));
     let cand = ids.filter(id => !deadByWolf.has(id));
@@ -463,7 +481,7 @@
       const feel = .55 * hash01(S.seed + ':' + id + '>' + q.id) + .45 * hash01(S.seed + ':' + S.day + ':' + id + '>' + q.id);   // a fixed like / dislike, and today's mood
       let s = wit * A.p[q.id] + (1 - wit) * feel * avg * 2;
       if (A.p[q.id] === 0) s *= .25;
-      if (q.isPlayer) s *= DIFF[S.diff].id === 0 ? .55 : .85;            // the player is the story's eyes; the village leans on them a little
+      if (q.isPlayer) s *= DIFF[S.diff].easy ? .55 : .85;            // the player is the story's eyes; the village leans on them a little
       sus[q.id] = Math.max(0, s);
     }
     if (p.role === 'wolf') {               // wolves pretend: they use the village's view, never their partners
@@ -563,7 +581,7 @@
       let bite = claimed.length === 2 ? .6 : fakeOurs ? .55 : .75;
       if (gjOn === s.id) bite = Math.min(.95, bite * 1.3);     // the guard cannot stand at the same door two nights running
       if (S.req && S.req.guard && S.req.guard.day === S.day && S.req.guard.target === s.id) bite *= .9;   // asked aloud: the guard may be at that door
-      if (s.isPlayer && D.id === 0) bite *= .5;
+      if (s.isPlayer && D.easy) bite *= .5;
       if (rnd(S) < bite) return s.id;
     }
     const t = wpick(S, cand, p => {
@@ -575,7 +593,7 @@
       if (S.req && S.req.guard && S.req.guard.day === S.day && S.req.guard.target === p.id) v *= .85;
       v += (p.persona.logic || .5) * 1.2;
       v *= 1.15 - pub.p[p.id];                                    // keep the suspected alive as scapegoats
-      if (p.isPlayer) v *= c ? (D.id === 0 ? .5 : 1) : D.player * (1 + (S.pl.hit || 0));
+      if (p.isPlayer) v *= c ? (D.easy ? .5 : 1) : D.player * (1 + (S.pl.hit || 0));
       return v;
     });
     return t.id;
@@ -655,8 +673,8 @@
     else if (p.role === 'mason') role = rnd(S) < .95 ? 'mason' : null;
     else if (p.role === 'cat') role = rnd(S) < .85 ? 'cat' : null;
     else if (p.role === 'wolf' || p.role === 'madman') {
-      if (RS(S).guard && !aliveClaims('guard').length && rnd(S) < (p.role === 'wolf' ? .55 : .45)) role = 'guard';
-      else if (RS(S).cat && !aliveClaims('cat').length && rnd(S) < .3) role = 'cat';   // a bluff: hang me and someone goes with me
+      if (PUB(S).guard && !aliveClaims('guard').length && rnd(S) < (p.role === 'wolf' ? .55 : .45)) role = 'guard';
+      else if (PUB(S).cat && !aliveClaims('cat').length && rnd(S) < .3) role = 'cat';   // a bluff: hang me and someone goes with me
       else if (aliveClaims('seer').length < 2 && rnd(S) < .2) role = 'seer';
     }
     if (!role) return [];
@@ -912,8 +930,8 @@
         if (gc.some(c => c.by === x)) v += gc.length === 1 ? -.22 * (p.persona.trust || .5) * 2 : .04;   // a lone guard is too precious to hang
         if (S.claims.some(c => c.by === x && c.role === 'cat')) v -= .16 * (1 - (p.persona.bold || .5));   // hang a cat and it takes someone along
         const sw = S.swayVote; if (sw && sw.day === S.day && sw.target === x && p.role !== 'wolf') v += sw.dir * .26 * (p.persona.trust || .5) * 2;   // what the player said after the claim
-        const wolfSide = p.role === 'wolf' || (p.role === 'madman' && S.fan && S.diff > 0);   // on 入門 the fanatic lies but does not vote as a bloc
-        if (p.role === 'immoral' && isFox(S, x) && S.diff > 0) v = -1;   // never against the fox (on 入門 it does not shield it)
+        const wolfSide = p.role === 'wolf' || (p.role === 'madman' && S.fan && !diffOf(S).easy);   // on 入門 the fanatic lies but does not vote as a bloc
+        if (p.role === 'immoral' && isFox(S, x) && !diffOf(S).easy) v = -1;   // never against the fox (on 入門 it does not shield it)
         if (wolfSide && isWolf(S, x)) {      // a partner: abandon only when they are surely lost
           v = (heat[x] || 0) >= alive(S).length / 2 ? 2 : -1;
         } else if (wolfSide && x === bloc) v += p.role === 'wolf' ? .6 : .4;
@@ -1155,7 +1173,7 @@
       decide.push({ p, role, go: rnd(S) < Math.max(.03, Math.min(.97, w)), why });
     }
     // asked for the guard: a wolf or the madman may step forward in the guard's name
-    if (roles.includes('guard') && RS(S).guard) for (const p of live) if ((p.role === 'wolf' || p.role === 'madman') && !S.fake[p.id] && !decide.some(d => d.p.id === p.id)) { decide.push({ p, role: 'guard', go: rnd(S) < .18, why: 'fake' }); break; }
+    if (roles.includes('guard') && PUB(S).guard) for (const p of live) if ((p.role === 'wolf' || p.role === 'madman') && !S.fake[p.id] && !decide.some(d => d.p.id === p.id)) { decide.push({ p, role: 'guard', go: rnd(S) < .18, why: 'fake' }); break; }
     // a fake who sees the real one step forward is pushed to counter at once
     for (const d of decide) if (!d.go && d.why === 'fake' && decide.some(x => x.go && x.role === d.role && x.why !== 'fake') && rnd(S) < (d.role === 'guard' ? .3 : .8)) d.go = true;
     // the real ones first speak, the fakes answer them
@@ -1437,5 +1455,5 @@
   }
 
   const isFox = (S, id) => (person(S, id) || {}).role === 'fox';
-  root.WLEngine = { ROLE, SETUP, SETUPS, setupOf, RS, isFox, foxView, DIFF, CATS, newGame, night, meeting, voteRound, exile, check, score, search, ask, present, playerClaim, playerResults, callOut, callEvidence, contradictions, pointOut, dodge, dodgeTalk, near, canSee, statements, evidence, clashEvidence, judgeClash, defendEvidence, judgeDefend, askDivine, askGuard, askHide, testimony, analyze, opinion, suspicion, npcSearch, canConfront, fitsTraces, person, alive, isWolf, rnd, pick, shuffle };
+  root.WLEngine = { ROLE, SETUP, SETUPS, setupOf, RS, PUB, isFox, foxView, DIFF, CATS, newGame, night, meeting, voteRound, exile, check, score, search, ask, present, playerClaim, playerResults, callOut, callEvidence, contradictions, pointOut, dodge, dodgeTalk, near, canSee, statements, evidence, clashEvidence, judgeClash, defendEvidence, judgeDefend, askDivine, askGuard, askHide, testimony, analyze, opinion, suspicion, npcSearch, canConfront, fitsTraces, person, alive, isWolf, rnd, pick, shuffle };
 })(typeof window !== 'undefined' ? window : globalThis);
