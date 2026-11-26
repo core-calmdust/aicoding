@@ -98,6 +98,8 @@ function verify(opt = {}) {
         const dv = Math.max(...Ls.map(L => { let k = 0; while (k < L.length && k < P.mv.length && L[k] === P.mv[k]) k++; return k; }));   // where it leaves the line
         if (dv >= P.mv.length) bad(q, '④ P.mv が手順の上の局面（手順の外でない）');
         else if ((dv % 2 ? 3 - st.turn : st.turn) === side) bad(q, '④ 手順を外れた手が本の側の手（相手が外れた局面でない）');
+        // ④ 19路の定石（布石・置碁以外）：相手が1手目（カカリ・定石の入口）から別の手だと、その定石が始まっていない（2026-11-26 担当B）
+        if (dv === 0 && !/^fuseki_/.test(g.id) && N >= 19) bad(q, `④ 相手が定石の1手目 ${g.line[0]} から外れている（${P.mv[0]}：その定石が始まっていない）`);
         // after the other side left the line: the side's moves are the reading's first move there (its stored reading), the other side's are any
         for (let k = dv + 1; k < P.mv.length; k++) if ((k % 2 ? 3 - st.turn : st.turn) === side) { const r0 = RD && RD.pos && RD.pos[g.id + '@' + P.mv.slice(0, k).join(' ')];
           if (!r0 || !r0.top.length || r0.top[0][0] !== P.mv[k]) bad(q, `④ 手順を外れたあとの本の側の手 ${P.mv[k]}（${k + 1}手目）が読みの首位でない（${r0 && r0.top.length ? r0.top[0][0] : '読みなし'}）`); } }
