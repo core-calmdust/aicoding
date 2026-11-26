@@ -25,7 +25,7 @@
   }
   const seerSure = () => ((E.DIFF[S.diff].hide || {}).seer || 0) >= 1;
   // 上級・悪夢：いるかもしれない役（数は伏せる）
-  function hidList() { const P = E.PUB(S), mad = st.rules === 'fanatic' ? (st.roles.madman || {}).name || '狂信者' : '狂人'; return [P.seer && !seerSure() && st.roles.seer.name, P.medium && st.roles.medium.name, P.guard && (st.roles.guard || {}).name, P.mason && st.roles.mason.name, P.cat && st.roles.cat.name, P.fox && st.roles.fox.name, P.immoral && st.roles.immoral.name, P.madman && mad].filter(Boolean).join('・'); }
+  function hidList() { const P = E.PUB(S), mad = st.rules === 'fanatic' ? (st.roles.madman || {}).name || '狂信者' : '狂人'; return [P.seer && !seerSure() && st.roles.seer.name, P.medium && st.roles.medium.name, P.guard && (st.roles.guard || {}).name, P.madman && st.rules !== 'fanatic' && mad].filter(Boolean).join('・'); }
   const NUM = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
   const ROLE_ICON = {
     auto: '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="11"/><path d="M12.5 12.5a3.6 3.6 0 1 1 4.8 3.4c-.9.4-1.3 1.1-1.3 2.1v.6M16 22.5v.2"/></svg>',
@@ -162,7 +162,7 @@
       .concat(st.rules === 'mason' ? [['mason', st.roles.mason.name, '相方と互いに人間だと知る']] : [['guard', '狩人', '毎晩ひとりを守る']])
       .concat(st.rules === 'cat' ? [['cat', st.roles.cat.name, '吊られても噛まれても道連れ']] : []);
     const can = r => r === 'auto' || r === 'villager' || RR[r] > 0;
-    $('setRules').innerHTML = st.rulesNote ? `<b>この物語のしくみ</b>${esc(st.rulesNote)}${E.DIFF[G.diff].hide ? '（上級・悪夢では、どの役もいるとは限らない）' : ''}` : '';
+    $('setRules').innerHTML = st.rulesNote ? `<b>この物語のしくみ</b>${esc(st.rulesNote)}${E.DIFF[G.diff].hide ? '（上級・悪夢でも、この物語の役は必ずいる。ほかの役は、いるとは限らない）' : ''}` : '';
     $('setRules').classList.toggle('hide', !st.rulesNote);
     if (!can(G.role)) G.role = 'auto';
     $('setRole').innerHTML = roles.map(([r, n, d]) => `<button class="tile${G.role === r ? ' on' : ''}" data-r="${r}" ${can(r) ? '' : 'disabled style="opacity:.35"'}>${ROLE_ICON[r]}<b>${n}</b><span>${can(r) ? d : 'この人数にはいない'}</span></button>`).join('');
@@ -593,7 +593,7 @@
   async function roleCard() {
     const r = S.pl.role, R = st.roles[r];
     await say([{ text: fill(st.text.role, { roleHow: R.how }) }]);
-    await sheet(`<div class="rolecard"><div class="em">${ROLE_ICON[r]}</div><p style="font:700 15px var(--ui);letter-spacing:.2em;color:var(--mute);margin:0">あなたの役</p><h3>${esc(R.name)}</h3><p>${esc(R.perk)}</p><p style="font-size:15px;color:var(--mute)">${castLine()}</p>${st.rulesNote ? `<p style="font-size:14px;color:var(--mute)">${esc(st.rulesNote)}${S.hid ? '（ただし、このむずかしさでは、いるとは限らない）' : ''}</p>` : ''}</div><div class="foot" style="justify-content:center"><button class="btn pri" data-ok>はじまる</button></div>`, box => box.querySelector('[data-ok]').onclick = () => closeSheet(true));
+    await sheet(`<div class="rolecard"><div class="em">${ROLE_ICON[r]}</div><p style="font:700 15px var(--ui);letter-spacing:.2em;color:var(--mute);margin:0">あなたの役</p><h3>${esc(R.name)}</h3><p>${esc(R.perk)}</p><p style="font-size:15px;color:var(--mute)">${castLine()}</p>${st.rulesNote ? `<p style="font-size:14px;color:var(--mute)">${esc(st.rulesNote)}</p>` : ''}</div><div class="foot" style="justify-content:center"><button class="btn pri" data-ok>はじまる</button></div>`, box => box.querySelector('[data-ok]').onclick = () => closeSheet(true));
   }
 
   /* morning: what the night left behind */
