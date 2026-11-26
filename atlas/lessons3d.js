@@ -3162,7 +3162,7 @@
     vct: { g: [w => `${w}で止めさせて、どう受けられても三と四で最後まで追いこめるね。`, w => `攻めの主導権をにぎった！ 相手は受けるだけになるペン。`, w => `${w}のあとも次の攻めの形が残る、いい入り口だね。`, w => `相手の止め石が攻めのじゃまにならない、上手な順番なんだ。`, w => `あとは三と四をつないで、勝ちまで一直線！`],
       n: ['緑の点からなら、どう止められても勝ち切れたんだ。', '正解は緑の点。そこから三と四で追いこめたペン。', '緑の点の攻めなら、相手はどこで受けても逃げられなかったね。', '攻めの入り口は緑の点。そこから攻めが途切れなかったんだ。', '緑の点から始めれば、相手は受け続けるしかなかったペン。'],
       t4: ['きみの四は止められたあと、攻めが続かないペン。', 'その四はふさがれたら終わり。次の攻めがないんだ。', 'きみの四は一発勝負で、止められると相手の番になっちゃう。', 'いまの四のあと、続く攻めの形がない。', '四を急ぎすぎて、攻めの材料を使い切っちゃうペン。'],
-      t3: ['きみの三は、止め方によっては攻めが切れちゃう。', 'その三は、うまく受けられると次が続かないペン。', 'きみの三をはしで止められると、攻めが途切れちゃうんだ。', 'いまの三は、相手の受け方しだいで空振りになる。', 'その三だと、相手の止め石が攻めのじゃまをしちゃう。'],
+      t3: ['きみの三は、止め方によっては攻めが切れちゃう。', 'その三は、うまく受けられると次が続かないペン。', 'きみの三は、相手に受け方を選ばれると攻めが途切れちゃうんだ。', 'いまの三は、相手の受け方しだいで空振りになる。', 'その三だと、相手の止め石が攻めのじゃまをしちゃう。'],
       t0: ['きみの手だと三も四もできないから、相手に反撃の時間をあげちゃう。', 'その手は攻めになっていないから、相手が先に動けちゃうペン。', 'いまの手では相手に受けを強制できないんだ。', 'その一手だと相手は自由に打てて、攻めが止まっちゃう。', 'きみの手は攻めの線から外れていて、相手に番を渡しちゃうペン。'] },
   };
   function gmLsJa(sid, pos, rule, ok, i, n) {
@@ -3249,7 +3249,7 @@
     LKEY: 'aicoding-gomoku-lessons', OKEY: 'aicoding-gomoku-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261126c'), getJ('../gomoku/openings.json?v=20261126v9'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=30261127a'), getJ('../gomoku/openings.json?v=20261126v9'), fetch('../gomoku/i18n.js?v=20261127a').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=5').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] gomoku texts', e); } this.I = w.I18N || {}; this.data = { ls, op };
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
