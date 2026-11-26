@@ -6463,7 +6463,7 @@
       cap: ['横取りのチャンス！ どの穴をまく？', 'さいごの1粒を、空の穴に止められるかな？', '相手の山、どこから取ろうか？', 'いちばんたくさん取れる手はどれかな？', 'さあ、向かいの山をごっそりいただこう！'],
       def: ['相手の横取りのねらい、かわせるかな？', 'このままだと山を取られちゃう！ どうする？', '相手の次の手を読んで、いちばんいい守りをえらんでね。', 'ねらわれた山、どうやって守ろうか？', 'さあ、相手の止まる穴を考えて！'],
       blk: ['相手のもう一回、消せるかな？', '相手のぴったりの穴に、種を落とす手はどれ？', 'このままだと相手に続けて打たれちゃう！ どうする？', '相手の穴の数をずらせる手、どこかな？', 'さあ、相手の「もう一回」をじゃましよう！'],
-      open: ['序盤のいちばんいい手はどれかな？', 'まずは、もう一回が取れる？', '序盤の組み立て、どの穴から始める？', '相手にぴったりの穴をあげない手、わかるかな？', 'さあ、定石どおりに指せるかな？'],
+      open: ['序盤のいちばんいい手はどれかな？', '序盤の組み立て、どの穴から始める？', 'この序盤、きみならどの穴をまく？', '序盤の一手、どこがいちばんかな？', '序盤のきまりを思い出して、どの穴？'],   // (2026-11-26 担当A: no 「もう一回が取れる？」「定石どおり」 — half the problems have no extra turn and none is the book line)
       end: ['終盤！ さいごの差がいちばん大きくなる手はどれかな？', 'ここは数えれば読みきれる！ どの穴をまく？', '勝ちまであと何粒？ いちばん得する手をえらんでね。', 'おしまいまで数えて、最善の一手を！', 'さあ、数え合いの勝負！ どの穴かな？'],
       keep: ['あわてずに考えよう。いちばんいい手はどれかな？', '大きく動く手が、いつもいいとは限らないの。どうする？', '種を相手にわたしすぎない手、見つけられるかな？', 'さあ、きみの側の種をどう使う？', '先の形まで見て、一手をえらんでね！'],
       play: ['実戦の局面！ いちばんいい手はどれかな？', 'きみの得と相手の得、くらべてみて！', 'さあ、ここまでの考え方を全部使おう！', '迷ったら相手の次の手まで数えてね。どの穴？', '最善手、見つけられるかな？'],
@@ -6475,7 +6475,7 @@
       defend: ['赤い丸が、相手の次の手で取られちゃうきみの種。', '相手の種が止まる空の穴はどこ？ その向かいの山があぶないの。'],
       chain: ['ストアに近い穴から順に、ぴったりの数の穴をさがしてね。', '遠い穴を先にまくと、近い穴の数が変わっちゃう！'],
       endgame: ['それぞれの手のあと、相手がどう返すかまで数えてみて。', 'きみの列に残った種は、さいごにきみのものになるの。'],
-      k_open: ['まずストアにぴったり届く穴をさがして！', 'もう一回のあとは、相手に「もう一回」をあげない手をね。'],
+      k_open: ['まずストアにぴったり届く穴をさがして！', 'もう一回がないときは、相手に「もう一回」をあげない手をね。'],
       k_open6: ['6粒なら、ストアからいちばん遠い穴がぴったりの数！', '相手の穴に1粒足すと、相手のぴったりがずれることもあるの。'],
       k_combo: ['もう一回で穴を空けると、そこが横取りの着地点になるの。', '赤い丸は取れそうな相手の山。どの順番なら届くかな？', 'まずは、さいごの1粒がストアに入る穴をさがしてみて。', 'まいたあとの空っぽの穴は、次の手の着地点になるの！', 'もう一回を何回つなげたら、どの山まで届く？'],   // (2026-11-26: five of its own — the group's 「向かいに大きな山がある空き穴」 speaks of a capture right now)
       k_tempo: ['相手の側に種が入らない手をさがしてみて。', 'きみの側の中だけで終わる、少ない種の穴はどれかな？'],
@@ -6529,7 +6529,7 @@
     cap: ['まずは、きみの側の空っぽの穴を見つけよう！', '向かいに大きな山がある空き穴をねらってね！', 'その空き穴まで、ちょうどの数の種がある穴は？'],
     def: ['ねらわれた山を動かせば、取られるものがなくなるの！', '相手が止まる空の穴に、種を落としてうめる手もあるの！', '相手の穴に1粒足して、止まる場所をずらすのも手！'],
     blk: ['相手のストアまでの距離と、相手の穴の種の数をくらべてみて！', 'きみのまく種が、相手の列のどこまで届くか追ってみよう？', '相手の穴が1粒ふえるだけで、ぴったりはくずれるの！'],
-    open: ['まずはもう一回。そのあとで相手の形を見よう！', '相手の列にどれだけ種をわたすかも数えてね！', 'まいたあと、相手にぴったりの穴ができない？'],
+    open: ['まずはもう一回。そのあとで相手の形を見よう！', '相手の列にどれだけ種をわたすかも数えてね！', 'まいたあと、相手にぴったりの穴ができない？', 'ぴったりの穴が2つ以上あるの。どれから使うかで、あとが変わるよ！', 'もう一回がない番。相手の穴の種の数と、相手のストアまでの距離をくらべてみて！'],
     end: ['おしまいの瞬間、どちらの列に何粒残る？', 'あと何粒で勝ちか、先に数えておこう！', 'もう一回で手番を重ねられるかもチェック！'],
     keep: ['大きな山をまくと、種はどこまで流れる？', '少ない種で、手番だけわたす手もあるの！', 'きみの側にためた種は、さいごにきみのもの！'],
     play: ['まずは、もう一回と横取りを探そう！', '相手の次の一手で何をされるかも見てね！', 'きみの得から相手の得を引いて、くらべよう！'],
@@ -6545,11 +6545,17 @@
     cap: [(E, Q, R) => mcTurnCap(E, Q, R) > 0, (E, Q, R) => mcTurnCap(E, Q, R) >= 4, (E, Q, R) => mcTurnCap(E, Q, R) > 0],
     def: [(E, Q, R) => mcDef(E, Q, R).mv, (E, Q, R) => mcDef(E, Q, R).fill, (E, Q, R) => mcDef(E, Q, R).shift],
     end: [null, null, (E, Q, R) => mcReady(E, Q, R).length > 0],
+    open: [(E, Q, R) => mcReady(E, Q, R).includes(Q.best), null, (E, Q, R) => !mcReady(E, Q, R).length && !mcOppEx(E, Q, R), (E, Q, R) => mcReady(E, Q, R).length >= 2 && mcReady(E, Q, R).includes(Q.best), (E, Q, R) => !mcReady(E, Q, R).length],   // (2026-11-26 担当A)
     keep: [null, (E, Q, R) => { const t = E.trace(Int8Array.from(Q.b), 0, Q.best, R); return Q.b[Q.best] <= 4 && !t.extra && !t.cap && t.events.filter(e => e.t === 'drop').every(e => e.at <= 5); }, null],   // (2026-11-26: 「少ない種で、手番だけわたす」 = the answer is a quiet move of 4 seeds or fewer)
   };
   const mcNear = (E, Q, R) => { const r = mcReady(E, Q, R); return r.length >= 1 && r.every(k => k <= Q.best); }, mcNear2 = (E, Q, R) => mcReady(E, Q, R).length >= 2 && mcNear(E, Q, R);
-  const MCJ_HFIT = { extra: [null, mcNear2], chain: [mcNear, mcNear2] };   // (the lessons' own two hints: 「候補がいくつかあるなら…」「遠い穴を先にまくと…」 need two ready pits)
+  const mcOppEx = (E, Q, R) => { const t = E.trace(Int8Array.from(Q.b), 0, Q.best, R); if (t.extra || t.over) return 0; return E.legal(t.board, 1, R).filter(k => { const u = E.trace(t.board, 1, k, R); return u.extra && !u.over; }).length; };   // (the opponent's exact pits after the answer)
+  const mcShift = (E, Q, R) => { const b = Int8Array.from(Q.b), ex = E.legal(b, 1, R).filter(k => E.trace(b, 1, k, R).extra), dr = E.trace(b, 0, Q.best, R).events.filter(e => e.t === 'drop').map(e => e.at); return !mcReady(E, Q, R).length && ex.some(k => dr.includes(7 + k)); };   // (the answer adds a seed to an exact pit of the opponent's)
+  const MCJ_HFIT = { extra: [null, mcNear2], chain: [mcNear, mcNear2],
+    k_open: [(E, Q, R) => mcReady(E, Q, R).length > 0, (E, Q, R) => !mcReady(E, Q, R).length && !mcOppEx(E, Q, R)],   // (2026-11-26 担当A)
+    k_open6: [(E, Q, R) => Q.best === 0 && Q.b[0] === 6 && mcReady(E, Q, R).includes(0), mcShift] };   // (the lessons' own two hints: 「候補がいくつかあるなら…」「遠い穴を先にまくと…」 need two ready pits)
   const MCJ_GHX = {
+    open: ['まく前に、相手の列に何粒わたるか数えてみよう！', 'まいたあと、相手のどの穴がストアにぴったり届くか、たしかめてみて！'],   // (2026-11-26 担当A)
     sow: ['1粒ずつ、穴を数えながらまいてみよう！', 'さいごの1粒が落ちる穴を、指でたどってみて。', '種の数だけ、となりへとなりへ進めるの。'],
     extra: ['さいごの1粒がどこに落ちるか、指でなぞって確かめよう！', 'ストアまでの穴の数を、右から順に数えてみて。', 'まいたあと、手番がきみに残る穴はどこ？'],
     cap: ['相手の大きな山の向かいは、空いていない？', 'さいごの1粒が空の穴に入る手を探してみて。', '取れる粒の数を、穴ごとにくらべよう！'],
@@ -6611,7 +6617,8 @@
       if (W.over && W.margin > 0 && !(G.over && G.margin > 0)) return T(v(W_.notWin()));
       if (W.extra && !G.extra) return T(v(s.rules === 'sunka' || G.relays ? W_.noExRelay() : G.n < G.d ? W_.noExShort(G.d - G.n) : W_.noExOver()));
       if (W.cap > G.cap && W.cap >= 2) return T(v(G.cap ? W_.capSmall(G.cap) : W_.noCap()));
-      if (G.oppBest >= W.oppBest + 2) { const mo = G.oppBest >= 4 ? 'も' : ''; return T(v((G.oppHow === 'cap' ? W_.oppCap : G.oppHow === 'both' ? W_.oppBoth : G.oppHow === 'extra' ? W_.oppEx : W_.oppPlain)(G.oppBest, mo))); }
+      if (G.oppBest >= W.oppBest + 2) { const mo = G.oppBest >= 4 ? 'も' : '', tx = v((G.oppHow === 'cap' ? W_.oppCap : G.oppHow === 'both' ? W_.oppBoth : G.oppHow === 'extra' ? W_.oppEx : W_.oppPlain)(G.oppBest, mo));
+        return T(G.extra ? 'もう一回を使いきっても、' + tx.replace(/^赤い丸(の穴のあと|をまくと|のあとは|のあと|の手だと|では)、/, '') : tx); }   // (2026-11-26 担当A: the red pit gives another turn — the opponent moves only after it is used up)
       if (g === 'blk' && G.oppEx > W.oppEx) return T(v(W_.blk()));
       if (W.turn >= G.turn + 2) return T(v(W_.turn(G.turn)));
       if (G.toOpp >= W.toOpp + 2) return T(v(W_.toOpp(G.toOpp)));
@@ -6665,7 +6672,7 @@
     LKEY: 'aicoding-mancala-v1-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../mancala/lessons.json?v=20261126km1'), Promise.all(['../mancala/i18n.js?v=20261107l15', '../mancala/i18n-learn.js?v=20261107l14'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mcEng().catch(() => null)])
+      return (this.p = Promise.all([getJ('../mancala/lessons.json?v=20261126km2'), Promise.all(['../mancala/i18n.js?v=20261107l15', '../mancala/i18n-learn.js?v=20261126l15'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mcEng().catch(() => null)])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] mancala texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
