@@ -3138,7 +3138,7 @@ try { lessonProgress = JSON.parse(localStorage.getItem(LESSON_STORE) || '{}'); }
 const CORNER_OF = { 9: 0, 14: 7, 49: 56, 54: 63, 1: 0, 8: 0, 6: 7, 15: 7, 48: 56, 57: 56, 55: 63, 62: 63 };
 async function loadLessons() {
   if (lessonData) return lessonData;
-  try { lessonData = await fetch('lessons.json?v=20261126q1').then(r => r.json()); } catch (e) { lessonData = { lessons: [] }; }
+  try { lessonData = await fetch('lessons.json?v=20261126w1').then(r => r.json()); } catch (e) { lessonData = { lessons: [] }; }
   return lessonData;
 }
 const LT = l => l.text ? Object.assign({}, l.text.ja, l.text.en, l.text[LANG]) : l;  // per-field fallback: LANG → en → ja
