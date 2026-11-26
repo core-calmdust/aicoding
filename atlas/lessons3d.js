@@ -2733,7 +2733,7 @@
   /* the same texts without coordinates, for the 3D board (2026-11-14): atlas/nocoord/<game>.json { '<lesson id>/<ramp index>/<field>': { lang: text } }
      (the full games keep their own texts: their boards show coordinates) */
   const NC = {};
-  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=22').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
+  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=23').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
   // (2026-11-21 user: 「ドット＆ボックスの初回レッスンも、これはどういうゲームなのかの説明がない。まずは短くても良いからそこから」)
   // the first lesson of a game opens with what the game is and how it is won, in the guide's voice (ja; the games whose first intro lacks it)
   const GAME_JA = {
@@ -3388,7 +3388,8 @@
       nobi: ['{n}自分の石からまっすぐ伸びた！ ダメが{l}つに増えて、じょうぶな形ペン。', '{n}仲間の石にくっつけて伸びた。これで石が強くなったね！', '{n}あわてずに一歩伸びて、ダメを{l}つにした！'],
       local: ['{n}ここで形を整えた！ 次の戦いにそなえる一手ペン。', '{n}石の働きを広げる、大事な一手だね！', '{n}まわりの石と協力できる場所に打った！'],
       open: ['{n}空いている大きな場所を先に取った！', '{n}広いところに先に石を置いたペン。あとで大きく働くね！', '{n}まだだれもいない場所へ。大場を取る手なんだ！'] },
-    whyMore: { contact: ['{n}相手の石にがっちり接して、自由にさせない一手だよ！', '{n}相手の石と肩をならべて、一歩も引かずに受けて立った！', '{n}相手の石にくっついて、戦いの主導権をにぎったペン。'] },   // (more lines for a kind asked more often in one set than H.why has: uzw)
+    whyMore: { contact: ['{n}相手の石にがっちり接して、自由にさせない一手だよ！', '{n}相手の石と肩をならべて、一歩も引かずに受けて立った！', '{n}相手の石にくっついて、戦いの主導権をにぎったペン。'],
+      atari: ['{n}相手の石を、あと1手で取れるところまで追いこんだ！', '{n}相手の石を追いつめた。取られないよう、相手は受けるしかないペン。'] },   // (more lines for a kind asked more often in one set than H.why has: uzw)
     // what the other side does with the green point if it is left
     them: {
       cap: ['そのままだと、相手が{m}に打って、石を{k}子取られちゃう。', '相手が{m}に打つと、きみの石が{k}子取られちゃうんだ。', 'もし{m}を後回しにすると、そこで{k}子を取られちゃうペン。'],
@@ -3468,7 +3469,7 @@
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=12'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
+      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=14'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
         try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
         return this; }).catch(e => { this.p = null; throw e; }));
     },
@@ -7218,7 +7219,7 @@
     load(lang) {
       const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261021L`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
       if (this.p) return this.p.then(() => T()).then(() => this);
-      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261125i'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
+      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261126a'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
         .then(([ls, X]) => { const w = {}; try { new Function('window', 'with (window) {' + X + '\n}')(w); } catch (e) { console.warn('[lessons3d] dots texts', e); } this.I = w.I18N || {}; this.data = { ls }; return T(); }).then(() => this)
         .catch(e => { this.p = null; throw e; }));
     },

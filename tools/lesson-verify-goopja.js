@@ -98,10 +98,10 @@ function checkProblem(o, p0, ok) {
   const hk = Object.entries(H.hint).find(([, arr]) => arr.includes(o.hintTx)); if (!hk) bad.push(`⑦ ヒントの文が表にない：${o.hintTx}`);
   else if (HINT_NEED[hk[0]] && !HINT_NEED[hk[0]](F)) bad.push(`⑧ ヒント（${hk[0]}）が盤と合わない：${o.hintTx}`);
   // the praise
-  const g = o.good(ok), wf = matchKind(H.why, g);
+  const WHY = Object.fromEntries(Object.entries(H.why).map(([k, a]) => [k, a.concat((H.whyMore || {})[k] || [])])), g = o.good(ok), wf = matchKind(WHY, g);   // (2026-11-26 担当B: whyMore の言い回しも盤で照合)
   if (!wf) bad.push(`⑧ 正解の文に理由（why）がない：${g}`);
   // 追90: the other wordings of the same kind (the lesson picks them in turn) — each one's numbers and claim on this board
-  else { (H.why[wf.kind] || []).forEach(t => { if (!t.includes('{k}') && !t.includes('{l}')) return; if (wf.kind === 'cap' && !(F.cap > 0)) bad.push(`追90 ${t}`); });
+  else { (WHY[wf.kind] || []).forEach(t => { if (!t.includes('{k}') && !t.includes('{l}')) return; if (wf.kind === 'cap' && !(F.cap > 0)) bad.push(`追90 ${t}`); });
     if (!whyTrue(wf.kind, F, wf)) bad.push(`⑧ 正解の理由（${wf.kind}）が盤と合わない：${g}`);
     for (const nm of ['ハネ', 'オサエ', 'ツケ', 'キリ', 'アテ', 'ハイ', 'オシ', 'ノゾキ']) if (['この{n}で、', '{n}を打って、', '{n}がぴったり。', 'ここで{n}！'].some(t => g.includes(t.replace('{n}', nm))) && !(F.opp >= 1)) bad.push(`⑧ 手の名前「${nm}」が相手の石に接しない手：${g}`); }
   // every legal wrong move
@@ -141,6 +141,7 @@ if (require.main === module && process.argv.includes('--selftest')) {
   out.push(['そのままの文', checkProblem(mk(), p, ok).length === 0]);
   { const o = mk(), g0 = o.good; o.good = u => g0.call(o, u).replace(/(\d+)子/, (_, k) => (+k + 1) + '子'); out.push(['取った数を1つ増やす', checkProblem(o, p, ok).some(m => /⑧ 正解の理由/.test(m))]); }
   { const o = mk(); o.good = () => 'いいね！ ' + H.why.atari[0].replace('{n}', ''); out.push(['取る手を「アタリにした」と言う', checkProblem(o, p, ok).some(m => /⑧ 正解の理由（atari）/.test(m))]); }
+  { const o = mk(); o.good = () => 'いいね！ ' + H.whyMore.atari[0].replace('{n}', ''); out.push(['取る手を whyMore の「追いこんだ」で言う', checkProblem(o, p, ok).some(m => /⑧ 正解の理由（atari）/.test(m))]); }
   { const o = mk(), n0 = o.ng; o.ng = u => n0.call(o, u) + ' ' + themT(H.them.cap[1]).replace('{k}', '1'); out.push(['ほかの手のあとを「取られる」と言う（取られない）', checkProblem(o, p, ok).some(m => /⑦ .*説明（cap）/.test(m))]); }
   { const o = mk(); o.hintTx = H.hint.save[0]; out.push(['アタリの自分の石がないのに「助ける」ヒント', checkProblem(o, p, ok).some(m => /⑧ ヒント（save）/.test(m))]); }
   out.forEach(([k, v]) => console.log((v ? 'OK ' : 'NG ') + k)); process.exit(out.every(x => x[1]) ? 0 : 1);
