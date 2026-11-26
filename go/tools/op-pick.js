@@ -26,13 +26,17 @@ const pool = [];
 O.sets.forEach(g => { if (SETS.includes(g.id)) return; (g.problems || []).forEach((P, j) => { const p = play(g, P.mv || g.line.slice(0, P.at)); if (p) pool.push({ who: g.id + ' q' + (j + 1), n: g.n || 19, S: stonesOf(p) }); }); });
 const L = J('go/lessons.json'); L.steps.forEach(st => { (st.problems || []).forEach((P, j) => pool.push({ who: 'lesson ' + st.id, n: P.s.n, S: stonesOf(R.Pos.from(P.s)) })); (st.ramp || []).forEach(r => { if (r.s) pool.push({ who: 'warm-up ' + st.id, n: r.s.n, S: stonesOf(R.Pos.from(r.s)) }); }); });
 J('go/puzzles.json').themes.forEach(t => (t.puzzles || []).forEach(P => { if (P.s) pool.push({ who: 'tsumego ' + t.id, n: P.s.n, S: stonesOf(R.Pos.from(P.s)) }); }));
+function farOf(g, a) { const N = g.n || 19; if (/^fuseki_/.test(g.id) || N < 19) return false; const i = R.parseCoord(a, N);
+  const pts = [].concat(...[g.line].concat((g.vars || []).map(v => v.line))).map(m => R.parseCoord(m, N)).filter(j => j >= 0);
+  return !pts.some(j => Math.max(Math.abs(j % N - i % N), Math.abs(Math.floor(j / N) - Math.floor(i / N))) <= 4); }
 const RD = J('go/tools/data/openings-reads.json'), PICKED = [];   // (the positions taken by the sets before: 5 each, kept apart too)
 for (const id of SETS) { const g = O.sets.find(x => x.id === id), N = g.n || 19, side = g.side || 1;
   const cand = Object.entries(C).filter(([k, c]) => c.id === id && c.deep && passes(c) && passes(c.deep, c.top[0][0]) && c.turn === side)
     .map(([k, c]) => { const p = play(g, c.mv); return { k, c, p, S: stonesOf(p) }; }).sort((a, b) => a.c.mv.length - b.c.mv.length);
   const pick = [];
   for (const x of cand) { const near = pool.find(o => dist(x.S, N, o.S, o.n) <= 2), mine = pick.concat(PICKED).find(o => dist(x.S, N, o.S, o.N || N) <= 2);
-    console.log(id, x.c.mv.join(' '), '→', x.c.top[0][0], near ? '⑤ ' + near.who : mine ? '⑤ 同じ本 ' + mine.c.mv.join(' ') : 'ok'); if (!near && !mine && pick.length < 5) pick.push(x); }
+    const far = farOf(g, x.c.top[0][0]);   // ④ 19路の定石：答えが定石の隅（本筋・変化の石から4路以内）
+    console.log(id, x.c.mv.join(' '), '→', x.c.top[0][0], far ? '④ 定石の隅から離れている' : near ? '⑤ ' + near.who : mine ? '⑤ 同じ本 ' + mine.c.mv.join(' ') : 'ok'); if (!far && !near && !mine && pick.length < 5) pick.push(x); }
   console.log(id, '選んだ', pick.length); if (pick.length === 5) pick.forEach(x => PICKED.push(Object.assign(x, { N })));
   if (WRITE && pick.length === 5) { g.problems = pick.map(x => { const on = g.line.slice(0, x.c.mv.length).join(' ') === x.c.mv.join(' ');
       if (on) RD.pos[id + '@' + x.c.mv.length] = { turn: x.c.turn, pol: x.c.pol, top: x.c.top, deep: { pol: x.c.deep.pol, top: x.c.deep.top } };

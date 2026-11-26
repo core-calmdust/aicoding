@@ -76,7 +76,7 @@
   const DIFF = [   // 2026-11-25：村まかせでも勝ててしまうので、村の推理を弱め、痕跡を減らした（あなたの働きで勝敗が決まるように）
     { id: 0, cunning: 0, size: 8,  ap: 3, traces: 1, neg: .35, player: 0,    plant: .15, drop: .2,  erase: .1,  adj: .25, npcFind: .22, fakeSeer: .6,  assist: true,  wit: .16, sway: 1.3 },
     { id: 1, cunning: 0, size: 10, ap: 3, traces: 1, neg: .5,  player: .3,   plant: .4,  drop: .12, erase: .3,  adj: .2,  npcFind: .1,  fakeSeer: .9,  assist: false, wit: .05, sway: 1.0 },
-    { id: 2, cunning: .2, size: 11, ap: 3, traces: 1, neg: .55, player: .35, plant: .42, drop: .11, erase: .3, adj: .19, npcFind: .14, fakeSeer: .85, assist: false, wit: .2, sway: 1.0 },   // 2026-11-26：中級（標準と上級のあいだ）
+    { id: 2, cunning: .4, size: 11, ap: 3, traces: 1, neg: .58, player: .4, plant: .44, drop: .1, erase: .32, adj: .18, npcFind: .12, fakeSeer: .85, assist: false, wit: .12, sway: .95 },   // 2026-11-26：中級（標準と上級のあいだ）。やさしすぎたので、嘘の巧さ・目撃・村の推理を上級寄りに
     { id: 3, cunning: .7, size: 12, ap: 3, traces: 1, neg: .6,  player: .45,  plant: .45, drop: .1,  erase: .35, adj: .17, npcFind: .15, fakeSeer: .8,  assist: false, wit: .16, sway: .9 },
     { id: 4, cunning: 1, size: 13, ap: 3, traces: 1, neg: .85, player: .45, plant: .75, drop: .08, erase: .3,  adj: .15, npcFind: .12, fakeSeer: 1,   assist: false, wit: .08, sway: .7 },
   ];
@@ -150,7 +150,9 @@
   const alive = S => S.people.filter(p => p.alive);
   const isWolf = (S, id) => S.wolves.includes(id);
   const wolvesAlive = S => S.people.filter(p => p.alive && p.role === 'wolf');
-  const diffOf = S => DIFF[S.diff];
+  // 物語ごとの手直し（2026-11-26 ユーザー：霧鐘村・北辰号の中級がまだ易しい）。配役は変えず、嘘の巧さと村の推理だけを締める
+  const TUNE = { kirigane: { 2: { cunning: .6, wit: .08, npcFind: .1 } }, hokushin: { 2: { cunning: .6, wit: .08, npcFind: .1 } } }, TD = {};
+  const diffOf = S => { const t = TUNE[S.story] && TUNE[S.story][S.diff]; if (!t) return DIFF[S.diff]; const k = S.story + S.diff; return TD[k] || (TD[k] = Object.assign({}, DIFF[S.diff], t)); };
 
   /* ---------- the night ---------- */
   // actions: { prologue, divine:id, guard:id, stake:locId }
