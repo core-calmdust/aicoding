@@ -4184,7 +4184,7 @@
       m_dc: ['重炮で詰ませる、最初の手はどれかな？', '2つの炮を縦に重ねるには、どう指す？', '重炮の形を作る一手、わかる？', '重炮のチャンスだコン！ 最初の手は？', '炮を台にして炮で詰ませる。どこから始める？'],
       m_face: ['帥の力も使って、詰ませてみよう！', '帥と將のにらみ合いを使う一手はどれかな？', '帥のいる筋は、將は通れない。それを使うと？', '帥も攻めに参加させるコン！ 決め手は？', '帥のにらみを生かす詰め方、わかる？'],
       e_rook: ['いちばん早く詰む手はどれ？', '最短で詰ませる一手を探してみて！', '詰みまでの手数がいちばん少ない手は？', 'いちばん早く詰むコースを探してみよう！', '最短の詰み、見つけられる？'],
-      e_pawn: ['詰みへの近道になる手はどれかな？', '兵をどこまで進める？ いちばん良い手は？', '帥と兵で、どう追いつめる？', 'いちばん早く詰むコースを探してみて！', '兵の進め方が勝負だコン！'],
+      e_pawn: ['帥と兵で、いちばん早く詰む手はどれかな？', '兵をどう動かす？ 最短で詰ませる一手は？', '詰みまでの手数がいちばん少ない手を探して！', 'いちばん早く詰むコースを探してみて！', '兵の進め方が勝負だコン！ 最短の詰みはどれ？'],
     },
     hint: {
       b_rook: ['車の縦と横を、端まで見通してみて。', '取ったあと、その場所を相手の駒がねらっていない？', 'ひもの付いていない駒を探すのがコツだコン。', '車の通り道に、さえぎる駒はある？', '取れる駒の中で、守り手のいないのはどれ？'],
@@ -4208,7 +4208,14 @@
       e_rookP: ['帥を動かして、將との間にいる士を動けなくしてみて。', '帥と將の間に士が1つ。帥で向かい合うと、その士はどうなる？'],
       e_rookC: ['車の王手から入ってみて。', '王手で將を動かして、追いこんでいこう。'],
       e_rookQ: ['王手を急がず、車で將の通り道をふさいでみて。', 'あせって王手するより、將の行き場を先に消すのが近道なの。'],
-      e_pawn: ['兵は戻れないから、進めすぎに気をつけるコン。', '帥のにらみで、將の行き場をしぼってみて。', '兵が九宮に入ると、將のとなりをおさえられるの。', '將が動ける点を数えて、いちばん減る手を探そう！', '兵を急がせず、帥を先に動かす手もあるの。'],
+      // (2026-11-26 第2期 担当A) e_pawn: the hint follows the answer, as e_rook (the general's face-off / the middle file / an advisor
+      // pinned between the generals / a soldier's check / a quiet soldier move forward or sideways)
+      e_pawn: ['帥を動かして、將と向かい合う筋をにらんでみて。', '帥のにらみで、將の行き場を1つ消してみて！'],
+      e_pawnM: ['帥を真ん中の筋へ動かして、將が使える点を減らしてみて。', '帥で真ん中の筋をにらむと、將はその筋に出られないの。'],
+      e_pawnP: ['帥を動かして、將との間にいる士を動けなくしてみて。', '帥と將の間に士が1つ。帥で向かい合うと、その士はどうなる？'],
+      e_pawnC: ['兵の王手から入ってみて。', '兵で王手して、將を追いこんでいこう。'],
+      e_pawnQ: ['王手を急がず、兵を1歩前へ進めて將の行き場をふさいでみて。', 'あせって王手するより、兵を前へ進めて將の通り道を先に消すのが近道なの。'],
+      e_pawnS: ['王手を急がず、兵を横へ寄せて將の行き場をふさいでみて。', 'あせって王手するより、兵を横に動かして將の通り道を先に消すのが近道なの。'],
     },
     // ショウギツネ's voice for one lesson, each lesson in an order of its own (xqLsVoice)
     cheer: ['お見事！', 'いい手！', 'そのとおり！', 'ばっちりだコン！', 'さすが！', 'ナイス！', 'やったね！', 'すごい、正解！', 'よく見つけた！', 'そうそう、それ！', '上手だコン！', 'いい目してる！'],
@@ -4371,6 +4378,12 @@
       // (2026-11-25 第2期 担当A) e_rook (ok kind: the fastest mate alone is right): what the miss does on the board — the chariot is taken
       // (a draw: no mate is left with the general alone), a slower win (the engine still sees a mate), or the mate is put off (no win
       // within one move more than the answer: tools/lesson-verify-xqend.js)
+      // (2026-11-26 第2期 担当A) e_pawn the same: a soldier taken (a reply takes it), a slower win, or the mate put off (tools/lesson-verify-xqpawn.js)
+      if (id === 'e_pawn') { const q = pos.clone().play(u), lost = q.moves().some(r => q.at(E.mTo(r)) && E.typeOf(q.at(E.mTo(r))) === E.PAWN);
+        return lost ? (v != null && v > WT ? V(['{x}だと兵を1つ取られちゃう。まだ勝てるけど、詰みが遠回りになるの。', '{x}では兵がただで取られるの。勝ちは残っても、手数が多くかかっちゃう。'])
+            : V(['{x}だと兵を取られて、詰みがずっと遠のいちゃう。', '{x}では兵がただで取られて、すぐには詰ませられなくなるの。']))
+          : v != null && v > WT ? V(['{x}でも勝てるけど、詰みまで少し遠回りになるの。', '{x}も勝ちまで行けるけど、手数が多くかかるの。'])
+          : V(['{x}だと詰みが遠のいて、相手に粘られちゃう。', '{x}では將に息をつかせて、詰みまで長引くの。', '{x}のあとは、すぐには詰まない形になっちゃう。']); }
       if (id === 'e_rook') { const q = pos.clone().play(u), lost = q.moves().some(r => q.at(E.mTo(r)) && E.typeOf(q.at(E.mTo(r))) === E.ROOK);
         return lost ? V(['{x}だと車を取られて、引き分けになっちゃう。', '{x}では車がただで取られて、もう詰ませられないの。'])
           : v != null && v > WT ? V(['{x}でも勝てるけど、詰みまで少し遠回りになるの。', '{x}も勝ちまで行けるけど、手数が多くかかるの。'])
@@ -4446,14 +4459,15 @@
     const clear = (z, a0, t) => { for (let r = Math.min(a0, t) + 9; r < Math.max(a0, t); r += 9) if (z.at(r)) return false; return true; };
     const shut = () => { const z = pos.clone().play(A), a0 = z.k[me], b0 = z.k[me ^ 1];   // a flight next to the enemy general shut by our general's face-off
       return [b0 - 9, b0 + 9, b0 - 1, b0 + 1].some(t => t >= 0 && t < 90 && Math.abs(t % 9 - b0 % 9) + Math.abs(((t / 9) | 0) - ((b0 / 9) | 0)) === 1 && t % 9 >= 3 && t % 9 <= 5 && (me ? (t / 9 | 0) >= 7 : (t / 9 | 0) <= 2) && !z.at(t) && t % 9 === a0 % 9 && clear(z, a0, t)); };
-    const HE = id === 'e_rook' ? (E.typeOf(pos.at(E.mFrom(A))) === E.KING ? (pin() ? XQJ_LS.hint.e_rookP : shut() ? XQJ_LS.hint.e_rook : XQJ_LS.hint.e_rookM) : FA && FA.check ? XQJ_LS.hint.e_rookC : XQJ_LS.hint.e_rookQ) : null;
+    const HE = id === 'e_rook' ? (E.typeOf(pos.at(E.mFrom(A))) === E.KING ? (pin() ? XQJ_LS.hint.e_rookP : shut() ? XQJ_LS.hint.e_rook : XQJ_LS.hint.e_rookM) : FA && FA.check ? XQJ_LS.hint.e_rookC : XQJ_LS.hint.e_rookQ)
+      : id === 'e_pawn' ? (E.typeOf(pos.at(E.mFrom(A))) === E.KING ? (pin() ? XQJ_LS.hint.e_pawnP : shut() ? XQJ_LS.hint.e_pawn : XQJ_LS.hint.e_pawnM) : pos.clone().play(A).inCheck() ? XQJ_LS.hint.e_pawnC : E.mFrom(A) % 9 === E.mTo(A) % 9 ? XQJ_LS.hint.e_pawnQ : XQJ_LS.hint.e_pawnS) : null;
     return { ask: pick(A0), hintTx: HE ? HE[((i + n) >> 1) % HE.length] : H2 ? H2[(i + n) % 5] : H.length ? H[(i + n) % H.length] : '', good, ng: say, own: true };
   }
   const XIANGQI = {
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xe1-er1-tc1-tf1'), getJ('../xiangqi/openings.json?v=6'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xe1-er1-tc1-tf1-ep1'), getJ('../xiangqi/openings.json?v=6'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vf]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vf)(v); this.V = ((v.I18N || {})['ja@fox']) || {}; } catch (e) { this.V = {}; }   // (ショウギツネ's own lines, 3D, ja)
           return this; })
