@@ -4147,7 +4147,7 @@
       b_escape: '相手の駒が、きみの大事な駒をねらっているの！<br>取られない場所へ逃げよう。逃げた先でまたねらわれないか、確かめるのも忘れずにね。',
       b_mate1: '王手をかけて、相手がどうしても王手をはずせなければ<b>詰み</b>。きみの勝ちだコン！<br>將（帥）は九宮から出られないから、逃げ道は少ないの。そこがねらい目だね。',
       t_capture: '守られている駒でも、自分の駒より価値が高ければ、取る値打ちがあるの。<br>目安は、車9・炮4.5・馬4・仕と相2・兵1（川を渡ると2）くらい。<br>取り返されても得をする取り方を、探してみよう！',
-      t_fork: '1つの駒で2つの駒を同時にねらうのが<b>両取り</b>。相手は片方しか守れないの。<br>とくに馬の両取りはよく出てくるから、覚えておくと役に立つコン！',
+      t_fork: '1つの駒で2つの駒を同時にねらうのが<b>両取り</b>。相手は1手で片方しか助けられないの。<br>得は駒の値打ちで数えるよ：車9・炮4.5・馬4・仕と相2・兵1（川を渡ると2）。ねらう駒が守られていても、動いた駒より高ければ得になるコン！',
       t_check: '王手をかけられたら、相手は必ず受けないといけないよね。<br>だから、王手のついでに別の駒もねらえる手は、とっても強いの。相手を忙しくさせちゃおう！',
       t_defend: '相手の次の手を、先に読んでみよう。<br>ただで取られそうな駒があったら、守る（ひもをつける）か、間に駒を入れて防ぐの。守りも攻めと同じくらい大切だコン。',
       m_mate2: '相手がどう受けても、次の手で必ず詰む。そんな最初の1手を見つけよう！<br>王手から始まるとはかぎらないの。静かな一手が決め手になることもあるんだコン。',
@@ -4260,8 +4260,64 @@
       return v(XQT_OPEN) + w + v(XQT_RIGHT, 2)(M, MA, W, AC, V, g); };
     return { ask: v(XQT_ASK), hintTx: v(XQT_HINT)(MA), good: () => v(XQT_GOOD)(MA, W, AC, V, g), ng, own: true };
   }
+  // (2026-11-26 第2期 担当A) t_fork「両取り」: the answer is a quiet move (no capture, no check) after which the moved piece attacks two
+  // pieces worth 2 or more; whatever the opponent replies, we still win something (the fork value, three plies: the piece the reply
+  // takes − / + our best 1-move net after it, 追51). The words name the two targets, the sure gain, and for a wrong move what the board
+  // does: a mate in 1, a capture taken back (the net), another piece of ours left to be taken, a double threat the opponent answers with
+  // one move (the piece that moves), a single threat, or none — counted again by tools/lesson-verify-xqfork.js (tools/xqfork-facts.js).
+  function xqForkF(E) {
+    const T = E.typeOf, C = E.colorOf, mTo = E.mTo, mFrom = E.mFrom;
+    const val = (q, sq) => { const x = q.at(sq), t = T(x); return t === E.PAWN ? ((C(x) ? sq >= 45 : sq < 45) ? 2 : 1) : XQV[t]; };
+    const cheap = (q, L) => L.reduce((a, y) => val(q, mFrom(y)) < val(q, mFrom(a)) ? y : a, L[0]);
+    const exch = (q, sq) => { const gs = []; let r = q.clone(); if (!r.at(sq) || T(r.at(sq)) === E.KING || C(r.at(sq)) === r.side) return 0;
+      for (let k = 0; k < 14; k++) { const L = r.moves().filter(m => mTo(m) === sq); if (!L.length) break; gs.push(val(r, sq)); r = r.clone().play(cheap(r, L)); }
+      let g = 0; for (let k = gs.length - 1; k >= 0; k--) g = Math.max(0, gs[k] - g); return g; };
+    const danger = q => { const o = []; for (let sq = 0; sq < 90; sq++) { const x = q.at(sq); if (!x || C(x) === q.side || T(x) === E.KING) continue; const g = exch(q, sq);
+      if (g > 0) o.push({ s: sq, t: T(x), g, by: T(q.at(mFrom(cheap(q, q.moves().filter(m => mTo(m) === sq))))) }); } return o.sort((a, b) => b.g - a.g || XQV[b.t] - XQV[a.t]); };
+    const turned = q => { const f = q.fen().split(' '); f[1] = f[1] === 'w' ? 'b' : 'w'; return E.Pos.from(f.join(' ')); };
+    const mate1 = q => q.moves().some(x => q.clone().play(x).status() === -1);
+    const capV = (q, m) => q.at(mTo(m)) ? val(q, mTo(m)) : 0;
+    const threats = (q, me) => { const r = q.side === me ? q : turned(q), o = []; for (let sq = 0; sq < 90; sq++) { const x = r.at(sq); if (!x || C(x) === me || T(x) === E.KING) continue; const g = exch(r, sq); if (g > 0) o.push({ s: sq, t: T(x), g, v: val(r, sq) }); } return o.sort((a, b) => b.g - a.g || b.v - a.v); };
+    const net1 = (q, x) => { const r = q.clone().play(x); if (mate1(r)) return -99; const D = danger(r); return capV(q, x) - (D[0] ? D[0].g : 0); };
+    const best1 = (q, stop) => { const L = q.moves(); if (!L.length) return -99; let b = -1e9; const cs = L.filter(x => q.at(mTo(x))).sort((x, y) => capV(q, y) - capV(q, x));
+      for (const x of cs) { if (T(q.at(mTo(x))) === E.KING) continue; if (capV(q, x) <= b) break; b = Math.max(b, net1(q, x)); if (b >= stop) return b; } if (b >= 0) return b;
+      for (const x of L) { if (q.at(mTo(x))) continue; b = Math.max(b, net1(q, x)); if (b >= 0 || b >= stop) return b; } return b; };
+    const fork = (p, u, cut) => { const c0 = capV(p, u), q = p.clone().play(u); if (mate1(q)) return { v: -99, by: null, m1: true };
+      const R = q.moves(); if (!R.length) return { v: 99, by: null }; const th = new Set(threats(q, p.side).map(o => o.s)), key = r => (q.at(mTo(r)) ? 100 + capV(q, r) : 0) + (th.has(mFrom(r)) ? 50 : 0);
+      R.sort((a, b) => key(b) - key(a)); let mn = 1e9, by = null;
+      for (const r of R) { const cr = capV(q, r), v = c0 - cr + best1(q.clone().play(r), mn - c0 + cr); if (v < mn) { mn = v; by = r; if (cut != null && mn <= cut) break; } } return { v: mn, by, m1: false }; };
+    const hits = (p, u) => { const q = p.clone().play(u), r = turned(q); return threats(q, p.side).filter(o => o.v >= 2 && r.movesFrom(mTo(u)).some(x => mTo(x) === o.s)); };
+    return { val, exch, danger, turned, mate1, capV, threats, net1, best1, fork, hits };
+  }
+  const XQF_ASK = ['両取りをかけてみよう！', '1手で2つの駒を同時にねらえる手はどれかな？', '相手が1手では守りきれない手、見つけられる？', '両取りのチャンスだコン。どの駒を、どこへ動かす？', '2つの駒に同時に届く点はどこかな？'];
+  const XQF_HINT = [M => `光っている${M}を動かした先から、相手の駒が2つ見える点を探してみて。`, M => `光っている${M}の行き先を1つずつ確かめよう。そこから取れる相手の駒はいくつ？`, M => `光っている${M}だよ。ねらう2つの駒が、守られていないか、守りより値打ちが高いかも見てね！`, M => `光っている${M}で、相手の駒2つの両方に届く点はどこかな？ 動いた${M}が取られないかも確かめてね。`, M => `光っている${M}を使うよ。1つだけねらっても逃げられちゃう。2つ同時がコツだコン！`];
+  const XQF_GOOD = [(M, W, g) => `正解！ ${M}で${W}の両取り。相手はどちらか一方しか救えないから、${g}点の得だコン。その調子！`, (M, W, g) => `やったね！ ${M}が${W}を同時にねらってるの。相手がどう受けても、少なくとも${g}点の得、ばっちりだよ！`, (M, W, g) => `お見事！ ${M}1つで${W}をねらう、きれいな両取り。相手がどう受けても、${g}点はきみのものだね。`, (M, W, g) => `さすが！ ${W}に${M}が同時に届く点を見つけたね。相手は1手で両方は守れないから、${g}点の得なんだ。`, (M, W, g) => `すごい！ ${M}の両取りで${W}をねらったよ。${g}点のもうけ、次もこの目でいこう！`];
+  const XQF_OPEN = ['いっしょに確かめよう。', '惜しかったね、盤をよく見よう。', '', '大丈夫、両取りは見つけるのに慣れがいるの。', 'これで覚えちゃおうコン！ '];
+  const XQF_RIGHT = [(K, M, W) => `正解は${K}。${M}で${W}を同時にねらえたの。`, (K, M, W) => `${K}なら、${M}が${W}の両方に届いたよ。次はきっと見つかるね！`, (K, M, W) => `答えは${K}。${M}の両取りで、${W}のどちらかが取れたんだコン。`, (K, M, W) => `いちばんは${K}、${M}で${W}をねらう両取りだったの。`, (K, M, W) => `${K}がよかったね。そこの${M}は、${W}の両方に届くんだ。`];
+  function xqForkJa(E, s, P, i, ck, n) {
+    const v = (L, o) => L[(i + n + (o || 0)) % L.length], T = E.typeOf, mTo = E.mTo, mFrom = E.mFrom, p = E.Pos.from(P.s), me = p.side, A = P.best, M = ck('ok'), X = ck('ng'), F = xqForkF(E);
+    const N = t => XQN(t, me), NO = t => XQN(t, me ^ 1), two = (a, b) => a === b ? `2つの${NO(a)}` : `${NO(a)}と${NO(b)}`;
+    const MA = N(T(p.at(mFrom(A)))), H0 = F.hits(p, A), W = two((H0[0] || {}).t, (H0[1] || {}).t), g = xqtNum(F.fork(p, A).v);
+    const sayNet = x => x < 0 ? `差し引き${xqtNum(-x)}点の損になっちゃう` : '差し引きとんとんで、得にならない';
+    const ng = u0 => { const L = p.moves(), u = u0 != null && u0 !== A && L.includes(u0) ? u0 : L.find(x => x !== A && F.threats(p.clone().play(x), me).length >= 2) || L.find(x => x !== A && p.at(mTo(x))) || L.find(x => x !== A); let w = '';
+      if (u != null) { const q = p.clone().play(u), c = p.at(mTo(u)) ? T(p.at(mTo(u))) : 0, Cn = c ? NO(c) : '', CV = xqtNum(F.capV(p, u)), MT = N(T(p.at(mFrom(u)))), MV = xqtNum(F.val(q, mTo(u)));
+        if (F.mate1(q)) w = v([`${X}だと、相手に1手で詰まされちゃう！ 自分の王さまの守りも見てね。`, `${X}のあと、相手には1手で詰ませる手があるの。こっちが先に詰んじゃう！`], 1);
+        else { const D = F.danger(q), dd = D[0], nt = F.capV(p, u) - (dd ? dd.g : 0);
+          if (c && dd && dd.s === mTo(u)) w = v([`${X}で${Cn}（${CV}点）を取ると、きみの${MT}（${MV}点）を相手の${NO(dd.by)}に取り返されて、${sayNet(nt)}の。`, `${X}だと${Cn}（${CV}点）は取れるけど、${MT}（${MV}点）が相手の${NO(dd.by)}に取り返されるの。${sayNet(nt)}んだ。`], 1);
+          else if (c && dd) w = v([`${X}で${Cn}（${CV}点）は取れるけど、こんどは${N(dd.t)}を相手の${NO(dd.by)}に取られちゃう。${sayNet(nt)}の。`, `${X}だと${Cn}（${CV}点）を取っても、${N(dd.t)}が相手の${NO(dd.by)}に取られる形になるの。${sayNet(nt)}んだ。`], 1);
+          else if (dd) w = v([`${X}だと、こんどは${N(dd.t)}を相手の${NO(dd.by)}に取られる形になるの。`, `${X}のあと、きみの${N(dd.t)}が相手の${NO(dd.by)}に取られちゃう。`], 1);
+          else { const H = F.threats(q, me);
+            if (H.length >= 2) { const f = F.fork(p, u, 0), R = f.by != null ? NO(T(q.at(mFrom(f.by)))) : '';
+              w = R ? v([`${X}で${two(H[0].t, H[1].t)}をねらえるけど、相手は${R}を動かす1手で両方しのげるから、得にならないの。`, `${X}だと${two(H[0].t, H[1].t)}に届くけど、相手の${R}の1手で、どちらも取れなくなるの。`], 1)
+                : `${X}で${two(H[0].t, H[1].t)}をねらえるけど、相手に1手で両方しのがれるから、得にならないの。`; }
+            else if (H.length === 1) w = v([`${X}だと、ねらえるのは${NO(H[0].t)}の1つだけ。1つなら、相手は1手でしのげるの。`, `${X}では${NO(H[0].t)}しかねらえないの。ねらいが1つだと、相手に守られちゃう。`], 1);
+            else w = v([`${X}は、相手の駒をねらう手になっていないの。`, `${X}だと、取れそうな相手の駒が1つもできないね。`], 1); } } }
+      return v(XQF_OPEN) + w + v(XQF_RIGHT, 2)(M, MA, W); };
+    return { ask: v(XQF_ASK), hintTx: v(XQF_HINT)(MA), good: () => v(XQF_GOOD)(MA, W, g), ng, own: true };
+  }
   function xqLsJa(E, s, P, i, ck, n) {   // n: the lesson's number (each lesson words its praise / misses in an order of its own)
     if (s.id === 't_capture') return xqTradeJa(E, s, P, i, ck, n || 0);
+    if (s.id === 't_fork') return xqForkJa(E, s, P, i, ck, n || 0);
     const id = s.id, A0 = XQJ_LS.ask[id]; if (!A0) return null; n = n || 0;
     const k = i + id.length, pick = L => L[k % L.length], H = XQJ_LS.hint[id] || [], VO = xqLsVoice(n);
     const vi = (i + n) % 5, V = (L, o) => L[(i + n + (o || 0)) % L.length];   // (the problem's own wording: five problems, five wordings)
@@ -4387,7 +4443,7 @@
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xe1-er1-tc1'), getJ('../xiangqi/openings.json?v=6'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xe1-er1-tc1-tf1'), getJ('../xiangqi/openings.json?v=6'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vf]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vf)(v); this.V = ((v.I18N || {})['ja@fox']) || {}; } catch (e) { this.V = {}; }   // (ショウギツネ's own lines, 3D, ja)
           return this; })
