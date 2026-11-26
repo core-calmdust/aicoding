@@ -1236,7 +1236,14 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
     nueReady = true;
   }
   // the NNUE evaluation for normal play, hints and analysis; the beginner levels (noise) keep the linear evaluation they were tuned with
-  function nueUse(on) { on = !!(on && nueReady); if (on !== nueCur) { X.nue_enable(on ? 1 : 0); X.tt_clear(); nueCur = on; } }
+  // The search follows the evaluation (2026-11-27): search v6 was tuned with the net; with the linear evaluation (12〜9級 and the
+  // beginner levels) it measured about 100 Elo below search v5 at 27000 and 48000 nodes (120 games each), so those levels keep
+  // search v5, the search their node counts were set with. (engine.c P[]: the two sets of numbers)
+  const SV5 = '85=0,91=0,92=0,55=0,110=0,113=0,115=0,75=5,76=90,77=40,79=2,9=5049,43=246,17=214,2=73,1=11,112=0,114=0,116=0,81=0,86=0,87=0,88=0,89=0,93=0,95=0,96=0,97=0,98=0,99=0,100=0,101=0,102=0,103=0,104=0,105=0';
+  const SV6 = '85=1,91=1,92=2,55=1,110=1,113=1,115=2,75=4,76=83,77=110,79=3,86=31,88=169,87=163,89=315,93=400,95=62,96=3,97=1087,98=3261,99=207,100=297,101=179,102=81,103=98,104=85,105=29,81=1935,9=6247,43=379,17=182,2=67,1=18,112=391,114=220,116=239';
+  let srchCur = 6;
+  function srchUse(v) { if (v === srchCur || !X.set_param) return; for (const kv of (v === 5 ? SV5 : SV6).split(',')) { const [k, x] = kv.split('='); X.set_param(+k, +x); } X.tt_clear(); srchCur = v; }
+  function nueUse(on) { on = !!(on && nueReady); if (on !== nueCur) { X.nue_enable(on ? 1 : 0); X.tt_clear(); nueCur = on; } srchUse(on ? 6 : 5); }
   let wReady = Promise.resolve();   // the wasm engine (and its NNUE) loaded, or failed
   try {
     // which net: several threads: the one the page's module is built for; one thread: the new one, else the 512 one
