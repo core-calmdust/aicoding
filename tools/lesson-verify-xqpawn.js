@@ -91,7 +91,7 @@ function verify({ E, L, X, pool, dist, brd, plain, add, only }) {
       if (!raw.includes('〈誤〉') || !raw.includes('〈正〉')) a(`⑦ ${xn}: the words do not name both moves 「${raw}」`);
       if (/いい手|ナイス|正解！|お見事/.test(t)) a(`⑦ ${xn}: praises a wrong move 「${t}」`);
       const q = p.clone().play(u), lost = q.moves().some(r => q.at(mTo(r)) && T(q.at(mTo(r))) === PW && C(q.at(mTo(r))) === me), v = sm.get(u);
-      const sLost = /兵を(1つ)?取られ|兵がただで取られ/.test(t), sSlow = /でも勝てる|勝ちまで行ける|まだ勝てる|勝ちは残って/.test(t), sOff = /詰みが遠のいて|息をつかせて|すぐには詰まない|詰みがずっと遠のい|すぐには詰ませられな/.test(t);
+      const sLost = /兵を(1つ)?取られ|兵がただで取られ/.test(t), sSlow = /でも勝てる|勝ちまで行ける|まだ勝てる|勝ちは残って/.test(t), sOff = /詰みが遠のいて|息をつかせ|すぐには詰まない|詰みがずっと遠の|すぐには詰ませられな/.test(t);
       const slowWin = v > WT && !S.forces(p, u, n, false), noWin = !S.forces(p, u, n + 1, false);
       if (sLost !== lost) a(`⑦ ${xn}: 「${t}」 (a soldier ${lost ? 'can' : 'cannot'} be taken)`);
       if (sSlow && !slowWin) a(`⑦ ${xn}: 「${t}」 (no slower win: ${v})`);

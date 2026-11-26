@@ -4380,10 +4380,10 @@
       // within one move more than the answer: tools/lesson-verify-xqend.js)
       // (2026-11-26 第2期 担当A) e_pawn the same: a soldier taken (a reply takes it), a slower win, or the mate put off (tools/lesson-verify-xqpawn.js)
       if (id === 'e_pawn') { const q = pos.clone().play(u), lost = q.moves().some(r => q.at(E.mTo(r)) && E.typeOf(q.at(E.mTo(r))) === E.PAWN);
-        return lost ? (v != null && v > WT ? V(['{x}だと兵を1つ取られちゃう。まだ勝てるけど、詰みが遠回りになるの。', '{x}では兵がただで取られるの。勝ちは残っても、手数が多くかかっちゃう。'])
-            : V(['{x}だと兵を取られて、詰みがずっと遠のいちゃう。', '{x}では兵がただで取られて、すぐには詰ませられなくなるの。']))
-          : v != null && v > WT ? V(['{x}でも勝てるけど、詰みまで少し遠回りになるの。', '{x}も勝ちまで行けるけど、手数が多くかかるの。'])
-          : V(['{x}だと詰みが遠のいて、相手に粘られちゃう。', '{x}では將に息をつかせて、詰みまで長引くの。', '{x}のあとは、すぐには詰まない形になっちゃう。']); }
+        return lost ? (v != null && v > WT ? V(['{x}だと兵を1つ取られちゃう。まだ勝てるけど、詰みが遠回りになるの。', '{x}では兵がただで取られるの。勝ちは残っても、手数が多くかかっちゃう。', '{x}のあと、兵を1つ取られるね。まだ勝てるけど、詰みまでの道が長くなるの。', '{x}だと兵がただで取られる。勝ちは残っても、ひと回り遠くなっちゃう。', '{x}では兵を1つ取られて、まだ勝てるけど回り道になるコン。'])
+            : V(['{x}だと兵を取られて、詰みがずっと遠のいちゃう。', '{x}では兵がただで取られて、すぐには詰ませられなくなるの。', '{x}のあと兵を取られると、詰みがずっと遠のくコン。', '{x}だと兵を1つ取られて、すぐには詰ませられない形になるの。', '{x}では兵がただで取られる。そうなると、詰みがずっと遠のいちゃう。']))
+          : v != null && v > WT ? V(['{x}でも勝てるけど、詰みまで少し遠回りになるの。', '{x}も勝ちまで行けるけど、手数が多くかかるの。', '{x}でも勝てるけど、最短の道からは外れちゃう。', '{x}も勝ちまで行けるね。ただ、詰みまで1手以上よけいにかかるの。', '{x}でも勝てるけど、將に少し長く粘られるコン。'])
+          : V(['{x}だと詰みが遠のいて、相手に粘られちゃう。', '{x}では將に息をつかせて、詰みまで長引くの。', '{x}のあとは、すぐには詰まない形になっちゃう。', '{x}だと詰みが遠のいて、將に逃げ道を探されるコン。', '{x}では將に息をつかせちゃう。詰みまでずっと長くなるの。']); }
       if (id === 'e_rook') { const q = pos.clone().play(u), lost = q.moves().some(r => q.at(E.mTo(r)) && E.typeOf(q.at(E.mTo(r))) === E.ROOK);
         return lost ? V(['{x}だと車を取られて、引き分けになっちゃう。', '{x}では車がただで取られて、もう詰ませられないの。'])
           : v != null && v > WT ? V(['{x}でも勝てるけど、詰みまで少し遠回りになるの。', '{x}も勝ちまで行けるけど、手数が多くかかるの。'])
@@ -4447,7 +4447,10 @@
     const say = u0 => { let u = u0; if (u == null || right(u)) u = pickWrong(id === 'b_mate1' || P.ok ? Q => Q.check : FA.cap ? Q => Q.cap || Q.hang.length : null);
       const Q = u != null ? FF(u) : null, w = Q ? (M2 ? why2(Q, u) : why(Q, u)) : '';
       return f(VO.soft(i) + ' ' + w + XQJ_LS.lead[vi] + (M2 ? plus2() : plus(FA, A))[(vi + 2) % 5] + XQJ_LS.tail[vi]); };
-    const good = u => { const U = u != null && (sc ? sc.has(u) : right(u)) ? u : A, Q = FF(U) || FA; let s0 = VO.cheer(i) + ' ' + (M2 ? plus2() : plus(Q, U))[vi] + XQJ_LS.gend[vi];
+    const good = u => { const U = u != null && (sc ? sc.has(u) : right(u)) ? u : A, Q = FF(U) || FA, ch0 = VO.cheer(i);
+      // (2026-11-26 担当A e_pawn) a cheer that ends in ね！ is not followed by …ね。 (the same ending twice in one bubble)
+      const ge = id === 'e_pawn' && /ね！$/.test(ch0) && /ね。$/.test(XQJ_LS.gend[vi]) ? XQJ_LS.gend[vi].replace(/だ?ね。$/, 'なの。') : XQJ_LS.gend[vi];
+      let s0 = ch0 + ' ' + (M2 ? plus2() : plus(Q, U))[vi] + ge;
       if (sc && U !== A && sc.get(U) < best) s0 += best > WT ? V([' いちばん早い詰みより、ほんの少し遠回りだけどね。', ' 最短の詰みには、あと一歩だったけどね。']) : V([' これもいい手だコン。', ' これも十分いい手なの。']);
       if (pu) s0 += ' ' + VO.push(i);
       return f(s0); };
