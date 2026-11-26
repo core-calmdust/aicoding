@@ -446,7 +446,7 @@ $('#lsList').onclick = () => { if (!lesson) return; if (lesson.study || lesson.v
 let OPEN = null, openChoiceIdx = -1;
 // (2026-11-15) read when the openings are first opened, not with the page (1.6MB)
 let openP = null;
-const openLoad = () => openP || (openP = fetch('openings.json?v=15').then(r => r.json()).then(d => (OPEN = d)).catch(() => { openP = null; return null; }));
+const openLoad = () => openP || (openP = fetch('openings.json?v=16').then(r => r.json()).then(d => (OPEN = d)).catch(() => { openP = null; return null; }));
 const OP_STORE = STORE + '-open';
 function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{}'); } catch (e) { return {}; } }
 let opCatSel = '';

@@ -2373,7 +2373,7 @@
           break;
         }
         case 'edge':
-          if ((P.wedge || []).includes(u)) out.push(pk(['相手の石2つのあいだに打つ付け手！ 相手の辺の形がくずれて、隅をねらいやすくなるんだ。', '辺のすき間に打つ付け手だよ。相手はもう、きれいな辺を作れないね。', '付け手がずばり決まった！ 両側が相手の石だから、横から返されないんだ。', 'くさびを打ちこめた！ 相手の辺が、まっぷたつに分かれたよ。', 'すき間を見のがさなかったね。付け手で、相手の辺はばらばらなんだ。'], k));
+          if ((P.wedge || []).includes(u)) out.push(pk(['相手の石2つのあいだに打つ付け手！ 相手の辺が2つに分かれて、きれいにつながらなくなるんだ。', '辺のすき間に打つ付け手だよ。相手はもう、その辺をきれいにつなげられないね。', '付け手がずばり決まった！ 両側が相手の石だから、辺にそっては返されないんだ。', 'くさびを打ちこめた！ 相手の辺が、まっぷたつに分かれたよ。', 'すき間を見のがさなかったね。付け手で、相手の辺はばらばらなんだ。'], k));
           else out.push(pk([`辺の形をよく見られたね。相手の打てる場所は${fu[3]}か所に抑えられるんだ。`, `辺のバランスをくずさない手！ 相手の打ち場所は${fu[3]}か所だよ。`, `辺をうまく守れたんだ。相手の候補は${fu[3]}か所！`, `辺の読みがばっちり！ 相手は${fu[3]}か所にしか打てないね。`, `辺に気をくばった手だよ。相手の打てる場所も${fu[3]}か所ですむんだ。`], k));
           break;
         case 'exception':
@@ -2450,9 +2450,9 @@
           else out.push(loss());
           break;
         }
-        case 'edge':
-          if ((P.wedge || []).includes(b)) out.push(pk(['緑の枠は、相手の石2つのあいだのすき間に打つ付け手。相手の辺の形をくずせるから、隅や辺をうばうきっかけになるんだ。', '緑の枠は辺のすき間！ そこに入れれば、相手の辺がまっぷたつになったね。', '付け手のチャンスが緑の枠にあったんだ。両側が相手の石だから、返される心配もないよ。', '緑の枠なら相手の辺を分けられた！ すき間に打つと、横から返されないからね。', '辺のすき間に打てば、相手の辺の形がくずれたから、隅もねらえたんだ。'], k));
-          if (lead) out.push(lead); else if (!(P.wedge || []).includes(b)) out.push(loss());
+        case 'edge':   // (2026-11-27 第2期 ⑦ 担当A: the wedge, then what the red move gives — a corner, an X/C, or more moves for the opponent; never the engine's value)
+          if ((P.wedge || []).includes(b)) out.push(pk(['緑の枠は、相手の石2つのあいだのすき間に打つ付け手。相手の辺の形をくずせたんだ。', '緑の枠は辺のすき間！ そこに入れれば、相手の辺がまっぷたつになったね。', '付け手のチャンスが緑の枠にあったんだ。両側が相手の石だから、辺にそって返される心配もないよ。', '緑の枠なら相手の辺を分けられた！ すき間に打つと、辺にそっては返されないからね。', '辺のすき間に打てば、相手の辺の形をくずせたんだ。'], k));
+          out.push(lead || (fu[3] > fb[3] ? mob() : loss()));
           break;
         case 'exception':
           if (RV_CN.includes(u)) out.push(pk([`隅は取れるけど、そのあと相手に${fu[3]}か所も打つ場所が残るから、主導権をにぎられちゃうんだ。`, `隅を取っても、相手には${fu[3]}か所の打ち場所が残る。相手の思うつぼになるんだ。`, `隅に打つと、相手の候補が${fu[3]}か所も残っちゃうよ。`, `隅を急ぐと、相手に${fu[3]}か所の打ち場所が残って損なんだ。`, `赤い枠の隅だと、相手は${fu[3]}か所に打てるから、手番を取られるよ。`], k));
@@ -2631,7 +2631,7 @@
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261126w1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=3').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=9').catch(() => ({}))])
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261127e1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=3').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=9').catch(() => ({}))])
         .then(([ls, op, ev, wt, opp]) => { this.WT = wt || {}; this.OPP = opp || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
@@ -3488,7 +3488,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=16'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
+      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=17'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
         try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
         return this; }).catch(e => { this.p = null; throw e; }));
     },
@@ -4356,9 +4356,43 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       return v(XQF_OPEN) + w + v(XQF_RIGHT, 2)(M, MA, W); };
     return { ask: v(XQF_ASK), hintTx: v(XQF_HINT)(MA), good: () => v(XQF_GOOD)(MA, W, g), ng, own: true };
   }
+  // (2026-11-26 第2期 担当A) t_check「王手で得をする」: the answer is a quiet check (no capture, not a mate); the opponent must answer
+  // the check first, and after it a piece of the opponent worth 4 or more (馬・炮・車) is attacked with a winning exchange, so whatever
+  // the reply we still win something (the fork value of xqForkF, three plies = 追51). The words name the piece moved, the piece
+  // attacked (the biggest) and the sure gain; for a wrong move what the board does: a mate in 1, a capture taken back (the net), a
+  // piece of ours left to be taken (by a check answered with that capture too), another check and the piece whose move answers it,
+  // a quiet move and what it attacks — counted again by tools/lesson-verify-xqcheck.js (tools/xqfork-facts.js).
+  const XQC_ASK = ['王手をかけて、駒得をねらってみよう！', '相手が王手を受けているあいだに、得をする手はどれかな？', '王手と同時に、相手の駒もねらえる手はある？', '王手をかけられたら、相手は受けるしかないの。それを使って得をする1手は？', 'ここは王手が決め手だコン。どの駒を、どこへ動かす？'];
+  const XQC_HINT = [M => `光っている${M}で王手をかけてみて。そのとき、ほかにねらえる相手の駒はある？`, M => `光っている${M}を動かして王手。相手が王さまを助けているあいだに、取れる駒はどれかな？`, M => `光っている${M}を使うよ。王手をかけたあと、相手の大きな駒に届いていないか見てね！`, M => `王手はいくつかあるけど、得になるのは1つだけ。光っている${M}の王手を1つずつ確かめようコン。`, M => `光っている${M}で王手するとき、動いた先で取られないかも確かめてね。王さまと、もう1つの駒をねらう形を探そう！`];
+  const XQC_GOOD = [(M, A, g) => `正解！ ${M}で王手、しかも${A}もねらってるの。相手は王手を受けるのが先だから、どう受けても${g}点の得だコン。その調子！`, (M, A, g) => `すごい！ ${M}の王手が、${A}へのねらいにもなってるんだ。どう受けられても${g}点の得、次もこの目でいこう！`, (M, A, g) => `さすが！ 王手と${A}ねらいを${M}の1手でかけたよ。相手は1手で両方は防げないから、${g}点のもうけだコン。`, (M, A, g) => `やったね！ ${M}で王手をかけて、王さまと${A}を同時にねらったから、どう受けられても${g}点の得。ばっちり！`, (M, A, g) => `お見事！ ${M}の王手で、王さまと${A}が同時にねらわれてるの。相手がどう受けても、少なくとも${g}点はきみのものだよ。`];
+  const XQC_OPEN = ['いっしょに確かめよう。', 'ここは盤をよく見よう。', '', '大丈夫、王手の使い方は慣れだコン。', 'これで覚えちゃおう！ '];
+  const XQC_RIGHT = [(K, M, A) => `正解は${K}。${M}で王手をかけると、${A}もねらえたの。`, (K, M, A) => `${K}なら、${M}の王手と同時に${A}をねらえたよ。次はきっと見つかるね！`, (K, M, A) => `答えは${K}。${M}の王手で、王さまと${A}を同時にねらえたんだコン。`, (K, M, A) => `いちばんは${K}、${M}で王手をかけながら${A}をねらう手だったの。`, (K, M, A) => `${K}がよかったね。${M}を動かすと、王手と${A}ねらいが同時にかかったんだ。`];
+  function xqCheckJa(E, s, P, i, ck, n) {
+    const v = (L, o) => L[(i + n + (o || 0)) % L.length], T = E.typeOf, mTo = E.mTo, mFrom = E.mFrom, p = E.Pos.from(P.s), me = p.side, A = P.best, M = ck('ok'), X = ck('ng'), F = xqForkF(E);
+    const N = t => XQN(t, me), NO = t => XQN(t, me ^ 1), qa = p.clone().play(A);
+    const MA = N(T(p.at(mFrom(A)))), hit = F.threats(qa, me).filter(o => o.v >= 4), TA = NO((hit[0] || {}).t), g = xqtNum(F.fork(p, A).v);
+    const sayNet = x => x < 0 ? `差し引き${xqtNum(-x)}点の損になっちゃう` : '差し引きとんとんで、得にならない';
+    const ng = u0 => { const L = p.moves(), u = u0 != null && u0 !== A && L.includes(u0) ? u0 : L.find(x => x !== A && p.clone().play(x).inCheck()) || L.find(x => x !== A && p.at(mTo(x))) || L.find(x => x !== A); let w = '';
+      if (u != null) { const q = p.clone().play(u), c = p.at(mTo(u)) ? T(p.at(mTo(u))) : 0, Cn = c ? NO(c) : '', CV = xqtNum(F.capV(p, u)), MT = N(T(p.at(mFrom(u)))), MV = xqtNum(F.val(q, mTo(u)));
+        if (F.mate1(q)) w = v([`${X}だと、相手に1手で詰まされちゃう！ 自分の王さまの守りも見てね。`, `${X}のあと、相手には1手で詰ませる手があるの。こっちが先に詰んじゃう！`], 1);
+        else { const D = F.danger(q), dd = D[0], nt = F.capV(p, u) - (dd ? dd.g : 0);
+          if (c && dd && dd.s === mTo(u)) w = v([`${X}で${Cn}（${CV}点）を取ると、きみの${MT}（${MV}点）を相手の${NO(dd.by)}に取り返されて、${sayNet(nt)}の。`, `${X}だと${Cn}（${CV}点）は取れるけど、${MT}（${MV}点）が相手の${NO(dd.by)}に取り返されるの。${sayNet(nt)}んだ。`], 1);
+          else if (c && dd) w = v([`${X}で${Cn}（${CV}点）は取れるけど、こんどは${N(dd.t)}を相手の${NO(dd.by)}に取られちゃう。${sayNet(nt)}の。`, `${X}だと${Cn}（${CV}点）を取っても、${N(dd.t)}が相手の${NO(dd.by)}に取られる形になるの。${sayNet(nt)}んだ。`], 1);
+          else if (c) w = `${X}で${Cn}（${CV}点）は取れるけど、それだけなの。`;
+          else if (dd) w = q.inCheck() ? v([`${X}も王手だけど、相手は${NO(dd.by)}で${N(dd.t)}を取って、王手を受けられちゃう。それだと損だコン。`, `${X}で王手しても、相手の${NO(dd.by)}が${N(dd.t)}を取る手で受けられるの。${N(dd.t)}を取られて損しちゃう。`], 1)
+            : v([`${X}だと、こんどは${N(dd.t)}を相手の${NO(dd.by)}に取られる形になるの。`, `${X}のあと、きみの${N(dd.t)}が相手の${NO(dd.by)}に取られちゃう。`], 1);
+          else if (q.inCheck()) { const f = F.fork(p, u, 0), R = f.by != null ? NO(T(q.at(mFrom(f.by)))) : '';
+            w = R ? v([`${X}で王手をかけても、相手は${R}を動かして受ければ、得になる取りが残らないの。`, `${X}の王手は、相手の${R}の1手で受けられて、そのあと得をする手がないんだ。`], 1) : `${X}で王手をかけても、受けられたあと、得をする手が残らないの。`; }
+          else { const H = F.threats(q, me);
+            if (H.length) w = v([`${X}は王手じゃないから、相手は${NO(H[0].t)}を守る手を指せちゃう。`, `${X}で${NO(H[0].t)}をねらっても、王手じゃないと相手に1手で守られちゃうの。`], 1);
+            else w = v([`${X}は王手でもないし、相手の駒をねらう手にもなっていないの。`, `${X}だと王手もかからないし、取れそうな相手の駒も1つもできないね。`], 1); } } }
+      return v(XQC_OPEN) + w + v(XQC_RIGHT, 2)(M, MA, TA); };
+    return { ask: v(XQC_ASK), hintTx: v(XQC_HINT)(MA), good: () => v(XQC_GOOD)(MA, TA, g), ng, own: true };
+  }
   function xqLsJa(E, s, P, i, ck, n) {   // n: the lesson's number (each lesson words its praise / misses in an order of its own)
     if (s.id === 't_capture') return xqTradeJa(E, s, P, i, ck, n || 0);
     if (s.id === 't_fork') return xqForkJa(E, s, P, i, ck, n || 0);
+    if (s.id === 't_check') return xqCheckJa(E, s, P, i, ck, n || 0);
     const id = s.id, A0 = XQJ_LS.ask[id]; if (!A0) return null; n = n || 0;
     const k = i + id.length, pick = L => L[k % L.length], H = XQJ_LS.hint[id] || [], VO = xqLsVoice(n);
     const vi = (i + n) % 5, V = (L, o) => L[(i + n + (o || 0)) % L.length];   // (the problem's own wording: five problems, five wordings)
@@ -4494,7 +4528,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xe1-er1-tc1-tf1-ep1'), getJ('../xiangqi/openings.json?v=6'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=30261126xe1-er1-tc1-tf1-ep1-ck1'), getJ('../xiangqi/openings.json?v=6'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd2-p61').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=3').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vf]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vf)(v); this.V = ((v.I18N || {})['ja@fox']) || {}; } catch (e) { this.V = {}; }   // (ショウギツネ's own lines, 3D, ja)
           return this; })
