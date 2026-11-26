@@ -9,18 +9,18 @@
   const KEY = 'wolflantern-save-v1', REC = 'wolflantern-rec-v1', PREF = 'wolflantern-pref-v1';
   const ORDER = ['kirigane', 'hokushin', 'tomoshibi', 'nekonaki', 'shirane', 'kiteki'];
   const DIFFN = ['入門', '標準', '中級', '上級', '悪夢'];
-  const DIFFT = ['はじめての夜に。嘘をつく者がいる。', '嘘つきが、ぼろを出しにくくなる。', '嘘つきが、ぼろを出さなくなる。', '占い師は必ずいる。嘘つきは悪夢なみ。', '嘘と罠ばかり。誰の言葉も信じきれない。'];
+  const DIFFT = ['はじめての夜に。嘘をつく者がいる。', '嘘つきが、ぼろを出しにくくなる。', '嘘つきが、ぼろを出さなくなる。', '嘘つきは悪夢なみ。', '嘘と罠ばかり。誰の言葉も信じきれない。'];
   // the card's line follows the story's real cast for that size (the wolves and the roles differ story by story)
   function diffDesc(s, i) {
     const R = E.setupOf(s, E.DIFF[i].size);
-    if (E.DIFF[i].hide) return `狼${R.wolf}匹。ほかに誰がいるかは、わからない。${DIFFT[i]}`;
+    if (E.DIFF[i].hide) return `狼${R.wolf}匹。${E.DIFF[i].hide.seer >= 1 ? '占い師は必ずいるが、' : ''}ほかに誰がいるかは、わからない。${DIFFT[i]}`;
     const mad = R.madman ? `と${s.rules === 'fanatic' ? (s.roles.madman || {}).name || '狂信者' : '狂人'}${R.madman > 1 ? R.madman + '人' : ''}` : '';
     const ex = [R.guard && '狩人', R.mason && '共有者', R.cat && '猫又', R.fox && '妖狐', R.immoral && '背徳者'].filter(Boolean);
     return `狼${R.wolf}匹${mad}。${ex.length ? ex.join('・') + 'がいる。' : ''}${DIFFT[i]}`;
   }
   // the role card's line on who is in the village
   function castLine() {
-    if (S.hid) return `この${st.lex.village}には人狼が${S.wolves.length}匹いる。${seerSure() ? `${st.roles.seer.name}は必ずいる。` : ''}ほかに誰がいるかは、わからない――${hidList()}が、いるかもしれないし、いないかもしれない。全部で${S.size}人。`;
+    if (S.hid) return `この${st.lex.village}には人狼が${S.wolves.length}匹いる。${seerSure() ? `${st.roles.seer.name}は必ずいるが、` : ''}ほかに誰がいるかは、わからない――${hidList()}が、いるかもしれないし、いないかもしれない。全部で${S.size}人。`;
     return `この${st.lex.village}には人狼が${S.wolves.length}匹${E.RS(S).madman ? (st.rules === 'fanatic' ? `、狼の正体を知る狂信者が${E.RS(S).madman > 1 ? NUM[E.RS(S).madman] + '人' : 'ひとり'}` : `、狼に味方する狂人が${E.RS(S).madman > 1 ? NUM[E.RS(S).madman] + '人' : 'ひとり'}`) : ''}${E.RS(S).cat ? '、道連れの猫又がひとり' : ''}${E.RS(S).fox ? `、${st.roles.fox.tag || '社に棲む妖狐'}がひとり` : ''}${E.RS(S).immoral ? `、${st.roles.immoral.tag || '妖狐に仕える背徳者'}がひとり` : ''}${E.RS(S).mason ? '、互いを知る共有者がふたり' : ''}いる。全部で${S.size}人。`;
   }
   const seerSure = () => ((E.DIFF[S.diff].hide || {}).seer || 0) >= 1;
