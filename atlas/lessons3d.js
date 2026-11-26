@@ -2373,7 +2373,7 @@
           break;
         }
         case 'edge':
-          if ((P.wedge || []).includes(u)) out.push(pk(['相手の石2つのあいだに打つ付け手！ 相手の辺の形がくずれて、隅をねらいやすくなるんだ。', '辺のすき間に打つ付け手だよ。相手はもう、きれいな辺を作れないね。', '付け手がずばり決まった！ 両側が相手の石だから、横から返されないんだ。', 'くさびを打ちこめた！ 相手の辺が、まっぷたつに分かれたよ。', 'すき間を見のがさなかったね。付け手で、相手の辺はばらばらなんだ。'], k));
+          if ((P.wedge || []).includes(u)) out.push(pk(['相手の石2つのあいだに打つ付け手！ 相手の辺が2つに分かれて、きれいにつながらなくなるんだ。', '辺のすき間に打つ付け手だよ。相手はもう、その辺をきれいにつなげられないね。', '付け手がずばり決まった！ 両側が相手の石だから、辺にそっては返されないんだ。', 'くさびを打ちこめた！ 相手の辺が、まっぷたつに分かれたよ。', 'すき間を見のがさなかったね。付け手で、相手の辺はばらばらなんだ。'], k));
           else out.push(pk([`辺の形をよく見られたね。相手の打てる場所は${fu[3]}か所に抑えられるんだ。`, `辺のバランスをくずさない手！ 相手の打ち場所は${fu[3]}か所だよ。`, `辺をうまく守れたんだ。相手の候補は${fu[3]}か所！`, `辺の読みがばっちり！ 相手は${fu[3]}か所にしか打てないね。`, `辺に気をくばった手だよ。相手の打てる場所も${fu[3]}か所ですむんだ。`], k));
           break;
         case 'exception':
@@ -2450,9 +2450,9 @@
           else out.push(loss());
           break;
         }
-        case 'edge':
-          if ((P.wedge || []).includes(b)) out.push(pk(['緑の枠は、相手の石2つのあいだのすき間に打つ付け手。相手の辺の形をくずせるから、隅や辺をうばうきっかけになるんだ。', '緑の枠は辺のすき間！ そこに入れれば、相手の辺がまっぷたつになったね。', '付け手のチャンスが緑の枠にあったんだ。両側が相手の石だから、返される心配もないよ。', '緑の枠なら相手の辺を分けられた！ すき間に打つと、横から返されないからね。', '辺のすき間に打てば、相手の辺の形がくずれたから、隅もねらえたんだ。'], k));
-          if (lead) out.push(lead); else if (!(P.wedge || []).includes(b)) out.push(loss());
+        case 'edge':   // (2026-11-27 第2期 ⑦ 担当A: the wedge, then what the red move gives — a corner, an X/C, or more moves for the opponent; never the engine's value)
+          if ((P.wedge || []).includes(b)) out.push(pk(['緑の枠は、相手の石2つのあいだのすき間に打つ付け手。相手の辺の形をくずせたんだ。', '緑の枠は辺のすき間！ そこに入れれば、相手の辺がまっぷたつになったね。', '付け手のチャンスが緑の枠にあったんだ。両側が相手の石だから、辺にそって返される心配もないよ。', '緑の枠なら相手の辺を分けられた！ すき間に打つと、辺にそっては返されないからね。', '辺のすき間に打てば、相手の辺の形をくずせたんだ。'], k));
+          out.push(lead || (fu[3] > fb[3] ? mob() : loss()));
           break;
         case 'exception':
           if (RV_CN.includes(u)) out.push(pk([`隅は取れるけど、そのあと相手に${fu[3]}か所も打つ場所が残るから、主導権をにぎられちゃうんだ。`, `隅を取っても、相手には${fu[3]}か所の打ち場所が残る。相手の思うつぼになるんだ。`, `隅に打つと、相手の候補が${fu[3]}か所も残っちゃうよ。`, `隅を急ぐと、相手に${fu[3]}か所の打ち場所が残って損なんだ。`, `赤い枠の隅だと、相手は${fu[3]}か所に打てるから、手番を取られるよ。`], k));
@@ -2631,7 +2631,7 @@
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261126w1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=3').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=9').catch(() => ({}))])
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=30261127e1'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=3').catch(() => ({})), getJ('../reversi/opcourse-probs.json?v=9').catch(() => ({}))])
         .then(([ls, op, ev, wt, opp]) => { this.WT = wt || {}; this.OPP = opp || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
