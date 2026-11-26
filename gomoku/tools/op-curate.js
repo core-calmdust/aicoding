@@ -11,6 +11,7 @@
 const fs = require('fs'), path = require('path');
 const OUT = process.env.GM_OUT || path.join(__dirname, '..', 'openings.json');   // GM_OUT: a copy to write (two runs in parallel)
 const ids = (process.argv[2] || '').split(',').filter(Boolean);
+const WIDE = !!process.env.GM_WIDE;           // GM_WIDE=1: a wider search (plies 3–13, 6 other moves each) for sets the default search leaves short of 5 — the checks stay the same
 const N = require('./op-engine.js');           // the core + net (its own copy of the engine module)
 delete require.cache[require.resolve('../engine.js')];
 const E = require('../engine.js');              // a fresh copy: the JavaScript search without the learned weights (the stored scale)
@@ -23,8 +24,8 @@ const V = require('../../tools/lesson-verify-gmopen.js'), G = { check: V.check, 
 for (const id of ids) {
   const g = O.sets.find(x => x.id === id); if (!g) { console.log('no set', id); continue; }
   const line = g.study.map(x => sqOf(x[0])), t0 = Date.now(), cands = [], seen = new Set();
-  for (let k = 3; k <= Math.min(11, line.length - 1); k++) {
-    const pre = line.slice(0, k), first = read(pre, 4).filter(e => e[0] !== sqName(line[k]) && Math.abs(e[1]) < WINT).slice(0, 4);
+  for (let k = 3; k <= Math.min(WIDE ? 13 : 11, line.length - 1); k++) {
+    const pre = line.slice(0, k), first = read(pre, 4).filter(e => e[0] !== sqName(line[k]) && Math.abs(e[1]) < WINT).slice(0, WIDE ? 6 : 4);
     for (const [alt] of first) for (const br of [0, 1]) {
       let mv = pre.concat(sqOf(alt));
       for (let extra = 0; extra <= 7; extra++) {
