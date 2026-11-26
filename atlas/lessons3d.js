@@ -428,7 +428,7 @@
       k3: '相手が「次に詰ませるぞ」とねらう形を<b>詰めろ</b>っていうの。<br>攻める前に、まず自分の玉の安全を確かめるコン。相手の詰み筋を消す手を探してね！',
       k2: '5手詰は、王手と受けを2回くり返してから詰ませるよ。<br>頭の中で盤を動かす力の勝負！ 受けが何通りかあるときは、どれでも詰むか確かめよう。<br>竜（龍）は縦横どこまでも＋斜め1マス、馬は斜めどこまでも＋縦横1マス動けるコン。',
       k1: 'ここからは<b>浅い読みでは見つからない手</b>が正解。<br>候補手をいくつか出して、相手のいちばんの応手まで読み比べてみようね！',
-      d1: '7手詰は、有段者の入り口っていわれるの。<b>捨て駒・空き王手・逃げ道封鎖</b>を組み合わせるコン。<br>最後の詰み形を思いうかべて、逆から考えるのもおすすめ！',
+      d1: '7手詰は、有段者の入り口っていわれるの。<b>捨て駒・逃げ道封鎖</b>を組み合わせるコン。<br>最後の詰み形を思いうかべて、逆から考えるのもおすすめ！<br>竜（龍）は縦横どこまでも＋斜め1マス、馬は斜めどこまでも＋縦横1マス動けるコン。',
       d2: '9手詰では、<b>持ち駒を使う順番</b>をまちがえると詰まなくなっちゃう。<br>一手ずつ、相手のいちばんの受けを考えながら進めよう！',
       d3: 'さいごは<b>11手以上の詰み</b>と、<b>深く読まないと見えない静かな好手</b>のまぜこぜ。<br>ここまで来たきみなら、きっと大丈夫だコン！',
       rx: '最後はルールの確認！ <b>打ち歩詰め</b>は反則、<b>千日手</b>は引き分け、玉が敵陣に入れば<b>入玉宣言</b>もあるの。<br><b>駒落ち</b>は、強いほうが駒を減らして先に指すんだコン。',
@@ -619,7 +619,7 @@
       else if (!F.check) why = at(['{x}は王手じゃないから、相手に一手もらっちゃうの。', '{x}だと王手にならないの。詰将棋は王手の連続だコン。', '{x}は王手じゃないの。そのすきに受けられちゃう。', '王手でない{x}だと、相手に余裕を与えるの。', '{x}では王手がかからないから、詰まないの。']);
       else if (P.n > 1 && P.ref && P.ref[u]) {   // (2026-11-26 第2期 k6: a wrong check of a mate in 3 — the defender's stored answer P.ref (after it no check mates), said from the board)
         const R = (() => { try { const S = shLB(P.sfen), A = shLPlay(S, u); return shLPlay({ B: A.B, w: !S.w }, P.ref[u]); } catch (e) { return null; } })(), pn = shLNm(F.piece.t);
-        const k = !R ? 4 : R.piece.t === 'k' ? (R.took ? 0 : 1) : R.took ? 2 : 3, rn = R ? shLNm(R.piece.t) : '';
+        const k = !R ? 4 : R.piece.t === 'k' ? (R.took ? 0 : 1) : R.took ? 2 : 3, rn = R ? shLNm(P.ref[u][4] === '+' && R.piece.t[0] === '+' ? R.piece.t.slice(1) : R.piece.t) : '';   // (2026-11-27 d1: a defender that takes and promotes is named as the piece that took — 香車, not 成香)
         why = [at([`{x}の${pn}は、玉に取られちゃうの。そのあと詰ませる王手がないコン。`, `{x}だと、玉が${pn}を取って逃げるの。次の一手では詰まないの。`, `{x}の${pn}は、玉が取れるの。取られたら、もう詰まないコン。`, `玉が{x}の${pn}を取っちゃうの。それで詰みが消えるの。`, `{x}の${pn}は、玉に取られて詰みまで届かないの。`]),
           at(['{x}の王手だと、玉に逃げられて、次の一手では詰まないの。', '{x}だと、玉が空いたマスへ逃げるの。そこからは詰まないコン。', '{x}の王手は、玉が逃げてかわせるの。次の王手で詰まないの。', '{x}だと玉に逃げ道が残るの。逃げたあと、詰ませる手がないコン。', '{x}の王手では、玉が逃げ出して詰みが消えるの。']),
           at([`{x}の${pn}は、相手の${rn}に取られちゃうの。そのあと詰ませる王手がないコン。`, `{x}だと、${rn}で${pn}を取られるの。それで詰みが消えるの。`, `{x}の${pn}は、${rn}が取れるの。取られたら、もう詰まないコン。`, `相手が${rn}で{x}の${pn}を取って受けるの。次の一手では詰まないの。`, `{x}の${pn}は、${rn}に取られて詰みまで届かないの。`]),
@@ -929,9 +929,9 @@
     LKEY: 'shogi-kaya-lessons-v1', OKEY: 'shogi-kaya-open-v1', CATS: ['beg', 'mid', 'adv', 'sp', 'new', 'castle', 'handi'], data: null,
     load() {
       if (this.p) return this.p;
-      const voice = fetch('../shogi/voice-fox-ja.js?v=7').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
+      const voice = fetch('../shogi/voice-fox-ja.js?v=8').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       const rep = getJ('../shogi/lesson-replies.json?v=4').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
-      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261127k2'), getJ('../shogi/openings.json?v=20261124ol1'),
+      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261127d1'), getJ('../shogi/openings.json?v=20261124ol1'),
         ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261125sb`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
