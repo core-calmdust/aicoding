@@ -162,7 +162,7 @@
       .concat(st.rules === 'mason' ? [['mason', st.roles.mason.name, '相方と互いに人間だと知る']] : [['guard', '狩人', '毎晩ひとりを守る']])
       .concat(st.rules === 'cat' ? [['cat', st.roles.cat.name, '吊られても噛まれても道連れ']] : []);
     const can = r => r === 'auto' || r === 'villager' || RR[r] > 0;
-    $('setRules').innerHTML = st.rulesNote ? `<b>この物語のしくみ</b>${esc(st.rulesNote)}` : '';
+    $('setRules').innerHTML = st.rulesNote ? `<b>この物語のしくみ</b>${esc(st.rulesNote)}${E.DIFF[G.diff].hide ? '（上級・悪夢では、どの役もいるとは限らない）' : ''}` : '';
     $('setRules').classList.toggle('hide', !st.rulesNote);
     if (!can(G.role)) G.role = 'auto';
     $('setRole').innerHTML = roles.map(([r, n, d]) => `<button class="tile${G.role === r ? ' on' : ''}" data-r="${r}" ${can(r) ? '' : 'disabled style="opacity:.35"'}>${ROLE_ICON[r]}<b>${n}</b><span>${can(r) ? d : 'この人数にはいない'}</span></button>`).join('');
