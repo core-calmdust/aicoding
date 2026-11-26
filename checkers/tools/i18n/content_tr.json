@@ -61,6 +61,7 @@
  "ls.t_defend.goal": "Hiçbir şey kaybettirmeyen hamleyi bul.",
  "ls.t_defend.hint": "Altın halkalı taşı oynamak doğrudur.",
  "ls.t_defend.why": "{m} doğru savunmadır.",
+ "ls.t_defend.ng": "{x} taş kaybettirir. {m} ile hiçbir taş alınmaz.",
  "ls.t_best.title": "Kazandıran fikri bulmak",
  "ls.t_best.sub": "Açıkça en iyi hamle",
  "ls.t_best.intro": "<p>Oyun sonuna yakın, <b>diğerlerinden açıkça daha iyi</b> bir hamle var: dama çıkmak, rakip taşı durdurmak, değişimi kazanmak… hangisi?</p>",

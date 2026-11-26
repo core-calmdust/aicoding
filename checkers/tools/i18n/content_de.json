@@ -61,6 +61,7 @@
  "ls.t_defend.goal": "Finde den Zug, der nichts verliert.",
  "ls.t_defend.hint": "Der Zug mit dem Stein mit goldenem Ring ist richtig.",
  "ls.t_defend.why": "{m} ist die richtige Verteidigung.",
+ "ls.t_defend.ng": "{x} verliert Material. Mit {m} geht kein Stein verloren.",
  "ls.t_best.title": "Die Gewinnidee finden",
  "ls.t_best.sub": "Der klar beste Zug",
  "ls.t_best.intro": "<p>Kurz vor dem Endspiel gibt es einen Zug, der <b>klar besser ist als alle anderen</b>: eine Dame machen, einen gegnerischen Stein aufhalten, einen Abtausch gewinnen … welcher ist es?</p>",
