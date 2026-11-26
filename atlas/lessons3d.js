@@ -6619,7 +6619,7 @@
       if (W.extra && !G.extra) return T(v(s.rules === 'sunka' || G.relays ? W_.noExRelay() : G.n < G.d ? W_.noExShort(G.d - G.n) : W_.noExOver()));
       if (W.cap > G.cap && W.cap >= 2) return T(v(G.cap ? W_.capSmall(G.cap) : W_.noCap()));
       if (G.oppBest >= W.oppBest + 2) { const mo = G.oppBest >= 4 ? 'も' : '', tx = v((G.oppHow === 'cap' ? W_.oppCap : G.oppHow === 'both' ? W_.oppBoth : G.oppHow === 'extra' ? W_.oppEx : W_.oppPlain)(G.oppBest, mo));
-        return T(G.extra ? 'もう一回を使いきっても、' + tx.replace(/^赤い丸(の穴のあと|をまくと|のあとは|のあと|の手だと|では)、/, '') : tx); }   // (2026-11-26 担当A: the red pit gives another turn — the opponent moves only after it is used up)
+        return T(G.extra ? '赤い丸だと、もう一回を使いきっても、' + tx.replace(/^赤い丸(の穴のあと|をまくと|のあとは|のあと|の手だと|では)、/, '') : tx); }   // (2026-11-26 担当A: the red pit gives another turn — the opponent moves only after it is used up)
       if (g === 'blk' && G.oppEx > W.oppEx) return T(v(W_.blk()));
       if (W.turn >= G.turn + 2) return T(v(W_.turn(G.turn)));
       if (G.toOpp >= W.toOpp + 2) return T(v(W_.toOpp(G.toOpp)));
