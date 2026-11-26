@@ -163,7 +163,7 @@
   "ls.defend.ng": "Nach {x} gewinnt der Gegner trotzdem. Blockiere auf {m}.",
   "ls.vct.title": "Angriff mit Dreien (VCT)",
   "ls.vct.sub": "Dreien und Vieren kombinieren",
-  "ls.vct.intro": "<p>Nicht nur Vieren, auch <b>Dreien</b> sind Angriffe: Werden sie nicht blockiert, werden sie zu offenen Vieren. Dreien und Vieren zu kombinieren, um Antworten zu erzwingen, und dann eine Vier-Drei zu bilden, heißt <b>VCT</b> — Sieg durch fortgesetzte Drohungen.</p><p>Eine Drei lässt sich auf mehrere Arten blockieren, also wähle einen Zug, der gegen jeden Block gewinnt.</p>",
+  "ls.vct.intro": "<p>Nicht nur Vieren, auch <b>Dreien</b> sind Angriffe: Werden sie nicht blockiert, werden sie zu offenen Vieren. Dreien und Vieren zu kombinieren, um Antworten zu erzwingen, und dann eine unaufhaltsame Form (Vier-Drei, offene Vier …) zu bilden, heißt <b>VCT</b> — Sieg durch fortgesetzte Drohungen.</p><p>Eine Drei lässt sich auf mehrere Arten blockieren, also wähle einen Zug, der gegen jeden Block gewinnt.</p>",
   "ls.vct.goal": "Spiele den ersten Zug eines gewinnenden Angriffs (Dreien erlaubt).",
   "ls.vct.hint": "Bilde eine Drei, erzwinge einen Block und wähle eine Reihenfolge, bei der die blockierenden Steine dem Gegner nicht helfen.",
   "ls.vct.why": "Ab {m} gewinnen Dreien und Vieren.",

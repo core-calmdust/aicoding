@@ -163,7 +163,7 @@
   "ls.defend.ng": "After {x} your opponent still wins. Block at {m}.",
   "ls.vct.title": "Attack with threes (VCT)",
   "ls.vct.sub": "Combine threes and fours",
-  "ls.vct.intro": "<p>Not only fours but also <b>threes</b> are attacks: if not blocked they become straight fours. Combining threes and fours to force replies and then making a four-three is a <b>VCT</b> — victory by continuous threats.</p><p>A three can be blocked in several ways, so choose a move that wins against every block.</p>",
+  "ls.vct.intro": "<p>Not only fours but also <b>threes</b> are attacks: if not blocked they become straight fours. Combining threes and fours to force replies and then making an unstoppable shape (a four-three, an open four…) is a <b>VCT</b> — victory by continuous threats.</p><p>A three can be blocked in several ways, so choose a move that wins against every block.</p>",
   "ls.vct.goal": "Play the first move of a winning attack (threes allowed).",
   "ls.vct.hint": "Make a three, force a block, and choose an order where the blocking stones do not help the opponent.",
   "ls.vct.why": "Starting with {m}, threes and fours win.",

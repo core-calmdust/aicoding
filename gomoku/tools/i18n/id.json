@@ -469,7 +469,7 @@
   "ls.defend.ng": "Setelah {x} lawan tetap menang. Tutup di {m}.",
   "ls.vct.title": "Serangan tiga (VCT)",
   "ls.vct.sub": "Gabungkan tiga dan empat",
-  "ls.vct.intro": "<p>Bukan hanya empat, <b>tiga</b> juga serangan: jika tak ditutup menjadi empat terbuka. Menggabungkan tiga dan empat untuk memaksa jawaban lalu membuat empat-tiga adalah <b>VCT</b> — menang dengan ancaman beruntun.</p><p>Tiga bisa ditutup dengan beberapa cara, jadi pilih langkah yang menang melawan tutupan apa pun.</p>",
+  "ls.vct.intro": "<p>Bukan hanya empat, <b>tiga</b> juga serangan: jika tak ditutup menjadi empat terbuka. Menggabungkan tiga dan empat untuk memaksa jawaban lalu membuat bentuk yang tak bisa dihentikan (empat-tiga, empat terbuka…) adalah <b>VCT</b> — menang dengan ancaman beruntun.</p><p>Tiga bisa ditutup dengan beberapa cara, jadi pilih langkah yang menang melawan tutupan apa pun.</p>",
   "ls.vct.goal": "Mainkan langkah pertama serangan menang (tiga boleh).",
   "ls.vct.hint": "Buat tiga, paksa tutupan, dan pilih urutan yang batu penutupnya tidak membantu lawan.",
   "ls.vct.why": "Mulai dari {m}, tiga dan empat menang.",
