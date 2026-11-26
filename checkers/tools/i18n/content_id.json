@@ -68,6 +68,7 @@
  "ls.t_best.goal": "Temukan langkah terbaik.",
  "ls.t_best.hint": "Langkah terbaik memakai biji bercincin emas.",
  "ls.t_best.why": "{m} adalah ide menangnya.",
+ "ls.t_best.ng": "{x} bukan langkah penentu. {m} jelas lebih baik.",
  "ls.e_kings.title": "Akhir permainan raja",
  "ls.e_kings.sub": "Jangan lepaskan kemenangan",
  "ls.e_kings.intro": "<p>Akhir permainan dengan raja. Bahkan di posisi menang, <b>hanya sedikit langkah yang menjaga kemenangan</b>.</p><p class=\"note\">Dua raja mengalahkan satu raja, tetapi raja tunggal di \"sudut ganda\" (1 dan 5, atau 28 dan 32) butuh usaha untuk diusir. Jawaban diperiksa dengan database akhir permainan.</p>",

@@ -3784,6 +3784,8 @@
     const wrongOf = u => { if (u != null && !ok.includes(u) && pos.moves().includes(u)) return u;   // (no move given, or a right one: a typical miss, as the tool asks)
       const L = pos.moves().filter(m => !ok.includes(m)); if (P.sc) { const v = P.sc.filter(x => !ok.includes(x[0]) && best - x[1] > 6); if (v.length) return v[Math.min(v.length - 1, k % 2)][0]; } return L[k % Math.max(1, L.length)]; };
     const deg = d => CKJ_OP.deg(d);
+    // (t_best) 相手の駒を止める: the answer leaves his men no crowning, at least two other moves let one crown
+    const stopK = id === 't_best' && !FA.crown && !FA.shot && !FA.capN && !FA.oppCrown && pos.moves().filter(m => !ok.includes(m) && ckLF(E, pos, m).oppCrown).length >= 2;
     // why the right move works (a: a short plain clause, the variant j)
     const why = (F, j) => {
       const n = F.capN, g = F.net;
@@ -3811,6 +3813,7 @@
           : F.crown ? pk(['キングに成って一気に有利になる', '先に王冠をかぶって主導権をにぎれる', 'キングを作って、戦いがぐっと楽になる', '奥の段に着いて強い駒が増える', '後ろにも動ける駒が手に入る'], j)
           : F.shot ? pk(['取らせて跳び返して駒得できる', 'ショットで駒得になる', '捨て駒から得をする手順に入れる', '1枚あげて、それ以上取り返せる', '相手の取りを利用して得をする'], j)
           : F.capN ? pk(['取り返されない取り方で得をする', 'いちばん得な取り方ができる', '取ったあとも駒が安全', '取ってもお返しされない', '得をしたまま形を保てる'], j)
+          : stopK ? pk(['相手のマンをキングにさせない', '相手のマンに王冠への道をあけずにすむ', '相手のマンが奥の段へ入れなくなる', '相手にキングを作らせずにすむ', '相手のマンの成りを止められる'], j)   // (2026-11-26 第2期: 相手の駒を止める — the other moves let his man crown)
           : P.sc && P.sc.filter(x => x[0] !== A && x[1] < -(CK_WINT - 1000)).length * 2 >= P.sc.length - 1 ? pk(['負けにつながる落とし穴をよけられる', '負けの落とし穴をよけて進める', 'ちゃんと負けから逃れられる', '負けにつながる手を全部よけられる', '負けの道を避けて踏みとどまれる'], j)
           : F.oppShot <= 0 && F.net >= 0 ? pk(['相手にショットのすきを作らない', '駒を取られる形を作らずに進める', '相手に跳び越えるチャンスをあげない', '後ろの守りをくずさずに進める', '駒の並びをくずさずに前へ出せる'], j)
           : pk(['損をいちばん小さくできる', 'ほかの手より被害が少ない', 'いちばんましな形で受けられる'], j);
@@ -3846,6 +3849,7 @@
       if (F.net < 0) return pk([`相手に跳び越えられて、${n}枚タダで取られちゃう`, `タダで${n}枚、相手に取られちゃう`, `相手に${n}枚タダで取られて損しちゃう`], j);
       if ((FA.shot && !F.shot) || id === 't_shot1' || id === 't_shot2') return pk(['ショットのチャンスを見のがしちゃう', '駒得できる手順に入れない', '相手の取る手を利用できない'], j);
       if (FA.crown && !F.crown) return pk(['キングになるチャンスを逃しちゃう', '先に成るチャンスがなくなる', '王冠への近道を見のがしちゃう'], j);
+      if (stopK && F.oppCrown) return pk(['相手のマンにキングになられちゃう', '相手のマンに王冠への道をあけちゃう', '相手のマンが奥の段へ入ってキングになる'], j);
       if (F.back && !FA.back) return pk(['後ろの段に穴があいて、相手にキングになられやすくなる', '後ろの守りがうすくなって、相手のマンが奥へ入りやすくなる'], j);
       if (FA.center && !F.center) return pk(['真ん中への進出がおくれて、相手に中央を取られちゃう', '中央をあけてしまって、相手の駒が入りこみやすくなる'], j);
       if (d != null && d > 6) return pk(['相手に先に良いマスを取られて、あとで駒の動きがつまっちゃう', 'あとの展開で、相手の駒のほうが動きやすくなっちゃう'], j);
@@ -3872,7 +3876,7 @@
     LKEY: 'aicoding-checkers-lessons', OKEY: 'aicoding-checkers-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=30261127bk1-ts1-td1'), getJ('../checkers/openings.json?v=6'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1-bk1-bs1-ts1-td1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=8').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=30261127bk1-ts1-td1-tb1'), getJ('../checkers/openings.json?v=6'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1-bk1-bs1-ts1-td1-tb1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=8').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vc]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] checkers texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vc)(v); this.V = ((v.I18N || {})['ja@crab']) || {}; } catch (e) { this.V = {}; }   // (チェッカニ's own lines, 3D, ja)
           return this; })
@@ -5727,7 +5731,7 @@
     LKEY: 'aicoding-amazons-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      const tx = ['../checkers/i18n.js?v=20261107l14-nd1-bs1-ts1-td1', '../amazons/i18n-am.js?v=4', '../amazons/i18n-am-more.js?v=4', '../amazons/i18n-am-ls.js?v=6', '../amazons/i18n-am-ls-more.js?v=5', '../amazons/i18n-am-ls-more2.js?v=5'];
+      const tx = ['../checkers/i18n.js?v=20261107l14-nd1-bs1-ts1-td1-tb1', '../amazons/i18n-am.js?v=4', '../amazons/i18n-am-more.js?v=4', '../amazons/i18n-am-ls.js?v=6', '../amazons/i18n-am-ls-more.js?v=5', '../amazons/i18n-am-ls-more2.js?v=5'];
       return (this.p = Promise.all([getJ('../amazons/lessons.json?v=7'), Promise.all(tx.map(u => fetch(u).then(r => r.text()).catch(() => ''))), amEng().catch(() => null)])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T[0] + '\nvar I18N = window.I18N = window.I18N || {};\n' + T.slice(1).join('\n'))(w); } catch (e) { console.warn('[lessons3d] amazons texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
