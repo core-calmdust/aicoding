@@ -6410,6 +6410,19 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
         if (k && z.lastCaps.includes(E.mTo(u))) how = 'taken'; else how = how || (k ? 'king' : 'other'); } }
     return how;
   }
+  // (2026-11-27 第2期 担当A) t_fort: why a wrong move u of the defenders does not make the fort (read with the rules, as
+  // tools/lesson-verify-tffort.js; A = the answer, whose fort gives the room and the walls): 'moved' a wall piece left the wall, 'cap' a
+  // piece of the wall can be taken next, 'kingoff' the king left the edge, 'king' the king moved along it, 'enter' an attacker gets into the fort (the room, the king's square, the gap), 'stuck' the man
+  // went into the room and the king cannot move, 'open' the gap stays; '' u ends the game
+  function tfFortWhy(E, pos, A, u) {
+    const room = z => { const k = z.king, seen = new Set([k]), st = [k], w = new Set(); while (st.length) { const x = st.pop(); for (const y of z.nb(x)) { if (seen.has(y)) continue; if (!z.at(y)) { seen.add(y); st.push(y); } else if (z.at(y) === 2) w.add(y); } } return { seen, w }; };
+    const za = pos.clone().play(A), R = room(za), FR = new Set(R.seen), FW = new Set(R.w); FR.add(E.mTo(A)); FW.delete(E.mTo(A));
+    const q = pos.clone().play(u), t = E.mTo(u); if (q.res) return '';
+    if (FW.has(E.mFrom(u))) return 'moved'; if (E.mFrom(u) === pos.king) return pos.G.F[t] & 1 ? 'king' : 'kingoff';
+    const kq = q.clone(); kq.turn = 2; if (FR.has(t) && !kq.moves().some(x => E.mFrom(x) === q.king)) return 'stuck';
+    let cap = false, enter = false; for (const r of q.moves()) { const z = q.clone().play(r); if (z.lastCaps.some(x => FW.has(x) || (x === t && FR.has(x)))) cap = true; if (FR.has(E.mTo(r))) enter = true; }
+    return cap ? 'cap' : enter ? 'enter' : 'open';
+  }
   // (2026-11-22 lesson loop) タフリン's voice for one lesson: praise / soft words / push on, each lesson in an order of its own (tfVoice);
   // every line below has five wordings, taken by the problem's number, so no line comes twice in a lesson
   const TF_V = {
@@ -6538,10 +6551,17 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
           : pk(['{x}だと、王に2手で逃げ切られちゃう。', '{x}では、2手のうちに王が角へ着いちゃうの。', '{x}だと、王さまの逃げ道がまだ残るね。', '{x}のあと、王は2手で脱出できるの。', '{x}では止めきれないんだ。']);
         return f(w + pk(['{m}なら、王の道がしっかり止まるから。', '{m}で道をふさげば、王はトゥイチも作れなかったの。', '正解の{m}は、道を止めたうえで、王に2本目の道を作らせない手。', 'こっちの{m}だったら、2手のうちに逃げられなかったね。', '{m}を選べば、王はどう動いても2手では角に届かなかったんだ。'])); };
     } else if (id === 't_fort') {
+      // (2026-11-27 第2期 担当A) each wrong move by what follows it on the board (tfFortWhy, as tools/lesson-verify-tffort.js)
       good = () => fg(FA.win === 'fort' ? pk(['{x}で砦の完成！ もう攻め手は壁をこわせないから、守り手の勝ち。', 'エッジフォートのできあがり！ 王は砦の中で動けて、壁の駒もはさまれないの。', '{x}で穴がふさがった！ こわせない砦で、守り手の勝ちだね。', '最後の1枚がぴたり！ 攻め手はもう砦に手が出せないの。', '王さまのお城、完成！ 壁のどの駒もはさめない形ね。']) : pk(['{x}で守り手の勝ち！ 王の守りは完ぺきだね。', '{x}で勝負あり！', '守り手の勝ち！', 'みごとに勝ちを決めたね！', 'これで守り手の勝ち！']));
-      ng = u => say(u, null, G => G.scan().c ? pk(['{x}だと壁の駒がはさまれて、砦がくずれちゃう。', '{x}のあと、壁の駒を攻め手に取られるの。', '{x}では、壁にはさまれる駒が残っちゃう。', '{x}だと、攻め手に壁をこわされちゃう。', '{x}のあと、壁の1枚がねらわれるの。'])
-        : pk(['{x}だと壁に穴が残って、攻め手に入りこまれちゃう。', '{x}では、砦の入口があいたままなの。', '{x}だと、まだ砦が完成しないね。', '{x}だと、壁のすき間がそのまま残るの。', '{x}では、穴をふさげないんだ。']),
-        pk(['{m}なら、穴がぴったりふさがるの。', '{m}で最後の1枚を入れれば、砦が完成したから。', '正解の{m}が、壁の最後のピース。', 'こっちの{m}だったら、こわせない砦になったね。', '{m}を選べば、その場で守り手の勝ちだったの。']));
+      ng = u => { const v = alt(u), why = v != null ? tfFortWhy(E, pos, A, v) : '';
+        const w = why === 'moved' ? pk(['{x}だと壁の駒が動いて、べつの所に穴があいちゃう。', '{x}では、壁の1枚がぬけて新しいすき間ができるの。', '{x}だと、壁から駒がはなれて、砦に穴があくね。', '{x}のあと、壁の駒がいた所が空いちゃう。', '{x}では、壁をくずして別の穴を作っちゃうの。'])
+          : why === 'kingoff' ? pk(['{x}だと王が端からはなれちゃう。砦は王が端にいてこそなの。', '{x}では、王さまが盤のふちを出ちゃうの。それじゃ砦にならない。', '{x}だと、王が端をはなれて砦が作れないね。', '{x}のあと、王は端にいないの。エッジフォートは端が条件なんだ。', '{x}では、王さまが内側へ出ちゃう。砦の中にいないとね。'])
+          : why === 'king' ? pk(['{x}は王さまが動く手。王が動いても、壁の駒がそろわないと砦にはならないの。', '{x}だと王が動くだけ。砦の壁は、守り手の駒でそろえるものなの。', '{x}では、王さまが場所を変えただけで、壁はそろわないね。', '{x}は王の手なの。最後の1枚は、守り手の駒で入れるんだ。', '{x}だと、王が動いても壁の形は完成しないの。'])
+          : why === 'cap' ? pk(['{x}だと壁の駒がはさまれて、砦がくずれちゃう。', '{x}のあと、壁の駒を攻め手に取られるの。', '{x}では、壁にはさまれる駒が残っちゃう。', '{x}だと、攻め手に壁をこわされちゃう。', '{x}のあと、壁の1枚がねらわれるの。'])
+          : why === 'enter' ? pk(['{x}だと壁に穴が残って、攻め手に入りこまれちゃう。', '{x}では砦の入口があいたままで、攻め手が入ってこられるの。', '{x}のあと、攻め手が穴から砦に入ってくるの。', '{x}だと、すき間に攻め手の駒が飛びこんでくる！', '{x}では、攻め手に壁のすき間へ入られちゃう。'])
+          : why === 'stuck' ? pk(['{x}だと王のまわりが埋まって、王が動けないの。それじゃ砦にならない。', '{x}では、砦の中に駒が入って王の動く場所がなくなるの。', '{x}だと、王さまが中で動けなくなっちゃう。砦は王が動けることが条件なの。', '{x}のあと、王はどこへも動けないね。それでは砦じゃないの。', '{x}では、王の部屋をふさいじゃうんだ。'])
+          : pk(['{x}だと、まだ砦が完成しないね。', '{x}では、壁のすき間がそのまま残るの。', '{x}では、穴をふさげないんだ。', '{x}だと、砦の入口があいたままなの。', '{x}のあとも、壁に穴が残ったまま。']);
+        return f(w + pk(['{m}なら、穴がぴったりふさがるの。', '{m}で最後の1枚を入れれば、砦が完成したから。', '正解の{m}が、壁の最後のピース。', 'こっちの{m}だったら、こわせない砦になったね。', '{m}を選べば、その場で守り手の勝ちだったの。'])); };
     } else if (id === 't_encircle') {
       good = () => fg(FA.win === 'encircle' ? pk(['{x}で包囲の完成！ 守り手はどの駒も端へ出られないから、攻め手の勝ち。', '輪がぴったり閉じた！ ななめのつながりでも、ちゃんと閉じているの。', '{x}ですき間がなくなった！ 守り手をまるごとかこんで、攻め手の勝ちだね。', '最後のすき間を閉じた！ 守り手はもう外へ出られないの。', '大きな輪の完成！ 守り手をまるごと閉じこめたね。']) : pk(['{x}で攻め手の勝ち！ みごとな包囲だね。', '{x}で勝負あり！', '攻め手の勝ち！', 'みごとに勝ちを決めたね！', 'これで攻め手の勝ち！']));
       ng = u => say(u, null, G => G.scan().c ? pk(['{x}だと輪の駒がはさまれて、穴があいちゃう。', '{x}のあと、輪の駒を守り手に取られるの。', '{x}では、輪の1枚がはさまれちゃう。', '{x}だと、守り手に輪をこわされちゃう。', '{x}のあと、輪の駒がねらわれるの。'])
@@ -6560,7 +6580,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-tafl-lessons', OKEY: 'aicoding-tafl-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=11'), fetch('../tafl/i18n.js?v=6ek-nd1-bm2-bs1-tu1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261125o').catch(() => null)])
+      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=12'), fetch('../tafl/i18n.js?v=6ek-nd1-bm2-bs1-tu1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261125o').catch(() => null)])
         .then(([ls, T, _, op]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] tafl texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
