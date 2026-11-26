@@ -35,6 +35,7 @@
       { id: 'guard', name: '夜通しの戸口', desc: '狩人として、狼の牙から誰かを守る', c: ['guardGJ'] },
       { id: 'clash', name: '食い違いを聞き逃さない', desc: 'ひと幕で、矛盾を二度突く', c: ['clash2'] },
       { id: 'ghost', name: '霧の向こうから', desc: '幽霊になっても、村を解決へ導く', c: ['ghost'] },
+      { id: 'medium', name: '氷室の声を聞く', desc: '霊媒師として解決する', c: ['roleWin', 'medium'] },
       { id: 'rankS', name: '影絵の名手', desc: '評価Sを取る', c: ['rankS'] },
     ],
     hokushin: [
@@ -48,6 +49,7 @@
       { id: 'accuse', name: '名指しの切符', desc: 'ひと幕で、名指しを二度当てる', c: ['accuse2'] },
       { id: 'fast', name: '夜明け前の到着', desc: '標準以上で、三日目までに解決する', c: ['fast'] },
       { id: 'ghost', name: '幽霊列車', desc: '幽霊になっても、列車を解決へ導く', c: ['ghost'] },
+      { id: 'clash', name: '時刻表の食い違い', desc: 'ひと幕で、矛盾を二度突く', c: ['clash2'] },
       { id: 'rankS', name: '一等寝台の名探偵', desc: '評価Sを取る', c: ['rankS'] },
     ],
     tomoshibi: [
@@ -61,6 +63,7 @@
       { id: 'hunt', name: '最後の一日', desc: '狐を探す最後の一日に、狐を見つけて解決する', c: ['huntWin'] },
       { id: 'clean', name: '油庫は空のまま', desc: '標準以上で、罪のない者を一度も油庫へ送らずに解決する', c: ['noWrong'] },
       { id: 'ghost', name: '灯台の幽霊', desc: '幽霊になっても、島を解決へ導く', c: ['ghost'] },
+      { id: 'guard', name: '嵐の夜の戸口', desc: '狩人として、狼の牙から誰かを守る', c: ['guardGJ'] },
       { id: 'rankS', name: '島いちばんの目', desc: '評価Sを取る', c: ['rankS'] },
     ],
     nekonaki: [
@@ -74,6 +77,7 @@
       { id: 'clean', name: '土蔵は空のまま', desc: '標準以上で、罪のない者を一度も土蔵へ送らずに解決する', c: ['noWrong'] },
       { id: 'fast', name: '三日で開いた峠', desc: '標準以上で、三日目までに解決する', c: ['fast'] },
       { id: 'ghost', name: '湯けむりの幽霊', desc: '幽霊になっても、湯治場を解決へ導く', c: ['ghost'] },
+      { id: 'clash', name: '湯気の向こうの嘘', desc: 'ひと幕で、矛盾を二度突く', c: ['clash2'] },
       { id: 'rankS', name: '招き猫の両目', desc: '評価Sを取る', c: ['rankS'] },
     ],
     shirane: [
@@ -87,6 +91,7 @@
       { id: 'clean', name: '独房は空のまま', desc: '標準以上で、罪のない者を一度も独房へ送らずに解決する', c: ['noWrong'] },
       { id: 'fast', name: '三日で開いた峰', desc: '標準以上で、三日目までに解決する', c: ['fast'] },
       { id: 'ghost', name: '祈りの声のひとつ', desc: '幽霊になっても、修道院を解決へ導く', c: ['ghost'] },
+      { id: 'guard', name: '夜課の戸口', desc: '狩人として、狼の牙から誰かを守る', c: ['guardGJ'] },
       { id: 'rankS', name: '聖人の目', desc: '評価Sを取る', c: ['rankS'] },
     ],
     kiteki: [
@@ -100,6 +105,7 @@
       { id: 'sign', name: '奈落の温もり', desc: '奈落で、夜通し座っていた者の跡を見つける', c: ['foxSign'] },
       { id: 'clean', name: '道具倉は空のまま', desc: '標準以上で、罪のない者を一度も道具倉へ送らずに解決する', c: ['noWrong'] },
       { id: 'ghost', name: '客席の幽霊', desc: '幽霊になっても、劇場を解決へ導く', c: ['ghost'] },
+      { id: 'accuse', name: '桟敷からの名指し', desc: 'ひと幕で、名指しを二度当てる', c: ['accuse2'] },
       { id: 'rankS', name: '鳴りやまない喝采', desc: '評価Sを取る', c: ['rankS'] },
     ],
   };
