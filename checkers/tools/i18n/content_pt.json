@@ -68,6 +68,7 @@
  "ls.t_best.goal": "Encontre o melhor lance.",
  "ls.t_best.hint": "O melhor lance usa a peça do anel dourado.",
  "ls.t_best.why": "{m} é a ideia vencedora.",
+ "ls.t_best.ng": "{x} não é a ideia vencedora. {m} é claramente melhor.",
  "ls.e_kings.title": "Finais de damas",
  "ls.e_kings.sub": "Não deixe a vitória escapar",
  "ls.e_kings.intro": "<p>Finais com damas. Mesmo numa posição ganha, <b>poucos lances mantêm a vitória</b>.</p><p class=\"note\">Duas damas vencem uma, mas uma dama sozinha num \"canto duplo\" (1 e 5, ou 28 e 32) dá trabalho para ser expulsa. As respostas foram conferidas com as bases de dados de finais.</p>",

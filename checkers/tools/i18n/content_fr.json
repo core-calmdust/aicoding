@@ -68,6 +68,7 @@
  "ls.t_best.goal": "Trouvez le meilleur coup.",
  "ls.t_best.hint": "Le meilleur coup joue la pièce à l'anneau doré.",
  "ls.t_best.why": "{m} est l'idée gagnante.",
+ "ls.t_best.ng": "{x} n’est pas l’idée gagnante. {m} est nettement meilleur.",
  "ls.e_kings.title": "Finales de dames",
  "ls.e_kings.sub": "Ne pas laisser filer le gain",
  "ls.e_kings.intro": "<p>Des finales avec des dames. Même dans une position gagnante, <b>peu de coups conservent le gain</b>.</p><p class=\"note\">Deux dames battent une dame, mais une dame seule dans un « double coin » (1 et 5, ou 28 et 32) est difficile à déloger. Les réponses ont été vérifiées avec les bases de finales.</p>",
