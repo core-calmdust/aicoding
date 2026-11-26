@@ -3740,7 +3740,7 @@
       b_win: ['相手が動かせる駒、全部数えてみて！', '相手の駒の進む先をふさぐ手もあるの。', '全部取り切れる道はない？', '相手の駒が進めるマスを、ひとつずつたしかめてみて。', 'この手のあと、相手に動ける手が残るか見てみて。'],
       t_shot1: ['わざと取らせたら、相手の駒はどこに着地する？', '取られるマスへ、あえて進めてみるカニ。', '相手の取る手は決まっている。それを利用するカニ！', '着地点の先に、もう1枚取れる駒が並ぶかな？', '損して得とれ！ 先に1枚あげちゃおう。'],
       t_shot2: ['一見タダで取られる手が、じつは正解かもカニ。', '捨てる → 着地点 → もう一度捨てる → 着地点 → 自分の取る道、の順に読んでみて。', '2回目の着地点から、3回続けて跳べる道を探して！', '捨てる駒の場所で、相手の着地点が決まるの。', '相手に取らせたあとの盤を想像してみて！'],
-      t_defend: ['この手のあと、相手に捨て駒の一手はない？', '相手の連続取りの道、先にふさげない？', '相手に「取らされる」形にならない手を探すカニ。', '1手ずつ「相手の番になったら？」と確かめてみて。', '何気ない手ほど危ないの。相手のねらいを読んでみて！'],
+      t_defend: ['この手のあと、相手に捨て駒の一手はない？', '相手が1枚捨ててきたら、取らされたあとの盤を想像してみて。', '相手に「取らされる」形にならない手を探すカニ。', '1手ずつ「相手の番になったら？」と確かめてみて。', '何気ない手ほど危ないの。相手のねらいを読んでみて！'],
       t_best: ['キングを作る手、相手を止める手、交換の手…どれかな？', 'いちばん働く駒はどれか、考えるカニ。', '相手の駒の進む道もよく見てみて。', 'タダで取られる駒が出ないかも確かめてね。', '先に成った方が有利になりやすいの！'],
       e_kings: ['相手のキングを二重コーナーへ行かせないで！', '勝ちを保てる手は、じつは少ないカニ。', '相手のキングの逃げ道を数えてみて。', 'キングをタダで取られないマスを選んでね。', '2枚のキングで、はさむように追いつめよう！'],
       e_men: ['どっちが先にキングになれるか、手数を数えてみて！', '相手のマンの進む先、おさえられない？', '先にキングになれば、ぐっと有利になるカニ。', '取られる形にならないかも確かめてね。', 'キングとマン、どの駒を動かすのがいいかな？'],
@@ -3804,7 +3804,7 @@
         case 't_shot1': return F.shot ? pk([`1枚取らせたあと跳び返して、差し引き${g}枚の得`, '取らせてから跳び返す、ショットが決まる', `捨てた分より${g}枚多く取り返せる`, `相手が取ったあとに連続取りで${g}枚の得`, 'わざと渡した1枚が、倍になって返ってくる'], j)
           : pk(['相手の取る手を利用して、駒得の手順に入れる', '捨て駒からの手順で駒得できる', '相手の駒を、こっちの取りやすい所へ呼びこめる', '相手は取るしかなくて、そこから得をする', '一手ずつ追いこんで、駒得の始まりになる'], j);
         case 't_defend': if (P.sc && P.sc.every(x => x[0] === A || x[1] < -(CK_WINT - 1000))) return pk(['負けを避けられる、ただ一つの手になる', 'ほかの手はどれも負け。これだけが助かる', '負けの道をひとつだけ抜けられる', '相手の勝ち筋をただ一つ消せる', '負けずにすむ道に入れる'], j);
-          return F.oppShot <= 0 ? pk(['相手のショットが決まらなくなる', '捨て駒の一手を先に消せる', '相手の連続ジャンプを先に封じられる', '捨て駒をされても困らない', '相手のねらいが空振りになる'], j)
+          return F.oppShot <= 0 ? pk(['相手のショットが決まらなくなる', '捨て駒の一手を先に消せる', 'タダで取られる駒をひとつも出さずにすむ', '捨て駒をされても困らない', '相手のねらいが空振りになる'], j)
           : pk(['損をいちばん小さくできる', 'ほかの手より被害が少ない', '傷を浅くすませられる', 'いちばんましな受けになる', '損を最小限におさえられる'], j);
         case 't_best': return F.win ? pk(['相手を動けなくして勝ちが決まる', '一気に勝負を決められる', 'これで相手は動けない', 'そのまま勝ちになる', '決着がつく'], j)
           : F.crown ? pk(['キングに成って一気に有利になる', '先に王冠をかぶって主導権をにぎれる', 'キングを作って、戦いがぐっと楽になる', '奥の段に着いて強い駒が増える', '後ろにも動ける駒が手に入る'], j)
@@ -3871,7 +3871,7 @@
     LKEY: 'aicoding-checkers-lessons', OKEY: 'aicoding-checkers-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=30261127bk1-ts1'), getJ('../checkers/openings.json?v=6'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1-bk1-bs1-ts1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=30261127bk1-ts1-td1'), getJ('../checkers/openings.json?v=6'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1-bk1-bs1-ts1-td1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=8').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vc]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] checkers texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vc)(v); this.V = ((v.I18N || {})['ja@crab']) || {}; } catch (e) { this.V = {}; }   // (チェッカニ's own lines, 3D, ja)
           return this; })
@@ -5726,7 +5726,7 @@
     LKEY: 'aicoding-amazons-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      const tx = ['../checkers/i18n.js?v=20261107l14-nd1-bs1-ts1', '../amazons/i18n-am.js?v=4', '../amazons/i18n-am-more.js?v=4', '../amazons/i18n-am-ls.js?v=6', '../amazons/i18n-am-ls-more.js?v=5', '../amazons/i18n-am-ls-more2.js?v=5'];
+      const tx = ['../checkers/i18n.js?v=20261107l14-nd1-bs1-ts1-td1', '../amazons/i18n-am.js?v=4', '../amazons/i18n-am-more.js?v=4', '../amazons/i18n-am-ls.js?v=6', '../amazons/i18n-am-ls-more.js?v=5', '../amazons/i18n-am-ls-more2.js?v=5'];
       return (this.p = Promise.all([getJ('../amazons/lessons.json?v=7'), Promise.all(tx.map(u => fetch(u).then(r => r.text()).catch(() => ''))), amEng().catch(() => null)])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T[0] + '\nvar I18N = window.I18N = window.I18N || {};\n' + T.slice(1).join('\n'))(w); } catch (e) { console.warn('[lessons3d] amazons texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
