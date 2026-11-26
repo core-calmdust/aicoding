@@ -9,7 +9,7 @@
   const KEY = 'wolflantern-save-v1', REC = 'wolflantern-rec-v1', PREF = 'wolflantern-pref-v1';
   const ORDER = ['kirigane', 'hokushin', 'tomoshibi', 'nekonaki', 'shirane', 'kiteki'];
   const DIFFN = ['入門', '標準', '中級', '上級', '悪夢'];
-  const DIFFT = ['はじめての夜に。嘘をつく者がいる。', '嘘つきが、ぼろを出しにくくなる。', '嘘つきが、ぼろを出さなくなる。', '嘘つきは悪夢なみ。', '嘘と罠ばかり。誰の言葉も信じきれない。'];
+  const DIFFT = ['はじめての夜に。嘘をつく者がいる。', '嘘つきが、ぼろを出しにくくなる。', '嘘つきが、ぼろを出さなくなる。', '占い師は必ずいる。嘘つきは悪夢なみ。', '嘘と罠ばかり。誰の言葉も信じきれない。'];
   // the card's line follows the story's real cast for that size (the wolves and the roles differ story by story)
   function diffDesc(s, i) {
     const R = E.setupOf(s, E.DIFF[i].size);
@@ -20,11 +20,12 @@
   }
   // the role card's line on who is in the village
   function castLine() {
-    if (S.hid) return `この${st.lex.village}には人狼が${S.wolves.length}匹いる。ほかに誰がいるかは、わからない――${hidList()}が、いるかもしれないし、いないかもしれない。全部で${S.size}人。`;
+    if (S.hid) return `この${st.lex.village}には人狼が${S.wolves.length}匹いる。${seerSure() ? `${st.roles.seer.name}は必ずいる。` : ''}ほかに誰がいるかは、わからない――${hidList()}が、いるかもしれないし、いないかもしれない。全部で${S.size}人。`;
     return `この${st.lex.village}には人狼が${S.wolves.length}匹${E.RS(S).madman ? (st.rules === 'fanatic' ? `、狼の正体を知る狂信者が${E.RS(S).madman > 1 ? NUM[E.RS(S).madman] + '人' : 'ひとり'}` : `、狼に味方する狂人が${E.RS(S).madman > 1 ? NUM[E.RS(S).madman] + '人' : 'ひとり'}`) : ''}${E.RS(S).cat ? '、道連れの猫又がひとり' : ''}${E.RS(S).fox ? `、${st.roles.fox.tag || '社に棲む妖狐'}がひとり` : ''}${E.RS(S).immoral ? `、${st.roles.immoral.tag || '妖狐に仕える背徳者'}がひとり` : ''}${E.RS(S).mason ? '、互いを知る共有者がふたり' : ''}いる。全部で${S.size}人。`;
   }
+  const seerSure = () => ((E.DIFF[S.diff].hide || {}).seer || 0) >= 1;
   // 上級・悪夢：いるかもしれない役（数は伏せる）
-  function hidList() { const P = E.PUB(S), mad = st.rules === 'fanatic' ? (st.roles.madman || {}).name || '狂信者' : '狂人'; return [P.seer && st.roles.seer.name, P.medium && st.roles.medium.name, P.guard && (st.roles.guard || {}).name, P.mason && st.roles.mason.name, P.cat && st.roles.cat.name, P.fox && st.roles.fox.name, P.immoral && st.roles.immoral.name, P.madman && mad].filter(Boolean).join('・'); }
+  function hidList() { const P = E.PUB(S), mad = st.rules === 'fanatic' ? (st.roles.madman || {}).name || '狂信者' : '狂人'; return [P.seer && !seerSure() && st.roles.seer.name, P.medium && st.roles.medium.name, P.guard && (st.roles.guard || {}).name, P.mason && st.roles.mason.name, P.cat && st.roles.cat.name, P.fox && st.roles.fox.name, P.immoral && st.roles.immoral.name, P.madman && mad].filter(Boolean).join('・'); }
   const NUM = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
   const ROLE_ICON = {
     auto: '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="11"/><path d="M12.5 12.5a3.6 3.6 0 1 1 4.8 3.4c-.9.4-1.3 1.1-1.3 2.1v.6M16 22.5v.2"/></svg>',
