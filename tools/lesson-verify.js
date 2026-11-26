@@ -701,7 +701,7 @@ function gomoku(opt) {
 //   ⑦⑧ ハコピヨ's words (atlas/lessons3d.js dotsJa, run here) against the board: the boxes the red line hands over (≥1 when the
 //      words say so) and the boxes lost ((best − v) / 2), no 「開く」 for a line that takes, the question's 「1本」 / 「広い盤」 and the
 //      2D example's 「緑の点線も安全な線で、どれを選んでも同じ結果」 (problem 0 has other safe lines, all best)
-const DT_DONE = new Set(['safe', 'third', 'take', 'chain', 'hard', 'double', 'control']);
+const DT_DONE = new Set(['safe', 'third', 'take', 'chain', 'hard', 'double', 'control', 'parity']);
 function dots(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'dots/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'dots/lessons.json'), 'utf8'));
@@ -771,6 +771,26 @@ function dots(opt) {
           if (!comps.some(c => c.n >= 3 && !c.boxes.some(bx => p.cnt[bx] === 3))) a('④ no other chain of 3+ (「次の長い鎖」)');
         }
         d = comps.length;
+      } else if (id === 'parity') {
+        // (2026-11-26 担当A) parity = the long chain rule (DTJ.parity / ls.parity.body): safe lines left (3+, the question 「安全な線はまだ
+        // あるけど、どれでも同じじゃない」), nothing to take, no box taken yet (so the mover is 先手 ⇔ the lines drawn are even, and the rule
+        // can be applied), exactly one best line and it is safe, it wins (「長鎖ルールで勝てる線」). The words on the board, every safe line
+        // through every run of safe lines to the end (dtSafeEnd): after the best line the opponent is the one left without a safe line
+        // (「最後に長い鎖を開くのは相手」) in every run; after every other safe line it is the mover (yPar 「最後に長い鎖を開かされる」);
+        // the end is plain chains only (no loop, no junction box: the words say 鎖) with the same number of long chains (3+) in every run,
+        // at least one, and Berlekamp's rule (先手 wants dots + long chains even) on that number says the best line wins and every other
+        // safe line loses.
+        const dotsN = (q.n + 1) * (q.n + 1), first = edges.length % 2 === 0, ruleWin = lc => first === ((dotsN + lc) % 2 === 0);
+        if (cap) a('④ a box to take'); if (safe.length < 3) a(`④ ${safe.length} safe lines (3+: 「どれでも同じじゃない」)`);
+        if (X.dDecO(q.o).some(o => o >= 0)) a('④ a box already taken (the mover\'s 先手 / 後手 is not on the board)');
+        if (B.length !== 1 || !safe.includes(B[0])) a(`④ the best lines ${B} are not one safe line`);
+        if (best <= 0) a(`④ the best line does not win (${best})`);
+        for (const e of safe) { const f = dtSafeEnd(E, p, e), isB = B.includes(e);
+          if (!f.simple || f.loops) a(`④ line ${e}: the end of the safe lines has ${f.loops ? 'a loop' : 'a junction box'} (the words say 鎖)`);
+          if (f.lc.size !== 1 || [...f.lc][0] < 1) a(`④ line ${e}: the long chains at the end ${[...f.lc]} (one number, 1+)`);
+          if (f.opener !== (isB ? 'opp' : 'me')) a(`⑦⑧ line ${e} (${isB ? 'best' : 'worse'}): at the end of the safe lines the one to open is ${f.opener} (the words: ${isB ? 'the opponent' : 'the mover'})`);
+          if (f.lc.size === 1 && ruleWin([...f.lc][0]) !== isB) a(`④ line ${e}: the long chain rule with ${[...f.lc][0]} long chains says ${isB ? 'it loses' : 'it wins'}`); }
+        d = (q.n - 3) * 10 + safe.length;
       } else if (id === 'control') {
         // (2026-11-25 担当A) control = ハコピヨ's rule (DTJ.control.intro / ls.control.body: 「残りの鎖が小さい…なら全部取る…大きな長い
         // 鎖が残っていれば、残して主導権をキープ」) on the board: no safe line, no loop, one box to take, in an opened chain of 2 (the
@@ -817,6 +837,19 @@ function dots(opt) {
   dtIntro(L, X, E, lj, add, only);
   return out;
 }
+// (2026-11-26 担当A, dots parity) after the mover's safe line e, every run of safe lines to the end (no safe line left; a safe line
+// never takes, so the turns alternate): opener = who has to open first in every run ('opp' / 'me' / 'mixed'), the long chains (3+,
+// plain, not a loop) at the end, any loop, every part plain (no junction box).
+function dtSafeEnd(E, p0, e) {
+  const p = p0.clone(), memo = new Map(); p.play(e);
+  const rec = () => { const key = p.h1[0] + ':' + p.h2[0]; if (memo.has(key)) return memo.get(key);
+    const sl = p.legal().filter(x => p.isSafe(x)); let r;
+    if (!sl.length) { const cs = E.components(p, true); r = { par: new Set([0]), lc: new Set([cs.filter(c => c.simple && !c.loop && c.n >= 3).length]), loops: cs.some(c => c.loop), simple: cs.every(c => c.simple) }; }
+    else { r = { par: new Set(), lc: new Set(), loops: false, simple: true };
+      for (const x of sl) { p.play(x); const t = rec(); p.undo(x); t.par.forEach(v => r.par.add(1 - v)); t.lc.forEach(v => r.lc.add(v)); r.loops = r.loops || t.loops; r.simple = r.simple && t.simple; } }
+    memo.set(key, r); return r; };
+  const r = rec(); return { opener: r.par.size > 1 ? 'mixed' : r.par.has(0) ? 'opp' : 'me', lc: r.lc, loops: r.loops, simple: r.simple };
+}
 // (2026-11-24 第2期 追14) the dots examples of DT_DONE (no warm-up: problem 0 is the worked example under the 2D intro and the 3D intro's
 // board): the 2D figure as learn.js exampleMarks draws it (gold = right, green dotted = the other safe lines) against its caption
 // (ls.<id>.ex / ls.exampleCap / the body, ja): every gold line is a best line; 「緑」 ⇔ green lines are drawn, 「どれを選んでも同じ
@@ -857,6 +890,11 @@ function dtIntro(L, X, E, lj, add, only) {
     if (id === 'safe' && !(safe.length && lg.some(e => p.gives(e) > 0))) a(`⑧ the 3D intro (safe): ${safe.length} safe lines on its board`);
     if (id === 'third' && !(q.n === 4 && two >= 2 && trap.length)) a(`⑧ the 3D intro (third) 「盤が広くなると…両がわ」: ${q.n}×${q.n}, ${two} boxes with two sides, ${trap.length} lines safe on one side only`);
     if (id === 'take' && !(p.hasCapture() && V.filter(x => x[1] === best).every(x => p.completes(x[0]) > 0))) a('⑧ the 3D intro (take): no box to take, or the best line takes nothing');
+    // (2026-11-26 担当A) parity: 「ほかの安全な線（緑）では、長い鎖の数の偶奇が相手に有利になります」 = green lines drawn, every one worse
+    // than the gold, and after each the mover is the one to open the long chains first (dtSafeEnd); the 3D intro's 「安全な線がつきたとき」
+    if (id === 'parity') { if (!green.length || green.some(e => val.get(e) >= best)) a(`⑧ the parity caption 「${ex}」: green ${green.map(e => e + '=' + val.get(e))}, best ${best}`);
+      for (const e of green) if (dtSafeEnd(E, p, e).opener !== 'me') a(`⑧ the parity caption: after the green line ${e} the mover does not open first`);
+      for (const e of mk.hl) if (dtSafeEnd(E, p, e).opener !== 'opp') a(`⑧ the parity example: after the gold line ${e} the opponent does not open first`); }
     if (id === 'chain') { if (safe.length) a(`⑧ the 3D intro (chain) 「安全な線がなくなると」: ${safe.length} safe lines on its board`);
       if (/と、輪になった/.test(it) && !E.components(p, true).some(c => c.loop)) a(`⑧ the 3D intro (chain) 「${it.slice(0, 40)}…」 speaks of the board's loops, its board has none`); }
   });
