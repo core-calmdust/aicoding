@@ -16,7 +16,7 @@ CUR=${CUR:-$SHOGI/nnue.bin.gz}; gzip -dc "$CUR" > "$WORK/cur.bin" 2>/dev/null ||
 V5="85=0,91=0,92=0,55=0,110=0,113=0,115=0,75=5,76=90,77=40,79=2,9=5049,43=246,17=214,2=73,1=11,112=0,114=0,116=0,81=0,86=0,87=0,88=0,89=0,93=0,95=0,96=0,97=0,98=0,99=0,100=0,101=0,102=0,103=0,104=0,105=0"
 echo "new: $(basename "$NET") + the default search; old: the site's net + search v5; $((G * P)) games a line"
 for N in $LEVELS; do for F in $FACTORS; do
-  N2=$(awk -v n="$N" -v f="$F" 'BEGIN { x = int(n * f + 0.5); print x < 1 ? 1 : x }')
+  N2=$(awk -v n="$N" -v f="$F" 'BEGIN { x = int(n * f + 0.5); if (x < 1) x = 1; print x }')
   T=$(mktemp -d); i=1
   while [ $i -le $P ]; do
     R=$(( (i - 1) * G / 2 % 100 ))
@@ -26,7 +26,7 @@ for N in $LEVELS; do for F in $FACTORS; do
   done
   wait
   for f in "$T"/m-*.txt; do grep "total" "$f" | tail -1; done | sed 's/.*total +\([0-9]*\) -\([0-9]*\) =\([0-9]*\).*/\1 \2 \3/' | awk -v n="$N" -v n2="$N2" -v f="$F" '
-    { ow += $1; nw += $2; d += $3 } END { t = ow + nw + d; if (!t) { print "no games finished"; exit 1 } s = (nw + d / 2) / t; ss = s < 0.01 ? 0.01 : s > 0.99 ? 0.99 : s;
+    { ow += $1; nw += $2; d += $3 } END { t = ow + nw + d; if (!t) { print "no games finished"; exit 1 } s = (nw + d / 2) / t; ss = s; if (ss < 0.01) ss = 0.01; if (ss > 0.99) ss = 0.99;
       printf "level %7d nodes: new at %7d (x %.2f): new +%d -%d =%d  score %.3f  Elo %+.0f\n", n, n2, f, nw, ow, d, s, -400 * log(1 / ss - 1) / log(10) }'
   rm -rf "$T"
 done; done
