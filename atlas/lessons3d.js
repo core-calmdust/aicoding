@@ -421,7 +421,7 @@
       k15: '次は<b>タダの駒</b>（取り返されない駒）を見つける練習だコン。価値の目安は歩1・香3・桂4・銀5・金6・角8・飛10。<br>動きは、歩・香は前、桂は前へジャンプ、銀は前と斜め、金は前・横・後ろ、玉はまわり、角は斜め、飛は縦横だよ。<br>取る前に「取り返されない？」と確かめてね！',
       k12: '王手をかけられたら、<b>逃げる・取る・合駒</b>のどれかで防ぐの。<br>でも、どれでもいいわけじゃないコン。かわしたあとに安全な形になる受けを選ぼう！',
       k10: '<b>詰み</b>は、玉がどう逃げても取られちゃう形のこと。<br>持ち駒を打つ手と盤の駒を動かす手、両方を考えて、1手で詰ませてみよう！<br>成った角の馬は斜めどこまでも＋縦横1マス、成った飛車の竜（龍）は縦横どこまでも＋斜め1マス動けるコン。',
-      k8: '今度は王手のかけ方がいろいろある局面だよ。<br>王手でも、<b>逃げ道が残る手</b>や<b>取られる手</b>は詰みにならないの。玉のまわりを1マスずつ確かめてみて！',
+      k8: '今度は王手のかけ方がいろいろある局面だよ。<br>王手でも、<b>逃げ道が残る手</b>や<b>取られる手</b>は詰みにならないの。玉のまわりを1マスずつ確かめてみて！<br>竜（龍）は縦横どこまでも＋斜め1マス動けるコン。',
       k6: '3手詰は<b>王手・相手の受け・詰み</b>の3手。<br>相手がいちばんねばる受けを考えて、どう受けても詰む王手を探すコン！',
       k5: '中盤は<b>駒得</b>が大事！ 代表的な手筋は、1手で2つをねらう<b>両取り</b>なの。<br>桂・銀・角は両取りをかけやすい駒だから、よく見てね。',
       k4: '今度の3手詰は、<b>駒を捨てる</b>王手が正解になりやすいの。<br>「取られるから指さない」じゃなくて「取らせて詰ます」。この発想を練習しよう！',
@@ -920,7 +920,7 @@
       if (this.p) return this.p;
       const voice = fetch('../shogi/voice-fox-ja.js?v=5').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       const rep = getJ('../shogi/lesson-replies.json?v=4').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
-      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261126k10b'), getJ('../shogi/openings.json?v=20261124ol1'),
+      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261126k8'), getJ('../shogi/openings.json?v=20261124ol1'),
         ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261125sb`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
@@ -3458,7 +3458,7 @@
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=8'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
+      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=9'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
         try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
         return this; }).catch(e => { this.p = null; throw e; }));
     },
@@ -3699,7 +3699,7 @@
       b_safe: '相手の番になったら取られちゃう駒、見つけられる？<br>守り方は3つ。逃げる、跳ばれる先のマスをふさぐ、取られても取り返せる形にする。どれが使えるか考えるカニ！',
       b_win: '相手の駒を全部取るか、1手も動けない形にしたら勝ち！ 駒が残っていても、動かせなければ負けなの。<br>ここでは、1手で勝負を決める手を探すカニ。',
       t_shot1: 'いよいよ大事な戦術「ショット」だカニ！<br>わざと1枚取らせると、取るのは義務だから相手の駒が動く。そのあと連続で跳び返して、1枚捨てて2枚取るの。',
-      t_shot2: 'ちょっと長いショットに挑戦！<br>捨てた駒を相手が取ると、相手の駒はどこに着地する？ その着地点から、自分の連続取りがつながるかを読むカニ。',
+      t_shot2: 'ちょっと長いショットに挑戦！<br>1枚捨てて相手に取らせたら、もう1枚捨てて、また取らせるの。相手の駒の着地点を2回読んで、最後に3枚続けて跳び返すカニ。',
       t_defend: '今度は守る側。相手にショットのねらいがあって、たいていの手は駒損になっちゃう局面なの。<br>指す前に「このあと捨て駒の一手はない？」と確かめて、ただ一つの受けを探すカニ！',
       t_best: '終盤に近い局面で、ほかよりはっきり良い手が一つだけある問題だカニ。<br>キングを作る、相手の駒を止める、交換で得をする。どれが決め手になるか、じっくり考えてみて！',
       e_kings: 'キングどうしの終盤！ 勝てる局面でも、勝ちを保てる手は少ないことがあるの。<br>相手のキングを、角の二重コーナーへ逃がさないのがコツだカニ。答えは終盤のデータベースで確かめてある！',
@@ -3729,7 +3729,7 @@
       b_safe: ['いま跳び越えられそうな駒はどれ？', '跳ばれる先のマスをふさぐ手もあるの。', '取られても、すぐ取り返せる形なら損はしないカニ。', '逃げた先でまた取られないか、確かめてみて。', '相手の番になったつもりで、取れる駒を探してみて！'],
       b_win: ['相手が動かせる駒、全部数えてみて！', '相手の駒の進む先をふさぐ手もあるの。', '全部取り切れる道はない？', '相手の駒が進めるマスを、ひとつずつたしかめてみて。', 'この手のあと、相手に動ける手が残るか見てみて。'],
       t_shot1: ['わざと取らせたら、相手の駒はどこに着地する？', '取られるマスへ、あえて進めてみるカニ。', '相手の取る手は決まっている。それを利用するカニ！', '着地点の先に、もう1枚取れる駒が並ぶかな？', '損して得とれ！ 先に1枚あげちゃおう。'],
-      t_shot2: ['一見タダで取られる手が、じつは正解かもカニ。', '捨てる → 相手の着地点 → 自分の取る道、の順に読んでみて。', '相手の駒が着地したら、2回以上跳べる？', '捨てる駒の場所で、相手の着地点が決まるの。', '相手に取らせたあとの盤を想像してみて！'],
+      t_shot2: ['一見タダで取られる手が、じつは正解かもカニ。', '捨てる → 着地点 → もう一度捨てる → 着地点 → 自分の取る道、の順に読んでみて。', '2回目の着地点から、3回続けて跳べる道を探して！', '捨てる駒の場所で、相手の着地点が決まるの。', '相手に取らせたあとの盤を想像してみて！'],
       t_defend: ['この手のあと、相手に捨て駒の一手はない？', '相手の連続取りの道、先にふさげない？', '相手に「取らされる」形にならない手を探すカニ。', '1手ずつ「相手の番になったら？」と確かめてみて。', '何気ない手ほど危ないの。相手のねらいを読んでみて！'],
       t_best: ['キングを作る手、相手を止める手、交換の手…どれかな？', 'いちばん働く駒はどれか、考えるカニ。', '相手の駒の進む道もよく見てみて。', 'タダで取られる駒が出ないかも確かめてね。', '先に成った方が有利になりやすいの！'],
       e_kings: ['相手のキングを二重コーナーへ行かせないで！', '勝ちを保てる手は、じつは少ないカニ。', '相手のキングの逃げ道を数えてみて。', 'キングをタダで取られないマスを選んでね。', '2枚のキングで、はさむように追いつめよう！'],
@@ -3789,7 +3789,9 @@
           : pk(['相手が取っても、すぐ取り返せる', '取り合いで損をしない形になる', '取られても取り返せる形になる', '取られた分を取り戻せる', '相手が取ればお返しできる'], j);
         case 'b_win': return F.oppLeft === 0 ? pk(['相手の駒を全部取り切れる', '最後の駒まで取れる', '相手の駒がひとつも残らない', '盤の上から相手がいなくなる', '残りの駒をまとめて取れる'], j)
           : pk(['相手がもう1手も動けない', '相手の進む先が全部ふさがる', '相手は動かせる手がなくなる', '相手の駒が身動きできなくなる', '相手に指せる手がひとつも残らない'], j);
-        case 't_shot1': case 't_shot2': return F.shot ? pk([`1枚取らせたあと跳び返して、差し引き${g}枚の得`, '取らせてから跳び返す、ショットが決まる', `捨てた分より${g}枚多く取り返せる`, `相手が取ったあとに連続取りで${g}枚の得`, 'わざと渡した1枚が、倍になって返ってくる'], j)
+        case 't_shot2': if (!F.shot) return pk(['2回捨てたあと、3枚続けて跳び返せる', '相手に2回取らせて、最後に3枚取れる', '2枚あげて3枚取る、長いショットが決まる', '相手の着地点を2回動かして、3枚取りの道ができる', '捨て駒を2回使って、差し引き1枚の得'], j);   // (2026-11-26 第2期: the 3-move shots — give two, take three)
+        // falls through
+        case 't_shot1': return F.shot ? pk([`1枚取らせたあと跳び返して、差し引き${g}枚の得`, '取らせてから跳び返す、ショットが決まる', `捨てた分より${g}枚多く取り返せる`, `相手が取ったあとに連続取りで${g}枚の得`, 'わざと渡した1枚が、倍になって返ってくる'], j)
           : pk(['相手の取る手を利用して、駒得の手順に入れる', '捨て駒からの手順で駒得できる', '相手の駒を、こっちの取りやすい所へ呼びこめる', '相手は取るしかなくて、そこから得をする', '一手ずつ追いこんで、駒得の始まりになる'], j);
         case 't_defend': if (P.sc && P.sc.every(x => x[0] === A || x[1] < -(CK_WINT - 1000))) return pk(['負けを避けられる、ただ一つの手になる', 'ほかの手はどれも負け。これだけが助かる', '負けの道をひとつだけ抜けられる', '相手の勝ち筋をただ一つ消せる', '負けずにすむ道に入れる'], j);
           return F.oppShot <= 0 ? pk(['相手のショットが決まらなくなる', '捨て駒の一手を先に消せる', '相手の連続ジャンプを先に封じられる', '捨て駒をされても困らない', '相手のねらいが空振りになる'], j)
@@ -3831,7 +3833,7 @@
       if (d != null && d < 120 && (F.oppShot > 0 || F.net < 0)) return d > 6 ? (F.oppShot > 0 ? pk([`相手にショットを打たれて${F.oppShot}枚損しちゃう`, `相手の捨て駒から${F.oppShot}枚取られちゃう`], j) : pk([`相手に${-F.net}枚タダで取られちゃう`, `跳び越えられて${-F.net}枚の損になる`], j)) : pk(['悪くないけど、ほんの少し見劣りする', 'わずかに形が悪くなる', 'ほんの少しだけ損になる'], j);
       if (F.oppShot > 0) return pk([`相手にショットを打たれて${F.oppShot}枚損しちゃう`, `捨て駒からの連続取りで${F.oppShot}枚取られちゃう`, `相手の捨て駒が決まって${F.oppShot}枚の損`], j);
       if (F.net < 0) return pk([`相手に跳び越えられて、${n}枚タダで取られちゃう`, `タダで${n}枚、相手に取られちゃう`, `相手に${n}枚タダで取られて損しちゃう`], j);
-      if (FA.shot && !F.shot) return pk(['ショットのチャンスを見のがしちゃう', '駒得できる手順に入れない', '相手の取る手を利用できない'], j);
+      if ((FA.shot && !F.shot) || id === 't_shot1' || id === 't_shot2') return pk(['ショットのチャンスを見のがしちゃう', '駒得できる手順に入れない', '相手の取る手を利用できない'], j);
       if (FA.crown && !F.crown) return pk(['キングになるチャンスを逃しちゃう', '先に成るチャンスがなくなる', '王冠への近道を見のがしちゃう'], j);
       if (F.back && !FA.back) return pk(['後ろの段に穴があいて、相手にキングになられやすくなる', '後ろの守りがうすくなって、相手のマンが奥へ入りやすくなる'], j);
       if (FA.center && !F.center) return pk(['真ん中への進出がおくれて、相手に中央を取られちゃう', '中央をあけてしまって、相手の駒が入りこみやすくなる'], j);
@@ -3859,7 +3861,7 @@
     LKEY: 'aicoding-checkers-lessons', OKEY: 'aicoding-checkers-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=30261127bk1'), getJ('../checkers/openings.json?v=6'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1-bk1-bs1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=6').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=30261127bk1-ts1'), getJ('../checkers/openings.json?v=6'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1-bk1-bs1-ts1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vc]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] checkers texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vc)(v); this.V = ((v.I18N || {})['ja@crab']) || {}; } catch (e) { this.V = {}; }   // (チェッカニ's own lines, 3D, ja)
           return this; })
@@ -5658,7 +5660,7 @@
     LKEY: 'aicoding-amazons-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      const tx = ['../checkers/i18n.js?v=20261107l14-nd1-bs1', '../amazons/i18n-am.js?v=4', '../amazons/i18n-am-more.js?v=4', '../amazons/i18n-am-ls.js?v=6', '../amazons/i18n-am-ls-more.js?v=5', '../amazons/i18n-am-ls-more2.js?v=5'];
+      const tx = ['../checkers/i18n.js?v=20261107l14-nd1-bs1-ts1', '../amazons/i18n-am.js?v=4', '../amazons/i18n-am-more.js?v=4', '../amazons/i18n-am-ls.js?v=6', '../amazons/i18n-am-ls-more.js?v=5', '../amazons/i18n-am-ls-more2.js?v=5'];
       return (this.p = Promise.all([getJ('../amazons/lessons.json?v=7'), Promise.all(tx.map(u => fetch(u).then(r => r.text()).catch(() => ''))), amEng().catch(() => null)])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T[0] + '\nvar I18N = window.I18N = window.I18N || {};\n' + T.slice(1).join('\n'))(w); } catch (e) { console.warn('[lessons3d] amazons texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));

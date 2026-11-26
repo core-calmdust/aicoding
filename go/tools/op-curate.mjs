@@ -13,6 +13,9 @@ const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(k);
 const VIS = +opt('--visits', 300), DEEP = +opt('--deep', 1000), PART = +opt('--part', 0), OF = +opt('--of', 1), SETS = (opt('--sets', '') || '').split(',').filter(Boolean);
 // --wide (2026-11-26 13路)：外れ方を方策3%以上・5つまでに広げる。--stage2 --depth D：外れたあと D 組先まで（D=2 は --stage2 で読んだ局面からもう1組）
 const WIDE = args.includes('--wide'), DEPTH = +opt('--depth', 1);
+// --pmin P --pn K（2026-11-26 19路）：外れ方を方策 P 以上・K 個までに（19路の定石は外れた直後の局面がほぼ「手抜きと同じ」か「一本道」で、
+// 唯一の最善が出るのは相手が少し悪い手で外れたとき。読みの合否（①②③・2つの読み）は変えない）
+const PMIN = +opt('--pmin', WIDE ? 0.03 : 0.05), PN = +opt('--pn', WIDE ? 5 : 3);
 // --low（2026-11-26 19路の定石）：外れ方を方策1%以上3%未満の手（相手のはっきりした悪手寄り）から5つまで。19路の定石は外れ方が自然な手だと手抜きなど同じくらいの手が並ぶため
 const LOW = args.includes('--low');
 const O = JSON.parse(fs.readFileSync(path.join(DIR, '..', 'openings.json'), 'utf8'));
@@ -42,7 +45,7 @@ for (const g of O.sets) { if (SETS.length && !SETS.includes(g.id)) continue; con
     if (mover === side) { const k = g.id + ':' + pre.join(' '); if (!seen.has(k)) { seen.add(k); jobs.push({ g, mv: pre, k }); } continue; }
     // the other side leaves the line here: its likely moves (policy >= 5%) that are not the line's
     const pol = policy(E, st, pre.map(s => R.parseCoord(s, n)), komiOf(g), 8);
-    pol.list.filter(e => e.m >= 0 && (LOW ? e.p >= 0.01 && e.p < 0.03 : e.p >= (WIDE ? 0.03 : 0.05)) && R.coord(e.m, n) !== L[at]).slice(0, LOW || WIDE ? 5 : 3).forEach(e => { const mv = pre.concat([R.coord(e.m, n)]), k = g.id + ':' + mv.join(' ');
+    pol.list.filter(e => e.m >= 0 && (LOW ? e.p >= 0.01 && e.p < 0.03 : e.p >= PMIN) && R.coord(e.m, n) !== L[at]).slice(0, LOW ? 5 : PN).forEach(e => { const mv = pre.concat([R.coord(e.m, n)]), k = g.id + ':' + mv.join(' ');
       if (!seen.has(k)) { seen.add(k); jobs.push({ g, mv, k, dev: at }); } }); } }
 // --stage2: one more pair off the line — after each position where the other side left it, the side's best reply (the reading's first
 // move) and the other side's likely answers (policy >= 5%, up to 2): the side to move again
