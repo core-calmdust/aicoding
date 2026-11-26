@@ -68,6 +68,7 @@
  "ls.t_best.goal": "Find the best move.",
  "ls.t_best.hint": "The best move uses the piece with the gold ring.",
  "ls.t_best.why": "{m} is the winning idea.",
+ "ls.t_best.ng": "{x} is not the winning idea. {m} is clearly better.",
  "ls.e_kings.title": "King endings",
  "ls.e_kings.sub": "Don't let the win slip",
  "ls.e_kings.intro": "<p>Endings with kings. Even in a won position, <b>few moves keep the win</b>.</p><p class=\"note\">Two kings beat one king, but a lone king in a \"double corner\" (1 and 5, or 28 and 32) takes work to drive out. The answers were checked with the endgame databases.</p>",
