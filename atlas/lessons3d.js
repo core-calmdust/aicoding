@@ -7379,7 +7379,10 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       hint: ['金色の輪は安全な線。でも、どれでも同じじゃないよ！', 'その線のあと、長い鎖を先に開くことになるのはだれかな？', '1本ずつ、安全な線がつきたときの形を想像してみて！', '長い鎖になりそうな所を探してみて。', '安全な線で、盤がどう分かれていくか考えて！'] },   // (2026-11-28 担当A: the answer is one safe line — after it the opponent is the first to open a long chain)
     exam: { intro: '最後は総合問題！ 安全な線、取り切りと残し、長鎖ルール、犠牲、ループ、終盤の数え。どの考え方がいるか、自分で見きわめてね。<br>75点以上で卒業。がんばろう！',
       ask: ['どの考え方がいるか見きわめて、いちばんいい線を引いて！', 'つぎはどう？ いちばんいい線は？', 'さあ、腕の見せどころ！ どの線？', 'これまでの技を思い出して、1本えらんで！', 'ラスト！ 卒業をかけた1本だよ！'],
-      hint: ['安全な線は残ってる？ 取れる箱は？', '長い鎖とループは何本あるかな？', 'あげるなら小さく！ 2箱は真ん中から。', '安全な線の偶数・奇数を数えてみよう！', '迷ったら、取れる箱 → 安全な線 → あげる順番！'] },
+      hint: ['安全な線は残ってる？ 取れる箱は？', '長い鎖とループは何本あるかな？', '取れる箱と、あとに残る鎖を見てみて！', '安全な線のあとの形を想像してみよう！', '迷ったら、取れる箱 → 安全な線 → あげる順番！'],
+      // (2026-11-28 担当A) the hint of each problem by the lesson it comes from (q.k '<lesson>:…'; tools/lesson-verify.js dots, exam)
+      hintK: { control: '取れる2箱、全部取る？ それとも残す？ あとに残る鎖の長さを見てみて！', parity: '安全な線がつきたとき、最初に長い鎖を開くのはだれかな？',
+        sacrifice: '安全な線で逃げきれるかな？ あげるなら、なるべく小さな所から！', loop: 'ループの4つ残しをする？ 取り切る？ あとの鎖の大きさがカギ！', count: '取り切る？ 2つ残し？ 小さな鎖が何本あるか数えてみて！' } },
   };
   const DT_CH = {
     good: ['いいね！', 'さすが！', 'お見事！', 'ばっちりピヨ！', 'やったね！', 'いい目してる！', 'すごいすごい！', 'そうそう、それ！'],
@@ -7484,9 +7487,9 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
   const DOTS = {
     LKEY: 'dots-lessons-v2', data: null, I: null, got: {},
     load(lang) {
-      const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261128A`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
+      const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261128ex1`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
       if (this.p) return this.p.then(() => T()).then(() => this);
-      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261128a'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
+      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261128ex1'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
         .then(([ls, X]) => { const w = {}; try { new Function('window', 'with (window) {' + X + '\n}')(w); } catch (e) { console.warn('[lessons3d] dots texts', e); } this.I = w.I18N || {}; this.data = { ls }; return T(); }).then(() => this)
         .catch(e => { this.p = null; throw e; }));
     },
@@ -7499,11 +7502,11 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     },
     lesson(key, lang) {
       const s = this.data.ls.steps[+key]; if (!s) return null;
-      const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), SAFE = ['safe', 'third', 'parity', 'sacrifice', 'open3', 'mid4', 'mid5'].includes(s.id), ja = lang === 'ja' && DTJ[s.id];
+      const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), SAFE = ['safe', 'third', 'parity', 'sacrifice', 'open3', 'mid4', 'mid5', 'exam'].includes(s.id), ja = lang === 'ja' && DTJ[s.id];
       return { id: s.id, title: T('t'), intro: ja ? ja.intro : T('body'), ramp: null,
-        probs: s.problems.slice(1, 6).map((q, i) => { const edges = dDecE(q.e), values = dDecV(q.v), best = Math.max(...values.map(x => x[1])), ans = values.find(x => x[1] === best)[0], P = { values };
-          const fb = ja ? dotsJa(s, dFacts(q.n, edges), P, ans, i, +key) : { good: () => T('tip'), ng: () => T('tip') };
-          return { pos: { spec: { n: q.n, edges, owners: dDecO(q.o) }, me: 0 }, kind: 'best', P, ask: `<small>${q.n}×${q.n}</small> ` + (ja ? ja.ask[i % 5] : T('q')), ans, hintTx: ja ? ja.hint[i % 5] : T('hint'), hint: SAFE ? dSafe(q.n, edges) : [], dHint: true,
+        probs: s.problems.slice(1, 6).map((q, i) => { const kid = s.id === 'exam' ? String(q.k).split(':')[0] : s.id, sk = kid === s.id ? s : { id: kid }, edges = dDecE(q.e), values = dDecV(q.v), best = Math.max(...values.map(x => x[1])), ans = values.find(x => x[1] === best)[0], P = { values };
+          const fb = ja ? dotsJa(sk, dFacts(q.n, edges), P, ans, i, +key) : { good: () => T('tip'), ng: () => T('tip') };
+          return { pos: { spec: { n: q.n, edges, owners: dDecO(q.o) }, me: 0 }, kind: 'best', P, ask: `<small>${q.n}×${q.n}</small> ` + (ja ? ja.ask[i % 5] : T('q')), ans, hintTx: ja ? (ja.hintK && ja.hintK[kid]) || ja.hint[i % 5] : T('hint'), hint: SAFE ? dSafe(q.n, edges) : [], dHint: true,
             why: '', good: fb.good, ng: fb.ng, own: !!ja, ckls: !!ja }; }),   // (ckls: ハコピヨ praises himself — no heading line)
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= max * .75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
     },
