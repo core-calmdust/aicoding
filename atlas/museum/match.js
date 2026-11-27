@@ -432,6 +432,8 @@
     el.grid.innerHTML = GAMES.filter(G => kind === 'all' || G.kind === kind).map(G => { const x = gt(G.id);
       return `<button type="button" class="mxc" data-g="${G.id}"><span class="mxth k-${G.kind}">${thumb(G)}</span><span class="mxcl"><i>${esc(u('k_' + G.kind))}</i><b>${esc(x.t)}</b><small>${esc(x.w)} — ${esc(x.b)}</small><small>${esc(x.d)} · ${esc(x.pl)}</small></span></button>`; }).join('');
     el.grid.querySelectorAll('[data-g]').forEach(b => b.onclick = () => show(b.dataset.g, true));
+    // (2026-11-27 ユーザー: 12を超えたら次のページ — 他の部屋と同じ) the museum's own pager: search box + the kinds' chips in one bar, 12 a page at every width
+    if (window.AtlasMuseum && AtlasMuseum.pager) AtlasMuseum.pager(el.grid, 'match' + (kind === 'all' ? '' : '-' + kind), { per: 12, extra: el.chips });
     el.lead.textContent = u('lead'); el.credit.textContent = u('credit');
     if (window.AtlasMuseum && AtlasMuseum.catalog) AtlasMuseum.catalog('match', GAMES.map(G => ({ id: G.id, t: gt(G.id).t })));
     MK(null, GAMES.length);
