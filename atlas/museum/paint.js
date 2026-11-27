@@ -201,6 +201,14 @@
     { id: 'jardin', w: 2048, h: 1430, rijks: 'RP-F-F01164-8-5', bg: '#cfc3a6', spots: [[.483, .51], [.148, .106], [.45, .2], [.711, .29], [.221, .29], [.85, .75]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
     // (2026-11-25) the Rijksmuseum: album snapshot: family playing cards under an oil lamp
     { id: 'lamplight', w: 1337, h: 945, rijks: 'RP-F-2002-101-3-2', bg: '#2a241e', spots: [[.623, .52], [.6, .14], [.164, .46], [.336, .31], [.479, .36], [.85, .19]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Rijksmuseum: embroidered top of a folding card table with a card party (1700–25)
+    { id: 'borduur', w: 2048, h: 1756, rijks: 'BK-15995-A', bg: '#3a2e24', spots: [[.49, .54], [.33, .55], [.48, .43], [.67, .54], [.47, .27], [.1, .15]], links: [{ g: 'poker' }, { g: 'solitaire' }] },
+    // (2026-11-25) the Rijksmuseum: linen cloth printed with a piquet game, purse and counters (1725–50)
+    { id: 'piquet', w: 2048, h: 1784, rijks: 'BK-1968-81', bg: '#ece8df', spots: [[.5, .45], [.4, .3], [.8, .45], [.5, .04], [.75, .27], [.78, .8]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Rijksmuseum: wheel-engraved goblet with two chess players (1815–30)
+    { id: 'schaakglas', w: 1655, h: 2048, rijks: 'BK-1978-33', bg: '#dcdcdc', spots: [[.48, .445], [.4, .37], [.585, .38], [.5, .36], [.53, .43], [.675, .36]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Rijksmuseum: 'Arlequin's Lotto-Spel' (Mindermann & Co.), board in the shape of Harlequin
+    { id: 'arlequin', w: 1493, h: 2048, rijks: 'KOG-ZG-1-34-40', bg: '#e9e3d2', spots: [[.65, .1], [.26, .79], [.45, .23], [.54, .6], [.5, .92], [.77, .5]], links: [{ ex: 'goose' }, { room: 'chance' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
