@@ -498,6 +498,8 @@
       if (gid === 'rx') { const qj = String((P.q && (P.q.ja || P.q)) || ''); if (P.kind === 'tsume') q.ask = T.ask.rx[/突いて/.test(qj) ? 1 : nUchi++ ? 2 : 0]; else if (P.src === 'handi' && nHandi++) q.ask = '今度も<b>駒落ち</b>の対局！ 下手のきみなら、どう指す？'; }
       else q.ask = best ? T.ask[key][i % 5] : fill(T.ask.tsume[(i + o) % 5], { n: q.n });
       q.hintTx = T.hint[key][(i + o) % T.hint[key].length];
+      if (gid === 'k3' && P.src === 'defend' && (P.th || []).length) { try { const S0 = shLB(P.sfen), tn = shMvJa({ B: S0.B, w: !S0.w }, P.th[0]) + (P.th.length > 1 ? 'など' : '');   // (2026-11-27 第2期 k3: the threat named from the board)
+        q.hintTx = [`相手は${tn}で詰ませるつもりなの。光っている駒で防げるコン。`, `このまま相手の番なら${tn}で詰み！ 光っている駒で、それを止めよう。`, `${tn}の詰みを、光っている駒で先に消してみて。`, `ねらわれているのは${tn}の詰み。光っている駒が受けの主役なの。`, `光っている駒がヒント。${tn}で詰まない形にしよう！`][(i + o) % 5]; } catch (e) {} }
       q.own = true; try { Object.defineProperty(P, '__i', { value: g.problems.indexOf(P), configurable: true }); } catch (e) {}
       const why0 = q.why;
       q.good = u => shGoodJa(gid, P, u, i, o, why0, ex);
@@ -546,7 +548,19 @@
     else if (P.src === 'evade') { const k = F.took && shLChk(P.sfen, u) ? 1 : F.piece && F.piece.t === 'k' ? 0 : 2;   // (2026-11-25 第2期 k12: the king taking the checker is 取る; every other defence is mated or loses a piece — checked on the board)
       core = [at(['玉が逃げるのが正解。逃げた先には、相手の駒が届かないの。', '玉をかわす受けがいちばんだったコン。', 'この逃げ方なら、相手の次の手で詰まされないね。', '玉が安全な場所へ移れたね。', '逃げた先なら、駒をタダで取られることもないの。']), at([`王手している${px}を取るのが正解だったね。`, `${px}を取って、王手ごと消したコン。`, `王手の${px}を取れば、相手の攻めの駒が1つ減るの。`, `${px}を取る受けで、駒得にもなったね。`, `取る受けがいちばん。${px}がいなくなったの。`]), at([`${nm}の合駒が正解！ 玉を動かさずに守れたね。`, `間に${nm}を入れて、王手をさえぎったコン。`, `合駒の${nm}は、取られても取り返せるの。`, `${nm}を間に置く受けが、いちばん安全だったね。`, `${nm}の合駒でしのいだね。`])][k]
         + at(['ほかの受けだと、詰まされるか駒を取られちゃうの。', 'ほかの受けは、どれも詰みや駒損につながるの。', 'ほかの手では、玉か駒のどちらかが助からなかったコン。', 'ほかのかわし方には、相手の決め手が待っていたの。', 'ほかの手を選ぶと、次に相手の駒が働いちゃうの。']); }
-    else if (P.src === 'defend') { const th = (ex.match(/相手のねらいは([☗☖][^。]*?)からの詰み/) || [])[1]; core = at(['詰めろを消せたね。', 'これで相手の詰み筋がなくなったコン。', '先回りの受け、ばっちりなの。', 'これで玉が安全になったね。', '相手のねらいをちゃんと消したの。']) + (th ? at([`相手は${th}から詰ませるつもりだったの。`, `ねらいは${th}からの詰みだったね。`, `${th}からの詰みを止めたコン。`, `${th}の筋がもう効かないの。`, `${th}からの攻めを読めていたね。`]) : ''); }
+    else if (P.src === 'defend') {   // (2026-11-27 第2期 k3: the threat P.th (the opponent's mates in one after a pass) and what the answer does, from the board; every other move is mated within three — tools/lesson-verify-shdefend.js)
+      let tn = ''; try { const S0 = shLB(P.sfen); tn = (P.th || []).length ? shMvJa({ B: S0.B, w: !S0.w }, P.th[0]) : ''; } catch (e) {}
+      const k = F.drop ? 2 : F.piece && F.piece.t === 'k' ? 0 : F.took ? 1 : 3;
+      const fill = (P.th || []).some(x => x.slice(2, 4) === String(u).slice(2, 4));   // (the answer stands on the square a threatening move goes to)
+      core = [at(['玉を先に逃がす「早逃げ」が正解！', '玉を安全なマスへ先に動かしたね。', '{m}で玉が先に逃げたコン。', '早逃げで、玉を詰みの形から出したの。', '玉を動かして、詰みの形からはずしたね。']),
+        at([`{m}で${px}を取って、詰み筋を消したね。`, `${px}を取る受けが正解だったコン。`, `${px}を取れば、相手の詰み筋が消えるの。`, `${px}を先に取ったのが、いちばんの受けなの。`, `{m}で${px}を取ったのが決め手の受けだね。`]),
+        fill ? at([`持ち駒の${nm}を打って、相手が打ちたいマスを先にふさいだね。`, `${nm}を打って、詰みのマスを先に埋めたコン。`, `{m}の${nm}打ちで、相手の駒が入るマスがなくなったの。`, `${nm}を打って先にふさぐ受けが正解！`, `相手がねらうマスに、先に${nm}を打ったね。`])
+          : at([`持ち駒の${nm}を打って守ったね。`, `${nm}を打って、玉のまわりの守りを足したコン。`, `{m}の${nm}打ちが、ぴったりの受けなの。`, `${nm}を打つ受けが正解！`, `持ち駒の${nm}が、玉の守りになったの。`]),
+        fill ? at([`${nm}を動かして、相手がねらうマスを先にふさいだね。`, `{m}で${nm}が詰みのマスに入ったコン。`, `${nm}で先にマスを埋める受けが正解なの。`, `${nm}を動かして、詰み筋をふさいだね。`, `{m}の${nm}が、相手の駒の入るマスを消したの。`])
+          : at([`${nm}を動かして守りを足したね。`, `{m}で${nm}が守りに効いてくるコン。`, `${nm}を動かす受けが正解なの。`, `${nm}を動かして、玉の守りを固めたね。`, `{m}の${nm}が、玉を守る一手なの。`])][k]
+        + (tn ? at([`相手は${tn}で詰ませるつもりだったの。`, `ねらいは${tn}の詰みだったの。`, `これで${tn}は詰みにならない！`, `${tn}の詰みを消せたコン。`, `${tn}からの詰みを止めたコン。`]) : '')   // (the endings differ from the sentence before and after at each place — 「ね」 twice in a row is a minus)
+        + at(['ほかの手だと、3手以内に詰まされちゃうコン。', 'ほかの手は、どれも詰みが残るコン。', 'ほかの受けでは、どれも詰んじゃうの。', 'ほかの手を指すと、相手の詰みが待っていたの。', 'これ以外の手は、全部詰まされちゃうの。']);
+    }
     else if (gid === 'rx') core = P.src === 'handi' ? at(['駒落ちでも、駒の働きを大事にする手なの。', '上手の駒が少ないところを、うまくついたコン。', '駒落ちの定跡どおり、いい形だね。', '下手らしく、まっすぐ攻める手なの。', 'これで駒落ちの戦い方がわかってきたね。']) : why0 || '';
     else { const cat = /両取り/.test(ex) ? 0 : /王手◯取り|王手をかけながら/.test(ex) ? 1 : /静かな好手/.test(ex) ? 2 : /王手から/.test(ex) ? 3 : 4;
       core = [at(['1手で2つをねらう両取り！ どちらかは取れるの。', '両取りの形、見事だコン。', '2つの駒を同時にねらえたね。', '相手は両方を守れないの。', '両取りで駒得が決まったね。']),
@@ -652,6 +666,7 @@
       else if (gid === 'k12' && F) { const nm = shLNm(F.piece.t), k = F.took && shLChk(P.sfen, u) ? at([`{x}は${px}を取る受け。`, `{x}で王手の${px}を取ったね。`, `{x}は王手の${px}を取る手。`, `{x}で${px}を取って王手を消したね。`, `{x}は${px}を取る受けだね。`]) : F.piece.t === 'k' ? (F.took ? at([`{x}は${px}を取りながら玉が逃げる受け。`, `{x}で玉が${px}を取って逃げたね。`, `{x}は玉が${px}を取って逃げる手。`, `{x}で${px}を取りつつ玉を逃がしたね。`, `{x}は${px}を取って玉が逃げる受けだね。`]) : at(['{x}は玉が逃げる受け。', '{x}で玉を逃がしたね。', '{x}は玉をよける手。', '{x}で玉が逃げたね。', '{x}は玉が逃げる受けだね。'])) : at([`{x}は${nm}の合駒。`, `{x}で${nm}を間に入れたね。`, `{x}は${nm}で王手をさえぎる手。`, `{x}は${nm}を間に置く受け。`, `{x}で${nm}の合駒をしたね。`]);   // (2026-11-25 第2期: the king taking the checker is 取る; the opponent's answer on the board, mate or the piece it takes)
         why = k + (rw || shLoss(winP(best, 600) - winP(s, 600), i + o)); }
       else if (!sc.has(u) && back) why = at([`{x}で${px}は取れるけど、相手の駒が届くから取り返されちゃうの。`, `{x}の${px}取りは、相手の駒が届いているから取り返されるの。`, `{x}で${px}を取っても、相手の駒が利いているから取り返されるコン。`, `{x}で取った駒は、守りの駒がいるから、すぐ取り返されちゃうの。`, `{x}の${px}は守られていて、取っても取り返されるから損なの。`]);
+      else if (gid === 'k3' && rw && /詰[まんむ]/.test(rw)) why = rw;   // (2026-11-27 第2期 k3: every move but the answer is mated within three — the opponent's first mating move, shogi/lesson-replies.json)
       else if (s <= -29000) why = at(['{x}だと、相手に詰まされちゃうの。', '{x}では玉が詰んじゃうから、それだけはだめなの。', '{x}のあと、相手に詰み筋が残るコン。']);
       else if (best >= 29000) why = '{x}だと、詰みをのがしちゃうの。';
       else if (gid === 'k3') { const d = winP(best, 600) - winP(s, 600); why = rw && /詰ま/.test(rw) ? rw : at(['{x}でも詰みはひとまず防げるの。', '{x}も受けにはなっているの。', '{x}で詰めろは消えるの。', '{x}でも玉は助かるの。', '{x}も悪くない受け。']) + (rw ? 'でも、' + rw.replace(/^\{x\}(だと|では|のあと)、?/, '') : shLoss(d, i + o)); }
@@ -934,8 +949,8 @@
     load() {
       if (this.p) return this.p;
       const voice = fetch('../shogi/voice-fox-ja.js?v=9').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
-      const rep = getJ('../shogi/lesson-replies.json?v=5').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
-      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261127rx2'), getJ('../shogi/openings.json?v=20261124ol1'),
+      const rep = getJ('../shogi/lesson-replies.json?v=6').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
+      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261127k3'), getJ('../shogi/openings.json?v=20261124ol1'),
         ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261125sb`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));

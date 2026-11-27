@@ -1930,7 +1930,7 @@ html.atlas-skin #newOverlay #lvNote{display:none!important}   /* (the long note 
 <div class="mt-strip" id="mtStrip" role="button"></div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
-<script src="i18n.js?v=20261126k10"></script>
+<script src="i18n.js?v=20261127k3"></script>
 <script src="rules-i18n.js?v=20261107l14"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="../shared/export.js?v=9l14"></script>
@@ -4544,7 +4544,7 @@ let LESSONS = null;
 // they are addressed by negative indices (-1 = LESSONS.rules[0]) — see gradeAt()
 // (2026-11-15) read when the lessons are first opened, not with the page (0.5MB)
 let lessonsP = null;
-const lessonsLoad = () => lessonsP || (lessonsP = fetch('lessons.json?v=20261127rx2').then(r => r.json()).then(d => { d.rules = d.grades.filter(g => g.rules); d.grades = d.grades.filter(g => !g.rules); return (LESSONS = d); }).catch(e => { lessonsP = null; console.warn('lessons unavailable', e); }));
+const lessonsLoad = () => lessonsP || (lessonsP = fetch('lessons.json?v=20261127k3').then(r => r.json()).then(d => { d.rules = d.grades.filter(g => g.rules); d.grades = d.grades.filter(g => !g.rules); return (LESSONS = d); }).catch(e => { lessonsP = null; console.warn('lessons unavailable', e); }));
 let lprog = {};
 try { lprog = JSON.parse(localStorage.getItem(LSTORE) || '{}'); } catch (e) {}
 const L = o => (o && (o[LANG] || o.en || o.ja)) || '';
@@ -5650,6 +5650,13 @@ function lessonReason(pr, usi) {
       if (rp) { const q = new E.Position(); q.setSfen(pr.sfen); q.doMove(q.fromUsi(usi)); const sf = q.sfen(), y = q.fromUsi(rp[0]), R = kan1(sf, rp[0]);
         tail = rp[1] === 'mate' ? t('r.evMate', { m: M, r: R }) : t('r.evTake', { m: M, r: R, p: NAME[E.typeOf(q.board[E.mTo(y)])] }); }
       return t('r.evade', { a: t(kind(m)), b: t(kind(bm)) }) + ' ' + tail;
+    }
+    case 'defend': {   // (2026-11-27 第2期 k3「詰めろを受ける」: the threat pr.th (the opponent's mate in one after a pass) for the answer; for any other move the opponent's first mating move pr.rep — tools/lesson-verify-shdefend.js)
+      const M = kan1(pr.sfen, usi);
+      if (pr.accept.includes(usi)) { const th = (pr.th || [])[0]; return th ? t('r.dfOk', { m: M, r: kan1(pr.sfen.replace(/ ([bw]) /, (_, c) => c === 'b' ? ' w ' : ' b '), th) }) : ''; }
+      const rp = (pr.rep || {})[usi]; if (!rp) return '';
+      const q = new E.Position(); q.setSfen(pr.sfen); q.doMove(q.fromUsi(usi));
+      return t('r.evMate', { m: M, r: kan1(q.sfen(), rp[0]) });
     }
     case 'opening': {
       const pct = u => { const c = pr.cand.find(x => x[0] === u); return c ? Math.round(c[1] * 100 / pr.total) : 0; };
