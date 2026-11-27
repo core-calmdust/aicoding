@@ -155,6 +155,8 @@
     { id: 'gans', w: 2048, h: 1785, rijks: 'RP-P-1906-150', bg: '#e4e0d4', spots: [[.6, .45], [.075, .91], [.317, .915], [.494, .68], [.3, .57], [.7, .33]], links: [{ ex: 'goose' }, { room: 'chance' }] },
     // (2026-11-25) the Rijksmuseum: Claudine Stella after Jacques Stella, putti playing merelle (nine men's morris) and flying a kite
     { id: 'merelle', w: 2048, h: 1682, rijks: 'RP-P-2023-61-18', bg: '#ddd8cb', spots: [[.12, .73], [.17, .09], [.77, .45], [.83, .78], [.5, .42], [.5, .865]], links: [{ g: 'morris' }] },
+    // (2026-11-25) the Rijksmuseum: stereograph, card party at an outdoor table (Feldbrugge & Co., Groningen stamp)
+    { id: 'feldcards', w: 2048, h: 1015, rijks: 'RP-F-F10030', bg: '#d8ccb0', spots: [[.199, .33], [.258, .491], [.309, .512], [.428, .299], [.392, .237], [.21, .7]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
