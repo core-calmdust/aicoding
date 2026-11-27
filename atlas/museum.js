@@ -45,10 +45,10 @@
     // read.js loads when the story opens (with ?v=READ_I18N_V, read as AtlasMuseum.readV)
     { id: 'read', src: () => [`museum/read-i18n/${rl()}.js?v=${READ_I18N_V}`, 'museum/read.js?v=114'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T && MUSEUM_READ_T[rl()]), render: (el, c) => AtlasRead.render(el, c) },
     // (2026-11-27 ユーザー: 名局・名勝負の部屋) the great games: one file per language like the paintings (museum/match-i18n/<lang>.js, English filled in)
-    { id: 'match', src: () => [`museum/match-i18n/${rl()}.js?v=${MATCH_I18N_V}`, 'museum/match.js?v=60'], ready: () => !!(window.AtlasMatch && window.MUSEUM_MATCH_T && MUSEUM_MATCH_T[rl()]), render: (el, c) => AtlasMatch.render(el, c) },
+    { id: 'match', src: () => [`museum/match-i18n/${rl()}.js?v=${MATCH_I18N_V}`, 'museum/match.js?v=61'], ready: () => !!(window.AtlasMatch && window.MUSEUM_MATCH_T && MUSEUM_MATCH_T[rl()]), render: (el, c) => AtlasMatch.render(el, c) },
     { id: 'chance', src: () => ['museum/chance-i18n/en.js?v=' + CHANCE_I18N_V, ...(rl() !== 'en' ? [`museum/chance-i18n/${rl()}.js?v=${CHANCE_I18N_V}`] : []), 'museum/chance.js?v=7'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T && MUSEUM_CHANCE_T.en && MUSEUM_CHANCE_T[rl()]), render: (el, c) => AtlasChance.render(el, c) },   // (per language)
   ];
-  const READ_I18N_V = 74, PAINT_I18N_V = 84, PAINT_JS = 'museum/paint.js?v=95', CHANCE_I18N_V = 1, MATCH_I18N_V = 58, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
+  const READ_I18N_V = 74, PAINT_I18N_V = 84, PAINT_JS = 'museum/paint.js?v=95', CHANCE_I18N_V = 1, MATCH_I18N_V = 59, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
   const KEY = 'atlas-museum-room';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const loaded = {};
