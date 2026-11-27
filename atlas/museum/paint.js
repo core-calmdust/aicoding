@@ -171,6 +171,12 @@
     { id: 'braekel', w: 1511, h: 2048, rijks: 'RP-P-1909-2550', bg: '#d9cfb8', spots: [[.4, .63], [.41, .46], [.69, .48], [.25, .8], [.33, .93], [.3, .2]], links: [{ g: 'checkers' }] },
     // (2026-11-25) the Rijksmuseum: after Bunbury, 'Billiards' (1780)
     { id: 'billiard', w: 2048, h: 1430, rijks: 'RP-P-2022-211-36', bg: '#e3dccb', spots: [[.3, .53], [.47, .45], [.44, .31], [.65, .39], [.53, .27], [.75, .33]], links: [{ g: 'carrom' }] },
+    // (2026-11-25) the Rijksmuseum: detail of Xu Yanghong's 'One Hundred Children' handscroll: children at a go board
+    { id: 'baizi', w: 1580, h: 1119, rijks: 'AK-RAK-2020-3', bg: '#d8d2bc', spots: [[.56, .78], [.42, .8], [.69, .7], [.48, .32], [.88, .55], [.09, .5]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
+    // (2026-11-25) the Rijksmuseum: Pieter Schenk II chinoiserie etching: two Chinese women playing cards
+    { id: 'schenkcards', w: 2048, h: 1279, rijks: 'RP-P-2013-9-32', bg: '#ece6d6', spots: [[.384, .528], [.233, .366], [.463, .366], [.824, .528], [.095, .735], [.564, .32]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Rijksmuseum: Chinese famille-rose saucer (1725–35), figures playing go
+    { id: 'gosaucer', w: 2048, h: 2003, rijks: 'AK-NM-13689', bg: '#d9d9d6', spots: [[.543, .606], [.4, .54], [.657, .54], [.53, .32], [.386, .22], [.75, .47]], links: [{ g: 'go' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
