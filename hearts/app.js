@@ -506,7 +506,7 @@ function scoreHtml() {
   const cur = S.phase !== 'end' || !U.res ? `<tr class="cur"><td>${S.no}<small>${esc(t('dirS.' + S.dir))}</small></td>${[0, 1, 2, 3].map(s => `<td class="${s === 0 ? 'me' : ''}">${HT.rawPts(S, s) || '·'}</td>`).join('')}</tr>` : '';
   const tot = `<tr class="tot"><td>Σ</td>${G.scores.map((x, s) => `<td class="${s === 0 ? 'me' : ''}">${x}</td>`).join('')}</tr>`;
   const lead = Math.max(...G.scores), pct = Math.min(100, lead / G.R.target * 100);
-  return `<table class="sc-tbl">${head}${rows}${cur}${tot}</table><div class="sc-bar"><i style="width:${pct.toFixed(1)}%"></i><span>${esc(t('to.end', { n: Math.max(0, G.R.target - lead) }))}</span></div>` +
+  return `<table class="sc-tbl">${head}${rows}${cur}${tot}</table><div class="sc-bar"><i style="width:${pct.toFixed(1)}%"></i><span>${esc(G.over ? t('ab.over') : t('to.end', { n: Math.max(0, G.R.target - lead) }))}</span></div>` +
     `<p class="diff-desc">${esc(t('rule.line.' + G.R.v))} ${esc(t('moon.rule.' + (G.R.moon || 'add')))}</p>`;
 }
 function countHtml() {
