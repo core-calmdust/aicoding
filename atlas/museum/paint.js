@@ -277,6 +277,14 @@
     { id: 'historiespel', w: 2048, h: 1591, rijks: 'RP-P-1908-2540', bg: '#e4e0d6', spots: [[.13, .88], [.5, .5], [.5, .57], [.42, .65], [.49, .31], [.5, .97]], links: [{ ex: 'goose' }] },
     // (2026-11-25) the Rijksmuseum: Daumier, 'Tout ce qu'on voudra' no. 12, draughts players (Le Charivari 1847)
     { id: 'daumier', w: 1543, h: 2048, rijks: 'RP-P-OB-41.043', bg: '#e6e1d6', spots: [[.55, .47], [.4, .43], [.52, .37], [.67, .4], [.3, .24], [.5, .9]], links: [{ g: 'checkers' }] },
+    // (2026-11-25) the Rijksmuseum: Valentin after Gérôme, 'Arnautes jouant aux dames' (Goupil)
+    { id: 'arnauts', w: 2048, h: 1550, rijks: 'RP-P-1892-A-17724', bg: '#e6e2d8', spots: [[.56, .6], [.3, .41], [.33, .49], [.61, .3], [.64, .49], [.06, .43]], links: [{ g: 'checkers' }] },
+    // (2026-11-25) the Rijksmuseum: Jan Luyken for Cornelis de Bruyn's travels (1698): Turks smoking and playing chess
+    { id: 'luyken', w: 2048, h: 1664, rijks: 'RP-P-1896-A-19368-1206', bg: '#e4e0d6', spots: [[.6, .71], [.83, .51], [.45, .62], [.14, .43], [.5, .96], [.17, .18]], links: [{ g: 'chess' }, { ex: 'ottoman' }] },
+    // (2026-11-25) the Rijksmuseum: Master of the Amsterdam Cabinet, Card Players, drypoint (1483-87)
+    { id: 'kabinet', w: 1949, h: 2048, rijks: 'RP-P-OB-937', bg: '#ece8de', spots: [[.45, .3], [.5, .6], [.32, .32], [.25, .84], [.66, .82], [.92, .2]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Jan Lievens, Quarrelling Card Players and Death (1638)
+    { id: 'lievens', w: 2048, h: 1555, rijks: 'RP-P-OB-12.544', bg: '#e2ddd2', spots: [[.56, .25], [.62, .07], [.44, .24], [.72, .28], [.47, .76], [.25, .95]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
