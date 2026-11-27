@@ -209,6 +209,8 @@
     { id: 'schaakglas', w: 1655, h: 2048, rijks: 'BK-1978-33', bg: '#dcdcdc', spots: [[.48, .445], [.4, .37], [.585, .38], [.5, .36], [.53, .43], [.675, .36]], links: [{ g: 'chess' }] },
     // (2026-11-25) the Rijksmuseum: 'Arlequin's Lotto-Spel' (Mindermann & Co.), board in the shape of Harlequin
     { id: 'arlequin', w: 1493, h: 2048, rijks: 'KOG-ZG-1-34-40', bg: '#e9e3d2', spots: [[.65, .1], [.26, .79], [.45, .23], [.54, .6], [.5, .92], [.77, .5]], links: [{ ex: 'goose' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Photo-Club de Paris plate 'La partie du Vicaire' (René Gayant)
+    { id: 'vicaire', w: 2048, h: 1414, rijks: 'RP-F-2001-7-1107A-3', bg: '#d8d2c4', spots: [[.65, .594], [.75, .45], [.465, .362], [.575, .39], [.32, .362], [.38, .13]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
