@@ -7321,9 +7321,9 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     count: { intro: '安全な線がつきた終盤は、鎖の数え合い。主導権を持つ側は、2つ残しで手番を返すか、全部取り切るかを決めるんだ。<br>1〜2箱の小さな鎖は、差し出すと手番が入れかわる（2箱は真ん中から）。長い鎖があっても、小さな鎖が何本あるかで答えが変わる！',
       ask: ['安全な線はもうない。取り切る？ 2つ残す？', '主導権はきみ。ここは残す？ 取り切る？', '小さな鎖は何本ある？ それで答えが変わるよ！', '残しの損と取り切りの得、どっちが大きい？', 'ラスト！ 計算勝負だよ！'],
       hint: ['取り切ったら、次に鎖を開くのはきみ。そのとき小さな鎖を差し出せたら？', '1箱・2箱の小さな鎖は何本あるかな？', '小さな鎖は、取り切りと残しの損得を変えるんだ！', '残せば2箱の損。取り切ったら、そのあと長い鎖を開くのはどっち？', '残しの損と取り切りの得を、順に足してみて！'] },
-    open3: { intro: '3×3（点16個）は完全に解かれていて、おたがい最善なら後手が6対3で勝つ。それでも序盤には、1本で結果が変わる局面がたくさんあるんだ。<br>先手は長い鎖を偶数本に、後手は奇数本にしたい。盤を分ける線が鎖の形を決める！',
+    open3: { intro: '3×3（点16個）は完全に解かれていて、おたがい最善なら後手が6対3で勝つ。それでも序盤には、1本で結果が変わる局面がたくさんあるんだ。<br>先手は長い鎖を偶数本に、後手は奇数本にしたい。どの安全な線を引くかで、最初に長い鎖を開くのがだれかが決まる！',
       ask: ['3×3の序盤。いちばんいい線はどれ？', 'この盤なら、どの1本？', '先を読んで、鎖の形を決めよう！ どの線？', 'どこに引けば、きみに合う形になるかな？', 'ラスト！ 序盤の1本を選んで！'],
-      hint: ['この線で、盤はどんな鎖に分かれていきそう？', '先手は長い鎖を偶数本、後手は奇数本にしたい！', '長い鎖ができそうな所を想像してみて！', '安全な線でも、鎖の形は変わるんだ。', '金色の輪の線をひとつずつ試すつもりで、形を想像してみて！'] },
+      hint: ['この線で、盤はどんな鎖に分かれていきそう？', 'その線のあと、長い鎖を先に開くことになるのはだれかな？', '長い鎖ができそうな所を想像してみて！', '安全な線でも、鎖の形は変わるんだ。', '金色の輪の線をひとつずつ試すつもりで、形を想像してみて！'] },
     mid4: { intro: '4×4（点25個）は、おたがい最善なら8対8の引き分け。点が奇数だから、<b>先手は長い鎖を奇数本、後手は偶数本</b>にしたい盤なんだ。<br>中盤は1本引くたびに鎖の形が固まっていく。どの線が鎖をつなげて、どれが切るかを考えよう！',
       ask: ['4×4の中盤。いちばんいい線は？', '鎖の形を読んで、1本えらんで！', 'どの線が鎖をつなげる？ 切る？', 'この局面、きみならどう引く？', 'ラスト！ 中盤の勝負所だよ！'],
       hint: ['長い鎖になりそうな所を探してみて。', '先手は長い鎖を奇数本、後手は偶数本にしたい盤！', '安全な線だけが正解とはかぎらない！', '小さくあげて流れを変える手もあるよ？', '金色の輪の線で、鎖の数がどう変わるか考えて！'] },
@@ -7360,6 +7360,12 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     yKeepL: ['赤い線で4箱残しても、あとの鎖はどれも4箱より小さいから取り返せない。', '残した4箱は相手のもの。あとの鎖はそれより小さいから損なんだ。', 'この先の鎖はどれも3箱以下。赤い線の4つ残しは損になる。', '赤い線の4つ残しは、ここではもったいない。', '主導権を守っても、4箱を取り返す鎖がなければ意味がない。'],   // (2026-11-27 担当A, loop: the take is best when every other chain is 3 or less — a 3-chain is a long chain, so not 「大きな鎖がない」)
     rLoopO: ['緑の線はループを開く線。主導権がないときは、ループから開こう。', '正解は緑の線、ループから開く！', '緑の線でループを先に開けば、相手の残しは4箱かかる。', 'ここはループの緑の線から。', '緑の線でループを差し出すのが、いちばん損が少ない。'],
     yLoopC: ['赤い線は{xm}箱の鎖を先に開くから、ループがあとに残っちゃう。', '赤い線だと鎖が先で、ループはあと回し。順番が逆なんだ。', '赤い線で{xm}箱の鎖から開くと、ループの高い犠牲を相手にせまれない。', '赤い線は鎖を開く線。ループを残したままだと、相手が楽になる。', '赤い線だと{xm}箱の鎖が先。ループの4箱はあとに残っちゃう。'],   // (2026-11-27 担当A, loop: the red line opens a chain of 3+ and leaves the 4-loop whole — what the opponent then does is its choice, so the words say only that; tools/lesson-verify.js)
+    // (2026-11-27 担当A, open3: the opening on a 3×3 — what the board shows along optimal play is who first opens a long chain, so the
+    // words say that, not the number of long chains; a red third side hands the boxes over, whether the opponent takes them all is its choice)
+    safeO: ['この線なら、最初に長い鎖を開かされるのは相手になる。', '安全な線の中でも、いちばん箱が多く取れる1本！', '先の鎖の形まで読めてる！ 長い鎖を先に開くのは相手のほう。', 'ほかの安全な線だと、長い鎖を先に開くのがきみになっちゃう。そこを避けられた！', '盤の分け方が決まった！ 最後まで正しく引けば、きみの勝ち。'],
+    rParO: ['緑の線なら、最初に長い鎖を開かされるのは相手のほう。', '正解は緑の線。盤の分かれ方まで見た1本なんだ。', 'どっちも安全な線だけど、緑の線が勝ちにつながる。', '緑の線を引けば、長い鎖を先に開くのは相手になる。', '安全な線どうしでも、緑の線のほうが箱が多く取れる。'],
+    yParO: ['赤い線だと、最初に長い鎖を開かされるのがきみになる。', '赤い線も安全だけど、そのあと長い鎖を先に開くのはきみのほう。', '赤い線では、長い鎖を最初に差し出すのがきみになる。', '赤い線だと盤の分かれ方が変わって、長い鎖を先に開く役がきみに回る。', '赤い線のあとは、長い鎖を先に開かされるのがきみ。'],
+    yGiveO: ['赤い線は箱の3本目になって、相手に{xm}箱を差し出すことになる。', '赤い線を引くと、相手は{xm}箱を取れるようになる。', '赤い線のとなりの箱は2本引いてあったから、そこが3本目になる。', '赤い線は3本目を作るから、相手に箱を取るチャンスをあげちゃう。', '赤い線は2本の箱にさわったから、{xm}箱が相手の取れる箱になる。'],
     // the green line's point, for a miss ({bm}: what the green line hands over)
     rSafe: ['緑の線は安全な線。', '緑の線なら1箱もあげずにすむ。', '安全な線は緑の所！', '緑の線は、どの箱にも3本目を作らない。', '正解は緑の線。'],
     rPar: ['どっちも安全な線だけど、緑の線なら長い鎖の数がきみにぴったり。', '緑の線を引けば、長い鎖を開かされるのは相手のほう。', '正解は緑の線。鎖の形まで見た1本なんだ。', '緑の線のほうが、長い鎖の本数がきみに合う。', '安全な線どうしでも、緑の線が勝ちにつながる。'],
@@ -7396,7 +7402,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       let L;
       if (x.cls === 'take') L = F.hasCap && DT_END.test(s.id) ? (s.id === 'loop' ? DT_CH.takeL : s.id === 'count' ? DT_CH.takeC : DT_CH.takeE) : DT_CH.take;
       else if (x.cls === 'decline') L = x.m === 4 ? DT_CH.dec4 : s.id === 'count' ? DT_CH.decC : DT_CH.dec;
-      else if (x.cls === 'safe') L = pick2 ? DT_CH.safeP : DT_CH.safe;
+      else if (x.cls === 'safe') L = s.id === 'open3' ? DT_CH.safeO : pick2 ? DT_CH.safeP : DT_CH.safe;
       else if (F.ns) L = DT_CH.sac;
       else if (x.m === 4 && s.id === 'loop') L = DT_CH.loop4;
       else if (x.m === 2 && !x.ret && s.id === 'hard') L = DT_CH.mid;
@@ -7409,7 +7415,8 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       if (V.get(u) === undefined || V.get(u) === best) u = P.values.reduce((a, c) => c[1] < a[1] ? c : a)[0];   // (the runner never shows this for a best line: a checker's call — the worst line stands in)
       const x = F.of(u), loss = (best - V.get(u)) / 2, o = { bm: b.m, xm: x.m, s: F.sm };
       let R, Y;
-      if (b.cls === 'safe') { R = x.cls === 'safe' ? DT_CH.rPar : DT_CH.rSafe; Y = x.cls === 'safe' ? DT_CH.yPar : DT_CH.yGive; }
+      if (b.cls === 'safe' && s.id === 'open3') { R = x.cls === 'safe' ? DT_CH.rParO : DT_CH.rSafe; Y = x.cls === 'safe' ? DT_CH.yParO : DT_CH.yGiveO; }
+      else if (b.cls === 'safe') { R = x.cls === 'safe' ? DT_CH.rPar : DT_CH.rSafe; Y = x.cls === 'safe' ? DT_CH.yPar : DT_CH.yGive; }
       else if (s.id === 'count' && b.cls === 'take' && x.dd) { R = DT_CH.rTakeC; Y = DT_CH.yKeepC; }
       else if (s.id === 'count' && b.cls === 'decline' && x.cls === 'take') { R = DT_CH.rDec; Y = DT_CH.yAllC; }
       else if (b.cls === 'take') { const e = x.dd && DT_END.test(s.id) && (x.m === 2 || x.m === 4); R = e ? DT_CH.rTakeE : DT_CH.rTake; Y = e ? (s.id === 'loop' ? DT_CH.yKeepL : DT_CH.yKeep) : x.cls === 'decline' ? DT_CH.yMiss : DT_CH.yOrd; }
@@ -7430,9 +7437,9 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
   const DOTS = {
     LKEY: 'dots-lessons-v2', data: null, I: null, got: {},
     load(lang) {
-      const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261127U`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
+      const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261127V`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
       if (this.p) return this.p.then(() => T()).then(() => this);
-      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261127u'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
+      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261127v'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
         .then(([ls, X]) => { const w = {}; try { new Function('window', 'with (window) {' + X + '\n}')(w); } catch (e) { console.warn('[lessons3d] dots texts', e); } this.I = w.I18N || {}; this.data = { ls }; return T(); }).then(() => this)
         .catch(e => { this.p = null; throw e; }));
     },
@@ -7461,8 +7468,8 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
   /* whose move it is (2026-11-23 user: every problem — the warm-up's too — must say which side the player moves, 「黒の手番だよ」).
      turnOf: 1 / 2 from the position (an object's me, reversi "…:1", a chess FEN's w / b, a shogi SFEN's b / w), 0 = no sides (dots),
      null = not known. turnLine: the line put before the question, '' when the question already names the side (the same side). */
-  const TURN_N = { ja: { ur: ['白', '黒'], senet: ['糸巻き', '円錐'], patolli: ['手前', '奥'], morris: ['金', '銀'], tafl: ['攻め手', '守り手'], chess: ['白', '黒'], reversi: ['●黒', '○白'], gomoku: ['●黒', '○白'], go: ['●黒', '○白'], checkers: ['黒', '白'], konane: ['黒', '白'], fanorona: ['白', '黒'], xiangqi: ['赤', '黒'], janggi: ['楚', '漢'], hex: ['赤', '青'], amazons: ['白', '黒'], connect4: ['金', '銀'], shogi: ['☗先手', '☖後手'], backgammon: ['金', '金'] },
-    en: { ur: ['Light', 'Dark'], senet: ['Spools', 'Cones'], patolli: ['Near', 'Far'], morris: ['Gold', 'Silver'], tafl: ['Attackers', 'Defenders'], chess: ['White', 'Black'], reversi: ['● Black', '○ White'], gomoku: ['● Black', '○ White'], go: ['● Black', '○ White'], checkers: ['Black', 'White'], konane: ['Black', 'White'], fanorona: ['White', 'Black'], xiangqi: ['Red', 'Black'], janggi: ['Cho', 'Han'], hex: ['Red', 'Blue'], amazons: ['White', 'Black'], connect4: ['Gold', 'Silver'], shogi: ['☗ Sente', '☖ Gote'], backgammon: ['Gold', 'Gold'] } };
+  const TURN_N = { ja: { ur: ['白', '黒'], senet: ['糸巻き', '円錐'], patolli: ['手前', '奥'], morris: ['金', '銀'], tafl: ['攻め手', '守り手'], chess: ['白', '黒'], reversi: ['●黒', '○白'], gomoku: ['●黒', '○白'], go: ['●黒', '○白'], checkers: ['黒', '白'], konane: ['黒', '白'], fanorona: ['白', '黒'], agon: ['白', '黒'], xiangqi: ['赤', '黒'], janggi: ['楚', '漢'], hex: ['赤', '青'], amazons: ['白', '黒'], connect4: ['金', '銀'], shogi: ['☗先手', '☖後手'], backgammon: ['金', '金'] },
+    en: { ur: ['Light', 'Dark'], senet: ['Spools', 'Cones'], patolli: ['Near', 'Far'], morris: ['Gold', 'Silver'], tafl: ['Attackers', 'Defenders'], chess: ['White', 'Black'], reversi: ['● Black', '○ White'], gomoku: ['● Black', '○ White'], go: ['● Black', '○ White'], checkers: ['Black', 'White'], konane: ['Black', 'White'], fanorona: ['White', 'Black'], agon: ['White', 'Black'], xiangqi: ['Red', 'Black'], janggi: ['Cho', 'Han'], hex: ['Red', 'Blue'], amazons: ['White', 'Black'], connect4: ['Gold', 'Silver'], shogi: ['☗ Sente', '☖ Gote'], backgammon: ['Gold', 'Gold'] } };
   function turnOf(id, pos) {
     if (id === 'dots') return 0;
     if (id === 'mancala') return 1;   // (the player's row is always the near one)
@@ -7512,12 +7519,17 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     .catch(e => { this.p = null; throw e; })); } };
   /* fanorona (2026-11-27 担当E): the data, チェッカニ's words and the board facts are in atlas/ls-fanorona.js (loaded the first time; only the
      lessons checked and rebuilt for the 3D, AtlasLsFanorona.READY — tools/lesson-verify-fanorona-ls.js) */
-  const FANORONA = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsFanorona) return res(); const sc = document.createElement('script'); sc.src = 'ls-fanorona.js?v=2'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const FANORONA = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsFanorona) return res(); const sc = document.createElement('script'); sc.src = 'ls-fanorona.js?v=3'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsFanorona.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
+    .catch(e => { this.p = null; throw e; })); } };
+  /* agon (2026-11-27 担当F): the data, キンダイスン's words and the board facts are in atlas/ls-agon.js (loaded the first time; only the
+     lessons checked and rebuilt for the 3D, AtlasLsAgon.READY — tools/lesson-verify-agon-ls.js) */
+  const AGON = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsAgon) return res(); const sc = document.createElement('script'); sc.src = 'ls-agon.js?v=1'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+    .then(() => { const U = AtlasLsAgon.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   // (2026-11-24 ユーザー指示: ur・senet・patolli のレッスンは廃止 — 双六系はマンカラ・バックギャモンのような戦略性の高いものを除いてレッスン・パズルを作らない。
   //  UR・SENET・PATOLLI とそのファイルは残すが、DATA に載せない＝AtlasLessons.has が false でタブに出ない)
-  const DATA = { foxgeese: FOXGEESE, konane: KONANE, ugolki: UGOLKI, fanorona: FANORONA, dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, janggi: JANGGI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
+  const DATA = { foxgeese: FOXGEESE, konane: KONANE, ugolki: UGOLKI, fanorona: FANORONA, agon: AGON, dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, janggi: JANGGI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
 
   function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(lang), ncLoad(id)]).then(() => D.list(kind, lang)); }
   function next(id, kind, lang) { return list(id, kind, lang).then(L2 => { const x = L2.find(i => !i.full && i.st !== 'pass') || L2.find(i => !i.full); return x ? x.key : null; }); }
@@ -7627,7 +7639,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
             pz: Object.assign({ lesson: true, fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: () => id === 'reversi' && phase !== 'ramp' && !(phase === 'prob' && cur && cur.k >= RV_NUMS()), ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
           ctx.Table3D.play(true);
         } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks, lock: !!G.lock });
-        else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots' || id === 'foxgeese' || id === 'konane' || id === 'ugolki' || id === 'fanorona')) pz().load(G.spec, G.me, { lock: !!G.lock });
+        else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots' || id === 'foxgeese' || id === 'konane' || id === 'ugolki' || id === 'fanorona' || id === 'agon')) pz().load(G.spec, G.me, { lock: !!G.lock });
         else if (G && id === 'mancala') pz().load(G.spec, G.me, { lock: !!G.lock, marks: G.marks });
         else if (G && id === 'connect4') pz().load(G.moves, G.me, { lock: !!G.lock });
         else if (G && id === 'backgammon') pz().load(G.bg);
@@ -7960,7 +7972,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;
       }
-      if ((id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots' || id === 'foxgeese' || id === 'konane' || id === 'ugolki') && typeof u === 'number' || id === 'fanorona' && typeof u === 'string' && u) {   // (fanorona: the move's notation, h2-h3A)
+      if ((id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots' || id === 'foxgeese' || id === 'konane' || id === 'ugolki' || id === 'agon') && typeof u === 'number' || id === 'fanorona' && typeof u === 'string' && u) {   // (fanorona: the move's notation, h2-h3A)
      // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
         const right = pts >= 16, k = cur.k;   // (p.own: the guide names the green arrow herself — the heading is only 「おしい！」)
         say(`${right ? (p.own && (id === 'morris' || id === 'janggi' || p.ckls) ? '' : line('solved') || pick(X.good)) : p.own ? (pts >= 10 ? 'いい線いってる！' : '') : pts >= 10 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));

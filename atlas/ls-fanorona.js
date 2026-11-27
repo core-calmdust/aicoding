@@ -3,6 +3,8 @@
    fanorona/lessons.json (the same file as the 2D lessons, progress the full game's 'aicoding-fanorona-lessons' { id: { best, clear } }),
    told by チェッカニ (Checkrab, the guide of atlas/rules/fanorona.js and the 3D puzzles atlas/games/fanorona-pz.js).
    Every reason is a fact of the board, read by fanorona/ls-facts.js (the 2D and tools/lesson-verify-fanorona-ls.js read the same):
+   b_safe: the one paika move after which the opponent can take nothing; a wrong move's {c} (the most the opponent then takes) and
+   whether the piece moved is taken (self) or the point it left lets the opponent in (open).
    how many pieces a move's line takes, what ends a shorter line (the board's edge, your own piece, an empty point), the same step's
    other line (approach / withdrawal); for b_chain the total of a capture chain, whether a move stopped while its piece could go on,
    or went to its end (no capture left), and whether it is the answer's piece.
@@ -12,7 +14,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const READY = ['b_approach', 'b_withdraw', 'b_choose', 'b_chain'];
+  const READY = ['b_approach', 'b_withdraw', 'b_choose', 'b_chain', 'b_safe'];
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
   const KN = { A: '接近', W: '離脱' };
   // ---------- チェッカニ's words (ja) ----------
@@ -21,19 +23,23 @@
       b_approach: 'やっほー、チェッカニだカニ！ ファノロナは<b>相手の玉を全部取ったら勝ち</b>のゲーム。1歩動いた<b>すぐ先の相手の玉</b>と、その後ろに<b>続けて並ぶ玉</b>を一列まとめて取れる。これが<b>接近</b>だよ。<br>列は<b>空いた点・きみの玉・盤のはし</b>で切れるんだ。いちばん長い列を探そう！',
       b_withdraw: 'こんどは<b>離脱</b>だカニ。となりの相手の玉から<b>まっすぐ離れる</b>ように1歩動くと、その玉と、<b>向こうに続けて並ぶ相手の玉</b>を一列まとめて取れる。<br>列は<b>空いた点・きみの玉・盤のはし</b>で切れるよ。そこまで数えて、いちばん多く取れる手を探そう！',
       b_chain: 'カニカニ、取った玉は<b>同じ番のうちに続けて取れる</b>んだ！ ただし<b>毎回向きを変えて</b>、<b>一度いた点には戻れない</b>よ。<br>途中で止めることもできるけど、止めると取れる数がへっちゃう。どの道を通るかでも数が変わるから、<b>最後までたどって合計を数えよう</b>！',
+      b_safe: 'カニカニ、<b>取れる手がない</b>ときは、取らずに1歩動かす（<b>パイカ</b>）んだ。<br>大事なのは、動かしたあと<b>相手に取る手を与えない</b>こと。<b>動かした玉</b>がねらわれないか、玉が<b>元いた点</b>を相手に使われないか、両方たしかめよう！',
       b_choose: '1歩で<b>接近と離脱の両方</b>の取りができることがあるカニ。でも取れるのは<b>どちらか一方の列だけ</b>。<br>そんなときは前の列（接近）と後ろの列（離脱）を数えて、<b>多いほうを選ぶ</b>んだ。ほかの玉の取りともくらべて、いちばん多く取れる手を探そう！',
     },
     ask: {
       b_approach: ['近づいて取る手のうち、いちばん多く取れるのはどれ？', 'カニカニ、列がいちばん長いのはどの接近かな？', 'どの玉を動かすと、相手の玉をたくさん一列で取れる？', '前に並ぶ相手の玉を数えてみよう。いちばん多いのは？', '接近で取れる数がいちばん多い手を指してね。'],
       b_withdraw: ['離れて取る手のうち、いちばん多く取れるのはどれ？', 'カニッ、後ろに長い列があるのはどの玉？', 'まっすぐ離れたとき、いちばん多く取れる手は？', '離脱で取れる列を数えくらべてみよう。いちばんは？', 'どの玉を離れさせると、たくさん取れるかな？'],
       b_chain: ['続けて取って、合計がいちばん多くなる手はどれ？', 'カニカニ、どの玉でどの道を通ると、いちばん多く取れる？', '止めずに進む道を探そう。合計のいちばん多い連続取りは？', '取ったあと、まだ取れるかな？ いちばん多く取れる手を指してね。', '道の分かれ目に気をつけて。合計がいちばん多いのはどれ？'],
+      b_safe: ['相手に何も取らせない一歩はどれ？', 'カニカニ、動かしても取られない玉はどれかな？', '取れる手がないね。安全に動かせる手を探そう！', 'どの一歩なら、相手は何も取れない？', '動いた先と元いた点、両方を見て安全な手を指してね。'],
       b_choose: ['接近か離脱か。いちばん多く取れる取り方はどれ？', 'カニカニ、両方で取れる1歩があるよ。どっちの列を選ぶ？', '前の列と後ろの列、多いのはどっち？ いちばんの手を指してね。', 'ほかの玉の取りともくらべて、いちばん多く取れるのは？', '列を数えてから選ぼう。いちばん多く取れる手は？'],
     },
     askLast: ['カニッ、これで最後！ いちばん多く取れる手はどれ？', 'ラストの問題だね。列をじっくり数えて決めよう！'],
+    askLastBy: { b_safe: ['カニッ、これで最後！ 相手に何も取らせない一歩はどれ？', 'ラストの問題だね。動いた先と元いた点を、じっくり確かめて決めよう！'] },
     hint: {
       b_approach: ['光っているのは、いま取れる玉。それぞれ、動いた先のすぐ前の列を数えてみて！', '光る玉ごとに、1歩先の向こうへ相手の玉がいくつ続くか数えよう。', '列は空いた点・きみの玉・盤のはしで切れるよ。どこで切れるか見てね。', 'カニ、前に続く相手の玉がいちばん多い向きを探そう！', '光る玉の進む先を指でなぞって、列の長さをくらべてみて。'],
       b_withdraw: ['光っているのは、いま取れる玉。動く向きと反対側の列を数えてみて！', '光る玉のすぐ後ろから、相手の玉がいくつ続くか数えよう。', '後ろの列が、空いた点・きみの玉・盤のはしのどこで切れるか見てみよう。', 'カニ、離れる玉の背中側に長い列があるのはどれかな？', '光る玉ごとに、後ろに並ぶ相手の玉をくらべてみよう。'],
       b_chain: ['光っているのは、いま取れる玉。それぞれ、取ったあとまだ続けて取れるか、最後までたどってみて！', '1回取ったら、その先でまた取れる向きがないか探そう。向きは毎回変えるんだよ。', 'カニ、道が分かれるところでは、どっちへ進むと合計が多くなるか数えくらべてね。', '光る玉ごとに、連続取りの道を指でなぞって合計を数えよう。', '一度いた点には戻れないよ。それも気にしながら道をたどってみて。'],
+      b_safe: ['光っているのは、動かせるきみの玉。それぞれ、動いた先で相手にねらわれないか確かめてみて！', '動いた先で相手の玉と1つ空けて一直線に並ぶと、相手が近づいて取れちゃうよ。', 'となりに相手の玉が来て、その後ろが空いていると、相手は離れて取れるんだ。気をつけて！', '玉が動くと、元いた点が空くよ。その点に相手が入ってこられないかも見てね。', 'カニ、光る玉ごとに、動いたあとの相手の取りを一つずつ探してみよう。'],
       b_choose: ['光っているのは、いま取れる玉。両方で取れる1歩は、前と後ろの列を両方数えよう！', '同じ1歩でも、接近と離脱で取れる数がちがうよ。多いほうはどっち？', 'カニ、前の列と後ろの列、長いほうを選ぶのがコツだよ。', '光る玉ごとに、取れる列の長さをくらべてみて。', '選べる1歩では、短いほうの列を選ばないように気をつけてね。'],
     },
     cheer: ['正解だカニ！', 'ばっちり！', 'お見事！', 'いいね、その手！', 'さすが！'],
@@ -43,6 +49,7 @@
       b_approach: ['近づいた先に相手の玉が{a}つ並んでいたね。一列まとめて{a}つ取り！', 'カニッ、いちばん長い列を見つけたね。接近で{a}つ取れたよ。', '前に続く相手の玉は{a}つ。ほかのどの手よりも多いんだ。', '列の切れ目まできっちり数えられたね。{a}つまとめていただき！', '{a}つ並んだ列にまっすぐ近づけたね。お見事な接近だカニ。'],
       b_withdraw: ['離れた背中側に相手の玉が{a}つ並んでいたね。一列まとめて{a}つ取り！', 'カニッ、いちばん長い後ろの列を見つけたね。離脱で{a}つ！', '後ろに続く相手の玉は{a}つ。ほかのどの手よりも多いんだ。', '列の切れ目まで後ろ向きに数えられたね。{a}つまとめていただき！', 'まっすぐ離れて{a}つ取り。向きの選び方もばっちりだカニ。'],
       b_chain: ['{sa}回続けて、合計{a}つ取り！ 最後まで止めずに進めたね。', 'カニッ、{sa}回の連続取りで{a}つ！ ほかのどの道よりも多いんだ。', '道の分かれ目でも正しい向きを選べたね。{sa}回続けて合計{a}つだよ。', '止めずに{sa}回取りきって、合計{a}つまとめていただき！', '最後までたどれたね。{sa}回続けて{a}つ、いちばん多い連続取りだカニ。'],
+      b_safe: ['緑の一歩なら、相手はどの玉も取れないんだ。ほかの手はどれも取られちゃう。', 'カニッ、動いたあとも相手は何も取れない。安全な一歩を見つけたね！', 'その一歩なら、動かした玉もねらわれず、元いた点も使われない。相手が取れる玉がないんだ。', 'ほかの手だとどこかを取られるけど、この一歩なら相手はひとつも取れないんだ。', '取らせない一歩を選べたね。これで相手は何も取れない。守りもばっちり！'],
       b_choose: ['この一歩は接近と離脱の両方で取れたけど、{ka}の列なら{a}つ。多いほうを選べたね！', 'カニッ、{ka}を選んで{a}つ取り！ もう一方の列より多いんだ。', '前と後ろをくらべて、{ka}の{a}つを選んだね。ほかのどの手よりも多いよ。', '{a}つ取れる{ka}を選べたね。数えてから選ぶのがコツだカニ。', '両方で取れる一歩で、長いほうの{ka}を選んだね！ {a}つまとめていただき。'],
     },
     n: {
@@ -53,6 +60,8 @@
       stopx: ['赤は{c}つで止めたけど、その玉はまだ続けて取れたよ。それに緑の道なら合計{a}つ取れたんだ。', 'カニ、赤は{c}つで止まったけど、まだ続けて取れたんだ。緑の道なら最後まで行って合計{a}つだよ。', '赤のところからもまだ続けて取れたね。でも合計がいちばん多いのは緑の{a}つ。赤は{c}つだよ。', '赤は{c}つで止めちゃったけど、その先もまだ続けて取れた。緑の道を選べば{a}つ取れたんだ。', 'カニッ、赤は{c}つ。止めずに続けられたし、道を緑のほうへ選べば合計{a}つだったよ。'],
       deadSame: ['赤の道は{c}つ取ったところで、もう取れる玉がない行き止まり。同じ玉でも緑の道を通れば合計{a}つ！', 'カニ、赤の道だと{c}つ取ったら、もう取れる玉がないんだ。分かれ目で緑のほうへ進めば{a}つ取れたよ。', '同じ玉でも、通る道で数が変わるんだ。赤の道は{c}つで行き止まり、緑の道なら合計{a}つ。', '赤の道は{c}つ目のあと、もう取れる玉がないから止まっちゃう。緑の道を選んでいたら{a}つ取れたんだ。', 'カニッ、赤は{c}つで行き止まり。同じ玉の緑の道なら、合計{a}つまで続いたよ。'],
       deadOther: ['赤の玉は{c}つ取ったら、もう取れる玉がないんだ。緑の玉の連続取りなら合計{a}つ取れたよ。', 'カニ、赤の玉の取りは{c}つで行き止まり。緑の玉なら続けて取って合計{a}つ！', '赤の玉だと{c}つ取ったところで、もう取れる玉がない。緑の玉で連続取りすれば{a}つだよ。', '赤は{c}つで行き止まりになる玉なんだ。緑の玉なら合計{a}つの連続取りができたよ。', 'カニッ、赤の玉は{c}つ取ったら行き止まり。緑の玉で道をたどれば合計{a}つ取れたんだ。'],
+      self: ['赤の手だと、動かした玉がねらわれちゃう。相手が取れるのは{c}つ。緑の一歩ならだいじょうぶだったんだ。', 'カニ、赤の一歩のあと、相手は動かした玉を取れるんだ。取られるのは{c}つになる。緑の手は安全な場所へ動いていたね。', '赤の一歩で、動かした玉が相手の玉と一直線に並んじゃった。相手は{c}つ取れる。緑を選んでいれば無事だったね。', '動かした玉が相手の取りの列に入っちゃうんだ。赤だと{c}つ取られる。緑の手なら、相手の取りはひとつもないんだ。', 'カニッ、赤の手は動かした玉ごと{c}つ取られちゃう。緑の一歩は、そのねらいをかわしていたんだ。'],
+      open: ['赤の手だと、玉が元いた点が空いて、相手がそこへ入ってこられるんだ。それで{c}つ取られちゃう。緑の一歩なら、相手の取りは生まれない。', 'カニ、赤だと、玉が動いたあとの空いた点を相手に使われちゃう。相手が取れるのは{c}つ。緑の手を見てごらん。', '赤の一歩で空いた点に相手が入って、ほかのきみの玉が{c}つ取られるんだ。緑を選んでいれば無事だったね。', '玉が元いた点が、相手の通り道になっちゃった。赤だと{c}つ取られる。緑の手なら、相手はどこからも取れないんだ。', 'カニッ、赤の手は元いた点を空けてしまって、そこから{c}つ取られちゃう。緑の一歩なら、相手に取りは生まれなかったね。'],
       same: ['赤は同じ一歩でも{kx}の列を選んで{c}つ。緑の{ka}を選んでいたなら{a}つ取れたんだ。', 'カニ、その一歩は両方で取れたけど、赤の{kx}だと{c}つだけ。緑の{ka}なら{a}つ！', '同じ動きでも、{kx}だと{c}つ・緑の{ka}なら{a}つ。多いほうを選びたかったね。', '両方で取れる一歩だから、列は選べたんだ。赤の{kx}は{c}つ、緑の{ka}なら{a}つだよ。', 'カニッ、選んだ{kx}の列は{c}つだけ。もう一方の緑の{ka}なら{a}つ取れたんだ。'],
     },
   };
@@ -70,13 +79,13 @@
   function words(id, P, u, lang, tx, V, last, fill) {
     const E = engine(), F = facts(); E.setRule('sivy');
     const f = F.fact(E, id, P.s, u), right = f.k === 'most', v = { c: f.c, a: f.a, ka: KN[f.akind], kx: KN[f.kind], sa: f.sa, sc: f.sc };
-    const CH = id === 'b_chain', stop = CH && (f.k === 'stop' || f.k === 'stopx');   // (b_chain: stopped while the piece could go on / went to its end)
+    const CH = id === 'b_chain', SF = id === 'b_safe', stop = CH && (f.k === 'stop' || f.k === 'stopx');   // (b_chain: stopped while the piece could go on / went to its end)
     if (lang === 'ja') {
       if (right) return { f, html: `${V.v(JA.cheer)} ${fill(V.v(JA.w[id]), v)}${last ? '' : ' ' + V.v(JA.push)}`.replace(/(カニ！) カニッ?、/, '$1 ') };   // (the tic once)
-      const n = CH ? JA.n[stop ? f.k : f.same ? 'deadSame' : 'deadOther'] : f.k === 'same' ? JA.n.same : JA.n[f.end] || JA.n.empty;
+      const n = SF ? JA.n[f.k === 'self' ? 'self' : 'open'] : CH ? JA.n[stop ? f.k : f.same ? 'deadSame' : 'deadOther'] : f.k === 'same' ? JA.n.same : JA.n[f.end] || JA.n.empty;
       return { f, html: `${V.v(JA.soft)} ${fill(V.v(n), v)}` };
     }
-    const key = right ? '.why' : stop ? '.ngStop' : f.k === 'same' ? '.ngSame' : '.ng';
+    const key = right ? '.why' : SF ? (f.k === 'self' ? '.ngSelf' : '.ng') : stop ? '.ngStop' : f.k === 'same' ? '.ngSame' : '.ng';
     return { f, html: tx('ls.' + id + key, lang, Object.assign(v, { m: SPOT('ok'), x: SPOT('ng') })) };
   }
   function make(H) {
@@ -85,8 +94,8 @@
       LKEY: 'aicoding-fanorona-lessons', data: null, I: null, JA, READY,
       load() {
         const ld = u => fetch(u).then(r => r.text()).catch(() => '');
-        return this.p || (this.p = Promise.all([getJ('../fanorona/lessons.json?v=7'), ld('../fanorona/i18n.js?v=7'),
-          loadJs('../fanorona/engine.js?v=fb5s-pro1-mt1-aq4', () => !!window.FanoronaEngine).then(() => loadJs('../fanorona/ls-facts.js?v=2', () => !!window.FanoronaLsFacts))])
+        return this.p || (this.p = Promise.all([getJ('../fanorona/lessons.json?v=8'), ld('../fanorona/i18n.js?v=8'),
+          loadJs('../fanorona/engine.js?v=fb5s-pro1-mt1-aq4', () => !!window.FanoronaEngine).then(() => loadJs('../fanorona/ls-facts.js?v=3', () => !!window.FanoronaLsFacts))])
           .then(([d, a]) => { const w = { I18N: {} }; try { new Function('window', 'I18N', a)(w, w.I18N); } catch (e) { console.warn('[lessons3d] fanorona texts', e); }
             this.I = w.I18N; this.data = d; return this; })
           .catch(e => { this.p = null; throw e; }));
@@ -108,7 +117,7 @@
         const probs = s.problems.map((P, pi) => {
           const last = pi === N - 1;
           const o = { pos: { spec: P.s, me: P.s.side }, kind: 'best', P, ans: P.best, ok: P.ok.slice(), own: ja, ckls: true, dHint: true, hint: this.hintPts(id, P),
-            ask: ja ? V.v(last ? JA.askLast : JA.ask[id]) : T('goal'), hintTx: ja ? V.v(JA.hint[id]) : T('hint') };
+            ask: ja ? V.v(last ? JA.askLastBy[id] || JA.askLast : JA.ask[id]) : T('goal'), hintTx: ja ? V.v(JA.hint[id]) : T('hint') };
           o.good = u => words(id, P, u == null ? P.best : u, lang, tx, V, last, fill).html;
           o.ng = u => { if (u == null || P.ok.includes(u)) { const E = window.FanoronaEngine; E.setRule('sivy'); u = E.Pos.from(P.s).moves(true).find(x => !P.ok.includes(x)); }   // (asked for the answer itself: the words for a wrong move)
             return words(id, P, u, lang, tx, V, last, fill).html; };
