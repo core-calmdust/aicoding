@@ -41,7 +41,11 @@
     // (2026-11-27) Akaboshi Intetsu v. Honinbo Jowa, 1835: The Blood-vomiting Game
     { id: 'toketsu', kind: 'go', size: 19, res: 'W+R',
       moves: 'cp pq qd ed oc eq qo qk qi op iq dn ep dp do dq co eo fp cq bq br cm gr hp en bp ck dl dk el gn cr dr bs fq go ar hn gm hm gl ek hl di io ho fo ch cd lq pn gc qn dc cc ec cf il gp nq ic fd lc bg bf af bi dj eh fj qg oi qe pd nf ok pk ol pj rn rm qq qr rr qp rq pr rp po pp mp qm pm np mq mo lp lo kp no nr or qp mr ro pi lr ns ip jr hq jn ko kq kn jm km ik mk mm ir jq kk mi nm ml ki lj lk kj jj kl ll lm oj mg jl jk nj ni im in jo kl js ks jl im is kl ei ej jl hr hs kl cn bn jl gs fs kl hi ij jl ls ji hj oe kg jg gi nc jf nb re if je hd fe gf ff fg gg gh hg fi gj ig hh hf ii rf pe pf le kd ad kh qf ef de qe ld lg kc jd qf db eb qe jb od ib mf qf jp kr qe lf kf qf hc qe hb pg og of cg bh pf ph bb da cb fh ac eg bd ob oa of mh rj kl',
-      mk: {28: {'s':['ck']},33: {'s':['cr']},68: {'s':['bi']},70: {'s':['eh']},80: {'s':['pj']},246: {'s':['kl']}} }
+      mk: {28: {'s':['ck']},33: {'s':['cr']},68: {'s':['bi']},70: {'s':['eh']},80: {'s':['pj']},246: {'s':['kl']}} },
+    // (2026-11-27) Deep Blue (IBM computer) v. Garry Kasparov, 1997: Deep Blue Wins
+    { id: 'deepblue1997', kind: 'chess', res: 'w', moves: 'e4 c6 d4 d5 Nc3 dxe4 Nxe4 Nd7 Ng5 Ngf6 Bd3 e6 N1f3 h6 Nxe6 Qe7 O-O fxe6 Bg6+ Kd8 Bf4 b5 a4 Bb7 Re1 Nd5 Bg3 Kc8 axb5 cxb5 Qd3 Bc6 Bf5 exf5 Rxe7 Bxe7 c4',
+      mk: { 9: { a: [['g5', 'f7']] }, 14: { a: [['h6', 'g5']] }, 15: { a: [['g5', 'e6']] }, 16: { a: [['e7', 'e1']] }, 19: { a: [['g6', 'e8']] }, 23: { a: [['a4', 'b5']] }, 25: { a: [['e1', 'e6']] },
+        26: { a: [['d5', 'f4']] }, 31: { a: [['d3', 'b5']] }, 33: { s: ['f5'] }, 34: { a: [['e1', 'e7']] }, 35: { a: [['e1', 'e7']] }, 37: { a: [['c4', 'b5'], ['c4', 'd5']], s: ['c8'] } } }
   ];
 
   /* ---------- the kinds ---------- */
