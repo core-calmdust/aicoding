@@ -199,6 +199,9 @@ def reprint(svg, out_png, scale=4.0, seed=11, rng_seed=5, wobble_amp=2.2, drop=N
         mk = (full == i) & inner
         if mk.sum() < 50:
             continue
+        # let each colour run under the neighbouring key line, so a small misregistration never opens a paper gap
+        lineall = (lab == names.index('line')) & inner
+        mk = mk | (nd.binary_dilation(mk, iterations=int(1.6 * px)) & lineall)
         mk = warp(mk, rng, wobble_amp * px, 9)        # hand-cut stencil wobble
         masks[n] = np.clip(mk, 0, 1)
     # drop parts of the underlay's line work we draw ourselves (e.g. a written character)
@@ -233,7 +236,7 @@ def reprint(svg, out_png, scale=4.0, seed=11, rng_seed=5, wobble_amp=2.2, drop=N
     lines = np.maximum(lines, blob_a)
     if extra is not None:
         extra(masks, lines, w, h, px, rng, full, names)
-    P.print_masks(masks, lines, out_png, scale=scale, seed=seed + 1)
+    P.print_masks(masks, lines, out_png, scale=scale, seed=seed + 1, reg=0.5)
     return out_png
 
 
