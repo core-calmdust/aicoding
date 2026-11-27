@@ -469,6 +469,28 @@ window.MUSEUM_MATCH_T = {
         "239": "黒239（A6）で白1子を取り、左の端でコウになりました。最後まで1目ずつの争いが続きます。",
         "260": "白260（T6）で黒1子を取り、右下の端でもコウ。黒は263（T5）で取り返します。",
         "267": "267手で終局。黒の11目勝ちです。大きな冒険はせず、相手の石を攻めながら自然に地をふやしていく、秀策らしい勝ち方でした。これが御城碁19連勝の1局目です。"
+      } },
+    "shilin": { "t": "『事林広記』順手炮の局", "w": "紅（名は伝わらない）", "b": "黒（名は伝わらない）", "ev": "日用百科『事林広記』の「饒先順手取勝局」", "d": "13世紀", "pl": "中国（宋〜元）", "lead": "宋の終わりから元の初めのころ、陳元靚がまとめた日用百科『事林広記』にのっている棋譜です。今に残るシャンチーの全局の譜として、もっとも古いものの一つとされます。強い側が先手をゆずる「饒先」の手本の局で、わずか9手のうちに黒の馬が紅の車をつかまえます。",
+      c: {
+        "0": "今から700年以上前の、宋から元にかけての時代の棋譜です。百科事典『事林広記』の遊びの章にのっていて、今に残るシャンチーの全局の記録としては、もっとも古いものの一つとされます。対局者の名は伝わっていません。「饒先」とは、強い人が弱い人に先手をゆずることで、この局は先手をもらった紅がどう負けるかを見せる手本です。紅が下で、先に指します。",
+        "1": "紅は右の炮をまん中の筋へ動かしました。「中炮（当頭炮）」とよばれ、黒の将の正面をにらむ、いちばん強い始め方の一つです。700年前から、もうこの形が指されていたことがわかります。",
+        "2": "黒も炮をまん中へ動かして、正面から向き合いました。紅と同じ側の炮を動かす形を「順手炮」といいます。炮と炮でにらみ合う、昔から人気の作戦です。",
+        "3": "紅は馬をはねて、まん中の兵を守りました。中の兵は黒の炮にねらわれているので、守りが必要です。同時に、馬が前に出る準備にもなります。",
+        "4": "黒も馬をはねて、中の卒を守ります。おたがいに同じ形で、まずは足場をかためています。",
+        "5": "紅は右の車を一つ横へ動かし、縦にまっすぐ走れる筋に出しました。車は盤でいちばん強い駒なので、早く働かせたいのです。",
+        "6": "黒はもう一頭の馬を出しました。車を出すのは後回しにして、まず駒を前に出す作戦です。ただ、車が出おくれると、あとで攻めに使いにくくなります。",
+        "7": "紅の車が一気に河をこえ、黒の陣地に入りました。黒の駒をおびやかすねらいですが、ほかの駒がまだ家にいるので、少しあわてた攻めです。左の馬や車を先に出す手もありました。",
+        "8": "黒は3筋の卒を一つ進めました。馬の通り道をあけて、あとで前へ出られるようにする手です。紅の車が来るのを、むしろ待っています。",
+        "9": "紅の車が卒を取り、その先の黒の馬をにらみました。駒を一つ得して、さらに馬をおびやかす、気持ちのいい手に見えます。ところが、車だけが前に出すぎていて、まわりに味方がいません。ひとりで敵陣に入った車は、ねらわれやすいのです。",
+        "10": "黒の馬が前へとび出しました。紅の車からにげながら、紅の陣地へ近づく一石二鳥の手です。この馬が、この局の主役になります。",
+        "11": "紅は車を一つ下げて、横から黒の馬をねらいました。車は遠くからでも駒を取れるので、馬は休めません。でもこの手も、自分の駒を育てる手ではありません。",
+        "12": "黒の馬はさらに前へ進み、河をこえて紅の陣地に入りました。紅の車からにげるたびに、だんだん紅の帥に近づいていきます。",
+        "13": "紅は兵を一つ進めて、自分の馬の通り道をあけました。次に馬を出して、黒の馬と取りかえようという考えです。ただ、この時間で黒はさらに先に進めます。",
+        "14": "黒は象を上げて、紅の車をねらいました。守りの駒の象で、相手の車を追いはらう、むだのない手です。紅は車を動かさなければならず、黒はもう一手かせぎました。",
+        "15": "紅の車が横へ動いて、また卒を取りました。駒は二つ得しましたが、これが負けにつながる手です。車が帥から遠くはなれ、守りにもどれなくなってしまいました。ここは車を守りにもどすなど、黒の馬にそなえる手が必要でした。",
+        "16": "黒の馬がさらに深く入りこみ、紅の車をねらいました。それだけではありません。次に馬が進むと、紅の帥に王手がかかり、同時に紅の隅の車もねらえる位置です。馬一頭で、二つのねらいを同時につくりました。",
+        "17": "紅は車で黒の馬を追いかけました。でも、馬はもう止まりません。紅の車がいなくなった帥のまわりは、からっぽです。",
+        "18": "黒の馬が飛びこんで王手！しかもこの馬は、紅の隅の車もねらっています。紅が帥を逃がすと、次に車を取られてしまいます。たった9手ですが、ひとりで前に出すぎた車がどうなるか、駒をそろえて戦う大切さを教えてくれる局です。700年前の人たちも、同じ盤で同じことを考えていたのですね。"
       } }
   },
   "en": {
@@ -938,6 +960,28 @@ window.MUSEUM_MATCH_T = {
         "239": "Black 239 (A6) captures a stone and a ko appears at the left edge. The fight over single points goes on to the very end.",
         "260": "White 260 (T6) captures a stone, making another ko at the bottom-right edge. Black takes back at 263 (T5).",
         "267": "The game ends after 267 moves: Black wins by 11 points. No wild adventures — Shusaku simply attacked and let his territory grow naturally, a very Shusaku-like win. It was the first of his 19 straight Castle Game victories."
+      } },
+    "shilin": { "t": "The Shilin Guangji game", "w": "Red (name not recorded)", "b": "Black (name not recorded)", "ev": "The everyday encyclopedia Shilin Guangji: “a game won after giving the first move, with same-side cannons”", "d": "13th century", "pl": "China (Song–Yuan)", "lead": "This record comes from the Shilin Guangji, an everyday encyclopedia compiled by Chen Yuanjing around the end of the Song dynasty and the start of the Yuan. It is said to be one of the oldest complete xiangqi game records that survive. It is a model game in which the stronger side lets the other move first, and in only nine moves Black’s horse traps Red’s chariot.",
+      c: {
+        "0": "This record is more than 700 years old, from the time between the Song and Yuan dynasties. It appears in the games chapter of the encyclopedia Shilin Guangji, and it is said to be one of the oldest complete xiangqi games we still have. The players’ names are not recorded. The title says the stronger player “gave the first move” to the weaker one, so this is a lesson showing how Red, who moves first, loses. Red is at the bottom and starts.",
+        "1": "Red moves the right cannon to the middle file. This is the Central Cannon, aimed straight at Black’s general, and still one of the strongest openings today. It shows that this opening was already played 700 years ago.",
+        "2": "Black answers with a cannon to the middle too, so the two cannons face each other. When both sides move the cannon on the same side, it is called Same Direction Cannons. Cannon against cannon has been a popular fight for centuries.",
+        "3": "Red jumps a horse out to guard the middle soldier. That soldier is under attack from Black’s cannon, so it needs a defender. The horse is also getting ready to come forward.",
+        "4": "Black does the same and guards the middle soldier with a horse. Both sides are building a firm base first.",
+        "5": "Red moves the right chariot one step sideways onto an open file. The chariot is the strongest piece on the board, so it is good to get it working early.",
+        "6": "Black brings out the other horse and leaves the chariots at home for now. The plan is to bring pieces forward first. But a chariot that comes out late can be hard to use in the attack later.",
+        "7": "Red’s chariot rushes across the river into Black’s camp. It wants to threaten Black’s pieces, but Red’s other pieces are still at home, so this attack is a bit hasty. Bringing out the left horse or chariot first was also possible.",
+        "8": "Black pushes the soldier on file 3 one step. This opens a path for the horse so it can jump forward later. Black is almost inviting Red’s chariot to come.",
+        "9": "Red’s chariot takes a soldier and now eyes the black horse beyond it. Winning a piece and threatening another looks great. But the chariot has run far ahead with no friends around it. A chariot alone in the enemy camp is easy to chase.",
+        "10": "Black’s horse jumps forward. It escapes from the chariot and moves toward Red’s camp at the same time — two jobs with one move. This horse will be the star of the game.",
+        "11": "Red pulls the chariot back one step to attack the horse from the side. A chariot can capture from far away, so the horse cannot rest. Still, this move does not help Red develop any other piece.",
+        "12": "Black’s horse goes further forward and crosses the river into Red’s camp. Each time it runs from the chariot, it gets closer to Red’s general.",
+        "13": "Red pushes a soldier to open a path for Red’s own horse. The idea is to bring that horse out and trade it for Black’s horse. But this gives Black time to go even further.",
+        "14": "Black lifts an elephant and attacks Red’s chariot. Using a defending piece to chase the enemy chariot away is very efficient. Red must move the chariot again, and Black gains another move.",
+        "15": "Red’s chariot slides across and takes another soldier. Red is now two soldiers up, but this is the move that loses. The chariot is now far from its general and cannot come back to defend. Red needed a move to guard against the horse, such as bringing the chariot home.",
+        "16": "Black’s horse jumps deeper and attacks Red’s chariot. And there is more: if the horse jumps once again, it will check Red’s general and at the same time attack the chariot in Red’s corner. One horse has made two threats at once.",
+        "17": "Red chases the horse with the chariot. But the horse can no longer be stopped. Around Red’s general there is nobody left to help.",
+        "18": "The horse leaps in with check! It also attacks the chariot in Red’s corner, so when the general steps away, the chariot will be lost. Only nine moves, but the game teaches what happens to a chariot that runs ahead alone, and why pieces should fight together. Players 700 years ago were thinking about the same things on the same board."
       } }
   },
   "zh": {
@@ -1407,6 +1451,28 @@ window.MUSEUM_MATCH_T = {
         "239": "黑239（A6）提白一子，左边边缘形成劫。一目一目的争夺一直持续到最后。",
         "260": "白260（T6）提黑一子，右下边缘也成劫。黑在263（T5）提回。",
         "267": "267手终局，黑胜11目。没有冒大险，而是边攻击边自然扩大实地，是秀策式的胜法。这是他御城棋19连胜的第一局。"
+      } },
+    "shilin": { "t": "《事林广记》顺手炮局", "w": "红方（姓名未流传）", "b": "黑方（姓名未流传）", "ev": "日用百科《事林广记》“饶先顺手取胜局”", "d": "13世纪", "pl": "中国（宋元之际）", "lead": "这是宋末元初陈元靓编写的日用百科《事林广记》中收录的棋谱，被认为是现存最古老的象棋全局谱之一。这是一盘强者让对方先走的“饶先”示范局，短短9个回合，黑马就捉住了红车。",
+      c: {
+        "0": "这是七百多年前、宋元之际的棋谱。它收在百科全书《事林广记》讲游戏的部分，被认为是现存最古老的象棋全局记录之一。对局双方的名字没有流传下来。“饶先”是强者把先手让给弱者，所以这盘棋是在示范先走的红方怎样输掉。红方在下方，先走。",
+        "1": "红方把右边的炮移到中路。这叫“中炮（当头炮）”，正对着黑将，至今仍是最强的开局之一。可见七百年前人们就已经在下这种布局了。",
+        "2": "黑方也把炮移到中路，正面对峙。双方都动同一侧的炮，叫做“顺手炮”。炮对炮的较量，自古以来就很受欢迎。",
+        "3": "红方跳马保护中兵。中兵正被黑炮瞄着，需要有子保护。同时，这匹马也准备向前出动。",
+        "4": "黑方也跳马保护中卒。双方摆出相同的阵形，先把根基打牢。",
+        "5": "红方把右车横移一步，走到可以直冲的路线上。车是棋盘上最强的子，越早出动越好。",
+        "6": "黑方又跳出一匹马，暂时不出车。先把子力向前展开是一种思路，但车出得太晚，之后就不容易参加进攻。",
+        "7": "红车一下子过河，冲进黑方阵地。它想威胁黑子，可是红方其他子都还在家里，这样进攻有点急。也可以先出动左边的马或车。",
+        "8": "黑方挺起3路卒，给马让出道路，以后马就能向前跳。黑方几乎是在等红车过来。",
+        "9": "红车吃掉一个卒，同时瞄着后面的黑马。得了一子又捉马，看起来很痛快。可是这辆车冲得太远，身边没有帮手。孤车深入敌阵，很容易被追打。",
+        "10": "黑马向前跳出，既躲开红车，又靠近红方阵地，一步棋做了两件事。这匹马就是本局的主角。",
+        "11": "红车退一步，从侧面再捉黑马。车能远距离吃子，马一刻也不能停。不过这步棋同样没有让其他红子出动。",
+        "12": "黑马继续前进，过河进入红方阵地。每躲一次红车，它就离红帅更近一步。",
+        "13": "红方挺起一个兵，给自己的马让路。想法是接着出马，和黑马兑换。可是这就给了黑方继续前进的时间。",
+        "14": "黑方飞象，攻击红车。用防守的象赶走对方的车，非常经济。红车只好再走，黑方又赚了一步。",
+        "15": "红车横走，又吃掉一个卒。虽然多得了两个卒，但这正是输棋的一步。车离帅太远，再也回不来防守了。这里需要防备黑马，比如把车调回来。",
+        "16": "黑马跳得更深，捉住红车。不止如此：马再跳一步，就能将军红帅，同时捉住红方角上的车。一匹马同时造成了两个威胁。",
+        "17": "红车追捉黑马，可是马已经挡不住了。红帅身边已经没有任何保护。",
+        "18": "黑马跳入将军！这匹马同时还捉着红方角上的车，红帅一躲，车就会被吃掉。虽然只有9个回合，但这盘棋告诉我们：孤车冒进会有什么下场，子力要互相配合才能作战。七百年前的人们，也在同样的棋盘上思考着同样的事情。"
       } }
   },
   "zh-TW": {
@@ -1876,6 +1942,28 @@ window.MUSEUM_MATCH_T = {
         "239": "黑239（A6）提白一子，左邊邊緣形成劫。一目一目的爭奪一直持續到最後。",
         "260": "白260（T6）提黑一子，右下邊緣也成劫。黑在263（T5）提回。",
         "267": "267手終局，黑勝11目。沒有冒大險，而是邊攻擊邊自然擴大實地，是秀策式的勝法。這是他御城碁19連勝的第一局。"
+      } },
+    "shilin": { "t": "《事林廣記》順手炮局", "w": "紅方（姓名未流傳）", "b": "黑方（姓名未流傳）", "ev": "日用百科《事林廣記》「饒先順手取勝局」", "d": "13世紀", "pl": "中國（宋元之際）", "lead": "這是宋末元初陳元靚編寫的日用百科《事林廣記》中收錄的棋譜，被認為是現存最古老的象棋全局譜之一。這是一盤強者讓對方先走的「饒先」示範局，短短9個回合，黑馬就捉住了紅車。",
+      c: {
+        "0": "這是七百多年前、宋元之際的棋譜。它收在百科全書《事林廣記》講遊戲的部分，被認為是現存最古老的象棋全局紀錄之一。對局雙方的名字沒有流傳下來。「饒先」是強者把先手讓給弱者，所以這盤棋是在示範先走的紅方怎樣輸掉。紅方在下方，先走。",
+        "1": "紅方把右邊的炮移到中路。這叫「中炮（當頭炮）」，正對著黑將，至今仍是最強的開局之一。可見七百年前人們就已經在下這種佈局了。",
+        "2": "黑方也把炮移到中路，正面對峙。雙方都動同一側的炮，叫做「順手炮」。炮對炮的較量，自古以來就很受歡迎。",
+        "3": "紅方跳馬保護中兵。中兵正被黑炮瞄著，需要有子保護。同時，這匹馬也準備向前出動。",
+        "4": "黑方也跳馬保護中卒。雙方擺出相同的陣形，先把根基打牢。",
+        "5": "紅方把右車橫移一步，走到可以直衝的路線上。車是棋盤上最強的子，越早出動越好。",
+        "6": "黑方又跳出一匹馬，暫時不出車。先把子力向前展開是一種思路，但車出得太晚，之後就不容易參加進攻。",
+        "7": "紅車一下子過河，衝進黑方陣地。它想威脅黑子，可是紅方其他子都還在家裡，這樣進攻有點急。也可以先出動左邊的馬或車。",
+        "8": "黑方挺起3路卒，給馬讓出道路，以後馬就能向前跳。黑方幾乎是在等紅車過來。",
+        "9": "紅車吃掉一個卒，同時瞄著後面的黑馬。得了一子又捉馬，看起來很痛快。可是這輛車衝得太遠，身邊沒有幫手。孤車深入敵陣，很容易被追打。",
+        "10": "黑馬向前跳出，既躲開紅車，又靠近紅方陣地，一步棋做了兩件事。這匹馬就是本局的主角。",
+        "11": "紅車退一步，從側面再捉黑馬。車能遠距離吃子，馬一刻也不能停。不過這步棋同樣沒有讓其他紅子出動。",
+        "12": "黑馬繼續前進，過河進入紅方陣地。每躲一次紅車，它就離紅帥更近一步。",
+        "13": "紅方挺起一個兵，給自己的馬讓路。想法是接著出馬，和黑馬兌換。可是這就給了黑方繼續前進的時間。",
+        "14": "黑方飛象，攻擊紅車。用防守的象趕走對方的車，非常經濟。紅車只好再走，黑方又賺了一步。",
+        "15": "紅車橫走，又吃掉一個卒。雖然多得了兩個卒，但這正是輸棋的一步。車離帥太遠，再也回不來防守了。這裡需要防備黑馬，比如把車調回來。",
+        "16": "黑馬跳得更深，捉住紅車。不只如此：馬再跳一步，就能將軍紅帥，同時捉住紅方角上的車。一匹馬同時造成了兩個威脅。",
+        "17": "紅車追捉黑馬，可是馬已經擋不住了。紅帥身邊已經沒有任何保護。",
+        "18": "黑馬跳入將軍！這匹馬同時還捉著紅方角上的車，紅帥一躲，車就會被吃掉。雖然只有9個回合，但這盤棋告訴我們：孤車冒進會有什麼下場，子力要互相配合才能作戰。七百年前的人們，也在同樣的棋盤上思考著同樣的事情。"
       } }
   },
   "ko": {
@@ -2345,6 +2433,28 @@ window.MUSEUM_MATCH_T = {
         "239": "흑239(A6)로 백 한 점을 따내 왼쪽 끝에서 패가 생겼습니다. 한 집 한 집의 다툼이 끝까지 이어집니다.",
         "260": "백260(T6)으로 흑 한 점을 따내 우하 끝에서도 패. 흑은 263(T5)으로 되따냅니다.",
         "267": "267수로 종국, 흑 11집 승. 큰 모험 없이, 상대 돌을 공격하며 자연스럽게 집을 늘리는 슈사쿠다운 승리였습니다. 이것이 어성기 19연승의 첫 판입니다."
+      } },
+    "shilin": { "t": "《사림광기》 순수포 대국", "w": "홍（이름이 전해지지 않음）", "b": "흑（이름이 전해지지 않음）", "ev": "일용 백과 《사림광기》의 「요선 순수포 승리국」", "d": "13세기", "pl": "중국（송~원）", "lead": "송나라 말부터 원나라 초 무렵 진원정이 엮은 일용 백과 《사림광기》에 실린 기보로, 지금까지 남아 있는 샹치 전국 기보 가운데 가장 오래된 것 중 하나로 여겨집니다. 강한 쪽이 선수를 양보하는 「요선」의 본보기 대국으로, 단 9수 만에 흑의 마가 홍의 차를 붙잡습니다.",
+      c: {
+        "0": "지금으로부터 700년도 더 전, 송나라에서 원나라로 넘어가던 시대의 기보입니다. 백과사전 《사림광기》의 놀이 부분에 실려 있으며, 지금 남아 있는 샹치 전국 기록 가운데 가장 오래된 것 중 하나로 여겨집니다. 두 사람의 이름은 전해지지 않습니다. 「요선」은 강한 사람이 약한 사람에게 선수를 양보한다는 뜻이라, 이 대국은 먼저 둔 홍이 어떻게 지는지를 보여 주는 본보기입니다. 홍이 아래쪽이고 먼저 둡니다.",
+        "1": "홍은 오른쪽 포를 가운데 줄로 옮겼습니다. 「중포（당두포）」라고 하며, 흑의 장을 정면으로 노리는, 지금도 가장 강한 시작 가운데 하나입니다. 700년 전에도 이미 이 형태가 두어졌다는 것을 알 수 있습니다.",
+        "2": "흑도 포를 가운데로 옮겨 정면으로 마주 봅니다. 양쪽이 같은 쪽의 포를 움직이는 형태를 「순수포」라고 합니다. 포와 포가 맞서는 싸움은 옛날부터 인기가 많았습니다.",
+        "3": "홍은 마를 뛰어 가운데 병을 지켰습니다. 가운데 병은 흑의 포에게 노려지고 있어 지켜 줄 말이 필요합니다. 동시에 마가 앞으로 나갈 준비도 됩니다.",
+        "4": "흑도 마를 뛰어 가운데 졸을 지킵니다. 서로 같은 모양으로 먼저 발판을 다지고 있습니다.",
+        "5": "홍은 오른쪽 차를 옆으로 한 칸 옮겨 곧게 달릴 수 있는 줄로 내보냈습니다. 차는 판에서 가장 강한 말이라 일찍 움직이게 하고 싶은 것입니다.",
+        "6": "흑은 마 하나를 더 꺼냈습니다. 차는 나중으로 미루고 먼저 말들을 앞으로 내보내는 작전입니다. 하지만 차가 늦게 나오면 나중에 공격에 쓰기 어려워집니다.",
+        "7": "홍의 차가 단숨에 강을 건너 흑의 진영으로 들어갔습니다. 흑의 말들을 위협하려는 것이지만, 다른 말들이 아직 집에 있어서 조금 서두른 공격입니다. 왼쪽 마나 차를 먼저 꺼내는 수도 있었습니다.",
+        "8": "흑은 3번 줄의 졸을 한 칸 전진했습니다. 마가 다닐 길을 열어 나중에 앞으로 나갈 수 있게 하는 수입니다. 홍의 차가 오기를 오히려 기다리고 있습니다.",
+        "9": "홍의 차가 졸을 잡고, 그 뒤의 흑 마를 노립니다. 말 하나를 얻고 또 마를 위협하니 기분 좋은 수로 보입니다. 하지만 차 혼자 너무 앞으로 나와 주변에 도와줄 말이 없습니다. 혼자 적진에 들어간 차는 쫓기기 쉽습니다.",
+        "10": "흑의 마가 앞으로 뛰어나왔습니다. 홍의 차를 피하면서 홍 진영에 가까워지는, 한 수로 두 가지를 하는 수입니다. 이 마가 이 대국의 주인공이 됩니다.",
+        "11": "홍은 차를 한 칸 물려 옆에서 흑의 마를 노렸습니다. 차는 멀리서도 잡을 수 있어 마는 쉴 수가 없습니다. 하지만 이 수도 다른 말을 키우는 수는 아닙니다.",
+        "12": "흑의 마는 더 앞으로 나아가 강을 건너 홍 진영에 들어갔습니다. 홍의 차를 피할 때마다 점점 홍의 장에 가까워집니다.",
+        "13": "홍은 병을 하나 전진시켜 자기 마가 다닐 길을 열었습니다. 다음에 마를 꺼내 흑의 마와 바꾸려는 생각입니다. 하지만 그 사이에 흑은 더 앞으로 나갈 수 있습니다.",
+        "14": "흑은 상을 올려 홍의 차를 노렸습니다. 수비하는 말인 상으로 상대의 차를 쫓아내는, 군더더기 없는 수입니다. 홍은 차를 또 움직여야 하고, 흑은 한 수를 더 벌었습니다.",
+        "15": "홍의 차가 옆으로 움직여 또 졸을 잡았습니다. 말을 둘이나 얻었지만, 이것이 지는 원인이 되는 수입니다. 차가 장에게서 너무 멀어져 다시 지키러 돌아올 수 없게 되었습니다. 여기서는 차를 불러들이는 등 흑의 마에 대비하는 수가 필요했습니다.",
+        "16": "흑의 마가 더 깊이 들어가 홍의 차를 노렸습니다. 그것만이 아닙니다. 마가 한 번 더 뛰면 홍의 장에게 장군을 부르면서 동시에 구석의 차도 노릴 수 있습니다. 마 하나로 두 가지 노림을 한꺼번에 만들었습니다.",
+        "17": "홍은 차로 흑의 마를 쫓았습니다. 하지만 마는 이제 막을 수 없습니다. 차가 떠난 홍 장의 주변은 텅 비어 있습니다.",
+        "18": "흑의 마가 뛰어들어 장군! 게다가 이 마는 홍의 구석에 있는 차도 노리고 있습니다. 홍이 수를 피하면 다음에 차를 잃게 됩니다. 단 9수이지만, 혼자 너무 앞서 나간 차가 어떻게 되는지, 말들이 함께 싸우는 것이 얼마나 중요한지 알려 주는 대국입니다. 700년 전 사람들도 같은 판 위에서 같은 생각을 했던 것이지요."
       } }
   },
   "es": {
@@ -2814,6 +2924,28 @@ window.MUSEUM_MATCH_T = {
         "239": "Negro 239 (A6) captura una piedra y aparece un ko en el borde izquierdo. La lucha punto a punto sigue hasta el final.",
         "260": "Blanco 260 (T6) captura una piedra y forma otro ko en el borde inferior derecho. Negro recaptura en 263 (T5).",
         "267": "La partida termina en la jugada 267: Negro gana por 11 puntos. Sin aventuras: Shūsaku atacó y dejó crecer su territorio con naturalidad, una victoria muy suya. Fue la primera de sus 19 victorias seguidas en el castillo."
+      } },
+    "shilin": { "t": "La partida del Shilin Guangji", "w": "Rojas (nombre no conservado)", "b": "Negras (nombre no conservado)", "ev": "Enciclopedia cotidiana Shilin Guangji: «partida ganada cediendo la salida, con cañones del mismo lado»", "d": "Siglo XIII", "pl": "China (Song–Yuan)", "lead": "Este registro procede del Shilin Guangji, una enciclopedia de la vida diaria reunida por Chen Yuanjing entre el final de la dinastía Song y el comienzo de la Yuan. Se considera uno de los registros completos de xiangqi más antiguos que se conservan. Es una partida modelo en la que el bando más fuerte cede la salida, y en solo nueve jugadas el caballo negro atrapa al carro rojo.",
+      c: {
+        "0": "Este registro tiene más de 700 años, de la época entre las dinastías Song y Yuan. Aparece en el capítulo de juegos de la enciclopedia Shilin Guangji y se considera una de las partidas completas de xiangqi más antiguas que conservamos. No se conocen los nombres de los jugadores. El título dice que el jugador fuerte «cedió la salida» al más débil, así que es una lección que muestra cómo pierde Rojas, que juega primero. Rojas está abajo y empieza.",
+        "1": "Rojas lleva el cañón derecho a la columna central. Es el Cañón Central, que apunta directo al general negro, y sigue siendo una de las aperturas más fuertes. Vemos que ya se jugaba hace 700 años.",
+        "2": "Negras también lleva un cañón al centro, y los dos cañones quedan frente a frente. Cuando ambos mueven el cañón del mismo lado se llama «cañones en la misma dirección». El duelo de cañones es popular desde hace siglos.",
+        "3": "Rojas saca un caballo para proteger al soldado central. Ese soldado está atacado por el cañón negro y necesita un defensor. Además, el caballo se prepara para avanzar.",
+        "4": "Negras hace lo mismo y protege su soldado central con un caballo. Los dos bandos primero construyen una base firme.",
+        "5": "Rojas mueve el carro derecho un paso de lado, a una columna abierta. El carro es la pieza más fuerte del tablero, así que conviene ponerlo a trabajar pronto.",
+        "6": "Negras saca el otro caballo y deja los carros en casa por ahora. La idea es adelantar piezas primero. Pero un carro que sale tarde puede costar usarlo en el ataque después.",
+        "7": "El carro rojo cruza el río de golpe y entra en el campo negro. Quiere amenazar piezas negras, pero las demás piezas rojas siguen en casa, así que el ataque es algo apresurado. También podía sacar antes el caballo o el carro izquierdos.",
+        "8": "Negras avanza un paso el soldado de la columna 3. Así abre camino al caballo para que pueda saltar adelante más tarde. Casi invita al carro rojo a venir.",
+        "9": "El carro rojo captura un soldado y ahora apunta al caballo negro que está detrás. Ganar una pieza y amenazar otra parece estupendo. Pero el carro se ha adelantado mucho y no tiene amigos cerca. Un carro solo en campo enemigo es fácil de perseguir.",
+        "10": "El caballo negro salta adelante. Escapa del carro y a la vez se acerca al campo rojo: dos tareas con una jugada. Este caballo será el protagonista de la partida.",
+        "11": "Rojas retira el carro un paso para atacar al caballo desde el lado. El carro captura desde lejos, así que el caballo no puede descansar. Aun así, esta jugada no ayuda a desarrollar otras piezas rojas.",
+        "12": "El caballo negro sigue avanzando y cruza el río hacia el campo rojo. Cada vez que huye del carro, queda más cerca del general rojo.",
+        "13": "Rojas avanza un soldado para abrir paso a su propio caballo. La idea es sacarlo y cambiarlo por el caballo negro. Pero eso da tiempo a Negras para ir aún más lejos.",
+        "14": "Negras sube un elefante y ataca al carro rojo. Usar una pieza defensiva para echar al carro enemigo es muy eficaz. Rojas debe mover otra vez el carro, y Negras gana otro tiempo.",
+        "15": "El carro rojo se desliza de lado y captura otro soldado. Rojas tiene ya dos soldados de ventaja, pero esta es la jugada que pierde. El carro queda muy lejos de su general y no puede volver a defender. Rojas necesitaba protegerse del caballo, por ejemplo trayendo el carro a casa.",
+        "16": "El caballo negro se mete más a fondo y ataca al carro rojo. Y hay más: si salta otra vez, dará jaque al general rojo y al mismo tiempo atacará al carro de la esquina roja. Un solo caballo ha creado dos amenazas a la vez.",
+        "17": "Rojas persigue al caballo con el carro. Pero ya no se puede detener. Alrededor del general rojo no queda nadie para ayudar.",
+        "18": "¡El caballo salta con jaque! También ataca al carro de la esquina roja, así que cuando el general se aparte, el carro se perderá. Solo nueve jugadas, pero la partida enseña qué le pasa a un carro que avanza solo y por qué las piezas deben luchar juntas. Hace 700 años los jugadores pensaban en lo mismo sobre el mismo tablero."
       } }
   },
   "fr": {
@@ -3283,6 +3415,28 @@ window.MUSEUM_MATCH_T = {
         "239": "Noir 239 (A6) prend une pierre et un ko apparaît au bord gauche. La lutte point par point continue jusqu’au bout.",
         "260": "Blanc 260 (T6) prend une pierre et crée un autre ko au bord en bas à droite. Noir reprend en 263 (T5).",
         "267": "La partie s’achève au coup 267 : Noir gagne de 11 points. Pas d’aventure : Shūsaku a attaqué et laissé son territoire grandir naturellement, une victoire bien à son image. C’était la première de ses 19 victoires d’affilée au château."
+      } },
+    "shilin": { "t": "La partie du Shilin Guangji", "w": "Rouges (nom non conservé)", "b": "Noirs (nom non conservé)", "ev": "Encyclopédie de la vie quotidienne Shilin Guangji : « partie gagnée en cédant le trait, canons du même côté »", "d": "XIIIe siècle", "pl": "Chine (Song–Yuan)", "lead": "Ce relevé vient du Shilin Guangji, une encyclopédie de la vie quotidienne réunie par Chen Yuanjing entre la fin de la dynastie Song et le début des Yuan. On le considère comme l’un des plus anciens relevés complets de xiangqi conservés. C’est une partie modèle où le joueur le plus fort laisse l’autre commencer, et en neuf coups seulement le cheval noir piège le char rouge.",
+      c: {
+        "0": "Ce relevé a plus de 700 ans ; il date de l’époque entre les Song et les Yuan. Il figure dans le chapitre des jeux de l’encyclopédie Shilin Guangji, et on le considère comme l’une des plus anciennes parties complètes de xiangqi encore connues. Le nom des joueurs n’a pas été conservé. Le titre dit que le plus fort a « cédé le trait » au plus faible : c’est donc une leçon qui montre comment Rouge, qui commence, finit par perdre. Rouge est en bas et joue en premier.",
+        "1": "Rouge place le canon de droite sur la colonne centrale. C’est le Canon central, braqué sur le général noir, et c’est encore aujourd’hui l’une des ouvertures les plus fortes. On voit qu’on la jouait déjà il y a 700 ans.",
+        "2": "Noir répond aussi par un canon au centre : les deux canons se font face. Quand les deux camps jouent le canon du même côté, on parle de « canons dans le même sens ». Le duel de canons plaît depuis des siècles.",
+        "3": "Rouge sort un cheval pour protéger le soldat central. Ce soldat est visé par le canon noir et a besoin d’un défenseur. Le cheval se prépare aussi à avancer.",
+        "4": "Noir fait de même et protège son soldat central avec un cheval. Les deux camps bâtissent d’abord une base solide.",
+        "5": "Rouge déplace le char de droite d’un pas sur le côté, vers une colonne ouverte. Le char est la pièce la plus forte, il vaut mieux le faire travailler tôt.",
+        "6": "Noir sort l’autre cheval et laisse les chars à la maison pour l’instant. L’idée est d’avancer d’abord les pièces. Mais un char sorti tard est parfois difficile à utiliser ensuite dans l’attaque.",
+        "7": "Le char rouge traverse d’un coup la rivière et entre dans le camp noir. Il veut menacer des pièces noires, mais les autres pièces rouges sont encore chez elles : l’attaque est un peu précipitée. Sortir d’abord le cheval ou le char de gauche était aussi possible.",
+        "8": "Noir avance d’un pas le soldat de la colonne 3. Il ouvre ainsi un chemin au cheval, qui pourra sauter en avant plus tard. Noir invite presque le char rouge à venir.",
+        "9": "Le char rouge prend un soldat et vise maintenant le cheval noir derrière. Gagner une pièce et en menacer une autre semble excellent. Mais le char est parti très loin, sans aucun ami autour. Un char seul dans le camp adverse se fait facilement chasser.",
+        "10": "Le cheval noir saute en avant. Il fuit le char et se rapproche du camp rouge en même temps : deux tâches en un coup. Ce cheval sera la vedette de la partie.",
+        "11": "Rouge recule le char d’un pas pour attaquer le cheval par le côté. Le char prend de loin, le cheval ne peut pas se reposer. Mais ce coup n’aide toujours pas à développer les autres pièces rouges.",
+        "12": "Le cheval noir avance encore et traverse la rivière dans le camp rouge. Chaque fois qu’il fuit le char, il se rapproche du général rouge.",
+        "13": "Rouge avance un soldat pour ouvrir le chemin de son propre cheval. L’idée est de le sortir pour l’échanger contre le cheval noir. Mais cela laisse à Noir le temps d’aller encore plus loin.",
+        "14": "Noir lève un éléphant et attaque le char rouge. Chasser le char adverse avec une pièce de défense, c’est très efficace. Rouge doit encore bouger son char, et Noir gagne un temps de plus.",
+        "15": "Le char rouge glisse de côté et prend un autre soldat. Rouge a deux soldats de plus, mais c’est le coup perdant. Le char est maintenant loin de son général et ne peut plus revenir défendre. Il fallait parer le cheval, par exemple en ramenant le char.",
+        "16": "Le cheval noir s’enfonce et attaque le char rouge. Et ce n’est pas tout : s’il saute encore une fois, il fera échec au général rouge tout en attaquant le char du coin rouge. Un seul cheval a créé deux menaces à la fois.",
+        "17": "Rouge poursuit le cheval avec son char. Mais on ne peut plus l’arrêter. Autour du général rouge, il n’y a plus personne pour aider.",
+        "18": "Le cheval bondit avec échec ! Il attaque aussi le char du coin rouge : quand le général s’écarte, le char est perdu. Neuf coups seulement, mais la partie montre ce qui arrive à un char qui part seul en avant, et pourquoi les pièces doivent se battre ensemble. Il y a 700 ans, les joueurs réfléchissaient déjà aux mêmes choses sur le même plateau."
       } }
   },
   "pt": {
@@ -3752,6 +3906,28 @@ window.MUSEUM_MATCH_T = {
         "239": "Preto 239 (A6) captura uma pedra e surge um ko na borda esquerda. A luta ponto a ponto segue até o fim.",
         "260": "Branco 260 (T6) captura uma pedra e forma outro ko na borda inferior direita. Preto recaptura em 263 (T5).",
         "267": "A partida termina no lance 267: Preto vence por 11 pontos. Sem aventuras: Shūsaku atacou e deixou seu território crescer naturalmente, uma vitória bem dele. Foi a primeira de suas 19 vitórias seguidas no castelo."
+      } },
+    "shilin": { "t": "A partida do Shilin Guangji", "w": "Vermelhas (nome não registrado)", "b": "Pretas (nome não registrado)", "ev": "Enciclopédia do dia a dia Shilin Guangji: «partida vencida cedendo a saída, com canhões do mesmo lado»", "d": "Século XIII", "pl": "China (Song–Yuan)", "lead": "Este registro vem do Shilin Guangji, uma enciclopédia do dia a dia reunida por Chen Yuanjing entre o fim da dinastia Song e o início da Yuan. É considerado um dos registros completos de xiangqi mais antigos que existem. É uma partida-modelo em que o lado mais forte deixa o outro começar, e em apenas nove lances o cavalo preto prende a carruagem vermelha.",
+      c: {
+        "0": "Este registro tem mais de 700 anos, da época entre as dinastias Song e Yuan. Ele está no capítulo de jogos da enciclopédia Shilin Guangji e é considerado uma das partidas completas de xiangqi mais antigas que ainda temos. Os nomes dos jogadores não foram registrados. O título diz que o jogador forte «cedeu a saída» ao mais fraco, então é uma lição que mostra como as Vermelhas, que jogam primeiro, perdem. As Vermelhas estão embaixo e começam.",
+        "1": "As Vermelhas levam o canhão direito para a coluna central. É o Canhão Central, mirando direto o general preto, e ainda hoje uma das aberturas mais fortes. Vemos que ela já era jogada há 700 anos.",
+        "2": "As Pretas também levam um canhão ao centro, e os dois canhões ficam frente a frente. Quando os dois lados movem o canhão do mesmo lado, chama-se «canhões na mesma direção». O duelo de canhões é popular há séculos.",
+        "3": "As Vermelhas tiram um cavalo para proteger o soldado central. Esse soldado está atacado pelo canhão preto e precisa de defesa. O cavalo também se prepara para avançar.",
+        "4": "As Pretas fazem o mesmo e protegem o soldado central com um cavalo. Os dois lados primeiro constroem uma base firme.",
+        "5": "As Vermelhas movem a carruagem direita um passo para o lado, para uma coluna aberta. A carruagem é a peça mais forte do tabuleiro, então é bom colocá-la para trabalhar cedo.",
+        "6": "As Pretas tiram o outro cavalo e deixam as carruagens em casa por enquanto. A ideia é avançar as peças primeiro. Mas uma carruagem que sai tarde pode ser difícil de usar no ataque depois.",
+        "7": "A carruagem vermelha cruza o rio de uma vez e entra no campo preto. Quer ameaçar peças pretas, mas as outras peças vermelhas ainda estão em casa, então o ataque é um pouco apressado. Também era possível tirar antes o cavalo ou a carruagem da esquerda.",
+        "8": "As Pretas avançam um passo o soldado da coluna 3. Isso abre caminho para o cavalo saltar à frente mais tarde. As Pretas quase convidam a carruagem vermelha a vir.",
+        "9": "A carruagem vermelha captura um soldado e agora mira o cavalo preto atrás dele. Ganhar uma peça e ameaçar outra parece ótimo. Mas a carruagem avançou demais e não tem amigos por perto. Uma carruagem sozinha no campo inimigo é fácil de perseguir.",
+        "10": "O cavalo preto salta à frente. Foge da carruagem e ao mesmo tempo se aproxima do campo vermelho: duas tarefas num lance. Este cavalo será o protagonista da partida.",
+        "11": "As Vermelhas recuam a carruagem um passo para atacar o cavalo pelo lado. A carruagem captura de longe, então o cavalo não pode descansar. Ainda assim, esse lance não ajuda a desenvolver outras peças vermelhas.",
+        "12": "O cavalo preto avança mais e cruza o rio para o campo vermelho. Cada vez que foge da carruagem, chega mais perto do general vermelho.",
+        "13": "As Vermelhas avançam um soldado para abrir caminho ao próprio cavalo. A ideia é tirá-lo e trocá-lo pelo cavalo preto. Mas isso dá tempo às Pretas para ir ainda mais longe.",
+        "14": "As Pretas sobem um elefante e atacam a carruagem vermelha. Usar uma peça de defesa para expulsar a carruagem inimiga é muito eficiente. As Vermelhas precisam mover a carruagem de novo, e as Pretas ganham mais um tempo.",
+        "15": "A carruagem vermelha desliza de lado e captura outro soldado. As Vermelhas têm dois soldados a mais, mas este é o lance que perde. A carruagem fica longe do seu general e não consegue voltar para defender. Era preciso se proteger do cavalo, por exemplo trazendo a carruagem de volta.",
+        "16": "O cavalo preto entra mais fundo e ataca a carruagem vermelha. E tem mais: se saltar outra vez, dará xeque ao general vermelho e ao mesmo tempo atacará a carruagem do canto vermelho. Um só cavalo criou duas ameaças de uma vez.",
+        "17": "As Vermelhas perseguem o cavalo com a carruagem. Mas ele já não pode ser parado. Ao redor do general vermelho não sobrou ninguém para ajudar.",
+        "18": "O cavalo salta com xeque! Ele também ataca a carruagem do canto vermelho, então quando o general sair, a carruagem será perdida. Só nove lances, mas a partida ensina o que acontece com uma carruagem que avança sozinha e por que as peças devem lutar juntas. Há 700 anos os jogadores já pensavam nas mesmas coisas, no mesmo tabuleiro."
       } }
   },
   "de": {
@@ -4221,6 +4397,28 @@ window.MUSEUM_MATCH_T = {
         "239": "Schwarz 239 (A6) schlägt einen Stein, und am linken Rand entsteht ein Ko. Der Kampf um einzelne Punkte geht bis zum Schluss.",
         "260": "Weiß 260 (T6) schlägt einen Stein, und am Rand unten rechts entsteht ein weiteres Ko. Schwarz schlägt mit 263 (T5) zurück.",
         "267": "Nach 267 Zügen ist Schluss: Schwarz gewinnt mit 11 Punkten. Keine Abenteuer – Shūsaku griff an und ließ sein Gebiet ganz natürlich wachsen, ein typischer Shūsaku-Sieg. Es war der erste seiner 19 Siege in Folge bei den Schlosspartien."
+      } },
+    "shilin": { "t": "Die Partie aus dem Shilin Guangji", "w": "Rot (Name nicht überliefert)", "b": "Schwarz (Name nicht überliefert)", "ev": "Alltagsenzyklopädie Shilin Guangji: „Sieg nach Überlassen des ersten Zugs, Kanonen auf derselben Seite“", "d": "13. Jahrhundert", "pl": "China (Song–Yuan)", "lead": "Diese Aufzeichnung stammt aus dem Shilin Guangji, einer Alltagsenzyklopädie, die Chen Yuanjing am Ende der Song- und zu Beginn der Yuan-Zeit zusammenstellte. Sie gilt als eine der ältesten erhaltenen vollständigen Xiangqi-Partien. Es ist eine Musterpartie, in der die stärkere Seite der anderen den ersten Zug überlässt – und in nur neun Zügen fängt das schwarze Pferd den roten Wagen.",
+      c: {
+        "0": "Diese Aufzeichnung ist über 700 Jahre alt und stammt aus der Zeit zwischen Song- und Yuan-Dynastie. Sie steht im Spiele-Kapitel der Enzyklopädie Shilin Guangji und gilt als eine der ältesten vollständigen Xiangqi-Partien, die wir noch haben. Die Namen der Spieler sind nicht überliefert. Der Titel sagt, dass der Stärkere dem Schwächeren „den ersten Zug überließ“ – es ist also eine Lehrpartie, die zeigt, wie Rot, das beginnt, verliert. Rot steht unten und zieht zuerst.",
+        "1": "Rot stellt die rechte Kanone auf die Mittellinie. Das ist die Mittelkanone, die direkt auf den schwarzen General zielt – bis heute eine der stärksten Eröffnungen. Man sieht: Schon vor 700 Jahren wurde sie gespielt.",
+        "2": "Schwarz antwortet ebenfalls mit einer Kanone in die Mitte, die beiden Kanonen stehen sich gegenüber. Ziehen beide die Kanone auf derselben Seite, heißt das „gleichgerichtete Kanonen“. Das Kanonenduell ist seit Jahrhunderten beliebt.",
+        "3": "Rot zieht ein Pferd heraus, um den mittleren Soldaten zu decken. Dieser Soldat wird von der schwarzen Kanone bedroht und braucht einen Beschützer. Zugleich macht sich das Pferd bereit, nach vorn zu kommen.",
+        "4": "Schwarz macht dasselbe und deckt den mittleren Soldaten mit einem Pferd. Beide Seiten bauen zuerst eine feste Grundlage.",
+        "5": "Rot zieht den rechten Wagen einen Schritt zur Seite auf eine offene Linie. Der Wagen ist die stärkste Figur – er soll früh arbeiten.",
+        "6": "Schwarz bringt das zweite Pferd heraus und lässt die Wagen vorerst zu Hause. Der Plan: erst Figuren nach vorn bringen. Aber ein Wagen, der spät herauskommt, lässt sich später schwer im Angriff einsetzen.",
+        "7": "Der rote Wagen stürmt über den Fluss ins schwarze Lager. Er will schwarze Figuren bedrohen, doch die anderen roten Figuren stehen noch zu Hause – der Angriff ist etwas überhastet. Erst das linke Pferd oder den linken Wagen zu entwickeln, wäre auch möglich gewesen.",
+        "8": "Schwarz rückt den Soldaten auf Linie 3 einen Schritt vor. So öffnet es dem Pferd einen Weg, um später nach vorn zu springen. Schwarz lädt den roten Wagen fast ein zu kommen.",
+        "9": "Der rote Wagen schlägt einen Soldaten und zielt nun auf das schwarze Pferd dahinter. Eine Figur gewinnen und die nächste bedrohen – das sieht toll aus. Aber der Wagen ist weit vorgeprescht und hat keine Freunde in der Nähe. Ein Wagen allein im feindlichen Lager lässt sich leicht jagen.",
+        "10": "Das schwarze Pferd springt nach vorn. Es flieht vor dem Wagen und nähert sich zugleich dem roten Lager – zwei Aufgaben mit einem Zug. Dieses Pferd wird der Star der Partie.",
+        "11": "Rot zieht den Wagen einen Schritt zurück, um das Pferd von der Seite anzugreifen. Der Wagen schlägt auch aus der Ferne, also kann das Pferd nicht ausruhen. Trotzdem entwickelt dieser Zug keine andere rote Figur.",
+        "12": "Das schwarze Pferd zieht weiter vor und überquert den Fluss ins rote Lager. Jedes Mal, wenn es vor dem Wagen flieht, kommt es dem roten General näher.",
+        "13": "Rot rückt einen Soldaten vor, um dem eigenen Pferd den Weg zu öffnen. Die Idee: das Pferd herausbringen und gegen das schwarze tauschen. Doch das gibt Schwarz Zeit, noch weiter vorzudringen.",
+        "14": "Schwarz hebt einen Elefanten und greift den roten Wagen an. Mit einer Verteidigungsfigur den feindlichen Wagen zu vertreiben, ist sehr sparsam. Rot muss den Wagen wieder ziehen, und Schwarz gewinnt noch ein Tempo.",
+        "15": "Der rote Wagen gleitet zur Seite und schlägt einen weiteren Soldaten. Rot hat nun zwei Soldaten mehr – doch das ist der Verlustzug. Der Wagen ist weit weg von seinem General und kann nicht mehr zur Verteidigung zurück. Rot hätte sich gegen das Pferd schützen müssen, etwa indem es den Wagen heimholt.",
+        "16": "Das schwarze Pferd dringt tiefer ein und greift den roten Wagen an. Und mehr noch: Springt es noch einmal, gibt es dem roten General Schach und greift zugleich den Wagen in Rots Ecke an. Ein einziges Pferd hat zwei Drohungen auf einmal geschaffen.",
+        "17": "Rot jagt das Pferd mit dem Wagen. Doch es lässt sich nicht mehr aufhalten. Um den roten General herum ist niemand mehr, der helfen kann.",
+        "18": "Das Pferd springt hinein – Schach! Es greift auch den Wagen in Rots Ecke an; weicht der General aus, geht der Wagen verloren. Nur neun Züge, doch die Partie zeigt, was mit einem Wagen passiert, der allein vorstürmt, und warum Figuren zusammen kämpfen müssen. Schon vor 700 Jahren dachten Spieler auf demselben Brett über dieselben Dinge nach."
       } }
   },
   "ru": {
@@ -4690,6 +4888,28 @@ window.MUSEUM_MATCH_T = {
         "239": "Чёрные 239 (A6) снимают камень, и у левого края возникает ко. Борьба за каждое очко идёт до самого конца.",
         "260": "Белые 260 (T6) снимают камень, и у правого нижнего края возникает ещё одно ко. Чёрные забирают обратно ходом 263 (T5).",
         "267": "Партия заканчивается на 267-м ходу: чёрные выигрывают 11 очков. Без авантюр — Сюсаку атаковал и естественно наращивал территорию, победа в его духе. Это первая из 19 подряд побед в замковых партиях."
+      } },
+    "shilin": { "t": "Партия из «Шилинь гуанцзи»", "w": "Красные (имя не сохранилось)", "b": "Чёрные (имя не сохранилось)", "ev": "Бытовая энциклопедия «Шилинь гуанцзи»: «победа после уступленного первого хода, пушки с одной стороны»", "d": "XIII век", "pl": "Китай (Сун — Юань)", "lead": "Эта запись взята из «Шилинь гуанцзи» — бытовой энциклопедии, которую Чэнь Юаньцзин составил на рубеже династий Сун и Юань. Её считают одной из самых старых сохранившихся полных партий в сянци. Это образцовая партия, где сильный игрок уступает слабому первый ход, — и всего за девять ходов чёрный конь ловит красную колесницу.",
+      c: {
+        "0": "Этой записи больше 700 лет: она из эпохи между династиями Сун и Юань. Она помещена в главе об играх энциклопедии «Шилинь гуанцзи» и считается одной из самых старых полных партий в сянци, дошедших до нас. Имена игроков не сохранились. В названии сказано, что сильный «уступил первый ход» слабому, так что это урок: он показывает, как проигрывают красные, которые ходят первыми. Красные внизу и начинают.",
+        "1": "Красные ставят правую пушку на центральную вертикаль. Это «центральная пушка», нацеленная прямо на чёрного генерала, — и сегодня одно из самых сильных начал. Видно, что так играли уже 700 лет назад.",
+        "2": "Чёрные тоже ставят пушку в центр, и две пушки смотрят друг на друга. Когда обе стороны двигают пушку с одной и той же стороны, это называют «пушки в одну сторону». Дуэль пушек любят уже много веков.",
+        "3": "Красные выводят коня, чтобы защитить центрального солдата. Этого солдата атакует чёрная пушка, ему нужен защитник. Заодно конь готовится выйти вперёд.",
+        "4": "Чёрные делают то же самое и защищают центрального солдата конём. Обе стороны сначала строят прочную опору.",
+        "5": "Красные сдвигают правую колесницу на шаг вбок, на открытую вертикаль. Колесница — самая сильная фигура, её полезно рано пустить в дело.",
+        "6": "Чёрные выводят второго коня, а колесницы пока оставляют дома. План — сначала продвинуть фигуры. Но колесницу, которая вышла поздно, потом бывает трудно включить в атаку.",
+        "7": "Красная колесница сразу перебегает реку и врывается в лагерь чёрных. Она хочет угрожать чёрным фигурам, но остальные красные фигуры ещё дома, так что атака немного поспешная. Можно было сначала вывести левого коня или левую колесницу.",
+        "8": "Чёрные продвигают солдата на 3-й вертикали на шаг. Так они открывают коню дорогу, чтобы позже прыгнуть вперёд. Чёрные почти приглашают красную колесницу прийти.",
+        "9": "Красная колесница берёт солдата и теперь целится в чёрного коня за ним. Выиграть фигуру и угрожать другой — выглядит отлично. Но колесница забежала далеко, и рядом нет друзей. Одинокую колесницу в чужом лагере легко гонять.",
+        "10": "Чёрный конь прыгает вперёд. Он уходит от колесницы и одновременно приближается к лагерю красных — две задачи одним ходом. Этот конь станет героем партии.",
+        "11": "Красные отводят колесницу на шаг, чтобы напасть на коня сбоку. Колесница бьёт издалека, так что коню некогда отдыхать. Но и этот ход не помогает развить другие красные фигуры.",
+        "12": "Чёрный конь идёт дальше и переходит реку в лагерь красных. Каждый раз, убегая от колесницы, он оказывается ближе к красному генералу.",
+        "13": "Красные продвигают солдата, чтобы открыть дорогу своему коню. Идея — вывести его и разменять на чёрного коня. Но это даёт чёрным время пройти ещё дальше.",
+        "14": "Чёрные поднимают слона и нападают на красную колесницу. Прогнать вражескую колесницу защитной фигурой — очень экономно. Красным снова приходится двигать колесницу, а чёрные выигрывают ещё темп.",
+        "15": "Красная колесница скользит вбок и берёт ещё одного солдата. У красных уже на два солдата больше, но именно этот ход проигрывает. Колесница теперь далеко от своего генерала и не может вернуться на защиту. Нужно было защититься от коня, например вернуть колесницу домой.",
+        "16": "Чёрный конь проникает глубже и нападает на красную колесницу. И это не всё: если он прыгнет ещё раз, то объявит шах красному генералу и одновременно нападёт на колесницу в углу. Один конь создал сразу две угрозы.",
+        "17": "Красные гонятся за конём колесницей. Но его уже не остановить. Вокруг красного генерала не осталось никого, кто мог бы помочь.",
+        "18": "Конь прыгает с шахом! Он же нападает на колесницу в углу красных, так что когда генерал отойдёт, колесница пропадёт. Всего девять ходов, но партия учит, что бывает с колесницей, убежавшей вперёд в одиночку, и почему фигуры должны сражаться вместе. 700 лет назад игроки думали о том же самом на той же доске."
       } }
   },
   "tr": {
@@ -5159,6 +5379,28 @@ window.MUSEUM_MATCH_T = {
         "239": "Siyah 239 (A6) bir taş alıyor ve sol kenarda bir ko çıkıyor. Puan puan mücadele sonuna kadar sürüyor.",
         "260": "Beyaz 260 (T6) bir taş alıyor ve sağ alt kenarda bir ko daha oluşuyor. Siyah 263 (T5) ile geri alıyor.",
         "267": "Oyun 267 hamlede bitiyor: Siyah 11 puanla kazanıyor. Macera yok; Shūsaku saldırarak bölgesini doğal biçimde büyüttü, tam ona yakışan bir zafer. Şato oyunlarındaki 19 ardışık galibiyetinin ilkiydi."
+      } },
+    "shilin": { "t": "Shilin Guangji oyunu", "w": "Kırmızı (adı bilinmiyor)", "b": "Siyah (adı bilinmiyor)", "ev": "Gündelik ansiklopedi Shilin Guangji: “ilk hamleyi verip aynı taraf toplarla kazanılan oyun”", "d": "13. yüzyıl", "pl": "Çin (Song–Yuan)", "lead": "Bu kayıt, Chen Yuanjing’in Song hanedanının sonu ile Yuan’ın başı arasında derlediği gündelik ansiklopedi Shilin Guangji’den gelir. Günümüze kalan en eski tam xiangqi oyunlarından biri olduğu söylenir. Güçlü tarafın ilk hamleyi diğerine bıraktığı örnek bir oyundur ve yalnızca dokuz hamlede siyah at kırmızı arabayı yakalar.",
+      c: {
+        "0": "Bu kayıt 700 yıldan eski; Song ile Yuan hanedanları arasındaki döneme ait. Shilin Guangji ansiklopedisinin oyunlar bölümünde yer alır ve elimizdeki en eski tam xiangqi oyunlarından biri olduğu söylenir. Oyuncuların adları bilinmiyor. Başlık, güçlü oyuncunun ilk hamleyi zayıf olana “verdiğini” söyler; yani bu, önce oynayan Kırmızı’nın nasıl kaybettiğini gösteren bir derstir. Kırmızı altta ve ilk o oynar.",
+        "1": "Kırmızı sağdaki topu orta hatta getirir. Buna Orta Top denir; doğrudan siyah generale nişan alır ve bugün de en güçlü açılışlardan biridir. 700 yıl önce de oynandığını görüyoruz.",
+        "2": "Siyah da bir topu ortaya getirir ve iki top karşı karşıya gelir. İki taraf da aynı taraftaki topu oynarsa buna “aynı yönde toplar” denir. Top topa düello yüzyıllardır sevilir.",
+        "3": "Kırmızı ortadaki askeri korumak için bir at çıkarır. Bu asker siyah topun hedefinde ve bir koruyucuya ihtiyacı var. At aynı zamanda ileri çıkmaya da hazırlanıyor.",
+        "4": "Siyah da aynısını yapar ve orta askerini atla korur. İki taraf da önce sağlam bir zemin kuruyor.",
+        "5": "Kırmızı sağ arabayı bir adım yana, açık bir hatta kaydırır. Araba tahtadaki en güçlü taştır, erken çalıştırmak iyidir.",
+        "6": "Siyah diğer atı da çıkarır ve arabaları şimdilik evde bırakır. Plan önce taşları ileri getirmek. Ama geç çıkan bir arabayı sonra saldırıda kullanmak zor olabilir.",
+        "7": "Kırmızı araba bir anda nehri geçip siyahın kampına girer. Siyah taşları tehdit etmek istiyor ama diğer kırmızı taşlar hâlâ evde; bu saldırı biraz aceleci. Önce soldaki atı ya da arabayı çıkarmak da mümkündü.",
+        "8": "Siyah 3. hattaki askeri bir adım ilerletir. Böylece ata yol açar, at sonra ileri sıçrayabilir. Siyah neredeyse kırmızı arabayı gelmeye davet ediyor.",
+        "9": "Kırmızı araba bir askeri alır ve şimdi arkasındaki siyah atı hedefler. Bir taş kazanıp bir başkasını tehdit etmek harika görünür. Ama araba çok ileri gitmiş, yanında hiç arkadaşı yok. Düşman kampında yalnız kalan bir araba kolayca kovalanır.",
+        "10": "Siyah at ileri sıçrar. Hem arabadan kaçar hem de kırmızının kampına yaklaşır: tek hamlede iki iş. Bu at oyunun yıldızı olacak.",
+        "11": "Kırmızı arabayı bir adım geri çeker ve atı yandan tehdit eder. Araba uzaktan da alabildiği için at dinlenemez. Yine de bu hamle diğer kırmızı taşları geliştirmiyor.",
+        "12": "Siyah at daha da ilerler ve nehri geçip kırmızının kampına girer. Arabadan her kaçışında kırmızı generale biraz daha yaklaşır.",
+        "13": "Kırmızı kendi atına yol açmak için bir askeri ilerletir. Fikir, atı çıkarıp siyah atla değiştirmek. Ama bu, Siyah’a daha da ilerlemek için zaman verir.",
+        "14": "Siyah bir fili kaldırır ve kırmızı arabaya saldırır. Bir savunma taşıyla düşman arabasını kovalamak çok verimlidir. Kırmızı arabayı yine oynamak zorunda ve Siyah bir tempo daha kazanır.",
+        "15": "Kırmızı araba yana kayar ve bir asker daha alır. Kırmızı artık iki asker önde ama kaybettiren hamle bu. Araba generalinden çok uzakta ve savunmaya geri dönemez. Kırmızı’nın atına karşı önlem alması, örneğin arabayı eve getirmesi gerekiyordu.",
+        "16": "Siyah at daha derine girer ve kırmızı arabaya saldırır. Dahası var: bir kez daha sıçrarsa kırmızı generale şah çekecek ve aynı anda köşedeki arabaya saldıracak. Tek bir at aynı anda iki tehdit yarattı.",
+        "17": "Kırmızı atı arabayla kovalar. Ama artık durdurulamaz. Kırmızı generalin çevresinde yardım edecek kimse kalmadı.",
+        "18": "At şahla içeri sıçrar! Köşedeki kırmızı arabaya da saldırır; general kaçınca araba kaybedilir. Yalnızca dokuz hamle, ama oyun tek başına öne fırlayan bir arabaya ne olduğunu ve taşların neden birlikte savaşması gerektiğini öğretir. 700 yıl önceki oyuncular da aynı tahtada aynı şeyleri düşünüyordu."
       } }
   },
   "id": {
@@ -5628,6 +5870,28 @@ window.MUSEUM_MATCH_T = {
         "239": "Hitam 239 (A6) memakan satu batu dan ko muncul di tepi kiri. Perebutan poin demi poin berlanjut sampai akhir.",
         "260": "Putih 260 (T6) memakan satu batu dan membuat ko lagi di tepi kanan bawah. Hitam membalas di 263 (T5).",
         "267": "Permainan selesai setelah 267 langkah: Hitam menang 11 poin. Tanpa petualangan — Shūsaku menyerang dan membiarkan wilayahnya tumbuh wajar, kemenangan khas dirinya. Inilah yang pertama dari 19 kemenangan beruntunnya di Permainan Kastel."
+      } },
+    "shilin": { "t": "Partai dari Shilin Guangji", "w": "Merah (nama tidak tercatat)", "b": "Hitam (nama tidak tercatat)", "ev": "Ensiklopedia sehari-hari Shilin Guangji: “partai yang dimenangkan setelah memberi langkah pertama, meriam sisi yang sama”", "d": "Abad ke-13", "pl": "Tiongkok (Song–Yuan)", "lead": "Catatan ini berasal dari Shilin Guangji, ensiklopedia kehidupan sehari-hari yang disusun Chen Yuanjing pada akhir Dinasti Song hingga awal Yuan. Catatan ini disebut sebagai salah satu catatan partai xiangqi lengkap tertua yang masih ada. Ini adalah partai contoh ketika pihak yang lebih kuat memberi langkah pertama, dan hanya dalam sembilan langkah kuda hitam menjebak kereta merah.",
+      c: {
+        "0": "Catatan ini berumur lebih dari 700 tahun, dari masa antara Dinasti Song dan Yuan. Catatan ini ada di bab permainan ensiklopedia Shilin Guangji dan disebut sebagai salah satu partai xiangqi lengkap tertua yang masih kita miliki. Nama para pemainnya tidak tercatat. Judulnya mengatakan pemain kuat “memberikan langkah pertama” kepada yang lebih lemah, jadi ini pelajaran yang menunjukkan bagaimana Merah, yang melangkah lebih dulu, kalah. Merah di bawah dan mulai lebih dulu.",
+        "1": "Merah memindahkan meriam kanan ke lajur tengah. Ini disebut Meriam Tengah, langsung membidik jenderal hitam, dan sampai sekarang masih salah satu pembukaan terkuat. Ternyata pembukaan ini sudah dimainkan 700 tahun lalu.",
+        "2": "Hitam juga memindahkan meriam ke tengah, sehingga dua meriam saling berhadapan. Jika kedua pihak menggerakkan meriam di sisi yang sama, namanya “meriam searah”. Duel meriam sudah populer selama berabad-abad.",
+        "3": "Merah mengeluarkan kuda untuk menjaga prajurit tengah. Prajurit itu sedang dibidik meriam hitam dan perlu penjaga. Kuda itu juga bersiap untuk maju.",
+        "4": "Hitam melakukan hal yang sama dan menjaga prajurit tengahnya dengan kuda. Kedua pihak membangun pijakan yang kuat dulu.",
+        "5": "Merah menggeser kereta kanan satu langkah ke samping, ke lajur terbuka. Kereta adalah bidak terkuat, jadi sebaiknya cepat dipakai.",
+        "6": "Hitam mengeluarkan kuda yang lain dan membiarkan kereta tetap di rumah dulu. Rencananya memajukan bidak lebih dulu. Tetapi kereta yang keluar terlambat bisa sulit dipakai untuk menyerang nanti.",
+        "7": "Kereta merah langsung menyeberangi sungai dan masuk ke daerah hitam. Ia ingin mengancam bidak hitam, tetapi bidak merah lainnya masih di rumah, jadi serangan ini agak terburu-buru. Mengeluarkan kuda atau kereta kiri lebih dulu juga mungkin.",
+        "8": "Hitam memajukan prajurit di lajur 3 satu langkah. Ini membuka jalan bagi kuda agar bisa melompat maju nanti. Hitam seolah-olah mengundang kereta merah datang.",
+        "9": "Kereta merah memakan seorang prajurit dan sekarang membidik kuda hitam di belakangnya. Mendapat satu bidak dan mengancam bidak lain terlihat hebat. Tetapi kereta itu maju terlalu jauh tanpa teman di sekitarnya. Kereta yang sendirian di daerah lawan mudah dikejar.",
+        "10": "Kuda hitam melompat maju. Ia lari dari kereta sekaligus mendekati daerah merah: dua tugas dalam satu langkah. Kuda ini akan menjadi bintang partai ini.",
+        "11": "Merah menarik kereta satu langkah untuk menyerang kuda dari samping. Kereta bisa memakan dari jauh, jadi kuda tidak bisa beristirahat. Namun langkah ini tetap tidak membantu bidak merah lainnya keluar.",
+        "12": "Kuda hitam maju lagi dan menyeberangi sungai ke daerah merah. Setiap kali lari dari kereta, ia semakin dekat dengan jenderal merah.",
+        "13": "Merah memajukan seorang prajurit untuk membuka jalan bagi kudanya sendiri. Idenya mengeluarkan kuda itu dan menukarnya dengan kuda hitam. Tetapi ini memberi Hitam waktu untuk maju lebih jauh.",
+        "14": "Hitam menaikkan gajah dan menyerang kereta merah. Mengusir kereta lawan dengan bidak bertahan sangat efisien. Merah harus memindahkan kereta lagi, dan Hitam mendapat satu tempo lagi.",
+        "15": "Kereta merah bergeser ke samping dan memakan prajurit lagi. Merah unggul dua prajurit, tetapi inilah langkah yang membuat kalah. Kereta kini jauh dari jenderalnya dan tidak bisa kembali untuk bertahan. Merah perlu berjaga dari kuda, misalnya dengan membawa kereta pulang.",
+        "16": "Kuda hitam masuk lebih dalam dan menyerang kereta merah. Dan masih ada lagi: jika melompat sekali lagi, ia akan menskak jenderal merah dan sekaligus menyerang kereta di sudut merah. Satu kuda membuat dua ancaman sekaligus.",
+        "17": "Merah mengejar kuda dengan kereta. Tetapi kuda itu sudah tidak bisa dihentikan. Di sekitar jenderal merah tidak ada lagi yang bisa membantu.",
+        "18": "Kuda melompat masuk dengan skak! Ia juga menyerang kereta di sudut merah, jadi saat jenderal menghindar, kereta akan hilang. Hanya sembilan langkah, tetapi partai ini mengajarkan apa yang terjadi pada kereta yang maju sendirian, dan mengapa bidak harus berjuang bersama. 700 tahun lalu, para pemain sudah memikirkan hal yang sama di papan yang sama."
       } }
   },
   "hi": {
@@ -6097,6 +6361,28 @@ window.MUSEUM_MATCH_T = {
         "239": "काले की 239 (A6) एक पत्थर पकड़ती है और बाएँ किनारे पर “को” बनता है। एक-एक अंक की लड़ाई आख़िर तक चलती है।",
         "260": "सफ़ेद की 260 (T6) एक पत्थर पकड़कर नीचे दाएँ किनारे पर एक और “को” बनाती है। काला 263 (T5) से वापस पकड़ता है।",
         "267": "267 चालों पर बाज़ी ख़त्म: काला 11 अंक से जीता। कोई जोखिम नहीं — शूसाकु ने हमला करते हुए अपना इलाक़ा स्वाभाविक रूप से बढ़ाया, बिल्कुल उसकी शैली की जीत। यह क़िले की बाज़ियों में उसकी लगातार 19 जीतों में पहली थी।"
+      } },
+    "shilin": { "t": "शिलिन ग्वांगजी की बाज़ी", "w": "लाल (नाम दर्ज नहीं)", "b": "काला (नाम दर्ज नहीं)", "ev": "रोज़मर्रा का विश्वकोश शिलिन ग्वांगजी: “पहली चाल देकर, एक ही ओर की तोपों से जीती बाज़ी”", "d": "13वीं सदी", "pl": "चीन (सोंग–युआन)", "lead": "यह रिकॉर्ड शिलिन ग्वांगजी से है, जो रोज़मर्रा के जीवन का एक विश्वकोश है और जिसे चेन युआनजिंग ने सोंग राजवंश के अंत और युआन की शुरुआत के आसपास तैयार किया था। इसे शियांगची की सबसे पुरानी बची हुई पूरी बाज़ियों में से एक माना जाता है। यह एक नमूना बाज़ी है जिसमें मज़बूत खिलाड़ी दूसरे को पहली चाल देता है, और सिर्फ़ नौ चालों में काला घोड़ा लाल रथ को फँसा लेता है।",
+      c: {
+        "0": "यह रिकॉर्ड 700 साल से भी पुराना है, सोंग और युआन राजवंशों के बीच के समय का। यह शिलिन ग्वांगजी विश्वकोश के खेलों वाले हिस्से में है, और इसे हमारे पास बची शियांगची की सबसे पुरानी पूरी बाज़ियों में से एक माना जाता है। खिलाड़ियों के नाम दर्ज नहीं हैं। शीर्षक कहता है कि मज़बूत खिलाड़ी ने कमज़ोर को “पहली चाल दी”, इसलिए यह एक पाठ है जो दिखाता है कि पहले चलने वाला लाल कैसे हारता है। लाल नीचे है और पहले चलता है।",
+        "1": "लाल दाईं तोप को बीच वाली पंक्ति में लाता है। इसे “बीच की तोप” कहते हैं; यह सीधे काले जनरल पर निशाना साधती है और आज भी सबसे मज़बूत शुरुआतों में से एक है। इससे पता चलता है कि यह शुरुआत 700 साल पहले भी खेली जाती थी।",
+        "2": "काला भी एक तोप बीच में लाता है, और दोनों तोपें आमने-सामने आ जाती हैं। जब दोनों एक ही ओर की तोप चलाते हैं, तो इसे “एक ही दिशा की तोपें” कहते हैं। तोप बनाम तोप की लड़ाई सदियों से पसंद की जाती है।",
+        "3": "लाल बीच वाले सिपाही की रक्षा के लिए एक घोड़ा निकालता है। उस सिपाही पर काली तोप का निशाना है, इसलिए उसे रक्षक चाहिए। साथ ही घोड़ा आगे बढ़ने की तैयारी भी करता है।",
+        "4": "काला भी यही करता है और अपने बीच वाले सिपाही की रक्षा घोड़े से करता है। दोनों पहले अपनी नींव मज़बूत कर रहे हैं।",
+        "5": "लाल दाएँ रथ को एक कदम बगल में, खुली पंक्ति पर ले जाता है। रथ बोर्ड का सबसे ताक़तवर मोहरा है, इसलिए उसे जल्दी काम में लगाना अच्छा है।",
+        "6": "काला दूसरा घोड़ा निकालता है और रथों को अभी घर पर ही रखता है। योजना पहले मोहरों को आगे लाने की है। लेकिन देर से निकला रथ बाद में हमले में काम लाना मुश्किल हो सकता है।",
+        "7": "लाल रथ एक ही बार में नदी पार करके काले के इलाक़े में घुस जाता है। वह काले मोहरों को धमकाना चाहता है, पर बाकी लाल मोहरे अभी घर पर हैं, इसलिए यह हमला थोड़ा जल्दबाज़ी वाला है। पहले बायाँ घोड़ा या रथ निकालना भी संभव था।",
+        "8": "काला कॉलम 3 के सिपाही को एक कदम आगे बढ़ाता है। इससे घोड़े का रास्ता खुलता है ताकि वह बाद में आगे कूद सके। काला लगभग लाल रथ को आने का न्योता दे रहा है।",
+        "9": "लाल रथ एक सिपाही को मारता है और अब उसके पीछे वाले काले घोड़े पर निशाना साधता है। एक मोहरा जीतना और दूसरे को धमकाना बढ़िया लगता है। लेकिन रथ बहुत आगे निकल गया है और उसके पास कोई साथी नहीं है। दुश्मन के इलाक़े में अकेला रथ आसानी से खदेड़ा जाता है।",
+        "10": "काला घोड़ा आगे कूदता है। वह रथ से बचता है और साथ ही लाल के इलाक़े के पास पहुँचता है — एक चाल में दो काम। यही घोड़ा इस बाज़ी का हीरो बनेगा।",
+        "11": "लाल रथ को एक कदम पीछे करके घोड़े पर बगल से हमला करता है। रथ दूर से भी मार सकता है, इसलिए घोड़ा आराम नहीं कर सकता। फिर भी यह चाल किसी दूसरे लाल मोहरे को आगे नहीं लाती।",
+        "12": "काला घोड़ा और आगे बढ़कर नदी पार करके लाल के इलाक़े में पहुँच जाता है। हर बार रथ से बचते हुए वह लाल जनरल के और पास आ जाता है।",
+        "13": "लाल अपने घोड़े का रास्ता खोलने के लिए एक सिपाही आगे बढ़ाता है। विचार यह है कि घोड़े को निकालकर काले घोड़े से बदल लिया जाए। लेकिन इससे काले को और आगे जाने का समय मिल जाता है।",
+        "14": "काला हाथी को ऊपर लाकर लाल रथ पर हमला करता है। बचाव वाले मोहरे से दुश्मन के रथ को भगाना बहुत किफ़ायती है। लाल को फिर रथ हटाना पड़ता है, और काला एक और चाल कमा लेता है।",
+        "15": "लाल रथ बगल में खिसककर एक और सिपाही मारता है। लाल अब दो सिपाही आगे है, लेकिन यही हारने वाली चाल है। रथ अब अपने जनरल से बहुत दूर है और बचाव के लिए लौट नहीं सकता। लाल को घोड़े से बचाव करना था, जैसे रथ को घर वापस लाना।",
+        "16": "काला घोड़ा और गहराई में घुसकर लाल रथ पर हमला करता है। और भी है: अगर वह एक बार और कूदे, तो लाल जनरल को शह देगा और उसी समय कोने वाले रथ पर भी हमला करेगा। एक ही घोड़े ने एक साथ दो ख़तरे बना दिए।",
+        "17": "लाल रथ से घोड़े का पीछा करता है। लेकिन अब उसे रोका नहीं जा सकता। लाल जनरल के आसपास मदद करने वाला कोई नहीं बचा।",
+        "18": "घोड़ा कूदकर शह देता है! वह कोने वाले लाल रथ पर भी हमला कर रहा है, इसलिए जनरल के हटते ही रथ चला जाएगा। सिर्फ़ नौ चालें, लेकिन यह बाज़ी सिखाती है कि अकेले आगे भागने वाले रथ का क्या होता है, और मोहरों को मिलकर क्यों लड़ना चाहिए। 700 साल पहले के खिलाड़ी भी उसी बोर्ड पर यही बातें सोच रहे थे।"
       } }
   },
   "ar": {
@@ -6566,6 +6852,28 @@ window.MUSEUM_MATCH_T = {
         "239": "الأسود 239 (A6) يأسر حجرًا فيظهر كو على الحافة اليسرى. يستمر الصراع على كل نقطة حتى النهاية.",
         "260": "الأبيض 260 (T6) يأسر حجرًا ويصنع كو آخر عند الحافة السفلى اليمنى. يستردّ الأسود بالنقلة 263 (T5).",
         "267": "تنتهي المباراة بعد 267 نقلة: فاز الأسود بفارق 11 نقطة. بلا مغامرات: هاجم شوساكو وترك أرضه تنمو بشكل طبيعي، فوز يشبهه تمامًا. وكانت الأولى من 19 انتصارًا متتاليًا في مباريات القلعة."
+      } },
+    "shilin": { "t": "مباراة «شيلين غوانغجي»", "w": "الأحمر (لم يُحفظ اسمه)", "b": "الأسود (لم يُحفظ اسمه)", "ev": "موسوعة الحياة اليومية «شيلين غوانغجي»: «مباراة فاز فيها من أعطى النقلة الأولى، بمدفعين من الجهة نفسها»", "d": "القرن الثالث عشر", "pl": "الصين (سونغ–يوان)", "lead": "هذا السجل مأخوذ من «شيلين غوانغجي»، وهي موسوعة للحياة اليومية جمعها تشن يوانجينغ في أواخر عهد سلالة سونغ وبدايات يوان. ويُقال إنه من أقدم سجلات الشيانغتشي الكاملة الباقية. إنها مباراة نموذجية يترك فيها اللاعب الأقوى النقلة الأولى لخصمه، وفي تسع نقلات فقط يحاصر الحصانُ الأسود العربةَ الحمراء.",
+      c: {
+        "0": "يزيد عمر هذا السجل على 700 عام، وهو من الزمن الواقع بين سلالتي سونغ ويوان. يرد في باب الألعاب من موسوعة «شيلين غوانغجي»، ويُقال إنه من أقدم مباريات الشيانغتشي الكاملة التي بقيت لنا. لم تُحفظ أسماء اللاعبين. يقول العنوان إن اللاعب الأقوى «أعطى النقلة الأولى» للأضعف، فهي درس يبيّن كيف يخسر الأحمر الذي يبدأ. الأحمر في الأسفل ويبدأ اللعب.",
+        "1": "ينقل الأحمر المدفع الأيمن إلى العمود الأوسط. هذا هو «المدفع المركزي» الذي يصوّب مباشرة على الجنرال الأسود، وما زال من أقوى الافتتاحيات حتى اليوم. ونرى أنه كان يُلعب قبل 700 عام.",
+        "2": "يردّ الأسود بمدفع إلى الوسط أيضًا، فيتواجه المدفعان. عندما يحرّك الطرفان المدفع من الجهة نفسها يُسمّى ذلك «مدفعين في اتجاه واحد». ومعركة المدفع ضد المدفع محبوبة منذ قرون.",
+        "3": "يُخرج الأحمر حصانًا ليحمي الجندي الأوسط. هذا الجندي مهدَّد من المدفع الأسود ويحتاج إلى حارس. والحصان يستعد أيضًا للتقدّم.",
+        "4": "يفعل الأسود الشيء نفسه ويحمي جنديه الأوسط بحصان. يبني الطرفان أولًا قاعدة متينة.",
+        "5": "ينقل الأحمر العربة اليمنى خطوة إلى الجانب نحو عمود مفتوح. العربة أقوى قطعة على الرقعة، لذلك من الجيد تشغيلها مبكرًا.",
+        "6": "يُخرج الأسود الحصان الآخر ويترك العربتين في البيت الآن. الخطة هي تقديم القطع أولًا. لكن العربة التي تخرج متأخرة قد يصعب استخدامها في الهجوم لاحقًا.",
+        "7": "تعبر العربة الحمراء النهر دفعة واحدة وتدخل معسكر الأسود. تريد تهديد القطع السوداء، لكن بقية القطع الحمراء ما زالت في البيت، فالهجوم متسرّع قليلًا. كان يمكن أيضًا إخراج الحصان أو العربة اليسرى أولًا.",
+        "8": "يقدّم الأسود جندي العمود 3 خطوة واحدة. بهذا يفتح طريقًا للحصان ليقفز إلى الأمام لاحقًا. يكاد الأسود يدعو العربة الحمراء إلى القدوم.",
+        "9": "تأخذ العربة الحمراء جنديًا وتصوّب الآن على الحصان الأسود خلفه. كسب قطعة وتهديد أخرى يبدو رائعًا. لكن العربة تقدّمت بعيدًا جدًا ولا صديق حولها. والعربة الوحيدة في معسكر العدو يسهل مطاردتها.",
+        "10": "يقفز الحصان الأسود إلى الأمام. يهرب من العربة ويقترب من معسكر الأحمر في الوقت نفسه: مهمتان بنقلة واحدة. سيكون هذا الحصان بطل المباراة.",
+        "11": "يعيد الأحمر العربة خطوة إلى الوراء ليهاجم الحصان من الجانب. العربة تأخذ من بعيد، فلا يستطيع الحصان أن يرتاح. ومع ذلك لا تساعد هذه النقلة على إخراج قطع حمراء أخرى.",
+        "12": "يتقدّم الحصان الأسود أكثر ويعبر النهر إلى معسكر الأحمر. وفي كل مرة يهرب فيها من العربة يقترب أكثر من الجنرال الأحمر.",
+        "13": "يقدّم الأحمر جنديًا ليفتح الطريق لحصانه. الفكرة إخراجه ومبادلته بالحصان الأسود. لكن هذا يمنح الأسود وقتًا ليتقدّم أكثر.",
+        "14": "يرفع الأسود فيلًا ويهاجم العربة الحمراء. طرد عربة الخصم بقطعة دفاعية أمر فعّال جدًا. على الأحمر أن يحرّك العربة مرة أخرى، ويكسب الأسود نقلة إضافية.",
+        "15": "تنزلق العربة الحمراء جانبًا وتأخذ جنديًا آخر. صار الأحمر متقدّمًا بجنديين، لكن هذه هي النقلة الخاسرة. فالعربة الآن بعيدة عن جنرالها ولا تستطيع العودة للدفاع. كان على الأحمر أن يحتاط من الحصان، كأن يعيد العربة إلى البيت.",
+        "16": "يتوغّل الحصان الأسود أعمق ويهاجم العربة الحمراء. وهناك المزيد: إذا قفز مرة أخرى فسيكشّ الجنرال الأحمر ويهاجم في الوقت نفسه العربة في زاوية الأحمر. حصان واحد صنع تهديدين معًا.",
+        "17": "يطارد الأحمر الحصان بالعربة. لكن لم يعد من الممكن إيقافه. لم يبقَ حول الجنرال الأحمر أحد يساعد.",
+        "18": "يقفز الحصان مع كِش! وهو يهاجم أيضًا العربة في زاوية الأحمر، فإذا تنحّى الجنرال ضاعت العربة. تسع نقلات فقط، لكن المباراة تعلّمنا ماذا يحدث لعربة تندفع وحدها، ولماذا يجب أن تقاتل القطع معًا. قبل 700 عام كان اللاعبون يفكّرون في الأشياء نفسها على الرقعة نفسها."
       } }
   }
 };
