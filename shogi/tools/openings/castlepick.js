@@ -14,7 +14,8 @@ for (const c of ['beg', 'mid', 'adv', 'sp', 'new', 'castle']) {
 }
 JSON.parse(fs.readFileSync(path.join(ROOT, 'shogi/openings.json'), 'utf8')).sets.forEach(s => (s.problems || []).forEach(p => others.push(CU.brd(p.sfen))));
 const L = JSON.parse(fs.readFileSync(path.join(ROOT, 'shogi/lessons.json'), 'utf8')); L.grades.forEach(g => { g.problems.forEach(p => others.push(CU.brd(p.sfen))); (g.ramp || []).forEach(r => r.sfen && others.push(CU.brd(r.sfen))); });
-const ok = C.filter(p => others.every(b => CU.dist(CU.brd(p.sfen), b) >= 5));
+const STF = path.join(__dirname, `castlestable-${id}.json`), ST = fs.existsSync(STF) ? JSON.parse(fs.readFileSync(STF, 'utf8')) : null;   // (castlestable.js: 追84, the reads after other reads agree)
+const ok = C.filter(p => others.every(b => CU.dist(CU.brd(p.sfen), b) >= 5) && (!ST || (ST[p.sfen] && ST[p.sfen].ok && ST[p.sfen].dd[1] - ST[p.sfen].dd[0] <= 2)));
 console.log(C.length, 'candidates,', ok.length, 'apart from every other problem and line');
 for (const p of ok) { const r = W.analyze(p.sfen, { depth: 9 }), v = new Map(r.map(x => [x.usi, x.s])), ref = Math.max(...p.G.map(u => v.get(u))); p.dd = r.filter(x => !p.G.includes(x.usi) && x.s >= ref - 100).length; }
 ok.sort((a, b) => a.dd - b.dd || a.sfen.localeCompare(b.sfen));
@@ -38,5 +39,8 @@ pick.sort((a, b) => a.dd - b.dd);
 pick.forEach(p => console.log(p.th ? '★' : ' ', 'dd', p.dd, 'left', p.left, p.accept.join('/'), p.sfen));
 const OUT = path.join(__dirname, 'lineprobs.json'), all = JSON.parse(fs.readFileSync(OUT, 'utf8'));
 const mk = require('./src/castle.js').find(x => x.id === id).story.marks;   // (the castle's squares: 3D says when the answer lands on one)
-all[id] = pick.map(p => { const o = Object.assign({}, p, { mk }); delete o.sc8; delete o.th; return o; });
+// (2026-11-28) mp: the piece of the line's final position on each castle square (3D: 「決まった場所に入る」 only for that piece)
+const KIF2 = require('./kif.js'), e2 = require('./src/castle.js').find(x => x.id === id), q2 = new E.Position(); q2.setSfen(e2.start || KIF2.START); for (const u of KIF2.conv(e2.line, e2.start).usi) { q2.doMove(q2.fromUsi(u)); q2.sp = 0; }
+const mp = mk.map(m => 'xplnsbrgk'[E.typeOf(q2.board[E.makeSq(+m[0], +m[1])])]);
+all[id] = pick.map(p => { const o = Object.assign({}, p, { mk, mp }); delete o.sc8; delete o.th; return o; });
 fs.writeFileSync(OUT, JSON.stringify(all));

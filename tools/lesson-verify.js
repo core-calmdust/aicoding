@@ -1964,7 +1964,7 @@ function ckWarm(opt, L, E, X, val, moveVal, add, only) {
 //   縦と横) and for every wrong move (the king or not, a blocker on the way, a capture or not, a piece of yours taken next), the question
 //   and the hint (a corner / the throne named is in an answer)
 //   ⑨ the 2D (tafl/app.js problemPoints) and the 3D (TAFL.points) both score P.ok
-const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield', 't_tuichi', 't_block', 't_fort', 't_encircle', 's_corner', 's_breakout', 's_squeeze']);
+const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield', 't_tuichi', 't_block', 't_fort', 't_encircle', 's_corner', 's_breakout', 's_squeeze', 'v_brandubh']);
 function tafl(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'tafl/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'tafl/lessons.json'), 'utf8'));
@@ -2339,9 +2339,52 @@ function tafl(opt) {
     const w = {}; vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'tafl/i18n.js'), 'utf8'), { window: w });
     for (const lg of Object.keys(w.I18N)) { const T = w.I18N[lg]; for (const k of ['intro', 'goal', 'hint', 'why', 'ng']) { const x = T['ls.s_squeeze.' + k]; if (!x) add('s_squeeze', -1, `⑨ ${lg}: no ls.s_squeeze.${k}`); }
       if (/class="note"/.test(T['ls.s_squeeze.intro'] || '')) add('s_squeeze', -1, `⑨ ${lg}: the 2D intro still has the engine note`); } }
+  // (2026-11-28 第2期 担当A) v_brandubh「ブランドゥブの王」(tools/lesson-verify-tfbrand.js): the attackers to move on the 7×7 board. ①②
+  // P.ok = every move that takes the king (all legal moves) ③ ≥10 moves, the answers ≤ a third of the moves and of the ringed man's
+  // moves (追17), ≥1 near-miss (a wrong move next to the king) ④ one man, all answers the same way (2 men / a man and a corner), the king
+  // not on or next to the throne, the defenders win at once only when the king stands next to a corner ⑤ ≥4 squares (the 8 symmetries
+  // of 7×7) from every other brandubh board (lessons, diagrams, warm-ups, the 120 brandubh puzzles) and from each other, no answer the
+  // same turned / mirrored ⑥ d (the near-misses) never down, last > first ⑦⑧ タフリン's words: every wrong move by what follows it
+  // (tfBrandWhy: next to the king but the far side open / not next to him; the king steps into a corner next; the moved man / another
+  // attacker taken next), the corner named in the praise, the right move's words, the question and the hint, only when the board says so;
+  // the diagram's arrow takes the king (追14)
+  const BD = require(path.join(ROOT, 'tools/lesson-verify-tfbrand.js')), bdPool = [], bdKey = new Map();
+  L.steps.forEach(st => { (st.problems || []).forEach((q, j) => q.s.v === 'brandubh' && bdPool.push([`${st.id} q${j + 1}`, q.s.b])); if (st.diagram && st.diagram.s.v === 'brandubh') bdPool.push([`${st.id} diagram`, st.diagram.s.b]); (st.ramp || []).forEach((r, j) => r.s && r.s.v === 'brandubh' && bdPool.push([`${st.id} ramp ${j + 1}`, r.s.b])); });
+  (PZ.themes || []).forEach(th => (th.puzzles || []).forEach((q, j) => q.s.v === 'brandubh' && bdPool.push([`puzzle ${th.id} ${j + 1}`, q.s.b])));
+  const brandOne = (st, si, P, j, a) => { const f = BD.brandFacts(E, P), nm = m => E.name(f.p, m), p = f.p; f.bad.forEach(a);
+    for (const [who, b] of bdPool) { if (who === `${st.id} q${j + 1}`) continue; const e = BD.dist7(P.s.b, b); if (e < 4) a(`⑤ ${e} squares from ${who}`); }
+    const SY = [(r, c) => [r, c], (r, c) => [r, 6 - c], (r, c) => [6 - r, c], (r, c) => [6 - r, 6 - c], (r, c) => [c, r], (r, c) => [c, 6 - r], (r, c) => [6 - c, r], (r, c) => [6 - c, 6 - r]];
+    for (const m of P.ok || []) { const ks = SY.map(S => { const x = S(Math.floor(E.mFrom(m) / 7), E.mFrom(m) % 7), y = S(Math.floor(E.mTo(m) / 7), E.mTo(m) % 7); return `${x[0] * 7 + x[1]}>${y[0] * 7 + y[1]}`; });
+      const hit = ks.find(k => bdKey.has(k) && bdKey.get(k) !== j); if (hit) a(`⑤ the same answer as q${bdKey.get(hit) + 1} turned / mirrored (${nm(m)})`); ks.forEach(k => { if (!bdKey.has(k)) bdKey.set(k, j); }); }
+    let W; try { W = X_.tfLsJa(E, st, P, j, k => X_.TFM(k, 'ja'), si); } catch (e) { a('⑧ the words fail: ' + e.message); return f.d; }
+    const cor = f.kind === 'corner', g = plain(W.good()), k = p.king, nbK = BD.nb4(k);
+    for (const t of [W.ask, W.hintTx, g]) if (!t || /\{|undefined|NaN/.test(t)) a(`⑧ 「${t}」`);
+    for (const t of [W.ask, W.hintTx]) {
+      if (/角のすぐとなり|角のとなりの王|角へ逃げられる前|角が片側/.test(t) && !cor) a(`⑧ 「${t}」: the king is not taken against a corner`);
+      if (/王のとなりにいる攻め手|王のとなりに攻め手がいる/.test(t) && !nbK.some(i => p.at(i) === 1)) a(`⑧ 「${t}」: no attacker next to the king`);
+      if (/1つだけ/.test(t) && f.goal.length !== 1) a(`⑧ 「${t}」: ${f.goal.length} moves take the king`);
+      if (/寄るだけの手|となりに入るだけ/.test(t) && f.d < 1) a(`⑧ 「${t}」: no wrong move next to the king`);
+      if (/とちゅうに駒のない道/.test(t) && !(P.ok || []).every(m => Math.abs(Math.floor(E.mFrom(m) / 7) - Math.floor(E.mTo(m) / 7)) + Math.abs(E.mFrom(m) % 7 - E.mTo(m) % 7) >= 2)) a(`⑧ 「${t}」: the answer is a one-step move`);
+      if (/玉座/.test(t)) a(`⑧ 「${t}」: the throne plays no part here`); }
+    if (/角/.test(g) !== cor) a(`⑧ the praise 「${g}」: ${cor ? 'the corner is not named' : 'no corner takes part'}`);
+    for (const m of f.wrong) { const raw = plain(W.ng(m)), x0 = nm(m), i0 = raw.indexOf('赤い印の手'), i1 = raw.indexOf('緑の印の手');
+      if (/\{|undefined|NaN/.test(raw) || i0 < 0 || i1 < 0) { a(`⑦ ${x0}: 「${raw}」 (your move / the right move not named)`); continue; }
+      const tx = raw.slice(i0, i1), tl = raw.slice(i1), R = f.C.get(m);
+      const said = /となりには入れた|王に寄れても|となりに来ただけ|反対側があいたまま|向かい側にいない/.test(tx) ? 'adj' : /となりに駒が来ない|はさむ形にならない|となりにも駒が来ない|自由なまま|離れた所/.test(tx) ? 'far' : 'other';
+      const want = R.why === 'throne' ? 'adj' : R.why;
+      if (said !== want) a(`⑦ ${x0}: 「${tx}」 says ${said}, the board: ${want}`);
+      const sEsc = /角へ逃げ|角に着|角へ脱出|角へ入/.test(tx), sCapm = /(動かした駒|その駒|寄せた駒).{0,12}(はさまれ|取られ)/.test(tx), sCap = /(ほかの攻め手|別の攻め手)/.test(tx);
+      if (sEsc !== !!R.esc) a(`⑦ ${x0}: 「${tx}」 the king ${R.esc ? 'steps into a corner next' : 'reaches no corner next'}`);
+      if (!R.esc) { if (sCapm !== !!R.capm) a(`⑦ ${x0}: 「${tx}」 the moved man ${R.capm ? 'is' : 'is not'} taken next`); if (!R.capm && sCap !== !!R.cap) a(`⑦ ${x0}: 「${tx}」 another attacker ${R.cap ? 'is' : 'is not'} taken next`); }
+      else if (sCapm || sCap) a(`⑦ ${x0}: 「${tx}」 (the escape comes first)`);
+      if (/角/.test(tl) !== cor) a(`⑦ ${x0}: 「${tl}」 the right move ${cor ? 'uses' : 'does not use'} a corner`); }
+    return f.d; };
+  { const st = L.steps.find(s => s.id === 'v_brandubh');
+    if (st && st.diagram) { const D = st.diagram, p = E.Pos.from(D.s); (D.arrows || []).forEach(([fr, to]) => { const m = E.parse(p, fr + '-' + to); if (m == null) { add('v_brandubh', -1, `diagram: 追14 ${fr}-${to} is not legal`); return; }
+      if (p.clone().play(m).res !== 1) add('v_brandubh', -1, `diagram: 追14 ${fr}-${to} does not take the king`); }); } }
   L.steps.forEach((st, si) => { const id = st.id; if (!TF_DONE.has(id) || (opt && opt.only && !opt.only.includes(id))) return;   // (opt.only: the mutation tests of one lesson)
     let prevD = -1, firstD = null;
-    if (id === 'b_safe' || id === 't_shield' || id === 't_tuichi' || id === 't_block' || id === 't_fort' || id === 't_encircle' || id === 's_corner' || id === 's_breakout' || id === 's_squeeze') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : id === 't_tuichi' ? tuichiOne : id === 't_block' ? blockOne : id === 't_fort' ? fortOne : id === 't_encircle' ? encOne : id === 's_corner' ? cornerOne : id === 's_breakout' ? breakOne : id === 's_squeeze' ? squeezeOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
+    if (id === 'b_safe' || id === 't_shield' || id === 't_tuichi' || id === 't_block' || id === 't_fort' || id === 't_encircle' || id === 's_corner' || id === 's_breakout' || id === 's_squeeze' || id === 'v_brandubh') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : id === 't_tuichi' ? tuichiOne : id === 't_block' ? blockOne : id === 't_fort' ? fortOne : id === 't_encircle' ? encOne : id === 's_corner' ? cornerOne : id === 's_breakout' ? breakOne : id === 's_squeeze' ? squeezeOne : id === 'v_brandubh' ? brandOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
     st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), me = p.turn, all = p.moves(), nm = m => E.name(p, m);
       if (P.n > 1) { const d = seqCheck(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
         if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); seqWords(st, si, P, j, a); return; }
@@ -3083,7 +3126,7 @@ function shogiOpen(opt) {
   // (there is no line here), "近づく" only for a castle move, "近づかない / 進まない / 遠いまま" only for the others, "AIの評価が…下がる"
   // only 100+ below, captures / recaptures / king / bishop's line / edge pawn / rook claims on the board, the near words only 10+ points.
   {
-    const SHC_DONE = new Set(['c_mino', 'c_takamino', 'c_ginkan']), SRCC = require(path.join(ROOT, 'shogi/tools/openings/src/castle.js')), KIF = require(path.join(ROOT, 'shogi/tools/openings/kif.js'));
+    const SHC_DONE = new Set(['c_mino', 'c_yagura', 'c_funa', 'c_takamino', 'c_ginkan']), SRCC = require(path.join(ROOT, 'shogi/tools/openings/src/castle.js')), KIF = require(path.join(ROOT, 'shogi/tools/openings/kif.js'));
     if (!src.includes("sort((a, b) => (a.off ? a.dd : a.ply) - (b.off ? b.dd : b.ply))")) add('-', -1, '⑥ the 3D castle problems are not drawn in the dd order');
     const linePos = []; for (const c of CATS) require(path.join(ROOT, `shogi/tools/openings/src/${c}.js`)).forEach(e => { try { const q = new E.Position(); q.setSfen(e.start || KIF.START); for (const u of KIF.conv(e.line, e.start).usi) { q.doMove(q.fromUsi(u)); q.sp = 0; linePos.push([e.id + ' line', CU.brd(q.sfen())]); } } catch (er) {} });
     const STEP = { 4: [[0, -1], [1, -1], [-1, -1], [1, 1], [-1, 1]], 7: [[0, -1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1]], 8: [[0, -1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1], [1, 1], [-1, 1]], 3: [[1, -2], [-1, -2]] };
@@ -3107,7 +3150,8 @@ function shogiOpen(opt) {
       PS.forEach((P, j) => { const a = m => add(id, j, m), p = new E.Position(); p.setSfen(P.sfen); const ms = p.legalMoves(true), U = m => p.toUsi(m);
         const G = ms.filter(m => { if (E.isDrop(m)) return false; p.doMove(m); const b = p.board.slice(); p.undoMove(); return cd(b) < cd(p.board); }).map(U).sort();
         if (JSON.stringify(G) !== JSON.stringify((P.G || []).slice().sort())) a(`① the castle moves are ${G} (stored ${P.G})`);
-        const sets2 = []; shoW = require(path.join(ROOT, 'shogi/tools/openings/wasm-engine.js')).loadSync();   // (a new engine for every problem: the values do not depend on what was read before, 2026-11-28 担当B)
+        const sets2 = [];
+        shoW = require(path.join(ROOT, 'shogi/tools/openings/wasm-engine.js')).loadSync();   // (a new engine for every castle problem: the same values whatever was read before, 追84)
         for (const d of [8, 9]) { const r = shoW.analyze(P.sfen, { depth: d }), v = new Map(r.map(x => [x.usi, x.s])), ref = Math.max(...G.map(u => v.get(u)));
           if (r[0].s - ref > 80) a(`① depth ${d}: the engine's best ${r[0].usi} is ${r[0].s - ref} above the castle moves`);
           const grey = G.filter(u => v.get(u) < ref - 40 && v.get(u) >= ref - 100); if (grey.length) a(`② depth ${d}: ${grey} in the grey zone`);
@@ -3119,6 +3163,7 @@ function shogiOpen(opt) {
         if (ms.length - P.accept.length < 3) a(`③ ${ms.length - P.accept.length} moves outside the set`);
         const left = cd(p.board); if (p.side !== 0 || p.inCheck() || left < 1 || left > 3 || E.typeOf(p.board[rookSq]) !== 6 || E.colorOf(p.board[rookSq]) !== 0) a(`④ side ${p.side} / check / ${left} castle moves left / the rook off its square`);
         if (ms.some(m => !E.isDrop(m) && p.board[E.mTo(m)])) a('④ a piece can be taken (not a quiet castle position)');
+        if (p.board.some(x => x && E.typeOf(x) > 8) || Math.abs(P.cand[0][1]) > 300) a(`④ not an even, quiet opening (a promoted piece on the board / best ${P.cand[0][1]})`);   // (2026-11-28 c_yagura・c_funa)
         const B = CU.brd(P.sfen);
         const me = (s.problems || []).length + LP.indexOf(P); for (const [w, k, b] of pool) { if (w === id && k === me) continue; const d = CU.dist(B, b); if (d <= 4) a(`⑤ ${d} squares from ${w} ${k + 1}`); }
         for (const [w, b] of linePos) { const d = CU.dist(B, b); if (d <= 4) a(`⑤ 追1 ${d} squares from a position of ${w}`); }
@@ -3138,7 +3183,7 @@ function shogiOpen(opt) {
             if (/手順|見本どおり/.test(w)) bad('speaks of the line');
             if (/\{(?![mx]\})|undefined|NaN/.test(w)) bad('a placeholder');
             if (/\{m\}なら[^。！]*攻め|攻めの形/.test(w)) bad('a castle move is not an attack');
-            if (u === A) { const to = E.mTo(p.fromUsi(A)), onMk = T.some(x => x.sq === to && x.t === F.pt); if (JSON.stringify(P.mk) !== JSON.stringify(e.story.marks)) bad('P.mk is not the story marks');
+            if (u === A) { const to = E.mTo(p.fromUsi(A)), onMk = T.some(x => x.sq === to && x.t === F.pt); if (JSON.stringify(P.mk) !== JSON.stringify(e.story.marks)) bad('P.mk is not the story marks'); if (P.mp && JSON.stringify(P.mp) !== JSON.stringify(T.map(x => 'xplnsbrgk'[x.t]))) bad('P.mp is not the pieces of the castle squares');
               if (/決まった場所に入る|あるべきマスへおさめる|定位置について|持ち場に入った|居場所はそこで決まり/.test(w) && !onMk) bad('does not land on a castle square'); if (/一歩近づける手|持ち場へ一歩進む手|まず一歩|囲いの奥へ向かう|あるべき場所へ近づけた/.test(w) && onMk) bad('lands on a castle square'); }
             if (P.accept.includes(u)) { if (u !== A && !/\{x\}/.test(w)) bad('the other right move is not named'); if (/取る手|取り返|打つ手/.test(w)) bad('a capture / a drop'); continue; }
             if (!w.includes('{m}')) bad('the answer is not named');
@@ -3819,7 +3864,7 @@ function hexOpen(opt) {
       const legal = []; for (let m = 0; m < g.n * g.n; m++) if (q.legal(m)) legal.push(m);
       const NB = E.geo(g.n).NB, s = P.s.side, o = 3 - s, at = c => P.s.b[c] === 'r' ? 1 : P.s.b[c] === 'b' ? 2 : 0;
       const savable = fb.save > 0;   // (an own bridge cut into: the answer answers it)
-      for (let i = 0; i < 5; i++) { const probs = P0.slice(0, 5); let W; try { W = X.HX.opJa.call(X.HX, P, LI, i, probs, {}); } catch (e) { a("⑧ the words fail: " + e.stack.split("\n").slice(0, 3).join(" | ")); break; }
+      for (let i = 0; i < 15; i++) { const probs = P0.slice(0, 5); let W; try { W = X.HX.opJa.call(X.HX, P, LI + Math.floor(i / 5), i % 5, probs, {}); } catch (e) { a("⑧ the words fail: " + e.stack.split("\n").slice(0, 3).join(" | ")); break; }   // (追90, 2026-11-28 担当B: three turns of the word lists — every candidate of a 2- or 3-word list is said once — not only the order the set's index gives)
         const ask = plain(W.ask), hint = plain(W.hintTx); if (/\{|undefined|NaN/.test(ask + hint)) a(`⑧ the question / hint 「${ask}」「${hint}」`);
         if (!ask.includes(s === 2 ? '青' : '赤')) a(`⑧ the question does not name the side 「${ask}」`);
         if (!(X.HXJ_OP.hint[kb] || X.HXJ_OP.hint.open).map(plain).includes(hint)) a(`⑧ the hint is not the answer's shape (${kb}) 「${hint}」`);
@@ -3833,6 +3878,7 @@ function hexOpen(opt) {
           if (/もう1つの割りこまれたほう|大事なほうのブリッジ/.test(w) && !(savable && fu.save)) bad('yours answers no other cut bridge');
           if (/ほかの石から遠すぎ|戦いの場所から離れすぎ|まわりに石がなくて/.test(w) && !(fu.dOpp >= 4 && fu.dOwn >= 4)) bad(`the move is ${fu.dOpp} / ${fu.dOwn} from the stones`);
           if (/割りこむ先手を逃し|すき間をつくチャンス|受けさせる一手を打てず/.test(w) && !(fb.intrude && !fu.intrude)) bad('not an intrusion missed');
+          if (/もっと効くすき間|割りこむ場所がちがって/.test(w) && !(fb.intrude && fu.intrude)) bad('said to be another intrusion, it is none');
           if (/くっつけて止めると|となりで止めても|ぴったりつけると/.test(w) && !fu.touch) bad('the move touches nothing');
           if (/離れすぎて|間があきすぎて|遠くで待っても/.test(w) && fu.touch) bad('the move touches the opponent');
           if (/1マスずつしか進めず|となりにつなぐだけ|歩みがおそく/.test(w) && !(fu.adj && fb.bridge)) bad('not an adjacent move against a bridge');
