@@ -20,7 +20,18 @@
 //    conditions are not met; the warm-ups: the uchifuzume square marked is one where a dropped pawn would mate, the nifu marks are
 //    every empty square of the pawn's file where a pawn could stand; 14 languages for q and expl; no atlas/nocoord entry left for a
 //    problem whose words were rewritten without coordinates.
-//  The handicap problems (src handi) are checked in a later round (pending).
+//  the handicap problems (src handi, mode free; 2026-11-27 17:20 担当A, shHandi below): a real handicap game (the piece 上手 dropped
+//    — P.handi r / b — is on the board once, black's, nowhere else), not in check, 3+ legal moves and 2+ pieces that can be taken,
+//    ①② the goal set from the board: exactly one non-pawn piece can be taken with no legal recapture, by one move (no promotion
+//    choice) = accept = cand[0]; cand = every capture with its net value (as k15); no other move scores over 14 in the 2D / the 3D;
+//    the engine (JS depth 3 and wasm depth 8, every root move in full) has the answer on top, the second 250+ below, no mate;
+//    ④ the handicap is the reason: with the dropped piece back on its own square (empty there, no king in check) it legally takes
+//    the mover back on the landing square; ⑤ 7+ squares from every shogi problem / warm-up / tsume / opening problem (mirrored);
+//    ⑥ d (pieces that can be taken ×3 + legal moves / 8) does not fall from the first handicap problem to the second;
+//    ⑦⑧ the 3D praise names the piece taken and the dropped piece, every other legal move's 3D words say what the board says (no
+//    capture → 取れない・取らない, a free pawn → 取れるけど, a guarded capture → the piece that takes back and the mover, 損 only when
+//    the mover is worth more), the question and the explanation (14 languages) name 駒落ち and the dropped piece; the 2D's reason
+//    is the k15 one (shogi/index.html case 'handi' falls into case 'free').
 module.exports = function shRx({ ROOT, E, L, X, pool, brd, dist, add, src, app }) {
   const fs = require('fs'), path = require('path');
   const GID = 'rx', g = L.grades.find(x => x.id === GID); if (!g) return;
@@ -42,11 +53,71 @@ module.exports = function shRx({ ROOT, E, L, X, pool, brd, dist, add, src, app }
   // the 3D lesson as the page builds it (all problems in the pool's order, the words of lessons.json / atlas/nocoord)
   const probs = g.problems.map((P, i) => ({ P, kind: P.kind === 'tsume' ? 'tsume' : 'best', n: P.n, sol: P.sol, why: plain(((NC[`${GID}/p${i}/expl`] || P.expl || {}).ja) || ''), ng: null }));
   try { X.shJaLesson(g, probs); } catch (e) { add(GID, -1, '⑧ the 3D words fail: ' + e.message); return; }
+  // ---- the handicap problems (src handi) ----
+  const LVv = { 1: 1, 2: 3, 3: 4, 4: 5, 5: 8, 6: 10, 7: 6, 9: 6, 10: 6, 11: 6, 12: 6, 13: 10, 14: 12 }, HSQ = { r: [10, 6, '飛車'], b: [16, 5, '角'] };
+  if (!app.includes("    case 'handi':   // (2026-11-27") || app.indexOf("    case 'handi':") + 120 < app.indexOf("    case 'free': {") || app.indexOf("    case 'handi':") > app.indexOf("    case 'free': {")) add(GID, -1, "⑨ shogi/index.html: case 'handi' does not fall into case 'free'");
+  const OPS = []; for (const f of fs.readdirSync(path.join(ROOT, 'shogi')).filter(f => /^openings.*\.json$/.test(f))) { try { (JSON.parse(fs.readFileSync(path.join(ROOT, 'shogi', f), 'utf8')).sets || []).forEach(S => (S.problems || []).forEach((q, k) => q.sfen && OPS.push([`${f} ${S.id} ${k + 1}`, brd(q.sfen)]))); } catch (e) {} }
+  let W = null; try { W = require(path.join(ROOT, 'shogi/tools/openings/wasm-engine.js')).loadSync(); } catch (e) { add(GID, -1, '① the wasm engine does not load: ' + e.message); }
+  let hPrev = -1;
+  function shHandi(P, j, a, Q) {
+    if (P.kind !== 'best' || P.mode !== 'free') { a('④ the handicap problem is not mode free'); return; }
+    const H = HSQ[P.handi]; if (!H) { a(`④ P.handi ${P.handi}`); return; }
+    const p = pos(P.sfen), ms = p.legalMoves(true), U = m => p.toUsi(m);
+    if (p.side !== 0) { a('④ not 下手 (black) to move'); return; }
+    let cnt = 0, mine = 0; for (let s = 0; s < 81; s++) { const x = p.board[s]; if (x && [H[1], H[1] + 8].includes(T(x))) { cnt++; if (E.colorOf(x) === 0) mine++; } }
+    cnt += p.hand[H[1]] + p.hand[8 + H[1]]; if (cnt !== 1 || mine !== 1) a(`④ the ${H[2]} is not dropped (${cnt} on the board / in hand, ${mine} black's)`);
+    if (p.inCheck() || pos(P.sfen.replace(' b ', ' w ')).inCheck()) { a('① a king in check'); return; }
+    if (ms.length < 3) a(`③ ${ms.length} legal moves`);
+    const caps = ms.filter(m => !E.isDrop(m) && p.board[E.mTo(m)]).map(m => { const u = U(m), q = pos(P.sfen); q.doMove(q.fromUsi(u));
+      const rec = q.legalMoves(true).filter(y => !E.isDrop(y) && E.mTo(y) === E.mTo(m)).map(y => T(q.board[E.mFrom(y)]));
+      return { u, to: E.mTo(m), t: T(p.board[E.mTo(m)]), mv: T(p.board[E.mFrom(m)]), rec }; });
+    caps.forEach(c => { if (!LVv[c.t]) a(`④ ${c.u} takes a piece without a lesson value (type ${c.t})`); });
+    const tg = new Set(caps.map(c => c.to)); if (tg.size < 2) a(`③ only ${tg.size} piece can be taken`);
+    const free = caps.filter(c => !c.rec.length && LVv[c.t] >= 3);
+    if (free.length !== 1) { a(`② ${free.length} free non-pawn captures (${free.map(c => c.u)})`); return; }
+    const F0 = free[0], ans = F0.u;
+    if (caps.some(c => c.u === ans + '+' || c.u + '+' === ans)) a('② the answer has a promotion choice');
+    if ((P.accept || []).join() !== ans) a(`① accept ${P.accept}, the free capture ${ans}`);
+    const cs = new Map(P.cand || []); if (cs.size !== (P.cand || []).length || cs.size !== caps.length) a('⑨ cand is not every capture once');
+    caps.forEach(c => { const v = LVv[c.t] - (c.rec.length ? LVv[c.mv] : 0); if (cs.get(c.u) !== v) a(`⑨ cand ${c.u} = ${cs.get(c.u)}, the board says ${v}`); });
+    for (let k = 1; k < (P.cand || []).length; k++) if (P.cand[k][1] > P.cand[k - 1][1]) a('⑨ cand is not best first');
+    if ((P.cand || [[]])[0][0] !== ans) a('⑨ cand[0] is not the answer');
+    const pts = u => { const c = (P.cand || []).find(x => x[0] === u); return c ? Math.max(0, Math.round(20 * c[1] / P.cand[0][1])) : 0; };
+    ms.forEach(m => { const u = U(m); if (u !== ans && pts(u) > 14) a(`② ${u} scores ${pts(u)}`); });
+    if ((P.pv || [])[0] !== ans) a('⑧ pv[0] is not the answer');
+    // the engine, two ways
+    const r = new E.Searcher(pos(P.sfen)).analyze({ depth: 3, time: 60000 });
+    if (U(r[0].m) !== ans) a(`① the engine (depth 3) prefers ${U(r[0].m)}`);
+    else if (r[0].s - r[1].s < 250) a(`② depth 3: ${U(r[1].m)} only ${r[0].s - r[1].s} below`);
+    if (Math.abs(r[0].s) > 20000) a('④ a mate in the values');
+    if (W) { const r2 = W.analyze(P.sfen, { depth: 8 }); if (r2[0].usi !== ans) a(`① the engine (wasm depth 8) prefers ${r2[0].usi}`); else if (r2[0].s - r2[1].s < 250) a(`② wasm depth 8: ${r2[1].usi} only ${r2[0].s - r2[1].s} below`); if (Math.abs(r2[0].s) > 20000) a('④ a mate in the wasm values'); }
+    // ④ the dropped piece back on its square takes the mover back
+    if (p.board[H[0]]) a(`④ the ${H[2]}'s own square is not empty`);
+    else { const q = pos(P.sfen); q.board[H[0]] = H[1] + E.WF; const s2 = q.sfen(), r3 = pos(s2);
+      if (r3.inCheck() || pos(s2.replace(' b ', ' w ')).inCheck()) a(`④ with the ${H[2]} back a king is in check`);
+      else { r3.doMove(r3.fromUsi(ans)); if (!r3.legalMoves(true).some(y => !E.isDrop(y) && E.mFrom(y) === H[0] && E.mTo(y) === F0.to)) a(`④ with the ${H[2]} back it does not take the mover back: the handicap is not the reason`); } }
+    // ⑤ ⑥
+    const B = brd(P.sfen); for (const [who, b] of pool.concat(OPS)) { if (who === `${GID} q${j + 1}`) continue; const e = dist(B, b); if (e <= 6) a(`⑤ ${e} squares from ${who}`); }
+    const d = tg.size * 3 + ms.length / 8; if (d < hPrev) a(`⑥ easier than the handicap problem before (d ${d.toFixed(1)} after ${hPrev.toFixed(1)})`); hPrev = Math.max(hPrev, d);
+    // ⑦⑧ the words
+    const pn = NM[F0.t], qj = plain(P.q.ja), ex = plain(P.expl.ja);
+    if (!/駒落ち/.test(qj) || !qj.includes(H[2] + '落ち')) a(`⑧ the question does not name 駒落ち / ${H[2]}落ち`);
+    if (!ex.includes(H[2]) || !ex.includes(pn.replace(/車|馬$/, ''))) a(`⑧ the explanation does not name the ${H[2]} and the ${pn}`);
+    for (const l of LANGS) if (l !== 'ja' && (P.expl[l] || '') === (P.expl.ja || '')) a(`⑨ expl ${l} is the Japanese`);
+    const gd = plain(Q.good(ans)); if (!gd.includes(H[2]) || !gd.includes(pn) || /undefined|NaN/.test(gd)) a(`⑧ the praise 「${gd}」 does not name the ${H[2]} and the ${pn}`);
+    for (const m of ms) { const u = U(m); if (u === ans) continue; const w = plain(Q.ng(u)), c = caps.find(x => x.u === u);
+      if (/undefined|NaN/.test(w) || !w.includes('{m}') && !w.includes(pn)) { a(`⑧ ${u}: 「${w}」`); continue; }
+      if (!c) { if (!/取れない|取らない|何も取れ|駒得にならない/.test(w)) a(`⑦ ${u} takes nothing, the words 「${w}」`); continue; }
+      if (!c.rec.length) { if (!/取れるけど/.test(w) || !w.includes(NM[c.t].replace(/車$/, ''))) a(`⑦ ${u} takes a free ${NM[c.t]}, the words 「${w}」`); continue; }
+      const mvn = NM[u.endsWith('+') ? c.mv + 8 : c.mv], said = c.rec.filter(t => w.includes(NM[t] + 'に') || w.includes(NM[t] + 'が') || w.includes(NM[t] + 'で') || w.includes(NM[t] + 'の守り'));
+      if (!said.length || !w.includes(mvn) || !/取り返/.test(w)) a(`⑦ ${u}: the ${mvn} is taken back by ${c.rec.map(t => NM[t])}, the words 「${w}」`);
+      if (/損/.test(w) && !(LVv[c.mv] > LVv[c.t])) a(`⑦ ${u}: the words say 損, the ${NM[c.mv]} (${LVv[c.mv]}) for the ${NM[c.t]} (${LVv[c.t]}) is not`); }
+  }
   let prevD = -1; const kinds = new Set();
   g.problems.forEach((P, j) => {
     const a = m => add(GID, j, m), Q = probs[j];
-    for (const k of ['q', 'expl']) { const miss = LANGS.filter(l => !(P[k] && P[k][l])); if (miss.length && !(k === 'expl' && P.src === 'handi')) a(`⑨ ${k} lacks ${miss.join(' ')}`); }
-    if (P.src === 'handi') return;   // (pending: the handicap problems — a later round)
+    for (const k of ['q', 'expl']) { const miss = LANGS.filter(l => !(P[k] && P[k][l])); if (miss.length) a(`⑨ ${k} lacks ${miss.join(' ')}`); }
+    if (P.src === 'handi') { shHandi(P, j, a, Q); kinds.add('handi'); return; }
     const p = pos(P.sfen), ms = p.legalMoves(true), U = m => p.toUsi(m), ex = plain(P.expl.ja), qj = plain(P.q.ja);
     if (p.inCheck() || pos(P.sfen.replace(' b ', ' w ')).inCheck()) { a('① the start has a king in check'); return; }
     if (ms.length < 3) a(`③ ${ms.length} legal moves`);
@@ -120,7 +191,7 @@ module.exports = function shRx({ ROOT, E, L, X, pool, brd, dist, add, src, app }
       for (const m of ms) { const u = U(m); if (good.includes(u)) continue; const w = plain(Q.ng(u)); if (!/入玉宣言の条件がそろわない/.test(w)) a(`⑦ ${u}: 「${w}」`); }
     } else a('④ neither a mate in one nor the entering king');
   });
-  ['push', 'board', 'drop', 'enter'].forEach(k => { if (!kinds.has(k)) add(GID, -1, `④ no ${k} problem`); });
+  ['push', 'board', 'drop', 'enter', 'handi'].forEach(k => { if (!kinds.has(k)) add(GID, -1, `④ no ${k} problem`); });
   // the warm-ups
   (g.ramp || []).forEach((R, j) => { if (!R.sfen) return; const t = plain((R.t || {}).ja || ''), ng = (R.marks || []).filter(x => x[1] === 'ng').map(x => x[0]).sort();
     if (/歩を打って詰ませる/.test(t)) { const us = uchiSq(R.sfen, R.sfen.split(' ')[2]).sort(); if (ng.join() !== us.join()) add(GID, -1, `⑧ warm-up ${j + 1}: marks ${ng}, the uchifuzume squares ${us}`); }

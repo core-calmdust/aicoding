@@ -3,6 +3,7 @@
 // every text with the number placeholder {n} (the moves left / the limit / the margin / the empties of the 3D puzzles' guide) in
 //   - atlas/puzzles.js: every top-level `const X = { … }` block of words (TX, RV, C4X, MCX, MMX, TFX, AMX, HXX, CKX, XQX, JGX, BGX, GOX, GMX),
 //   - xiangqi/pzwhy.js · hex/pzwhy.js: T and OWN (the words after a move off the solution, 3D and 2D),
+//   - atlas/games/ugolki-pz.js T · ugolki/i18n-ug-pzwhy.js (every count {k} {n} {b} {s} {o}, 2026-11-27 担当D),
 // by language:
 //   en      the word after the number ends in -s (moves, discs, squares, times…) or is "empty" (→ "empty squares");
 //   es · pt the word after ends in -s, or the verb before is plural (Quedan / Faltan / Faltam / Restan);
@@ -72,6 +73,17 @@ function verify(opt) {
   all.push(...texts('xiangqi/pzwhy.js T', XW.T), ...texts('xiangqi/pzwhy.js OWN', XW.OWN));
   const HW = opt.hx || require(path.join(ROOT, 'hex/pzwhy.js'));   // (追88) 詰めヘックス's words after a move off the solution
   all.push(...texts('hex/pzwhy.js T', HW.T), ...texts('hex/pzwhy.js OWN', HW.OWN));
+  // (追58, 2026-11-27 担当D) ugolki's words after a move off the solution, 3D (atlas/games/ugolki-pz.js T) and 2D
+  // (ugolki/i18n-ug-pzwhy.js pz.why.*): every count there can be 1 — {k} own pieces outside, {n} moves left, {b} the opponent's pieces
+  // on the corner, {s} the moves needed, {o} the opponent's pieces outside — so each is checked as {n}.
+  {
+    const U3 = opt.ug3 || require(path.join(ROOT, 'atlas/games/ugolki-pz.js')).T;
+    let U2 = opt.ug2; if (!U2) { const w = { I18N: {} }; require('vm').runInNewContext(fs.readFileSync(path.join(ROOT, 'ugolki/i18n-ug-pzwhy.js'), 'utf8'), { window: w, I18N: w.I18N }); U2 = w.I18N; }
+    const as = s => String(s).replace(/\{[kbso]\}/g, '{n}'), before = all.length;
+    for (const [lang, o] of Object.entries(U3 || {})) for (const [k, v] of Object.entries(o || {})) [].concat(v).forEach((x, i) => { if (typeof x === 'string' && /\{[knbso]\}/.test(x)) all.push({ where: 'atlas/games/ugolki-pz.js', key: `${lang}.${k}${Array.isArray(v) ? '.' + i : ''}`, lang, s: as(x) }); });
+    for (const [lang, o] of Object.entries(U2 || {})) for (const [k, x] of Object.entries(o || {})) if (typeof x === 'string' && /\{[knbso]\}/.test(x)) all.push({ where: 'ugolki/i18n-ug-pzwhy.js', key: `${lang}.${k}`, lang, s: as(x) });
+    if (all.length - before < 40) add('ugolki', `追58 only ${all.length - before} ugolki texts with a count were seen (the words moved?)`);
+  }
   // 追61: the game's own 2D words (<game>/i18n.js, pz.*) that the 3D puzzle also says (B.tx: the goal 「mate within 1 moves」, the
   // solved line, the reason of a wrong move). The games in I18N_DONE are checked; the others are counted as pending (追61 未確認).
   const vm = require('vm'), pending = {};
