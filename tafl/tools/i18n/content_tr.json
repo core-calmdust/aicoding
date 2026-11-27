@@ -107,7 +107,7 @@
  "ls.v_tablut.goal": "Kralın iki hamle içinde kenara ulaşmasını sağlayan hamleyi yapın.",
  "ls.v_tablut.hint": "Kralı kenarı iki ya da daha fazla yönde gören bir kareye gönderin.",
  "ls.v_tablut.why": "{m} — iki yol! Kral sonraki hamlede kenarda.",
- "ls.v_tablut.ng": "{x} sonrası yollar kapatılabilir. Cevap {m} idi.",
+ "ls.v_tablut.ng": "{x} sonrası saldıranlar şahın iki hamlede kenara çıkmasını engelleyebilir. Cevap {m} idi.",
  "pz.th.esc2": "2 hamlede kaçış",
  "pz.th.esc2.sub": "Tuichi yap",
  "pz.th.esc3": "3 hamlede kaçış",

@@ -107,7 +107,7 @@
  "ls.v_tablut.goal": "Mainkan langkah yang membuat raja bisa mencapai tepi dalam dua langkah.",
  "ls.v_tablut.hint": "Kirim raja ke petak yang melihat tepi dari dua arah atau lebih.",
  "ls.v_tablut.why": "{m} — dua jalan! Raja mencapai tepi di langkah berikutnya.",
- "ls.v_tablut.ng": "Setelah {x} jalannya bisa ditutup. Jawabannya {m}.",
+ "ls.v_tablut.ng": "Setelah {x} penyerang bisa mencegah raja mencapai tepi dalam dua langkah. Jawabannya {m}.",
  "pz.th.esc2": "Kabur dalam 2",
  "pz.th.esc2.sub": "Buat tuichi",
  "pz.th.esc3": "Kabur dalam 3",
