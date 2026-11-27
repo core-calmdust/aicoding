@@ -197,6 +197,10 @@
     { id: 'epinal', w: 2048, h: 1386, rijks: 'RP-P-OB-201.586', bg: '#e7dfc9', spots: [[.45, .62], [.5, .42], [.08, .3], [.5, .04], [.2, .87], [.13, .045]], links: [{ ex: 'goose' }, { room: 'chance' }] },
     // (2026-11-25) the Rijksmuseum: Jacob Matham, an elegant couple playing tric-trac for money (1621)
     { id: 'matham', w: 2048, h: 1833, rijks: 'RP-P-OB-27.054', bg: '#dcd8cd', spots: [[.43, .62], [.6, .45], [.58, .53], [.5, .28], [.47, .69], [.5, .95]], links: [{ g: 'backgammon' }] },
+    // (2026-11-25) the Rijksmuseum: French amateur album: three men playing cards at a garden table, an onlooker
+    { id: 'jardin', w: 2048, h: 1430, rijks: 'RP-F-F01164-8-5', bg: '#cfc3a6', spots: [[.483, .51], [.148, .106], [.45, .2], [.711, .29], [.221, .29], [.85, .75]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Rijksmuseum: album snapshot: family playing cards under an oil lamp
+    { id: 'lamplight', w: 1337, h: 945, rijks: 'RP-F-2002-101-3-2', bg: '#2a241e', spots: [[.623, .52], [.6, .14], [.164, .46], [.336, .31], [.479, .36], [.85, .19]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
