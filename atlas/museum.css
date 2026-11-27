@@ -1196,3 +1196,62 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 .mxch .mxcoord{fill:#cbbfa9}   /* (the chess board stands on the dark stage: its letters and numbers light) */
 .mxcap{padding:2px 8px;border-radius:99px;background:#efe8da;color:#23262f}.mxcap em{color:#5d564b}   /* (what a side has taken: on a light chip, so black pieces show on the dark stage) */
 .mxlm.ring{fill:rgba(250,205,70,.25);stroke:#e0a21a;stroke-width:.07}   /* (point boards: the last move shows as a ring around the piece, not only under it) */
+.mxp,.mxcap,.mxhk,.mxxk{font-style:normal}   /* (2026-11-27 ユーザー: 将棋とシャンチーの駒がイタリックになっている — the pieces sit in <i> elements) */
+/* (2026-11-27 ユーザー: 画面下に謎の改行 — the story was held to 46em inside a wider card, so its lines stopped short of the card's edge)
+   the card in two columns: the story on the left, filling its column; the record on the right, one item under another */
+.mxabout{display:grid;grid-template-columns:minmax(0,1fr) minmax(200px,280px);gap:6px 28px;align-items:start}
+.mxabout h4{grid-column:1/-1}
+.mxabout p{max-width:none}
+.mxabout dl{grid-template-columns:minmax(0,1fr);margin:0;padding-inline-start:20px;border-inline-start:2px solid var(--line)}
+@media (max-width:819px){.mxabout{grid-template-columns:minmax(0,1fr)}.mxabout dl{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-top:8px;padding:10px 0 0;border:0;border-top:2px solid var(--line)}}
+/* (2026-11-27 ユーザー: 描かれたゲームのレイアウトが崩れている) the three pull-downs (地域・ゲーム・時代) on a phone: thirds of one line, no sideways scroll */
+@media (max-width:819px){.mupg-ex.ptreg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;overflow:visible;-webkit-mask:none;mask:none}
+  .ptreg .ptdd{position:relative;max-width:none;min-width:0;flex-direction:column;justify-content:center;align-items:flex-start;gap:0;padding:4px 24px 5px 12px;border-radius:14px;min-height:44px;text-align:start}
+  .ptreg .ptdd .ptddk{font-size:12px;line-height:1.2}.ptreg .ptdd b{font-size:13px;line-height:1.25;white-space:normal;overflow:visible;overflow-wrap:anywhere}
+  .ptreg .ptdd svg{position:absolute;inset-inline-end:7px;top:50%;margin-top:-7px;width:14px;height:14px}}
+/* (2026-11-27 ユーザー: 名局選の一覧の画像はどのゲームでもサイズ固定・盤を大きく) every card's picture: the same square; the board fills it */
+.mxth{aspect-ratio:1/1;padding:14px;display:grid;place-items:center}
+.mxth svg{width:100%;height:100%;max-height:none}
+.mxth{position:relative;overflow:hidden}.mxth.k-xiangqi{background-color:#2b2f3b}
+.mxth svg{position:absolute;inset:14px;width:calc(100% - 28px);height:calc(100% - 28px)}
+/* ===== スタンプカード (2026-11-27 作り直し — ユーザー: あまりにも不均衡、もっとスマートに): a head with a ring of the rooms done, every room
+   the same tile (stamp · name · goal · bar · k / n · reward · buttons), the item stamps of one room at a time, small, under the tiles ===== */
+.mupass.on{padding:18px 20px}
+.mpc-h{position:relative;display:flex;align-items:center;gap:14px;padding-inline-end:44px}
+.mpc-ring{flex:none;position:relative;display:grid;place-items:center;width:58px;height:58px;border-radius:50%;background:conic-gradient(#2f7d4a var(--p),#eadfc6 0)}
+.mpc-ring::before{content:"";position:absolute;inset:6px;border-radius:50%;background:#fffaf0}
+.mpc-ring b{position:relative;font:900 20px var(--round);color:var(--ink)}
+.mpc-ht{min-width:0}.mpc-ht b{display:block;font:800 18px var(--font)}.mpc-ht small{display:block;font-size:13px;font-weight:700;color:#5d564b;line-height:1.5}
+.mpc-ht .mpc-k{color:#2f6b43;font-weight:800}
+.mpc-rw{margin:10px 0 14px;padding:8px 12px;border-radius:12px;background:#f6ecd6;color:#7a4c12;font-size:13px;font-weight:800;line-height:1.5}
+.mpc-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.mpc-t{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border:2px solid var(--line);border-radius:16px;background:#fff;min-width:0}
+.mpc-t.ok{border-color:#cfe0c9;background:#fbfdf9}.mpc-t.on{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink) inset}
+.mpc-tp{display:flex;align-items:center;gap:10px;min-width:0}
+.mpc-ic{flex:none;position:relative;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;border:2px dashed #d6c7a4;color:#9b8a68}
+.mpc-ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mpc-ic i{position:absolute;inset-inline-end:-6px;bottom:-4px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:#2f7d4a;color:#fff;font-style:normal;font-size:12px;font-weight:900}
+.mpc-t.ok .mpc-ic{border:3px solid #9a6a32;background:#f6e3bd;color:#7a4a1a;transform:rotate(-8deg)}
+.mpc-ic.sm{width:32px;height:32px;border-style:solid}.mpc-ic.sm svg{width:18px;height:18px}
+.mpc-tt{min-width:0}.mpc-tt b{display:block;font-size:15px;line-height:1.3}.mpc-tt small{display:block;font-size:12.5px;font-weight:700;color:#5d564b;line-height:1.4}
+.mpc-bar{display:block;height:7px;border-radius:99px;background:#efe6d2;overflow:hidden}.mpc-bar span{display:block;height:100%;border-radius:99px;background:#c9a35a}
+.mpc-t.ok .mpc-bar span{background:#2f7d4a}
+.mpc-ft{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.mpc-ft em{font-style:normal;font:800 14px var(--round);color:var(--ink)}.mpc-ft small{font-size:12px;font-weight:800;color:#7a4c12}
+.mpc-ac{display:flex;gap:6px;margin-top:auto}
+.mpc-b{flex:1;min-height:36px;padding:4px 10px;border:2px solid var(--line);border-radius:99px;background:#fff;color:var(--ink);font:inherit;font-weight:800;font-size:13px;cursor:pointer}
+.mpc-b.go{background:var(--ink);border-color:var(--ink);color:#fff}
+.mpc-b.see[aria-expanded=true]{background:#f1ead9}
+.mpc-d{margin-top:14px;padding:12px 14px;border:2px solid var(--line);border-radius:16px;background:#fff}
+.mpc-dh{display:flex;align-items:center;gap:10px;margin-bottom:10px}.mpc-dh b{font-size:15px}.mpc-dh em{margin-inline-start:auto;font-style:normal;font:800 14px var(--round)}
+.mpc-st{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:6px;max-height:232px;overflow-y:auto;overscroll-behavior:contain;padding:2px}
+.mpc-s1{position:relative;aspect-ratio:1/1;min-width:0;padding:0;border:2px dashed #d6c7a4;border-radius:50%;background:#fffaf0;color:#8a7a5a;cursor:pointer;overflow:hidden;font:800 11px var(--round)}
+.mpc-s1 img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.mpc-s1 i{position:relative;font-style:normal;font-size:12px}
+.mpc-s1.on{border:2px solid #9a6a32}.mpc-s1.on i{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.8)}
+@media (max-width:819px){.mupass.on{padding:14px 12px}.mpc-g{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.mpc-t{padding:10px}.mpc-ic{width:38px;height:38px}.mpc-tt small{display:none}.mpc-ft small{display:none}.mpc-ac{flex-direction:column}.mpc-b{min-height:44px}.mpc-st{grid-template-columns:repeat(auto-fill,minmax(44px,1fr))}}
+.mpc-b.see{flex:none;display:grid;place-items:center;width:44px;padding:0}
+.mpc-b.see svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+.mpc-b.see circle{fill:currentColor;stroke:none}
+.mpc-b.see[aria-expanded=true]{background:var(--ink);border-color:var(--ink);color:#fff}.mpc-b.see[aria-expanded=true] path{transform:rotate(180deg);transform-origin:12px 19px}
+@media (max-width:819px){.mpc-ac{flex-direction:row}.mpc-tt b{font-size:14px}}
