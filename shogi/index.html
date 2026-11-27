@@ -4544,7 +4544,7 @@ let LESSONS = null;
 // they are addressed by negative indices (-1 = LESSONS.rules[0]) — see gradeAt()
 // (2026-11-15) read when the lessons are first opened, not with the page (0.5MB)
 let lessonsP = null;
-const lessonsLoad = () => lessonsP || (lessonsP = fetch('lessons.json?v=20261127rx').then(r => r.json()).then(d => { d.rules = d.grades.filter(g => g.rules); d.grades = d.grades.filter(g => !g.rules); return (LESSONS = d); }).catch(e => { lessonsP = null; console.warn('lessons unavailable', e); }));
+const lessonsLoad = () => lessonsP || (lessonsP = fetch('lessons.json?v=20261127rx2').then(r => r.json()).then(d => { d.rules = d.grades.filter(g => g.rules); d.grades = d.grades.filter(g => !g.rules); return (LESSONS = d); }).catch(e => { lessonsP = null; console.warn('lessons unavailable', e); }));
 let lprog = {};
 try { lprog = JSON.parse(localStorage.getItem(LSTORE) || '{}'); } catch (e) {}
 const L = o => (o && (o[LANG] || o.en || o.ja)) || '';
@@ -5632,6 +5632,7 @@ function lessonReason(pr, usi) {
       const a = capName(m), b = capName(bm);
       return (a ? t('r.took', { m: kan1(pr.sfen, usi), p: a }) : t('r.noCap', { m: kan1(pr.sfen, usi) })) + (usi !== pr.accept[0] ? t('r.couldTake', { m: kan1(pr.sfen, pr.accept[0]), p: b }) : '');
     }
+    case 'handi':   // (2026-11-27 第2期 rx の駒落ち：上手が落とした駒のせいでタダになった駒を取る — k15 と同じ盤の理由)
     case 'free': {   // (2026-11-25 第2期 k15「タダの駒を取る」: the piece taken and who takes the mover back, from the board)
       const a = capName(m), b = capName(bm), M = kan1(pr.sfen, usi), B = kan1(pr.sfen, pr.accept[0]);
       if (pr.accept.includes(usi)) return t('r.freeOk', { m: M, p: b });
@@ -5654,11 +5655,6 @@ function lessonReason(pr, usi) {
       const pct = u => { const c = pr.cand.find(x => x[0] === u); return c ? Math.round(c[1] * 100 / pr.total) : 0; };
       const my = pct(usi);
       return (my ? t('r.freq', { m: kan1(pr.sfen, usi), p: my }) : t('r.offbook', { m: kan1(pr.sfen, usi) })) + (usi !== pr.accept[0] ? ' ' + t('r.freq', { m: kan1(pr.sfen, pr.accept[0]), p: pct(pr.accept[0]) }) : '');
-    }
-    case 'handi': {
-      if (pr.accept.includes(usi)) return '';
-      const c = pr.cand.find(x => x[0] === usi), s = c ? c[1] : pr.floor;
-      return t('r.cp', { d: Math.max(0, Math.round(pr.cand[0][1] - s)) });
     }
     case 'trap':
       return usi === pr.bait ? t('r.bait', { m: kan1(pr.sfen, usi) }) : t('r.baitAvoided', { m: kan1(pr.sfen, pr.bait) });

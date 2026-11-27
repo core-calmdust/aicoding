@@ -285,6 +285,36 @@
     { id: 'kabinet', w: 1949, h: 2048, rijks: 'RP-P-OB-937', bg: '#ece8de', spots: [[.45, .3], [.5, .6], [.32, .32], [.25, .84], [.66, .82], [.92, .2]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
     // (2026-11-25) the Rijksmuseum: Jan Lievens, Quarrelling Card Players and Death (1638)
     { id: 'lievens', w: 2048, h: 1555, rijks: 'RP-P-OB-12.544', bg: '#e2ddd2', spots: [[.56, .25], [.62, .07], [.44, .24], [.72, .28], [.47, .76], [.25, .95]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Cornelis Anthonisz., Sorgheloos series 4/6: the game of chance (1541)
+    { id: 'sorgheloos', w: 1943, h: 2048, rijks: 'RP-P-1932-121D', bg: '#e8e1d0', spots: [[.39, .59], [.48, .41], [.33, .41], [.2, .54], [.64, .53], [.85, .5]], links: [{ room: 'chance' }, { g: 'solitaire' }] },
+    // (2026-11-25) the Rijksmuseum: 'Alea Belli': satire on the Northern War, Swede and Dane at tric-trac (1656)
+    { id: 'aleabelli', w: 2048, h: 1646, rijks: 'RP-P-OB-81.843', bg: '#e4e0d6', spots: [[.47, .52], [.45, .61], [.47, .09], [.84, .65], [.45, .83], [.95, .07]], links: [{ g: 'backgammon' }] },
+    // (2026-11-25) the Rijksmuseum: Kubota Shunman surimono: Hyakunin isshu poem cards and their box (1806)
+    { id: 'shunman', w: 2048, h: 1480, rijks: 'RP-P-1995-287', bg: '#efe9dc', spots: [[.71, .63], [.52, .73], [.3, .86], [.38, .28], [.87, .33], [.86, .8]], links: [{ g: 'solitaire' }] },
+    // (2026-11-25) the Rijksmuseum: G. M. Mitelli, 'Gioco de mestieri', dice game of twenty trades (1698)
+    { id: 'mitelli', w: 2048, h: 1535, rijks: 'RP-P-2015-26-1606', bg: '#e8e3d6', spots: [[.51, .03], [.06, .09], [.49, .17], [.89, .17], [.45, .88], [.91, .98]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: William Hogarth, 'The Lottery' (1721)
+    { id: 'hogarth', w: 2048, h: 1681, rijks: 'RP-P-OB-18.741', bg: '#e4dfd2', spots: [[.26, .29], [.78, .29], [.5, .24], [.49, .52], [.78, .65], [.5, .89]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: G. D. Matthieu, ladies playing draughts by candlelight (1765)
+    { id: 'matthieu', w: 2048, h: 1680, rijks: 'RP-P-1999-31', bg: '#e4e0d8', spots: [[.4, .67], [.49, .29], [.45, .8], [.36, .33], [.67, .25], [.79, .97]], links: [{ g: 'checkers' }] },
+    // (2026-11-25) the Rijksmuseum: Canot after Pillement, Chinese children's games: house of cards (1759)
+    { id: 'pillement', w: 1324, h: 2048, rijks: 'RP-P-1887-A-12359', bg: '#eee8de', spots: [[.53, .25], [.41, .27], [.66, .19], [.5, .8], [.38, .85], [.5, .99]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Gebroeders Koster, 'Het skating-rink spel', goose-type board (1870)
+    { id: 'skating', w: 2048, h: 1533, rijks: 'RP-P-OB-201.529', bg: '#ece3d0', spots: [[.5, .45], [.52, .73], [.39, .07], [.18, .72], [.08, .2], [.45, .96]], links: [{ ex: 'goose' }] },
+    // (2026-11-25) the Rijksmuseum: Gavarni in Le Charivari 1837: a wife watching her husband and lover at a board game
+    { id: 'gavarni', w: 1371, h: 2048, rijks: 'RP-P-OB-40.831', bg: '#e8ddcd', spots: [[.16, .32], [.39, .49], [.63, .32], [.81, .16], [.93, .16], [.51, .95]], links: [{ g: 'checkers' }, { g: 'backgammon' }] },
+    // (2026-11-25) the Rijksmuseum: Bernard Picart, lottery on a stage (Great Mirror of Folly, 1720)
+    { id: 'picart', w: 2048, h: 1293, rijks: 'RP-P-OB-51.357X', bg: '#e6e2d8', spots: [[.57, .47], [.68, .46], [.32, .73], [.62, .8], [.94, .86], [.07, .95]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Goose game satirising the bull Unigenitus (1724)
+    { id: 'unigenitus', w: 2048, h: 1626, rijks: 'RP-P-1970-479', bg: '#e8e3d6', spots: [[.5, .13], [.5, .4], [.1, .11], [.89, .11], [.1, .45], [.56, .82]], links: [{ ex: 'goose' }] },
+    // (2026-11-25) the Rijksmuseum: David Bles, study of a man playing chess (1876)
+    { id: 'bles', w: 2048, h: 1578, rijks: 'RP-T-1941-47(R)', bg: '#d9d2c4', spots: [[.58, .35], [.48, .22], [.25, .6], [.85, .65], [.08, .77], [.82, .93]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Rijksmuseum: Visscher, 'Het nieuw en vermaeckelyck Ghanse-spel' with rules (1612-52)
+    { id: 'visscher', w: 2048, h: 1785, rijks: 'RP-P-1893-A-18144', bg: '#e6e1d4', spots: [[.62, .42], [.33, .37], [.71, .72], [.45, .78], [.24, .32], [.12, .62]], links: [{ ex: 'goose' }] },
+    // (2026-11-25) the Rijksmuseum: Gavarni, 'Une tombola' (La Caricature 1840): Pierrots hold a carnival lottery
+    { id: 'tombola', w: 1407, h: 2048, rijks: 'RP-P-1898-A-21391', bg: '#e8e0d2', spots: [[.32, .19], [.54, .28], [.8, .28], [.57, .44], [.37, .56], [.5, .96]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: 'Nêerlands Staatkundich Werp Spel', anti-Patriot board game (1793)
+    { id: 'patriotten', w: 2048, h: 1604, rijks: 'RP-P-1888-A-12939', bg: '#ebe7de', spots: [[.52, .5], [.54, .36], [.52, .11], [.36, .42], [.36, .82], [.71, .8]], links: [{ ex: 'goose' }, { room: 'chance' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
