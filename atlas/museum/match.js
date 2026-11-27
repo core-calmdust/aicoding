@@ -35,8 +35,8 @@
         41: { a: [['g7', 'e8']] }, 42: { s: ['d8'] }, 43: { a: [['f6', 'd8']] }, 44: { a: [['g8', 'f6']] }, 45: { a: [['e7', 'd8'], ['d5', 'c7'], ['g7', 'e8']], s: ['d8'] } } },
     // (2026-11-27) Honinbo Shusaku v. Inoue Gennan Inseki, 1846: The Ear-reddening Game
     { id: 'mimiaka', kind: 'go', size: 19, res: 'B+2',
-      moves: 'qd dc pq oc cp cf ep qo pe np po pp op qp oq oo pn qq nq on pm om pl mp mq ol pk lq lr kr lp kq qr rr rs mr nr pr ps qs no mo qr rm rl qs lo mn qr qm or ql qj rj ri rk ln mm qi rq jn ls ns gq go ck kc ic pc nj ke og oh pb qb ng mi mj nd ph qg pg hq hr ir iq hp jr fc lc ld mc lb mb md qf pf qh rg rh sh rf sg pj pi oi oj ni qk ok qe kb jb ka jc ob ja la db cc fe cn gr is fq io ji eb fb eg dj dk ej cj dh ij hm gj eh fl fg er dm fn dn gn jj jk kk ii ik jl kl il jh co do ih hn hl bl dg gh ch ig ec cr fd gd ed gc bk cm gs gp li kg in lj lg gm jf jg im fm kf lf mf le gf hf ff gg lk kj km lm ll jm ge he ef ea cb fr fs dr qa ra pa rb da gi fj fi fa ga gl ek em ho el en jo kn ci lh mh mg di ei lg qn rn re sl mg bm am lg eq es mg ha gb lg ds hs mg sj si lg sr sq mg hd hb lg ro so mg ss qs lg sn rp mg cl bn lg ml mk mg pj sf lg nn nl mg ib ia lg nc nb mg jd kd lg ma na mg qc rc lg js ks mg hc id lg fk hj mg hh hg lg gk hk mg ak lg al bm nf od ki ms kp ip jp lr oj mr ea sr',
-      mk: {1: {'s':['qd']},3: {'s':['pq']},4: {'a':[['oc','qd']]},5: {'s':['cp']},6: {'s':['cf']},7: {'s':['ep']},8: {'a':[['qo','pq']]},10: {'s':['np','pq'],'a':[['np','pq']]},24: {'s':['pm','pl']},25: {'s':['mq']},28: {'s':['mq','lq'],'a':[['lq','mq']]},30: {'s':['mq','nq','oq']},31: {'s':['lp']},33: {'s':['qr']},40: {'a':[['qs','qr']],'s':['qs']},44: {'a':[['rm','qm']]},50: {'s':['qm']},51: {'s':['or']},53: {'s':['qj']},60: {'s':['rq']},63: {'s':['ns','or']},67: {'a':[['kc','oc']]},70: {'a':[['nj','oh']]},72: {'a':[['og','od']],'s':['og']},77: {'s':['mi']},83: {'s':['hq']},89: {'a':[['fc','dc']]},96: {'s':['qf']},104: {'s':['pj']},107: {'s':['oj']},112: {'a':[['kb','jc']]},118: {'s':['la']},126: {'s':['io']},127: {'a':[['ji','je'],['ji','jo'],['ji','oi'],['ji','fi']],'s':['ji']},131: {'s':['dj']},136: {'s':['ij'],'a':[['ij','ji']]},147: {'s':['jj']},150: {'s':['ii']},155: {'s':['jh']},160: {'s':['hl']},162: {'s':['dg']},167: {'s':['cr']},175: {'s':['gp']},180: {'s':['lg']},199: {'s':['jm']},228: {'s':['mh','lg']},236: {'s':['sl']},274: {'s':['pj']},299: {'s':['id']},311: {'s':['lg']},325: {'s':['sr']}} },
+          moves: 'qd dc pq oc cp cf ep qo pe np po pp op qp oq oo pn qq nq on pm om pl mp mq ol pk lq lr kr lp kq qr rr rs mr nr pr ps qs no mo qr rm rl qs lo mn qr qm or ql qj rj ri rk ln mm qi rq jn ls ns gq go ck kc ic pc nj ke og oh pb qb ng mi mj nd ph qg pg hq hr ir iq hp jr fc lc ld mc lb mb md qf pf qh rg rh sh rf sg pj pi oi oj ni qk ok qe kb jb ka jc ob ja la db cc fe cn gr is fq io ji eb fb eg dj dk ej cj dh ij hm gj eh fl fg er dm fn dn gn jj jk kk ii ik jl kl il jh co do ih hn hl bl dg gh ch ig ec cr fd gd ed gc bk cm gs gp li kg in lj lg gm jf jg im fm kf lf mf le gf hf ff gg lk kj km lm ll jm ge he ef ea cb fr fs dr qa ra pa rb da gi fj fi fa ga gl ek em ho el en jo kn ci lh mh mg di ei lg qn rn re sl mg bm am lg eq es mg ha gb lg ds hs mg sj si lg sr sq mg hd hb lg ro so mg ss qs lg sn rp mg cl bn lg ml mk mg pj sf lg nn nl mg ib ia lg nc nb mg jd kd lg ma na mg qc rc lg js ks mg hc id lg fk hj mg hh hg lg gk hk mg ak lg al bm nf od ki ms kp ip jp lr oj mr ea sr',
+          mk: {1: {'s':['qd']},3: {'s':['pq']},4: {'a':[['oc','qd']]},5: {'s':['cp']},6: {'s':['cf']},7: {'s':['ep']},8: {'a':[['qo','pq']]},10: {'s':['np','pq'],'a':[['np','pq']]},24: {'s':['pm','pl']},25: {'s':['mq']},28: {'s':['mq','lq'],'a':[['lq','mq']]},30: {'s':['mq','nq','oq']},31: {'s':['lp']},33: {'s':['qr']},40: {'a':[['qs','qr']],'s':['qs']},44: {'a':[['rm','qm']]},50: {'s':['qm']},51: {'s':['or']},53: {'s':['qj']},60: {'s':['rq']},63: {'s':['ns','or']},67: {'a':[['kc','oc']]},70: {'a':[['nj','oh']]},72: {'a':[['og','od']],'s':['og']},77: {'s':['mi']},83: {'s':['hq']},89: {'a':[['fc','dc']]},96: {'s':['qf']},104: {'s':['pj']},107: {'s':['oj']},112: {'a':[['kb','jc']]},118: {'s':['la']},126: {'s':['io']},127: {'a':[['ji','je'],['ji','jo'],['ji','oi'],['ji','fi']],'s':['ji']},131: {'s':['dj']},136: {'s':['ij'],'a':[['ij','ji']]},147: {'s':['jj']},150: {'s':['ii']},155: {'s':['jh']},160: {'s':['hl']},162: {'s':['dg']},167: {'s':['cr']},175: {'s':['gp']},180: {'s':['lg']},199: {'s':['jm']},228: {'s':['mh','lg']},236: {'s':['sl']},274: {'s':['pj']},299: {'s':['id']},311: {'s':['lg']},325: {'s':['sr']}} },
     // (2026-11-27) Adolf Anderssen v. Jean Dufresne, 1852: The Evergreen Game
     { id: 'evergreen', kind: 'chess', res: 'w', moves: 'e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 exd4 O-O d3 Qb3 Qf6 e5 Qg6 Re1 Nge7 Ba3 b5 Qxb5 Rb8 Qa4 Bb6 Nbd2 Bb7 Ne4 Qf5 Bxd3 Qh5 Nf6+ gxf6 exf6 Rg8 Rad1 Qxf3 Rxe7+ Nxe7 Qxd7+ Kxd7 Bf5+ Ke8 Bd7+ Kf8 Bxe7#',
       mk: { 1: { s: ['d5', 'f5'] }, 2: { s: ['d4', 'f4'] }, 3: { a: [['f3', 'e5']] }, 4: { a: [['c6', 'e5']] }, 5: { a: [['c4', 'f7']], s: ['f7'] }, 6: { a: [['c5', 'f2']], s: ['f2'] }, 7: { a: [['b4', 'c5']] }, 8: { s: ['b4'] },
@@ -71,7 +71,7 @@
     // (2026-11-27) Honinbo Shusaku v. Yasui Sanchi IX, 1849: Shusaku’s First Castle Game
     { id: 'oshiro1849', kind: 'go', size: 19, res: 'B+11',
       moves: 'qd qp dc ce ci fd de df ee cd ec cc ic oc co ep dq eq dr cm cn dm eo cg en em fe gm fi hp nq kq qq rq pq rr po qo pn qn pm qm pl kc pe oe of ne ql qb og dj di ei eh ej bf dh ch dg bg cf bj fh gq hq gp gr fr hr go fg jc kd hf oi pi pj ph mj qj if he hg mh bk be lh lg kh im ie hd mi ll kk hm ik rl rc rd mq mr lr mp lq bl ak aj cj bh cl so sp sm sr hk pf qc rb qe gn ho io jo hn in ip gl fm lo er dp fq kl dn do fo lk bp bq br cq bd ae bn bo ao bm am an bi ai bn aq al ap kj hi mg mf nh nf mc qr rs nr nl nm ml mm jb ib ka db ds cs es cr cb ia jp kp lf me sd se sc qf hj gj ij nc nb nd od md lc le kf ls ks ms jr pb ob pc pa ih gf ge fk gk jl jm il hl fj gi da ea ca oj nj ok ol lj ii hh jh ig nk pk gg ng mh jg kg an dd ed ao oh an ad ac fl el lp qs ps pp op om on li rm ro rn sn ja kb so rp id ni sn',
-      mk: {1: {'s':['qd']},5: {'s':['ci']},15: {'s':['co']},43: {'s':['pl']},76: {'s':['oi']}} },
+      mk: {1: {'s':['qd']},3: {'s':['dc','qd']},4: {'a':[['ce','dc']],'s':['ce']},5: {'a':[['ci','ce']],'s':['ci']},6: {'s':['fd','ce'],'a':[['fd','dc']]},7: {'s':['de','ce','fd']},9: {'s':['ee','de']},12: {'s':['cc','cd','ce','df','fd']},13: {'s':['ic','fd']},14: {'a':[['oc','qd']],'s':['oc']},15: {'s':['co']},16: {'a':[['ep','co']],'s':['ep']},19: {'s':['dr','co','dq']},20: {'a':[['cm','co']],'s':['cm']},23: {'s':['eo','ep','eq']},24: {'a':[['cg','ci']],'s':['cg']},26: {'s':['em','cm','dm']},27: {'s':['fe','fd']},28: {'s':['gm','cm','dm','em']},29: {'s':['fi','ci']},30: {'s':['hp','ep','eq']},32: {'s':['kq','nq'],'a':[['kq','nq']]},33: {'s':['qq','qp','nq']},36: {'s':['rr','qq','pq','rq']},37: {'s':['po']},42: {'s':['qm','qo','qn','po','pn','pm']},43: {'s':['pl','pq','po','pn','pm'],'a':[['pl','kl']]},44: {'s':['kc','ic','oc']},45: {'s':['pe','qd']},48: {'s':['ne','oe','oc','of']},49: {'s':['ql','qp','qo','qn','qm']},50: {'a':[['qb','qd']],'s':['qb']},51: {'s':['og','of','pl'],'a':[['og','ok']]},52: {'s':['dj','ci','fi']},56: {'s':['ej','dj','ei','fi','eh']},57: {'s':['bf','cg','ce','cd','cc']},60: {'s':['dg','ci','ch','di']},63: {'s':['bj','bg','bf']},64: {'s':['fh','eh']},65: {'s':['gq','eq','hp']},70: {'s':['hr','gq','gp','fr']},71: {'s':['go','ep','eq','hp','hq']},72: {'s':['fg','fh']},75: {'a':[['hf','hh']],'s':['hf']},76: {'s':['oi','og','pl']},77: {'s':['pi','oi']},80: {'s':['mj','pj','ph'],'a':[['mj','jj']]},81: {'s':['qj','pj']},84: {'s':['hg','hf','he','if']},85: {'s':['mh','mj','oi']},87: {'s':['be','bk','bj']},90: {'s':['kh','lh','mh'],'a':[['kh','if']]},91: {'s':['im','gm','hp','kq']},94: {'s':['mi','mj','mh']},99: {'s':['rl','ll','hm','ql']},101: {'s':['rd','rc']},106: {'s':['lq','kq','mq','lr','nq']},112: {'s':['cl','cj','bh','bl']},116: {'s':['sr','so','sp','sm']},121: {'s':['qe','pf','qc','pe']},122: {'s':['gn','gq','gp','go']},128: {'s':['ip','gq','gp','go','ho']},131: {'s':['lo','jo']},134: {'s':['fq','fr','ep','eq','er']},137: {'s':['do','dn']},138: {'s':['fo','gq','gp','go','ho'],'a':[['fo','fp']]},139: {'s':['lk','kk']},145: {'s':['ae','bp','bq','cq','bd']},151: {'s':['an','ao','am']},154: {'s':['bn','bi','bm','bl']},157: {'s':['ap','bp','ao']},162: {'s':['nh','mf','mg']},167: {'s':['nr','nf','qr']},171: {'s':['mm','nl','ml','nm']},179: {'s':['cr','cs','ds','es']},185: {'s':['me','lg','kp']},189: {'s':['qf','pf','se']},192: {'s':['ij','hk','hj','gj']},199: {'s':['le','nd','nc','md','od']},204: {'s':['jr','ls','ms']},208: {'s':['pa','pb','pc']},211: {'s':['ge','gf']},219: {'s':['gi','fj','fi']},226: {'s':['ol','oj','ok','pj']},233: {'s':['pk','ok','oj']},238: {'s':['kg','mh','ng']},242: {'s':['ao','an','ed']},245: {'s':['ad','oi','an']},248: {'s':['el','fl','fk','fj']},253: {'s':['op','pp','qr','qq']},259: {'s':['rn','ro'],'a':[['rn','rp']]},263: {'s':['so','ja','rp']},267: {'s':['sn','pl','po','og','hf','pk']}} },
     // (2026-11-27) Red (name not recorded) v. Black (name not recorded), 13th century: The Shilin Guangji game
     { id: 'shilin', kind: 'xiangqi', res: 'b', moves: 'h2e2 h7e7 h0g2 h9g7 i0h0 b9c7 h0h6 c6c5 h6g6 c7d5 g6g5 d5f4 g3g4 g9i7 g5c5 f4d3 c5d5 d3c1', mk: { 2: { a: [['e7', 'e3']] }, 9: { a: [['g6', 'g7']] }, 11: { a: [['g5', 'd5']] }, 14: { a: [['i7', 'g5']] }, 16: { a: [['d3', 'c5']], s: ['c1'] }, 18: { a: [['c1', 'a0']], s: ['e0'] } } },
     // (2026-11-27) Red (name not recorded) v. Black (name not recorded), 1632 (published): The Thirteen-Move Horse Sacrifice (Juzhongmi)
@@ -93,7 +93,11 @@
     // (2026-11-27) Sakata Sankichi v. Sekine Kinjirō, 14 July 1913: Sakata Sankichi beats Sekine with the Side Rook
     { id: 'sakata1913', kind: 'shogi', res: 's',
       moves: '7g7f 3c3d 5g5f 5c5d 6g6f 8c8d 7i7h 7a6b 7h6g 8d8e 8h7g 7c7d 3i4h 6a5b 4h5g 5a4b 6i7h 3a3b 3g3f 4c4d 2h3h 5b4c 5i6i 3b3c 1g1f 4b3b 3f3e 3d3e 3h3e 2b3a 3e3h 8e8f 8g8f 3a8f 7g8f 8b8f P*8g 8f8b 5g4f 6b5c 4i5h P*3d 6i7i 9c9d 1f1e 9d9e 7i8h 4a4b 5h6h 6c6d 5f5e 5d5e B*6c 7d7e 3h5h B*9b 6c3f+ 4d4e 4f5g 7e7f 6g7f 5c5d 3f3g 8b7b P*7e 4c4d 5h5i 3b4c 6h6g 3d3e 8i7g 4b5c 6f6e 6d6e P*5f 3e3f 3g3f 5e5f 5g5f P*5e 5f6e P*6d 6e5d 4d5d P*6e P*3e 3f3g 3c4d P*5f 5e5f 6e6d 4e4f 4g4f 4d5e 6d6c+ 5c6c P*6f 2a3c S*6e P*6d 6e5d 6c5d P*3d 4c3d P*3f S*4d 5i3i 3d4c 3f3e P*3h G*3d 4c5c 3i5i 7b4b 3g2f 5e4f 3d3c 4b8b 3c3d 4d5e N*7d 8b4b P*4d 5d4d 3d4d 4b4d 6g5f 5e5f 5i5f S*5e 5f5i P*5h 5i6i 5c5d 2f3f G*4e G*6e 6d6e 7f6e 5d4c 3f4e 4d4e S*5d',
-      mk: { 21: { s: ['3h'] }, 26: { s: ['3b'] }, 27: { a: [['3h', '3c']] }, 29: { a: [['3e', '3b']] }, 34: { a: [['3a', '8f']] }, 53: { s: ['6c'] }, 57: { a: [['6c', '3f']], s: ['3f'] }, 68: { s: ['4c'] }, 81: { a: [['5f', '6e']] }, 99: { a: [['6e', '5d']] }, 104: { s: ['3d'] }, 107: { a: [['3i', '3e']] }, 111: { a: [['3d', '4c']] }, 115: { a: [['3g', '2f']], s: ['4f'] }, 121: { a: [['7d', '8b'], ['7d', '6b']] }, 134: { s: ['5d'] }, 135: { a: [['3f', '5d']] }, 137: { a: [['6e', '5d']] }, 139: { a: [['6e', '5d']] }, 141: { a: [['3f', '4e']] }, 143: { a: [['5d', '4c']], s: ['4c'] } } }
+      mk: { 21: { s: ['3h'] }, 26: { s: ['3b'] }, 27: { a: [['3h', '3c']] }, 29: { a: [['3e', '3b']] }, 34: { a: [['3a', '8f']] }, 53: { s: ['6c'] }, 57: { a: [['6c', '3f']], s: ['3f'] }, 68: { s: ['4c'] }, 81: { a: [['5f', '6e']] }, 99: { a: [['6e', '5d']] }, 104: { s: ['3d'] }, 107: { a: [['3i', '3e']] }, 111: { a: [['3d', '4c']] }, 115: { a: [['3g', '2f']], s: ['4f'] }, 121: { a: [['7d', '8b'], ['7d', '6b']] }, 134: { s: ['5d'] }, 135: { a: [['3f', '5d']] }, 137: { a: [['6e', '5d']] }, 139: { a: [['6e', '5d']] }, 141: { a: [['3f', '4e']] }, 143: { a: [['5d', '4c']], s: ['4c'] } } },
+    // (2026-11-27) Kimura Yoshio v. Sakata Sankichi, February 1937: The Nanzen-ji Showdown: Sakata's Edge Pawn
+    { id: 'nanzenji1937', kind: 'shogi', res: 's',
+      moves: '7g7f 9c9d 5g5f 3c3d 5f5e 4c4d 3i4h 3a3b 4h5g 3b4c 2g2f 3d3e 2f2e 2b3c 5i6h 8b2b 4g4f 4a3b 4i5h 4c3d 6h7h 6a6b 7i6h 5a6a 5h4g 2c2d 2e2d 3c2d 5e5d 2a3c 3g3f P*2f 3f3e 2d3e 4g3f 6a7b 5d5c+ 6b5c P*2e 7a6b 6i5i 1c1d 3f3e 3d3e P*3d 3c2e 4f4e 2b2d 4e4d P*5e 8h5e 5c4d 5g4f 4d5e 4f3e 2d2a B*7g G*4e P*5c P*5a 3e4f 5e4f 3d3c+ 2a2d 3c3b 2d3d 3b4b 7c7d 2h2f 3d3i+ S*6a 7b6a G*8b 6b7a 2f4f 7a8b 4f4e 6a7b 4b5b S*7a G*6b 7b7c 4e2e G*5f G*6f 8c8d 6f5f B*4g 2e6e 7a6b 5b6b S*5d G*7b 7c8c 7g5e',
+      mk: { 2: { s: ['9d'] }, 5: { s: ['5e'] }, 9: { s: ['5e', '5g'] }, 16: { a: [['2b', '2h']] }, 26: { a: [['2b', '2h']] }, 29: { a: [['5d', '5c']] }, 32: { a: [['2f', '2g']], s: ['2g'] }, 35: { a: [['3f', '3e']] }, 39: { s: ['2f'] }, 43: { s: ['3e'] }, 45: { a: [['3d', '3c']] }, 49: { a: [['4d', '4c']] }, 50: { a: [['8h', '5e']] }, 52: { a: [['4d', '5e']] }, 58: { s: ['5e', '4e'] }, 60: { s: ['5a', '5b'] }, 65: { s: ['3b'] }, 69: { a: [['2f', '4f']] }, 70: { s: ['3i'] }, 71: { s: ['6a'] }, 73: { a: [['8b', '7a']] }, 77: { s: ['4e'] }, 82: { s: ['7d'] }, 88: { a: [['4g', '5f']] }, 92: { a: [['5d', '6e']] }, 95: { a: [['5e', '7c']], s: ['8c'] } } }
   ];
 
   /* ---------- the kinds ---------- */
@@ -313,7 +317,38 @@
     return { init, play, label, pieces, cols: 9, rows: 10, sides: ['r', 'b'], first: 'r', pair: true, pt: true, GL,
       xy: (s, flip) => { const f = s.charCodeAt(0) - 97, r = +s[1]; return flip ? [8 - f, r] : [f, 9 - r]; } };
   })();
-  const KINDS = { chess: CHESS, shogi: SHOGI, go: GO, xiangqi: XIANGQI };
+  // reversi (2026-11-27): 8 × 8, squares a1…h8 as the records write them (files a…h from the left, ranks 1…8 from the top); Black moves first,
+  // d5 e4 black and d4 e5 white at the start. play flips every line the move flanks (throws on a move that flanks nothing or a taken square);
+  // '-' is a pass, allowed only when the side has no move (and the other side has one). A disc keeps its id while it turns over.
+  const REVERSI = (() => {
+    const DIR = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+    const ix = s => { const f = s.charCodeAt(0) - 97, r = s.charCodeAt(1) - 49; if (s.length !== 2 || f < 0 || f > 7 || r < 0 || r > 7) throw new Error('bad square: ' + s); return f + r * 8; };
+    const nm = i => 'abcdefgh'[i & 7] + ((i >> 3) + 1), opp = c => c === 'b' ? 'w' : 'b';
+    function init() { const b = Array(64).fill(null); let id = 0; [['d5', 'b'], ['e4', 'b'], ['d4', 'w'], ['e5', 'w']].forEach(([s, c]) => { b[ix(s)] = { id: id++, c }; }); return { b, turn: 'b', id, n: { b: 2, w: 2 } }; }
+    function flips(b, i, c) { if (b[i]) return []; const out = [], f0 = i & 7, r0 = i >> 3;
+      DIR.forEach(([df, dr]) => { const run = []; let f = f0 + df, r = r0 + dr; const on = () => f >= 0 && f < 8 && r >= 0 && r < 8;
+        while (on() && b[f + r * 8] && b[f + r * 8].c !== c) { run.push(f + r * 8); f += df; r += dr; }
+        if (run.length && on() && b[f + r * 8] && b[f + r * 8].c === c) out.push(...run); });
+      return out; }
+    const canMove = (b, c) => b.some((x, i) => !x && flips(b, i, c).length > 0);
+    function play(st, mv) {
+      const me = st.turn;
+      if (mv === '-' || mv === '' || mv === 'pass') {
+        if (canMove(st.b, me)) throw new Error('a pass, but there is a move to play');
+        if (!canMove(st.b, opp(me))) throw new Error('a pass after the game is over');
+        return { st: Object.assign({}, st, { turn: opp(me) }), pass: true, side: me, to: null, flips: [] }; }
+      const i = ix(String(mv).toLowerCase()); if (st.b[i]) throw new Error('square taken: ' + mv);
+      const fl = flips(st.b, i, me); if (!fl.length) throw new Error('flips nothing: ' + mv);
+      const b = st.b.slice(); b[i] = { id: st.id, c: me }; fl.forEach(j => { b[j] = { id: b[j].id, c: me }; });
+      const n = { b: 0, w: 0 }; b.forEach(x => { if (x) n[x.c]++; });
+      return { st: { b, turn: opp(me), id: st.id + 1, n }, to: nm(i), side: me, flips: fl.map(nm) }; }
+    const over = st => !canMove(st.b, 'b') && !canMove(st.b, 'w');
+    const label = (mv, i, r) => r.pass ? u('pass') : r.to;
+    const pieces = st => st.b.map((x, i) => x && { id: x.id, at: nm(i), k: 'd', c: x.c }).filter(Boolean);
+    return { init, play, label, pieces, over, cols: 8, rows: 8, sides: ['b', 'w'], first: 'b', disc: true,
+      xy: (s, flip) => { const f = s.charCodeAt(0) - 97, r = s.charCodeAt(1) - 49; return flip ? [7 - f, 7 - r] : [f, r]; } };
+  })();
+  const KINDS = { chess: CHESS, shogi: SHOGI, go: GO, xiangqi: XIANGQI, reversi: REVERSI };
 
   // every position of a game, worked out once (the record → states[0…n]; recs[i] = what move i did)
   const cache = {};
@@ -321,7 +356,7 @@
     if (cache[G.id]) return cache[G.id];
     const K = KINDS[G.kind], mv = Array.isArray(G.moves) ? G.moves : G.moves.trim().split(/\s+/);
     const st = [K.init(G)], recs = [];
-    mv.forEach((m, i) => { const r = K.play(st[i], G.kind === 'go' && m === '-' ? '' : m); recs.push(r); st.push(r.st); });
+    mv.forEach((m, i) => { let r; try { r = K.play(st[i], G.kind === 'go' && m === '-' ? '' : m); } catch (e) { e.message = `move ${i + 1} (${m}): ` + e.message; throw e; } recs.push(r); st.push(r.st); });
     return (cache[G.id] = { K, mv, st, recs });
   }
 
@@ -346,6 +381,7 @@
     if (K.go) { const n = G.size || 19; return { W: n + 1, H: n + 1, ox: 1, oy: 1, n, cell: 1, pt: true }; }
     if (K === SHOGI) return { W: 10.7, H: 9.9, ox: 0.85, oy: 0.45, cell: 1 };   // (2026-11-27 ユーザー: 盤が右寄り — the same margin left and right)
     if (K === XIANGQI) return { W: 9.7, H: 10.9, ox: 0.85, oy: 0.95, cell: 1, pt: true };
+    if (K === REVERSI) return { W: 9.2, H: 8.7, ox: 0.6, oy: 0.6, cell: 1 };   // (the letters along the top, the numbers on the left, as the records count)
     return { W: 9.2, H: 8.7, ox: 0.6, oy: 0.1, cell: 1 };   // (left: the ranks; right: the same width empty, so the squares stand in the middle)
   }
   function boardSVG(G, K, g, flip) {
@@ -382,12 +418,21 @@
         P.push(`<text x="${X(i) * 100}" y="${(g.oy - .42) * 100}" class="mxcoord" transform="scale(.01)">${top}</text><text x="${X(i) * 100}" y="${(Y(9) + .68) * 100}" class="mxcoord" transform="scale(.01)">${bot}</text>`); }
       return `<g class="mxxq">${P.join('')}</g>`;
     }
+    if (K === REVERSI) {   // the site's reversi board: green felt in a dark frame, black grid lines, the four dots at the c3 / f3 / c6 / f6 corners
+      const X = g.ox, Y = g.oy;
+      P.push(`<rect x="${X - .16}" y="${Y - .16}" width="8.32" height="8.32" rx=".14" class="mxrvfr"/><rect x="${X}" y="${Y}" width="8" height="8" class="mxrvf"/>`);
+      for (let i = 1; i < 8; i++) P.push(`<line x1="${X}" y1="${Y + i}" x2="${X + 8}" y2="${Y + i}"/><line x1="${X + i}" y1="${Y}" x2="${X + i}" y2="${Y + 8}"/>`);
+      [[2, 2], [6, 2], [2, 6], [6, 6]].forEach(([a, b]) => P.push(`<circle cx="${X + a}" cy="${Y + b}" r=".07" class="mxrvd"/>`));
+      for (let i = 0; i < 8; i++) P.push(`<text x="${(X + i + .5) * 100}" y="${(Y - .24) * 100}" class="mxcoord" transform="scale(.01)">${'abcdefgh'[flip ? 7 - i : i]}</text><text x="${(X - .32) * 100}" y="${(Y + i + .62) * 100}" class="mxcoord" transform="scale(.01)">${flip ? 8 - i : i + 1}</text>`);
+      return `<g class="mxrv">${P.join('')}</g>`;
+    }
     for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) P.push(`<rect x="${g.ox + f}" y="${g.oy + r}" width="1" height="1" class="${(r + f) % 2 ? 'mxdk' : 'mxlt'}"/>`);
     for (let i = 0; i < 8; i++) { P.push(`<text x="${(g.ox + i + .5) * 100}" y="${(g.oy + 8.45) * 100}" class="mxcoord" transform="scale(.01)">${'abcdefgh'[flip ? 7 - i : i]}</text><text x="${(g.ox - .3) * 100}" y="${(g.oy + i + .62) * 100}" class="mxcoord" transform="scale(.01)">${flip ? i + 1 : 8 - i}</text>`); }
     return `<g class="mxch">${P.join('')}</g>`;
   }
   function pieceHTML(K, p, g) {
     if (K.go) return `<span class="mxst ${p.k === 'B' ? 'b' : 'w'}"></span>`;
+    if (K === REVERSI) return `<span class="mxrd${p.c === 'w' ? ' w' : ''}"><span class="mxrf b"></span><span class="mxrf w"></span></span>`;   // two faces; turning over = rotating the one element
     if (K === XIANGQI) return `<span class="mxxp${p.red ? ' r' : ''}"><b>${p.glyph}</b></span>`;
     if (K === SHOGI) return `<span class="mxsg${p.up ? '' : ' dn'}${p.red ? ' pr' : ''}"><svg viewBox="0 0 100 110" aria-hidden="true"><path d="M50 4 82 18 94 106H6L18 18z"/></svg><b>${p.glyph}</b></span>`;
     return `<img src="${PIMG}${p.k}.svg" alt="" draggable="false">`;
@@ -398,7 +443,7 @@
     const G = cur, L = line(G), K = L.K, g = geom(G, K), st = L.st[ply], r = ply ? L.recs[ply - 1] : null, flip = G.orient === 'b' || G.orient === 'g';
     const box = el.board;
     if (box._g !== G.id) { box._g = G.id; box.innerHTML = `<svg class="mxbg" viewBox="0 0 ${g.W} ${g.H}" aria-hidden="true">${boardSVG(G, K, g, flip)}<g class="mxmk"></g></svg><div class="mxpcs"></div>`;
-      box.style.aspectRatio = `${g.W} / ${g.H}`; box._el = {}; box.classList.toggle('go', !!K.go); box.classList.toggle('sh', K === SHOGI); box.classList.toggle('ch', K === CHESS); box.classList.toggle('xq', K === XIANGQI); }
+      box.style.aspectRatio = `${g.W} / ${g.H}`; box._el = {}; box.classList.toggle('go', !!K.go); box.classList.toggle('sh', K === SHOGI); box.classList.toggle('ch', K === CHESS); box.classList.toggle('xq', K === XIANGQI); box.classList.toggle('mxrvb', K === REVERSI); }
     box.classList.toggle('still', !anim);
     const sz = (K.go ? 1 : 1) / g.W * 100, szh = 1 / g.H * 100;
     const lay = box.querySelector('.mxpcs'), seen = new Set();
@@ -406,13 +451,15 @@
       if (!e) { e = document.createElement('i'); e.className = 'mxp'; lay.appendChild(e); box._el[p.id] = e; e._k = ''; e.classList.add('new'); requestAnimationFrame(() => requestAnimationFrame(() => e.classList.remove('new'))); }
       if (e._k !== p.k + (p.glyph || '') + (p.up ? 1 : 0)) { e._k = p.k + (p.glyph || '') + (p.up ? 1 : 0); e.innerHTML = pieceHTML(K, p, g); }
       const [x, y] = spot(G, K, g, p.at, flip); e.style.left = x + '%'; e.style.top = y + '%'; e.style.width = sz + '%'; e.style.height = szh + '%';
-      e.classList.toggle('last', !!(K.go && r && r.to === p.at)); });
+      if (K.disc) { const d = e.firstChild, w = p.c === 'w';   // (reversi) a disc that changes colour turns over where it lies; the ones nearer the new disc first
+        if (d.classList.contains('w') !== w) { const f = r && anim && r.to ? Math.max(...[0, 1].map(j => Math.abs(p.at.charCodeAt(j) - r.to.charCodeAt(j)))) : 0; d.style.transitionDelay = f ? (f - 1) * 55 + 'ms' : '0ms'; d.classList.toggle('w', w); } }
+      e.classList.toggle('last', !!((K.go || K.disc) && r && r.to === p.at)); });
     Object.keys(box._el).forEach(id => { if (!seen.has(+id)) { const e = box._el[id]; delete box._el[id]; e.classList.add('gone'); setTimeout(() => e.remove(), anim ? 260 : 0); } });
     // the marks: the last move's squares, then what the note points at (arrows, squares)
     const mk = box.querySelector('.mxmk'), M = (G.mk || {})[ply] || {}, out = [];
     const c = at => { const [x, y] = K.xy(at, flip, g.n); return K.go || K.pt ? [g.ox + x, g.oy + y] : [g.ox + x + .5, g.oy + y + .5]; };
     const sqr = (at, cls) => { const [x, y] = c(at); out.push(K.pt ? `<circle cx="${x}" cy="${y}" r=".5" class="${cls}${cls === 'mxlm' ? ' ring' : ''}"/>` : `<rect x="${x - .5}" y="${y - .5}" width="1" height="1" class="${cls}"/>`); };
-    if (r && !K.go) { if (r.from) sqr(r.from, 'mxlm'); if (r.to) sqr(r.to, 'mxlm'); }
+    if (r && !K.go && !K.disc) { if (r.from) sqr(r.from, 'mxlm'); if (r.to) sqr(r.to, 'mxlm'); }
     (M.s || []).forEach(a => K.go ? (() => { const [x, y] = c(a); out.push(`<circle cx="${x}" cy="${y}" r=".42" class="mxsq"/>`); })() : sqr(a, 'mxsq'));
     (M.a || []).forEach(([a, b]) => { const [x1, y1] = c(a), [x2, y2] = c(b), d = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / d, uy = (y2 - y1) / d, ex = x2 - ux * .38, ey = y2 - uy * .38;
       out.push(`<path class="mxar" d="M${(x1 + ux * .3).toFixed(2)} ${(y1 + uy * .3).toFixed(2)}L${ex.toFixed(2)} ${ey.toFixed(2)}"/><path class="mxah" d="M${(x2 - ux * .12).toFixed(2)} ${(y2 - uy * .12).toFixed(2)}L${(ex - uy * .26).toFixed(2)} ${(ey + ux * .26).toFixed(2)}L${(ex + uy * .26).toFixed(2)} ${(ey - ux * .26).toFixed(2)}z"/>`); });
@@ -424,11 +471,12 @@
     const L = line(G), K = L.K, g = geom(G, K), st = L.st[L.st.length - 1], flip = G.orient === 'b' || G.orient === 'g', P = [];
     K.pieces(st).forEach(p => { const [x, y] = K.xy(p.at, flip, g.n), pt = K.go || K.pt, cx = pt ? g.ox + x : g.ox + x + .5, cy = pt ? g.oy + y : g.oy + y + .5;
       if (K.go) P.push(`<circle cx="${cx}" cy="${cy}" r=".47" class="${p.k === 'B' ? 'mxtb' : 'mxtw'}"/>`);
+      else if (K.disc) P.push(`<circle cx="${cx}" cy="${cy}" r=".4" class="${p.c === 'b' ? 'mxtb' : 'mxtw'}"/>`);
       else if (K === XIANGQI) P.push(`<g transform="translate(${cx} ${cy})"><circle r=".45" class="mxxt${p.red ? ' r' : ''}"/><text y="19" transform="scale(.01)" class="mxxg${p.red ? ' r' : ''}">${p.glyph}</text></g>`);
       else if (K === SHOGI) P.push(`<g transform="translate(${cx} ${cy})${p.up ? '' : ' rotate(180)'}"><path d="M0 -.44 .32 -.3 .4 .42H-.4L-.32 -.3z" class="mxtk"/><text y="20" transform="scale(.01)" class="mxtg${p.red ? ' pr' : ''}">${p.glyph}</text></g>`);
       else P.push(`<image href="${PIMG}${p.k}.svg" x="${cx - .5}" y="${cy - .5}" width="1" height="1"/>`); });
     // (2026-11-27 ユーザー: 一覧の画像はどのゲームでも同じ大きさ、盤を大きく、数字は省いてよい) the playing area only, no letters or numbers
-    const n = g.n || 0, box = K.go ? [.45, .45, n + .1, n + .1] : K === SHOGI ? [g.ox - .2, g.oy - .2, 9.4, 9.4] : K === XIANGQI ? [g.ox - .62, g.oy - .62, 9.24, 10.24] : [g.ox, g.oy, 8, 8];
+    const n = g.n || 0, box = K.go ? [.45, .45, n + .1, n + .1] : K === SHOGI ? [g.ox - .2, g.oy - .2, 9.4, 9.4] : K === XIANGQI ? [g.ox - .62, g.oy - .62, 9.24, 10.24] : K.disc ? [g.ox - .16, g.oy - .16, 8.32, 8.32] : [g.ox, g.oy, 8, 8];
     return `<svg viewBox="${box.map(v => +v.toFixed(2)).join(' ')}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">${boardSVG(G, K, g, flip).replace(/<text[^>]*>[^<]*<\/text>/g, '')}${P.join('')}</svg>`;
   }
   function wall() {
@@ -455,6 +503,7 @@
      as the stage) → the game's story and record. Phone: one column; the moves' list is a strip that scrolls sideways. */
   const plateOf = (G, L, st, side) => {   // what a side has to show on its plate
     const K = L.K;
+    if (K.disc) return `<span class="mxcap mxrc">${esc(u('discs').replace('{n}', st.n[side]))}</span>`;   // (reversi) the discs each side has now
     if (K.go) return st.cap[side] ? `<span class="mxcap"><u class="mxdot ${side === 'B' ? 'W' : 'B'}"></u>${esc(u('caps'))} ${st.cap[side]}</span>` : '';
     if (K === SHOGI) { const c = {}; K.hands(st)[side].forEach(x => c[x.t] = (c[x.t] || 0) + 1); const e = Object.entries(c);
       return e.length ? `<span class="mxcap"><em>${esc(u('hand'))}</em>${e.map(([t, n]) => `<span class="mxhk">${K.KAN[t]}${n > 1 ? `<sub>${n}</sub>` : ''}</span>`).join('')}</span>` : ''; }
@@ -475,7 +524,7 @@
     el.pushed = !!(user && ctx && ctx.hist); if (el.pushed) ctx.hist({ room: 'match', game: id });
     stop(); cur = G; ply = 0; const L = line(G), x = gt(G.id), n = L.mv.length, K = L.K;
     el.wall.hidden = true; el.view.hidden = false; host.querySelector('.mxx').classList.add('on');
-    const res = G.res && (G.kind === 'go' ? G.res : u('res_' + G.res)), flip = G.orient === 'b' || G.orient === 'g';
+    const fin = L.st[n], res = G.res && (G.kind === 'go' ? G.res : u('res_' + G.res) + (K.disc ? ` ${fin.n.b}–${fin.n.w}` : '')), flip = G.orient === 'b' || G.orient === 'g';
     const [s0, s1] = K.sides, nm = s => s === s0 ? x.w : x.b, plate = (s, pos) => `<div class="mxpl ${pos}" data-s="${s}"><u class="mxdot ${s}"></u><b>${esc(nm(s))}</b><span class="mxside-n">${esc(u('side_' + s))}</span><span class="mxpx"></span></div>`;
     const btn = (c, k) => `<button type="button" data-c="${c}"${c === 'play' ? ' class="pl"' : ''} aria-label="${esc(u(k))}" title="${esc(u(k))}">${svg(c)}</button>`;
     el.view.innerHTML = `<div class="mxhd"><button type="button" class="mxback" aria-label="${esc(u('back'))}" title="${esc(u('back'))}">${svg('back')}</button>
@@ -497,7 +546,7 @@
     q('.mxback').onclick = () => { if (el.pushed) history.back(); else wall(); };
     // the moves: chess and xiangqi as numbered pairs; shogi and go one by one, numbered, in columns
     const lab = i => K.label(L.mv[i], i, L.recs[i], lang, L.st[0]);
-    const mb = i => `<button type="button" data-p="${i + 1}"${note(G.id, i + 1) != null ? ' class="nt"' : ''}>${K.pair ? '' : `<span class="mxno">${i + 1}</span>`}${K.go ? `<u class="mxdot ${L.recs[i].side}"></u>` : ''}<bdi>${esc(lab(i))}</bdi></button>`;
+    const mb = i => `<button type="button" data-p="${i + 1}"${note(G.id, i + 1) != null ? ' class="nt"' : ''}>${K.pair ? '' : `<span class="mxno">${i + 1}</span>`}${K.go || K.disc ? `<u class="mxdot ${L.recs[i].side}"></u>` : ''}<bdi>${esc(lab(i))}</bdi></button>`;
     const rows = [`<div class="mxrow st" role="listitem"><button type="button" data-p="0"${note(G.id, 0) != null ? ' class="nt"' : ''}>${esc(u('startpos'))}</button></div>`];
     if (K.pair) for (let i = 0; i < n; i += 2) rows.push(`<div class="mxrow pr" role="listitem"><span class="mxno">${i / 2 + 1}.</span>${mb(i)}${i + 1 < n ? mb(i + 1) : ''}</div>`);
     else for (let i = 0; i < n; i++) rows.push(`<div class="mxrow" role="listitem">${mb(i)}</div>`);

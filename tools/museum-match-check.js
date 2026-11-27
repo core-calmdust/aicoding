@@ -13,6 +13,8 @@ for (const G of M.GAMES) {
   if (ids.has(G.id)) no(`${G.id}: the id is used twice`); ids.add(G.id);
   let L; try { L = M.line(G); } catch (e) { no(`${G.id}: ${e.message}`); continue; }
   const n = L.mv.length;
+  if (L.K.over && !L.K.over(L.st[n])) no(`${G.id}: the record stops before the game is over`);   // (reversi) the last move ends the game
+  if (L.K.disc) { const c = L.st[n].n, w = c.b > c.w ? 'b' : c.w > c.b ? 'w' : 'd'; if (G.res !== w) no(`${G.id}: res is ${G.res} but the discs say ${w} (${c.b}–${c.w})`); }
   Object.keys(G.mk || {}).forEach(p => { if (+p < 0 || +p > n) no(`${G.id}: mk ${p} is past the end (${n} moves)`); });
   for (const l of LANGS) { const x = (T[l] || {})[G.id];
     if (!x) { no(`${G.id}: no text in ${l}`); continue; }
