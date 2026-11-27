@@ -7,7 +7,7 @@
    AtlasMatch.render(box, ctx) — the museum (atlas/museum.js) calls it. */
 (function () {
   'use strict';
-  const V = 1, GUIDE = '../images/atlas/av/musowl-2.webp';
+  const EVAL_V = 1, V = 1, GUIDE = '../images/atlas/av/musowl-2.webp';
   /* the games. kind · moves: the record (chess: SAN; shogi: USI, 7g7f / P*5e / 8h2b+; go: SGF points, pd, '' = pass) · res: w | b | d | s | g
      (go: 'B+R', 'W+2.5' as written) · mk: { ply: { a: [[from, to], …] arrows, s: [squares] } } what the note points at · orient: 'b' to see the board from Black */
   const GAMES = [
@@ -463,6 +463,13 @@
     if (!gone.length) return '';
     return `<span class="mxcap">${gone.map(p => K === CHESS ? `<img src="${PIMG}${p.k}.svg" alt="">` : `<span class="mxxk${p.red ? ' r' : ''}">${p.glyph || ''}</span>`).join('')}</span>`;
   };
+  // the evaluations (tools/museum-match-eval.js → museum/match-eval.js): loaded the first time a game opens
+  let EV = window.MATCH_EVAL || null, evP = null;
+  function evalOf() { if (EV) return Promise.resolve(EV); return evP || (evP = new Promise(res => { const sc = document.createElement('script'); sc.src = 'museum/match-eval.js?v=' + EVAL_V; sc.onload = () => res(EV = window.MATCH_EVAL || {}); sc.onerror = () => res(EV = {}); document.head.appendChild(sc); })); }
+  // the graph behind the slider: the first side's chance over the game (light above, dark below); 50% the middle line
+  function graph(G, E) { const e = E[G.id], svgE = el.graph; if (!svgE) return; el.graph.parentNode.classList.toggle('on', !!e); if (!e) { svgE.innerHTML = ''; return; }
+    const n = e.w.length - 1 || 1, pts = e.w.map((w, i) => `${(i / n * 100).toFixed(2)},${(40 - w * .4).toFixed(2)}`);
+    svgE.innerHTML = `<path class="mxg0" d="M0,40L${pts.join('L')}L100,40z"/><path class="mxg1" d="M${pts.join('L')}"/><line x1="0" y1="20" x2="100" y2="20" class="mxg2"/>`; }
   function show(id, user) {
     const G = GAMES.find(x => x.id === id); if (!G || !host) return;
     el.pushed = !!(user && ctx && ctx.hist); if (el.pushed) ctx.hist({ room: 'match', game: id });
@@ -476,8 +483,8 @@
       <div class="mxmain">
         <div class="mxleft k-${G.kind}">${plate(flip ? s0 : s1, 'top')}<div class="mxboard" dir="ltr" role="img"></div>${plate(flip ? s1 : s0, 'bot')}
           <div class="mxctl" dir="ltr">${btn('start', 'start')}${btn('prev', 'prev')}${btn('play', 'play')}${btn('next', 'next')}${btn('end', 'end')}</div>
-          <div class="mxseek" dir="ltr"><input type="range" class="mxrng" min="0" max="${n}" value="0" step="1" aria-label="${esc(u('moves'))}"><span class="mxpos" aria-live="polite"></span></div></div>
-        <div class="mxside"><div class="mxnote"><div class="mxnh"><img src="${GUIDE}" alt="" class="mxowl"><b class="mxwho">${esc(u('guide'))}</b><span class="mxmv"></span></div>
+          <div class="mxseek" dir="ltr"><span class="mxgw"><svg class="mxgraph" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"></svg><input type="range" class="mxrng" min="0" max="${n}" value="0" step="1" aria-label="${esc(u('moves'))}"></span><span class="mxpos" aria-live="polite"></span></div></div>
+        <div class="mxside"><div class="mxnote"><div class="mxnh"><img src="${GUIDE}" alt="" class="mxowl"><b class="mxwho">${esc(u('guide'))}</b><span class="mxmv"></span></div><div class="mxev" hidden title="${esc(u('evby'))}"><i>${esc(u('ev'))}</i><span class="mxevb"><span></span></span><b></b></div>
             <p class="mxtxt"></p>
             <div class="mxnn"><button type="button" data-n="-1">${svg('prev')}<span>${esc(u('pnote'))}</span></button><button type="button" data-n="1"><span>${esc(u('nnote'))}</span>${svg('next')}</button></div></div>
           <div class="mxlog"><h4>${esc(u('moves'))}<span>${esc(u('plies').replace('{n}', n))}</span></h4><div class="mxlist k-${K.pair ? 'pair' : 'one'}" dir="ltr" role="list"></div></div></div></div>
@@ -485,7 +492,8 @@
         <dl><div><dt>${esc(u('r_event'))}</dt><dd>${esc(x.ev || '—')}</dd></div><div><dt>${esc(u('r_date'))}</dt><dd>${esc(x.d)}</dd></div><div><dt>${esc(u('r_place'))}</dt><dd>${esc(x.pl)}</dd></div>${res ? `<div><dt>${esc(u('result'))}</dt><dd>${esc(res)}</dd></div>` : ''}</dl></section>
       <p class="mxcredit">${esc(u('credit'))}</p>`;
     const q = s => el.view.querySelector(s);
-    Object.assign(el, { board: q('.mxboard'), say: q('.mxtxt'), list: q('.mxlist'), pos: q('.mxpos'), mv: q('.mxmv'), rng: q('.mxrng'), nn: q('.mxnn') });
+    Object.assign(el, { board: q('.mxboard'), say: q('.mxtxt'), list: q('.mxlist'), pos: q('.mxpos'), mv: q('.mxmv'), rng: q('.mxrng'), nn: q('.mxnn'), ev: q('.mxev'), graph: q('.mxgraph') });
+    evalOf(G).then(E => { if (cur === G) { graph(G, E); go(ply, false); } });
     q('.mxback').onclick = () => { if (el.pushed) history.back(); else wall(); };
     // the moves: chess and xiangqi as numbered pairs; shogi and go one by one, numbered, in columns
     const lab = i => K.label(L.mv[i], i, L.recs[i], lang, L.st[0]);
@@ -511,6 +519,9 @@
     el.say.textContent = x != null ? x : u('quiet'); el.say.classList.toggle('quiet', x == null);
     const lb = p ? K.label(L.mv[p - 1], p - 1, r, lang, L.st[0]) : '';
     el.mv.innerHTML = p ? `<u class="mxdot ${r.side}"></u>${esc(u('move').replace('{n}', p))}<bdi dir="ltr">${esc(lb)}</bdi>` : esc(u('startpos'));
+    { const E = EV && EV[G.id], w = E && E.w[p]; el.ev.hidden = w == null;   // (2026-11-27 ユーザー: 形勢評価) the first side's chance after this move
+      if (w != null) { const [s0, s1] = K.sides, lead = w >= 50 ? s0 : s1, k = Math.max(w, 100 - w); el.ev.querySelector('.mxevb span').style.width = w + '%';
+        el.ev.querySelector('b').innerHTML = Math.abs(w - 50) < 3 ? esc(u('even')) : `<u class="mxdot ${lead}"></u>${esc(u('side_' + lead))} ${k}%`; } }
     el.pos.textContent = `${p} / ${n}`; el.rng.value = p; el.rng.style.setProperty('--f', (n ? p / n * 100 : 0) + '%');
     el.board.setAttribute('aria-label', p ? u('move').replace('{n}', p) + ' ' + lb : u('startpos'));
     // the notes before and after this move
