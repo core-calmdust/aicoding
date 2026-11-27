@@ -541,5 +541,5 @@
       el = { wall: box.querySelector('.mxwall'), view: box.querySelector('.mxview'), lead: box.querySelector('.mxwl'), chips: box.querySelector('.mxchips'), grid: box.querySelector('.mxgrid'), credit: box.querySelector('.mxwc') }; }
     if (cur && !el.view.hidden) { const id = cur.id, p = ply, pu = el.pushed; show(id, false); el.pushed = pu; go(p, false); } else wall();
   }
-  window.AtlasMatch = { render, GAMES, KINDS, V, line, show: id => show(id, false), wall: () => host && wall(), current: () => cur && !el.view.hidden ? cur.id : null, _go: p => go(p, false) };
+  window.AtlasMatch = { render, GAMES, KINDS, V, line, show: id => show(id, false), open: id => show(id, true), wall: () => host && wall(), current: () => cur && !el.view.hidden ? cur.id : null, _go: p => go(p, false) };
 })();
