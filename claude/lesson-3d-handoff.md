@@ -21,7 +21,7 @@
 - **さかのぼりを減らす**：「追N 未確認」だけを片づける回は作らない。そのゲームを検証するときに一緒に当て、当てた分は表から消す。
 - **質を落とさずに速く**（2026-11-26）：「さかのぼりを減らす」6.（検証済みの問題は読み直さない、2つ目の深さの読みは差が小さい問題だけ、など）。基準は外さない。
 - **基準を甘くする変更はしない**（機械チェックの線を下げない、pending に逃がさない）。
-- **ゲームの仕様上基準が満たせない**とき（2026-11-27 23:40 ユーザー指示「ゲームの仕様上基準が満たせない場合は基準を緩めてください」。確認を待たずにゆるめてよい）や、**基準どおりでは問題がそもそも作れない**とき（数え上げで確かめる）は、**問題が成立する範囲で基準をゆるめてよい**（2026-11-27「こういう場合は問題が成立する範囲内で基準を緩めて良い」）。答えが1つ・理由が盤の事実は守り、ゆるめた項目と理由をログに書き、機械チェックはその問題だけ線を変える（lesson-quality.md「見つけた問題を基準に足す」の例外）。
+- ただし**ゲームの仕様上、基準を満たせない**とき（ルール・盤の形・駒の動きのせいで、基準どおりの問題がそもそも作れない、または基準がそのゲームに当てはまらない）は、**止まらずに、ゲームの仕様に合わせて基準をゆるめて進める**（2026-11-27「こういう場合は問題が成立する範囲内で基準を緩めて良い」、23:34「ゲームの仕様上基準が満たせない場合、進行できないと言う話が頻発してます。その場合はゲームの仕様に合わせて基準を緩めてください」）。ユーザーへの確認は要らない。守ること：答えが盤で確かめられて正しい・理由が盤の事実・ゆるめるのはそのゲーム（そのレッスン・テーマ）で満たせない項目だけ。満たせないことは、候補の数え上げや短い試し（候補0・ルール上ありえない など）で確かめ、ログと進み具合表に「ゆるめた項目・ゲームの仕様の理由・新しい線」を書く。機械チェックはそのゲームの該当の問題だけ線を変え、ほかのゲームの線は下げない。作れるのに手間を省くためにゆるめるのは不可。
 - **双六系（ur・senet・patolli・ludo）にはレッスン・パズルを作らない**（2026-11-24）。手をつけない。
 - 下の7ゲームが終わったあとに、ほかのゲーム（peg など3D卓があってレッスン・パズルのないもの）へ広げるかどうかは、**ユーザーに確認する**。勝手に広げない。
 - リポジトリは公開。未発表の企画などは書かない。
@@ -37,7 +37,7 @@
 | konane コナネ | チェッカニ | **3D対応済み**（パズル226問・レッスン9本45問。s_go・s_keep・s_read・b_jump・b_open は 2026-11-27 担当C） | なし（b_open は 20:40 に「最初の取り除きと最初の跳び」へ作り直し、③⑤をユーザー指示でゆるめた） |
 | ugolki ウゴルキ | モリフク | **3D対応済み**（パズル152問・レッスン11本55問。s_count は 2026-11-27 に作り直し） | なし（2D・3D の追58 は 2026-11-27 担当D） |
 | fanorona ファノロナ | チェッカニ | 一部（パズル199問・レッスン9本45問：b_approach・b_withdraw・b_choose・b_chain・b_safe・b_win・t_big・t_count・t_stop、2026-11-27 担当E） | **レッスン3本15問**（t_paika・e_hunt・e_trap）。atlas/ls-fanorona.js の READY に足し、tools/lesson-verify-fanorona-ls.js にその主題のチェックを足す（今は basics 3本と b_chain・b_safe・b_win・t_big・t_count・t_stop の形） |
-| agon アゴン | キンダイスン | 一部（パズル152問は 2026-11-27 18:00 に3D対応済み、レッスンは b_step・b_capture・b_throne・b_reloc・b_safe・s_block の6本30問〈担当F、最後は 23:15 s_block〉と s_double〈担当D〉を作り直して3D対応） | レッスン5本23問（担当F：b_finish〈基準どおりでは作れない・ユーザーに確認中〉・s_queencap、担当D：s_tempo・s_best。s_win2 は 2026-11-27 23:45 担当D で3D対応済み）（atlas/ls-agon.js の READY に足す。agon/ls-facts.js・tools/lesson-verify-agon-ls.js に主題の事実とチェック） |
+| agon アゴン | キンダイスン | 一部（パズル152問は 2026-11-27 18:00 に3D対応済み、レッスンは b_step・b_capture・b_throne・b_reloc・b_safe・b_finish・s_block の7本35問〈担当F、最後は 23:25 b_finish：ユーザー指示で③⑥をゆるめた〉と s_double・s_win2〈担当D、s_win2 は 23:45：ユーザー指示で③をゆるめた〉を作り直して3D対応） | レッスン3本13問（担当F：s_queencap、担当D：s_tempo・s_best）（atlas/ls-agon.js の READY に足す。agon/ls-facts.js・tools/lesson-verify-agon-ls.js に主題の事実とチェック） |
 | latrunculi ラトルンクリ | ポンメェ | **3D対応済み**（パズル250問は 2026-11-27 21:40 担当D、レッスン7本35問は 2026-11-27 22:58 担当C：atlas/ls-latrunculi.js・lessons3d.js の DATA・TURN_N、lesson-quality.js の PZ_ONLY から外した） | なし |
 
 おすすめの順：（janggi の NG 直し・ugolki s_count は済み）→ konane（済み） → ugolki の2D 追58 → fanorona のレッスン → agon → latrunculi。大きいゲームは「パズル → レッスン数本ずつ」に区切ってマージしてよい（表は「一部」）。
@@ -81,7 +81,7 @@
 | C | konane（2026-11-27 済み）→ **latrunculi のレッスン7本35問**（2026-11-27 20:30 ユーザー指示で追加） | `lesson-new-c-` | 毎時31分 |
 | D | janggi の NG 直し → ugolki s_count → latrunculi のパズル250問（済み）→ **agon のレッスン後半4本 s_double・s_tempo・s_win2・s_best**（2026-11-27 21:35 ユーザー指示で追加） | `lesson-new-d-` | 毎時1分 |
 | E | fanorona のレッスン12本 | `lesson-new-e-` | 毎時11分 |
-| F | agon（パズル152問・レッスン b_step・b_throne・b_capture・b_reloc・b_safe は済み）→ **agon のレッスン前半4本 b_safe（済み）・s_block（済み）・b_finish（ユーザーに確認中）・s_queencap** | `lesson-new-f-` | 毎時41分 |
+| F | agon（パズル152問・レッスン b_step・b_throne・b_capture・b_reloc・b_safe は済み）→ **agon のレッスン前半4本 b_safe（済み）・s_block（済み）・b_finish（済み）・s_queencap** | `lesson-new-f-` | 毎時41分 |
 
 1ゲームを2人で分けない（同じゲームのデータで衝突するため）。例外：latrunculi はパズル（担当D）とレッスン（担当C）で分ける（2026-11-27 ユーザー指示「C の担当が終わったので他に作業を振って」）。agon のレッスンも、前半4本（b_safe・b_finish・s_block・s_queencap）は担当F、後半4本（s_double・s_tempo・s_win2・s_best）は担当D で分ける（2026-11-27 21:35 ユーザー指示「担当D も完了」）。同じファイル（agon/lessons.json・atlas/ls-agon.js の READY・tools/lesson-verify-agon-ls.js）を触るが、自分の本の行だけを変え、マージ前に main を取り込んで両方を残す。共通の部分（ls-agon.js の読み込み・セリフの仕組み・lesson-verify-agon-ls.js の共通の検査）を変えるのは F だけにし、D は自分の本に要る分だけを足す。C は lessons.json・atlas/ls-latrunculi.js・tools/lesson-verify-latrunculi-ls.js と2D のレッスン部分だけを触り、D の puzzles.json・latrunculi/pzwhy.js・atlas/games/latrunculi-pz.js・tools/lesson-verify-latrunculi.js には手を出さない。3D卓のアダプタ atlas/games/latrunculi.js のパズル／レッスンモード（ctx.pz・api.pz）は D が先に作る。D のその PR がマージされる前は、C は2D のレッスンの検証・作り直しと機械チェック（-ls.js）まで進め、3D に出すのは D のマージ後にする（アダプタを2人で別々に作らない）。担当A（16分）・B（46分）と時刻を重ねない。
 

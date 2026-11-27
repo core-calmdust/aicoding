@@ -41,6 +41,10 @@
                          and the next turn goes to relocating it (cells: the last empty cell)
                 (k 'block' / 'shut' / 'other' — the enemy steps into the last cell / closes it between two enemy pieces / any
                  other defence: never in this lesson, the verify checks)
+     b_finish   (the queen on the throne, five guards round her and one cell next to the throne empty)
+                k 'ok'    the sixth guard steps into that cell: six guards round the queen, the game won
+                k 'shift' a guard already next to the throne slides into it, so the cell it left is empty now (v: that cell)
+                k 'away'  any other move: the cell next to the throne stays empty (still five guards round the queen)
    hint(E, id, spec) → the cells of the pieces to look at (never the answer's piece alone, 追52): b_step every piece with a step
    inwards, b_capture every piece with a move next to an enemy piece, b_throne the queen and every enemy piece next to a cell
    she can step inwards to, b_reloc the captured guard and every piece of yours the enemy could sandwich next (the guard off
@@ -51,7 +55,7 @@
    window.AgonLsFacts · module.exports the same. */
 (function () {
   'use strict';
-  const IDS = ['b_step', 'b_capture', 'b_throne', 'b_reloc', 'b_safe', 's_double', 's_block', 's_win2'];
+  const IDS = ['b_step', 'b_capture', 'b_throne', 'b_reloc', 'b_safe', 's_double', 's_block', 'b_finish', 's_win2'];
   // b_reloc: the enemy's capturing moves with the captured guard off the board ([move, the pieces it takes])
   // b_safe: the same with the turn passed to the enemy (nothing captured on the board)
   function threats(E, spec) {
@@ -129,6 +133,11 @@
       }
       return Object.assign(best || { k: 'ok' }, { cells });
     }
+    if (id === 'b_finish') {
+      const j = E.judge(p.clone().play(m));
+      if (j.over && j.winner === me) return { k: 'ok' };
+      return E.RING[f] === 1 ? { k: 'shift', v: f } : { k: 'away' };
+    }
     if (id === 'b_capture') {
       const c = p.capsOf(m).length;
       if (c) return { k: 'ok', c };
@@ -178,6 +187,7 @@
       if (id === 'b_capture' && E.NB[t].some(a => a >= 0 && p.owner(a) === 3 - me)) out.add(f);
       if (id === 's_double' && p.capsOf(m).length) out.add(f);
       if (id === 's_win2' && E.RING[t] === 1 && E.RING[f] === 2) out.add(f);
+      if (id === 'b_finish' && E.RING[t] === 1 && !p.isQueen(f)) out.add(f);   // (b_finish: every piece that can step into the gap)
     }
     return [...out].sort((a, b) => a - b);
   }
@@ -191,6 +201,7 @@
     if (id === 'b_reloc') return F.k === 'open' ? 'ngOpen' : 'ng';
     if (id === 'b_safe') return F.k === 'left' ? 'ngLeft' : 'ng';
     if (id === 's_double') return F.k === 'one' ? 'ngOne' : 'ng';
+    if (id === 'b_finish') return F.k === 'away' ? 'ngAway' : 'ng';
     if (id === 's_block') return F.k === 'touch' ? 'ngTouch' : 'ng';
     if (id === 's_win2') return F.k === 'slow' ? 'ngSlow' : 'ng';
     return 'ng';
