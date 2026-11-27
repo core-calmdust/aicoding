@@ -10,7 +10,7 @@
    a mouse can also drag the canvas. */
 (function () {
   'use strict';
-  const V = 3;
+  const V = 4;
   /* ---------- the families (lanes), top to bottom ---------- */
   const FAM = [
     { k: 'race', c: '#c27a2c', i: '<rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="9" cy="9" r="1.4" fill="currentColor"/><circle cx="15" cy="15" r="1.4" fill="currentColor"/><circle cx="15" cy="9" r="1.4" fill="currentColor"/><circle cx="9" cy="15" r="1.4" fill="currentColor"/>' },
