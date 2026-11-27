@@ -253,6 +253,10 @@
     { id: 'gothink', w: 1973, h: 1238, rijks: 'RP-F-2001-7-1557B-22', bg: '#d8d2c2', spots: [[.49, .64], [.41, .61], [.645, .32], [.467, .31], [.374, .85], [.543, .775]], links: [{ g: 'go' }] },
     // (2026-11-25) the Rijksmuseum: Francis A. Place, 'Juvenile Gamblers': four boys shooting dice on a crate
     { id: 'craps', w: 1425, h: 2048, rijks: 'RP-F-2001-7-1106C-1', bg: '#cdb9a0', spots: [[.47, .682], [.425, .663], [.595, .536], [.23, .7], [.61, .955], [.47, .8]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Jan Baptist Weenix (possibly), study of a man playing knucklebones, chalk on blue paper (1642-47)
+    { id: 'bikkel', w: 1383, h: 2048, rijks: 'RP-T-1899-A-4239', bg: '#c9d0d4', spots: [[.77, .19], [.7, .5], [.8, .78], [.45, .85], [.53, .44], [.18, .45]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Anonymous French design for chessmen, Western and Eastern sides (1850-75)
+    { id: 'stukken', w: 1594, h: 2048, rijks: 'RP-T-2020-114', bg: '#b9c8c8', spots: [[.12, .3], [.29, .3], [.47, .27], [.63, .37], [.12, .68], [.63, .73]], links: [{ g: 'chess' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
