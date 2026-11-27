@@ -41,8 +41,10 @@
         43: { a: [['f5', 'd7'], ['d1', 'd7']], s: ['d7'] }, 45: { a: [['d7', 'e8']] }, 47: { a: [['a3', 'e7']], s: ['f8'] } } },
     // (2026-11-27) Edward Lasker v. George Alan Thomas, 1912: The King Hunt
     { id: 'lasker1912', kind: 'chess', res: 'w', moves: 'd4 e6 Nf3 f5 Nc3 Nf6 Bg5 Be7 Bxf6 Bxf6 e4 fxe4 Nxe4 b6 Ne5 O-O Bd3 Bb7 Qh5 Qe7 Qxh7+ Kxh7 Nxf6+ Kh6 Neg4+ Kg5 h4+ Kf4 g3+ Kf3 Be2+ Kg2 Rh2+ Kg1 Kd2#',
-      mk: { 7: { a: [['g5', 'f6']] }, 15: { s: ['e5'] }, 17: { s: ['d3', 'e4', 'h7'] }, 19: { a: [['h5', 'h7']] }, 21: { a: [['h5', 'h7']] }, 23: { a: [['f6', 'h7'], ['d3', 'h7']] },
-        25: { a: [['g4', 'h6']] }, 27: { a: [['h4', 'g5']] }, 29: { a: [['g3', 'f4']] }, 31: { a: [['e2', 'f3']] }, 33: { a: [['h2', 'g2']] }, 34: { s: ['g8', 'g1'] }, 35: { a: [['a1', 'g1']], s: ['g1'] } } },
+      mk: { 1: { s: ['e5', 'c5'] }, 4: { s: ['e4'] }, 7: { a: [['g5', 'f6']] }, 9: { s: ['f6'] }, 11: { a: [['e4', 'f5']] }, 13: { s: ['e4'] }, 14: { a: [['b7', 'e4']] }, 15: { s: ['e5'] }, 16: { s: ['g8', 'h7'] },
+        17: { a: [['d3', 'h7']], s: ['e4'] }, 18: { a: [['b7', 'e4']] }, 19: { a: [['h5', 'h7']] }, 20: { a: [['h5', 'h7'], ['d3', 'h7']], s: ['h7'] }, 21: { a: [['h5', 'h7']] }, 22: { s: ['h7'] }, 23: { a: [['f6', 'h7'], ['d3', 'h7']] },
+        24: { a: [['e5', 'g6']], s: ['h8'] }, 25: { a: [['g4', 'h6']] }, 26: { s: ['g5'] }, 27: { a: [['h4', 'g5']] }, 28: { s: ['f4'] }, 29: { a: [['g3', 'f4']] }, 30: { s: ['f3'] }, 31: { a: [['e2', 'f3']] }, 32: { s: ['g2'] },
+        33: { a: [['h2', 'g2']] }, 34: { s: ['g8', 'g1'] }, 35: { a: [['a1', 'g1']], s: ['g1'] } } },
     // (2026-11-27) Akaboshi Intetsu v. Honinbo Jowa, 1835: The Blood-vomiting Game
     { id: 'toketsu', kind: 'go', size: 19, res: 'W+R',
       moves: 'cp pq qd ed oc eq qo qk qi op iq dn ep dp do dq co eo fp cq bq br cm gr hp en bp ck dl dk el gn cr dr bs fq go ar hn gm hm gl ek hl di io ho fo ch cd lq pn gc qn dc cc ec cf il gp nq ic fd lc bg bf af bi dj eh fj qg oi qe pd nf ok pk ol pj rn rm qq qr rr qp rq pr rp po pp mp qm pm np mq mo lp lo kp no nr or qp mr ro pi lr ns ip jr hq jn ko kq kn jm km ik mk mm ir jq kk mi nm ml ki lj lk kj jj kl ll lm oj mg jl jk nj ni im in jo kl js ks jl im is kl ei ej jl hr hs kl cn bn jl gs fs kl hi ij jl ls ji hj oe kg jg gi nc jf nb re if je hd fe gf ff fg gg gh hg fi gj ig hh hf ii rf pe pf le kd ad kh qf ef de qe ld lg kc jd qf db eb qe jb od ib mf qf jp kr qe lf kf qf hc qe hb pg og of cg bh pf ph bb da cb fh ac eg bd ob oa of mh rj kl',
