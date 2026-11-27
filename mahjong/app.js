@@ -1551,6 +1551,7 @@ function classicBoot() {
   if (go === 'ranked' || go === 'free') { DB.set.mode = go; save(); SND.unlock(); startGame(go === 'ranked' ? { ranked: true, len: DB.set.len } : {}); return; }
   save();
   if (go === 'rules' || go === 'lessons') { clTable(); openLessons(go === 'rules' ? 'r' : 'l'); return; }
+  if (go === 'lesson') { const ls = LS_ALL().find(x => x.id === q.get('id')); if (ls) { SND.unlock(); startGame({ lesson: ls }); return; } clTable(); openLessons('r'); return; }   // (2026-11-28: one step of the rules course, picked in the Atlas's 3D view)
   if (go === 'stats') { clTable(); openStats(null); return; }
   if (go === 'settings') { clTable(); openSettings(); return; }
   if (go === 'online') { clTable(); const op = () => { if (window.JankaOnline) JankaOnline.open(); else setTimeout(op, 100); }; setTimeout(op, 0); return; }   // (online.js loads after this file)

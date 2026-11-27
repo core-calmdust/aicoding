@@ -960,6 +960,7 @@
     bvGame = g; stopSession(); renderPlace();   // (the panel's 盤 row follows the game on the table)
     setTimeout(landNudge, 900);
     $('bv').classList.add('on'); $('bv').classList.remove('playing'); $('endc').classList.remove('on');
+    document.documentElement.classList.remove('bvboot');   // (opened from #<page>/<game>: the pages were hidden until now — atlas/index.html)
     // keep the board framed above the card whatever changes its size later (fonts, the phone drawer, coming back from a game);
     // scheduled first so it also runs if anything below fails
     [60, 600, 1000].forEach(ms => setTimeout(fitStage, ms));   // (the camera glides back by itself: no snapping)
@@ -1196,7 +1197,7 @@
       // measure again once the custom pickers below are in place and the web fonts have loaded
       setTimeout(() => window.__bvModeRz && window.__bvModeRz(), 0); if (document.fonts) document.fonts.ready.then(() => window.__bvModeRz && window.__bvModeRz());
     }
-    if ($('bvRules')) $('bvRules').onclick = ad && ad.ext ? () => ad.ext('rules') : startRules;   // (a game played on its own page — 麻雀 riichi, adapter.ext: its rules course there)
+    if ($('bvRules')) $('bvRules').onclick = ad && ad.ext ? () => ad.ext('rules', { lang }) : startRules;   // (a game played on its own page — 麻雀 riichi, adapter.ext: its rules course there)
     if ($('bvVar') && ad && ad.variants) varBind(g, ad);   // (a game without variants: a #bvVar still in the page is the card sliding out — 2026-11-13, phones: shogi → its neighbour broke the card)
     if (MX && ad && ad.aiOnly && $('bvSzRow') && $('bvRt')) $('bvSzRow').after($('bvRt'));   // (操作 · 点数 · 相手: the rating row last — テーブルホッケー)
     if (MX) mxBind(g, ad);
