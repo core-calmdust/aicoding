@@ -781,7 +781,7 @@
     ICO: { Step: '<path d="M12 21v-8M12 13c0-4 3-6 7-6 0 4-3 6-7 6zM12 15c0-3-2-5-6-5 0 3 2 5 6 5z"/>', Tac: '<path d="M13 3L5 14h6l-1 7 8-11h-6z"/>', End: '<path d="M5 18h14M6 18l-1-9 4 3 3-6 3 6 4-3-1 9"/>' },
     fetch() {
       const ld = u => fetch(u).then(r => r.text()).catch(() => '');
-      return Promise.all([fetch(this.url).then(r => r.json()), ld('../fanorona/i18n.js?v=fb5l14-nd1-lf1')]).then(([d, ...src]) => {
+      return Promise.all([fetch(this.url).then(r => r.json()), ld('../fanorona/i18n.js?v=fb5l14-nd1-lf2')]).then(([d, ...src]) => {
         const w = { I18N: {} };
         for (const tx of src) { try { new Function('window', 'I18N', tx)(w, w.I18N); } catch (e) {} }
         this.I = w.I18N; d.levels = d.themes; return d;

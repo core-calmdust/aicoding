@@ -408,7 +408,7 @@
           const k = e.cls || 'ok', p = E.path(pos, e.m).filter(q => q >= 0); if (!p.length) continue;
           mark(pzMk, GEO.ring, pm(k, .95), p[0], .05); p.slice(1, -1).forEach(q => mark(pzMk, GEO.dot, pm(k, .9), q, .04)); mark(pzMk, GEO.dot, pm(k, .95), p[p.length - 1], .04);
           let caps = []; try { caps = E.capsOf(pos, e.m).flat(); } catch (x) {}
-          caps.forEach(i => [1, -1].forEach(sg => { const b = mark(pzMk, GEO.x, pm(k, .85), i, .05); b.rotation.y = sg * Math.PI / 4; }));
+          caps.forEach(i => [1, -1].forEach(sg => { const b = mark(pzMk, GEO.x, pm(k, .85), i, pos.at(i) ? 2 * (F3.R || .3) + .01 : .05); b.rotation.y = sg * Math.PI / 4; }));   // (2026-11-27 担当E: on top of the ball it takes — under it the cross was hidden)
           continue;
         }
         const [q, k] = Array.isArray(e) ? e : [e.at, e.cls]; if (!(q >= 0 && q < NPg)) continue;
