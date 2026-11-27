@@ -722,3 +722,20 @@
 描かれたゲーム: gavarni（夫と恋人の盤遊びを見る妻, 1837）と picart（舞台の上の宝くじ, 1720）を追加 PAINT_I18N_V 81、paint.js v92、museum.js v328。
 描かれたゲーム: unigenitus（教皇勅書ウニゲニトゥスのガチョウのゲーム, 1724）と bles（チェスを指す男, 1876）を追加 PAINT_I18N_V 82、paint.js v93、museum.js v329。
 描かれたゲーム: visscher（新しく楽しいガチョウのゲーム, 1612-52）・tombola（富くじ, 1840）・patriotten（オランダ政治のサイコロ遊び, 1793）を追加 PAINT_I18N_V 83、paint.js v94、museum.js v331。
+
+## 2026-11-27：名局選（名局・名勝負の部屋）
+ユーザー：名局選としてコンテンツを用意。盤で再生するだけでなく、ミュゼフクの一手ごとの解説。棋譜は前後に自由に移動、棋譜ログをUIで表示。骨格ができたら4人体制で拡充。
+- 博物館の7つめの部屋 `match`（タブ：名局選／短い名 名局）。`atlas/museum/match.js`（部屋・盤・ルール）、`atlas/museum/match-i18n.js`（文、14言語）→ `node tools/museum-read-split.js` で `match-i18n/<lang>.js`（足りない文は英語で埋める）。文を変えたら `atlas/museum.js` の `MATCH_I18N_V`、match.js を変えたら同じ所の `match.js?v=` を上げる。
+- 一覧（盤の最終局面の小さな図＋題・対局者・年・場所、ゲームの種類のチップ）→ 1局を開くと：盤（2D、駒はすべって動く。直前の手のマス、解説が指す矢印・マス）、操作（最初・1手もどる・自動再生・1手進む・最後、← → Home End）、ミュゼフクの吹き出し（その手の解説。解説のない手は「次の解説へ（n手目）」ボタン）、棋譜ログ（押すとその局面へ。今の手を強調、解説のある手に点）、局の紹介。
+- 最後まで見るとその局のスタンプ（`mark('match', id)`、1局 ¢30、部屋全部 ¢150）。履歴：局を開くと history に { room: 'match', game }。
+- **データ**（match.js の `GAMES`）：`{ id, kind, moves, res, mk, orient, size }`。
+  - chess：moves は SAN（O-O、=Q、+、#）。取る手の x・チェックの +・メイトの # が局面と合わないと点検で止まる。表示は図形（♘f3）。
+  - shogi：moves は USI（7g7f、P*5e、8h2b+）。表示は CJK で ▲7六歩・同・成・不成・打、ほかは P-7f / Bx2b+ / P*5e。
+  - go：SGF の点（pd、パスは '-'）、`size`。取りはルールどおり。res は 'B+R' などそのまま。
+  - mk：{ 手数: { a: [[from, to]…] 矢印, s: [マス] } }。orient: 'b' / 'g' で後手側から見る。
+  - 新しい種類のゲーム（シャンチー・チェッカーなど）は KINDS に足す（init / play（打てない手は throw）/ label / pieces / xy、盤の絵は boardSVG・pieceHTML・thumb）。
+- **文**（match-i18n.js、ゲーム id ごと）：t 題、w / b 対局者（先手・黒・白の順は種類の sides）、ev 対局の場、d 年、pl 場所、lead 紹介、c { 手数: 解説 }（0 = 開始局面）。
+  - 短い局（チェスのミニチュアなど）は**全部の手**に解説。長い局（囲碁・将棋）は要所（目安30〜60）に。
+  - 事実は記録どおり（日付・場所・大会・結果）。推測は「〜と思われる」。文は子どもにも読める平易さ。案内役の名は ja ミュゼフク、ほか Musowl。
+- **点検**：`node tools/museum-match-check.js`（全局を match.js のルールで最後まで指す・14言語そろい・解説の手数が局の中）→ 0 件。監査：`node tools/museum-audit.js match …` 0。
+- 棋譜は公に知られた記録（事実）。解説は自分で書く（本・サイトの解説文を写さない）。
