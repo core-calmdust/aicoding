@@ -38,7 +38,7 @@
 | ugolki ウゴルキ | モリフク | **3D対応済み**（パズル152問・レッスン11本55問。s_count は 2026-11-27 に作り直し） | なし（2D・3D の追58 は 2026-11-27 担当D） |
 | fanorona ファノロナ | チェッカニ | 一部（パズル199問・レッスン5本25問：b_approach・b_withdraw・b_choose・b_chain・b_safe、2026-11-27 担当E） | **レッスン7本35問**（b_win・t_big・t_count・t_stop・t_paika・e_hunt・e_trap）。atlas/ls-fanorona.js の READY に足し、tools/lesson-verify-fanorona-ls.js にその主題のチェックを足す（今は basics 3本と b_chain・b_safe の形） |
 | agon アゴン | キンダイスン | 一部（パズル152問は 2026-11-27 18:00 に3D対応済み、レッスンは b_step・b_capture の2本10問を 19:15 に作り直して3D対応、担当F） | レッスン10本46問（atlas/ls-agon.js の READY に足す。agon/ls-facts.js・tools/lesson-verify-agon-ls.js に主題の事実とチェック） |
-| latrunculi ラトルンクリ | ポンメェ | 未（担当D：パズル250問は問題検証済み・2D の外れた手の文 latrunculi/pzwhy.js 済み、2026-11-27） | 3D パズル（BOOK.latrunculi・latrunculi-pz.js にポンメェの文・表示確認）とレッスン7本35問 |
+| latrunculi ラトルンクリ | ポンメェ | 未（担当D：パズル250問は問題検証済み・2D の外れた手の文 latrunculi/pzwhy.js 済み、2026-11-27） | 3D パズル（担当D：BOOK.latrunculi・latrunculi-pz.js にポンメェの文・表示確認）とレッスン7本35問（担当C） |
 
 おすすめの順：（janggi の NG 直し・ugolki s_count は済み）→ konane（済み） → ugolki の2D 追58 → fanorona のレッスン → agon → latrunculi。大きいゲームは「パズル → レッスン数本ずつ」に区切ってマージしてよい（表は「一部」）。
 
@@ -78,12 +78,12 @@
 
 | 担当 | 範囲（めやす） | ブランチ | 実行（UTC） |
 |---|---|---|---|
-| C | konane | `lesson-new-c-` | 毎時31分 |
-| D | janggi の NG 直し → ugolki s_count | `lesson-new-d-` | 毎時1分 |
+| C | konane（2026-11-27 済み）→ **latrunculi のレッスン7本35問**（2026-11-27 20:30 ユーザー指示で追加） | `lesson-new-c-` | 毎時31分 |
+| D | janggi の NG 直し → ugolki s_count（済み）→ **latrunculi のパズル250問** | `lesson-new-d-` | 毎時1分 |
 | E | fanorona のレッスン12本 | `lesson-new-e-` | 毎時11分 |
 | F | agon（パズル → レッスン） | `lesson-new-f-` | 毎時41分 |
 
-latrunculi は最初に手が空いた担当が取る（取る前に「作業中」の印を見て重ねない）。1ゲームを2人で分けない（同じゲームのデータで衝突するため）。担当A（16分）・B（46分）と時刻を重ねない。
+1ゲームを2人で分けない（同じゲームのデータで衝突するため）。例外：latrunculi はパズル（担当D）とレッスン（担当C）で分ける（2026-11-27 ユーザー指示「C の担当が終わったので他に作業を振って」）。C は lessons.json・atlas/ls-latrunculi.js・tools/lesson-verify-latrunculi-ls.js と2D のレッスン部分だけを触り、D の puzzles.json・latrunculi/pzwhy.js・atlas/games/latrunculi-pz.js・tools/lesson-verify-latrunculi.js には手を出さない。3D卓のアダプタ atlas/games/latrunculi.js のパズル／レッスンモード（ctx.pz・api.pz）は D が先に作る。D のその PR がマージされる前は、C は2D のレッスンの検証・作り直しと機械チェック（-ls.js）まで進め、3D に出すのは D のマージ後にする（アダプタを2人で別々に作らない）。担当A（16分）・B（46分）と時刻を重ねない。
 
 ## 7. 定期実行で回す場合
 
