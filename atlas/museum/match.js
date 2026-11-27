@@ -28,7 +28,12 @@
     // (2026-11-27) Honinbo Shusaku v. Inoue Gennan Inseki, 1846: The Ear-reddening Game
     { id: 'mimiaka', kind: 'go', size: 19, res: 'B+2',
       moves: 'qd dc pq oc cp cf ep qo pe np po pp op qp oq oo pn qq nq on pm om pl mp mq ol pk lq lr kr lp kq qr rr rs mr nr pr ps qs no mo qr rm rl qs lo mn qr qm or ql qj rj ri rk ln mm qi rq jn ls ns gq go ck kc ic pc nj ke og oh pb qb ng mi mj nd ph qg pg hq hr ir iq hp jr fc lc ld mc lb mb md qf pf qh rg rh sh rf sg pj pi oi oj ni qk ok qe kb jb ka jc ob ja la db cc fe cn gr is fq io ji eb fb eg dj dk ej cj dh ij hm gj eh fl fg er dm fn dn gn jj jk kk ii ik jl kl il jh co do ih hn hl bl dg gh ch ig ec cr fd gd ed gc bk cm gs gp li kg in lj lg gm jf jg im fm kf lf mf le gf hf ff gg lk kj km lm ll jm ge he ef ea cb fr fs dr qa ra pa rb da gi fj fi fa ga gl ek em ho el en jo kn ci lh mh mg di ei lg qn rn re sl mg bm am lg eq es mg ha gb lg ds hs mg sj si lg sr sq mg hd hb lg ro so mg ss qs lg sn rp mg cl bn lg ml mk mg pj sf lg nn nl mg ib ia lg nc nb mg jd kd lg ma na mg qc rc lg js ks mg hc id lg fk hj mg hh hg lg gk hk mg ak lg al bm nf od ki ms kp ip jp lr oj mr ea sr',
-      mk: {1: {'s':['qd']},5: {'s':['qd','pq','cp']},10: {'s':['np']},25: {'s':['mq']},31: {'s':['lp']},72: {'s':['og']},127: {'s':['ji']},311: {'s':['lg']}} }
+      mk: {1: {'s':['qd']},5: {'s':['qd','pq','cp']},10: {'s':['np']},25: {'s':['mq']},31: {'s':['lp']},72: {'s':['og']},127: {'s':['ji']},311: {'s':['lg']}} },
+    // (2026-11-27) Adolf Anderssen v. Jean Dufresne, 1852: The Evergreen Game
+    { id: 'evergreen', kind: 'chess', res: 'w', moves: 'e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 exd4 O-O d3 Qb3 Qf6 e5 Qg6 Re1 Nge7 Ba3 b5 Qxb5 Rb8 Qa4 Bb6 Nbd2 Bb7 Ne4 Qf5 Bxd3 Qh5 Nf6+ gxf6 exf6 Rg8 Rad1 Qxf3 Rxe7+ Nxe7 Qxd7+ Kxd7 Bf5+ Ke8 Bd7+ Kf8 Bxe7#',
+      mk: { 7: { s: ['b4'] }, 15: { a: [['b3', 'f7'], ['c4', 'f7']] }, 21: { a: [['a3', 'e7']] }, 24: { a: [['b8', 'b5']] }, 32: { a: [['h5', 'f3']] }, 33: { a: [['e4', 'f6']] },
+        35: { a: [['f6', 'e7'], ['e1', 'e7']] }, 36: { a: [['g8', 'g2'], ['h5', 'f3']] }, 37: { a: [['d1', 'd7']] }, 38: { a: [['f3', 'g2']] }, 39: { a: [['e1', 'e7']] }, 41: { a: [['a4', 'd7']] },
+        43: { a: [['f5', 'd7'], ['d1', 'd7']], s: ['d7'] }, 45: { a: [['d7', 'e8']] }, 47: { a: [['a3', 'e7']], s: ['f8'] } } }
   ];
 
   /* ---------- the kinds ---------- */
