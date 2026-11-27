@@ -59,12 +59,12 @@ if (cmd === 'check') {
 } else if (cmd === 'find') {
   const it = OP.items[arg], book = it.lines[0].m, books = new Set(it.lines.map(l => l.m)), tol = OP.tol, out = [];
   // the opponent's opening: every non-double opening roll's book play (line a of each open item)
-  const opens = Object.values(OP.items).filter(x => x.kind === 'open').map(x => ({ d: x.d, m: x.lines[0].m }));
+  const opens = Object.values(OP.items).filter(x => x.kind === 'open').flatMap(x => (process.argv.includes('--alt') ? x.lines : x.lines.slice(0, 1)).map(l => ({ d: x.d, m: l.m })));   // (--alt: the opponent's other book plays of its opening too = o41, where no line-a opening leaves 41 with one right play)
   // positions already asked (⑤): every reply line and every lesson play problem — checked again by tools/lesson-verify-bgopen.js
   const used = new Set(); Object.values(OP.items).filter(x => x.kind !== 'open').forEach(x => x.lines.forEach(l => { if (l.seq.length === 2 && l.seq[0].r === 0) used.add(l.seq[0].m + ':' + l.seq[0].d.join('') + '>' + l.seq[1].d.join('')); }));
   // 2-ply first (cheap): roll out only where the book play is the 2-ply best, the widest margins first; stop at the first that passes
   const skip = (process.argv.find(a => a.startsWith('--skip=')) || '').slice(7).split(',');   // (opponent openings whose position is a lesson problem)
-  const pre = opens.filter(o => !skip.includes(o.d.join('')) && !used.has(o.m + ':' + o.d.join('') + '>' + it.d.join(''))).map(o => { const p = applyM(dec(START), 1, o.m);
+  const pre = opens.filter(o => !skip.includes(o.d.join('')) && !skip.includes(o.d.join('') + ':' + o.m) && !used.has(o.m + ':' + o.d.join('') + '>' + it.d.join(''))).map(o => { const p = applyM(dec(START), 1, o.m);
     const L = BG.genPlays(p, 0, it.d[0], it.d[1]).map(pl => ({ m: code(p, 0, pl), e2: BG.equity(BG.evalPly(pl.pos, 1, 2)) })).sort((x, y) => y.e2 - x.e2);
     const L2 = L.filter(y => !books.has(y.m)); return { o, p, g2: books.has(L[0].m) ? L[0].e2 - L2[0].e2 : -1 }; }).filter(x => x.g2 > 0.02).sort((x, y) => y.g2 - x.g2);
   console.log('2-ply:', pre.map(x => x.o.d.join('') + ' ' + x.g2.toFixed(3)).join(', '));
