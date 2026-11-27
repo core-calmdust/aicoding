@@ -233,7 +233,7 @@
 "rv.place":"Sıra",
 "rv.acc":"İyi kararlar",
 "rv.worst":"Dönüm noktası: {n}. tur",
-"rv.same":"İyi karar (tutma olasılığı {p})",
+"rv.same":"İyi karar (başarı olasılığı {p})",
 "rv.alt":"Koç: {b} (fark {d})",
 "rv.help":"← → ile turlar arasında geç. Kararlar o anda bildiklerine göre (zarların ve teklifler) değerlendirilir.",
 "grade.best":"En iyi",

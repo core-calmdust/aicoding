@@ -233,7 +233,7 @@
 "rv.place":"Colocação",
 "rv.acc":"Boas decisões",
 "rv.worst":"Momento decisivo: rodada {n}",
-"rv.same":"Boa decisão (valia {p})",
+"rv.same":"Boa decisão ({p} de sucesso)",
 "rv.alt":"Treinador: {b} (diferença {d})",
 "rv.help":"← → para passar as rodadas. As decisões são avaliadas pelo que você sabia na hora (seus dados e as apostas).",
 "grade.best":"Melhor",

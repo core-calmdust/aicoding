@@ -162,7 +162,7 @@ function doAct(p, a) {
   const g = G();
   // your decisions: graded against the coach's numbers before the move (for the review and the statistics)
   if (p === 0 && !M.tut) {
-    try { const C = AI.coach(g, 0, a), v = AI.verdict(C.opts, a); const dec = { r: g.round.no, i: g.round.bids.length, a, grade: v.grade, best: v.best.a, U: v.me.U, bestU: v.best.U, T: C.T, opts: C.opts.slice(0, 5).map(o => ({ a: o.a, U: o.U, T: o.T, lose: o.lose })) }; M.dec.push(dec); U.lastDec = dec;
+    try { const C = AI.coach(g, 0, a), v = AI.verdict(C.opts, a); const dec = { r: g.round.no, i: g.round.bids.length, a, grade: v.grade, best: v.best.a, U: v.me.U, bestU: v.best.U, T: a.t === 'bid' ? (v.me.T != null ? v.me.T : null) : a.t === 'calza' ? (v.me.E != null ? v.me.E : null) : C.T != null ? 1 - C.T : null, opts: C.opts.slice(0, 5).map(o => ({ a: o.a, U: o.U, T: o.T, lose: o.lose })) }; M.dec.push(dec); U.lastDec = dec;
       D.stats.grades[v.grade] = (D.stats.grades[v.grade] || 0) + 1;
       if (a.t === 'bid') { D.stats.bids++; const sup = LD.supportOf(g.hands[0], a.f, LD.wildOn(g)); if (sup === 0) D.stats.bluffs++; } } catch (e) { console.error(e); }
   }

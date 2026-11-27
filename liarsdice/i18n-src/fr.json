@@ -233,7 +233,7 @@
 "rv.place":"Place",
 "rv.acc":"Bonnes décisions",
 "rv.worst":"Tournant : manche {n}",
-"rv.same":"Bonne décision (elle tenait à {p})",
+"rv.same":"Bonne décision ({p} de réussite)",
 "rv.alt":"Coach : {b} (écart {d})",
 "rv.help":"← → pour passer d’une manche à l’autre. Les décisions sont jugées d’après ce que vous saviez alors (vos dés et les annonces).",
 "grade.best":"Meilleure",

@@ -233,7 +233,7 @@
 "rv.place":"Platz",
 "rv.acc":"Gute Entscheidungen",
 "rv.worst":"Wendepunkt: Runde {n}",
-"rv.same":"Gute Entscheidung (stimmte mit {p})",
+"rv.same":"Gute Entscheidung ({p} Erfolgschance)",
 "rv.alt":"Trainer: {b} (Unterschied {d})",
 "rv.help":"Mit ← → durch die Runden blättern. Bewertet wird nach dem, was du damals wusstest (deine Würfel und die Ansagen).",
 "grade.best":"Beste",

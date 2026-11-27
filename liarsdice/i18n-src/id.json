@@ -233,7 +233,7 @@
 "rv.place":"Peringkat",
 "rv.acc":"Keputusan bagus",
 "rv.worst":"Titik balik: ronde {n}",
-"rv.same":"Keputusan bagus (benar {p})",
+"rv.same":"Keputusan bagus (peluang berhasil {p})",
 "rv.alt":"Pelatih: {b} (selisih {d})",
 "rv.help":"← → untuk berpindah ronde. Keputusan dinilai dari yang kamu ketahui saat itu (dadumu dan tawaran).",
 "grade.best":"Terbaik",

@@ -233,7 +233,7 @@
 "rv.place":"Puesto",
 "rv.acc":"Buenas decisiones",
 "rv.worst":"Momento clave: ronda {n}",
-"rv.same":"Buena decisión (se cumplía {p})",
+"rv.same":"Buena decisión ({p} de éxito)",
 "rv.alt":"Entrenador: {b} (diferencia {d})",
 "rv.help":"← → para pasar de ronda. Las decisiones se juzgan con lo que sabías entonces (tus dados y las apuestas).",
 "grade.best":"Mejor",
