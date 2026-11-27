@@ -1531,8 +1531,9 @@ $('#gExit').addEventListener('click', async () => {
 // (atlas/games/riichi-card.js) picks the mode and opens this page with ?go=ranked|free|online|rules|lessons|stats (&len=east|south
 // &lv=1..10): a game starts at once, a list opens over the empty table. When nothing is left on screen (the game quit, the list
 // closed) the page goes back to the card. Without ?go it goes straight to the card (?home: the old home, for checks).
-const ATLAS_CARD = '../atlas/#games/riichi';
-function toAtlas() { try { if (document.referrer && /\/atlas\//.test(document.referrer) && history.length > 1) { history.back(); return; } } catch (e) {} location.href = ATLAS_CARD; }
+// (2026-11-28 ユーザー「戻る時はホームではなく大百科の麻雀3Dビュー」) always the Atlas's 3D view of the game, whatever page came before
+const ATLAS_CARD = '../atlas/#home/riichi';
+function toAtlas() { location.href = ATLAS_CARD; }
 const clIdle = () => $('#modal').hidden && $('#pstats').hidden && !G && !(window.JankaOnline && JankaOnline._R && JankaOnline._R.code);
 function clBackSoon() { if (!CLASSIC || /[?&]home\b/.test(location.search)) return; setTimeout(() => { if (clIdle()) toAtlas(); }, 120); }
 function clTable() {   // the empty table behind a list (the felt, the rails, the console)
