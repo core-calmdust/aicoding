@@ -221,6 +221,14 @@
     { id: 'vanvliet', w: 1804, h: 2048, rijks: 'RP-P-1904-2260', bg: '#2e2b26', spots: [[.4, .6], [.33, .37], [.55, .4], [.79, .2], [.81, .45], [.15, .15]], links: [{ g: 'backgammon' }] },
     // (2026-11-25) the Rijksmuseum: François Hermans carte de visite, two women and a girl at a chessboard
     { id: 'hermans', w: 746, h: 1328, rijks: 'RP-F-F00753-G', bg: '#d8cdb6', spots: [[.474, .578], [.395, .544], [.395, .489], [.632, .456], [.494, .856], [.909, .367]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Rijksmuseum: boxwood draughtsman with a view of Nuremberg (1690)
+    { id: 'norimberg', w: 2048, h: 2048, rijks: 'BK-KOG-2643', bg: '#c9c6c1', spots: [[.5, .5], [.28, .33], [.5, .73], [.45, .27], [.62, .38], [.9, .5]], links: [{ g: 'checkers' }, { g: 'backgammon' }] },
+    // (2026-11-25) the Rijksmuseum: 'De Toovenaar' (1856), a goose-type spiral race game, spaces 1–63
+    { id: 'toovenaar', w: 2048, h: 1695, rijks: 'KOG-ZG-1-34-66', bg: '#ece6d6', spots: [[.42, .6], [.52, .3], [.32, .57], [.95, .14], [.5, .13], [.33, .65]], links: [{ ex: 'goose' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: ivory box with gaming counters by Mariaval le Jeune (1725)
+    { id: 'fichesdoos', w: 2048, h: 1609, rijks: 'BK-NM-624-A', bg: '#cfcfcd', spots: [[.43, .4], [.64, .69], [.63, .36], [.36, .3], [.4, .75], [.45, .25]], links: [{ g: 'poker' }, { g: 'solitaire' }] },
+    // (2026-11-25) the Art Institute of Chicago: Vuillard, pastel of the artist's mother playing checkers (c. 1890–91)
+    { id: 'vuilmere', w: 1686, h: 2038, aic: 86259, no: '1956.35', bg: '#c3c0b5', spots: [[.47, .48], [.58, .28], [.29, .45], [.76, .52], [.4, .2], [.8, .85]], links: [{ g: 'checkers' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
