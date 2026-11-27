@@ -953,6 +953,19 @@
     dirty = shadowDirty = true; kick(400);
     return true;
   }
+  // (2026-11-27, 麻雀 riichi: ユーザー「ロケーションはちゃぶ台などを使う必要はなく雀卓にしてOK」) a model marked .solo is its own place:
+  // the room (table, walls, decor) is hidden while it is on show and the background is the model's own dark colour
+  let soloOn = false;
+  function solo(on, bg) {
+    if (!R || !scene || mountOpts.plain || museumOn) return;
+    on = !!on; if (on === soloOn) return; soloOn = on;
+    // (only what is drawn: the room's lights stay, so the table is lit as on any place)
+    roomObjs.forEach(x => x.traverse(o => { if (!(o.isMesh || o.isSprite || o.isPoints || o.isLine)) return; if (on) { o.userData.soloV = o.visible; o.visible = false; } else if (o.userData.soloV !== undefined) { o.visible = o.userData.soloV; delete o.userData.soloV; } }));
+    scene.background = on ? new (T().Color)(bg || '#0b1410').convertSRGBToLinear() : roomBg;
+    try { document.body.classList.toggle('solo3d', on); } catch (e) {}
+    paintCss(on ? '' : roomCss); if (lampShade && on) lampShade.visible = false;
+    dirty = shadowDirty = true; kick(400);
+  }
   /* ---------- scene ---------- */
   let mountOpts = {}, envBuild = null, roomObjs = [];
   function setTimeOfDay(v) {   // rebuild the room's lights, sky and decor for another time of day
@@ -976,6 +989,7 @@
       const before = new Set(scene.children); buildRoom(scene, mountOpts.plain || false); roomObjs = scene.children.filter(o => !before.has(o) && o !== root);
       try { envBuild && envBuild(); } catch (e) {}
       if (museumOn) { roomObjs.forEach(x => { x.visible = false; }); museumOn = false; museum(true); }
+      if (soloOn) { roomObjs.forEach(x => x.traverse(o => { if (o.isMesh || o.isSprite || o.isPoints || o.isLine) { o.userData.soloV = o.visible; o.visible = false; } })); scene.background = new (T().Color)('#0b1410').convertSRGBToLinear(); }
       if (alignFn) { const c = keyLight && keyLight.shadow.camera; if (c) c.right = -1; fitShadow(); }
       dirty = shadowDirty = true; kick(600);
     }
@@ -1833,6 +1847,7 @@
     }
     if (opts.introFromCache) opts.intro = (pre && pre.extra) || (window.Icons3D && Icons3D.ICONS[id] ? Icons3D.ICONS[id]() : null);
     cur = null; if (!g) return null;
+    try { solo(!!(MODELS[id] && MODELS[id].solo), MODELS[id] && MODELS[id].soloBg); } catch (e) {}
     if (!model && !g.userData.merged) { g.userData.merged = true; try { mergeStatic(g); } catch (e) {} }   // the showcase boards are static: fewer draw calls (stones, pieces, bowls…)
     const c = new (T().Group)(); c.add(g); cur = c; if (!model) c.userData.showId = id; c.userData.st = stamp(); c.userData.gameId = id;
     if (tblInfo && tblInfo.onShow) try { tblInfo.onShow(id); } catch (e) {}

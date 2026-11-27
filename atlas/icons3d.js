@@ -777,6 +777,29 @@
       const q = arc(.36); g.add(at(marble(0x3d7fe0, .56), q[0], q[1] + .12, q[2]));
       return g;
     },
+    riichi() {   // 麻雀 (riichi/, 2026-11-27): a corner of the green-felt automatic table — the 1000-point riichi stick laid out, a few
+      // blue-backed tiles of the hand standing, and the big red 五萬 tile hopping in (not 上海's pile of tiles and 中)
+      const felt = M({ map: X.canvasTex('icrif', 256, 256, (c, W) => { c.fillStyle = '#2c6a50'; c.fillRect(0, 0, W, W); for (let i = 0; i < 2600; i++) { c.fillStyle = `rgba(${Math.random() < .5 ? '255,255,255' : '0,0,0'},.05)`; c.fillRect(Math.random() * W, Math.random() * W, 2, 2); }
+        c.strokeStyle = 'rgba(10,30,20,.45)'; c.lineWidth = 3; c.strokeRect(W * .12, W * .12, W * .76, W * .76); }), roughness: .95 });
+      const g = boardChunk(3, 3.6, felt, M({ map: softWood('icris', '#8a5430', '#4a2a14'), roughness: .4 }));
+      const S = X.shanghai, y0 = .5;
+      // the riichi stick: an ivory bar with one red dot in the middle
+      const stick = new T.Group(); stick.add(rbox(2.5, .09, .24, .045, gloss(0xf3efe4)));
+      const dot = mesh(new T.CircleGeometry(.075, 24), C(0xd8283c, { roughness: .3 })); dot.rotation.x = -Math.PI / 2; dot.position.y = .092; stick.add(dot);
+      g.add(at(stick, -.1, y0 + .05, 1.15, 0, .12, 0));
+      if (!S) return g;
+      const tile = (f, s, rx, ry) => { const im = S.tiles(1, 'lapis'); im.userData.setFace(0, f); im.setMatrixAt(0, new T.Matrix4()); im.setColorAt(0, new T.Color(.82, .82, .82)); im.castShadow = true;
+        const inner = new T.Group(); inner.add(im); inner.rotation.x = rx || 0;
+        const outer = new T.Group(); outer.add(inner); outer.rotation.y = ry == null ? -Math.PI / 4 : ry; outer.scale.setScalar(s); return outer; };
+      // three tiles of the hand standing in a row along the far rail, faces toward the viewer (三四五筒)
+      const sh = S.TH * .72 / 2;
+      [11, 12, 13].forEach((f, i) => g.add(at(tile(f, .72, 1.3), -1.3 + i * .58, y0 + sh + .22, -1.22)));
+      // the big red five (五萬) hopping in, leaning toward the viewer
+      const big = tile(4, 1.35, .58); big.position.set(.15, y0 + .75, .25); g.add(big);
+      const dotM = gloss(0xf1c879);
+      [[.55, .95, .2], [.78, .78, .02]].forEach(([x, y, z]) => { const d = ball(.07, dotM); d.position.set(x, y0 + y, z); g.add(d); });
+      return g;
+    },
     shanghai() {   // a corner of a green-felt mahjong table: a little stack of ivory tiles, and a big 中 tile lifting off toward its twin
       const felt = M({ map: X.canvasTex('icshf', 256, 256, (c, W) => { c.fillStyle = '#2f6b55'; c.fillRect(0, 0, W, W); for (let i = 0; i < 2600; i++) { c.fillStyle = `rgba(${Math.random() < .5 ? '255,255,255' : '0,0,0'},.05)`; c.fillRect(Math.random() * W, Math.random() * W, 1.5, 1.5); } }), roughness: .95 });
       const g = boardChunk(3, 3.6, felt, M({ map: softWood('icshs', '#8a5430', '#4a2a14'), roughness: .4 }));

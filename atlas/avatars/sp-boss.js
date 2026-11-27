@@ -19,6 +19,33 @@
   const tor = (R, r, m, arc) => mesh(new T.TorusGeometry(R, r, 12, 44, arc || Math.PI * 2), m);
   const put = (g, o, p, rot, sc) => { o.position.set(...p); if (rot) o.rotation.set(...rot); if (sc) Array.isArray(sc) ? o.scale.set(...sc) : o.scale.setScalar(sc); g.add(o); return o; };
 
+  /* ---------------- mahjong tiles (麻雀 riichi/, 2026-11-28 ユーザー「アトラモのデザインはもっと麻雀をモチーフに」) ----------------
+     a small ivory tile with the deep blue back of riichi/'s table and a painted face: 中 · 發 · 白 · 一索 (the bird) · 五筒 · 一筒 */
+  const TFACE = {};
+  const tfTex = f => TFACE[f] || (TFACE[f] = (() => {
+    const W = 128, H = 172, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const x = cv.getContext('2d');
+    x.fillStyle = '#f6f1e4'; x.fillRect(0, 0, W, H);
+    const R = '#d8283c', G = '#1e8a50', Bl = '#2a477a';
+    const ring = (cx, cy, r, col) => { x.fillStyle = col; x.beginPath(); x.arc(cx, cy, r, 0, 7); x.fill(); x.fillStyle = '#f6f1e4'; x.beginPath(); x.arc(cx, cy, r * .62, 0, 7); x.fill(); x.fillStyle = col; x.beginPath(); x.arc(cx, cy, r * .3, 0, 7); x.fill(); };
+    const glyph = (ch, col) => { x.fillStyle = col; x.font = '900 104px "Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(ch, W / 2, H / 2 + 6); };
+    if (f === 'chun') glyph('中', R);
+    else if (f === 'hatsu') glyph('發', G);
+    else if (f === 'haku') { x.strokeStyle = Bl; x.lineWidth = 9; x.strokeRect(24, 30, W - 48, H - 60); }
+    else if (f === 'p5') { [[34, 42], [94, 42], [34, 130], [94, 130]].forEach(([u, v]) => ring(u, v, 24, G)); ring(64, 86, 26, R); }
+    else if (f === 'p1') { ring(64, 86, 50, Bl); x.fillStyle = R; x.beginPath(); x.arc(64, 86, 14, 0, 7); x.fill(); }
+    else if (f === 's1') {   // 一索: the little bird
+      x.fillStyle = G; x.beginPath(); x.ellipse(64, 96, 30, 36, 0, 0, 7); x.fill();
+      x.beginPath(); x.moveTo(40, 120); x.lineTo(16, 150); x.lineTo(50, 132); x.fill(); x.beginPath(); x.moveTo(88, 120); x.lineTo(112, 150); x.lineTo(78, 132); x.fill();
+      x.fillStyle = R; x.beginPath(); x.arc(64, 54, 18, 0, 7); x.fill(); x.beginPath(); x.moveTo(78, 50); x.lineTo(98, 56); x.lineTo(78, 62); x.fill();
+      x.fillStyle = '#f6f1e4'; x.beginPath(); x.arc(68, 50, 5, 0, 7); x.fill(); x.fillStyle = Bl; x.fillRect(46, 84, 36, 8); x.fillRect(46, 102, 36, 8);
+    }
+    const t = new T.CanvasTexture(cv); if (T.SRGBColorSpace) t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4; return t; })());
+  // mjT(f, s): a tile s tall, face toward +z, centre at the origin
+  const mjT = (f, s = .4) => { const g = new T.Group(), w = s * .75, d = s * .55;
+    K.sq(g, fixed(0xf6f1e4, { rough: .35 }), [0, 0, d * .18], [w, s, d * .64], .3); K.sq(g, fixed(0x2a477a, { rough: .3 }), [0, 0, -d * .3], [w, s, d * .4], .3);
+    if (f) { const pm = M({ map: tfTex(f), roughness: .45 }); const pf = mesh(new T.PlaneGeometry(w * .84, s * .86), pm); pf.position.z = d * .5 + .004; noShadow(pf); g.add(pf); }
+    return g; };
+
   /* ---------------- hats (local: brim centre at the origin, on top of the head) ---------------- */
   const HATS = {
     crown(g, c, L) { const cr = K.crown(L ? goldM() : pl(c[0]), gemM(L ? 0xff5a8a : 0x5ec8ff), .78); g.add(cr); },
@@ -92,6 +119,18 @@
     kokoshnik(g, c, L) { const m = L ? goldM() : pl(c[0] || 0xd83a4a); const k = mesh(new T.CircleGeometry(.5, 32, 0, Math.PI), m); k.material.side = T.DoubleSide; put(g, k, [0, .02, .3], [-.25, 0, 0]); [-.5, 0, .5].forEach(a => blob(g, gemM(0x6fc8ff), [Math.sin(a) * .3, .22 + Math.cos(a) * .12, .38], .06)); },
     bonnet(g, c) { const m = pl(c[0] || 0xfff4f8); blob(g, m, [0, .0, -.12], [.66, .6, .5]); put(g, tor(.6, .06, pl(c[1] || 0xff8fb0)), [0, -.05, .1], [Math.PI / 2 - .6, 0, 0]); blob(g, pl(c[1] || 0xff8fb0), [.5, -.5, .4], [.1, .1, .06]); },
     flowers(g, c) { for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; blob(g, pl([0xff8fb0, 0xffd65a, 0xffffff][i % 3]), [Math.cos(a) * .52, .06, Math.sin(a) * .52], .11); } },
+    // 麻雀 (riichi/): a crown of the three dragons (白・發・中) on a red-lacquer band; the deluxe outfit's band is gold
+    sangen(g, c, L) { const bm = L ? goldM() : pl(c[0] || 0xd8283c, { rough: .45 }); put(g, cyl(.5, .47, .2, bm), [0, .1, 0]); put(g, tor(.5, .05, L ? goldM() : pl(0xffd65a)), [0, .2, 0], [Math.PI / 2, 0, 0]);
+      [['haku', -.62], ['chun', 0], ['hatsu', .62]].forEach(([f, a]) => { const t = mjT(f, f === 'chun' ? .5 : .42); t.position.set(Math.sin(a) * .44, f === 'chun' ? .45 : .4, Math.cos(a) * .44); t.rotation.set(-.12, a, 0); g.add(t); });
+      if (L) [-1.2, 1.2].forEach(a => blob(g, gemM(0xff3d6e), [Math.sin(a) * .5, .1, Math.cos(a) * .5], .06)); },
+    // a hachimaki (headband) with a little 一索 — the bird tile — on the forehead
+    mjband(g, c) { put(g, tor(.56, .07, pl(0xfffaf2)), [0, -.02, 0], [Math.PI / 2 - .05, 0, 0]); [-1, 1].forEach(s => blob(g, pl(c[1] || 0xd8283c), [s * .08, -.1, -.6], [.06, .18, .03], [0, 0, s * .5]));
+      const t = mjT('s1', .5); t.position.set(0, .12, .6); t.rotation.x = -.25; g.add(t); },
+    // a top hat with a band of little tiles (五筒 and 中) instead of the ribbon
+    mjtophat(g, c, L) { const m = pl(c[0] || 0x2a2a38, { rough: .6 }); blob(g, m, [0, .02, 0], [.6, .05, .6]); put(g, cyl(.34, .36, .62, m), [0, .33, 0]); put(g, cyl(.365, .365, .05, L ? goldM() : pl(c[1] || 0xd8283c)), [0, .04, 0]);
+      [-.75, -.25, .25, .75].forEach((a, i) => { const t = mjT(i % 2 ? 'chun' : 'p5', .27); t.position.set(Math.sin(a) * .38, .2, Math.cos(a) * .37); t.rotation.y = a; g.add(t); }); },
+    // a beret with a 發 tile for a pin
+    mjberet(g, c) { const m = pl(c[0]); blob(g, m, [0, .1, 0], [.56, .17, .54]); blob(g, m, [0, .27, 0], .06); const t = mjT('hatsu', .38); t.position.set(.24, .2, .44); t.rotation.set(-.25, .35, -.15); g.add(t); },
     none() {},
   };
   /* ---------------- props held in the right paw ---------------- */
@@ -109,6 +148,17 @@
     flag(c) { const g = new T.Group(); put(g, cyl(.025, .025, 1.0, pl(0x9a6a40), 8), [0, .3, 0]); const f = blob(g, pl(c ? c[2] || 0xff6b7a : 0xff6b7a), [.2, .66, 0], [.2, .14, .03]); return g; },
     goblet(c, L) { const g = new T.Group(); const m = L ? goldM() : pl(0xd8c8a0); put(g, cyl(.15, .04, .2, m, 20), [0, .2, 0]); put(g, cyl(.03, .03, .16, m, 8), [0, .03, 0]); put(g, cyl(.1, .1, .03, m, 16), [0, -.05, 0]); return g; },
     quill() { const g = new T.Group(); blob(g, fixed(0xfffaf0), [0, .3, 0], [.07, .34, .02], [0, 0, -.2]); put(g, cyl(.012, .012, .3, fixed(0x2a2233), 6), [.04, 0, 0], [0, 0, -.2]); return g; },
+    // 麻雀 (riichi/, 2026-11-28): a tile with a real face (c.f: the boss's own tile), the merchant's fan of point sticks, the scholar's rule book
+    mjface(c, L) { const g = mjT(c && c.f || 'chun', .44); g.rotation.set(-.2, .15, 0); return g; },
+    tenbou(c, L) { const g = new T.Group(); [-2, -1, 0, 1, 2].forEach(i => { const st = new T.Group(); K.sq(st, fixed(0xf6f1e4, { rough: .35 }), [0, .26, 0], [.06, .56, .03], .3);
+        blob(st, fixed(i === 0 ? 0xd8283c : 0x2a2a38), [0, .4, .018], [.022, .022, .006]); if (i) [.32, .2].forEach(y => blob(st, fixed(0x2a2a38), [0, y, .018], [.014, .014, .005]));
+        st.rotation.z = i * .22; g.add(st); });
+      blob(g, L ? goldM() : pl(0xd8283c), [0, 0, .02], [.05, .05, .04]); return g; },
+    mjbook(c) { const g = new T.Group(); K.sq(g, pl(0x1e6a48), [0, 0, 0], [.34, .44, .12], .3); K.sq(g, fixed(0xfff8e8), [.03, 0, 0], [.3, .4, .1], .3);
+      const t = mjT('chun', .2); t.position.set(0, .04, .07); t.scale.z = .4; g.add(t); return g; },
+    // a mahjong tile (麻雀 riichi/, 2026-11-27): ivory face with a red 中-like mark, the deep blue back of riichi/'s table
+    mjtile(c) { const g = new T.Group(); K.sq(g, fixed(0xf6f1e4, { rough: .35 }), [0, 0, .03], [.3, .4, .14], .3); K.sq(g, fixed(0x2a477a, { rough: .3 }), [0, 0, -.07], [.3, .4, .08], .3);
+      blob(g, fixed(c && c[2] === 1 ? 0x1e8a50 : 0xd8283c), [0, .03, .102], [.035, .12, .01]); blob(g, fixed(c && c[2] === 1 ? 0x1e8a50 : 0xd8283c), [0, .02, .102], [.1, .04, .01]); g.rotation.x = -.2; return g; },
     piece(c) { const g = new T.Group(), m = fixed(c && c[2] === 1 ? 0xfbfaf4 : 0x26262e, { rough: .45 }); g.add(puck(.18, .06, m, .5)); blob(g, m, [0, .16, 0], [.08, .12, .08]); blob(g, m, [0, .32, 0], .09); return g; },
     shogi() { const g = K.shogiPiece('王', .34); return g; },
     seeds(c) { const g = new T.Group(); for (let i = 0; i < 6; i++) blob(g, gemM([0x46c8a0, 0xff6b7a, 0x6fb8ff, 0xffd65a][i % 4]), [Math.cos(i) * .1, (i % 3) * .06, Math.sin(i * 2) * .1], .07); return g; },
@@ -165,7 +215,39 @@
     cp.scale.set(.7, 1.0, .62); cp.position.set(0, 1.02, -.06); g.add(cp);
     [-1, 1].forEach(s => blob(g, cm, [s * .34, .98, .02], [.12, .09, .12]));
   }
+  /* 麻雀 (riichi/, 2026-11-28 ユーザー「アクセサリではなく、クジャクパイみたいにしっかり麻雀モチーフなキャラに」): the cat IS a tile — a plump
+     五筒 with cat's ears and a riichi stick (点棒) for a tail. R gets the merchant's top hat, SR turns its face into the red five (赤五筒,
+     the dora everyone wants), SSR a gilded back. (Built like 上海's tile children, atlas/avatars/sp-e.js.) */
+  const pinFace = red => K.decal('mjb-p5' + (red ? 'r' : ''), 160, 200, (x, W, H) => { x.clearRect(0, 0, W, H);
+    const ring = (cx, cy, r, col) => { x.fillStyle = col; x.beginPath(); x.arc(cx, cy, r, 0, 7); x.fill(); x.fillStyle = '#fffefa'; x.beginPath(); x.arc(cx, cy, r * .64, 0, 7); x.fill(); x.fillStyle = col; x.beginPath(); x.arc(cx, cy, r * .3, 0, 7); x.fill(); };
+    const o = red ? '#d8283c' : '#2f6fd0', ce = '#d8283c';
+    [[.27, .24], [.73, .24], [.27, .78], [.73, .78]].forEach(([u, v]) => ring(W * u, H * v, W * .19, red ? o : (u < .5) === (v < .5) ? o : '#1e8a50')); ring(W * .5, H * .51, W * .21, ce); });
+  function mjNeko(sp, tier) {
+    const L = tier >= 3, g = new T.Group();
+    const Tw = pl(0xfffefa, { under: 0xe8eef0, uk: .35, rough: .5 }), Tb = L ? goldM() : pl(0x2a5aa8, { under: 0x4a7ad0, uk: .4, rough: .6 }), pink = pl(0xffb0c0);
+    const c = V3(0, 1.0, 0), S = [1.2, 1.56, .6];
+    K.sq(g, Tw, [c.x, c.y, c.z + .07], S, .34); K.sq(g, Tb, [c.x, c.y, c.z - .3], [1.16, 1.52, .34], .34);
+    const front = K.sqs(c, S, .34), fz = c.z + S[2] / 2 + .072;
+    const pf = noShadow(mesh(new T.PlaneGeometry(.66, .82), pinFace(tier >= 2))); pf.position.set(0, c.y - .28, fz); g.add(pf);
+    // the ears: two soft triangles on the tile's top corners (ivory, pink inside), the back's colour behind
+    [-1, 1].forEach(s => { const e = put(g, cone(.2, .36, Tw, 4), [s * .4, 1.86, .06], [0, Math.PI / 4, -s * .28]); e.scale.z = .5;
+      const ei = put(g, cone(.11, .2, pink, 4), [s * .39, 1.84, .14], [0, Math.PI / 4, -s * .28]); ei.scale.z = .35; });
+    // whiskers, little paws and feet in the back's colour
+    [-1, 1].forEach(s => [0, 1].forEach(i => put(g, cyl(.008, .008, .3, fixed(0x9aa0b0), 6), [s * .44, 1.18 - i * .07, fz + .02], [0, 0, Math.PI / 2 + s * (i ? -.12 : .12)])));
+    [-1, 1].forEach(s => { blob(g, Tb, [s * .68, .98, .1], [.13, .2, .13], [0, 0, s * .5]); blob(g, Tb, [s * .3, .1, .08], [.18, .1, .2]); });
+    // the tail: a 千点棒 (white stick, one red dot) curling up behind
+    const tl = new T.Group(); K.sq(tl, fixed(0xf6f1e4, { rough: .35 }), [0, .45, 0], [.12, .95, .07], .3); blob(tl, fixed(0xd8283c), [0, .62, .04], [.04, .04, .01]); blob(tl, fixed(0xd8283c), [0, .62, -.04], [.04, .04, .01]);
+    tl.position.set(.5, .3, -.5); tl.rotation.set(-.35, 0, -.7); g.add(tl);
+    const eyes = face(g, (u, v) => { const r = front(u, v + .32); r.p.z += .07; return r; }, { er: .09, gap: .22, v: .06, mouth: 'w', mw: .1, by: .12, bx: .16 });
+    if (tier >= 1) { const hg = new T.Group(); HATS.tophat(hg, [0x2a2a38, 0xd8283c], L); hg.scale.setScalar(.72); hg.position.set(0, 1.78, -.04); hg.rotation.z = -.1; g.add(hg); }
+    g.userData.head = [1.3, .62, .1]; g.userData.top = [0, 2.0, .1, 0];
+    return alive(g, eyes);
+  }
+  // the bamboo of 索子: a green stick with two joints
+  const bamboo = (len, L) => { const g = new T.Group(), m = pl(0x2f9a5a, { rough: .55 }), j = L ? goldM() : pl(0x1e6a3c);
+    put(g, cyl(.05, .05, len, m, 12), [0, len / 2, 0]); blob(g, m, [0, len, 0], [.05, .03, .05]); [.3, .68].forEach(k => put(g, tor(.052, .014, j), [0, len * k, 0], [Math.PI / 2, 0, 0])); return g; };
   function build(sp, tier) {
+    if (sp.m.mj === 'neko') return mjNeko(sp, tier);
     const m = sp.m, A = AN[m.a] || AN.bear, L = tier >= 3, rank = sp.rank || 0;
     const g = new T.Group(), c = m.c || [0xffc890, 0xfff4e6, 0xff6b7a];
     const B = pl(c[0], { under: shade(c[0], -.1) }), cream = pl(c[1] || 0xfff4e6, { under: 0xffd6e4, uk: .35 }), acc = pl(c[2] || 0xff6b7a);
@@ -174,7 +256,7 @@
     blob(g, B, [0, .52, 0], [.52, .5, .46]); blob(g, cream, [0, .48, .22], [.34, .33, .27]);
     [-1, 1].forEach(s => blob(g, B, [s * .24, .1, .26], [.15, .1, .18]));
     // arms / wings
-    if (A.w) [-1, 1].forEach(s => blob(g, B, [s * .5, .58, .02], [.12, .3, .24], [0, 0, s * .45]));
+    if (A.w && !(m.ex || []).includes('souwings')) [-1, 1].forEach(s => blob(g, B, [s * .5, .58, .02], [.12, .3, .24], [0, 0, s * .45]));
     else [-1, 1].forEach(s => blob(g, B, [s * .44, .6, .24], [.12, .17, .12], [0, 0, s * .4]));
     // head
     const hc = V3(0, 1.45, .02), HR = [.84, .72, .72];
@@ -190,7 +272,7 @@
     else if (E === 'floppy') [-1, 1].forEach(s => blob(g, dark, [s * .82, 1.4, 0], [.18, .42, .3], [0, 0, s * .25]));
     else if (E === 'tuft') [-1, 1].forEach(s => put(g, cone(.16, .4, B), [s * .5, 2.1, 0], [0, 0, -s * .5]));
     else if (E === 'elephant') [-1, 1].forEach(s => { blob(g, B, [s * .86, 1.48, -.08], [.12, .5, .44], [0, s * .3, 0]); blob(g, inner, [s * .9, 1.48, 0], [.06, .36, .3], [0, s * .3, 0]); });
-    else if (E === 'horns') [-1, 1].forEach(s => put(g, cone(.1, .4, L ? goldM() : pl(0xfff4dc), 16), [s * .36, 2.12, -.1], [-.2, 0, -s * .3]));
+    else if (E === 'horns' && !(m.ex || []).includes('tenbouhorns')) [-1, 1].forEach(s => put(g, cone(.1, .4, L ? goldM() : pl(0xfff4dc), 16), [s * .36, 2.12, -.1], [-.2, 0, -s * .3]));
     else if (E === 'frog') [-1, 1].forEach(s => blob(g, B, [s * .36, 2.0, .12], [.24, .22, .22]));
     // (the celestial Janus) two-sided: the left half of the body, head, ear, paw and foot in the other colour, with a white patch round its eye
     if (m.split != null) {
@@ -218,8 +300,8 @@
     if (rank >= .55 || m.brow) [-1, 1].forEach(s => { const p = surf(s * .28, eyeV + .2), b = mesh(new T.SphereGeometry(1, 16, 10), fixed(INK)); b.scale.set(.1, .028, .02); b.position.copy(p.p).addScaledVector(p.n, .008); b.lookAt(b.position.clone().add(p.n)); b.rotateZ(-s * .32); g.add(b); });
     // extras
     // N (tier 0) = the bare plush with its prop, R (1) = + the hat, SR (2) and up = + the outfit
-    const OUTFIT = ['glasses', 'monocle', 'cape', 'cape?', 'ruff', 'scarf', 'necklace', 'collar', 'belt', 'robe', 'armor'];
-    const X = (A.x || []).concat((m.ex || []).filter(x => tier >= 2 || !OUTFIT.includes(x)));
+    const OUTFIT = ['glasses', 'pinglasses', 'tilelace', 'monocle', 'cape', 'cape?', 'ruff', 'scarf', 'necklace', 'collar', 'belt', 'robe', 'armor'];
+    const X = (A.x || []).filter(x => !(x === 'spikes' && (m.ex || []).includes('sangenspine'))).concat((m.ex || []).filter(x => tier >= 2 || !OUTFIT.includes(x)));
     X.forEach(x => {
       if (x === 'mane') for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; blob(g, pl(c[2] || 0xd8823a), [Math.cos(a) * .82, 1.45 + Math.sin(a) * .7, -.12], [.26, .26, .2]); }
       else if (x === 'horsemane') for (let i = 0; i < 5; i++) blob(g, acc, [0, 2.1 - i * .18, -.3 - i * .1], [.14, .16, .14]);
@@ -250,6 +332,22 @@
       });
       else if (x === 'batwings') [-1, 1].forEach(s => blob(g, dark, [s * .8, 1.0, -.2], [.4, .3, .05], [0, s * .5, s * .3]));
       else if (x === 'glasses') [-1, 1].forEach(s => { const p = surf(s * .28, eyeV); const r = put(g, tor(.15, .02, fixed(L ? 0xffd65a : 0x2a2233)), [p.p.x, p.p.y, p.p.z + .05]); });
+      // 麻雀 (riichi/) body features: the sparrow's wings and tail of 索子 bamboo, the owl's 一筒 eye-rings and 筒子 breast, the dragon's 三元 spine
+      else if (x === 'souwings') [-1, 1].forEach(s => [0, 1, 2].slice(0, tier >= 1 ? 3 : 2).forEach(i => { const b = bamboo(.62 - i * .06, L); b.position.set(s * .46, .5, .12 - i * .1); b.rotation.set(-.1, 0, -s * (.75 + i * .4)); g.add(b); }));
+      else if (x === 'soutail') [-.5, 0, .5].forEach(a => { const b = bamboo(.8, L); b.position.set(0, .4, -.4); b.rotation.set(-.7, 0, a); g.add(b); });
+      else if (x === 'soucrest') [-.4, 0, .4].forEach(a => { const b = bamboo(a ? .32 : .4, L); b.position.set(Math.sin(a) * .1, 2.1, -.05); b.rotation.set(-.25, 0, -a); g.add(b); });
+      else if (x === 'pineyes') [-1, 1].forEach(s => { const p = surf(s * .28, eyeV), at = (r, w, col, d) => { const t = put(g, tor(r, w, fixed(col, { rough: .4 })), [p.p.x + p.n.x * d, p.p.y + p.n.y * d, p.p.z + p.n.z * d]); t.lookAt(p.p.x + p.n.x * 2, p.p.y + p.n.y * 2, p.p.z + p.n.z * 2); };
+        at(.2, .035, L ? 0xffd65a : 0x2f6fd0, .03); at(.155, .02, 0xd8283c, .035); at(.25, .022, 0x1e8a50, .02); })
+      else if (x === 'pinbelly') { const d = put(g, mesh(new T.PlaneGeometry(.5, .5), K.decal('mjb-pinb', 128, 128, (x2, W) => { x2.clearRect(0, 0, W, W);
+          const ring = (cx, cy, r, col) => { x2.fillStyle = col; x2.beginPath(); x2.arc(cx, cy, r, 0, 7); x2.fill(); x2.fillStyle = '#fff6ea'; x2.beginPath(); x2.arc(cx, cy, r * .6, 0, 7); x2.fill(); x2.fillStyle = col; x2.beginPath(); x2.arc(cx, cy, r * .28, 0, 7); x2.fill(); };
+          ring(W * .26, W * .24, W * .17, '#1e8a50'); ring(W * .5, W * .5, W * .17, '#d8283c'); ring(W * .74, W * .76, W * .17, '#2f6fd0'); })), [0, .5, .5]); d.rotation.x = -.15; noShadow(d); }
+      else if (x === 'sangenspine') {   // (a crest of the three dragon tiles on the head, fanned like a dragon's fin; a little row of them down the back)
+        [['haku', -1], ['chun', 0], ['hatsu', 1]].forEach(([f, k]) => { const t = mjT(f, k ? .44 : .54); t.position.set(k * .3, 2.2 + (k ? 0 : .08), -.12 - Math.abs(k) * .06); t.rotation.set(-.15, -k * .25, -k * .35); g.add(t); });
+        [0, 1].forEach(i => { const t = mjT(null, .3 - i * .06); t.position.set(0, 1.3 - i * .42, -.72 + i * .12); t.rotation.set(-.4 - i * .5, Math.PI / 2, 0); g.add(t); }); }
+      else if (x === 'tenbouhorns') [-1, 1].forEach(s => { const h = new T.Group(); K.sq(h, fixed(0xf6f1e4, { rough: .35 }), [0, .22, 0], [.09, .46, .06], .3); blob(h, fixed(0xd8283c), [0, .3, .032], [.028, .028, .008]); h.position.set(s * .34, 2.02, -.1); h.rotation.set(-.3, 0, -s * .35); g.add(h); });
+      else if (x === 'pinglasses') [-1, 1].forEach(s => { const p = surf(s * .28, eyeV); put(g, tor(.15, .024, fixed(0x2a477a)), [p.p.x, p.p.y, p.p.z + .05]); put(g, tor(.18, .012, fixed(0xd8283c)), [p.p.x, p.p.y, p.p.z + .045]); });   // (一筒's rings)
+      else if (x === 'tilelace') { put(g, tor(.38, .025, L ? goldM() : pl(0xd8283c)), [0, .95, .03], [Math.PI / 2 - .2, 0, 0]);
+        [-.9, -.45, 0, .45, .9].forEach((a, i) => { const t = mjT(['p5', 'hatsu', 'chun', 'haku', 'p1'][i], .23); t.position.set(Math.sin(a) * .38, .9 - Math.cos(a) * .05, .12 + Math.cos(a) * .32); t.rotation.set(-.3, a, 0); g.add(t); }); }
       else if (x === 'monocle') { const p = surf(.28, eyeV); put(g, tor(.16, .022, fixed(0xffd65a)), [p.p.x, p.p.y, p.p.z + .05]); }
       else if (x === 'cape' || (x === 'cape?' && (L || rank >= .6))) { const cm = pl(m.cape || c[2] || 0xc83a4a); capeOn(g, cm); if (L) put(g, tor(.36, .05, goldM()), [0, .98, .02], [Math.PI / 2, 0, 0]); }
       else if (x === 'ruff') for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; blob(g, fixed(0xffffff), [Math.cos(a) * .36, .98, Math.sin(a) * .32], [.14, .07, .1], [0, -a, 0]); }
@@ -275,7 +373,7 @@
     if (hk !== 'none') { hg.position.set(0, hy, -.04); hg.rotation.set(-.08, 0, hk === 'crown' || hk === 'beret' ? -.12 : 0); g.add(hg); }
     if (L && m.hat2) { const h2 = new T.Group(); HATS[m.hat2](h2, hcol, L); h2.position.set(0, hy + .12, -.04); g.add(h2); }
     // prop in the right paw
-    const pr = (PROPS[m.held || 'none'] || PROPS.none)(c, L);
+    const pr = (PROPS[m.held || 'none'] || PROPS.none)(m.f ? Object.assign(c.slice(), { f: m.f }) : c, L);
     if (pr) { pr.position.set(-.58, .66, .38); g.add(pr); }
     if (L && rank >= .99 && !(X.includes('cape')) && !X.includes('angelwings')) { capeOn(g, pl(m.cape || 0x8a3ad8)); }
     // the strongest boss (UR): a ring of stars behind and above the head

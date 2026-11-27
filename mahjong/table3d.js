@@ -9,7 +9,11 @@ const W = 1, H = 1.36, D = 0.78;
 // the page opens; if one is not there in time (or ?nobake), the code below draws it as before. Every drawn one is kept in
 // JANKA_TEXGEN for the baking tool.
 const BAKE_V = 3, BAKED = {};
-if (!/[?&]nobake\b/.test(location.search)) for (const n of ['felt', 'wood', 'woodb', 'stone']) { const im = new Image(); im.decoding = 'async'; im.src = (root.JANKA_ASSETS || '../images/mahjong/') + 'tex/' + n + '.webp?v=' + BAKE_V; BAKED[n] = im; }
+// (2026-11-27, 大百科の麻雀 riichi/: ユーザー「雀卓は緑系のフェルトの方が良い（オーソドックスに）」) window.JANKA_FELT = 'green': the same cloth
+// in a quiet table green (tex/felt-green.webp = felt.webp with its shading kept, recoloured), and no hands over the table (JANKA_NOHANDS)
+const GREEN = root.JANKA_FELT === 'green', NOHANDS = !!root.JANKA_NOHANDS;
+if (!/[?&]nobake\b/.test(location.search)) for (const n of GREEN ? ['felt', 'wood', 'woodb'] : ['felt', 'wood', 'woodb', 'stone']) {   // (green: the backs' stone is drawn in blue below)
+  const im = new Image(); im.decoding = 'async'; im.src = (root.JANKA_ASSETS || '../images/mahjong/') + 'tex/' + (n === 'felt' && GREEN ? 'felt-green' : n) + '.webp?v=' + BAKE_V; BAKED[n] = im; }
 // (2026-11-15, ユーザー「スマホで落ちまくる」: memory) on a touch device the big pictures are kept at half size — on a phone's screen
 // the felt and the rails never show more than that — and once a picture that never changes is on the graphics card, the copy the
 // page kept of it is let go (lean). Desktop: full size as before, lean too (2026-11-16).
@@ -137,7 +141,7 @@ function stoneTex() {
   const oct = ps => ps.map(P => [grid(P), P]);
   const fbm = (O, u, v) => { let s = 0, a = .5, n = 0; for (const [G, P] of O) { s += val(G, P, u, v) * a; n += a; a *= .5; } return s / n; };   // 0..1, periodic
   const A = oct([3, 6, 12, 24, 48]), B = oct([2, 4, 8, 16]), Cc = oct([2, 4, 8, 16]);
-  const br = 0x59, bg = 0x36, bb = 0x86;   // the deep 袱紗 purple (unchanged)
+  const [br, bg, bb] = GREEN ? [0x2a, 0x47, 0x78] : [0x59, 0x36, 0x86];   // the deep 袱紗 purple (unchanged) — on the green table (大百科の麻雀) a deep blue, as on an orthodox automatic table
   for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
     const u = x / S, v = y / S, wx = (fbm(B, u, v) - .5) * .5, wy = (fbm(Cc, u, v) - .5) * .5;        // the fold
     const cl = fbm(A, u + wx, v + wy) - .5;                                                         // the clouds
@@ -617,7 +621,7 @@ class Table3D {
       for (let y = 0; y < 2048; y++) for (let x = 0; x < 2048; x++) {
         const u = x / 2048, v = y / 2048, rq = Math.min(1, Math.max(0, (Math.hypot(u - .5, v - .5) - .2) / .42)), vig = 1.14 - .3 * rq * rq * (3 - 2 * rq);   // (ユーザー 2026-11-15, a reference shot: the cloth bright in the middle and clearly deeper toward the rails — in the cloth itself, so the tiles stay evenly lit)
         const m = (N.fbm(A, u, v) - .5) * .16, n = (N.R() - .5) * .09, f = vig * (1 + m + n), p = (y * 2048 + x) * 4;
-        d[p] = 32 * f; d[p + 1] = 58 * f; d[p + 2] = 104 * f; d[p + 3] = 255;   // (ユーザー 2026-11-15: the lake blue was too vivid — back to the calm dusty navy; the middle-bright shading stays)   // (ユーザー 2026-11-15: a hue that sits better with the brown frame and the tiles — a clear lake blue, a touch toward teal; was a dusty navy 32,56,100)
+        if (GREEN) { d[p] = 36 * f; d[p + 1] = 92 * f; d[p + 2] = 66 * f; } else { d[p] = 32 * f; d[p + 1] = 58 * f; d[p + 2] = 104 * f; } d[p + 3] = 255;   // (ユーザー 2026-11-15: the lake blue was too vivid — back to the calm dusty navy; the middle-bright shading stays)   // (ユーザー 2026-11-15: a hue that sits better with the brown frame and the tiles — a clear lake blue, a touch toward teal; was a dusty navy 32,56,100)
       }
       g.putImageData(img, 0, 0); }
     g.translate(1024, 1024);
@@ -981,12 +985,13 @@ class Table3D {
   hand(seat) {
     if (!this.hands) this.hands = [];
     let rig = this.hands[seat];
+    if (!rig && NOHANDS) { rig = this.hands[seat] = new THREE.Group(); rig.rotation.y = seat * PI / 2; rig.visible = false; return rig; }   // (an empty stand-in: the tiles move by the same paths, nothing is drawn)
     if (!rig) { if (!this.handProto) this.handProto = buildHand(this.envTex); rig = this.hands[seat] = this.handProto.clone(true); rig.rotation.y = seat * PI / 2; rig.visible = false; this.scene.add(rig); if (this.sleeves && this.sleeves[seat]) this._sleeve(rig, this.sleeves[seat]); }
     return rig;
   }
   // each seat's sleeve in the colour of its character's sisters (cols: four CSS colours). The ground is the colour taken deeper,
   // as silk is (a light colour stays light); one material per colour, made once.
-  setSleeves(cols, nails) { this.sleeves = cols.slice(); this.nailStyles = (nails || []).slice(); (this.hands || []).forEach((rig, s) => { if (rig && cols[s]) this._sleeve(rig, cols[s]); });
+  setSleeves(cols, nails) { if (NOHANDS) return; this.sleeves = cols.slice(); this.nailStyles = (nails || []).slice(); (this.hands || []).forEach((rig, s) => { if (rig && cols[s]) this._sleeve(rig, cols[s]); });
     // (2026-11-15, memory: the nail pictures of looks no seat wears any more are freed — at most four sets are kept)
     if (this.sleeveMats) for (const [k, sm] of this.sleeveMats) if (cols.indexOf(k) < 0) { if (sm.map) sm.map.dispose(); sm.dispose(); this.sleeveMats.delete(k); }
     if (this.nailMats) { const live = new Set(cols.map((c, s) => (this.nailStyles[s] || 'gem') + c)); for (const [k, nm] of this.nailMats) if (!live.has(k)) { if (nm.map) nm.map.dispose(); if (nm.bumpMap) nm.bumpMap.dispose(); nm.dispose(); this.nailMats.delete(k); } }

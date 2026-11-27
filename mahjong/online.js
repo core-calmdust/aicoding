@@ -15,6 +15,9 @@
 //                  start { chars[4]（ch）, names[4] }、ev/<uid>/<push> { j }、q/<uid>/<push> { j }、ans/<uid>/<push> { j }、emo/<push> { u, k, t }、res { scores, rank }
 //   mm/<uid>     : レート戦の待ち { t, r, name, c（招待されたルームの code） }
 //   pl/<uid>     : { r（レート、1500 から）, n（対局数）, name, t }
+//   mm0/<uid>・pl0/<uid> : スキルなし（標準戦）のレート戦の待ちとレート（2026-11-27、ユーザー「スキルなしのレート戦を雀華と共通に」）。
+//                  雀華の「スキルなし」と世界のボドゲ大百科の麻雀（riichi/、window.JANKA_CLASSIC）が同じ列・同じレートで当たる。
+//                  rooms/<code>/meta.sk（0＝スキルなし、無い・1＝スキルあり）。大百科の麻雀はスキルありのルームには入れない。
 //   ?mock=1 で Firebase の代わりに localStorage の偽データベース（同じブラウザの別タブどうしで対戦できる。テスト用）。
 (function () {
   'use strict';
@@ -26,6 +29,8 @@
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const J = () => window.JANKA;
   const TURN_MS = 25000, CALL_MS = 9000, DEAL_MS = 9000, ACK_MS = 30000, HB_MS = 8000, STALE_MS = 40000;
+  const CL = () => !!window.JANKA_CLASSIC;   // (世界のボドゲ大百科の麻雀: skills off, plain seats)
+  const SKN = sk => sk ? '' : '0';             // (the paths of the no-skill rated play: mm0 / pl0)
   const EMO = [['よろしく！', 'Hi!'], ['ナイス！', 'Nice!'], ['すごい！', 'Wow!'], ['ありがとう', 'Thanks'], ['ごめんね', 'Sorry'], ['どんまい', 'Never mind'], ['くやしい…', 'Argh…'], ['おつかれさま', 'GG']];
 
   // ================================================================ backend
@@ -120,7 +125,7 @@
 
   // ================================================================ the guest's table: a mirror of the host's game
   class MirrorGame extends MJGame {
-    constructor(chars, len) { super({ agents: [], chars, rules: { length: len, skills: true } }); this._left = 70; this._di = []; this._ura = []; this.ph = [[], [], [], []]; this.P = [0, 1, 2, 3].map(s => this.blankP(s)); }
+    constructor(chars, len, sk = true) { super({ agents: [], chars, rules: { length: len, skills: !!sk } }); this._left = 70; this._di = []; this._ura = []; this.ph = [[], [], [], []]; this.P = [0, 1, 2, 3].map(s => this.blankP(s)); }
     blankP(s) { return { seat: s, hand: [], melds: [], river: [], riichi: false, riichiTurn: -1, skUsed: [false, false], fx: {}, discards: new Set(), dblRiichi: false, ippatsu: false }; }
     liveLeft() { return this._left; }
     doraInds() { return this._di.slice(); }
@@ -200,21 +205,23 @@
   function code5() { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; for (let i = 0; i < 5; i++) s += A[(Math.random() * A.length) | 0]; return s; }
   const myName = () => { const DB = J() && J().DB; return (DB && DB.oname) || TX('プレイヤー', 'Player'); };
   const myCh = () => { const o = J().mySeat(); return { id: o.id, key: MJSkills.key(o.skill, o.tier), pid: o.partner ? o.partner.id : null, pkey: o.partner && o.skill2 ? MJSkills.key(o.skill2, o.tier2) : null }; };
-  function charOf(ch) { const C = MJChars.get(ch && ch.id) || MJChars.list[0]; const P = ch && ch.pid ? MJChars.get(ch.pid) : null; return J().seatChar(C, ch && ch.key || 'swap:0', P, ch && ch.pkey); }
+  function charOf(ch, name, i) { if (CL()) return J().classicSeat(i, name && name !== 'BOT' ? name : null); const C = MJChars.get(ch && ch.id) || MJChars.list[0]; const P = ch && ch.pid ? MJChars.get(ch.pid) : null; return J().seatChar(C, ch && ch.key || 'swap:0', P, ch && ch.pkey); }
   function botCh(taken) { const pool = MJChars.list.filter(c => c.reward == null && !taken.has(c.id)); const c = pool[(Math.random() * pool.length) | 0]; taken.add(c.id); return { id: c.id, key: J().rollSkillKey() }; }
 
   const R = {};   // the room this player is in: { code, host, meta, seats, ... }
-  let rating = null;
-  async function myRating() { const uid = NET.uid(); const v = await NET.get(`janka/pl/${uid}`); rating = v && typeof v.r === 'number' ? v : { r: 1500, n: 0 }; return rating; }
+  let rating = null, ratingSk = null;
+  // the rating of the rated play with skills (pl) or without (pl0) — `rating` is the one of the mode last read
+  async function myRating(sk = true) { const uid = NET.uid(); const v = await NET.get(`janka/pl${SKN(sk)}/${uid}`); rating = v && typeof v.r === 'number' ? v : { r: 1500, n: 0 }; ratingSk = !!sk; return rating; }
 
   function resetRoom() { for (const k in R) { if (k.startsWith('_off')) try { R[k](); } catch (e) {} } for (const k of Object.keys(R)) delete R[k]; }
-  async function enter(code, asHost, mode, len) {
+  async function enter(code, asHost, mode, len, sk = true) {
     resetRoom();
     const uid = NET.uid(), base = `janka/rooms/${code}`;
     Object.assign(R, { code, base, uid, host: asHost, meta: null, seats: {}, evN: {}, ans: {}, closed: false });
     R.waitAns = (u, n) => new Promise(res => { (R.ans[u] = R.ans[u] || {})[n] = res; });
     R.dropAns = (u, n) => { if (R.ans[u]) delete R.ans[u][n]; };
-    if (asHost) await NET.set(`${base}/meta`, { host: uid, mode, len, st: 'wait', t: NET.now(), hb: NET.now() });
+    if (asHost) await NET.set(`${base}/meta`, { host: uid, mode, len, sk: sk ? 1 : 0, st: 'wait', t: NET.now(), hb: NET.now() });
+    if (mode === 'rated' && ratingSk !== !!sk) await myRating(sk);
     const me = { name: myName(), ch: myCh(), r: (rating && rating.r) || 1500, t: NET.now(), hb: NET.now() };
     await NET.set(`${base}/seats/${uid}`, me);
     NET.dropOnLeave(`${base}/seats/${uid}`);
@@ -242,17 +249,18 @@
     const chs = order.map(u => u ? R.seats[u].ch : botCh(taken));
     const names = order.map(u => u ? (R.seats[u].name || '?') : 'BOT');
     const rs = order.map(u => u ? (R.seats[u].r || 1500) : 1500);
-    await NET.set(`${R.base}/start`, { j: JSON.stringify({ order, chs, names, rs, len: R.meta.len, mode: R.meta.mode }) });
+    const sk = R.meta.sk !== 0;
+    await NET.set(`${R.base}/start`, { j: JSON.stringify({ order, chs, names, rs, len: R.meta.len, mode: R.meta.mode, sk: sk ? 1 : 0 }) });
     await NET.update(`${R.base}/meta`, { st: 'play', order });
     R.started = true; R.order = order; R.names = names; R.rs = rs;
     closeLobby();
-    const chars = chs.map(charOf);
+    const chars = chs.map((ch, i) => charOf(ch, names[i], i));
     chars[0] = J().mySeat();
     // answers: one listener per remote player
     for (const u of uids) { R['_offAns' + u] = NET.added(`${R.base}/ans/${u}`, (k, v) => { try { const a = JSON.parse(v.j); const f = R.ans[u] && R.ans[u][a.n]; if (f) f(a.a); if (a.k === 'ack') { (R.acks = R.acks || {})[u] = Math.max((R.acks[u] || 0), a.h); } } catch (e) {} }); }
     let hn = 0;
     const ON = {
-      len: R.meta.len, chars, names, order, mode: R.meta.mode, rs, host: true, room: R,
+      len: R.meta.len, sk, chars, names, order, mode: R.meta.mode, rs, host: true, room: R,
       agents: (me, mkBot) => order.map((u, s) => s === 0 ? me : u ? new RemoteAgent(R, u, s, new MJBot.Bot(3)) : mkBot(3)),
       ui: onEvent => async (ev, d) => {
         const g = J().G;
@@ -276,10 +284,11 @@
     const S = JSON.parse(st.j), k = S.order.indexOf(R.uid); if (k < 0) return;
     R.order = S.order; R.k = k;
     closeLobby();
-    const chars = rotA(S.chs, k).map(charOf); chars[0] = J().mySeat();
     const names = rotA(S.names, k), rs = rotA(S.rs, k);
-    const mirror = new MirrorGame(chars, S.len);
-    const ON = { len: S.len, chars, names, order: S.order, mode: S.mode, rs, host: false, room: R, mirror, k,
+    const chars = rotA(S.chs, k).map((ch, i) => charOf(ch, names[i], i)); chars[0] = J().mySeat();
+    const sk = S.sk !== 0;
+    const mirror = new MirrorGame(chars, S.len, sk);
+    const ON = { len: S.len, sk, chars, names, order: S.order, mode: S.mode, rs, host: false, room: R, mirror, k,
       run: (onEvent, human) => guestLoop(onEvent, human, mirror) };
     J().startRemote(ON);
   }
@@ -322,14 +331,14 @@
 
   // ================================================================ rated: finding opponents
   let mm = null;
-  async function seek() {
-    await myRating();
-    const uid = NET.uid(), t0 = NET.now();
-    mm = { t0, off: null, timer: null };
-    await NET.set(`janka/mm/${uid}`, { t: t0, r: rating.r, name: myName() });
-    NET.dropOnLeave(`janka/mm/${uid}`);
+  async function seek(sk = true) {
+    await myRating(sk);
+    const uid = NET.uid(), t0 = NET.now(), Q = `janka/mm${SKN(sk)}`;
+    mm = { t0, off: null, timer: null, q: Q };
+    await NET.set(`${Q}/${uid}`, { t: t0, r: rating.r, name: myName() });
+    NET.dropOnLeave(`${Q}/${uid}`);
     let list = {};
-    mm.off = NET.watch('janka/mm', v => { list = v || {}; const mine = list[uid]; if (mine && mine.c && !R.code) { const c = mine.c; stopSeek(); join(c); } });
+    mm.off = NET.watch(Q, v => { list = v || {}; const mine = list[uid]; if (mine && mine.c && !R.code) { const c = mine.c; stopSeek(); join(c); } });
     mm.timer = setInterval(async () => {
       if (R.code) return;
       const now = NET.now();
@@ -338,25 +347,26 @@
       const n = wait.length, waited = now - t0;
       if (n >= 4 || (n >= 2 && waited > 15000)) {
         const code = code5(), others = wait.slice(1, 4).map(([u]) => u);
-        await enter(code, true, 'rated', 'east');
-        for (const u of others) await NET.tx(`janka/mm/${u}`, v => v && !v.c ? Object.assign(v, { c: code }) : undefined);
+        await enter(code, true, 'rated', 'east', sk);
+        for (const u of others) await NET.tx(`${Q}/${u}`, v => v && !v.c ? Object.assign(v, { c: code }) : undefined);
         stopSeek(true);
         // wait for them to sit down (10 s at most), then start
         const t1 = Date.now(); while (Date.now() - t1 < 10000 && Object.keys(R.seats).length < 1 + others.length) await sleep(300);
-        if (Object.keys(R.seats).length >= 2) hostStart(); else { await leave(true); seek(); }
+        if (Object.keys(R.seats).length >= 2) hostStart(); else { await leave(true); seek(sk); }
       }
       if (lobbyOpen) drawLobby();
     }, 1500);
     drawLobby();
   }
-  function stopSeek() { if (!mm) return; clearInterval(mm.timer); if (mm.off) mm.off(); mm = null; NET.remove(`janka/mm/${NET.uid()}`); }
+  function stopSeek() { if (!mm) return; clearInterval(mm.timer); if (mm.off) mm.off(); const Q = mm.q; mm = null; NET.remove(`${Q}/${NET.uid()}`); }
   async function join(code) {
     code = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
     const m = await NET.get(`janka/rooms/${code}/meta`);
     if (!m || m.st !== 'wait') { J().toast(TX('ルームが見つかりません', 'Room not found'), 2400); return; }
     const seats = await NET.get(`janka/rooms/${code}/seats`) || {};
     if (Object.keys(seats).length >= 4) { J().toast(TX('満席です', 'The room is full'), 2400); return; }
-    await enter(code, false, m.mode, m.len);
+    if (CL() && m.sk !== 0) { J().toast(TX('スキルありのルームには参加できません', 'This room plays with skills: it cannot be joined here'), 2800); return; }
+    await enter(code, false, m.mode, m.len, m.sk !== 0);
     drawLobby();
   }
 
@@ -364,10 +374,10 @@
   async function finalNote(ON, d, myRank) {
     const names = ON.names || [];
     if (ON.mode !== 'rated' || !NET) return `<span class="ol-note">${names.filter((n, i) => i && n !== 'BOT').length ? esc(TX('オンライン対戦', 'Online game')) : ''}</span>`;
-    const me = await myRating(), opp = (ON.rs || []).filter((r, i) => i !== 0), avg = opp.length ? opp.reduce((a, b) => a + b, 0) / opp.length : 1500;
+    const sk = ON.sk !== false, me = await myRating(sk), opp = (ON.rs || []).filter((r, i) => i !== 0), avg = opp.length ? opp.reduce((a, b) => a + b, 0) / opp.length : 1500;
     const dR = Math.max(-60, Math.min(60, Math.round([30, 10, -10, -30][myRank] + (avg - me.r) / 40)));   // (the rules allow ±60 a game)
     const nr = Math.max(100, me.r + dR);
-    try { await NET.set(`janka/pl/${NET.uid()}`, { r: nr, n: (me.n || 0) + 1, name: myName(), t: NET.now() }); rating = { r: nr, n: (me.n || 0) + 1 }; } catch (e) {}
+    try { await NET.set(`janka/pl${SKN(sk)}/${NET.uid()}`, { r: nr, n: (me.n || 0) + 1, name: myName(), t: NET.now() }); rating = { r: nr, n: (me.n || 0) + 1 }; } catch (e) {}
     return `<span class="ol-note">${esc(TX('レート', 'Rating'))} <b>${nr}</b> <em class="${dR >= 0 ? 'up' : 'dn'}">${dR >= 0 ? '+' : ''}${dR}</em></span>`;
   }
   function after(ON, again) { leave(true); if (again) open(); }
@@ -406,11 +416,14 @@
   // ================================================================ the lobby
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   let lobbyOpen = false, tab = 'rated', status = '', freeLen = 'east';
+  // with skills or without (雀華 picks; 大百科の麻雀 is always without): the rated queue and the rooms made
+  let rSk = !CL(), fSk = !CL();
+  const skSeg = (cur, a) => CL() ? '' : `<div class="seg ol-sk"><button class="${cur ? 'on' : ''}" data-${a}="1">${esc(TX('スキルあり', 'Skills on'))}</button><button class="${cur ? '' : 'on'}" data-${a}="0">${esc(TX('スキルなし', 'No skills'))}</button></div>`;
   function closeLobby() { if (lobbyOpen) { lobbyOpen = false; J().closeModal(); } }
   async function open() {
     if (!avail()) { J().toast(TX('オンライン対戦は公開ページで遊べます', 'Online play works on the published page'), 3000); return; }
     lobbyOpen = true; status = TX('接続しています…', 'Connecting…'); drawLobby();
-    try { await NET.ready(); await myRating(); status = ''; }
+    try { await NET.ready(); await myRating(rSk); status = ''; }
     catch (e) { console.warn(e); status = TX('接続できませんでした。時間をおいて試してください', 'Could not connect. Please try again later'); }
     drawLobby();
   }
@@ -418,7 +431,7 @@
     const ss = Object.entries(R.seats || {}).sort((a, b) => (a[1].t || 0) - (b[1].t || 0));
     const rows = [];
     for (let i = 0; i < 4; i++) { const e = ss[i];
-      if (e) { const [u, v] = e, c = MJChars.get(v.ch && v.ch.id);
+      if (e) { const [u, v] = e, c = CL() ? J().classicSeat(i, v.name) : MJChars.get(v.ch && v.ch.id);
         rows.push(`<div class="ol-seat on"><img src="${c ? J().charImg(c, 'face') : ''}" alt=""><b>${esc(v.name)}${u === R.uid ? ` <small>${esc(TX('（あなた）', '(you)'))}</small>` : ''}${R.meta && R.meta.host === u ? ` <i>${esc(TX('ホスト', 'Host'))}</i>` : ''}</b><span>${R.meta && R.meta.mode === 'rated' ? 'R ' + (v.r || 1500) : ''}</span></div>`); }
       else rows.push(`<div class="ol-seat"><span class="ol-bot">BOT</span><b>${esc(TX('空き（BOTが入ります）', 'Open (a BOT plays)'))}</b></div>`); }
     return rows.join('');
@@ -431,16 +444,18 @@
     else if (R.code) {
       const host = R.meta && R.meta.host === R.uid, mode = R.meta && R.meta.mode;
       body = `<div class="ol-room"><div class="ol-code"><small>${esc(mode === 'rated' ? TX('レート戦', 'Rated game') : TX('ルームコード', 'Room code'))}</small><b>${mode === 'rated' ? esc(TX('対戦相手がそろいました', 'Opponents found')) : esc(R.code)}</b>
-        <span>${esc((R.meta && R.meta.len) === 'south' ? TX('半荘戦', 'South round') : TX('東風戦', 'East round'))} ・ ${esc(TX('スキルあり', 'Skills on'))}</span></div>
+        <span>${esc((R.meta && R.meta.len) === 'south' ? TX('半荘戦', 'South round') : TX('東風戦', 'East round'))} ・ ${esc(R.meta && R.meta.sk === 0 ? TX('スキルなし', 'No skills') : TX('スキルあり', 'Skills on'))}</span></div>
         <div class="ol-seats">${seatsHTML()}</div>
         <div class="cbtns">${host && mode !== 'rated' ? `<button class="btn gold" data-a="start">${esc(TX('対局開始', 'Start'))}</button>` : mode !== 'rated' ? `<p class="ol-wait">${esc(TX('ホストの開始を待っています…', 'Waiting for the host to start…'))}</p>` : ''}<button class="btn" data-a="leave">${esc(host ? TX('ルームを閉じる', 'Close room') : TX('退出', 'Leave'))}</button></div></div>`;
     } else {
       body = `<nav class="ol-tabs"><button class="${tab === 'rated' ? 'on' : ''}" data-tab="rated">${esc(TX('レート戦', 'Rated'))}</button><button class="${tab === 'free' ? 'on' : ''}" data-tab="free">${esc(TX('フリー対戦（ルーム）', 'Free (rooms)'))}</button></nav>`;
       if (tab === 'rated') body += `<div class="ol-pane"><div class="ol-rate"><small>${esc(TX('あなたのレート', 'Your rating'))}</small><b>${rr}</b><span>${esc(TX('対局数', 'Games'))} ${rating ? rating.n || 0 : 0}</span></div>
-        <p class="ol-d">${esc(TX('東風戦・スキルあり。2人以上そろうと始まり、空いた席は BOT が入ります。', 'East round, skills on. Starts with 2+ players; BOTs fill the empty seats.'))}</p>
+        ${mm ? '' : skSeg(rSk, 'rsk')}
+        <p class="ol-d">${esc(rSk ? TX('東風戦・スキルあり。2人以上そろうと始まり、空いた席は BOT が入ります。', 'East round, skills on. Starts with 2+ players; BOTs fill the empty seats.')
+          : TX('東風戦・スキルなし（標準ルール）。雀華と世界のボドゲ大百科の麻雀のプレイヤーが同じレートで対戦します。2人以上そろうと始まり、空いた席は BOT が入ります。', 'East round, no skills (standard rules). Players of Janka and of the World Board Game Atlas mahjong share one rating. Starts with 2+ players; BOTs fill the empty seats.'))}</p>
         ${mm ? `<p class="ol-wait">${esc(TX('対戦相手を探しています…', 'Looking for opponents…'))}</p><div class="cbtns"><button class="btn" data-a="cancel">${esc(TX('やめる', 'Cancel'))}</button></div>` : `<div class="cbtns"><button class="btn gold" data-a="seek">${esc(TX('対戦相手を探す', 'Find opponents'))}</button></div>`}</div>`;
       else body += `<div class="ol-pane"><p class="ol-d">${esc(TX('ルームを作ってコードを友だちに伝えるか、コードを入れて参加します。空いた席は BOT が入ります。', 'Make a room and share its code, or join with a code. BOTs fill the empty seats.'))}</p>
-        <div class="ol-row"><div class="seg ol-len"><button class="${freeLen === 'east' ? 'on' : ''}" data-len="east">${esc(TX('東風戦', 'East'))}</button><button class="${freeLen === 'south' ? 'on' : ''}" data-len="south">${esc(TX('半荘戦', 'South'))}</button></div><button class="btn gold" data-a="make">${esc(TX('ルームを作る', 'Make a room'))}</button></div>
+        ${skSeg(fSk, 'fsk')}<div class="ol-row"><div class="seg ol-len"><button class="${freeLen === 'east' ? 'on' : ''}" data-len="east">${esc(TX('東風戦', 'East'))}</button><button class="${freeLen === 'south' ? 'on' : ''}" data-len="south">${esc(TX('半荘戦', 'South'))}</button></div><button class="btn gold" data-a="make">${esc(TX('ルームを作る', 'Make a room'))}</button></div>
         <div class="ol-row"><input id="olCode" maxlength="5" placeholder="${esc(TX('コード', 'Code'))}" autocomplete="off"><button class="btn" data-a="join">${esc(TX('参加', 'Join'))}</button></div></div>`;
       body += `<div class="ol-name"><small>${esc(TX('表示名', 'Name'))}</small><input id="olName" maxlength="12" value="${esc((DB && DB.oname) || '')}" placeholder="${esc(TX('プレイヤー', 'Player'))}"></div>`;
     }
@@ -449,13 +464,15 @@
     box.addEventListener('click', async e => {
       const tb = e.target.closest('[data-tab]'); if (tb) { tab = tb.dataset.tab; drawLobby(); return; }
       const ln = e.target.closest('[data-len]'); if (ln) { freeLen = ln.dataset.len; drawLobby(); return; }
+      const rs = e.target.closest('[data-rsk]'); if (rs) { rSk = rs.dataset.rsk === '1'; try { await myRating(rSk); } catch (er) {} drawLobby(); return; }
+      const fs = e.target.closest('[data-fsk]'); if (fs) { fSk = fs.dataset.fsk === '1'; drawLobby(); return; }
       const a = e.target.closest('[data-a]'); if (!a) return;
       const k = a.dataset.a;
       try {
         if (k === 'close') { if (mm) stopSeek(); if (R.code && !R.started) await leave(true); lobbyOpen = false; J().closeModal(); return; }
-        if (k === 'seek') return seek();
+        if (k === 'seek') return seek(rSk);
         if (k === 'cancel') { stopSeek(); drawLobby(); return; }
-        if (k === 'make') { await enter(code5(), true, 'free', freeLen); drawLobby(); return; }
+        if (k === 'make') { await enter(code5(), true, 'free', freeLen, fSk); drawLobby(); return; }
         if (k === 'join') return join((box.querySelector('#olCode') || {}).value);
         if (k === 'start') return hostStart();
         if (k === 'leave') return leave();
