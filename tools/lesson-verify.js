@@ -1964,7 +1964,7 @@ function ckWarm(opt, L, E, X, val, moveVal, add, only) {
 //   縦と横) and for every wrong move (the king or not, a blocker on the way, a capture or not, a piece of yours taken next), the question
 //   and the hint (a corner / the throne named is in an answer)
 //   ⑨ the 2D (tafl/app.js problemPoints) and the 3D (TAFL.points) both score P.ok
-const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield', 't_tuichi', 't_block', 't_fort', 't_encircle', 's_corner', 's_breakout', 's_squeeze']);
+const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield', 't_tuichi', 't_block', 't_fort', 't_encircle', 's_corner', 's_breakout', 's_squeeze', 'v_brandubh']);
 function tafl(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'tafl/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'tafl/lessons.json'), 'utf8'));
@@ -2339,9 +2339,52 @@ function tafl(opt) {
     const w = {}; vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'tafl/i18n.js'), 'utf8'), { window: w });
     for (const lg of Object.keys(w.I18N)) { const T = w.I18N[lg]; for (const k of ['intro', 'goal', 'hint', 'why', 'ng']) { const x = T['ls.s_squeeze.' + k]; if (!x) add('s_squeeze', -1, `⑨ ${lg}: no ls.s_squeeze.${k}`); }
       if (/class="note"/.test(T['ls.s_squeeze.intro'] || '')) add('s_squeeze', -1, `⑨ ${lg}: the 2D intro still has the engine note`); } }
+  // (2026-11-28 第2期 担当A) v_brandubh「ブランドゥブの王」(tools/lesson-verify-tfbrand.js): the attackers to move on the 7×7 board. ①②
+  // P.ok = every move that takes the king (all legal moves) ③ ≥10 moves, the answers ≤ a third of the moves and of the ringed man's
+  // moves (追17), ≥1 near-miss (a wrong move next to the king) ④ one man, all answers the same way (2 men / a man and a corner), the king
+  // not on or next to the throne, the defenders win at once only when the king stands next to a corner ⑤ ≥4 squares (the 8 symmetries
+  // of 7×7) from every other brandubh board (lessons, diagrams, warm-ups, the 120 brandubh puzzles) and from each other, no answer the
+  // same turned / mirrored ⑥ d (the near-misses) never down, last > first ⑦⑧ タフリン's words: every wrong move by what follows it
+  // (tfBrandWhy: next to the king but the far side open / not next to him; the king steps into a corner next; the moved man / another
+  // attacker taken next), the corner named in the praise, the right move's words, the question and the hint, only when the board says so;
+  // the diagram's arrow takes the king (追14)
+  const BD = require(path.join(ROOT, 'tools/lesson-verify-tfbrand.js')), bdPool = [], bdKey = new Map();
+  L.steps.forEach(st => { (st.problems || []).forEach((q, j) => q.s.v === 'brandubh' && bdPool.push([`${st.id} q${j + 1}`, q.s.b])); if (st.diagram && st.diagram.s.v === 'brandubh') bdPool.push([`${st.id} diagram`, st.diagram.s.b]); (st.ramp || []).forEach((r, j) => r.s && r.s.v === 'brandubh' && bdPool.push([`${st.id} ramp ${j + 1}`, r.s.b])); });
+  (PZ.themes || []).forEach(th => (th.puzzles || []).forEach((q, j) => q.s.v === 'brandubh' && bdPool.push([`puzzle ${th.id} ${j + 1}`, q.s.b])));
+  const brandOne = (st, si, P, j, a) => { const f = BD.brandFacts(E, P), nm = m => E.name(f.p, m), p = f.p; f.bad.forEach(a);
+    for (const [who, b] of bdPool) { if (who === `${st.id} q${j + 1}`) continue; const e = BD.dist7(P.s.b, b); if (e < 4) a(`⑤ ${e} squares from ${who}`); }
+    const SY = [(r, c) => [r, c], (r, c) => [r, 6 - c], (r, c) => [6 - r, c], (r, c) => [6 - r, 6 - c], (r, c) => [c, r], (r, c) => [c, 6 - r], (r, c) => [6 - c, r], (r, c) => [6 - c, 6 - r]];
+    for (const m of P.ok || []) { const ks = SY.map(S => { const x = S(Math.floor(E.mFrom(m) / 7), E.mFrom(m) % 7), y = S(Math.floor(E.mTo(m) / 7), E.mTo(m) % 7); return `${x[0] * 7 + x[1]}>${y[0] * 7 + y[1]}`; });
+      const hit = ks.find(k => bdKey.has(k) && bdKey.get(k) !== j); if (hit) a(`⑤ the same answer as q${bdKey.get(hit) + 1} turned / mirrored (${nm(m)})`); ks.forEach(k => { if (!bdKey.has(k)) bdKey.set(k, j); }); }
+    let W; try { W = X_.tfLsJa(E, st, P, j, k => X_.TFM(k, 'ja'), si); } catch (e) { a('⑧ the words fail: ' + e.message); return f.d; }
+    const cor = f.kind === 'corner', g = plain(W.good()), k = p.king, nbK = BD.nb4(k);
+    for (const t of [W.ask, W.hintTx, g]) if (!t || /\{|undefined|NaN/.test(t)) a(`⑧ 「${t}」`);
+    for (const t of [W.ask, W.hintTx]) {
+      if (/角のすぐとなり|角のとなりの王|角へ逃げられる前|角が片側/.test(t) && !cor) a(`⑧ 「${t}」: the king is not taken against a corner`);
+      if (/王のとなりにいる攻め手|王のとなりに攻め手がいる/.test(t) && !nbK.some(i => p.at(i) === 1)) a(`⑧ 「${t}」: no attacker next to the king`);
+      if (/1つだけ/.test(t) && f.goal.length !== 1) a(`⑧ 「${t}」: ${f.goal.length} moves take the king`);
+      if (/寄るだけの手|となりに入るだけ/.test(t) && f.d < 1) a(`⑧ 「${t}」: no wrong move next to the king`);
+      if (/とちゅうに駒のない道/.test(t) && !(P.ok || []).every(m => Math.abs(Math.floor(E.mFrom(m) / 7) - Math.floor(E.mTo(m) / 7)) + Math.abs(E.mFrom(m) % 7 - E.mTo(m) % 7) >= 2)) a(`⑧ 「${t}」: the answer is a one-step move`);
+      if (/玉座/.test(t)) a(`⑧ 「${t}」: the throne plays no part here`); }
+    if (/角/.test(g) !== cor) a(`⑧ the praise 「${g}」: ${cor ? 'the corner is not named' : 'no corner takes part'}`);
+    for (const m of f.wrong) { const raw = plain(W.ng(m)), x0 = nm(m), i0 = raw.indexOf('赤い印の手'), i1 = raw.indexOf('緑の印の手');
+      if (/\{|undefined|NaN/.test(raw) || i0 < 0 || i1 < 0) { a(`⑦ ${x0}: 「${raw}」 (your move / the right move not named)`); continue; }
+      const tx = raw.slice(i0, i1), tl = raw.slice(i1), R = f.C.get(m);
+      const said = /となりには入れた|王に寄れても|となりに来ただけ|反対側があいたまま|向かい側にいない/.test(tx) ? 'adj' : /となりに駒が来ない|はさむ形にならない|となりにも駒が来ない|自由なまま|離れた所/.test(tx) ? 'far' : 'other';
+      const want = R.why === 'throne' ? 'adj' : R.why;
+      if (said !== want) a(`⑦ ${x0}: 「${tx}」 says ${said}, the board: ${want}`);
+      const sEsc = /角へ逃げ|角に着|角へ脱出|角へ入/.test(tx), sCapm = /(動かした駒|その駒|寄せた駒).{0,12}(はさまれ|取られ)/.test(tx), sCap = /(ほかの攻め手|別の攻め手)/.test(tx);
+      if (sEsc !== !!R.esc) a(`⑦ ${x0}: 「${tx}」 the king ${R.esc ? 'steps into a corner next' : 'reaches no corner next'}`);
+      if (!R.esc) { if (sCapm !== !!R.capm) a(`⑦ ${x0}: 「${tx}」 the moved man ${R.capm ? 'is' : 'is not'} taken next`); if (!R.capm && sCap !== !!R.cap) a(`⑦ ${x0}: 「${tx}」 another attacker ${R.cap ? 'is' : 'is not'} taken next`); }
+      else if (sCapm || sCap) a(`⑦ ${x0}: 「${tx}」 (the escape comes first)`);
+      if (/角/.test(tl) !== cor) a(`⑦ ${x0}: 「${tl}」 the right move ${cor ? 'uses' : 'does not use'} a corner`); }
+    return f.d; };
+  { const st = L.steps.find(s => s.id === 'v_brandubh');
+    if (st && st.diagram) { const D = st.diagram, p = E.Pos.from(D.s); (D.arrows || []).forEach(([fr, to]) => { const m = E.parse(p, fr + '-' + to); if (m == null) { add('v_brandubh', -1, `diagram: 追14 ${fr}-${to} is not legal`); return; }
+      if (p.clone().play(m).res !== 1) add('v_brandubh', -1, `diagram: 追14 ${fr}-${to} does not take the king`); }); } }
   L.steps.forEach((st, si) => { const id = st.id; if (!TF_DONE.has(id) || (opt && opt.only && !opt.only.includes(id))) return;   // (opt.only: the mutation tests of one lesson)
     let prevD = -1, firstD = null;
-    if (id === 'b_safe' || id === 't_shield' || id === 't_tuichi' || id === 't_block' || id === 't_fort' || id === 't_encircle' || id === 's_corner' || id === 's_breakout' || id === 's_squeeze') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : id === 't_tuichi' ? tuichiOne : id === 't_block' ? blockOne : id === 't_fort' ? fortOne : id === 't_encircle' ? encOne : id === 's_corner' ? cornerOne : id === 's_breakout' ? breakOne : id === 's_squeeze' ? squeezeOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
+    if (id === 'b_safe' || id === 't_shield' || id === 't_tuichi' || id === 't_block' || id === 't_fort' || id === 't_encircle' || id === 's_corner' || id === 's_breakout' || id === 's_squeeze' || id === 'v_brandubh') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : id === 't_tuichi' ? tuichiOne : id === 't_block' ? blockOne : id === 't_fort' ? fortOne : id === 't_encircle' ? encOne : id === 's_corner' ? cornerOne : id === 's_breakout' ? breakOne : id === 's_squeeze' ? squeezeOne : id === 'v_brandubh' ? brandOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
     st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), me = p.turn, all = p.moves(), nm = m => E.name(p, m);
       if (P.n > 1) { const d = seqCheck(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
         if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); seqWords(st, si, P, j, a); return; }
