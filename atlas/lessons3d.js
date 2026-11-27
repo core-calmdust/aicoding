@@ -5040,7 +5040,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       if (this.p) return this.p;
       const tx = window.AtlasBgTexts ? AtlasBgTexts() : Promise.resolve({});
       const bg = window.AtlasBgExplain ? AtlasBgExplain() : Promise.resolve();   // (the rules and the commentary engine: atlas/puzzles.js loads them — the same files and cache keys as the table)
-      return (this.p = Promise.all([getJ('../backgammon/lessons.json?v=30261124a1'), getJ('../backgammon/openings.json?v=20261126rq2'), tx, bg, getJ('../backgammon/ramps.json?v=3').catch(() => null)])
+      return (this.p = Promise.all([getJ('../backgammon/lessons.json?v=30261124a1'), getJ('../backgammon/openings.json?v=20261128rq3'), tx, bg, getJ('../backgammon/ramps.json?v=3').catch(() => null)])
         .then(([ls, op, I, _, rp]) => { this.I = I || {}; this.data = { ls, op, rp }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
