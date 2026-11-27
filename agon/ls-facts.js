@@ -20,14 +20,17 @@
                 k 'trap' the enemy's next move sandwiches the relocated guard (rp: that enemy move)
                 k 'open' the relocated guard is safe, but the enemy's next move sandwiches another piece of yours (rp, v: the
                          piece it takes)
+     s_double   (2026-11-27 担当D) k 'ok'   the one move that sandwiches two enemy pieces at once (c: how many, v: the pieces)
+                k 'one'  it captures one enemy piece only (v: that piece)
+                k 'none' it captures nothing
    hint(E, id, spec) → the cells of the pieces to look at (never the answer's piece alone, 追52): b_step every piece with a step
    inwards, b_capture every piece with a move next to an enemy piece, b_throne the queen and every enemy piece next to a cell
    she can step inwards to, b_reloc the captured guard and every piece of yours the enemy could sandwich next (the guard off
-   the board).
+   the board), s_double every piece of yours with a capturing move.
    window.AgonLsFacts · module.exports the same. */
 (function () {
   'use strict';
-  const IDS = ['b_step', 'b_capture', 'b_throne', 'b_reloc'];
+  const IDS = ['b_step', 'b_capture', 'b_throne', 'b_reloc', 's_double'];
   // b_reloc: the enemy's capturing moves with the captured guard off the board ([move, the pieces it takes])
   function threats(E, spec) {
     const r = E.Pos.from({ b: spec.b.replace(/[xyXY]/g, '.'), side: 3 - spec.side, n: spec.n });
@@ -61,6 +64,10 @@
       if (ro != null) return { k: 'open', rp: ro, v: q.capsOf(ro)[0] };
       return { k: 'ok', block: threats(E, spec).some(([r]) => E.mTo(r) === t) };
     }
+    if (id === 's_double') {   // (担当D)
+      const v = p.capsOf(m);
+      return v.length >= 2 ? { k: 'ok', c: v.length, v } : v.length === 1 ? { k: 'one', v: v[0] } : { k: 'none' };
+    }
     if (id === 'b_capture') {
       const c = p.capsOf(m).length;
       if (c) return { k: 'ok', c };
@@ -92,6 +99,7 @@
       if (m === E.PASS) continue; const f = E.mFrom(m), t = E.mTo(m);
       if (id === 'b_step' && E.RING[t] === E.RING[f] - 1) out.add(f);
       if (id === 'b_capture' && E.NB[t].some(a => a >= 0 && p.owner(a) === 3 - me)) out.add(f);
+      if (id === 's_double' && p.capsOf(m).length) out.add(f);
     }
     return [...out].sort((a, b) => a - b);
   }
@@ -103,6 +111,7 @@
     if (id === 'b_capture') return F.k === 'touch' ? 'ngTouch' : 'ng';
     if (id === 'b_throne') return F.k === 'side' ? 'ngSide' : F.k === 'guard' ? 'ngGuard' : 'ng';
     if (id === 'b_reloc') return F.k === 'open' ? 'ngOpen' : 'ng';
+    if (id === 's_double') return F.k === 'one' ? 'ngOne' : 'ng';
     return 'ng';
   }
   const API = { IDS, fact, hint, key, threats };
