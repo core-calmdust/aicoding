@@ -23,6 +23,9 @@ const WIDE2 = args.includes('--wide2');
 // --near（2026-11-27 担当B）：--stage2 で、本の側の応手（読みの首位）が定石の隅（本筋・変化の石から4路以内）から離れた局面は広げない。
 // 相手が手を抜いて別の隅で戦う流れは答えが ④（op-pick.js・lesson-verify-goopen.js）で落ちるので、読む数を減らすだけ（合否は変えない）
 const NEAR = args.includes('--near');
+// --dnear（2026-11-27 担当B）：外れ方を定石の隅（本筋・変化の石から4路以内）の手だけにする。相手が手を抜いた局面は本の側の最善も
+// 別の隅になりやすく ④ で落ちるので、--pmin を小さく・--pn を大きくして隅の中の悪い外れ方を集めるとき用（読む数を減らすだけ、合否は変えない）
+const DNEAR = args.includes('--dnear');
 // --devmin K（2026-11-27 担当B、19路の布石）：--stage2 で、相手が K 手目より前（0 始まりの手数 < K）に外れた局面は広げない。
 // 布石の形（二連星の Q16・Q4、三連星の Q10 など）ができる前に外れた局面は ④ 主題に合わない（op-pick.js --shape でも落とす）。読む数を減らすだけ（合否は変えない）
 const DEVMIN = +opt('--devmin', 0);
@@ -56,7 +59,7 @@ for (const g of O.sets) { if (SETS.length && !SETS.includes(g.id)) continue; con
     if (mover === side) { const k = g.id + ':' + pre.join(' '); if (!seen.has(k)) { seen.add(k); jobs.push({ g, mv: pre, k }); } continue; }
     // the other side leaves the line here: its likely moves (policy >= 5%) that are not the line's
     const pol = policy(E, st, pre.map(s => R.parseCoord(s, n)), komiOf(g), 8);
-    pol.list.filter(e => e.m >= 0 && (LOW ? e.p >= 0.01 && e.p < 0.03 : e.p >= PMIN) && R.coord(e.m, n) !== L[at]).slice(0, LOW ? 5 : PN).forEach(e => { const mv = pre.concat([R.coord(e.m, n)]), k = g.id + ':' + mv.join(' ');
+    pol.list.filter(e => e.m >= 0 && (LOW ? e.p >= 0.01 && e.p < 0.03 : e.p >= PMIN) && R.coord(e.m, n) !== L[at] && !(DNEAR && farOf(g, R.coord(e.m, n)))).slice(0, LOW ? 5 : PN).forEach(e => { const mv = pre.concat([R.coord(e.m, n)]), k = g.id + ':' + mv.join(' ');
       if (!seen.has(k)) { seen.add(k); jobs.push({ g, mv, k, dev: at }); } }); } }
 // --stage2: one more pair off the line — after each position where the other side left it, the side's best reply (the reading's first
 // move) and the other side's likely answers (policy >= 5%, up to 2): the side to move again
