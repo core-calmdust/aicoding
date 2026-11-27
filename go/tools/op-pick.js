@@ -31,6 +31,10 @@ J('go/puzzles.json').themes.forEach(t => (t.puzzles || []).forEach(P => { if (P.
 function farOf(g, a) { const N = g.n || 19; if (/^fuseki_/.test(g.id) || N < 19) return false; const i = R.parseCoord(a, N);
   const pts = [].concat(...[g.line].concat((g.vars || []).map(v => v.line))).map(m => R.parseCoord(m, N)).filter(j => j >= 0);
   return !pts.some(j => Math.max(Math.abs(j % N - i % N), Math.abs(Math.floor(j / N) - Math.floor(i / N))) <= 4); }
+function lineTwin(g, p, S, ans) { const N = g.n || 19, Ls = [g.line].concat((g.vars || []).map(v => g.line.slice(0, v.at).concat(v.line)));
+  for (const [li, L] of Ls.entries()) for (let at = 0; at < L.length; at++) { if (L[at] !== ans) continue; const q = play(g, L.slice(0, at)); if (!q || q.turn !== p.turn) continue;
+    const d = dist(S, N, stonesOf(q), N); if (d <= 2) return (li ? '変化' + li : '本筋') + ' ' + (at + 1) + '手目 ' + ans + '・' + d + '石違い'; }
+  return null; }
 const RD = J('go/tools/data/openings-reads.json'), PICKED = [];   // (the positions taken by the sets before: 5 each, kept apart too)
 for (const id of SETS) { const g = O.sets.find(x => x.id === id), N = g.n || 19, side = g.side || 1;
   const cand = Object.entries(C).filter(([k, c]) => c.id === id && c.deep && passes(c) && passes(c.deep, c.top[0][0]) && c.turn === side)
@@ -40,6 +44,8 @@ for (const id of SETS) { const g = O.sets.find(x => x.id === id), N = g.n || 19,
     const onVar = (g.vars || []).some(v => { const L = g.line.slice(0, v.at).concat(v.line); return x.c.mv.length <= L.length && L.slice(0, x.c.mv.length).join(' ') === x.c.mv.join(' '); });   // ④ 変化の手順の上（見本で見せた局面）は手順の外でない（2026-11-26 担当B）
     if (SKIP.has(x.k)) { console.log(id, x.c.mv.join(' '), '→', x.c.top[0][0], '--skip'); continue; }
     if (onVar) { console.log(id, x.c.mv.join(' '), '→', x.c.top[0][0], '④ 変化の手順の上'); continue; }
+    // ⑤・追1 見本（本筋・変化の手順）の局面と1〜2石違いで、答えが見本のその局面の手と同じ（相手の手抜き1手だけ違う＝見せた答えをもう一度、2026-11-27 担当B）
+    { const lm = lineTwin(g, x.p, x.S, x.c.top[0][0]); if (lm) { console.log(id, x.c.mv.join(' '), '→', x.c.top[0][0], '⑤ 見本の局面（' + lm + '）と同じ答え'); continue; } }
     // ④ 外れたあとの本の側の手がすべて読みの首位（lesson-verify-goopen.js と同じ。同じ局面の読みがファイルによって食い違う＝ゆれる手も落とす、2026-11-27 担当B）
     const chain = (() => { if (x.c.dev == null) return null; for (let k = x.c.dev + 1; k < x.c.mv.length; k += 2) { const kk = id + ':' + x.c.mv.slice(0, k).join(' ');
       const rs = ALL.filter(o => o[kk]).map(o => o[kk].top[0][0]); if (!rs.length) return (k + 1) + '手目 読みなし'; if (rs.some(t => t !== x.c.mv[k])) return (k + 1) + '手目 ' + x.c.mv[k] + ' が首位でない（' + rs.join('/') + '）'; } return null; })();
