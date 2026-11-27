@@ -219,6 +219,8 @@
     { id: 'bruining', w: 1614, h: 2048, rijks: 'RP-P-1878-A-705', bg: '#ece9dc', spots: [[.5, .56], [.31, .42], [.57, .41], [.48, .49], [.68, .53], [.22, .745]], links: [{ g: 'checkers' }] },
     // (2026-11-25) the Rijksmuseum: Jan van Vliet, tric-trac players by candlelight (Leiden)
     { id: 'vanvliet', w: 1804, h: 2048, rijks: 'RP-P-1904-2260', bg: '#2e2b26', spots: [[.4, .6], [.33, .37], [.55, .4], [.79, .2], [.81, .45], [.15, .15]], links: [{ g: 'backgammon' }] },
+    // (2026-11-25) the Rijksmuseum: François Hermans carte de visite, two women and a girl at a chessboard
+    { id: 'hermans', w: 746, h: 1328, rijks: 'RP-F-F00753-G', bg: '#d8cdb6', spots: [[.474, .578], [.395, .544], [.395, .489], [.632, .456], [.494, .856], [.909, .367]], links: [{ g: 'chess' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
