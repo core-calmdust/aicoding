@@ -1140,3 +1140,4 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 @media (max-width:819px){.muwrap .murooms{display:flex;overflow-x:auto}.muwrap .murm{flex:1 1 auto;min-width:44px}}
 .mxtk{fill:#f3d59c;stroke:#a07a3a;stroke-width:.03}.mxtg{font-size:50px;font-weight:900;text-anchor:middle;fill:#1f1a14}.mxtg.pr{fill:#c0281b}.mxtb{fill:#1c1c1c}.mxtw{fill:#fbfbf8;stroke:#777;stroke-width:.04}
 .mxx .mxwl,.mxx .mxcredit,.mxx .mxlead,.mxx .mxmeta{max-width:46em}
+.mxgc{font-size:40px;font-weight:800;fill:#6b4a1d;text-anchor:middle;font-family:var(--round)}
