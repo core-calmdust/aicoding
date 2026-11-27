@@ -7504,7 +7504,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     .catch(e => { this.p = null; throw e; })); } };
   /* fanorona (2026-11-27 担当E): the data, チェッカニ's words and the board facts are in atlas/ls-fanorona.js (loaded the first time; only the
      lessons checked and rebuilt for the 3D, AtlasLsFanorona.READY — tools/lesson-verify-fanorona-ls.js) */
-  const FANORONA = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsFanorona) return res(); const sc = document.createElement('script'); sc.src = 'ls-fanorona.js?v=1'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const FANORONA = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsFanorona) return res(); const sc = document.createElement('script'); sc.src = 'ls-fanorona.js?v=2'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsFanorona.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   // (2026-11-24 ユーザー指示: ur・senet・patolli のレッスンは廃止 — 双六系はマンカラ・バックギャモンのような戦略性の高いものを除いてレッスン・パズルを作らない。
@@ -7957,7 +7957,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
         const right = pts >= 16, k = cur.k;   // (p.own: the guide names the green arrow herself — the heading is only 「おしい！」)
         say(`${right ? (p.own && (id === 'morris' || id === 'janggi' || p.ckls) ? '' : line('solved') || pick(X.good)) : p.own ? (pts >= 10 ? 'いい線いってる！' : '') : pts >= 10 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
         try { chime(right); } catch (e) {}
-        later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); const mk = [...(right || p.ans == null ? [] : [[{ m: p.ans }, 'ok']]), [{ m: u }, right ? 'ok' : 'ng'], ...(!right && p._rp != null ? [[{ m: p._rp }, 'hl']] : [])]; pz().mark(id === 'fanorona' ? mk.reverse() : mk); }, 900);   // (fanorona: the green move drawn last — the same step's other line shares its ring)   // (foxgeese: the geese's covering step gold, p._rp)
+        later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); const mk = [...(right || p.ans == null ? [] : [[{ m: p.ans }, 'ok']]), [{ m: u }, right ? 'ok' : 'ng'], ...(!right && p._rp != null ? [[{ m: p._rp }, 'hl']] : [])]; pz().mark(id === 'fanorona' && !(typeof p.ans === 'string' && p.ans.startsWith(u + '-')) ? mk.reverse() : mk); }, 900);   // (fanorona: the green move drawn last — the same step's other line shares its ring; a capture chain stopped on the answer's road (b_chain) red last, on top of the green road it is a part of)   // (foxgeese: the geese's covering step gold, p._rp)
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;

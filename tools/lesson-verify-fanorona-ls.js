@@ -21,6 +21,8 @@
 //    capture (not the answer's piece alone), the 14 languages have the keys.
 //  追75 / 追14 the ramps (fanorona/lessons.json step.ramp, 2D): a try's right move names are legal moves of its board, its look
 //    points on the board; an explain's arrows are legal in turn; the b_choose explain's counts are the board's.
+// b_chain (keep capturing): chainProblem / chainWords below (the total of a chain, a move that stops while its piece could go on,
+//    a road that ends; the 2D keys why / ng / ngStop).
 // Usage: node tools/lesson-verify-fanorona-ls.js [--selftest]   (also: node tools/lesson-verify.js fanorona)
 'use strict';
 const fs = require('fs'), path = require('path'), zlib = require('zlib');
@@ -110,6 +112,67 @@ function basicProblem(id, P, opt) {
   const dd = (L.length - 1) + 2 * cnt.filter(c => c === mx - 1).length;
   return { ok: !msgs.length, msgs, best, d: dd, n: L.length, cnt };
 }
+// b_chain (keep capturing, 2026-11-27 担当E): one problem — { ok, msgs, best, d }
+//  ① ok = [the move that takes the most in total] (every legal move's pieces recounted from its steps), the engine first at 7 and 9;
+//  ② no other move takes as many; the engine's second 60 or more below; ③ 5〜16 legal moves from 3 capturing pieces or more (追52),
+//  追72; ④ the answer a chain of 3 captures or more taking 4 or more, and its piece has another road that ends (a branch, not a part
+//  of the answer: the lesson is "go on, and pick the road"); 2 opponent pieces or more left; ⑤ as basicProblem;
+//  ⑥ d = wrong moves + 2 × near misses (one fewer).
+function chainProblem(P, opt) {
+  opt = opt || {}; engine();
+  const msgs = [], pos = E.Pos.from(P.s), L = pos.moves(true), bad = m => msgs.push(m);
+  if (pos.status() !== 0 || !L.length || !pos.hasCaps()) return { ok: false, msgs: ['① no capture'] };
+  const S = L.map(m => pos.steps(m)), cnt = S.map(x => x.reduce((a, y) => a + y.cap.length, 0));
+  const mx = Math.max(...cnt), top = L.filter((m, i) => cnt[i] === mx), best = top[0];
+  if (top.length !== 1) bad('② ' + top.length + ' moves take ' + mx);
+  const B = pos.steps(best);
+  if (B.length < 3) bad('④ the answer is ' + B.length + ' captures');
+  if (mx < 4) bad('④ the most is ' + mx);
+  if (L.length < 5 || L.length > 16) bad('③ ' + L.length + ' legal moves');
+  if (new Set(S.map(x => x[0].from)).size < 3) bad('③ 追52 captures from fewer than 3 pieces');
+  const ends = m => !L.some(x => x.startsWith(m + '-'));
+  if (!L.some((m, i) => m !== best && !best.startsWith(m + '-') && S[i][0].from === B[0].from && S[i].length >= 2 && ends(m))) bad('④ no other road for the answer\'s piece');
+  const after = pos.clone().play(best);
+  if (after.count(after.turn) < 2) bad('④ fewer than 2 opponent pieces left');
+  if (P.ok && (P.ok.length !== 1 || P.ok[0] !== best)) bad('① ok ' + JSON.stringify(P.ok) + ' ≠ ' + best);
+  if (P.best !== undefined && P.best !== best) bad('① best ' + P.best + ' ≠ ' + best);
+  if (F.best(E, P.s) !== best) bad('⑧ ls-facts best');
+  if (opt.pool) for (const A of opt.pool) if (A.b !== P.s.b && near(P.s, A)) { bad('⑤ near ' + A.tag); break; }
+  if (msgs.length) return { ok: false, msgs, best };
+  if (!opt.skipEngine) for (const d of [7, 9]) {
+    const V = values(P.s, d);
+    if (!V.length || V[0].m !== best && !E.same(pos, V[0].m, best)) { bad(`① the engine (depth ${d}) puts ${V[0] && V[0].m} first`); break; }
+    if (V.length > 1 && V[0].v - V[1].v < 60) { bad(`② the engine (depth ${d}) second ${V[1].m} only ${V[0].v - V[1].v} below`); break; }
+  }
+  const dd = (L.length - 1) + 2 * cnt.filter(c => c === mx - 1).length;
+  return { ok: !msgs.length, msgs, best, d: dd, n: L.length, cnt };
+}
+// b_chain: the words for every move against the facts recounted here (by the move names: a part of the answer, a move that could go on)
+function chainWords(P, LS3, i18n, bad) {
+  const id = 'b_chain', pos = E.Pos.from(P.s), L = pos.moves(true), best = P.best;
+  const n = m => pos.steps(m).reduce((a, y) => a + y.cap.length, 0), a = n(best), sa = pos.steps(best).length;
+  for (const m of L) {
+    const f = F.fact(E, id, P.s, m), c = n(m), sc = pos.steps(m).length, more = L.some(x => x.startsWith(m + '-'));
+    const k = m === best ? 'most' : best.startsWith(m + '-') ? 'stop' : more ? 'stopx' : 'dead';
+    if (f.k !== k || f.c !== c || f.a !== a || f.sc !== sc || f.sa !== sa) bad(`⑧ ${m}: the facts ${JSON.stringify(f)} ≠ ${k} ${c}/${a} ${sc}/${sa}`);
+    if (f.same !== (pos.steps(m)[0].from === pos.steps(best)[0].from)) bad(`⑧ ${m}: the facts' same piece`);
+    for (const lang of LANGS) for (let j = 0; j < (lang === 'ja' ? 6 : 1); j++) {
+      const h = LS3.sayText(id, P, m, lang, j);
+      if (!h || /\{\w+\}/.test(h) || /undefined|NaN/.test(h)) { bad(`⑧ ${m} ${lang}: ${h}`); continue; }
+      const nums = (h.replace(/<[^>]+>/g, '').match(/\d+/g) || []).map(Number);
+      if (lang === 'ja' || lang === 'en') { const ok = new Set([c, a, sc, sa]); nums.forEach(x => { if (!ok.has(x)) bad(`⑧ ${m} ${lang}: the number ${x}`); }); }
+      if (lang !== 'ja') continue;
+      if (m === best) { if (!nums.includes(a)) bad(`⑧ ${m} ja: the praise does not say ${a}`); continue; }
+      if (NEAR.test(h)) bad(`追66 ${m} ja: ${h}`);
+      if (PRAISE.test(h)) bad(`追20 ${m} ja: praise after a wrong move`);
+      if (!(nums.includes(c) && nums.includes(a))) bad(`⑧ ${m} ja: does not say ${c} and ${a}`);
+      const goOn = /続け(られ|て取れ)|まだ取れ|まだ続/.test(h), noMore = /取れる(列|玉)がな|もう取れない|行き止まり/.test(h);
+      if (more !== goOn || more === noMore) bad(`⑧ ${m} ja: could it go on? said ${goOn ? 'yes' : noMore ? 'no' : '(none)'}, the board ${more}`);
+    }
+    const key = 'ls.' + id + (m === best ? '.why' : k === 'stop' || k === 'stopx' ? '.ngStop' : '.ng');
+    for (const lang of LANGS) { const tx = (i18n[lang] || {})[key]; if (!tx) bad(`⑨ 2D ${key} ${lang} missing`); else if (!/\{m\}/.test(tx) || (m !== best && !/\{x\}/.test(tx))) bad(`⑨ 2D ${key} ${lang}: {m}/{x}`); }
+  }
+}
 // the words for every move (the 3D's say() in 14 languages) against the facts recounted here
 const NEAR = /おしい|あと一歩|いい線|あと少し|惜しい|Close|So close|Almost/i, PRAISE = /正解|お見事|ばっちり|さすが|Correct|Well done/;
 function words(id, P, LS3, i18n, bad) {
@@ -156,16 +219,17 @@ function verify(opt) {
   let n = 0, okN = 0;
   for (const id of LS3.READY) {
     const st = LS.steps.find(s => s.id === id); if (!st) { add(id, 0, 'missing'); continue; }
-    if (!BASICS.includes(id)) { add(id, 0, 'no check for this lesson yet'); continue; }
+    const CH = id === 'b_chain';
+    if (!BASICS.includes(id) && !CH) { add(id, 0, 'no check for this lesson yet'); continue; }
     let prevD = -1, firstD = null;
     st.problems.forEach((P, j) => {
       n++; const before = out.length;
-      const r = basicProblem(id, P, { pool: PL.filter(A => A.tag !== id + '#' + (j + 1)) });
+      const o = { pool: PL.filter(A => A.tag !== id + '#' + (j + 1)) }, r = CH ? chainProblem(P, o) : basicProblem(id, P, o);
       r.msgs.forEach(m => add(id, j + 1, m));
       if (r.ok) {
         if (r.d <= prevD) add(id, j + 1, `⑥ d ${r.d} not above ${prevD}`);
         prevD = r.d; if (firstD == null) firstD = r.d;
-        words(id, P, LS3, i18n, m => add(id, j + 1, m));
+        if (CH) chainWords(P, LS3, i18n, m => add(id, j + 1, m)); else words(id, P, LS3, i18n, m => add(id, j + 1, m));
       }
       if (out.length === before) okN++;
     });
@@ -207,6 +271,8 @@ function selftest() {
     ['④', '④ a withdrawal problem in the approach lesson', d => { st(d, 'b_approach').problems[2] = JSON.parse(JSON.stringify(st(d, 'b_withdraw').problems[2])); }],
     ['⑤', '⑤ a mirrored copy of another problem', d => { const P = st(d, 'b_approach').problems[1]; st(d, 'b_approach').problems[4] = { s: { b: symB(P.s.b, GEO[1], false), side: P.s.side }, ok: [mirM(P.best)], best: mirM(P.best) }; }],
     ['⑥', '⑥ the order reversed', d => { st(d, 'b_withdraw').problems.reverse(); }],
+    ['①', '① b_chain: the answer cut short (a part of the chain)', d => { const P = st(d, 'b_chain').problems[2], q = P.best.split('-').slice(0, -1).join('-'); P.ok = [q]; P.best = q; }],
+    ['④', '④ b_chain: a problem of single steps', d => { st(d, 'b_chain').problems[0] = JSON.parse(JSON.stringify(st(d, 'b_approach').problems[0])); }],
     ['追75', '追75 a ramp move off its board', d => { st(d, 'b_choose').ramp.find(x => x.k === 'try').ok = ['a1-a2A']; }],
   ];
   let fails = 0;
@@ -214,6 +280,10 @@ function selftest() {
   {   // the words: a wrong count in the 3D ja words
     const orig = LS3.sayText; LS3.sayText = (id, P, m, lang, k) => orig(id, P, m, lang, k).replace(/(\d+)/, (x) => String(+x + 1));
     const r = verify({ ls3: LS3 }); LS3.sayText = orig; const hit = r.out.some(o => /⑧/.test(o.msg)); if (!hit) fails++; console.log((hit ? 'ok   ' : 'MISS ') + '⑧ a wrong number in the words');
+  }
+  {   // b_chain: a move that could go on told it could not
+    const orig = LS3.sayText; LS3.sayText = (id, P, m, lang, k) => { const h = orig(id, P, m, lang, k); return id === 'b_chain' ? h.replace(/まだ続けて取れ/g, 'もう取れな').replace(/続けられ/g, 'もう取れな') : h; };
+    const r = verify({ ls3: LS3 }); LS3.sayText = orig; const hit = r.out.some(o => o.id === 'b_chain' && /⑧/.test(o.msg)); if (!hit) fails++; console.log((hit ? 'ok   ' : 'MISS ') + '⑧ b_chain: "could not go on" said of a move that could');
   }
   {   // the 2D key missing in one language
     const I = loadI18n(); delete I.de['ls.b_choose.ngSame'];
@@ -225,7 +295,7 @@ function selftest() {
   }
   return fails;
 }
-module.exports = { engine, values, basicProblem, verify, selftest, pool, near, lineOf, BASICS };
+module.exports = { engine, values, basicProblem, chainProblem, verify, selftest, pool, near, lineOf, BASICS };
 if (require.main === module) {
   if (process.argv.includes('--selftest')) { const f = selftest(); console.log(f ? `selftest: ${f} missed` : 'selftest: all caught'); process.exit(f ? 1 : 0); }
   const r = verify();
