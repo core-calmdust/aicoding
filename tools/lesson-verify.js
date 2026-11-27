@@ -1847,7 +1847,7 @@ function ckWarm(opt, L, E, X, val, moveVal, add, only) {
 //   縦と横) and for every wrong move (the king or not, a blocker on the way, a capture or not, a piece of yours taken next), the question
 //   and the hint (a corner / the throne named is in an answer)
 //   ⑨ the 2D (tafl/app.js problemPoints) and the 3D (TAFL.points) both score P.ok
-const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield', 't_tuichi', 't_block', 't_fort', 't_encircle']);
+const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield', 't_tuichi', 't_block', 't_fort', 't_encircle', 's_corner']);
 function tafl(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'tafl/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'tafl/lessons.json'), 'utf8'));
@@ -2140,9 +2140,35 @@ function tafl(opt) {
   { const st = L.steps.find(s => s.id === 't_fort');
     if (st && st.diagram) { const D = st.diagram, p = E.Pos.from(D.s); (D.arrows || []).forEach(([fr, to]) => { const m = E.parse(p, fr + '-' + to); if (m == null) { add('t_fort', -1, `diagram: 追14 ${fr}-${to} is not legal`); return; }
       const f = FT.fortFacts(E, { s: D.s, ok: [m], best: m }); f.bad.filter(b => /^①/.test(b)).forEach(b => add('t_fort', -1, `diagram: 追14 ${b}`)); }); } }
+  // (2026-11-27 第2期 担当A) s_corner「角を固める」(tools/lesson-verify-tfcorner.js): the attackers to move, the king with no line yet but a
+  // corner within his 2 moves. ①② P.ok = the moves after which the king cannot reach a corner within 2 (a full search of his moves and
+  // every reply) ③ ≥3 moves onto a blockade square, the answers ≤ a third of the moves and ≤ half of them, d ≥ 1, 追17 ④ no line now, the
+  // threat a king move, every answer on a blockade square of one corner and taking nothing, no fort / edge deciding, no loss to another
+  // defender's move ⑤ the pool (five) and no two problems with the same shape (cornerSig) ⑥ d×10 − the answers never down, last > first
+  // ⑦⑧ タフリン's words: every wrong move by what follows it (cornerWhy = the 3D tfBlockWhy: the line opened / a トゥイチ / the piece taken by
+  // the king / a king move nobody can reach), the praise, the question and the hints (the ringed piece = the answers' piece, ≥1 near-miss);
+  // the 2D ng says the king gets away (true of every wrong move by ②); the diagram: its arrow guards (追14)
+  const CN = require(path.join(ROOT, 'tools/lesson-verify-tfcorner.js')), cnSig = new Map();
+  const cornerOne = (st, si, P, j, a) => { const f = CN.cornerFacts(E, P), nm = m => E.name(f.p, m); f.bad.forEach(a);
+    five(st.id, j, P, f.me, nm, a);
+    { const sig = CN.cornerSig(E, P); if (cnSig.has(sig)) a(`⑤ the same shape (${sig}) as ${cnSig.get(sig)}`); else cnSig.set(sig, `q${j + 1}`); }
+    if ((P.ok || []).length && new Set(P.ok.map(E.mFrom)).size !== 1) a('⑧ the hint「金の丸がその駒」: the answers come from more than one piece');
+    let W; try { W = X_.tfLsJa(E, st, P, j, k => X_.TFM(k, 'ja'), si); } catch (e) { a('⑧ the words fail: ' + e.message); return f.d; }
+    for (const t of [W.ask, W.hintTx, plain(W.good())]) if (!t || /\{|undefined|NaN/.test(t)) a(`⑧ 「${t}」`);
+    for (const t of [W.ask, W.hintTx, plain(W.good())]) if (/最善|評価|いちばんいい手/.test(t)) a(`⑧ 「${t}」: the engine's view (the goal is the corner within 2)`);
+    for (const m of f.wrong) { const raw = plain(W.ng(m)), x0 = nm(m), i0 = raw.indexOf('赤い印の手'), i1 = raw.indexOf('緑の印の手');
+      if (/\{|undefined|NaN/.test(raw) || i0 < 0 || i1 < 0) { a(`⑦ ${x0}: 「${raw}」 (your move / the right move not named)`); continue; }
+      const tx = raw.slice(i0, i1), want = CN.cornerWhy(E, P, m) || 'other';
+      const said = /王にはさまれて取られ|王に取られ|その駒を取っちゃう/.test(tx) ? 'taken' : /2本|トゥイチ|2方向/.test(tx) ? 'tuichi' : /届かない|間に合わない|ふさげない|ふさぎに行けない|ふさげる攻め手がいない/.test(tx) ? 'king'
+        : /道が開いて|一直線に走れ|駒がいなくなって|道があいて|そのまま角へ逃げこめ/.test(tx) ? 'open' : 'other';
+      if (said !== want) a(`⑦ ${x0}: 「${tx}」 says ${said}, the board: ${want}`); }
+    return f.d * 10 - (P.ok || []).length; };
+  { const st = L.steps.find(s => s.id === 's_corner');
+    if (st && st.diagram) { const D = st.diagram, p = E.Pos.from(D.s); (D.arrows || []).forEach(([fr, to]) => { const m = E.parse(p, fr + '-' + to); if (m == null) { add('s_corner', -1, `diagram: 追14 ${fr}-${to} is not legal`); return; }
+      const f = CN.cornerFacts(E, { s: D.s, ok: [m], best: m }); f.bad.filter(b => /^[①]|^④ (the defenders do not|the king has|the answers guard)/.test(b)).forEach(b => add('s_corner', -1, `diagram: 追14 ${b}`)); }); } }
   L.steps.forEach((st, si) => { const id = st.id; if (!TF_DONE.has(id) || (opt && opt.only && !opt.only.includes(id))) return;   // (opt.only: the mutation tests of one lesson)
     let prevD = -1, firstD = null;
-    if (id === 'b_safe' || id === 't_shield' || id === 't_tuichi' || id === 't_block' || id === 't_fort' || id === 't_encircle') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : id === 't_tuichi' ? tuichiOne : id === 't_block' ? blockOne : id === 't_fort' ? fortOne : id === 't_encircle' ? encOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
+    if (id === 'b_safe' || id === 't_shield' || id === 't_tuichi' || id === 't_block' || id === 't_fort' || id === 't_encircle' || id === 's_corner') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : id === 't_tuichi' ? tuichiOne : id === 't_block' ? blockOne : id === 't_fort' ? fortOne : id === 't_encircle' ? encOne : id === 's_corner' ? cornerOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
     st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), me = p.turn, all = p.moves(), nm = m => E.name(p, m);
       if (P.n > 1) { const d = seqCheck(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
         if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); seqWords(st, si, P, j, a); return; }
