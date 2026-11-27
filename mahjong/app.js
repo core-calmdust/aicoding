@@ -2753,8 +2753,11 @@ function cloudInit() {
 let ffxT = 0;
 new MutationObserver(() => { clearTimeout(ffxT); ffxT = setTimeout(() => { if (window.FrameFX) FrameFX.scan(); }, 60); }).observe(document.body, { childList: true, subtree: true });
 I18N.set(I18N.lang);
-MJTiles.ready().then(() => { MJTiles.reset(); ART.clear(); renderHome(); });   // (the tile faces from the 上海 sheets, 2026-11-14)
-document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(() => { MJTiles.reset(); ART.clear(); renderHome(); });
+// (2026-11-28 ユーザー「ドラ表示の牌が読み込み中のフォントのまま」) a game begun before the tile sheets / the font arrived (大百科の麻雀 starts at
+// once from ?go=): the dora box's tile pictures (TB.tileShot) were taken with the stand-in faces and kept — taken again, with the box
+function tilesNow() { MJTiles.reset(); ART.clear(); renderHome(); if (TB) { if (TB.shots) TB.shots.clear(); if (TB.refaces) TB.refaces(); } if (G && TB) try { refreshTable(); } catch (e) {} }
+MJTiles.ready().then(tilesNow);   // (the tile faces from the 上海 sheets, 2026-11-14)   // (the tile faces from the 上海 sheets, 2026-11-14)
+document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(tilesNow);
 renderHome(); homeEnter();
 cloudInit();
 if (CLASSIC) classicBoot();
