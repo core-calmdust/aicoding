@@ -237,6 +237,8 @@
     { id: 'richelieu', w: 2048, h: 1829, rijks: 'RP-P-1907-4831', bg: '#c9c3b5', spots: [[.45, .49], [.3, .42], [.58, .42], [.07, .32], [.8, .33], [.5, .97]], links: [{ g: 'chess' }] },
     // (2026-11-25) the Rijksmuseum: after Adam de Coster, tric-trac players by candlelight
     { id: 'coster', w: 2048, h: 1575, rijks: 'RP-P-1960-204', bg: '#2b2824', spots: [[.38, .66], [.6, .58], [.25, .5], [.42, .35], [.13, .33], [.86, .45]], links: [{ g: 'backgammon' }] },
+    // (2026-11-25) the Rijksmuseum: Hans Watzek, 'Kiebitz' (1894), halftone in 'La Photographie est-elle un Art?'
+    { id: 'kiebitz', w: 1710, h: 1538, rijks: 'RP-F-2001-7-162-18', bg: '#d9d2c2', spots: [[.76, .45], [.64, .27], [.33, .42], [.56, .6], [.9, .06], [.5, .97]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
