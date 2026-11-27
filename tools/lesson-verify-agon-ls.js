@@ -9,7 +9,8 @@
 //     b_reloc — (a relocation turn: one captured guard of the side to move, none of the enemy's) the edge cell after which no
 //     enemy move captures anything;
 //     b_safe — the move after which no enemy move captures anything (a guard of the mover's was to be sandwiched);
-//     s_double (担当D) — the move that captures two enemy pieces or more.
+//     s_double (担当D) — the move that captures two enemy pieces or more;
+//     s_block — (the enemy queen on the throne, five enemy guards round her) the move after which the enemy cannot win at once.
 //  ② one answer only (ok has one move).
 //  ③ 10 legal moves or more, 3 wrong moves or more, 追72 the answer ≤ a third of the moves; the hint (agon/ls-facts.js hint, 2D
 //     and 3D) rings 2 pieces or more, the answer's piece among them (追52: never the answer's piece alone).
@@ -26,11 +27,17 @@
 //     answer either moves that guard away or steps into the enemy's cell (the words: escaped / blocked), 1 move or more whose piece
 //     is sandwiched at once (the meaningful mistake);
 //     s_double (担当D): the answer takes two guards (no queen: the words "two relocation turns"), 2 moves or more capture one
-//     piece (the meaningful mistake), none of them the queen, no move ends the game.
+//     piece (the meaningful mistake), none of them the queen, no move ends the game;
+//     s_block: the enemy queen on the throne with five enemy guards round her and one empty cell, a cell the mover may not enter
+//     (between two enemy pieces in a line; no move of the mover's lands on it — the words: "your pieces cannot enter it"), the
+//     enemy (the turn passed) wins at once, the answer captures one guard that has such a winning move (the words: the incoming
+//     guard, the relocation), 2 pieces of the mover's or more can move next to that guard and 1 move or more goes next to it
+//     without capturing (the meaningful mistake), no move ends the game.
 //  ⑤ no two positions the same or 4 cells apart under the board's 12 symmetries, each with the colours swapped too — against
 //     every lesson problem, ramp and puzzle (agon/puzzles.json).
 //  ⑥ d = wrong moves + 2 × near misses (b_step: the sandwiched steps inwards, b_capture: the moves next to an enemy piece,
-//     b_reloc: the relocations sandwiched at once, b_safe: the moves whose piece is sandwiched at once, s_double: the moves that capture one piece):
+//     b_reloc: the relocations sandwiched at once, b_safe: the moves whose piece is sandwiched at once, s_double: the moves that capture one piece,
+//     s_block: the moves next to the incoming guard that capture nothing):
 //     strictly rising through the lesson (b_throne: the queen's sandwiched steps inwards and her steps along the ring).
 //  ⑦⑧ the words for every legal move: 3D ja (キンダイスン, every line of every list), the other languages' 2D words as the 3D
 //     says them, the 2D's key — each kind of line checked against the recount (a step along the ring / a step inwards sandwiched
@@ -63,6 +70,10 @@ function sandwiches(p, m) {   // the pieces move m captures: an enemy piece next
   const f = E.mFrom(m), t = E.mTo(m), out = [];
   for (let d = 0; d < 6; d++) { const a = E.NB[t][d]; if (a < 0 || !enemyOf(p, a) || p.captured(a)) continue; const b = E.NB[a][d]; if (b >= 0 && b !== f && p.owner(b) === p.side + 1) out.push(a); }
   return out;
+}
+function refWins(spec) {   // s_block: the enemy's moves that win at once, the turn passed
+  const r = E.Pos.from({ b: spec.b, side: 3 - spec.side, n: spec.n });
+  return r.phase() === 'move' ? r.moves().filter(m => { const j = E.judge(r.clone().play(m)); return j.over && j.winner === r.side + 1; }) : [];
 }
 function refThreats(spec) {   // b_reloc: the enemy's captures with the captured guard off the board
   const r = E.Pos.from({ b: spec.b.replace(/[xyXY]/g, '.'), side: 3 - spec.side, n: spec.n });
@@ -101,6 +112,12 @@ function recount(id, spec, m) {
     if (oth.length) return { k: 'open', reps: oth.map(x => x[0]), vs: [...new Set(oth.flatMap(x => x[1]))] };
     return { k: 'ok', block: refThreats(spec).some(([r]) => E.mTo(r) === t) };
   }
+  if (id === 's_block') {   // right = after it the enemy has no move that wins at once (a capture: its next turn is the relocation)
+    const q = p.clone().play(m), en = 3 - (p.side + 1);
+    const reps = q.phase() === 'move' ? q.moves().filter(r => { const j = E.judge(q.clone().play(r)); return j.over && j.winner === en; }) : [];
+    if (!E.judge(q).over && !reps.length) return { k: 'ok', c: sandwiches(p, m) };
+    return { k: E.NB[t].some(a => a >= 0 && enemyOf(p, a)) ? 'touch' : 'none', reps };
+  }
   if (id === 's_double') { const c = sandwiches(p, m); return c.length >= 2 ? { k: 'ok', c } : c.length === 1 ? { k: 'one', c } : { k: 'none' }; }
   if (id === 'b_capture') {
     const c = sandwiches(p, m); if (c.length) return { k: 'ok', c };
@@ -113,7 +130,7 @@ function recount(id, spec, m) {
 function loadI18n() { const w = { I18N: { ja: {}, en: {} } }; for (const f of ['i18n-ag.js', 'i18n-ag-more.js']) new Function('window', 'I18N', fs.readFileSync(path.join(ROOT, 'agon', f), 'utf8'))(w, w.I18N); return w.I18N; }
 const CLOSE = /おしい|惜しい|あと一歩|いい線|あと少し|もう少し/, PRAISE = /正解|お見事|ばっちり|さすが|いいね/;
 // ⑦⑧ the ja lines by kind: what each must (re) say
-const JA_NEED = { done: /1枚(だけ|取り)|捕獲は1枚/, dnone: /何も(捕まらない|はさめない)|0枚|捕まらない/, strap: /^(?=[\s\S]*金色)(?=[\s\S]*(動かした|赤の駒|赤の行き先))/, sleft: /(危ない|ねらわれた)ガード[\s\S]*金色|金色[\s\S]*(危ない|ねらわれた)ガード/, rtrap: /金色/, ropen: /金色[\s\S]*(別の|ほかの|もう1枚の)ガード|ガードがもう1枚|(別の|ほかの)ガード[\s\S]*金色/, guard: /ガード/, qside: /横|同じ輪/, qtrap: /金色/, side: /横|同じ輪/, trap: /金色/, none: /いない|届かない|くっついていない/, empty: /空/, edge: /はし|盤の外/, enemy: /相手の駒(が2枚|の向こうも相手|が続いて)|向こうにも相手/, mixed: /どの|どれも/ };
+const JA_NEED = { bnone: /^(?=[\s\S]*金色)(?=[\s\S]*(何も|0枚))/, btouch: /^(?=[\s\S]*金色)(?=[\s\S]*(となり|くっつい))(?=[\s\S]*(何も捕まら|捕まらな|はさめていない|止められない))/, done: /1枚(だけ|取り)|捕獲は1枚/, dnone: /何も(捕まらない|はさめない)|0枚|捕まらない/, strap: /^(?=[\s\S]*金色)(?=[\s\S]*(動かした|赤の駒|赤の行き先))/, sleft: /(危ない|ねらわれた)ガード[\s\S]*金色|金色[\s\S]*(危ない|ねらわれた)ガード/, rtrap: /金色/, ropen: /金色[\s\S]*(別の|ほかの|もう1枚の)ガード|ガードがもう1枚|(別の|ほかの)ガード[\s\S]*金色/, guard: /ガード/, qside: /横|同じ輪/, qtrap: /金色/, side: /横|同じ輪/, trap: /金色/, none: /いない|届かない|くっついていない/, empty: /空/, edge: /はし|盤の外/, enemy: /相手の駒(が2枚|の向こうも相手|が続いて)|向こうにも相手/, mixed: /どの|どれも/ };
 function verify(opt) {
   opt = opt || {};
   const out = [], add = (id, q, msg) => out.push({ id, q, msg });
@@ -198,6 +215,22 @@ function verify(opt) {
         if (ones.some(m => p.isQueen(R.get(m).c[0]))) a('④ a one-piece capture takes the queen');
         if (L.some(m => E.judge(p.clone().play(m)).over)) a('④ a move ends the game');
         nearN = ones.length;
+      } else if (id === 's_block') {
+        const me = p.side + 1, en = 3 - me, ring = E.NB[E.CENTER], gaps = ring.filter(c => !p.at(c)), W = refWins(P.s), inc = new Set(W.map(E.mFrom));
+        if (!(p.owner(E.CENTER) === en && p.isQueen(E.CENTER))) a('④ the enemy queen is not on the throne');
+        if (gaps.length !== 1 || ring.filter(c => p.owner(c) === en && !p.captured(c)).length !== 5) a('④ not five enemy guards round her and one empty cell');
+        const h = gaps[0];
+        if (h != null && ![0, 1, 2].some(dd => { const x = E.NB[h][dd], y = E.NB[h][dd + 3]; return x >= 0 && y >= 0 && p.owner(x) === en && p.owner(y) === en; })) a('④ the empty cell is not between two enemy pieces in a line');
+        if (L.some(m => E.mTo(m) === h)) a('④ a move of the mover\'s enters the empty cell');
+        if (!W.length) a('④ the enemy does not win at once');
+        const c = goal.length ? sandwiches(p, goal[0]) : [];
+        if (c.length !== 1 || p.isQueen(c[0]) || !inc.has(c[0])) a('④ the answer does not capture the incoming guard');
+        const next = L.filter(m => E.NB[E.mTo(m)].some(x => inc.has(x)));
+        if (new Set(next.map(E.mFrom)).size < 2) a('④ fewer than 2 pieces can move next to the incoming guard');
+        const nearM = next.filter(m => R.get(m).k !== 'ok');
+        if (!nearM.length) a('④ no move next to the incoming guard without a capture');
+        if (L.some(m => E.judge(p.clone().play(m)).over)) a('④ a move ends the game');
+        nearN = nearM.length;
       } else if (id === 'b_capture') {
         const c = goal.length ? sandwiches(p, goal[0]) : [];
         if (c.length !== 1 || p.isQueen(c[0])) a('④ the answer does not take one guard');
@@ -221,6 +254,7 @@ function verify(opt) {
         if ((id === 'b_step' || id === 'b_throne') && fx.k === 'trap' && !r.reps.includes(fx.rp)) a(`⑦ ${nm}: the gold move does not capture the moved piece`);
         if (id === 's_double' && (fx.k !== r.k || (fx.k === 'one' && fx.v !== r.c[0]) || (fx.k === 'ok' && fx.c !== r.c.length))) a(`⑦ ls-facts calls ${nm} ${fx.k}, the board ${r.k}`);
         if (id === 'b_capture' && !right && fx.k !== r.k) a(`⑦ ls-facts calls ${nm} ${fx.k}, the board ${r.k}`);
+        if (id === 's_block' && (fx.k !== r.k || (right && fx.v !== r.c[0]) || (!right && !r.reps.includes(fx.rp)))) a(`⑦ ls-facts calls ${nm} ${fx.k} (gold ${fx.rp}), the board ${r.k}`);
         if (id === 'b_safe' && !right && fx.k !== r.k) a(`⑦ ls-facts calls ${nm} ${fx.k}, the board ${r.k}`);
         if (id === 'b_safe' && right && !!fx.block !== !!r.block) a(`⑦ ${nm}: ls-facts and the board differ on the block`);
         if (id === 'b_safe' && fx.k === 'trap' && !r.reps.includes(fx.rp)) a(`⑦ ${nm}: the gold move does not capture the moved piece`);
@@ -229,13 +263,14 @@ function verify(opt) {
         if (id === 'b_reloc' && fx.k === 'trap' && !r.reps.includes(fx.rp)) a(`⑦ ${nm}: the gold move does not capture the relocated guard`);
         if (id === 'b_reloc' && fx.k === 'open' && (!r.reps.includes(fx.rp) || !r.vs.includes(fx.v) || fx.v === E.mTo(m))) a(`⑦ ${nm}: the gold move does not capture another guard`);
         if (id === 'b_capture' && fx.k === 'touch' && (r.ends.length === 1 ? fx.end !== r.ends[0] : fx.end !== 'mixed')) a(`⑦ ${nm}: the cells beyond are ${r.ends}, the words ${fx.end}`);
-        const kind = right ? null : id === 's_double' ? (r.k === 'one' ? 'done' : 'dnone') : id === 'b_safe' ? (r.k === 'trap' ? 'strap' : 'sleft') : id === 'b_reloc' ? (r.k === 'trap' ? 'rtrap' : 'ropen') : id === 'b_step' ? r.k : id === 'b_throne' ? { guard: 'guard', side: 'qside', trap: 'qtrap' }[r.k] : r.k === 'touch' ? (r.ends.length === 1 ? r.ends[0] : 'mixed') : 'none';
+        const kind = right ? null : id === 's_block' ? (r.k === 'touch' ? 'btouch' : 'bnone') : id === 's_double' ? (r.k === 'one' ? 'done' : 'dnone') : id === 'b_safe' ? (r.k === 'trap' ? 'strap' : 'sleft') : id === 'b_reloc' ? (r.k === 'trap' ? 'rtrap' : 'ropen') : id === 'b_step' ? r.k : id === 'b_throne' ? { guard: 'guard', side: 'qside', trap: 'qtrap' }[r.k] : r.k === 'touch' ? (r.ends.length === 1 ? r.ends[0] : 'mixed') : 'none';
         // ja: every line of the list it picks
         for (let k = 0; k < 6; k++) {
           const h = LS.sayText(id, P, m, 'ja', k), tx = h.replace(/<[^>]+>/g, '');
           if (/\{\w+\}/.test(h)) a(`⑧ ja ${nm}: a placeholder left — ${tx}`);
           if (right) {
             if (!PRAISE.test(tx)) a(`⑧ ja ${nm}: no praise on the right move`);
+            if (id === 's_block' && !(/置き直し/.test(tx) && /(捕まえ|捕獲)/.test(tx))) a(`⑧ ja ${nm}: the words do not say the capture and the relocation — ${tx}`);
             if (id === 's_double' && !/2枚/.test(tx)) a(`⑧ ja ${nm}: the words do not say two pieces — ${tx}`);
             if (id === 'b_safe' && (r.block ? !/ふさ|先回り/.test(tx) : !/逃|動かして守|動かせた/.test(tx))) a(`⑧ ja ${nm}: the words do not say how it was saved — ${tx}`);
             if (id === 'b_throne' && (r.throne ? !/王座に(座|一番乗り)|真ん中/.test(tx) || /あと1歩|となりの輪|となりへ|目の前|1の輪へ入/.test(tx) : !/あと1歩|となりの輪|となりへ|目の前|1の輪へ入/.test(tx) || /王座に座/.test(tx))) a(`⑧ ja ${nm}: the words do not say where the queen is — ${tx}`);
@@ -251,13 +286,13 @@ function verify(opt) {
           const h = LS.sayText(id, P, m, l, 0);
           if (!h || /\{\w+\}/.test(h)) a(`⑨ ${l} ${nm}: missing words or a placeholder left`);
           if (!right && !/ls-spot ng/.test(h)) a(`⑨ ${l} ${nm}: your move is not marked`);
-          if ((fx.k === 'trap' || fx.k === 'open' || fx.k === 'left') && !/ls-spot hl/.test(h)) a(`⑨ ${l} ${nm}: the enemy's move is not marked`);
+          if ((fx.k === 'trap' || fx.k === 'open' || fx.k === 'left' || (id === 's_block' && !right)) && !/ls-spot hl/.test(h)) a(`⑨ ${l} ${nm}: the enemy's move is not marked`);
         }
       }
       // the ja questions / hints of the lesson: no coordinates (the 3D board has none)
     });
     // ⑨ the 2D keys
-    const need = id === 's_double' ? { why: ['{m}'], ng: ['{x}', '{m}'], ngOne: ['{x}', '{m}'], goal: [], hint: [] } : id === 'b_safe' ? { why: ['{m}'], ng: ['{x}', '{m}', '{r}'], ngLeft: ['{x}', '{m}', '{r}'], goal: [], hint: [] } : id === 'b_reloc' ? { why: ['{m}'], ng: ['{x}', '{m}', '{r}'], ngOpen: ['{x}', '{m}', '{r}'], goal: [], hint: [] } : id === 'b_step' ? { why: ['{m}'], ng: ['{x}', '{m}', '{r}'], ngSide: ['{x}', '{m}'], goal: [], hint: [] } : id === 'b_throne' ? { why: ['{m}'], ng: ['{x}', '{m}', '{r}'], ngSide: ['{x}', '{m}'], ngGuard: ['{x}', '{m}'], goal: [], hint: [] } : { why: ['{m}'], ng: ['{x}', '{m}'], ngTouch: ['{x}', '{m}'], goal: [], hint: [] };
+    const need = id === 's_block' ? { why: ['{m}'], ng: ['{x}', '{m}', '{r}'], ngTouch: ['{x}', '{m}', '{r}'], goal: [], hint: [] } : id === 's_double' ? { why: ['{m}'], ng: ['{x}', '{m}'], ngOne: ['{x}', '{m}'], goal: [], hint: [] } : id === 'b_safe' ? { why: ['{m}'], ng: ['{x}', '{m}', '{r}'], ngLeft: ['{x}', '{m}', '{r}'], goal: [], hint: [] } : id === 'b_reloc' ? { why: ['{m}'], ng: ['{x}', '{m}', '{r}'], ngOpen: ['{x}', '{m}', '{r}'], goal: [], hint: [] } : id === 'b_step' ? { why: ['{m}'], ng: ['{x}', '{m}', '{r}'], ngSide: ['{x}', '{m}'], goal: [], hint: [] } : id === 'b_throne' ? { why: ['{m}'], ng: ['{x}', '{m}', '{r}'], ngSide: ['{x}', '{m}'], ngGuard: ['{x}', '{m}'], goal: [], hint: [] } : { why: ['{m}'], ng: ['{x}', '{m}'], ngTouch: ['{x}', '{m}'], goal: [], hint: [] };
     for (const l of LANGS) for (const [k, ph] of Object.entries(need)) { const v = (I18N[l] || {})['ls.' + id + '.' + k]; if (!v) add(id, 0, `⑨ ${l} has no ls.${id}.${k}`); else for (const x of ph) if (!v.includes(x)) add(id, 0, `⑨ ${l} ls.${id}.${k} without ${x}`); }
     for (const k of ['intro', 'ask', 'askLast', 'hint', 'w']) if (!JA[k] || !JA[k][id]) add(id, 0, `⑧ no ja ${k}`);
     for (const k of ['intro', 'ask', 'askLast', 'hint']) for (const t of [].concat(JA[k][id] || [])) if (/[1-5]\.\d{1,2}|\bT\b/.test(t)) add(id, 0, `⑧ ja ${k}: a cell name on the 3D board — ${t}`);
@@ -267,12 +302,17 @@ function verify(opt) {
       if (it.k === 'try') {
         const okM = (it.ok || []).map(byName);
         if (okM.some(m => m == null)) a('追75 a right move is not a move of its board');
-        const want = id === 'b_safe' ? L.filter(m => { const q = p.clone().play(m); return !q.moves().some(r => sandwiches(q, r).length); }) : id === 'b_step' ? L.filter(m => E.RING[E.mTo(m)] === E.RING[E.mFrom(m)] - 1) : id === 'b_throne' ? L.filter(m => E.mTo(m) === E.CENTER) : L.filter(m => sandwiches(p, m).length);
+        const want = id === 's_block' ? L.filter(m => recount('s_block', it.s, m).k === 'ok') : id === 'b_safe' ? L.filter(m => { const q = p.clone().play(m); return !q.moves().some(r => sandwiches(q, r).length); }) : id === 'b_step' ? L.filter(m => E.RING[E.mTo(m)] === E.RING[E.mFrom(m)] - 1) : id === 'b_throne' ? L.filter(m => E.mTo(m) === E.CENTER) : L.filter(m => sandwiches(p, m).length);
         if (want.length !== okM.length || !want.every(m => okM.includes(m))) a(`追14 the right moves ≠ every move that does it (${want.map(m => E.name(p, m))})`);
-        const lookOk = id === 'b_safe' ? new Set(refThreats(it.s).flatMap(x => x[1])) : id === 'b_throne' ? new Set([E.CENTER, p.queen(p.side + 1)]) : id === 'b_capture' ? new Set(want.flatMap(m => sandwiches(p, m))) : new Set(want.map(E.mFrom));   // (b_step: the pieces that can step in; b_capture: the pieces to take)
+        const lookOk = id === 's_block' ? new Set(refWins(it.s).map(E.mFrom)) : id === 'b_safe' ? new Set(refThreats(it.s).flatMap(x => x[1])) : id === 'b_throne' ? new Set([E.CENTER, p.queen(p.side + 1)]) : id === 'b_capture' ? new Set(want.flatMap(m => sandwiches(p, m))) : new Set(want.map(E.mFrom));   // (b_step: the pieces that can step in; b_capture: the pieces to take)
         for (const c of it.look || []) if (!lookOk.has(c - 1)) a(`追14 look ${c} is not ${id === 'b_capture' ? 'a piece to take' : id === 'b_safe' ? 'the piece in danger' : 'a piece that can step in'}`);
       } else {
-        if (id === 'b_safe') {
+        if (id === 's_block') {   // the explain: 'x' the empty cell next to the throne, 'ng' the incoming guard; its line captures that guard
+          const inc = new Set(refWins(it.s).map(E.mFrom)), gaps = E.NB[E.CENTER].filter(c => !p.at(c));
+          for (const [c, k] of it.marks || []) if (k === 'x' ? !gaps.includes(c - 1) : k === 'ng' ? !inc.has(c - 1) : true) a(`追14 explain mark ${E.sqName(c - 1)} ${k} is neither the empty cell (x) nor the incoming guard (ng)`);
+          const m = (it.seq || []).length ? L.find(x => E.name(p, x) === it.seq[0]) : null;
+          if (m == null || !sandwiches(p, m).some(c => inc.has(c))) a('追14 the explain\'s line does not capture the incoming guard');
+        } else if (id === 'b_safe') {
           const T = refThreats(it.s), vs = new Set(T.flatMap(x => x[1])), cells = new Set(T.map(([r]) => E.mTo(r)));
           for (const [c, k] of it.marks || []) if (k === 'ng' ? !vs.has(c - 1) : k === 'dash' ? !cells.has(c - 1) : true) a(`追14 explain mark ${E.sqName(c - 1)} ${k} is neither the piece in danger (ng) nor the enemy's cell (dash)`);
           if (!(it.marks || []).some(x => x[1] === 'ng')) a('追14 the explain does not mark the piece in danger');
@@ -314,6 +354,8 @@ function selftest() {
     ['b_reloc: a sandwiched cell as the answer', d => { const P = d.steps.find(s => s.id === 'b_reloc').problems[1]; const m = E.Pos.from(P.s).moves().find(x => F.fact(E, 'b_reloc', P.s, x).k === 'trap'); P.ok = [m]; P.best = m; }],
     ['b_safe: a move that leaves the guard in danger as the answer', d => { const P = d.steps.find(s => s.id === 'b_safe').problems[3]; const m = E.Pos.from(P.s).moves().find(x => F.fact(E, 'b_safe', P.s, x).k === 'left'); P.ok = [m]; P.best = m; }],
     ['b_safe: the explain marks the wrong cell', d => { const r = d.steps.find(s => s.id === 'b_safe').ramp.find(x => x.k === 'explain'); r.marks[0][0] = 1; }],
+    ['s_block: a move next to the incoming guard as the answer', d => { const P = d.steps.find(s => s.id === 's_block').problems[1]; const m = E.Pos.from(P.s).moves().find(x => F.fact(E, 's_block', P.s, x).k === 'touch'); P.ok = [m]; P.best = m; }],
+    ['s_block: the explain marks the wrong cell', d => { const r = d.steps.find(s => s.id === 's_block').ramp.find(x => x.k === 'explain'); r.marks[1][0] = 1; }],
     ['s_double: a one-piece capture as the answer', d => { const P = d.steps.find(s => s.id === 's_double').problems[2]; const m = E.Pos.from(P.s).moves().find(x => F.fact(E, 's_double', P.s, x).k === 'one'); P.ok = [m]; P.best = m; }],
     ['a ramp move that is not legal', d => { const r = d.steps.find(s => s.id === 'b_capture').ramp.find(x => x.k === 'try'); r.ok[0] = '5.1-4.1x'; }],
   ];
