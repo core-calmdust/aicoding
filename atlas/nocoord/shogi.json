@@ -159,38 +159,6 @@
 "hi": "अगर विरोधी की चाल होती, तो प्यादे से बचा सोना आपके राजा के सिर पर मात कर देता। राजा को उस आकार से हटाइए।",
 "ar": "لو كان الدور للخصم لكان ذهب على رأس ملكك يحميه البيدق ماتًا. أخرِج الملك من هذا الشكل."
 },
-"rx/p0/expl": {
-"ja": "歩を玉の頭に打てば詰みですが、打ち歩詰めで指せません。桂（成り）か香で詰ませます。",
-"en": "A pawn dropped on the king’s head would be mate, but it is illegal (pawn-drop mate). Mate with the knight (promoting) or the lance instead.",
-"zh": "把步打在玉头上就能将死，但这是打步诘，不能下。改用桂（升变）或香将死。",
-"zh-TW": "把步打在王頭上就能詰死，但這是打步詰，不能下。改用桂（升變）或香詰死。",
-"ko": "보를 왕 머리에 놓으면 외통이지만 타보외통이라 둘 수 없어요. 계마(승격)나 향차로 외통시키세요.",
-"es": "Un peón soltado en la cabeza del rey daría mate, pero es ilegal (mate con peón soltado). Da mate con el caballo (promocionando) o con la lanza.",
-"fr": "Un pion parachuté sur la tête du roi ferait mat, mais c’est interdit (mat par parachutage de pion). Matez avec le cavalier (en promouvant) ou la lance.",
-"pt": "Um peão solto na cabeça do rei daria mate, mas é ilegal (mate com peão solto). Dê mate com o cavalo (promovendo) ou com a lança.",
-"de": "Ein Bauer auf dem Kopf des Königs wäre Matt, ist aber verboten (Bauernabwurf-Matt). Setze stattdessen mit dem Springer (mit Umwandlung) oder der Lanze matt.",
-"ru": "Пешка, сброшенная королю в лоб, дала бы мат, но это запрещено (мат сбросом пешки). Ставьте мат конём (с превращением) или копьём.",
-"tr": "Şahın başına bırakılan piyon mat olurdu ama yasak (piyon bırakarak mat). Bunun yerine atla (terfi ederek) ya da mızrakla mat et.",
-"id": "Bidak yang dijatuhkan di kepala raja akan mat, tapi itu terlarang (mat dengan jatuhan bidak). Mat-kan dengan kuda (promosi) atau tombak.",
-"hi": "राजा के सिर पर प्यादा रखना मात होता, पर यह वर्जित है (प्यादा रखकर मात)। घोड़े (पदोन्नति के साथ) या भाले से मात दें।",
-"ar": "إسقاط بيدق على رأس الملك يكون ماتًا، لكنه ممنوع (مات بإسقاط بيدق). أمِتْ بالحصان (مع الترقية) أو بالرمح بدلًا من ذلك."
-},
-"rx/p2/expl": {
-"ja": "玉の頭に歩を打つのは打ち歩詰めで指せません。歩以外の駒（銀）を打って詰ませるのはOKです。",
-"en": "Dropping a pawn on the king’s head is an illegal pawn-drop mate. Dropping another piece (the silver) to mate is fine.",
-"zh": "把步打在玉头上是打步诘，不能下。打步以外的棋子（银）将死则没问题。",
-"zh-TW": "把步打在王頭上是打步詰，不能下。打步以外的棋子（銀）詰死則沒問題。",
-"ko": "왕 머리에 보를 놓는 것은 타보외통이라 둘 수 없어요. 보 말고 다른 말(은)을 놓아 외통시키는 것은 괜찮습니다.",
-"es": "Soltar un peón en la cabeza del rey es un mate ilegal con peón soltado. Soltar otra pieza (la plata) para dar mate está permitido.",
-"fr": "Parachuter un pion sur la tête du roi est un mat interdit. Parachuter une autre pièce (l’argent) pour mater est permis.",
-"pt": "Soltar um peão na cabeça do rei é um mate ilegal com peão solto. Soltar outra peça (a prata) para dar mate é permitido.",
-"de": "Ein Bauer auf dem Kopf des Königs ist ein verbotenes Bauernabwurf-Matt. Eine andere Figur (das Silber) zum Matt einzusetzen ist erlaubt.",
-"ru": "Сброс пешки королю в лоб — запрещённый мат сбросом пешки. Сбросить другую фигуру (серебро) для мата можно.",
-"tr": "Şahın başına piyon bırakmak yasak bir piyon-bırakma matıdır. Mat için başka bir taş (gümüş) bırakmak serbesttir.",
-"id": "Menjatuhkan bidak di kepala raja adalah mat jatuhan bidak yang terlarang. Menjatuhkan bidak lain (perak) untuk mat boleh.",
-"hi": "राजा के सिर पर प्यादा रखना वर्जित मात है। मात के लिए कोई और मोहरा (चाँदी) रखना ठीक है।",
-"ar": "إسقاط بيدق على رأس الملك مات ممنوع. أما إسقاط قطعة أخرى (الفضة) للمات فمسموح."
-},
 "op:genshi/n0": {
 "ja": "飛車先の歩を突きます。攻めの主役は、その後ろにいる飛車です。",
 "en": "Push the rook pawn. The star of the attack is the rook right behind it.",
