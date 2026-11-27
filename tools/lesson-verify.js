@@ -3083,7 +3083,7 @@ function shogiOpen(opt) {
   // (there is no line here), "近づく" only for a castle move, "近づかない / 進まない / 遠いまま" only for the others, "AIの評価が…下がる"
   // only 100+ below, captures / recaptures / king / bishop's line / edge pawn / rook claims on the board, the near words only 10+ points.
   {
-    const SHC_DONE = new Set(['c_mino']), SRCC = require(path.join(ROOT, 'shogi/tools/openings/src/castle.js')), KIF = require(path.join(ROOT, 'shogi/tools/openings/kif.js'));
+    const SHC_DONE = new Set(['c_mino', 'c_takamino', 'c_ginkan']), SRCC = require(path.join(ROOT, 'shogi/tools/openings/src/castle.js')), KIF = require(path.join(ROOT, 'shogi/tools/openings/kif.js'));
     if (!src.includes("sort((a, b) => (a.off ? a.dd : a.ply) - (b.off ? b.dd : b.ply))")) add('-', -1, '⑥ the 3D castle problems are not drawn in the dd order');
     const linePos = []; for (const c of CATS) require(path.join(ROOT, `shogi/tools/openings/src/${c}.js`)).forEach(e => { try { const q = new E.Position(); q.setSfen(e.start || KIF.START); for (const u of KIF.conv(e.line, e.start).usi) { q.doMove(q.fromUsi(u)); q.sp = 0; linePos.push([e.id + ' line', CU.brd(q.sfen())]); } } catch (er) {} });
     const STEP = { 4: [[0, -1], [1, -1], [-1, -1], [1, 1], [-1, 1]], 7: [[0, -1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1]], 8: [[0, -1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1], [1, 1], [-1, 1]], 3: [[1, -2], [-1, -2]] };
@@ -3094,13 +3094,20 @@ function shogiOpen(opt) {
       const cd = b => { let tot = 0; for (const tp of [...new Set(T.map(x => x.t))]) { const S = T.filter(x => x.t === tp).map(x => x.sq), own = []; for (let q = 0; q < 81; q++) if (b[q] && E.colorOf(b[q]) === 0 && E.typeOf(b[q]) === tp) own.push(q); if (own.length < S.length) return 99; let best = 99; const go = (i, used, c) => { if (c >= best) return; if (i === S.length) { best = c; return; } own.forEach((q, j) => { if (!(used >> j & 1)) go(i + 1, used | 1 << j, c + dist1(tp, q, S[i])); }); }; go(0, 0, 0); tot += best; } return tot; };
       const LP = (s.lineProbs || []), PS = LP.filter(P => P.off);
       if ((s.problems || []).length + PS.length < 5 || PS.length !== LP.length) add(id, -1, `③ ${PS.length} castle problems off the line (${LP.length - PS.length} on the shown line, 追1)`);
+      // ④ (2026-11-28 担当B) a castle built on another (高美濃 on 美濃, 銀冠 on 高美濃): at least half of the answers bring a piece
+      // toward a square of this castle that the parent does not have (that castle's own theme, not the parent's moves again)
+      { const PAR = { c_takamino: 'c_mino', c_ginkan: 'c_takamino' }[id];
+        if (PAR) { const pe = SRCC.find(x => x.id === PAR), q1 = new E.Position(); q1.setSfen(pe.start || KIF.START); for (const u of KIF.conv(pe.line, pe.start).usi) { q1.doMove(q1.fromUsi(u)); q1.sp = 0; }
+          const pp = new Set(pe.story.marks.map(m => m + ':' + E.typeOf(q1.board[E.makeSq(+m[0], +m[1])]))), own = T.filter(x => !pp.has(E.sqFile(x.sq) + '' + E.sqRank(x.sq) + ':' + x.t));
+          const th = PS.filter(P => { const q = new E.Position(); q.setSfen(P.sfen); return P.accept.some(u => { const m = q.fromUsi(u); if (E.isDrop(m)) return false; const fr = E.mFrom(m), to = E.mTo(m), t = E.typeOf(q.board[fr]); return own.some(x => x.t === t && dist1(t, to, x.sq) < dist1(t, fr, x.sq)); }); }).length;
+          if (!own.length || th * 2 < PS.length) add(id, -1, `④ only ${th} of ${PS.length} answers build ${nm}'s own squares (the rest are ${PAR}'s moves)`); } }
       const ans = new Map(); let prevD = -1;
       const pts = (P, u) => { if (P.accept.includes(u)) return 20; const ref = Math.max(...P.cand.filter(c => P.accept.includes(c[0])).map(c => c[1])), c = P.cand.find(x => x[0] === u), sc = c ? c[1] : P.floor; return Math.max(0, Math.min(12, Math.round(12 * (1 - (ref - sc) / 500)))); };
       VO.pts = pts;
       PS.forEach((P, j) => { const a = m => add(id, j, m), p = new E.Position(); p.setSfen(P.sfen); const ms = p.legalMoves(true), U = m => p.toUsi(m);
         const G = ms.filter(m => { if (E.isDrop(m)) return false; p.doMove(m); const b = p.board.slice(); p.undoMove(); return cd(b) < cd(p.board); }).map(U).sort();
         if (JSON.stringify(G) !== JSON.stringify((P.G || []).slice().sort())) a(`① the castle moves are ${G} (stored ${P.G})`);
-        const sets2 = [];
+        const sets2 = []; shoW = require(path.join(ROOT, 'shogi/tools/openings/wasm-engine.js')).loadSync();   // (a new engine for every problem: the values do not depend on what was read before, 2026-11-28 担当B)
         for (const d of [8, 9]) { const r = shoW.analyze(P.sfen, { depth: d }), v = new Map(r.map(x => [x.usi, x.s])), ref = Math.max(...G.map(u => v.get(u)));
           if (r[0].s - ref > 80) a(`① depth ${d}: the engine's best ${r[0].usi} is ${r[0].s - ref} above the castle moves`);
           const grey = G.filter(u => v.get(u) < ref - 40 && v.get(u) >= ref - 100); if (grey.length) a(`② depth ${d}: ${grey} in the grey zone`);
@@ -3124,6 +3131,7 @@ function shogiOpen(opt) {
           const file = E.sqFile(to); return { pt, cap, b0, b1, win, file }; };
         const r9 = new Map(P.cand), loss = u => { const ref = Math.max(...P.cand.filter(c => P.accept.includes(c[0])).map(c => c[1])); return ref - (r9.has(u) ? r9.get(u) : P.floor); };
         for (let i = 0; i < 5; i++) { let Q; try { Q = X.shLineJa({ pos: P.sfen, kind: 'best', P, ans: A }, nm, hs + i, null, VO, i); } catch (er) { a(`⑧ the 3D words fail: ${er.message}`); break; }
+          if (/AI|評価|形勢|見込み/.test(plain(Q.ask) + plain(Q.hintTx || ''))) a("⑧ the engine's opinion in the question / hint");
           const ask = plain(Q.ask); if (!ask.includes('☗先手') || !ask.includes(`『${nm}』`) || /手順|\{|undefined/.test(ask)) a(`⑧ the question 「${ask}」`);
           const hint = plain(Q.hintTx || ''); if (/手順|\{(?![mx]\})|undefined/.test(hint)) a(`⑧ the hint 「${hint}」`);
           for (const u of ms.map(U)) { const w = plain(u === A || P.accept.includes(u) ? Q.good(u) : Q.ng(u)), bad = m => a(`⑦ ${u}: ${m} 「${w}」`), F = qf(u);
@@ -3137,7 +3145,7 @@ function shogiOpen(opt) {
             { const e2 = soft53(w, pts(P, u), false); if (e2) bad(e2); }
             if (/近づく手だけど|には近づくけど/.test(w) && !G.includes(u)) bad('not a castle move');
             if (/近づかない|囲いの駒が進まない|完成が遠いまま|囲いはそのまま|一歩も進まない/.test(w) && G.includes(u)) bad('a castle move');
-            if (/はっきり下がる|ずっと良い/.test(w) && !(loss(u) >= 100)) bad(`only ${loss(u)} below`);
+            if (/AI|評価|形勢|見込み/.test(w)) bad("the engine's opinion as the reason (理由は盤の事実で)");
             if (/取られ/.test(w) && !/取り返/.test(w) && !(F.win > 0 && loss(u) >= 60)) bad(`nothing is lost at once (SEE ${F.win}, ${loss(u)} below)`);
             if (/取り返しそびれ/.test(w)) bad('there is nothing to recapture');
             if (/\{x\}は角道を止め/.test(w) && !(F.b1 < F.b0 - 1)) bad("does not shut the bishop's line");

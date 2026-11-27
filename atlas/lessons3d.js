@@ -942,8 +942,8 @@
       if (F.hang && !FA.hang && d > .05) return L(F.hangDef ? `{x}だと、その${SH_PN[F.pc]}が相手の${SH_PN[F.hang]}の利きに入っちゃう。安い駒と交換されると駒損なの。` : `{x}だと、その${SH_PN[F.pc]}を相手の${SH_PN[F.hang]}にタダで取られちゃう！`);
       if (FA.cap && FA.behind && !F.cap) return L('{x}だと取り返しそびれて、駒損のままになっちゃう。');
       if ((later || []).includes(u)) return L(N('{x}も『{n}』で指す手だけど、いまはまだ早いの。先に{m}を指しておかないと、形がくずれちゃう') + kon);
-      if (OF && (P.G || []).includes(u)) return L(N(['{x}も『{n}』の形に近づく手だけど、この局面ではAIの評価が{m}よりはっきり下がるの。先に{m}を指しておきたい', '{x}でも『{n}』には近づくけど、相手の形を見ると、AIは{m}のほうがずっと良いと見ている'][fb % 2]) + kon);
       const rw = shStaticWhyJa(o.pos, u, k); if (rw) return L(rw);
+      if (OF && (P.G || []).includes(u)) return L(N(['{x}も『{n}』の形に近づく手だけど、この局面では{m}が先なの。{m}なら' + SC, '{x}でも『{n}』には近づくけど、組む順番は{m}から。{m}なら' + SC][fb % 2]) + kon);   // (2026-11-28 担当B: not the engine's opinion — the order, and what the answer does on the board)
       if (d > .12) return L(N(shContrastJa(F, FA, k, fb, OF ? SC : null)));
       if (OF) return L(N([`{x}では囲いの形に近づかないの。{m}なら${SC}`, `{x}は囲いの駒が進まない手。ここで{m}なら${SC}`, `{x}だと完成が遠いまま。{m}を指せば${SC}`, `{x}を指しても、囲いはそのまま。{m}だと${SC}`, `{x}のあいだ、囲いは一歩も進まないの。{m}なら${SC}`][(vi != null ? vi : k) % 5]) + kon);
       return L([`{x}も悪い手じゃないけど、それだと手順からはずれちゃうの。{m}なら${shShortJa(FA)}`, `{x}だと、組みたい形から少しそれるの。手順の{m}なら${shShortJa(FA)}`, `{x}は形に合わない一手なの。ここで{m}なら${shShortJa(FA)}`, `{x}では組む順番がずれちゃうの。先に{m}なら${shShortJa(FA)}`, `{x}だと手順が一つ飛んじゃう。{m}を指してこそ${shShortJa(FA)}`, `{x}は今の形には早すぎるの。{m}だと${shShortJa(FA)}`][fb] + kon);
