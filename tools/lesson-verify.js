@@ -3727,7 +3727,7 @@ function near53(opt) { const src = require('fs').readFileSync(path.join(ROOT, 'a
       for (let k = 1; k <= 5; k++) for (let sum = 0; sum <= 20 * k; sum++) { const n = Math.round(sum * 100 / (20 * k)), near = Math.round((sum + 20) * 100 / (20 * k)) >= 75;
         if (n < 75 && near !== (Math.round(Math.min(20 * k, sum + 20) * 100 / (20 * k)) >= 75)) out.push({ step: 'reversi/opcourse.js', q: 0, msg: `追82 near wrong at ${k} problems, ${sum} points` }); } } }
   return out; }
-const N81_DONE = ['gomoku', 'amazons', 'checkers', 'chess', 'connect4', 'go', 'hex', 'mancala', 'morris', 'shogi', 'tafl', 'xiangqi', 'konane'], N81_NO_RAMPUI = new Set(['amazons', 'hex']);
+const N81_DONE = ['gomoku', 'amazons', 'checkers', 'chess', 'connect4', 'go', 'hex', 'mancala', 'morris', 'shogi', 'tafl', 'xiangqi', 'konane', 'fanorona'], N81_NO_RAMPUI = new Set(['amazons', 'hex']);
 function xiangqiOpen(opt) {
   const fs = require('fs'), CU = require(path.join(ROOT, 'xiangqi/tools/op_curate.js')), E = require(path.join(ROOT, 'xiangqi/engine.js'));
   const OP = (opt && opt.op) || JSON.parse(fs.readFileSync(path.join(ROOT, 'xiangqi/openings.json'), 'utf8'));
@@ -3838,7 +3838,8 @@ const konane = () => require('./lesson-verify-konane.js').verify().out.concat(re
 const ugolki = () => require('./lesson-verify-ugolki.js').verify().out.map(o => ({ step: o.theme, q: o.q, msg: o.msg }))
   .concat(require('./lesson-verify-ugolki-ls.js').verify().out.map(o => ({ step: 'lesson ' + o.id, q: o.q, msg: o.msg })));   // (+ the lessons on the 3D table: tools/lesson-verify-ugolki-ls.js, 担当D)
 // (2026-11-25 担当D) fanorona on the 3D table: the puzzles (8 themes, the 2D shares them) — tools/lesson-verify-fanorona.js
-const fanorona = () => require('./lesson-verify-fanorona.js').verify().out.map(o => ({ step: o.theme, q: o.q, msg: o.msg }));
+// (2026-11-27 担当E) and its lessons listed on the 3D (atlas/ls-fanorona.js READY) — tools/lesson-verify-fanorona-ls.js (the lines recounted on the board)
+const fanorona = () => require('./lesson-verify-fanorona.js').verify().out.map(o => ({ step: o.theme, q: o.q, msg: o.msg })).concat(require('./lesson-verify-fanorona-ls.js').verify().out.map(o => ({ step: o.id, q: o.q, msg: o.msg })));
 // (2026-11-27 担当F) agon: the puzzles (7 themes, 2D agon/app.js puzzleMove) — tools/lesson-verify-agon.js (exact solver, ①〜⑨)
 const agon = () => require('./lesson-verify-agon.js').verify().out.map(o => ({ step: o.theme, q: o.q, msg: o.msg }));
 const reversiOpen = opt => require('./lesson-verify-rvopen.js')(opt);   // (2026-11-24 担当B：リバーシの定跡、tools/lesson-verify-rvopen.js)

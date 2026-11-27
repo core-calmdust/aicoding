@@ -26,7 +26,7 @@
 'use strict';
 const path = require('path'), fs = require('fs'), vm = require('vm');
 const ROOT = path.join(__dirname, '..');
-const DONE = new Set(['b_check', 'b_escape', 'b_mate', 'b_special']);
+const DONE = new Set(['b_check', 'b_escape', 'b_mate', 'b_special', 'b_draw']);
 const MV = [0, 1, 3, 3, 5, 9, 0];
 function lib() {
   const E = require(path.join(ROOT, 'chess/engine.js'));
@@ -50,7 +50,7 @@ function lib() {
   const dist = (a, b) => { let n = 0; for (let i = 0; i < 64; i++) if (a[i] !== b[i]) n++; return n; };
   const dmin = (a, b) => Math.min(dist(a, b), dist(flip(a), b), dist(swap(a), b), dist(flip(swap(a)), b));
   // ⑤ the same board or 1〜2 moves apart: 2 squares or fewer, or 4 or fewer with the same pieces (two moves without a capture)
-  const pcs = b => b.replace(/\./g, '').split('').sort().join(''), near = (a, b) => { const d = dmin(a, b); return d <= 2 || (d <= 4 && pcs(a) === pcs(b)) ? d : 0; };
+  const pcs = b => b.replace(/\./g, '').split('').sort().join(''), near = (a, b) => { const d = dmin(a, b); return d <= 2 || (d <= 4 && pcs(a) === pcs(b)) ? String(d) : 0; };   // (2026-11-27: a string, so the same board (0 squares) counts too)
   return { E, pos, mat, ms, after, keep, brd, dist, dmin, near };
 }
 // every other chess board (追1: the diagrams and warm-ups too)
@@ -149,6 +149,32 @@ function verify(opt) {
           if (/クイーンより弱い/.test(T)) { known++; if (!isP(u) || u.endsWith('q')) a(`⑦ ${u}: said an under-promotion`); }
           if (/奥の段に着かない|まだ成れていない/.test(T)) { known++; if (isP(u)) a(`⑦ ${u}: said it does not promote`); }
           if (!known) a(`⑦ ${u}: the words do not say what the move does: ${t}`); }));
+      } else if (sid === 'b_draw') {
+        // (2026-11-27 担当A) stalemate: the one mate in 1 among stalemate traps. ① ok = the mating moves, exactly one ③ 6 legal moves or more,
+        // 3 checks or more (追19) ④ 2 stalemating moves or more (the lesson's trap); d = the stalemates + the checks that do not mate
+        const st = legal.filter(u => { const z = Lb.after(P.fen, u); return !z.inCheck() && !z.hasLegal(); });
+        right = mate; d = st.length + chk.length - mate.length;
+        if (!P.ok || JSON.stringify([...P.ok].sort()) !== JSON.stringify(mate.slice().sort())) a(`① ok ${P.ok} ≠ the mates ${mate}`);
+        if (mate.length !== 1) a(`② ${mate.length} mates`);
+        if (legal.length < 6) a(`③ ${legal.length} legal moves`);
+        if (chk.length < 3) a(`③ 追19 ${chk.length} checks (3 or more)`);
+        if (st.length < 2) a(`④ ${st.length} stalemating moves (2 or more: the lesson's trap)`);
+        // ⑦⑧ ナイトン's words for every wrong move, every wording, against the board
+        let Rs = []; try { Rs = [...Array(12).keys()].map(off => W.X.chLsJa(sid, { pos: P.fen, ans, P }, j, W.mkV(off))); } catch (e) { a('⑦ chLsJa threw ' + e.message); }
+        const m0 = Lb.mat(p, me);
+        Rs.length && legal.filter(u => !right.includes(u)).forEach(u => { const z = Lb.after(P.fen, u), isSt = st.includes(u), kq = z.ksq[z.side];
+          const kMoves = z.legal().filter(m => (m & 127) === kq).length, lose = z.legal().some(m => z.uci(m).slice(2, 4) === u.slice(2, 4)) && Lb.keep(P.fen, u, 2) < m0;
+          [...new Set(Rs.map(R => R.ng(u)))].forEach(t0 => { const t = t0.split('{m}')[0], S = /ステイルメイト|引き分け/.test(t), H = /取られちゃう/.test(t), C = t.match(/王手だけど、黒のキングにはまだ逃げるマスが(\d+)つ/), C2 = /王手は、キングに逃げ道が残る|キングは空いたマスへ逃げられ/.test(t), Q = /チェックにならない|王手がかからない|王手がかかっていない|チェックもかかっていない/.test(t);
+            if (S !== isSt && !(H && lose)) a(`⑦ ${u}: stalemate ${isSt}, the words: ${t}`);
+            if (H && !lose) a(`⑦ ${u}: said taken by the king, it is not: ${t}`);
+            if (C && (!z.inCheck() || +C[1] !== kMoves || !kMoves)) a(`⑦ ${u}: said check with ${C[1]} ways out (check ${z.inCheck()}, ${kMoves}): ${t}`);
+            if (C2 && !(z.inCheck() && z.hasLegal())) a(`⑦ ${u}: said a check that does not mate: ${t}`);
+            if (Q && (z.inCheck() || !z.hasLegal())) a(`⑦ ${u}: said no check and Black can still move: ${t}`);
+            if (!S && !H && !C && !C2 && !Q) a(`⑦ ${u}: the words do not say what the move does: ${t}`);
+            if (isSt && !S && !lose) a(`⑦ ${u} stalemates, the words do not say so: ${t}`); }); });
+        // ⑧ the question and the praise: no piece named that the answer does not move
+        const T = []; for (let off = 0; off < 30; off++) { try { const R = W.X.chLsJa(sid, { pos: P.fen, ans, P }, j, W.mkV(off)); T.push(R.ask, R.hintTx, R.good(ans)); } catch (e) { break; } }
+        new Set(T).forEach(t => { for (const [c, n] of Object.entries(W.X.CH_PN)) if (c !== FA.pc && c !== 'k' && t.includes(n)) a(`⑧ the ${n} named, the answer moves the ${W.X.CH_PN[FA.pc]}: ${t}`); if (!/詰|メイト|決着/.test(t) && T.indexOf(t) % 3 === 2) a(`⑧ the praise does not say mate: ${t}`); });
       } else {
         d = legal.length; if (legal.length < 3) a(`③ ${legal.length} legal moves`);
         const m0 = Lb.mat(p, me), keep = Object.fromEntries(legal.map(u => [u, Lb.keep(P.fen, u)]));

@@ -27,6 +27,15 @@
 //    opponent's jump after it that wins (you lose then, solved), {e} = your jumps after it, drawn on the problem's board, s_stop
 //    'go' says the landed stone is taken iff the reply takes it (and says it whenever some winning reply does); ⑨ the 2D keys
 //    ls.s_count.ng.more0/N · ls.s_stop.ng.goS/go/lose 0/N with {r} (and {e} for N) in 14 languages, app.js reads the facts.
+//  s_go / s_keep / s_read (2026-11-27 担当C, strat3()): the same exact solve — ① ok = the winning jumps; ② one; ③ 5+ legal, 4+ wrong,
+//    追72; ④ the opponent still has a jump after the answer, 3+ stones can jump = the hint's stones; s_go the answer jumps 2+ to the
+//    end of its line and the line stopped earlier is among the moves · s_keep some move leaves the opponent fewer jumps than the
+//    answer, and every such move leaves you fewer of your own (o) · s_read the opponent has 2+ replies after the answer and some
+//    wrong move leaves it as few or fewer; ⑥ d = wrong + 2 × near (s_go the stops of the answer's line · s_keep the moves cutting
+//    more · s_read the moves leaving as few or fewer); ⑦⑧ every wrong move: the words' kind (short / cut / fewer / lose) and j, j0,
+//    o, o0, c, n = the board, the gold reply {r} wins for the opponent, {e} = your jumps after it, drawn on the problem's board,
+//    s_go shortS iff the reply jumps with a stone the full jump would have taken (said whenever some winning reply does); ⑨ the 2D
+//    keys ls.s_go.ng.short(S) · ls.s_keep.ng.cut · ls.s_read.ng.fewer · ls.st.lose / tail0 / tailN in 14 languages, app.js reads them.
 // Usage: node tools/lesson-verify-konane-ls.js [--selftest]   (also run by tools/lesson-verify-konane.js / lesson-verify.js konane)
 'use strict';
 const fs = require('fs'), path = require('path');
@@ -109,6 +118,70 @@ function strat(id, P, q, add, fact, hintF, JA) {
   }
   return (L.length - P.ok.length) + 2 * nearN;
 }
+// (2026-11-27 担当C) s_go / s_keep / s_read
+function strat3(id, P, q, add, fact, hintF, JA) {
+  const N = 8, me = P.s.side, b = P.s.b, pos = E.Pos.from(P.s), L = pos.moves(), J = jumps(b, N, me), op = 3 - me;
+  const mv = jj => L.find(m => E.mFrom(m) === jj.from && E.mTo(m) === jj.to), nm = m => E.name(pos, m);
+  if (!(P.ok || []).every(m => L.includes(m)) || !L.includes(P.best)) { add(id, q, '① a right move is not a move of the board'); return 0; }
+  const key = x => x.from + '>' + x.to, eng = new Set(L.map(m => E.mFrom(m) + '>' + E.mTo(m)));
+  if (J.length !== eng.size || J.some(x => !eng.has(key(x)))) add(id, q, `① the engine's ${eng.size} moves ≠ this file's ${J.length} jumps`);
+  const res = J.map(x => { const b2 = after(b, N, x, me); return { x, m: mv(x), b2, win: !winsB(b2, N, op), j: jumps(b2, N, op).length, o: jumps(b2, N, me).length }; });
+  const won = res.filter(r => r.win).map(r => r.m).sort((x, y) => x - y), ok = P.ok.slice().sort((x, y) => x - y);
+  if (won.join() !== ok.join()) add(id, q, `① ok ${ok.length} move(s) ≠ the ${won.length} winning move(s)`);
+  if (!P.ok.includes(P.best)) add(id, q, '① best is not in ok');
+  if (P.ok.length !== 1) add(id, q, `② ${P.ok.length} right moves`);
+  if (L.length < 5) add(id, q, `③ ${L.length} legal moves`);
+  if (L.length - P.ok.length < 4) add(id, q, `③ ${L.length - P.ok.length} wrong moves`);
+  if (P.ok.length * 3 > L.length) add(id, q, `追72 ${P.ok.length} right of ${L.length} legal moves (more than 1/3)`);
+  const A = res.find(r => r.m === P.best); if (!A) return 0;
+  const movers = [...new Set(J.map(x => x.from))].sort((x, y) => x - y);
+  if (!A.j) add(id, q, '④ the opponent has no jump after the answer (the b_win lesson again)');
+  if (movers.length < 3) add(id, q, `④ ${movers.length} stones can jump (the hint narrows to the answer)`);
+  if (hintF(E, id, P.s).slice().sort((x, y) => x - y).join() !== movers.join()) add(id, q, '⑦ the hint\'s stones are not your stones that can jump');
+  const sameLine = (a, c) => a.from === c.from && a.dir.join() === c.dir.join(), others = res.filter(r => r.m !== P.best);
+  let nearN = 0;
+  if (id === 's_go') {
+    const line = res.filter(r => sameLine(r.x, A.x));
+    if (A.x.k < 2) add(id, q, `④ the answer takes ${A.x.k} (not a jump on to the end)`);
+    if (line.some(r => r.x.k > A.x.k)) add(id, q, '④ the answer\'s line goes on further (it does not jump to the end)');
+    nearN = line.filter(r => r.x.k < A.x.k).length; if (!nearN) add(id, q, '④ the answer\'s line stopped earlier is not among the moves');
+  } else if (id === 's_keep') {
+    const cut = others.filter(r => r.j < A.j); nearN = cut.length;
+    if (!cut.length) add(id, q, '④ no move leaves the opponent fewer jumps than the answer (the s_count lesson again)');
+    if (cut.some(r => r.o >= A.o)) add(id, q, '④ a move cutting the opponent more keeps as many jumps of yours as the answer');
+  } else {
+    if (A.j < 2) add(id, q, `④ the opponent has ${A.j} reply after the answer (nothing to read out)`);
+    nearN = others.filter(r => r.j <= A.j).length; if (!nearN) add(id, q, '④ the answer leaves the opponent the fewest jumps (the s_count lesson again)');
+  }
+  const fb = fact(E, id, P.s, P.best), wk = { s_go: 'all', s_keep: 'keep', s_read: 'read' }[id];
+  if (fb.k !== wk || fb.j !== A.j || fb.c !== A.x.k || (id === 's_keep' && fb.o !== A.o)) add(id, q, `⑧ the answer's words say ${fb.k} j=${fb.j} c=${fb.c} o=${fb.o}, the board j=${A.j} c=${A.x.k} o=${A.o}`);
+  const wl = (JA.w || {})[wk];
+  if (!wl || wl.length < 5) add(id, q, `⑧ ${wl ? wl.length : 0} ja right words for 5 problems (a line said twice in a lesson)`);
+  for (const t of [].concat(wl || [])) { const x = t.replace(/\{(j|c|n|o)\}/g, '0'); if (/\{\w+\}/.test(x)) add(id, q, '⑧ ja right words: a placeholder left'); if (/勝率|評価|見込み/.test(x)) add(id, q, '追16 the words give an evaluation'); }
+  for (const r of others) {
+    const f = fact(E, id, P.s, r.m), w = nm(r.m);
+    const want = id === 's_go' ? (sameLine(r.x, A.x) && r.x.k < A.x.k ? 'short' : 'lose') : id === 's_keep' ? (r.j < A.j ? 'cut' : 'lose') : (r.j <= A.j ? 'fewer' : 'lose');
+    if (f.k !== want || f.j !== r.j || f.c !== r.x.k) add(id, q, `⑧ ${w}: the words say ${f.k} j=${f.j} c=${f.c}, the board ${want} j=${r.j} c=${r.x.k}`);
+    if (want === 'short' && f.n !== A.x.k) add(id, q, `⑧ ${w}: the words say the line goes to ${f.n}, the board ${A.x.k}`);
+    if (want === 'cut' && (f.j0 !== A.j || f.o !== r.o || f.o0 !== A.o)) add(id, q, `⑧ ${w}: the words say j0=${f.j0} o=${f.o} o0=${f.o0}, the board ${A.j} ${r.o} ${A.o}`);
+    if (want === 'cut' && !(r.o < A.o)) add(id, q, `⑧ ${w}: the words say your jumps drop, the board ${r.o} ≥ ${A.o}`);
+    if (want === 'fewer' && f.j0 !== A.j) add(id, q, `⑧ ${w}: the words say j0=${f.j0}, the board ${A.j}`);
+    const R = jumps(r.b2, N, op), rr = f.r != null && R.find(x => x.from === E.mFrom(f.r) && x.to === E.mTo(f.r));
+    if (!rr) { add(id, q, `⑧ ${w}: the gold reply is not one of the opponent's jumps`); continue; }
+    const b3 = after(r.b2, N, rr, op);
+    if (winsB(b3, N, me)) add(id, q, `⑧ ${w}: after the gold reply you can still win (it is not a refutation)`);
+    if (f.e !== jumps(b3, N, me).length) add(id, q, `⑧ ${w}: ${f.e} jumps of yours after the gold reply in the words, ${jumps(b3, N, me).length} on the board`);
+    if (!f.draw || b[rr.from] !== (op === 1 ? 'b' : 'w') || b[rr.to] !== '.') add(id, q, `⑧ ${w}: the gold reply cannot be drawn on the problem's board`);
+    if (want === 'short') { const left = capOf(A.x).filter(x => !capOf(r.x).includes(x)), sp = left.includes(rr.from);
+      if (!!f.spring !== sp) add(id, q, `⑧ ${w}: the words say the reply jumps ${f.spring ? 'with' : 'without'} a stone left standing, the gold reply ${sp ? 'does' : 'does not'}`);
+      if (!sp && R.some(x => left.includes(x.from) && !winsB(after(r.b2, N, x, op), N, me))) add(id, q, `⑧ ${w}: a winning reply jumps with a stone left standing, the words do not say so`); }
+    const k = LSK.kindOf(f), [h, tl] = k.split('+');
+    for (const part of [h, tl]) { const list = (JA.n || {})[part]; if (!list || !list.length) { add(id, q, `⑧ no ja words for ${part}`); continue; }
+      for (const t of list) { const x = t.replace(/\{(j|j0|e|c|n|o|o0)\}/g, '0'); if (/\{\w+\}/.test(x)) add(id, q, `⑧ ja ${part}: a placeholder left`); if (/勝率|評価|見込み/.test(x)) add(id, q, '追16 the words give an evaluation'); } }
+    if (tl !== (f.e ? 'tailN' : 'tail0')) add(id, q, `⑧ ${w}: the tail ${tl} for ${f.e} jumps left`);
+  }
+  return others.length + 2 * nearN;
+}
 function verify(opt) {
   opt = opt || {};
   const LS = opt.data || JSON.parse(fs.readFileSync(path.join(ROOT, 'konane/lessons.json'), 'utf8'));
@@ -130,6 +203,7 @@ function verify(opt) {
     const st = LS.steps.find(s => s.id === id); if (!st) { add(id, 0, 'not in lessons.json'); continue; }
     const ds = [];
     st.problems.forEach((P, j) => {
+      if (/^s_(go|keep|read)$/.test(id)) { ds.push(strat3(id, P, j + 1, add, fact, hintF, JA)); return; }
       if (/^s_/.test(id)) { ds.push(strat(id, P, j + 1, add, fact, hintF, JA)); return; }
       const q = j + 1, me = P.s.side, b = P.s.b, pos = E.Pos.from(P.s), L = pos.moves(), J = jumps(b, N, me);
       if (!(P.ok || []).every(m => L.includes(m)) || !L.includes(P.best)) { add(id, q, '① a right move is not a move of the board'); ds.push(0); return; }
@@ -208,9 +282,14 @@ function verify(opt) {
     if (!/<script src="ls-facts\.js/.test(html)) add('2D', 0, '⑨ konane/index.html does not load ls-facts.js');
     const I = {}; LANGS.forEach(l => { I[l] = {}; });
     for (const f of ['i18n-kn.js', 'i18n-kn-more.js']) { try { new Function('window', 'I18N', fs.readFileSync(path.join(ROOT, 'konane', f), 'utf8'))({ I18N: I }, I); } catch (e) { add('2D', 0, '⑨ i18n: ' + e.message); } }
-    if (!/s_count\|s_stop|s_\(count\|stop\)/.test(app)) add('2D', 0, '⑨ konane/app.js does not read the facts for s_count / s_stop');
+    if (!/s_count\|s_stop|s_\(count\|stop[|)]/.test(app)) add('2D', 0, '⑨ konane/app.js does not read the facts for s_count / s_stop');
+    if (!/s_\(count\|stop\|go\|keep\|read\)/.test(app) || !/ls\.st\.tailN/.test(app)) add('2D', 0, '⑨ konane/app.js does not read the facts for s_go / s_keep / s_read');
     const need = { 'ls.s_count.why': ['{m}', '{j}'], 'ls.s_count.ng.more0': ['{m}', '{x}', '{j}', '{j0}', '{r}'], 'ls.s_count.ng.moreN': ['{m}', '{x}', '{j}', '{j0}', '{r}', '{e}'], 'ls.s_count.hint': [],
       'ls.s_stop.why': ['{m}'], 'ls.s_stop.hint': [], ...Object.fromEntries(['goS', 'go', 'lose'].flatMap(h => [['ls.s_stop.ng.' + h + '0', ['{m}', '{x}', '{r}']], ['ls.s_stop.ng.' + h + 'N', ['{m}', '{x}', '{r}', '{e}']]])),
+      'ls.s_go.why': ['{m}'], 'ls.s_go.hint': [], 'ls.s_go.ng.short': ['{x}', '{c}', '{n}', '{m}', '{r}'], 'ls.s_go.ng.shortS': ['{x}', '{r}'],
+      'ls.s_keep.why': ['{m}', '{j}', '{o}'], 'ls.s_keep.hint': [], 'ls.s_keep.ng.cut': ['{x}', '{j}', '{j0}', '{o}', '{o0}', '{m}', '{r}'],
+      'ls.s_read.why': ['{m}', '{j}'], 'ls.s_read.hint': [], 'ls.s_read.ng.fewer': ['{x}', '{j}', '{j0}', '{m}', '{r}'],
+      'ls.st.lose': ['{x}', '{r}'], 'ls.st.tail0': ['{m}'], 'ls.st.tailN': ['{m}', '{e}'],
       'ls.b_double.why': ['{m}'], 'ls.b_double.ng.stop': ['{m}', '{x}'], 'ls.b_double.ng.other': ['{m}', '{x}'], 'ls.b_double.hint': [], 'ls.b_win.why': ['{m}'], 'ls.b_win.ng': ['{m}', '{x}', '{j}'], 'ls.b_win.ng1': ['{m}', '{x}'], 'ls.b_win.hint': [] };
     for (const l of LANGS) for (const [k, ph] of Object.entries(need)) { const x = (opt.i18n || I)[l][k]; if (!x) { add('2D', 0, `⑨ ${l}: no ${k}`); continue; } ph.forEach(p => { if (!x.includes(p)) add('2D', 0, `⑨ ${l}: ${k} has no ${p}`); }); if (k === 'ls.b_win.ng1' && /\{j\}/.test(x)) add('2D', 0, `追58 ${l}: ${k} counts {j}`); }
   }
@@ -238,6 +317,15 @@ function selftest() {
     ['s_count: the hint lights the answer only (⑦)', null, /^[④⑦]/, { hint: (E2, id, s) => id === 's_count' ? [E2.mFrom(st(base, id).problems.find(P => P.s.b === s.b).best)] : FACTS.hint(E2, id, s) }],
     ['s_stop: a warm-up answer not the winning set (①)', d => { const r = st(d, 's_stop').ramp.find(x => x.k === 'try'); r.ok = r.ok.slice(0, 1); }, /^① warm-up/],
     ['a language without s_stop.ng.goSN (⑨)', null, /^⑨/, { i18n: (() => { const I = {}; LANGS.forEach(l => { I[l] = {}; }); for (const f of ['i18n-kn.js', 'i18n-kn-more.js']) new Function('window', 'I18N', fs.readFileSync(path.join(ROOT, 'konane', f), 'utf8'))({ I18N: I }, I); delete I.fr['ls.s_stop.ng.goSN']; return I; })() }],
+    ['s_go: the answer changed to a stop of its line (①)', d => { const P = st(d, 's_go').problems[0]; const p = E.Pos.from(P.s); const w = p.moves().find(m => m !== P.best && E.mFrom(m) === E.mFrom(P.best)); P.best = w; P.ok = [w]; }, /^①/],
+    ['s_keep: order reversed (⑥)', d => { st(d, 's_keep').problems.reverse(); }, /^⑥/],
+    ['s_read: a duplicate of an s_go problem, mirrored (⑤)', d => { const b = st(d, 's_go').problems[2].s.b; let o = ''; for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) o += b[(7 - r) * 8 + c]; st(d, 's_read').problems[1].s.b = o; }, /^⑤/],
+    ['s_go: the stone left standing said wrong (⑧)', null, /^⑧/, { fact: (E2, id, s, m) => { const f = FACTS.fact(E2, id, s, m); return f.k === 'short' ? Object.assign({}, f, { spring: !f.spring }) : f; } }],
+    ['s_keep: your jumps after a cut counted wrong (⑧)', null, /^⑧/, { fact: (E2, id, s, m) => { const f = FACTS.fact(E2, id, s, m); return f.k === 'cut' ? Object.assign({}, f, { o: f.o + 1 }) : f; } }],
+    ['s_read: a fewer move told as lose (⑧)', null, /^⑧/, { fact: (E2, id, s, m) => { const f = FACTS.fact(E2, id, s, m); return f.k === 'fewer' ? Object.assign({}, f, { k: 'lose' }) : f; } }],
+    ['s_read: the gold reply is not a refutation (⑧)', null, /^⑧/, { fact: (E2, id, s, m) => { const f = FACTS.fact(E2, id, s, m); if (id !== 's_read' || f.k === 'read') return f; const q = E2.Pos.from(s).play(m), o = q.moves().find(r => FACTS.wins(q.clone().play(r))); return o != null ? Object.assign({}, f, { r: o }) : f; } }],
+    ['s_go: a warm-up answer that is no move (追75)', d => { st(d, 's_go').ramp.find(x => x.k === 'try').ok = ['g6-e6-c6', 'b5-b7']; }, /^(追75|① warm-up)/],
+    ['a language without ls.st.tailN (⑨)', null, /^⑨/, { i18n: (() => { const I = {}; LANGS.forEach(l => { I[l] = {}; }); for (const f of ['i18n-kn.js', 'i18n-kn-more.js']) new Function('window', 'I18N', fs.readFileSync(path.join(ROOT, 'konane', f), 'utf8'))({ I18N: I }, I); delete I.ko['ls.st.tailN']; return I; })() }],
     ['「おしい」 for 0 points (追66)', null, /^追66/, { ja: Object.assign({}, LSK.JA, { soft: ['おしい！'] }) }],
     ['the 2D words without the facts (⑨)', null, /^⑨/, { app: 'function okAnswer() {}' }],
     ['a language without ng1 (⑨)', null, /^⑨/, { i18n: (() => { const I = {}; LANGS.forEach(l => { I[l] = {}; }); for (const f of ['i18n-kn.js', 'i18n-kn-more.js']) new Function('window', 'I18N', fs.readFileSync(path.join(ROOT, 'konane', f), 'utf8'))({ I18N: I }, I); delete I.de['ls.b_win.ng1']; return I; })() }],

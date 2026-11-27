@@ -92,7 +92,7 @@
     // (2026-11-25) the Art Institute of Chicago: Meade brothers daguerreotype, two men at chess
     { id: 'meade', w: 1686, h: 1403, aic: 250084, no: '2019.462', bg: '#3a2a24', spots: [[.5, .66], [.4, .43], [.64, .38], [.66, .57], [.52, .77], [.1, .5]], links: [{ g: 'chess' }] },
     // (2026-11-25) the Art Institute of Chicago: hanging scroll attributed to Dai Jin, Daoist immortals playing weiqi
-    { id: 'weiqi', w: 1189, h: 2048, aic: 150406, no: '1998.148', bg: '#5d5640', spots: [[.47, .79], [.37, .73], [.58, .76], [.25, .8], [.475, .72], [.955, .34]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
+    { id: 'weiqidai', w: 1189, h: 2048, aic: 150406, no: '1998.148', bg: '#5d5640', spots: [[.47, .79], [.37, .73], [.58, .76], [.25, .8], [.475, .72], [.955, .34]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
     // (2026-11-25) the Rijksmuseum: 'Die Reise um die Welt' — a round dice race game, spaces 1–41, rules in four languages
     { id: 'reise', w: 1611, h: 2048, rijks: 'RP-P-OB-200.986', bg: '#e7e3d8', spots: [[.5, .42], [.5, .71], [.836, .59], [.727, .25], [.25, .28], [.5, .87]], links: [{ ex: 'goose' }, { room: 'chance' }] },
     // (2026-11-25) the Rijksmuseum: Jan van Huchtenburg, prisoners casting dice on a drum for their lives
@@ -107,6 +107,92 @@
     { id: 'ostade', w: 1930, h: 2048, rijks: 'RP-P-OB-12.729', bg: '#d8d4c8', spots: [[.31, .66], [.15, .53], [.37, .53], [.34, .41], [.7, .56], [.6, .38]], links: [{ g: 'backgammon' }] },
     // (2026-11-25) the Rijksmuseum: follower of Mathieu Le Nain, dice players at a round table
     { id: 'lenain', w: 2048, h: 1576, rijks: 'SK-A-3099', bg: '#4a4237', spots: [[.48, .49], [.27, .3], [.63, .24], [.51, .2], [.075, .25], [.86, .68]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Antwerp World's Fair 1894, Tunisian section: card game outside an Arab café
+    { id: 'tunisie', w: 2048, h: 1538, rijks: 'RP-F-2001-7-1494-48', bg: '#e6dfcf', spots: [[.483, .6], [.264, .541], [.702, .6], [.475, .67], [.63, .225], [.5, .87]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Rijksmuseum: caids near Laghouat, Algeria, laying out tiles (probably dominoes)
+    { id: 'laghouat', w: 2048, h: 1592, rijks: 'RP-F-F01088-AN', bg: '#cdbb98', spots: [[.506, .624], [.53, .78], [.38, .81], [.34, .2], [.8, .15], [.65, .75]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Cleveland Museum of Art: detail of 'Palace Ladies' (copy after Qiu Ying): court ladies at a weiqi board
+    { id: 'hangong', w: 1904, h: 1706, cma: '1954.369', bg: '#6b5a33', spots: [[.61, .35], [.555, .28], [.7, .27], [.205, .33], [.645, .49], [.235, .73]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
+    // (2026-11-25) the Cleveland Museum of Art: Winslow Homer, 'Backgammon', wood engraving
+    { id: 'homerbg', w: 2048, h: 1609, cma: '1942.1484', bg: '#e4e1d8', spots: [[.6, .49], [.4, .26], [.67, .26], [.1, .47], [.3, .72], [.45, .955]], links: [{ g: 'backgammon' }] },
+    // (2026-11-25) the Rijksmuseum: coloured stereograph 'The Chess Players', man and woman at chess
+    { id: 'chessst', w: 2048, h: 1033, rijks: 'RP-F-F10541', bg: '#d8cdb5', spots: [[.37, .71], [.395, .6], [.314, .31], [.181, .25], [.366, .12], [.75, .5]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Art Institute of Chicago: Posada, 'Corrida de Toros' (1898) — a spiral dice race game of the bullfight
+    { id: 'corrida', w: 1544, h: 2048, aic: 52044, no: '1944.943', bg: '#d9d3bf', spots: [[.5, .07], [.47, .42], [.46, .82], [.84, .11], [.12, .81], [.3, .95]], links: [{ ex: 'goose' }, { room: 'chance' }] },
+    // (2026-11-25) the Art Institute of Chicago: American ambrotype (1865), three men playing cards
+    { id: 'ambrocards', w: 1651, h: 2048, aic: 250224, no: '2019.603', bg: '#3b2c24', spots: [[.47, .5], [.275, .39], [.51, .38], [.72, .4], [.135, .56], [.03, .5]], links: [{ g: 'poker' }, { g: 'solitaire' }] },
+    // (2026-11-25) the Cleveland Museum of Art: Winslow Homer, 'Paul Morphy, The Chess Champion', wood engraving, 1859
+    { id: 'morphy', w: 1504, h: 2048, cma: '1942.1472', bg: '#e2ded4', spots: [[.114, .538], [.21, .597], [.47, .2], [.52, .33], [.6, .69], [.5, .975]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Cleveland Museum of Art: Johann Zoffany, the Dutton family at cards, Sherborne Park
+    { id: 'dutton', w: 2048, h: 1631, cma: '2023.122', bg: '#3e5a5a', spots: [[.35, .66], [.287, .48], [.17, .72], [.553, .48], [.68, .5], [.9, .58]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Rijksmuseum: 'The X.mas Academics: A Combination Game at Whist' (1773), satire on Cambridge academics
+    { id: 'whist', w: 2048, h: 1390, rijks: 'RP-P-2022-211-63', bg: '#ddd9cf', spots: [[.53, .6], [.46, .42], [.69, .3], [.23, .36], [.52, .22], [.85, .73]], links: [{ g: 'solitaire' }] },
+    // (2026-11-25) the Rijksmuseum: Paul Hey, three old men at chess in a café
+    { id: 'hey', w: 2048, h: 1388, rijks: 'RP-P-OB-16.717', bg: '#e2dccc', spots: [[.45, .74], [.28, .4], [.58, .38], [.75, .3], [.63, .73], [.26, .77]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Rijksmuseum: coloured stereograph 'The artful card, or, one too many for granny. Hearts are trumps!'
+    { id: 'artful', w: 2048, h: 1000, rijks: 'RP-F-F10570', bg: '#d9cfb6', spots: [[.212, .565], [.171, .44], [.396, .498], [.328, .536], [.289, .648], [.396, .297]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Art Institute of Chicago: Cézanne, watercolour study for The Card Players
+    { id: 'cezcards', w: 1686, h: 1271, aic: 133136, no: '475.1983', bg: '#e8d2c6', spots: [[.38, .27], [.62, .5], [.58, .68], [.09, .5], [.25, .6], [.72, .6]], links: [{ g: 'poker' }, { g: 'solitaire' }] },
+    // (2026-11-25) the Art Institute of Chicago: Vuillard, 'The Game of Checkers' (1899), colour lithograph
+    { id: 'vuillardck', w: 1663, h: 2048, aic: 22735, no: '1936.199', bg: '#b8925a', spots: [[.42, .79], [.3, .56], [.6, .42], [.45, .22], [.15, .82], [.29, .31]], links: [{ g: 'checkers' }] },
+    // (2026-11-25) the Art Institute of Chicago: Cruikshank after Marryat, 'Game of Chess' (1814)
+    { id: 'cruikchess', w: 1686, h: 1198, aic: 90197, no: '1928.1507d', bg: '#c9c79a', spots: [[.48, .55], [.46, .37], [.21, .25], [.66, .27], [.47, .86], [.5, .95]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Art Institute of Chicago: American photograph (c. 1898), woman and child playing dominoes
+    { id: 'domino98', w: 1686, h: 1350, aic: 63559, no: '1981.651', bg: '#5e5440', spots: [[.47, .51], [.33, .45], [.62, .38], [.49, .39], [.85, .3], [.73, .88]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Albert Glaser and friends playing cards on a boat, Langkat, Sumatra
+    { id: 'langkat', w: 2048, h: 1578, rijks: 'RP-F-2003-107', bg: '#dcd6c6', spots: [[.513, .717], [.388, .452], [.217, .452], [.757, .452], [.708, .657], [.54, .41]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Rijksmuseum: Indian miniature, two women playing chaturanga
+    { id: 'chatur', w: 1400, h: 2048, rijks: 'RP-T-1993-306', bg: '#7a2a22', spots: [[.56, .73], [.39, .59], [.705, .59], [.25, .48], [.2, .38], [.05, .54]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Rijksmuseum: Indian miniature, four women at chaupar/pachisi on a festival night
+    { id: 'shabbarat', w: 1554, h: 2048, rijks: 'RP-T-1993-195', bg: '#7d7d80', spots: [[.462, .625], [.545, .666], [.53, .533], [.86, .54], [.595, .44], [.73, .25]], links: [{ g: 'ludo' }] },
+    // (2026-11-25) the Rijksmuseum: Chinese famille-rose vase (1724), women playing go, seal 'Tang Jintang'
+    { id: 'govase', w: 1480, h: 2048, rijks: 'AK-NM-6352-B', bg: '#d6d6d4', spots: [[.467, .721], [.353, .6], [.587, .658], [.653, .552], [.38, .48], [.36, .726]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
+    // (2026-11-25) the Rijksmuseum: surimono (1822): Xuanzong and Yang Guifei playing ban-sugoroku
+    { id: 'yokihi', w: 1835, h: 2048, rijks: 'RP-P-1991-545', bg: '#e5e1d6', spots: [[.544, .55], [.265, .375], [.6, .25], [.33, .15], [.865, .31], [.85, .85]], links: [{ g: 'backgammon' }, { ex: 'sugoroku' }] },
+    // (2026-11-25) the Rijksmuseum: Disdéri & Cie carte de visite, men in old-fashioned costume playing cards
+    { id: 'disderi', w: 1573, h: 1071, rijks: 'RP-F-F01031-12-2', bg: '#e6e0d2', spots: [[.45, .47], [.45, .28], [.32, .33], [.6, .34], [.578, .718], [.9, .5]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Rijksmuseum: Oortman after Stoopendaal, a 74-space spiral goose game
+    { id: 'gans', w: 2048, h: 1785, rijks: 'RP-P-1906-150', bg: '#e4e0d4', spots: [[.6, .45], [.075, .91], [.317, .915], [.494, .68], [.3, .57], [.7, .33]], links: [{ ex: 'goose' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Claudine Stella after Jacques Stella, putti playing merelle (nine men's morris) and flying a kite
+    { id: 'merelle', w: 2048, h: 1682, rijks: 'RP-P-2023-61-18', bg: '#ddd8cb', spots: [[.12, .73], [.17, .09], [.77, .45], [.83, .78], [.5, .42], [.5, .865]], links: [{ g: 'morris' }] },
+    // (2026-11-25) the Rijksmuseum: stereograph, card party at an outdoor table (Feldbrugge & Co., Groningen stamp)
+    { id: 'feldcards', w: 2048, h: 1015, rijks: 'RP-F-F10030', bg: '#d8ccb0', spots: [[.199, .33], [.258, .491], [.309, .512], [.428, .299], [.392, .237], [.21, .7]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Rijksmuseum: 'De Tempel van 't Geluk' (1816), a spiral dice race game, spaces 1–74
+    { id: 'tempel', w: 2048, h: 1816, rijks: 'KOG-ZG-1-35-14', bg: '#cfc6b2', spots: [[.59, .47], [.08, .86], [.36, .92], [.22, .11], [.65, .9], [.71, .6]], links: [{ ex: 'goose' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: miniature verkeer board (1690–1710), probably from Petronella Oortman's dolls' house
+    { id: 'verkeer', w: 2048, h: 1478, rijks: 'BK-NM-1010-276', bg: '#cfcfcd', spots: [[.32, .49], [.6, .4], [.36, .57], [.27, .35], [.5, .5], [.18, .4]], links: [{ g: 'backgammon' }, { g: 'chess' }, { g: 'morris' }] },
+    // (2026-11-25) the Rijksmuseum: silver miniature draughts/morris board by Frederik van Strant II (1739)
+    { id: 'silverbd', w: 2048, h: 1532, rijks: 'BK-15111', bg: '#e2e2e0', spots: [[.36, .71], [.42, .25], [.88, .63], [.45, .5], [.47, .44], [.12, .37]], links: [{ g: 'checkers' }, { g: 'morris' }] },
+    // (2026-11-25) the Rijksmuseum: German boxwood chess set (1550) with mounted kings and queens
+    { id: 'schaak1550', w: 2048, h: 595, rijks: 'BK-NM-7402', bg: '#d9d8d6', spots: [[.45, .42], [.56, .5], [.92, .38], [.08, .4], [.33, .75], [.68, .8]], links: [{ g: 'chess' }, { ex: 'lewis' }] },
+    // (2026-11-25) the Rijksmuseum: family album photo, a backgammon box board and dice cups in a living room
+    { id: 'kraaij', w: 2048, h: 1492, rijks: 'RP-F-F01010-C', bg: '#4a3a2c', spots: [[.485, .727], [.412, .652], [.603, .708], [.453, .576], [.486, .113], [.869, .446]], links: [{ g: 'backgammon' }] },
+    // (2026-11-25) the Rijksmuseum: Ferdinand De Braekeleer, an old couple playing draughts
+    { id: 'braekel', w: 1511, h: 2048, rijks: 'RP-P-1909-2550', bg: '#d9cfb8', spots: [[.4, .63], [.41, .46], [.69, .48], [.25, .8], [.33, .93], [.3, .2]], links: [{ g: 'checkers' }] },
+    // (2026-11-25) the Rijksmuseum: after Bunbury, 'Billiards' (1780)
+    { id: 'billiard', w: 2048, h: 1430, rijks: 'RP-P-2022-211-36', bg: '#e3dccb', spots: [[.3, .53], [.47, .45], [.44, .31], [.65, .39], [.53, .27], [.75, .33]], links: [{ g: 'carrom' }] },
+    // (2026-11-25) the Rijksmuseum: detail of Xu Yanghong's 'One Hundred Children' handscroll: children at a go board
+    { id: 'baizi', w: 1580, h: 1119, rijks: 'AK-RAK-2020-3', bg: '#d8d2bc', spots: [[.56, .78], [.42, .8], [.69, .7], [.48, .32], [.88, .55], [.09, .5]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
+    // (2026-11-25) the Rijksmuseum: Pieter Schenk II chinoiserie etching: two Chinese women playing cards
+    { id: 'schenkcards', w: 2048, h: 1279, rijks: 'RP-P-2013-9-32', bg: '#ece6d6', spots: [[.384, .528], [.233, .366], [.463, .366], [.824, .528], [.095, .735], [.564, .32]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Rijksmuseum: Chinese famille-rose saucer (1725–35), figures playing go
+    { id: 'gosaucer', w: 2048, h: 2003, rijks: 'AK-NM-13689', bg: '#d9d9d6', spots: [[.543, .606], [.4, .54], [.657, .54], [.53, .32], [.386, .22], [.75, .47]], links: [{ g: 'go' }] },
+    // (2026-11-25) the Rijksmuseum: Cheetham family album, 'a little card-party' in Russia
+    { id: 'cheetham', w: 2048, h: 1615, rijks: 'RP-F-F01050-BH', bg: '#cdb48c', spots: [[.273, .519], [.493, .51], [.652, .52], [.584, .46], [.455, .73], [.5, .96]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Rijksmuseum: coloured stereograph 'The Problem', a chess game in 18th-century costume
+    { id: 'problem', w: 2048, h: 961, rijks: 'RP-F-F10674', bg: '#d6cbb0', spots: [[.24, .532], [.226, .356], [.356, .372], [.213, .795], [.199, .152], [.75, .5]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Rijksmuseum: ten cards from a Bolognese tarot pack (1660–1718), suit of coins VI–X
+    { id: 'tarocco', w: 2048, h: 1403, rijks: 'KOG-ZG-1-34-29', bg: '#efe7d6', spots: [[.16, .25], [.33, .25], [.49, .25], [.66, .25], [.16, .69], [.83, .69]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Rijksmuseum: field of 48 Delft tiles with children's games (1680–1730)
+    { id: 'kindtegel', w: 1565, h: 2048, rijks: 'BK-1955-328-A', bg: '#dfe3e2', spots: [[.25, .07], [.415, .44], [.08, .19], [.04, .02], [.5, .5], [.92, .94]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: miniature walnut board for draughts and mill (1740–60)
+    { id: 'dammolen', w: 2048, h: 1971, rijks: 'BK-NM-5783-21', bg: '#cdcdcb', spots: [[.45, .42], [.52, .5], [.27, .45], [.3, .57], [.45, .68], [.6, .33]], links: [{ g: 'checkers' }, { g: 'morris' }] },
+    // (2026-11-25) the Rijksmuseum: Nuremberg boxwood draughtsman with Charlemagne's portrait (1525–75)
+    { id: 'karelpiece', w: 2048, h: 2048, rijks: 'BK-NM-3213', bg: '#c9c6c1', spots: [[.5, .45], [.5, .65], [.7, .22], [.25, .3], [.45, .19], [.5, .86]], links: [{ g: 'checkers' }, { g: 'backgammon' }] },
+    // (2026-11-25) the Rijksmuseum: Pieter van den Berge, 'Le jeu hollandois, la belle vie!' — devils winning a card player's money
+    { id: 'vdberge', w: 1307, h: 2048, rijks: 'RP-P-1890-A-15893', bg: '#e1d9c6', spots: [[.36, .36], [.57, .56], [.12, .36], [.66, .68], [.5, .18], [.5, .89]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Giuseppe Maria Crespi, children playing dice in the street
+    { id: 'crespi', w: 1346, h: 2048, rijks: 'RP-P-1959-652', bg: '#e6e3da', spots: [[.66, .79], [.43, .6], [.58, .5], [.78, .55], [.7, .42], [.5, .89]], links: [{ room: 'chance' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
