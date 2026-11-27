@@ -78,12 +78,12 @@
 
 | 担当 | 範囲（めやす） | ブランチ | 実行（UTC） |
 |---|---|---|---|
-| C | konane | `lesson-new-c-` | 毎時31分 |
-| D | janggi の NG 直し → ugolki s_count | `lesson-new-d-` | 毎時1分 |
+| C | konane（2026-11-27 済み）→ **latrunculi のレッスン7本35問**（2026-11-27 20:30 ユーザー指示で追加） | `lesson-new-c-` | 毎時31分 |
+| D | janggi の NG 直し → ugolki s_count（済み）→ **latrunculi のパズル250問** | `lesson-new-d-` | 毎時1分 |
 | E | fanorona のレッスン12本 | `lesson-new-e-` | 毎時11分 |
 | F | agon（パズル → レッスン） | `lesson-new-f-` | 毎時41分 |
 
-latrunculi は最初に手が空いた担当が取る（取る前に「作業中」の印を見て重ねない）。1ゲームを2人で分けない（同じゲームのデータで衝突するため）。担当A（16分）・B（46分）と時刻を重ねない。
+1ゲームを2人で分けない（同じゲームのデータで衝突するため）。例外：latrunculi はパズル（担当D）とレッスン（担当C）で分ける（2026-11-27 ユーザー指示「C の担当が終わったので他に作業を振って」）。C は lessons.json・atlas/ls-latrunculi.js・tools/lesson-verify-latrunculi-ls.js と2D のレッスン部分だけを触り、D の puzzles.json・latrunculi/pzwhy.js・atlas/games/latrunculi-pz.js・tools/lesson-verify-latrunculi.js には手を出さない。3D卓のアダプタ atlas/games/latrunculi.js のパズル／レッスンモード（ctx.pz・api.pz）は D が先に作る。D のその PR がマージされる前は、C は2D のレッスンの検証・作り直しと機械チェック（-ls.js）まで進め、3D に出すのは D のマージ後にする（アダプタを2人で別々に作らない）。担当A（16分）・B（46分）と時刻を重ねない。
 
 ## 7. 定期実行で回す場合
 
