@@ -1,0 +1,254 @@
+{
+ "note": "agon s_win2（2手で勝つ）の作り直し案（2026-11-27 担当D）。③合法手10以上と⑥d の単調増加を両立できないため未採用（lesson-quality.md のログ 2026-11-27 23:55 担当D）。ユーザーが③を「6以上」にゆるめてよいと決めたら、この5問・説明の盤・14言語の文・キンダイスンの文で3D対応できる。",
+ "problems": [
+  {
+   "s": {
+    "b": "........................b.......bw..wb......wWwbB......ww......b...........b...............",
+    "side": 1,
+    "n": 40
+   },
+   "ok": [
+    3161
+   ],
+   "best": 3161
+  },
+  {
+   "s": {
+    "b": "..........B......b........wb.....bw.........wW.......b.www........b....b...................",
+    "side": 1,
+    "n": 40
+   },
+   "ok": [
+    3246
+   ],
+   "best": 3246
+  },
+  {
+   "s": {
+    "b": "...........B............b.b......bw.wb.....bwWw.........w.......wb.........................",
+    "side": 1,
+    "n": 40
+   },
+   "ok": [
+    3256
+   ],
+   "best": 3256
+  },
+  {
+   "s": {
+    "b": "b..............b........wb.........wb.......wWw......bw.w........b.............B...........",
+    "side": 1,
+    "n": 40
+   },
+   "ok": [
+    3152
+   ],
+   "best": 3152
+  },
+  {
+   "s": {
+    "b": "..............b..................bww.b.......W.wb.....www.bB.b.............................",
+    "side": 1,
+    "n": 40
+   },
+   "ok": [
+    4279
+   ],
+   "best": 4279
+  }
+ ],
+ "ramp": [
+  {
+   "k": "explain",
+   "s": {
+    "b": "................b........b.......bww.B......wWw..........wb.....w.b........b...............",
+    "side": 1,
+    "n": 40
+   },
+   "seq": null,
+   "marks": [
+    [
+     57,
+     "ok"
+    ],
+    [
+     56,
+     "ok"
+    ],
+    [
+     58,
+     "ng"
+    ]
+   ],
+   "t": {
+    "ja": "2手先まで読む",
+    "en": "Looking two moves ahead",
+    "zh": "算到两步之后",
+    "ko": "두 수 앞까지 읽기",
+    "es": "Mirar dos jugadas adelante",
+    "fr": "Voir deux coups à l’avance",
+    "pt": "Olhar dois lances à frente",
+    "de": "Zwei Züge vorausdenken",
+    "hi": "दो चालें आगे देखना",
+    "ar": "النظر نقلتين إلى الأمام",
+    "ru": "Расчёт на два хода вперёд",
+    "zh-TW": "往後看兩步",
+    "id": "Melihat dua langkah ke depan",
+    "tr": "İki hamle ileriyi görmek"
+   },
+   "body": {
+    "ja": "<p>勝ちまで2手：王座のまわりの空きマス（緑）が2つ。外のガード2枚で1つずつ埋めます。ただし間に相手も1手指します。</p><p>赤のガードは、相手の次の手で一直線にはさまれる位置。後回しにすると捕まって、置き直しに手番を使ってしまいます。<b>ねらわれているガードから先に</b>入れましょう。</p>",
+    "en": "<p>Two moves to win: two empty cells round the throne (green), and two guards outside to fill one each. But your opponent moves in between.</p><p>The red guard stands where the enemy's next move can sandwich it. Leave it for later and it is captured, and your turn goes to relocating it. <b>Bring the threatened guard in first.</b></p>",
+    "zh": "<p>两步取胜：王座周围有两个空格（绿色），外面的两枚卫兵各填一个。但中间对方也会走一步。</p><p>红色的卫兵处在对方下一步就能夹住的位置。拖到后面就会被吃掉，回合要用来重新放置。<b>先让被盯上的卫兵进去。</b></p>",
+    "ko": "<p>승리까지 두 수: 왕좌 둘레의 빈칸(초록)이 2개, 바깥의 호위병 2개로 하나씩 채웁니다. 하지만 그 사이에 상대도 한 수를 둡니다.</p><p>빨간 호위병은 상대의 다음 수에 일직선으로 끼이는 자리. 나중으로 미루면 잡혀서 차례를 재배치에 쓰게 됩니다. <b>노려지는 호위병부터 먼저</b> 넣으세요.</p>",
+    "es": "<p>Dos jugadas para ganar: dos casillas vacías junto al trono (verdes) y dos guardias fuera para llenar una cada uno. Pero el rival juega entre medias.</p><p>El guardia rojo está donde la siguiente jugada enemiga puede encerrarlo. Si lo dejas para después, es capturado y tu turno se va en recolocarlo. <b>Mete primero al guardia amenazado.</b></p>",
+    "fr": "<p>Deux coups pour gagner : deux cases vides autour du trône (vertes), et deux gardes dehors pour en remplir une chacun. Mais l’adversaire joue entre-temps.</p><p>Le garde rouge est là où le coup suivant de l’ennemi peut le prendre en tenaille. Laissé pour plus tard, il est capturé et votre tour sert à le replacer. <b>Faites entrer d’abord le garde menacé.</b></p>",
+    "pt": "<p>Dois lances para vencer: duas casas vazias em volta do trono (verdes) e dois guardas fora para preencher uma cada. Mas o adversário joga no meio.</p><p>O guarda vermelho está onde o próximo lance inimigo pode cercá-lo. Deixado para depois, ele é capturado e seu turno vai para recolocá-lo. <b>Coloque primeiro o guarda ameaçado.</b></p>",
+    "de": "<p>Zwei Züge bis zum Sieg: zwei leere Felder um den Thron (grün) und zwei Wachen draußen, die je eines füllen. Aber dazwischen zieht der Gegner.</p><p>Die rote Wache steht dort, wo der nächste gegnerische Zug sie einschließen kann. Schiebst du sie auf, wird sie geschlagen und dein Zug geht für das Umsetzen drauf. <b>Bring zuerst die bedrohte Wache hinein.</b></p>",
+    "hi": "<p>जीत के लिए दो चालें: सिंहासन के चारों ओर दो खाली खाने (हरे), और बाहर के दो रक्षक एक-एक भरेंगे। पर बीच में विरोधी भी चलता है।</p><p>लाल रक्षक ऐसी जगह है जहाँ विरोधी की अगली चाल उसे फँसा सकती है। बाद के लिए छोड़ें तो वह पकड़ा जाएगा और आपकी बारी उसे फिर से रखने में जाएगी। <b>पहले ख़तरे वाले रक्षक को अंदर लाएँ।</b></p>",
+    "ar": "<p>نقلتان للفوز: خانتان فارغتان حول العرش (خضراوان)، وحارسان في الخارج يملأ كلٌّ منهما واحدة. لكن الخصم يلعب بينهما.</p><p>الحارس الأحمر في مكان يمكن لنقلة الخصم التالية محاصرته. إن أجّلته يُؤسر وتذهب نوبتك في إعادة وضعه. <b>أدخِل أولًا الحارس المهدَّد.</b></p>",
+    "ru": "<p>До победы два хода: у трона две пустые клетки (зелёные), и два стража снаружи займут по одной. Но между ходами ходит соперник.</p><p>Красный страж стоит там, где следующий ход соперника может его зажать. Отложите его — и его возьмут, а ваш ход уйдёт на перестановку. <b>Сначала заведите стража под угрозой.</b></p>",
+    "zh-TW": "<p>兩步取勝：王座周圍有兩個空格（綠色），外面的兩枚衛兵各填一個。但中間對手也會走一步。</p><p>紅色的衛兵處在對手下一步就能夾住的位置。拖到後面就會被吃掉，回合要用來重新放置。<b>先讓被盯上的衛兵進去。</b></p>",
+    "id": "<p>Dua langkah untuk menang: dua petak kosong di sekeliling takhta (hijau), dan dua pengawal di luar mengisi satu-satu. Tetapi lawan bergerak di antaranya.</p><p>Pengawal merah berada di tempat yang bisa dijepit oleh langkah lawan berikutnya. Kalau ditunda, ia tertangkap dan giliranmu habis untuk menempatkannya kembali. <b>Masukkan dulu pengawal yang terancam.</b></p>",
+    "tr": "<p>Kazanmaya iki hamle: tahtın çevresinde iki boş kare (yeşil), dışarıdaki iki muhafız birer tane doldurur. Ama arada rakip de oynar.</p><p>Kırmızı muhafız, rakibin sonraki hamlesiyle sıkıştırılabileceği yerde. Sonraya bırakırsan alınır ve sıran onu yeniden yerleştirmeye gider. <b>Önce tehdit altındaki muhafızı içeri sok.</b></p>"
+   }
+  }
+ ],
+ "texts2D": {
+  "ja": {
+   "intro": "あと2手で勝てる形。王座のまわりの空きマスは2つ、外にはそれを埋めるガードが2枚。ただし間に相手も1手指します。外に残ったガードが相手の次の手ではさまれると、捕まって次の手番を置き直しに使い、間に合いません。ねらわれているガードから先に入れましょう。",
+   "goal": "相手がどう指しても、次の手で勝てる1手目を指そう。",
+   "hint": "光っているのは、空きマスへ入れるきみのガードと、きみのガードをはさめる相手の駒。どのガードがねらわれているかな？",
+   "why": "正解！ {m} でねらわれていたガードを先に入れました。相手がどう指しても、残りのガードで最後の空きマスを埋めて勝てます。",
+   "ng": "{x} で空きマスは1つになりますが、相手の {r} で外に残ったガードがはさまれて捕まり、次の手番は置き直しになって間に合いません。正解は {m}。",
+   "ngSlow": "{x} のあとも王座のまわりの空きマスは2つのまま。次の1手では埋めきれません。正解は {m}。",
+   "body": "<p>勝ちまで2手：王座のまわりの空きマス（緑）が2つ。外のガード2枚で1つずつ埋めます。ただし間に相手も1手指します。</p><p>赤のガードは、相手の次の手で一直線にはさまれる位置。後回しにすると捕まって、置き直しに手番を使ってしまいます。<b>ねらわれているガードから先に</b>入れましょう。</p>"
+  },
+  "en": {
+   "intro": "Two moves to win: two empty cells round the throne, and two guards of yours just outside to fill them. But your opponent moves in between. If a guard left outside can be sandwiched by the enemy's next move, it is captured, your next turn goes to relocating it and you are too late. Bring the threatened guard in first.",
+   "goal": "Play the first move after which you win next move, whatever the reply.",
+   "hint": "Glowing: your guards that can step into an empty cell, and the enemy pieces that can sandwich one of them. Which guard is under threat?",
+   "why": "Correct! {m} brings the threatened guard in first. Whatever the enemy plays, your other guard fills the last empty cell and wins.",
+   "ng": "{x} leaves one empty cell, but {r} sandwiches the guard left outside: it is captured, your next turn goes to relocating it and you are too late. The answer was {m}.",
+   "ngSlow": "After {x} there are still two empty cells round the throne — one move cannot fill both. The answer was {m}.",
+   "body": "<p>Two moves to win: two empty cells round the throne (green), and two guards outside to fill one each. But your opponent moves in between.</p><p>The red guard stands where the enemy's next move can sandwich it. Leave it for later and it is captured, and your turn goes to relocating it. <b>Bring the threatened guard in first.</b></p>"
+  },
+  "zh": {
+   "intro": "再走两步就能赢：王座周围有两个空格，外面有两枚卫兵可以填进去。但中间对方也会走一步。如果留在外面的卫兵会被对方下一步夹住，它就会被吃掉，你的下一回合要用来重新放置，就来不及了。先让被盯上的卫兵进去。",
+   "goal": "走出一步，使对方无论怎么走，你下一步都能取胜。",
+   "hint": "发光的是能进入空格的你的卫兵，以及能夹住你卫兵的对方棋子。哪枚卫兵被盯上了？",
+   "why": "正确！{m} 先让被盯上的卫兵进去。无论对方怎么走，你的另一枚卫兵都能填上最后的空格取胜。",
+   "ng": "{x} 之后只剩一个空格，但对方的 {r} 会夹住留在外面的卫兵：它被吃掉，你的下一回合要用来重新放置，来不及了。正确是 {m}。",
+   "ngSlow": "{x} 之后王座周围仍有两个空格，一步填不满。正确是 {m}。",
+   "body": "<p>两步取胜：王座周围有两个空格（绿色），外面的两枚卫兵各填一个。但中间对方也会走一步。</p><p>红色的卫兵处在对方下一步就能夹住的位置。拖到后面就会被吃掉，回合要用来重新放置。<b>先让被盯上的卫兵进去。</b></p>"
+  },
+  "zh-TW": {
+   "intro": "再走兩步就能贏：王座周圍有兩個空格，外面有兩枚衛兵可以填進去。但中間對手也會走一步。如果留在外面的衛兵會被對手下一步夾住，它就會被吃掉，你的下一回合要用來重新放置，就來不及了。先讓被盯上的衛兵進去。",
+   "goal": "走出一步，使對手不論怎麼走，你下一步都能獲勝。",
+   "hint": "發光的是能進入空格的你的衛兵，以及能夾住你衛兵的對手棋子。哪枚衛兵被盯上了？",
+   "why": "正確！{m} 先讓被盯上的衛兵進去。不論對手怎麼走，你的另一枚衛兵都能填上最後的空格獲勝。",
+   "ng": "{x} 之後只剩一個空格，但對手的 {r} 會夾住留在外面的衛兵：它被吃掉，你的下一回合要用來重新放置，來不及了。正確是 {m}。",
+   "ngSlow": "{x} 之後王座周圍仍有兩個空格，一步填不滿。正確是 {m}。",
+   "body": "<p>兩步取勝：王座周圍有兩個空格（綠色），外面的兩枚衛兵各填一個。但中間對手也會走一步。</p><p>紅色的衛兵處在對手下一步就能夾住的位置。拖到後面就會被吃掉，回合要用來重新放置。<b>先讓被盯上的衛兵進去。</b></p>"
+  },
+  "ko": {
+   "intro": "두 수면 이기는 형태: 왕좌 둘레에 빈칸이 2개, 바깥에 그곳을 채울 호위병이 2개. 하지만 그 사이에 상대도 한 수를 둡니다. 바깥에 남은 호위병이 상대의 다음 수에 끼이면 잡혀서, 다음 차례를 재배치에 쓰게 되어 늦습니다. 노려지는 호위병부터 먼저 넣으세요.",
+   "goal": "상대가 어떻게 두어도 다음 수에 이기는 첫 수를 두세요.",
+   "hint": "빛나는 것은 빈칸에 들어갈 수 있는 내 호위병과, 내 호위병을 끼울 수 있는 상대 말. 어느 호위병이 노려지고 있을까?",
+   "why": "정답! {m}(으)로 노려지던 호위병을 먼저 넣었습니다. 상대가 어떻게 두어도 남은 호위병으로 마지막 빈칸을 채워 이깁니다.",
+   "ng": "{x}(으)로 빈칸은 1개가 되지만, 상대의 {r}에 바깥에 남은 호위병이 끼여 잡히고, 다음 차례는 재배치가 되어 늦습니다. 정답은 {m}.",
+   "ngSlow": "{x} 뒤에도 왕좌 둘레의 빈칸은 2개 그대로. 한 수로는 다 채울 수 없습니다. 정답은 {m}.",
+   "body": "<p>승리까지 두 수: 왕좌 둘레의 빈칸(초록)이 2개, 바깥의 호위병 2개로 하나씩 채웁니다. 하지만 그 사이에 상대도 한 수를 둡니다.</p><p>빨간 호위병은 상대의 다음 수에 일직선으로 끼이는 자리. 나중으로 미루면 잡혀서 차례를 재배치에 쓰게 됩니다. <b>노려지는 호위병부터 먼저</b> 넣으세요.</p>"
+  },
+  "es": {
+   "intro": "Faltan dos jugadas para ganar: dos casillas vacías junto al trono y dos guardias tuyos justo fuera para llenarlas. Pero el rival juega entre medias. Si un guardia que queda fuera puede ser encerrado por la siguiente jugada enemiga, es capturado, tu siguiente turno se va en recolocarlo y llegas tarde. Mete primero al guardia amenazado.",
+   "goal": "Juega la primera jugada tras la cual ganas en la siguiente, responda lo que responda.",
+   "hint": "Brillan tus guardias que pueden entrar en una casilla vacía y las piezas enemigas que pueden encerrar a uno de ellos. ¿Qué guardia está amenazado?",
+   "why": "¡Correcto! {m} mete primero al guardia amenazado. Juegue lo que juegue el rival, tu otro guardia llena la última casilla vacía y gana.",
+   "ng": "{x} deja una sola casilla vacía, pero {r} encierra al guardia que queda fuera: es capturado, tu siguiente turno se va en recolocarlo y llegas tarde. La respuesta era {m}.",
+   "ngSlow": "Tras {x} siguen vacías dos casillas junto al trono: una jugada no puede llenar las dos. La respuesta era {m}.",
+   "body": "<p>Dos jugadas para ganar: dos casillas vacías junto al trono (verdes) y dos guardias fuera para llenar una cada uno. Pero el rival juega entre medias.</p><p>El guardia rojo está donde la siguiente jugada enemiga puede encerrarlo. Si lo dejas para después, es capturado y tu turno se va en recolocarlo. <b>Mete primero al guardia amenazado.</b></p>"
+  },
+  "fr": {
+   "intro": "Deux coups pour gagner : deux cases vides autour du trône, et deux de vos gardes juste à l’extérieur pour les remplir. Mais l’adversaire joue entre-temps. Si un garde resté dehors peut être pris en tenaille par le coup suivant de l’ennemi, il est capturé, votre tour suivant sert à le replacer et vous arrivez trop tard. Faites entrer d’abord le garde menacé.",
+   "goal": "Jouez le premier coup après lequel vous gagnez au coup suivant, quelle que soit la réponse.",
+   "hint": "Brillent : vos gardes qui peuvent entrer dans une case vide, et les pièces ennemies qui peuvent prendre l’un d’eux en tenaille. Quel garde est menacé ?",
+   "why": "Exact ! {m} fait entrer d’abord le garde menacé. Quoi que joue l’ennemi, votre autre garde remplit la dernière case vide et gagne.",
+   "ng": "{x} ne laisse qu’une case vide, mais {r} prend en tenaille le garde resté dehors : il est capturé, votre tour suivant sert à le replacer et vous arrivez trop tard. La réponse était {m}.",
+   "ngSlow": "Après {x}, il reste deux cases vides autour du trône : un seul coup ne peut pas remplir les deux. La réponse était {m}.",
+   "body": "<p>Deux coups pour gagner : deux cases vides autour du trône (vertes), et deux gardes dehors pour en remplir une chacun. Mais l’adversaire joue entre-temps.</p><p>Le garde rouge est là où le coup suivant de l’ennemi peut le prendre en tenaille. Laissé pour plus tard, il est capturé et votre tour sert à le replacer. <b>Faites entrer d’abord le garde menacé.</b></p>"
+  },
+  "pt": {
+   "intro": "Dois lances para vencer: duas casas vazias em volta do trono e dois guardas seus logo fora para preenchê-las. Mas o adversário joga no meio. Se um guarda que fica fora pode ser cercado pelo próximo lance inimigo, ele é capturado, seu próximo turno vai para recolocá-lo e você chega tarde. Coloque primeiro o guarda ameaçado.",
+   "goal": "Jogue o primeiro lance depois do qual você vence no próximo, seja qual for a resposta.",
+   "hint": "Brilham seus guardas que podem entrar numa casa vazia e as peças inimigas que podem cercar um deles. Qual guarda está ameaçado?",
+   "why": "Certo! {m} coloca primeiro o guarda ameaçado. Jogue o inimigo o que jogar, seu outro guarda preenche a última casa vazia e vence.",
+   "ng": "{x} deixa uma só casa vazia, mas {r} cerca o guarda que ficou fora: ele é capturado, seu próximo turno vai para recolocá-lo e você chega tarde. A resposta era {m}.",
+   "ngSlow": "Depois de {x} continuam vazias duas casas em volta do trono: um lance não preenche as duas. A resposta era {m}.",
+   "body": "<p>Dois lances para vencer: duas casas vazias em volta do trono (verdes) e dois guardas fora para preencher uma cada. Mas o adversário joga no meio.</p><p>O guarda vermelho está onde o próximo lance inimigo pode cercá-lo. Deixado para depois, ele é capturado e seu turno vai para recolocá-lo. <b>Coloque primeiro o guarda ameaçado.</b></p>"
+  },
+  "de": {
+   "intro": "Zwei Züge bis zum Sieg: zwei leere Felder um den Thron, und zwei deiner Wachen direkt davor, um sie zu füllen. Aber dazwischen zieht der Gegner. Kann eine draußen gebliebene Wache vom nächsten gegnerischen Zug eingeschlossen werden, wird sie geschlagen, dein nächster Zug geht für das Umsetzen drauf und du kommst zu spät. Bring zuerst die bedrohte Wache hinein.",
+   "goal": "Spiele den ersten Zug, nach dem du im nächsten Zug gewinnst – egal, was der Gegner antwortet.",
+   "hint": "Es leuchten deine Wachen, die auf ein leeres Feld ziehen können, und die gegnerischen Steine, die eine von ihnen einschließen können. Welche Wache ist bedroht?",
+   "why": "Richtig! {m} bringt zuerst die bedrohte Wache hinein. Was der Gegner auch zieht, deine andere Wache füllt das letzte leere Feld und gewinnt.",
+   "ng": "Nach {x} ist nur noch ein Feld leer, aber {r} schließt die draußen gebliebene Wache ein: Sie wird geschlagen, dein nächster Zug geht für das Umsetzen drauf und du kommst zu spät. Richtig war {m}.",
+   "ngSlow": "Nach {x} sind um den Thron noch zwei Felder leer – ein Zug kann nicht beide füllen. Richtig war {m}.",
+   "body": "<p>Zwei Züge bis zum Sieg: zwei leere Felder um den Thron (grün) und zwei Wachen draußen, die je eines füllen. Aber dazwischen zieht der Gegner.</p><p>Die rote Wache steht dort, wo der nächste gegnerische Zug sie einschließen kann. Schiebst du sie auf, wird sie geschlagen und dein Zug geht für das Umsetzen drauf. <b>Bring zuerst die bedrohte Wache hinein.</b></p>"
+  },
+  "ru": {
+   "intro": "До победы два хода: у трона две пустые клетки, а рядом снаружи два ваших стража, чтобы их занять. Но между ходами ходит соперник. Если оставшегося снаружи стража можно зажать следующим ходом соперника, его возьмут, ваш следующий ход уйдёт на его перестановку, и вы не успеете. Сначала заведите внутрь стража под угрозой.",
+   "goal": "Сделайте первый ход, после которого вы побеждаете следующим ходом при любом ответе.",
+   "hint": "Светятся ваши стражи, которые могут встать на пустую клетку, и фигуры соперника, которые могут зажать одного из них. Какой страж под угрозой?",
+   "why": "Верно! {m} первым заводит стража под угрозой. Как бы ни сходил соперник, ваш второй страж занимает последнюю пустую клетку и побеждает.",
+   "ng": "После {x} остаётся одна пустая клетка, но {r} зажимает оставшегося снаружи стража: его берут, ваш следующий ход уходит на перестановку, и вы не успеваете. Правильно было {m}.",
+   "ngSlow": "После {x} у трона всё ещё две пустые клетки — одним ходом обе не занять. Правильно было {m}.",
+   "body": "<p>До победы два хода: у трона две пустые клетки (зелёные), и два стража снаружи займут по одной. Но между ходами ходит соперник.</p><p>Красный страж стоит там, где следующий ход соперника может его зажать. Отложите его — и его возьмут, а ваш ход уйдёт на перестановку. <b>Сначала заведите стража под угрозой.</b></p>"
+  },
+  "tr": {
+   "intro": "Kazanmaya iki hamle var: tahtın çevresinde iki boş kare, hemen dışında da onları dolduracak iki muhafızın. Ama arada rakip de oynar. Dışarıda kalan bir muhafız rakibin sonraki hamlesiyle sıkıştırılabiliyorsa alınır, sonraki sıran onu yeniden yerleştirmeye gider ve geç kalırsın. Önce tehdit altındaki muhafızı içeri sok.",
+   "goal": "Rakip ne oynarsa oynasın bir sonraki hamlede kazandığın ilk hamleyi oyna.",
+   "hint": "Parlayanlar: boş bir kareye girebilen muhafızların ve onlardan birini sıkıştırabilen rakip taşlar. Hangi muhafız tehdit altında?",
+   "why": "Doğru! {m} önce tehdit altındaki muhafızı içeri sokar. Rakip ne oynarsa oynasın, diğer muhafızın son boş kareyi doldurur ve kazanır.",
+   "ng": "{x} ile tek boş kare kalır, ama {r} dışarıda kalan muhafızı sıkıştırır: alınır, sonraki sıran onu yeniden yerleştirmeye gider ve geç kalırsın. Doğrusu {m} idi.",
+   "ngSlow": "{x} sonrasında tahtın çevresinde hâlâ iki boş kare var — tek hamle ikisini dolduramaz. Doğrusu {m} idi.",
+   "body": "<p>Kazanmaya iki hamle: tahtın çevresinde iki boş kare (yeşil), dışarıdaki iki muhafız birer tane doldurur. Ama arada rakip de oynar.</p><p>Kırmızı muhafız, rakibin sonraki hamlesiyle sıkıştırılabileceği yerde. Sonraya bırakırsan alınır ve sıran onu yeniden yerleştirmeye gider. <b>Önce tehdit altındaki muhafızı içeri sok.</b></p>"
+  },
+  "id": {
+   "intro": "Dua langkah untuk menang: dua petak kosong di sekeliling takhta, dan dua pengawalmu tepat di luar untuk mengisinya. Tetapi lawan bergerak di antaranya. Jika pengawal yang tertinggal di luar bisa dijepit oleh langkah lawan berikutnya, ia tertangkap, giliranmu berikutnya habis untuk menempatkannya kembali, dan kamu terlambat. Masukkan dulu pengawal yang terancam.",
+   "goal": "Mainkan langkah pertama yang membuatmu menang di langkah berikutnya, apa pun balasan lawan.",
+   "hint": "Yang bersinar: pengawalmu yang bisa masuk ke petak kosong, dan bidak lawan yang bisa menjepit salah satunya. Pengawal mana yang terancam?",
+   "why": "Benar! {m} memasukkan dulu pengawal yang terancam. Apa pun langkah lawan, pengawalmu yang lain mengisi petak kosong terakhir dan menang.",
+   "ng": "Setelah {x} tinggal satu petak kosong, tetapi {r} menjepit pengawal yang tertinggal di luar: ia tertangkap, giliranmu berikutnya habis untuk menempatkannya kembali, dan kamu terlambat. Jawabannya {m}.",
+   "ngSlow": "Setelah {x} masih ada dua petak kosong di sekeliling takhta — satu langkah tidak bisa mengisi keduanya. Jawabannya {m}.",
+   "body": "<p>Dua langkah untuk menang: dua petak kosong di sekeliling takhta (hijau), dan dua pengawal di luar mengisi satu-satu. Tetapi lawan bergerak di antaranya.</p><p>Pengawal merah berada di tempat yang bisa dijepit oleh langkah lawan berikutnya. Kalau ditunda, ia tertangkap dan giliranmu habis untuk menempatkannya kembali. <b>Masukkan dulu pengawal yang terancam.</b></p>"
+  },
+  "hi": {
+   "intro": "जीत के लिए दो चालें: सिंहासन के चारों ओर दो खाली खाने, और ठीक बाहर उन्हें भरने के लिए आपके दो रक्षक। पर बीच में विरोधी भी चलता है। अगर बाहर बचा कोई रक्षक विरोधी की अगली चाल से फँस सकता है, तो वह पकड़ा जाएगा, आपकी अगली बारी उसे फिर से रखने में जाएगी और आप देर कर देंगे। पहले उस रक्षक को अंदर लाएँ जिस पर ख़तरा है।",
+   "goal": "वह पहली चाल चलें जिसके बाद विरोधी कुछ भी करे, आप अगली चाल में जीतें।",
+   "hint": "चमक रहे हैं: आपके वे रक्षक जो किसी खाली खाने में जा सकते हैं, और विरोधी की वे गोटियाँ जो उनमें से किसी को फँसा सकती हैं। किस रक्षक पर ख़तरा है?",
+   "why": "सही! {m} ख़तरे वाले रक्षक को पहले अंदर लाती है। विरोधी कुछ भी चले, आपका दूसरा रक्षक आख़िरी खाली खाना भरकर जीतता है।",
+   "ng": "{x} के बाद एक ही खाना खाली रहता है, पर {r} बाहर बचे रक्षक को फँसा लेती है: वह पकड़ा जाता है, आपकी अगली बारी उसे फिर से रखने में जाती है और आप देर कर देते हैं। सही चाल {m} थी।",
+   "ngSlow": "{x} के बाद भी सिंहासन के चारों ओर दो खाने खाली हैं — एक चाल दोनों नहीं भर सकती। सही चाल {m} थी।",
+   "body": "<p>जीत के लिए दो चालें: सिंहासन के चारों ओर दो खाली खाने (हरे), और बाहर के दो रक्षक एक-एक भरेंगे। पर बीच में विरोधी भी चलता है।</p><p>लाल रक्षक ऐसी जगह है जहाँ विरोधी की अगली चाल उसे फँसा सकती है। बाद के लिए छोड़ें तो वह पकड़ा जाएगा और आपकी बारी उसे फिर से रखने में जाएगी। <b>पहले ख़तरे वाले रक्षक को अंदर लाएँ।</b></p>"
+  },
+  "ar": {
+   "intro": "نقلتان للفوز: خانتان فارغتان حول العرش، وحارسان لك خارجهما مباشرة لملئهما. لكن الخصم يلعب بينهما. إذا كان الحارس الباقي في الخارج يمكن محاصرته بنقلة الخصم التالية، فإنه يُؤسر، وتذهب نوبتك التالية في إعادة وضعه فتتأخر. أدخِل أولًا الحارس المهدَّد.",
+   "goal": "العب النقلة الأولى التي تفوز بعدها في النقلة التالية مهما كان الرد.",
+   "hint": "المضيء: حرّاسك الذين يمكنهم دخول خانة فارغة، وقطع الخصم التي يمكنها محاصرة أحدهم. أيّ حارس مهدَّد؟",
+   "why": "صحيح! {m} تُدخل الحارس المهدَّد أولًا. مهما لعب الخصم، يملأ حارسك الآخر الخانة الفارغة الأخيرة ويفوز.",
+   "ng": "بعد {x} تبقى خانة فارغة واحدة، لكن {r} تحاصر الحارس الباقي في الخارج: يُؤسر، وتذهب نوبتك التالية في إعادة وضعه فتتأخر. الصحيح كان {m}.",
+   "ngSlow": "بعد {x} ما زالت خانتان فارغتين حول العرش — نقلة واحدة لا تملأ الاثنتين. الصحيح كان {m}.",
+   "body": "<p>نقلتان للفوز: خانتان فارغتان حول العرش (خضراوان)، وحارسان في الخارج يملأ كلٌّ منهما واحدة. لكن الخصم يلعب بينهما.</p><p>الحارس الأحمر في مكان يمكن لنقلة الخصم التالية محاصرته. إن أجّلته يُؤسر وتذهب نوبتك في إعادة وضعه. <b>أدخِل أولًا الحارس المهدَّد.</b></p>"
+  }
+ },
+ "ja3D": [
+  "s_win2: 'ワン！ <b>あと2手で勝てる</b>形だよ。女王は王座にいて、まわりの空きマスは<b>2つ</b>。外のガード2枚で1つずつ埋めれば勝ちなんだ。<br>でも、あいだに相手も1手指す。外に残ったガードが<b>相手の次の手ではさまれる</b>と、捕まって置き直しに手番を使うから間に合わない。<b>ねらわれているガードから先に</b>入れよう！',",
+  "s_win2: ['相手がどう動いても、次の手で勝てる1手目はどれかな？', 'ワン、空きマスは2つ。どっちのガードから入れる？', '外のガードのうち、相手にねらわれているのはどれだろう？ 先に入れる1手を指してね。', '2手で勝つには順番が大事。先に入れるガードはどれ？', '相手の次の手まで読んで、勝ちが消えない1手目を探そう！'],",
+  "s_win2: ['これで最後の問題だワン！ 相手がどう受けても間に合う1手目はどれ？', 'ラストの問題。ねらわれているガードを見つけて、先に入れよう！'],",
+  "s_win2: ['光っているのは、空きマスへ入れるきみのガードと、きみのガードをはさめる相手の駒。どのガードがねらわれているかな？', '相手の番だと思って見てみよう。一直線にはさまれそうなガードはどれ？', '空きマスを1つ埋めたあと、外に残るガードが相手の次の手ではさまれないか確かめるんだワン。', '光る相手の駒が動ける先と、その向こうを見て。はさまれるガードは後回しにしちゃだめ！', '外のガードのうち、動かさずに残すとはさまれるのはどっちかな？'],",
+  "s_win2: ['ねらわれていたガードを先に入れたね。相手がどう動いても、残りのガードで最後の空きマスを埋めて勝ちだワン！', 'ワン、これで空きマスは1つ。外のガードははさまれないから、相手がどう受けても次で勝てるんだ。', '順番がばっちり。危ないガードを先に入れたから、相手には止める手がないんだよ。', '相手がどこへ動いても、次の手で王座のまわりがきみのガードで埋まるよ。2手で勝ちだワン！', 'はさまれそうなガードを先に内側へ。これで相手は最後の空きマスをふさげないし、ガードも捕まえられないんだ。'],",
+  "wslow: ['赤い手のあとも、王座のまわりの空きマスは2つのまま。次の1手では埋めきれないんだ。緑の手なら空きマスが1つになって、相手がどう動いても勝てたワン。', 'ワン、赤の手では空きマスが減っていないよ。2つ残ったままだと、次の手で勝つことはできないんだ。緑の手を見てみて！', '赤の手だと、王座のまわりはまだ2つ空いているの。1手で埋められるのは1マスだけ。緑の手なら次で勝てたよ。', '赤で動いた駒は、内側の輪の空きマスを減らしていないんだ。空きマスは2つのままだから、緑の手で1つ埋めるのが先だったワン。', '空きマスが2つ残ると、次の1手では勝てないよね。緑の手なら空きマスを1つ埋めて、ねらわれたガードも守れたんだ。'],",
+  "wcap: ['赤い手で空きマスは1つになったけど、相手の金色の手で外に残ったガードがはさまれて捕まっちゃう。次の手番は置き直しになるから間に合わないんだ。緑の手なら、ねらわれたガードを先に入れられたワン。', 'ワン、赤の手だと外に残るのは、相手にねらわれていたガード。金色の手で一直線にはさまれて、置き直しに手番を使っちゃうんだ。緑の手を見てみて！', '赤のあと、金色の手で相手が入ってくると、外のガードが捕まるの。捕まったら次は置き直しの番だから、最後の空きマスを埋められないよ。緑が正しい順番だったんだ。', '順番が逆だったね。赤の手では危ないガードが外に残って、金色の手ではさまれちゃう。緑の手なら先にそのガードを内側へ入れられたワン。', '金色の手を見て。外に残ったガードが相手の駒2枚のあいだになって捕まるんだ。置き直しで1手使うから、緑の手から入れるのが正しい順番だったよ。'],"
+ ]
+}
