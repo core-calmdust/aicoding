@@ -18,7 +18,7 @@ const ITEMS = [   // [key, points, must]
     const p = await c.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
     await p.goto(BASE + '/atlas/index.html#museum', { waitUntil: 'load' }); await p.waitForTimeout(3500);
     await p.evaluate(() => document.querySelectorAll('#ov.on,.ov.on').forEach(o => o.classList.remove('on')));
-    await p.evaluate(() => AtlasMuseum.go('match')); await p.waitForTimeout(1800);
+    await p.evaluate(() => AtlasMuseum.go('match')); await p.waitForFunction(() => window.AtlasMatch && document.querySelector('.muroom[data-r="match"] .mxc'), null, { timeout: 30000 }); await p.waitForTimeout(400);   // (wait for the room, not a fixed time: a slow load used to stop the run)
     const games = await p.evaluate(() => { const seen = {}; return AtlasMatch.GAMES.filter(G => !seen[G.kind] && (seen[G.kind] = 1)).map(G => G.id); });
     for (const id of games) {
       await p.evaluate(id => { document.querySelectorAll('.mutoast,.mission,.msn').forEach(e => e.remove()); AtlasMatch.show(id); }, id); await p.waitForTimeout(600);
