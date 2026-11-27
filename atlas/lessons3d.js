@@ -3484,11 +3484,15 @@
     const goEnd = t => { const sn = String(t || '').split(/(?<=[。！？])\s*/).filter(Boolean).pop() || '', b = sn.replace(/[。！？!?]+$/, ''); for (const e of ['んだ', 'よね', 'かな', 'よう', 'ろう', 'よ', 'ね', 'ペン']) if (b.endsWith(e)) return e; return ''; };
     const goPush = (w, j) => { const e = goEnd(w); for (let q = 0; q < H.push.length; q++) { const x = pk(H.push, j + q); if (!x) return q ? '' : x; if (!e || goEnd(x) !== e) return x; } return ''; };
 o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good, oi) : pk(H.near, i), why, goPush(why, LI + i)].filter(Boolean).join(' '); };
+    // (2026-11-27 担当B) the soft opener does not open on the praise's last ending (「…攻められるね！」 then 「次は見つけられるね！」), nor take one another problem of the set opens with: the next one in the list
+    const gE = goEnd([pk(H.good, oi), why, goPush(why, LI + i)].filter(Boolean).join(' ')), sE = t => goEnd((String(t || '').match(/^[^。！？]*[。！？]?/) || [''])[0]), sUsed = seen.__soft = seen.__soft || [];
+    let soft = pk(H.soft, oi); if (gE && sE(soft) === gE) for (let q = 1; q < H.soft.length; q++) { const x = pk(H.soft, oi + q); if (sE(x) !== gE && !sUsed.includes(x) && ![0, 1, 2, 3, 4, 5, 6].some(j => pk(H.soft, a + j * b) === x)) { soft = x; break; } }
+    sUsed.push(soft);
     o.ng = function (u) { this._hl = []; const part = (o.P.good || []).concat(o.P.half || []).includes(u), right = fill(pk(H.right, LI + i + 1), { m: OKM });
       if (part) return [pk(H.half, i), right, why, pk(H.you.half, LI + i)].join(' ');
       const [th, uu] = themOf(u); let ex = null;
       if (uu != null) { const fu = goOpF(p0, uu); if (fu) ex = fu.libs === 1 && !fu.cap ? pk(H.you.selfAtari, i) : fu.line === 1 ? H.you.line1[0] : fu.dOwn > 4 && fu.dOpp > 4 ? pk(H.you.far, i) : null; }
-      return [pk(H.soft, oi), right, th, ex, ex ? null : pk(H.tail, LI + i)].filter(Boolean).join(' '); };
+      return [soft, right, th, ex, ex ? null : pk(H.tail, LI + i)].filter(Boolean).join(' '); };
   }
   function goOpIntroJa(g, LI) {   // a short intro: the name, the stored one-line summary (or the story's first plain sentence), a nudge
     const H = GOJ_OP, pk = (a, j) => a[((j % a.length) + a.length) % a.length], sh = L(g.short, 'ja');
@@ -3501,7 +3505,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=28'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
+      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=29'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
         try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
         return this; }).catch(e => { this.p = null; throw e; }));
     },
