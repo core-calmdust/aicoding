@@ -58,13 +58,13 @@ const ITEMS = [   // [key, points, must]
         const cb = [...ctl.querySelectorAll('button')].map(x => R(x)), mb = btns.map(x => R(x).height);
         o._touch = [Math.round(Math.min(...cb.map(r => Math.min(r.width, r.height)))), Math.round(Math.min(...mb))];
         o.touch = (Math.min(...cb.map(r => Math.min(r.width, r.height))) >= (ph ? 44 : 40) ? .6 : 0) + (Math.min(...mb) >= 32 ? .4 : 0);
-        // ★ contrast: every text in the view ≥ 4.5 (≥ 3 for large text) against what is behind it
+        // ★ contrast (the board itself is a picture — its pieces' letters are drawn on their own shapes — and is left out): every text in the view ≥ 4.5 (≥ 3 for large text) against what is behind it
         const rgb = s => { const m = s.match(/[\d.]+/g); return m ? m.map(Number) : [0, 0, 0, 0]; };
         const lum = ([r, g, b2]) => { const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }; return .2126 * f(r) + .7152 * f(g) + .0722 * f(b2); };
         const bg = e => { let c = [255, 255, 255]; const stack = []; for (let x = e; x; x = x.parentElement) { const v = rgb(getComputedStyle(x).backgroundColor); if (v.length < 4 || v[3] > 0) stack.push(v); if (v.length < 4 || v[3] === 1) break; }
           stack.reverse().forEach(v => { const a = v.length < 4 ? 1 : v[3]; c = c.map((k, i) => k * (1 - a) + v[i] * a); }); return c; };
         let bad = [];
-        view.querySelectorAll('*').forEach(e => { if (!e.offsetParent || e.closest('svg') || ![...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) return;
+        view.querySelectorAll('*').forEach(e => { if (!e.offsetParent || e.closest('svg,.mxboard') || ![...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) return;
           const s = getComputedStyle(e), fg = rgb(s.color), a = fg.length > 3 ? fg[3] : 1, back = bg(e), col = fg.slice(0, 3).map((k, i) => k * a + back[i] * (1 - a));
           const L1 = lum(col), L2 = lum(back), cr = (Math.max(L1, L2) + .05) / (Math.min(L1, L2) + .05), big = parseFloat(s.fontSize) >= 24 || (parseFloat(s.fontSize) >= 18.6 && +s.fontWeight >= 700);
           if (cr < (big ? 3 : 4.5)) bad.push(e.className + ' ' + cr.toFixed(2)); });
@@ -78,7 +78,7 @@ const ITEMS = [   // [key, points, must]
         if (!ph) { const a = R(stage), s = R(side), used = (Math.max(a.right, s.right) - Math.min(a.left, s.left)) / vr.width; o._use = Math.round(used * 100) / 100; o.use = used >= .9 ? 1 : used / .9; } else o.use = 1;
         // tokens: few type sizes (≤ 8) and the site's own corner radii only
         const sizes = new Set(), radii = new Set(), OK = ['0px', '2px', '4px', '6px', '8px', '10px', '12px', '14px', '16px', '18px', '20px', '22px', '24px', '99px', '50%', '999px'];
-        view.querySelectorAll('*').forEach(e => { if (!e.offsetParent || e.closest('svg')) return; const s = getComputedStyle(e); if ([...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) sizes.add(s.fontSize); radii.add(s.borderTopLeftRadius); });
+        view.querySelectorAll('*').forEach(e => { if (!e.offsetParent || e.closest('svg,.mxboard')) return; const s = getComputedStyle(e); if ([...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) sizes.add(s.fontSize); radii.add(s.borderTopLeftRadius); });
         const odd = [...radii].filter(r => !OK.includes(r)); o._tokens = [[...sizes].length, odd]; o.tokens = (sizes.size <= 8 ? .5 : 0) + (odd.length ? 0 : .5);
         // rtl: in Arabic the side panel stands on the board's left (PC) / the page reads right to left, while the board itself stays left to right
         o.rtl = lang !== 'ar' ? 1 : (getComputedStyle(board).direction === 'ltr' && getComputedStyle(view).direction === 'rtl' ? 1 : 0);

@@ -1080,12 +1080,12 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 .mxgc{font-size:40px;font-weight:800;fill:#6b4a1d;text-anchor:middle;font-family:var(--round)}
 /* (2026-11-27 名局選：シャンチー) the board of points (9 × 10) with the river, round pieces with their characters (Red at the bottom) */
 .mxxq line{stroke:#5d3f18;stroke-width:.035}.mxxf{fill:none;stroke:#5d3f18;stroke-width:.07}.mxxm{fill:none;stroke:#5d3f18;stroke-width:.03}
-.mxxr{font-size:56px;font-weight:700;fill:#7a5428;text-anchor:middle;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Noto Serif CJK JP",serif}
+.mxxr{font-size:50px;font-weight:700;fill:#7a5428;text-anchor:middle;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Noto Serif CJK JP",serif}
 .mxxp{display:block;width:88%;height:88%;margin:6%;border-radius:50%;background:radial-gradient(circle at 38% 32%,#fbecc8,#ecd29c 70%,#d9b97b);box-shadow:0 .08em .16em rgba(0,0,0,.35),inset 0 0 0 1.5px #a5824a;position:relative}
 .mxxp::before{content:"";position:absolute;inset:9%;border-radius:50%;border:1.5px solid #1f1a14}.mxxp.r::before{border-color:#c0281b}
 .mxxp b{position:absolute;inset:0;display:grid;place-items:center;font-size:54cqh;line-height:1;font-weight:900;color:#1f1a14;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Noto Serif CJK JP",serif}
 .mxxp.r b{color:#c0281b}
-.mxxt{fill:#f0d9a6;stroke:#1f1a14;stroke-width:.04}.mxxt.r{stroke:#c0281b}.mxxg{font-size:52px;font-weight:900;text-anchor:middle;fill:#1f1a14;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Noto Serif CJK JP",serif}.mxxg.r{fill:#c0281b}
+.mxxt{fill:#f0d9a6;stroke:#1f1a14;stroke-width:.04}.mxxt.r{stroke:#c0281b}.mxxg{font-size:50px;font-weight:900;text-anchor:middle;fill:#1f1a14;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Noto Serif CJK JP",serif}.mxxg.r{fill:#c0281b}
 .mxth.k-xiangqi{background:#efe3c8}
 .mxdot.r{background:#d23a2a;border-color:#7d1a10}
 
@@ -1195,3 +1195,4 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 @media (max-width:819px) and (max-height:700px){.mxkick,.mxseek,.mxpl .mxside-n{display:none}.mxcap img{width:15px;height:15px}.mxleft{gap:5px}.mxpl{min-height:26px;padding-block:1px;font-size:12.5px}.mxctl button{width:44px;height:44px}.mxctl button.pl{width:46px;height:46px}.mxhd{margin-bottom:8px}.mxhd h3{font-size:18px}}
 .mxch .mxcoord{fill:#cbbfa9}   /* (the chess board stands on the dark stage: its letters and numbers light) */
 .mxcap{padding:2px 8px;border-radius:99px;background:#efe8da;color:#23262f}.mxcap em{color:#5d564b}   /* (what a side has taken: on a light chip, so black pieces show on the dark stage) */
+.mxlm.ring{fill:rgba(250,205,70,.25);stroke:#e0a21a;stroke-width:.07}   /* (point boards: the last move shows as a ring around the piece, not only under it) */
