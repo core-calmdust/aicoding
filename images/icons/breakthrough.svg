@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- Breakthrough: a corner of the walnut-and-maple board; a boxwood pawn (seen from above: foot, collar, head) steps
+       diagonally into the last row of ebony pawns — the moment of the breakthrough -->
+  <defs>
+    <clipPath id="bt-c"><rect width="96" height="96" rx="20"/></clipPath>
+    <linearGradient id="bt-l" x1="0" y1="0" x2="1" y2=".2"><stop offset="0" stop-color="#ecd3a4"/><stop offset=".5" stop-color="#e0c08a"/><stop offset="1" stop-color="#e9cd98"/></linearGradient>
+    <linearGradient id="bt-d" x1="0" y1="0" x2=".2" y2="1"><stop offset="0" stop-color="#83512f"/><stop offset=".5" stop-color="#6a3f23"/><stop offset="1" stop-color="#7a4a2a"/></linearGradient>
+    <radialGradient id="bt-wf" cx=".4" cy=".36" r=".7"><stop offset="0" stop-color="#fbe7bd"/><stop offset=".7" stop-color="#e2bd7c"/><stop offset="1" stop-color="#b98d4e"/></radialGradient>
+    <radialGradient id="bt-wh" cx=".36" cy=".32" r=".7"><stop offset="0" stop-color="#fff6e0"/><stop offset=".6" stop-color="#ecc98c"/><stop offset="1" stop-color="#b48748"/></radialGradient>
+    <radialGradient id="bt-bf" cx=".4" cy=".36" r=".7"><stop offset="0" stop-color="#4a3328"/><stop offset=".7" stop-color="#22160f"/><stop offset="1" stop-color="#0d0805"/></radialGradient>
+    <radialGradient id="bt-bh" cx=".34" cy=".3" r=".7"><stop offset="0" stop-color="#7a5a48"/><stop offset=".45" stop-color="#2b1c14"/><stop offset="1" stop-color="#0b0604"/></radialGradient>
+    <filter id="bt-s" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="1.6" stdDeviation="1.6" flood-color="#000" flood-opacity=".55"/></filter>
+  </defs>
+  <g clip-path="url(#bt-c)">
+    <rect width="96" height="96" fill="url(#bt-d)"/>
+    <rect x="0" y="0" width="32" height="32" fill="url(#bt-l)"/><rect x="64" y="0" width="32" height="32" fill="url(#bt-l)"/>
+    <rect x="32" y="32" width="32" height="32" fill="url(#bt-l)"/>
+    <rect x="0" y="64" width="32" height="32" fill="url(#bt-l)"/><rect x="64" y="64" width="32" height="32" fill="url(#bt-l)"/>
+    <g stroke="#2e1c10" stroke-width="1.1" opacity=".8"><path d="M32 0v96M64 0v96M0 32h96M0 64h96"/></g>
+    <g opacity=".14" stroke="#3a2010" stroke-width=".7"><path d="M2 8h28M2 15h28M2 23h28M66 6h28M66 13h28M66 22h28M34 40h28M34 49h28M34 57h28M2 70h28M2 79h28M2 88h28M66 71h28M66 80h28M66 90h28"/></g>
+    <!-- the black row -->
+    <g filter="url(#bt-s)">
+      <circle cx="16" cy="16" r="13" fill="url(#bt-bf)"/><circle cx="16" cy="16" r="8.4" fill="none" stroke="#6a4a3a" stroke-width="1.1" opacity=".7"/><circle cx="16" cy="16" r="5.6" fill="url(#bt-bh)"/>
+      <circle cx="80" cy="16" r="13" fill="url(#bt-bf)"/><circle cx="80" cy="16" r="8.4" fill="none" stroke="#6a4a3a" stroke-width="1.1" opacity=".7"/><circle cx="80" cy="16" r="5.6" fill="url(#bt-bh)"/>
+    </g>
+    <!-- the white pawn breaking through, with its path -->
+    <path d="M30 70 L46 52" stroke="#ffd25a" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 5" opacity=".85"/>
+    <g filter="url(#bt-s)">
+      <circle cx="48" cy="48" r="14" fill="url(#bt-wf)"/><circle cx="48" cy="48" r="9.2" fill="none" stroke="#9a7240" stroke-width="1.2" opacity=".75"/><circle cx="48" cy="48" r="6.2" fill="url(#bt-wh)"/>
+    </g>
+    <g filter="url(#bt-s)">
+      <circle cx="16" cy="80" r="13" fill="url(#bt-wf)"/><circle cx="16" cy="80" r="8.4" fill="none" stroke="#9a7240" stroke-width="1.1" opacity=".75"/><circle cx="16" cy="80" r="5.6" fill="url(#bt-wh)"/>
+    </g>
+    <rect width="96" height="96" rx="20" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="1.5"/>
+  </g>
+</svg>
