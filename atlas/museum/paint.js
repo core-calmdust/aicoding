@@ -121,6 +121,10 @@
     { id: 'corrida', w: 1544, h: 2048, aic: 52044, no: '1944.943', bg: '#d9d3bf', spots: [[.5, .07], [.47, .42], [.46, .82], [.84, .11], [.12, .81], [.3, .95]], links: [{ ex: 'goose' }, { room: 'chance' }] },
     // (2026-11-25) the Art Institute of Chicago: American ambrotype (1865), three men playing cards
     { id: 'ambrocards', w: 1651, h: 2048, aic: 250224, no: '2019.603', bg: '#3b2c24', spots: [[.47, .5], [.275, .39], [.51, .38], [.72, .4], [.135, .56], [.03, .5]], links: [{ g: 'poker' }, { g: 'solitaire' }] },
+    // (2026-11-25) the Cleveland Museum of Art: Winslow Homer, 'Paul Morphy, The Chess Champion', wood engraving, 1859
+    { id: 'morphy', w: 1504, h: 2048, cma: '1942.1472', bg: '#e2ded4', spots: [[.114, .538], [.21, .597], [.47, .2], [.52, .33], [.6, .69], [.5, .975]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Cleveland Museum of Art: Johann Zoffany, the Dutton family at cards, Sherborne Park
+    { id: 'dutton', w: 2048, h: 1631, cma: '2023.122', bg: '#3e5a5a', spots: [[.35, .66], [.287, .48], [.17, .72], [.553, .48], [.68, .5], [.9, .58]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
