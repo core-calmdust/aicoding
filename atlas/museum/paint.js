@@ -301,6 +301,14 @@
     { id: 'pillement', w: 1324, h: 2048, rijks: 'RP-P-1887-A-12359', bg: '#eee8de', spots: [[.53, .25], [.41, .27], [.66, .19], [.5, .8], [.38, .85], [.5, .99]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
     // (2026-11-25) the Rijksmuseum: Gebroeders Koster, 'Het skating-rink spel', goose-type board (1870)
     { id: 'skating', w: 2048, h: 1533, rijks: 'RP-P-OB-201.529', bg: '#ece3d0', spots: [[.5, .45], [.52, .73], [.39, .07], [.18, .72], [.08, .2], [.45, .96]], links: [{ ex: 'goose' }] },
+    // (2026-11-25) the Rijksmuseum: Gavarni in Le Charivari 1837: a wife watching her husband and lover at a board game
+    { id: 'gavarni', w: 1371, h: 2048, rijks: 'RP-P-OB-40.831', bg: '#e8ddcd', spots: [[.16, .32], [.39, .49], [.63, .32], [.81, .16], [.93, .16], [.51, .95]], links: [{ g: 'checkers' }, { g: 'backgammon' }] },
+    // (2026-11-25) the Rijksmuseum: Bernard Picart, lottery on a stage (Great Mirror of Folly, 1720)
+    { id: 'picart', w: 2048, h: 1293, rijks: 'RP-P-OB-51.357X', bg: '#e6e2d8', spots: [[.57, .47], [.68, .46], [.32, .73], [.62, .8], [.94, .86], [.07, .95]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Goose game satirising the bull Unigenitus (1724)
+    { id: 'unigenitus', w: 2048, h: 1626, rijks: 'RP-P-1970-479', bg: '#e8e3d6', spots: [[.5, .13], [.5, .4], [.1, .11], [.89, .11], [.1, .45], [.56, .82]], links: [{ ex: 'goose' }] },
+    // (2026-11-25) the Rijksmuseum: David Bles, study of a man playing chess (1876)
+    { id: 'bles', w: 2048, h: 1578, rijks: 'RP-T-1941-47(R)', bg: '#d9d2c4', spots: [[.58, .35], [.48, .22], [.25, .6], [.85, .65], [.08, .77], [.82, .93]], links: [{ g: 'chess' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
