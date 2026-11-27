@@ -1396,7 +1396,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=9').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=12').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { let pr; try { pr = JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } return pzMigrate(pr); }
@@ -1648,7 +1648,7 @@ function lessonAnswer(m) {
     update(false);
   }, moveDur(m, pos0) + 700);
 }
-const LS_FACT = /^(b_(approach|withdraw|choose|chain|safe|win)|t_(big|count|stop))$/;   // (the lessons whose words come from fanorona/ls-facts.js)
+const LS_FACT = /^(b_(approach|withdraw|choose|chain|safe|win)|t_(big|count|stop|paika)|e_(trap|hunt))$/;   // (the lessons whose words come from fanorona/ls-facts.js)
 function okAnswer(P, s, m, pts) {
   const pos0 = posAt(0).pos;
   lesson.results[lesson.i] = pts; renderLessonCard();
@@ -1663,7 +1663,10 @@ function okAnswer(P, s, m, pts) {
   //   a move taking more than the answer ngGreedy, one taken back nothing ngSmall, else ng
   // b_win: all {a} of the opponent's pieces taken by the answer; a wrong move's {c} and the pieces it leaves {r} (ngStop / ng as b_chain)
   // t_stop: as t_count, where the answer is a stop; a move going on past it along its road ngOn
-  const ngKey = F && F.k === 'on' ? '.ngOn' : F && F.k === 'small' ? '.ngSmall' : F && F.k === 'greedy' ? '.ngGreedy' : F && F.k === 'same' ? '.ngSame' : F && F.k === 'self' ? '.ngSelf' : F && (F.k === 'stop' || F.k === 'stopx') ? '.ngStop' : '.ng', fv = F ? { a: F.a, c: F.c, sa: F.sa, r: F.r, c1: F.c1, a1: F.a1, ar: F.ar, an: F.an } : { a: '' };
+  // t_paika: the answer's {a} (the fewest you then take); a wrong move giving {c} ng, setting up nothing ngNone, stopped by a reply ngBlock
+  // e_trap (2026-11-28 担当C): the answer's {n} replies (all caught); a wrong move giving {c} ng, leaving {r} ways out ngRun
+  // e_hunt (2026-11-28 担当E): the answer's {ta} taken, {n} replies, the {a} left all taken next; a wrong capture {t} taken back {c} ng, leaving {r} ways out ngRun
+  const ngKey = F && F.k === 'run' ? '.ngRun' : F && F.k === 'none' ? '.ngNone' : F && F.k === 'block' ? '.ngBlock' : F && F.k === 'on' ? '.ngOn' : F && F.k === 'small' ? '.ngSmall' : F && F.k === 'greedy' ? '.ngGreedy' : F && F.k === 'same' ? '.ngSame' : F && F.k === 'self' ? '.ngSelf' : F && (F.k === 'stop' || F.k === 'stopx') ? '.ngStop' : '.ng', fv = F ? { a: F.a, c: F.c, sa: F.sa, r: F.r, c1: F.c1, a1: F.a1, ar: F.ar, an: F.an, n: F.n, t: F.t, ta: F.ta } : { a: '' };
   $('#lsFb').innerHTML = `<span class="pts ${pts ? 'ok' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts ? 'ok' : 'ng'}">${t(pts ? 'fb.perfect' : 'fb.bad')}</b> ` + (pts ? t('ls.' + s.id + ((s.id === 't_count' || s.id === 't_stop') && F && !F.ar ? '.why0' : '.why'), Object.assign({ m: mvIn(pos0, m) }, fv)) : t('ls.' + s.id + ngKey, Object.assign({ m: mvIn(pos0, best), x: mvIn(pos0, m) }, fv)));
   playChime(!!pts); playMove2(m);
   lsAuto(!!pts, moveDur(m, pos0) + 1100);

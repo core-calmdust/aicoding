@@ -603,6 +603,8 @@ function explain(beat, t, g, s, ja, act) {
   return ja ? `${nm(t)}を切ると受け入れは${row[2]}枚。もっと広くなる牌がありますよ！` : `The ${nm(t)} leaves ${row[2]} tiles that help. One discard leaves more!`;
 }
 
+// (大百科の麻雀 riichi/, 2026-11-27) no character guides the course there: the first greeting without 小町's name
+if (root.JANKA_CLASSIC) RULES[0].intro[0] = L('はじめまして！ 今日から麻雀を、ほんものの卓でいっしょに覚えていきましょうね♪', 'Hi! Let\'s learn mahjong together, right here at a real table.');
 root.MJLessons = { LessonGame, check, hintTypes, bestDiscards, discardTable, explain, tName, attachDrills, LV, RULES, LESSONS, CATS };
 if (typeof module !== 'undefined' && module.exports) module.exports = root.MJLessons;
 })(typeof window !== 'undefined' ? window : globalThis);

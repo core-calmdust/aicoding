@@ -59,6 +59,8 @@
       name: N('ブラックジャック', 'Blackjack', '21点', '블랙잭', 'Blackjack', 'Blackjack', 'Blackjack', 'Blackjack', 'ब्लैकजैक', 'بلاك جاك', 'Блэкджек', '21點', 'Blackjack', 'Blackjack') },
     { id: 'guandan', cat: 'card', store: ['aicoding-guandan'], href: 'guandan/', color: '#1f7d5e', alpha: true, released: '2026-11-24', tags: ['classic', 'card', 'ai', 'lessons', 'mobile'], total: { ls: 12 },
       name: N('掼蛋', 'Guandan', '掼蛋', '관단', 'Guandan', 'Guandan', 'Guandan', 'Guandan', 'ग्वानदान', 'غواندان', 'Гуаньдань', '摜蛋', 'Guandan', 'Guandan') },
+    { id: 'riichi', cat: 'card', store: ['riichi-v1'], href: 'riichi/', color: '#2f7a5a', alpha: true, released: '2026-11-27', tags: ['classic', 'ai', 'online', 'lessons', 'mobile'], total: { ls: 40 },   /* (雀華 mahjong/ の土台をスキルなし・キャラなしで。2026-11-27) */
+      name: N('麻雀', 'Riichi Mahjong', '立直麻将', '리치 마작', 'Mahjong riichi', 'Mahjong riichi', 'Mahjong riichi', 'Riichi-Mahjong', 'रीची माहजोंग', 'ماجونغ ريتشي', 'Риичи-маджонг', '立直麻將', 'Mahjong Riichi', 'Riichi Mahjong') },
     { id: 'solitaire', cat: 'puzzle', store: ['aicoding-solitaire'], href: 'solitaire/', color: '#2f6b4f', released: '2026-10-28', tags: ['classic', 'card', 'daily', 'variants', 'mobile'], total: {},
       name: N('ソリティア', 'Solitaire', '纸牌接龙', '솔리테어', 'Solitario', 'Solitaire', 'Paciência', 'Solitär', 'सॉलिटेयर', 'سوليتير', 'Пасьянс', '接龍', 'Solitaire', 'Solitaire') },
     { id: 'peg', cat: 'puzzle', store: ['aicoding-peg'], href: 'atlas/#games/peg', only3d: true, color: '#7d5ba6', released: '2026-11-11', official: '2026-11-13', tags: ['classic', 'daily', 'puzzles', 'variants', 'mobile'], total: { pz: 497 },
@@ -289,6 +291,10 @@
       const D = J('aicoding-baccarat') || {}, st = D.stats || {};
       const hands = Object.values(st).reduce((a, v) => a + ((v && v.hands) || 0), 0);
       return { hd: hands, ls: cntClear(J('aicoding-baccarat-lessons'), 'pass'), ru: rules('baccarat'), nat: Object.values(st).reduce((a, v) => a + ((v && v.nat) || 0), 0), tie: Object.values(st).reduce((a, v) => a + ((v && v.bets && v.bets.T && v.bets.T.won) || 0), 0) };
+    },
+    riichi: () => {   // hands played (the stats' counters), the rules course and lessons passed (the save of riichi/: ../mahjong/app.js with JANKA_CLASSIC)
+      const d = J('riichi-v1') || {}, ps = d.pstats || {}, h = ((ps.std && ps.std.hands) || 0) + ((ps.old && ps.old.hands) || 0);
+      return { hd: h, ls: cntClear(d.lessons, 'pass'), ru: rules('riichi') };
     },
     guandan: () => {   // hands played, lessons passed
       const st = (J('aicoding-guandan') || {}).stats || {};

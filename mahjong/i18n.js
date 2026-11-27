@@ -71,6 +71,13 @@ Object.assign(S.en, { cloudT: 'Save your progress', cloudD: 'Link your Google ac
   cloudBusy: 'Syncing…', cloudLast: 'Synced {t}', cloudErr_rules: 'Cloud saving is not ready yet', cloudErr_net: 'Could not connect. Please try again later', cloudErr_fail: 'Could not link',
   cloudOffQ: 'Unlink? (The data on this device stays as it is)', cloudAskT: 'Which data do you want to play with?', cloudAskD: 'This device and the cloud have different progress. The one you do not pick is overwritten.',
   cloudLocal: 'This device', cloudCloud: 'Cloud', cloudUse: 'Play with this', cloudLater: 'Decide later', sumChars: 'Characters', sumGames: 'Games', sumCoins: 'Coins', sumPt: 'Rank pt', cloudSaved: 'Saved {t}', cloudShort: 'Cloud save', cloudErr_tamper: 'This save was edited outside the game and cannot be saved to the cloud', tamperNote: 'This save was edited outside the game. Cloud saving is disabled' });
+// 世界のボドゲ大百科の麻雀（riichi/、2026-11-27）：キャラ・スキルなしの言い方
+if (root.JANKA_CLASSIC) {
+  Object.assign(S.ja, { exitQ: '対局をやめて大百科に戻りますか？', title: '麻雀', sub: 'リーチ麻雀', series: '世界のボドゲ大百科', rkRuleC: '標準ルール（スキルなし）。相手は段位が上がるにつれて強くなります。級のうちはポイントは減りません。初段からは3位・4位で減り、降段もあります（初段より下には落ちません）。',
+    lsDrillsGo: 'ここからは練習問題！ {n}問、だんだんむずかしくなっていくよ。正解したら、わけはぼくが話すね♪', lsListD: 'クジャクパイといっしょに、実際の卓で遊びながら覚えよう', lsSay100: 'かんぺき！ ぼくのしっぽも、うれしくて広がっちゃった♪', lsSayPass: 'やったね、合格クジャ！ この調子で次もいこう。', lsSayFail: 'だいじょうぶ、もう一回やればきっとできる！ ぼくもいっしょに見てるからね。', lsWrong: 'あれれ、ちょっと違うみたい…！ もう一回いってみよう。', bot: 'CPU戦', psBotNote: 'CPUはこの対局の成績を表示しています。', clGift: '🎁 {name}（{r}）をゲット！ 大百科のきせかえで使えます', clGiftGuide: '🎁 ルールコース完走！ クジャクパイ（N）をゲット！ 大百科のきせかえで使えます' });
+  Object.assign(S.en, { exitQ: 'Leave this game and go back to the Atlas?', title: 'Mahjong', sub: 'Riichi Mahjong', series: 'World Board Game Atlas', rkRuleC: 'Standard rules (no skills). Your opponents grow stronger as you climb. In the kyu ranks points never go down; from 1 Dan, 3rd and 4th lose points and you can be demoted (never below 1 Dan).',
+    lsDrillsGo: 'Now some practice: {n} problems, getting harder as you go. After each one, I\'ll tell you why.', lsListD: 'Learn by playing at a real table with Peacotile', bot: 'vs CPU', psBotNote: 'For a CPU, this game\'s record is shown.', clGift: '🎁 You got {name} ({r})! Wear it in the Atlas\' dress-up', clGiftGuide: '🎁 Rules course complete! You got Peacotile (N) — wear it in the Atlas\' dress-up' });
+}
 const YAKU = {
   ja: { riichi: '立直', dbl_riichi: 'ダブル立直', ippatsu: '一発', tsumo: '門前清自摸和', pinfu: '平和', tanyao: '断幺九', iipeikou: '一盃口',
     haku: '役牌 白', hatsu: '役牌 發', chun: '役牌 中', seat_wind: '自風牌', round_wind: '場風牌', haitei: '海底摸月', houtei: '河底撈魚', rinshan: '嶺上開花', chankan: '槍槓',

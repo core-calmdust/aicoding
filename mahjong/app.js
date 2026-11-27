@@ -14,13 +14,18 @@ const sleep = ms => new Promise(r => { const end = performance.now() + ms * FAST
   (function tick() { const left = end - performance.now(); if (left <= 0 && !frozen()) return r(); setTimeout(tick, Math.max(16, Math.min(left, 150))); })(); });
 const ASSETS = window.JANKA_ASSETS || '../images/mahjong/';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+// (2026-11-27, ユーザー「大百科用のマジメな麻雀を雀華をベースに」) the same code runs 世界のボドゲ大百科's 麻雀 (riichi/): window.JANKA_CLASSIC
+// turns off the characters, the skills, the gacha and the coins — plain seats (あなた・CPU), a green felt, no hands over the table,
+// its own save (window.JANKA_KEY). Everything else (rules, BOTs, 3D table, lessons, stats, online) is shared with 雀華.
+const CLASSIC = !!window.JANKA_CLASSIC;
+if (CLASSIC) document.documentElement.classList.add('classic');
 
 // ---------------------------------------------------------------- save
-const KEY = 'janka-v1';
+const KEY = window.JANKA_KEY || 'janka-v1';
 // (ユーザー 2026-11-18「軽い抑止」) the save carries a signature of its contents. A save changed outside the game (the browser's tools)
 // no longer matches: it is marked (tamper) — such a save is not uploaded to the cloud and the home says so once. Absurd values are
 // put back in range. It only stops casual editing (the key is in this file), as was explained to the user.
-const SIG_SALT = 'janka:7f3c:雀華', SIG_FLAG = 'janka-sv';
+const SIG_SALT = CLASSIC ? 'riichi:5b2e:麻雀' : 'janka:7f3c:雀華', SIG_FLAG = CLASSIC ? 'riichi-sv' : 'janka-sv';
 const fnv = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); };
 function sigOf(o) { const r = Object.assign({}, o); delete r.sig; const j = JSON.stringify(r); return fnv(SIG_SALT + j) + fnv(j + SIG_SALT); }
 function packSave(o) { delete o.sig; o.sig = sigOf(o); try { localStorage.setItem(SIG_FLAG, '1'); } catch (e) {} return JSON.stringify(o); }
@@ -61,8 +66,18 @@ function load() {
   for (const id in d.chars) { const o = d.chars[id]; o.skills = (Array.isArray(o.skills) ? o.skills : []).filter(k => { try { const k2 = MJSkills.parse(k); return !!(k2 && MJSkills.get(k2.id) && k2.tier >= 0 && k2.tier < MJSkills.TIERS.length); } catch (e) { return false; } }); if (!o.skills.length) delete d.chars[id]; }
   if (!Object.keys(d.chars).length) { const st = MJChars.starter, k = MJSkills.key(st.skill, st.tier); d.chars[st.id] = { skills: [k], use: k }; }
   if (!d.chars[d.sel]) d.sel = Object.keys(d.chars)[0];
+  if (CLASSIC) d.set.skills = false;   // (大百科の麻雀: always the standard rules)
   return d;
 }
+// ---- 大百科の麻雀 (CLASSIC): plain seats instead of characters. The same shape as a character (game.js and the stats read
+// .skill etc.), drawn as a quiet emblem (charImg). The player is あなた; the BOTs are CPU 1–3 (the seat's wind is shown beside).
+const CL_COL = [['#3e7d62', '#173a2c'], ['#5a6f8f', '#1f2a3d'], ['#8a6a3e', '#3a2a14'], ['#7d4f5f', '#341c25']];
+function classicChar(i, name) {
+  const [c1, c2] = CL_COL[i % 4];
+  const nm = name ? { ja: name, en: name } : i === 0 ? { ja: 'あなた', en: 'You' } : { ja: 'CPU ' + i, en: 'CPU ' + i };
+  return { id: 'cl' + i, classic: true, ci: i % 4, name: nm, title: { ja: '', en: '' }, profile: { ja: '', en: '' }, color: c1, color2: c2, rarity: 'N', family: '', lines: {}, nail: 'french', skill: 'swap', tier: 0 };
+}
+const classicSeat = (i, name) => seatChar(classicChar(i, name), MJSkills.key('swap', 0));
 const owns = id => !!DB.chars[id];
 function useKey(id) { const o = DB.chars[id]; return o ? (o.skills.includes(o.use) ? o.use : o.skills[0]) : null; }
 // pc / pkey: the partner (a sister) and the partner's skill — the seat's second skill (game.js slot 1)
@@ -80,7 +95,17 @@ function partnerKey(id) {
   const ks = partnerSkills(id).filter(x => x.ok).map(x => x.k), o = DB.chars[id];
   return ks.includes(o.puse) ? o.puse : ks.includes(useKey(p.id)) ? useKey(p.id) : ks[0] || null;
 }
-function mySeat() { const id = DB.sel; return seatChar(MJChars.get(id), useKey(id), partnerOf(id), partnerKey(id)); }
+// 大百科の麻雀 (riichi/, 2026-11-28 ユーザー「あなたの時には自分のアトラモを、CPUもランダムに今いるアトラモを」): the player's seat
+// shows the avatar chosen in the Atlas (shared/atlas.js .av.icon = av-<species>-<tier>), the CPUs a random Atlamo each game (riichi/atlamo.js)
+const AV_DIR = '../images/atlas/av/';
+function clMyAv() { try { const d = window.Atlas && Atlas.load ? Atlas.load() : JSON.parse(localStorage.getItem('atlas-v1') || 'null') || { av: { icon: 'av-dice-0' } }, m = /^av-([a-z0-9-]+)-(\d)$/.exec((d && d.av && d.av.icon) || ''); return m ? AV_DIR + m[1] + '-' + m[2] + '.webp' : null; } catch (e) { return null; } }
+function clCpuSeat(i, used) {
+  const L = window.RIICHI_ATLAMO; if (!L || !L.length) return classicSeat(i);
+  let k = Math.floor(Math.random() * L.length); for (let n = 0; used.has(k) && n < L.length; n++) k = (k + 1) % L.length; used.add(k);
+  const [sp, ja, en] = L[k], t = Math.floor(Math.random() * 3);
+  return Object.assign(classicSeat(i), { id: 'cla' + i, img: AV_DIR + sp + '-' + t + '.webp', name: { ja, en } });
+}
+function mySeat() { if (CLASSIC) { const s = classicSeat(0), im = clMyAv(); if (im) s.img = im; return s; } const id = DB.sel; return seatChar(MJChars.get(id), useKey(id), partnerOf(id), partnerKey(id)); }
 const coarse = () => matchMedia('(pointer: coarse)').matches;
 function rollSkillKey() {
   const r = Math.random() * 100; let acc = 0, tier = 0;
@@ -183,7 +208,9 @@ const SND = (() => {
     main: { file: 'bgm-main', vol: .45 * .9, restart: false },
     main2: { file: 'bgm-main2', vol: .25 * .9, restart: false },
     main3: { file: 'bgm-main3', vol: .235 * .9, restart: false },
-    main4: { file: 'bgm-main4', vol: .26 * .9, restart: false },   // (2026-11-16, ユーザー「forbidden echoes を通常BGMに」: −14.3 LUFS → ≈ −26)
+    main4: { file: 'bgm-main4', vol: .26 * .9, restart: false },
+    // (2026-11-28, ユーザー「大百科の麻雀の対局中BGMはこちらで（雀華とは別に）」: riichi/'s one track — the Japanese flute, −11.3 LUFS → ≈ −26 like the others)
+    flute: { file: 'bgm-flute', vol: .166, restart: false },   // (2026-11-16, ユーザー「forbidden echoes を通常BGMに」: −14.3 LUFS → ≈ −26)
     riichi: { file: 'bgm-riichi', vol: .26, restart: true },
     riichi2: { file: 'bgm-riichi2', vol: .182, restart: true },   // (2026-11-16, ユーザー「リーチ2BGM」: −9.2 LUFS → ≈ −24 like the first)
     riichi3: { file: 'bgm-riichi3', vol: .184, restart: true },   // (同日「リーチ3」: −9.3 LUFS → ≈ −24)
@@ -193,6 +220,7 @@ const SND = (() => {
     // (同日、ユーザー「ルール曲はこちらに（前のは気が散る）」: the rules course's own, acoustic guitar: −16.2 LUFS → ≈ −22)
     rules: { file: 'bgm-guitar', vol: .52, restart: false },   // (ユーザー 2026-11-15: a short piece, once per results screen — no loop)
   };
+  if (CLASSIC) { TRK.lesson = { file: 'bgm-flute', vol: .166, restart: false }; TRK.rules = { file: 'bgm-flute', vol: .166, restart: false }; }   // (2026-11-28 ユーザー「大百科のルールコースは通常ゲーム中のBGMと同じで良い」: riichi/'s lessons play the flute too, carried on from the game's)
   for (const k in TRK) Object.assign(TRK[k], { url: null, el: null, g: null, on: false, t: 0 });
   const idle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 600 }) : setTimeout(f, 60));
   function mkctx() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } return ac; }
@@ -238,9 +266,9 @@ const SND = (() => {
   // (2026-11-16, ユーザー「1ゲームの中でもランダムで切り替わって欲しい」) a new track is drawn for every hand (the game's tracks) and for every
   // riichi that starts the riichi music (another riichi in the same hand keeps it) — never the one just heard. The next one is drawn
   // ahead and fetched in the background, so it is in memory when it is wanted.
-  const MAINS = ['main', 'main2', 'main3', 'main4'], RIIS = ['riichi', 'riichi2', 'riichi3'];
-  const draw = (list, not) => { const l = list.filter(k => k !== not); return l[(Math.random() * l.length) | 0]; };
-  let mainKey = 'main', riichiKey = 'riichi', nextMain = draw(MAINS), nextRii = draw(RIIS), handT = 0;
+  const MAINS = CLASSIC ? ['flute'] : ['main', 'main2', 'main3', 'main4'], RIIS = CLASSIC ? ['flute'] : ['riichi', 'riichi2', 'riichi3'];   // (riichi/: the flute all game long, through riichi too)
+  const draw = (list, not) => { const l = list.length > 1 ? list.filter(k => k !== not) : list; return l[(Math.random() * l.length) | 0]; };   // (one track only — riichi/: that one)
+  let mainKey = MAINS[0], riichiKey = RIIS[0], nextMain = draw(MAINS), nextRii = draw(RIIS), handT = 0;
   function music(name) {
     clearTimeout(handT);
     if (name === 'main') name = mainKey;
@@ -376,6 +404,8 @@ addEventListener("load", () => setTimeout(() => SND.preload(), 400));
 // ---------------------------------------------------------------- character art
 const ART = new Map();
 function charImg(c, kind) {          // kind: 'full' | 'bust' | 'face' | 'thumb' | 'sil' / 'silf' (the outline of a locked character, full / face: black on clear — tools/make-sil.py)
+  if (c.img) return c.img;
+  if (c.classic) return classicImg(c);
   if (c.art) {
     if (kind === 'full') return `${ASSETS}chara/${c.id}.webp`;
     if (kind === 'thumb') return `${ASSETS}chara/${c.id}-t.webp`;
@@ -421,6 +451,34 @@ function charImg(c, kind) {          // kind: 'full' | 'bust' | 'face' | 'thumb'
   return u;
 }
 
+// 大百科の麻雀: a seat's emblem — a lacquered disc in the seat's colour, a fine gold ring, and a quiet figure (the guide of the
+// lessons: the 中 tile's character). One picture for every size (it is only ever shown small).
+function classicImg(c) {
+  const k = 'cl:' + c.ci + (c.glyph || '');
+  if (ART.has(k)) return ART.get(k);
+  const W = 192, cv = document.createElement('canvas'); cv.width = cv.height = W;
+  const g = cv.getContext('2d'), m = W / 2;
+  const bg = g.createRadialGradient(m * .8, m * .62, W * .05, m, m, W * .62); bg.addColorStop(0, c.color); bg.addColorStop(1, c.color2);
+  g.fillStyle = bg; g.fillRect(0, 0, W, W);
+  // a soft weave in the cloth
+  g.globalAlpha = .07; g.strokeStyle = '#fff'; g.lineWidth = 1;
+  for (let i = -W; i < W * 2; i += 7) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i - W, W); g.stroke(); }
+  g.globalAlpha = 1;
+  g.strokeStyle = 'rgba(232,206,140,.75)'; g.lineWidth = 3; g.beginPath(); g.arc(m, m, W * .43, 0, Math.PI * 2); g.stroke();
+  g.strokeStyle = 'rgba(232,206,140,.35)'; g.lineWidth = 1.5; g.beginPath(); g.arc(m, m, W * .385, 0, Math.PI * 2); g.stroke();
+  if (c.glyph) {
+    g.fillStyle = '#f4ead2'; g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = 8;
+    g.font = `800 ${W * .44}px "Shippori Mincho B1", serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(c.glyph, m, m + W * .03);
+  } else {
+    const fg = g.createLinearGradient(0, W * .25, 0, W * .8); fg.addColorStop(0, 'rgba(246,234,206,.95)'); fg.addColorStop(1, 'rgba(214,190,140,.85)');
+    g.fillStyle = fg; g.shadowColor = 'rgba(0,0,0,.35)'; g.shadowBlur = 6;
+    g.beginPath(); g.arc(m, W * .4, W * .12, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.moveTo(m - W * .24, W * .76); g.quadraticCurveTo(m - W * .23, W * .55, m, W * .55); g.quadraticCurveTo(m + W * .23, W * .55, m + W * .24, W * .76); g.closePath(); g.fill();
+  }
+  const u = cv.toDataURL('image/png');
+  ART.set(k, u);
+  return u;
+}
 // rarity frame around a character image (N plain … UR rainbow, animated)
 function frame(c, kind, cls = '', extra = '') {
   return `<span class="frame fr-${c.rarity} ${cls}" style="--c:${c.color}" ${extra}><img src="${charImg(c, kind)}" alt="" draggable="false"><i class="fx-sh"></i></span>`;
@@ -521,7 +579,7 @@ function modal(html, cls = '') {
   requestAnimationFrame(() => m.classList.add('show'));
   return m.firstElementChild;
 }
-function closeModal() { const m = $('#modal'); m.classList.remove('show'); m.hidden = true; m.innerHTML = ''; if (TB) TB.quiet = false; }
+function closeModal() { const m = $('#modal'); m.classList.remove('show'); m.hidden = true; m.innerHTML = ''; if (TB) TB.quiet = false; if (CLASSIC) clBackSoon(); }
 function confirmBox(q) {
   return new Promise(res => {
     const b = modal(`<p class="cq">${esc(q)}</p><div class="cbtns"><button class="btn" data-a="no">${t('no')}</button><button class="btn gold" data-a="yes">${t('yes')}</button></div>`, 'small');
@@ -533,7 +591,7 @@ function confirmBox(q) {
 function applyText() {
   document.querySelectorAll('[data-t]').forEach(el => { el.textContent = t(el.dataset.t); });
   document.querySelectorAll('[data-tt]').forEach(el => { el.title = t(el.dataset.tt); el.setAttribute('aria-label', t(el.dataset.tt)); });
-  document.title = I18N.lang === 'ja' ? '雀華 〜艶やかなる姫君の雀宴〜' : 'JANKA — The Princesses\' Mahjong Banquet';
+  document.title = CLASSIC ? (I18N.lang === 'ja' ? '麻雀（リーチ麻雀）｜世界のボドゲ大百科' : 'Riichi Mahjong | World Board Game Atlas') : I18N.lang === 'ja' ? '雀華 〜艶やかなる姫君の雀宴〜' : 'JANKA — The Princesses\' Mahjong Banquet';
 }
 function sndIcons() { for (const b of document.querySelectorAll('.snd')) b.innerHTML = IC.gear; }
 function renderHome() {
@@ -552,6 +610,7 @@ function renderHome() {
   $('#btnLesson').innerHTML = mi(IC.lesson, t('lsLessons'), en2('LESSON')); $('#btnOnline').innerHTML = mi(IC.online, I18N.lang === 'ja' ? 'オンライン' : 'Online', en2('ONLINE')); $('#btnRules').innerHTML = mi(IC.rules, t('lsRules'), en2('RULES'));   // (2026-11-18: the lessons are in)
   document.querySelectorAll('#luxMenu [data-soon]').forEach(b => { b.innerHTML = mi(IC[b.dataset.soon] || '', t(b.dataset.soon), t('soon')); });
   sndIcons(); applyLite();
+  if (CLASSIC) { renderHomeClassic(mi, en2); return; }
   const c = MJChars.get(DB.sel);
   const o = DB.chars[c.id], uk = useKey(c.id);
   const home = $('#home'); home.style.setProperty('--c', c.color); home.style.setProperty('--c2', c.color2);
@@ -602,6 +661,57 @@ function renderHome() {
   seg($('#optLen'), [['east', t('east')], ['south', t('south')]], DB.set.len, v => DB.set.len = v);
   seg($('#optSkill'), [['1', t('skillOn')], ['0', t('skillOff')]], DB.set.skills ? '1' : '0', v => DB.set.skills = v === '1');
   seg($('#optLv'), t('lv').map((x, i) => [String(i), x]), String(DB.set.lv), v => DB.set.lv = +v);
+}
+// ---- 大百科の麻雀 (CLASSIC): the BOTs' strength is Lv.1–10 as in the rest of the series (Lv.N＋入門〜最上級, two levels to a tier),
+// the BOT's own level (0–4, fractional — ai.js rolls between whole levels) in even steps
+const CL_LV = n => +((Math.max(1, Math.min(10, n)) - 1) * 4 / 9).toFixed(3);
+const CL_TIER = { ja: ['入門', '初級', '中級', '上級', '最上級'], en: ['Beginner', 'Novice', 'Intermediate', 'Advanced', 'Expert'] };
+function clLvName(n) { return `Lv.${n} ${(CL_TIER[I18N.lang] || CL_TIER.en)[Math.min(4, Math.floor((n - 1) / 2))]}`; }
+const clLvOf = lv => Math.max(1, Math.min(10, Math.round(lv * 9 / 4) + 1));   // (a BOT's level back to Lv.N)
+const lvLabel = lv => CLASSIC ? clLvName(clLvOf(lv)) : t('lv')[Math.max(0, Math.min(4, lv | 0))];
+// ---- 大百科の麻雀: the Atlas' AI bosses (atlas/npc/roster.js BOSSES.riichi, one per three levels: Lv.1–3 スズメチュン … Lv.10 サンゲンドラ).
+// The boss of the level sits across the table (the other two are CPU), and a 1st place gives the Atlas' reward of that level, as on the
+// portal's 3D table: Lv.1 N, Lv.2 R, Lv.3 SR, Lv.4 N … (AtlasNPC.tier) — an avatar into the Atlas' wallet (shared/atlas.js), once.
+const BOSS_IMG = '../images/atlas/av/';
+function clBoss(n) {   // n: Lv.1–10 → { i (0-based band), tier, name, img }
+  const N = window.AtlasNPC, L = N && N.BOSSES && N.BOSSES.riichi; if (!L) return null;
+  const i = N.band('riichi', n), b = L[i]; if (!b) return null;
+  return { i, tier: N.tier('riichi', n), name: b.n, img: `${BOSS_IMG}boss-riichi-${i + 1}-${N.top('riichi', i) ? 3 : 2}.webp` };
+}
+function clBossSeat(n) { const B = clBoss(n); if (!B) return classicSeat(2); const c = classicSeat(2); return Object.assign(c, { id: 'clb' + B.i, img: B.img, name: { ja: B.name.ja, en: B.name.en }, boss: B }); }
+// a gift into the Atlas' wallet (once): true when new
+function atlasGift(id) { try { const A = window.Atlas; if (!A || !A.load) return false; const W = A.load(); if (!W || W.owned.includes(id)) return false; W.owned.push(id); A.save(W); return true; } catch (e) { return false; } }
+// the home: no character — a hand of tiles laid out on the cloth (a 一気通貫 with a pair of 中, the tiles of the game itself),
+// the player's record at the top left, and the same play box (段位戦 / フリー対局, 東風 / 半荘, the BOTs' Lv.)
+function renderHomeClassic(mi, en2) {
+  const P = DB.pstats, all = MJStats.derive(MJStats.sum(P.std, P.old));
+  { const lk = document.querySelector('#home .lg-k'); if (lk) lk.dataset.text = t('title'); }
+  $('#btnRated').innerHTML = mi(IC.rank, t('rated'), en2('RANKED'));
+  $('#aaProf').innerHTML = `<img src="${charImg(mySeat(), 'face')}" alt=""><span><b>${esc(t('you'))}</b><small>${esc(t('psGames'))} ${all.games} ・ ${esc(t('psAvgRank'))} ${all.avgRank == null ? '—' : all.avgRank.toFixed(2)}</small></span>${rankBadge(MJRank.at(DB.rank.pt), 'sm')}`;
+  const hero = $('#pArt');
+  if (hero.dataset.id !== 'classic' && MJTiles.sheets && MJTiles.sheets()) {
+    hero.dataset.id = 'classic';
+    const ty = MJ.parse('123456789m55p777z'), m = (ty.length - 1) / 2;
+    hero.innerHTML = `<div class="clh"><div class="clh-fan">${ty.map((x, i) => `<span class="clh-t" style="--i:${i};--r:${((i - m) * 2.2).toFixed(2)}deg;--y:${(Math.pow(i - m, 2) * .5).toFixed(1)}px"><img src="${MJTiles.url(x, i === 10)}" alt="" draggable="false"></span>`).join('')}</div><i class="clh-sh"></i></div>`;
+  } else if (hero.dataset.id !== 'classic') setTimeout(() => { if (!$('#home').hidden) renderHome(); }, 300);   // (the tile sheets are still loading)
+  if (!DB.set.clv) DB.set.clv = 4;
+  const rankedMode = DB.set.mode !== 'free';
+  $('#aaGoSub').textContent = rankedMode ? `${t('rated')} ・ ${t(DB.set.len === 'south' ? 'south' : 'east')} ・ ${L(MJRank.at(DB.rank.pt).name)}`
+    : `${t(DB.set.len === 'south' ? 'south' : 'east')} ・ CPU ${clLvName(DB.set.clv)}`;
+  $('#optSkill').hidden = true; $('#optLv').hidden = rankedMode; $('#optRank').hidden = !rankedMode;
+  if (rankedMode) { const r = MJRank.at(DB.rank.pt), n = MJRank.next(DB.rank.pt);
+    $('#optRank').innerHTML = `${rankBadge(r)}<span><b>${DB.rank.pt} pt</b><small>${n ? esc(t('rkNext', { r: rkName(n), n: n.pt - DB.rank.pt })) : esc(t('rkTop'))}</small></span><button class="ap-rk-more" data-a="ranked">${esc(t('rkLadder'))} ›</button>`;
+    $('#optRank').onclick = e => { if (e.target.closest('[data-a=ranked]')) openRanked(); }; }
+  const seg = (el, items, cur, cb) => {
+    el.innerHTML = items.map(([v, lab]) => `<button class="${v === cur ? 'on' : ''}" data-v="${v}">${esc(lab)}</button>`).join('');
+    el.onclick = e => { const b = e.target.closest('button'); if (!b) return; SND.pick(); cb(b.dataset.v); save(); renderHome(); };
+  };
+  seg($('#optMode'), [['ranked', t('rated')], ['free', t('freePlay')]], rankedMode ? 'ranked' : 'free', v => DB.set.mode = v);
+  seg($('#optLen'), [['east', t('east')], ['south', t('south')]], DB.set.len, v => DB.set.len = v);
+  // the BOTs' Lv.: a stepper (‹ Lv.4 初級 ›) — ten buttons in a row would not fit the box
+  const lv = DB.set.clv;
+  $('#optLv').innerHTML = `<button data-v="-1" ${lv <= 1 ? 'disabled' : ''} aria-label="−">‹</button><span class="cl-lv"><small>CPU</small><b>${esc(clLvName(lv))}</b></span><button data-v="1" ${lv >= 10 ? 'disabled' : ''} aria-label="+">›</button>`;
+  $('#optLv').onclick = e => { const b = e.target.closest('button'); if (!b || b.disabled) return; SND.pick(); DB.set.clv = Math.max(1, Math.min(10, DB.set.clv + +b.dataset.v)); save(); renderHome(); };
 }
 $('#pArt').addEventListener('click', e => { if (e.target.closest('#pImg')) homeSay(e); });
 $('#partner').addEventListener('click', e => { if (e.target.closest('#ppChg, #ppMore')) { SND.pick(); openChara(DB.sel); } });
@@ -810,7 +920,7 @@ function resetData() {
 }
 $('#btnSet').addEventListener('click', openSettings);
 // 戦績: a labelled button in the home header (PC and phones — this game has no bottom tab bar)
-if (window.GameRecord) { GameRecord.init({ game: 'mahjong', lang: () => I18N.lang, menu: '#luxMenu', btnClass: 'lm rec' });
+if (window.GameRecord) { GameRecord.init({ game: CLASSIC ? 'riichi' : 'mahjong', lang: () => I18N.lang, menu: '#luxMenu', btnClass: 'lm rec' });
   // (2026-11-15) its dialog joins #root, so that on a phone held upright it turns with the rest of the UI (it stood sideways)
   { const ov = document.querySelector('.grc-ov'); if (ov) $('#root').appendChild(ov); } const rb = $('#btnRecord'); if (rb) { $('#luxMenu').insertBefore(rb, $('#btnStats'));
   const fix = () => { const sp = rb.querySelector('span'); if (sp && !rb.querySelector('.lm-t')) { const ic = rb.querySelector('svg'); rb.innerHTML = `<i class="lm-i">${ic ? ic.outerHTML : ''}</i><span class="lm-t"><b>${esc(sp.textContent)}</b><small>RECORD</small></span>`; } };
@@ -820,7 +930,9 @@ function applyLite() {
   if (TB) TB.setQuality(DB.set.lite ? 'lite' : 'high');
   if (typeof homeFx === 'function' && $('#aaFx')) homeFx();
 }
-$('#gSnd').addEventListener('click', openSettings);   // the gear: the same settings as the home screen's (ユーザー 2026-11-14)
+$('#gSnd').addEventListener('click', openSettings);
+// (2026-11-28 ユーザー「戦績はアイコンで見られるように」) 大百科の麻雀 (riichi/) has a record button beside the gear
+if ($('#gRec')) { $('#gRec').innerHTML = IC.stats; $('#gRec').title = t('stats'); $('#gRec').setAttribute('aria-label', t('stats')); $('#gRec').addEventListener('click', () => { SND.pick(); openStats(null); }); }   // the gear: the same settings as the home screen's (ユーザー 2026-11-14)
 // phones always use the landscape layout; held upright, the whole UI is turned 90° (no reliance on the OS rotation)
 const PHONE = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600;
 function fitRoot() {
@@ -875,12 +987,12 @@ function rankStrip(rk) {
 function openRanked() {
   SND.pick();
   const pt = DB.rank.pt, cur = MJRank.at(pt), nx = MJRank.next(pt);
-  const nextGift = MJRank.list.find(x => x.reward && x.i > cur.i);
+  const nextGift = CLASSIC ? null : MJRank.list.find(x => x.reward && x.i > cur.i);
   const lvName = MJRank.botName(pt, t('lv'));
   const veiled = MJRank.list.some(x => !rkSeen(x));
   const rows = (veiled ? `<div class="rk-row rk-veil">${rankBadge(MJRank.list[MJRank.list.length - 1], 'sm')}<span class="rk-vt">${esc(t('rkVeil'))}</span></div>` : '') +
     MJRank.list.filter(rkSeen).reverse().map(x => {
-    const g = x.reward ? MJChars.get(x.reward) : null, got = g && owns(g.id);
+    const g = x.reward && !CLASSIC ? MJChars.get(x.reward) : null, got = g && owns(g.id);
     return `<div class="rk-row ${x.i === cur.i ? 'cur' : x.i < cur.i ? 'past' : ''}">${rankBadge(x, 'sm')}<span class="rk-need">${x.pt} pt</span>${g ? `<span class="rk-gift ${got ? 'got' : ''}">${frame(g, got ? 'face' : 'silf', got ? '' : 'fr-lock')}<em class="r-${g.rarity}">${g.rarity}</em>${got ? `<b>${esc(L(g.name))}</b>` : `<b>？？？</b>`}</span>` : '<span class="rk-gift none"></span>'}</div>`;
   }).join('');
   const b = modal(`
@@ -892,7 +1004,7 @@ function openRanked() {
           <div class="rk-pts"><b>${pt}</b> pt <small>${esc(t('rkGames', { n: DB.rank.games }))}</small></div>
           ${rankBar(pt)}
           ${nextGift ? `<div class="rk-ng"><span class="rk-gimg rk-sil">${frame(MJChars.get(nextGift.reward), 'silf', 'fr-lock')}</span><span><small>${esc(t('rkNextGift'))}</small><b>？？？</b><em>${esc(t('rkGiftAt', { r: rkName(nextGift), n: Math.max(0, nextGift.pt - pt) }))}</em></span></div>` : ''}
-          <p class="rk-rule">${esc(t('rkRule', { lv: lvName }))}${pt >= MJRank.FLOOR ? '' : ''}</p>
+          <p class="rk-rule">${esc(t(CLASSIC ? 'rkRuleC' : 'rkRule', { lv: lvName }))}${pt >= MJRank.FLOOR ? '' : ''}</p>
           <div class="rk-go">
             ${['east', 'south'].map(len => { const T = MJRank.table(pt, len); return `<button class="go rk-b" data-len="${len}"><b>${esc(t(len))}</b><small>${[0, 1, 2, 3].filter(i => T[i] !== 0).map(i => `<span class="rk-pp ${T[i] < 0 ? 'neg' : ''}">${esc(t('rank')[i])} ${T[i] > 0 ? '+' : '−'}${Math.abs(T[i])}</span>`).join('')}</small></button>`; }).join('')}
           </div>
@@ -1162,11 +1274,12 @@ async function openStats(s) {             // s: a seat of the game on screen; nu
   const tabs = [];
   if (pl.kind === 'me') {
     const P = DB.pstats;
-    tabs.push(['all', t('psAll'), MJStats.sum(P.skill, P.std, P.old)], ['skill', t('skillOn'), P.skill], ['std', t('skillOff'), P.std]);
+    if (CLASSIC) tabs.push(['all', t('psAll'), MJStats.sum(P.std, P.old)]);   // (大百科の麻雀: the standard rules only — one total)
+    else tabs.push(['all', t('psAll'), MJStats.sum(P.skill, P.std, P.old)], ['skill', t('skillOn'), P.skill], ['std', t('skillOff'), P.std]);
     if (!ig) tabs.push(['log', t('history'), null]);
   } else if (pl.kind === 'online' && MJStats.remote) {
     let r = null; try { r = await MJStats.remote(pl.uid); } catch (e) {}
-    if (r && r.raw) tabs.push(['all', t('psAll'), MJStats.sum(r.raw.skill, r.raw.std)], ['skill', t('skillOn'), MJStats.fix(r.raw.skill)], ['std', t('skillOff'), MJStats.fix(r.raw.std)]);
+    if (r && r.raw) { if (CLASSIC) tabs.push(['all', t('skillOff'), MJStats.fix(r.raw.std)]); else tabs.push(['all', t('psAll'), MJStats.sum(r.raw.skill, r.raw.std)], ['skill', t('skillOn'), MJStats.fix(r.raw.skill)], ['std', t('skillOff'), MJStats.fix(r.raw.std)]); }
   }
   if (ig && UIS.track) tabs.push(['game', t('psGame'), UIS.track.seat[s]]);
   let tab = tabs[0] ? tabs[0][0] : 'game';
@@ -1219,13 +1332,13 @@ function yakuTip(row) {
   void tip.offsetWidth; tip.classList.add('show');
 }
 document.addEventListener('mouseover', e => { if (!fine.matches) return; const yk = e.target.closest && e.target.closest('#pstats [data-yk]'); if (yk) yakuTip(yk); else if (!e.target.closest || !e.target.closest('.yk-tip')) { const t0 = document.querySelector('.yk-tip.show'); if (t0) t0.classList.remove('show'); } });
-function closeStats() { const el = $('#pstats'); if (el.hidden) return; el.classList.remove('show'); el.hidden = true; el.innerHTML = ''; PS = null; }
+function closeStats() { const el = $('#pstats'); if (el.hidden) return; el.classList.remove('show'); el.hidden = true; el.innerHTML = ''; PS = null; if (CLASSIC) clBackSoon(); }
 function renderStats() {
   const P = PS, c = P.c, pl = P.pl;
   const tb = P.tabs.find(x => x[0] === P.tab) || P.tabs[0];
   const raw = (tb && tb[2]) || MJStats.blank(), D = MJStats.derive(raw), isG = !!tb && tb[0] === 'game';
   // (in ranked play the bots' strength is not shown — only the rank, as on the ranked screen)
-  const who = pl.kind === 'me' ? t('you') : pl.kind === 'bot' ? (inGame() && UIS.ranked ? 'BOT' : 'BOT · ' + t('lv')[Math.max(0, Math.min(4, pl.lv | 0))]) : esc(pl.name || '');
+  const who = pl.kind === 'me' ? t('you') : pl.kind === 'bot' ? (inGame() && UIS.ranked ? (CLASSIC ? 'CPU' : 'BOT') : (CLASSIC ? 'CPU · ' : 'BOT · ') + lvLabel(pl.lv)) : esc(pl.name || '');
   const sk = (P.ig ? (c.skill ? MJSkills.key(c.skill, c.tier | 0) : null) : useKey(c.id));
   const empty = tb && tb[0] === 'log' ? false : isG ? !D.hands : !D.games && !D.hands;
   let place = null; if (isG && G) place = G.ranking().indexOf(P.s);
@@ -1235,7 +1348,7 @@ function renderStats() {
   const rows = (isG ? [] : [[t('psTop'), pct(D.top)], [t('psRentai'), pct(D.rentai)], [t('psLastAvoid'), pct(D.lastAvoid)], [t('psAvgScore'), num(D.avgScore)], [t('psBust'), pct(D.bust)]])
     .concat([[t('psRiichi'), pct(D.riichi)], [t('psCall'), pct(D.call)], [t('psTsumo'), pct(D.tsumo)], [t('psRiichiWin'), pct(D.riichiWin)],
       [t('psAvgWin'), num(D.avgWin)], [t('psAvgDeal'), num(D.avgDealin)], [t('psDrawTen'), pct(D.drawTenpai)],
-      isG ? [t('psSkillN'), num(raw.skillUses)] : [t('psSkill'), num(D.skillPerGame, 2)], [t('psYakuman'), num(D.yakuman)]]);
+      ...(CLASSIC ? [] : [isG ? [t('psSkillN'), num(raw.skillUses)] : [t('psSkill'), num(D.skillPerGame, 2)]]), [t('psYakuman'), num(D.yakuman)]]);
   const mw = D.maxWin;
   const mwHtml = mw && mw.pts ? `<b class="ps-mwp">${num(mw.pts)}</b><span>${mw.limit ? esc(t(mw.limit)) : esc(t('han', { n: mw.han }) + ' ' + t('fu', { n: mw.fu }))}${mw.yaku ? ` · ${esc(I18N.yaku(mw.yaku))}` : ''}</span>` : `<span class="ps-none">—</span>`;
   // (ユーザー 2026-11-15) every yaku ever made: how many times, and in what share of all the hands played (回数 / 総局数)
@@ -1317,7 +1430,7 @@ const AUTO = /[?&]auto/.test(location.search);
 async function startGame(opt = {}) {
   if (window.MJ && MJ.clearCache) MJ.clearCache();   // (a fresh game: the memo tables start empty, so they never pile up across games)
   if (opt.lesson) SND.lessonLater(opt.lesson.cat ? 'lesson' : 'rules'); else SND.newGame();   // opt.ranked: a 段位戦 game, opt.len its length (a lesson: its own music, carried on)
-  $('#home').hidden = true; $('#game').hidden = false;
+  $('#home').hidden = true; $('#game').hidden = false; $('#game').classList.remove('cl-idle');
   closeModal();
   if (!TB) { TB = new Table3D($('#stage')); TB.setQuality(DB.set.lite ? 'lite' : 'high'); TB.doraFn = isDora; TB.onTileLand = (kind, seat) => { SND.tile(); if (kind === 'river' && UIS.landWait && UIS.landWait.seat === seat) UIS.landWait.done(); }; TB.warm(); }
   TB.resume(); requestAnimationFrame(() => dispatchEvent(new Event('resize')));   // (the table's size is read again once the screen is shown)
@@ -1330,7 +1443,7 @@ async function startGame(opt = {}) {
   // (ユーザー 2026-11-15) in 段位戦 up to 6級 the BOTs bring one skill only, even when the player brings two (an easier start;
   // tools/dual-skill-sim.js: two skills against one is worth about 0.06 of a place)
   const bot1 = !!opt.ranked && DB.rank.pt < MJRank.list.find(r => r.name.ja === '5級').pt;
-  const others = picked.map(c => {
+  const clUsed = new Set(), others = CLASSIC ? [clCpuSeat(1, clUsed), clBossSeat(clLvOf(opt.ranked ? MJRank.botLv(DB.rank.pt) : CL_LV(DB.set.clv || 4))), clCpuSeat(3, clUsed)] : picked.map(c => {
     const key = rollSkillKey();
     if (!me.skill2 || bot1) return seatChar(c, key);
     const sis = pool.filter(x => x.family === c.family && !taken.has(x.id)).sort(() => Math.random() - .5)[0];
@@ -1341,16 +1454,16 @@ async function startGame(opt = {}) {
   });
   const LSN = opt.lesson || null;   // (a lesson: fixed seats — the player, and three young sisters at the table)
   const ON = opt.online || null;   // (online, as the host: online.js gives the seats — the players' own characters, BOTs in the empty seats — and the agents)
-  const chars = ON ? ON.chars : LSN ? [LSN.pos.skills ? seatChar(MJChars.get('komachi'), MJSkills.key('swap', 0)) : me, ...['rikka', 'haruka', 'nana'].map(id => seatChar(MJChars.get(id), rollSkillKey()))] : [me, ...others];
-  chars.concat(chars.map(c => c.partner).filter(Boolean)).forEach(c => { const im = new Image(); im.src = charImg(c, 'full'); if (im.decode) im.decode().catch(() => {}); });   // cut-in art, loaded and decoded in advance
-  const ranked = !!opt.ranked, len = ranked ? opt.len : DB.set.len, lv = ranked ? MJRank.botLv(DB.rank.pt) : DB.set.lv, skills = ranked ? true : DB.set.skills;
+  const chars = ON ? ON.chars : LSN ? (CLASSIC ? [me, ...[1, 2, 3].map(i => classicSeat(i))] : [LSN.pos.skills ? seatChar(MJChars.get('komachi'), MJSkills.key('swap', 0)) : me, ...['rikka', 'haruka', 'nana'].map(id => seatChar(MJChars.get(id), rollSkillKey()))]) : [me, ...others];
+  if (!CLASSIC) chars.concat(chars.map(c => c.partner).filter(Boolean)).forEach(c => { const im = new Image(); im.src = charImg(c, 'full'); if (im.decode) im.decode().catch(() => {}); });   // cut-in art, loaded and decoded in advance
+  const ranked = !!opt.ranked, len = ranked ? opt.len : DB.set.len, lv = ranked ? MJRank.botLv(DB.rank.pt) : CLASSIC ? CL_LV(DB.set.clv || 4) : DB.set.lv, skills = CLASSIC ? false : ranked ? true : DB.set.skills;
   UIS = { ranked: ranked ? { len } : null, lv, chars, players: [{ kind: 'me' }, ...[1, 2, 3].map(() => ({ kind: 'bot', lv }))], track: new MJStats.Tracker(), drawnBy: [null, null, null, null], abort: false, hand: [], intel: null, picked: null, riichiMode: false, resolve: null, opts: null, kind: null };
   const auto = /[?&]auto/.test(location.search);
   const agents = ON ? ON.agents(new Human(), lvx => new SlowBot(lvx)) : LSN ? [new LessonHuman(), new LessonBot(), new LessonBot(), new LessonBot()] : [auto ? new AutoMe(lv) : new Human(), new SlowBot(lv), new SlowBot(lv), new SlowBot(lv)];
   // a lesson: its example, then its practice problems (ls.drills), one hand each at the same table; the score counts them all
   const STG = LSN ? [{ pos: LSN.pos, beats: LSN.beats, intro: LSN.intro, end: LSN.end }].concat(LSN.drills || []) : null;
   const lsGame = (st, i) => new MJLessons.LessonGame({ agents, chars, rules: { length: 'east', skills: !!st.pos.skills }, ui: onEvent, seed: ([...LSN.id].reduce((a, c) => a * 31 + c.charCodeAt(0), 7) + i * 977) >>> 0, oya: 0, pos: st.pos });
-  G = ON ? new MJGame({ agents, chars, rules: { length: ON.len, skills: true }, ui: ON.ui(onEvent) }) : LSN ? lsGame(STG[0], 0) : new MJGame({ agents, chars, rules: { length: len, skills }, ui: onEvent });
+  G = ON ? new MJGame({ agents, chars, rules: { length: ON.len, skills: ON.sk !== false }, ui: ON.ui(onEvent) }) : LSN ? lsGame(STG[0], 0) : new MJGame({ agents, chars, rules: { length: len, skills }, ui: onEvent });
   UIS.lesson = LSN ? { ls: LSN, stg: STG, si: 0, beats: STG[0].beats.slice(), intro: STG[0].intro || [], end: STG[0].end, n: STG.reduce((a, st) => a + st.beats.length, 0), k: 0, miss: new Set(), cur: null, until: 0 } : null;
   UIS.game = G; UIS.online = ON;
   TB.setSleeves(chars.map(c => c.color), chars.map(c => c.nail));   // (each seat's sleeve in her sisters' colour)
@@ -1383,13 +1496,13 @@ async function startGame(opt = {}) {
 async function startRemote(ON) {
   if (window.MJ && MJ.clearCache) MJ.clearCache();
   SND.newGame();
-  $('#home').hidden = true; $('#game').hidden = false;
+  $('#home').hidden = true; $('#game').hidden = false; $('#game').classList.remove('cl-idle');
   closeModal();
   if (!TB) { TB = new Table3D($('#stage')); TB.setQuality(DB.set.lite ? 'lite' : 'high'); TB.doraFn = isDora; TB.onTileLand = (kind, seat) => { SND.tile(); if (kind === 'river' && UIS.landWait && UIS.landWait.seat === seat) UIS.landWait.done(); }; TB.warm(); }
   TB.resume(); requestAnimationFrame(() => dispatchEvent(new Event('resize')));
   TB.hideAll();
   const chars = ON.chars;
-  chars.concat(chars.map(c => c.partner).filter(Boolean)).forEach(c => { const im = new Image(); im.src = charImg(c, 'full'); if (im.decode) im.decode().catch(() => {}); });
+  if (!CLASSIC) chars.concat(chars.map(c => c.partner).filter(Boolean)).forEach(c => { const im = new Image(); im.src = charImg(c, 'full'); if (im.decode) im.decode().catch(() => {}); });
   UIS = { ranked: null, lv: 3, chars, players: [{ kind: 'me' }, ...[1, 2, 3].map(() => ({ kind: 'bot', lv: 3 }))], track: new MJStats.Tracker(), drawnBy: [null, null, null, null], abort: false, hand: [], intel: null, picked: null, riichiMode: false, resolve: null, opts: null, kind: null };
   G = ON.mirror; UIS.game = G; UIS.online = ON;
   TB.setSleeves(chars.map(c => c.color), chars.map(c => c.nail));
@@ -1415,6 +1528,39 @@ $('#gExit').addEventListener('click', async () => {
   if (UIS && UIS.online && window.JankaOnline) JankaOnline.leave(UIS.online);
   quitGame();
 });
+// ---- 大百科の麻雀 (CLASSIC): no title screen (ユーザー 2026-11-27「タイトル画面を出す形じゃなく大百科のUIに統合」). The Atlas' card
+// (atlas/games/riichi-card.js) picks the mode and opens this page with ?go=ranked|free|online|rules|lessons|stats (&len=east|south
+// &lv=1..10): a game starts at once, a list opens over the empty table. When nothing is left on screen (the game quit, the list
+// closed) the page goes back to the card. Without ?go it goes straight to the card (?home: the old home, for checks).
+// (2026-11-28 ユーザー「戻る時はホームではなく大百科の麻雀3Dビュー」) always the Atlas's 3D view of the game, whatever page came before
+const ATLAS_CARD = '../atlas/#home/riichi';
+function toAtlas() { if (window.AtlasLoading && !toAtlas.on) { toAtlas.on = 1; AtlasLoading.show(); } setTimeout(() => { location.href = ATLAS_CARD; }, 60); }   // (the curtain first: the Atlas shows the same one until its 3D view is up)
+// the curtain lifts when the table (or the list over it) is on screen — two frames after, as the full games do (atlas/skin/common.js)
+function clReady() { if (!window.AtlasLoading) return; requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(() => AtlasLoading.hide(), 350))); }
+const clIdle = () => $('#modal').hidden && $('#pstats').hidden && !G && !(window.JankaOnline && JankaOnline._R && JankaOnline._R.code);
+function clBackSoon() { if (!CLASSIC || /[?&]home\b/.test(location.search)) return; setTimeout(() => { if (clIdle()) toAtlas(); }, 120); }
+function clTable() {   // the empty table behind a list (the felt, the rails, the console)
+  $('#home').hidden = true; $('#game').hidden = false; $('#game').classList.add('cl-idle');
+  if (!TB) { TB = new Table3D($('#stage')); TB.setQuality(DB.set.lite ? 'lite' : 'high'); TB.doraFn = isDora; TB.onTileLand = (kind, seat) => { SND.tile(); if (kind === 'river' && UIS && UIS.landWait && UIS.landWait.seat === seat) UIS.landWait.done(); }; TB.warm(); }
+  TB.resume(); TB.hideAll(); requestAnimationFrame(() => dispatchEvent(new Event('resize')));
+}
+function classicBoot() {
+  const q = new URLSearchParams(location.search), go = q.get('go');
+  if (q.has('home')) return;
+  $('#home').hidden = true;
+  const len = q.get('len'), lv = +q.get('lv');
+  if (len === 'east' || len === 'south') DB.set.len = len;
+  if (lv >= 1 && lv <= 10) DB.set.clv = lv;
+  clReady();   // (every branch below puts the table on screen at once)
+  if (go === 'ranked' || go === 'free') { DB.set.mode = go; save(); SND.unlock(); startGame(go === 'ranked' ? { ranked: true, len: DB.set.len } : {}); return; }
+  save();
+  if (go === 'rules' || go === 'lessons') { clTable(); openLessons(go === 'rules' ? 'r' : 'l'); return; }
+  if (go === 'lesson') { const ls = LS_ALL().find(x => x.id === q.get('id')); if (ls) { SND.unlock(); startGame({ lesson: ls }); return; } clTable(); openLessons('r'); return; }   // (2026-11-28: one step of the rules course, picked in the Atlas's 3D view)
+  if (go === 'stats') { clTable(); openStats(null); return; }
+  if (go === 'settings') { clTable(); openSettings(); return; }
+  if (go === 'online') { clTable(); const op = () => { if (window.JankaOnline) JankaOnline.open(); else setTimeout(op, 100); }; setTimeout(op, 0); return; }   // (online.js loads after this file)
+  location.replace(ATLAS_CARD);
+}
 function quitGame() { if (window.MJSkillFx) MJSkillFx.stop();
   if (UIS) UIS.abort = true;
   SND.titleLater();
@@ -1426,6 +1572,7 @@ function quitGame() { if (window.MJSkillFx) MJSkillFx.stop();
   if (TB) TB.pause();
   closeModal(); $('#cutin').hidden = true;
   renderHome();
+  if (CLASSIC) { $('#home').hidden = true; clBackSoon(); }   // (大百科の麻雀: no title screen — back to the Atlas' card, unless a list opens next)
 }
 
 // ---------------------------------------------------------------- events from the game
@@ -2180,8 +2327,8 @@ async function showRyuukyoku(d) {
 const PTS = { ja: '{n}点', en: '{n} pts', zh: '{n}点', ko: '{n}점', es: '{n} pts', fr: '{n} pts', pt: '{n} pts', de: '{n} Pkt.', hi: '{n} अंक', ar: '{n} نقطة', ru: '{n} очк.', 'zh-TW': '{n}點', id: '{n} poin', tr: '{n} puan' };
 function recordGame(d, myRank) {
   if (!window.GameRecord || /[?&]auto/.test(location.search) || !G || !G.rules) return;
-  const r = G.rules, lv = Math.floor(UIS.lv ?? DB.set.lv);
-  try { GameRecord.add({ mode: 'ai', res: myRank === 0 ? 'w' : myRank === 3 ? 'l' : 'd', opp: t(r.length === 'south' ? 'south' : 'east') + ' · ' + t(r.skills ? 'skillOn' : 'skillOff') + ' · BOT ' + t('lv')[lv], key: r.length + ':' + (r.skills ? 1 : 0) + ':' + lv, why: t('rank')[myRank] + ' · ' + (PTS[I18N.lang] || PTS.en).replace('{n}', d.scores[ME].toLocaleString()) }); } catch (e) {}
+  const r = G.rules, lv = CLASSIC ? clLvOf(UIS.lv ?? 0) : Math.floor(UIS.lv ?? DB.set.lv);
+  try { GameRecord.add({ mode: 'ai', res: myRank === 0 ? 'w' : myRank === 3 ? 'l' : 'd', opp: CLASSIC ? t(r.length === 'south' ? 'south' : 'east') + ' · ' + (UIS.ranked ? t('rated') : 'CPU ' + clLvName(lv)) : t(r.length === 'south' ? 'south' : 'east') + ' · ' + t(r.skills ? 'skillOn' : 'skillOff') + ' · BOT ' + t('lv')[lv], key: r.length + ':' + (r.skills ? 1 : 0) + ':' + (CLASSIC && UIS.ranked ? 'r' : lv), why: t('rank')[myRank] + ' · ' + (PTS[I18N.lang] || PTS.en).replace('{n}', d.scores[ME].toLocaleString()) }); } catch (e) {}
 }
 const RAR_BONUS = { N: 0, R: .05, SR: .1, SSR: .2, UR: .3 };
 async function showFinal(d) {
@@ -2205,7 +2352,7 @@ async function showFinal(d) {
     const before = DB.rank.pt, r0 = MJRank.at(before), ap = MJRank.apply(before, UIS.ranked.len, myRank), gain = ap.gain;
     DB.rank.pt = ap.pt; DB.rank.games++;
     const r1 = MJRank.at(DB.rank.pt), ups = MJRank.list.slice(r0.i + 1, r1.i + 1), gifts = [], down = r1.i < r0.i;
-    for (const u of MJRank.list.slice(1, r1.i + 1)) if (u.reward && !owns(u.reward))   // (any reward of a rank reached and not yet held)
+    if (!CLASSIC) for (const u of MJRank.list.slice(1, r1.i + 1)) if (u.reward && !owns(u.reward))   // (any reward of a rank reached and not yet held)
       { const k = rollSkillKey(); DB.chars[u.reward] = { skills: [k], use: k }; gifts.push(u.reward); }
     rk = { gain, before, r0, r1, ups, gifts, down };
   }
@@ -2216,6 +2363,9 @@ async function showFinal(d) {
     if (L0.length > 200) L0.splice(0, L0.length - 200); }
   save();
   if (!UIS.online) recordGame(d, myRank);
+  let gift = null;   // (大百科の麻雀: the boss's reward for a 1st place)
+  if (CLASSIC && !AUTO && !UIS.online && myRank === 0 && window.AtlasNPC) { const n = clLvOf(UIS.lv), B = clBoss(n);
+    if (B && B.tier >= 0 && atlasGift(`av-boss-riichi-${B.i + 1}-${B.tier}`)) gift = { B, t: B.tier }; }
   let olx = '';   // (online: each player's name and, in a rated game, the rating change)
   if (UIS.online && window.JankaOnline) olx = await JankaOnline.finalNote(UIS.online, d, myRank);
   const w = UIS.chars[rank[0]];
@@ -2226,8 +2376,8 @@ async function showFinal(d) {
       <div class="agst-who"><b>${esc(L(w.name))}</b><span>${t('rank')[0]}</span></div>
       <div class="agst-main">
         <h2 class="fn-t">${t('final')}</h2>
-        <div class="fn-rows">${rank.map((s, i) => { const c = UIS.chars[s]; return `<div class="fn-r r${i} ${s === ME ? 'mine' : ''}" data-ps="${s}" style="--c:${c.color};--i:${i}"><em class="mv-r r${i}">${t('rank')[i]}</em><img src="${charImg(c, 'face')}" alt=""><b>${esc(L(c.name))}${s === ME ? ` <small>(${t('you')})</small>` : UIS.online && UIS.online.names && UIS.online.names[s] ? ` <small>(${esc(UIS.online.names[s])})</small>` : ''}</b><span>${d.scores[s].toLocaleString()}</span></div>`; }).join('')}</div>
-        <div class="fn-foot">${rk ? rankStrip(rk) : olx || '<span></span>'}<div class="earn">${icon('coin')} ${t('earned', { n: coins })}${bonus ? `<small class="rbonus">${esc(t('rarBonus', { r: myR, p: Math.round(bonusP * 100), n: bonus }))}</small>` : ''}${sbonus ? `<small class="rbonus">${esc(t('scoreBonus', { n: sbonus, k: (over * 1000).toLocaleString() }))}</small>` : ''}</div>
+        <div class="fn-rows">${rank.map((s, i) => { const c = UIS.chars[s]; return `<div class="fn-r r${i} ${s === ME ? 'mine' : ''}" data-ps="${s}" style="--c:${c.color};--i:${i}"><em class="mv-r r${i}">${t('rank')[i]}</em><img src="${charImg(c, 'face')}" alt=""><b>${esc(L(c.name))}${s === ME ? (CLASSIC ? '' : ` <small>(${t('you')})</small>`) : UIS.online && UIS.online.names && UIS.online.names[s] ? ` <small>(${esc(UIS.online.names[s])})</small>` : ''}</b><span>${d.scores[s].toLocaleString()}</span></div>`; }).join('')}</div>
+        <div class="fn-foot">${gift ? `<span class="cl-gift"><img src="${BOSS_IMG}boss-riichi-${gift.B.i + 1}-${gift.t}.webp" alt=""><b>${esc(t('clGift', { name: L(gift.B.name), r: ['N', 'R', 'SR'][gift.t] }))}</b></span>` : rk ? rankStrip(rk) : olx || '<span></span>'}<div class="earn">${icon('coin')} ${t('earned', { n: coins })}${bonus ? `<small class="rbonus">${esc(t('rarBonus', { r: myR, p: Math.round(bonusP * 100), n: bonus }))}</small>` : ''}${sbonus ? `<small class="rbonus">${esc(t('scoreBonus', { n: sbonus, k: (over * 1000).toLocaleString() }))}</small>` : ''}</div>
           <div class="cbtns"><button class="btn" data-a="home">${t('toHome')}</button><button class="btn gold" data-a="again">${t('again')}</button></div></div>
       </div>
     </div>`, 'stage');
@@ -2328,6 +2478,14 @@ document.addEventListener('keydown', e => {
 // decision (a discard, riichi, tsumo, ron, a call, a skill): a wrong answer is not taken (the hand stays) and is asked again; a
 // right one plays on. Score = the beats answered right at the first try (a hint counts as a miss) — 75 or more passes.
 const GUIDE = 'komachi';
+// (大百科の麻雀) the lessons' guide is not a character: the 中 emblem, called ガイド; the rules course leaves out 雀華's skills (r10)
+// (2026-11-27, ユーザー「レッスンもアトラモの喋りに」) the guide is the Atlas' クジャクパイ (riichi/ls-voice.js: his script, and voice()
+// turning the explanations built from the table into his words); without that file, the plain 中 emblem
+const KJ = CLASSIC && window.KJVoice;
+const CL_GUIDE = Object.assign(classicChar(0), KJ ? { id: 'clg', img: KJ.GUIDE.img, name: { ja: KJ.GUIDE.ja, en: KJ.GUIDE.en } } : { id: 'clg', glyph: '中', ci: 0, name: { ja: 'ガイド', en: 'Guide' } });
+const gv = x => KJ && I18N.lang === 'ja' ? KJ.voice(x) : x;   // (his words: only the Japanese is in the polite voice of 雀華's 小町)
+const guideChar = () => CLASSIC ? CL_GUIDE : MJChars.get(GUIDE);
+const lsRules = () => CLASSIC ? MJLessons.RULES.filter(x => x.id !== 'r10') : MJLessons.RULES;
 class LessonBot {
   async turn(g, s, o) { await sleep(560 * FAST + 60); return { act: 'discard', id: o.drawn ?? g.P[s].hand[g.P[s].hand.length - 1] }; }
   async react() { return { act: 'pass' }; }
@@ -2409,11 +2567,11 @@ function lessonGuide(o) {
   if (!o) { if (el) el.remove(); return; }
   const L = UIS && UIS.lesson; if (!L) return;
   if (!el) { el = document.createElement('div'); el.id = 'lsGuide'; $('#game .hud').appendChild(el); }
-  const c = MJChars.get(GUIDE);
+  const c = guideChar();
   el.className = 'ls-guide' + (o.good ? ' good' : '') + (o.bad ? ' bad' : '');
   el.innerHTML = `<img class="lg-face" src="${charImg(c, 'face')}" alt="">
     <div class="lg-bub"><div class="lg-top"><b>${esc(I18N.L(c.name))}</b><small>${esc(I18N.L(L.ls.title))}${esc(lsStep(L))}</small><em class="lg-sc${o.bad ? ' hit' : ''}">${esc(t('lsNow', { n: lsScoreNow(L) }))}</em><button class="lg-quit" id="lgQuit">${esc(t('lsQuit'))}</button></div>
-      <p>${esc(o.text)}${o.again ? `<span class="lg-again">${esc(o.again)}</span>` : ''}</p>
+      <p>${esc(gv(o.text))}${o.again ? `<span class="lg-again">${esc(gv(o.again))}</span>` : ''}</p>
       ${o.hint || o.next ? `<div class="lg-btns">${o.hint ? `<button class="btn" id="lgHint">${esc(t('lsHint'))}</button>` : ''}${o.next ? `<button class="btn gold" id="lgNext">${esc(o.next)}<kbd>Enter</kbd></button>` : ''}</div>` : ''}</div>`;
   placeGuide(el); guideDodge();
   const q = $('#lgQuit'); if (q) q.onclick = async () => { SND.pick(); if (await confirmBox(t('exitQ'))) { quitGame(); openLessons(L.ls.cat ? 'l' : 'r', L.ls.cat); } };
@@ -2452,20 +2610,23 @@ async function lessonIntro() {
   const pages = L.intro || [];
   for (let i = 0; i < pages.length; i++) { if (!UIS || UIS.lesson !== L) throw 'abort'; await guideWait(I18N.L(pages[i]), i === pages.length - 1 ? t('lsStart') : t('lsNext')); }
 }
-const LS_ALL = () => MJLessons.RULES.concat(MJLessons.LESSONS);
+const LS_ALL = () => lsRules().concat(MJLessons.LESSONS);
 async function lessonDone() {
   const L = UIS && UIS.lesson; if (!L) return;
   const ls = L.ls, score = lsScoreNow(L), pass = score >= 75;
   const rec = DB.lessons = DB.lessons || {}, old = rec[ls.id] || {};
   rec[ls.id] = { best: Math.max(old.best || 0, score), pass: !!(old.pass || pass) }; save();
-  const list = ls.cat ? MJLessons.LESSONS.filter(x => x.cat === ls.cat) : MJLessons.RULES, i = list.indexOf(ls), next = list[i + 1];
+  // (大百科の麻雀) the whole rules course passed = the rules learned, for the Atlas' achievement (shared/atlas.js rules('riichi'))
+  if (CLASSIC && lsRules().every(x => rec[x.id] && rec[x.id].pass)) { try { localStorage.setItem('aicoding-riichi-rules-seen', '1'); } catch (e) {}
+    if (atlasGift('av-peacock-0')) setTimeout(() => toast(t('clGiftGuide'), 4200), 900); }   // (the rules course: the guide's own N, as on the Atlas' rules tours)
+  const list = ls.cat ? MJLessons.LESSONS.filter(x => x.cat === ls.cat) : lsRules(), i = list.indexOf(ls), next = list[i + 1];
   await sleep(450);
   if (!UIS || UIS.lesson !== L) return;
   // (ユーザー 2026-11-19「最後のメッセージを読む前に結果が出る」) 小町's last words stay until 次へ / Enter, then the result
   if (L.lastGood) { await guideWait(L.lastGood, t('lsNext'), null, true); if (!UIS || UIS.lesson !== L) return; }
   lessonGuide(null);
-  const b = modal(`<div class="ls-res ${pass ? 'ok' : ''}"><img class="lr-face" src="${charImg(MJChars.get(GUIDE), 'face')}" alt=""><h3>${esc(pass ? t('lsPass') : t('lsFail'))}</h3>
-    <div class="lr-sc"><b>${score}</b><small>/100</small></div><p class="lr-say">${esc(t(score >= 100 ? 'lsSay100' : pass ? 'lsSayPass' : 'lsSayFail'))}</p><p class="lr-t">${esc(I18N.L(ls.title))}</p><p class="lr-p">${esc(I18N.L(ls.point))}</p><small class="lr-line">${esc(t('lsPassLine'))}</small>
+  const b = modal(`<div class="ls-res ${pass ? 'ok' : ''}"><img class="lr-face" src="${charImg(guideChar(), 'face')}" alt=""><h3>${esc(pass ? t('lsPass') : t('lsFail'))}</h3>
+    <div class="lr-sc"><b>${score}</b><small>/100</small></div><p class="lr-say">${esc(gv(t(score >= 100 ? 'lsSay100' : pass ? 'lsSayPass' : 'lsSayFail')))}</p><p class="lr-t">${esc(I18N.L(ls.title))}</p><p class="lr-p">${esc(I18N.L(ls.point))}</p><small class="lr-line">${esc(t('lsPassLine'))}</small>
     <div class="cbtns"><button class="btn" data-a="list">${esc(t('lsList'))}</button><button class="btn" data-a="again">${esc(t('lsAgain'))}</button>${next ? `<button class="btn gold" data-a="next">${esc(t('lsNextL'))}</button>` : ''}</div></div>`, 'small lsres');
   SND.grade(score);
   // (2026-11-19, ユーザー「次へを押すと真っ暗」: going home and straight back to the table left the 3D view black — the table was
@@ -2484,9 +2645,9 @@ const lsStars = r => !r ? 0 : r.best >= 100 ? 3 : r.best >= 90 ? 2 : r.pass ? 1 
 const starRow = n => `<span class="lx-st">${[0, 1, 2].map(i => `<i class="${i < n ? 'on' : ''}">★</i>`).join('')}</span>`;
 function openLessons(tab, cat0) {
   if (tab) lsTab = tab; if (cat0) lsCat = cat0;
-  const rec = DB.lessons || {}, R = MJLessons.RULES, LL = MJLessons.LESSONS, all = R.concat(LL);
+  const rec = DB.lessons || {}, R = lsRules(), LL = MJLessons.LESSONS, all = R.concat(LL);
   const passN = l => l.filter(x => rec[x.id] && rec[x.id].pass).length, done = passN(all);
-  const g = MJChars.get(GUIDE);
+  const g = guideChar();
   const say = passN(R) === 0 ? (I18N.lang === 'ja' ? 'まずはルールコースから。いっしょに卓に着きましょう！' : 'Start with the rules course — let\'s sit down together!')
     : passN(R) < R.length ? (I18N.lang === 'ja' ? 'その調子です！ 次のステップに進みましょう。' : 'Keep it up! On to the next step.')
     : done < all.length ? (I18N.lang === 'ja' ? 'ルールはばっちり！ レッスンで腕を磨きましょう。' : 'You know the rules! Sharpen your play in the lessons.')
@@ -2504,7 +2665,7 @@ function openLessons(tab, cat0) {
     return `<button class="lx-card ${r && r.pass ? 'done' : ''}" data-id="${ls.id}" style="--cc:${LS_COL[ls.cat]}"><span class="lx-no">${String(i + 1).padStart(2, '0')}</span>${fan(ls)}
       <b>${esc(I18N.L(ls.title))}</b><small>${esc(I18N.L(ls.point))}</small>${ls.drills ? `<i class="lx-qn">${esc(t('lsQn', { n: ls.drills.length + 1 }))}</i>` : ''}<span class="lx-ft2">${starRow(lsStars(r))}<em>${r ? t('lsScore', { n: r.best }) : esc(t('lsNew'))}</em></span></button>`; }).join('')}</div>`;
   const html = `<div class="lx">
-    <aside class="lx-side"><img class="lx-art" src="${charImg(g, 'bust')}" alt=""><div class="lx-say"><b>${esc(I18N.L(g.name))}</b>${esc(say)}</div>
+    <aside class="lx-side"><img class="lx-art" src="${charImg(g, 'bust')}" alt=""><div class="lx-say"><b>${esc(I18N.L(g.name))}</b>${esc(gv(say))}</div>
       <div class="lx-prog">${ring(done, all.length)}<span><b>${done}</b><small>/ ${all.length}</small></span><em>${esc(t('lsPassed'))}</em></div></aside>
     <section class="lx-main"><header class="lx-h"><h2>${esc(t('lsListT'))}</h2><button class="x" data-a="close" aria-label="close">✕</button></header>
       <nav class="lx-tabs"><button class="${lsTab === 'r' ? 'on' : ''}" data-tab="r">${IC.rules}<span><b>${esc(t('lsRules'))}</b><small>${passN(R)} / ${R.length}</small></span></button>
@@ -2590,12 +2751,13 @@ function cloudInit() {
 // ---------------------------------------------------------------- boot
 // animated frame effects follow whatever large frames are on screen
 let ffxT = 0;
-new MutationObserver(() => { clearTimeout(ffxT); ffxT = setTimeout(() => FrameFX.scan(), 60); }).observe(document.body, { childList: true, subtree: true });
+new MutationObserver(() => { clearTimeout(ffxT); ffxT = setTimeout(() => { if (window.FrameFX) FrameFX.scan(); }, 60); }).observe(document.body, { childList: true, subtree: true });
 I18N.set(I18N.lang);
 MJTiles.ready().then(() => { MJTiles.reset(); ART.clear(); renderHome(); });   // (the tile faces from the 上海 sheets, 2026-11-14)
 document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(() => { MJTiles.reset(); ART.clear(); renderHome(); });
 renderHome(); homeEnter();
 cloudInit();
+if (CLASSIC) classicBoot();
 if (DB.tamper) { let shown = false; try { shown = sessionStorage.getItem('janka-tn') === '1'; sessionStorage.setItem('janka-tn', '1'); } catch (e) {} if (!shown) setTimeout(() => toast(t('tamperNote'), 4500), 1200); }
-window.JANKA = { startRemote, mySeat, seatChar, rollSkillKey, toast, modal, closeModal, confirmBox, esc, charImg, get ME() { return ME; }, _save: () => save(), _final: d => showFinal(d), _ev: (e, d) => onEvent(e, d), _overMyRiver: (x, y) => overMyRiver(x, y), get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, mindPop, showMoves, partnerFlash, askDealSkill, roundBanner };
+window.JANKA = { startRemote, mySeat, seatChar, classicSeat, CLASSIC, rollSkillKey, toast, modal, closeModal, confirmBox, esc, charImg, get ME() { return ME; }, _save: () => save(), _final: d => showFinal(d), _ev: (e, d) => onEvent(e, d), _overMyRiver: (x, y) => overMyRiver(x, y), get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, mindPop, showMoves, partnerFlash, askDealSkill, roundBanner };
 })();

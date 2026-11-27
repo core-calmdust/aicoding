@@ -15,7 +15,7 @@
   'use strict';
   const A = window.AtlasNPC = window.AtlasNPC || {};
   A.LEVELS = { chess: 33, shogi: 30, go: 37, reversi: 36, gomoku: 20, checkers: 20, xiangqi: 20, janggi: 23, tafl: 30, ur: 20, senet: 20, morris: 11,
-    connect4: 9, dots: 12, mancala: 11, backgammon: 10, hex: 20, fanorona: 20, ugolki: 28, agon: 28, konane: 26, latrunculi: 26, foxgeese: 20, patolli: 20, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, botao: 20, alquerque: 20, amazons: 28, hitblow: 20, sugoroku: 20, goose: 20, liubo: 20 };
+    riichi: 10, connect4: 9, dots: 12, mancala: 11, backgammon: 10, hex: 20, fanorona: 20, ugolki: 28, agon: 28, konane: 26, latrunculi: 26, foxgeese: 20, patolli: 20, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, botao: 20, alquerque: 20, amazons: 28, hitblow: 20, sugoroku: 20, goose: 20, liubo: 20 };
   const N = s => { const p = s.split('|'), k = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'ru', 'hi', 'ar'], o = {}; k.forEach((l, i) => { o[l] = p[i] || p[1]; }); ['es', 'fr', 'pt', 'de', 'id', 'tr'].forEach(l => { o[l] = o.en; }); return o; };
   const b = (v, m, n) => ({ v, m, n: N(n) });
   // colours: [body, belly / face, accent]
@@ -377,6 +377,17 @@
       b('trickster', { a: 'fox', c: [0xff9a4a, 0xfff4e6, 0x3a6ad8], hat: 'kasa', held: 'die', ex: ['scarf'], sc: 0x3a6ad8 }, 'サイノメコン|Dicefox|骰子狐狐|骰子狐狐|사이노메콘|Дайсфокс|डाइसफ़ॉक्स|دايسفوكس'),
       b('cool', { a: 'hawk', c: [0x8a6a4a, 0xf4e6d0, 0x2a2a38], beak: 0xffc040, hat: 'eboshi', held: 'die', ex: ['robe'], rc: 0x2a2a38 }, 'ショウソウタカ|Shosohawk|正仓隼|正倉隼|쇼소타카|Шосохок|शोसोहॉक|شوسوهوك'),
       b('king', { a: 'dragon', c: [0x2f6a44, 0xe0f4e0, 0xffd65a], hat: 'bigcrown', held: 'die', ex: ['cape'], cape: 0x6a3a8a }, 'テンピョウドラ|Tempyodra|天平龙宝|天平龍寶|덴표도라|Тэмпёдра|टेम्प्योड्रा|تيمبيودرا'),
+    ],
+    // 麻雀 (riichi/, 2026-11-27): the game's own story — the sparrow of its name (麻雀 = sparrow) from the coast of Ningbo where the oldest
+    // tiles were found, the 1920s American craze (Babcock's rules, 1920; the flappers' mahjong parties), Japan's first parlours and the
+    // 日本麻雀連盟 of the writer Kikuchi Kan (1929), and the three dragons of the tiles (白・發・中) for the top (UR in the gacha)
+    // (2026-11-28, ユーザー「クジャクパイみたいにしっかり麻雀モチーフなキャラに」) built of the game itself: the sparrow's wings, tail and crest are
+    // 索子 bamboo, the cat IS a 五筒 tile (赤五 at SR) with a 点棒 tail, the owl's eyes are 一筒 rings, the dragon's crest the 三元牌
+    riichi: [
+      b('sleepy', { a: 'bird', c: [0xb8865a, 0xfff2e0, 0x2f9a5a], beak: 0x3a2a20, held: 'mjface', f: 's1', ex: ['soucrest', 'souwings', 'soutail', 'scarf'], sc: 0xd8283c }, 'スズメチュン|Sparrowchun|麻雀啾啾|麻雀啾啾|참새짹|Воробьичун|स्पैरोचुन|سبارو تشون'),
+      b('merchant', { a: 'cat', mj: 'neko', c: [0xfffefa, 0xffffff, 0xd8283c] }, 'バブコニャン|Babcocat|巴布猫猫|巴布貓貓|바브코냥|Бабкокот|बैबकोकैट|بابكوكات'),
+      b('scholar', { a: 'owl', c: [0x8a7460, 0xf4eadc, 0x2a477a], hat: 'mortar', hc: [0x1e6a48, 0xd8283c], held: 'mjbook', ex: ['pineyes', 'pinbelly', 'scarf'], sc: 0x1e6a48 }, 'キクチホー|Kikuowl|菊池咕|菊池咕|기쿠치호|Кикуоул|किकुआउल|كيكوأول'),
+      b('king', { a: 'dragon', c: [0x2f8a5a, 0xf0f8e8, 0xd8283c], held: 'mjface', f: 'chun', ex: ['sangenspine', 'tenbouhorns', 'cape'], cape: 0xd8283c }, 'サンゲンドラ|Sangendra|三元龙宝|三元龍寶|산겐도라|Сангендра|सांगेंड्रा|سانغيندرا'),
     ],
     // peg solitaire (2026-11-14): no AI — the two Atlamo come with the goals of a game without hints (atlas/games/peg.js):
     // N 3 or fewer left · R one left · SR one left on ◎. The flat boards give the princess's, the pyramid Kepler's (UR in the gacha).
