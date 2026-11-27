@@ -293,6 +293,10 @@
     { id: 'shunman', w: 2048, h: 1480, rijks: 'RP-P-1995-287', bg: '#efe9dc', spots: [[.71, .63], [.52, .73], [.3, .86], [.38, .28], [.87, .33], [.86, .8]], links: [{ g: 'solitaire' }] },
     // (2026-11-25) the Rijksmuseum: G. M. Mitelli, 'Gioco de mestieri', dice game of twenty trades (1698)
     { id: 'mitelli', w: 2048, h: 1535, rijks: 'RP-P-2015-26-1606', bg: '#e8e3d6', spots: [[.51, .03], [.06, .09], [.49, .17], [.89, .17], [.45, .88], [.91, .98]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: William Hogarth, 'The Lottery' (1721)
+    { id: 'hogarth', w: 2048, h: 1681, rijks: 'RP-P-OB-18.741', bg: '#e4dfd2', spots: [[.26, .29], [.78, .29], [.5, .24], [.49, .52], [.78, .65], [.5, .89]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: G. D. Matthieu, ladies playing draughts by candlelight (1765)
+    { id: 'matthieu', w: 2048, h: 1680, rijks: 'RP-P-1999-31', bg: '#e4e0d8', spots: [[.4, .67], [.49, .29], [.45, .8], [.36, .33], [.67, .25], [.79, .97]], links: [{ g: 'checkers' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
