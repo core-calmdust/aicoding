@@ -718,6 +718,11 @@
     dubL: ['少しむりのある手だけど、『{n}』はこの手で相手をゆさぶるのが持ち味なの。', 'ちょっと強引だけど、相手をゆさぶるのがこの戦法の味なの！', '相手が正しく受けると苦しい手。でも、それがこの戦法のおもしろさコン。'],
     altL: ['{x}でも大丈夫コン！ 手順では{m}が先だけど、順番が入れかわっても同じ『{n}』の形になるの。', 'それもあり！ {x}を先に指しても、最後は同じ『{n}』の形に組めるコン。'],
     leadL: ['『{n}』の手順は{m}。', '正解は{m}だったコン。', 'ここは{m}を指したかったね。', '手順の次の手は{m}なの。', '次は{m}の番だったコン。', '手順どおりなら{m}！', '答えは{m}だったの。'],
+    // (2026-11-28 第2期・担当B) the castles off the shown line (P.off, shogi/tools/openings/castleprobs.js): the opponent played other moves, the castle is 1〜3 moves short
+    askC: ['相手が見本とちがう手を指してきたコン。『{n}』を組み上げる{s}の一手は？', '見本とは相手の形がちがうコン。{s}の番、『{n}』に近づける手はどれ？', '『{n}』はまだ完成していないの。この局面で{s}が指したい一手は？', '相手は見本どおりに来なかったコン。それでも『{n}』を組むなら、{s}はどう指す？', '{s}の番！ 『{n}』の完成まであと少し。いま指すならどの手？'],
+    tailC: ['完成に、また一歩近づいたの！', '囲いの形が一つ整ったコン！', '組み上がりが見えてきたの！', '囲いの完成がまた近づいたコン。', '相手の形がちがっても、ちゃんと組めているの！'],
+    altC: ['{x}でも大丈夫コン！ {m}と同じように、『{n}』の完成に一歩近づく手なの。', 'それもあり！ {x}も『{n}』の形に近づく手で、{m}とほとんど同じくらい良いコン。'],
+    leadC: ['『{n}』を組むなら{m}。', '正解は{m}だったコン。', 'ここは{m}を指したかったね。', '答えは{m}だったの。', '{m}で『{n}』の形に近づけたかったコン。'],
     hintL: ['光っている手が、手順の次の一手。指したあとの形を想像してみてね。', 'ヒントは光っている手コン。『{n}』の完成した形を思い出してみて！'],
   };
   const SH_V = { p: 1, l: 3, n: 4, s: 5, g: 6, b: 8, r: 10, k: 0 };
@@ -842,6 +847,7 @@
     if (F.clash) return Q('cl', ['相手の歩とのにらみ合いに注目！', '歩と歩の向かい合いを見てみて。', 'そろそろ戦いを始める？']);
     if (F.guard) return Q('gd', ['玉のまわりの守りを見てみて。', '玉のそばに、まだすき間がない？', '囲いを作るなら、どの駒が近づくといいかな？', '守りの駒、玉から遠くない？', '玉をもっと安心させる手は？']);
     if (cp) return Q('cp2', ['駒の多さを、どう生かすかな？', '指したあと、駒がどう働くか想像してみて。', '駒落ちの定跡の形、思い出せる？']);
+    if (line === 'off') return Q('lc', ['完成した形を思い出してみて！', '指したあとの形を想像してみてね。', '囲いの形を頭に浮かべてみて！', '組み上がりまで、あと何手かな？', '囲いのどこが、まだ空いているかな？']);   // (the castles off the line: no line to recall)
     if (line) return Q('ln', ['完成した形を思い出してみて！', '指したあとの形を想像してみてね。', '手順の次の一手、思い出せる？', '囲いの形を頭に浮かべてみて！', '組み上がりまで、あと何手かな？']);
     return Q('df', ['強いソフトの対局でいちばん多い手を探してみて。', '手順の流れを思い出してみて！', '手順のどこまで来たか、思い出そう。', '指したあとの形を想像してみよう！', '定跡の形、頭に浮かぶかな？', 'この局面、次は何をする場面？']);
   }
@@ -905,10 +911,10 @@
       return [`{x}のあと、相手の${A}で${X}を取られちゃうの。`, `{x}だと、${X}のまもりがなくなって、相手の${A}に取られるコン。`][k % 2];
     } catch (e) { return ''; }
   }
-  function shContrastJa(F, FA, k, ci) {   // (2026-11-22) a quiet miss in an opening: what the line's move does, and what yours does instead — from the board
+  function shContrastJa(F, FA, k, ci, shO) {   // (shO: what the answer does, said by the caller — the castles off the line)   // (2026-11-22) a quiet miss in an opening: what the line's move does, and what yours does instead — from the board
     const mine = F.bshut ? '{x}は角道を止めてしまう手' : F.pc === 'k' && !F.castle ? '{x}は玉を戦いの起きる側へ動かしてしまう手' : F.edge ? '{x}の端歩は、急がなくてもいい手' : F.swing && !FA.swing ? '{x}は飛車を動かして、作戦が変わってしまう手' : F.pc === 'r' && !FA.swing ? '{x}は飛車をうろうろさせる手' : '';
-    const theirs = `{m}なら${shShortJa(FA)}`;
-    const c = ci != null ? ci : k, sh = shShortJa(FA);
+    const theirs = `{m}なら${shO || shShortJa(FA)}`;
+    const c = ci != null ? ci : k, sh = shO || shShortJa(FA);
     return mine ? [`${mine}。${theirs}から、ここは{m}が先なの。`, `${theirs}けど、${mine}なの。`, `${mine}だから、ここは見送りたいの。${theirs}！`, `残念、${mine}なの。${theirs}からね。`][c % 4] : [`${theirs}けど、{x}ではそうならないの。`, `{x}を指しても、${sh}ことにはならないの。{m}を先に指しておきたいところ！`, `{x}ではその働きがないの。${theirs}から、こっちが先コン。`, `{x}だと${sh}チャンスをのがしちゃうの。{m}が先！`][c % 4];
   }
   function shOpVoice(id) {   // (2026-11-22 lesson loop) one opening's voice: the wordings in turn, and the praise / the soft words / the push in an order of its own
@@ -921,9 +927,9 @@
     V = V || shOpVoice(name); const v = V.pk, i = vi != null ? vi : k;
     const P = o.P, C = P.cand || [], A = o.ans, sente = String(o.pos).split(' ')[1] !== 'w', side = sente ? '☗先手' : '☖後手', FA = shFacts(o.pos, A), N = t => t.replace(/\{n\}/g, name);
     const val = new Map(C), ref = Math.max(...C.filter(c => P.accept.includes(c[0])).map(c => c[1]));
-    const ask = N(SHJ_OP.askL[k % 5]).replace('{s}', side);
-    const hintTx = N(shHintJa(FA, k, false, v, true));
-    const fb = v('fb', [0, 1, 2, 3, 4, 5]), w = shWhyJa(FA, v), t = N(P.dub ? v('dubL', SHJ_OP.dubL) : v('tailL', SHJ_OP.tailL)), alt = N(v('altL', SHJ_OP.altL)), lead = N(v('leadL', SHJ_OP.leadL)), ch = V.cheer(i), so = V.soft(i), pu = V.push(i);
+    const OF = !!P.off, dsq = A.slice(2, 4), onMk = OF && (P.mk || []).includes(dsq[0] + ('abcdefghi'.indexOf(dsq[1]) + 1)), SC = (FA.pc === 'k' ? ['玉を囲いの奥へ入れられる', '玉が囲いの中心へ一歩進む', '玉の引っ越しがまた進む', '玉がまた一歩安全になる', '玉の住まいに近づける'] : ['囲いの形に一歩近づく', '守りの駒がまた一枚そろう', '囲いのすき間が一つ減る', '玉のまわりがまた整う', '組み上がりがまた近づく'])[(vi != null ? vi : k) % 5], ask = N((OF ? SHJ_OP.askC : SHJ_OP.askL)[k % 5]).replace('{s}', side);
+    const hintTx = N(shHintJa(FA, k, false, v, OF ? 'off' : true));
+    const fb = v('fb', [0, 1, 2, 3, 4, 5]), w = OF ? (onMk ? [`${SH_PN[FA.pc]}が、囲いの決まった場所に入る手。`, `${SH_PN[FA.pc]}を、あるべきマスへおさめる手。`, `これで${SH_PN[FA.pc]}が定位置についたの。`, `${SH_PN[FA.pc]}がぴたりと持ち場に入ったコン。`, `${SH_PN[FA.pc]}の居場所はそこで決まり。`] : [`${SH_PN[FA.pc]}を囲いへ一歩近づける手。`, `${SH_PN[FA.pc]}が持ち場へ一歩進む手。`, `${SH_PN[FA.pc]}の行き先へ、まず一歩。`, `${SH_PN[FA.pc]}が囲いの奥へ向かう手。`, `${SH_PN[FA.pc]}をあるべき場所へ近づけたの。`])[(vi != null ? vi : k) % 5] : shWhyJa(FA, v), t = N(P.dub ? v('dubL', SHJ_OP.dubL) : OF ? v('tailC', SHJ_OP.tailC) : v('tailL', SHJ_OP.tailL)), alt = N(OF ? v('altC', SHJ_OP.altC) : v('altL', SHJ_OP.altL)), lead = N(OF ? v('leadC', SHJ_OP.leadC) : v('leadL', SHJ_OP.leadL)), ch = V.cheer(i), so = V.soft(i), pu = V.push(i);
     const good = u => {
       if (u && u !== A && P.accept.includes(u)) return shJoin(ch, alt);
       return shFit(shJoin(ch, w, t), pu); };
@@ -936,8 +942,10 @@
       if (F.hang && !FA.hang && d > .05) return L(F.hangDef ? `{x}だと、その${SH_PN[F.pc]}が相手の${SH_PN[F.hang]}の利きに入っちゃう。安い駒と交換されると駒損なの。` : `{x}だと、その${SH_PN[F.pc]}を相手の${SH_PN[F.hang]}にタダで取られちゃう！`);
       if (FA.cap && FA.behind && !F.cap) return L('{x}だと取り返しそびれて、駒損のままになっちゃう。');
       if ((later || []).includes(u)) return L(N('{x}も『{n}』で指す手だけど、いまはまだ早いの。先に{m}を指しておかないと、形がくずれちゃう') + kon);
+      if (OF && (P.G || []).includes(u)) return L(N(['{x}も『{n}』の形に近づく手だけど、この局面ではAIの評価が{m}よりはっきり下がるの。先に{m}を指しておきたい', '{x}でも『{n}』には近づくけど、相手の形を見ると、AIは{m}のほうがずっと良いと見ている'][fb % 2]) + kon);
       const rw = shStaticWhyJa(o.pos, u, k); if (rw) return L(rw);
-      if (d > .12) return L(shContrastJa(F, FA, k, fb));
+      if (d > .12) return L(N(shContrastJa(F, FA, k, fb, OF ? SC : null)));
+      if (OF) return L(N([`{x}では囲いの形に近づかないの。{m}なら${SC}`, `{x}は囲いの駒が進まない手。ここで{m}なら${SC}`, `{x}だと完成が遠いまま。{m}を指せば${SC}`, `{x}を指しても、囲いはそのまま。{m}だと${SC}`, `{x}のあいだ、囲いは一歩も進まないの。{m}なら${SC}`][(vi != null ? vi : k) % 5]) + kon);
       return L([`{x}も悪い手じゃないけど、それだと手順からはずれちゃうの。{m}なら${shShortJa(FA)}`, `{x}だと、組みたい形から少しそれるの。手順の{m}なら${shShortJa(FA)}`, `{x}は形に合わない一手なの。ここで{m}なら${shShortJa(FA)}`, `{x}では組む順番がずれちゃうの。先に{m}なら${shShortJa(FA)}`, `{x}だと手順が一つ飛んじゃう。{m}を指してこそ${shShortJa(FA)}`, `{x}は今の形には早すぎるの。{m}だと${shShortJa(FA)}`][fb] + kon);
     };
     return { ask, hintTx, good, ng };
@@ -983,7 +991,7 @@
       const voice = fetch('../shogi/voice-fox-ja.js?v=9').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       const rep = getJ('../shogi/lesson-replies.json?v=6').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
       return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261127k3'), getJ('../shogi/openings.json?v=20261124ol1'),
-        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261128sb`).catch(() => ({ sets: [] })))])
+        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261128sd`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
           sets.forEach(s => { if (!s.cat) s.cat = s.handi ? 'handi' : 'mid'; });
@@ -1022,7 +1030,7 @@
       const probs = (s.problems || []).length ? (s.handi ? s.problems.map((p, i) => i) : shuffle(s.problems.map((p, i) => i))).slice(0, 5).sort((a, b) => a - b).map(i => s.problems[i]) : [];   // (the pool's order: easy → hard, 2026-11-24 第2期・担当B)
       // (2026-11-21) sets with few game-based problems (the castles, 鬼殺し, 立石流 …): filled up with "the line's next move" problems
       // (lineProbs, shogi/tools/openings/lineprobs.js), in the line's order
-      if (probs.length < 5 && (s.lineProbs || []).length) probs.push(...shuffle(s.lineProbs.slice()).slice(0, 5 - probs.length).sort((a, b) => a.ply - b.ply));
+      if (probs.length < 5 && (s.lineProbs || []).length) probs.push(...shuffle(s.lineProbs.slice()).slice(0, 5 - probs.length).sort((a, b) => (a.off ? a.dd : a.ply) - (b.off ? b.dd : b.ply)));   // (the castles off the line: easy → hard by dd, 2026-11-28 担当B)
       const nc = NC.shogi || {}, notes = Object.assign({}, s.study && s.study.notes || {}); Object.keys(nc).forEach(k => { const m = k.match(/^op:(.+)\/n(\d+)$/); if (m && m[1] === s.id) notes[m[2]] = nc[k]; });   // (3D: the notes without coordinates)
       const ja = lang === 'ja', nm = L(s.title, 'ja'), hs = s.id.length * 3, sh = String(L(nc['op:' + s.id + '/short'] || s.short, lang) || '');
       const intro = !ja ? sh : s.handi ? `『${nm}』の練習だコン！<br>${sh}` : SHJ_OP.intro[hs % SHJ_OP.intro.length].replace('{n}', nm).replace('{t}', sh.replace(/[。！]$/, ''));   // (2026-11-21 lesson loop: ショウギツネ introduces it)
@@ -1030,7 +1038,7 @@
       if (ja && s.study && s.study.start) try { const gen = shStepNotesJa(s.study.start, s.study.steps.map(x => x[0]), notes, VO.pk); Object.keys(gen).forEach(k => { notes[k] = gen[k]; }); } catch (e) { console.warn('[lessons3d] shogi step notes', e); }
       return { id: s.id, title: L(s.title, lang), intro, start: s.study && s.study.start, steps: (s.study && s.study.steps || []).map(x => x[0]), notes,
         probs: probs.map((p, i) => { const o = { pos: p.sfen, kind: 'best', P: p, ans: (p.mode === 'line' ? p.pv : p.accept || p.pv || (p.cand && [p.cand[0][0]]) || [])[0] };
-          const st = (s.study && s.study.steps || []).map(x => x[0]), later = p.mode === 'line' ? st.filter((u, j) => j > p.ply && (j - p.ply) % 2 === 0) : null;
+          const st = (s.study && s.study.steps || []).map(x => x[0]), later = p.mode === 'line' && !p.off ? st.filter((u, j) => j > p.ply && (j - p.ply) % 2 === 0) : null;
           if (ja && o.ans) try { Object.assign(o, p.mode === 'line' ? shLineJa(o, nm, hs + i, later, VO, i) : shOpJa(o, nm, hs, i, !!s.handi, VO)); } catch (e) { console.warn('[lessons3d] shogi opening', e); } return o; }),
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[s.id] || { best: 0, pass: false }, pass = pts >= Math.ceil(max * PASS); pr[s.id] = { best: Math.max(o.best || 0, Math.round(pts * 100 / max)), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
     },
@@ -6419,7 +6427,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       s_corner: ['このままだと、王に2手で角へ逃げられちゃう！ 角のまわりを固めて止めよう。', '角を守る3つのマス、どこがあいてる？ 王より先に入ろう！', '王が角へ走る前に、どのマスを固める？', '王がねらっている角があるの。どの駒で守る？', 'さあ、角の守りをしっかり！ 2手先まで王を止められる手は？'],
       s_breakout: ['王さまの前に、味方の駒がじゃまをしてるの。どかして、攻め手がふさげない道を開こう！', '味方を1つどかすだけで、王の道が開くかも。どの駒をどこへ？', '攻め手が入りこめない道を、王のために開いてあげて！', '王と角のあいだにいる味方、どこへどかす？', 'さあ、守り手の道開け！ 次の手で王が角へ走れるようにしよう。'],
       s_squeeze: ['王の動けるマスを、いちばん減らせる安全な手はどれ？', '輪をひとまわり小さくしよう！ 王の通り道に、どの駒を立てる？', '王さまの動ける場所をせまくしたいの。はさまれずに寄せられる手は？', '王の行き先を、ぐっと減らしてみて！ 取られない場所でね。', 'さあ、じわじわ追いつめよう！ どの駒を寄せる？'],
-      v_brandubh: ['王さまをつかまえて、勝っちゃおう！', '王のとなりに攻め手がいる！ 反対側に置ける駒は？', 'ブランドゥブなら2枚でつかまえられる。どの駒を動かす？', '角も味方になるのを思い出して！ 王をはさむ手は？', 'さあ、一手で勝負を決めよう！'],
+      v_brandubh: ['王さまが角のすぐとなり！ 角へ逃げられる前に、つかまえて！', '王のとなりに攻め手がいる！ 反対側に置ける駒は？', 'ブランドゥブなら2枚でつかまえられる。どの駒を動かす？', '王をはさむ手は、ここでは1つだけ。となりに寄るだけの手にまどわされないでね！', 'さあ、一手で王さまをつかまえよう！'],
       v_tablut: ['2手以内に、王を端へ逃がせる手を指してみて！', '王から端まで、2方向に見通せるマスはどこかな？', '攻め手が1手でふさぎきれない場所へ、王を動かそう！', '端への道を2本作れたら勝ち！ どこへ行く？', 'さあ、王さまの脱出ルートを作っちゃおう！'],
     },
     hint: {
@@ -6434,7 +6442,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       t_block: ['王から角（端）までの道の上に、攻め手を1つ入れるの。金の丸がその駒！', 'ふさいだあと、王が別のマスで2本の道を作れないかも見ておいて！', '王さまが次に動く先も想像してみて。', '道のどこでふさぐかで、そのあとが変わるの。', 'ふさぎに行く駒が、はさまれないかも確かめて！'],
       t_fort: ['王のまわりの壁に、1か所だけ穴があいてるの。金の丸の駒でふさいでね。', '壁の駒が、攻め手にはさまれない形になるかも確かめて！', '砦は端にくっついた守りの壁。どこが欠けてる？', '王さまが中で動けるスペースも残しておいてね。', '攻め手が入ってこられる入口、ひとつだけあるの。'],
       t_encircle: ['輪に1か所だけすき間があるの。金の丸の駒で閉じてね。', '守り手の駒が端へ出られる道をたどってみて。どこで切れるかな？', '輪はななめにつながっていてもOK！', '外へぬける穴をひとつ探そう。そこに入れば完成なの。', '輪の駒を動かすと、そこが新しいすき間になっちゃう。輪の外から駒を持ってこよう！'],
-      v_brandubh: ['王の反対側に、もう1枚置ける攻め手をさがしてね。', '王のとなりにいる攻め手は？ その向かい側へ行ける駒が答え！', '角のとなりの王なら、角が片側の役をしてくれるの。', '縦でも横でもいいの。2枚で王をはさむ形を作ろう。', '王が玉座のとなりにいないか、先に確かめてね。'],
+      v_brandubh: ['角のとなりの王なら、角が片側の役をしてくれるの。', '王のとなりにいる攻め手は？ その向かい側へ行ける駒が答え！', '縦でも横でもいいの。王の向かい側まで、とちゅうに駒のない道をさがそう。', '王のとなりに入るだけじゃだめ。向かい側に攻め手か角がある所を選んでね。', '王の反対側に、もう1枚置ける攻め手をさがしてね。'],
       v_tablut: ['王を、2つ以上の方向へ端まで見通せるマスへ動かしてね。', '端への道が2本できれば、攻め手は1本しかふさげないの。王はどこへ行く？', 'タブルットは角じゃなくて、端ならどこでも脱出なの。', '王さまの上下左右、端まで空いた道を数えてみて。', '一度にふさがれない場所、見つけられるかな？'],
       s_corner: ['角からななめに並ぶ3マスのどれかに、攻め手を入れるの。金の丸がその駒！', '王が1手動いた先で、角への道ができないかまで読んでみて。', '角を守るマスでも、入る場所で効き目がちがうの。', '王がねらっている角はどれかな？ そのまわりのすき間をさがそう。', '王から角へ向かう道を、指でたどってみて。'],
       s_breakout: ['金の丸の駒が、王の道をふさいでいるの。', '開いた道に、攻め手の駒が1手で入れるかどうか見てみて。', '道にそって動かしても、まだふさいだままなの。', '道を開いても、攻め手にふさがれたら意味がないの。', '王から両側の角まで、とちゅうにいる駒を指でたどってみて。'],
@@ -6480,6 +6488,18 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     let stop = false; for (const r of q.moves()) { const z = q.clone().play(r); if (z.res) return z.res === 2 ? '' : 'lose'; if (!escNow(z)) stop = true; }
     return !stop ? '' : q.kingLines().length ? 'block' : (F[q.king] & 1) ? 'shut' : 'off';
   }
+  // (2026-11-28 第2期 担当A) v_brandubh: what follows a move u of the attackers (read with the rules, as tools/lesson-verify-tfbrand.js):
+  // why 'adj' next to the king but the far side open (or the king next to the throne), 'far' not next to the king; esc = the king steps
+  // into a corner next; capm / cap = a defender takes the moved man / another attacker next; corner = the answer takes him against a corner
+  function tfBrandWhy(E, pos, u) {
+    const n = pos.n, q = pos.clone().play(u), k = pos.king, t = E.mTo(u); if (q.res) return { why: '' };
+    const kr = Math.floor(k / n), kc = k % n, tr = Math.floor(t / n), tc = t % n, adj = Math.abs(kr - tr) + Math.abs(kc - tc) === 1;
+    const esc = q.moves().some(x => E.mFrom(x) === q.king && q.clone().play(x).res === 2);
+    let capm = false, cap = false; for (const r of q.moves()) { const c = q.clone().play(r).lastCaps; if (c.length) { cap = true; if (c.includes(t)) capm = true; } }
+    return { why: adj ? 'adj' : 'far', esc, cap, capm };
+  }
+  function tfBrandCorner(E, pos, m) { const n = pos.n, k = pos.king, t = E.mTo(m), r = 2 * Math.floor(k / n) - Math.floor(t / n), c = 2 * (k % n) - t % n;
+    return r >= 0 && c >= 0 && r < n && c < n && !!(pos.G.F[r * n + c] & 2); }
   // (2026-11-28 第2期 担当A) s_squeeze: what follows a move u of the attackers (read with the rules, as tools/lesson-verify-tfsqueeze.js):
   // km = the king's squares after it; why: 'esc' the king reaches a corner within his 2 moves, 'capm' a defender takes the moved man next,
   // 'cap' a defender takes another attacker next, 'wide' safe (the king keeps km squares), '' the game ends
@@ -6704,11 +6724,19 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
           : pk(['{x}だと、まだ輪が閉じないね。', '{x}では、輪のすき間がそのまま残るの。', '{x}では、すき間をふさげないんだ。', '{x}だと、輪の出口があいたままなの。', '{x}のあとも、すき間が残ったまま。']);
         return f(w + pk(['{m}なら、さいごのすき間が閉じるから。', '{m}で閉じれば、守り手の出口はひとつもなかったの。', '正解の{m}が、輪の最後のひとつ。', 'こっちの{m}だったら、包囲が完成していたね。', '{m}を選べば、その場で攻め手の勝ちだったの。'])); };
     } else if (id === 'v_brandubh') {
-      good = () => fg(FA.win ? (FA.kingNearCorner ? pk(['{x}で、角と攻め手で王をはさんだ！ 角も攻め手の味方なの。', '角を味方にして王さまを捕獲！', '{x}で角との間にはさんで、攻め手の勝ち！', '角のとなりの王を、1枚でつかまえたね！', '角が片側の役！ 王さまをつかまえたの。'])
-        : pk(['{x}で王さまをはさんだ！ 攻め手の勝ち！', '2枚でぴたっとつかまえた！ 小さな盤のブランドゥブならではだね。', '{x}で勝負あり！ 王の向かい側に、ちゃんと駒を置けたね。', '王さまを両側からはさんで捕獲！', '向かい側にぴたり！ 王さま、つかまえたの。'])) : pk(['{x}で王を追いつめた！', '王さまをしっかり追いつめたね！', 'いい追いこみ！', '王の逃げ道をせばめたね！', 'じわっと追いつめた！']));
-      ng = u => say(u, G => !G.win, G => pk(['{x}だと王の反対側があいたままで、つかまえられないの。', '{x}では、王を2枚ではさむ形にならないね。', '{x}だと、王の向かい側に駒が来ないの。', '{x}だと、王さまは自由なまま。', '{x}では、王をはさむもう1枚が足りないんだ。'])
-          + (G.scan().w ? pk(['しかも王に逃げられちゃう！', 'そのうえ、王さまが角へ逃げちゃう。', 'おまけに王が脱出しちゃうの。', 'しかも王に逃げ切られるね。', 'そのうえ王に走られちゃう！']) : ''),
-        pk(['{m}なら、王を2枚ではさめたから。', '{m}で向かい側に置けば、王はもう逃げられなかったの。', '正解の{m}は、王の向かい側に入る手。', 'こっちの{m}だったら、その場で王をつかまえられたね。', '{m}を選べば、攻め手の勝ちだったんだ。']));
+      // (2026-11-28 第2期 担当A) one move takes the king (2 men, or a man and a corner); every wrong move by what follows it on the board
+      // (tfBrandWhy); tools/lesson-verify.js tafl reads each line back against the rules (tools/lesson-verify-tfbrand.js)
+      const cor = tfBrandCorner(E, pos, A);
+      good = () => fg(cor ? pk(['{x}で、角と攻め手で王をはさんだ！ 角も攻め手の味方なの。', '角を味方にして王さまを捕獲！ 逃げられる前に間に合ったね。', '{x}で角との間にはさんで、攻め手の勝ち！', '角のとなりの王を、1枚でつかまえたね！', '角が片側の役！ 王さまをつかまえたの。'])
+        : pk(['{x}で王さまをはさんだ！ 攻め手の勝ち！', '2枚でぴたっとつかまえた！ 小さな盤のブランドゥブならではだね。', '{x}で勝負あり！ 王の向かい側に、ちゃんと駒を置けたね。', '王さまを両側からはさんで捕獲！', '向かい側にぴたり！ 王さま、つかまえたの。']));
+      ng = u => { const v = alt(u), R = v != null ? tfBrandWhy(E, pos, v) : { why: '' };
+        const w = R.why === 'adj' ? pk(['{x}だと王のとなりには入れたけど、向かい側があいていて、はさめないの。', '{x}では王に寄れても、反対側に味方がいないね。', '{x}だと、王のとなりに来ただけ。向かい側に攻め手も角もないの。', '{x}のあと、王の反対側があいたままなの。', '{x}では、王をはさむもう1枚が向かい側にいないんだ。'])
+          : pk(['{x}だと、王のとなりに駒が来ないの。', '{x}では、王をはさむ形にならないね。', '{x}だと、王の向かい側にも、となりにも駒が来ないの。', '{x}だと、王さまは自由なまま。', '{x}では、王から離れた所に動いただけなんだ。']);
+        const w2 = R.esc ? pk(['そのうえ、王さまが次に角へ逃げちゃう！', 'しかも王に角へ逃げこまれちゃう。', 'おまけに王が次の手で角に着いちゃうの。', 'そのうえ王さまに角へ脱出されちゃう。', 'しかも次に、王が角へ入っちゃう！'])
+          : R.capm ? pk(['しかも動かした駒が、守り手にはさまれちゃう。', 'おまけに、動かした駒が次に取られるの。', 'そのうえ、その駒が守り手にはさまれちゃう。', 'しかも、動かした駒が次の手で取られちゃう。', 'おまけに、寄せた駒が守り手に取られるの。'])
+          : R.cap ? pk(['しかも、ほかの攻め手が守り手にはさまれちゃう。', 'おまけに、別の攻め手が次に取られるの。', 'そのうえ、守り手にほかの攻め手を取られちゃう。', 'しかも次の手で、別の攻め手がはさまれちゃう。', 'おまけに、ほかの攻め手が取られちゃうの。']) : '';
+        return f(w + w2 + (cor ? pk(['{m}なら、角と攻め手で王をはさめたから。', '{m}で向かい側に置けば、角が片側の役をしてくれたの。', '正解の{m}は、角の反対側に入る手。', 'こっちの{m}だったら、角を味方にしてつかまえられたね。', '{m}を選べば、攻め手の勝ちだったんだ。'])
+          : pk(['{m}なら、王を2枚ではさめたから。', '{m}で向かい側に置けば、王はもう逃げられなかったの。', '正解の{m}は、王の向かい側に入る手。', 'こっちの{m}だったら、その場で王をつかまえられたね。', '{m}を選べば、攻め手の勝ちだったんだ。']))); };
     }
     return wrap({ ask, hintTx, good, ng }, pu);
   }
@@ -6716,7 +6744,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-tafl-lessons', OKEY: 'aicoding-tafl-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=16'), fetch('../tafl/i18n.js?v=6ek-nd1-bm2-bs1-tu1-sc1-br1-sq1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261125o').catch(() => null)])
+      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=17'), fetch('../tafl/i18n.js?v=6ek-nd1-bm2-bs1-tu1-sc1-br1-sq1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261125o').catch(() => null)])
         .then(([ls, T, _, op]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] tafl texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -7318,7 +7346,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-morris-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([Promise.all(MMV.map(v => getJ(`../morris/lessons${v === 'nine' ? '' : '-' + v}.json?v=20261126-mb`))), Promise.all(['../morris/i18n.js?v=20261116-p61', '../morris/i18n_more.js?v=20261126-mb'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mrEng().catch(() => null)])
+      return (this.p = Promise.all([Promise.all(MMV.map(v => getJ(`../morris/lessons${v === 'nine' ? '' : '-' + v}.json?v=20261128-tb`))), Promise.all(['../morris/i18n.js?v=20261116-p61', '../morris/i18n_more.js?v=20261126-mb'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mrEng().catch(() => null)])
         .then(([L, T]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] morris texts', e); } this.I = w.I18N || {};
           const steps = []; L.forEach((d, k) => d.steps.forEach(s => { if (s.problems && s.problems.length) steps.push(Object.assign({ v: MMV[k] }, s)); })); this.data = { steps }; return this; })
         .catch(e => { this.p = null; throw e; }));

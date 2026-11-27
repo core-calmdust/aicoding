@@ -229,8 +229,8 @@ const CHECKS = {
             if (id === 'defend' && P.sc) { const top = Math.max(...P.sc.map(e => e[1])), W = E.WINT; const n = P.sc.filter(([x, v]) => v >= top - 6 && !(top > W && v < top)).length; if (n !== 1) bad(g, K, `${w}: ${n} moves are as good as the answer (not the only defence)`); }
             if (id === 'tw_diag' && r !== NO) { const DG = [[0, 3, 6], [2, 5, 8], [21, 18, 15], [23, 20, 17]]; if (!DG.some(ml => ml.includes(t) && ml.every(q => after.b[q] === me))) bad(g, K, `${w}: the mill is not on a diagonal line`); }
           }); }); }); });
-    // (2026-11-26 第2期 担当A) nine b_place・b_mill: the strict ①〜⑧ — tools/lesson-verify-mmbasic.js (key = the 3D list index)
-    require('./lesson-verify-mmbasic.js').verify().forEach(fa => bad(g, String(['b_place', 'b_mill'].indexOf(fa.step)), `${fa.step} q${fa.q}: ${fa.msg}`));
+    // (2026-11-26 第2期 担当A) nine b_place・b_mill・b_take・b_block: the strict ①〜⑧ — tools/lesson-verify-mmbasic.js (key = the 3D list index)
+    require('./lesson-verify-mmbasic.js').verify().forEach(fa => bad(g, String(['b_place', 'b_mill', 'b_take', 'b_block'].indexOf(fa.step)), `${fa.step} q${fa.q}: ${fa.msg}`));
   },
   // (2026-11-22 lesson loop) the tafl lessons ('tafl', key = the step's index in tafl/lessons.json): every accepted / scored move is legal and
   // the best one is the top of the stored values (within 15); what the step's words say the answer does holds on the board (atlas/lessons3d.js

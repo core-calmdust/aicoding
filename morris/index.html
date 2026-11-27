@@ -2736,7 +2736,7 @@ function rtConfirm(after) {
 let LESSONS = null, lsVar = 'nine', pzVar = 'nine';
 const VSUF = v => v === 'nine' ? '' : '-' + v, VPRE = v => v === 'nine' ? '' : v + ':';
 const LSDATA = {}, PZDATA = {};
-function loadLs(v) { return LSDATA[v] || (LSDATA[v] = fetch(`lessons${VSUF(v)}.json?v=20261126mb`).then(r => r.json()).catch(() => null)); }
+function loadLs(v) { return LSDATA[v] || (LSDATA[v] = fetch(`lessons${VSUF(v)}.json?v=20261128tb`).then(r => r.json()).catch(() => null)); }
 function loadPz(v) { return PZDATA[v] || (PZDATA[v] = fetch(`puzzles${VSUF(v)}.json?v=20261104pzd`).then(r => r.json()).catch(() => null)); }
 const lessonsReady = loadLs('nine').then(d => (LESSONS = d));
 const lsKey = id => VPRE(lsVar) + id;
@@ -3989,7 +3989,7 @@ window.addEventListener('resize', () => renderFx());
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261127rc" defer></script>
+<script src="../shared/atlas.js?v=20261128b" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261109ac2l14as1" defer></script>
 <script src="../shared/infotabs.js?v=24" data-strips defer></script>

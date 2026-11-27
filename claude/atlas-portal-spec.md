@@ -74,6 +74,8 @@ URL: https://core-calmdust.github.io/aicoding/atlas/  ／ 詳細: repo の atlas
 - 旧2Dアイコン（i001…）は廃止。保存データからは消し、初期キャラ（ダイスン・ポトンウサ・ゴイシペン）を配り直す
 
 ## 共通ルール
+- サイトTOP（ルートの index.html）のアイコンの並び（2026-11-28、ユーザー指示）：カードゲームの4つは **麻雀 → グアンダン → バカラ → ポーカー** の順（だつごくスライダーの次から。前後のゲームは動かさない）。index.html の一覧の定義順がそのまま並び。大百科（atlas/）のホームの並びは更新順のままで、固定はしない（一度 `PIN` で先頭に固定したのは読み違いで、取り消した）。
+  - MUSEUM の7点（セネト・棊局・双六局・ブランドゥブ・チェスとガチョウ・六博・ウル、この順のまま）は、最後の「リバーシ v3.1」の直前にまとめる。
 - 更新情報の並び（2026-11-08）：先頭は公開14日以内のいちばん新しい新作（`news()`）、残りは新しい順。
 - バッジ（2026-11-08、最大2・優先順）：**ALPHA**（`alpha: true`、これだけ。2026-11-15〜新作はここから）→ **BETA**（`beta: true`、これだけ）→ **NEW**（公開 `released` から14日以内、これだけ）→ **ORIGINAL**（`original: true`、NEWの後）→ **UPDATE**（そのゲームの最新の `UPDATES` の行が公開日より後の日付＝更新で、14日以内）。公開日以前の行は「公開の行」とみなすので、行にラベルは要らない。判定は `shared/atlas.js` の `badges()`（`NEW_DAYS`・`UPDATE_DAYS`）、文字は `badgeText()`（どのバッジも全言語で英語表記）。出る場所：更新情報の列・ゲームのアイコン一覧・ゲーム一覧・ゲームカード、トップページ `index.html` の詳細パネル（同じ `badges()` を読む）。色：NEW＝コーラル、UPDATE＝スカイ、ALPHA＝ティール、BETA＝グレープ（PREMIUM は廃止）
 - タグ：ai / online / rated / netrank / daily / lessons / puzzles / openings / variants / mobile
