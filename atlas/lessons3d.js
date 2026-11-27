@@ -6372,7 +6372,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       t_tuichi: ['王を盤の端へ出して、その辺の両側の角まで駒がないマスをさがしてね。金の丸が王さま！', '王が着いた先から、角へまっすぐ行ける道は何本あるかな？ 2本ならトゥイチ！', '1本だけの道は、すぐふさがれちゃう。2本同時がねらい目なの。', '王さまが出られる端はいくつかあるね。着いた辺の両側が、角まで空いているのはどこ？', '辺の1列が、王さまのほかは角から角まで空っぽになる場所はどこかな？'],
       t_block: ['王から角（端）までの道の上に、攻め手を1つ入れるの。金の丸がその駒！', 'ふさいだあと、王が別のマスで2本の道を作れないかも見ておいて！', '王さまが次に動く先も想像してみて。', '道のどこでふさぐかで、そのあとが変わるの。', 'ふさぎに行く駒が、はさまれないかも確かめて！'],
       t_fort: ['王のまわりの壁に、1か所だけ穴があいてるの。金の丸の駒でふさいでね。', '壁の駒が、攻め手にはさまれない形になるかも確かめて！', '砦は端にくっついた守りの壁。どこが欠けてる？', '王さまが中で動けるスペースも残しておいてね。', '攻め手が入ってこられる入口、ひとつだけあるの。'],
-      t_encircle: ['輪に1か所だけすき間があるの。金の丸の駒で閉じてね。', '守り手の駒が端へ出られる道をたどってみて。どこで切れるかな？', '輪はななめにつながっていてもOK！', '外へぬける穴をひとつ探そう。そこに入れば完成なの。', '閉じる駒が、はさまれない場所かも見ておいてね。'],
+      t_encircle: ['輪に1か所だけすき間があるの。金の丸の駒で閉じてね。', '守り手の駒が端へ出られる道をたどってみて。どこで切れるかな？', '輪はななめにつながっていてもOK！', '外へぬける穴をひとつ探そう。そこに入れば完成なの。', '輪の駒を動かすと、そこが新しいすき間になっちゃう。輪の外から駒を持ってこよう！'],
       v_brandubh: ['王の反対側に、もう1枚置ける攻め手をさがしてね。', '王のとなりにいる攻め手は？ その向かい側へ行ける駒が答え！', '角のとなりの王なら、角が片側の役をしてくれるの。', '縦でも横でもいいの。2枚で王をはさむ形を作ろう。', '王が玉座のとなりにいないか、先に確かめてね。'],
       v_tablut: ['王を、2つ以上の方向へ端まで見通せるマスへ動かしてね。', '端への道が2本できれば、攻め手は1本しかふさげないの。王はどこへ行く？', 'タブルットは角じゃなくて、端ならどこでも脱出なの。', '王さまの上下左右、端まで空いた道を数えてみて。', '一度にふさがれない場所、見つけられるかな？'],
       s_corner: ['四隅のまわりで、王が入りこめそうなすき間はどこかな？', 'ねらわれている自分の駒がないかも、先に確かめてね。', '角からななめに並ぶ3マス、もう埋まってる？', '王から角へ向かう道を、指でたどってみて。', '取れる相手の駒があれば、それも候補に入れてね。'],
@@ -6414,6 +6414,18 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
   // tools/lesson-verify-tffort.js; A = the answer, whose fort gives the room and the walls): 'moved' a wall piece left the wall, 'cap' a
   // piece of the wall can be taken next, 'kingoff' the king left the edge, 'king' the king moved along it, 'enter' an attacker gets into the fort (the room, the king's square, the gap), 'stuck' the man
   // went into the room and the king cannot move, 'open' the gap stays; '' u ends the game
+  // (2026-11-27 第2期 担当A) t_encircle: why a wrong move u of the attackers does not shut every defender in (read with the rules, as
+  // tools/lesson-verify-tfenc.js; A = the answer, whose ring gives the defenders' room and the ring pieces): 'moved' a ring piece left the
+  // ring, 'cap' the defenders can take a ring piece (or the moved one) next, 'out' a defender gets out of the room next, 'open' the gap
+  // stays; '' u ends the game
+  function tfEncWhy(E, pos, A, u) {
+    const roomOf = z => { const b = z.b, seen = new Set(), st = [], w = new Set(); for (let i = 0; i < b.length; i++) if (b[i] === 2 || b[i] === 3) { seen.add(i); st.push(i); }
+      while (st.length) { const x = st.pop(); for (const y of z.nb(x)) { if (seen.has(y)) continue; if (b[y] === 1) w.add(y); else { seen.add(y); st.push(y); } } } return { seen, w }; };
+    const R = roomOf(pos.clone().play(A)), q = pos.clone().play(u), t = E.mTo(u); if (q.res) return '';
+    if (R.w.has(E.mFrom(u))) return 'moved';
+    let cap = false, out = false; for (const r of q.moves()) { const z = q.clone().play(r); if (z.lastCaps.some(x => R.w.has(x) || x === t)) cap = true; if (R.seen.has(E.mFrom(r)) && !R.seen.has(E.mTo(r))) out = true; }
+    return cap ? 'cap' : out ? 'out' : 'open';
+  }
   function tfFortWhy(E, pos, A, u) {
     const room = z => { const k = z.king, seen = new Set([k]), st = [k], w = new Set(); while (st.length) { const x = st.pop(); for (const y of z.nb(x)) { if (seen.has(y)) continue; if (!z.at(y)) { seen.add(y); st.push(y); } else if (z.at(y) === 2) w.add(y); } } return { seen, w }; };
     const za = pos.clone().play(A), R = room(za), FR = new Set(R.seen), FW = new Set(R.w); FR.add(E.mTo(A)); FW.delete(E.mTo(A));
@@ -6563,10 +6575,14 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
           : pk(['{x}だと、まだ砦が完成しないね。', '{x}では、壁のすき間がそのまま残るの。', '{x}では、穴をふさげないんだ。', '{x}だと、砦の入口があいたままなの。', '{x}のあとも、壁に穴が残ったまま。']);
         return f(w + pk(['{m}なら、穴がぴったりふさがるの。', '{m}で最後の1枚を入れれば、砦が完成したから。', '正解の{m}が、壁の最後のピース。', 'こっちの{m}だったら、こわせない砦になったね。', '{m}を選べば、その場で守り手の勝ちだったの。'])); };
     } else if (id === 't_encircle') {
+      // (2026-11-27 第2期 担当A) each wrong move by what follows it on the board (tfEncWhy, as tools/lesson-verify-tfenc.js)
       good = () => fg(FA.win === 'encircle' ? pk(['{x}で包囲の完成！ 守り手はどの駒も端へ出られないから、攻め手の勝ち。', '輪がぴったり閉じた！ ななめのつながりでも、ちゃんと閉じているの。', '{x}ですき間がなくなった！ 守り手をまるごとかこんで、攻め手の勝ちだね。', '最後のすき間を閉じた！ 守り手はもう外へ出られないの。', '大きな輪の完成！ 守り手をまるごと閉じこめたね。']) : pk(['{x}で攻め手の勝ち！ みごとな包囲だね。', '{x}で勝負あり！', '攻め手の勝ち！', 'みごとに勝ちを決めたね！', 'これで攻め手の勝ち！']));
-      ng = u => say(u, null, G => G.scan().c ? pk(['{x}だと輪の駒がはさまれて、穴があいちゃう。', '{x}のあと、輪の駒を守り手に取られるの。', '{x}では、輪の1枚がはさまれちゃう。', '{x}だと、守り手に輪をこわされちゃう。', '{x}のあと、輪の駒がねらわれるの。'])
-        : pk(['{x}だと輪にすき間が残って、守り手が外へ出られちゃう。', '{x}では、輪の出口があいたままなの。', '{x}だと、まだ包囲が完成しないね。', '{x}のあとも、守り手のぬけ道が残るの。', '{x}では、すき間を閉じられないんだ。']),
-        pk(['{m}なら、さいごのすき間が閉じるから。', '{m}で閉じれば、守り手の出口はひとつもなかったの。', '正解の{m}が、輪の最後のひとつ。', 'こっちの{m}だったら、包囲が完成していたね。', '{m}を選べば、その場で攻め手の勝ちだったの。']));
+      ng = u => { const v = alt(u), why = v != null ? tfEncWhy(E, pos, A, v) : '';
+        const w = why === 'moved' ? pk(['{x}だと輪の駒が動いて、べつの所にすき間ができちゃう。', '{x}では、輪から駒がぬけて新しい穴があくの。', '{x}だと、輪の1枚がはなれて、そこに穴があくね。', '{x}のあと、輪の駒がいた所が空いちゃう。', '{x}では、輪をくずして別のすき間を作っちゃうの。'])
+          : why === 'cap' ? pk(['{x}だと、守り手に輪の駒がはさまれちゃう。', '{x}のあと、輪の駒を守り手に取られるの。', '{x}では、輪の1枚がはさまれて取られちゃう。', '{x}だと、守り手に輪の駒を取られて、穴が広がるの。', '{x}のあと、輪の駒が守り手にはさまれるね。'])
+          : why === 'out' ? pk(['{x}だとすき間が閉じなくて、守り手がそこから外へ出られちゃう。', '{x}では、守り手にすき間からぬけ出されるの。', '{x}のあと、守り手の駒が輪の外へ出られるね。', '{x}だと、守り手がすき間を通って外へにげちゃう。', '{x}では、守り手が輪の外へぬけ出せるの。'])
+          : pk(['{x}だと、まだ輪が閉じないね。', '{x}では、輪のすき間がそのまま残るの。', '{x}では、すき間をふさげないんだ。', '{x}だと、輪の出口があいたままなの。', '{x}のあとも、すき間が残ったまま。']);
+        return f(w + pk(['{m}なら、さいごのすき間が閉じるから。', '{m}で閉じれば、守り手の出口はひとつもなかったの。', '正解の{m}が、輪の最後のひとつ。', 'こっちの{m}だったら、包囲が完成していたね。', '{m}を選べば、その場で攻め手の勝ちだったの。'])); };
     } else if (id === 'v_brandubh') {
       good = () => fg(FA.win ? (FA.kingNearCorner ? pk(['{x}で、角と攻め手で王をはさんだ！ 角も攻め手の味方なの。', '角を味方にして王さまを捕獲！', '{x}で角との間にはさんで、攻め手の勝ち！', '角のとなりの王を、1枚でつかまえたね！', '角が片側の役！ 王さまをつかまえたの。'])
         : pk(['{x}で王さまをはさんだ！ 攻め手の勝ち！', '2枚でぴたっとつかまえた！ 小さな盤のブランドゥブならではだね。', '{x}で勝負あり！ 王の向かい側に、ちゃんと駒を置けたね。', '王さまを両側からはさんで捕獲！', '向かい側にぴたり！ 王さま、つかまえたの。'])) : pk(['{x}で王を追いつめた！', '王さまをしっかり追いつめたね！', 'いい追いこみ！', '王の逃げ道をせばめたね！', 'じわっと追いつめた！']));
@@ -6580,7 +6596,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-tafl-lessons', OKEY: 'aicoding-tafl-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=12'), fetch('../tafl/i18n.js?v=6ek-nd1-bm2-bs1-tu1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261125o').catch(() => null)])
+      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=13'), fetch('../tafl/i18n.js?v=6ek-nd1-bm2-bs1-tu1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261125o').catch(() => null)])
         .then(([ls, T, _, op]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] tafl texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
