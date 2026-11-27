@@ -1128,6 +1128,7 @@
     const sizeOnly = ad && ad.sizes ? `<label>${esc(KF && !RU && !ad.kindOwn ? KL : ad.sizeLabel ? ad.sizeLabel(lang) : '')}<select id="bvSize">${SZS.map(z => `<option value="${z}" ${z === bsz ? 'selected' : ''}>${ad.sizeName ? esc(ad.sizeName(z, lang)) : z + '×' + z}</option>`).join('')}</select></label>` : ''
     const sizeHtml = sizeOnly ? ruleHtml + sizeOnly : '';
     headIcons(false);   // (ヒストリア / 戦績 back out of the old card before it is rebuilt)
+    $('bvi').classList.toggle('ext', !!(ad && ad.ext));   // (麻雀 riichi, 2026-11-28 ユーザー「タブは上部に配置」: its tabs keep to the top whatever the tab holds — atlas/index.html .bvi.ext)
     { const rc = $('bvRec'); if (rc && $('bvi').contains(rc)) { rc.classList.remove('inact'); $('bv').appendChild(rc); } }   // (the cup rides on the card: keep it out of the rebuild)
     $('bvi').innerHTML = `<div class="cols"><div class="L"><div class="row">${g3(g)}<div style="min-width:0;flex:1"><h3>${esc(gname(g))}</h3><div class="bd">${A_.badges(g).map(badgeHtml).join('')}</div></div>${glOK && ((window.AtlasRules && AtlasRules[id]) || (ad && ad.ext)) ? `<button type="button" class="rulesb" id="bvRules"><span>📖</span><b>${t('bv.rules')}</b></button>` : ''}${achRing(g)}</div>
       <div class="tags">${g.tags.filter(k => k !== 'mobile').map(tagHtml).join('')}</div>
