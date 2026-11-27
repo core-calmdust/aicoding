@@ -196,7 +196,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .kifu-card .kifu{flex:1;min-height:0;max-height:none}
 .brand{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
 .brand h1{--tl:17;font-family:'Shippori Mincho B1',serif;font-weight:800;font-size:clamp(15px, calc((100cqw - 190px) / (var(--tl) * .66)), 28px);letter-spacing:.06em;white-space:nowrap}
-.brand h1 small{font-size:12px;letter-spacing:.3em;color:var(--brass);margin-left:8px;font-family:'Zen Kaku Gothic New';font-weight:500}
+.brand h1 small{font-size:12px;letter-spacing:.3em;color:var(--brass);margin-inline-start:8px;font-family:'Zen Kaku Gothic New';font-weight:500}
 .brand a{font-size:12px;color:var(--dim);text-decoration:none;white-space:nowrap}
 .brand a:hover{color:var(--muted)}
 .brand-r{display:flex;align-items:center;gap:8px}
@@ -346,6 +346,7 @@ body.rv-on #evalCard.hidden{display:block!important}   /* the ◀ ▶ navigation
 
 /* rules page */
 #rulesOverlay .modal{width:min(900px,100%)}
+@media (pointer: coarse) and (max-width: 760px){ .modal .seg.ls-tabs{background:#15181c!important;box-shadow:0 12px 0 12px #15181c} .modal .rt > .rt-nav{background:#15181c!important} }   /* phones: the sticky bottom tabs are opaque, so the scrolled text never shows through */
 /* hands-on rules tutorial (shared/ruletour.js): fixed dialog size, the tour has its own Back / Close / Next */
 #rulesOverlay .modal{height:min(880px, calc(100vh - 32px));height:min(880px, calc(100dvh - 32px));display:flex;flex-direction:column}
 #rulesOverlay .modal > h2, #rulesOverlay .modal > .modal-actions{display:none}
@@ -500,7 +501,7 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   .side-in > *{width:var(--fw);max-width:100%;flex:none}
   .brand{order:-5;height:28px;align-items:center}
   .brand h1{font-size:clamp(14px, calc((100vw - 200px) / (var(--tl) * .64)), 19px);letter-spacing:.03em}
-  .brand h1 small{font-size:10px;margin-left:4px;letter-spacing:.15em}
+  .brand h1 small{display:none}
   .brand-r{gap:6px}
   .brand a{font-size:11px}
   .players{order:-2;padding:8px;gap:8px}
@@ -558,7 +559,7 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
   .review-card.show{flex:none;overflow:visible}
   .brand{align-items:center}
   .brand h1{font-size:clamp(13px, calc((100vw - var(--fw) - 230px) / (var(--tl) * .64)), 16px);letter-spacing:.04em}
-  .brand h1 small{font-size:10px;margin-left:5px}
+  .brand h1 small{font-size:10px;margin-inline-start:5px}
   .brand a{font-size:11px}
   .card{padding:8px 10px;border-radius:12px}
   .players{display:flex;gap:6px;padding:6px}
@@ -782,11 +783,15 @@ body .info-line{font-size:12.5px}
 /* the rule variants (ルール tab) */
 #fVar .var-rows{display:flex;flex-direction:column;gap:10px}
 #fVar .var-q{display:block;font-size:13px;color:var(--muted);margin:0 0 5px;letter-spacing:.02em}
-#fVar .seg button{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#fVar .seg{display:flex!important;flex-wrap:wrap}
+#fVar .seg button{white-space:nowrap;flex:1 1 auto;min-width:max-content!important;overflow:visible;text-overflow:clip}
 #fVar .var-note{font-size:12.5px;color:var(--dim);line-height:1.65;margin-top:10px}
 #fVar .var-help{margin-inline-start:8px;font:inherit;font-size:12px;letter-spacing:.04em;color:var(--accent);background:none;border:0;text-decoration:underline;cursor:pointer;padding:0}
 /* the prompt under the board: at the end of the row of the bottom plate (never over it) */
 .prompt{left:auto!important;right:calc(var(--cell) * .3)!important;transform:none!important;font-size:max(12.5px, calc(var(--cell) * .2))!important;bottom:calc(var(--cell) * .17)!important}
+@media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
+  .prompt{font-size:clamp(11px, calc(var(--cell) * .16), 14px)!important;bottom:calc(var(--cell) * .1)!important;padding:.15em .7em!important}
+}
 /* ================================================================ uttt: rendered boards (grid baked in), hand-made marks, glowing boards to play in */
 :root{--frm:#6b4a2c;--num:rgba(255,236,205,.5)}
 .board{background:var(--bdImg,none) center/100% 100% no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.5),0 calc(var(--cell) * .12) calc(var(--cell) * .5) rgba(0,0,0,.55);border-radius:6px}
@@ -844,6 +849,8 @@ html[data-pcs=token] .bigmk.fresh{animation-name:utDrop}
 .pdisc.p1{background-image:var(--mkX0)!important}.pdisc.p2{background-image:var(--mkO0)!important}
 .kifu button i.p1,.rv-list .mv i.p1,.kifu button i.p2,.rv-list .mv i.p2{background:center/100% 100% no-repeat!important;box-shadow:none!important;border-radius:0!important}
 .kifu button i.p1,.rv-list .mv i.p1{background-image:var(--mkX0)!important}.kifu button i.p2,.rv-list .mv i.p2{background-image:var(--mkO0)!important}
+html:is([data-pcs=brush],[data-pcs=ink]) :is(.pdisc,.kifu button i,.rv-list .mv i){background-color:#ece3d0!important;background-size:82% 82%!important;border-radius:4px!important;box-shadow:inset 0 0 0 1px rgba(60,40,20,.35)!important}   /* ink marks are dark: a paper tile behind the small icon on the dark page */
+html[data-bd=marble][data-pcs=token] :is(.mk.o,.bigmk.o){filter:drop-shadow(0 0 .7px rgba(38,34,28,.95)) drop-shadow(0 1px 1.6px rgba(0,0,0,.4))}   /* ivory rings on white marble: a dark rim keeps them readable */
 .hb .hb-info .hb-chip{flex:none}
 @media (max-width: 1600px){.hb .hb-info .hb-chip.opt{display:none}}
 .evalbar{background:linear-gradient(90deg,#3f6fb5,#7fa8e6)}

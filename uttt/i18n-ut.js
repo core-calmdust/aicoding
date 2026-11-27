@@ -17,7 +17,7 @@ ja: {
   'ng.rules': 'ルール', 'var.help': 'ルールを見る',
   'var.fc': '決着した小盤に送られたら', 'var.fc0': 'どこでも置ける', 'var.fc1': '空きがあればそこへ',
   'var.tie': '引き分けた小盤は', 'var.tie0': 'どちらのものでもない', 'var.tie1': '両方のもの',
-  'var.cnt': '大盤に3つ並ばずに終わったら', 'var.cnt0': '引き分け', 'var.cnt1': '取った小盤の多い方の勝ち',
+  'var.cnt': '大盤に3つ並ばずに終わったら', 'var.cnt0': '引き分け', 'var.cnt1': '小盤の数で決める',
   'var.std': 'いま主流のルールです（レーティング戦・レッスン・パズルもこのルール）。',
   'var.custom': 'ルールを変えた対局です。AIはどのルールでも考えますが、レーティング戦・レッスン・パズルは主流のルールで行います。',
   'lvd': ['入門：目の前の三目だけを見る', '初級〜中級：数手先の送り先まで読む', '上級：小盤の取り合いを読み分ける', '最上級：大盤まで深く読む'],
@@ -179,7 +179,7 @@ ja: {
   "cr.tip.gen": "💡 盤上の矢印が最善手、数字はそのマスに置いたときの評価です。",
 },
 en: {
-  'meta.title': 'Ultimate Tic-Tac-Toe — World Board Game Atlas', 'title': 'Ultimate Tic-Tac-Toe', 'sub': 'Ultimate Tic-Tac-Toe', 'p1': 'X', 'p2': 'O',
+  'meta.title': 'Ultimate Tic-Tac-Toe — World Board Game Atlas', 'title': 'Ultimate Tic-Tac-Toe', 'sub': '', 'p1': 'X', 'p2': 'O',
   'ng.first': 'First (X)', 'ng.second': 'Second (O)', 'ng.level1': 'First (X) AI strength', 'ng.level2': 'Second (O) AI strength',
   'pcs': 'boards', 'hb.free': 'Free choice', 'hb.to': 'Sent to: {b}', 'hb.var': 'Rule variant',
   'rsv.won': 'Boards won {n}', 'rsv.free': 'free choice', 'rsv.title': '{c}: {n} small boards won (three in a row win)',

@@ -2083,7 +2083,7 @@ function rvbFx(svg, pos) {
   (e.pv || []).slice(0, 3).forEach((m, k) => { if (!p.moves().includes(m)) return; const d = fxDiv('rvb-n', m); d.textContent = String(k + 2); p = p.clone().play(m); });
   const d0 = fxDiv('rvb-n first', e.m); d0.textContent = '1';
 }
-const rvbDot = p => `<i style="background:${p === P1 ? '#2e2b2a;box-shadow:inset 0 0 0 1.5px #0c0b0b' : '#f3eee2;box-shadow:inset 0 0 0 1.5px #b8ab92'}"></i>`;
+const rvbDot = p => p === P1 ? '<svg class="rvb-mk" viewBox="0 0 12 12" width="12" height="12" style="vertical-align:-1px;margin-inline-end:5px"><path d="M2.5 2.5 9.5 9.5M9.5 2.5 2.5 9.5" stroke="#d65a45" stroke-width="2.4" stroke-linecap="round"/></svg>' : '<svg class="rvb-mk" viewBox="0 0 12 12" width="12" height="12" style="vertical-align:-1px;margin-inline-end:5px"><circle cx="6" cy="6" r="3.9" fill="none" stroke="#e9e2d2" stroke-width="2"/></svg>';
 function rvbLine(pos, list, n0) { let p = pos.clone(), out = []; for (const m of list) { if (!p.moves().includes(m)) break; out.push((n0 ? (n0 + out.length) + '.' : '') + mvIn(p, m)); p = p.clone().play(m); } return out.join(' '); }
 function rvbLeft() {
   if (rv.running) return `<p class="rvb-dim">${BOX.t('analyzing', { a: rv.done, b: rv.total })}</p>`;
