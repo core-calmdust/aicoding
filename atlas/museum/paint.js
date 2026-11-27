@@ -167,6 +167,10 @@
     { id: 'schaak1550', w: 2048, h: 595, rijks: 'BK-NM-7402', bg: '#d9d8d6', spots: [[.45, .42], [.56, .5], [.92, .38], [.08, .4], [.33, .75], [.68, .8]], links: [{ g: 'chess' }, { ex: 'lewis' }] },
     // (2026-11-25) the Rijksmuseum: family album photo, a backgammon box board and dice cups in a living room
     { id: 'kraaij', w: 2048, h: 1492, rijks: 'RP-F-F01010-C', bg: '#4a3a2c', spots: [[.485, .727], [.412, .652], [.603, .708], [.453, .576], [.486, .113], [.869, .446]], links: [{ g: 'backgammon' }] },
+    // (2026-11-25) the Rijksmuseum: Ferdinand De Braekeleer, an old couple playing draughts
+    { id: 'braekel', w: 1511, h: 2048, rijks: 'RP-P-1909-2550', bg: '#d9cfb8', spots: [[.4, .63], [.41, .46], [.69, .48], [.25, .8], [.33, .93], [.3, .2]], links: [{ g: 'checkers' }] },
+    // (2026-11-25) the Rijksmuseum: after Bunbury, 'Billiards' (1780)
+    { id: 'billiard', w: 2048, h: 1430, rijks: 'RP-P-2022-211-36', bg: '#e3dccb', spots: [[.3, .53], [.47, .45], [.44, .31], [.65, .39], [.53, .27], [.75, .33]], links: [{ g: 'carrom' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
