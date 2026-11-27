@@ -95,7 +95,17 @@ function partnerKey(id) {
   const ks = partnerSkills(id).filter(x => x.ok).map(x => x.k), o = DB.chars[id];
   return ks.includes(o.puse) ? o.puse : ks.includes(useKey(p.id)) ? useKey(p.id) : ks[0] || null;
 }
-function mySeat() { if (CLASSIC) return classicSeat(0); const id = DB.sel; return seatChar(MJChars.get(id), useKey(id), partnerOf(id), partnerKey(id)); }
+// 大百科の麻雀 (riichi/, 2026-11-28 ユーザー「あなたの時には自分のアトラモを、CPUもランダムに今いるアトラモを」): the player's seat
+// shows the avatar chosen in the Atlas (shared/atlas.js .av.icon = av-<species>-<tier>), the CPUs a random Atlamo each game (riichi/atlamo.js)
+const AV_DIR = '../images/atlas/av/';
+function clMyAv() { try { const d = window.Atlas && Atlas.load ? Atlas.load() : JSON.parse(localStorage.getItem('atlas-v1') || 'null') || { av: { icon: 'av-dice-0' } }, m = /^av-([a-z0-9-]+)-(\d)$/.exec((d && d.av && d.av.icon) || ''); return m ? AV_DIR + m[1] + '-' + m[2] + '.webp' : null; } catch (e) { return null; } }
+function clCpuSeat(i, used) {
+  const L = window.RIICHI_ATLAMO; if (!L || !L.length) return classicSeat(i);
+  let k = Math.floor(Math.random() * L.length); for (let n = 0; used.has(k) && n < L.length; n++) k = (k + 1) % L.length; used.add(k);
+  const [sp, ja, en] = L[k], t = Math.floor(Math.random() * 3);
+  return Object.assign(classicSeat(i), { id: 'cla' + i, img: AV_DIR + sp + '-' + t + '.webp', name: { ja, en } });
+}
+function mySeat() { if (CLASSIC) { const s = classicSeat(0), im = clMyAv(); if (im) s.img = im; return s; } const id = DB.sel; return seatChar(MJChars.get(id), useKey(id), partnerOf(id), partnerKey(id)); }
 const coarse = () => matchMedia('(pointer: coarse)').matches;
 function rollSkillKey() {
   const r = Math.random() * 100; let acc = 0, tier = 0;
@@ -198,7 +208,9 @@ const SND = (() => {
     main: { file: 'bgm-main', vol: .45 * .9, restart: false },
     main2: { file: 'bgm-main2', vol: .25 * .9, restart: false },
     main3: { file: 'bgm-main3', vol: .235 * .9, restart: false },
-    main4: { file: 'bgm-main4', vol: .26 * .9, restart: false },   // (2026-11-16, ユーザー「forbidden echoes を通常BGMに」: −14.3 LUFS → ≈ −26)
+    main4: { file: 'bgm-main4', vol: .26 * .9, restart: false },
+    // (2026-11-28, ユーザー「大百科の麻雀の対局中BGMはこちらで（雀華とは別に）」: riichi/'s one track — the Japanese flute, −11.3 LUFS → ≈ −26 like the others)
+    flute: { file: 'bgm-flute', vol: .166, restart: false },   // (2026-11-16, ユーザー「forbidden echoes を通常BGMに」: −14.3 LUFS → ≈ −26)
     riichi: { file: 'bgm-riichi', vol: .26, restart: true },
     riichi2: { file: 'bgm-riichi2', vol: .182, restart: true },   // (2026-11-16, ユーザー「リーチ2BGM」: −9.2 LUFS → ≈ −24 like the first)
     riichi3: { file: 'bgm-riichi3', vol: .184, restart: true },   // (同日「リーチ3」: −9.3 LUFS → ≈ −24)
@@ -253,9 +265,9 @@ const SND = (() => {
   // (2026-11-16, ユーザー「1ゲームの中でもランダムで切り替わって欲しい」) a new track is drawn for every hand (the game's tracks) and for every
   // riichi that starts the riichi music (another riichi in the same hand keeps it) — never the one just heard. The next one is drawn
   // ahead and fetched in the background, so it is in memory when it is wanted.
-  const MAINS = ['main', 'main2', 'main3', 'main4'], RIIS = ['riichi', 'riichi2', 'riichi3'];
-  const draw = (list, not) => { const l = list.filter(k => k !== not); return l[(Math.random() * l.length) | 0]; };
-  let mainKey = 'main', riichiKey = 'riichi', nextMain = draw(MAINS), nextRii = draw(RIIS), handT = 0;
+  const MAINS = CLASSIC ? ['flute'] : ['main', 'main2', 'main3', 'main4'], RIIS = CLASSIC ? ['flute'] : ['riichi', 'riichi2', 'riichi3'];   // (riichi/: the flute all game long, through riichi too)
+  const draw = (list, not) => { const l = list.length > 1 ? list.filter(k => k !== not) : list; return l[(Math.random() * l.length) | 0]; };   // (one track only — riichi/: that one)
+  let mainKey = MAINS[0], riichiKey = RIIS[0], nextMain = draw(MAINS), nextRii = draw(RIIS), handT = 0;
   function music(name) {
     clearTimeout(handT);
     if (name === 'main') name = mainKey;
@@ -917,7 +929,9 @@ function applyLite() {
   if (TB) TB.setQuality(DB.set.lite ? 'lite' : 'high');
   if (typeof homeFx === 'function' && $('#aaFx')) homeFx();
 }
-$('#gSnd').addEventListener('click', openSettings);   // the gear: the same settings as the home screen's (ユーザー 2026-11-14)
+$('#gSnd').addEventListener('click', openSettings);
+// (2026-11-28 ユーザー「戦績はアイコンで見られるように」) 大百科の麻雀 (riichi/) has a record button beside the gear
+if ($('#gRec')) { $('#gRec').innerHTML = IC.stats; $('#gRec').title = t('stats'); $('#gRec').setAttribute('aria-label', t('stats')); $('#gRec').addEventListener('click', () => { SND.pick(); openStats(null); }); }   // the gear: the same settings as the home screen's (ユーザー 2026-11-14)
 // phones always use the landscape layout; held upright, the whole UI is turned 90° (no reliance on the OS rotation)
 const PHONE = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600;
 function fitRoot() {
@@ -1428,7 +1442,7 @@ async function startGame(opt = {}) {
   // (ユーザー 2026-11-15) in 段位戦 up to 6級 the BOTs bring one skill only, even when the player brings two (an easier start;
   // tools/dual-skill-sim.js: two skills against one is worth about 0.06 of a place)
   const bot1 = !!opt.ranked && DB.rank.pt < MJRank.list.find(r => r.name.ja === '5級').pt;
-  const others = CLASSIC ? [classicSeat(1), clBossSeat(clLvOf(opt.ranked ? MJRank.botLv(DB.rank.pt) : CL_LV(DB.set.clv || 4))), classicSeat(3)] : picked.map(c => {
+  const clUsed = new Set(), others = CLASSIC ? [clCpuSeat(1, clUsed), clBossSeat(clLvOf(opt.ranked ? MJRank.botLv(DB.rank.pt) : CL_LV(DB.set.clv || 4))), clCpuSeat(3, clUsed)] : picked.map(c => {
     const key = rollSkillKey();
     if (!me.skill2 || bot1) return seatChar(c, key);
     const sis = pool.filter(x => x.family === c.family && !taken.has(x.id)).sort(() => Math.random() - .5)[0];
@@ -1517,8 +1531,9 @@ $('#gExit').addEventListener('click', async () => {
 // (atlas/games/riichi-card.js) picks the mode and opens this page with ?go=ranked|free|online|rules|lessons|stats (&len=east|south
 // &lv=1..10): a game starts at once, a list opens over the empty table. When nothing is left on screen (the game quit, the list
 // closed) the page goes back to the card. Without ?go it goes straight to the card (?home: the old home, for checks).
-const ATLAS_CARD = '../atlas/#games/riichi';
-function toAtlas() { try { if (document.referrer && /\/atlas\//.test(document.referrer) && history.length > 1) { history.back(); return; } } catch (e) {} location.href = ATLAS_CARD; }
+// (2026-11-28 ユーザー「戻る時はホームではなく大百科の麻雀3Dビュー」) always the Atlas's 3D view of the game, whatever page came before
+const ATLAS_CARD = '../atlas/#home/riichi';
+function toAtlas() { location.href = ATLAS_CARD; }
 const clIdle = () => $('#modal').hidden && $('#pstats').hidden && !G && !(window.JankaOnline && JankaOnline._R && JankaOnline._R.code);
 function clBackSoon() { if (!CLASSIC || /[?&]home\b/.test(location.search)) return; setTimeout(() => { if (clIdle()) toAtlas(); }, 120); }
 function clTable() {   // the empty table behind a list (the felt, the rails, the console)

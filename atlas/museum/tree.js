@@ -104,7 +104,7 @@
   // (2026-11-24 ユーザー: 盤双六は遊べるようになった) a node played on a museum piece (所蔵品で遊ぶ): it links to the exhibit
   const EXP = { sugoroku: { ex: 'sugoroku', color: '#6a3a22' } };
   const art = g => g.ex ? `<img class="trex" src="../images/atlas/ex/${g.ex}.webp" alt="" loading="lazy">` : ctx.art(g);
-  const PLAY = { pachisi: { game: 'ludo', rule: 'pachisi', size: 14 }, airhockey: { game: 'hockey', board: 'air' } };
+  const PLAY = { pachisi: { game: 'ludo', rule: 'pachisi', size: 14 }, airhockey: { game: 'hockey', board: 'air' }, mahjong: { game: 'riichi' } };   // (麻雀 → 大百科の麻雀 riichi, 2026-11-28 ユーザー「博物館の麻雀（系統樹）からリンクを」)
   /* ---------- the lines: [from, to, sure] (sure 0 = a theory / an influence / a shared board: dashed) ---------- */
   const E = [
     ['tabula', 'backgammon', 1], ['nard', 'backgammon', 0], ['nard', 'sugoroku', 0], ['pachisi', 'ludo', 1],
