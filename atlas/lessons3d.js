@@ -532,6 +532,10 @@
       }
       core = A.join('');
     } else if (P.mode === 'material' && gid === 'k20') core = at([`{m}で${px}を取ったね。ここで取れる駒の中では一番の大物なの。`, `${px}をゲット！ 盤の上でいちばんおいしい駒だったコン。`, `{m}で${px}！ 大きい駒から取るのが基本なの。`, `${px}を取れたね。ほかに取れる駒より値打ちが上でしょ？`, `大物の${px}を見のがさなかったね。`]);
+    else if (P.mode === 'free' && P.src === 'handi') {   // (2026-11-27 第2期 rx の駒落ち: the piece is free because 上手 dropped the rook / bishop — with it back on its square it would take the mover back)
+      const hn = P.handi === 'b' ? '角' : '飛車', mv = shLNm(F.piece ? F.piece.t : '');
+      core = at([`{m}で${px}をタダで取れたね。上手は${hn}を落としているから、取り返せる駒がいないの。`, `${px}はタダだったコン。${hn}が元の場所にいたら、${mv}を取り返されていたの。`, `上手に${hn}がないから、${px}を取っても取り返されないの。駒落ちの弱いところだね。`, `${px}をまるもうけ！ 平手なら${hn}が守っていたマスなの。`, `{m}で${px}を取ったね。守るはずの${hn}がいないのが、駒落ちの上手の弱点なの。`]);
+    }
     else if (P.mode === 'free') {   // (2026-11-25 第2期 k15: the free piece, and the bigger piece that was guarded)
       let big = ''; (P.cand || []).forEach(([v]) => { const f = shLFacts(P, v); if (f && f.took && f.takers.length && (!big || (SH_LV[f.took.t] || 0) > (SH_LV[big] || 0))) big = f.took.t; });
       const bn = big ? shLNm(big) : '';
@@ -611,7 +615,7 @@
     if (!u || acc.includes(u) || (P.sol && u === P.sol[0])) { const w = C.find(x => !acc.includes(x[0])); u = w ? w[0] : ''; }
     const F = u ? shLFacts(P, u) : null;
     const partial = P.kind === 'best' && u && SHOGI.points(P, u) > 0;
-    const od = shOrd(gid, i), right = partial || (P.pre && P.pre.length) ? '' : od(['{m}が正解の手なの。', '答えは{m}だったコン。', 'ここは{m}を指したかったね。', '正解は{m}！ ', 'いちばんは{m}なの。']);
+    const od = shOrd(gid, i), right = partial || (P.pre && P.pre.length) ? '' : (gid === 'rx' ? a => a.concat('ここでの正解は{m}だよ。')[i % 6] : od)(['{m}が正解の手なの。', '答えは{m}だったコン。', 'ここは{m}を指したかったね。', '正解は{m}！ ', 'いちばんは{m}なの。']);   // (rx: six problems — six different openers, 2026-11-27)
     let why = '';
     if (P.kind === 'tsume') {
       if (!F) why = at(['ほかの王手だと、玉に逃げ道が残っちゃうの。', '別の手からだと、相手に受けられて詰まないコン。', 'ほかの手では、玉をつかまえきれないの。', '最初の一手をまちがえると、玉が逃げ出しちゃうの。', 'ほかの王手だと、受けがきいちゃうから詰まないの。']);
@@ -930,8 +934,8 @@
     load() {
       if (this.p) return this.p;
       const voice = fetch('../shogi/voice-fox-ja.js?v=9').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
-      const rep = getJ('../shogi/lesson-replies.json?v=4').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
-      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261127rx'), getJ('../shogi/openings.json?v=20261124ol1'),
+      const rep = getJ('../shogi/lesson-replies.json?v=5').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
+      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261127rx2'), getJ('../shogi/openings.json?v=20261124ol1'),
         ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261125sb`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));

@@ -2763,7 +2763,7 @@ function shogi(opt) {
   if (SH_DONE.has('k2')) require('./lesson-verify-shmate5.js')({ E, L, X, pool, brd, dist, add, src, app });
   if (SH_DONE.has('d1')) require('./lesson-verify-shmate7.js')({ E, L, X, pool, brd, dist, add, src, app });
   if (SH_DONE.has('d2')) require('./lesson-verify-shmate7.js')({ E, L, X, pool, brd, dist, add, src, app }, 'd2', 9);
-  if (SH_DONE.has('rx')) require('./lesson-verify-shrx.js')({ ROOT, E, L, X, pool, brd, dist, add, src, app });   // (rx: the rules step — the mates in one around uchifuzume and the entering king; the handicap problems pending)
+  if (SH_DONE.has('rx')) require('./lesson-verify-shrx.js')({ ROOT, E, L, X, pool, brd, dist, add, src, app });   // (rx: the rules step — the mates in one around uchifuzume, the entering king and the handicap problems)
   // 追72 (2026-11-25 担当A): the moves that count as right (16 points or more of 20) and a warm-up try's ok are a third of the legal moves at most
   for (const g of L.grades) { if (!SH_DONE.has(g.id)) continue;
     g.problems.forEach((P, j) => { const p = pos(P.sfen), ms = p.legalMoves(true), r = P.kind === 'tsume' ? (P.sol || []).length && 1 : ms.filter(m => ctx.SHOGI.points(P, p.toUsi(m)) >= 16).length;   // (k10: one mate in one — lesson-verify-shmate1.js checks it is the only one)
