@@ -1,0 +1,67 @@
+/* 世界のボドゲ大百科の麻雀（riichi/、2026-11-27）— 雀華（../mahjong/app.css）の上に重ねる「クラシック」の見た目。
+   ユーザー：大百科用のマジメな麻雀。雀卓はオーソドックスな緑のフェルト。キャラ・スキル・ガチャ・コインは出さない。
+   色：紫がかった黒漆 → 深い緑がかった黒漆（金の細線はそのまま）。 */
+:root{
+  --bg:#0a1913; --bg2:#12281f; --panel:rgba(14,32,25,.9); --lq1:#18281f; --lq2:#08110d;
+}
+html.classic,html.classic body{background:#07120d}
+
+/* ---------------- home: no character, no gacha, no coins ---------------- */
+html.classic #btnGacha,html.classic #btnColl,html.classic #aaBanner,html.classic #partner,html.classic #coinBox,html.classic #btnCloud,html.classic #aaSay{display:none!important}
+html.classic #home.aaa .aa-blur{display:none}
+html.classic #home.aaa .aa-bg{background:
+  radial-gradient(70% 80% at 40% 58%,#1f5a43 0%,#123a2b 45%,#0a2119 78%,#06140e 100%)}
+html.classic #home.aaa .aa-bg::before{content:'';position:absolute;inset:0;opacity:.35;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5  0 0 0 0 .5  0 0 0 0 .5  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+html.classic #home.aaa .aa-wash{background:
+  radial-gradient(46% 62% at 38% 60%,rgba(120,200,160,.16),transparent 72%),
+  linear-gradient(90deg,rgba(3,10,7,.82) 0%,rgba(3,10,7,.18) 30%,rgba(3,10,7,.12) 55%,rgba(3,10,7,.8) 100%),
+  linear-gradient(180deg,rgba(3,10,7,.55),transparent 22%,transparent 70%,rgba(3,10,7,.88))}
+html.classic #home.aaa .aa-lat{opacity:.07}
+html.classic #home.aaa .aa-vig{background:radial-gradient(120% 95% at 42% 55%,transparent 52%,rgba(0,0,0,.7) 100%)}
+
+/* the hand of tiles where 雀華's partner stands: a 一気通貫 with a pair and a triplet, standing on the cloth */
+html.classic #home.aaa .aa-hero{left:18.5%;bottom:auto;top:0;height:100%;width:38%;aspect-ratio:auto;pointer-events:none}
+html.classic .clh{position:absolute;left:0;right:0;top:56%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center}
+html.classic .clh-fan{display:flex;align-items:flex-end;justify-content:center;gap:calc(var(--tw) * .045);--tw:min(calc(var(--W,100vw) * .0275),calc(var(--H,100vh) * .06));transform:perspective(1200px) rotateX(16deg)}
+html.classic .clh-t{position:relative;width:var(--tw);aspect-ratio:3/4;border-radius:calc(var(--tw) * .12);flex:none;
+  background:linear-gradient(180deg,#fbf8ef,#ede8da 82%,#d9d2c0);
+  box-shadow:0 calc(var(--tw) * .2) 0 -1px #d6cfbd,0 calc(var(--tw) * .2) 0 0 #2c7a58,0 calc(var(--tw) * .3) 0 0 #1f5f43,0 calc(var(--tw) * .55) calc(var(--tw) * .45) rgba(0,0,0,.55),inset 0 1px 0 #fff;
+  transform:translateY(var(--y)) rotate(var(--r));animation:clhIn .8s cubic-bezier(.2,.8,.2,1) calc(var(--i) * 45ms) both}
+html.classic .clh-t img{position:absolute;inset:7% 8% 6%;width:84%;height:87%;object-fit:contain;display:block}
+html.classic .clh-t:nth-child(10){margin-left:calc(var(--tw) * .4)}
+html.classic .clh-t:nth-child(12){margin-left:calc(var(--tw) * .4)}
+html.classic .clh-sh{display:block;width:118%;height:calc(var(--tw) * 1.2);margin-top:calc(var(--tw) * -.25);background:radial-gradient(closest-side,rgba(0,0,0,.45),transparent);filter:blur(6px)}
+@keyframes clhIn{from{opacity:0;transform:translateY(calc(var(--y) + 26px)) rotate(var(--r))}}
+html.lite.classic .clh-t{animation:none}
+
+/* the logo: 麻雀 large in the mincho, the series under it */
+html.classic #home.aaa .lg-k{letter-spacing:.18em}
+
+/* the BOTs' Lv. stepper on the home */
+html.classic #home .seg.lv{display:flex;align-items:center;gap:6px}
+html.classic #home .seg.lv[hidden]{display:none}
+html.classic #home .seg.lv>button{flex:none;width:56px;font-size:24px!important;line-height:1;padding:8px 0!important}
+html.classic #home .seg.lv>button:disabled{opacity:.3;cursor:default}
+html.classic #home .seg.lv .cl-lv{flex:1;display:flex;align-items:baseline;justify-content:center;gap:10px;font-family:var(--serif);color:var(--gold)}
+html.classic #home .seg.lv .cl-lv small{font-family:'Cinzel',var(--serif);font-size:13px;letter-spacing:.24em;opacity:.75}
+html.classic #home .seg.lv .cl-lv b{font-size:19px;letter-spacing:.08em;white-space:nowrap}
+
+/* ---------------- the game: plain seats ---------------- */
+/* (no character art in the cut-ins and result screens: the words and the hands alone) */
+html.classic .cutin .ci-art,html.classic .cutin .ci-line,html.classic .agst-ch,html.classic .agst-who{display:none!important}
+html.classic .ps-art{display:none!important}
+html.classic .ps-box{grid-template-columns:1fr!important}
+html.classic .earn,html.classic .ps-chs,html.classic .ps-sk{display:none!important}
+html.classic .ps-id .prar{display:none}
+/* the win and the final screens: no character on the left — the results in the middle of the band */
+html.classic .agst-main{left:16cqw;right:16cqw}
+/* (no スキル戦/標準戦 choice: the length takes the whole row in free play too) */
+html.classic #home.aaa .ap-opts #optLen{grid-column:1/-1}
+/* no title screen (the Atlas' card is the menu): the home never shows; behind a list the empty table, without the game's HUD */
+html.classic #home{display:none!important}
+html.classic #game.cl-idle .hud,html.classic #game.cl-idle .rays{display:none}
+/* the boss's reward on the final screen */
+html.classic .cl-gift{display:flex;align-items:center;gap:10px;min-width:0}
+html.classic .cl-gift img{width:64px;height:64px;flex:none;filter:drop-shadow(0 3px 6px rgba(0,0,0,.35))}
+html.classic .cl-gift b{font-size:15px;line-height:1.4}
