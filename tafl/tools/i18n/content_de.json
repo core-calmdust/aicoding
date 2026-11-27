@@ -107,7 +107,7 @@
 "ls.v_tablut.goal": "Mache einen Zug, nach dem der König in zwei Zügen den Rand erreicht.",
 "ls.v_tablut.hint": "Bring den König auf ein Feld, das den Rand in zwei oder mehr Richtungen sieht.",
 "ls.v_tablut.why": "{m}: zwei Wege! Der König erreicht im nächsten Zug den Rand.",
-"ls.v_tablut.ng": "Nach {x} können die Wege gesperrt werden. {m} war die Antwort.",
+"ls.v_tablut.ng": "Nach {x} können die Angreifer verhindern, dass der König in zwei Zügen den Rand erreicht. {m} war die Antwort.",
 "pz.th.esc2": "Flucht in 2",
 "pz.th.esc2.sub": "Stelle ein Tuichi her",
 "pz.th.esc3": "Flucht in 3",
