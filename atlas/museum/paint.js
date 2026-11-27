@@ -309,6 +309,12 @@
     { id: 'unigenitus', w: 2048, h: 1626, rijks: 'RP-P-1970-479', bg: '#e8e3d6', spots: [[.5, .13], [.5, .4], [.1, .11], [.89, .11], [.1, .45], [.56, .82]], links: [{ ex: 'goose' }] },
     // (2026-11-25) the Rijksmuseum: David Bles, study of a man playing chess (1876)
     { id: 'bles', w: 2048, h: 1578, rijks: 'RP-T-1941-47(R)', bg: '#d9d2c4', spots: [[.58, .35], [.48, .22], [.25, .6], [.85, .65], [.08, .77], [.82, .93]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Rijksmuseum: Visscher, 'Het nieuw en vermaeckelyck Ghanse-spel' with rules (1612-52)
+    { id: 'visscher', w: 2048, h: 1785, rijks: 'RP-P-1893-A-18144', bg: '#e6e1d4', spots: [[.62, .42], [.33, .37], [.71, .72], [.45, .78], [.24, .32], [.12, .62]], links: [{ ex: 'goose' }] },
+    // (2026-11-25) the Rijksmuseum: Gavarni, 'Une tombola' (La Caricature 1840): Pierrots hold a carnival lottery
+    { id: 'tombola', w: 1407, h: 2048, rijks: 'RP-P-1898-A-21391', bg: '#e8e0d2', spots: [[.32, .19], [.54, .28], [.8, .28], [.57, .44], [.37, .56], [.5, .96]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: 'Nêerlands Staatkundich Werp Spel', anti-Patriot board game (1793)
+    { id: 'patriotten', w: 2048, h: 1604, rijks: 'RP-P-1888-A-12939', bg: '#ebe7de', spots: [[.52, .5], [.54, .36], [.52, .11], [.36, .42], [.36, .82], [.71, .8]], links: [{ ex: 'goose' }, { room: 'chance' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',

@@ -712,3 +712,4 @@
 描かれたゲーム: pillement（カードの家を作る中国の子どもたち, 1759）と skating（スケートリンクのすごろく, 1870）を追加 PAINT_I18N_V 80、paint.js v91、museum.js v327。
 描かれたゲーム: gavarni（夫と恋人の盤遊びを見る妻, 1837）と picart（舞台の上の宝くじ, 1720）を追加 PAINT_I18N_V 81、paint.js v92、museum.js v328。
 描かれたゲーム: unigenitus（教皇勅書ウニゲニトゥスのガチョウのゲーム, 1724）と bles（チェスを指す男, 1876）を追加 PAINT_I18N_V 82、paint.js v93、museum.js v329。
+描かれたゲーム: visscher（新しく楽しいガチョウのゲーム, 1612-52）・tombola（富くじ, 1840）・patriotten（オランダ政治のサイコロ遊び, 1793）を追加 PAINT_I18N_V 83、paint.js v94、museum.js v331。
