@@ -36,7 +36,7 @@
 | janggi チャンギ | ショウギツネ | **3D対応済み**（パズル289問・レッスン15本75問） | なし（e_rook q3 の作り直しと追88 は 2026-11-27 #3936 で済み） |
 | konane コナネ | チェッカニ | **3D対応済み**（パズル226問・レッスン9本45問。s_go・s_keep・s_read・b_jump・b_open は 2026-11-27 担当C） | なし（b_open は 20:40 に「最初の取り除きと最初の跳び」へ作り直し、③⑤をユーザー指示でゆるめた） |
 | ugolki ウゴルキ | モリフク | **3D対応済み**（パズル152問・レッスン11本55問。s_count は 2026-11-27 に作り直し） | なし（2D・3D の追58 は 2026-11-27 担当D） |
-| fanorona ファノロナ | チェッカニ | 一部（パズル199問・レッスン8本40問：b_approach・b_withdraw・b_choose・b_chain・b_safe・b_win・t_big・t_count、2026-11-27 担当E） | **レッスン4本20問**（t_stop・t_paika・e_hunt・e_trap）。atlas/ls-fanorona.js の READY に足し、tools/lesson-verify-fanorona-ls.js にその主題のチェックを足す（今は basics 3本と b_chain・b_safe・b_win・t_big・t_count の形） |
+| fanorona ファノロナ | チェッカニ | 一部（パズル199問・レッスン9本45問：b_approach・b_withdraw・b_choose・b_chain・b_safe・b_win・t_big・t_count・t_stop、2026-11-27 担当E） | **レッスン3本15問**（t_paika・e_hunt・e_trap）。atlas/ls-fanorona.js の READY に足し、tools/lesson-verify-fanorona-ls.js にその主題のチェックを足す（今は basics 3本と b_chain・b_safe・b_win・t_big・t_count・t_stop の形） |
 | agon アゴン | キンダイスン | 一部（パズル152問は 2026-11-27 18:00 に3D対応済み、レッスンは b_step・b_capture・b_throne・b_reloc・b_safe の5本25問を作り直して3D対応〈最後は 22:05 b_safe〉、担当F） | レッスン7本32問（担当F：b_finish・s_block・s_queencap、担当D：後半4本）（atlas/ls-agon.js の READY に足す。agon/ls-facts.js・tools/lesson-verify-agon-ls.js に主題の事実とチェック） |
 | latrunculi ラトルンクリ | ポンメェ | 一部（パズル250問は 2026-11-27 21:40 に3D対応済み、担当D。アダプタ atlas/games/latrunculi.js の ctx.pz・api.pz もマージ済み） | レッスン7本35問の3D（担当C：2D の検証・作り直し・ls-facts.js・lesson-verify-latrunculi-ls.js は 2026-11-27 済み。atlas/ls-latrunculi.js・lessons3d.js の DATA・READY、lesson-quality.js の PZ_ONLY から latrunculi を外す） |
 
