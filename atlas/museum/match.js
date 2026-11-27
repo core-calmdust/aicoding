@@ -337,9 +337,9 @@
   const PIMG = '../chess/pieces/cburnett/';
   function geom(G, K) {   // in board units: the playing area starts at (ox, oy); one cell = 1
     if (K.go) { const n = G.size || 19; return { W: n + 1, H: n + 1, ox: 1, oy: 1, n, cell: 1, pt: true }; }
-    if (K === SHOGI) return { W: 10.3, H: 9.9, ox: 0.45, oy: 0.45, cell: 1 };
+    if (K === SHOGI) return { W: 10.7, H: 9.9, ox: 0.85, oy: 0.45, cell: 1 };   // (2026-11-27 ユーザー: 盤が右寄り — the same margin left and right)
     if (K === XIANGQI) return { W: 9.7, H: 10.9, ox: 0.85, oy: 0.95, cell: 1, pt: true };
-    return { W: 8.7, H: 8.7, ox: 0.6, oy: 0.1, cell: 1 };
+    return { W: 9.2, H: 8.7, ox: 0.6, oy: 0.1, cell: 1 };   // (left: the ranks; right: the same width empty, so the squares stand in the middle)
   }
   function boardSVG(G, K, g, flip) {
     const P = [];
