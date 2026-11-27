@@ -78,7 +78,8 @@
 ## 新作は ALPHA から（規定・2026-11-15）
 - **これから公開する新作は、リリース当初は ALPHA 版にする**（2026-11-15 ユーザー指示。BETA の規定より優先）。フチボウ・ジ・ボタンから適用。既存の BETA タイトル（チャンギ等）はそのまま。
 - 付け方：トップページ `index.html` のゲーム定義に `alpha:true`（アイコン左上の ALPHA と詳細パネルの「アルファ版」タグ。開発室の LAB に移す必要はない）、ポータル `shared/atlas.js` の GAMES に `alpha: true`（大百科の ALPHA バッジ。BETA と同じく単独で、NEW・ORIGINAL・UPDATE の代わりに出る。`badges()`：ALPHA → BETA → NEW → …）。UPDATES の公開行は「（ALPHA）」。
-- **開発室（`index.html` の `LAB`）の並び順**（ユーザー指定 2026-11-17）：麻雀（ALPHA）→ NUMBERLANDS → WYRMSPHERE → 将棋デッキ（overkill）。
+- **開発室（`index.html` の `LAB`）の並び順**（ユーザー指定 2026-11-17）：麻雀（ALPHA）→ NUMBERLANDS → WYRMSPHERE → 将棋デッキ（overkill）。（2026-11-28：麻雀＝雀華は BETA に上がり「ゲーム」へ移った）
+- **トップページの「ゲーム」区画**（2026-11-28 ユーザー指示）：ボドゲ大百科の下・開発室の上に、大百科に載せないオリジナルの BETA タイトルを置く区画（`index.html` の `TITLES`、`<section id="titles">`、`makeGallery` の p `og`、見た目は開発室と同じ箱でBETAのピンク）。見出し「ゲーム」・副題「オリジナルのβ版タイトル」（`nav.og`・`og.h2`・`og.sub`・`og.desc`、14言語）。ナビとスマホの下タブ（5つ）にも「ゲーム」。並び：狼影灯 → 雀華（どちらも `beta:1`）。開発室のタイトルを BETA に上げるときは、ここへ移す。
 - ALPHA → BETA → 正式版の切り替えはユーザーが指示する（Claude の判断で変えない）。
 - **3D専用のタイトル、作り直したタイトルも同じ**（2026-11-16 ユーザー再指示、ヒット＆ブローを3D専用で出し直したとき）：公開した直後は ALPHA。BETA を付けて出さない。
 
