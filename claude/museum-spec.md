@@ -699,3 +699,4 @@
 描かれたゲーム: bikkel（骨投げ遊びをする男の習作, 1642-47）と stukken（チェスの駒のデザイン, 1850-75）を追加 PAINT_I18N_V 69、paint.js v80、museum.js v314。
 描かれたゲーム: rozetempel（花園、または楽しいバラの神殿, 1792-1847）と brelan（ブレラン, 1657）を追加 PAINT_I18N_V 70、paint.js v81、museum.js v315。
 描かれたゲーム: pwkarte（オウム6羽の丸いトランプ, 1470-1500）と nilson（盤上の遊び ダムとトカディーユ）を追加 PAINT_I18N_V 71、paint.js v82、museum.js v317。
+描かれたゲーム: chateau（カードの城, 1725）と pugillus（サイコロに負けた若者と着飾った女性, 1608-18）を追加 PAINT_I18N_V 72、paint.js v83、museum.js v318。
