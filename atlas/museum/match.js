@@ -13,9 +13,12 @@
   const GAMES = [
     // (2026-11-27) Morphy v. Duke Karl of Brunswick & Count Isouard, Paris 1858, the Opera Game
     { id: 'opera', kind: 'chess', res: 'w',
-      moves: 'e4 e5 Nf3 d6 d4 Bg4 dxe5 Bxf3 Qxf3 dxe5 Bc4 Nf6 Qb3 Qe7 Nc3 c6 Bg5 b5 Nxb5 cxb5 Bxb5+ Nbd7 O-O-O Rd8 Rxd7 Rxd7 Rd1 Qe6 Bxd7+ Nxd7 Qb8+ Nxb8 Rd8#',
-      mk: { 11: { a: [['c4', 'f7'], ['f3', 'f7']] }, 12: { a: [['f3', 'f7']], s: ['f6'] }, 13: { a: [['b3', 'f7'], ['b3', 'b7']] }, 17: { a: [['g5', 'f6'], ['f6', 'e7']] },
-        21: { s: ['e8'] }, 23: { a: [['d1', 'd7']] }, 27: { a: [['d1', 'd7'], ['b5', 'd7']] }, 31: { a: [['b3', 'b8']] }, 33: { a: [['g5', 'd8']], s: ['e8'] } } },
+          moves: 'e4 e5 Nf3 d6 d4 Bg4 dxe5 Bxf3 Qxf3 dxe5 Bc4 Nf6 Qb3 Qe7 Nc3 c6 Bg5 b5 Nxb5 cxb5 Bxb5+ Nbd7 O-O-O Rd8 Rxd7 Rxd7 Rd1 Qe6 Bxd7+ Nxd7 Qb8+ Nxb8 Rd8#',
+          mk: { 1: { s: ['d5', 'e5', 'd4', 'e4'] }, 3: { a: [['f3', 'e5']] }, 4: { a: [['d6', 'e5']] }, 5: { a: [['d4', 'e5']] }, 6: { a: [['g4', 'f3']], s: ['d1'] }, 7: { a: [['d4', 'e5']] },
+            8: { s: ['f3'] }, 9: { s: ['f3'] }, 11: { a: [['c4', 'f7'], ['f3', 'f7']], s: ['f7'] }, 12: { a: [['f3', 'f7']], s: ['f6'] }, 13: { a: [['b3', 'f7'], ['b3', 'b7']] }, 14: { a: [['e7', 'f7']] },
+            15: { s: ['b7'] }, 16: { a: [['c6', 'b5']] }, 17: { a: [['g5', 'f6'], ['f6', 'e7']] }, 18: { a: [['b5', 'c4']] }, 19: { a: [['c3', 'b5']] }, 20: { s: ['b5'] }, 21: { a: [['b5', 'e8']], s: ['e8'] },
+            22: { s: ['d7'] }, 23: { a: [['d1', 'd7'], ['b5', 'd7']] }, 24: { a: [['d8', 'd7']] }, 25: { s: ['d7'] }, 26: { s: ['d7'] }, 27: { a: [['d1', 'd7'], ['b5', 'd7']] }, 28: { a: [['e6', 'b3']] },
+            29: { a: [['b5', 'd7']] }, 30: { a: [['g5', 'd8']] }, 31: { a: [['b3', 'b8']] }, 32: { s: ['b8', 'd8'] }, 33: { a: [['g5', 'd8'], ['d1', 'd8']], s: ['e8'] } } },
     // (2026-11-27) Richard Réti v. Savielly Tartakower, 1910: Réti's Mate
     { id: 'reti1910', kind: 'chess', res: 'w', moves: 'e4 c6 d4 d5 Nc3 dxe4 Nxe4 Nf6 Qd3 e5 dxe5 Qa5+ Bd2 Qxe5 O-O-O Nxe4 Qd8+ Kxd8 Bg5+ Kc7 Bd8#',
       mk: { 1: { s: ['d5', 'e5'] }, 2: { a: [['c6', 'd5']] }, 3: { s: ['d4', 'e4'] }, 4: { a: [['d5', 'e4']] }, 5: { a: [['c3', 'e4']] }, 6: { s: ['e4'] }, 7: { s: ['e4'] }, 8: { a: [['f6', 'e4']] },
