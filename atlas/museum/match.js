@@ -27,18 +27,24 @@
         19: { a: [['g5', 'd8'], ['d1', 'd8']], s: ['d8'] }, 20: { a: [['d1', 'd8']], s: ['c7', 'e8'] }, 21: { a: [['d8', 'c7'], ['d1', 'd8']], s: ['c7'] } } },
     // (2026-11-27) Adolf Anderssen v. Lionel Kieseritzky, 1851: The Immortal Game
     { id: 'immortal', kind: 'chess', res: 'w', moves: 'e4 e5 f4 exf4 Bc4 Qh4+ Kf1 b5 Bxb5 Nf6 Nf3 Qh6 d3 Nh5 Nh4 Qg5 Nf5 c6 g4 Nf6 Rg1 cxb5 h4 Qg6 h5 Qg5 Qf3 Ng8 Bxf4 Qf6 Nc3 Bc5 Nd5 Qxb2 Bd6 Bxg1 e5 Qxa1+ Ke2 Na6 Nxg7+ Kd8 Qf6+ Nxf6 Be7#',
-      mk: { 3: { a: [['f4', 'e5']] }, 6: { a: [['h4', 'e1']] }, 14: { a: [['h5', 'g3']] }, 18: { a: [['c6', 'b5']] }, 21: { s: ['b5'] }, 23: { a: [['h4', 'g5']] }, 25: { a: [['h5', 'g6']] },
-        29: { a: [['f4', 'g5']] }, 32: { a: [['c5', 'g1']] }, 33: { a: [['d5', 'f6'], ['d5', 'c7']] }, 34: { a: [['b2', 'a1']] }, 35: { s: ['d6', 'g1', 'a1'] }, 37: { a: [['b2', 'g7']], s: ['e5'] },
-        40: { a: [['a6', 'c7']] }, 41: { a: [['g7', 'e8']] }, 43: { a: [['f6', 'd8']] }, 45: { a: [['e7', 'd8']], s: ['d8'] } } },
+      mk: { 1: { s: ['d5', 'f5'] }, 2: { s: ['d4', 'f4'] }, 3: { a: [['f4', 'e5']] }, 4: { a: [['f4', 'g3'], ['f4', 'e3']] }, 5: { a: [['c4', 'f7']], s: ['f7'] }, 6: { a: [['h4', 'e1']] }, 7: { s: ['f1'] }, 8: { a: [['b5', 'c4']] },
+        9: { s: ['f7'] }, 10: { a: [['f6', 'e4']] }, 11: { a: [['f3', 'h4']] }, 12: { s: ['h6'] }, 13: { a: [['d3', 'e4']], s: ['c1'] }, 14: { a: [['h5', 'g3'], ['h6', 'h2']], s: ['f1', 'h1'] }, 15: { a: [['h4', 'f5']], s: ['h4'] }, 16: { a: [['g5', 'h4']] },
+        17: { a: [['f5', 'g7']], s: ['h6', 'd6'] }, 18: { a: [['c6', 'b5']] }, 19: { a: [['g4', 'h5']], s: ['b5'] }, 20: { a: [['c6', 'b5']] }, 21: { a: [['g1', 'g4']], s: ['b5'] }, 22: { s: ['b5'] }, 23: { a: [['h4', 'g5']] }, 24: { s: ['g6'] },
+        25: { a: [['h5', 'g6']] }, 26: { a: [['f5', 'h6']], s: ['h6', 'g5'] }, 27: { a: [['c1', 'f4']], s: ['f4'] }, 28: { s: ['f6'] }, 29: { a: [['f4', 'g5']] }, 30: { s: ['f6'] }, 31: { a: [['c3', 'd5']] }, 32: { a: [['c5', 'g1']] },
+        33: { a: [['d5', 'f6'], ['d5', 'c7']] }, 34: { a: [['b2', 'a1']] }, 35: { a: [['d6', 'f8']], s: ['d6', 'g1', 'a1'] }, 36: { s: ['g1'] }, 37: { a: [['b2', 'g7']], s: ['e5'] }, 38: { a: [['a1', 'f1']] }, 39: { s: ['e2'] }, 40: { a: [['a6', 'c7']] },
+        41: { a: [['g7', 'e8']] }, 42: { s: ['d8'] }, 43: { a: [['f6', 'd8']] }, 44: { a: [['g8', 'f6']] }, 45: { a: [['e7', 'd8'], ['d5', 'c7'], ['g7', 'e8']], s: ['d8'] } } },
     // (2026-11-27) Honinbo Shusaku v. Inoue Gennan Inseki, 1846: The Ear-reddening Game
     { id: 'mimiaka', kind: 'go', size: 19, res: 'B+2',
       moves: 'qd dc pq oc cp cf ep qo pe np po pp op qp oq oo pn qq nq on pm om pl mp mq ol pk lq lr kr lp kq qr rr rs mr nr pr ps qs no mo qr rm rl qs lo mn qr qm or ql qj rj ri rk ln mm qi rq jn ls ns gq go ck kc ic pc nj ke og oh pb qb ng mi mj nd ph qg pg hq hr ir iq hp jr fc lc ld mc lb mb md qf pf qh rg rh sh rf sg pj pi oi oj ni qk ok qe kb jb ka jc ob ja la db cc fe cn gr is fq io ji eb fb eg dj dk ej cj dh ij hm gj eh fl fg er dm fn dn gn jj jk kk ii ik jl kl il jh co do ih hn hl bl dg gh ch ig ec cr fd gd ed gc bk cm gs gp li kg in lj lg gm jf jg im fm kf lf mf le gf hf ff gg lk kj km lm ll jm ge he ef ea cb fr fs dr qa ra pa rb da gi fj fi fa ga gl ek em ho el en jo kn ci lh mh mg di ei lg qn rn re sl mg bm am lg eq es mg ha gb lg ds hs mg sj si lg sr sq mg hd hb lg ro so mg ss qs lg sn rp mg cl bn lg ml mk mg pj sf lg nn nl mg ib ia lg nc nb mg jd kd lg ma na mg qc rc lg js ks mg hc id lg fk hj mg hh hg lg gk hk mg ak lg al bm nf od ki ms kp ip jp lr oj mr ea sr',
-      mk: {1: {'s':['qd']},5: {'s':['qd','pq','cp']},10: {'s':['np']},25: {'s':['mq']},31: {'s':['lp']},72: {'s':['og']},127: {'s':['ji']},311: {'s':['lg']}} },
+      mk: {1: {'s':['qd']},3: {'s':['pq']},4: {'a':[['oc','qd']]},5: {'s':['cp']},6: {'s':['cf']},7: {'s':['ep']},8: {'a':[['qo','pq']]},10: {'s':['np','pq'],'a':[['np','pq']]},24: {'s':['pm','pl']},25: {'s':['mq']},28: {'s':['mq','lq'],'a':[['lq','mq']]},30: {'s':['mq','nq','oq']},31: {'s':['lp']},33: {'s':['qr']},40: {'a':[['qs','qr']],'s':['qs']},44: {'a':[['rm','qm']]},50: {'s':['qm']},51: {'s':['or']},53: {'s':['qj']},60: {'s':['rq']},63: {'s':['ns','or']},67: {'a':[['kc','oc']]},70: {'a':[['nj','oh']]},72: {'a':[['og','od']],'s':['og']},77: {'s':['mi']},83: {'s':['hq']},89: {'a':[['fc','dc']]},96: {'s':['qf']},104: {'s':['pj']},107: {'s':['oj']},112: {'a':[['kb','jc']]},118: {'s':['la']},126: {'s':['io']},127: {'a':[['ji','je'],['ji','jo'],['ji','oi'],['ji','fi']],'s':['ji']},131: {'s':['dj']},136: {'s':['ij'],'a':[['ij','ji']]},147: {'s':['jj']},150: {'s':['ii']},155: {'s':['jh']},160: {'s':['hl']},162: {'s':['dg']},167: {'s':['cr']},175: {'s':['gp']},180: {'s':['lg']},199: {'s':['jm']},228: {'s':['mh','lg']},236: {'s':['sl']},274: {'s':['pj']},299: {'s':['id']},311: {'s':['lg']},325: {'s':['sr']}} },
     // (2026-11-27) Adolf Anderssen v. Jean Dufresne, 1852: The Evergreen Game
     { id: 'evergreen', kind: 'chess', res: 'w', moves: 'e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 exd4 O-O d3 Qb3 Qf6 e5 Qg6 Re1 Nge7 Ba3 b5 Qxb5 Rb8 Qa4 Bb6 Nbd2 Bb7 Ne4 Qf5 Bxd3 Qh5 Nf6+ gxf6 exf6 Rg8 Rad1 Qxf3 Rxe7+ Nxe7 Qxd7+ Kxd7 Bf5+ Ke8 Bd7+ Kf8 Bxe7#',
-      mk: { 7: { s: ['b4'] }, 15: { a: [['b3', 'f7'], ['c4', 'f7']] }, 21: { a: [['a3', 'e7']] }, 24: { a: [['b8', 'b5']] }, 32: { a: [['h5', 'f3']] }, 33: { a: [['e4', 'f6']] },
-        35: { a: [['f6', 'e7'], ['e1', 'e7']] }, 36: { a: [['g8', 'g2'], ['h5', 'f3']] }, 37: { a: [['d1', 'd7']] }, 38: { a: [['f3', 'g2']] }, 39: { a: [['e1', 'e7']] }, 41: { a: [['a4', 'd7']] },
-        43: { a: [['f5', 'd7'], ['d1', 'd7']], s: ['d7'] }, 45: { a: [['d7', 'e8']] }, 47: { a: [['a3', 'e7']], s: ['f8'] } } },
+      mk: { 1: { s: ['d5', 'f5'] }, 2: { s: ['d4', 'f4'] }, 3: { a: [['f3', 'e5']] }, 4: { a: [['c6', 'e5']] }, 5: { a: [['c4', 'f7']], s: ['f7'] }, 6: { a: [['c5', 'f2']], s: ['f2'] }, 7: { a: [['b4', 'c5']] }, 8: { s: ['b4'] },
+        9: { a: [['c3', 'b4']] }, 10: { a: [['a5', 'c3']] }, 11: { a: [['d4', 'e5']] }, 12: { s: ['d4'] }, 13: { s: ['g1', 'f1'] }, 14: { s: ['d3'] }, 15: { a: [['b3', 'f7'], ['c4', 'f7']], s: ['f7'] }, 16: { a: [['f6', 'f7']] },
+        17: { a: [['e5', 'f6']] }, 18: { a: [['g6', 'g2']] }, 19: { a: [['e1', 'e5']] }, 20: { s: ['e7'] }, 21: { a: [['a3', 'e7']], s: ['f8'] }, 22: { a: [['b5', 'c4']] }, 23: { s: ['b5'] }, 24: { a: [['b8', 'b5']] },
+        25: { a: [['a4', 'e8'], ['a4', 'a5']], s: ['c6'] }, 26: { a: [['b6', 'f2']] }, 27: { a: [['d2', 'e4']] }, 28: { a: [['b7', 'c6']] }, 29: { a: [['e4', 'f6'], ['e4', 'd6']] }, 30: { a: [['f5', 'e4'], ['f5', 'f3']] }, 31: { a: [['d3', 'f5']], s: ['e4'] }, 32: { a: [['h5', 'f3']] },
+        33: { a: [['f6', 'e8'], ['f6', 'h5']] }, 34: { s: ['g7'] }, 35: { a: [['f6', 'e7'], ['e1', 'e7']], s: ['e8'] }, 36: { a: [['g8', 'g2']] }, 37: { a: [['d1', 'd7']], s: ['d3'] }, 38: { a: [['f3', 'g2']], s: ['g2'] }, 39: { a: [['e7', 'e8']] }, 40: { a: [['a4', 'd7']], s: ['c6'] },
+        41: { s: ['d7'] }, 42: { s: ['d7'] }, 43: { a: [['f5', 'd7'], ['d1', 'd7']], s: ['d7'] }, 44: { s: ['e8'] }, 45: { a: [['d7', 'e8']] }, 46: { s: ['f8'] }, 47: { a: [['e7', 'f8'], ['d7', 'e8'], ['f6', 'g7']], s: ['f8'] } } },
     // (2026-11-27) Edward Lasker v. George Alan Thomas, 1912: The King Hunt
     { id: 'lasker1912', kind: 'chess', res: 'w', moves: 'd4 e6 Nf3 f5 Nc3 Nf6 Bg5 Be7 Bxf6 Bxf6 e4 fxe4 Nxe4 b6 Ne5 O-O Bd3 Bb7 Qh5 Qe7 Qxh7+ Kxh7 Nxf6+ Kh6 Neg4+ Kg5 h4+ Kf4 g3+ Kf3 Be2+ Kg2 Rh2+ Kg1 Kd2#',
       mk: { 1: { s: ['e5', 'c5'] }, 4: { s: ['e4'] }, 7: { a: [['g5', 'f6']] }, 9: { s: ['f6'] }, 11: { a: [['e4', 'f5']] }, 13: { s: ['e4'] }, 14: { a: [['b7', 'e4']] }, 15: { s: ['e5'] }, 16: { s: ['g8', 'h7'] },
@@ -48,21 +54,20 @@
     // (2026-11-27) Akaboshi Intetsu v. Honinbo Jowa, 1835: The Blood-vomiting Game
     { id: 'toketsu', kind: 'go', size: 19, res: 'W+R',
       moves: 'cp pq qd ed oc eq qo qk qi op iq dn ep dp do dq co eo fp cq bq br cm gr hp en bp ck dl dk el gn cr dr bs fq go ar hn gm hm gl ek hl di io ho fo ch cd lq pn gc qn dc cc ec cf il gp nq ic fd lc bg bf af bi dj eh fj qg oi qe pd nf ok pk ol pj rn rm qq qr rr qp rq pr rp po pp mp qm pm np mq mo lp lo kp no nr or qp mr ro pi lr ns ip jr hq jn ko kq kn jm km ik mk mm ir jq kk mi nm ml ki lj lk kj jj kl ll lm oj mg jl jk nj ni im in jo kl js ks jl im is kl ei ej jl hr hs kl cn bn jl gs fs kl hi ij jl ls ji hj oe kg jg gi nc jf nb re if je hd fe gf ff fg gg gh hg fi gj ig hh hf ii rf pe pf le kd ad kh qf ef de qe ld lg kc jd qf db eb qe jb od ib mf qf jp kr qe lf kf qf hc qe hb pg og of cg bh pf ph bb da cb fh ac eg bd ob oa of mh rj kl',
-      mk: {28: {'s':['ck']},33: {'s':['cr']},68: {'s':['bi']},70: {'s':['eh']},80: {'s':['pj']},246: {'s':['kl']}} },
+      mk: {1: {'s':['cp']},5: {'s':['qd','oc']},6: {'s':['eq']},8: {'a':[['qk','qo']]},9: {'a':[['qi','qk']]},12: {'s':['dn','cp'],'a':[['dn','cp']]},28: {'a':[['ck','cf']],'s':['ck']},33: {'s':['cr','dn','en','eo']},43: {'s':['ek','dn','en','gm','gl']},45: {'a':[['di','ck']]},60: {'s':['gp','go','ho']},68: {'s':['bi','ck','dk']},70: {'s':['eh']},80: {'s':['pj','ok','ol'],'a':[['pj','oi'],['pj','ol']]},83: {'a':[['qq','pq']],'s':['qq']},104: {'s':['qp']},106: {'s':['ro']},113: {'s':['jn']},120: {'s':['jn','jm','kn']},138: {'s':['jl','kl']},170: {'s':['oe']},178: {'a':[['if','jg'],['if','hg']],'s':['if']},201: {'s':['qf','qe']},206: {'s':['lg']},222: {'s':['kf']},225: {'s':['qe','qf']},229: {'s':['of']},246: {'s':['kl']}} },
     // (2026-11-27) Deep Blue (IBM computer) v. Garry Kasparov, 1997: Deep Blue Wins
     { id: 'deepblue1997', kind: 'chess', res: 'w', moves: 'e4 c6 d4 d5 Nc3 dxe4 Nxe4 Nd7 Ng5 Ngf6 Bd3 e6 N1f3 h6 Nxe6 Qe7 O-O fxe6 Bg6+ Kd8 Bf4 b5 a4 Bb7 Re1 Nd5 Bg3 Kc8 axb5 cxb5 Qd3 Bc6 Bf5 exf5 Rxe7 Bxe7 c4',
-      mk: { 9: { a: [['g5', 'f7']] }, 14: { a: [['h6', 'g5']] }, 15: { a: [['g5', 'e6']] }, 16: { a: [['e7', 'e1']] }, 19: { a: [['g6', 'e8']] }, 23: { a: [['a4', 'b5']] }, 25: { a: [['e1', 'e6']] },
-        26: { a: [['d5', 'f4']] }, 31: { a: [['d3', 'b5']] }, 33: { s: ['f5'] }, 34: { a: [['e1', 'e7']] }, 35: { a: [['e1', 'e7']] }, 37: { a: [['c4', 'b5'], ['c4', 'd5']], s: ['c8'] } } },
+      mk: { 2: { a: [['c6', 'd5']] }, 4: { a: [['d5', 'e4']] }, 5: { a: [['c3', 'e4']] }, 8: { a: [['d7', 'f6']] }, 9: { a: [['g5', 'f7'], ['g5', 'e6']] }, 10: { s: ['f6'] }, 11: { a: [['d3', 'h7']] }, 12: { s: ['e6'] },
+        13: { s: ['f3'] }, 14: { a: [['h6', 'g5']] }, 15: { a: [['g5', 'e6']], s: ['e6'] }, 16: { a: [['e7', 'e1']] }, 17: { s: ['g1'] }, 18: { s: ['e6'] }, 19: { a: [['g6', 'e8']] }, 20: { s: ['d8'] }, 21: { a: [['f4', 'c7']] },
+        22: { s: ['b5'] }, 23: { a: [['a4', 'b5']] }, 24: { a: [['b7', 'g2']] }, 25: { a: [['e1', 'e6']] }, 26: { a: [['d5', 'f4']] }, 27: { s: ['g3'] }, 28: { s: ['c8'] }, 29: { a: [['a1', 'a7']] }, 30: { s: ['b5'] },
+        31: { a: [['d3', 'b5'], ['d3', 'f5']] }, 32: { a: [['c6', 'b5']] }, 33: { s: ['f5'] }, 34: { a: [['e1', 'e7']] }, 35: { a: [['e1', 'e7']] }, 36: { s: ['e7'] }, 37: { a: [['c4', 'b5'], ['c4', 'd5']], s: ['c8'] } } },
     // (2026-11-27) Go Seigen v. Honinbo Shusai, 1933–1934: The 3-3, Star Point and Tengen Game
     { id: 'seigen1933', kind: 'go', size: 19, res: 'W+2',
       moves: 'qc cd dp pq jj pd qd pe ob qn jp lq dj ed lo nq kq lp ko ch gj fq fo iq gp cq cp dq nd ph pj ne me mf nf ng oe of ne nj om mg ke hc qm rm rn rl ro pm ql qk pl pn pk qj nl pi qp on nn no mo op qr qq rq pr rr mn nm lm ll kp mp mq ip jq kk cn ep cj ck dk cl dl ci bj bi di ej bh dm ei fj cm ak ai el bp rf co qg rh jc gq eq en fn er fr dr hq hr hp gr fc ic dc cc gd he ge je hd id hf kd le kc og oh pg em ek fm gm mb cb ec eb dd db gb bc bd bb nb oa fb ea gh jf ie ff hi hg eo fp hl il jh fh fi hj if ih ii ig jg ji fg kf ij ik hh gf mk df ml sm sk mm dg li ol ln nk km fl gl oj qh ri cf ef gi eh ee eg de bf bq br ps os qs oq bo aq an bn am ao rg mi qi lh kh lj rj rk sh sj bg ae cg ag fe gc fd ce kg mc ki fk ld lc gk bk bl na nc gg fa ga ac ad lg mh qo lk',
       mk: {1: {'s':['qc']},3: {'s':['dp']},5: {'s':['jj']},6: {'s':['qc','dp','jj']},160: {'s':['hl']}} },
     // (2026-11-27) Donald Byrne v. Bobby Fischer, 1956: The Game of the Century
     { id: 'century1956', kind: 'chess', res: 'b', moves: 'Nf3 Nf6 c4 g6 Nc3 Bg7 d4 O-O Bf4 d5 Qb3 dxc4 Qxc4 c6 e4 Nbd7 Rd1 Nb6 Qc5 Bg4 Bg5 Na4 Qa3 Nxc3 bxc3 Nxe4 Bxe7 Qb6 Bc4 Nxc3 Bc5 Rfe8+ Kf1 Be6 Bxb6 Bxc4+ Kg1 Ne2+ Kf1 Nxd4+ Kg1 Ne2+ Kf1 Nc3+ Kg1 axb6 Qb4 Ra4 Qxb6 Nxd1 h3 Rxa2 Kh2 Nxf2 Re1 Rxe1 Qd8+ Bf8 Nxe1 Bd5 Nf3 Ne4 Qb8 b5 h4 h5 Ne5 Kg7 Kg1 Bc5+ Kf1 Ng3+ Ke1 Bb4+ Kd1 Bb3+ Kc1 Ne2+ Kb1 Nc3+ Kc1 Rc2#',
-      mk: { 18: { a: [['b6', 'c4']] }, 20: { a: [['g4', 'f3']] }, 22: { a: [['b6', 'a4']], s: ['e4'] }, 26: { s: ['e4'] }, 27: { a: [['e7', 'd8'], ['e7', 'f8']] }, 28: { a: [['d8', 'b6']], s: ['f8'] },
-        30: { a: [['c3', 'd1']] }, 31: { a: [['c5', 'b6']] }, 32: { a: [['e8', 'e1']] }, 34: { a: [['c5', 'b6'], ['e6', 'c4']], s: ['b6'] }, 36: { a: [['c4', 'f1']] }, 38: { a: [['e2', 'g1']] },
-        40: { a: [['c4', 'f1']] }, 44: { a: [['c3', 'd1']] }, 46: { s: ['b6'] }, 50: { s: ['d1'] }, 57: { a: [['d8', 'g8']] }, 64: { s: ['b5'] }, 70: { a: [['c5', 'g1']] }, 72: { a: [['g3', 'f1']] },
-        74: { a: [['b4', 'e1']] }, 76: { a: [['b3', 'd1']] }, 78: { a: [['e2', 'c1']] }, 80: { a: [['c3', 'b1']] }, 82: { a: [['c2', 'c1']], s: ['c1'] } } },
+      mk: { 1: { s: ['e5', 'd4'] }, 2: { s: ['e4', 'd5'] }, 3: { a: [['c4', 'd5']] }, 4: { s: ['g7'] }, 5: { s: ['d5', 'e4'] }, 6: { s: ['g7'] }, 7: { s: ['c4', 'd4'] }, 8: { s: ['g8'] }, 9: { a: [['f4', 'c7']] }, 10: { a: [['d5', 'c4']] }, 11: { a: [['b3', 'b7']], s: ['d5'] }, 12: { a: [['c4', 'b3']] }, 13: { s: ['c4'] }, 14: { s: ['d5', 'b5'] }, 15: { s: ['d4', 'e4'] }, 16: { a: [['d7', 'b6']] }, 17: { a: [['d1', 'd4']], s: ['e1'] }, 18: { a: [['b6', 'c4']] }, 19: { a: [['c5', 'e7']] }, 20: { a: [['g4', 'd1']], s: ['f3'] }, 21: { a: [['g5', 'f6']], s: ['e1'] }, 22: { a: [['a4', 'c5'], ['a4', 'c3']], s: ['e4'] }, 23: { a: [['a3', 'e7']] }, 24: { s: ['c3', 'e4'] }, 25: { s: ['e4'] }, 26: { a: [['e4', 'c3'], ['e4', 'g5']] }, 27: { a: [['e7', 'd8'], ['e7', 'f8']] }, 28: { a: [['d8', 'b6']], s: ['f8'] }, 29: { s: ['f1'] }, 30: { a: [['c3', 'd1']] }, 31: { a: [['c5', 'b6']], s: ['e7'] }, 32: { a: [['e8', 'e1']] }, 33: { s: ['f1', 'h1'] }, 34: { a: [['c5', 'b6'], ['e6', 'c4']], s: ['b6'] }, 35: { a: [['e6', 'c4']] }, 36: { a: [['c4', 'f1']] }, 37: { s: ['g1', 'h1'] }, 38: { a: [['e2', 'g1']] }, 39: { a: [['c4', 'e2']], s: ['f1'] }, 40: { a: [['c4', 'f1']] }, 41: { s: ['g1'] }, 42: { a: [['e2', 'g1']] }, 43: { a: [['c4', 'e2']], s: ['f1'] }, 44: { a: [['c4', 'f1'], ['c3', 'd1']] }, 45: { a: [['a7', 'b6']], s: ['b6'] }, 46: { a: [['a8', 'a3']], s: ['b6'] }, 47: { a: [['b4', 'c4'], ['b4', 'c3'], ['b4', 'b6']] }, 48: { a: [['a4', 'b4']] }, 49: { a: [['c3', 'd1']] }, 50: { s: ['d1', 'h1'] }, 51: { s: ['h2'] }, 52: { a: [['a2', 'f2']] }, 53: { s: ['h1'] }, 54: { a: [['f2', 'h1'], ['f2', 'h3']] }, 55: { a: [['e1', 'e8']] }, 56: { a: [['f3', 'e1']] }, 57: { a: [['d8', 'g8']] }, 58: { s: ['f8'] }, 59: { s: ['e1'] }, 60: { a: [['d5', 'f3'], ['d5', 'a2']] }, 61: { s: ['f3'] }, 62: { a: [['f8', 'd6']], s: ['h2'] }, 63: { a: [['b8', 'f8']], s: ['g8', 'b7'] }, 64: { s: ['b5'] }, 65: { s: ['h4'] }, 66: { s: ['h5'] }, 67: { a: [['e5', 'f7'], ['e5', 'd7']], s: ['f8'] }, 68: { s: ['g7', 'f8'] }, 69: { s: ['g1'] }, 70: { a: [['c5', 'g1']] }, 71: { s: ['f1'] }, 72: { a: [['g3', 'f1']] }, 73: { s: ['e1'] }, 74: { a: [['b4', 'e1']] }, 75: { s: ['d1'] }, 76: { a: [['b3', 'd1']] }, 77: { s: ['c1'] }, 78: { a: [['e2', 'c1']] }, 79: { s: ['b1'] }, 80: { a: [['c3', 'b1'], ['c3', 'd1']] }, 81: { s: ['c1'] }, 82: { a: [['c2', 'c1'], ['b3', 'c2']], s: ['b1', 'b2', 'd1', 'd2'] } } },
     // (2026-11-27) Honinbo Shusaku v. Yasui Sanchi IX, 1849: Shusaku’s First Castle Game
     { id: 'oshiro1849', kind: 'go', size: 19, res: 'B+11',
       moves: 'qd qp dc ce ci fd de df ee cd ec cc ic oc co ep dq eq dr cm cn dm eo cg en em fe gm fi hp nq kq qq rq pq rr po qo pn qn pm qm pl kc pe oe of ne ql qb og dj di ei eh ej bf dh ch dg bg cf bj fh gq hq gp gr fr hr go fg jc kd hf oi pi pj ph mj qj if he hg mh bk be lh lg kh im ie hd mi ll kk hm ik rl rc rd mq mr lr mp lq bl ak aj cj bh cl so sp sm sr hk pf qc rb qe gn ho io jo hn in ip gl fm lo er dp fq kl dn do fo lk bp bq br cq bd ae bn bo ao bm am an bi ai bn aq al ap kj hi mg mf nh nf mc qr rs nr nl nm ml mm jb ib ka db ds cs es cr cb ia jp kp lf me sd se sc qf hj gj ij nc nb nd od md lc le kf ls ks ms jr pb ob pc pa ih gf ge fk gk jl jm il hl fj gi da ea ca oj nj ok ol lj ii hh jh ig nk pk gg ng mh jg kg an dd ed ao oh an ad ac fl el lp qs ps pp op om on li rm ro rn sn ja kb so rp id ni sn',
@@ -74,7 +79,21 @@
     // (2026-11-27) Ōhashi Sōkei (I) v. Hon'inbō Sansa, June 1607: The oldest shogi record that survives
     { id: 'sokei1607', kind: 'shogi', res: 's',
       moves: '7g7f 3c3d 3i4h 4c4d 4g4f 3a4b 4h4g 4b4c 3g3f 8b4b 2h4h 2b3c 1g1f 1c1d 2g2f 5a6b 5i6h 6b7b 6h7h 7a6b 4i5h 5c5d 5g5f 6b5c 7i6h 6c6d 6g6f 4a5b 6h6g 5b6c 9g9f 9c9d 8g8f 7c7d 7h8g 7b8b 6i7h 6a7b 8i7g 8c8d 4h3h 4b3b 2f2e 3c5a 3h2h 3b2b 6f6e 8a7c 6e6d 6c6d 4f4e 5a3c 2i3g P*6e 2h2i 7d7e 7f7e 6d7e P*7f 7e7d 2i6i 5c6d 7g6e 7c6e P*6f 8d8e 8f8e P*7g 7h7i N*7e 7f7e 6d7e P*7f P*8f 8g9h 9d9e 7f7e 7d7e S*7f 7e7f 6g7f 9e9f 6f6e S*7h P*9b 9a9b N*8d 3c5a N*7d 8b8c 8d9b+ 8c9b 8h7g 7h6i+ 7i6i P*7e P*9c 9b8a 7g8f 7e7f G*9b 8a7a 8f5c+ 7a6a L*6d P*6b 5c4c N*5b 9h8g R*8i 8g7h 7f7g+ 7h7g 8i6i+ S*5c S*6f 7g8f 6i8i 8f9e 6b6c S*6b 5a6b 5c6b+ 7b6b 7d6b+ 6a6b B*5c 6b7c G*8d 7c7b P*7c 7b6a 6d6c+',
-      mk: { 10: { s: ['4b'] }, 11: { s: ['4h'] }, 46: { s: ['2h', '2b'] }, 47: { s: ['6e'] }, 54: { a: [['7g', '6e']], s: ['6e'] }, 56: { a: [['7e', '7f']] }, 68: { a: [['7g', '7h']] }, 70: { a: [['7e', '8g']] }, 74: { a: [['8f', '8g']] }, 77: { s: ['7e'] }, 84: { a: [['7h', '6i']] }, 85: { a: [['9a', '9b']] }, 87: { a: [['8d', '9b'], ['8d', '7b']] }, 88: { a: [['5a', '8d']] }, 89: { a: [['7d', '8b']] }, 94: { s: ['6i'] }, 99: { a: [['8f', '5c']] }, 103: { s: ['5c'] }, 105: { a: [['6d', '6b']] }, 114: { s: ['6i'] }, 119: { s: ['9e'] }, 121: { s: ['6b'] }, 127: { a: [['5c', '6b']] }, 133: { a: [['6c', '6b']], s: ['6a'] } } }
+      mk: { 10: { s: ['4b'] }, 11: { s: ['4h'] }, 46: { s: ['2h', '2b'] }, 47: { s: ['6e'] }, 54: { a: [['7g', '6e']], s: ['6e'] }, 56: { a: [['7e', '7f']] }, 68: { a: [['7g', '7h']] }, 70: { a: [['7e', '8g']] }, 74: { a: [['8f', '8g']] }, 77: { s: ['7e'] }, 84: { a: [['7h', '6i']] }, 85: { a: [['9a', '9b']] }, 87: { a: [['8d', '9b'], ['8d', '7b']] }, 88: { a: [['5a', '8d']] }, 89: { a: [['7d', '8b']] }, 94: { s: ['6i'] }, 99: { a: [['8f', '5c']] }, 103: { s: ['5c'] }, 105: { a: [['6d', '6b']] }, 114: { s: ['6i'] }, 119: { s: ['9e'] }, 121: { s: ['6b'] }, 127: { a: [['5c', '6b']] }, 133: { a: [['6c', '6b']], s: ['6a'] } } },
+    // (2026-11-27) Yang Guanlin v. Hu Ronghua, 28 October 1960: Hu Ronghua, aged 15, beats Yang Guanlin
+    { id: 'hu1960', kind: 'xiangqi', res: 'b', moves: 'h2e2 h9g7 h0g2 g6g5 i0h0 i9h9 c3c4 h7h3 b0c2 c9e7 b2b9 a9b9 a0b0 b7b3 c2d4 f9e8 c4c5 b9b4 d4b3 h3e3 d0e1 h9h0 g2h0 g7f5 b0b1 e3c3 c5c6 e6e5 e2g2 f5g3 h0i2 g3e4 c0e2 c3c5 g2h2 c5b5 h2h4 e4c3 h4h9 e8f9 b1b2 b5b3 i2g3 g5g4 e2g4 c3e4 g3e2 b4c4 b2b0 b3e3 c6d6 e4c3 h9h6 f9e8 h6e6 c3a2 b0d0 e5e4 e6e3 e4e3 e2g3 c4g4 d0d2 a2c1 d2d1 c1b3 g3f1 e3e2 d1d3 b3c1 d3d1 c1a2 g0i2 g4g2 i3i4 g2i2 f1g3 i2g2 g3e4 g2g4 d1a1 g4e4 a1a2 e7g5 d6c6 a6a5 a2b2 e8f9 e0d0 e2e1 f0e1 e4i4 b2e2 f9e8 e2e5 i4c4 e1d2 c4c6 e5g5 c6a6 d0d1 g9e7 g5g4 i6i5 g4e4 e8f7 e4e5 i5i4 e5e4 i4i3 e4e3 a6i6 e3e5 i6d6 e5a5 d6d3 a3a4 i3h3 a5e5 d9e8 e5e7 h3g3 a4a5 g3f3 e7e2 d3d5 a5a6 d5d6 a6a7 d6d7 a7a8 d7d8 a8a9 d8d9 e2i2 d9a9 i2i9 e8f9 i9i4 a9a1 d1d0 f3f2 i4f4 f2f1 f4f7 f9e8 f7b7 e9d9 b7b4 a1a7 b4f4 a7d7', mk: { 8: { a: [['h3', 'h0']] }, 11: { s: ['e9'] }, 14: { a: [['b3', 'b0']] }, 17: { a: [['d4', 'b3']] }, 18: { a: [['b4', 'd4']], s: ['b3'] }, 20: { s: ['e0'] }, 22: { a: [['h9', 'h0']] }, 26: { s: ['c3', 'b3'] }, 36: { a: [['b5', 'b3']] }, 38: { a: [['c3', 'b1']] }, 42: { s: ['b3'] }, 46: { a: [['g3', 'e4']] }, 50: { a: [['e3', 'e0']] }, 64: { a: [['c1', 'e0']], s: ['d1'] }, 104: { a: [['i5', 'i0']] }, 123: { s: ['a5'] }, 136: { s: ['a9'] }, 152: { s: ['d7', 'd0'] } } },
+    // (2026-11-27) Ōhashi Sōei (VI) v. Ōhashi Sōkei (IX), 1790: Demon Sōei beats the Meijin in an even game
+    { id: 'soei1790', kind: 'shogi', res: 's',
+      moves: '7g7f 3c3d 2g2f 4c4d 3i4h 3a3b 5g5f 5c5d 3g3f 3b4c 2f2e 2b3c 7i7h 7a6b 4i5h 6b5c 2i3g 4a3b 6g6f 8b5b 7h6g 5d5e 5f5e 5c6d 5e5d 5b5d 8h7i 5a4a P*5f P*5e 5h5g 5e5f 5g5f 6d5e 5f5e 5d5e P*5f 5e5b 6i5h 8c8d 5i6i 8d8e 6i7h 5b8b S*7g 6a5b 1g1f 3c4b 1f1e 7c7d 2e2d 2c2d 7i2d 4b2d 2h2d P*2c 2d2f 6c6d 4g4f 8b8d 3f3e 8a7c 4f4e 4d4e 5f5e P*5c 3e3d 8e8f 7g8f B*4d 2f2i 6d6e 6f6e P*3f B*6f 8d8a 3g4e G*4f 3d3c+ 2a3c 4e3c+ 4d3c 4h5g 4f5g 5h5g 7d7e N*4e 3c2d P*3c 3b2b 5e5d 4c5d 2i2d 2c2d B*3b 4a5a 3b5d+ 5c5d P*5c R*4h 6g5h B*5f 7h8h 5f4e 5c5b+ 5a5b P*5c 5b6b S*6d S*7d 5c5b+ 6b7b 6d7c+ 7b7c G*6d 7c8c 6d7d 8c7d 8f7e 7d6c 7e6d',
+      mk: { 3: { s: ['2f'] }, 12: { a: [['3c', '2d']] }, 20: { s: ['5b'] }, 22: { s: ['5e'] }, 25: { a: [['5d', '5c']] }, 27: { a: [['7i', '2d']] }, 36: { s: ['5e'] }, 43: { s: ['7h'] }, 45: { s: ['7g'] }, 51: { s: ['2d'] }, 53: { a: [['7i', '2d']] }, 55: { s: ['2d'] }, 63: { s: ['3e', '4e', '5e'] }, 70: { a: [['4d', '2f']] }, 71: { a: [['2f', '2i']] }, 74: { a: [['3f', '3g']] }, 75: { a: [['6f', '8d']] }, 77: { a: [['3g', '4e']] }, 79: { s: ['3c'] }, 87: { a: [['4e', '3c']] }, 92: { s: ['4c'] }, 93: { a: [['2i', '2d']] }, 95: { a: [['3b', '4a']] }, 97: { a: [['3b', '5d']], s: ['4c'] }, 100: { a: [['4h', '6h']] }, 102: { a: [['5f', '7h']] }, 105: { s: ['5b'] }, 115: { a: [['6d', '7c']] }, 117: { a: [['7d', '8c']] }, 119: { a: [['7e', '7d']] }, 121: { a: [['6d', '6c']], s: ['6c'] } } },
+    // (2026-11-27) Amano Sōho v. Itō Sōin (VIII), 1856: Sōho the Saint and his far-seeing bishop
+    { id: 'soho1856', kind: 'shogi', res: 's',
+      moves: '7g7f 3c3d 2g2f 5c5d 5g5f 7a6b 3i4h 4a3b 6i7h 6b5c 2f2e 5c6d 2e2d 2c2d 2h2d 8b5b 5i6i 5a4a 2d2h P*2c 8h2b+ 3a2b 7i6h 5d5e 5f5e 6d5e P*5d 7c7d B*5c B*4d 5c4d+ 5e4d B*1h 3b4b 4h5g 4a3b 5g5f 6a6b 2h5h 2b3c 6g6f 1c1d 6i7i 8c8d 4i5i 8d8e 1h2g 5b5a 5f4e P*5e 6h6g 8e8f 8g8f 7d7e 7f7e 4d4e 2g4e 3c4d 4e1h S*5f 6g5f 5e5f 5h5f S*5e 5f5h 5e6f P*6g P*7g 8i7g 6f7e 5i6h P*7f 7g6e 7e6d S*5c 6b5c 5d5c+ 4d5c 6e5c+ 6d5c 1h6c+ S*7g P*2d 2c2d P*2e B*3c P*5e 7g7h+ 6h7h G*7g S*4e 5a6a 6c7d 2d2e 4e3d 3c2d S*4f 4b3c 3d3c+ 3b3c S*3e N*8g 7h8g 7g8g 3e2d 3c2d 4f3e 2d3e B*4f 3e4d G*3d',
+      mk: { 16: { s: ['5b'] }, 21: { a: [['8h', '2b']] }, 27: { s: ['5d'] }, 29: { s: ['5c'] }, 33: { a: [['1h', '5d']], s: ['1h'] }, 47: { a: [['2g', '4e']] }, 49: { a: [['2g', '4e']] }, 57: { a: [['2g', '4e']] }, 59: { s: ['1h'] }, 66: { s: ['6f'] }, 73: { a: [['6e', '5c']] }, 75: { a: [['5d', '5c'], ['6e', '5c']] }, 80: { a: [['1h', '6c']] }, 81: { a: [['1h', '6c']], s: ['6c'] }, 92: { a: [['6a', '6c']] }, 97: { a: [['2d', '4f']] }, 101: { a: [['3e', '2d']] }, 102: { a: [['8g', '7i']] }, 105: { a: [['2d', '3c']] }, 107: { a: [['3e', '2d']] }, 109: { a: [['4f', '3e']] }, 111: { a: [['3d', '4d']], s: ['4d'] } } },
+    // (2026-11-27) Sakata Sankichi v. Sekine Kinjirō, 14 July 1913: Sakata Sankichi beats Sekine with the Side Rook
+    { id: 'sakata1913', kind: 'shogi', res: 's',
+      moves: '7g7f 3c3d 5g5f 5c5d 6g6f 8c8d 7i7h 7a6b 7h6g 8d8e 8h7g 7c7d 3i4h 6a5b 4h5g 5a4b 6i7h 3a3b 3g3f 4c4d 2h3h 5b4c 5i6i 3b3c 1g1f 4b3b 3f3e 3d3e 3h3e 2b3a 3e3h 8e8f 8g8f 3a8f 7g8f 8b8f P*8g 8f8b 5g4f 6b5c 4i5h P*3d 6i7i 9c9d 1f1e 9d9e 7i8h 4a4b 5h6h 6c6d 5f5e 5d5e B*6c 7d7e 3h5h B*9b 6c3f+ 4d4e 4f5g 7e7f 6g7f 5c5d 3f3g 8b7b P*7e 4c4d 5h5i 3b4c 6h6g 3d3e 8i7g 4b5c 6f6e 6d6e P*5f 3e3f 3g3f 5e5f 5g5f P*5e 5f6e P*6d 6e5d 4d5d P*6e P*3e 3f3g 3c4d P*5f 5e5f 6e6d 4e4f 4g4f 4d5e 6d6c+ 5c6c P*6f 2a3c S*6e P*6d 6e5d 6c5d P*3d 4c3d P*3f S*4d 5i3i 3d4c 3f3e P*3h G*3d 4c5c 3i5i 7b4b 3g2f 5e4f 3d3c 4b8b 3c3d 4d5e N*7d 8b4b P*4d 5d4d 3d4d 4b4d 6g5f 5e5f 5i5f S*5e 5f5i P*5h 5i6i 5c5d 2f3f G*4e G*6e 6d6e 7f6e 5d4c 3f4e 4d4e S*5d',
+      mk: { 21: { s: ['3h'] }, 26: { s: ['3b'] }, 27: { a: [['3h', '3c']] }, 29: { a: [['3e', '3b']] }, 34: { a: [['3a', '8f']] }, 53: { s: ['6c'] }, 57: { a: [['6c', '3f']], s: ['3f'] }, 68: { s: ['4c'] }, 81: { a: [['5f', '6e']] }, 99: { a: [['6e', '5d']] }, 104: { s: ['3d'] }, 107: { a: [['3i', '3e']] }, 111: { a: [['3d', '4c']] }, 115: { a: [['3g', '2f']], s: ['4f'] }, 121: { a: [['7d', '8b'], ['7d', '6b']] }, 134: { s: ['5d'] }, 135: { a: [['3f', '5d']] }, 137: { a: [['6e', '5d']] }, 139: { a: [['6e', '5d']] }, 141: { a: [['3f', '4e']] }, 143: { a: [['5d', '4c']], s: ['4c'] } } }
   ];
 
   /* ---------- the kinds ---------- */
@@ -200,10 +219,11 @@
   // go: SGF points (aa = the top left), '' or 'tt' = pass. Captures follow the rules (a group with no liberty is taken off).
   const GO = (() => {
     const LET = 'ABCDEFGHJKLMNOPQRST';
-    function init(G) { return { n: G.size || 19, s: {}, turn: 'B', id: 0, cap: { B: 0, W: 0 } }; }
+    function init(G) { return { n: G.size || 19, s: {}, turn: 'B', id: 0, cap: { B: 0, W: 0 }, back: '' }; }
+    const pos = s => Object.keys(s).sort().map(k => k + s[k].c).join('');
     function play(st, mv) {
       const n = st.n, s = Object.assign({}, st.s), me = st.turn, you = me === 'B' ? 'W' : 'B';
-      if (!mv || mv === 'tt') return { st: Object.assign({}, st, { turn: you }), pass: true, side: me, to: null };
+      if (!mv || mv === 'tt') return { st: Object.assign({}, st, { turn: you, back: pos(st.s) }), pass: true, side: me, to: null };
       const x = mv.charCodeAt(0) - 97, y = mv.charCodeAt(1) - 97;
       if (x < 0 || y < 0 || x >= n || y >= n || s[mv]) throw new Error('point taken or off the board: ' + mv);
       const id = st.id; s[mv] = { c: me, id };
@@ -213,8 +233,9 @@
       const off = [];
       nb(mv).forEach(b => { if (s[b] && s[b].c === you) { const G = group(b); if (!G.lib) G.g.forEach(p => { if (s[p]) { off.push(s[p].id); delete s[p]; } }); } });
       if (!group(mv).lib) throw new Error('suicide: ' + mv);
+      if (off.length === 1 && pos(s) === st.back) throw new Error('ko (retaken at once): ' + mv);   // (2026-11-27 担当C: コウの禁止)
       const cap = Object.assign({}, st.cap); cap[me] += off.length;
-      return { st: { n, s, turn: you, id: id + 1, cap }, to: mv, side: me, off };
+      return { st: { n, s, turn: you, id: id + 1, cap, back: pos(st.s) }, to: mv, side: me, off };
     }
     const name = (p, n) => LET[p.charCodeAt(0) - 97] + (n - (p.charCodeAt(1) - 97));
     const label = (mv, i, r, lang, st0) => r.pass ? '—' : name(r.to, st0.n);
@@ -323,9 +344,9 @@
   const PIMG = '../chess/pieces/cburnett/';
   function geom(G, K) {   // in board units: the playing area starts at (ox, oy); one cell = 1
     if (K.go) { const n = G.size || 19; return { W: n + 1, H: n + 1, ox: 1, oy: 1, n, cell: 1, pt: true }; }
-    if (K === SHOGI) return { W: 9.9, H: 9.9 + 2.4, ox: 0.45, oy: 1.2 + 0.45, cell: 1, hands: true };
+    if (K === SHOGI) return { W: 10.7, H: 9.9, ox: 0.85, oy: 0.45, cell: 1 };   // (2026-11-27 ユーザー: 盤が右寄り — the same margin left and right)
     if (K === XIANGQI) return { W: 9.7, H: 10.9, ox: 0.85, oy: 0.95, cell: 1, pt: true };
-    return { W: 8.7, H: 8.7, ox: 0.6, oy: 0.1, cell: 1 };
+    return { W: 9.2, H: 8.7, ox: 0.6, oy: 0.1, cell: 1 };   // (left: the ranks; right: the same width empty, so the squares stand in the middle)
   }
   function boardSVG(G, K, g, flip) {
     const P = [];
@@ -338,10 +359,10 @@
       return `<g class="mxgo">${P.join('')}</g>`;
     }
     if (K === SHOGI) {
-      P.push(`<rect x="0" y="1.2" width="9.9" height="9.9" rx=".2" class="mxwood"/>`);
+      P.push(`<rect x="0" y="0" width="${g.W}" height="${g.H}" rx=".2" class="mxwood"/>`);
       for (let i = 0; i <= 9; i++) P.push(`<line x1="${g.ox}" y1="${g.oy + i}" x2="${g.ox + 9}" y2="${g.oy + i}"/><line x1="${g.ox + i}" y1="${g.oy}" x2="${g.ox + i}" y2="${g.oy + 9}"/>`);
       [[3, 3], [6, 3], [3, 6], [6, 6]].forEach(([a, b]) => P.push(`<circle cx="${g.ox + a}" cy="${g.oy + b}" r=".07" class="mxhoshi"/>`));
-      for (let i = 0; i < 9; i++) { P.push(`<text x="${(g.ox + i + .5) * 100}" y="${(g.oy - .12) * 100}" class="mxcoord" transform="scale(.01)">${flip ? i + 1 : 9 - i}</text>`); }
+      for (let i = 0; i < 9; i++) { P.push(`<text x="${(g.ox + i + .5) * 100}" y="${(g.oy - .1) * 100}" class="mxcoord" transform="scale(.01)">${flip ? i + 1 : 9 - i}</text><text x="${(g.ox + 9.62) * 100}" y="${(g.oy + i + .62) * 100}" class="mxcoord" transform="scale(.01)">${'一二三四五六七八九'[flip ? 8 - i : i]}</text>`); }
       return `<g class="mxsh">${P.join('')}</g>`;
     }
     if (K === XIANGQI) {   // 9 × 10 points, the river (楚河 漢界) across the middle, the palaces with their diagonals, the marks where cannons and soldiers start
@@ -376,7 +397,7 @@
   function draw(anim) {
     const G = cur, L = line(G), K = L.K, g = geom(G, K), st = L.st[ply], r = ply ? L.recs[ply - 1] : null, flip = G.orient === 'b' || G.orient === 'g';
     const box = el.board;
-    if (box._g !== G.id) { box._g = G.id; box.innerHTML = `<svg class="mxbg" viewBox="0 0 ${g.W} ${g.H}" aria-hidden="true">${boardSVG(G, K, g, flip)}<g class="mxmk"></g></svg><div class="mxpcs"></div>${g.hands ? '<div class="mxhand g"></div><div class="mxhand s"></div>' : ''}`;
+    if (box._g !== G.id) { box._g = G.id; box.innerHTML = `<svg class="mxbg" viewBox="0 0 ${g.W} ${g.H}" aria-hidden="true">${boardSVG(G, K, g, flip)}<g class="mxmk"></g></svg><div class="mxpcs"></div>`;
       box.style.aspectRatio = `${g.W} / ${g.H}`; box._el = {}; box.classList.toggle('go', !!K.go); box.classList.toggle('sh', K === SHOGI); box.classList.toggle('ch', K === CHESS); box.classList.toggle('xq', K === XIANGQI); }
     box.classList.toggle('still', !anim);
     const sz = (K.go ? 1 : 1) / g.W * 100, szh = 1 / g.H * 100;
@@ -387,15 +408,10 @@
       const [x, y] = spot(G, K, g, p.at, flip); e.style.left = x + '%'; e.style.top = y + '%'; e.style.width = sz + '%'; e.style.height = szh + '%';
       e.classList.toggle('last', !!(K.go && r && r.to === p.at)); });
     Object.keys(box._el).forEach(id => { if (!seen.has(+id)) { const e = box._el[id]; delete box._el[id]; e.classList.add('gone'); setTimeout(() => e.remove(), anim ? 260 : 0); } });
-    // the hands (shogi): what each side holds
-    if (g.hands) { const H = K.hands(st), cnt = side => { const c = {}; H[side].forEach(x => c[x.t] = (c[x.t] || 0) + 1); return Object.entries(c); };
-      ['g', 's'].forEach(side => { const h = box.querySelector('.mxhand.' + side), top = (side === 'g') !== flip;
-        h.style.top = top ? '0' : ''; h.style.bottom = top ? '' : '0'; h.classList.toggle('top', top);
-        h.innerHTML = `<em>${side === 's' ? '▲' : '△'}${esc(u('side_' + side))}</em>` + cnt(side).map(([t, n]) => `<span class="mxsg${top ? ' dn' : ''}"><svg viewBox="0 0 100 110" aria-hidden="true"><path d="M50 4 82 18 94 106H6L18 18z"/></svg><b>${SHOGI.KAN[t]}</b>${n > 1 ? `<u>${n}</u>` : ''}</span>`).join(''); }); }
     // the marks: the last move's squares, then what the note points at (arrows, squares)
     const mk = box.querySelector('.mxmk'), M = (G.mk || {})[ply] || {}, out = [];
     const c = at => { const [x, y] = K.xy(at, flip, g.n); return K.go || K.pt ? [g.ox + x, g.oy + y] : [g.ox + x + .5, g.oy + y + .5]; };
-    const sqr = (at, cls) => { const [x, y] = c(at); out.push(K.pt ? `<circle cx="${x}" cy="${y}" r=".5" class="${cls}"/>` : `<rect x="${x - .5}" y="${y - .5}" width="1" height="1" class="${cls}"/>`); };
+    const sqr = (at, cls) => { const [x, y] = c(at); out.push(K.pt ? `<circle cx="${x}" cy="${y}" r=".5" class="${cls}${cls === 'mxlm' ? ' ring' : ''}"/>` : `<rect x="${x - .5}" y="${y - .5}" width="1" height="1" class="${cls}"/>`); };
     if (r && !K.go) { if (r.from) sqr(r.from, 'mxlm'); if (r.to) sqr(r.to, 'mxlm'); }
     (M.s || []).forEach(a => K.go ? (() => { const [x, y] = c(a); out.push(`<circle cx="${x}" cy="${y}" r=".42" class="mxsq"/>`); })() : sqr(a, 'mxsq'));
     (M.a || []).forEach(([a, b]) => { const [x1, y1] = c(a), [x2, y2] = c(b), d = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / d, uy = (y2 - y1) / d, ex = x2 - ux * .38, ey = y2 - uy * .38;
@@ -411,7 +427,9 @@
       else if (K === XIANGQI) P.push(`<g transform="translate(${cx} ${cy})"><circle r=".45" class="mxxt${p.red ? ' r' : ''}"/><text y="19" transform="scale(.01)" class="mxxg${p.red ? ' r' : ''}">${p.glyph}</text></g>`);
       else if (K === SHOGI) P.push(`<g transform="translate(${cx} ${cy})${p.up ? '' : ' rotate(180)'}"><path d="M0 -.44 .32 -.3 .4 .42H-.4L-.32 -.3z" class="mxtk"/><text y="20" transform="scale(.01)" class="mxtg${p.red ? ' pr' : ''}">${p.glyph}</text></g>`);
       else P.push(`<image href="${PIMG}${p.k}.svg" x="${cx - .5}" y="${cy - .5}" width="1" height="1"/>`); });
-    return `<svg viewBox="0 0 ${g.W} ${g.H}" aria-hidden="true">${boardSVG(G, K, g, flip)}${P.join('')}</svg>`;
+    // (2026-11-27 ユーザー: 一覧の画像はどのゲームでも同じ大きさ、盤を大きく、数字は省いてよい) the playing area only, no letters or numbers
+    const n = g.n || 0, box = K.go ? [.45, .45, n + .1, n + .1] : K === SHOGI ? [g.ox - .2, g.oy - .2, 9.4, 9.4] : K === XIANGQI ? [g.ox - .62, g.oy - .62, 9.24, 10.24] : [g.ox, g.oy, 8, 8];
+    return `<svg viewBox="${box.map(v => +v.toFixed(2)).join(' ')}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">${boardSVG(G, K, g, flip).replace(/<text[^>]*>[^<]*<\/text>/g, '')}${P.join('')}</svg>`;
   }
   function wall() {
     stop(); cur = null; host.querySelector('.mxx').classList.remove('on');
@@ -423,58 +441,87 @@
     el.grid.innerHTML = GAMES.filter(G => kind === 'all' || G.kind === kind).map(G => { const x = gt(G.id);
       return `<button type="button" class="mxc" data-g="${G.id}"><span class="mxth k-${G.kind}">${thumb(G)}</span><span class="mxcl"><i>${esc(u('k_' + G.kind))}</i><b>${esc(x.t)}</b><small>${esc(x.w)} — ${esc(x.b)}</small><small>${esc(x.d)} · ${esc(x.pl)}</small></span></button>`; }).join('');
     el.grid.querySelectorAll('[data-g]').forEach(b => b.onclick = () => show(b.dataset.g, true));
+    // (2026-11-27 ユーザー: 12を超えたら次のページ — 他の部屋と同じ) the museum's own pager: search box + the kinds' chips in one bar, 12 a page at every width
+    if (window.AtlasMuseum && AtlasMuseum.pager) AtlasMuseum.pager(el.grid, 'match' + (kind === 'all' ? '' : '-' + kind), { per: 12, extra: el.chips });
     el.lead.textContent = u('lead'); el.credit.textContent = u('credit');
     if (window.AtlasMuseum && AtlasMuseum.catalog) AtlasMuseum.catalog('match', GAMES.map(G => ({ id: G.id, t: gt(G.id).t })));
     MK(null, GAMES.length);
   }
 
-  /* ---------- a game ---------- */
+  /* ---------- a game (2026-11-27 ユーザー: レイアウトとデザインを徹底的に見直し — 評価: tools/museum-match-layout.js) ----------
+     The view: a short head (kind · year · place, the title, the result) → the stage (the board between the two players' plates — whose
+     move it is lights up; what each side has taken or holds — and under it the steps, a slider through the whole game and the move number)
+     beside the side column (ミュゼフク's note card for the move on the board, with the previous / next note, then the moves' list, as tall
+     as the stage) → the game's story and record. Phone: one column; the moves' list is a strip that scrolls sideways. */
+  const plateOf = (G, L, st, side) => {   // what a side has to show on its plate
+    const K = L.K;
+    if (K.go) return st.cap[side] ? `<span class="mxcap"><u class="mxdot ${side === 'B' ? 'W' : 'B'}"></u>${esc(u('caps'))} ${st.cap[side]}</span>` : '';
+    if (K === SHOGI) { const c = {}; K.hands(st)[side].forEach(x => c[x.t] = (c[x.t] || 0) + 1); const e = Object.entries(c);
+      return e.length ? `<span class="mxcap"><em>${esc(u('hand'))}</em>${e.map(([t, n]) => `<span class="mxhk">${K.KAN[t]}${n > 1 ? `<sub>${n}</sub>` : ''}</span>`).join('')}</span>` : ''; }
+    // chess, xiangqi: the other side's pieces this side has taken
+    const now = new Set(K.pieces(st).map(p => p.id)), gone = K.pieces(L.st[0]).filter(p => !now.has(p.id) && p.k[0] !== side[0]);
+    if (!gone.length) return '';
+    return `<span class="mxcap">${gone.map(p => K === CHESS ? `<img src="${PIMG}${p.k}.svg" alt="">` : `<span class="mxxk${p.red ? ' r' : ''}">${p.glyph || ''}</span>`).join('')}</span>`;
+  };
   function show(id, user) {
     const G = GAMES.find(x => x.id === id); if (!G || !host) return;
     el.pushed = !!(user && ctx && ctx.hist); if (el.pushed) ctx.hist({ room: 'match', game: id });
-    stop(); cur = G; ply = 0; const L = line(G), x = gt(G.id), n = L.mv.length;
+    stop(); cur = G; ply = 0; const L = line(G), x = gt(G.id), n = L.mv.length, K = L.K;
     el.wall.hidden = true; el.view.hidden = false; host.querySelector('.mxx').classList.add('on');
-    const K = L.K, side = s => u('side_' + s), res = G.res && (G.kind === 'go' ? G.res : u('res_' + G.res));
-    el.view.innerHTML = `<button type="button" class="mxback">${svg('back')}${esc(u('back'))}</button>
-      <div class="mxhd"><i>${esc(u('k_' + G.kind))}</i><h3>${esc(x.t)}</h3>
-        <p class="mxvs"><span><u class="mxdot ${K.sides[0]}"></u>${esc(x.w)}</span><em>vs</em><span><u class="mxdot ${K.sides[1]}"></u>${esc(x.b)}</span></p>
-        <p class="mxmeta">${esc(x.d)} · ${esc(x.pl)}${x.ev ? ' · ' + esc(x.ev) : ''}${res ? ` · <b>${esc(u('result'))}: ${esc(res)}</b>` : ''}</p></div>
-      <div class="mxmain"><div class="mxleft k-${G.kind}"><div class="mxboard" dir="ltr" role="img"></div>
-        <div class="mxctl" dir="ltr"><button type="button" data-c="start" aria-label="${esc(u('start'))}" title="${esc(u('start'))}">${svg('start')}</button><button type="button" data-c="prev" aria-label="${esc(u('prev'))}" title="${esc(u('prev'))}">${svg('prev')}</button>
-          <button type="button" data-c="play" class="pl" aria-label="${esc(u('play'))}" title="${esc(u('play'))}">${svg('play')}</button><button type="button" data-c="next" aria-label="${esc(u('next'))}" title="${esc(u('next'))}">${svg('next')}</button><button type="button" data-c="end" aria-label="${esc(u('end'))}" title="${esc(u('end'))}">${svg('end')}</button></div>
-        <p class="mxpos" aria-live="polite"></p></div>
-        <div class="mxside"><div class="mxsay"><img src="${GUIDE}" alt="" class="mxowl"><div class="mxbub"><b class="mxwho">${esc(u('guide'))}</b><p class="mxtxt"></p><button type="button" class="mxnext" hidden></button></div></div>
-          <div class="mxlog"><h4>${esc(u('moves'))}</h4><div class="mxlist" dir="ltr" role="list"></div></div></div></div>
-      <p class="mxlead">${esc(x.lead || '')}</p><p class="mxcredit">${esc(u('credit'))}</p>`;
-    el.board = el.view.querySelector('.mxboard'); el.say = el.view.querySelector('.mxtxt'); el.list = el.view.querySelector('.mxlist'); el.pos = el.view.querySelector('.mxpos'); el.nx = el.view.querySelector('.mxnext');
-    el.view.querySelector('.mxback').onclick = () => { if (el.pushed) history.back(); else wall(); };
-    // the moves' list: chess as numbered pairs; the others one move a row, numbered
+    const res = G.res && (G.kind === 'go' ? G.res : u('res_' + G.res)), flip = G.orient === 'b' || G.orient === 'g';
+    const [s0, s1] = K.sides, nm = s => s === s0 ? x.w : x.b, plate = (s, pos) => `<div class="mxpl ${pos}" data-s="${s}"><u class="mxdot ${s}"></u><b>${esc(nm(s))}</b><span class="mxside-n">${esc(u('side_' + s))}</span><span class="mxpx"></span></div>`;
+    const btn = (c, k) => `<button type="button" data-c="${c}"${c === 'play' ? ' class="pl"' : ''} aria-label="${esc(u(k))}" title="${esc(u(k))}">${svg(c)}</button>`;
+    el.view.innerHTML = `<div class="mxhd"><button type="button" class="mxback" aria-label="${esc(u('back'))}" title="${esc(u('back'))}">${svg('back')}</button>
+        <div class="mxht"><p class="mxkick"><i>${esc(u('k_' + G.kind))}</i><span>${esc(x.d)} · ${esc(x.pl)}</span></p><h3>${esc(x.t)}</h3></div>${res ? `<span class="mxres">${esc(res)}</span>` : ''}</div>
+      <div class="mxmain">
+        <div class="mxleft k-${G.kind}">${plate(flip ? s0 : s1, 'top')}<div class="mxboard" dir="ltr" role="img"></div>${plate(flip ? s1 : s0, 'bot')}
+          <div class="mxctl" dir="ltr">${btn('start', 'start')}${btn('prev', 'prev')}${btn('play', 'play')}${btn('next', 'next')}${btn('end', 'end')}</div>
+          <div class="mxseek" dir="ltr"><input type="range" class="mxrng" min="0" max="${n}" value="0" step="1" aria-label="${esc(u('moves'))}"><span class="mxpos" aria-live="polite"></span></div></div>
+        <div class="mxside"><div class="mxnote"><div class="mxnh"><img src="${GUIDE}" alt="" class="mxowl"><b class="mxwho">${esc(u('guide'))}</b><span class="mxmv"></span></div>
+            <p class="mxtxt"></p>
+            <div class="mxnn"><button type="button" data-n="-1">${svg('prev')}<span>${esc(u('pnote'))}</span></button><button type="button" data-n="1"><span>${esc(u('nnote'))}</span>${svg('next')}</button></div></div>
+          <div class="mxlog"><h4>${esc(u('moves'))}<span>${esc(u('plies').replace('{n}', n))}</span></h4><div class="mxlist k-${K.pair ? 'pair' : 'one'}" dir="ltr" role="list"></div></div></div></div>
+      <section class="mxabout"><h4>${esc(u('about'))}</h4><p>${esc(x.lead || '')}</p>
+        <dl><div><dt>${esc(u('r_event'))}</dt><dd>${esc(x.ev || '—')}</dd></div><div><dt>${esc(u('r_date'))}</dt><dd>${esc(x.d)}</dd></div><div><dt>${esc(u('r_place'))}</dt><dd>${esc(x.pl)}</dd></div>${res ? `<div><dt>${esc(u('result'))}</dt><dd>${esc(res)}</dd></div>` : ''}</dl></section>
+      <p class="mxcredit">${esc(u('credit'))}</p>`;
+    const q = s => el.view.querySelector(s);
+    Object.assign(el, { board: q('.mxboard'), say: q('.mxtxt'), list: q('.mxlist'), pos: q('.mxpos'), mv: q('.mxmv'), rng: q('.mxrng'), nn: q('.mxnn') });
+    q('.mxback').onclick = () => { if (el.pushed) history.back(); else wall(); };
+    // the moves: chess and xiangqi as numbered pairs; shogi and go one by one, numbered, in columns
     const lab = i => K.label(L.mv[i], i, L.recs[i], lang, L.st[0]);
-    const btn = i => `<button type="button" data-p="${i + 1}" class="${note(G.id, i + 1) != null ? 'nt' : ''}">${esc(lab(i))}</button>`;
-    const rows = [`<div class="mxrow st" role="listitem"><button type="button" data-p="0" class="${note(G.id, 0) != null ? 'nt' : ''}">${esc(u('startpos'))}</button></div>`];
-    if (K.pair) for (let i = 0; i < n; i += 2) rows.push(`<div class="mxrow pr" role="listitem"><span>${i / 2 + 1}.</span>${btn(i)}${i + 1 < n ? btn(i + 1) : '<b></b>'}</div>`);
-    else for (let i = 0; i < n; i++) rows.push(`<div class="mxrow" role="listitem"><span>${i + 1}</span>${K.go ? `<u class="mxdot ${L.recs[i].side}"></u>` : ''}${btn(i)}</div>`);
+    const mb = i => `<button type="button" data-p="${i + 1}"${note(G.id, i + 1) != null ? ' class="nt"' : ''}>${K.pair ? '' : `<span class="mxno">${i + 1}</span>`}${K.go ? `<u class="mxdot ${L.recs[i].side}"></u>` : ''}<bdi>${esc(lab(i))}</bdi></button>`;
+    const rows = [`<div class="mxrow st" role="listitem"><button type="button" data-p="0"${note(G.id, 0) != null ? ' class="nt"' : ''}>${esc(u('startpos'))}</button></div>`];
+    if (K.pair) for (let i = 0; i < n; i += 2) rows.push(`<div class="mxrow pr" role="listitem"><span class="mxno">${i / 2 + 1}.</span>${mb(i)}${i + 1 < n ? mb(i + 1) : ''}</div>`);
+    else for (let i = 0; i < n; i++) rows.push(`<div class="mxrow" role="listitem">${mb(i)}</div>`);
     el.list.innerHTML = rows.join(''); el.list.classList.toggle('alln', Array.from({ length: n + 1 }, (_, i) => note(G.id, i) != null).every(Boolean));
     el.list.onclick = e => { const b = e.target.closest('[data-p]'); if (b) { stop(); go(+b.dataset.p, true); } };
-    el.view.querySelector('.mxctl').onclick = e => { const b = e.target.closest('[data-c]'); if (!b) return; const c = b.dataset.c;
+    q('.mxctl').onclick = e => { const b = e.target.closest('[data-c]'); if (!b) return; const c = b.dataset.c;
       if (c === 'play') { timer ? stop() : run(); return; } stop(); go(c === 'start' ? 0 : c === 'end' ? n : c === 'prev' ? ply - 1 : ply + 1, c === 'next' || c === 'prev'); };
-    el.nx.onclick = () => { stop(); go(+el.nx.dataset.p, true); };
-    go(0, false); el.view.querySelector('.mxback').focus({ preventScroll: true });
-    if (user) { const t = host.getBoundingClientRect().top + scrollY - 80; if (scrollY > t) scrollTo({ top: Math.max(0, t) }); }
+    el.rng.oninput = () => { stop(); go(+el.rng.value, false); };
+    el.nn.onclick = e => { const b = e.target.closest('[data-n]'); if (!b || b.disabled) return; stop(); const t = +b.dataset.p; if (t >= 0) go(t, Math.abs(t - ply) === 1); };
+    go(0, false); q('.mxback').focus({ preventScroll: true });
+    if (user) requestAnimationFrame(() => { const t = el.view.getBoundingClientRect().top + scrollY - band() - 8; if (Math.abs(scrollY - t) > 4) scrollTo({ top: Math.max(0, t) }); });
   }
+  // the page's own bar along the top (the site's header) — the view is scrolled to just under it
+  function band() { let b = 0; for (const e of document.elementsFromPoint(innerWidth / 2, 2)) { const ps = getComputedStyle(e).position; if (ps === 'fixed' || ps === 'sticky') b = Math.max(b, e.getBoundingClientRect().bottom); } return b < innerHeight / 3 ? b : 0; }
   function go(p, anim) {
     const G = cur; if (!G) return; const L = line(G), n = L.mv.length; p = Math.max(0, Math.min(n, p));
     const near = Math.abs(p - ply) === 1; ply = p; draw(anim && near);
-    const K = L.K, r = p ? L.recs[p - 1] : null, x = note(G.id, p);
+    const K = L.K, r = p ? L.recs[p - 1] : null, x = note(G.id, p), st = L.st[p];
     el.say.textContent = x != null ? x : u('quiet'); el.say.classList.toggle('quiet', x == null);
-    // the next note further on (long games: most moves have none)
-    let nn = -1; if (x == null) for (let i = p + 1; i <= n; i++) if (note(G.id, i) != null) { nn = i; break; }
-    el.nx.hidden = nn < 0; if (nn >= 0) { el.nx.dataset.p = nn; el.nx.innerHTML = esc(u('nextnote').replace('{n}', nn)) + svg('note'); }
-    const lb = p ? K.label(L.mv[p - 1], p - 1, r, lang, L.st[0]) : ''; el.pos.innerHTML = p ? esc(u('move').replace('{n}', p)) + ' · <bdi dir="ltr">' + esc(lb) + '</bdi>' : esc(u('startpos'));
-    el.board.setAttribute('aria-label', el.pos.textContent);
+    const lb = p ? K.label(L.mv[p - 1], p - 1, r, lang, L.st[0]) : '';
+    el.mv.innerHTML = p ? `<u class="mxdot ${r.side}"></u>${esc(u('move').replace('{n}', p))}<bdi dir="ltr">${esc(lb)}</bdi>` : esc(u('startpos'));
+    el.pos.textContent = `${p} / ${n}`; el.rng.value = p; el.rng.style.setProperty('--f', (n ? p / n * 100 : 0) + '%');
+    el.board.setAttribute('aria-label', p ? u('move').replace('{n}', p) + ' ' + lb : u('startpos'));
+    // the notes before and after this move
+    let pv = -1, nx = -1; for (let i = p - 1; i >= 0; i--) if (note(G.id, i) != null) { pv = i; break; } for (let i = p + 1; i <= n; i++) if (note(G.id, i) != null) { nx = i; break; }
+    el.nn.querySelectorAll('[data-n]').forEach(b => { const t = +b.dataset.n < 0 ? pv : nx; b.dataset.p = t; b.disabled = t < 0; });
+    // the plates: whose move it is, and what each side has taken / holds
+    el.view.querySelectorAll('.mxpl').forEach(pl => { const s = pl.dataset.s; pl.classList.toggle('on', p < n && st.turn === s); pl.querySelector('.mxpx').innerHTML = plateOf(G, L, st, s); });
     el.list.querySelectorAll('[aria-current]').forEach(b => b.removeAttribute('aria-current'));
     const on = el.list.querySelector(`[data-p="${p}"]`); if (on) { on.setAttribute('aria-current', 'step'); const lr = el.list.getBoundingClientRect(), br = on.getBoundingClientRect();
-      if (br.top < lr.top || br.bottom > lr.bottom) el.list.scrollTop += br.top - lr.top - lr.height / 2 + br.height / 2; }
+      if (getComputedStyle(el.list).overflowX === 'auto' && el.list.scrollWidth > el.list.clientWidth + 2) el.list.scrollLeft += (br.left + br.width / 2) - (lr.left + lr.width / 2);
+      else if (br.top < lr.top || br.bottom > lr.bottom) el.list.scrollTop += br.top - lr.top - lr.height / 2 + br.height / 2; }
     const ctl = el.view.querySelector('.mxctl'); ctl.querySelector('[data-c=start]').disabled = ctl.querySelector('[data-c=prev]').disabled = !p;
     ctl.querySelector('[data-c=end]').disabled = ctl.querySelector('[data-c=next]').disabled = p >= n;
     if (p >= n) { MK(G.id, GAMES.length); if (timer) stop(); }
@@ -497,5 +544,5 @@
       el = { wall: box.querySelector('.mxwall'), view: box.querySelector('.mxview'), lead: box.querySelector('.mxwl'), chips: box.querySelector('.mxchips'), grid: box.querySelector('.mxgrid'), credit: box.querySelector('.mxwc') }; }
     if (cur && !el.view.hidden) { const id = cur.id, p = ply, pu = el.pushed; show(id, false); el.pushed = pu; go(p, false); } else wall();
   }
-  window.AtlasMatch = { render, GAMES, KINDS, V, line, show: id => show(id, false), wall: () => host && wall(), current: () => cur && !el.view.hidden ? cur.id : null, _go: p => go(p, false) };
+  window.AtlasMatch = { render, GAMES, KINDS, V, line, show: id => show(id, false), open: id => show(id, true), wall: () => host && wall(), current: () => cur && !el.view.hidden ? cur.id : null, _go: p => go(p, false) };
 })();

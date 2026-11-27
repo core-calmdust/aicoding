@@ -35,7 +35,7 @@
   // the rooms, in order. src: scripts loaded the first time the room opens; ready(): the room's code is there
   const ROOMS = [
     { id: 'map', ready: () => !!window.AtlasMap, render: (el, c) => AtlasMap.render(el, c) },
-    { id: 'tree', src: ['museum/tree.js?v=8'], ready: () => !!window.AtlasTree, render: (el, c) => AtlasTree.render(el, c) },
+    { id: 'tree', src: ['museum/tree.js?v=9'], ready: () => !!window.AtlasTree, render: (el, c) => AtlasTree.render(el, c) },
     { id: 'gallery', src: ['museum/gallery.js?v=151'], ready: () => !!window.AtlasGallery, render: (el, c) => AtlasGallery.render(el, c) },
     { id: 'paint', src: () => ['museum/paint-i18n/en.js?v=' + PAINT_I18N_V, ...(rl() !== 'en' ? [`museum/paint-i18n/${rl()}.js?v=${PAINT_I18N_V}`] : []), PAINT_JS], ready: () => !!(window.AtlasPaint && window.MUSEUM_PAINT_T && MUSEUM_PAINT_T.en && MUSEUM_PAINT_T[rl()]), render: (el, c) => AtlasPaint.render(el, c) },   // (per language, like the stories)
     // (2026-11-24 audit pageKB) the stories' text in one file per language (museum/read-i18n/<lang>.js, made by tools/museum-read-split.js from
@@ -43,12 +43,12 @@
     // (2026-11-24 audit textKB) one file only: tools/museum-read-split.js fills each language's file with English for anything it lacks
     // (2026-11-24 audit textKB, per screen) that file is now the shelf's index only; each story's text is museum/read-i18n/<lang>/<id>.js, which
     // read.js loads when the story opens (with ?v=READ_I18N_V, read as AtlasMuseum.readV)
-    { id: 'read', src: () => [`museum/read-i18n/${rl()}.js?v=${READ_I18N_V}`, 'museum/read.js?v=98'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T && MUSEUM_READ_T[rl()]), render: (el, c) => AtlasRead.render(el, c) },
+    { id: 'read', src: () => [`museum/read-i18n/${rl()}.js?v=${READ_I18N_V}`, 'museum/read.js?v=106'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T && MUSEUM_READ_T[rl()]), render: (el, c) => AtlasRead.render(el, c) },
     // (2026-11-27 ユーザー: 名局・名勝負の部屋) the great games: one file per language like the paintings (museum/match-i18n/<lang>.js, English filled in)
-    { id: 'match', src: () => [`museum/match-i18n/${rl()}.js?v=${MATCH_I18N_V}`, 'museum/match.js?v=19'], ready: () => !!(window.AtlasMatch && window.MUSEUM_MATCH_T && MUSEUM_MATCH_T[rl()]), render: (el, c) => AtlasMatch.render(el, c) },
+    { id: 'match', src: () => [`museum/match-i18n/${rl()}.js?v=${MATCH_I18N_V}`, 'museum/match.js?v=37'], ready: () => !!(window.AtlasMatch && window.MUSEUM_MATCH_T && MUSEUM_MATCH_T[rl()]), render: (el, c) => AtlasMatch.render(el, c) },
     { id: 'chance', src: () => ['museum/chance-i18n/en.js?v=' + CHANCE_I18N_V, ...(rl() !== 'en' ? [`museum/chance-i18n/${rl()}.js?v=${CHANCE_I18N_V}`] : []), 'museum/chance.js?v=7'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T && MUSEUM_CHANCE_T.en && MUSEUM_CHANCE_T[rl()]), render: (el, c) => AtlasChance.render(el, c) },   // (per language)
   ];
-  const READ_I18N_V = 59, PAINT_I18N_V = 84, PAINT_JS = 'museum/paint.js?v=95', CHANCE_I18N_V = 1, MATCH_I18N_V = 18, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
+  const READ_I18N_V = 66, PAINT_I18N_V = 84, PAINT_JS = 'museum/paint.js?v=95', CHANCE_I18N_V = 1, MATCH_I18N_V = 35, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
   const KEY = 'atlas-museum-room';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const loaded = {};
@@ -75,7 +75,7 @@
     el.rooms.style.setProperty('--n', ROOMS.length); el.rooms.style.setProperty('--h', ROOMS.length <= 4 ? ROOMS.length : Math.ceil(ROOMS.length / 2));
     // (a phone: one strip of all the rooms, icon over a short name — like the games' own menus, 2026-11-24 ユーザー)
     el.rooms.innerHTML = ROOMS.map(r => `<button type="button" class="murm" data-r="${r.id}" role="tab" aria-selected="${r.id === room}"><span class="mui"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[r.id]}</svg></span><span class="mut"><b>${esc(u(r.id))}</b><small>${esc(u(r.id + 'S'))}</small></span><span class="mup">${esc(u(r.id + 'P') !== r.id + 'P' ? u(r.id + 'P') : u(r.id))}</span></button>`).join('');
-    el.rooms.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { if (b.dataset.r !== room) open(b.dataset.r, true); });
+    el.rooms.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { if (b.dataset.r !== room) open(b.dataset.r, true); else top(room); });
     tabKeys(el.rooms); rove(el.rooms);
     fitBar();
   }
@@ -112,6 +112,18 @@
     if (R.ready()) go();
     else { box.innerHTML = `<p class="muload">${esc(u('load'))}</p>`; const L = typeof R.src === 'function' ? R.src() : (R.src || []); L.reduce((q, x) => q.then(() => load(x)), Promise.resolve()).then(go); }   // (in order: the text before the room's code)
     if (user && innerWidth < 820) { const t = el.rooms.getBoundingClientRect().top + scrollY - 70; if (scrollY > t) scrollTo({ top: Math.max(0, t), behavior: 'smooth' }); }
+  }
+  // (2026-11-27 ユーザー: 読み物を読んでいるときに読み物タブを押すとトップに戻れるように — 名局選・描かれたゲームも) the open room's tab, pressed
+  // again: back to the room's own start — a story / a game / a work closes, the list goes to its first page — and up to the tabs
+  function top(r) {
+    const R = ROOMS.find(x => x.id === r), box = el.stage && el.stage.querySelector(`.muroom[data-r="${r}"]`); if (!R || !box || !R.ready()) return;
+    Object.keys(PG).forEach(k => { if (k === r || k.indexOf(r + '-') === 0) PG[k].p = 0; });
+    const deep = (r === 'read' && window.AtlasRead && AtlasRead.current && AtlasRead.current()) || (r === 'match' && window.AtlasMatch && AtlasMatch.current && AtlasMatch.current());
+    if (deep) hist({ room: r });
+    if (r === 'read') AtlasRead.showShelf();
+    else if (r === 'match') AtlasMatch.wall();
+    else if (r !== 'chance' && r !== 'map' && r !== 'tree') { if (r === 'paint' && window.AtlasPaint && AtlasPaint.close) AtlasPaint.close(); R.render(box, rctx()); }
+    const t = el.rooms.getBoundingClientRect().top + scrollY - 90; if (scrollY > t) scrollTo({ top: Math.max(0, t), behavior: 'smooth' });
   }
   // 館内スタンプ帳 (2026-11-24): each room reports what the visitor has done there — mark(room, ids, total): ids seen/done (a list or one),
   // total the room's count; map and tree count as done once opened. 'atlas-museum-prog' = { room: { ids: [...], n: total } }. A room is
@@ -267,7 +279,7 @@
     inp.placeholder = t[0]; inp.setAttribute('aria-label', t[0]); inp.value = st.q; none.textContent = t[3];
     top.querySelector('.mupg-x').setAttribute('aria-label', t[4]);
     [top, bot].forEach(b => b.querySelectorAll('.mupg-a').forEach(a => a.setAttribute('aria-label', t[+a.dataset.d > 0 ? 2 : 1])));
-    const per = () => { const ph = innerWidth <= 819, cols = Math.max(1, getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length); return cols * ((ph ? o.rows && o.rows.phone : o.rows && o.rows.pc) || (ph ? 4 : 2)); };
+    const per = () => { if (o.per) return o.per; const ph = innerWidth <= 819, cols = Math.max(1, getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length); return cols * ((ph ? o.rows && o.rows.phone : o.rows && o.rows.pc) || (ph ? 4 : 2)); };
     const draw = () => {
       const q = norm(st.q), hit = cards.filter(c => !q || c.dataset.pq.includes(q)), n = per(), pages = Math.max(1, Math.ceil(hit.length / n));
       st.p = Math.min(Math.max(0, st.p), pages - 1);
