@@ -129,6 +129,8 @@
     { id: 'whist', w: 2048, h: 1390, rijks: 'RP-P-2022-211-63', bg: '#ddd9cf', spots: [[.53, .6], [.46, .42], [.69, .3], [.23, .36], [.52, .22], [.85, .73]], links: [{ g: 'solitaire' }] },
     // (2026-11-25) the Rijksmuseum: Paul Hey, three old men at chess in a café
     { id: 'hey', w: 2048, h: 1388, rijks: 'RP-P-OB-16.717', bg: '#e2dccc', spots: [[.45, .74], [.28, .4], [.58, .38], [.75, .3], [.63, .73], [.26, .77]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Rijksmuseum: coloured stereograph 'The artful card, or, one too many for granny. Hearts are trumps!'
+    { id: 'artful', w: 2048, h: 1000, rijks: 'RP-F-F10570', bg: '#d9cfb6', spots: [[.212, .565], [.171, .44], [.396, .498], [.328, .536], [.289, .648], [.396, .297]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
