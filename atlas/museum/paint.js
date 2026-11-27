@@ -149,6 +149,8 @@
     { id: 'govase', w: 1480, h: 2048, rijks: 'AK-NM-6352-B', bg: '#d6d6d4', spots: [[.467, .721], [.353, .6], [.587, .658], [.653, .552], [.38, .48], [.36, .726]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
     // (2026-11-25) the Rijksmuseum: surimono (1822): Xuanzong and Yang Guifei playing ban-sugoroku
     { id: 'yokihi', w: 1835, h: 2048, rijks: 'RP-P-1991-545', bg: '#e5e1d6', spots: [[.544, .55], [.265, .375], [.6, .25], [.33, .15], [.865, .31], [.85, .85]], links: [{ g: 'backgammon' }, { ex: 'sugoroku' }] },
+    // (2026-11-25) the Rijksmuseum: Disdéri & Cie carte de visite, men in old-fashioned costume playing cards
+    { id: 'disderi', w: 1573, h: 1071, rijks: 'RP-F-F01031-12-2', bg: '#e6e0d2', spots: [[.45, .47], [.45, .28], [.32, .33], [.6, .34], [.578, .718], [.9, .5]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
