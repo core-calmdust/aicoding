@@ -211,8 +211,10 @@
     return lead > 0 ? [ups[lead], ...ups.slice(0, lead), ...ups.slice(lead + 1)] : ups;
   }
   // games ordered by the changelog (UPDATES is newest first); games without entries keep registry order
+  // (2026-11-28 ユーザー指示: the home grid leads with 麻雀 → グアンダン → バカラ → ポーカー, whatever was updated last; the rest follow by update)
+  const PIN = ['riichi', 'guandan', 'baccarat', 'poker'];
   function byUpdate() {
-    const rank = id => { const k = UPDATES.findIndex(u => u[1] === id); return k >= 0 ? k : UPD_LAST[id] ? 1e8 - +UPD_LAST[id].replace(/-/g, '') / 1e3 : 1e9; };   // (archived: after the recent ones, newest first)
+    const rank = id => { const p = PIN.indexOf(id); if (p >= 0) return p - PIN.length; const k = UPDATES.findIndex(u => u[1] === id); return k >= 0 ? k : UPD_LAST[id] ? 1e8 - +UPD_LAST[id].replace(/-/g, '') / 1e3 : 1e9; };   // (archived: after the recent ones, newest first)
     return GAMES.map((g, i) => ({ g, i, k: rank(g.id) })).sort((a, b) => a.k - b.k || a.i - b.i).map(x => x.g);
   }
 
