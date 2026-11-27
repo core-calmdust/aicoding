@@ -95,7 +95,17 @@ function partnerKey(id) {
   const ks = partnerSkills(id).filter(x => x.ok).map(x => x.k), o = DB.chars[id];
   return ks.includes(o.puse) ? o.puse : ks.includes(useKey(p.id)) ? useKey(p.id) : ks[0] || null;
 }
-function mySeat() { if (CLASSIC) return classicSeat(0); const id = DB.sel; return seatChar(MJChars.get(id), useKey(id), partnerOf(id), partnerKey(id)); }
+// 大百科の麻雀 (riichi/, 2026-11-28 ユーザー「あなたの時には自分のアトラモを、CPUもランダムに今いるアトラモを」): the player's seat
+// shows the avatar chosen in the Atlas (shared/atlas.js .av.icon = av-<species>-<tier>), the CPUs a random Atlamo each game (riichi/atlamo.js)
+const AV_DIR = '../images/atlas/av/';
+function clMyAv() { try { const d = window.Atlas && Atlas.load ? Atlas.load() : JSON.parse(localStorage.getItem('atlas-v1') || 'null') || { av: { icon: 'av-dice-0' } }, m = /^av-([a-z0-9-]+)-(\d)$/.exec((d && d.av && d.av.icon) || ''); return m ? AV_DIR + m[1] + '-' + m[2] + '.webp' : null; } catch (e) { return null; } }
+function clCpuSeat(i, used) {
+  const L = window.RIICHI_ATLAMO; if (!L || !L.length) return classicSeat(i);
+  let k = Math.floor(Math.random() * L.length); for (let n = 0; used.has(k) && n < L.length; n++) k = (k + 1) % L.length; used.add(k);
+  const [sp, ja, en] = L[k], t = Math.floor(Math.random() * 3);
+  return Object.assign(classicSeat(i), { id: 'cla' + i, img: AV_DIR + sp + '-' + t + '.webp', name: { ja, en } });
+}
+function mySeat() { if (CLASSIC) { const s = classicSeat(0), im = clMyAv(); if (im) s.img = im; return s; } const id = DB.sel; return seatChar(MJChars.get(id), useKey(id), partnerOf(id), partnerKey(id)); }
 const coarse = () => matchMedia('(pointer: coarse)').matches;
 function rollSkillKey() {
   const r = Math.random() * 100; let acc = 0, tier = 0;
@@ -917,7 +927,9 @@ function applyLite() {
   if (TB) TB.setQuality(DB.set.lite ? 'lite' : 'high');
   if (typeof homeFx === 'function' && $('#aaFx')) homeFx();
 }
-$('#gSnd').addEventListener('click', openSettings);   // the gear: the same settings as the home screen's (ユーザー 2026-11-14)
+$('#gSnd').addEventListener('click', openSettings);
+// (2026-11-28 ユーザー「戦績はアイコンで見られるように」) 大百科の麻雀 (riichi/) has a record button beside the gear
+if ($('#gRec')) { $('#gRec').innerHTML = IC.stats; $('#gRec').title = t('stats'); $('#gRec').setAttribute('aria-label', t('stats')); $('#gRec').addEventListener('click', () => { SND.pick(); openStats(null); }); }   // the gear: the same settings as the home screen's (ユーザー 2026-11-14)
 // phones always use the landscape layout; held upright, the whole UI is turned 90° (no reliance on the OS rotation)
 const PHONE = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600;
 function fitRoot() {
@@ -1428,7 +1440,7 @@ async function startGame(opt = {}) {
   // (ユーザー 2026-11-15) in 段位戦 up to 6級 the BOTs bring one skill only, even when the player brings two (an easier start;
   // tools/dual-skill-sim.js: two skills against one is worth about 0.06 of a place)
   const bot1 = !!opt.ranked && DB.rank.pt < MJRank.list.find(r => r.name.ja === '5級').pt;
-  const others = CLASSIC ? [classicSeat(1), clBossSeat(clLvOf(opt.ranked ? MJRank.botLv(DB.rank.pt) : CL_LV(DB.set.clv || 4))), classicSeat(3)] : picked.map(c => {
+  const clUsed = new Set(), others = CLASSIC ? [clCpuSeat(1, clUsed), clBossSeat(clLvOf(opt.ranked ? MJRank.botLv(DB.rank.pt) : CL_LV(DB.set.clv || 4))), clCpuSeat(3, clUsed)] : picked.map(c => {
     const key = rollSkillKey();
     if (!me.skill2 || bot1) return seatChar(c, key);
     const sis = pool.filter(x => x.family === c.family && !taken.has(x.id)).sort(() => Math.random() - .5)[0];

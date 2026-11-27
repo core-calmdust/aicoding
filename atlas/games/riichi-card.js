@@ -1,4 +1,4 @@
-/* 麻雀（riichi/、2026-11-27）— the Atlas' card for the game (ユーザー「タイトル画面ではなく大百科のUIに統合」):
+/* 麻雀（riichi/、2026-11-27）— the Atlas' adapter for the game (card) (ユーザー「タイトル画面ではなく大百科のUIに統合」):
    the right column of the board card picks what to play — 段位戦 / フリー対局 / オンライン, 東風戦 / 半荘戦, the CPU's Lv.1–10 —
    and the big button opens the game page straight onto the table (riichi/?go=…); ルール・レッスン・戦績 open its lists the same way.
    The choice is the game's own (riichi-v1 .set: mode, len, clv), so the card and the game always agree.
@@ -26,60 +26,39 @@
     bossAt: N('相手のボス', 'The boss', '对手首领', '상대 보스', 'El jefe', 'Le boss', 'O chefe', 'Der Boss', 'बॉस', 'الزعيم', 'Босс', '對手首領', 'Bos', 'Patron'),
     win: N('1位で {r} をゲット', 'Win 1st for {r}', '拿到第1名获得 {r}', '1위로 {r} 획득', 'Gana 1.º: {r}', '1er : {r}', '1º lugar: {r}', 'Platz 1: {r}', 'पहला स्थान: {r}', 'المركز الأول: {r}', '1-е место: {r}', '拿到第1名獲得 {r}', 'Juara 1: {r}', '1.lik: {r}'),
     got: N('ゲット済み', 'Got it', '已获得', '획득 완료', 'Conseguido', 'Obtenu', 'Obtido', 'Erhalten', 'मिल गया', 'تم الحصول', 'Получено', '已獲得', 'Didapat', 'Alındı'),
+    rank: N('段位', 'Rank', '段位', '단위', 'Rango', 'Rang', 'Nível', 'Rang', 'रैंक', 'الرتبة', 'Ранг', '段位', 'Peringkat', 'Derece'),
     nOnline: N('東風戦・スキルなしのレート戦（雀華と共通）と、友だちとのルーム戦', 'Rated East-round games without skills (shared with Janka), and rooms to play with friends.', '东风战、无技能的积分战（与《雀华》共通），以及和朋友的房间战', '동풍전·스킬 없는 레이팅전(작화와 공통)과 친구와의 룸 대전', 'Partidas con rating a una ronda sin habilidades (compartidas con Janka) y salas para jugar con amigos.', 'Parties classées à un tour sans compétences (partagées avec Janka) et salons entre amis.', 'Partidas com rating de uma rodada sem habilidades (com Janka) e salas com amigos.', 'Ratingpartien (Ost-Runde, ohne Fähigkeiten, gemeinsam mit Janka) und Räume für Freunde.', 'बिना स्किल वाले रेटिंग मैच (जानका के साथ साझा) और दोस्तों के साथ रूम।', 'مباريات تصنيف بجولة واحدة بلا مهارات (مشتركة مع جانكا) وغرف للعب مع الأصدقاء.', 'Рейтинговые партии в один круг без навыков (общие с Janka) и комнаты для игры с друзьями.', '東風戰、無技能的積分戰（與《雀華》共通），以及和朋友的房間戰', 'Permainan rating satu ronde tanpa skill (bersama Janka) dan room bersama teman.', 'Becerisiz tek turluk reyting maçları (Janka ile ortak) ve arkadaşlarla oda oyunları.'),
   };
   const TIER = { ja: ['入門', '初級', '中級', '上級', '最上級'], en: ['Beginner', 'Novice', 'Intermediate', 'Advanced', 'Expert'], zh: ['入门', '初级', '中级', '高级', '专家'], 'zh-TW': ['入門', '初級', '中級', '高級', '專家'], ko: ['입문', '초급', '중급', '상급', '전문가'],
     es: ['Iniciación', 'Principiante', 'Intermedio', 'Avanzado', 'Experto'], fr: ['Initiation', 'Débutant', 'Intermédiaire', 'Avancé', 'Expert'], pt: ['Iniciação', 'Iniciante', 'Intermediário', 'Avançado', 'Especialista'], de: ['Einstieg', 'Anfänger', 'Mittelstufe', 'Fortgeschritten', 'Experte'],
     hi: ['परिचय', 'शुरुआती', 'मध्यम', 'उन्नत', 'विशेषज्ञ'], ar: ['تمهيدي', 'مبتدئ', 'متوسط', 'متقدم', 'خبير'], ru: ['Начальный', 'Новичок', 'Средний', 'Продвинутый', 'Эксперт'], id: ['Pengenalan', 'Pemula', 'Menengah', 'Mahir', 'Ahli'], tr: ['Giriş', 'Acemi', 'Orta', 'İleri', 'Uzman'] };
   const tx = (k, l) => (TX[k] && (TX[k][l] || TX[k].en)) || k;
-  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  // the game's save (its own settings; the signature is the game's business — the card only reads, and writes .set back unsigned
-  // would break it, so the choice travels in the address instead: ?go=…&len=…&lv=…, and the game saves it)
+  const LVD = { ja: ['ルールを覚えたての人向け。鳴きもリーチも素直', '役を意識して手を進める', '押し引きを覚えた中級者', '守りも攻めも手ごわい上級者', '牌効率も読みも鋭い最強クラス'],
+    en: ['For those who just learned the rules — plain calls and riichi', 'Builds hands with yaku in mind', 'Knows when to push and when to fold', 'Tough in attack and defence', 'Sharp efficiency and reads — the strongest'] };
   function save() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
-  const st = { mode: null, len: null, lv: null };
-  function cur() {
-    const d = save(), s = d.set || {};
-    if (!st.mode) st.mode = s.mode === 'free' ? 'free' : s.mode === 'online' ? 'online' : 'ranked';
-    if (!st.len) st.len = s.len === 'south' ? 'south' : 'east';
-    if (!st.lv) st.lv = Math.max(1, Math.min(10, s.clv | 0 || 4));
-    return d;
-  }
-  function rankLine(d, l) {
-    const R = window.MJRank; if (!R) return '';
-    const pt = (d.rank && d.rank.pt) | 0, r = R.at(pt), nm = r.name[l] || r.name.en;
-    return `${esc(nm)} ・ ${pt} pt`;
-  }
-  function html(l) {
-    const d = cur(), M = st.mode;
-    const tabs = ['ranked', 'free', 'online'].map(m => `<button type="button" data-rcm="${m}" class="${m === M ? 'on' : ''}">${esc(tx(m, l))}</button>`).join('');
-    const lvOpts = Array.from({ length: 10 }, (_, i) => `<option value="${i + 1}" ${i + 1 === st.lv ? 'selected' : ''}>Lv.${i + 1} ${esc((TIER[l] || TIER.en)[Math.floor(i / 2)])}</option>`).join('');
-    const note = M === 'ranked' ? `${esc(tx('nRanked', l))}${rankLine(d, l) ? `<b class="rcrk">${rankLine(d, l)}</b>` : ''}` : esc(tx(M === 'free' ? 'nFree' : 'nOnline', l));
-    return `<div class="mtab3" id="rcMode">${tabs}</div><div class="mbody" id="rcBody"><div class="mnote rcnote">${note}</div>
-      ${M === 'online' ? '' : `<div class="opts" id="rcOpts"><label>${esc(tx('len', l))}<select id="rcLen"><option value="east" ${st.len === 'east' ? 'selected' : ''}>${esc(tx('east', l))}</option><option value="south" ${st.len === 'south' ? 'selected' : ''}>${esc(tx('south', l))}</option></select></label></div>${M === 'free' ? `<div class="opts"><label>${esc(tx('cpu', l))}<select id="rcLv">${lvOpts}</select></label></div>${bossRow(st.lv, l)}` : ''}`}
-      <div class="opts mxp rclinks">${['rules', 'lessons', 'stats', 'settings'].map(k => `<a class="mxb" href="${url(k)}"><span>${esc(tx(k, l))}</span></a>`).join('')}</div></div>`;
-  }
-  // the boss of the chosen level (atlas/npc/roster.js BOSSES.riichi) and the avatar a 1st place gives (✓ once owned)
-  function bossRow(lv, l) {
-    const A = window.AtlasNPC, L = A && A.BOSSES && A.BOSSES.riichi; if (!L) return '';
-    const i = A.band('riichi', lv), b = L[i], tr = A.tier('riichi', lv); if (!b) return '';
-    let own = false; try { own = !!(window.Atlas && Atlas.load && Atlas.load().owned.includes(`av-boss-riichi-${i + 1}-${tr}`)); } catch (e) {}
-    const R = ['N', 'R', 'SR'][tr] || '';
-    return `<div class="opts rcboss"><img src="../images/atlas/av/boss-riichi-${i + 1}-${tr < 0 ? 3 : tr}.webp" alt=""><span><small>${esc(tx('bossAt', l))} ・ ${esc(A.range('riichi', i))}</small><b>${esc(b.n[l] || b.n.en)}</b></span><em class="${own ? 'ok' : ''}">${own ? '✓ ' + esc(tx('got', l)) : esc(tx('win', l).replace('{r}', R))}</em></div>`;
-  }
-  function url(go) { return `../riichi/?go=${go}${go === 'ranked' || go === 'free' ? `&len=${st.len}` : ''}${go === 'free' ? `&lv=${st.lv}` : ''}`; }
-  function bind(root, l) {
-    const play = root.querySelector('.act a.btn.big');
-    const fix = () => { if (play) { play.href = url(st.mode); play.textContent = (st.mode === 'online' ? tx('toOnline', l) : tx('start', l)) + ' ▶'; } };
-    const redraw = () => { const col = root.querySelector('#rcMode'); if (!col) return; const host = document.createElement('div'); host.innerHTML = html(l);
-      col.replaceWith(host.children[0]); root.querySelector('#rcBody').replaceWith(host.children[0]); wire(); fix(); };
-    function wire() {
-      root.querySelectorAll('[data-rcm]').forEach(b => b.onclick = () => { st.mode = b.dataset.rcm; redraw(); });
-      const ln = root.querySelector('#rcLen'); if (ln) ln.onchange = () => { st.len = ln.value; redraw(); };
-      const lv = root.querySelector('#rcLv'); if (lv) lv.onchange = () => { st.lv = +lv.value; redraw(); };
-    }
-    wire(); fix();
-  }
-  // its look (the portal's own card style: a small row with the boss's face)
-  { const st = document.createElement('style'); st.textContent = '.rcboss{display:flex;align-items:center;gap:10px;margin-top:8px}.rcboss img{width:52px;height:52px;flex:none}.rcboss span{display:flex;flex-direction:column;min-width:0;flex:1}.rcboss small{font-size:11.5px;font-weight:700;color:var(--ink2)}.rcboss b{font-size:16px;font-weight:900;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rcboss em{font-style:normal;font-size:12.5px;font-weight:900;color:var(--coral2);white-space:nowrap}.rcboss em.ok{color:var(--mint2)}.rcrk{display:block;margin-top:4px;color:var(--ink)}'; document.head.appendChild(st); }
-  window.AtlasRiichiCard = { html, bind };
+  const go = q => { location.href = '../riichi/?go=' + q; };
+  const lenQ = z => '&len=' + (+z === 2 ? 'south' : 'east');
+  /* the adapter (2026-11-28 ユーザー「ゲームカードの作りが他のゲームと全然違う」): the portal draws the card as for every game — 対戦 · レート戦 ·
+     レッスン, 相手 (the Lv list with the Atlamo bosses and their rewards), 対局 (東風戦 / 半荘戦), 📖 ルール, the cup for the record —
+     and adapter.ext opens the game page there (atlas/app.js: ext / extLabel / rtNow). The table is the portal's showcase only. */
+  window.Atlas3D = window.Atlas3D || {};
+  window.Atlas3D.riichi = {
+    table: true, mx: true, levels: 10, modes: ['ai', 'rated'],
+    sizes: [1, 2], size0: (() => { const s = (save().set || {}); return s.len === 'south' ? 2 : 1; })(),
+    sizeLabel: l => tx('len', l), sizeName: (z, l) => tx(+z === 2 ? 'south' : 'east', l),
+    levelInfo: (n, l) => ({ name: 'Lv.' + n, desc: (LVD[l] || LVD.en)[Math.min(4, Math.floor((n - 1) / 2))], who: '' }),
+    ext(m, o) {
+      if (m === 'rules') return go('rules');
+      if (m === 'stats') return go('stats');
+      if (m === 'lesson') return go('lessons');
+      if (m === 'rated') return go(o.opp === 'online' ? 'online' : 'ranked' + lenQ(o.size));
+      go('free' + lenQ(o.size) + '&lv=' + Math.max(1, Math.min(10, o.lv || 4)));
+    },
+    extLabel: (m, l, opp) => m === 'lesson' ? tx('lessons', l) : m === 'rated' && opp === 'online' ? tx('toOnline', l) : tx('start', l),
+    rtNow(opp, l) {   // レート戦: AI = the 段位 (riichi-v1 .rank, rank.js), オンライン = no local copy of the rating — nothing shown
+      if (opp === 'online' || !window.MJRank) return null;
+      const d = save(), pt = (d.rank && d.rank.pt) | 0, r = MJRank.at(pt);
+      return [tx('rank', l), `${r.name[l] || r.name.en} · ${pt} pt`];
+    },
+  };
 })();
