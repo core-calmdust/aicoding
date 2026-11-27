@@ -34,6 +34,8 @@
 // t_count (count the recapture, 2026-11-27 担当E): countProblem / countWords below (the one capture whose taken − taken back — the
 //    opponent's biggest reply, recounted here — is the biggest, where a move taking more is taken back more; the 2D keys
 //    why / why0 / ng / ngGreedy / ngSmall).
+// t_stop (stop partway, 2026-11-27 担当E): stopProblem / stopWords below (t_count's taken − taken back, where the answer is a stop and
+//    going on along its road takes more and is taken back more; the 2D keys why / why0 / ng / ngOn / ngSmall).
 // Usage: node tools/lesson-verify-fanorona-ls.js [--selftest]   (also: node tools/lesson-verify.js fanorona)
 'use strict';
 const fs = require('fs'), path = require('path'), zlib = require('zlib');
@@ -308,6 +310,78 @@ function countProblem(P, opt) {
   const dd = (L.length - 1) + 2 * net.filter(x => x === mx - 1).length + 2 * greedy.length;
   return { ok: !msgs.length, msgs, best, d: dd, n: L.length, cnt, back, kinds, ar: back[bi] };
 }
+// t_stop (stop partway, 2026-11-27 担当E): one problem — { ok, msgs, best, d, kinds, ar }
+//  ① ok = [the one capture whose taken − taken back is the biggest] (recounted here as t_count), the engine first at 7 and 9, and the
+//    answer is a stop: a legal move goes on along its road (its piece could still capture where it stops); ② no other move as good by
+//    that count, the engine's second 60 or more below; ③ 5〜16 legal moves from 3 capturing pieces or more (追52), 追72; ④ the lesson's
+//    point — going on past the answer's stop takes more and is taken back more (every such move: 'on'); the answer gains 1 or more;
+//    no move ends the game; 2 or more of the opponent's pieces left after the answer; ⑤ as basicProblem;
+//  ⑥ d = wrong moves + 2 × near misses (one below by the count) + 2 × the moves going on.
+const eqStep = (x, y) => x.from === y.from && x.to === y.to && x.kind === y.kind;
+function stopProblem(P, opt) {
+  opt = opt || {}; engine();
+  const msgs = [], pos = E.Pos.from(P.s), L = pos.moves(true), bad = m => msgs.push(m), opp = 3 - pos.turn;
+  if (pos.status() !== 0 || !L.length || !pos.hasCaps()) return { ok: false, msgs: ['① no capture'] };
+  const S = L.map(m => pos.steps(m)), cnt = S.map(x => x.reduce((a, y) => a + y.cap.length, 0));
+  if (L.length < 5 || L.length > 16) bad('③ ' + L.length + ' legal moves');
+  if (new Set(S.map(x => x[0].from)).size < 3) bad('③ 追52 captures from fewer than 3 pieces');
+  if (msgs.length) return { ok: false, msgs };
+  const Q = L.map(m => pos.clone().play(m));
+  Q.forEach((q, i) => { if (!q.count(opp) || q.status() !== 0) bad('④ ' + L[i] + ': the game ends (no reply to count)'); });
+  if (msgs.length) return { ok: false, msgs };
+  const back = L.map(m => oppCaps(pos, m).c), net = cnt.map((c, i) => c - back[i]);
+  const mx = Math.max(...net), top = L.filter((m, i) => net[i] === mx), best = top[0], bi = L.indexOf(best);
+  if (top.length !== 1) bad('② ' + top.length + ' moves gain ' + mx);
+  if (mx < 1) bad('④ the best gains ' + mx);
+  const B = S[bi], onI = L.map((m, i) => S[i].length > B.length && B.every((x, j) => eqStep(x, S[i][j])));
+  if (!onI.some(Boolean)) bad('④ the answer is no stop (no move goes on along its road)');
+  if (Q[bi].count(opp) < 2) bad('④ fewer than 2 opponent pieces left');
+  const kinds = L.map((m, i) => m === best ? 'most' : onI[i] ? 'on' : back[i] > 0 ? 'back' : 'small');
+  if (P.ok && (P.ok.length !== 1 || P.ok[0] !== best)) bad('① ok ' + JSON.stringify(P.ok) + ' ≠ ' + best);
+  if (P.best !== undefined && P.best !== best) bad('① best ' + P.best + ' ≠ ' + best);
+  if (F.stopBest(E, P.s) !== (top.length === 1 && onI.some(Boolean) ? best : null)) bad('⑧ ls-facts stopBest');
+  if (opt.pool) for (const A of opt.pool) if (A.b !== P.s.b && near(P.s, A)) { bad('⑤ near ' + A.tag); break; }
+  if (msgs.length) return { ok: false, msgs, best, kinds };
+  if (!opt.skipEngine) for (const d of [7, 9]) {
+    const V = values(P.s, d);
+    if (!V.length || V[0].m !== best && !E.same(pos, V[0].m, best)) { bad(`① the engine (depth ${d}) puts ${V[0] && V[0].m} first`); break; }
+    if (V.length > 1 && V[0].v - V[1].v < 60) { bad(`② the engine (depth ${d}) second ${V[1].m} only ${V[0].v - V[1].v} below`); break; }
+  }
+  const dd = (L.length - 1) + 2 * net.filter(x => x === mx - 1).length + 2 * onI.filter(Boolean).length;
+  return { ok: !msgs.length, msgs, best, d: dd, n: L.length, cnt, back, kinds, ar: back[bi] };
+}
+// t_stop: the words for every move against the facts recounted here (taken, taken back, going on past the stop, the answer's gain)
+function stopWords(P, LS3, i18n, bad) {
+  const id = 't_stop', pos = E.Pos.from(P.s), L = pos.moves(true), best = P.best, B = pos.steps(best);
+  const n = m => pos.steps(m).reduce((x, y) => x + y.cap.length, 0), a = n(best), ar = oppCaps(pos, best).c, an = a - ar;
+  for (const m of L) {
+    const f = F.fact(E, id, P.s, m), c = n(m), r = oppCaps(pos, m).c, S = pos.steps(m);
+    const on = S.length > B.length && B.every((x, j) => eqStep(x, S[j]));
+    const k = m === best ? 'most' : on ? 'on' : r > 0 ? 'back' : 'small';
+    if (f.k !== k || f.c !== c || f.r !== r || f.a !== a || f.ar !== ar || f.an !== an) bad(`⑧ ${m}: the facts ${JSON.stringify(f)} ≠ ${k} ${c}−${r} / ${a}−${ar}`);
+    for (const lang of LANGS) for (let j = 0; j < (lang === 'ja' ? 6 : 1); j++) {
+      const h = LS3.sayText(id, P, m, lang, j);
+      if (!h || /\{\w+\}/.test(h) || /undefined|NaN/.test(h)) { bad(`⑧ ${m} ${lang}: ${h}`); continue; }
+      const nums = (h.replace(/<[^>]+>/g, '').match(/\d+/g) || []).map(Number);
+      if (lang === 'ja' || lang === 'en') { const ok = new Set([c, r, a, ar, an]); nums.forEach(x => { if (!ok.has(x)) bad(`⑧ ${m} ${lang}: the number ${x}`); }); }
+      if (lang !== 'ja') continue;
+      const none = /何も取り返せ|取り返されない|取り返されずに|ひとつも取り返/.test(h);
+      if (m === best) {
+        if (!nums.includes(a) || !nums.includes(an)) bad(`⑧ ${m} ja: the praise does not say ${a} and ${an}`);
+        if (ar ? !nums.includes(ar) || none : !none) bad(`⑧ ${m} ja: the praise's taken back (${ar})`);
+        if (!/止め/.test(h)) bad(`⑧ ${m} ja: the praise does not say it stopped`);
+        continue;
+      }
+      if (NEAR.test(h)) bad(`追66 ${m} ja: ${h}`);
+      if (PRAISE.test(h)) bad(`追20 ${m} ja: praise after a wrong move`);
+      if (!nums.includes(c) || !nums.includes(an)) bad(`⑧ ${m} ja: does not say ${c} and ${an}`);
+      if (k === 'small' ? !none : !nums.includes(r) || none) bad(`⑧ ${m} ja: taken back said ${none ? 'none' : '?'}, the board ${r}`);
+      if (k === 'on' !== /先まで|進みすぎ|続けすぎ|取りすぎ/.test(h)) bad(`⑧ ${m} ja: going on past the stop said / not said (the board: ${k})`);
+    }
+    const key = 'ls.' + id + (m === best ? (ar ? '.why' : '.why0') : k === 'on' ? '.ngOn' : k === 'small' ? '.ngSmall' : '.ng');
+    for (const lang of LANGS) { const tx = (i18n[lang] || {})[key]; if (!tx) bad(`⑨ 2D ${key} ${lang} missing`); else if (!/\{m\}/.test(tx) || !/\{an\}/.test(tx) || (m !== best && !/\{x\}/.test(tx)) || (m !== best && k !== 'small' && !/\{r\}/.test(tx)) || (m !== best && !/\{c\}/.test(tx)) || (m === best && ar && !/\{ar\}/.test(tx))) bad(`⑨ 2D ${key} ${lang}: {m}/{x}/{c}/{r}/{an}`); }
+  }
+}
 // t_count: the words for every move against the facts recounted here (taken, taken back, the answer's gain)
 function countWords(P, LS3, i18n, bad) {
   const id = 't_count', pos = E.Pos.from(P.s), L = pos.moves(true), best = P.best;
@@ -491,19 +565,19 @@ function verify(opt) {
   let n = 0, okN = 0;
   for (const id of LS3.READY) {
     const st = LS.steps.find(s => s.id === id); if (!st) { add(id, 0, 'missing'); continue; }
-    const CH = id === 'b_chain', SF = id === 'b_safe', WN = id === 'b_win', BG = id === 't_big', CT = id === 't_count';
-    if (!BASICS.includes(id) && !CH && !SF && !WN && !BG && !CT) { add(id, 0, 'no check for this lesson yet'); continue; }
+    const CH = id === 'b_chain', SF = id === 'b_safe', WN = id === 'b_win', BG = id === 't_big', CT = id === 't_count', TS = id === 't_stop';
+    if (!BASICS.includes(id) && !CH && !SF && !WN && !BG && !CT && !TS) { add(id, 0, 'no check for this lesson yet'); continue; }
     let prevD = -1, firstD = null; const kindsSeen = new Set();
     st.problems.forEach((P, j) => {
       n++; const before = out.length;
-      const o = { pool: PL.filter(A => A.tag !== id + '#' + (j + 1)) }, r = CH ? chainProblem(P, o) : CT ? countProblem(P, o) : BG ? bigProblem(P, o) : SF ? safeProblem(P, o) : WN ? winProblem(P, o) : basicProblem(id, P, o);
-      if ((SF || WN || BG || CT) && r.kinds) r.kinds.forEach(k => kindsSeen.add(k));
-      if (CT && r.ok) kindsSeen.add(r.ar ? 'ar' : 'ar0');
+      const o = { pool: PL.filter(A => A.tag !== id + '#' + (j + 1)) }, r = CH ? chainProblem(P, o) : TS ? stopProblem(P, o) : CT ? countProblem(P, o) : BG ? bigProblem(P, o) : SF ? safeProblem(P, o) : WN ? winProblem(P, o) : basicProblem(id, P, o);
+      if ((SF || WN || BG || CT || TS) && r.kinds) r.kinds.forEach(k => kindsSeen.add(k));
+      if ((CT || TS) && r.ok) kindsSeen.add(r.ar ? 'ar' : 'ar0');
       r.msgs.forEach(m => add(id, j + 1, m));
       if (r.ok) {
         if (r.d <= prevD) add(id, j + 1, `⑥ d ${r.d} not above ${prevD}`);
         prevD = r.d; if (firstD == null) firstD = r.d;
-        if (CH) chainWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (CT) countWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (BG) bigWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (WN) winWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (SF) safeWords(P, LS3, i18n, m => add(id, j + 1, m)); else words(id, P, LS3, i18n, m => add(id, j + 1, m));
+        if (CH) chainWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (TS) stopWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (CT) countWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (BG) bigWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (WN) winWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (SF) safeWords(P, LS3, i18n, m => add(id, j + 1, m)); else words(id, P, LS3, i18n, m => add(id, j + 1, m));
       }
       if (out.length === before) okN++;
     });
@@ -512,6 +586,7 @@ function verify(opt) {
     if (WN && st.problems.slice(1).some(P => P.best && P.best.split('-').length < 3)) add(id, 0, '④ b_win: an answer after problem 1 that is no chain');
     if (BG && !(kindsSeen.has('stop') || kindsSeen.has('stopx')) || BG && !kindsSeen.has('dead')) add(id, 0, '④ t_big: not every kind of wrong move (greedy in each, and stopped / a road to its end in the lesson)');
     if (CT && !(kindsSeen.has('back') && kindsSeen.has('ar') && kindsSeen.has('ar0'))) add(id, 0, '④ t_count: not every kind (a wrong move taken back, an answer taken back and one taken back nothing)');
+    if (TS && !(kindsSeen.has('back') && kindsSeen.has('ar0'))) add(id, 0, '④ t_stop: not every kind (a wrong move of another road taken back, an answer taken back nothing)');
     if (st.problems.length !== 5) add(id, 0, '5 problems');
     if (st.problems.length && st.problems[3] && st.problems[3].s.side !== 2) add(id, 4, '追5 problem 4 is not Black\'s');
   }
@@ -562,6 +637,9 @@ function selftest() {
     ['④', '④ t_count: the old q1 (the answer loses 2: taken 1, taken back 3)', d => { st(d, 't_count').problems[0] = { s: { b: 'wwwww.w....w...wb..w.w......bb.w...b.b.b.bbb.', side: 1 }, ok: ['c2-c3A'], best: 'c2-c3A' }; }],
     ['②', '② t_count: the old q2 (two moves gain 1)', d => { st(d, 't_count').problems[1] = { s: { b: 'ww...w.w...b...ww......b.b.b....bbb...w.....b', side: 1 }, ok: ['g2-g3A-f2W'], best: 'g2-g3A-f2W' }; }],
     ['①', '① t_count: the greedy move stored as the answer', d => { const P = st(d, 't_count').problems[2], p = E.Pos.from(P.s), a = p.steps(P.best).reduce((x, y) => x + y.cap.length, 0), g = p.moves(true).find(m => p.steps(m).reduce((x, y) => x + y.cap.length, 0) > a); P.ok = [g]; P.best = g; }],
+    ['④', '④ t_stop: the old q1 (the best gains −2, no stop)', d => { st(d, 't_stop').problems[0] = { s: { b: 'w.w..wwwww.w.w.wwwb..wwbwbwbbb.bbbbb....bbbbb', side: 1 }, ok: ['c1-b2A'], best: 'c1-b2A' }; }],
+    ['①', '① t_stop: the move going on past the stop stored as the answer', d => { const P = st(d, 't_stop').problems[1], p = E.Pos.from(P.s), g = p.moves(true).find(m => m.startsWith(P.best + '-')); P.ok = [g]; P.best = g; }],
+    ['④', '④ t_stop: a t_count problem whose answer goes to its end (no stop)', d => { st(d, 't_stop').problems[2] = JSON.parse(JSON.stringify(st(d, 't_count').problems[0])); }],
     ['追75', '追75 a ramp move off its board', d => { st(d, 'b_choose').ramp.find(x => x.k === 'try').ok = ['a1-a2A']; }],
   ];
   let fails = 0;
@@ -590,6 +668,10 @@ function selftest() {
     const orig = LS3.sayText; LS3.sayText = (id, P, m, lang, k) => { const h = orig(id, P, m, lang, k); return id === 't_count' ? h.replace(/(\d+)つ取り返さ/g, (x, n) => (+n + 7) + 'つ取り返さ') : h; };
     const r = verify({ ls3: LS3 }); LS3.sayText = orig; const hit = r.out.some(o => o.id === 't_count' && /⑧/.test(o.msg)); if (!hit) fails++; console.log((hit ? 'ok   ' : 'MISS ') + '⑧ t_count: the taken back miscounted');
   }
+  {   // t_stop: a move going on past the stop told as another road (the going-on words dropped)
+    const orig = LS3.sayText; LS3.sayText = (id, P, m, lang, k) => { const h = orig(id, P, m, lang, k); return id === 't_stop' ? h.replace(/先まで|進みすぎ|続けすぎ|取りすぎ/g, 'そこで') : h; };
+    const r = verify({ ls3: LS3 }); LS3.sayText = orig; const hit = r.out.some(o => o.id === 't_stop' && /⑧/.test(o.msg)); if (!hit) fails++; console.log((hit ? 'ok   ' : 'MISS ') + '⑧ t_stop: going on past the stop not said');
+  }
   {   // the 2D key missing in one language
     const I = loadI18n(); delete I.de['ls.b_choose.ngSame'];
     const r = verify({ i18n: I }); const hit = r.out.some(o => /⑨/.test(o.msg)); if (!hit) fails++; console.log((hit ? 'ok   ' : 'MISS ') + '⑨ a 2D key missing');
@@ -600,7 +682,7 @@ function selftest() {
   }
   return fails;
 }
-module.exports = { engine, values, basicProblem, chainProblem, bigProblem, countProblem, safeProblem, winProblem, verify, selftest, pool, near, lineOf, BASICS };
+module.exports = { engine, values, basicProblem, chainProblem, bigProblem, countProblem, stopProblem, safeProblem, winProblem, verify, selftest, pool, near, lineOf, BASICS };
 if (require.main === module) {
   if (process.argv.includes('--selftest')) { const f = selftest(); console.log(f ? `selftest: ${f} missed` : 'selftest: all caught'); process.exit(f ? 1 : 0); }
   const r = verify();
