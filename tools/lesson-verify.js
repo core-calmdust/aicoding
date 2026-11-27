@@ -771,7 +771,7 @@ function gomoku(opt) {
 //   ⑦⑧ ハコピヨ's words (atlas/lessons3d.js dotsJa, run here) against the board: the boxes the red line hands over (≥1 when the
 //      words say so) and the boxes lost ((best − v) / 2), no 「開く」 for a line that takes, the question's 「1本」 / 「広い盤」 and the
 //      2D example's 「緑の点線も安全な線で、どれを選んでも同じ結果」 (problem 0 has other safe lines, all best)
-const DT_DONE = new Set(['safe', 'third', 'take', 'chain', 'hard', 'double', 'control', 'parity']);
+const DT_DONE = new Set(['safe', 'third', 'take', 'chain', 'hard', 'double', 'control', 'parity', 'sacrifice']);
 function dots(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'dots/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'dots/lessons.json'), 'utf8'));
@@ -861,6 +861,36 @@ function dots(opt) {
           if (f.opener !== (isB ? 'opp' : 'me')) a(`⑦⑧ line ${e} (${isB ? 'best' : 'worse'}): at the end of the safe lines the one to open is ${f.opener} (the words: ${isB ? 'the opponent' : 'the mover'})`);
           if (f.lc.size === 1 && ruleWin([...f.lc][0]) !== isB) a(`④ line ${e}: the long chain rule with ${[...f.lc][0]} long chains says ${isB ? 'it loses' : 'it wins'}`); }
         d = (q.n - 3) * 10 + safe.length;
+      } else if (id === 'sacrifice') {
+        // (2026-11-27 担当A) sacrifice = DTJ.sacrifice / ls.sacrifice (「長鎖ルールで負けている側は、安全な線が残っていても、あえて1〜2箱を
+        // あげて手番の偶数・奇数をひっくり返せる」, q 「安全な線はあるが、それでは負ける」, ex 「緑の安全な線を引くと、長い鎖を開かされるのは
+        // 自分」): nothing to take, no box taken yet (先手 / 後手 on the board), 2+ safe lines and every one loses (v < 0), and after each,
+        // in every run of safe lines to the end (dtSafeEnd), the mover is the one to open (ySafe 「最後に長い鎖を開くのがきみ」) — the end
+        // plain chains only, one number of long chains (1+), and the long chain rule on it says the safe line loses; exactly one best
+        // line, it hands over 1–2 boxes (not an end-opened 2-chain, which the opponent could hand back), the fewest any line hands over
+        // (the hint 「あげるなら、なるべく小さな所から」), and it wins (「勝つための投資」); after it and the opponent's taking (dtTakeAll),
+        // in every run of safe lines the opponent is the one to open (DT_CH.sac 「最後に長い鎖を開く役を相手に回した」), plain chains,
+        // one number of long chains (1+); every other line handing over as few (DT_CH.ySac 「手番の偶数・奇数が変わらない」「最後の長い
+        // 鎖はやっぱり相手のもの」): after the opponent's taking, the mover still opens in every run.
+        const dotsN = (q.n + 1) * (q.n + 1), first = edges.length % 2 === 0, ruleWin = lc => first === ((dotsN + lc) % 2 === 0);
+        if (cap) a('④ a box to take'); if (safe.length < 2) a(`④ ${safe.length} safe lines (2+: 「安全な線はあるけど」)`);
+        if (X.dDecO(q.o).some(o => o >= 0)) a('④ a box already taken (the mover\'s 先手 / 後手 is not on the board)');
+        for (const e of safe) { const f = dtSafeEnd(E, p, e);
+          if (V.get(e) >= 0) a(`④ the safe line ${e} does not lose (${V.get(e)}: 「それでは負ける」)`);
+          if (!f.simple || f.loops) a(`④ line ${e}: the end of the safe lines has ${f.loops ? 'a loop' : 'a junction box'} (the words say 鎖)`);
+          if (f.lc.size !== 1 || [...f.lc][0] < 1) a(`④ line ${e}: the long chains at the end ${[...f.lc]} (one number, 1+)`);
+          if (f.opener !== 'me') a(`⑦⑧ the safe line ${e}: at the end of the safe lines the one to open is ${f.opener} (ySafe: the mover)`);
+          if (f.lc.size === 1 && ruleWin([...f.lc][0])) a(`④ the safe line ${e}: the long chain rule with ${[...f.lc][0]} long chains says it wins`); }
+        const gm = lg.filter(e => F.of(e).cls === 'give').map(e => F.of(e).m), fb = B.length === 1 ? F.of(B[0]) : null;
+        if (!fb) a(`④ ${B.length} best lines (one sacrifice)`);
+        else { if (fb.cls !== 'give' || fb.m < 1 || fb.m > 2 || fb.ret) a(`④ the best line ${B[0]}: ${fb.cls}, hands over ${fb.m}${fb.ret ? ' (an end-opened 2-chain)' : ''} (1–2 boxes)`);
+          if (fb.m !== Math.min(...gm)) a(`⑧ the best line hands over ${fb.m}, a line hands over ${Math.min(...gm)} (「あげるなら、なるべく小さな所から」)`);
+          if (best <= 0) a(`④ the best line does not win (${best})`);
+          const f = dtSideEnd(E, dtTakeAll(p, B[0]));
+          if (f.opener !== 'tomove' || !f.simple || f.loops || f.lc.size !== 1 || [...f.lc][0] < 1) a(`⑦⑧ after the sacrifice ${B[0]} and the opponent's taking: the one to open ${f.opener === 'tomove' ? 'the opponent' : f.opener === 'other' ? 'the mover' : 'mixed'}, long chains ${[...f.lc]}${f.loops ? ', a loop' : ''}${f.simple ? '' : ', a junction box'} (DT_CH.sac: the opponent opens)`);
+          for (const e of lg) { const x = F.of(e); if (e === B[0] || x.cls !== 'give' || x.m > fb.m || (x.ret && fb.m === 2)) continue;
+            const g = dtSideEnd(E, dtTakeAll(p, e)); if (g.opener !== 'other') a(`⑦ the red sacrifice ${e} (${x.m} boxes, ySac 「最後の長い鎖はやっぱり相手のもの」): after the taking the one to open is ${g.opener === 'tomove' ? 'the opponent' : 'mixed'}`); } }
+        d = (q.n - 3) * 10 + gm.filter(m => m <= 2).length;
       } else if (id === 'control') {
         // (2026-11-25 担当A) control = ハコピヨ's rule (DTJ.control.intro / ls.control.body: 「残りの鎖が小さい…なら全部取る…大きな長い
         // 鎖が残っていれば、残して主導権をキープ」) on the board: no safe line, no loop, one box to take, in an opened chain of 2 (the
@@ -898,8 +928,16 @@ function dots(opt) {
           const n = t.match(/(\d+)箱の差|(\d+)箱ぶん、もったいない|(\d+)箱ちがって/); if (n && +(n[1] || n[2] || n[3]) !== L2) a(`⑦ line ${x.m}: the words say ${n[0]}, the solver ${L2} boxes`);
           if (!n) a(`⑦ line ${x.m}: the words do not say the boxes lost (${L2})`);
           if (/(^|[^\d])0箱/.test(t)) a(`⑦ line ${x.m}: 「${t}」 (0 boxes)`);
-          const g2 = t.match(/相手に(\d+)箱|(\d+)箱が相手|(\d+)箱をぺろり|(\d+)箱が渡る|(\d+)箱を丸ごと|(\d+)箱の鎖|(\d+)箱あげる|(\d+)箱を渡す|(\d+)箱をまとめて|(\d+)箱をごっそり/);
+          // (2026-11-27 担当A) the boxes handed over by the red line: not in a sentence about the green line alone (rSac 「緑の線で{bm}箱あげるのが正解」)
+          const tRed = t.split('。').filter(c => !/緑/.test(c) || /赤/.test(c)).join('。');
+          const g2 = tRed.match(/相手に(\d+)箱|(\d+)箱が相手|(\d+)箱をぺろり|(\d+)箱が渡る|(\d+)箱を丸ごと|(\d+)箱の鎖|(\d+)箱あげる|(\d+)箱を渡す|(\d+)箱をまとめて|(\d+)箱をごっそり/);
           if (g2) { const k = +g2.slice(1).find(Boolean); if (k !== fx.m) a(`⑦ line ${x.m}: the words say ${g2[0]}, the line hands over ${fx.m}`); }
+          // (2026-11-27 担当A) an end-opened 2-chain (ret): words that say the opponent hands the 2 boxes back (yEnd 「返して手番を押しつけてくる」
+          // 「取らずに手番だけ押しつけられる」「主導権まで取られちゃう」) only when handing back is among the opponent's best replies (the solver
+          // after the red line); 「返す手が残る」「返せる形」 (yEnd / yEndS) is what the shape allows and holds for every end-opened 2-chain
+          if (fx.ret && /返して手番を押しつけて|取らずに手番だけ押しつけ|主導権まで取られ/.test(t)) { const p2 = p.clone(); p2.play(x.m); const R2 = new E.Solver(G).all(p2), b2 = Math.max(...R2.map(y => y.v)), F2 = X.dFacts(q.n, edges.concat([x.m]));
+            if (!R2.some(y => y.v === b2 && F2.of(y.m).cls === 'decline')) a(`⑦ line ${x.m} (an end-opened 2-chain): the words say the opponent hands it back, the opponent's best is to take: 「${t}」`); }
+          if (fx.ret && !/返/.test(t) && id === 'sacrifice') a(`⑧ line ${x.m} (an end-opened 2-chain): the words do not say what the end opening lets the opponent do: 「${t}」`);
           if (fx.cls === 'take' && /開/.test(t)) a(`⑦ line ${x.m} takes a box, the words say it opens: 「${t}」`);
           // (2026-11-25 担当A, control) the red line's 「残し」 (yKeep) only for the double-deal itself (F.dd), not for a line that opens another chain
           if (/赤い線で\d+箱残しても|残した\d+箱|赤い線の残し|赤い線の2つ残し|主導権を守っても/.test(t) && !fx.dd) a(`⑦ line ${x.m} opens another chain (hands over ${fx.m}), the words call it the leave: 「${t}」`); } }
@@ -920,6 +958,20 @@ function dtSafeEnd(E, p0, e) {
     memo.set(key, r); return r; };
   const r = rec(); return { opener: r.par.size > 1 ? 'mixed' : r.par.has(0) ? 'opp' : 'me', lc: r.lc, loops: r.loops, simple: r.simple };
 }
+// (2026-11-27 担当A, dots sacrifice) dtSideEnd: from p (the side to move), every run of safe lines to the end — opener 'tomove' / 'other' /
+// 'mixed' (who has no safe line first), the long chains (3+, plain, not a loop), any loop, every part plain. dtTakeAll: the position
+// after the mover's line e and the opponent's taking of every box it opens (the opponent to move).
+function dtSideEnd(E, p0) {
+  const p = p0.clone(), memo = new Map();
+  const rec = () => { const key = p.h1[0] + ':' + p.h2[0]; if (memo.has(key)) return memo.get(key);
+    const sl = p.legal().filter(x => p.isSafe(x)); let r;
+    if (!sl.length) { const cs = E.components(p, true); r = { par: new Set([0]), lc: new Set([cs.filter(c => c.simple && !c.loop && c.n >= 3).length]), loops: cs.some(c => c.loop), simple: cs.every(c => c.simple) }; }
+    else { r = { par: new Set(), lc: new Set(), loops: false, simple: true };
+      for (const x of sl) { p.play(x); const t = rec(); p.undo(x); t.par.forEach(v => r.par.add(1 - v)); t.lc.forEach(v => r.lc.add(v)); r.loops = r.loops || t.loops; r.simple = r.simple && t.simple; } }
+    memo.set(key, r); return r; };
+  const r = rec(); return { opener: r.par.size > 1 ? 'mixed' : r.par.has(0) ? 'tomove' : 'other', lc: r.lc, loops: r.loops, simple: r.simple };
+}
+function dtTakeAll(p0, e) { const p = p0.clone(); p.play(e); for (;;) { const c = p.legal().find(x => p.completes(x) > 0); if (c === undefined) break; p.play(c); } return p; }
 // (2026-11-24 第2期 追14) the dots examples of DT_DONE (no warm-up: problem 0 is the worked example under the 2D intro and the 3D intro's
 // board): the 2D figure as learn.js exampleMarks draws it (gold = right, green dotted = the other safe lines) against its caption
 // (ls.<id>.ex / ls.exampleCap / the body, ja): every gold line is a best line; 「緑」 ⇔ green lines are drawn, 「どれを選んでも同じ
@@ -965,6 +1017,11 @@ function dtIntro(L, X, E, lj, add, only) {
     if (id === 'parity') { if (!green.length || green.some(e => val.get(e) >= best)) a(`⑧ the parity caption 「${ex}」: green ${green.map(e => e + '=' + val.get(e))}, best ${best}`);
       for (const e of green) if (dtSafeEnd(E, p, e).opener !== 'me') a(`⑧ the parity caption: after the green line ${e} the mover does not open first`);
       for (const e of mk.hl) if (dtSafeEnd(E, p, e).opener !== 'opp') a(`⑧ the parity example: after the gold line ${e} the opponent does not open first`); }
+    // (2026-11-27 担当A) sacrifice: 「緑の安全な線を引くと、長い鎖を開かされるのは自分になります」 = green lines drawn (the safe lines), every
+    // one worse than the gold, and after each the mover opens first in every run (dtSafeEnd); the gold line is the sacrifice
+    if (id === 'sacrifice') { if (!green.length || green.some(e => val.get(e) >= best)) a(`⑧ the sacrifice caption 「${ex}」: green ${green.map(e => e + '=' + val.get(e))}, best ${best}`);
+      for (const e of green) if (dtSafeEnd(E, p, e).opener !== 'me') a(`⑧ the sacrifice caption: after the green line ${e} the mover does not open first`);
+      for (const e of mk.hl) if (!(p.gives(e) > 0)) a(`⑧ the sacrifice example: the gold line ${e} hands over nothing`); }
     if (id === 'chain') { if (safe.length) a(`⑧ the 3D intro (chain) 「安全な線がなくなると」: ${safe.length} safe lines on its board`);
       if (/と、輪になった/.test(it) && !E.components(p, true).some(c => c.loop)) a(`⑧ the 3D intro (chain) 「${it.slice(0, 40)}…」 speaks of the board's loops, its board has none`); }
   });
@@ -1697,7 +1754,7 @@ function ckWarm(opt, L, E, X, val, moveVal, add, only) {
 //   縦と横) and for every wrong move (the king or not, a blocker on the way, a capture or not, a piece of yours taken next), the question
 //   and the hint (a corner / the throne named is in an answer)
 //   ⑨ the 2D (tafl/app.js problemPoints) and the 3D (TAFL.points) both score P.ok
-const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield', 't_tuichi', 't_block']);
+const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield', 't_tuichi', 't_block', 't_fort']);
 function tafl(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'tafl/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'tafl/lessons.json'), 'utf8'));
@@ -1934,9 +1991,36 @@ function tafl(opt) {
         const nmK = E.sqName(p.king, 11); if (!(r.body && r.body.ja || '').includes(nmK)) add('t_block', -1, `warm-up ${k + 1}: 追14 the words do not name the king's square ${nmK}`); }); });
     if (st && st.diagram) { const D = st.diagram, p = E.Pos.from(D.s); (D.arrows || []).forEach(([fr, to]) => { const m = E.parse(p, fr + '-' + to); if (m == null) { add('t_block', -1, `diagram: 追14 ${fr}-${to} is not legal`); return; }
       const f = BK.blockFacts(E, { s: D.s, ok: [m], best: m }); f.bad.filter(b => /^[①]|one line/.test(b)).forEach(b => add('t_block', -1, `diagram: 追14 ${b}`)); }); } }
+  // (2026-11-27 第2期 担当A) t_fort「エッジフォート」(tools/lesson-verify-tffort.js): the defenders to move, the king on an edge, one wall
+  // piece missing. ①② P.ok = the moves that make the fort at once (the rules' fort test), no wrong move that still wins next move whatever
+  // the attackers do ③ the answers ≤ a third of the moves, ≥2 near-misses (wrong moves of a man to within 2 of the king), 追17 the ringed
+  // piece ≥2 wrong moves ④ no other win (an escape), no king move as the answer, no threat of the attackers ⑤ the pool and no two problems
+  // with the same shape (fortSig), one gap (the 2D hint「1か所だけ穴」) ⑥ d×10 − the answers never down, last > first ⑦⑧ タフリン's words:
+  // every wrong move by what follows it (a wall piece moved / a wall piece taken / an attacker in / the king shut in / the gap left), the
+  // hints that lean on a trap (「はさまれない」: a wrong move that leaves a wall piece to be taken;「動けるスペース」: one that shuts the king in);
+  // the diagram: its arrow makes the fort (追14)
+  const FT = require(path.join(ROOT, 'tools/lesson-verify-tffort.js')), ftSig = new Map();
+  const fortOne = (st, si, P, j, a) => { const f = FT.fortFacts(E, P), nm = m => E.name(f.p, m); f.bad.forEach(a);
+    five(st.id, j, P, f.me, nm, a);
+    { const sig = FT.fortSig(E, P); if (ftSig.has(sig)) a(`⑤ the same shape (${sig}) as ${ftSig.get(sig)}`); else ftSig.set(sig, `q${j + 1}`); }
+    if (f.gaps.size !== 1) a(`⑧ the hint「1か所だけ穴」: ${f.gaps.size} gaps make the fort`);
+    let W; try { W = X_.tfLsJa(E, st, P, j, k => X_.TFM(k, 'ja'), si); } catch (e) { a('⑧ the words fail: ' + e.message); return f.d; }
+    for (const t of [W.ask, W.hintTx, plain(W.good())]) if (!t || /\{|undefined|NaN/.test(t)) a(`⑧ 「${t}」`);
+    if (/はさまれない/.test(W.hintTx) && !f.wrong.some(m => f.C.get(m).why2 === 'cap')) a(`⑧ 「${W.hintTx}」: no wrong move here leaves a wall piece to be taken`);
+    if (/動けるスペース/.test(W.hintTx) && !f.wrong.some(m => f.C.get(m).why2 === 'stuck')) a(`⑧ 「${W.hintTx}」: no wrong move here shuts the king in`);
+    for (const m of f.wrong) { const raw = plain(W.ng(m)), x0 = nm(m), i0 = raw.indexOf('赤い印の手'), i1 = raw.indexOf('緑の印の手'), R = f.C.get(m);
+      if (/\{|undefined|NaN/.test(raw) || i0 < 0 || i1 < 0) { a(`⑦ ${x0}: 「${raw}」 (your move / the right move not named)`); continue; }
+      const tx = raw.slice(i0, i1);
+      const said = /壁の駒が動いて|壁の1枚がぬけて|壁から駒がはなれて|壁の駒がいた所|壁をくずして/.test(tx) ? 'moved' : /端からはなれ|ふちを出|端をはなれ|端にいない|内側へ出/.test(tx) ? 'kingoff' : /王さまが動く手|王が動くだけ|場所を変えただけ|王の手なの|王が動いても壁/.test(tx) ? 'king' : /入りこまれ|入ってこられる|入ってくる|飛びこんで|入られ/.test(tx) ? 'enter'
+        : /はさまれ|取られる|こわされ|ねらわれる/.test(tx) ? 'cap' : /動けな|動く場所がなく|部屋をふさ/.test(tx) ? 'stuck' : /完成しない|そのまま残る|ふさげない|あいたまま|残ったまま/.test(tx) ? 'open' : '?';
+      if (said !== R.why2) a(`⑦ ${x0}: 「${tx}」 says ${said}, the board: ${R.why2}`); }
+    return f.d * 10 - (P.ok || []).length; };
+  { const st = L.steps.find(s => s.id === 't_fort');
+    if (st && st.diagram) { const D = st.diagram, p = E.Pos.from(D.s); (D.arrows || []).forEach(([fr, to]) => { const m = E.parse(p, fr + '-' + to); if (m == null) { add('t_fort', -1, `diagram: 追14 ${fr}-${to} is not legal`); return; }
+      const f = FT.fortFacts(E, { s: D.s, ok: [m], best: m }); f.bad.filter(b => /^①/.test(b)).forEach(b => add('t_fort', -1, `diagram: 追14 ${b}`)); }); } }
   L.steps.forEach((st, si) => { const id = st.id; if (!TF_DONE.has(id) || (opt && opt.only && !opt.only.includes(id))) return;   // (opt.only: the mutation tests of one lesson)
     let prevD = -1, firstD = null;
-    if (id === 'b_safe' || id === 't_shield' || id === 't_tuichi' || id === 't_block') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : id === 't_tuichi' ? tuichiOne : id === 't_block' ? blockOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
+    if (id === 'b_safe' || id === 't_shield' || id === 't_tuichi' || id === 't_block' || id === 't_fort') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : id === 't_tuichi' ? tuichiOne : id === 't_block' ? blockOne : id === 't_fort' ? fortOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
     st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), me = p.turn, all = p.moves(), nm = m => E.name(p, m);
       if (P.n > 1) { const d = seqCheck(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
         if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); seqWords(st, si, P, j, a); return; }
@@ -2317,7 +2401,7 @@ function xqStray42(PZ, add, W0) {
 // capture, its value), the engine (depth 3: the answer on top, every other move 250 or more worse), the pool (lessons.json problems
 // and warm-ups of every step, tsume.json; mirrored too), the order (both the 2D and the 3D keep the pool's order) and ショウギツネ's
 // words for every legal move.
-const SH_DONE = new Set(['k20', 'k15', 'k12', 'k10', 'k8', 'k6', 'k4', 'k2']);   // (k12: tools/lesson-verify-shevade.js, k10 and k8: tools/lesson-verify-shmate1.js, k6 and k4: tools/lesson-verify-shmate3.js, k2: tools/lesson-verify-shmate5.js)
+const SH_DONE = new Set(['k20', 'k15', 'k12', 'k10', 'k8', 'k6', 'k4', 'k2', 'd1']);   // (k12: tools/lesson-verify-shevade.js, k10 and k8: tools/lesson-verify-shmate1.js, k6 and k4: tools/lesson-verify-shmate3.js, k2: tools/lesson-verify-shmate5.js, d1: tools/lesson-verify-shmate7.js)
 function shogi(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'shogi/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'shogi/lessons.json'), 'utf8'));
@@ -2418,7 +2502,7 @@ function shogi(opt) {
     if (id === 'k15') { freeX.g = g; if (g.trapNote) add(id, -1, '④ a trapNote but no trap problem'); if (/罠|わな|poison/i.test(JSON.stringify(g.prompt) + JSON.stringify(X.SHJ2.intro.k15 || ''))) add(id, -1, '④ the prompt / intro speaks of traps'); }
     g.problems.forEach((P, j) => { const a = m => add(id, j, m), p = pos(P.sfen), ms = p.legalMoves(true), U = m => p.toUsi(m);
       if (id === 'k15') { shFree(P, j, a, p, ms, U); return; }
-      if (id === 'k12' || id === 'k10' || id === 'k8' || id === 'k6' || id === 'k4' || id === 'k2') return;   // (tools/lesson-verify-shevade.js / lesson-verify-shmate1.js, below)
+      if (id === 'k12' || id === 'k10' || id === 'k8' || id === 'k6' || id === 'k4' || id === 'k2' || id === 'd1') return;   // (tools/lesson-verify-shevade.js / lesson-verify-shmate1.js, below)
       if (P.kind !== 'best' || P.mode !== 'material') { a('④ not a material problem'); return; }
       if (p.inCheck()) a('④ the mover is in check');
       if (ms.length < 3) a(`③ ${ms.length} legal moves`);
@@ -2465,7 +2549,7 @@ function shogi(opt) {
         if (c) { const x = NM[c.t]; if (!w.includes(x)) a(`⑦ ${u}: takes a ${x}, the words do not say so 「${w}」`); if (/取れない|取らない|駒得にならない|何も取れない|取っていない/.test(w)) a(`⑦ ${u}: it does take 「${w}」`); }
         else if (!/取れない|取らない|駒得にならない|何も取れない|取っていない/.test(w)) a(`⑦ ${u}: takes nothing, the words do not say so 「${w}」`); }
     });
-    if (id !== 'k12' && id !== 'k10' && id !== 'k8' && id !== 'k6' && id !== 'k4' && id !== 'k2' && (id === 'k15' ? freeX.movers : movers).size < 5) add(id, -1, `⑤ only ${(id === 'k15' ? freeX.movers : movers).size} kinds of piece take`);
+    if (id !== 'k12' && id !== 'k10' && id !== 'k8' && id !== 'k6' && id !== 'k4' && id !== 'k2' && id !== 'd1' && (id === 'k15' ? freeX.movers : movers).size < 5) add(id, -1, `⑤ only ${(id === 'k15' ? freeX.movers : movers).size} kinds of piece take`);
     // 追32 every kind of piece that can take in the problems and warm-ups (the moves the student has to read) has its move told in
     // the intro: the 3D (ショウギツネ's SHJ2.intro, the warm-ups) and the 2D (grade.intro.ja, the warm-ups) — the name and a move word
     // next to it; promoted pieces: 成 … 金と同じ, 馬, 龍. (k20: the 3D intro said only 「駒の動きは練習で見ていこう」 and the warm-ups showed the
@@ -2476,7 +2560,7 @@ function shogi(opt) {
     g.problems.forEach(P => scan(P.sfen)); (g.ramp || []).forEach(r => r.k === 'try' && scan(r.sfen));
     const rampTx = (g.ramp || []).map(r => ['t', 'body', 'g', 'h', 'y'].map(f => r[f] && r[f].ja || '').join(' ')).join(' ');
     const said = { '3D': plain(String((X.SHJ2.intro || {})[id] || '')) + ' ' + plain(rampTx), '2D': plain((g.intro && g.intro.ja || []).join(' ')) + ' ' + plain(rampTx) };
-    if (id === 'k12' || id === 'k10' || id === 'k8' || id === 'k6' || id === 'k4' || id === 'k2') { const g0 = L.grades.find(x => x.id === 'k20'), r0 = (g0.ramp || []).map(r => ['t', 'body', 'g', 'h', 'y'].map(f => r[f] && r[f].ja || '').join(' ')).join(' ');   // (k12: the moves were taught before the problems, in k20「駒の動きと価値」 — the lesson before; its intro and warm-ups count)
+    if (id === 'k12' || id === 'k10' || id === 'k8' || id === 'k6' || id === 'k4' || id === 'k2' || id === 'd1') { const g0 = L.grades.find(x => x.id === 'k20'), r0 = (g0.ramp || []).map(r => ['t', 'body', 'g', 'h', 'y'].map(f => r[f] && r[f].ja || '').join(' ')).join(' ');   // (k12: the moves were taught before the problems, in k20「駒の動きと価値」 — the lesson before; its intro and warm-ups count)
       said['3D'] += ' ' + plain(String((X.SHJ2.intro || {}).k20 || '')) + ' ' + plain(r0); said['2D'] += ' ' + plain((g0.intro && g0.intro.ja || []).join(' ')) + ' ' + plain(r0); }
     for (const [who, tx] of Object.entries(said)) for (const k of kinds) { const w = KW[k]; if (!w) continue;
       const ok = k >= 9 && k <= 12 ? w.every(x => tx.includes(x)) : new RegExp(w[0] + MW).test(tx);
@@ -2529,6 +2613,7 @@ function shogi(opt) {
   if (SH_DONE.has('k6')) require('./lesson-verify-shmate3.js')({ E, L, X, pool, brd, dist, add, src, app });
   if (SH_DONE.has('k4')) require('./lesson-verify-shmate3.js')({ E, L, X, pool, brd, dist, add, src, app }, 'k4');
   if (SH_DONE.has('k2')) require('./lesson-verify-shmate5.js')({ E, L, X, pool, brd, dist, add, src, app });
+  if (SH_DONE.has('d1')) require('./lesson-verify-shmate7.js')({ E, L, X, pool, brd, dist, add, src, app });
   // 追72 (2026-11-25 担当A): the moves that count as right (16 points or more of 20) and a warm-up try's ok are a third of the legal moves at most
   for (const g of L.grades) { if (!SH_DONE.has(g.id)) continue;
     g.problems.forEach((P, j) => { const p = pos(P.sfen), ms = p.legalMoves(true), r = P.kind === 'tsume' ? (P.sol || []).length && 1 : ms.filter(m => ctx.SHOGI.points(P, p.toUsi(m)) >= 16).length;   // (k10: one mate in one — lesson-verify-shmate1.js checks it is the only one)
