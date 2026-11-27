@@ -89,6 +89,8 @@
       name: N('ネファタフル', 'Hnefatafl', '维京棋（Hnefatafl）', '흐네파타플', 'Hnefatafl', 'Hnefatafl', 'Hnefatafl', 'Hnefatafl', 'ह्नेफ़ाटाफ़ल', 'هنفتافل', 'Хнефатафл', '維京棋（Hnefatafl）', 'Hnefatafl', 'Hnefatafl') },
     { id: 'amazons', cat: 'line', also: ['chess'], store: ['aicoding-amazons', 'amazons-online-name'], href: 'amazons/', color: '#3f8a5c', released: '2026-11-10', official: '2026-11-11', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'mobile'], total: { pz: 163, ls: 8 },
       name: N("アマゾンズ", "Amazons", "亚马逊棋", "아마존스", "Amazons", "Amazons", "Amazons", "Amazons", "अमेज़न्स", "الأمازونات", "Амазонки", "亞馬遜棋", "Amazons", "Amazons") },
+    { id: 'breakthrough', cat: 'line', also: ['chess'], store: ['aicoding-breakthrough', 'breakthrough-online-name'], href: 'breakthrough/', color: '#c25f37', alpha: true, released: '2026-11-28', tags: ['classic', 'ai', 'rated', 'daily', 'lessons', 'puzzles', 'variants', 'mobile'], total: { pz: 206, ls: 8 },
+      name: N("ブレイクスルー", "Breakthrough", "突破棋", "브레이크스루", "Breakthrough", "Breakthrough", "Breakthrough", "Breakthrough", "ब्रेकथ्रू", "الاختراق", "Прорыв", "突破棋", "Breakthrough", "Breakthrough") },
     { id: 'go', cat: 'line', store: ['aicoding-go', 'go-online-name'], href: 'go/', color: '#b8893f', released: '2026-10-22', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 500, ls: 21 },
       name: N('囲碁', 'Go', '围棋', '바둑', 'Go', 'Go', 'Go', 'Go', 'गो', 'غو', 'Го', '圍棋', 'Go', 'Go') },
     { id: 'gomoku', cat: 'line', store: ['aicoding-gomoku', 'gomoku-online-name'], href: 'gomoku/', color: '#c48a4a', released: '2026-10-19', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 500, ls: 12 },
@@ -246,6 +248,7 @@
     peg: () => { const pz = J('aicoding-peg-pz'), g = (J('aicoding-peg') || {}).goal || {}, b = Object.values(g);   // goal: { board: { b: fewest left (no hint), pf } } (2026-11-14)
       return { pz: cntPos(pz), st: starsOf(pz), dl: daily('aicoding-peg-daily'), ru: rules('peg'), pg: { g3: b.filter(x => x.b <= 3).length, g1: b.filter(x => x.b === 1).length, pf: b.filter(x => x.pf).length } }; },
     amazons: () => { const pz = J('aicoding-amazons-puzzles2'); return { pz: cntPos(pz), st: starsOf(pz), ls: cntClear(J('aicoding-amazons-lessons')), dl: daily('aicoding-amazons-daily'), rt: rated('aicoding-amazons-rated'), ru: rules('amazons') }; },
+    breakthrough: () => { const pz = J('aicoding-breakthrough-puzzles'); return { pz: cntPos(pz), st: starsOf(pz), ls: cntClear(J('aicoding-breakthrough-lessons')), dl: daily('aicoding-breakthrough-daily'), rt: rated('aicoding-breakthrough-rated'), ru: rules('breakthrough') }; },
     ludo: () => { const ls = J('aicoding-ludo-lessons') || {}; return { ls: Object.keys(ls).filter(k => typeof ls[k] === 'number' ? ls[k] >= 75 : !!(ls[k] && ls[k].pass)).length, rt: rated('aicoding-ludo-rated'), ru: rules('ludo') || !!J('aicoding-ludo-rules-ludo') || !!J('aicoding-ludo-rules-pachisi') }; },
     senet: () => { return { ls: cntClear(J('aicoding-senet-lessons')), rt: rated('aicoding-senet-rated'), ru: rules('senet') }; },
     ur: () => { return { ls: cntClear(J('aicoding-ur-lessons')), rt: rated('aicoding-ur-rated'), ru: rules('ur') }; },
