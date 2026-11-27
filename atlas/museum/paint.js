@@ -97,6 +97,8 @@
     { id: 'reise', w: 1611, h: 2048, rijks: 'RP-P-OB-200.986', bg: '#e7e3d8', spots: [[.5, .42], [.5, .71], [.836, .59], [.727, .25], [.25, .28], [.5, .87]], links: [{ ex: 'goose' }, { room: 'chance' }] },
     // (2026-11-25) the Rijksmuseum: Jan van Huchtenburg, prisoners casting dice on a drum for their lives
     { id: 'huchten', w: 2048, h: 1795, rijks: 'SK-A-2675', bg: '#2f2a22', spots: [[.49, .8], [.48, .62], [.7, .7], [.85, .5], [.89, .08], [.14, .21]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: 'Spel der Deugd / Le jeu de la vertu' (1798), a two-dice betting game of virtues and vices
+    { id: 'vertu', w: 1486, h: 2048, rijks: 'RP-P-1905-6651', bg: '#e4dfd2', spots: [[.5, .135], [.5, .46], [.21, .45], [.48, .62], [.12, .66], [.25, .85]], links: [{ room: 'chance' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
