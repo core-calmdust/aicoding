@@ -654,6 +654,22 @@ body.scr-play{-webkit-user-select:none;user-select:none}
 .vol::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--paper,#f3ecd9);border:2.5px solid var(--ink);margin-top:-8px}
 .vol::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--paper,#f3ecd9);border:2.5px solid var(--ink)}
 .vol:focus-visible{outline:2px solid var(--acc);outline-offset:4px}
+
+/* ---------- 演出（cine.js）：カメラ・光・粒子 ---------- */
+#cam{position:absolute;inset:0;transform-origin:0 0;will-change:transform}
+#cineShade{position:absolute;inset:0;z-index:5;pointer-events:none;opacity:0;mix-blend-mode:multiply;transition:opacity 1.4s;background:radial-gradient(44vmax 34vmax at var(--lx,50%) var(--ly,40%),rgba(26,12,4,0) 0%,rgba(26,12,4,.14) 34%,rgba(22,10,3,.6) 72%,rgba(14,6,2,.92) 100%)}
+body.night #cineShade{background:radial-gradient(44vmax 34vmax at var(--lx,50%) var(--ly,40%),rgba(4,8,20,0) 0%,rgba(4,8,20,.14) 34%,rgba(4,8,20,.6) 72%,rgba(2,4,12,.9) 100%)}
+#cineBloom{position:absolute;inset:0;z-index:5;pointer-events:none;opacity:0;mix-blend-mode:screen;transition:opacity 1.4s;background:radial-gradient(34vmax 30vmax at var(--lx,50%) var(--ly,40%),color-mix(in srgb,var(--lamp) 55%,transparent),transparent 70%)}
+body.night #cineBloom{background:radial-gradient(34vmax 30vmax at var(--lx,50%) var(--ly,40%),rgba(190,210,255,.45),transparent 70%)}
+#cineSky{position:absolute;left:0;top:0;z-index:5;pointer-events:none}
+#cineGrain{position:absolute;inset:0;z-index:5;pointer-events:none;mix-blend-mode:overlay;opacity:0;transition:opacity 1s;animation:cineGrain .5s steps(1) infinite}
+body.cine-on #cineGrain{opacity:.07}
+@keyframes cineGrain{0%{background-image:var(--g0);background-position:0 0}25%{background-image:var(--g1);background-position:-37px 61px}50%{background-image:var(--g2);background-position:83px -29px}75%{background-image:var(--g3);background-position:-12px -77px}}
+#cast .pp.cine-dim{filter:blur(2.6px);opacity:.74}
+#cast .pp{transition:left .7s cubic-bezier(.3,.7,.2,1),bottom .7s,transform .5s,opacity .6s,filter .9s}
+#fx .run.cine-gallop{filter:blur(1.2px)}
+.cine-lens{position:absolute;bottom:-30%;width:260vw;color:#030407;filter:blur(16px);z-index:6;pointer-events:none;display:none}
+body.anim-off #cineGrain,body.anim-off #cineSky{display:none}
 </style>
 </head>
 <body class="scr-title">
@@ -759,6 +775,7 @@ body.scr-play{-webkit-user-select:none;user-select:none}
 <script src="stories/kiteki.who.open.js?v=2"></script>
 <script src="tutorial.js?v=7"></script>
 <script src="sound.js?v=14"></script>
-<script src="game.js?v=77"></script>
+<script src="cine.js?v=1"></script>
+<script src="game.js?v=78"></script>
 </body>
 </html>

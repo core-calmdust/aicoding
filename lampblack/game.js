@@ -56,10 +56,11 @@
     moon: '<svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>',
   };
 
-  let pref = { speed: 2, anim: true, names: true, seen: false };
+  let pref = { speed: 2, anim: true, names: true, seen: false, cine: true };
   try { Object.assign(pref, JSON.parse(localStorage.getItem(PREF) || '{}')); } catch (e) {}
   if (!pref.speedSet) pref.speed = 2;   // the default is now はやい (2026-11-25); only a speed the player chose stays
   pref.names = true; if (!(pref.speed >= 1)) pref.speed = 1;   // 2026-11-27：名札はいつも出す。文字の速さは ゆっくり(1)・ふつう(2)・はやい(3)。以前の「ゆっくり(0)」はゆっくりへ
+  const CINE = window.WLCine; if (CINE) CINE.enabled = pref.cine !== false;
   const savePref = () => { try { localStorage.setItem(PREF, JSON.stringify(pref)); } catch (e) {} };
   let st = null, S = null;
   const G = { scr: 'title', storyId: null, diff: 1, role: 'auto', q: [], typing: null, loc: null, nbTab: 'ppl' };
@@ -94,7 +95,7 @@
     $('btnNb').classList.toggle('hide', !play);
     $('hbWhere').textContent = play ? '' : '';
     $('hbAp').innerHTML = '';
-    if (!play) { document.body.classList.remove('nb-open', 'night'); setNb(false); $('cast').innerHTML = ''; $('fx').innerHTML = ''; }
+    if (!play) { document.body.classList.remove('nb-open', 'night'); setNb(false); $('cast').innerHTML = ''; $('fx').innerHTML = ''; if (CINE) { CINE.reset(0); CINE.weather(null, false); } }
     document.body.classList.toggle('anim-off', !pref.anim);
     document.body.classList.toggle('show-names', !!pref.names);
   }
@@ -177,6 +178,7 @@
     document.body.classList.toggle('crowd', !!crowd);
     const k = st.scene + ':' + loc;
     document.body.classList.toggle('night', !!night);
+    if (CINE) CINE.weather(st.scene === 'alps' || st.scene === 'abbey' ? 'snow' : night ? null : 'motes', !!night);
     if (k === sceneKey) return;
     sceneKey = k;
     const el = $('scene');
@@ -327,7 +329,7 @@
 
   /* ---------- the text strip: narration and speech, one page at a time ---------- */
   function showTx() { $('tx').classList.remove('hide'); $('menu').classList.add('hide'); layoutDock(); }
-  function showMenu(html) { $('tx').classList.add('hide'); const m = $('menu'); m.innerHTML = html; m.classList.remove('hide'); layoutDock(); m.querySelector('button')?.focus({ preventScroll: true }); }
+  function showMenu(html) { if (CINE) CINE.reset(); $('tx').classList.add('hide'); const m = $('menu'); m.innerHTML = html; m.classList.remove('hide'); layoutDock(); m.querySelector('button')?.focus({ preventScroll: true }); }
   function say(items) { return new Promise(res => { G.q = items.filter(Boolean); G.qres = res; showTx(); nextPage(); }); }
   function nextPage() {
     if (G.typing) { finishType(); return; }
@@ -343,6 +345,7 @@
     else { who.classList.add('none'); nmEl.textContent = it.title || ''; speakPup(null); }
     tx.classList.toggle('narr', !id);
     G.talkVo = voiceOf(id);
+    if (CINE) CINE.page({ el: id && id !== 'you' ? pup(id) : null, wide: !S || S.phase === 'meeting' || S.phase === 'vote' || G.tut || !!it.guide });
     type(it.text);
     renderRoster();
     SND.page();
@@ -371,7 +374,7 @@
     t.innerHTML = chars.map(c => c[0] === '<' ? c : `<i>${c}</i>`).join('');
     const is = t.querySelectorAll('i'); let k = 0;
     const vo = G.talkVo, quiet = /[\s、。！？…—「」『』（）・\-]/;
-    G.typing = setInterval(() => { if (G.paused) return; let say = false; for (let s = 0; s < 2 && k < is.length; s++) { const ch0 = is[k].textContent; if (!quiet.test(ch0)) say = true; is[k++].style.opacity = 1; } if (say) SND.talk(vo); if (k >= is.length) finishType(); }, sp * 2);
+    G.typing = setInterval(() => { if (G.paused) return; let say = false; for (let s = 0; s < 2 && k < is.length; s++) { const ch0 = is[k].textContent; if (!quiet.test(ch0)) say = true; is[k++].style.opacity = 1; } if (say) { SND.talk(vo); if (CINE) CINE.blip(); } if (k >= is.length) finishType(); }, sp * 2);
   }
   function finishType() { clearInterval(G.typing); G.typing = null; const t = $('tx').querySelector('.t'); t.querySelectorAll('i').forEach(i => i.style.opacity = 1); $('tx').classList.add('done'); }
   $('tx').addEventListener('click', nextPage);
@@ -1211,8 +1214,10 @@
   }
   async function wolfRun(N) {
     const fx = $('fx');
-    const d = document.createElement('div'); d.className = 'run'; d.innerHTML = ART.wolf(); fx.appendChild(d);
     SND.howl(.3);
+    const gal = !N && CINE ? CINE.run(fx, ART.wolf()) : null;
+    if (gal) { SND.door(1.3); await gal; return; }
+    const d = document.createElement('div'); d.className = 'run'; d.innerHTML = ART.wolf(); fx.appendChild(d);
     if (!N) { SND.door(1.3); await wait(2900); d.remove(); return; }   // far off a howl, then a door creaks open somewhere close
     // the nekomata's curse: the wolf comes back from its kill; the cat's eyes open behind it, it cries,
     // four claws of pale fire tear across the wolf, and the shadow falls apart in the dark
@@ -1443,6 +1448,7 @@
     sheet(`<h3>設定</h3>
       <div class="set-row"><span>文字の速さ</span>${seg('speed', [[1, 'ゆっくり'], [2, 'ふつう'], [3, 'はやい']])}</div>
       <div class="set-row"><span>アニメーション</span>${seg('anim', [[true, 'あり'], [false, 'なし']])}</div>
+      <div class="set-row"><span>演出<small>話す人に寄るカメラ・光・雪</small></span>${seg('cine', [[true, 'あり'], [false, 'なし']])}</div>
       <div class="set-row"><span>音楽</span><input type="range" class="vol" data-vol="bgm" min="0" max="100" step="5" value="${Math.round(SND.musicVol * 100)}" aria-label="音楽の音量"></div>
       <div class="set-row"><span>効果音<small>話し声も含む</small></span><input type="range" class="vol" data-vol="sfx" min="0" max="100" step="5" value="${Math.round(SND.sfxVol * 100)}" aria-label="効果音の音量"></div>
       ${FS() ? `<div class="set-row"><span>フルスクリーン</span><div class="seg" data-k="fs"><button data-v="1" class="${isFS() ? 'on' : ''}">オン</button><button data-v="0" class="${isFS() ? '' : 'on'}">オフ</button></div></div>` : ''}
@@ -1453,6 +1459,7 @@
         if (k === 'fs') { toggleFS(v === '1'); return; } else { pref[k] = v === 'true' ? true : v === 'false' ? false : +v; if (k === 'speed') pref.speedSet = true; }
         savePref(); s.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
         document.body.classList.toggle('anim-off', !pref.anim);
+        if (CINE) CINE.enabled = pref.cine !== false;
       }));
       box.querySelectorAll('.vol').forEach(r => { r.style.setProperty('--p', r.value + '%'); r.oninput = () => { r.style.setProperty('--p', r.value + '%'); (r.dataset.vol === 'bgm' ? SND.setMusicVol : SND.setSfxVol)(r.value / 100); }; r.onchange = () => { if (r.dataset.vol === 'sfx') SND.page(); }; });
       const q = box.querySelector('[data-quit]'); if (q) q.onclick = () => { closeSheet(); save(); G.tut = false; buildTitle(); };
