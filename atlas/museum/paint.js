@@ -103,6 +103,10 @@
     { id: 'charros', w: 1686, h: 1235, aic: 52038, no: '1944.940', bg: '#4a4740', spots: [[.5, .07], [.85, .25], [.24, .8], [.6, .65], [.2, .2], [.47, .84]], links: [{ ex: 'goose' }, { room: 'chance' }] },
     // (2026-11-25) the Art Institute of Chicago: Qing snuff bottle painted with two old men at a weiqi board
     { id: 'snuffwq', w: 1595, h: 2048, aic: 87724, no: '1961.1233', bg: '#8d8f94', spots: [[.55, .58], [.37, .59], [.67, .66], [.33, .48], [.64, .47], [.51, .24]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
+    // (2026-11-25) the Rijksmuseum: Adriaen van Ostade etching, trictrac players in an inn
+    { id: 'ostade', w: 1930, h: 2048, rijks: 'RP-P-OB-12.729', bg: '#d8d4c8', spots: [[.31, .66], [.15, .53], [.37, .53], [.34, .41], [.7, .56], [.6, .38]], links: [{ g: 'backgammon' }] },
+    // (2026-11-25) the Rijksmuseum: follower of Mathieu Le Nain, dice players at a round table
+    { id: 'lenain', w: 2048, h: 1576, rijks: 'SK-A-3099', bg: '#4a4237', spots: [[.48, .49], [.27, .3], [.63, .24], [.51, .2], [.075, .25], [.86, .68]], links: [{ room: 'chance' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
