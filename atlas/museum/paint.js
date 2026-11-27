@@ -193,6 +193,10 @@
     { id: 'vdberge', w: 1307, h: 2048, rijks: 'RP-P-1890-A-15893', bg: '#e1d9c6', spots: [[.36, .36], [.57, .56], [.12, .36], [.66, .68], [.5, .18], [.5, .89]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
     // (2026-11-25) the Rijksmuseum: Giuseppe Maria Crespi, children playing dice in the street
     { id: 'crespi', w: 1346, h: 2048, rijks: 'RP-P-1959-652', bg: '#e6e3da', spots: [[.66, .79], [.43, .6], [.58, .5], [.78, .55], [.7, .42], [.5, .89]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Pellerin & Cie, Épinal: 'Grand jeu de l'oie / Ganzenbord' with rules and counters
+    { id: 'epinal', w: 2048, h: 1386, rijks: 'RP-P-OB-201.586', bg: '#e7dfc9', spots: [[.45, .62], [.5, .42], [.08, .3], [.5, .04], [.2, .87], [.13, .045]], links: [{ ex: 'goose' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Jacob Matham, an elegant couple playing tric-trac for money (1621)
+    { id: 'matham', w: 2048, h: 1833, rijks: 'RP-P-OB-27.054', bg: '#dcd8cd', spots: [[.43, .62], [.6, .45], [.58, .53], [.5, .28], [.47, .69], [.5, .95]], links: [{ g: 'backgammon' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
