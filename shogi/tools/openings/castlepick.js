@@ -14,9 +14,25 @@ for (const c of ['beg', 'mid', 'adv', 'sp', 'new', 'castle']) {
 }
 JSON.parse(fs.readFileSync(path.join(ROOT, 'shogi/openings.json'), 'utf8')).sets.forEach(s => (s.problems || []).forEach(p => others.push(CU.brd(p.sfen))));
 const L = JSON.parse(fs.readFileSync(path.join(ROOT, 'shogi/lessons.json'), 'utf8')); L.grades.forEach(g => { g.problems.forEach(p => others.push(CU.brd(p.sfen))); (g.ramp || []).forEach(r => r.sfen && others.push(CU.brd(r.sfen))); });
-const ok = C.filter(p => others.every(b => CU.dist(CU.brd(p.sfen), b) >= 5));
+// (2026-11-28 担当B, c_furiana) quiet for both sides: the opponent, if it were its move, has no capture that wins material (SEE > 0)
+// — a ☖ tokin in the camp attacking the bishop is not a "build the castle" position
+const threat = sf => { const q = new E.Position(); q.setSfen(sf.replace(/ b /, ' w ')); let w = 0; for (const m of q.legalMoves(true)) if (!E.isDrop(m) && q.board[E.mTo(m)]) w = Math.max(w, q.see(m)); return w; };
+// and even material (no hand pieces, the same pieces on both sides: a castle side a bishop down is not an opening position)
+const even = sf => { const [b, , h] = sf.split(' '); if (h !== '-') return false; const c = {}; for (const ch of b.replace(/\+/g, '')) if (/[a-z]/i.test(ch)) c[ch] = (c[ch] || 0) + 1; return 'plnsgbrk'.split('').every(x => (c[x] || 0) === (c[x.toUpperCase()] || 0)); };
+const ok = C.filter(p => even(p.sfen) && threat(p.sfen) === 0 && others.every(b => CU.dist(CU.brd(p.sfen), b) >= 5));
 console.log(C.length, 'candidates,', ok.length, 'apart from every other problem and line');
-for (const p of ok) { const r = W.analyze(p.sfen, { depth: 9 }), v = new Map(r.map(x => [x.usi, x.s])), ref = Math.max(...p.G.map(u => v.get(u))); p.dd = r.filter(x => !p.G.includes(x.usi) && x.s >= ref - 100).length; }
+// (2026-11-28 担当B) the reads again by a new engine each (the same values every time, as tools/lesson-verify.js reads them): the
+// accepted set by depth 8 and 9, no grey zone, the castle within 80 of the best, 3+ moves outside; dd from the new depth-9 read
+const fresh = (sf, d) => require('./wasm-engine.js').loadSync().analyze(sf, { depth: d });
+for (const p of ok.slice()) { const R = [8, 9].map(d => fresh(p.sfen, d)), sets = []; let bad = false;
+  for (const r of R) { const v = new Map(r.map(x => [x.usi, x.s])), ref = Math.max(...p.G.map(u => v.get(u)));
+    if (r[0].s - ref > 80 || p.G.some(u => v.get(u) < ref - 40 && v.get(u) >= ref - 100)) bad = true; sets.push(p.G.filter(u => v.get(u) >= ref - 40).sort().join(',')); }
+  const r = R[1], v = new Map(r.map(x => [x.usi, x.s])), acc = sets[1].split(',');
+  if (bad || sets[0] !== sets[1] || r.length - acc.length < 3) { ok.splice(ok.indexOf(p), 1); continue; }
+  p.accept = acc.sort((a, b) => v.get(b) - v.get(a)); p.pv = [p.accept[0]]; p.floor = r[r.length - 1].s;
+  p.cand = r.slice(0, 12).map(x => [x.usi, x.s]); for (const u of p.accept) if (!p.cand.some(c => c[0] === u)) p.cand.push([u, v.get(u)]);
+  const ref = Math.max(...p.G.map(u => v.get(u))); p.dd = r.filter(x => !p.G.includes(x.usi) && x.s >= ref - 100).length; }
+console.log(ok.length, 'still pass by new engines');
 ok.sort((a, b) => a.dd - b.dd || a.sfen.localeCompare(b.sfen));
 // spread over dd: greedy from the evenly spaced places, apart from each other, one answer at most twice
 const pick = [], cnt = new Map(), fits = p => pick.every(q => CU.dist(CU.brd(p.sfen), CU.brd(q.sfen)) >= 5) && p.accept.every(u => (cnt.get(u) || 0) < 2);

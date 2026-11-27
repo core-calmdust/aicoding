@@ -3126,7 +3126,7 @@ function shogiOpen(opt) {
   // (there is no line here), "近づく" only for a castle move, "近づかない / 進まない / 遠いまま" only for the others, "AIの評価が…下がる"
   // only 100+ below, captures / recaptures / king / bishop's line / edge pawn / rook claims on the board, the near words only 10+ points.
   {
-    const SHC_DONE = new Set(['c_mino']), SRCC = require(path.join(ROOT, 'shogi/tools/openings/src/castle.js')), KIF = require(path.join(ROOT, 'shogi/tools/openings/kif.js'));
+    const SHC_DONE = new Set(['c_mino', 'c_furiana', 'c_ibiana']), SRCC = require(path.join(ROOT, 'shogi/tools/openings/src/castle.js')), KIF = require(path.join(ROOT, 'shogi/tools/openings/kif.js'));
     if (!src.includes("sort((a, b) => (a.off ? a.dd : a.ply) - (b.off ? b.dd : b.ply))")) add('-', -1, '⑥ the 3D castle problems are not drawn in the dd order');
     const linePos = []; for (const c of CATS) require(path.join(ROOT, `shogi/tools/openings/src/${c}.js`)).forEach(e => { try { const q = new E.Position(); q.setSfen(e.start || KIF.START); for (const u of KIF.conv(e.line, e.start).usi) { q.doMove(q.fromUsi(u)); q.sp = 0; linePos.push([e.id + ' line', CU.brd(q.sfen())]); } } catch (er) {} });
     const STEP = { 4: [[0, -1], [1, -1], [-1, -1], [1, 1], [-1, 1]], 7: [[0, -1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1]], 8: [[0, -1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1], [1, 1], [-1, 1]], 3: [[1, -2], [-1, -2]] };
@@ -3144,17 +3144,19 @@ function shogiOpen(opt) {
         const G = ms.filter(m => { if (E.isDrop(m)) return false; p.doMove(m); const b = p.board.slice(); p.undoMove(); return cd(b) < cd(p.board); }).map(U).sort();
         if (JSON.stringify(G) !== JSON.stringify((P.G || []).slice().sort())) a(`① the castle moves are ${G} (stored ${P.G})`);
         const sets2 = [];
-        for (const d of [8, 9]) { const r = shoW.analyze(P.sfen, { depth: d }), v = new Map(r.map(x => [x.usi, x.s])), ref = Math.max(...G.map(u => v.get(u)));
+        for (const d of [8, 9]) { shoW = require(path.join(ROOT, 'shogi/tools/openings/wasm-engine.js')).loadSync(); const r = shoW.analyze(P.sfen, { depth: d }), v = new Map(r.map(x => [x.usi, x.s])), ref = Math.max(...G.map(u => v.get(u)));
           if (r[0].s - ref > 80) a(`① depth ${d}: the engine's best ${r[0].usi} is ${r[0].s - ref} above the castle moves`);
           const grey = G.filter(u => v.get(u) < ref - 40 && v.get(u) >= ref - 100); if (grey.length) a(`② depth ${d}: ${grey} in the grey zone`);
           sets2.push(G.filter(u => v.get(u) >= ref - 40).sort().join(','));
-          if (d === 9) { const dd = r.filter(x => !G.includes(x.usi) && x.s >= ref - 100).length; if (Math.abs(P.dd - dd) > 3) a(`⑥ dd ${P.dd} (recounted ${dd}: the depth-9 values move a little with what the engine read before)`); } }
+          if (d === 9) { const dd = r.filter(x => !G.includes(x.usi) && x.s >= ref - 100).length; if (P.dd !== dd) a(`⑥ dd ${P.dd} (recounted ${dd} by a new engine)`); } }   // (a new engine for each read = the same values every time; 2026-11-28 担当B)
         if (sets2[0] !== sets2[1] || sets2[1] !== P.accept.slice().sort().join(',')) a(`① accept ${P.accept} (depth 8: ${sets2[0]}, depth 9: ${sets2[1]})`);
         if (P.pv[0] !== P.accept[0]) a('① pv is not the first accepted move');
         ms.map(U).forEach(u => { if (!P.accept.includes(u) && pts(P, u) > 12) a(`② ${u} ${pts(P, u)} points`); });
         if (ms.length - P.accept.length < 3) a(`③ ${ms.length - P.accept.length} moves outside the set`);
         const left = cd(p.board); if (p.side !== 0 || p.inCheck() || left < 1 || left > 3 || E.typeOf(p.board[rookSq]) !== 6 || E.colorOf(p.board[rookSq]) !== 0) a(`④ side ${p.side} / check / ${left} castle moves left / the rook off its square`);
         if (ms.some(m => !E.isDrop(m) && p.board[E.mTo(m)])) a('④ a piece can be taken (not a quiet castle position)');
+        { const q2 = new E.Position(); q2.setSfen(P.sfen.replace(/ b /, ' w ')); let w2 = 0; for (const m of q2.legalMoves(true)) if (!E.isDrop(m) && q2.board[E.mTo(m)]) w2 = Math.max(w2, q2.see(m)); if (w2 > 0) a(`④ the opponent threatens to win material (SEE ${w2}: not a quiet castle position)`); }
+        { const [bb, , hh] = P.sfen.split(' '), c = {}; for (const ch of bb.replace(/\+/g, '')) if (/[a-z]/i.test(ch)) c[ch] = (c[ch] || 0) + 1; if (hh !== '-' || !'plnsgbrk'.split('').every(x => (c[x] || 0) === (c[x.toUpperCase()] || 0))) a('④ uneven material / pieces in hand (not an opening position)'); }   // (2026-11-28 担当B, c_furiana)
         const B = CU.brd(P.sfen);
         const me = (s.problems || []).length + LP.indexOf(P); for (const [w, k, b] of pool) { if (w === id && k === me) continue; const d = CU.dist(B, b); if (d <= 4) a(`⑤ ${d} squares from ${w} ${k + 1}`); }
         for (const [w, b] of linePos) { const d = CU.dist(B, b); if (d <= 4) a(`⑤ 追1 ${d} squares from a position of ${w}`); }
