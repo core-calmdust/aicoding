@@ -208,10 +208,11 @@
   // go: SGF points (aa = the top left), '' or 'tt' = pass. Captures follow the rules (a group with no liberty is taken off).
   const GO = (() => {
     const LET = 'ABCDEFGHJKLMNOPQRST';
-    function init(G) { return { n: G.size || 19, s: {}, turn: 'B', id: 0, cap: { B: 0, W: 0 } }; }
+    function init(G) { return { n: G.size || 19, s: {}, turn: 'B', id: 0, cap: { B: 0, W: 0 }, back: '' }; }
+    const pos = s => Object.keys(s).sort().map(k => k + s[k].c).join('');
     function play(st, mv) {
       const n = st.n, s = Object.assign({}, st.s), me = st.turn, you = me === 'B' ? 'W' : 'B';
-      if (!mv || mv === 'tt') return { st: Object.assign({}, st, { turn: you }), pass: true, side: me, to: null };
+      if (!mv || mv === 'tt') return { st: Object.assign({}, st, { turn: you, back: pos(st.s) }), pass: true, side: me, to: null };
       const x = mv.charCodeAt(0) - 97, y = mv.charCodeAt(1) - 97;
       if (x < 0 || y < 0 || x >= n || y >= n || s[mv]) throw new Error('point taken or off the board: ' + mv);
       const id = st.id; s[mv] = { c: me, id };
@@ -221,8 +222,9 @@
       const off = [];
       nb(mv).forEach(b => { if (s[b] && s[b].c === you) { const G = group(b); if (!G.lib) G.g.forEach(p => { if (s[p]) { off.push(s[p].id); delete s[p]; } }); } });
       if (!group(mv).lib) throw new Error('suicide: ' + mv);
+      if (off.length === 1 && pos(s) === st.back) throw new Error('ko (retaken at once): ' + mv);   // (2026-11-27 担当C: コウの禁止)
       const cap = Object.assign({}, st.cap); cap[me] += off.length;
-      return { st: { n, s, turn: you, id: id + 1, cap }, to: mv, side: me, off };
+      return { st: { n, s, turn: you, id: id + 1, cap, back: pos(st.s) }, to: mv, side: me, off };
     }
     const name = (p, n) => LET[p.charCodeAt(0) - 97] + (n - (p.charCodeAt(1) - 97));
     const label = (mv, i, r, lang, st0) => r.pass ? '—' : name(r.to, st0.n);
@@ -331,7 +333,7 @@
   const PIMG = '../chess/pieces/cburnett/';
   function geom(G, K) {   // in board units: the playing area starts at (ox, oy); one cell = 1
     if (K.go) { const n = G.size || 19; return { W: n + 1, H: n + 1, ox: 1, oy: 1, n, cell: 1, pt: true }; }
-    if (K === SHOGI) return { W: 9.9, H: 9.9 + 2.4, ox: 0.45, oy: 1.2 + 0.45, cell: 1, hands: true };
+    if (K === SHOGI) return { W: 10.3, H: 9.9, ox: 0.45, oy: 0.45, cell: 1 };
     if (K === XIANGQI) return { W: 9.7, H: 10.9, ox: 0.85, oy: 0.95, cell: 1, pt: true };
     return { W: 8.7, H: 8.7, ox: 0.6, oy: 0.1, cell: 1 };
   }
@@ -346,10 +348,10 @@
       return `<g class="mxgo">${P.join('')}</g>`;
     }
     if (K === SHOGI) {
-      P.push(`<rect x="0" y="1.2" width="9.9" height="9.9" rx=".2" class="mxwood"/>`);
+      P.push(`<rect x="0" y="0" width="${g.W}" height="${g.H}" rx=".2" class="mxwood"/>`);
       for (let i = 0; i <= 9; i++) P.push(`<line x1="${g.ox}" y1="${g.oy + i}" x2="${g.ox + 9}" y2="${g.oy + i}"/><line x1="${g.ox + i}" y1="${g.oy}" x2="${g.ox + i}" y2="${g.oy + 9}"/>`);
       [[3, 3], [6, 3], [3, 6], [6, 6]].forEach(([a, b]) => P.push(`<circle cx="${g.ox + a}" cy="${g.oy + b}" r=".07" class="mxhoshi"/>`));
-      for (let i = 0; i < 9; i++) { P.push(`<text x="${(g.ox + i + .5) * 100}" y="${(g.oy - .12) * 100}" class="mxcoord" transform="scale(.01)">${flip ? i + 1 : 9 - i}</text>`); }
+      for (let i = 0; i < 9; i++) { P.push(`<text x="${(g.ox + i + .5) * 100}" y="${(g.oy - .1) * 100}" class="mxcoord" transform="scale(.01)">${flip ? i + 1 : 9 - i}</text><text x="${(g.ox + 9.62) * 100}" y="${(g.oy + i + .62) * 100}" class="mxcoord" transform="scale(.01)">${'一二三四五六七八九'[flip ? 8 - i : i]}</text>`); }
       return `<g class="mxsh">${P.join('')}</g>`;
     }
     if (K === XIANGQI) {   // 9 × 10 points, the river (楚河 漢界) across the middle, the palaces with their diagonals, the marks where cannons and soldiers start
@@ -384,7 +386,7 @@
   function draw(anim) {
     const G = cur, L = line(G), K = L.K, g = geom(G, K), st = L.st[ply], r = ply ? L.recs[ply - 1] : null, flip = G.orient === 'b' || G.orient === 'g';
     const box = el.board;
-    if (box._g !== G.id) { box._g = G.id; box.innerHTML = `<svg class="mxbg" viewBox="0 0 ${g.W} ${g.H}" aria-hidden="true">${boardSVG(G, K, g, flip)}<g class="mxmk"></g></svg><div class="mxpcs"></div>${g.hands ? '<div class="mxhand g"></div><div class="mxhand s"></div>' : ''}`;
+    if (box._g !== G.id) { box._g = G.id; box.innerHTML = `<svg class="mxbg" viewBox="0 0 ${g.W} ${g.H}" aria-hidden="true">${boardSVG(G, K, g, flip)}<g class="mxmk"></g></svg><div class="mxpcs"></div>`;
       box.style.aspectRatio = `${g.W} / ${g.H}`; box._el = {}; box.classList.toggle('go', !!K.go); box.classList.toggle('sh', K === SHOGI); box.classList.toggle('ch', K === CHESS); box.classList.toggle('xq', K === XIANGQI); }
     box.classList.toggle('still', !anim);
     const sz = (K.go ? 1 : 1) / g.W * 100, szh = 1 / g.H * 100;
@@ -395,15 +397,10 @@
       const [x, y] = spot(G, K, g, p.at, flip); e.style.left = x + '%'; e.style.top = y + '%'; e.style.width = sz + '%'; e.style.height = szh + '%';
       e.classList.toggle('last', !!(K.go && r && r.to === p.at)); });
     Object.keys(box._el).forEach(id => { if (!seen.has(+id)) { const e = box._el[id]; delete box._el[id]; e.classList.add('gone'); setTimeout(() => e.remove(), anim ? 260 : 0); } });
-    // the hands (shogi): what each side holds
-    if (g.hands) { const H = K.hands(st), cnt = side => { const c = {}; H[side].forEach(x => c[x.t] = (c[x.t] || 0) + 1); return Object.entries(c); };
-      ['g', 's'].forEach(side => { const h = box.querySelector('.mxhand.' + side), top = (side === 'g') !== flip;
-        h.style.top = top ? '0' : ''; h.style.bottom = top ? '' : '0'; h.classList.toggle('top', top);
-        h.innerHTML = `<em>${side === 's' ? '▲' : '△'}${esc(u('side_' + side))}</em>` + cnt(side).map(([t, n]) => `<span class="mxsg${top ? ' dn' : ''}"><svg viewBox="0 0 100 110" aria-hidden="true"><path d="M50 4 82 18 94 106H6L18 18z"/></svg><b>${SHOGI.KAN[t]}</b>${n > 1 ? `<u>${n}</u>` : ''}</span>`).join(''); }); }
     // the marks: the last move's squares, then what the note points at (arrows, squares)
     const mk = box.querySelector('.mxmk'), M = (G.mk || {})[ply] || {}, out = [];
     const c = at => { const [x, y] = K.xy(at, flip, g.n); return K.go || K.pt ? [g.ox + x, g.oy + y] : [g.ox + x + .5, g.oy + y + .5]; };
-    const sqr = (at, cls) => { const [x, y] = c(at); out.push(K.pt ? `<circle cx="${x}" cy="${y}" r=".5" class="${cls}"/>` : `<rect x="${x - .5}" y="${y - .5}" width="1" height="1" class="${cls}"/>`); };
+    const sqr = (at, cls) => { const [x, y] = c(at); out.push(K.pt ? `<circle cx="${x}" cy="${y}" r=".5" class="${cls}${cls === 'mxlm' ? ' ring' : ''}"/>` : `<rect x="${x - .5}" y="${y - .5}" width="1" height="1" class="${cls}"/>`); };
     if (r && !K.go) { if (r.from) sqr(r.from, 'mxlm'); if (r.to) sqr(r.to, 'mxlm'); }
     (M.s || []).forEach(a => K.go ? (() => { const [x, y] = c(a); out.push(`<circle cx="${x}" cy="${y}" r=".42" class="mxsq"/>`); })() : sqr(a, 'mxsq'));
     (M.a || []).forEach(([a, b]) => { const [x1, y1] = c(a), [x2, y2] = c(b), d = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / d, uy = (y2 - y1) / d, ex = x2 - ux * .38, ey = y2 - uy * .38;
@@ -436,53 +433,80 @@
     MK(null, GAMES.length);
   }
 
-  /* ---------- a game ---------- */
+  /* ---------- a game (2026-11-27 ユーザー: レイアウトとデザインを徹底的に見直し — 評価: tools/museum-match-layout.js) ----------
+     The view: a short head (kind · year · place, the title, the result) → the stage (the board between the two players' plates — whose
+     move it is lights up; what each side has taken or holds — and under it the steps, a slider through the whole game and the move number)
+     beside the side column (ミュゼフク's note card for the move on the board, with the previous / next note, then the moves' list, as tall
+     as the stage) → the game's story and record. Phone: one column; the moves' list is a strip that scrolls sideways. */
+  const plateOf = (G, L, st, side) => {   // what a side has to show on its plate
+    const K = L.K;
+    if (K.go) return st.cap[side] ? `<span class="mxcap"><u class="mxdot ${side === 'B' ? 'W' : 'B'}"></u>${esc(u('caps'))} ${st.cap[side]}</span>` : '';
+    if (K === SHOGI) { const c = {}; K.hands(st)[side].forEach(x => c[x.t] = (c[x.t] || 0) + 1); const e = Object.entries(c);
+      return e.length ? `<span class="mxcap"><em>${esc(u('hand'))}</em>${e.map(([t, n]) => `<span class="mxhk">${K.KAN[t]}${n > 1 ? `<sub>${n}</sub>` : ''}</span>`).join('')}</span>` : ''; }
+    // chess, xiangqi: the other side's pieces this side has taken
+    const now = new Set(K.pieces(st).map(p => p.id)), gone = K.pieces(L.st[0]).filter(p => !now.has(p.id) && p.k[0] !== side[0]);
+    if (!gone.length) return '';
+    return `<span class="mxcap">${gone.map(p => K === CHESS ? `<img src="${PIMG}${p.k}.svg" alt="">` : `<span class="mxxk${p.red ? ' r' : ''}">${p.glyph || ''}</span>`).join('')}</span>`;
+  };
   function show(id, user) {
     const G = GAMES.find(x => x.id === id); if (!G || !host) return;
     el.pushed = !!(user && ctx && ctx.hist); if (el.pushed) ctx.hist({ room: 'match', game: id });
-    stop(); cur = G; ply = 0; const L = line(G), x = gt(G.id), n = L.mv.length;
+    stop(); cur = G; ply = 0; const L = line(G), x = gt(G.id), n = L.mv.length, K = L.K;
     el.wall.hidden = true; el.view.hidden = false; host.querySelector('.mxx').classList.add('on');
-    const K = L.K, side = s => u('side_' + s), res = G.res && (G.kind === 'go' ? G.res : u('res_' + G.res));
-    el.view.innerHTML = `<button type="button" class="mxback">${svg('back')}${esc(u('back'))}</button>
-      <div class="mxhd"><i>${esc(u('k_' + G.kind))}</i><h3>${esc(x.t)}</h3>
-        <p class="mxvs"><span><u class="mxdot ${K.sides[0]}"></u>${esc(x.w)}</span><em>vs</em><span><u class="mxdot ${K.sides[1]}"></u>${esc(x.b)}</span></p>
-        <p class="mxmeta">${esc(x.d)} · ${esc(x.pl)}${x.ev ? ' · ' + esc(x.ev) : ''}${res ? ` · <b>${esc(u('result'))}: ${esc(res)}</b>` : ''}</p></div>
-      <div class="mxmain"><div class="mxleft k-${G.kind}"><div class="mxboard" dir="ltr" role="img"></div>
-        <div class="mxctl" dir="ltr"><button type="button" data-c="start" aria-label="${esc(u('start'))}" title="${esc(u('start'))}">${svg('start')}</button><button type="button" data-c="prev" aria-label="${esc(u('prev'))}" title="${esc(u('prev'))}">${svg('prev')}</button>
-          <button type="button" data-c="play" class="pl" aria-label="${esc(u('play'))}" title="${esc(u('play'))}">${svg('play')}</button><button type="button" data-c="next" aria-label="${esc(u('next'))}" title="${esc(u('next'))}">${svg('next')}</button><button type="button" data-c="end" aria-label="${esc(u('end'))}" title="${esc(u('end'))}">${svg('end')}</button></div>
-        <p class="mxpos" aria-live="polite"></p></div>
-        <div class="mxside"><div class="mxsay"><img src="${GUIDE}" alt="" class="mxowl"><div class="mxbub"><b class="mxwho">${esc(u('guide'))}</b><p class="mxtxt"></p><button type="button" class="mxnext" hidden></button></div></div>
-          <div class="mxlog"><h4>${esc(u('moves'))}</h4><div class="mxlist" dir="ltr" role="list"></div></div></div></div>
-      <p class="mxlead">${esc(x.lead || '')}</p><p class="mxcredit">${esc(u('credit'))}</p>`;
-    el.board = el.view.querySelector('.mxboard'); el.say = el.view.querySelector('.mxtxt'); el.list = el.view.querySelector('.mxlist'); el.pos = el.view.querySelector('.mxpos'); el.nx = el.view.querySelector('.mxnext');
-    el.view.querySelector('.mxback').onclick = () => { if (el.pushed) history.back(); else wall(); };
-    // the moves' list: chess as numbered pairs; the others one move a row, numbered
+    const res = G.res && (G.kind === 'go' ? G.res : u('res_' + G.res)), flip = G.orient === 'b' || G.orient === 'g';
+    const [s0, s1] = K.sides, nm = s => s === s0 ? x.w : x.b, plate = (s, pos) => `<div class="mxpl ${pos}" data-s="${s}"><u class="mxdot ${s}"></u><b>${esc(nm(s))}</b><span class="mxside-n">${esc(u('side_' + s))}</span><span class="mxpx"></span></div>`;
+    const btn = (c, k) => `<button type="button" data-c="${c}"${c === 'play' ? ' class="pl"' : ''} aria-label="${esc(u(k))}" title="${esc(u(k))}">${svg(c)}</button>`;
+    el.view.innerHTML = `<div class="mxhd"><button type="button" class="mxback" aria-label="${esc(u('back'))}" title="${esc(u('back'))}">${svg('back')}</button>
+        <div class="mxht"><p class="mxkick"><i>${esc(u('k_' + G.kind))}</i><span>${esc(x.d)} · ${esc(x.pl)}</span></p><h3>${esc(x.t)}</h3></div>${res ? `<span class="mxres">${esc(res)}</span>` : ''}</div>
+      <div class="mxmain">
+        <div class="mxleft k-${G.kind}">${plate(flip ? s0 : s1, 'top')}<div class="mxboard" dir="ltr" role="img"></div>${plate(flip ? s1 : s0, 'bot')}
+          <div class="mxctl" dir="ltr">${btn('start', 'start')}${btn('prev', 'prev')}${btn('play', 'play')}${btn('next', 'next')}${btn('end', 'end')}</div>
+          <div class="mxseek" dir="ltr"><input type="range" class="mxrng" min="0" max="${n}" value="0" step="1" aria-label="${esc(u('moves'))}"><span class="mxpos" aria-live="polite"></span></div></div>
+        <div class="mxside"><div class="mxnote"><div class="mxnh"><img src="${GUIDE}" alt="" class="mxowl"><b class="mxwho">${esc(u('guide'))}</b><span class="mxmv"></span></div>
+            <p class="mxtxt"></p>
+            <div class="mxnn"><button type="button" data-n="-1">${svg('prev')}<span>${esc(u('pnote'))}</span></button><button type="button" data-n="1"><span>${esc(u('nnote'))}</span>${svg('next')}</button></div></div>
+          <div class="mxlog"><h4>${esc(u('moves'))}<span>${esc(u('plies').replace('{n}', n))}</span></h4><div class="mxlist k-${K.pair ? 'pair' : 'one'}" dir="ltr" role="list"></div></div></div></div>
+      <section class="mxabout"><h4>${esc(u('about'))}</h4><p>${esc(x.lead || '')}</p>
+        <dl><div><dt>${esc(u('r_event'))}</dt><dd>${esc(x.ev || '—')}</dd></div><div><dt>${esc(u('r_date'))}</dt><dd>${esc(x.d)}</dd></div><div><dt>${esc(u('r_place'))}</dt><dd>${esc(x.pl)}</dd></div>${res ? `<div><dt>${esc(u('result'))}</dt><dd>${esc(res)}</dd></div>` : ''}</dl></section>
+      <p class="mxcredit">${esc(u('credit'))}</p>`;
+    const q = s => el.view.querySelector(s);
+    Object.assign(el, { board: q('.mxboard'), say: q('.mxtxt'), list: q('.mxlist'), pos: q('.mxpos'), mv: q('.mxmv'), rng: q('.mxrng'), nn: q('.mxnn') });
+    q('.mxback').onclick = () => { if (el.pushed) history.back(); else wall(); };
+    // the moves: chess and xiangqi as numbered pairs; shogi and go one by one, numbered, in columns
     const lab = i => K.label(L.mv[i], i, L.recs[i], lang, L.st[0]);
-    const btn = i => `<button type="button" data-p="${i + 1}" class="${note(G.id, i + 1) != null ? 'nt' : ''}">${esc(lab(i))}</button>`;
-    const rows = [`<div class="mxrow st" role="listitem"><button type="button" data-p="0" class="${note(G.id, 0) != null ? 'nt' : ''}">${esc(u('startpos'))}</button></div>`];
-    if (K.pair) for (let i = 0; i < n; i += 2) rows.push(`<div class="mxrow pr" role="listitem"><span>${i / 2 + 1}.</span>${btn(i)}${i + 1 < n ? btn(i + 1) : '<b></b>'}</div>`);
-    else for (let i = 0; i < n; i++) rows.push(`<div class="mxrow" role="listitem"><span>${i + 1}</span>${K.go ? `<u class="mxdot ${L.recs[i].side}"></u>` : ''}${btn(i)}</div>`);
+    const mb = i => `<button type="button" data-p="${i + 1}"${note(G.id, i + 1) != null ? ' class="nt"' : ''}>${K.pair ? '' : `<span class="mxno">${i + 1}</span>`}${K.go ? `<u class="mxdot ${L.recs[i].side}"></u>` : ''}<bdi>${esc(lab(i))}</bdi></button>`;
+    const rows = [`<div class="mxrow st" role="listitem"><button type="button" data-p="0"${note(G.id, 0) != null ? ' class="nt"' : ''}>${esc(u('startpos'))}</button></div>`];
+    if (K.pair) for (let i = 0; i < n; i += 2) rows.push(`<div class="mxrow pr" role="listitem"><span class="mxno">${i / 2 + 1}.</span>${mb(i)}${i + 1 < n ? mb(i + 1) : ''}</div>`);
+    else for (let i = 0; i < n; i++) rows.push(`<div class="mxrow" role="listitem">${mb(i)}</div>`);
     el.list.innerHTML = rows.join(''); el.list.classList.toggle('alln', Array.from({ length: n + 1 }, (_, i) => note(G.id, i) != null).every(Boolean));
     el.list.onclick = e => { const b = e.target.closest('[data-p]'); if (b) { stop(); go(+b.dataset.p, true); } };
-    el.view.querySelector('.mxctl').onclick = e => { const b = e.target.closest('[data-c]'); if (!b) return; const c = b.dataset.c;
+    q('.mxctl').onclick = e => { const b = e.target.closest('[data-c]'); if (!b) return; const c = b.dataset.c;
       if (c === 'play') { timer ? stop() : run(); return; } stop(); go(c === 'start' ? 0 : c === 'end' ? n : c === 'prev' ? ply - 1 : ply + 1, c === 'next' || c === 'prev'); };
-    el.nx.onclick = () => { stop(); go(+el.nx.dataset.p, true); };
-    go(0, false); el.view.querySelector('.mxback').focus({ preventScroll: true });
-    if (user) { const t = host.getBoundingClientRect().top + scrollY - 80; if (scrollY > t) scrollTo({ top: Math.max(0, t) }); }
+    el.rng.oninput = () => { stop(); go(+el.rng.value, false); };
+    el.nn.onclick = e => { const b = e.target.closest('[data-n]'); if (!b || b.disabled) return; stop(); const t = +b.dataset.p; if (t >= 0) go(t, Math.abs(t - ply) === 1); };
+    go(0, false); q('.mxback').focus({ preventScroll: true });
+    if (user) requestAnimationFrame(() => { const t = el.view.getBoundingClientRect().top + scrollY - band() - 8; if (Math.abs(scrollY - t) > 4) scrollTo({ top: Math.max(0, t) }); });
   }
+  // the page's own bar along the top (the site's header) — the view is scrolled to just under it
+  function band() { let b = 0; for (const e of document.elementsFromPoint(innerWidth / 2, 2)) { const ps = getComputedStyle(e).position; if (ps === 'fixed' || ps === 'sticky') b = Math.max(b, e.getBoundingClientRect().bottom); } return b < innerHeight / 3 ? b : 0; }
   function go(p, anim) {
     const G = cur; if (!G) return; const L = line(G), n = L.mv.length; p = Math.max(0, Math.min(n, p));
     const near = Math.abs(p - ply) === 1; ply = p; draw(anim && near);
-    const K = L.K, r = p ? L.recs[p - 1] : null, x = note(G.id, p);
+    const K = L.K, r = p ? L.recs[p - 1] : null, x = note(G.id, p), st = L.st[p];
     el.say.textContent = x != null ? x : u('quiet'); el.say.classList.toggle('quiet', x == null);
-    // the next note further on (long games: most moves have none)
-    let nn = -1; if (x == null) for (let i = p + 1; i <= n; i++) if (note(G.id, i) != null) { nn = i; break; }
-    el.nx.hidden = nn < 0; if (nn >= 0) { el.nx.dataset.p = nn; el.nx.innerHTML = esc(u('nextnote').replace('{n}', nn)) + svg('note'); }
-    const lb = p ? K.label(L.mv[p - 1], p - 1, r, lang, L.st[0]) : ''; el.pos.innerHTML = p ? esc(u('move').replace('{n}', p)) + ' · <bdi dir="ltr">' + esc(lb) + '</bdi>' : esc(u('startpos'));
-    el.board.setAttribute('aria-label', el.pos.textContent);
+    const lb = p ? K.label(L.mv[p - 1], p - 1, r, lang, L.st[0]) : '';
+    el.mv.innerHTML = p ? `<u class="mxdot ${r.side}"></u>${esc(u('move').replace('{n}', p))}<bdi dir="ltr">${esc(lb)}</bdi>` : esc(u('startpos'));
+    el.pos.textContent = `${p} / ${n}`; el.rng.value = p; el.rng.style.setProperty('--f', (n ? p / n * 100 : 0) + '%');
+    el.board.setAttribute('aria-label', p ? u('move').replace('{n}', p) + ' ' + lb : u('startpos'));
+    // the notes before and after this move
+    let pv = -1, nx = -1; for (let i = p - 1; i >= 0; i--) if (note(G.id, i) != null) { pv = i; break; } for (let i = p + 1; i <= n; i++) if (note(G.id, i) != null) { nx = i; break; }
+    el.nn.querySelectorAll('[data-n]').forEach(b => { const t = +b.dataset.n < 0 ? pv : nx; b.dataset.p = t; b.disabled = t < 0; });
+    // the plates: whose move it is, and what each side has taken / holds
+    el.view.querySelectorAll('.mxpl').forEach(pl => { const s = pl.dataset.s; pl.classList.toggle('on', p < n && st.turn === s); pl.querySelector('.mxpx').innerHTML = plateOf(G, L, st, s); });
     el.list.querySelectorAll('[aria-current]').forEach(b => b.removeAttribute('aria-current'));
     const on = el.list.querySelector(`[data-p="${p}"]`); if (on) { on.setAttribute('aria-current', 'step'); const lr = el.list.getBoundingClientRect(), br = on.getBoundingClientRect();
-      if (br.top < lr.top || br.bottom > lr.bottom) el.list.scrollTop += br.top - lr.top - lr.height / 2 + br.height / 2; }
+      if (getComputedStyle(el.list).overflowX === 'auto' && el.list.scrollWidth > el.list.clientWidth + 2) el.list.scrollLeft += (br.left + br.width / 2) - (lr.left + lr.width / 2);
+      else if (br.top < lr.top || br.bottom > lr.bottom) el.list.scrollTop += br.top - lr.top - lr.height / 2 + br.height / 2; }
     const ctl = el.view.querySelector('.mxctl'); ctl.querySelector('[data-c=start]').disabled = ctl.querySelector('[data-c=prev]').disabled = !p;
     ctl.querySelector('[data-c=end]').disabled = ctl.querySelector('[data-c=next]').disabled = p >= n;
     if (p >= n) { MK(G.id, GAMES.length); if (timer) stop(); }
