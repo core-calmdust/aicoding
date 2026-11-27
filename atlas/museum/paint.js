@@ -93,6 +93,10 @@
     { id: 'meade', w: 1686, h: 1403, aic: 250084, no: '2019.462', bg: '#3a2a24', spots: [[.5, .66], [.4, .43], [.64, .38], [.66, .57], [.52, .77], [.1, .5]], links: [{ g: 'chess' }] },
     // (2026-11-25) the Art Institute of Chicago: hanging scroll attributed to Dai Jin, Daoist immortals playing weiqi
     { id: 'weiqi', w: 1189, h: 2048, aic: 150406, no: '1998.148', bg: '#5d5640', spots: [[.47, .79], [.37, .73], [.58, .76], [.25, .8], [.475, .72], [.955, .34]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
+    // (2026-11-25) the Rijksmuseum: 'Die Reise um die Welt' — a round dice race game, spaces 1–41, rules in four languages
+    { id: 'reise', w: 1611, h: 2048, rijks: 'RP-P-OB-200.986', bg: '#e7e3d8', spots: [[.5, .42], [.5, .71], [.836, .59], [.727, .25], [.25, .28], [.5, .87]], links: [{ ex: 'goose' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Jan van Huchtenburg, prisoners casting dice on a drum for their lives
+    { id: 'huchten', w: 2048, h: 1795, rijks: 'SK-A-2675', bg: '#2f2a22', spots: [[.49, .8], [.48, .62], [.7, .7], [.85, .5], [.89, .08], [.14, .21]], links: [{ room: 'chance' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
