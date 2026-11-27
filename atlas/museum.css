@@ -1141,3 +1141,14 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 .mxtk{fill:#f3d59c;stroke:#a07a3a;stroke-width:.03}.mxtg{font-size:50px;font-weight:900;text-anchor:middle;fill:#1f1a14}.mxtg.pr{fill:#c0281b}.mxtb{fill:#1c1c1c}.mxtw{fill:#fbfbf8;stroke:#777;stroke-width:.04}
 .mxx .mxwl,.mxx .mxcredit,.mxx .mxlead,.mxx .mxmeta{max-width:46em}
 .mxgc{font-size:40px;font-weight:800;fill:#6b4a1d;text-anchor:middle;font-family:var(--round)}
+/* (2026-11-27 名局選：シャンチー) the board of points (9 × 10) with the river, round pieces with their characters (Red at the bottom) */
+.mxxq line{stroke:#5d3f18;stroke-width:.035}.mxxf{fill:none;stroke:#5d3f18;stroke-width:.07}.mxxm{fill:none;stroke:#5d3f18;stroke-width:.03}
+.mxxr{font-size:56px;font-weight:700;fill:#7a5428;text-anchor:middle;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Noto Serif CJK JP",serif}
+.mxxp{display:block;width:88%;height:88%;margin:6%;border-radius:50%;background:radial-gradient(circle at 38% 32%,#fbecc8,#ecd29c 70%,#d9b97b);box-shadow:0 .08em .16em rgba(0,0,0,.35),inset 0 0 0 1.5px #a5824a;position:relative}
+.mxxp::before{content:"";position:absolute;inset:9%;border-radius:50%;border:1.5px solid #1f1a14}.mxxp.r::before{border-color:#c0281b}
+.mxxp b{position:absolute;inset:0;display:grid;place-items:center;font-size:54cqh;line-height:1;font-weight:900;color:#1f1a14;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Noto Serif CJK JP",serif}
+.mxxp.r b{color:#c0281b}
+.mxxt{fill:#f0d9a6;stroke:#1f1a14;stroke-width:.04}.mxxt.r{stroke:#c0281b}.mxxg{font-size:52px;font-weight:900;text-anchor:middle;fill:#1f1a14;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Noto Serif CJK JP",serif}.mxxg.r{fill:#c0281b}
+.mxth.k-xiangqi{background:#efe3c8}
+.mxdot.r{background:#d23a2a;border-color:#7d1a10}
+@media (min-width:820px){.mxleft.k-xiangqi{max-width:min(500px,calc((100vh - 230px) * .89));width:100%;justify-self:center}}
