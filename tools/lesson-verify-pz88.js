@@ -7,7 +7,7 @@
 'use strict';
 const fs = require('fs'), path = require('path');
 const ROOT = path.join(__dirname, '..');
-const DONE = ['hex', 'fanorona', 'janggi'];   // (janggi: 2026-11-27 担当D)
+const DONE = ['hex', 'fanorona', 'janggi', 'agon'];   // (janggi: 2026-11-27 担当D; agon: 2026-11-27 担当F)
 function fnBody(src, name) {
   const i = src.search(new RegExp('\\n(async )?function ' + name + '\\(')); if (i < 0) return '';
   const j = src.indexOf('\n}', i + 1); return j < 0 ? src.slice(i) : src.slice(i, j + 2);
