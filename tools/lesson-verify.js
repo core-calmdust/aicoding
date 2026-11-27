@@ -98,7 +98,7 @@ function mcTopic(id, b, A, E, R) {
     else { if (oppEx(A)) return '④ the gold pit leaves the opponent an exact pit'; if (L0.filter(k => k !== A && oppEx(k)).length < 2) return '④ fewer than 2 other pits leave the opponent an exact pit'; } }
   return '';
 }
-const MC_DONE = new Set(['sow', 'extra', 'capture', 'defend', 'chain', 'endgame', 'k_open', 'k_open6', 'k_combo', 'k_tempo', 'k_hoard', 'k_starve', 'k_count']);
+const MC_DONE = new Set(['n_cap', 'n_defend', 'n_play', 'sow', 'extra', 'capture', 'defend', 'chain', 'endgame', 'k_open', 'k_open6', 'k_combo', 'k_tempo', 'k_hoard', 'k_starve', 'k_count']);
 function mancala(opt) {
   const E = require(path.join(ROOT, 'mancala/engine.js')), L = require(path.join(ROOT, 'mancala/lessons.json')), PZ = require(path.join(ROOT, 'mancala/puzzles.json'));
   const out = [], pend = [], only = opt && opt.only;
@@ -134,8 +134,8 @@ function mancala(opt) {
         for (const x of s.list) { const e = Math.abs(P.sc[x.m] - x.v); if (P.exact ? e > 1e-9 : e > 3) add(`① pit ${x.m}: stored ${P.sc[x.m]}, engine ${x.v.toFixed(1)}`); }
         const T = tr(b, 0, P.best);
         if (id === 'extra' && !T.extra) add('④ the gold pit does not end in the store');
-        if (id === 'capture' && !(T.cap > 0)) add('④ the gold pit does not capture');
-        if (id === 'defend' && !(caps(b).length && !T.extra && !caps(Array.from(T.board)).length)) add('④ the gold pit does not take away the opponent\'s capture');
+        if ((id === 'capture' || id === 'n_cap') && !(T.cap > 0)) add('④ the gold pit does not capture');
+        if ((id === 'defend' || id === 'n_defend') && !(caps(b).length && !T.extra && !caps(Array.from(T.board)).length)) add('④ the gold pit does not take away the opponent\'s capture');
         if (id === 'chain') { const c = chain(b, P.best); if (c < 2 || L0.some(k => k !== P.best && chain(b, k) >= c)) add(`④ the gold pit's chain ${c} is not the only longest`); }
         if (id === 'endgame' && !(P.exact && s.exact)) add('④ an endgame problem not solved exactly');
         if (/^k_(combo|tempo|hoard|starve|count)$/.test(id)) { const t = mcTopic(id, b, P.best, E, R); if (t) add(t); if (id === 'k_count' && !(P.exact && s.exact)) add('④ an endgame problem not solved exactly'); }
