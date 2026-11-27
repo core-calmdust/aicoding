@@ -7,7 +7,7 @@
    AtlasMatch.render(box, ctx) — the museum (atlas/museum.js) calls it. */
 (function () {
   'use strict';
-  const EVAL_V = 1, V = 1, GUIDE = '../images/atlas/av/musowl-2.webp';
+  const EVAL_V = 2, V = 1, GUIDE = '../images/atlas/av/musowl-2.webp';
   /* the games. kind · moves: the record (chess: SAN; shogi: USI, 7g7f / P*5e / 8h2b+; go: SGF points, pd, '' = pass) · res: w | b | d | s | g
      (go: 'B+R', 'W+2.5' as written) · mk: { ply: { a: [[from, to], …] arrows, s: [squares] } } what the note points at · orient: 'b' to see the board from Black */
   const GAMES = [
