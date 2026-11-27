@@ -233,6 +233,22 @@ def paper(h, w, rng, px):
 
 
 def print_card(card, out_png, scale=4.0, seed=7, reg=1.0):
+    h, w = int(H * scale), int(W * scale)
+    px = scale
+    lines = None
+    if 'line' in card.plates:
+        vis = raster_ids(card, scale, lines=True) == 31
+        lines = raster(card.plates['line'], scale) * blur(vis.astype(np.float32), 0.4 * px).clip(0, 1) ** 0.5
+    ids = raster_ids(card, scale)
+    masks = {}
+    for ink in card.order:
+        if ink == 'paper':
+            continue
+        masks[ink] = (ids == card.order.index(ink) + 1).astype(np.float32)
+    return print_masks(masks, lines, out_png, scale, seed, reg)
+
+
+def print_masks(masks, lines, out_png, scale=4.0, seed=7, reg=1.0, line_soft=0.3):
     rng = np.random.default_rng(seed)
     h, w = int(H * scale), int(W * scale)
     px = scale
@@ -241,22 +257,18 @@ def print_card(card, out_png, scale=4.0, seed=7, reg=1.0):
     inner = ((xx > FR * px - 2 * px) & (xx < (W - FR) * px + 2 * px) & (yy > FR * px - 2 * px) & (yy < (H - FR) * px + 2 * px)).astype(np.float32)
 
     # 1. key block
-    if 'line' in card.plates:
-        vis = raster_ids(card, scale, lines=True) == 31
-        a = raster(card.plates['line'], scale) * inner * blur(vis.astype(np.float32), 0.4 * px).clip(0, 1) ** 0.5
+    if lines is not None:
+        a = lines * inner
         a = shift(a, rng.normal(0, 0.3 * px), rng.normal(0, 0.3 * px))
         n = 0.6 * fbm(h, w, rng, 3, 70) + 0.4 * fbm(h, w, rng, 2, 220)
-        a = np.clip((blur(a, 0.3 * px) - 0.45) * 2.0 + 0.45 + (n - 0.5) * 0.85, 0, 1)
+        a = np.clip((blur(a, line_soft * px) - 0.45) * 2.0 + 0.45 + (n - 0.5) * 0.85, 0, 1)
         a *= np.clip(1.15 - 0.5 * fbm(h, w, rng, 4, 40) ** 2, 0.5, 1)    # dry spots
         col = np.array(INK['line'], np.float32) / 255
         img = img * (1 - a[..., None] * 0.9) + col * a[..., None] * 0.9
 
     # 2. stencils
-    ids = raster_ids(card, scale)
-    for ink in card.order:
-        if ink == 'paper':
-            continue
-        a = (ids == card.order.index(ink) + 1).astype(np.float32) * inner
+    for ink, a in masks.items():
+        a = a * inner
         off = 1.1 * reg * px
         a = shift(a, float(np.clip(rng.normal(0, off), -2.4 * px, 2.4 * px)), float(np.clip(rng.normal(0, off), -2.4 * px, 2.4 * px)))
         rough = fbm(h, w, rng, 4, 55)
