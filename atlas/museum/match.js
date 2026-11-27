@@ -18,8 +18,10 @@
         21: { s: ['e8'] }, 23: { a: [['d1', 'd7']] }, 27: { a: [['d1', 'd7'], ['b5', 'd7']] }, 31: { a: [['b3', 'b8']] }, 33: { a: [['g5', 'd8']], s: ['e8'] } } },
     // (2026-11-27) Richard Réti v. Savielly Tartakower, 1910: Réti's Mate
     { id: 'reti1910', kind: 'chess', res: 'w', moves: 'e4 c6 d4 d5 Nc3 dxe4 Nxe4 Nf6 Qd3 e5 dxe5 Qa5+ Bd2 Qxe5 O-O-O Nxe4 Qd8+ Kxd8 Bg5+ Kc7 Bd8#',
-      mk: { 9: { a: [['d3', 'e4']] }, 12: { a: [['a5', 'e1']] }, 14: { a: [['e5', 'e1']], s: ['e4'] }, 15: { a: [['d1', 'd8']] }, 16: { a: [['d3', 'd8']], s: ['e8'] }, 17: { a: [['d3', 'd8']] },
-        19: { a: [['g5', 'd8'], ['d1', 'd8']], s: ['d8'] }, 20: { s: ['c7'] }, 21: { a: [['d8', 'c7']], s: ['c7'] } } },
+      mk: { 1: { s: ['d5', 'e5'] }, 2: { a: [['c6', 'd5']] }, 3: { s: ['d4', 'e4'] }, 4: { a: [['d5', 'e4']] }, 5: { a: [['c3', 'e4']] }, 6: { s: ['e4'] }, 7: { s: ['e4'] }, 8: { a: [['f6', 'e4']] },
+        9: { a: [['d3', 'e4'], ['d3', 'd8']] }, 10: { a: [['e5', 'd4']] }, 11: { s: ['e5'] }, 12: { a: [['a5', 'e1'], ['a5', 'e5']] }, 13: { s: ['d2'] }, 14: { a: [['e5', 'e1']], s: ['e4'] },
+        15: { a: [['d1', 'd8']], s: ['c1'] }, 16: { a: [['d3', 'd8']], s: ['e8'] }, 17: { a: [['d3', 'd8']] }, 18: { s: ['d8'] },
+        19: { a: [['g5', 'd8'], ['d1', 'd8']], s: ['d8'] }, 20: { a: [['d1', 'd8']], s: ['c7', 'e8'] }, 21: { a: [['d8', 'c7'], ['d1', 'd8']], s: ['c7'] } } },
     // (2026-11-27) Adolf Anderssen v. Lionel Kieseritzky, 1851: The Immortal Game
     { id: 'immortal', kind: 'chess', res: 'w', moves: 'e4 e5 f4 exf4 Bc4 Qh4+ Kf1 b5 Bxb5 Nf6 Nf3 Qh6 d3 Nh5 Nh4 Qg5 Nf5 c6 g4 Nf6 Rg1 cxb5 h4 Qg6 h5 Qg5 Qf3 Ng8 Bxf4 Qf6 Nc3 Bc5 Nd5 Qxb2 Bd6 Bxg1 e5 Qxa1+ Ke2 Na6 Nxg7+ Kd8 Qf6+ Nxf6 Be7#',
       mk: { 3: { a: [['f4', 'e5']] }, 6: { a: [['h4', 'e1']] }, 14: { a: [['h5', 'g3']] }, 18: { a: [['c6', 'b5']] }, 21: { s: ['b5'] }, 23: { a: [['h4', 'g5']] }, 25: { a: [['h5', 'g6']] },
@@ -45,7 +47,23 @@
     // (2026-11-27) Deep Blue (IBM computer) v. Garry Kasparov, 1997: Deep Blue Wins
     { id: 'deepblue1997', kind: 'chess', res: 'w', moves: 'e4 c6 d4 d5 Nc3 dxe4 Nxe4 Nd7 Ng5 Ngf6 Bd3 e6 N1f3 h6 Nxe6 Qe7 O-O fxe6 Bg6+ Kd8 Bf4 b5 a4 Bb7 Re1 Nd5 Bg3 Kc8 axb5 cxb5 Qd3 Bc6 Bf5 exf5 Rxe7 Bxe7 c4',
       mk: { 9: { a: [['g5', 'f7']] }, 14: { a: [['h6', 'g5']] }, 15: { a: [['g5', 'e6']] }, 16: { a: [['e7', 'e1']] }, 19: { a: [['g6', 'e8']] }, 23: { a: [['a4', 'b5']] }, 25: { a: [['e1', 'e6']] },
-        26: { a: [['d5', 'f4']] }, 31: { a: [['d3', 'b5']] }, 33: { s: ['f5'] }, 34: { a: [['e1', 'e7']] }, 35: { a: [['e1', 'e7']] }, 37: { a: [['c4', 'b5'], ['c4', 'd5']], s: ['c8'] } } }
+        26: { a: [['d5', 'f4']] }, 31: { a: [['d3', 'b5']] }, 33: { s: ['f5'] }, 34: { a: [['e1', 'e7']] }, 35: { a: [['e1', 'e7']] }, 37: { a: [['c4', 'b5'], ['c4', 'd5']], s: ['c8'] } } },
+    // (2026-11-27) Go Seigen v. Honinbo Shusai, 1933–1934: The 3-3, Star Point and Tengen Game
+    { id: 'seigen1933', kind: 'go', size: 19, res: 'W+2',
+      moves: 'qc cd dp pq jj pd qd pe ob qn jp lq dj ed lo nq kq lp ko ch gj fq fo iq gp cq cp dq nd ph pj ne me mf nf ng oe of ne nj om mg ke hc qm rm rn rl ro pm ql qk pl pn pk qj nl pi qp on nn no mo op qr qq rq pr rr mn nm lm ll kp mp mq ip jq kk cn ep cj ck dk cl dl ci bj bi di ej bh dm ei fj cm ak ai el bp rf co qg rh jc gq eq en fn er fr dr hq hr hp gr fc ic dc cc gd he ge je hd id hf kd le kc og oh pg em ek fm gm mb cb ec eb dd db gb bc bd bb nb oa fb ea gh jf ie ff hi hg eo fp hl il jh fh fi hj if ih ii ig jg ji fg kf ij ik hh gf mk df ml sm sk mm dg li ol ln nk km fl gl oj qh ri cf ef gi eh ee eg de bf bq br ps os qs oq bo aq an bn am ao rg mi qi lh kh lj rj rk sh sj bg ae cg ag fe gc fd ce kg mc ki fk ld lc gk bk bl na nc gg fa ga ac ad lg mh qo lk',
+      mk: {1: {'s':['qc']},3: {'s':['dp']},5: {'s':['jj']},6: {'s':['qc','dp','jj']},160: {'s':['hl']}} },
+    // (2026-11-27) Donald Byrne v. Bobby Fischer, 1956: The Game of the Century
+    { id: 'century1956', kind: 'chess', res: 'b', moves: 'Nf3 Nf6 c4 g6 Nc3 Bg7 d4 O-O Bf4 d5 Qb3 dxc4 Qxc4 c6 e4 Nbd7 Rd1 Nb6 Qc5 Bg4 Bg5 Na4 Qa3 Nxc3 bxc3 Nxe4 Bxe7 Qb6 Bc4 Nxc3 Bc5 Rfe8+ Kf1 Be6 Bxb6 Bxc4+ Kg1 Ne2+ Kf1 Nxd4+ Kg1 Ne2+ Kf1 Nc3+ Kg1 axb6 Qb4 Ra4 Qxb6 Nxd1 h3 Rxa2 Kh2 Nxf2 Re1 Rxe1 Qd8+ Bf8 Nxe1 Bd5 Nf3 Ne4 Qb8 b5 h4 h5 Ne5 Kg7 Kg1 Bc5+ Kf1 Ng3+ Ke1 Bb4+ Kd1 Bb3+ Kc1 Ne2+ Kb1 Nc3+ Kc1 Rc2#',
+      mk: { 18: { a: [['b6', 'c4']] }, 20: { a: [['g4', 'f3']] }, 22: { a: [['b6', 'a4']], s: ['e4'] }, 26: { s: ['e4'] }, 27: { a: [['e7', 'd8'], ['e7', 'f8']] }, 28: { a: [['d8', 'b6']], s: ['f8'] },
+        30: { a: [['c3', 'd1']] }, 31: { a: [['c5', 'b6']] }, 32: { a: [['e8', 'e1']] }, 34: { a: [['c5', 'b6'], ['e6', 'c4']], s: ['b6'] }, 36: { a: [['c4', 'f1']] }, 38: { a: [['e2', 'g1']] },
+        40: { a: [['c4', 'f1']] }, 44: { a: [['c3', 'd1']] }, 46: { s: ['b6'] }, 50: { s: ['d1'] }, 57: { a: [['d8', 'g8']] }, 64: { s: ['b5'] }, 70: { a: [['c5', 'g1']] }, 72: { a: [['g3', 'f1']] },
+        74: { a: [['b4', 'e1']] }, 76: { a: [['b3', 'd1']] }, 78: { a: [['e2', 'c1']] }, 80: { a: [['c3', 'b1']] }, 82: { a: [['c2', 'c1']], s: ['c1'] } } },
+    // (2026-11-27) Honinbo Shusaku v. Yasui Sanchi IX, 1849: Shusaku’s First Castle Game
+    { id: 'oshiro1849', kind: 'go', size: 19, res: 'B+11',
+      moves: 'qd qp dc ce ci fd de df ee cd ec cc ic oc co ep dq eq dr cm cn dm eo cg en em fe gm fi hp nq kq qq rq pq rr po qo pn qn pm qm pl kc pe oe of ne ql qb og dj di ei eh ej bf dh ch dg bg cf bj fh gq hq gp gr fr hr go fg jc kd hf oi pi pj ph mj qj if he hg mh bk be lh lg kh im ie hd mi ll kk hm ik rl rc rd mq mr lr mp lq bl ak aj cj bh cl so sp sm sr hk pf qc rb qe gn ho io jo hn in ip gl fm lo er dp fq kl dn do fo lk bp bq br cq bd ae bn bo ao bm am an bi ai bn aq al ap kj hi mg mf nh nf mc qr rs nr nl nm ml mm jb ib ka db ds cs es cr cb ia jp kp lf me sd se sc qf hj gj ij nc nb nd od md lc le kf ls ks ms jr pb ob pc pa ih gf ge fk gk jl jm il hl fj gi da ea ca oj nj ok ol lj ii hh jh ig nk pk gg ng mh jg kg an dd ed ao oh an ad ac fl el lp qs ps pp op om on li rm ro rn sn ja kb so rp id ni sn',
+      mk: {1: {'s':['qd']},5: {'s':['ci']},15: {'s':['co']},43: {'s':['pl']},76: {'s':['oi']}} },
+    // (2026-11-27) Red (name not recorded) v. Black (name not recorded), 13th century: The Shilin Guangji game
+    { id: 'shilin', kind: 'xiangqi', res: 'b', moves: 'h2e2 h7e7 h0g2 h9g7 i0h0 b9c7 h0h6 c6c5 h6g6 c7d5 g6g5 d5f4 g3g4 g9i7 g5c5 f4d3 c5d5 d3c1', mk: { 2: { a: [['e7', 'e3']] }, 9: { a: [['g6', 'g7']] }, 11: { a: [['g5', 'd5']] }, 14: { a: [['i7', 'g5']] }, 16: { a: [['d3', 'c5']], s: ['c1'] }, 18: { a: [['c1', 'a0']], s: ['e0'] } } }
   ];
 
   /* ---------- the kinds ---------- */
@@ -193,7 +211,77 @@
     return { init, play, label, pieces, sides: ['B', 'W'], first: 'B', go: true, name,
       xy: (p, flip, n) => { const x = p.charCodeAt(0) - 97, y = p.charCodeAt(1) - 97; return flip ? [n - 1 - x, n - 1 - y] : [x, y]; } };
   })();
-  const KINDS = { chess: CHESS, shogi: SHOGI, go: GO };
+  // xiangqi: ICCS (h2e2). Files a…i from Red's left, ranks 0…9 from Red's side; Red (r) at the bottom moves first. Pieces K A E R H C P (WXF letters).
+  // play checks each piece's own way (the horse's leg, the elephant's eye and the river, the palace, the cannon's screen, the soldier's
+  // sideways step once over the river), that the two generals never face each other on an open file, and that a move does not leave one's own general in check.
+  const XIANGQI_CN = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+  const XIANGQI = (() => {
+    const GL = { r: { K: '帥', A: '仕', E: '相', R: '俥', H: '傌', C: '炮', P: '兵' }, b: { K: '将', A: '士', E: '象', R: '車', H: '馬', C: '砲', P: '卒' } };
+    const NAME = {   // the moves' list (Chinese style): simplified (zh) / traditional (zh-TW, ko) / Japanese forms (ja)
+      zh: { r: { K: '帅', A: '仕', E: '相', R: '车', H: '马', C: '炮', P: '兵' }, b: { K: '将', A: '士', E: '象', R: '车', H: '马', C: '炮', P: '卒' }, w: ['进', '退', '平', '前', '后', '中'] },
+      tw: { r: { K: '帥', A: '仕', E: '相', R: '俥', H: '傌', C: '炮', P: '兵' }, b: { K: '將', A: '士', E: '象', R: '車', H: '馬', C: '砲', P: '卒' }, w: ['進', '退', '平', '前', '後', '中'] },
+      ja: { r: { K: '帥', A: '仕', E: '相', R: '俥', H: '傌', C: '炮', P: '兵' }, b: { K: '将', A: '士', E: '象', R: '車', H: '馬', C: '砲', P: '卒' }, w: ['進', '退', '平', '前', '後', '中'] } };
+    const CN = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+    const ix = s => { const f = s.charCodeAt(0) - 97, r = s.charCodeAt(1) - 48; if (f < 0 || f > 8 || r < 0 || r > 9 || s.length !== 2) throw new Error('bad square: ' + s); return f + r * 9; };
+    const nm = i => 'abcdefghi'[i % 9] + Math.floor(i / 9);
+    const opp = c => c === 'r' ? 'b' : 'r';
+    function init() { const b = Array(90).fill(null); let id = 0; const put = (f, r, c, t) => { b[f + r * 9] = { id: id++, c, t }; };
+      'RHEAKAEHR'.split('').forEach((t, f) => { put(f, 0, 'r', t); put(f, 9, 'b', t); });
+      [1, 7].forEach(f => { put(f, 2, 'r', 'C'); put(f, 7, 'b', 'C'); });
+      [0, 2, 4, 6, 8].forEach(f => { put(f, 3, 'r', 'P'); put(f, 6, 'b', 'P'); });
+      return { b, turn: 'r' }; }
+    const palace = (c, f, r) => f >= 3 && f <= 5 && (c === 'r' ? r <= 2 : r >= 7);
+    const between = (b, f0, r0, f1, r1) => { let n = 0; const sf = Math.sign(f1 - f0), sr = Math.sign(r1 - r0); let f = f0 + sf, r = r0 + sr; while (f !== f1 || r !== r1) { if (b[f + r * 9]) n++; f += sf; r += sr; } return n; };
+    function reach(b, from, to) {   // the piece on from may go to to (or takes there), by its own way of moving
+      const p = b[from], q = b[to]; if (!p || from === to || (q && q.c === p.c)) return false;
+      const f0 = from % 9, r0 = Math.floor(from / 9), f1 = to % 9, r1 = Math.floor(to / 9), df = f1 - f0, dr = r1 - r0, ad = Math.abs(df), ar = Math.abs(dr), fw = p.c === 'r' ? 1 : -1;
+      switch (p.t) {
+        case 'K': return ad + ar === 1 && palace(p.c, f1, r1);
+        case 'A': return ad === 1 && ar === 1 && palace(p.c, f1, r1);
+        case 'E': return ad === 2 && ar === 2 && !b[(f0 + df / 2) + (r0 + dr / 2) * 9] && (p.c === 'r' ? r1 <= 4 : r1 >= 5);
+        case 'H': if (!((ad === 1 && ar === 2) || (ad === 2 && ar === 1))) return false;
+          return !(ad === 2 ? b[(f0 + df / 2) + r0 * 9] : b[f0 + (r0 + dr / 2) * 9]);   // the leg: the point next to it, on the long side
+        case 'R': return (!df || !dr) && between(b, f0, r0, f1, r1) === 0;
+        case 'C': return (!df || !dr) && between(b, f0, r0, f1, r1) === (q ? 1 : 0);
+        case 'P': { const over = p.c === 'r' ? r0 >= 5 : r0 <= 4; return (dr === fw && !df) || (over && !dr && ad === 1); }
+      } return false; }
+    const king = (b, c) => b.findIndex(p => p && p.c === c && p.t === 'K');
+    const attacked = (b, c) => { const k = king(b, c); return k >= 0 && b.some((p, i) => p && p.c !== c && reach(b, i, k)); };
+    const facing = b => { const a = king(b, 'r'), z = king(b, 'b'); return a >= 0 && z >= 0 && a % 9 === z % 9 && between(b, a % 9, Math.floor(a / 9), z % 9, Math.floor(z / 9)) === 0; };
+    function play(st, mv) {
+      const m = String(mv).toLowerCase().replace('-', ''); if (!/^[a-i]\d[a-i]\d$/.test(m)) throw new Error('bad move: ' + mv);
+      const from = ix(m.slice(0, 2)), to = ix(m.slice(2)), b = st.b.slice(), p = b[from], q = b[to];
+      if (!p) throw new Error('no piece to move: ' + mv); if (p.c !== st.turn) throw new Error('not this side\'s piece: ' + mv);
+      if (!reach(b, from, to)) throw new Error('the piece cannot go there: ' + mv);
+      b[to] = p; b[from] = null;
+      if (facing(b)) throw new Error('the generals would face each other: ' + mv);
+      if (attacked(b, p.c)) throw new Error('leaves the general in check: ' + mv);
+      // for the list: same pieces on the same file (前・後), counted from the front as the mover sees it
+      const f0 = from % 9, fw = p.c === 'r' ? 1 : -1, same = [];
+      st.b.forEach((x, i) => { if (x && x.c === p.c && x.t === p.t && i % 9 === f0) same.push(Math.floor(i / 9)); });
+      same.sort((a, c) => (c - a) * fw);
+      return { st: { b, turn: opp(st.turn) }, from: nm(from), to: nm(to), side: p.c, t: p.t, cap: q ? { id: q.id } : null, chk: attacked(b, opp(p.c)),
+        tn: 'RHCP'.includes(p.t) ? same.length : 1, ti: same.indexOf(Math.floor(from / 9)) };
+    }
+    // the list: Chinese style in ja / zh / zh-TW / ko (炮二平五, 马8进7, 前炮进一); WXF elsewhere (C2=5, H8+7, +C+1)
+    function label(mv, i, r, lang) {
+      const red = r.side === 'r', f0 = r.from.charCodeAt(0) - 97, f1 = r.to.charCodeAt(0) - 97, r0 = +r.from[1], r1 = +r.to[1];
+      const file = f => red ? 9 - f : f + 1, dr = (r1 - r0) * (red ? 1 : -1), straight = 'KRCP'.includes(r.t);
+      const act = dr > 0 ? 0 : dr < 0 ? 1 : 2, dest = act === 2 || !straight ? file(f1) : Math.abs(dr);
+      const N = lang === 'zh' ? NAME.zh : lang === 'ja' ? NAME.ja : /^(zh-TW|ko)$/.test(lang) ? NAME.tw : null;
+      if (N) { const num = n => red ? CN[n] : String(n), pc = N[r.side][r.t];
+        let head = pc + num(file(f0));
+        if (r.tn === 2) head = N.w[r.ti ? 4 : 3] + pc; else if (r.tn === 3) head = N.w[[3, 5, 4][r.ti]] + pc; else if (r.tn > 3) head = num(r.ti + 1) + pc;
+        return head + N.w[act] + num(dest); }
+      const L = r.t; let head = L + file(f0);
+      if (r.tn === 2) head = (r.ti ? '-' : '+') + L; else if (r.tn > 2) head = (r.ti + 1) + L;
+      return head + ['+', '-', '='][act] + dest;
+    }
+    const pieces = st => st.b.map((p, i) => p && { id: p.id, at: nm(i), k: p.c + p.t, glyph: GL[p.c][p.t], red: p.c === 'r' }).filter(Boolean);
+    return { init, play, label, pieces, cols: 9, rows: 10, sides: ['r', 'b'], first: 'r', pair: true, pt: true, GL,
+      xy: (s, flip) => { const f = s.charCodeAt(0) - 97, r = +s[1]; return flip ? [8 - f, r] : [f, 9 - r]; } };
+  })();
+  const KINDS = { chess: CHESS, shogi: SHOGI, go: GO, xiangqi: XIANGQI };
 
   // every position of a game, worked out once (the record → states[0…n]; recs[i] = what move i did)
   const cache = {};
@@ -225,6 +313,7 @@
   function geom(G, K) {   // in board units: the playing area starts at (ox, oy); one cell = 1
     if (K.go) { const n = G.size || 19; return { W: n + 1, H: n + 1, ox: 1, oy: 1, n, cell: 1, pt: true }; }
     if (K === SHOGI) return { W: 9.9, H: 9.9 + 2.4, ox: 0.45, oy: 1.2 + 0.45, cell: 1, hands: true };
+    if (K === XIANGQI) return { W: 9.7, H: 10.9, ox: 0.85, oy: 0.95, cell: 1, pt: true };
     return { W: 8.7, H: 8.7, ox: 0.6, oy: 0.1, cell: 1 };
   }
   function boardSVG(G, K, g, flip) {
@@ -244,22 +333,40 @@
       for (let i = 0; i < 9; i++) { P.push(`<text x="${(g.ox + i + .5) * 100}" y="${(g.oy - .12) * 100}" class="mxcoord" transform="scale(.01)">${flip ? i + 1 : 9 - i}</text>`); }
       return `<g class="mxsh">${P.join('')}</g>`;
     }
+    if (K === XIANGQI) {   // 9 × 10 points, the river (楚河 漢界) across the middle, the palaces with their diagonals, the marks where cannons and soldiers start
+      const X = x => g.ox + x, Y = y => g.oy + y;
+      P.push(`<rect x="0" y="0" width="${g.W}" height="${g.H}" rx=".3" class="mxwood"/><rect x="${X(-.22)}" y="${Y(-.22)}" width="8.44" height="9.44" class="mxxf"/>`);
+      for (let y = 0; y < 10; y++) P.push(`<line x1="${X(0)}" y1="${Y(y)}" x2="${X(8)}" y2="${Y(y)}"/>`);
+      for (let x = 0; x < 9; x++) P.push(x === 0 || x === 8 ? `<line x1="${X(x)}" y1="${Y(0)}" x2="${X(x)}" y2="${Y(9)}"/>` : `<line x1="${X(x)}" y1="${Y(0)}" x2="${X(x)}" y2="${Y(4)}"/><line x1="${X(x)}" y1="${Y(5)}" x2="${X(x)}" y2="${Y(9)}"/>`);
+      [0, 7].forEach(y => P.push(`<line x1="${X(3)}" y1="${Y(y)}" x2="${X(5)}" y2="${Y(y + 2)}"/><line x1="${X(5)}" y1="${Y(y)}" x2="${X(3)}" y2="${Y(y + 2)}"/>`));
+      const cross = (x, y) => { const d = .1, l = .22; [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy]) => { if ((x === 0 && sx < 0) || (x === 8 && sx > 0)) return;
+        const a = X(x) + sx * d, b = Y(y) + sy * d; P.push(`<path class="mxxm" d="M${a + sx * l} ${b}H${a}V${b + sy * l}"/>`); }); };
+      [[1, 2], [7, 2], [1, 7], [7, 7]].forEach(([x, y]) => cross(x, y)); [0, 2, 4, 6, 8].forEach(x => { cross(x, 3); cross(x, 6); });
+      const rv = flip ? ['漢', '界', '楚', '河'] : ['楚', '河', '漢', '界'];
+      [1.55, 2.55, 5.45, 6.45].forEach((x, i) => P.push(`<text x="${X(x) * 100}" y="${(Y(4.5) + .21) * 100}" class="mxxr" transform="scale(.01)">${rv[i]}</text>`));
+      // the files: Black counts 1…9 from its right, Red 一…九 (9…1 outside the CJK languages) from its right
+      const cjk = /^(ja|zh|zh-TW|ko)$/.test(lang);
+      for (let i = 0; i < 9; i++) { const f = flip ? 8 - i : i, rn = 9 - f, bn = f + 1, rl = cjk ? XIANGQI_CN[rn] : rn, top = flip ? rl : bn, bot = flip ? bn : rl;
+        P.push(`<text x="${X(i) * 100}" y="${(g.oy - .42) * 100}" class="mxcoord" transform="scale(.01)">${top}</text><text x="${X(i) * 100}" y="${(Y(9) + .68) * 100}" class="mxcoord" transform="scale(.01)">${bot}</text>`); }
+      return `<g class="mxxq">${P.join('')}</g>`;
+    }
     for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) P.push(`<rect x="${g.ox + f}" y="${g.oy + r}" width="1" height="1" class="${(r + f) % 2 ? 'mxdk' : 'mxlt'}"/>`);
     for (let i = 0; i < 8; i++) { P.push(`<text x="${(g.ox + i + .5) * 100}" y="${(g.oy + 8.45) * 100}" class="mxcoord" transform="scale(.01)">${'abcdefgh'[flip ? 7 - i : i]}</text><text x="${(g.ox - .3) * 100}" y="${(g.oy + i + .62) * 100}" class="mxcoord" transform="scale(.01)">${flip ? i + 1 : 8 - i}</text>`); }
     return `<g class="mxch">${P.join('')}</g>`;
   }
   function pieceHTML(K, p, g) {
     if (K.go) return `<span class="mxst ${p.k === 'B' ? 'b' : 'w'}"></span>`;
+    if (K === XIANGQI) return `<span class="mxxp${p.red ? ' r' : ''}"><b>${p.glyph}</b></span>`;
     if (K === SHOGI) return `<span class="mxsg${p.up ? '' : ' dn'}${p.red ? ' pr' : ''}"><svg viewBox="0 0 100 110" aria-hidden="true"><path d="M50 4 82 18 94 106H6L18 18z"/></svg><b>${p.glyph}</b></span>`;
     return `<img src="${PIMG}${p.k}.svg" alt="" draggable="false">`;
   }
   // where a point sits, as % of the board's box
-  function spot(G, K, g, at, flip) { const [x, y] = K.xy(at, flip, g.n); return K.go ? [(g.ox + x) / g.W * 100, (g.oy + y) / g.H * 100] : [(g.ox + x + .5) / g.W * 100, (g.oy + y + .5) / g.H * 100]; }
+  function spot(G, K, g, at, flip) { const [x, y] = K.xy(at, flip, g.n); return K.go || K.pt ? [(g.ox + x) / g.W * 100, (g.oy + y) / g.H * 100] : [(g.ox + x + .5) / g.W * 100, (g.oy + y + .5) / g.H * 100]; }
   function draw(anim) {
     const G = cur, L = line(G), K = L.K, g = geom(G, K), st = L.st[ply], r = ply ? L.recs[ply - 1] : null, flip = G.orient === 'b' || G.orient === 'g';
     const box = el.board;
     if (box._g !== G.id) { box._g = G.id; box.innerHTML = `<svg class="mxbg" viewBox="0 0 ${g.W} ${g.H}" aria-hidden="true">${boardSVG(G, K, g, flip)}<g class="mxmk"></g></svg><div class="mxpcs"></div>${g.hands ? '<div class="mxhand g"></div><div class="mxhand s"></div>' : ''}`;
-      box.style.aspectRatio = `${g.W} / ${g.H}`; box._el = {}; box.classList.toggle('go', !!K.go); box.classList.toggle('sh', K === SHOGI); box.classList.toggle('ch', K === CHESS); }
+      box.style.aspectRatio = `${g.W} / ${g.H}`; box._el = {}; box.classList.toggle('go', !!K.go); box.classList.toggle('sh', K === SHOGI); box.classList.toggle('ch', K === CHESS); box.classList.toggle('xq', K === XIANGQI); }
     box.classList.toggle('still', !anim);
     const sz = (K.go ? 1 : 1) / g.W * 100, szh = 1 / g.H * 100;
     const lay = box.querySelector('.mxpcs'), seen = new Set();
@@ -276,8 +383,8 @@
         h.innerHTML = `<em>${side === 's' ? '▲' : '△'}${esc(u('side_' + side))}</em>` + cnt(side).map(([t, n]) => `<span class="mxsg${top ? ' dn' : ''}"><svg viewBox="0 0 100 110" aria-hidden="true"><path d="M50 4 82 18 94 106H6L18 18z"/></svg><b>${SHOGI.KAN[t]}</b>${n > 1 ? `<u>${n}</u>` : ''}</span>`).join(''); }); }
     // the marks: the last move's squares, then what the note points at (arrows, squares)
     const mk = box.querySelector('.mxmk'), M = (G.mk || {})[ply] || {}, out = [];
-    const c = at => { const [x, y] = K.xy(at, flip, g.n); return K.go ? [g.ox + x, g.oy + y] : [g.ox + x + .5, g.oy + y + .5]; };
-    const sqr = (at, cls) => { const [x, y] = c(at); out.push(`<rect x="${x - .5}" y="${y - .5}" width="1" height="1" class="${cls}"/>`); };
+    const c = at => { const [x, y] = K.xy(at, flip, g.n); return K.go || K.pt ? [g.ox + x, g.oy + y] : [g.ox + x + .5, g.oy + y + .5]; };
+    const sqr = (at, cls) => { const [x, y] = c(at); out.push(K.pt ? `<circle cx="${x}" cy="${y}" r=".5" class="${cls}"/>` : `<rect x="${x - .5}" y="${y - .5}" width="1" height="1" class="${cls}"/>`); };
     if (r && !K.go) { if (r.from) sqr(r.from, 'mxlm'); if (r.to) sqr(r.to, 'mxlm'); }
     (M.s || []).forEach(a => K.go ? (() => { const [x, y] = c(a); out.push(`<circle cx="${x}" cy="${y}" r=".42" class="mxsq"/>`); })() : sqr(a, 'mxsq'));
     (M.a || []).forEach(([a, b]) => { const [x1, y1] = c(a), [x2, y2] = c(b), d = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / d, uy = (y2 - y1) / d, ex = x2 - ux * .38, ey = y2 - uy * .38;
@@ -288,8 +395,9 @@
   /* ---------- the wall ---------- */
   function thumb(G) {   // the last position, small (a picture of the board, no sliding)
     const L = line(G), K = L.K, g = geom(G, K), st = L.st[L.st.length - 1], flip = G.orient === 'b' || G.orient === 'g', P = [];
-    K.pieces(st).forEach(p => { const [x, y] = K.xy(p.at, flip, g.n), cx = K.go ? g.ox + x : g.ox + x + .5, cy = K.go ? g.oy + y : g.oy + y + .5;
+    K.pieces(st).forEach(p => { const [x, y] = K.xy(p.at, flip, g.n), pt = K.go || K.pt, cx = pt ? g.ox + x : g.ox + x + .5, cy = pt ? g.oy + y : g.oy + y + .5;
       if (K.go) P.push(`<circle cx="${cx}" cy="${cy}" r=".47" class="${p.k === 'B' ? 'mxtb' : 'mxtw'}"/>`);
+      else if (K === XIANGQI) P.push(`<g transform="translate(${cx} ${cy})"><circle r=".45" class="mxxt${p.red ? ' r' : ''}"/><text y="19" transform="scale(.01)" class="mxxg${p.red ? ' r' : ''}">${p.glyph}</text></g>`);
       else if (K === SHOGI) P.push(`<g transform="translate(${cx} ${cy})${p.up ? '' : ' rotate(180)'}"><path d="M0 -.44 .32 -.3 .4 .42H-.4L-.32 -.3z" class="mxtk"/><text y="20" transform="scale(.01)" class="mxtg${p.red ? ' pr' : ''}">${p.glyph}</text></g>`);
       else P.push(`<image href="${PIMG}${p.k}.svg" x="${cx - .5}" y="${cy - .5}" width="1" height="1"/>`); });
     return `<svg viewBox="0 0 ${g.W} ${g.H}" aria-hidden="true">${boardSVG(G, K, g, flip)}${P.join('')}</svg>`;

@@ -182,11 +182,41 @@ function analyze(P, tid) {
   }
   return r;
 }
+// (2026-11-27 担当D) the 3D table: ポンメェ's words (atlas/games/latrunculi-pz.js) — every line in 14 languages (the board facts of a
+// language without its own: latrunculi/pzwhy.js), each variant with the placeholders of the 2D's words; the facts without a red
+// mark (wEnd · wLast) never speak of one and the others name it (ja / en: ⑦ the words say what is on the board); the line after a
+// right move (mid) has no praise (追91); atlas/puzzles.js plays the 2D's reply and says facts() (ltMoved), and the table loads both
+// files (atlas/lazy.js)
+function texts3d(A, pzSrc, lzSrc) {
+  const out = [], add = msg => out.push({ step: '3D', q: 0, msg });
+  A = A || require(path.join(ROOT, 'atlas/games/latrunculi-pz.js'));
+  const ph = s => (String(s).match(/\{\w+\}/g) || []).filter(x => x !== '{c}').sort().join('');
+  const OWN = ['p1', 'p2', 'hi', 'goal', 'mid', 'solved', 'ans', 'pz.hint1', 'pz.hintText', 'pz.showing', 'pz.answerDone'];
+  const WK = WHY.KEYS.filter(k => k !== 'answer'), RED = { ja: /赤い印/, en: /red mark/ }, NOMARK = ['wEnd', 'wLast'];
+  for (const L of LANGS) {
+    for (const k of OWN.concat(WK)) {
+      const own = A.T[L] && A.T[L][k], vs = own == null ? [] : [].concat(own);
+      if (!vs.length && OWN.includes(k)) { add(`⑨ latrunculi-pz.js ${L}.${k} missing`); continue; }
+      const want = WK.includes(k) ? ph(WHY.T.ja[k]) : ph([].concat(A.T.ja[k])[0]);
+      const all = vs.length ? vs : [A.text(L, k, 0, null)];
+      all.forEach((x, j) => {
+        if (x == null || !String(x).trim()) { add(`⑨ latrunculi-pz.js ${L}.${k} empty`); return; }
+        if (ph(x) !== want) add(`⑨ latrunculi-pz.js ${L}.${k}[${j}] placeholders ${ph(x) || '-'} ≠ ${want || '-'}`);
+        if (RED[L] && WK.includes(k) && vs.length) { const red = RED[L].test(x); if (NOMARK.includes(k) ? red : !red) add(`⑦ latrunculi-pz.js ${L}.${k}[${j}] ${red ? 'speaks of a red mark that is not there' : 'does not name the red mark'}`); }
+        if (k === 'mid' && /(いいね|お見事|正解|さすが|ナイス|good|great|well done)/i.test(x)) add(`追91 latrunculi-pz.js ${L}.mid[${j}] praises on the way`);
+      });
+    }
+  }
+  const pz = pzSrc != null ? pzSrc : fs.readFileSync(path.join(ROOT, 'atlas/puzzles.js'), 'utf8'), lz = lzSrc != null ? lzSrc : fs.readFileSync(path.join(ROOT, 'atlas/lazy.js'), 'utf8');
+  if (!/async function ltMoved[\s\S]{0,1400}W\.facts\(/.test(pz)) add('⑨ atlas/puzzles.js ltMoved does not say LatrPzWhy facts');
+  if (!/"latrunculi": \[[^\]]*latrunculi\/pzwhy\.js[^\]]*games\/latrunculi-pz\.js/.test(lz)) add('⑨ atlas/lazy.js does not load latrunculi/pzwhy.js and games/latrunculi-pz.js for latrunculi');
+  return out;
+}
 const KINDS = {};
 function verify(opt = {}) {
   const file = opt.file || path.join(ROOT, 'latrunculi/puzzles.json');
   const D = opt.data || JSON.parse(fs.readFileSync(file, 'utf8'));
-  const out = whyWords(), rows = {};
+  const out = whyWords().concat(texts3d(opt.pz3d, opt.pzSrc)), rows = {};
   // ⑨ the 2D says the pzwhy words, keeps the 詰め rule (lesson-verify-pz88.js lists latrunculi as DONE)
   const app = opt.app != null ? opt.app : fs.readFileSync(path.join(ROOT, 'latrunculi/app.js'), 'utf8');
   if (!/LatrPzWhy/.test(app) || !/W\.facts\(/.test(app)) out.push({ step: 'all', q: 0, msg: '⑨ latrunculi/app.js puzzleMove does not say the pzwhy words' });
@@ -233,11 +263,13 @@ function selftest() {   // broken copies of a smaller book (t2 · corner · doub
   t('the 2D does not say the words', () => {}, /⑨/, { app: '', only: 't2' });
   t('a wrong kind of words', () => { const f0 = WHY.facts; WHY.facts = o => { const f = f0(o); return f.k === 'wRun' ? Object.assign({}, f, { k: 'wHit' }) : f; }; }, /⑧/, { only: 't2' }, () => { WHY.facts = FACTS0; });
   t('a missing language', () => { delete WHY.T.ar.wRun; }, /⑨ ar\.wRun/, { only: 't2' }, () => { WHY.T.ar.wRun = AR0; });
+  t('the 3D words: a fact naming no red mark', () => {}, /⑦ latrunculi-pz\.js ja\.wRun/, { only: 't2', pz3d: { T: { ja: { wRun: '相手は動きました。残り{n}手では取れません。' } }, text: () => 'x' } });
+  t('the 3D does not say the facts', () => {}, /⑨ atlas\/puzzles\.js ltMoved/, { only: 't2', pzSrc: '' });
   t('the theme of double', d => { th(d, 'double')[0] = th(d, 't2')[0]; }, /④|⑤/);
-  console.log(bad.length ? 'selftest NG: ' + bad.join(', ') : 'selftest OK (9 broken copies detected)');
+  console.log(bad.length ? 'selftest NG: ' + bad.join(', ') : 'selftest OK (11 broken copies detected)');
   return bad;
 }
-module.exports = { verify, analyze, near, good, selftest };
+module.exports = { verify, analyze, near, good, selftest, texts3d };
 if (require.main === module) {
   const a = process.argv.slice(2), fi = a.indexOf('--file'), oi = a.indexOf('--only');
   if (a.includes('--selftest')) { process.exitCode = selftest().length ? 1 : 0; }
