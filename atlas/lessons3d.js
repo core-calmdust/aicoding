@@ -487,6 +487,7 @@
     let esc = 0; if (kr >= 0) { const B2 = B.map(r => r.slice()); B2[kr][kc] = null; for (const [dr, dc] of SH_MV.k) { const y = kr + dr, x = kc + dc; if (y < 0 || y > 8 || x < 0 || x > 8 || (B2[y][x] && B2[y][x].w !== me)) continue; if (!shLBy(B2, y, x, me).length) esc++; } }   // (the squares the king can step to)
     return { B, to: [tr, tc], piece, took, drop, check, esc, takers, kingTakes: takers.some(P => P.t === 'k') && !guards.length && Math.abs(kr - tr) <= 1 && Math.abs(kc - tc) <= 1, guarded: guards.length > 0 };
   }
+  const SH_TN = ['', '歩', '香車', '桂馬', '銀', '角', '飛車', '金', '玉', 'と金', '成香', '成桂', '成銀', '馬', '竜'];   // (the engine's piece numbers: k5 P.tg / P.rep)
   const shLNm = t => SH_KJ[t] || '駒', SH_LV = { p: 1, l: 3, n: 4, s: 5, g: 6, b: 8, r: 10 };
   function shLFacts(p, u) { try { let S = shLB(p.sfen); for (const k of p.pre || []) { const R = shLPlay(S, k); S = { B: R.B, w: !S.w }; } return shLPlay(S, u); } catch (e) { return null; } }   // (p.pre: the moves already played — a later move of a mate in 3, 2026-11-26 第2期 k6)
   function shJaLesson(g, probs) {   // probs (lesson()) → the Japanese words of the 3D lesson
@@ -500,6 +501,9 @@
       q.hintTx = T.hint[key][(i + o) % T.hint[key].length];
       if (gid === 'k3' && P.src === 'defend' && (P.th || []).length) { try { const S0 = shLB(P.sfen), tn = shMvJa({ B: S0.B, w: !S0.w }, P.th[0]) + (P.th.length > 1 ? 'など' : '');   // (2026-11-27 第2期 k3: the threat named from the board)
         q.hintTx = [`相手は${tn}で詰ませるつもりなの。光っている駒で防げるコン。`, `このまま相手の番なら${tn}で詰み！ 光っている駒で、それを止めよう。`, `${tn}の詰みを、光っている駒で先に消してみて。`, `ねらわれているのは${tn}の詰み。光っている駒が受けの主役なの。`, `光っている駒がヒント。${tn}で詰まない形にしよう！`][(i + o) % 5]; } catch (e) {} }
+      if (gid === 'k5' && P.src === 'fork') { const ck = (P.tg || []).some(x => x[1] === 8);   // (2026-11-28 第2期 k5: a check fork or a fork of two pieces — tools/lesson-verify-shfork.js)
+        q.hintTx = (ck ? ['光っている駒で王手をかけると、もう1つの駒もねらえるの。', '王手しながら、ほかの駒にも当たる場所があるコン。光っている駒を使って！', '光っている駒の王手で、玉といっしょにねらえる駒はどれかな？', '王手◯取りの形を、光っている駒で探してみて。', '光っている駒の王手で、玉ともう1つの駒を同時にねらおう！']
+          : ['光っている駒で、相手の駒を2つ同時にねらえるの。', '光っている駒が届くマスで、相手の駒2つに当たる場所を探して！', '相手の駒が2つ並んでいるところに注目。光っている駒が効くコン。', '光っている駒で両取りをかけよう。どこに指す？', '光っている駒で、2つの駒にいっぺんに当たる場所は？'])[(i + o) % 5]; }
       q.own = true; try { Object.defineProperty(P, '__i', { value: g.problems.indexOf(P), configurable: true }); } catch (e) {}
       const why0 = q.why;
       q.good = u => shGoodJa(gid, P, u, i, o, why0, ex);
@@ -560,6 +564,12 @@
           : at([`${nm}を動かして守りを足したね。`, `{m}で${nm}が守りに効いてくるコン。`, `${nm}を動かす受けが正解なの。`, `${nm}を動かして、玉の守りを固めたね。`, `{m}の${nm}が、玉を守る一手なの。`])][k]
         + (tn ? at([`相手は${tn}で詰ませるつもりだったの。`, `ねらいは${tn}の詰みだったの。`, `これで${tn}は詰みにならない！`, `${tn}の詰みを消せたコン。`, `${tn}からの詰みを止めたコン。`]) : '')   // (the endings differ from the sentence before and after at each place — 「ね」 twice in a row is a minus)
         + at(['ほかの手だと、3手以内に詰まされちゃうコン。', 'ほかの手は、どれも詰みが残るコン。', 'ほかの受けでは、どれも詰んじゃうの。', 'ほかの手を指すと、相手の詰みが待っていたの。', 'これ以外の手は、全部詰まされちゃうの。']);
+    }
+    else if (P.src === 'fork') {   // (2026-11-28 第2期 k5: the targets P.tg of the moved piece — two pieces, or the king and a piece — and every other move wins far less: tools/lesson-verify-shfork.js)
+      const tn = (P.tg || []).filter(x => x[1] !== 8).map(x => SH_TN[x[1]]), ck = (P.tg || []).some(x => x[1] === 8), X = tn.join('と'), A = tn[0] || '', B = tn[1] || '';
+      core = (ck ? at([`{m}で王手${X}取り！ 王手を受けると、${X}が取れるの。`, `王手しながら${X}もねらう形だね。玉を守っても、${X}は守れないコン。`, `${nm}の王手で、玉と${X}を同時にねらえたの。`, `王手${X}取りが決まったコン。相手は玉と${X}を両方は守れないの。`, `{m}は王手で、${X}にも当たっているの。王手を受けると${X}が取れるね。`])
+        : at([`{m}で${A}と${B}の両取り！ 相手は両方は守れないの。`, `${nm}が${A}と${B}を同時にねらう形だコン。どちらかは取れるの。`, `${A}と${B}に同時に当たる、きれいな両取りだね。どちらかは取れるの。`, `{m}の${nm}で両取り！ ${A}か${B}、どちらかが取れるの。`, `両取りで、${A}と${B}を一度にねらえたコン。相手は両方は守れないの。`]))
+        + at(['ほかの手では、こんなに駒得できないの。', 'ほかの手だと、ここまでの駒得はないコン。', 'これ以外の手では、大きな駒得にならないの。', 'ほかの手では、こんな得は生まれないの。', '大きく駒得できるのは、この手だけだコン。']);
     }
     else if (gid === 'rx') core = P.src === 'handi' ? at(['駒落ちでも、駒の働きを大事にする手なの。', '上手の駒が少ないところを、うまくついたコン。', '駒落ちの定跡どおり、いい形だね。', '下手らしく、まっすぐ攻める手なの。', 'これで駒落ちの戦い方がわかってきたね。']) : why0 || '';
     else { const cat = /両取り/.test(ex) ? 0 : /王手◯取り|王手をかけながら/.test(ex) ? 1 : /静かな好手/.test(ex) ? 2 : /王手から/.test(ex) ? 3 : 4;
@@ -660,6 +670,16 @@
           : `{x}で${px}は取れるけど、{m}なら${pm}をタダで取れたの。`;
       }
       else if (gid === 'rx' && P.mode === 'material') why = '{x}だと、入玉宣言の条件がそろわないの。';
+      else if (P.src === 'fork') {   // (2026-11-28 第2期 k5: what the opponent's best reply P.rep[u] = [reply, the piece it takes, our material after it] does, and the fork the answer had — tools/lesson-verify-shfork.js)
+        const tn = (P.tg || []).filter(x => x[1] !== 8).map(x => SH_TN[x[1]]), ck = (P.tg || []).some(x => x[1] === 8), X = tn.join('と'), rp = (P.rep || {})[u];
+        let rn = ''; try { const S0 = shLB(P.sfen), A0 = shLPlay(S0, u); rn = rp && rp[0] ? shMvJa({ B: A0.B, w: !S0.w }, rp[0]) : ''; } catch (e) {}
+        why = (rp && rn && rp[1] && rp[1] !== 8 && rp[2] <= -0.5 ? at([`{x}のあと、${rn}で${SH_TN[rp[1]]}を取られちゃうの。`, `{x}だと、${rn}で${SH_TN[rp[1]]}を取られるコン。`, `{x}では、相手の${rn}で${SH_TN[rp[1]]}を取られちゃう。`, `{x}を指すと、${rn}で${SH_TN[rp[1]]}が取られるの。`, `{x}だと${SH_TN[rp[1]]}が守れないの。${rn}で取られちゃう。`])
+          : rp && rn && rp[2] <= -2.5 ? at([`{x}だと、${rn}のあと、逆に駒損になっちゃうの。`, `{x}では、相手の${rn}で、こちらが駒損するコン。`, `{x}のあと${rn}と指されると、駒損になるの。`])
+          : rp && rp[2] > 0.5 ? at(['{x}でも歩くらいは得できるけど、大きな駒得にはならないの。', '{x}だと、得をしても歩1枚くらいなの。', '{x}では、歩くらいしか得できないコン。'])
+          : at(['{x}では、駒得にならないの。', '{x}だと、駒得の形にならないコン。', '{x}では、駒の損得が良くならないの。', '{x}では、駒得のチャンスが生まれないの。', '{x}では、相手に損をさせられないの。']))
+          + (ck ? at([`{m}なら、王手${X}取りだったコン。`, `{m}の王手で、${X}もねらえたの。`, `{m}なら王手と同時に${X}に当たったの。`, `{m}の王手なら、${X}が取れたコン。`, `{m}で王手${X}取りがかかったの。`])
+            : at([`{m}なら、${X}の両取りだったの。`, `{m}で${X}を同時にねらえたコン。`, `{m}なら${X}にいっぺんに当たったの。`, `{m}の両取りで、${X}のどちらかが取れたの。`, `{m}なら、${X}の両方をねらえたコン。`]));
+      }
       else if (P.trap && P.bait && u === P.bait) why = /詰まされ/.test(ex) ? at([`{x}で取れる${px || '駒'}はわな！ 取ると詰まされちゃうの。`, `${px || '駒'}を取ると、そのすきに玉が詰まされるコン。`]) : at([`{x}で取れる${px || '駒'}はわなだったの。取ったあと、相手に強い手があるの。`, `${px || '駒'}に飛びつくと、あとで大損しちゃうコン。`, `{x}の${px || '駒'}取りは、相手の反撃が待っているの。`]);
       else if (rw && gid !== 'k12' && gid !== 'k3' && !(back && !/取られちゃう|取られる|取られて/.test(rw))) why = rw;   // (2026-11-22: what the opponent's answer does to the move played)
       else if (!sc.has(u) && !back && gid !== 'k12') why = at(['{x}だと、相手の駒の利きや次のねらいへの備えが足りないの。{m}なら、そのすきを作らないコン。', '{x}は、この局面の急所から外れた手なの。{m}がいちばん大事な場所に効いているコン。']);   // (no stored answer for this move)
@@ -7379,7 +7399,10 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       hint: ['金色の輪は安全な線。でも、どれでも同じじゃないよ！', 'その線のあと、長い鎖を先に開くことになるのはだれかな？', '1本ずつ、安全な線がつきたときの形を想像してみて！', '長い鎖になりそうな所を探してみて。', '安全な線で、盤がどう分かれていくか考えて！'] },   // (2026-11-28 担当A: the answer is one safe line — after it the opponent is the first to open a long chain)
     exam: { intro: '最後は総合問題！ 安全な線、取り切りと残し、長鎖ルール、犠牲、ループ、終盤の数え。どの考え方がいるか、自分で見きわめてね。<br>75点以上で卒業。がんばろう！',
       ask: ['どの考え方がいるか見きわめて、いちばんいい線を引いて！', 'つぎはどう？ いちばんいい線は？', 'さあ、腕の見せどころ！ どの線？', 'これまでの技を思い出して、1本えらんで！', 'ラスト！ 卒業をかけた1本だよ！'],
-      hint: ['安全な線は残ってる？ 取れる箱は？', '長い鎖とループは何本あるかな？', 'あげるなら小さく！ 2箱は真ん中から。', '安全な線の偶数・奇数を数えてみよう！', '迷ったら、取れる箱 → 安全な線 → あげる順番！'] },
+      hint: ['安全な線は残ってる？ 取れる箱は？', '長い鎖とループは何本あるかな？', '取れる箱と、あとに残る鎖を見てみて！', '安全な線のあとの形を想像してみよう！', '迷ったら、取れる箱 → 安全な線 → あげる順番！'],
+      // (2026-11-28 担当A) the hint of each problem by the lesson it comes from (q.k '<lesson>:…'; tools/lesson-verify.js dots, exam)
+      hintK: { control: '取れる2箱、全部取る？ それとも残す？ あとに残る鎖の長さを見てみて！', parity: '安全な線がつきたとき、最初に長い鎖を開くのはだれかな？',
+        sacrifice: '安全な線で逃げきれるかな？ あげるなら、なるべく小さな所から！', loop: 'ループの4つ残しをする？ 取り切る？ あとの鎖の大きさがカギ！', count: '取り切る？ 2つ残し？ 小さな鎖が何本あるか数えてみて！' } },
   };
   const DT_CH = {
     good: ['いいね！', 'さすが！', 'お見事！', 'ばっちりピヨ！', 'やったね！', 'いい目してる！', 'すごいすごい！', 'そうそう、それ！'],
@@ -7484,9 +7507,9 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
   const DOTS = {
     LKEY: 'dots-lessons-v2', data: null, I: null, got: {},
     load(lang) {
-      const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261128A`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
+      const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261128ex1`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
       if (this.p) return this.p.then(() => T()).then(() => this);
-      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261128a'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
+      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261128ex1'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
         .then(([ls, X]) => { const w = {}; try { new Function('window', 'with (window) {' + X + '\n}')(w); } catch (e) { console.warn('[lessons3d] dots texts', e); } this.I = w.I18N || {}; this.data = { ls }; return T(); }).then(() => this)
         .catch(e => { this.p = null; throw e; }));
     },
@@ -7499,11 +7522,11 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     },
     lesson(key, lang) {
       const s = this.data.ls.steps[+key]; if (!s) return null;
-      const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), SAFE = ['safe', 'third', 'parity', 'sacrifice', 'open3', 'mid4', 'mid5'].includes(s.id), ja = lang === 'ja' && DTJ[s.id];
+      const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), SAFE = ['safe', 'third', 'parity', 'sacrifice', 'open3', 'mid4', 'mid5', 'exam'].includes(s.id), ja = lang === 'ja' && DTJ[s.id];
       return { id: s.id, title: T('t'), intro: ja ? ja.intro : T('body'), ramp: null,
-        probs: s.problems.slice(1, 6).map((q, i) => { const edges = dDecE(q.e), values = dDecV(q.v), best = Math.max(...values.map(x => x[1])), ans = values.find(x => x[1] === best)[0], P = { values };
-          const fb = ja ? dotsJa(s, dFacts(q.n, edges), P, ans, i, +key) : { good: () => T('tip'), ng: () => T('tip') };
-          return { pos: { spec: { n: q.n, edges, owners: dDecO(q.o) }, me: 0 }, kind: 'best', P, ask: `<small>${q.n}×${q.n}</small> ` + (ja ? ja.ask[i % 5] : T('q')), ans, hintTx: ja ? ja.hint[i % 5] : T('hint'), hint: SAFE ? dSafe(q.n, edges) : [], dHint: true,
+        probs: s.problems.slice(1, 6).map((q, i) => { const kid = s.id === 'exam' ? String(q.k).split(':')[0] : s.id, sk = kid === s.id ? s : { id: kid }, edges = dDecE(q.e), values = dDecV(q.v), best = Math.max(...values.map(x => x[1])), ans = values.find(x => x[1] === best)[0], P = { values };
+          const fb = ja ? dotsJa(sk, dFacts(q.n, edges), P, ans, i, +key) : { good: () => T('tip'), ng: () => T('tip') };
+          return { pos: { spec: { n: q.n, edges, owners: dDecO(q.o) }, me: 0 }, kind: 'best', P, ask: `<small>${q.n}×${q.n}</small> ` + (ja ? ja.ask[i % 5] : T('q')), ans, hintTx: ja ? (ja.hintK && ja.hintK[kid]) || ja.hint[i % 5] : T('hint'), hint: SAFE ? dSafe(q.n, edges) : [], dHint: true,
             why: '', good: fb.good, ng: fb.ng, own: !!ja, ckls: !!ja }; }),   // (ckls: ハコピヨ praises himself — no heading line)
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= max * .75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
     },

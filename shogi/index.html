@@ -1930,7 +1930,7 @@ html.atlas-skin #newOverlay #lvNote{display:none!important}   /* (the long note 
 <div class="mt-strip" id="mtStrip" role="button"></div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
-<script src="i18n.js?v=20261127k3"></script>
+<script src="i18n.js?v=20261128k5"></script>
 <script src="rules-i18n.js?v=20261107l14"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="../shared/export.js?v=9l14"></script>
@@ -5657,6 +5657,13 @@ function lessonReason(pr, usi) {
       const rp = (pr.rep || {})[usi]; if (!rp) return '';
       const q = new E.Position(); q.setSfen(pr.sfen); q.doMove(q.fromUsi(usi));
       return t('r.evMate', { m: M, r: kan1(q.sfen(), rp[0]) });
+    }
+    case 'fork': {   // (2026-11-28 第2期 k5「両取りと駒得の手筋」: the targets pr.tg of the answer, and the opponent's best reply pr.rep[usi] = [reply, the piece it takes, our material after it] — tools/lesson-verify-shfork.js)
+      const M = kan1(pr.sfen, usi), B = kan1(pr.sfen, pr.accept[0]), ck = (pr.tg || []).some(x => x[1] === OU), X = (pr.tg || []).filter(x => x[1] !== OU).map(x => NAME[x[1]]).join('・');
+      if (pr.accept.includes(usi)) return t(ck ? 'r.fkChk' : 'r.fkOk', { m: M, a: X });
+      const rp = (pr.rep || {})[usi]; let w = t('r.fkNo', { m: M });
+      if (rp && rp[0] && rp[1] && rp[1] !== OU && rp[2] <= -0.5) { const q = new E.Position(); q.setSfen(pr.sfen); q.doMove(q.fromUsi(usi)); w = t('r.evTake', { m: M, r: kan1(q.sfen(), rp[0]), p: NAME[rp[1]] }); }
+      return w + ' ' + t(ck ? 'r.fkCouldChk' : 'r.fkCould', { m: B, a: X });
     }
     case 'opening': {
       const pct = u => { const c = pr.cand.find(x => x[0] === u); return c ? Math.round(c[1] * 100 / pr.total) : 0; };
