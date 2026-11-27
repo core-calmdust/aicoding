@@ -257,6 +257,10 @@
     { id: 'bikkel', w: 1383, h: 2048, rijks: 'RP-T-1899-A-4239', bg: '#c9d0d4', spots: [[.77, .19], [.7, .5], [.8, .78], [.45, .85], [.53, .44], [.18, .45]], links: [{ room: 'chance' }] },
     // (2026-11-25) the Rijksmuseum: Anonymous French design for chessmen, Western and Eastern sides (1850-75)
     { id: 'stukken', w: 1594, h: 2048, rijks: 'RP-T-2020-114', bg: '#b9c8c8', spots: [[.12, .3], [.29, .3], [.47, .27], [.63, .37], [.12, .68], [.63, .73]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Rijksmuseum: Moolenyzer, 'Bloemenhof of Vermakelijke Roze Tempel', dice game board (1792-1847)
+    { id: 'rozetempel', w: 1686, h: 2048, rijks: 'RP-P-2019-2954', bg: '#e9e1cc', spots: [[.5, .08], [.5, .41], [.5, .56], [.37, .38], [.83, .41], [.5, .96]], links: [{ ex: 'goose' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Claudine Stella after Jacques Stella, 'Le Brelan', putti playing cards (1657)
+    { id: 'brelan', w: 2048, h: 1757, rijks: 'RP-P-2023-61-32', bg: '#e2dccb', spots: [[.45, .55], [.32, .73], [.22, .3], [.86, .58], [.8, .17], [.51, .83]], links: [{ g: 'poker' }, { room: 'chance' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
