@@ -12,6 +12,8 @@
    t_count: taken − taken back — a move's {c} and the most the opponent then takes back {r}; the answer's {a}, {ar} and its gain {an};
    a wrong move that takes more than the answer (greedy), one taken back (back), one taken back nothing but smaller (small).
    t_stop: t_count's count where the answer is a stop — a move going on past it along its road (on), back / small as t_count.
+   t_paika: the one paika move after which the opponent takes nothing and, whatever the reply, you capture next (at least {a});
+   a wrong move that gives the opponent {c} (give), one safe but setting up nothing (none), one whose set-up a reply stops (block).
    how many pieces a move's line takes, what ends a shorter line (the board's edge, your own piece, an empty point), the same step's
    other line (approach / withdrawal); for b_chain the total of a capture chain, whether a move stopped while its piece could go on,
    or went to its end (no capture left), and whether it is the answer's piece.
@@ -21,7 +23,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const READY = ['b_approach', 'b_withdraw', 'b_choose', 'b_chain', 'b_safe', 'b_win', 't_big', 't_count', 't_stop'];
+  const READY = ['b_approach', 'b_withdraw', 'b_choose', 'b_chain', 'b_safe', 'b_win', 't_big', 't_count', 't_stop', 't_paika'];
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
   const KN = { A: '接近', W: '離脱' };
   // ---------- チェッカニ's words (ja) ----------
@@ -35,6 +37,7 @@
       t_big: 'カニカニ、取り方がたくさんある局面だよ。<b>最初の一回でたくさん取れる手</b>に飛びつきたくなるけど、それが<b>合計でいちばん多い</b>とは限らないんだ。<br>接近・離脱・連続取りを<b>最後までたどって</b>、合計を数えくらべよう！',
       t_count: 'カニカニ、<b>いちばん多く取れる手</b>が、いちばん良い手とは限らないんだ。<br>取ったあと、<b>相手にいくつ取り返されるか</b>まで数えて、「取った数 − 取り返される数」の<b>差し引き</b>でくらべよう！',
       t_stop: 'カニカニ、連続取りは<b>どこで止めてもいい</b>んだ。<br>最後まで続けると、止まった点で<b>相手に大きく取り返される</b>ことがあるよ。一回取るごとに「ここで止めたら、相手はいくつ取り返せる？」と数えて、<b>差し引きでいちばん得な点で止めよう</b>！ 止めるときは、玉をもう一度押してね。',
+      t_paika: 'カニカニ、取れる手がないときのパイカは、<b>安全なだけじゃもったいない</b>んだ。<br>動かしたあと<b>相手に何も取らせない</b>うえに、<b>相手がどう動いても次にきみが取れる</b>形を作る一歩を探そう！ 取れる形を作っても、相手の一歩で止められないか、相手の番まで読んでね。',
       b_choose: '1歩で<b>接近と離脱の両方</b>の取りができることがあるカニ。でも取れるのは<b>どちらか一方の列だけ</b>。<br>そんなときは前の列（接近）と後ろの列（離脱）を数えて、<b>多いほうを選ぶ</b>んだ。ほかの玉の取りともくらべて、いちばん多く取れる手を探そう！',
     },
     ask: {
@@ -46,10 +49,11 @@
       t_big: ['最初の一取りにまどわされないで。合計でいちばん多く取れる手は？', 'カニカニ、どの玉でどの道を通ると、合計がいちばん多くなる？', '大きく取れそうな手と、長く続く手。合計で多いのはどっち？', '取り方がいっぱいあるよ。どの道も終わりまで数えて、合計いちばんの手を指してね。', '一回目の数より、合計の数で決めよう。いちばん多いのはどれ？'],
       t_count: ['取り返しまで数えて、いちばん得な取り方はどれ？', 'カニカニ、たくさん取れる手ほど、取り返されないか気をつけて。差し引きでいちばん得なのは？', '取った数から、取り返される数を引いてみよう。いちばん多く残るのはどの手？', '相手の番まで見てね。差し引きでいちばん得な手を指そう！', 'どの手のあと、相手はいくつ取り返せる？ 差し引きいちばんの手はどれ？'],
       t_stop: ['どこまで取って、どこで止めるのがいちばん得？', 'カニカニ、最後まで取りきるのが正解とは限らないんだ。いちばんもうかる止めどころは？', '一回取るごとに、止めたあとの相手の取り返しを数えてみよう。どこで止める？', '続けるか、止めるか。取った数と取り返される数をくらべて決めてね。', '取りすぎて取り返されないように。いちばん得な止めどころを探そう！'],
+      t_paika: ['相手に何も取らせず、次に必ず取れる一歩はどれ？', 'カニカニ、安全なだけじゃなく、止められないねらいも作れるパイカはどれかな？', '相手の返し方をぜんぶ読んで、それでも取れる形を作ろう。どの一歩？', '取られない手はいくつかあるよ。その中で、相手に止められないねらいを作れるのは？', '動いた先の安全と、次の取り。両方そろう一歩を探してね。'],
       b_choose: ['接近か離脱か。いちばん多く取れる取り方はどれ？', 'カニカニ、両方で取れる1歩があるよ。どっちの列を選ぶ？', '前の列と後ろの列、多いのはどっち？ いちばんの手を指してね。', 'ほかの玉の取りともくらべて、いちばん多く取れるのは？', '列を数えてから選ぼう。いちばん多く取れる手は？'],
     },
     askLast: ['カニッ、これで最後！ いちばん多く取れる手はどれ？', 'ラストの問題だね。列をじっくり数えて決めよう！'],
-    askLastBy: { t_stop: ['カニッ、これで最後！ どこで止めるのがいちばん得？', 'ラストの問題だね。続けた先の取り返しまで、じっくり数えて止めどころを決めよう！'], t_count: ['カニッ、これで最後！ 取り返しまで数えて、いちばん得な取り方はどれ？', 'ラストの問題だね。取った数と取り返される数、じっくり差し引きして決めよう！'], t_big: ['カニッ、これで最後！ 合計でいちばん多く取れる手はどれ？', 'ラストの問題だね。最初の数にまどわされず、合計をじっくり数えて決めよう！'], b_win: ['カニッ、これで最後！ 相手の玉を全部取って勝ちを決めよう。', 'ラストの問題だね。最後の玉まで、じっくり道をたどって決めよう！'], b_safe: ['カニッ、これで最後！ 相手に何も取らせない一歩はどれ？', 'ラストの問題だね。動いた先と元いた点を、じっくり確かめて決めよう！'] },
+    askLastBy: { t_paika: ['カニッ、これで最後！ 相手に何も取らせず、次に必ず取れる一歩は？', 'ラストの問題だね。相手の一手まで読んで、止められないねらいを作ろう！'], t_stop: ['カニッ、これで最後！ どこで止めるのがいちばん得？', 'ラストの問題だね。続けた先の取り返しまで、じっくり数えて止めどころを決めよう！'], t_count: ['カニッ、これで最後！ 取り返しまで数えて、いちばん得な取り方はどれ？', 'ラストの問題だね。取った数と取り返される数、じっくり差し引きして決めよう！'], t_big: ['カニッ、これで最後！ 合計でいちばん多く取れる手はどれ？', 'ラストの問題だね。最初の数にまどわされず、合計をじっくり数えて決めよう！'], b_win: ['カニッ、これで最後！ 相手の玉を全部取って勝ちを決めよう。', 'ラストの問題だね。最後の玉まで、じっくり道をたどって決めよう！'], b_safe: ['カニッ、これで最後！ 相手に何も取らせない一歩はどれ？', 'ラストの問題だね。動いた先と元いた点を、じっくり確かめて決めよう！'] },
     hint: {
       b_approach: ['光っているのは、いま取れる玉。それぞれ、動いた先のすぐ前の列を数えてみて！', '光る玉ごとに、1歩先の向こうへ相手の玉がいくつ続くか数えよう。', '列は空いた点・きみの玉・盤のはしで切れるよ。どこで切れるか見てね。', 'カニ、前に続く相手の玉がいちばん多い向きを探そう！', '光る玉の進む先を指でなぞって、列の長さをくらべてみて。'],
       b_withdraw: ['光っているのは、いま取れる玉。動く向きと反対側の列を数えてみて！', '光る玉のすぐ後ろから、相手の玉がいくつ続くか数えよう。', '後ろの列が、空いた点・きみの玉・盤のはしのどこで切れるか見てみよう。', 'カニ、離れる玉の背中側に長い列があるのはどれかな？', '光る玉ごとに、後ろに並ぶ相手の玉をくらべてみよう。'],
@@ -59,6 +63,7 @@
       t_big: ['光っているのは、いま取れる玉。それぞれ、最初の一回だけでなく、続けて取れる分まで合計してみて！', '最初に一列でたくさん取れる手も、そのあとが続かなければ合計は増えないよ。', '一回目は少なくても、そのあと何回も取りつづけられる道があるかもしれないよ。', 'カニ、道が分かれるところでは、どっちへ進むと合計が多くなるか数えくらべてね。', '向きは毎回変えるし、一度いた点には戻れないよ。それも気にしながら道をたどってみて。'],
       t_count: ['光っているのは、いま取れる玉。それぞれ、取ったあと相手が一度にいくつ取り返せるか数えてみて！', '取った数から、相手に取り返される数を引くんだ。その差し引きでくらべよう。', 'たくさん取れる手ほど、自分の玉が相手の列の前に出ていないか見てね。', 'カニ、取ったあとの盤で、相手の玉がきみの玉に近づいたり離れたりして取れないか探そう。', '取り返されない手が、いつも得とは限らないよ。差し引きの数で決めよう。'],
       t_stop: ['光っているのは、いま取れる玉。連続取りは、一回取るごとに「ここで止めたら？」と考えてみて！', '止まった点のまわりを見よう。相手の玉が近づいたり離れたりして、きみの玉を取れないかな？', '最後まで取りきった点が、相手のねらいの中にあることもあるんだ。', 'カニ、取った数から、止めたあと相手に取り返される数を引いて、差し引きでくらべよう。', '途中で止めると取る数は減るけど、取り返しも減るかもしれないよ。'],
+      t_paika: ['光っているのは、動かせるきみの玉。まず、動かしたあと相手に取られないかを確かめよう！', '取られない手が見つかったら、次にきみが取れる形ができているかを見てね。', '相手も一歩動けるんだ。ねらわれた玉を逃がしたり、間に入ったりして、きみの取りを消せないかな？', 'カニ、相手の玉と1つ空けて一直線に並ぶか、となりに並んで後ろが空いていると、次に取れる形だよ。', '安全な手をいくつか見つけたら、それぞれ「相手はどう動けば止められる？」と考えてみて。'],
       b_choose: ['光っているのは、いま取れる玉。両方で取れる1歩は、前と後ろの列を両方数えよう！', '同じ1歩でも、接近と離脱で取れる数がちがうよ。多いほうはどっち？', 'カニ、前の列と後ろの列、長いほうを選ぶのがコツだよ。', '光る玉ごとに、取れる列の長さをくらべてみて。', '選べる1歩では、短いほうの列を選ばないように気をつけてね。'],
     },
     cheer: ['正解だカニ！', 'ばっちり！', 'お見事！', 'いいね、その手！', 'さすが！'],
@@ -75,6 +80,7 @@
       t_count0: ['{a}つ取って、相手は何も取り返せない。まるごと{an}つの得、いちばん得な取り方だカニ！', 'カニッ、取ったあと相手はひとつも取り返せないんだ。{a}つがそのまま得になるよ！', '取り返しまで数えられたね。相手は何も取り返せないから、{a}つ取った分がまるまる{an}つの得。', 'たくさん取る手に飛びつかなかったね。取り返されずに{a}つ、差し引きも{an}つのままだよ！', '相手の返しまで見えていたね。{a}つ取って何も取り返せないから、得は{an}つだカニ。'],
       t_stop: ['ここで止めて{a}つ取り、取り返されるのは{ar}つだけ。差し引き{an}つの得、いちばんの止めどころだカニ！', 'カニッ、止める点を選べたね。{a}つ取って{ar}つ返されても、{an}つの得が残るよ。', '続けたくなるところで止められたね。{a}−{ar}で{an}つのもうけ、ほかのどの手よりも得なんだ。', '止めた点なら、相手が取り返せるのは{ar}つ。{a}つ取って差し引き{an}つの得だよ。', 'いい止めどころ！ 取ったのは{a}つ、取り返しは{ar}つ、残る得は{an}つだカニ。'],
       t_stop0: ['ここで止めて{a}つ取り、相手は何も取り返せない。まるごと{an}つの得、いちばんの止めどころだカニ！', 'カニッ、止めた点は安全なんだ。{a}つ取って、取り返されずに{an}つの得！', '先へ進みたいところで、ぐっと止めたね。相手は何も取り返せないから、{a}つがそのまま{an}つの得。', '止める点を選べたね。相手はひとつも取り返せない、{a}つまるごと{an}つの得だよ。', 'いい止めどころ！ {a}つ取って何も取り返されない。得は{an}つだカニ。'],
+      t_paika: ['緑の一歩なら、相手は何も取れないうえに、どう動いても次にきみが少なくとも{a}つ取れるんだ！', 'カニッ、相手はひとつも取れないよ。どこへ逃げても、次のきみの番に{a}つ以上取れるよ。ねらいつきのパイカだね！', 'その一歩なら相手に取れる玉がない。しかも相手が何をしても、きみは{a}つ以上取れる形が残るんだ。', '安全で、しかもねらいつき！ 相手は何も取れないし、どの手で応じても少なくとも{a}つはきみのものだよ。', '相手は何も取れないし、止められないねらいも作れたね。どう応じられても、次に{a}つ以上取れるカニ！'],
       b_choose: ['この一歩は接近と離脱の両方で取れたけど、{ka}の列なら{a}つ。多いほうを選べたね！', 'カニッ、{ka}を選んで{a}つ取り！ もう一方の列より多いんだ。', '前と後ろをくらべて、{ka}の{a}つを選んだね。ほかのどの手よりも多いよ。', '{a}つ取れる{ka}を選べたね。数えてから選ぶのがコツだカニ。', '両方で取れる一歩で、長いほうの{ka}を選んだね！ {a}つまとめていただき。'],
     },
     n: {
@@ -102,10 +108,13 @@
       sOn: ['赤は緑の先まで進んで{c}つ取ったけど、止まった点で相手に{r}つ取り返されちゃう。緑で止めれば差し引き{an}つの得なんだ。', 'カニ、赤は取りすぎだよ。{c}つ取っても、そこで相手に{r}つ返されるんだ。緑の点で止めれば{a}つ取って{an}つの得。', '緑の点で止めずに先まで続けたね。{c}つ取れるけど、相手が{r}つ取り返せるから、差し引きは緑の{an}つに負けるんだ。', '赤は緑より多い{c}つを取れる。でも進みすぎて、相手に{r}つ取り返される点で止まっちゃった。緑なら{an}つの得。', 'カニッ、続けすぎちゃったね。赤は{c}つ取って{r}つ返される。緑で止めれば{a}つ取って差し引き{an}つだよ。'],
       sBack: ['赤は{c}つ取れるけど、相手に{r}つ取り返されちゃう。緑で止めれば{a}つ取って、差し引き{an}つの得だよ。', 'カニ、赤のあとだと相手は{r}つ取り返せるんだ。赤の{c}つから引くと少ないね。緑を選べば{an}つの得。', '赤で{c}つ取ると、相手の番に{r}つ取り返される。いちばん得なのは緑の止めどころで、{an}つの得が残るんだ。', '赤は{c}つ取って{r}つ返される手だったから、得は小さいんだ。緑なら手元に{an}つの得が残るよ。', 'カニッ、赤は{c}つ取れても、相手に{r}つ取り返されるから損なんだ。緑は{a}−{ar}で{an}つの得。'],
       sSmall: ['赤は取り返されないけど、取れるのは{c}つだけ。緑で止めれば差し引きでも{an}つの得なんだ。', 'カニ、赤は取り返されない手だけど、{c}つしか取れないから得が小さいよ。緑は{an}つの得。', '赤のあと相手は何も取り返せない。でも赤は{c}つだけだから、緑の{an}つの得にはとどかないよ。', '取り返されない赤も、取るのは{c}つだけなんだ。緑の止めどころなら{an}つの得が残るよ。', 'カニッ、赤は取り返されないけど{c}つ止まり。緑なら{an}つの得だったよ。'],
+      pGive: ['赤の一歩のあと、相手に{c}つ取られちゃう。緑なら相手は何も取れないうえに、次にきみが取れるよ。', 'カニ、赤だと相手の番に{c}つ取られるよ。動いた先と元いた点、両方の安全をたしかめてね。', '赤は安全じゃなかったんだ。相手に{c}つ取られてしまう。緑の一歩なら取られずにすむよ。', '赤を指すと、相手は一度に{c}つ取れるんだ。次の取りを考える前に、まず取られない手を選ぼう。', 'カニッ、赤のあと相手に{c}つ取られちゃう。緑なら相手は何も取れず、次はきみが取る番だよ。'],
+      pNone: ['赤のあと相手は何も取れない。でも、きみが次に取れる形ができていないから、ねらいのないパイカなんだ。緑なら次に取れるよ。', 'カニ、赤は安全だけど、相手は何も取れないかわりに、きみも次に取れる形がないから、次の番も取れないんだ。緑は次の取りまで作れる一歩だよ。', '赤なら相手は何も取れない。ただ、きみが続けて取れる形は作れていないから、次の番も取れないよ。', '安全な一歩だけど、ねらいがないんだ。赤のあと相手は何も取れず、きみも次に取れる形がないから、もったいないよ。', 'カニッ、赤のあと相手は何も取れない。でも次にきみが取れる形ができていないから、緑とくらべると損なんだ。'],
+      pBlock: ['赤のあと相手は何も取れないし、ねらいもできた。でも相手が一歩動くと、そのねらいを止められちゃうんだ。緑なら止められないよ。', 'カニ、赤も安全で、相手は何も取れない。ただ、相手の一手でねらいをふさがれるんだ。緑のねらいは、どう動かれても消えないよ。', '赤だと相手は何も取れないけど、相手は一歩動いて、きみの取りを止められるんだ。相手の一手まで読むと、緑が強いよ。', '相手は何も取れない、そこまではいい。でも赤のねらいは、相手の一歩で止められちゃう。緑なら相手は止められないんだ。', 'カニッ、赤のあと相手は何も取れない。けれど相手が動けば、きみの取りはふさがれるよ。緑は止められないねらいなんだ。'],
       same: ['赤は同じ一歩でも{kx}の列を選んで{c}つ。緑の{ka}を選んでいたなら{a}つ取れたんだ。', 'カニ、その一歩は両方で取れたけど、赤の{kx}だと{c}つだけ。緑の{ka}なら{a}つ！', '同じ動きでも、{kx}だと{c}つ・緑の{ka}なら{a}つ。多いほうを選びたかったね。', '両方で取れる一歩だから、列は選べたんだ。赤の{kx}は{c}つ、緑の{ka}なら{a}つだよ。', 'カニッ、選んだ{kx}の列は{c}つだけ。もう一方の緑の{ka}なら{a}つ取れたんだ。'],
     },
   };
-  const SEEDX = { b_win: 1, t_big: 2, t_count: 11, t_stop: 13 };   // (the voice's order: b_win's own, not the same openers' order as b_choose)
+  const SEEDX = { b_win: 1, t_big: 2, t_count: 11, t_stop: 13, t_paika: 4 };   // (the voice's order: b_win's own, not the same openers' order as b_choose)
   const SPOT = k => `<i class="ls-spot ${k}"></i>`;
   function voice(seed) {   // each list in its own order per lesson (a seeded shuffle), a line never twice in a lesson while unused ones are left
     const used = new Set(), perm = new Map();
@@ -122,17 +131,18 @@
     const f = F.fact(E, id, P.s, u), right = f.k === 'most', v = { c: f.c, a: f.a, ka: KN[f.akind], kx: KN[f.kind], sa: f.sa, sc: f.sc, r: f.r, c1: f.c1, a1: f.a1, ar: f.ar, an: f.an };
     const WN = id === 'b_win', BG = id === 't_big', CH = id === 'b_chain' || WN || BG, SF = id === 'b_safe', stop = CH && (f.k === 'stop' || f.k === 'stopx');   // (b_chain: stopped while the piece could go on / went to its end)
     const CT = id === 't_count';
-    const TS = id === 't_stop';   // (t_stop: as t_count, the answer a stop; 'on' a move going on past it)   // (t_count: taken − taken back; the praise says the answer's taken back {ar} or that nothing comes back)
+    const TS = id === 't_stop', TP = id === 't_paika';   // (t_paika: give {c} / none / block; the praise says the answer's {a})   // (t_stop: as t_count, the answer a stop; 'on' a move going on past it)   // (t_count: taken − taken back; the praise says the answer's taken back {ar} or that nothing comes back)
     if (lang === 'ja') {
       if (right && CT) return { f, html: `${V.v(JA.cheer)} ${fill(V.v(JA.w[f.ar ? 't_count' : 't_count0']), v)}${last ? '' : ' ' + V.v(JA.push)}`.replace(/(カニ！) カニッ?、/, '$1 ') };
       if (right && TS) return { f, html: `${V.v(JA.cheer)} ${fill(V.v(JA.w[f.ar ? 't_stop' : 't_stop0']), v)}${last ? '' : ' ' + V.v(JA.push)}`.replace(/(カニ！) カニッ?、/, '$1 ') };
       if (TS) return { f, html: `${V.v(JA.soft)} ${fill(V.v(JA.n[f.k === 'on' ? 'sOn' : f.k === 'small' ? 'sSmall' : 'sBack']), v)}` };
+      if (TP && !right) return { f, html: `${V.v(JA.soft)} ${fill(V.v(JA.n[f.k === 'give' ? 'pGive' : f.k === 'none' ? 'pNone' : 'pBlock']), v)}` };
       if (CT) return { f, html: `${V.v(JA.soft)} ${fill(V.v(JA.n[f.k === 'greedy' ? 'cGreedy' : f.k === 'small' ? 'cSmall' : 'cBack']), v)}` };
       if (right) return { f, html: `${V.v(JA.cheer)} ${fill(V.v(JA.w[id]), v)}${last ? '' : ' ' + V.v(JA.push)}`.replace(/(カニ！) カニッ?、/, '$1 ') };   // (the tic once)
       const n = SF ? JA.n[f.k === 'self' ? 'self' : 'open'] : BG ? JA.n[f.k === 'greedy' ? 'greedy' : stop ? (f.k === 'stop' ? 'bigStop' : 'bigStopx') : f.same ? 'bigDeadSame' : 'bigDeadOther'] : WN ? JA.n[stop ? (f.k === 'stop' ? 'winStop' : 'winStopx') : f.same ? 'winDeadSame' : 'winDeadOther'] : CH ? JA.n[stop ? f.k : f.same ? 'deadSame' : 'deadOther'] : f.k === 'same' ? JA.n.same : JA.n[f.end] || JA.n.empty;
       return { f, html: `${V.v(JA.soft)} ${fill(V.v(n), v)}` };
     }
-    const key = TS ? (right ? (f.ar ? '.why' : '.why0') : f.k === 'on' ? '.ngOn' : f.k === 'small' ? '.ngSmall' : '.ng') : CT ? (right ? (f.ar ? '.why' : '.why0') : f.k === 'greedy' ? '.ngGreedy' : f.k === 'small' ? '.ngSmall' : '.ng') : right ? '.why' : SF ? (f.k === 'self' ? '.ngSelf' : '.ng') : f.k === 'greedy' ? '.ngGreedy' : stop ? '.ngStop' : f.k === 'same' ? '.ngSame' : '.ng';
+    const key = TP ? (right ? '.why' : f.k === 'give' ? '.ng' : f.k === 'none' ? '.ngNone' : '.ngBlock') : TS ? (right ? (f.ar ? '.why' : '.why0') : f.k === 'on' ? '.ngOn' : f.k === 'small' ? '.ngSmall' : '.ng') : CT ? (right ? (f.ar ? '.why' : '.why0') : f.k === 'greedy' ? '.ngGreedy' : f.k === 'small' ? '.ngSmall' : '.ng') : right ? '.why' : SF ? (f.k === 'self' ? '.ngSelf' : '.ng') : f.k === 'greedy' ? '.ngGreedy' : stop ? '.ngStop' : f.k === 'same' ? '.ngSame' : '.ng';
     return { f, html: tx('ls.' + id + key, lang, Object.assign(v, { m: SPOT('ok'), x: SPOT('ng') })) };
   }
   function make(H) {
@@ -141,8 +151,8 @@
       LKEY: 'aicoding-fanorona-lessons', data: null, I: null, JA, READY,
       load() {
         const ld = u => fetch(u).then(r => r.text()).catch(() => '');
-        return this.p || (this.p = Promise.all([getJ('../fanorona/lessons.json?v=12'), ld('../fanorona/i18n.js?v=12'),
-          loadJs('../fanorona/engine.js?v=fb5s-pro1-mt1-aq4', () => !!window.FanoronaEngine).then(() => loadJs('../fanorona/ls-facts.js?v=7', () => !!window.FanoronaLsFacts))])
+        return this.p || (this.p = Promise.all([getJ('../fanorona/lessons.json?v=13'), ld('../fanorona/i18n.js?v=13'),
+          loadJs('../fanorona/engine.js?v=fb5s-pro1-mt1-aq4', () => !!window.FanoronaEngine).then(() => loadJs('../fanorona/ls-facts.js?v=8', () => !!window.FanoronaLsFacts))])
           .then(([d, a]) => { const w = { I18N: {} }; try { new Function('window', 'I18N', a)(w, w.I18N); } catch (e) { console.warn('[lessons3d] fanorona texts', e); }
             this.I = w.I18N; this.data = d; return this; })
           .catch(e => { this.p = null; throw e; }));
