@@ -7,7 +7,7 @@
    AtlasMatch.render(box, ctx) — the museum (atlas/museum.js) calls it. */
 (function () {
   'use strict';
-  const V = 1, GUIDE = '../images/atlas/av/musowl-2.webp';
+  const EVAL_V = 1, V = 1, GUIDE = '../images/atlas/av/musowl-2.webp';
   /* the games. kind · moves: the record (chess: SAN; shogi: USI, 7g7f / P*5e / 8h2b+; go: SGF points, pd, '' = pass) · res: w | b | d | s | g
      (go: 'B+R', 'W+2.5' as written) · mk: { ply: { a: [[from, to], …] arrows, s: [squares] } } what the note points at · orient: 'b' to see the board from Black */
   const GAMES = [
@@ -64,7 +64,7 @@
     // (2026-11-27) Go Seigen v. Honinbo Shusai, 1933–1934: The 3-3, Star Point and Tengen Game
     { id: 'seigen1933', kind: 'go', size: 19, res: 'W+2',
       moves: 'qc cd dp pq jj pd qd pe ob qn jp lq dj ed lo nq kq lp ko ch gj fq fo iq gp cq cp dq nd ph pj ne me mf nf ng oe of ne nj om mg ke hc qm rm rn rl ro pm ql qk pl pn pk qj nl pi qp on nn no mo op qr qq rq pr rr mn nm lm ll kp mp mq ip jq kk cn ep cj ck dk cl dl ci bj bi di ej bh dm ei fj cm ak ai el bp rf co qg rh jc gq eq en fn er fr dr hq hr hp gr fc ic dc cc gd he ge je hd id hf kd le kc og oh pg em ek fm gm mb cb ec eb dd db gb bc bd bb nb oa fb ea gh jf ie ff hi hg eo fp hl il jh fh fi hj if ih ii ig jg ji fg kf ij ik hh gf mk df ml sm sk mm dg li ol ln nk km fl gl oj qh ri cf ef gi eh ee eg de bf bq br ps os qs oq bo aq an bn am ao rg mi qi lh kh lj rj rk sh sj bg ae cg ag fe gc fd ce kg mc ki fk ld lc gk bk bl na nc gg fa ga ac ad lg mh qo lk',
-      mk: {1: {'s':['qc']},3: {'s':['dp']},5: {'s':['jj']},6: {'s':['qc','dp','jj']},160: {'s':['hl']}} },
+      mk: {1: {'s':['qc']},3: {'s':['dp']},5: {'s':['jj','qc','dp']},6: {'s':['pd','qc']},10: {'s':['qn','pe','pq']},11: {'s':['jp','jj']},21: {'s':['gj','dj','jj']},26: {'s':['cq','dp']},28: {'s':['cp','dp','fo','gp']},31: {'s':['pj','ph','qn']},35: {'s':['ne','mf']},37: {'s':['ne']},45: {'s':['qm','qn'],'a':[['qm','ph']]},59: {'a':[['qp','ro']],'s':['qp']},70: {'s':['nn','mo']},78: {'s':['kq']},79: {'s':['kk','gj','jj','mo','nl','pj']},82: {'s':['cj']},87: {'s':['ci']},88: {'s':['cj','ch']},98: {'s':['dk','dl'],'a':[['el','ek']]},101: {'a':[['rf','qg']]},106: {'s':['fq','iq']},116: {'s':['fr']},117: {'s':['fc']},127: {'s':['he']},130: {'s':['jc']},133: {'s':['pd','pe','of']},135: {'s':['ek']},139: {'s':['cb','cd','cc','ed']},152: {'s':['gh']},153: {'s':['jf','je']},159: {'s':['ep','fo']},160: {'a':[['hl','gk'],['hl','ik']],'s':['hl']},162: {'s':['jh','gh','hi']},165: {'s':['fh']},178: {'s':['mk','kk','nl']},180: {'s':['nn','nm','nl']},186: {'a':[['ol','nk'],['ol','ok']],'s':['ol']},189: {'s':['nn','nm','nl','om','mm']},192: {'s':['oj','qm','ql','pl','pk','pj'],'a':[['ok','ol']]},197: {'s':['gi','gh','hh','hi','ii','ij'],'a':[['gi','gg']]},198: {'a':[['gh','fh'],['gh','gg']],'s':['eh']},232: {'s':['ce','gg']},233: {'s':['kg','jh','jg']},246: {'s':['gg']},252: {'s':['lk']}} },
     // (2026-11-27) Donald Byrne v. Bobby Fischer, 1956: The Game of the Century
     { id: 'century1956', kind: 'chess', res: 'b', moves: 'Nf3 Nf6 c4 g6 Nc3 Bg7 d4 O-O Bf4 d5 Qb3 dxc4 Qxc4 c6 e4 Nbd7 Rd1 Nb6 Qc5 Bg4 Bg5 Na4 Qa3 Nxc3 bxc3 Nxe4 Bxe7 Qb6 Bc4 Nxc3 Bc5 Rfe8+ Kf1 Be6 Bxb6 Bxc4+ Kg1 Ne2+ Kf1 Nxd4+ Kg1 Ne2+ Kf1 Nc3+ Kg1 axb6 Qb4 Ra4 Qxb6 Nxd1 h3 Rxa2 Kh2 Nxf2 Re1 Rxe1 Qd8+ Bf8 Nxe1 Bd5 Nf3 Ne4 Qb8 b5 h4 h5 Ne5 Kg7 Kg1 Bc5+ Kf1 Ng3+ Ke1 Bb4+ Kd1 Bb3+ Kc1 Ne2+ Kb1 Nc3+ Kc1 Rc2#',
       mk: { 1: { s: ['e5', 'd4'] }, 2: { s: ['e4', 'd5'] }, 3: { a: [['c4', 'd5']] }, 4: { s: ['g7'] }, 5: { s: ['d5', 'e4'] }, 6: { s: ['g7'] }, 7: { s: ['c4', 'd4'] }, 8: { s: ['g8'] }, 9: { a: [['f4', 'c7']] }, 10: { a: [['d5', 'c4']] }, 11: { a: [['b3', 'b7']], s: ['d5'] }, 12: { a: [['c4', 'b3']] }, 13: { s: ['c4'] }, 14: { s: ['d5', 'b5'] }, 15: { s: ['d4', 'e4'] }, 16: { a: [['d7', 'b6']] }, 17: { a: [['d1', 'd4']], s: ['e1'] }, 18: { a: [['b6', 'c4']] }, 19: { a: [['c5', 'e7']] }, 20: { a: [['g4', 'd1']], s: ['f3'] }, 21: { a: [['g5', 'f6']], s: ['e1'] }, 22: { a: [['a4', 'c5'], ['a4', 'c3']], s: ['e4'] }, 23: { a: [['a3', 'e7']] }, 24: { s: ['c3', 'e4'] }, 25: { s: ['e4'] }, 26: { a: [['e4', 'c3'], ['e4', 'g5']] }, 27: { a: [['e7', 'd8'], ['e7', 'f8']] }, 28: { a: [['d8', 'b6']], s: ['f8'] }, 29: { s: ['f1'] }, 30: { a: [['c3', 'd1']] }, 31: { a: [['c5', 'b6']], s: ['e7'] }, 32: { a: [['e8', 'e1']] }, 33: { s: ['f1', 'h1'] }, 34: { a: [['c5', 'b6'], ['e6', 'c4']], s: ['b6'] }, 35: { a: [['e6', 'c4']] }, 36: { a: [['c4', 'f1']] }, 37: { s: ['g1', 'h1'] }, 38: { a: [['e2', 'g1']] }, 39: { a: [['c4', 'e2']], s: ['f1'] }, 40: { a: [['c4', 'f1']] }, 41: { s: ['g1'] }, 42: { a: [['e2', 'g1']] }, 43: { a: [['c4', 'e2']], s: ['f1'] }, 44: { a: [['c4', 'f1'], ['c3', 'd1']] }, 45: { a: [['a7', 'b6']], s: ['b6'] }, 46: { a: [['a8', 'a3']], s: ['b6'] }, 47: { a: [['b4', 'c4'], ['b4', 'c3'], ['b4', 'b6']] }, 48: { a: [['a4', 'b4']] }, 49: { a: [['c3', 'd1']] }, 50: { s: ['d1', 'h1'] }, 51: { s: ['h2'] }, 52: { a: [['a2', 'f2']] }, 53: { s: ['h1'] }, 54: { a: [['f2', 'h1'], ['f2', 'h3']] }, 55: { a: [['e1', 'e8']] }, 56: { a: [['f3', 'e1']] }, 57: { a: [['d8', 'g8']] }, 58: { s: ['f8'] }, 59: { s: ['e1'] }, 60: { a: [['d5', 'f3'], ['d5', 'a2']] }, 61: { s: ['f3'] }, 62: { a: [['f8', 'd6']], s: ['h2'] }, 63: { a: [['b8', 'f8']], s: ['g8', 'b7'] }, 64: { s: ['b5'] }, 65: { s: ['h4'] }, 66: { s: ['h5'] }, 67: { a: [['e5', 'f7'], ['e5', 'd7']], s: ['f8'] }, 68: { s: ['g7', 'f8'] }, 69: { s: ['g1'] }, 70: { a: [['c5', 'g1']] }, 71: { s: ['f1'] }, 72: { a: [['g3', 'f1']] }, 73: { s: ['e1'] }, 74: { a: [['b4', 'e1']] }, 75: { s: ['d1'] }, 76: { a: [['b3', 'd1']] }, 77: { s: ['c1'] }, 78: { a: [['e2', 'c1']] }, 79: { s: ['b1'] }, 80: { a: [['c3', 'b1'], ['c3', 'd1']] }, 81: { s: ['c1'] }, 82: { a: [['c2', 'c1'], ['b3', 'c2']], s: ['b1', 'b2', 'd1', 'd2'] } } },
@@ -463,6 +463,13 @@
     if (!gone.length) return '';
     return `<span class="mxcap">${gone.map(p => K === CHESS ? `<img src="${PIMG}${p.k}.svg" alt="">` : `<span class="mxxk${p.red ? ' r' : ''}">${p.glyph || ''}</span>`).join('')}</span>`;
   };
+  // the evaluations (tools/museum-match-eval.js → museum/match-eval.js): loaded the first time a game opens
+  let EV = window.MATCH_EVAL || null, evP = null;
+  function evalOf() { if (EV) return Promise.resolve(EV); return evP || (evP = new Promise(res => { const sc = document.createElement('script'); sc.src = 'museum/match-eval.js?v=' + EVAL_V; sc.onload = () => res(EV = window.MATCH_EVAL || {}); sc.onerror = () => res(EV = {}); document.head.appendChild(sc); })); }
+  // the graph behind the slider: the first side's chance over the game (light above, dark below); 50% the middle line
+  function graph(G, E) { const e = E[G.id], svgE = el.graph; if (!svgE) return; el.graph.parentNode.classList.toggle('on', !!e); if (!e) { svgE.innerHTML = ''; return; }
+    const n = e.w.length - 1 || 1, pts = e.w.map((w, i) => `${(i / n * 100).toFixed(2)},${(40 - w * .4).toFixed(2)}`);
+    svgE.innerHTML = `<path class="mxg0" d="M0,40L${pts.join('L')}L100,40z"/><path class="mxg1" d="M${pts.join('L')}"/><line x1="0" y1="20" x2="100" y2="20" class="mxg2"/>`; }
   function show(id, user) {
     const G = GAMES.find(x => x.id === id); if (!G || !host) return;
     el.pushed = !!(user && ctx && ctx.hist); if (el.pushed) ctx.hist({ room: 'match', game: id });
@@ -476,16 +483,17 @@
       <div class="mxmain">
         <div class="mxleft k-${G.kind}">${plate(flip ? s0 : s1, 'top')}<div class="mxboard" dir="ltr" role="img"></div>${plate(flip ? s1 : s0, 'bot')}
           <div class="mxctl" dir="ltr">${btn('start', 'start')}${btn('prev', 'prev')}${btn('play', 'play')}${btn('next', 'next')}${btn('end', 'end')}</div>
-          <div class="mxseek" dir="ltr"><input type="range" class="mxrng" min="0" max="${n}" value="0" step="1" aria-label="${esc(u('moves'))}"><span class="mxpos" aria-live="polite"></span></div></div>
-        <div class="mxside"><div class="mxnote"><div class="mxnh"><img src="${GUIDE}" alt="" class="mxowl"><b class="mxwho">${esc(u('guide'))}</b><span class="mxmv"></span></div>
+          <div class="mxseek" dir="ltr"><span class="mxgw"><svg class="mxgraph" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"></svg><input type="range" class="mxrng" min="0" max="${n}" value="0" step="1" aria-label="${esc(u('moves'))}"></span><span class="mxpos" aria-live="polite"></span></div></div>
+        <div class="mxside"><div class="mxnote"><div class="mxnh"><img src="${GUIDE}" alt="" class="mxowl"><b class="mxwho">${esc(u('guide'))}</b><span class="mxmv"></span></div><div class="mxev" hidden title="${esc(u('evby'))}"><i>${esc(u('ev'))}</i><span class="mxevb"><span></span></span><b></b></div>
             <p class="mxtxt"></p>
             <div class="mxnn"><button type="button" data-n="-1">${svg('prev')}<span>${esc(u('pnote'))}</span></button><button type="button" data-n="1"><span>${esc(u('nnote'))}</span>${svg('next')}</button></div></div>
           <div class="mxlog"><h4>${esc(u('moves'))}<span>${esc(u('plies').replace('{n}', n))}</span></h4><div class="mxlist k-${K.pair ? 'pair' : 'one'}" dir="ltr" role="list"></div></div></div></div>
       <section class="mxabout"><h4>${esc(u('about'))}</h4><p>${esc(x.lead || '')}</p>
-        <dl><div><dt>${esc(u('r_event'))}</dt><dd>${esc(x.ev || '—')}</dd></div><div><dt>${esc(u('r_date'))}</dt><dd>${esc(x.d)}</dd></div><div><dt>${esc(u('r_place'))}</dt><dd>${esc(x.pl)}</dd></div>${res ? `<div><dt>${esc(u('result'))}</dt><dd>${esc(res)}</dd></div>` : ''}</dl></section>
+        <dl><div><dt>${esc(u('r_event'))}</dt><dd>${esc(x.ev || '—')}</dd></div><div><dt>${esc(u('r_dp'))}</dt><dd>${esc(x.d)} · ${esc(x.pl)}</dd></div>${res ? `<div><dt>${esc(u('result'))}</dt><dd>${esc(res)}</dd></div>` : ''}</dl></section>
       <p class="mxcredit">${esc(u('credit'))}</p>`;
     const q = s => el.view.querySelector(s);
-    Object.assign(el, { board: q('.mxboard'), say: q('.mxtxt'), list: q('.mxlist'), pos: q('.mxpos'), mv: q('.mxmv'), rng: q('.mxrng'), nn: q('.mxnn') });
+    Object.assign(el, { board: q('.mxboard'), say: q('.mxtxt'), list: q('.mxlist'), pos: q('.mxpos'), mv: q('.mxmv'), rng: q('.mxrng'), nn: q('.mxnn'), ev: q('.mxev'), graph: q('.mxgraph') });
+    evalOf(G).then(E => { if (cur === G) { graph(G, E); go(ply, false); } });
     q('.mxback').onclick = () => { if (el.pushed) history.back(); else wall(); };
     // the moves: chess and xiangqi as numbered pairs; shogi and go one by one, numbered, in columns
     const lab = i => K.label(L.mv[i], i, L.recs[i], lang, L.st[0]);
@@ -511,6 +519,9 @@
     el.say.textContent = x != null ? x : u('quiet'); el.say.classList.toggle('quiet', x == null);
     const lb = p ? K.label(L.mv[p - 1], p - 1, r, lang, L.st[0]) : '';
     el.mv.innerHTML = p ? `<u class="mxdot ${r.side}"></u>${esc(u('move').replace('{n}', p))}<bdi dir="ltr">${esc(lb)}</bdi>` : esc(u('startpos'));
+    { const E = EV && EV[G.id], w = E && E.w[p]; el.ev.hidden = w == null;   // (2026-11-27 ユーザー: 形勢評価) the first side's chance after this move
+      if (w != null) { const [s0, s1] = K.sides, lead = w >= 50 ? s0 : s1, k = Math.max(w, 100 - w); el.ev.querySelector('.mxevb span').style.width = w + '%';
+        el.ev.querySelector('b').innerHTML = Math.abs(w - 50) < 3 ? esc(u('even')) : `<u class="mxdot ${lead}"></u>${esc(u('side_' + lead))} ${k}%`; } }
     el.pos.textContent = `${p} / ${n}`; el.rng.value = p; el.rng.style.setProperty('--f', (n ? p / n * 100 : 0) + '%');
     el.board.setAttribute('aria-label', p ? u('move').replace('{n}', p) + ' ' + lb : u('startpos'));
     // the notes before and after this move

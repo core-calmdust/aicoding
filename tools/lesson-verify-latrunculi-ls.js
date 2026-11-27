@@ -23,12 +23,19 @@
 //  ⑨ the 2D: latrunculi/index.html loads ls-facts.js (after engine.js) and i18n-lt-ls.js (after i18n-lt-more.js); app.js reads
 //    LatrLsFacts.wrong for the words and LatrLsFacts.marks for the hint; the 14 languages have every key with its placeholders;
 //    追66・追68 no closeness word on these 0-point words; 追16 no rate / evaluation in the data or the words.
+//  3D (atlas/ls-latrunculi.js, READY = the 7 lessons): ⑧ every legal move's words, every line of the lists (k 0〜5): ja praise on a
+//    right move and the lesson's point (2個 / 辺 / 隅 / 助け …), on a wrong one no praise (追20), no closeness word (追66), the green
+//    answer named, the words of its kind (何も挟めない / 1個だけ / 取られ / 挟み返 …), the gold move named exactly when there is a
+//    reply to show (and that reply encloses one of yours on the board); no placeholder left; ⑨ the 13 other languages: your move
+//    marked red, the reply gold when there is one, no square name (the 3D board has none); the ja questions, hints and intros name
+//    no square.
 // Usage: node tools/lesson-verify-latrunculi-ls.js [--selftest]   (also: node tools/lesson-verify.js latrunculiLs)
 'use strict';
 const fs = require('fs'), path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const E = require(path.join(ROOT, 'latrunculi/engine.js')); E.setRule('seneca');
 const F = require(path.join(ROOT, 'latrunculi/ls-facts.js')).make(E);
+const LS3 = require(path.join(ROOT, 'atlas/ls-latrunculi.js'));
 const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 const IDS = ['b_block', 'b_edge', 'b_corner', 'b_rescue', 's_safe', 's_double', 's_two'];
 const KEYS = { 'ls.ng.none': ['x'], 'ls.ng.reply': ['r', 'y'], 'ls.b_rescue.ng': ['x', 'y'], 'ls.s_safe.ng': ['x', 'r', 'y'], 'ls.s_double.ng1': ['x', 't'], 'ls.s_two.ng': ['x', 't', 'r', 'h'], 'ls.s_two.ng0': ['x'] };
@@ -135,6 +142,45 @@ function verify(opt) {
     for (let k = 1; k < ds.length; k++) if (ds[k] < ds[k - 1]) add(id, k + 1, `⑥ d ${ds[k]} after ${ds[k - 1]}`);
     if (ds.length > 1 && ds[ds.length - 1] <= ds[0]) add(id, 0, `⑥ the last d ${ds[ds.length - 1]} is not above the first ${ds[0]}`);
   }
+  // 3D (atlas/ls-latrunculi.js)
+  const LS = opt.ls3 || LS3, JA = LS.JA;
+  if (IDS.some(id => !LS.READY.includes(id))) add('3D', 0, `⑨ READY ${LS.READY.join(' ')} lacks a lesson`);
+  const PRAISE = /正解|お見事|さすが|いいね|すごい|やったね/, SQ = /\b[a-h][1-8]\b/;
+  const NEED = { none: /挟めない|駒がない|裏返らない|そろわない|埋まらない|できない|いない|表のまま/, rescue: /裏返ったまま|取られ|消えない|届かない|そのまま/, safe: /挟まれ|裏返/, double1: /1個|1つの方向/, two: /挟み返|表に戻|助け/, two0: /挟めない|挟む手じゃない|裏返らない|挟みができない|取れる駒(が|も)ない/ };
+  const POINT = { b_block: /挟|裏返|両どなり|両側/, b_edge: /辺/, b_corner: /隅/, b_rescue: /味方|助け|挟み返|挟んでいる側/, s_safe: /挟め(ない|る駒はない)|挟まれ|挟む手は0|挟む手がなくなった/, s_double: /2個|2つの方向/, s_two: /助けられない|確実|必ず|挟み返す手がない|残る|きっちり取れる|助けに来られる駒がいない/ };
+  for (const k of ['intro', 'ask', 'askLast', 'hint', 'w']) for (const id of IDS) if (!JA[k] || !JA[k][id]) add(id, 0, `⑧ 3D no ja ${k}`);
+  for (const id of IDS) for (const k of ['intro', 'ask', 'askLast', 'hint']) for (const t of [].concat(JA[k][id] || [])) if (SQ.test(t.replace(/<[^>]+>/g, ''))) add(id, 0, `⑧ 3D ja ${k}: a square name on the 3D board — ${t}`);
+  for (const st of L.steps) {
+    const id = st.id; if (!IDS.includes(id)) continue;
+    st.problems.forEach((P, j) => {
+      const q1 = j + 1, pos = E.Pos.from(P.s), me = pos.turn;
+      for (const m of pos.moves()) {
+        const right = (P.ok || []).includes(m), x = E.name(pos, m), q = pos.clone().play(m);
+        for (let k = 0; k < 6; k++) {
+          const r = LS.sayText(id, P, m, 'ja', k), h = r.html, tx = h.replace(/<[^>]+>/g, '');
+          if (/\{\w+\}/.test(h)) add(id, q1, `⑧ 3D ja ${x}: a placeholder left — ${tx}`);
+          if (SQ.test(tx)) add(id, q1, `⑧ 3D ja ${x}: a square name — ${tx}`);
+          if (right) { if (!PRAISE.test(tx)) add(id, q1, `⑧ 3D ja ${x}: no praise on the right move`); if (!POINT[id].test(tx)) add(id, q1, `⑧ 3D ja ${x}: the words do not say the lesson's point — ${tx}`); continue; }
+          const kind = LS.kindOf(id, r.w).replace(/^none_.*/, 'none');
+          if (PRAISE.test(tx)) add(id, q1, `追20 3D ja ${x}: praise after a wrong move — ${tx}`);
+          if (NEAR.test(tx)) add(id, q1, `追66 3D ja ${x}: a closeness word — ${tx}`);
+          if (!/緑/.test(tx)) add(id, q1, `⑧ 3D ja ${x}: the green answer is not named — ${tx}`);
+          if (!NEED[kind].test(tx)) add(id, q1, `⑧ 3D ja ${x} (${kind}): the words do not say it — ${tx}`);
+          if ((r.rp != null) !== /金の手/.test(tx)) add(id, q1, `⑧ 3D ja ${x}: the gold move ${r.rp != null ? 'not named' : 'named without a reply'} — ${tx}`);
+          if (r.rp != null && (!q.moves().includes(r.rp) || !encMine(q, r.rp, me).length)) add(id, q1, `⑦ 3D ${x}: the gold reply does not enclose a counter of yours`);
+        }
+        for (const l of LANGS) {
+          if (l === 'ja') continue;
+          const r = LS.sayText(id, P, m, l, 0), h = r.html, tx = h.replace(/<[^>]+>/g, '');
+          if (!h || /\{\w+\}/.test(h)) add(id, q1, `⑨ 3D ${l} ${x}: missing words or a placeholder left`);
+          if (SQ.test(tx)) add(id, q1, `⑨ 3D ${l} ${x}: a square name — ${tx}`);
+          if (right) { if (!/ls-spot ok/.test(h)) add(id, q1, `⑨ 3D ${l} ${x}: the right move is not marked`); continue; }
+          if (!/ls-spot ng/.test(h)) add(id, q1, `⑨ 3D ${l} ${x}: your move is not marked`);
+          if ((r.rp != null) !== /ls-spot hl/.test(h)) add(id, q1, `⑨ 3D ${l} ${x}: the reply ${r.rp != null ? 'is not marked' : 'marked without one'}`);
+        }
+      }
+    });
+  }
   // ⑨ the 2D
   const html = opt.index || fs.readFileSync(path.join(ROOT, 'latrunculi/index.html'), 'utf8'), app = opt.app || fs.readFileSync(path.join(ROOT, 'latrunculi/app.js'), 'utf8');
   const at = s => html.indexOf(s);
@@ -165,6 +211,10 @@ if (require.main === module) {
       ['a closeness word on a wrong move', () => ({ i18n: i18.replace("'ls.ng.none': '<b>{x}</b> では", "'ls.ng.none': 'おしい！ <b>{x}</b> では") }), /追66/],
       ['index.html without ls-facts.js', () => ({ index: html.replace('ls-facts.js', 'ls-factz.js') }), /⑨ index.html/],
       ['app.js not reading the facts', () => ({ app: app.replace(/LatrLsFacts\.marks\(/g, 'LatrLsFacts.markz(') }), /⑨ app.js/],
+      ['3D: a ja wrong line without the green answer', () => { const J = JSON.parse(JSON.stringify(LS3.JA)); J.n.rescue[0] = '赤の手では、挟まれた味方は裏返ったまま。'; return { ls3: Object.assign({}, LS3, { JA: J, sayText: (...a) => { const o = LS3.JA.n.rescue[0]; LS3.JA.n.rescue[0] = J.n.rescue[0]; try { return LS3.sayText(...a); } finally { LS3.JA.n.rescue[0] = o; } } }) }; }, /the green answer is not named/],
+      ['3D: the gold reply dropped from the words', () => ({ ls3: Object.assign({}, LS3, { sayText: (...a) => { const r = LS3.sayText(...a); return Object.assign({}, r, { html: r.html.replace(/金の手/g, '次の手').replace(/ls-spot hl/g, 'ls-spot xx') }); } }) }), /the gold move not named|reply is not marked/],
+      ['3D: a square name in another language', () => ({ ls3: Object.assign({}, LS3, { sayText: (id, P, u, l, k) => { const r = LS3.sayText(id, P, u, l, k); return l === 'en' ? Object.assign({}, r, { html: r.html + ' (c5)' }) : r; } }) }), /⑨ 3D en .*square name/],
+      ['3D: a lesson left out of READY', () => ({ ls3: Object.assign({}, LS3, { READY: LS3.READY.slice(1) }) }), /READY/],
     ];
     let bad = 0;
     for (const [name, mk, re] of T) { const r = verify(mk()).out; const hit = r.some(o => re.test(o.msg)); console.log((hit ? 'detects ' : 'MISSES  ') + name + (hit ? '' : ' — ' + r.slice(0, 3).map(o => o.msg).join(' / '))); if (!hit) bad++; }

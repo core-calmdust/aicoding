@@ -1056,10 +1056,11 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 /* ===== 名局選 (the great games, atlas/museum/match.js, 2026-11-27 ユーザー: ミュゼフクの一手ごとの解説・自由に行き来できる棋譜・棋譜ログ) ===== */
 .mxboard{position:relative;width:100%;user-select:none;-webkit-user-select:none;touch-action:manipulation;border-radius:8px}
 .mxbg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+/* (2026-11-27) .mxp・.mxrow・.mxnote are also class names of the portal's game card (atlas/app.js: the mode panels "opts mxp", .mxrow, .mxnote) — the 名局選 rules for them are kept inside the match room (:where(.mxx *), no added specificity), or the card's rated/puzzle/lesson panels collapse */
 .mxpcs{position:absolute;inset:0;pointer-events:none}
-.mxp{position:absolute;display:block;transform:translate(-50%,-50%);transition:left .26s cubic-bezier(.3,.7,.3,1),top .26s cubic-bezier(.3,.7,.3,1),opacity .22s;container-type:size}
-.mxboard.still .mxp{transition:none}.mxp.new,.mxp.gone{opacity:0}
-.mxp img{display:block;width:100%;height:100%}
+.mxp:where(.mxx *){position:absolute;display:block;transform:translate(-50%,-50%);transition:left .26s cubic-bezier(.3,.7,.3,1),top .26s cubic-bezier(.3,.7,.3,1),opacity .22s;container-type:size}
+.mxboard.still .mxp:where(.mxx *){transition:none}.mxp:where(.mxx *).new,.mxp:where(.mxx *).gone{opacity:0}
+.mxp:where(.mxx *) img{display:block;width:100%;height:100%}
 .mxch .mxlt{fill:#f1dfbd}.mxch .mxdk{fill:#b88a5c}
 .mxcoord{font-size:28px;font-weight:800;fill:#7a5a36;text-anchor:middle;font-family:var(--round)}
 .mxlm{fill:rgba(250,205,70,.45)}.mxsq{fill:none;stroke:#e0533d;stroke-width:.08}
@@ -1067,7 +1068,7 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 .mxwood{fill:#e6bf7a}.mxgo line{stroke:#5d3f18;stroke-width:.045}.mxsh line{stroke:#6b4a1d;stroke-width:.03}.mxhoshi{fill:#5d3f18}
 .mxst{display:block;width:94%;height:94%;margin:3%;border-radius:50%;box-shadow:0 .06em .12em rgba(0,0,0,.35)}
 .mxst.b{background:radial-gradient(circle at 34% 30%,#6a6a6a,#151515 62%)}.mxst.w{background:radial-gradient(circle at 34% 30%,#fff,#dcdcd6 72%)}
-.mxp.last .mxst::after{content:"";display:block;width:36%;height:36%;margin:32%;border-radius:50%;border:2px solid #e0533d}
+.mxp:where(.mxx *).last .mxst::after{content:"";display:block;width:36%;height:36%;margin:32%;border-radius:50%;border:2px solid #e0533d}
 .mxsg{position:relative;display:block;width:86%;height:92%;margin:4% 7%}.mxsg.dn{transform:rotate(180deg)}
 .mxsg svg{position:absolute;inset:0;width:100%;height:100%}.mxsg path{fill:#f3d59c;stroke:#a07a3a;stroke-width:3}
 .mxsg b{position:absolute;inset:8% 0 0;display:grid;place-items:center;font-size:62cqh;line-height:1;font-weight:900;color:#1f1a14;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Noto Serif CJK JP",serif}
@@ -1143,7 +1144,7 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 .mxrng:focus-visible{outline:2px solid #fff;outline-offset:3px;border-radius:99px}
 .mxpos{flex:none;min-width:4.5em;text-align:end;font-weight:800;font-size:13px;color:#e9e2d4;font-family:var(--round);font-variant-numeric:tabular-nums}
 .mxside{display:flex;flex-direction:column;gap:14px;min-width:0;contain:size}
-.mxnote{flex:none;padding:14px 16px 12px;border:2px solid var(--line);border-radius:18px;background:#fffdf7;box-shadow:0 3px 0 var(--line)}
+.mxnote:where(.mxx *){flex:none;padding:14px 16px 12px;border:2px solid var(--line);border-radius:18px;background:#fffdf7;box-shadow:0 3px 0 var(--line)}
 .mxnh{display:flex;align-items:center;gap:8px;margin-bottom:6px}
 .mxowl{flex:none;width:40px;height:40px;border-radius:50%;background:#f6eedb}
 .mxwho{font-size:13px;font-weight:900;color:var(--mx-gold)}
@@ -1159,16 +1160,16 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 .mxlog h4 span{font-weight:700;color:var(--mx-ink2)}
 .mxlist{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:6px 8px;font-family:var(--round);font-variant-numeric:tabular-nums}
 .mxlist.k-one{display:grid;grid-template-columns:repeat(auto-fill,minmax(7.4em,1fr));align-content:start;gap:0 2px}
-.mxrow{display:flex;align-items:center}
-.mxrow.pr{display:grid;grid-template-columns:2.6em 7.5em 7.5em;align-items:center}
-.mxrow.st{grid-column:1/-1}
+.mxrow:where(.mxx *){display:flex;align-items:center}
+.mxrow:where(.mxx *).pr{display:grid;grid-template-columns:2.6em 7.5em 7.5em;align-items:center}
+.mxrow:where(.mxx *).st{grid-column:1/-1}
 .mxno{font-size:12px;color:var(--mx-ink2);font-weight:700}
-.mxrow.pr>.mxno{text-align:end;padding-inline-end:6px}
-.mxrow button{display:inline-flex;align-items:center;gap:5px;justify-self:start;min-height:32px;padding:3px 9px;border:0;border-radius:8px;background:none;color:var(--ink);font:inherit;font-weight:800;font-size:14.5px;text-align:start;cursor:pointer;white-space:nowrap}
-.mxrow button .mxno{min-width:1.8em;text-align:end}
-@media (hover:hover){.mxrow button:hover{background:#f3eee2}}
-.mxrow button[aria-current]{background:var(--ink);color:#fff}.mxrow button[aria-current] .mxno{color:#d9d3c7}
-.mxrow button.nt::after{content:"";display:inline-block;flex:none;width:6px;height:6px;border-radius:50%;background:#d1901a}
+.mxrow:where(.mxx *).pr>.mxno{text-align:end;padding-inline-end:6px}
+.mxrow:where(.mxx *) button{display:inline-flex;align-items:center;gap:5px;justify-self:start;min-height:32px;padding:3px 9px;border:0;border-radius:8px;background:none;color:var(--ink);font:inherit;font-weight:800;font-size:14.5px;text-align:start;cursor:pointer;white-space:nowrap}
+.mxrow:where(.mxx *) button .mxno{min-width:1.8em;text-align:end}
+@media (hover:hover){.mxrow:where(.mxx *) button:hover{background:#f3eee2}}
+.mxrow:where(.mxx *) button[aria-current]{background:var(--ink);color:#fff}.mxrow:where(.mxx *) button[aria-current] .mxno{color:#d9d3c7}
+.mxrow:where(.mxx *) button.nt::after{content:"";display:inline-block;flex:none;width:6px;height:6px;border-radius:50%;background:#d1901a}
 .mxlist.alln button.nt::after{display:none}
 .mxabout{margin-top:18px;padding:16px 20px;border:2px solid var(--line);border-radius:18px;background:#fffdf7}
 .mxabout h4{margin:0 0 6px;font-size:14px;font-weight:900}
@@ -1186,9 +1187,9 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
   .mxtxt{min-height:0;font-size:15.5px}
   .mxlog h4{padding:7px 14px}
   .mxlist,.mxlist.k-one{display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;gap:2px;padding:6px 8px;scrollbar-width:thin}
-  .mxrow,.mxrow.pr{display:flex;flex:none}.mxrow.st{grid-column:auto}
-  .mxrow.pr>.mxno{padding-inline:6px 2px}
-  .mxrow button{min-height:36px}
+  .mxrow:where(.mxx *),.mxrow:where(.mxx *).pr{display:flex;flex:none}.mxrow:where(.mxx *).st{grid-column:auto}
+  .mxrow:where(.mxx *).pr>.mxno{padding-inline:6px 2px}
+  .mxrow:where(.mxx *) button{min-height:36px}
   .mxctl button{width:44px;height:44px}.mxctl button.pl{width:52px;height:52px}
   .mxabout{margin:16px 12px 0}.mxcredit{margin-inline:12px}
 }
@@ -1196,7 +1197,7 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 .mxch .mxcoord{fill:#cbbfa9}   /* (the chess board stands on the dark stage: its letters and numbers light) */
 .mxcap{padding:2px 8px;border-radius:99px;background:#efe8da;color:#23262f}.mxcap em{color:#5d564b}   /* (what a side has taken: on a light chip, so black pieces show on the dark stage) */
 .mxlm.ring{fill:rgba(250,205,70,.25);stroke:#e0a21a;stroke-width:.07}   /* (point boards: the last move shows as a ring around the piece, not only under it) */
-.mxp,.mxcap,.mxhk,.mxxk{font-style:normal}   /* (2026-11-27 ユーザー: 将棋とシャンチーの駒がイタリックになっている — the pieces sit in <i> elements) */
+.mxp:where(.mxx *),.mxcap,.mxhk,.mxxk{font-style:normal}   /* (2026-11-27 ユーザー: 将棋とシャンチーの駒がイタリックになっている — the pieces sit in <i> elements) */
 /* (2026-11-27 ユーザー: 画面下に謎の改行 — the story was held to 46em inside a wider card, so its lines stopped short of the card's edge)
    the card in two columns: the story on the left, filling its column; the record on the right, one item under another */
 .mxabout{display:grid;grid-template-columns:minmax(0,1fr) minmax(200px,280px);gap:6px 28px;align-items:start}
@@ -1255,3 +1256,30 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 .mpc-b.see circle{fill:currentColor;stroke:none}
 .mpc-b.see[aria-expanded=true]{background:var(--ink);border-color:var(--ink);color:#fff}.mpc-b.see[aria-expanded=true] path{transform:rotate(180deg);transform-origin:12px 19px}
 @media (max-width:819px){.mpc-ac{flex-direction:row}.mpc-tt b{font-size:14px}}
+/* (2026-11-27 ユーザー: 名局選に形勢評価) the slider over a graph of the first side's chance (light) against the second's (dark); the note card's chip */
+.mxgw{position:relative;flex:1;min-width:0;display:flex;align-items:center}
+.mxgw .mxgraph{display:none}
+.mxgw.on{height:30px}.mxgw.on .mxgraph{display:block;position:absolute;inset:0;width:100%;height:100%;border-radius:8px;background:#3d4250;overflow:hidden}
+.mxg0{fill:#ece4d4}.mxg1{fill:none;stroke:#fdc43f;stroke-width:1.6;vector-effect:non-scaling-stroke}.mxg2{stroke:rgba(35,38,47,.35);stroke-width:1;stroke-dasharray:3 3;vector-effect:non-scaling-stroke}
+.mxgw.on .mxrng{position:relative;height:30px}
+.mxgw.on .mxrng::-webkit-slider-runnable-track{height:30px;background:transparent}
+.mxgw.on .mxrng::-moz-range-track{height:30px;background:transparent}
+.mxgw.on .mxrng::-webkit-slider-thumb{width:4px;height:34px;margin-top:-2px;border-radius:2px;background:#fdc43f;box-shadow:0 0 0 2px #23262f}
+.mxgw.on .mxrng::-moz-range-thumb{width:4px;height:34px;border-radius:2px;background:#fdc43f}
+.mxev{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:13px;font-weight:800}
+.mxev i{font-style:normal;color:#5d564b}
+.mxevb{position:relative;flex:1;max-width:140px;height:10px;border-radius:99px;background:#3d4250;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+.mxevb span{position:absolute;inset:0 auto 0 0;background:#ece4d4;transition:width .3s}
+.mxevb::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(253,196,63,.9)}
+.mxev b{display:inline-flex;align-items:center;gap:5px;font-family:var(--round);color:var(--ink)}
+.mxev[hidden]{display:none}
+/* (2026-11-27 ユーザー: 博物館の「さがす」は右端で統一) every room's bar: the filters first, the search box at the end of the line (the right; on a
+   right-to-left page, the line's end); a phone: the page numbers, then the search box, the filters on the next line */
+.mupg-ex{order:1}.mupg-n{order:2}.mupg-s{order:3;margin-inline-start:auto;flex:0 1 320px}
+@media (max-width:819px){.mupg-n{order:1;margin-inline-start:0}.mupg .mupg-s{order:2;flex:1 1 0;margin-inline-start:0}.mupg-ex,.mupg>.sgw{order:3}}
+/* (2026-11-27 ユーザー: 形勢評価グラフはもう少し大きく) the graph: 64 px high on PC, 52 on a phone; the playhead as tall */
+.mxgw.on{height:64px}.mxgw.on .mxrng{height:64px}
+.mxgw.on .mxrng::-webkit-slider-runnable-track{height:64px}.mxgw.on .mxrng::-moz-range-track{height:64px}
+.mxgw.on .mxrng::-webkit-slider-thumb{height:68px}.mxgw.on .mxrng::-moz-range-thumb{height:68px}
+@media (max-width:819px){.mxgw.on,.mxgw.on .mxrng{height:52px}.mxgw.on .mxrng::-webkit-slider-runnable-track,.mxgw.on .mxrng::-moz-range-track{height:52px}.mxgw.on .mxrng::-webkit-slider-thumb{height:56px}.mxgw.on .mxrng::-moz-range-thumb{height:56px}}
+.mxabout dl{gap:6px 18px}.mxabout dd{font-size:13.5px}
