@@ -46,7 +46,7 @@ for (const id of ids) {
   const pool = (raw[id] || []).map(P => { const C = P.cand || [], n1 = C[0][1], n2 = (C[1] || [0, 0])[1];
     const p = new E.Position(); p.setSfen(P.sfen); const a = match(p, C0), b = C1 && match(p, C1), strat = a && !b ? side : b && !a ? 1 - side : -1;
     // (the engine reads only the problems that pass the cheap checks first — the same result, faster)
-    const loss = () => { const r = W.analyze(P.sfen, { depth: 8 }), sc = (r.find(x => x.usi === P.accept[0]) || { s: -1e9 }).s; return r[0].s - sc; };
+    const loss = () => { const r = require('./wasm-engine.js').loadSync().analyze(P.sfen, { depth: 8 })   /* (a new engine per position = the same values as lesson-verify.js shogiOpen, 2026-11-28) */, sc = (r.find(x => x.usi === P.accept[0]) || { s: -1e9 }).s; return r[0].s - sc; };
     const B = brd(P.sfen); return { P, n1, n2, strat, mover: p.side, loss, B, d: dist(B, S0) + 20 * n2 / n1 }; });
   pool.sort((x, y) => y.n1 - x.n1);
   for (const q of pool) {

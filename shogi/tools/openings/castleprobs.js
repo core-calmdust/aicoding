@@ -14,7 +14,7 @@
 const fs = require('fs'), path = require('path');
 const { conv, START } = require('./kif.js');
 const W = require('./wasm-engine.js').loadSync(), E = W.E;
-const ACC = 40, GAP = 100, TOP = 80;
+const ACC = 40, GAP = 100, TOP = 80, EVEN = 300;
 const SRC = require('./src/castle.js');
 const id = process.argv[2], N = +(process.argv.find(a => a.startsWith('n=')) || 'n=40').slice(2), SEED = +(process.argv.find(a => a.startsWith('seed=')) || 'seed=1').slice(5);
 let rs = SEED >>> 0; const rnd = () => ((rs = (rs * 1664525 + 1013904223) >>> 0) / 4294967296);
@@ -83,6 +83,9 @@ while (out.length < N && tries < N * 30) {
     ok.push(acc.sort().join(','));
   }
   if (!bad && ok[0] !== ok[1]) bad = `reads differ ${ok[0]} / ${ok[1]}`;
+  // (2026-11-28 c_yagura・c_funa) the opening is still even and quiet: |best| ≤ EVEN by both reads, no promoted piece on the board
+  if (!bad && (Math.abs(r8[0].s) > EVEN || Math.abs(r9[0].s) > EVEN)) bad = `not even ${r9[0].s}`;
+  if (!bad && p.board.some(x => x && E.typeOf(x) > 8)) bad = 'promoted piece';
   const legal = r9.length, acc = ok[1].split(',');
   if (!bad && legal - acc.length < 3) bad = 'few';
   console.log(out.length, kk, 'd' + d0, 'G=' + G.join(','), bad ? 'NG ' + bad : 'OK accept=' + acc.join(','));
