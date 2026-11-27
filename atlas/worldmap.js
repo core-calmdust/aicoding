@@ -46,6 +46,7 @@
   const zl = (l, i) => (ZT[l] || ZT.en)[i];
   let ctx = null, lang = 'ja', host = null, el = {}, view = null, sel = null, reg = 'all', anim = 0, ro = null, raf = 0;
   const u = k => (UI[lang] || UI.en)[k] || UI.en[k];
+  const PAINT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="1"/><path d="M3.5 16l5-5 4 4 3-3 5 5"/><circle cx="15.5" cy="9" r="1.4"/></svg>';
   const READ_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h9l3 3v13H6z"/><path d="M9 10h6M9 13h6M9 16h4"/></svg>';
   const D = id => window.ATLAS_MAP_DATA && window.ATLAS_MAP_DATA[id];
   const games = () => ctx.games.filter(g => D(g.id));
@@ -225,7 +226,10 @@
     el.info.querySelector('.amplay').onclick = () => { const im = [...el.info.querySelectorAll('.amart img')].find(i => i.offsetParent); ctx.open(g.id, im); };
     const hb = el.info.querySelector('.amhist'); if (hb) hb.onclick = () => window.Historia.open(g.id);   // (opens the board view first, then the history over it)
     { const M = window.AtlasMuseum, sid = M && M.readOf && M.readOf(g.id), acts = el.info.querySelector('.amacts');   // (2026-11-24 ユーザー: 読み物とのつながり)
-      if (sid && acts && host.closest('#pg-museum')) { acts.insertAdjacentHTML('beforeend', `<button type="button" class="amhist amread" style="--c:${g.color}">${READ_SVG}${esc(M.rname('read'))}</button>`); acts.querySelector('.amread').onclick = () => M.openItem('read', sid); } }
+      if (sid && acts && host.closest('#pg-museum')) { acts.insertAdjacentHTML('beforeend', `<button type="button" class="amhist amread" style="--c:${g.color}">${READ_SVG}${esc(M.rname('read'))}</button>`); acts.querySelector('.amread').onclick = () => M.openItem('read', sid); }
+      // (2026-11-27 ユーザー: このゲームが描かれた作品へ) the paintings room, filtered to this game — only when at least one work shows it
+      if (M && M.paintOf && acts && host.closest('#pg-museum')) { const gid = g.id; M.paintOf(gid).then(n => { if (!n || sel !== gid || !acts.isConnected || acts.querySelector('.ampaint')) return;
+        acts.insertAdjacentHTML('beforeend', `<button type="button" class="amhist ampaint" title="${esc(M.rname('paint'))}" aria-label="${esc(M.rname('paint') + ' ' + n)}" style="--c:${g.color}">${PAINT_SVG}<span>${esc(M.rname('paintP'))}</span><em>${n}</em></button>`); acts.querySelector('.ampaint').onclick = () => M.openPaint(gid); }); } }
     // the journey chips: hovering (or touching) one lights its numbered stop on the map
     el.info.querySelectorAll('.amjour [data-n]').forEach(ch => {
       const lit = on => { hotN = on ? ch.dataset.n : null; el.map.querySelectorAll(`.num[data-n="${ch.dataset.n}"]`).forEach(n => n.classList.toggle('hot', on)); };
