@@ -1333,7 +1333,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=8').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=9').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { let pr; try { pr = JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } return pzMigrate(pr); }
@@ -1595,7 +1595,7 @@ function okAnswer(P, s, m, pts) {
   // (2026-11-25 05:33 担当C) s_count / s_stop: the opponent's winning reply {r} and your jumps after it {e} (an exact solve)
   // (2026-11-27 担当C) s_go / s_keep / s_read: the head (ls.s_go.ng.short(S) · ls.s_keep.ng.cut · ls.s_read.ng.fewer · ls.st.lose) + the tail
   // (ls.st.tail0 / tailN: after the opponent's winning reply {r}, your jumps {e})
-  const F = window.KonaneLsFacts && !lesson.virt && /^(b_(double|win|jump)|s_(count|stop|go|keep|read))$/.test(s.id) ? KonaneLsFacts.fact(E, s.id, P.s, m) : null;
+  const F = window.KonaneLsFacts && !lesson.virt && /^(b_(open|double|win|jump)|s_(count|stop|go|keep|read))$/.test(s.id) ? KonaneLsFacts.fact(E, s.id, P.s, m) : null;
   const S3 = F && /^(s_(go|keep|read)|b_jump)$/.test(s.id) && ['short', 'cut', 'fewer', 'lose', 'miss'].includes(F.k);   // (b_jump 2026-11-27: ls.b_jump.ng.miss / missT + the tail)
   const ST = F && (S3 || ['more', 'go', 'lose'].includes(F.k));
   const ngKey = !F ? '.ng' : ST ? '.ng.' + (F.k === 'go' && F.spring ? 'goS' : F.k) + (F.e ? 'N' : '0') : F.k === 'stop' ? '.ng.stop' : F.k === 'other' ? '.ng.other' : F.k === 'left' ? (F.j === 1 ? '.ng1' : '.ng') : '.ng';
@@ -1622,7 +1622,7 @@ $('#lsHint').onclick = () => {
   lessonMarks = [];
   const good = P.ok || [P.best];
   // (2026-11-25 担当C) b_double: every stone that can jump · b_win: the opponent's stones that could jump now (not the answer's stone, 追52)
-  const hp = window.KonaneLsFacts && !lesson.virt && /^(b_(double|win|jump)|s_(count|stop|go|keep|read))$/.test(s.id) ? KonaneLsFacts.hint(E, s.id, P.s) : null;
+  const hp = window.KonaneLsFacts && !lesson.virt && /^(b_(open|double|win|jump)|s_(count|stop|go|keep|read))$/.test(s.id) ? KonaneLsFacts.hint(E, s.id, P.s) : null;
   for (const f of hp || new Set(good.map(mFrom))) lessonMarks.push({ at: f, cls: 'ok' });
   $('#lsFb').innerHTML = lesson.virt ? t('op.hint') : t('ls.' + s.id + '.hint');
   renderFx();
