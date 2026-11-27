@@ -733,6 +733,13 @@ class Table3D {
     this.setInfo({ round: 0, kyoku: 0, honba: 0, kyotaku: 0, left: 70, scores: [25000, 25000, 25000, 25000], dealer: 0, turn: -1 });
   }
 
+  // (2026-11-28) the faces drawn before the tile sheets / the font arrived: painted again in place (the materials stay, so every tile on the table follows)
+  refaces() {
+    if (!this.faceTex) return;
+    for (const [k, m] of this.faceTex) { const t = parseInt(k, 10), red = /r$/.test(k), tex = m.normal.map; if (!tex) continue;
+      tex.image = MJTiles.canvas(t, red); tex.needsUpdate = true;
+      if (MJTiles.sheets()) { const nm = m.normal.normalMap; if (nm) { nm.image = MJTiles.normal(t, red); nm.needsUpdate = true; } else { const n = new THREE.CanvasTexture(MJTiles.normal(t, red)); n.anisotropy = 8; for (const k2 in m) if (m[k2] && m[k2].isMaterial) { m[k2].normalMap = n; m[k2].needsUpdate = true; } } } }
+  }
   faceMat(id) {
     const t = id >> 2, red = id === 16 || id === 52 || id === 88;
     const k = t + (red ? 'r' : '');
