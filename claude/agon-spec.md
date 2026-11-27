@@ -29,6 +29,7 @@ URL: https://core-calmdust.github.io/aicoding/agon/ ／ トップはアルケル
 - パズル＝勝ち切りパズル152問（tools/gen_pz.js 構成局面＋gen_duel.js 実戦 → build_pz.js）：x2（2手以内）8問、w3/b3, w4/b4, w5/b5 各24問。x2 は単純すぎるとのユーザー指摘で24→8問に削減（2026-11-05）。
   - **2026-11-27 担当F（3Dレッスン品質ループ）**：全152問を claude/lesson-quality.md ①〜⑨・追1〜追88 で検証（`tools/lesson-verify-agon.js`＝engine.js の duelGood・duelMin・duelReply で完全読み。`node tools/lesson-verify.js agon`、`--selftest`）。合格の線：勝てる初手は1つ・それより短い勝ちなし・合法手3以上で外れ2以上・追72（正解は合法手の1/3以下）・12の対称と色の入れかえで4マス以内の局面なし（レッスンとも）・ほかの問題の本手順の局面でない・10問の段ごとに難しさ d（外れた初手＋2×1手遅れで勝てる手）が下がらない・本手順の全段の外れ手で相手の応手のあと勝ち切れないこと。不合格は `agon/tools/rebuild_pz.js` で候補（今の問題・tools/duel_raw.jsonl・pz_c*.jsonl）から作り直し（puzzles.json v2）。
   - 2D の詰めの決まり（追88）：`puzzleMove` は外れた手を戻さず正解の手も出さない。相手が duelReply（3D と同じエンジン）で応じ、`agon/pzwhy.js`（AgonPzWhy.facts／text、14言語）が盤で起きたこと（女王・ガードをはさまれた・捕まった駒を置き直された・王座のまわりに入られた・空の王座を囲んだ・最後の手で女王／ガードが足りない）を赤い印つきで言う。正解は「答えを見る」だけ。
+  - **3D 卓のパズル（2026-11-27 担当F）**：ポータルの3D卓でも同じ152問（atlas/puzzles.js BOOK.agon、atlas/games/agon.js の ctx.pz、案内キンダイスン atlas/games/agon-pz.js）。判定・応手・外れた手の文は 2D と同じ（duelGood・duelReply・pzwhy.js facts）。詳細は claude/atlas-portal-spec.md の「アゴン」。
 - コーチ（coach.js / coach-i18n.js）：形勢・歩数・王座・危ない駒、方針分類（勝ち筋・女王捕獲・捕獲・王座へ・輪に入る・ふさぐ・守る・置き直し・配置・内側へ・輪の上）。
 - オンライン：firebase-config.js が null → 準備中表示。手の符号化は3文字（下位6bit×2＋上位bit）。
 - アイコン：トップ images/icons/agon.svg、ポータル3D atlas/icons3d.js の agon() → images/atlas/agon.webp（atlas/app.js の R3）、ゲーム一覧サムネ atlas/shots/agon.webp：いずれもヴィクトリア朝の盤と骨の女王。トップのSS images/agon.webp は民芸盤のまま（ユーザー指定）。

@@ -237,6 +237,38 @@
     { id: 'richelieu', w: 2048, h: 1829, rijks: 'RP-P-1907-4831', bg: '#c9c3b5', spots: [[.45, .49], [.3, .42], [.58, .42], [.07, .32], [.8, .33], [.5, .97]], links: [{ g: 'chess' }] },
     // (2026-11-25) the Rijksmuseum: after Adam de Coster, tric-trac players by candlelight
     { id: 'coster', w: 2048, h: 1575, rijks: 'RP-P-1960-204', bg: '#2b2824', spots: [[.38, .66], [.6, .58], [.25, .5], [.42, .35], [.13, .33], [.86, .45]], links: [{ g: 'backgammon' }] },
+    // (2026-11-25) the Rijksmuseum: Hans Watzek, 'Kiebitz' (1894), halftone in 'La Photographie est-elle un Art?'
+    { id: 'kiebitz', w: 1710, h: 1538, rijks: 'RP-F-2001-7-162-18', bg: '#d9d2c2', spots: [[.76, .45], [.64, .27], [.33, .42], [.56, .6], [.9, .06], [.5, .97]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Rijksmuseum: Esaias van de Velde drawing, tric-trac players in a castle garden (1630)
+    { id: 'evdvelde', w: 2048, h: 1258, rijks: 'RP-T-00-280', bg: '#dcdad2', spots: [[.7, .52], [.6, .38], [.8, .45], [.85, .3], [.25, .6], [.12, .82]], links: [{ g: 'backgammon' }] },
+    // (2026-11-25) the Rijksmuseum: Leendert van der Cooghen, two men at tric-trac with a monkey in the window (1666)
+    { id: 'cooghen', w: 2048, h: 1339, rijks: 'RP-P-BI-6200', bg: '#e6e2d6', spots: [[.48, .6], [.3, .32], [.36, .5], [.22, .2], [.53, .39], [.71, .27]], links: [{ g: 'backgammon' }] },
+    // (2026-11-25) the Rijksmuseum: Ferdinand Roybet, 'Le joueur d'échecs' (1875)
+    { id: 'roybet', w: 1532, h: 2048, rijks: 'RP-P-1991-247', bg: '#e6e2d8', spots: [[.25, .53], [.55, .27], [.33, .46], [.85, .57], [.2, .32], [.5, .95]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Rijksmuseum: Le Charivari 1838, 'St. Pierre, mon ami, vous êtes capot!' — artist and model at cards
+    { id: 'capot', w: 1451, h: 2048, rijks: 'RP-P-OB-40.891', bg: '#e3e0da', spots: [[.6, .52], [.42, .38], [.76, .35], [.3, .2], [.3, .75], [.5, .93]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: King of Clubs from a 1900 deck with photographs of Native Americans (Vroman / Lazarus & Melzer)
+    { id: 'ziacard', w: 1502, h: 2048, rijks: 'RP-F-2020-40-13', bg: '#d9d4c6', spots: [[.107, .16], [.44, .31], [.66, .32], [.5, .55], [.51, .83], [.9, .8]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Rijksmuseum: hand-coloured Japanese photograph, two women and an old man playing go
+    { id: 'gothink', w: 1973, h: 1238, rijks: 'RP-F-2001-7-1557B-22', bg: '#d8d2c2', spots: [[.49, .64], [.41, .61], [.645, .32], [.467, .31], [.374, .85], [.543, .775]], links: [{ g: 'go' }] },
+    // (2026-11-25) the Rijksmuseum: Francis A. Place, 'Juvenile Gamblers': four boys shooting dice on a crate
+    { id: 'craps', w: 1425, h: 2048, rijks: 'RP-F-2001-7-1106C-1', bg: '#cdb9a0', spots: [[.47, .682], [.425, .663], [.595, .536], [.23, .7], [.61, .955], [.47, .8]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Jan Baptist Weenix (possibly), study of a man playing knucklebones, chalk on blue paper (1642-47)
+    { id: 'bikkel', w: 1383, h: 2048, rijks: 'RP-T-1899-A-4239', bg: '#c9d0d4', spots: [[.77, .19], [.7, .5], [.8, .78], [.45, .85], [.53, .44], [.18, .45]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Anonymous French design for chessmen, Western and Eastern sides (1850-75)
+    { id: 'stukken', w: 1594, h: 2048, rijks: 'RP-T-2020-114', bg: '#b9c8c8', spots: [[.12, .3], [.29, .3], [.47, .27], [.63, .37], [.12, .68], [.63, .73]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Rijksmuseum: Moolenyzer, 'Bloemenhof of Vermakelijke Roze Tempel', dice game board (1792-1847)
+    { id: 'rozetempel', w: 1686, h: 2048, rijks: 'RP-P-2019-2954', bg: '#e9e1cc', spots: [[.5, .08], [.5, .41], [.5, .56], [.37, .38], [.83, .41], [.5, .96]], links: [{ ex: 'goose' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Claudine Stella after Jacques Stella, 'Le Brelan', putti playing cards (1657)
+    { id: 'brelan', w: 2048, h: 1757, rijks: 'RP-P-2023-61-32', bg: '#e2dccb', spots: [[.45, .55], [.32, .73], [.22, .3], [.86, .58], [.8, .17], [.51, .83]], links: [{ g: 'poker' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Master PW of Cologne, round playing card, six of parrots (1470-1500)
+    { id: 'pwkarte', w: 1998, h: 2048, rijks: 'RP-P-OB-987', bg: '#ece8dc', spots: [[.47, .14], [.61, .86], [.27, .27], [.75, .54], [.47, .74], [.5, .46]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: J. E. Nilson, 'Das Bretspiel': draughts and tocadille in a Rococo frame
+    { id: 'nilson', w: 2048, h: 1405, rijks: 'RP-P-1964-2876', bg: '#ece6d8', spots: [[.44, .48], [.68, .6], [.59, .47], [.77, .5], [.28, .45], [.5, .88]], links: [{ g: 'checkers' }, { g: 'backgammon' }] },
+    // (2026-11-25) the Rijksmuseum: Joullain after Coypel, 'Les Châteaux de cartes' (1725)
+    { id: 'chateau', w: 1399, h: 2048, rijks: 'RP-P-OB-43.810', bg: '#ebe3d3', spots: [[.37, .42], [.12, .47], [.43, .29], [.7, .23], [.22, .79], [.53, .89]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Pugillus facetiarum iconographicarum: ruined young man with dice and an elegant woman (1608-18)
+    { id: 'pugillus', w: 2048, h: 1398, rijks: 'RP-P-1996-2', bg: '#e8e4da', spots: [[.25, .3], [.32, .18], [.72, .25], [.7, .55], [.71, .84], [.75, .93]], links: [{ room: 'chance' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',

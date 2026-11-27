@@ -1,0 +1,34 @@
+{
+"t": {
+"ja": "両方の手数を数える",
+"en": "Count both sides",
+"zh": "数双方的步数",
+"zh-TW": "數雙方的手數",
+"ko": "양쪽 수를 센다",
+"es": "Cuenta ambos bandos",
+"fr": "Comptez les deux camps",
+"pt": "Conte os dois lados",
+"de": "Beide Seiten zählen",
+"ru": "Считайте обе стороны",
+"tr": "İki tarafı da say",
+"id": "Hitung kedua pihak",
+"hi": "दोनों की चालें गिनो",
+"ar": "عُدّ للطرفين"
+},
+"body": {
+"ja": "<p>白と黒、それぞれ<b>あと何手</b>で陣地が完成するか数えよう（相手は動かないとする）。いまの黒は、白の{S}の駒を<b>跳び台</b>にして{B0}手で完成できる。</p><p>白がほかの駒をいちばん速く進めても、白は{W}手・黒は{B0}手で同じ。白が完成しても黒が最後の1手で追いついて引き分けになる。矢印の{A}で{S}の駒をどかすと、黒は{B}手に遅れて、白の{W}手のほうが少なくなる。これで勝ちだ。</p>",
+"en": "<p>Count for White and for Black how many <b>moves</b> each still needs to fill its corner (as if the other stood still). Right now Black hops over the white piece on {S} (<b>its springboard</b>) and finishes in {B0}.</p><p>If White moves another piece as fast as it can, White needs {W} and Black {B0}: the same, so Black catches up with its last move and it is a draw. The arrow {A} moves the piece on {S} away: Black now needs {B}, White’s {W} is fewer, and White wins.</p>",
+"zh": "<p>分别数一数白方和黑方填满营地<b>还要几步</b>（假设对方不动）。现在黑方可以把{S}的白子当作<b>跳板</b>，{B0}步就能完成。</p><p>白方用别的子走最快的一步，白方{W}步、黑方{B0}步，一样多：白方完成后黑方用最后一步追上，是和棋。箭头{A}把{S}的子移开，黑方变成{B}步，白方的{W}步更少，白方获胜。</p>",
+"zh-TW": "<p>分別數一數白方和黑方填滿陣地<b>還要幾手</b>（假設對方不動）。現在黑方可以把{S}的白子當作<b>跳板</b>，{B0}手就能完成。</p><p>白方用別的子走最快的一手，白方{W}手、黑方{B0}手，一樣多：白方完成後黑方用最後一手追上，是和棋。箭頭{A}把{S}的子移開，黑方變成{B}手，白方的{W}手更少，白方獲勝。</p>",
+"ko": "<p>백과 흑이 각각 진영을 채우기까지 <b>몇 수</b> 남았는지 세어 봅시다(상대는 움직이지 않는다고 봅니다). 지금 흑은 {S}의 백 말을 <b>발판</b>으로 삼아 {B0}수에 완성할 수 있습니다.</p><p>백이 다른 말을 가장 빠르게 움직여도 백 {W}수, 흑 {B0}수로 같아서, 백이 완성해도 흑이 마지막 한 수로 따라와 무승부입니다. 화살표 {A}로 {S}의 말을 치우면 흑은 {B}수로 늦어지고, 백의 {W}수가 더 적어 백이 이깁니다.</p>",
+"es": "<p>Cuenta para blancas y para negras cuántas <b>jugadas</b> les faltan para llenar su esquina (como si el rival no se moviera). Ahora las negras saltan la pieza blanca de {S} (<b>su trampolín</b>) y terminan en {B0}.</p><p>Si las blancas mueven otra pieza lo más rápido posible, blancas {W} y negras {B0}: iguales, así que las negras empatan con su última jugada. La flecha {A} aparta la pieza de {S}: las negras necesitan {B}, las {W} de las blancas son menos y ganan las blancas.</p>",
+"fr": "<p>Comptez pour les blancs et pour les noirs combien de <b>coups</b> il leur reste pour remplir leur coin (comme si l’adversaire ne bougeait pas). Pour l’instant les noirs sautent le pion blanc de {S} (<b>leur tremplin</b>) et finissent en {B0}.</p><p>Si les blancs jouent un autre pion au plus vite, blancs {W} et noirs {B0} : autant, donc les noirs rattrapent avec leur dernier coup, nulle. La flèche {A} écarte le pion de {S} : les noirs ont besoin de {B}, les {W} des blancs sont moins nombreux et les blancs gagnent.</p>",
+"pt": "<p>Conte para as brancas e para as pretas quantos <b>lances</b> faltam para encher o canto (como se o adversário não se mexesse). Agora as pretas saltam a peça branca de {S} (<b>o trampolim delas</b>) e terminam em {B0}.</p><p>Se as brancas moverem outra peça o mais rápido possível, brancas {W} e pretas {B0}: iguais, então as pretas empatam com o último lance. A seta {A} afasta a peça de {S}: as pretas precisam de {B}, os {W} das brancas são menos e as brancas vencem.</p>",
+"de": "<p>Zähle für Weiß und für Schwarz, wie viele <b>Züge</b> jede Seite noch braucht, um ihre Ecke zu füllen (als ob der Gegner stillstünde). Jetzt springt Schwarz über den weißen Stein auf {S} (<b>sein Sprungbrett</b>) und ist in {B0} fertig.</p><p>Zieht Weiß einen anderen Stein so schnell wie möglich, braucht Weiß {W} und Schwarz {B0}: gleich viele, also holt Schwarz mit seinem letzten Zug auf, Remis. Der Pfeil {A} zieht den Stein auf {S} weg: Schwarz braucht nun {B}, die {W} von Weiß sind weniger, und Weiß gewinnt.</p>",
+"ru": "<p>Посчитайте для белых и для чёрных, сколько <b>ходов</b> каждому ещё нужно, чтобы заполнить свой угол (как будто соперник стоит на месте). Сейчас чёрные прыгают через белую шашку на {S} (<b>свой трамплин</b>) и заканчивают за {B0}.</p><p>Если белые пойдут другой шашкой как можно быстрее, белым нужно {W}, чёрным {B0} — поровну, и чёрные догоняют последним ходом: ничья. Стрелка {A} убирает шашку с {S}: чёрным теперь нужно {B}, у белых {W} — меньше, и белые выигрывают.</p>",
+"tr": "<p>Beyaz ve Siyah için köşeyi doldurmaya <b>kaç hamle</b> kaldığını say (rakip oynamıyormuş gibi). Şu an Siyah, {S} karesindeki beyaz taşın üstünden atlayarak (<b>sıçrama tahtası</b>) {B0} hamlede bitirir.</p><p>Beyaz başka bir taşı en hızlı şekilde oynasa bile Beyaz {W}, Siyah {B0}: eşit, yani Siyah son hamlesiyle yetişir ve berabere olur. Ok {A}, {S} karesindeki taşı çeker: Siyahın artık {B} hamleye ihtiyacı var, Beyazın {W} hamlesi daha az ve Beyaz kazanır.</p>",
+"id": "<p>Hitung untuk Putih dan Hitam berapa <b>langkah</b> lagi yang dibutuhkan untuk mengisi sudutnya (seolah lawan diam). Sekarang Hitam melompati bidak putih di {S} (<b>batu loncatannya</b>) dan selesai dalam {B0}.</p><p>Jika Putih menggerakkan bidak lain secepat mungkin, Putih {W} dan Hitam {B0}: sama, jadi Hitam menyusul dengan langkah terakhirnya dan hasilnya seri. Panah {A} memindahkan bidak di {S}: Hitam kini butuh {B}, {W} milik Putih lebih sedikit, dan Putih menang.</p>",
+"hi": "<p>सफ़ेद और काले, दोनों के लिए गिनो कि कोना भरने में <b>कितनी चालें</b> बाकी हैं (मानो विरोधी नहीं चलता)। अभी काला {S} की सफ़ेद गोटी के ऊपर से कूदकर (<b>उसकी सीढ़ी</b>) {B0} चालों में पूरा कर लेता है।</p><p>सफ़ेद कोई दूसरी गोटी सबसे तेज़ चले तब भी सफ़ेद {W} और काला {B0}: बराबर, इसलिए काला आख़िरी चाल से बराबरी कर लेता है और ड्रॉ। तीर {A} से {S} की गोटी हट जाती है: अब काले को {B} चाहिए, सफ़ेद की {W} कम हैं और सफ़ेद जीतता है।</p>",
+"ar": "<p>عُدّ للأبيض وللأسود كم <b>نقلة</b> بقيت لكلٍّ منهما لملء ركنه (كأن الخصم لا يتحرك). الآن يقفز الأسود فوق القطعة البيضاء في {S} (<b>منصة قفزه</b>) وينهي في {B0}.</p><p>إذا حرّك الأبيض قطعة أخرى بأسرع ما يمكن فالأبيض {W} والأسود {B0}: متساويان، فيلحق الأسود بنقلته الأخيرة ويكون تعادلًا. السهم {A} يُبعد القطعة من {S}: يحتاج الأسود الآن {B}، و{W} للأبيض أقل، فيفوز الأبيض.</p>"
+}
+}

@@ -146,6 +146,35 @@ function texts(add) {
   if (!/AgonPzWhy/.test(app)) add('2D', -1, '⑨ agon/app.js does not use AgonPzWhy');
   const P88 = require('./lesson-verify-pz88.js');
   if (!P88.DONE.includes('agon')) add('2D', -1, '⑨ lesson-verify-pz88.js DONE does not list agon');
+  texts3d(add);
+}
+// (2026-11-27 担当F) the 3D table: キンダイスン's words (atlas/games/agon-pz.js) — every line in 14 languages (the board facts of a
+// language without its own: agon/pzwhy.js), each variant with the placeholders of the 2D's words; the facts without a red mark
+// (wEmpty · wLastQ · wLastG · wPass) never speak of one and the others name it (ja / en: ⑦ the words say what is on the board); the
+// line after a right move (mid) has no praise (追91); atlas/puzzles.js plays the 2D's reply and says facts() (agMoved), and the table
+// loads both files (atlas/lazy.js)
+function texts3d(add, A) {
+  A = A || require(path.join(ROOT, 'atlas/games/agon-pz.js'));
+  const ph = s => (String(s).match(/\{\w+\}/g) || []).filter(x => x !== '{c}').sort().join('');
+  const OWN = ['p1', 'p2', 'hi', 'goal', 'mid', 'solved', 'ans', 'pz.hint1', 'pz.hintText', 'pz.showing', 'pz.answerDone'];
+  const RED = { ja: /赤い印/, en: /red mark/ }, NOMARK = ['wEmpty', 'wLastQ', 'wLastG', 'wPass'];
+  for (const L of LANGS) {
+    for (const k of OWN.concat(W.KEYS)) {
+      const own = A.T[L] && A.T[L][k], vs = own == null ? [] : [].concat(own);
+      if (!vs.length && OWN.includes(k)) { add('3D', -1, `⑨ agon-pz.js ${L}.${k} missing`); continue; }
+      const want = W.KEYS.includes(k) ? ph(W.T.ja[k]) : ph([].concat(A.T.ja[k])[0]);
+      const all = vs.length ? vs : [A.text(L, k, 0, null)];
+      all.forEach((x, j) => {
+        if (x == null || !String(x).trim()) { add('3D', -1, `⑨ agon-pz.js ${L}.${k} empty`); return; }
+        if (ph(x) !== want) add('3D', -1, `⑨ agon-pz.js ${L}.${k}[${j}] placeholders ${ph(x) || '-'} ≠ ${want || '-'}`);
+        if (RED[L] && W.KEYS.includes(k) && vs.length) { const red = RED[L].test(x); if (NOMARK.includes(k) ? red : !red) add('3D', -1, `⑦ agon-pz.js ${L}.${k}[${j}] ${red ? 'speaks of a red mark that is not there' : 'does not name the red mark'}`); }
+        if (k === 'mid' && /(いいね|お見事|正解|さすが|ナイス|good|great|well done)/i.test(x)) add('3D', -1, `追91 agon-pz.js ${L}.mid[${j}] praises on the way`);
+      });
+    }
+  }
+  const pz = fs.readFileSync(path.join(ROOT, 'atlas/puzzles.js'), 'utf8'), lz = fs.readFileSync(path.join(ROOT, 'atlas/lazy.js'), 'utf8');
+  if (!/async function agMoved[\s\S]{0,1200}W\.facts\(/.test(pz)) add('3D', -1, '⑨ atlas/puzzles.js agMoved does not say AgonPzWhy facts');
+  if (!/"agon": \[[^\]]*agon\/pzwhy\.js[^\]]*games\/agon-pz\.js/.test(lz)) add('3D', -1, '⑨ atlas/lazy.js does not load agon/pzwhy.js and games/agon-pz.js for agon');
 }
 function verify(opt) {
   opt = opt || {};
@@ -181,7 +210,7 @@ function verify(opt) {
   if (!opt.noText) texts(add);
   return { out, rows };
 }
-module.exports = { verify, analyze, dist, poolOf, MAPS, sym, THEME };
+module.exports = { verify, analyze, dist, poolOf, MAPS, sym, THEME, texts3d };
 if (require.main === module) {
   const a = process.argv.slice(2), gv = k => { const i = a.indexOf(k); return i >= 0 ? a[i + 1] : null; };
   if (a.includes('--selftest')) {
@@ -197,6 +226,9 @@ if (require.main === module) {
     { const r = analyze(P, 'w3', { facts: o => ({ k: o.last ? 'wLastQ' : 'wRun', v: { g: 0, n: o.left }, mark: o.reply != null ? E.mTo(o.reply) : -1 }) }); const ok = r.iss.some(x => /⑧/.test(x)); console.log(ok ? 'detected' : 'MISSED', 'broken facts', '|', r.iss.slice(0, 2).join(' / ')); if (!ok) fails++; }
     // a duplicate: a puzzle copied under a symmetry with the colours swapped
     { const D = JSON.parse(JSON.stringify(PZ)); const Q = JSON.parse(JSON.stringify(P)); Q.s.b = sym(Q.s.b, MAPS[7], 1); Q.s.side = 3 - Q.s.side; D.themes.find(T => T.id === 'b3').puzzles.push(Q); const pool = poolOf(D); const A = pool.find(x => x.tag === 'w3#1'), B = pool[pool.findIndex(x => x.tag.startsWith('b3#')) + D.themes.find(T => T.id === 'b3').puzzles.length - 1]; const ok = dist(A, B) === 0; console.log(ok ? 'detected' : 'MISSED', 'a mirrored colour-swapped copy (⑤)'); if (!ok) fails++; }
+    // broken 3D words: {n} dropped from a ja variant, a red mark named where there is none
+    { const A = JSON.parse(JSON.stringify(require(path.join(ROOT, 'atlas/games/agon-pz.js')).T)); A.ja.wTookG[2] = A.ja.wTookG[2].replace('{n}', '3'); A.ja.wLastQ[1] += '赤い印'; const out = []; texts3d((a, b, m) => out.push(m), { T: A, text: require(path.join(ROOT, 'atlas/games/agon-pz.js')).text });
+      const ok = out.some(m => /wTookG\[2\] placeholders/.test(m)) && out.some(m => /wLastQ\[1\] speaks/.test(m)); console.log(ok ? 'detected' : 'MISSED', 'broken 3D words', '|', out.slice(0, 2).join(' / ')); if (!ok) fails++; }
     console.log(fails ? fails + ' MISSED' : 'selftest ok'); process.exit(fails ? 1 : 0);
   }
   const r = verify({ file: gv('--file'), only: gv('--only') });

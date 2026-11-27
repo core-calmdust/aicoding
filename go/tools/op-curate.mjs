@@ -58,6 +58,7 @@ for (const g of O.sets) { if (SETS.length && !SETS.includes(g.id)) continue; con
   for (const L of lines) for (let at = 0; at < L.length; at++) { const mover = at % 2 ? 3 - st.turn : st.turn, pre = L.slice(0, at);
     if (mover === side) { const k = g.id + ':' + pre.join(' '); if (!seen.has(k)) { seen.add(k); jobs.push({ g, mv: pre, k }); } continue; }
     // the other side leaves the line here: its likely moves (policy >= 5%) that are not the line's
+    if (at < DEVMIN) continue;   // (--devmin は外れ方にも：布石の形ができる前の外れ方は読まない＝速さのためだけ、2026-11-27 担当B)
     const pol = policy(E, st, pre.map(s => R.parseCoord(s, n)), komiOf(g), 8);
     pol.list.filter(e => e.m >= 0 && (LOW ? e.p >= 0.01 && e.p < 0.03 : e.p >= PMIN) && R.coord(e.m, n) !== L[at] && !(DNEAR && farOf(g, R.coord(e.m, n)))).slice(0, LOW ? 5 : PN).forEach(e => { const mv = pre.concat([R.coord(e.m, n)]), k = g.id + ':' + mv.join(' ');
       if (!seen.has(k)) { seen.add(k); jobs.push({ g, mv, k, dev: at }); } }); } }

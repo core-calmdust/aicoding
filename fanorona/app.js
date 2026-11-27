@@ -1396,7 +1396,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=3').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=4').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { let pr; try { pr = JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } return pzMigrate(pr); }
@@ -1648,7 +1648,7 @@ function lessonAnswer(m) {
     update(false);
   }, moveDur(m, pos0) + 700);
 }
-const LS_FACT = /^b_(approach|withdraw|choose)$/;   // (the lessons whose words come from fanorona/ls-facts.js)
+const LS_FACT = /^b_(approach|withdraw|choose|chain)$/;   // (the lessons whose words come from fanorona/ls-facts.js)
 function okAnswer(P, s, m, pts) {
   const pos0 = posAt(0).pos;
   lesson.results[lesson.i] = pts; renderLessonCard();
@@ -1656,8 +1656,9 @@ function okAnswer(P, s, m, pts) {
   // (2026-11-27 担当E) b_approach / b_withdraw / b_choose: the words say what the move took on the board (fanorona/ls-facts.js, the same as the 3D):
   // the answer's count {a}, and for b_choose the same step's other line (ngSame)
   const F = window.FanoronaLsFacts && !lesson.virt && LS_FACT.test(s.id) ? FanoronaLsFacts.fact(E, s.id, P.s, m) : null;
-  const ngKey = F && F.k === 'same' ? '.ngSame' : '.ng';
-  $('#lsFb').innerHTML = `<span class="pts ${pts ? 'ok' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts ? 'ok' : 'ng'}">${t(pts ? 'fb.perfect' : 'fb.bad')}</b> ` + (pts ? t('ls.' + s.id + '.why', { m: mvIn(pos0, m), a: F ? F.a : '' }) : t('ls.' + s.id + ngKey, { m: mvIn(pos0, best), x: mvIn(pos0, m), a: F ? F.a : '' }));
+  // b_chain: the total {a} in {sa} captures, a wrong move's {c}, and whether it stopped while its piece could go on (ngStop)
+  const ngKey = F && F.k === 'same' ? '.ngSame' : F && (F.k === 'stop' || F.k === 'stopx') ? '.ngStop' : '.ng', fv = F ? { a: F.a, c: F.c, sa: F.sa } : { a: '' };
+  $('#lsFb').innerHTML = `<span class="pts ${pts ? 'ok' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts ? 'ok' : 'ng'}">${t(pts ? 'fb.perfect' : 'fb.bad')}</b> ` + (pts ? t('ls.' + s.id + '.why', Object.assign({ m: mvIn(pos0, m) }, fv)) : t('ls.' + s.id + ngKey, Object.assign({ m: mvIn(pos0, best), x: mvIn(pos0, m) }, fv)));
   playChime(!!pts); playMove2(m);
   lsAuto(!!pts, moveDur(m, pos0) + 1100);
   const tok = busyToken;
