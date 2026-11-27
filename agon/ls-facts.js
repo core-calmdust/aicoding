@@ -34,6 +34,13 @@
                 k 'touch' it lands next to an enemy piece without sandwiching it; nothing captured, the enemy completes the
                           ring (rp: that enemy move, gold)
                 k 'none'  no enemy piece next to where it lands; nothing captured, the enemy completes the ring (rp)
+     s_win2     (2026-11-27 担当D; the queen on the throne, two empty cells round it, two guards of yours one step outside)
+                k 'ok'   after it, whatever the enemy plays, your next move completes the ring (cells: the last empty cell)
+                k 'slow' still two empty cells round the throne after it: no next move of yours can win, whatever the enemy does
+                k 'cap'  one empty cell left, but the enemy's next move sandwiches a piece of yours (rp: that move, v: the piece)
+                         and the next turn goes to relocating it (cells: the last empty cell)
+                (k 'block' / 'shut' / 'other' — the enemy steps into the last cell / closes it between two enemy pieces / any
+                 other defence: never in this lesson, the verify checks)
      b_finish   (the queen on the throne, five guards round her and one cell next to the throne empty)
                 k 'ok'    the sixth guard steps into that cell: six guards round the queen, the game won
                 k 'shift' a guard already next to the throne slides into it, so the cell it left is empty now (v: that cell)
@@ -50,12 +57,13 @@
    she can step inwards to, b_reloc the captured guard and every piece of yours the enemy could sandwich next (the guard off
    the board), b_safe the guard in danger, the enemy pieces that would sandwich it (the one stepping in and the one beyond)
    and every piece of yours that can step into the enemy's cell, s_double every piece of yours with a capturing move, s_block the enemy
-   guard that can step into the last cell (its winning move, the turn passed) and every piece of yours with a move next to it,
+   guard that can step into the last cell (its winning move, the turn passed) and every piece of yours with a move next to it, s_win2
+   every guard of yours that can step into an empty cell round the throne and the enemy pieces that could sandwich one (the turn passed),
    s_queencap your pieces on ring 1 and every piece of yours with a move into ring 1.
    window.AgonLsFacts · module.exports the same. */
 (function () {
   'use strict';
-  const IDS = ['b_step', 'b_capture', 'b_throne', 'b_reloc', 'b_safe', 's_double', 's_block', 'b_finish', 's_queencap'];
+  const IDS = ['b_step', 'b_capture', 'b_throne', 'b_reloc', 'b_safe', 's_double', 's_block', 'b_finish', 's_win2', 's_queencap'];
   // b_reloc: the enemy's capturing moves with the captured guard off the board ([move, the pieces it takes])
   // b_safe: the same with the turn passed to the enemy (nothing captured on the board)
   function threats(E, spec) {
@@ -115,6 +123,24 @@
       const rp = q.phase() === 'move' ? q.moves().find(r => { const j = E.judge(q.clone().play(r)); return j.over && j.winner === 3 - me; }) : undefined;
       return { k: E.NB[t].some(a => a >= 0 && p.owner(a) === 3 - me) ? 'touch' : 'none', rp };
     }
+    if (id === 's_win2') {   // (担当D)
+      const q = p.clone().play(m), J = E.judge(q);
+      if (J.over) return { k: J.winner === me ? 'win' : 'lose' };
+      const wins = r => r.phase() === 'move' && r.moves().some(x => { const j = E.judge(r.clone().play(x)); return j.over && j.winner === me; });
+      const pass = q.clone(); pass.side ^= 1; pass.rehash();
+      const fin = pass.phase() === 'move' ? pass.moves().filter(x => { const j = E.judge(pass.clone().play(x)); return j.over && j.winner === me; }) : [];
+      if (!fin.length) return { k: 'slow' };
+      const cells = [...new Set(fin.map(E.mTo))], PR = { block: 0, cap: 1, shut: 2, other: 3 };
+      let best = null;
+      for (const r of q.moves()) {
+        const z = q.clone().play(r), j = E.judge(z);
+        if (j.over ? j.winner === me : wins(z)) continue;
+        const t = r === E.PASS ? -1 : E.mTo(r), caps = q.capsOf(r).filter(v => q.owner(v) === me);
+        const F = caps.length ? { k: 'cap', rp: r, v: caps[0] } : cells.includes(t) ? { k: 'block', rp: r } : cells.every(c => z.trapped(c, me)) ? { k: 'shut', rp: r } : { k: 'other', rp: r };
+        if (!best || PR[F.k] < PR[best.k]) best = F;
+      }
+      return Object.assign(best || { k: 'ok' }, { cells });
+    }
     if (id === 'b_finish') {
       const j = E.judge(p.clone().play(m));
       if (j.over && j.winner === me) return { k: 'ok' };
@@ -167,11 +193,16 @@
       return [...out].sort((a, b) => a - b);
     }
     if (id === 's_queencap') for (const c of E.NB[E.CENTER]) if (p.owner(c) === me) out.add(c);   // (your pieces on ring 1: the partners across the throne)
+    if (id === 's_win2') {   // the enemy pieces that could sandwich a guard of yours (the one stepping in and the one beyond)
+      const r = p.clone(); r.side ^= 1; r.rehash();
+      if (r.phase() === 'move') for (const x of r.moves()) for (const v of r.capsOf(x)) { out.add(E.mFrom(x)); const b = E.NB[v][E.NB[E.mTo(x)].indexOf(v)]; if (b >= 0) out.add(b); }
+    }
     for (const m of p.moves()) {
       if (m === E.PASS) continue; const f = E.mFrom(m), t = E.mTo(m);
       if (id === 'b_step' && E.RING[t] === E.RING[f] - 1) out.add(f);
       if (id === 'b_capture' && E.NB[t].some(a => a >= 0 && p.owner(a) === 3 - me)) out.add(f);
       if (id === 's_double' && p.capsOf(m).length) out.add(f);
+      if (id === 's_win2' && E.RING[t] === 1 && E.RING[f] === 2) out.add(f);
       if (id === 'b_finish' && E.RING[t] === 1 && !p.isQueen(f)) out.add(f);   // (b_finish: every piece that can step into the gap)
       if (id === 's_queencap' && E.RING[t] === 1) out.add(f);
     }
@@ -190,6 +221,7 @@
     if (id === 'b_finish') return F.k === 'away' ? 'ngAway' : 'ng';
     if (id === 's_block') return F.k === 'touch' ? 'ngTouch' : 'ng';
     if (id === 's_queencap') return F.k === 'touch' ? 'ngTouch' : F.k === 'guard' ? 'ngGuard' : 'ng';
+    if (id === 's_win2') return F.k === 'slow' ? 'ngSlow' : 'ng';
     return 'ng';
   }
   const API = { IDS, fact, hint, key, threats, wins };

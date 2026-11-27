@@ -360,7 +360,8 @@
   function hist(T) {
     const d = D(T.id), E = expected(T), tot = T.hist === 'face' ? d.n * T.n : d.n, B = T.bins;
     const obs = B.map(b => tot ? (d.c[b] || 0) / tot : 0), ex = B.map(b => E[b] || 0);
-    const top = Math.max(...ex, ...obs) * 1.12 || 1, W = 320, H = 150, pad = 4, bw = (W - pad * 2) / B.length;
+    const cw = el.hist.clientWidth || 0, top = Math.max(...ex, ...obs) * 1.12 || 1, W = cw > 420 ? Math.round(cw * .9) : 320, H = 150,   // (2026-11-27: under the tray on PC the chart is wide — a wider drawing, not a taller one)
+      pad = 4, bw = (W - pad * 2) / B.length;
     let s = `<svg class="chsvg" viewBox="0 0 ${W} ${H + 20}" role="img" aria-label="${esc(u('obs'))}">`;
     for (let i = 1; i <= 3; i++) s += `<line x1="0" x2="${W}" y1="${(H - H * i / 4).toFixed(1)}" y2="${(H - H * i / 4).toFixed(1)}" class="chgl"/>`;
     B.forEach((b, i) => { const x = pad + i * bw, ho = H * obs[i] / top, he = H * ex[i] / top;
@@ -431,6 +432,7 @@
     el = { tools: q('.chtools'), lead: q('.chlead'), stage: q('.chstage'), cv: q('canvas'), res: q('.chres'), hint: q('.chhint'), btns: q('.chbtns'), name: q('.chname'), sub: q('.chsub'), body: q('.chbody'), fact: q('.chfact'), note: q('.chnote'), links: q('.chlinks'), hist: q('.chhist'), n: q('.chn'), extra: q('.chextra'), obsLab: q('.chobl'), exLab: q('.chexl') };
     st = el.stage; bEl = q('.chbadges');
     el.tools.querySelectorAll('[data-t]').forEach(b => b.onclick = () => choose(b.dataset.t));
+    if (!window.__chRs) { window.__chRs = 1; let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (tool && el && el.hist && el.hist.isConnected) hist(tool); }, 200); }); }   // (the chart's width follows the column)
     el.btns.querySelectorAll('[data-a]').forEach(b => b.onclick = () => { const a = +b.dataset.a; if (a) doThrow(a); else if (tool) { data[tool.id] = null; hist(tool); el.res.textContent = ''; el.res.classList.remove('on'); hideBadges(); } });
     // the tray: a tap throws, a drag turns it a little
     let dn = null;
