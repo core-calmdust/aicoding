@@ -1806,7 +1806,7 @@ function ckWarm(opt, L, E, X, val, moveVal, add, only) {
 //   縦と横) and for every wrong move (the king or not, a blocker on the way, a capture or not, a piece of yours taken next), the question
 //   and the hint (a corner / the throne named is in an answer)
 //   ⑨ the 2D (tafl/app.js problemPoints) and the 3D (TAFL.points) both score P.ok
-const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield', 't_tuichi', 't_block', 't_fort']);
+const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield', 't_tuichi', 't_block', 't_fort', 't_encircle']);
 function tafl(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'tafl/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'tafl/lessons.json'), 'utf8'));
@@ -2067,12 +2067,41 @@ function tafl(opt) {
         : /はさまれ|取られる|こわされ|ねらわれる/.test(tx) ? 'cap' : /動けな|動く場所がなく|部屋をふさ/.test(tx) ? 'stuck' : /完成しない|そのまま残る|ふさげない|あいたまま|残ったまま/.test(tx) ? 'open' : '?';
       if (said !== R.why2) a(`⑦ ${x0}: 「${tx}」 says ${said}, the board: ${R.why2}`); }
     return f.d * 10 - (P.ok || []).length; };
+  // (2026-11-27 第2期 担当A) t_encircle「包囲で勝つ」(tools/lesson-verify-tfenc.js): the attackers to move, every defender in a room walled
+  // by a ring with one gap. ①② P.ok = the moves that encircle at once (the rules' test), no wrong move that still encircles next move
+  // whatever the defenders do ③ the answers ≤ a third of the moves, ≥2 near-misses (wrong moves to within 2 of the gap), 追17 the ringed
+  // piece ≥2 wrong moves ④ no other win (the king taken), no threat of the defenders, the answer takes nothing ⑤ the pool and no two
+  // problems with the same room (encSig), one gap (the hint「1か所だけすき間」) ⑥ d×10 − the answers never down, last > first ⑦⑧ タフリン's
+  // words: every wrong move by what follows it (a ring piece moved / a ring piece taken / a defender out / the gap left), the hints and the
+  // question that lean on the board (「ななめ」: the ring holds a diagonal link;「輪の外から駒を」: the answer's piece is not a ring piece);
+  // the diagram: its arrow encircles (追14)
+  const EC = require(path.join(ROOT, 'tools/lesson-verify-tfenc.js')), ecSig = new Map();
+  const encOne = (st, si, P, j, a) => { const f = EC.encFacts(E, P), nm = m => E.name(f.p, m); f.bad.forEach(a);
+    five(st.id, j, P, f.me, nm, a);
+    { const sig = EC.encSig(E, P); if (ecSig.has(sig)) a(`⑤ the same room (${sig}) as ${ecSig.get(sig)}`); else ecSig.set(sig, `q${j + 1}`); }
+    if (f.gaps.size !== 1) a(`⑧ the hint「1か所だけすき間」: ${f.gaps.size} gaps close the ring`);
+    let W; try { W = X_.tfLsJa(E, st, P, j, k => X_.TFM(k, 'ja'), si); } catch (e) { a('⑧ the words fail: ' + e.message); return f.d; }
+    for (const t of [W.ask, W.hintTx, plain(W.good())]) if (!t || /\{|undefined|NaN/.test(t)) a(`⑧ 「${t}」`);
+    for (const t of [W.ask, W.hintTx]) if (/ななめ/.test(t) && !f.diag) a(`⑧ 「${t}」: the ring has no diagonal link`);
+    if (/輪の外から/.test(W.hintTx) && (P.ok || []).some(m => f.FW.has(E.mFrom(m)))) a(`⑧ 「${W.hintTx}」: an answer moves a ring piece`);
+    if (/新しいすき間/.test(W.hintTx) && !f.wrong.some(m => f.C.get(m).why2 === 'moved')) a(`⑧ 「${W.hintTx}」: no wrong move moves a ring piece`);
+    if (/はさまれない/.test(W.hintTx) && !f.wrong.some(m => f.C.get(m).why2 === 'cap')) a(`⑧ 「${W.hintTx}」: no wrong move leaves a ring piece to be taken`);
+    for (const m of f.wrong) { const raw = plain(W.ng(m)), x0 = nm(m), i0 = raw.indexOf('赤い印の手'), i1 = raw.indexOf('緑の印の手'), R = f.C.get(m);
+      if (/\{|undefined|NaN/.test(raw) || i0 < 0 || i1 < 0) { a(`⑦ ${x0}: 「${raw}」 (your move / the right move not named)`); continue; }
+      const tx = raw.slice(i0, i1);
+      const said = /輪の駒が動いて|輪から駒がぬけて|輪の1枚がはなれて|輪の駒がいた所|輪をくずして/.test(tx) ? 'moved' : /はさまれ|取られ/.test(tx) ? 'cap'
+        : /外へ出られ|ぬけ出され|外へ出られる|外へにげ|外へぬけ出せ/.test(tx) ? 'out' : /まだ輪が閉じない|そのまま残る|ふさげない|あいたまま|残ったまま/.test(tx) ? 'open' : '?';
+      if (said !== R.why2) a(`⑦ ${x0}: 「${tx}」 says ${said}, the board: ${R.why2}`); }
+    return f.d * 10 - (P.ok || []).length; };
+  { const st = L.steps.find(s => s.id === 't_encircle');
+    if (st && st.diagram) { const D = st.diagram, p = E.Pos.from(D.s); (D.arrows || []).forEach(([fr, to]) => { const m = E.parse(p, fr + '-' + to); if (m == null) { add('t_encircle', -1, `diagram: 追14 ${fr}-${to} is not legal`); return; }
+      const f = EC.encFacts(E, { s: D.s, ok: [m], best: m }); f.bad.filter(b => /^①/.test(b)).forEach(b => add('t_encircle', -1, `diagram: 追14 ${b}`)); }); } }
   { const st = L.steps.find(s => s.id === 't_fort');
     if (st && st.diagram) { const D = st.diagram, p = E.Pos.from(D.s); (D.arrows || []).forEach(([fr, to]) => { const m = E.parse(p, fr + '-' + to); if (m == null) { add('t_fort', -1, `diagram: 追14 ${fr}-${to} is not legal`); return; }
       const f = FT.fortFacts(E, { s: D.s, ok: [m], best: m }); f.bad.filter(b => /^①/.test(b)).forEach(b => add('t_fort', -1, `diagram: 追14 ${b}`)); }); } }
   L.steps.forEach((st, si) => { const id = st.id; if (!TF_DONE.has(id) || (opt && opt.only && !opt.only.includes(id))) return;   // (opt.only: the mutation tests of one lesson)
     let prevD = -1, firstD = null;
-    if (id === 'b_safe' || id === 't_shield' || id === 't_tuichi' || id === 't_block' || id === 't_fort') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : id === 't_tuichi' ? tuichiOne : id === 't_block' ? blockOne : id === 't_fort' ? fortOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
+    if (id === 'b_safe' || id === 't_shield' || id === 't_tuichi' || id === 't_block' || id === 't_fort' || id === 't_encircle') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : id === 't_tuichi' ? tuichiOne : id === 't_block' ? blockOne : id === 't_fort' ? fortOne : id === 't_encircle' ? encOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
     st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), me = p.turn, all = p.moves(), nm = m => E.name(p, m);
       if (P.n > 1) { const d = seqCheck(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
         if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); seqWords(st, si, P, j, a); return; }
@@ -2950,6 +2979,7 @@ function checkersOpen(opt) {
   const fs = require('fs'), vm = require('vm');
   if (!ckW) ckW = require(path.join(ROOT, 'checkers/tools/wasm.js')).loadSync();
   const W = ckW, E = W.E, out = [], add = (id, j, m) => out.push({ step: id, q: j + 1, msg: m });
+  const ckFresh = () => require(path.join(ROOT, 'checkers/tools/wasm.js')).loadSync();   // (a new instance: nothing left from other searches)
   const O = (opt && opt.op) || JSON.parse(fs.readFileSync(path.join(ROOT, 'checkers/openings.json'), 'utf8'));
   const src = (opt && opt.src) || fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), app = fs.readFileSync(path.join(ROOT, 'checkers/app.js'), 'utf8');
   const cut = (a, b) => src.slice(src.indexOf(a), src.indexOf(b));
@@ -2986,9 +3016,13 @@ function checkersOpen(opt) {
       sc.forEach(([m, v], k) => { if (!ms.includes(m)) a(`① ${m} is not legal`); if (k && v > sc[k - 1][1]) a('① the values are not best first'); });
       if ((sc[0] || [])[0] !== A) a('① best is not the top of the stored values');
       sc.forEach(([m]) => { if (m !== A && pts(sc, m) > 12) a(`② ${E.name(p, m)} scores ${pts(sc, m)} (stored values)`); });
-      const r = W.analyzeDepth(P.s, 14), fr = r.list.map(e => [e.m, e.v]);
-      if (fr[0][0] !== A) a(`① a fresh search prefers ${E.name(p, fr[0][0])} (${fr[0][1]}) to ${E.name(p, A)} (${(fr.find(e => e[0] === A) || [0, '—'])[1]})`);
-      else fr.forEach(([m]) => { if (m !== A && pts(fr, m) > 12) a(`② ${E.name(p, m)} scores ${pts(fr, m)} in a fresh search`); });
+      // (2026-11-27 担当B) each fresh search on a new engine instance: the transposition table, history and killers of the checks
+      // run before it in the same process changed the reading (glasgow q8 NG only after the checkers check) — now the same however it is run.
+      // 追4 / さかのぼりを減らす 6.2: when another move scores more than 4 at depth 14 (the margin under twice the pass line), read again at depth 16
+      for (const dp of [14, 16]) { const fr = ckFresh().analyzeDepth(P.s, dp).list.map(e => [e.m, e.v]);
+        if (fr[0][0] !== A) { a(`① a fresh search (depth ${dp}) prefers ${E.name(p, fr[0][0])} (${fr[0][1]}) to ${E.name(p, A)} (${(fr.find(e => e[0] === A) || [0, '—'])[1]})`); break; }
+        fr.forEach(([m]) => { if (m !== A && pts(fr, m) > 12) a(`② ${E.name(p, m)} scores ${pts(fr, m)} in a fresh search (depth ${dp})`); });
+        if (!fr.some(([m]) => m !== A && pts(fr, m) > 4)) break; }
       // ③
       const safe = ms.filter(m => m !== A && net(p, m) >= 0).length;
       if (ms.length < 3) a(`③ ${ms.length} legal moves`); if (safe < 2) a(`③ only ${safe} other moves keep every piece`);
