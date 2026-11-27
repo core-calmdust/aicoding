@@ -181,6 +181,13 @@ def reprint(svg, out_png, scale=4.0, seed=11, rng_seed=5, wobble_amp=2.2, drop=N
     u = render_underlay(svg, w, h)
     lab = classify(u)
     names = [n for _, n in UNDER]
+    # the underlay draws some outlines as thin dark-grey strokes: those are line work, not a grey wash
+    kk = lab == names.index('k')
+    r1 = max(1, int(round(1.1 * px)))
+    yy1, xx1 = np.mgrid[-r1:r1 + 1, -r1:r1 + 1]
+    kk_open = nd.binary_opening(kk, (yy1 ** 2 + xx1 ** 2) <= r1 * r1)
+    thin = kk & ~kk_open & nd.binary_dilation(lab == names.index('line'), iterations=3)
+    lab[thin] = names.index('line')
     # inside the picture area only (our own frame replaces the underlay's border)
     yy, xx = np.mgrid[0:h, 0:w]
     m = (P.FR - 0.5) * px
@@ -196,14 +203,17 @@ def reprint(svg, out_png, scale=4.0, seed=11, rng_seed=5, wobble_amp=2.2, drop=N
     for i, n in enumerate(names):
         if n in ('line', 'paper'):
             continue
-        mk = (full == i) & inner
-        if mk.sum() < 50:
+        mk = (full == i)                     # runs on under our frame (no paper edge at the frame)
+        if (mk & inner).sum() < 50:
             continue
         # let each colour run under the neighbouring key line, so a small misregistration never opens a paper gap
         lineall = (lab == names.index('line')) & inner
         mk = mk | (nd.binary_dilation(mk, iterations=int(1.6 * px)) & lineall)
+        raw = mk.astype(np.float32)
         mk = warp(mk, rng, wobble_amp * px, 9)        # hand-cut stencil wobble
-        masks[n] = np.clip(mk, 0, 1)
+        dfr = np.minimum(np.minimum(xx, w - 1 - xx), np.minimum(yy, h - 1 - yy)) - P.FR * px
+        zone = np.clip(1 - dfr / (5 * px), 0, 1)
+        masks[n] = np.clip(mk * (1 - zone) + raw * zone, 0, 1)
     # drop parts of the underlay's line work we draw ourselves (e.g. a written character)
     if drop is not None:
         line = line & ~drop(line, px)
@@ -236,7 +246,7 @@ def reprint(svg, out_png, scale=4.0, seed=11, rng_seed=5, wobble_amp=2.2, drop=N
     lines = np.maximum(lines, blob_a)
     if extra is not None:
         extra(masks, lines, w, h, px, rng, full, names)
-    P.print_masks(masks, lines, out_png, scale=scale, seed=seed + 1, reg=0.5)
+    P.print_masks(masks, lines, out_png, scale=scale, seed=seed + 1, reg=0.22)
     return out_png
 
 

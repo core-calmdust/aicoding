@@ -153,6 +153,7 @@
   function actions(s) {
     switch (s.phase) {
       case 'play': return s.hands[s.turn].slice();
+      case 'draw': return ['draw'];
       case 'pickPlay': case 'pickDraw': return matches(s.field, s.pending);
       case 'koi': return canKoi(s) ? ['stop', 'koi'] : ['stop'];
       default: return [];
@@ -191,13 +192,15 @@
         s.field.push(a); s.log.push({ p, kind: 'play', card: a, got: [] });
       } else if (ms.length === 2) { s.phase = 'pickPlay'; s.pending = a; s.log.push({ p, kind: 'play', card: a, got: null }); return s; }
       else { const got = take(s, p, a, ms[0]); s.log.push({ p, kind: 'play', card: a, got }); }
-      return draw(s);
+      s.phase = 'draw';
+      return s;
     }
+    if (s.phase === 'draw') { s.phase = 'play'; return draw(s); }
     if (s.phase === 'pickPlay') {
       const got = take(s, p, s.pending, a);
       s.log[s.log.length - 1].got = got;
-      s.pending = null; s.phase = 'play';
-      return draw(s);
+      s.pending = null; s.phase = 'draw';
+      return s;
     }
     if (s.phase === 'pickDraw') {
       const got = take(s, p, s.pending, a);

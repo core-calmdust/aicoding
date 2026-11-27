@@ -263,21 +263,25 @@ def print_masks(masks, lines, out_png, scale=4.0, seed=7, reg=1.0, line_soft=0.3
     # 1. key block
     if lines is not None:
         a = lines * inner
-        a = shift(a, rng.normal(0, 0.3 * px), rng.normal(0, 0.3 * px))
+        a = shift(a, rng.normal(0, 0.15 * px), rng.normal(0, 0.15 * px))
+        # a woodblock line: a crisp, tight edge (no grey halo); the ink's unevenness only inside the line
+        a = np.clip((blur(a, 0.22 * px) - 0.5) * 5.0 + 0.5, 0, 1)
         n = 0.6 * fbm(h, w, rng, 3, 70) + 0.4 * fbm(h, w, rng, 2, 220)
-        a = np.clip((blur(a, line_soft * px) - 0.45) * 2.0 + 0.45 + (n - 0.5) * 0.85, 0, 1)
-        a *= np.clip(1.15 - 0.5 * fbm(h, w, rng, 4, 40) ** 2, 0.5, 1)    # dry spots
+        a *= np.clip(0.97 + 0.08 * (n - 0.5), 0, 1) * np.clip(1.04 - 0.12 * fbm(h, w, rng, 4, 40) ** 2, 0.9, 1)
         col = np.array(INK['line'], np.float32) / 255
-        img = img * (1 - a[..., None] * 0.9) + col * a[..., None] * 0.9
+        img = img * (1 - a[..., None] * 0.985) + col * a[..., None] * 0.985
 
     # 2. stencils
+    dfr = np.minimum(np.minimum(xx, w - 1 - xx), np.minimum(yy, h - 1 - yy)) - FR * px
+    zone = np.clip(1 - dfr / (5 * px), 0, 1).astype(np.float32)     # next to the frame: no misregistration / ragged edge
     for ink, a in masks.items():
-        a = a * inner
+        a_raw = np.clip(a, 0, 1)
         off = 1.1 * reg * px
         lim = 2.4 * reg * px
         a = shift(a, float(np.clip(rng.normal(0, off), -lim, lim)), float(np.clip(rng.normal(0, off), -lim, lim)))
         rough = 0.5 + (fbm(h, w, rng, 4, 55) - 0.5) * (1 - 0.7 * detail)
         a = np.clip((blur(a, 0.6 * px) - 0.5) * 2.8 + 0.5 + (rough - 0.5) * 0.95, 0, 1)
+        a = a * (1 - zone) + a_raw * zone
         ang = rng.uniform(-0.25, 0.25)
         stk = streaks(h, w, rng, ang, px)
         stk = 0.5 + (stk - 0.5) * 0.45
@@ -286,7 +290,7 @@ def print_masks(masks, lines, out_png, scale=4.0, seed=7, reg=1.0, line_soft=0.3
         quiet = 1 - 0.75 * detail
         dens = 0.84 + (0.26 * (mott - 0.5) + 0.10 * (stk - 0.5) + 0.10 * (gran - 0.5)) * quiet
         edge = np.clip(a - blur(a, 1.6 * px), 0, 1)
-        dens = dens + edge * 0.16 * quiet
+        dens = dens + edge * 0.0
         cover = np.maximum(cover, a)
         # paper tooth: tiny skips where the brush did not push pigment into the fibres
         skip = rng.random((h // 3 + 1, w // 12 + 1)) > 0.993
