@@ -5545,6 +5545,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       else if (kb0 === 'save') b = 'ブリッジに受けていないから、そこで切られちゃう';
       else if (!stones && u !== 1023 && best !== 1023 && hc(u) > hc(best)) b = pk(['まん中から遠くて、相手に止められやすい', '盤のはしに寄っていて、行ける方向が少ない', '中央から離れていて、道の選び方がせまくなる'], k);
       else if (stones && fu.dOpp >= 4 && fu.dOwn >= 4) b = pk(['ほかの石から遠すぎて、いまの戦いに関われない', '戦いの場所から離れすぎていて、働きが小さい', 'まわりに石がなくて、つなぐのにも止めるのにも役立たない'], k);
+      else if (kb0 === 'intrude' && fu.intrude) b = 'そこも割りこみだけど、もっと効くすき間がある';
       else if (kb0 === 'intrude') b = '相手のブリッジに割りこむ先手を逃しちゃう';
       else if (kb0 === 'far' && (ku === 'touch' || ku === 'adjtouch')) b = 'くっつけて止めると、すぐ横へすり抜けられちゃう';
       else if ((kb0 === 'touch' || kb0 === 'adjtouch') && (ku === 'far' || ku === 'open')) b = '離れすぎて、そのあいだを相手に使われちゃう';
@@ -5561,7 +5562,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-hex-lessons', OKEY: 'aicoding-hex-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../hex/lessons.json?v=30261123b'), getJ('../hex/openings.json?v=3'), fetch('../hex/i18n.js?v=20261124-p61').then(r => r.text()), hxEng().catch(() => null), getJ('../hex/ramps3d.json?v=3').catch(() => ({})), fetch('../hex/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../hex/lessons.json?v=30261123b'), getJ('../hex/openings.json?v=20261128f6'), fetch('../hex/i18n.js?v=20261124-p61').then(r => r.text()), hxEng().catch(() => null), getJ('../hex/ramps3d.json?v=3').catch(() => ({})), fetch('../hex/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, , rt, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] hex texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; this.RT = rt || {};
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
@@ -5663,6 +5664,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
         else if (kb0 === 'save' && fu.save) b = uz('save2', ['そっちのブリッジは守れても、もう1つの割りこまれたほうが切られちゃう', '受ける場所がちがって、大事なほうのブリッジが切られちゃう']);   // (2026-11-24 第2期・担当B: two of our bridges are cut into — yours answers the other one)
         else if (kb0 === 'save') b = uz('save', ['ブリッジに受けていないから、そこで切られちゃう', '割りこみを放っておくと、もう片方もふさがれて切れちゃう', '受けそびれたブリッジが、次の一手で切られちゃう']);
         else if (stones && fu.dOpp >= 4 && fu.dOwn >= 4) b = uz('far', ['ほかの石から遠すぎて、いまの戦いに関われない', '戦いの場所から離れすぎて、働きが小さい', 'まわりに石がなくて、つなぐのにも止めるのにも役立たない']);
+        else if (kb0 === 'intrude' && fu.intrude) b = uz('intr2', ['そこも割りこみだけど、もっと効くすき間がある', '割りこむ場所がちがって、効き目が小さい']);   // (2026-11-28 担当B: yours cuts into a bridge too — the green one is the better cut, by the engine's values; not 「割りこむ先手を逃し」)
         else if (kb0 === 'intrude') b = uz('intr', ['相手のブリッジに割りこむ先手を逃しちゃう', '相手のすき間をつくチャンスが消えちゃう', '受けさせる一手を打てず、相手に形を整えられちゃう']);
         else if (kb0 === 'far' && (ku === 'touch' || ku === 'adjtouch')) b = uz('tch', ['くっつけて止めると、すぐ横へすり抜けられちゃう', 'となりで止めても、相手は向きを変えて回りこめちゃう', 'ぴったりつけると、相手にななめへ逃げ道ができちゃう']);
         else if ((kb0 === 'touch' || kb0 === 'adjtouch') && (ku === 'far' || ku === 'open')) b = uz('gap', ['離れすぎて、そのあいだを相手に使われちゃう', '間があきすぎて、相手に押し進まれちゃう', '遠くで待っても、相手は手前で曲がって進めちゃう']);
@@ -6425,7 +6427,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       s_corner: ['このままだと、王に2手で角へ逃げられちゃう！ 角のまわりを固めて止めよう。', '角を守る3つのマス、どこがあいてる？ 王より先に入ろう！', '王が角へ走る前に、どのマスを固める？', '王がねらっている角があるの。どの駒で守る？', 'さあ、角の守りをしっかり！ 2手先まで王を止められる手は？'],
       s_breakout: ['王さまの前に、味方の駒がじゃまをしてるの。どかして、攻め手がふさげない道を開こう！', '味方を1つどかすだけで、王の道が開くかも。どの駒をどこへ？', '攻め手が入りこめない道を、王のために開いてあげて！', '王と角のあいだにいる味方、どこへどかす？', 'さあ、守り手の道開け！ 次の手で王が角へ走れるようにしよう。'],
       s_squeeze: ['王の動けるマスを、いちばん減らせる安全な手はどれ？', '輪をひとまわり小さくしよう！ 王の通り道に、どの駒を立てる？', '王さまの動ける場所をせまくしたいの。はさまれずに寄せられる手は？', '王の行き先を、ぐっと減らしてみて！ 取られない場所でね。', 'さあ、じわじわ追いつめよう！ どの駒を寄せる？'],
-      v_brandubh: ['王さまをつかまえて、勝っちゃおう！', '王のとなりに攻め手がいる！ 反対側に置ける駒は？', 'ブランドゥブなら2枚でつかまえられる。どの駒を動かす？', '角も味方になるのを思い出して！ 王をはさむ手は？', 'さあ、一手で勝負を決めよう！'],
+      v_brandubh: ['王さまが角のすぐとなり！ 角へ逃げられる前に、つかまえて！', '王のとなりに攻め手がいる！ 反対側に置ける駒は？', 'ブランドゥブなら2枚でつかまえられる。どの駒を動かす？', '王をはさむ手は、ここでは1つだけ。となりに寄るだけの手にまどわされないでね！', 'さあ、一手で王さまをつかまえよう！'],
       v_tablut: ['2手以内に、王を端へ逃がせる手を指してみて！', '王から端まで、2方向に見通せるマスはどこかな？', '攻め手が1手でふさぎきれない場所へ、王を動かそう！', '端への道を2本作れたら勝ち！ どこへ行く？', 'さあ、王さまの脱出ルートを作っちゃおう！'],
     },
     hint: {
@@ -6440,7 +6442,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       t_block: ['王から角（端）までの道の上に、攻め手を1つ入れるの。金の丸がその駒！', 'ふさいだあと、王が別のマスで2本の道を作れないかも見ておいて！', '王さまが次に動く先も想像してみて。', '道のどこでふさぐかで、そのあとが変わるの。', 'ふさぎに行く駒が、はさまれないかも確かめて！'],
       t_fort: ['王のまわりの壁に、1か所だけ穴があいてるの。金の丸の駒でふさいでね。', '壁の駒が、攻め手にはさまれない形になるかも確かめて！', '砦は端にくっついた守りの壁。どこが欠けてる？', '王さまが中で動けるスペースも残しておいてね。', '攻め手が入ってこられる入口、ひとつだけあるの。'],
       t_encircle: ['輪に1か所だけすき間があるの。金の丸の駒で閉じてね。', '守り手の駒が端へ出られる道をたどってみて。どこで切れるかな？', '輪はななめにつながっていてもOK！', '外へぬける穴をひとつ探そう。そこに入れば完成なの。', '輪の駒を動かすと、そこが新しいすき間になっちゃう。輪の外から駒を持ってこよう！'],
-      v_brandubh: ['王の反対側に、もう1枚置ける攻め手をさがしてね。', '王のとなりにいる攻め手は？ その向かい側へ行ける駒が答え！', '角のとなりの王なら、角が片側の役をしてくれるの。', '縦でも横でもいいの。2枚で王をはさむ形を作ろう。', '王が玉座のとなりにいないか、先に確かめてね。'],
+      v_brandubh: ['角のとなりの王なら、角が片側の役をしてくれるの。', '王のとなりにいる攻め手は？ その向かい側へ行ける駒が答え！', '縦でも横でもいいの。王の向かい側まで、とちゅうに駒のない道をさがそう。', '王のとなりに入るだけじゃだめ。向かい側に攻め手か角がある所を選んでね。', '王の反対側に、もう1枚置ける攻め手をさがしてね。'],
       v_tablut: ['王を、2つ以上の方向へ端まで見通せるマスへ動かしてね。', '端への道が2本できれば、攻め手は1本しかふさげないの。王はどこへ行く？', 'タブルットは角じゃなくて、端ならどこでも脱出なの。', '王さまの上下左右、端まで空いた道を数えてみて。', '一度にふさがれない場所、見つけられるかな？'],
       s_corner: ['角からななめに並ぶ3マスのどれかに、攻め手を入れるの。金の丸がその駒！', '王が1手動いた先で、角への道ができないかまで読んでみて。', '角を守るマスでも、入る場所で効き目がちがうの。', '王がねらっている角はどれかな？ そのまわりのすき間をさがそう。', '王から角へ向かう道を、指でたどってみて。'],
       s_breakout: ['金の丸の駒が、王の道をふさいでいるの。', '開いた道に、攻め手の駒が1手で入れるかどうか見てみて。', '道にそって動かしても、まだふさいだままなの。', '道を開いても、攻め手にふさがれたら意味がないの。', '王から両側の角まで、とちゅうにいる駒を指でたどってみて。'],
@@ -6486,6 +6488,18 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     let stop = false; for (const r of q.moves()) { const z = q.clone().play(r); if (z.res) return z.res === 2 ? '' : 'lose'; if (!escNow(z)) stop = true; }
     return !stop ? '' : q.kingLines().length ? 'block' : (F[q.king] & 1) ? 'shut' : 'off';
   }
+  // (2026-11-28 第2期 担当A) v_brandubh: what follows a move u of the attackers (read with the rules, as tools/lesson-verify-tfbrand.js):
+  // why 'adj' next to the king but the far side open (or the king next to the throne), 'far' not next to the king; esc = the king steps
+  // into a corner next; capm / cap = a defender takes the moved man / another attacker next; corner = the answer takes him against a corner
+  function tfBrandWhy(E, pos, u) {
+    const n = pos.n, q = pos.clone().play(u), k = pos.king, t = E.mTo(u); if (q.res) return { why: '' };
+    const kr = Math.floor(k / n), kc = k % n, tr = Math.floor(t / n), tc = t % n, adj = Math.abs(kr - tr) + Math.abs(kc - tc) === 1;
+    const esc = q.moves().some(x => E.mFrom(x) === q.king && q.clone().play(x).res === 2);
+    let capm = false, cap = false; for (const r of q.moves()) { const c = q.clone().play(r).lastCaps; if (c.length) { cap = true; if (c.includes(t)) capm = true; } }
+    return { why: adj ? 'adj' : 'far', esc, cap, capm };
+  }
+  function tfBrandCorner(E, pos, m) { const n = pos.n, k = pos.king, t = E.mTo(m), r = 2 * Math.floor(k / n) - Math.floor(t / n), c = 2 * (k % n) - t % n;
+    return r >= 0 && c >= 0 && r < n && c < n && !!(pos.G.F[r * n + c] & 2); }
   // (2026-11-28 第2期 担当A) s_squeeze: what follows a move u of the attackers (read with the rules, as tools/lesson-verify-tfsqueeze.js):
   // km = the king's squares after it; why: 'esc' the king reaches a corner within his 2 moves, 'capm' a defender takes the moved man next,
   // 'cap' a defender takes another attacker next, 'wide' safe (the king keeps km squares), '' the game ends
@@ -6710,11 +6724,19 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
           : pk(['{x}だと、まだ輪が閉じないね。', '{x}では、輪のすき間がそのまま残るの。', '{x}では、すき間をふさげないんだ。', '{x}だと、輪の出口があいたままなの。', '{x}のあとも、すき間が残ったまま。']);
         return f(w + pk(['{m}なら、さいごのすき間が閉じるから。', '{m}で閉じれば、守り手の出口はひとつもなかったの。', '正解の{m}が、輪の最後のひとつ。', 'こっちの{m}だったら、包囲が完成していたね。', '{m}を選べば、その場で攻め手の勝ちだったの。'])); };
     } else if (id === 'v_brandubh') {
-      good = () => fg(FA.win ? (FA.kingNearCorner ? pk(['{x}で、角と攻め手で王をはさんだ！ 角も攻め手の味方なの。', '角を味方にして王さまを捕獲！', '{x}で角との間にはさんで、攻め手の勝ち！', '角のとなりの王を、1枚でつかまえたね！', '角が片側の役！ 王さまをつかまえたの。'])
-        : pk(['{x}で王さまをはさんだ！ 攻め手の勝ち！', '2枚でぴたっとつかまえた！ 小さな盤のブランドゥブならではだね。', '{x}で勝負あり！ 王の向かい側に、ちゃんと駒を置けたね。', '王さまを両側からはさんで捕獲！', '向かい側にぴたり！ 王さま、つかまえたの。'])) : pk(['{x}で王を追いつめた！', '王さまをしっかり追いつめたね！', 'いい追いこみ！', '王の逃げ道をせばめたね！', 'じわっと追いつめた！']));
-      ng = u => say(u, G => !G.win, G => pk(['{x}だと王の反対側があいたままで、つかまえられないの。', '{x}では、王を2枚ではさむ形にならないね。', '{x}だと、王の向かい側に駒が来ないの。', '{x}だと、王さまは自由なまま。', '{x}では、王をはさむもう1枚が足りないんだ。'])
-          + (G.scan().w ? pk(['しかも王に逃げられちゃう！', 'そのうえ、王さまが角へ逃げちゃう。', 'おまけに王が脱出しちゃうの。', 'しかも王に逃げ切られるね。', 'そのうえ王に走られちゃう！']) : ''),
-        pk(['{m}なら、王を2枚ではさめたから。', '{m}で向かい側に置けば、王はもう逃げられなかったの。', '正解の{m}は、王の向かい側に入る手。', 'こっちの{m}だったら、その場で王をつかまえられたね。', '{m}を選べば、攻め手の勝ちだったんだ。']));
+      // (2026-11-28 第2期 担当A) one move takes the king (2 men, or a man and a corner); every wrong move by what follows it on the board
+      // (tfBrandWhy); tools/lesson-verify.js tafl reads each line back against the rules (tools/lesson-verify-tfbrand.js)
+      const cor = tfBrandCorner(E, pos, A);
+      good = () => fg(cor ? pk(['{x}で、角と攻め手で王をはさんだ！ 角も攻め手の味方なの。', '角を味方にして王さまを捕獲！ 逃げられる前に間に合ったね。', '{x}で角との間にはさんで、攻め手の勝ち！', '角のとなりの王を、1枚でつかまえたね！', '角が片側の役！ 王さまをつかまえたの。'])
+        : pk(['{x}で王さまをはさんだ！ 攻め手の勝ち！', '2枚でぴたっとつかまえた！ 小さな盤のブランドゥブならではだね。', '{x}で勝負あり！ 王の向かい側に、ちゃんと駒を置けたね。', '王さまを両側からはさんで捕獲！', '向かい側にぴたり！ 王さま、つかまえたの。']));
+      ng = u => { const v = alt(u), R = v != null ? tfBrandWhy(E, pos, v) : { why: '' };
+        const w = R.why === 'adj' ? pk(['{x}だと王のとなりには入れたけど、向かい側があいていて、はさめないの。', '{x}では王に寄れても、反対側に味方がいないね。', '{x}だと、王のとなりに来ただけ。向かい側に攻め手も角もないの。', '{x}のあと、王の反対側があいたままなの。', '{x}では、王をはさむもう1枚が向かい側にいないんだ。'])
+          : pk(['{x}だと、王のとなりに駒が来ないの。', '{x}では、王をはさむ形にならないね。', '{x}だと、王の向かい側にも、となりにも駒が来ないの。', '{x}だと、王さまは自由なまま。', '{x}では、王から離れた所に動いただけなんだ。']);
+        const w2 = R.esc ? pk(['そのうえ、王さまが次に角へ逃げちゃう！', 'しかも王に角へ逃げこまれちゃう。', 'おまけに王が次の手で角に着いちゃうの。', 'そのうえ王さまに角へ脱出されちゃう。', 'しかも次に、王が角へ入っちゃう！'])
+          : R.capm ? pk(['しかも動かした駒が、守り手にはさまれちゃう。', 'おまけに、動かした駒が次に取られるの。', 'そのうえ、その駒が守り手にはさまれちゃう。', 'しかも、動かした駒が次の手で取られちゃう。', 'おまけに、寄せた駒が守り手に取られるの。'])
+          : R.cap ? pk(['しかも、ほかの攻め手が守り手にはさまれちゃう。', 'おまけに、別の攻め手が次に取られるの。', 'そのうえ、守り手にほかの攻め手を取られちゃう。', 'しかも次の手で、別の攻め手がはさまれちゃう。', 'おまけに、ほかの攻め手が取られちゃうの。']) : '';
+        return f(w + w2 + (cor ? pk(['{m}なら、角と攻め手で王をはさめたから。', '{m}で向かい側に置けば、角が片側の役をしてくれたの。', '正解の{m}は、角の反対側に入る手。', 'こっちの{m}だったら、角を味方にしてつかまえられたね。', '{m}を選べば、攻め手の勝ちだったんだ。'])
+          : pk(['{m}なら、王を2枚ではさめたから。', '{m}で向かい側に置けば、王はもう逃げられなかったの。', '正解の{m}は、王の向かい側に入る手。', 'こっちの{m}だったら、その場で王をつかまえられたね。', '{m}を選べば、攻め手の勝ちだったんだ。']))); };
     }
     return wrap({ ask, hintTx, good, ng }, pu);
   }
@@ -6722,7 +6744,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-tafl-lessons', OKEY: 'aicoding-tafl-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=16'), fetch('../tafl/i18n.js?v=6ek-nd1-bm2-bs1-tu1-sc1-br1-sq1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261125o').catch(() => null)])
+      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=17'), fetch('../tafl/i18n.js?v=6ek-nd1-bm2-bs1-tu1-sc1-br1-sq1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261125o').catch(() => null)])
         .then(([ls, T, _, op]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] tafl texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },

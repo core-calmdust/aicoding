@@ -79,8 +79,9 @@
     { id: 0, cunning: 0, size: 10, ap: 3, traces: 1, neg: .5,  player: .3,   plant: .4,  drop: .12, erase: .3,  adj: .2,  npcFind: .1,  fakeSeer: .9,  assist: true,   wit: .05, sway: 1.0 },
     { id: 1, cunning: .7, size: 11, ap: 3, traces: 1, neg: .52, player: .35, plant: .4, drop: .12, erase: .3, adj: .2, npcFind: .14, fakeSeer: .85, assist: false, wit: .16, sway: 1.0 },   // 嘘つきの「いつもの口ぶり」が透けないよう、巧い嘘つきは中級と同じ割合。そのぶん痕跡・目撃・村の推理はやさしい
     { id: 2, cunning: .7, size: 12, ap: 3, traces: 1, neg: .6,  player: .45,  plant: .45, drop: .1,  erase: .35, adj: .17, npcFind: .15, fakeSeer: .8,  assist: false, wit: .16, sway: .9 },
+    // 2026-11-28 上級：配役・嘘の巧さはそのまま、証拠を増やして憶測を減らす（2つ目の痕跡 .75・否定形と罠の物を減らす・消えにくく・目撃と村の発見を少し増やす）
     // hide: 役の伏せ方。狼の数だけは知らされ、ほかの役はくじ（mad: 狂人 0〜3人の重み、ほかは登場する確率）
-    { id: 3, cunning: .85, size: 13, ap: 3, traces: 1, neg: .7, player: .45, plant: .55, drop: .1, erase: .32, adj: .16, npcFind: .13, fakeSeer: .9, assist: false, wit: .1, sway: .75,
+    { id: 3, cunning: .85, size: 13, ap: 3, traces: 1, trace2: .75, neg: .6, player: .45, plant: .45, drop: .13, erase: .25, adj: .19, npcFind: .15, fakeSeer: .9, assist: false, wit: .1, sway: .75,
       hide: { mad: [1, 1, 0, 0], seer: 1, medium: .75, guard: .65, mason: .8, fox: .8, immoral: .65, cat: .8 } },
     { id: 4, cunning: 1, size: 13, ap: 3, traces: 1, neg: .85, player: .45, plant: .75, drop: .08, erase: .3,  adj: .15, npcFind: .12, fakeSeer: 1,   assist: false, wit: .08, sway: .7, nightmare: true,
       hide: { mad: [1, 3, 3, 0], seer: .85, medium: .7, guard: .6, mason: .7, fox: .75, immoral: .6, cat: .75 } },
@@ -168,7 +169,7 @@
   const wolvesAlive = S => S.people.filter(p => p.alive && p.role === 'wolf');
   // 物語ごとの手直し（2026-11-26 ユーザー：霧鐘村・北辰号の中級がまだ易しい）。配役は変えず、嘘の巧さと村の推理だけを締める
   const TUNE = { tomoshibi: { 4: { cunning: .9, neg: .7, plant: .5 } }, kirigane: { 1: { wit: .1, npcFind: .12 }, 3: { wit: .07, sway: .67 }, 4: { wit: .06, sway: .62 } }, hokushin: { 1: { wit: .1, npcFind: .12 }, 3: { wit: .09, sway: .72 }, 4: { wit: .06, sway: .6 } }, nekonaki: { 1: { cunning: .4, wit: .22, npcFind: .16, sway: 1.05 }, 3: { wit: .06, sway: .65 }, 4: { wit: .04, sway: .55, hide: { mad: [0, 2, 4, 0] } } },
-    kiteki: { 3: { neg: .6, plant: .45, wit: .16, sway: .9 }, 4: { cunning: .9, neg: .7, plant: .5, hide: { mad: [3, 4, 1, 0] } } }, shirane: { 4: { neg: .75, plant: .6, hide: { mad: [3, 5, 1, 0] } } } }, TD = {};
+    kiteki: { 3: { neg: .5, plant: .38, wit: .16, sway: .9 }, 4: { cunning: .9, neg: .7, plant: .5, hide: { mad: [3, 4, 1, 0] } } }, shirane: { 4: { neg: .75, plant: .6, hide: { mad: [3, 5, 1, 0] } } } }, TD = {};
   function tuneOf(story, i) { const t = TUNE[story] && TUNE[story][i]; if (!t) return DIFF[i]; const k = story + i; return TD[k] || (TD[k] = Object.assign({}, DIFF[i], t, t.hide ? { hide: Object.assign({}, DIFF[i].hide, t.hide) } : {})); }
   const diffOf = S => tuneOf(S.story, S.diff);
 
@@ -209,7 +210,7 @@
     // traces: the killer's body, left where it happened
     const traces = [];
     if (killer) {
-      const cats = shuffle(S, CATS).slice(0, act.prologue ? 1 : D.traces + (D.traces < 2 && rnd(S) < .5 ? 1 : 0));
+      const cats = shuffle(S, CATS).slice(0, act.prologue ? 1 : D.traces + (D.traces < 2 && rnd(S) < (D.trace2 == null ? .5 : D.trace2) ? 1 : 0));
       for (const c of cats) {
         const v = killer.traits[c];
         const neg = c !== 'hand' && rnd(S) < D.neg;
