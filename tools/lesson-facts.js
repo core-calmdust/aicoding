@@ -626,7 +626,7 @@ const CHECKS = {
       if (!!F.check !== q.inCheck()) bad(G, sid, `${w}: ${u} check ${q.inCheck()}, the words say ${!!F.check}`);
       if (sid === 'b_check' && !q.inCheck()) bad(G, sid, `${w}: ${u} is said to check, but does not`);
       if ((sid === 'b_mate' || sid === 'mate1') && !mated(q)) bad(G, sid, `${w}: ${u} is said to mate, but does not`);
-      if (sid === 'b_draw') { const m1 = (P.sc || []).some(x => x[0] === u && x[1] >= 29999); if (m1 && !mated(q)) bad(G, sid, `${w}: ${u} said to mate, but does not`); if (!q.hasLegal() && !q.inCheck()) bad(G, sid, `${w}: ${u} stalemates`); }
+      if (sid === 'b_draw') { const m1 = !!P.ok || (P.sc || []).some(x => x[0] === u && x[1] >= 29999); if (m1 && !mated(q)) bad(G, sid, `${w}: ${u} said to mate, but does not`); if (!q.hasLegal() && !q.inCheck()) bad(G, sid, `${w}: ${u} stalemates`); }
       if (sid === 'b_escape') { if (!pos.inCheck()) bad(G, sid, `${w}: not in check`); if (F.cap && NAME[ty(victim)] !== X.CH_PN[F.cap]) bad(G, sid, `${w}: ${u} takes a ${NAME[ty(victim)]}, the words say ${X.CH_PN[F.cap]}`);
         if (F.cap) { const pv = E.Pos.fromFEN(fen); pv.side ^= 1; if (!pv.attacked(pos.ksq[me], me ^ 1) || !hitsFrom(pos, E.sqOf(to), pos.ksq[me])) bad(G, sid, `${w}: ${u} is said to take the checking piece, but ${to} does not give the check`); } }
       if (sid === 'capture') { if (!victim) bad(G, sid, `${w}: ${u} is said to take, but takes nothing`); else if (NAME[ty(victim)] !== X.CH_PN[F.cap]) bad(G, sid, `${w}: ${u} takes a ${NAME[ty(victim)]}, the words say ${X.CH_PN[F.cap]}`);
