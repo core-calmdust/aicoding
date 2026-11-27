@@ -2927,7 +2927,7 @@ function shogi(opt) {
 // side and the name in the question, the percentages from the stored counts, and each claim about the board checked on the board
 // (swing names, the bishop's line opened / shut, captures, recaptures, king moves, edge pawns, a piece left to be taken: the opponent
 // wins material at once by SEE and the engine puts the move 100+ below the answer); ⑨ the 2D and the 3D score a freq problem alike.
-const SHO_DONE = new Set(['nakabisha', 'mukai', 'migishiken', 'sanken', 'koshikake', 'gokigen', 'chousoku', 'yoko85', 'direct']);
+const SHO_DONE = new Set(['nakabisha', 'mukai', 'migishiken', 'sanken', 'koshikake', 'gokigen', 'chousoku', 'yoko85', 'direct', 'genshi', 'hayakuri', 'ishida', 'aifuri', 'ittezon', 'sodebisha', 'gangi', 'kaku48', 'aignew', 'kakubou']);
 let shoW = null;
 function shogiOpen(opt) {
   const fs = require('fs'), vm = require('vm');
@@ -2987,7 +2987,7 @@ function shogiOpen(opt) {
       const N = tot || 1, pc = c => Math.max(1, Math.round(c / N * 100)), cnt = new Map(C);
       const facts = u => { const q = new E.Position(); q.setSfen(P.sfen); const m = q.fromUsi(u), drop = E.isDrop(m), fr = drop ? -1 : E.mFrom(m), to = E.mTo(m), pt = drop ? E.dropType(m) : E.typeOf(q.board[fr]), cap = q.board[to];
         const bish = x => { let n = 0; for (const mm of x.legalMoves(true)) if (!E.isDrop(mm) && [5, 13].includes(E.typeOf(x.board[E.mFrom(mm)]))) n++; return n; };
-        const nullSide = x => { const y = new E.Position(); y.setSfen(x.sfen().replace(/ [bw] /, ` ${q.side ? 'w' : 'b'} `)); return y; };
+        const nullSide = x => { const y = new E.Position(); y.setSfen(x.sfen().replace(/ [bw] /, ` ${q.side ? 'b' : 'w'} `)); return y; };   // (2026-11-28 担当B: the mover to move again — it was the opponent's bishop that got counted)
         const b0 = bish(q); q.doMove(m); const b1 = bish(nullSide(q));
         let win = 0; for (const mm of q.legalMoves(true)) if (!E.isDrop(mm) && q.board[E.mTo(mm)]) win = Math.max(win, q.see(mm));
         const file = 9 - to % 9, rank = ((to / 9) | 0) + 1, sfile = q.side ? file : 10 - file;   // (q.side: the opponent now; sfile counted from the mover's right)
