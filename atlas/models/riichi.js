@@ -24,8 +24,15 @@
       if (P) c.drawImage(P.canvas(t, red), 0, 0, 240, 320);
       else { c.fillStyle = '#fbf8ef'; c.fillRect(0, 0, 240, 320); }
     });
-    return M({ map: tex, roughness: .3, bump: false });
+    const m = M({ map: tex, roughness: .3, bump: false }); faces.push([m, t, red]); return m;
   });
+  // (2026-11-28 ユーザー「牌のフォントをゲーム中のものと同じに（負荷は変えずに）」) the game's own tile art (上海's two sheets, mahjong/tiles.js) is
+  // fetched once; when it is in, the faces already drawn with the stand-in glyphs are painted again in place — same textures, same cost
+  const faces = []; let artOn = false;
+  function artLater() {
+    const P = window.MJTiles; if (artOn || !P || !P.ready || P.sheets && P.sheets()) return; artOn = true;
+    P.ready().then(() => { P.reset(); faces.forEach(([m, t, red]) => { const c = m.map && m.map.image; if (!c || !c.getContext) return; const x = c.getContext('2d'); x.clearRect(0, 0, c.width, c.height); x.drawImage(P.canvas(t, red), 0, 0, c.width, c.height); m.map.needsUpdate = true; }); if (X.kick) X.kick(600); });
+  }
   // one tile: the ivory body and the blue back, as two rounded blocks; lying face up / face down, or standing (the face toward +z)
   // (2026-11-28 ユーザー「3Dビューの麻雀台のポリゴン数が多すぎる」) the ~210 tiles' bodies and backs are two InstancedMeshes (2 draw calls
   // instead of ~420), each a plain block (12 triangles, was 300 — at the 3D view's distance the rounding did not show): placed by markers, gathered at the end (instance())
@@ -43,6 +50,7 @@
   const P = s => { const out = [], m = s.match(/\d+[mpsz]/g) || []; for (const grp of m) { const k = grp.slice(-1), b = { m: 0, p: 9, s: 18, z: 27 }[k]; for (const d of grp.slice(0, -1)) out.push(k === 'z' ? b + +d - 1 : b + (+d === 0 ? 4 : +d - 1)); } return out; };
 
   X.MODELS.riichi = function () {
+    artLater();
     const TT = T(), g = new TT.Group(), S = 9.6, H = .9;   // the table's playing square, its height above the floor
     // the cabinet and the walnut rails
     const body = mesh(RB(S + 1.4, H - .1, S + 1.4, .2, 2), M({ color: 0x241a14, roughness: .55 }), 0, (H - .1) / 2, 0); g.add(body);
@@ -82,11 +90,11 @@
     const mine = P('234m56p678s345s22z'), z0 = 4.35;
     mine.forEach((t, i) => { const tl = tile(t, 'stand', t === 4); tl.position.set((i - 6.5) * (TW + .01) - .2, H + TH / 2 + .002, z0); tl.rotation.y = 0; g.add(tl); });
     { const tl = tile(P('7s')[0], 'stand'); tl.position.set(6.5 * (TW + .01) - .2 + .42, H + TH / 2 + .002, z0); g.add(tl); }
-    // (2026-11-28 ユーザー「手牌が一人分しかテクスチャを貼ってない。全員待ちっぽい手牌に」) the other three show their hands, standing with the faces to the centre
+    // (2026-11-28 ユーザー「手牌が一人分しかテクスチャを貼ってない。全員待ちっぽい手牌に」) the other three show their hands too, standing and facing their own players
     // (as if opened at a drawn hand's tenpai): a two-sided wait (25p), seven pairs on a single honour (西), a closed wait (6s)
     const OPEN = [null, P('345m678p456s88s34p'), P('22m55p77p44s88s11z3z'), P('123m456m789m22p57s')];
     for (let k = 1; k < 4; k++) { const p = new TT.Group(); p.rotation.y = k * Math.PI / 2; g.add(p);
-      OPEN[k].forEach((t, i) => { const tl = tile(t, 'stand', t === 4 && k === 1); tl.position.set((i - 6) * (TW + .01), H + TH / 2 + .002, z0); tl.rotation.y = Math.PI; p.add(tl); }); }   // (standing, the faces turned to the table's centre: 同日「牌は立てたまま」)
+      OPEN[k].forEach((t, i) => { const tl = tile(t, 'stand', t === 4 && k === 1); tl.position.set((i - 6) * (TW + .01), H + TH / 2 + .002, z0); p.add(tl); }); }   // (standing, the faces to their own player as the near hand's — 同日「牌は立てたまま」「3人の向きが逆」)
     // the rivers: six discards each, in front of each seat, face up (the right seat's riichi tile turned sideways)
     const R = [P('9m1p8s4z2m6z'), P('1s9p3z7m5z1m'), P('9s2p4z7p1z8m'), P('3z9m1s7z6p2s')];
     R.forEach((list, k) => { const p = new TT.Group(); p.rotation.y = k * Math.PI / 2; g.add(p);
