@@ -1196,3 +1196,4 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 .mxch .mxcoord{fill:#cbbfa9}   /* (the chess board stands on the dark stage: its letters and numbers light) */
 .mxcap{padding:2px 8px;border-radius:99px;background:#efe8da;color:#23262f}.mxcap em{color:#5d564b}   /* (what a side has taken: on a light chip, so black pieces show on the dark stage) */
 .mxlm.ring{fill:rgba(250,205,70,.25);stroke:#e0a21a;stroke-width:.07}   /* (point boards: the last move shows as a ring around the piece, not only under it) */
+.mxp,.mxcap,.mxhk,.mxxk{font-style:normal}   /* (2026-11-27 ユーザー: 将棋とシャンチーの駒がイタリックになっている — the pieces sit in <i> elements) */
