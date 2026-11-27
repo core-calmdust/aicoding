@@ -9,12 +9,18 @@
                           end 'empty' (an empty cell — the cell the piece left counts as empty) / 'edge' (off the board) / 'enemy'
                           for every enemy piece it touches, or 'mixed' when they differ
                 k 'none' no enemy piece next to where it lands
+     b_throne   k 'ok'   a step of the queen one ring inwards (onto the throne, or next to it) after which no enemy move captures
+                         anything of yours (throne: true when the step lands on the throne)
+                k 'trap' a step of the queen one ring inwards that the enemy's next move sandwiches (rp: that enemy move)
+                k 'side' a step of the queen along the same ring (not inwards)
+                k 'guard' a guard's move (only the queen may go onto the throne; a guard does not bring her nearer)
    hint(E, id, spec) → the cells of the pieces to look at (never the answer's piece alone, 追52): b_step every piece with a step
-   inwards, b_capture every piece with a move next to an enemy piece.
+   inwards, b_capture every piece with a move next to an enemy piece, b_throne the queen and every enemy piece next to a cell
+   she can step inwards to.
    window.AgonLsFacts · module.exports the same. */
 (function () {
   'use strict';
-  const IDS = ['b_step', 'b_capture'];
+  const IDS = ['b_step', 'b_capture', 'b_throne'];
   function fact(E, id, spec, m) {
     const p = E.Pos.from(spec), f = E.mFrom(m), t = E.mTo(m), me = p.side + 1;
     if (id === 'b_step') {
@@ -24,6 +30,15 @@
       if (rp != null) return { k: 'trap', rp };
       if (L.some(r => q.capsOf(r).length)) return { k: 'trapOther' };   // (another of your pieces left to be sandwiched: never in these lessons — the verify checks)
       return { k: 'ok' };
+    }
+    if (id === 'b_throne') {
+      if (!p.isQueen(f)) return { k: 'guard' };
+      if (E.RING[t] !== E.RING[f] - 1) return { k: 'side' };
+      const q = p.clone().play(m), L = q.moves();
+      const rp = L.find(r => q.capsOf(r).includes(t));
+      if (rp != null) return { k: 'trap', rp };
+      if (L.some(r => q.capsOf(r).length)) return { k: 'trapOther' };
+      return { k: 'ok', throne: t === E.CENTER };
     }
     if (id === 'b_capture') {
       const c = p.capsOf(m).length;
@@ -41,6 +56,12 @@
   }
   function hint(E, id, spec) {
     const p = E.Pos.from(spec), me = p.side + 1, out = new Set();
+    if (id === 'b_throne') {
+      const qn = p.queen(me); if (qn < 0) return [];
+      out.add(qn);
+      for (const m of p.moves()) { if (m === E.PASS || E.mFrom(m) !== qn) continue; const t = E.mTo(m); if (E.RING[t] !== E.RING[qn] - 1) continue; for (const a of E.NB[t]) if (a >= 0 && p.owner(a) === 3 - me) out.add(a); }
+      return [...out].sort((a, b) => a - b);
+    }
     for (const m of p.moves()) {
       if (m === E.PASS) continue; const f = E.mFrom(m), t = E.mTo(m);
       if (id === 'b_step' && E.RING[t] === E.RING[f] - 1) out.add(f);
@@ -54,6 +75,7 @@
     if (F.k === 'ok') return 'why';
     if (id === 'b_step') return F.k === 'side' ? 'ngSide' : 'ng';
     if (id === 'b_capture') return F.k === 'touch' ? 'ngTouch' : 'ng';
+    if (id === 'b_throne') return F.k === 'side' ? 'ngSide' : F.k === 'guard' ? 'ngGuard' : 'ng';
     return 'ng';
   }
   const API = { IDS, fact, hint, key };
