@@ -489,7 +489,7 @@
             <div class="mxnn"><button type="button" data-n="-1">${svg('prev')}<span>${esc(u('pnote'))}</span></button><button type="button" data-n="1"><span>${esc(u('nnote'))}</span>${svg('next')}</button></div></div>
           <div class="mxlog"><h4>${esc(u('moves'))}<span>${esc(u('plies').replace('{n}', n))}</span></h4><div class="mxlist k-${K.pair ? 'pair' : 'one'}" dir="ltr" role="list"></div></div></div></div>
       <section class="mxabout"><h4>${esc(u('about'))}</h4><p>${esc(x.lead || '')}</p>
-        <dl><div><dt>${esc(u('r_event'))}</dt><dd>${esc(x.ev || '—')}</dd></div><div><dt>${esc(u('r_date'))}</dt><dd>${esc(x.d)}</dd></div><div><dt>${esc(u('r_place'))}</dt><dd>${esc(x.pl)}</dd></div>${res ? `<div><dt>${esc(u('result'))}</dt><dd>${esc(res)}</dd></div>` : ''}</dl></section>
+        <dl><div><dt>${esc(u('r_event'))}</dt><dd>${esc(x.ev || '—')}</dd></div><div><dt>${esc(u('r_dp'))}</dt><dd>${esc(x.d)} · ${esc(x.pl)}</dd></div>${res ? `<div><dt>${esc(u('result'))}</dt><dd>${esc(res)}</dd></div>` : ''}</dl></section>
       <p class="mxcredit">${esc(u('credit'))}</p>`;
     const q = s => el.view.querySelector(s);
     Object.assign(el, { board: q('.mxboard'), say: q('.mxtxt'), list: q('.mxlist'), pos: q('.mxpos'), mv: q('.mxmv'), rng: q('.mxrng'), nn: q('.mxnn'), ev: q('.mxev'), graph: q('.mxgraph') });

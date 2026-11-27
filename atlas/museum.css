@@ -1273,3 +1273,13 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 .mxevb::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(253,196,63,.9)}
 .mxev b{display:inline-flex;align-items:center;gap:5px;font-family:var(--round);color:var(--ink)}
 .mxev[hidden]{display:none}
+/* (2026-11-27 ユーザー: 博物館の「さがす」は右端で統一) every room's bar: the filters first, the search box at the end of the line (the right; on a
+   right-to-left page, the line's end); a phone: the page numbers, then the search box, the filters on the next line */
+.mupg-ex{order:1}.mupg-n{order:2}.mupg-s{order:3;margin-inline-start:auto;flex:0 1 320px}
+@media (max-width:819px){.mupg-n{order:1;margin-inline-start:0}.mupg .mupg-s{order:2;flex:1 1 0;margin-inline-start:0}.mupg-ex,.mupg>.sgw{order:3}}
+/* (2026-11-27 ユーザー: 形勢評価グラフはもう少し大きく) the graph: 64 px high on PC, 52 on a phone; the playhead as tall */
+.mxgw.on{height:64px}.mxgw.on .mxrng{height:64px}
+.mxgw.on .mxrng::-webkit-slider-runnable-track{height:64px}.mxgw.on .mxrng::-moz-range-track{height:64px}
+.mxgw.on .mxrng::-webkit-slider-thumb{height:68px}.mxgw.on .mxrng::-moz-range-thumb{height:68px}
+@media (max-width:819px){.mxgw.on,.mxgw.on .mxrng{height:52px}.mxgw.on .mxrng::-webkit-slider-runnable-track,.mxgw.on .mxrng::-moz-range-track{height:52px}.mxgw.on .mxrng::-webkit-slider-thumb{height:56px}.mxgw.on .mxrng::-moz-range-thumb{height:56px}}
+.mxabout dl{gap:6px 18px}.mxabout dd{font-size:13.5px}
