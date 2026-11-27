@@ -396,4 +396,7 @@
 "rv.held":"{q} teklifine karşı {c}: teklif doğruydu.",
 "rv.broke":"{q} teklifine karşı {c}: teklif yanlıştı.",
 "rv.calzaOk":"Tam {c}: calza doğru.",
-"rv.calzaNg":"{c} tane varmış: tam değil."}
+"rv.calzaNg":"{c} tane varmış: tam değil.",
+"odds.rated":"Puanlı oyunlarda beklenen adetler gizlenir.",
+"hint.rated":"Puanlı oyunlarda ipucu kapalı",
+"open.you":"Açılış teklifi sende"}

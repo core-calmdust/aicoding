@@ -301,6 +301,7 @@ function dudoMe() { const g = G(); if (!myCtx() || !LD.canDudo(g, 0)) return; if
 function calzaMe() { const g = G(); if (!myCtx() || !LD.canCalza(g, 0)) return; if (tutBlock({ t: 'calza' })) return; doAct(0, { t: 'calza' }); if (window.LdTut) LdTut.after('calza'); }
 function hintMe() {
   const g = G(); if (!myCtx()) return;
+  if (M.mode === 'rated') { toast(t('hint.rated')); return; }
   const C = getCoach(); if (!C || !C.opts.length) return;
   const a = C.opts[0].a;
   if (a.t === 'bid') { U.f = a.f; U.q = a.q; render(); }
@@ -372,7 +373,7 @@ function render() {
     mid += `<div class="mid-bid rv">${bidHtml(R.bid, 'bl')}<em>${esc(nameOf(R.bid.p))}</em></div><div class="count"><small>${esc(t('rev.count'))}</small><b class="${rev.done ? (R.n >= R.bid.q ? 'yes' : 'no') : ''}">${cnt}</b></div>`;
     if (rev.done) mid += `<div class="verdict ${R.loser === 0 ? 'bad' : R.gainer === 0 ? 'good' : ''}">${esc(verdictTxt(R))}</div>`;
   } else if (last) mid += `<div class="mid-bid">${bidHtml(last, 'bl')}<em>${esc(nameOf(last.p))}</em></div><div class="mid-tot">${esc(t('dice.total', { n: LD.total(g) }))}</div>`;
-  else mid += `<div class="mid-open">${esc(U.phase === 'roll' ? t('roll.now') : t('open.wait', { n: nameOf(r ? r.turn : 0) }))}</div><div class="mid-tot">${esc(t('dice.total', { n: LD.total(g) }))}</div>`;
+  else mid += `<div class="mid-open">${esc(U.phase === 'roll' ? t('roll.now') : r && r.turn === 0 ? t('open.you') : t('open.wait', { n: nameOf(r ? r.turn : 0) }))}</div><div class="mid-tot">${esc(t('dice.total', { n: LD.total(g) }))}</div>`;
   // the bids of this round so far
   const bids = rev ? (g.rounds[g.rounds.length - 1] || {}).bids || [] : r ? r.bids : [];
   if (bids.length > 1 && !rev) mid += `<div class="hist">${bids.slice(-7, -1).map(b => `<span class="ldh">${esc(nameOf(b.p).slice(0, 1))}<b>${b.q}</b>${Dice.img(b.f, 'hd')}</span>`).join('')}</div>`;
@@ -402,7 +403,7 @@ function renderActbar() {
   const faces = [1, 2, 3, 4, 5, 6].map(f => { const m = LD.minQ(ctx, f), ok = m <= ctx.total; return `<button type="button" class="fbtn${U.f === f ? ' sel' : ''}${ok ? '' : ' off'}" data-f="${f}"${ok ? '' : ' disabled'} title="${ok ? esc(t('min.q', { q: m })) : ''}">${Dice.img(f, 'fb')}<small>${ok ? m + '+' : '—'}</small></button>`; }).join('');
   const legal = U.f && LD.legalBid(ctx, U.q, U.f);
   const msg = ctx.prev ? t('ab.raise', { b: bidTxt(ctx.prev) }) : t('ab.open');
-  const C = set.odds ? getCoach() : null;
+  const C = set.odds && M.mode !== 'rated' ? getCoach() : null;
   const pT = C && U.f && legal ? `<span class="oddsv" title="${esc(t('set.odds.h'))}"><small>${esc(t('odds.lab'))}</small><b>${pct(AI.pTrue(C.V, U.q, U.f))}</b></span>` : '';
   patch(bar, `<div class="ab-msg turn">${esc(msg)}</div>` +
     `<div class="bld">${pT}<div class="qsel"><button type="button" class="qb" id="qMinus" aria-label="−">−</button><b id="qVal">${U.q || '–'}</b><button type="button" class="qb" id="qPlus" aria-label="+">+</button></div><span class="xmul">×</span><div class="fsel">${faces}</div></div>` +
@@ -433,7 +434,8 @@ function renderSide() {
   else if (set.coach) h += `<div class="card coach-card" data-pt="coach" data-k="coach"><h3>${esc(t('side.coach'))}${coachSw()}</h3>${coachHtml()}</div>`;
   else h += `<div class="card coach-card ck-off" data-pt="coach" data-k="coach"><h3>${esc(t('side.coach'))}${coachSw()}</h3><p class="muted">${esc(t('coach.off'))}</p></div>`;
   // odds: expected matches among all the dice, per face
-  h += `<div class="card odds-card" data-pt="odds" data-k="odds"><h3>${esc(t('side.odds'))}<button type="button" class="sbtn mini" id="oddsCalc">${esc(t('btn.calc'))}</button></h3>${oddsHtml()}</div>`;
+  h += M.mode === 'rated' && !M.over ? `<div class="card odds-card ck-rest" data-pt="odds" data-k="odds"><h3>${esc(t('side.odds'))}</h3><p class="muted">${esc(t('odds.rated'))}</p></div>`
+    : `<div class="card odds-card" data-pt="odds" data-k="odds"><h3>${esc(t('side.odds'))}<button type="button" class="sbtn mini" id="oddsCalc">${esc(t('btn.calc'))}</button></h3>${oddsHtml()}</div>`;
   // log
   h += `<div class="card log-card" data-pt="log" data-k="log"><h3>${esc(t('side.log'))}<span class="h3s">${esc(t('round.no', { n: g.round ? g.round.no : 0 }))}</span></h3><div class="pk-log" id="ldLog">${logHtml()}</div></div>`;
   // rating
@@ -703,7 +705,7 @@ $('#btnResign').onclick = () => {
   if (window.Resign) Resign.confirm({ lang: LANG }).then(ok => { if (ok) go(); }); else confirmBox(t('resignQ'), go);
 };
 $('#btnStats').onclick = () => window.LdTools && LdTools.stats();
-$('#btnCalc').onclick = () => window.LdTools && LdTools.calc(true);
+$('#btnCalc').onclick = () => window.LdTools && LdTools.calc(!(M && M.mode === 'rated' && !M.over));
 $('#btnLesson').onclick = () => window.LdLessons && LdLessons.open();
 $('#langSel').onchange = () => { LANG = $('#langSel').value; try { localStorage.setItem('aicoding-lang', LANG); } catch (e) {} applyI18n(); U.coach = null; render(); if (window.LdRules && LdRules.relang) LdRules.relang(); if (window.GameRecord) GameRecord.relabel(); };
 document.addEventListener('keydown', e => {

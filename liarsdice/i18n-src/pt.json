@@ -396,4 +396,7 @@
 "rv.held":"{c} para uma aposta de {q}: a aposta era verdadeira.",
 "rv.broke":"{c} para uma aposta de {q}: a aposta era falsa.",
 "rv.calzaOk":"Exatamente {c}: a calza acertou.",
-"rv.calzaNg":"Havia {c}: não era exato."}
+"rv.calzaNg":"Havia {c}: não era exato.",
+"odds.rated":"As quantidades esperadas ficam ocultas nas partidas ranqueadas.",
+"hint.rated":"Dicas desativadas nas partidas ranqueadas",
+"open.you":"Sua vez de abrir"}

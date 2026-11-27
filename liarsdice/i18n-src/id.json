@@ -396,4 +396,7 @@
 "rv.held":"{c} untuk tawaran {q}: tawarannya benar.",
 "rv.broke":"{c} untuk tawaran {q}: tawarannya salah.",
 "rv.calzaOk":"Tepat {c}: calza benar.",
-"rv.calzaNg":"Ada {c}: tidak pas."}
+"rv.calzaNg":"Ada {c}: tidak pas.",
+"odds.rated":"Jumlah perkiraan disembunyikan di permainan berperingkat.",
+"hint.rated":"Petunjuk dimatikan di permainan berperingkat",
+"open.you":"Giliranmu membuka"}

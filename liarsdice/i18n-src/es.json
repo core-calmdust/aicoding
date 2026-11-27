@@ -396,4 +396,7 @@
 "rv.held":"{c} frente a una apuesta de {q}: la apuesta era cierta.",
 "rv.broke":"{c} frente a una apuesta de {q}: la apuesta era falsa.",
 "rv.calzaOk":"Exactamente {c}: el calzo acierta.",
-"rv.calzaNg":"Había {c}: no era exacto."}
+"rv.calzaNg":"Había {c}: no era exacto.",
+"odds.rated":"En las partidas puntuadas no se muestran las cantidades esperadas.",
+"hint.rated":"Las pistas están desactivadas en las partidas puntuadas",
+"open.you":"Te toca abrir"}

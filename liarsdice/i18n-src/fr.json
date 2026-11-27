@@ -396,4 +396,7 @@
 "rv.held":"{c} pour une annonce de {q} : l’annonce était vraie.",
 "rv.broke":"{c} pour une annonce de {q} : l’annonce était fausse.",
 "rv.calzaOk":"Exactement {c} : la calza est juste.",
-"rv.calzaNg":"Il y en avait {c} : pas exactement."}
+"rv.calzaNg":"Il y en avait {c} : pas exactement.",
+"odds.rated":"Les nombres attendus sont masqués en partie classée.",
+"hint.rated":"Pas d’indice en partie classée",
+"open.you":"À vous d’ouvrir"}

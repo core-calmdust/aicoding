@@ -396,4 +396,7 @@
 "rv.held":"{c} bei einer Ansage von {q}: Die Ansage stimmte.",
 "rv.broke":"{c} bei einer Ansage von {q}: Die Ansage war falsch.",
 "rv.calzaOk":"Genau {c}: Die Calza stimmt.",
-"rv.calzaNg":"Es waren {c}: nicht genau."}
+"rv.calzaNg":"Es waren {c}: nicht genau.",
+"odds.rated":"In Wertungspartien werden die erwarteten Anzahlen nicht gezeigt.",
+"hint.rated":"In Wertungspartien gibt es keine Tipps",
+"open.you":"Du eröffnest"}

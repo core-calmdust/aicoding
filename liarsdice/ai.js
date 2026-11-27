@@ -26,8 +26,8 @@ function params0(L) {
   const x = (L - 1) / 19;
   return {
     L,
-    tau: [0, 1, .8, .6, .5, .4, .34, .28, .24, .2, .17, .14, .12, .1, .08, .06, .045, .04, .02, .01, .004][L],   // softmax temperature (dice)
-    own: L === 1 ? .35 : L === 2 ? .6 : L === 3 ? .82 : 1,                         // chance of looking at your own dice when judging
+    tau: [0, 1.4, 1, .7, .5, .4, .34, .28, .24, .2, .17, .14, .12, .1, .08, .06, .045, .04, .02, .01, .004][L],   // softmax temperature (dice)
+    own: L === 1 ? .2 : L === 2 ? .45 : L === 3 ? .75 : 1,                         // chance of looking at your own dice when judging
     gamma: L <= 4 ? 0 : lerp(.2, .85, (L - 5) / 11),                               // trust in the others' bids (Bayesian reading)
     pub: L >= 6,                                                                     // d from what the table can see
     calza: L >= 5,
@@ -35,7 +35,8 @@ function params0(L) {
     k: lerp(6, 11, x),                                                               // how sharply the next player doubts
     lift: L >= 12,                                                                   // consider bigger raises (+2)
     roll: +(process_env('LDROLL') || [0, 30, 60, 100, 160][Math.max(0, L - 16)]), rtop: 6, rnoise: .06,
-    nx: L >= +(process_env('LDNX') || 10), k2: +(process_env('LDK2') || 14), th: +(process_env('LDTH') || .5), press: +(process_env('LDPR') || .12),
+    // nx: the next-player model (measured: no gain over the table reading; off, kept for tests)
+    nx: L >= +(process_env('LDNX') || 99), k2: +(process_env('LDK2') || 14), th: +(process_env('LDTH') || .5), press: +(process_env('LDPR') || .12),
   };
 }
 const GAMMA_COACH = .7, COACH_LV = 20;

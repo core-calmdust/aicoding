@@ -28,7 +28,7 @@ function distHtml(n, m, q, f, wild) {
   return `<div class="cdist">` + d.map((p, k) => { const tot = k + m; return `<div class="cb${tot >= q ? ' ok' : ''}${tot === q ? ' eq' : ''}" title="${tot}: ${(p * 100).toFixed(1)}%"><i style="height:${(p / mx * 100).toFixed(1)}%"></i><small>${tot}</small></div>`; }).join('') + `</div>`;
 }
 function renderCalc() {
-  const M = $('#toolsModal'), g = A.G, inGame = g && g.round && g.phase === 'bid';
+  const M = $('#toolsModal'), g = A.G, inGame = g && g.round && g.phase === 'bid' && !(A.M.mode === 'rated' && !A.M.over);
   const tabs = `<div class="ng-tabs"><button type="button" data-ct="calc" class="${C.tab === 'calc' ? 'sel' : ''}">${esc(t('calc.tab'))}</button><button type="button" data-ct="game" class="${C.tab === 'game' ? 'sel' : ''}"${inGame ? '' : ' disabled'}>${esc(t('calc.tabGame'))}</button></div>`;
   let body;
   if (C.tab === 'game' && inGame) body = gameHtml();
