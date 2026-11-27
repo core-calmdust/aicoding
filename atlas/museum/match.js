@@ -49,7 +49,13 @@
     // (2026-11-27) Go Seigen v. Honinbo Shusai, 1933–1934: The 3-3, Star Point and Tengen Game
     { id: 'seigen1933', kind: 'go', size: 19, res: 'W+2',
       moves: 'qc cd dp pq jj pd qd pe ob qn jp lq dj ed lo nq kq lp ko ch gj fq fo iq gp cq cp dq nd ph pj ne me mf nf ng oe of ne nj om mg ke hc qm rm rn rl ro pm ql qk pl pn pk qj nl pi qp on nn no mo op qr qq rq pr rr mn nm lm ll kp mp mq ip jq kk cn ep cj ck dk cl dl ci bj bi di ej bh dm ei fj cm ak ai el bp rf co qg rh jc gq eq en fn er fr dr hq hr hp gr fc ic dc cc gd he ge je hd id hf kd le kc og oh pg em ek fm gm mb cb ec eb dd db gb bc bd bb nb oa fb ea gh jf ie ff hi hg eo fp hl il jh fh fi hj if ih ii ig jg ji fg kf ij ik hh gf mk df ml sm sk mm dg li ol ln nk km fl gl oj qh ri cf ef gi eh ee eg de bf bq br ps os qs oq bo aq an bn am ao rg mi qi lh kh lj rj rk sh sj bg ae cg ag fe gc fd ce kg mc ki fk ld lc gk bk bl na nc gg fa ga ac ad lg mh qo lk',
-      mk: {1: {'s':['qc']},3: {'s':['dp']},5: {'s':['jj']},6: {'s':['qc','dp','jj']},160: {'s':['hl']}} }
+      mk: {1: {'s':['qc']},3: {'s':['dp']},5: {'s':['jj']},6: {'s':['qc','dp','jj']},160: {'s':['hl']}} },
+    // (2026-11-27) Donald Byrne v. Bobby Fischer, 1956: The Game of the Century
+    { id: 'century1956', kind: 'chess', res: 'b', moves: 'Nf3 Nf6 c4 g6 Nc3 Bg7 d4 O-O Bf4 d5 Qb3 dxc4 Qxc4 c6 e4 Nbd7 Rd1 Nb6 Qc5 Bg4 Bg5 Na4 Qa3 Nxc3 bxc3 Nxe4 Bxe7 Qb6 Bc4 Nxc3 Bc5 Rfe8+ Kf1 Be6 Bxb6 Bxc4+ Kg1 Ne2+ Kf1 Nxd4+ Kg1 Ne2+ Kf1 Nc3+ Kg1 axb6 Qb4 Ra4 Qxb6 Nxd1 h3 Rxa2 Kh2 Nxf2 Re1 Rxe1 Qd8+ Bf8 Nxe1 Bd5 Nf3 Ne4 Qb8 b5 h4 h5 Ne5 Kg7 Kg1 Bc5+ Kf1 Ng3+ Ke1 Bb4+ Kd1 Bb3+ Kc1 Ne2+ Kb1 Nc3+ Kc1 Rc2#',
+      mk: { 18: { a: [['b6', 'c4']] }, 20: { a: [['g4', 'f3']] }, 22: { a: [['b6', 'a4']], s: ['e4'] }, 26: { s: ['e4'] }, 27: { a: [['e7', 'd8'], ['e7', 'f8']] }, 28: { a: [['d8', 'b6']], s: ['f8'] },
+        30: { a: [['c3', 'd1']] }, 31: { a: [['c5', 'b6']] }, 32: { a: [['e8', 'e1']] }, 34: { a: [['c5', 'b6'], ['e6', 'c4']], s: ['b6'] }, 36: { a: [['c4', 'f1']] }, 38: { a: [['e2', 'g1']] },
+        40: { a: [['c4', 'f1']] }, 44: { a: [['c3', 'd1']] }, 46: { s: ['b6'] }, 50: { s: ['d1'] }, 57: { a: [['d8', 'g8']] }, 64: { s: ['b5'] }, 70: { a: [['c5', 'g1']] }, 72: { a: [['g3', 'f1']] },
+        74: { a: [['b4', 'e1']] }, 76: { a: [['b3', 'd1']] }, 78: { a: [['e2', 'c1']] }, 80: { a: [['c3', 'b1']] }, 82: { a: [['c2', 'c1']], s: ['c1'] } } }
   ];
 
   /* ---------- the kinds ---------- */
