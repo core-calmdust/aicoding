@@ -3731,7 +3731,7 @@ function hexOpen(opt) {
       const legal = []; for (let m = 0; m < g.n * g.n; m++) if (q.legal(m)) legal.push(m);
       const NB = E.geo(g.n).NB, s = P.s.side, o = 3 - s, at = c => P.s.b[c] === 'r' ? 1 : P.s.b[c] === 'b' ? 2 : 0;
       const savable = fb.save > 0;   // (an own bridge cut into: the answer answers it)
-      for (let i = 0; i < 5; i++) { const probs = P0.slice(0, 5); let W; try { W = X.HX.opJa.call(X.HX, P, LI, i, probs, {}); } catch (e) { a("⑧ the words fail: " + e.stack.split("\n").slice(0, 3).join(" | ")); break; }
+      for (let i = 0; i < 15; i++) { const probs = P0.slice(0, 5); let W; try { W = X.HX.opJa.call(X.HX, P, LI + Math.floor(i / 5), i % 5, probs, {}); } catch (e) { a("⑧ the words fail: " + e.stack.split("\n").slice(0, 3).join(" | ")); break; }   // (追90, 2026-11-28 担当B: three turns of the word lists — every candidate of a 2- or 3-word list is said once — not only the order the set's index gives)
         const ask = plain(W.ask), hint = plain(W.hintTx); if (/\{|undefined|NaN/.test(ask + hint)) a(`⑧ the question / hint 「${ask}」「${hint}」`);
         if (!ask.includes(s === 2 ? '青' : '赤')) a(`⑧ the question does not name the side 「${ask}」`);
         if (!(X.HXJ_OP.hint[kb] || X.HXJ_OP.hint.open).map(plain).includes(hint)) a(`⑧ the hint is not the answer's shape (${kb}) 「${hint}」`);
@@ -3745,6 +3745,7 @@ function hexOpen(opt) {
           if (/もう1つの割りこまれたほう|大事なほうのブリッジ/.test(w) && !(savable && fu.save)) bad('yours answers no other cut bridge');
           if (/ほかの石から遠すぎ|戦いの場所から離れすぎ|まわりに石がなくて/.test(w) && !(fu.dOpp >= 4 && fu.dOwn >= 4)) bad(`the move is ${fu.dOpp} / ${fu.dOwn} from the stones`);
           if (/割りこむ先手を逃し|すき間をつくチャンス|受けさせる一手を打てず/.test(w) && !(fb.intrude && !fu.intrude)) bad('not an intrusion missed');
+          if (/もっと効くすき間|割りこむ場所がちがって/.test(w) && !(fb.intrude && fu.intrude)) bad('said to be another intrusion, it is none');
           if (/くっつけて止めると|となりで止めても|ぴったりつけると/.test(w) && !fu.touch) bad('the move touches nothing');
           if (/離れすぎて|間があきすぎて|遠くで待っても/.test(w) && fu.touch) bad('the move touches the opponent');
           if (/1マスずつしか進めず|となりにつなぐだけ|歩みがおそく/.test(w) && !(fu.adj && fb.bridge)) bad('not an adjacent move against a bridge');
