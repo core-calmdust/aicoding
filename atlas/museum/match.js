@@ -355,7 +355,54 @@
     return { init, play, label, pieces, over, cols: 8, rows: 8, sides: ['b', 'w'], first: 'b', disc: true,
       xy: (s, flip) => { const f = s.charCodeAt(0) - 97, r = s.charCodeAt(1) - 49; return flip ? [7 - f, 7 - r] : [f, r]; } };
   })();
-  const KINDS = { chess: CHESS, shogi: SHOGI, go: GO, xiangqi: XIANGQI, reversi: REVERSI };
+  // checkers (English draughts / American checkers, as the site's checkers/): PDN numbers 1…32 on the dark squares. Black (b) moves first
+  // and starts on 1…12 at the top (the usual diagram: White at the bottom, 1 in the top row from White's left); a man steps forward,
+  // a king either way; taking is a must, a jump goes on to the end, and a man that reaches the far row is crowned there (its move ends).
+  // Moves as written: 11-15, 22x15, 18x11x2 (each landing square), or the start and end alone (22x8) when only one way of jumping fits.
+  const CHECKERS = (() => {
+    const rc = n => { n = +n; if (!(n >= 1 && n <= 32) || n !== Math.floor(n)) throw new Error('bad square: ' + n); const r = (n - 1) >> 2, k = (n - 1) & 3; return [r, r % 2 ? 2 * k : 2 * k + 1]; };
+    const num = (r, c) => r < 0 || r > 7 || c < 0 || c > 7 || (r + c) % 2 === 0 ? 0 : r * 4 + (c >> 1) + 1;
+    const opp = c => c === 'b' ? 'w' : 'b';
+    function init() { const b = {}; let id = 0; for (let n = 1; n <= 12; n++) b[n] = { id: id++, c: 'b', k: false }; for (let n = 21; n <= 32; n++) b[n] = { id: id++, c: 'w', k: false }; return { b, turn: 'b', cap: { b: 0, w: 0 } }; }
+    const dirs = p => p.k ? [[1, 1], [1, -1], [-1, 1], [-1, -1]] : p.c === 'b' ? [[1, 1], [1, -1]] : [[-1, 1], [-1, -1]];
+    const lastRow = (p, n) => (p.c === 'b' && n >= 29) || (p.c === 'w' && n <= 4);
+    // every full jump from n by the piece p on board b: [[landing…], [taken…]]; a crowned man stops
+    function jumps(b, n, p, gone) { const [r, c] = rc(n), out = [];
+      dirs(p).forEach(([dr, dc]) => { const over = num(r + dr, c + dc), to = num(r + 2 * dr, c + 2 * dc);
+        if (!over || !to || !b[over] || b[over].c === p.c || gone.includes(over) || (b[to] && to !== p.home)) return;
+        const g = gone.concat(over);
+        if (!p.k && lastRow(p, to)) { out.push([[to], g]); return; }
+        const more = jumps(b, to, p, g); if (more.length) more.forEach(([l, t]) => out.push([[to].concat(l), t])); else out.push([[to], g]); });
+      return out; }
+    const allJumps = st => { const o = []; Object.keys(st.b).forEach(n => { const p = st.b[n]; if (p.c === st.turn) jumps(st.b, +n, Object.assign({ home: +n }, p), []).forEach(j => o.push([+n].concat(j))); }); return o; };
+    function play(st, mv) {
+      const m = String(mv).trim(), cap = m.includes('x'), sq = m.split(/[-x]/).map(Number);
+      if (!/^\d{1,2}([-x]\d{1,2})+$/.test(m) || (!cap && sq.length !== 2)) throw new Error('bad move: ' + mv);
+      sq.forEach(rc); const from = sq[0], p = st.b[from];
+      if (!p) throw new Error('no piece to move: ' + mv); if (p.c !== st.turn) throw new Error('not this side\'s piece: ' + mv);
+      const must = allJumps(st), b = Object.assign({}, st.b); let land, taken = [];
+      if (!cap) { if (must.length) throw new Error('a capture is a must here: ' + mv);
+        const [r0, c0] = rc(from), [r1, c1] = rc(sq[1]);
+        if (!dirs(p).some(([dr, dc]) => r0 + dr === r1 && c0 + dc === c1) || b[sq[1]]) throw new Error('the piece cannot go there: ' + mv);
+        land = [sq[1]];
+      } else {
+        const fit = must.filter(([f, l]) => f === from && (sq.length > 2 ? l.join() === sq.slice(1).join() : l[l.length - 1] === sq[1]));
+        if (!fit.length) throw new Error((must.some(j => j[0] === from) ? 'the jump is not complete or not possible: ' : 'no such jump: ') + mv);
+        if (fit.length > 1 && new Set(fit.map(j => j[2].slice().sort().join())).size > 1) throw new Error('ambiguous jump (write each landing): ' + mv);
+        land = fit[0][1]; taken = fit[0][2];
+      }
+      const to = land[land.length - 1], crown = !p.k && lastRow(p, to), capd = taken.map(t => ({ id: b[t].id, at: String(t) }));
+      taken.forEach(t => delete b[t]); delete b[from]; b[to] = { id: p.id, c: p.c, k: p.k || crown };
+      const c2 = Object.assign({}, st.cap); c2[p.c] += taken.length;
+      return { st: { b, turn: opp(st.turn), cap: c2 }, from: String(from), to: String(to), path: [from].concat(land).map(String), side: p.c, cap: capd.length ? capd[0] : null, caps: capd, crown };
+    }
+    const label = mv => String(mv);
+    const pieces = st => Object.keys(st.b).map(n => { const p = st.b[n]; return { id: p.id, at: n, k: p.c + (p.k ? 'k' : 'm'), king: p.k }; });
+    return { init, play, label, pieces, cols: 8, rows: 8, sides: ['b', 'w'], first: 'b', pair: true, up: true, num, rc,
+      xy: (s, flip) => { const [r, c] = rc(s); return flip ? [7 - c, 7 - r] : [c, r]; } };
+  })();
+  const CROWN = '<path d="M3 18 4.5 7l5 4.5L12 5l2.5 6.5 5-4.5L21 18z" class="mxcr"/><path d="M3.5 20.5h17" class="mxcb"/>';
+  const KINDS = { chess: CHESS, shogi: SHOGI, go: GO, xiangqi: XIANGQI, reversi: REVERSI, checkers: CHECKERS };
 
   // every position of a game, worked out once (the record → states[0…n]; recs[i] = what move i did)
   const cache = {};
@@ -389,6 +436,7 @@
     if (K === SHOGI) return { W: 10.7, H: 9.9, ox: 0.85, oy: 0.45, cell: 1 };   // (2026-11-27 ユーザー: 盤が右寄り — the same margin left and right)
     if (K === XIANGQI) return { W: 9.7, H: 10.9, ox: 0.85, oy: 0.95, cell: 1, pt: true };
     if (K === REVERSI) return { W: 9.2, H: 8.7, ox: 0.6, oy: 0.6, cell: 1 };   // (the letters along the top, the numbers on the left, as the records count)
+    if (K === CHECKERS) return { W: 8.5, H: 8.5, ox: 0.25, oy: 0.25, cell: 1 };   // (the numbers 1…32 sit in the dark squares, so no letters round the edge)
     return { W: 9.2, H: 8.7, ox: 0.6, oy: 0.1, cell: 1 };   // (left: the ranks; right: the same width empty, so the squares stand in the middle)
   }
   function boardSVG(G, K, g, flip) {
@@ -433,6 +481,12 @@
       for (let i = 0; i < 8; i++) P.push(`<text x="${(X + i + .5) * 100}" y="${(Y - .24) * 100}" class="mxcoord" transform="scale(.01)">${'abcdefgh'[flip ? 7 - i : i]}</text><text x="${(X - .32) * 100}" y="${(Y + i + .62) * 100}" class="mxcoord" transform="scale(.01)">${flip ? 8 - i : i + 1}</text>`);
       return `<g class="mxrv">${P.join('')}</g>`;
     }
+    if (K === CHECKERS) {   // (2026-11-27 名局選：チェッカー) the site's checkers: a wine-red frame with a brass line, ivory and green squares, the PDN numbers in the dark ones
+      P.push(`<rect x="0" y="0" width="${g.W}" height="${g.H}" rx=".22" class="mxckf"/><rect x="${g.ox - .05}" y="${g.oy - .05}" width="8.1" height="8.1" class="mxckr"/>`);
+      for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) { const dk = (r + c) % 2 === 1; P.push(`<rect x="${g.ox + c}" y="${g.oy + r}" width="1" height="1" class="${dk ? 'mxckd' : 'mxckl'}"/>`);
+        if (dk) { const n = flip ? K.num(7 - r, 7 - c) : K.num(r, c); P.push(`<text x="${(g.ox + c + .07) * 100}" y="${(g.oy + r + .23) * 100}" class="mxckn" transform="scale(.01)">${n}</text>`); } }
+      return `<g class="mxck">${P.join('')}</g>`;
+    }
     for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) P.push(`<rect x="${g.ox + f}" y="${g.oy + r}" width="1" height="1" class="${(r + f) % 2 ? 'mxdk' : 'mxlt'}"/>`);
     for (let i = 0; i < 8; i++) { P.push(`<text x="${(g.ox + i + .5) * 100}" y="${(g.oy + 8.45) * 100}" class="mxcoord" transform="scale(.01)">${'abcdefgh'[flip ? 7 - i : i]}</text><text x="${(g.ox - .3) * 100}" y="${(g.oy + i + .62) * 100}" class="mxcoord" transform="scale(.01)">${flip ? i + 1 : 8 - i}</text>`); }
     return `<g class="mxch">${P.join('')}</g>`;
@@ -441,6 +495,7 @@
     if (K.go) return `<span class="mxst ${p.k === 'B' ? 'b' : 'w'}"></span>`;
     if (K === REVERSI) return `<span class="mxrd${p.c === 'w' ? ' w' : ''}"><span class="mxrf b"></span><span class="mxrf w"></span></span>`;   // two faces; turning over = rotating the one element
     if (K === XIANGQI) return `<span class="mxxp${p.red ? ' r' : ''}"><b>${p.glyph}</b></span>`;
+    if (K === CHECKERS) return `<span class="mxcm ${p.k[0]}${p.king ? ' k' : ''}">${p.king ? `<svg viewBox="0 0 24 24" aria-hidden="true">${CROWN}</svg>` : ''}</span>`;
     if (K === SHOGI) return `<span class="mxsg${p.up ? '' : ' dn'}${p.red ? ' pr' : ''}"><svg viewBox="0 0 100 110" aria-hidden="true"><path d="M50 4 82 18 94 106H6L18 18z"/></svg><b>${p.glyph}</b></span>`;
     return `<img src="${PIMG}${p.k}.svg" alt="" draggable="false">`;
   }
@@ -450,7 +505,7 @@
     const G = cur, L = line(G), K = L.K, g = geom(G, K), st = L.st[ply], r = ply ? L.recs[ply - 1] : null, flip = G.orient === 'b' || G.orient === 'g';
     const box = el.board;
     if (box._g !== G.id) { box._g = G.id; box.innerHTML = `<svg class="mxbg" viewBox="0 0 ${g.W} ${g.H}" aria-hidden="true">${boardSVG(G, K, g, flip)}<g class="mxmk"></g></svg><div class="mxpcs"></div>`;
-      box.style.aspectRatio = `${g.W} / ${g.H}`; box._el = {}; box.classList.toggle('go', !!K.go); box.classList.toggle('sh', K === SHOGI); box.classList.toggle('ch', K === CHESS); box.classList.toggle('xq', K === XIANGQI); box.classList.toggle('mxrvb', K === REVERSI); }
+      box.style.aspectRatio = `${g.W} / ${g.H}`; box._el = {}; box.classList.toggle('go', !!K.go); box.classList.toggle('sh', K === SHOGI); box.classList.toggle('ch', K === CHESS); box.classList.toggle('xq', K === XIANGQI); box.classList.toggle('mxrvb', K === REVERSI); box.classList.toggle('ck', K === CHECKERS); }
     box.classList.toggle('still', !anim);
     const sz = (K.go ? 1 : 1) / g.W * 100, szh = 1 / g.H * 100;
     const lay = box.querySelector('.mxpcs'), seen = new Set();
@@ -480,10 +535,11 @@
       if (K.go) P.push(`<circle cx="${cx}" cy="${cy}" r=".47" class="${p.k === 'B' ? 'mxtb' : 'mxtw'}"/>`);
       else if (K.disc) P.push(`<circle cx="${cx}" cy="${cy}" r=".4" class="${p.c === 'b' ? 'mxtb' : 'mxtw'}"/>`);
       else if (K === XIANGQI) P.push(`<g transform="translate(${cx} ${cy})"><circle r=".45" class="mxxt${p.red ? ' r' : ''}"/><text y="19" transform="scale(.01)" class="mxxg${p.red ? ' r' : ''}">${p.glyph}</text></g>`);
+      else if (K === CHECKERS) P.push(`<g transform="translate(${cx} ${cy})"><circle r=".4" class="mxct ${p.k[0]}"/>${p.king ? `<g transform="translate(-.25 -.26) scale(.021)">${CROWN}</g>` : ''}</g>`);
       else if (K === SHOGI) P.push(`<g transform="translate(${cx} ${cy})${p.up ? '' : ' rotate(180)'}"><path d="M0 -.44 .32 -.3 .4 .42H-.4L-.32 -.3z" class="mxtk"/><text y="20" transform="scale(.01)" class="mxtg${p.red ? ' pr' : ''}">${p.glyph}</text></g>`);
       else P.push(`<image href="${PIMG}${p.k}.svg" x="${cx - .5}" y="${cy - .5}" width="1" height="1"/>`); });
     // (2026-11-27 ユーザー: 一覧の画像はどのゲームでも同じ大きさ、盤を大きく、数字は省いてよい) the playing area only, no letters or numbers
-    const n = g.n || 0, box = K.go ? [.45, .45, n + .1, n + .1] : K === SHOGI ? [g.ox - .2, g.oy - .2, 9.4, 9.4] : K === XIANGQI ? [g.ox - .62, g.oy - .62, 9.24, 10.24] : K.disc ? [g.ox - .16, g.oy - .16, 8.32, 8.32] : [g.ox, g.oy, 8, 8];
+    const n = g.n || 0, box = K.go ? [.45, .45, n + .1, n + .1] : K === SHOGI ? [g.ox - .2, g.oy - .2, 9.4, 9.4] : K === XIANGQI ? [g.ox - .62, g.oy - .62, 9.24, 10.24] : K === CHECKERS ? [g.ox - .12, g.oy - .12, 8.24, 8.24] : K.disc ? [g.ox - .16, g.oy - .16, 8.32, 8.32] : [g.ox, g.oy, 8, 8];
     return `<svg viewBox="${box.map(v => +v.toFixed(2)).join(' ')}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">${boardSVG(G, K, g, flip).replace(/<text[^>]*>[^<]*<\/text>/g, '')}${P.join('')}</svg>`;
   }
   function wall() {
@@ -514,6 +570,7 @@
     if (K.go) return st.cap[side] ? `<span class="mxcap"><u class="mxdot ${side === 'B' ? 'W' : 'B'}"></u>${esc(u('caps'))} ${st.cap[side]}</span>` : '';
     if (K === SHOGI) { const c = {}; K.hands(st)[side].forEach(x => c[x.t] = (c[x.t] || 0) + 1); const e = Object.entries(c);
       return e.length ? `<span class="mxcap"><em>${esc(u('hand'))}</em>${e.map(([t, n]) => `<span class="mxhk">${K.KAN[t]}${n > 1 ? `<sub>${n}</sub>` : ''}</span>`).join('')}</span>` : ''; }
+    if (K === CHECKERS) return st.cap[side] ? `<span class="mxcap"><u class="mxdot ${side === 'b' ? 'w' : 'b'}"></u>${esc(u('taken'))} ${st.cap[side]}</span>` : '';
     // chess, xiangqi: the other side's pieces this side has taken
     const now = new Set(K.pieces(st).map(p => p.id)), gone = K.pieces(L.st[0]).filter(p => !now.has(p.id) && p.k[0] !== side[0]);
     if (!gone.length) return '';
@@ -532,12 +589,12 @@
     stop(); cur = G; ply = 0; const L = line(G), x = gt(G.id), n = L.mv.length, K = L.K;
     el.wall.hidden = true; el.view.hidden = false; host.querySelector('.mxx').classList.add('on');
     const fin = L.st[n], res = G.res && (G.kind === 'go' ? G.res : u('res_' + G.res) + (K.disc ? ` ${fin.n.b}–${fin.n.w}` : '')), flip = G.orient === 'b' || G.orient === 'g';
-    const [s0, s1] = K.sides, nm = s => s === s0 ? x.w : x.b, plate = (s, pos) => `<div class="mxpl ${pos}" data-s="${s}"><u class="mxdot ${s}"></u><b>${esc(nm(s))}</b><span class="mxside-n">${esc(u('side_' + s))}</span><span class="mxpx"></span></div>`;
+    const [s0, s1] = K.sides, fp = flip !== !!K.up, nm = s => s === s0 ? x.w : x.b, plate = (s, pos) => `<div class="mxpl ${pos}" data-s="${s}"><u class="mxdot ${s}"></u><b>${esc(nm(s))}</b><span class="mxside-n">${esc(u('side_' + s))}</span><span class="mxpx"></span></div>`;
     const btn = (c, k) => `<button type="button" data-c="${c}"${c === 'play' ? ' class="pl"' : ''} aria-label="${esc(u(k))}" title="${esc(u(k))}">${svg(c)}</button>`;
     el.view.innerHTML = `<div class="mxhd"><button type="button" class="mxback" aria-label="${esc(u('back'))}" title="${esc(u('back'))}">${svg('back')}</button>
         <div class="mxht"><p class="mxkick"><i>${esc(u('k_' + G.kind))}</i><span>${esc(x.d)} · ${esc(x.pl)}</span></p><h3>${esc(x.t)}</h3></div>${res ? `<span class="mxres">${esc(res)}</span>` : ''}</div>
       <div class="mxmain">
-        <div class="mxleft k-${G.kind}">${plate(flip ? s0 : s1, 'top')}<div class="mxboard" dir="ltr" role="img"></div>${plate(flip ? s1 : s0, 'bot')}
+        <div class="mxleft k-${G.kind}">${plate(fp ? s0 : s1, 'top')}<div class="mxboard" dir="ltr" role="img"></div>${plate(fp ? s1 : s0, 'bot')}
           <div class="mxctl" dir="ltr">${btn('start', 'start')}${btn('prev', 'prev')}${btn('play', 'play')}${btn('next', 'next')}${btn('end', 'end')}</div>
           <div class="mxseek" dir="ltr"><span class="mxgw"><svg class="mxgraph" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"></svg><input type="range" class="mxrng" min="0" max="${n}" value="0" step="1" aria-label="${esc(u('moves'))}"></span><span class="mxpos" aria-live="polite"></span></div></div>
         <div class="mxside"><div class="mxnote"><div class="mxnh"><img src="${GUIDE}" alt="" class="mxowl"><b class="mxwho">${esc(u('guide'))}</b><span class="mxmv"></span></div><div class="mxev" hidden title="${esc(u('evby'))}"><i>${esc(u('ev'))}</i><span class="mxevb"><span></span></span><b></b></div>
