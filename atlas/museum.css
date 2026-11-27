@@ -1035,3 +1035,109 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 .mupg>.sgw{flex:1 1 auto;min-width:0;margin:0}   /* (the chips' scroll wrapper, when the page adds one) */
 .mupg.pc .mupg-n{display:none}
 @media (max-width:819px){.mupg.on{flex-wrap:wrap}.mupg .mupg-s{flex:1 1 0;max-width:none}.mupg>.sgw{order:3;flex:1 1 100%}.mupg-ex{order:3;flex:1 1 100%;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}.mupg-ex::-webkit-scrollbar{display:none}}
+/* (2026-11-27 ユーザー: 描かれたゲームをゲーム別・時代別でも) the two pull-down chips beside the regions — the portal's own pull-down, no
+   system <select>: the chip shows the choice; its list floats on the page (body), under the chip or, on a phone held upright, as a sheet */
+.ptreg .ptdd{gap:6px;padding-inline-end:9px;max-width:min(260px,70vw)}
+.ptreg .ptdd .ptddk{font-weight:800;opacity:.62;font-size:12.5px}
+.ptreg .ptdd b{font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ptreg .ptdd svg{flex:none;width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
+.ptreg .ptdd[aria-expanded=true] svg{transform:rotate(180deg)}
+.ptddl{position:fixed;z-index:9000;min-width:200px;max-width:min(320px,calc(100vw - 16px));overflow:auto;overscroll-behavior:contain;padding:6px;border:2px solid var(--line);border-radius:16px;background:#fff;color:var(--ink);box-shadow:0 12px 30px rgba(20,24,40,.22);font-family:inherit}
+.ptddl button{display:flex;align-items:center;gap:10px;width:100%;min-height:38px;padding:7px 12px;border:0;border-radius:10px;background:none;color:inherit;font:inherit;font-weight:800;font-size:14px;text-align:start;cursor:pointer}
+.ptddl button span{flex:1;min-width:0}
+.ptddl button em{font-style:normal;font-family:var(--round);font-size:12px;opacity:.6}
+.ptddl button:hover:not([disabled]):not([aria-selected=true]),.ptddl button:focus-visible:not([aria-selected=true]){background:#f1ede4;outline:none}
+.ptddl button[aria-selected=true]{background:var(--ink);color:#fff}
+.ptddl button[aria-selected=true]:focus-visible{outline:3px solid color-mix(in srgb,var(--ink) 35%,#fff);outline-offset:1px}
+.ptddl button[aria-selected=true] em{opacity:.8}
+.ptddl button[disabled]{opacity:.38;cursor:default}
+.ptddl.sheet{left:8px;right:8px;bottom:8px;max-width:none;border-radius:20px;padding:8px calc(8px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left))}
+.ptddl.sheet button{min-height:46px;font-size:15px}
+/* ===== 名局選 (the great games, atlas/museum/match.js, 2026-11-27 ユーザー: ミュゼフクの一手ごとの解説・自由に行き来できる棋譜・棋譜ログ) ===== */
+.mxx .mxgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;margin-top:14px}
+.mxc{display:flex;flex-direction:column;text-align:start;padding:0;border:2px solid var(--line);border-radius:18px;background:#fff;color:var(--ink);overflow:hidden;cursor:pointer;box-shadow:0 3px 0 var(--line);font:inherit;transition:transform .15s}
+.mxc:hover{transform:translateY(-2px)}.mxc:active{transform:translateY(1px);box-shadow:0 1px 0 var(--line)}
+.mxth{display:block;padding:14px;background:#f4ead5}.mxth.k-go{background:#efe3c8}.mxth svg{display:block;width:100%;height:auto;max-height:240px}
+.mxcl{display:flex;flex-direction:column;gap:3px;padding:10px 14px 14px}
+.mxcl i{align-self:flex-start;font-style:normal;font-weight:900;font-size:12px;padding:2px 9px;border-radius:99px;background:#f1ead9;color:var(--ink2)}
+.mxcl b{font-size:16px;line-height:1.35}.mxcl small{font-size:12.5px;color:var(--ink2);line-height:1.45}
+.mxcredit{font-size:12px;color:var(--ink2);margin:16px 0 0}
+.mxback{display:inline-flex;align-items:center;gap:6px;padding:7px 14px 7px 9px;border:2px solid var(--line);border-radius:99px;background:#fff;color:var(--ink);font:inherit;font-weight:900;font-size:14px;cursor:pointer;box-shadow:0 2px 0 var(--line)}
+.mxback svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+[dir=rtl] .mxback svg{transform:scaleX(-1)}
+.mxhd{margin:14px 0 12px}.mxhd i{font-style:normal;font-weight:900;font-size:12px;padding:2px 9px;border-radius:99px;background:#f1ead9;color:var(--ink2)}
+.mxhd h3{margin:6px 0 4px;font-size:24px;line-height:1.3}
+.mxvs{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:0;font-weight:800;font-size:14.5px}.mxvs em{font-style:normal;color:var(--ink2);font-size:12px}
+.mxvs span{display:inline-flex;align-items:center;gap:6px}
+.mxdot{display:inline-block;flex:none;width:12px;height:12px;border-radius:50%;border:1.5px solid #333;background:#fff}.mxdot.b,.mxdot.B{background:#222}.mxdot.s,.mxdot.g{border-radius:2px;background:#f2d49b;border-color:#a07a3a}.mxdot.g{transform:rotate(180deg)}
+.mxmeta{margin:4px 0 0;font-size:13px;color:var(--ink2);line-height:1.6}.mxmeta b{color:var(--ink)}
+.mxmain{display:grid;grid-template-columns:minmax(0,540px) minmax(280px,1fr);gap:24px;align-items:start}
+.mxleft.k-shogi{max-width:470px;width:100%;justify-self:center}
+.mxboard{position:relative;width:100%;user-select:none;-webkit-user-select:none;touch-action:manipulation;border-radius:8px}
+.mxbg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.mxpcs{position:absolute;inset:0;pointer-events:none}
+.mxp{position:absolute;display:block;transform:translate(-50%,-50%);transition:left .26s cubic-bezier(.3,.7,.3,1),top .26s cubic-bezier(.3,.7,.3,1),opacity .22s;container-type:size}
+.mxboard.still .mxp{transition:none}.mxp.new,.mxp.gone{opacity:0}
+.mxp img{display:block;width:100%;height:100%}
+.mxch .mxlt{fill:#f1dfbd}.mxch .mxdk{fill:#b88a5c}
+.mxcoord{font-size:28px;font-weight:800;fill:#7a5a36;text-anchor:middle;font-family:var(--round)}
+.mxlm{fill:rgba(250,205,70,.45)}.mxsq{fill:none;stroke:#e0533d;stroke-width:.08}
+.mxar{fill:none;stroke:rgba(40,120,220,.78);stroke-width:.15;stroke-linecap:round}.mxah{fill:rgba(40,120,220,.78)}
+.mxwood{fill:#e6bf7a}.mxgo line{stroke:#5d3f18;stroke-width:.045}.mxsh line{stroke:#6b4a1d;stroke-width:.03}.mxhoshi{fill:#5d3f18}
+.mxst{display:block;width:94%;height:94%;margin:3%;border-radius:50%;box-shadow:0 .06em .12em rgba(0,0,0,.35)}
+.mxst.b{background:radial-gradient(circle at 34% 30%,#6a6a6a,#151515 62%)}.mxst.w{background:radial-gradient(circle at 34% 30%,#fff,#dcdcd6 72%)}
+.mxp.last .mxst::after{content:"";display:block;width:36%;height:36%;margin:32%;border-radius:50%;border:2px solid #e0533d}
+.mxsg{position:relative;display:block;width:86%;height:92%;margin:4% 7%}.mxsg.dn{transform:rotate(180deg)}
+.mxsg svg{position:absolute;inset:0;width:100%;height:100%}.mxsg path{fill:#f3d59c;stroke:#a07a3a;stroke-width:3}
+.mxsg b{position:absolute;inset:8% 0 0;display:grid;place-items:center;font-size:62cqh;line-height:1;font-weight:900;color:#1f1a14;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Noto Serif CJK JP",serif}
+.mxsg.pr b{color:#c0281b}
+.mxhand{position:absolute;left:0;right:0;height:9.4%;display:flex;align-items:center;gap:1.2%;padding:0 2%;container-type:size}
+.mxhand em{font-style:normal;font-weight:900;font-size:30cqh;color:var(--ink2);margin-inline-end:2%;white-space:nowrap}
+.mxhand .mxsg{flex:none;height:88%;width:auto;aspect-ratio:100/110;margin:0;container-type:size}
+.mxhand .mxsg u{position:absolute;right:-18%;bottom:-6%;text-decoration:none;font-weight:900;font-size:40cqh;color:#fff;background:var(--ink);border-radius:99px;padding:0 .3em;line-height:1.3}
+.mxhand .mxsg.dn u{transform:rotate(180deg);right:auto;left:-18%;top:-6%;bottom:auto}
+.mxctl{display:flex;justify-content:center;gap:8px;margin-top:12px}
+.mxctl button{display:grid;place-items:center;width:46px;height:46px;border:2px solid var(--line);border-radius:50%;background:#fff;color:var(--ink);cursor:pointer;box-shadow:0 2px 0 var(--line)}
+.mxctl button.pl{width:54px;height:54px;margin-top:-4px;background:var(--ink);border-color:var(--ink);color:#fff;box-shadow:0 2px 0 #161a28}
+.mxctl button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.mxctl button.pl svg{fill:currentColor}.mxctl button[aria-pressed=true] svg{fill:none;stroke-width:3}
+.mxctl button:disabled{opacity:.35;cursor:default;box-shadow:none}
+.mxpos{margin:8px 0 0;text-align:center;font-weight:800;font-size:14px;color:var(--ink2);font-family:var(--round)}
+.mxside{display:flex;flex-direction:column;gap:14px;min-width:0}
+.mxsay{display:flex;align-items:flex-start;gap:10px}
+.mxowl{flex:none;width:64px;height:64px;margin-top:6px}
+.mxbub{position:relative;flex:1;min-width:0;padding:10px 14px 12px;border:2px solid var(--line);border-radius:16px;background:#fffdf7;min-height:6.2em}
+.mxbub::before{content:"";position:absolute;inset-inline-start:-9px;top:24px;width:14px;height:14px;background:#fffdf7;border-left:2px solid var(--line);border-bottom:2px solid var(--line);transform:rotate(45deg)}
+[dir=rtl] .mxbub::before{transform:rotate(-135deg)}
+.mxwho{display:block;font-size:12px;font-weight:900;color:#b07d1a;margin-bottom:2px}
+.mxtxt{margin:0;font-size:15px;line-height:1.75}.mxtxt.quiet{color:var(--ink2)}
+.mxnext{display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:5px 10px 5px 13px;border:2px solid var(--line);border-radius:99px;background:#fff;color:var(--ink);font:inherit;font-weight:900;font-size:13px;cursor:pointer}
+.mxnext svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}[dir=rtl] .mxnext svg{transform:scaleX(-1)}
+.mxlog{display:flex;flex-direction:column;border:2px solid var(--line);border-radius:16px;background:#fff;overflow:hidden}
+.mxlog h4{margin:0;padding:8px 14px;font-size:13px;font-weight:900;border-bottom:2px solid var(--line);background:#faf5ea}
+.mxlist{max-height:min(48vh,440px);overflow:auto;overscroll-behavior:contain;padding:6px;font-family:var(--round);font-variant-numeric:tabular-nums}
+.mxrow{display:grid;grid-template-columns:2.4em auto 1fr;align-items:center;gap:2px 4px}
+.mxrow.pr{grid-template-columns:2.4em 1fr 1fr}.mxrow.st{display:block}
+.mxrow>span{font-size:12px;color:var(--ink2);text-align:end;padding-inline-end:2px}
+.mxrow button{position:relative;min-height:32px;padding:4px 10px;border:0;border-radius:8px;background:none;color:var(--ink);font:inherit;font-weight:800;font-size:14.5px;text-align:start;cursor:pointer;white-space:nowrap}
+.mxrow.st button{width:100%}
+.mxrow button:hover{background:#f3eee2}.mxrow button[aria-current]{background:var(--ink);color:#fff}
+.mxrow button.nt::after{content:"";display:inline-block;width:6px;height:6px;margin-inline-start:6px;vertical-align:middle;border-radius:50%;background:#e0a32a}
+.mxlead{margin:18px 0 0;padding:12px 16px;border-radius:14px;background:#fffdf7;border:2px solid var(--line);font-size:14px;line-height:1.75}
+@media (max-width:819px){
+  .mxmain{grid-template-columns:minmax(0,1fr);gap:14px}
+  .mxleft{width:100%;max-width:560px;justify-self:center}
+  .mxhd h3{font-size:20px}
+  .mxowl{width:48px;height:48px}.mxtxt{font-size:14.5px}
+  .mxlist{max-height:36vh}.mxrow button{min-height:36px}
+  .mxctl button{width:44px;height:44px}.mxctl button.pl{width:52px;height:52px}
+}
+.mxnext[hidden]{display:none}.mxlist.alln button.nt::after{display:none}
+@media (min-width:820px){.mxleft.k-chess,.mxleft.k-go{max-width:min(540px,calc(100vh - 230px));width:100%}.mxleft.k-shogi{max-width:min(470px,calc((100vh - 230px) * .8))}}
+/* (2026-11-27 名局選で部屋が7つに) the tabs take their names' width (the long name, 描かれたゲーム, is no longer cut); on a phone each keeps 44 px
+   (a narrow phone scrolls the strip a little) */
+@media (min-width:1101px){.muwrap .murm{flex:1 1 auto;padding-inline:8px}}
+@media (max-width:819px){.muwrap .murooms{display:flex;overflow-x:auto}.muwrap .murm{flex:1 1 auto;min-width:44px}}
+.mxtk{fill:#f3d59c;stroke:#a07a3a;stroke-width:.03}.mxtg{font-size:50px;font-weight:900;text-anchor:middle;fill:#1f1a14}.mxtg.pr{fill:#c0281b}.mxtb{fill:#1c1c1c}.mxtw{fill:#fbfbf8;stroke:#777;stroke-width:.04}
+.mxx .mxwl,.mxx .mxcredit,.mxx .mxlead,.mxx .mxmeta{max-width:46em}
+.mxgc{font-size:40px;font-weight:800;fill:#6b4a1d;text-anchor:middle;font-family:var(--round)}

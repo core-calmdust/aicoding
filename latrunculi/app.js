@@ -1395,7 +1395,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=3').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=4').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { let pr; try { pr = JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } return pzMigrate(pr); }
@@ -1649,11 +1649,17 @@ function lessonAnswer(m) {
     update(false);
   }, moveDur(m, pos0) + 700);
 }
+// a wrong move's words: what latrunculi/ls-facts.js counts on the board (the lesson's key, then the opponent's enclosure after it)
+function lsNgText(s, pos0, m, best) {
+  const F = window.LatrLsFacts; if (!F || lesson.virt) return t('ls.' + s.id + '.ng', { m: mvIn(pos0, best), x: mvIn(pos0, m) });
+  const w = F.wrong(s.id, pos0, m);
+  return t(w.k, w.v) + (w.tail ? ' ' + t(w.tail.k, w.tail.v) : '');
+}
 function okAnswer(P, s, m, pts) {
   const pos0 = posAt(0).pos;
   lesson.results[lesson.i] = pts; renderLessonCard();
   const best = P.ok.includes(m) ? m : P.best;
-  $('#lsFb').innerHTML = `<span class="pts ${pts ? 'ok' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts ? 'ok' : 'ng'}">${t(pts ? 'fb.perfect' : 'fb.bad')}</b> ` + (pts ? t('ls.' + s.id + '.why', { m: mvIn(pos0, m) }) : t('ls.' + s.id + '.ng', { m: mvIn(pos0, best), x: mvIn(pos0, m) }));
+  $('#lsFb').innerHTML = `<span class="pts ${pts ? 'ok' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts ? 'ok' : 'ng'}">${t(pts ? 'fb.perfect' : 'fb.bad')}</b> ` + (pts ? t('ls.' + s.id + '.why', { m: mvIn(pos0, m) }) : lsNgText(s, pos0, m, best));
   playChime(!!pts); playMove2(m);
   lsAuto(!!pts, moveDur(m, pos0) + 1100);
   const tok = busyToken;
@@ -1672,7 +1678,9 @@ $('#lsHint').onclick = () => {
   const s = curStep(), P = lessonProblem();
   lessonMarks = [];
   const good = P.ok || [P.best];
-  for (const f of new Set(good.map(mFrom))) lessonMarks.push({ at: f, cls: 'ok' });
+  // the lesson's hint lights the counters to look at (ls-facts.js marks: the chances, the holders, the threatened counter), not the answer's own
+  if (window.LatrLsFacts && !lesson.virt) for (const q of LatrLsFacts.marks(s.id, posAt(0).pos)) lessonMarks.push({ at: q, cls: 'ok' });
+  else for (const f of new Set(good.map(mFrom))) lessonMarks.push({ at: f, cls: 'ok' });
   $('#lsFb').innerHTML = lesson.virt ? t('op.hint') : t('ls.' + s.id + '.hint');
   renderFx();
 };
@@ -1861,7 +1869,7 @@ function startPractice(gi) {
 
 // ====================================================================== puzzles: win / win material within N moves (PZBook v2)
 let PUZZLES = null;
-const puzzlesReady = fetch('puzzles.json?v=4').then(r => r.json()).then(d => { PUZZLES = d; pzProgress(); return d; }).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=5').then(r => r.json()).then(d => { PUZZLES = d; pzProgress(); return d; }).catch(() => null);
 let pzLevel = 0;
 const pzKey = (id, j) => id + '-' + j;
 const starVal = x => x === true ? 3 : (+x || 0);
@@ -1999,25 +2007,38 @@ async function pzOpponent(Pz, tok) {
   return pzWon(Pz);
 }
 async function puzzleMove(m) {
+  // the 詰め rule (claude/game-conventions-addendum.md; 2026-11-27 担当D, claude/lesson-quality.md 追42・追88): nothing is judged on
+  // the way; a move off the solution is not taken back and the right move is not shown — the defender answers (engine.js
+  // goalReply, the same reply as the 3D table) and the result says what is on the board (latrunculi/pzwhy.js LatrPzWhy.facts /
+  // text, 14 languages; checked by tools/lesson-verify-latrunculi.js); the solution only with 「答えを見る」
   const Pz = puzzle; Pz.busy = true; lessonMarks = [];
-  const left = Pz.n - Pz.used, tok = busyToken;
+  const left = Pz.n - Pz.used, tok = busyToken, W = window.LatrPzWhy;
   pzStatus(t('pz.checking'));
   const good = await mateReq(left);
   if (!good || puzzle !== Pz || tok !== busyToken) return;
   const before = posAt(cur).pos.clone(), dm = moveDur(m, before);
   playMove2(m); Pz.used++; renderPuzzleCard();
-  // a move off the solution is not called a mistake: play goes on until the moves run out (the user's rule for every
-  // 詰め problem, 2026-11) — it only costs the three stars
-  if (!good.includes(m)) Pz.failed = true;
+  if (!good.includes(m)) {
+    Pz.failed = true; renderPuzzleCard();
+    const mid = posAt(cur).pos.clone(), me = Pz.me, over = statusAt(cur).over;
+    await sleep(dm + 250);
+    if (puzzle !== Pz || tok !== busyToken) return;
+    let after = null, r = null;
+    if (left > 1 && !over) {
+      r = await replyReq(left - 1);
+      if (puzzle !== Pz || tok !== busyToken) return;
+      if (r != null) { playMove2(r); await sleep(moveDur(r, mid) + 120); if (puzzle !== Pz || tok !== busyToken) return; after = posAt(cur).pos.clone(); }
+    }
+    const w = W.facts({ E, me, G: Pz.G, pre: before, move: m, mid, after, reply: r, left: left - 1, last: left <= 1 || over });
+    if (w.mark >= 0) lessonMarks = [{ at: w.mark, cls: 'ng' }];
+    Pz.state = 'fail'; Pz.busy = false; update(false); renderFx(); playChime(false); renderPuzzleCard();
+    pzStatus(`<b class="ng">${PZBook.t('outOfMoves', { n: Pz.n })}</b> ${W.text(LANG, w.k, w.v)} ${W.text(LANG, 'answer')}`);
+    return;
+  }
   await sleep(dm + 60);
   if (puzzle !== Pz || tok !== busyToken) return;
   if (pzWon(Pz) || await pzOpponent(Pz, tok)) { if (puzzle === Pz) puzzleSolved(); return; }
   if (puzzle !== Pz || tok !== busyToken) return;
-  if (Pz.used >= Pz.n || statusAt(cur).over) {   // out of moves: back to the start for another try
-    pzStatus(`${PZBook.t('outOfMoves', { n: Pz.n })} ${t('pz.retry')}`); playChime(false);
-    await sleep(1500); if (puzzle !== Pz || tok !== busyToken) return;
-    moves = []; cur = 0; Pz.used = 0; Pz.busy = false; Pz.lastReply = ''; lessonMarks = []; update(false); renderPuzzleCard(); return;
-  }
   Pz.busy = false; renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay());
   pzStatus(t('pz.reply', { m: Pz.lastReply || '', n: Pz.n - Pz.used }));
 }
