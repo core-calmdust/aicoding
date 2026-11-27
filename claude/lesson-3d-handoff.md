@@ -32,14 +32,14 @@
 | ゲーム | 案内キャラ | 状態 | 残り |
 |---|---|---|---|
 | foxgeese 狐とガチョウ | ドミダック | **3D対応済み**（パズル250問・レッスン6本30問） | なし |
-| janggi チャンギ | ショウギツネ | **3D対応済み**（パズル289問・レッスン15本75問） | ① `lesson-verify.js` の NG：**レッスン e_rook q3 が ⑤ 不合格**（シャンチーのレッスン e_rook 1問目と4点以内）→ 作り直し。② 追88 未確認（2D パズルの failBack・途中の pz.good） |
-| konane コナネ | チェッカニ | 一部（パズル226問・レッスン7本35問。s_go・s_keep・s_read は 2026-11-27 担当C） | レッスン2本10問：b_open・b_jump（どの合法手も正解になる形なので、選ぶ問題の作りから見直す） |
-| ugolki ウゴルキ | モリフク | 一部（パズル152問・レッスン10本50問） | レッスン s_count（レースを読む）5問。旧5問は4問が黒番で全問不合格。前回の設計では候補0（`ugolki/tools/scan_s_count.js`）。「わな」の条件を見直す（例：答えとの白の手数の差1以内の外れ手で、黒の手数で負ける）か、中盤のからみ合う局面から探す。追77 未確認。2D の追58 は en 以外の言語が未確認 |
+| janggi チャンギ | ショウギツネ | **3D対応済み**（パズル289問・レッスン15本75問） | なし（e_rook q3 の作り直しと追88 は 2026-11-27 #3936 で済み） |
+| konane コナネ | チェッカニ | 一部（パズル226問・レッスン8本40問。s_go・s_keep・s_read・b_jump は 2026-11-27 担当C） | レッスン1本5問：b_open（最初の取り除き。黒の合法手4・白2〜4で、どの合法手も正解の形。選ぶ問題の作りから見直す） |
+| ugolki ウゴルキ | モリフク | **3D対応済み**（パズル152問・レッスン11本55問。s_count は 2026-11-27 に作り直し） | なし（2D・3D の追58 は 2026-11-27 担当D） |
 | fanorona ファノロナ | チェッカニ | 一部（パズル199問・レッスン4本20問：b_approach・b_withdraw・b_choose・b_chain、2026-11-27 担当E） | **レッスン8本40問**（b_safe・b_win・t_big・t_count・t_stop・t_paika・e_hunt・e_trap）。atlas/ls-fanorona.js の READY に足し、tools/lesson-verify-fanorona-ls.js にその主題のチェックを足す（今は basics 3本と b_chain の形） |
 | agon アゴン | キンダイスン | 未（パズル152問は問題検証済み・2D の追88 済み、2026-11-27 担当F） | 3D パズル（BOOK.agon・agon-pz.js・表示確認）とレッスン12本56問 |
 | latrunculi ラトルンクリ | ポンメェ | 未 | パズル（t2・t3・t4・corner・double の5テーマ 250問）とレッスン7本35問 |
 
-おすすめの順：janggi の NG 直し（小さい）→ konane の残り → ugolki s_count → fanorona のレッスン → agon → latrunculi。大きいゲームは「パズル → レッスン数本ずつ」に区切ってマージしてよい（表は「一部」）。
+おすすめの順：（janggi の NG 直し・ugolki s_count は済み）→ konane の残り → ugolki の2D 追58 → fanorona のレッスン → agon → latrunculi。大きいゲームは「パズル → レッスン数本ずつ」に区切ってマージしてよい（表は「一部」）。
 
 ## 4. 1ゲームを載せるときの場所（手本は foxgeese・konane・janggi・ugolki・fanorona）
 

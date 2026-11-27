@@ -253,6 +253,38 @@
     { id: 'gothink', w: 1973, h: 1238, rijks: 'RP-F-2001-7-1557B-22', bg: '#d8d2c2', spots: [[.49, .64], [.41, .61], [.645, .32], [.467, .31], [.374, .85], [.543, .775]], links: [{ g: 'go' }] },
     // (2026-11-25) the Rijksmuseum: Francis A. Place, 'Juvenile Gamblers': four boys shooting dice on a crate
     { id: 'craps', w: 1425, h: 2048, rijks: 'RP-F-2001-7-1106C-1', bg: '#cdb9a0', spots: [[.47, .682], [.425, .663], [.595, .536], [.23, .7], [.61, .955], [.47, .8]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Jan Baptist Weenix (possibly), study of a man playing knucklebones, chalk on blue paper (1642-47)
+    { id: 'bikkel', w: 1383, h: 2048, rijks: 'RP-T-1899-A-4239', bg: '#c9d0d4', spots: [[.77, .19], [.7, .5], [.8, .78], [.45, .85], [.53, .44], [.18, .45]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Anonymous French design for chessmen, Western and Eastern sides (1850-75)
+    { id: 'stukken', w: 1594, h: 2048, rijks: 'RP-T-2020-114', bg: '#b9c8c8', spots: [[.12, .3], [.29, .3], [.47, .27], [.63, .37], [.12, .68], [.63, .73]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Rijksmuseum: Moolenyzer, 'Bloemenhof of Vermakelijke Roze Tempel', dice game board (1792-1847)
+    { id: 'rozetempel', w: 1686, h: 2048, rijks: 'RP-P-2019-2954', bg: '#e9e1cc', spots: [[.5, .08], [.5, .41], [.5, .56], [.37, .38], [.83, .41], [.5, .96]], links: [{ ex: 'goose' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Claudine Stella after Jacques Stella, 'Le Brelan', putti playing cards (1657)
+    { id: 'brelan', w: 2048, h: 1757, rijks: 'RP-P-2023-61-32', bg: '#e2dccb', spots: [[.45, .55], [.32, .73], [.22, .3], [.86, .58], [.8, .17], [.51, .83]], links: [{ g: 'poker' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Master PW of Cologne, round playing card, six of parrots (1470-1500)
+    { id: 'pwkarte', w: 1998, h: 2048, rijks: 'RP-P-OB-987', bg: '#ece8dc', spots: [[.47, .14], [.61, .86], [.27, .27], [.75, .54], [.47, .74], [.5, .46]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: J. E. Nilson, 'Das Bretspiel': draughts and tocadille in a Rococo frame
+    { id: 'nilson', w: 2048, h: 1405, rijks: 'RP-P-1964-2876', bg: '#ece6d8', spots: [[.44, .48], [.68, .6], [.59, .47], [.77, .5], [.28, .45], [.5, .88]], links: [{ g: 'checkers' }, { g: 'backgammon' }] },
+    // (2026-11-25) the Rijksmuseum: Joullain after Coypel, 'Les Châteaux de cartes' (1725)
+    { id: 'chateau', w: 1399, h: 2048, rijks: 'RP-P-OB-43.810', bg: '#ebe3d3', spots: [[.37, .42], [.12, .47], [.43, .29], [.7, .23], [.22, .79], [.53, .89]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Pugillus facetiarum iconographicarum: ruined young man with dice and an elegant woman (1608-18)
+    { id: 'pugillus', w: 2048, h: 1398, rijks: 'RP-P-1996-2', bg: '#e8e4da', spots: [[.25, .3], [.32, .18], [.72, .25], [.7, .55], [.71, .84], [.75, .93]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Cornelis Dusart, the Grootebroek lottery prizes brought home (1694)
+    { id: 'grootebroek', w: 1602, h: 2048, rijks: 'RP-P-OB-17.043', bg: '#d8d4cc', spots: [[.42, .4], [.6, .4], [.7, .22], [.13, .27], [.9, .45], [.5, .92]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Caspar Merian after Holbein, two fools dicing (Praise of Folly)
+    { id: 'narren', w: 790, h: 728, rijks: 'RP-P-OB-21.869', bg: '#ece2d4', spots: [[.4, .53], [.27, .25], [.44, .09], [.65, .21], [.88, .44], [.52, .86]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Bendorp, 'Vaderlandsch Historiespel', Dutch history goose-type board (1816)
+    { id: 'historiespel', w: 2048, h: 1591, rijks: 'RP-P-1908-2540', bg: '#e4e0d6', spots: [[.13, .88], [.5, .5], [.5, .57], [.42, .65], [.49, .31], [.5, .97]], links: [{ ex: 'goose' }] },
+    // (2026-11-25) the Rijksmuseum: Daumier, 'Tout ce qu'on voudra' no. 12, draughts players (Le Charivari 1847)
+    { id: 'daumier', w: 1543, h: 2048, rijks: 'RP-P-OB-41.043', bg: '#e6e1d6', spots: [[.55, .47], [.4, .43], [.52, .37], [.67, .4], [.3, .24], [.5, .9]], links: [{ g: 'checkers' }] },
+    // (2026-11-25) the Rijksmuseum: Valentin after Gérôme, 'Arnautes jouant aux dames' (Goupil)
+    { id: 'arnauts', w: 2048, h: 1550, rijks: 'RP-P-1892-A-17724', bg: '#e6e2d8', spots: [[.56, .6], [.3, .41], [.33, .49], [.61, .3], [.64, .49], [.06, .43]], links: [{ g: 'checkers' }] },
+    // (2026-11-25) the Rijksmuseum: Jan Luyken for Cornelis de Bruyn's travels (1698): Turks smoking and playing chess
+    { id: 'luyken', w: 2048, h: 1664, rijks: 'RP-P-1896-A-19368-1206', bg: '#e4e0d6', spots: [[.6, .71], [.83, .51], [.45, .62], [.14, .43], [.5, .96], [.17, .18]], links: [{ g: 'chess' }, { ex: 'ottoman' }] },
+    // (2026-11-25) the Rijksmuseum: Master of the Amsterdam Cabinet, Card Players, drypoint (1483-87)
+    { id: 'kabinet', w: 1949, h: 2048, rijks: 'RP-P-OB-937', bg: '#ece8de', spots: [[.45, .3], [.5, .6], [.32, .32], [.25, .84], [.66, .82], [.92, .2]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Jan Lievens, Quarrelling Card Players and Death (1638)
+    { id: 'lievens', w: 2048, h: 1555, rijks: 'RP-P-OB-12.544', bg: '#e2ddd2', spots: [[.56, .25], [.62, .07], [.44, .24], [.72, .28], [.47, .76], [.25, .95]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
