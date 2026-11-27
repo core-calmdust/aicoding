@@ -177,6 +177,10 @@
     { id: 'schenkcards', w: 2048, h: 1279, rijks: 'RP-P-2013-9-32', bg: '#ece6d6', spots: [[.384, .528], [.233, .366], [.463, .366], [.824, .528], [.095, .735], [.564, .32]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
     // (2026-11-25) the Rijksmuseum: Chinese famille-rose saucer (1725–35), figures playing go
     { id: 'gosaucer', w: 2048, h: 2003, rijks: 'AK-NM-13689', bg: '#d9d9d6', spots: [[.543, .606], [.4, .54], [.657, .54], [.53, .32], [.386, .22], [.75, .47]], links: [{ g: 'go' }] },
+    // (2026-11-25) the Rijksmuseum: Cheetham family album, 'a little card-party' in Russia
+    { id: 'cheetham', w: 2048, h: 1615, rijks: 'RP-F-F01050-BH', bg: '#cdb48c', spots: [[.273, .519], [.493, .51], [.652, .52], [.584, .46], [.455, .73], [.5, .96]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Rijksmuseum: coloured stereograph 'The Problem', a chess game in 18th-century costume
+    { id: 'problem', w: 2048, h: 961, rijks: 'RP-F-F10674', bg: '#d6cbb0', spots: [[.24, .532], [.226, .356], [.356, .372], [.213, .795], [.199, .152], [.75, .5]], links: [{ g: 'chess' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
