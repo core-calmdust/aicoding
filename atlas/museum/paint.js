@@ -247,6 +247,12 @@
     { id: 'roybet', w: 1532, h: 2048, rijks: 'RP-P-1991-247', bg: '#e6e2d8', spots: [[.25, .53], [.55, .27], [.33, .46], [.85, .57], [.2, .32], [.5, .95]], links: [{ g: 'chess' }] },
     // (2026-11-25) the Rijksmuseum: Le Charivari 1838, 'St. Pierre, mon ami, vous êtes capot!' — artist and model at cards
     { id: 'capot', w: 1451, h: 2048, rijks: 'RP-P-OB-40.891', bg: '#e3e0da', spots: [[.6, .52], [.42, .38], [.76, .35], [.3, .2], [.3, .75], [.5, .93]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: King of Clubs from a 1900 deck with photographs of Native Americans (Vroman / Lazarus & Melzer)
+    { id: 'ziacard', w: 1502, h: 2048, rijks: 'RP-F-2020-40-13', bg: '#d9d4c6', spots: [[.107, .16], [.44, .31], [.66, .32], [.5, .55], [.51, .83], [.9, .8]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Rijksmuseum: hand-coloured Japanese photograph, two women and an old man playing go
+    { id: 'gothink', w: 1973, h: 1238, rijks: 'RP-F-2001-7-1557B-22', bg: '#d8d2c2', spots: [[.49, .64], [.41, .61], [.645, .32], [.467, .31], [.374, .85], [.543, .775]], links: [{ g: 'go' }] },
+    // (2026-11-25) the Rijksmuseum: Francis A. Place, 'Juvenile Gamblers': four boys shooting dice on a crate
+    { id: 'craps', w: 1425, h: 2048, rijks: 'RP-F-2001-7-1106C-1', bg: '#cdb9a0', spots: [[.47, .682], [.425, .663], [.595, .536], [.23, .7], [.61, .955], [.47, .8]], links: [{ room: 'chance' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
