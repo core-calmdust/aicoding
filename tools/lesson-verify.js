@@ -3080,7 +3080,7 @@ function shogiOpen(opt) {
   // (there is no line here), "近づく" only for a castle move, "近づかない / 進まない / 遠いまま" only for the others, "AIの評価が…下がる"
   // only 100+ below, captures / recaptures / king / bishop's line / edge pawn / rook claims on the board, the near words only 10+ points.
   {
-    const SHC_DONE = new Set(['c_mino']), SRCC = require(path.join(ROOT, 'shogi/tools/openings/src/castle.js')), KIF = require(path.join(ROOT, 'shogi/tools/openings/kif.js'));
+    const SHC_DONE = new Set(['c_mino', 'c_yagura', 'c_funa']), SRCC = require(path.join(ROOT, 'shogi/tools/openings/src/castle.js')), KIF = require(path.join(ROOT, 'shogi/tools/openings/kif.js'));
     if (!src.includes("sort((a, b) => (a.off ? a.dd : a.ply) - (b.off ? b.dd : b.ply))")) add('-', -1, '⑥ the 3D castle problems are not drawn in the dd order');
     const linePos = []; for (const c of CATS) require(path.join(ROOT, `shogi/tools/openings/src/${c}.js`)).forEach(e => { try { const q = new E.Position(); q.setSfen(e.start || KIF.START); for (const u of KIF.conv(e.line, e.start).usi) { q.doMove(q.fromUsi(u)); q.sp = 0; linePos.push([e.id + ' line', CU.brd(q.sfen())]); } } catch (er) {} });
     const STEP = { 4: [[0, -1], [1, -1], [-1, -1], [1, 1], [-1, 1]], 7: [[0, -1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1]], 8: [[0, -1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1], [1, 1], [-1, 1]], 3: [[1, -2], [-1, -2]] };
@@ -3109,6 +3109,7 @@ function shogiOpen(opt) {
         if (ms.length - P.accept.length < 3) a(`③ ${ms.length - P.accept.length} moves outside the set`);
         const left = cd(p.board); if (p.side !== 0 || p.inCheck() || left < 1 || left > 3 || E.typeOf(p.board[rookSq]) !== 6 || E.colorOf(p.board[rookSq]) !== 0) a(`④ side ${p.side} / check / ${left} castle moves left / the rook off its square`);
         if (ms.some(m => !E.isDrop(m) && p.board[E.mTo(m)])) a('④ a piece can be taken (not a quiet castle position)');
+        if (p.board.some(x => x && E.typeOf(x) > 8) || Math.abs(P.cand[0][1]) > 300) a(`④ not an even, quiet opening (a promoted piece on the board / best ${P.cand[0][1]})`);   // (2026-11-28 c_yagura・c_funa)
         const B = CU.brd(P.sfen);
         const me = (s.problems || []).length + LP.indexOf(P); for (const [w, k, b] of pool) { if (w === id && k === me) continue; const d = CU.dist(B, b); if (d <= 4) a(`⑤ ${d} squares from ${w} ${k + 1}`); }
         for (const [w, b] of linePos) { const d = CU.dist(B, b); if (d <= 4) a(`⑤ 追1 ${d} squares from a position of ${w}`); }
@@ -3127,7 +3128,7 @@ function shogiOpen(opt) {
             if (/手順|見本どおり/.test(w)) bad('speaks of the line');
             if (/\{(?![mx]\})|undefined|NaN/.test(w)) bad('a placeholder');
             if (/\{m\}なら[^。！]*攻め|攻めの形/.test(w)) bad('a castle move is not an attack');
-            if (u === A) { const to = E.mTo(p.fromUsi(A)), onMk = T.some(x => x.sq === to && x.t === F.pt); if (JSON.stringify(P.mk) !== JSON.stringify(e.story.marks)) bad('P.mk is not the story marks');
+            if (u === A) { const to = E.mTo(p.fromUsi(A)), onMk = T.some(x => x.sq === to && x.t === F.pt); if (JSON.stringify(P.mk) !== JSON.stringify(e.story.marks)) bad('P.mk is not the story marks'); if (P.mp && JSON.stringify(P.mp) !== JSON.stringify(T.map(x => 'xplnsbrgk'[x.t]))) bad('P.mp is not the pieces of the castle squares');
               if (/決まった場所に入る|あるべきマスへおさめる|定位置について|持ち場に入った|居場所はそこで決まり/.test(w) && !onMk) bad('does not land on a castle square'); if (/一歩近づける手|持ち場へ一歩進む手|まず一歩|囲いの奥へ向かう|あるべき場所へ近づけた/.test(w) && onMk) bad('lands on a castle square'); }
             if (P.accept.includes(u)) { if (u !== A && !/\{x\}/.test(w)) bad('the other right move is not named'); if (/取る手|取り返|打つ手/.test(w)) bad('a capture / a drop'); continue; }
             if (!w.includes('{m}')) bad('the answer is not named');
