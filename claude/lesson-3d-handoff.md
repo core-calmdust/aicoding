@@ -37,7 +37,7 @@
 | konane コナネ | チェッカニ | **3D対応済み**（パズル226問・レッスン9本45問。s_go・s_keep・s_read・b_jump・b_open は 2026-11-27 担当C） | なし（b_open は 20:40 に「最初の取り除きと最初の跳び」へ作り直し、③⑤をユーザー指示でゆるめた） |
 | ugolki ウゴルキ | モリフク | **3D対応済み**（パズル152問・レッスン11本55問。s_count は 2026-11-27 に作り直し） | なし（2D・3D の追58 は 2026-11-27 担当D） |
 | fanorona ファノロナ | チェッカニ | 一部（パズル199問・レッスン9本45問：b_approach・b_withdraw・b_choose・b_chain・b_safe・b_win・t_big・t_count・t_stop、2026-11-27 担当E） | **レッスン3本15問**（t_paika・e_hunt・e_trap）。atlas/ls-fanorona.js の READY に足し、tools/lesson-verify-fanorona-ls.js にその主題のチェックを足す（今は basics 3本と b_chain・b_safe・b_win・t_big・t_count・t_stop の形） |
-| agon アゴン | キンダイスン | 一部（パズル152問は 2026-11-27 18:00 に3D対応済み、レッスンは b_step・b_capture・b_throne・b_reloc・b_safe・b_finish・s_block の7本35問〈担当F、最後は 23:25 b_finish：ユーザー指示で③⑥をゆるめた〉と s_double・s_win2〈担当D、s_win2 は 23:45：ユーザー指示で③をゆるめた〉を作り直して3D対応） | レッスン3本13問（担当F：s_queencap、担当D：s_tempo・s_best）（atlas/ls-agon.js の READY に足す。agon/ls-facts.js・tools/lesson-verify-agon-ls.js に主題の事実とチェック） |
+| agon アゴン | キンダイスン | 一部（パズル152問は 2026-11-27 18:00 に3D対応済み、レッスンは b_step・b_capture・b_throne・b_reloc・b_safe・b_finish・s_block の7本35問〈担当F、最後は 23:25 b_finish：ユーザー指示で③⑥をゆるめた〉、23:55 s_queencap〈担当F、これで担当F 完了〉と s_double・s_win2〈担当D、s_win2 は 23:45：ユーザー指示で③をゆるめた〉を作り直して3D対応） | レッスン2本8問（担当D：s_tempo・s_best）（atlas/ls-agon.js の READY に足す。agon/ls-facts.js・tools/lesson-verify-agon-ls.js に主題の事実とチェック） |
 | latrunculi ラトルンクリ | ポンメェ | **3D対応済み**（パズル250問は 2026-11-27 21:40 担当D、レッスン7本35問は 2026-11-27 22:58 担当C：atlas/ls-latrunculi.js・lessons3d.js の DATA・TURN_N、lesson-quality.js の PZ_ONLY から外した） | なし |
 
 おすすめの順：（janggi の NG 直し・ugolki s_count は済み）→ konane（済み） → ugolki の2D 追58 → fanorona のレッスン → agon → latrunculi。大きいゲームは「パズル → レッスン数本ずつ」に区切ってマージしてよい（表は「一部」）。
@@ -81,7 +81,7 @@
 | C | konane（2026-11-27 済み）→ **latrunculi のレッスン7本35問**（2026-11-27 20:30 ユーザー指示で追加） | `lesson-new-c-` | 毎時31分 |
 | D | janggi の NG 直し → ugolki s_count → latrunculi のパズル250問（済み）→ **agon のレッスン後半4本 s_double・s_tempo・s_win2・s_best**（2026-11-27 21:35 ユーザー指示で追加） | `lesson-new-d-` | 毎時1分 |
 | E | fanorona のレッスン12本 | `lesson-new-e-` | 毎時11分 |
-| F | agon（パズル152問・レッスン b_step・b_throne・b_capture・b_reloc・b_safe は済み）→ **agon のレッスン前半4本 b_safe（済み）・s_block（済み）・b_finish（済み）・s_queencap** | `lesson-new-f-` | 毎時41分 |
+| F | agon（パズル152問・レッスン b_step・b_throne・b_capture・b_reloc・b_safe は済み）→ agon のレッスン前半4本 b_safe・s_block・b_finish・s_queencap（**すべて済み、2026-11-27 23:55 担当F 完了**） | `lesson-new-f-` | 毎時41分 |
 
 1ゲームを2人で分けない（同じゲームのデータで衝突するため）。例外：latrunculi はパズル（担当D）とレッスン（担当C）で分ける（2026-11-27 ユーザー指示「C の担当が終わったので他に作業を振って」）。agon のレッスンも、前半4本（b_safe・b_finish・s_block・s_queencap）は担当F、後半4本（s_double・s_tempo・s_win2・s_best）は担当D で分ける（2026-11-27 21:35 ユーザー指示「担当D も完了」）。同じファイル（agon/lessons.json・atlas/ls-agon.js の READY・tools/lesson-verify-agon-ls.js）を触るが、自分の本の行だけを変え、マージ前に main を取り込んで両方を残す。共通の部分（ls-agon.js の読み込み・セリフの仕組み・lesson-verify-agon-ls.js の共通の検査）を変えるのは F だけにし、D は自分の本に要る分だけを足す。C は lessons.json・atlas/ls-latrunculi.js・tools/lesson-verify-latrunculi-ls.js と2D のレッスン部分だけを触り、D の puzzles.json・latrunculi/pzwhy.js・atlas/games/latrunculi-pz.js・tools/lesson-verify-latrunculi.js には手を出さない。3D卓のアダプタ atlas/games/latrunculi.js のパズル／レッスンモード（ctx.pz・api.pz）は D が先に作る。D のその PR がマージされる前は、C は2D のレッスンの検証・作り直しと機械チェック（-ls.js）まで進め、3D に出すのは D のマージ後にする（アダプタを2人で別々に作らない）。担当A（16分）・B（46分）と時刻を重ねない。
 
