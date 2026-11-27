@@ -69,11 +69,22 @@
 注意：
 
 - 担当A（レッスン、`lesson-loop-`）・担当B（定跡、`lesson-open-`）は毎時動いていて、同じ共有ファイルを触る。衝突は毎回ありうる。
-- 3時間ごとの報告（`lesson-report-`）が見張っている。**50分以上止まった `lesson-new-c-`／`lesson-new-d-` の未マージ PR は、報告が中身を見てマージするか閉じる**。PR は作ったらすぐマージまで進める。
+- 3時間ごとの報告（`lesson-report-`、もとのアカウント）は C〜F を**見るだけ**（2026-11-27〜）：未マージの PR・止まっていそうな担当・進み具合を報告に書くが、C〜F の PR をマージ・クローズしない。止まった PR は自分の担当で片づける（作ったらすぐマージまで進める）。
 - 中途半端な3D表示を出さない。未完成のレッスン・パズルは一覧に出さない（`has` が false・`READY` に入れない）。
 - 道具の目安：`lesson-facts.js`・`lesson-verify.js`・`lesson-quality.js` を全部回すと2コアの環境で40分ほどかかる。回の中では対象のゲームと near53 だけでよい（全ゲーム分は報告で回す）。lesson-quality.js には Chrome（`/usr/bin/google-chrome`）と puppeteer-core（`/opt/npm-tools/node_modules/puppeteer-core`、または環境変数 `CHROME`・`PUPPETEER_CORE`）が必要。
 
-## 6. 定期実行で回す場合
+## 6. 担当の分け方（2026-11-27〜、別のアカウントで C〜F の4名）
+
+| 担当 | 範囲（めやす） | ブランチ | 実行（UTC） |
+|---|---|---|---|
+| C | konane | `lesson-new-c-` | 毎時31分 |
+| D | janggi の NG 直し → ugolki s_count | `lesson-new-d-` | 毎時1分 |
+| E | fanorona のレッスン12本 | `lesson-new-e-` | 毎時11分 |
+| F | agon（パズル → レッスン） | `lesson-new-f-` | 毎時41分 |
+
+latrunculi は最初に手が空いた担当が取る（取る前に「作業中」の印を見て重ねない）。1ゲームを2人で分けない（同じゲームのデータで衝突するため）。担当A（16分）・B（46分）と時刻を重ねない。
+
+## 7. 定期実行で回す場合
 
 もとの担当C（毎時31分 UTC、ブランチ `lesson-new-c-`）・担当D（毎時1分 UTC、`lesson-new-d-`）の定期実行は、もとのアカウントで無効のまま残っている。引き継ぎ先で回すときは、引き継ぎ先のアカウントで定期実行を作る。ブランチ名は `lesson-new-c-`／`lesson-new-d-` をそのまま使う（報告の見張りとログがこの名前で追っている）。プロンプトの骨子：
 
