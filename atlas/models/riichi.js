@@ -1,6 +1,7 @@
 /* =====================================================================
    麻雀（riichi/、2026-11-27）— the portal's showcase: an automatic mahjong table in play, the table itself being the place
-   (ユーザー「ロケーションはちゃぶ台などを使う必要はなく雀卓にしてOK」: MODELS.riichi.solo — table3d.js hides the room).
+   (2026-11-28 ユーザー「3Dビューの時点ではまだ背景は大百科の方に」: the Atlas's places as for every game — the solo dark room is off;
+   MODELS.riichi.solo only with window.RIICHI_SOLO, a debug switch).
      the quiet green felt of riichi/ (images/mahjong/tex/felt-green.webp) inside walnut rails; the centre console with its
      round display (東1局) and the four score windows; the four walls of blue-backed tiles, one of them broken open with the
      dora indicator turned up; each player's 13 tiles standing (the near hand faces the viewer, the others show their backs),
@@ -93,6 +94,6 @@
     g.scale.setScalar(.9);
     return g;
   };
-  X.MODELS.riichi.solo = true;
+  X.MODELS.riichi.solo = !!window.RIICHI_SOLO;
   X.MODELS.riichi.soloBg = '#0b1410';
 })();

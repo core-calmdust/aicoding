@@ -2570,7 +2570,6 @@
   addEventListener('atlas-places', () => { try { renderPlace(); } catch (e) {} try { if (page === 'dress') renderDress(); } catch (e) {} });   // (only きせかえ (its 台 tab) shows the places: re-rendering the open page here made the home jump a few seconds after load with nothing touched, 2026-11-11)
   function renderPlace() {
     const X = P3(), btn = $('bvPlBtn'); if (!btn) return;
-    { const w = $('bvTodW'); if (w) w.style.visibility = bvGame && bvGame.id === 'riichi' ? 'hidden' : ''; }   // (麻雀: the table is the place — no place to pick)
     if (!X) { btn.hidden = true; return; }
     if (btn.hidden) btn.hidden = false;   // (the places arrived after the page: atlas-places)
     const k = X.table(), names = X.PLACES.name[lang] || X.PLACES.name.en;
