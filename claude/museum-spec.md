@@ -703,3 +703,4 @@
 描かれたゲーム: grootebroek（フローテブルークの宝くじ, 1694）と narren（サイコロをする二人の道化, 1516原画）を追加 PAINT_I18N_V 73、paint.js v84、museum.js v319。
 描かれたゲーム: historiespel（祖国の歴史すごろく, 1816）と daumier（決して警察に見張られないパリっ子たち, 1847）を追加 PAINT_I18N_V 74、paint.js v85、museum.js v320。
 描かれたゲーム: arnauts（ダムを打つアルナウトたち）と luyken（タバコを吸いチェスをするトルコの人々, 1698）を追加 PAINT_I18N_V 75、paint.js v86、museum.js v321。
+描かれたゲーム: kabinet（カード遊びをする人々, 1483-87）と lievens（喧嘩するカード遊びの男たちと死神, 1638）を追加 PAINT_I18N_V 76、paint.js v87、museum.js v322。
