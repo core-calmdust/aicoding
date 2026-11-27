@@ -19,7 +19,11 @@
        'open'  it takes other pieces of yours, through the point the moved piece left (the opponent steps onto it)
        'other' (never in a lesson: tools/lesson-verify-fanorona-ls.js rejects it) neither
      c  the most the opponent can then take in one turn (a chain counted in full)
-   FanoronaLsFacts.best(E, spec) → the move that takes the most (null when two moves take as many)
+   b_win (2026-11-27 担当E, the move that takes every piece the opponent has left): { k, c, a, r, sc, sa, same }
+     k 'most'  the answer: all { a } of the opponent's pieces in { sa } captures (the game is won)
+       'stop' / 'stopx' / 'dead'  as b_chain: { c } taken in { sc } captures, { r } = a − c of the opponent's pieces left
+     same  the move's piece is the answer's piece
+  FanoronaLsFacts.best(E, spec) → the move that takes the most (null when two moves take as many)
    FanoronaLsFacts.hint(E, id, spec) → the points of the pieces that can capture now (never the answer's piece alone)
    Moves are the engine's notation (h2-h3A), points its indices r * 9 + c. Works as a plain script and in Node. */
 (function () {
@@ -69,8 +73,24 @@
     const open = !self && o.S.some(st => st.some(y => y.to === from));
     return Object.assign(f, { k: self ? 'self' : open ? 'open' : 'other', self });
   }
+  // b_win: the one move after which the opponent has no piece left (null when none or two)
+  function winBest(E, spec) {
+    const pos = E.Pos.from(spec), opp = 3 - pos.turn, L = pos.moves(true).filter(m => pos.clone().play(m).count(opp) === 0);
+    return L.length === 1 ? L[0] : null;
+  }
+  function winFact(E, spec, m) {
+    const pos = E.Pos.from(spec), b = winBest(E, spec), S = pos.steps(m);
+    if (!S || !b) return { k: 'bad' };
+    const B = pos.steps(b), sum = X => X.reduce((n, x) => n + x.cap.length, 0), a = pos.count(3 - pos.turn), c = sum(S);
+    const f = { c, a, r: a - c, sc: S.length, sa: B.length, same: S[0].from === B[0].from, from: S[0].from };
+    if (m === b) return Object.assign(f, { k: 'most' });
+    let st = null; for (const x of S) st = E.Pos.after(pos, st, x);
+    const more = pos.capSteps(st).length > 0, onRoad = S.length < B.length && S.every((x, i) => eqS(x, B[i]));
+    return Object.assign(f, { k: onRoad ? 'stop' : more ? 'stopx' : 'dead' });
+  }
   function fact(E, id, spec, m) {
     if (id === 'b_chain') return chainFact(E, spec, m);
+    if (id === 'b_win') return winFact(E, spec, m);
     if (id === 'b_safe') return safeFact(E, spec, m);
     const pos = E.Pos.from(spec), b = best(E, spec), S = pos.steps(m);
     if (!S || !b) return { k: 'bad' };
@@ -86,7 +106,7 @@
     if (id === 'b_safe') return [...new Set(pos.paikaSteps().map(x => x.from))];   // (every piece you can move: never the answer's alone, 追52)
     return [...new Set(pos.capSteps(null).map(x => x.from))];
   }
-  const API = { fact, best, hint, endOf, capN, chainFact, safeFact, safeBest, oppMost };
+  const API = { fact, best, hint, endOf, capN, chainFact, safeFact, safeBest, oppMost, winFact, winBest };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   if (typeof window !== 'undefined') window.FanoronaLsFacts = API;
 })();
