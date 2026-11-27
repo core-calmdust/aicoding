@@ -1964,7 +1964,7 @@ function ckWarm(opt, L, E, X, val, moveVal, add, only) {
 //   縦と横) and for every wrong move (the king or not, a blocker on the way, a capture or not, a piece of yours taken next), the question
 //   and the hint (a corner / the throne named is in an answer)
 //   ⑨ the 2D (tafl/app.js problemPoints) and the 3D (TAFL.points) both score P.ok
-const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield', 't_tuichi', 't_block', 't_fort', 't_encircle', 's_corner', 's_breakout']);
+const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield', 't_tuichi', 't_block', 't_fort', 't_encircle', 's_corner', 's_breakout', 's_squeeze']);
 function tafl(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'tafl/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'tafl/lessons.json'), 'utf8'));
@@ -2308,9 +2308,40 @@ function tafl(opt) {
   { const st = L.steps.find(s => s.id === 's_breakout');
     if (st && st.diagram) { const D = st.diagram, p = E.Pos.from(D.s); (D.arrows || []).forEach(([fr, to]) => { const m = E.parse(p, fr + '-' + to); if (m == null) { add('s_breakout', -1, `diagram: 追14 ${fr}-${to} is not legal`); return; }
       const f = BR.breakFacts(E, { s: D.s, ok: [m], best: m }); f.bad.filter(b => /^①|^④ (the king|not the)/.test(b)).forEach(b => add('s_breakout', -1, `diagram: 追14 ${b}`)); }); } }
+  // (2026-11-28 第2期 担当A) s_squeeze「輪を縮める」(tools/lesson-verify-tfsqueeze.js): the attackers to move, the corners shut, nothing
+  // of theirs can be taken now. ①② P.ok = the safe moves (no defender reply takes an attacker, the king reaches no corner within his 2
+  // moves; all moves, all replies) after which the king has the fewest squares, and the next safe move leaves him ≥2 more ③ the answers ≤ a
+  // third of the moves and of the ringed man's moves (追17), ≥1 near-miss (a wrong move that narrows him as much but is not safe) ④ the
+  // squeeze ≥3 squares, every answer on the king's row / column with nothing between, taking nothing, from one man ⑤ the pool (five) and
+  // no two problems with the same shape (squeezeSig) ⑥ d (the near-misses) never down, last > first ⑦⑧ タフリン's words: every wrong move by
+  // what follows it (squeezeWhy = the 3D tfSqueezeWhy: a corner within 2 / the moved man taken / another man taken / the king's squares
+  // left, the number checked), the praise's numbers (now → after), the question and the hints (no engine words); the diagram: its arrow is
+  // an answer (追14); the 2D intro without the engine note
+  const SQ = require(path.join(ROOT, 'tools/lesson-verify-tfsqueeze.js')), sqSig = new Map();
+  const squeezeOne = (st, si, P, j, a) => { const f = SQ.squeezeFacts(E, P), nm = m => E.name(f.p, m); f.bad.forEach(a);
+    five(st.id, j, P, f.me, nm, a);
+    { const sig = SQ.squeezeSig(E, P); if (sqSig.has(sig)) a(`⑤ the same shape (${sig}) as ${sqSig.get(sig)}`); else sqSig.set(sig, `q${j + 1}`); }
+    let W; try { W = X_.tfLsJa(E, st, P, j, k => X_.TFM(k, 'ja'), si); } catch (e) { a('⑧ the words fail: ' + e.message); return f.d; }
+    for (const t of [W.ask, W.hintTx, plain(W.good())]) if (!t || /\{|undefined|NaN/.test(t)) a(`⑧ 「${t}」`);
+    for (const t of [W.ask, W.hintTx, plain(W.good())]) if (/最善|評価|いちばんいい手|取れる相手の駒/.test(t)) a(`⑧ 「${t}」: the engine's view / a capture (the goal is the king's squares, safely)`);
+    { const g = plain(W.good()), ns = (g.match(/\d+/g) || []).map(Number); if (!ns.length || ns.some(x => x !== f.K0 && x !== f.min) || !ns.includes(f.min)) a(`⑧ the praise 「${g}」: the king ${f.K0} → ${f.min}`); }
+    for (const m of f.wrong) { const raw = plain(W.ng(m)), x0 = nm(m), i0 = raw.indexOf('赤い印の手'), i1 = raw.indexOf('緑の印の手');
+      if (/\{|undefined|NaN/.test(raw) || i0 < 0 || i1 < 0) { a(`⑦ ${x0}: 「${raw}」 (your move / the right move not named)`); continue; }
+      const tx = raw.slice(i0, i1), tl = raw.slice(i1), want = SQ.squeezeWhy(E, P, m) || '?';
+      const said = /角へ逃げ|角に着/.test(tx) ? 'esc' : /寄せた駒|動かした駒/.test(tx) && /取られ|はさまれ/.test(tx) ? 'capm' : /ほかの攻め手|別の攻め手|ほかの駒/.test(tx) ? 'cap' : /まだ(\d+)マス/.test(tx) ? 'wide' : 'other';
+      if (said !== want) a(`⑦ ${x0}: 「${tx}」 says ${said}, the board: ${want}`);
+      else if (want === 'wide') { const k = +tx.match(/まだ(\d+)マス/)[1], km = f.C.get(m).km; if (k !== km) a(`⑦ ${x0}: 「${tx}」 says ${k} squares, the board: ${km}`); }
+      { const ns = (tl.match(/\d+/g) || []).map(Number); if (ns.some(x => x !== f.K0 && x !== f.min) || !ns.includes(f.min)) a(`⑦ ${x0}: 「${tl}」 the right move: the king ${f.K0} → ${f.min}`); } }
+    return f.d; };
+  { const st = L.steps.find(s => s.id === 's_squeeze');
+    if (st && st.diagram) { const D = st.diagram, p = E.Pos.from(D.s); (D.arrows || []).forEach(([fr, to]) => { const m = E.parse(p, fr + '-' + to); if (m == null) { add('s_squeeze', -1, `diagram: 追14 ${fr}-${to} is not legal`); return; }
+      const f = SQ.squeezeFacts(E, { s: D.s, ok: [m], best: m }); f.bad.filter(b => /^①|^②|^④/.test(b)).forEach(b => add('s_squeeze', -1, `diagram: 追14 ${b}`)); }); }
+    const w = {}; vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'tafl/i18n.js'), 'utf8'), { window: w });
+    for (const lg of Object.keys(w.I18N)) { const T = w.I18N[lg]; for (const k of ['intro', 'goal', 'hint', 'why', 'ng']) { const x = T['ls.s_squeeze.' + k]; if (!x) add('s_squeeze', -1, `⑨ ${lg}: no ls.s_squeeze.${k}`); }
+      if (/class="note"/.test(T['ls.s_squeeze.intro'] || '')) add('s_squeeze', -1, `⑨ ${lg}: the 2D intro still has the engine note`); } }
   L.steps.forEach((st, si) => { const id = st.id; if (!TF_DONE.has(id) || (opt && opt.only && !opt.only.includes(id))) return;   // (opt.only: the mutation tests of one lesson)
     let prevD = -1, firstD = null;
-    if (id === 'b_safe' || id === 't_shield' || id === 't_tuichi' || id === 't_block' || id === 't_fort' || id === 't_encircle' || id === 's_corner' || id === 's_breakout') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : id === 't_tuichi' ? tuichiOne : id === 't_block' ? blockOne : id === 't_fort' ? fortOne : id === 't_encircle' ? encOne : id === 's_corner' ? cornerOne : id === 's_breakout' ? breakOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
+    if (id === 'b_safe' || id === 't_shield' || id === 't_tuichi' || id === 't_block' || id === 't_fort' || id === 't_encircle' || id === 's_corner' || id === 's_breakout' || id === 's_squeeze') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : id === 't_tuichi' ? tuichiOne : id === 't_block' ? blockOne : id === 't_fort' ? fortOne : id === 't_encircle' ? encOne : id === 's_corner' ? cornerOne : id === 's_breakout' ? breakOne : id === 's_squeeze' ? squeezeOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
     st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), me = p.turn, all = p.moves(), nm = m => E.name(p, m);
       if (P.n > 1) { const d = seqCheck(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
         if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); seqWords(st, si, P, j, a); return; }
