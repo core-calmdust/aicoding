@@ -1850,7 +1850,7 @@ function pickAttack(list, left) { let best = null; for (const e of list) if (e.n
 const pzReached = (Pz, pos) => pos.status() === -1;
 // ---- puzzles v2: a wrong move does not end the puzzle at once. The defender (the engine's best reply) answers and the
 // player may keep going until the puzzle's move count is used up; mating within it still counts (★★).
-// "Obvious mistake" (flagged at once; the move is taken back and the correct move shown):
+// "Obvious mistake" (the puzzle ends after the defender's reply; nothing is taken back, the right move is not shown — 追88):
 //   1. losing at once: after the move the opponent mates with its very next move (or the own king is left facing mate);
 //   2. a checks-only puzzle (連将): a move that is not a check.
 function pzBlunder(Pz, before, m) {
@@ -1872,50 +1872,39 @@ async function puzzleMove(m) {
   renderPuzzleCard();
   const e = list.find(x => x.m === m), dm = moveDur(m, before);
   if (pzReached(Pz, posAt(cur).pos)) { setTimeout(() => puzzleSolved(), dm + 200); return; }
-  const good = list.filter(x => x.need > 0 && x.need <= left).sort((a, b) => a.need - b.need);
-  const failBack = async html => {
-    Pz.state = 'fail'; Pz.busy = false; Pz.failed = true;
-    await sleep(dm + 300);
-    if (puzzle !== Pz) return;
-    moves = moves.slice(0, cur - 1); cur = moves.length; Pz.used--;
-    const p0 = posAt(cur).pos;
-    if (good[0]) markMove(p0, good[0].m, 'ok'); markMove(p0, m, 'ng');
-    update(false); playChime(false);
-    pzStatus(html); renderPuzzleCard();
-  };
+  // (追88, 2026-11-27 担当D) the 詰め rule of the 3D table (atlas/puzzles.js jgMoved): a move off the solution is not taken back and the
+  // right move is not shown — the defender answers (after a move that lets it mate at once, pz.bl.lose, with that mate: JanggiPzWhy.mateReply;
+  // otherwise the engine's move) and the words say what it did on the board (janggi/pzwhy.js); the solution only with 「答えを見る」.
+  // A move that is not a check in a checks-only puzzle (pz.bl.nock), the last move of the count, or a mate against you end the puzzle.
   if (!e || !(e.need > 0) || e.need > left) {
-    if (left <= 1) {
-      await failBack(good.length ? `<b class="ng">${t('pz.fail')}</b> ${t('pz.failWhy', { m: '<bdi>' + mvIn(before, m) + '</bdi>', b: '<bdi>' + mvIn(before, good[0].m) + '</bdi>', n: Pz.n })}`
-        : `<b class="ng">${t('pz.fail')}</b> ${PZBook.t('outOfMoves', { n: Pz.n })}`);
-      return;
-    }
-    const why = pzBlunder(Pz, before, m);
-    if (why) { await failBack(`<b class="ng">${PZBook.t('blunder')}</b> ${t('pz.bl.' + why, { n: Pz.n, m: mvIn(before, m) })}${good.length ? ' ' + t('pz.best', { b: '<bdi>' + mvIn(before, good[0].m) + '</bdi>' }) : ''}`); return; }
-    // not the solution, but play on: the defender answers with the engine's best move
+    const W = window.JanggiPzWhy, bl = pzBlunder(Pz, before, m), b2 = posAt(cur).pos.clone();
     Pz.failed = true; Pz.strayed = true; (Pz.bad = Pz.bad || []).push(Pz.used - 1);
     renderPuzzleCard();
     pzStatus(t('pz.checking'));
-    const res = await request('ai', { type: 'think', moves: moves.slice(0, cur), level: 17 });
-    if (!res || puzzle !== Pz || tok !== busyToken) return;
+    let rm = bl === 'lose' && W ? W.mateReply(E, b2) : null;
+    if (rm == null) { const res = await request('ai', { type: 'think', moves: moves.slice(0, cur), level: 17 }); if (!res || puzzle !== Pz || tok !== busyToken) return; rm = res.move; }
     await sleep(Math.max(0, dm + 250));
-    if (puzzle !== Pz) return;
-    if (res.move === undefined || res.move < 0) { Pz.state = 'fail'; Pz.busy = false; renderPuzzleCard(); pzStatus(`<b class="ng">${t('pz.fail')}</b> ${PZBook.t('outOfMoves', { n: Pz.n })}`); return; }
-    const b2 = posAt(cur).pos; playMove2(res.move);
-    await sleep(moveDur(res.move, b2));
+    if (puzzle !== Pz || tok !== busyToken) return;
+    if (rm === undefined || rm === null || rm < 0) { Pz.state = 'fail'; Pz.busy = false; renderPuzzleCard(); pzStatus(`<b class="ng">${t('pz.fail')}</b> ${PZBook.t('outOfMoves', { n: Pz.n })}`); return; }
+    playMove2(rm);
+    await sleep(moveDur(rm, b2));
     if (puzzle !== Pz) return;
     Pz.busy = false;
-    if (statusAt(cur).over) { Pz.state = 'fail'; playChime(false); renderPuzzleCard(); pzStatus(`<b class="ng">${t('pz.fail')}</b> ${PZBook.t('outOfMoves', { n: Pz.n })}`); return; }
     // (追42) what the reply did on the board (marked red) and whether a mate is still there in the moves left (janggi/pzwhy.js)
-    const W = window.JanggiPzWhy, wy = W ? W.why(E, b2, res.move) : null, left2 = Pz.n - Pz.used;
-    if (wy && wy.k !== 'pass') { lessonMarks = []; markMove(posAt(cur).pos, res.move, 'ng'); update(false); }
-    if (W && left2 <= 0) { Pz.state = 'fail'; playChime(false); renderPuzzleCard(); pzStatus(`<b class="ng">${t('pz.fail')}</b> ${W.say(LANG, wy, null, 0)} ${PZBook.t('outOfMoves', { n: Pz.n })}`); return; }
+    const wy = W ? W.why(E, b2, rm) : null, left2 = Pz.n - Pz.used;
+    if (wy && wy.k !== 'pass') { lessonMarks = []; markMove(posAt(cur).pos, rm, 'ng'); update(false); }
+    if (bl || left2 <= 0 || statusAt(cur).over) {
+      Pz.state = 'fail'; playChime(false); renderPuzzleCard();
+      pzStatus(`<b class="ng">${t('pz.fail')}</b> ${bl === 'nock' ? t('pz.bl.nock', { n: Pz.n }) + ' ' : ''}${W ? W.say(LANG, wy, null, 0) : ''}${wy && wy.k === 'mated' ? '' : ' ' + PZBook.t('outOfMoves', { n: Pz.n })}`);
+      return;
+    }
     let reach = null;
     if (W) { const L2 = await mateReq(left2, false); if (puzzle !== Pz) return; reach = (L2 || []).some(x => x.need > 0 && x.need <= left2); }
     renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay());
     pzStatus(W ? `<b class="ng">${t('pz.stray')}</b> ${W.say(LANG, wy, reach, left2)}` : `<b class="ng">${t('pz.stray')}</b> ${PZBook.t('movesLeft', { n: Pz.n - Pz.used })}`);
     return;
   }
-  pzStatus(t('pz.good'));
+  pzStatus(t('pz.checking'));   // (追88: nothing is judged on the way — no 「良い手です」)
   const dl = await mateReq(Pz.n - Pz.used, true);
   if (!dl || puzzle !== Pz || tok !== busyToken) return;
   await sleep(Math.max(0, dm + 250));
