@@ -141,6 +141,14 @@
     { id: 'domino98', w: 1686, h: 1350, aic: 63559, no: '1981.651', bg: '#5e5440', spots: [[.47, .51], [.33, .45], [.62, .38], [.49, .39], [.85, .3], [.73, .88]], links: [{ room: 'chance' }] },
     // (2026-11-25) the Rijksmuseum: Albert Glaser and friends playing cards on a boat, Langkat, Sumatra
     { id: 'langkat', w: 2048, h: 1578, rijks: 'RP-F-2003-107', bg: '#dcd6c6', spots: [[.513, .717], [.388, .452], [.217, .452], [.757, .452], [.708, .657], [.54, .41]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Rijksmuseum: Indian miniature, two women playing chaturanga
+    { id: 'chatur', w: 1400, h: 2048, rijks: 'RP-T-1993-306', bg: '#7a2a22', spots: [[.56, .73], [.39, .59], [.705, .59], [.25, .48], [.2, .38], [.05, .54]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Rijksmuseum: Indian miniature, four women at chaupar/pachisi on a festival night
+    { id: 'shabbarat', w: 1554, h: 2048, rijks: 'RP-T-1993-195', bg: '#7d7d80', spots: [[.462, .625], [.545, .666], [.53, .533], [.86, .54], [.595, .44], [.73, .25]], links: [{ g: 'ludo' }] },
+    // (2026-11-25) the Rijksmuseum: Chinese famille-rose vase (1724), women playing go, seal 'Tang Jintang'
+    { id: 'govase', w: 1480, h: 2048, rijks: 'AK-NM-6352-B', bg: '#d6d6d4', spots: [[.467, .721], [.353, .6], [.587, .658], [.653, .552], [.38, .48], [.36, .726]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
+    // (2026-11-25) the Rijksmuseum: surimono (1822): Xuanzong and Yang Guifei playing ban-sugoroku
+    { id: 'yokihi', w: 1835, h: 2048, rijks: 'RP-P-1991-545', bg: '#e5e1d6', spots: [[.544, .55], [.265, .375], [.6, .25], [.33, .15], [.865, .31], [.85, .85]], links: [{ g: 'backgammon' }, { ex: 'sugoroku' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
