@@ -15,7 +15,33 @@
     { id: 'opera', kind: 'chess', res: 'w',
       moves: 'e4 e5 Nf3 d6 d4 Bg4 dxe5 Bxf3 Qxf3 dxe5 Bc4 Nf6 Qb3 Qe7 Nc3 c6 Bg5 b5 Nxb5 cxb5 Bxb5+ Nbd7 O-O-O Rd8 Rxd7 Rxd7 Rd1 Qe6 Bxd7+ Nxd7 Qb8+ Nxb8 Rd8#',
       mk: { 11: { a: [['c4', 'f7'], ['f3', 'f7']] }, 12: { a: [['f3', 'f7']], s: ['f6'] }, 13: { a: [['b3', 'f7'], ['b3', 'b7']] }, 17: { a: [['g5', 'f6'], ['f6', 'e7']] },
-        21: { s: ['e8'] }, 23: { a: [['d1', 'd7']] }, 27: { a: [['d1', 'd7'], ['b5', 'd7']] }, 31: { a: [['b3', 'b8']] }, 33: { a: [['g5', 'd8']], s: ['e8'] } } }
+        21: { s: ['e8'] }, 23: { a: [['d1', 'd7']] }, 27: { a: [['d1', 'd7'], ['b5', 'd7']] }, 31: { a: [['b3', 'b8']] }, 33: { a: [['g5', 'd8']], s: ['e8'] } } },
+    // (2026-11-27) Richard Réti v. Savielly Tartakower, 1910: Réti's Mate
+    { id: 'reti1910', kind: 'chess', res: 'w', moves: 'e4 c6 d4 d5 Nc3 dxe4 Nxe4 Nf6 Qd3 e5 dxe5 Qa5+ Bd2 Qxe5 O-O-O Nxe4 Qd8+ Kxd8 Bg5+ Kc7 Bd8#',
+      mk: { 9: { a: [['d3', 'e4']] }, 12: { a: [['a5', 'e1']] }, 14: { a: [['e5', 'e1']], s: ['e4'] }, 15: { a: [['d1', 'd8']] }, 16: { a: [['d3', 'd8']], s: ['e8'] }, 17: { a: [['d3', 'd8']] },
+        19: { a: [['g5', 'd8'], ['d1', 'd8']], s: ['d8'] }, 20: { s: ['c7'] }, 21: { a: [['d8', 'c7']], s: ['c7'] } } },
+    // (2026-11-27) Adolf Anderssen v. Lionel Kieseritzky, 1851: The Immortal Game
+    { id: 'immortal', kind: 'chess', res: 'w', moves: 'e4 e5 f4 exf4 Bc4 Qh4+ Kf1 b5 Bxb5 Nf6 Nf3 Qh6 d3 Nh5 Nh4 Qg5 Nf5 c6 g4 Nf6 Rg1 cxb5 h4 Qg6 h5 Qg5 Qf3 Ng8 Bxf4 Qf6 Nc3 Bc5 Nd5 Qxb2 Bd6 Bxg1 e5 Qxa1+ Ke2 Na6 Nxg7+ Kd8 Qf6+ Nxf6 Be7#',
+      mk: { 3: { a: [['f4', 'e5']] }, 6: { a: [['h4', 'e1']] }, 14: { a: [['h5', 'g3']] }, 18: { a: [['c6', 'b5']] }, 21: { s: ['b5'] }, 23: { a: [['h4', 'g5']] }, 25: { a: [['h5', 'g6']] },
+        29: { a: [['f4', 'g5']] }, 32: { a: [['c5', 'g1']] }, 33: { a: [['d5', 'f6'], ['d5', 'c7']] }, 34: { a: [['b2', 'a1']] }, 35: { s: ['d6', 'g1', 'a1'] }, 37: { a: [['b2', 'g7']], s: ['e5'] },
+        40: { a: [['a6', 'c7']] }, 41: { a: [['g7', 'e8']] }, 43: { a: [['f6', 'd8']] }, 45: { a: [['e7', 'd8']], s: ['d8'] } } },
+    // (2026-11-27) Honinbo Shusaku v. Inoue Gennan Inseki, 1846: The Ear-reddening Game
+    { id: 'mimiaka', kind: 'go', size: 19, res: 'B+2',
+      moves: 'qd dc pq oc cp cf ep qo pe np po pp op qp oq oo pn qq nq on pm om pl mp mq ol pk lq lr kr lp kq qr rr rs mr nr pr ps qs no mo qr rm rl qs lo mn qr qm or ql qj rj ri rk ln mm qi rq jn ls ns gq go ck kc ic pc nj ke og oh pb qb ng mi mj nd ph qg pg hq hr ir iq hp jr fc lc ld mc lb mb md qf pf qh rg rh sh rf sg pj pi oi oj ni qk ok qe kb jb ka jc ob ja la db cc fe cn gr is fq io ji eb fb eg dj dk ej cj dh ij hm gj eh fl fg er dm fn dn gn jj jk kk ii ik jl kl il jh co do ih hn hl bl dg gh ch ig ec cr fd gd ed gc bk cm gs gp li kg in lj lg gm jf jg im fm kf lf mf le gf hf ff gg lk kj km lm ll jm ge he ef ea cb fr fs dr qa ra pa rb da gi fj fi fa ga gl ek em ho el en jo kn ci lh mh mg di ei lg qn rn re sl mg bm am lg eq es mg ha gb lg ds hs mg sj si lg sr sq mg hd hb lg ro so mg ss qs lg sn rp mg cl bn lg ml mk mg pj sf lg nn nl mg ib ia lg nc nb mg jd kd lg ma na mg qc rc lg js ks mg hc id lg fk hj mg hh hg lg gk hk mg ak lg al bm nf od ki ms kp ip jp lr oj mr ea sr',
+      mk: {1: {'s':['qd']},5: {'s':['qd','pq','cp']},10: {'s':['np']},25: {'s':['mq']},31: {'s':['lp']},72: {'s':['og']},127: {'s':['ji']},311: {'s':['lg']}} },
+    // (2026-11-27) Adolf Anderssen v. Jean Dufresne, 1852: The Evergreen Game
+    { id: 'evergreen', kind: 'chess', res: 'w', moves: 'e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 exd4 O-O d3 Qb3 Qf6 e5 Qg6 Re1 Nge7 Ba3 b5 Qxb5 Rb8 Qa4 Bb6 Nbd2 Bb7 Ne4 Qf5 Bxd3 Qh5 Nf6+ gxf6 exf6 Rg8 Rad1 Qxf3 Rxe7+ Nxe7 Qxd7+ Kxd7 Bf5+ Ke8 Bd7+ Kf8 Bxe7#',
+      mk: { 7: { s: ['b4'] }, 15: { a: [['b3', 'f7'], ['c4', 'f7']] }, 21: { a: [['a3', 'e7']] }, 24: { a: [['b8', 'b5']] }, 32: { a: [['h5', 'f3']] }, 33: { a: [['e4', 'f6']] },
+        35: { a: [['f6', 'e7'], ['e1', 'e7']] }, 36: { a: [['g8', 'g2'], ['h5', 'f3']] }, 37: { a: [['d1', 'd7']] }, 38: { a: [['f3', 'g2']] }, 39: { a: [['e1', 'e7']] }, 41: { a: [['a4', 'd7']] },
+        43: { a: [['f5', 'd7'], ['d1', 'd7']], s: ['d7'] }, 45: { a: [['d7', 'e8']] }, 47: { a: [['a3', 'e7']], s: ['f8'] } } },
+    // (2026-11-27) Edward Lasker v. George Alan Thomas, 1912: The King Hunt
+    { id: 'lasker1912', kind: 'chess', res: 'w', moves: 'd4 e6 Nf3 f5 Nc3 Nf6 Bg5 Be7 Bxf6 Bxf6 e4 fxe4 Nxe4 b6 Ne5 O-O Bd3 Bb7 Qh5 Qe7 Qxh7+ Kxh7 Nxf6+ Kh6 Neg4+ Kg5 h4+ Kf4 g3+ Kf3 Be2+ Kg2 Rh2+ Kg1 Kd2#',
+      mk: { 7: { a: [['g5', 'f6']] }, 15: { s: ['e5'] }, 17: { s: ['d3', 'e4', 'h7'] }, 19: { a: [['h5', 'h7']] }, 21: { a: [['h5', 'h7']] }, 23: { a: [['f6', 'h7'], ['d3', 'h7']] },
+        25: { a: [['g4', 'h6']] }, 27: { a: [['h4', 'g5']] }, 29: { a: [['g3', 'f4']] }, 31: { a: [['e2', 'f3']] }, 33: { a: [['h2', 'g2']] }, 34: { s: ['g8', 'g1'] }, 35: { a: [['a1', 'g1']], s: ['g1'] } } },
+    // (2026-11-27) Akaboshi Intetsu v. Honinbo Jowa, 1835: The Blood-vomiting Game
+    { id: 'toketsu', kind: 'go', size: 19, res: 'W+R',
+      moves: 'cp pq qd ed oc eq qo qk qi op iq dn ep dp do dq co eo fp cq bq br cm gr hp en bp ck dl dk el gn cr dr bs fq go ar hn gm hm gl ek hl di io ho fo ch cd lq pn gc qn dc cc ec cf il gp nq ic fd lc bg bf af bi dj eh fj qg oi qe pd nf ok pk ol pj rn rm qq qr rr qp rq pr rp po pp mp qm pm np mq mo lp lo kp no nr or qp mr ro pi lr ns ip jr hq jn ko kq kn jm km ik mk mm ir jq kk mi nm ml ki lj lk kj jj kl ll lm oj mg jl jk nj ni im in jo kl js ks jl im is kl ei ej jl hr hs kl cn bn jl gs fs kl hi ij jl ls ji hj oe kg jg gi nc jf nb re if je hd fe gf ff fg gg gh hg fi gj ig hh hf ii rf pe pf le kd ad kh qf ef de qe ld lg kc jd qf db eb qe jb od ib mf qf jp kr qe lf kf qf hc qe hb pg og of cg bh pf ph bb da cb fh ac eg bd ob oa of mh rj kl',
+      mk: {28: {'s':['ck']},33: {'s':['cr']},68: {'s':['bi']},70: {'s':['eh']},80: {'s':['pj']},246: {'s':['kl']}} }
   ];
 
   /* ---------- the kinds ---------- */
@@ -203,6 +229,8 @@
       const n = g.n; P.push(`<rect x="0" y="0" width="${g.W}" height="${g.H}" rx=".3" class="mxwood"/>`);
       for (let i = 0; i < n; i++) { P.push(`<line x1="1" y1="${1 + i}" x2="${n}" y2="${1 + i}"/><line x1="${1 + i}" y1="1" x2="${1 + i}" y2="${n}"/>`); }
       const hs = n === 19 ? [3, 9, 15] : n === 13 ? [3, 6, 9] : [2, 4, 6]; hs.forEach(a => hs.forEach(b => { if (n !== 9 || (a + b) % 4 === 0 || (a === 4 && b === 4)) P.push(`<circle cx="${1 + a}" cy="${1 + b}" r=".12" class="mxhoshi"/>`); }));
+      for (let i = 0; i < n; i++) { const c = 'ABCDEFGHJKLMNOPQRST'[flip ? n - 1 - i : i], r = flip ? i + 1 : n - i;   // the coordinates the moves' list uses (D4, Q16)
+        P.push(`<text x="${(1 + i) * 100}" y="${45}" class="mxgc" transform="scale(.01)">${c}</text><text x="${(1 + i) * 100}" y="${(n + .72) * 100}" class="mxgc" transform="scale(.01)">${c}</text><text x="${48}" y="${(1 + i + .15) * 100}" class="mxgc" transform="scale(.01)">${r}</text><text x="${(n + .52) * 100}" y="${(1 + i + .15) * 100}" class="mxgc" transform="scale(.01)">${r}</text>`); }
       return `<g class="mxgo">${P.join('')}</g>`;
     }
     if (K === SHOGI) {
