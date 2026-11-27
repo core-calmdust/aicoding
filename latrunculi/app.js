@@ -1395,7 +1395,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=3').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=4').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { let pr; try { pr = JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } return pzMigrate(pr); }
@@ -1649,11 +1649,17 @@ function lessonAnswer(m) {
     update(false);
   }, moveDur(m, pos0) + 700);
 }
+// a wrong move's words: what latrunculi/ls-facts.js counts on the board (the lesson's key, then the opponent's enclosure after it)
+function lsNgText(s, pos0, m, best) {
+  const F = window.LatrLsFacts; if (!F || lesson.virt) return t('ls.' + s.id + '.ng', { m: mvIn(pos0, best), x: mvIn(pos0, m) });
+  const w = F.wrong(s.id, pos0, m);
+  return t(w.k, w.v) + (w.tail ? ' ' + t(w.tail.k, w.tail.v) : '');
+}
 function okAnswer(P, s, m, pts) {
   const pos0 = posAt(0).pos;
   lesson.results[lesson.i] = pts; renderLessonCard();
   const best = P.ok.includes(m) ? m : P.best;
-  $('#lsFb').innerHTML = `<span class="pts ${pts ? 'ok' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts ? 'ok' : 'ng'}">${t(pts ? 'fb.perfect' : 'fb.bad')}</b> ` + (pts ? t('ls.' + s.id + '.why', { m: mvIn(pos0, m) }) : t('ls.' + s.id + '.ng', { m: mvIn(pos0, best), x: mvIn(pos0, m) }));
+  $('#lsFb').innerHTML = `<span class="pts ${pts ? 'ok' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts ? 'ok' : 'ng'}">${t(pts ? 'fb.perfect' : 'fb.bad')}</b> ` + (pts ? t('ls.' + s.id + '.why', { m: mvIn(pos0, m) }) : lsNgText(s, pos0, m, best));
   playChime(!!pts); playMove2(m);
   lsAuto(!!pts, moveDur(m, pos0) + 1100);
   const tok = busyToken;
@@ -1672,7 +1678,9 @@ $('#lsHint').onclick = () => {
   const s = curStep(), P = lessonProblem();
   lessonMarks = [];
   const good = P.ok || [P.best];
-  for (const f of new Set(good.map(mFrom))) lessonMarks.push({ at: f, cls: 'ok' });
+  // the lesson's hint lights the counters to look at (ls-facts.js marks: the chances, the holders, the threatened counter), not the answer's own
+  if (window.LatrLsFacts && !lesson.virt) for (const q of LatrLsFacts.marks(s.id, posAt(0).pos)) lessonMarks.push({ at: q, cls: 'ok' });
+  else for (const f of new Set(good.map(mFrom))) lessonMarks.push({ at: f, cls: 'ok' });
   $('#lsFb').innerHTML = lesson.virt ? t('op.hint') : t('ls.' + s.id + '.hint');
   renderFx();
 };
