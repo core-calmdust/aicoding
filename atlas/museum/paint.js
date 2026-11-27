@@ -189,6 +189,10 @@
     { id: 'dammolen', w: 2048, h: 1971, rijks: 'BK-NM-5783-21', bg: '#cdcdcb', spots: [[.45, .42], [.52, .5], [.27, .45], [.3, .57], [.45, .68], [.6, .33]], links: [{ g: 'checkers' }, { g: 'morris' }] },
     // (2026-11-25) the Rijksmuseum: Nuremberg boxwood draughtsman with Charlemagne's portrait (1525–75)
     { id: 'karelpiece', w: 2048, h: 2048, rijks: 'BK-NM-3213', bg: '#c9c6c1', spots: [[.5, .45], [.5, .65], [.7, .22], [.25, .3], [.45, .19], [.5, .86]], links: [{ g: 'checkers' }, { g: 'backgammon' }] },
+    // (2026-11-25) the Rijksmuseum: Pieter van den Berge, 'Le jeu hollandois, la belle vie!' — devils winning a card player's money
+    { id: 'vdberge', w: 1307, h: 2048, rijks: 'RP-P-1890-A-15893', bg: '#e1d9c6', spots: [[.36, .36], [.57, .56], [.12, .36], [.66, .68], [.5, .18], [.5, .89]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Giuseppe Maria Crespi, children playing dice in the street
+    { id: 'crespi', w: 1346, h: 2048, rijks: 'RP-P-1959-652', bg: '#e6e3da', spots: [[.66, .79], [.43, .6], [.58, .5], [.78, .55], [.7, .42], [.5, .89]], links: [{ room: 'chance' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
