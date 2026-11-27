@@ -3501,7 +3501,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=26'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
+      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=27'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
         try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
         return this; }).catch(e => { this.p = null; throw e; }));
     },
@@ -7499,7 +7499,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     .catch(e => { this.p = null; throw e; })); } };
   /* ugolki (2026-11-24 担当D): the data, モリフク's words and the board facts are in atlas/ls-ugolki.js (loaded the first time; only the
      lessons checked and rebuilt for the 3D, AtlasLsUgolki.READY — tools/lesson-verify-ugolki-ls.js) */
-  const UGOLKI = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUgolki) return res(); const sc = document.createElement('script'); sc.src = 'ls-ugolki.js?v=4'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const UGOLKI = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUgolki) return res(); const sc = document.createElement('script'); sc.src = 'ls-ugolki.js?v=5'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsUgolki.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   /* fanorona (2026-11-27 担当E): the data, チェッカニ's words and the board facts are in atlas/ls-fanorona.js (loaded the first time; only the
