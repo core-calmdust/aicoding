@@ -91,6 +91,8 @@
     { id: 'gojo', w: 1692, h: 1234, rijks: 'RP-F-F01161-K', bg: '#c9c6bd', spots: [[.52, .6], [.42, .59], [.28, .33], [.69, .38], [.5, .8], [.49, .27]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
     // (2026-11-25) the Art Institute of Chicago: Meade brothers daguerreotype, two men at chess
     { id: 'meade', w: 1686, h: 1403, aic: 250084, no: '2019.462', bg: '#3a2a24', spots: [[.5, .66], [.4, .43], [.64, .38], [.66, .57], [.52, .77], [.1, .5]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Art Institute of Chicago: hanging scroll attributed to Dai Jin, Daoist immortals playing weiqi
+    { id: 'weiqi', w: 1189, h: 2048, aic: 150406, no: '1998.148', bg: '#5d5640', spots: [[.47, .79], [.37, .73], [.58, .76], [.25, .8], [.475, .72], [.955, .34]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
