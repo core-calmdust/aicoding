@@ -261,6 +261,10 @@
     { id: 'rozetempel', w: 1686, h: 2048, rijks: 'RP-P-2019-2954', bg: '#e9e1cc', spots: [[.5, .08], [.5, .41], [.5, .56], [.37, .38], [.83, .41], [.5, .96]], links: [{ ex: 'goose' }, { room: 'chance' }] },
     // (2026-11-25) the Rijksmuseum: Claudine Stella after Jacques Stella, 'Le Brelan', putti playing cards (1657)
     { id: 'brelan', w: 2048, h: 1757, rijks: 'RP-P-2023-61-32', bg: '#e2dccb', spots: [[.45, .55], [.32, .73], [.22, .3], [.86, .58], [.8, .17], [.51, .83]], links: [{ g: 'poker' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Master PW of Cologne, round playing card, six of parrots (1470-1500)
+    { id: 'pwkarte', w: 1998, h: 2048, rijks: 'RP-P-OB-987', bg: '#ece8dc', spots: [[.47, .14], [.61, .86], [.27, .27], [.75, .54], [.47, .74], [.5, .46]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: J. E. Nilson, 'Das Bretspiel': draughts and tocadille in a Rococo frame
+    { id: 'nilson', w: 2048, h: 1405, rijks: 'RP-P-1964-2876', bg: '#ece6d8', spots: [[.44, .48], [.68, .6], [.59, .47], [.77, .5], [.28, .45], [.5, .88]], links: [{ g: 'checkers' }, { g: 'backgammon' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
