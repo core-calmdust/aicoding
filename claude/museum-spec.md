@@ -708,3 +708,4 @@
 描かれたゲーム: sorgheloos（賭けごと, 1541）と aleabelli（戦争という遊び, 1656）を追加 PAINT_I18N_V 77、paint.js v88、museum.js v324。
 描かれたゲーム: shunman（歌かるたと箱, 1806）と mitelli（職業の遊び, 1698）を追加 PAINT_I18N_V 78、paint.js v89、museum.js v325。
 描かれたゲーム: hogarth（宝くじ, 1721）と matthieu（ろうそくの明かりでダムを打つ女性たち, 1765）を追加 PAINT_I18N_V 79、paint.js v90、museum.js v326。
+描かれたゲーム: pillement（カードの家を作る中国の子どもたち, 1759）と skating（スケートリンクのすごろく, 1870）を追加 PAINT_I18N_V 80、paint.js v91、museum.js v327。

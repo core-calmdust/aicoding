@@ -297,6 +297,10 @@
     { id: 'hogarth', w: 2048, h: 1681, rijks: 'RP-P-OB-18.741', bg: '#e4dfd2', spots: [[.26, .29], [.78, .29], [.5, .24], [.49, .52], [.78, .65], [.5, .89]], links: [{ room: 'chance' }] },
     // (2026-11-25) the Rijksmuseum: G. D. Matthieu, ladies playing draughts by candlelight (1765)
     { id: 'matthieu', w: 2048, h: 1680, rijks: 'RP-P-1999-31', bg: '#e4e0d8', spots: [[.4, .67], [.49, .29], [.45, .8], [.36, .33], [.67, .25], [.79, .97]], links: [{ g: 'checkers' }] },
+    // (2026-11-25) the Rijksmuseum: Canot after Pillement, Chinese children's games: house of cards (1759)
+    { id: 'pillement', w: 1324, h: 2048, rijks: 'RP-P-1887-A-12359', bg: '#eee8de', spots: [[.53, .25], [.41, .27], [.66, .19], [.5, .8], [.38, .85], [.5, .99]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Gebroeders Koster, 'Het skating-rink spel', goose-type board (1870)
+    { id: 'skating', w: 2048, h: 1533, rijks: 'RP-P-OB-201.529', bg: '#ece3d0', spots: [[.5, .45], [.52, .73], [.39, .07], [.18, .72], [.08, .2], [.45, .96]], links: [{ ex: 'goose' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
