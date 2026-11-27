@@ -92,7 +92,7 @@
     // (2026-11-25) the Art Institute of Chicago: Meade brothers daguerreotype, two men at chess
     { id: 'meade', w: 1686, h: 1403, aic: 250084, no: '2019.462', bg: '#3a2a24', spots: [[.5, .66], [.4, .43], [.64, .38], [.66, .57], [.52, .77], [.1, .5]], links: [{ g: 'chess' }] },
     // (2026-11-25) the Art Institute of Chicago: hanging scroll attributed to Dai Jin, Daoist immortals playing weiqi
-    { id: 'weiqi', w: 1189, h: 2048, aic: 150406, no: '1998.148', bg: '#5d5640', spots: [[.47, .79], [.37, .73], [.58, .76], [.25, .8], [.475, .72], [.955, .34]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
+    { id: 'weiqidai', w: 1189, h: 2048, aic: 150406, no: '1998.148', bg: '#5d5640', spots: [[.47, .79], [.37, .73], [.58, .76], [.25, .8], [.475, .72], [.955, .34]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
     // (2026-11-25) the Rijksmuseum: 'Die Reise um die Welt' — a round dice race game, spaces 1–41, rules in four languages
     { id: 'reise', w: 1611, h: 2048, rijks: 'RP-P-OB-200.986', bg: '#e7e3d8', spots: [[.5, .42], [.5, .71], [.836, .59], [.727, .25], [.25, .28], [.5, .87]], links: [{ ex: 'goose' }, { room: 'chance' }] },
     // (2026-11-25) the Rijksmuseum: Jan van Huchtenburg, prisoners casting dice on a drum for their lives
@@ -134,7 +134,7 @@
     // (2026-11-25) the Art Institute of Chicago: Cézanne, watercolour study for The Card Players
     { id: 'cezcards', w: 1686, h: 1271, aic: 133136, no: '475.1983', bg: '#e8d2c6', spots: [[.38, .27], [.62, .5], [.58, .68], [.09, .5], [.25, .6], [.72, .6]], links: [{ g: 'poker' }, { g: 'solitaire' }] },
     // (2026-11-25) the Art Institute of Chicago: Vuillard, 'The Game of Checkers' (1899), colour lithograph
-    { id: 'vuillard', w: 1663, h: 2048, aic: 22735, no: '1936.199', bg: '#b8925a', spots: [[.42, .79], [.3, .56], [.6, .42], [.45, .22], [.15, .82], [.29, .31]], links: [{ g: 'checkers' }] },
+    { id: 'vuillardck', w: 1663, h: 2048, aic: 22735, no: '1936.199', bg: '#b8925a', spots: [[.42, .79], [.3, .56], [.6, .42], [.45, .22], [.15, .82], [.29, .31]], links: [{ g: 'checkers' }] },
     // (2026-11-25) the Art Institute of Chicago: Cruikshank after Marryat, 'Game of Chess' (1814)
     { id: 'cruikchess', w: 1686, h: 1198, aic: 90197, no: '1928.1507d', bg: '#c9c79a', spots: [[.48, .55], [.46, .37], [.21, .25], [.66, .27], [.47, .86], [.5, .95]], links: [{ g: 'chess' }] },
     // (2026-11-25) the Art Institute of Chicago: American photograph (c. 1898), woman and child playing dominoes
