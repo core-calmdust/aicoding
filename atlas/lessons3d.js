@@ -3492,7 +3492,6 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       if (part) return [pk(H.half, i), right, why, pk(H.you.half, LI + i)].join(' ');
       const [th, uu] = themOf(u); let ex = null;
       if (uu != null) { const fu = goOpF(p0, uu); if (fu) ex = fu.libs === 1 && !fu.cap ? pk(H.you.selfAtari, i) : fu.line === 1 ? H.you.line1[0] : fu.dOwn > 4 && fu.dOpp > 4 ? pk(H.you.far, i) : null; }
-      // (2026-11-27 担当B) the soft opener does not open on the praise's last ending (「…攻められるね！」 then 「次は見つけられるね！」): the next one in the list
       return [soft, right, th, ex, ex ? null : pk(H.tail, LI + i)].filter(Boolean).join(' '); };
   }
   function goOpIntroJa(g, LI) {   // a short intro: the name, the stored one-line summary (or the story's first plain sentence), a nudge
