@@ -36,6 +36,9 @@
 //    why / why0 / ng / ngGreedy / ngSmall).
 // t_stop (stop partway, 2026-11-27 担当E): stopProblem / stopWords below (t_count's taken − taken back, where the answer is a stop and
 //    going on along its road takes more and is taken back more; the 2D keys why / why0 / ng / ngOn / ngSmall).
+// t_paika (choosing a paika, 2026-11-27 担当E): paikaProblem / paikaWords below (no capture for either side; the one paika move that
+//    gives the opponent nothing and, whatever the reply, leaves you a capture; a wrong move gives a capture / sets up nothing / sets up
+//    one a reply stops; the 2D keys why / ng / ngNone / ngBlock).
 // Usage: node tools/lesson-verify-fanorona-ls.js [--selftest]   (also: node tools/lesson-verify.js fanorona)
 'use strict';
 const fs = require('fs'), path = require('path'), zlib = require('zlib');
@@ -196,6 +199,80 @@ function safeProblem(P, opt) {
   }
   const dd = (L.length - 1) + 2 * R.filter(r => r.c === 1).length;
   return { ok: !msgs.length, msgs, best, d: dd, n: L.length, kinds, cnt: R.map(r => r.c) };
+}
+// t_paika (the paika move, 2026-11-27 担当E): one problem — { ok, msgs, best, d, kinds }
+//  ① ok = [the one paika move after which the opponent can capture nothing and, whatever the opponent's reply, you can capture]
+//    (every legal move, every reply of the opponent recounted here), the engine first at 7 and 9 (9 twice); ② no other such move;
+//    the engine's second 60 or more below; ③ 5〜16 legal moves from 3 pieces or more (追52: the hint rings every piece you can move),
+//    追72; ④ neither side can capture now, 3 pieces or more a side, the game goes on after every safe move, at least one wrong move
+//    that is safe but sets up nothing (none) or a capture the opponent can stop (block) — the lesson is more than b_safe — and the
+//    lesson has give · none · block; ⑤ as basicProblem; ⑥ d = wrong moves + 2 × block moves.
+function paikaLook(pos, m) {
+  const r = oppCaps(pos, m); if (r.c) return { k: 'give', c: r.c };
+  const q = pos.clone().play(m), me = pos.turn;
+  if (q.status() !== 0) return { k: 'end', c: 0 };
+  if (!E.Pos.from({ b: q.spec().b, side: me }).hasCaps()) return { k: 'none', c: 0 };
+  let a = Infinity;
+  for (const y of q.moves(true)) {
+    const q2 = q.clone().play(y); if (q2.turn !== me || !q2.hasCaps()) return { k: 'block', c: 0 };
+    a = Math.min(a, Math.max(...q2.moves(true).map(x => q2.steps(x).reduce((n, z) => n + z.cap.length, 0))));
+  }
+  return { k: 'sure', c: 0, a };
+}
+function paikaProblem(P, opt) {
+  opt = opt || {}; engine();
+  const msgs = [], pos = E.Pos.from(P.s), L = pos.moves(true), bad = m => msgs.push(m);
+  if (pos.status() !== 0 || !L.length) return { ok: false, msgs: ['① no move'] };
+  if (pos.hasCaps()) return { ok: false, msgs: ['④ a capture on the board (the lesson is a paika move)'] };
+  if (E.Pos.from({ b: P.s.b, side: 3 - P.s.side }).hasCaps()) bad('④ the opponent can already capture (a threat on the board)');
+  if (pos.count(1) < 3 || pos.count(2) < 3) bad('④ fewer than 3 pieces a side');
+  if (L.length < 5 || L.length > 16) bad('③ ' + L.length + ' legal moves');
+  if (new Set(L.map(m => m.split('-')[0])).size < 3) bad('③ 追52 moves from fewer than 3 pieces');
+  if (msgs.length) return { ok: false, msgs };
+  const R = L.map(m => paikaLook(pos, m)), sure = L.filter((m, i) => R[i].k === 'sure'), best = sure[0];
+  if (R.some(r => r.k === 'end')) bad('④ a move ends the game');
+  if (sure.length !== 1) bad('② ' + sure.length + ' moves set up a sure capture');
+  if (!R.some(r => r.k === 'none' || r.k === 'block')) bad('④ no safe wrong move (the lesson would be b_safe)');
+  const kinds = L.map((m, i) => m === best ? 'most' : R[i].k);
+  if (P.ok && (P.ok.length !== 1 || P.ok[0] !== best)) bad('① ok ' + JSON.stringify(P.ok) + ' ≠ ' + best);
+  if (P.best !== undefined && P.best !== best) bad('① best ' + P.best + ' ≠ ' + best);
+  if (F.paikaBest(E, P.s) !== (sure.length === 1 ? best : null)) bad('⑧ ls-facts paikaBest');
+  if (opt.pool) for (const A of opt.pool) if (A.b !== P.s.b && near(P.s, A)) { bad('⑤ near ' + A.tag); break; }
+  if (msgs.length) return { ok: false, msgs, best, kinds };
+  if (!opt.skipEngine) for (const d of [7, 9, 9]) {
+    const V = values(P.s, d);
+    if (!V.length || V[0].m !== best && !E.same(pos, V[0].m, best)) { bad(`① the engine (depth ${d}) puts ${V[0] && V[0].m} first`); break; }
+    if (V.length > 1 && V[0].v - V[1].v < 60) { bad(`② the engine (depth ${d}) second ${V[1].m} only ${V[0].v - V[1].v} below`); break; }
+    if (V[0].v < -E.WINT) { bad(`④ the engine (depth ${d}): lost even after the answer (${V[0].v})`); break; }
+  }
+  const dd = (L.length - 1) + 2 * R.filter(r => r.k === 'block').length;
+  return { ok: !msgs.length, msgs, best, d: dd, n: L.length, kinds, a: R[L.indexOf(best)].a };
+}
+// t_paika: the words for every move against the facts recounted here (the opponent's most, set up nothing / stopped, the answer's {a})
+function paikaWords(P, LS3, i18n, bad) {
+  const id = 't_paika', pos = E.Pos.from(P.s), L = pos.moves(true), best = P.best, a = paikaLook(pos, best).a;
+  for (const m of L) {
+    const f = F.fact(E, id, P.s, m), r = paikaLook(pos, m), k = m === best ? 'most' : r.k;
+    if (f.k !== k || f.c !== r.c || f.a !== a) bad(`⑧ ${m}: the facts ${JSON.stringify(f)} ≠ ${k} ${r.c} / ${a}`);
+    for (const lang of LANGS) for (let j = 0; j < (lang === 'ja' ? 6 : 1); j++) {
+      const h = LS3.sayText(id, P, m, lang, j);
+      if (!h || /\{\w+\}/.test(h) || /undefined|NaN/.test(h)) { bad(`⑧ ${m} ${lang}: ${h}`); continue; }
+      const nums = (h.replace(/<[^>]+>/g, '').match(/\d+/g) || []).map(Number);
+      if (lang === 'ja' || lang === 'en') { const ok = new Set([r.c, a]); nums.forEach(x => { if (!ok.has(x)) bad(`⑧ ${m} ${lang}: the number ${x}`); }); }
+      if (lang !== 'ja') continue;
+      const oppNone = /何も取れ|どの玉も取れ|ひとつも取れ|取れる玉がな/.test(h), any = /どう動いても|どこへ(動|逃げ)ても|何をしても|どの手で(も|応じても)|どう応じられても/.test(h);
+      if (m === best) {
+        if (!oppNone || !any || !nums.includes(a)) bad(`⑧ ${m} ja: the praise does not say nothing to take, whatever the reply, ${a}`);
+        continue;
+      }
+      if (NEAR.test(h)) bad(`追66 ${m} ja: ${h}`);
+      if (PRAISE.test(h)) bad(`追20 ${m} ja: praise after a wrong move`);
+      const sayGive = nums.includes(r.c) && /取られ/.test(h), sayNone = /取れる形(が|は)(でき|作れ)てい?ない|取れる形がない|ねらいがない|ねらいが(でき|作れ)/.test(h), sayBlock = /止められ|ふさが|防が/.test(h);
+      if (k === 'give' ? !sayGive || sayNone || sayBlock : k === 'none' ? !sayNone || sayBlock || !oppNone : !sayBlock || sayNone || !oppNone) bad(`⑧ ${m} ja: said ${sayGive ? 'give' : sayNone ? 'none' : sayBlock ? 'block' : '(none)'}, the board ${k}`);
+    }
+    const key = 'ls.' + id + (m === best ? '.why' : k === 'give' ? '.ng' : k === 'none' ? '.ngNone' : '.ngBlock');
+    for (const lang of LANGS) { const tx = (i18n[lang] || {})[key]; if (!tx) bad(`⑨ 2D ${key} ${lang} missing`); else if (!/\{m\}/.test(tx) || (m === best && !/\{a\}/.test(tx)) || (m !== best && !/\{x\}/.test(tx)) || (k === 'give' && !/\{c\}/.test(tx))) bad(`⑨ 2D ${key} ${lang}: {m}/{x}/{c}/{a}`); }
+  }
 }
 // b_win (finish the game, 2026-11-27 担当E): one problem — { ok, msgs, best, d, kinds }
 //  ① ok = [the one move after which the opponent has no piece left] (every legal move played here and the opponent's pieces
@@ -565,19 +642,19 @@ function verify(opt) {
   let n = 0, okN = 0;
   for (const id of LS3.READY) {
     const st = LS.steps.find(s => s.id === id); if (!st) { add(id, 0, 'missing'); continue; }
-    const CH = id === 'b_chain', SF = id === 'b_safe', WN = id === 'b_win', BG = id === 't_big', CT = id === 't_count', TS = id === 't_stop';
-    if (!BASICS.includes(id) && !CH && !SF && !WN && !BG && !CT && !TS) { add(id, 0, 'no check for this lesson yet'); continue; }
+    const CH = id === 'b_chain', SF = id === 'b_safe', WN = id === 'b_win', BG = id === 't_big', CT = id === 't_count', TS = id === 't_stop', TP = id === 't_paika';
+    if (!BASICS.includes(id) && !CH && !SF && !WN && !BG && !CT && !TS && !TP) { add(id, 0, 'no check for this lesson yet'); continue; }
     let prevD = -1, firstD = null; const kindsSeen = new Set();
     st.problems.forEach((P, j) => {
       n++; const before = out.length;
-      const o = { pool: PL.filter(A => A.tag !== id + '#' + (j + 1)) }, r = CH ? chainProblem(P, o) : TS ? stopProblem(P, o) : CT ? countProblem(P, o) : BG ? bigProblem(P, o) : SF ? safeProblem(P, o) : WN ? winProblem(P, o) : basicProblem(id, P, o);
-      if ((SF || WN || BG || CT || TS) && r.kinds) r.kinds.forEach(k => kindsSeen.add(k));
+      const o = { pool: PL.filter(A => A.tag !== id + '#' + (j + 1)) }, r = CH ? chainProblem(P, o) : TP ? paikaProblem(P, o) : TS ? stopProblem(P, o) : CT ? countProblem(P, o) : BG ? bigProblem(P, o) : SF ? safeProblem(P, o) : WN ? winProblem(P, o) : basicProblem(id, P, o);
+      if ((SF || WN || BG || CT || TS || TP) && r.kinds) r.kinds.forEach(k => kindsSeen.add(k));
       if ((CT || TS) && r.ok) kindsSeen.add(r.ar ? 'ar' : 'ar0');
       r.msgs.forEach(m => add(id, j + 1, m));
       if (r.ok) {
         if (r.d <= prevD) add(id, j + 1, `⑥ d ${r.d} not above ${prevD}`);
         prevD = r.d; if (firstD == null) firstD = r.d;
-        if (CH) chainWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (TS) stopWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (CT) countWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (BG) bigWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (WN) winWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (SF) safeWords(P, LS3, i18n, m => add(id, j + 1, m)); else words(id, P, LS3, i18n, m => add(id, j + 1, m));
+        if (CH) chainWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (TP) paikaWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (TS) stopWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (CT) countWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (BG) bigWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (WN) winWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (SF) safeWords(P, LS3, i18n, m => add(id, j + 1, m)); else words(id, P, LS3, i18n, m => add(id, j + 1, m));
       }
       if (out.length === before) okN++;
     });
@@ -587,6 +664,7 @@ function verify(opt) {
     if (BG && !(kindsSeen.has('stop') || kindsSeen.has('stopx')) || BG && !kindsSeen.has('dead')) add(id, 0, '④ t_big: not every kind of wrong move (greedy in each, and stopped / a road to its end in the lesson)');
     if (CT && !(kindsSeen.has('back') && kindsSeen.has('ar') && kindsSeen.has('ar0'))) add(id, 0, '④ t_count: not every kind (a wrong move taken back, an answer taken back and one taken back nothing)');
     if (TS && !(kindsSeen.has('back') && kindsSeen.has('ar0'))) add(id, 0, '④ t_stop: not every kind (a wrong move of another road taken back, an answer taken back nothing)');
+    if (TP && !(kindsSeen.has('give') && kindsSeen.has('none') && kindsSeen.has('block'))) add(id, 0, '④ t_paika: not every kind of wrong move (gives a capture / sets up nothing / a set-up the opponent stops)');
     if (st.problems.length !== 5) add(id, 0, '5 problems');
     if (st.problems.length && st.problems[3] && st.problems[3].s.side !== 2) add(id, 4, '追5 problem 4 is not Black\'s');
   }
@@ -640,10 +718,14 @@ function selftest() {
     ['④', '④ t_stop: the old q1 (the best gains −2, no stop)', d => { st(d, 't_stop').problems[0] = { s: { b: 'w.w..wwwww.w.w.wwwb..wwbwbwbbb.bbbbb....bbbbb', side: 1 }, ok: ['c1-b2A'], best: 'c1-b2A' }; }],
     ['①', '① t_stop: the move going on past the stop stored as the answer', d => { const P = st(d, 't_stop').problems[1], p = E.Pos.from(P.s), g = p.moves(true).find(m => m.startsWith(P.best + '-')); P.ok = [g]; P.best = g; }],
     ['④', '④ t_stop: a t_count problem whose answer goes to its end (no stop)', d => { st(d, 't_stop').problems[2] = JSON.parse(JSON.stringify(st(d, 't_count').problems[0])); }],
+    ['②', '② t_paika: the old q3 (no move sets up a sure capture)', d => { st(d, 't_paika').problems[2] = { s: { b: '.....w.ww...........b.......b..w..b.........b', side: 1 }, ok: ['f1-g1'], best: 'f1-g1' }; }],
+    ['④', '④ t_paika: a b_safe problem (no safe wrong move)', d => { st(d, 't_paika').problems[1] = JSON.parse(JSON.stringify(st(d, 'b_safe').problems[2])); }],
+    ['①', '① t_paika: a safe move that sets up nothing stored as the answer', d => { const P = st(d, 't_paika').problems[0], p = E.Pos.from(P.s), g = p.moves(true).find(m => paikaLook(p, m).k === 'none'); P.ok = [g]; P.best = g; }],
     ['追75', '追75 a ramp move off its board', d => { st(d, 'b_choose').ramp.find(x => x.k === 'try').ok = ['a1-a2A']; }],
   ];
   let fails = 0;
-  for (const [tag, name, f] of cases) { const d = clone(); f(d); const r = verify({ data: d, ls3: LS3 }), o = r.out.find(x => x.msg.startsWith(tag)); if (!o) fails++; console.log((o ? 'ok   ' : 'MISS ') + name + (o ? '  → ' + o.id + ' ' + o.q + ' ' + o.msg : '')); }
+  // (a case named for a lesson — "① t_paika: …" — is caught only by that lesson's NG)
+  for (const [tag, name, f] of cases) { const d = clone(); f(d); const r = verify({ data: d, ls3: LS3 }), own = (/^\S+ ([bt]_\w+):/.exec(name) || [])[1], o = r.out.find(x => x.msg.startsWith(tag) && (!own || x.id === own)); if (!o) fails++; console.log((o ? 'ok   ' : 'MISS ') + name + (o ? '  → ' + o.id + ' ' + o.q + ' ' + o.msg : '')); }
   {   // the words: a wrong count in the 3D ja words
     const orig = LS3.sayText; LS3.sayText = (id, P, m, lang, k) => orig(id, P, m, lang, k).replace(/(\d+)/, (x) => String(+x + 1));
     const r = verify({ ls3: LS3 }); LS3.sayText = orig; const hit = r.out.some(o => /⑧/.test(o.msg)); if (!hit) fails++; console.log((hit ? 'ok   ' : 'MISS ') + '⑧ a wrong number in the words');
@@ -672,6 +754,10 @@ function selftest() {
     const orig = LS3.sayText; LS3.sayText = (id, P, m, lang, k) => { const h = orig(id, P, m, lang, k); return id === 't_stop' ? h.replace(/先まで|進みすぎ|続けすぎ|取りすぎ/g, 'そこで') : h; };
     const r = verify({ ls3: LS3 }); LS3.sayText = orig; const hit = r.out.some(o => o.id === 't_stop' && /⑧/.test(o.msg)); if (!hit) fails++; console.log((hit ? 'ok   ' : 'MISS ') + '⑧ t_stop: going on past the stop not said');
   }
+  {   // t_paika: a set-up the opponent stops told as no set-up
+    const orig = LS3.sayText; LS3.sayText = (id, P, m, lang, k) => { const h = orig(id, P, m, lang, k); return id === 't_paika' ? h.replace(/止められ|ふさが|防が/g, '取れる形ができていな') : h; };
+    const r = verify({ ls3: LS3 }); LS3.sayText = orig; const hit = r.out.some(o => o.id === 't_paika' && /⑧/.test(o.msg)); if (!hit) fails++; console.log((hit ? 'ok   ' : 'MISS ') + '⑧ t_paika: a stopped set-up told as none');
+  }
   {   // the 2D key missing in one language
     const I = loadI18n(); delete I.de['ls.b_choose.ngSame'];
     const r = verify({ i18n: I }); const hit = r.out.some(o => /⑨/.test(o.msg)); if (!hit) fails++; console.log((hit ? 'ok   ' : 'MISS ') + '⑨ a 2D key missing');
@@ -682,7 +768,7 @@ function selftest() {
   }
   return fails;
 }
-module.exports = { engine, values, basicProblem, chainProblem, bigProblem, countProblem, stopProblem, safeProblem, winProblem, verify, selftest, pool, near, lineOf, BASICS };
+module.exports = { engine, values, basicProblem, chainProblem, bigProblem, countProblem, stopProblem, safeProblem, winProblem, paikaProblem, paikaLook, verify, selftest, pool, near, lineOf, BASICS };
 if (require.main === module) {
   if (process.argv.includes('--selftest')) { const f = selftest(); console.log(f ? `selftest: ${f} missed` : 'selftest: all caught'); process.exit(f ? 1 : 0); }
   const r = verify();
