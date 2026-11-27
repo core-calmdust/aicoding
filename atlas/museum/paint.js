@@ -165,6 +165,8 @@
     { id: 'silverbd', w: 2048, h: 1532, rijks: 'BK-15111', bg: '#e2e2e0', spots: [[.36, .71], [.42, .25], [.88, .63], [.45, .5], [.47, .44], [.12, .37]], links: [{ g: 'checkers' }, { g: 'morris' }] },
     // (2026-11-25) the Rijksmuseum: German boxwood chess set (1550) with mounted kings and queens
     { id: 'schaak1550', w: 2048, h: 595, rijks: 'BK-NM-7402', bg: '#d9d8d6', spots: [[.45, .42], [.56, .5], [.92, .38], [.08, .4], [.33, .75], [.68, .8]], links: [{ g: 'chess' }, { ex: 'lewis' }] },
+    // (2026-11-25) the Rijksmuseum: family album photo, a backgammon box board and dice cups in a living room
+    { id: 'kraaij', w: 2048, h: 1492, rijks: 'RP-F-F01010-C', bg: '#4a3a2c', spots: [[.485, .727], [.412, .652], [.603, .708], [.453, .576], [.486, .113], [.869, .446]], links: [{ g: 'backgammon' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
