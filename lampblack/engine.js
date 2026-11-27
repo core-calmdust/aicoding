@@ -76,7 +76,7 @@
   // how often they plant a belonging, how often the weather wipes a trace, how far a figure is seen
   const DIFF = [   // 2026-11-25：村まかせでも勝ててしまうので、村の推理を弱め、痕跡を減らした（あなたの働きで勝敗が決まるように）
     // 2026-11-27：むずかしさを一段ずつ下げ（旧標準→入門・旧中級→標準・旧上級→中級）、上級と悪夢は「狼の数のほかは、誰がいるかわからない」にした
-    { id: 0, cunning: 0, size: 10, ap: 3, traces: 1, neg: .5,  player: .3,   plant: .4,  drop: .12, erase: .3,  adj: .2,  npcFind: .1,  fakeSeer: .9,  assist: false, wit: .05, sway: 1.0 },
+    { id: 0, cunning: 0, size: 10, ap: 3, traces: 1, neg: .5,  player: .3,   plant: .4,  drop: .12, erase: .3,  adj: .2,  npcFind: .1,  fakeSeer: .9,  assist: true,   wit: .05, sway: 1.0 },
     { id: 1, cunning: .7, size: 11, ap: 3, traces: 1, neg: .52, player: .35, plant: .4, drop: .12, erase: .3, adj: .2, npcFind: .14, fakeSeer: .85, assist: false, wit: .16, sway: 1.0 },   // 嘘つきの「いつもの口ぶり」が透けないよう、巧い嘘つきは中級と同じ割合。そのぶん痕跡・目撃・村の推理はやさしい
     { id: 2, cunning: .7, size: 12, ap: 3, traces: 1, neg: .6,  player: .45,  plant: .45, drop: .1,  erase: .35, adj: .17, npcFind: .15, fakeSeer: .8,  assist: false, wit: .16, sway: .9 },
     // hide: 役の伏せ方。狼の数だけは知らされ、ほかの役はくじ（mad: 狂人 0〜3人の重み、ほかは登場する確率）
