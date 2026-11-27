@@ -226,7 +226,7 @@ def paper(h, w, rng, px):
             a += rng.normal(0, 0.3); x += math.cos(a) * L / 6; y += math.sin(a) * L / 6; pts.append((x, y))
         d.line(pts, fill=int(rng.uniform(20, 70)), width=max(1, int(px * 0.25)))
     sp = np.asarray(m.filter(ImageFilter.GaussianBlur(px * 0.15)), np.float32) / 255
-    img *= (1 - sp * 0.35)[..., None] * 1.0
+    paper.specks = sp            # applied at the end, on open paper only
     grain = rng.random((h, w)).astype(np.float32)
     img *= (1 - 0.03 * (grain - 0.5))[..., None]
     return np.clip(img, 0, 1), cloud
@@ -253,7 +253,11 @@ def print_masks(masks, lines, out_png, scale=4.0, seed=7, reg=1.0, line_soft=0.3
     h, w = int(H * scale), int(W * scale)
     px = scale
     img, cloud = paper(h, w, rng, px)
+    specks = paper.specks
     yy, xx = np.mgrid[0:h, 0:w]
+    # where the drawing is dense (feathers, petals, needles) the print is kept quieter
+    detail = np.zeros((h, w), np.float32) if lines is None else np.clip(blur(lines, 5 * px) * 3.2, 0, 1)
+    cover = np.zeros((h, w), np.float32) if lines is None else lines.copy()
     inner = ((xx > FR * px - 2 * px) & (xx < (W - FR) * px + 2 * px) & (yy > FR * px - 2 * px) & (yy < (H - FR) * px + 2 * px)).astype(np.float32)
 
     # 1. key block
@@ -270,17 +274,20 @@ def print_masks(masks, lines, out_png, scale=4.0, seed=7, reg=1.0, line_soft=0.3
     for ink, a in masks.items():
         a = a * inner
         off = 1.1 * reg * px
-        a = shift(a, float(np.clip(rng.normal(0, off), -2.4 * px, 2.4 * px)), float(np.clip(rng.normal(0, off), -2.4 * px, 2.4 * px)))
-        rough = fbm(h, w, rng, 4, 55)
+        lim = 2.4 * reg * px
+        a = shift(a, float(np.clip(rng.normal(0, off), -lim, lim)), float(np.clip(rng.normal(0, off), -lim, lim)))
+        rough = 0.5 + (fbm(h, w, rng, 4, 55) - 0.5) * (1 - 0.7 * detail)
         a = np.clip((blur(a, 0.6 * px) - 0.5) * 2.8 + 0.5 + (rough - 0.5) * 0.95, 0, 1)
         ang = rng.uniform(-0.25, 0.25)
         stk = streaks(h, w, rng, ang, px)
         stk = 0.5 + (stk - 0.5) * 0.45
         mott = fbm(h, w, rng, 5, 6)                       # brush-dabbed mottling
         gran = fbm(h, w, rng, 2, 160)                     # pigment granulation
-        dens = 0.70 + 0.26 * mott + 0.10 * (stk - 0.5) + 0.10 * (gran - 0.5)
+        quiet = 1 - 0.75 * detail
+        dens = 0.84 + (0.26 * (mott - 0.5) + 0.10 * (stk - 0.5) + 0.10 * (gran - 0.5)) * quiet
         edge = np.clip(a - blur(a, 1.6 * px), 0, 1)
-        dens = dens + edge * 0.16
+        dens = dens + edge * 0.16 * quiet
+        cover = np.maximum(cover, a)
         # paper tooth: tiny skips where the brush did not push pigment into the fibres
         skip = rng.random((h // 3 + 1, w // 12 + 1)) > 0.993
         skip = np.asarray(Image.fromarray((skip * 255).astype(np.uint8)).resize((w, h), Image.BICUBIC), np.float32)[:h, :w] / 255
@@ -304,6 +311,9 @@ def print_masks(masks, lines, out_png, scale=4.0, seed=7, reg=1.0, line_soft=0.3
             img = img * (1 - alpha[..., None]) + mix * alpha[..., None]
 
     # paper grain shows through the inks a little (sized kozo surface)
+    # specks of bark and dust: only on wide open paper, away from lines and colour
+    openp = np.clip(1 - blur(cover, 2.5 * px) * 3.0, 0, 1)
+    img *= (1 - specks * 0.35 * openp)[..., None]
     tooth = fbm(h, w, rng, 2, 240)
     img *= (0.97 + 0.06 * tooth)[..., None]
 
