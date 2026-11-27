@@ -233,6 +233,10 @@
     { id: 'dewitte', w: 1558, h: 1691, rijks: 'RP-P-1913-4386', bg: '#5c564c', spots: [[.4, .49], [.55, .43], [.25, .25], [.72, .3], [.3, .62], [.06, .38]], links: [{ g: 'chess' }] },
     // (2026-11-25) the Rijksmuseum: Charles Rolls after W. Gill, 'The Orphans' playing draughts
     { id: 'orphans', w: 1080, h: 1588, rijks: 'RP-P-1905-6028', bg: '#cfc4ad', spots: [[.48, .54], [.33, .47], [.6, .45], [.55, .33], [.4, .71], [.5, .965]], links: [{ g: 'checkers' }] },
+    // (2026-11-25) the Rijksmuseum: Reckleben, Louis XIII and Richelieu at chess (1850)
+    { id: 'richelieu', w: 2048, h: 1829, rijks: 'RP-P-1907-4831', bg: '#c9c3b5', spots: [[.45, .49], [.3, .42], [.58, .42], [.07, .32], [.8, .33], [.5, .97]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Rijksmuseum: after Adam de Coster, tric-trac players by candlelight
+    { id: 'coster', w: 2048, h: 1575, rijks: 'RP-P-1960-204', bg: '#2b2824', spots: [[.38, .66], [.6, .58], [.25, .5], [.42, .35], [.13, .33], [.86, .45]], links: [{ g: 'backgammon' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
