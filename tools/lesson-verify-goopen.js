@@ -23,7 +23,7 @@ const J = f => JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8'));
 const R = require(path.join(ROOT, 'go/rules.js'));
 const EPS = 0.5, GAP = 1.0, MINV = 10;
 // ⑤・追1 見本の局面と1〜2石違いで同じ答え：2026-11-27 担当B が見つけた時点の検証済みの本の問題（作り直しのときに直す）
-const LINE_TWIN_PENDING = new Set(['fuseki_9_33 q4', 'fuseki_h4 q4']);
+const LINE_TWIN_PENDING = new Set([]);
 
 function specFrom(o) { const n = o.n || 19, a = Array(n * n).fill('.');
   for (const s of o.ab || []) a[R.parseCoord(s, n)] = 'b'; for (const s of o.aw || []) a[R.parseCoord(s, n)] = 'w';
