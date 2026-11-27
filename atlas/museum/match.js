@@ -55,7 +55,11 @@
       mk: { 18: { a: [['b6', 'c4']] }, 20: { a: [['g4', 'f3']] }, 22: { a: [['b6', 'a4']], s: ['e4'] }, 26: { s: ['e4'] }, 27: { a: [['e7', 'd8'], ['e7', 'f8']] }, 28: { a: [['d8', 'b6']], s: ['f8'] },
         30: { a: [['c3', 'd1']] }, 31: { a: [['c5', 'b6']] }, 32: { a: [['e8', 'e1']] }, 34: { a: [['c5', 'b6'], ['e6', 'c4']], s: ['b6'] }, 36: { a: [['c4', 'f1']] }, 38: { a: [['e2', 'g1']] },
         40: { a: [['c4', 'f1']] }, 44: { a: [['c3', 'd1']] }, 46: { s: ['b6'] }, 50: { s: ['d1'] }, 57: { a: [['d8', 'g8']] }, 64: { s: ['b5'] }, 70: { a: [['c5', 'g1']] }, 72: { a: [['g3', 'f1']] },
-        74: { a: [['b4', 'e1']] }, 76: { a: [['b3', 'd1']] }, 78: { a: [['e2', 'c1']] }, 80: { a: [['c3', 'b1']] }, 82: { a: [['c2', 'c1']], s: ['c1'] } } }
+        74: { a: [['b4', 'e1']] }, 76: { a: [['b3', 'd1']] }, 78: { a: [['e2', 'c1']] }, 80: { a: [['c3', 'b1']] }, 82: { a: [['c2', 'c1']], s: ['c1'] } } },
+    // (2026-11-27) Honinbo Shusaku v. Yasui Sanchi IX, 1849: Shusaku’s First Castle Game
+    { id: 'oshiro1849', kind: 'go', size: 19, res: 'B+11',
+      moves: 'qd qp dc ce ci fd de df ee cd ec cc ic oc co ep dq eq dr cm cn dm eo cg en em fe gm fi hp nq kq qq rq pq rr po qo pn qn pm qm pl kc pe oe of ne ql qb og dj di ei eh ej bf dh ch dg bg cf bj fh gq hq gp gr fr hr go fg jc kd hf oi pi pj ph mj qj if he hg mh bk be lh lg kh im ie hd mi ll kk hm ik rl rc rd mq mr lr mp lq bl ak aj cj bh cl so sp sm sr hk pf qc rb qe gn ho io jo hn in ip gl fm lo er dp fq kl dn do fo lk bp bq br cq bd ae bn bo ao bm am an bi ai bn aq al ap kj hi mg mf nh nf mc qr rs nr nl nm ml mm jb ib ka db ds cs es cr cb ia jp kp lf me sd se sc qf hj gj ij nc nb nd od md lc le kf ls ks ms jr pb ob pc pa ih gf ge fk gk jl jm il hl fj gi da ea ca oj nj ok ol lj ii hh jh ig nk pk gg ng mh jg kg an dd ed ao oh an ad ac fl el lp qs ps pp op om on li rm ro rn sn ja kb so rp id ni sn',
+      mk: {1: {'s':['qd']},5: {'s':['ci']},15: {'s':['co']},43: {'s':['pl']},76: {'s':['oi']}} }
   ];
 
   /* ---------- the kinds ---------- */
