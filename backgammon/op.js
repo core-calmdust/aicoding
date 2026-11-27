@@ -5,7 +5,7 @@
 // Loaded after app.js (shares its globals: lesson, turn, view, render, …).
 'use strict';
 let OPB = null;
-const opReady = fetch('openings.json?v=20261126rq2').then(r => r.json()).then(d => (OPB = d)).catch(() => null);
+const opReady = fetch('openings.json?v=20261128rq3').then(r => r.json()).then(d => (OPB = d)).catch(() => null);
 const OP_STORE = STORE + '-open', OP_TAB = STORE + '-optab';
 function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{}'); } catch (e) { return {}; } }
 function opSave(p) { try { localStorage.setItem(OP_STORE, JSON.stringify(p)); } catch (e) {} }
