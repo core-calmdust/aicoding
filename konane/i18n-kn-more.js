@@ -1897,3 +1897,134 @@ tr: {
 "ls.b_jump.ng.missT": "{x} تترك حجر الخصم القادر على القفز قائمًا، وذلك الحجر يقفز بـ {r} (أزرق)."
 }
 });
+
+// (2026-11-27 担当C) b_open「最初の取り除きと最初の跳び」: the board right after the two removals; pick the first jump that leaves the
+// opponent the fewest jumps (konane/ls-facts.js b_open: why {m} {j} · ng {x} {j} and the answer {m} {j0})
+(function (A) { for (const l in A) if (window.I18N) I18N[l] = Object.assign(I18N[l] || {}, A[l]); })({
+"ja": {
+"ls.b_open.title": "最初の取り除きと最初の跳び",
+"ls.b_open.sub": "相手の跳ぶ手を少なく",
+"ls.b_open.intro": "<p>コナネは盤いっぱいの石から始まり、最初の2手は石を取り除くだけです。黒は中央の4マスか四隅の黒の石を、白はその穴のすぐ隣の白の石を取り除きます。そのあとの跳びは、あいた穴へ跳び込む手だけ。どの向きから跳び込むかで、相手が次に跳べる手の数が変わります。</p>",
+"ls.b_open.goal": "取り除きは済んでいます。相手の跳べる手がいちばん少なくなる跳びを選ぼう。",
+"ls.b_open.hint": "光っている石はどれも穴へ跳べます。1つずつ跳んだつもりで、相手の跳べる手を数えてくらべよう。",
+"ls.b_open.why": "{m} のあと、相手の跳べる手は{j}通り。ほかのどの跳びよりも少なくなります。",
+"ls.b_open.ng": "{x} のあと、相手の跳べる手は{j}通り。{m} なら{j0}通りに減らせます。"
+},
+"en": {
+"ls.b_open.title": "The removals and the first jumps",
+"ls.b_open.sub": "Leave the opponent fewer jumps",
+"ls.b_open.intro": "<p>Kōnane starts with a full board, and the first two moves only lift stones off: Black one of its stones in the centre four or a corner, White one of its stones right next to that hole. After that, the only jumps are into the hole — and which side you jump in from changes how many jumps the opponent has next.</p>",
+"ls.b_open.goal": "The removals are done. Pick the jump that leaves the opponent the fewest jumps.",
+"ls.b_open.hint": "Every glowing stone can jump into the hole. Try each in your head and count the opponent’s jumps after it.",
+"ls.b_open.why": "After {m} the opponent has {j} jumps — fewer than after any other jump.",
+"ls.b_open.ng": "After {x} the opponent has {j} jumps. After {m} it would have {j0}."
+},
+"zh": {
+"ls.b_open.title": "开局取子与第一跳",
+"ls.b_open.sub": "让对手的跳法变少",
+"ls.b_open.intro": "<p>科纳内从满盘开始，前两步只是取下棋子：黑方取中央4格或四角的黑子，白方取紧挨那个空格的白子。之后的跳只能跳进空出来的洞。从哪个方向跳进去，会改变对手下一步的跳法数量。</p>",
+"ls.b_open.goal": "取子已经完成。选出让对手跳法最少的一跳。",
+"ls.b_open.hint": "亮起的子都能跳进洞里。逐个设想跳过去，数一数之后对手有几种跳法。",
+"ls.b_open.why": "{m} 之后，对手有{j}种跳法，比其他任何一跳都少。",
+"ls.b_open.ng": "{x} 之后，对手有{j}种跳法。{m} 之后只有{j0}种。"
+},
+"zh-TW": {
+"ls.b_open.title": "開局拿子與第一跳",
+"ls.b_open.sub": "讓對手的跳法變少",
+"ls.b_open.intro": "<p>柯納尼從滿盤開始，前兩步只拿掉棋子：黑方拿中央四格或角落的自己的棋子，白方拿緊鄰那個空洞的自己的棋子。之後的跳只能跳進空出來的洞。從哪個方向跳進去，會改變對手下一步的跳法數量。</p>",
+"ls.b_open.goal": "拿子已經完成。選出讓對手跳法最少的一跳。",
+"ls.b_open.hint": "亮起的子都能跳進洞裡。逐一設想跳過去，數一數之後對手有幾種跳法。",
+"ls.b_open.why": "{m} 之後，對手有{j}種跳法，比其他任何一跳都少。",
+"ls.b_open.ng": "{x} 之後，對手有{j}種跳法。{m} 之後只有{j0}種。"
+},
+"ko": {
+"ls.b_open.title": "첫 빼기와 첫 뛰기",
+"ls.b_open.sub": "상대가 뛸 수를 적게",
+"ls.b_open.intro": "<p>코나네는 판 가득한 돌에서 시작하고, 처음 두 수는 돌을 빼기만 합니다. 흑은 가운데 4칸이나 네 구석의 흑 돌을, 백은 그 구멍 바로 옆의 백 돌을 뺍니다. 그다음 뛰기는 비어 있는 구멍으로 뛰어드는 수뿐입니다. 어느 쪽에서 뛰어드느냐에 따라 상대가 다음에 뛸 수 있는 수가 달라집니다.</p>",
+"ls.b_open.goal": "빼기는 끝났습니다. 상대가 뛸 수가 가장 적어지는 뛰기를 고르자.",
+"ls.b_open.hint": "빛나는 돌은 모두 구멍으로 뛸 수 있습니다. 하나씩 뛰어 본다고 생각하고, 그 뒤 상대가 뛸 수를 세어 비교하자.",
+"ls.b_open.why": "{m} 뒤에 상대가 뛸 수는 {j}가지. 다른 어떤 뛰기보다 적습니다.",
+"ls.b_open.ng": "{x} 뒤에 상대가 뛸 수는 {j}가지. {m} 이면 {j0}가지로 줄일 수 있습니다."
+},
+"es": {
+"ls.b_open.title": "Las retiradas y los primeros saltos",
+"ls.b_open.sub": "Deja menos saltos al rival",
+"ls.b_open.intro": "<p>El kōnane empieza con el tablero lleno y las dos primeras jugadas solo retiran piedras: las negras una suya del centro o de una esquina, las blancas una suya junto a ese hueco. Después, los únicos saltos son hacia el hueco, y el lado desde el que saltas cambia cuántos saltos tendrá el rival.</p>",
+"ls.b_open.goal": "Las retiradas ya están hechas. Elige el salto que deja al rival con menos saltos.",
+"ls.b_open.hint": "Todas las piedras iluminadas pueden saltar al hueco. Prueba cada una mentalmente y cuenta los saltos del rival después.",
+"ls.b_open.why": "Tras {m} el rival tiene {j} saltos: menos que tras cualquier otro salto.",
+"ls.b_open.ng": "Tras {x} el rival tiene {j} saltos. Tras {m} tendría {j0}."
+},
+"fr": {
+"ls.b_open.title": "Les retraits et les premiers sauts",
+"ls.b_open.sub": "Laisser moins de sauts à l’adversaire",
+"ls.b_open.intro": "<p>Le kōnane commence plateau plein, et les deux premiers coups ne font que retirer des pierres : les noirs une des leurs au centre ou dans un coin, les blancs une des leurs juste à côté de ce trou. Ensuite, les seuls sauts vont dans le trou, et le côté d’où l’on saute change le nombre de sauts de l’adversaire.</p>",
+"ls.b_open.goal": "Les retraits sont faits. Choisissez le saut qui laisse le moins de sauts à l’adversaire.",
+"ls.b_open.hint": "Toutes les pierres qui brillent peuvent sauter dans le trou. Essayez-les une à une et comptez les sauts de l’adversaire ensuite.",
+"ls.b_open.why": "Après {m}, l’adversaire a {j} sauts : moins qu’après n’importe quel autre saut.",
+"ls.b_open.ng": "Après {x}, l’adversaire a {j} sauts. Après {m}, il en aurait {j0}."
+},
+"pt": {
+"ls.b_open.title": "As retiradas e os primeiros saltos",
+"ls.b_open.sub": "Deixe menos saltos ao rival",
+"ls.b_open.intro": "<p>O kōnane começa com o tabuleiro cheio, e os dois primeiros lances só retiram pedras: as pretas uma sua do centro ou de um canto, as brancas uma sua logo ao lado desse buraco. Depois, os únicos saltos são para dentro do buraco, e o lado de onde você salta muda quantos saltos o rival terá.</p>",
+"ls.b_open.goal": "As retiradas já foram feitas. Escolha o salto que deixa o rival com menos saltos.",
+"ls.b_open.hint": "Todas as pedras iluminadas podem saltar para o buraco. Teste cada uma mentalmente e conte os saltos do rival depois.",
+"ls.b_open.why": "Depois de {m} o rival tem {j} saltos: menos do que depois de qualquer outro salto.",
+"ls.b_open.ng": "Depois de {x} o rival tem {j} saltos. Depois de {m} teria {j0}."
+},
+"de": {
+"ls.b_open.title": "Das Abnehmen und die ersten Sprünge",
+"ls.b_open.sub": "Dem Gegner weniger Sprünge lassen",
+"ls.b_open.intro": "<p>Kōnane beginnt mit vollem Brett, und die ersten beiden Züge nehmen nur Steine ab: Schwarz einen eigenen aus der Mitte oder einer Ecke, Weiß einen eigenen direkt neben diesem Loch. Danach gehen alle Sprünge ins Loch – und von welcher Seite du hineinspringst, ändert, wie viele Sprünge der Gegner danach hat.</p>",
+"ls.b_open.goal": "Das Abnehmen ist erledigt. Wähle den Sprung, der dem Gegner die wenigsten Sprünge lässt.",
+"ls.b_open.hint": "Jeder leuchtende Stein kann ins Loch springen. Probiere jeden im Kopf und zähle danach die Sprünge des Gegners.",
+"ls.b_open.why": "Nach {m} hat der Gegner {j} Sprünge – weniger als nach jedem anderen Sprung.",
+"ls.b_open.ng": "Nach {x} hat der Gegner {j} Sprünge. Nach {m} hätte er {j0}."
+},
+"ru": {
+"ls.b_open.title": "Снятия и первые прыжки",
+"ls.b_open.sub": "Оставить сопернику меньше прыжков",
+"ls.b_open.intro": "<p>Конане начинается с полной доски, и первые два хода лишь снимают камни: чёрные — свой камень в центре или углу, белые — свой камень прямо рядом с этой дырой. Потом прыгать можно только в дыру, и то, с какой стороны вы в неё прыгаете, меняет число прыжков у соперника.</p>",
+"ls.b_open.goal": "Снятия уже сделаны. Выберите прыжок, после которого у соперника меньше всего прыжков.",
+"ls.b_open.hint": "Каждый светящийся камень может прыгнуть в дыру. Попробуйте каждый мысленно и посчитайте прыжки соперника после него.",
+"ls.b_open.why": "После {m} у соперника прыжков: {j} — меньше, чем после любого другого прыжка.",
+"ls.b_open.ng": "После {x} у соперника прыжков: {j}. После {m} было бы {j0}."
+},
+"tr": {
+"ls.b_open.title": "Kaldırmalar ve ilk atlamalar",
+"ls.b_open.sub": "Rakibe daha az atlama bırak",
+"ls.b_open.intro": "<p>Kōnane dolu bir tahtayla başlar ve ilk iki hamle yalnızca taş kaldırır: Siyah ortadaki dört karede ya da köşedeki kendi taşını, Beyaz o deliğin hemen yanındaki kendi taşını. Sonrasında atlamalar yalnızca deliğe olur ve deliğe hangi yandan atladığın, rakibin sonraki atlama sayısını değiştirir.</p>",
+"ls.b_open.goal": "Kaldırmalar yapıldı. Rakibe en az atlama bırakan atlamayı seç.",
+"ls.b_open.hint": "Parlayan taşların hepsi deliğe atlayabilir. Her birini aklında dene ve sonrasında rakibin atlamalarını say.",
+"ls.b_open.why": "{m} sonrasında rakibin {j} atlaması var: başka her atlamadan daha az.",
+"ls.b_open.ng": "{x} sonrasında rakibin {j} atlaması var. {m} sonrasında {j0} olurdu."
+},
+"id": {
+"ls.b_open.title": "Pengangkatan dan lompatan pertama",
+"ls.b_open.sub": "Sisakan lebih sedikit lompatan bagi lawan",
+"ls.b_open.intro": "<p>Kōnane dimulai dengan papan penuh, dan dua langkah pertama hanya mengangkat batu: Hitam satu batunya di empat petak tengah atau sudut, Putih satu batunya tepat di sebelah lubang itu. Setelah itu, lompatan hanya bisa masuk ke lubang, dan dari sisi mana kamu melompat masuk mengubah berapa lompatan lawan berikutnya.</p>",
+"ls.b_open.goal": "Pengangkatan sudah selesai. Pilih lompatan yang menyisakan lompatan paling sedikit bagi lawan.",
+"ls.b_open.hint": "Semua batu yang menyala bisa melompat ke lubang. Coba satu per satu dalam pikiran dan hitung lompatan lawan setelahnya.",
+"ls.b_open.why": "Setelah {m} lawan punya {j} lompatan — lebih sedikit daripada setelah lompatan lain mana pun.",
+"ls.b_open.ng": "Setelah {x} lawan punya {j} lompatan. Setelah {m} hanya {j0}."
+},
+"hi": {
+"ls.b_open.title": "शुरुआती हटाना और पहली छलाँगें",
+"ls.b_open.sub": "विरोधी के लिए कम छलाँगें छोड़ो",
+"ls.b_open.intro": "<p>कोनाने भरे बोर्ड से शुरू होता है, और पहली दो चालें सिर्फ़ पत्थर हटाती हैं: काला बीच के चार खानों या किसी कोने से अपना पत्थर, सफ़ेद उस छेद के ठीक बगल से अपना पत्थर। उसके बाद छलाँगें सिर्फ़ छेद में ही होती हैं, और तुम किस ओर से छेद में कूदते हो, इससे विरोधी की अगली छलाँगों की गिनती बदल जाती है।</p>",
+"ls.b_open.goal": "हटाना हो चुका है। वह छलाँग चुनो जिसके बाद विरोधी के पास सबसे कम छलाँगें बचें।",
+"ls.b_open.hint": "चमकते सभी पत्थर छेद में कूद सकते हैं। हर एक को मन में आज़माओ और उसके बाद विरोधी की छलाँगें गिनो।",
+"ls.b_open.why": "{m} के बाद विरोधी के पास {j} छलाँगें हैं — किसी भी दूसरी छलाँग से कम।",
+"ls.b_open.ng": "{x} के बाद विरोधी के पास {j} छलाँगें हैं। {m} के बाद {j0} होतीं।"
+},
+"ar": {
+"ls.b_open.title": "النزع الافتتاحي والقفزات الأولى",
+"ls.b_open.sub": "اترك للخصم قفزات أقل",
+"ls.b_open.intro": "<p>تبدأ الكونانيه بلوحة ممتلئة، والنقلتان الأوليان تنزعان أحجارًا فقط: الأسود حجرًا له من المربعات الأربعة في الوسط أو من زاوية، والأبيض حجرًا له ملاصقًا لتلك الحفرة. بعد ذلك تكون كل القفزات إلى داخل الحفرة، والجهة التي تقفز منها تغيّر عدد قفزات الخصم التالية.</p>",
+"ls.b_open.goal": "انتهى النزع. اختر القفزة التي تترك للخصم أقل عدد من القفزات.",
+"ls.b_open.hint": "كل الأحجار المضيئة تستطيع القفز إلى الحفرة. جرّب كل واحد في ذهنك وعُدّ قفزات الخصم بعده.",
+"ls.b_open.why": "بعد {m} يبقى عدد قفزات الخصم: {j} — أقل مما بعد أي قفزة أخرى.",
+"ls.b_open.ng": "بعد {x} يبقى عدد قفزات الخصم: {j}. بعد {m} كان سيصبح {j0}."
+}
+});
