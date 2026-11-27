@@ -1,0 +1,120 @@
+/* 世界のボドゲ大百科の麻雀（riichi/）— 大百科のUIの色と文字（2026-11-27、ユーザー「UIのカラーや文字デザインも大百科に寄せて」）。
+   大百科（atlas/index.html）の約束：クリーム色の紙（--paper・--cream）、紺の文字（--ink）、ベージュの線（--line）、丸ゴシック（Zen Maru
+   Gothic・Fredoka）、角の丸い箱と、下に厚みの影がつく丸いボタン（主ボタンは珊瑚色 --coral）。3Dの卓（緑のフェルト）はそのまま。
+   雀華（../mahjong/app.css → app-classic.css）の黒漆と金・明朝を、ここで上書きする。 */
+html.classic{
+  --cream:#fff6e2; --paper:#fffdf7; --ink:#2b3044; --ink2:#6a7088; --line:#efe3c8;
+  --coral:#ff5d5d; --coral2:#d93c3c; --sky:#36b4ff; --sky2:#1789d6; --sun:#ffc928; --sun2:#e09a00; --mint:#3ccf91; --mint2:#1ea36c;
+  --af:'Zen Maru Gothic','Fredoka','Noto Sans JP',system-ui,sans-serif; --ar:'Fredoka','Zen Maru Gothic',system-ui,sans-serif;
+  --serif:var(--af); --ui:var(--af); --gold:var(--ink); --gold2:var(--ink2); --gl:var(--ink2); --gl2:var(--ink); --line2:var(--line);
+}
+/* the letters: the Atlas' rounded faces everywhere (the tiles are pictures: untouched) */
+html.classic body,html.classic #root,html.classic #root :is(div,span,b,small,em,p,h2,h3,h4,h5,button,a,label,input,select,kbd,i,strong,li,section,header,nav),html.classic .grc-ov *{font-family:var(--af)!important;letter-spacing:.02em!important;text-indent:0!important}
+html.classic :is(.ag-pw,.mv-p,.fn-r .sc,.rk-pts b,.ps-big b,.lr-sc b,.cl-lv b,.ol-rate b,.ap-rank b){font-family:var(--ar)!important}
+
+/* ---------------- boxes (dialogs, lists, stats) ---------------- */
+html.classic .modal{background:rgba(43,48,68,.42)!important;backdrop-filter:blur(3px)}
+html.classic .mbox{background:var(--paper)!important;color:var(--ink)!important;border:3px solid var(--line)!important;border-radius:26px!important;box-shadow:0 2px 0 rgba(43,48,68,.06),0 18px 40px -14px rgba(120,80,20,.45)!important;outline:0!important}
+html.classic .mbox::before,html.classic .mbox::after{display:none!important}
+html.classic .mbox :is(h2,h3,h4,b,strong,p,span,small,label,li,em){color:inherit;text-shadow:none!important}
+html.classic .mbox :is(h2,h3){color:var(--ink)!important;font-weight:900!important;background:none!important;-webkit-text-fill-color:currentColor!important}
+html.classic .mbox small{color:var(--ink2)!important}
+html.classic .mbox :is(section,.ps-sec,.ps-big>div,.ps-grid>div,.st-row,.rk-row,.lx-card,.lx-node .lx-med,.ol-seat,.ol-rate,.ol-code,.ol-pane,.rk-me){background:#fff!important;border-color:var(--line)!important;box-shadow:none!important;color:var(--ink)!important}
+html.classic .mbox :is(.ps-big>div,.ps-grid>div,.ol-seat,.ol-rate,.rk-row,.lx-card){border:2px solid var(--line)!important;border-radius:16px!important}
+html.classic .mbox .x,html.classic .ps-box .x{background:#fff!important;border:2px solid var(--line)!important;color:var(--ink)!important;border-radius:50%!important;box-shadow:0 2px 0 var(--line)!important}
+
+/* buttons: the Atlas' pills — coral for the main one, white for the others */
+html.classic :is(.mbox,.ps-box,.ls-guide,.ls-res,.agst,.fnst,#modal) .btn,html.classic .cbtns .btn{background:#fff!important;color:var(--ink)!important;border:2px solid var(--line)!important;border-radius:99px!important;box-shadow:0 3px 0 var(--line)!important;font-weight:900!important;text-shadow:none!important;-webkit-text-fill-color:currentColor!important}
+html.classic :is(.mbox,.ps-box,.ls-guide,.ls-res,.agst,.fnst,#modal) .btn.gold,html.classic .cbtns .btn.gold,html.classic .go,html.classic .rk-b{background:var(--coral)!important;color:#fff!important;border:0!important;box-shadow:0 4px 0 var(--coral2)!important;border-radius:99px!important;-webkit-text-fill-color:#fff!important}
+html.classic :is(.btn,.go,.rk-b)::before,html.classic :is(.btn,.go,.rk-b)::after{display:none!important}
+html.classic .btn kbd,html.classic .ab kbd{background:rgba(255,255,255,.75)!important;color:var(--ink)!important;border:1.5px solid var(--line)!important;border-bottom-width:3px!important;border-radius:6px!important}
+
+/* segments and tabs */
+html.classic :is(.seg,.ps-tabs,.ol-tabs,.lx-tabs,.lx-cats){background:#f6efdd!important;border:0!important;border-radius:99px!important;box-shadow:none!important}
+html.classic :is(.seg,.ps-tabs,.ol-tabs) button,html.classic .lx-cats button{background:transparent!important;color:var(--ink2)!important;border:0!important;border-radius:99px!important;box-shadow:none!important;font-weight:900!important;-webkit-text-fill-color:currentColor!important}
+html.classic :is(.seg,.ps-tabs,.ol-tabs) button.on,html.classic .lx-cats button.on{background:var(--ink)!important;color:#fff!important;box-shadow:0 3px 0 #161a28!important}
+html.classic .lx-tabs button{background:#fff!important;border:2px solid var(--line)!important;border-radius:18px!important;color:var(--ink)!important;box-shadow:0 3px 0 var(--line)!important}
+html.classic .lx-tabs button.on{border-color:var(--ink)!important;box-shadow:0 3px 0 var(--ink)!important}
+html.classic .lx-tabs button svg,html.classic .lx-tabs button i{color:var(--ink)!important}
+html.classic input:not([type=range]),html.classic select{background:#fff!important;color:var(--ink)!important;border:2px solid var(--line)!important;border-radius:12px!important}
+
+/* ---------------- the game's HUD over the table ---------------- */
+html.classic #game .tbtns .ib,html.classic #game .ib{background:#fff!important;color:var(--ink)!important;border:2px solid var(--line)!important;border-radius:50%!important;box-shadow:0 2px 0 var(--line)!important}
+html.classic #game .ib svg{color:var(--ink)!important;stroke:currentColor}
+/* the seats: the face on a white disc, the name on a cream pill, the wind as a navy token */
+html.classic #game :is(.opp,.me) .bf .frame{border-radius:20px!important;box-shadow:0 0 0 3px #fff,0 4px 0 3px var(--line),0 10px 18px -8px rgba(0,0,0,.5)!important;background:#fff!important}
+html.classic #game :is(.opp,.me) .bf .frame img{border-radius:18px!important}
+html.classic #game :is(.opp,.me) .bf em{background:var(--ink)!important;color:#fff!important;border:2px solid #fff!important;box-shadow:0 2px 0 rgba(0,0,0,.25)!important;font-weight:900!important}
+html.classic #game :is(.opp,.me) .bf.dealer em{background:var(--coral)!important}
+html.classic #game :is(.opp,.me) .bt b{background:var(--paper)!important;color:var(--ink)!important;border:2px solid var(--line)!important;border-radius:99px!important;box-shadow:0 2px 0 var(--line)!important;font-weight:900!important;-webkit-text-fill-color:currentColor!important}
+html.classic #game .riiflag{background:var(--coral)!important;color:#fff!important;border-radius:99px!important}
+/* the dora box at the top left */
+html.classic #game .rbox{background:rgba(255,253,247,.94)!important;border:2px solid var(--line)!important;border-radius:18px!important;box-shadow:0 3px 0 var(--line),0 10px 20px -10px rgba(0,0,0,.5)!important;color:var(--ink)!important}
+html.classic #game .rbox *{color:var(--ink)!important}
+/* the call / win buttons: the Atlas' pills (ロン・ツモ coral, リーチ sun, ポン・チー・カン sky, パス white) */
+html.classic #acts .ab,html.classic .da-b .ab{border-radius:99px!important;border:0!important;font-weight:900!important;color:#fff!important;-webkit-text-fill-color:#fff!important;text-shadow:none!important}
+html.classic #acts .ab::before,html.classic #acts .ab::after{display:none!important}
+html.classic #acts .ab.win{background:var(--coral)!important;box-shadow:0 4px 0 var(--coral2)!important}
+html.classic #acts .ab.rii{background:var(--sun)!important;box-shadow:0 4px 0 var(--sun2)!important;color:var(--ink)!important;-webkit-text-fill-color:var(--ink)!important}
+html.classic #acts .ab.rii.on{background:var(--ink2)!important;box-shadow:0 4px 0 var(--ink)!important;color:#fff!important;-webkit-text-fill-color:#fff!important}
+html.classic #acts .ab.call,html.classic .da-b .ab.call{background:var(--sky)!important;box-shadow:0 4px 0 var(--sky2)!important}
+html.classic #acts .ab.skip,html.classic .da-b .ab.skip{background:#fff!important;color:var(--ink)!important;-webkit-text-fill-color:var(--ink)!important;border:2px solid var(--line)!important;box-shadow:0 4px 0 var(--line)!important}
+html.classic .chiPick{background:var(--paper)!important;border:2px solid var(--line)!important;border-radius:18px!important}
+html.classic .callout{color:var(--ink)!important}
+html.classic .toast{background:var(--ink)!important;color:#fff!important;border-radius:99px!important;border:0!important}
+html.classic .khelp{background:var(--paper)!important;color:var(--ink)!important;border:2px solid var(--line)!important;border-radius:18px!important}
+html.classic .khelp *{color:var(--ink)!important}
+
+/* ---------------- the lessons' guide (クジャクパイ) ---------------- */
+html.classic #game .ls-guide .lg-face{border-radius:50%!important;background:#fff!important;box-shadow:0 0 0 3px #fff,0 4px 0 3px var(--line)!important;object-fit:contain!important}
+html.classic #game .ls-guide .lg-bub{background:var(--paper)!important;color:var(--ink)!important;border:3px solid var(--line)!important;border-radius:22px!important;box-shadow:0 4px 0 var(--line),0 14px 28px -14px rgba(0,0,0,.6)!important}
+html.classic #game .ls-guide .lg-bub::before,html.classic #game .ls-guide .lg-bub::after{display:none!important}
+html.classic #game .ls-guide :is(p,b,small,span){color:var(--ink)!important;text-shadow:none!important}
+html.classic #game .ls-guide .lg-top small{color:var(--ink2)!important}
+html.classic #game .ls-guide .lg-sc{background:var(--sun)!important;color:var(--ink)!important;border:0!important;border-radius:99px!important}
+html.classic #game .ls-guide .lg-quit{background:none!important;color:var(--ink2)!important;border:0!important;text-decoration:underline}
+html.classic #game .ls-guide.good .lg-bub{border-color:var(--mint)!important}
+html.classic #game .ls-guide.bad .lg-bub{border-color:var(--coral)!important}
+html.classic #game .ls-guide .lg-again{color:var(--ink2)!important}
+
+/* ---------------- the result screens: a cream card on the dim table ---------------- */
+html.classic .agst-bg{background:var(--paper)!important;border-color:var(--line)!important;box-shadow:0 18px 40px -14px rgba(0,0,0,.6)!important}
+html.classic .agst :is(h2,b,span,small,em,p,div){text-shadow:none!important}
+html.classic .agst-main :is(h2,.fn-t){color:var(--ink)!important;-webkit-text-fill-color:currentColor!important;background:none!important}
+html.classic .fn-r{background:#fff!important;border:2px solid var(--line)!important;border-radius:18px!important;box-shadow:0 3px 0 var(--line)!important;clip-path:none!important}
+html.classic .fn-r *{color:var(--ink)!important}
+html.classic .fn-r.mine{border-color:var(--coral)!important;box-shadow:0 3px 0 var(--coral2)!important}
+html.classic .fn-foot{background:#fff!important;border:2px solid var(--line)!important;border-radius:18px!important;color:var(--ink)!important}
+html.classic .fn-foot *{color:var(--ink)!important}
+/* the record (スタッツ) — its own box, not a .mbox */
+html.classic .pstats{background:rgba(43,48,68,.42)!important}
+html.classic .ps-box{background:none!important;border:0!important;box-shadow:none!important}
+html.classic .ps-main{background:var(--paper)!important;color:var(--ink)!important;border:3px solid var(--line)!important;border-radius:26px!important;box-shadow:0 18px 40px -14px rgba(120,80,20,.45)!important}
+html.classic .ps-box::before,html.classic .ps-box::after,html.classic .ps-main::before,html.classic .ps-main::after{display:none!important}
+html.classic .ps-box :is(h4,h5,b,span,small,em,p,div){text-shadow:none!important}
+html.classic .ps-box :is(.ps-id b,h4,h5){color:var(--ink)!important;-webkit-text-fill-color:currentColor!important;background:none!important}
+html.classic .ps-box :is(small,.ps-note,.ps-empty){color:var(--ink2)!important}
+html.classic .ps-box :is(.ps-big>div,.ps-grid>div,.ps-sec,.ph-r,.ps-rbar,.ps-yk){background:#fff!important;border:2px solid var(--line)!important;border-radius:16px!important;box-shadow:none!important;color:var(--ink)!important}
+html.classic .ps-box :is(.ps-big b,.ps-grid b,.ph-s,.ph-pl){color:var(--ink)!important;-webkit-text-fill-color:currentColor!important}
+html.classic .ps-box .ps-yt{background:#fff!important;border:2px solid var(--line)!important;border-radius:99px!important;color:var(--ink)!important;box-shadow:0 2px 0 var(--line)!important}
+html.classic .ps-box .ps-yk i{background:#f6efdd!important}
+html.classic .ps-box .ps-yk i u{background:var(--mint)!important}
+/* the settings' volume rows */
+html.classic .st-v{background:#fff!important;border:2px solid var(--line)!important}
+html.classic .st-m{background:var(--ink)!important;color:#fff!important;border-radius:50%!important}
+html.classic .st-vol.off .st-m{background:#f6efdd!important;color:var(--ink2)!important}
+html.classic .st-vol small b{color:var(--ink)!important}
+html.classic .st-v input[type=range]{background:none!important;border:0!important}
+html.classic .st-v input[type=range]::-webkit-slider-runnable-track{background:linear-gradient(90deg,var(--coral) var(--p),#f0e6cf var(--p))!important}
+html.classic .st-v input[type=range]::-moz-range-track{background:linear-gradient(90deg,var(--coral) var(--p),#f0e6cf var(--p))!important}
+html.classic .st-note{color:var(--ink2)!important}
+/* the lessons' list: the guide's bubble and the progress ring as cream cards */
+html.classic .lx :is(h2,h3,b,span,small,em,p){text-shadow:none!important;-webkit-text-stroke:0!important}
+html.classic .lx-say{background:var(--paper)!important;color:var(--ink)!important;border:2px solid var(--line)!important;box-shadow:0 3px 0 var(--line),0 10px 20px -10px rgba(0,0,0,.5)!important}
+html.classic .lx-say b{color:var(--ink2)!important}
+html.classic .lx-prog{background:var(--paper)!important;border:2px solid var(--line)!important}
+html.classic .lx-prog :is(b,em){color:var(--ink)!important}
+html.classic .lx-prog small{color:var(--ink2)!important}
+html.classic .lx-ring .bg{stroke:#f0e6cf!important}
+html.classic .lx-ring .fg{stroke:var(--coral)!important;filter:none!important}
+html.classic .lx-h h2,html.classic :is(.mbox,.ps-main) h2{background:none!important;color:var(--ink)!important;-webkit-text-fill-color:var(--ink)!important;filter:none!important;font-weight:900!important}
