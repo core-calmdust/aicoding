@@ -78,12 +78,12 @@
 
 | 担当 | 範囲（めやす） | ブランチ | 実行（UTC） |
 |---|---|---|---|
-| C | konane（2026-11-27 済み）→ **latrunculi のレッスン7本35問**（2026-11-27 20:30 ユーザー指示で追加） | `lesson-new-c-` | 毎時31分 |
-| D | janggi の NG 直し → ugolki s_count → latrunculi のパズル250問（済み）→ **agon のレッスン後半4本 s_double・s_tempo・s_win2・s_best**（2026-11-27 21:35 ユーザー指示で追加） | `lesson-new-d-` | 毎時1分 |
-| E | fanorona のレッスン12本 | `lesson-new-e-` | 毎時11分 |
-| F | agon（パズル152問・レッスン b_step・b_throne・b_capture・b_reloc・b_safe は済み）→ agon のレッスン前半4本 b_safe・s_block・b_finish・s_queencap（**すべて済み、2026-11-27 23:55 担当F 完了**） | `lesson-new-f-` | 毎時41分 |
+| C | konane・latrunculi のレッスン（済み）→ **fanorona のレッスン e_trap**（2026-11-28 00:15 ユーザー指示で再配分） | `lesson-new-c-` | 毎時31分 |
+| D | janggi・ugolki・latrunculi のパズル・agon の s_double・s_win2（済み）→ **agon のレッスン s_tempo** | `lesson-new-d-` | 毎時1分 |
+| E | fanorona のレッスン（t_stop まで済み）→ **e_hunt**（t_paika まで済み） | `lesson-new-e-` | 毎時11分 |
+| F | agon のパズル・レッスン前半（済み）→ **agon のレッスン s_best** | `lesson-new-f-` | 毎時41分 |
 
-1ゲームを2人で分けない（同じゲームのデータで衝突するため）。例外：latrunculi はパズル（担当D）とレッスン（担当C）で分ける（2026-11-27 ユーザー指示「C の担当が終わったので他に作業を振って」）。agon のレッスンも、前半4本（b_safe・b_finish・s_block・s_queencap）は担当F、後半4本（s_double・s_tempo・s_win2・s_best）は担当D で分ける（2026-11-27 21:35 ユーザー指示「担当D も完了」）。同じファイル（agon/lessons.json・atlas/ls-agon.js の READY・tools/lesson-verify-agon-ls.js）を触るが、自分の本の行だけを変え、マージ前に main を取り込んで両方を残す。共通の部分（ls-agon.js の読み込み・セリフの仕組み・lesson-verify-agon-ls.js の共通の検査）を変えるのは F だけにし、D は自分の本に要る分だけを足す。C は lessons.json・atlas/ls-latrunculi.js・tools/lesson-verify-latrunculi-ls.js と2D のレッスン部分だけを触り、D の puzzles.json・latrunculi/pzwhy.js・atlas/games/latrunculi-pz.js・tools/lesson-verify-latrunculi.js には手を出さない。3D卓のアダプタ atlas/games/latrunculi.js のパズル／レッスンモード（ctx.pz・api.pz）は D が先に作る。D のその PR がマージされる前は、C は2D のレッスンの検証・作り直しと機械チェック（-ls.js）まで進め、3D に出すのは D のマージ後にする（アダプタを2人で別々に作らない）。担当A（16分）・B（46分）と時刻を重ねない。
+1ゲームを2人で分けない（同じゲームのデータで衝突するため）。例外：latrunculi はパズル（担当D）とレッスン（担当C）で分ける（2026-11-27 ユーザー指示「C の担当が終わったので他に作業を振って」）。agon のレッスンも、前半4本（b_safe・b_finish・s_block・s_queencap）は担当F、後半4本（s_double・s_tempo・s_win2・s_best）は担当D で分ける（2026-11-27 21:35 ユーザー指示「担当D も完了」）。（2026-11-28 00:15 再配分：残り4本を1本ずつ。agon は s_tempo＝D・s_best＝F、fanorona は e_hunt＝E・e_trap＝C。ファノロナの共通の部分〈ls-fanorona.js の読み込み・セリフの仕組み・lesson-verify-fanorona の共通の検査〉は E が持ち、C は e_trap に要る分だけを足す。）同じファイル（agon/lessons.json・atlas/ls-agon.js の READY・tools/lesson-verify-agon-ls.js）を触るが、自分の本の行だけを変え、マージ前に main を取り込んで両方を残す。共通の部分（ls-agon.js の読み込み・セリフの仕組み・lesson-verify-agon-ls.js の共通の検査）を変えるのは F だけにし、D は自分の本に要る分だけを足す。C は lessons.json・atlas/ls-latrunculi.js・tools/lesson-verify-latrunculi-ls.js と2D のレッスン部分だけを触り、D の puzzles.json・latrunculi/pzwhy.js・atlas/games/latrunculi-pz.js・tools/lesson-verify-latrunculi.js には手を出さない。3D卓のアダプタ atlas/games/latrunculi.js のパズル／レッスンモード（ctx.pz・api.pz）は D が先に作る。D のその PR がマージされる前は、C は2D のレッスンの検証・作り直しと機械チェック（-ls.js）まで進め、3D に出すのは D のマージ後にする（アダプタを2人で別々に作らない）。担当A（16分）・B（46分）と時刻を重ねない。
 
 ## 7. 定期実行で回す場合
 
