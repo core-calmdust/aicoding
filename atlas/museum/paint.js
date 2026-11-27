@@ -125,6 +125,10 @@
     { id: 'morphy', w: 1504, h: 2048, cma: '1942.1472', bg: '#e2ded4', spots: [[.114, .538], [.21, .597], [.47, .2], [.52, .33], [.6, .69], [.5, .975]], links: [{ g: 'chess' }] },
     // (2026-11-25) the Cleveland Museum of Art: Johann Zoffany, the Dutton family at cards, Sherborne Park
     { id: 'dutton', w: 2048, h: 1631, cma: '2023.122', bg: '#3e5a5a', spots: [[.35, .66], [.287, .48], [.17, .72], [.553, .48], [.68, .5], [.9, .58]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Rijksmuseum: 'The X.mas Academics: A Combination Game at Whist' (1773), satire on Cambridge academics
+    { id: 'whist', w: 2048, h: 1390, rijks: 'RP-P-2022-211-63', bg: '#ddd9cf', spots: [[.53, .6], [.46, .42], [.69, .3], [.23, .36], [.52, .22], [.85, .73]], links: [{ g: 'solitaire' }] },
+    // (2026-11-25) the Rijksmuseum: Paul Hey, three old men at chess in a café
+    { id: 'hey', w: 2048, h: 1388, rijks: 'RP-P-OB-16.717', bg: '#e2dccc', spots: [[.45, .74], [.28, .4], [.58, .38], [.75, .3], [.63, .73], [.26, .77]], links: [{ g: 'chess' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
