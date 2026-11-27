@@ -13,15 +13,16 @@ html.classic body,html.classic #root,html.classic #root :is(div,span,b,small,em,
 html.classic :is(.ag-pw,.mv-p,.fn-r .sc,.rk-pts b,.ps-big b,.lr-sc b,.cl-lv b,.ol-rate b,.ap-rank b){font-family:var(--ar)!important}
 
 /* ---------------- boxes (dialogs, lists, stats) ---------------- */
-html.classic .modal{background:rgba(43,48,68,.42)!important;backdrop-filter:blur(3px)}
-html.classic .mbox{background:var(--paper)!important;color:var(--ink)!important;border:3px solid var(--line)!important;border-radius:26px!important;box-shadow:0 2px 0 rgba(43,48,68,.06),0 18px 40px -14px rgba(120,80,20,.45)!important;outline:0!important}
-html.classic .mbox::before,html.classic .mbox::after{display:none!important}
-html.classic .mbox :is(h2,h3,h4,b,strong,p,span,small,label,li,em){color:inherit;text-shadow:none!important}
-html.classic .mbox :is(h2,h3){color:var(--ink)!important;font-weight:900!important;background:none!important;-webkit-text-fill-color:currentColor!important}
-html.classic .mbox small{color:var(--ink2)!important}
-html.classic .mbox :is(section,.ps-sec,.ps-big>div,.ps-grid>div,.st-row,.rk-row,.lx-card,.lx-node .lx-med,.ol-seat,.ol-rate,.ol-code,.ol-pane,.rk-me){background:#fff!important;border-color:var(--line)!important;box-shadow:none!important;color:var(--ink)!important}
-html.classic .mbox :is(.ps-big>div,.ps-grid>div,.ol-seat,.ol-rate,.rk-row,.lx-card){border:2px solid var(--line)!important;border-radius:16px!important}
-html.classic .mbox .x,html.classic .ps-box .x{background:#fff!important;border:2px solid var(--line)!important;color:var(--ink)!important;border-radius:50%!important;box-shadow:0 2px 0 var(--line)!important}
+html.classic .modal:not(.stage){background:rgba(43,48,68,.42)!important;backdrop-filter:blur(3px)}
+html.classic .modal:not(.stage) .mbox{background:var(--paper)!important;color:var(--ink)!important;border:3px solid var(--line)!important;border-radius:26px!important;box-shadow:0 2px 0 rgba(43,48,68,.06),0 18px 40px -14px rgba(120,80,20,.45)!important;outline:0!important}
+html.classic .modal:not(.stage) .mbox::before,html.classic .modal:not(.stage) .mbox::after{display:none!important}
+html.classic .modal.stage .mbox{background:transparent!important;border:0!important;box-shadow:none!important}
+html.classic .modal:not(.stage) .mbox :is(h2,h3,h4,b,strong,p,span,small,label,li,em){color:inherit;text-shadow:none!important}
+html.classic .modal:not(.stage) .mbox :is(h2,h3){color:var(--ink)!important;font-weight:900!important;background:none!important;-webkit-text-fill-color:currentColor!important}
+html.classic .modal:not(.stage) .mbox small{color:var(--ink2)!important}
+html.classic .modal:not(.stage) .mbox :is(section,.ps-sec,.ps-big>div,.ps-grid>div,.st-row,.rk-row,.lx-card,.lx-node .lx-med,.ol-seat,.ol-rate,.ol-code,.ol-pane,.rk-me){background:#fff!important;border-color:var(--line)!important;box-shadow:none!important;color:var(--ink)!important}
+html.classic .modal:not(.stage) .mbox :is(.ps-big>div,.ps-grid>div,.ol-seat,.ol-rate,.rk-row,.lx-card){border:2px solid var(--line)!important;border-radius:16px!important}
+html.classic .modal:not(.stage) .mbox .x,html.classic .ps-box .x{background:#fff!important;border:2px solid var(--line)!important;color:var(--ink)!important;border-radius:50%!important;box-shadow:0 2px 0 var(--line)!important}
 
 /* buttons: the Atlas' pills — coral for the main one, white for the others */
 html.classic :is(.mbox,.ps-box,.ls-guide,.ls-res,.agst,.fnst,#modal) .btn,html.classic .cbtns .btn{background:#fff!important;color:var(--ink)!important;border:2px solid var(--line)!important;border-radius:99px!important;box-shadow:0 3px 0 var(--line)!important;font-weight:900!important;text-shadow:none!important;-webkit-text-fill-color:currentColor!important}
@@ -78,9 +79,6 @@ html.classic #game .ls-guide.bad .lg-bub{border-color:var(--coral)!important}
 html.classic #game .ls-guide .lg-again{color:var(--ink2)!important}
 
 /* ---------------- the result screens: a cream card on the dim table ---------------- */
-html.classic .agst-bg{background:var(--paper)!important;border-color:var(--line)!important;box-shadow:0 18px 40px -14px rgba(0,0,0,.6)!important}
-html.classic .agst :is(h2,b,span,small,em,p,div){text-shadow:none!important}
-html.classic .agst-main :is(h2,.fn-t){color:var(--ink)!important;-webkit-text-fill-color:currentColor!important;background:none!important}
 html.classic .fn-r{background:#fff!important;border:2px solid var(--line)!important;border-radius:18px!important;box-shadow:0 3px 0 var(--line)!important;clip-path:none!important}
 html.classic .fn-r *{color:var(--ink)!important}
 html.classic .fn-r.mine{border-color:var(--coral)!important;box-shadow:0 3px 0 var(--coral2)!important}
@@ -118,3 +116,5 @@ html.classic .lx-prog small{color:var(--ink2)!important}
 html.classic .lx-ring .bg{stroke:#f0e6cf!important}
 html.classic .lx-ring .fg{stroke:var(--coral)!important;filter:none!important}
 html.classic .lx-h h2,html.classic :is(.mbox,.ps-main) h2{background:none!important;color:var(--ink)!important;-webkit-text-fill-color:var(--ink)!important;filter:none!important;font-weight:900!important}
+/* the points-move screen (流局 · 和了の点数移動): on the dimmed table — its title white */
+html.classic .mvst .mv-t{color:#fff!important;-webkit-text-fill-color:#fff!important;text-shadow:0 2px 10px rgba(0,0,0,.7)!important}
