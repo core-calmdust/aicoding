@@ -265,6 +265,10 @@
     { id: 'pwkarte', w: 1998, h: 2048, rijks: 'RP-P-OB-987', bg: '#ece8dc', spots: [[.47, .14], [.61, .86], [.27, .27], [.75, .54], [.47, .74], [.5, .46]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
     // (2026-11-25) the Rijksmuseum: J. E. Nilson, 'Das Bretspiel': draughts and tocadille in a Rococo frame
     { id: 'nilson', w: 2048, h: 1405, rijks: 'RP-P-1964-2876', bg: '#ece6d8', spots: [[.44, .48], [.68, .6], [.59, .47], [.77, .5], [.28, .45], [.5, .88]], links: [{ g: 'checkers' }, { g: 'backgammon' }] },
+    // (2026-11-25) the Rijksmuseum: Joullain after Coypel, 'Les Châteaux de cartes' (1725)
+    { id: 'chateau', w: 1399, h: 2048, rijks: 'RP-P-OB-43.810', bg: '#ebe3d3', spots: [[.37, .42], [.12, .47], [.43, .29], [.7, .23], [.22, .79], [.53, .89]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Pugillus facetiarum iconographicarum: ruined young man with dice and an elegant woman (1608-18)
+    { id: 'pugillus', w: 2048, h: 1398, rijks: 'RP-P-1996-2', bg: '#e8e4da', spots: [[.25, .3], [.32, .18], [.72, .25], [.7, .55], [.71, .84], [.75, .93]], links: [{ room: 'chance' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
