@@ -7559,7 +7559,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     .catch(e => { this.p = null; throw e; })); } };
   /* agon (2026-11-27 担当F): the data, キンダイスン's words and the board facts are in atlas/ls-agon.js (loaded the first time; only the
      lessons checked and rebuilt for the 3D, AtlasLsAgon.READY — tools/lesson-verify-agon-ls.js) */
-  const AGON = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsAgon) return res(); const sc = document.createElement('script'); sc.src = 'ls-agon.js?v=8'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const AGON = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsAgon) return res(); const sc = document.createElement('script'); sc.src = 'ls-agon.js?v=9'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsAgon.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   /* latrunculi (2026-11-27 担当C): the data, ポンメェ's words and the board facts are in atlas/ls-latrunculi.js (loaded the first time; only the

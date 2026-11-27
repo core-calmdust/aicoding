@@ -37,7 +37,7 @@
 | konane コナネ | チェッカニ | **3D対応済み**（パズル226問・レッスン9本45問。s_go・s_keep・s_read・b_jump・b_open は 2026-11-27 担当C） | なし（b_open は 20:40 に「最初の取り除きと最初の跳び」へ作り直し、③⑤をユーザー指示でゆるめた） |
 | ugolki ウゴルキ | モリフク | **3D対応済み**（パズル152問・レッスン11本55問。s_count は 2026-11-27 に作り直し） | なし（2D・3D の追58 は 2026-11-27 担当D） |
 | fanorona ファノロナ | チェッカニ | 一部（パズル199問・レッスン9本45問：b_approach・b_withdraw・b_choose・b_chain・b_safe・b_win・t_big・t_count・t_stop、2026-11-27 担当E） | **レッスン3本15問**（t_paika・e_hunt・e_trap）。atlas/ls-fanorona.js の READY に足し、tools/lesson-verify-fanorona-ls.js にその主題のチェックを足す（今は basics 3本と b_chain・b_safe・b_win・t_big・t_count・t_stop の形） |
-| agon アゴン | キンダイスン | 一部（パズル152問は 2026-11-27 18:00 に3D対応済み、レッスンは b_step・b_capture・b_throne・b_reloc・b_safe・b_finish・s_block の7本35問〈担当F、最後は 23:25 b_finish：ユーザー指示で③⑥をゆるめた〉と s_double・s_win2〈担当D、s_win2 は 23:45：ユーザー指示で③をゆるめた〉を作り直して3D対応） | レッスン3本13問（担当F：s_queencap、担当D：s_tempo・s_best）（atlas/ls-agon.js の READY に足す。agon/ls-facts.js・tools/lesson-verify-agon-ls.js に主題の事実とチェック） |
+| agon アゴン | キンダイスン | 一部（パズル152問は 2026-11-27 18:00 に3D対応済み、レッスンは b_step・b_capture・b_throne・b_reloc・b_safe・b_finish・s_block の7本35問〈担当F、最後は 23:25 b_finish：ユーザー指示で③⑥をゆるめた〉と s_double・s_win2・s_tempo〈担当D、s_win2 は 23:45：ユーザー指示で③をゆるめた、s_tempo は 2026-11-28 00:55〉を作り直して3D対応） | レッスン2本10問（担当F：s_queencap、担当D：s_best）（atlas/ls-agon.js の READY に足す。agon/ls-facts.js・tools/lesson-verify-agon-ls.js に主題の事実とチェック） |
 | latrunculi ラトルンクリ | ポンメェ | **3D対応済み**（パズル250問は 2026-11-27 21:40 担当D、レッスン7本35問は 2026-11-27 22:58 担当C：atlas/ls-latrunculi.js・lessons3d.js の DATA・TURN_N、lesson-quality.js の PZ_ONLY から外した） | なし |
 
 おすすめの順：（janggi の NG 直し・ugolki s_count は済み）→ konane（済み） → ugolki の2D 追58 → fanorona のレッスン → agon → latrunculi。大きいゲームは「パズル → レッスン数本ずつ」に区切ってマージしてよい（表は「一部」）。

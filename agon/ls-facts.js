@@ -41,6 +41,10 @@
                          and the next turn goes to relocating it (cells: the last empty cell)
                 (k 'block' / 'shut' / 'other' — the enemy steps into the last cell / closes it between two enemy pieces / any
                  other defence: never in this lesson, the verify checks)
+     s_tempo    (2026-11-28 担当D; several captures, each of one enemy guard: a captured guard is relocated to the edge, ring 5)
+                k 'ok'    it captures the guard on the innermost ring of all the captures (v: that guard, ring: its ring)
+                k 'outer' it captures a guard on a ring farther out (v: that guard, ring: its ring, deep: the innermost ring)
+                k 'none'  it captures nothing
      b_finish   (the queen on the throne, five guards round her and one cell next to the throne empty)
                 k 'ok'    the sixth guard steps into that cell: six guards round the queen, the game won
                 k 'shift' a guard already next to the throne slides into it, so the cell it left is empty now (v: that cell)
@@ -51,11 +55,12 @@
    the board), b_safe the guard in danger, the enemy pieces that would sandwich it (the one stepping in and the one beyond)
    and every piece of yours that can step into the enemy's cell, s_double every piece of yours with a capturing move, s_block the enemy
    guard that can step into the last cell (its winning move, the turn passed) and every piece of yours with a move next to it, s_win2
-   every guard of yours that can step into an empty cell round the throne and the enemy pieces that could sandwich one (the turn passed).
+   every guard of yours that can step into an empty cell round the throne and the enemy pieces that could sandwich one (the turn passed),
+   s_tempo every piece of yours with a capturing move and every enemy guard it can take (compare their rings).
    window.AgonLsFacts · module.exports the same. */
 (function () {
   'use strict';
-  const IDS = ['b_step', 'b_capture', 'b_throne', 'b_reloc', 'b_safe', 's_double', 's_block', 'b_finish', 's_win2'];
+  const IDS = ['b_step', 'b_capture', 'b_throne', 'b_reloc', 'b_safe', 's_double', 's_block', 'b_finish', 's_win2', 's_tempo'];
   // b_reloc: the enemy's capturing moves with the captured guard off the board ([move, the pieces it takes])
   // b_safe: the same with the turn passed to the enemy (nothing captured on the board)
   function threats(E, spec) {
@@ -133,6 +138,11 @@
       }
       return Object.assign(best || { k: 'ok' }, { cells });
     }
+    if (id === 's_tempo') {   // (担当D) the ring of the guard taken, against the innermost ring any capture reaches
+      const v = p.capsOf(m); if (!v.length) return { k: 'none' };
+      const deep = Math.min(...p.moves().filter(x => x !== E.PASS).flatMap(x => p.capsOf(x).map(c => E.RING[c]))), ring = Math.min(...v.map(c => E.RING[c]));
+      return ring === deep ? { k: 'ok', v: v[0], ring } : { k: 'outer', v: v[0], ring, deep };
+    }
     if (id === 'b_finish') {
       const j = E.judge(p.clone().play(m));
       if (j.over && j.winner === me) return { k: 'ok' };
@@ -186,6 +196,7 @@
       if (id === 'b_step' && E.RING[t] === E.RING[f] - 1) out.add(f);
       if (id === 'b_capture' && E.NB[t].some(a => a >= 0 && p.owner(a) === 3 - me)) out.add(f);
       if (id === 's_double' && p.capsOf(m).length) out.add(f);
+      if (id === 's_tempo' && p.capsOf(m).length) { out.add(f); p.capsOf(m).forEach(c => out.add(c)); }
       if (id === 's_win2' && E.RING[t] === 1 && E.RING[f] === 2) out.add(f);
       if (id === 'b_finish' && E.RING[t] === 1 && !p.isQueen(f)) out.add(f);   // (b_finish: every piece that can step into the gap)
     }
@@ -204,6 +215,7 @@
     if (id === 'b_finish') return F.k === 'away' ? 'ngAway' : 'ng';
     if (id === 's_block') return F.k === 'touch' ? 'ngTouch' : 'ng';
     if (id === 's_win2') return F.k === 'slow' ? 'ngSlow' : 'ng';
+    if (id === 's_tempo') return F.k === 'outer' ? 'ngOuter' : 'ng';
     return 'ng';
   }
   const API = { IDS, fact, hint, key, threats, wins };
