@@ -75,6 +75,20 @@
           ".write": "auth != null && auth.uid === $uid",
           ".validate": "newData.hasChildren(['r','n']) && newData.child('r').isNumber() && newData.child('n').isNumber() && (data.exists() ? (newData.child('n').val() === data.child('n').val() + 1 && newData.child('r').val() - data.child('r').val() <= 60 && data.child('r').val() - newData.child('r').val() <= 60) : (newData.child('n').val() === 1 && newData.child('r').val() >= 1440 && newData.child('r').val() <= 1560))"
         }
+      },
+      "mm0": {
+        ".read": "auth != null",
+        "$uid": {
+          ".write": "auth != null && (auth.uid === $uid || (data.exists() && !data.child('c').exists() && newData.child('c').isString()))",
+          ".validate": "!newData.exists() || newData.hasChildren(['t','r'])"
+        }
+      },
+      "pl0": {
+        ".read": "auth != null",
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.hasChildren(['r','n']) && newData.child('r').isNumber() && newData.child('n').isNumber() && (data.exists() ? (newData.child('n').val() === data.child('n').val() + 1 && newData.child('r').val() - data.child('r').val() <= 60 && data.child('r').val() - newData.child('r').val() <= 60) : (newData.child('n').val() === 1 && newData.child('r').val() >= 1440 && newData.child('r').val() <= 1560))"
+        }
       }
     }
   }

@@ -36,6 +36,13 @@
      c / r / a / ar / an as t_count (the one move whose c − r is the biggest: stopBest — the answer is a stop: its piece could go on)
      k 'most' the answer · 'on' a move going on past the answer's stop on its road (more taken, more taken back) ·
        'back' another move taken back something (r > 0) · 'small' another move taken back nothing but fewer taken
+   t_paika (2026-11-27 担当E, no capture for either side; the paika move that gives nothing and sets up a capture the opponent
+   cannot stop): { k, c, a }
+     k 'most'  the answer: after it the opponent takes nothing and, whatever the opponent's reply, you can capture next ({ a } = the
+               fewest pieces you can then take, over the opponent's replies; the only such move)
+       'give'  the opponent can take { c } (the most in one turn, a chain in full)
+       'none'  the opponent takes nothing, but no capture of yours is set up (even if the opponent passed you could take nothing)
+       'block' the opponent takes nothing and a capture is set up, but some reply of the opponent leaves you none
   FanoronaLsFacts.best(E, spec) → the move that takes the most (null when two moves take as many)
    FanoronaLsFacts.hint(E, id, spec) → the points of the pieces that can capture now (never the answer's piece alone)
    Moves are the engine's notation (h2-h3A), points its indices r * 9 + c. Works as a plain script and in Node. */
@@ -138,7 +145,30 @@
     const on = S.length > B.length && B.every((x, i) => eqS(x, S[i]));
     return Object.assign(f, { k: m === b ? 'most' : on ? 'on' : o.r > 0 ? 'back' : 'small' });
   }
+  // t_paika: a paika move's look ahead — the opponent's most after it, and your captures after each of the opponent's replies
+  function paikaLook(E, pos, m) {
+    const o = oppMost(E, pos, m); if (o.c) return { c: o.c, k: 'give' };
+    const q = pos.clone().play(m), me = pos.turn;
+    if (!E.Pos.from({ b: q.spec().b, side: me }).hasCaps()) return { c: 0, k: 'none' };
+    let a = 1e9;
+    for (const y of q.moves(true)) {
+      const q2 = q.clone().play(y); if (q2.status() !== 0 || q2.turn !== me || !q2.hasCaps()) return { c: 0, k: 'block' };
+      a = Math.min(a, Math.max(...q2.moves(true).map(x => capN(E, q2, x))));
+    }
+    return a < 1e9 ? { c: 0, k: 'sure', a } : { c: 0, k: 'block' };
+  }
+  function paikaBest(E, spec) {
+    const pos = E.Pos.from(spec); if (pos.hasCaps()) return null;
+    const L = pos.moves(true).filter(m => paikaLook(E, pos, m).k === 'sure'); return L.length === 1 ? L[0] : null;
+  }
+  function paikaFact(E, spec, m) {
+    const pos = E.Pos.from(spec), S = pos.steps(m), b = paikaBest(E, spec);
+    if (!S || !b || S[0].cap.length) return { k: 'bad' };
+    const o = paikaLook(E, pos, m), A = paikaLook(E, pos, b);
+    return { k: m === b ? 'most' : o.k, c: o.c, a: A.a, from: S[0].from, to: S[0].to };
+  }
   function fact(E, id, spec, m) {
+    if (id === 't_paika') return paikaFact(E, spec, m);
     if (id === 't_stop') return stopFact(E, spec, m);
     if (id === 't_count') return countFact(E, spec, m);
     if (id === 'b_chain') return chainFact(E, spec, m);
@@ -156,10 +186,10 @@
   }
   function hint(E, id, spec) {
     const pos = E.Pos.from(spec);
-    if (id === 'b_safe') return [...new Set(pos.paikaSteps().map(x => x.from))];   // (every piece you can move: never the answer's alone, 追52)
+    if (id === 'b_safe' || id === 't_paika') return [...new Set(pos.paikaSteps().map(x => x.from))];   // (every piece you can move: never the answer's alone, 追52)
     return [...new Set(pos.capSteps(null).map(x => x.from))];
   }
-  const API = { fact, best, hint, endOf, capN, chainFact, bigFact, safeFact, safeBest, oppMost, winFact, winBest, countBest, countFact, countNet, stopBest, stopFact };
+  const API = { fact, best, hint, endOf, capN, chainFact, bigFact, safeFact, safeBest, oppMost, winFact, winBest, countBest, countFact, countNet, stopBest, stopFact, paikaLook, paikaBest, paikaFact };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   if (typeof window !== 'undefined') window.FanoronaLsFacts = API;
 })();

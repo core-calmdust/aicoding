@@ -1311,3 +1311,17 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 .mxx .mxboard.mxrvb .mxp.last::after{content:"";position:absolute;left:50%;top:50%;width:15%;height:15%;transform:translate(-50%,-50%);border-radius:50%;background:#ff6b5b;box-shadow:0 0 6px rgba(255,107,91,.8)}
 .mxx .mxth.k-reversi .mxtb{fill:#1c1d1f}.mxx .mxth.k-reversi .mxtw{fill:#f2f0e9;stroke:none}
 .mxx .mxcap.mxrc{font-variant-numeric:tabular-nums}
+/* (2026-11-27 ユーザー: 偶然の道具のレイアウトのバランス — 上のタグなど) PC/tablet: the tools as an even 4 × 2 of equal pills (no ragged 5 + 3);
+   under the tray, the buttons and then the tally, so the left column runs as long as the story card on the right */
+@media (min-width:820px){
+  .muwrap .chtools{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+  .muwrap .cht{width:auto;min-width:0}
+  .muwrap .cht .chtt{min-width:0}
+  .muwrap .cht b{white-space:normal;line-height:1.25;word-break:keep-all;overflow-wrap:anywhere}
+  .chmain{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);grid-template-rows:auto auto 1fr;column-gap:20px;row-gap:12px}
+  .chmain .chl,.chmain .chr{display:contents}
+  .chmain .chstage{grid-column:1;grid-row:1}
+  .chmain .chbtns{grid-column:1;grid-row:2}
+  .chmain .chchart{grid-column:1;grid-row:3;align-self:start}
+  .chmain .chtext{grid-column:2;grid-row:1/4;align-self:start;position:sticky;top:84px}
+}
