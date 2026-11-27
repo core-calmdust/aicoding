@@ -229,6 +229,10 @@
     { id: 'fichesdoos', w: 2048, h: 1609, rijks: 'BK-NM-624-A', bg: '#cfcfcd', spots: [[.43, .4], [.64, .69], [.63, .36], [.36, .3], [.4, .75], [.45, .25]], links: [{ g: 'poker' }, { g: 'solitaire' }] },
     // (2026-11-25) the Art Institute of Chicago: Vuillard, pastel of the artist's mother playing checkers (c. 1890–91)
     { id: 'vuilmere', w: 1686, h: 2038, aic: 86259, no: '1956.35', bg: '#c3c0b5', spots: [[.47, .48], [.58, .28], [.29, .45], [.76, .52], [.4, .2], [.8, .85]], links: [{ g: 'checkers' }] },
+    // (2026-11-25) the Rijksmuseum: Adrien de Witte, two men at chess (1877)
+    { id: 'dewitte', w: 1558, h: 1691, rijks: 'RP-P-1913-4386', bg: '#5c564c', spots: [[.4, .49], [.55, .43], [.25, .25], [.72, .3], [.3, .62], [.06, .38]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Rijksmuseum: Charles Rolls after W. Gill, 'The Orphans' playing draughts
+    { id: 'orphans', w: 1080, h: 1588, rijks: 'RP-P-1905-6028', bg: '#cfc4ad', spots: [[.48, .54], [.33, .47], [.6, .45], [.55, .33], [.4, .71], [.5, .965]], links: [{ g: 'checkers' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
