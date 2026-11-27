@@ -111,6 +111,10 @@
     { id: 'tunisie', w: 2048, h: 1538, rijks: 'RP-F-2001-7-1494-48', bg: '#e6dfcf', spots: [[.483, .6], [.264, .541], [.702, .6], [.475, .67], [.63, .225], [.5, .87]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
     // (2026-11-25) the Rijksmuseum: caids near Laghouat, Algeria, laying out tiles (probably dominoes)
     { id: 'laghouat', w: 2048, h: 1592, rijks: 'RP-F-F01088-AN', bg: '#cdbb98', spots: [[.506, .624], [.53, .78], [.38, .81], [.34, .2], [.8, .15], [.65, .75]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Cleveland Museum of Art: detail of 'Palace Ladies' (copy after Qiu Ying): court ladies at a weiqi board
+    { id: 'hangong', w: 1904, h: 1706, cma: '1954.369', bg: '#6b5a33', spots: [[.61, .35], [.555, .28], [.7, .27], [.205, .33], [.645, .49], [.235, .73]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
+    // (2026-11-25) the Cleveland Museum of Art: Winslow Homer, 'Backgammon', wood engraving
+    { id: 'homerbg', w: 2048, h: 1609, cma: '1942.1484', bg: '#e4e1d8', spots: [[.6, .49], [.4, .26], [.67, .26], [.1, .47], [.3, .72], [.45, .955]], links: [{ g: 'backgammon' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
