@@ -1333,7 +1333,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=6').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=7').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { let pr; try { pr = JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } return pzMigrate(pr); }
@@ -1593,10 +1593,15 @@ function okAnswer(P, s, m, pts) {
   const best = P.ok.includes(m) ? m : P.best;
   // (2026-11-25 担当C) b_double / b_win: the words say what the move did on the board (konane/ls-facts.js, the same as the 3D)
   // (2026-11-25 05:33 担当C) s_count / s_stop: the opponent's winning reply {r} and your jumps after it {e} (an exact solve)
-  const F = window.KonaneLsFacts && !lesson.virt && /^(b_(double|win)|s_(count|stop))$/.test(s.id) ? KonaneLsFacts.fact(E, s.id, P.s, m) : null;
-  const ST = F && ['more', 'go', 'lose'].includes(F.k);
+  // (2026-11-27 担当C) s_go / s_keep / s_read: the head (ls.s_go.ng.short(S) · ls.s_keep.ng.cut · ls.s_read.ng.fewer · ls.st.lose) + the tail
+  // (ls.st.tail0 / tailN: after the opponent's winning reply {r}, your jumps {e})
+  const F = window.KonaneLsFacts && !lesson.virt && /^(b_(double|win)|s_(count|stop|go|keep|read))$/.test(s.id) ? KonaneLsFacts.fact(E, s.id, P.s, m) : null;
+  const S3 = F && /^s_(go|keep|read)$/.test(s.id) && ['short', 'cut', 'fewer', 'lose'].includes(F.k);
+  const ST = F && (S3 || ['more', 'go', 'lose'].includes(F.k));
   const ngKey = !F ? '.ng' : ST ? '.ng.' + (F.k === 'go' && F.spring ? 'goS' : F.k) + (F.e ? 'N' : '0') : F.k === 'stop' ? '.ng.stop' : F.k === 'other' ? '.ng.other' : F.k === 'left' ? (F.j === 1 ? '.ng1' : '.ng') : '.ng';
-  $('#lsFb').innerHTML = `<span class="pts ${pts ? 'ok' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts ? 'ok' : 'ng'}">${t(pts ? 'fb.perfect' : 'fb.bad')}</b> ` + (pts ? t('ls.' + s.id + '.why', { m: mvIn(pos0, m), j: F && F.j, c: F && F.c, n: F && F.n }) : t('ls.' + s.id + ngKey, { m: mvIn(pos0, best), x: mvIn(pos0, m), j: F && F.j, j0: F && F.j0, e: F && F.e, r: ST && F.r != null ? mvIn(pos0, F.r) : '' }));
+  const nv = { m: mvIn(pos0, best), x: mvIn(pos0, m), j: F && F.j, j0: F && F.j0, o: F && F.o, o0: F && F.o0, c: F && F.c, n: F && F.n, e: F && F.e, r: ST && F.r != null ? mvIn(pos0, F.r) : '' };
+  const ngTx = S3 ? t(F.k === 'lose' ? 'ls.st.lose' : 'ls.' + s.id + '.ng.' + (F.k === 'short' && F.spring ? 'shortS' : F.k), nv) + ' ' + t(F.e ? 'ls.st.tailN' : 'ls.st.tail0', nv) : t('ls.' + s.id + ngKey, nv);
+  $('#lsFb').innerHTML = `<span class="pts ${pts ? 'ok' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts ? 'ok' : 'ng'}">${t(pts ? 'fb.perfect' : 'fb.bad')}</b> ` + (pts ? t('ls.' + s.id + '.why', { m: mvIn(pos0, m), j: F && F.j, o: F && F.o, c: F && F.c, n: F && F.n }) : ngTx);
   playChime(!!pts); playMove2(m);
   lsAuto(!!pts, moveDur(m, pos0) + 1100);
   const tok = busyToken;
@@ -1617,7 +1622,7 @@ $('#lsHint').onclick = () => {
   lessonMarks = [];
   const good = P.ok || [P.best];
   // (2026-11-25 担当C) b_double: every stone that can jump · b_win: the opponent's stones that could jump now (not the answer's stone, 追52)
-  const hp = window.KonaneLsFacts && !lesson.virt && /^(b_(double|win)|s_(count|stop))$/.test(s.id) ? KonaneLsFacts.hint(E, s.id, P.s) : null;
+  const hp = window.KonaneLsFacts && !lesson.virt && /^(b_(double|win)|s_(count|stop|go|keep|read))$/.test(s.id) ? KonaneLsFacts.hint(E, s.id, P.s) : null;
   for (const f of hp || new Set(good.map(mFrom))) lessonMarks.push({ at: f, cls: 'ok' });
   $('#lsFb').innerHTML = lesson.virt ? t('op.hint') : t('ls.' + s.id + '.hint');
   renderFx();
