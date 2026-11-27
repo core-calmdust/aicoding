@@ -35,7 +35,7 @@
   // the rooms, in order. src: scripts loaded the first time the room opens; ready(): the room's code is there
   const ROOMS = [
     { id: 'map', ready: () => !!window.AtlasMap, render: (el, c) => AtlasMap.render(el, c) },
-    { id: 'tree', src: ['museum/tree.js?v=9'], ready: () => !!window.AtlasTree, render: (el, c) => AtlasTree.render(el, c) },
+    { id: 'tree', src: ['museum/tree.js?v=10'], ready: () => !!window.AtlasTree, render: (el, c) => AtlasTree.render(el, c) },
     { id: 'gallery', src: ['museum/gallery.js?v=151'], ready: () => !!window.AtlasGallery, render: (el, c) => AtlasGallery.render(el, c) },
     { id: 'paint', src: () => ['museum/paint-i18n/en.js?v=' + PAINT_I18N_V, ...(rl() !== 'en' ? [`museum/paint-i18n/${rl()}.js?v=${PAINT_I18N_V}`] : []), PAINT_JS], ready: () => !!(window.AtlasPaint && window.MUSEUM_PAINT_T && MUSEUM_PAINT_T.en && MUSEUM_PAINT_T[rl()]), render: (el, c) => AtlasPaint.render(el, c) },   // (per language, like the stories)
     // (2026-11-24 audit pageKB) the stories' text in one file per language (museum/read-i18n/<lang>.js, made by tools/museum-read-split.js from
@@ -45,10 +45,10 @@
     // read.js loads when the story opens (with ?v=READ_I18N_V, read as AtlasMuseum.readV)
     { id: 'read', src: () => [`museum/read-i18n/${rl()}.js?v=${READ_I18N_V}`, 'museum/read.js?v=121'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T && MUSEUM_READ_T[rl()]), render: (el, c) => AtlasRead.render(el, c) },
     // (2026-11-27 ユーザー: 名局・名勝負の部屋) the great games: one file per language like the paintings (museum/match-i18n/<lang>.js, English filled in)
-    { id: 'match', src: () => [`museum/match-i18n/${rl()}.js?v=${MATCH_I18N_V}`, 'museum/match.js?v=89'], ready: () => !!(window.AtlasMatch && window.MUSEUM_MATCH_T && MUSEUM_MATCH_T[rl()]), render: (el, c) => AtlasMatch.render(el, c) },
+    { id: 'match', src: () => [`museum/match-i18n/${rl()}.js?v=${MATCH_I18N_V}`, 'museum/match.js?v=90'], ready: () => !!(window.AtlasMatch && window.MUSEUM_MATCH_T && MUSEUM_MATCH_T[rl()]), render: (el, c) => AtlasMatch.render(el, c) },
     { id: 'chance', src: () => ['museum/chance-i18n/en.js?v=' + CHANCE_I18N_V, ...(rl() !== 'en' ? [`museum/chance-i18n/${rl()}.js?v=${CHANCE_I18N_V}`] : []), 'museum/chance.js?v=8'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T && MUSEUM_CHANCE_T.en && MUSEUM_CHANCE_T[rl()]), render: (el, c) => AtlasChance.render(el, c) },   // (per language)
   ];
-  const READ_I18N_V = 81, PAINT_I18N_V = 84, PAINT_JS = 'museum/paint.js?v=95', CHANCE_I18N_V = 1, MATCH_I18N_V = 87, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
+  const READ_I18N_V = 81, PAINT_I18N_V = 84, PAINT_JS = 'museum/paint.js?v=95', CHANCE_I18N_V = 1, MATCH_I18N_V = 88, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
   const KEY = 'atlas-museum-room';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const loaded = {};
