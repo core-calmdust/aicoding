@@ -1794,7 +1794,7 @@ html[data-cup=tan] .ld .cupi,html[data-cup=tan] .rcup{background-image:url(img/c
   .ld .verdict{font-size:12px;padding:4px 6px}
   .ld .hist .ldh:nth-last-child(n+4){display:none}
 }
-.rl.lvrow{flex-direction:column;align-items:stretch;gap:8px}
+.rl.lvrow{display:flex;flex-direction:column;align-items:stretch;gap:8px}
 .rl.lvrow .rl-t{flex-direction:row;align-items:baseline;gap:10px;flex-wrap:wrap}
 .rl.lvrow .lvsel b{min-width:3.6em}
 .ld{--hl:#c99a52;--hl2:#e9c784;--hl-a:rgba(201,154,82,.45)}

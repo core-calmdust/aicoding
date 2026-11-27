@@ -9,7 +9,7 @@
 const A = window.LdApp;
 const STORE = 'liarsdice-rated-v1', START = 1000, PLAYERS = 4;
 // index = level (tools/arena.js, 4 players, Perudo rules; rescaled to 400–1900, see the spec)
-const RT_LV = window.LD_RT_LV || [0, 400, 479, 558, 637, 716, 795, 874, 953, 1032, 1111, 1189, 1268, 1347, 1426, 1505, 1584, 1663, 1742, 1821, 1900];
+const RT_LV = window.LD_RT_LV || [0, 400, 600, 625, 905, 935, 1055, 1215, 1285, 1370, 1445, 1525, 1665, 1695, 1725, 1755, 1785, 1810, 1840, 1870, 1900];
 const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
 const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
 const esc = s => A.esc(s), t = (k, v) => A.t(k, v);

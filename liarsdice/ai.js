@@ -234,10 +234,11 @@ function decide(G, me, L, rng) {
   const P = params(L); P.rng = rng; const V = view(G, me, P.gamma);
   const ctx = LD.bidCtx(G, me);
   // the weakest levels: often the smallest raise on a face of their own hand
-  if (L <= 2 && rng() < (L === 1 ? .45 : .25)) {
+  if (L <= 2 && rng() < (L === 1 ? .55 : .3)) {
     const prev = ctx.prev;
-    if (prev && rng() < (L === 1 ? .35 : .25) && pTrue(V, prev.q, prev.f) < .55) return { t: 'dudo' };
-    const fs = [...new Set(G.hands[me])].filter(f => LD.minQ(ctx, f) <= ctx.total);
+    if (prev && rng() < (L === 1 ? .3 : .25)) return pTrue(V, prev.q, prev.f, L === 2) < (L === 1 ? .7 : .55) || LD.minQ(ctx, prev.f) > ctx.total ? { t: 'dudo' } : { t: 'bid', q: LD.minQ(ctx, prev.f), f: prev.f };
+    // Lv.1: the smallest raise on any face; Lv.2: on a face of its own hand
+    const fs = (L === 1 ? [1, 2, 3, 4, 5, 6] : [...new Set(G.hands[me])]).filter(f => LD.minQ(ctx, f) <= ctx.total);
     const f = fs.length ? fs[Math.floor(rng() * fs.length)] : 0;
     if (f) return { t: 'bid', q: LD.minQ(ctx, f), f };
   }
