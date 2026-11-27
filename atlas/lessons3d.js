@@ -7362,9 +7362,9 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     mid4: { intro: '4×4（点25個）は、おたがい最善なら8対8の引き分け。点が奇数だから、<b>先手は長い鎖を奇数本、後手は偶数本</b>にしたい盤なんだ。<br>中盤は1本引くたびに鎖の形が固まっていく。どの線が鎖をつなげて、どれが切るかを考えよう！',
       ask: ['4×4の中盤。いちばんいい線は？', '鎖の形を読んで、1本えらんで！', 'どの線が鎖をつなげる？ 切る？', 'この局面、きみならどう引く？', 'ラスト！ 中盤の勝負所だよ！'],
       hint: ['長い鎖になりそうな所を探してみて。', 'その線のあと、長い鎖を先に開くことになるのはだれかな？', '金色の輪は安全な線。でも、どれでも同じじゃないよ！', '1本ずつ、そのあとの鎖の形を想像してみて！', '安全な線で、盤がどう分かれていくか考えて！'] },   // (2026-11-27 担当A: the answer is one safe line, picked by the shape that follows)
-    mid5: { intro: '5×5（点36個）はまだ解かれていない大きな盤。ここでは、安全な線が少なくなって読み切れる局面だけを出すね。<br>点が偶数だから、先手は長い鎖を偶数本、後手は奇数本にしたい。取り切り・残しの損得も大きいんだ。',
-      ask: ['5×5の中盤から終盤。いちばんいい線はどれ？', '大きな盤でも落ちついて。どの線にする？', '長い鎖とループ、何本あるかな？ どこに引く？', '読み切れる局面だよ！ いちばんいい1本は？', 'ラスト！ 大きな盤を決めて！'],
-      hint: ['残りの安全な線と、長い鎖・ループの数を数えてみて。', '5×5は、先手が長い鎖を偶数本にしたい盤！', '取り切り・残しの損得も大きいんだ！', '安全な線は残りわずか。最後に開くのはだれ？', '1箱あげて手番を変える手も考えて！'] },
+    mid5: { intro: '5×5（点36個）は線が60本もある大きな盤。それでも考え方は同じだよ。<br>安全な線がつきたとき、<b>最初に長い鎖を開かされたほうが負けやすい</b>。どの安全な線を引けば、その役が相手に回るかを読もう！',
+      ask: ['5×5の中盤。いちばんいい線はどれ？', '大きな盤でも落ちついて。どの1本にする？', '安全な線の先まで読んで、1本えらんで！', 'この局面、きみならどこに引く？', 'ラスト！ 大きな盤の勝負所だよ！'],
+      hint: ['金色の輪は安全な線。でも、どれでも同じじゃないよ！', 'その線のあと、長い鎖を先に開くことになるのはだれかな？', '1本ずつ、安全な線がつきたときの形を想像してみて！', '長い鎖になりそうな所を探してみて。', '安全な線で、盤がどう分かれていくか考えて！'] },   // (2026-11-28 担当A: the answer is one safe line — after it the opponent is the first to open a long chain)
     exam: { intro: '最後は総合問題！ 安全な線、取り切りと残し、長鎖ルール、犠牲、ループ、終盤の数え。どの考え方がいるか、自分で見きわめてね。<br>75点以上で卒業。がんばろう！',
       ask: ['どの考え方がいるか見きわめて、いちばんいい線を引いて！', 'つぎはどう？ いちばんいい線は？', 'さあ、腕の見せどころ！ どの線？', 'これまでの技を思い出して、1本えらんで！', 'ラスト！ 卒業をかけた1本だよ！'],
       hint: ['安全な線は残ってる？ 取れる箱は？', '長い鎖とループは何本あるかな？', 'あげるなら小さく！ 2箱は真ん中から。', '安全な線の偶数・奇数を数えてみよう！', '迷ったら、取れる箱 → 安全な線 → あげる順番！'] },
@@ -7437,7 +7437,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       let L;
       if (x.cls === 'take') L = F.hasCap && DT_END.test(s.id) ? (s.id === 'loop' ? DT_CH.takeL : s.id === 'count' ? DT_CH.takeC : DT_CH.takeE) : DT_CH.take;
       else if (x.cls === 'decline') L = x.m === 4 ? DT_CH.dec4 : s.id === 'count' ? DT_CH.decC : DT_CH.dec;
-      else if (x.cls === 'safe') L = s.id === 'open3' || s.id === 'mid4' ? DT_CH.safeO : pick2 ? DT_CH.safeP : DT_CH.safe;
+      else if (x.cls === 'safe') L = s.id === 'open3' || s.id === 'mid4' || s.id === 'mid5' ? DT_CH.safeO : pick2 ? DT_CH.safeP : DT_CH.safe;
       else if (F.ns) L = DT_CH.sac;
       else if (x.m === 4 && s.id === 'loop') L = DT_CH.loop4;
       else if (x.m === 2 && !x.ret && s.id === 'hard') L = DT_CH.mid;
@@ -7450,7 +7450,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       if (V.get(u) === undefined || V.get(u) === best) u = P.values.reduce((a, c) => c[1] < a[1] ? c : a)[0];   // (the runner never shows this for a best line: a checker's call — the worst line stands in)
       const x = F.of(u), loss = (best - V.get(u)) / 2, o = { bm: b.m, xm: x.m, s: F.sm };
       let R, Y;
-      if (b.cls === 'safe' && (s.id === 'open3' || s.id === 'mid4')) { R = x.cls === 'safe' ? DT_CH.rParO : DT_CH.rSafe; Y = x.cls === 'safe' ? DT_CH.yParO : DT_CH.yGiveO; }
+      if (b.cls === 'safe' && (s.id === 'open3' || s.id === 'mid4' || s.id === 'mid5')) { R = x.cls === 'safe' ? DT_CH.rParO : DT_CH.rSafe; Y = x.cls === 'safe' ? DT_CH.yParO : DT_CH.yGiveO; }
       else if (b.cls === 'safe') { R = x.cls === 'safe' ? DT_CH.rPar : DT_CH.rSafe; Y = x.cls === 'safe' ? DT_CH.yPar : DT_CH.yGive; }
       else if (s.id === 'count' && b.cls === 'take' && x.dd) { R = DT_CH.rTakeC; Y = DT_CH.yKeepC; }
       else if (s.id === 'count' && b.cls === 'decline' && x.cls === 'take') { R = DT_CH.rDec; Y = DT_CH.yAllC; }
@@ -7472,9 +7472,9 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
   const DOTS = {
     LKEY: 'dots-lessons-v2', data: null, I: null, got: {},
     load(lang) {
-      const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261127W`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
+      const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261128A`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
       if (this.p) return this.p.then(() => T()).then(() => this);
-      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261127w'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
+      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261128a'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
         .then(([ls, X]) => { const w = {}; try { new Function('window', 'with (window) {' + X + '\n}')(w); } catch (e) { console.warn('[lessons3d] dots texts', e); } this.I = w.I18N || {}; this.data = { ls }; return T(); }).then(() => this)
         .catch(e => { this.p = null; throw e; }));
     },
