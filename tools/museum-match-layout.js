@@ -24,7 +24,7 @@ const ITEMS = [   // [key, points, must]
       await p.evaluate(id => { document.querySelectorAll('.mutoast,.mission,.msn').forEach(e => e.remove()); AtlasMatch.show(id); }, id); await p.waitForTimeout(600);
       await p.evaluate(() => { const n = AtlasMatch.line(AtlasMatch.GAMES.find(G => G.id === AtlasMatch.current())).mv.length; AtlasMatch._go(Math.min(13, n)); }); await p.waitForTimeout(500);
       // the view as the room leaves it right after opening the game (show() scrolls the viewer to the top)
-      await p.evaluate(() => { AtlasMatch.wall(); scrollTo(0, 0); }); await p.waitForTimeout(300); await p.click(`.mxc[data-g="${id}"]`); await p.waitForTimeout(800);   // (as a visitor opens it: the card pressed)
+      await p.evaluate(id => { AtlasMatch.wall(); scrollTo(0, 0); }, id); await p.waitForTimeout(300); await p.evaluate(id => AtlasMatch.open(id), id); await p.waitForTimeout(800);   // (as a visitor's press on the card: AtlasMatch.open — the list is paged, the card may be on a later page)
       await p.evaluate(() => AtlasMatch._go(13)); await p.waitForTimeout(400);
       const m = await p.evaluate(({ ph, lang }) => {
         const q = s => document.querySelector(s), R = e => e && e.getBoundingClientRect();
