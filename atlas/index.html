@@ -380,6 +380,7 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
   .bvi{padding:24px 30px;border-radius:30px;bottom:24px}
   .bvi .cols{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px 36px;align-items:center}
   .bvi .R{border-inline-start:2px dashed var(--line);padding-inline-start:32px;display:flex;flex-direction:column;justify-content:center}
+  .bvi.ext .cols{align-items:stretch}.bvi.ext .R{justify-content:flex-start}.bvi.ext .R > .act{margin-top:auto!important}   /* (麻雀: the tabs at the top, あそぶ at the bottom, 2026-11-28) */
   .bvi h3{font-size:32px}
   .bvi .g3{width:76px;height:76px;border-radius:22px}
   .bvi .ring{width:64px;height:64px;font-size:15px}
@@ -2559,7 +2560,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=555"></script>
+<script src="lazy.js?v=556"></script>
 <script src="puzzle-lines.js?v=2"></script>
 <script src="puzzles.js?v=69"></script>
 <script src="lessons3d.js?v=372"></script>
@@ -2597,7 +2598,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   mo = new MutationObserver(sync); mo.observe(document.body, { childList: true }); sync(); window.__pgState = sync; })();
 </script>
 <script src="museum/mu-games.js?v=3"></script>
-<script src="app.js?v=511"></script>
+<script src="app.js?v=512"></script>
 <script src="../shared/praline-badge.js?v=9" data-portal defer></script>
 </body>
 </html>
