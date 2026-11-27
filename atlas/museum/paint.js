@@ -117,6 +117,10 @@
     { id: 'homerbg', w: 2048, h: 1609, cma: '1942.1484', bg: '#e4e1d8', spots: [[.6, .49], [.4, .26], [.67, .26], [.1, .47], [.3, .72], [.45, .955]], links: [{ g: 'backgammon' }] },
     // (2026-11-25) the Rijksmuseum: coloured stereograph 'The Chess Players', man and woman at chess
     { id: 'chessst', w: 2048, h: 1033, rijks: 'RP-F-F10541', bg: '#d8cdb5', spots: [[.37, .71], [.395, .6], [.314, .31], [.181, .25], [.366, .12], [.75, .5]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Art Institute of Chicago: Posada, 'Corrida de Toros' (1898) — a spiral dice race game of the bullfight
+    { id: 'corrida', w: 1544, h: 2048, aic: 52044, no: '1944.943', bg: '#d9d3bf', spots: [[.5, .07], [.47, .42], [.46, .82], [.84, .11], [.12, .81], [.3, .95]], links: [{ ex: 'goose' }, { room: 'chance' }] },
+    // (2026-11-25) the Art Institute of Chicago: American ambrotype (1865), three men playing cards
+    { id: 'ambrocards', w: 1651, h: 2048, aic: 250224, no: '2019.603', bg: '#3b2c24', spots: [[.47, .5], [.275, .39], [.51, .38], [.72, .4], [.135, .56], [.03, .5]], links: [{ g: 'poker' }, { g: 'solitaire' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
