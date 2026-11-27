@@ -44,7 +44,7 @@ a{color:#f0b48a}
 <body>
 <header>
   <h1>花札（こいこい）絵柄サンプル — 難所の4枚<small>世界のボドゲ大百科 ／ 本番の48枚に進む前の確認用</small></h1>
-  <p class="lead">明治〜昭和前期の八八花（はちはちばな）の図案の決まり事に沿って、構図を一枚ずつ手で描き起こし、墨の線を先に刷ってから合羽刷り（型紙＋刷毛）の色を重ねる手順をそのまま再現しました。版ずれ・刷りむら・和紙の繊維と斑点・線の揺らぎ・札の縁に折り返した黒い裏紙まで入れています。短冊・盃の文字は書体を使わず筆の運びで描いています。札をクリックすると原寸（1280×2120）で見られます。</p>
+  <p class="lead">八八花（はちはちばな）の図案を下敷きにして形を合わせ、線は一本ずつ筆で引き直しました（入り・抜き・太さの抑揚つき）。刷りは墨の主版を先に、合羽刷り（型紙＋刷毛）の色を後から重ねる手順のまま、版ずれ・刷りむら・和紙の繊維と斑点・札の縁に折り返した黒い裏紙まで再現しています。盃の「寿」は書体を使わず筆で書いています。札をクリックすると原寸（1280×2120）で見られます。</p>
 </header>
 <div class="cards">
   <figure><a href="img/cards/matsu-tsuru@2x.webp" data-z><img src="img/cards/matsu-tsuru.webp" alt="松に鶴" width="640" height="1060"></a><figcaption><b>松に鶴</b><span>1月・光札</span></figcaption></figure>
@@ -56,18 +56,18 @@ a{color:#f0b48a}
 <section>
   <h2>自己採点（各5点）</h2>
   <table>
-    <thead><tr><th>札</th><th>構図の正確さ</th><th>色</th><th>刷りの味</th><th>文字</th><th>ベクター感の無さ</th></tr></thead>
+    <thead><tr><th>札</th><th>構図の正確さ</th><th>色</th><th>刷りの味</th><th>文字</th><th>筆の線・ベクター感の無さ</th></tr></thead>
     <tbody id="score"></tbody>
   </table>
-  <p class="note" style="margin-top:10px">構図は参考資料（下記）と同じ方眼に重ねて位置・大きさを照合。色は現行品の鮮やかなインクではなく、墨・朱・雌黄（黄）・紫・群青系の顔料らしい落ち着いた色にしています。</p>
+  <p class="note" style="margin-top:10px">構図は参考の図案と同寸で左右に並べて照合。色は現行品の鮮やかなインクではなく、墨・朱・雌黄（黄）・紫・黄丹・浅い群青の顔料らしい落ち着いた色にしています。盃の口には金の縁と、漆の照りを入れました。</p>
 </section>
 
 <section>
   <h2>作り方</h2>
   <ul>
-    <li>各要素（鶴・松・道風・蛙・鳳凰・桐・菊・盃など）を、点の座標を一つずつ置いて描き起こし（参考画像のパスは使っていません）。</li>
-    <li>刷りの工程を版ごとに分けて再現：①墨の線（主版）→②色ごとの型紙（合羽刷り）。色版ごとに数ピクセルの版ずれ、刷毛の筋・顔料のむら、縁の溜まり、和紙の繊維・斑点、紙の地の透け。</li>
-    <li>札の縁は黒い裏紙を表に折り返した作り（角は額縁状の合わせ目）。</li>
+    <li>図案を下敷き（トレース台）にして、色の面は型紙として切り直し（手で切ったような揺らぎ）、線は中心線をたどって一本ずつ筆で引き直し。下敷きの均一な太さの線や図形はそのまま使っていません。</li>
+    <li>筆の線：入りは重く、抜きは細く、途中で太さがゆっくり揺れる。太い黒（冠・傘の頭など）は線ではなく墨の型紙として刷る。</li>
+    <li>刷りの工程：①墨の主版 →②色ごとの型紙（合羽刷り）。色版ごとの版ずれ、刷毛の筋・顔料のむら、縁の溜まり、和紙の繊維・斑点、紙の地の透け。札の縁は黒い裏紙を表に折り返した作り。</li>
     <li>出力は 1280×2120 の画像（WebP）。生成スクリプト：<code>hanafuda/tools/art/</code></li>
   </ul>
 </section>
@@ -77,17 +77,17 @@ a{color:#f0b48a}
   <ul>
     <li>フランス国立図書館（BnF）所蔵の19世紀の花札（京都・赤田製の銘入り）— Wikimedia Commons「Hanafuda, ou jeu des fleurs - jeu de cartes, estampe - btv1b105093472」（<a href="https://commons.wikimedia.org/wiki/Category:Hanafuda,_ou_jeu_des_fleurs_-_jeu_de_cartes,_estampe_-_btv1b105093472" rel="noopener">Commons</a>）：刷りの質感・版ずれ・枠の作りの手本</li>
     <li>白美人印の八八花札（昭和前期）— Wikimedia Commons（<a href="https://commons.wikimedia.org/wiki/File:%E7%99%BD%E7%BE%8E%E4%BA%BA%E5%8D%B0%E3%81%AE%E5%85%AB%E5%85%AB%E8%8A%B1%E6%9C%AD%EF%BC%88%E6%98%AD%E5%92%8C%E5%89%8D%E6%9C%9F%EF%BC%89.jpg" rel="noopener">Commons</a>）：48枚の図案の配置</li>
-    <li>Hanafuda January Hikari Alt ／ November Hikari Alt ／ December Hikari Alt ／ September Tane Alt（Wikimedia Commons の SVG）：4枚の構図の照合用（形は流用せず照合のみ）</li>
+    <li>Hanafuda January Hikari Alt ／ November Hikari Alt ／ December Hikari Alt ／ September Tane Alt（Wikimedia Commons の SVG）：4枚の下敷き（形を合わせるための下絵。図形そのものは使わず、線と色面は描き直し）</li>
     <li>図案の決まり事・歴史：Wikipedia「花札」（1886年ごろ柳の光札が小野道風に差し替えられた経緯など）、サザノ「花札の短冊の文字」（あかよろし・みよしの）</li>
   </ul>
 </section>
 <div class="zoom" id="zoom"><img alt=""></div>
 <script>
 const S = [
-  ['松に鶴', 4, 4, 4, '—', 4],
-  ['柳に小野道風', 4, 4, 4, '—', 4],
-  ['桐に鳳凰', 4, 4, 4, '—', 4],
-  ['菊に盃', 4, 4, 4, 4, 4],
+  ['松に鶴', 5, 4, 4, '—', 4],
+  ['柳に小野道風', 5, 4, 4, '—', 4],
+  ['桐に鳳凰', 5, 4, 4, '—', 4],
+  ['菊に盃', 5, 4, 4, 4, 4],
 ];
 document.getElementById('score').innerHTML = S.map(r => '<tr>' + r.map((v, i) => i ? `<td class="n">${v}</td>` : `<td>${v}</td>`).join('') + '</tr>').join('');
 const z = document.getElementById('zoom'), zi = z.querySelector('img');
