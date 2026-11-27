@@ -27,6 +27,11 @@
      as b_chain, and c1 / a1 the pieces the move's / the answer's first capture takes;
      k 'greedy' a wrong move whose first capture takes more than the answer's first (c1 > a1) but less in total; more: its piece
                could still go on where it stopped
+   t_count (2026-11-27 担当E, count the recapture: taken − taken back): { k, c, r, a, ar, an, same }
+     c  the pieces the move takes (the chain in full) · r  the most the opponent then takes back in one turn (oppMost)
+     a / ar / an  the answer's taken / taken back / a − ar (the one move whose c − r is the biggest: countBest)
+     k 'most' the answer · 'greedy' a wrong move taking more than the answer (c > a) and more taken back ·
+       'back' taking no more than the answer and something taken back (r > 0) · 'small' nothing taken back but fewer taken (c < an)
   FanoronaLsFacts.best(E, spec) → the move that takes the most (null when two moves take as many)
    FanoronaLsFacts.hint(E, id, spec) → the points of the pieces that can capture now (never the answer's piece alone)
    Moves are the engine's notation (h2-h3A), points its indices r * 9 + c. Works as a plain script and in Node. */
@@ -100,7 +105,23 @@
     if (f.k !== 'most' && f.c1 > f.a1) f.k = 'greedy';
     return f;
   }
+  // t_count: the one capture whose taken − taken back (the opponent's biggest reply) is the biggest (null when two are)
+  function countNet(E, pos, m) { const c = capN(E, pos, m), r = oppMost(E, pos, m).c; return { c, r, n: c - r }; }
+  function countBest(E, spec) {
+    const pos = E.Pos.from(spec); if (!pos.hasCaps()) return null;
+    let mx = -1e9, b = null, k = 0;
+    for (const m of pos.moves(true)) { const o = countNet(E, pos, m); if (o.n > mx) { mx = o.n; b = m; k = 1; } else if (o.n === mx) k++; }
+    return k === 1 ? b : null;
+  }
+  function countFact(E, spec, m) {
+    const pos = E.Pos.from(spec), b = countBest(E, spec), S = pos.steps(m);
+    if (!S || !b || !S[0].cap.length) return { k: 'bad' };
+    const o = countNet(E, pos, m), B = countNet(E, pos, b);
+    const f = { c: o.c, r: o.r, a: B.c, ar: B.r, an: B.n, same: S[0].from === pos.steps(b)[0].from, from: S[0].from };
+    return Object.assign(f, { k: m === b ? 'most' : o.c > B.c ? 'greedy' : o.r > 0 ? 'back' : 'small' });
+  }
   function fact(E, id, spec, m) {
+    if (id === 't_count') return countFact(E, spec, m);
     if (id === 'b_chain') return chainFact(E, spec, m);
     if (id === 't_big') return bigFact(E, spec, m);
     if (id === 'b_win') return winFact(E, spec, m);
@@ -119,7 +140,7 @@
     if (id === 'b_safe') return [...new Set(pos.paikaSteps().map(x => x.from))];   // (every piece you can move: never the answer's alone, 追52)
     return [...new Set(pos.capSteps(null).map(x => x.from))];
   }
-  const API = { fact, best, hint, endOf, capN, chainFact, bigFact, safeFact, safeBest, oppMost, winFact, winBest };
+  const API = { fact, best, hint, endOf, capN, chainFact, bigFact, safeFact, safeBest, oppMost, winFact, winBest, countBest, countFact, countNet };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   if (typeof window !== 'undefined') window.FanoronaLsFacts = API;
 })();
