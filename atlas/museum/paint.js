@@ -239,6 +239,10 @@
     { id: 'coster', w: 2048, h: 1575, rijks: 'RP-P-1960-204', bg: '#2b2824', spots: [[.38, .66], [.6, .58], [.25, .5], [.42, .35], [.13, .33], [.86, .45]], links: [{ g: 'backgammon' }] },
     // (2026-11-25) the Rijksmuseum: Hans Watzek, 'Kiebitz' (1894), halftone in 'La Photographie est-elle un Art?'
     { id: 'kiebitz', w: 1710, h: 1538, rijks: 'RP-F-2001-7-162-18', bg: '#d9d2c2', spots: [[.76, .45], [.64, .27], [.33, .42], [.56, .6], [.9, .06], [.5, .97]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Rijksmuseum: Esaias van de Velde drawing, tric-trac players in a castle garden (1630)
+    { id: 'evdvelde', w: 2048, h: 1258, rijks: 'RP-T-00-280', bg: '#dcdad2', spots: [[.7, .52], [.6, .38], [.8, .45], [.85, .3], [.25, .6], [.12, .82]], links: [{ g: 'backgammon' }] },
+    // (2026-11-25) the Rijksmuseum: Leendert van der Cooghen, two men at tric-trac with a monkey in the window (1666)
+    { id: 'cooghen', w: 2048, h: 1339, rijks: 'RP-P-BI-6200', bg: '#e6e2d6', spots: [[.48, .6], [.3, .32], [.36, .5], [.22, .2], [.53, .39], [.71, .27]], links: [{ g: 'backgammon' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
