@@ -131,6 +131,14 @@
     { id: 'hey', w: 2048, h: 1388, rijks: 'RP-P-OB-16.717', bg: '#e2dccc', spots: [[.45, .74], [.28, .4], [.58, .38], [.75, .3], [.63, .73], [.26, .77]], links: [{ g: 'chess' }] },
     // (2026-11-25) the Rijksmuseum: coloured stereograph 'The artful card, or, one too many for granny. Hearts are trumps!'
     { id: 'artful', w: 2048, h: 1000, rijks: 'RP-F-F10570', bg: '#d9cfb6', spots: [[.212, .565], [.171, .44], [.396, .498], [.328, .536], [.289, .648], [.396, .297]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Art Institute of Chicago: Cézanne, watercolour study for The Card Players
+    { id: 'cezcards', w: 1686, h: 1271, aic: 133136, no: '475.1983', bg: '#e8d2c6', spots: [[.38, .27], [.62, .5], [.58, .68], [.09, .5], [.25, .6], [.72, .6]], links: [{ g: 'poker' }, { g: 'solitaire' }] },
+    // (2026-11-25) the Art Institute of Chicago: Vuillard, 'The Game of Checkers' (1899), colour lithograph
+    { id: 'vuillard', w: 1663, h: 2048, aic: 22735, no: '1936.199', bg: '#b8925a', spots: [[.42, .79], [.3, .56], [.6, .42], [.45, .22], [.15, .82], [.29, .31]], links: [{ g: 'checkers' }] },
+    // (2026-11-25) the Art Institute of Chicago: Cruikshank after Marryat, 'Game of Chess' (1814)
+    { id: 'cruikchess', w: 1686, h: 1198, aic: 90197, no: '1928.1507d', bg: '#c9c79a', spots: [[.48, .55], [.46, .37], [.21, .25], [.66, .27], [.47, .86], [.5, .95]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Art Institute of Chicago: American photograph (c. 1898), woman and child playing dominoes
+    { id: 'domino98', w: 1686, h: 1350, aic: 63559, no: '1981.651', bg: '#5e5440', spots: [[.47, .51], [.33, .45], [.62, .38], [.49, .39], [.85, .3], [.73, .88]], links: [{ room: 'chance' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
