@@ -45,7 +45,11 @@
     // (2026-11-27) Deep Blue (IBM computer) v. Garry Kasparov, 1997: Deep Blue Wins
     { id: 'deepblue1997', kind: 'chess', res: 'w', moves: 'e4 c6 d4 d5 Nc3 dxe4 Nxe4 Nd7 Ng5 Ngf6 Bd3 e6 N1f3 h6 Nxe6 Qe7 O-O fxe6 Bg6+ Kd8 Bf4 b5 a4 Bb7 Re1 Nd5 Bg3 Kc8 axb5 cxb5 Qd3 Bc6 Bf5 exf5 Rxe7 Bxe7 c4',
       mk: { 9: { a: [['g5', 'f7']] }, 14: { a: [['h6', 'g5']] }, 15: { a: [['g5', 'e6']] }, 16: { a: [['e7', 'e1']] }, 19: { a: [['g6', 'e8']] }, 23: { a: [['a4', 'b5']] }, 25: { a: [['e1', 'e6']] },
-        26: { a: [['d5', 'f4']] }, 31: { a: [['d3', 'b5']] }, 33: { s: ['f5'] }, 34: { a: [['e1', 'e7']] }, 35: { a: [['e1', 'e7']] }, 37: { a: [['c4', 'b5'], ['c4', 'd5']], s: ['c8'] } } }
+        26: { a: [['d5', 'f4']] }, 31: { a: [['d3', 'b5']] }, 33: { s: ['f5'] }, 34: { a: [['e1', 'e7']] }, 35: { a: [['e1', 'e7']] }, 37: { a: [['c4', 'b5'], ['c4', 'd5']], s: ['c8'] } } },
+    // (2026-11-27) Go Seigen v. Honinbo Shusai, 1933–1934: The 3-3, Star Point and Tengen Game
+    { id: 'seigen1933', kind: 'go', size: 19, res: 'W+2',
+      moves: 'qc cd dp pq jj pd qd pe ob qn jp lq dj ed lo nq kq lp ko ch gj fq fo iq gp cq cp dq nd ph pj ne me mf nf ng oe of ne nj om mg ke hc qm rm rn rl ro pm ql qk pl pn pk qj nl pi qp on nn no mo op qr qq rq pr rr mn nm lm ll kp mp mq ip jq kk cn ep cj ck dk cl dl ci bj bi di ej bh dm ei fj cm ak ai el bp rf co qg rh jc gq eq en fn er fr dr hq hr hp gr fc ic dc cc gd he ge je hd id hf kd le kc og oh pg em ek fm gm mb cb ec eb dd db gb bc bd bb nb oa fb ea gh jf ie ff hi hg eo fp hl il jh fh fi hj if ih ii ig jg ji fg kf ij ik hh gf mk df ml sm sk mm dg li ol ln nk km fl gl oj qh ri cf ef gi eh ee eg de bf bq br ps os qs oq bo aq an bn am ao rg mi qi lh kh lj rj rk sh sj bg ae cg ag fe gc fd ce kg mc ki fk ld lc gk bk bl na nc gg fa ga ac ad lg mh qo lk',
+      mk: {1: {'s':['qc']},3: {'s':['dp']},5: {'s':['jj']},6: {'s':['qc','dp','jj']},160: {'s':['hl']}} }
   ];
 
   /* ---------- the kinds ---------- */
