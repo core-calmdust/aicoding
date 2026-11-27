@@ -48,7 +48,7 @@
     { id: 'match', src: () => [`museum/match-i18n/${rl()}.js?v=${MATCH_I18N_V}`, 'museum/match.js?v=81'], ready: () => !!(window.AtlasMatch && window.MUSEUM_MATCH_T && MUSEUM_MATCH_T[rl()]), render: (el, c) => AtlasMatch.render(el, c) },
     { id: 'chance', src: () => ['museum/chance-i18n/en.js?v=' + CHANCE_I18N_V, ...(rl() !== 'en' ? [`museum/chance-i18n/${rl()}.js?v=${CHANCE_I18N_V}`] : []), 'museum/chance.js?v=8'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T && MUSEUM_CHANCE_T.en && MUSEUM_CHANCE_T[rl()]), render: (el, c) => AtlasChance.render(el, c) },   // (per language)
   ];
-  const READ_I18N_V = 80, PAINT_I18N_V = 84, PAINT_JS = 'museum/paint.js?v=95', CHANCE_I18N_V = 1, MATCH_I18N_V = 79, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
+  const READ_I18N_V = 81, PAINT_I18N_V = 84, PAINT_JS = 'museum/paint.js?v=95', CHANCE_I18N_V = 1, MATCH_I18N_V = 79, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
   const KEY = 'atlas-museum-room';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const loaded = {};
