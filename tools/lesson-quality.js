@@ -18,7 +18,7 @@ const srv = http.createServer((q, r) => { const u = decodeURIComponent(q.url.spl
   if (!f.startsWith(ROOT)) { r.writeHead(403); return r.end(); }
   fs.readFile(f, (e, d) => { if (e) { r.writeHead(404); return r.end(); } r.writeHead(200, { 'Content-Type': MIME[path.extname(f)] || 'application/octet-stream' }); r.end(d); }); });
 
-const TIC = { ur: /ワン/, patolli: /ワン/, amazons: /ケロ/, shogi: /コン(?![ト-ヾ])/, xiangqi: /コン(?![ト-ヾ])/, janggi: /コン(?![ト-ヾ])/, backgammon: /ワン/, chess: /ピョン/, go: /ペン(?!ギ)/, gomoku: /ペン(?!ギ)/, hex: /ペン(?!ギ)/, checkers: /カニ/, foxgeese: /クワ/, konane: /カニ/, ugolki: /ホー/, fanorona: /カニ/ };const plain = s => String(s || '').replace(/<br\s*\/?>/g, '\n').replace(/<[^>]+>/g, '').trim();
+const TIC = { ur: /ワン/, patolli: /ワン/, amazons: /ケロ/, shogi: /コン(?![ト-ヾ])/, xiangqi: /コン(?![ト-ヾ])/, janggi: /コン(?![ト-ヾ])/, backgammon: /ワン/, chess: /ピョン/, go: /ペン(?!ギ)/, gomoku: /ペン(?!ギ)/, hex: /ペン(?!ギ)/, checkers: /カニ/, foxgeese: /クワ/, konane: /カニ/, ugolki: /ホー/, fanorona: /カニ/, agon: /ワン/ };const plain = s => String(s || '').replace(/<br\s*\/?>/g, '\n').replace(/<[^>]+>/g, '').trim();
 const sents = s => (plain(s).match(/[^。！？\n]+[。！？]+|[^。！？\n]+$/gm) || []).map(x => x.trim()).filter(Boolean);
 const end = sn => { const b = sn.replace(/[。！？!?]+$/, '').replace(/[）)」]+$/, ''); for (const e of ['なんだ', 'んだ', 'だよ', 'だね', 'よね', 'かな', 'よう', 'ろう', 'よ', 'ね']) if (b.endsWith(e)) return e === 'だよ' ? 'よ' : e === 'なんだ' ? 'んだ' : e === 'だね' ? 'ね' : e; return /[！？]$/.test(sn) ? sn.slice(-1) : 'x'; };
 const REASON = /(から|ので|ため|と、|と相手|ると|れば|なら|だと|では|せいで|取られ|負け|逃げ|防げ|止め|ふさ|残る|残っちゃ|できない|届かない|ならない|損)/;
@@ -220,6 +220,30 @@ function ugPuzzleTexts() {
     return { key: T.id, title: T.id, intro: F.text('ja', 'hi', 0), ramp: [], probs };
   });
 }
+// (2026-11-27 担当F) the 3D agon puzzles: per theme as a player meets it (atlas/puzzles.js agMoved with キンダイスン's words,
+//  atlas/games/agon-pz.js): the greeting + goal, the hints, after a right move the reply line (no praise on the way: the 詰め rule)
+//  and the cheer when solved, and for each of the first 5 puzzles the words after its first wrong move (the defender's reply
+//  engine.js duelReply, the fact agon/pzwhy.js facts() names) — scored as a lesson; whose move from the puzzle (1 = 白 / 2 = 黒)
+function agPuzzleTexts() {
+  const F = require(path.join(ROOT, 'atlas/games/agon-pz.js')), W = require(path.join(ROOT, 'agon/pzwhy.js')), E = require(path.join(ROOT, 'agon/engine.js')), PZ = JSON.parse(fs.readFileSync(path.join(ROOT, 'agon/puzzles.json'), 'utf8'));
+  E.setRule('std');
+  const name = c => c === 2 ? '黒' : '白';
+  return PZ.themes.map((T, ti) => {
+    const N = {}, tx = (k, v) => F.text('ja', k, ti * 2 + (N[k] = N[k] == null ? 0 : N[k] + 1) * (1 + Math.floor(ti / 5)), v);   // (= atlas/puzzles.js agT: each line's variants in turn)
+    const probs = T.puzzles.slice(0, 5).map(P => {
+      const pos = E.Pos.from(P.s), me = pos.turn, n = P.n, good = E.duelGood(P.s, [], n, 'std', 6e7) || [];
+      const m = pos.moves().find(x => x !== E.PASS && !good.includes(x)), mid = E.replay(P.s, [m]).pos, over = E.judge(mid).over;
+      let r = null, after = null;
+      if (n > 1 && !over) { r = E.duelReply(P.s, [m], n - 1, 'std').move; if (r != null) after = E.replay(P.s, [m, r]).pos; }
+      const w = W.facts({ E, me, mid, after, reply: r, left: n - 1, last: n <= 1 || over });
+      const ng = tx(w.k, Object.assign({ c: name(me) }, w.v));
+      const ask = tx('goal', { n, c: name(me) }), hint = tx('pz.hint1', { n }) + ' ' + tx('pz.hintText');
+      const gd = (n > 1 ? tx('mid', { n: n - 1 }) + ' ' : '') + tx('solved');
+      return { ask, hint, good: gd, ng: ng + ' ' + tx('ans'), tw: me === 2 ? 2 : 1 };
+    });
+    return { key: T.id, title: T.id, intro: F.text('ja', 'hi', 0), ramp: [], probs };
+  });
+}
 // (2026-11-25 担当D) the 3D fanorona puzzles: per theme as a player meets it (atlas/puzzles.js faMoved with チェッカニ's words,
 //  atlas/games/fanorona-pz.js): the greeting + goal, the hints, after a right move the reply line (no praise on the way: the 詰め rule)
 //  and the cheer when solved, and for each of the first 5 puzzles the words after its first wrong move (the defender's reply
@@ -277,7 +301,7 @@ function jgPuzzleTexts() {
   await pg.setRequestInterception(true);   // (fonts / CDNs: not needed, and they hang where the network is closed — as tools/lesson-progress.js)
   pg.on('request', q => { const u = q.url(); if (u.startsWith(`http://127.0.0.1:${port}/`) || u.startsWith('data:') || u.startsWith('blob:')) q.continue(); else q.abort(); });
   await pg.goto(`http://127.0.0.1:${port}/atlas/`, { waitUntil: 'domcontentloaded' }); await new Promise(r => setTimeout(r, 4000));
-  const PZ_ONLY = ['fanorona'];   // (2026-11-25 担当D: fanorona has its puzzles on the 3D table, its lessons not yet — scored below)
+  const PZ_ONLY = ['agon'];   // (2026-11-27 担当F: agon has its puzzles on the 3D table first, the lessons later — remove it then)   // (2026-11-25 担当D: fanorona had its puzzles on the 3D table first; 2026-11-27 担当E: its lessons too, atlas/ls-fanorona.js — scored with the others)
   const pgGames = games.filter(g => !PZ_ONLY.includes(g)), onlyPz = games.length > 0 && !pgGames.length;   // (konane: the lessons (atlas/ls-konane.js, 2026-11-25) and the puzzles, scored below)   // (foxgeese: the lessons (atlas/ls-foxgeese.js) and the puzzles, scored below)
   const R = onlyPz ? {} : await pg.evaluate(async games => {
     let src = await (await fetch('lessons3d.js?x=' + Date.now())).text();
@@ -318,11 +342,13 @@ function jgPuzzleTexts() {
   if (!games.length || games.includes('konane')) R['konane/pz'] = knPuzzleTexts();
   if (!games.length || games.includes('ugolki')) R['ugolki/pz'] = ugPuzzleTexts();
   if (!games.length || games.includes('fanorona')) R['fanorona/pz'] = faPuzzleTexts();
+  if (!games.length || games.includes('agon')) R['agon/pz'] = agPuzzleTexts();
   if (!games.length || games.includes('janggi')) try { R['janggi/pz'] = jgPuzzleTexts(); } catch (e) { R['janggi/pz'] = [{ err: String(e) }]; }
   const TN = R.__TN || {}; delete R.__TN; turnNames = TN;
   const rep = {}; let sum = 0, n = 0;
   // (2026-11-22) the board facts (tools/lesson-facts.js): a lesson whose marks / answers / claims do not hold on the board fails
-  let FACTS = {}; try { const tmp = require('os').tmpdir() + '/lesson-facts.json'; try { require('child_process').execFileSync(process.execPath, [path.join(__dirname, 'lesson-facts.js'), '--json', tmp], { stdio: 'ignore' }); } catch (e) {} FACTS = JSON.parse(fs.readFileSync(tmp, 'utf8')); } catch (e) {}
+  // (2026-11-27 担当A: lesson-facts.js for the games asked for only — the whole set takes over 10 minutes)
+  let FACTS = {}; try { const tmp = require('os').tmpdir() + '/lesson-facts.json'; try { require('child_process').execFileSync(process.execPath, [path.join(__dirname, 'lesson-facts.js'), ...(games.length ? [games.join(',')] : []), '--json', tmp], { stdio: 'ignore' }); } catch (e) {} FACTS = JSON.parse(fs.readFileSync(tmp, 'utf8')); } catch (e) {}
   // (2026-11-23 ユーザー：回答可能かどうかも評価に) --progress out.json (tools/lesson-progress.js --json): a lesson that could not be
   //  played to the end with the right answers (stuck, a JS error, short of full points) loses 60
   let PROG = {}; if (opt('--progress')) try { for (const r of JSON.parse(fs.readFileSync(opt('--progress'), 'utf8'))) if (!r.ok && r.key !== '-') (PROG[r.game + (r.kind === 'open' ? '/open' : '')] ||= {})[r.key] = r.fail || 'failed'; } catch (e) { console.error('progress: ' + e.message); }

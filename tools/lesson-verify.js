@@ -771,7 +771,7 @@ function gomoku(opt) {
 //   ⑦⑧ ハコピヨ's words (atlas/lessons3d.js dotsJa, run here) against the board: the boxes the red line hands over (≥1 when the
 //      words say so) and the boxes lost ((best − v) / 2), no 「開く」 for a line that takes, the question's 「1本」 / 「広い盤」 and the
 //      2D example's 「緑の点線も安全な線で、どれを選んでも同じ結果」 (problem 0 has other safe lines, all best)
-const DT_DONE = new Set(['safe', 'third', 'take', 'chain', 'hard', 'double', 'control', 'parity', 'sacrifice', 'loop']);
+const DT_DONE = new Set(['safe', 'third', 'take', 'chain', 'hard', 'double', 'control', 'parity', 'sacrifice', 'loop', 'count']);
 function dots(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'dots/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'dots/lessons.json'), 'utf8'));
@@ -928,6 +928,32 @@ function dots(opt) {
           if (/残し|残すには/.test(ask + hint) && q.k !== 'loopdec') a(`⑧ the question / hint 「${ask}」「${hint}」 on a ${q.k}`);
           if (/どこから開く|ループから開く|主導権がない/.test(ask + hint) && q.k !== 'loopopen') a(`⑧ the question / hint 「${ask}」「${hint}」 on a ${q.k}`); }
         d = (q.n - 3) * 10 + comps.length;
+      } else if (id === 'count') {
+        // (2026-11-27 担当A) count = DTJ.count / ls.count (「主導権を持つ側は、2つ残しで手番を返すか、全部取り切るかを決める…1〜2箱の小さな鎖は、
+        // 差し出すと手番が入れかわる…長い鎖があっても、小さな鎖が何本あるかで答えが変わる」): no safe line, no loop, the boxes to take one
+        // opened chain of 2, every other part a plain chain, both a small chain (1–2: F.sm, the words' {s}) and a chain of 3+ left (so the
+        // control lesson's 「長い鎖が残れば残す」 alone does not decide), one take line and one double-deal line (E.captureMoves), the best
+        // line exactly one of them and the other worse. Along the solver's line after the best line the largest chain left is the mover's
+        // (takeC / decC 「最後の長い鎖はきみのもの」); after the take (best) the mover's first opening is a small chain (takeC 「小さな鎖を先に
+        // あげれば」); after the red take (when the leave is best) the largest chain is the opponent's (yAllC 「最後の長い鎖を相手に取られる」).
+        const comps = E.components(p, true), cur = comps.filter(c => c.boxes.some(bx => p.cnt[bx] === 3)), rest = comps.filter(c => !cur.includes(c));
+        if (F.ns) a(`④ ${F.ns} safe lines`);
+        if (comps.some(c => c.loop)) a('④ a loop on the board (the words say 鎖)');
+        if (cur.length !== 1 || cur[0].n !== 2 || [...p.cnt].filter(c => c === 3).length !== 1) a(`④ the boxes to take are not one opened chain of 2 (${cur.map(c => c.n)})`);
+        if (rest.some(c => !c.simple)) a('④ a part with a junction box (not a plain chain)');
+        const sm = rest.filter(c => c.n <= 2).length; if (!sm) a('④ no small chain (1–2) left'); if (F.sm !== sm) a(`⑧ dFacts sm ${F.sm}, the board ${sm}`);
+        if (!rest.some(c => c.n >= 3)) a('④ no chain of 3+ left (then it is the control lesson)');
+        const cm = E.captureMoves(p);
+        if (cm.forced !== undefined || cm.moves.length !== 1 || cm.declines.length !== 1) a('④ not one take line and one double-deal line');
+        else { const tk = cm.moves[0], dd = cm.declines[0];
+          if (!(B.length === 1 && (B[0] === tk || B[0] === dd))) a(`④ the best lines ${B} are not the take ${tk} or the leave ${dd} alone`);
+          else { kinds[j] = B[0] === tk ? 'take' : 'dd'; if (q.k !== kinds[j]) a(`④ k ${q.k}, the board ${kinds[j]}`);
+            const other = B[0] === tk ? dd : tk; if (V.get(other) >= best) a(`④ ${other} is as good as the best`);
+            const big = rest.reduce((x, c) => c.n > x.n ? c : x), pv = dtPV(E, G, p, B[0]);
+            if (!big.boxes.every(bx => pv.got[bx] === 0)) a(`⑧ along the best line the largest chain (${big.n}) is not the mover's (「最後の長い鎖はきみのもの」)`);
+            if (kinds[j] === 'take' && !(pv.firstOpen >= 1 && pv.firstOpen <= 2)) a(`⑧ after the take the mover first opens a part of ${pv.firstOpen} (「小さな鎖を先にあげれば」)`);
+            if (kinds[j] === 'dd') { const pr = dtPV(E, G, p, tk); if (!big.boxes.every(bx => pr.got[bx] === 1)) a(`⑦ after the red take ${tk} the largest chain is not the opponent's (yAllC)`); } } }
+        d = (q.n - 3) * 10 + comps.length;
       } else if (id === 'control') {
         // (2026-11-25 担当A) control = ハコピヨ's rule (DTJ.control.intro / ls.control.body: 「残りの鎖が小さい…なら全部取る…大きな長い
         // 鎖が残っていれば、残して主導権をキープ」) on the board: no safe line, no loop, one box to take, in an opened chain of 2 (the
@@ -984,6 +1010,9 @@ function dots(opt) {
     });
     // (2026-11-27 担当A, loop) the two choices of the intro on the board: the 4-leave and the take both among 1–9 and in the 3D five (1–5),
     // the loop opened first in the 3D five, once with a smaller chain beside it (the loop is not just the smallest part); no kind 5 times
+    // (2026-11-27 担当A, count) both answers (the take, the leave) among 1–9 and in the 3D five; neither more than 6 times in 1–9
+    if (id === 'count') { const k9 = kinds.slice(1), k5 = kinds.slice(1, 6);
+      for (const k of ['take', 'dd']) { if (!k5.includes(k)) add(id, -1, `④ no ${k} problem in the 3D five (${k5})`); if (k9.filter(x => x === k).length > 6) add(id, -1, `⑤ the same move (${k}) more than 6 times`); } }
     if (id === 'loop') { const k9 = kinds.slice(1), k5 = kinds.slice(1, 6), cnt = k => k9.filter(x => x === k).length;
       for (const k of ['dd', 'take']) if (!k5.includes(k)) add(id, -1, `④ no ${k} problem in the 3D five (${k5})`);
       if (!k5.some(k => /^open/.test(k))) add(id, -1, `④ no loopopen problem in the 3D five (${k5})`);
@@ -992,6 +1021,18 @@ function dots(opt) {
   });
   dtIntro(L, X, E, lj, add, only);
   return out;
+}
+// (2026-11-27 担当A, dots count) the solver's line from p after the mover's line e (then the first best line each turn): got[bx] = 0 the
+// mover's / 1 the opponent's, firstOpen = the size of the part the mover first opens (draws a line that takes nothing) after e
+function dtPV(E, G, p0, e) {
+  const q = p0.clone(), got = new Array(G.B).fill(-1); let side = 0, firstOpen = null, step = 0;
+  for (;;) { const lg = q.legal(); if (!lg.length) break; let m = e;
+    if (step) { const A = new E.Solver(G).all(q), bv = Math.max(...A.map(x => x.v)); m = A.find(x => x.v === bv).m; }
+    const bs = [G.eb0[m], G.eb1[m]], before = E.components(q, true), k = q.play(m);
+    bs.forEach(bx => { if (bx >= 0 && q.cnt[bx] === 4 && got[bx] < 0) got[bx] = side; });
+    if (!k) { if (firstOpen === null && side === 0 && step) { const c = before.find(c => bs.some(bx => c.boxes.includes(bx))); firstOpen = c ? c.n : 0; } side ^= 1; }
+    step++; }
+  return { got, firstOpen };
 }
 // (2026-11-26 担当A, dots parity) after the mover's safe line e, every run of safe lines to the end (no safe line left; a safe line
 // never takes, so the turns alternate): opener = who has to open first in every run ('opp' / 'me' / 'mixed'), the long chains (3+,
@@ -1806,7 +1847,7 @@ function ckWarm(opt, L, E, X, val, moveVal, add, only) {
 //   縦と横) and for every wrong move (the king or not, a blocker on the way, a capture or not, a piece of yours taken next), the question
 //   and the hint (a corner / the throne named is in an answer)
 //   ⑨ the 2D (tafl/app.js problemPoints) and the 3D (TAFL.points) both score P.ok
-const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield', 't_tuichi', 't_block', 't_fort', 't_encircle']);
+const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield', 't_tuichi', 't_block', 't_fort', 't_encircle', 's_corner']);
 function tafl(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'tafl/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'tafl/lessons.json'), 'utf8'));
@@ -2099,9 +2140,35 @@ function tafl(opt) {
   { const st = L.steps.find(s => s.id === 't_fort');
     if (st && st.diagram) { const D = st.diagram, p = E.Pos.from(D.s); (D.arrows || []).forEach(([fr, to]) => { const m = E.parse(p, fr + '-' + to); if (m == null) { add('t_fort', -1, `diagram: 追14 ${fr}-${to} is not legal`); return; }
       const f = FT.fortFacts(E, { s: D.s, ok: [m], best: m }); f.bad.filter(b => /^①/.test(b)).forEach(b => add('t_fort', -1, `diagram: 追14 ${b}`)); }); } }
+  // (2026-11-27 第2期 担当A) s_corner「角を固める」(tools/lesson-verify-tfcorner.js): the attackers to move, the king with no line yet but a
+  // corner within his 2 moves. ①② P.ok = the moves after which the king cannot reach a corner within 2 (a full search of his moves and
+  // every reply) ③ ≥3 moves onto a blockade square, the answers ≤ a third of the moves and ≤ half of them, d ≥ 1, 追17 ④ no line now, the
+  // threat a king move, every answer on a blockade square of one corner and taking nothing, no fort / edge deciding, no loss to another
+  // defender's move ⑤ the pool (five) and no two problems with the same shape (cornerSig) ⑥ d×10 − the answers never down, last > first
+  // ⑦⑧ タフリン's words: every wrong move by what follows it (cornerWhy = the 3D tfBlockWhy: the line opened / a トゥイチ / the piece taken by
+  // the king / a king move nobody can reach), the praise, the question and the hints (the ringed piece = the answers' piece, ≥1 near-miss);
+  // the 2D ng says the king gets away (true of every wrong move by ②); the diagram: its arrow guards (追14)
+  const CN = require(path.join(ROOT, 'tools/lesson-verify-tfcorner.js')), cnSig = new Map();
+  const cornerOne = (st, si, P, j, a) => { const f = CN.cornerFacts(E, P), nm = m => E.name(f.p, m); f.bad.forEach(a);
+    five(st.id, j, P, f.me, nm, a);
+    { const sig = CN.cornerSig(E, P); if (cnSig.has(sig)) a(`⑤ the same shape (${sig}) as ${cnSig.get(sig)}`); else cnSig.set(sig, `q${j + 1}`); }
+    if ((P.ok || []).length && new Set(P.ok.map(E.mFrom)).size !== 1) a('⑧ the hint「金の丸がその駒」: the answers come from more than one piece');
+    let W; try { W = X_.tfLsJa(E, st, P, j, k => X_.TFM(k, 'ja'), si); } catch (e) { a('⑧ the words fail: ' + e.message); return f.d; }
+    for (const t of [W.ask, W.hintTx, plain(W.good())]) if (!t || /\{|undefined|NaN/.test(t)) a(`⑧ 「${t}」`);
+    for (const t of [W.ask, W.hintTx, plain(W.good())]) if (/最善|評価|いちばんいい手/.test(t)) a(`⑧ 「${t}」: the engine's view (the goal is the corner within 2)`);
+    for (const m of f.wrong) { const raw = plain(W.ng(m)), x0 = nm(m), i0 = raw.indexOf('赤い印の手'), i1 = raw.indexOf('緑の印の手');
+      if (/\{|undefined|NaN/.test(raw) || i0 < 0 || i1 < 0) { a(`⑦ ${x0}: 「${raw}」 (your move / the right move not named)`); continue; }
+      const tx = raw.slice(i0, i1), want = CN.cornerWhy(E, P, m) || 'other';
+      const said = /王にはさまれて取られ|王に取られ|その駒を取っちゃう/.test(tx) ? 'taken' : /2本|トゥイチ|2方向/.test(tx) ? 'tuichi' : /届かない|間に合わない|ふさげない|ふさぎに行けない|ふさげる攻め手がいない/.test(tx) ? 'king'
+        : /道が開いて|一直線に走れ|駒がいなくなって|道があいて|そのまま角へ逃げこめ/.test(tx) ? 'open' : 'other';
+      if (said !== want) a(`⑦ ${x0}: 「${tx}」 says ${said}, the board: ${want}`); }
+    return f.d * 10 - (P.ok || []).length; };
+  { const st = L.steps.find(s => s.id === 's_corner');
+    if (st && st.diagram) { const D = st.diagram, p = E.Pos.from(D.s); (D.arrows || []).forEach(([fr, to]) => { const m = E.parse(p, fr + '-' + to); if (m == null) { add('s_corner', -1, `diagram: 追14 ${fr}-${to} is not legal`); return; }
+      const f = CN.cornerFacts(E, { s: D.s, ok: [m], best: m }); f.bad.filter(b => /^[①]|^④ (the defenders do not|the king has|the answers guard)/.test(b)).forEach(b => add('s_corner', -1, `diagram: 追14 ${b}`)); }); } }
   L.steps.forEach((st, si) => { const id = st.id; if (!TF_DONE.has(id) || (opt && opt.only && !opt.only.includes(id))) return;   // (opt.only: the mutation tests of one lesson)
     let prevD = -1, firstD = null;
-    if (id === 'b_safe' || id === 't_shield' || id === 't_tuichi' || id === 't_block' || id === 't_fort' || id === 't_encircle') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : id === 't_tuichi' ? tuichiOne : id === 't_block' ? blockOne : id === 't_fort' ? fortOne : id === 't_encircle' ? encOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
+    if (id === 'b_safe' || id === 't_shield' || id === 't_tuichi' || id === 't_block' || id === 't_fort' || id === 't_encircle' || id === 's_corner') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : id === 't_tuichi' ? tuichiOne : id === 't_block' ? blockOne : id === 't_fort' ? fortOne : id === 't_encircle' ? encOne : id === 's_corner' ? cornerOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
     st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), me = p.turn, all = p.moves(), nm = m => E.name(p, m);
       if (P.n > 1) { const d = seqCheck(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
         if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); seqWords(st, si, P, j, a); return; }
@@ -3660,7 +3727,7 @@ function near53(opt) { const src = require('fs').readFileSync(path.join(ROOT, 'a
       for (let k = 1; k <= 5; k++) for (let sum = 0; sum <= 20 * k; sum++) { const n = Math.round(sum * 100 / (20 * k)), near = Math.round((sum + 20) * 100 / (20 * k)) >= 75;
         if (n < 75 && near !== (Math.round(Math.min(20 * k, sum + 20) * 100 / (20 * k)) >= 75)) out.push({ step: 'reversi/opcourse.js', q: 0, msg: `追82 near wrong at ${k} problems, ${sum} points` }); } } }
   return out; }
-const N81_DONE = ['gomoku', 'amazons', 'checkers', 'chess', 'connect4', 'go', 'hex', 'mancala', 'morris', 'shogi', 'tafl', 'xiangqi', 'konane'], N81_NO_RAMPUI = new Set(['amazons', 'hex']);
+const N81_DONE = ['gomoku', 'amazons', 'checkers', 'chess', 'connect4', 'go', 'hex', 'mancala', 'morris', 'shogi', 'tafl', 'xiangqi', 'konane', 'fanorona'], N81_NO_RAMPUI = new Set(['amazons', 'hex']);
 function xiangqiOpen(opt) {
   const fs = require('fs'), CU = require(path.join(ROOT, 'xiangqi/tools/op_curate.js')), E = require(path.join(ROOT, 'xiangqi/engine.js'));
   const OP = (opt && opt.op) || JSON.parse(fs.readFileSync(path.join(ROOT, 'xiangqi/openings.json'), 'utf8'));
@@ -3771,7 +3838,10 @@ const konane = () => require('./lesson-verify-konane.js').verify().out.concat(re
 const ugolki = () => require('./lesson-verify-ugolki.js').verify().out.map(o => ({ step: o.theme, q: o.q, msg: o.msg }))
   .concat(require('./lesson-verify-ugolki-ls.js').verify().out.map(o => ({ step: 'lesson ' + o.id, q: o.q, msg: o.msg })));   // (+ the lessons on the 3D table: tools/lesson-verify-ugolki-ls.js, 担当D)
 // (2026-11-25 担当D) fanorona on the 3D table: the puzzles (8 themes, the 2D shares them) — tools/lesson-verify-fanorona.js
-const fanorona = () => require('./lesson-verify-fanorona.js').verify().out.map(o => ({ step: o.theme, q: o.q, msg: o.msg }));
+// (2026-11-27 担当E) and its lessons listed on the 3D (atlas/ls-fanorona.js READY) — tools/lesson-verify-fanorona-ls.js (the lines recounted on the board)
+const fanorona = () => require('./lesson-verify-fanorona.js').verify().out.map(o => ({ step: o.theme, q: o.q, msg: o.msg })).concat(require('./lesson-verify-fanorona-ls.js').verify().out.map(o => ({ step: o.id, q: o.q, msg: o.msg })));
+// (2026-11-27 担当F) agon: the puzzles (7 themes, 2D agon/app.js puzzleMove) — tools/lesson-verify-agon.js (exact solver, ①〜⑨)
+const agon = () => require('./lesson-verify-agon.js').verify().out.map(o => ({ step: o.theme, q: o.q, msg: o.msg }));
 const reversiOpen = opt => require('./lesson-verify-rvopen.js')(opt);   // (2026-11-24 担当B：リバーシの定跡、tools/lesson-verify-rvopen.js)
 const bgOpen = () => require('./lesson-verify-bgopen.js')();   // (2026-11-24 担当B：バックギャモンの定跡、tools/lesson-verify-bgopen.js)
 const patolli = () => require('./lesson-verify-patolli.js')();   // (2026-11-24 担当C：パトリのレッスン（ベルの復元 v2）、tools/lesson-verify-patolli.js)
@@ -3845,11 +3915,11 @@ function morris72(opt) {
 function morrisBasic(opt) { return require('./lesson-verify-mmbasic.js').verify(opt); }
 // (2026-11-26 第2期 担当A) chess b_check・b_escape・b_mate — tools/lesson-verify-chbasic.js
 function chessBasic(opt) { return require('./lesson-verify-chbasic.js').verify(opt); }
-const GAMES = { pz88, dupkey89, chessDrill, chessBasic, morrisBasic, morris72, near53, goOpen, open67, plural58, backgammon, gomokuOpen, bgOpen, chessOpen, xiangqiOpen, reversiOpen, ur, senet, patolli, foxgeese, konane, ugolki, fanorona, stray, hex, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines, janggi, hexOpen };
+const GAMES = { pz88, dupkey89, chessDrill, chessBasic, morrisBasic, morris72, near53, goOpen, open67, plural58, backgammon, gomokuOpen, bgOpen, chessOpen, xiangqiOpen, reversiOpen, ur, senet, patolli, foxgeese, konane, ugolki, fanorona, agon, stray, hex, connect4, mancala, gomoku, dots, amazons, reversi, checkers, tafl, xiangqi, shogi, shogiOpen, taflOpen, checkersOpen, openLines, janggi, hexOpen };
 module.exports = GAMES; Object.defineProperty(GAMES, '_gm', { value: { gmForbid, gmTrap } }); GAMES.mancalaWords = mancalaWords; Object.assign(GAMES, { chessOpenCtx, chessOpenProblem, chessOpenSet, chessOpenD }); Object.defineProperty(GAMES, '_hex', { value: { deep1: hxDeep1, ctx: hxCtx, near: hxNear, problem: hxProblem, d: hxD, pts: hxPts, kind: (sp, m) => { const X = hxX(); return X.HXA.kind(X.HXA.facts(sp, m)); } } }); Object.defineProperty(GAMES, '_mc', { value: { topic: mcTopic } }); Object.defineProperty(GAMES, '_ck', { value: { ckExact, ckPool, ckDist } });   // (_ck: for checkers/tools/eg_lessons.js)   // (not a game of the CLI: the words pass alone, for tests)
 Object.defineProperty(GAMES, '_xqStray', { value: xqStray42 });   // (the xiangqi 追42 check alone, with a broken pzwhy for tests)
 if (require.main === module) {
-  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'pz88,dupkey89,chessDrill,chessBasic,morrisBasic,near53,plural58,backgammon,reversiOpen,gomokuOpen,goOpen,open67,connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,chessOpen,xiangqiOpen,openLines,janggi,foxgeese,konane,fanorona,ugolki,hex,hexOpen,bgOpen').split(',');
+  const a = process.argv.slice(2), games = (a.find(x => !x.startsWith('-')) || 'pz88,dupkey89,chessDrill,chessBasic,morrisBasic,near53,plural58,backgammon,reversiOpen,gomokuOpen,goOpen,open67,connect4,mancala,gomoku,dots,amazons,reversi,checkers,tafl,xiangqi,shogi,shogiOpen,taflOpen,checkersOpen,chessOpen,xiangqiOpen,openLines,janggi,foxgeese,konane,fanorona,agon,ugolki,hex,hexOpen,bgOpen').split(',');
   let bad = 0;
   for (const g of games) { const f = GAMES[g]((g === 'hexOpen' || g === 'reversiOpen' || g === 'gomokuOpen') && a.includes('--deep') ? { deep: true } : undefined); if (!f.length) { console.log(`OK ${g}` + (g === 'morrisBasic' ? ' (モリス（ナイン）のはじめて b_place・b_mill の①〜⑧・追4・追72：ルールで正解の集まり〈空いた交差点／ミルを作る全手〉、エンジン（engine_simd.wasm＋evalnet）の深さ9と10で正解は20点・ほかは16点未満、16通りの対称で重なりなし、モリフクの文を全合法手で)' : g === 'chessBasic' ? ' (チェスのはじめて b_check・b_escape・b_mate・b_special の①〜⑧・追1・追2・追4・追17・追19・追27・追34・追45・追72：ルールで全合法手、b_escape は材料の読みとエンジン2回、ナイトンの文を全合法手の盤の事実で)' : g === 'chessDrill' ? ' (チェスの駒の動き8本：3D の★の問題を種を固定して生成、各3問・追72 正解は手の1/3以下)' : g === 'ugolki' ? ' (勝ち切りパズル全問の①〜⑨・追16・追65、tools/lesson-verify-ugolki.js ＋ 3D のレッスン（READY）全問の①〜⑨・追17・追27・追52、tools/lesson-verify-ugolki-ls.js)' : g === 'bgOpen' ? ' (バックギャモンの定跡 34項目99問の①〜⑨・追63（評価の誤差）・追53、3D の出し方どおり。⑤ レッスンと同じ盤だった10問のうち9問は2手目の問題 it.rq に（追90：言い回し全部を照合）、残り o41 の1問は pending)' : g === 'open67' ? ' (追67：tafl・checkers・xiangqi・shogi・chess・gomoku・reversi・hex・backgammon の定跡と connect4 の問題の局面が、どの本の見本の局面と同じでも、見本の手が正解（20点）に入っている。検証済みの本は NG、ほかは pending＝node tools/lesson-verify-op67.js --all)' : g === 'goOpen' ? ` (囲碁の定石・布石 ${require('./lesson-verify-goopen.js').DONE().join('・') || 'なし'} の①〜⑨・追4・追9。ほかの本は pending、--all で全問の不合格の内訳)` : g === 'gomokuOpen' ? ` (五目並べの定跡（珠型） ${require('./lesson-verify-gmopen.js').DONE().join('・') || 'なし'} の5問の①〜⑨・追1・追39・追53・追90。①は保存した2つの読みと net の最善で照合、--deep で読み直し)` : g === 'reversiOpen' ? ` (リバーシの定跡 ${[...require('./lesson-verify-rvopen.js').DONE].join('・') || 'なし'} の手順の外の5問の①〜⑨・追1・追43、全定跡の不正解の文の頭＝追53` + (a.includes('--deep') ? '。①②はエンジンで読み直し)' : '。①②は保存した2つの読みで照合、読み直しは --deep)') : g === 'xiangqiOpen' ? ` (シャンチーの定跡 ${JSON.parse(require('fs').readFileSync(path.join(ROOT, 'xiangqi/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id).join('・')} の①〜⑨・追3・追4・追5・追8・追9・追41。ほかの定跡は pending)` : g === 'chessOpen' ? ' (チェスの定跡の drill の①〜⑨・追3・追25。drill のない定跡は pending、プールの全問で追53・追66)' : g === 'connect4' ? ' (count/endwin の⑦⑧)' : g === 'patolli' ? ' (パトリの作り直したレッスン（v2：豆の確率・腕の先・上がり）の①〜⑧・追7・追16・追22・追23・追40。厳密な勝率は C で解き直し)' : g === 'senet' ? ' (セネトのレッスン9本（v2）の①〜⑧・追7・追16・追22・追23・追28・追36・追40・追47・追54・追59・追64。厳密な勝率は C で解き直し、水の家の選ぶ問題は engine.js で数え直し)' : g === 'backgammon' ? ' (選ぶ問題 shots・race の①〜⑨・追22・追23・追40・追54：36通りをルールで数え直し、誤答ごとの説明を14言語で)' : g === 'hex' ? ' (3D の準備13本：緑の印・半回転の try・説明と ほめ言葉の語が盤の事実・追1 準備の問題を本番で出さない)' : g === 'hexOpen' ? ` (ヘックスの定跡 ${JSON.parse(require('fs').readFileSync(path.join(ROOT, 'hex/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id).join('・') || 'なし'} の①〜⑨、全定跡の不正解の文の頭＝追53・16〜19点のほめ言葉＝追71` + (a.includes('--deep') ? '。①②はエンジンで2回読み直し、両方で合格＝追26・追84)' : '。①②は保存した2つの読みで照合、読み直しは --deep＝追26)') : g === 'foxgeese' ? ' (パズル全250問の①〜⑨・追6・追13・追16：厳密なソルバーで手数・正解の集まり・全段階の全不正解手の応手と文、2D の外れた手の文／3D のレッスン（狐：取れるガチョウ・続けて取る・2羽を同時に／ガチョウ：跳ばれない・閉じ込める・2手で閉じ込める）30問の①〜⑧・追3・追7・追16・追52・追70：正解の集まり・全合法手の盤の事実と14言語の文・ヒントの印)' : g === 'konane' ? ' (コナネのパズル全問の①〜⑨・追13・追16・追56：厳密なソルバーで手数・正解の集まり・テーマ（止まる・続けて跳ぶ）を正解手の全部で・全段階の全不正解手の応手と文、2D の外れた手の文。レッスン（3D の READY）：跳び方を数え直して正解の集まり・全不正解手の盤の事実・ヒントの印・準備の手・14言語)' : g === 'janggi' ? ' (パズル全問・レッスン b_rook・b_horse・b_elephant・b_cannon・b_pawn・b_escape・b_mate1・t_capture・t_fork・t_check・t_defend・m_mate2・m_mate3・e_rook・e_pawn の①〜⑨・追19・追20・追24・追27・追31・追34・追38・追39・追42・追44・追51・追55・追60)' : g === 'ur' ? (require('fs').existsSync(require('path').join(process.env.UR_LUT_DIR || '/tmp/urlut', 'finkel.rgu')) ? ' (ウルのレッスン12本の①〜⑧・追7・追16)' : ' (ウルのレッスン12本の③〜⑧・追7・追16。①②は完全解析表なしで未照合＝追26)') : g === 'plural58' ? ' (全ゲームの3Dパズルの案内文 atlas/puzzles.js とシャンチーの外れた手の文 xiangqi/pzwhy.js、追61 の <game>/i18n.js pz.*（xiangqi・chess・hex・morris・connect4・reversi）：1になりうる数のとなりに複数形の語がない＝追58、前の動詞（quedan・restam・осталось）は大文字小文字を問わない＝追69、en・es・fr・pt・de・ru・hi・ar)' : g === 'pz88' ? ' (追88：2D の詰めパズル（<game>/app.js puzzleMove・blockMove）が外れた手を戻さない・正解の手を出さない・途中で pz.good を言わない（hex・fanorona、ほかは pending）、詰めヘックス全403問の全段階の全外れ手×守りの応手で 2D・3D の文が盤の事実（あと何個・残り何手・相手がつながった・止まらない）と合う。追91：3D の詰めパズルの途中の文 <X>.mid にほめ言葉なし（HXX、ほかは pending）)' : g === 'dupkey89' ? ' (追89：3D のレッスン・パズルの文とデータ（atlas/ls-*.js・games/*-pz.js・lessons3d.js・puzzles.js・lsvoice-ja.js・<game>/ls-facts.js）の1つの辞書に同じ鍵が2度ない＝あとの鍵が前のセリフを黙って上書きしない)' : g === 'near53' ? ' (3D の結果の見出し「いい手だね…」「いい線！」「おしい！」は10点以上だけ＝追53・追57・追66、0点の見出し TX.wrong は14言語とも「惜しい」と言わない、3D レッスン本文の不正解の文の頭 soft にも近さの語なし＝追73、3D パズルの外れた手の文（foxgeese・konane の -pz.js の ja、janggi・ugolki の -pz.js の全言語）にも＝追78、2D レッスンの不合格の見出し「もう一息」は あと1問で合格のときだけ（janggi・fanorona・konane・foxgeese・checkers・chess・go・hex・morris・reversi・tafl・xiangqi）＝追82、2D の準備の外れた手の文 rampUi.ng（gomoku・konane）＝追81)': g === 'openLines' ? ' (shogi・tafl・checkers・xiangqi の定跡の手順：①合法④名前の手・形⑤ほかの定跡と同じ手順・前半・行き着く先が同じでない＝追15)' : ` (${[...(g === 'gomoku' ? GM_DONE : g === 'dots' ? DT_DONE : g === 'amazons' ? AM_DONE : g === 'reversi' ? RV_DONE : g === 'checkers' ? CK_DONE : g === 'tafl' ? TF_DONE : g === 'xiangqi' ? XQ_DONE : g === 'shogi' ? SH_DONE : g === 'shogiOpen' ? SHO_DONE : g === 'checkersOpen' ? CKO_DONE : g === 'taflOpen' ? new Set(JSON.parse(require('fs').readFileSync(path.join(ROOT, 'tafl/openings.json'), 'utf8')).sets.filter(x => x.verified).map(x => x.id)) : MC_DONE)].join('・')} の①〜⑧${g === 'xiangqi' ? '、詰め233問の外れた手の文＝追20・追42' : g === 'checkers' ? '、基本 b_move・b_jump・b_multi・b_king・b_safe・b_win とショット t_shot1・t_shot2・ただ一つの受け t_defend・決め手 t_best の全問・準備（lesson-verify-ckbasic.js）、詰めチェッカー527問の外れた手×全応手の文＝追20・追42・追58' : ''})`)); continue; }    bad += f.length; f.forEach(x => console.log(`NG ${g} ${x.step} q${x.q}: ${x.msg}`)); }
   process.exit(bad ? 1 : 0);
