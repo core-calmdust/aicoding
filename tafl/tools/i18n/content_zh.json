@@ -107,7 +107,7 @@
 "ls.v_tablut.goal": "走一手，让王在两步内到达边上。",
 "ls.v_tablut.hint": "把王送到能望见两个以上方向边线的格子。",
 "ls.v_tablut.why": "走 {m}，两条逃路！下一步就能到边上。",
-"ls.v_tablut.ng": "走 {x} 逃路会被封住。正解是 {m}。",
+"ls.v_tablut.ng": "走 {x} 的话，攻方能挡住王，两步之内到不了边。正解是 {m}。",
 "pz.th.esc2": "2步逃脱",
 "pz.th.esc2.sub": "制造 tuichi",
 "pz.th.esc3": "3步逃脱",
