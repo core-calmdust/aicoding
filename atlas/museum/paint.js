@@ -269,6 +269,14 @@
     { id: 'chateau', w: 1399, h: 2048, rijks: 'RP-P-OB-43.810', bg: '#ebe3d3', spots: [[.37, .42], [.12, .47], [.43, .29], [.7, .23], [.22, .79], [.53, .89]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
     // (2026-11-25) the Rijksmuseum: Pugillus facetiarum iconographicarum: ruined young man with dice and an elegant woman (1608-18)
     { id: 'pugillus', w: 2048, h: 1398, rijks: 'RP-P-1996-2', bg: '#e8e4da', spots: [[.25, .3], [.32, .18], [.72, .25], [.7, .55], [.71, .84], [.75, .93]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Cornelis Dusart, the Grootebroek lottery prizes brought home (1694)
+    { id: 'grootebroek', w: 1602, h: 2048, rijks: 'RP-P-OB-17.043', bg: '#d8d4cc', spots: [[.42, .4], [.6, .4], [.7, .22], [.13, .27], [.9, .45], [.5, .92]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Caspar Merian after Holbein, two fools dicing (Praise of Folly)
+    { id: 'narren', w: 790, h: 728, rijks: 'RP-P-OB-21.869', bg: '#ece2d4', spots: [[.4, .53], [.27, .25], [.44, .09], [.65, .21], [.88, .44], [.52, .86]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Bendorp, 'Vaderlandsch Historiespel', Dutch history goose-type board (1816)
+    { id: 'historiespel', w: 2048, h: 1591, rijks: 'RP-P-1908-2540', bg: '#e4e0d6', spots: [[.13, .88], [.5, .5], [.5, .57], [.42, .65], [.49, .31], [.5, .97]], links: [{ ex: 'goose' }] },
+    // (2026-11-25) the Rijksmuseum: Daumier, 'Tout ce qu'on voudra' no. 12, draughts players (Le Charivari 1847)
+    { id: 'daumier', w: 1543, h: 2048, rijks: 'RP-P-OB-41.043', bg: '#e6e1d6', spots: [[.55, .47], [.4, .43], [.52, .37], [.67, .4], [.3, .24], [.5, .9]], links: [{ g: 'checkers' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
