@@ -26,6 +26,9 @@ const NEAR = args.includes('--near');
 // --dnear（2026-11-27 担当B）：外れ方を定石の隅（本筋・変化の石から4路以内）の手だけにする。相手が手を抜いた局面は本の側の最善も
 // 別の隅になりやすく ④ で落ちるので、--pmin を小さく・--pn を大きくして隅の中の悪い外れ方を集めるとき用（読む数を減らすだけ、合否は変えない）
 const DNEAR = args.includes('--dnear');
+// --devmin K（2026-11-27 担当B、19路の布石）：--stage2 で、相手が K 手目より前（0 始まりの手数 < K）に外れた局面は広げない。
+// 布石の形（二連星の Q16・Q4、三連星の Q10 など）ができる前に外れた局面は ④ 主題に合わない（op-pick.js --shape でも落とす）。読む数を減らすだけ（合否は変えない）
+const DEVMIN = +opt('--devmin', 0);
 function farOf(g, a) { const N = g.n || 19; if (/^fuseki_/.test(g.id) || N < 19) return false; const i = R.parseCoord(a, N);
   const pts = [].concat(...[g.line].concat((g.vars || []).map(v => v.line))).map(m => R.parseCoord(m, N)).filter(j => j >= 0);
   return !pts.some(j => Math.max(Math.abs(j % N - i % N), Math.abs(Math.floor(j / N) - Math.floor(i / N))) <= 4); }
@@ -65,6 +68,7 @@ if (args.includes('--stage2')) { jobs.length = 0; const all = {}; for (const f o
   for (const [k, c] of Object.entries(all)) { if (c.dev == null || c.mv.length !== c.dev + 2 * DEPTH - 1) continue; const g = O.sets.find(x => x.id === c.id); if (!g || (SETS.length && !SETS.includes(g.id))) continue;
     if (c.dev === 0 && !/^fuseki_/.test(g.id) && (g.n || 19) >= 19) continue;   // (19路の定石：相手が1手目から外れた局面は ④ で落ちるので広げない)
     if (NEAR && farOf(g, c.top[0][0])) continue;   // (--near：本の側の応手が定石の隅から離れた局面は広げない＝そのあとの答えは ④ で落ちる。速さのためだけ)
+    if (c.dev < DEVMIN) continue;   // (--devmin：布石の形ができる前に外れた局面は広げない。速さのためだけ)
     const n = g.n || 19, mv1 = c.mv.concat([c.top[0][0]]), pol = policy(E, startOf(g), mv1.map(s => R.parseCoord(s, n)), komiOf(g), 8);
     pol.list.filter(e => e.m >= 0 && e.p >= (WIDE2 ? 0.03 : 0.05)).slice(0, WIDE2 ? 4 : 2).forEach(e => { const mv = mv1.concat([R.coord(e.m, n)]), kk = g.id + ':' + mv.join(' '); if (!seen.has(kk)) { seen.add(kk); jobs.push({ g, mv, k: kk, dev: c.dev }); } }); } }
 console.log('jobs', jobs.length);

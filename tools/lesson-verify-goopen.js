@@ -112,6 +112,10 @@ function verify(opt = {}) {
       if ((P.good || []).length) bad(q, `② 16点の手（good）${P.good.join(' ')}：正解か不正解かはっきりしない（12点を超える）`);
       const r = play(g, mv); if (!r.pos) { bad(q, '④ 問題の局面まで手順が合法でない'); return; }
       const pos = r.pos, legal = []; for (let i = 0; i < N * N; i++) if (pos.tryPlay(i)) legal.push(i);
+      // ④ 19路の名前のある布石（cat basic）：問題の局面に本の側の布石の形（g.shape、二連星の Q16・Q4 など）がそろっている。形ができる前に相手が外れた局面は
+      // その布石の問題でない（2026-11-27 担当B）。検証済みの布石の本は shape を持つこと
+      if (g.cat === 'basic' && N >= 19) { if (!(g.shape || []).length) bad(q, '④ 布石の形（shape）が決まっていない（主題の形を盤で確かめられない）');
+        for (const a of g.shape || []) { const i = R.parseCoord(a, N); if (pos.b[i] !== side) bad(q, `④ 布石の形の石 ${a} が盤にない（形ができる前に外れた局面＝その布石の問題でない）`); } }
       { const c = canon(pos), t = taught.get(c.key), okc = new Set(ok.map(m => c.map(R.parseCoord(m, N))));
         if (t) for (const [mm, who] of t) if (!okc.has(mm) && !who.startsWith(g.id + ' の本筋')) { bad(q, `追67 同じ局面で ${who} が打つ手 ${R.coord(c.unmap(mm), N)} をこの問題は ${(P.good || []).includes(R.coord(c.unmap(mm), N)) ? '16点' : (P.half || []).includes(R.coord(c.unmap(mm), N)) ? '10点' : '不正解'} にしている（本によって正解が食い違う）`); break; } }
       // ⑨ 2D and 3D give the same points to every legal move

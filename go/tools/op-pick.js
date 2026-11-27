@@ -48,6 +48,7 @@ for (const id of SETS) { const g = O.sets.find(x => x.id === id), N = g.n || 19,
       const dv = Math.max(...Ls.map(L => { let k = 0; while (k < L.length && k < x.c.mv.length && L[k] === x.c.mv[k]) k++; return k; }));
       if (dv < x.c.mv.length && (dv % 2 ? 3 - st0.turn : st0.turn) === side) { console.log(id, x.c.mv.join(' '), '→', x.c.top[0][0], '④ 手順を外れた手が本の側の手（' + (dv + 1) + '手目）'); continue; } }
     if (chain) { console.log(id, x.c.mv.join(' '), '→', x.c.top[0][0], '④ ' + chain); continue; }
+    if (g.cat === 'basic' && N >= 19) { const miss = (g.shape || ['?']).filter(m => x.p.b[R.parseCoord(m, N)] !== side); if (miss.length) { console.log(id, x.c.mv.join(' '), '→', x.c.top[0][0], '④ 布石の形がない（' + miss.join(' ') + '）'); continue; } }   // ④ 19路の布石：形（g.shape）がそろった局面だけ（2026-11-27 担当B）
     const far = farOf(g, x.c.top[0][0]);   // ④ 19路の定石：答えが定石の隅（本筋・変化の石から4路以内）
     const d0 = x.c.dev === 0 && !/^fuseki_/.test(g.id) && (g.n || 19) >= 19;   // ④ 19路の定石：相手が1手目から外れると定石が始まっていない（2026-11-26 担当B）
     console.log(id, x.c.mv.join(' '), '→', x.c.top[0][0], d0 ? '④ 相手が1手目から外れている' : far ? '④ 定石の隅から離れている' : near ? '⑤ ' + near.who : mine ? '⑤ 同じ本 ' + mine.c.mv.join(' ') : 'ok'); if (!d0 && !far && !near && !mine && pick.length < 5) pick.push(x); }

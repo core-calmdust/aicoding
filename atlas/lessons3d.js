@@ -429,7 +429,7 @@
       k2: '5手詰は、王手と受けを2回くり返してから詰ませるよ。<br>頭の中で盤を動かす力の勝負！ 受けが何通りかあるときは、どれでも詰むか確かめよう。<br>竜（龍）は縦横どこまでも＋斜め1マス、馬は斜めどこまでも＋縦横1マス動けるコン。',
       k1: 'ここからは<b>浅い読みでは見つからない手</b>が正解。<br>候補手をいくつか出して、相手のいちばんの応手まで読み比べてみようね！',
       d1: '7手詰は、有段者の入り口っていわれるの。<b>捨て駒・逃げ道封鎖</b>を組み合わせるコン。<br>最後の詰み形を思いうかべて、逆から考えるのもおすすめ！<br>竜（龍）は縦横どこまでも＋斜め1マス、馬は斜めどこまでも＋縦横1マス動けるコン。',
-      d2: '9手詰では、<b>持ち駒を使う順番</b>をまちがえると詰まなくなっちゃう。<br>一手ずつ、相手のいちばんの受けを考えながら進めよう！',
+      d2: '9手詰では、<b>持ち駒を使う順番</b>をまちがえると詰まなくなっちゃう。<br>一手ずつ、相手のいちばんの受けを考えながら進めよう！<br>竜（龍）は縦横どこまでも＋斜め1マス、馬は斜めどこまでも＋縦横1マス動けるコン。',
       d3: 'さいごは<b>11手以上の詰み</b>と、<b>深く読まないと見えない静かな好手</b>のまぜこぜ。<br>ここまで来たきみなら、きっと大丈夫だコン！',
       rx: '最後はルールの確認！ <b>打ち歩詰め</b>は反則、<b>千日手</b>は引き分け、玉が敵陣に入れば<b>入玉宣言</b>もあるの。<br><b>駒落ち</b>は、強いほうが駒を減らして先に指すんだコン。',
     },
@@ -929,9 +929,9 @@
     LKEY: 'shogi-kaya-lessons-v1', OKEY: 'shogi-kaya-open-v1', CATS: ['beg', 'mid', 'adv', 'sp', 'new', 'castle', 'handi'], data: null,
     load() {
       if (this.p) return this.p;
-      const voice = fetch('../shogi/voice-fox-ja.js?v=8').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
+      const voice = fetch('../shogi/voice-fox-ja.js?v=9').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       const rep = getJ('../shogi/lesson-replies.json?v=4').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
-      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261127d1'), getJ('../shogi/openings.json?v=20261124ol1'),
+      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261127rx'), getJ('../shogi/openings.json?v=20261124ol1'),
         ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261125sb`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
@@ -2758,7 +2758,7 @@
   /* the same texts without coordinates, for the 3D board (2026-11-14): atlas/nocoord/<game>.json { '<lesson id>/<ramp index>/<field>': { lang: text } }
      (the full games keep their own texts: their boards show coordinates) */
   const NC = {};
-  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=23').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
+  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=24').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
   // (2026-11-21 user: 「ドット＆ボックスの初回レッスンも、これはどういうゲームなのかの説明がない。まずは短くても良いからそこから」)
   // the first lesson of a game opens with what the game is and how it is won, in the guide's voice (ja; the games whose first intro lacks it)
   const GAME_JA = {
@@ -3497,7 +3497,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=21'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
+      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=23'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
         try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
         return this; }).catch(e => { this.p = null; throw e; }));
     },
@@ -7306,7 +7306,11 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     sac: ['あえて{m}箱あげる勇気の1手！ これで最後の長い鎖がきみに回ってくる。', '小さな犠牲で流れを変えた！ {m}箱で主導権が買えた。', '安全な線を引いていたら負けだった。{m}箱の投資、大成功！', '目の前の箱より、最後の長い鎖！ そこが見えてる。', '{m}箱で、最後に長い鎖を開く役を相手に回した！'],
     mid: ['真ん中から開いたから、相手は返せない！', '1箱ずつに分けたから、相手は取るしかない！', '端から開かずにすんだ。これで手番を押しつけられない！', '2箱の鎖は真ん中から。コツをつかんだ！', '相手は2箱を取って、また線を引くことになる。上手なあげ方！'],
     small: ['{m}箱だけですむ、いちばん安いあげ方！', '{m}箱ですむ所から開いた。ここがいちばん損が少ない！', '短い鎖から順にあげる、基本どおり！', '長い鎖は後回し。{m}箱の所を先に差し出せた！', 'あげる箱をいちばん少なくできた！ 計算ばっちり。'],
-    loop4: ['主導権がないから、ループから開いて相手に4つ残しをさせる！', 'ループを先に開けば、相手は残すたびに4箱も損する！', 'ループから開く、上手な順番！', '相手に高い犠牲をはらわせる開き方！', 'ループは主導権を持つ側に高くつく。そこをついた！'],
+    loop4: ['主導権がないから、ループから開いて、相手に4つ残しの高い犠牲をせまる！', 'ループを先に開けば、相手は残すたびに4箱も損する！', 'ループから開く、上手な順番！', '相手が主導権を守るには、4箱の犠牲がいる開き方！', 'ループは主導権を持つ側に高くつく。そこをついた！'],   // (2026-11-27 担当A: not 「4つ残しをさせる」「はらわせる」 — whether the opponent leaves the 4 or takes them is the opponent's choice)
+    takeL: ['ここは取り切るのが正解！ 残りの鎖はどれもループより小さいから、残しても取り返せない。', '全部取ってOK！ ループで残すと損が大きい。あとの鎖はそれより小さいんだ。', '残すより取り切り！ あとの鎖では、ループの犠牲を取り返せない場面を見きわめた。', '取り切り、正解！ ループの犠牲は、あとの小さな鎖では取り返せない。', 'ループを全部いただき！ 残しても、取り返せる大きさの鎖があとにない。'],
+    yKeepL: ['赤い線で4箱残しても、あとの鎖はどれも4箱より小さいから取り返せない。', '残した4箱は相手のもの。あとの鎖はそれより小さいから損なんだ。', 'この先の鎖はどれも3箱以下。赤い線の4つ残しは損になる。', '赤い線の4つ残しは、ここではもったいない。', '主導権を守っても、4箱を取り返す鎖がなければ意味がない。'],   // (2026-11-27 担当A, loop: the take is best when every other chain is 3 or less — a 3-chain is a long chain, so not 「大きな鎖がない」)
+    rLoopO: ['緑の線はループを開く線。主導権がないときは、ループから開こう。', '正解は緑の線、ループから開く！', '緑の線でループを先に開けば、相手の残しは4箱かかる。', 'ここはループの緑の線から。', '緑の線でループを差し出すのが、いちばん損が少ない。'],
+    yLoopC: ['赤い線は{xm}箱の鎖を先に開くから、ループがあとに残っちゃう。', '赤い線だと鎖が先で、ループはあと回し。順番が逆なんだ。', '赤い線で{xm}箱の鎖から開くと、ループの高い犠牲を相手にせまれない。', '赤い線は鎖を開く線。ループを残したままだと、相手が楽になる。', '赤い線だと{xm}箱の鎖が先。ループの4箱はあとに残っちゃう。'],   // (2026-11-27 担当A, loop: the red line opens a chain of 3+ and leaves the 4-loop whole — what the opponent then does is its choice, so the words say only that; tools/lesson-verify.js)
     // the green line's point, for a miss ({bm}: what the green line hands over)
     rSafe: ['緑の線は安全な線。', '緑の線なら1箱もあげずにすむ。', '安全な線は緑の所！', '緑の線は、どの箱にも3本目を作らない。', '正解は緑の線。'],
     rPar: ['どっちも安全な線だけど、緑の線なら長い鎖の数がきみにぴったり。', '緑の線を引けば、長い鎖を開かされるのは相手のほう。', '正解は緑の線。鎖の形まで見た1本なんだ。', '緑の線のほうが、長い鎖の本数がきみに合う。', '安全な線どうしでも、緑の線が勝ちにつながる。'],
@@ -7341,7 +7345,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       const o = { k: x.k, m: x.m, edge: x.edge ? '外がわの線は箱1つにしか関係しない。その箱がまだ1本以下だから安心！' : '内がわの線は箱2つにまたがるけど、どっちも2本未満。だから安全！',
         left: x.n2 ? `引いたあと、安全な線は残り${x.n2}本。先に困るのは相手かも！` : '引いたあと、安全な線はもうない。次に箱をあげるのは相手のほう！' };
       let L;
-      if (x.cls === 'take') L = F.hasCap && DT_END.test(s.id) ? DT_CH.takeE : DT_CH.take;
+      if (x.cls === 'take') L = F.hasCap && DT_END.test(s.id) ? (s.id === 'loop' ? DT_CH.takeL : DT_CH.takeE) : DT_CH.take;
       else if (x.cls === 'decline') L = x.m === 4 ? DT_CH.dec4 : DT_CH.dec;
       else if (x.cls === 'safe') L = pick2 ? DT_CH.safeP : DT_CH.safe;
       else if (F.ns) L = DT_CH.sac;
@@ -7357,9 +7361,10 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       const x = F.of(u), loss = (best - V.get(u)) / 2, o = { bm: b.m, xm: x.m };
       let R, Y;
       if (b.cls === 'safe') { R = x.cls === 'safe' ? DT_CH.rPar : DT_CH.rSafe; Y = x.cls === 'safe' ? DT_CH.yPar : DT_CH.yGive; }
-      else if (b.cls === 'take') { const e = x.dd && DT_END.test(s.id) && (x.m === 2 || x.m === 4); R = e ? DT_CH.rTakeE : DT_CH.rTake; Y = e ? DT_CH.yKeep : x.cls === 'decline' ? DT_CH.yMiss : DT_CH.yOrd; }
+      else if (b.cls === 'take') { const e = x.dd && DT_END.test(s.id) && (x.m === 2 || x.m === 4); R = e ? DT_CH.rTakeE : DT_CH.rTake; Y = e ? (s.id === 'loop' ? DT_CH.yKeepL : DT_CH.yKeep) : x.cls === 'decline' ? DT_CH.yMiss : DT_CH.yOrd; }
       else if (b.cls === 'decline') { R = DT_CH.rDec; Y = x.cls === 'take' ? DT_CH.yAll : DT_CH.yMore; }
       else if (x.cls === 'safe') { R = DT_CH.rSac; Y = DT_CH.ySafe; }
+      else if (s.id === 'loop' && b.cls === 'give' && b.m === 4 && x.cls === 'give' && x.m >= 3) { R = DT_CH.rLoopO; Y = DT_CH.yLoopC; }
       else if (x.ret && !b.ret && b.m === 2) { R = DT_CH.rMid; Y = s.id === 'sacrifice' ? DT_CH.yEndS : DT_CH.yEnd; }
       else if (b.m < x.m) { R = DT_CH.rSmall; Y = x.m >= 3 ? DT_CH.yLong : DT_CH.ySmall; }
       else if (F.ns) { R = DT_CH.rSac; Y = DT_CH.ySac; }
@@ -7376,7 +7381,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     load(lang) {
       const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261021L`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
       if (this.p) return this.p.then(() => T()).then(() => this);
-      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261127s'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
+      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261127t'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
         .then(([ls, X]) => { const w = {}; try { new Function('window', 'with (window) {' + X + '\n}')(w); } catch (e) { console.warn('[lessons3d] dots texts', e); } this.I = w.I18N || {}; this.data = { ls }; return T(); }).then(() => this)
         .catch(e => { this.p = null; throw e; }));
     },
