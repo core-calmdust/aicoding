@@ -724,7 +724,8 @@ function selftest() {
     ['追75', '追75 a ramp move off its board', d => { st(d, 'b_choose').ramp.find(x => x.k === 'try').ok = ['a1-a2A']; }],
   ];
   let fails = 0;
-  for (const [tag, name, f] of cases) { const d = clone(); f(d); const r = verify({ data: d, ls3: LS3 }), own = (/^\S+ ([bt]_\w+):/.exec(name) || [])[1], o = r.out.find(x => x.msg.startsWith(tag) && (!own || x.id === own));   // (a case named for a lesson is caught in that lesson) if (!o) fails++; console.log((o ? 'ok   ' : 'MISS ') + name + (o ? '  → ' + o.id + ' ' + o.q + ' ' + o.msg : '')); }
+  // (a case named for a lesson — "① t_paika: …" — is caught only by that lesson's NG)
+  for (const [tag, name, f] of cases) { const d = clone(); f(d); const r = verify({ data: d, ls3: LS3 }), own = (/^\S+ ([bt]_\w+):/.exec(name) || [])[1], o = r.out.find(x => x.msg.startsWith(tag) && (!own || x.id === own)); if (!o) fails++; console.log((o ? 'ok   ' : 'MISS ') + name + (o ? '  → ' + o.id + ' ' + o.q + ' ' + o.msg : '')); }
   {   // the words: a wrong count in the 3D ja words
     const orig = LS3.sayText; LS3.sayText = (id, P, m, lang, k) => orig(id, P, m, lang, k).replace(/(\d+)/, (x) => String(+x + 1));
     const r = verify({ ls3: LS3 }); LS3.sayText = orig; const hit = r.out.some(o => /⑧/.test(o.msg)); if (!hit) fails++; console.log((hit ? 'ok   ' : 'MISS ') + '⑧ a wrong number in the words');
