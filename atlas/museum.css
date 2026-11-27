@@ -1054,167 +1054,182 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 .ptddl.sheet{left:8px;right:8px;bottom:8px;max-width:none;border-radius:20px;padding:8px calc(8px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left))}
 .ptddl.sheet button{min-height:46px;font-size:15px}
 /* ===== 名局選 (the great games, atlas/museum/match.js, 2026-11-27 ユーザー: ミュゼフクの一手ごとの解説・自由に行き来できる棋譜・棋譜ログ) ===== */
-.mxboard{position:relative;width:100%;user-select:none;-webkit-user-select:none;touch-action:manipulation;border-radius:8px}
-.mxbg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-/* (2026-11-27) .mxp・.mxrow・.mxnote are also class names of the portal's game card (atlas/app.js: the mode panels "opts mxp", .mxrow, .mxnote) — the 名局選 rules for them are kept inside the match room (:where(.mxx *), no added specificity), or the card's rated/puzzle/lesson panels collapse */
-.mxpcs{position:absolute;inset:0;pointer-events:none}
-.mxp:where(.mxx *){position:absolute;display:block;transform:translate(-50%,-50%);transition:left .26s cubic-bezier(.3,.7,.3,1),top .26s cubic-bezier(.3,.7,.3,1),opacity .22s;container-type:size}
-.mxboard.still .mxp:where(.mxx *){transition:none}.mxp:where(.mxx *).new,.mxp:where(.mxx *).gone{opacity:0}
-.mxp:where(.mxx *) img{display:block;width:100%;height:100%}
-.mxch .mxlt{fill:#f1dfbd}.mxch .mxdk{fill:#b88a5c}
-.mxcoord{font-size:28px;font-weight:800;fill:#7a5a36;text-anchor:middle;font-family:var(--round)}
-.mxlm{fill:rgba(250,205,70,.45)}.mxsq{fill:none;stroke:#e0533d;stroke-width:.08}
-.mxar{fill:none;stroke:rgba(40,120,220,.78);stroke-width:.15;stroke-linecap:round}.mxah{fill:rgba(40,120,220,.78)}
-.mxwood{fill:#e6bf7a}.mxgo line{stroke:#5d3f18;stroke-width:.045}.mxsh line{stroke:#6b4a1d;stroke-width:.03}.mxhoshi{fill:#5d3f18}
-.mxst{display:block;width:94%;height:94%;margin:3%;border-radius:50%;box-shadow:0 .06em .12em rgba(0,0,0,.35)}
-.mxst.b{background:radial-gradient(circle at 34% 30%,#6a6a6a,#151515 62%)}.mxst.w{background:radial-gradient(circle at 34% 30%,#fff,#dcdcd6 72%)}
-.mxp:where(.mxx *).last .mxst::after{content:"";display:block;width:36%;height:36%;margin:32%;border-radius:50%;border:2px solid #e0533d}
-.mxsg{position:relative;display:block;width:86%;height:92%;margin:4% 7%}.mxsg.dn{transform:rotate(180deg)}
-.mxsg svg{position:absolute;inset:0;width:100%;height:100%}.mxsg path{fill:#f3d59c;stroke:#a07a3a;stroke-width:3}
-.mxsg b{position:absolute;inset:8% 0 0;display:grid;place-items:center;font-size:62cqh;line-height:1;font-weight:900;color:#1f1a14;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Noto Serif CJK JP",serif}
-.mxsg.pr b{color:#c0281b}
+.mxx .mxboard{position:relative;width:100%;user-select:none;-webkit-user-select:none;touch-action:manipulation;border-radius:8px}
+.mxx .mxbg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+/* (2026-11-27 ユーザー: mx で始まるクラス名はゲームカードと重なる — atlas/app.js の mxp・mxb・mxic・mxkind・mxrow・mxnote) every 名局選 rule is inside .mxx (the match room) — tools: /tmp/mx/scope.py */
+.mxx .mxpcs{position:absolute;inset:0;pointer-events:none}
+.mxx .mxp{position:absolute;display:block;transform:translate(-50%,-50%);transition:left .26s cubic-bezier(.3,.7,.3,1),top .26s cubic-bezier(.3,.7,.3,1),opacity .22s;container-type:size}
+.mxx .mxboard.still .mxp{transition:none}.mxx .mxp.new,.mxx .mxp.gone{opacity:0}
+.mxx .mxp img{display:block;width:100%;height:100%}
+.mxx .mxch .mxlt{fill:#f1dfbd}.mxx .mxch .mxdk{fill:#b88a5c}
+.mxx .mxcoord{font-size:28px;font-weight:800;fill:#7a5a36;text-anchor:middle;font-family:var(--round)}
+.mxx .mxlm{fill:rgba(250,205,70,.45)}.mxx .mxsq{fill:none;stroke:#e0533d;stroke-width:.08}
+.mxx .mxar{fill:none;stroke:rgba(40,120,220,.78);stroke-width:.15;stroke-linecap:round}.mxx .mxah{fill:rgba(40,120,220,.78)}
+.mxx .mxwood{fill:#e6bf7a}.mxx .mxgo line{stroke:#5d3f18;stroke-width:.045}.mxx .mxsh line{stroke:#6b4a1d;stroke-width:.03}.mxx .mxhoshi{fill:#5d3f18}
+.mxx .mxst{display:block;width:94%;height:94%;margin:3%;border-radius:50%;box-shadow:0 .06em .12em rgba(0,0,0,.35)}
+.mxx .mxst.b{background:radial-gradient(circle at 34% 30%,#6a6a6a,#151515 62%)}.mxx .mxst.w{background:radial-gradient(circle at 34% 30%,#fff,#dcdcd6 72%)}
+.mxx .mxp.last .mxst::after{content:"";display:block;width:36%;height:36%;margin:32%;border-radius:50%;border:2px solid #e0533d}
+.mxx .mxsg{position:relative;display:block;width:86%;height:92%;margin:4% 7%}.mxx .mxsg.dn{transform:rotate(180deg)}
+.mxx .mxsg svg{position:absolute;inset:0;width:100%;height:100%}.mxx .mxsg path{fill:#f3d59c;stroke:#a07a3a;stroke-width:3}
+.mxx .mxsg b{position:absolute;inset:8% 0 0;display:grid;place-items:center;font-size:62cqh;line-height:1;font-weight:900;color:#1f1a14;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Noto Serif CJK JP",serif}
+.mxx .mxsg.pr b{color:#c0281b}
 /* (2026-11-27 名局選で部屋が7つに) the tabs take their names' width (the long name, 描かれたゲーム, is no longer cut); on a phone each keeps 44 px
    (a narrow phone scrolls the strip a little) */
 @media (min-width:1101px){.muwrap .murm{flex:1 1 auto;padding-inline:8px}}
 @media (max-width:819px){.muwrap .murooms{display:flex;overflow-x:auto}.muwrap .murm{flex:1 1 auto;min-width:44px}}
-.mxtk{fill:#f3d59c;stroke:#a07a3a;stroke-width:.03}.mxtg{font-size:50px;font-weight:900;text-anchor:middle;fill:#1f1a14}.mxtg.pr{fill:#c0281b}.mxtb{fill:#1c1c1c}.mxtw{fill:#fbfbf8;stroke:#777;stroke-width:.04}
-.mxgc{font-size:40px;font-weight:800;fill:#6b4a1d;text-anchor:middle;font-family:var(--round)}
+.mxx .mxtk{fill:#f3d59c;stroke:#a07a3a;stroke-width:.03}.mxx .mxtg{font-size:50px;font-weight:900;text-anchor:middle;fill:#1f1a14}.mxx .mxtg.pr{fill:#c0281b}.mxx .mxtb{fill:#1c1c1c}.mxx .mxtw{fill:#fbfbf8;stroke:#777;stroke-width:.04}
+.mxx .mxgc{font-size:40px;font-weight:800;fill:#6b4a1d;text-anchor:middle;font-family:var(--round)}
 /* (2026-11-27 名局選：シャンチー) the board of points (9 × 10) with the river, round pieces with their characters (Red at the bottom) */
-.mxxq line{stroke:#5d3f18;stroke-width:.035}.mxxf{fill:none;stroke:#5d3f18;stroke-width:.07}.mxxm{fill:none;stroke:#5d3f18;stroke-width:.03}
-.mxxr{font-size:50px;font-weight:700;fill:#7a5428;text-anchor:middle;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Noto Serif CJK JP",serif}
-.mxxp{display:block;width:88%;height:88%;margin:6%;border-radius:50%;background:radial-gradient(circle at 38% 32%,#fbecc8,#ecd29c 70%,#d9b97b);box-shadow:0 .08em .16em rgba(0,0,0,.35),inset 0 0 0 1.5px #a5824a;position:relative}
-.mxxp::before{content:"";position:absolute;inset:9%;border-radius:50%;border:1.5px solid #1f1a14}.mxxp.r::before{border-color:#c0281b}
-.mxxp b{position:absolute;inset:0;display:grid;place-items:center;font-size:54cqh;line-height:1;font-weight:900;color:#1f1a14;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Noto Serif CJK JP",serif}
-.mxxp.r b{color:#c0281b}
-.mxxt{fill:#f0d9a6;stroke:#1f1a14;stroke-width:.04}.mxxt.r{stroke:#c0281b}.mxxg{font-size:50px;font-weight:900;text-anchor:middle;fill:#1f1a14;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Noto Serif CJK JP",serif}.mxxg.r{fill:#c0281b}
-.mxth.k-xiangqi{background:#efe3c8}
-.mxdot.r{background:#d23a2a;border-color:#7d1a10}
+.mxx .mxxq line{stroke:#5d3f18;stroke-width:.035}.mxx .mxxf{fill:none;stroke:#5d3f18;stroke-width:.07}.mxx .mxxm{fill:none;stroke:#5d3f18;stroke-width:.03}
+.mxx .mxxr{font-size:50px;font-weight:700;fill:#7a5428;text-anchor:middle;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Noto Serif CJK JP",serif}
+.mxx .mxxp{display:block;width:88%;height:88%;margin:6%;border-radius:50%;background:radial-gradient(circle at 38% 32%,#fbecc8,#ecd29c 70%,#d9b97b);box-shadow:0 .08em .16em rgba(0,0,0,.35),inset 0 0 0 1.5px #a5824a;position:relative}
+.mxx .mxxp::before{content:"";position:absolute;inset:9%;border-radius:50%;border:1.5px solid #1f1a14}.mxx .mxxp.r::before{border-color:#c0281b}
+.mxx .mxxp b{position:absolute;inset:0;display:grid;place-items:center;font-size:54cqh;line-height:1;font-weight:900;color:#1f1a14;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Noto Serif CJK JP",serif}
+.mxx .mxxp.r b{color:#c0281b}
+.mxx .mxxt{fill:#f0d9a6;stroke:#1f1a14;stroke-width:.04}.mxx .mxxt.r{stroke:#c0281b}.mxx .mxxg{font-size:50px;font-weight:900;text-anchor:middle;fill:#1f1a14;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Noto Serif CJK JP",serif}.mxx .mxxg.r{fill:#c0281b}
+.mxx .mxth.k-xiangqi{background:#efe3c8}
+.mxx .mxdot.r{background:#d23a2a;border-color:#7d1a10}
+/* (2026-11-27 名局選：チェッカー) the site's checkers (checkers/): a wine-red frame with a brass line, ivory and green squares with the PDN numbers,
+   round pieces (ebony and ivory), a gold crown on a king. Black (first) at the top */
+.mxx .mxckf{fill:#4f1020}.mxx .mxckr{fill:none;stroke:#c9a961;stroke-width:.04}
+.mxx .mxckl{fill:#ddc9a0}.mxx .mxckd{fill:#2f5a45}
+.mxx .mxckn{font-size:19px;font-weight:700;fill:rgba(255,246,220,.62);font-family:var(--round)}
+.mxx .mxcm{position:relative;display:block;width:80%;height:80%;margin:10%;border-radius:50%}
+.mxx .mxcm.b{background:radial-gradient(circle at 34% 28%,#6b5a52 0%,#3b302b 30%,#1f1916 72%,#0d0a09 100%);box-shadow:inset 0 -.08em .16em rgba(0,0,0,.5),inset 0 0 0 1.5px rgba(255,200,170,.2),0 .08em .14em rgba(0,0,0,.6)}
+.mxx .mxcm.w{background:radial-gradient(circle at 34% 28%,#fffdf6 0%,#efe5cf 30%,#cbbd9c 74%,#7f7258 100%);box-shadow:inset 0 -.08em .16em rgba(80,60,20,.35),inset 0 0 0 1.5px rgba(255,255,255,.5),0 .08em .14em rgba(0,0,0,.55)}
+.mxx .mxcm::before{content:"";position:absolute;inset:14%;border-radius:50%;box-shadow:inset 0 2px 3px rgba(0,0,0,.4),0 1px 0 rgba(255,255,255,.18)}
+.mxx .mxcm.k{box-shadow:inset 0 -.08em .16em rgba(0,0,0,.45),0 0 0 2px rgba(226,194,117,.75),0 .08em .14em rgba(0,0,0,.6)}
+.mxx .mxcm svg{position:absolute;inset:20%;width:60%;height:60%;filter:drop-shadow(0 1px 1px rgba(0,0,0,.6))}
+.mxx .mxcr{fill:#f2d27a;stroke:#7a5a1c;stroke-width:1.2;stroke-linejoin:round}.mxx .mxcb{fill:none;stroke:#f2d27a;stroke-width:2;stroke-linecap:round}
+.mxx .mxct.b{fill:#241c19;stroke:#0d0a09;stroke-width:.04}.mxx .mxct.w{fill:#f3ead6;stroke:#7f7258;stroke-width:.04}
+.mxx .mxth.k-checkers{background-color:#2b2f3b}
+.mxx .mxck .mxlm{fill:rgba(255,222,130,.38)}
 
 /* ===== 名局選の画面 (2026-11-27 作り直し — ユーザー: レイアウトとデザインを徹底的に見直し、きちんと評価して高い基準を超える。
    評価: tools/museum-match-layout.js、項目: claude/museum-match-layout.md) — the wall of games; a game: head, the stage (the board between the
    two players' plates, the steps and a slider) beside the side column (ミュゼフク's note card, the moves), then the game's story ===== */
 .mxx{--mx-ink2:#5d564b;--mx-gold:#8a5a0a}
 .mxx .mxgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:18px;margin-top:16px}
-.mxc{display:flex;flex-direction:column;text-align:start;padding:0;border:2px solid var(--line);border-radius:18px;background:#fff;color:var(--ink);overflow:hidden;cursor:pointer;box-shadow:0 3px 0 var(--line);font:inherit;transition:transform .15s,box-shadow .15s}
-@media (hover:hover){.mxc:hover{transform:translateY(-3px);box-shadow:0 6px 0 var(--line)}}
-.mxc:active{transform:translateY(1px);box-shadow:0 1px 0 var(--line)}
-.mxth{display:block;padding:16px;background-color:#2b2f3b}.mxth svg{display:block;width:100%;height:auto;max-height:230px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35))}
-.mxcl{display:flex;flex-direction:column;gap:4px;padding:12px 16px 16px}
-.mxcl i{align-self:flex-start;font-style:normal;font-weight:900;font-size:12px;padding:2px 10px;border-radius:99px;background:#f1ead9;color:var(--mx-ink2)}
-.mxcl b{font-size:16px;line-height:1.4}.mxcl small{font-size:13px;color:var(--mx-ink2);line-height:1.5}
-.mxcredit{font-size:12px;color:var(--mx-ink2);margin:18px 0 0;max-width:46em}
+.mxx .mxc{display:flex;flex-direction:column;text-align:start;padding:0;border:2px solid var(--line);border-radius:18px;background:#fff;color:var(--ink);overflow:hidden;cursor:pointer;box-shadow:0 3px 0 var(--line);font:inherit;transition:transform .15s,box-shadow .15s}
+@media (hover:hover){.mxx .mxc:hover{transform:translateY(-3px);box-shadow:0 6px 0 var(--line)}}
+.mxx .mxc:active{transform:translateY(1px);box-shadow:0 1px 0 var(--line)}
+.mxx .mxth{display:block;padding:16px;background-color:#2b2f3b}.mxx .mxth svg{display:block;width:100%;height:auto;max-height:230px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35))}
+.mxx .mxcl{display:flex;flex-direction:column;gap:4px;padding:12px 16px 16px}
+.mxx .mxcl i{align-self:flex-start;font-style:normal;font-weight:900;font-size:12px;padding:2px 10px;border-radius:99px;background:#f1ead9;color:var(--mx-ink2)}
+.mxx .mxcl b{font-size:16px;line-height:1.4}.mxx .mxcl small{font-size:13px;color:var(--mx-ink2);line-height:1.5}
+.mxx .mxcredit{font-size:12px;color:var(--mx-ink2);margin:18px 0 0;max-width:46em}
 .mxx .mxwl{max-width:46em}
 /* the head */
-.mxhd{display:flex;align-items:center;gap:12px;margin:0 0 14px}
-.mxback{flex:none;display:grid;place-items:center;width:42px;height:42px;padding:0;border:2px solid var(--line);border-radius:50%;background:#fff;color:var(--ink);cursor:pointer;box-shadow:0 2px 0 var(--line)}
-.mxback svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}[dir=rtl] .mxback svg{transform:scaleX(-1)}
-.mxht{flex:1;min-width:0}
-.mxkick{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:0;font-size:13px;font-weight:700;color:var(--mx-ink2)}
-.mxkick i{font-style:normal;font-weight:900;font-size:12px;padding:2px 10px;border-radius:99px;background:#f1ead9;color:var(--mx-ink2)}
-.mxhd h3{margin:2px 0 0;font-size:22px;line-height:1.3}
-.mxres{flex:none;padding:6px 14px;border-radius:99px;background:var(--ink);color:#fff;font-weight:900;font-size:13px;white-space:nowrap}
+.mxx .mxhd{display:flex;align-items:center;gap:12px;margin:0 0 14px}
+.mxx .mxback{flex:none;display:grid;place-items:center;width:42px;height:42px;padding:0;border:2px solid var(--line);border-radius:50%;background:#fff;color:var(--ink);cursor:pointer;box-shadow:0 2px 0 var(--line)}
+.mxx .mxback svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}[dir=rtl] .mxx .mxback svg{transform:scaleX(-1)}
+.mxx .mxht{flex:1;min-width:0}
+.mxx .mxkick{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:0;font-size:13px;font-weight:700;color:var(--mx-ink2)}
+.mxx .mxkick i{font-style:normal;font-weight:900;font-size:12px;padding:2px 10px;border-radius:99px;background:#f1ead9;color:var(--mx-ink2)}
+.mxx .mxhd h3{margin:2px 0 0;font-size:22px;line-height:1.3}
+.mxx .mxres{flex:none;padding:6px 14px;border-radius:99px;background:var(--ink);color:#fff;font-weight:900;font-size:13px;white-space:nowrap}
 /* the stage and the side column */
-.mxmain{--bs:clamp(300px,calc(100svh - 392px),600px);display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:18px;align-items:stretch}
-.mxleft{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 16px 14px;border-radius:22px;background-color:#2a2e39;background-image:radial-gradient(120% 90% at 50% 0%,#363b49,#23262f);color:#f4efe6;box-shadow:0 10px 26px rgba(30,24,16,.22)}
-.mxboard{position:relative;height:var(--bs);width:auto;max-width:100%;user-select:none;-webkit-user-select:none;touch-action:manipulation;border-radius:8px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.4))}
-.mxpl{align-self:stretch;display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;min-height:32px;padding:3px 10px;border-radius:12px;font-size:14px;transition:background .2s}
-.mxpl b{font-weight:800;line-height:1.35}.mxpl .mxside-n{font-size:12px;font-weight:700;color:#c9c1b2}
-.mxpl.on{background:rgba(255,255,255,.1)}.mxpl.on .mxdot{box-shadow:0 0 0 3px rgba(253,196,63,.85)}
-.mxpx{margin-inline-start:auto;display:flex;align-items:center}
-.mxcap{display:inline-flex;flex-wrap:wrap;align-items:center;gap:2px 4px;font-size:13px;font-weight:700;color:#e9e2d4}
-.mxcap img{width:18px;height:18px}.mxcap em{font-style:normal;color:#c9c1b2;margin-inline-end:2px}
-.mxhk{display:inline-grid;place-items:center;min-width:22px;height:24px;padding:0 3px;border-radius:5px;background:#f3d59c;color:#1f1a14;font-weight:900;font-size:13px;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif}
-.mxhk sub{font-size:10px;vertical-align:baseline;margin-inline-start:1px;font-family:var(--round)}
-.mxxk{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#f0d9a6;color:#1f1a14;font-size:12px;font-weight:900}.mxxk.r{color:#b3241a}
-.mxdot{display:inline-block;flex:none;width:12px;height:12px;border-radius:50%;border:1.5px solid #333;background:#fff}.mxdot.b,.mxdot.B{background:#222;border-color:#999}
-.mxdot.s,.mxdot.g{border-radius:2px;background:#f3d59c;border-color:#a07a3a}.mxdot.g{transform:rotate(180deg)}
-.mxctl{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:2px}
-.mxctl button{display:grid;place-items:center;width:42px;height:42px;padding:0;border:1.5px solid rgba(255,255,255,.22);border-radius:50%;background:rgba(255,255,255,.07);color:#fff;cursor:pointer}
-@media (hover:hover){.mxctl button:not(:disabled):hover{background:rgba(255,255,255,.16)}}
-.mxctl button.pl{width:50px;height:50px;background:var(--sun,#fdc43f);border-color:var(--sun,#fdc43f);color:#23262f}
-.mxctl button svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
-.mxctl button.pl svg{fill:currentColor}.mxctl button[aria-pressed=true] svg{fill:none;stroke-width:3}
-.mxctl button:disabled{opacity:.3;cursor:default}
-.mxseek{align-self:stretch;display:flex;align-items:center;gap:12px;padding:0 4px}
-.mxrng{flex:1;min-width:0;height:22px;margin:0;background:none;-webkit-appearance:none;appearance:none;cursor:pointer}
-.mxrng::-webkit-slider-runnable-track{height:6px;border-radius:99px;background:linear-gradient(90deg,var(--sun,#fdc43f) var(--f,0%),rgba(255,255,255,.2) var(--f,0%))}
-.mxrng::-moz-range-track{height:6px;border-radius:99px;background:linear-gradient(90deg,var(--sun,#fdc43f) var(--f,0%),rgba(255,255,255,.2) var(--f,0%))}
-.mxrng::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-6px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
-.mxrng::-moz-range-thumb{width:18px;height:18px;border:0;border-radius:50%;background:#fff}
-.mxrng:focus-visible{outline:2px solid #fff;outline-offset:3px;border-radius:99px}
-.mxpos{flex:none;min-width:4.5em;text-align:end;font-weight:800;font-size:13px;color:#e9e2d4;font-family:var(--round);font-variant-numeric:tabular-nums}
-.mxside{display:flex;flex-direction:column;gap:14px;min-width:0;contain:size}
-.mxnote:where(.mxx *){flex:none;padding:14px 16px 12px;border:2px solid var(--line);border-radius:18px;background:#fffdf7;box-shadow:0 3px 0 var(--line)}
-.mxnh{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.mxowl{flex:none;width:40px;height:40px;border-radius:50%;background:#f6eedb}
-.mxwho{font-size:13px;font-weight:900;color:var(--mx-gold)}
-.mxmv{margin-inline-start:auto;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;background:#f1ead9;font-size:13px;font-weight:800;color:var(--ink);white-space:nowrap}
-.mxmv bdi{font-family:var(--round)}
-.mxtxt{margin:0;min-height:5.4em;font-size:16px;line-height:1.8;color:var(--ink)}.mxtxt.quiet{color:var(--mx-ink2)}
-.mxnn{display:flex;justify-content:space-between;gap:8px;margin-top:10px}
-.mxnn button{display:inline-flex;align-items:center;gap:4px;min-height:36px;padding:4px 12px;border:2px solid var(--line);border-radius:99px;background:#fff;color:var(--ink);font:inherit;font-weight:800;font-size:13px;cursor:pointer}
-.mxnn button svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}[dir=rtl] .mxnn button svg{transform:scaleX(-1)}
-.mxnn button:disabled{opacity:.4;cursor:default}
-.mxlog{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;border:2px solid var(--line);border-radius:18px;background:#fff;overflow:hidden}
-.mxlog h4{display:flex;justify-content:space-between;align-items:baseline;margin:0;padding:9px 16px;font-size:13px;font-weight:900;border-bottom:2px solid var(--line);background:#faf5ea}
-.mxlog h4 span{font-weight:700;color:var(--mx-ink2)}
-.mxlist{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:6px 8px;font-family:var(--round);font-variant-numeric:tabular-nums}
-.mxlist.k-one{display:grid;grid-template-columns:repeat(auto-fill,minmax(7.4em,1fr));align-content:start;gap:0 2px}
-.mxrow:where(.mxx *){display:flex;align-items:center}
-.mxrow:where(.mxx *).pr{display:grid;grid-template-columns:2.6em 7.5em 7.5em;align-items:center}
-.mxrow:where(.mxx *).st{grid-column:1/-1}
-.mxno{font-size:12px;color:var(--mx-ink2);font-weight:700}
-.mxrow:where(.mxx *).pr>.mxno{text-align:end;padding-inline-end:6px}
-.mxrow:where(.mxx *) button{display:inline-flex;align-items:center;gap:5px;justify-self:start;min-height:32px;padding:3px 9px;border:0;border-radius:8px;background:none;color:var(--ink);font:inherit;font-weight:800;font-size:14.5px;text-align:start;cursor:pointer;white-space:nowrap}
-.mxrow:where(.mxx *) button .mxno{min-width:1.8em;text-align:end}
-@media (hover:hover){.mxrow:where(.mxx *) button:hover{background:#f3eee2}}
-.mxrow:where(.mxx *) button[aria-current]{background:var(--ink);color:#fff}.mxrow:where(.mxx *) button[aria-current] .mxno{color:#d9d3c7}
-.mxrow:where(.mxx *) button.nt::after{content:"";display:inline-block;flex:none;width:6px;height:6px;border-radius:50%;background:#d1901a}
-.mxlist.alln button.nt::after{display:none}
-.mxabout{margin-top:18px;padding:16px 20px;border:2px solid var(--line);border-radius:18px;background:#fffdf7}
-.mxabout h4{margin:0 0 6px;font-size:14px;font-weight:900}
-.mxabout p{margin:0;max-width:46em;font-size:15px;line-height:1.8}
-.mxabout dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 18px;margin:12px 0 0}
-.mxabout dl div{min-width:0}.mxabout dt{font-size:12px;font-weight:800;color:var(--mx-ink2)}.mxabout dd{margin:1px 0 0;font-size:14px;font-weight:700;line-height:1.5}
-@media (max-width:1023px) and (min-width:820px){.mxmain{--bs:clamp(300px,calc(100svh - 380px),460px);grid-template-columns:minmax(0,1fr) 340px}}
+.mxx .mxmain{--bs:clamp(300px,calc(100svh - 392px),600px);display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:18px;align-items:stretch}
+.mxx .mxleft{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 16px 14px;border-radius:22px;background-color:#2a2e39;background-image:radial-gradient(120% 90% at 50% 0%,#363b49,#23262f);color:#f4efe6;box-shadow:0 10px 26px rgba(30,24,16,.22)}
+.mxx .mxboard{position:relative;height:var(--bs);width:auto;max-width:100%;user-select:none;-webkit-user-select:none;touch-action:manipulation;border-radius:8px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.4))}
+.mxx .mxpl{align-self:stretch;display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;min-height:32px;padding:3px 10px;border-radius:12px;font-size:14px;transition:background .2s}
+.mxx .mxpl b{font-weight:800;line-height:1.35}.mxx .mxpl .mxside-n{font-size:12px;font-weight:700;color:#c9c1b2}
+.mxx .mxpl.on{background:rgba(255,255,255,.1)}.mxx .mxpl.on .mxdot{box-shadow:0 0 0 3px rgba(253,196,63,.85)}
+.mxx .mxpx{margin-inline-start:auto;display:flex;align-items:center}
+.mxx .mxcap{display:inline-flex;flex-wrap:wrap;align-items:center;gap:2px 4px;font-size:13px;font-weight:700;color:#e9e2d4}
+.mxx .mxcap img{width:18px;height:18px}.mxx .mxcap em{font-style:normal;color:#c9c1b2;margin-inline-end:2px}
+.mxx .mxhk{display:inline-grid;place-items:center;min-width:22px;height:24px;padding:0 3px;border-radius:5px;background:#f3d59c;color:#1f1a14;font-weight:900;font-size:13px;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif}
+.mxx .mxhk sub{font-size:10px;vertical-align:baseline;margin-inline-start:1px;font-family:var(--round)}
+.mxx .mxxk{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#f0d9a6;color:#1f1a14;font-size:12px;font-weight:900}.mxx .mxxk.r{color:#b3241a}
+.mxx .mxdot{display:inline-block;flex:none;width:12px;height:12px;border-radius:50%;border:1.5px solid #333;background:#fff}.mxx .mxdot.b,.mxx .mxdot.B{background:#222;border-color:#999}
+.mxx .mxdot.s,.mxx .mxdot.g{border-radius:2px;background:#f3d59c;border-color:#a07a3a}.mxx .mxdot.g{transform:rotate(180deg)}
+.mxx .mxctl{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:2px}
+.mxx .mxctl button{display:grid;place-items:center;width:42px;height:42px;padding:0;border:1.5px solid rgba(255,255,255,.22);border-radius:50%;background:rgba(255,255,255,.07);color:#fff;cursor:pointer}
+@media (hover:hover){.mxx .mxctl button:not(:disabled):hover{background:rgba(255,255,255,.16)}}
+.mxx .mxctl button.pl{width:50px;height:50px;background:var(--sun,#fdc43f);border-color:var(--sun,#fdc43f);color:#23262f}
+.mxx .mxctl button svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.mxx .mxctl button.pl svg{fill:currentColor}.mxx .mxctl button[aria-pressed=true] svg{fill:none;stroke-width:3}
+.mxx .mxctl button:disabled{opacity:.3;cursor:default}
+.mxx .mxseek{align-self:stretch;display:flex;align-items:center;gap:12px;padding:0 4px}
+.mxx .mxrng{flex:1;min-width:0;height:22px;margin:0;background:none;-webkit-appearance:none;appearance:none;cursor:pointer}
+.mxx .mxrng::-webkit-slider-runnable-track{height:6px;border-radius:99px;background:linear-gradient(90deg,var(--sun,#fdc43f) var(--f,0%),rgba(255,255,255,.2) var(--f,0%))}
+.mxx .mxrng::-moz-range-track{height:6px;border-radius:99px;background:linear-gradient(90deg,var(--sun,#fdc43f) var(--f,0%),rgba(255,255,255,.2) var(--f,0%))}
+.mxx .mxrng::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-6px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.mxx .mxrng::-moz-range-thumb{width:18px;height:18px;border:0;border-radius:50%;background:#fff}
+.mxx .mxrng:focus-visible{outline:2px solid #fff;outline-offset:3px;border-radius:99px}
+.mxx .mxpos{flex:none;min-width:4.5em;text-align:end;font-weight:800;font-size:13px;color:#e9e2d4;font-family:var(--round);font-variant-numeric:tabular-nums}
+.mxx .mxside{display:flex;flex-direction:column;gap:14px;min-width:0;contain:size}
+.mxx .mxnote{flex:none;padding:14px 16px 12px;border:2px solid var(--line);border-radius:18px;background:#fffdf7;box-shadow:0 3px 0 var(--line)}
+.mxx .mxnh{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.mxx .mxowl{flex:none;width:40px;height:40px;border-radius:50%;background:#f6eedb}
+.mxx .mxwho{font-size:13px;font-weight:900;color:var(--mx-gold)}
+.mxx .mxmv{margin-inline-start:auto;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;background:#f1ead9;font-size:13px;font-weight:800;color:var(--ink);white-space:nowrap}
+.mxx .mxmv bdi{font-family:var(--round)}
+.mxx .mxtxt{margin:0;min-height:5.4em;font-size:16px;line-height:1.8;color:var(--ink)}.mxx .mxtxt.quiet{color:var(--mx-ink2)}
+.mxx .mxnn{display:flex;justify-content:space-between;gap:8px;margin-top:10px}
+.mxx .mxnn button{display:inline-flex;align-items:center;gap:4px;min-height:36px;padding:4px 12px;border:2px solid var(--line);border-radius:99px;background:#fff;color:var(--ink);font:inherit;font-weight:800;font-size:13px;cursor:pointer}
+.mxx .mxnn button svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}[dir=rtl] .mxx .mxnn button svg{transform:scaleX(-1)}
+.mxx .mxnn button:disabled{opacity:.4;cursor:default}
+.mxx .mxlog{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;border:2px solid var(--line);border-radius:18px;background:#fff;overflow:hidden}
+.mxx .mxlog h4{display:flex;justify-content:space-between;align-items:baseline;margin:0;padding:9px 16px;font-size:13px;font-weight:900;border-bottom:2px solid var(--line);background:#faf5ea}
+.mxx .mxlog h4 span{font-weight:700;color:var(--mx-ink2)}
+.mxx .mxlist{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:6px 8px;font-family:var(--round);font-variant-numeric:tabular-nums}
+.mxx .mxlist.k-one{display:grid;grid-template-columns:repeat(auto-fill,minmax(7.4em,1fr));align-content:start;gap:0 2px}
+.mxx .mxrow{display:flex;align-items:center}
+.mxx .mxrow.pr{display:grid;grid-template-columns:2.6em 7.5em 7.5em;align-items:center}
+.mxx .mxrow.st{grid-column:1/-1}
+.mxx .mxno{font-size:12px;color:var(--mx-ink2);font-weight:700}
+.mxx .mxrow.pr>.mxno{text-align:end;padding-inline-end:6px}
+.mxx .mxrow button{display:inline-flex;align-items:center;gap:5px;justify-self:start;min-height:32px;padding:3px 9px;border:0;border-radius:8px;background:none;color:var(--ink);font:inherit;font-weight:800;font-size:14.5px;text-align:start;cursor:pointer;white-space:nowrap}
+.mxx .mxrow button .mxno{min-width:1.8em;text-align:end}
+@media (hover:hover){.mxx .mxrow button:hover{background:#f3eee2}}
+.mxx .mxrow button[aria-current]{background:var(--ink);color:#fff}.mxx .mxrow button[aria-current] .mxno{color:#d9d3c7}
+.mxx .mxrow button.nt::after{content:"";display:inline-block;flex:none;width:6px;height:6px;border-radius:50%;background:#d1901a}
+.mxx .mxlist.alln button.nt::after{display:none}
+.mxx .mxabout{margin-top:18px;padding:16px 20px;border:2px solid var(--line);border-radius:18px;background:#fffdf7}
+.mxx .mxabout h4{margin:0 0 6px;font-size:14px;font-weight:900}
+.mxx .mxabout p{margin:0;max-width:46em;font-size:15px;line-height:1.8}
+.mxx .mxabout dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 18px;margin:12px 0 0}
+.mxx .mxabout dl div{min-width:0}.mxx .mxabout dt{font-size:12px;font-weight:800;color:var(--mx-ink2)}.mxx .mxabout dd{margin:1px 0 0;font-size:14px;font-weight:700;line-height:1.5}
+@media (max-width:1023px) and (min-width:820px){.mxx .mxmain{--bs:clamp(300px,calc(100svh - 380px),460px);grid-template-columns:minmax(0,1fr) 340px}}
 @media (max-width:819px){
-  .mxview{margin-inline:-12px}
-  .mxhd{margin:0 12px 12px}.mxhd h3{font-size:19px}
-  .mxmain{grid-template-columns:minmax(0,1fr);gap:12px}
-  .mxleft{border-radius:18px;padding:8px 8px 10px}
-  .mxboard{height:auto;width:100%}
-  .mxside{contain:none;gap:12px}
-  .mxtxt{min-height:0;font-size:15.5px}
-  .mxlog h4{padding:7px 14px}
-  .mxlist,.mxlist.k-one{display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;gap:2px;padding:6px 8px;scrollbar-width:thin}
-  .mxrow:where(.mxx *),.mxrow:where(.mxx *).pr{display:flex;flex:none}.mxrow:where(.mxx *).st{grid-column:auto}
-  .mxrow:where(.mxx *).pr>.mxno{padding-inline:6px 2px}
-  .mxrow:where(.mxx *) button{min-height:36px}
-  .mxctl button{width:44px;height:44px}.mxctl button.pl{width:52px;height:52px}
-  .mxabout{margin:16px 12px 0}.mxcredit{margin-inline:12px}
+  .mxx .mxview{margin-inline:-12px}
+  .mxx .mxhd{margin:0 12px 12px}.mxx .mxhd h3{font-size:19px}
+  .mxx .mxmain{grid-template-columns:minmax(0,1fr);gap:12px}
+  .mxx .mxleft{border-radius:18px;padding:8px 8px 10px}
+  .mxx .mxboard{height:auto;width:100%}
+  .mxx .mxside{contain:none;gap:12px}
+  .mxx .mxtxt{min-height:0;font-size:15.5px}
+  .mxx .mxlog h4{padding:7px 14px}
+  .mxx .mxlist,.mxx .mxlist.k-one{display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;gap:2px;padding:6px 8px;scrollbar-width:thin}
+  .mxx .mxrow,.mxx .mxrow.pr{display:flex;flex:none}.mxx .mxrow.st{grid-column:auto}
+  .mxx .mxrow.pr>.mxno{padding-inline:6px 2px}
+  .mxx .mxrow button{min-height:36px}
+  .mxx .mxctl button{width:44px;height:44px}.mxx .mxctl button.pl{width:52px;height:52px}
+  .mxx .mxabout{margin:16px 12px 0}.mxx .mxcredit{margin-inline:12px}
 }
-@media (max-width:819px) and (max-height:700px){.mxkick,.mxseek,.mxpl .mxside-n{display:none}.mxcap img{width:15px;height:15px}.mxleft{gap:5px}.mxpl{min-height:26px;padding-block:1px;font-size:12.5px}.mxctl button{width:44px;height:44px}.mxctl button.pl{width:46px;height:46px}.mxhd{margin-bottom:8px}.mxhd h3{font-size:18px}}
-.mxch .mxcoord{fill:#cbbfa9}   /* (the chess board stands on the dark stage: its letters and numbers light) */
-.mxcap{padding:2px 8px;border-radius:99px;background:#efe8da;color:#23262f}.mxcap em{color:#5d564b}   /* (what a side has taken: on a light chip, so black pieces show on the dark stage) */
-.mxlm.ring{fill:rgba(250,205,70,.25);stroke:#e0a21a;stroke-width:.07}   /* (point boards: the last move shows as a ring around the piece, not only under it) */
-.mxp:where(.mxx *),.mxcap,.mxhk,.mxxk{font-style:normal}   /* (2026-11-27 ユーザー: 将棋とシャンチーの駒がイタリックになっている — the pieces sit in <i> elements) */
+@media (max-width:819px) and (max-height:700px){.mxx .mxkick,.mxx .mxseek,.mxx .mxpl .mxside-n{display:none}.mxx .mxcap img{width:15px;height:15px}.mxx .mxleft{gap:5px}.mxx .mxpl{min-height:26px;padding-block:1px;font-size:12.5px}.mxx .mxctl button{width:44px;height:44px}.mxx .mxctl button.pl{width:46px;height:46px}.mxx .mxhd{margin-bottom:8px}.mxx .mxhd h3{font-size:18px}}
+.mxx .mxch .mxcoord{fill:#cbbfa9}   /* (the chess board stands on the dark stage: its letters and numbers light) */
+.mxx .mxcap{padding:2px 8px;border-radius:99px;background:#efe8da;color:#23262f}.mxx .mxcap em{color:#5d564b}   /* (what a side has taken: on a light chip, so black pieces show on the dark stage) */
+.mxx .mxlm.ring{fill:rgba(250,205,70,.25);stroke:#e0a21a;stroke-width:.07}   /* (point boards: the last move shows as a ring around the piece, not only under it) */
+.mxx .mxp,.mxx .mxcap,.mxx .mxhk,.mxx .mxxk{font-style:normal}   /* (2026-11-27 ユーザー: 将棋とシャンチーの駒がイタリックになっている — the pieces sit in <i> elements) */
 /* (2026-11-27 ユーザー: 画面下に謎の改行 — the story was held to 46em inside a wider card, so its lines stopped short of the card's edge)
    the card in two columns: the story on the left, filling its column; the record on the right, one item under another */
-.mxabout{display:grid;grid-template-columns:minmax(0,1fr) minmax(200px,280px);gap:6px 28px;align-items:start}
-.mxabout h4{grid-column:1/-1}
-.mxabout p{max-width:none}
-.mxabout dl{grid-template-columns:minmax(0,1fr);margin:0;padding-inline-start:20px;border-inline-start:2px solid var(--line)}
-@media (max-width:819px){.mxabout{grid-template-columns:minmax(0,1fr)}.mxabout dl{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-top:8px;padding:10px 0 0;border:0;border-top:2px solid var(--line)}}
+.mxx .mxabout{display:grid;grid-template-columns:minmax(0,1fr) minmax(200px,280px);gap:6px 28px;align-items:start}
+.mxx .mxabout h4{grid-column:1/-1}
+.mxx .mxabout p{max-width:none}
+.mxx .mxabout dl{grid-template-columns:minmax(0,1fr);margin:0;padding-inline-start:20px;border-inline-start:2px solid var(--line)}
+@media (max-width:819px){.mxx .mxabout{grid-template-columns:minmax(0,1fr)}.mxx .mxabout dl{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-top:8px;padding:10px 0 0;border:0;border-top:2px solid var(--line)}}
 /* (2026-11-27 ユーザー: 描かれたゲームのレイアウトが崩れている) the three pull-downs (地域・ゲーム・時代) on a phone: thirds of one line, no sideways scroll */
 @media (max-width:819px){.mupg-ex.ptreg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;overflow:visible;-webkit-mask:none;mask:none}
   .ptreg .ptdd{position:relative;max-width:none;min-width:0;flex-direction:column;justify-content:center;align-items:flex-start;gap:0;padding:4px 24px 5px 12px;border-radius:14px;min-height:44px;text-align:start}
   .ptreg .ptdd .ptddk{font-size:12px;line-height:1.2}.ptreg .ptdd b{font-size:13px;line-height:1.25;white-space:normal;overflow:visible;overflow-wrap:anywhere}
   .ptreg .ptdd svg{position:absolute;inset-inline-end:7px;top:50%;margin-top:-7px;width:14px;height:14px}}
 /* (2026-11-27 ユーザー: 名局選の一覧の画像はどのゲームでもサイズ固定・盤を大きく) every card's picture: the same square; the board fills it */
-.mxth{aspect-ratio:1/1;padding:14px;display:grid;place-items:center}
-.mxth svg{width:100%;height:100%;max-height:none}
-.mxth{position:relative;overflow:hidden}.mxth.k-xiangqi{background-color:#2b2f3b}
-.mxth svg{position:absolute;inset:14px;width:calc(100% - 28px);height:calc(100% - 28px)}
+.mxx .mxth{aspect-ratio:1/1;padding:14px;display:grid;place-items:center}
+.mxx .mxth svg{width:100%;height:100%;max-height:none}
+.mxx .mxth{position:relative;overflow:hidden}.mxx .mxth.k-xiangqi{background-color:#2b2f3b}
+.mxx .mxth svg{position:absolute;inset:14px;width:calc(100% - 28px);height:calc(100% - 28px)}
 /* ===== スタンプカード (2026-11-27 作り直し — ユーザー: あまりにも不均衡、もっとスマートに): a head with a ring of the rooms done, every room
    the same tile (stamp · name · goal · bar · k / n · reward · buttons), the item stamps of one room at a time, small, under the tiles ===== */
 .mupass.on{padding:18px 20px}
@@ -1257,29 +1272,56 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 .mpc-b.see[aria-expanded=true]{background:var(--ink);border-color:var(--ink);color:#fff}.mpc-b.see[aria-expanded=true] path{transform:rotate(180deg);transform-origin:12px 19px}
 @media (max-width:819px){.mpc-ac{flex-direction:row}.mpc-tt b{font-size:14px}}
 /* (2026-11-27 ユーザー: 名局選に形勢評価) the slider over a graph of the first side's chance (light) against the second's (dark); the note card's chip */
-.mxgw{position:relative;flex:1;min-width:0;display:flex;align-items:center}
-.mxgw .mxgraph{display:none}
-.mxgw.on{height:30px}.mxgw.on .mxgraph{display:block;position:absolute;inset:0;width:100%;height:100%;border-radius:8px;background:#3d4250;overflow:hidden}
-.mxg0{fill:#ece4d4}.mxg1{fill:none;stroke:#fdc43f;stroke-width:1.6;vector-effect:non-scaling-stroke}.mxg2{stroke:rgba(35,38,47,.35);stroke-width:1;stroke-dasharray:3 3;vector-effect:non-scaling-stroke}
-.mxgw.on .mxrng{position:relative;height:30px}
-.mxgw.on .mxrng::-webkit-slider-runnable-track{height:30px;background:transparent}
-.mxgw.on .mxrng::-moz-range-track{height:30px;background:transparent}
-.mxgw.on .mxrng::-webkit-slider-thumb{width:4px;height:34px;margin-top:-2px;border-radius:2px;background:#fdc43f;box-shadow:0 0 0 2px #23262f}
-.mxgw.on .mxrng::-moz-range-thumb{width:4px;height:34px;border-radius:2px;background:#fdc43f}
-.mxev{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:13px;font-weight:800}
-.mxev i{font-style:normal;color:#5d564b}
-.mxevb{position:relative;flex:1;max-width:140px;height:10px;border-radius:99px;background:#3d4250;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
-.mxevb span{position:absolute;inset:0 auto 0 0;background:#ece4d4;transition:width .3s}
-.mxevb::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(253,196,63,.9)}
-.mxev b{display:inline-flex;align-items:center;gap:5px;font-family:var(--round);color:var(--ink)}
-.mxev[hidden]{display:none}
+.mxx .mxgw{position:relative;flex:1;min-width:0;display:flex;align-items:center}
+.mxx .mxgw .mxgraph{display:none}
+.mxx .mxgw.on{height:30px}.mxx .mxgw.on .mxgraph{display:block;position:absolute;inset:0;width:100%;height:100%;border-radius:8px;background:#3d4250;overflow:hidden}
+.mxx .mxg0{fill:#ece4d4}.mxx .mxg1{fill:none;stroke:#fdc43f;stroke-width:1.6;vector-effect:non-scaling-stroke}.mxx .mxg2{stroke:rgba(35,38,47,.35);stroke-width:1;stroke-dasharray:3 3;vector-effect:non-scaling-stroke}
+.mxx .mxgw.on .mxrng{position:relative;height:30px}
+.mxx .mxgw.on .mxrng::-webkit-slider-runnable-track{height:30px;background:transparent}
+.mxx .mxgw.on .mxrng::-moz-range-track{height:30px;background:transparent}
+.mxx .mxgw.on .mxrng::-webkit-slider-thumb{width:4px;height:34px;margin-top:-2px;border-radius:2px;background:#fdc43f;box-shadow:0 0 0 2px #23262f}
+.mxx .mxgw.on .mxrng::-moz-range-thumb{width:4px;height:34px;border-radius:2px;background:#fdc43f}
+.mxx .mxev{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:13px;font-weight:800}
+.mxx .mxev i{font-style:normal;color:#5d564b}
+.mxx .mxevb{position:relative;flex:1;max-width:140px;height:10px;border-radius:99px;background:#3d4250;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+.mxx .mxevb span{position:absolute;inset:0 auto 0 0;background:#ece4d4;transition:width .3s}
+.mxx .mxevb::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(253,196,63,.9)}
+.mxx .mxev b{display:inline-flex;align-items:center;gap:5px;font-family:var(--round);color:var(--ink)}
+.mxx .mxev[hidden]{display:none}
 /* (2026-11-27 ユーザー: 博物館の「さがす」は右端で統一) every room's bar: the filters first, the search box at the end of the line (the right; on a
    right-to-left page, the line's end); a phone: the page numbers, then the search box, the filters on the next line */
 .mupg-ex{order:1}.mupg-n{order:2}.mupg-s{order:3;margin-inline-start:auto;flex:0 1 320px}
 @media (max-width:819px){.mupg-n{order:1;margin-inline-start:0}.mupg .mupg-s{order:2;flex:1 1 0;margin-inline-start:0}.mupg-ex,.mupg>.sgw{order:3}}
 /* (2026-11-27 ユーザー: 形勢評価グラフはもう少し大きく) the graph: 64 px high on PC, 52 on a phone; the playhead as tall */
-.mxgw.on{height:64px}.mxgw.on .mxrng{height:64px}
-.mxgw.on .mxrng::-webkit-slider-runnable-track{height:64px}.mxgw.on .mxrng::-moz-range-track{height:64px}
-.mxgw.on .mxrng::-webkit-slider-thumb{height:68px}.mxgw.on .mxrng::-moz-range-thumb{height:68px}
-@media (max-width:819px){.mxgw.on,.mxgw.on .mxrng{height:52px}.mxgw.on .mxrng::-webkit-slider-runnable-track,.mxgw.on .mxrng::-moz-range-track{height:52px}.mxgw.on .mxrng::-webkit-slider-thumb{height:56px}.mxgw.on .mxrng::-moz-range-thumb{height:56px}}
-.mxabout dl{gap:6px 18px}.mxabout dd{font-size:13.5px}
+.mxx .mxgw.on{height:64px}.mxx .mxgw.on .mxrng{height:64px}
+.mxx .mxgw.on .mxrng::-webkit-slider-runnable-track{height:64px}.mxx .mxgw.on .mxrng::-moz-range-track{height:64px}
+.mxx .mxgw.on .mxrng::-webkit-slider-thumb{height:68px}.mxx .mxgw.on .mxrng::-moz-range-thumb{height:68px}
+@media (max-width:819px){.mxx .mxgw.on,.mxx .mxgw.on .mxrng{height:52px}.mxx .mxgw.on .mxrng::-webkit-slider-runnable-track,.mxx .mxgw.on .mxrng::-moz-range-track{height:52px}.mxx .mxgw.on .mxrng::-webkit-slider-thumb{height:56px}.mxx .mxgw.on .mxrng::-moz-range-thumb{height:56px}}
+.mxx .mxabout dl{gap:6px 18px}.mxx .mxabout dd{font-size:13.5px}
+/* (2026-11-27) 名局選のリバーシ: the site's green felt board, the discs turn over where they lie (one element, two faces) */
+.mxx .mxrvfr{fill:#2b2118;stroke:#8e7440;stroke-width:.04}.mxx .mxrvf{fill:#1b6a4a}.mxx .mxrv line{stroke:rgba(0,0,0,.42);stroke-width:.035}.mxx .mxrvd{fill:rgba(0,0,0,.6)}
+.mxx .mxrv .mxcoord{fill:#cbbfa9}
+.mxx .mxboard.mxrvb .mxp{perspective:320px}
+.mxx .mxrd{position:relative;display:block;width:82%;height:82%;margin:9%;transform-style:preserve-3d;transition:transform .42s cubic-bezier(.45,.05,.25,1)}
+.mxx .mxrd.w{transform:rotateY(180deg)}
+.mxx .mxboard.still .mxrd{transition:none}
+.mxx .mxrf{position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.mxx .mxrf.b{background:linear-gradient(165deg,#2c2d30 0%,#1b1c1e 50%,#131416 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 2cqw 0 #0f1011,0 4.4cqw 0 #c7c3b8,0 7cqw 6cqw rgba(0,0,0,.42)}
+.mxx .mxrf.w{transform:rotateY(180deg);background:linear-gradient(165deg,#f4f2eb 0%,#e7e4db 50%,#d9d6cc 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.75),inset 0 -1px 1px rgba(0,0,0,.14),0 2cqw 0 #c9c6bc,0 4.4cqw 0 #161718,0 7cqw 6cqw rgba(0,0,0,.4)}
+.mxx .mxboard.mxrvb .mxp.last::after{content:"";position:absolute;left:50%;top:50%;width:15%;height:15%;transform:translate(-50%,-50%);border-radius:50%;background:#ff6b5b;box-shadow:0 0 6px rgba(255,107,91,.8)}
+.mxx .mxth.k-reversi .mxtb{fill:#1c1d1f}.mxx .mxth.k-reversi .mxtw{fill:#f2f0e9;stroke:none}
+.mxx .mxcap.mxrc{font-variant-numeric:tabular-nums}
+/* (2026-11-27 ユーザー: 偶然の道具のレイアウトのバランス — 上のタグなど) PC/tablet: the tools as an even 4 × 2 of equal pills (no ragged 5 + 3);
+   under the tray, the buttons and then the tally, so the left column runs as long as the story card on the right */
+@media (min-width:820px){
+  .muwrap .chtools{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+  .muwrap .cht{width:auto;min-width:0}
+  .muwrap .cht .chtt{min-width:0}
+  .muwrap .cht b{white-space:normal;line-height:1.25;word-break:keep-all;overflow-wrap:anywhere}
+  .chmain{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);grid-template-rows:auto auto 1fr;column-gap:20px;row-gap:12px}
+  .chmain .chl,.chmain .chr{display:contents}
+  .chmain .chstage{grid-column:1;grid-row:1}
+  .chmain .chbtns{grid-column:1;grid-row:2}
+  .chmain .chchart{grid-column:1;grid-row:3;align-self:start}
+  .chmain .chtext{grid-column:2;grid-row:1/4;align-self:start;position:sticky;top:84px}
+}
