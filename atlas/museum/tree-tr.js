@@ -22,7 +22,7 @@
     reversi: [null, "İngiltere", "1880'lerde Londra'da Reversi adıyla satıldı. 1973'te Japonya'da yaratılan Othello onu tüm dünyanın oyunu yaptı."],
     dots: [null, "Fransa", "Noktaları birleştirip kutuları kapat — matematikçi Lucas 1889'da tanıttı. Yalnızca kalem ve kâğıtla oynanır; okul defterlerinin klasiği oldu."],
     hex: [null, "Danimarka ve ABD", "Piet Hein 1942'de, Nash ise 1948 dolaylarında birbirinden ayrı icat etti. Bir oyunun asla berabere bitemeyeceği matematiksel olarak kanıtlanmıştır."],
-    connect4: [null, "ABD", "Dik bir tahtada dördü yan yana dizme; Milton Bradley 1974'te piyasaya sürdü. 1988'de ilk oyuncunun kazandığı kanıtlandı."],
+    connect4: [null, "ABD", "Dik bir tahtada dördü yan yana dizme; 1974'te ABD'de satışa çıktı. 1988'de ilk oyuncunun kazandığı kanıtlandı."],
     amazons: [null, "Arjantin", "Zamkauskas'ın 1988'de icat ettiği bir bölge oyunu. Bilgisayar olimpiyatlarında bir dal oldu."],
     latrunculi: [null, "Roma", "Roma askerlerinin savaş oyunu: bir taş, iki taş arasına kıstırılarak alınır. En eski kayıt MÖ 1. yüzyılda Varro'dadır."],
     tafl: [null, "İskandinavya", "Saldırganlara karşı bir kralın savunulduğu İskandinav oyunları. Bir görüş Roma latrunculi'sinin etkisini görür. Satranç yayıldıkça unutuldular."],

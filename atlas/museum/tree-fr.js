@@ -22,7 +22,7 @@
     reversi: [null, "Angleterre", "Vendu à Londres dans les années 1880 sous le nom de Reversi. L'Othello, créé au Japon en 1973, en fit un jeu du monde entier."],
     dots: [null, "France", "Reliez les points pour fermer des carrés ; présenté par le mathématicien Lucas en 1889. Un crayon et du papier suffisent : il devint un classique des cahiers d'écolier."],
     hex: [null, "Danemark et États-Unis", "Inventé séparément par Piet Hein en 1942 et par Nash vers 1948. Il est démontré mathématiquement qu'une partie ne peut jamais finir par un match nul."],
-    connect4: [null, "États-Unis", "Quatre en ligne sur un plateau vertical, lancé par Milton Bradley en 1974. La victoire du premier joueur fut démontrée en 1988."],
+    connect4: [null, "États-Unis", "Quatre en ligne sur un plateau vertical, mis en vente aux États-Unis en 1974. La victoire du premier joueur fut démontrée en 1988."],
     amazons: [null, "Argentine", "Jeu de territoire inventé par Zamkauskas en 1988. Il devint une épreuve des olympiades informatiques."],
     latrunculi: [null, "Rome", "Le jeu de guerre des soldats romains : on prend une pièce en l'encadrant entre deux. La plus ancienne mention se trouve chez Varron, au Ier siècle av. J.-C."],
     tafl: [null, "Scandinavie", "Les jeux nordiques d'un roi défendu contre des assaillants. Une hypothèse y voit l'influence du latrunculi romain. Ils s'effacèrent à mesure que les échecs se répandaient."],

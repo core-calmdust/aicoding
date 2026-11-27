@@ -22,7 +22,7 @@
     reversi: [null, 'Inggris', 'Dijual di London tahun 1880-an sebagai Reversi. Othello, yang diciptakan di Jepang pada 1973, menjadikannya permainan seluruh dunia.'],
     dots: [null, 'Prancis', 'Hubungkan titik untuk menutup kotak — diperkenalkan oleh matematikawan Lucas pada 1889. Cukup dimainkan dengan pensil dan kertas, ia menjadi klasik di buku tulis sekolah.'],
     hex: [null, 'Denmark & AS', 'Diciptakan secara terpisah oleh Piet Hein pada 1942 dan oleh Nash sekitar 1948. Secara matematis terbukti bahwa permainannya tidak pernah berakhir seri.'],
-    connect4: [null, 'AS', 'Empat berderet di papan tegak, diluncurkan oleh Milton Bradley pada 1974. Kemenangan pemain pertama dibuktikan pada 1988.'],
+    connect4: [null, 'AS', 'Empat berderet di papan tegak, dijual di AS sejak 1974. Kemenangan pemain pertama dibuktikan pada 1988.'],
     amazons: [null, 'Argentina', 'Permainan wilayah yang diciptakan oleh Zamkauskas pada 1988. Ia menjadi salah satu nomor di olimpiade komputer.'],
     latrunculi: [null, 'Roma', 'Permainan perang para prajurit Romawi: bidak ditangkap dengan menjepitnya di antara dua bidak. Catatan tertua ada pada Varro, abad ke-1 SM.'],
     tafl: [null, 'Skandinavia', 'Permainan Nordik tentang raja yang dipertahankan dari para penyerang. Satu teori melihat pengaruh latrunculi Romawi. Permainan ini memudar seiring menyebarnya catur.'],

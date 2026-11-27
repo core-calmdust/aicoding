@@ -22,7 +22,7 @@
     reversi: [null, "Inglaterra", "Se vendía en el Londres de la década de 1880 como Reversi. Othello, creado en Japón en 1973, lo convirtió en un juego de todo el mundo."],
     dots: [null, "Francia", "Une los puntos para cerrar cuadros; lo presentó el matemático Lucas en 1889. Basta con lápiz y papel, y se volvió un clásico de cuaderno escolar."],
     hex: [null, "Dinamarca y EE. UU.", "Inventado por separado por Piet Hein en 1942 y por Nash hacia 1948. Está demostrado matemáticamente que una partida nunca puede terminar en empate."],
-    connect4: [null, "EE. UU.", "Cuatro en línea en un tablero vertical, lanzado por Milton Bradley en 1974. En 1988 se demostró que gana el primer jugador."],
+    connect4: [null, "EE. UU.", "Cuatro en línea en un tablero vertical, a la venta en EE. UU. desde 1974. En 1988 se demostró que gana el primer jugador."],
     amazons: [null, "Argentina", "Juego de territorio inventado por Zamkauskas en 1988. Se convirtió en una prueba de las olimpiadas de computación."],
     latrunculi: [null, "Roma", "El juego de guerra de los soldados romanos: una pieza se captura atrapándola entre dos. El registro más antiguo está en Varrón, siglo I a. C."],
     tafl: [null, "Escandinavia", "Los juegos nórdicos de un rey defendido contra atacantes. Una hipótesis ve en ellos la influencia del latrunculi romano. Se desvanecieron al difundirse el ajedrez."],
