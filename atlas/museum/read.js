@@ -85,6 +85,7 @@
     { id: 'solved', region: 'americas', color: '#3a4a6a', cover: { s: 'solved' }, mins: 3, sec: [{ paint: 'braekel' }, null, null, { pic: 'slvdraughtsbox' }, { paint: 'kyosai' }], figs: { m0: { svg: 'solvedSteal' }, m1: { svg: 'solvedYears' }, m2: { svg: 'solvedSizes' } }, refs: ['L. V. Allis, Searching for Solutions in Games and Artificial Intelligence (1994)', 'J. Schaeffer et al., “Checkers Is Solved”, Science 317 (2007)', 'J. W. Romein, H. E. Bal, “Solving Awari with Parallel Retrograde Analysis”, IEEE Computer (2003)', 'The Metropolitan Museum of Art, 48.174.49 (box-board for draughts)', 'Wikipedia, “Solved game”, “Game complexity”, “Hex (board game)”, “Strategy-stealing argument”, “Endgame tablebase”'], links: [{ g: 'hex' }, { g: 'connect4' }, { g: 'checkers' }, { g: 'gomoku' }] },
     { id: 'solved', region: 'americas', color: '#3a4a6a', cover: { s: 'solved' }, mins: 3, sec: [{ paint: 'braekel' }, null, null, { pic: 'slvdraughtsbox' }, { paint: 'kyosai' }], figs: { m0: { svg: 'solvedSteal' }, m1: { svg: 'solvedTimeline' }, m2: { svg: 'solvedSizes' } }, refs: ['L. V. Allis, Searching for Solutions in Games and Artificial Intelligence (1994)', 'J. Schaeffer et al., “Checkers Is Solved”, Science 317 (2007)', 'J. W. Romein, H. E. Bal, “Solving Awari with Parallel Retrograde Analysis”, IEEE Computer (2003)', 'The Metropolitan Museum of Art, 48.174.49 (box-board for draughts)', 'Wikipedia, “Solved game”, “Game complexity”, “Hex (board game)”, “Strategy-stealing argument”, “Endgame tablebase”'], links: [{ g: 'hex' }, { g: 'connect4' }, { g: 'checkers' }, { g: 'gomoku' }] },
     { id: 'travel', region: 'europe', color: '#5a3a24', cover: { s: 'travel' }, mins: 3, sec: [{ ex: 'ballinderry' }, { pic: 'travelbox' }, { pic: 'travelwalnut' }, { pic: 'travelleather' }, null], figs: { m0: { svg: 'travelFold' }, m1: { svg: 'travelHold' }, m2: { svg: 'travelTimeline' } }, refs: ['The Metropolitan Museum of Art, Game Box (2010.109.5, Italy, 14th century); Draughtsmen and box-board for checkers, backgammon and nine men’s morris (48.174.49, mid-19th century)', 'Rijksmuseum, Verkeerbord (BK-NM-1010-276, c. 1690–1710); Board game box (BK-1980-41, c. 1600–49)', 'Royal Museums Greenwich, Travelling chess set and board (AAB0070)', 'Isabella Stewart Gardner Museum, Traveling Chess Set (U11n41)', 'Victoria and Albert Museum, Combined pocket chess & draughts board (E.2517-1948)', 'FIDE World Chess Museum, Travel chess set with metal chessboard box', 'Wikipedia, “Chess set”, “Correspondence chess”'], links: [{ g: 'chess' }, { g: 'backgammon' }, { g: 'morris' }, { ex: 'ballinderry' }, { ex: 'goose' }] },
+    { id: 'hunt', region: 'asia', color: '#7a4a1a', cover: { s: 'hunt' }, mins: 3, sec: [null, null, null, null, { paint: 'coyote' }], figs: { m0: { svg: 'huntBoard' }, m1: { svg: 'huntJump' }, m2: { svg: 'huntMap' } }, refs: ['D. Parlett, The Oxford History of Board Games (1999)', 'H. J. R. Murray, A History of Board-Games Other Than Chess (1952)', 'H. Parker, Ancient Ceylon (1909)', 'K. Plischke (1890), on the Malay game of rimau-rimau; C. Snouck Hurgronje, The Achehnese (1906)', 'Lim Yew Jin & J. Nievergelt, “Computing Tigers and Goats”, ICGA Journal 27 (2004)', 'Ludii, “Pulijudamu” (after Vasantha 2003)', 'Wikipedia, “Bagh-Chal”, “Lambs and tigers”, “Bagh bandi”, “Demala diviyan keliya”, “Rimau-rimau”, “Meurimueng-rimueng-do”, “Tiger game”'], links: [{ g: 'foxgeese' }, { g: 'alquerque' }, { paint: 'coyote' }] },
   ];
   // pictures shown only beside a story's paragraph (not in another room): a museum's open-access photo (CC0), linked to the museum's page.
   // The name, in each language, is MUSEUM_READ_T[lang].pic[id]. Files images/atlas/museum-story/pic/<id>.webp (≤ 960 px).
@@ -163,6 +164,14 @@
     const tk = t.match(/[⺀-鿿　-ヿ＀-￯]|[^\s⺀-鿿　-ヿ＀-￯]+\s*|\s+/g) || [], out = []; let cur = '', w = 0;
     tk.forEach(k => { const kw = [...k].reduce((a, c) => a + cw(c), 0); if (cur && w + kw > maxW && !/^[、。，．）」』%]/.test(k)) { out.push(cur.trim()); cur = ''; w = 0; } cur += k; w += kw; });
     if (cur.trim()) out.push(cur.trim()); return out; };
+  // (2026-11-27, story 71) a tiger piece (orange, striped) and a goat piece (cream), for the tiger-and-goat boards below
+  const huntTiger = (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#d0782a" stroke="#6a3010" stroke-width="1.6"/><path d="M${x - r * .55} ${y - r * .5}l${r * .3} ${r * .35}M${x + r * .55} ${y - r * .5}l${-r * .3} ${r * .35}M${x} ${y - r * .75}v${r * .4}" stroke="#3a1a08" stroke-width="${r * .16}" stroke-linecap="round"/>`;
+  const huntGoat = (x, y, r, op) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#fbf6ea" stroke="#8a7a5a" stroke-width="1.5"${op ? ` opacity="${op}"` : ''}/><circle cx="${x}" cy="${y}" r="${r * .45}" fill="none" stroke="#c8b898" stroke-width="1"${op ? ` opacity="${op}"` : ''}/>`;
+  // the 5 × 5 lattice of bagh-chal: lines along rows and columns, diagonals through the points where column + row is even (as on alquerque)
+  const huntLattice = (x0, y0, C, n, col) => { let s = ''; const X = c => x0 + c * C, Y = r => y0 + r * C, L = (a, b, c, d) => `<line x1="${X(a)}" y1="${Y(b)}" x2="${X(c)}" y2="${Y(d)}" stroke="${col}" stroke-width="1.8"/>`;
+      for (let k = 0; k < n; k++) s += L(0, k, n - 1, k) + L(k, 0, k, n - 1);
+      for (let r = 0; r < n - 1; r++) for (let c = 0; c < n - 1; c++) s += (c + r) % 2 ? L(c + 1, r, c, r + 1) : L(c, r, c + 1, r + 1);
+      for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) s += `<circle cx="${X(c)}" cy="${Y(r)}" r="3" fill="${col}"/>`; return s; };
   const DIAG = {
     // the twenty squares, the five rosettes, and one player's road (1 → 14) as the reconstructed rules run it
     urBoard: () => { const C = 46, X0 = 12, Y0 = 12, ex = (r, c) => r === 1 || c < 4 || c > 5, ros = [[0, 0], [2, 0], [1, 3], [0, 6], [2, 6]];
@@ -2244,6 +2253,42 @@
         g += `<text x="50" y="${yy - 4}" font-size="13" font-weight="800" fill="${C[k]}"${diceRtl(yr)}>${esc(yr || '')}</text>`;
         diceWrap(nm, 240, 12).slice(0, 2).forEach((t, j) => { g += `<text x="50" y="${yy + 12 + j * 14}" font-size="12" fill="#2b2a28"${diceRtl(t)}>${esc(t)}</text>`; }); });
       return `<svg viewBox="0 0 ${W} ${24 + RH * (T.length - 1) + 36}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // the bagh-chal board at the start: the four tigers on the corners, the goats waiting beside the board (20, placed one by one)
+    // (text: the story's figL.board — [the tigers, the goats, how pieces sit and move])
+    huntBoard: () => { const L = ((st('hunt').figL || {}).board) || [], W = 300, C = 52, x0 = 46, y0 = 22; let g = `<rect x="${x0 - 30}" y="${y0 - 16}" width="${C * 4 + 60}" height="${C * 4 + 32}" rx="10" fill="#d8b878" stroke="#8a6a32" stroke-width="2"/>` + huntLattice(x0, y0, C, 5, '#5a3e1a');
+      [[0, 0], [4, 0], [0, 4], [4, 4]].forEach(([c, r]) => { g += huntTiger(x0 + c * C, y0 + r * C, 13); });
+      let y = y0 + C * 4 + 46;
+      g += huntTiger(22, y - 4, 9) + `<text x="40" y="${y}" font-size="13" font-weight="800" fill="#6a3010">× 4</text>`;
+      diceWrap(L[0], 200, 12).forEach((t, j) => { g += `<text x="82" y="${y + j * 15}" font-size="12" fill="#2b2a28"${diceRtl(t)}>${esc(t)}</text>`; }); y += Math.max(1, diceWrap(L[0], 200, 12).length) * 15 + 12;
+      g += huntGoat(22, y - 4, 9) + `<text x="40" y="${y}" font-size="13" font-weight="800" fill="#5a544a">× 20</text>`;
+      diceWrap(L[1], 200, 12).forEach((t, j) => { g += `<text x="82" y="${y + j * 15}" font-size="12" fill="#2b2a28"${diceRtl(t)}>${esc(t)}</text>`; }); y += Math.max(1, diceWrap(L[1], 200, 12).length) * 15 + 12;
+      g += `<circle cx="22" cy="${y - 4}" r="3" fill="#5a3e1a"/><path d="M12 ${y - 4}h20" stroke="#5a3e1a" stroke-width="1.8"/>`;
+      const ln = diceWrap(L[2], 250, 12); ln.forEach((t, j) => { g += `<text x="40" y="${y + j * 15}" font-size="12" fill="#2b2a28"${diceRtl(t)}>${esc(t)}</text>`; }); y += (ln.length - 1) * 15 + 10;
+      return `<svg viewBox="0 0 ${W} ${y}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // three small pieces of the lattice: ① the tiger jumps a goat to the empty point beyond and takes it; ② a goat with another behind it cannot be jumped;
+    // ③ goats close every way out and the tiger cannot move — then the two ways to win
+    // (text: the story's figL.jump — [①, ②, ③, the tigers win, the goats win])
+    huntJump: () => { const L = ((st('hunt').figL || {}).jump) || [], W = 300, C = 32; let g = '', y = 8;
+      const panel = (k, py) => { const x0 = 18, y0 = py + 14; let s = `<rect x="4" y="${py}" width="${C * 2 + 30}" height="${C * 2 + 28}" rx="8" fill="#ecd8a8"/>` + huntLattice(x0 + 1, y0, C, 3, '#7a5a32');
+        const P = (c, r) => [x0 + 1 + c * C, y0 + r * C];
+        if (k === 0) { s += huntTiger(...P(0, 2), 10) + huntGoat(...P(1, 1), 10, .45) + `<path d="M${P(0, 2)[0] + 6} ${P(0, 2)[1] - 14}Q${P(1, 1)[0] - 16} ${P(1, 1)[1] - 22} ${P(2, 0)[0] - 8} ${P(2, 0)[1] + 2}" fill="none" stroke="#c0392b" stroke-width="2.4" marker-end="url(#hjA)"/>` + `<circle cx="${P(2, 0)[0]}" cy="${P(2, 0)[1]}" r="10" fill="none" stroke="#c0392b" stroke-width="1.6" stroke-dasharray="3 2"/><path d="M${P(1, 1)[0] - 6} ${P(1, 1)[1] - 6}l12 12M${P(1, 1)[0] + 6} ${P(1, 1)[1] - 6}l-12 12" stroke="#c0392b" stroke-width="2.4"/>`; }
+        if (k === 1) { s += huntTiger(...P(0, 1), 10) + huntGoat(...P(1, 1), 10) + huntGoat(...P(2, 1), 10) + `<path d="M${P(0, 1)[0] + 4} ${P(0, 1)[1] - 16}h${C * 2 - 8}" stroke="#7a7a7a" stroke-width="2" stroke-dasharray="4 3"/><path d="M${P(2, 1)[0] - 5} ${P(2, 1)[1] - 27}l10 10M${P(2, 1)[0] + 5} ${P(2, 1)[1] - 27}l-10 10" stroke="#c0392b" stroke-width="2.4"/>`; }
+        if (k === 2) { s += huntTiger(...P(0, 0), 10); [[1, 0], [0, 1], [1, 1], [2, 0], [0, 2], [2, 2]].forEach(([c, r]) => { s += huntGoat(...P(c, r), 10); }); }
+        return s + `<circle cx="${C * 2 + 34}" cy="${py + 12}" r="9" fill="#2f5f9e"/><text x="${C * 2 + 34}" y="${py + 16.5}" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">${k + 1}</text>`; };
+      [0, 1, 2].forEach(k => { const h = C * 2 + 28; g += panel(k, y); const ln = diceWrap(L[k], W - C * 2 - 56, 12), ty = y + h / 2 - (ln.length - 1) * 7.5 + 4;
+        ln.forEach((t, j) => { g += `<text x="${C * 2 + 50}" y="${ty + j * 15}" font-size="12" fill="#2b2a28"${diceRtl(t)}>${esc(t)}</text>`; }); y += h + 10; });
+      y += 10; [[3, 'tiger'], [4, 'goat']].forEach(([i, w]) => { g += w === 'tiger' ? huntTiger(16, y - 4, 8) : huntGoat(16, y - 4, 8); const ln = diceWrap(L[i], 254, 12); ln.forEach((t, j) => { g += `<text x="32" y="${y + j * 15}" font-size="12" font-weight="700" fill="#2b2a28"${diceRtl(t)}>${esc(t)}</text>`; }); y += ln.length * 15 + 8; });
+      return `<svg viewBox="0 0 ${W} ${y}" role="img" style="font-family:inherit;direction:ltr"><defs><marker id="hjA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#c0392b"/></marker></defs>${g}</svg>`; },
+    // the family around the Bay of Bengal and beyond: a card each with the name, then the place and the animals, and a row of pieces (hunters, then prey)
+    // (text: the story's figL.map — [name, place, animals] × 7 in the order of N below)
+    huntMap: () => { const R = ((st('hunt').figL || {}).map) || [], N = [[4, 20], [3, 15], [2, 20], [3, 15], [2, 24], [5, 15], [1, 18]], C = ['#8a4a1a', '#6a3a5a', '#2a5a6a', '#3a5a3a', '#7a2a2a', '#2a4a7a', '#5a4a20'], W = 300; let g = '', y = 6;
+      R.forEach(([nm, pl, an], k) => { const c = C[k], [a, b] = N[k] || [0, 0], ln = diceWrap(pl + ' · ' + an, 270, 12), h = 44 + ln.length * 15;
+        g += `<rect x="4" y="${y}" width="${W - 8}" height="${h}" rx="10" fill="${c}" opacity=".08"/>`;
+        g += `<text x="14" y="${y + 19}" font-size="14" font-weight="800" fill="${c}"${diceRtl(nm)}>${esc(nm)}</text>`;
+        ln.forEach((t, j) => { g += `<text x="14" y="${y + 36 + j * 15}" font-size="12" fill="#2b2a28"${diceRtl(t)}>${esc(t)}</text>`; });
+        const dy = y + h - 9; let x = 16; for (let i = 0; i < a; i++) { g += `<circle cx="${x}" cy="${dy}" r="4.2" fill="#d0782a" stroke="#6a3010"/>`; x += 10; } x += 6; for (let i = 0; i < b; i++) { g += `<circle cx="${x}" cy="${dy}" r="4" fill="#fbf6ea" stroke="#8a7a5a"/>`; x += 9.4; }
+        y += h + 6; });
+      return `<svg viewBox="0 0 ${W} ${y}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
     tetraOdds: () => { const n = [1, 4, 6, 4, 1], W = 300, H = 150, bw = 40, gap = (W - 40 - bw * 5) / 4; let g = '';
       n.forEach((v, i) => { const x = 20 + i * (bw + gap), h = v / 6 * 96, y = 112 - h;
         g += `<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="5" fill="${i === 2 ? '#2f4a6e' : '#8aa3c4'}"/><text x="${x + bw / 2}" y="${y - 6}" font-size="12" font-weight="800" fill="#2b2a28" text-anchor="middle">${v}/16</text><text x="${x + bw / 2}" y="132" font-size="14" font-weight="800" fill="#2b2a28" text-anchor="middle">${i}</text>`; });
