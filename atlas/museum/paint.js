@@ -99,6 +99,10 @@
     { id: 'huchten', w: 2048, h: 1795, rijks: 'SK-A-2675', bg: '#2f2a22', spots: [[.49, .8], [.48, .62], [.7, .7], [.85, .5], [.89, .08], [.14, .21]], links: [{ room: 'chance' }] },
     // (2026-11-25) the Rijksmuseum: 'Spel der Deugd / Le jeu de la vertu' (1798), a two-dice betting game of virtues and vices
     { id: 'vertu', w: 1486, h: 2048, rijks: 'RP-P-1905-6651', bg: '#e4dfd2', spots: [[.5, .135], [.5, .46], [.21, .45], [.48, .62], [.12, .66], [.25, .85]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Art Institute of Chicago: Posada, 'Los Charros Contrabandistas' — a three-dice race game
+    { id: 'charros', w: 1686, h: 1235, aic: 52038, no: '1944.940', bg: '#4a4740', spots: [[.5, .07], [.85, .25], [.24, .8], [.6, .65], [.2, .2], [.47, .84]], links: [{ ex: 'goose' }, { room: 'chance' }] },
+    // (2026-11-25) the Art Institute of Chicago: Qing snuff bottle painted with two old men at a weiqi board
+    { id: 'snuffwq', w: 1595, h: 2048, aic: 87724, no: '1961.1233', bg: '#8d8f94', spots: [[.55, .58], [.37, .59], [.67, .66], [.33, .48], [.64, .47], [.51, .24]], links: [{ g: 'go' }, { ex: 'shosoin' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
