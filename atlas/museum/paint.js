@@ -382,10 +382,11 @@
     const GL = Object.keys(gc).sort((a, b) => (a === '@chance') - (b === '@chance') || gc[b] - gc[a] || gName(a).localeCompare(gName(b)));
     const chips = document.createElement('div'); chips.className = 'chips cats ptreg'; chips.setAttribute('role', 'group');
     const ddb = (k, lb, v, vl) => `<button type="button" class="chip cat ptdd" data-dd="${k}" aria-haspopup="listbox" aria-expanded="false" aria-pressed="${v !== 'all'}"><span class="ptddk">${esc(lb)}</span><b>${esc(vl)}</b>${CHEV}</button>`;
-    chips.innerHTML = RG.filter(k => k === 'all' || n({ r: k }) || k === region).map(k => `<button type="button" class="chip cat" data-reg="${k}" aria-pressed="${k === region}">${esc(rl(k))}<em>${n({ r: k })}</em></button>`).join('')
-      + ddb('g', u('game'), gsel, gsel === 'all' ? allL() : gName(gsel)) + ddb('e', u('era'), esel, esel === 'all' ? allL() : u('era_' + esel));
+    // (2026-11-27 ユーザー: 描かれたゲームのレイアウトが崩れている — 5 region chips + 2 pull-downs ran onto a second line) the region is a
+    // pull-down too: search · 地域 · ゲーム · 時代 in one line, the same three controls everywhere
+    chips.innerHTML = ddb('r', u('region'), region, region === 'all' ? allL() : rl(region)) + ddb('g', u('game'), gsel, gsel === 'all' ? allL() : gName(gsel)) + ddb('e', u('era'), esel, esel === 'all' ? allL() : u('era_' + esel));
     const re = (k, v) => { wall(); requestAnimationFrame(() => { const c = document.querySelector(`.ptreg [data-${k}="${v}"]`); if (c) c.focus({ preventScroll: true }); }); };
-    chips.querySelectorAll('[data-reg]').forEach(b => b.onclick = () => { region = b.dataset.reg; SS('atlas-paint-region', region); re('reg', region); });
+    chips.querySelector('[data-dd="r"]').onclick = e => openDD(e.currentTarget, RG.filter(k => k === 'all' || n({ r: k }) || k === region).map(k => [k, rl(k), n({ r: k })]), region, k => { region = k; SS('atlas-paint-region', k); re('dd', 'r'); });
     chips.querySelector('[data-dd="g"]').onclick = e => openDD(e.currentTarget, [['all', allL(), n({ g: 'all' })], ...GL.map(g => [g, gName(g), n({ g })])], gsel, k => { gsel = k; SS('atlas-paint-game', k); re('dd', 'g'); });
     chips.querySelector('[data-dd="e"]').onclick = e => openDD(e.currentTarget, [['all', allL(), n({ e: 'all' })], ...ERAS.map(k => [k, u('era_' + k), n({ e: k })])], esel, k => { esel = k; SS('atlas-paint-era', k); re('dd', 'e'); });
     el.grid.innerHTML = WORKS.filter(W => fit(W, st)).map(W => { const x = wt(W.id);
