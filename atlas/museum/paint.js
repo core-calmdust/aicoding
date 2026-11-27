@@ -243,6 +243,10 @@
     { id: 'evdvelde', w: 2048, h: 1258, rijks: 'RP-T-00-280', bg: '#dcdad2', spots: [[.7, .52], [.6, .38], [.8, .45], [.85, .3], [.25, .6], [.12, .82]], links: [{ g: 'backgammon' }] },
     // (2026-11-25) the Rijksmuseum: Leendert van der Cooghen, two men at tric-trac with a monkey in the window (1666)
     { id: 'cooghen', w: 2048, h: 1339, rijks: 'RP-P-BI-6200', bg: '#e6e2d6', spots: [[.48, .6], [.3, .32], [.36, .5], [.22, .2], [.53, .39], [.71, .27]], links: [{ g: 'backgammon' }] },
+    // (2026-11-25) the Rijksmuseum: Ferdinand Roybet, 'Le joueur d'échecs' (1875)
+    { id: 'roybet', w: 1532, h: 2048, rijks: 'RP-P-1991-247', bg: '#e6e2d8', spots: [[.25, .53], [.55, .27], [.33, .46], [.85, .57], [.2, .32], [.5, .95]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Rijksmuseum: Le Charivari 1838, 'St. Pierre, mon ami, vous êtes capot!' — artist and model at cards
+    { id: 'capot', w: 1451, h: 2048, rijks: 'RP-P-OB-40.891', bg: '#e3e0da', spots: [[.6, .52], [.42, .38], [.76, .35], [.3, .2], [.3, .75], [.5, .93]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
