@@ -960,7 +960,6 @@
     bvGame = g; stopSession(); renderPlace();   // (the panel's 盤 row follows the game on the table)
     setTimeout(landNudge, 900);
     $('bv').classList.add('on'); $('bv').classList.remove('playing'); $('endc').classList.remove('on');
-    document.documentElement.classList.remove('bvboot');   // (opened from #<page>/<game>: the pages were hidden until now — atlas/index.html)
     // keep the board framed above the card whatever changes its size later (fonts, the phone drawer, coming back from a game);
     // scheduled first so it also runs if anything below fails
     [60, 600, 1000].forEach(ms => setTimeout(fitStage, ms));   // (the camera glides back by itself: no snapping)
@@ -975,6 +974,7 @@
         const rm = ruleModel(id);
         if (back) { Table3D.show(id, rm, { soft: true }); Table3D.play(false, { glide: 400 }); }
         else { Table3D.show(id, rm, flown && !rm ? { magic: true, hold: true } : {}); Table3D.play(false); }
+        if (document.documentElement.classList.contains('bvboot')) { document.documentElement.classList.remove('bvboot'); if (window.AtlasLoading) requestAnimationFrame(() => requestAnimationFrame(() => AtlasLoading.hide())); }   // (opened from #<page>/<game> — a game page's way back: the pages and the curtain wait for this — atlas/index.html)
       };
       if (TG && !back) try { warm(id); } catch (e) {}   // (built now, so its textures are under way)
       if (!back && texBusy(id)) {   // its textures are still being drawn (opened right after the page loaded): show it when they are done
@@ -1197,7 +1197,7 @@
       // measure again once the custom pickers below are in place and the web fonts have loaded
       setTimeout(() => window.__bvModeRz && window.__bvModeRz(), 0); if (document.fonts) document.fonts.ready.then(() => window.__bvModeRz && window.__bvModeRz());
     }
-    if ($('bvRules')) $('bvRules').onclick = ad && ad.ext ? () => ad.ext('rules', { lang }) : startRules;   // (a game played on its own page — 麻雀 riichi, adapter.ext: its rules course there)
+    if ($('bvRules')) $('bvRules').onclick = ad && ad.ext ? () => (ad.lsList ? lessonSheet(g, 'rules') : ad.ext('rules', { lang })) : startRules;   // (a game played on its own page — 麻雀 riichi, adapter.ext: its rules course there)
     if ($('bvVar') && ad && ad.variants) varBind(g, ad);   // (a game without variants: a #bvVar still in the page is the card sliding out — 2026-11-13, phones: shogi → its neighbour broke the card)
     if (MX && ad && ad.aiOnly && $('bvSzRow') && $('bvRt')) $('bvSzRow').after($('bvRt'));   // (操作 · 点数 · 相手: the rating row last — テーブルホッケー)
     if (MX) mxBind(g, ad);
@@ -1689,7 +1689,7 @@
     return (rtA || `<div class="opts mxp" id="bvRt" hidden><div class="mxrow"><label>${t('bv.opp')}<select id="bvRtOpp">${aiRt ? `<option value="ai" ${opp === 'ai' ? 'selected' : ''}>AI</option>` : ''}${MXR3 && !Atlas3D[id].online ? `<option value="online" disabled>${esc(SOON[lang] || SOON.en)}</option>` : ''}${fullRt || RT_NO_ONLINE[id] ? '' : `<option value="online" ${opp === 'online' || (!RTG[id] && !FULL_AI_RT[id]) ? 'selected' : ''}>${esc(t('bv.online'))}</option>`}</select></label><button type="button" class="mxb mxic" id="bvRtRec" aria-label="${esc(t('bv.rtRec'))}" title="${esc(t('bv.rtRec'))}"><span class="hb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5.5a2.5 2.5 0 0 0 3 3.6M16 6h2.5a2.5 2.5 0 0 1-3 3.6"/><path d="M12 13v3.5M8.5 20h7M10 16.5h4l.5 3.5h-5z"/></svg></span></button></div>`
       + `<label id="bvRtTcL">${t('tc.h')}<button type="button" class="lvpick" id="bvRtTc"></button></label>${rtOnly ? '<div class="opts vopts rtonly"><span class="rtnow2" id="bvRtNow" hidden></span></div>' : ''}<div class="mxnote" id="bvRtNote" hidden>${esc(t('bv.rtNoTc'))}</div></div>`)
       + (Atlas3D[id] && Atlas3D[id].dailyHtml ? `<div class="opts mxp hbdy" id="bvPz" hidden>${Atlas3D[id].dailyHtml(lang)}</div>` : `<div class="opts mxp${pz3dOf(id) ? '' : ' mxoff'}" id="bvPz" hidden>${daily.map(([k, ic, lb]) => `<button type="button" class="mxb${pzDone(g.id, k) ? ' pzok' : ''}" data-pz="${k}"><i>${ic}</i>${esc(lb)}</button>`).join('')}<button type="button" class="mxb" data-pz="list"><i>▦</i>${esc(t('bv.pzList'))}</button></div>`)
-      + `<div class="opts mxp${ls3dOf(id) || (Atlas3D[id] && Atlas3D[id].ext) ? '' : ' mxoff'}" id="bvLs" hidden><label><select id="bvLsK"><option value="list" ${lsk === 'list' ? 'selected' : ''}>${esc(t('bv.ls'))}</option>${NO_OPEN3D[id] ? '' : `<option value="open" ${lsk === 'open' ? 'selected' : ''}>${esc(t('bv.lsOp'))}</option>`}</select></label><button type="button" class="mxb mxwide" id="bvLsList"><i>▦</i>${esc(t('bv.pzList'))}</button></div>`
+      + `<div class="opts mxp${ls3dOf(id) || (Atlas3D[id] && Atlas3D[id].ext) ? '' : ' mxoff'}" id="bvLs" hidden><label${Atlas3D[id] && Atlas3D[id].ext ? ' style="display:none"' : ''}><select id="bvLsK"><option value="list" ${lsk === 'list' ? 'selected' : ''}>${esc(t('bv.ls'))}</option>${NO_OPEN3D[id] ? '' : `<option value="open" ${lsk === 'open' ? 'selected' : ''}>${esc(t('bv.lsOp'))}</option>`}</select></label><button type="button" class="mxb mxwide" id="bvLsList"><i>▦</i>${esc(t('bv.pzList'))}</button></div>`
       + '<div class="ps-prog mxprog" id="bvMxProg" hidden></div>';   // (phones, 2026-11-16: how far the パズル / レッスン tab has gone, just above あそぶ · フル機能で遊ぶ — the sheet's own rows for them are gone)
   }
   const MXI = { puzzle: '<svg viewBox="0 0 24 24"><path d="M10 3h4v2.2a1.8 1.8 0 1 0 3.6 0V3H21v6h-2.2a1.8 1.8 0 1 0 0 3.6H21V21h-6v-2.2a1.8 1.8 0 1 0-3.6 0V21H3v-6h2.2a1.8 1.8 0 1 0 0-3.6H3V3h7z"/></svg>', lesson: '<svg viewBox="0 0 24 24"><path d="M3 9.5 12 5l9 4.5-9 4.5z"/><path d="M7 11.6V16c0 1.4 2.2 2.6 5 2.6s5-1.2 5-2.6v-4.4M21 9.5V15"/></svg>' };
@@ -1771,7 +1771,7 @@
     const extGo = (m, o) => ad.ext(m, Object.assign({ lv: $('bvLv') ? +$('bvLv').value : 0, size: $('bvSize') ? +$('bvSize').value : 0, opp: $('bvRtOpp') ? $('bvRtOpp').value : 'ai', lsk: $('bvLsK') ? $('bvLsK').value : 'list' }, o || {}));   // (麻雀 riichi: its own page, adapter.ext(tab, settings))
     $('bvFull').onclick = () => { const m = M(); if (ad && ad.ext) { extGo(m); return; } if (m === 'puzzle' && ownPz) ownGo(); else if (m === 'puzzle') startPuzzle(); else if (m === 'lesson') startLesson3D($('bvLsK').value); else if (m === 'rated' && ($('bvRtOpp').value === 'online' || !RTG[id])) startPlay('full'); else startPlay('table'); };   // あそぶ (here)
     $('bvTable').onclick = () => { const m = M(); if (m === 'puzzle') startPlay('full', 'puzzle', 'cont'); else if (m === 'lesson') startPlay('full', 'lesson', $('bvLsK').value); else startPlay('full'); };   // フル機能で遊ぶ
-    $('bvLsList').onclick = () => { try { SFX.tap && SFX.tap(); } catch (x) {} if (ad && ad.ext) { extGo('lesson'); return; } lessonSheet(g, $('bvLsK').value); };
+    $('bvLsList').onclick = () => { try { SFX.tap && SFX.tap(); } catch (x) {} if (ad && ad.ext && !ad.lsList) { extGo('lesson'); return; } lessonSheet(g, $('bvLsK').value); };
     $('bvPz').onclick = e => { if (ownPz && ad.bookSheet && e.target.closest('[data-hbbook]')) { try { SFX.tap && SFX.tap(); } catch (x) {} ad.bookSheet(lang, k => ownGo(k)); return; } const d = e.target.closest('[data-daily]'); if (d) { try { SFX.tap && SFX.tap(); } catch (x) {} ownGo(d.dataset.daily); return; } const b = e.target.closest('[data-pz]'); if (b) { try { SFX.tap && SFX.tap(); } catch (x) {} const k = b.dataset.pz; if (k === 'list') puzzleSheet(g); else startPuzzle({ daily: k }); } };   // (on the 3D table, 2026-11-11)
     $('bvRtRec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (x) {} openRec(g, 'all', ad && ad.ext ? 'rec' : 'rt');   /* (麻雀 riichi, 2026-11-28 ユーザー「戦績も3Dビューで見られるように」: the Atlas's own record sheet — riichi/ writes GameRecord 'riichi') */ };
     $('bvLsK').addEventListener('change', () => { pref[id + ':lsk'] = $('bvLsK').value; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} const cl = $('bv2d') || $('bvi').querySelector('.R .act > a.btn'); if (cl && M() === 'lesson') cl.href = mx2d(g, 'lesson'); });
@@ -2257,7 +2257,7 @@
   // レッスン・定跡の一覧 (2026-11-13, every game): the same header as 詰将棋 / 問題一覧 — the guide, the title, the progress over all the
   // chapters and 続きから (the first card not yet passed), with the chapter tabs along its bottom. Kept up as the list re-renders.
   function lxHead(S0, g, title) {
-    const GD = (window.AtlasPuzzles && AtlasPuzzles.G || {})[g.id] || {}, nm = (GD.name && (GD.name[lang] || GD.name.en)) || '';
+    const GD = (window.AtlasPuzzles && AtlasPuzzles.G || {})[g.id] || (window.Atlas3D && Atlas3D[g.id] && Atlas3D[g.id].lsHead) || {}, nm = (GD.name && (GD.name[lang] || GD.name.en)) || '';
     const CONT = { ja: '続きから', en: 'Continue', zh: '继续', 'zh-TW': '繼續', ko: '이어서', es: 'Continuar', fr: 'Continuer', pt: 'Continuar', de: 'Weiter', ru: 'Продолжить', tr: 'Devam', id: 'Lanjut', hi: 'जारी रखें', ar: 'متابعة' };
     let busy = false;
     const apply = () => {
@@ -2392,9 +2392,11 @@
   // aim, the record). 将棋のレッスン keeps the full game's own cards (their boards) under the same styles (index.html .bksheet).
   function lessonSheet(g, kind) {
     if (g.id === 'shogi' && kind !== 'open' && window.AtlasLessons && AtlasLessons.data) return lessonBook(g);
-    if (!window.AtlasLessons) return startPlay('full', 'lesson', kind);
-    const S0 = bookSheet(t(kind === 'open' ? 'bv.lsOp' : 'bv.ls')); lxHead(S0, g, t(kind === 'open' ? 'bv.lsOp' : 'bv.ls')); const TK = 'atlas-lxtab-' + g.id + '-' + (kind === 'open' ? 'o' : 'l');
-    AtlasLessons.list(g.id, kind === 'open' ? 'open' : 'lesson', lang).then(items => {
+    const XA = window.Atlas3D && Atlas3D[g.id] && Atlas3D[g.id].lsList ? Atlas3D[g.id] : null;   // (a game on its own page — 麻雀 riichi, 2026-11-28: its rules course / lessons listed here, opened there: adapter.lsList · lsTitle · ext)
+    if (!window.AtlasLessons && !XA) return startPlay('full', 'lesson', kind);
+    const TTL = XA && XA.lsTitle ? XA.lsTitle(kind, lang) : t(kind === 'open' ? 'bv.lsOp' : 'bv.ls');
+    const S0 = bookSheet(TTL); lxHead(S0, g, TTL); const TK = 'atlas-lxtab-' + g.id + '-' + (kind === 'open' ? 'o' : 'l');
+    (XA ? XA.lsList(kind, lang) : AtlasLessons.list(g.id, kind === 'open' ? 'open' : 'lesson', lang)).then(items => {
       const cats = []; items.forEach((x, i) => { x.i = i; const k = x.cat || ''; let c = cats.find(y => y.k === k); if (!c) cats.push(c = { k, name: x.catName || '', items: [] }); c.items.push(x); });
       let cur = null; try { cur = localStorage.getItem(TK); } catch (e) {}
       if (!cats.some(c => c.k === cur)) { const c = cats.find(c => c.items.some(x => x.st !== 'pass')) || cats[0]; cur = c ? c.k : ''; }
@@ -2402,7 +2404,7 @@
         const c = cats.find(y => y.k === cur) || cats[0]; if (!c) { S0.body.textContent = '—'; return; }
         const pass = x => x.st === 'pass', dn = y => y.items.filter(pass).length;
         const tabs = cats.length > 1 ? `<div class="lx-tabs${cats.length > 4 ? ' many' : ''}">${cats.map(y => `<button type="button" data-cat="${esc(y.k)}" class="${y.k === c.k ? 'sel' : ''}"><span class="nm">${esc(y.name || '—')}</span><span class="ct${dn(y) >= y.items.length ? ' ok' : ''}">${dn(y)}/${y.items.length}</span></button>`).join('')}</div>` : '';
-        const ban = `<div class="lx-banner"><div class="tx"><b>${esc(c.name || t(kind === 'open' ? 'bv.lsOp' : 'bv.ls'))}</b></div><div class="pg"><small>${dn(c)} / ${c.items.length} ✓</small></div></div>`;
+        const ban = `<div class="lx-banner"><div class="tx"><b>${esc(c.name || TTL)}</b></div><div class="pg"><small>${dn(c)} / ${c.items.length} ✓</small></div></div>`;
         const card = x => `<button type="button" class="lx-card${pass(x) ? ' done' : ''}${x.svg ? '' : ' nth'}" data-k="${esc(x.key)}" data-full="${x.full ? 1 : ''}">${x.svg ? `<span class="lx-th">${x.svg}</span>` : ''}<span class="lx-tx"><span class="lx-top"><span class="lx-no">${esc(x.tag || String(c.items.indexOf(x) + 1))}</span><span class="lx-st${pass(x) ? ' ok' : x.st === 'try' ? ' so' : ' new'}">${pass(x) ? '✓' : x.st === 'try' ? '…' : 'NEW'}</span></span><span class="lx-t">${esc(x.title)}</span>${x.sub ? `<span class="lx-sub">${esc(x.sub)}</span>` : ''}${x.desc ? `<span class="lx-desc">${esc(x.desc)}</span>` : ''}</span></button>`;
         S0.body.className = 'lesson-list lx-on';
         S0.body.innerHTML = tabs + ban + `<div class="lx-grid">${c.items.map(card).join('')}</div>`;
@@ -2412,6 +2414,7 @@
       S0.body.onclick = e => {
         const tb = e.target.closest('[data-cat]'); if (tb) { cur = tb.dataset.cat; try { localStorage.setItem(TK, cur); SFX.tap && SFX.tap(); } catch (x) {} draw(); S0.body.parentNode.scrollTop = 0; return; }
         const b = e.target.closest('[data-k]'); if (!b) return; S0.close();
+        if (XA) { XA.ext('lesson', { id: b.dataset.k }); return; }
         if (b.dataset.full) startPlay('full', 'lesson', kind); else startLesson3D(kind, b.dataset.k);
       };
     }).catch(() => { S0.body.textContent = '⚠'; });

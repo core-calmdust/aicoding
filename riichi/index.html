@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <script>window.JANKA_CLASSIC = true; window.JANKA_KEY = 'riichi-v1'; window.JANKA_FELT = 'green'; window.JANKA_NOHANDS = true; document.documentElement.classList.add('classic');   /* (from the first paint: the old title screen never shows, 2026-11-28) */</script>
+<script>/* (2026-11-28 ユーザー「大百科と麻雀の盤面の切り替えをスムーズに」) opened from the Atlas (?go=…): the Atlas's own "loading" curtain from the
+   first paint (the same one the Atlas showed before coming here), lifted once the table is up (app.js clReady) */
+if (/[?&]go=/.test(location.search)) document.write('<link rel="stylesheet" href="../atlas/skin/loading.css?v=2"><script src="../atlas/skin/loading.js?v=6"><\/script><script>AtlasLoading.show()<\/script>');</script>
 <script src="../shared/safetop.js?v=2"></script>
 <script src="../shared/latinfs.js?v=1"></script>
 <script src="../shared/focusgate.js?v=5"></script>
@@ -146,7 +149,7 @@ else document.write('<script src="../atlas/vendor/three-r186.min.js?v=1"><\/scri
 <script src="atlamo.js?v=1"></script>
 <script src="../atlas/npc/roster.js?v=22"></script>
 <script src="../mahjong/fbcfg.js?v=2"></script>
-<script src="../mahjong/app.js?v=244"></script>
+<script src="../mahjong/app.js?v=245"></script>
 <script src="../mahjong/online.js?v=2"></script>
 <script src="../shared/atlas.js?v=20261127rc" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1l14" defer></script>

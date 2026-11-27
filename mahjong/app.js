@@ -220,6 +220,7 @@ const SND = (() => {
     // (同日、ユーザー「ルール曲はこちらに（前のは気が散る）」: the rules course's own, acoustic guitar: −16.2 LUFS → ≈ −22)
     rules: { file: 'bgm-guitar', vol: .52, restart: false },   // (ユーザー 2026-11-15: a short piece, once per results screen — no loop)
   };
+  if (CLASSIC) { TRK.lesson = { file: 'bgm-flute', vol: .166, restart: false }; TRK.rules = { file: 'bgm-flute', vol: .166, restart: false }; }   // (2026-11-28 ユーザー「大百科のルールコースは通常ゲーム中のBGMと同じで良い」: riichi/'s lessons play the flute too, carried on from the game's)
   for (const k in TRK) Object.assign(TRK[k], { url: null, el: null, g: null, on: false, t: 0 });
   const idle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 600 }) : setTimeout(f, 60));
   function mkctx() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } return ac; }
@@ -1533,7 +1534,9 @@ $('#gExit').addEventListener('click', async () => {
 // closed) the page goes back to the card. Without ?go it goes straight to the card (?home: the old home, for checks).
 // (2026-11-28 ユーザー「戻る時はホームではなく大百科の麻雀3Dビュー」) always the Atlas's 3D view of the game, whatever page came before
 const ATLAS_CARD = '../atlas/#home/riichi';
-function toAtlas() { location.href = ATLAS_CARD; }
+function toAtlas() { if (window.AtlasLoading && !toAtlas.on) { toAtlas.on = 1; AtlasLoading.show(); } setTimeout(() => { location.href = ATLAS_CARD; }, 60); }   // (the curtain first: the Atlas shows the same one until its 3D view is up)
+// the curtain lifts when the table (or the list over it) is on screen — two frames after, as the full games do (atlas/skin/common.js)
+function clReady() { if (!window.AtlasLoading) return; requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(() => AtlasLoading.hide(), 350))); }
 const clIdle = () => $('#modal').hidden && $('#pstats').hidden && !G && !(window.JankaOnline && JankaOnline._R && JankaOnline._R.code);
 function clBackSoon() { if (!CLASSIC || /[?&]home\b/.test(location.search)) return; setTimeout(() => { if (clIdle()) toAtlas(); }, 120); }
 function clTable() {   // the empty table behind a list (the felt, the rails, the console)
@@ -1548,6 +1551,7 @@ function classicBoot() {
   const len = q.get('len'), lv = +q.get('lv');
   if (len === 'east' || len === 'south') DB.set.len = len;
   if (lv >= 1 && lv <= 10) DB.set.clv = lv;
+  clReady();   // (every branch below puts the table on screen at once)
   if (go === 'ranked' || go === 'free') { DB.set.mode = go; save(); SND.unlock(); startGame(go === 'ranked' ? { ranked: true, len: DB.set.len } : {}); return; }
   save();
   if (go === 'rules' || go === 'lessons') { clTable(); openLessons(go === 'rules' ? 'r' : 'l'); return; }
