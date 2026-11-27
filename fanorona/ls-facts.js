@@ -48,6 +48,11 @@
                { a } of its pieces next (the game is won; the only such move)
        'give'  the opponent can take { c } (the most in one turn, a chain in full)
        'run'   the opponent takes nothing, but { r } of its replies leave you no move that takes all its pieces (a way out)
+   e_hunt (2026-11-28 担当E, an endgame capture that hunts down the rest): { k, t, c, r, ta, n, a }
+     k 'most'  the answer: it takes { ta } and leaves { a } of the opponent's pieces; the opponent then takes nothing and, whichever of
+               its { n } replies, you take all it has left next (the game is won; the only such capture)
+       'give'  the move takes { t }, then the opponent takes back { c } (the most in one turn, a chain in full)
+       'run'   the move takes { t }, the opponent takes nothing, but { r } of its replies leave you no move that takes all (a way out)
   FanoronaLsFacts.best(E, spec) → the move that takes the most (null when two moves take as many)
    FanoronaLsFacts.hint(E, id, spec) → the points of the pieces that can capture now (never the answer's piece alone)
    Moves are the engine's notation (h2-h3A), points its indices r * 9 + c. Works as a plain script and in Node. */
@@ -191,7 +196,29 @@
     const o = trapLook(E, pos, m), A = trapLook(E, pos, b);
     return { k: m === b ? 'most' : o.k, c: o.c, r: o.r, n: A.n, a: pos.count(3 - pos.turn), from: S[0].from, to: S[0].to };
   }
+  // e_hunt: a capture's look ahead — the pieces it takes, the opponent's most after it, and after each reply whether you take all
+  // ('win' it takes every piece now, 'end' the game ends at once: never in a lesson)
+  function huntLook(E, pos, m) {
+    const t = capN(E, pos, m), me = pos.turn, opp = 3 - me, q = pos.clone().play(m);
+    if (q.count(opp) === 0) return { k: 'win', t, c: 0, r: 0, n: 0, left: 0 };
+    if (q.status() !== 0) return { k: 'end', t, c: 0, r: 0, n: 0, left: q.count(opp) };
+    const o = oppMost(E, pos, m); if (o.c) return { k: 'give', t, c: o.c, r: 0, n: 0, left: q.count(opp) };
+    const R = q.moves(true); let r = 0;
+    for (const y of R) { const q2 = q.clone().play(y); if (q2.turn !== me || !q2.moves(true).some(x => q2.clone().play(x).count(opp) === 0)) r++; }
+    return { k: r ? 'run' : 'sure', t, c: 0, r, n: R.length, left: q.count(opp) };
+  }
+  function huntBest(E, spec) {
+    const pos = E.Pos.from(spec); if (!pos.hasCaps()) return null;
+    const L = pos.moves(true).filter(m => huntLook(E, pos, m).k === 'sure'); return L.length === 1 ? L[0] : null;
+  }
+  function huntFact(E, spec, m) {
+    const pos = E.Pos.from(spec), S = pos.steps(m), b = huntBest(E, spec);
+    if (!S || !b || !S[0].cap.length) return { k: 'bad' };
+    const o = huntLook(E, pos, m), A = huntLook(E, pos, b);
+    return { k: m === b ? 'most' : o.k, t: o.t, c: o.c, r: o.r, ta: A.t, n: A.n, a: A.left, from: S[0].from, to: S[0].to };
+  }
   function fact(E, id, spec, m) {
+    if (id === 'e_hunt') return huntFact(E, spec, m);
     if (id === 'e_trap') return trapFact(E, spec, m);
     if (id === 't_paika') return paikaFact(E, spec, m);
     if (id === 't_stop') return stopFact(E, spec, m);
@@ -214,7 +241,7 @@
     if (id === 'b_safe' || id === 't_paika' || id === 'e_trap') return [...new Set(pos.paikaSteps().map(x => x.from))];   // (every piece you can move: never the answer's alone, 追52)
     return [...new Set(pos.capSteps(null).map(x => x.from))];
   }
-  const API = { fact, best, hint, endOf, capN, chainFact, bigFact, safeFact, safeBest, oppMost, winFact, winBest, countBest, countFact, countNet, stopBest, stopFact, paikaLook, paikaBest, paikaFact, trapLook, trapBest, trapFact };
+  const API = { fact, best, hint, endOf, capN, chainFact, bigFact, safeFact, safeBest, oppMost, winFact, winBest, countBest, countFact, countNet, stopBest, stopFact, paikaLook, paikaBest, paikaFact, trapLook, trapBest, trapFact, huntLook, huntBest, huntFact };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   if (typeof window !== 'undefined') window.FanoronaLsFacts = API;
 })();
