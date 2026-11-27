@@ -82,11 +82,11 @@
     const mine = P('234m56p678s345s22z'), z0 = 4.35;
     mine.forEach((t, i) => { const tl = tile(t, 'stand', t === 4); tl.position.set((i - 6.5) * (TW + .01) - .2, H + TH / 2 + .002, z0); tl.rotation.y = 0; g.add(tl); });
     { const tl = tile(P('7s')[0], 'stand'); tl.position.set(6.5 * (TW + .01) - .2 + .42, H + TH / 2 + .002, z0); g.add(tl); }
-    // (2026-11-28 ユーザー「手牌が一人分しかテクスチャを貼ってない。全員待ちっぽい手牌に」) the other three lay their hands open, face up
-    // as at a drawn hand's tenpai: a two-sided wait (25p), seven pairs on a single honour (西), a closed wait (6s)
+    // (2026-11-28 ユーザー「手牌が一人分しかテクスチャを貼ってない。全員待ちっぽい手牌に」) the other three show their hands, standing with the faces to the centre
+    // (as if opened at a drawn hand's tenpai): a two-sided wait (25p), seven pairs on a single honour (西), a closed wait (6s)
     const OPEN = [null, P('345m678p456s88s34p'), P('22m55p77p44s88s11z3z'), P('123m456m789m22p57s')];
     for (let k = 1; k < 4; k++) { const p = new TT.Group(); p.rotation.y = k * Math.PI / 2; g.add(p);
-      OPEN[k].forEach((t, i) => { const tl = tile(t, 'up', t === 4 && k === 1); tl.position.set((i - 6) * (TW + .01), Y, z0 - .05); tl.rotation.y = Math.PI; p.add(tl); }); }
+      OPEN[k].forEach((t, i) => { const tl = tile(t, 'stand', t === 4 && k === 1); tl.position.set((i - 6) * (TW + .01), H + TH / 2 + .002, z0); tl.rotation.y = Math.PI; p.add(tl); }); }   // (standing, the faces turned to the table's centre: 同日「牌は立てたまま」)
     // the rivers: six discards each, in front of each seat, face up (the right seat's riichi tile turned sideways)
     const R = [P('9m1p8s4z2m6z'), P('1s9p3z7m5z1m'), P('9s2p4z7p1z8m'), P('3z9m1s7z6p2s')];
     R.forEach((list, k) => { const p = new TT.Group(); p.rotation.y = k * Math.PI / 2; g.add(p);
