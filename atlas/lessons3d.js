@@ -5545,6 +5545,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       else if (kb0 === 'save') b = 'ブリッジに受けていないから、そこで切られちゃう';
       else if (!stones && u !== 1023 && best !== 1023 && hc(u) > hc(best)) b = pk(['まん中から遠くて、相手に止められやすい', '盤のはしに寄っていて、行ける方向が少ない', '中央から離れていて、道の選び方がせまくなる'], k);
       else if (stones && fu.dOpp >= 4 && fu.dOwn >= 4) b = pk(['ほかの石から遠すぎて、いまの戦いに関われない', '戦いの場所から離れすぎていて、働きが小さい', 'まわりに石がなくて、つなぐのにも止めるのにも役立たない'], k);
+      else if (kb0 === 'intrude' && fu.intrude) b = 'そこも割りこみだけど、もっと効くすき間がある';
       else if (kb0 === 'intrude') b = '相手のブリッジに割りこむ先手を逃しちゃう';
       else if (kb0 === 'far' && (ku === 'touch' || ku === 'adjtouch')) b = 'くっつけて止めると、すぐ横へすり抜けられちゃう';
       else if ((kb0 === 'touch' || kb0 === 'adjtouch') && (ku === 'far' || ku === 'open')) b = '離れすぎて、そのあいだを相手に使われちゃう';
@@ -5561,7 +5562,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-hex-lessons', OKEY: 'aicoding-hex-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../hex/lessons.json?v=30261123b'), getJ('../hex/openings.json?v=3'), fetch('../hex/i18n.js?v=20261124-p61').then(r => r.text()), hxEng().catch(() => null), getJ('../hex/ramps3d.json?v=3').catch(() => ({})), fetch('../hex/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../hex/lessons.json?v=30261123b'), getJ('../hex/openings.json?v=20261128f6'), fetch('../hex/i18n.js?v=20261124-p61').then(r => r.text()), hxEng().catch(() => null), getJ('../hex/ramps3d.json?v=3').catch(() => ({})), fetch('../hex/voice-pen-ja.js?v=4').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, , rt, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] hex texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; this.RT = rt || {};
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
@@ -5663,6 +5664,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
         else if (kb0 === 'save' && fu.save) b = uz('save2', ['そっちのブリッジは守れても、もう1つの割りこまれたほうが切られちゃう', '受ける場所がちがって、大事なほうのブリッジが切られちゃう']);   // (2026-11-24 第2期・担当B: two of our bridges are cut into — yours answers the other one)
         else if (kb0 === 'save') b = uz('save', ['ブリッジに受けていないから、そこで切られちゃう', '割りこみを放っておくと、もう片方もふさがれて切れちゃう', '受けそびれたブリッジが、次の一手で切られちゃう']);
         else if (stones && fu.dOpp >= 4 && fu.dOwn >= 4) b = uz('far', ['ほかの石から遠すぎて、いまの戦いに関われない', '戦いの場所から離れすぎて、働きが小さい', 'まわりに石がなくて、つなぐのにも止めるのにも役立たない']);
+        else if (kb0 === 'intrude' && fu.intrude) b = uz('intr2', ['そこも割りこみだけど、もっと効くすき間がある', '割りこむ場所がちがって、効き目が小さい']);   // (2026-11-28 担当B: yours cuts into a bridge too — the green one is the better cut, by the engine's values; not 「割りこむ先手を逃し」)
         else if (kb0 === 'intrude') b = uz('intr', ['相手のブリッジに割りこむ先手を逃しちゃう', '相手のすき間をつくチャンスが消えちゃう', '受けさせる一手を打てず、相手に形を整えられちゃう']);
         else if (kb0 === 'far' && (ku === 'touch' || ku === 'adjtouch')) b = uz('tch', ['くっつけて止めると、すぐ横へすり抜けられちゃう', 'となりで止めても、相手は向きを変えて回りこめちゃう', 'ぴったりつけると、相手にななめへ逃げ道ができちゃう']);
         else if ((kb0 === 'touch' || kb0 === 'adjtouch') && (ku === 'far' || ku === 'open')) b = uz('gap', ['離れすぎて、そのあいだを相手に使われちゃう', '間があきすぎて、相手に押し進まれちゃう', '遠くで待っても、相手は手前で曲がって進めちゃう']);
