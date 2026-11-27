@@ -65,9 +65,12 @@
     // plus some slack past the world's edges (a quarter of the box), so a game near the top / an edge can be brought
     // toward the middle — tafl's Scandinavia, for one — instead of stopping hard at the edge
     const ax = (c, h, L, m) => h * 2 >= L ? Math.max(L - h - m, Math.min(h + m, c)) : Math.max(h - m, Math.min(L - h + m, c));
-    return { x: ax(v.x, hw, W0, hw * .5), y: ax(v.y, hh, H0, hh * .5), z };
+    // (2026-11-27 ユーザー: 地図は水平方向なら永久ループ、負荷を増やさずに) east–west the world goes round: x is kept in 0…W0 and the dots,
+    // pins and routes are drawn from it modulo the world's width — the same number of dots and one pin per game, as before
+    return { x: ((v.x % W0) + W0) % W0, y: ax(v.y, hh, H0, hh * .5), z };
   }
   const sx = (v, x) => (x - v.x) * v.z + box().w / 2, sy = (v, y) => (y - v.y) * v.z + box().h / 2;
+  const near = (x, to) => x + W0 * Math.round((to - x) / W0);   // the copy of a longitude nearest another (the world repeats east–west)
   // the view that frames a set of points with a margin (pins near the edge still fit with their icon)
   function fit(pts, pad = 1.6) {
     const b = box(); if (!pts.length) return clamp({ x: W0 / 2, y: H0 / 2 - 8, z: 0 });
@@ -76,7 +79,7 @@
     return clamp({ x: (x0 + x1) / 2, y: (y0 + y1) / 2, z: Math.min(b.w / w, b.h / h) });
   }
   function fly(to, ms = 650) {
-    cancelAnimationFrame(anim); const from = { ...view }, t0 = performance.now();
+    cancelAnimationFrame(anim); const from = { ...view }, t0 = performance.now(); to = { ...to, x: near(to.x, from.x) };
     // zoom travels in log space so a big zoom-in doesn't rush at the start
     const step = now => { const k = Math.min(1, (now - t0) / ms), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
       view = clamp({ x: from.x + (to.x - from.x) * e, y: from.y + (to.y - from.y) * e, z: Math.exp(Math.log(from.z) + (Math.log(to.z) - Math.log(from.z)) * e) });
@@ -101,7 +104,7 @@
       g.fillStyle = '#e3cf9f'; g.beginPath();
       for (let y = oy + P / 2; y < b.h; y += P) {
         const lat = LAT0 - (y0 + y / v.z), row = Math.floor((M.lat0 - lat) / M.step); if (row < 0 || row >= M.nr) continue;
-        for (let x = ox + P / 2; x < b.w; x += P) { const col = Math.floor((x0 + x / v.z) / M.step); if (col >= 0 && col < M.nc && M.g[row * M.nc + col]) { g.moveTo(x + r, y); g.arc(x, y, r, 0, 6.2832); } }
+        for (let x = ox + P / 2; x < b.w; x += P) { const wx = x0 + x / v.z, col = Math.floor((((wx % W0) + W0) % W0) / M.step); if (col < M.nc && M.g[row * M.nc + col]) { g.moveTo(x + r, y); g.arc(x, y, r, 0, 6.2832); } }
       }
       g.fill();
     }
@@ -110,7 +113,7 @@
   // pins: one per game at its home, pushed apart in screen space when they crowd (a short leader line keeps the true spot)
   function placePins() {
     const v = view, b = box(), list = games(), S = b.w < 520 ? 34 : 46;
-    const A = list.map(g => { const [x, y] = toU(home(g)); return { g, ax: sx(v, x), ay: sy(v, y) }; });
+    const A = list.map(g => { const [x, y] = toU(home(g)); return { g, ax: sx(v, near(x, v.x)), ay: sy(v, y) }; });
     // crowded spots (three or more games within about a pin's width) become one bubble with the count; tapping it zooms in.
     // The picked game always keeps its own pin.
     // zoomed well in, every game gets its own pin again (games from the same city fan out round it, joined by short lines)
@@ -176,7 +179,9 @@
   const textW = s => { if (!mctx) { mctx = document.createElement('canvas').getContext('2d'); } mctx.font = '900 ' + fs() + 'px ' + (getComputedStyle(el.map).getPropertyValue('--font') || 'sans-serif'); return mctx.measureText(s).width; };
   function routeSvg(rects, b) {
     const d = sel && D(sel); if (!d) return { under: '', over: '' };
-    const g = ctx.games.find(x => x.id === sel), v = view, P = d.p.map(p => { const [x, y] = toU(p); return [sx(v, x), sy(v, y)]; });
+    const g = ctx.games.find(x => x.id === sel), v = view, P = (() => { const U = d.p.map(toU), h = d.h || 0; U[h] = [near(U[h][0], v.x), U[h][1]];   // (the home stop where its pin is; the others the short way from their neighbour)
+      for (let i = h + 1; i < U.length; i++) U[i] = [near(U[i][0], U[i - 1][0]), U[i][1]]; for (let i = h - 1; i >= 0; i--) U[i] = [near(U[i][0], U[i + 1][0]), U[i][1]];
+      return U.map(([x, y]) => [sx(v, x), sy(v, y)]); })();
     const pins = pick(d.pn, lang) || [];
     const arcs = (d.r && d.r.length ? d.r : P.slice(1).map((_, i) => [i, i + 1])).map(([a, b]) => {
       const A = P[a], B = P[b]; if (!A || !B) return '';
