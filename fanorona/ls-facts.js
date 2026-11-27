@@ -32,6 +32,10 @@
      a / ar / an  the answer's taken / taken back / a − ar (the one move whose c − r is the biggest: countBest)
      k 'most' the answer · 'greedy' a wrong move taking more than the answer (c > a) and more taken back ·
        'back' taking no more than the answer and something taken back (r > 0) · 'small' nothing taken back but fewer taken (c < an)
+   t_stop (2026-11-27 担当E, stop partway: a chain stopped where going on is taken back more): { k, c, r, a, ar, an, sa, sc, same }
+     c / r / a / ar / an as t_count (the one move whose c − r is the biggest: stopBest — the answer is a stop: its piece could go on)
+     k 'most' the answer · 'on' a move going on past the answer's stop on its road (more taken, more taken back) ·
+       'back' another move taken back something (r > 0) · 'small' another move taken back nothing but fewer taken
   FanoronaLsFacts.best(E, spec) → the move that takes the most (null when two moves take as many)
    FanoronaLsFacts.hint(E, id, spec) → the points of the pieces that can capture now (never the answer's piece alone)
    Moves are the engine's notation (h2-h3A), points its indices r * 9 + c. Works as a plain script and in Node. */
@@ -120,7 +124,22 @@
     const f = { c: o.c, r: o.r, a: B.c, ar: B.r, an: B.n, same: S[0].from === pos.steps(b)[0].from, from: S[0].from };
     return Object.assign(f, { k: m === b ? 'most' : o.c > B.c ? 'greedy' : o.r > 0 ? 'back' : 'small' });
   }
+  // t_stop: the one capture whose taken − taken back is the biggest, when it is a stop (a longer move goes on along its road)
+  function stopBest(E, spec) {
+    const b = countBest(E, spec); if (!b) return null;
+    const pos = E.Pos.from(spec), B = pos.steps(b);
+    return pos.moves(true).some(m => { const S = pos.steps(m); return S.length > B.length && B.every((x, i) => eqS(x, S[i])); }) ? b : null;
+  }
+  function stopFact(E, spec, m) {
+    const pos = E.Pos.from(spec), b = stopBest(E, spec), S = pos.steps(m);
+    if (!S || !b || !S[0].cap.length) return { k: 'bad' };
+    const B = pos.steps(b), o = countNet(E, pos, m), A = countNet(E, pos, b);
+    const f = { c: o.c, r: o.r, a: A.c, ar: A.r, an: A.n, sc: S.length, sa: B.length, same: S[0].from === B[0].from, from: S[0].from };
+    const on = S.length > B.length && B.every((x, i) => eqS(x, S[i]));
+    return Object.assign(f, { k: m === b ? 'most' : on ? 'on' : o.r > 0 ? 'back' : 'small' });
+  }
   function fact(E, id, spec, m) {
+    if (id === 't_stop') return stopFact(E, spec, m);
     if (id === 't_count') return countFact(E, spec, m);
     if (id === 'b_chain') return chainFact(E, spec, m);
     if (id === 't_big') return bigFact(E, spec, m);
@@ -140,7 +159,7 @@
     if (id === 'b_safe') return [...new Set(pos.paikaSteps().map(x => x.from))];   // (every piece you can move: never the answer's alone, 追52)
     return [...new Set(pos.capSteps(null).map(x => x.from))];
   }
-  const API = { fact, best, hint, endOf, capN, chainFact, bigFact, safeFact, safeBest, oppMost, winFact, winBest, countBest, countFact, countNet };
+  const API = { fact, best, hint, endOf, capN, chainFact, bigFact, safeFact, safeBest, oppMost, winFact, winBest, countBest, countFact, countNet, stopBest, stopFact };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   if (typeof window !== 'undefined') window.FanoronaLsFacts = API;
 })();
