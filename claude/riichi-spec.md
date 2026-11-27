@@ -8,7 +8,7 @@
 - mahjong/app.js の `CLASSIC` 分岐：キャラ・スキル・ガチャ・コインなし。席は「あなた / CPU n」、CPU は Lv.1〜10（入門〜最上級）。
 - 見た目：riichi/app-classic.css（雀華の app.css を紫→緑に塗り替えた生成物。`python3 riichi/tools/classic-css.py`）＋ classic.css ＋ atlas-skin.css（大百科の色と文字：クリーム色の紙・紺の文字・ベージュの線、Zen Maru Gothic／Fredoka、下に厚みのある丸いボタン。ロン・ツモ＝珊瑚、リーチ＝黄、鳴き＝空色、パス＝白）。
 - タイトル画面はない。大百科のゲームカード（atlas/games/riichi-card.js：段位戦・フリー・オンライン、長さ、CPU Lv、ルール/レッスン/戦績/設定）から `riichi/?go=ranked|free|online|rules|lessons|stats|settings` で直接開き、閉じると大百科に戻る。
-- 大百科の3D：atlas/models/riichi.js（全自動卓、`solo`＝部屋なしの暗い背景）。場所の選択は出さない。
+- 大百科の3D：atlas/models/riichi.js（全自動卓）。背景は他のゲームと同じ大百科の場所（ちゃぶ台の部屋など、場所の選択あり。2026-11-28 ユーザー指示）。
 
 ## オンライン
 - スキルなしレート戦は雀華と共通（Firebase Janka-Database、待ち行列 mm0・レート pl0、部屋の meta.sk=false）。雀華のロビーで「スキルなし」を選ぶと同じ相手と当たる。
