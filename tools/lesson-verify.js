@@ -2982,14 +2982,14 @@ function shogiOpen(opt) {
   if (!src.includes(MAT)) add('-', -1, '⑨ the 3D SHOGI.points (freq) changed');
   if (!app.includes('const probs = shuffle(g.problems.map((p, i) => i)).slice(0, 5).sort((a, b) => a - b).map(i => g.problems[i]);')) add('-', -1, '⑥ the 2D opening practice does not keep the pool order');
   if (!src.includes('shuffle(s.problems.map((p, i) => i))).slice(0, 5).sort((a, b) => a - b).map(i => s.problems[i])')) add('-', -1, '⑥ the 3D opening practice does not keep the pool order');
-  const X = vm.runInNewContext(src.slice(src.indexOf('  const winP = (v, k) =>'), src.indexOf('  const SHOGI = {')) + '\n;({ shOpJa, shOpVoice })', { fill: (s, v) => String(s).replace(/\{(\w+)\}/g, (_, k) => v[k] != null ? v[k] : ''), console });
+  const X = vm.runInNewContext(src.slice(src.indexOf('  const winP = (v, k) =>'), src.indexOf('  const SHOGI = {')) + '\n;({ shOpJa, shOpVoice, shLineJa })', { fill: (s, v) => String(s).replace(/\{(\w+)\}/g, (_, k) => v[k] != null ? v[k] : ''), console });
   const pool = [];
   sets.forEach(s => (s.problems || []).concat(s.lineProbs || []).forEach((p, j) => pool.push([s.id, j, CU.brd(p.sfen)])));
   L.grades.forEach(g => { g.problems.forEach((p, j) => pool.push([g.id, j, CU.brd(p.sfen)])); (g.ramp || []).forEach((r, j) => r.sfen && pool.push([g.id + ' ramp', j, CU.brd(r.sfen)])); });
   const S0 = CU.brd('lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1');
   const plain = t => String(t).replace(/<[^>]+>/g, '');
   const NM = { 1: '歩', 2: '香', 3: '桂', 4: '銀', 5: '角', 6: '飛車', 7: '金', 8: '玉' };
-  for (const s of sets) { const id = s.id; if (!SHO_DONE.has(id)) continue;
+  for (const s of sets) { const id = s.id; if (!SHO_DONE.has(id)) continue; if (process.env.SHO_ONLY && !process.env.SHO_ONLY.split(',').includes(id)) continue;   // (SHO_ONLY=id,…: only those sets, for a quick run while making them)
     const e = SRC[id], P0 = s.problems || [], side = e.side === 'w' ? 1 : 0, C0 = CU.compile(e.pat, false), C1 = e.mirror ? CU.compile(e.pat, true) : null;
     if (P0.length < 5) add(id, -1, `③ ${P0.length} problems in the pool (5 are drawn)`);
     let prevD = -1; const ans = new Map(), nm = String(s.title.ja), VO = X.shOpVoice(id), hs = id.length * 3;
@@ -3068,6 +3068,83 @@ function shogiOpen(opt) {
         }
       }
     });
+  }
+  // (2026-11-28 第2期・担当B) the castles off the shown line (SHC_DONE, lineProbs with off: shogi/tools/openings/castleprobs.js):
+  // ① accept = the moves that bring the castle closer (the story's marked squares, the castle distance recounted here) within 40 of
+  // the best of them, by the engine at depth 8 AND 9 (deterministic), the best of them within 80 of the engine's best move of all;
+  // ② no castle move in the grey zone (40..100 below) in either read, every other move ≤ 12 points (SHOGI.points line); ③ 3+ legal
+  // moves outside the set; ④ the castle side (☗) to move, its rook on the line's square, 1〜3 castle moves left, not in check, nothing
+  // to take (quiet); ⑤ 5+ squares from every other shogi problem AND every position of every set's shown line (追1), one answer at
+  // most twice; ⑥ easy → hard by dd (the castle moves' rivals: other moves within 100 of the set), the 3D keeps that order;
+  // ⑦⑧ ショウギツネ's words (shLineJa) at all 5 places for the answer, the other accepted moves and every other legal move: no "手順"
+  // (there is no line here), "近づく" only for a castle move, "近づかない / 進まない / 遠いまま" only for the others, "AIの評価が…下がる"
+  // only 100+ below, captures / recaptures / king / bishop's line / edge pawn / rook claims on the board, the near words only 10+ points.
+  {
+    const SHC_DONE = new Set(['c_mino']), SRCC = require(path.join(ROOT, 'shogi/tools/openings/src/castle.js')), KIF = require(path.join(ROOT, 'shogi/tools/openings/kif.js'));
+    if (!src.includes("sort((a, b) => (a.off ? a.dd : a.ply) - (b.off ? b.dd : b.ply))")) add('-', -1, '⑥ the 3D castle problems are not drawn in the dd order');
+    const linePos = []; for (const c of CATS) require(path.join(ROOT, `shogi/tools/openings/src/${c}.js`)).forEach(e => { try { const q = new E.Position(); q.setSfen(e.start || KIF.START); for (const u of KIF.conv(e.line, e.start).usi) { q.doMove(q.fromUsi(u)); q.sp = 0; linePos.push([e.id + ' line', CU.brd(q.sfen())]); } } catch (er) {} });
+    const STEP = { 4: [[0, -1], [1, -1], [-1, -1], [1, 1], [-1, 1]], 7: [[0, -1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1]], 8: [[0, -1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1], [1, 1], [-1, 1]], 3: [[1, -2], [-1, -2]] };
+    const dist1 = (tp, a0, b0) => { const d = new Array(81).fill(99), q = [a0]; d[a0] = 0; while (q.length) { const s0 = q.shift(), f = E.sqFile(s0), r = E.sqRank(s0); for (const [df, dr] of STEP[tp] || []) { const f2 = f - df, r2 = r + dr; if (f2 < 1 || f2 > 9 || r2 < 1 || r2 > 9) continue; const s2 = E.makeSq(f2, r2); if (d[s2] > d[s0] + 1) { d[s2] = d[s0] + 1; q.push(s2); } } } return d[b0]; };
+    for (const s of sets) { if (!SHC_DONE.has(s.id)) continue; if (process.env.SHO_ONLY && !process.env.SHO_ONLY.split(',').includes(s.id)) continue; const id = s.id, e = SRCC.find(x => x.id === id), nm = String(s.title.ja), VO = X.shOpVoice(id), hs = id.length * 3;
+      const q0 = new E.Position(); q0.setSfen(e.start || KIF.START); for (const u of KIF.conv(e.line, e.start).usi) { q0.doMove(q0.fromUsi(u)); q0.sp = 0; }
+      const fin = q0.board.slice(), T = e.story.marks.map(m => { const sq = E.makeSq(+m[0], +m[1]); return { sq, t: E.typeOf(fin[sq]) }; }), rookSq = fin.findIndex(x => x && E.colorOf(x) === 0 && E.typeOf(x) === 6);
+      const cd = b => { let tot = 0; for (const tp of [...new Set(T.map(x => x.t))]) { const S = T.filter(x => x.t === tp).map(x => x.sq), own = []; for (let q = 0; q < 81; q++) if (b[q] && E.colorOf(b[q]) === 0 && E.typeOf(b[q]) === tp) own.push(q); if (own.length < S.length) return 99; let best = 99; const go = (i, used, c) => { if (c >= best) return; if (i === S.length) { best = c; return; } own.forEach((q, j) => { if (!(used >> j & 1)) go(i + 1, used | 1 << j, c + dist1(tp, q, S[i])); }); }; go(0, 0, 0); tot += best; } return tot; };
+      const LP = (s.lineProbs || []), PS = LP.filter(P => P.off);
+      if ((s.problems || []).length + PS.length < 5 || PS.length !== LP.length) add(id, -1, `③ ${PS.length} castle problems off the line (${LP.length - PS.length} on the shown line, 追1)`);
+      const ans = new Map(); let prevD = -1;
+      const pts = (P, u) => { if (P.accept.includes(u)) return 20; const ref = Math.max(...P.cand.filter(c => P.accept.includes(c[0])).map(c => c[1])), c = P.cand.find(x => x[0] === u), sc = c ? c[1] : P.floor; return Math.max(0, Math.min(12, Math.round(12 * (1 - (ref - sc) / 500)))); };
+      VO.pts = pts;
+      PS.forEach((P, j) => { const a = m => add(id, j, m), p = new E.Position(); p.setSfen(P.sfen); const ms = p.legalMoves(true), U = m => p.toUsi(m);
+        const G = ms.filter(m => { if (E.isDrop(m)) return false; p.doMove(m); const b = p.board.slice(); p.undoMove(); return cd(b) < cd(p.board); }).map(U).sort();
+        if (JSON.stringify(G) !== JSON.stringify((P.G || []).slice().sort())) a(`① the castle moves are ${G} (stored ${P.G})`);
+        const sets2 = [];
+        for (const d of [8, 9]) { const r = shoW.analyze(P.sfen, { depth: d }), v = new Map(r.map(x => [x.usi, x.s])), ref = Math.max(...G.map(u => v.get(u)));
+          if (r[0].s - ref > 80) a(`① depth ${d}: the engine's best ${r[0].usi} is ${r[0].s - ref} above the castle moves`);
+          const grey = G.filter(u => v.get(u) < ref - 40 && v.get(u) >= ref - 100); if (grey.length) a(`② depth ${d}: ${grey} in the grey zone`);
+          sets2.push(G.filter(u => v.get(u) >= ref - 40).sort().join(','));
+          if (d === 9) { const dd = r.filter(x => !G.includes(x.usi) && x.s >= ref - 100).length; if (Math.abs(P.dd - dd) > 3) a(`⑥ dd ${P.dd} (recounted ${dd}: the depth-9 values move a little with what the engine read before)`); } }
+        if (sets2[0] !== sets2[1] || sets2[1] !== P.accept.slice().sort().join(',')) a(`① accept ${P.accept} (depth 8: ${sets2[0]}, depth 9: ${sets2[1]})`);
+        if (P.pv[0] !== P.accept[0]) a('① pv is not the first accepted move');
+        ms.map(U).forEach(u => { if (!P.accept.includes(u) && pts(P, u) > 12) a(`② ${u} ${pts(P, u)} points`); });
+        if (ms.length - P.accept.length < 3) a(`③ ${ms.length - P.accept.length} moves outside the set`);
+        const left = cd(p.board); if (p.side !== 0 || p.inCheck() || left < 1 || left > 3 || E.typeOf(p.board[rookSq]) !== 6 || E.colorOf(p.board[rookSq]) !== 0) a(`④ side ${p.side} / check / ${left} castle moves left / the rook off its square`);
+        if (ms.some(m => !E.isDrop(m) && p.board[E.mTo(m)])) a('④ a piece can be taken (not a quiet castle position)');
+        const B = CU.brd(P.sfen);
+        const me = (s.problems || []).length + LP.indexOf(P); for (const [w, k, b] of pool) { if (w === id && k === me) continue; const d = CU.dist(B, b); if (d <= 4) a(`⑤ ${d} squares from ${w} ${k + 1}`); }
+        for (const [w, b] of linePos) { const d = CU.dist(B, b); if (d <= 4) a(`⑤ 追1 ${d} squares from a position of ${w}`); }
+        P.accept.forEach(u => { ans.set(u, (ans.get(u) || 0) + 1); }); if ([...ans.values()].some(n => n > 2) && P.accept.length === 1) a(`⑤ the answer ${P.accept[0]} a third time`);
+        if (P.dd < prevD) a(`⑥ dd ${P.dd} after ${prevD}`); prevD = Math.max(prevD, P.dd);
+        const A = P.accept[0], qf = u => { const q = new E.Position(); q.setSfen(P.sfen); const m = q.fromUsi(u), drop = E.isDrop(m), fr = drop ? -1 : E.mFrom(m), to = E.mTo(m), pt = drop ? E.dropType(m) : E.typeOf(q.board[fr]), cap = !!q.board[to];
+          const bish = x => { let n = 0; for (const mm of x.legalMoves(true)) if (!E.isDrop(mm) && [5, 13].includes(E.typeOf(x.board[E.mFrom(mm)]))) n++; return n; };
+          const b0 = bish(q); q.doMove(m); const y = new E.Position(); y.setSfen(q.sfen().replace(/ [bw] /, ' b ')); const b1 = bish(y);
+          let win = 0; for (const mm of q.legalMoves(true)) if (!E.isDrop(mm) && q.board[E.mTo(mm)]) win = Math.max(win, q.see(mm));
+          const file = E.sqFile(to); return { pt, cap, b0, b1, win, file }; };
+        const r9 = new Map(P.cand), loss = u => { const ref = Math.max(...P.cand.filter(c => P.accept.includes(c[0])).map(c => c[1])); return ref - (r9.has(u) ? r9.get(u) : P.floor); };
+        for (let i = 0; i < 5; i++) { let Q; try { Q = X.shLineJa({ pos: P.sfen, kind: 'best', P, ans: A }, nm, hs + i, null, VO, i); } catch (er) { a(`⑧ the 3D words fail: ${er.message}`); break; }
+          const ask = plain(Q.ask); if (!ask.includes('☗先手') || !ask.includes(`『${nm}』`) || /手順|\{|undefined/.test(ask)) a(`⑧ the question 「${ask}」`);
+          const hint = plain(Q.hintTx || ''); if (/手順|\{(?![mx]\})|undefined/.test(hint)) a(`⑧ the hint 「${hint}」`);
+          for (const u of ms.map(U)) { const w = plain(u === A || P.accept.includes(u) ? Q.good(u) : Q.ng(u)), bad = m => a(`⑦ ${u}: ${m} 「${w}」`), F = qf(u);
+            if (/手順|見本どおり/.test(w)) bad('speaks of the line');
+            if (/\{(?![mx]\})|undefined|NaN/.test(w)) bad('a placeholder');
+            if (/\{m\}なら[^。！]*攻め|攻めの形/.test(w)) bad('a castle move is not an attack');
+            if (u === A) { const to = E.mTo(p.fromUsi(A)), onMk = T.some(x => x.sq === to && x.t === F.pt); if (JSON.stringify(P.mk) !== JSON.stringify(e.story.marks)) bad('P.mk is not the story marks');
+              if (/決まった場所に入る|あるべきマスへおさめる|定位置について|持ち場に入った|居場所はそこで決まり/.test(w) && !onMk) bad('does not land on a castle square'); if (/一歩近づける手|持ち場へ一歩進む手|まず一歩|囲いの奥へ向かう|あるべき場所へ近づけた/.test(w) && onMk) bad('lands on a castle square'); }
+            if (P.accept.includes(u)) { if (u !== A && !/\{x\}/.test(w)) bad('the other right move is not named'); if (/取る手|取り返|打つ手/.test(w)) bad('a capture / a drop'); continue; }
+            if (!w.includes('{m}')) bad('the answer is not named');
+            { const e2 = soft53(w, pts(P, u), false); if (e2) bad(e2); }
+            if (/近づく手だけど|には近づくけど/.test(w) && !G.includes(u)) bad('not a castle move');
+            if (/近づかない|囲いの駒が進まない|完成が遠いまま|囲いはそのまま|一歩も進まない/.test(w) && G.includes(u)) bad('a castle move');
+            if (/はっきり下がる|ずっと良い/.test(w) && !(loss(u) >= 100)) bad(`only ${loss(u)} below`);
+            if (/取られ/.test(w) && !/取り返/.test(w) && !(F.win > 0 && loss(u) >= 60)) bad(`nothing is lost at once (SEE ${F.win}, ${loss(u)} below)`);
+            if (/取り返しそびれ/.test(w)) bad('there is nothing to recapture');
+            if (/\{x\}は角道を止め/.test(w) && !(F.b1 < F.b0 - 1)) bad("does not shut the bishop's line");
+            if (/\{x\}は玉を/.test(w) && F.pt !== 8) bad('not a king move');
+            if (/\{x\}の端歩/.test(w) && !(F.pt === 1 && (F.file === 1 || F.file === 9))) bad('not an edge pawn');
+            if (/\{x\}は飛車を|\{x\}で飛車を/.test(w) && F.pt !== 6) bad('not a rook move');
+          }
+        }
+      });
+    }
   }
   // 追25 / 追30 over every freq problem of every shogi opening (the words are shared by all sets): the record (probs.js) keeps every move
   // played 3 times or more, so a move outside it was played at most min(2, games left over) times — "hardly played" only when that is
