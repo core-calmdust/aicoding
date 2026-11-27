@@ -1590,7 +1590,7 @@ html[data-cup=tan] .ld .cupi,html[data-cup=tan] .rcup{background-image:url(img/c
 .rt-ng p{margin:6px 0 4px;font-size:14px}.rt-ng small{color:var(--muted);font-size:12px}
 
 /* new game dialog */
-.ng-games.ld3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.ng-games.ld3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:none;height:auto;align-content:start;gap:12px}
 .garts.ld{position:relative;display:block;width:150px;height:96px;margin:0 auto}
 .garts.ld .gcup{position:absolute;left:4px;top:0;width:76px;filter:drop-shadow(0 4px 4px rgba(0,0,0,.5))}
 .garts.ld .gdie{position:absolute;width:38px;filter:drop-shadow(1px 3px 2px rgba(0,0,0,.55))}
@@ -1862,3 +1862,38 @@ html[data-cup=tan] .ld .cupi,html[data-cup=tan] .rcup{background-image:url(img/c
 @media (max-width:760px){.ng-games.ld3{height:auto}}
 
 .ld .lr-sum{flex-direction:row;padding:0;border:0;font-size:inherit}
+/* dialogs: as tall as their contents on PC (the poker shell gives some of them a fixed height) */
+@media (hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4){
+  .ld .stats-modal{height:auto;max-height:calc(100dvh - 32px)}
+  .ld #setOverlay .modal{height:auto;min-height:0}
+  .ld .tools-modal{height:auto}
+}
+.ld .st-two{display:grid;grid-template-columns:1fr 1.3fr;gap:18px;margin-top:12px}
+.ld .st-two .lab{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px}
+.ld .fq{display:grid;grid-template-columns:minmax(0,9em) 1fr 2.5em;gap:8px;align-items:center;font-size:13.5px;padding:3px 0}
+.ld .fq-b{height:8px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}
+.ld .fq-b i{display:block;height:100%;background:#d9bf7d;border-radius:4px}
+.ld .fq b{text-align:end}
+@media (max-width:760px){.ld .st-two{grid-template-columns:1fr}}
+/* settings: the tab body follows its contents (the new-game dialog keeps its fixed body) */
+.ld #setBody{height:auto;max-height:calc(100dvh - 250px)}
+/* phones: statistics sheet is as tall as its contents */
+@media (max-width:760px),(max-height:500px){
+  .ld .stats-modal{height:auto;max-height:calc(100dvh - 16px)}
+}
+/* phones: the action bar is a column; a 100% flex-basis there would push the buttons into a second column */
+@media (max-width:760px){
+  .ld .actbar{flex-wrap:nowrap}
+  .ld .actbar .ab-msg{flex:none}
+}
+/* calculator: the six faces stay on one row */
+.ld .cstep .fsel{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}
+.ld .cstep .fsel .fbtn{min-width:0;padding:5px 0;display:flex;justify-content:center}
+/* lesson list (4 lessons) is as tall as its cards; a running lesson keeps the fixed box */
+@media (hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4){
+  .ld .lesson-modal:has(> .lc-body){height:auto}
+}
+/* new-game dialog on PC: no fixed 540px body; a common minimum keeps the three tabs about the same height */
+@media (hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4){
+  .ld #newOverlay .ng-body{height:auto;min-height:330px;max-height:calc(100dvh - 290px)}
+}
