@@ -393,7 +393,7 @@
         <p><b>三つの約束</b>痕跡は嘘をつかない。物は嘘をつくことがある。人間は他人のことで嘘をつかない（自分の居場所はごまかすことがある）。</p>
         <p><b>推理手帳</b>痕跡に合う特徴は赤く、合わない特徴は線で消える。白・灰・黒の印で、わかったことを整理する。</p>
         <p><b>勝ち負け</b>狼を全部追放すれば村の勝ち。狼の数が人間と同じになれば狼の勝ち。</p></div>
-        <p style="font-size:15px;color:var(--mute)">本番の物語では、狼は毎回ちがう人。入門では、手帳の赤い特徴の手助けがある。</p></div>
+        <p style="font-size:15px;color:var(--mute)">本番の物語では、狼は毎回ちがう人。入門では、手帳の赤い特徴の手助けがある。中級までは配役がはじめに明かされるが、上級と悪夢で明かされるのは狼の数（と物語の役）だけ。上級は占い師が必ずいて狂人は0〜1人、悪夢は占い師もいないことがあり狂人は0〜2人。</p></div>
         <div class="foot" style="justify-content:center;gap:10px"><button class="btn" data-v="title">タイトルへ</button><button class="btn pri" data-v="select">物語をえらぶ</button></div>`, box => box.querySelectorAll('[data-v]').forEach(b => b.onclick = () => T.closeSheet(b.dataset.v)));
       try { localStorage.setItem('wolflantern-tut-done', '1'); } catch (e) {}
       if (v === 'select') T.select(); else T.title();
