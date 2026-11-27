@@ -1197,3 +1197,20 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 .mxcap{padding:2px 8px;border-radius:99px;background:#efe8da;color:#23262f}.mxcap em{color:#5d564b}   /* (what a side has taken: on a light chip, so black pieces show on the dark stage) */
 .mxlm.ring{fill:rgba(250,205,70,.25);stroke:#e0a21a;stroke-width:.07}   /* (point boards: the last move shows as a ring around the piece, not only under it) */
 .mxp,.mxcap,.mxhk,.mxxk{font-style:normal}   /* (2026-11-27 ユーザー: 将棋とシャンチーの駒がイタリックになっている — the pieces sit in <i> elements) */
+/* (2026-11-27 ユーザー: 画面下に謎の改行 — the story was held to 46em inside a wider card, so its lines stopped short of the card's edge)
+   the card in two columns: the story on the left, filling its column; the record on the right, one item under another */
+.mxabout{display:grid;grid-template-columns:minmax(0,1fr) minmax(200px,280px);gap:6px 28px;align-items:start}
+.mxabout h4{grid-column:1/-1}
+.mxabout p{max-width:none}
+.mxabout dl{grid-template-columns:minmax(0,1fr);margin:0;padding-inline-start:20px;border-inline-start:2px solid var(--line)}
+@media (max-width:819px){.mxabout{grid-template-columns:minmax(0,1fr)}.mxabout dl{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-top:8px;padding:10px 0 0;border:0;border-top:2px solid var(--line)}}
+/* (2026-11-27 ユーザー: 描かれたゲームのレイアウトが崩れている) the three pull-downs (地域・ゲーム・時代) on a phone: thirds of one line, no sideways scroll */
+@media (max-width:819px){.mupg-ex.ptreg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;overflow:visible;-webkit-mask:none;mask:none}
+  .ptreg .ptdd{position:relative;max-width:none;min-width:0;flex-direction:column;justify-content:center;align-items:flex-start;gap:0;padding:4px 24px 5px 12px;border-radius:14px;min-height:44px;text-align:start}
+  .ptreg .ptdd .ptddk{font-size:12px;line-height:1.2}.ptreg .ptdd b{font-size:13px;line-height:1.25;white-space:normal;overflow:visible;overflow-wrap:anywhere}
+  .ptreg .ptdd svg{position:absolute;inset-inline-end:7px;top:50%;margin-top:-7px;width:14px;height:14px}}
+/* (2026-11-27 ユーザー: 名局選の一覧の画像はどのゲームでもサイズ固定・盤を大きく) every card's picture: the same square; the board fills it */
+.mxth{aspect-ratio:1/1;padding:14px;display:grid;place-items:center}
+.mxth svg{width:100%;height:100%;max-height:none}
+.mxth{position:relative;overflow:hidden}.mxth.k-xiangqi{background-color:#2b2f3b}
+.mxth svg{position:absolute;inset:14px;width:calc(100% - 28px);height:calc(100% - 28px)}
