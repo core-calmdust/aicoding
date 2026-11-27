@@ -322,7 +322,8 @@ function jgPuzzleTexts() {
   const TN = R.__TN || {}; delete R.__TN; turnNames = TN;
   const rep = {}; let sum = 0, n = 0;
   // (2026-11-22) the board facts (tools/lesson-facts.js): a lesson whose marks / answers / claims do not hold on the board fails
-  let FACTS = {}; try { const tmp = require('os').tmpdir() + '/lesson-facts.json'; try { require('child_process').execFileSync(process.execPath, [path.join(__dirname, 'lesson-facts.js'), '--json', tmp], { stdio: 'ignore' }); } catch (e) {} FACTS = JSON.parse(fs.readFileSync(tmp, 'utf8')); } catch (e) {}
+  // (2026-11-27 担当A: lesson-facts.js for the games asked for only — the whole set takes over 10 minutes)
+  let FACTS = {}; try { const tmp = require('os').tmpdir() + '/lesson-facts.json'; try { require('child_process').execFileSync(process.execPath, [path.join(__dirname, 'lesson-facts.js'), ...(games.length ? [games.join(',')] : []), '--json', tmp], { stdio: 'ignore' }); } catch (e) {} FACTS = JSON.parse(fs.readFileSync(tmp, 'utf8')); } catch (e) {}
   // (2026-11-23 ユーザー：回答可能かどうかも評価に) --progress out.json (tools/lesson-progress.js --json): a lesson that could not be
   //  played to the end with the right answers (stuck, a JS error, short of full points) loses 60
   let PROG = {}; if (opt('--progress')) try { for (const r of JSON.parse(fs.readFileSync(opt('--progress'), 'utf8'))) if (!r.ok && r.key !== '-') (PROG[r.game + (r.kind === 'open' ? '/open' : '')] ||= {})[r.key] = r.fail || 'failed'; } catch (e) { console.error('progress: ' + e.message); }
