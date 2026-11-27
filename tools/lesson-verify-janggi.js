@@ -146,8 +146,8 @@ function stray42(PZ, add, W0) {
   const OWN = (w3.AtlasJanggiPz.why || {}).ja;
   if (!OWN) { add('-', -1, '追42 no ショウギツネ words for the reply (AtlasJanggiPz.why.ja)'); return; }
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
-  for (const lg of LANGS) for (const k of ['cap', 'esc', 'block', 'run', 'move', 'pass', 'reach', 'noreach']) if (!(W.T[lg] && W.T[lg][k])) add('-', -1, `追42 no 2D words ${lg}.${k}`);
-  for (const k of ['cap', 'esc', 'block', 'run', 'move', 'pass', 'reach', 'noreach']) if (!(OWN[k] || []).length) add('-', -1, `追42 no ショウギツネ words ${k}`);
+  for (const lg of LANGS) for (const k of ['cap', 'esc', 'block', 'run', 'move', 'pass', 'mated', 'reach', 'noreach']) if (!(W.T[lg] && W.T[lg][k])) add('-', -1, `追42 no 2D words ${lg}.${k}`);
+  for (const k of ['cap', 'esc', 'block', 'run', 'move', 'pass', 'mated', 'reach', 'noreach']) if (!(OWN[k] || []).length) add('-', -1, `追42 no ショウギツネ words ${k}`);
   const PRAISE = /調子|いいね|いい手|すごい|お見事|やったね|さすが|Nice|Good|Great/;
   for (const k in OWN) for (const x of OWN[k]) { if (PRAISE.test(x)) add('-', -1, `追42/追20 praise after a move off the line: ${x}`); if (/(です|ます|ません|ました)(?=[。！？]|$)/.test(x)) add('-', -1, `ショウギツネ: polite 「${x}」`); }
   // (追84, 2026-11-25 担当D) the 3D says OWN[k][j % length] with j rising by 1 for each move off the line: a class with fewer than 5
@@ -155,16 +155,16 @@ function stray42(PZ, add, W0) {
   //  variants of the reply classes open the same way (the first clause), and each line gives a reason (lesson-quality.js REASON) — the
   //  wrong move's bubble is the fact + reach / noreach, and a bare 「相手は{b}を動かしたね。」 + 「まだ残ってるコン」 said no why (ck5 q3).
   const REASON = /(から|ので|ため|と、|と相手|ると|れば|なら|だと|では|せいで|取られ|負け|逃げ|防げ|止め|ふさ|残る|残っちゃ|できない|届かない|ならない|損)/, open1 = {};
-  for (const k of ['cap', 'esc', 'block', 'run', 'move', 'reach', 'noreach']) {
+  for (const k of ['cap', 'esc', 'block', 'run', 'move', 'mated', 'reach', 'noreach']) {
     if ((OWN[k] || []).length < 5) add('-', -1, `追84 ショウギツネ ${k}: ${(OWN[k] || []).length} variants (< 5, a line repeats within a theme)`);
     for (const x of OWN[k] || []) { if (!REASON.test(x)) add('-', -1, `追84 ${k} 「${x}」 gives no reason`);
       if (k !== 'reach' && k !== 'noreach') { const o = x.split(/[、。！]/)[0]; if (open1[o]) add('-', -1, `追84 ${k} 「${x}」 opens as ${open1[o]} does (「${o}」)`); open1[o] = k; } }
   }
   // the ja words must claim exactly the class's fact: cap = 取; esc = 逃; block = 防|止; run/move = 動か; reach = まだ|残って; noreach = もう|ない
-  const CLAIM = { cap: /取/, esc: /逃/, block: /防|止/, run: /動|寄せ/, move: /動|回し/, pass: /パス/, reach: /まだ|残って/, noreach: /もう|なく|ない/ };
-  const NEVER = { cap: /逃げ|防/, esc: /取られ|取った/, block: /取られ|取った|逃げ/, run: /取られ|取った/, move: /取られ|取った/, reach: /詰まなく|ない/, noreach: /まだ/ };
+  const CLAIM = { mated: /詰ま|詰ん|逃げられない/, cap: /取/, esc: /逃/, block: /防|止/, run: /動|寄せ/, move: /動|回し/, pass: /パス/, reach: /まだ|残って/, noreach: /もう|なく|ない/ };
+  const NEVER = { mated: /まだ|残り|正解/, cap: /逃げ|防/, esc: /取られ|取った/, block: /取られ|取った|逃げ/, run: /取られ|取った/, move: /取られ|取った/, reach: /詰まなく|ない/, noreach: /まだ/ };
   for (const k in CLAIM) for (const x of [].concat(OWN[k] || [], W.T.ja[k] || [])) { if (!CLAIM[k].test(x)) add('-', -1, `追42 ${k} 「${x}」 does not say its fact`); if (NEVER[k] && NEVER[k].test(x)) add('-', -1, `追42 ${k} 「${x}」 says another class's fact`); }
-  let nMv = 0, nRe = 0, reach = 0, noreach = 0; const cnt = {};
+  let nMv = 0, nRe = 0, reach = 0, noreach = 0, nLose = 0; const cnt = {};
   for (const T of PZ.themes || []) {
     const [, ck] = THEME[T.id] || [0, false];
     T.puzzles.forEach((P, j) => {
@@ -175,8 +175,17 @@ function stray42(PZ, add, W0) {
       for (const m of pos.moves()) {
         const e = L.find(x => x.m === m); if (e && e.need > 0 && e.need <= P.n) continue;   // (the solution)
         const mid = pos.clone().play(m); if (mid.status() !== 0) continue;
-        if (ck && !mid.inCheck()) continue;   // (pz.bl.nock: taken back)
-        if (mid.moves().some(x => mid.clone().play(x).status() === -1)) continue;   // (pz.bl.lose: taken back)
+        // (追88, 2026-11-27) nothing is taken back: a move that is not a check in a checks-only puzzle (pz.bl.nock) is answered like any
+        //  other; after a move that lets the defender mate at once (pz.bl.lose) the reply is that mate (W.mateReply, the 2D's and the 3D's)
+        //  and its words say the mate (mated), with the piece that gave it
+        if (mid.moves().some(x => mid.clone().play(x).status() === -1)) {
+          nLose = (nLose || 0) + 1; const r = W.mateReply ? W.mateReply(E, mid) : null;
+          if (r == null || mid.clone().play(r).status() !== -1) { a('追88 the reply after pz.bl.lose does not mate'); continue; }
+          const w = W.why(E, mid, r); if (w.k !== 'mated' || !w.b || w.b.t !== E.typeOf(mid.at(E.mFrom(r)))) { a(`追88 the mate reply's class ${w.k} (mated)`); continue; }
+          for (const lg of LANGS) { const t = W.say(lg, w, null, 0); if (/[{}]|undefined|null/.test(t) || !t) a(`追88 ${lg} mated words: ${t}`); }
+          const t3 = W.say('ja', w, null, 0, OWN, nLose); if (!t3.includes(W.name('ja', w.b.t, w.b.c))) a('追88 ショウギツネ does not name the mating piece: ' + t3);
+          continue;
+        }
         nMv++;
         for (const r of mid.moves()) {
           nRe++;
@@ -185,7 +194,8 @@ function stray42(PZ, add, W0) {
           let k;
           if (E.isPass(r)) k = 'pass';
           else { const taken = mid.at(E.mTo(r)); const kingMv = E.typeOf(mid.at(E.mFrom(r))) === E.KING;
-            k = taken ? 'cap' : mid.inCheck() ? (kingMv ? 'esc' : 'block') : (kingMv ? 'run' : 'move');
+            k = after.status() === -1 ? 'mated' : taken ? 'cap' : mid.inCheck() ? (kingMv ? 'esc' : 'block') : (kingMv ? 'run' : 'move');
+            if (k === 'mated' && (!w.b || w.b.t !== E.typeOf(mid.at(E.mFrom(r))))) a('追88 the mating piece is not named right');
             if (k === 'cap') { if (!w.p || w.p.t !== E.typeOf(taken) || E.colorOf(taken) === mid.side) a('追42 the piece taken is not named right'); if (!w.b || w.b.t !== E.typeOf(mid.at(E.mFrom(r)))) a('追42 the taker is not named right'); }
             if ((k === 'esc' || k === 'block') && after.attacked(mid.side)) a('追42 the check is not out after ' + k); }
           if (w.k !== k) { a(`追42 reply class ${w.k} but the board says ${k}`); continue; }
@@ -204,9 +214,15 @@ function stray42(PZ, add, W0) {
   }
   const p3 = fs.readFileSync(path.join(ROOT, 'atlas/puzzles.js'), 'utf8'), app = fs.readFileSync(path.join(ROOT, 'janggi/app.js'), 'utf8');
   if (!/const L = await xqReq\(p, left, false\);[^\n]*\n\s*const reach = \(L \|\| \[\]\)\.some\(e => e\.need > 0 && e\.need <= left\)/.test(p3)) add('-', -1, '追42 the 3D jgStray does not ask the solver for the moves left');
-  if (!/return jgStray\(p, mid, r\)/.test(p3)) add('-', -1, '追42 the 3D xqMoved does not call jgStray for janggi');
-  if (!/W\.why\(E, b2, res\.move\)/.test(app) || !/reach = \(L2 \|\| \[\]\)\.some\(x => x\.need > 0 && x\.need <= left2\)/.test(app)) add('-', -1, '追42 the 2D puzzleMove does not say the reply\'s fact');
-  stray42.stats = { moves: nMv, replies: nRe, cnt, reach, noreach };
+  if (!/return jgStray\(p, mid, r, null, bl\)/.test(p3) || !/if \(id === 'janggi' && window\.JanggiPzWhy\) return jgMoved\(p, m, info\)/.test(p3)) add('-', -1, '追42 the 3D xqMoved does not call jgMoved / jgStray for janggi');
+  // (追88) the 3D jgMoved: no take-back (undo), no right move marked or named, no 「いい手」 on the way; pz.bl.lose answered by W.mateReply
+  { const i = p3.indexOf('async function jgMoved('), b = i < 0 ? '' : p3.slice(i, p3.indexOf('\n    }\n', i));
+    if (!b) add('-', -1, '追88 the 3D has no jgMoved');
+    else { if (/undo\(|back\(|'ok'\]|pz\.good|pz\.best|pz\.failWhy/.test(b)) add('-', -1, '追88 the 3D jgMoved takes back / shows the right move / praises');
+      if (!/bl === 'lose' \? window\.JanggiPzWhy\.mateReply\(/.test(b)) add('-', -1, '追88 the 3D jgMoved does not answer pz.bl.lose with the mate (mateReply)'); }
+    if (!/bl === 'lose' && W \? W\.mateReply\(E, b2\)/.test(app)) add('-', -1, '追88 the 2D puzzleMove does not answer pz.bl.lose with the mate (mateReply)'); }
+  if (!/W\.why\(E, b2, rm\)/.test(app) || !/reach = \(L2 \|\| \[\]\)\.some\(x => x\.need > 0 && x\.need <= left2\)/.test(app)) add('-', -1, '追42 the 2D puzzleMove does not say the reply\'s fact');
+  stray42.stats = { moves: nMv, replies: nRe, lose: nLose, cnt, reach, noreach };
 }
 
 // (2026-11-24 担当D) the lessons on the 3D table (atlas/games/janggi-ls.js DONE: the capture basics b_rook・b_horse・b_elephant・b_cannon・b_pawn), as
