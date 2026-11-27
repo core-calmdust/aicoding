@@ -33,7 +33,11 @@
     { id: 'evergreen', kind: 'chess', res: 'w', moves: 'e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 exd4 O-O d3 Qb3 Qf6 e5 Qg6 Re1 Nge7 Ba3 b5 Qxb5 Rb8 Qa4 Bb6 Nbd2 Bb7 Ne4 Qf5 Bxd3 Qh5 Nf6+ gxf6 exf6 Rg8 Rad1 Qxf3 Rxe7+ Nxe7 Qxd7+ Kxd7 Bf5+ Ke8 Bd7+ Kf8 Bxe7#',
       mk: { 7: { s: ['b4'] }, 15: { a: [['b3', 'f7'], ['c4', 'f7']] }, 21: { a: [['a3', 'e7']] }, 24: { a: [['b8', 'b5']] }, 32: { a: [['h5', 'f3']] }, 33: { a: [['e4', 'f6']] },
         35: { a: [['f6', 'e7'], ['e1', 'e7']] }, 36: { a: [['g8', 'g2'], ['h5', 'f3']] }, 37: { a: [['d1', 'd7']] }, 38: { a: [['f3', 'g2']] }, 39: { a: [['e1', 'e7']] }, 41: { a: [['a4', 'd7']] },
-        43: { a: [['f5', 'd7'], ['d1', 'd7']], s: ['d7'] }, 45: { a: [['d7', 'e8']] }, 47: { a: [['a3', 'e7']], s: ['f8'] } } }
+        43: { a: [['f5', 'd7'], ['d1', 'd7']], s: ['d7'] }, 45: { a: [['d7', 'e8']] }, 47: { a: [['a3', 'e7']], s: ['f8'] } } },
+    // (2026-11-27) Edward Lasker v. George Alan Thomas, 1912: The King Hunt
+    { id: 'lasker1912', kind: 'chess', res: 'w', moves: 'd4 e6 Nf3 f5 Nc3 Nf6 Bg5 Be7 Bxf6 Bxf6 e4 fxe4 Nxe4 b6 Ne5 O-O Bd3 Bb7 Qh5 Qe7 Qxh7+ Kxh7 Nxf6+ Kh6 Neg4+ Kg5 h4+ Kf4 g3+ Kf3 Be2+ Kg2 Rh2+ Kg1 Kd2#',
+      mk: { 7: { a: [['g5', 'f6']] }, 15: { s: ['e5'] }, 17: { s: ['d3', 'e4', 'h7'] }, 19: { a: [['h5', 'h7']] }, 21: { a: [['h5', 'h7']] }, 23: { a: [['f6', 'h7'], ['d3', 'h7']] },
+        25: { a: [['g4', 'h6']] }, 27: { a: [['h4', 'g5']] }, 29: { a: [['g3', 'f4']] }, 31: { a: [['e2', 'f3']] }, 33: { a: [['h2', 'g2']] }, 34: { s: ['g8', 'g1'] }, 35: { a: [['a1', 'g1']], s: ['g1'] } } }
   ];
 
   /* ---------- the kinds ---------- */
