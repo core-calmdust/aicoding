@@ -423,7 +423,7 @@
       k10: '<b>詰み</b>は、玉がどう逃げても取られちゃう形のこと。<br>持ち駒を打つ手と盤の駒を動かす手、両方を考えて、1手で詰ませてみよう！<br>成った角の馬は斜めどこまでも＋縦横1マス、成った飛車の竜（龍）は縦横どこまでも＋斜め1マス動けるコン。',
       k8: '今度は王手のかけ方がいろいろある局面だよ。<br>王手でも、<b>逃げ道が残る手</b>や<b>取られる手</b>は詰みにならないの。玉のまわりを1マスずつ確かめてみて！<br>竜（龍）は縦横どこまでも＋斜め1マス動けるコン。',
       k6: '3手詰は<b>王手・相手の受け・詰み</b>の3手。<br>王手のあと、玉が<b>逃げる</b>・王手の駒を<b>取る</b>・<b>合駒</b>をする、ぜんぶの受けを確かめて、どう受けても次で詰む王手を探すコン！<br>竜（龍）は縦横どこまでも＋斜め1マス動けるの。',
-      k5: '中盤は<b>駒得</b>が大事！ 代表的な手筋は、1手で2つをねらう<b>両取り</b>なの。<br>桂・銀・角は両取りをかけやすい駒だから、よく見てね。',
+      k5: '中盤は<b>駒得</b>が大事！ 代表的な手筋は、1手で2つをねらう<b>両取り</b>なの。<br>桂・銀・角は両取りをかけやすい駒だから、よく見てね。成った飛車の<b>龍</b>は、縦横どこまでも進めて、斜めにも1マス動けるコン。',
       k4: '今度の3手詰は、<b>駒を捨てる</b>王手が正解なの。わざと取られる場所へ駒を打つか動かして、取らせてから詰ませるコン。<br>「取られるから指さない」じゃなくて「取らせて詰ます」。王手のあとの受けを、ぜんぶ確かめてね！<br>竜（龍）は縦横どこまでも＋斜め1マス動けるの。',
       k3: '相手が「次に詰ませるぞ」とねらう形を<b>詰めろ</b>っていうの。<br>攻める前に、まず自分の玉の安全を確かめるコン。相手の詰み筋を消す手を探してね！',
       k2: '5手詰は、王手と受けを2回くり返してから詰ませるよ。<br>頭の中で盤を動かす力の勝負！ 受けが何通りかあるときは、どれでも詰むか確かめよう。<br>竜（龍）は縦横どこまでも＋斜め1マス、馬は斜めどこまでも＋縦横1マス動けるコン。',
@@ -568,7 +568,7 @@
     else if (P.src === 'fork') {   // (2026-11-28 第2期 k5: the targets P.tg of the moved piece — two pieces, or the king and a piece — and every other move wins far less: tools/lesson-verify-shfork.js)
       const tn = (P.tg || []).filter(x => x[1] !== 8).map(x => SH_TN[x[1]]), ck = (P.tg || []).some(x => x[1] === 8), X = tn.join('と'), A = tn[0] || '', B = tn[1] || '';
       core = (ck ? at([`{m}で王手${X}取り！ 王手を受けると、${X}が取れるの。`, `王手しながら${X}もねらう形だね。玉を守っても、${X}は守れないコン。`, `${nm}の王手で、玉と${X}を同時にねらえたの。`, `王手${X}取りが決まったコン。相手は玉と${X}を両方は守れないの。`, `{m}は王手で、${X}にも当たっているの。王手を受けると${X}が取れるね。`])
-        : at([`{m}で${A}と${B}の両取り！ 相手は両方は守れないの。`, `${nm}が${A}と${B}を同時にねらう形だコン。どちらかは取れるの。`, `${A}と${B}に同時に当たる、きれいな両取りだね。どちらかは取れるの。`, `{m}の${nm}で両取り！ ${A}か${B}、どちらかが取れるの。`, `両取りで、${A}と${B}を一度にねらえたコン。相手は両方は守れないの。`]))
+        : at([`{m}で${A}と${B}の両取り！ 相手は両方は守れないの。`, `${nm}が${A}と${B}を同時にねらう形だコン。どちらかは取れるの。`, `${A}と${B}に同時に当たる、きれいな両取りだね。片方は必ず取れるの。`, `{m}の${nm}で両取り！ ${A}か${B}、どちらかが取れるの。`, `両取りで、${A}と${B}を一度にねらえたコン。相手は両方は守れないの。`]))
         + at(['ほかの手では、こんなに駒得できないの。', 'ほかの手だと、ここまでの駒得はないコン。', 'これ以外の手では、大きな駒得にならないの。', 'ほかの手では、こんな得は生まれないの。', '大きく駒得できるのは、この手だけだコン。']);
     }
     else if (gid === 'rx') core = P.src === 'handi' ? at(['駒落ちでも、駒の働きを大事にする手なの。', '上手の駒が少ないところを、うまくついたコン。', '駒落ちの定跡どおり、いい形だね。', '下手らしく、まっすぐ攻める手なの。', 'これで駒落ちの戦い方がわかってきたね。']) : why0 || '';
@@ -989,8 +989,8 @@
     load() {
       if (this.p) return this.p;
       const voice = fetch('../shogi/voice-fox-ja.js?v=9').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
-      const rep = getJ('../shogi/lesson-replies.json?v=6').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
-      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261127k3'), getJ('../shogi/openings.json?v=20261124ol1'),
+      const rep = getJ('../shogi/lesson-replies.json?v=7').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
+      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261128k5'), getJ('../shogi/openings.json?v=20261124ol1'),
         ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261128sc`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
