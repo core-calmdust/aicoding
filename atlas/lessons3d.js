@@ -6398,7 +6398,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       t_encircle: '攻め手が<b>守り手の駒ぜんぶ</b>をかこんで、どの駒も盤の端へ出られなくしたら、攻め手の勝ち！<br>輪はななめにつながっていても、ちゃんと閉じているあつかいなの。',
       s_corner: '攻め手のいちばん最初の仕事は、王が角へ走る前に<b>四隅のまわりを固める</b>こと。角からななめに並ぶ3つのマスに駒を置くと、王は角へ近づけないの。',
       s_breakout: '守り手は、攻め手の輪ができあがる前に<b>駒を外へ出して</b>すき間を作り、王の走る道を開くの。王と角のあいだにいる味方を<b>道の外へどかす</b>と、王の道が開く。攻め手が1手でその道に入れなければ、王は次の手で角へ走れるよ！',
-      s_squeeze: '角を固めたら、攻め手は<b>少しずつ輪を縮めて</b>、王の動ける場所をせまくしていくの。取れる駒は取って、王のそばへ駒を寄せていこう！',
+      s_squeeze: '角を固めたら、攻め手は<b>少しずつ輪を縮めて</b>、王の動けるマスを減らしていくの。王の通り道に駒を立てると、その先へは進めなくなる。<br>でも、寄せた駒が<b>はさまれない</b>か、角の守りがゆるまないかも確かめてね！',
       v_brandubh: '小さな盤のブランドゥブでは、王は玉座とそのとなり以外なら<b>2枚ではさむだけ</b>でつかまっちゃう。角も攻め手の味方（敵のマス）になるの！',
       v_tablut: 'タブルットでは、王は盤の<b>端のどこか</b>に着けば脱出成功！ そのかわり、玉座からはなれた王は2枚ではさまれちゃうの。',
     },
@@ -6416,7 +6416,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       t_encircle: ['輪のさいごのすき間を閉じて、包囲を完成させよう！', '守り手が外へ出られるすき間、どこにあるかな？', 'あと1手で包囲の完成！ どの駒で閉じる？', '輪がななめにつながってもいいのを思い出して！ 閉じる手は？', 'さあ、守り手をまるごとかこんじゃおう！'],
       s_corner: ['このままだと、王に2手で角へ逃げられちゃう！ 角のまわりを固めて止めよう。', '角を守る3つのマス、どこがあいてる？ 王より先に入ろう！', '王が角へ走る前に、どのマスを固める？', '王がねらっている角があるの。どの駒で守る？', 'さあ、角の守りをしっかり！ 2手先まで王を止められる手は？'],
       s_breakout: ['王さまの前に、味方の駒がじゃまをしてるの。どかして、攻め手がふさげない道を開こう！', '味方を1つどかすだけで、王の道が開くかも。どの駒をどこへ？', '攻め手が入りこめない道を、王のために開いてあげて！', '王と角のあいだにいる味方、どこへどかす？', 'さあ、守り手の道開け！ 次の手で王が角へ走れるようにしよう。'],
-      s_squeeze: ['この場面、攻め手のいちばんいい手は？ 王のまわりに注目！', '輪をひとまわり小さくできるかな？', '王の動けるマス、どうやったら減らせる？', 'いちばんの一手を当ててみて！', 'さあ、じわじわ追いつめよう！ どの駒を寄せる？'],
+      s_squeeze: ['王の動けるマスを、いちばん減らせる安全な手はどれ？', '輪をひとまわり小さくしよう！ 王の通り道に、どの駒を立てる？', '王さまの動ける場所をせまくしたいの。はさまれずに寄せられる手は？', '王の行き先を、ぐっと減らしてみて！ 取られない場所でね。', 'さあ、じわじわ追いつめよう！ どの駒を寄せる？'],
       v_brandubh: ['王さまをつかまえて、勝っちゃおう！', '王のとなりに攻め手がいる！ 反対側に置ける駒は？', 'ブランドゥブなら2枚でつかまえられる。どの駒を動かす？', '角も味方になるのを思い出して！ 王をはさむ手は？', 'さあ、一手で勝負を決めよう！'],
       v_tablut: ['2手以内に、王を端へ逃がせる手を指してみて！', '王から端まで、2方向に見通せるマスはどこかな？', '攻め手が1手でふさぎきれない場所へ、王を動かそう！', '端への道を2本作れたら勝ち！ どこへ行く？', 'さあ、王さまの脱出ルートを作っちゃおう！'],
     },
@@ -6436,7 +6436,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       v_tablut: ['王を、2つ以上の方向へ端まで見通せるマスへ動かしてね。', '端への道が2本できれば、攻め手は1本しかふさげないの。王はどこへ行く？', 'タブルットは角じゃなくて、端ならどこでも脱出なの。', '王さまの上下左右、端まで空いた道を数えてみて。', '一度にふさがれない場所、見つけられるかな？'],
       s_corner: ['角からななめに並ぶ3マスのどれかに、攻め手を入れるの。金の丸がその駒！', '王が1手動いた先で、角への道ができないかまで読んでみて。', '角を守るマスでも、入る場所で効き目がちがうの。', '王がねらっている角はどれかな？ そのまわりのすき間をさがそう。', '王から角へ向かう道を、指でたどってみて。'],
       s_breakout: ['金の丸の駒が、王の道をふさいでいるの。', '開いた道に、攻め手の駒が1手で入れるかどうか見てみて。', '道にそって動かしても、まだふさいだままなの。', '道を開いても、攻め手にふさがれたら意味がないの。', '王から両側の角まで、とちゅうにいる駒を指でたどってみて。'],
-      s_squeeze: ['王の動けるマスを数えてみて。いちばん減らせる手は？', 'はさまれそうな自分の駒、取れる相手の駒も見のがさないでね。', '輪のすき間から、守り手が出てこられそうな所は？', '王の近くへ寄せられる攻め手はどれかな？', '急ぎすぎて、駒をはさまれないようにね。'],
+      s_squeeze: ['王が1手で行けるマスを、縦と横に数えてみて。', '寄せた駒のとなりに、守り手が来てはさめないか見てね。', '王の通り道に駒を立てると、その先のマスがまとめて消えるの。', '金の丸の駒が、王の通り道に立てる駒なの。', '急ぎすぎて、駒をはさまれないようにね。'],
     },
   };
   // (2026-11-25 第2期) b_safe: the piece of the side to move that the opponent could take now (-1: none), and after a move m the squares
@@ -6477,6 +6477,19 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     const escNow = z => z.moves().some(x => E.mFrom(x) === z.king && (F[E.mTo(x)] & 2) && z.clone().play(x).res === 2);
     let stop = false; for (const r of q.moves()) { const z = q.clone().play(r); if (z.res) return z.res === 2 ? '' : 'lose'; if (!escNow(z)) stop = true; }
     return !stop ? '' : q.kingLines().length ? 'block' : (F[q.king] & 1) ? 'shut' : 'off';
+  }
+  // (2026-11-28 第2期 担当A) s_squeeze: what follows a move u of the attackers (read with the rules, as tools/lesson-verify-tfsqueeze.js):
+  // km = the king's squares after it; why: 'esc' the king reaches a corner within his 2 moves, 'capm' a defender takes the moved man next,
+  // 'cap' a defender takes another attacker next, 'wide' safe (the king keeps km squares), '' the game ends
+  function tfSqueezeWhy(E, pos, u) {
+    const F = pos.G.F, q = pos.clone().play(u); if (q.res) return { why: '', km: 0 };
+    const kSq = z => { let c = 0; for (const x of z.moves()) if (E.mFrom(x) === z.king) c++; return c; };
+    const winNow = z => { if (z.res) return z.res === 2; for (const x of z.moves()) if (E.mFrom(x) === z.king && (F[E.mTo(x)] & 2)) return true; return false; };
+    const esc = (() => { const k = q.king, ms = q.moves().sort((a, b) => (E.mFrom(a) === k ? 0 : 1) - (E.mFrom(b) === k ? 0 : 1));
+      for (const d of ms) { const z = q.clone().play(d); if (z.res === 2) return true; if (z.res) continue; const R = z.moves(); if (!R.length) continue;
+        let fo = true; for (const r of R) { const y = z.clone().play(r); if (y.res || !winNow(y)) { fo = false; break; } } if (fo) return true; } return false; })();
+    let capm = false, cap = false; for (const r of q.moves()) { const c = q.clone().play(r).lastCaps; if (c.length) { cap = true; if (c.includes(E.mTo(u))) capm = true; } }
+    return { why: esc ? 'esc' : capm ? 'capm' : cap ? 'cap' : 'wide', km: kSq(q) };
   }
   // (2026-11-27 第2期 担当A) t_fort: why a wrong move u of the defenders does not make the fort (read with the rules, as
   // tools/lesson-verify-tffort.js; A = the answer, whose fort gives the room and the walls): 'moved' a wall piece left the wall, 'cap' a
@@ -6653,6 +6666,20 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
           : why === 'shut' ? pk(['{x}だと、王から角への道はまだふさがったまま。', '{x}のあとも、王と角のあいだに駒が残るから、道は開かないの。', '{x}では、王の道が1本も開かないね。', '{x}だと、王はまだ角までまっすぐ走れないの。', '{x}では、角への道に駒がいたままなんだ。'])
           : pk(['{x}だと、王は次の手で角へ逃げられないの。', '{x}では、王の道が開ききらないね。', '{x}だと、攻め手に間に合われちゃう。', '{x}のあと、王はまだ角に届かないの。', '{x}では逃げきれないんだ。']);
         return f(w + pk(['{m}なら、攻め手のどの駒も入れない道が開いたから。', '{m}でどかせば、攻め手がどう受けても道が残るから、王は次に角へ着けたの。', '正解の{m}は、王の前の味方を道の外へ出す手。', 'こっちの{m}だったら、攻め手はその道をふさげなかったね。', '{m}を選べば、次の手で王が角へ逃げられたんだ。'])); };
+    } else if (id === 's_squeeze') {
+      // (2026-11-28 第2期 担当A) the corners shut, the attackers to move: the answer is the safe move after which the king has the fewest
+      // squares (no defender can take an attacker next, no corner within his 2 moves). The counts are read from the board (k0 now, k1 after
+      // the answer); every wrong move is named by what the board does after it (tfSqueezeWhy); tools/lesson-verify.js tafl reads each line
+      // back against the rules (tools/lesson-verify-tfsqueeze.js)
+      const kSq = z => { let c = 0; for (const x of z.moves()) if (E.mFrom(x) === z.king) c++; return c; };
+      const q0 = pos.clone(); q0.turn = 2; q0.res = 0; const k0 = kSq(q0), k1 = tfSqueezeWhy(E, pos, A).km;
+      good = () => fg(pk([`{x}で輪が縮んだ！ 王の動けるマスが${k0}から${k1}に減って、寄せた駒もはさまれないの。`, `ナイス！ 王の通り道に駒が立って、行けるマスは${k1}つだけ。守り手はその駒を取れないね。`, `{x}で王の行き先が${k0}マスから${k1}マスに！ 角の守りもゆるまない安全な寄せなの。`, `みごとな寄せ！ 王の動けるマスが${k1}つにしぼれたうえに、どの攻め手もはさまれないの。`, `じわっと${k0}から${k1}へ。取られない場所で輪を縮める、攻め手のお手本なの！`]));
+      ng = u => { const v = alt(u), R = v != null ? tfSqueezeWhy(E, pos, v) : { why: '', km: 0 };
+        const w = R.why === 'esc' ? pk(['{x}だと角の守りがゆるんで、王に2手で角へ逃げられちゃう。', '{x}のあと、王が2手のうちに角へ逃げこめる道ができちゃう。', '{x}では、角を守っていた形がくずれて、王に角へ逃げられるの。', '{x}だと、王さまに2手で角に着かれちゃう。', '{x}のすきに、王が角へ逃げる道が開いちゃう。'])
+          : R.why === 'capm' ? pk(['{x}で寄せた駒が、守り手にはさまれて取られちゃう。', '{x}だと、動かした駒が次の手ではさまれるの。', '{x}では、寄せた駒のとなりに守り手が来て、取られちゃう。', '{x}のあと、寄せた駒が守り手にはさまれちゃう。', '{x}だと、動かした駒がすぐ取られちゃうの。'])
+          : R.why === 'cap' ? pk(['{x}のあと、守り手にほかの攻め手の駒をはさまれちゃう。', '{x}だと、動かしたあとに別の攻め手が取られるの。', '{x}では、ほかの攻め手の駒が守り手にはさまれちゃう。', '{x}のあと、守り手の次の手でほかの攻め手が取られちゃう。', '{x}だと、別の攻め手が次の手ではさまれるの。'])
+          : pk([`{x}だと、王はまだ${R.km}マス動けるの。`, `{x}では、王の行き先がまだ${R.km}マス残るね。`, `{x}のあとも、王さまはまだ${R.km}マス動けるまま。`, `{x}だと輪が縮みきらず、王はまだ${R.km}マス動けるの。`, `{x}では、王の通り道が切れず、まだ${R.km}マス動けるの。`]);
+        return f(w + pk([`{m}なら、王の動けるマスは${k1}つだけで、寄せた駒も取られなかったの。`, `{m}で王の通り道に立てば、行けるマスは${k1}つ。守り手はどの攻め手もはさめなかったの。`, `正解の{m}は、取られない場所から王の行き先を${k1}マスにしぼる手。`, `こっちの{m}だったら、王の動けるマスが${k0}から${k1}に減っていたね。`, `{m}を選べば、安全に王を${k1}マスまで追いつめられたんだ。`])); };
     } else if (id === 't_fort') {
       // (2026-11-27 第2期 担当A) each wrong move by what follows it on the board (tfFortWhy, as tools/lesson-verify-tffort.js)
       good = () => fg(FA.win === 'fort' ? pk(['{x}で砦の完成！ もう攻め手は壁をこわせないから、守り手の勝ち。', 'エッジフォートのできあがり！ 王は砦の中で動けて、壁の駒もはさまれないの。', '{x}で穴がふさがった！ こわせない砦で、守り手の勝ちだね。', '最後の1枚がぴたり！ 攻め手はもう砦に手が出せないの。', '王さまのお城、完成！ 壁のどの駒もはさめない形ね。']) : pk(['{x}で守り手の勝ち！ 王の守りは完ぺきだね。', '{x}で勝負あり！', '守り手の勝ち！', 'みごとに勝ちを決めたね！', 'これで守り手の勝ち！']));
@@ -6687,7 +6714,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-tafl-lessons', OKEY: 'aicoding-tafl-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=15'), fetch('../tafl/i18n.js?v=6ek-nd1-bm2-bs1-tu1-sc1-br1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261125o').catch(() => null)])
+      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=16'), fetch('../tafl/i18n.js?v=6ek-nd1-bm2-bs1-tu1-sc1-br1-sq1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261125o').catch(() => null)])
         .then(([ls, T, _, op]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] tafl texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
