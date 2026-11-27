@@ -139,6 +139,8 @@
     { id: 'cruikchess', w: 1686, h: 1198, aic: 90197, no: '1928.1507d', bg: '#c9c79a', spots: [[.48, .55], [.46, .37], [.21, .25], [.66, .27], [.47, .86], [.5, .95]], links: [{ g: 'chess' }] },
     // (2026-11-25) the Art Institute of Chicago: American photograph (c. 1898), woman and child playing dominoes
     { id: 'domino98', w: 1686, h: 1350, aic: 63559, no: '1981.651', bg: '#5e5440', spots: [[.47, .51], [.33, .45], [.62, .38], [.49, .39], [.85, .3], [.73, .88]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Albert Glaser and friends playing cards on a boat, Langkat, Sumatra
+    { id: 'langkat', w: 2048, h: 1578, rijks: 'RP-F-2003-107', bg: '#dcd6c6', spots: [[.513, .717], [.388, .452], [.217, .452], [.757, .452], [.708, .657], [.54, .41]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
