@@ -20,15 +20,23 @@
                 k 'trap' the enemy's next move sandwiches the relocated guard (rp: that enemy move)
                 k 'open' the relocated guard is safe, but the enemy's next move sandwiches another piece of yours (rp, v: the
                          piece it takes)
+     b_safe     (the enemy's next move would sandwich one guard of yours — the threat: threats() with the turn passed)
+                k 'ok'   after it no enemy move captures anything (block: true when it lands on the cell the enemy would step
+                         into for the capture, else it moved the guard in danger away)
+                k 'trap' the enemy's next move sandwiches the piece just moved (rp: that enemy move)
+                k 'left' the moved piece is safe, but the enemy's next move still sandwiches the guard in danger (rp, v: the
+                         piece it takes)
    hint(E, id, spec) → the cells of the pieces to look at (never the answer's piece alone, 追52): b_step every piece with a step
    inwards, b_capture every piece with a move next to an enemy piece, b_throne the queen and every enemy piece next to a cell
    she can step inwards to, b_reloc the captured guard and every piece of yours the enemy could sandwich next (the guard off
-   the board).
+   the board), b_safe the guard in danger, the enemy pieces that would sandwich it (the one stepping in and the one beyond)
+   and every piece of yours that can step into the enemy's cell.
    window.AgonLsFacts · module.exports the same. */
 (function () {
   'use strict';
-  const IDS = ['b_step', 'b_capture', 'b_throne', 'b_reloc'];
+  const IDS = ['b_step', 'b_capture', 'b_throne', 'b_reloc', 'b_safe'];
   // b_reloc: the enemy's capturing moves with the captured guard off the board ([move, the pieces it takes])
+  // b_safe: the same with the turn passed to the enemy (nothing captured on the board)
   function threats(E, spec) {
     const r = E.Pos.from({ b: spec.b.replace(/[xyXY]/g, '.'), side: 3 - spec.side, n: spec.n });
     if (r.phase() !== 'move') return [];
@@ -61,6 +69,14 @@
       if (ro != null) return { k: 'open', rp: ro, v: q.capsOf(ro)[0] };
       return { k: 'ok', block: threats(E, spec).some(([r]) => E.mTo(r) === t) };
     }
+    if (id === 'b_safe') {
+      const q = p.clone().play(m), L = q.moves();
+      const rp = L.find(r => q.capsOf(r).includes(t));
+      if (rp != null) return { k: 'trap', rp };
+      const ro = L.find(r => q.capsOf(r).length);
+      if (ro != null) return { k: 'left', rp: ro, v: q.capsOf(ro)[0] };
+      return { k: 'ok', block: threats(E, spec).some(([r]) => E.mTo(r) === t) };
+    }
     if (id === 'b_capture') {
       const c = p.capsOf(m).length;
       if (c) return { k: 'ok', c };
@@ -88,6 +104,12 @@
       for (const [, c] of threats(E, spec)) c.forEach(i => out.add(i));
       return [...out].sort((a, b) => a - b);
     }
+    if (id === 'b_safe') {
+      const T = threats(E, spec), cells = new Set(T.map(([r]) => E.mTo(r)));
+      for (const [r, c] of T) { out.add(E.mFrom(r)); for (const v of c) { out.add(v); const b = E.NB[v][E.NB[E.mTo(r)].indexOf(v)]; if (b >= 0) out.add(b); } }
+      for (const m of p.moves()) if (m !== E.PASS && cells.has(E.mTo(m))) out.add(E.mFrom(m));
+      return [...out].sort((a, b) => a - b);
+    }
     for (const m of p.moves()) {
       if (m === E.PASS) continue; const f = E.mFrom(m), t = E.mTo(m);
       if (id === 'b_step' && E.RING[t] === E.RING[f] - 1) out.add(f);
@@ -103,6 +125,7 @@
     if (id === 'b_capture') return F.k === 'touch' ? 'ngTouch' : 'ng';
     if (id === 'b_throne') return F.k === 'side' ? 'ngSide' : F.k === 'guard' ? 'ngGuard' : 'ng';
     if (id === 'b_reloc') return F.k === 'open' ? 'ngOpen' : 'ng';
+    if (id === 'b_safe') return F.k === 'left' ? 'ngLeft' : 'ng';
     return 'ng';
   }
   const API = { IDS, fact, hint, key, threats };
