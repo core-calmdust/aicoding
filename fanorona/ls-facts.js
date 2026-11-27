@@ -23,6 +23,10 @@
      k 'most'  the answer: all { a } of the opponent's pieces in { sa } captures (the game is won)
        'stop' / 'stopx' / 'dead'  as b_chain: { c } taken in { sc } captures, { r } = a − c of the opponent's pieces left
      same  the move's piece is the answer's piece
+   t_big (2026-11-27 担当E, the biggest total where the biggest first capture is a trap): { k, c, a, sc, sa, same, c1, a1, more }
+     as b_chain, and c1 / a1 the pieces the move's / the answer's first capture takes;
+     k 'greedy' a wrong move whose first capture takes more than the answer's first (c1 > a1) but less in total; more: its piece
+               could still go on where it stopped
   FanoronaLsFacts.best(E, spec) → the move that takes the most (null when two moves take as many)
    FanoronaLsFacts.hint(E, id, spec) → the points of the pieces that can capture now (never the answer's piece alone)
    Moves are the engine's notation (h2-h3A), points its indices r * 9 + c. Works as a plain script and in Node. */
@@ -88,8 +92,17 @@
     const more = pos.capSteps(st).length > 0, onRoad = S.length < B.length && S.every((x, i) => eqS(x, B[i]));
     return Object.assign(f, { k: onRoad ? 'stop' : more ? 'stopx' : 'dead' });
   }
+  // t_big: b_chain's facts and the first captures (a wrong move that takes more first and less in all is 'greedy')
+  function bigFact(E, spec, m) {
+    const f = chainFact(E, spec, m); if (f.k === 'bad') return f;
+    const pos = E.Pos.from(spec), S = pos.steps(m), B = pos.steps(best(E, spec));
+    f.c1 = S[0].cap.length; f.a1 = B[0].cap.length; f.more = f.k === 'stop' || f.k === 'stopx';
+    if (f.k !== 'most' && f.c1 > f.a1) f.k = 'greedy';
+    return f;
+  }
   function fact(E, id, spec, m) {
     if (id === 'b_chain') return chainFact(E, spec, m);
+    if (id === 't_big') return bigFact(E, spec, m);
     if (id === 'b_win') return winFact(E, spec, m);
     if (id === 'b_safe') return safeFact(E, spec, m);
     const pos = E.Pos.from(spec), b = best(E, spec), S = pos.steps(m);
@@ -106,7 +119,7 @@
     if (id === 'b_safe') return [...new Set(pos.paikaSteps().map(x => x.from))];   // (every piece you can move: never the answer's alone, 追52)
     return [...new Set(pos.capSteps(null).map(x => x.from))];
   }
-  const API = { fact, best, hint, endOf, capN, chainFact, safeFact, safeBest, oppMost, winFact, winBest };
+  const API = { fact, best, hint, endOf, capN, chainFact, bigFact, safeFact, safeBest, oppMost, winFact, winBest };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   if (typeof window !== 'undefined') window.FanoronaLsFacts = API;
 })();
