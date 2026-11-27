@@ -313,7 +313,38 @@
     return { init, play, label, pieces, cols: 9, rows: 10, sides: ['r', 'b'], first: 'r', pair: true, pt: true, GL,
       xy: (s, flip) => { const f = s.charCodeAt(0) - 97, r = +s[1]; return flip ? [8 - f, r] : [f, 9 - r]; } };
   })();
-  const KINDS = { chess: CHESS, shogi: SHOGI, go: GO, xiangqi: XIANGQI };
+  // reversi (2026-11-27): 8 × 8, squares a1…h8 as the records write them (files a…h from the left, ranks 1…8 from the top); Black moves first,
+  // d5 e4 black and d4 e5 white at the start. play flips every line the move flanks (throws on a move that flanks nothing or a taken square);
+  // '-' is a pass, allowed only when the side has no move (and the other side has one). A disc keeps its id while it turns over.
+  const REVERSI = (() => {
+    const DIR = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+    const ix = s => { const f = s.charCodeAt(0) - 97, r = s.charCodeAt(1) - 49; if (s.length !== 2 || f < 0 || f > 7 || r < 0 || r > 7) throw new Error('bad square: ' + s); return f + r * 8; };
+    const nm = i => 'abcdefgh'[i & 7] + ((i >> 3) + 1), opp = c => c === 'b' ? 'w' : 'b';
+    function init() { const b = Array(64).fill(null); let id = 0; [['d5', 'b'], ['e4', 'b'], ['d4', 'w'], ['e5', 'w']].forEach(([s, c]) => { b[ix(s)] = { id: id++, c }; }); return { b, turn: 'b', id, n: { b: 2, w: 2 } }; }
+    function flips(b, i, c) { if (b[i]) return []; const out = [], f0 = i & 7, r0 = i >> 3;
+      DIR.forEach(([df, dr]) => { const run = []; let f = f0 + df, r = r0 + dr; const on = () => f >= 0 && f < 8 && r >= 0 && r < 8;
+        while (on() && b[f + r * 8] && b[f + r * 8].c !== c) { run.push(f + r * 8); f += df; r += dr; }
+        if (run.length && on() && b[f + r * 8] && b[f + r * 8].c === c) out.push(...run); });
+      return out; }
+    const canMove = (b, c) => b.some((x, i) => !x && flips(b, i, c).length > 0);
+    function play(st, mv) {
+      const me = st.turn;
+      if (mv === '-' || mv === '' || mv === 'pass') {
+        if (canMove(st.b, me)) throw new Error('a pass, but there is a move to play');
+        if (!canMove(st.b, opp(me))) throw new Error('a pass after the game is over');
+        return { st: Object.assign({}, st, { turn: opp(me) }), pass: true, side: me, to: null, flips: [] }; }
+      const i = ix(String(mv).toLowerCase()); if (st.b[i]) throw new Error('square taken: ' + mv);
+      const fl = flips(st.b, i, me); if (!fl.length) throw new Error('flips nothing: ' + mv);
+      const b = st.b.slice(); b[i] = { id: st.id, c: me }; fl.forEach(j => { b[j] = { id: b[j].id, c: me }; });
+      const n = { b: 0, w: 0 }; b.forEach(x => { if (x) n[x.c]++; });
+      return { st: { b, turn: opp(me), id: st.id + 1, n }, to: nm(i), side: me, flips: fl.map(nm) }; }
+    const over = st => !canMove(st.b, 'b') && !canMove(st.b, 'w');
+    const label = (mv, i, r) => r.pass ? u('pass') : r.to;
+    const pieces = st => st.b.map((x, i) => x && { id: x.id, at: nm(i), k: 'd', c: x.c }).filter(Boolean);
+    return { init, play, label, pieces, over, cols: 8, rows: 8, sides: ['b', 'w'], first: 'b', disc: true,
+      xy: (s, flip) => { const f = s.charCodeAt(0) - 97, r = s.charCodeAt(1) - 49; return flip ? [7 - f, 7 - r] : [f, r]; } };
+  })();
+  const KINDS = { chess: CHESS, shogi: SHOGI, go: GO, xiangqi: XIANGQI, reversi: REVERSI };
 
   // every position of a game, worked out once (the record → states[0…n]; recs[i] = what move i did)
   const cache = {};
@@ -321,7 +352,7 @@
     if (cache[G.id]) return cache[G.id];
     const K = KINDS[G.kind], mv = Array.isArray(G.moves) ? G.moves : G.moves.trim().split(/\s+/);
     const st = [K.init(G)], recs = [];
-    mv.forEach((m, i) => { const r = K.play(st[i], G.kind === 'go' && m === '-' ? '' : m); recs.push(r); st.push(r.st); });
+    mv.forEach((m, i) => { let r; try { r = K.play(st[i], G.kind === 'go' && m === '-' ? '' : m); } catch (e) { e.message = `move ${i + 1} (${m}): ` + e.message; throw e; } recs.push(r); st.push(r.st); });
     return (cache[G.id] = { K, mv, st, recs });
   }
 
@@ -346,6 +377,7 @@
     if (K.go) { const n = G.size || 19; return { W: n + 1, H: n + 1, ox: 1, oy: 1, n, cell: 1, pt: true }; }
     if (K === SHOGI) return { W: 10.7, H: 9.9, ox: 0.85, oy: 0.45, cell: 1 };   // (2026-11-27 ユーザー: 盤が右寄り — the same margin left and right)
     if (K === XIANGQI) return { W: 9.7, H: 10.9, ox: 0.85, oy: 0.95, cell: 1, pt: true };
+    if (K === REVERSI) return { W: 9.2, H: 8.7, ox: 0.6, oy: 0.6, cell: 1 };   // (the letters along the top, the numbers on the left, as the records count)
     return { W: 9.2, H: 8.7, ox: 0.6, oy: 0.1, cell: 1 };   // (left: the ranks; right: the same width empty, so the squares stand in the middle)
   }
   function boardSVG(G, K, g, flip) {
@@ -382,12 +414,21 @@
         P.push(`<text x="${X(i) * 100}" y="${(g.oy - .42) * 100}" class="mxcoord" transform="scale(.01)">${top}</text><text x="${X(i) * 100}" y="${(Y(9) + .68) * 100}" class="mxcoord" transform="scale(.01)">${bot}</text>`); }
       return `<g class="mxxq">${P.join('')}</g>`;
     }
+    if (K === REVERSI) {   // the site's reversi board: green felt in a dark frame, black grid lines, the four dots at the c3 / f3 / c6 / f6 corners
+      const X = g.ox, Y = g.oy;
+      P.push(`<rect x="${X - .16}" y="${Y - .16}" width="8.32" height="8.32" rx=".14" class="mxrvfr"/><rect x="${X}" y="${Y}" width="8" height="8" class="mxrvf"/>`);
+      for (let i = 1; i < 8; i++) P.push(`<line x1="${X}" y1="${Y + i}" x2="${X + 8}" y2="${Y + i}"/><line x1="${X + i}" y1="${Y}" x2="${X + i}" y2="${Y + 8}"/>`);
+      [[2, 2], [6, 2], [2, 6], [6, 6]].forEach(([a, b]) => P.push(`<circle cx="${X + a}" cy="${Y + b}" r=".07" class="mxrvd"/>`));
+      for (let i = 0; i < 8; i++) P.push(`<text x="${(X + i + .5) * 100}" y="${(Y - .24) * 100}" class="mxcoord" transform="scale(.01)">${'abcdefgh'[flip ? 7 - i : i]}</text><text x="${(X - .32) * 100}" y="${(Y + i + .62) * 100}" class="mxcoord" transform="scale(.01)">${flip ? 8 - i : i + 1}</text>`);
+      return `<g class="mxrv">${P.join('')}</g>`;
+    }
     for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) P.push(`<rect x="${g.ox + f}" y="${g.oy + r}" width="1" height="1" class="${(r + f) % 2 ? 'mxdk' : 'mxlt'}"/>`);
     for (let i = 0; i < 8; i++) { P.push(`<text x="${(g.ox + i + .5) * 100}" y="${(g.oy + 8.45) * 100}" class="mxcoord" transform="scale(.01)">${'abcdefgh'[flip ? 7 - i : i]}</text><text x="${(g.ox - .3) * 100}" y="${(g.oy + i + .62) * 100}" class="mxcoord" transform="scale(.01)">${flip ? i + 1 : 8 - i}</text>`); }
     return `<g class="mxch">${P.join('')}</g>`;
   }
   function pieceHTML(K, p, g) {
     if (K.go) return `<span class="mxst ${p.k === 'B' ? 'b' : 'w'}"></span>`;
+    if (K === REVERSI) return `<span class="mxrd${p.c === 'w' ? ' w' : ''}"><span class="mxrf b"></span><span class="mxrf w"></span></span>`;   // two faces; turning over = rotating the one element
     if (K === XIANGQI) return `<span class="mxxp${p.red ? ' r' : ''}"><b>${p.glyph}</b></span>`;
     if (K === SHOGI) return `<span class="mxsg${p.up ? '' : ' dn'}${p.red ? ' pr' : ''}"><svg viewBox="0 0 100 110" aria-hidden="true"><path d="M50 4 82 18 94 106H6L18 18z"/></svg><b>${p.glyph}</b></span>`;
     return `<img src="${PIMG}${p.k}.svg" alt="" draggable="false">`;
@@ -398,7 +439,7 @@
     const G = cur, L = line(G), K = L.K, g = geom(G, K), st = L.st[ply], r = ply ? L.recs[ply - 1] : null, flip = G.orient === 'b' || G.orient === 'g';
     const box = el.board;
     if (box._g !== G.id) { box._g = G.id; box.innerHTML = `<svg class="mxbg" viewBox="0 0 ${g.W} ${g.H}" aria-hidden="true">${boardSVG(G, K, g, flip)}<g class="mxmk"></g></svg><div class="mxpcs"></div>`;
-      box.style.aspectRatio = `${g.W} / ${g.H}`; box._el = {}; box.classList.toggle('go', !!K.go); box.classList.toggle('sh', K === SHOGI); box.classList.toggle('ch', K === CHESS); box.classList.toggle('xq', K === XIANGQI); }
+      box.style.aspectRatio = `${g.W} / ${g.H}`; box._el = {}; box.classList.toggle('go', !!K.go); box.classList.toggle('sh', K === SHOGI); box.classList.toggle('ch', K === CHESS); box.classList.toggle('xq', K === XIANGQI); box.classList.toggle('mxrvb', K === REVERSI); }
     box.classList.toggle('still', !anim);
     const sz = (K.go ? 1 : 1) / g.W * 100, szh = 1 / g.H * 100;
     const lay = box.querySelector('.mxpcs'), seen = new Set();
@@ -406,13 +447,15 @@
       if (!e) { e = document.createElement('i'); e.className = 'mxp'; lay.appendChild(e); box._el[p.id] = e; e._k = ''; e.classList.add('new'); requestAnimationFrame(() => requestAnimationFrame(() => e.classList.remove('new'))); }
       if (e._k !== p.k + (p.glyph || '') + (p.up ? 1 : 0)) { e._k = p.k + (p.glyph || '') + (p.up ? 1 : 0); e.innerHTML = pieceHTML(K, p, g); }
       const [x, y] = spot(G, K, g, p.at, flip); e.style.left = x + '%'; e.style.top = y + '%'; e.style.width = sz + '%'; e.style.height = szh + '%';
-      e.classList.toggle('last', !!(K.go && r && r.to === p.at)); });
+      if (K.disc) { const d = e.firstChild, w = p.c === 'w';   // (reversi) a disc that changes colour turns over where it lies; the ones nearer the new disc first
+        if (d.classList.contains('w') !== w) { const f = r && anim && r.to ? Math.max(...[0, 1].map(j => Math.abs(p.at.charCodeAt(j) - r.to.charCodeAt(j)))) : 0; d.style.transitionDelay = f ? (f - 1) * 55 + 'ms' : '0ms'; d.classList.toggle('w', w); } }
+      e.classList.toggle('last', !!((K.go || K.disc) && r && r.to === p.at)); });
     Object.keys(box._el).forEach(id => { if (!seen.has(+id)) { const e = box._el[id]; delete box._el[id]; e.classList.add('gone'); setTimeout(() => e.remove(), anim ? 260 : 0); } });
     // the marks: the last move's squares, then what the note points at (arrows, squares)
     const mk = box.querySelector('.mxmk'), M = (G.mk || {})[ply] || {}, out = [];
     const c = at => { const [x, y] = K.xy(at, flip, g.n); return K.go || K.pt ? [g.ox + x, g.oy + y] : [g.ox + x + .5, g.oy + y + .5]; };
     const sqr = (at, cls) => { const [x, y] = c(at); out.push(K.pt ? `<circle cx="${x}" cy="${y}" r=".5" class="${cls}${cls === 'mxlm' ? ' ring' : ''}"/>` : `<rect x="${x - .5}" y="${y - .5}" width="1" height="1" class="${cls}"/>`); };
-    if (r && !K.go) { if (r.from) sqr(r.from, 'mxlm'); if (r.to) sqr(r.to, 'mxlm'); }
+    if (r && !K.go && !K.disc) { if (r.from) sqr(r.from, 'mxlm'); if (r.to) sqr(r.to, 'mxlm'); }
     (M.s || []).forEach(a => K.go ? (() => { const [x, y] = c(a); out.push(`<circle cx="${x}" cy="${y}" r=".42" class="mxsq"/>`); })() : sqr(a, 'mxsq'));
     (M.a || []).forEach(([a, b]) => { const [x1, y1] = c(a), [x2, y2] = c(b), d = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / d, uy = (y2 - y1) / d, ex = x2 - ux * .38, ey = y2 - uy * .38;
       out.push(`<path class="mxar" d="M${(x1 + ux * .3).toFixed(2)} ${(y1 + uy * .3).toFixed(2)}L${ex.toFixed(2)} ${ey.toFixed(2)}"/><path class="mxah" d="M${(x2 - ux * .12).toFixed(2)} ${(y2 - uy * .12).toFixed(2)}L${(ex - uy * .26).toFixed(2)} ${(ey + ux * .26).toFixed(2)}L${(ex + uy * .26).toFixed(2)} ${(ey - ux * .26).toFixed(2)}z"/>`); });
@@ -424,11 +467,12 @@
     const L = line(G), K = L.K, g = geom(G, K), st = L.st[L.st.length - 1], flip = G.orient === 'b' || G.orient === 'g', P = [];
     K.pieces(st).forEach(p => { const [x, y] = K.xy(p.at, flip, g.n), pt = K.go || K.pt, cx = pt ? g.ox + x : g.ox + x + .5, cy = pt ? g.oy + y : g.oy + y + .5;
       if (K.go) P.push(`<circle cx="${cx}" cy="${cy}" r=".47" class="${p.k === 'B' ? 'mxtb' : 'mxtw'}"/>`);
+      else if (K.disc) P.push(`<circle cx="${cx}" cy="${cy}" r=".4" class="${p.c === 'b' ? 'mxtb' : 'mxtw'}"/>`);
       else if (K === XIANGQI) P.push(`<g transform="translate(${cx} ${cy})"><circle r=".45" class="mxxt${p.red ? ' r' : ''}"/><text y="19" transform="scale(.01)" class="mxxg${p.red ? ' r' : ''}">${p.glyph}</text></g>`);
       else if (K === SHOGI) P.push(`<g transform="translate(${cx} ${cy})${p.up ? '' : ' rotate(180)'}"><path d="M0 -.44 .32 -.3 .4 .42H-.4L-.32 -.3z" class="mxtk"/><text y="20" transform="scale(.01)" class="mxtg${p.red ? ' pr' : ''}">${p.glyph}</text></g>`);
       else P.push(`<image href="${PIMG}${p.k}.svg" x="${cx - .5}" y="${cy - .5}" width="1" height="1"/>`); });
     // (2026-11-27 ユーザー: 一覧の画像はどのゲームでも同じ大きさ、盤を大きく、数字は省いてよい) the playing area only, no letters or numbers
-    const n = g.n || 0, box = K.go ? [.45, .45, n + .1, n + .1] : K === SHOGI ? [g.ox - .2, g.oy - .2, 9.4, 9.4] : K === XIANGQI ? [g.ox - .62, g.oy - .62, 9.24, 10.24] : [g.ox, g.oy, 8, 8];
+    const n = g.n || 0, box = K.go ? [.45, .45, n + .1, n + .1] : K === SHOGI ? [g.ox - .2, g.oy - .2, 9.4, 9.4] : K === XIANGQI ? [g.ox - .62, g.oy - .62, 9.24, 10.24] : K.disc ? [g.ox - .16, g.oy - .16, 8.32, 8.32] : [g.ox, g.oy, 8, 8];
     return `<svg viewBox="${box.map(v => +v.toFixed(2)).join(' ')}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">${boardSVG(G, K, g, flip).replace(/<text[^>]*>[^<]*<\/text>/g, '')}${P.join('')}</svg>`;
   }
   function wall() {
@@ -455,6 +499,7 @@
      as the stage) → the game's story and record. Phone: one column; the moves' list is a strip that scrolls sideways. */
   const plateOf = (G, L, st, side) => {   // what a side has to show on its plate
     const K = L.K;
+    if (K.disc) return `<span class="mxcap mxrc">${esc(u('discs').replace('{n}', st.n[side]))}</span>`;   // (reversi) the discs each side has now
     if (K.go) return st.cap[side] ? `<span class="mxcap"><u class="mxdot ${side === 'B' ? 'W' : 'B'}"></u>${esc(u('caps'))} ${st.cap[side]}</span>` : '';
     if (K === SHOGI) { const c = {}; K.hands(st)[side].forEach(x => c[x.t] = (c[x.t] || 0) + 1); const e = Object.entries(c);
       return e.length ? `<span class="mxcap"><em>${esc(u('hand'))}</em>${e.map(([t, n]) => `<span class="mxhk">${K.KAN[t]}${n > 1 ? `<sub>${n}</sub>` : ''}</span>`).join('')}</span>` : ''; }
@@ -475,7 +520,7 @@
     el.pushed = !!(user && ctx && ctx.hist); if (el.pushed) ctx.hist({ room: 'match', game: id });
     stop(); cur = G; ply = 0; const L = line(G), x = gt(G.id), n = L.mv.length, K = L.K;
     el.wall.hidden = true; el.view.hidden = false; host.querySelector('.mxx').classList.add('on');
-    const res = G.res && (G.kind === 'go' ? G.res : u('res_' + G.res)), flip = G.orient === 'b' || G.orient === 'g';
+    const fin = L.st[n], res = G.res && (G.kind === 'go' ? G.res : u('res_' + G.res) + (K.disc ? ` ${fin.n.b}–${fin.n.w}` : '')), flip = G.orient === 'b' || G.orient === 'g';
     const [s0, s1] = K.sides, nm = s => s === s0 ? x.w : x.b, plate = (s, pos) => `<div class="mxpl ${pos}" data-s="${s}"><u class="mxdot ${s}"></u><b>${esc(nm(s))}</b><span class="mxside-n">${esc(u('side_' + s))}</span><span class="mxpx"></span></div>`;
     const btn = (c, k) => `<button type="button" data-c="${c}"${c === 'play' ? ' class="pl"' : ''} aria-label="${esc(u(k))}" title="${esc(u(k))}">${svg(c)}</button>`;
     el.view.innerHTML = `<div class="mxhd"><button type="button" class="mxback" aria-label="${esc(u('back'))}" title="${esc(u('back'))}">${svg('back')}</button>
@@ -497,7 +542,7 @@
     q('.mxback').onclick = () => { if (el.pushed) history.back(); else wall(); };
     // the moves: chess and xiangqi as numbered pairs; shogi and go one by one, numbered, in columns
     const lab = i => K.label(L.mv[i], i, L.recs[i], lang, L.st[0]);
-    const mb = i => `<button type="button" data-p="${i + 1}"${note(G.id, i + 1) != null ? ' class="nt"' : ''}>${K.pair ? '' : `<span class="mxno">${i + 1}</span>`}${K.go ? `<u class="mxdot ${L.recs[i].side}"></u>` : ''}<bdi>${esc(lab(i))}</bdi></button>`;
+    const mb = i => `<button type="button" data-p="${i + 1}"${note(G.id, i + 1) != null ? ' class="nt"' : ''}>${K.pair ? '' : `<span class="mxno">${i + 1}</span>`}${K.go || K.disc ? `<u class="mxdot ${L.recs[i].side}"></u>` : ''}<bdi>${esc(lab(i))}</bdi></button>`;
     const rows = [`<div class="mxrow st" role="listitem"><button type="button" data-p="0"${note(G.id, 0) != null ? ' class="nt"' : ''}>${esc(u('startpos'))}</button></div>`];
     if (K.pair) for (let i = 0; i < n; i += 2) rows.push(`<div class="mxrow pr" role="listitem"><span class="mxno">${i / 2 + 1}.</span>${mb(i)}${i + 1 < n ? mb(i + 1) : ''}</div>`);
     else for (let i = 0; i < n; i++) rows.push(`<div class="mxrow" role="listitem">${mb(i)}</div>`);

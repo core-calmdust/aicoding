@@ -1283,3 +1283,16 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 .mxx .mxgw.on .mxrng::-webkit-slider-thumb{height:68px}.mxx .mxgw.on .mxrng::-moz-range-thumb{height:68px}
 @media (max-width:819px){.mxx .mxgw.on,.mxx .mxgw.on .mxrng{height:52px}.mxx .mxgw.on .mxrng::-webkit-slider-runnable-track,.mxx .mxgw.on .mxrng::-moz-range-track{height:52px}.mxx .mxgw.on .mxrng::-webkit-slider-thumb{height:56px}.mxx .mxgw.on .mxrng::-moz-range-thumb{height:56px}}
 .mxx .mxabout dl{gap:6px 18px}.mxx .mxabout dd{font-size:13.5px}
+/* (2026-11-27) 名局選のリバーシ: the site's green felt board, the discs turn over where they lie (one element, two faces) */
+.mxx .mxrvfr{fill:#2b2118;stroke:#8e7440;stroke-width:.04}.mxx .mxrvf{fill:#1b6a4a}.mxx .mxrv line{stroke:rgba(0,0,0,.42);stroke-width:.035}.mxx .mxrvd{fill:rgba(0,0,0,.6)}
+.mxx .mxrv .mxcoord{fill:#cbbfa9}
+.mxx .mxboard.mxrvb .mxp{perspective:320px}
+.mxx .mxrd{position:relative;display:block;width:82%;height:82%;margin:9%;transform-style:preserve-3d;transition:transform .42s cubic-bezier(.45,.05,.25,1)}
+.mxx .mxrd.w{transform:rotateY(180deg)}
+.mxx .mxboard.still .mxrd{transition:none}
+.mxx .mxrf{position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.mxx .mxrf.b{background:linear-gradient(165deg,#2c2d30 0%,#1b1c1e 50%,#131416 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 2cqw 0 #0f1011,0 4.4cqw 0 #c7c3b8,0 7cqw 6cqw rgba(0,0,0,.42)}
+.mxx .mxrf.w{transform:rotateY(180deg);background:linear-gradient(165deg,#f4f2eb 0%,#e7e4db 50%,#d9d6cc 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.75),inset 0 -1px 1px rgba(0,0,0,.14),0 2cqw 0 #c9c6bc,0 4.4cqw 0 #161718,0 7cqw 6cqw rgba(0,0,0,.4)}
+.mxx .mxboard.mxrvb .mxp.last::after{content:"";position:absolute;left:50%;top:50%;width:15%;height:15%;transform:translate(-50%,-50%);border-radius:50%;background:#ff6b5b;box-shadow:0 0 6px rgba(255,107,91,.8)}
+.mxx .mxth.k-reversi .mxtb{fill:#1c1d1f}.mxx .mxth.k-reversi .mxtw{fill:#f2f0e9;stroke:none}
+.mxx .mxcap.mxrc{font-variant-numeric:tabular-nums}
