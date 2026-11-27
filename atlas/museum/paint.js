@@ -320,6 +320,8 @@
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
     talbot: 'europe', pvl: 'europe', ingram: 'europe', liubo: 'asia', chaupar: 'asia', shogi: 'asia', sugoroku: 'asia', weiqi: 'asia', leifeng: 'asia', tutinama: 'asia', imari: 'asia',
     shoei: 'asia', umaya: 'asia', goryeo: 'asia', kangra: 'asia', kiyohiro: 'asia', eakins: 'americas' };
+  // (2026-11-27) the works added 11-24…27 (made in → region; a print made in Europe of a far-off scene stays 'europe', as ingram does)
+  Object.assign(REGION, {posada: 'americas', jintile: 'asia', kyosai: 'asia', yokuts: 'americas', hokkei: 'asia', vorsterman: 'europe', zorn: 'europe', kota: 'asia', coyote: 'americas', mons: 'europe', stembus: 'europe', koorai: 'europe', cairo: 'mea', vanmour: 'mea', algiers: 'mea', circo: 'americas', loteria: 'americas', jeupol: 'europe', dkaart: 'europe', apen: 'europe', dstereo: 'europe', gojo: 'asia', meade: 'americas', weiqidai: 'asia', reise: 'europe', huchten: 'europe', vertu: 'europe', charros: 'americas', snuffwq: 'asia', ostade: 'europe', lenain: 'europe', tunisie: 'europe', laghouat: 'mea', hangong: 'asia', homerbg: 'americas', chessst: 'europe', corrida: 'americas', ambrocards: 'americas', morphy: 'americas', dutton: 'europe', whist: 'europe', hey: 'europe', artful: 'europe', cezcards: 'europe', vuillardck: 'europe', cruikchess: 'europe', domino98: 'americas', langkat: 'asia', chatur: 'asia', shabbarat: 'asia', govase: 'asia', yokihi: 'asia', disderi: 'europe', gans: 'europe', merelle: 'europe', feldcards: 'europe', tempel: 'europe', verkeer: 'europe', silverbd: 'europe', schaak1550: 'europe', kraaij: 'europe', braekel: 'europe', billiard: 'europe', baizi: 'asia', schenkcards: 'europe', gosaucer: 'asia', cheetham: 'europe', problem: 'europe', tarocco: 'europe', kindtegel: 'europe', dammolen: 'europe', karelpiece: 'europe', vdberge: 'europe', crespi: 'europe', epinal: 'europe', matham: 'europe', jardin: 'europe', lamplight: 'europe', borduur: 'europe', piquet: 'europe', schaakglas: 'europe', arlequin: 'europe', vicaire: 'europe', israels: 'europe', louisxi: 'europe', bruining: 'europe', vanvliet: 'europe', hermans: 'europe', norimberg: 'europe', toovenaar: 'europe', fichesdoos: 'europe', vuilmere: 'europe', dewitte: 'europe', orphans: 'europe', richelieu: 'europe', coster: 'europe', kiebitz: 'europe', evdvelde: 'europe', cooghen: 'europe', roybet: 'europe', capot: 'europe', ziacard: 'americas', gothink: 'asia', craps: 'americas', bikkel: 'europe', stukken: 'europe', rozetempel: 'europe', brelan: 'europe', pwkarte: 'europe', nilson: 'europe', chateau: 'europe', pugillus: 'europe', grootebroek: 'europe', narren: 'europe', historiespel: 'europe', daumier: 'europe', arnauts: 'europe', luyken: 'europe', kabinet: 'europe', lievens: 'europe', sorgheloos: 'europe', aleabelli: 'europe', shunman: 'asia', mitelli: 'europe', hogarth: 'europe', matthieu: 'europe', pillement: 'europe', skating: 'europe', gavarni: 'europe', picart: 'europe', unigenitus: 'europe', bles: 'europe', visscher: 'europe', tombola: 'europe', patriotten: 'europe' });
   let region = (() => { try { return localStorage.getItem('atlas-paint-region') || 'all'; } catch (e) { return 'all'; } })();
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   let host = null, ctx = null, lang = 'ja', el = {}, cur = null;
@@ -330,21 +332,73 @@
   const wt = id => Object.assign({}, (T().en || {})[id] || {}, tx()[id] || {});   // (a language may leave out the record's fields that read the same: size, credit line)
 
   /* ---------- the wall ---------- */
+  // (2026-11-27 ユーザー: ゲーム別・時代別でも絞る) the game a work shows (its links' games, then the chance room), the period (from its date)
+  const LS = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } }, SS = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+  let gsel = LS('atlas-paint-game', 'all'), esel = LS('atlas-paint-era', 'all');
+  const gamesOf = W => { const a = W.links.filter(L => L.g).map(L => L.g); if (W.links.some(L => L.room === 'chance')) a.push('@chance'); return a; };
+  const yearOf = W => { const d = ((T().en || {})[W.id] || {}).date || ''; const bc = /BCE|\bBC\b/.test(d); let m = d.match(/\d{3,4}/); if (m) return bc ? -m[0] : +m[0];
+    m = d.match(/(\d{1,2})(?:st|nd|rd|th)\b[^0-9]*century/i); return m ? (bc ? -1 : 1) * (m[1] * 100 - 50) : null; };
+  const ERAS = ['e0', 'e1', 'e2', 'e3', 'e4'];
+  const eraOf = W => { const y = yearOf(W); return y == null ? null : y < 1500 ? 'e0' : y < 1700 ? 'e1' : y < 1800 ? 'e2' : y < 1900 ? 'e3' : 'e4'; };
+  const fit = (W, o) => (o.r === 'all' || REGION[W.id] === o.r) && (o.g === 'all' || gamesOf(W).includes(o.g)) && (o.e === 'all' || eraOf(W) === o.e);
+  const gName = g => g === '@chance' ? u('room_chance') : (() => { const q = (ctx.games || []).find(x => x.id === g); return q && ctx.gname ? ctx.gname(q) : g; })();
+  const allL = () => window.AtlasMap && AtlasMap.label ? AtlasMap.label('all', lang) : 'All';
+  const CHEV = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+  let ddl = null;
+  function shutDD(back) { if (!ddl) return; const b = ddl._b; ddl.remove(); ddl = null; removeEventListener('pointerdown', outDD, true); removeEventListener('resize', shutDD); removeEventListener('scroll', onScr, true);
+    if (b) { b.setAttribute('aria-expanded', 'false'); if (back) b.focus(); } }
+  const outDD = e => { if (ddl && !ddl.contains(e.target) && e.target !== ddl._b && !ddl._b.contains(e.target)) shutDD(); };
+  const onScr = e => { if (ddl && !ddl.contains(e.target)) shutDD(); };
+  // the portal's pull-down (no system <select>): a chip that shows the choice; its list floats under it (on a phone held upright, a sheet at the bottom)
+  function openDD(b, items, cur, pick) {
+    if (ddl && ddl._b === b) { shutDD(true); return; } shutDD();
+    const l = document.createElement('div'); l.className = 'ptddl'; l.setAttribute('role', 'listbox'); l._b = b; ddl = l;
+    l.innerHTML = items.map(([k, nm, n]) => `<button type="button" role="option" data-k="${esc(k)}" aria-selected="${k === cur}"${n ? '' : ' disabled'}><span>${esc(nm)}</span><em>${n}</em></button>`).join('');
+    document.body.appendChild(l); b.setAttribute('aria-expanded', 'true');
+    const sheet = matchMedia('(max-width:640px)').matches; l.classList.toggle('sheet', sheet); const r = b.getBoundingClientRect();
+    // the floor: the page's own bars along the bottom (the news line, the phone's tab bar) — the list stops above them
+    let fl = innerHeight; for (const e of document.elementsFromPoint(Math.min(innerWidth - 10, Math.max(10, r.left + 20)), innerHeight - 3)) { if (l.contains(e)) continue; const ps = getComputedStyle(e).position; if (ps === 'fixed' || ps === 'sticky') fl = Math.min(fl, e.getBoundingClientRect().top); }
+    if (fl < innerHeight / 2) fl = innerHeight;
+    if (sheet) { l.style.bottom = (innerHeight - fl + 8) + 'px'; l.style.maxHeight = Math.min(520, (fl - 16) * .75) + 'px'; }
+    else { const w = l.offsetWidth, rtl = getComputedStyle(b).direction === 'rtl';
+      let x = rtl ? r.right - w : r.left; x = Math.max(8, Math.min(x, innerWidth - w - 8)); const below = fl - r.bottom - 12, above = r.top - 12;
+      if (below >= Math.min(l.scrollHeight, 220) || below >= above) { l.style.top = (r.bottom + 6) + 'px'; l.style.maxHeight = Math.max(160, below) + 'px'; } else { l.style.bottom = (innerHeight - r.top + 6) + 'px'; l.style.maxHeight = Math.max(160, above) + 'px'; }
+      l.style.left = x + 'px'; }
+    l.onclick = e => { const o = e.target.closest('button[data-k]'); if (!o || o.disabled) return; shutDD(true); pick(o.dataset.k); };
+    l.onkeydown = e => { const os = [...l.querySelectorAll('button:not([disabled])')], i = os.indexOf(document.activeElement);
+      if (e.key === 'Escape') { e.preventDefault(); shutDD(true); } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const n = os[(i + (e.key === 'ArrowDown' ? 1 : -1) + os.length) % os.length]; if (n) n.focus(); } };
+    setTimeout(() => { addEventListener('pointerdown', outDD, true); addEventListener('resize', shutDD); addEventListener('scroll', onScr, true); }, 0);
+    const on = l.querySelector('[aria-selected=true]') || l.querySelector('button:not([disabled])'); if (on) { on.focus({ preventScroll: true }); on.scrollIntoView({ block: 'nearest' }); }
+  }
   function wall() {
-    el.lead.textContent = u('lead');
+    el.lead.textContent = u('lead'); shutDD();
     const RG = ((window.AtlasMap && AtlasMap.REG) || ['all', 'asia', 'europe', 'mea', 'americas']), rl = k => window.AtlasMap && AtlasMap.label ? AtlasMap.label(k, lang) : k;
-    const cnt = k => WORKS.filter(W => k === 'all' || REGION[W.id] === k).length; if (region !== 'all' && !cnt(region)) region = 'all';
+    const st = { r: region, g: gsel, e: esel };
+    const n = o => WORKS.filter(W => fit(W, Object.assign({}, st, o))).length;
+    if (gsel !== 'all' && !WORKS.some(W => gamesOf(W).includes(gsel))) gsel = st.g = 'all';
+    if (region !== 'all' && !n({ r: region })) region = st.r = 'all';
+    // the games, the most painted first (the chance room last); the periods in time order
+    const gc = {}; WORKS.forEach(W => gamesOf(W).forEach(g => gc[g] = (gc[g] || 0) + 1));
+    const GL = Object.keys(gc).sort((a, b) => (a === '@chance') - (b === '@chance') || gc[b] - gc[a] || gName(a).localeCompare(gName(b)));
     const chips = document.createElement('div'); chips.className = 'chips cats ptreg'; chips.setAttribute('role', 'group');
-    chips.innerHTML = RG.filter(k => cnt(k)).map(k => `<button type="button" class="chip cat" data-reg="${k}" aria-pressed="${k === region}">${esc(rl(k))}<em>${cnt(k)}</em></button>`).join('');
-    chips.querySelectorAll('[data-reg]').forEach(b => b.onclick = () => { region = b.dataset.reg; try { localStorage.setItem('atlas-paint-region', region); } catch (e) {} wall(); const c = el.grid.parentNode.querySelector(`.ptreg [data-reg="${region}"]`); if (c) c.focus(); });
-    el.grid.innerHTML = WORKS.filter(W => region === 'all' || REGION[W.id] === region).map(W => { const x = wt(W.id);
+    const ddb = (k, lb, v, vl) => `<button type="button" class="chip cat ptdd" data-dd="${k}" aria-haspopup="listbox" aria-expanded="false" aria-pressed="${v !== 'all'}"><span class="ptddk">${esc(lb)}</span><b>${esc(vl)}</b>${CHEV}</button>`;
+    chips.innerHTML = RG.filter(k => k === 'all' || n({ r: k }) || k === region).map(k => `<button type="button" class="chip cat" data-reg="${k}" aria-pressed="${k === region}">${esc(rl(k))}<em>${n({ r: k })}</em></button>`).join('')
+      + ddb('g', u('game'), gsel, gsel === 'all' ? allL() : gName(gsel)) + ddb('e', u('era'), esel, esel === 'all' ? allL() : u('era_' + esel));
+    const re = (k, v) => { wall(); requestAnimationFrame(() => { const c = document.querySelector(`.ptreg [data-${k}="${v}"]`); if (c) c.focus({ preventScroll: true }); }); };
+    chips.querySelectorAll('[data-reg]').forEach(b => b.onclick = () => { region = b.dataset.reg; SS('atlas-paint-region', region); re('reg', region); });
+    chips.querySelector('[data-dd="g"]').onclick = e => openDD(e.currentTarget, [['all', allL(), n({ g: 'all' })], ...GL.map(g => [g, gName(g), n({ g })])], gsel, k => { gsel = k; SS('atlas-paint-game', k); re('dd', 'g'); });
+    chips.querySelector('[data-dd="e"]').onclick = e => openDD(e.currentTarget, [['all', allL(), n({ e: 'all' })], ...ERAS.map(k => [k, u('era_' + k), n({ e: k })])], esel, k => { esel = k; SS('atlas-paint-era', k); re('dd', 'e'); });
+    el.grid.innerHTML = WORKS.filter(W => fit(W, st)).map(W => { const x = wt(W.id);
       return `<button type="button" class="ptc" data-w="${W.id}" style="--mat:${W.bg}"><span class="ptf"><img src="${IMG}${W.id}-t.webp?v=${V}" alt="${esc(x.title)}" loading="lazy" width="${W.w}" height="${W.h}"></span>
         <span class="ptl"><b>${esc(x.title)}</b><small>${esc(x.date)} · ${esc(x.place)}</small><em>${esc(x.game || '')}</em></span></button>`; }).join('');
     el.grid.querySelectorAll('[data-w]').forEach(b => b.onclick = () => openWork(b.dataset.w));
-    if (window.AtlasMuseum && AtlasMuseum.pager) AtlasMuseum.pager(el.grid, 'paint' + (region === 'all' ? '' : '-' + region), { rows: { pc: 3, phone: 4 }, extra: chips });
+    if (window.AtlasMuseum && AtlasMuseum.pager) AtlasMuseum.pager(el.grid, ['paint', region, gsel, esel].filter((x, i) => !i || x !== 'all').join('-'), { rows: { pc: 3, phone: 4 }, extra: chips });
     el.credit.innerHTML = esc(u('credit'));
     if (window.AtlasMuseum && AtlasMuseum.catalog) AtlasMuseum.catalog('paint', WORKS.map(W => ({ id: W.id, img: `${IMG}${W.id}-t.webp?v=${V}`, t: wt(W.id).title })));
   }
+  // (2026-11-27) from a game's card (the map): the works that show it — how many, and the wall shown with only them
+  const countOf = g => WORKS.filter(W => gamesOf(W).includes(g)).length;
+  function showGame(g) { gsel = countOf(g) ? g : 'all'; esel = 'all'; region = 'all'; SS('atlas-paint-game', gsel); SS('atlas-paint-era', 'all'); SS('atlas-paint-region', 'all'); if (host && host.isConnected && ctx) wall(); }
 
   /* ---------- the viewer ---------- */
   // 番号を隠す (2026-11-24 ユーザー): one switch for the numbered spots, shared with the other room ('atlas-museum-nospots')
@@ -461,5 +515,5 @@
       el = { lead: box.querySelector('.ptlead'), grid: box.querySelector('.ptgrid'), credit: box.querySelector('.ptcredit') }; }
     wall();
   }
-  window.AtlasPaint = { render, WORKS, V, open: openWork, close: () => close(), _view: () => vs };
+  window.AtlasPaint = { render, WORKS, V, open: openWork, close: () => close(), _view: () => vs, countOf, showGame };
 })();

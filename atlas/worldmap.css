@@ -172,3 +172,17 @@
 .amjour [data-n]{cursor:default}
 /* 「もっと読む」 opened: the card grows to its content (the fixed size only holds while it is closed) */
 .amwrap>.aminfo.open{height:auto;overflow:visible}
+.amhist em{font-style:normal;font-family:var(--round);font-size:12px;opacity:.7}   /* (the paintings button: how many works show the game) */
+/* (2026-11-27) four buttons in the museum (play · historia · stories · in art): the PC column stays inside the card's height; a phone puts them two by two */
+.amhist.ampaint{white-space:nowrap;min-width:0}
+.amhist.ampaint span{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.amhist.ampaint svg,.amhist.ampaint em{flex:none}
+@media (min-width:820px){
+  .aminfo:has(.ampaint){grid-template-columns:280px minmax(0,1fr) 214px}
+  .aminfo .amacts:has(.ampaint){gap:6px}
+  .aminfo .amacts:has(.ampaint)>*{padding-block:6px;padding-inline:10px}
+}
+@media (max-width:819px){
+  .aminfo .amacts:has(.ampaint){flex-wrap:wrap}
+  .aminfo .amacts:has(.ampaint)>*{flex:1 1 calc(50% - 4px);min-width:0;padding-inline:8px}
+}
