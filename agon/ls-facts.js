@@ -38,16 +38,24 @@
                 k 'ok'    the sixth guard steps into that cell: six guards round the queen, the game won
                 k 'shift' a guard already next to the throne slides into it, so the cell it left is empty now (v: that cell)
                 k 'away'  any other move: the cell next to the throne stays empty (still five guards round the queen)
+     s_queencap (the enemy queen on the throne; one move of yours sandwiches her — a cell of ring 1 straight across the throne
+                from a piece of yours)
+                k 'ok'    the move captures the queen (v: the throne): she leaves the throne, the enemy's next turn is her relocation
+                k 'guard' it captures an enemy guard but not the queen (v: that guard): the queen stays on the throne
+                k 'touch' it steps into ring 1, next to the queen, but the cell straight across the throne is not yours
+                          (across: that cell, end 'empty' / 'enemy')
+                k 'none'  any other move: it does not reach ring 1 and captures nothing
    hint(E, id, spec) → the cells of the pieces to look at (never the answer's piece alone, 追52): b_step every piece with a step
    inwards, b_capture every piece with a move next to an enemy piece, b_throne the queen and every enemy piece next to a cell
    she can step inwards to, b_reloc the captured guard and every piece of yours the enemy could sandwich next (the guard off
    the board), b_safe the guard in danger, the enemy pieces that would sandwich it (the one stepping in and the one beyond)
    and every piece of yours that can step into the enemy's cell, s_double every piece of yours with a capturing move, s_block the enemy
-   guard that can step into the last cell (its winning move, the turn passed) and every piece of yours with a move next to it.
+   guard that can step into the last cell (its winning move, the turn passed) and every piece of yours with a move next to it,
+   s_queencap your pieces on ring 1 and every piece of yours with a move into ring 1.
    window.AgonLsFacts · module.exports the same. */
 (function () {
   'use strict';
-  const IDS = ['b_step', 'b_capture', 'b_throne', 'b_reloc', 'b_safe', 's_double', 's_block', 'b_finish'];
+  const IDS = ['b_step', 'b_capture', 'b_throne', 'b_reloc', 'b_safe', 's_double', 's_block', 'b_finish', 's_queencap'];
   // b_reloc: the enemy's capturing moves with the captured guard off the board ([move, the pieces it takes])
   // b_safe: the same with the turn passed to the enemy (nothing captured on the board)
   function threats(E, spec) {
@@ -112,6 +120,13 @@
       if (j.over && j.winner === me) return { k: 'ok' };
       return E.RING[f] === 1 ? { k: 'shift', v: f } : { k: 'away' };
     }
+    if (id === 's_queencap') {
+      const v = p.capsOf(m);
+      if (v.some(x => p.isQueen(x))) return { k: 'ok', v: E.CENTER };
+      if (v.length) return { k: 'guard', v: v[0] };
+      if (E.RING[t] === 1) { const across = E.NB[E.CENTER][(E.NB[E.CENTER].indexOf(t) + 3) % 6]; return { k: 'touch', across, end: p.owner(across) === 3 - me ? 'enemy' : 'empty' }; }
+      return { k: 'none' };
+    }
     if (id === 'b_capture') {
       const c = p.capsOf(m).length;
       if (c) return { k: 'ok', c };
@@ -151,12 +166,14 @@
       for (const m of p.moves()) if (m !== E.PASS && cells.has(E.mTo(m))) out.add(E.mFrom(m));
       return [...out].sort((a, b) => a - b);
     }
+    if (id === 's_queencap') for (const c of E.NB[E.CENTER]) if (p.owner(c) === me) out.add(c);   // (your pieces on ring 1: the partners across the throne)
     for (const m of p.moves()) {
       if (m === E.PASS) continue; const f = E.mFrom(m), t = E.mTo(m);
       if (id === 'b_step' && E.RING[t] === E.RING[f] - 1) out.add(f);
       if (id === 'b_capture' && E.NB[t].some(a => a >= 0 && p.owner(a) === 3 - me)) out.add(f);
       if (id === 's_double' && p.capsOf(m).length) out.add(f);
       if (id === 'b_finish' && E.RING[t] === 1 && !p.isQueen(f)) out.add(f);   // (b_finish: every piece that can step into the gap)
+      if (id === 's_queencap' && E.RING[t] === 1) out.add(f);
     }
     return [...out].sort((a, b) => a - b);
   }
@@ -172,6 +189,7 @@
     if (id === 's_double') return F.k === 'one' ? 'ngOne' : 'ng';
     if (id === 'b_finish') return F.k === 'away' ? 'ngAway' : 'ng';
     if (id === 's_block') return F.k === 'touch' ? 'ngTouch' : 'ng';
+    if (id === 's_queencap') return F.k === 'touch' ? 'ngTouch' : F.k === 'guard' ? 'ngGuard' : 'ng';
     return 'ng';
   }
   const API = { IDS, fact, hint, key, threats, wins };
