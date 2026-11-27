@@ -98,7 +98,7 @@ function mcTopic(id, b, A, E, R) {
     else { if (oppEx(A)) return '④ the gold pit leaves the opponent an exact pit'; if (L0.filter(k => k !== A && oppEx(k)).length < 2) return '④ fewer than 2 other pits leave the opponent an exact pit'; } }
   return '';
 }
-const MC_DONE = new Set(['sow', 'extra', 'capture', 'defend', 'chain', 'endgame', 'k_open', 'k_open6', 'k_combo', 'k_tempo', 'k_hoard', 'k_starve', 'k_count']);
+const MC_DONE = new Set(['n_cap', 'n_defend', 'n_play', 'sow', 'extra', 'capture', 'defend', 'chain', 'endgame', 'k_open', 'k_open6', 'k_combo', 'k_tempo', 'k_hoard', 'k_starve', 'k_count']);
 function mancala(opt) {
   const E = require(path.join(ROOT, 'mancala/engine.js')), L = require(path.join(ROOT, 'mancala/lessons.json')), PZ = require(path.join(ROOT, 'mancala/puzzles.json'));
   const out = [], pend = [], only = opt && opt.only;
@@ -134,8 +134,8 @@ function mancala(opt) {
         for (const x of s.list) { const e = Math.abs(P.sc[x.m] - x.v); if (P.exact ? e > 1e-9 : e > 3) add(`① pit ${x.m}: stored ${P.sc[x.m]}, engine ${x.v.toFixed(1)}`); }
         const T = tr(b, 0, P.best);
         if (id === 'extra' && !T.extra) add('④ the gold pit does not end in the store');
-        if (id === 'capture' && !(T.cap > 0)) add('④ the gold pit does not capture');
-        if (id === 'defend' && !(caps(b).length && !T.extra && !caps(Array.from(T.board)).length)) add('④ the gold pit does not take away the opponent\'s capture');
+        if ((id === 'capture' || id === 'n_cap') && !(T.cap > 0)) add('④ the gold pit does not capture');
+        if ((id === 'defend' || id === 'n_defend') && !(caps(b).length && !T.extra && !caps(Array.from(T.board)).length)) add('④ the gold pit does not take away the opponent\'s capture');
         if (id === 'chain') { const c = chain(b, P.best); if (c < 2 || L0.some(k => k !== P.best && chain(b, k) >= c)) add(`④ the gold pit's chain ${c} is not the only longest`); }
         if (id === 'endgame' && !(P.exact && s.exact)) add('④ an endgame problem not solved exactly');
         if (/^k_(combo|tempo|hoard|starve|count)$/.test(id)) { const t = mcTopic(id, b, P.best, E, R); if (t) add(t); if (id === 'k_count' && !(P.exact && s.exact)) add('④ an endgame problem not solved exactly'); }
@@ -771,7 +771,7 @@ function gomoku(opt) {
 //   ⑦⑧ ハコピヨ's words (atlas/lessons3d.js dotsJa, run here) against the board: the boxes the red line hands over (≥1 when the
 //      words say so) and the boxes lost ((best − v) / 2), no 「開く」 for a line that takes, the question's 「1本」 / 「広い盤」 and the
 //      2D example's 「緑の点線も安全な線で、どれを選んでも同じ結果」 (problem 0 has other safe lines, all best)
-const DT_DONE = new Set(['safe', 'third', 'take', 'chain', 'hard', 'double', 'control', 'parity', 'sacrifice', 'loop']);
+const DT_DONE = new Set(['safe', 'third', 'take', 'chain', 'hard', 'double', 'control', 'parity', 'sacrifice', 'loop', 'count']);
 function dots(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'dots/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'dots/lessons.json'), 'utf8'));
@@ -928,6 +928,32 @@ function dots(opt) {
           if (/残し|残すには/.test(ask + hint) && q.k !== 'loopdec') a(`⑧ the question / hint 「${ask}」「${hint}」 on a ${q.k}`);
           if (/どこから開く|ループから開く|主導権がない/.test(ask + hint) && q.k !== 'loopopen') a(`⑧ the question / hint 「${ask}」「${hint}」 on a ${q.k}`); }
         d = (q.n - 3) * 10 + comps.length;
+      } else if (id === 'count') {
+        // (2026-11-27 担当A) count = DTJ.count / ls.count (「主導権を持つ側は、2つ残しで手番を返すか、全部取り切るかを決める…1〜2箱の小さな鎖は、
+        // 差し出すと手番が入れかわる…長い鎖があっても、小さな鎖が何本あるかで答えが変わる」): no safe line, no loop, the boxes to take one
+        // opened chain of 2, every other part a plain chain, both a small chain (1–2: F.sm, the words' {s}) and a chain of 3+ left (so the
+        // control lesson's 「長い鎖が残れば残す」 alone does not decide), one take line and one double-deal line (E.captureMoves), the best
+        // line exactly one of them and the other worse. Along the solver's line after the best line the largest chain left is the mover's
+        // (takeC / decC 「最後の長い鎖はきみのもの」); after the take (best) the mover's first opening is a small chain (takeC 「小さな鎖を先に
+        // あげれば」); after the red take (when the leave is best) the largest chain is the opponent's (yAllC 「最後の長い鎖を相手に取られる」).
+        const comps = E.components(p, true), cur = comps.filter(c => c.boxes.some(bx => p.cnt[bx] === 3)), rest = comps.filter(c => !cur.includes(c));
+        if (F.ns) a(`④ ${F.ns} safe lines`);
+        if (comps.some(c => c.loop)) a('④ a loop on the board (the words say 鎖)');
+        if (cur.length !== 1 || cur[0].n !== 2 || [...p.cnt].filter(c => c === 3).length !== 1) a(`④ the boxes to take are not one opened chain of 2 (${cur.map(c => c.n)})`);
+        if (rest.some(c => !c.simple)) a('④ a part with a junction box (not a plain chain)');
+        const sm = rest.filter(c => c.n <= 2).length; if (!sm) a('④ no small chain (1–2) left'); if (F.sm !== sm) a(`⑧ dFacts sm ${F.sm}, the board ${sm}`);
+        if (!rest.some(c => c.n >= 3)) a('④ no chain of 3+ left (then it is the control lesson)');
+        const cm = E.captureMoves(p);
+        if (cm.forced !== undefined || cm.moves.length !== 1 || cm.declines.length !== 1) a('④ not one take line and one double-deal line');
+        else { const tk = cm.moves[0], dd = cm.declines[0];
+          if (!(B.length === 1 && (B[0] === tk || B[0] === dd))) a(`④ the best lines ${B} are not the take ${tk} or the leave ${dd} alone`);
+          else { kinds[j] = B[0] === tk ? 'take' : 'dd'; if (q.k !== kinds[j]) a(`④ k ${q.k}, the board ${kinds[j]}`);
+            const other = B[0] === tk ? dd : tk; if (V.get(other) >= best) a(`④ ${other} is as good as the best`);
+            const big = rest.reduce((x, c) => c.n > x.n ? c : x), pv = dtPV(E, G, p, B[0]);
+            if (!big.boxes.every(bx => pv.got[bx] === 0)) a(`⑧ along the best line the largest chain (${big.n}) is not the mover's (「最後の長い鎖はきみのもの」)`);
+            if (kinds[j] === 'take' && !(pv.firstOpen >= 1 && pv.firstOpen <= 2)) a(`⑧ after the take the mover first opens a part of ${pv.firstOpen} (「小さな鎖を先にあげれば」)`);
+            if (kinds[j] === 'dd') { const pr = dtPV(E, G, p, tk); if (!big.boxes.every(bx => pr.got[bx] === 1)) a(`⑦ after the red take ${tk} the largest chain is not the opponent's (yAllC)`); } } }
+        d = (q.n - 3) * 10 + comps.length;
       } else if (id === 'control') {
         // (2026-11-25 担当A) control = ハコピヨ's rule (DTJ.control.intro / ls.control.body: 「残りの鎖が小さい…なら全部取る…大きな長い
         // 鎖が残っていれば、残して主導権をキープ」) on the board: no safe line, no loop, one box to take, in an opened chain of 2 (the
@@ -984,6 +1010,9 @@ function dots(opt) {
     });
     // (2026-11-27 担当A, loop) the two choices of the intro on the board: the 4-leave and the take both among 1–9 and in the 3D five (1–5),
     // the loop opened first in the 3D five, once with a smaller chain beside it (the loop is not just the smallest part); no kind 5 times
+    // (2026-11-27 担当A, count) both answers (the take, the leave) among 1–9 and in the 3D five; neither more than 6 times in 1–9
+    if (id === 'count') { const k9 = kinds.slice(1), k5 = kinds.slice(1, 6);
+      for (const k of ['take', 'dd']) { if (!k5.includes(k)) add(id, -1, `④ no ${k} problem in the 3D five (${k5})`); if (k9.filter(x => x === k).length > 6) add(id, -1, `⑤ the same move (${k}) more than 6 times`); } }
     if (id === 'loop') { const k9 = kinds.slice(1), k5 = kinds.slice(1, 6), cnt = k => k9.filter(x => x === k).length;
       for (const k of ['dd', 'take']) if (!k5.includes(k)) add(id, -1, `④ no ${k} problem in the 3D five (${k5})`);
       if (!k5.some(k => /^open/.test(k))) add(id, -1, `④ no loopopen problem in the 3D five (${k5})`);
@@ -992,6 +1021,18 @@ function dots(opt) {
   });
   dtIntro(L, X, E, lj, add, only);
   return out;
+}
+// (2026-11-27 担当A, dots count) the solver's line from p after the mover's line e (then the first best line each turn): got[bx] = 0 the
+// mover's / 1 the opponent's, firstOpen = the size of the part the mover first opens (draws a line that takes nothing) after e
+function dtPV(E, G, p0, e) {
+  const q = p0.clone(), got = new Array(G.B).fill(-1); let side = 0, firstOpen = null, step = 0;
+  for (;;) { const lg = q.legal(); if (!lg.length) break; let m = e;
+    if (step) { const A = new E.Solver(G).all(q), bv = Math.max(...A.map(x => x.v)); m = A.find(x => x.v === bv).m; }
+    const bs = [G.eb0[m], G.eb1[m]], before = E.components(q, true), k = q.play(m);
+    bs.forEach(bx => { if (bx >= 0 && q.cnt[bx] === 4 && got[bx] < 0) got[bx] = side; });
+    if (!k) { if (firstOpen === null && side === 0 && step) { const c = before.find(c => bs.some(bx => c.boxes.includes(bx))); firstOpen = c ? c.n : 0; } side ^= 1; }
+    step++; }
+  return { got, firstOpen };
 }
 // (2026-11-26 担当A, dots parity) after the mover's safe line e, every run of safe lines to the end (no safe line left; a safe line
 // never takes, so the turns alternate): opener = who has to open first in every run ('opp' / 'me' / 'mixed'), the long chains (3+,
