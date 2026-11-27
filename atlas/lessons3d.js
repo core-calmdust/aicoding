@@ -927,7 +927,7 @@
     V = V || shOpVoice(name); const v = V.pk, i = vi != null ? vi : k;
     const P = o.P, C = P.cand || [], A = o.ans, sente = String(o.pos).split(' ')[1] !== 'w', side = sente ? '☗先手' : '☖後手', FA = shFacts(o.pos, A), N = t => t.replace(/\{n\}/g, name);
     const val = new Map(C), ref = Math.max(...C.filter(c => P.accept.includes(c[0])).map(c => c[1]));
-    const OF = !!P.off, dsq = A.slice(2, 4), onMk = OF && (P.mk || []).includes(dsq[0] + ('abcdefghi'.indexOf(dsq[1]) + 1)), SC = (FA.pc === 'k' ? ['玉を囲いの奥へ入れられる', '玉が囲いの中心へ一歩進む', '玉の引っ越しがまた進む', '玉がまた一歩安全になる', '玉の住まいに近づける'] : ['囲いの形に一歩近づく', '守りの駒がまた一枚そろう', '囲いのすき間が一つ減る', '玉のまわりがまた整う', '組み上がりがまた近づく'])[(vi != null ? vi : k) % 5], ask = N((OF ? SHJ_OP.askC : SHJ_OP.askL)[k % 5]).replace('{s}', side);
+    const OF = !!P.off, dsq = A.slice(2, 4), onMk = OF && (P.mk || []).some((m, j) => m === dsq[0] + ('abcdefghi'.indexOf(dsq[1]) + 1) && (!P.mp || P.mp[j] === FA.pc)), SC = (FA.pc === 'k' ? ['玉を囲いの奥へ入れられる', '玉が囲いの中心へ一歩進む', '玉の引っ越しがまた進む', '玉がまた一歩安全になる', '玉の住まいに近づける'] : ['囲いの形に一歩近づく', '守りの駒がまた一枚そろう', '囲いのすき間が一つ減る', '玉のまわりがまた整う', '組み上がりがまた近づく'])[(vi != null ? vi : k) % 5], ask = N((OF ? SHJ_OP.askC : SHJ_OP.askL)[k % 5]).replace('{s}', side);
     const hintTx = N(shHintJa(FA, k, false, v, OF ? 'off' : true));
     const fb = v('fb', [0, 1, 2, 3, 4, 5]), w = OF ? (onMk ? [`${SH_PN[FA.pc]}が、囲いの決まった場所に入る手。`, `${SH_PN[FA.pc]}を、あるべきマスへおさめる手。`, `これで${SH_PN[FA.pc]}が定位置についたの。`, `${SH_PN[FA.pc]}がぴたりと持ち場に入ったコン。`, `${SH_PN[FA.pc]}の居場所はそこで決まり。`] : [`${SH_PN[FA.pc]}を囲いへ一歩近づける手。`, `${SH_PN[FA.pc]}が持ち場へ一歩進む手。`, `${SH_PN[FA.pc]}の行き先へ、まず一歩。`, `${SH_PN[FA.pc]}が囲いの奥へ向かう手。`, `${SH_PN[FA.pc]}をあるべき場所へ近づけたの。`])[(vi != null ? vi : k) % 5] : shWhyJa(FA, v), t = N(P.dub ? v('dubL', SHJ_OP.dubL) : OF ? v('tailC', SHJ_OP.tailC) : v('tailL', SHJ_OP.tailL)), alt = N(OF ? v('altC', SHJ_OP.altC) : v('altL', SHJ_OP.altL)), lead = N(OF ? v('leadC', SHJ_OP.leadC) : v('leadL', SHJ_OP.leadL)), ch = V.cheer(i), so = V.soft(i), pu = V.push(i);
     const good = u => {
@@ -991,7 +991,7 @@
       const voice = fetch('../shogi/voice-fox-ja.js?v=9').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       const rep = getJ('../shogi/lesson-replies.json?v=6').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
       return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261127k3'), getJ('../shogi/openings.json?v=20261124ol1'),
-        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261128sd`).catch(() => ({ sets: [] })))])
+        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261128se`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
           sets.forEach(s => { if (!s.cat) s.cat = s.handi ? 'handi' : 'mid'; });
