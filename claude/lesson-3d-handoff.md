@@ -36,7 +36,7 @@
 | konane コナネ | チェッカニ | 一部（パズル226問・レッスン8本40問。s_go・s_keep・s_read・b_jump は 2026-11-27 担当C） | レッスン1本5問：b_open（最初の取り除き）。2026-11-27 19:10 担当C の検証で、取り除きはどの盤の大きさでも合法手が黒4・白2か4、前後の局面は2マス以内で、選ぶ問題（③⑤）にできない → 形をユーザーに確認中（準備だけのレッスン／b_jump の準備に移す／主題を変える） |
 | ugolki ウゴルキ | モリフク | **3D対応済み**（パズル152問・レッスン11本55問。s_count は 2026-11-27 に作り直し） | なし（2D・3D の追58 は 2026-11-27 担当D） |
 | fanorona ファノロナ | チェッカニ | 一部（パズル199問・レッスン5本25問：b_approach・b_withdraw・b_choose・b_chain・b_safe、2026-11-27 担当E） | **レッスン7本35問**（b_win・t_big・t_count・t_stop・t_paika・e_hunt・e_trap）。atlas/ls-fanorona.js の READY に足し、tools/lesson-verify-fanorona-ls.js にその主題のチェックを足す（今は basics 3本と b_chain・b_safe の形） |
-| agon アゴン | キンダイスン | 未（パズル152問は問題検証済み・2D の追88 済み、2026-11-27 担当F） | 3D パズル（BOOK.agon・agon-pz.js・表示確認）とレッスン12本56問 |
+| agon アゴン | キンダイスン | 一部（パズル152問は 2026-11-27 18:00 に3D対応済み、レッスンは b_step・b_capture の2本10問を 19:15 に作り直して3D対応、担当F） | レッスン10本46問（atlas/ls-agon.js の READY に足す。agon/ls-facts.js・tools/lesson-verify-agon-ls.js に主題の事実とチェック） |
 | latrunculi ラトルンクリ | ポンメェ | 未 | パズル（t2・t3・t4・corner・double の5テーマ 250問）とレッスン7本35問 |
 
 おすすめの順：（janggi の NG 直し・ugolki s_count は済み）→ konane の残り → ugolki の2D 追58 → fanorona のレッスン → agon → latrunculi。大きいゲームは「パズル → レッスン数本ずつ」に区切ってマージしてよい（表は「一部」）。

@@ -3901,7 +3901,8 @@ const ugolki = () => require('./lesson-verify-ugolki.js').verify().out.map(o => 
 // (2026-11-27 担当E) and its lessons listed on the 3D (atlas/ls-fanorona.js READY) — tools/lesson-verify-fanorona-ls.js (the lines recounted on the board)
 const fanorona = () => require('./lesson-verify-fanorona.js').verify().out.map(o => ({ step: o.theme, q: o.q, msg: o.msg })).concat(require('./lesson-verify-fanorona-ls.js').verify().out.map(o => ({ step: o.id, q: o.q, msg: o.msg })));
 // (2026-11-27 担当F) agon: the puzzles (7 themes, 2D agon/app.js puzzleMove) — tools/lesson-verify-agon.js (exact solver, ①〜⑨)
-const agon = () => require('./lesson-verify-agon.js').verify().out.map(o => ({ step: o.theme, q: o.q, msg: o.msg }));
+// (2026-11-27 担当F) and its lessons listed on the 3D (atlas/ls-agon.js READY) — tools/lesson-verify-agon-ls.js (the facts recounted on the board)
+const agon = () => require('./lesson-verify-agon.js').verify().out.map(o => ({ step: o.theme, q: o.q, msg: o.msg })).concat(require('./lesson-verify-agon-ls.js').verify().out.map(o => ({ step: o.id, q: o.q, msg: o.msg })));
 const reversiOpen = opt => require('./lesson-verify-rvopen.js')(opt);   // (2026-11-24 担当B：リバーシの定跡、tools/lesson-verify-rvopen.js)
 const bgOpen = () => require('./lesson-verify-bgopen.js')();   // (2026-11-24 担当B：バックギャモンの定跡、tools/lesson-verify-bgopen.js)
 const patolli = () => require('./lesson-verify-patolli.js')();   // (2026-11-24 担当C：パトリのレッスン（ベルの復元 v2）、tools/lesson-verify-patolli.js)
