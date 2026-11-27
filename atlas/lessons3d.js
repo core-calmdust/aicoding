@@ -6649,7 +6649,8 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       ng = u => say(u, G => G.king && !G.win && G.routes < 2, G => G.win ? '' : G.scan().w ? pk(['{x}だと、王が攻め手にはさまれちゃう！', '{x}のあと、王さまがつかまっちゃう。', '{x}だと、王が攻め手につかまる場所なの。', '{x}では、王さまが危ないマスに入っちゃう。', '{x}のあと、攻め手が王をはさめるの。'])
         : G.routes === 1 ? pk([`{x}だと${goal}への道は1本だけ。攻め手にすぐふさがれちゃう。`, '{x}では道が1本しかできないの。1手でふさがれるね。', '{x}だと見通せるのは1方向だけ。それだとライチどまり。', `{x}の場所からは、${goal}への道が1本きり。`, '{x}だと、攻め手はその1本をふさぐだけでいいの。'])
         : !G.king ? pk(['{x}は王じゃない駒を動かしてるの。', '{x}で動いたのは王さまじゃないね。', '{x}は守り手の駒。動かしたいのは王さま！', '{x}だと、王さまはその場のまま。', '{x}では王さまの道が増えないの。'])
-        : G.edge || id === 'v_tablut' ? pk([`{x}だと、王から${goal}へまっすぐ通る道がないの。`, `{x}の場所からは、${goal}まで見通せないね。`, `{x}だと、${goal}への道がひとつもできないの。`, `{x}では、辺の上で王さまの両側に駒が立ちふさがってるね。`, `{x}だと、王から${goal}までのあいだに駒がいるの。`])
+        : id === 'v_tablut' ? pk(['{x}だと、王から端へまっすぐ通る道がないの。', '{x}の場所からは、端まで見通せないね。', '{x}だと、端への道がひとつもできないの。', '{x}では、上下左右どっちを見ても、端までのあいだに駒がいるの。', '{x}だと、王から端までのあいだに駒がいるの。'])
+        : G.edge ? pk([`{x}だと、王から${goal}へまっすぐ通る道がないの。`, `{x}の場所からは、${goal}まで見通せないね。`, `{x}だと、${goal}への道がひとつもできないの。`, `{x}では、辺の上で王さまの両側に駒が立ちふさがってるね。`, `{x}だと、王から${goal}までのあいだに駒がいるの。`])
         : pk([`{x}だと王さまは端に出ていないから、${goal}へまっすぐ通る道がないの。`, `{x}の場所は盤の内側。そこからは${goal}まで見通せないね。`, `{x}だと、王が端に着かないから${goal}への道がひとつもできないの。`, `{x}では、王さまが端まで出られていないの。`, `{x}だと、王は内側にいて${goal}への道ができないの。`]),
         FA.win ? pk([`{m}なら、そのまま${goal}へ着けたから。`, `正解の{m}は、${goal}まで一直線の道。`, `{m}を選べば、その場で脱出できたの。`, `こっちの{m}だったら、${goal}まで止まらずに行けたね。`, `{m}だと、そのまま勝ちだったんだ。`])
           : pk([`{m}なら道が${r}本できて、攻め手は1手じゃふさぎきれないから。`, `正解の{m}は、${goal}への道を${r}本ひらく場所。`, '{m}を選べば、攻め手は1本しか止められなかったの。', 'こっちの{m}だったら、トゥイチになっていたね。', `{m}だと、${r}方向に道が通っていたんだ。`]));
@@ -6744,7 +6745,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-tafl-lessons', OKEY: 'aicoding-tafl-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=17'), fetch('../tafl/i18n.js?v=6ek-nd1-bm2-bs1-tu1-sc1-br1-sq1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261125o').catch(() => null)])
+      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=18'), fetch('../tafl/i18n.js?v=6ek-nd1-bm2-bs1-tu1-sc1-br1-sq1-tb1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261125o').catch(() => null)])
         .then(([ls, T, _, op]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] tafl texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },

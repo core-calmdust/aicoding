@@ -107,7 +107,7 @@
 "ls.v_tablut.goal": "Jouez un coup qui permet au roi d’atteindre le bord en deux coups.",
 "ls.v_tablut.hint": "Envoyez le roi sur une case qui voit le bord dans deux directions ou plus.",
 "ls.v_tablut.why": "{m} : deux chemins ! Le roi atteint le bord au coup suivant.",
-"ls.v_tablut.ng": "Après {x}, les chemins peuvent être bouchés. {m} était la réponse.",
+"ls.v_tablut.ng": "Après {x}, les attaquants peuvent empêcher le roi d'atteindre le bord en deux coups. {m} était la réponse.",
 "pz.th.esc2": "Fuite en 2",
 "pz.th.esc2.sub": "Faites un tuichi",
 "pz.th.esc3": "Fuite en 3",
