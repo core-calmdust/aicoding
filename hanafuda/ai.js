@@ -22,11 +22,12 @@
     lv = Math.max(1, Math.min(20, lv | 0));
     return {
       lv,
-      worlds: [0, 2, 3, 4, 6, 8, 10, 14, 18, 24, 30, 40, 52, 66, 84, 104, 130, 160, 200, 240, 300][lv],
+      worlds: [0, 2, 3, 4, 6, 8, 10, 14, 18, 24, 30, 40, 36, 44, 52, 62, 74, 88, 104, 124, 150][lv],
       noise: Math.max(0, 1.6 - lv * 0.11),          // softmax temperature-ish
       blunder: Math.max(0, 0.30 - lv * 0.022),      // chance to play a quick-policy / random move
       infer: lv >= 8,                                // use the opponent's discards to shape its hand
       koiSmart: lv >= 5,
+      strong: lv >= 12,                              // the stronger playout policy
     };
   }
 
@@ -42,6 +43,53 @@
     if (p.sake) v += 3 + (p.moon ? 2 : 0) + (p.curtain ? 2 : 0);
     v += Math.min(p.tane, 4) * 0.8 + Math.min(p.tan, 4) * 0.7 + Math.min(p.kasu, 9) * 0.35;
     return v;
+  }
+
+  // stronger quick policy (Lv.12+ playouts): weigh a capture by what it adds to my pile AND what it keeps from the opponent;
+  // weigh a discard by how much it could give the opponent (if it holds that month) or let me take back later.
+  function gain(caps, add, o) { return pileValue(caps.concat(add), o) - pileValue(caps, o); }
+  function quick2(s, r, eps) {
+    const acts = HF.actions(s);
+    if (acts.length === 1) return acts[0];
+    if (s.phase === 'koi') return quickKoi2(s) ? 'koi' : 'stop';
+    if (eps && r() < eps) return acts[Math.floor(r() * acts.length)];
+    const p = s.turn, q = 1 - p, o = s.o, mine = s.caps[p], opp = s.caps[q];
+    if (s.phase === 'pickPlay' || s.phase === 'pickDraw') {
+      let best = acts[0], bv = -1e9;
+      for (const a of acts) { const v = gain(mine, [s.pending, a], o) + 0.6 * gain(opp, [a], o); if (v > bv) { bv = v; best = a; } }
+      return best;
+    }
+    // months already gone (both other cards captured) are safe to discard
+    const seen = new Uint8Array(12);
+    for (const c of mine) seen[month(c)]++;
+    for (const c of opp) seen[month(c)]++;
+    for (const c of s.field) seen[month(c)]++;
+    let best = acts[0], bv = -1e9;
+    for (const a of acts) {
+      const ms = HF.matches(s.field, a);
+      let v;
+      if (ms.length) {
+        const take = ms.length === 3 ? ms : [ms.reduce((x, y) => (gain(mine, [y], o) + 0.6 * gain(opp, [y], o) > gain(mine, [x], o) + 0.6 * gain(opp, [x], o) ? y : x))];
+        v = 40 + gain(mine, [a, ...take], o) + 0.6 * gain(opp, take.concat([a]), o);
+      } else {
+        // the card goes to the field: the opponent may take it (with its month) next turn
+        const left = 4 - 1 - seen[month(a)] - s.hands[p].filter(c => c !== a && month(c) === month(a)).length;
+        const risk = left > 0 ? Math.min(1, left / 2) : 0;
+        const mineBack = s.hands[p].some(c => c !== a && month(c) === month(a)) ? 0.5 : 0;   // I can take it back myself
+        v = -risk * gain(opp, [a], o) * (1 - mineBack) + mineBack * 2 - VAL[a] * 0.3 + (r() - 0.5) * 0.2;
+      }
+      if (v > bv) { bv = v; best = a; }
+    }
+    return best;
+  }
+  function quickKoi2(s) {
+    const p = s.turn, q = 1 - p;
+    const mine = HF.yaku(s.caps[p], s.o).total;
+    if (mine >= 7 && s.o.over7) return false;
+    if (s.koi[q] > 0) return false;                 // win now while the opponent is in koi-koi (double)
+    const oppV = pileValue(s.caps[q], s.o), myV = pileValue(s.caps[p], s.o) - mine * 10;
+    const left = s.hands[p].length;
+    return left >= 3 && oppV < 12 && myV > 8;
   }
 
   // quick policy for playouts and for the weakest levels
@@ -129,9 +177,9 @@
     return w;
   }
 
-  function playout(s, me, r) {
+  function playout(s, me, r, strong) {
     let guard = 0;
-    while (s.phase !== 'over' && guard++ < 200) s = HF.apply(s, quick(s, r, 0.08));
+    while (s.phase !== 'over' && guard++ < 200) s = HF.apply(s, strong ? quick2(s, r, 0.04) : quick(s, r, 0.08));
     const res = s.result;
     if (!res || res.winner < 0) return res && res.draw ? 0 : 0;
     return res.winner === me ? res.pts : -res.pts;
@@ -158,7 +206,7 @@
           // re-shuffle the deck between reps (the draw order is unknown to both)
           const ws = HF.clone(world);
           if (k) HF.shuffle(ws.deck, r);
-          tot += playout(HF.apply(ws, a), me, r);
+          tot += playout(HF.apply(ws, a), me, r, L.strong);
         }
         sum.set(a, sum.get(a) + tot / reps);
       }
@@ -184,6 +232,6 @@
     return { action: best.a, scores: scores.sort((a, b) => b.v - a.v) };
   }
 
-  const API = { choose, quick, level, pileValue, sampleWorld };
+  const API = { choose, quick, quick2, level, pileValue, sampleWorld };
   if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.HFAI = API;
 })(typeof self !== 'undefined' ? self : this);

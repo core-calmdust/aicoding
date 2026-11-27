@@ -1,5 +1,5 @@
 /* AI worker: {id, s, lv, seed} -> {id, action, scores} */
-importScripts('engine.js?v=2', 'ai.js?v=2');
+importScripts('engine.js?v=3', 'ai.js?v=3');
 self.onmessage = e => {
   const { id, s, lv, seed } = e.data;
   try {
