@@ -38,7 +38,7 @@
 }
 
 /* the board view while Historia is open: its own UI steps aside, the canvas slides right on wide screens */
-.bv.hist .bvi,.bv.hist .bvnav,.bv.hist .bvtod,.bv.hist .x,.bv.hist .bvhist,.bv.hist .quit{opacity:0!important;pointer-events:none!important;transition:opacity .25s}
+.bv.hist .bvi,.bv.hist .bvnav,.bv.hist .bvtod,.bv.hist .x,.bv.hist .bvhist,.bv.hist .quit,.bv.hist .bvtop{opacity:0!important;pointer-events:none!important;transition:opacity .25s}
 #gl{transition:transform .8s cubic-bezier(.6,0,.2,1)}
 /* (the board moves beside the page with a shift lens in Table3D.setShift: the canvas itself stays full screen) */
 

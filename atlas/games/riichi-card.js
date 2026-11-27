@@ -32,6 +32,7 @@
   const TIER = { ja: ['入門', '初級', '中級', '上級', '最上級'], en: ['Beginner', 'Novice', 'Intermediate', 'Advanced', 'Expert'], zh: ['入门', '初级', '中级', '高级', '专家'], 'zh-TW': ['入門', '初級', '中級', '高級', '專家'], ko: ['입문', '초급', '중급', '상급', '전문가'],
     es: ['Iniciación', 'Principiante', 'Intermedio', 'Avanzado', 'Experto'], fr: ['Initiation', 'Débutant', 'Intermédiaire', 'Avancé', 'Expert'], pt: ['Iniciação', 'Iniciante', 'Intermediário', 'Avançado', 'Especialista'], de: ['Einstieg', 'Anfänger', 'Mittelstufe', 'Fortgeschritten', 'Experte'],
     hi: ['परिचय', 'शुरुआती', 'मध्यम', 'उन्नत', 'विशेषज्ञ'], ar: ['تمهيدي', 'مبتدئ', 'متوسط', 'متقدم', 'خبير'], ru: ['Начальный', 'Новичок', 'Средний', 'Продвинутый', 'Эксперт'], id: ['Pengenalan', 'Pemula', 'Menengah', 'Mahir', 'Ahli'], tr: ['Giriş', 'Acemi', 'Orta', 'İleri', 'Uzman'] };
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const tx = (k, l) => (TX[k] && (TX[k][l] || TX[k].en)) || k;
   const LVD = { ja: ['ルールを覚えたての人向け。鳴きもリーチも素直', '役を意識して手を進める', '押し引きを覚えた中級者', '守りも攻めも手ごわい上級者', '牌効率も読みも鋭い最強クラス'],
     en: ['For those who just learned the rules — plain calls and riichi', 'Builds hands with yaku in mind', 'Knows when to push and when to fold', 'Tough in attack and defence', 'Sharp efficiency and reads — the strongest'] };
@@ -41,6 +42,32 @@
   /* the adapter (2026-11-28 ユーザー「ゲームカードの作りが他のゲームと全然違う」): the portal draws the card as for every game — 対戦 · レート戦 ·
      レッスン, 相手 (the Lv list with the Atlamo bosses and their rewards), 対局 (東風戦 / 半荘戦), 📖 ルール, the cup for the record —
      and adapter.ext opens the game page there (atlas/app.js: ext / extLabel / rtNow). The table is the portal's showcase only. */
+  /* the rules course's list in the 3D view (2026-11-28 ユーザー「ルールコースの一覧メニューは3Dビューで出したい（少し小さくしても良い）」):
+     the portal's own list sheet (.lvsheet, as the 相手 list), each step with its point and ✓ once passed (riichi-v1 .lessons);
+     a step opens on the game page (riichi/?go=lesson&id=…). The game's text is ja / en (the game page's languages). */
+  const RULES = [['r1', '麻雀ってどんなゲーム？', 'What is mahjong?', '4人で点数を取り合うゲーム', 'Four players, one score race'],
+    ['r2', '牌の種類', 'The tiles', '萬子・筒子・索子・字牌、各4枚', 'Characters, dots, bamboo, honours — 4 of each'],
+    ['r3', 'アガリの形', 'A winning hand', '4つの面子＋1つの雀頭', 'Four sets and a pair'],
+    ['r4', 'ツモと打牌', 'Drawing and discarding', '使いにくい牌から捨てる', 'Throw the least useful tile'],
+    ['r5', '役がないとアガれない', 'You need a yaku', 'リーチ・タンヤオ・役牌', 'Riichi, all simples, honour pungs'],
+    ['r6', 'リーチしてツモアガリ', 'Riichi and win', '門前でテンパイ→リーチ', 'Tenpai without calls → riichi'],
+    ['r7', 'ロンとフリテン', 'Ron and furiten', '人の捨て牌でアガる', 'Win on someone’s discard'],
+    ['r8', '鳴き（ポン・チー）', 'Calls: pon and chi', '人の捨て牌で面子を作る', 'Make sets from discards'],
+    ['r9', '点数と順位', 'Points and places', '親は1.5倍、流局はテンパイ料', 'Dealer ×1.5; tenpai payments at a draw']];
+  const RTX = { ja: ['ルールコース', '全9ステップ・実際の卓で遊びながら覚えます', '合格'], en: ['Rules course', '9 steps, learnt by playing at a real table', 'Passed'] };
+  function rulesSheet(l) {
+    l = l || document.documentElement.lang || 'ja';
+    const ja = /^(ja)$/.test(l), X = RTX[ja ? 'ja' : 'en'], rec = save().lessons || {}, next = RULES.find(r => !(rec[r[0]] && rec[r[0]].pass));
+    const old = document.querySelector('.lvsheet.rcrules'); if (old) old.remove();
+    const sh = document.createElement('div'); sh.className = 'lvsheet rcrules';
+    sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(X[0])}<small>${esc(X[1])}</small><button type="button" class="lvs-x" aria-label="✕">✕</button></div><div class="lvs-l">${RULES.map((r, i) => { const ok = rec[r[0]] && rec[r[0]].pass;
+      return `<button type="button" role="option" data-rid="${r[0]}" class="${r === next ? 'on' : ''}"><b>${i + 1}</b><span class="nm"><span class="nt">${esc(ja ? r[1] : r[2])}</span>${ok ? `<i class="lvck" aria-label="${esc(X[2])}">✓</i>` : ''}</span><small>${esc(ja ? r[3] : r[4])}</small></button>`; }).join('')}</div></div>`;
+    document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
+    const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 240); };
+    sh.onclick = e => { const b = e.target.closest('[data-rid]'); if (b) { close(); go('lesson&id=' + b.dataset.rid); return; } if (e.target === sh || e.target.closest('.lvs-x')) close(); };
+    const on = sh.querySelector('.on'); if (on) on.scrollIntoView({ block: 'center' });
+  }
+  { const st = document.createElement('style'); st.textContent = '.lvsheet.rcrules .lvs-in{max-width:460px}.lvsheet.rcrules .lvs-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}.lvsheet.rcrules .lvs-h small{font-size:12px;font-weight:700;color:var(--ink2,#6a7088);flex-basis:100%;order:3}.lvsheet.rcrules .lvs-l button{padding-block:8px}.lvsheet.rcrules .lvs-l button b{font-size:15px}.lvsheet.rcrules .lvs-l small{font-size:12px}'; document.head.appendChild(st); }
   window.Atlas3D = window.Atlas3D || {};
   window.Atlas3D.riichi = {
     table: true, mx: true, noPvp: true, levels: 10,   // (noPvp: no 二人で対戦 at the head of 相手 — four seats, no hot-seat game)
@@ -49,7 +76,7 @@
     sizeLabel: l => tx('len', l), sizeName: (z, l) => tx(+z === 2 ? 'south' : 'east', l),
     levelInfo: (n, l) => ({ name: 'Lv.' + n, desc: (LVD[l] || LVD.en)[Math.min(4, Math.floor((n - 1) / 2))], who: '' }),
     ext(m, o) {
-      if (m === 'rules') return go('rules');
+      if (m === 'rules') return rulesSheet(o && o.lang);
       if (m === 'stats') return go('stats');
       if (m === 'lesson') return go('lessons');
       if (m === 'rated') return go(o.opp === 'online' ? 'online' : 'ranked' + lenQ(o.size));

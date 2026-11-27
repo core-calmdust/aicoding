@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>/* the worn portal skin (きせかえ → スキン, atlas/skins.js): its colours before the first paint */
 try { (function (j) { if (!j || !j.v) return; var r = document.documentElement; for (var k in j.v) r.style.setProperty(k, j.v[k]); r.setAttribute('data-skin', j.id); r.setAttribute('data-skk', j.k); if (j.a) r.setAttribute('data-ska', '1'); if (j.p) r.setAttribute('data-skp', '1'); if (j.d) r.className += ' skdark'; })(JSON.parse(localStorage.getItem('atlas-skin-css') || 'null')); } catch (e) {}</script>
+<script>/* (2026-11-28 ユーザー「戻り先→一瞬大百科のトップへ移ってしまう」) opened straight at a game's 3D view (#home/riichi — a game page's way
+   back): the portal's pages stay hidden until the view is up (app.js openBoard0 takes the class off; 8 s at most) */
+if (/^#[a-z]+\/[a-z0-9-]+/.test(location.hash) && !/^#museum\//.test(location.hash)) { document.documentElement.classList.add('bvboot'); setTimeout(() => document.documentElement.classList.remove('bvboot'), 8000); }</script>
+<style>html.bvboot body > :not(.bv):not(script):not(style){visibility:hidden!important}</style>
 <script src="../shared/safetop.js?v=2"></script>
 <script src="../shared/latinfs.js?v=1"></script>
 <script src="../shared/focusgate.js?v=5"></script>
@@ -2553,12 +2557,12 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=553"></script>
+<script src="lazy.js?v=554"></script>
 <script src="puzzle-lines.js?v=2"></script>
 <script src="puzzles.js?v=69"></script>
 <script src="lessons3d.js?v=368"></script>
 <script src="missions.js?v=10"></script>
-<link rel="stylesheet" href="historia.css?v=17">
+<link rel="stylesheet" href="historia.css?v=18">
 <script src="historia.js?v=51"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=5"></script>
@@ -2591,7 +2595,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   mo = new MutationObserver(sync); mo.observe(document.body, { childList: true }); sync(); window.__pgState = sync; })();
 </script>
 <script src="museum/mu-games.js?v=3"></script>
-<script src="app.js?v=508"></script>
+<script src="app.js?v=510"></script>
 <script src="../shared/praline-badge.js?v=9" data-portal defer></script>
 </body>
 </html>
