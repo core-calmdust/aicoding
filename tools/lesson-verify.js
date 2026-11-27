@@ -2671,7 +2671,7 @@ function xqStray42(PZ, add, W0) {
 // capture, its value), the engine (depth 3: the answer on top, every other move 250 or more worse), the pool (lessons.json problems
 // and warm-ups of every step, tsume.json; mirrored too), the order (both the 2D and the 3D keep the pool's order) and ショウギツネ's
 // words for every legal move.
-const SH_DONE = new Set(['k20', 'k15', 'k12', 'k10', 'k8', 'k6', 'k4', 'k3', 'k2', 'd1', 'd2', 'rx']);   // (k3: tools/lesson-verify-shdefend.js, k12: tools/lesson-verify-shevade.js, k10 and k8: tools/lesson-verify-shmate1.js, k6 and k4: tools/lesson-verify-shmate3.js, k2: tools/lesson-verify-shmate5.js, d1: tools/lesson-verify-shmate7.js)
+const SH_DONE = new Set(['k20', 'k15', 'k12', 'k10', 'k8', 'k6', 'k4', 'k3', 'k2', 'd1', 'd2', 'rx']);   // (k5 is next: tools/lesson-verify-shfork.js, added to SH_DONE once its problems are rebuilt; k3: tools/lesson-verify-shdefend.js, k12: tools/lesson-verify-shevade.js, k10 and k8: tools/lesson-verify-shmate1.js, k6 and k4: tools/lesson-verify-shmate3.js, k2: tools/lesson-verify-shmate5.js, d1: tools/lesson-verify-shmate7.js)
 function shogi(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'shogi/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'shogi/lessons.json'), 'utf8'));
@@ -2772,7 +2772,7 @@ function shogi(opt) {
     if (id === 'k15') { freeX.g = g; if (g.trapNote) add(id, -1, '④ a trapNote but no trap problem'); if (/罠|わな|poison/i.test(JSON.stringify(g.prompt) + JSON.stringify(X.SHJ2.intro.k15 || ''))) add(id, -1, '④ the prompt / intro speaks of traps'); }
     g.problems.forEach((P, j) => { const a = m => add(id, j, m), p = pos(P.sfen), ms = p.legalMoves(true), U = m => p.toUsi(m);
       if (id === 'k15') { shFree(P, j, a, p, ms, U); return; }
-      if (id === 'k3' || id === 'k12' || id === 'k10' || id === 'k8' || id === 'k6' || id === 'k4' || id === 'k2' || id === 'd1' || id === 'd2' || id === 'rx') return;   // (tools/lesson-verify-shevade.js / lesson-verify-shmate1.js, below)
+      if (id === 'k5' || id === 'k3' || id === 'k12' || id === 'k10' || id === 'k8' || id === 'k6' || id === 'k4' || id === 'k2' || id === 'd1' || id === 'd2' || id === 'rx') return;   // (tools/lesson-verify-shevade.js / lesson-verify-shmate1.js, below)
       if (P.kind !== 'best' || P.mode !== 'material') { a('④ not a material problem'); return; }
       if (p.inCheck()) a('④ the mover is in check');
       if (ms.length < 3) a(`③ ${ms.length} legal moves`);
@@ -2819,7 +2819,7 @@ function shogi(opt) {
         if (c) { const x = NM[c.t]; if (!w.includes(x)) a(`⑦ ${u}: takes a ${x}, the words do not say so 「${w}」`); if (/取れない|取らない|駒得にならない|何も取れない|取っていない/.test(w)) a(`⑦ ${u}: it does take 「${w}」`); }
         else if (!/取れない|取らない|駒得にならない|何も取れない|取っていない/.test(w)) a(`⑦ ${u}: takes nothing, the words do not say so 「${w}」`); }
     });
-    if (id !== 'k3' && id !== 'k12' && id !== 'k10' && id !== 'k8' && id !== 'k6' && id !== 'k4' && id !== 'k2' && id !== 'd1' && id !== 'd2' && id !== 'rx' && (id === 'k15' ? freeX.movers : movers).size < 5) add(id, -1, `⑤ only ${(id === 'k15' ? freeX.movers : movers).size} kinds of piece take`);
+    if (id !== 'k5' && id !== 'k3' && id !== 'k12' && id !== 'k10' && id !== 'k8' && id !== 'k6' && id !== 'k4' && id !== 'k2' && id !== 'd1' && id !== 'd2' && id !== 'rx' && (id === 'k15' ? freeX.movers : movers).size < 5) add(id, -1, `⑤ only ${(id === 'k15' ? freeX.movers : movers).size} kinds of piece take`);
     // 追32 every kind of piece that can take in the problems and warm-ups (the moves the student has to read) has its move told in
     // the intro: the 3D (ショウギツネ's SHJ2.intro, the warm-ups) and the 2D (grade.intro.ja, the warm-ups) — the name and a move word
     // next to it; promoted pieces: 成 … 金と同じ, 馬, 龍. (k20: the 3D intro said only 「駒の動きは練習で見ていこう」 and the warm-ups showed the
@@ -2830,7 +2830,7 @@ function shogi(opt) {
     g.problems.forEach(P => scan(P.sfen)); (g.ramp || []).forEach(r => r.k === 'try' && scan(r.sfen));
     const rampTx = (g.ramp || []).map(r => ['t', 'body', 'g', 'h', 'y'].map(f => r[f] && r[f].ja || '').join(' ')).join(' ');
     const said = { '3D': plain(String((X.SHJ2.intro || {})[id] || '')) + ' ' + plain(rampTx), '2D': plain((g.intro && g.intro.ja || []).join(' ')) + ' ' + plain(rampTx) };
-    if (id === 'k3' || id === 'k12' || id === 'k10' || id === 'k8' || id === 'k6' || id === 'k4' || id === 'k2' || id === 'd1' || id === 'd2' || id === 'rx') { const g0 = L.grades.find(x => x.id === 'k20'), r0 = (g0.ramp || []).map(r => ['t', 'body', 'g', 'h', 'y'].map(f => r[f] && r[f].ja || '').join(' ')).join(' ');   // (k12: the moves were taught before the problems, in k20「駒の動きと価値」 — the lesson before; its intro and warm-ups count)
+    if (id === 'k5' || id === 'k3' || id === 'k12' || id === 'k10' || id === 'k8' || id === 'k6' || id === 'k4' || id === 'k2' || id === 'd1' || id === 'd2' || id === 'rx') { const g0 = L.grades.find(x => x.id === 'k20'), r0 = (g0.ramp || []).map(r => ['t', 'body', 'g', 'h', 'y'].map(f => r[f] && r[f].ja || '').join(' ')).join(' ');   // (k12: the moves were taught before the problems, in k20「駒の動きと価値」 — the lesson before; its intro and warm-ups count)
       said['3D'] += ' ' + plain(String((X.SHJ2.intro || {}).k20 || '')) + ' ' + plain(r0); said['2D'] += ' ' + plain((g0.intro && g0.intro.ja || []).join(' ')) + ' ' + plain(r0); }
     for (const [who, tx] of Object.entries(said)) for (const k of kinds) { const w = KW[k]; if (!w) continue;
       const ok = k >= 9 && k <= 12 ? w.every(x => tx.includes(x)) : new RegExp(w[0] + MW).test(tx);
@@ -2859,9 +2859,12 @@ function shogi(opt) {
     // 追14 the warm-ups: an explain's arrows from a sliding piece end on the farthest square it reaches (no free square beyond);
     // a try's words — the piece to move (「角で」), the piece to take (「金を取」), how many it can take (「取れる駒が2つ」), the praise
     // naming what was taken — agree with the board and the ok moves; a move that does what the words ask is in ok (else they say 成).
-    (g.ramp || []).forEach((r, j) => { const a = m => add(id, -1, `追14 ramp ${j + 1}: ${m}`), p = pos(r.sfen), ms = p.legalMoves(true), U = m => p.toUsi(m), legal = new Set(ms.map(U));
+    (g.ramp || []).forEach((r, j) => { const a = m => add(id, -1, `追14 ramp ${j + 1}: ${m}`), p = pos(r.sfen); if (r.k === 'explain' && id === 'k5') for (const u of r.seq || []) { p.doMove(p.fromUsi(u)); p.doNull(); }   // (an explain's arrows are drawn after its seq: k5's knight dropped on 5d, the same side's arrows)
+      const ms = p.legalMoves(true), U = m => p.toUsi(m), legal = new Set(ms.map(U));
       const sq = q => [+q[0], q.charCodeAt(1) - 96], nm = ([f, k]) => f + String.fromCharCode(96 + k);
       for (const [f0, t0] of r.arrows || []) { const A = sq(f0), B = sq(t0), df = Math.sign(B[0] - A[0]), dk = Math.sign(B[1] - A[1]);
+        const sqI = q => E.makeSq(+q[0], q.charCodeAt(1) - 96), kq = p.board[sqI(t0)];
+        if (id === 'k5' && kq && T(kq) === 8 && E.colorOf(kq) !== p.side && p.attackers(sqI(t0), p.side).includes(sqI(f0))) continue;   // (an arrow onto the enemy king: the piece gives check — k5's knight fork)
         if (!legal.has(f0 + t0) && !legal.has(f0 + t0 + '+')) { a(`the arrow ${f0}→${t0} is not a move`); continue; }
         const pc = T(p.board[E.mFrom(p.fromUsi(f0 + t0) || p.fromUsi(f0 + t0 + '+'))]);
         if ([2, 5, 6, 13, 14].includes(pc) && Math.max(Math.abs(B[0] - A[0]), Math.abs(B[1] - A[1])) > 1 && !p.board[E.mTo(p.fromUsi(f0 + t0) || p.fromUsi(f0 + t0 + '+'))]) {
@@ -2871,7 +2874,7 @@ function shogi(opt) {
       const caps = ms.filter(m => !E.isDrop(m) && p.board[E.mTo(m)] && (byN < 0 || T(p.board[E.mFrom(m)]) === byN));
       const mn = c => (c.match(/取れる駒が(\d)つ/) || [])[1];
       if (mn(g0) && new Set(caps.map(m => E.mTo(m))).size !== +mn(g0)) a(`「${g0}」 but ${new Set(caps.map(m => E.mTo(m))).size} pieces can be taken`);
-      for (const u of r.ok) { const m = p.fromUsi(u); if (byN > 0 && T(p.board[E.mFrom(m)]) !== byN) a(`ok ${u} does not move the ${NM[byN]} 「${g0}」`); if (tgN > 0 && T(p.board[E.mTo(m)] || 0) !== tgN) a(`ok ${u} does not take the ${NM[tgN]} 「${g0}」`);
+      for (const u of r.ok) { const m = p.fromUsi(u); if (byN > 0 && (E.isDrop(m) ? E.dropType(m) : T(p.board[E.mFrom(m)])) !== byN) a(`ok ${u} does not move the ${NM[byN]} 「${g0}」`); if (tgN > 0 && T(p.board[E.mTo(m)] || 0) !== tgN) a(`ok ${u} does not take the ${NM[tgN]} 「${g0}」`);
         const tk = p.board[E.mTo(m)] ? NM[T(p.board[E.mTo(m)])] : ''; if (tk && /を取っ/.test(y0) && !y0.includes(tk.slice(0, 1))) a(`the praise 「${y0}」 does not name the ${tk}`);
         if (/成っ|成る|成れ/.test(y0) && /成った|に成っ/.test(y0) && !u.endsWith('+')) a(`the praise says it promoted, ok ${u} does not`); }
       if (byN > 0 && tgN > 0) { const want = caps.filter(m => T(p.board[E.mTo(m)]) === tgN).map(U);
@@ -2886,6 +2889,7 @@ function shogi(opt) {
   if (SH_DONE.has('d1')) require('./lesson-verify-shmate7.js')({ E, L, X, pool, brd, dist, add, src, app });
   if (SH_DONE.has('d2')) require('./lesson-verify-shmate7.js')({ E, L, X, pool, brd, dist, add, src, app }, 'd2', 9);
   if (SH_DONE.has('k3')) require('./lesson-verify-shdefend.js')({ ROOT, E, L, X, pool, brd, dist, add, src, app });   // (k3「詰めろを受ける」: the only move that leaves no mate within three)
+  if (SH_DONE.has('k5')) require('./lesson-verify-shfork.js')({ ROOT, E, L, X, pool, brd, dist, add, src, app });   // (k5「両取りと駒得の手筋」: the one fork that wins material — shogi/tools/fork-lib.js)
   if (SH_DONE.has('rx')) require('./lesson-verify-shrx.js')({ ROOT, E, L, X, pool, brd, dist, add, src, app });   // (rx: the rules step — the mates in one around uchifuzume, the entering king and the handicap problems)
   // 追72 (2026-11-25 担当A): the moves that count as right (16 points or more of 20) and a warm-up try's ok are a third of the legal moves at most
   for (const g of L.grades) { if (!SH_DONE.has(g.id)) continue;
