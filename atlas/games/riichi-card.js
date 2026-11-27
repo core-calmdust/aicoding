@@ -26,6 +26,8 @@
     bossAt: N('相手のボス', 'The boss', '对手首领', '상대 보스', 'El jefe', 'Le boss', 'O chefe', 'Der Boss', 'बॉस', 'الزعيم', 'Босс', '對手首領', 'Bos', 'Patron'),
     win: N('1位で {r} をゲット', 'Win 1st for {r}', '拿到第1名获得 {r}', '1위로 {r} 획득', 'Gana 1.º: {r}', '1er : {r}', '1º lugar: {r}', 'Platz 1: {r}', 'पहला स्थान: {r}', 'المركز الأول: {r}', '1-е место: {r}', '拿到第1名獲得 {r}', 'Juara 1: {r}', '1.lik: {r}'),
     got: N('ゲット済み', 'Got it', '已获得', '획득 완료', 'Conseguido', 'Obtenu', 'Obtido', 'Erhalten', 'मिल गया', 'تم الحصول', 'Получено', '已獲得', 'Didapat', 'Alındı'),
+    rulesC: N('ルールコース', 'Rules course', '规则课程', '규칙 코스', 'Curso de reglas', 'Cours des règles', 'Curso de regras', 'Regelkurs', 'नियम कोर्स', 'دورة القواعد', 'Курс правил', '規則課程', 'Kursus aturan', 'Kural kursu'),
+    cont: N('続きから', 'Continue', '继续', '이어서', 'Continuar', 'Continuer', 'Continuar', 'Weiter', 'जारी रखें', 'متابعة', 'Продолжить', '繼續', 'Lanjut', 'Devam'),
     rank: N('段位', 'Rank', '段位', '단위', 'Rango', 'Rang', 'Nível', 'Rang', 'रैंक', 'الرتبة', 'Ранг', '段位', 'Peringkat', 'Derece'),
     nOnline: N('東風戦・スキルなしのレート戦（雀華と共通）と、友だちとのルーム戦', 'Rated East-round games without skills (shared with Janka), and rooms to play with friends.', '东风战、无技能的积分战（与《雀华》共通），以及和朋友的房间战', '동풍전·스킬 없는 레이팅전(작화와 공통)과 친구와의 룸 대전', 'Partidas con rating a una ronda sin habilidades (compartidas con Janka) y salas para jugar con amigos.', 'Parties classées à un tour sans compétences (partagées avec Janka) et salons entre amis.', 'Partidas com rating de uma rodada sem habilidades (com Janka) e salas com amigos.', 'Ratingpartien (Ost-Runde, ohne Fähigkeiten, gemeinsam mit Janka) und Räume für Freunde.', 'बिना स्किल वाले रेटिंग मैच (जानका के साथ साझा) और दोस्तों के साथ रूम।', 'مباريات تصنيف بجولة واحدة بلا مهارات (مشتركة مع جانكا) وغرف للعب مع الأصدقاء.', 'Рейтинговые партии в один круг без навыков (общие с Janka) и комнаты для игры с друзьями.', '東風戰、無技能的積分戰（與《雀華》共通），以及和朋友的房間戰', 'Permainan rating satu ronde tanpa skill (bersama Janka) dan room bersama teman.', 'Becerisiz tek turluk reyting maçları (Janka ile ortak) ve arkadaşlarla oda oyunları.'),
   };
@@ -37,7 +39,7 @@
   const LVD = { ja: ['ルールを覚えたての人向け。鳴きもリーチも素直', '役を意識して手を進める', '押し引きを覚えた中級者', '守りも攻めも手ごわい上級者', '牌効率も読みも鋭い最強クラス'],
     en: ['For those who just learned the rules — plain calls and riichi', 'Builds hands with yaku in mind', 'Knows when to push and when to fold', 'Tough in attack and defence', 'Sharp efficiency and reads — the strongest'] };
   function save() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
-  const go = q => { location.href = '../riichi/?go=' + q; };
+  const go = q => { if (window.AtlasLoading) AtlasLoading.show(document.documentElement.lang); setTimeout(() => { location.href = '../riichi/?go=' + q; }, 300); };   // (the curtain first, as a full game opens: the game page shows the same one until its table is up)
   const lenQ = z => '&len=' + (+z === 2 ? 'south' : 'east');
   /* the adapter (2026-11-28 ユーザー「ゲームカードの作りが他のゲームと全然違う」): the portal draws the card as for every game — 対戦 · レート戦 ·
      レッスン, 相手 (the Lv list with the Atlamo bosses and their rewards), 対局 (東風戦 / 半荘戦), 📖 ルール, the cup for the record —
@@ -68,6 +70,27 @@
     const on = sh.querySelector('.on'); if (on) on.scrollIntoView({ block: 'center' });
   }
   { const st = document.createElement('style'); st.textContent = '.lvsheet.rcrules .lvs-in{max-width:460px}.lvsheet.rcrules .lvs-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}.lvsheet.rcrules .lvs-h small{font-size:12px;font-weight:700;color:var(--ink2,#6a7088);flex-basis:100%;order:3}.lvsheet.rcrules .lvs-l button{padding-block:8px}.lvsheet.rcrules .lvs-l button b{font-size:15px}.lvsheet.rcrules .lvs-l small{font-size:12px}'; document.head.appendChild(st); }
+  /* the lessons' and the rules course's lists for the Atlas's own list sheet (atlas/app.js lessonSheet: the same as every game's lessons —
+     2026-11-28 ユーザー「レイアウトはレッスンコースと同じように」「レッスンの問題一覧も3Dビューで」): the game's own data (mahjong/lessons.js and
+     what it needs, loaded once), each card a fan of the step's hand drawn with the game's tile faces (mahjong/tiles.js) */
+  const SRC = ['engine.js?v=3', 'skills.js?v=11', 'game.js?v=19', 'drills.js?v=4', 'lessons.js?v=13'];
+  let lsP = null;
+  const lsLoad = () => lsP || (lsP = SRC.reduce((p, f) => p.then(() => new Promise((ok, ng) => { const sc = document.createElement('script'); sc.src = '../mahjong/' + f; sc.onload = ok; sc.onerror = ng; document.head.appendChild(sc); })), Promise.resolve()));
+  function fan(ls) {
+    const MJ = window.MJ, U = window.MJTiles; if (!MJ || !U) return '';
+    const ty = MJ.parse(ls.pos.me).concat(ls.pos.drawn ? MJ.parse(ls.pos.drawn) : []), pick = ty.filter((x, i) => i % 2 === 0).slice(0, 7), m = (pick.length - 1) / 2;
+    return `<span class="rcfan">${pick.map((x, i) => `<img src="${U.url(x)}" alt="" style="--r:${((i - m) * 7).toFixed(1)}deg;--y:${(Math.abs(i - m) * 3).toFixed(1)}px">`).join('')}</span>`;
+  }
+  function lsList(kind, l) {
+    const ja = l === 'ja', T = o => (o && (ja ? o.ja : o.en)) || '';
+    return lsLoad().then(() => window.MJTiles && MJTiles.ready ? MJTiles.ready() : null).then(() => {
+      const X = window.MJLessons, rec = save().lessons || {}; if (!X) return [];
+      const st = id => rec[id] && rec[id].pass ? 'pass' : rec[id] ? 'try' : 'new';
+      if (kind === 'rules') return X.RULES.filter(r => r.id !== 'r10').map((r, i) => ({ key: r.id, cat: '', title: T(r.title), sub: T(r.point), st: st(r.id), tag: String(i + 1), svg: fan(r) }));
+      return X.LESSONS.map(r => { const c = X.CATS.find(y => y.id === r.cat); return { key: r.id, cat: r.cat, catName: c ? T(c.name) : '', title: T(r.title), sub: T(r.point), st: st(r.id), svg: fan(r) }; });
+    });
+  }
+  { const st = document.createElement('style'); st.textContent = '.rcfan{position:relative;display:flex;justify-content:center;align-items:center;height:100%;width:100%}.rcfan img{width:12%;margin:0 -1%;transform:translateY(var(--y)) rotate(var(--r));filter:drop-shadow(0 2px 2px rgba(0,0,0,.25));border-radius:3px}'; document.head.appendChild(st); }
   window.Atlas3D = window.Atlas3D || {};
   window.Atlas3D.riichi = {
     table: true, mx: true, noPvp: true, levels: 10,   // (noPvp: no 二人で対戦 at the head of 相手 — four seats, no hot-seat game)
@@ -78,11 +101,13 @@
     ext(m, o) {
       if (m === 'rules') return rulesSheet(o && o.lang);
       if (m === 'stats') return go('stats');
-      if (m === 'lesson') return go('lessons');
+      if (m === 'lesson') { if (o && o.id) return go('lesson&id=' + o.id); return lsList('lesson', 'ja').then(L => { const x = L.find(y => y.st !== 'pass') || L[0]; go(x ? 'lesson&id=' + x.key : 'lessons'); }); }   // (no id: the next lesson not passed yet — 続きから)
       if (m === 'rated') return go(o.opp === 'online' ? 'online' : 'ranked' + lenQ(o.size));
       go('free' + lenQ(o.size) + '&lv=' + Math.max(1, Math.min(10, o.lv || 4)));
     },
-    extLabel: (m, l, opp) => m === 'lesson' ? tx('lessons', l) : m === 'rated' && opp === 'online' ? tx('toOnline', l) : tx('start', l),
+    lsList: (k, l) => lsList(k, l), lsTitle: (k, l) => tx(k === 'rules' ? 'rulesC' : 'lessons', l),
+    lsHead: { guide: '../images/atlas/av/peacock-0.webp', name: { ja: '麻雀', en: 'Riichi Mahjong' } },
+    extLabel: (m, l, opp) => m === 'lesson' ? tx('cont', l) : m === 'rated' && opp === 'online' ? tx('toOnline', l) : tx('start', l),
     rtNow(opp, l) {   // レート戦: AI = the 段位 (riichi-v1 .rank, rank.js), オンライン = no local copy of the rating — nothing shown
       if (opp === 'online' || !window.MJRank) return null;
       const d = save(), pt = (d.rank && d.rank.pt) | 0, r = MJRank.at(pt);
