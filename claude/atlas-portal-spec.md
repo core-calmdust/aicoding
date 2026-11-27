@@ -199,6 +199,7 @@ GAMES に追加（store 含む）→ i18n.js に hist.<id>（歴史・雑学、1
   - レッスン s_double（2026-11-27 担当D）：作戦 s_double（2枚同時の捕獲）5問も READY に入れた（作り直し済み・claude/agon-spec.md）。理由は agon/ls-facts.js：何もはさめない／1枚だけで相手の置き直しは1手ですむ／2つの方向で2枚を同時にはさみ、相手は置き直しに2手。外れた手は赤、正解は緑。
   - レッスン s_win2（2026-11-27 担当D）：作戦 s_win2（2手で勝つ）5問も READY に入れた（作り直し済み・③は合法手6以上にゆるめた・claude/agon-spec.md）。理由は agon/ls-facts.js：空きマスが2つのまま（次の1手では勝てない）／外に残ったガードが相手の金色の手ではさまれ、次の手番が置き直しになる／ねらわれているガードを先に入れ、相手がどう動いても次で勝てる。外れた手は赤、正解は緑、相手の手は金色。
   - レッスン s_tempo（2026-11-28 担当D）：作戦 s_tempo（どれを捕まえる？）5問も READY に入れた（作り直し済み・claude/agon-spec.md）。理由は agon/ls-facts.js：何も捕まらない／捕まるのは外側の輪のガード（置き直しで戻る道のりが短い）／いちばん内側の輪のガードを捕まえる1手（外周までいちばん遠く戻る）。3D は赤＝自分の手、緑＝答え。
+  - レッスン s_best（2026-11-28 担当F）：作戦 s_best（隙を作らない1手）5問も READY に入れた（作り直し済み・claude/agon-spec.md）。理由は agon/ls-facts.js：動かした駒が相手の金色の手ではさまれる／元いたマスが空いて、金色の手でほかの駒がはさまれる／相手が何もはさめない1手。これでアゴンのレッスン12本すべて3D の一覧に出る。
 - ラトルンクリ（2026-11-27、担当D、3D未対応ゲームの対応）：
   - パズル：フル版と同じ latrunculi/puzzles.json（シェードラー式。「N手で駒を取れ」t2・t3・t4・corner・double 各50問、250問）と記録（`aicoding-latrunculi-puzzles`・`aicoding-latrunculi-pz-last`・今日のパズル `aicoding-latrunculi-daily`）。BOOK.latrunculi（kind `lt`）・G.latrunculi（ポンメェ）・AtlasMini.latrunculi・app.js MXG。
   - 判定（2D と同じエンジン）：正解の集まり＝engine.js goalGood（ワーカーの 'goal'）、相手の応手＝goalReply。アダプタ atlas/games/latrunculi.js の `ctx.pz`／`api.pz`（レッスンも共用）。外れた手は戻さず相手が応じ、赤い印と latrunculi/pzwhy.js の事実をポンメェの文で（atlas/games/latrunculi-pz.js）。検証は `node tools/lesson-verify.js latrunculi`。レッスン（担当C）は atlas/ls-latrunculi.js で別に載せる。
