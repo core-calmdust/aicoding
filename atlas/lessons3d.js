@@ -7252,7 +7252,11 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     const run = on => { on = new Set(on); let t = 0, bx; while ((bx = cap(on)) >= 0) { const e = be(bx).find(x => !on.has(x)); t += ob[e].filter(b => cnt(on, b) === 3).length; on.add(e); } return t; };
     const on0 = new Set(edges); let ns = 0; for (let e = 0; e < E; e++) if (!on0.has(e) && ob[e].every(bx => cnt(on0, bx) < 2)) ns++;
     const hasCap = cap(on0) >= 0, r0 = run(on0); let three0 = 0; for (let bx = 0; bx < n * n; bx++) if (cnt(on0, bx) === 3) three0++;
-    return { hasCap, ns, of(e) { const k = ob[e].filter(bx => cnt(on0, bx) === 3).length, on = new Set(on0); on.add(e); let three = 0; for (let bx = 0; bx < n * n; bx++) if (cnt(on, bx) === 3) three++;
+    // (2026-11-27 担当A, count) sm: the small chains (1–2 boxes) besides the boxes to take — the parts of unfilled boxes joined by undrawn lines
+    let sm = 0; { const seen = new Set(); for (let b0 = 0; b0 < n * n; b0++) { if (seen.has(b0) || cnt(on0, b0) === 4) continue; const st = [b0], part = []; seen.add(b0);
+      while (st.length) { const bx = st.pop(); part.push(bx); for (const e of be(bx)) if (!on0.has(e)) for (const o of ob[e]) if (o !== bx && !seen.has(o)) { seen.add(o); st.push(o); } }
+      if (part.length <= 2 && part.every(bx => cnt(on0, bx) < 3)) sm++; } }
+    return { hasCap, ns, sm, of(e) { const k = ob[e].filter(bx => cnt(on0, bx) === 3).length, on = new Set(on0); on.add(e); let three = 0; for (let bx = 0; bx < n * n; bx++) if (cnt(on, bx) === 3) three++;
       const m = k ? 0 : run(on), cls = k ? 'take' : hasCap ? 'decline' : m ? 'give' : 'safe'; let n2 = 0; for (let f = 0; f < E; f++) if (!on.has(f) && ob[f].every(bx => cnt(on, bx) < 2)) n2++;
       return { k, m, cls, ret: cls === 'give' && m === 2 && three === 1, dd: cls === 'decline' && m === r0 && three > three0, edge: ob[e].length === 1, n2 }; } };   // (edge: an outer line, one box; n2: the safe lines left after it; dd: the double-deal itself — it hands over just the boxes already open and turns the last of them into a domino (2026-11-25 担当A: a line that opens another chain beside them is not 「残し」))
   };
@@ -7290,9 +7294,9 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     loop: { intro: '開かれた<b>ループ</b>で主導権を保つには、<b>最後の4箱を残し</b>て、2箱ずつの組を2つあげる。ループの犠牲は4箱と大きいんだ。<br>だから主導権のない側は、<b>ループから先に開いて</b>相手に4箱をはらわせる。残りの大きさで決めよう！',
       ask: ['ループのある終盤。いちばんいい線はどれ？', 'ループと鎖、どう動く？', '4つ残し、使う？ 使わない？', 'どこから開くのが得かな？', 'ラスト！ ループの扱い、見せて！'],
       hint: ['ループで残すには4箱いる。残りの鎖で取り返せるかな？', 'ループは輪だから、開くと両方向から取れちゃう！', '主導権を持ってるのはどっちか、まず考えて！', '主導権がないなら、ループから開くのも手！', '残りの鎖とループの箱を足してみよう！'] },
-    count: { intro: '安全な線がつきた盤は、鎖とループの組み合わせ。主導権を持つ側は最後の鎖以外で2つ残し（ループは4つ残し）を続け、持たない側は開く順番で損をへらすんだ。<br>小さな鎖（1〜2箱）が多いほど、主導権の値打ちは下がる！',
-      ask: ['安全な線はもうない。開く順番を計算して、いちばんいい線は？', 'どの鎖から開くのが得？', '損を小さくする順番、わかる？', '小さな鎖は何本ある？ どれから？', 'ラスト！ 計算勝負だよ！'],
-      hint: ['主導権を持ってるのはどっち？', '1箱・2箱の小さな鎖は何本あるかな？', '小さな鎖は、取り切りと残しの損得を変えるんだ！', '2箱の鎖は、真ん中から開くのを忘れずに！', '残しの損と取り切りの得を、順に足してみて！'] },
+    count: { intro: '安全な線がつきた終盤は、鎖の数え合い。主導権を持つ側は、2つ残しで手番を返すか、全部取り切るかを決めるんだ。<br>1〜2箱の小さな鎖は、差し出すと手番が入れかわる（2箱は真ん中から）。長い鎖があっても、小さな鎖が何本あるかで答えが変わる！',
+      ask: ['安全な線はもうない。取り切る？ 2つ残す？', '主導権はきみ。ここは残す？ 取り切る？', '小さな鎖は何本ある？ それで答えが変わるよ！', '残しの損と取り切りの得、どっちが大きい？', 'ラスト！ 計算勝負だよ！'],
+      hint: ['取り切ったら、次に鎖を開くのはきみ。そのとき小さな鎖を差し出せたら？', '1箱・2箱の小さな鎖は何本あるかな？', '小さな鎖は、取り切りと残しの損得を変えるんだ！', '残せば2箱の損。取り切ったら、そのあと長い鎖を開くのはどっち？', '残しの損と取り切りの得を、順に足してみて！'] },
     open3: { intro: '3×3（点16個）は完全に解かれていて、おたがい最善なら後手が6対3で勝つ。それでも序盤には、1本で結果が変わる局面がたくさんあるんだ。<br>先手は長い鎖を偶数本に、後手は奇数本にしたい。盤を分ける線が鎖の形を決める！',
       ask: ['3×3の序盤。いちばんいい線はどれ？', 'この盤なら、どの1本？', '先を読んで、鎖の形を決めよう！ どの線？', 'どこに引けば、きみに合う形になるかな？', 'ラスト！ 序盤の1本を選んで！'],
       hint: ['この線で、盤はどんな鎖に分かれていきそう？', '先手は長い鎖を偶数本、後手は奇数本にしたい！', '長い鎖ができそうな所を想像してみて！', '安全な線でも、鎖の形は変わるんだ。', '金色の輪の線をひとつずつ試すつもりで、形を想像してみて！'] },
@@ -7323,6 +7327,11 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     mid: ['真ん中から開いたから、相手は返せない！', '1箱ずつに分けたから、相手は取るしかない！', '端から開かずにすんだ。これで手番を押しつけられない！', '2箱の鎖は真ん中から。コツをつかんだ！', '相手は2箱を取って、また線を引くことになる。上手なあげ方！'],
     small: ['{m}箱だけですむ、いちばん安いあげ方！', '{m}箱ですむ所から開いた。ここがいちばん損が少ない！', '短い鎖から順にあげる、基本どおり！', '長い鎖は後回し。{m}箱の所を先に差し出せた！', 'あげる箱をいちばん少なくできた！ 計算ばっちり。'],
     loop4: ['主導権がないから、ループから開いて、相手に4つ残しの高い犠牲をせまる！', 'ループを先に開けば、相手は残すたびに4箱も損する！', 'ループから開く、上手な順番！', '相手が主導権を守るには、4箱の犠牲がいる開き方！', 'ループは主導権を持つ側に高くつく。そこをついた！'],   // (2026-11-27 担当A: not 「4つ残しをさせる」「はらわせる」 — whether the opponent leaves the 4 or takes them is the opponent's choice)
+    takeC: ['ここは取り切り！ 小さな鎖が{s}本あるから、全部取っても主導権は取り返せる。', '取り切りが正解！ 長い鎖は残ってるけど、小さな鎖を先にあげれば、また相手が開く番になる。', '数えてみると取り切りが得！ 小さな鎖が{s}本で、主導権の値打ちが下がってる。', '残さなくていい場面を見きわめた！ 小さな鎖で手番を返せば、最後の長い鎖もきみのもの。', '取り切り、正解！ 小さな鎖が{s}本なら、残すより目の前の箱。'],   // (2026-11-27 担当A, count: the take is best though a chain of 3+ is left — the small chains hand the turn back)
+    decC: ['{m}箱を残して手番を返した！ 小さな鎖が{s}本あっても、最後の長い鎖はきみのもの。', '数えてみると残しが得！ 小さな鎖が{s}本だから、ここは主導権をキープ。', '2つ残し、決まった！ 次に鎖を開くのは相手のほう。', 'がまんの2つ残し！ {m}箱あげても、あとの長い鎖で取り返せる。', '残しの損より、主導権の得が大きい場面。計算ばっちり！'],
+    rTakeC: ['小さな鎖が{s}本あるから、ここは緑の線で取り切るのが正解。', '正解は緑の線、取り切り！', '緑の線で取り切っても、小さな鎖で主導権を取り返せる。', 'ここは緑の線で全部いただこう。', '緑の線で取り切ってから、小さな鎖を差し出そう。'],
+    yKeepC: ['赤い線で2箱残すと、そのぶんだけ損。小さな鎖があるから、残さなくても主導権は戻ってくる。', '残した2箱は相手のもの。小さな鎖が{s}本だと、残すほうが高くつくんだ。', '赤い線の2つ残しは、ここではもったいない。', '主導権は、取り切ってからでも小さな鎖で取り返せる。赤い線の残しはいらないんだ。', '赤い線で残すと2箱の損。小さな鎖の数まで数えてみよう。'],
+    yAllC: ['赤い線で取り切ると、次に箱をあげる番はきみ。小さな鎖が{s}本では、手番を返しきれない。', '全部取ると、最後の長い鎖を相手に取られる！', '赤い線で取り切ると、小さな鎖をあげても、最後の長い鎖は相手のものになる。', '赤い線は目の前の箱に飛びついたから、主導権が相手に移る。', '赤い線で取り切ると、最後の長い鎖が相手のものに。'],
     takeL: ['ここは取り切るのが正解！ 残りの鎖はどれもループより小さいから、残しても取り返せない。', '全部取ってOK！ ループで残すと損が大きい。あとの鎖はそれより小さいんだ。', '残すより取り切り！ あとの鎖では、ループの犠牲を取り返せない場面を見きわめた。', '取り切り、正解！ ループの犠牲は、あとの小さな鎖では取り返せない。', 'ループを全部いただき！ 残しても、取り返せる大きさの鎖があとにない。'],
     yKeepL: ['赤い線で4箱残しても、あとの鎖はどれも4箱より小さいから取り返せない。', '残した4箱は相手のもの。あとの鎖はそれより小さいから損なんだ。', 'この先の鎖はどれも3箱以下。赤い線の4つ残しは損になる。', '赤い線の4つ残しは、ここではもったいない。', '主導権を守っても、4箱を取り返す鎖がなければ意味がない。'],   // (2026-11-27 担当A, loop: the take is best when every other chain is 3 or less — a 3-chain is a long chain, so not 「大きな鎖がない」)
     rLoopO: ['緑の線はループを開く線。主導権がないときは、ループから開こう。', '正解は緑の線、ループから開く！', '緑の線でループを先に開けば、相手の残しは4箱かかる。', 'ここはループの緑の線から。', '緑の線でループを差し出すのが、いちばん損が少ない。'],
@@ -7358,11 +7367,11 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     const pk = (L, j) => L[((j % L.length) + L.length) % L.length], fl = (t, o) => t.replace(/\{(\w+)\}/g, (_, x) => o[x] != null ? o[x] : '');
     const pick2 = P.values.some(([e, v]) => v < best && F.of(e).cls === 'safe');   // (a safe line that loses: the best one is picked by the long chains)
     const why = x => {
-      const o = { k: x.k, m: x.m, edge: x.edge ? '外がわの線は箱1つにしか関係しない。その箱がまだ1本以下だから安心！' : '内がわの線は箱2つにまたがるけど、どっちも2本未満。だから安全！',
+      const o = { k: x.k, m: x.m, s: F.sm, edge: x.edge ? '外がわの線は箱1つにしか関係しない。その箱がまだ1本以下だから安心！' : '内がわの線は箱2つにまたがるけど、どっちも2本未満。だから安全！',
         left: x.n2 ? `引いたあと、安全な線は残り${x.n2}本。先に困るのは相手かも！` : '引いたあと、安全な線はもうない。次に箱をあげるのは相手のほう！' };
       let L;
-      if (x.cls === 'take') L = F.hasCap && DT_END.test(s.id) ? (s.id === 'loop' ? DT_CH.takeL : DT_CH.takeE) : DT_CH.take;
-      else if (x.cls === 'decline') L = x.m === 4 ? DT_CH.dec4 : DT_CH.dec;
+      if (x.cls === 'take') L = F.hasCap && DT_END.test(s.id) ? (s.id === 'loop' ? DT_CH.takeL : s.id === 'count' ? DT_CH.takeC : DT_CH.takeE) : DT_CH.take;
+      else if (x.cls === 'decline') L = x.m === 4 ? DT_CH.dec4 : s.id === 'count' ? DT_CH.decC : DT_CH.dec;
       else if (x.cls === 'safe') L = pick2 ? DT_CH.safeP : DT_CH.safe;
       else if (F.ns) L = DT_CH.sac;
       else if (x.m === 4 && s.id === 'loop') L = DT_CH.loop4;
@@ -7374,9 +7383,11 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     const good = u => jn([pk(DT_CH.good, o8), why(F.of(V.get(u) === best ? u : ans)), DT_CH.push[k]]);
     const ng = u => {
       if (V.get(u) === undefined || V.get(u) === best) u = P.values.reduce((a, c) => c[1] < a[1] ? c : a)[0];   // (the runner never shows this for a best line: a checker's call — the worst line stands in)
-      const x = F.of(u), loss = (best - V.get(u)) / 2, o = { bm: b.m, xm: x.m };
+      const x = F.of(u), loss = (best - V.get(u)) / 2, o = { bm: b.m, xm: x.m, s: F.sm };
       let R, Y;
       if (b.cls === 'safe') { R = x.cls === 'safe' ? DT_CH.rPar : DT_CH.rSafe; Y = x.cls === 'safe' ? DT_CH.yPar : DT_CH.yGive; }
+      else if (s.id === 'count' && b.cls === 'take' && x.dd) { R = DT_CH.rTakeC; Y = DT_CH.yKeepC; }
+      else if (s.id === 'count' && b.cls === 'decline' && x.cls === 'take') { R = DT_CH.rDec; Y = DT_CH.yAllC; }
       else if (b.cls === 'take') { const e = x.dd && DT_END.test(s.id) && (x.m === 2 || x.m === 4); R = e ? DT_CH.rTakeE : DT_CH.rTake; Y = e ? (s.id === 'loop' ? DT_CH.yKeepL : DT_CH.yKeep) : x.cls === 'decline' ? DT_CH.yMiss : DT_CH.yOrd; }
       else if (b.cls === 'decline') { R = DT_CH.rDec; Y = x.cls === 'take' ? DT_CH.yAll : DT_CH.yMore; }
       else if (x.cls === 'safe') { R = DT_CH.rSac; Y = DT_CH.ySafe; }
@@ -7395,9 +7406,9 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
   const DOTS = {
     LKEY: 'dots-lessons-v2', data: null, I: null, got: {},
     load(lang) {
-      const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261021L`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
+      const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261127U`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
       if (this.p) return this.p.then(() => T()).then(() => this);
-      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261127t'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
+      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261127u'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
         .then(([ls, X]) => { const w = {}; try { new Function('window', 'with (window) {' + X + '\n}')(w); } catch (e) { console.warn('[lessons3d] dots texts', e); } this.I = w.I18N || {}; this.data = { ls }; return T(); }).then(() => this)
         .catch(e => { this.p = null; throw e; }));
     },
