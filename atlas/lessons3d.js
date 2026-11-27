@@ -428,7 +428,7 @@
       k3: '相手が「次に詰ませるぞ」とねらう形を<b>詰めろ</b>っていうの。<br>攻める前に、まず自分の玉の安全を確かめるコン。相手の詰み筋を消す手を探してね！',
       k2: '5手詰は、王手と受けを2回くり返してから詰ませるよ。<br>頭の中で盤を動かす力の勝負！ 受けが何通りかあるときは、どれでも詰むか確かめよう。<br>竜（龍）は縦横どこまでも＋斜め1マス、馬は斜めどこまでも＋縦横1マス動けるコン。',
       k1: 'ここからは<b>浅い読みでは見つからない手</b>が正解。<br>候補手をいくつか出して、相手のいちばんの応手まで読み比べてみようね！',
-      d1: '7手詰は、有段者の入り口っていわれるの。<b>捨て駒・空き王手・逃げ道封鎖</b>を組み合わせるコン。<br>最後の詰み形を思いうかべて、逆から考えるのもおすすめ！',
+      d1: '7手詰は、有段者の入り口っていわれるの。<b>捨て駒・逃げ道封鎖</b>を組み合わせるコン。<br>最後の詰み形を思いうかべて、逆から考えるのもおすすめ！<br>竜（龍）は縦横どこまでも＋斜め1マス、馬は斜めどこまでも＋縦横1マス動けるコン。',
       d2: '9手詰では、<b>持ち駒を使う順番</b>をまちがえると詰まなくなっちゃう。<br>一手ずつ、相手のいちばんの受けを考えながら進めよう！',
       d3: 'さいごは<b>11手以上の詰み</b>と、<b>深く読まないと見えない静かな好手</b>のまぜこぜ。<br>ここまで来たきみなら、きっと大丈夫だコン！',
       rx: '最後はルールの確認！ <b>打ち歩詰め</b>は反則、<b>千日手</b>は引き分け、玉が敵陣に入れば<b>入玉宣言</b>もあるの。<br><b>駒落ち</b>は、強いほうが駒を減らして先に指すんだコン。',
@@ -619,7 +619,7 @@
       else if (!F.check) why = at(['{x}は王手じゃないから、相手に一手もらっちゃうの。', '{x}だと王手にならないの。詰将棋は王手の連続だコン。', '{x}は王手じゃないの。そのすきに受けられちゃう。', '王手でない{x}だと、相手に余裕を与えるの。', '{x}では王手がかからないから、詰まないの。']);
       else if (P.n > 1 && P.ref && P.ref[u]) {   // (2026-11-26 第2期 k6: a wrong check of a mate in 3 — the defender's stored answer P.ref (after it no check mates), said from the board)
         const R = (() => { try { const S = shLB(P.sfen), A = shLPlay(S, u); return shLPlay({ B: A.B, w: !S.w }, P.ref[u]); } catch (e) { return null; } })(), pn = shLNm(F.piece.t);
-        const k = !R ? 4 : R.piece.t === 'k' ? (R.took ? 0 : 1) : R.took ? 2 : 3, rn = R ? shLNm(R.piece.t) : '';
+        const k = !R ? 4 : R.piece.t === 'k' ? (R.took ? 0 : 1) : R.took ? 2 : 3, rn = R ? shLNm(P.ref[u][4] === '+' && R.piece.t[0] === '+' ? R.piece.t.slice(1) : R.piece.t) : '';   // (2026-11-27 d1: a defender that takes and promotes is named as the piece that took — 香車, not 成香)
         why = [at([`{x}の${pn}は、玉に取られちゃうの。そのあと詰ませる王手がないコン。`, `{x}だと、玉が${pn}を取って逃げるの。次の一手では詰まないの。`, `{x}の${pn}は、玉が取れるの。取られたら、もう詰まないコン。`, `玉が{x}の${pn}を取っちゃうの。それで詰みが消えるの。`, `{x}の${pn}は、玉に取られて詰みまで届かないの。`]),
           at(['{x}の王手だと、玉に逃げられて、次の一手では詰まないの。', '{x}だと、玉が空いたマスへ逃げるの。そこからは詰まないコン。', '{x}の王手は、玉が逃げてかわせるの。次の王手で詰まないの。', '{x}だと玉に逃げ道が残るの。逃げたあと、詰ませる手がないコン。', '{x}の王手では、玉が逃げ出して詰みが消えるの。']),
           at([`{x}の${pn}は、相手の${rn}に取られちゃうの。そのあと詰ませる王手がないコン。`, `{x}だと、${rn}で${pn}を取られるの。それで詰みが消えるの。`, `{x}の${pn}は、${rn}が取れるの。取られたら、もう詰まないコン。`, `相手が${rn}で{x}の${pn}を取って受けるの。次の一手では詰まないの。`, `{x}の${pn}は、${rn}に取られて詰みまで届かないの。`]),
@@ -929,9 +929,9 @@
     LKEY: 'shogi-kaya-lessons-v1', OKEY: 'shogi-kaya-open-v1', CATS: ['beg', 'mid', 'adv', 'sp', 'new', 'castle', 'handi'], data: null,
     load() {
       if (this.p) return this.p;
-      const voice = fetch('../shogi/voice-fox-ja.js?v=7').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
+      const voice = fetch('../shogi/voice-fox-ja.js?v=8').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       const rep = getJ('../shogi/lesson-replies.json?v=4').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
-      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261127k2'), getJ('../shogi/openings.json?v=20261124ol1'),
+      return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261127d1'), getJ('../shogi/openings.json?v=20261124ol1'),
         ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261125sb`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
@@ -3497,7 +3497,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=19'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
+      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=21'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
         try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
         return this; }).catch(e => { this.p = null; throw e; }));
     },
@@ -6370,7 +6370,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       b_safe: ['金の丸の駒に、どの駒も取られなくなる動かし方があるの。', 'いま相手にはさまれそうな駒はどれ？ 相手が入れる反対側のマスに注目してね。', '逃げるなら、逃げた先の両どなりも確かめてね。', '相手が次に置けるマスを想像してみて。そこで取られる駒は？', 'よけるだけじゃなく、相手の置き場所をふさぐのも守りなの。'],
       t_shield: ['並んだ駒の前はもう埋まってるの。残ってるのは、列のはしの「ふた」だね。', '列の両はしを見てみて。片方はもう閉じているの。あいているのはどっち？', '端に並んだ相手の駒、何枚あるか数えてみて。', 'まとめ取りは、列の両はしと前がそろったとき。足りないのは1か所！', '金の丸の駒で、列のはしへ入ってみよう。'],
       t_tuichi: ['王を盤の端へ出して、その辺の両側の角まで駒がないマスをさがしてね。金の丸が王さま！', '王が着いた先から、角へまっすぐ行ける道は何本あるかな？ 2本ならトゥイチ！', '1本だけの道は、すぐふさがれちゃう。2本同時がねらい目なの。', '王さまが出られる端はいくつかあるね。着いた辺の両側が、角まで空いているのはどこ？', '辺の1列が、王さまのほかは角から角まで空っぽになる場所はどこかな？'],
-      t_block: ['王から角（端）までの道の上に、攻め手を1つ入れるの。金の丸がその駒！', 'ふさいだあと、王が別のマスで2本の道を作れないかも見てね。', '王さまが次に動く先も想像してみて。', '道のどこでふさぐかで、そのあとが変わるの。', 'ふさぎに行く駒が、はさまれないかも確かめて！'],
+      t_block: ['王から角（端）までの道の上に、攻め手を1つ入れるの。金の丸がその駒！', 'ふさいだあと、王が別のマスで2本の道を作れないかも見ておいて！', '王さまが次に動く先も想像してみて。', '道のどこでふさぐかで、そのあとが変わるの。', 'ふさぎに行く駒が、はさまれないかも確かめて！'],
       t_fort: ['王のまわりの壁に、1か所だけ穴があいてるの。金の丸の駒でふさいでね。', '壁の駒が、攻め手にはさまれない形になるかも確かめて！', '砦は端にくっついた守りの壁。どこが欠けてる？', '王さまが中で動けるスペースも残しておいてね。', '攻め手が入ってこられる入口、ひとつだけあるの。'],
       t_encircle: ['輪に1か所だけすき間があるの。金の丸の駒で閉じてね。', '守り手の駒が端へ出られる道をたどってみて。どこで切れるかな？', '輪はななめにつながっていてもOK！', '外へぬける穴をひとつ探そう。そこに入れば完成なの。', '閉じる駒が、はさまれない場所かも見ておいてね。'],
       v_brandubh: ['王の反対側に、もう1枚置ける攻め手をさがしてね。', '王のとなりにいる攻め手は？ その向かい側へ行ける駒が答え！', '角のとなりの王なら、角が片側の役をしてくれるの。', '縦でも横でもいいの。2枚で王をはさむ形を作ろう。', '王が玉座のとなりにいないか、先に確かめてね。'],
@@ -6394,6 +6394,34 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       if (!after.res) for (const r of after.moves()) { const z = after.clone().play(r); if (z.res && z.res !== me) w = true; c = Math.max(c, z.lastCaps.length); if (!z.res && z.kingLines().length >= 2) tu = true; }
       return (R._s = { c, w, tu }); };
     return R;
+  }
+  // (2026-11-27 第2期 担当A) t_block: why a wrong move u of the attackers loses (read with the rules, as tools/lesson-verify-tfblock.js):
+  // 'open' the line stays open, 'opened' u stands on the line but another line opens, 'tuichi' a king move to two lines nobody can stop,
+  // 'taken' the king takes the blocker and the line opens again for good, 'king' a king move to one line the attackers cannot reach,
+  // 'other' another defender's move, '' none (u holds)
+  function tfBlockWhy(E, pos, u) {
+    const F = pos.G.F, n = pos.n, q = pos.clone().play(u), RC = i => [Math.floor(i / n), i % n];
+    const winNow = z => { if (z.res) return z.res === 2; const k = z.king; for (const x of z.moves()) if (E.mFrom(x) === k && (F[E.mTo(x)] & 2) && z.clone().play(x).res === 2) return true; return false; };
+    const on = new Set(); pos.kingLines().forEach(t => { const [r1, c1] = RC(pos.king), [r2, c2] = RC(t), dr = Math.sign(r2 - r1), dc = Math.sign(c2 - c1); for (let r = r1 + dr, c = c1 + dc; r !== r2 || c !== c2; r += dr, c += dc) on.add(r * n + c); });
+    if (q.res) return ''; if (winNow(q)) return on.has(E.mTo(u)) ? 'opened' : 'open';
+    let how = '';
+    for (const d of q.moves()) { const z = q.clone().play(d); if (z.res) { if (z.res === 2) return 'other'; continue; }
+      if (z.moves().every(r => { const y = z.clone().play(r); return !y.res && winNow(y); })) { const k = E.mFrom(d) === q.king; if (k && z.kingLines().length >= 2) return 'tuichi';
+        if (k && z.lastCaps.includes(E.mTo(u))) how = 'taken'; else how = how || (k ? 'king' : 'other'); } }
+    return how;
+  }
+  // (2026-11-27 第2期 担当A) t_fort: why a wrong move u of the defenders does not make the fort (read with the rules, as
+  // tools/lesson-verify-tffort.js; A = the answer, whose fort gives the room and the walls): 'moved' a wall piece left the wall, 'cap' a
+  // piece of the wall can be taken next, 'kingoff' the king left the edge, 'king' the king moved along it, 'enter' an attacker gets into the fort (the room, the king's square, the gap), 'stuck' the man
+  // went into the room and the king cannot move, 'open' the gap stays; '' u ends the game
+  function tfFortWhy(E, pos, A, u) {
+    const room = z => { const k = z.king, seen = new Set([k]), st = [k], w = new Set(); while (st.length) { const x = st.pop(); for (const y of z.nb(x)) { if (seen.has(y)) continue; if (!z.at(y)) { seen.add(y); st.push(y); } else if (z.at(y) === 2) w.add(y); } } return { seen, w }; };
+    const za = pos.clone().play(A), R = room(za), FR = new Set(R.seen), FW = new Set(R.w); FR.add(E.mTo(A)); FW.delete(E.mTo(A));
+    const q = pos.clone().play(u), t = E.mTo(u); if (q.res) return '';
+    if (FW.has(E.mFrom(u))) return 'moved'; if (E.mFrom(u) === pos.king) return pos.G.F[t] & 1 ? 'king' : 'kingoff';
+    const kq = q.clone(); kq.turn = 2; if (FR.has(t) && !kq.moves().some(x => E.mFrom(x) === q.king)) return 'stuck';
+    let cap = false, enter = false; for (const r of q.moves()) { const z = q.clone().play(r); if (z.lastCaps.some(x => FW.has(x) || (x === t && FR.has(x)))) cap = true; if (FR.has(E.mTo(r))) enter = true; }
+    return cap ? 'cap' : enter ? 'enter' : 'open';
   }
   // (2026-11-22 lesson loop) タフリン's voice for one lesson: praise / soft words / push on, each lesson in an order of its own (tfVoice);
   // every line below has five wordings, taken by the problem's number, so no line comes twice in a lesson
@@ -6511,16 +6539,29 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
         FA.win ? pk([`{m}なら、そのまま${goal}へ着けたから。`, `正解の{m}は、${goal}まで一直線の道。`, `{m}を選べば、その場で脱出できたの。`, `こっちの{m}だったら、${goal}まで止まらずに行けたね。`, `{m}だと、そのまま勝ちだったんだ。`])
           : pk([`{m}なら道が${r}本できて、攻め手は1手じゃふさぎきれないから。`, `正解の{m}は、${goal}への道を${r}本ひらく場所。`, '{m}を選べば、攻め手は1本しか止められなかったの。', 'こっちの{m}だったら、トゥイチになっていたね。', `{m}だと、${r}方向に道が通っていたんだ。`]));
     } else if (id === 't_block') {
+      // (2026-11-27 第2期 担当A) every wrong move is named by what the board does after it (tfBlockWhy); tools/lesson-verify.js tafl reads
+      // each line back against the rules
       good = () => fg(pk(['{x}で逃げ道がふさがった！ 次に王が動いても、道を2本は作れないの。', 'ナイスブロック！ 王の道に駒を入れたうえに、トゥイチの心配もない形だね。', '{x}で王の走る道がとぎれた！ これで2手のうちには逃げられないの。', 'ぴったりの場所でふさげた！ 王の次の一手まで、ちゃんと見えてたね。', '道をふさいで、しかもトゥイチもさせない。攻め手のお手本の受けなの。']));
-      ng = u => say(u, G => G.scan().w || G.scan().tu, G => G.scan().w ? pk(['{x}だと、王にそのまま角まで逃げられちゃう！', '{x}では道がふさがらなくて、王が角に着いちゃう。', '{x}のあと、王さまはそのまま脱出なの。', '{x}だと、ひらいた道がそのまま残るの。', '{x}では、王の通り道に駒が入らないね。'])
-        : G.scan().tu ? pk(['{x}だと1本はふさげても、次に王が2本の逃げ道を作れちゃう。', '{x}のあと、王が動いてトゥイチを作れるの。', '{x}では、王の次の一手で道が2本ひらいちゃう。', '{x}だと、ふさいだ先で別の2本が生まれるね。', '{x}のあと、王さまに2方向をねらわれちゃう。'])
-        : pk(['{x}だと、王に2手で逃げ切られちゃう。', '{x}では、2手のうちに王が角へ着いちゃうの。', '{x}だと、王さまの逃げ道がまだ残るね。', '{x}のあと、王は2手で脱出できるの。', '{x}では止めきれないんだ。']),
-        pk(['{m}なら、王の道がしっかり止まるから。', '{m}で道をふさげば、王はトゥイチも作れなかったの。', '正解の{m}は、道を止めて先の2本も消す手。', 'こっちの{m}だったら、2手のうちに逃げられなかったね。', '{m}を選べば、王の行き先がちゃんと減ったんだ。']));
+      ng = u => { const v = alt(u), why = v != null ? tfBlockWhy(E, pos, v) : '';
+        const w = why === 'open' ? pk(['{x}だと、王にそのまま角まで逃げられちゃう！', '{x}では道がふさがらなくて、王が角に着いちゃう。', '{x}のあと、王さまはそのまま脱出なの。', '{x}だと、ひらいた道がそのまま残るの。', '{x}では、王の通り道に駒が入らないね。'])
+          : why === 'opened' ? pk(['{x}でその道はふさがるけど、王に別の角への道ができちゃう。', '{x}だと、前の道は止まっても、王から別の角へ行ける道がひらくの。', '{x}では、ふさいだかわりに別の逃げ道が開いちゃう。', '{x}のあと、王さまは別の道からそのまま角へ行けちゃう。', '{x}だと、前の道は止まっても新しい道ができちゃう。'])
+          : why === 'tuichi' ? pk(['{x}だと1本はふさげても、次に王が2本の逃げ道を作れちゃう。', '{x}のあと、王が動いてトゥイチを作れるの。', '{x}では、王の次の一手で道が2本ひらいちゃう。', '{x}だと、王が動いた先で別の2本が生まれるね。', '{x}のあと、王さまに2方向をねらわれちゃう。'])
+          : why === 'taken' ? pk(['{x}だと、ふさいだ駒を王に取られて、道がまた開いちゃう。', '{x}のあと、ふさぎに入った駒が王にはさまれて取られるの。そうなると道はもう止まらない。', '{x}では、王が動いてふさいだ駒を取っちゃう。道がまた通っちゃうの。', '{x}だと、入った駒が王に取られて、角への道がもとどおり。', '{x}のあと、ふさいだ駒が取られて、王の道がまた開くの。'])
+          : why === 'king' ? pk(['{x}だと、王が1手動いた先から、攻め手がふさぎに行けない道ができちゃう。', '{x}のあと、王さまが動くと、もう攻め手の駒が届かない道がひらくの。', '{x}では、王の次の一手で、だれもふさげない道ができちゃう。', '{x}だと、王が動いたあとの道に、攻め手が間に合わないの。', '{x}のあと、王さまの新しい道をふさげる攻め手がいないの。'])
+          : pk(['{x}だと、王に2手で逃げ切られちゃう。', '{x}では、2手のうちに王が角へ着いちゃうの。', '{x}だと、王さまの逃げ道がまだ残るね。', '{x}のあと、王は2手で脱出できるの。', '{x}では止めきれないんだ。']);
+        return f(w + pk(['{m}なら、王の道がしっかり止まるから。', '{m}で道をふさげば、王はトゥイチも作れなかったの。', '正解の{m}は、道を止めたうえで、王に2本目の道を作らせない手。', 'こっちの{m}だったら、2手のうちに逃げられなかったね。', '{m}を選べば、王はどう動いても2手では角に届かなかったんだ。'])); };
     } else if (id === 't_fort') {
+      // (2026-11-27 第2期 担当A) each wrong move by what follows it on the board (tfFortWhy, as tools/lesson-verify-tffort.js)
       good = () => fg(FA.win === 'fort' ? pk(['{x}で砦の完成！ もう攻め手は壁をこわせないから、守り手の勝ち。', 'エッジフォートのできあがり！ 王は砦の中で動けて、壁の駒もはさまれないの。', '{x}で穴がふさがった！ こわせない砦で、守り手の勝ちだね。', '最後の1枚がぴたり！ 攻め手はもう砦に手が出せないの。', '王さまのお城、完成！ 壁のどの駒もはさめない形ね。']) : pk(['{x}で守り手の勝ち！ 王の守りは完ぺきだね。', '{x}で勝負あり！', '守り手の勝ち！', 'みごとに勝ちを決めたね！', 'これで守り手の勝ち！']));
-      ng = u => say(u, null, G => G.scan().c ? pk(['{x}だと壁の駒がはさまれて、砦がくずれちゃう。', '{x}のあと、壁の駒を攻め手に取られるの。', '{x}では、壁にはさまれる駒が残っちゃう。', '{x}だと、攻め手に壁をこわされちゃう。', '{x}のあと、壁の1枚がねらわれるの。'])
-        : pk(['{x}だと壁に穴が残って、攻め手に入りこまれちゃう。', '{x}では、砦の入口があいたままなの。', '{x}だと、まだ砦が完成しないね。', '{x}だと、壁のすき間がそのまま残るの。', '{x}では、穴をふさげないんだ。']),
-        pk(['{m}なら、穴がぴったりふさがるの。', '{m}で最後の1枚を入れれば、砦が完成したから。', '正解の{m}が、壁の最後のピース。', 'こっちの{m}だったら、こわせない砦になったね。', '{m}を選べば、その場で守り手の勝ちだったの。']));
+      ng = u => { const v = alt(u), why = v != null ? tfFortWhy(E, pos, A, v) : '';
+        const w = why === 'moved' ? pk(['{x}だと壁の駒が動いて、べつの所に穴があいちゃう。', '{x}では、壁の1枚がぬけて新しいすき間ができるの。', '{x}だと、壁から駒がはなれて、砦に穴があくね。', '{x}のあと、壁の駒がいた所が空いちゃう。', '{x}では、壁をくずして別の穴を作っちゃうの。'])
+          : why === 'kingoff' ? pk(['{x}だと王が端からはなれちゃう。砦は王が端にいてこそなの。', '{x}では、王さまが盤のふちを出ちゃうの。それじゃ砦にならない。', '{x}だと、王が端をはなれて砦が作れないね。', '{x}のあと、王は端にいないの。エッジフォートは端が条件なんだ。', '{x}では、王さまが内側へ出ちゃう。砦の中にいないとね。'])
+          : why === 'king' ? pk(['{x}は王さまが動く手。王が動いても、壁の駒がそろわないと砦にはならないの。', '{x}だと王が動くだけ。砦の壁は、守り手の駒でそろえるものなの。', '{x}では、王さまが場所を変えただけで、壁はそろわないね。', '{x}は王の手なの。最後の1枚は、守り手の駒で入れるんだ。', '{x}だと、王が動いても壁の形は完成しないの。'])
+          : why === 'cap' ? pk(['{x}だと壁の駒がはさまれて、砦がくずれちゃう。', '{x}のあと、壁の駒を攻め手に取られるの。', '{x}では、壁にはさまれる駒が残っちゃう。', '{x}だと、攻め手に壁をこわされちゃう。', '{x}のあと、壁の1枚がねらわれるの。'])
+          : why === 'enter' ? pk(['{x}だと壁に穴が残って、攻め手に入りこまれちゃう。', '{x}では砦の入口があいたままで、攻め手が入ってこられるの。', '{x}のあと、攻め手が穴から砦に入ってくるの。', '{x}だと、すき間に攻め手の駒が飛びこんでくる！', '{x}では、攻め手に壁のすき間へ入られちゃう。'])
+          : why === 'stuck' ? pk(['{x}だと王のまわりが埋まって、王が動けないの。それじゃ砦にならない。', '{x}では、砦の中に駒が入って王の動く場所がなくなるの。', '{x}だと、王さまが中で動けなくなっちゃう。砦は王が動けることが条件なの。', '{x}のあと、王はどこへも動けないね。それでは砦じゃないの。', '{x}では、王の部屋をふさいじゃうんだ。'])
+          : pk(['{x}だと、まだ砦が完成しないね。', '{x}では、壁のすき間がそのまま残るの。', '{x}では、穴をふさげないんだ。', '{x}だと、砦の入口があいたままなの。', '{x}のあとも、壁に穴が残ったまま。']);
+        return f(w + pk(['{m}なら、穴がぴったりふさがるの。', '{m}で最後の1枚を入れれば、砦が完成したから。', '正解の{m}が、壁の最後のピース。', 'こっちの{m}だったら、こわせない砦になったね。', '{m}を選べば、その場で守り手の勝ちだったの。'])); };
     } else if (id === 't_encircle') {
       good = () => fg(FA.win === 'encircle' ? pk(['{x}で包囲の完成！ 守り手はどの駒も端へ出られないから、攻め手の勝ち。', '輪がぴったり閉じた！ ななめのつながりでも、ちゃんと閉じているの。', '{x}ですき間がなくなった！ 守り手をまるごとかこんで、攻め手の勝ちだね。', '最後のすき間を閉じた！ 守り手はもう外へ出られないの。', '大きな輪の完成！ 守り手をまるごと閉じこめたね。']) : pk(['{x}で攻め手の勝ち！ みごとな包囲だね。', '{x}で勝負あり！', '攻め手の勝ち！', 'みごとに勝ちを決めたね！', 'これで攻め手の勝ち！']));
       ng = u => say(u, null, G => G.scan().c ? pk(['{x}だと輪の駒がはさまれて、穴があいちゃう。', '{x}のあと、輪の駒を守り手に取られるの。', '{x}では、輪の1枚がはさまれちゃう。', '{x}だと、守り手に輪をこわされちゃう。', '{x}のあと、輪の駒がねらわれるの。'])
@@ -6539,7 +6580,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-tafl-lessons', OKEY: 'aicoding-tafl-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=10'), fetch('../tafl/i18n.js?v=6ek-nd1-bm2-bs1-tu1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261125o').catch(() => null)])
+      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=12'), fetch('../tafl/i18n.js?v=6ek-nd1-bm2-bs1-tu1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261125o').catch(() => null)])
         .then(([ls, T, _, op]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] tafl texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },

@@ -1697,7 +1697,7 @@ function ckWarm(opt, L, E, X, val, moveVal, add, only) {
 //   縦と横) and for every wrong move (the king or not, a blocker on the way, a capture or not, a piece of yours taken next), the question
 //   and the hint (a corner / the throne named is in an answer)
 //   ⑨ the 2D (tafl/app.js problemPoints) and the 3D (TAFL.points) both score P.ok
-const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield', 't_tuichi']);
+const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield', 't_tuichi', 't_block', 't_fort']);
 function tafl(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'tafl/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'tafl/lessons.json'), 'utf8'));
@@ -1902,9 +1902,68 @@ function tafl(opt) {
     for (const lg of Object.keys(w.I18N)) { const h = w.I18N[lg]['ls.t_tuichi.hint'] || ''; if (/2つの辺|角に近い|two sides|near a corner/.test(h)) add('t_tuichi', -1, `⑧ the 2D hint (${lg}) 「${h}」: the two lines run both ways along one edge`); }
     (st && st.ramp || []).forEach((r, k) => { if (r.k !== 'try') return; const f = TU.tuichiFacts(E, { s: r.s, ok: r.ok, best: r.ok[0] }); f.bad.filter(b => /^[①②④]/.test(b)).forEach(b => add('t_tuichi', -1, `warm-up ${k + 1}: ${b}`));
       if (r.ok.length * 3 > f.all.length) add('t_tuichi', -1, `warm-up ${k + 1}: ③ ${r.ok.length} of ${f.all.length} moves are right`); }); }
+  // (2026-11-27 第2期 担当A) t_block「逃げ道をふさぐ」(tools/lesson-verify-tfblock.js): the attackers to move, the king with one open line
+  // ①② P.ok = the moves after which the defender cannot force a win within his 2 moves (a full search of his moves and every reply)
+  // ③ ≥3 blocks onto the line, the answers ≤ a third of the moves and ≤ half of the blocks, d ≥ 1 (a block that still loses), 追17 the
+  // ringed pieces ≥2 wrong moves ④ one line (a ライチ), no move ends the game, every answer on the line, no loss to another defender's move,
+  // no fort deciding ⑤ the pool (five) and no two problems with the same shape (blockSig) ⑥ d×10 − the answers never down, last > first
+  // ⑦⑧ タフリン's words: every wrong move by what follows it (the line left open / another line opened / a トゥイチ / the blocker taken by
+  // the king / a king move nobody
+  // can reach / ...), the praise (no king move to two lines after the answer), the hints (a トゥイチ trap and a good block on every
+  // problem, a blocker taken by the king when the hint says「はさまれないか」); the explain / the try / the diagram: the block shown holds (追14)
+  const BK = require(path.join(ROOT, 'tools/lesson-verify-tfblock.js')), bkSig = new Map();
+  const blockOne = (st, si, P, j, a) => { const f = BK.blockFacts(E, P), nm = m => E.name(f.p, m); f.bad.forEach(a);
+    five(st.id, j, P, f.me, nm, a);
+    { const sig = BK.blockSig(E, P); if (bkSig.has(sig)) a(`⑤ the same shape (${sig}) as ${bkSig.get(sig)}`); else bkSig.set(sig, `q${j + 1}`); }
+    if (!f.wrong.some(m => f.C.get(m).on && f.C.get(m).tuF)) a('⑧ the hint「2本の道を作れないかも」: no block loses to a トゥイチ here');
+    let W; try { W = X_.tfLsJa(E, st, P, j, k => X_.TFM(k, 'ja'), si); } catch (e) { a('⑧ the words fail: ' + e.message); return f.d; }
+    for (const t of [W.ask, W.hintTx, plain(W.good())]) if (!t || /\{|undefined|NaN/.test(t)) a(`⑧ 「${t}」`);
+    if (/はさまれない/.test(W.hintTx) && !f.wrong.some(m => f.C.get(m).takenF)) a(`⑧ 「${W.hintTx}」: no block here loses its piece to the king`);
+    for (const m of f.wrong) { const raw = plain(W.ng(m)), x0 = nm(m), i0 = raw.indexOf('赤い印の手'), i1 = raw.indexOf('緑の印の手'), R = f.C.get(m);
+      if (/\{|undefined|NaN/.test(raw) || i0 < 0 || i1 < 0) { a(`⑦ ${x0}: 「${raw}」 (your move / the right move not named)`); continue; }
+      const tx = raw.slice(i0, i1);
+      const want = R.esc1 ? (R.on ? 'opened' : 'open') : R.tuF ? 'tuichi' : R.takenF ? 'taken' : R.f2 && R.f2.how === 'king' ? 'king' : 'other';
+      const said = /王に取られ|王にはさまれて取られ|駒を取っちゃう|駒が取られ/.test(tx) ? 'taken' : /別の角への道|別の道|別の逃げ道|新しい道ができ/.test(tx) ? 'opened' : /そのまま|ふさがらな|駒が入らない/.test(tx) ? 'open' : /2本|トゥイチ|2方向/.test(tx) ? 'tuichi' : /届かない|間に合わない|ふさげない|ふさぎに行けない|ふさげる攻め手がいない/.test(tx) ? 'king' : '?';
+      if (said !== want && !(want === 'other' && said === '?')) a(`⑦ ${x0}: 「${tx}」 says ${said}, the board: ${want}`); }
+    return f.d * 10 - (P.ok || []).length; };
+  { const st = L.steps.find(s => s.id === 't_block');
+    (st && st.ramp || []).forEach((r, k) => { if (r.k === 'try') { const f = BK.blockFacts(E, { s: r.s, ok: r.ok, best: r.ok[0] }); f.bad.filter(b => /^[①②④]/.test(b)).forEach(b => add('t_block', -1, `warm-up ${k + 1}: ${b}`));
+        if (r.ok.length * 3 > f.all.length) add('t_block', -1, `warm-up ${k + 1}: ③ ${r.ok.length} of ${f.all.length} moves are right`); }
+      if (r.k === 'explain') (r.seq || []).forEach(([mv]) => { const p = E.Pos.from(r.s), m = E.parse(p, mv); if (m == null) { add('t_block', -1, `warm-up ${k + 1}: 追14 ${mv} is not legal`); return; }
+        const f = BK.blockFacts(E, { s: r.s, ok: [m], best: m }); f.bad.filter(b => /^[①②]|one line/.test(b)).forEach(b => add('t_block', -1, `warm-up ${k + 1}: 追14 ${b}`));
+        const nmK = E.sqName(p.king, 11); if (!(r.body && r.body.ja || '').includes(nmK)) add('t_block', -1, `warm-up ${k + 1}: 追14 the words do not name the king's square ${nmK}`); }); });
+    if (st && st.diagram) { const D = st.diagram, p = E.Pos.from(D.s); (D.arrows || []).forEach(([fr, to]) => { const m = E.parse(p, fr + '-' + to); if (m == null) { add('t_block', -1, `diagram: 追14 ${fr}-${to} is not legal`); return; }
+      const f = BK.blockFacts(E, { s: D.s, ok: [m], best: m }); f.bad.filter(b => /^[①]|one line/.test(b)).forEach(b => add('t_block', -1, `diagram: 追14 ${b}`)); }); } }
+  // (2026-11-27 第2期 担当A) t_fort「エッジフォート」(tools/lesson-verify-tffort.js): the defenders to move, the king on an edge, one wall
+  // piece missing. ①② P.ok = the moves that make the fort at once (the rules' fort test), no wrong move that still wins next move whatever
+  // the attackers do ③ the answers ≤ a third of the moves, ≥2 near-misses (wrong moves of a man to within 2 of the king), 追17 the ringed
+  // piece ≥2 wrong moves ④ no other win (an escape), no king move as the answer, no threat of the attackers ⑤ the pool and no two problems
+  // with the same shape (fortSig), one gap (the 2D hint「1か所だけ穴」) ⑥ d×10 − the answers never down, last > first ⑦⑧ タフリン's words:
+  // every wrong move by what follows it (a wall piece moved / a wall piece taken / an attacker in / the king shut in / the gap left), the
+  // hints that lean on a trap (「はさまれない」: a wrong move that leaves a wall piece to be taken;「動けるスペース」: one that shuts the king in);
+  // the diagram: its arrow makes the fort (追14)
+  const FT = require(path.join(ROOT, 'tools/lesson-verify-tffort.js')), ftSig = new Map();
+  const fortOne = (st, si, P, j, a) => { const f = FT.fortFacts(E, P), nm = m => E.name(f.p, m); f.bad.forEach(a);
+    five(st.id, j, P, f.me, nm, a);
+    { const sig = FT.fortSig(E, P); if (ftSig.has(sig)) a(`⑤ the same shape (${sig}) as ${ftSig.get(sig)}`); else ftSig.set(sig, `q${j + 1}`); }
+    if (f.gaps.size !== 1) a(`⑧ the hint「1か所だけ穴」: ${f.gaps.size} gaps make the fort`);
+    let W; try { W = X_.tfLsJa(E, st, P, j, k => X_.TFM(k, 'ja'), si); } catch (e) { a('⑧ the words fail: ' + e.message); return f.d; }
+    for (const t of [W.ask, W.hintTx, plain(W.good())]) if (!t || /\{|undefined|NaN/.test(t)) a(`⑧ 「${t}」`);
+    if (/はさまれない/.test(W.hintTx) && !f.wrong.some(m => f.C.get(m).why2 === 'cap')) a(`⑧ 「${W.hintTx}」: no wrong move here leaves a wall piece to be taken`);
+    if (/動けるスペース/.test(W.hintTx) && !f.wrong.some(m => f.C.get(m).why2 === 'stuck')) a(`⑧ 「${W.hintTx}」: no wrong move here shuts the king in`);
+    for (const m of f.wrong) { const raw = plain(W.ng(m)), x0 = nm(m), i0 = raw.indexOf('赤い印の手'), i1 = raw.indexOf('緑の印の手'), R = f.C.get(m);
+      if (/\{|undefined|NaN/.test(raw) || i0 < 0 || i1 < 0) { a(`⑦ ${x0}: 「${raw}」 (your move / the right move not named)`); continue; }
+      const tx = raw.slice(i0, i1);
+      const said = /壁の駒が動いて|壁の1枚がぬけて|壁から駒がはなれて|壁の駒がいた所|壁をくずして/.test(tx) ? 'moved' : /端からはなれ|ふちを出|端をはなれ|端にいない|内側へ出/.test(tx) ? 'kingoff' : /王さまが動く手|王が動くだけ|場所を変えただけ|王の手なの|王が動いても壁/.test(tx) ? 'king' : /入りこまれ|入ってこられる|入ってくる|飛びこんで|入られ/.test(tx) ? 'enter'
+        : /はさまれ|取られる|こわされ|ねらわれる/.test(tx) ? 'cap' : /動けな|動く場所がなく|部屋をふさ/.test(tx) ? 'stuck' : /完成しない|そのまま残る|ふさげない|あいたまま|残ったまま/.test(tx) ? 'open' : '?';
+      if (said !== R.why2) a(`⑦ ${x0}: 「${tx}」 says ${said}, the board: ${R.why2}`); }
+    return f.d * 10 - (P.ok || []).length; };
+  { const st = L.steps.find(s => s.id === 't_fort');
+    if (st && st.diagram) { const D = st.diagram, p = E.Pos.from(D.s); (D.arrows || []).forEach(([fr, to]) => { const m = E.parse(p, fr + '-' + to); if (m == null) { add('t_fort', -1, `diagram: 追14 ${fr}-${to} is not legal`); return; }
+      const f = FT.fortFacts(E, { s: D.s, ok: [m], best: m }); f.bad.filter(b => /^①/.test(b)).forEach(b => add('t_fort', -1, `diagram: 追14 ${b}`)); }); } }
   L.steps.forEach((st, si) => { const id = st.id; if (!TF_DONE.has(id) || (opt && opt.only && !opt.only.includes(id))) return;   // (opt.only: the mutation tests of one lesson)
     let prevD = -1, firstD = null;
-    if (id === 'b_safe' || id === 't_shield' || id === 't_tuichi') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : id === 't_tuichi' ? tuichiOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
+    if (id === 'b_safe' || id === 't_shield' || id === 't_tuichi' || id === 't_block' || id === 't_fort') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : id === 't_tuichi' ? tuichiOne : id === 't_block' ? blockOne : id === 't_fort' ? fortOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
     st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), me = p.turn, all = p.moves(), nm = m => E.name(p, m);
       if (P.n > 1) { const d = seqCheck(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
         if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); seqWords(st, si, P, j, a); return; }
@@ -2285,7 +2344,7 @@ function xqStray42(PZ, add, W0) {
 // capture, its value), the engine (depth 3: the answer on top, every other move 250 or more worse), the pool (lessons.json problems
 // and warm-ups of every step, tsume.json; mirrored too), the order (both the 2D and the 3D keep the pool's order) and ショウギツネ's
 // words for every legal move.
-const SH_DONE = new Set(['k20', 'k15', 'k12', 'k10', 'k8', 'k6', 'k4', 'k2']);   // (k12: tools/lesson-verify-shevade.js, k10 and k8: tools/lesson-verify-shmate1.js, k6 and k4: tools/lesson-verify-shmate3.js, k2: tools/lesson-verify-shmate5.js)
+const SH_DONE = new Set(['k20', 'k15', 'k12', 'k10', 'k8', 'k6', 'k4', 'k2', 'd1']);   // (k12: tools/lesson-verify-shevade.js, k10 and k8: tools/lesson-verify-shmate1.js, k6 and k4: tools/lesson-verify-shmate3.js, k2: tools/lesson-verify-shmate5.js, d1: tools/lesson-verify-shmate7.js)
 function shogi(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'shogi/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'shogi/lessons.json'), 'utf8'));
@@ -2386,7 +2445,7 @@ function shogi(opt) {
     if (id === 'k15') { freeX.g = g; if (g.trapNote) add(id, -1, '④ a trapNote but no trap problem'); if (/罠|わな|poison/i.test(JSON.stringify(g.prompt) + JSON.stringify(X.SHJ2.intro.k15 || ''))) add(id, -1, '④ the prompt / intro speaks of traps'); }
     g.problems.forEach((P, j) => { const a = m => add(id, j, m), p = pos(P.sfen), ms = p.legalMoves(true), U = m => p.toUsi(m);
       if (id === 'k15') { shFree(P, j, a, p, ms, U); return; }
-      if (id === 'k12' || id === 'k10' || id === 'k8' || id === 'k6' || id === 'k4' || id === 'k2') return;   // (tools/lesson-verify-shevade.js / lesson-verify-shmate1.js, below)
+      if (id === 'k12' || id === 'k10' || id === 'k8' || id === 'k6' || id === 'k4' || id === 'k2' || id === 'd1') return;   // (tools/lesson-verify-shevade.js / lesson-verify-shmate1.js, below)
       if (P.kind !== 'best' || P.mode !== 'material') { a('④ not a material problem'); return; }
       if (p.inCheck()) a('④ the mover is in check');
       if (ms.length < 3) a(`③ ${ms.length} legal moves`);
@@ -2433,7 +2492,7 @@ function shogi(opt) {
         if (c) { const x = NM[c.t]; if (!w.includes(x)) a(`⑦ ${u}: takes a ${x}, the words do not say so 「${w}」`); if (/取れない|取らない|駒得にならない|何も取れない|取っていない/.test(w)) a(`⑦ ${u}: it does take 「${w}」`); }
         else if (!/取れない|取らない|駒得にならない|何も取れない|取っていない/.test(w)) a(`⑦ ${u}: takes nothing, the words do not say so 「${w}」`); }
     });
-    if (id !== 'k12' && id !== 'k10' && id !== 'k8' && id !== 'k6' && id !== 'k4' && id !== 'k2' && (id === 'k15' ? freeX.movers : movers).size < 5) add(id, -1, `⑤ only ${(id === 'k15' ? freeX.movers : movers).size} kinds of piece take`);
+    if (id !== 'k12' && id !== 'k10' && id !== 'k8' && id !== 'k6' && id !== 'k4' && id !== 'k2' && id !== 'd1' && (id === 'k15' ? freeX.movers : movers).size < 5) add(id, -1, `⑤ only ${(id === 'k15' ? freeX.movers : movers).size} kinds of piece take`);
     // 追32 every kind of piece that can take in the problems and warm-ups (the moves the student has to read) has its move told in
     // the intro: the 3D (ショウギツネ's SHJ2.intro, the warm-ups) and the 2D (grade.intro.ja, the warm-ups) — the name and a move word
     // next to it; promoted pieces: 成 … 金と同じ, 馬, 龍. (k20: the 3D intro said only 「駒の動きは練習で見ていこう」 and the warm-ups showed the
@@ -2444,7 +2503,7 @@ function shogi(opt) {
     g.problems.forEach(P => scan(P.sfen)); (g.ramp || []).forEach(r => r.k === 'try' && scan(r.sfen));
     const rampTx = (g.ramp || []).map(r => ['t', 'body', 'g', 'h', 'y'].map(f => r[f] && r[f].ja || '').join(' ')).join(' ');
     const said = { '3D': plain(String((X.SHJ2.intro || {})[id] || '')) + ' ' + plain(rampTx), '2D': plain((g.intro && g.intro.ja || []).join(' ')) + ' ' + plain(rampTx) };
-    if (id === 'k12' || id === 'k10' || id === 'k8' || id === 'k6' || id === 'k4' || id === 'k2') { const g0 = L.grades.find(x => x.id === 'k20'), r0 = (g0.ramp || []).map(r => ['t', 'body', 'g', 'h', 'y'].map(f => r[f] && r[f].ja || '').join(' ')).join(' ');   // (k12: the moves were taught before the problems, in k20「駒の動きと価値」 — the lesson before; its intro and warm-ups count)
+    if (id === 'k12' || id === 'k10' || id === 'k8' || id === 'k6' || id === 'k4' || id === 'k2' || id === 'd1') { const g0 = L.grades.find(x => x.id === 'k20'), r0 = (g0.ramp || []).map(r => ['t', 'body', 'g', 'h', 'y'].map(f => r[f] && r[f].ja || '').join(' ')).join(' ');   // (k12: the moves were taught before the problems, in k20「駒の動きと価値」 — the lesson before; its intro and warm-ups count)
       said['3D'] += ' ' + plain(String((X.SHJ2.intro || {}).k20 || '')) + ' ' + plain(r0); said['2D'] += ' ' + plain((g0.intro && g0.intro.ja || []).join(' ')) + ' ' + plain(r0); }
     for (const [who, tx] of Object.entries(said)) for (const k of kinds) { const w = KW[k]; if (!w) continue;
       const ok = k >= 9 && k <= 12 ? w.every(x => tx.includes(x)) : new RegExp(w[0] + MW).test(tx);
@@ -2497,6 +2556,7 @@ function shogi(opt) {
   if (SH_DONE.has('k6')) require('./lesson-verify-shmate3.js')({ E, L, X, pool, brd, dist, add, src, app });
   if (SH_DONE.has('k4')) require('./lesson-verify-shmate3.js')({ E, L, X, pool, brd, dist, add, src, app }, 'k4');
   if (SH_DONE.has('k2')) require('./lesson-verify-shmate5.js')({ E, L, X, pool, brd, dist, add, src, app });
+  if (SH_DONE.has('d1')) require('./lesson-verify-shmate7.js')({ E, L, X, pool, brd, dist, add, src, app });
   // 追72 (2026-11-25 担当A): the moves that count as right (16 points or more of 20) and a warm-up try's ok are a third of the legal moves at most
   for (const g of L.grades) { if (!SH_DONE.has(g.id)) continue;
     g.problems.forEach((P, j) => { const p = pos(P.sfen), ms = p.legalMoves(true), r = P.kind === 'tsume' ? (P.sol || []).length && 1 : ms.filter(m => ctx.SHOGI.points(P, p.toUsi(m)) >= 16).length;   // (k10: one mate in one — lesson-verify-shmate1.js checks it is the only one)
