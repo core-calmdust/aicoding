@@ -2765,7 +2765,7 @@ function xqStray42(PZ, add, W0) {
 // capture, its value), the engine (depth 3: the answer on top, every other move 250 or more worse), the pool (lessons.json problems
 // and warm-ups of every step, tsume.json; mirrored too), the order (both the 2D and the 3D keep the pool's order) and ショウギツネ's
 // words for every legal move.
-const SH_DONE = new Set(['k20', 'k15', 'k12', 'k10', 'k8', 'k6', 'k4', 'k3', 'k2', 'd1', 'd2', 'rx']);   // (k5 is next: tools/lesson-verify-shfork.js, added to SH_DONE once its problems are rebuilt; k3: tools/lesson-verify-shdefend.js, k12: tools/lesson-verify-shevade.js, k10 and k8: tools/lesson-verify-shmate1.js, k6 and k4: tools/lesson-verify-shmate3.js, k2: tools/lesson-verify-shmate5.js, d1: tools/lesson-verify-shmate7.js)
+const SH_DONE = new Set(['k20', 'k15', 'k12', 'k10', 'k8', 'k6', 'k5', 'k4', 'k3', 'k2', 'd1', 'd2', 'rx']);   // (k5: tools/lesson-verify-shfork.js; k3: tools/lesson-verify-shdefend.js, k12: tools/lesson-verify-shevade.js, k10 and k8: tools/lesson-verify-shmate1.js, k6 and k4: tools/lesson-verify-shmate3.js, k2: tools/lesson-verify-shmate5.js, d1: tools/lesson-verify-shmate7.js)
 function shogi(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'shogi/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'shogi/lessons.json'), 'utf8'));

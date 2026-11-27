@@ -8,7 +8,8 @@
 // usage: node shogi/tools/set-fork.js <candidates.jsonl...> [--n=10] [--write]
 'use strict';
 const E = require('../engine.js'), zlib = require('zlib'), fs = require('fs'), path = require('path');
-{ const b = zlib.gunzipSync(fs.readFileSync(path.join(__dirname, '../weights.bin.gz'))); E.setWeights(new Int16Array(b.buffer, b.byteOffset, b.length / 2)); }
+const E0 = (() => { const k = require.resolve('../engine.js'), c = require.cache[k]; delete require.cache[k]; const e = require('../engine.js'); require.cache[k] = c; return e; })();
+const WTS = (() => { const b = zlib.gunzipSync(fs.readFileSync(path.join(__dirname, '../weights.bin.gz'))); return new Int16Array(b.buffer, b.byteOffset, b.length / 2); })(); E.setWeights(WTS);
 const F = require('./fork-lib.js')(E), T = E.typeOf;
 const args = process.argv.slice(2), files = args.filter(a => !a.startsWith('--')), NWANT = +((args.find(a => a.startsWith('--n=')) || '--n=10').slice(4)), WRITE = args.includes('--write');
 const LP = path.join(__dirname, '../lessons.json'), L = JSON.parse(fs.readFileSync(LP, 'utf8'));
@@ -28,9 +29,15 @@ for (const c of cs) {
   E.ttClear(); const r5 = new E.Searcher(p).analyze({ depth: 5, time: 0 }).sort((x, y) => y.s - x.s);
   if (p.toUsi(r5[0].m) !== c.ans || r5[1].s > r5[0].s - 300) { console.error('engine5', c.ans, p.toUsi(r5[0].m), r5[0].s, r5[1] && r5[1].s); continue; }
   if (r5[0].s - r5[1].s < 600) { E.ttClear(); const r6 = new E.Searcher(p).analyze({ depth: 6, time: 0 }).sort((x, y) => y.s - x.s); if (p.toUsi(r6[0].m) !== c.ans || r6[1].s > r6[0].s - 300) { console.error('engine6', c.ans); continue; } }
+  { let bad = null;   // (tools/lesson-verify-shfork.js searches with the engine's default weights: both must agree)
+    E0.ttClear(); const p0 = new E0.Position(); p0.setSfen(c.sfen); const q5 = new E0.Searcher(p0).analyze({ depth: 5, time: 0 }).sort((x, y) => y.s - x.s);
+    if (p0.toUsi(q5[0].m) !== c.ans || (q5[1] && q5[1].s > q5[0].s - 300)) bad = 'plain5';
+    else if (q5[1] && q5[0].s - q5[1].s < 600) { E0.ttClear(); const q6 = new E0.Searcher(p0).analyze({ depth: 6, time: 0 }).sort((x, y) => y.s - x.s); if (p0.toUsi(q6[0].m) !== c.ans || (q6[1] && q6[1].s > q6[0].s - 300)) bad = 'plain6'; }
+    if (bad) { console.error(bad, c.ans); continue; } }
   const B = brd(c.sfen); if (pool.some(b => dist(B, b) <= 6)) { console.error('near'); continue; }
   const d = ms.filter(m => p.toUsi(m) !== c.ans && single(p, m)).length + ms.length / 1000;
-  c.cand = r5.map(x => [p.toUsi(x.m), x.s]); { let lo = c.cand[c.cand.length - 1][1]; for (const m of ms) { const u = p.toUsi(m); if (!c.cand.some(x => x[0] === u)) c.cand.push([u, --lo]); } }   // (the moves the search leaves out — a needless non-promotion — last) c.d = d; c.B = B; ok.push(c);
+  c.cand = r5.map(x => [p.toUsi(x.m), x.s]); { let lo = c.cand[c.cand.length - 1][1]; for (const m of ms) { const u = p.toUsi(m); if (!c.cand.some(x => x[0] === u)) c.cand.push([u, --lo]); } }   // (the moves the search leaves out — a needless non-promotion — last)
+  c.d = d; c.B = B; ok.push(c);
 }
 console.error('kept', ok.length, 'of', cs.length);
 // greedy: variety of mover pieces and kinds, apart from each other
