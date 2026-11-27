@@ -771,7 +771,7 @@ function gomoku(opt) {
 //   ⑦⑧ ハコピヨ's words (atlas/lessons3d.js dotsJa, run here) against the board: the boxes the red line hands over (≥1 when the
 //      words say so) and the boxes lost ((best − v) / 2), no 「開く」 for a line that takes, the question's 「1本」 / 「広い盤」 and the
 //      2D example's 「緑の点線も安全な線で、どれを選んでも同じ結果」 (problem 0 has other safe lines, all best)
-const DT_DONE = new Set(['safe', 'third', 'take', 'chain', 'hard', 'double', 'control', 'parity', 'sacrifice', 'loop', 'count']);
+const DT_DONE = new Set(['safe', 'third', 'take', 'chain', 'hard', 'double', 'control', 'parity', 'sacrifice', 'loop', 'count', 'open3']);
 function dots(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'dots/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'dots/lessons.json'), 'utf8'));
@@ -783,6 +783,9 @@ function dots(opt) {
   const pool = []; L.steps.forEach(st => st.problems.forEach((q, j) => pool.push([`${st.id} q${j + 1}`, q])));
   for (const f of fs.readdirSync(path.join(ROOT, 'dots/puzzles'))) { const d = JSON.parse(fs.readFileSync(path.join(ROOT, 'dots/puzzles', f), 'utf8'));
     (d.levels || []).forEach((lv, i) => (lv || []).forEach((q, j) => { if (q && q.e) pool.push([`puzzle ${d.cat} ${i + 1}-${j + 1}`, q]); })); }
+  // (2026-11-27 担当A) ⑤ the opening book too for open3 (dots/openings.json: every position along every line, the drill's included)
+  { const OB = JSON.parse(fs.readFileSync(path.join(ROOT, 'dots/openings.json'), 'utf8')), DK = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+    for (const set of OB.sets || []) for (const ln of set.lines || []) for (let k = 1; k <= ln.moves.length; k++) pool.push([`opening ${set.id} ${ln.id} move ${k}`, { n: set.n, e: ln.moves.slice(0, k), book: 1 }]); }
   const dist = (a, b) => { if (a.n !== b.n) return 99; const G = E.geom(a.n, a.n), A = X.dDecE(a.e), B = new Set(X.dDecE(b.e)); let best = 99;
     for (const P of G.perms) { const A2 = new Set(A.map(e => P[e])); let d = 0; for (const e of A2) if (!B.has(e)) d++; for (const e of B) if (!A2.has(e)) d++; best = Math.min(best, d); } return best; };
   const plain = t => String(t || '').replace(/<[^>]+>/g, '');
@@ -954,6 +957,39 @@ function dots(opt) {
             if (kinds[j] === 'take' && !(pv.firstOpen >= 1 && pv.firstOpen <= 2)) a(`⑧ after the take the mover first opens a part of ${pv.firstOpen} (「小さな鎖を先にあげれば」)`);
             if (kinds[j] === 'dd') { const pr = dtPV(E, G, p, tk); if (!big.boxes.every(bx => pr.got[bx] === 1)) a(`⑦ after the red take ${tk} the largest chain is not the opponent's (yAllC)`); } } }
         d = (q.n - 3) * 10 + comps.length;
+      } else if (id === 'open3') {
+        // (2026-11-27 担当A) open3 = DTJ.open3 / ls.open3 (「3×3（点16個）…序盤には、1本で結果が変わる局面…先手は長い鎖を偶数本に、後手は
+        // 奇数本にしたい。盤を分ける線が鎖の形を決める」, q 「この盤なら、どの1本？」): a 3×3, no box taken yet (先手 / 後手 on the board),
+        // nothing to take, 3+ safe lines with 2+ of them worse than the best (「安全な線でも、鎖の形は変わる」), exactly one best line and it
+        // is safe, and it wins (rPar 「緑の線が勝ちにつながる」). Along every line of optimal play (dtOpener): after the best line the
+        // opponent is the first to open a long chain (safeP / rPar 「最後に長い鎖を開くのは相手」「長い鎖を開かされるのは相手のほう」) and
+        // the long chains then agree with the long chain rule for the mover (「長い鎖の数がきみに合う」); after every worse safe line the
+        // mover is the first to open one (yPar 「最後に長い鎖を開かされる」「最後に長い鎖を開くのがきみになる」); after every red line that
+        // gives a third side, taking every box it hands over (F m, yGive 「{xm}箱取られる」) is among the opponent's best replies.
+        // the words (safeO / rParO / yParO / yGiveO) say who opens first, not the number of long chains (along optimal play from an opening
+        // the long chains at that moment need not agree with the long chain rule), so they must not speak of it; 「取られる」 for a red third
+        // side only when taking every box it hands over is among the opponent's best replies
+        const S2 = new E.Solver(G), W3 = u => plain(X.dotsJa(st, F, { values: all.map(x => [x.m, x.v]) }, B[0], Math.max(0, j - 1), si).ng(u));
+        for (const t of [plain(X.dotsJa(st, F, { values: all.map(x => [x.m, x.v]) }, B[0], Math.max(0, j - 1), si).good(B[0]))].concat(worse.map(x => W3(x.m)))) if (/本数|偶数|奇数|数がきみに|数がずれ/.test(t)) a(`⑧ the words 「${t}」 speak of the number of long chains`);
+        if (q.n !== 3) a(`④ a ${q.n}×${q.n} board (the lesson's: 3×3)`);
+        if (X.dDecO(q.o).some(o => o >= 0)) a('④ a box already taken (the mover\'s 先手 / 後手 is not on the board)');
+        if (cap) a('④ a box to take'); if (safe.length < 3) a(`④ ${safe.length} safe lines (3+)`);
+        if (safe.filter(e => V.get(e) < best).length < 2) a('④ fewer than 2 safe lines worse than the best (「安全な線でも、鎖の形は変わる」)');
+        if (B.length !== 1 || !safe.includes(B[0])) a(`④ the best lines ${B} are not one safe line`);
+        if (best <= 0) a(`④ the best line does not win (${best}: rPar 「緑の線が勝ちにつながる」)`);
+        for (const e of safe) { const p2 = p.clone(); p2.play(e); const o = dtOpener(E, G, S2, p2), isB = B.includes(e), want = isB ? 'tomove' : 'other';
+          if (o.who.size !== 1 || !o.who.has(want)) a(`⑦⑧ the ${isB ? 'best' : 'red safe'} line ${e}: along optimal play the first to open a long chain is ${[...o.who].map(w => w === 'tomove' ? 'the opponent' : w === 'other' ? 'the mover' : 'none')} (the words: ${isB ? 'the opponent' : 'the mover'})`);
+        }
+        for (const x of worse) { if (p.isSafe(x.m) || p.completes(x.m) || !(p.gives(x.m) > 0)) continue;
+          const p2 = p.clone(); p2.play(x.m); const v2 = Math.max(...S2.all(p2).map(y => y.v)), p3 = dtTakeAll(p, x.m); let k = 0; for (let bx = 0; bx < G.B; bx++) if (p3.cnt[bx] === 4 && p.cnt[bx] !== 4) k++;
+          const rest = p3.legal().length ? Math.max(...S2.all(p3).map(y => y.v)) : 0;
+          if (k !== F.of(x.m).m) a(`⑧ the red line ${x.m}: dFacts says it hands over ${F.of(x.m).m}, taking after it gets ${k}`);
+          if (k + rest !== v2 && /箱取られ|箱が相手のものに|ぺろり/.test(W3(x.m))) a(`⑦ the red line ${x.m}: taking the ${k} boxes it hands over is not among the opponent's best replies (yGive 「${k}箱取られる」)`); }
+        // 追45: the intros (2D body, 3D intro) recommend no kind of line that is wrong in a problem (the old 「中央の箱の辺や、盤を分断する線」:
+        // in 8 of the 10 problems every edge of the centre box was a losing line) — they speak of the safe line that decides who opens first
+        if (j === 0) { const ja = JSON.parse(fs.readFileSync(path.join(ROOT, 'dots/content/text.ja.json'), 'utf8')), t = plain([].concat(ja['ls.open3.body'] || []).join(' ') + ' ' + X.DTJ.open3.intro);
+          if (/中央の箱|真ん中の箱|盤を分(け|断)/.test(t)) a(`追45 the open3 intro recommends a kind of line (the centre box / a line that cuts the board): 「${t}」`); }
+        d = safe.length;
       } else if (id === 'control') {
         // (2026-11-25 担当A) control = ハコピヨ's rule (DTJ.control.intro / ls.control.body: 「残りの鎖が小さい…なら全部取る…大きな長い
         // 鎖が残っていれば、残して主導権をキープ」) on the board: no safe line, no loop, one box to take, in an opened chain of 2 (the
@@ -977,7 +1013,7 @@ function dots(opt) {
       if (j >= 1) { if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
         if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 2 (d ${d} vs ${firstD})`); }
       // ⑤
-      for (const [who, r] of pool) { if (r === q) continue; const e = dist(q, r); if (e <= 2) a(`⑤ ${e} lines from ${who}`); }
+      for (const [who, r] of pool) { if (r === q || (r.book && id !== 'open3')) continue; const e = dist(q, r); if (e <= 2) a(`⑤ ${e} lines from ${who}`); }   // (the book: open3, the openings lesson, against every position of every line)
       // ⑦ ⑧ the 3D words (problems 1–5) and the 2D example's caption (problem 0)
       if (j === 0 && id === 'safe' && !(safe.length >= 2 && same(B, safe))) a(`⑧ the example's 「緑の点線も安全な線で、どれを選んでも同じ結果」: ${safe.length} safe lines, best ${B}`);
       if (j >= 1 && j <= 5) { const i = j - 1, ask = X.DTJ[id].ask[i % 5], P = { values: vals }, ans = B[0], W = X.dotsJa(st, F, P, ans, i, si);
@@ -996,7 +1032,7 @@ function dots(opt) {
           if (/(^|[^\d])0箱/.test(t)) a(`⑦ line ${x.m}: 「${t}」 (0 boxes)`);
           // (2026-11-27 担当A) the boxes handed over by the red line: not in a sentence about the green line alone (rSac 「緑の線で{bm}箱あげるのが正解」)
           const tRed = t.split('。').filter(c => !/緑/.test(c) || /赤/.test(c)).join('。');
-          const g2 = tRed.match(/相手に(\d+)箱|(\d+)箱が相手|(\d+)箱をぺろり|(\d+)箱が渡る|(\d+)箱を丸ごと|(\d+)箱の鎖|(\d+)箱あげる|(\d+)箱を渡す|(\d+)箱をまとめて|(\d+)箱をごっそり/);
+          const g2 = tRed.match(/(\d+)箱取られ|相手に(\d+)箱|(\d+)箱が相手|(\d+)箱をぺろり|(\d+)箱が渡る|(\d+)箱を丸ごと|(\d+)箱の鎖|(\d+)箱あげる|(\d+)箱を渡す|(\d+)箱をまとめて|(\d+)箱をごっそり/);
           if (g2) { const k = +g2.slice(1).find(Boolean); if (k !== fx.m) a(`⑦ line ${x.m}: the words say ${g2[0]}, the line hands over ${fx.m}`); }
           // (2026-11-27 担当A) an end-opened 2-chain (ret): words that say the opponent hands the 2 boxes back (yEnd 「返して手番を押しつけてくる」
           // 「取らずに手番だけ押しつけられる」「主導権まで取られちゃう」) only when handing back is among the opponent's best replies (the solver
@@ -1033,6 +1069,24 @@ function dtPV(E, G, p0, e) {
     if (!k) { if (firstOpen === null && side === 0 && step) { const c = before.find(c => bs.some(bx => c.boxes.includes(bx))); firstOpen = c ? c.n : 0; } side ^= 1; }
     step++; }
   return { got, firstOpen };
+}
+// (2026-11-27 担当A, dots open3) dtOpener: from p (the side to move), along every line of optimal play (every best line of the exact
+// solver, each turn), who is the first to open a long chain (draw a line that takes nothing and gives a third side to a box of a part
+// of 3+): a Set of 'tomove' / 'other' / 'none' (the game ends with no long chain opened); lc = the long chains (plain, not a loop, 3+)
+// on the board at that moment, as a Set.
+function dtOpener(E, G, S, p0) {
+  const p = p0.clone(), memo = new Map();
+  const rec = () => { const key = p.h1[0] + ':' + p.h2[0]; if (memo.has(key)) return memo.get(key);
+    const lg = p.legal(), r = { who: new Set(), lc: new Set() };
+    if (!lg.length) { r.who.add('none'); memo.set(key, r); return r; }
+    const A = S.all(p), bv = Math.max(...A.map(x => x.v));
+    for (const x of A) { if (x.v !== bv) continue; const m = x.m;
+      if (!p.completes(m) && p.gives(m) > 0) { const cs = E.components(p, true), bs = [G.eb0[m], G.eb1[m]], c = cs.find(c => bs.some(b => b >= 0 && c.boxes.includes(b)));
+        if (c && c.n >= 3) { r.who.add('tomove'); r.lc.add(cs.filter(c => c.simple && !c.loop && c.n >= 3).length); continue; } }
+      const k = p.play(m), t = rec(); p.undo(m);
+      t.who.forEach(v => r.who.add(v === 'none' || k ? v : v === 'tomove' ? 'other' : 'tomove')); t.lc.forEach(v => r.lc.add(v)); }
+    memo.set(key, r); return r; };
+  return rec();
 }
 // (2026-11-26 担当A, dots parity) after the mover's safe line e, every run of safe lines to the end (no safe line left; a safe line
 // never takes, so the turns alternate): opener = who has to open first in every run ('opp' / 'me' / 'mixed'), the long chains (3+,
@@ -1106,6 +1160,12 @@ function dtIntro(L, X, E, lj, add, only) {
     if (id === 'parity') { if (!green.length || green.some(e => val.get(e) >= best)) a(`⑧ the parity caption 「${ex}」: green ${green.map(e => e + '=' + val.get(e))}, best ${best}`);
       for (const e of green) if (dtSafeEnd(E, p, e).opener !== 'me') a(`⑧ the parity caption: after the green line ${e} the mover does not open first`);
       for (const e of mk.hl) if (dtSafeEnd(E, p, e).opener !== 'opp') a(`⑧ the parity example: after the gold line ${e} the opponent does not open first`); }
+    // (2026-11-27 担当A) open3: 「ほかの安全な線（緑）を引くと、最初に長い鎖を開かされるのは自分になります」 = green lines drawn, every one
+    // worse than the gold, and after each the mover is the first to open a long chain along every line of optimal play (dtOpener); after
+    // the gold line the opponent is
+    if (id === 'open3') { const S2 = new E.Solver(G); if (!green.length || green.some(e => val.get(e) >= best)) a(`⑧ the open3 caption 「${ex}」: green ${green.map(e => e + '=' + val.get(e))}, best ${best}`);
+      for (const e of green) { const p2 = p.clone(); p2.play(e); const o = dtOpener(E, G, S2, p2).who; if (o.size !== 1 || !o.has('other')) a(`⑧ the open3 caption: after the green line ${e} the mover is not the first to open`); }
+      for (const e of mk.hl) { const p2 = p.clone(); p2.play(e); const o = dtOpener(E, G, S2, p2).who; if (o.size !== 1 || !o.has('tomove')) a(`⑧ the open3 example: after the gold line ${e} the opponent is not the first to open`); } }
     // (2026-11-27 担当A) sacrifice: 「緑の安全な線を引くと、長い鎖を開かされるのは自分になります」 = green lines drawn (the safe lines), every
     // one worse than the gold, and after each the mover opens first in every run (dtSafeEnd); the gold line is the sacrifice
     if (id === 'sacrifice') { if (!green.length || green.some(e => val.get(e) >= best)) a(`⑧ the sacrifice caption 「${ex}」: green ${green.map(e => e + '=' + val.get(e))}, best ${best}`);
