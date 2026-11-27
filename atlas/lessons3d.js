@@ -3904,7 +3904,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-checkers-lessons', OKEY: 'aicoding-checkers-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=30261127bk1-ts1-td1-tb1'), getJ('../checkers/openings.json?v=6'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1-bk1-bs1-ts1-td1-tb1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=8').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=30261127bk1-ts1-td1-tb1'), getJ('../checkers/openings.json?v=7'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1-bk1-bs1-ts1-td1-tb1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=8').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vc]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] checkers texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vc)(v); this.V = ((v.I18N || {})['ja@crab']) || {}; } catch (e) { this.V = {}; }   // (チェッカニ's own lines, 3D, ja)
           return this; })

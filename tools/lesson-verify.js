@@ -2979,6 +2979,7 @@ function checkersOpen(opt) {
   const fs = require('fs'), vm = require('vm');
   if (!ckW) ckW = require(path.join(ROOT, 'checkers/tools/wasm.js')).loadSync();
   const W = ckW, E = W.E, out = [], add = (id, j, m) => out.push({ step: id, q: j + 1, msg: m });
+  const ckFresh = () => require(path.join(ROOT, 'checkers/tools/wasm.js')).loadSync();   // (a new instance: nothing left from other searches)
   const O = (opt && opt.op) || JSON.parse(fs.readFileSync(path.join(ROOT, 'checkers/openings.json'), 'utf8'));
   const src = (opt && opt.src) || fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), app = fs.readFileSync(path.join(ROOT, 'checkers/app.js'), 'utf8');
   const cut = (a, b) => src.slice(src.indexOf(a), src.indexOf(b));
@@ -3015,9 +3016,13 @@ function checkersOpen(opt) {
       sc.forEach(([m, v], k) => { if (!ms.includes(m)) a(`① ${m} is not legal`); if (k && v > sc[k - 1][1]) a('① the values are not best first'); });
       if ((sc[0] || [])[0] !== A) a('① best is not the top of the stored values');
       sc.forEach(([m]) => { if (m !== A && pts(sc, m) > 12) a(`② ${E.name(p, m)} scores ${pts(sc, m)} (stored values)`); });
-      const r = W.analyzeDepth(P.s, 14), fr = r.list.map(e => [e.m, e.v]);
-      if (fr[0][0] !== A) a(`① a fresh search prefers ${E.name(p, fr[0][0])} (${fr[0][1]}) to ${E.name(p, A)} (${(fr.find(e => e[0] === A) || [0, '—'])[1]})`);
-      else fr.forEach(([m]) => { if (m !== A && pts(fr, m) > 12) a(`② ${E.name(p, m)} scores ${pts(fr, m)} in a fresh search`); });
+      // (2026-11-27 担当B) each fresh search on a new engine instance: the transposition table, history and killers of the checks
+      // run before it in the same process changed the reading (glasgow q8 NG only after the checkers check) — now the same however it is run.
+      // 追4 / さかのぼりを減らす 6.2: when another move scores more than 4 at depth 14 (the margin under twice the pass line), read again at depth 16
+      for (const dp of [14, 16]) { const fr = ckFresh().analyzeDepth(P.s, dp).list.map(e => [e.m, e.v]);
+        if (fr[0][0] !== A) { a(`① a fresh search (depth ${dp}) prefers ${E.name(p, fr[0][0])} (${fr[0][1]}) to ${E.name(p, A)} (${(fr.find(e => e[0] === A) || [0, '—'])[1]})`); break; }
+        fr.forEach(([m]) => { if (m !== A && pts(fr, m) > 12) a(`② ${E.name(p, m)} scores ${pts(fr, m)} in a fresh search (depth ${dp})`); });
+        if (!fr.some(([m]) => m !== A && pts(fr, m) > 4)) break; }
       // ③
       const safe = ms.filter(m => m !== A && net(p, m) >= 0).length;
       if (ms.length < 3) a(`③ ${ms.length} legal moves`); if (safe < 2) a(`③ only ${safe} other moves keep every piece`);
