@@ -38,7 +38,7 @@
 | ugolki ウゴルキ | モリフク | **3D対応済み**（パズル152問・レッスン11本55問。s_count は 2026-11-27 に作り直し） | なし（2D・3D の追58 は 2026-11-27 担当D） |
 | fanorona ファノロナ | チェッカニ | 一部（パズル199問・レッスン5本25問：b_approach・b_withdraw・b_choose・b_chain・b_safe、2026-11-27 担当E） | **レッスン7本35問**（b_win・t_big・t_count・t_stop・t_paika・e_hunt・e_trap）。atlas/ls-fanorona.js の READY に足し、tools/lesson-verify-fanorona-ls.js にその主題のチェックを足す（今は basics 3本と b_chain・b_safe の形） |
 | agon アゴン | キンダイスン | 一部（パズル152問は 2026-11-27 18:00 に3D対応済み、レッスンは b_step・b_capture・b_throne・b_reloc の4本20問を作り直して3D対応〈最後は 21:15 b_reloc〉、担当F） | レッスン8本37問（atlas/ls-agon.js の READY に足す。agon/ls-facts.js・tools/lesson-verify-agon-ls.js に主題の事実とチェック） |
-| latrunculi ラトルンクリ | ポンメェ | 未（担当D：パズル250問は問題検証済み・2D の外れた手の文 latrunculi/pzwhy.js 済み、2026-11-27） | 3D パズル（担当D：BOOK.latrunculi・latrunculi-pz.js にポンメェの文・表示確認）とレッスン7本35問の3D（担当C：2D の検証・作り直し・ls-facts.js・lesson-verify-latrunculi-ls.js は 2026-11-27 済み。D のアダプタのマージ後に atlas/ls-latrunculi.js・lessons3d.js の DATA・READY） |
+| latrunculi ラトルンクリ | ポンメェ | 一部（パズル250問は 2026-11-27 21:40 に3D対応済み、担当D。アダプタ atlas/games/latrunculi.js の ctx.pz・api.pz もマージ済み） | レッスン7本35問の3D（担当C：2D の検証・作り直し・ls-facts.js・lesson-verify-latrunculi-ls.js は 2026-11-27 済み。atlas/ls-latrunculi.js・lessons3d.js の DATA・READY、lesson-quality.js の PZ_ONLY から latrunculi を外す） |
 
 おすすめの順：（janggi の NG 直し・ugolki s_count は済み）→ konane（済み） → ugolki の2D 追58 → fanorona のレッスン → agon → latrunculi。大きいゲームは「パズル → レッスン数本ずつ」に区切ってマージしてよい（表は「一部」）。
 
