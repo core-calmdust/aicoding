@@ -277,7 +277,7 @@ function jgPuzzleTexts() {
   await pg.setRequestInterception(true);   // (fonts / CDNs: not needed, and they hang where the network is closed — as tools/lesson-progress.js)
   pg.on('request', q => { const u = q.url(); if (u.startsWith(`http://127.0.0.1:${port}/`) || u.startsWith('data:') || u.startsWith('blob:')) q.continue(); else q.abort(); });
   await pg.goto(`http://127.0.0.1:${port}/atlas/`, { waitUntil: 'domcontentloaded' }); await new Promise(r => setTimeout(r, 4000));
-  const PZ_ONLY = ['fanorona'];   // (2026-11-25 担当D: fanorona has its puzzles on the 3D table, its lessons not yet — scored below)
+  const PZ_ONLY = [];   // (2026-11-25 担当D: fanorona had its puzzles on the 3D table first; 2026-11-27 担当E: its lessons too, atlas/ls-fanorona.js — scored with the others)
   const pgGames = games.filter(g => !PZ_ONLY.includes(g)), onlyPz = games.length > 0 && !pgGames.length;   // (konane: the lessons (atlas/ls-konane.js, 2026-11-25) and the puzzles, scored below)   // (foxgeese: the lessons (atlas/ls-foxgeese.js) and the puzzles, scored below)
   const R = onlyPz ? {} : await pg.evaluate(async games => {
     let src = await (await fetch('lessons3d.js?x=' + Date.now())).text();
