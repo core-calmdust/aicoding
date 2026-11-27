@@ -24,8 +24,15 @@
       if (P) c.drawImage(P.canvas(t, red), 0, 0, 240, 320);
       else { c.fillStyle = '#fbf8ef'; c.fillRect(0, 0, 240, 320); }
     });
-    return M({ map: tex, roughness: .3, bump: false });
+    const m = M({ map: tex, roughness: .3, bump: false }); faces.push([m, t, red]); return m;
   });
+  // (2026-11-28 ユーザー「牌のフォントをゲーム中のものと同じに（負荷は変えずに）」) the game's own tile art (上海's two sheets, mahjong/tiles.js) is
+  // fetched once; when it is in, the faces already drawn with the stand-in glyphs are painted again in place — same textures, same cost
+  const faces = []; let artOn = false;
+  function artLater() {
+    const P = window.MJTiles; if (artOn || !P || !P.ready || P.sheets && P.sheets()) return; artOn = true;
+    P.ready().then(() => { P.reset(); faces.forEach(([m, t, red]) => { const c = m.map && m.map.image; if (!c || !c.getContext) return; const x = c.getContext('2d'); x.clearRect(0, 0, c.width, c.height); x.drawImage(P.canvas(t, red), 0, 0, c.width, c.height); m.map.needsUpdate = true; }); if (X.kick) X.kick(600); });
+  }
   // one tile: the ivory body and the blue back, as two rounded blocks; lying face up / face down, or standing (the face toward +z)
   // (2026-11-28 ユーザー「3Dビューの麻雀台のポリゴン数が多すぎる」) the ~210 tiles' bodies and backs are two InstancedMeshes (2 draw calls
   // instead of ~420), each a plain block (12 triangles, was 300 — at the 3D view's distance the rounding did not show): placed by markers, gathered at the end (instance())
@@ -43,6 +50,7 @@
   const P = s => { const out = [], m = s.match(/\d+[mpsz]/g) || []; for (const grp of m) { const k = grp.slice(-1), b = { m: 0, p: 9, s: 18, z: 27 }[k]; for (const d of grp.slice(0, -1)) out.push(k === 'z' ? b + +d - 1 : b + (+d === 0 ? 4 : +d - 1)); } return out; };
 
   X.MODELS.riichi = function () {
+    artLater();
     const TT = T(), g = new TT.Group(), S = 9.6, H = .9;   // the table's playing square, its height above the floor
     // the cabinet and the walnut rails
     const body = mesh(RB(S + 1.4, H - .1, S + 1.4, .2, 2), M({ color: 0x241a14, roughness: .55 }), 0, (H - .1) / 2, 0); g.add(body);
