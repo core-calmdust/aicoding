@@ -1353,7 +1353,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=3').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=5').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { let pr; try { pr = JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } return pzMigrate(pr); }
@@ -1607,11 +1607,17 @@ function lessonAnswer(m) {
     update(false);
   }, moveDur(m, pos0) + 700);
 }
+// (2026-11-27 担当F) the lessons rebuilt for the 3D (agon/ls-facts.js IDS): the words for a wrong move from the board's facts —
+// b_step a step along the ring (ngSide) / inwards into a sandwich ({r}: the enemy move that captures it), b_capture next to an
+// enemy piece with nothing of yours beyond it (ngTouch) / no enemy piece next to it (ng)
+const lsFx = s => !lesson.virt && window.AgonLsFacts && AgonLsFacts.IDS.includes(s.id);
+function lsNgKey(s, pos0, m) { return lsFx(s) ? AgonLsFacts.key(E, s.id, pos0.spec(), m) : 'ng'; }
+function lsNgR(s, pos0, m) { if (!lsFx(s)) return ''; const F = AgonLsFacts.fact(E, s.id, pos0.spec(), m); return F.rp != null ? mvIn(pos0.clone().play(m), F.rp) : ''; }
 function okAnswer(P, s, m, pts) {
   const pos0 = posAt(0).pos;
   lesson.results[lesson.i] = pts; renderLessonCard();
   const best = P.ok.includes(m) ? m : P.best;
-  $('#lsFb').innerHTML = `<span class="pts ${pts ? 'ok' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts ? 'ok' : 'ng'}">${t(pts ? 'fb.perfect' : 'fb.bad')}</b> ` + (pts ? t('ls.' + s.id + '.why', { m: mvIn(pos0, m) }) : t('ls.' + s.id + '.ng', { m: mvIn(pos0, best), x: mvIn(pos0, m) }));
+  $('#lsFb').innerHTML = `<span class="pts ${pts ? 'ok' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts ? 'ok' : 'ng'}">${t(pts ? 'fb.perfect' : 'fb.bad')}</b> ` + (pts ? t('ls.' + s.id + '.why', { m: mvIn(pos0, m) }) : t('ls.' + s.id + '.' + lsNgKey(s, pos0, m), { m: mvIn(pos0, best), x: mvIn(pos0, m), r: lsNgR(s, pos0, m) }));
   playChime(!!pts); playMove2(m);
   lsAuto(!!pts, moveDur(m, pos0) + 1100);
   const tok = busyToken;
@@ -1630,7 +1636,8 @@ $('#lsHint').onclick = () => {
   const s = curStep(), P = lessonProblem();
   lessonMarks = [];
   const good = P.ok || [P.best];
-  for (const f of new Set(good.map(mFrom))) lessonMarks.push({ at: f, cls: 'ok' });
+  if (lsFx(s)) for (const f of AgonLsFacts.hint(E, s.id, P.s)) lessonMarks.push({ at: f, cls: 'ok' });   // (every piece to look at, never the answer's alone: 追52)
+  else for (const f of new Set(good.map(mFrom))) lessonMarks.push({ at: f, cls: 'ok' });
   $('#lsFb').innerHTML = lesson.virt ? t('op.hint') : t('ls.' + s.id + '.hint');
   renderFx();
 };

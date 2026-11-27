@@ -26,6 +26,9 @@
 // b_safe (a safe move, 2026-11-27 担当E): safeProblem / safeWords below (no capture for either side; the one paika move after which the
 //    opponent has no capture; every other move gives one — the piece moved is taken, or other pieces through the point it left;
 //    the 2D keys why / ng / ngSelf).
+// b_win (finish the game, 2026-11-27 担当E): winProblem / winWords below (the one move that takes every piece the opponent has left;
+//    no other move wins anyway — the engine's second below a won value and 60 below; the pieces a wrong move leaves; the 2D keys
+//    why / ng / ngStop).
 // Usage: node tools/lesson-verify-fanorona-ls.js [--selftest]   (also: node tools/lesson-verify.js fanorona)
 'use strict';
 const fs = require('fs'), path = require('path'), zlib = require('zlib');
@@ -187,6 +190,69 @@ function safeProblem(P, opt) {
   const dd = (L.length - 1) + 2 * R.filter(r => r.c === 1).length;
   return { ok: !msgs.length, msgs, best, d: dd, n: L.length, kinds, cnt: R.map(r => r.c) };
 }
+// b_win (finish the game, 2026-11-27 担当E): one problem — { ok, msgs, best, d, kinds }
+//  ① ok = [the one move after which the opponent has no piece left] (every legal move played here and the opponent's pieces
+//    counted), the engine first at 7 and 9 with a won value; ② no other move takes them all, and no other move wins anyway: the
+//    engine's second below a won value (WINT) and 60 or more below (a move that stops early lets the opponent strike back — the
+//    lesson is "finish it now"); every wrong move leaves the opponent a legal move (no win by a blockade: the words count the pieces
+//    left); ③ 4〜16 legal moves from 3 capturing pieces or more (追52), 追72; ④ 2 opponent pieces or more taken by the answer;
+//  ⑤ as basicProblem; ⑥ d = wrong moves + 2 × near misses (moves leaving 1).
+function winProblem(P, opt) {
+  opt = opt || {}; engine();
+  const msgs = [], pos = E.Pos.from(P.s), L = pos.moves(true), bad = m => msgs.push(m), opp = 3 - pos.turn;
+  if (pos.status() !== 0 || !L.length || !pos.hasCaps()) return { ok: false, msgs: ['① no capture'] };
+  const a = pos.count(opp), Q = L.map(m => pos.clone().play(m)), left = Q.map(q => q.count(opp));
+  const wins = L.filter((m, i) => left[i] === 0), best = wins[0];
+  if (wins.length !== 1) bad('② ' + wins.length + ' moves take every piece');
+  if (a < 2) bad('④ the opponent has ' + a);
+  if (L.length < 4 || L.length > 16) bad('③ ' + L.length + ' legal moves');
+  const S = L.map(m => pos.steps(m));
+  if (new Set(S.map(x => x[0].from)).size < 3) bad('③ 追52 captures from fewer than 3 pieces');
+  if (3 > L.length) bad('追72');
+  Q.forEach((q, i) => { if (left[i] && q.status() !== 0) bad('② ' + L[i] + ': the opponent cannot move (a win by a blockade)'); });
+  const kinds = L.map((m, i) => m === best ? 'most' : best && best.startsWith(m + '-') ? 'stop' : L.some(x => x.startsWith(m + '-')) ? 'stopx' : 'dead');
+  if (P.ok && (P.ok.length !== 1 || P.ok[0] !== best)) bad('① ok ' + JSON.stringify(P.ok) + ' ≠ ' + best);
+  if (P.best !== undefined && P.best !== best) bad('① best ' + P.best + ' ≠ ' + best);
+  if (F.winBest(E, P.s) !== (wins.length === 1 ? best : null)) bad('⑧ ls-facts winning move');
+  if (opt.pool) for (const A of opt.pool) if (A.b !== P.s.b && near(P.s, A)) { bad('⑤ near ' + A.tag); break; }
+  if (msgs.length) return { ok: false, msgs, best, kinds };
+  if (!opt.skipEngine) for (const d of [7, 9]) {
+    const V = values(P.s, d);
+    if (!V.length || V[0].m !== best && !E.same(pos, V[0].m, best)) { bad(`① the engine (depth ${d}) puts ${V[0] && V[0].m} first`); break; }
+    if (V[0].v < E.WINT) { bad(`① the engine (depth ${d}): the answer not a won value (${V[0].v})`); break; }
+    if (V.length > 1 && (V[1].v >= E.WINT || V[0].v - V[1].v < 60)) { bad(`② the engine (depth ${d}) second ${V[1].m} ${V[1].v} (wins anyway or within 60)`); break; }
+  }
+  const dd = (L.length - 1) + 2 * left.filter(x => x === 1).length;
+  return { ok: !msgs.length, msgs, best, d: dd, n: L.length, kinds, cnt: left };
+}
+// b_win: the words for every move against the facts recounted here (the opponent's pieces left, a move that could go on)
+function winWords(P, LS3, i18n, bad) {
+  const id = 'b_win', pos = E.Pos.from(P.s), L = pos.moves(true), best = P.best, opp = 3 - pos.turn;
+  const n = m => pos.steps(m).reduce((a, y) => a + y.cap.length, 0), a = pos.count(opp), sa = pos.steps(best).length;
+  for (const m of L) {
+    const f = F.fact(E, id, P.s, m), c = n(m), sc = pos.steps(m).length, r = pos.clone().play(m).count(opp), more = L.some(x => x.startsWith(m + '-'));
+    const k = m === best ? 'most' : best.startsWith(m + '-') ? 'stop' : more ? 'stopx' : 'dead';
+    if (f.k !== k || f.c !== c || f.a !== a || f.r !== r || f.sc !== sc || f.sa !== sa) bad(`⑧ ${m}: the facts ${JSON.stringify(f)} ≠ ${k} ${c}/${a} left ${r} ${sc}/${sa}`);
+    if (c + r !== a) bad(`⑧ ${m}: taken ${c} + left ${r} ≠ ${a}`);
+    if (f.same !== (pos.steps(m)[0].from === pos.steps(best)[0].from)) bad(`⑧ ${m}: the facts' same piece`);
+    for (const lang of LANGS) for (let j = 0; j < (lang === 'ja' ? 6 : 1); j++) {
+      const h = LS3.sayText(id, P, m, lang, j);
+      if (!h || /\{\w+\}/.test(h) || /undefined|NaN/.test(h)) { bad(`⑧ ${m} ${lang}: ${h}`); continue; }
+      const nums = (h.replace(/<[^>]+>/g, '').match(/\d+/g) || []).map(Number);
+      if (lang === 'ja' || lang === 'en') { const ok = new Set([c, a, r, sc, sa]); nums.forEach(x => { if (!ok.has(x)) bad(`⑧ ${m} ${lang}: the number ${x}`); }); }
+      if (lang !== 'ja') continue;
+      if (m === best) { if (!nums.includes(a) || !/全部|すべて/.test(h)) bad(`⑧ ${m} ja: the praise does not say all ${a}`); continue; }
+      if (NEAR.test(h)) bad(`追66 ${m} ja: ${h}`);
+      if (PRAISE.test(h)) bad(`追20 ${m} ja: praise after a wrong move`);
+      if (!(nums.includes(c) && nums.includes(r)) || !new RegExp(r + 'つ残').test(h)) bad(`⑧ ${m} ja: does not say ${c} taken and ${r} left`);
+      const goOn = /続け(られ|て取れ)|まだ取れ|まだ続/.test(h), noMore = /取れる(列|玉)がな|もう取れない|行き止まり/.test(h);
+      if (more !== goOn || more === noMore) bad(`⑧ ${m} ja: could it go on? said ${goOn ? 'yes' : noMore ? 'no' : '(none)'}, the board ${more}`);
+      if (!more && /同じ玉/.test(h) !== f.same) bad(`⑧ ${m} ja: "the same piece" said ${/同じ玉/.test(h)}, the board ${f.same}`);
+    }
+    const key = 'ls.' + id + (m === best ? '.why' : k === 'stop' || k === 'stopx' ? '.ngStop' : '.ng');
+    for (const lang of LANGS) { const tx = (i18n[lang] || {})[key]; if (!tx) bad(`⑨ 2D ${key} ${lang} missing`); else if (!/\{m\}/.test(tx) || !/\{a\}/.test(tx) || (m !== best && !/\{x\}/.test(tx)) || (m !== best && !/\{r\}/.test(tx))) bad(`⑨ 2D ${key} ${lang}: {m}/{a}/{x}/{r}`); }
+  }
+}
 // b_safe: the words for every move against the facts recounted here (the opponent's most, the piece moved / the point it left)
 function safeWords(P, LS3, i18n, bad) {
   const id = 'b_safe', pos = E.Pos.from(P.s), L = pos.moves(true), best = P.best;
@@ -283,22 +349,24 @@ function verify(opt) {
   let n = 0, okN = 0;
   for (const id of LS3.READY) {
     const st = LS.steps.find(s => s.id === id); if (!st) { add(id, 0, 'missing'); continue; }
-    const CH = id === 'b_chain', SF = id === 'b_safe';
-    if (!BASICS.includes(id) && !CH && !SF) { add(id, 0, 'no check for this lesson yet'); continue; }
+    const CH = id === 'b_chain', SF = id === 'b_safe', WN = id === 'b_win';
+    if (!BASICS.includes(id) && !CH && !SF && !WN) { add(id, 0, 'no check for this lesson yet'); continue; }
     let prevD = -1, firstD = null; const kindsSeen = new Set();
     st.problems.forEach((P, j) => {
       n++; const before = out.length;
-      const o = { pool: PL.filter(A => A.tag !== id + '#' + (j + 1)) }, r = CH ? chainProblem(P, o) : SF ? safeProblem(P, o) : basicProblem(id, P, o);
-      if (SF && r.kinds) r.kinds.forEach(k => kindsSeen.add(k));
+      const o = { pool: PL.filter(A => A.tag !== id + '#' + (j + 1)) }, r = CH ? chainProblem(P, o) : SF ? safeProblem(P, o) : WN ? winProblem(P, o) : basicProblem(id, P, o);
+      if ((SF || WN) && r.kinds) r.kinds.forEach(k => kindsSeen.add(k));
       r.msgs.forEach(m => add(id, j + 1, m));
       if (r.ok) {
         if (r.d <= prevD) add(id, j + 1, `⑥ d ${r.d} not above ${prevD}`);
         prevD = r.d; if (firstD == null) firstD = r.d;
-        if (CH) chainWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (SF) safeWords(P, LS3, i18n, m => add(id, j + 1, m)); else words(id, P, LS3, i18n, m => add(id, j + 1, m));
+        if (CH) chainWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (WN) winWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (SF) safeWords(P, LS3, i18n, m => add(id, j + 1, m)); else words(id, P, LS3, i18n, m => add(id, j + 1, m));
       }
       if (out.length === before) okN++;
     });
     if (SF && !(kindsSeen.has('self') && kindsSeen.has('open'))) add(id, 0, '④ b_safe: not both kinds of wrong move (the piece moved taken / through the point it left)');
+    if (WN && !(kindsSeen.has('stop') && kindsSeen.has('dead'))) add(id, 0, '④ b_win: not both kinds of wrong move (stopped on the answer\'s road / a road to its end)');
+    if (WN && st.problems.slice(1).some(P => P.best && P.best.split('-').length < 3)) add(id, 0, '④ b_win: an answer after problem 1 that is no chain');
     if (st.problems.length !== 5) add(id, 0, '5 problems');
     if (st.problems.length && st.problems[3] && st.problems[3].s.side !== 2) add(id, 4, '追5 problem 4 is not Black\'s');
   }
@@ -341,6 +409,9 @@ function selftest() {
     ['④', '④ b_chain: a problem of single steps', d => { st(d, 'b_chain').problems[0] = JSON.parse(JSON.stringify(st(d, 'b_approach').problems[0])); }],
     ['②', '② b_safe: a problem with two safe moves (the old q1)', d => { st(d, 'b_safe').problems[0] = { s: { b: '.b....w.w.w........b...........b............w', side: 1 }, ok: ['b2-c2'], best: 'b2-c2' }; }],
     ['④', '④ b_safe: a problem with a capture on the board', d => { st(d, 'b_safe').problems[1] = JSON.parse(JSON.stringify(st(d, 'b_approach').problems[1])); }],
+    ['③', '③ b_win: the old q1 (captures from 2 pieces only, 追52)', d => { st(d, 'b_win').problems[0] = { s: { b: '...b......b...........wb......w...w...w...w..', side: 1 }, ok: ['e3-d3W-d2A-c2A'], best: 'e3-d3W-d2A-c2A' }; }],
+    ['②', '② b_win: the old q3 (every other move wins anyway: the engine\'s second a won value)', d => { st(d, 'b_win').problems[2] = { s: { b: '............b.b.w...b....w.w.w...w..w.b.w....', side: 1 }, ok: ['e5-d4A-e3W-f4W-f3A'], best: 'e5-d4A-e3W-f4W-f3A' }; }],
+    ['①', '① b_win: the answer cut short (a part of the chain)', d => { const P = st(d, 'b_win').problems[1], q = P.best.split('-').slice(0, -1).join('-'); P.ok = [q]; P.best = q; }],
     ['追75', '追75 a ramp move off its board', d => { st(d, 'b_choose').ramp.find(x => x.k === 'try').ok = ['a1-a2A']; }],
   ];
   let fails = 0;
@@ -357,6 +428,10 @@ function selftest() {
     const orig = LS3.sayText; LS3.sayText = (id, P, m, lang, k) => { const h = orig(id, P, m, lang, k); return id === 'b_safe' ? h.replace(/動かした玉(が|を|ごと)/g, '元いた点$1') : h; };
     const r = verify({ ls3: LS3 }); LS3.sayText = orig; const hit = r.out.some(o => o.id === 'b_safe' && /⑧/.test(o.msg)); if (!hit) fails++; console.log((hit ? 'ok   ' : 'MISS ') + '⑧ b_safe: "the point it left" said of a move whose piece is taken');
   }
+  {   // b_win: the pieces left miscounted in the words
+    const orig = LS3.sayText; LS3.sayText = (id, P, m, lang, k) => { const h = orig(id, P, m, lang, k); return id === 'b_win' ? h.replace(/(\d+)つ残/g, (x, n) => (+n + 1) + 'つ残') : h; };
+    const r = verify({ ls3: LS3 }); LS3.sayText = orig; const hit = r.out.some(o => o.id === 'b_win' && /⑧/.test(o.msg)); if (!hit) fails++; console.log((hit ? 'ok   ' : 'MISS ') + '⑧ b_win: the pieces left miscounted');
+  }
   {   // the 2D key missing in one language
     const I = loadI18n(); delete I.de['ls.b_choose.ngSame'];
     const r = verify({ i18n: I }); const hit = r.out.some(o => /⑨/.test(o.msg)); if (!hit) fails++; console.log((hit ? 'ok   ' : 'MISS ') + '⑨ a 2D key missing');
@@ -367,7 +442,7 @@ function selftest() {
   }
   return fails;
 }
-module.exports = { engine, values, basicProblem, chainProblem, safeProblem, verify, selftest, pool, near, lineOf, BASICS };
+module.exports = { engine, values, basicProblem, chainProblem, safeProblem, winProblem, verify, selftest, pool, near, lineOf, BASICS };
 if (require.main === module) {
   if (process.argv.includes('--selftest')) { const f = selftest(); console.log(f ? `selftest: ${f} missed` : 'selftest: all caught'); process.exit(f ? 1 : 0); }
   const r = verify();

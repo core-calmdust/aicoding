@@ -771,7 +771,7 @@ function gomoku(opt) {
 //   ⑦⑧ ハコピヨ's words (atlas/lessons3d.js dotsJa, run here) against the board: the boxes the red line hands over (≥1 when the
 //      words say so) and the boxes lost ((best − v) / 2), no 「開く」 for a line that takes, the question's 「1本」 / 「広い盤」 and the
 //      2D example's 「緑の点線も安全な線で、どれを選んでも同じ結果」 (problem 0 has other safe lines, all best)
-const DT_DONE = new Set(['safe', 'third', 'take', 'chain', 'hard', 'double', 'control', 'parity', 'sacrifice', 'loop', 'count', 'open3']);
+const DT_DONE = new Set(['safe', 'third', 'take', 'chain', 'hard', 'double', 'control', 'parity', 'sacrifice', 'loop', 'count', 'open3', 'mid4']);
 function dots(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'dots/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'dots/lessons.json'), 'utf8'));
@@ -990,6 +990,35 @@ function dots(opt) {
         if (j === 0) { const ja = JSON.parse(fs.readFileSync(path.join(ROOT, 'dots/content/text.ja.json'), 'utf8')), t = plain([].concat(ja['ls.open3.body'] || []).join(' ') + ' ' + X.DTJ.open3.intro);
           if (/中央の箱|真ん中の箱|盤を分(け|断)/.test(t)) a(`追45 the open3 intro recommends a kind of line (the centre box / a line that cuts the board): 「${t}」`); }
         d = safe.length;
+      } else if (id === 'mid4') {
+        // (2026-11-27 担当A) mid4 = DTJ.mid4 / ls.mid4 (「4×4（点25個）…先手は長い鎖を奇数本、後手は偶数本…中盤は1本引くたびに鎖の形が固まって
+        // いく。どの線が鎖をつなげて、どれが切るか」, hints 「金色の輪は安全な線。でも、どれでも同じじゃない」): a 4×4, no box taken yet (先手 /
+        // 後手 on the board), nothing to take, 3+ safe lines, exactly one best line, it is safe, 2+ safe lines are worse, and it wins (safeO
+        // 「最後まで正しく引けば、きみの勝ち」). Not the parity lesson's counting: after the best line the runs of safe lines do not all end in
+        // one plain shape (one number of long chains, no loop, no junction box) — the midgame shape is still open. Along every line of optimal
+        // play (dtOpener): after the best line the opponent is the first to open a long chain (safeO / rParO); after every worse safe line the
+        // mover is (yParO); a red line that hands over boxes: dFacts' count = the boxes taking after it gets, and 「取られる」 words only when
+        // taking them all is among the opponent's best replies. The words say who opens first, not the number of long chains (as open3).
+        const S2 = new E.Solver(G), W3 = u => plain(X.dotsJa(st, F, { values: vals }, B[0], Math.max(0, j - 1), si).ng(u)), op = e => { const p2 = p.clone(); p2.play(e); return dtOpener(E, G, S2, p2).who; };
+        for (const t of [plain(X.dotsJa(st, F, { values: vals }, B[0], Math.max(0, j - 1), si).good(B[0]))].concat(worse.map(x => W3(x.m)))) if (/本数|偶数|奇数|数がきみに|数がずれ|長鎖ルール/.test(t)) a(`⑧ the words 「${t}」 speak of the number of long chains`);
+        if (q.n !== 4) a(`④ a ${q.n}×${q.n} board (the lesson's: 4×4)`);
+        if (X.dDecO(q.o).some(o => o >= 0)) a('④ a box already taken (the mover\'s 先手 / 後手 is not on the board)');
+        if (cap) a('④ a box to take'); if (safe.length < 3) a(`④ ${safe.length} safe lines (3+)`);
+        if (B.length !== 1 || !safe.includes(B[0])) a(`④ the best lines ${B} are not one safe line`);
+        if (best <= 0) a(`④ the best line does not win (${best})`);
+        if (safe.filter(e => V.get(e) < best).length < 2) a('④ fewer than 2 safe lines worse than the best');
+        const b0 = B[0];
+        if (safe.includes(b0)) { const fe = dtSafeEnd(E, p, b0); if (fe.simple && !fe.loops && fe.lc.size === 1) a(`④ after the best line every run of safe lines ends in plain chains with ${[...fe.lc]} long chains (the parity lesson's counting)`); }
+        { const o = op(b0); if (o.size !== 1 || !o.has('tomove')) a(`⑦⑧ the best line ${b0}: along optimal play the first to open a long chain is ${[...o]} (the words: the opponent)`); }
+        for (const x of worse) { const fx = F.of(x.m);
+          if (p.isSafe(x.m)) { const o = op(x.m); if (o.size !== 1 || !o.has('other')) a(`⑦ the red safe line ${x.m}: along optimal play the first to open a long chain is ${[...o]} (yParO: the mover)`); }
+          else if (p.gives(x.m) > 0) { const p2 = p.clone(); p2.play(x.m); const v2 = Math.max(...S2.all(p2).map(y => y.v)), p3 = dtTakeAll(p, x.m); let k = 0; for (let bx = 0; bx < G.B; bx++) if (p3.cnt[bx] === 4 && p.cnt[bx] !== 4) k++;
+            const rest = p3.legal().length ? Math.max(...S2.all(p3).map(y => y.v)) : 0;
+            if (k !== fx.m) a(`⑧ the red line ${x.m}: dFacts says it hands over ${fx.m}, taking after it gets ${k}`);
+            if (k + rest !== v2 && /箱取られ|箱が相手のものに|ぺろり|丸ごと|ごっそり|まとめて取れる|持っていかれる/.test(W3(x.m))) a(`⑦ the red line ${x.m}: taking the ${k} boxes it hands over is not among the opponent's best replies: 「${W3(x.m)}」`); } }
+        if (j >= 1 && j <= 5) { const t = plain(X.DTJ.mid4.ask[(j - 1) % 5] + ' ' + X.DTJ.mid4.hint[(j - 1) % 5]);
+          if (/小さくあげて|1箱あげる|安全な線だけが正解とはかぎらない|金色の輪の線で/.test(t)) a(`⑧ the question / hint 「${t}」 (the answer is one safe line)`); }
+        d = safe.length;
       } else if (id === 'control') {
         // (2026-11-25 担当A) control = ハコピヨ's rule (DTJ.control.intro / ls.control.body: 「残りの鎖が小さい…なら全部取る…大きな長い
         // 鎖が残っていれば、残して主導権をキープ」) on the board: no safe line, no loop, one box to take, in an opened chain of 2 (the
@@ -1166,6 +1195,12 @@ function dtIntro(L, X, E, lj, add, only) {
     if (id === 'open3') { const S2 = new E.Solver(G); if (!green.length || green.some(e => val.get(e) >= best)) a(`⑧ the open3 caption 「${ex}」: green ${green.map(e => e + '=' + val.get(e))}, best ${best}`);
       for (const e of green) { const p2 = p.clone(); p2.play(e); const o = dtOpener(E, G, S2, p2).who; if (o.size !== 1 || !o.has('other')) a(`⑧ the open3 caption: after the green line ${e} the mover is not the first to open`); }
       for (const e of mk.hl) { const p2 = p.clone(); p2.play(e); const o = dtOpener(E, G, S2, p2).who; if (o.size !== 1 || !o.has('tomove')) a(`⑧ the open3 example: after the gold line ${e} the opponent is not the first to open`); } }
+    // (2026-11-27 担当A) mid4: the example is a safe-line problem — the gold line safe, green lines drawn (the other safe lines), every one
+    // worse, and after each the mover is the first to open a long chain (dtOpener), after the gold line the opponent
+    if (id === 'mid4') { const S2 = new E.Solver(G); if (!mk.hl.every(e => safe.includes(e))) a(`⑧ the mid4 example: the gold line ${mk.hl} is not safe`);
+      if (!green.length || green.some(e => val.get(e) >= best)) a(`⑧ the mid4 example: green ${green.map(e => e + '=' + val.get(e))}, best ${best}`);
+      for (const e of green) { const p2 = p.clone(); p2.play(e); const o = dtOpener(E, G, S2, p2).who; if (o.size !== 1 || !o.has('other')) a(`⑧ the mid4 example: after the green line ${e} the mover is not the first to open`); }
+      for (const e of mk.hl) { const p2 = p.clone(); p2.play(e); const o = dtOpener(E, G, S2, p2).who; if (o.size !== 1 || !o.has('tomove')) a(`⑧ the mid4 example: after the gold line ${e} the opponent is not the first to open`); } }
     // (2026-11-27 担当A) sacrifice: 「緑の安全な線を引くと、長い鎖を開かされるのは自分になります」 = green lines drawn (the safe lines), every
     // one worse than the gold, and after each the mover opens first in every run (dtSafeEnd); the gold line is the sacrifice
     if (id === 'sacrifice') { if (!green.length || green.some(e => val.get(e) >= best)) a(`⑧ the sacrifice caption 「${ex}」: green ${green.map(e => e + '=' + val.get(e))}, best ${best}`);
@@ -3901,7 +3936,8 @@ const ugolki = () => require('./lesson-verify-ugolki.js').verify().out.map(o => 
 // (2026-11-27 担当E) and its lessons listed on the 3D (atlas/ls-fanorona.js READY) — tools/lesson-verify-fanorona-ls.js (the lines recounted on the board)
 const fanorona = () => require('./lesson-verify-fanorona.js').verify().out.map(o => ({ step: o.theme, q: o.q, msg: o.msg })).concat(require('./lesson-verify-fanorona-ls.js').verify().out.map(o => ({ step: o.id, q: o.q, msg: o.msg })));
 // (2026-11-27 担当F) agon: the puzzles (7 themes, 2D agon/app.js puzzleMove) — tools/lesson-verify-agon.js (exact solver, ①〜⑨)
-const agon = () => require('./lesson-verify-agon.js').verify().out.map(o => ({ step: o.theme, q: o.q, msg: o.msg }));
+// (2026-11-27 担当F) and its lessons listed on the 3D (atlas/ls-agon.js READY) — tools/lesson-verify-agon-ls.js (the facts recounted on the board)
+const agon = () => require('./lesson-verify-agon.js').verify().out.map(o => ({ step: o.theme, q: o.q, msg: o.msg })).concat(require('./lesson-verify-agon-ls.js').verify().out.map(o => ({ step: o.id, q: o.q, msg: o.msg })));
 // (2026-11-27 担当D) latrunculi: the puzzles (5 themes, 2D latrunculi/app.js puzzleMove) — tools/lesson-verify-latrunculi.js (exact solver, ①〜⑨)
 const latrunculi = () => require('./lesson-verify-latrunculi.js').verify();
 const reversiOpen = opt => require('./lesson-verify-rvopen.js')(opt);   // (2026-11-24 担当B：リバーシの定跡、tools/lesson-verify-rvopen.js)

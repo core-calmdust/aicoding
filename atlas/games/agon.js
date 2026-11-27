@@ -294,9 +294,9 @@
       clear(pzMk); if (list == null || !pos) return;
       const L0 = typeof list === 'number' ? [[list, 'ring']] : list;
       for (const e of L0) {
-        if (e && !Array.isArray(e) && e.m != null) {
-          if (e.m === E.PASS) continue;
-          const k = e.cls || 'ok', f = E.mFrom(e.m), to = E.mTo(e.m);
+        if (e && (Array.isArray(e) ? e[0] && typeof e[0] === 'object' && e[0].m != null : e.m != null)) {   // (a whole move: { m, cls } or the lessons' [{ m }, cls])
+          const mm = Array.isArray(e) ? e[0].m : e.m; if (mm === E.PASS) continue;
+          const k = (Array.isArray(e) ? e[1] : e.cls) || 'ok', f = E.mFrom(mm), to = E.mTo(mm);
           if (f >= 0 && f !== E.RES && f < E.N) mark(pzMk, GEO.ring, pm(k, .95), f, .05);
           mark(pzMk, GEO.dot, pm(k, .95), to, .05); mark(pzMk, GEO.hex, pm(k, .4), to, .015);
           continue;

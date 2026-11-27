@@ -7,6 +7,8 @@
                 'other' (another jump: { c } taken; { end } what follows its landing square in its direction:
                          'edge' the board ends · 'mine' your own stone · 'empty' an empty square (no stone to jump) ·
                          'block' an enemy stone with no empty square behind it)
+     b_open   : 'few'   (the answer: the only first jump leaving the opponent the fewest jumps { j }; { t } your jumps now)
+                'many'  (another first jump: { j } the opponent's jumps after it, { j0 } after the answer)
      b_win    : 'win'   (the answer: the opponent has no jump; { t } the jumps it had before)
                 'left'  ({ j } jumps the opponent still has after it, { c } stones taken, { r } one of those jumps)
    Moves are the engine's numbers (E.mFrom / E.mTo / E.path), squares its indices. Works as a plain script and in Node. */
@@ -96,6 +98,12 @@
       const p = E.path(pos, m), same = L.some(x => E.hops(x) === n && E.mFrom(x) === E.mFrom(m) && E.path(pos, x)[1] === p[1]);
       return same ? { k: 'stop', c, n } : { k: 'other', c, n, end: endOf(E, pos, m) };
     }
+    // (2026-11-27 担当C) b_open: the first jumps after the two removals. 'few' the answer (the only move leaving the opponent the
+    // fewest jumps: { j }, { t } your jumps now) · 'many' another jump ({ j } the opponent's jumps after it, { j0 } after the answer)
+    if (id === 'b_open') {
+      const L = pos.moves(), js = L.map(x => pos.clone().play(x).mobility(3 - me)), j0 = Math.min(...js), j = q.mobility(3 - me);
+      return j === j0 ? { k: 'few', j, c, t: L.length } : { k: 'many', j, j0, c };
+    }
     if (id === 'b_win') {
       const j = q.mobility(3 - me);
       if (!j) return { k: 'win', t: pos.mobility(3 - me), c };
@@ -108,6 +116,7 @@
     const pos = E.Pos.from(spec), me = pos.turn;
     if (id === 'b_double') return [...new Set(pos.moves().map(E.mFrom))];
     if (id === 'b_win') { const o = pos.clone(); o.side ^= 1; return [...new Set(o.moves().map(E.mFrom))].filter(x => pos.owner(x) === 3 - me); }
+    if (id === 'b_open') return [...new Set(pos.moves().map(E.mFrom))];   // (every stone that can jump into the hole: count after each)
     if (id === 's_count') return [...new Set(pos.moves().map(E.mFrom))];   // (every stone that can jump: count after each)
     if (id === 's_stop') return [...new Set(pos.moves().map(E.mFrom))];   // (every stone that can jump: where to stop on each line)
     if (/^s_(go|keep|read)$|^b_jump$/.test(id)) return [...new Set(pos.moves().map(E.mFrom))];   // (every stone that can jump: go on or stop · your jumps kept · each reply)

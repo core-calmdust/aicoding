@@ -36,16 +36,16 @@
     { id: 'map', ready: () => !!window.AtlasMap, render: (el, c) => AtlasMap.render(el, c) },
     { id: 'tree', src: ['museum/tree.js?v=7'], ready: () => !!window.AtlasTree, render: (el, c) => AtlasTree.render(el, c) },
     { id: 'gallery', src: ['museum/gallery.js?v=151'], ready: () => !!window.AtlasGallery, render: (el, c) => AtlasGallery.render(el, c) },
-    { id: 'paint', src: () => ['museum/paint-i18n/en.js?v=' + PAINT_I18N_V, ...(rl() !== 'en' ? [`museum/paint-i18n/${rl()}.js?v=${PAINT_I18N_V}`] : []), 'museum/paint.js?v=94'], ready: () => !!(window.AtlasPaint && window.MUSEUM_PAINT_T && MUSEUM_PAINT_T.en && MUSEUM_PAINT_T[rl()]), render: (el, c) => AtlasPaint.render(el, c) },   // (per language, like the stories)
+    { id: 'paint', src: () => ['museum/paint-i18n/en.js?v=' + PAINT_I18N_V, ...(rl() !== 'en' ? [`museum/paint-i18n/${rl()}.js?v=${PAINT_I18N_V}`] : []), PAINT_JS], ready: () => !!(window.AtlasPaint && window.MUSEUM_PAINT_T && MUSEUM_PAINT_T.en && MUSEUM_PAINT_T[rl()]), render: (el, c) => AtlasPaint.render(el, c) },   // (per language, like the stories)
     // (2026-11-24 audit pageKB) the stories' text in one file per language (museum/read-i18n/<lang>.js, made by tools/museum-read-split.js from
     // museum/read-i18n.js): English (the fallback for anything missing) and the page's language, not all fourteen (1.5 MB)
     // (2026-11-24 audit textKB) one file only: tools/museum-read-split.js fills each language's file with English for anything it lacks
     // (2026-11-24 audit textKB, per screen) that file is now the shelf's index only; each story's text is museum/read-i18n/<lang>/<id>.js, which
     // read.js loads when the story opens (with ?v=READ_I18N_V, read as AtlasMuseum.readV)
-    { id: 'read', src: () => [`museum/read-i18n/${rl()}.js?v=${READ_I18N_V}`, 'museum/read.js?v=86'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T && MUSEUM_READ_T[rl()]), render: (el, c) => AtlasRead.render(el, c) },
+    { id: 'read', src: () => [`museum/read-i18n/${rl()}.js?v=${READ_I18N_V}`, 'museum/read.js?v=90'], ready: () => !!(window.AtlasRead && window.MUSEUM_READ_T && MUSEUM_READ_T[rl()]), render: (el, c) => AtlasRead.render(el, c) },
     { id: 'chance', src: () => ['museum/chance-i18n/en.js?v=' + CHANCE_I18N_V, ...(rl() !== 'en' ? [`museum/chance-i18n/${rl()}.js?v=${CHANCE_I18N_V}`] : []), 'museum/chance.js?v=7'], ready: () => !!(window.AtlasChance && window.MUSEUM_CHANCE_T && MUSEUM_CHANCE_T.en && MUSEUM_CHANCE_T[rl()]), render: (el, c) => AtlasChance.render(el, c) },   // (per language)
   ];
-  const READ_I18N_V = 47, PAINT_I18N_V = 83, CHANCE_I18N_V = 1, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
+  const READ_I18N_V = 51, PAINT_I18N_V = 84, PAINT_JS = 'museum/paint.js?v=95', CHANCE_I18N_V = 1, READ_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'], rl = () => { const l = (ctx && ctx.lang) || lang; return READ_LANGS.includes(l) ? l : 'en'; };
   const KEY = 'atlas-museum-room';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const loaded = {};
@@ -134,6 +134,10 @@
     chess: 'queen', tafl: 'tafl', ludo: 'pachisi', checkers: 'draughts', reversi: 'reversi', mancala: 'mancala', morris: 'morris', xiangqi: 'xiangqi', hex: 'hex',
     amazons: 'amazons', konane: 'konane', peg: 'peg', fanorona: 'fanorona', janggi: 'janggi', gomoku: 'gomoku', carrom: 'carrom', crokinole: 'crokinole', ugolki: 'ugolki', agon: 'agon', connect4: 'dots', dots: 'dots', hitblow: 'hitblow', botao: 'botao', hockey: 'hockey', solitaire: 'solitaire', sudoku: 'sudoku', shanghai: 'shanghai', samegame: 'samegame' };
   const readOf = g => READ_OF[g] || null;
+  // (2026-11-27 ユーザー: ゲームから「描かれた作品」へ) how many works show a game (paint.js alone is enough to count) · the wall with only them
+  const paintOf = g => load(PAINT_JS).then(() => (window.AtlasPaint && AtlasPaint.countOf ? AtlasPaint.countOf(g) : 0));
+  const openPaint = g => { try { localStorage.setItem('atlas-paint-game', g); localStorage.setItem('atlas-paint-era', 'all'); localStorage.setItem('atlas-paint-region', 'all'); } catch (e) {}
+    if (window.AtlasPaint && AtlasPaint.showGame) AtlasPaint.showGame(g); open('paint', true); };
   const rname = r => ((UI[lang] || UI.en)[r]) || UI.en[r] || r;
   // another room's game, picked there: the map or the tree opens with the game chosen (its card shows)
   function pickIn(r, g) {
@@ -300,5 +304,5 @@
     if (!f.length) return; const i = f.indexOf(document.activeElement);
     if (i < 0 || (e.shiftKey && i === 0) || (!e.shiftKey && i === f.length - 1)) { e.preventDefault(); f[e.shiftKey ? (i <= 0 ? f.length - 1 : i - 1) : (i < 0 || i === f.length - 1 ? 0 : i + 1)].focus(); }
   }, true);
-  window.AtlasMuseum = { restore, render, room: () => room, ROOMS, V, readV: READ_I18N_V, goEx, go: r => open(r, true), mark, prog, pager, catalog, tabKeys, rove, readOf, rname, openItem, pickIn };
+  window.AtlasMuseum = { restore, render, room: () => room, ROOMS, V, readV: READ_I18N_V, goEx, go: r => open(r, true), mark, prog, pager, catalog, tabKeys, rove, readOf, paintOf, openPaint, rname, openItem, pickIn };
 })();
