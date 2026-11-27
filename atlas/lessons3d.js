@@ -718,6 +718,11 @@
     dubL: ['少しむりのある手だけど、『{n}』はこの手で相手をゆさぶるのが持ち味なの。', 'ちょっと強引だけど、相手をゆさぶるのがこの戦法の味なの！', '相手が正しく受けると苦しい手。でも、それがこの戦法のおもしろさコン。'],
     altL: ['{x}でも大丈夫コン！ 手順では{m}が先だけど、順番が入れかわっても同じ『{n}』の形になるの。', 'それもあり！ {x}を先に指しても、最後は同じ『{n}』の形に組めるコン。'],
     leadL: ['『{n}』の手順は{m}。', '正解は{m}だったコン。', 'ここは{m}を指したかったね。', '手順の次の手は{m}なの。', '次は{m}の番だったコン。', '手順どおりなら{m}！', '答えは{m}だったの。'],
+    // (2026-11-28 第2期・担当B) the castles off the shown line (P.off, shogi/tools/openings/castleprobs.js): the opponent played other moves, the castle is 1〜3 moves short
+    askC: ['相手が見本とちがう手を指してきたコン。『{n}』を組み上げる{s}の一手は？', '見本とは相手の形がちがうコン。{s}の番、『{n}』に近づける手はどれ？', '『{n}』はまだ完成していないの。この局面で{s}が指したい一手は？', '相手は見本どおりに来なかったコン。それでも『{n}』を組むなら、{s}はどう指す？', '{s}の番！ 『{n}』の完成まであと少し。いま指すならどの手？'],
+    tailC: ['完成に、また一歩近づいたの！', '囲いの形が一つ整ったコン！', '組み上がりが見えてきたの！', '囲いの完成がまた近づいたコン。', '相手の形がちがっても、ちゃんと組めているの！'],
+    altC: ['{x}でも大丈夫コン！ {m}と同じように、『{n}』の完成に一歩近づく手なの。', 'それもあり！ {x}も『{n}』の形に近づく手で、{m}とほとんど同じくらい良いコン。'],
+    leadC: ['『{n}』を組むなら{m}。', '正解は{m}だったコン。', 'ここは{m}を指したかったね。', '答えは{m}だったの。', '{m}で『{n}』の形に近づけたかったコン。'],
     hintL: ['光っている手が、手順の次の一手。指したあとの形を想像してみてね。', 'ヒントは光っている手コン。『{n}』の完成した形を思い出してみて！'],
   };
   const SH_V = { p: 1, l: 3, n: 4, s: 5, g: 6, b: 8, r: 10, k: 0 };
@@ -842,6 +847,7 @@
     if (F.clash) return Q('cl', ['相手の歩とのにらみ合いに注目！', '歩と歩の向かい合いを見てみて。', 'そろそろ戦いを始める？']);
     if (F.guard) return Q('gd', ['玉のまわりの守りを見てみて。', '玉のそばに、まだすき間がない？', '囲いを作るなら、どの駒が近づくといいかな？', '守りの駒、玉から遠くない？', '玉をもっと安心させる手は？']);
     if (cp) return Q('cp2', ['駒の多さを、どう生かすかな？', '指したあと、駒がどう働くか想像してみて。', '駒落ちの定跡の形、思い出せる？']);
+    if (line === 'off') return Q('lc', ['完成した形を思い出してみて！', '指したあとの形を想像してみてね。', '囲いの形を頭に浮かべてみて！', '組み上がりまで、あと何手かな？', '囲いのどこが、まだ空いているかな？']);   // (the castles off the line: no line to recall)
     if (line) return Q('ln', ['完成した形を思い出してみて！', '指したあとの形を想像してみてね。', '手順の次の一手、思い出せる？', '囲いの形を頭に浮かべてみて！', '組み上がりまで、あと何手かな？']);
     return Q('df', ['強いソフトの対局でいちばん多い手を探してみて。', '手順の流れを思い出してみて！', '手順のどこまで来たか、思い出そう。', '指したあとの形を想像してみよう！', '定跡の形、頭に浮かぶかな？', 'この局面、次は何をする場面？']);
   }
@@ -905,10 +911,10 @@
       return [`{x}のあと、相手の${A}で${X}を取られちゃうの。`, `{x}だと、${X}のまもりがなくなって、相手の${A}に取られるコン。`][k % 2];
     } catch (e) { return ''; }
   }
-  function shContrastJa(F, FA, k, ci) {   // (2026-11-22) a quiet miss in an opening: what the line's move does, and what yours does instead — from the board
+  function shContrastJa(F, FA, k, ci, shO) {   // (shO: what the answer does, said by the caller — the castles off the line)   // (2026-11-22) a quiet miss in an opening: what the line's move does, and what yours does instead — from the board
     const mine = F.bshut ? '{x}は角道を止めてしまう手' : F.pc === 'k' && !F.castle ? '{x}は玉を戦いの起きる側へ動かしてしまう手' : F.edge ? '{x}の端歩は、急がなくてもいい手' : F.swing && !FA.swing ? '{x}は飛車を動かして、作戦が変わってしまう手' : F.pc === 'r' && !FA.swing ? '{x}は飛車をうろうろさせる手' : '';
-    const theirs = `{m}なら${shShortJa(FA)}`;
-    const c = ci != null ? ci : k, sh = shShortJa(FA);
+    const theirs = `{m}なら${shO || shShortJa(FA)}`;
+    const c = ci != null ? ci : k, sh = shO || shShortJa(FA);
     return mine ? [`${mine}。${theirs}から、ここは{m}が先なの。`, `${theirs}けど、${mine}なの。`, `${mine}だから、ここは見送りたいの。${theirs}！`, `残念、${mine}なの。${theirs}からね。`][c % 4] : [`${theirs}けど、{x}ではそうならないの。`, `{x}を指しても、${sh}ことにはならないの。{m}を先に指しておきたいところ！`, `{x}ではその働きがないの。${theirs}から、こっちが先コン。`, `{x}だと${sh}チャンスをのがしちゃうの。{m}が先！`][c % 4];
   }
   function shOpVoice(id) {   // (2026-11-22 lesson loop) one opening's voice: the wordings in turn, and the praise / the soft words / the push in an order of its own
@@ -921,9 +927,9 @@
     V = V || shOpVoice(name); const v = V.pk, i = vi != null ? vi : k;
     const P = o.P, C = P.cand || [], A = o.ans, sente = String(o.pos).split(' ')[1] !== 'w', side = sente ? '☗先手' : '☖後手', FA = shFacts(o.pos, A), N = t => t.replace(/\{n\}/g, name);
     const val = new Map(C), ref = Math.max(...C.filter(c => P.accept.includes(c[0])).map(c => c[1]));
-    const ask = N(SHJ_OP.askL[k % 5]).replace('{s}', side);
-    const hintTx = N(shHintJa(FA, k, false, v, true));
-    const fb = v('fb', [0, 1, 2, 3, 4, 5]), w = shWhyJa(FA, v), t = N(P.dub ? v('dubL', SHJ_OP.dubL) : v('tailL', SHJ_OP.tailL)), alt = N(v('altL', SHJ_OP.altL)), lead = N(v('leadL', SHJ_OP.leadL)), ch = V.cheer(i), so = V.soft(i), pu = V.push(i);
+    const OF = !!P.off, dsq = A.slice(2, 4), onMk = OF && (P.mk || []).includes(dsq[0] + ('abcdefghi'.indexOf(dsq[1]) + 1)), SC = (FA.pc === 'k' ? ['玉を囲いの奥へ入れられる', '玉が囲いの中心へ一歩進む', '玉の引っ越しがまた進む', '玉がまた一歩安全になる', '玉の住まいに近づける'] : ['囲いの形に一歩近づく', '守りの駒がまた一枚そろう', '囲いのすき間が一つ減る', '玉のまわりがまた整う', '組み上がりがまた近づく'])[(vi != null ? vi : k) % 5], ask = N((OF ? SHJ_OP.askC : SHJ_OP.askL)[k % 5]).replace('{s}', side);
+    const hintTx = N(shHintJa(FA, k, false, v, OF ? 'off' : true));
+    const fb = v('fb', [0, 1, 2, 3, 4, 5]), w = OF ? (onMk ? [`${SH_PN[FA.pc]}が、囲いの決まった場所に入る手。`, `${SH_PN[FA.pc]}を、あるべきマスへおさめる手。`, `これで${SH_PN[FA.pc]}が定位置についたの。`, `${SH_PN[FA.pc]}がぴたりと持ち場に入ったコン。`, `${SH_PN[FA.pc]}の居場所はそこで決まり。`] : [`${SH_PN[FA.pc]}を囲いへ一歩近づける手。`, `${SH_PN[FA.pc]}が持ち場へ一歩進む手。`, `${SH_PN[FA.pc]}の行き先へ、まず一歩。`, `${SH_PN[FA.pc]}が囲いの奥へ向かう手。`, `${SH_PN[FA.pc]}をあるべき場所へ近づけたの。`])[(vi != null ? vi : k) % 5] : shWhyJa(FA, v), t = N(P.dub ? v('dubL', SHJ_OP.dubL) : OF ? v('tailC', SHJ_OP.tailC) : v('tailL', SHJ_OP.tailL)), alt = N(OF ? v('altC', SHJ_OP.altC) : v('altL', SHJ_OP.altL)), lead = N(OF ? v('leadC', SHJ_OP.leadC) : v('leadL', SHJ_OP.leadL)), ch = V.cheer(i), so = V.soft(i), pu = V.push(i);
     const good = u => {
       if (u && u !== A && P.accept.includes(u)) return shJoin(ch, alt);
       return shFit(shJoin(ch, w, t), pu); };
@@ -936,8 +942,10 @@
       if (F.hang && !FA.hang && d > .05) return L(F.hangDef ? `{x}だと、その${SH_PN[F.pc]}が相手の${SH_PN[F.hang]}の利きに入っちゃう。安い駒と交換されると駒損なの。` : `{x}だと、その${SH_PN[F.pc]}を相手の${SH_PN[F.hang]}にタダで取られちゃう！`);
       if (FA.cap && FA.behind && !F.cap) return L('{x}だと取り返しそびれて、駒損のままになっちゃう。');
       if ((later || []).includes(u)) return L(N('{x}も『{n}』で指す手だけど、いまはまだ早いの。先に{m}を指しておかないと、形がくずれちゃう') + kon);
+      if (OF && (P.G || []).includes(u)) return L(N(['{x}も『{n}』の形に近づく手だけど、この局面ではAIの評価が{m}よりはっきり下がるの。先に{m}を指しておきたい', '{x}でも『{n}』には近づくけど、相手の形を見ると、AIは{m}のほうがずっと良いと見ている'][fb % 2]) + kon);
       const rw = shStaticWhyJa(o.pos, u, k); if (rw) return L(rw);
-      if (d > .12) return L(shContrastJa(F, FA, k, fb));
+      if (d > .12) return L(N(shContrastJa(F, FA, k, fb, OF ? SC : null)));
+      if (OF) return L(N([`{x}では囲いの形に近づかないの。{m}なら${SC}`, `{x}は囲いの駒が進まない手。ここで{m}なら${SC}`, `{x}だと完成が遠いまま。{m}を指せば${SC}`, `{x}を指しても、囲いはそのまま。{m}だと${SC}`, `{x}のあいだ、囲いは一歩も進まないの。{m}なら${SC}`][(vi != null ? vi : k) % 5]) + kon);
       return L([`{x}も悪い手じゃないけど、それだと手順からはずれちゃうの。{m}なら${shShortJa(FA)}`, `{x}だと、組みたい形から少しそれるの。手順の{m}なら${shShortJa(FA)}`, `{x}は形に合わない一手なの。ここで{m}なら${shShortJa(FA)}`, `{x}では組む順番がずれちゃうの。先に{m}なら${shShortJa(FA)}`, `{x}だと手順が一つ飛んじゃう。{m}を指してこそ${shShortJa(FA)}`, `{x}は今の形には早すぎるの。{m}だと${shShortJa(FA)}`][fb] + kon);
     };
     return { ask, hintTx, good, ng };
@@ -983,7 +991,7 @@
       const voice = fetch('../shogi/voice-fox-ja.js?v=9').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       const rep = getJ('../shogi/lesson-replies.json?v=6').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
       return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261127k3'), getJ('../shogi/openings.json?v=20261124ol1'),
-        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261128sb`).catch(() => ({ sets: [] })))])
+        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261128sc`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
           sets.forEach(s => { if (!s.cat) s.cat = s.handi ? 'handi' : 'mid'; });
@@ -1022,7 +1030,7 @@
       const probs = (s.problems || []).length ? (s.handi ? s.problems.map((p, i) => i) : shuffle(s.problems.map((p, i) => i))).slice(0, 5).sort((a, b) => a - b).map(i => s.problems[i]) : [];   // (the pool's order: easy → hard, 2026-11-24 第2期・担当B)
       // (2026-11-21) sets with few game-based problems (the castles, 鬼殺し, 立石流 …): filled up with "the line's next move" problems
       // (lineProbs, shogi/tools/openings/lineprobs.js), in the line's order
-      if (probs.length < 5 && (s.lineProbs || []).length) probs.push(...shuffle(s.lineProbs.slice()).slice(0, 5 - probs.length).sort((a, b) => a.ply - b.ply));
+      if (probs.length < 5 && (s.lineProbs || []).length) probs.push(...shuffle(s.lineProbs.slice()).slice(0, 5 - probs.length).sort((a, b) => (a.off ? a.dd : a.ply) - (b.off ? b.dd : b.ply)));   // (the castles off the line: easy → hard by dd, 2026-11-28 担当B)
       const nc = NC.shogi || {}, notes = Object.assign({}, s.study && s.study.notes || {}); Object.keys(nc).forEach(k => { const m = k.match(/^op:(.+)\/n(\d+)$/); if (m && m[1] === s.id) notes[m[2]] = nc[k]; });   // (3D: the notes without coordinates)
       const ja = lang === 'ja', nm = L(s.title, 'ja'), hs = s.id.length * 3, sh = String(L(nc['op:' + s.id + '/short'] || s.short, lang) || '');
       const intro = !ja ? sh : s.handi ? `『${nm}』の練習だコン！<br>${sh}` : SHJ_OP.intro[hs % SHJ_OP.intro.length].replace('{n}', nm).replace('{t}', sh.replace(/[。！]$/, ''));   // (2026-11-21 lesson loop: ショウギツネ introduces it)
@@ -1030,7 +1038,7 @@
       if (ja && s.study && s.study.start) try { const gen = shStepNotesJa(s.study.start, s.study.steps.map(x => x[0]), notes, VO.pk); Object.keys(gen).forEach(k => { notes[k] = gen[k]; }); } catch (e) { console.warn('[lessons3d] shogi step notes', e); }
       return { id: s.id, title: L(s.title, lang), intro, start: s.study && s.study.start, steps: (s.study && s.study.steps || []).map(x => x[0]), notes,
         probs: probs.map((p, i) => { const o = { pos: p.sfen, kind: 'best', P: p, ans: (p.mode === 'line' ? p.pv : p.accept || p.pv || (p.cand && [p.cand[0][0]]) || [])[0] };
-          const st = (s.study && s.study.steps || []).map(x => x[0]), later = p.mode === 'line' ? st.filter((u, j) => j > p.ply && (j - p.ply) % 2 === 0) : null;
+          const st = (s.study && s.study.steps || []).map(x => x[0]), later = p.mode === 'line' && !p.off ? st.filter((u, j) => j > p.ply && (j - p.ply) % 2 === 0) : null;
           if (ja && o.ans) try { Object.assign(o, p.mode === 'line' ? shLineJa(o, nm, hs + i, later, VO, i) : shOpJa(o, nm, hs, i, !!s.handi, VO)); } catch (e) { console.warn('[lessons3d] shogi opening', e); } return o; }),
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[s.id] || { best: 0, pass: false }, pass = pts >= Math.ceil(max * PASS); pr[s.id] = { best: Math.max(o.best || 0, Math.round(pts * 100 / max)), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
     },
