@@ -29,6 +29,8 @@
 // b_win (finish the game, 2026-11-27 担当E): winProblem / winWords below (the one move that takes every piece the opponent has left;
 //    no other move wins anyway — the engine's second below a won value and 60 below; the pieces a wrong move leaves; the 2D keys
 //    why / ng / ngStop).
+// t_big (big captures, 2026-11-27 担当E): bigProblem / bigWords below (the biggest total, where a move whose first capture takes more
+//    than the answer's first takes less in all — the greedy trap; the 2D keys why / ng / ngStop / ngGreedy).
 // Usage: node tools/lesson-verify-fanorona-ls.js [--selftest]   (also: node tools/lesson-verify.js fanorona)
 'use strict';
 const fs = require('fs'), path = require('path'), zlib = require('zlib');
@@ -225,6 +227,74 @@ function winProblem(P, opt) {
   const dd = (L.length - 1) + 2 * left.filter(x => x === 1).length;
   return { ok: !msgs.length, msgs, best, d: dd, n: L.length, kinds, cnt: left };
 }
+// t_big (big captures, 2026-11-27 担当E): one problem — { ok, msgs, best, d, kinds }
+//  ① ok = [the move that takes the most in total] (every legal move's pieces recounted from its steps), the engine first at 7 and 9;
+//  ② no other move takes as many; the engine's second 60 or more below; ③ 7〜20 legal moves from 3 capturing pieces or more (追52),
+//  追72; ④ the lesson's point — the biggest first capture is not the answer's: some wrong move takes more with its first capture than
+//  the answer's first (greedy) and less in all, the biggest such first capture 3 or more; the answer a chain (2 captures or more) taking 4 or more; 2 or more pieces of the
+//  opponent left after it (not b_win's "take them all"); ⑤ as basicProblem; ⑥ d = wrong moves + 2 × near misses (one fewer)
+//  + 2 × greedy moves.
+function bigProblem(P, opt) {
+  opt = opt || {}; engine();
+  const msgs = [], pos = E.Pos.from(P.s), L = pos.moves(true), bad = m => msgs.push(m);
+  if (pos.status() !== 0 || !L.length || !pos.hasCaps()) return { ok: false, msgs: ['① no capture'] };
+  const S = L.map(m => pos.steps(m)), cnt = S.map(x => x.reduce((a, y) => a + y.cap.length, 0));
+  const mx = Math.max(...cnt), top = L.filter((m, i) => cnt[i] === mx), best = top[0];
+  if (top.length !== 1) bad('② ' + top.length + ' moves take ' + mx);
+  const B = pos.steps(best), a1 = B[0].cap.length;
+  if (B.length < 2) bad('④ the answer is ' + B.length + ' capture');
+  if (mx < 4) bad('④ the most is ' + mx);
+  if (L.length < 7 || L.length > 20) bad('③ ' + L.length + ' legal moves');
+  if (new Set(S.map(x => x[0].from)).size < 3) bad('③ 追52 captures from fewer than 3 pieces');
+  const greedy = L.filter((m, i) => m !== best && S[i][0].cap.length > a1);
+  if (!greedy.length) bad('④ no move takes more than the answer with its first capture (no greedy trap)');
+  else if (Math.max(...greedy.map(m => pos.steps(m)[0].cap.length)) < 3) bad('④ the greedy trap is small (no first capture of 3 or more)');
+  const after = pos.clone().play(best);
+  if (after.count(after.turn) < 2) bad('④ fewer than 2 opponent pieces left');
+  const ends = m => !L.some(x => x.startsWith(m + '-'));
+  const kinds = L.map((m, i) => m === best ? 'most' : S[i][0].cap.length > a1 ? 'greedy' : best.startsWith(m + '-') ? 'stop' : !ends(m) ? 'stopx' : 'dead');
+  if (P.ok && (P.ok.length !== 1 || P.ok[0] !== best)) bad('① ok ' + JSON.stringify(P.ok) + ' ≠ ' + best);
+  if (P.best !== undefined && P.best !== best) bad('① best ' + P.best + ' ≠ ' + best);
+  if (F.best(E, P.s) !== best) bad('⑧ ls-facts best');
+  if (opt.pool) for (const A of opt.pool) if (A.b !== P.s.b && near(P.s, A)) { bad('⑤ near ' + A.tag); break; }
+  if (msgs.length) return { ok: false, msgs, best, kinds };
+  if (!opt.skipEngine) for (const d of [7, 9]) {
+    const V = values(P.s, d);
+    if (!V.length || V[0].m !== best && !E.same(pos, V[0].m, best)) { bad(`① the engine (depth ${d}) puts ${V[0] && V[0].m} first`); break; }
+    if (V.length > 1 && V[0].v - V[1].v < 60) { bad(`② the engine (depth ${d}) second ${V[1].m} only ${V[0].v - V[1].v} below`); break; }
+  }
+  const dd = (L.length - 1) + 2 * cnt.filter(c => c === mx - 1).length + 2 * greedy.length;
+  return { ok: !msgs.length, msgs, best, d: dd, n: L.length, cnt, kinds };
+}
+// t_big: the words for every move against the facts recounted here (the totals, the first captures, a move that could go on)
+function bigWords(P, LS3, i18n, bad) {
+  const id = 't_big', pos = E.Pos.from(P.s), L = pos.moves(true), best = P.best;
+  const n = m => pos.steps(m).reduce((a, y) => a + y.cap.length, 0), a = n(best), sa = pos.steps(best).length, a1 = pos.steps(best)[0].cap.length;
+  for (const m of L) {
+    const f = F.fact(E, id, P.s, m), S = pos.steps(m), c = n(m), sc = S.length, c1 = S[0].cap.length, more = L.some(x => x.startsWith(m + '-'));
+    const k = m === best ? 'most' : c1 > a1 ? 'greedy' : best.startsWith(m + '-') ? 'stop' : more ? 'stopx' : 'dead';
+    if (f.k !== k || f.c !== c || f.a !== a || f.sc !== sc || f.sa !== sa || f.c1 !== c1 || f.a1 !== a1 || (m !== best && f.more !== more)) bad(`⑧ ${m}: the facts ${JSON.stringify(f)} ≠ ${k} ${c}/${a} ${sc}/${sa} first ${c1}/${a1} more ${more}`);
+    if (f.same !== (S[0].from === pos.steps(best)[0].from)) bad(`⑧ ${m}: the facts' same piece`);
+    for (const lang of LANGS) for (let j = 0; j < (lang === 'ja' ? 6 : 1); j++) {
+      const h = LS3.sayText(id, P, m, lang, j);
+      if (!h || /\{\w+\}/.test(h) || /undefined|NaN/.test(h)) { bad(`⑧ ${m} ${lang}: ${h}`); continue; }
+      const nums = (h.replace(/<[^>]+>/g, '').match(/\d+/g) || []).map(Number);
+      if (lang === 'ja' || lang === 'en') { const ok = new Set([c, a, sc, sa, c1, a1]); nums.forEach(x => { if (!ok.has(x)) bad(`⑧ ${m} ${lang}: the number ${x}`); }); }
+      if (lang !== 'ja') continue;
+      if (m === best) { if (!nums.includes(a)) bad(`⑧ ${m} ja: the praise does not say ${a}`); continue; }
+      if (NEAR.test(h)) bad(`追66 ${m} ja: ${h}`);
+      if (PRAISE.test(h)) bad(`追20 ${m} ja: praise after a wrong move`);
+      if (!(nums.includes(c) && nums.includes(a))) bad(`⑧ ${m} ja: does not say ${c} and ${a}`);
+      const goOn = /続け(られ|て取れ)|まだ取れ|まだ続/.test(h), noMore = /取れる(列|玉)がな|もう取れない|行き止まり/.test(h);
+      if (k === 'greedy') {
+        if (!(nums.includes(c1) && nums.includes(a1)) || !/最初|[1一]回目/.test(h)) bad(`⑧ ${m} ja: the greedy words do not say the first captures ${c1} and ${a1}`);
+        if ((goOn && !more) || (noMore && more)) bad(`⑧ ${m} ja: could it go on? said ${goOn ? 'yes' : 'no'}, the board ${more}`);
+      } else if (more !== goOn || more === noMore) bad(`⑧ ${m} ja: could it go on? said ${goOn ? 'yes' : noMore ? 'no' : '(none)'}, the board ${more}`);
+    }
+    const key = 'ls.' + id + (m === best ? '.why' : k === 'greedy' ? '.ngGreedy' : k === 'stop' || k === 'stopx' ? '.ngStop' : '.ng');
+    for (const lang of LANGS) { const tx = (i18n[lang] || {})[key]; if (!tx) bad(`⑨ 2D ${key} ${lang} missing`); else if (!/\{m\}/.test(tx) || !/\{a\}/.test(tx) || (m !== best && !/\{x\}/.test(tx)) || (k === 'greedy' && !(/\{c1\}/.test(tx) && /\{a1\}/.test(tx)))) bad(`⑨ 2D ${key} ${lang}: {m}/{a}/{x}/{c1}/{a1}`); }
+  }
+}
 // b_win: the words for every move against the facts recounted here (the opponent's pieces left, a move that could go on)
 function winWords(P, LS3, i18n, bad) {
   const id = 'b_win', pos = E.Pos.from(P.s), L = pos.moves(true), best = P.best, opp = 3 - pos.turn;
@@ -349,24 +419,25 @@ function verify(opt) {
   let n = 0, okN = 0;
   for (const id of LS3.READY) {
     const st = LS.steps.find(s => s.id === id); if (!st) { add(id, 0, 'missing'); continue; }
-    const CH = id === 'b_chain', SF = id === 'b_safe', WN = id === 'b_win';
-    if (!BASICS.includes(id) && !CH && !SF && !WN) { add(id, 0, 'no check for this lesson yet'); continue; }
+    const CH = id === 'b_chain', SF = id === 'b_safe', WN = id === 'b_win', BG = id === 't_big';
+    if (!BASICS.includes(id) && !CH && !SF && !WN && !BG) { add(id, 0, 'no check for this lesson yet'); continue; }
     let prevD = -1, firstD = null; const kindsSeen = new Set();
     st.problems.forEach((P, j) => {
       n++; const before = out.length;
-      const o = { pool: PL.filter(A => A.tag !== id + '#' + (j + 1)) }, r = CH ? chainProblem(P, o) : SF ? safeProblem(P, o) : WN ? winProblem(P, o) : basicProblem(id, P, o);
-      if ((SF || WN) && r.kinds) r.kinds.forEach(k => kindsSeen.add(k));
+      const o = { pool: PL.filter(A => A.tag !== id + '#' + (j + 1)) }, r = CH ? chainProblem(P, o) : BG ? bigProblem(P, o) : SF ? safeProblem(P, o) : WN ? winProblem(P, o) : basicProblem(id, P, o);
+      if ((SF || WN || BG) && r.kinds) r.kinds.forEach(k => kindsSeen.add(k));
       r.msgs.forEach(m => add(id, j + 1, m));
       if (r.ok) {
         if (r.d <= prevD) add(id, j + 1, `⑥ d ${r.d} not above ${prevD}`);
         prevD = r.d; if (firstD == null) firstD = r.d;
-        if (CH) chainWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (WN) winWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (SF) safeWords(P, LS3, i18n, m => add(id, j + 1, m)); else words(id, P, LS3, i18n, m => add(id, j + 1, m));
+        if (CH) chainWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (BG) bigWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (WN) winWords(P, LS3, i18n, m => add(id, j + 1, m)); else if (SF) safeWords(P, LS3, i18n, m => add(id, j + 1, m)); else words(id, P, LS3, i18n, m => add(id, j + 1, m));
       }
       if (out.length === before) okN++;
     });
     if (SF && !(kindsSeen.has('self') && kindsSeen.has('open'))) add(id, 0, '④ b_safe: not both kinds of wrong move (the piece moved taken / through the point it left)');
     if (WN && !(kindsSeen.has('stop') && kindsSeen.has('dead'))) add(id, 0, '④ b_win: not both kinds of wrong move (stopped on the answer\'s road / a road to its end)');
     if (WN && st.problems.slice(1).some(P => P.best && P.best.split('-').length < 3)) add(id, 0, '④ b_win: an answer after problem 1 that is no chain');
+    if (BG && !(kindsSeen.has('stop') || kindsSeen.has('stopx')) || BG && !kindsSeen.has('dead')) add(id, 0, '④ t_big: not every kind of wrong move (greedy in each, and stopped / a road to its end in the lesson)');
     if (st.problems.length !== 5) add(id, 0, '5 problems');
     if (st.problems.length && st.problems[3] && st.problems[3].s.side !== 2) add(id, 4, '追5 problem 4 is not Black\'s');
   }
@@ -412,6 +483,8 @@ function selftest() {
     ['③', '③ b_win: the old q1 (captures from 2 pieces only, 追52)', d => { st(d, 'b_win').problems[0] = { s: { b: '...b......b...........wb......w...w...w...w..', side: 1 }, ok: ['e3-d3W-d2A-c2A'], best: 'e3-d3W-d2A-c2A' }; }],
     ['②', '② b_win: the old q3 (every other move wins anyway: the engine\'s second a won value)', d => { st(d, 'b_win').problems[2] = { s: { b: '............b.b.w...b....w.w.w...w..w.b.w....', side: 1 }, ok: ['e5-d4A-e3W-f4W-f3A'], best: 'e5-d4A-e3W-f4W-f3A' }; }],
     ['①', '① b_win: the answer cut short (a part of the chain)', d => { const P = st(d, 'b_win').problems[1], q = P.best.split('-').slice(0, -1).join('-'); P.ok = [q]; P.best = q; }],
+    ['②', '② t_big: the old q4 (two moves take 5, no greedy trap)', d => { st(d, 't_big').problems[3] = { s: { b: 'ww.....wwwww....wwbw...b.bwbbb.....bbbb.b..b.', side: 1 }, ok: ['b3-c3W-d4A-e4W'], best: 'b3-c3W-d4A-e4W' }; }],
+    ['④', '④ t_big: a b_chain problem (no greedy trap of 3)', d => { st(d, 't_big').problems[2] = JSON.parse(JSON.stringify(st(d, 'b_chain').problems[2])); }],
     ['追75', '追75 a ramp move off its board', d => { st(d, 'b_choose').ramp.find(x => x.k === 'try').ok = ['a1-a2A']; }],
   ];
   let fails = 0;
@@ -432,6 +505,10 @@ function selftest() {
     const orig = LS3.sayText; LS3.sayText = (id, P, m, lang, k) => { const h = orig(id, P, m, lang, k); return id === 'b_win' ? h.replace(/(\d+)つ残/g, (x, n) => (+n + 1) + 'つ残') : h; };
     const r = verify({ ls3: LS3 }); LS3.sayText = orig; const hit = r.out.some(o => o.id === 'b_win' && /⑧/.test(o.msg)); if (!hit) fails++; console.log((hit ? 'ok   ' : 'MISS ') + '⑧ b_win: the pieces left miscounted');
   }
+  {   // t_big: the greedy move's first capture miscounted in the words
+    const orig = LS3.sayText; LS3.sayText = (id, P, m, lang, k) => { const h = orig(id, P, m, lang, k); return id === 't_big' ? h.replace(/最初の一取りは(\d+)つ|最初の一回で(\d+)つ|最初に(\d+)つ|最初の(\d+)つ|赤の(\d+)つは/g, x => x.replace(/\d+/, n => String(+n + 5))) : h; };
+    const r = verify({ ls3: LS3 }); LS3.sayText = orig; const hit = r.out.some(o => o.id === 't_big' && /⑧/.test(o.msg)); if (!hit) fails++; console.log((hit ? 'ok   ' : 'MISS ') + '⑧ t_big: the greedy first capture miscounted');
+  }
   {   // the 2D key missing in one language
     const I = loadI18n(); delete I.de['ls.b_choose.ngSame'];
     const r = verify({ i18n: I }); const hit = r.out.some(o => /⑨/.test(o.msg)); if (!hit) fails++; console.log((hit ? 'ok   ' : 'MISS ') + '⑨ a 2D key missing');
@@ -442,7 +519,7 @@ function selftest() {
   }
   return fails;
 }
-module.exports = { engine, values, basicProblem, chainProblem, safeProblem, winProblem, verify, selftest, pool, near, lineOf, BASICS };
+module.exports = { engine, values, basicProblem, chainProblem, bigProblem, safeProblem, winProblem, verify, selftest, pool, near, lineOf, BASICS };
 if (require.main === module) {
   if (process.argv.includes('--selftest')) { const f = selftest(); console.log(f ? `selftest: ${f} missed` : 'selftest: all caught'); process.exit(f ? 1 : 0); }
   const r = verify();
