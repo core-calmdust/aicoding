@@ -1035,3 +1035,21 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 .mupg>.sgw{flex:1 1 auto;min-width:0;margin:0}   /* (the chips' scroll wrapper, when the page adds one) */
 .mupg.pc .mupg-n{display:none}
 @media (max-width:819px){.mupg.on{flex-wrap:wrap}.mupg .mupg-s{flex:1 1 0;max-width:none}.mupg>.sgw{order:3;flex:1 1 100%}.mupg-ex{order:3;flex:1 1 100%;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}.mupg-ex::-webkit-scrollbar{display:none}}
+/* (2026-11-27 ユーザー: 描かれたゲームをゲーム別・時代別でも) the two pull-down chips beside the regions — the portal's own pull-down, no
+   system <select>: the chip shows the choice; its list floats on the page (body), under the chip or, on a phone held upright, as a sheet */
+.ptreg .ptdd{gap:6px;padding-inline-end:9px;max-width:min(260px,70vw)}
+.ptreg .ptdd .ptddk{font-weight:800;opacity:.62;font-size:12.5px}
+.ptreg .ptdd b{font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ptreg .ptdd svg{flex:none;width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
+.ptreg .ptdd[aria-expanded=true] svg{transform:rotate(180deg)}
+.ptddl{position:fixed;z-index:9000;min-width:200px;max-width:min(320px,calc(100vw - 16px));overflow:auto;overscroll-behavior:contain;padding:6px;border:2px solid var(--line);border-radius:16px;background:#fff;color:var(--ink);box-shadow:0 12px 30px rgba(20,24,40,.22);font-family:inherit}
+.ptddl button{display:flex;align-items:center;gap:10px;width:100%;min-height:38px;padding:7px 12px;border:0;border-radius:10px;background:none;color:inherit;font:inherit;font-weight:800;font-size:14px;text-align:start;cursor:pointer}
+.ptddl button span{flex:1;min-width:0}
+.ptddl button em{font-style:normal;font-family:var(--round);font-size:12px;opacity:.6}
+.ptddl button:hover:not([disabled]):not([aria-selected=true]),.ptddl button:focus-visible:not([aria-selected=true]){background:#f1ede4;outline:none}
+.ptddl button[aria-selected=true]{background:var(--ink);color:#fff}
+.ptddl button[aria-selected=true]:focus-visible{outline:3px solid color-mix(in srgb,var(--ink) 35%,#fff);outline-offset:1px}
+.ptddl button[aria-selected=true] em{opacity:.8}
+.ptddl button[disabled]{opacity:.38;cursor:default}
+.ptddl.sheet{left:8px;right:8px;bottom:8px;max-width:none;border-radius:20px;padding:8px calc(8px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left))}
+.ptddl.sheet button{min-height:46px;font-size:15px}

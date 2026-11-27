@@ -39,6 +39,13 @@
 //    o, o0, c, n = the board, the gold reply {r} wins for the opponent, {e} = your jumps after it, drawn on the problem's board,
 //    s_go shortS iff the reply jumps with a stone the full jump would have taken (said whenever some winning reply does); ⑨ the 2D
 //    keys ls.s_go.ng.short(S) · ls.s_keep.ng.cut · ls.s_read.ng.fewer · ls.st.lose / tail0 / tailN in 14 languages, app.js reads them.
+//  b_open (2026-11-27 担当C, open1()): the board right after the two removals (n = 2 or 3, n empty squares, a position the opening's
+//    removals and jumps reach) — ① ok = the only jump leaving the opponent the fewest jumps (this file's count); ② one; ③ relaxed for
+//    this lesson (the user 2026-11-27: 「問題が成立する範囲内で基準を緩めて良い」): 3+ legal, 2+ wrong, 追72; ④ 3+ stones can jump =
+//    the hint's stones; ⑤ relaxed: the b_open problems are never the same position under the 8 symmetries (the opening has no others),
+//    and stay 5+ squares from every other lesson and puzzle; ⑥ d = wrong + 2 × near (one jump more than the answer); ⑦⑧ the answer
+//    'few' j / t and every wrong move 'many' j / j0 = the board, the ja words from w.few / n.many with only those numbers, no win
+//    claim (the count is a fact, not a solve); ⑨ the 2D keys ls.b_open.why / ng / hint / goal in 14 languages, app.js reads them.
 // Usage: node tools/lesson-verify-konane-ls.js [--selftest]   (also run by tools/lesson-verify-konane.js / lesson-verify.js konane)
 'use strict';
 const fs = require('fs'), path = require('path');
@@ -198,6 +205,48 @@ function strat3(id, P, q, add, fact, hintF, JA) {
   }
   return others.length + 2 * nearN;
 }
+// (2026-11-27 担当C) b_open: the first jumps after the opening removals
+let OPEN = null;
+function openSet() {   // every board the opening reaches at ply 2 and 3 (removals, then the first jump)
+  if (OPEN) return OPEN; OPEN = new Set();
+  const go = p => { if (p.ply >= 2) OPEN.add(p.spec().b + p.turn + p.ply); if (p.ply < 3) for (const m of p.moves()) go(p.clone().play(m)); };
+  go(new E.Pos()); return OPEN;
+}
+function open1(id, P, q, add, fact, hintF, JA) {
+  const N = 8, me = P.s.side, b = P.s.b, pos = E.Pos.from(P.s), L = pos.moves(), J = jumps(b, N, me), op = 3 - me;
+  const mv = jj => L.find(m => E.mFrom(m) === jj.from && E.mTo(m) === jj.to), nm = m => E.name(pos, m);
+  if (!(P.ok || []).every(m => L.includes(m)) || !L.includes(P.best)) { add(id, q, '① a right move is not a move of the board'); return 0; }
+  const key = x => x.from + '>' + x.to, eng = new Set(L.map(m => E.mFrom(m) + '>' + E.mTo(m)));
+  if (J.length !== eng.size || J.some(x => !eng.has(key(x)))) add(id, q, `① the engine's ${eng.size} moves ≠ this file's ${J.length} jumps`);
+  const n = P.s.n, holes = b.split('').filter(x => x === '.').length;
+  if (!(n === 2 || n === 3) || holes !== n || !openSet().has(b + me + n)) add(id, q, `④ not a position of the first jumps after the removals (n=${n}, ${holes} empty)`);
+  const res = J.map(x => ({ x, m: mv(x), j: jumps(after(b, N, x, me), N, op).length })), j0 = Math.min(...res.map(r => r.j));
+  const few = res.filter(r => r.j === j0).map(r => r.m).sort((x, y) => x - y), ok = P.ok.slice().sort((x, y) => x - y);
+  if (few.join() !== ok.join()) add(id, q, `① ok ${ok.length} move(s) ≠ the ${few.length} leaving the fewest jumps (${j0})`);
+  if (!P.ok.includes(P.best)) add(id, q, '① best is not in ok');
+  if (P.ok.length !== 1) add(id, q, `② ${P.ok.length} right moves`);
+  if (L.length < 3) add(id, q, `③ ${L.length} legal moves (3 needed, relaxed for the opening)`);
+  if (L.length - P.ok.length < 2) add(id, q, `③ ${L.length - P.ok.length} wrong moves (2 needed, relaxed for the opening)`);
+  if (P.ok.length * 3 > L.length) add(id, q, `追72 ${P.ok.length} right of ${L.length} legal moves (more than 1/3)`);
+  const movers = [...new Set(J.map(x => x.from))].sort((x, y) => x - y);
+  if (movers.length < 3) add(id, q, `④ ${movers.length} stones can jump (the hint narrows to the answer)`);
+  if (hintF(E, id, P.s).slice().sort((x, y) => x - y).join() !== movers.join()) add(id, q, '⑦ the hint\'s stones are not your stones that can jump');
+  const A = res.find(r => r.m === P.best); if (!A) return 0;
+  const fb = fact(E, id, P.s, P.best);
+  if (fb.k !== 'few' || fb.j !== A.j || fb.t !== L.length || fb.c !== A.x.k) add(id, q, `⑧ the answer's words say ${fb.k} j=${fb.j} t=${fb.t}, the board j=${A.j} t=${L.length}`);
+  const chk = (list, part, ph) => { if (!list || list.length < 5) { add(id, q, `⑧ ${list ? list.length : 0} ja words for ${part} (5 problems)`); return; }
+    for (const t of list) { const x = t.replace(ph, '0'); if (/\{\w+\}/.test(x)) add(id, q, `⑧ ja ${part}: a placeholder left`); if (/勝|負け|勝率|評価|見込み/.test(t)) add(id, q, `追16 ja ${part}: a win claim or an evaluation (the count is the only fact)`); } };
+  chk((JA.w || {}).few, 'few', /\{(j|t)\}/g); chk((JA.n || {}).many, 'many', /\{(j|j0)\}/g);
+  let nearN = 0;
+  for (const r of res) {
+    if (r.m === P.best) continue;
+    const f = fact(E, id, P.s, r.m);
+    if (f.k !== 'many' || f.j !== r.j || f.j0 !== j0 || f.c !== r.x.k) add(id, q, `⑧ ${nm(r.m)}: the words say ${f.k} j=${f.j} j0=${f.j0}, the board j=${r.j} j0=${j0}`);
+    if (LSK.kindOf(f) !== 'many') add(id, q, `⑧ ${nm(r.m)}: the ja words are not from n.many`);
+    if (r.j === j0 + 1) nearN++;
+  }
+  return (L.length - P.ok.length) + 2 * nearN;
+}
 function verify(opt) {
   opt = opt || {};
   const LS = opt.data || JSON.parse(fs.readFileSync(path.join(ROOT, 'konane/lessons.json'), 'utf8'));
@@ -211,7 +260,8 @@ function verify(opt) {
   PZ.themes.forEach(T => T.puzzles.forEach((P, j) => pool.push({ id: 'puzzle ' + T.id, q: j + 1, b: P.s.b, mine: false })));
   const vars = pool.map(A => A.mine ? S.flatMap(f => [false, true].map(sw => symB(A.b, f, N, sw))) : null);
   for (let a = 0; a < pool.length; a++) if (pool[a].mine) for (let b = 0; b < pool.length; b++) if (b !== a && !(pool[b].mine && b < a)) {
-    if (vars[a].some(x => diff(pool[b].b, x) <= 4)) add(pool[a].id, pool[a].q, `⑤ within 4 squares of ${pool[b].id} #${pool[b].q}`);
+    const op2 = pool[a].id === 'b_open' && pool[b].id === 'b_open', lim = op2 ? 0 : 4;   // (b_open: relaxed to "never the same", 2026-11-27)
+    if (vars[a].some(x => diff(pool[b].b, x) <= lim)) add(pool[a].id, pool[a].q, op2 ? `⑤ the same position as b_open #${pool[b].q} under a symmetry` : `⑤ within 4 squares of ${pool[b].id} #${pool[b].q}`);
   }
   const soft = (JA.soft || []).join(' ');
   if (/おしい|惜しい|あと一歩|あと少し|いい線/.test(soft)) add('ja', 0, '追66・追68 a 0-point move is told it was close (JA.soft)');
@@ -219,6 +269,7 @@ function verify(opt) {
     const st = LS.steps.find(s => s.id === id); if (!st) { add(id, 0, 'not in lessons.json'); continue; }
     const ds = [];
     st.problems.forEach((P, j) => {
+      if (id === 'b_open') { ds.push(open1(id, P, j + 1, add, fact, hintF, JA)); return; }
       if (/^(s_(go|keep|read)|b_jump)$/.test(id)) { ds.push(strat3(id, P, j + 1, add, fact, hintF, JA)); return; }
       if (/^s_/.test(id)) { ds.push(strat(id, P, j + 1, add, fact, hintF, JA)); return; }
       const q = j + 1, me = P.s.side, b = P.s.b, pos = E.Pos.from(P.s), L = pos.moves(), J = jumps(b, N, me);
@@ -300,13 +351,13 @@ function verify(opt) {
     for (const f of ['i18n-kn.js', 'i18n-kn-more.js']) { try { new Function('window', 'I18N', fs.readFileSync(path.join(ROOT, 'konane', f), 'utf8'))({ I18N: I }, I); } catch (e) { add('2D', 0, '⑨ i18n: ' + e.message); } }
     if (!/s_count\|s_stop|s_\(count\|stop[|)]/.test(app)) add('2D', 0, '⑨ konane/app.js does not read the facts for s_count / s_stop');
     if (!/s_\(count\|stop\|go\|keep\|read\)/.test(app) || !/ls\.st\.tailN/.test(app)) add('2D', 0, '⑨ konane/app.js does not read the facts for s_go / s_keep / s_read');
-    if (!/b_\(double\|win\|jump\)/.test(app) || !/'missT'/.test(app)) add('2D', 0, '⑨ konane/app.js does not read the facts for b_jump');
+    if (!/b_\(open\|double\|win\|jump\)/.test(app) || !/'missT'/.test(app)) add('2D', 0, '⑨ konane/app.js does not read the facts for b_jump');
     const need = { 'ls.s_count.why': ['{m}', '{j}'], 'ls.s_count.ng.more0': ['{m}', '{x}', '{j}', '{j0}', '{r}'], 'ls.s_count.ng.moreN': ['{m}', '{x}', '{j}', '{j0}', '{r}', '{e}'], 'ls.s_count.hint': [],
       'ls.s_stop.why': ['{m}'], 'ls.s_stop.hint': [], ...Object.fromEntries(['goS', 'go', 'lose'].flatMap(h => [['ls.s_stop.ng.' + h + '0', ['{m}', '{x}', '{r}']], ['ls.s_stop.ng.' + h + 'N', ['{m}', '{x}', '{r}', '{e}']]])),
       'ls.s_go.why': ['{m}'], 'ls.s_go.hint': [], 'ls.s_go.ng.short': ['{x}', '{c}', '{n}', '{m}', '{r}'], 'ls.s_go.ng.shortS': ['{x}', '{r}'],
       'ls.s_keep.why': ['{m}', '{j}', '{o}'], 'ls.s_keep.hint': [], 'ls.s_keep.ng.cut': ['{x}', '{j}', '{j0}', '{o}', '{o0}', '{m}', '{r}'],
       'ls.s_read.why': ['{m}', '{j}'], 'ls.s_read.hint': [], 'ls.s_read.ng.fewer': ['{x}', '{j}', '{j0}', '{m}', '{r}'],
-      'ls.b_jump.why': ['{m}', '{j}'], 'ls.b_jump.hint': [], 'ls.b_jump.goal': [], 'ls.b_jump.ng.miss': ['{x}', '{r}'], 'ls.b_jump.ng.missT': ['{x}', '{r}'],
+      'ls.b_open.why': ['{m}', '{j}'], 'ls.b_open.ng': ['{x}', '{j}', '{m}', '{j0}'], 'ls.b_open.hint': [], 'ls.b_open.goal': [], 'ls.b_jump.why': ['{m}', '{j}'], 'ls.b_jump.hint': [], 'ls.b_jump.goal': [], 'ls.b_jump.ng.miss': ['{x}', '{r}'], 'ls.b_jump.ng.missT': ['{x}', '{r}'],
       'ls.st.lose': ['{x}', '{r}'], 'ls.st.tail0': ['{m}'], 'ls.st.tailN': ['{m}', '{e}'],
       'ls.b_double.why': ['{m}'], 'ls.b_double.ng.stop': ['{m}', '{x}'], 'ls.b_double.ng.other': ['{m}', '{x}'], 'ls.b_double.hint': [], 'ls.b_win.why': ['{m}'], 'ls.b_win.ng': ['{m}', '{x}', '{j}'], 'ls.b_win.ng1': ['{m}', '{x}'], 'ls.b_win.hint': [] };
     for (const l of LANGS) for (const [k, ph] of Object.entries(need)) { const x = (opt.i18n || I)[l][k]; if (!x) { add('2D', 0, `⑨ ${l}: no ${k}`); continue; } ph.forEach(p => { if (!x.includes(p)) add('2D', 0, `⑨ ${l}: ${k} has no ${p}`); }); if (k === 'ls.b_win.ng1' && /\{j\}/.test(x)) add('2D', 0, `追58 ${l}: ${k} counts {j}`); }
@@ -354,6 +405,15 @@ function selftest() {
     ['b_jump: the jumps left after the answer counted wrong (⑧)', null, /^⑧/, { fact: (E2, id, s, m) => { const f = FACTS.fact(E2, id, s, m); return id === 'b_jump' && f.k === 'take' ? Object.assign({}, f, { j: f.j + 1 }) : f; } }],
     ['b_jump: the 2D without missT (⑨)', null, /^⑨/, { app: fs.readFileSync(path.join(ROOT, 'konane/app.js'), 'utf8').replace(/'missT'/g, "'miss'") }],
     ['b_jump: a language without ng.missT (⑨)', null, /^⑨/, { i18n: (() => { const I = {}; LANGS.forEach(l => { I[l] = {}; }); for (const f of ['i18n-kn.js', 'i18n-kn-more.js']) new Function('window', 'I18N', fs.readFileSync(path.join(ROOT, 'konane', f), 'utf8'))({ I18N: I }, I); delete I.tr['ls.b_jump.ng.missT']; return I; })() }],
+    // (2026-11-27 担当C) b_open
+    ['b_open: the answer changed (①)', d => { const P = st(d, 'b_open').problems[3]; const p = E.Pos.from(P.s); const w = p.moves().find(m => m !== P.best); P.best = w; P.ok = [w]; }, /^①/],
+    ['b_open: every jump right (the old lesson, ②追72)', d => { const P = st(d, 'b_open').problems[1]; P.ok = E.Pos.from(P.s).moves(); }, /^(①|②|追72)/],
+    ['b_open: order reversed (⑥)', d => { st(d, 'b_open').problems.reverse(); }, /^⑥/],
+    ['b_open: the same class twice, mirrored (⑤)', d => { const pr = st(d, 'b_open').problems, b = pr[1].s.b; let o = ''; for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) o += b[(7 - c) * 8 + (7 - r)]; pr[2] = JSON.parse(JSON.stringify(pr[1])); pr[2].s.b = o; }, /^⑤/],
+    ['b_open: a position the opening never reaches (④)', d => { const P = st(d, 'b_open').problems[4]; P.s = Object.assign({}, P.s, { n: 4 }); }, /^④/],
+    ['b_open: the opponent\'s jumps counted wrong (⑧)', null, /^⑧/, { fact: (E2, id, s, m) => { const f = FACTS.fact(E2, id, s, m); return id === 'b_open' && f.k === 'many' ? Object.assign({}, f, { j: f.j + 1 }) : f; } }],
+    ['b_open: a win claimed in the words (追16)', null, /^追16/, { ja: Object.assign({}, LSK.JA, { w: Object.assign({}, LSK.JA.w, { few: LSK.JA.w.few.map(t => t + 'これで勝ちだ！') }) }) }],
+    ['b_open: a language without ng (⑨)', null, /^⑨/, { i18n: (() => { const I = {}; LANGS.forEach(l => { I[l] = {}; }); for (const f of ['i18n-kn.js', 'i18n-kn-more.js']) new Function('window', 'I18N', fs.readFileSync(path.join(ROOT, 'konane', f), 'utf8'))({ I18N: I }, I); delete I.id['ls.b_open.ng']; return I; })() }],
     ['a language without ng1 (⑨)', null, /^⑨/, { i18n: (() => { const I = {}; LANGS.forEach(l => { I[l] = {}; }); for (const f of ['i18n-kn.js', 'i18n-kn-more.js']) new Function('window', 'I18N', fs.readFileSync(path.join(ROOT, 'konane', f), 'utf8'))({ I18N: I }, I); delete I.de['ls.b_win.ng1']; return I; })() }],
   ];
   let ok = 0; const key = x => x.theme + '#' + x.q + ' ' + x.msg, base0 = new Set(verify({ data: clone() }).out.map(key));

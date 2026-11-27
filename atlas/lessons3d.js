@@ -7326,7 +7326,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       hint: ['この線で、盤はどんな鎖に分かれていきそう？', 'その線のあと、長い鎖を先に開くことになるのはだれかな？', '長い鎖ができそうな所を想像してみて！', '安全な線でも、鎖の形は変わるんだ。', '金色の輪の線をひとつずつ試すつもりで、形を想像してみて！'] },
     mid4: { intro: '4×4（点25個）は、おたがい最善なら8対8の引き分け。点が奇数だから、<b>先手は長い鎖を奇数本、後手は偶数本</b>にしたい盤なんだ。<br>中盤は1本引くたびに鎖の形が固まっていく。どの線が鎖をつなげて、どれが切るかを考えよう！',
       ask: ['4×4の中盤。いちばんいい線は？', '鎖の形を読んで、1本えらんで！', 'どの線が鎖をつなげる？ 切る？', 'この局面、きみならどう引く？', 'ラスト！ 中盤の勝負所だよ！'],
-      hint: ['長い鎖になりそうな所を探してみて。', '先手は長い鎖を奇数本、後手は偶数本にしたい盤！', '安全な線だけが正解とはかぎらない！', '小さくあげて流れを変える手もあるよ？', '金色の輪の線で、鎖の数がどう変わるか考えて！'] },
+      hint: ['長い鎖になりそうな所を探してみて。', 'その線のあと、長い鎖を先に開くことになるのはだれかな？', '金色の輪は安全な線。でも、どれでも同じじゃないよ！', '1本ずつ、そのあとの鎖の形を想像してみて！', '安全な線で、盤がどう分かれていくか考えて！'] },   // (2026-11-27 担当A: the answer is one safe line, picked by the shape that follows)
     mid5: { intro: '5×5（点36個）はまだ解かれていない大きな盤。ここでは、安全な線が少なくなって読み切れる局面だけを出すね。<br>点が偶数だから、先手は長い鎖を偶数本、後手は奇数本にしたい。取り切り・残しの損得も大きいんだ。',
       ask: ['5×5の中盤から終盤。いちばんいい線はどれ？', '大きな盤でも落ちついて。どの線にする？', '長い鎖とループ、何本あるかな？ どこに引く？', '読み切れる局面だよ！ いちばんいい1本は？', 'ラスト！ 大きな盤を決めて！'],
       hint: ['残りの安全な線と、長い鎖・ループの数を数えてみて。', '5×5は、先手が長い鎖を偶数本にしたい盤！', '取り切り・残しの損得も大きいんだ！', '安全な線は残りわずか。最後に開くのはだれ？', '1箱あげて手番を変える手も考えて！'] },
@@ -7402,7 +7402,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       let L;
       if (x.cls === 'take') L = F.hasCap && DT_END.test(s.id) ? (s.id === 'loop' ? DT_CH.takeL : s.id === 'count' ? DT_CH.takeC : DT_CH.takeE) : DT_CH.take;
       else if (x.cls === 'decline') L = x.m === 4 ? DT_CH.dec4 : s.id === 'count' ? DT_CH.decC : DT_CH.dec;
-      else if (x.cls === 'safe') L = s.id === 'open3' ? DT_CH.safeO : pick2 ? DT_CH.safeP : DT_CH.safe;
+      else if (x.cls === 'safe') L = s.id === 'open3' || s.id === 'mid4' ? DT_CH.safeO : pick2 ? DT_CH.safeP : DT_CH.safe;
       else if (F.ns) L = DT_CH.sac;
       else if (x.m === 4 && s.id === 'loop') L = DT_CH.loop4;
       else if (x.m === 2 && !x.ret && s.id === 'hard') L = DT_CH.mid;
@@ -7415,7 +7415,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       if (V.get(u) === undefined || V.get(u) === best) u = P.values.reduce((a, c) => c[1] < a[1] ? c : a)[0];   // (the runner never shows this for a best line: a checker's call — the worst line stands in)
       const x = F.of(u), loss = (best - V.get(u)) / 2, o = { bm: b.m, xm: x.m, s: F.sm };
       let R, Y;
-      if (b.cls === 'safe' && s.id === 'open3') { R = x.cls === 'safe' ? DT_CH.rParO : DT_CH.rSafe; Y = x.cls === 'safe' ? DT_CH.yParO : DT_CH.yGiveO; }
+      if (b.cls === 'safe' && (s.id === 'open3' || s.id === 'mid4')) { R = x.cls === 'safe' ? DT_CH.rParO : DT_CH.rSafe; Y = x.cls === 'safe' ? DT_CH.yParO : DT_CH.yGiveO; }
       else if (b.cls === 'safe') { R = x.cls === 'safe' ? DT_CH.rPar : DT_CH.rSafe; Y = x.cls === 'safe' ? DT_CH.yPar : DT_CH.yGive; }
       else if (s.id === 'count' && b.cls === 'take' && x.dd) { R = DT_CH.rTakeC; Y = DT_CH.yKeepC; }
       else if (s.id === 'count' && b.cls === 'decline' && x.cls === 'take') { R = DT_CH.rDec; Y = DT_CH.yAllC; }
@@ -7437,9 +7437,9 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
   const DOTS = {
     LKEY: 'dots-lessons-v2', data: null, I: null, got: {},
     load(lang) {
-      const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261127V`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
+      const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261127W`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
       if (this.p) return this.p.then(() => T()).then(() => this);
-      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261127v'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
+      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261127w'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
         .then(([ls, X]) => { const w = {}; try { new Function('window', 'with (window) {' + X + '\n}')(w); } catch (e) { console.warn('[lessons3d] dots texts', e); } this.I = w.I18N || {}; this.data = { ls }; return T(); }).then(() => this)
         .catch(e => { this.p = null; throw e; }));
     },
@@ -7509,7 +7509,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     .catch(e => { this.p = null; throw e; })); } };
   /* kōnane (2026-11-25 担当C): the data, チェッカニ's words and the board facts are in atlas/ls-konane.js (loaded the first time; only the
      lessons checked and rebuilt for the 3D, AtlasLsKonane.READY — tools/lesson-verify-konane.js --lessons) */
-  const KONANE = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsKonane) return res(); const sc = document.createElement('script'); sc.src = 'ls-konane.js?v=5'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const KONANE = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsKonane) return res(); const sc = document.createElement('script'); sc.src = 'ls-konane.js?v=6'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsKonane.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   /* ugolki (2026-11-24 担当D): the data, モリフク's words and the board facts are in atlas/ls-ugolki.js (loaded the first time; only the
