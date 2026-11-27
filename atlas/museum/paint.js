@@ -181,6 +181,14 @@
     { id: 'cheetham', w: 2048, h: 1615, rijks: 'RP-F-F01050-BH', bg: '#cdb48c', spots: [[.273, .519], [.493, .51], [.652, .52], [.584, .46], [.455, .73], [.5, .96]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
     // (2026-11-25) the Rijksmuseum: coloured stereograph 'The Problem', a chess game in 18th-century costume
     { id: 'problem', w: 2048, h: 961, rijks: 'RP-F-F10674', bg: '#d6cbb0', spots: [[.24, .532], [.226, .356], [.356, .372], [.213, .795], [.199, .152], [.75, .5]], links: [{ g: 'chess' }] },
+    // (2026-11-25) the Rijksmuseum: ten cards from a Bolognese tarot pack (1660–1718), suit of coins VI–X
+    { id: 'tarocco', w: 2048, h: 1403, rijks: 'KOG-ZG-1-34-29', bg: '#efe7d6', spots: [[.16, .25], [.33, .25], [.49, .25], [.66, .25], [.16, .69], [.83, .69]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Rijksmuseum: field of 48 Delft tiles with children's games (1680–1730)
+    { id: 'kindtegel', w: 1565, h: 2048, rijks: 'BK-1955-328-A', bg: '#dfe3e2', spots: [[.25, .07], [.415, .44], [.08, .19], [.04, .02], [.5, .5], [.92, .94]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: miniature walnut board for draughts and mill (1740–60)
+    { id: 'dammolen', w: 2048, h: 1971, rijks: 'BK-NM-5783-21', bg: '#cdcdcb', spots: [[.45, .42], [.52, .5], [.27, .45], [.3, .57], [.45, .68], [.6, .33]], links: [{ g: 'checkers' }, { g: 'morris' }] },
+    // (2026-11-25) the Rijksmuseum: Nuremberg boxwood draughtsman with Charlemagne's portrait (1525–75)
+    { id: 'karelpiece', w: 2048, h: 2048, rijks: 'BK-NM-3213', bg: '#c9c6c1', spots: [[.5, .45], [.5, .65], [.7, .22], [.25, .3], [.45, .19], [.5, .86]], links: [{ g: 'checkers' }, { g: 'backgammon' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
