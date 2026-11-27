@@ -203,6 +203,8 @@
       const n = g.n; P.push(`<rect x="0" y="0" width="${g.W}" height="${g.H}" rx=".3" class="mxwood"/>`);
       for (let i = 0; i < n; i++) { P.push(`<line x1="1" y1="${1 + i}" x2="${n}" y2="${1 + i}"/><line x1="${1 + i}" y1="1" x2="${1 + i}" y2="${n}"/>`); }
       const hs = n === 19 ? [3, 9, 15] : n === 13 ? [3, 6, 9] : [2, 4, 6]; hs.forEach(a => hs.forEach(b => { if (n !== 9 || (a + b) % 4 === 0 || (a === 4 && b === 4)) P.push(`<circle cx="${1 + a}" cy="${1 + b}" r=".12" class="mxhoshi"/>`); }));
+      for (let i = 0; i < n; i++) { const c = 'ABCDEFGHJKLMNOPQRST'[flip ? n - 1 - i : i], r = flip ? i + 1 : n - i;   // the coordinates the moves' list uses (D4, Q16)
+        P.push(`<text x="${(1 + i) * 100}" y="${45}" class="mxgc" transform="scale(.01)">${c}</text><text x="${(1 + i) * 100}" y="${(n + .72) * 100}" class="mxgc" transform="scale(.01)">${c}</text><text x="${48}" y="${(1 + i + .15) * 100}" class="mxgc" transform="scale(.01)">${r}</text><text x="${(n + .52) * 100}" y="${(1 + i + .15) * 100}" class="mxgc" transform="scale(.01)">${r}</text>`); }
       return `<g class="mxgo">${P.join('')}</g>`;
     }
     if (K === SHOGI) {
