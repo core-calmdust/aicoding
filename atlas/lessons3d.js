@@ -7325,6 +7325,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     yMiss: ['赤い線だと、相手に{xm}箱取られちゃう。', '赤い線を引くと、その箱は相手が取る。{xm}箱のプレゼントになる。', '見のがすと、相手に{xm}箱と手番まで渡しちゃう。', '赤い線では、取れたはずの箱が相手のものに。', '赤い線のあと、相手は{xm}箱をまとめて取れる。'],
     yMore: ['赤い線だと{xm}箱も相手にあげることになる。', '赤い線の所で手を止めると、残る箱が{xm}箱にふえちゃう。', '赤い線は残しすぎ！ {xm}箱も渡るから損が大きい。', '赤い線では、相手に{xm}箱をまとめて取られる。', '赤い線では取り方の順番がずれて、{xm}箱あげることになる。'],
     yEnd: ['端の赤い線で開くと、相手は2箱を返して手番を押しつけてくる。', '端から開いた赤い線だと、相手に「返す」手が残っちゃう。', '赤い端の線だと、相手は2箱を取らずに手番だけ押しつけられる。', '赤い線は端から開いたから、相手が2箱を返せる形。', '端の赤い線では、2箱をあげたうえに主導権まで取られちゃう。'],
+    yEndS: ['端から開いた赤い線だと、相手に「返す」手が残っちゃう。', '赤い線は端から開いたから、相手が2箱を返せる形。', '端の赤い線だと、2箱を取るか返すか、相手が好きなほうを選べる。', '端から開くと、取るか返すかの選択を相手にあげちゃう。', '赤い端の線は、相手に返す手を残す開き方なんだ。'],   // (2026-11-27 担当A, sacrifice: only what the end-opened 2-chain lets the opponent do — whether the opponent's best is to hand back or to take differs line by line)
     yLong: ['赤い線は{xm}箱の鎖を開くから、相手に丸ごと取られる。', '赤い線だと{xm}箱の鎖が開いちゃう。長い鎖は後回しにしたい！', '赤い線だと、{xm}箱を丸ごと持っていかれる。', '赤い線のほうは{xm}箱。差し出すには大きすぎて損！', '赤い線で開くと、相手は{xm}箱をごっそり取れる。'],
     ySmall: ['赤い線だと{xm}箱あげることになるから、緑の線より損。', '赤い線は{xm}箱を渡す線だから、緑の線より高くつく。', '赤い線で開くと、相手は{xm}箱をまとめて取れる。', '赤い線のほうがあげる箱が多いから損。', '赤い線だと{xm}箱。少しの差でも、終盤では大きい！'],   // (x.m < 3: not a long chain)
     ySac: ['赤い線だと流れが変わらない。', '赤い線では箱をあげても、手番の偶数・奇数が変わらない。', '赤い線の犠牲だと、長い鎖の主導権につながらない。', '赤い線では、あげ損になっちゃう。', '赤い線だと、最後の長い鎖はやっぱり相手のもの。'],
@@ -7359,7 +7360,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       else if (b.cls === 'take') { const e = x.dd && DT_END.test(s.id) && (x.m === 2 || x.m === 4); R = e ? DT_CH.rTakeE : DT_CH.rTake; Y = e ? DT_CH.yKeep : x.cls === 'decline' ? DT_CH.yMiss : DT_CH.yOrd; }
       else if (b.cls === 'decline') { R = DT_CH.rDec; Y = x.cls === 'take' ? DT_CH.yAll : DT_CH.yMore; }
       else if (x.cls === 'safe') { R = DT_CH.rSac; Y = DT_CH.ySafe; }
-      else if (x.ret && !b.ret && b.m === 2) { R = DT_CH.rMid; Y = DT_CH.yEnd; }
+      else if (x.ret && !b.ret && b.m === 2) { R = DT_CH.rMid; Y = s.id === 'sacrifice' ? DT_CH.yEndS : DT_CH.yEnd; }
       else if (b.m < x.m) { R = DT_CH.rSmall; Y = x.m >= 3 ? DT_CH.yLong : DT_CH.ySmall; }
       else if (F.ns) { R = DT_CH.rSac; Y = DT_CH.ySac; }
       else { R = DT_CH.rSmall; Y = DT_CH.yOrd; }
@@ -7375,7 +7376,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     load(lang) {
       const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261021L`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
       if (this.p) return this.p.then(() => T()).then(() => this);
-      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261126a'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
+      return (this.p = Promise.all([getJ('../dots/lessons.json?v=30261127s'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
         .then(([ls, X]) => { const w = {}; try { new Function('window', 'with (window) {' + X + '\n}')(w); } catch (e) { console.warn('[lessons3d] dots texts', e); } this.I = w.I18N || {}; this.data = { ls }; return T(); }).then(() => this)
         .catch(e => { this.p = null; throw e; }));
     },
