@@ -289,6 +289,10 @@
     { id: 'sorgheloos', w: 1943, h: 2048, rijks: 'RP-P-1932-121D', bg: '#e8e1d0', spots: [[.39, .59], [.48, .41], [.33, .41], [.2, .54], [.64, .53], [.85, .5]], links: [{ room: 'chance' }, { g: 'solitaire' }] },
     // (2026-11-25) the Rijksmuseum: 'Alea Belli': satire on the Northern War, Swede and Dane at tric-trac (1656)
     { id: 'aleabelli', w: 2048, h: 1646, rijks: 'RP-P-OB-81.843', bg: '#e4e0d6', spots: [[.47, .52], [.45, .61], [.47, .09], [.84, .65], [.45, .83], [.95, .07]], links: [{ g: 'backgammon' }] },
+    // (2026-11-25) the Rijksmuseum: Kubota Shunman surimono: Hyakunin isshu poem cards and their box (1806)
+    { id: 'shunman', w: 2048, h: 1480, rijks: 'RP-P-1995-287', bg: '#efe9dc', spots: [[.71, .63], [.52, .73], [.3, .86], [.38, .28], [.87, .33], [.86, .8]], links: [{ g: 'solitaire' }] },
+    // (2026-11-25) the Rijksmuseum: G. M. Mitelli, 'Gioco de mestieri', dice game of twenty trades (1698)
+    { id: 'mitelli', w: 2048, h: 1535, rijks: 'RP-P-2015-26-1606', bg: '#e8e3d6', spots: [[.51, .03], [.06, .09], [.49, .17], [.89, .17], [.45, .88], [.91, .98]], links: [{ room: 'chance' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
