@@ -3002,6 +3002,7 @@ function shogiOpen(opt) {
       C.forEach(([u, n], k) => { if (!legal.has(u)) a(`① candidate ${u} is not legal`); if (k && n > C[k - 1][1]) a('① cand is not most played first'); });
       const n1 = (C[0] || [0, 0])[1], n2 = (C[1] || [0, 0])[1], tot = P.total || C.reduce((x, c) => x + c[1], 0);
       if (C.reduce((x, c) => x + c[1], 0) > tot) a('⑧ the total is below the counts');
+      shoW = require(path.join(ROOT, 'shogi/tools/openings/wasm-engine.js')).loadSync();   // (a new engine for every problem = the same values whatever was read before; 2026-11-28 担当B)
       const r = shoW.analyze(P.sfen, { depth: 8 }), sc = u => (r.find(x => x.usi === u) || { s: -1e9 }).s, best = r[0].s;
       if (best - sc(A) > 150) a(`① the engine puts the answer ${best - sc(A)} below its best ${r[0].usi}`);
       if (n1 < 12) a(`② played only ${n1} times`);
@@ -3020,7 +3021,7 @@ function shogiOpen(opt) {
       const d = CU.dist(B, S0) + 20 * n2 / n1; if (d < prevD) a(`⑥ easier than the problem before (d ${d.toFixed(1)} after ${prevD.toFixed(1)})`); prevD = Math.max(prevD, d);
       // ⑦⑧ the words at every place in the lesson
       const N = tot || 1, pc = c => Math.max(1, Math.round(c / N * 100)), cnt = new Map(C);
-      const facts = u => { const q = new E.Position(); q.setSfen(P.sfen); const m = q.fromUsi(u), drop = E.isDrop(m), fr = drop ? -1 : E.mFrom(m), to = E.mTo(m), pt = drop ? E.dropType(m) : E.typeOf(q.board[fr]), cap = q.board[to];
+      const facts0 = u => { const q = new E.Position(); q.setSfen(P.sfen); const m = q.fromUsi(u), drop = E.isDrop(m), fr = drop ? -1 : E.mFrom(m), to = E.mTo(m), pt = drop ? E.dropType(m) : E.typeOf(q.board[fr]), cap = q.board[to];
         const bish = x => { let n = 0; for (const mm of x.legalMoves(true)) if (!E.isDrop(mm) && [5, 13].includes(E.typeOf(x.board[E.mFrom(mm)]))) n++; return n; };
         const nullSide = x => { const y = new E.Position(); y.setSfen(x.sfen().replace(/ [bw] /, ` ${q.side ? 'b' : 'w'} `)); return y; };   // (2026-11-28 担当B: the mover to move again — it was the opponent's bishop that got counted)
         const b0 = bish(q); q.doMove(m); const b1 = bish(nullSide(q));
@@ -3029,8 +3030,10 @@ function shogiOpen(opt) {
         const fw = drop ? 0 : (p.side ? 1 : -1) * (((to / 9) | 0) - ((fr / 9) | 0)), n = drop ? 0 : Math.max(Math.abs(((to / 9) | 0) - ((fr / 9) | 0)), Math.abs(to % 9 - fr % 9));
         return { pt, drop, cap: !!cap, fr, to, b0, b1, win, file: p.side ? 10 - file : file, rank, horiz: !drop && ((fr / 9) | 0) === ((to / 9) | 0), loss: sc(A) - sc(u), dir: drop ? '' : fw > 0 ? 'up' : fw < 0 ? 'back' : 'side', n };
       };
-      const FA = facts(A);
-      for (let i = 0; i < 5; i++) {
+      const FM = new Map(), facts = u => { if (!FM.has(u)) FM.set(u, facts0(u)); return FM.get(u); }, FA = facts(A);
+      // 追90 (2026-11-28 担当B): the words rotate through their phrasings (V.v / pk), so each of the 5 places is heard 8 times with the
+      // same voice — every phrasing that can come up is checked on the board, not only the one the first pass picks
+      for (let i0 = 0; i0 < 5 * 8; i0++) { const i = i0 % 5;
         let Q; try { Q = X.shOpJa({ pos: P.sfen, kind: 'best', P, ans: A }, nm, hs, i, false, VO); } catch (er) { a(`⑧ the 3D words fail: ${er.message}`); break; }
         const who = p.side ? '☖後手' : '☗先手', ask = plain(Q.ask);
         if (/\{|undefined|NaN/.test(ask) || (/先手|後手/.test(ask) && !ask.includes(who))) a(`⑧ the question 「${ask}」`);
@@ -3098,6 +3101,7 @@ function shogiOpen(opt) {
         const G = ms.filter(m => { if (E.isDrop(m)) return false; p.doMove(m); const b = p.board.slice(); p.undoMove(); return cd(b) < cd(p.board); }).map(U).sort();
         if (JSON.stringify(G) !== JSON.stringify((P.G || []).slice().sort())) a(`① the castle moves are ${G} (stored ${P.G})`);
         const sets2 = [];
+        shoW = require(path.join(ROOT, 'shogi/tools/openings/wasm-engine.js')).loadSync();   // (a new engine for every castle problem: the same values whatever was read before, 追84)
         for (const d of [8, 9]) { const r = shoW.analyze(P.sfen, { depth: d }), v = new Map(r.map(x => [x.usi, x.s])), ref = Math.max(...G.map(u => v.get(u)));
           if (r[0].s - ref > 80) a(`① depth ${d}: the engine's best ${r[0].usi} is ${r[0].s - ref} above the castle moves`);
           const grey = G.filter(u => v.get(u) < ref - 40 && v.get(u) >= ref - 100); if (grey.length) a(`② depth ${d}: ${grey} in the grey zone`);
