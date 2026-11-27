@@ -208,7 +208,9 @@ const SND = (() => {
     main: { file: 'bgm-main', vol: .45 * .9, restart: false },
     main2: { file: 'bgm-main2', vol: .25 * .9, restart: false },
     main3: { file: 'bgm-main3', vol: .235 * .9, restart: false },
-    main4: { file: 'bgm-main4', vol: .26 * .9, restart: false },   // (2026-11-16, ユーザー「forbidden echoes を通常BGMに」: −14.3 LUFS → ≈ −26)
+    main4: { file: 'bgm-main4', vol: .26 * .9, restart: false },
+    // (2026-11-28, ユーザー「大百科の麻雀の対局中BGMはこちらで（雀華とは別に）」: riichi/'s one track — the Japanese flute, −11.3 LUFS → ≈ −26 like the others)
+    flute: { file: 'bgm-flute', vol: .166, restart: false },   // (2026-11-16, ユーザー「forbidden echoes を通常BGMに」: −14.3 LUFS → ≈ −26)
     riichi: { file: 'bgm-riichi', vol: .26, restart: true },
     riichi2: { file: 'bgm-riichi2', vol: .182, restart: true },   // (2026-11-16, ユーザー「リーチ2BGM」: −9.2 LUFS → ≈ −24 like the first)
     riichi3: { file: 'bgm-riichi3', vol: .184, restart: true },   // (同日「リーチ3」: −9.3 LUFS → ≈ −24)
@@ -263,9 +265,9 @@ const SND = (() => {
   // (2026-11-16, ユーザー「1ゲームの中でもランダムで切り替わって欲しい」) a new track is drawn for every hand (the game's tracks) and for every
   // riichi that starts the riichi music (another riichi in the same hand keeps it) — never the one just heard. The next one is drawn
   // ahead and fetched in the background, so it is in memory when it is wanted.
-  const MAINS = ['main', 'main2', 'main3', 'main4'], RIIS = ['riichi', 'riichi2', 'riichi3'];
-  const draw = (list, not) => { const l = list.filter(k => k !== not); return l[(Math.random() * l.length) | 0]; };
-  let mainKey = 'main', riichiKey = 'riichi', nextMain = draw(MAINS), nextRii = draw(RIIS), handT = 0;
+  const MAINS = CLASSIC ? ['flute'] : ['main', 'main2', 'main3', 'main4'], RIIS = CLASSIC ? ['flute'] : ['riichi', 'riichi2', 'riichi3'];   // (riichi/: the flute all game long, through riichi too)
+  const draw = (list, not) => { const l = list.length > 1 ? list.filter(k => k !== not) : list; return l[(Math.random() * l.length) | 0]; };   // (one track only — riichi/: that one)
+  let mainKey = MAINS[0], riichiKey = RIIS[0], nextMain = draw(MAINS), nextRii = draw(RIIS), handT = 0;
   function music(name) {
     clearTimeout(handT);
     if (name === 'main') name = mainKey;

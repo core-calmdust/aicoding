@@ -43,7 +43,8 @@
      and adapter.ext opens the game page there (atlas/app.js: ext / extLabel / rtNow). The table is the portal's showcase only. */
   window.Atlas3D = window.Atlas3D || {};
   window.Atlas3D.riichi = {
-    table: true, mx: true, levels: 10, modes: ['ai', 'rated'],
+    table: true, mx: true, noPvp: true, levels: 10,   // (noPvp: no 二人で対戦 at the head of 相手 — four seats, no hot-seat game)
+    modes: ['ai', 'rated'],
     sizes: [1, 2], size0: (() => { const s = (save().set || {}); return s.len === 'south' ? 2 : 1; })(),
     sizeLabel: l => tx('len', l), sizeName: (z, l) => tx(+z === 2 ? 'south' : 'east', l),
     levelInfo: (n, l) => ({ name: 'Lv.' + n, desc: (LVD[l] || LVD.en)[Math.min(4, Math.floor((n - 1) / 2))], who: '' }),
