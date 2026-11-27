@@ -1255,3 +1255,20 @@ body:has(.ptv.on,.exv.on) .flycoin{z-index:2147482975}
 .mpc-b.see circle{fill:currentColor;stroke:none}
 .mpc-b.see[aria-expanded=true]{background:var(--ink);border-color:var(--ink);color:#fff}.mpc-b.see[aria-expanded=true] path{transform:rotate(180deg);transform-origin:12px 19px}
 @media (max-width:819px){.mpc-ac{flex-direction:row}.mpc-tt b{font-size:14px}}
+/* (2026-11-27 ユーザー: 名局選に形勢評価) the slider over a graph of the first side's chance (light) against the second's (dark); the note card's chip */
+.mxgw{position:relative;flex:1;min-width:0;display:flex;align-items:center}
+.mxgw .mxgraph{display:none}
+.mxgw.on{height:30px}.mxgw.on .mxgraph{display:block;position:absolute;inset:0;width:100%;height:100%;border-radius:8px;background:#3d4250;overflow:hidden}
+.mxg0{fill:#ece4d4}.mxg1{fill:none;stroke:#fdc43f;stroke-width:1.6;vector-effect:non-scaling-stroke}.mxg2{stroke:rgba(35,38,47,.35);stroke-width:1;stroke-dasharray:3 3;vector-effect:non-scaling-stroke}
+.mxgw.on .mxrng{position:relative;height:30px}
+.mxgw.on .mxrng::-webkit-slider-runnable-track{height:30px;background:transparent}
+.mxgw.on .mxrng::-moz-range-track{height:30px;background:transparent}
+.mxgw.on .mxrng::-webkit-slider-thumb{width:4px;height:34px;margin-top:-2px;border-radius:2px;background:#fdc43f;box-shadow:0 0 0 2px #23262f}
+.mxgw.on .mxrng::-moz-range-thumb{width:4px;height:34px;border-radius:2px;background:#fdc43f}
+.mxev{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:13px;font-weight:800}
+.mxev i{font-style:normal;color:#5d564b}
+.mxevb{position:relative;flex:1;max-width:140px;height:10px;border-radius:99px;background:#3d4250;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+.mxevb span{position:absolute;inset:0 auto 0 0;background:#ece4d4;transition:width .3s}
+.mxevb::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(253,196,63,.9)}
+.mxev b{display:inline-flex;align-items:center;gap:5px;font-family:var(--round);color:var(--ink)}
+.mxev[hidden]{display:none}
