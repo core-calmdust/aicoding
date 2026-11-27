@@ -1,5 +1,6 @@
 /* builds the "loading" overlay (see loading.css); window.AtlasLoading.show() / .hide() */
 (function () {
+  if (window.AtlasLoading) return;   // (2026-11-28: a page that showed the overlay from its <head> loads this file again at the end — keep that one)
   const W = { ja: 'よみこみちゅう', en: 'Loading', zh: '加载中', ko: '불러오는 중', es: 'Cargando', fr: 'Chargement', pt: 'Carregando', de: 'Lädt', hi: 'लोड हो रहा है', ar: 'جارٍ التحميل', ru: 'Загрузка', 'zh-TW': '載入中', id: 'Memuat', tr: 'Yükleniyor' };
   let el = null, t0 = 0;
   const MIN = 600;   // it's cute — keep it on screen a little while

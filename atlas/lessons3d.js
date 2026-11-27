@@ -5040,7 +5040,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       if (this.p) return this.p;
       const tx = window.AtlasBgTexts ? AtlasBgTexts() : Promise.resolve({});
       const bg = window.AtlasBgExplain ? AtlasBgExplain() : Promise.resolve();   // (the rules and the commentary engine: atlas/puzzles.js loads them — the same files and cache keys as the table)
-      return (this.p = Promise.all([getJ('../backgammon/lessons.json?v=30261124a1'), getJ('../backgammon/openings.json?v=20261126rq2'), tx, bg, getJ('../backgammon/ramps.json?v=3').catch(() => null)])
+      return (this.p = Promise.all([getJ('../backgammon/lessons.json?v=30261124a1'), getJ('../backgammon/openings.json?v=20261128rq3'), tx, bg, getJ('../backgammon/ramps.json?v=3').catch(() => null)])
         .then(([ls, op, I, _, rp]) => { this.I = I || {}; this.data = { ls, op, rp }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -7559,7 +7559,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     .catch(e => { this.p = null; throw e; })); } };
   /* agon (2026-11-27 担当F): the data, キンダイスン's words and the board facts are in atlas/ls-agon.js (loaded the first time; only the
      lessons checked and rebuilt for the 3D, AtlasLsAgon.READY — tools/lesson-verify-agon-ls.js) */
-  const AGON = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsAgon) return res(); const sc = document.createElement('script'); sc.src = 'ls-agon.js?v=10'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const AGON = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsAgon) return res(); const sc = document.createElement('script'); sc.src = 'ls-agon.js?v=11'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsAgon.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   /* latrunculi (2026-11-27 担当C): the data, ポンメェ's words and the board facts are in atlas/ls-latrunculi.js (loaded the first time; only the
