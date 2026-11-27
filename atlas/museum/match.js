@@ -24,7 +24,11 @@
     { id: 'immortal', kind: 'chess', res: 'w', moves: 'e4 e5 f4 exf4 Bc4 Qh4+ Kf1 b5 Bxb5 Nf6 Nf3 Qh6 d3 Nh5 Nh4 Qg5 Nf5 c6 g4 Nf6 Rg1 cxb5 h4 Qg6 h5 Qg5 Qf3 Ng8 Bxf4 Qf6 Nc3 Bc5 Nd5 Qxb2 Bd6 Bxg1 e5 Qxa1+ Ke2 Na6 Nxg7+ Kd8 Qf6+ Nxf6 Be7#',
       mk: { 3: { a: [['f4', 'e5']] }, 6: { a: [['h4', 'e1']] }, 14: { a: [['h5', 'g3']] }, 18: { a: [['c6', 'b5']] }, 21: { s: ['b5'] }, 23: { a: [['h4', 'g5']] }, 25: { a: [['h5', 'g6']] },
         29: { a: [['f4', 'g5']] }, 32: { a: [['c5', 'g1']] }, 33: { a: [['d5', 'f6'], ['d5', 'c7']] }, 34: { a: [['b2', 'a1']] }, 35: { s: ['d6', 'g1', 'a1'] }, 37: { a: [['b2', 'g7']], s: ['e5'] },
-        40: { a: [['a6', 'c7']] }, 41: { a: [['g7', 'e8']] }, 43: { a: [['f6', 'd8']] }, 45: { a: [['e7', 'd8']], s: ['d8'] } } }
+        40: { a: [['a6', 'c7']] }, 41: { a: [['g7', 'e8']] }, 43: { a: [['f6', 'd8']] }, 45: { a: [['e7', 'd8']], s: ['d8'] } } },
+    // (2026-11-27) Honinbo Shusaku v. Inoue Gennan Inseki, 1846: The Ear-reddening Game
+    { id: 'mimiaka', kind: 'go', size: 19, res: 'B+2',
+      moves: 'qd dc pq oc cp cf ep qo pe np po pp op qp oq oo pn qq nq on pm om pl mp mq ol pk lq lr kr lp kq qr rr rs mr nr pr ps qs no mo qr rm rl qs lo mn qr qm or ql qj rj ri rk ln mm qi rq jn ls ns gq go ck kc ic pc nj ke og oh pb qb ng mi mj nd ph qg pg hq hr ir iq hp jr fc lc ld mc lb mb md qf pf qh rg rh sh rf sg pj pi oi oj ni qk ok qe kb jb ka jc ob ja la db cc fe cn gr is fq io ji eb fb eg dj dk ej cj dh ij hm gj eh fl fg er dm fn dn gn jj jk kk ii ik jl kl il jh co do ih hn hl bl dg gh ch ig ec cr fd gd ed gc bk cm gs gp li kg in lj lg gm jf jg im fm kf lf mf le gf hf ff gg lk kj km lm ll jm ge he ef ea cb fr fs dr qa ra pa rb da gi fj fi fa ga gl ek em ho el en jo kn ci lh mh mg di ei lg qn rn re sl mg bm am lg eq es mg ha gb lg ds hs mg sj si lg sr sq mg hd hb lg ro so mg ss qs lg sn rp mg cl bn lg ml mk mg pj sf lg nn nl mg ib ia lg nc nb mg jd kd lg ma na mg qc rc lg js ks mg hc id lg fk hj mg hh hg lg gk hk mg ak lg al bm nf od ki ms kp ip jp lr oj mr ea sr',
+      mk: {1: {'s':['qd']},5: {'s':['qd','pq','cp']},10: {'s':['np']},25: {'s':['mq']},31: {'s':['lp']},72: {'s':['og']},127: {'s':['ji']},311: {'s':['lg']}} }
   ];
 
   /* ---------- the kinds ---------- */
