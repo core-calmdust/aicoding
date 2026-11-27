@@ -858,10 +858,21 @@
     });
     return out;
   }
+  function shFleeJa(sfen, u) {   // (2026-11-28 担当B, 追41) the move takes a piece the opponent could win away to a square where it cannot be won: its name
+    try {
+      if (u[1] === '*') return '';
+      const { b, sente: s } = shBd(sfen), a = shSq(u.slice(0, 2)), z = shSq(u.slice(2, 4)), nb = shBd(shSfenStep(sfen, u)).b;
+      if (b[z]) return '';
+      const t = b[a].replace('+', '').toLowerCase(); if (t === 'k') return '';
+      const won = (bd, q) => { const at = shAtk(bd, q, !s); if (at >= 99) return false; const df = shAtk(bd, q, s), v = SH_V[bd[q].replace('+', '').toLowerCase()]; return df >= 99 ? v > 0 : v - at > 0; };
+      return won(b, a) && !won(nb, z) ? SH_PN[t] : '';
+    } catch (e) { return ''; }
+  }
   function shStaticWhyJa(sfen, u, k) {   // (2026-11-22, the openings) after the move: the piece of yours the opponent can win at once (attacked and not
     // defended, or attacked by a cheaper piece) — the moved piece itself, or one that was already attacked and left there
     try {
       const { b, sente: s } = shBd(sfen), nb = shBd(shSfenStep(sfen, u)).b, z = shSq(u.slice(2, 4)), cap = b[z] ? SH_V[b[z].replace('+', '').toLowerCase()] : 0;
+      { const kz = shKing(nb, !s); if (kz >= 0 && shAtk(nb, kz, s) < 99) return ''; }   // (2026-11-28 担当B: a check — the opponent must answer it first, so nothing is "taken at once")
       let best = null;
       nb.forEach((pc, i) => { if (!pc || shS(pc) !== s) return; const t = pc.replace('+', '').toLowerCase(); if (t === 'k') return;
         const v = SH_V[t], at = shAtk(nb, i, !s); if (at >= 99) return; const df = shAtk(nb, i, s), gain = df >= 99 ? v : v - at; if (gain <= 1) return;
@@ -921,7 +932,8 @@
     const fq = v('fq', [0, 1, 2, 3]), ct = v('ct', [0, 1, 2, 3]), lead = v('lead', SHJ_OP.lead), ch = V.cheer(i), so = V.soft(i), pu = V.push(i), sh = shShortJa(FA), hint = shHintJa(FA, k, cp, v);
     const good = u => {
       if (u && u !== A && cnt.has(u)) return shJoin(ch, cp ? `{x}も悪くない手コン。でも{m}なら${sh}から、ほんの少し上なの。` : `{x}もよく指される手！ 実戦では${pc(cnt.get(u))}%、いちばん多い{m}も${pc(cnt.get(A))}%で、どっちも本筋なの。`);
-      return shFit(shJoin(ch, w, t), pu); };
+      const fl = shFleeJa(o.pos, A), fw = fl ? [`ねらわれていた${fl}を、取られないマスへ逃がす手。`, `${fl}がねらわれていたから、まずは安全なマスへよける手。`][k % 2] : '';
+      return shFit(shJoin(ch, fw || w, t), pu); };
     const ng = u0 => {
       let u = u0; if (!u || u === A) u = (C.find(x => x[0] !== A) || [])[0];
       const so2 = (pt => { const N = /いい線|あと少し|あと一歩|おしい/, t0 = V.soft(i); if (pt >= 10 || !N.test(t0)) return t0; const U = [0, 1, 2, 3, 4].map(q => V.soft(q)), L = []; for (let q = 5; q < 24; q++) { const t = V.soft(q); if (!N.test(t) && !U.includes(t) && !L.includes(t)) L.push(t); } const r = [0, 1, 2, 3, 4].slice(0, Math.min(i, 5)).filter(q => N.test(V.soft(q))).length; return L.length ? L[(r + Math.max(0, i - 5)) % L.length] : 'ドンマイ！'; })(u && V.pts ? V.pts(P, u) : 0), L = x => shJoin(so2, shJoin(lead, x));   // (追53: the near words only for a move worth 10+ points)
@@ -951,7 +963,7 @@
       const voice = fetch('../shogi/voice-fox-ja.js?v=9').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       const rep = getJ('../shogi/lesson-replies.json?v=6').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
       return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261127k3'), getJ('../shogi/openings.json?v=20261124ol1'),
-        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261125sb`).catch(() => ({ sets: [] })))])
+        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261128sb`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
           sets.forEach(s => { if (!s.cat) s.cat = s.handi ? 'handi' : 'mid'; });

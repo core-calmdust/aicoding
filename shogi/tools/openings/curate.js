@@ -45,18 +45,19 @@ for (const id of ids) {
   const kept = [], why = {};
   const pool = (raw[id] || []).map(P => { const C = P.cand || [], n1 = C[0][1], n2 = (C[1] || [0, 0])[1];
     const p = new E.Position(); p.setSfen(P.sfen); const a = match(p, C0), b = C1 && match(p, C1), strat = a && !b ? side : b && !a ? 1 - side : -1;
-    const r = W.analyze(P.sfen, { depth: 8 }), sc = (r.find(x => x.usi === P.accept[0]) || { s: -1e9 }).s;
-    const B = brd(P.sfen); return { P, n1, n2, strat, mover: p.side, loss: r[0].s - sc, B, d: dist(B, S0) + 20 * n2 / n1 }; });
+    // (the engine reads only the problems that pass the cheap checks first — the same result, faster)
+    const loss = () => { const r = W.analyze(P.sfen, { depth: 8 }), sc = (r.find(x => x.usi === P.accept[0]) || { s: -1e9 }).s; return r[0].s - sc; };
+    const B = brd(P.sfen); return { P, n1, n2, strat, mover: p.side, loss, B, d: dist(B, S0) + 20 * n2 / n1 }; });
   pool.sort((x, y) => y.n1 - x.n1);
   for (const q of pool) {
     const no = m => { why[m] = (why[m] || 0) + 1; };
     if (q.P.mode !== 'freq' || q.P.accept.length !== 1 || q.P.accept[0] !== q.P.cand[0][0]) { no('① not a freq problem'); continue; }
-    if (q.loss > 150) { no('① the engine: 150+ below its best'); continue; }
     if (q.n1 < 12 || q.n2 > 0.6 * q.n1) { no('② not clearly the most played'); continue; }
     if (q.P.cand.length < 2) { no('③ one candidate'); continue; }
     if (q.strat !== q.mover) { no('④ not the strategy side to move'); continue; }
     if (others.some(([, b]) => dist(q.B, b) <= 4) || kept.some(k => dist(k.B, q.B) <= 4)) { no('⑤ a near twin'); continue; }
     if (kept.filter(k => k.P.accept[0] === q.P.accept[0]).length >= 2) { no('⑤ the same answer a third time'); continue; }
+    if (q.loss() > 150) { no('① the engine: 150+ below its best'); continue; }
     kept.push(q);
   }
   kept.sort((x, y) => x.d - y.d);
