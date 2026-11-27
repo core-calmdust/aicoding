@@ -15,7 +15,11 @@
     { id: 'opera', kind: 'chess', res: 'w',
       moves: 'e4 e5 Nf3 d6 d4 Bg4 dxe5 Bxf3 Qxf3 dxe5 Bc4 Nf6 Qb3 Qe7 Nc3 c6 Bg5 b5 Nxb5 cxb5 Bxb5+ Nbd7 O-O-O Rd8 Rxd7 Rxd7 Rd1 Qe6 Bxd7+ Nxd7 Qb8+ Nxb8 Rd8#',
       mk: { 11: { a: [['c4', 'f7'], ['f3', 'f7']] }, 12: { a: [['f3', 'f7']], s: ['f6'] }, 13: { a: [['b3', 'f7'], ['b3', 'b7']] }, 17: { a: [['g5', 'f6'], ['f6', 'e7']] },
-        21: { s: ['e8'] }, 23: { a: [['d1', 'd7']] }, 27: { a: [['d1', 'd7'], ['b5', 'd7']] }, 31: { a: [['b3', 'b8']] }, 33: { a: [['g5', 'd8']], s: ['e8'] } } }
+        21: { s: ['e8'] }, 23: { a: [['d1', 'd7']] }, 27: { a: [['d1', 'd7'], ['b5', 'd7']] }, 31: { a: [['b3', 'b8']] }, 33: { a: [['g5', 'd8']], s: ['e8'] } } },
+    // (2026-11-27) Richard Réti v. Savielly Tartakower, 1910: Réti's Mate
+    { id: 'reti1910', kind: 'chess', res: 'w', moves: 'e4 c6 d4 d5 Nc3 dxe4 Nxe4 Nf6 Qd3 e5 dxe5 Qa5+ Bd2 Qxe5 O-O-O Nxe4 Qd8+ Kxd8 Bg5+ Kc7 Bd8#',
+      mk: { 9: { a: [['d3', 'e4']] }, 12: { a: [['a5', 'e1']] }, 14: { a: [['e5', 'e1']], s: ['e4'] }, 15: { a: [['d1', 'd8']] }, 16: { a: [['d3', 'd8']], s: ['e8'] }, 17: { a: [['d3', 'd8']] },
+        19: { a: [['g5', 'd8'], ['d1', 'd8']], s: ['d8'] }, 20: { s: ['c7'] }, 21: { a: [['d8', 'c7']], s: ['c7'] } } }
   ];
 
   /* ---------- the kinds ---------- */
