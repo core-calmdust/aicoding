@@ -22,7 +22,7 @@
     reversi: [null, 'England', 'In den 1880ern in London als Reversi verkauft. Othello, 1973 in Japan geschaffen, machte es zu einem Spiel der ganzen Welt.'],
     dots: [null, 'Frankreich', 'Verbinde Punkte, um Kästchen zu schließen — 1889 vom Mathematiker Lucas vorgestellt. Nur mit Stift und Papier gespielt, wurde es zum Schulheft-Klassiker.'],
     hex: [null, 'Dänemark & USA', 'Unabhängig erfunden von Piet Hein 1942 und von Nash um 1948. Es ist mathematisch bewiesen, dass eine Partie nie unentschieden enden kann.'],
-    connect4: [null, 'USA', 'Vier in einer Reihe auf einem aufrechten Brett, 1974 von Milton Bradley herausgebracht. 1988 wurde ein Sieg des Anziehenden bewiesen.'],
+    connect4: [null, 'USA', 'Vier in einer Reihe auf einem aufrechten Brett, seit 1974 in den USA im Handel. 1988 wurde ein Sieg des Anziehenden bewiesen.'],
     amazons: [null, 'Argentinien', 'Ein Gebietsspiel, 1988 von Zamkauskas erfunden. Es wurde zu einer Disziplin bei Computer-Olympiaden.'],
     latrunculi: [null, 'Rom', 'Das Kriegsspiel der römischen Soldaten: Ein Stein wird geschlagen, indem man ihn zwischen zwei einschließt. Der früheste Beleg steht bei Varro, 1. Jahrhundert v. Chr.'],
     tafl: [null, 'Skandinavien', 'Die nordischen Spiele um einen König, der gegen Angreifer verteidigt wird. Eine Theorie sieht Einfluss der römischen Latrunculi. Mit der Ausbreitung des Schachs verschwanden sie.'],

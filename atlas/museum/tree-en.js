@@ -22,7 +22,7 @@
     reversi: [null, 'England', 'Sold in 1880s London as Reversi. Othello, created in Japan in 1973, made it a game of the whole world.'],
     dots: [null, 'France', 'Join the dots to close boxes — introduced by the mathematician Lucas in 1889. Played with just pencil and paper, it became a school-notebook classic.'],
     hex: [null, 'Denmark & USA', 'Invented separately by Piet Hein in 1942 and by Nash around 1948. It is mathematically proven that a game can never end in a draw.'],
-    connect4: [null, 'USA', 'Four in a row on an upright board, launched by Milton Bradley in 1974. A first-player win was proven in 1988.'],
+    connect4: [null, 'USA', 'Four in a row on an upright board, on sale in the USA from 1974. A first-player win was proven in 1988.'],
     amazons: [null, 'Argentina', 'A territory game invented by Zamkauskas in 1988. It became an event at computer olympiads.'],
     latrunculi: [null, 'Rome', 'The Roman soldiers\' war game: a piece is taken by trapping it between two. The earliest record is in Varro, 1st century BC.'],
     tafl: [null, 'Scandinavia', 'The Norse games of a king defended against attackers. One theory sees the influence of Roman latrunculi. They faded away as chess spread.'],
