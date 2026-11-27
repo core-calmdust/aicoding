@@ -3488,11 +3488,15 @@
     const goEnd = t => { const sn = String(t || '').split(/(?<=[。！？])\s*/).filter(Boolean).pop() || '', b = sn.replace(/[。！？!?]+$/, ''); for (const e of ['んだ', 'よね', 'かな', 'よう', 'ろう', 'よ', 'ね', 'ペン']) if (b.endsWith(e)) return e; return ''; };
     const goPush = (w, j) => { const e = goEnd(w); for (let q = 0; q < H.push.length; q++) { const x = pk(H.push, j + q); if (!x) return q ? '' : x; if (!e || goEnd(x) !== e) return x; } return ''; };
 o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good, oi) : pk(H.near, i), why, goPush(why, LI + i)].filter(Boolean).join(' '); };
+    // (2026-11-27 担当B) the soft opener does not open on the praise's last ending (「…攻められるね！」 then 「次は見つけられるね！」), nor take one another problem of the set opens with: the next one in the list
+    const gE = goEnd([pk(H.good, oi), why, goPush(why, LI + i)].filter(Boolean).join(' ')), sE = t => goEnd((String(t || '').match(/^[^。！？]*[。！？]?/) || [''])[0]), sUsed = seen.__soft = seen.__soft || [];
+    let soft = pk(H.soft, oi); if (gE && sE(soft) === gE) for (let q = 1; q < H.soft.length; q++) { const x = pk(H.soft, oi + q); if (sE(x) !== gE && !sUsed.includes(x) && ![0, 1, 2, 3, 4, 5, 6].some(j => pk(H.soft, a + j * b) === x)) { soft = x; break; } }
+    sUsed.push(soft);
     o.ng = function (u) { this._hl = []; const part = (o.P.good || []).concat(o.P.half || []).includes(u), right = fill(pk(H.right, LI + i + 1), { m: OKM });
       if (part) return [pk(H.half, i), right, why, pk(H.you.half, LI + i)].join(' ');
       const [th, uu] = themOf(u); let ex = null;
       if (uu != null) { const fu = goOpF(p0, uu); if (fu) ex = fu.libs === 1 && !fu.cap ? pk(H.you.selfAtari, i) : fu.line === 1 ? H.you.line1[0] : fu.dOwn > 4 && fu.dOpp > 4 ? pk(H.you.far, i) : null; }
-      return [pk(H.soft, oi), right, th, ex, ex ? null : pk(H.tail, LI + i)].filter(Boolean).join(' '); };
+      return [soft, right, th, ex, ex ? null : pk(H.tail, LI + i)].filter(Boolean).join(' '); };
   }
   function goOpIntroJa(g, LI) {   // a short intro: the name, the stored one-line summary (or the story's first plain sentence), a nudge
     const H = GOJ_OP, pk = (a, j) => a[((j % a.length) + a.length) % a.length], sh = L(g.short, 'ja');
@@ -3505,7 +3509,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=26'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
+      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=29'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
         try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
         return this; }).catch(e => { this.p = null; throw e; }));
     },
@@ -7498,17 +7502,17 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     .catch(e => { this.p = null; throw e; })); } };
   /* kōnane (2026-11-25 担当C): the data, チェッカニ's words and the board facts are in atlas/ls-konane.js (loaded the first time; only the
      lessons checked and rebuilt for the 3D, AtlasLsKonane.READY — tools/lesson-verify-konane.js --lessons) */
-  const KONANE = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsKonane) return res(); const sc = document.createElement('script'); sc.src = 'ls-konane.js?v=4'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const KONANE = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsKonane) return res(); const sc = document.createElement('script'); sc.src = 'ls-konane.js?v=5'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsKonane.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   /* ugolki (2026-11-24 担当D): the data, モリフク's words and the board facts are in atlas/ls-ugolki.js (loaded the first time; only the
      lessons checked and rebuilt for the 3D, AtlasLsUgolki.READY — tools/lesson-verify-ugolki-ls.js) */
-  const UGOLKI = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUgolki) return res(); const sc = document.createElement('script'); sc.src = 'ls-ugolki.js?v=4'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const UGOLKI = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUgolki) return res(); const sc = document.createElement('script'); sc.src = 'ls-ugolki.js?v=5'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsUgolki.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   /* fanorona (2026-11-27 担当E): the data, チェッカニ's words and the board facts are in atlas/ls-fanorona.js (loaded the first time; only the
      lessons checked and rebuilt for the 3D, AtlasLsFanorona.READY — tools/lesson-verify-fanorona-ls.js) */
-  const FANORONA = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsFanorona) return res(); const sc = document.createElement('script'); sc.src = 'ls-fanorona.js?v=1'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const FANORONA = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsFanorona) return res(); const sc = document.createElement('script'); sc.src = 'ls-fanorona.js?v=2'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsFanorona.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   // (2026-11-24 ユーザー指示: ur・senet・patolli のレッスンは廃止 — 双六系はマンカラ・バックギャモンのような戦略性の高いものを除いてレッスン・パズルを作らない。
@@ -7961,7 +7965,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
         const right = pts >= 16, k = cur.k;   // (p.own: the guide names the green arrow herself — the heading is only 「おしい！」)
         say(`${right ? (p.own && (id === 'morris' || id === 'janggi' || p.ckls) ? '' : line('solved') || pick(X.good)) : p.own ? (pts >= 10 ? 'いい線いってる！' : '') : pts >= 10 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
         try { chime(right); } catch (e) {}
-        later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); const mk = [...(right || p.ans == null ? [] : [[{ m: p.ans }, 'ok']]), [{ m: u }, right ? 'ok' : 'ng'], ...(!right && p._rp != null ? [[{ m: p._rp }, 'hl']] : [])]; pz().mark(id === 'fanorona' ? mk.reverse() : mk); }, 900);   // (fanorona: the green move drawn last — the same step's other line shares its ring)   // (foxgeese: the geese's covering step gold, p._rp)
+        later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); const mk = [...(right || p.ans == null ? [] : [[{ m: p.ans }, 'ok']]), [{ m: u }, right ? 'ok' : 'ng'], ...(!right && p._rp != null ? [[{ m: p._rp }, 'hl']] : [])]; pz().mark(id === 'fanorona' && !(typeof p.ans === 'string' && p.ans.startsWith(u + '-')) ? mk.reverse() : mk); }, 900);   // (fanorona: the green move drawn last — the same step's other line shares its ring; a capture chain stopped on the answer's road (b_chain) red last, on top of the green road it is a part of)   // (foxgeese: the geese's covering step gold, p._rp)
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;

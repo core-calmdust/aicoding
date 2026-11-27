@@ -76,9 +76,17 @@
       const j0 = qa ? qa.mobility(3 - me) : 0;
       return Object.assign({ k: j <= j0 ? 'fewer' : 'lose', j, c, j0 }, refute(E, pos, q, m));
     }
+    // (2026-11-27 担当C) b_jump: the target = the opponent's only stone that can jump now; the answer is the only jump taking it.
+    // a wrong move ('miss'): the target still stands; the reply {r} (the target's own jump first: tgt) wins, {e} your jumps after it
+    if (id === 'b_jump') {
+      const o = pos.clone(); o.side ^= 1; const t = [...new Set(o.moves().map(E.mFrom))], tg = t.length === 1 ? t[0] : -1;
+      if (win) return { k: 'take', j, c, t: o.moves().length };
+      const R = refute(E, pos, q, m, null, tg >= 0 ? [tg] : null);
+      return Object.assign({ k: 'miss', j, c }, R, { tgt: !!(R && E.mFrom(R.r) === tg) });
+    }
     return { k: '' };
   }
-  const STRATS = ['s_count', 's_stop', 's_go', 's_keep', 's_read'];
+  const STRATS = ['s_count', 's_stop', 's_go', 's_keep', 's_read', 'b_jump'];
   function fact(E, id, spec, m) {
     if (STRATS.includes(id)) return strat(E, id, spec, m);
     const pos = E.Pos.from(spec), me = pos.turn, q = pos.clone().play(m), c = E.hops(m);
@@ -102,7 +110,7 @@
     if (id === 'b_win') { const o = pos.clone(); o.side ^= 1; return [...new Set(o.moves().map(E.mFrom))].filter(x => pos.owner(x) === 3 - me); }
     if (id === 's_count') return [...new Set(pos.moves().map(E.mFrom))];   // (every stone that can jump: count after each)
     if (id === 's_stop') return [...new Set(pos.moves().map(E.mFrom))];   // (every stone that can jump: where to stop on each line)
-    if (/^s_(go|keep|read)$/.test(id)) return [...new Set(pos.moves().map(E.mFrom))];   // (every stone that can jump: go on or stop · your jumps kept · each reply)
+    if (/^s_(go|keep|read)$|^b_jump$/.test(id)) return [...new Set(pos.moves().map(E.mFrom))];   // (every stone that can jump: go on or stop · your jumps kept · each reply)
     return [];
   }
   const API = { fact, hint, endOf, wins, STRATS };

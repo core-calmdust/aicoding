@@ -81,8 +81,9 @@
     const tall = innerHeight > innerWidth * 1.15;
     if (T3.fit) T3.fit(tall ? { w: A3.B * .98, d: A3.B * .98, y: Y + .2, pitch: 1.0 } : { w: A3.B * .92, d: A3.B * .92, y: Y + .2, pitch: 1.0 });
     const pvp = ctx.mode === 'pvp';
-    const human = pvp ? 1 : ctx.side === 2 ? 2 : 1;
-    const flip = human === 2;
+    const PZ = ctx.pz || null;   // PZ: a puzzle position driven by atlas/puzzles.js (no AI: ctx.pz.moved decides; 2026-11-27 担当F)
+    let human = pvp ? 1 : PZ ? (PZ.me === 2 ? 2 : 1) : ctx.side === 2 ? 2 : 1;
+    let flip = human === 2, START = PZ && PZ.spec || null;
     const pname = c => X.n[c - 1];
     let E = null;
     const xz = i => flip ? U.pt(-E.XC[i], -E.YC[i]) : U.pt(E.XC[i], E.YC[i]);
@@ -130,7 +131,7 @@
     function rebuild() { Object.values(pcs).forEach(p => drop(p.g)); pcs = {}; for (let i = 0; i < E.N; i++) { const k = pos.at(i); if (k) { pcs[i] = { g: mk(k, i), k }; if (pos.captured(i)) lean(pcs[i].g, true, true); } } capMarks(); kick(300); }
 
     /* ---------- position ---------- */
-    function refresh() { const r = E.replay(null, moves); pos = r.pos; hashes = r.hashes; }
+    function refresh() { const r = E.replay(START, moves); pos = r.pos; hashes = r.hashes; }
     function hud(msg) {
       const side = c => `<span class="hs ${pos && pos.side + 1 === c && !over ? 'on' : ''}"><i class="dk" style="${DK[c - 1]}"></i>${pvp ? pname(c) : c === human ? L.you : L.ai}<b>${pos ? (pos.onThrone(c) ? '♛' : '') + pos.ringCount(c) : 0}/6</b></span>`;
       ctx.hud(`${side(1)}<span class="hm">${msg || ''}</span>${side(2)}`);
@@ -196,7 +197,7 @@
           done();
         });
     }
-    function commit(m) { busy = true; play(m, () => { busy = false; next(); }); }
+    function commit(m) { if (PZ) { pzOn = false; busy = true; play(m, () => { busy = false; pzAfter(); }); return; } busy = true; play(m, () => { busy = false; next(); }); }
     function next() {
       if (stopped) return;
       const st = E.judge(pos, hashes);
@@ -242,7 +243,7 @@
       return best;
     }
     function onClick(e) {
-      if (over || busy || thinking || !pos || pos.side + 1 !== mover() || T3.wasDrag()) return;
+      if (over || busy || thinking || !pos || pos.side + 1 !== mover() || T3.wasDrag() || (PZ && !pzOn)) return;
       const i = cellOf(e); if (i < 0) { if (!offerReloc()) deselect(); return; }
       const me = pos.side + 1, ph = pos.phase();
       if (ph === 'place') { const m = legal.find(x => E.mTo(x) === i); if (m != null) commit(m); else toast(X.move); return; }
@@ -266,12 +267,79 @@
       refresh(); legal = pos.moves(); const wait = setup(); hud('');
       later(() => { busy = false; showMarks(); next(); }, wait + 200);
     }
+    /* ---------- puzzle mode (ctx.pz, 2026-11-27 担当F): a position from agon/puzzles.json, no AI; atlas/puzzles.js judges each move
+       (ctx.pz.moved(m, info)) and plays the replies (api.pz.play). The solver is the game's own exact one (engine.js duelGood /
+       duelReply, the 2D's requests 'duel' / 'duelReply') in the engine worker. Marks: cells [i, 'ok'|'ng'|'hl'|'ring'] or a whole
+       move { m, cls } (a ring where it starts, a disc where it lands). ---------- */
+    let pzOn = false, pzJ = 0;
+    const pzMk = new TH.Group(); board.add(pzMk);
+    const PZC = { ok: 0x2fd17a, ng: 0xff3b30, hl: 0xffb21a, ring: 0xffc928 }, pzMat = {};
+    const pm = (k, op) => pzMat[k + op] || (pzMat[k + op] = basic(PZC[k] != null ? PZC[k] : PZC.hl, op));
+    function pzState() { const st = E.judge(pos, hashes); return { over: !!st.over, winner: st.winner || 0, draw: !!st.draw || (!!st.over && !st.winner), turn: pos.side + 1, n: moves.length, phase: pos.phase() }; }
+    function pzAfter() { const m = moves[moves.length - 1]; if (PZ.moved) PZ.moved(m, pzState()); }
+    function pzWait() {
+      busy = false; over = !!(pos && E.judge(pos, hashes).over); legal = over ? [] : pos.moves(); pzOn = !over;
+      if (pzOn && pos.side + 1 === human && legal.length && legal[0] === E.PASS) { commit(E.PASS); return; }   // (no move: the pass is played for you)
+      hud(''); if (pzOn) offerReloc();
+    }
+    function pzLoad(spec, me) {
+      PZ.spec = spec || null; PZ.me = me === 2 ? 2 : 1;
+      if (!E) return;   // (the engine is still loading: it starts from PZ)
+      timers.forEach(clearTimeout); timers.length = 0; jid++; pzJ++; pzOn = false; clear(pzMk); clear(mv); clear(hl); clear(cm); sel = null;
+      START = PZ.spec; human = PZ.me; flip = human === 2;
+      moves = []; over = false; busy = true; refresh(); legal = []; const wait = setup(); capMarks(); hud('');
+      later(() => { showMarks(); busy = false; if (PZ.ready) PZ.ready(); }, wait + 150);
+    }
+    function pzMark(list) {
+      clear(pzMk); if (list == null || !pos) return;
+      const L0 = typeof list === 'number' ? [[list, 'ring']] : list;
+      for (const e of L0) {
+        if (e && !Array.isArray(e) && e.m != null) {
+          if (e.m === E.PASS) continue;
+          const k = e.cls || 'ok', f = E.mFrom(e.m), to = E.mTo(e.m);
+          if (f >= 0 && f !== E.RES && f < E.N) mark(pzMk, GEO.ring, pm(k, .95), f, .05);
+          mark(pzMk, GEO.dot, pm(k, .95), to, .05); mark(pzMk, GEO.hex, pm(k, .4), to, .015);
+          continue;
+        }
+        const [q, k] = Array.isArray(e) ? e : [e.at, e.cls]; if (!(q >= 0 && q < E.N)) continue;
+        if (k === 'ring') { mark(pzMk, GEO.ring, pm('ring', 1), q, .05); continue; }
+        mark(pzMk, GEO.ring, pm(k, .95), q, .05); mark(pzMk, GEO.hex, pm(k, k === 'hl' ? .35 : .45), q, .015);
+      }
+      kick(400);
+    }
+    // the engine worker's exact solver (the 2D's requests): 'duel' → the first moves that win within n own moves whatever the
+    // reply; 'duelReply' → the defender's most stubborn reply
+    function pzAsk(msg, mvs) {
+      const j = ++pzJ, line = (mvs || moves).slice();
+      return new Promise(res => {
+        if (!worker) worker = newWorker();
+        worker.onmessage = e => { const r = e.data; if (r.id === -j && r.type === 'result') res(r.error ? null : r); };
+        worker.onerror = () => { worker = null; res(null); };
+        worker.postMessage(Object.assign({ id: -j, start: START, moves: line, rule }, msg));
+      });
+    }
+    const pzApi = {
+      load: (spec, me) => pzLoad(spec, me),
+      wait: pzWait,
+      play: m => new Promise(res => { if (!pos || !pos.moves().includes(m)) return res(false); pzOn = false; busy = true; clear(pzMk); clear(mv); sel = null; play(m, () => { busy = false; over = !!E.judge(pos, hashes).over; res(true); }); }),
+      undo(k = 1) { timers.forEach(clearTimeout); timers.length = 0; clear(mv); sel = null; moves.splice(Math.max(0, moves.length - k)); refresh(); over = false; rebuild(); clear(pzMk); showMarks(); },
+      moves: () => moves.slice(),
+      state: () => pos ? pzState() : {},
+      mark: pzMark,
+      pos: () => pos ? pos.clone() : null,
+      start: () => E.Pos.from(START),
+      engine: () => E,
+      good: (left, mvs) => pzAsk({ type: 'duel', n: left }, mvs).then(r => r && r.list ? r.list.map(x => x.m) : []),
+      reply: left => pzAsk({ type: 'duelReply', n: Math.max(0, left) }).then(r => r && r.move != null ? r.move : null),
+    };
+
     hud('');
-    loadEngine().then(e => { if (stopped) return; E = e; E.setRule(rule); if (!pvp) worker = newWorker(); begin(); }).catch(() => hud('⚠'));
+    loadEngine().then(e => { if (stopped) return; E = e; E.setRule(rule); if (PZ) { worker = newWorker(); pzLoad(PZ.spec, PZ.me); return; } if (!pvp) worker = newWorker(); begin(); }).catch(() => hud('⚠'));
 
     const dbg = {
       at: i => { const [x, z] = xz(i); return T3.project(x, z, Y); },
-      state: () => ({ moves: moves.length, side: pos && pos.side, human, pvp, over, busy, thinking, sel: sel ? sel.from : null, pieces: Object.keys(pcs).length, phase: pos && pos.phase(), w: pos && pos.ringCount(1), b: pos && pos.ringCount(2) }),
+      pz: () => PZ ? pzApi : null,
+      state: () => ({ pzOn, moves: moves.length, side: pos && pos.side, human, pvp, over, busy, thinking, sel: sel ? sel.from : null, pieces: Object.keys(pcs).length, phase: pos && pos.phase(), w: pos && pos.ringCount(1), b: pos && pos.ringCount(2) }),
       legal: () => legal.map(m => ({ m, from: E.mFrom(m), to: E.mTo(m) })),
     };
     window.Atlas3D.agon._dbg = dbg;
@@ -293,7 +361,7 @@
       hud(L.lose); later(() => ctx.onEnd({ win: false, draw: false, level: ctx.level, score: r }), 200);
     }
     const api = {
-      human: human - 1,
+      human: human - 1, pz: PZ ? pzApi : null,
       canUndo: () => myTurn() && undoN() > 0 && moves.length - undoN() >= 0,
       undo() { if (!api.canUndo()) return; const n = undoN(); timers.forEach(clearTimeout); timers.length = 0; jid++; deselect(); moves.splice(moves.length - n); refresh(); rebuild(); ply++; busy = false; legal = pos.moves(); showMarks(); next(); },
       canHint: () => myTurn(),
@@ -338,7 +406,7 @@
         timers.forEach(clearTimeout); clearTimeout(toastT); if (toastEl) toastEl.remove();
         ctx.el.removeEventListener('click', onClick);
         if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null;
-        Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
+        Object.values(MAT).forEach(m => m.dispose()); Object.values(pzMat).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
         if (window.Atlas3D.agon._dbg === dbg) delete window.Atlas3D.agon._dbg;
       },
       _debug: dbg,

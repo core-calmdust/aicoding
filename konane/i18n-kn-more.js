@@ -1766,3 +1766,134 @@ tr: {
 "ls.s_go.intro": "<p>بالعكس، قد يترك التوقف في المنتصف حجرًا للخصم يقفز عائدًا بعد ذلك. حيث يستمر الخط، قارن أيضًا القفز حتى النهاية.</p>"
 }
 });
+
+// (2026-11-27 担当C) b_jump「取れる石を見つける」: the opponent has one stone that can jump now; take it. A wrong move: the head
+// (ls.b_jump.ng.miss — the opponent answers {r}, drawn blue / ng.missT — that very stone jumps with {r}) + the tail ls.st.tail0 / tailN
+(function (A) { for (const l in A) if (window.I18N) I18N[l] = Object.assign(I18N[l] || {}, A[l]); })({
+"ja": {
+"ls.b_jump.sub": "跳べる相手の石を取る",
+"ls.b_jump.intro": "<p>自分の番には必ず相手の石を跳び越えて取ります。縦か横に隣り合う相手の石の向こうが空いていれば跳べます。相手の石のうち、いま跳べるのが1つだけなら、その石を取れば、その石の跳びは消えます。</p>",
+"ls.b_jump.goal": "相手の石でいま跳べるのは1つだけ。その石を跳び越えて取ろう。",
+"ls.b_jump.hint": "光っている石はどれも跳べます。相手の石で、となりにあなたの石があり、その奥が空いている石を探して、それを跳び越える手を選ぼう。",
+"ls.b_jump.why": "{m} で、相手のいま跳べるただ1つの石を取りました。相手の跳べる手は{j}通り残りますが、最後に跳ぶのはあなたです。",
+"ls.b_jump.ng.miss": "{x} では、いま跳べる相手の石が残ります。相手は {r}（青）と跳びます。",
+"ls.b_jump.ng.missT": "{x} では、いま跳べる相手の石が残り、その石が {r}（青）と跳んできます。"
+},
+"en": {
+"ls.b_jump.sub": "Take the stone that can jump",
+"ls.b_jump.intro": "<p>Every move captures: if an enemy stone sits next to yours, up, down or sideways, with an empty square behind it, you can jump it. When only one enemy stone can jump right now, take that stone and its jumps are gone.</p>",
+"ls.b_jump.goal": "Only one enemy stone can jump now. Jump over it and take it.",
+"ls.b_jump.hint": "Every glowing stone can jump. Find the enemy stone with one of your stones next to it and an empty square beyond, and pick the jump over it.",
+"ls.b_jump.why": "{m} takes the only enemy stone that could jump. The opponent’s jumps left: {j}, but you are the one who jumps last.",
+"ls.b_jump.ng.miss": "{x} leaves the enemy stone that can jump standing. The opponent answers {r} (blue).",
+"ls.b_jump.ng.missT": "{x} leaves the enemy stone that can jump standing, and that stone jumps with {r} (blue)."
+},
+"zh": {
+"ls.b_jump.sub": "吃掉能跳的子",
+"ls.b_jump.intro": "<p>每一步都要跳过对方的子把它吃掉。上下左右相邻的对方棋子后面若是空格，就能跳。对方的子中现在能跳的只有一颗时，吃掉它，它的跳法就没了。</p>",
+"ls.b_jump.goal": "对方现在能跳的子只有一颗。跳过它，把它吃掉。",
+"ls.b_jump.hint": "亮起的子都能跳。找出旁边有你的子、再往后是空格的对方棋子，选跳过它的走法。",
+"ls.b_jump.why": "{m} 吃掉了对方现在唯一能跳的子。对方剩下的跳法：{j}，但最后跳的是你。",
+"ls.b_jump.ng.miss": "{x} 让对方能跳的子留了下来。对方以 {r}（蓝）跳。",
+"ls.b_jump.ng.missT": "{x} 让对方能跳的子留了下来，那颗子以 {r}（蓝）跳过来。"
+},
+"zh-TW": {
+"ls.b_jump.sub": "吃掉能跳的子",
+"ls.b_jump.intro": "<p>每一步都要跳過對方的子把它吃掉。上下左右相鄰的對方棋子後面若是空格，就能跳。對方的子中現在能跳的只有一顆時，吃掉它，它的跳法就沒了。</p>",
+"ls.b_jump.goal": "對方現在能跳的子只有一顆。跳過它，把它吃掉。",
+"ls.b_jump.hint": "亮起的子都能跳。找出旁邊有你的子、再往後是空格的對方棋子，選跳過它的走法。",
+"ls.b_jump.why": "{m} 吃掉了對方現在唯一能跳的子。對方剩下的跳法：{j}，但最後跳的是你。",
+"ls.b_jump.ng.miss": "{x} 讓對方能跳的子留了下來。對方以 {r}（藍）跳。",
+"ls.b_jump.ng.missT": "{x} 讓對方能跳的子留了下來，那顆子以 {r}（藍）跳過來。"
+},
+"ko": {
+"ls.b_jump.sub": "뛸 수 있는 돌 잡기",
+"ls.b_jump.intro": "<p>내 차례에는 반드시 상대 돌을 뛰어넘어 잡습니다. 상하좌우로 붙은 상대 돌 너머가 비어 있으면 뛸 수 있습니다. 상대 돌 중 지금 뛸 수 있는 돌이 하나뿐이라면, 그 돌을 잡으면 그 돌의 점프는 사라집니다.</p>",
+"ls.b_jump.goal": "지금 뛸 수 있는 상대 돌은 하나뿐. 그 돌을 뛰어넘어 잡자.",
+"ls.b_jump.hint": "빛나는 돌은 모두 뛸 수 있습니다. 옆에 당신의 돌이 있고 그 너머가 빈 상대 돌을 찾아, 그 돌을 뛰어넘는 수를 고르자.",
+"ls.b_jump.why": "{m} 로 상대가 지금 뛸 수 있는 단 하나의 돌을 잡았습니다. 상대에게 남은 점프: {j}. 그래도 마지막에 뛰는 것은 당신입니다.",
+"ls.b_jump.ng.miss": "{x} 로는 뛸 수 있는 상대 돌이 남습니다. 상대는 {r}(파랑)로 뜁니다.",
+"ls.b_jump.ng.missT": "{x} 로는 뛸 수 있는 상대 돌이 남고, 그 돌이 {r}(파랑)로 뛰어옵니다."
+},
+"es": {
+"ls.b_jump.sub": "Captura la piedra que salta",
+"ls.b_jump.intro": "<p>Toda jugada captura: si una piedra rival está junto a la tuya, arriba, abajo o al lado, con una casilla vacía detrás, puedes saltarla. Cuando solo una piedra rival puede saltar ahora, captúrala y sus saltos desaparecen.</p>",
+"ls.b_jump.goal": "Solo una piedra rival puede saltar ahora. Sáltala y captúrala.",
+"ls.b_jump.hint": "Todas las piedras que brillan pueden saltar. Busca la piedra rival con una tuya al lado y una casilla vacía detrás, y elige el salto sobre ella.",
+"ls.b_jump.why": "{m} captura la única piedra rival que podía saltar. Saltos que le quedan al rival: {j}, pero quien salta el último eres tú.",
+"ls.b_jump.ng.miss": "{x} deja en pie la piedra rival que puede saltar. El rival responde {r} (azul).",
+"ls.b_jump.ng.missT": "{x} deja en pie la piedra rival que puede saltar, y esa piedra salta con {r} (azul)."
+},
+"fr": {
+"ls.b_jump.sub": "Prendre la pierre qui saute",
+"ls.b_jump.intro": "<p>Chaque coup prend : si une pierre adverse touche la vôtre, en haut, en bas ou sur le côté, avec une case vide derrière, vous pouvez la sauter. Quand une seule pierre adverse peut sauter maintenant, prenez-la et ses sauts disparaissent.</p>",
+"ls.b_jump.goal": "Une seule pierre adverse peut sauter maintenant. Sautez-la et prenez-la.",
+"ls.b_jump.hint": "Toutes les pierres qui brillent peuvent sauter. Cherchez la pierre adverse qui touche l’une des vôtres avec une case vide au-delà, et choisissez le saut par-dessus.",
+"ls.b_jump.why": "{m} prend la seule pierre adverse qui pouvait sauter. Sauts restants à l’adversaire : {j}, mais c’est vous qui sautez en dernier.",
+"ls.b_jump.ng.miss": "{x} laisse debout la pierre adverse qui peut sauter. L’adversaire répond {r} (bleu).",
+"ls.b_jump.ng.missT": "{x} laisse debout la pierre adverse qui peut sauter, et cette pierre saute par {r} (bleu)."
+},
+"pt": {
+"ls.b_jump.sub": "Capture a pedra que salta",
+"ls.b_jump.intro": "<p>Todo lance captura: se uma pedra rival está ao lado da sua, em cima, embaixo ou de lado, com uma casa vazia atrás, você pode saltá-la. Quando só uma pedra rival pode saltar agora, capture-a e os saltos dela somem.</p>",
+"ls.b_jump.goal": "Só uma pedra rival pode saltar agora. Salte sobre ela e capture-a.",
+"ls.b_jump.hint": "Todas as pedras que brilham podem saltar. Ache a pedra rival com uma das suas ao lado e uma casa vazia além, e escolha o salto sobre ela.",
+"ls.b_jump.why": "{m} captura a única pedra rival que podia saltar. Saltos que restam ao rival: {j}, mas quem salta por último é você.",
+"ls.b_jump.ng.miss": "{x} deixa de pé a pedra rival que pode saltar. O rival responde {r} (azul).",
+"ls.b_jump.ng.missT": "{x} deixa de pé a pedra rival que pode saltar, e essa pedra salta com {r} (azul)."
+},
+"de": {
+"ls.b_jump.sub": "Den springenden Stein schlagen",
+"ls.b_jump.intro": "<p>Jeder Zug schlägt: Steht ein Gegnerstein oben, unten oder seitlich neben deinem und dahinter ist ein Feld frei, kannst du ihn überspringen. Kann gerade nur ein Gegnerstein springen, schlag ihn, und seine Sprünge sind weg.</p>",
+"ls.b_jump.goal": "Nur ein Gegnerstein kann jetzt springen. Überspring ihn und schlag ihn.",
+"ls.b_jump.hint": "Jeder leuchtende Stein kann springen. Such den Gegnerstein, neben dem einer deiner Steine steht und dahinter ein freies Feld, und wähl den Sprung über ihn.",
+"ls.b_jump.why": "{m} schlägt den einzigen Gegnerstein, der springen konnte. Dem Gegner bleiben Sprünge: {j}, doch du springst als Letzter.",
+"ls.b_jump.ng.miss": "{x} lässt den Gegnerstein stehen, der springen kann. Der Gegner antwortet {r} (blau).",
+"ls.b_jump.ng.missT": "{x} lässt den Gegnerstein stehen, der springen kann, und genau dieser Stein springt mit {r} (blau)."
+},
+"ru": {
+"ls.b_jump.sub": "Взять камень, что может прыгнуть",
+"ls.b_jump.intro": "<p>Каждый ход — взятие: если рядом с вашим камнем (сверху, снизу или сбоку) стоит камень соперника, а за ним пусто, его можно перепрыгнуть. Когда прыгнуть сейчас может только один камень соперника, возьмите его — и его прыжков не станет.</p>",
+"ls.b_jump.goal": "Прыгнуть сейчас может лишь один камень соперника. Перепрыгните и возьмите его.",
+"ls.b_jump.hint": "Каждый светящийся камень может прыгнуть. Найдите камень соперника, рядом с которым ваш камень, а за ним пусто, и выберите прыжок через него.",
+"ls.b_jump.why": "{m} берёт единственный камень соперника, который мог прыгнуть. Прыжков у соперника осталось: {j}, но последним прыгаете вы.",
+"ls.b_jump.ng.miss": "После {x} камень соперника, который может прыгнуть, остаётся. Соперник отвечает {r} (синий).",
+"ls.b_jump.ng.missT": "После {x} камень соперника, который может прыгнуть, остаётся, и именно он прыгает: {r} (синий)."
+},
+"tr": {
+"ls.b_jump.sub": "Atlayabilen taşı al",
+"ls.b_jump.intro": "<p>Her hamle taş alır: rakip taş seninkinin üstünde, altında ya da yanında durup arkası boşsa onu atlayabilirsin. Şu an yalnızca bir rakip taş atlayabiliyorsa onu al; o taşın atlamaları da biter.</p>",
+"ls.b_jump.goal": "Şu an yalnızca bir rakip taş atlayabiliyor. Onun üstünden atla ve al.",
+"ls.b_jump.hint": "Parlayan taşların hepsi atlayabilir. Yanında senin bir taşın, ötesinde boş kare olan rakip taşı bul ve onun üstünden atlayan hamleyi seç.",
+"ls.b_jump.why": "{m} atlayabilen tek rakip taşı aldı. Rakibin kalan atlamaları: {j}, ama son atlayan sensin.",
+"ls.b_jump.ng.miss": "{x} atlayabilen rakip taşı yerinde bırakır. Rakip {r} (mavi) ile cevap verir.",
+"ls.b_jump.ng.missT": "{x} atlayabilen rakip taşı yerinde bırakır ve o taş {r} (mavi) ile atlar."
+},
+"id": {
+"ls.b_jump.sub": "Ambil batu yang bisa melompat",
+"ls.b_jump.intro": "<p>Setiap langkah menangkap: jika batu lawan ada di samping batumu, atas, bawah, atau sisi, dengan petak kosong di belakangnya, kamu bisa melompatinya. Bila sekarang hanya satu batu lawan yang bisa melompat, ambil batu itu dan lompatannya hilang.</p>",
+"ls.b_jump.goal": "Sekarang hanya satu batu lawan yang bisa melompat. Lompati dan ambil batu itu.",
+"ls.b_jump.hint": "Semua batu yang menyala bisa melompat. Cari batu lawan yang di sampingnya ada batumu dan di baliknya petak kosong, lalu pilih lompatan di atasnya.",
+"ls.b_jump.why": "{m} mengambil satu-satunya batu lawan yang bisa melompat. Lompatan lawan yang tersisa: {j}, tetapi yang melompat terakhir adalah kamu.",
+"ls.b_jump.ng.miss": "{x} membiarkan batu lawan yang bisa melompat tetap berdiri. Lawan menjawab {r} (biru).",
+"ls.b_jump.ng.missT": "{x} membiarkan batu lawan yang bisa melompat tetap berdiri, dan batu itu melompat dengan {r} (biru)."
+},
+"hi": {
+"ls.b_jump.sub": "कूद सकने वाला पत्थर लो",
+"ls.b_jump.intro": "<p>हर चाल पत्थर लेती है: अगर विरोधी का पत्थर तुम्हारे पत्थर के ऊपर, नीचे या बगल में हो और उसके पीछे खाना खाली हो, तो उसे कूदकर ले सकते हो। जब अभी विरोधी का सिर्फ़ एक पत्थर कूद सकता हो, उसे ले लो — उसकी छलांगें खत्म।</p>",
+"ls.b_jump.goal": "अभी विरोधी का सिर्फ़ एक पत्थर कूद सकता है। उसे कूदकर ले लो।",
+"ls.b_jump.hint": "चमकते सभी पत्थर कूद सकते हैं। विरोधी का वह पत्थर ढूँढो जिसके बगल में तुम्हारा पत्थर हो और उसके पार खाली खाना, फिर उसके ऊपर से कूदने वाली चाल चुनो।",
+"ls.b_jump.why": "{m} ने विरोधी का वह अकेला पत्थर लिया जो कूद सकता था। विरोधी की बची छलांगें: {j}, पर आख़िरी छलांग तुम्हारी है।",
+"ls.b_jump.ng.miss": "{x} के बाद कूद सकने वाला विरोधी पत्थर बचा रहता है। विरोधी {r} (नीला) से जवाब देता है।",
+"ls.b_jump.ng.missT": "{x} के बाद कूद सकने वाला विरोधी पत्थर बचा रहता है, और वही पत्थर {r} (नीला) से कूदता है।"
+},
+"ar": {
+"ls.b_jump.sub": "خذ الحجر القادر على القفز",
+"ls.b_jump.intro": "<p>كل نقلة أسر: إن جاور حجرَك حجرُ خصم من فوق أو تحت أو جانب وخلفه مربع فارغ، يمكنك القفز فوقه. إن كان حجر واحد فقط للخصم يستطيع القفز الآن، فخذه فتختفي قفزاته.</p>",
+"ls.b_jump.goal": "حجر واحد فقط للخصم يستطيع القفز الآن. اقفز فوقه وخذه.",
+"ls.b_jump.hint": "كل حجر مضيء يستطيع القفز. ابحث عن حجر الخصم الذي بجانبه أحد أحجارك وخلفه مربع فارغ، واختر القفزة فوقه.",
+"ls.b_jump.why": "{m} تأخذ حجر الخصم الوحيد الذي كان يستطيع القفز. قفزات الخصم المتبقية: {j}، لكنك أنت من يقفز أخيرًا.",
+"ls.b_jump.ng.miss": "{x} تترك حجر الخصم القادر على القفز قائمًا. يرد الخصم بـ {r} (أزرق).",
+"ls.b_jump.ng.missT": "{x} تترك حجر الخصم القادر على القفز قائمًا، وذلك الحجر يقفز بـ {r} (أزرق)."
+}
+});
