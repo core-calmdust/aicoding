@@ -70,6 +70,7 @@
     { id: 'moksha', region: 'asia', color: '#2f6a4a', cover: { s: 'moksha' }, mins: 3, sec: [{ paint: 'chaupar' }, null, null, { ex: 'goose' }, null], figs: { m0: { svg: 'mokshaBoard' }, m1: { svg: 'mokshaRatio' }, m2: { svg: 'mokshaRoute' } }, refs: ['A. Topsfield, “The Indian Game of Snakes and Ladders”, Artibus Asiae 46 (1985)', 'A. Topsfield, “A Note on Sufi Snakes and Ladders”, Journal of the Royal Asiatic Society 32 (2022)', 'J. Schmidt-Madsen, The Game of Knowledge: Playing at Spiritual Liberation in 18th- and 19th-Century Western India (PhD thesis, University of Copenhagen, 2019)', 'E. A. Dauenhauer, P. J. Dauenhauer, “Quantifying the Vices and Virtues of Snakes and Ladders through Time”, Board Game Studies Journal 18 (2024)', 'R. C. Bell, Board and Table Games from Many Civilizations (1960)', 'Wikipedia, “Snakes and ladders”, “Gyan chauper”'], links: [{ g: 'ludo' }, { ex: 'goose' }, { paint: 'chaupar' }, { g: 'senet' }] },
     { id: 'domino', region: 'asia', color: '#2a3a52', cover: { s: 'domino' }, mins: 3, sec: [{ pic: 'dominocma' }, { pic: 'dominocape' }, { pic: 'dominobook' }, { paint: 'dstereo' }, { paint: 'domino98' }], figs: { m0: { svg: 'dominoDice' }, m1: { svg: 'dominoChain' }, m2: { svg: 'dominoRoute' } }, refs: ['周密『武林舊事』 / Zhou Mi, Former Events in Wulin (13th c.)', 'The Cleveland Museum of Art, Dominoes (骨牌圖), Qianlong period (2025.104)', 'L’Avantcoureur, 1 April 1762; Dictionnaire de Trévoux (1771)', 'Stewart Culin, Chess and Playing-Cards (1898)', 'The Metropolitan Museum of Art, Domino (1971.47.4); Domino game in book form (Thomas J. Watson Library)', 'Wikipedia, “Dominoes”, “Chinese dominoes”'], links: [{ g: 'shanghai' }, { g: 'backgammon' }, { paint: 'dstereo' }, { paint: 'dkaart' }] },
     { id: 'kriegsspiel', region: 'europe', color: '#3a4a3a', cover: { s: 'kriegsspiel' }, mins: 3, sec: [{ pic: 'kriegalea' }, { pic: 'kriegprussian' }, { pic: 'kriegtin' }, null, null], figs: { m0: { svg: 'kriegsTimeline' }, m1: { svg: 'kriegsTable' }, m2: { svg: 'kriegsHidden' } }, refs: ['J. C. L. Hellwig, Versuch eines aufs Schachspiel gebaueten taktischen Spiels (1780); Das Kriegsspiel (1803)', 'G. H. R. J. von Reisswitz, Anleitung zur Darstellung militairischer Manöver mit dem Apparat des Kriegs-Spieles (1824)', 'J. von Verdy du Vernois, Beitrag zum Kriegsspiel (1876)', 'H. G. Wells, Little Wars (1913)', 'Rijksmuseum, RP-P-OB-81.843; NG-NM-3501; NG-NM-11127', 'Wikipedia, “Kriegsspiel”, “Wargame”, “Johann Christian Ludwig Hellwig”, “Kriegspiel (chess)”'], links: [{ g: 'chess' }, { g: 'xiangqi' }, { g: 'janggi' }] },
+    { id: 'chessfamily', region: 'asia', color: '#5a3a1a', cover: { s: 'chessfamily' }, mins: 3, sec: [{ paint: 'shahnama' }, null, null, null, { ex: 'nishapur' }], figs: { m0: { svg: 'chessfamilyTree' }, m1: { svg: 'makrukStart' }, m2: { svg: 'sittuyinSetup' } }, refs: ['H. J. R. Murray, A History of Chess (1913)', 'D. B. Pritchard, The Encyclopedia of Chess Variants (1994), after Shwei-gyin U Bha’s Burmese rule book (c. 1924)', 'R. Gralla, on V. Kramnik’s makruk game in Bonn (2004)', 'Wikipedia, “Makruk”, “Sittuyin”, “Shatar”, “Chaturanga”'], links: [{ g: 'chess' }, { g: 'shogi' }, { g: 'xiangqi' }] },
   ];
   // pictures shown only beside a story's paragraph (not in another room): a museum's open-access photo (CC0), linked to the museum's page.
   // The name, in each language, is MUSEUM_READ_T[lang].pic[id]. Files images/atlas/museum-story/pic/<id>.webp (≤ 960 px).
@@ -1646,6 +1647,47 @@
         g += `<text x="${x + B + 14}" y="${y + B / 2 - 8}" font-size="14" font-weight="800" fill="${col}">${esc(nm || '')}</text>` + ln.map((l, i) => `<text x="${x + B + 14}" y="${y + B / 2 + 12 + i * 17}" font-size="12.5" fill="#2b2a28">${esc(l)}</text>`).join(''); });
       const fy = 8 + 3 * RH + 6; g += `<text x="${W / 2}" y="${fy}" font-size="12.5" font-weight="700" fill="#5a3e78" text-anchor="middle">${esc(L[5] || '')}</text>`;
       return `<svg viewBox="0 0 ${W} ${fy + 10}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // the family tree of chess: solid lines for clear descent, dotted for disputed links
+    // (text: the story's figL.tree — [name, place] × 9 in the order chaturanga, shatranj, sittuyin, makruk, chess, shatar, ouk, xiangqi, shogi; figL.leg — [solid, dotted])
+    chessfamilyTree: () => { const F = st('chessfamily').figL || {}, N = F.tree || [], L = F.leg || [], W = 300, BW = 90, BH = 40;
+      const P = [[150, 6], [52, 70], [150, 70], [248, 70], [52, 134], [150, 134], [248, 134], [101, 198], [200, 198]], C = ['#7a4a1a', '#2a5a8a', '#8a3a2a', '#2f6a4a', '#2a5a8a', '#2a5a8a', '#2f6a4a', '#6a6460', '#6a6460'];
+      const top = k => [P[k][0], P[k][1]], bot = k => [P[k][0], P[k][1] + BH];
+      const ln = (a, b, d) => `<path d="M${a[0]} ${a[1]}L${b[0]} ${b[1]}" stroke="${d ? '#8a8478' : '#4a4640'}" stroke-width="${d ? 2 : 2.4}" fill="none"${d ? ' stroke-dasharray="4 4"' : ''}/>`;
+      let g = ln(bot(0), top(1)) + ln(bot(0), top(2)) + ln(bot(0), top(3)) + ln(bot(1), top(4)) + ln(bot(1), top(5)) + ln(bot(3), top(6));
+      g += `<path d="M120 ${6 + BH}C101 ${6 + BH + 12} 101 ${6 + BH + 12} 101 ${6 + BH + 30}V198" stroke="#8a8478" stroke-width="2" fill="none" stroke-dasharray="4 4"/>`;
+      g += `<path d="M230 ${70 + BH}C200 ${70 + BH + 12} 200 ${70 + BH + 12} 200 ${70 + BH + 30}V198" stroke="#8a8478" stroke-width="2" fill="none" stroke-dasharray="4 4"/>`;
+      g += ln([146, 218], [155, 218], 1);
+      N.forEach(([nm, pl], k) => { const [x, y] = P[k];
+        g += `<rect x="${x - BW / 2}" y="${y}" width="${BW}" height="${BH}" rx="8" fill="#fbf8f0" stroke="${C[k]}" stroke-width="2"/><text x="${x}" y="${y + 17}" text-anchor="middle" font-size="13" font-weight="800" fill="${C[k]}">${esc(nm || '')}</text><text x="${x}" y="${y + 33}" text-anchor="middle" font-size="12" fill="#5a544a">${esc(pl || '')}</text>`; });
+      g += `<path d="M10 260H44" stroke="#4a4640" stroke-width="2.4"/><text x="52" y="264" font-size="12" fill="#2b2a28">${esc(L[0] || '')}</text><path d="M10 282H44" stroke="#8a8478" stroke-width="2" stroke-dasharray="4 4"/><text x="52" y="286" font-size="12" fill="#2b2a28">${esc(L[1] || '')}</text>`;
+      return `<svg viewBox="0 0 ${W} 296" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // makruk's starting position: pieces numbered by kind, pawns (bia) on the 3rd and 6th ranks
+    // (text: the story's figL.mk — [name, move] × 6 for khun, met, khon, ma, ruea, bia; figL.mkN — [pawn ranks, promotion])
+    makrukStart: () => { const F = st('chessfamily').figL || {}, M = F.mk || [], NT = F.mkN || [], W = 300, c = 24, x0 = 54, y0 = 8, B = 8 * c;
+      const back = [5, 4, 3, 1, 2, 3, 4, 5], backB = [5, 4, 3, 2, 1, 3, 4, 5]; let g = '';
+      for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) g += `<rect x="${x0 + f * c}" y="${y0 + r * c}" width="${c}" height="${c}" fill="${r === 2 || r === 5 ? '#f3e2b8' : '#efe6d2'}" stroke="#b8a888" stroke-width=".8"/>`;
+      for (let r = 0; r < 8; r++) g += `<text x="${x0 - 8}" y="${y0 + r * c + 16}" text-anchor="end" font-size="12" fill="#8a8478">${8 - r}</text>`;
+      const pc = (f, r, n, w) => `<circle cx="${x0 + f * c + c / 2}" cy="${y0 + r * c + c / 2}" r="9.5" fill="${w ? '#fbf8f0' : '#2b2a28'}" stroke="#2b2a28" stroke-width="1.2"/><text x="${x0 + f * c + c / 2}" y="${y0 + r * c + c / 2 + 4.5}" text-anchor="middle" font-size="12" font-weight="800" fill="${w ? '#2b2a28' : '#fbf8f0'}">${n}</text>`;
+      for (let f = 0; f < 8; f++) { g += pc(f, 0, backB[f], 0) + pc(f, 2, 6, 0) + pc(f, 5, 6, 1) + pc(f, 7, back[f], 1); }
+      g += `<path d="M${x0 + B + 6} ${y0 + 2 * c + c / 2}h10M${x0 + B + 6} ${y0 + 5 * c + c / 2}h10" stroke="#b07a1a" stroke-width="2"/>`;
+      let y = y0 + B + 22; g += `<text x="10" y="${y}" font-size="12" font-weight="700" fill="#8a5a10">${esc(NT[0] || '')}</text>`; y += 18; g += `<text x="10" y="${y}" font-size="12" fill="#5a544a">${esc(NT[1] || '')}</text>`; y += 12;
+      M.forEach(([nm, mv], k) => { y += 30; g += `<circle cx="20" cy="${y - 5}" r="9.5" fill="#fbf8f0" stroke="#2b2a28" stroke-width="1.2"/><text x="20" y="${y - 0.5}" text-anchor="middle" font-size="12" font-weight="800" fill="#2b2a28">${k + 1}</text><text x="36" y="${y - 7}" font-size="13" font-weight="800" fill="#2b2a28">${esc(nm || '')}</text><text x="36" y="${y + 8}" font-size="12" fill="#5a544a">${esc(mv || '')}</text>`; });
+      return `<svg viewBox="0 0 ${W} ${y + 16}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
+    // sittuyin at the start: staggered pawns, each side's free-setup camp, and the two promotion diagonals
+    // (text: the story's figL.sy — [Red pawns, Black pawns, Red's camp, Black's camp, the diagonals, who sets up first])
+    sittuyinSetup: () => { const L = ((st('chessfamily').figL || {}).sy) || [], W = 300, c = 28, x0 = 38, y0 = 8, B = 8 * c; let g = '';
+      // rows from the top: r = 8 - rank. Red camp: files a–d ranks 1–2, e–h ranks 1–3; Black camp: a–d ranks 6–8, e–h ranks 7–8
+      for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) { const rk = 8 - r, red = f < 4 ? rk <= 2 : rk <= 3, blk = f < 4 ? rk >= 6 : rk >= 7;
+        g += `<rect x="${x0 + f * c}" y="${y0 + r * c}" width="${c}" height="${c}" fill="${red ? '#f6d4c8' : blk ? '#d8d4cc' : '#f3ecdc'}" stroke="#b8a888" stroke-width=".8"/>`; }
+      g += `<path d="M${x0} ${y0}L${x0 + B} ${y0 + B}M${x0 + B} ${y0}L${x0} ${y0 + B}" stroke="#2f6a4a" stroke-width="2.2"/>`;
+      for (let r = 0; r < 8; r++) g += `<text x="${x0 - 8}" y="${y0 + r * c + 18}" text-anchor="end" font-size="12" fill="#8a8478">${8 - r}</text>`;
+      const pw = (f, rk, red) => `<circle cx="${x0 + f * c + c / 2}" cy="${y0 + (8 - rk) * c + c / 2}" r="9" fill="${red ? '#c0392b' : '#2b2a28'}" stroke="#fff" stroke-width="1.4"/>`;
+      for (let f = 0; f < 8; f++) { g += pw(f, f < 4 ? 3 : 4, 1) + pw(f, f < 4 ? 5 : 6, 0); }
+      let y = y0 + B + 10; const row = (sw, t, b) => { y += 22; return sw + `<text x="34" y="${y}" font-size="12"${b ? ' font-weight="700"' : ''} fill="#2b2a28">${esc(t || '')}</text>`; };
+      g += row(`<circle cx="16" cy="${y + 18}" r="7" fill="#c0392b"/>`, L[0]) + row(`<circle cx="16" cy="${y + 18}" r="7" fill="#2b2a28"/>`, L[1]);
+      g += row(`<rect x="8" y="${y + 10}" width="16" height="14" fill="#f6d4c8" stroke="#b8a888"/>`, L[2]) + row(`<rect x="8" y="${y + 10}" width="16" height="14" fill="#d8d4cc" stroke="#b8a888"/>`, L[3]);
+      g += row(`<path d="M8 ${y + 24}L24 ${y + 10}" stroke="#2f6a4a" stroke-width="2.2"/>`, L[4]) + row('', L[5], 1);
+      return `<svg viewBox="0 0 ${W} ${y + 12}" role="img" style="font-family:inherit;direction:ltr">${g}</svg>`; },
     // four tetrahedral dice: how often each score comes (out of 16)
     tetraOdds: () => { const n = [1, 4, 6, 4, 1], W = 300, H = 150, bw = 40, gap = (W - 40 - bw * 5) / 4; let g = '';
       n.forEach((v, i) => { const x = 20 + i * (bw + gap), h = v / 6 * 96, y = 112 - h;
