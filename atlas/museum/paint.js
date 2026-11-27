@@ -151,6 +151,10 @@
     { id: 'yokihi', w: 1835, h: 2048, rijks: 'RP-P-1991-545', bg: '#e5e1d6', spots: [[.544, .55], [.265, .375], [.6, .25], [.33, .15], [.865, .31], [.85, .85]], links: [{ g: 'backgammon' }, { ex: 'sugoroku' }] },
     // (2026-11-25) the Rijksmuseum: Disdéri & Cie carte de visite, men in old-fashioned costume playing cards
     { id: 'disderi', w: 1573, h: 1071, rijks: 'RP-F-F01031-12-2', bg: '#e6e0d2', spots: [[.45, .47], [.45, .28], [.32, .33], [.6, .34], [.578, .718], [.9, .5]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Rijksmuseum: Oortman after Stoopendaal, a 74-space spiral goose game
+    { id: 'gans', w: 2048, h: 1785, rijks: 'RP-P-1906-150', bg: '#e4e0d4', spots: [[.6, .45], [.075, .91], [.317, .915], [.494, .68], [.3, .57], [.7, .33]], links: [{ ex: 'goose' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Claudine Stella after Jacques Stella, putti playing merelle (nine men's morris) and flying a kite
+    { id: 'merelle', w: 2048, h: 1682, rijks: 'RP-P-2023-61-18', bg: '#ddd8cb', spots: [[.12, .73], [.17, .09], [.77, .45], [.83, .78], [.5, .42], [.5, .865]], links: [{ g: 'morris' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
