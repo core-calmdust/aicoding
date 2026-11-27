@@ -8,13 +8,15 @@ const root = path.join(__dirname, '..');
 const mins = x => { const t = [x.lead, ...(x.s || []), ...(x.kf || []), ...((x.more || []).flatMap(m => [m.h, ...m.p])), ...((x.tl || []).map(r => r.join(' ')))].join(' ');
   const cjk = (t.match(/[\u3000-\u9fff\uac00-\ud7af]/g) || []).length, words = t.replace(/[\u3000-\u9fff\uac00-\ud7af]/g, ' ').split(/\s+/).filter(Boolean).length;
   return Math.round(cjk / 500 + words / 200); };
-for (const [name, G] of [['read', 'MUSEUM_READ_T'], ['paint', 'MUSEUM_PAINT_T'], ['chance', 'MUSEUM_CHANCE_T']]) {
+for (const [name, G] of [['read', 'MUSEUM_READ_T'], ['paint', 'MUSEUM_PAINT_T'], ['chance', 'MUSEUM_CHANCE_T'], ['match', 'MUSEUM_MATCH_T']]) {
   const src = path.join(root, `atlas/museum/${name}-i18n.js`), out = path.join(root, `atlas/museum/${name}-i18n`);
   const window = {}; new Function('window', fs.readFileSync(src, 'utf8'))(window);
   const T = window[G]; fs.mkdirSync(out, { recursive: true });
   // (2026-11-24 audit textKB) the stories: each language's file carries the English text for anything it lacks (story by story, field by
   // field), so the museum reads one file, not English + the language (English 127 KB + Arabic 182 KB went past the 300 KB line)
-  const fill = l => { if (name !== 'read' || l === 'en' || !T.en) return T[l]; const o = Object.assign({}, T[l]);
+  const fill = l => { if (name === 'match' && l !== 'en' && T.en) {   // (2026-11-27 名局選: the page reads one file — English for any game, field or note the language lacks)
+      const o = Object.assign({}, T[l]); for (const k of Object.keys(T.en)) { const e = T.en[k], v = o[k]; o[k] = !v ? e : Object.assign({}, e, v, e.c || v.c ? { c: Object.assign({}, e.c, v.c) } : {}); } return o; }
+    if (name !== 'read' || l === 'en' || !T.en) return T[l]; const o = Object.assign({}, T[l]);
     for (const k of Object.keys(T.en)) { const e = T.en[k], v = o[k]; o[k] = v == null ? e : e && typeof e === 'object' && !Array.isArray(e) && v && typeof v === 'object' && !Array.isArray(v) ? Object.assign({}, e, v) : v; }
     return o; };
   const head = `/* generated from atlas/museum/${name}-i18n.js by tools/museum-read-split.js — edit the source, not this file */\n`;
