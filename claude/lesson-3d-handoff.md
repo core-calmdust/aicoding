@@ -33,10 +33,10 @@
 |---|---|---|---|
 | foxgeese 狐とガチョウ | ドミダック | **3D対応済み**（パズル250問・レッスン6本30問） | なし |
 | janggi チャンギ | ショウギツネ | **3D対応済み**（パズル289問・レッスン15本75問） | なし（e_rook q3 の作り直しと追88 は 2026-11-27 #3936 で済み） |
-| konane コナネ | チェッカニ | 一部（パズル226問・レッスン4本20問） | レッスン5本25問：s_go・s_keep・s_read（`konane/tools/ls_strat_gen.js` の読み切りで作れる。**その準備の正解の手が盤にない＝追75**も直す）、b_open・b_jump（どの合法手も正解になる形なので、選ぶ問題の作りから見直す） |
+| konane コナネ | チェッカニ | 一部（パズル226問・レッスン7本35問。s_go・s_keep・s_read は 2026-11-27 担当C） | レッスン2本10問：b_open・b_jump（どの合法手も正解になる形なので、選ぶ問題の作りから見直す） |
 | ugolki ウゴルキ | モリフク | **3D対応済み**（パズル152問・レッスン11本55問。s_count は 2026-11-27 に作り直し） | 2D の追58 未確認：ugolki/i18n-ug-pzwhy.js の pz.why.* が en 以外の12言語で数の後ろに複数形の名詞（es「{k} piezas」「{n} jugadas」など）。数が1になりうるので、数を名詞の後ろに置くか1のときの文を持つ。機械チェックも足す |
-| fanorona ファノロナ | チェッカニ | 一部（パズル199問） | **レッスン12本60問すべて**（b_approach・b_withdraw・b_choose・b_chain・b_safe・b_win・t_big・t_count・t_stop・t_paika・e_hunt・e_trap） |
-| agon アゴン | キンダイスン | 未 | パズル（x2・w3〜w5・b3〜b5 の7テーマ 152問）とレッスン12本56問。追88 未確認（2D の詰めパズル puzzleMove が外れた手を戻す・正解の手を出す） |
+| fanorona ファノロナ | チェッカニ | 一部（パズル199問・レッスン4本20問：b_approach・b_withdraw・b_choose・b_chain、2026-11-27 担当E） | **レッスン8本40問**（b_safe・b_win・t_big・t_count・t_stop・t_paika・e_hunt・e_trap）。atlas/ls-fanorona.js の READY に足し、tools/lesson-verify-fanorona-ls.js にその主題のチェックを足す（今は basics 3本と b_chain の形） |
+| agon アゴン | キンダイスン | 未（パズル152問は問題検証済み・2D の追88 済み、2026-11-27 担当F） | 3D パズル（BOOK.agon・agon-pz.js・表示確認）とレッスン12本56問 |
 | latrunculi ラトルンクリ | ポンメェ | 未 | パズル（t2・t3・t4・corner・double の5テーマ 250問）とレッスン7本35問 |
 
 おすすめの順：（janggi の NG 直し・ugolki s_count は済み）→ konane の残り → ugolki の2D 追58 → fanorona のレッスン → agon → latrunculi。大きいゲームは「パズル → レッスン数本ずつ」に区切ってマージしてよい（表は「一部」）。

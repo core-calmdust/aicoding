@@ -1260,7 +1260,7 @@
       b_escape: ['チェックされちゃった！ いちばん良い守り方は？', 'キングがねらわれてる。逃げる・置く・取る、どれにする？', 'チェックを防ぐ手はいくつかある。損しない手はどれかな？', 'さあ、キングを守ろう！ 駒も損しない手を選んでね。', 'ここはどう守る？ 3つの方法を思い出してみて！'],
       b_mate: ['1手でチェックメイトにしちゃおう！', 'キングの逃げ道を全部ふさぐチェックはどれかな？', 'この局面、1手で勝てるピョン。わかる？', '黒のキングを詰ませる一手を見つけて！', '逃げ場のないチェック、指せるかな？'],
       b_special: [''],   // (its own questions below, by the rule the problem uses)
-      b_draw: ['ステイルメイトにしないで、勝ちにつながる手は？', '黒のキングを追いつめよう。でも、動けなくしすぎないでね！', 'クイーンでとどめをさせるかな？ わなに注意ピョン。', '引き分けにならない、勝ちへの一手を選ぼう！', 'ここでいちばん良い手はどれかな？ キングの逃げ道もよく見て！'],
+      b_draw: ['ステイルメイトにしないで、勝ちにつながる手は？', '黒のキングを追いつめよう。でも、動けなくしすぎないでね！', 'とどめの一手、見えるかな？ わなに注意ピョン。', '引き分けにならない、勝ちへの一手を選ぼう！', 'ここでいちばん良い手はどれかな？ キングの逃げ道もよく見て！'],
       capture: ['得をする駒取りを見つけよう！', '取れる駒はいくつかある。いちばん得なのはどれ？', '守られていない駒、見つけられるかな？', 'その駒、取っても取り返されない？ よく見て選んでね。', 'ここで駒得できる手があるピョン。どれだろう？'],
       escape: ['ねらわれた駒を助けてあげよう！', 'どの駒があぶないかな？ 安全にする手を探して！', '相手の最後の手で、何がねらわれた？', 'このままだと駒を取られちゃう。どう助ける？', '逃げる・守る・ねらい返す。いちばんいい手は？'],
       fork: ['2つの駒を、同時にねらっちゃおう！', '1手で両取りをかけられる駒はどれかな？', '相手の駒の並びをよく見て。両取りのチャンスピョン！', 'フォークをかけるマス、見つけられる？', '相手が一度に守れない手を探してみて！'],
@@ -1359,13 +1359,17 @@
         if (kd === 'ep') return hang.length ? hang : fr === ans.slice(0, 2) && !G.cap ? ['{x}と前へ進めると、横のポーンはもう取れなくなる。'] : ['{x}を指すと、アンパッサンの権利はこの一手で消えちゃう。', '{x}だと、次の手ではもうアンパッサンできない。'];
         return G.promo && G.promo !== 'q' ? ['{x}だとクイーンより弱い駒になっちゃう。'] : ['{x}では、ポーンは奥の段に着かないまま。', '{x}を指しても、ポーンはまだ成れていない。']; };
     } else if (sid === 'b_draw') {
-      const m1 = best >= 29999;
+      const m1 = P.ok ? true : best >= 29999;   // (2026-11-27 第2期 担当A: the problems are 'ok' kinds — the one mate in 1 among stalemate traps; tools/lesson-verify-chbasic.js)
       hints = m1 ? ['黒のキングの逃げ道を数えてみて。チェックしながら全部ふさげるマスがあるね。', 'チェックをかけて、逃げ道もなくせるマスは？ 王手を忘れずに！'] : ['すぐには詰まない形。黒のキングに動けるマスを残しながら、せまい所へ追いこもう！', 'あわてて詰ませなくていい。黒のキングに1マスだけ逃げ道を残してみて。'];
-      goods = m1 ? ['{x}で王手をかけて詰み！ チェックをかけたから、ステイルメイトにならずに勝てたピョン。', '{x}で詰み！ 王手をかけたまま逃げ道をなくしたから、引き分けのわなもよけられた。', '{x}で決着！ チェックしてから動けなくしたから、ちゃんと勝ちになる。']
+      goods = m1 ? ['{x}で王手をかけて詰み！ チェックをかけたから、ステイルメイトにならずに勝てたピョン。', '{x}で詰み！ 王手をかけたまま逃げ道をなくしたから、引き分けのわなもよけられた。', '{x}で決着！ チェックしてから動けなくしたから、ちゃんと勝ちになる。', '{x}でチェックメイト！ 逃げ道ゼロの王手だから、引き分けにはならないピョン。', 'お見事、{x}で詰み！ 動けないうえに王手もかかっている。これは勝ち。', '{x}が決め手！ 引き分けになる手を全部よけて、きっちり詰ませた。']
         : ['{x}がいちばん！ 黒のキングに動けるマスを1つ残して、ステイルメイトをよけながら追いつめてる。', '{x}でキングをすみへ追いこんだ！ 逃げ道を1つ残しているから、引き分けにはならない。', 'うまい追いこみ！ {x}のあとも黒には指せる手が残っているから、あわてず詰みへ向かえる。'];
-      rights = m1 ? ['{m}でチェックをかけて詰ませれば、勝ちだった。', '{m}なら王手で詰み。引き分けの心配もなかったんだ。', '{m}は王手で、そのまま逃げ道もゼロ。これが勝ち方ピョン。', '{m}なら、ステイルメイトのわなをよけて詰ませられた。'] : ['{m}なら逃げ道を1つ残せる。それが勝ちへの近道ピョン。', '{m}で追いこめば、ステイルメイトにならずにすむ。', '{m}なら、黒にまだ指せる手を残しながら追いつめられた。', '{m}で追いこめば、次の手で詰ませる形ができたんだ。'];
+      rights = m1 ? ['{m}でチェックをかけて詰ませれば、勝ちだった。', '{m}なら王手で詰み。引き分けの心配もなかったんだ。', '{m}は王手で、そのまま逃げ道もゼロ。これが勝ち方ピョン。', '{m}なら、ステイルメイトのわなをよけて詰ませられた。', '正しくは{m}。王手をかけながら、最後の逃げ道もふさげた。', 'ここは{m}、王手と同時にキングの行き場がなくなる手だった。'] : ['{m}なら逃げ道を1つ残せる。それが勝ちへの近道ピョン。', '{m}で追いこめば、ステイルメイトにならずにすむ。', '{m}なら、黒にまだ指せる手を残しながら追いつめられた。', '{m}で追いこめば、次の手で詰ませる形ができたんだ。'];
       altGood = u => { const v = val(u); return v != null && v < best ? '{x}でも勝ちは変わらない！ ただ、{m}ならもっと早く詰ませられたピョン。' : '{x}でもばっちり！ 引き分けのわなを、ちゃんとよけたね。'; };
-      xpart = G => !G ? ['ほかの手だと勝ちが遠のいちゃう。'] : G.hang ? [`{x}だと、${N[G.pc]}をキングに取られちゃう！`, `{x}の${N[G.pc]}は、黒のキングにただで取られちゃう。`] : !G.check && !G.run ? ['{x}だと黒のキングは、チェックされていないのに動けない。これじゃ引き分けになっちゃう！', '{x}のあと、黒は指せる手がゼロ。王手じゃないから、ステイルメイト！', '{x}は黒を動けなくしすぎ。チェックなしで手がなくなると、引き分けピョン。']
+      xpart = G => !G ? ['ほかの手だと勝ちが遠のいちゃう。'] : P.ok ? (G.hang ? [`{x}だと、${N[G.pc]}をキングにただで取られちゃう！`, `{x}の${N[G.pc]}は守りがないから、黒のキングに取られちゃう。`]
+          : !G.check && !G.run ? ['{x}だと黒のキングは、チェックされていないのに動けない。これじゃ引き分けになっちゃう！', '{x}のあと、黒は指せる手がゼロ。王手じゃないから、ステイルメイト！', '{x}は黒を動けなくしすぎ。チェックなしで手がなくなると、引き分けピョン。']
+          : G.check ? [`{x}は王手だけど、黒のキングにはまだ逃げるマスが${G.run}つある。`, '{x}の王手は、キングに逃げ道が残るから詰みにならない。', '{x}でチェックはかかるけど、キングは空いたマスへ逃げられちゃう。']
+          : ['{x}はチェックにならないから、黒のキングはまだ動ける。', '{x}だと王手がかからない。黒にはまだ指せる手があって、詰みは先になる。', '{x}では王手がかかっていない。黒のキングは、まだ空いたマスへ歩ける。', '{x}のあと、黒のキングは自由に1歩動ける。チェックもかかっていないピョン。'])
+        : G.hang ? [`{x}だと、${N[G.pc]}をキングに取られちゃう！`, `{x}の${N[G.pc]}は、黒のキングにただで取られちゃう。`] : !G.check && !G.run ? ['{x}だと黒のキングは、チェックされていないのに動けない。これじゃ引き分けになっちゃう！', '{x}のあと、黒は指せる手がゼロ。王手じゃないから、ステイルメイト！', '{x}は黒を動けなくしすぎ。チェックなしで手がなくなると、引き分けピョン。']
         : ['{x}だと勝ちが遠のいちゃう。', '{x}では、黒のキングをなかなか追いつめられない。', '{x}のあと、黒のキングはまだ広いところへ逃げられる。', '{x}だと、詰みまで遠回りになっちゃう。', '{x}では、黒のキングがまだ自由に動けるから、詰みが遠い。'];
     } else if (sid === 'capture') {
       const cA = N[FA.cap] || '駒', defd = FA.taken;
@@ -2095,7 +2099,7 @@
     load() {
       if (this.p) return this.p;
       const txt = u => fetch(u).then(r => r.text());
-      return (this.p = Promise.all([getJ('../chess/lessons.json?v=30261126sp1'), getJ('../chess/openings.json?v=20261126o2'), txt('../chess/i18n.js?v=20261107pro2-i14-p61'), txt('../chess/i18n_basics.js?v=20261019ol-i14'), txt('../chess/voice-knight-ja.js?v=4').catch(() => '')])
+      return (this.p = Promise.all([getJ('../chess/lessons.json?v=30261127dr1'), getJ('../chess/openings.json?v=20261126o2'), txt('../chess/i18n.js?v=20261107pro2-i14-p61'), txt('../chess/i18n_basics.js?v=20261127dr1'), txt('../chess/voice-knight-ja.js?v=5').catch(() => '')])
         .then(([ls, op, a, b, vk]) => {
           const w = {}; try { new Function('window', a)(w); new Function('window', b)(w); } catch (e) { console.warn('[lessons3d] chess texts', e); }   // (a sandbox: the page's own I18N stays untouched)
           try { const v = {}; new Function('window', vk)(v); this.V = ((v.I18N || {})['ja@knight']) || {}; } catch (e) { this.V = {}; }   // (ナイトン's own lines, 3D, ja)
@@ -3497,7 +3501,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=25'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
+      return (this.p = Promise.all([getJ('../go/lessons.json?v=30261126d'), getJ('../go/openings.json?v=27'), goRules(), fetch('../go/voice-pen-ja.js?v=7').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
         try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
         return this; }).catch(e => { this.p = null; throw e; }));
     },
@@ -6355,7 +6359,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       t_block: ['王の逃げ道をふさいで、2手以内に逃げられないようにしよう！', '王から角までの道が開いてる！ どこでふさぐ？', 'ふさいだあと、王にトゥイチされないかな？ よく見て！', 'ライチ発生！ 攻め手の受けの一手は？', 'さあ、王さまの道に駒を入れて止めよう！'],
       t_fort: ['さいごの1枚を入れて、エッジフォートを完成させよう！', '砦の壁に、穴がひとつあいてるの。どこかな？', 'あと1手で砦ができあがる！ どの駒を動かす？', '攻め手が入れない砦、作れるかな？', 'さあ、王さまのお城を完成させて！'],
       t_encircle: ['輪のさいごのすき間を閉じて、包囲を完成させよう！', '守り手が外へ出られるすき間、どこにあるかな？', 'あと1手で包囲の完成！ どの駒で閉じる？', '輪がななめにつながってもいいのを思い出して！ 閉じる手は？', 'さあ、守り手をまるごとかこんじゃおう！'],
-      s_corner: ['この場面、攻め手のいちばんいい手はどれかな？ 角のまわりに注目！', '角のまわり、すき間はない？ いちばんの一手を指して！', '王が角へ走る前に、どこを固める？', 'いちばんの手を当ててみて！ カギは四隅。', 'さあ、角の守りをしっかり！ どの駒を動かす？'],
+      s_corner: ['このままだと、王に2手で角へ逃げられちゃう！ 角のまわりを固めて止めよう。', '角を守る3つのマス、どこがあいてる？ 王より先に入ろう！', '王が角へ走る前に、どのマスを固める？', '王がねらっている角があるの。どの駒で守る？', 'さあ、角の守りをしっかり！ 2手先まで王を止められる手は？'],
       s_breakout: ['この場面、守り手のいちばんいい手は？ 王の道に注目して！', '輪がとじる前に、すき間を作れるかな？', '王さまの通り道、どうやって広げる？', 'いちばんの一手を当ててみて！', 'さあ、守り手の反撃！ どこから動く？'],
       s_squeeze: ['この場面、攻め手のいちばんいい手は？ 王のまわりに注目！', '輪をひとまわり小さくできるかな？', '王の動けるマス、どうやったら減らせる？', 'いちばんの一手を当ててみて！', 'さあ、じわじわ追いつめよう！ どの駒を寄せる？'],
       v_brandubh: ['王さまをつかまえて、勝っちゃおう！', '王のとなりに攻め手がいる！ 反対側に置ける駒は？', 'ブランドゥブなら2枚でつかまえられる。どの駒を動かす？', '角も味方になるのを思い出して！ 王をはさむ手は？', 'さあ、一手で勝負を決めよう！'],
@@ -6375,7 +6379,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
       t_encircle: ['輪に1か所だけすき間があるの。金の丸の駒で閉じてね。', '守り手の駒が端へ出られる道をたどってみて。どこで切れるかな？', '輪はななめにつながっていてもOK！', '外へぬける穴をひとつ探そう。そこに入れば完成なの。', '輪の駒を動かすと、そこが新しいすき間になっちゃう。輪の外から駒を持ってこよう！'],
       v_brandubh: ['王の反対側に、もう1枚置ける攻め手をさがしてね。', '王のとなりにいる攻め手は？ その向かい側へ行ける駒が答え！', '角のとなりの王なら、角が片側の役をしてくれるの。', '縦でも横でもいいの。2枚で王をはさむ形を作ろう。', '王が玉座のとなりにいないか、先に確かめてね。'],
       v_tablut: ['王を、2つ以上の方向へ端まで見通せるマスへ動かしてね。', '端への道が2本できれば、攻め手は1本しかふさげないの。王はどこへ行く？', 'タブルットは角じゃなくて、端ならどこでも脱出なの。', '王さまの上下左右、端まで空いた道を数えてみて。', '一度にふさがれない場所、見つけられるかな？'],
-      s_corner: ['四隅のまわりで、王が入りこめそうなすき間はどこかな？', 'ねらわれている自分の駒がないかも、先に確かめてね。', '角からななめに並ぶ3マス、もう埋まってる？', '王から角へ向かう道を、指でたどってみて。', '取れる相手の駒があれば、それも候補に入れてね。'],
+      s_corner: ['角からななめに並ぶ3マスのどれかに、攻め手を入れるの。金の丸がその駒！', '王が1手動いた先で、角への道ができないかまで読んでみて。', '角を守るマスでも、入る場所で効き目がちがうの。', '王がねらっている角はどれかな？ そのまわりのすき間をさがそう。', '王から角へ向かう道を、指でたどってみて。'],
       s_breakout: ['王から見て、ふさがっている方向はどっち？ じゃまな駒をどかすのも手なの。', '輪のうすいところはどこかな？ そこへ駒を出してみて。', '王さま自身が動くのも、立派な作戦なの。', 'はさまれそうな味方はいない？ 守りながら外へ出よう。', '盤の端や角に近い場所、空いてないかな？'],
       s_squeeze: ['王の動けるマスを数えてみて。いちばん減らせる手は？', 'はさまれそうな自分の駒、取れる相手の駒も見のがさないでね。', '輪のすき間から、守り手が出てこられそうな所は？', '王の近くへ寄せられる攻め手はどれかな？', '急ぎすぎて、駒をはさまれないようにね。'],
     },
@@ -6562,6 +6566,18 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
           : why === 'king' ? pk(['{x}だと、王が1手動いた先から、攻め手がふさぎに行けない道ができちゃう。', '{x}のあと、王さまが動くと、もう攻め手の駒が届かない道がひらくの。', '{x}では、王の次の一手で、だれもふさげない道ができちゃう。', '{x}だと、王が動いたあとの道に、攻め手が間に合わないの。', '{x}のあと、王さまの新しい道をふさげる攻め手がいないの。'])
           : pk(['{x}だと、王に2手で逃げ切られちゃう。', '{x}では、2手のうちに王が角へ着いちゃうの。', '{x}だと、王さまの逃げ道がまだ残るね。', '{x}のあと、王は2手で脱出できるの。', '{x}では止めきれないんだ。']);
         return f(w + pk(['{m}なら、王の道がしっかり止まるから。', '{m}で道をふさげば、王はトゥイチも作れなかったの。', '正解の{m}は、道を止めたうえで、王に2本目の道を作らせない手。', 'こっちの{m}だったら、2手のうちに逃げられなかったね。', '{m}を選べば、王はどう動いても2手では角に届かなかったんだ。'])); };
+    } else if (id === 's_corner') {
+      // (2026-11-27 第2期 担当A) the king has no line yet but reaches a corner within his 2 moves; the answer fills a blockade square of that
+      // corner. Every wrong move is named by what the board does after it (tfBlockWhy: the same reading as t_block); tools/lesson-verify.js
+      // tafl reads each line back against the rules (tools/lesson-verify-tfcorner.js)
+      good = () => fg(pk(['{x}で角のまわりが固まった！ 王はどう動いても、2手では角に着けないの。', 'ナイスガード！ 角を守るマスに、王より先に入れた！', '{x}で王の角への道が先回りでふさがった！ これで2手のうちには逃げられないの。', 'ぴったりの場所！ 王が次にどこへ動いても、角までは届かない！', '角のまわりを先に固める。攻め手のお手本の一手なの。']));
+      ng = u => { const v = alt(u), why = v != null ? tfBlockWhy(E, pos, v) : '';
+        const w = why === 'open' ? pk(['{x}だと、王から角への道が開いて、そのまま逃げられちゃう！', '{x}のあと、王さまは角まで一直線に走れちゃうの。', '{x}では、角への道に駒がいなくなって、王が角に着いちゃう。', '{x}だと、王の前の道があいて、すぐ脱出されるの。', '{x}のあと、王はそのまま角へ逃げこめちゃう。'])
+          : why === 'tuichi' ? pk(['{x}のあと、王が動いて角への道を2本作れちゃう。1手では両方ふさげないの。', '{x}だと、王の次の一手でトゥイチができちゃう。', '{x}では、王が動いた先から角への道が2本ひらくの。', '{x}だと、王に2方向の逃げ道を作られちゃう。', '{x}のあと、王さまに2本の道でねらわれて止めきれないの。'])
+          : why === 'taken' ? pk(['{x}で入った駒が、王にはさまれて取られちゃう。そうなると角への道が開くの。', '{x}のあと、守りに入った駒が王に取られて、道がとおっちゃう。', '{x}では、王が動いてその駒を取っちゃう。角の守りがなくなるの。', '{x}だと、入れた駒が王に取られて、角への道ができちゃう。', '{x}のあと、守りの駒が王に取られて、王が角へ走れるの。'])
+          : why === 'king' ? pk(['{x}だと、王が1手動いた先から角への道ができて、攻め手がふさぎに行けないの。', '{x}のあと、王さまが動くと、だれも届かない角への道がひらくの。', '{x}では、王の次の一手で、攻め手がふさげない道ができちゃう。', '{x}だと、王が動いたあとの道に、攻め手が間に合わないの。', '{x}のあと、王の新しい道をふさげる攻め手がいないの。'])
+          : pk(['{x}だと、王に2手で角へ逃げられちゃう。', '{x}では、2手のうちに王が角へ着いちゃうの。', '{x}だと、角の守りが間に合わないね。', '{x}のあと、王は2手で脱出できるの。', '{x}では止めきれないんだ。']);
+        return f(w + pk(['{m}なら、角を守るマスに先に入れたから、王は2手では角に届かなかったの。', '{m}で角のまわりを固めれば、王はどう動いても逃げられなかったの。', '正解の{m}は、王がねらう角の前のマスをうめる手。', 'こっちの{m}だったら、2手のうちに逃げられなかったね。', '{m}を選べば、王はどう動いても2手では角に着かなかったんだ。'])); };
     } else if (id === 't_fort') {
       // (2026-11-27 第2期 担当A) each wrong move by what follows it on the board (tfFortWhy, as tools/lesson-verify-tffort.js)
       good = () => fg(FA.win === 'fort' ? pk(['{x}で砦の完成！ もう攻め手は壁をこわせないから、守り手の勝ち。', 'エッジフォートのできあがり！ 王は砦の中で動けて、壁の駒もはさまれないの。', '{x}で穴がふさがった！ こわせない砦で、守り手の勝ちだね。', '最後の1枚がぴたり！ 攻め手はもう砦に手が出せないの。', '王さまのお城、完成！ 壁のどの駒もはさめない形ね。']) : pk(['{x}で守り手の勝ち！ 王の守りは完ぺきだね。', '{x}で勝負あり！', '守り手の勝ち！', 'みごとに勝ちを決めたね！', 'これで守り手の勝ち！']));
@@ -6596,7 +6612,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-tafl-lessons', OKEY: 'aicoding-tafl-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=13'), fetch('../tafl/i18n.js?v=6ek-nd1-bm2-bs1-tu1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261125o').catch(() => null)])
+      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=14'), fetch('../tafl/i18n.js?v=6ek-nd1-bm2-bs1-tu1-sc1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261125o').catch(() => null)])
         .then(([ls, T, _, op]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] tafl texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -7437,8 +7453,8 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
   /* whose move it is (2026-11-23 user: every problem — the warm-up's too — must say which side the player moves, 「黒の手番だよ」).
      turnOf: 1 / 2 from the position (an object's me, reversi "…:1", a chess FEN's w / b, a shogi SFEN's b / w), 0 = no sides (dots),
      null = not known. turnLine: the line put before the question, '' when the question already names the side (the same side). */
-  const TURN_N = { ja: { ur: ['白', '黒'], senet: ['糸巻き', '円錐'], patolli: ['手前', '奥'], morris: ['金', '銀'], tafl: ['攻め手', '守り手'], chess: ['白', '黒'], reversi: ['●黒', '○白'], gomoku: ['●黒', '○白'], go: ['●黒', '○白'], checkers: ['黒', '白'], konane: ['黒', '白'], xiangqi: ['赤', '黒'], janggi: ['楚', '漢'], hex: ['赤', '青'], amazons: ['白', '黒'], connect4: ['金', '銀'], shogi: ['☗先手', '☖後手'], backgammon: ['金', '金'] },
-    en: { ur: ['Light', 'Dark'], senet: ['Spools', 'Cones'], patolli: ['Near', 'Far'], morris: ['Gold', 'Silver'], tafl: ['Attackers', 'Defenders'], chess: ['White', 'Black'], reversi: ['● Black', '○ White'], gomoku: ['● Black', '○ White'], go: ['● Black', '○ White'], checkers: ['Black', 'White'], konane: ['Black', 'White'], xiangqi: ['Red', 'Black'], janggi: ['Cho', 'Han'], hex: ['Red', 'Blue'], amazons: ['White', 'Black'], connect4: ['Gold', 'Silver'], shogi: ['☗ Sente', '☖ Gote'], backgammon: ['Gold', 'Gold'] } };
+  const TURN_N = { ja: { ur: ['白', '黒'], senet: ['糸巻き', '円錐'], patolli: ['手前', '奥'], morris: ['金', '銀'], tafl: ['攻め手', '守り手'], chess: ['白', '黒'], reversi: ['●黒', '○白'], gomoku: ['●黒', '○白'], go: ['●黒', '○白'], checkers: ['黒', '白'], konane: ['黒', '白'], fanorona: ['白', '黒'], xiangqi: ['赤', '黒'], janggi: ['楚', '漢'], hex: ['赤', '青'], amazons: ['白', '黒'], connect4: ['金', '銀'], shogi: ['☗先手', '☖後手'], backgammon: ['金', '金'] },
+    en: { ur: ['Light', 'Dark'], senet: ['Spools', 'Cones'], patolli: ['Near', 'Far'], morris: ['Gold', 'Silver'], tafl: ['Attackers', 'Defenders'], chess: ['White', 'Black'], reversi: ['● Black', '○ White'], gomoku: ['● Black', '○ White'], go: ['● Black', '○ White'], checkers: ['Black', 'White'], konane: ['Black', 'White'], fanorona: ['White', 'Black'], xiangqi: ['Red', 'Black'], janggi: ['Cho', 'Han'], hex: ['Red', 'Blue'], amazons: ['White', 'Black'], connect4: ['Gold', 'Silver'], shogi: ['☗ Sente', '☖ Gote'], backgammon: ['Gold', 'Gold'] } };
   function turnOf(id, pos) {
     if (id === 'dots') return 0;
     if (id === 'mancala') return 1;   // (the player's row is always the near one)
@@ -7478,7 +7494,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     .catch(e => { this.p = null; throw e; })); } };
   /* kōnane (2026-11-25 担当C): the data, チェッカニ's words and the board facts are in atlas/ls-konane.js (loaded the first time; only the
      lessons checked and rebuilt for the 3D, AtlasLsKonane.READY — tools/lesson-verify-konane.js --lessons) */
-  const KONANE = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsKonane) return res(); const sc = document.createElement('script'); sc.src = 'ls-konane.js?v=3'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+  const KONANE = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsKonane) return res(); const sc = document.createElement('script'); sc.src = 'ls-konane.js?v=4'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsKonane.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
   /* ugolki (2026-11-24 担当D): the data, モリフク's words and the board facts are in atlas/ls-ugolki.js (loaded the first time; only the
@@ -7486,9 +7502,14 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
   const UGOLKI = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsUgolki) return res(); const sc = document.createElement('script'); sc.src = 'ls-ugolki.js?v=5'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
     .then(() => { const U = AtlasLsUgolki.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
     .catch(e => { this.p = null; throw e; })); } };
+  /* fanorona (2026-11-27 担当E): the data, チェッカニ's words and the board facts are in atlas/ls-fanorona.js (loaded the first time; only the
+     lessons checked and rebuilt for the 3D, AtlasLsFanorona.READY — tools/lesson-verify-fanorona-ls.js) */
+  const FANORONA = { load(lang) { return this.p || (this.p = new Promise((res, rej) => { if (window.AtlasLsFanorona) return res(); const sc = document.createElement('script'); sc.src = 'ls-fanorona.js?v=2'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })
+    .then(() => { const U = AtlasLsFanorona.make({ getJ, J, put, L, fill }); Object.keys(U).forEach(k => { if (k !== 'load' && k !== 'p') this[k] = typeof U[k] === 'function' ? U[k].bind(U) : U[k]; }); return U.load(lang).then(() => { this.data = U.data; this.I = U.I; return this; }); })
+    .catch(e => { this.p = null; throw e; })); } };
   // (2026-11-24 ユーザー指示: ur・senet・patolli のレッスンは廃止 — 双六系はマンカラ・バックギャモンのような戦略性の高いものを除いてレッスン・パズルを作らない。
   //  UR・SENET・PATOLLI とそのファイルは残すが、DATA に載せない＝AtlasLessons.has が false でタブに出ない)
-  const DATA = { foxgeese: FOXGEESE, konane: KONANE, ugolki: UGOLKI, dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, janggi: JANGGI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
+  const DATA = { foxgeese: FOXGEESE, konane: KONANE, ugolki: UGOLKI, fanorona: FANORONA, dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, janggi: JANGGI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
 
   function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(lang), ncLoad(id)]).then(() => D.list(kind, lang)); }
   function next(id, kind, lang) { return list(id, kind, lang).then(L2 => { const x = L2.find(i => !i.full && i.st !== 'pass') || L2.find(i => !i.full); return x ? x.key : null; }); }
@@ -7598,7 +7619,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
             pz: Object.assign({ lesson: true, fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: () => id === 'reversi' && phase !== 'ramp' && !(phase === 'prob' && cur && cur.k >= RV_NUMS()), ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
           ctx.Table3D.play(true);
         } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks, lock: !!G.lock });
-        else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots' || id === 'foxgeese' || id === 'konane' || id === 'ugolki')) pz().load(G.spec, G.me, { lock: !!G.lock });
+        else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots' || id === 'foxgeese' || id === 'konane' || id === 'ugolki' || id === 'fanorona')) pz().load(G.spec, G.me, { lock: !!G.lock });
         else if (G && id === 'mancala') pz().load(G.spec, G.me, { lock: !!G.lock, marks: G.marks });
         else if (G && id === 'connect4') pz().load(G.moves, G.me, { lock: !!G.lock });
         else if (G && id === 'backgammon') pz().load(G.bg);
@@ -7931,11 +7952,12 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;
       }
-      if ((id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots' || id === 'foxgeese' || id === 'konane' || id === 'ugolki') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
+      if ((id === 'checkers' || id === 'xiangqi' || id === 'janggi' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots' || id === 'foxgeese' || id === 'konane' || id === 'ugolki') && typeof u === 'number' || id === 'fanorona' && typeof u === 'string' && u) {   // (fanorona: the move's notation, h2-h3A)
+     // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
         const right = pts >= 16, k = cur.k;   // (p.own: the guide names the green arrow herself — the heading is only 「おしい！」)
         say(`${right ? (p.own && (id === 'morris' || id === 'janggi' || p.ckls) ? '' : line('solved') || pick(X.good)) : p.own ? (pts >= 10 ? 'いい線いってる！' : '') : pts >= 10 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
         try { chime(right); } catch (e) {}
-        later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark([...(right || p.ans == null ? [] : [[{ m: p.ans }, 'ok']]), [{ m: u }, right ? 'ok' : 'ng'], ...(!right && p._rp != null ? [[{ m: p._rp }, 'hl']] : [])]); }, 900);   // (foxgeese: the geese's covering step gold, p._rp)
+        later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); const mk = [...(right || p.ans == null ? [] : [[{ m: p.ans }, 'ok']]), [{ m: u }, right ? 'ok' : 'ng'], ...(!right && p._rp != null ? [[{ m: p._rp }, 'hl']] : [])]; pz().mark(id === 'fanorona' && !(typeof p.ans === 'string' && p.ans.startsWith(u + '-')) ? mk.reverse() : mk); }, 900);   // (fanorona: the green move drawn last — the same step's other line shares its ring; a capture chain stopped on the answer's road (b_chain) red last, on top of the green road it is a part of)   // (foxgeese: the geese's covering step gold, p._rp)
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;

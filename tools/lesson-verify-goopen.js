@@ -22,6 +22,8 @@ const ROOT = path.resolve(__dirname, '..');
 const J = f => JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8'));
 const R = require(path.join(ROOT, 'go/rules.js'));
 const EPS = 0.5, GAP = 1.0, MINV = 10;
+// ⑤・追1 見本の局面と1〜2石違いで同じ答え：2026-11-27 担当B が見つけた時点の検証済みの本の問題（作り直しのときに直す）
+const LINE_TWIN_PENDING = new Set(['hoshi_ryogakari q4', 'fuseki_9_tengen q1', 'fuseki_9_54 q4', 'fuseki_9_33 q4', 'fuseki_9_fight q3', 'fuseki_13_basic q4', 'fuseki_h4 q4']);
 
 function specFrom(o) { const n = o.n || 19, a = Array(n * n).fill('.');
   for (const s of o.ab || []) a[R.parseCoord(s, n)] = 'b'; for (const s of o.aw || []) a[R.parseCoord(s, n)] = 'w';
@@ -124,6 +126,11 @@ function verify(opt = {}) {
         const d = legal.find(u => sc.p3(P3, u) !== sc.p2(P, u, N)); if (d != null) bad(q, `⑨ ${R.coord(d, N)} の点が 2D ${sc.p2(P, d, N)}・3D ${sc.p3(P3, d)} で違う`); }
       // ⑤ no other go problem within 2 stones
       const S = stonesOf(pos); for (const o of pool) { if (o.id === g.id && o.j === j) continue; const d = dist(S, N, o.S, o.n); if (d <= 2) { bad(q, `⑤ ${o.who} と ${d} 石違い（${d === 0 ? '同じ局面' : '1〜2手違い'}）`); break; } }
+      // ⑤・追1 手順の外の問題が、見本（同じ本の本筋・変化）の局面と1〜2石違い（相手の手抜き1手だけ違う）で、答えが見本のその局面の手と同じ＝見せた答えをもう一度（2026-11-27 担当B）。
+      // LINE_TWIN_PENDING は見つけた時点で検証済みだった本の問題（作り直しのときに直す。ここに足して通すのは不可）
+      if (P.mv && !LINE_TWIN_PENDING.has(g.id + ' q' + q)) { const Ls = [g.line].concat((g.vars || []).map(v => g.line.slice(0, v.at).concat(v.line)));
+        outer: for (const [li, L] of Ls.entries()) for (let at = 0; at < L.length; at++) { if (!ok.includes(L[at])) continue; const r2 = play(g, L.slice(0, at)); if (!r2.pos || r2.pos.turn !== pos.turn) continue;
+          const d = dist(S, N, stonesOf(r2.pos), N); if (d <= 2) { bad(q, `⑤ 見本（${li ? '変化' + li : '本筋'} ${at + 1}手目 ${L[at]}）の局面と ${d} 石違いで答えが同じ（見せた答えをもう一度）`); break outer; } } }
       prev.push(P.at);
       // ①②③ from the stored reading (no reading = NG, 追26)
       const Rd0 = RD && RD.pos && RD.pos[g.id + '@' + (P.mv ? P.mv.join(' ') : P.at)];
