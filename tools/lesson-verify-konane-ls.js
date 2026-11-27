@@ -27,6 +27,9 @@
 //    opponent's jump after it that wins (you lose then, solved), {e} = your jumps after it, drawn on the problem's board, s_stop
 //    'go' says the landed stone is taken iff the reply takes it (and says it whenever some winning reply does); ⑨ the 2D keys
 //    ls.s_count.ng.more0/N · ls.s_stop.ng.goS/go/lose 0/N with {r} (and {e} for N) in 14 languages, app.js reads the facts.
+//  b_jump (2026-11-27 担当C, strat3()): the opponent has exactly one stone that can jump now (the target) and exactly one jump takes it
+//    = the answer = the only winning jump; ⑥ near = wrong moves taking a stone next to the target; ⑦⑧ 'take' j = the opponent's jumps
+//    after it, every wrong move 'miss' with the gold reply winning, tgt iff the reply is the target's own jump (used whenever one wins).
 //  s_go / s_keep / s_read (2026-11-27 担当C, strat3()): the same exact solve — ① ok = the winning jumps; ② one; ③ 5+ legal, 4+ wrong,
 //    追72; ④ the opponent still has a jump after the answer, 3+ stones can jump = the hint's stones; s_go the answer jumps 2+ to the
 //    end of its line and the line stopped earlier is among the moves · s_keep some move leaves the opponent fewer jumps than the
@@ -139,7 +142,7 @@ function strat3(id, P, q, add, fact, hintF, JA) {
   if (movers.length < 3) add(id, q, `④ ${movers.length} stones can jump (the hint narrows to the answer)`);
   if (hintF(E, id, P.s).slice().sort((x, y) => x - y).join() !== movers.join()) add(id, q, '⑦ the hint\'s stones are not your stones that can jump');
   const sameLine = (a, c) => a.from === c.from && a.dir.join() === c.dir.join(), others = res.filter(r => r.m !== P.best);
-  let nearN = 0;
+  let nearN = 0, tgt = -1;
   if (id === 's_go') {
     const line = res.filter(r => sameLine(r.x, A.x));
     if (A.x.k < 2) add(id, q, `④ the answer takes ${A.x.k} (not a jump on to the end)`);
@@ -149,18 +152,28 @@ function strat3(id, P, q, add, fact, hintF, JA) {
     const cut = others.filter(r => r.j < A.j); nearN = cut.length;
     if (!cut.length) add(id, q, '④ no move leaves the opponent fewer jumps than the answer (the s_count lesson again)');
     if (cut.some(r => r.o >= A.o)) add(id, q, '④ a move cutting the opponent more keeps as many jumps of yours as the answer');
+  } else if (id === 'b_jump') {
+    // (2026-11-27 担当C) the target: the opponent's only stone that can jump now; the answer is the only jump taking it
+    const T = [...new Set(jumps(b, N, op).map(x => x.from))];
+    if (T.length !== 1) add(id, q, `④ ${T.length} stones of the opponent can jump now (not one stone to find)`);
+    tgt = T.length === 1 ? T[0] : -1;
+    const takes = res.filter(r => capOf(r.x).includes(tgt));
+    if (!capOf(A.x).includes(tgt)) add(id, q, '④ the answer does not take the opponent\'s stone that can jump');
+    if (takes.length !== 1) add(id, q, `④ ${takes.length} jumps take the opponent's stone that can jump`);
+    const [tr, tc] = [(tgt / N) | 0, tgt % N];
+    nearN = others.filter(r => capOf(r.x).some(x => Math.abs(((x / N) | 0) - tr) + Math.abs(x % N - tc) === 1)).length;
   } else {
     if (A.j < 2) add(id, q, `④ the opponent has ${A.j} reply after the answer (nothing to read out)`);
     nearN = others.filter(r => r.j <= A.j).length; if (!nearN) add(id, q, '④ the answer leaves the opponent the fewest jumps (the s_count lesson again)');
   }
-  const fb = fact(E, id, P.s, P.best), wk = { s_go: 'all', s_keep: 'keep', s_read: 'read' }[id];
+  const fb = fact(E, id, P.s, P.best), wk = { s_go: 'all', s_keep: 'keep', s_read: 'read', b_jump: 'take' }[id];
   if (fb.k !== wk || fb.j !== A.j || fb.c !== A.x.k || (id === 's_keep' && fb.o !== A.o)) add(id, q, `⑧ the answer's words say ${fb.k} j=${fb.j} c=${fb.c} o=${fb.o}, the board j=${A.j} c=${A.x.k} o=${A.o}`);
   const wl = (JA.w || {})[wk];
   if (!wl || wl.length < 5) add(id, q, `⑧ ${wl ? wl.length : 0} ja right words for 5 problems (a line said twice in a lesson)`);
   for (const t of [].concat(wl || [])) { const x = t.replace(/\{(j|c|n|o)\}/g, '0'); if (/\{\w+\}/.test(x)) add(id, q, '⑧ ja right words: a placeholder left'); if (/勝率|評価|見込み/.test(x)) add(id, q, '追16 the words give an evaluation'); }
   for (const r of others) {
     const f = fact(E, id, P.s, r.m), w = nm(r.m);
-    const want = id === 's_go' ? (sameLine(r.x, A.x) && r.x.k < A.x.k ? 'short' : 'lose') : id === 's_keep' ? (r.j < A.j ? 'cut' : 'lose') : (r.j <= A.j ? 'fewer' : 'lose');
+    const want = id === 's_go' ? (sameLine(r.x, A.x) && r.x.k < A.x.k ? 'short' : 'lose') : id === 's_keep' ? (r.j < A.j ? 'cut' : 'lose') : id === 'b_jump' ? 'miss' : (r.j <= A.j ? 'fewer' : 'lose');
     if (f.k !== want || f.j !== r.j || f.c !== r.x.k) add(id, q, `⑧ ${w}: the words say ${f.k} j=${f.j} c=${f.c}, the board ${want} j=${r.j} c=${r.x.k}`);
     if (want === 'short' && f.n !== A.x.k) add(id, q, `⑧ ${w}: the words say the line goes to ${f.n}, the board ${A.x.k}`);
     if (want === 'cut' && (f.j0 !== A.j || f.o !== r.o || f.o0 !== A.o)) add(id, q, `⑧ ${w}: the words say j0=${f.j0} o=${f.o} o0=${f.o0}, the board ${A.j} ${r.o} ${A.o}`);
@@ -175,6 +188,9 @@ function strat3(id, P, q, add, fact, hintF, JA) {
     if (want === 'short') { const left = capOf(A.x).filter(x => !capOf(r.x).includes(x)), sp = left.includes(rr.from);
       if (!!f.spring !== sp) add(id, q, `⑧ ${w}: the words say the reply jumps ${f.spring ? 'with' : 'without'} a stone left standing, the gold reply ${sp ? 'does' : 'does not'}`);
       if (!sp && R.some(x => left.includes(x.from) && !winsB(after(r.b2, N, x, op), N, me))) add(id, q, `⑧ ${w}: a winning reply jumps with a stone left standing, the words do not say so`); }
+    if (id === 'b_jump') { const tg = rr.from === tgt;   // (the words say the stone left standing jumps iff the gold reply is its jump; said whenever such a winning reply can be drawn)
+      if (!!f.tgt !== tg) add(id, q, `⑧ ${w}: the words say the reply is ${f.tgt ? '' : 'not '}the target's own jump, the gold reply ${tg ? 'is' : 'is not'}`);
+      if (!tg && R.some(x => x.from === tgt && b[x.to] === '.' && !winsB(after(r.b2, N, x, op), N, me))) add(id, q, `⑧ ${w}: the target stone has a winning jump drawn on the board, the words do not use it`); }
     const k = LSK.kindOf(f), [h, tl] = k.split('+');
     for (const part of [h, tl]) { const list = (JA.n || {})[part]; if (!list || !list.length) { add(id, q, `⑧ no ja words for ${part}`); continue; }
       for (const t of list) { const x = t.replace(/\{(j|j0|e|c|n|o|o0)\}/g, '0'); if (/\{\w+\}/.test(x)) add(id, q, `⑧ ja ${part}: a placeholder left`); if (/勝率|評価|見込み/.test(x)) add(id, q, '追16 the words give an evaluation'); } }
@@ -203,7 +219,7 @@ function verify(opt) {
     const st = LS.steps.find(s => s.id === id); if (!st) { add(id, 0, 'not in lessons.json'); continue; }
     const ds = [];
     st.problems.forEach((P, j) => {
-      if (/^s_(go|keep|read)$/.test(id)) { ds.push(strat3(id, P, j + 1, add, fact, hintF, JA)); return; }
+      if (/^(s_(go|keep|read)|b_jump)$/.test(id)) { ds.push(strat3(id, P, j + 1, add, fact, hintF, JA)); return; }
       if (/^s_/.test(id)) { ds.push(strat(id, P, j + 1, add, fact, hintF, JA)); return; }
       const q = j + 1, me = P.s.side, b = P.s.b, pos = E.Pos.from(P.s), L = pos.moves(), J = jumps(b, N, me);
       if (!(P.ok || []).every(m => L.includes(m)) || !L.includes(P.best)) { add(id, q, '① a right move is not a move of the board'); ds.push(0); return; }
@@ -284,11 +300,13 @@ function verify(opt) {
     for (const f of ['i18n-kn.js', 'i18n-kn-more.js']) { try { new Function('window', 'I18N', fs.readFileSync(path.join(ROOT, 'konane', f), 'utf8'))({ I18N: I }, I); } catch (e) { add('2D', 0, '⑨ i18n: ' + e.message); } }
     if (!/s_count\|s_stop|s_\(count\|stop[|)]/.test(app)) add('2D', 0, '⑨ konane/app.js does not read the facts for s_count / s_stop');
     if (!/s_\(count\|stop\|go\|keep\|read\)/.test(app) || !/ls\.st\.tailN/.test(app)) add('2D', 0, '⑨ konane/app.js does not read the facts for s_go / s_keep / s_read');
+    if (!/b_\(double\|win\|jump\)/.test(app) || !/'missT'/.test(app)) add('2D', 0, '⑨ konane/app.js does not read the facts for b_jump');
     const need = { 'ls.s_count.why': ['{m}', '{j}'], 'ls.s_count.ng.more0': ['{m}', '{x}', '{j}', '{j0}', '{r}'], 'ls.s_count.ng.moreN': ['{m}', '{x}', '{j}', '{j0}', '{r}', '{e}'], 'ls.s_count.hint': [],
       'ls.s_stop.why': ['{m}'], 'ls.s_stop.hint': [], ...Object.fromEntries(['goS', 'go', 'lose'].flatMap(h => [['ls.s_stop.ng.' + h + '0', ['{m}', '{x}', '{r}']], ['ls.s_stop.ng.' + h + 'N', ['{m}', '{x}', '{r}', '{e}']]])),
       'ls.s_go.why': ['{m}'], 'ls.s_go.hint': [], 'ls.s_go.ng.short': ['{x}', '{c}', '{n}', '{m}', '{r}'], 'ls.s_go.ng.shortS': ['{x}', '{r}'],
       'ls.s_keep.why': ['{m}', '{j}', '{o}'], 'ls.s_keep.hint': [], 'ls.s_keep.ng.cut': ['{x}', '{j}', '{j0}', '{o}', '{o0}', '{m}', '{r}'],
       'ls.s_read.why': ['{m}', '{j}'], 'ls.s_read.hint': [], 'ls.s_read.ng.fewer': ['{x}', '{j}', '{j0}', '{m}', '{r}'],
+      'ls.b_jump.why': ['{m}', '{j}'], 'ls.b_jump.hint': [], 'ls.b_jump.goal': [], 'ls.b_jump.ng.miss': ['{x}', '{r}'], 'ls.b_jump.ng.missT': ['{x}', '{r}'],
       'ls.st.lose': ['{x}', '{r}'], 'ls.st.tail0': ['{m}'], 'ls.st.tailN': ['{m}', '{e}'],
       'ls.b_double.why': ['{m}'], 'ls.b_double.ng.stop': ['{m}', '{x}'], 'ls.b_double.ng.other': ['{m}', '{x}'], 'ls.b_double.hint': [], 'ls.b_win.why': ['{m}'], 'ls.b_win.ng': ['{m}', '{x}', '{j}'], 'ls.b_win.ng1': ['{m}', '{x}'], 'ls.b_win.hint': [] };
     for (const l of LANGS) for (const [k, ph] of Object.entries(need)) { const x = (opt.i18n || I)[l][k]; if (!x) { add('2D', 0, `⑨ ${l}: no ${k}`); continue; } ph.forEach(p => { if (!x.includes(p)) add('2D', 0, `⑨ ${l}: ${k} has no ${p}`); }); if (k === 'ls.b_win.ng1' && /\{j\}/.test(x)) add('2D', 0, `追58 ${l}: ${k} counts {j}`); }
@@ -328,6 +346,14 @@ function selftest() {
     ['a language without ls.st.tailN (⑨)', null, /^⑨/, { i18n: (() => { const I = {}; LANGS.forEach(l => { I[l] = {}; }); for (const f of ['i18n-kn.js', 'i18n-kn-more.js']) new Function('window', 'I18N', fs.readFileSync(path.join(ROOT, 'konane', f), 'utf8'))({ I18N: I }, I); delete I.ko['ls.st.tailN']; return I; })() }],
     ['「おしい」 for 0 points (追66)', null, /^追66/, { ja: Object.assign({}, LSK.JA, { soft: ['おしい！'] }) }],
     ['the 2D words without the facts (⑨)', null, /^⑨/, { app: 'function okAnswer() {}' }],
+    // (2026-11-27 担当C) b_jump
+    ['b_jump: the answer changed to a move not taking the target (①④)', d => { const P = st(d, 'b_jump').problems[2]; const p = E.Pos.from(P.s); const w = p.moves().find(m => m !== P.best); P.best = w; P.ok = [w]; }, /^[①④]/],
+    ['b_jump: every jump right (the old lesson, ②追72)', d => { const P = st(d, 'b_jump').problems[0]; P.ok = E.Pos.from(P.s).moves(); }, /^(②|追72)/],
+    ['b_jump: a problem where two enemy stones can jump (④)', d => { st(d, 'b_jump').problems[1] = JSON.parse(JSON.stringify(st(base, 'b_win').problems[0])); }, /^④/],
+    ['b_jump: the target\'s own reply told as another (⑧)', null, /^⑧/, { fact: (E2, id, s, m) => { const f = FACTS.fact(E2, id, s, m); return id === 'b_jump' && f.k === 'miss' ? Object.assign({}, f, { tgt: !f.tgt }) : f; } }],
+    ['b_jump: the jumps left after the answer counted wrong (⑧)', null, /^⑧/, { fact: (E2, id, s, m) => { const f = FACTS.fact(E2, id, s, m); return id === 'b_jump' && f.k === 'take' ? Object.assign({}, f, { j: f.j + 1 }) : f; } }],
+    ['b_jump: the 2D without missT (⑨)', null, /^⑨/, { app: fs.readFileSync(path.join(ROOT, 'konane/app.js'), 'utf8').replace(/'missT'/g, "'miss'") }],
+    ['b_jump: a language without ng.missT (⑨)', null, /^⑨/, { i18n: (() => { const I = {}; LANGS.forEach(l => { I[l] = {}; }); for (const f of ['i18n-kn.js', 'i18n-kn-more.js']) new Function('window', 'I18N', fs.readFileSync(path.join(ROOT, 'konane', f), 'utf8'))({ I18N: I }, I); delete I.tr['ls.b_jump.ng.missT']; return I; })() }],
     ['a language without ng1 (⑨)', null, /^⑨/, { i18n: (() => { const I = {}; LANGS.forEach(l => { I[l] = {}; }); for (const f of ['i18n-kn.js', 'i18n-kn-more.js']) new Function('window', 'I18N', fs.readFileSync(path.join(ROOT, 'konane', f), 'utf8'))({ I18N: I }, I); delete I.de['ls.b_win.ng1']; return I; })() }],
   ];
   let ok = 0; const key = x => x.theme + '#' + x.q + ' ' + x.msg, base0 = new Set(verify({ data: clone() }).out.map(key));
