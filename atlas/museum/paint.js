@@ -285,6 +285,10 @@
     { id: 'kabinet', w: 1949, h: 2048, rijks: 'RP-P-OB-937', bg: '#ece8de', spots: [[.45, .3], [.5, .6], [.32, .32], [.25, .84], [.66, .82], [.92, .2]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
     // (2026-11-25) the Rijksmuseum: Jan Lievens, Quarrelling Card Players and Death (1638)
     { id: 'lievens', w: 2048, h: 1555, rijks: 'RP-P-OB-12.544', bg: '#e2ddd2', spots: [[.56, .25], [.62, .07], [.44, .24], [.72, .28], [.47, .76], [.25, .95]], links: [{ g: 'solitaire' }, { room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Cornelis Anthonisz., Sorgheloos series 4/6: the game of chance (1541)
+    { id: 'sorgheloos', w: 1943, h: 2048, rijks: 'RP-P-1932-121D', bg: '#e8e1d0', spots: [[.39, .59], [.48, .41], [.33, .41], [.2, .54], [.64, .53], [.85, .5]], links: [{ room: 'chance' }, { g: 'solitaire' }] },
+    // (2026-11-25) the Rijksmuseum: 'Alea Belli': satire on the Northern War, Swede and Dane at tric-trac (1656)
+    { id: 'aleabelli', w: 2048, h: 1646, rijks: 'RP-P-OB-81.843', bg: '#e4e0d6', spots: [[.47, .52], [.45, .61], [.47, .09], [.84, .65], [.45, .83], [.95, .07]], links: [{ g: 'backgammon' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
