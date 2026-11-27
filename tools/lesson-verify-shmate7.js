@@ -7,7 +7,8 @@
 // every other problem / warm-up / tsume.json (mirrored), a first-move shape twice at most; ⑥ d = checks + defences / 2 + legal / 100
 // never falls; ⑦⑧ the 3D words at the five places (a wrong first check: P.ref, after it nothing mates within N - 2, the words say
 // what it does; a later attacker's move on the line that is no check: said so; a last move after the stored N - 1 that does not mate:
-// the words of its board); ⑨ the 2D / 3D flow (as k2) and P.u; the warm-up explain: a mate in N with its words.
+// the words of its board); ⑨ the 2D / 3D flow (as k2) and P.u; the warm-up explain: a mate in N with its words. d2「9手詰」(N 9):
+// the same, and ④ every line drops two pieces from hand or more (the intro: 持ち駒を使う順番), the warm-up's line too.
 module.exports = function shMateN({ E, L, X, pool, brd, dist, add, src, app }, GID = 'd1', N = 7) {
   const g = L.grades.find(x => x.id === GID); if (!g) return;
   const T = E.typeOf, NM = ['', '歩', '香車', '桂馬', '銀', '角', '飛車', '金', '玉', 'と金', '成香', '成桂', '成銀', '馬', '竜'];
@@ -55,6 +56,8 @@ module.exports = function shMateN({ E, L, X, pool, brd, dist, add, src, app }, G
       let run = false, sac = false;
       for (let i = 1; i < N; i += 2) { const q = pos(P.sfen, P.sol.slice(0, i)); if (kingMove(q, P.sol[i])) run = true; if (P.sol[i].slice(2, 4) === P.sol[i - 1].slice(2, 4)) sac = true; }
       if (run) runs++; if (sac) sacs++;
+      // (2026-11-27 d2) the intro of 9手詰: 「持ち駒を使う順番」 — the line drops two pieces from hand or more
+      if (N >= 9) { const nd = P.sol.filter((u, i) => i % 2 === 0 && u[1] === '*').length; if (nd < 2) a(`④ the line drops ${nd} piece(s) from hand (2 or more: the intro 持ち駒を使う順番)`); }
     }
     const B = brd(P.sfen); for (const [who, b] of pool) { if (who === `${GID} q${j + 1}`) continue; const e = dist(B, b); if (e <= 6) a(`⑤ ${e} squares from ${who}`); }
     const d = checks.length + rs.length / 2 + ms.length / 100; if (d < prevD) a(`⑥ easier than the problem before (d ${d.toFixed(2)} after ${prevD.toFixed(2)})`); prevD = Math.max(prevD, d);
@@ -112,6 +115,7 @@ module.exports = function shMateN({ E, L, X, pool, brd, dist, add, src, app }, G
     if (R.k === 'explain') { const s = R.seq || []; if (s.length !== N || within(p, N - 2).length || within(p, N).join() !== s[0]) { add(GID, -1, `追14 warm-up ${j + 1}: not a mate in ${N} with ${s[0]} only`); return; }
       for (let k = 0; k < N; k++) { const q = pos(R.sfen, s.slice(0, k)); if (!q.legalMoves(true).some(m => q.toUsi(m) === s[k])) { add(GID, -1, `追14 warm-up ${j + 1}: ${s[k]} is not legal`); return; } }
       for (let i = 2; i < N; i += 2) { const q = pos(R.sfen, s.slice(0, i)); if ((i + 2 < N && within(q, N - i - 2).length) || within(q, N - i).join() !== s[i]) add(GID, -1, `追14 warm-up ${j + 1}: ${s[i - 1]} is not a longest defence or ${s[i]} not the only way on`); }
+      if (N >= 9 && s.filter((u, i) => i % 2 === 0 && u[1] === '*').length < 2) add(GID, -1, `④ warm-up ${j + 1}: the line drops fewer than 2 pieces (持ち駒を使う順番)`);
       const body = plain((R.body && R.body.ja) || '');
       if (/捨て駒/.test(body) && ![1, 3, 5].slice(0, (N - 1) / 2).some(i => s[i].slice(2, 4) === s[i - 1].slice(2, 4))) add(GID, -1, `追14 warm-up ${j + 1}: the words speak of a sacrifice, the line ${s}`);
       for (const pr of pool) if (pr[0] !== `${GID} ramp ${j + 1}`) { const e = dist(brd(R.sfen), pr[1]); if (e <= 6) add(GID, -1, `追1 warm-up ${j + 1}: ${e} squares from ${pr[0]}`); } } });
