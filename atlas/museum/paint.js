@@ -107,6 +107,10 @@
     { id: 'ostade', w: 1930, h: 2048, rijks: 'RP-P-OB-12.729', bg: '#d8d4c8', spots: [[.31, .66], [.15, .53], [.37, .53], [.34, .41], [.7, .56], [.6, .38]], links: [{ g: 'backgammon' }] },
     // (2026-11-25) the Rijksmuseum: follower of Mathieu Le Nain, dice players at a round table
     { id: 'lenain', w: 2048, h: 1576, rijks: 'SK-A-3099', bg: '#4a4237', spots: [[.48, .49], [.27, .3], [.63, .24], [.51, .2], [.075, .25], [.86, .68]], links: [{ room: 'chance' }] },
+    // (2026-11-25) the Rijksmuseum: Antwerp World's Fair 1894, Tunisian section: card game outside an Arab café
+    { id: 'tunisie', w: 2048, h: 1538, rijks: 'RP-F-2001-7-1494-48', bg: '#e6dfcf', spots: [[.483, .6], [.264, .541], [.702, .6], [.475, .67], [.63, .225], [.5, .87]], links: [{ g: 'solitaire' }, { g: 'poker' }] },
+    // (2026-11-25) the Rijksmuseum: caids near Laghouat, Algeria, laying out tiles (probably dominoes)
+    { id: 'laghouat', w: 2048, h: 1592, rijks: 'RP-F-F01088-AN', bg: '#cdbb98', spots: [[.506, .624], [.53, .78], [.38, .81], [.34, .2], [.8, .15], [.65, .75]], links: [{ room: 'chance' }] },
   ];
   // (2026-11-24 ユーザー: 読み物と同じく地域で絞る) each work's region — the world map's four (asia / europe / mea / americas). A new work: add it here.
   const REGION = { nefertari: 'mea', shahnama: 'mea', hydria: 'europe', liberale: 'europe', mirror: 'europe', morris: 'europe', teniers: 'europe', webb: 'europe', vuillard: 'europe',
