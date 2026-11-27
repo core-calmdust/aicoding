@@ -2535,6 +2535,7 @@
     const xqPick = (list, left) => { let b = null; for (const e of list || []) if (e.need > 0 && e.need <= left && (!b || e.need < b.need)) b = e; return b && b.m; };
     function xqOut(p) { p.failed = true; p.state = 'fail'; streak = 0; chime(false); say(fill(QA.out, { n: p.n }) + ' ' + (line('retry') || X.retry)); buttons(); }
     async function xqMoved(p, m, info) {
+      if (id === 'janggi' && window.JanggiPzWhy) return jgMoved(p, m, info);   // (追88: janggi's own 詰め rule, = janggi/app.js puzzleMove)
       const left = p.n - p.used, before = info.before, pre = pz().moves().slice(0, -1);
       say(B.tx('pz.checking', ctx.lang));
       const list = await xqReq(p, left, false, pre); if (p !== cur || stopped) return;
@@ -2567,11 +2568,39 @@
     /* (2026-11-24 担当D, 追42) janggi: after a move off the solution the defender's reply is marked red and ショウギツネ says what it did on
        the board (took a piece of yours / the general stepped out / a piece blocked the check / moved — janggi/pzwhy.js) and, from the
        solver, whether a mate is still there in the moves left (checked by tools/lesson-verify-janggi.js 追42). */
+    /* (追88, 2026-11-27 担当D) janggi (= janggi/app.js puzzleMove): nothing is judged on the way and nothing is taken back. A move off
+       the solution is answered by the defender — after a move that lets it mate at once (pz.bl.lose) with that mate (JanggiPzWhy.mateReply,
+       the 2D's), otherwise with the engine's move — and jgStray says what the reply did; a move that is not a check in a checks-only
+       puzzle (pz.bl.nock), the last move of the count, or the mate against you end the puzzle. The right move only with 「答え」. */
+    async function jgMoved(p, m, info) {
+      const left = p.n - p.used, before = info.before, pre = pz().moves().slice(0, -1);
+      say(B.tx('pz.checking', ctx.lang));
+      const list = await xqReq(p, left, false, pre); if (p !== cur || stopped) return;
+      p.used++;
+      if (xqReached(pz().pos())) return solved(p);
+      const e = (list || []).find(x => x.m === m);
+      if (!e || !(e.need > 0) || e.need > left) {
+        const bl = before ? xqBlunder(p, before, m) : null, mid = pz().pos();
+        p.failed = true; p.off = true;
+        let r = bl === 'lose' ? window.JanggiPzWhy.mateReply(pz().engine(), mid) : null;
+        if (r == null) { r = await pz().think(17); if (p !== cur || stopped) return; }
+        await sleep(250); if (p !== cur) return;
+        if (r == null) return xqOut(p);
+        await pz().play(r); if (p !== cur) return;
+        return jgStray(p, mid, r, null, bl);
+      }
+      const dl = await xqReq(p, p.n - p.used, true); if (p !== cur || stopped) return;
+      await sleep(250); if (p !== cur) return;
+      if (!dl || !dl.length) return solved(p);
+      const r = await ckDefence(dl); if (p !== cur || stopped) return;
+      await pz().play(r); if (p !== cur) return;
+      say(line('mid') || fill(QA.mid, { n: p.n - p.used })); p.state = 'play'; pz().wait(); buttons();
+    }
     let jgN = 0;
-    async function jgStray(p, mid, r, W0) {   // (2026-11-24 担当A: xiangqi too, W0 = xiangqi/pzwhy.js with ショウギツネ's own words OWN)
+    async function jgStray(p, mid, r, W0, bl) {   // (bl: janggi's pz.bl.lose / pz.bl.nock, 追88 — the puzzle ends after the reply)   // (2026-11-24 担当A: xiangqi too, W0 = xiangqi/pzwhy.js with ショウギツネ's own words OWN)
       const E = pz().engine(), W = W0 || window.JanggiPzWhy, w = W.why(E, mid, r), left = p.n - p.used, own = (W0 ? W0.OWN || {} : (window.AtlasJanggiPz || {}).why || {})[ctx.lang];
       pz().mark(w.k === 'pass' ? null : [[{ m: r }, 'ng'], [E.mTo(r), 'ng']]);   // (the reply: a red arrow and its point)
-      if (pz().state().over || left <= 0) { p.failed = true; p.state = 'fail'; streak = 0; chime(false); say(W.say(ctx.lang, w, null, 0, own, jgN++) + ' ' + fill(QA.out, { n: p.n }) + ' ' + (line('retry') || X.retry)); buttons(); return; }
+      if (bl || pz().state().over || left <= 0) { p.failed = true; p.state = 'fail'; streak = 0; chime(false); say((bl === 'nock' ? B.tx('pz.bl.nock', ctx.lang, { n: p.n }) + ' ' : '') + W.say(ctx.lang, w, null, 0, own, jgN++) + (w.k === 'mated' ? '' : ' ' + fill(QA.out, { n: p.n })) + ' ' + (line('retry') || X.retry)); buttons(); return; }
       const L = await xqReq(p, left, false); if (p !== cur || stopped) return;
       const reach = (L || []).some(e => e.need > 0 && e.need <= left);
       say(W.say(ctx.lang, w, reach, left, own, jgN++)); p.state = 'play'; pz().wait(); buttons();
