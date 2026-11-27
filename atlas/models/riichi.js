@@ -27,11 +27,13 @@
     return M({ map: tex, roughness: .3, bump: false });
   });
   // one tile: the ivory body and the blue back, as two rounded blocks; lying face up / face down, or standing (the face toward +z)
-  const geoI = () => mat('gI', () => RB(TW, TD * .58, TH, .045, 2)), geoB = () => mat('gB', () => RB(TW, TD * .42, TH, .045, 2));
+  // (2026-11-28 ユーザー「3Dビューの麻雀台のポリゴン数が多すぎる」) the ~210 tiles' bodies and backs are two InstancedMeshes (2 draw calls
+  // instead of ~420), each a plain block (12 triangles, was 300 — at the 3D view's distance the rounding did not show): placed by markers, gathered at the end (instance())
+  const geoI = () => mat('gI', () => new (T().BoxGeometry)(TW * .985, TD * .58, TH * .985)), geoB = () => mat('gB', () => new (T().BoxGeometry)(TW * .985, TD * .42, TH * .985));
   const geoF = () => mat('gF', () => new (T().PlaneGeometry)(TW * .86, TH * .88));
   function tile(t, how, red) {   // how: 'up' · 'down' · 'stand' (face toward +z) · 'back' (standing, the back toward +z)
     const TT = T(), g = new TT.Group();
-    const body = mesh(geoI(), ivory(), 0, -TD * .21, 0), back = mesh(geoB(), blue(), 0, TD * .29, 0); g.add(body, back);
+    const body = new TT.Object3D(), back = new TT.Object3D(); body.position.set(0, -TD * .21, 0); back.position.set(0, TD * .29, 0); body.userData.mjI = 1; back.userData.mjB = 1; g.add(body, back);
     if (t != null) { const f = mesh(geoF(), faceMat(t, red), 0, -TD * .5 - .002, 0); f.rotation.x = Math.PI / 2; g.add(f); }   // the face: under the ivory (lying face down = the face on the cloth)
     if (how === 'up') g.rotation.x = Math.PI;
     else if (how === 'stand') g.rotation.x = -Math.PI / 2;
@@ -43,9 +45,9 @@
   X.MODELS.riichi = function () {
     const TT = T(), g = new TT.Group(), S = 9.6, H = .9;   // the table's playing square, its height above the floor
     // the cabinet and the walnut rails
-    const body = mesh(RB(S + 1.4, H - .1, S + 1.4, .2, 3), M({ color: 0x241a14, roughness: .55 }), 0, (H - .1) / 2, 0); g.add(body);
+    const body = mesh(RB(S + 1.4, H - .1, S + 1.4, .2, 2), M({ color: 0x241a14, roughness: .55 }), 0, (H - .1) / 2, 0); g.add(body);
     const wm = mat('wood', () => M({ map: wood('rcwood', '#7a4a2a', '#3a2010'), roughness: .28 }));
-    for (let k = 0; k < 4; k++) { const r = mesh(RB(S + 1.4, .34, .7, .14, 3), wm, 0, H + .07, S / 2 + .35); const p = new TT.Group(); p.add(r); p.rotation.y = k * Math.PI / 2; g.add(p); }
+    for (let k = 0; k < 4; k++) { const r = mesh(RB(S + 1.4, .34, .7, .14, 2), wm, 0, H + .07, S / 2 + .35); const p = new TT.Group(); p.add(r); p.rotation.y = k * Math.PI / 2; g.add(p); }
     // the felt (the same cloth as riichi/'s table)
     const felt = canvasTex('rcfelt', 512, 512, c => {
       const gr = c.createRadialGradient(256, 256, 40, 256, 256, 380); gr.addColorStop(0, '#2e7656'); gr.addColorStop(1, '#174431'); c.fillStyle = gr; c.fillRect(0, 0, 512, 512);
@@ -55,12 +57,12 @@
     });
     const top = mesh(new TT.PlaneGeometry(S, S), M({ map: felt, roughness: .95, bump: false }), 0, H + .002, 0); top.rotation.x = -Math.PI / 2; top.receiveShadow = true; g.add(top);
     // the centre console: a dark block, the round display and four score windows
-    const con = mesh(RB(2.2, .34, 2.2, .18, 3), M({ color: 0x1c1d22, roughness: .3, metalness: .2 }), 0, H + .17, 0); g.add(con);
+    const con = mesh(RB(2.2, .34, 2.2, .18, 2), M({ color: 0x1c1d22, roughness: .3, metalness: .2 }), 0, H + .17, 0); g.add(con);
     const disp = canvasTex('rcdisp', 256, 256, c => {
       c.fillStyle = '#0d1a2a'; c.beginPath(); c.arc(128, 128, 124, 0, 7); c.fill(); c.strokeStyle = '#6fa8d8'; c.lineWidth = 6; c.stroke();
       c.fillStyle = '#e9f3ff'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = 'bold 62px "Noto Serif JP", serif'; c.fillText('東1局', 128, 104); c.font = 'bold 40px "Noto Serif JP", serif'; c.fillText('余 52', 128, 170);
     });
-    const dm = mesh(new TT.CircleGeometry(.62, 48), M({ map: disp, roughness: .2, emissive: 0x334455, bump: false }), 0, H + .345, 0); dm.rotation.x = -Math.PI / 2; g.add(dm);
+    const dm = mesh(new TT.CircleGeometry(.62, 32), M({ map: disp, roughness: .2, emissive: 0x334455, bump: false }), 0, H + .345, 0); dm.rotation.x = -Math.PI / 2; g.add(dm);
     const sc = canvasTex('rcsc', 256, 64, c => { c.fillStyle = '#120808'; c.fillRect(0, 0, 256, 64); c.fillStyle = '#ff5a3a'; c.font = 'bold 44px monospace'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('25000', 128, 34); });
     for (let k = 0; k < 4; k++) { const w = mesh(new TT.PlaneGeometry(.9, .22), M({ map: sc, emissive: 0x401010, roughness: .3, bump: false }), 0, H + .346, .82); w.rotation.x = -Math.PI / 2; const p = new TT.Group(); p.add(w); p.rotation.y = k * Math.PI / 2; g.add(p); }
     const Y = H + TD / 2 + .004;   // a lying tile's centre height
@@ -88,8 +90,13 @@
       list.forEach((t, i) => { const side = k === 1 && i === 4, tl = tile(t, 'up'); tl.position.set(-1.0 + i * (TW + .015) + (side ? .07 : 0) + (i > 4 && k === 1 ? .14 : 0), Y - TD * .0, 1.6); if (side) tl.rotation.y = Math.PI / 2; p.add(tl); }); });
     // the riichi stick of the right seat
     { const p = new TT.Group(); p.rotation.y = Math.PI / 2; g.add(p);
-      const st = mesh(RB(1.4, .05, .13, .025, 2), M({ color: 0xf4f1ea, roughness: .3 }), 0, H + .03, 1.15); p.add(st);
+      const st = mesh(RB(1.4, .05, .13, .025, 1), M({ color: 0xf4f1ea, roughness: .3 }), 0, H + .03, 1.15); p.add(st);
       const dot = mesh(new TT.CircleGeometry(.04, 20), M({ color: 0xd8283c, roughness: .3, bump: false }), 0, H + .056, 1.15); dot.rotation.x = -Math.PI / 2; p.add(dot); }
+    // the tiles' blocks: one InstancedMesh each for the ivory bodies and the blue backs
+    { g.updateMatrixWorld(true); const inv = new TT.Matrix4().copy(g.matrixWorld).invert(), I = [], B = [];
+      g.traverse(o => { if (o.userData.mjI) I.push(o); else if (o.userData.mjB) B.push(o); });
+      [[I, geoI(), ivory()], [B, geoB(), blue()]].forEach(([L, geo, m]) => { const im = new TT.InstancedMesh(geo, m, L.length), mx = new TT.Matrix4();
+        L.forEach((o, i) => { mx.multiplyMatrices(inv, o.matrixWorld); im.setMatrixAt(i, mx); o.parent.remove(o); }); im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere && im.computeBoundingSphere(); g.add(im); }); }
     g.traverse(o => { if (o.isMesh) { o.castShadow = o !== top; o.receiveShadow = true; } });
     g.scale.setScalar(.9);
     return g;

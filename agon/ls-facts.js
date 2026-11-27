@@ -56,6 +56,11 @@
                 k 'touch' it steps into ring 1, next to the queen, but the cell straight across the throne is not yours
                           (across: that cell, end 'empty' / 'enemy')
                 k 'none'  any other move: it does not reach ring 1 and captures nothing
+     s_best     (2026-11-28 担当F; no capture for either side now — the enemy's captures with the turn passed: none)
+                k 'ok'    after it no enemy move captures anything
+                k 'trap'  the enemy's next move sandwiches the piece just moved (rp: that enemy move)
+                k 'open'  the moved piece is safe, but the cell it left lets the enemy's next move sandwich another piece
+                          (rp: that enemy move, v: the piece it takes)
    hint(E, id, spec) → the cells of the pieces to look at (never the answer's piece alone, 追52): b_step every piece with a step
    inwards, b_capture every piece with a move next to an enemy piece, b_throne the queen and every enemy piece next to a cell
    she can step inwards to, b_reloc the captured guard and every piece of yours the enemy could sandwich next (the guard off
@@ -64,11 +69,12 @@
    guard that can step into the last cell (its winning move, the turn passed) and every piece of yours with a move next to it, s_win2
    every guard of yours that can step into an empty cell round the throne and the enemy pieces that could sandwich one (the turn passed),
    s_queencap your pieces on ring 1 and every piece of yours with a move into ring 1,
-   s_tempo every piece of yours with a capturing move and every enemy guard it can take (compare their rings).
+   s_tempo every piece of yours with a capturing move and every enemy guard it can take (compare their rings),
+   s_best every piece of yours next to an enemy piece (moving it may open a sandwich).
    window.AgonLsFacts · module.exports the same. */
 (function () {
   'use strict';
-  const IDS = ['b_step', 'b_capture', 'b_throne', 'b_reloc', 'b_safe', 's_double', 's_block', 'b_finish', 's_win2', 's_queencap', 's_tempo'];
+  const IDS = ['b_step', 'b_capture', 'b_throne', 'b_reloc', 'b_safe', 's_double', 's_block', 'b_finish', 's_win2', 's_queencap', 's_tempo', 's_best'];
   // b_reloc: the enemy's capturing moves with the captured guard off the board ([move, the pieces it takes])
   // b_safe: the same with the turn passed to the enemy (nothing captured on the board)
   function threats(E, spec) {
@@ -108,6 +114,14 @@
       const ro = L.find(r => q.capsOf(r).length);
       if (ro != null) return { k: 'open', rp: ro, v: q.capsOf(ro)[0] };
       return { k: 'ok', block: threats(E, spec).some(([r]) => E.mTo(r) === t) };
+    }
+    if (id === 's_best') {   // (担当F) the same recount as b_safe: the moved piece sandwiched / another piece opened
+      const q = p.clone().play(m), L = q.moves();
+      const rp = L.find(r => q.capsOf(r).includes(t));
+      if (rp != null) return { k: 'trap', rp };
+      const ro = L.find(r => q.capsOf(r).length);
+      if (ro != null) return { k: 'open', rp: ro, v: q.capsOf(ro)[0] };
+      return { k: 'ok' };
     }
     if (id === 'b_safe') {
       const q = p.clone().play(m), L = q.moves();
@@ -202,6 +216,7 @@
       for (const m of p.moves()) if (m !== E.PASS && cells.has(E.mTo(m))) out.add(E.mFrom(m));
       return [...out].sort((a, b) => a - b);
     }
+    if (id === 's_best') { for (let i = 0; i < E.NB.length; i++) if (p.owner(i) === me && E.NB[i].some(a => a >= 0 && p.owner(a) === 3 - me)) out.add(i); return [...out].sort((a, b) => a - b); }
     if (id === 's_queencap') for (const c of E.NB[E.CENTER]) if (p.owner(c) === me) out.add(c);   // (your pieces on ring 1: the partners across the throne)
     if (id === 's_win2') {   // the enemy pieces that could sandwich a guard of yours (the one stepping in and the one beyond)
       const r = p.clone(); r.side ^= 1; r.rehash();
@@ -234,6 +249,7 @@
     if (id === 's_queencap') return F.k === 'touch' ? 'ngTouch' : F.k === 'guard' ? 'ngGuard' : 'ng';
     if (id === 's_win2') return F.k === 'slow' ? 'ngSlow' : 'ng';
     if (id === 's_tempo') return F.k === 'outer' ? 'ngOuter' : 'ng';
+    if (id === 's_best') return F.k === 'open' ? 'ngOpen' : 'ng';
     return 'ng';
   }
   const API = { IDS, fact, hint, key, threats, wins };

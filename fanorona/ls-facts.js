@@ -43,6 +43,11 @@
        'give'  the opponent can take { c } (the most in one turn, a chain in full)
        'none'  the opponent takes nothing, but no capture of yours is set up (even if the opponent passed you could take nothing)
        'block' the opponent takes nothing and a capture is set up, but some reply of the opponent leaves you none
+   e_trap (2026-11-28 担当C, an endgame with no capture for either side; the paika move that shuts every way out): { k, c, r, n, a }
+     k 'most'  the answer: after it the opponent takes nothing and, whichever of its { n } replies the opponent plays, you take all
+               { a } of its pieces next (the game is won; the only such move)
+       'give'  the opponent can take { c } (the most in one turn, a chain in full)
+       'run'   the opponent takes nothing, but { r } of its replies leave you no move that takes all its pieces (a way out)
   FanoronaLsFacts.best(E, spec) → the move that takes the most (null when two moves take as many)
    FanoronaLsFacts.hint(E, id, spec) → the points of the pieces that can capture now (never the answer's piece alone)
    Moves are the engine's notation (h2-h3A), points its indices r * 9 + c. Works as a plain script and in Node. */
@@ -167,7 +172,27 @@
     const o = paikaLook(E, pos, m), A = paikaLook(E, pos, b);
     return { k: m === b ? 'most' : o.k, c: o.c, a: A.a, from: S[0].from, to: S[0].to };
   }
+  // e_trap: a paika move's look ahead — the opponent's most after it, and after each of the opponent's replies whether you can take
+  // every piece it has left ('end': the move ends the game at once, a blockade; never in a lesson)
+  function trapLook(E, pos, m) {
+    const o = oppMost(E, pos, m); if (o.c) return { k: 'give', c: o.c, r: 0, n: 0 };
+    const q = pos.clone().play(m), me = pos.turn, opp = 3 - me; if (q.status() !== 0) return { k: 'end', c: 0, r: 0, n: 0 };
+    const R = q.moves(true); let r = 0;
+    for (const y of R) { const q2 = q.clone().play(y); if (q2.turn !== me || !q2.moves(true).some(x => q2.clone().play(x).count(opp) === 0)) r++; }
+    return { k: r ? 'run' : 'sure', c: 0, r, n: R.length };
+  }
+  function trapBest(E, spec) {
+    const pos = E.Pos.from(spec); if (pos.hasCaps()) return null;
+    const L = pos.moves(true).filter(m => trapLook(E, pos, m).k === 'sure'); return L.length === 1 ? L[0] : null;
+  }
+  function trapFact(E, spec, m) {
+    const pos = E.Pos.from(spec), S = pos.steps(m), b = trapBest(E, spec);
+    if (!S || !b || S[0].cap.length) return { k: 'bad' };
+    const o = trapLook(E, pos, m), A = trapLook(E, pos, b);
+    return { k: m === b ? 'most' : o.k, c: o.c, r: o.r, n: A.n, a: pos.count(3 - pos.turn), from: S[0].from, to: S[0].to };
+  }
   function fact(E, id, spec, m) {
+    if (id === 'e_trap') return trapFact(E, spec, m);
     if (id === 't_paika') return paikaFact(E, spec, m);
     if (id === 't_stop') return stopFact(E, spec, m);
     if (id === 't_count') return countFact(E, spec, m);
@@ -186,10 +211,10 @@
   }
   function hint(E, id, spec) {
     const pos = E.Pos.from(spec);
-    if (id === 'b_safe' || id === 't_paika') return [...new Set(pos.paikaSteps().map(x => x.from))];   // (every piece you can move: never the answer's alone, 追52)
+    if (id === 'b_safe' || id === 't_paika' || id === 'e_trap') return [...new Set(pos.paikaSteps().map(x => x.from))];   // (every piece you can move: never the answer's alone, 追52)
     return [...new Set(pos.capSteps(null).map(x => x.from))];
   }
-  const API = { fact, best, hint, endOf, capN, chainFact, bigFact, safeFact, safeBest, oppMost, winFact, winBest, countBest, countFact, countNet, stopBest, stopFact, paikaLook, paikaBest, paikaFact };
+  const API = { fact, best, hint, endOf, capN, chainFact, bigFact, safeFact, safeBest, oppMost, winFact, winBest, countBest, countFact, countNet, stopBest, stopFact, paikaLook, paikaBest, paikaFact, trapLook, trapBest, trapFact };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   if (typeof window !== 'undefined') window.FanoronaLsFacts = API;
 })();
