@@ -190,7 +190,11 @@ function bestCombo(E, n) {          // → 選んだ番の配列（番号）
   const used = [];                   // [f, vertex]
   const pick = [];
   function rec(i, val) {
-    if (i === E.length) { if (val > bestV) { bestV = val; best = pick.slice(); } return; }
+    if (i === E.length) {
+      // 同点なら番号の小さい番（一般高 → 喜相逢 → 連六 → 老少副）を名乗る（PyMahjongGB と同じ）
+      if (val > bestV || (val === bestV && pick.slice().sort((a, b) => a - b).join() < best.slice().sort((a, b) => a - b).join())) { bestV = val; best = pick.slice(); }
+      return;
+    }
     rec(i + 1, val);                 // 使わない
     const e = E[i];
     const roots = e.v.map(find);
@@ -383,10 +387,23 @@ function calc(o) {
   const W = waits(o.hand, m);
   if (!W.includes(o.win)) return { ok: false, err: 'notwin' };
   const uniq = W.length === 1;
+  // 和絶張は、ほかの3枚が卓上（捨て牌と副露）に見えているときだけ。自分の立牌に同じ牌があれば付かない（2007年 峨眉山の審判講習。正誤表 3.8.1.58）
+  const lastBlocked = o.hand.includes(o.win);
+  // 自分のポンの牌でツモ・ロンしたら、残り3枚はすべて卓上に見えている＝和絶張
+  let inMelds = 0;
+  for (const md of o.melds) { if (md.k === 'chi') { if (o.win >= md.t && o.win <= md.t + 2) inMelds++; } else if (md.t === o.win) inMelds += 3; }
+  const lastAuto = inMelds >= 3;
   let best = null;
+  // 同点なら待ちの番は 辺張 → 嵌張 → 単釣 の順に名乗る（どれも1点。PyMahjongGB と同じ順）
+  const wrank = r => r.fans.some(f => f.id === 77) ? 3 : r.fans.some(f => f.id === 78) ? 2 : r.fans.some(f => f.id === 79) ? 1 : 0;
   const consider = (F, form) => {
+    if (lastBlocked) F.no(58);
+    else if (lastAuto && !F.f[58] && !(o.kong && !o.tsumo)) F.add(58);
     const r = finalize(F); r.form = form;
-    if (!best || r.pts > best.pts) best = r;
+    // 同点の分け方が複数あるときは：待ちの番 → 番の種類が少ない方 → 番号の小さい番を含む方
+    const ids = x => x.fans.map(f => String(f.id).padStart(2, '0')).sort().join();
+    if (!best || r.pts > best.pts || (r.pts === best.pts && (wrank(r) > wrank(best) || (wrank(r) === wrank(best) &&
+        (r.fans.length < best.fans.length || (r.fans.length === best.fans.length && ids(r) < ids(best))))))) best = r;
   };
   const meldSets = o.melds.map(md => ({ k: md.k === 'chi' ? 'c' : md.k === 'pon' ? 'p' : 'g', t: md.t, open: md.k !== 'ankan', conc: md.k === 'ankan' }));
 
