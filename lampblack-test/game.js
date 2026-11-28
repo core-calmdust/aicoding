@@ -330,7 +330,7 @@
 
   /* ---------- the text strip: narration and speech, one page at a time ---------- */
   function showTx() { $('tx').classList.remove('hide'); $('menu').classList.add('hide'); layoutDock(); }
-  function showMenu(html) { if (CINE) CINE.reset(); $('tx').classList.add('hide'); const m = $('menu'); m.innerHTML = html; m.classList.remove('hide'); layoutDock(); m.querySelector('button')?.focus({ preventScroll: true }); }
+  function showMenu(html) { if (CINE) { if (!S || S.phase === 'meeting' || S.phase === 'vote' || G.tut) CINE.reset(); else CINE.rest(); } $('tx').classList.add('hide'); const m = $('menu'); m.innerHTML = html; m.classList.remove('hide'); layoutDock(); m.querySelector('button')?.focus({ preventScroll: true }); }
   function say(items) { return new Promise(res => { G.q = items.filter(Boolean); G.qres = res; showTx(); nextPage(); }); }
   function nextPage() {
     if (G.typing) { finishType(); return; }
