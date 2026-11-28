@@ -1964,7 +1964,7 @@ function ckWarm(opt, L, E, X, val, moveVal, add, only) {
 //   縦と横) and for every wrong move (the king or not, a blocker on the way, a capture or not, a piece of yours taken next), the question
 //   and the hint (a corner / the throne named is in an answer)
 //   ⑨ the 2D (tafl/app.js problemPoints) and the 3D (TAFL.points) both score P.ok
-const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield', 't_tuichi', 't_block', 't_fort', 't_encircle', 's_corner', 's_breakout', 's_squeeze', 'v_brandubh']);
+const TF_DONE = new Set(['b_move', 'b_cap', 'b_hostile', 'b_escape', 'b_kingcap', 'b_safe', 't_shield', 't_tuichi', 't_block', 't_fort', 't_encircle', 's_corner', 's_breakout', 's_squeeze', 'v_brandubh', 'v_tablut']);
 function tafl(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'tafl/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'tafl/lessons.json'), 'utf8'));
@@ -2382,9 +2382,44 @@ function tafl(opt) {
   { const st = L.steps.find(s => s.id === 'v_brandubh');
     if (st && st.diagram) { const D = st.diagram, p = E.Pos.from(D.s); (D.arrows || []).forEach(([fr, to]) => { const m = E.parse(p, fr + '-' + to); if (m == null) { add('v_brandubh', -1, `diagram: 追14 ${fr}-${to} is not legal`); return; }
       if (p.clone().play(m).res !== 1) add('v_brandubh', -1, `diagram: 追14 ${fr}-${to} does not take the king`); }); } }
+  // (2026-11-28 第2期 担当A) v_tablut「タブルットの脱出」(tools/lesson-verify-tftablut.js): the defenders to move on the 9×9 board, the king
+  // escapes on any edge square. ①② P.ok = every move after which every attacker reply leaves the king an escape at once (a full search
+  // of the replies) ③ ≥10 moves, the answers ≤ a third of the moves and ≤ half of the king's moves, ≥1 king move opening just one line
+  // ④ no escape / no line / no attacker win now, every answer a king move opening two lines, no king move opening two lines the attackers
+  // can still stop (「2本作れたら勝ち」) ⑤ ≥4 squares (8 symmetries of 9×9) from every other tablut board (lessons, diagrams, warm-ups, the
+  // 120 tablut puzzles) and from each other, no answer the same turned / mirrored, (the two lines always run both ways across the king's move: a line along it would
+  // have let him reach the edge at once, the one behind him was open before — so no shape test) ⑥ d×10 − the
+  // answers never down, last > first ⑦⑧ タフリン's words for every wrong move (caught only when the attackers take him, one line, not the
+  // king, no line), the number of lines in the praise and in the right move's words, the 2D why (2 lines); the diagram arrow = a forced
+  // two-line move (追14)
+  const TB = require(path.join(ROOT, 'tools/lesson-verify-tftablut.js')), tbPool = [], tbKey = new Map();
+  L.steps.forEach(st => { (st.problems || []).forEach((q, j) => q.s.v === 'tablut' && tbPool.push([`${st.id} q${j + 1}`, q.s.b])); if (st.diagram && st.diagram.s.v === 'tablut') tbPool.push([`${st.id} diagram`, st.diagram.s.b]); (st.ramp || []).forEach((r, j) => r.s && r.s.v === 'tablut' && tbPool.push([`${st.id} ramp ${j + 1}`, r.s.b])); });
+  (PZ.themes || []).forEach(th => (th.puzzles || []).forEach((q, j) => q.s.v === 'tablut' && tbPool.push([`puzzle ${th.id} ${j + 1}`, q.s.b])));
+  const tablutOne = (st, si, P, j, a) => { const f = TB.tablutFacts(E, P), nm = m => E.name(f.p, m); f.bad.forEach(a);
+    for (const [who, b] of tbPool) { if (who === `${st.id} q${j + 1}`) continue; const e = TB.dist9(P.s.b, b); if (e < 4) a(`⑤ ${e} squares from ${who}`); }
+    for (const m of P.ok || []) { const ks = TB.symKeys(E, m), hit = ks.find(k => tbKey.has(k) && tbKey.get(k) !== j); if (hit) a(`⑤ the same answer as q${tbKey.get(hit) + 1} turned / mirrored (${nm(m)})`); ks.forEach(k => { if (!tbKey.has(k)) tbKey.set(k, j); }); }
+    let W; try { W = X_.tfLsJa(E, st, P, j, k => X_.TFM(k, 'ja'), si); } catch (e) { a('⑧ the words fail: ' + e.message); return f.d * 10; }
+    for (const t of [W.ask, W.hintTx]) if (!t || /\{|undefined|NaN/.test(t)) a(`⑧ 「${t}」`);
+    if (/角へ|角まで|角に着|辺の上/.test(W.hintTx + W.ask)) a(`⑧ 「${W.ask} / ${W.hintTx}」: the escape is any edge square`);
+    for (const u of P.ok || []) { const g = plain(W.good(u)), R = f.C.get(u), k = g.replace(/1本しか止め/g, '').match(/(\d+)(本|方向)/); if (!R) continue;
+      if (!k || +k[1] !== R.routes) a(`⑧ the praise 「${g}」: the king has ${R.routes} lines`); if (R.routes !== 2) a(`⑧ the 2D why says 2 lines, ${nm(u)} opens ${R.routes}`); if (/角/.test(g)) a(`⑧ the praise 「${g}」 names a corner`); }
+    for (const m of f.wrong) { const raw = plain(W.ng(m)), x0 = nm(m), i0 = raw.indexOf('赤い印の手'), i1 = raw.indexOf('緑の印の手'), R = f.C.get(m);
+      if (/\{|undefined|NaN/.test(raw) || i0 < 0 || i1 < 0) { a(`⑦ ${x0}: 「${raw}」 (your move / the right move not named)`); continue; }
+      const tx = raw.slice(i0, i1), tm = raw.slice(i1);
+      const want = R.capKing ? 'caught' : R.king && R.routes === 1 ? 'one' : !R.king ? 'notking' : R.routes === 0 ? 'blocked' : '?';
+      const said = /はさまれ|はさめる|つかま|危ない/.test(tx) ? 'caught' : /1本|1方向|ライチ|その1本/.test(tx) ? 'one' : /王じゃない|王さまじゃない|守り手の駒|その場のまま|道が増えない/.test(tx) ? 'notking' : /立ちふさが|あいだに駒|道がない|見通せない|ひとつもできない/.test(tx) ? 'blocked' : '?';
+      if (said !== want) a(`⑦ ${x0}: 「${tx}」 says ${said}, the board: ${want}`);
+      if (/角|辺の上|内側|端に出ていない/.test(tx)) a(`⑦ ${x0}: 「${tx}」 (tablut: any edge square, the king inside)`);
+      const k2 = tm.replace(/1本しか止め/g, '').match(/(\d+)(本|方向)/), A = f.C.get(P.best); if (A && k2 && +k2[1] !== A.routes) a(`⑧ ${x0}: 「${tm}」 — the right move opens ${A.routes}`); }
+    return f.d * 10 - (P.ok || []).length; };
+  { const st = L.steps.find(s => s.id === 'v_tablut');
+    if (st && st.diagram) { const D = st.diagram, p = E.Pos.from(D.s); (D.arrows || []).forEach(([fr, to]) => { const m = E.parse(p, fr + '-' + to); if (m == null) { add('v_tablut', -1, `diagram: 追14 ${fr}-${to} is not legal`); return; }
+      const f = TB.tablutFacts(E, { s: D.s, ok: [m], best: m }); if (!f.goal.includes(m)) add('v_tablut', -1, `diagram: 追14 ${fr}-${to} does not force the escape`); }); }
+    const w = {}; vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'tafl/i18n.js'), 'utf8'), { window: w });
+    for (const lg of Object.keys(w.I18N)) { const ng = w.I18N[lg]['ls.v_tablut.ng'] || ''; if (lg === 'ja' && /ふさがれ/.test(ng)) add('v_tablut', -1, `⑧ the 2D ng (ja) 「${ng}」: after many wrong moves nothing is blocked (the king is caught / no line opens)`); if (!/\{x\}/.test(ng) || !/\{m\}/.test(ng)) add('v_tablut', -1, `⑧ the 2D ng (${lg}) misses {x} / {m}`); } }
   L.steps.forEach((st, si) => { const id = st.id; if (!TF_DONE.has(id) || (opt && opt.only && !opt.only.includes(id))) return;   // (opt.only: the mutation tests of one lesson)
     let prevD = -1, firstD = null;
-    if (id === 'b_safe' || id === 't_shield' || id === 't_tuichi' || id === 't_block' || id === 't_fort' || id === 't_encircle' || id === 's_corner' || id === 's_breakout' || id === 's_squeeze' || id === 'v_brandubh') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : id === 't_tuichi' ? tuichiOne : id === 't_block' ? blockOne : id === 't_fort' ? fortOne : id === 't_encircle' ? encOne : id === 's_corner' ? cornerOne : id === 's_breakout' ? breakOne : id === 's_squeeze' ? squeezeOne : id === 'v_brandubh' ? brandOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
+    if (id === 'b_safe' || id === 't_shield' || id === 't_tuichi' || id === 't_block' || id === 't_fort' || id === 't_encircle' || id === 's_corner' || id === 's_breakout' || id === 's_squeeze' || id === 'v_brandubh' || id === 'v_tablut') { st.problems.forEach((P, j) => { const a = m => add(id, j, m), d = (id === 'b_safe' ? safeOne : id === 't_tuichi' ? tuichiOne : id === 't_block' ? blockOne : id === 't_fort' ? fortOne : id === 't_encircle' ? encOne : id === 's_corner' ? cornerOne : id === 's_breakout' ? breakOne : id === 's_squeeze' ? squeezeOne : id === 'v_brandubh' ? brandOne : id === 'v_tablut' ? tablutOne : shieldOne)(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d; if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); }); return; }
     st.problems.forEach((P, j) => { const a = m => add(id, j, m), p = E.Pos.from(P.s), me = p.turn, all = p.moves(), nm = m => E.name(p, m);
       if (P.n > 1) { const d = seqCheck(st, si, P, j, a); if (d < prevD) a(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
         if (j === st.problems.length - 1 && !(d > firstD)) a(`⑥ the last problem is no harder than problem 1 (d ${d} vs ${firstD})`); seqWords(st, si, P, j, a); return; }
@@ -2765,7 +2800,7 @@ function xqStray42(PZ, add, W0) {
 // capture, its value), the engine (depth 3: the answer on top, every other move 250 or more worse), the pool (lessons.json problems
 // and warm-ups of every step, tsume.json; mirrored too), the order (both the 2D and the 3D keep the pool's order) and ショウギツネ's
 // words for every legal move.
-const SH_DONE = new Set(['k20', 'k15', 'k12', 'k10', 'k8', 'k6', 'k4', 'k3', 'k2', 'd1', 'd2', 'rx']);   // (k5 is next: tools/lesson-verify-shfork.js, added to SH_DONE once its problems are rebuilt; k3: tools/lesson-verify-shdefend.js, k12: tools/lesson-verify-shevade.js, k10 and k8: tools/lesson-verify-shmate1.js, k6 and k4: tools/lesson-verify-shmate3.js, k2: tools/lesson-verify-shmate5.js, d1: tools/lesson-verify-shmate7.js)
+const SH_DONE = new Set(['k20', 'k15', 'k12', 'k10', 'k8', 'k6', 'k5', 'k4', 'k3', 'k2', 'd1', 'd2', 'rx']);   // (k5: tools/lesson-verify-shfork.js; k3: tools/lesson-verify-shdefend.js, k12: tools/lesson-verify-shevade.js, k10 and k8: tools/lesson-verify-shmate1.js, k6 and k4: tools/lesson-verify-shmate3.js, k2: tools/lesson-verify-shmate5.js, d1: tools/lesson-verify-shmate7.js)
 function shogi(opt) {
   const fs = require('fs'), vm = require('vm');
   const E = require(path.join(ROOT, 'shogi/engine.js')), L = (opt && opt.lessons) || JSON.parse(fs.readFileSync(path.join(ROOT, 'shogi/lessons.json'), 'utf8'));
@@ -3126,7 +3161,7 @@ function shogiOpen(opt) {
   // (there is no line here), "近づく" only for a castle move, "近づかない / 進まない / 遠いまま" only for the others, "AIの評価が…下がる"
   // only 100+ below, captures / recaptures / king / bishop's line / edge pawn / rook claims on the board, the near words only 10+ points.
   {
-    const SHC_DONE = new Set(['c_mino', 'c_furiana', 'c_ibiana']), SRCC = require(path.join(ROOT, 'shogi/tools/openings/src/castle.js')), KIF = require(path.join(ROOT, 'shogi/tools/openings/kif.js'));
+    const SHC_DONE = new Set(['c_mino', 'c_yagura', 'c_funa', 'c_furiana', 'c_ibiana']), SRCC = require(path.join(ROOT, 'shogi/tools/openings/src/castle.js')), KIF = require(path.join(ROOT, 'shogi/tools/openings/kif.js'));
     if (!src.includes("sort((a, b) => (a.off ? a.dd : a.ply) - (b.off ? b.dd : b.ply))")) add('-', -1, '⑥ the 3D castle problems are not drawn in the dd order');
     const linePos = []; for (const c of CATS) require(path.join(ROOT, `shogi/tools/openings/src/${c}.js`)).forEach(e => { try { const q = new E.Position(); q.setSfen(e.start || KIF.START); for (const u of KIF.conv(e.line, e.start).usi) { q.doMove(q.fromUsi(u)); q.sp = 0; linePos.push([e.id + ' line', CU.brd(q.sfen())]); } } catch (er) {} });
     const STEP = { 4: [[0, -1], [1, -1], [-1, -1], [1, 1], [-1, 1]], 7: [[0, -1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1]], 8: [[0, -1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1], [1, 1], [-1, 1]], 3: [[1, -2], [-1, -2]] };
@@ -3144,19 +3179,21 @@ function shogiOpen(opt) {
         const G = ms.filter(m => { if (E.isDrop(m)) return false; p.doMove(m); const b = p.board.slice(); p.undoMove(); return cd(b) < cd(p.board); }).map(U).sort();
         if (JSON.stringify(G) !== JSON.stringify((P.G || []).slice().sort())) a(`① the castle moves are ${G} (stored ${P.G})`);
         const sets2 = [];
-        for (const d of [8, 9]) { shoW = require(path.join(ROOT, 'shogi/tools/openings/wasm-engine.js')).loadSync(); const r = shoW.analyze(P.sfen, { depth: d }), v = new Map(r.map(x => [x.usi, x.s])), ref = Math.max(...G.map(u => v.get(u)));
+        shoW = require(path.join(ROOT, 'shogi/tools/openings/wasm-engine.js')).loadSync();   // (a new engine for every castle problem: the same values whatever was read before, 追84)
+        for (const d of [8, 9]) { const r = shoW.analyze(P.sfen, { depth: d }), v = new Map(r.map(x => [x.usi, x.s])), ref = Math.max(...G.map(u => v.get(u)));
           if (r[0].s - ref > 80) a(`① depth ${d}: the engine's best ${r[0].usi} is ${r[0].s - ref} above the castle moves`);
           const grey = G.filter(u => v.get(u) < ref - 40 && v.get(u) >= ref - 100); if (grey.length) a(`② depth ${d}: ${grey} in the grey zone`);
           sets2.push(G.filter(u => v.get(u) >= ref - 40).sort().join(','));
-          if (d === 9) { const dd = r.filter(x => !G.includes(x.usi) && x.s >= ref - 100).length; if (P.dd !== dd) a(`⑥ dd ${P.dd} (recounted ${dd} by a new engine)`); } }   // (a new engine for each read = the same values every time; 2026-11-28 担当B)
+          if (d === 9) { const dd = r.filter(x => !G.includes(x.usi) && x.s >= ref - 100).length; if (Math.abs(P.dd - dd) > 3) a(`⑥ dd ${P.dd} (recounted ${dd}: the depth-9 values move a little with what the engine read before)`); } }
         if (sets2[0] !== sets2[1] || sets2[1] !== P.accept.slice().sort().join(',')) a(`① accept ${P.accept} (depth 8: ${sets2[0]}, depth 9: ${sets2[1]})`);
         if (P.pv[0] !== P.accept[0]) a('① pv is not the first accepted move');
         ms.map(U).forEach(u => { if (!P.accept.includes(u) && pts(P, u) > 12) a(`② ${u} ${pts(P, u)} points`); });
         if (ms.length - P.accept.length < 3) a(`③ ${ms.length - P.accept.length} moves outside the set`);
         const left = cd(p.board); if (p.side !== 0 || p.inCheck() || left < 1 || left > 3 || E.typeOf(p.board[rookSq]) !== 6 || E.colorOf(p.board[rookSq]) !== 0) a(`④ side ${p.side} / check / ${left} castle moves left / the rook off its square`);
         if (ms.some(m => !E.isDrop(m) && p.board[E.mTo(m)])) a('④ a piece can be taken (not a quiet castle position)');
-        { const q2 = new E.Position(); q2.setSfen(P.sfen.replace(/ b /, ' w ')); let w2 = 0; for (const m of q2.legalMoves(true)) if (!E.isDrop(m) && q2.board[E.mTo(m)]) w2 = Math.max(w2, q2.see(m)); if (w2 > 0) a(`④ the opponent threatens to win material (SEE ${w2}: not a quiet castle position)`); }
-        { const [bb, , hh] = P.sfen.split(' '), c = {}; for (const ch of bb.replace(/\+/g, '')) if (/[a-z]/i.test(ch)) c[ch] = (c[ch] || 0) + 1; if (hh !== '-' || !'plnsgbrk'.split('').every(x => (c[x] || 0) === (c[x.toUpperCase()] || 0))) a('④ uneven material / pieces in hand (not an opening position)'); }   // (2026-11-28 担当B, c_furiana)
+        { const q2 = new E.Position(); q2.setSfen(P.sfen.replace(/ b /, ' w ')); let w2 = 0; for (const m of q2.legalMoves(true)) if (!E.isDrop(m) && q2.board[E.mTo(m)]) w2 = Math.max(w2, q2.see(m)); if (w2 > 0) a(`④ the opponent threatens to win material (SEE ${w2}: not a quiet castle position)`); }   // (2026-11-28 担当B, c_furiana)
+        { const [bb, , hh] = P.sfen.split(' '), c = {}; for (const ch of bb.replace(/\+/g, '')) if (/[a-z]/i.test(ch)) c[ch] = (c[ch] || 0) + 1; if (hh !== '-' || !'plnsgbrk'.split('').every(x => (c[x] || 0) === (c[x.toUpperCase()] || 0))) a('④ uneven material / pieces in hand (not an opening position)'); }
+        if (p.board.some(x => x && E.typeOf(x) > 8) || Math.abs(P.cand[0][1]) > 300) a(`④ not an even, quiet opening (a promoted piece on the board / best ${P.cand[0][1]})`);   // (2026-11-28 c_yagura・c_funa)
         const B = CU.brd(P.sfen);
         const me = (s.problems || []).length + LP.indexOf(P); for (const [w, k, b] of pool) { if (w === id && k === me) continue; const d = CU.dist(B, b); if (d <= 4) a(`⑤ ${d} squares from ${w} ${k + 1}`); }
         for (const [w, b] of linePos) { const d = CU.dist(B, b); if (d <= 4) a(`⑤ 追1 ${d} squares from a position of ${w}`); }
@@ -3175,7 +3212,7 @@ function shogiOpen(opt) {
             if (/手順|見本どおり/.test(w)) bad('speaks of the line');
             if (/\{(?![mx]\})|undefined|NaN/.test(w)) bad('a placeholder');
             if (/\{m\}なら[^。！]*攻め|攻めの形/.test(w)) bad('a castle move is not an attack');
-            if (u === A) { const to = E.mTo(p.fromUsi(A)), onMk = T.some(x => x.sq === to && x.t === F.pt); if (JSON.stringify(P.mk) !== JSON.stringify(e.story.marks)) bad('P.mk is not the story marks');
+            if (u === A) { const to = E.mTo(p.fromUsi(A)), onMk = T.some(x => x.sq === to && x.t === F.pt); if (JSON.stringify(P.mk) !== JSON.stringify(e.story.marks)) bad('P.mk is not the story marks'); if (P.mp && JSON.stringify(P.mp) !== JSON.stringify(T.map(x => 'xplnsbrgk'[x.t]))) bad('P.mp is not the pieces of the castle squares');
               if (/決まった場所に入る|あるべきマスへおさめる|定位置について|持ち場に入った|居場所はそこで決まり/.test(w) && !onMk) bad('does not land on a castle square'); if (/一歩近づける手|持ち場へ一歩進む手|まず一歩|囲いの奥へ向かう|あるべき場所へ近づけた/.test(w) && onMk) bad('lands on a castle square'); }
             if (P.accept.includes(u)) { if (u !== A && !/\{x\}/.test(w)) bad('the other right move is not named'); if (/取る手|取り返|打つ手/.test(w)) bad('a capture / a drop'); continue; }
             if (!w.includes('{m}')) bad('the answer is not named');
@@ -3856,7 +3893,7 @@ function hexOpen(opt) {
       const legal = []; for (let m = 0; m < g.n * g.n; m++) if (q.legal(m)) legal.push(m);
       const NB = E.geo(g.n).NB, s = P.s.side, o = 3 - s, at = c => P.s.b[c] === 'r' ? 1 : P.s.b[c] === 'b' ? 2 : 0;
       const savable = fb.save > 0;   // (an own bridge cut into: the answer answers it)
-      for (let i = 0; i < 5; i++) { const probs = P0.slice(0, 5); let W; try { W = X.HX.opJa.call(X.HX, P, LI, i, probs, {}); } catch (e) { a("⑧ the words fail: " + e.stack.split("\n").slice(0, 3).join(" | ")); break; }
+      for (let i = 0; i < 15; i++) { const probs = P0.slice(0, 5); let W; try { W = X.HX.opJa.call(X.HX, P, LI + Math.floor(i / 5), i % 5, probs, {}); } catch (e) { a("⑧ the words fail: " + e.stack.split("\n").slice(0, 3).join(" | ")); break; }   // (追90, 2026-11-28 担当B: three turns of the word lists — every candidate of a 2- or 3-word list is said once — not only the order the set's index gives)
         const ask = plain(W.ask), hint = plain(W.hintTx); if (/\{|undefined|NaN/.test(ask + hint)) a(`⑧ the question / hint 「${ask}」「${hint}」`);
         if (!ask.includes(s === 2 ? '青' : '赤')) a(`⑧ the question does not name the side 「${ask}」`);
         if (!(X.HXJ_OP.hint[kb] || X.HXJ_OP.hint.open).map(plain).includes(hint)) a(`⑧ the hint is not the answer's shape (${kb}) 「${hint}」`);
@@ -3870,6 +3907,7 @@ function hexOpen(opt) {
           if (/もう1つの割りこまれたほう|大事なほうのブリッジ/.test(w) && !(savable && fu.save)) bad('yours answers no other cut bridge');
           if (/ほかの石から遠すぎ|戦いの場所から離れすぎ|まわりに石がなくて/.test(w) && !(fu.dOpp >= 4 && fu.dOwn >= 4)) bad(`the move is ${fu.dOpp} / ${fu.dOwn} from the stones`);
           if (/割りこむ先手を逃し|すき間をつくチャンス|受けさせる一手を打てず/.test(w) && !(fb.intrude && !fu.intrude)) bad('not an intrusion missed');
+          if (/もっと効くすき間|割りこむ場所がちがって/.test(w) && !(fb.intrude && fu.intrude)) bad('said to be another intrusion, it is none');
           if (/くっつけて止めると|となりで止めても|ぴったりつけると/.test(w) && !fu.touch) bad('the move touches nothing');
           if (/離れすぎて|間があきすぎて|遠くで待っても/.test(w) && fu.touch) bad('the move touches the opponent');
           if (/1マスずつしか進めず|となりにつなぐだけ|歩みがおそく/.test(w) && !(fu.adj && fb.bridge)) bad('not an adjacent move against a bridge');
