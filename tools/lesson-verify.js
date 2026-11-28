@@ -3161,7 +3161,7 @@ function shogiOpen(opt) {
   // (there is no line here), "近づく" only for a castle move, "近づかない / 進まない / 遠いまま" only for the others, "AIの評価が…下がる"
   // only 100+ below, captures / recaptures / king / bishop's line / edge pawn / rook claims on the board, the near words only 10+ points.
   {
-    const SHC_DONE = new Set(['c_mino', 'c_yagura', 'c_funa', 'c_takamino', 'c_ginkan', 'c_hidarimino', 'c_kinmusou']), SRCC = require(path.join(ROOT, 'shogi/tools/openings/src/castle.js')), KIF = require(path.join(ROOT, 'shogi/tools/openings/kif.js'));
+    const SHC_DONE = new Set(['c_mino', 'c_yagura', 'c_funa', 'c_takamino', 'c_ginkan', 'c_hidarimino', 'c_kinmusou', 'c_furiana', 'c_ibiana']), SRCC = require(path.join(ROOT, 'shogi/tools/openings/src/castle.js')), KIF = require(path.join(ROOT, 'shogi/tools/openings/kif.js'));
     if (!src.includes("sort((a, b) => (a.off ? a.dd : a.ply) - (b.off ? b.dd : b.ply))")) add('-', -1, '⑥ the 3D castle problems are not drawn in the dd order');
     const linePos = []; for (const c of CATS) require(path.join(ROOT, `shogi/tools/openings/src/${c}.js`)).forEach(e => { try { const q = new E.Position(); q.setSfen(e.start || KIF.START); for (const u of KIF.conv(e.line, e.start).usi) { q.doMove(q.fromUsi(u)); q.sp = 0; linePos.push([e.id + ' line', CU.brd(q.sfen())]); } } catch (er) {} });
     const STEP = { 4: [[0, -1], [1, -1], [-1, -1], [1, 1], [-1, 1]], 7: [[0, -1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1]], 8: [[0, -1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1], [1, 1], [-1, 1]], 3: [[1, -2], [-1, -2]] };
@@ -3198,6 +3198,8 @@ function shogiOpen(opt) {
         if (ms.length - P.accept.length < 3) a(`③ ${ms.length - P.accept.length} moves outside the set`);
         const left = cd(p.board); if (p.side !== 0 || p.inCheck() || left < 1 || left > 3 || E.typeOf(p.board[rookSq]) !== 6 || E.colorOf(p.board[rookSq]) !== 0) a(`④ side ${p.side} / check / ${left} castle moves left / the rook off its square`);
         if (ms.some(m => !E.isDrop(m) && p.board[E.mTo(m)])) a('④ a piece can be taken (not a quiet castle position)');
+        { const q2 = new E.Position(); q2.setSfen(P.sfen.replace(/ b /, ' w ')); let w2 = 0; for (const m of q2.legalMoves(true)) if (!E.isDrop(m) && q2.board[E.mTo(m)]) w2 = Math.max(w2, q2.see(m)); if (w2 > 0) a(`④ the opponent threatens to win material (SEE ${w2}: not a quiet castle position)`); }   // (2026-11-28 担当B, c_furiana)
+        { const [bb, , hh] = P.sfen.split(' '), c = {}; for (const ch of bb.replace(/\+/g, '')) if (/[a-z]/i.test(ch)) c[ch] = (c[ch] || 0) + 1; if (hh !== '-' || !'plnsgbrk'.split('').every(x => (c[x] || 0) === (c[x.toUpperCase()] || 0))) a('④ uneven material / pieces in hand (not an opening position)'); }
         if (p.board.some(x => x && E.typeOf(x) > 8) || Math.abs(P.cand[0][1]) > 300) a(`④ not an even, quiet opening (a promoted piece on the board / best ${P.cand[0][1]})`);   // (2026-11-28 c_yagura・c_funa)
         const B = CU.brd(P.sfen);
         const me = (s.problems || []).length + LP.indexOf(P); for (const [w, k, b] of pool) { if (w === id && k === me) continue; const d = CU.dist(B, b); if (d <= 4) a(`⑤ ${d} squares from ${w} ${k + 1}`); }
