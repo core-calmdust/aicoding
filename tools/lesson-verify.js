@@ -89,7 +89,13 @@ function mcTopic(id, b, A, E, R) {
   if (id === 'k_starve') { if (!(theirs <= 6 && mine >= 2 * theirs)) return `④ the opponent's row (${theirs}) is not short against yours (${mine})`;
     if (opp(A) > 0) return '④ the gold pit feeds the opponent'; if (L0.filter(k => opp(k) === 0).length > 2) return '④ more than 2 pits feed no seed'; if (L0.filter(k => opp(k) > 0).length < 2) return '④ fewer than 2 pits feed the opponent'; }
   if (id === 'k_count' && onB > 22) return '④ too many seeds for an endgame read to the end';
-  if (id === 'k_open' || id === 'k_open6') { const tot = b.reduce((s, v) => s + v, 0), sd = id === 'k_open' ? 4 : 6, ex = L0.filter(k => tr(k).extra && !tr(k).over);
+  if (id === 'n_end' && onB > 22) return '④ too many seeds for an endgame read to the end';   // (2026-11-28 担当A: n_end, as k_count)
+  if (id === 'n_chain') { const ch = k => { const t = E.trace(Int8Array.from(k[0]), 0, k[1], R); if (!t.extra || t.over) return 0; let m = 0; for (const q of E.legal(t.board, 0, R)) m = Math.max(m, ch([Array.from(t.board), q])); return 1 + m; };
+    const c = ch([b, A]); if (c < 2 || L0.some(k => k !== A && ch([b, k]) >= c)) return `④ the gold pit's chain ${c} is not the only longest`; 
+    // (2026-11-28 担当A) the 2D hint・intro「ストアに近い穴から順に」: 2+ pits give another turn now, and the gold pit is the one nearest the store
+    const ex = L0.filter(k => { const t = tr(k); return t.extra && !t.over; }); if (ex.length < 2) return `④ ${ex.length} pit gives another turn now (no order to choose)`; if (A !== Math.max(...ex)) return `④ the gold pit ${A} is not the extra-turn pit nearest the store (${Math.max(...ex)})`; }
+  if (id === 'k_open' || id === 'k_open6' || id === 'n_open') { const tot = b.reduce((s, v) => s + v, 0), sd = id === 'k_open6' ? 6 : 4,   // (2026-11-28 担当A: n_open = the same two rules under the Normal rules, 2D ls.n_open.hint)
+    ex = L0.filter(k => tr(k).extra && !tr(k).over);
     const oppEx = k => { const t = tr(k); if (t.extra || t.over) return 0; return E.legal(t.board, 1, R).filter(q => { const u = E.trace(t.board, 1, q, R); return u.extra && !u.over; }).length; };
     if (tot !== 12 * sd) return `④ not a ${sd}-seed board (${tot} seeds)`;
     if (b[6] + b[13] > (sd === 4 ? 10 : 14)) return `④ no opening: ${b[6] + b[13]} seeds already in the stores`;
@@ -98,7 +104,7 @@ function mcTopic(id, b, A, E, R) {
     else { if (oppEx(A)) return '④ the gold pit leaves the opponent an exact pit'; if (L0.filter(k => k !== A && oppEx(k)).length < 2) return '④ fewer than 2 other pits leave the opponent an exact pit'; } }
   return '';
 }
-const MC_DONE = new Set(['n_cap', 'n_defend', 'n_play', 'sow', 'extra', 'capture', 'defend', 'chain', 'endgame', 'k_open', 'k_open6', 'k_combo', 'k_tempo', 'k_hoard', 'k_starve', 'k_count']);
+const MC_DONE = new Set(['n_cap', 'n_defend', 'n_play', 'n_open', 'n_chain', 'n_end', 'sow', 'extra', 'capture', 'defend', 'chain', 'endgame', 'k_open', 'k_open6', 'k_combo', 'k_tempo', 'k_hoard', 'k_starve', 'k_count']);
 function mancala(opt) {
   const E = require(path.join(ROOT, 'mancala/engine.js')), L = require(path.join(ROOT, 'mancala/lessons.json')), PZ = require(path.join(ROOT, 'mancala/puzzles.json'));
   const out = [], pend = [], only = opt && opt.only;
@@ -136,15 +142,16 @@ function mancala(opt) {
         if (id === 'extra' && !T.extra) add('④ the gold pit does not end in the store');
         if ((id === 'capture' || id === 'n_cap') && !(T.cap > 0)) add('④ the gold pit does not capture');
         if ((id === 'defend' || id === 'n_defend') && !(caps(b).length && !T.extra && !caps(Array.from(T.board)).length)) add('④ the gold pit does not take away the opponent\'s capture');
-        if (id === 'chain') { const c = chain(b, P.best); if (c < 2 || L0.some(k => k !== P.best && chain(b, k) >= c)) add(`④ the gold pit's chain ${c} is not the only longest`); }
-        if (id === 'endgame' && !(P.exact && s.exact)) add('④ an endgame problem not solved exactly');
-        if (/^k_(combo|tempo|hoard|starve|count)$/.test(id)) { const t = mcTopic(id, b, P.best, E, R); if (t) add(t); if (id === 'k_count' && !(P.exact && s.exact)) add('④ an endgame problem not solved exactly'); }
+        if (id === 'chain' || id === 'n_chain') {   // (2026-11-28 担当A: n_chain too — 2D ls.n_chain.goal「もう一回から始まる」・intro「連続手が長く続く」)
+          const c = chain(b, P.best); if (c < 2 || L0.some(k => k !== P.best && chain(b, k) >= c)) add(`④ the gold pit's chain ${c} is not the only longest`); }
+        if ((id === 'endgame' || id === 'n_end') && !(P.exact && s.exact)) add('④ an endgame problem not solved exactly');
+        if (/^(k_(combo|tempo|hoard|starve|count)|n_open|n_chain|n_end)$/.test(id)) { const t = mcTopic(id, b, P.best, E, R); if (t) add(t); if (id === 'k_count' && !(P.exact && s.exact)) add('④ an endgame problem not solved exactly'); }
         const g = E.turnMaxFirst(Int8Array.from(b), 0, R), gm = Math.max(...g.filter(x => x !== null));
         d = V.filter(x => x.m !== P.best && x.v >= top - 6).length + (g[P.best] === gm ? 0 : 1);
       }
       if (d < prevD) add(`⑥ easier than the problem before (d ${d} after ${prevD})`); prevD = Math.max(prevD, d); if (firstD === null) firstD = d;
       if (j === st.problems.length - 1 && !(d > firstD)) add(`⑥ the last problem is no harder than the first (d ${d} vs ${firstD})`);
-      if (/^k_open6?$/.test(id) && j === st.problems.length - 1) { const exK = Q => E.legal(Int8Array.from(Q.b), 0, R).some(k => { const t = tr(Q.b, 0, k); return t.extra && !t.over; });   // (2026-11-26 担当A) both of the lesson's rules come up
+      if (/^(k_open6?|n_open)$/.test(id) && j === st.problems.length - 1) { const exK = Q => E.legal(Int8Array.from(Q.b), 0, R).some(k => { const t = tr(Q.b, 0, k); return t.extra && !t.over; });   // (2026-11-26 担当A) both of the lesson's rules come up
         const nx = st.problems.filter(exK).length; if (nx < 1 || nx > 4) add(`④ ${nx} of the 5 problems take another turn (both rules — another turn / no exact pit for the opponent — should come up)`); }
       const me = `${id} q${j + 1}`, S1 = succ(b), S2 = [].concat(...S1.map(succ));
       for (const [who, y] of pool) { if (who === me) continue;
