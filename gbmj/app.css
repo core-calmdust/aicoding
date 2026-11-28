@@ -172,16 +172,19 @@ html.classic #game{background:#1a070b}
 #game .tl.ph{visibility:hidden}
 /* コーチのおすすめの捨て牌：緑の光の枠 */
 #game .hand .tl.rec{box-shadow:0 0 0 3px #3df59a,0 0 18px rgba(61,245,154,.85),0 calc(var(--tw)*.1) 0 #2c7a58,0 8px 14px rgba(0,0,0,.35)}
-/* 名札：点数・CPU の強さ・花牌の小さな絵・和了不可 */
-#game :is(.opp,.me) .bt .bk{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:4px 6px;align-items:center;margin-top:3px;max-width:190px}
-html.ds #game #opp2 .bt .bk{justify-content:flex-start}
-#game .gb-sc{font-family:var(--ar)!important;font-weight:900;font-size:16px;color:var(--ink);background:var(--paper);border:2px solid var(--line);border-radius:99px;padding:0 9px;line-height:1.5;box-shadow:0 2px 0 var(--line)}
-#game .gb-lv{font-size:12px;font-weight:900;color:#fff;background:rgba(43,48,68,.78);border-radius:99px;padding:1px 8px}
-#game .gb-fl{display:inline-flex;gap:2px;padding:3px 5px;border-radius:10px;background:rgba(255,253,247,.94);border:2px solid var(--line);box-shadow:0 2px 0 var(--line)}
-#game .gb-fl img{height:30px;width:auto;border-radius:3px;box-shadow:0 2px 0 #2c7a58,0 2px 4px rgba(0,0,0,.25);background:#fafaf6}
-#game .gb-dead{font-size:12px;font-weight:900;color:#fff;background:#e0662c;border-radius:99px;padding:1px 8px}
+/* 名札：顔の下に、名前・点数・CPU の強さ・和了不可を1枚のプレート（大百科の紙、名前の段と点数の段）に。花牌の小さな絵はプレートの横に揃えて並べる */
+#game .bt{position:relative}
+#game .gb-np{position:relative;display:flex;flex-direction:column;align-items:stretch;background:var(--paper);border:2px solid var(--line);border-radius:16px;box-shadow:0 3px 0 var(--line),0 8px 16px -8px rgba(0,0,0,.45);min-width:calc(96px * var(--hz,1))}
+html.classic #game :is(.opp,.me) .gb-np>b{background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;text-align:center;white-space:nowrap;font-size:calc(15px * var(--hz,1))!important;line-height:1.35;padding:calc(3px * var(--hz,1)) calc(14px * var(--hz,1)) calc(2px * var(--hz,1))!important}
+#game .gb-pl{display:flex;align-items:center;justify-content:center;gap:calc(7px * var(--hz,1));border-top:1.5px dashed var(--line);padding:calc(2px * var(--hz,1)) calc(10px * var(--hz,1)) calc(4px * var(--hz,1))}
+#game .gb-sc{font-family:var(--ar)!important;font-weight:800;font-size:calc(21px * var(--hz,1));line-height:1.15;color:var(--ink);font-variant-numeric:tabular-nums}
+#game .gb-lv{font-family:var(--ar);font-size:calc(13.5px * var(--hz,1));font-weight:800;color:#fff;background:#4a5068;border-radius:99px;padding:0 calc(8px * var(--hz,1));line-height:1.5}
+#game .gb-dead{font-size:calc(13px * var(--hz,1));font-weight:900;color:#fff;background:#e0662c;border-radius:99px;padding:0 calc(8px * var(--hz,1));line-height:1.5;white-space:nowrap}
+/* 花牌：プレートの横（右の席は左、ほかは右）に、プレートの高さの中ほどで1列に */
+#game .gb-fl{position:absolute;top:50%;left:calc(100% + 8px);transform:translateY(-50%);display:flex;gap:3px;padding:4px 5px;border-radius:12px;background:rgba(255,253,247,.94);border:2px solid var(--line);box-shadow:0 2px 0 var(--line),0 6px 12px -6px rgba(0,0,0,.4)}
+#game #opp1 .gb-fl{left:auto;right:calc(100% + 8px)}
+#game .gb-fl img{height:calc(34px * var(--hz,1));width:auto;border-radius:3px;box-shadow:0 2px 0 #2c7a58,0 2px 4px rgba(0,0,0,.25);background:#fafaf6}
 #game :is(.opp,.me .mb).gb-turn .bf .frame,#game .me .mb.gb-turn .bf .frame{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--coral),0 10px 18px -8px rgba(0,0,0,.5)!important}
-html.lp #game .gb-fl img{height:20px}html.lp #game .gb-sc{font-size:13px;padding:0 7px}html.lp #game .gb-lv,html.lp #game .gb-dead{font-size:10.5px}
 /* 左上の箱：局と8点縛り */
 #game .rbox .rk b{font-size:20px}#game .rbox .rk span{font-size:14px}
 #game .gb-rule{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
@@ -193,29 +196,61 @@ html.classic #game .rbox .gb-min{font-size:13px;font-weight:900;color:#fff!impor
 #acts .ab .tl.xs{margin-left:2px}
 html.classic #acts .ab.win.gb-low{background:#f08a3c!important;box-shadow:0 4px 0 #c0601e!important}
 /* コーチ：riichi/ の情報の箱（.intel）の場所と見た目（大百科の紙） */
-#game .gb-coach{position:absolute;right:var(--gi,10px);top:calc(var(--gi,10px) + 62px * var(--hz,1));padding:12px 14px;width:300px;max-width:none;max-height:calc(100% - 330px);overflow:auto;border-radius:18px!important;background:rgba(255,253,247,.95)!important;border:2px solid var(--line)!important;box-shadow:0 3px 0 var(--line),0 10px 20px -10px rgba(0,0,0,.5)!important;color:var(--ink);font-size:15px}
-#game .gb-coach h4{margin:0 0 6px;font-size:16px;color:#7a1726}
-#game .gb-coach h4 small{display:none;font-weight:700;color:var(--ink);margin-left:6px}
+#game .gb-coach{position:absolute;right:var(--gi,10px);top:calc(var(--gi,10px) + 62px * var(--hz,1));padding:12px 14px;width:300px;max-width:none;max-height:calc(100% - 330px);overflow:auto;border-radius:18px!important;background:rgba(255,253,247,.95)!important;border:2px solid var(--line)!important;box-shadow:0 3px 0 var(--line),0 10px 20px -10px rgba(0,0,0,.5)!important;color:var(--ink);font-size:calc(16px * var(--hz,1))}
+#game .gb-coach h4{margin:0 0 6px;font-size:calc(16px * var(--hz,1));color:#7a1726}
+#game .gb-coach h4 small{display:none;font-size:calc(16px * var(--hz,1));font-weight:800;color:var(--ink);margin-left:6px}
 #game .gb-coach p{margin:4px 0}
+#game .gb-coach .ck-l{font-weight:800}
+#game .gb-coach .ck-w{display:flex;flex-wrap:wrap;gap:6px 10px;margin:4px 0 6px}#game .gb-coach .ck-w .wt{display:inline-flex;align-items:center;gap:4px;font-family:var(--ar);font-weight:800}#game .gb-coach .ck-w .wt .gt.mini{height:calc(36px * var(--hz,1))}#game .gb-coach .ck-w .wt.low{color:#e0662c}
+#game .gb-coach .ck-rec{display:flex;align-items:center;gap:6px}#game .gb-coach .ck-rec .gt.mini{height:calc(36px * var(--hz,1))}
+#game .gb-coach .ck-warn{color:#c0501e;font-size:.9em;line-height:1.5}
+#game .gb-coach .ck-h{margin:8px 0 2px;font-size:.88em;color:var(--ink2);font-weight:800}
+#game .gb-coach .ck-p{list-style:none;margin:0;padding:0}#game .gb-coach .ck-p li{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:baseline;padding:3px 0;border-bottom:1px dashed var(--line)}#game .gb-coach .ck-p li span{font-family:var(--ar);font-weight:800;color:#7a1726}#game .gb-coach .ck-p li em{font-style:normal;font-size:.88em;color:var(--ink2);white-space:nowrap}
 #game .gb-coach.cmp{padding:8px 12px}
 #game .gb-coach.cmp:not(.open)>:not(h4){display:none}
 #game .gb-coach.cmp h4{margin:0;cursor:pointer;display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px}#game .gb-coach.cmp h4 small{display:inline;margin:0}
 #game .gb-coach.cmp h4::after{content:'▾';margin-left:auto}#game .gb-coach.cmp.open h4::after{content:'▴'}#game .gb-coach.cmp.open h4{margin-bottom:6px}
-#game .gb-coach h4 .sw-w{display:inline-flex;align-items:center;gap:2px;margin-left:4px;font-family:var(--ar);font-weight:800}#game .gb-coach h4 .sw-w .gt.mini{height:26px}#game .gb-coach h4 .sw-w.low{color:#e0662c}
+#game .gb-coach h4 .sw-w{display:inline-flex;align-items:center;gap:2px;margin-left:4px;font-family:var(--ar);font-weight:800}#game .gb-coach h4 .sw-w .gt.mini{height:calc(30px * var(--hz,1))}#game .gb-coach h4 .sw-w.low{color:#e0662c}
 html.lp #game .gb-coach{right:auto;left:8px;top:calc(var(--rbh,90px) + 16px);width:260px;font-size:13.5px;z-index:6;max-height:calc(var(--H) - var(--rbh,90px) - 30px)}
 html.lp #game .gb-coach:not(.open){display:none}html.lp #game .gb-coach h4{display:none}
 html.lp #game .gb-coach.cmp:not(.open)>:not(h4){display:revert}
 #game .gb-ckb{display:flex;align-items:center;gap:6px;border:0;background:#f6efdd;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:900;color:var(--ink);max-width:250px}
 #game .gb-ckb b{color:#7a1726!important}#game .gb-ckb span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}#game .gb-ckb .sw-w{display:inline-flex;align-items:center;gap:1px;font-family:var(--ar)}#game .gb-ckb .sw-w .gt.mini{height:20px}#game .gb-ckb .sw-w.low{color:#e0662c!important}
 html.lp #game #gStats{display:none}
-html.lp #game .gb-lv{display:none}html.lp #game :is(.opp,.me) .bt .bk{flex-wrap:nowrap;max-width:none}
 /* RTL でも卓の上の配置（名札・アイコン列）は左右を入れ替えない（文字の向きだけ右から左） */
 [dir=rtl] #game .hud{direction:ltr}
 [dir=rtl] #game .hud :is(.bt b,.rbox,.gb-coach,.ab){direction:rtl}
-/* スマホ：名札の下に点数・花牌を積むと、隣の名札に当たる。名札（顔＋名前）の横に置く */
-html.lp #game :is(.opp,.me .mb) .bt .bk{position:absolute;top:2px;margin:0;flex-direction:column;align-items:flex-start;gap:3px}
-html.lp #game :is(#opp3,.me .mb) .bt .bk{left:calc(100% + 5px)}
-html.lp #game #opp1 .bt .bk{right:calc(100% + 5px);left:auto;align-items:flex-end}
-html.lp #game #opp2 .bt .bk{right:calc(100% + 5px);left:auto;top:6px;flex-direction:row-reverse;align-items:center}
-html.lp #game .me .mb{position:relative}
+/* スマホ：プレートは小さめ（Lv も残す）。花牌はプレートの横 */
+html.lp #game .gb-np{min-width:0;border-radius:12px;border-width:1.5px;box-shadow:0 2px 0 var(--line)}
+html.classic.lp #game :is(.opp,.me) .gb-np>b{padding:1px 8px 0!important;font-size:11px!important}
+html.lp #game .gb-pl{gap:4px;padding:0 6px 1px}
+html.lp #game .gb-sc{font-size:14px}html.lp #game .gb-lv,html.lp #game .gb-dead{font-size:10px;padding:0 5px}
+html.lp #game .gb-fl{padding:2px 3px;gap:2px;border-radius:8px;left:calc(100% + 5px)}html.lp #game #opp1 .gb-fl{right:calc(100% + 5px)}
+html.lp #game .gb-fl img{height:22px}
 html.lp #game #opp2{left:auto!important;right:calc(max(10px,var(--sr)) + 136px)!important}
+/* 設定：音量（効果音・BGM）とミュート */
+.st-vol .st-v{display:flex;align-items:center;gap:10px;flex:0 1 260px}
+.st-vol .st-v input{flex:1;accent-color:var(--lac);min-width:0}
+.st-vol .st-v b{font-family:var(--ar);min-width:3.2em;text-align:right;font-size:16px}
+.st-m{width:40px;height:40px;border-radius:50%;border:2px solid var(--line);background:#fff;display:grid;place-items:center;flex:none;box-shadow:0 2px 0 var(--line)}
+.st-vol.off .st-m{color:#e0662c}.st-vol.off .st-v b{color:var(--ink2);font-size:14px}
+/* 花牌：飛んでくる1枚と、着いた所の光 */
+#game .gb-fl img.fly{visibility:hidden}#game .gb-fl img.pend{display:none}
+#game .gb-fl img.nw{animation:gbFlNew .9s ease-out both}
+@keyframes gbFlNew{0%{box-shadow:0 0 0 3px #fff1a8,0 0 16px 6px rgba(255,210,80,.9),0 2px 0 #2c7a58}100%{box-shadow:0 0 0 0 rgba(255,241,168,0),0 0 0 0 rgba(255,210,80,0),0 2px 0 #2c7a58,0 2px 4px rgba(0,0,0,.25)}}
+#game .gb-flfly{position:absolute;z-index:9;pointer-events:none;transform-origin:50% 50%}
+#game .gb-flfly img{width:100%;height:100%;display:block;border-radius:4px;background:#fafaf6;box-shadow:0 2px 0 #2c7a58,0 0 14px 4px rgba(255,220,120,.75),0 6px 14px rgba(0,0,0,.4)}
+/* まだ1枚も着いていない花の列（全部が飛ぶ前）は枠ごと見せない */
+#game .gb-fl:not(:has(img:not(.fly):not(.pend))){visibility:hidden}
+/* 自分の花牌：名札の右は左の席の副露（3D）が来る所なので、顔の上（卓の木枠の上）に左を揃えて並べる */
+#game #mePanel .mb{position:relative}
+#game #mePanel .bt,#game #mePanel .gb-np{position:static}
+#game #mePanel .gb-fl{left:0;right:auto;top:auto;bottom:calc(100% + 10px);transform:none}
+/* 向かいの席：名札の右は右上のアイコン列なので、花牌はプレートの下に左を揃えて */
+#game #opp2 .gb-fl{left:0;right:auto;top:calc(100% + 6px);transform:none}
+/* 5枚以上は4枚ずつ2段に（横に長く伸ばして卓やアイコン・コーチ欄にかからないように） */
+#game .gb-fl.r2{display:grid;grid-template-columns:repeat(4,auto)}
+/* スマホ：顔の上は左の席の名札が近いので、自分の花牌は顔の右（左の席の山より手前）に */
+html.lp #game #mePanel .gb-fl{left:calc(100% + 6px);top:2px;bottom:auto}
+/* コーチの要点の1行：▾ は折り返さず右端に（要点は中で折り返す） */
+#game .gb-coach.cmp h4{flex-wrap:nowrap;white-space:nowrap}#game .gb-coach.cmp h4 small{flex:1 1 auto;min-width:0;white-space:normal}

@@ -5,7 +5,7 @@ S: {
   mFree: '人機對戰', mFreeS: '對手 Lv.{lv}', mRated: '排位賽', mRatedPl: '從定級賽開始', mTut: '新手教學', mTutS: '邊打一局邊學', done: '已完成',
   mDex: '番種圖鑑', mDexS: '81個番種和例牌', mLs: '課程', mLsS: '湊夠8番的訣竅', mOnline: '線上對戰', soon: '準備中', onlineSoon: '線上對戰正在準備中。',
   homeNote: '沒有立直、寶牌、符和振聽。花牌每張1番（不計入8番起和）。',
-  lang: '語言', close: '關閉', settings: '設定', sSound: '音效', sCoach: '教練（目標番種和聽牌的番數）',
+  lang: '語言', close: '關閉', settings: '設定', sSound: '音效', sMusic: '背景音樂', sMute: '靜音', sCoach: '教練（目標番種和聽牌的番數）',
   tGame: '對局', tRule: '規則', start: '開始對局', ratedNote: '電腦的強度按你的等級分決定。名次會讓等級分上下變動。',
   length: '對局長度', hands: '{n}局', ratedFixed: '排位賽固定為8局（東、南兩圈），使用標準規則。', opp: '對手強度', rating: '等級分',
   lvDesc1: '入門：常常不看牌型就打牌。', lvDesc2: '初級：會追目標番種，但有時看漏。', lvDesc3: '中級：定下8番的目標，也會提防危險的對手。',

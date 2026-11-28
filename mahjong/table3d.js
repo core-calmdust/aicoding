@@ -13,7 +13,7 @@ const BAKE_V = 3, BAKED = {};
 // in a quiet table green (tex/felt-green.webp = felt.webp with its shading kept, recoloured), and no hands over the table (JANKA_NOHANDS)
 const GREEN = root.JANKA_FELT === 'green', RED = root.JANKA_FELT === 'red', NOHANDS = !!root.JANKA_NOHANDS;   // red：国標麻将（臙脂の羅紗・翡翠の牌の背）
 if (!/[?&]nobake\b/.test(location.search)) for (const n of GREEN || RED ? ['felt', 'wood', 'woodb'] : ['felt', 'wood', 'woodb', 'stone']) {   // (green: the backs' stone is drawn in blue below)
-  const im = new Image(); im.decoding = 'async'; im.src = (root.JANKA_ASSETS || '../images/mahjong/') + 'tex/' + (n === 'felt' && GREEN ? 'felt-green' : n === 'felt' && RED ? 'felt-red' : n) + '.webp?v=' + BAKE_V; BAKED[n] = im; }
+  const im = new Image(); im.decoding = 'async'; im.src = (root.JANKA_ASSETS || '../images/mahjong/') + 'tex/' + (n === 'felt' && GREEN ? 'felt-green' : n === 'felt' && RED ? 'felt-red' : n) + '.webp?v=' + BAKE_V + (RED && n === 'felt' ? 'r2' : ''); BAKED[n] = im; }   // r2：国標の臙脂を落ち着かせた版（2026-11-28）
 // (2026-11-15, ユーザー「スマホで落ちまくる」: memory) on a touch device the big pictures are kept at half size — on a phone's screen
 // the felt and the rails never show more than that — and once a picture that never changes is on the graphics card, the copy the
 // page kept of it is let go (lean). Desktop: full size as before, lean too (2026-11-16).
@@ -625,7 +625,7 @@ class Table3D {
       for (let y = 0; y < 2048; y++) for (let x = 0; x < 2048; x++) {
         const u = x / 2048, v = y / 2048, rq = Math.min(1, Math.max(0, (Math.hypot(u - .5, v - .5) - .2) / .42)), vig = 1.14 - .3 * rq * rq * (3 - 2 * rq);   // (ユーザー 2026-11-15, a reference shot: the cloth bright in the middle and clearly deeper toward the rails — in the cloth itself, so the tiles stay evenly lit)
         const m = (N.fbm(A, u, v) - .5) * .16, n = (N.R() - .5) * .09, f = vig * (1 + m + n), p = (y * 2048 + x) * 4;
-        if (GREEN) { d[p] = 36 * f; d[p + 1] = 92 * f; d[p + 2] = 66 * f; } else if (RED) { d[p] = 104 * f; d[p + 1] = 30 * f; d[p + 2] = 38 * f; } else { d[p] = 32 * f; d[p + 1] = 58 * f; d[p + 2] = 104 * f; } d[p + 3] = 255;   // (ユーザー 2026-11-15: the lake blue was too vivid — back to the calm dusty navy; the middle-bright shading stays)   // (ユーザー 2026-11-15: a hue that sits better with the brown frame and the tiles — a clear lake blue, a touch toward teal; was a dusty navy 32,56,100)
+        if (GREEN) { d[p] = 36 * f; d[p + 1] = 92 * f; d[p + 2] = 66 * f; } else if (RED) { d[p] = 80 * f; d[p + 1] = 30 * f; d[p + 2] = 37 * f; } else { d[p] = 32 * f; d[p + 1] = 58 * f; d[p + 2] = 104 * f; } d[p + 3] = 255;   // (ユーザー 2026-11-15: the lake blue was too vivid — back to the calm dusty navy; the middle-bright shading stays)   // (ユーザー 2026-11-15: a hue that sits better with the brown frame and the tiles — a clear lake blue, a touch toward teal; was a dusty navy 32,56,100)
       }
       g.putImageData(img, 0, 0); }
     g.translate(1024, 1024);

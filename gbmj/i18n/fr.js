@@ -5,7 +5,7 @@ S: {
   mFree: 'Contre l\'ordinateur', mFreeS: 'Adversaires Lv.{lv}', mRated: 'Classé', mRatedPl: 'Parties de placement d\'abord', mTut: 'Tutoriel', mTutS: 'Apprendre en jouant une main', done: 'Terminé',
   mDex: 'Guide des fan', mDexS: 'Les 81 fan avec des mains d\'exemple', mLs: 'Leçons', mLsS: 'Comment atteindre 8 points', mOnline: 'En ligne', soon: 'Bientôt', onlineSoon: 'Le jeu en ligne arrive bientôt.',
   homeNote: 'Pas de riichi, de dora, de fu ni de furiten. Chaque fleur vaut 1 point (les fleurs ne comptent pas pour le minimum de 8).',
-  lang: 'Langue', close: 'Fermer', settings: 'Réglages', sSound: 'Effets sonores', sCoach: 'Coach (fan visés et points de chaque attente)',
+  lang: 'Langue', close: 'Fermer', settings: 'Réglages', sSound: 'Effets sonores', sMusic: 'Musique', sMute: 'Couper le son', sCoach: 'Coach (fan visés et points de chaque attente)',
   tGame: 'Partie', tRule: 'Règles', start: 'Commencer', ratedNote: 'La force de l\'ordinateur suit votre classement. Votre place finale le fait monter ou descendre.',
   length: 'Durée', hands: '{n} mains', ratedFixed: 'Les parties classées durent 8 mains (tours d\'Est et de Sud), avec les règles standard.', opp: 'Force des adversaires', rating: 'Classement',
   lvDesc1: 'Débutant : défausse souvent sans regarder sa main.', lvDesc2: 'Novice : vise un fan, mais laisse parfois passer des choses.', lvDesc3: 'Intermédiaire : prévoit une main de 8 points et surveille les joueurs dangereux.',

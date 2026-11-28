@@ -8,7 +8,7 @@ const S = {
     mFree: 'CPU戦', mFreeS: '相手 Lv.{lv}', mRated: 'レート戦', mRatedPl: '予備選から', mTut: 'チュートリアル', mTutS: '1局打ちながら覚える', done: '修了',
     mDex: '番種図鑑', mDexS: '81の番種と例の手', mLs: 'レッスン', mLsS: '8点を作るコツ', mOnline: 'オンライン', soon: '準備中', onlineSoon: 'オンライン対戦は準備中です。',
     homeNote: '立直・ドラ・符・フリテンはありません。花牌は1枚1点（8点縛りには数えません）。',
-    lang: '言語', close: '閉じる', settings: '設定', sSound: '効果音', sCoach: 'コーチ（目標の番と待ちの点）',
+    lang: '言語', close: '閉じる', settings: '設定', sSound: '効果音', sMusic: 'BGM', sMute: 'ミュート', sCoach: 'コーチ（目標の番と待ちの点）',
     tGame: 'ゲーム', tRule: 'ルール', start: '対局開始', ratedNote: 'あなたのレートに合わせて CPU の強さが決まります。順位でレートが上下します。',
     length: '対局の長さ', hands: '{n}局', ratedFixed: 'レート戦は8局（東・南の2圏）・既定ルールで固定です。', opp: '相手の強さ', rating: 'レート',
     lvDesc1: '入門：形を見ずに捨てることがよくあります。', lvDesc2: '初級：目標の番を追いますが、ときどき見落とします。', lvDesc3: '中級：8点の目標を立てて、危ない相手も気にします。',
@@ -54,7 +54,7 @@ const S = {
     mFree: 'vs CPU', mFreeS: 'Opponents Lv.{lv}', mRated: 'Rated', mRatedPl: 'Placement first', mTut: 'Tutorial', mTutS: 'Learn by playing a hand', done: 'Done',
     mDex: 'Fan Guide', mDexS: 'All 81 fan with example hands', mLs: 'Lessons', mLsS: 'How to reach 8 points', mOnline: 'Online', soon: 'Coming soon', onlineSoon: 'Online play is coming soon.',
     homeNote: 'No riichi, dora, fu or furiten. Each flower is 1 point (flowers do not count toward the 8-point minimum).',
-    lang: 'Language', close: 'Close', settings: 'Settings', sSound: 'Sound effects', sCoach: 'Coach (target fan and wait points)',
+    lang: 'Language', close: 'Close', settings: 'Settings', sSound: 'Sound effects', sMusic: 'Music', sMute: 'Mute', sCoach: 'Coach (target fan and wait points)',
     tGame: 'Game', tRule: 'Rules', start: 'Start', ratedNote: 'The CPU strength follows your rating. Your placing moves your rating.',
     length: 'Length', hands: '{n} hands', ratedFixed: 'Rated games are 8 hands (East and South rounds) with the standard rules.', opp: 'Opponents', rating: 'Rating',
     lvDesc1: 'Beginner: often discards without looking at the hand.', lvDesc2: 'Novice: aims at a fan but sometimes misses things.', lvDesc3: 'Intermediate: plans an 8-point hand and watches dangerous players.',
@@ -143,7 +143,7 @@ const DESC = {};
   };
 let lang = 'ja';
 const CODES = ALL.map(x => x[0]);
-const V = 2;   // 言語ファイル（i18n/<lang>.js）の版。文言を変えたら上げる
+const V = 3;   // 言語ファイル（i18n/<lang>.js）の版。文言を変えたら上げる
 function detect() {
   const ls = (navigator.languages || [navigator.language || 'en']).map(x => String(x));
   for (const x of ls) {
