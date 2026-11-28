@@ -31,10 +31,10 @@ html:not(.hb-on) .app{min-height:var(--vh)}
 .btn:disabled{opacity:.45;cursor:default}
 
 /* stage */
-.stage{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px;padding:16px 24px 18px;max-width:1700px;width:100%;margin:0 auto;align-items:stretch;height:calc(var(--vh) - var(--hb-h,0px));min-height:560px}
+.stage{flex:1;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;gap:14px;padding:14px 20px 16px;width:100%;margin:0 auto;height:calc(var(--vh) - var(--hb-h,0px));min-height:560px}
 html.hb-on body{overflow:hidden}
 html.hb-on .stage{flex:none;height:calc(100vh - var(--hb-h,0px));overflow:hidden}
-html.hb-on .stage>.table,html.hb-on .stage>.side{height:calc(100vh - var(--hb-h,0px) - 34px)}
+html.hb-on .stage>.table{height:auto;min-height:0}
 .table{position:relative;border-radius:18px;padding:16px 20px;min-height:0;height:100%;overflow:hidden;display:flex!important;flex-direction:column;display:grid;grid-template-rows:auto 1fr auto;gap:14px;
   background:
     radial-gradient(120% 90% at 50% 40%,rgba(255,255,255,.06),rgba(0,0,0,.28)),
@@ -49,14 +49,13 @@ html[data-table=lacquer] .table{background:
   box-shadow:inset 0 0 0 3px #1a0a08,inset 0 0 0 5px rgba(225,184,102,.35),inset 0 0 70px rgba(0,0,0,.55),0 12px 30px rgba(0,0,0,.45)}
 .row{display:flex;align-items:center;gap:18px}
 .row.opp{justify-content:space-between;align-items:flex-end}
-.row.mycaps{justify-content:flex-start}
 .hand{display:flex;gap:8px;flex:0 1 auto;min-width:0}
-.my-hand{justify-content:center;flex:1}
+.my-hand{justify-content:flex-start;flex:0 1 auto}
+.my-hand .hf{width:var(--hw)}
 .opp-hand{gap:0;flex:0 0 auto}
 .opp-hand .hf{width:var(--kw);margin-inline-end:calc(var(--kw) * -.62)}
 .opp-hand .hf:last-child{margin-inline-end:0}
 .caps{display:flex;gap:14px;align-items:flex-end;flex:1;min-width:0;justify-content:flex-end}
-.row.mycaps .caps{justify-content:flex-start}
 .cap-grp{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:var(--kw)}
 .cap-grp .stack{display:flex;min-height:calc(var(--kw) * 1.656)}
 .cap-grp .stack:empty{border:1px dashed rgba(255,255,255,.14);border-radius:5px;width:var(--kw)}
@@ -73,7 +72,7 @@ html[data-table=lacquer] .table{background:
 .drawn{flex:0 0 var(--cw);height:var(--ch)}
 
 /* cards */
-.hf{position:relative;width:var(--cw);aspect-ratio:320/530;border-radius:calc(var(--cw) * .045);flex:0 0 auto;user-select:none;-webkit-user-select:none;
+.hf{position:relative;width:var(--cw);aspect-ratio:320/530;background:#e9dec4;border-radius:calc(var(--cw) * .045);flex:0 0 auto;user-select:none;-webkit-user-select:none;
   box-shadow:0 2px 3px rgba(0,0,0,.45),0 6px 14px rgba(0,0,0,.35);transition:transform .18s,box-shadow .18s,outline-color .18s;outline:3px solid transparent;outline-offset:2px}
 .hf img,.hf svg.hf-prov{width:100%;height:100%;display:block;border-radius:inherit}
 .hf.back{background:
@@ -94,7 +93,9 @@ html[data-back=red] .hf.back{background:radial-gradient(circle at 30% 25%,rgba(2
 .banner.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
 
 /* side */
-.side{display:flex;flex-direction:column;gap:14px;min-height:0;height:100%;overflow:auto}
+.side{display:flex;flex-direction:row;gap:14px;min-height:0;height:var(--side-h,200px)}
+.side>.box{min-width:0;overflow:auto}
+.side>.players{flex:0 0 300px}.side>.coach{flex:1.5 1 0}.side>.log{flex:1 1 0}.side>.online{flex:0 0 220px}
 .box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
 .box h3{font-size:15px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .pl{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0;font-size:17px}
@@ -127,7 +128,7 @@ html[data-back=red] .hf.back{background:radial-gradient(circle at 30% 25%,rgba(2
 .mbtn.go{background:#2c4a6e;border-color:#3e6593}
 .ng{height:min(720px,calc(var(--vh) - 32px))}
 .ng-tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:14px}
-.ng-tabs button{background:none;border:0;padding:10px 16px;font-weight:700;color:var(--muted);border-bottom:3px solid transparent}
+.ng-tabs button{background:none;border:0;padding:10px 16px;font-weight:700;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap}
 .ng-tabs button.on{color:var(--text);border-bottom-color:var(--accent)}
 .ng-body{flex:1;overflow:auto;padding-inline-end:4px}
 .gcard{display:flex;gap:16px;align-items:center;padding:14px;border:2px solid var(--accent);border-radius:14px;background:var(--panel)}
@@ -163,9 +164,7 @@ html[data-back=red] .hf.back{background:radial-gradient(circle at 30% 25%,rgba(2
 .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:rgba(10,14,20,.92);border:1px solid var(--line);padding:10px 18px;border-radius:12px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:80;font-weight:700}
 .toast.on{opacity:1}
 .m-tabs{display:none}
-.rules-modal{width:min(1100px,100%);height:min(780px,calc(var(--vh) - 32px));padding:20px 24px;overflow:hidden}
-.rules-modal #rulesBody{height:100%;display:flex;flex-direction:column;width:100%}
-#rulesBody>*{flex:1;min-height:0;width:100%}
+.rules-modal{width:min(980px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow:auto;display:block}
 .rt-nav button{white-space:nowrap}
 .lesson-modal{height:min(760px,calc(var(--vh) - 32px))}
 
@@ -184,13 +183,16 @@ html[data-back=red] .hf.back{background:radial-gradient(circle at 30% 25%,rgba(2
   .hand{gap:3px}
   .mid{flex-wrap:nowrap}
   .field{grid-template-columns:repeat(auto-fill,var(--cw))}
-  .toast{bottom:auto;top:108px;max-width:90vw;text-align:center}
+  .toast{bottom:auto;top:132px;max-width:90vw;text-align:center}
   .field{min-width:0;max-width:none;grid-template-columns:repeat(auto-fill,var(--cw));gap:5px}
   .drawn{flex-basis:auto;min-width:0;height:auto}
   .drawn:empty{display:none}
   .opp-hand .hf{width:calc(var(--cw) * .75)}
   .row.opp{min-height:0}
-  .side{max-height:none;overflow:visible;padding-bottom:70px}
+  .side{flex-direction:column;height:auto;max-height:none;overflow:visible;padding-bottom:70px}
+  .side>.box{flex:none!important}
+  .row.me{flex-direction:column;align-items:stretch}
+  .my-hand .hf{width:var(--cw)}
   .m-tabs{display:flex;position:fixed;left:0;right:0;bottom:0;background:var(--bg2);border-top:1px solid var(--line);z-index:20;padding-bottom:env(safe-area-inset-bottom)}
   .m-tabs button{flex:1;background:none;border:0;padding:8px 0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12.5px;color:var(--muted)}
   .m-tabs svg{width:22px;height:22px}
@@ -207,14 +209,14 @@ html[data-back=red] .hf.back{background:radial-gradient(circle at 30% 25%,rgba(2
 .credit a{color:var(--muted)}
 .muted{color:var(--muted)}
 /* rules tutorial mini boards */
-.rt-hf{display:flex;flex-direction:column;gap:10px;justify-content:center;height:100%;padding:8px}
-.rt-row{display:flex;align-items:center;gap:12px}
-.rt-row>b{flex:0 0 auto;width:min(90px,20%);font-size:14px;color:var(--muted)}
-.rt-cards{display:flex;gap:8px;flex-wrap:nowrap}
-.rt-hf .hf{width:var(--rcw,80px);cursor:pointer}
-.rt-hf .hf.ok{outline-color:#3df59a}
-.rt-btns{display:flex;gap:12px;justify-content:center;margin-top:8px}
-.rt-btns .mbtn{min-width:140px}
+.hfr{display:flex;flex-direction:column;gap:10px;justify-content:center;align-items:center;height:100%;padding:8px}
+.hfr-row{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.hfr-row>b{font-size:14px;color:var(--muted);white-space:nowrap;line-height:20px;min-height:20px}
+.hfr-cards{display:flex;gap:10px;flex-wrap:nowrap}
+.hfr .hf{width:var(--rcw,80px);cursor:pointer}
+.hfr .hf.ok{outline-color:#3df59a}
+.hfr-btns{display:flex;gap:12px;justify-content:center;margin-top:8px}
+.hfr-btns .mbtn{min-width:140px}
 /* lessons */
 .lesson-modal{position:relative}
 .ls-head{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;flex-direction:column;gap:4px}
@@ -226,7 +228,7 @@ html[data-back=red] .hf.back{background:radial-gradient(circle at 30% 25%,rgba(2
 .ls-thumb{width:54px;flex:0 0 auto}.ls-thumb img,.ls-thumb svg{width:100%;display:block;border-radius:3px}
 .ls-item small{color:var(--gold);font-weight:700}.ls-item b{display:block;font-size:17px}.ls-item p{color:var(--muted);font-size:14px;margin-top:2px}
 .ls-q{font-size:17px;margin-bottom:8px}
-.ls-board{flex:1;min-height:0}
+.ls-board{flex:1;min-height:0;overflow:hidden}
 .ls-board .hf.tap{cursor:pointer}.ls-board .hf.bad{outline-color:#ff6b5b}
 .ls-fb{min-height:3.4em;font-size:16px;margin-top:8px}
 .ls-fb .ok{color:var(--good)}.ls-fb .ng{color:#ff8a7a}

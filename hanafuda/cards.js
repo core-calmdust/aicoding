@@ -31,7 +31,10 @@ ${kind ? `<text x="16" y="28" font-size="17" font-family="Shippori Mincho B1, se
   // a card element's inner HTML
   function face(id, big) {
     const s = artSrc(id, big);
-    return s ? `<img class="hf-art" src="${s}" alt="" draggable="false">` : provisional(id);
+    return s ? `<img class="hf-art" src="${s}" alt="" draggable="false" loading="eager">` : provisional(id);
   }
-  root.HFCards = { face, artSrc, ART, PLANT };
+  // load every picture early, so a card never shows as an empty frame while its image is still on the way
+  function preload() { if (preload.done) return; preload.done = 1; Object.keys(ART).forEach(id => { const im = new Image(); im.decoding = 'async'; im.src = artSrc(+id); }); }
+  if (typeof document !== 'undefined') { if (document.readyState === 'complete') setTimeout(preload, 50); else addEventListener('load', () => setTimeout(preload, 50)); }
+  root.HFCards = { face, artSrc, ART, PLANT, preload };
 })(typeof self !== 'undefined' ? self : this);
