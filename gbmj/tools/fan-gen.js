@@ -3,7 +3,7 @@
 const GBFan = require('../fan.js');
 const N = +process.argv[2] || 10000;
 let seed = +process.argv[3] || 1;
-const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x80000000; };
+const rnd = () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };  // mulberry32
 const ri = n => Math.floor(rnd() * n);
 const pick = a => a[ri(a.length)];
 function pool(style) {                       // 使う牌の範囲
@@ -119,7 +119,7 @@ const TPL = [
   () => [Pg(27), Pg(28), Pg(29), Pg(30), ri(34)],                                         // 大四喜
   () => { const w = [27, 28, 29, 30].sort(() => rnd() - 0.5); return [Pg(w[0]), Pg(w[1]), Pg(w[2]), any(), w[3]]; },  // 小四喜
   () => { const w = [27, 28, 29, 30].sort(() => rnd() - 0.5); return [Pg(w[0]), Pg(w[1]), Pg(w[2]), any(), ri(34)]; }, // 三風刻
-  () => { const d = [31, 32, 33].sort(() => rnd() - 0.5); return [Pg(d[0]), Pg(d[1]), rnd() < 0.5 ? Pg(d[2]) : any(), any(), d[2]]; },
+  () => { const d = [31, 32, 33].sort(() => rnd() - 0.5); const big = rnd() < 0.5; return [Pg(d[0]), Pg(d[1]), big ? Pg(d[2]) : any(), any(), big ? ri(31) : d[2]]; },
   () => [Pg(27 + ri(7)), Pg(27 + ri(7)), Pg(27 + ri(7)), Pg(27 + ri(7)), 27 + ri(7)],      // 字一色
   () => { const T = [0, 8, 9, 17, 18, 26]; return [Pg(pick(T)), Pg(pick(T)), Pg(pick(T)), Pg(pick(T)), pick(T)]; },
   () => { const T = [0, 8, 9, 17, 18, 26]; return [Pg(pick(T)), Pg(pick(T)), Pg(pick(T)), rnd() < 0.5 ? Pg(pick(T)) : Pg(27 + ri(7)), pick(T)]; },
@@ -143,6 +143,8 @@ const TPL = [
   () => { const f = () => { const s = S3(); return rnd() < 0.6 ? C(s + 5 + ri(2)) : Pg(s + 5 + ri(4)); }; return [f(), f(), f(), f(), S3() + 5 + ri(4)]; }, // 大于五
   () => { const f = () => { const s = S3(); return rnd() < 0.6 ? C(s + ri(2)) : Pg(s + ri(4)); }; return [f(), f(), f(), f(), S3() + ri(4)]; },     // 小于五
   'chicken',
+  () => { const s = S3(), b = ri(7); return [C(s + b), C(s + b), C(s + b), C(s + b), ri(34)]; },                     // 一色四同順
+  () => { const f = () => ({ k: 'g', t: ri(34) }); return [f(), f(), f(), f(), ri(34)]; },                          // 四槓
 ];
 function any() { const t = ri(34); return rnd() < 0.5 && t < 27 && t % 9 <= 6 ? C(t) : Pg(t); }
 function genTpl() {

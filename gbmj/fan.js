@@ -389,17 +389,20 @@ function calc(o) {
   const uniq = W.length === 1;
   // 和絶張は、ほかの3枚が卓上（捨て牌と副露）に見えているときだけ。自分の立牌に同じ牌があれば付かない（2007年 峨眉山の審判講習。正誤表 3.8.1.58）
   const lastBlocked = o.hand.includes(o.win);
+  // 搶槓和は、和了牌がほかの3枚とも相手の明刻にある（＝自分の手と副露に1枚もない）ときだけ
+  if (o.kong && !o.tsumo && all[o.win] > 1) o = Object.assign({}, o, { kong: false });
   // 自分のポンの牌でツモ・ロンしたら、残り3枚はすべて卓上に見えている＝和絶張
   let inMelds = 0;
   for (const md of o.melds) { if (md.k === 'chi') { if (o.win >= md.t && o.win <= md.t + 2) inMelds++; } else if (md.t === o.win) inMelds += 3; }
   const lastAuto = inMelds >= 3;
-  let best = null;
+  let best = null, alts = [];
   // 同点なら待ちの番は 辺張 → 嵌張 → 単釣 の順に名乗る（どれも1点。PyMahjongGB と同じ順）
   const wrank = r => r.fans.some(f => f.id === 77) ? 3 : r.fans.some(f => f.id === 78) ? 2 : r.fans.some(f => f.id === 79) ? 1 : 0;
   const consider = (F, form) => {
     if (lastBlocked) F.no(58);
     else if (lastAuto && !F.f[58] && !(o.kong && !o.tsumo)) F.add(58);
     const r = finalize(F); r.form = form;
+    if (best && r.pts === best.pts) alts.push(r); else if (!best || r.pts > best.pts) alts = [r];
     // 同点の分け方が複数あるときは：待ちの番 → 番の種類が少ない方 → 番号の小さい番を含む方
     const ids = x => x.fans.map(f => String(f.id).padStart(2, '0')).sort().join();
     if (!best || r.pts > best.pts || (r.pts === best.pts && (wrank(r) > wrank(best) || (wrank(r) === wrank(best) &&
@@ -503,6 +506,7 @@ function calc(o) {
   if (best.flowers) best.fans.push({ id: 81, n: best.flowers, p: 1 });
   best.fans.sort((a, b) => b.p - a.p || a.id - b.id);
   best.waits = W;
+  best.alts = alts;              // 同点のほかの名乗り方（照合用）
   return best;
 }
 
