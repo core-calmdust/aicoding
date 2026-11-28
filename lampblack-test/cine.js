@@ -176,7 +176,7 @@
   let last = 0;
   function tick(t) {
     requestAnimationFrame(tick);
-    if (!cx || t - last < 33) return; const dt = Math.min(.1, (t - last) / 1000); last = t;
+    if (!cx || t - last < 33 || document.body.classList.contains('th-on')) return; const dt = Math.min(.1, (t - last) / 1000); last = t;
     const r = cv.getBoundingClientRect(); cx.clearRect(0, 0, r.width, r.height);
     if (!flakes.length || reduce() || document.body.classList.contains('paused') || document.hidden || !document.body.classList.contains('scr-play')) return;
     const snow = cv.dataset.kind === 'snow', night = cv.classList.contains('night');
