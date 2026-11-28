@@ -93,8 +93,8 @@ function create(o) {
   const level = Math.max(1, Math.min(20, o.level || 10));
   const rand = GB.rng(o.seed == null ? (Math.random() * 2 ** 32) >>> 0 : o.seed);
   // 強さの段：ミスの率、目標を見る深さ、守り、鳴きの判断
-  const noise = level >= 16 ? 0 : [0.6, 0.5, 0.42, 0.35, 0.3, 0.25, 0.2, 0.16, 0.13, 0.1, 0.08, 0.06, 0.045, 0.03, 0.015][level - 1];
-  const usePlans = level >= 3;
+  const noise = level >= 16 ? 0 : [0.34, 0.3, 0.26, 0.23, 0.2, 0.17, 0.15, 0.13, 0.11, 0.09, 0.07, 0.055, 0.04, 0.025, 0.012][level - 1];
+  const usePlans = true;
   const defend = level >= 8 ? Math.min(1, (level - 6) / 10) : 0;
   const Q = level >= 12 ? 0.42 : 0.36;
   const look = level >= 20 ? 6 : level >= 19 ? 4 : level >= 18 ? 3 : 0;   // 1枚先読みする候補の数（上位レベル）
@@ -126,7 +126,7 @@ function create(o) {
       if (d > 6) continue;
       const pts = pl.pts + bonus;
       let v = (24 + pts) * Math.pow(Q, d + 1);
-      if (pts < 8) v *= 0.3;
+      if (pts < 8) v *= level <= 4 ? 0.3 + 0.15 * (5 - level) : 0.3;
       vals.push(v);
     }
     // 目標に関係なく速さ（受け入れ枚数）
