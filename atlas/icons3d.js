@@ -755,6 +755,36 @@
       for (let i = 0; i < 5; i++) { const t = (i + .5) / 5, d = ball(.07, dotM); d.position.set(p(0) + (p(1) - .25 - p(0)) * t, .62 + t * .55, p(2) + (p(0) + .25 - p(2)) * t); g.add(d); }
       return g;
     },
+    breakthrough() {   // a corner of the walnut marquetry board (maple and walnut squares): ebony pawns hold a row, one with a gap; the big boxwood pawn steps through it toward the far row (brass ring), its path traced in dots
+      const top = M({ map: X.canvasTex('icbt', 512, 512, (c, W) => {
+        const s = W / 3; let sd = 11; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+        for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) {
+          const dark = (x + y) % 2 === 1, vert = (x + y) % 2 === 0;
+          c.fillStyle = dark ? '#6a3f22' : '#e6c690'; c.fillRect(x * s, y * s, s, s);
+          c.save(); c.beginPath(); c.rect(x * s, y * s, s, s); c.clip();
+          for (let k = 0; k < 46; k++) {   // grain: long soft streaks along the square, alternating direction like marquetry
+            const o = r() * s, wv = 1 + r() * 3.5, a = dark ? .12 + r() * .22 : .06 + r() * .12;
+            c.strokeStyle = dark ? `rgba(30,14,6,${a})` : `rgba(150,96,44,${a})`; c.lineWidth = wv; c.beginPath();
+            for (let t = 0; t <= 1.001; t += .1) { const u = t * s, w = o + Math.sin(t * 6 + k) * 3; vert ? (t ? c.lineTo(x * s + w, y * s + u) : c.moveTo(x * s + w, y * s + u)) : (t ? c.lineTo(x * s + u, y * s + w) : c.moveTo(x * s + u, y * s + w)); }
+            c.stroke(); }
+          c.restore(); }
+        c.strokeStyle = 'rgba(28,14,6,.85)'; c.lineWidth = 5; for (let i = 1; i < 3; i++) { c.beginPath(); c.moveTo(i * s, 0); c.lineTo(i * s, W); c.stroke(); c.beginPath(); c.moveTo(0, i * s); c.lineTo(W, i * s); c.stroke(); }
+      }), roughness: .5 });
+      const g = boardChunk(3, 3.6, top, M({ map: X.wood('icbtw', '#5a3418', '#2e180a') }));
+      const S = 3.3 / 3, p = i => -1.65 + S * (i + .5);
+      // a turned Staunton-like pawn, chunky: wide foot, cove, bead, body, collar and a round head (the page's piece seen from the side)
+      const pawn = (light, sc) => {
+        const mat = light ? M({ map: softWood('icbtp', '#f0d29a', '#c99a58'), roughness: .38 }) : C(0x2a1810, { roughness: .28 });
+        const pts = [[0, 0], [.62, 0], [.66, .08], [.62, .18], [.5, .24], [.44, .34], [.48, .4], [.4, .46], [.3, .72], [.38, .78], [.38, .84], [.24, .9]].map(([x, y]) => new T.Vector2(x, y));
+        const o = new T.Group(); o.add(mesh(new T.LatheGeometry(pts, 40), mat)); o.add(at(ball(.34, mat), 0, 1.16, 0)); o.scale.setScalar(sc); return o; };
+      [[0, 1, 0], [2, 1, 0], [1, 0, 0], [0, 2, 1], [2, 2, 1]].forEach(([x, z, w]) => g.add(at(pawn(!!w, .66), p(x), .5, p(z))));
+      const ring = mesh(new T.TorusGeometry(.4, .06, 12, 40), gloss(0xe9b04c)); ring.rotation.x = -Math.PI / 2; ring.position.set(p(0), .53, p(0)); g.add(ring);   // the far row
+      // the big boxwood pawn slipping through the gap in the ebony row, leaning on toward the far corner
+      g.add(at(pawn(true, 1.08), p(1) - .1, .95, p(1) - .1, -.16, 0, .16));
+      const dotM = gloss(0xe58a5c);
+      for (let i = 0; i < 4; i++) { const t = (i + .5) / 4, d = ball(.075, dotM); d.position.set(p(1) + .1 - .2 * t, .58 + t * .3, p(2) - .05 + (p(1) + .35 - p(2)) * t); g.add(d); }
+      return g;
+    },
     peg() {   // a corner of the walnut peg-solitaire board: cupped holes and glass marbles; the big blue marble arcs over the red one into the empty hole (gold ring)
       const top = M({ map: X.canvasTex('icpg', 512, 512, (c, W) => {
         c.drawImage(softWood('icpgw', '#a8703e', '#6a4020').image, 0, 0, W, W); const s = W / 3;
