@@ -8,6 +8,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const T = GB.T;
 const ME = 0;
 const AUTO = /[?&]auto\b/.test(location.search);
+const FAST = AUTO && !/[?&]slow\b/.test(location.search);   // 自動対局の確認：slow なら普段の速さで
 
 // ---------------------------------------------------------------- スマホはいつも横向きの配置（縦に持つと #root を90°回す。リーチ麻雀と同じ）
 const PHONE = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600;
@@ -109,7 +110,7 @@ function renderHome() {
 }
 function langDialog() {
   modal(`<h3>${esc(t('lang'))}</h3><div class="langs">${I18N.LANGS.map(([k, n]) => `<button class="lg${k === L() ? ' on' : ''}" data-l="${k}">${esc(n)}</button>`).join('')}</div><div class="btns"><button class="btn" data-x>${esc(t('close'))}</button></div>`, 'small', box => {
-    box.querySelectorAll('[data-l]').forEach(b => b.onclick = () => { DB.set.lang = b.dataset.l; save(); I18N.set(b.dataset.l); closeModal(); renderHome(); if (G) renderAll(); });
+    box.querySelectorAll('[data-l]').forEach(b => b.onclick = async () => { const l = b.dataset.l; await I18N.load(l); DB.set.lang = l; save(); I18N.set(l); closeModal(); renderHome(); if (G) renderAll(); if (window.GBTutorial && GBTutorial.relang) GBTutorial.relang(); });
     box.querySelector('[data-x]').onclick = closeModal;
   });
 }
@@ -176,6 +177,7 @@ function ensureTable() {
   if (TB) { TB.resume && TB.resume(); return; }
   TB = new Table3D($('#stage'), { tiles: 144, red: false, ankanDown: 4 });
   TB.doraFn = () => false;
+  TB.conLabel = I => [t('roundName', { w: t('wind' + I.round), n: I.kyoku + 1 }), t('leftShort')];
   TB.onTileLand = () => SND.tile();
   TB.setQuality && TB.setQuality('high');
   TB.warm && TB.warm();
@@ -214,7 +216,7 @@ async function startMatch(o) {
 }
 const name = p => p === ME ? t('you') : t('cpu', { n: p }) + ' Lv.' + UI.lv;
 async function until(f) { while (!f()) await sleep(120); }
-async function botWait(ms) { await sleep(AUTO ? 30 : ms); await until(() => !document.hidden); }
+async function botWait(ms) { await sleep(FAST ? 30 : ms); await until(() => !document.hidden); }
 
 async function playRound(r) {
   let seen = 0;
@@ -246,11 +248,11 @@ async function showEvent(r, e) {
     case 'deal': renderAll(true); break;
     case 'draw': renderAll(); break;
     case 'flower': if (!e.deal) { toast(t('flowerToast', { who: name(e.p) }), 900); SND.call(); } renderAll(); if (!e.deal) await sleep(250); break;
-    case 'discard': renderAll(false, e.p); await sleep(UI.tut ? 1000 : AUTO ? 10 : 260); break;
-    case 'chi': case 'pon': case 'kan': case 'kong': case 'kakan': SND.call(); shout(e.p, t('call_' + (e.ev === 'kong' ? 'kan' : e.ev === 'kakan' ? 'kan' : e.ev))); renderAll(); await sleep(AUTO ? 10 : 420); break;
+    case 'discard': renderAll(false, e.p); await sleep(UI.tut ? 1000 : FAST ? 10 : 260); break;
+    case 'chi': case 'pon': case 'kan': case 'kong': case 'kakan': SND.call(); shout(e.p, t('call_' + (e.ev === 'kong' ? 'kan' : e.ev === 'kakan' ? 'kan' : e.ev))); renderAll(); await sleep(FAST ? 10 : 420); break;
     case 'falsehu': SND.warn(); shout(e.p, t('falseHu')); toast(t('falseHuToast', { who: name(e.p), n: e.pts }), 2600); renderAll(); await sleep(900); break;
-    case 'win': SND.win(); shout(e.p, e.how === 'tsumo' ? t('tsumo') : t('ron')); renderAll(); await sleep(AUTO ? 50 : 900); break;
-    case 'exhaust': shout(-1, t('exhaust')); await sleep(AUTO ? 50 : 900); break;
+    case 'win': SND.win(); shout(e.p, e.how === 'tsumo' ? t('tsumo') : t('ron')); renderAll(); await sleep(FAST ? 50 : 900); break;
+    case 'exhaust': shout(-1, t('exhaust')); await sleep(FAST ? 50 : 900); break;
   }
 }
 function shout(p, s) {
@@ -276,7 +278,8 @@ function renderAll(fresh, discarder) {
   if (r.robTile != null && r.phase === 'rob') { const g = TB.tile(r.robTile); TB.place(g, r.robber, 0, 6.2, 'flat'); g.visible = true; }
   TB.setInfo({ round: r.wind, kyoku: r.no % 4, honba: 0, kyotaku: 0, left: r.left(), scores: M.scores.slice(), dealer: r.dealer, turn: r.phase === 'end' ? -1 : r.cur });
   TB.dirty = true;
-  renderSeats(); renderHand(); renderCoach(); renderInfo();
+  renderSeats(); renderHand(); renderCoach(); renderInfo(); layoutHud();
+  clearTimeout(renderAll.tm); renderAll.tm = setTimeout(layoutHud, 380);   // 3D の牌が動き終わってから測り直す
 }
 function renderInfo() {
   const r = R0; if (!r) return;
@@ -308,6 +311,7 @@ function renderHand() {
     b.onmouseleave = () => { if (TB) TB.highlightType(null); };
   });
   renderActs();
+  layoutHud();
 }
 function renderActs() {
   const acts = $('#acts'); const w = UI && UI.wait;
@@ -345,7 +349,7 @@ function renderCoach() {
   el.hidden = false;
   const melds = r.meldsOf(ME);
   const types = P.hand.map(T);
-  let sum = '';
+  let sum = '', sumW = '';
   let h = `<h4>${esc(t('coach'))}<small data-sum></small></h4>`;
   if (P.hand.length % 3 === 1) {
     const sh = GB.shanten(GB.counts(types), melds.length);
@@ -358,6 +362,7 @@ function renderCoach() {
       }).join('') + `</div>` + (ws.some(w => { const x = GBFan.calc({ melds, hand: types, win: w, tsumo: false, flowers: 0, seat: r.seatWind(ME), round: r.wind }); return !x.ok || x.pts < 8; }) ? `<p class="ck-warn">${esc(t('lowWaitWarn'))}</p>` : '');
     } else h += `<p class="ck-l">${esc(t('shantenN', { n: sh }))}</p>`;
     sum = sh === 0 ? t('ready') : t('shantenN', { n: sh });
+    if (sh === 0) sumW = GBFan.waits(types, melds.length).map(w => { const x = GBFan.calc({ melds, hand: types, win: w, tsumo: false, flowers: P.flowers.length, seat: r.seatWind(ME), round: r.wind }); return `<span class="sw-w${x.ok && x.pts >= 8 ? '' : ' low'}">${typeImg(w, 'mini')}${x.ok ? x.pts : 0}</span>`; }).join('');
   } else if (UI.coach) {
     const c = UI.coach;
     h += `<p class="ck-l">${esc(t('shantenN', { n: Math.max(0, c.shanten) }))}</p>`;
@@ -369,9 +374,46 @@ function renderCoach() {
   const a = UI.coach || UI.ckPlans;
   if (a && a.plans.length) h += `<p class="ck-h">${esc(t('targets'))}</p><ul class="ck-p">${a.plans.map(p => `<li><b>${esc(fanName(p.fan))}</b><span>${p.pts}${esc(t('ptsUnit'))}</span><em>${esc(p.d <= 0 ? t('ready') : t('awayN', { n: p.d }))}</em></li>`).join('')}</ul>`;
   el.innerHTML = h;
-  el.querySelector('[data-sum]').textContent = sum;
-  el.querySelector('h4').onclick = () => el.classList.toggle('open');
+  el.querySelector('[data-sum]').innerHTML = esc(sum) + (sumW ? ' ' + sumW : '');
+  el.querySelector('h4').onclick = () => { el.classList.toggle('open'); UI.ckOpen = el.classList.contains('open'); layoutHud(); };
+  if (UI.ckOpen) el.classList.add('open');
+  layoutHud();
 }
+
+// ---------------------------------------------------------------- 手牌の行とコーチ欄の置き場（卓の3Dの位置から）
+// 手牌の行は、手前左の花牌と右の副露（3D）にかからない幅に収め、牌の大きさをそれに合わせる。
+// コーチ欄（PC）は卓の右の枠より右に置く。入らないときは、要点だけの1行（触れると開く）にする。
+function scr(v3) { const h = TB.host, v = v3.clone().project(TB.camera); return [(v.x + 1) / 2 * h.clientWidth, (1 - v.y) / 2 * h.clientHeight]; }
+function layoutHud() {
+  const el = $('#hand'), ck = $('#coach');
+  if (!TB || !TB.camera || !R0 || $('#game').hidden) return;
+  const W = TB.host.clientWidth, P = R0.P[ME], V = THREE.Vector3;
+  // 手前の花牌・副露の画面上の左右端（牌の中心±半幅）
+  // 置き終わった位置で測る（動いている途中の牌では測らない）：花牌は左端 -9.7 から右へ、副露は右端 9.7 から左へ（table3d.js の layoutFlowers・layoutMelds と同じ幅）
+  const at = (lx, lz) => { const q = TB.local(0, lx, lz); return scr(new V(q.x, .39, q.z))[0]; };
+  const xs = lx => [at(lx, 8.05), at(lx, 9.45)];
+  const fR = P.flowers.length ? Math.max(...xs(-9.7 + P.flowers.length * 1.02)) : null;
+  let mw = 0; for (const m of P.melds) { const k = m.ids.length; mw += k * 1.02 + (m.k !== 'ankan' ? .36 : 0) + .22; }
+  const mL = P.melds.length ? Math.min(...xs(9.7 - mw)) : null;
+  const lp = document.documentElement.classList.contains('lp'), pad = lp ? 6 : 12;
+  const left = fR != null ? Math.max(pad, fR + pad) : pad, right = mL != null ? Math.max(pad, W - mL + pad) : pad;
+  // 花牌と副露のあいだの帯に収め、牌はできるだけ大きく（帯の中では中央寄せ）
+  el.style.left = left + 'px'; el.style.right = right + 'px'; el.style.padding = '0';
+  const n = el.querySelectorAll('.ht').length, gap = lp ? 2 : 3, gw = el.querySelector('.gap') ? (lp ? 8 : 16) : 0;
+  const band = W - left - right - (n - 1) * gap - gw, ratio = .74;
+  el.style.setProperty('--thmax', n ? Math.max(28, Math.floor(band / n / ratio)) + 'px' : '999px');
+  // コーチ欄（PC のみ）
+  if (lp || ck.hidden) { ck.classList.remove('cmp'); ck.style.width = ''; return; }
+  const top = 72, H = TB.host.clientHeight;
+  const freeAt = b => { let mx = 0; for (let z = -12.3; z <= 12.31; z += .3) { const [x, y] = scr(new V(12.3, .92, z)); if (y >= top - 10 && y <= b + 10) mx = Math.max(mx, x); } return W - mx - 14 - 12; };
+  const free = freeAt(Math.min(H, top + Math.max(ck.classList.contains('cmp') ? 0 : ck.offsetHeight, 220)));
+  const fit = free >= 250;
+  ck.classList.toggle('cmp', !fit);
+  // 1行（要点だけ）のとき：枠にかからない幅（開いたときは 300px）
+  const f1 = fit ? free : freeAt(top + 48);
+  ck.style.width = fit ? Math.min(320, free) + 'px' : ck.classList.contains('open') ? '300px' : Math.max(160, Math.min(300, f1)) + 'px';
+}
+addEventListener('resize', () => requestAnimationFrame(layoutHud));
 
 // ---------------------------------------------------------------- 和了・流局の結果
 function fanTable(fr) {

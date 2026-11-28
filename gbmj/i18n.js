@@ -1,5 +1,5 @@
 // 国標麻将の文言。I18N.t(key, vars)、I18N.fan(id)（番種名）、I18N.fanDesc(id)（図鑑の説明）。
-// 言語メニューに出すのは、その言語の文言がそろったものだけ（LANGS）。足りない言葉は英語、図鑑の説明は日本語の原文へ。
+// ja・en はこのファイル、ほかの12言語は i18n/<lang>.js（I18N.add で登録。選んだ言語だけ読む）。足りない言葉は英語へ。
 (function (root) {
 'use strict';
 const S = {
@@ -47,7 +47,7 @@ const S = {
     tu_pay: '支払い：ロンなら放銃した人が「点＋8」、ほかの2人も8点ずつ払います。ツモなら3人が「点＋8」ずつ。立直・ドラ・符はありません。',
     tu_end: 'これで遊べます！ほかにもポン・カン（暗槓は伏せる）、七対子・十三么・全不靠など81の番種があります。番種図鑑で例の手を見ながら、8点の作り方を覚えていきましょう。',
     tu_m_d1: '花龍まで', tu_m_chi: '花龍まで', tu_m_d2: '聴牌まで', tu_m_ron: 'この和了の点（8点で合格）',
-    exitTitle: '対局をやめますか？', exitBody: 'この対局は記録されません。', exitYes: 'やめる', yes: 'はい', no: 'いいえ',
+    exitTitle: '対局をやめますか？', exitBody: 'この対局は記録されません。', exitYes: 'やめる', yes: 'はい', no: 'いいえ', leftShort: '余',
   },
   en: {
     title: 'Chinese Official Mahjong', sub: 'Mahjong by the Chinese official rules (MCR). Build 8 points or more out of 81 scoring patterns to win.',
@@ -93,19 +93,20 @@ const S = {
     tu_pay: 'Payment: on a discard win the discarder pays points + 8 and the other two pay 8 each. On a self-drawn win all three pay points + 8. There is no riichi, dora or fu.',
     tu_end: 'You are ready to play! There is more: pungs, kongs (a concealed kong lies face down), Seven Pairs, Thirteen Orphans, Knitted hands and 81 fan in all. Use the Fan Guide and its example hands to learn how to reach 8 points.',
     tu_m_d1: 'Toward Mixed Straight', tu_m_chi: 'Toward Mixed Straight', tu_m_d2: 'Toward ready', tu_m_ron: 'Points of this win (8 to pass)',
-    exitTitle: 'Quit this game?', exitBody: 'This game will not be recorded.', exitYes: 'Quit', yes: 'Yes', no: 'No',
+    exitTitle: 'Quit this game?', exitBody: 'This game will not be recorded.', exitYes: 'Quit', yes: 'Yes', no: 'No', leftShort: 'left',
   },
 };
-// 言語メニュー（文言がそろった言語だけ）
-const ALL = [['ja', '日本語'], ['en', 'English'], ['zh', '简体中文'], ['zh-TW', '繁體中文'], ['ko', '한국어'], ['es', 'Español'], ['fr', 'Français'], ['pt', 'Português'], ['de', 'Deutsch'], ['ru', 'Русский'], ['tr', 'Türkçe'], ['id', 'Indonesian'], ['hi', 'हिन्दी'], ['ar', 'العربية']];
-const LANGS = ALL.filter(([k]) => S[k]);
+// 言語メニュー（14言語）
+const ALL = [['ja', '日本語'], ['en', 'English'], ['zh', '简体中文'], ['zh-TW', '繁體中文'], ['ko', '한국어'], ['es', 'Español'], ['fr', 'Français'], ['pt', 'Português'], ['de', 'Deutsch'], ['ru', 'Русский'], ['tr', 'Türkçe'], ['id', 'Bahasa Indonesia'], ['hi', 'हिन्दी'], ['ar', 'العربية']];
+const LANGS = ALL;
 // 番種名：言語ごと（ない言語は英語の定訳）。ja・zh・en は fan.js の表
 const FAN = {};
 const DESC = {};
-// 番種名：zh-TW は簡体字の名前を OpenCC（s2twp）で台湾の表記に、ko は繁体字の名前の漢字音（槓は깡）。
+// 番種名：zh-TW は簡体字の名前を繁体字に（么・槓・於・和。出典と方針は claude/gbmj-spec.md）。
+// ko は韓国語版ナムウィキ「국표마작/역」の表記（漢字音。番の名前の杠は「공」、副露の槓子は「깡」。推不倒は추부도）。
 // es・fr・pt・de・ru・tr・id・hi・ar は定訳がないので WMO 英語版の名前（画面では中国語原名を添える）。
   FAN['zh-TW'] = {"1": "大四喜", "2": "大三元", "3": "綠一色", "4": "九蓮寶燈", "5": "四槓", "6": "連七對", "7": "十三么", "8": "清么九", "9": "小四喜", "10": "小三元", "11": "字一色", "12": "四暗刻", "13": "一色雙龍會", "14": "一色四同順", "15": "一色四節高", "16": "一色四步高", "17": "三槓", "18": "混么九", "19": "七對", "20": "七星不靠", "21": "全雙刻", "22": "清一色", "23": "一色三同順", "24": "一色三節高", "25": "全大", "26": "全中", "27": "全小", "28": "清龍", "29": "三色雙龍會", "30": "一色三步高", "31": "全帶五", "32": "三同刻", "33": "三暗刻", "34": "全不靠", "35": "組合龍", "36": "大於五", "37": "小於五", "38": "三風刻", "39": "花龍", "40": "推不倒", "41": "三色三同順", "42": "三色三節高", "43": "無番和", "44": "妙手回春", "45": "海底撈月", "46": "槓上開花", "47": "搶槓和", "48": "雙暗槓", "49": "碰碰和", "50": "混一色", "51": "三色三步高", "52": "五門齊", "53": "全求人", "54": "雙箭刻", "55": "全帶么", "56": "不求人", "57": "雙明槓", "58": "和絕張", "59": "箭刻", "60": "圈風刻", "61": "門風刻", "62": "門前清", "63": "平和", "64": "四歸一", "65": "雙同刻", "66": "雙暗刻", "67": "暗槓", "68": "斷么", "69": "一般高", "70": "喜相逢", "71": "連六", "72": "老少副", "73": "么九刻", "74": "明槓", "75": "缺一門", "76": "無字", "77": "邊張", "78": "嵌張", "79": "單釣將", "80": "自摸", "81": "花牌"};
-  FAN.ko = {"1": "대사희", "2": "대삼원", "3": "녹일색", "4": "구련보등", "5": "사깡", "6": "연칠대", "7": "십삼요", "8": "청요구", "9": "소사희", "10": "소삼원", "11": "자일색", "12": "사암각", "13": "일색쌍룡회", "14": "일색사동순", "15": "일색사절고", "16": "일색사보고", "17": "삼깡", "18": "혼요구", "19": "칠대", "20": "칠성불고", "21": "전쌍각", "22": "청일색", "23": "일색삼동순", "24": "일색삼절고", "25": "전대", "26": "전중", "27": "전소", "28": "청룡", "29": "삼색쌍룡회", "30": "일색삼보고", "31": "전대오", "32": "삼동각", "33": "삼암각", "34": "전불고", "35": "조합룡", "36": "대어오", "37": "소어오", "38": "삼풍각", "39": "화룡", "40": "추불도", "41": "삼색삼동순", "42": "삼색삼절고", "43": "무번화", "44": "묘수회춘", "45": "해저로월", "46": "깡상개화", "47": "창깡화", "48": "쌍암깡", "49": "팽팽화", "50": "혼일색", "51": "삼색삼보고", "52": "오문제", "53": "전구인", "54": "쌍전각", "55": "전대요", "56": "불구인", "57": "쌍명깡", "58": "화절장", "59": "전각", "60": "권풍각", "61": "문풍각", "62": "문전청", "63": "평화", "64": "사귀일", "65": "쌍동각", "66": "쌍암각", "67": "암깡", "68": "단요", "69": "일반고", "70": "희상봉", "71": "연륙", "72": "노소부", "73": "요구각", "74": "명깡", "75": "결일문", "76": "무자", "77": "변장", "78": "감장", "79": "단조장", "80": "자모", "81": "화패"};
+  FAN.ko = {"1": "대사희", "2": "대삼원", "3": "녹일색", "4": "구련보등", "5": "사공", "6": "연칠대", "7": "십삼요", "8": "청요구", "9": "소사희", "10": "소삼원", "11": "자일색", "12": "사암각", "13": "일색쌍룡회", "14": "일색사동순", "15": "일색사절고", "16": "일색사보고", "17": "삼공", "18": "혼요구", "19": "칠대", "20": "칠성불고", "21": "전쌍각", "22": "청일색", "23": "일색삼동순", "24": "일색삼절고", "25": "전대", "26": "전중", "27": "전소", "28": "청룡", "29": "삼색쌍룡회", "30": "일색삼보고", "31": "전대오", "32": "삼동각", "33": "삼암각", "34": "전불고", "35": "조합룡", "36": "대어오", "37": "소어오", "38": "삼풍각", "39": "화룡", "40": "추부도", "41": "삼색삼동순", "42": "삼색삼절고", "43": "무번화", "44": "묘수회춘", "45": "해저로월", "46": "공상개화", "47": "창공화", "48": "쌍암공", "49": "팽팽화", "50": "혼일색", "51": "삼색삼보고", "52": "오문제", "53": "전구인", "54": "쌍전각", "55": "전대요", "56": "불구인", "57": "쌍명공", "58": "화절장", "59": "전각", "60": "권풍각", "61": "문풍각", "62": "문전청", "63": "평화", "64": "사귀일", "65": "쌍동각", "66": "쌍암각", "67": "암공", "68": "단요", "69": "일반고", "70": "희상봉", "71": "연륙", "72": "노소부", "73": "요구각", "74": "명공", "75": "결일문", "76": "무자", "77": "변장", "78": "감장", "79": "단조장", "80": "자모", "81": "화패"};
 
 // 図鑑の説明（英語。ほかの言語は英語→日本語の順に代わりに出す）
   DESC.en = {
@@ -141,19 +142,32 @@ const DESC = {};
     79: 'Waiting only on the pair tile.', 80: 'Winning on a tile you draw yourself.', 81: '1 point per flower. Flowers do not count toward the 8-point minimum.',
   };
 let lang = 'ja';
+const CODES = ALL.map(x => x[0]);
+const V = 1;   // 言語ファイル（i18n/<lang>.js）の版。文言を変えたら上げる
 function detect() {
   const ls = (navigator.languages || [navigator.language || 'en']).map(x => String(x));
   for (const x of ls) {
     const l = x.toLowerCase();
-    if (l.startsWith('zh')) { const k = /tw|hk|hant|mo/.test(l) ? 'zh-TW' : 'zh'; if (S[k]) return k; continue; }
-    const k = l.slice(0, 2); if (S[k]) return k;
+    if (l.startsWith('zh')) return /tw|hk|hant|mo/.test(l) ? 'zh-TW' : 'zh';
+    const k = l.slice(0, 2); if (CODES.includes(k)) return k;
   }
   return 'en';
 }
+function stored() { try { const d = JSON.parse(localStorage.getItem('gbmj-v1') || '{}'); return d.set && d.set.lang; } catch (e) { return null; } }
+const want = (l => CODES.includes(l) ? l : null)(stored()) || detect();
+// ja・en 以外は言語ファイルを読む（最初はページの読み込み中に同期で、切り替えは後から）
+const src = l => 'i18n/' + l + '.js?v=' + V;
+if (!S[want] && document.readyState === 'loading') document.write('<script src="' + src(want) + '"><\/script>');
+const loading = {};
 const I18N = {
-  S, FAN, DESC, LANGS,
+  S, FAN, DESC, LANGS, CODES,
   get lang() { return lang; },
-  init(pref) { lang = pref && S[pref] ? pref : detect(); },
+  add(l, pack) { S[l] = pack.S; if (pack.DESC) DESC[l] = pack.DESC; if (pack.FAN) FAN[l] = pack.FAN; },
+  load(l) {
+    if (S[l] || !CODES.includes(l)) return Promise.resolve();
+    return loading[l] || (loading[l] = new Promise(res => { const el = document.createElement('script'); el.src = src(l); el.onload = el.onerror = () => res(); document.head.appendChild(el); }));
+  },
+  init(pref) { const l = pref && CODES.includes(pref) ? pref : detect(); lang = S[l] ? l : S[want] ? want : 'en'; },
   set(l) { if (S[l]) lang = l; },
   t(k, v) { let x = (S[lang] && S[lang][k]) != null ? S[lang][k] : S.en[k] != null ? S.en[k] : S.ja[k]; if (x == null) return k; if (v) x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] != null ? v[y] : ''); return x; },
   fan(id) {

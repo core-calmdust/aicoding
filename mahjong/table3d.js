@@ -1487,7 +1487,10 @@ class Table3D {
   }
   _conText() { const el = this._chud, I = this.info; if (!el || !I) return;
     if (this._cscore) this._cscore.forEach((d, side) => { d.textContent = String(I.scores[side]); d.classList.toggle('on', I.turn === side); });
-    el.querySelector('b').textContent = !window.I18N || I18N.lang === 'ja' ? `${['東', '南', '西', '北'][I.round]}${I.kyoku + 1}局` : `${['East', 'South', 'West', 'North'][I.round]} ${I.kyoku + 1}`; el.querySelector('em').textContent = String(I.left); }
+    // (2026-11-28, 国標麻将の14言語) conLabel(info) → [局の名前, 「余」の字] があればそれを使う（無ければ今までどおり日本語か英語）
+    const cl = this.conLabel && this.conLabel(I);
+    el.querySelector('b').textContent = cl ? cl[0] : !window.I18N || I18N.lang === 'ja' ? `${['東', '南', '西', '北'][I.round]}${I.kyoku + 1}局` : `${['East', 'South', 'West', 'North'][I.round]} ${I.kyoku + 1}`; el.querySelector('em').textContent = String(I.left);
+    if (cl) el.querySelector('i').textContent = cl[1]; }
   // quality: 'high' | 'lite'. Lite drops shadows and renders at 1x pixel ratio.
   setQuality(q) {
     const lite = q === 'lite'; this.lite = lite;
