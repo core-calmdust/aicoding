@@ -324,7 +324,7 @@ body.rated-live #evalCard .evalrow,body.rated-live #evalCard .evalbar,body.rated
 #lessonListView > .modal-actions, #pzListView > .modal-actions, #pzGridView > .modal-actions{margin-top:auto;padding-top:22px}
 .mbtn{flex:1;padding:12px;border-radius:11px;font-weight:700;letter-spacing:.08em;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted)}
 .mbtn:hover{color:var(--text)}
-.mbtn.go{background:linear-gradient(180deg,#ffffff,#e9d79f);color:#3a2d0c;border-color:transparent}
+.mbtn.go{background:var(--rt-go-bg,linear-gradient(180deg,#f1efe9,#9c988f));color:var(--rt-go-ink,#121212);border-color:transparent}
 .mbtn.go:hover{filter:brightness(1.07)}
 .result-big{font-family:'Shippori Mincho B1',serif;font-size:34px;font-weight:800;text-align:center;letter-spacing:.1em;margin:4px 0 10px}
 .result-disc{display:flex;justify-content:center;margin:6px 0 4px}
@@ -409,7 +409,7 @@ body.in-puzzle #evalCard, body.in-puzzle .kifu-card, body.in-puzzle .info-line, 
 .lesson-actions button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted);font-size:13px;font-weight:700}
 .lesson-actions button:hover:not(:disabled){color:var(--text)}
 .lesson-actions button:disabled{opacity:.35}
-.lesson-actions button.go{background:linear-gradient(180deg,#ffffff,#e9d79f);color:#3a2d0c;border-color:transparent}
+.lesson-actions button.go{background:var(--rt-go-bg,linear-gradient(180deg,#f1efe9,#9c988f));color:var(--rt-go-ink,#121212);border-color:transparent}
 .lesson-list{display:grid;gap:8px}
 .ls-course{grid-column:1 / -1;margin:10px 0 2px;display:flex;flex-direction:column;gap:2px}
 .ls-course:first-child{margin-top:0}
@@ -1011,7 +1011,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 .sqfx.last{background:rgba(236,214,150,.28);box-shadow:inset 0 0 0 2px rgba(255,255,255,.8)}
 .sqfx.lastf{background:rgba(236,214,150,.16)}
 </style>
-<link rel="stylesheet" href="online.css?v=3lx">
+<link rel="stylesheet" href="online.css?v=3lxyb">
 <style>
 /* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
    not from the height, which differs by browser (iOS Chrome: toolbars) and would make some boards narrower; the page scrolls instead */
@@ -1319,16 +1319,16 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="i18n-ag.js?v=2lv-ls6-f3-d4-f4"></script>
 <script src="i18n-ag-more.js?v=2lv-l14n-ls6-f3-d4-f4"></script>
 <script src="i18n-online.js?v=stale1-l14-hb1"></script>
-<script src="../shared/pzbook.js?v=9sk"></script>
+<script src="../shared/pzbook.js?v=10sk"></script>
 <script src="../shared/placement.js?v=1l14"></script>
-<script src="../shared/rulesoffer.js?v=17l14j"></script>
+<script src="../shared/rulesoffer.js?v=24l14j"></script>
 <script src="../shared/headerbar.js?v=64"></script>
 <script src="../shared/lessonkeys.js?v=3"></script>
 <script src="../shared/flipbtn.js?v=5fs"></script>
 <script src="../shared/cardbar.js?v=15l14"></script>
 <script src="../shared/watchpause.js?v=2l14"></script>
 <script src="../shared/tick.js?v=2l14"></script>
-<script src="../shared/ruletour.js?v=30tw"></script>
+<script src="../shared/ruletour.js?v=32tw"></script>
 <script src="engine.js?v=12-nn2-bk1"></script>
 <script src="pzwhy.js?v=1"></script>
 <script src="ls-facts.js?v=11"></script>
@@ -1347,7 +1347,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="../shared/mtengine.js?v=15"></script><script src="../shared/mtsplit.js?v=7"></script><script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script><script src="../shared/ponder.js?v=1"></script><script src="../shared/luxintro.js?v=3"></script><script src="app.js?v=12lv-dr1-rc1-l14-ai1-ic2-pro1-aim-e2-mt1-sh3-wa3sq-pt1-lx1-ab1-sp-pk1-pd1-nn2-bk1-rb1-mq1-nn3-t2-pz88-ls6-f3-d4-f4"></script>
 <script src="online-ui.js?v=4sec1l9ck1p-dr1lx1c"></script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261128b" defer></script>
+<script src="../shared/atlas.js?v=20261128e" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261109ac2l14as1" defer></script>
 <script src="../shared/infotabs.js?v=24" data-strips defer></script>
@@ -1362,7 +1362,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=101sk'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=102sk'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net

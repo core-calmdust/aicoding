@@ -6,7 +6,7 @@
 'use strict';
 const GD = window.GD, AI = window.GDAI, $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const STORE = 'aicoding-guandan', SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
-const FELTS = ['jade', 'green', 'teal', 'blue', 'wine', 'charcoal', 'purple', 'mocha'];
+const FELTS = ['cinnabar', 'jade', 'green', 'teal', 'blue', 'wine', 'charcoal', 'purple', 'mocha'];
 const BACKS = ['crimson', 'ornateBlack', 'ornate', 'floral', 'floralBlack', 'azure', 'azureBlack', 'hex', 'cube', 'red', 'blue', 'navy', 'skullBlack', 'skull', 'gangsta'];
 const COURTS = ['classic', 'antique', 'flat', 'gangsta'];
 const LEVELS = [1, 2, 3, 4], STARTS = [2, 10, 0];   // 0 = single hands (practice)
@@ -16,7 +16,7 @@ const RKN = r => r === 14 ? 'A' : r === 13 ? 'K' : r === 12 ? 'Q' : r === 11 ? '
 /* ---------------- storage ---------------- */
 function load() { try { return JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch (e) { return {}; } }
 const D = load();
-D.set = Object.assign({ lvl: 2, start: 2, felt: 'jade', back: 'crimson', court: 'classic', cmode: 'simple', sound: true, anim: 1, speed: 'normal', coach: 1, autoPass: 0, mTab: 'coach', lang: '' }, D.set || {});
+D.set = Object.assign({ lvl: 2, start: 2, felt: 'cinnabar', back: 'crimson', court: 'classic', cmode: 'simple', sound: true, anim: 1, speed: 'normal', coach: 1, autoPass: 0, mTab: 'coach', lang: '' }, D.set || {});
 D.stats = Object.assign({ matches: 0, mwins: 0, hands: 0, hwins: 0, places: [0, 0, 0, 0], bombs: 0, up: 0, passA: 0, byLvl: {} }, D.stats || {});
 const set = D.set;
 ['felt', 'back', 'court', 'cmode'].forEach(k => { document.documentElement.dataset[k] = set[k]; });
@@ -716,7 +716,7 @@ function designHtml() {
   return `<div class="dz"><div class="dz-l"><div class="sec"><span class="lab">${esc(t('new.back'))}</span><div class="tiles backs">${back}</div></div></div><div class="dz-r"><div class="sec"><span class="lab">${esc(t('new.court'))}</span><div class="tiles faces">${court}</div></div></div></div><div class="sec dz-felt"><span class="lab">${esc(t('new.felt'))}</span><div class="tiles felts">${felt}</div></div>`;
 }
 function feltStyle(f) {
-  const c = { jade: ['#1f7d5e', '#0a3527'], green: ['#22704a', '#0e3a25'], blue: ['#235c97', '#0f2a4d'], wine: ['#7a2434', '#3b0e18'], charcoal: ['#3a3f45', '#16191c'], teal: ['#1d7474', '#0b3535'], purple: ['#56357f', '#24123d'], mocha: ['#6e4a2f', '#2e1b0f'] }[f];
+  const c = { cinnabar: ['#b3302f', '#4f0c14'], jade: ['#1f7d5e', '#0a3527'], green: ['#22704a', '#0e3a25'], blue: ['#235c97', '#0f2a4d'], wine: ['#7a2434', '#3b0e18'], charcoal: ['#3a3f45', '#16191c'], teal: ['#1d7474', '#0b3535'], purple: ['#56357f', '#24123d'], mocha: ['#6e4a2f', '#2e1b0f'] }[f];
   return `background:radial-gradient(120% 90% at 50% 20%,${c[0]},${c[1]})`;
 }
 function wireDesign(root) {

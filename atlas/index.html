@@ -208,7 +208,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:99px;padding:12px 22px;font-weight:900;font-size:16px;background:var(--coral);color:#fff;box-shadow:0 4px 0 var(--coral2);text-decoration:none;transition:transform .08s,box-shadow .08s;white-space:nowrap}
 .btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--coral2)}
 .btn.sky{background:var(--sky);box-shadow:0 4px 0 var(--sky2)}.btn.sky:active{box-shadow:0 1px 0 var(--sky2)}
-.btn.sun{background:var(--sun);color:#5a3a00;box-shadow:0 4px 0 var(--sun2)}.btn.sun:active{box-shadow:0 1px 0 var(--sun2)}
+.btn.sun{background:var(--coral);color:#fff;box-shadow:0 4px 0 var(--coral2)}.btn.sun:active{box-shadow:0 1px 0 var(--coral2)}   /* (was yellow: no yellow 3D buttons, common rule 2026-11-28) */
 .btn.mint{background:var(--mint);box-shadow:0 4px 0 var(--mint2)}
 .btn.ghost{background:#fff;color:var(--ink);box-shadow:0 4px 0 var(--line);border:2px solid var(--line)}
 .btn[disabled]{background:#d7dbe5;box-shadow:0 4px 0 #b9bfcd;color:#fff;cursor:not-allowed}
@@ -218,7 +218,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   .btn{transition:transform .15s,box-shadow .15s,filter .15s,background-color .15s}
   .btn:not([disabled]):hover{transform:translateY(-2px);filter:brightness(1.05);box-shadow:0 6px 0 var(--coral2),0 12px 20px -10px rgba(120,60,20,.45)}
   .btn.sky:not([disabled]):hover{box-shadow:0 6px 0 var(--sky2),0 12px 20px -10px rgba(20,80,140,.45)}
-  .btn.sun:not([disabled]):hover{box-shadow:0 6px 0 var(--sun2),0 12px 20px -10px rgba(140,90,0,.45)}
+  .btn.sun:not([disabled]):hover{box-shadow:0 6px 0 var(--coral2),0 12px 20px -10px rgba(120,60,20,.45)}
   .btn.mint:not([disabled]):hover{box-shadow:0 6px 0 var(--mint2),0 12px 20px -10px rgba(0,110,80,.4)}
   .btn.ghost:not([disabled]):hover{background:#fffaf0;filter:none;box-shadow:0 6px 0 var(--line),0 12px 20px -10px rgba(120,80,20,.35)}
   .btn:not([disabled]):active{transform:translateY(3px)}
@@ -2519,7 +2519,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script src="art.js?v=21"></script>
 <script src="skins.js?v=30"></script>
 <script src="../shared/atlas-updates.js?v=59"></script>
-<script src="../shared/atlas.js?v=20261128bt"></script>
+<script src="../shared/atlas.js?v=20261128e"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2as1"></script>
 <script src="i18n/v.js?v=20261127rc"></script>
@@ -2548,7 +2548,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 })();
 </script>
 <script src="models/cardtables.js?v=4"></script>
-<script src="icons3d.js?v=48"></script>
+<script src="icons3d.js?v=50"></script>
 <script>/* rules tours: after a solved step, the ▶ button fills up like a timer until the tour moves on by itself */
 window.AtlasRgdTimer = function (btn, ms, alive) {
   if (!btn) return; btn.classList.remove('rgd-auto'); void btn.offsetWidth; btn.style.setProperty('--rgt', ms + 'ms'); btn.classList.add('rgd-auto');
@@ -2560,10 +2560,10 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=559"></script>
+<script src="lazy.js?v=560"></script>
 <script src="puzzle-lines.js?v=2"></script>
 <script src="puzzles.js?v=69"></script>
-<script src="lessons3d.js?v=388"></script>
+<script src="lessons3d.js?v=390"></script>
 <script src="missions.js?v=10"></script>
 <link rel="stylesheet" href="historia.css?v=18">
 <script src="historia.js?v=51"></script>
@@ -2578,7 +2578,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 .rsg-ov.draw .rsg-flag{color:#b8862a!important}</style>
 <script src="../shared/resign.js?v=3"></script><script src="../shared/drawoffer.js?v=1"></script>
 <script src="../shared/tick.js?v=2"></script>
-<script src="gamelist.js?v=51"></script>
+<script src="gamelist.js?v=52"></script>
 <link rel="stylesheet" href="worldmap.css?v=21">
 <link rel="stylesheet" href="museum.css?v=97">
 <script src="worldmap.js?v=43"></script>
@@ -2598,7 +2598,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   mo = new MutationObserver(sync); mo.observe(document.body, { childList: true }); sync(); window.__pgState = sync; })();
 </script>
 <script src="museum/mu-games.js?v=3"></script>
-<script src="app.js?v=512"></script>
+<script src="app.js?v=515"></script>
 <script src="../shared/praline-badge.js?v=9" data-portal defer></script>
 </body>
 </html>

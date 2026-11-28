@@ -177,8 +177,9 @@
   function tick(t) {
     requestAnimationFrame(tick);
     if (!cx || t - last < 33 || document.body.classList.contains('th-on')) return; const dt = Math.min(.1, (t - last) / 1000); last = t;
-    const r = cv.getBoundingClientRect(); cx.clearRect(0, 0, r.width, r.height);
-    if (!flakes.length || reduce() || document.body.classList.contains('paused') || document.hidden || !document.body.classList.contains('scr-play')) return;
+    // nothing to draw: leave the canvas alone (clearing it every frame would make the screen be redrawn for nothing)
+    if (!flakes.length || reduce() || document.body.classList.contains('paused') || document.hidden || !document.body.classList.contains('scr-play')) { if (cv._dirty) { const r0 = cv.getBoundingClientRect(); cx.clearRect(0, 0, r0.width, r0.height); cv._dirty = false; } return; }
+    const r = cv.getBoundingClientRect(); cx.clearRect(0, 0, r.width, r.height); cv._dirty = true;
     const snow = cv.dataset.kind === 'snow', night = cv.classList.contains('night');
     for (const f of flakes) {
       if (snow) { f.y += (18 + f.d * 70) * dt; f.x += Math.sin(t / 1400 + f.a) * (6 + f.d * 18) * dt + 8 * dt; }

@@ -11,9 +11,9 @@ const W = 1, H = 1.36, D = 0.78;
 const BAKE_V = 3, BAKED = {};
 // (2026-11-27, 大百科の麻雀 riichi/: ユーザー「雀卓は緑系のフェルトの方が良い（オーソドックスに）」) window.JANKA_FELT = 'green': the same cloth
 // in a quiet table green (tex/felt-green.webp = felt.webp with its shading kept, recoloured), and no hands over the table (JANKA_NOHANDS)
-const GREEN = root.JANKA_FELT === 'green', NOHANDS = !!root.JANKA_NOHANDS;
-if (!/[?&]nobake\b/.test(location.search)) for (const n of GREEN ? ['felt', 'wood', 'woodb'] : ['felt', 'wood', 'woodb', 'stone']) {   // (green: the backs' stone is drawn in blue below)
-  const im = new Image(); im.decoding = 'async'; im.src = (root.JANKA_ASSETS || '../images/mahjong/') + 'tex/' + (n === 'felt' && GREEN ? 'felt-green' : n) + '.webp?v=' + BAKE_V; BAKED[n] = im; }
+const GREEN = root.JANKA_FELT === 'green', RED = root.JANKA_FELT === 'red', NOHANDS = !!root.JANKA_NOHANDS;   // red：国標麻将（臙脂の羅紗・翡翠の牌の背）
+if (!/[?&]nobake\b/.test(location.search)) for (const n of GREEN || RED ? ['felt', 'wood', 'woodb'] : ['felt', 'wood', 'woodb', 'stone']) {   // (green: the backs' stone is drawn in blue below)
+  const im = new Image(); im.decoding = 'async'; im.src = (root.JANKA_ASSETS || '../images/mahjong/') + 'tex/' + (n === 'felt' && GREEN ? 'felt-green' : n === 'felt' && RED ? 'felt-red' : n) + '.webp?v=' + BAKE_V; BAKED[n] = im; }
 // (2026-11-15, ユーザー「スマホで落ちまくる」: memory) on a touch device the big pictures are kept at half size — on a phone's screen
 // the felt and the rails never show more than that — and once a picture that never changes is on the graphics card, the copy the
 // page kept of it is let go (lean). Desktop: full size as before, lean too (2026-11-16).
@@ -141,7 +141,7 @@ function stoneTex() {
   const oct = ps => ps.map(P => [grid(P), P]);
   const fbm = (O, u, v) => { let s = 0, a = .5, n = 0; for (const [G, P] of O) { s += val(G, P, u, v) * a; n += a; a *= .5; } return s / n; };   // 0..1, periodic
   const A = oct([3, 6, 12, 24, 48]), B = oct([2, 4, 8, 16]), Cc = oct([2, 4, 8, 16]);
-  const [br, bg, bb] = GREEN ? [0x2a, 0x47, 0x78] : [0x59, 0x36, 0x86];   // the deep 袱紗 purple (unchanged) — on the green table (大百科の麻雀) a deep blue, as on an orthodox automatic table
+  const [br, bg, bb] = GREEN ? [0x2a, 0x47, 0x78] : RED ? [0x1c, 0x58, 0x46] : [0x59, 0x36, 0x86];   // the deep 袱紗 purple (unchanged) — on the green table (大百科の麻雀) a deep blue, as on an orthodox automatic table
   for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
     const u = x / S, v = y / S, wx = (fbm(B, u, v) - .5) * .5, wy = (fbm(Cc, u, v) - .5) * .5;        // the fold
     const cl = fbm(A, u + wx, v + wy) - .5;                                                         // the clouds
@@ -552,9 +552,13 @@ const PI = Math.PI;
 
 function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
 
+// 牌の種類と赤：既定はリーチ麻雀（136枚、赤五 16/52/88）。国標麻将（gbmj/）は new Table3D(host, { tiles: 144, red: false, ankanDown: 4 })：
+// id 136〜143 は花牌（種類 34〜41）、赤なし、暗槓は4枚とも伏せる。雀華・リーチ麻雀は引数なしで今までどおり。
+const tType = id => id < 136 ? id >> 2 : 34 + (id - 136);
 class Table3D {
-  constructor(host) {
+  constructor(host, opt) {
     this.host = host;
+    this.opt = Object.assign({ tiles: 136, red: true, ankanDown: 2 }, opt || {});
     const r = this.renderer = new THREE.WebGLRenderer({ antialias: (window.devicePixelRatio || 1) < 1.5, alpha: true, powerPreference: 'high-performance' });   // (2026-11-14, optimisation: a high-density screen is already sharp — no multisampling on top; and the faster GPU when there are two. 2026-11-15: a phone now draws at 2× (prMax) — sharp enough without it)
     // the graphics context lost and given back (see lean): the let-go pictures are drawn again, the shadows redone, a frame drawn
     r.domElement.addEventListener('webglcontextlost', e => { e.preventDefault(); this.ctxLost = true; }, false);
@@ -621,7 +625,7 @@ class Table3D {
       for (let y = 0; y < 2048; y++) for (let x = 0; x < 2048; x++) {
         const u = x / 2048, v = y / 2048, rq = Math.min(1, Math.max(0, (Math.hypot(u - .5, v - .5) - .2) / .42)), vig = 1.14 - .3 * rq * rq * (3 - 2 * rq);   // (ユーザー 2026-11-15, a reference shot: the cloth bright in the middle and clearly deeper toward the rails — in the cloth itself, so the tiles stay evenly lit)
         const m = (N.fbm(A, u, v) - .5) * .16, n = (N.R() - .5) * .09, f = vig * (1 + m + n), p = (y * 2048 + x) * 4;
-        if (GREEN) { d[p] = 36 * f; d[p + 1] = 92 * f; d[p + 2] = 66 * f; } else { d[p] = 32 * f; d[p + 1] = 58 * f; d[p + 2] = 104 * f; } d[p + 3] = 255;   // (ユーザー 2026-11-15: the lake blue was too vivid — back to the calm dusty navy; the middle-bright shading stays)   // (ユーザー 2026-11-15: a hue that sits better with the brown frame and the tiles — a clear lake blue, a touch toward teal; was a dusty navy 32,56,100)
+        if (GREEN) { d[p] = 36 * f; d[p + 1] = 92 * f; d[p + 2] = 66 * f; } else if (RED) { d[p] = 104 * f; d[p + 1] = 30 * f; d[p + 2] = 38 * f; } else { d[p] = 32 * f; d[p + 1] = 58 * f; d[p + 2] = 104 * f; } d[p + 3] = 255;   // (ユーザー 2026-11-15: the lake blue was too vivid — back to the calm dusty navy; the middle-bright shading stays)   // (ユーザー 2026-11-15: a hue that sits better with the brown frame and the tiles — a clear lake blue, a touch toward teal; was a dusty navy 32,56,100)
       }
       g.putImageData(img, 0, 0); }
     g.translate(1024, 1024);
@@ -740,8 +744,9 @@ class Table3D {
       tex.image = MJTiles.canvas(t, red); tex.needsUpdate = true;
       if (MJTiles.sheets()) { const nm = m.normal.normalMap; if (nm) { nm.image = MJTiles.normal(t, red); nm.needsUpdate = true; } else { const n = new THREE.CanvasTexture(MJTiles.normal(t, red)); n.anisotropy = 8; for (const k2 in m) if (m[k2] && m[k2].isMaterial) { m[k2].normalMap = n; m[k2].needsUpdate = true; } } } }
   }
+  isRed(id) { return this.opt.red && (id === 16 || id === 52 || id === 88); }
   faceMat(id) {
-    const t = id >> 2, red = id === 16 || id === 52 || id === 88;
+    const t = tType(id), red = this.isRed(id);
     const k = t + (red ? 'r' : '');
     let m = this.faceTex.get(k);
     if (!m) {
@@ -769,7 +774,7 @@ class Table3D {
   // (orthographic); back = the tile face down. Drawn once by a small renderer of its own
   // with a light from the front, and kept (data URL).
   tileShot(id, back) {
-    const key = back ? 'back' : (id >> 2) + (id === 16 || id === 52 || id === 88 ? 'r' : '');
+    const key = back ? 'back' : tType(id) + (this.isRed(id) ? 'r' : '');
     this.shots = this.shots || new Map();
     if (this.shots.has(key)) return this.shots.get(key);
     if (!this.shotR) {
@@ -811,13 +816,14 @@ class Table3D {
     if (this.A && (this.A.sheets || !MJTiles.sheets())) return this.A;
     // (2026-11-15: the tiles' pictures stay full size on a phone too — ユーザー: the board was blurred more than it needed; only the
     // cloth and the rails are kept at half, and the page's copies are let go)
-    const FW = MJTiles.FW, FH = MJTiles.FH, pad = 8, cw = FW + pad * 2, ch = FH + pad * 2, cols = 8, rows = 5;
+    const FW = MJTiles.FW, FH = MJTiles.FH, pad = 8, cw = FW + pad * 2, ch = FH + pad * 2, cols = 8, rows = this.opt.tiles > 136 ? 6 : 5;   // (花牌8種で1段ふやす)
     const mk = () => { const c = document.createElement('canvas'); c.width = cols * cw; c.height = rows * ch; return c; };
     const put = (gg, src, x, y) => { gg.drawImage(src, x - pad, y - pad, FW + pad * 2, FH + pad * 2); gg.drawImage(src, x, y, FW, FH); };   // (the picture's edge stretched into the padding: no bleeding from the neighbours)
     const cells = {}, sheets = !!MJTiles.sheets();
     // draws the faces' atlas (nrm: the normal maps' one instead) — once now, and again if the graphics context is lost (lean)
     const draw = nrm => { const c = mk(), gg = c.getContext('2d'); let k = 0;
-      for (let t = 0; t < 34; t++) for (const red of t === 4 || t === 13 || t === 22 ? [false, true] : [false]) {
+      const nT = this.opt.tiles > 136 ? 42 : 34;
+      for (let t = 0; t < nT; t++) for (const red of this.opt.red && (t === 4 || t === 13 || t === 22) ? [false, true] : [false]) {
         const col = k % cols, row = (k / cols) | 0, x = col * cw + pad, y = row * ch + pad;
         put(gg, nrm ? MJTiles.normal(t, red) : MJTiles.canvas(t, red), x, y);
         cells[t + (red ? 'r' : '')] = [col, rows - 1 - row]; k++; }
@@ -831,7 +837,7 @@ class Table3D {
   }
   _inst() {
     if (this.I) return this.I;
-    const N = 136, F = this.geoFront, nf = F.groups[0].count, A = this._atlas();
+    const N = this.opt.tiles, F = this.geoFront, nf = F.groups[0].count, A = this._atlas();
     const sub = (geo, st, n) => { const o = new THREE.BufferGeometry(); for (const k of ['position', 'normal', 'uv']) { const a = geo.attributes[k]; o.setAttribute(k, new THREE.BufferAttribute(a.array.slice(st * a.itemSize, (st + n) * a.itemSize), a.itemSize)); } return o; };
     const gFace = sub(F, 0, nf), gBody = sub(F, nf, F.groups[1].count), gBack = this.geoBack.clone();
     const aCell = new THREE.InstancedBufferAttribute(new Float32Array(N * 3), 3); aCell.setUsage(THREE.DynamicDrawUsage); gFace.setAttribute('aCell', aCell);
@@ -863,7 +869,7 @@ class Table3D {
       if (!g.visible) continue;
       g.updateMatrix();
       I.face.setMatrixAt(n, g.matrix); I.body.setMatrixAt(n, g.matrix); I.back.setMatrixAt(n, g.matrix);
-      const id = g.userData.id, t = id >> 2, red = id === 16 || id === 52 || id === 88, c = A.cells[t + (red ? 'r' : '')], look = g.userData.look;
+      const id = g.userData.id, t = tType(id), red = this.isRed(id), c = A.cells[t + (red ? 'r' : '')], look = g.userData.look;
       I.aCell.setXYZ(n, c[0], c[1], look === 'hi' ? 1 : 0); I.face.setColorAt(n, look === 'dim' ? dimC : one);
       I.aOff.setXY(n, (id % 4) * .27, (id % 4) * .41);
       if (++n >= I.N) break;
@@ -1272,7 +1278,8 @@ class Table3D {
         const pos = rel === 3 ? 0 : rel === 2 ? 1 : order.length;
         order.splice(pos, 0, m.called);
       }
-      const items = order.map((id, i) => ({ id, side: m.type !== 'ankan' && id === m.called, back: m.type === 'ankan' && (i === 0 || i === 3) }));
+      const down = this.opt.ankanDown;   // 暗槓の伏せる枚数（2＝両端、4＝全部）
+      const items = order.map((id, i) => ({ id, side: m.type !== 'ankan' && id === m.called, back: m.type === 'ankan' && (down >= 4 || i === 0 || i === 3) }));
       // place right to left
       for (let i = items.length - 1; i >= 0; i--) {
         const it = items[i];
@@ -1292,11 +1299,22 @@ class Table3D {
       x -= 0.22;
     }
   }
+  // 花牌（国標麻将）：持ち主から見て左手前の角に、表向きで並べる（副露は右から、花は左から。8枚まで）
+  layoutFlowers(seat, ids) {
+    let x = -9.7;
+    const lz = 8.75;
+    for (const id of ids) {
+      const g = this.tile(id);
+      this.place(g, seat, x + W / 2, lz, 'flat', g.visible ? null : { dur: 260 });
+      this.setTileLook(g, 'normal');
+      x += W + 0.02;
+    }
+  }
   setStick(seat, on) { this.sticks[seat].visible = !!on; this.dirty = true; }
   highlightType(t) {
     for (const g of this.tiles.values()) {
       if (!g.visible) continue;
-      const tt = g.userData.id >> 2;
+      const tt = tType(g.userData.id);
       this.setTileLook(g, t != null && tt === t ? 'hi' : 'normal');
     }
     this.dirty = true;

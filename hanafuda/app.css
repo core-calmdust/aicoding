@@ -40,7 +40,7 @@ html.hb-on .stage>.table{height:auto;min-height:0}
     radial-gradient(120% 90% at 50% 40%,rgba(255,255,255,.06),rgba(0,0,0,.28)),
     repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 3px),
     repeating-linear-gradient(90deg,rgba(0,0,0,.05) 0 1px,transparent 1px 4px),
-    #1c2c44;
+    #17435a;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),inset 0 0 60px rgba(0,0,0,.5),0 12px 30px rgba(0,0,0,.4)}
 html[data-table=lacquer] .table{background:
     radial-gradient(110% 80% at 40% 30%,rgba(255,190,150,.10),rgba(0,0,0,.35)),
@@ -75,9 +75,9 @@ html[data-table=lacquer] .table{background:
 .hf{position:relative;width:var(--cw);aspect-ratio:320/530;background:#e9dec4;border-radius:calc(var(--cw) * .045);flex:0 0 auto;user-select:none;-webkit-user-select:none;
   box-shadow:0 2px 3px rgba(0,0,0,.45),0 6px 14px rgba(0,0,0,.35);transition:transform .18s,box-shadow .18s,outline-color .18s;outline:3px solid transparent;outline-offset:2px}
 .hf img,.hf svg.hf-prov{width:100%;height:100%;display:block;border-radius:inherit}
-.hf.back{background:#121114 center/100% 100% no-repeat;background-image:image-set(url("img/cards/back-black.webp?v=1") 1x,url("img/cards/back-black@2x.webp?v=1") 2x);box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),0 0 0 1px rgba(0,0,0,.55),0 2px 3px rgba(0,0,0,.45),0 6px 14px rgba(0,0,0,.35)}
+.hf.back{background:#121114 center/100% 100% no-repeat;background-image:image-set(url("img/cards/back-black.webp?v=2") 1x,url("img/cards/back-black@2x.webp?v=2") 2x);box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),0 0 0 1px rgba(0,0,0,.55),0 2px 3px rgba(0,0,0,.45),0 6px 14px rgba(0,0,0,.35)}
 .opp-hand .hf.back{box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),-3px 0 4px rgba(0,0,0,.55),0 2px 3px rgba(0,0,0,.45)}
-html[data-back=red] .hf.back{background-color:#3e0c0b;background-image:image-set(url("img/cards/back-red.webp?v=1") 1x,url("img/cards/back-red@2x.webp?v=1") 2x)}
+html[data-back=red] .hf.back{background-color:#3e0c0b;background-image:image-set(url("img/cards/back-red.webp?v=2") 1x,url("img/cards/back-red@2x.webp?v=2") 2x)}
 .my-hand .hf{cursor:pointer}
 .my-hand .hf.can:hover{transform:translateY(-10px)}
 .my-hand .hf.sel{transform:translateY(-14px);outline-color:var(--gold)}
@@ -204,7 +204,8 @@ html[data-back=red] .hf.back{background-color:#3e0c0b;background-image:image-set
   .side>.log ol{max-height:240px}
   .row.me{flex-direction:column;align-items:stretch}
   .my-hand .hf{width:var(--cw)}
-  .tstrip{display:flex;align-items:center;justify-content:center;min-height:46px;margin:-2px 0 0;padding:0 8px;border-radius:10px;background:rgba(0,0,0,.18);color:var(--gold);font-weight:700;font-size:13.5px;line-height:1.3;text-align:center}
+  .table{overflow:clip}
+  .tstrip{position:sticky;top:0;z-index:6;display:flex;align-items:center;justify-content:center;min-height:52px;margin:-2px 0 0;padding:0 8px;border-radius:10px;background:#0f1620;box-shadow:0 4px 10px rgba(0,0,0,.35);color:var(--gold);font-weight:700;font-size:13.5px;line-height:1.3;text-align:center}
   .toast.ph{transform:none;background:#0b0f15;padding:6px 12px;font-size:13.5px;line-height:1.3;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
   .m-tabs{display:flex;position:fixed;left:0;right:0;bottom:0;background:var(--bg2);border-top:1px solid var(--line);z-index:20;padding-bottom:env(safe-area-inset-bottom)}
   .m-tabs button{flex:1;background:none;border:0;padding:8px 0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12.5px;color:var(--muted)}
@@ -295,3 +296,4 @@ html[data-back=red] .hf.back{background-color:#3e0c0b;background-image:image-set
 .rv-best b{color:var(--good)}.rv-good b{color:#9fd0ff}.rv-dub b{color:#ffd27a}.rv-bad b{color:#ff8a7a}
 .rv-sum{font-weight:700;margin-bottom:8px}
 .rv-btns{margin-top:10px;display:flex;justify-content:flex-end}
+.rv-next{padding:5px 14px;font-size:14px;border-radius:9px;margin-inline-start:auto}

@@ -1381,6 +1381,7 @@ img,svg{-webkit-user-drag:none;user-drag:none}
 .gd .gtile.sel,.gd .gcard.sel{background:linear-gradient(180deg,rgba(224,85,59,.14),rgba(0,0,0,.15))}
 .gd .seat.act .plate{border-color:var(--hl);box-shadow:0 0 0 2px var(--hl-a),0 0 22px rgba(224,85,59,.45)}
 .gd .tgl input:checked + i{background:linear-gradient(180deg,#ec6a4f,#b03a22)}
+html[data-felt=cinnabar]{--felt1:#b3302f;--felt2:#4f0c14;--felt-line:rgba(243,214,150,.36);--felt-ink:rgba(243,214,150,.2)}
 html[data-felt=jade]{--felt1:#1f7d5e;--felt2:#0a3527}
 html[data-back=crimson] .bk{background:radial-gradient(circle at 50% 50%,rgba(227,191,106,.55) 0 7%,transparent 7.5%),repeating-radial-gradient(circle at 50% 50%,transparent 0 5px,rgba(227,191,106,.2) 5px 6px),repeating-linear-gradient(45deg,rgba(255,255,255,.07) 0 1px,transparent 1px 6px),linear-gradient(160deg,#b5202f,#6b0d18);box-shadow:inset 0 0 0 calc(var(--cw)*.045) #f3e6c4,0 0 0 1px rgba(0,0,0,.4)}
 .gd .board-wrap{--R:min(9vw,14vh,120px)}

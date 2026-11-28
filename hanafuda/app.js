@@ -200,7 +200,9 @@ function showResult(r, last) {
     const box = $('#coachBox'); box.scrollIntoView({ block: 'nearest' });
     HFReview.review(D.m, think, box).then(() => {
       if (!reviewing) return;
-      box.insertAdjacentHTML('beforeend', `<div class="rv-btns"><button type="button" class="mbtn go" id="rvNext">${esc(t(last ? 'match.h' : 'res.next'))}</button></div>`);
+      // the button goes in the box's title row (never over the list)
+      const h3 = box.querySelector('h3') || box;
+      h3.insertAdjacentHTML('beforeend', `<button type="button" class="mbtn go rv-next" id="rvNext">${esc(t(last ? 'match.h' : 'res.next'))}</button>`);
       document.getElementById('rvNext').onclick = () => { reviewing = false; nextHand(); };
     });
   };
@@ -251,8 +253,8 @@ function renderNew() {
     }
   } else {
     const backs = ['black', 'red'], tabs = ['indigo', 'lacquer'];
-    h = `<div class="opt"><label>${esc(t('o.back'))}</label><div class="tiles">` + backs.map(b => `<button type="button" class="tile ${draft.back === b ? 'on' : ''}" data-back="${b}"><span class="sw-card" style="background:${b === 'black' ? '#121114' : '#3e0c0b'} url(img/cards/back-${b}@2x.webp?v=1) center/100% 100%"></span>${esc(t('bk.' + b))}</button>`).join('') + '</div></div>' +
-      `<div class="opt"><label>${esc(t('o.table'))}</label><div class="tiles">` + tabs.map(b => `<button type="button" class="tile ${draft.table === b ? 'on' : ''}" data-table="${b}"><span class="sw-table" style="background:${b === 'indigo' ? '#1c2c44' : '#3a1712'}"></span>${esc(t('tb.' + b))}</button>`).join('') + '</div></div>' +
+    h = `<div class="opt"><label>${esc(t('o.back'))}</label><div class="tiles">` + backs.map(b => `<button type="button" class="tile ${draft.back === b ? 'on' : ''}" data-back="${b}"><span class="sw-card" style="background:${b === 'black' ? '#121114' : '#3e0c0b'} url(img/cards/back-${b}@2x.webp?v=2) center/100% 100%"></span>${esc(t('bk.' + b))}</button>`).join('') + '</div></div>' +
+      `<div class="opt"><label>${esc(t('o.table'))}</label><div class="tiles">` + tabs.map(b => `<button type="button" class="tile ${draft.table === b ? 'on' : ''}" data-table="${b}"><span class="sw-table" style="background:${b === 'indigo' ? '#17435a' : '#3a1712'}"></span>${esc(t('tb.' + b))}</button>`).join('') + '</div></div>' +
       `<p class="credit">${esc(t('credit.art'))} <a href="img/cards/LICENSE.md" target="_blank" rel="noopener">CC BY-SA 4.0</a></p>`;
   }
   $('#ngBody').innerHTML = h;
@@ -317,7 +319,15 @@ function placeToast() {
   const pc = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)').matches;
   // PC: centered in the free strip of the opponent's row; phone: exactly over the status strip at the top of the table
   e.classList.toggle('ph', !pc);
-  if (!pc) { const st = $('#tstrip').getBoundingClientRect(); Object.assign(e.style, { bottom: 'auto', top: Math.round(Math.max(st.top, 4)) + 'px', left: Math.round(st.left) + 'px', width: Math.round(st.width) + 'px', minHeight: Math.round(st.height) + 'px', maxWidth: 'none' }); return; }
+  if (!pc) {
+    // the strip sticks to the top of the screen while the table is in view; the toast sits exactly on it.
+    // When the table is scrolled away, the toast becomes an opaque band at the top edge of the screen.
+    const st = $('#tstrip').getBoundingClientRect(), onScreen = st.bottom > 0 && st.top < innerHeight && r.bottom > st.height;
+    if (onScreen) Object.assign(e.style, { bottom: 'auto', top: Math.round(st.top) + 'px', left: Math.round(st.left) + 'px', width: Math.round(st.width) + 'px', minHeight: Math.round(st.height) + 'px', maxWidth: 'none', borderRadius: '' });
+    else Object.assign(e.style, { bottom: 'auto', top: '0px', left: '0px', width: '100%', minHeight: "52px", maxWidth: 'none', borderRadius: '0' });
+    return;
+  }
+  e.style.borderRadius = '';
   e.style.width = ''; e.style.minHeight = '';
   e.style.bottom = 'auto'; e.style.top = Math.round(r.top + 14) + 'px';
   if (pc) {
@@ -328,6 +338,7 @@ function placeToast() {
   }
 }
 window.HFToast = m => toast(m);
+addEventListener('scroll', () => { if ($('#toast').classList.contains('on')) placeToast(); }, { passive: true });
 function renderCoach() {
   const m = D.m, el = $('#coachBox');
   if (reviewing) return;

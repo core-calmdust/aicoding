@@ -108,21 +108,27 @@ function judge(pos) {
 function smallLine(pos, b) { const p = pos.own[b]; if (p !== 1 && p !== 2) return null; const m = pos.mask(b, p); const L = LINES.find((l, k) => (m & LMASK[k]) === LMASK[k]); return L || null; }
 function bigLine(pos) { if (pos.res !== 1 && pos.res !== 2) return null; const m = pos.macMask(pos.res); return LINES.find((l, k) => (m & LMASK[k]) === LMASK[k]) || null; }
 // ---------------------------------------------------------------- the WebAssembly core
-let WA = null;
+let WA = null, WMOD = null, coreErr = '';
+// Loads the core (once per worker; again after a failure or a trap). A failure is not logged here: a worker that the page
+// terminates while it is still loading (the page cancels a search by terminating its worker) fails its importScripts with a
+// NetworkError, and that is not an error. The worker retries when the next request arrives and reports it then (onmessage).
 function loadCore() {
   try {
     if (!G.UT_WASM) {
       if (typeof importScripts === 'function') importScripts(new URL('core-wasm.js?v=1', G.location.href).href);
       else if (typeof require === 'function') { G.self = G.self || G; require('./core-wasm.js'); }
     }
-    const b64 = G.UT_WASM; if (!b64) return;
-    const bin = typeof atob === 'function' ? Uint8Array.from(atob(b64), ch => ch.charCodeAt(0)) : Buffer.from(b64, 'base64');
-    const inst = new WebAssembly.Instance(new WebAssembly.Module(bin), { env: { now: () => Date.now() } });
+    const b64 = G.UT_WASM; if (!b64) { coreErr = 'core-wasm.js gave no module'; return; }
+    if (!WMOD) { const bin = typeof atob === 'function' ? Uint8Array.from(atob(b64), ch => ch.charCodeAt(0)) : Buffer.from(b64, 'base64'); WMOD = new WebAssembly.Module(bin); }
+    const inst = new WebAssembly.Instance(WMOD, { env: { now: () => Date.now() } });
     const x = inst.exports, mem = x.memory;
     WA = { x, mem, get io() { return new Int32Array(mem.buffer, x.io(), 128); }, get out() { return new Int32Array(mem.buffer, x.out(), 256); } };
     x.setrule(R.fc, R.tie, R.cnt); x.seed((Math.random() * 4294967295) >>> 0);
-  } catch (e) { WA = null; if (typeof console !== 'undefined') console.error('uttt core', e); }
+    coreErr = '';
+  } catch (e) { WA = null; coreErr = String(e && e.stack || e); }
 }
+// a WebAssembly trap (RuntimeError) leaves the instance's stack pointer and search state undefined: start a fresh instance
+function resetCore() { WA = null; loadCore(); }
 function toCore(pos) {
   const io = WA.io;
   for (let i = 0; i < 81; i++) io[i] = pos.c[i];
@@ -200,6 +206,7 @@ function think(start, moves, level, rand, rule) {
   nodes = 0;
   if (L.d && !L.s) {
     const vals = rootValues(pos, L.d, 4000) || rootValues(pos, 1, 0);
+    if (!vals || !vals.length) return { move: all[Math.floor(rand() * all.length)] };
     if (vals[0].v < -WINT) return { move: resist(pos, vals), v: vals[0].v };
     // a win at once is never missed; otherwise the noisy choice
     if (vals[0].v > WINT && vals[0].v >= WIN - 2) return { move: vals[0].m, v: vals[0].v };   // (a win in one move: every level plays it)
@@ -209,7 +216,7 @@ function think(start, moves, level, rand, rule) {
   }
   if (L.mc || L.it) {
     const r = mcts(pos, L.ms || 0, L.it || 0);
-    if (r.proven === -1) { const vals = rootValues(pos, 6, 1500) || rootValues(pos, 2, 0); return { move: resist(pos, vals), v: vals[0].v, mc: 1 }; }
+    if (r.proven === -1) { const vals = rootValues(pos, 6, 1500) || rootValues(pos, 2, 0); if (vals && vals.length) return { move: resist(pos, vals), v: vals[0].v, mc: 1 }; }
     return { move: r.move, v: wrV(r.wr), mc: 1, iters: r.iters };
   }
   const r = bestMove(pos, L.dx || 60, L.nk && L.ms >= 600000 ? 0 : (L.ms || 0), L.nk || 0);
@@ -286,8 +293,14 @@ const API = { P1, P2, WIN, WINT, LINES, RULES, RULE_ORDER, ruleOf, ruleKey, setR
   get core() { return WA; }, get nodes() { return nodes; } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
+  // anything that escapes the handler below: report it with its details (the page logs it and starts a new worker)
+  self.addEventListener('error', e => { try { self.postMessage({ type: 'werror', msg: String(e.message), file: e.filename, line: e.lineno, col: e.colno }); } catch (x) {} });
+  self.addEventListener('unhandledrejection', e => { try { self.postMessage({ type: 'werror', msg: 'unhandled rejection: ' + String(e.reason && e.reason.stack || e.reason) }); } catch (x) {} });
+  self.onmessageerror = () => { try { self.postMessage({ type: 'werror', msg: 'messageerror: a request could not be deserialized' }); } catch (x) {} };
   self.onmessage = e => {
     const m = e.data;
+    if (!m || typeof m !== 'object') return;
+    if (!WA && m.type !== 'newgame') { loadCore(); if (!WA) { self.postMessage({ id: m.id, type: 'result', error: 'core: ' + coreErr }); return; } }
     try {
       setRule(m.rule || 'std');
       if (m.type === 'think') { PRO_CFG = m.cfg || null; try { self.postMessage({ id: m.id, type: 'result', ...think(m.start, m.moves, m.level), nodes }); } finally { PRO_CFG = null; } }
@@ -298,7 +311,11 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
       else if (m.type === 'win') self.postMessage({ id: m.id, type: 'result', list: winningMoves(m.start, m.moves, null, m.n) });
       else if (m.type === 'newgame') { if (WA) WA.x.ttclear(); self.postMessage({ id: m.id, type: 'result' }); }
       else self.postMessage({ id: m.id, type: 'result' });
-    } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }
+    } catch (err) {
+      PRO_CFG = null;
+      if (typeof WebAssembly !== 'undefined' && err instanceof WebAssembly.RuntimeError) resetCore();
+      self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) });
+    }
   };
 }
 if (typeof window !== 'undefined') window.UtttEngine = API;

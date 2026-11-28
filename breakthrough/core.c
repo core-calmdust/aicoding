@@ -370,6 +370,7 @@ EXPORT(ab_best) int ab_best(int maxD, double ms, double nk) {
     ttStore(p->h, d, dV, 1, dBest, 0);
     if (dV > WINT || dV < -WINT) { if (d >= (WIN - (dV > 0 ? dV : -dV)) + 2) break; }   // a proven result, read deep enough
     if (ms > 0 && d >= 2 && now() - t0 > ms * 0.45) break;   // the next depth would most likely not finish
+    if (nk > 0 && d >= 2 && nodes > nk * 0.45) break;        // (the same for a node budget, 2026-11-28)
   }
   IO[1] = toPage(bestM); IO[2] = bestV; IO[3] = depth;
   return IO[1];
