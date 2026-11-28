@@ -35,7 +35,7 @@ ${kind ? `<text x="16" y="28" font-size="17" font-family="Shippori Mincho B1, se
   }
   // load every picture early, so a card never shows as an empty frame while its image is still on the way
   function preload() { if (preload.done) return; preload.done = 1; Object.keys(ART).forEach(id => { const im = new Image(); im.decoding = 'async'; im.src = artSrc(+id); });
-    ['black', 'red'].forEach(b => { const im = new Image(); im.src = `img/cards/back-${b}${(self.devicePixelRatio || 1) > 1.2 ? '@2x' : ''}.webp?v=1`; }); }
+    ['black', 'red'].forEach(b => { const im = new Image(); im.src = `img/cards/back-${b}${(self.devicePixelRatio || 1) > 1.2 ? '@2x' : ''}.webp?v=2`; }); }
   if (typeof document !== 'undefined') { if (document.readyState === 'complete') setTimeout(preload, 50); else addEventListener('load', () => setTimeout(preload, 50)); }
   root.HFCards = { face, artSrc, ART, PLANT, preload };
 })(typeof self !== 'undefined' ? self : this);

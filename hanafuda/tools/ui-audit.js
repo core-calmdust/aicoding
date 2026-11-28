@@ -26,6 +26,23 @@ const CHECK = () => {
     if (r.left < -1 || r.top < -1 || r.right > innerWidth + 1 || r.bottom > innerHeight + 1) bad.push('dialog leaves the window: ' + m.className);
   });
   document.querySelectorAll('.hfr-row>b, .cap-grp b').forEach(b => { if (vis(b) && b.textContent.trim() && lines(b) > 1) bad.push('label wraps: ' + b.textContent.trim()); });
+  // a button must not lie over text (clipped by scrolling boxes: only the visible part counts)
+  const clip = e => { let r = e.getBoundingClientRect(); let a = { l: r.left, t: r.top, r: r.right, b: r.bottom };
+    for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) { const cs = getComputedStyle(p); if (cs.overflow !== 'visible' || cs.overflowY !== 'visible') { const q = p.getBoundingClientRect(); a = { l: Math.max(a.l, q.left), t: Math.max(a.t, q.top), r: Math.min(a.r, q.right), b: Math.min(a.b, q.bottom) }; } }
+    return a; };
+  const texts = [...document.querySelectorAll('li, p, .it, .rv-sum, .status')].filter(e => vis(e) && e.textContent.trim());
+  document.querySelectorAll('.side button, .stage button').forEach(b => {
+    if (!vis(b)) return; const br = b.getBoundingClientRect();
+    for (const e of texts) {
+      if (e.contains(b) || b.contains(e)) continue;
+      const a = clip(e); const ix = Math.min(a.r, br.right) - Math.max(a.l, br.left), iy = Math.min(a.b, br.bottom) - Math.max(a.t, br.top);
+      if (ix > 2 && iy > 2) {
+        // only when the button is really drawn on top there (not a button under a dialog or the tutorial box)
+        const cx = (Math.max(a.l, br.left) + Math.min(a.r, br.right)) / 2, cy = (Math.max(a.t, br.top) + Math.min(a.b, br.bottom)) / 2;
+        const top = document.elementFromPoint(cx, cy); if (!top || !(b === top || b.contains(top))) continue;
+        bad.push('button over text: ' + b.textContent.trim().slice(0, 20) + ' / ' + e.textContent.trim().slice(0, 20)); break; }
+    }
+  });
   // the boxes under the table: nothing may be cut at the bottom or the side
   document.querySelectorAll('.side>.box, .side .status').forEach(e => {
     if (!vis(e)) return;
@@ -40,6 +57,17 @@ const TOAST = () => {
   const bad = [], tEl = document.getElementById('toast');
   const tr = tEl.getBoundingClientRect();
   if (tr.left < 0 || tr.right > innerWidth || tr.top < 0 || tr.bottom > innerHeight) bad.push('toast leaves the window');
+  const strip = document.getElementById('tstrip');
+  if (strip && getComputedStyle(strip).display !== 'none') {
+    // phone: the toast must sit exactly on the status strip (sticky at the top while the table is in view),
+    // or be an opaque band at the top edge when the table is scrolled away
+    const sr = strip.getBoundingClientRect(), tb = document.getElementById('table').getBoundingClientRect();
+    const near = (a, b) => Math.abs(a - b) <= 2;
+    if (sr.bottom > 0 && tb.bottom > sr.height) { if (!(near(tr.left, sr.left) && near(tr.right, sr.right) && near(tr.top, sr.top) && tr.bottom <= sr.bottom + 2)) bad.push('toast not on the strip ' + JSON.stringify([tr.top, tr.bottom, sr.top, sr.bottom])); }
+    else if (!(near(tr.top, 0) && near(tr.left, 0) && near(tr.right, innerWidth))) bad.push('toast is not the top band');
+    if (getComputedStyle(tEl).backgroundColor.indexOf('rgba') === 0) bad.push('toast not opaque');
+    return bad;
+  }
   const hit = r => !(r.right <= tr.left || r.left >= tr.right || r.bottom <= tr.top || r.top >= tr.bottom);
   document.querySelectorAll('.side>.box, .hf, .hb, .cap-grp b, #deckN, .m-tabs').forEach(e => {
     const r = e.getBoundingClientRect(); if (r.width && r.height && getComputedStyle(e).display !== 'none' && hit(r)) bad.push('toast covers ' + (e.id || e.className.toString().slice(0, 20)) + (e.dataset && e.dataset.id ? ' ' + e.dataset.id : ''));
@@ -60,12 +88,15 @@ const TOAST = () => {
     await p.reload({ waitUntil: 'load' }); await p.waitForTimeout(1500);
     await shot('main');
     const toastCheck = async name => {
-      await p.evaluate(() => scrollTo(0, 0));   // phone: the toast sits on the status strip at the top of the table
+      for (const sc of mob ? ['top', 'half', 'boxes'] : ['top']) {
+      await p.evaluate(sc => { const t = document.getElementById('table'); const y = t.getBoundingClientRect().top + scrollY; scrollTo(0, sc === 'top' ? 0 : sc === 'half' ? y + t.offsetHeight / 2 : y + t.offsetHeight + 40); }, sc);
       for (const msg of ['早い月を引いたAIが親です', 'Lv.20 と対局 (R 1500) ・ 早い月を引いたAIが親です', 'The AI drew the earlier month and deals first ・ Rated game against Lv.20']) {
         await p.evaluate(m => window.HFToast(m), msg); await p.waitForTimeout(350);
-        const bad = await p.evaluate(() => window.TOAST()); report.push([tag, 'toast-' + name, bad]);
-        if (msg.length < 20) await p.screenshot({ path: `${OUT}/${tag}-toast-${name}.png` });
+        const bad = await p.evaluate(() => window.TOAST()); report.push([tag, 'toast-' + name + '-' + sc, bad]);
+        if (msg.length < 20) await p.screenshot({ path: `${OUT}/${tag}-toast-${name}${sc === 'top' ? '' : '-' + sc}.png` });
       }
+      }
+      await p.evaluate(() => scrollTo(0, 0));
     };
     await p.evaluate(`window.TOAST = ${TOAST.toString()}`);
     await toastCheck('main');

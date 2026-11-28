@@ -26,21 +26,23 @@ def norm(a):
 
 
 def grain(rng):
-    # irregular grains: band-passed noise at a few scales, sharpened into blobs (not a uniform hiss, not a pattern)
+    # mottled grain: band-passed noise, its coordinates bent by a second noise so the grains join into irregular,
+    # worm-like patches (as in the photographed back), not a salt-and-pepper hiss
+    from scipy.ndimage import map_coordinates
     g = np.zeros((H, W), np.float32)
-    for s, wgt in ((1.8, 0.45), (3.5, 0.8), (6.2, 0.8), (10.5, 0.35)):
+    for s, wgt in ((1.4, 0.35), (2.6, 0.7), (4.2, 1.0), (7.0, 0.45)):
         n = rng.standard_normal((H, W)).astype(np.float32)
-        b = gaussian_filter(n, s) - gaussian_filter(n, s * 2.2)
-        g += wgt * norm(b)
+        g += wgt * norm(gaussian_filter(n, s) - gaussian_filter(n, s * 2.0))
     g = norm(g)
-    # the density of grains drifts across the sheet (paper is not even)
-    dens = norm(smooth(rng, 90))
-    g = g + 0.12 * dens
-    # grains: a soft threshold; about half of the sheet is grain, most of it dark grey, a few catch the light
-    lit = np.clip((g + 1.0) / 3.0, 0, 1) ** 1.2
-    # each grain has its own brightness: some dull, some catching the light
-    lit = lit * np.clip(0.75 + 0.45 * norm(gaussian_filter(rng.standard_normal((H, W)).astype(np.float32), 3.0)), 0.2, 1.6)
-    sparkle = np.clip((norm(gaussian_filter(rng.standard_normal((H, W)).astype(np.float32), 1.0)) - 2.6) / 1.2, 0, 1)
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    wx = norm(gaussian_filter(rng.standard_normal((H, W)).astype(np.float32), 6)) * 3.5
+    wy = norm(gaussian_filter(rng.standard_normal((H, W)).astype(np.float32), 6)) * 3.5
+    g = map_coordinates(g, [yy + wy, xx + wx], order=1, mode='reflect')
+    g = g + 0.12 * norm(smooth(rng, 90))
+    # about half of the sheet is grain; most of it dull, some catching the light
+    lit = np.clip((g + 0.85) / 2.7, 0, 1) ** 1.1
+    lit = lit * np.clip(0.8 + 0.4 * norm(gaussian_filter(rng.standard_normal((H, W)).astype(np.float32), 6.0)), 0.25, 1.5)
+    sparkle = np.clip((norm(gaussian_filter(rng.standard_normal((H, W)).astype(np.float32), 1.6)) - 2.7) / 1.2, 0, 1)
     return lit, sparkle
 
 
@@ -57,10 +59,10 @@ def make(base, seed, out_dir, name):
     fib = fibres(rng)
     mott = norm(smooth(rng, 160))
     base = np.array(base, np.float32) / 255
-    grey = np.array((0.50, 0.48, 0.46), np.float32)          # the lit grains: a cool grey, as in the photo
+    grey = np.array((0.50, 0.43, 0.36), np.float32)          # the lit grains: a warm grey, as in the photo
     img = base[None, None, :] * (1 + 0.06 * mott[..., None] + 0.035 * fib[..., None])
-    img = img + (grey - base)[None, None, :] * (lit * 0.80)[..., None]
-    img = img + (np.array((0.68, 0.67, 0.66)) - img) * (sparkle * 0.5)[..., None]
+    img = img + (grey - base)[None, None, :] * (lit * 0.92)[..., None]
+    img = img + (np.array((0.66, 0.59, 0.51)) - img) * (sparkle * 0.45)[..., None]
     # tiny dark pits between grains
     pits = np.clip((-norm(gaussian_filter(rng.standard_normal((H, W)).astype(np.float32), 1.3)) - 1.4) / 1.5, 0, 1)
     img *= (1 - 0.45 * pits)[..., None]
@@ -70,7 +72,7 @@ def make(base, seed, out_dir, name):
     dx = np.minimum(xx, W - 1 - xx); dy = np.minimum(yy, H - 1 - yy)
     d = np.minimum(dx, dy) + jag
     wear = np.clip(1 - d / (2.2 * px), 0, 1) * 0.22
-    img = img + wear[..., None] * (np.array((0.42, 0.41, 0.40)) - img)
+    img = img + wear[..., None] * (np.array((0.40, 0.36, 0.32)) - img)
     bevel = np.clip(1 - np.abs(d - 4.5 * px) / (2.5 * px), 0, 1) * 0.05
     img *= (1 - bevel)[..., None]
     # rounded corners like the faces
@@ -88,5 +90,5 @@ def make(base, seed, out_dir, name):
 
 if __name__ == '__main__':
     out = sys.argv[1]
-    make((12, 11, 13), 11, out, 'back-black')
-    make((70, 14, 13), 12, out, 'back-red')
+    make((17, 13, 11), 11, out, 'back-black')
+    make((72, 16, 12), 12, out, 'back-red')
