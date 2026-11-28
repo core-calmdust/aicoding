@@ -22,12 +22,12 @@
     lv = Math.max(1, Math.min(20, lv | 0));
     return {
       lv,
-      worlds: [0, 2, 3, 4, 6, 8, 10, 14, 18, 24, 30, 40, 36, 44, 52, 62, 74, 88, 104, 124, 150][lv],
+      worlds: [0, 2, 3, 4, 6, 8, 10, 14, 18, 24, 30, 40, 52, 66, 84, 104, 130, 160, 200, 240, 300][lv],
       noise: Math.max(0, 1.6 - lv * 0.11),          // softmax temperature-ish
       blunder: Math.max(0, 0.30 - lv * 0.022),      // chance to play a quick-policy / random move
       infer: lv >= 8,                                // use the opponent's discards to shape its hand
       koiSmart: lv >= 5,
-      strong: lv >= 12,                              // the stronger playout policy
+      strong: false,                                 // quick2: measured -0.59±0.45/hand vs quick at Lv.12 (2026-11-28) — off
     };
   }
 
