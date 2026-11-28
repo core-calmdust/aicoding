@@ -1897,3 +1897,92 @@ html[data-cup=tan] .ld .cupi,html[data-cup=tan] .rcup{background-image:url(img/c
 @media (hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4){
   .ld #newOverlay .ng-body{height:auto;min-height:330px;max-height:calc(100dvh - 290px)}
 }
+
+/* ===================== tutorial on the table (tutorial.js; the guandan tutorial's spotlight + bubble) ===================== */
+#tutLayer.ld-tl .tut-mask{position:fixed;left:0;top:0;pointer-events:none}
+#tutLayer.ld-tl .tut-mask path{fill:rgba(5,5,6,.58)}
+#tutLayer.ld-tl.center .tut-mask path{fill:rgba(5,5,6,.7)}
+#tutLayer.ld-tl .tut-ring{position:fixed;pointer-events:none;box-shadow:0 0 0 2px #e3bf6a,0 0 20px 4px rgba(227,191,106,.45);transition:left .3s,top .3s,width .3s,height .3s}
+#tutLayer.ld-tl.act .tut-ring{animation:ldTutRing 1.4s ease-in-out infinite}
+@keyframes ldTutRing{0%,100%{box-shadow:0 0 0 2px #8fe3b8,0 0 12px 2px rgba(143,227,184,.4)}50%{box-shadow:0 0 0 3px #8fe3b8,0 0 26px 8px rgba(143,227,184,.65)}}
+#tutLayer .ld-box{width:min(440px,calc(100vw - 20px));max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);overflow-y:auto;overscroll-behavior:contain;border-color:rgba(227,191,106,.6)}
+#tutLayer.ld-tl.center .ld-box{width:min(560px,calc(100vw - 20px))}
+.ld-box .tut-tr{display:flex;gap:4px}
+.ld-box .tp-h{display:block;font-size:17px;color:#f8f6f1;margin:2px 0 6px;line-height:1.35}
+.ld-box .tp-body p{margin:0;font-size:14.5px;line-height:1.8}
+.ld-box .tp-body p b{color:#f2d283}
+.ld-box .tp-wait{color:var(--muted)}
+.ld-box.min .tp-body p,.ld-box.min .tp-pics{display:none}
+.ld-box .tut-btns{margin-top:12px}
+.ld-box .tut-btns #tuBack{margin-right:auto}
+.tp-pics{margin-top:12px;padding:10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:8px}
+.tp-pics.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+.tp-pics.flow{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px}
+.tp-pics.flow > b{color:var(--accent);font-size:18px}
+.tp-pics.one{align-items:center}
+.tp-row{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0}
+.tp-pics.flow .tp-row,.tp-pics.one .tp-row{align-items:center}
+.tp-row small{font-size:12px;color:#d9d4ca;line-height:1.35}
+.tp-c{display:flex;flex-wrap:wrap;gap:2px}
+@media (min-width:900px){
+  #tutLayer .ld-box{width:min(480px,calc(100vw - 24px))}
+  #tutLayer.ld-tl.center .ld-box{width:min(640px,calc(100vw - 24px))}
+  .ld-box .tp-h{font-size:21px;margin-bottom:8px}
+  .ld-box .tp-body p{font-size:16.5px;line-height:1.85}
+  .tp-row small{font-size:13.5px}
+}
+@media (max-width:760px){
+  #tutLayer .ld-box{max-height:46vh;max-height:46dvh;padding:11px 13px 10px}
+  .ld-box .tp-h{font-size:16px;margin-bottom:4px}
+  .ld-box .tp-body p{font-size:14px;line-height:1.7}
+  .tp-pics{margin-top:8px;padding:8px}
+  .tp-pics.grid{gap:8px}
+  .ld-box .tut-btns{margin-top:8px}
+}
+html[lang=ar] .ld-box .tut-btns #tuBack{margin-right:0;margin-left:auto}
+/* liarsdice additions: the progress line, the meter, the dice pictures */
+.ld-box .tut-prog{display:block;height:3px;border-radius:2px;background:rgba(255,255,255,.08);margin:0 0 8px;overflow:hidden}
+.ld-box .tut-prog i{display:block;height:100%;background:#d9bf7d;transition:width .3s}
+.tut-meter{display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px 10px;margin-top:12px;padding:9px 11px;border-radius:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09)}
+.tut-meter small{grid-column:1/-1;font-size:12.5px;color:#d9d4ca}
+.tut-meter .tm-bar{height:9px;border-radius:5px;background:rgba(255,255,255,.09);overflow:hidden}
+.tut-meter .tm-bar i{display:block;height:100%;border-radius:5px;transition:width .25s}
+.tut-meter b{font:700 17px 'JetBrains Mono',monospace;min-width:3.2em;text-align:end}
+.tut-meter.hi .tm-bar i{background:#8fe3b8}.tut-meter.hi b{color:#8fe3b8}
+.tut-meter.mid .tm-bar i{background:#e3bf6a}.tut-meter.mid b{color:#e3bf6a}
+.tut-meter.lo .tm-bar i{background:#ff8f86}.tut-meter.lo b{color:#ff8f86}
+.tut-mt:empty{display:none}
+.tp-bid{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:10px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.1);direction:ltr}
+.tp-bid b{font:700 20px 'JetBrains Mono',monospace;color:#f1e6c8}.tp-bid i{font-style:normal;color:var(--muted)}
+.dimg.tpd{width:28px;height:28px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.45))}
+.dimg.tpd.nw{opacity:.55;filter:grayscale(.6)}
+.tp-c em{font-style:normal;font-weight:700;color:var(--muted);align-self:center;padding:0 2px}
+.tp-row.ok .tp-bid{border-color:rgba(143,227,184,.55)}.tp-row.ng .tp-bid{border-color:rgba(255,143,134,.55)}
+.tp-pics.grid .tp-row{align-items:center;text-align:center}
+.tut-offer .to-art .garts.ld{position:relative;display:block;width:150px;height:96px}
+.ld-tl .tp-c{align-items:center;gap:3px;direction:ltr}
+@media (max-width:760px){.dimg.tpd{width:24px;height:24px}.tp-bid b{font-size:17px}.tut-meter{margin-top:8px;padding:7px 9px}}
+/* phones: the button row is pulled up beside the − / + stepper; its padding must not swallow taps on the stepper */
+@media (max-width:760px){.ld .actbar:has(.bld) .ab-btns.main{pointer-events:none}.ld .actbar:has(.bld) .ab-btns.main > *{pointer-events:auto}}
+@media (max-width:760px){#tutLayer.ld-tl.center .ld-box{max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px)}}
+@media (max-width:760px) and (max-height:700px){#tutLayer .ld-box{max-height:54vh;max-height:54dvh}.ld-box .tp-body p{font-size:13.5px;line-height:1.6}}
+/* the tutorial: the reason for a wrong move, inside the bubble; the compact bubble on phones (no free band for the full one) */
+.ld-box .tut-ng{margin:10px 0 0;padding:7px 10px;border-radius:9px;background:rgba(255,120,110,.12);border:1px solid rgba(255,143,134,.45);color:#ffd2cd;font-size:13px;line-height:1.5}
+.ld-box .tut-ng[hidden]{display:none}
+@media (max-width:760px){
+  .ld-box.tight{padding:8px 11px 8px}
+  .ld-box.tight .tp-h{font-size:14.5px;margin:0 0 2px}
+  .ld-box.tight .tp-body p{font-size:12.5px;line-height:1.5}
+  .ld-box.tight .tut-meter{margin-top:6px;padding:5px 8px}.ld-box.tight .tut-meter small{font-size:11px}.ld-box.tight .tut-meter b{font-size:14px}
+  .ld-box.tight .tut-btns{margin-top:5px}.ld-box.tight .tut-prog{margin-bottom:4px}.ld-box.tight .tut-top{margin-bottom:2px}
+  .ld-box.tight .tut-ng{margin-top:6px;padding:5px 8px;font-size:12px}
+}
+/* phones, three players: the two others sit at the top corners; their speech bubbles go under the name plate
+   (beside it, the two bubbles met in the middle and covered each other) */
+@media (max-width:760px){
+  .ld #ldTable[data-n="3"] .seat.top .bub{top:calc(100% + 9px);bottom:auto;left:4px;right:auto;transform:none;animation-name:ldBubT}
+  .ld #ldTable[data-n="3"] .seat.top .bub::after{top:-5px;bottom:auto;left:16px;right:auto;transform:rotate(45deg)}
+  .ld #ldTable[data-n="3"] .seat.top.rside .bub{left:auto;right:4px}
+  .ld #ldTable[data-n="3"] .seat.top.rside .bub::after{left:auto;right:16px}
+}
+.ld-box.min p.tut-ng:not([hidden]){display:block}

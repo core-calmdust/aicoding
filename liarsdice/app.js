@@ -122,6 +122,7 @@ function persist() { if (!M || M.tut) return; D.cur = M; save(); }
 function rulesFromSet(o) { o = o || set; return { wild: !!o.wild, palifico: !!o.palifico, calza: !!o.calza, raise: o.raise, dice: 5 }; }
 function newGame(o) {
   unsched();
+  if (M && M.tut && window.LdTut) LdTut.stop();
   if (window.LdRated) LdRated.forfeitIfLive();
   recordAbandon();
   o = o || {};
@@ -133,7 +134,7 @@ function newGame(o) {
 }
 function startRound() {
   const g = G();
-  LD.startRound(g);
+  LD.startRound(g, null, M.tut && g.no === 0 ? M.fix : null);
   U.rev = null; U.said = {}; U.coach = null; U.q = 0; U.f = 0;
   U.phase = 'roll'; U.rollAt = performance.now();
   persist(); render();
@@ -148,12 +149,15 @@ function loop() {
   unsched();
   const g = G(); if (!g || U.phase !== 'bid' || g.phase !== 'bid') return;
   const p = g.round.turn;
-  if (p === 0) { sfx('turn'); presetBuilder(); render(); return; }
+  if (p === 0) { sfx('turn'); if (M.tut) { U.f = 0; U.q = 0; } else presetBuilder(); render(); return; }
+  // the tutorial: the computer waits while a step is being read
+  if (window.LdTut && LdTut.on() && LdTut.hold()) { U.think = -1; render(); return; }
   U.think = p; render();
   // the computer answers at once; we wait only for the previous call's animation (the speech bubble)
   const since = performance.now() - (U.saidAt || 0), wait = Math.max(0, 760 * pace() - since);
   sched(() => {
     const g2 = G(); if (!g2 || g2.phase !== 'bid' || g2.round.turn !== p) return;
+    if (window.LdTut && LdTut.on() && LdTut.hold()) { U.think = -1; render(); return; }
     let a; try { a = window.LdTut && LdTut.on() ? LdTut.bot(g2, p) : AI.decide(g2, p, M.lvls[p]); } catch (e) { console.error(e); a = LD.last(g2) ? { t: 'dudo' } : { t: 'bid', q: 1, f: 2 }; }
     U.think = -1; doAct(p, a);
   }, wait);
@@ -301,6 +305,7 @@ function dudoMe() { const g = G(); if (!myCtx() || !LD.canDudo(g, 0)) return; if
 function calzaMe() { const g = G(); if (!myCtx() || !LD.canCalza(g, 0)) return; if (tutBlock({ t: 'calza' })) return; doAct(0, { t: 'calza' }); if (window.LdTut) LdTut.after('calza'); }
 function hintMe() {
   const g = G(); if (!myCtx()) return;
+  if (M.tut) { if (window.LdTut) LdTut.hint(); return; }
   if (M.mode === 'rated') { toast(t('hint.rated')); return; }
   const C = getCoach(); if (!C || !C.opts.length) return;
   const a = C.opts[0].a;
@@ -317,7 +322,8 @@ function seatPos(p, n) {
   if (p === 0) return [50, 88];
   const a = Math.PI / 2 + p * 2 * Math.PI / n;
   const ph = window.innerWidth < 761;
-  return [50 + Math.cos(a) * (ph ? 34 : 41), (ph ? 53 : 50) + Math.sin(a) * (ph ? 37 : 33)];
+  // (phones, three players: the two others sit higher, clear of the bid in the middle)
+  return [50 + Math.cos(a) * (ph ? 34 : 41), (ph ? (n === 3 ? 45 : 53) : 50) + Math.sin(a) * (ph ? 37 : 33)];
 }
 function render() {
   const g = G(); if (!g) return;
@@ -381,6 +387,7 @@ function render() {
   h += mid;
   patch(box, h);
   box.classList.toggle('reveal', !!rev);
+  box.dataset.n = n;
   renderActbar(); renderSide(); renderNums();
   if (window.LdTut) LdTut.ev('render');
 }
@@ -688,6 +695,17 @@ $('#btnSetClose').onclick = () => closeOv('#setOverlay');
 
 /* ---------------- tutorial hooks ---------------- */
 function tutBlock(a) { return !!(window.LdTut && LdTut.on() && !LdTut.allow(a)); }
+// the tutorial's table: 3 players, Perudo rules, fixed dice for the first round, Luca opens (tutorial.js)
+function startTutorial(hands) {
+  unsched();
+  if (M && !M.tut) persist();
+  const g = LD.newGame({ players: 3, rules: Object.assign({}, LD.PRESETS.perudo, { dice: 5 }), starter: 1 });
+  M = { G: g, lvl: 3, lvls: [0, 3, 3], mode: 'ai', id: 'tut', dec: [], over: false, place: -1, tut: true, fix: hands };
+  U.rev = null; U.said = {}; U.coach = null; U.lastDec = null; U.think = -1;
+  startRound();
+}
+// back to the saved game (or a new one)
+function endTutorial() { unsched(); M = null; U.rev = null; U.said = {}; U.coach = null; U.think = -1; if (!resume()) newGame(); }
 
 /* ---------------- buttons & keys ---------------- */
 $('#btnNew').onclick = openNew;
@@ -743,6 +761,6 @@ function resume() {
 if (!resume()) newGame();
 
 window.LdApp = { get M() { return M; }, get G() { return G(); }, get LANG() { return LANG; }, get U() { return U; }, t, esc, sfx, openOv, closeOv, toast, confirmBox, set, D, save, render, nameOf, bidTxt, bidHtml, actTxt, levelLabel, newGame, startRound, loop, doAct, sched, unsched, persist, rulesFromSet, GRADE,
-  setM(m) { M = m; }, showTab(pt) { set.mTab = pt; mTabs(); } };
+  setM(m) { M = m; }, startTutorial, endTutorial, showTab(pt) { set.mTab = pt; mTabs(); } };
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-csw]'); if (!b || !G()) return; e.preventDefault(); const sc = document.querySelector('.stage'), st = sc ? sc.scrollTop : 0; set.coach = set.coach ? 0 : 1; save(); render(); toast(t('side.coach') + ' ' + (set.coach ? 'ON' : 'OFF')); if (sc) sc.scrollTop = st; });
 })();

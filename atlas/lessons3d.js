@@ -943,7 +943,7 @@
       if (FA.cap && FA.behind && !F.cap) return L('{x}だと取り返しそびれて、駒損のままになっちゃう。');
       if ((later || []).includes(u)) return L(N('{x}も『{n}』で指す手だけど、いまはまだ早いの。先に{m}を指しておかないと、形がくずれちゃう') + kon);
       const rw = shStaticWhyJa(o.pos, u, k); if (rw) return L(rw);
-      if (OF && (P.G || []).includes(u)) return L(N([`{x}も『{n}』の形に近づく手だけど、ここは{m}が先。{m}なら${SC}`, `{x}でも『{n}』には近づくけど、先に指したいのは{m}。{m}なら${SC}`][fb % 2]) + kon);   // (2026-11-28 担当B: no "AIの評価" as the reason; the board facts above first)
+      if (OF && (P.G || []).includes(u)) return L(N(['{x}も『{n}』の形に近づく手だけど、この局面では{m}が先なの。{m}なら' + SC, '{x}でも『{n}』には近づくけど、組む順番は{m}から。{m}なら' + SC][fb % 2]) + kon);   // (2026-11-28 担当B: not the engine's opinion — the order, and what the answer does on the board)
       if (d > .12) return L(N(shContrastJa(F, FA, k, fb, OF ? SC : null)));
       if (OF) return L(N([`{x}では囲いの形に近づかないの。{m}なら${SC}`, `{x}は囲いの駒が進まない手。ここで{m}なら${SC}`, `{x}だと完成が遠いまま。{m}を指せば${SC}`, `{x}を指しても、囲いはそのまま。{m}だと${SC}`, `{x}のあいだ、囲いは一歩も進まないの。{m}なら${SC}`][(vi != null ? vi : k) % 5]) + kon);
       return L([`{x}も悪い手じゃないけど、それだと手順からはずれちゃうの。{m}なら${shShortJa(FA)}`, `{x}だと、組みたい形から少しそれるの。手順の{m}なら${shShortJa(FA)}`, `{x}は形に合わない一手なの。ここで{m}なら${shShortJa(FA)}`, `{x}では組む順番がずれちゃうの。先に{m}なら${shShortJa(FA)}`, `{x}だと手順が一つ飛んじゃう。{m}を指してこそ${shShortJa(FA)}`, `{x}は今の形には早すぎるの。{m}だと${shShortJa(FA)}`][fb] + kon);
@@ -991,7 +991,7 @@
       const voice = fetch('../shogi/voice-fox-ja.js?v=9').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       const rep = getJ('../shogi/lesson-replies.json?v=7').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
       return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261128k5'), getJ('../shogi/openings.json?v=20261124ol1'),
-        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261128sf`).catch(() => ({ sets: [] })))])
+        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261128sg`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
           sets.forEach(s => { if (!s.cat) s.cat = s.handi ? 'handi' : 'mid'; });
@@ -1438,7 +1438,7 @@
       rights = defd ? [`{m}なら${cA}が取れて、取り返されても得。`, `{m}で${cA}を取れば、${pA}との交換でも得なんだ。`] : [`${cA}はだれにも守られていなかった！ {m}で、ただ取りできたんだ。`, `{m}なら、守りのない${cA}をただで取れたピョン。`, `ここは{m}、${cA}を守る駒は1つもいなかった。`, `正しくは{m}、ノーガードの${cA}を取り返されずに取れた。`, `{m}で取れば、${cA}の分だけまるまる得になったピョン。`];
       altGood = () => `{x}も悪くない手！ でも{m}なら${cA}を取れて、もっと得だった。`;
       xpart = G => !G ? [] : G.cap && G.hang ? [`{x}で取った${N[G.cap]}は守られていて、${N[G.pc]}を取り返されちゃう。`, `{x}だと${N[G.cap]}は取れても、${N[G.pc]}を取り返されて損。`]
-        : G.cap && CH_VAL[G.cap] < CH_VAL[FA.cap] ? [`{x}で取れる${N[G.cap]}より、${cA}のほうが価値が高い。`, `{x}の${N[G.cap]}取りより、もっと大きな${cA}があった。`]
+        : G.cap && CH_VAL[G.cap] < CH_VAL[FA.cap] ? [`{x}だと取れるのは${N[G.cap]}だけ。${cA}のほうが価値が高いピョン。`, `{x}で${N[G.cap]}を取ると、もっと大きな${cA}を取りそこねちゃう。`]
         : G.hang ? [`{x}のあと、その${N[G.pc]}が${G.hang}に取られて損しちゃう。`, `{x}で動いた${N[G.pc]}は、${G.hang}に取られる場所。`] : [`{x}だと、${cA}を取るチャンスを見のがしちゃう。`, `{x}では、取れるはずの${cA}がそのまま。`, `{x}を指すあいだに、${cA}は逃げちゃうかも。`, `{x}のあと、${cA}はまだ盤の上。もったいないピョン。`];
     } else if (sid === 'escape') {
       const th = FA.was, safe = !FA.taken, H = FA.hits.length && FA.hits[0] !== 'p' ? N[FA.hits[0]] : '';
