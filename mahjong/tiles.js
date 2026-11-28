@@ -140,6 +140,13 @@ function paintSheet(ctx, type, red) {
   if (k === 6) { put(cell(gImg, 14, 1, RED2)); return true; }
   return false;   // 白: the frame below
 }
+// 中国式の白板：青い二重の枠（国標麻将だけ。window.MJ_WHITE_FRAME）
+function whiteFrame(ctx) {
+  ctx.save(); ctx.strokeStyle = C_BLU; ctx.lineJoin = 'round';
+  ctx.lineWidth = 14; rr(ctx, FW * .17, FH * .14, FW * .66, FH * .72, 14); ctx.stroke();
+  ctx.lineWidth = 5; rr(ctx, FW * .26, FH * .21, FW * .48, FH * .58, 8); ctx.stroke();
+  ctx.restore();
+}
 function paint(type, red) {
   const cv = (typeof document !== 'undefined') ? document.createElement('canvas') : null;
   cv.width = FW; cv.height = FH;
@@ -147,6 +154,7 @@ function paint(type, red) {
   if (gImg && aImg) {
     ctx.fillStyle = GROUND; ctx.fillRect(0, 0, FW, FH);
     paintSheet(ctx, type, red);   // (白: nothing drawn — a plain white tile, as Japanese sets, ユーザー 2026-11-14)
+    if (type === 31 && root.MJ_WHITE_FRAME) whiteFrame(ctx);   // 国標麻将：中国の牌の白（青い枠）
     return cv;
   }
   ground(ctx);

@@ -132,10 +132,12 @@ function newGameDialog(rated) {
       G1.innerHTML = `<div class="ng-card"><span class="lab">${esc(t('opp'))}</span>
         <div class="lv"><button class="btn sm" data-d="-1">−</button><input type="range" min="1" max="20" value="${lv}" id="ngLv"><button class="btn sm" data-d="1">＋</button></div>
         <div class="lv-n"><b id="ngLvN">Lv.${lv}</b><small id="ngLvR">${esc(t('rating'))} ${RT(lv)}</small><span id="ngLvD">${esc(t('lvDesc' + Math.min(5, Math.ceil(lv / 4))))}</span></div></div>
-        <div class="ng-card"><span class="lab">${esc(t('length'))}</span><div class="seg">${[4, 8, 16].map(n => `<button data-len="${n}" class="${n === len ? 'on' : ''}">${esc(t('hands', { n }))}</button>`).join('')}</div><p class="dim">${esc(t('lenNote'))}</p></div>`;
+        <div class="ng-card"><span class="lab">${esc(t('length'))}</span><div class="seg">${[4, 8, 16].map(n => `<button data-len="${n}" class="${n === len ? 'on' : ''}">${esc(t('hands', { n }))}</button>`).join('')}</div><p class="dim">${esc(t('lenNote'))}</p></div>
+        <div class="ng-card wide"><span class="lab">${esc(t('tiersT'))}</span><ul class="tiers">${[1, 2, 3, 4, 5].map(k => `<li data-tier="${k}"><b>Lv.${(k - 1) * 4 + 1}〜${k * 4}</b>${esc(t('lvDesc' + k))}</li>`).join('')}<li><b>${esc(t('rating'))}</b>${esc(t('rateScale'))}</li></ul></div>`;
       const inp = G1.querySelector('#ngLv');
-      const upd = () => { G1.querySelector('#ngLvN').textContent = 'Lv.' + lv; G1.querySelector('#ngLvR').textContent = t('rating') + ' ' + RT(lv); G1.querySelector('#ngLvD').textContent = t('lvDesc' + Math.min(5, Math.ceil(lv / 4))); inp.value = lv; };
+      const upd = () => { G1.querySelector('#ngLvN').textContent = 'Lv.' + lv; G1.querySelector('#ngLvR').textContent = t('rating') + ' ' + RT(lv); G1.querySelector('#ngLvD').textContent = t('lvDesc' + Math.min(5, Math.ceil(lv / 4))); inp.value = lv; G1.querySelectorAll('[data-tier]').forEach(li => li.classList.toggle('on', +li.dataset.tier === Math.min(5, Math.ceil(lv / 4)))); };
       inp.oninput = () => { lv = +inp.value; upd(); };
+      upd();
       G1.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { lv = Math.max(1, Math.min(20, lv + +b.dataset.d)); upd(); });
       G1.querySelectorAll('[data-len]').forEach(b => b.onclick = () => { len = +b.dataset.len; G1.querySelectorAll('[data-len]').forEach(x => x.classList.toggle('on', x === b)); });
     }
@@ -326,7 +328,8 @@ function renderCoach() {
   el.hidden = false;
   const melds = r.meldsOf(ME);
   const types = P.hand.map(T);
-  let h = `<h4>${esc(t('coach'))}</h4>`;
+  let sum = '';
+  let h = `<h4>${esc(t('coach'))}<small data-sum></small></h4>`;
   if (P.hand.length % 3 === 1) {
     const sh = GB.shanten(GB.counts(types), melds.length);
     if (sh === 0) {
@@ -337,9 +340,11 @@ function renderCoach() {
         return `<span class="wt${ok ? '' : ' low'}">${typeImg(w, 'mini')}<b>${res.ok ? res.pts : 0}</b></span>`;
       }).join('') + `</div>` + (ws.some(w => { const x = GBFan.calc({ melds, hand: types, win: w, tsumo: false, flowers: 0, seat: r.seatWind(ME), round: r.wind }); return !x.ok || x.pts < 8; }) ? `<p class="ck-warn">${esc(t('lowWaitWarn'))}</p>` : '');
     } else h += `<p class="ck-l">${esc(t('shantenN', { n: sh }))}</p>`;
+    sum = sh === 0 ? t('ready') : t('shantenN', { n: sh });
   } else if (UI.coach) {
     const c = UI.coach;
     h += `<p class="ck-l">${esc(t('shantenN', { n: Math.max(0, c.shanten) }))}</p>`;
+    sum = t('shantenN', { n: Math.max(0, c.shanten) });
     if (c.discards[0]) h += `<p class="ck-rec">${esc(t('recDiscard'))} ${typeImg(c.discards[0].t, 'mini')}</p>`;
   }
   const key = P.hand.join() + '|' + P.melds.length;
@@ -347,6 +352,8 @@ function renderCoach() {
   const a = UI.coach || UI.ckPlans;
   if (a && a.plans.length) h += `<p class="ck-h">${esc(t('targets'))}</p><ul class="ck-p">${a.plans.map(p => `<li><b>${esc(fanName(p.fan))}</b><span>${p.pts}${esc(t('ptsUnit'))}</span><em>${esc(p.d <= 0 ? t('ready') : t('awayN', { n: p.d }))}</em></li>`).join('')}</ul>`;
   el.innerHTML = h;
+  el.querySelector('[data-sum]').textContent = sum;
+  el.querySelector('h4').onclick = () => el.classList.toggle('open');
 }
 
 // ---------------------------------------------------------------- 和了・流局の結果

@@ -74,6 +74,7 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .act:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.3)}
 .coach{position:absolute;right:14px;top:72px;width:300px;max-height:calc(100% - 300px);overflow:auto;padding:12px 14px;border-radius:18px;background:rgba(255,253,247,.96);border:2px solid var(--line);box-shadow:0 4px 0 rgba(0,0,0,.2);z-index:4;font-size:15px}
 .coach h4{margin:0 0 6px;font-size:16px;color:var(--lac2)}
+.coach h4 small{display:none;font-weight:500;color:var(--ink);margin-left:6px}
 .coach p{margin:4px 0}.ck-l{font-size:17px}.ck-h{color:var(--ink2);font-size:14px;margin-top:10px!important}
 .ck-rec .tl{vertical-align:middle}
 .ck-p{list-style:none;margin:4px 0 0;padding:0}.ck-p li{display:flex;gap:8px;align-items:baseline;padding:3px 0;border-top:1px dashed var(--line)}
@@ -104,7 +105,7 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .lg{padding:10px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:16px}.lg.on{border-color:var(--lac);color:var(--lac2);font-weight:900}
 .modal.small .mbox{width:min(460px,96vw)}
 /* 対局設定：タブを切り替えても大きさは同じ（いちばん大きいタブに合わせる） */
-.modal.ngm .mbox{width:min(760px,96vw);height:min(600px,calc(100vh - 32px));display:flex;flex-direction:column}
+.modal.ngm .mbox{width:min(820px,96vw);max-width:none;height:min(720px,calc(100vh - 32px));display:flex;flex-direction:column}
 .ng{display:flex;flex-direction:column;height:100%}
 .ng-tabs{display:flex;gap:8px;margin-bottom:12px}
 .ng-tabs button{flex:1;padding:10px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:17px;font-weight:700}
@@ -116,12 +117,14 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .ng-card .lab{display:block;font-weight:900;font-size:17px;margin-bottom:10px}
 .ng-card .big{font-family:var(--ar);font-size:40px;color:var(--lac2)}
 .ng-pane[data-pane=rule]{grid-template-columns:1fr}
+.ng-card.wide{grid-column:1/-1}
+.tiers{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}.tiers li{font-size:15px;padding:6px 10px;border-radius:12px;line-height:1.5}.tiers li b{font-family:var(--ar);margin-right:6px}.tiers li.on{background:#fff;outline:2px solid var(--lac)}
 .lv{display:flex;align-items:center;gap:10px}.lv input{flex:1;accent-color:var(--lac)}
 .lv-n{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin-top:10px}.lv-n b{font-family:var(--ar);font-size:28px;color:var(--lac2)}.lv-n small{color:var(--ink2);font-size:14px}.lv-n span{flex-basis:100%;font-size:15px;line-height:1.55}
-.seg{display:flex;gap:8px}.seg button{flex:1;padding:10px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:17px;font-weight:700}.seg button.on{background:var(--jade);border-color:var(--jade);color:#fff}
+.seg{display:flex;gap:8px}.seg button{flex:1;white-space:nowrap;padding:10px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:17px;font-weight:700}.seg button.on{background:var(--jade);border-color:var(--jade);color:#fff}
 .pl-btns button.pri{background:var(--lac)!important;color:#fff!important}
 /* 結果 */
-.modal.resm .mbox{width:min(720px,96vw)}
+.modal.resm .mbox{width:min(760px,96vw);max-width:none}
 .res .how{margin:0 0 10px;font-size:17px;color:var(--ink2)}
 .rhand{display:flex;flex-wrap:wrap;align-items:flex-end;gap:2px;margin:6px 0 12px}
 .rhand .tl{height:52px;border-radius:6px;box-shadow:0 3px 0 #1c5846}.rhand .tl.win{outline:3px solid var(--lac);outline-offset:1px}
@@ -138,7 +141,7 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .fr.me{border-color:var(--lac);background:#fff3f1}.fr .rk{font-family:var(--ar);font-size:26px;color:var(--lac2)}.fr em{font-style:normal;font-family:var(--ar);font-size:20px}.fr small{color:var(--ink2)}
 .rate{font-size:18px;text-align:center}
 /* 図鑑 */
-.modal.dexm .mbox{width:min(980px,96vw);height:min(820px,calc(100vh - 32px));display:flex;flex-direction:column}
+.modal.dexm .mbox{width:min(1040px,96vw);max-width:none;height:min(820px,calc(100vh - 32px));display:flex;flex-direction:column}
 .dex{display:flex;flex-direction:column;height:100%;min-height:0}
 .dx-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
 .dx-tabs button{padding:8px 14px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:15px;font-weight:700;font-family:var(--ar)}
@@ -165,7 +168,11 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
   .acts{bottom:calc((100vw - 40px) / 14.6 * 1.36 + 26px);gap:8px}.act{min-width:84px;padding:8px 12px;font-size:17px}
   #seats .seat{font-size:13px;padding:4px 9px 4px 4px;gap:5px}.seat .wd{width:24px;height:24px;font-size:13px}.seat .sc{font-size:15px}
   .seat.st0{bottom:calc((100vw - 40px) / 14.6 * 1.36 + 84px);left:8px}.seat.st1{right:6px;top:38%}.seat.st3{left:6px;top:38%}.seat.st2{top:62px}
-  .coach{left:8px;right:8px;width:auto;top:auto;bottom:calc((100vw - 40px) / 14.6 * 1.36 + 120px);max-height:30vh;font-size:14px}
+  .coach{left:8px;right:auto;width:auto;max-width:calc(100% - 16px);top:118px;max-height:44vh;font-size:14px;padding:8px 12px}
+  .coach:not(.open)>:not(h4){display:none}
+  .coach h4 small{display:inline}
+  .coach h4{margin:0;cursor:pointer}.coach h4::after{content:' ▾'}.coach.open h4::after{content:' ▴'}
+  #seats .seat .nm{display:none}
   .ng-pane{grid-template-columns:1fr}
   .modal.ngm .mbox{height:calc(100vh - 32px)}
   .dx-list{grid-template-columns:1fr}
