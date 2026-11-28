@@ -135,11 +135,11 @@ function glossHtml() {
   return `<div class="gl-list ht-gl"><p class="lc-lead">${esc(t('gl.lead'))}</p>` + GLOSS.map(k => `<div class="gl-item"><b>${esc(t('g.' + k + '.n'))}</b><p>${esc(t('g.' + k))}</p></div>`).join('') + `</div>`;
 }
 function tabs() {
-  $('#rulesTabs').innerHTML = `<button type="button" data-v="rules" class="${view === 'rules' ? 'sel' : ''}">${esc(t('btn.rules'))}</button><button type="button" data-v="gloss" class="${view === 'gloss' ? 'sel' : ''}">${esc(t('gl.tab'))}</button>` +
-    (window.HtTut ? `<button type="button" class="rv-tab-lesson" data-tut="1">▶ ${esc(t('tu.entry'))}</button>` : '');
-  const tu = document.querySelector('#rulesTabs [data-tut]'); if (tu) tu.onclick = () => { if (tour) tour.stop(); A.closeOv('#rulesOverlay'); HtTut.start(); };
+  $('#rulesTabs').innerHTML = `<button type="button" data-v="rules" class="${view === 'rules' ? 'sel' : ''}">${esc(t('btn.rules'))}</button><button type="button" data-v="gloss" class="${view === 'gloss' ? 'sel' : ''}">${esc(t('gl.tab'))}</button>`;
   document.querySelectorAll('#rulesTabs [data-v]').forEach(b => b.onclick = () => show(b.dataset.v));
-  $('#rulesTop').innerHTML = `<button type="button" class="sel" data-top="rules">${esc(t('btn.rules'))}</button><button type="button" data-top="lessons">${esc(t('btn.lesson'))}</button>`;
+  $('#rulesTop').innerHTML = `<button type="button" class="sel" data-top="rules">${esc(t('btn.rules'))}</button><button type="button" data-top="lessons">${esc(t('btn.lesson'))}</button>` +
+    (window.HtTut ? `<button type="button" class="lt-tut" data-tut="1">▶ ${esc(t('tu.entry'))}</button>` : '');
+  const tu = document.querySelector('#rulesTop [data-tut]'); if (tu) tu.onclick = () => { if (tour) tour.stop(); A.closeOv('#rulesOverlay'); HtTut.start(); };
   document.querySelector('#rulesTop [data-top="lessons"]').onclick = () => { if (tour) tour.stop(); window.HtLessons && HtLessons.open(); };
 }
 let glossEl = null;
