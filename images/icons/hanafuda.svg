@@ -1,10 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
   <defs>
-    <linearGradient id="hf-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8402e"/><stop offset="1" stop-color="#4a120c"/></linearGradient>
-    <radialGradient id="hf-tint" cx=".25" cy=".12" r=".95"><stop offset="0" stop-color="#ffe2c8" stop-opacity=".26"/><stop offset=".6" stop-color="#ffe2c8" stop-opacity=".04"/><stop offset="1" stop-color="#ffe2c8" stop-opacity="0"/></radialGradient>
+    <linearGradient id="hf-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a94a3"/><stop offset=".55" stop-color="#1d6a80"/><stop offset="1" stop-color="#0b3346"/></linearGradient>
+    <radialGradient id="hf-tint" cx=".25" cy=".12" r=".95"><stop offset="0" stop-color="#e4f4f2" stop-opacity=".26"/><stop offset=".6" stop-color="#e4f4f2" stop-opacity=".04"/><stop offset="1" stop-color="#e4f4f2" stop-opacity="0"/></radialGradient>
   </defs>
   <rect width="96" height="96" rx="22" fill="url(#hf-bg)"/>
   <rect width="96" height="96" rx="22" fill="url(#hf-tint)"/>
+  <rect x=".75" y=".75" width="94.5" height="94.5" rx="21.25" fill="none" stroke="#efe4cc" stroke-opacity=".3" stroke-width="1.5"/>
   <g transform="rotate(-12 34 50)">
     <rect x="16" y="22" width="34" height="54" rx="3" fill="#1c1a22"/>
     <rect x="19.5" y="25.5" width="27" height="47" fill="#efe4cc"/>

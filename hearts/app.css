@@ -1740,6 +1740,7 @@ html[lang=ar] .gd-box .tut-btns #tuBack{margin-right:0;margin-left:auto}
 .ht{--hl:#d9556f;--hl2:#ff9fb0;--hl-a:rgba(217,85,111,.5);--gold:#e3bf6a;--rose:#f08ca0}
 .ht .gcard.sel{background:linear-gradient(180deg,rgba(217,85,111,.16),rgba(0,0,0,.15))}
 .ht .tgl input:checked + i{background:linear-gradient(180deg,#e56d85,#a8324b)}
+html[data-felt=blue]{--felt1:#2a5cbc;--felt2:#0b1f58}
 html[data-felt=claret]{--felt1:#7d2236;--felt2:#2c0812}
 html[data-felt=wine]{--felt1:#5a2a52;--felt2:#200a1e}
 /* claret felt: a deeper nap (two noise layers, a soft lamp in the middle, darker rim) */
