@@ -97,7 +97,7 @@ function allow(r, a) {
   if (st.ok(a)) { okShown = true; wrongKey = ''; draw(); SNDok(); clearTimeout(autoT); autoT = setTimeout(() => { idx++; okShown = false; wrongKey = ''; draw(); }, 1700); return true; }
   wrongKey = 'tu_' + st.id + '_no'; draw(); return false;
 }
-function SNDok() { try { const ac = new (window.AudioContext || window.webkitAudioContext)(); [784, 1046].forEach((f, i) => { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = f; g.gain.value = .05; g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + .3 + i * .15); o.connect(g); g.connect(ac.destination); o.start(ac.currentTime + i * .15); o.stop(ac.currentTime + .4 + i * .15); }); } catch (e) {} }
+function SNDok() { if (A.SND) A.SND.ok(); }   // リーチ麻雀と同じ正解の音（app.js の SND）
 function result() { clearTimeout(autoT); okShown = false; wrongKey = ''; while (idx < STEPS.length && !STEPS[idx].result) idx++; setTimeout(draw, 400); }
 function next() {
   const st = cur(); if (!st) return;

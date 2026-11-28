@@ -5,7 +5,7 @@ S: {
   mFree: 'Gegen CPU', mFreeS: 'Gegner Lv.{lv}', mRated: 'Gewertet', mRatedPl: 'Zuerst Einstufung', mTut: 'Tutorial', mTutS: 'Lernen, indem du eine Hand spielst', done: 'Erledigt',
   mDex: 'Fan-Lexikon', mDexS: 'Alle 81 Fan mit Beispielhänden', mLs: 'Lektionen', mLsS: 'So erreichst du 8 Punkte', mOnline: 'Online', soon: 'Demnächst', onlineSoon: 'Online-Partien kommen bald.',
   homeNote: 'Kein Riichi, Dora, Fu oder Furiten. Jede Blume zählt 1 Punkt (Blumen zählen nicht für das Minimum von 8).',
-  lang: 'Sprache', close: 'Schließen', settings: 'Einstellungen', sSound: 'Soundeffekte', sCoach: 'Coach (Ziel-Fan und Punkte jeder Wartung)',
+  lang: 'Sprache', close: 'Schließen', settings: 'Einstellungen', sSound: 'Soundeffekte', sMusic: 'Musik', sMute: 'Stumm', sCoach: 'Coach (Ziel-Fan und Punkte jeder Wartung)',
   tGame: 'Partie', tRule: 'Regeln', start: 'Starten', ratedNote: 'Die Stärke der CPU richtet sich nach deiner Wertungszahl. Deine Platzierung verändert sie.',
   length: 'Länge', hands: '{n} Hände', ratedFixed: 'Gewertete Partien haben 8 Hände (Ost- und Südrunde) mit den Standardregeln.', opp: 'Stärke der Gegner', rating: 'Wertung',
   lvDesc1: 'Einsteiger: wirft oft ab, ohne auf die Hand zu schauen.', lvDesc2: 'Anfänger: verfolgt ein Fan, übersieht aber manchmal etwas.', lvDesc3: 'Mittel: plant eine Hand mit 8 Punkten und achtet auf gefährliche Gegner.',

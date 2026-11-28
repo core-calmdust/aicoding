@@ -5,7 +5,7 @@ S: {
   mFree: 'CPU 대전', mFreeS: '상대 Lv.{lv}', mRated: '레이팅전', mRatedPl: '배치전부터', mTut: '튜토리얼', mTutS: '한 판 치면서 배우기', done: '완료',
   mDex: '역 도감', mDexS: '81가지 역과 예시 패', mLs: '레슨', mLsS: '8점을 만드는 요령', mOnline: '온라인', soon: '준비 중', onlineSoon: '온라인 대전은 준비 중입니다.',
   homeNote: '리치·도라·부·후리텐은 없습니다. 화패는 1장에 1점(8점 조건에는 세지 않습니다).',
-  lang: '언어', close: '닫기', settings: '설정', sSound: '효과음', sCoach: '코치(목표 역과 대기의 점수)',
+  lang: '언어', close: '닫기', settings: '설정', sSound: '효과음', sMusic: '배경음악', sMute: '음소거', sCoach: '코치(목표 역과 대기의 점수)',
   tGame: '게임', tRule: '규칙', start: '대국 시작', ratedNote: '당신의 레이팅에 맞춰 CPU의 강도가 정해집니다. 순위에 따라 레이팅이 오르내립니다.',
   length: '대국 길이', hands: '{n}국', ratedFixed: '레이팅전은 8국(동·남 2바퀴), 기본 규칙으로 고정입니다.', opp: '상대 강도', rating: '레이팅',
   lvDesc1: '입문: 패 모양을 보지 않고 버릴 때가 많습니다.', lvDesc2: '초급: 목표 역을 노리지만 가끔 놓칩니다.', lvDesc3: '중급: 8점 목표를 세우고, 위험한 상대도 신경 씁니다.',

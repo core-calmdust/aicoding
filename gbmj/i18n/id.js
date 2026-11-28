@@ -5,7 +5,7 @@ S: {
   mFree: 'Lawan CPU', mFreeS: 'Lawan Lv.{lv}', mRated: 'Peringkat', mRatedPl: 'Mulai dari penempatan', mTut: 'Tutorial', mTutS: 'Belajar sambil memainkan satu ronde', done: 'Selesai',
   mDex: 'Panduan fan', mDexS: '81 fan dengan contoh tangan', mLs: 'Pelajaran', mLsS: 'Cara mencapai 8 poin', mOnline: 'Online', soon: 'Segera hadir', onlineSoon: 'Permainan online segera hadir.',
   homeNote: 'Tidak ada riichi, dora, fu, atau furiten. Setiap bunga bernilai 1 poin (bunga tidak dihitung untuk batas minimal 8).',
-  lang: 'Bahasa', close: 'Tutup', settings: 'Pengaturan', sSound: 'Efek suara', sCoach: 'Pelatih (fan target dan poin tiap tunggu)',
+  lang: 'Bahasa', close: 'Tutup', settings: 'Pengaturan', sSound: 'Efek suara', sMusic: 'Musik', sMute: 'Bisukan', sCoach: 'Pelatih (fan target dan poin tiap tunggu)',
   tGame: 'Permainan', tRule: 'Aturan', start: 'Mulai', ratedNote: 'Kekuatan CPU menyesuaikan dengan peringkatmu. Posisi akhirmu menaikkan atau menurunkan peringkat.',
   length: 'Panjang', hands: '{n} ronde', ratedFixed: 'Permainan peringkat terdiri dari 8 ronde (putaran Timur dan Selatan) dengan aturan standar.', opp: 'Kekuatan lawan', rating: 'Peringkat',
   lvDesc1: 'Pemula: sering membuang tanpa melihat tangan.', lvDesc2: 'Pemula lanjut: mengejar fan, tapi kadang ada yang terlewat.', lvDesc3: 'Menengah: merencanakan tangan 8 poin dan mewaspadai lawan yang berbahaya.',

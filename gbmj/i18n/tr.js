@@ -5,7 +5,7 @@ S: {
   mFree: 'CPU\'ya karşı', mFreeS: 'Rakipler Lv.{lv}', mRated: 'Dereceli', mRatedPl: 'Önce yerleştirme maçları', mTut: 'Eğitim', mTutS: 'Bir el oynayarak öğren', done: 'Tamamlandı',
   mDex: 'Fan rehberi', mDexS: '81 fan ve örnek eller', mLs: 'Dersler', mLsS: '8 puana ulaşmanın yolları', mOnline: 'Çevrimiçi', soon: 'Yakında', onlineSoon: 'Çevrimiçi oyun yakında geliyor.',
   homeNote: 'Riichi, dora, fu ve furiten yok. Her çiçek 1 puandır (çiçekler 8 puanlık alt sınıra sayılmaz).',
-  lang: 'Dil', close: 'Kapat', settings: 'Ayarlar', sSound: 'Ses efektleri', sCoach: 'Koç (hedef fan ve bekleyişlerin puanı)',
+  lang: 'Dil', close: 'Kapat', settings: 'Ayarlar', sSound: 'Ses efektleri', sMusic: 'Müzik', sMute: 'Sessiz', sCoach: 'Koç (hedef fan ve bekleyişlerin puanı)',
   tGame: 'Oyun', tRule: 'Kurallar', start: 'Başla', ratedNote: 'CPU\'nun gücü derecene göre belirlenir. Sıralaman dereceni yükseltir ya da düşürür.',
   length: 'Uzunluk', hands: '{n} el', ratedFixed: 'Dereceli oyunlar standart kurallarla 8 eldir (Doğu ve Güney turları).', opp: 'Rakiplerin gücü', rating: 'Derece',
   lvDesc1: 'Başlangıç: çoğu zaman eline bakmadan taş atar.', lvDesc2: 'Acemi: bir fanı hedefler ama bazen bir şeyleri kaçırır.', lvDesc3: 'Orta: 8 puanlık bir el planlar ve tehlikeli oyunculara dikkat eder.',

@@ -49,14 +49,14 @@ const fanZh = id => GBFan.FANS[id][2];
 const RT = lv => Math.round(300 + (lv - 1) * 1800 / 19);
 const LEVELS = Array.from({ length: 20 }, (_, i) => [i + 1, RT(i + 1)]);
 
-// ---------------------------------------------------------------- 音（小さな合成音だけ）
-let AC = null;
-function beep(f, d, v, type) {
-  if (!DB.set.snd || document.hidden) return;
-  try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const o = AC.createOscillator(), g = AC.createGain(); o.type = type || 'triangle'; o.frequency.value = f; g.gain.value = v || .05; g.gain.exponentialRampToValueAtTime(.0001, AC.currentTime + d); o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + d); } catch (e) {}
-}
-const SND = { tile: () => beep(1900, .05, .035, 'square'), call: () => { beep(660, .12, .06); setTimeout(() => beep(880, .14, .06), 90); }, win: () => [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => beep(f, .35, .07), i * 110)), warn: () => beep(220, .25, .07, 'sine') };
-document.addEventListener('visibilitychange', () => { if (AC) { if (document.hidden) AC.suspend(); else AC.resume(); } });
+// ---------------------------------------------------------------- 音：大百科のリーチ麻雀と同じ録音・BGM・音量（snd.js、mahjong/app.js の SND を写したもの）
+const SND = GBSnd(() => DB.set);
+addEventListener('load', () => setTimeout(() => SND.preload(), 400));
+// 窓が前にないときは音も止める（shared/focusgate.js が止めた時：リーチ麻雀と同じ）
+{ let fz = false; setInterval(() => { const f = !!(window.__focusGate && window.__focusGate.frozen); if (f === fz) return; fz = f; SND.gate(f); }, 200); }
+for (const ev of ['pointerdown', 'touchend', 'keydown']) addEventListener(ev, () => { SND.unlock(); SND.revive(); }, true);
+// ボタンの音（リーチ麻雀の pick と同じ短い音）
+document.addEventListener('click', e => { if (e.target.closest('.btn, .hm-b, .ib, .ng-tabs button, .seg button, .dx-tabs button, .lg, .sw')) SND.pick(); }, true);
 
 // ---------------------------------------------------------------- アイコン
 const IC = {
@@ -70,6 +70,8 @@ const IC = {
   tut: '<svg viewBox="0 0 24 24"><path d="M12 3L2 8l10 5 10-5z"/><path d="M6 10.5V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-5.5"/></svg>',
   ls: '<svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>',
   net: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg>',
+  snd: '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg>',
+  mute: '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>',
 };
 
 // ---------------------------------------------------------------- 牌の絵（HTML）
@@ -124,11 +126,24 @@ function langDialog() {
   });
 }
 function settingsDialog() {
+  // 音：効果音と BGM それぞれの音量（0〜100、既定 80）とミュート（リーチ麻雀と同じ扱い・同じ保存の名前）
   const sw = (k, on) => `<label class="row"><span>${esc(t(k))}</span><button class="sw${on ? ' on' : ''}" data-k="${k}" role="switch" aria-checked="${on}"><i></i></button></label>`;
-  modal(`<h3>${esc(t('settings'))}</h3>${sw('sSound', DB.set.snd)}${sw('sCoach', DB.set.coach)}<label class="row"><span>${esc(t('lang'))}</span><button class="btn sm" data-lang>${esc(I18N.LANGS.find(x => x[0] === L())[1])}</button></label><div class="btns"><button class="btn" data-x>${esc(t('close'))}</button></div>`, 'small', box => {
-    box.querySelectorAll('.sw').forEach(b => b.onclick = () => { const on = !b.classList.contains('on'); b.classList.toggle('on', on); b.setAttribute('aria-checked', on); if (b.dataset.k === 'sSound') DB.set.snd = on; else { DB.set.coach = on; renderCoach(); } save(); });
-    box.querySelector('[data-lang]').onclick = langDialog;
-    box.querySelector('[data-x]').onclick = closeModal;
+  const vrow = k => { const off = DB.set[k + 'On'] === false || DB.set.snd === false, v = SND.volP(k);
+    return `<div class="row st-vol${off ? ' off' : ''}"><span>${esc(t(k === 'se' ? 'sSound' : 'sMusic'))}</span><div class="st-v"><button class="st-m" data-m="${k}" aria-label="${esc(t('sMute'))}" title="${esc(t('sMute'))}">${off ? IC.mute : IC.snd}</button><input type="range" min="0" max="100" step="5" value="${v}" data-k="${k}" style="--p:${v}%"><b>${off ? esc(t('sMute')) : v}</b></div></div>`; };
+  const draw = () => `<h3>${esc(t('settings'))}</h3>${vrow('se')}${vrow('bg')}${sw('sCoach', DB.set.coach)}<label class="row"><span>${esc(t('lang'))}</span><button class="btn sm" data-lang>${esc(I18N.LANGS.find(x => x[0] === L())[1])}</button></label><div class="btns"><button class="btn" data-x>${esc(t('close'))}</button></div>`;
+  modal(draw(), 'small', box => {
+    const bind = () => {
+      box.querySelectorAll('.sw').forEach(b => b.onclick = () => { const on = !b.classList.contains('on'); b.classList.toggle('on', on); b.setAttribute('aria-checked', on); DB.set.coach = on; renderCoach(); save(); });
+      box.querySelector('[data-lang]').onclick = langDialog;
+      box.querySelector('[data-x]').onclick = closeModal;
+      box.querySelectorAll('.st-m').forEach(m => m.onclick = () => { const k = m.dataset.m, off = DB.set[k + 'On'] === false || DB.set.snd === false; DB.set[k + 'On'] = off; DB.set.snd = true; save(); SND.unlock(); SND.levels(); SND.resume(); box.innerHTML = draw(); bind(); if (off && k === 'se') SND.tile(); });
+      box.querySelectorAll('input[type=range]').forEach(r => {
+        r.oninput = () => { const k = r.dataset.k; DB.set[k === 'bg' ? 'bgQ' : k + 'P'] = +r.value; DB.set[k + 'On'] = true; DB.set.snd = true; save(); r.style.setProperty('--p', r.value + '%');
+          const row = r.closest('.st-vol'); row.classList.remove('off'); row.querySelector('.st-v b').textContent = r.value; row.querySelector('.st-m').innerHTML = IC.snd; SND.unlock(); SND.levels(); SND.resume(); };
+        r.onchange = () => { if (r.dataset.k === 'se') SND.tile(); };
+      });
+    };
+    bind();
   });
 }
 
@@ -208,12 +223,17 @@ async function startMatch(o) {
   M = new GBMatch({ hands: len, dealer0: Math.floor(Math.random() * 4) });
   UI = { rated, lv, plPick, bots: [null, 1, 2, 3].map((x, i) => i ? GBAI.create({ level: lv }) : null), coachBot: GBAI.create({ level: 16 }), autoBot: GBAI.create({ level: 10 }), stop: false, wait: null, sel: null, chars: seatChars() };
   G = M;
+  SND.newGame();
   renderAll();
   while (!M.over && !UI.stop) {
     const r = M.nextRound(); R0 = r;
     TB.hideAll();
+    dealFlowersHidden(r);
+    await evHook({ ev: 'round' }, 'pre');
     renderAll(true);
+    SND.handStart();
     await sleep(500);
+    await evHook({ ev: 'round' }, 'post');
     await playRound(r);
     if (UI.stop) return;
     M.finishRound(r);
@@ -223,6 +243,8 @@ async function startMatch(o) {
   }
   if (!UI.stop) await showFinal();
 }
+// 確認用（tools の検査スクリプトが GBApp.evHook を置いたときだけ）：出来事の前後で止めて撮る
+async function evHook(e, when) { const h = window.GBApp && GBApp.evHook; if (h) await h(e, when); }
 async function until(f) { while (!f()) await sleep(120); }
 async function botWait(ms) { await sleep(FAST ? 30 : ms); await until(() => !document.hidden); }
 
@@ -230,7 +252,7 @@ async function playRound(r) {
   let seen = 0;
   for (;;) {
     // 起きた出来事を画面へ
-    while (seen < r.events.length) { await showEvent(r, r.events[seen++]); if (UI.stop) return; }
+    while (seen < r.events.length) { const e = r.events[seen++]; UI.ahead = r.events.slice(seen); await evHook(e, 'pre'); await showEvent(r, e); await evHook(e, 'post'); if (UI.stop) return; }
     if (r.phase === 'end') return;
     const ws = r.waiting();
     // CPU を先に（ロンがあれば人の鳴きは不要になることがある）
@@ -253,15 +275,57 @@ async function playRound(r) {
 }
 async function showEvent(r, e) {
   switch (e.ev) {
-    case 'deal': renderAll(true); break;
+    case 'deal': renderAll(true); await flyDealFlowers(r); break;
     case 'draw': renderAll(); break;
-    case 'flower': if (!e.deal) { toast(t('flowerToast', { who: name(e.p) }), 900); SND.call(); } renderAll(); if (!e.deal) await sleep(250); break;
+    // 花牌：抜いた花が席の顔（自分はツモの位置）から名札の横の列へ飛んで収まる。補充のツモは次の draw で
+    case 'flower': if (e.deal) break; SND.flower(); await flyFlower(r, e.p, e.id); break;
     case 'discard': renderAll(false, e.p); await sleep(UI.tut ? 1000 : FAST ? 10 : 260); break;
-    case 'chi': case 'pon': case 'kan': case 'kong': case 'kakan': SND.call(); shout(e.p, t('call_' + (e.ev === 'kong' ? 'kan' : e.ev === 'kakan' ? 'kan' : e.ev))); renderAll(); await sleep(FAST ? 10 : 420); break;
+    case 'chi': case 'pon': case 'kan': case 'kong': case 'kakan': SND.call(); SND.voice(e.ev === 'chi' ? 'chi' : e.ev === 'pon' ? 'pon' : 'kan'); shout(e.p, t('call_' + (e.ev === 'kong' ? 'kan' : e.ev === 'kakan' ? 'kan' : e.ev))); renderAll(); await sleep(FAST ? 10 : 420); break;
     case 'falsehu': SND.warn(); shout(e.p, t('falseHu')); toast(t('falseHuToast', { who: name(e.p), n: e.pts }), 2600); renderAll(); await sleep(900); break;
-    case 'win': SND.win(); shout(e.p, e.how === 'tsumo' ? t('tsumo') : t('ron')); renderAll(); await sleep(FAST ? 50 : 900); break;
-    case 'exhaust': shout(-1, t('exhaust')); await sleep(FAST ? 50 : 900); break;
+    case 'win': SND.stop(); SND.ok(); SND.voice(e.how === 'tsumo' ? 'tsumo' : 'ron'); shout(e.p, e.how === 'tsumo' ? t('tsumo') : t('ron')); renderAll(); setTimeout(() => SND.win(), 350); await sleep(FAST ? 50 : 1100); break;
+    case 'exhaust': SND.stop(); SND.exhaust(); shout(-1, t('exhaust')); await sleep(FAST ? 50 : 900); break;
   }
+}
+// ---------------------------------------------------------------- 花牌の動き
+// 局の状態は画面より先に進んでいる（出来事を順に見せる）。まだ見せていない花牌は名札の列に出さず、まだ見せていないツモ牌は手牌の行に出さない
+const pendFlower = id => !!(UI && UI.ahead && UI.ahead.some(e => e.ev === 'flower' && !e.deal && e.id === id));
+const pendDraw = id => !!(UI && UI.ahead && UI.ahead.some(e => e.ev === 'draw' && e.p === ME && e.id === id));
+// 配牌の花は、局の始まりに名札の横へ（親から順に）飛ばす。それまで名札の列では隠しておく（UI.flyIds）
+function dealFlowersHidden(r) { UI.flyIds = new Set(); for (const e of r.events) if (e.ev === 'flower' && e.deal) UI.flyIds.add(e.id); }
+async function flyDealFlowers(r) {
+  const list = r.events.filter(e => e.ev === 'flower' && e.deal);
+  if (!list.length) return;
+  if (FAST || UI.tut) { for (const e of list) UI.flyIds.delete(e.id); renderSeats(); return; }
+  await sleep(350);
+  for (let i = 0; i < list.length; i++) { if (UI.stop) return; if (i % 2 === 0) SND.flower(); const pr = flyFlower(r, list[i].p, list[i].id, true); await (i === list.length - 1 ? pr : sleep(170)); }
+}
+function seatFace(p) { return (p === ME ? $('#mePanel') : $('#opp' + p)).querySelector('.bf'); }
+// 1枚：席の顔（自分は手牌の行のツモの位置）の上に大きく現れ、名札の横の花牌の列のその位置へ縮みながら移る（0.6秒）。列の牌は着いてから見せる
+function flyFlower(r, p, id, quick) {
+  UI.flyIds = UI.flyIds || new Set(); UI.flyIds.add(id); (UI.flying = UI.flying || new Set()).add(id);   // 飛んでいる1枚は場所だけ取って見せない（fly）、まだの花は場所も取らない（pend）
+  renderSeats(); if (p === ME) renderHand();
+  const dst = document.querySelector(`${p === ME ? '#mePanel' : '#opp' + p} .gb-fl img[data-id="${id}"]`);
+  const land = () => { UI.flyIds.delete(id); UI.flying.delete(id); const el = document.querySelector(`.gb-fl img[data-id="${id}"]`); if (el) { el.classList.remove('fly', 'pend'); el.classList.add('nw'); } UI.flNew = { id, t: performance.now() }; };
+  if (FAST || !dst || document.hidden) { land(); return Promise.resolve(); }
+  const g = $('#game');
+  const ph = p === ME ? document.querySelector('#hand .hrow .tl.ph, #hand .hrow .tl.drawn') : null;
+  // 回した画面（スマホ縦持ち）でも #root の中の座標で（uiRect）
+  const loc = el => { const q = uiRect(el); return { x: q.l, y: q.t, w: q.r - q.l, h: q.b - q.t }; };
+  const S = loc(ph || seatFace(p)), D = loc(dst);
+  const fly = document.createElement('div'); fly.className = 'gb-flfly';
+  fly.innerHTML = `<img src="${MJTiles.urlId(id)}" alt="" draggable="false">`;
+  const h0 = Math.min(S.h * .9, 96 * (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hz')) || 1)), w0 = h0 * D.w / D.h;
+  Object.assign(fly.style, { left: D.x + 'px', top: D.y + 'px', width: D.w + 'px', height: D.h + 'px' });
+  g.appendChild(fly);
+  const k = h0 / D.h, sx = S.x + S.w / 2 - (D.x + D.w / 2), sy = S.y + S.h / 2 - (D.y + D.h / 2);
+  const dur = quick ? 480 : 640;
+  const an = fly.animate([
+    { transform: `translate(${sx}px,${sy}px) scale(${k * .6})`, opacity: 0 },
+    { transform: `translate(${sx}px,${sy - 18}px) scale(${k})`, opacity: 1, offset: .28 },
+    { transform: `translate(${sx}px,${sy - 18}px) scale(${k})`, opacity: 1, offset: .5 },
+    { transform: 'translate(0,0) scale(1)', opacity: 1 },
+  ], { duration: dur, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards' });
+  return new Promise(res => { const end = () => { fly.remove(); land(); res(); }; an.onfinish = end; an.oncancel = end; setTimeout(() => { if (fly.isConnected) end(); }, dur + 400); });
 }
 function shout(p, s) {
   const el = document.createElement('div'); el.className = 'shout s' + (p < 0 ? 'c' : p); el.textContent = s;
@@ -321,12 +385,12 @@ function renderInfo() {
   $('#gFan').innerHTML = IC.book; $('#gStats').innerHTML = IC.cup; $('#gSet').innerHTML = IC.gear; $('#gExit').innerHTML = IC.exit;
   for (const [k, id] of [['mDex', 'gFan'], ['stats', 'gStats'], ['settings', 'gSet'], ['exitTitle', 'gExit']]) { const b = $('#' + id); b.title = t(k); b.setAttribute('aria-label', t(k)); }
 }
-// 名札：顔・席の風（親は珊瑚色）・名前、その下に点数・花牌（どの花か分かる小さな絵を枚数ぶん）・和了不可の印
+// 名札：顔・席の風（親は珊瑚色）。その下に名前・点数・Lv・和了不可を1枚のプレートに。花牌（どの花か分かる小さな絵を枚数ぶん）はプレートの横に並べる
 function badge(s) {
   const r = R0, P = r.P[s], w = r.seatWind(s), c = UI.chars[s];
-  const fl = P.flowers.length ? `<span class="gb-fl" title="${esc(t('flowersN', { n: P.flowers.length }))}">${P.flowers.slice().sort((a, b) => a - b).map(id => `<img src="${MJTiles.urlId(id)}" alt="" draggable="false">`).join('')}</span>` : '';
+  const fl = P.flowers.length ? `<span class="gb-fl${P.flowers.length > 4 ? ' r2' : ''}" title="${esc(t('flowersN', { n: P.flowers.length }))}">${P.flowers.slice().sort((a, b) => a - b).map(id => `<img src="${MJTiles.urlId(id)}" alt="" draggable="false" data-id="${id}" class="${UI.flying && UI.flying.has(id) ? 'fly' : (UI.flyIds && UI.flyIds.has(id)) || pendFlower(id) ? 'pend' : UI.flNew && UI.flNew.id === id && performance.now() - UI.flNew.t < 900 ? 'nw' : ''}"${UI.flNew && UI.flNew.id === id ? ` style="animation-delay:${-Math.round(performance.now() - UI.flNew.t)}ms"` : ''}>`).join('')}</span>` : '';
   return `<div class="bf ${w === 0 ? 'dealer' : ''}" style="--c:${SEAT_C[s]}"><span class="frame fr-N" style="--c:${SEAT_C[s]}"><img src="${c.img}" alt="" draggable="false"></span><em>${esc(t('windS' + w))}</em></div>
-    <div class="bt"><b>${esc(name(s))}</b><span class="bk"><span class="gb-sc">${M.scores[s]}</span>${s !== ME ? `<small class="gb-lv">Lv.${UI.lv}</small>` : ''}${fl}${P.dead ? `<span class="gb-dead">${esc(t('dead'))}</span>` : ''}</span></div>`;
+    <div class="bt"><span class="gb-np"><b>${esc(name(s))}</b><span class="gb-pl"><span class="gb-sc">${M.scores[s]}</span>${s !== ME ? `<small class="gb-lv">Lv.${UI.lv}</small>` : ''}${P.dead ? `<span class="gb-dead">${esc(t('dead'))}</span>` : ''}</span>${fl}</span></div>`;
 }
 function renderSeats() {
   const r = R0; if (!r) return;
@@ -340,8 +404,9 @@ function renderHand() {
   const el = $('#hand'), acts = $('#acts');
   if (!R0) { el.innerHTML = ''; acts.innerHTML = ''; return; }
   const r = R0, P = r.P[ME];
-  const drawn = r.phase === 'turn' && r.cur === ME && r.drawn != null && P.hand.includes(r.drawn) ? r.drawn : null;
-  const ids = P.hand.filter(id => id !== drawn).sort((a, b) => a - b);
+  const drawn0 = r.phase === 'turn' && r.cur === ME && r.drawn != null && P.hand.includes(r.drawn) ? r.drawn : null;
+  const drawn = drawn0 != null && pendDraw(drawn0) ? null : drawn0;   // （花の補充を見せている間は、補充のツモ牌をまだ出さない）
+  const ids = P.hand.filter(id => id !== drawn0).sort((a, b) => a - b);
   const myTurn = r.phase === 'turn' && r.cur === ME && UI.wait;
   const rec = myTurn && DB.set.coach && !UI.rated && !UI.tut && UI.coach && UI.coach.discards[0] ? UI.coach.discards[0].t : null;
   const cls = id => (myTurn ? 'can' : '') + (T(id) === rec ? ' rec' : '');
@@ -411,6 +476,7 @@ function humanAct(r) {
     const opts = r.options(ME);
     const kind = r.phase === 'turn' ? 'turn' : 'claim';
     UI.wait = { kind, opts: opts.filter(o => o.type !== 'discard'), done: a => { UI.wait = null; renderHand(); res(a); } };
+    if (kind === 'claim' && UI.wait.opts.length) SND.callAsk();
     if (kind === 'claim') { const tl = TB.tile(r.phase === 'rob' ? r.robTile : r.discard); TB.setTileLook(tl, 'hi'); TB.dirty = true; }
     UI.coach = DB.set.coach && !UI.rated ? UI.coachBot.analyze(r, ME) : null;
     renderHand(); renderCoach(); renderSeats();
@@ -467,10 +533,11 @@ function layoutHud() {
   const W = TB.host.clientWidth, H = TB.host.clientHeight, V = THREE.Vector3, top = ck.offsetTop || 72;
   const freeAt = b => { let mx = 0; for (let z = -12.3; z <= 12.31; z += .3) { const [x, y] = scr(new V(12.3, .92, z)); if (y >= top - 10 && y <= b + 10) mx = Math.max(mx, x); } return W - mx - 14 - 12; };
   const free = freeAt(Math.min(H, top + Math.max(ck.classList.contains('cmp') ? 0 : ck.offsetHeight, 220)));
-  const fit = free >= 250;
+  const fit = free >= 250 * (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hz')) || 1);
   ck.classList.toggle('cmp', !fit);
   const f1 = fit ? free : freeAt(top + 48);
-  ck.style.width = fit ? Math.min(320, free) + 'px' : ck.classList.contains('open') ? '300px' : Math.max(160, Math.min(300, f1)) + 'px';
+  const hz = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hz')) || 1;   // 文字は --hz 倍なので幅も
+  ck.style.width = fit ? Math.min(320 * hz, free) + 'px' : ck.classList.contains('open') ? 300 * hz + 'px' : Math.max(170 * hz, Math.min(300 * hz, f1)) + 'px';
 }
 addEventListener('resize', () => requestAnimationFrame(layoutHud));
 if (window.ResizeObserver) new ResizeObserver(() => { const r = $('#rbox'); if (r.offsetHeight) $('#game').style.setProperty('--rbh', r.offsetHeight + 'px'); }).observe($('#rbox'));
@@ -488,6 +555,7 @@ function handRowHtml(r, p, winId) {
   return `<div class="rhand">${hand.map(id => tileImg(id)).join('')}<span class="gap"></span>${tileImg(winId, 'win')}${melds}${P.flowers.length ? `<span class="ml fl">${P.flowers.map(id => tileImg(id)).join('')}</span>` : ''}</div>`;
 }
 function showResult(r) {
+  if (!UI.tut) SND.score();
   return new Promise(res => {
     const x = r.result;
     const pay = `<div class="pays">${[0, 1, 2, 3].map(s => `<div class="pay${x.pay[s] > 0 ? ' up' : x.pay[s] < 0 ? ' dn' : ''}"><span>${esc(name(s))}</span><b>${x.pay[s] > 0 ? '+' : ''}${x.pay[s]}</b><small>${M.scores[s]}</small></div>`).join('')}</div>`;
@@ -501,6 +569,7 @@ function showResult(r) {
   });
 }
 function showFinal() {
+  SND.ok();
   return new Promise(res => {
     const ranks = M.ranks(), tp = M.tablePoints();
     const order = [0, 1, 2, 3].sort((a, b) => ranks[a] - ranks[b]);
@@ -549,7 +618,7 @@ async function startTutorial(T) {
 function exitGame() {
   if (UI && UI.tut) UI.tut.stop();
   if (UI) { UI.stop = true; if (UI.wait) { const w = UI.wait; UI.wait = null; w.done({ type: 'pass' }); } }
-  R0 = null; G = null;
+  R0 = null; G = null; SND.stop();
   if (TB) { TB.hideAll(); TB.pause && TB.pause(); }
   $('#game').hidden = true; $('#home').hidden = false; renderHome();
 }
@@ -577,7 +646,7 @@ function openDex(sel) {
   paint();
 }
 window.GBDBG = () => R0 ? `${R0.phase} cur=${R0.cur} left=${R0.left()} ev=${R0.events.length} wait=${R0.waiting()} uiwait=${UI && UI.wait ? UI.wait.kind : ''}` : 'none';
-window.GBApp = { uiRect, startTutorial, exitGame, get R() { return R0; }, get UI() { return UI; }, renderAll, openDex, modal, closeModal, toast, tileImg, typeImg, parseTiles, t: (...a) => t(...a), esc, save, DB, ensureTable, get TB() { return TB; }, renderHome };
+window.GBApp = { SND, uiRect, startTutorial, exitGame, get R() { return R0; }, get UI() { return UI; }, renderAll, openDex, modal, closeModal, toast, tileImg, typeImg, parseTiles, t: (...a) => t(...a), esc, save, DB, ensureTable, get TB() { return TB; }, renderHome };
 
 // ---------------------------------------------------------------- ボタン・起動
 $('#gExit').onclick = async () => { if (await confirmBox(t('exitTitle'), esc(t('exitBody')), t('exitYes'), t('cancel'))) exitGame(); };

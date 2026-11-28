@@ -5,7 +5,7 @@ S: {
   mFree: 'Contra la CPU', mFreeS: 'Rivales Lv.{lv}', mRated: 'Clasificatoria', mRatedPl: 'Primero, partidas de nivel', mTut: 'Tutorial', mTutS: 'Aprende jugando una mano', done: 'Completado',
   mDex: 'Guía de fan', mDexS: 'Los 81 fan con manos de ejemplo', mLs: 'Lecciones', mLsS: 'Cómo llegar a 8 puntos', mOnline: 'En línea', soon: 'Próximamente', onlineSoon: 'El juego en línea llegará pronto.',
   homeNote: 'No hay riichi, dora, fu ni furiten. Cada flor vale 1 punto (las flores no cuentan para el mínimo de 8).',
-  lang: 'Idioma', close: 'Cerrar', settings: 'Ajustes', sSound: 'Efectos de sonido', sCoach: 'Entrenador (fan objetivo y puntos de cada espera)',
+  lang: 'Idioma', close: 'Cerrar', settings: 'Ajustes', sSound: 'Efectos de sonido', sMusic: 'Música', sMute: 'Silenciar', sCoach: 'Entrenador (fan objetivo y puntos de cada espera)',
   tGame: 'Partida', tRule: 'Reglas', start: 'Empezar', ratedNote: 'La fuerza de la CPU se ajusta a tu puntuación. Tu puesto final la sube o la baja.',
   length: 'Duración', hands: '{n} manos', ratedFixed: 'Las clasificatorias son de 8 manos (rondas Este y Sur) con las reglas estándar.', opp: 'Fuerza de los rivales', rating: 'Puntuación',
   lvDesc1: 'Principiante: a menudo descarta sin mirar la mano.', lvDesc2: 'Novato: busca un fan, pero a veces se le escapan cosas.', lvDesc3: 'Intermedio: planea una mano de 8 puntos y vigila a los rivales peligrosos.',
