@@ -82,7 +82,8 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .ck-w{display:flex;flex-wrap:wrap;gap:6px}.wt{display:flex;flex-direction:column;align-items:center;font-family:var(--ar)}.wt.low b{color:var(--warn)}.wt.low .tl{opacity:.6}
 .ck-warn{color:var(--warn);font-size:13.5px}
 .tl.mini{height:38px;border-radius:5px;box-shadow:0 2px 0 #1c5846}
-.tl.back{filter:brightness(0) saturate(0);opacity:.55}
+.tlb{display:inline-block;aspect-ratio:3/4;height:52px;border-radius:6px;background:linear-gradient(180deg,#2b7a62,#164a3b);box-shadow:inset 0 -3px 0 rgba(0,0,0,.25),0 3px 0 #0f3a2d}
+.tlb.mini{height:34px;border-radius:5px}
 .shout{position:absolute;z-index:8;font-family:'Shippori Mincho B1',var(--af);font-weight:800;font-size:52px;color:#fff;text-shadow:0 4px 0 var(--lac2),0 0 18px rgba(0,0,0,.5);animation:shout 1.2s ease-out forwards;pointer-events:none}
 .shout.s0{left:50%;bottom:220px;transform:translateX(-50%)}.shout.s1{right:14%;top:42%}.shout.s2{left:50%;top:20%;transform:translateX(-50%)}.shout.s3{left:14%;top:42%}.shout.sc{left:50%;top:44%;transform:translateX(-50%)}
 @keyframes shout{0%{opacity:0;scale:.6}15%{opacity:1;scale:1.08}25%{scale:1}80%{opacity:1}100%{opacity:0}}

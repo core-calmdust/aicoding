@@ -52,7 +52,8 @@ const IC = {
 
 // ---------------------------------------------------------------- 牌の絵（HTML）
 const tileImg = (id, cls) => `<img class="tl ${cls || ''}" src="${MJTiles.urlId(id)}" alt="${GB.NAMES[T(id)]}" draggable="false">`;
-const typeImg = (t, cls) => tileImg(t >= 34 ? 136 + t - 34 : t * 4 + 1, cls);
+const backImg = cls => `<span class="tl tlb ${cls || ''}"></span>`;
+const typeImg = (t, cls) => /\bback\b/.test(cls || '') ? backImg(cls) : tileImg(t >= 34 ? 136 + t - 34 : t * 4 + 1, cls);
 const parseTiles = s => { const out = []; let buf = []; for (const ch of String(s).replace(/\s+/g, '')) { if (/\d/.test(ch)) buf.push(+ch); else if ('mps'.includes(ch)) { const b = { m: 0, p: 9, s: 18 }[ch]; for (const n of buf) out.push(b + n - 1); buf = []; } else { const h = { E: 27, S: 28, W: 29, N: 30, P: 31, F: 32, C: 33 }[ch]; if (h != null) out.push(h); } } return out; };
 
 // ---------------------------------------------------------------- モーダル
@@ -82,7 +83,7 @@ function renderHome() {
   const R = DB.rate, pl = window.Placement && Placement.on(R);
   $('#hmMenu').innerHTML = B('hbFree', IC.play, 'mFree', t('mFreeS', { lv: DB.set.lv })) + B('hbRated', IC.star, 'mRated', pl ? t('mRatedPl') : 'R ' + R.r)
     + B('hbTut', IC.tut, 'mTut', DB.tut.done ? t('done') : t('mTutS')) + B('hbDex', IC.book, 'mDex', t('mDexS'))
-    + B('hbLs', IC.ls, 'mLs', t('mLsS')) + B('hbOn', IC.net, 'mOnline', t('soon'), true);
+    + B('hbLs', IC.ls, 'mLs', window.GBLessons ? t('mLsS') : t('soon'), !window.GBLessons) + B('hbOn', IC.net, 'mOnline', t('soon'), true);
   $('#hmNote').textContent = t('homeNote');
   $('#hbFree').onclick = () => newGameDialog(false);
   $('#hbRated').onclick = () => newGameDialog(true);
@@ -369,7 +370,7 @@ function fanTable(fr) {
 function handRowHtml(r, p, winId) {
   const P = r.P[p];
   const hand = P.hand.filter(id => id !== winId).sort((a, b) => a - b);
-  const melds = P.melds.map(m => `<span class="ml">${m.ids.map(id => tileImg(id, m.k === 'ankan' ? 'back' : '')).join('')}</span>`).join('');
+  const melds = P.melds.map(m => `<span class="ml">${m.ids.map(id => m.k === 'ankan' ? backImg() : tileImg(id)).join('')}</span>`).join('');
   return `<div class="rhand">${hand.map(id => tileImg(id)).join('')}<span class="gap"></span>${tileImg(winId, 'win')}${melds}${P.flowers.length ? `<span class="ml fl">${P.flowers.map(id => tileImg(id)).join('')}</span>` : ''}</div>`;
 }
 function showResult(r) {

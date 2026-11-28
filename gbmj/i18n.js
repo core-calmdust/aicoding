@@ -102,6 +102,44 @@ const LANGS = ALL.filter(([k]) => S[k]);
 // 番種名：言語ごと（ない言語は英語の定訳）。ja・zh・en は fan.js の表
 const FAN = {};
 const DESC = {};
+// 番種名：zh-TW は簡体字の名前を OpenCC（s2twp）で台湾の表記に、ko は繁体字の名前の漢字音（槓は깡）。
+// es・fr・pt・de・ru・tr・id・hi・ar は定訳がないので WMO 英語版の名前（画面では中国語原名を添える）。
+  FAN['zh-TW'] = {"1": "大四喜", "2": "大三元", "3": "綠一色", "4": "九蓮寶燈", "5": "四槓", "6": "連七對", "7": "十三么", "8": "清么九", "9": "小四喜", "10": "小三元", "11": "字一色", "12": "四暗刻", "13": "一色雙龍會", "14": "一色四同順", "15": "一色四節高", "16": "一色四步高", "17": "三槓", "18": "混么九", "19": "七對", "20": "七星不靠", "21": "全雙刻", "22": "清一色", "23": "一色三同順", "24": "一色三節高", "25": "全大", "26": "全中", "27": "全小", "28": "清龍", "29": "三色雙龍會", "30": "一色三步高", "31": "全帶五", "32": "三同刻", "33": "三暗刻", "34": "全不靠", "35": "組合龍", "36": "大於五", "37": "小於五", "38": "三風刻", "39": "花龍", "40": "推不倒", "41": "三色三同順", "42": "三色三節高", "43": "無番和", "44": "妙手回春", "45": "海底撈月", "46": "槓上開花", "47": "搶槓和", "48": "雙暗槓", "49": "碰碰和", "50": "混一色", "51": "三色三步高", "52": "五門齊", "53": "全求人", "54": "雙箭刻", "55": "全帶么", "56": "不求人", "57": "雙明槓", "58": "和絕張", "59": "箭刻", "60": "圈風刻", "61": "門風刻", "62": "門前清", "63": "平和", "64": "四歸一", "65": "雙同刻", "66": "雙暗刻", "67": "暗槓", "68": "斷么", "69": "一般高", "70": "喜相逢", "71": "連六", "72": "老少副", "73": "么九刻", "74": "明槓", "75": "缺一門", "76": "無字", "77": "邊張", "78": "嵌張", "79": "單釣將", "80": "自摸", "81": "花牌"};
+  FAN.ko = {"1": "대사희", "2": "대삼원", "3": "녹일색", "4": "구련보등", "5": "사깡", "6": "연칠대", "7": "십삼요", "8": "청요구", "9": "소사희", "10": "소삼원", "11": "자일색", "12": "사암각", "13": "일색쌍룡회", "14": "일색사동순", "15": "일색사절고", "16": "일색사보고", "17": "삼깡", "18": "혼요구", "19": "칠대", "20": "칠성불고", "21": "전쌍각", "22": "청일색", "23": "일색삼동순", "24": "일색삼절고", "25": "전대", "26": "전중", "27": "전소", "28": "청룡", "29": "삼색쌍룡회", "30": "일색삼보고", "31": "전대오", "32": "삼동각", "33": "삼암각", "34": "전불고", "35": "조합룡", "36": "대어오", "37": "소어오", "38": "삼풍각", "39": "화룡", "40": "추불도", "41": "삼색삼동순", "42": "삼색삼절고", "43": "무번화", "44": "묘수회춘", "45": "해저로월", "46": "깡상개화", "47": "창깡화", "48": "쌍암깡", "49": "팽팽화", "50": "혼일색", "51": "삼색삼보고", "52": "오문제", "53": "전구인", "54": "쌍전각", "55": "전대요", "56": "불구인", "57": "쌍명깡", "58": "화절장", "59": "전각", "60": "권풍각", "61": "문풍각", "62": "문전청", "63": "평화", "64": "사귀일", "65": "쌍동각", "66": "쌍암각", "67": "암깡", "68": "단요", "69": "일반고", "70": "희상봉", "71": "연륙", "72": "노소부", "73": "요구각", "74": "명깡", "75": "결일문", "76": "무자", "77": "변장", "78": "감장", "79": "단조장", "80": "자모", "81": "화패"};
+
+// 図鑑の説明（英語。ほかの言語は英語→日本語の順に代わりに出す）
+  DESC.en = {
+    1: 'Pungs (or kongs) of all four winds.', 2: 'Pungs (or kongs) of all three dragons.', 3: 'Only 2, 3, 4, 6, 8 Bamboo and Green Dragon.',
+    4: 'Concealed 1112345678999 of one suit, waiting on any of the nine tiles, and winning on one of them.', 5: 'Four kongs (concealed or melded).',
+    6: 'Seven pairs in one suit, one after another (for example 2 to 8).', 7: 'One each of the 1s, 9s and seven honors, with a pair of one of them.',
+    8: 'Only 1s and 9s of the suits (no honors).', 9: 'Pungs of three winds and a pair of the fourth.', 10: 'Pungs of two dragons and a pair of the third.',
+    11: 'Only honor tiles.', 12: 'Four pungs (or kongs) made without calling.', 13: '1-2-3, 1-2-3, 7-8-9, 7-8-9 and a pair of 5s, all in one suit.',
+    14: 'Four identical chows in one suit.', 15: 'Four pungs in one suit, each one up from the last (for example 333, 444, 555, 666).',
+    16: 'Four chows in one suit, each shifted up by one, or each by two.', 17: 'Three kongs.', 18: 'Only 1s, 9s and honors, in pungs and the pair.',
+    19: 'Seven pairs (four identical tiles may count as two pairs).', 20: 'All seven honors, one each, plus seven suit tiles from 1-4-7, 2-5-8 and 3-6-9 in three different suits.',
+    21: 'Four pungs of 2, 4, 6 or 8 and an even pair.', 22: 'Only tiles of one suit.', 23: 'Three identical chows in one suit.',
+    24: 'Three pungs in one suit, each one up from the last.', 25: 'Only 7, 8 and 9 of the suits.', 26: 'Only 4, 5 and 6 of the suits.', 27: 'Only 1, 2 and 3 of the suits.',
+    28: '1-2-3, 4-5-6 and 7-8-9 in one suit.', 29: '1-2-3 and 7-8-9 in two suits, and a pair of 5s in the third.',
+    30: 'Three chows in one suit, each shifted up by one, or each by two.', 31: 'Every set and the pair contain a 5.', 32: 'Pungs of the same number in all three suits.',
+    33: 'Three pungs made without calling.', 34: 'Fourteen single tiles: honors and suit tiles from 1-4-7, 2-5-8 and 3-6-9 in three different suits (no sets).',
+    35: '1-4-7, 2-5-8 and 3-6-9, one in each suit (nine tiles), plus one set and a pair.', 36: 'Only suit tiles from 6 to 9.', 37: 'Only suit tiles from 1 to 4.',
+    38: 'Pungs of three winds (the fourth wind is not the pair).', 39: '1-2-3, 4-5-6 and 7-8-9, each in a different suit.',
+    40: 'Only tiles that look the same upside down: Dots 1234589, Bamboo 245689 and White Dragon.', 41: 'The same chow in all three suits.',
+    42: 'Pungs in three suits, each one up from the last (for example 3 Characters, 4 Dots, 5 Bamboo).', 43: 'A hand with no other fan (0 points without flowers). Worth 8.',
+    44: 'Winning on the last tile of the wall by drawing it (Self-Drawn is not added).', 45: 'Winning on the last discard of the hand.',
+    46: 'Winning on the replacement tile after a kong (Self-Drawn is not added).', 47: 'Winning on the tile another player adds to a pung to make a kong (Last Tile is not added).',
+    48: 'Two concealed kongs.', 49: 'Four pungs (or kongs) and a pair.', 50: 'Only tiles of one suit plus honors.', 51: 'Chows in three suits, each one up from the last (for example 123 Characters, 234 Dots, 345 Bamboo).',
+    52: 'Characters, Dots, Bamboo, winds and dragons all appear in the hand.', 53: 'All four sets are called, and you win on the last tile (the pair) from a discard.',
+    54: 'Two pungs of dragons.', 55: 'Every set and the pair contain a 1, a 9 or an honor.', 56: 'No calls (a concealed kong is fine) and a self-drawn win (Self-Drawn and Concealed Hand are not added).',
+    57: 'Two melded kongs (one melded and one concealed kong: 6 points).', 58: 'Winning on a tile whose other three copies are already visible on the table.',
+    59: 'A pung (or kong) of a dragon.', 60: 'A pung of the wind of the current round.', 61: 'A pung of your own seat wind (the dealer is East).',
+    62: 'No calls (a concealed kong is fine) and winning on a discard.', 63: 'Four chows and a suit-tile pair (no honors).', 64: 'All four of one tile used without making a kong.',
+    65: 'Pungs of the same number in two suits.', 66: 'Two pungs made without calling.', 67: 'One concealed kong.', 68: 'No 1s, 9s or honors.',
+    69: 'Two identical chows in one suit.', 70: 'The same chow in two suits.', 71: 'Two chows in one suit that run on, like 1-2-3 and 4-5-6.', 72: '1-2-3 and 7-8-9 in one suit.',
+    73: 'A pung of 1s or 9s, or of a wind that is neither the round wind nor your seat wind.', 74: 'One melded kong (called or added).', 75: 'One of the three suits is missing.',
+    76: 'No honor tiles.', 77: 'Waiting only on 3 with 1-2, or only on 7 with 8-9.', 78: 'Waiting only on the middle tile of a chow, like 2 with 1-3.',
+    79: 'Waiting only on the pair tile.', 80: 'Winning on a tile you draw yourself.', 81: '1 point per flower. Flowers do not count toward the 8-point minimum.',
+  };
 let lang = 'ja';
 function detect() {
   const ls = (navigator.languages || [navigator.language || 'en']).map(x => String(x));
