@@ -95,7 +95,7 @@
     $('btnNb').classList.toggle('hide', !play);
     $('hbWhere').textContent = play ? '' : '';
     $('hbAp').innerHTML = '';
-    if (!play) { document.body.classList.remove('nb-open', 'night'); setNb(false); $('cast').innerHTML = ''; $('fx').innerHTML = ''; if (CINE) { CINE.reset(0); CINE.weather(null, false); } }
+    if (!play) { document.body.classList.remove('nb-open', 'night'); setNb(false); $('cast').innerHTML = ''; $('fx').innerHTML = ''; if (CINE) { CINE.reset(); CINE.weather(null, false); } }
     document.body.classList.toggle('anim-off', !pref.anim);
     document.body.classList.toggle('show-names', !!pref.names);
   }
@@ -180,10 +180,10 @@
     document.body.classList.toggle('night', !!night);
     if (CINE) CINE.weather(st.scene === 'alps' || st.scene === 'abbey' ? 'snow' : night ? null : 'motes', !!night);
     if (k === sceneKey) return;
-    sceneKey = k;
+    sceneKey = k; if (CINE) CINE.scene();
     const el = $('scene');
     el.classList.add('swap'); $('floor').classList.add('swap');
-    setTimeout(() => { el.innerHTML = ART.scene(st.scene, loc, 1); el.classList.remove('swap'); G.floorLoc = loc; drawFloor(); $('floor').classList.remove('swap'); }, pref.anim ? 260 : 0);
+    setTimeout(() => { el.innerHTML = ART.scene(st.scene, loc, 1); if (CINE) CINE.layer(); el.classList.remove('swap'); G.floorLoc = loc; drawFloor(); $('floor').classList.remove('swap'); }, pref.anim ? 260 : 0);
   }
   /* the stage floor, cut from paper and drawn for the real size (nothing stretches): what the way is made of, what lies beside it, what stands along it — one for each place, so it changes with the backdrop */
   const FLOOR = {
@@ -296,6 +296,7 @@
   }
   // the people on the stage: ids, and how to stand them
   function setCast(ids, o) {
+    if (CINE) CINE.cast();
     o = o || {};
     const c = $('cast');
     const have = {}; c.querySelectorAll('.pp').forEach(e => have[e.dataset.id] = e);
@@ -318,7 +319,7 @@
       const row = i < front ? 0 : 1, k = row ? i - front : i, m = row ? n - front : front;
       const x = m === 1 ? (o.x || 50) : (o.span ? o.span[0] : 10) + ((o.span ? o.span[1] - o.span[0] : 80) * (k + (row ? .5 : 0)) / Math.max(1, m - (row ? 0 : 1)));
       el.classList.toggle('back', !!row); el.classList.toggle('front', !row); el.classList.toggle('mid', !!o.mid);   // the day's search: the people stand halfway up the road, above the menu, names showing
-      requestAnimationFrame(() => { el.style.left = Math.min(94, Math.max(6, x)) + '%'; el.style.bottom = ''; el.style.opacity = ''; });
+      requestAnimationFrame(() => { el.style.left = Math.min(94, Math.max(6, x)) + '%'; el.style.bottom = ''; el.style.opacity = ''; if (CINE) CINE.cast(); });
       if (o.fallen === id) el.classList.add('fallen');
     });
     for (const id in have) { const e = have[id]; e.style.opacity = '0'; setTimeout(() => e.remove(), 600); }
@@ -329,7 +330,7 @@
 
   /* ---------- the text strip: narration and speech, one page at a time ---------- */
   function showTx() { $('tx').classList.remove('hide'); $('menu').classList.add('hide'); layoutDock(); }
-  function showMenu(html) { if (CINE) CINE.reset(); $('tx').classList.add('hide'); const m = $('menu'); m.innerHTML = html; m.classList.remove('hide'); layoutDock(); m.querySelector('button')?.focus({ preventScroll: true }); }
+  function showMenu(html) { if (CINE) { if (!S || S.phase === 'meeting' || S.phase === 'vote' || G.tut) CINE.reset(); else CINE.rest(); } $('tx').classList.add('hide'); const m = $('menu'); m.innerHTML = html; m.classList.remove('hide'); layoutDock(); m.querySelector('button')?.focus({ preventScroll: true }); }
   function say(items) { return new Promise(res => { G.q = items.filter(Boolean); G.qres = res; showTx(); nextPage(); }); }
   function nextPage() {
     if (G.typing) { finishType(); return; }
@@ -345,7 +346,7 @@
     else { who.classList.add('none'); nmEl.textContent = it.title || ''; speakPup(null); }
     tx.classList.toggle('narr', !id);
     G.talkVo = voiceOf(id);
-    if (CINE) CINE.page({ el: id && id !== 'you' ? pup(id) : null, wide: !S || S.phase === 'meeting' || S.phase === 'vote' || G.tut || !!it.guide });
+    if (CINE) CINE.page({ text: it.text, el: id && id !== 'you' ? pup(id) : null, wide: !S || S.phase === 'meeting' || S.phase === 'vote' || G.tut || !!it.guide });
     type(it.text);
     renderRoster();
     SND.page();
@@ -608,7 +609,7 @@
       setScene(N.loc || st.meetLoc || st.locs[0].id);   // a night with no attack has no scene of its own
       items.push({ text: st.text.day[Math.min(S.day - 1, st.text.day.length - 1)] });
       if (N.died && N.target === 'you') {
-        setCast([]); SND.door(0, 1.1); SND.thud();
+        setCast([]); SND.door(0, 1.1); SND.thud(); if (CINE) CINE.shake(1.4);
         items.push({ text: st.text.dead }, { text: st.text.ghost });
       } else if (N.died) {
         const v = N.target, c = ch(v);
@@ -1139,7 +1140,7 @@
     const c = ch(out);
     const t = pickOne(st.text.exile);
     await say([{ text: fill(t, { name: c.name }) }, { who: out, text: c.last }]);
-    const e = pup(out); if (e) { e.classList.add('lift'); SND.thud(); }
+    const e = pup(out); if (e) { e.classList.add('lift'); SND.thud(); if (CINE) CINE.shake(1); }
     await wait(900);
     if (dragged) { await say(dragLine()); if (dragged === 'you') { await say([{ text: st.text.ghost }].concat(willLines())); if (E.check(S)) { S.phase = 'end'; save(); return end(); } S.phase = 'night'; save(); return night(); } }
     log({ k: 'exile', who: out });

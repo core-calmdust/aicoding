@@ -1891,7 +1891,7 @@ html[data-cup=tan] .ld .cupi,html[data-cup=tan] .rcup{background-image:url(img/c
 .ld .cstep .fsel .fbtn{min-width:0;padding:5px 0;display:flex;justify-content:center}
 /* lesson list (4 lessons) is as tall as its cards; a running lesson keeps the fixed box */
 @media (hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4){
-  .ld .lesson-modal:has(> .lc-body){height:auto}
+  /* (the lesson list keeps the size of the rules box: rules | lessons | tutorial are one box) */
 }
 /* new-game dialog on PC: no fixed 540px body; a common minimum keeps the three tabs about the same height */
 @media (hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4){
@@ -1986,3 +1986,34 @@ html[lang=ar] .ld-box .tut-btns #tuBack{margin-right:0;margin-left:auto}
   .ld #ldTable[data-n="3"] .seat.top.rside .bub::after{left:auto;right:16px}
 }
 .ld-box.min p.tut-ng:not([hidden]){display:block}
+
+/* ===== 2026-11-28 (user): the box keeps its size when the tabs change; the middle of the table a size larger on PC; no yellow buttons ===== */
+/* probability calculator: both tabs in one cell, the box is as large as the larger ("this position"); longer than the screen: scroll inside */
+.ld .tl-stack{display:grid}
+.ld .tl-stack > .tl-pane{grid-area:1 / 1;min-width:0}
+.ld .tl-stack > .tl-pane.off{visibility:hidden;pointer-events:none}
+.ld .tools-modal{display:flex;flex-direction:column}
+.ld .tools-modal .tools-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.ld .tools-modal > h2,.ld .tools-modal > .ng-tabs,.ld .tools-modal > .modal-actions{flex-shrink:0}
+/* the middle of the table on PC: the small lines a size larger (the bid itself unchanged) */
+@media (hover:hover) and (pointer:fine) and (min-width:1040px) and (min-aspect-ratio:3/4){
+  .ld .mid{gap:8px;padding:14px 22px 14px}
+  .ld .mid-h{font-size:16px;gap:12px}
+  .ld .wildt .dimg{width:22px;height:22px}
+  .ld .palt{font-size:15px;padding:3px 12px}
+  .ld .mid-bid em{font-size:16px}
+  .ld .mid-tot{font-size:15.5px}
+  .ld .hist{gap:8px;max-width:380px}
+  .ld .ldh{font-size:13.5px;padding:3px 9px 3px 8px;gap:4px}
+  .ld .ldh b{font-size:16px}
+  .ld .ldh .dimg{width:20px;height:20px}
+  .ld .count small{font-size:15px}
+}
+/* buttons: the site's quiet light buttons instead of the shared parts' yellow ones (rule tour "Next", the "first time?" banner) */
+.ld .rt-nav button.go,.ld .rt-finish button.go{background:linear-gradient(180deg,#f1efe9,#9c988f);color:#121212;border:0}
+.ld .rt-nav button.go:disabled{opacity:.45}
+.ld .rules-offer{border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.04)}
+.ld .rules-offer button{background:rgba(255,255,255,.1);color:#f1efe9;border:1px solid rgba(255,255,255,.22)}
+.ld .rules-offer button:hover{background:rgba(255,255,255,.16)}
+@media (min-width:761px){.ld .tools-modal{max-height:calc(100dvh - 32px)}}
+@media (max-width:760px){.ld .lt-top button{white-space:nowrap;font-size:13px;letter-spacing:.02em;padding-left:4px;padding-right:4px}}

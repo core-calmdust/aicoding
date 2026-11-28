@@ -133,9 +133,9 @@ function listHtml() {
 function open() { cur = null; renderShell(); A.openOv('#lessonOverlay'); }
 function renderShell() {
   const M = $('#lessonModal');
-  const tabs = `<div class="ng-tabs lt-top"><button type="button" data-top="rules">${esc(t('btn.rules'))}</button><button type="button" class="sel" data-top="lessons">${esc(t('btn.lesson'))}</button></div>`;
+  const tabs = `<div class="ng-tabs lt-top"><button type="button" data-top="rules">${esc(t('btn.rules'))}</button><button type="button" class="sel" data-top="lessons">${esc(t('btn.lesson'))}</button>${window.LdTut ? `<button type="button" data-top="tut">▶ ${esc(t('tu.tab'))}</button>` : ''}</div>`;
   M.innerHTML = tabs + (!cur ? `<div class="lc-body">${listHtml()}</div><div class="modal-actions"><button class="mbtn go" id="lcClose">${esc(t('close'))}</button></div>` : playHtml());
-  M.querySelectorAll('[data-top]').forEach(b => b.onclick = () => { if (b.dataset.top === 'rules') window.LdRules && LdRules.open(); });
+  M.querySelectorAll('[data-top]').forEach(b => b.onclick = () => { if (b.dataset.top === 'rules') window.LdRules && LdRules.open(); else if (b.dataset.top === 'tut' && window.LdTut) { A.closeOv('#lessonOverlay'); LdTut.start(); } });
   if (!cur) { M.querySelectorAll('[data-l]').forEach(b => b.onclick = () => start(b.dataset.l)); const tb = $('#lcTut'); if (tb) tb.onclick = () => { A.closeOv('#lessonOverlay'); LdTut.start(); }; $('#lcClose').onclick = () => A.closeOv('#lessonOverlay'); }
   else wirePlay();
 }

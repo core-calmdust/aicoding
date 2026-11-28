@@ -6,7 +6,7 @@
   const NAMES = ["matsu-tsuru", "jan-tanzaku", "jan-kasu1", "jan-kasu2", "feb-tane", "feb-tanzaku", "feb-kasu1", "feb-kasu2", "mar-hikari", "mar-tanzaku", "mar-kasu1", "mar-kasu2", "apr-tane", "apr-tanzaku", "apr-kasu1", "apr-kasu2", "may-tane", "may-tanzaku", "may-kasu1", "may-kasu2", "jun-tane", "jun-tanzaku", "jun-kasu1", "jun-kasu2", "jul-tane", "jul-tanzaku", "jul-kasu1", "jul-kasu2", "aug-hikari", "aug-tane", "aug-kasu1", "aug-kasu2", "kiku-sakazuki", "sep-tanzaku", "sep-kasu1", "sep-kasu2", "oct-tane", "oct-tanzaku", "oct-kasu1", "oct-kasu2", "yanagi-michikaze", "nov-tane", "nov-tanzaku", "nov-kasu", "kiri-houou", "dec-kasu1", "dec-kasu3", "dec-kasu2"];
   const READY = new Set(NAMES);   // pictures that exist (all 48 once the deck is done)
   const ART = {}; NAMES.forEach((n, i) => { if (READY.has(n)) ART[i] = n; });
-  const V = 5;
+  const V = 6;
   // provisional face colours per month (plant tint) and the plant glyph
   const PLANT = ['松', '梅', '桜', '藤', '菖', '牡', '萩', '芒', '菊', '紅', '柳', '桐'];
   const TINT = ['#2f5b45', '#b8323a', '#d9879a', '#6b5394', '#4d5fa0', '#c2464e', '#9c3e5c', '#8a7a3c', '#c99a2e', '#b5452a', '#4f7a3a', '#6b5a8a'];
@@ -31,7 +31,10 @@ ${kind ? `<text x="16" y="28" font-size="17" font-family="Shippori Mincho B1, se
   // a card element's inner HTML
   function face(id, big) {
     const s = artSrc(id, big);
-    return s ? `<img class="hf-art" src="${s}" alt="" draggable="false">` : provisional(id);
+    return s ? `<img class="hf-art" src="${s}" alt="" draggable="false" loading="eager">` : provisional(id);
   }
-  root.HFCards = { face, artSrc, ART, PLANT };
+  // load every picture early, so a card never shows as an empty frame while its image is still on the way
+  function preload() { if (preload.done) return; preload.done = 1; Object.keys(ART).forEach(id => { const im = new Image(); im.decoding = 'async'; im.src = artSrc(+id); }); }
+  if (typeof document !== 'undefined') { if (document.readyState === 'complete') setTimeout(preload, 50); else addEventListener('load', () => setTimeout(preload, 50)); }
+  root.HFCards = { face, artSrc, ART, PLANT, preload };
 })(typeof self !== 'undefined' ? self : this);

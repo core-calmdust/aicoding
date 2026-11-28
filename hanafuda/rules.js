@@ -134,29 +134,29 @@ const r = k => { const L = A.LANG(); return (R[L] && R[L][k]) || R.en[k] || k; }
 const E = s => A.esc(s);
 
 function row(label, ids, cls) {
-  return `<div class="rt-row"><b>${E(label)}</b><div class="rt-cards">${ids.map(id => `<div class="hf ${cls || ''}" data-id="${id}">${C.face(id)}</div>`).join('')}</div></div>`;
+  return `<div class="hfr-row"><b>${E(label)}</b><div class="hfr-cards">${ids.map(id => `<div class="hf ${cls || ''}" data-id="${id}">${C.face(id)}</div>`).join('')}</div></div>`;
 }
 function board(api, html) {
   const b = api.board;
-  b.innerHTML = `<div class="rt-hf">${html}</div>`;
+  b.innerHTML = `<div class="hfr">${html}</div>`;
   const w = b.clientWidth || 400, h = b.clientHeight || 300;
-  const rows = b.querySelectorAll('.rt-row').length || 1;
-  const maxPer = Math.max(...[...b.querySelectorAll('.rt-cards')].map(x => x.children.length), 1);
-  const lab = Math.min(90, w * 0.2);
-  const cw = Math.max(30, Math.min((w - lab - 24 - maxPer * 8) / maxPer, (h - rows * 14 - 10) / rows / 1.66, 110));
+  const rows = b.querySelectorAll('.hfr-row').length || 1;
+  const maxPer = Math.max(...[...b.querySelectorAll('.hfr-cards')].map(x => x.children.length), 1);
+  const extra = b.querySelector('.hfr-btns') ? 64 : 0;
+  const cw = Math.max(30, Math.min((w - 16 - (maxPer - 1) * 10) / maxPer, (h - extra - rows * 34 - 16) / rows / 1.656, 150));
   b.style.setProperty('--rcw', cw + 'px');
 }
 const PAGES = [
   { id: 'months', setup(api) {
     board(api, row(r('field'), [21, 2, 33, 29]) + row(r('you'), [3]));
-    api.board.onclick = e => { const c = e.target.closest('.rt-row:first-child .hf'); if (!c) return; if (HF.month(+c.dataset.id) === 0) { c.classList.add('ok'); api.ok(E(r('months.ok'))); } else api.ng(E(r('months.ng'))); };
+    api.board.onclick = e => { const c = e.target.closest('.hfr-row:first-child .hf'); if (!c) return; if (HF.month(+c.dataset.id) === 0) { c.classList.add('ok'); api.ok(E(r('months.ok'))); } else api.ng(E(r('months.ng'))); };
   } },
   { id: 'match', setup(api) {
     board(api, row(r('field'), [12, 25, 38, 6]) + row(r('you'), [44, 15, 30]));
-    api.board.onclick = e => { const c = e.target.closest('.rt-row:last-child .hf'); if (!c) return; if (+c.dataset.id === 15) { c.classList.add('ok'); [...api.board.querySelectorAll('.hf')].filter(x => +x.dataset.id === 12).forEach(x => x.classList.add('ok')); api.ok(E(r('match.ok'))); } else api.ng(E(r('match.ng'))); };
+    api.board.onclick = e => { const c = e.target.closest('.hfr-row:last-child .hf'); if (!c) return; if (+c.dataset.id === 15) { c.classList.add('ok'); [...api.board.querySelectorAll('.hf')].filter(x => +x.dataset.id === 12).forEach(x => x.classList.add('ok')); api.ok(E(r('match.ok'))); } else api.ng(E(r('match.ng'))); };
   } },
   { id: 'draw', setup(api) {
-    board(api, row(r('field'), [10, 22, 31]) + `<div class="rt-row"><b></b><div class="rt-cards"><div class="hf back rt-deck"></div></div></div>`);
+    board(api, row(r('field'), [10, 22, 31]) + `<div class="hfr-row"><b></b><div class="hfr-cards"><div class="hf back rt-deck"></div></div></div>`);
     api.board.onclick = e => { const d = e.target.closest('.rt-deck'); if (!d || d.dataset.done) return; d.dataset.done = 1; d.classList.remove('back'); d.innerHTML = C.face(9); d.classList.add('ok'); [...api.board.querySelectorAll('.hf')].filter(x => +x.dataset.id === 10).forEach(x => x.classList.add('ok')); api.ok(E(r('draw.ok'))); };
   } },
   { id: 'kinds', setup(api) {
@@ -165,10 +165,10 @@ const PAGES = [
   } },
   { id: 'yaku', setup(api) {
     board(api, row(r('caps'), [1, 5]) + row(r('field'), [10, 9, 37, 13]) + row(r('you'), [11]));
-    api.board.onclick = e => { const c = e.target.closest('.rt-row:nth-child(2) .hf'); if (!c) return; if (+c.dataset.id === 9) { c.classList.add('ok'); api.ok(E(r('yaku.ok'))); } else api.ng(E(r('yaku.ng'))); };
+    api.board.onclick = e => { const c = e.target.closest('.hfr-row:nth-child(2) .hf'); if (!c) return; if (+c.dataset.id === 9) { c.classList.add('ok'); api.ok(E(r('yaku.ok'))); } else api.ng(E(r('yaku.ng'))); };
   } },
   { id: 'koi', setup(api) {
-    board(api, row(r('opp'), [24, 36]) + row(r('caps'), [1, 5, 9]) + `<div class="rt-btns"><button type="button" class="mbtn" data-a="go">${E(r('go'))}</button><button type="button" class="mbtn go" data-a="stop">${E(r('stop'))}</button></div>`);
+    board(api, row(r('opp'), [24, 36]) + row(r('caps'), [1, 5, 9]) + `<div class="hfr-btns"><button type="button" class="mbtn" data-a="go">${E(r('go'))}</button><button type="button" class="mbtn go" data-a="stop">${E(r('stop'))}</button></div>`);
     api.board.onclick = e => { const b = e.target.closest('[data-a]'); if (!b) return; if (b.dataset.a === 'stop') api.ok(E(r('koi.ok'))); else api.ng(E(r('koi.ng'))); };
   } },
 ];
@@ -181,7 +181,7 @@ function build() {
     lessons: () => { A.closeOv('#rulesOverlay'); window.HFLessons && HFLessons.open(); }, pages });
 }
 window.HFRules = {
-  open() { A.openOv('#rulesOverlay'); if (!tour) build(); tour.open(0); },
+  open() { try { localStorage.setItem('aicoding-hanafuda-rules-seen', '1'); } catch (e) {} A.openOv('#rulesOverlay'); if (!tour) build(); tour.open(0); },
   relang() { if (tour && tour.visible && tour.visible()) tour.render(); },
 };
 })();
