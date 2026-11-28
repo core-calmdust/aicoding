@@ -93,7 +93,8 @@
 
   // ---------- RNG ----------
   function rng(seed) {
-    let s = (seed >>> 0) || 0x9e3779b9;
+    let s = (Math.imul((seed >>> 0) ^ 0x5bd1e995, 0x9e3779b1) >>> 0) || 0x9e3779b9;
+    for (let i = 0; i < 4; i++) { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; }
     return function () { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; };
   }
   function shuffle(a, r) {
@@ -136,6 +137,17 @@
     }
     throw new Error('deal failed');
   }
+  // a fixed layout (tutorial / lessons): {hands:[[..],[..]], field:[..], draws:[first, second, ...], oya}
+  function layout(L, o) {
+    o = opts(o);
+    const used = new Set([...L.hands[0], ...L.hands[1], ...L.field, ...(L.draws || [])]);
+    const rest = [...Array(48).keys()].filter(i => !used.has(i));
+    const deck = rest.concat((L.draws || []).slice().reverse());
+    const s = { o, oya: L.oya || 0, turn: L.oya || 0, deck, hands: [L.hands[0].slice(), L.hands[1].slice()], field: L.field.slice(), caps: [[], []], phase: 'play',
+      koi: [0, 0], lastPts: [0, 0], pending: null, drawn: null, log: [], result: null, turns: 0, seen: [] };
+    sortHands(s);
+    return s;
+  }
   function sortHands(s) { for (const h of s.hands) h.sort((a, b) => a - b); }
 
   function matches(field, c) { const m = month(c); return field.filter(f => month(f) === m); }
@@ -153,6 +165,7 @@
   function actions(s) {
     switch (s.phase) {
       case 'play': return s.hands[s.turn].slice();
+      case 'draw': return ['draw'];
       case 'pickPlay': case 'pickDraw': return matches(s.field, s.pending);
       case 'koi': return canKoi(s) ? ['stop', 'koi'] : ['stop'];
       default: return [];
@@ -191,13 +204,15 @@
         s.field.push(a); s.log.push({ p, kind: 'play', card: a, got: [] });
       } else if (ms.length === 2) { s.phase = 'pickPlay'; s.pending = a; s.log.push({ p, kind: 'play', card: a, got: null }); return s; }
       else { const got = take(s, p, a, ms[0]); s.log.push({ p, kind: 'play', card: a, got }); }
-      return draw(s);
+      s.phase = 'draw';
+      return s;
     }
+    if (s.phase === 'draw') { s.phase = 'play'; return draw(s); }
     if (s.phase === 'pickPlay') {
       const got = take(s, p, s.pending, a);
       s.log[s.log.length - 1].got = got;
-      s.pending = null; s.phase = 'play';
-      return draw(s);
+      s.pending = null; s.phase = 'draw';
+      return s;
     }
     if (s.phase === 'pickDraw') {
       const got = take(s, p, s.pending, a);
@@ -293,6 +308,6 @@
     };
   }
 
-  const API = { CARDS, ID, DEF, month, DEFAULT_OPTS, PRESETS, opts, yaku, handYaku, deal, actions, apply, canKoi, nextOya, oyaDraw, clone, matches, progress, rng, shuffle, cardRank };
+  const API = { layout, CARDS, ID, DEF, month, DEFAULT_OPTS, PRESETS, opts, yaku, handYaku, deal, actions, apply, canKoi, nextOya, oyaDraw, clone, matches, progress, rng, shuffle, cardRank };
   if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.HF = API;
 })(typeof self !== 'undefined' ? self : this);
