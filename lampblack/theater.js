@@ -100,9 +100,9 @@
 #theater .scrim .fib{inset:-60%;transform-origin:50% 50%}
 #theater .scrim .fib1{background-image:var(--fib1);background-size:640px 640px;mix-blend-mode:multiply;opacity:.5}
 #theater .scrim .fib2{background-image:var(--fib2);background-size:320px 320px;mix-blend-mode:multiply;opacity:.16}
-#theater .scrim .lampL{inset:auto;width:2600px;height:2600px;border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--lamp) 92%,white) 0%,color-mix(in srgb,var(--lamp) 60%,transparent) 22%,transparent 64%);mix-blend-mode:soft-light}
+#theater .scrim .lampL{inset:auto;width:2600px;height:2600px;border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--lamp) 92%,white) 0%,color-mix(in srgb,var(--lamp) 60%,transparent) 22%,transparent 64%);}
 #theater .scrim .moonl{background:radial-gradient(70% 80% at 72% 18%,color-mix(in srgb,var(--moon) 70%,white) 0%,var(--moon) 25%,color-mix(in srgb,var(--night) 60%,var(--moon)) 62%,var(--night) 100%)}
-#theater .shadeL{position:absolute;inset:0;mix-blend-mode:multiply;z-index:8;pointer-events:none}
+#theater .shadeL{position:absolute;inset:0;z-index:8;pointer-events:none}
 #theater .scrim .edge{background:radial-gradient(120% 95% at 50% 45%,transparent 46%,rgba(40,20,6,.5) 100%)}
 #theater .L{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
 #theater .bd{position:absolute}
@@ -206,7 +206,7 @@
   World.prototype.light = function (o) {
     const L = this._lamp || (this._lamp = this.scrim.querySelector('.lampL')), M = this.scrim.querySelector('.moonl'), Ed = this.scrim.querySelector('.edge'), B = this.scrim.querySelector('.base');
     L.style.left = (o.lx != null ? o.lx : .5) * W + 'px'; L.style.top = (o.ly != null ? o.ly : .46) * H + 'px';
-    L.style.opacity = o.lamp != null ? o.lamp : .95; L.style.transform = `translate(-50%,-50%) scale(${o.ls || 1})`;
+    L.style.opacity = ((o.lamp != null ? o.lamp : .95) * .42).toFixed(3);   // a plain glow (no light blending: much cheaper for the graphics chip) L.style.transform = `translate(-50%,-50%) scale(${o.ls || 1})`;
     M.style.opacity = o.moon || 0; Ed.style.opacity = o.edge != null ? o.edge : 1;
     B.style.opacity = o.paper != null ? o.paper : 1;
     const Sd = this._sd || (this._sd = el('div', 'shadeL', null, this.box)), lx = (o.lx != null ? o.lx : .5) * 100, ly = (o.ly != null ? o.ly : .46) * 100;
@@ -265,9 +265,9 @@
 
 #theater .thSky{position:absolute;left:0;top:0;z-index:3;pointer-events:none}
 #theater .thVig{position:absolute;inset:0;z-index:4;pointer-events:none;background:radial-gradient(130% 110% at 50% 48%,transparent 52%,rgba(6,3,1,.6) 100%)}
-#theater .thGrain{position:absolute;inset:-128px;z-index:5;pointer-events:none;opacity:.5;mix-blend-mode:overlay;will-change:transform;animation:thGrain .5s steps(6) infinite}
+#theater .thGrain{display:none;position:absolute;inset:-128px;z-index:5;pointer-events:none;opacity:.5;mix-blend-mode:overlay;will-change:transform;animation:thGrain .5s steps(6) infinite}
 @keyframes thGrain{0%{transform:translate(0,0)}17%{transform:translate(-61px,37px)}33%{transform:translate(43px,-88px)}50%{transform:translate(-97px,-21px)}67%{transform:translate(19px,74px)}83%{transform:translate(88px,13px)}100%{transform:translate(0,0)}}
-#theater .bloomL{position:absolute;z-index:9;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(closest-side,rgba(255,214,150,.9),rgba(255,190,110,.35) 45%,transparent);mix-blend-mode:screen;pointer-events:none}
+#theater .bloomL{position:absolute;z-index:9;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(closest-side,rgba(255,226,170,.5),rgba(255,200,130,.16) 45%,transparent);pointer-events:none}
 #theater .lit .pup .cel{filter:drop-shadow(0 0 5px var(--cel)) drop-shadow(0 0 14px var(--cel))}
 #theater .wolfw{position:absolute}
 #theater .scrim .fib{display:none}
@@ -345,12 +345,18 @@ body.th-full #cam,body.th-full #scrim,body.th-full #cineShade,body.th-full #cine
   }
 
   // a slow machine: when frames take too long, draw at 30 fps with less snow and no film grain (decided once, kept)
-  let lite = false, ema = 16, lastNow = 0, skip = false;
+  let lite = false, ema = 33, lastNow = 0, lastDraw = 0, pausedAt = 0;
+  // the picture is drawn 30 times a second (the camera moves slowly: more is wasted work and heat), 20 once a shot has settled,
+  // and not at all while the game is paused (the window has lost focus or is hidden)
   function tick(now) {
     raf = 0; if (!cur) return;
-    if (lastNow) { const dt = Math.min(200, now - lastNow); ema = ema * .9 + dt * .1; if (!lite && (now - cur.t0) > 1500 && ema > (skip ? 40 : 24)) { lite = true; host.classList.add('lite'); } }
-    lastNow = now;
-    if (lite && (skip = !skip)) { if (host.classList.contains('on')) raf = requestAnimationFrame(tick); return; }
+    if (document.body.classList.contains('paused') || document.hidden) { if (!pausedAt) pausedAt = now; setTimeout(() => { if (!raf && host.classList.contains('on')) raf = requestAnimationFrame(tick); }, 250); return; }
+    if (pausedAt) { const d = now - pausedAt; cur.t0 += d; if (old) { old.t0 += d; old.at += d; } pausedAt = 0; lastDraw = 0; }
+    const settled = (now - cur.t0) > 14000 && now - talkAt > 400;
+    const gap = 1000 / (lite || settled ? 20 : 30);
+    if (lastDraw && now - lastDraw < gap - 4) { raf = requestAnimationFrame(tick); return; }
+    if (lastDraw) { const dt = Math.min(250, now - lastDraw); ema = ema * .9 + dt * .1; if (!lite && (now - cur.t0) > 1500 && ema > 48) { lite = true; host.classList.add('lite'); } }
+    lastDraw = now; lastNow = now; TH.draws = (TH.draws || 0) + 1;
     const t = seekT != null ? seekT : (now - cur.t0) / 1000;
     const talk = Math.max(0, 1 - (now - talkAt) / 140);
     const r = cur.def.draw(cur.S, t, ctx, { talk, now }) || {};
