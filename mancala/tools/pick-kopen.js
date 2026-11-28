@@ -5,7 +5,7 @@
 //   node mancala/tools/pick-kopen.js <candidates dir> k_open,k_open6
 const fs = require('fs'), path = require('path'), ROOT = path.join(__dirname, '../..');
 const E = require(path.join(ROOT, 'mancala/engine.js'));
-const R = 'kalah', dir = process.argv[2], ids = process.argv[3].split(',');
+const dir = process.argv[2], ids = process.argv[3].split(','), R = /^n_/.test(ids[0]) ? 'basic' : 'kalah';
 const LP = path.join(ROOT, 'mancala/lessons.json'), L = JSON.parse(fs.readFileSync(LP, 'utf8')), PZ = JSON.parse(fs.readFileSync(path.join(ROOT, 'mancala/puzzles.json'), 'utf8'));
 const pool = []; L.steps.forEach(st => { if (!ids.includes(st.id)) st.problems.forEach(P => pool.push(P.b)); (st.ramp || []).forEach(r => pool.push(r.b));
   if (st.line && st.line.moves) { let b = E.initial(st.line.seeds || st.seeds || 4), s = 0; pool.push(Array.from(b)); for (const k of st.line.moves) { const t = E.trace(b, s, k, R); b = t.board; s = t.next; pool.push(Array.from(b)); } } });

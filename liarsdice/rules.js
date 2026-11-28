@@ -101,9 +101,12 @@ function build() {
   if (tour) return tour;
   const m = document.createElement('div'); m.className = 'rt-mount'; $('#rulesBody').appendChild(m);
   const pages = [{ id: 'intro', title: () => esc(t('title')), body: () => '', html: () => overview() + RuleTour.intro({ img: IMG, origin: esc(t('r.origin')), players: esc(t('r.players')), time: esc(t('r.time')), history: esc(t('r.hist')), win: esc(t('r.howwin')), culture: esc(t('r.cult')), lang: A.LANG }) }];
-  PAGES.forEach(P => pages.push({ id: P.id, title: () => esc(R(P.id, 't')), body: () => esc(R(P.id, 'b')), task: () => esc(R(P.id, 'task')),
+  // the points of each page under its text (PC, beside the board; hidden on phones where the text sits above the board)
+  const pts = id => `<div class="ld-pts"><b>${esc(t('r.ui.pts'))}</b><ul>${String(R(id, 'pts')).split('|').filter(Boolean).map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`;
+  PAGES.forEach(P => pages.push({ id: P.id, title: () => esc(R(P.id, 't')), body: () => esc(R(P.id, 'b')), html: () => pts(P.id), task: () => esc(R(P.id, 'task')),
     setup: api => { const b = api.board; b.innerHTML = ''; const host = document.createElement('div'); host.className = 'rth'; b.appendChild(host); P.setup(api, host); }, teardown() {} }));
-  tour = RuleTour.create({ mount: m, store: 'aicoding-liarsdice-rules', lang: () => A.LANG, aspect: 1.15, sound: k => A.sfx(k),
+  tour = RuleTour.create({ mount: m, store: 'aicoding-liarsdice-rules', lang: () => A.LANG, aspect: () => innerWidth > 760 && innerHeight >= 800 ? 1 : 1.15,   // tall PC screens: a taller board fills the fixed box (the points sit beside it)
+    sound: k => A.sfx(k),
     close: () => A.closeOv('#rulesOverlay'),
     lessons: () => { A.closeOv('#rulesOverlay'); window.LdLessons && LdLessons.open(); },
     play: () => { A.closeOv('#rulesOverlay'); },
@@ -113,8 +116,9 @@ function build() {
 }
 function tabs() {
   $('#rulesTabs').innerHTML = '';
-  $('#rulesTop').innerHTML = `<button type="button" class="sel" data-top="rules">${esc(t('btn.rules'))}</button><button type="button" data-top="lessons">${esc(t('btn.lesson'))}</button>`;
+  $('#rulesTop').innerHTML = `<button type="button" class="sel" data-top="rules">${esc(t('btn.rules'))}</button><button type="button" data-top="lessons">${esc(t('btn.lesson'))}</button>` + (window.LdTut ? `<button type="button" data-top="tut">▶ ${esc(t('tu.tab'))}</button>` : '');
   document.querySelector('#rulesTop [data-top="lessons"]').onclick = () => { if (tour) tour.stop(); window.LdLessons && LdLessons.open(); };
+  const tu = document.querySelector('#rulesTop [data-top="tut"]'); if (tu) tu.onclick = () => { if (tour) tour.stop(); A.closeOv('#rulesOverlay'); LdTut.start(); };
 }
 function open(page) {
   try { localStorage.setItem('aicoding-liarsdice-rules-seen', '1'); } catch (e) {}

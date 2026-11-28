@@ -93,4 +93,24 @@ ok(Math.abs(LD.pAtLeast(1, 0, 1, 3, true) - 1 / 3) < 1e-12, 'p one die wild');
   }
   console.log('random rounds', rounds);
 }
+// the tutorial's scripted round (tutorial.js): every bid legal for both accepted answers, Dudo right, Mina loses a die;
+// the meters it shows: the task bid likely (>= 80%), the doubt likely right (>= 70%), and Dudo the coach's first choice
+{
+  const fs = require('fs'), src = fs.readFileSync(path.join(__dirname, '..', 'tutorial.js'), 'utf8');
+  const HANDS = JSON.parse(src.match(/const HANDS = (\[\[.*?\]\]);/)[1]);
+  const SCRIPT = eval(src.match(/const SCRIPT = (\[.*?\]);\n/)[1]);
+  for (const q of [5, 6]) {
+    const g = LD.newGame({ players: 3, rules: LD.PRESETS.perudo, starter: 1 });
+    LD.startRound(g, null, HANDS);
+    let sp = 0, res = null;
+    const bot = () => { const m = SCRIPT[sp++]; ok(m && m[0] === g.round.turn, 'tutorial: script seat ' + sp); ok(LD.legalBid(LD.bidCtx(g, m[0]), m[1].q, m[1].f), 'tutorial: legal ' + JSON.stringify(m[1])); LD.act(g, m[0], m[1]); };
+    bot(); bot();
+    let Cb = AI.coach(g, 0); ok(AI.pTrue(Cb.V, q, 3) >= .8, 'tutorial: task bid likely (' + q + ')'); ok(LD.legalBid(LD.bidCtx(g, 0), q, 3), 'tutorial: task bid legal ' + q);
+    LD.act(g, 0, { t: 'bid', q, f: 3 });
+    bot(); bot();
+    const Cd = AI.coach(g, 0); ok(1 - Cd.T >= .7, 'tutorial: dudo likely right'); ok(Cd.opts[0].a.t === 'dudo', 'tutorial: coach picks dudo');
+    res = LD.act(g, 0, { t: 'dudo' });
+    ok(res && !res.ok && res.loser === 2 && res.n === 3, 'tutorial: Mina loses, three counted');
+  }
+}
 console.log(bad ? bad + ' failure(s)' : 'all ok'); process.exit(bad ? 1 : 0);

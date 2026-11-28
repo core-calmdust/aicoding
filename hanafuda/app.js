@@ -12,9 +12,9 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 /* ---------------- storage ---------------- */
 function load() { try { return JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch (e) { return {}; } }
 const D = load();
-D.set = Object.assign({ lv: 5, preset: 'nintendo', opts: {}, back: 'black', table: 'indigo', coach: 1, sound: true }, D.set || {});
+D.set = Object.assign({ mode: 'ai', lv: 5, preset: 'nintendo', opts: {}, back: 'black', table: 'indigo', coach: 1, sound: true }, D.set || {});
 const set = D.set;
-function save() { try { localStorage.setItem(STORE, JSON.stringify(D)); } catch (e) {} }
+function save() { try { localStorage.setItem(STORE, JSON.stringify(D.m && D.m.tut ? Object.assign({}, D, { m: saved ? JSON.parse(saved) : null }) : D)); } catch (e) {} }
 function rules() { return HF.opts(Object.assign({}, HF.PRESETS[set.preset] || {}, set.preset === 'custom' ? set.opts : {})); }
 
 /* ---------------- language ---------------- */
@@ -56,7 +56,7 @@ function sfx(k) {
 
 /* ---------------- worker ---------------- */
 let W = null, wid = 0; const wait = new Map();
-try { W = new Worker('worker.js?v=2'); W.onmessage = e => { const f = wait.get(e.data.id); if (f) { wait.delete(e.data.id); f(e.data); } }; } catch (e) { W = null; }
+try { W = new Worker('worker.js?v=4'); W.onmessage = e => { const f = wait.get(e.data.id); if (f) { wait.delete(e.data.id); f(e.data); } }; } catch (e) { W = null; }
 function think(s, lv) {
   const seed = (Math.random() * 1e9) | 0;
   if (!W) return Promise.resolve(AI.choose(s, lv, seed));
@@ -70,15 +70,20 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 // D.m = { o, months, k (0-based month index), scores:[me,cpu], oya, s (hand state), hist:[{winner,pts}], lv, over }
 let busy = false, pick = null, hintId = null, lastLogLen = 0, gen = 0;
 function startMatch() {
-  const o = rules();
+  const rated = set.mode === 'rated' && window.HFRated;
+  if (rated && HFRated.gate(() => startMatch())) return;
+  const o = rated ? HF.opts({ months: 6 }) : rules();
   const od = HF.oyaDraw((Math.random() * 1e9) | 0);
-  D.m = { o, months: o.months, k: 0, scores: [0, 0], oya: od.oya, hist: [], lv: set.lv, s: null, over: false, oyaCards: od.cards };
+  let lv = set.lv, rt = null;
+  if (rated) { const pk = HFRated.pick(); lv = pk.lv; rt = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), lv: pk.lv, or: pk.or }; }
+  D.m = { o, months: o.months, k: 0, scores: [0, 0], oya: od.oya, hist: [], lv, s: null, over: false, oyaCards: od.cards, rated: rt };
   deal();
-  toast(t(od.oya === ME ? 'oya.you' : 'oya.cpu'));
+  toast(rated ? HFRated.r('vs', { lv, r: rt.or }) + ' ・ ' + t(od.oya === ME ? 'oya.you' : 'oya.cpu') : t(od.oya === ME ? 'oya.you' : 'oya.cpu'));
 }
 function deal() {
   const m = D.m;
   m.s = HF.deal((Math.random() * 1e9) | 0, m.oya, m.o);
+  m.dec = []; reviewing = false;
   lastLogLen = 0; pick = null; hintId = null; gen++;
   save(); render(); step();
 }
@@ -88,12 +93,13 @@ async function step() {
   const m = D.m; if (!m || m.over) return;
   const s = m.s, my = gen;
   if (s.phase === 'over') return handOver();
-  if (s.phase === 'draw') { await sleep(420); if (my !== gen) return; await focused(); act('draw'); return; }
+  if (s.phase === 'draw') { if (s.turn === CPU && m.tut && window.HFTut) { while (HFTut.hold()) { await sleep(250); if (my !== gen) return; } } await sleep(420); if (my !== gen) return; await focused(); act('draw'); return; }
+  if (s.turn === CPU && m.tut && window.HFTut) { while (HFTut.hold()) { await sleep(250); if (my !== gen) return; } }
   if (s.turn === CPU) {
     busy = true; render();
     await sleep(s.phase === 'play' ? 520 : 380); await focused();
     if (my !== gen) return;
-    const r = await think(s, m.lv);
+    const r = m.tut ? { action: m.script.length ? m.script.shift() : HF.actions(s)[0] } : await think(s, m.lv);
     if (my !== gen) return;
     busy = false;
     if (s.phase === 'koi') { banner(t(r.action === 'koi' ? 'koi.cpuKoi' : 'koi.cpuStop')); sfx(r.action === 'koi' ? 'koi' : 'yaku'); await sleep(900); }
@@ -107,6 +113,7 @@ async function step() {
 }
 function act(a) {
   const m = D.m, s = m.s;
+  if (s.turn === ME && !m.tut && a !== 'draw' && HF.actions(s).length > 1) (m.dec || (m.dec = [])).push({ s, a });
   const before = s.caps[s.turn].length;
   m.s = HF.apply(s, a);
   if (m.s.caps[s.turn].length > before) sfx('take'); else if (a !== 'stop' && a !== 'koi') sfx('play');
@@ -116,7 +123,9 @@ function act(a) {
 }
 function handOver() {
   const m = D.m, s = m.s, r = s.result;
+  if (m.tut) { m.scores[r.winner] += r.pts; showResult(r, false); render(); return; }
   if (r.winner >= 0) m.scores[r.winner] += r.pts;
+  D.hands = (D.hands || 0) + 1;
   m.hist.push({ winner: r.winner, pts: r.pts });
   const last = m.k + 1 >= m.months;
   sfx(r.winner === ME ? 'win' : r.winner === CPU ? 'lose' : 'play');
@@ -132,8 +141,11 @@ function nextHand() {
 function finishMatch() {
   const m = D.m; m.over = true; save();
   const [a, b] = m.scores, res = a > b ? 'w' : a < b ? 'l' : 'd';
-  if (window.GameRecord) GameRecord.add({ mode: 'ai', res, side: 0, opp: 'AI Lv.' + m.lv, key: 'ai:' + m.lv, n: m.months, why: a + '-' + b });
-  $('#resBody').innerHTML = `<h2>${esc(t('match.h'))}</h2><div class="big">${esc(t(res === 'w' ? 'match.win' : res === 'l' ? 'match.lose' : 'match.draw'))}</div><div class="pts">${a} − ${b}</div>`;
+  const x = m.rated && window.HFRated ? HFRated.settle(m, res === 'w' ? 1 : res === 'l' ? 0 : 0.5) : null;
+  save();
+  if (window.GameRecord) GameRecord.add({ mode: m.rated ? 'rated' : 'ai', res, side: 0, opp: 'AI Lv.' + m.lv, key: (m.rated ? 'rated:' : 'ai:') + m.lv, n: m.months, why: a + '-' + b });
+  $('#resBody').innerHTML = `<h2>${esc(t('match.h'))}</h2><div class="big">${esc(t(res === 'w' ? 'match.win' : res === 'l' ? 'match.lose' : 'match.draw'))}</div><div class="pts">${a} − ${b}</div>` + (x ? `<p class="note">${HFRated.resHtml(x)}</p>` : '');
+  $('#resClose').style.display = '';
   $('#resNext').textContent = t('match.again');
   $('#resNext').onclick = () => { closeOv('#resOverlay'); openNew(); };
   openOv('#resOverlay'); render();
@@ -143,6 +155,7 @@ function finishMatch() {
 function onHand(id) {
   const m = D.m; if (!m || busy) return; const s = m.s;
   if (s.turn !== ME || s.phase !== 'play') return;
+  if (m.tut && window.HFTut && !HFTut.allow(id)) return;
   act(id);
 }
 function onField(id) {
@@ -159,9 +172,9 @@ function ylist(list) { return '<ul class="ylist">' + list.map(y => `<li><span>${
 async function showKoi() {
   const s = D.m.s, y = HF.yaku(s.caps[ME], s.o);
   $('#koiBody').innerHTML = ylist(y.list) + `<p>${esc(t('koi.q'))}</p><p class="adv" id="koiAdv"></p>`;
-  $('#btnKoi').style.display = HF.canKoi(s) ? '' : 'none';
+  $('#btnKoi').style.display = HF.canKoi(s) && !D.m.tut ? '' : 'none';
   openOv('#koiOverlay');
-  if (set.coach) {
+  if (set.coach && !D.m.tut) {
     const r = await think(s, 16);
     const sc = Object.fromEntries(r.scores.map(x => [x.a, x.v]));
     const el = $('#koiAdv'); if (el && sc.koi !== undefined) el.textContent = t('coach.koiAdvice', { e: sc.koi.toFixed(1), s: sc.stop.toFixed(1) });
@@ -178,14 +191,27 @@ function showResult(r, last) {
     if (notes.length) h += `<p class="note">${notes.map(esc).join('<br>')}</p>`;
   }
   h += `<p class="note">${esc(t('monthOf', { n: D.m.k + 1, m: D.m.months }))} ・ ${esc(t('you'))} ${D.m.scores[0]} − ${D.m.scores[1]} ${esc(t('cpu'))}</p>`;
+  if (!D.m.tut && window.HFReview && (D.m.dec || []).length) h += `<p style="text-align:center;margin-top:10px"><button type="button" class="mbtn" id="resReview">${esc(HFRated.r('rv'))}</button></p>`;
   $('#resBody').innerHTML = h;
+  $('#resClose').style.display = D.m.tut ? 'none' : '';
+  const rvb = document.getElementById('resReview');
+  if (rvb) rvb.onclick = () => {
+    closeOv('#resOverlay'); reviewing = true;
+    const box = $('#coachBox'); box.scrollIntoView({ block: 'nearest' });
+    HFReview.review(D.m, think, box).then(() => {
+      if (!reviewing) return;
+      box.insertAdjacentHTML('beforeend', `<div class="rv-btns"><button type="button" class="mbtn go" id="rvNext">${esc(t(last ? 'match.h' : 'res.next'))}</button></div>`);
+      document.getElementById('rvNext').onclick = () => { reviewing = false; nextHand(); };
+    });
+  };
   $('#resNext').textContent = t(last ? 'match.h' : 'res.next');
-  $('#resNext').onclick = () => { closeOv('#resOverlay'); nextHand(); };
+  $('#resNext').onclick = () => { closeOv('#resOverlay'); if (D.m.tut) { window.HFTut && HFTut.next(); return; } nextHand(); };
   setTimeout(() => openOv('#resOverlay'), 700);
 }
 $('#resClose').onclick = () => closeOv('#resOverlay');
 let toastT = 0;
-function toast(msg) { const e = $('#toast'); e.textContent = msg; e.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => e.classList.remove('on'), 2400); }
+// the toast sits at the top of the table (between the opponent's hand and captures), never over the boxes below
+function toast(msg) { const e = $('#toast'); e.textContent = msg; placeToast(); e.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => e.classList.remove('on'), 2400); }
 let banT = 0;
 function banner(msg) { const e = $('#banner'); e.textContent = msg; e.classList.add('on'); clearTimeout(banT); banT = setTimeout(() => e.classList.remove('on'), 1300); }
 
@@ -208,13 +234,15 @@ function draftRules() { return HF.opts(Object.assign({}, HF.PRESETS[draft.preset
 function seg(name, vals, label, cur) { return `<div class="seg" data-o="${name}">` + vals.map(v => `<button type="button" data-v='${JSON.stringify(v)}' class="${JSON.stringify(v) === JSON.stringify(cur) ? 'on' : ''}">${esc(label(v))}</button>`).join('') + '</div>'; }
 function dd(name, vals, label, cur) { return `<div class="dd" data-o="${name}"><button type="button">${esc(label(cur))}</button><ul>` + vals.map(v => `<li data-v='${JSON.stringify(v)}' class="${JSON.stringify(v) === JSON.stringify(cur) ? 'on' : ''}">${esc(label(v))}</li>`).join('') + '</ul></div>'; }
 function renderNew() {
-  $('#ngTabs').innerHTML = ['game', 'rule', 'design'].map(k => `<button type="button" data-tab="${k}" class="${k === ngTab ? 'on' : ''}">${esc(t('tab.' + k))}</button>`).join('');
+  $('#ngTabs').innerHTML = ['game', 'rule', 'design'].filter(k => !(k === 'rule' && draft.mode === 'rated')).map(k => `<button type="button" data-tab="${k}" class="${k === ngTab ? 'on' : ''}">${esc(t('tab.' + k))}</button>`).join('');
   const r = draftRules();
   let h = '';
   if (ngTab === 'game') {
-    h = `<div class="gcard"><img src="${CARDS.artSrc(0)}" alt=""><div><b>${esc(t('g.koikoi'))}</b><p>${esc(t('g.koikoi.d'))}</p></div></div>
-      <div class="opt"><label>${esc(t('o.level'))}</label><div class="lv"><input type="range" min="1" max="20" value="${draft.lv}" id="ngLv"><b id="ngLvB">Lv.${draft.lv}</b></div></div>
-      <div class="opt"><label>${esc(t('o.months'))}</label>${seg('months', [12, 6, 3], v => t('mo.' + v), r.months)}</div>`;
+    const R = window.HFRated;
+    h = `<div class="ng-mode seg" data-o="mode">${['ai', 'rated'].map(k => `<button type="button" data-v='"${k}"' class="${draft.mode === k ? 'on' : ''}">${esc(R ? R.r(k) : k)}</button>`).join('')}</div>
+      <div class="gcard"><img src="${CARDS.artSrc(0)}" alt=""><div><b>${esc(t('g.koikoi'))}</b><p>${esc(t('g.koikoi.d'))}</p></div></div>` +
+      (draft.mode === 'rated' && R ? R.card() : `<div class="opt"><label>${esc(t('o.level'))}</label><div class="lv"><input type="range" min="1" max="20" value="${draft.lv}" id="ngLv"><b id="ngLvB">Lv.${draft.lv}</b></div></div>
+      <div class="opt"><label>${esc(t('o.months'))}</label>${seg('months', [12, 6, 3], v => t('mo.' + v), r.months)}</div>`);
   } else if (ngTab === 'rule') {
     h = `<div class="opt"><label>${esc(t('o.preset'))}</label>${seg('preset', ['nintendo', 'app', 'soft', 'custom'], v => t('p.' + v), draft.preset)}</div>`;
     for (const [k, vals, lab] of OPTS) {
@@ -223,7 +251,7 @@ function renderNew() {
     }
   } else {
     const backs = ['black', 'red'], tabs = ['indigo', 'lacquer'];
-    h = `<div class="opt"><label>${esc(t('o.back'))}</label><div class="tiles">` + backs.map(b => `<button type="button" class="tile ${draft.back === b ? 'on' : ''}" data-back="${b}"><span class="sw-card" style="background:${b === 'black' ? '#17151b' : '#7a1f1a'};box-shadow:inset 0 0 0 2px #050406"></span>${esc(t('bk.' + b))}</button>`).join('') + '</div></div>' +
+    h = `<div class="opt"><label>${esc(t('o.back'))}</label><div class="tiles">` + backs.map(b => `<button type="button" class="tile ${draft.back === b ? 'on' : ''}" data-back="${b}"><span class="sw-card" style="background:${b === 'black' ? '#121114' : '#3e0c0b'} url(img/cards/back-${b}@2x.webp?v=1) center/100% 100%"></span>${esc(t('bk.' + b))}</button>`).join('') + '</div></div>' +
       `<div class="opt"><label>${esc(t('o.table'))}</label><div class="tiles">` + tabs.map(b => `<button type="button" class="tile ${draft.table === b ? 'on' : ''}" data-table="${b}"><span class="sw-table" style="background:${b === 'indigo' ? '#1c2c44' : '#3a1712'}"></span>${esc(t('tb.' + b))}</button>`).join('') + '</div></div>' +
       `<p class="credit">${esc(t('credit.art'))} <a href="img/cards/LICENSE.md" target="_blank" rel="noopener">CC BY-SA 4.0</a></p>`;
   }
@@ -238,6 +266,7 @@ $('#ngBody').addEventListener('click', e => {
   const tgt = li || b;
   if (tgt) {
     const k = tgt.closest('[data-o]').dataset.o, v = JSON.parse(tgt.dataset.v);
+    if (k === 'mode') { draft.mode = v; renderNew(); return; }
     if (k === 'preset') { draft.preset = v; if (v === 'custom') draft.opts = Object.assign({}, draftRules(), draft.opts); }
     else { if (draft.preset !== 'custom') { draft.opts = Object.assign({}, draftRules()); draft.preset = 'custom'; } draft.opts[k] = v; }
     renderNew(); return;
@@ -255,7 +284,7 @@ $('#btnStart').onclick = () => {
 /* ---------------- coach ---------------- */
 let coachBest = null, coachGen = -1;
 async function coachThink() {
-  const m = D.m; if (!m || m.s.turn !== ME || m.s.phase === 'koi') return;
+  const m = D.m; if (!m || m.rated || m.s.turn !== ME || m.s.phase === 'koi') return;
   const key = gen + ':' + m.s.log.length; if (coachGen === key) return; coachGen = key;
   const r = await think(m.s, 14);
   if (coachGen !== key) return;
@@ -281,40 +310,81 @@ function nearSets(caps, s) {
   if (p.kasu >= 7 && p.kasu < 10) out.push({ id: 'kasu', n: 10 - p.kasu, need: [] });
   return out.sort((a, b) => a.n - b.n);
 }
+let reviewing = false, HB = null;
+function placeToast() {
+  const e = $('#toast'), tb = $('#table'); if (!tb) return;
+  const r = tb.getBoundingClientRect(), oh = $('#oppHand').getBoundingClientRect(), oc = $('#oppCaps').getBoundingClientRect();
+  const pc = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)').matches;
+  // PC: centered in the free strip of the opponent's row; phone: exactly over the status strip at the top of the table
+  e.classList.toggle('ph', !pc);
+  if (!pc) { const st = $('#tstrip').getBoundingClientRect(); Object.assign(e.style, { bottom: 'auto', top: Math.round(Math.max(st.top, 4)) + 'px', left: Math.round(st.left) + 'px', width: Math.round(st.width) + 'px', minHeight: Math.round(st.height) + 'px', maxWidth: 'none' }); return; }
+  e.style.width = ''; e.style.minHeight = '';
+  e.style.bottom = 'auto'; e.style.top = Math.round(r.top + 14) + 'px';
+  if (pc) {
+    // the free strip: from the right edge of the opponent's hand to the left edge of its first capture group
+    let right = r.right - 20; for (const g of $('#oppCaps').children) { const gr = g.getBoundingClientRect(); if (gr.width) right = Math.min(right, gr.left); }
+    const left = Math.max(r.left + 20, oh.right);
+    e.style.left = Math.round((left + right) / 2) + 'px'; e.style.maxWidth = Math.max(240, right - left - 32) + 'px';
+  }
+}
+window.HFToast = m => toast(m);
 function renderCoach() {
   const m = D.m, el = $('#coachBox');
+  if (reviewing) return;
   const head = `<h3><span>${esc(t('coach.h'))}</span><button type="button" class="sw ${set.coach ? 'on' : ''}" id="coachSw" aria-label="coach"></button></h3>`;
   if (!set.coach) { el.innerHTML = head + `<p class="muted">${esc(t('coach.off'))}</p>`; return; }
   if (!m) { el.innerHTML = head; return; }
+  if (m.rated && !m.over) { el.innerHTML = head + `<p class="muted">${esc(HFRated.r('rest'))}</p>`; return; }
   const s = m.s;
   const mine = nearSets(s.caps[ME], s), opp = nearSets(s.caps[CPU], s);
-  let h = head + `<div class="prog"><b>${esc(t('coach.mine'))}</b>` + (mine.length ? mine.slice(0, 4).map(x => `<div class="it"><span>${esc(t('y.' + x.id))}</span><em>${esc(t('coach.near', { n: x.n }))}</em></div>`).join('') : `<div class="it">${esc(t('coach.none'))}</div>`) + '</div>';
-  h += `<div class="prog" style="margin-top:10px"><b>${esc(t('coach.opp'))}</b>` + (opp.length ? opp.slice(0, 3).map(x => `<div class="it"><span>${esc(t('y.' + x.id))}</span><em>${esc(t('coach.near', { n: x.n }))}</em></div>`).join('') : `<div class="it">${esc(t('coach.none'))}</div>`) + '</div>';
-  const danger = opp.find(x => x.n === 1 && x.need.length);
-  if (danger) {
-    const months = new Set(danger.need.map(HF.month));
-    const onField = s.hands[ME].filter(c => months.has(HF.month(c)));
-    if (onField.length) h += `<p class="warn">${esc(t('coach.danger', { y: t('y.' + danger.id), n: 1, c: cardName(onField[0]) }))}</p>`;
-  }
-  if (s.turn === ME && coachBest && coachBest.key === gen + ':' + s.log.length && typeof coachBest.a === 'number') h += `<div class="best">${esc(t('coach.best', { c: cardName(coachBest.a) }))}</div>`;
+  const best = s.turn === ME && coachBest && coachBest.key === gen + ':' + s.log.length && typeof coachBest.a === 'number' ? `<div class="best">${esc(t('coach.best', { c: cardName(coachBest.a) }))}</div>` : '';
+  let warn = '';
+  { const danger = opp.find(x => x.n === 1 && x.need.length);
+    if (danger) { const months = new Set(danger.need.map(HF.month)); const onField = s.hands[ME].filter(c => months.has(HF.month(c)));
+      if (onField.length) warn = `<p class="warn">${esc(t('coach.danger', { y: t('y.' + danger.id), n: 1, c: cardName(onField[0]) }))}</p>`; } }
+  let h = head + best + `<div class="cols"><div class="prog"><b>${esc(t('coach.mine'))}</b>` + (mine.length ? mine.slice(0, warn ? 2 : 3).map(x => `<div class="it"><span>${esc(t('y.' + x.id))}</span><em>${esc(t('coach.near', { n: x.n }))}</em></div>`).join('') : `<div class="it none">${esc(t('coach.none'))}</div>`) + '</div>';
+  h += `<div class="prog"><b>${esc(t('coach.opp'))}</b>` + (opp.length ? opp.slice(0, warn ? 2 : 3).map(x => `<div class="it"><span>${esc(t('y.' + x.id))}</span><em>${esc(t('coach.near', { n: x.n }))}</em></div>`).join('') : `<div class="it none">${esc(t('coach.none'))}</div>`) + '</div></div>' + warn;
   el.innerHTML = h;
 }
 $('#coachBox').addEventListener('click', e => { if (e.target.closest('#coachSw')) { set.coach = set.coach ? 0 : 1; save(); renderCoach(); if (set.coach) coachThink(); toast(set.coach ? 'ON' : 'OFF'); } });
 
 /* ---------------- render ---------------- */
 function cardEl(id, cls, extra) { return `<div class="hf ${cls || ''}" data-id="${id}" ${extra || ''} title="${esc(cardName(id))}">${CARDS.face(id)}</div>`; }
-function capsHtml(caps) {
+function capsHtml(caps, o) {
   const g = { hikari: [], tane: [], tan: [], kasu: [] };
-  caps.forEach(c => g[HF.CARDS[c].type].push(c));
-  return ['hikari', 'tane', 'tan', 'kasu'].filter(k => g[k].length).map(k => `<div class="cap-grp"><div class="stack">${g[k].map(c => cardEl(c)).join('')}</div><b>${esc(t('k.' + k))} ${g[k].length}</b></div>`).join('');
+  caps.slice().sort((a, b) => a - b).forEach(c => g[HF.CARDS[c].type].push(c));
+  const y = HF.yaku(caps, o || HF.DEFAULT_OPTS).list.map(x => x.id);
+  const hot = { hikari: /goko|shiko|sanko/, tane: /^tane$|inoshikacho|hanami|tsukimi/, tan: /^tan$|akatan|aotan|akaao/, kasu: /^kasu$/ };
+  return ['hikari', 'tane', 'tan', 'kasu'].map(k => `<div class="cap-grp ${k} ${y.some(id => hot[k].test(id)) ? 'yk' : ''}"><b>${esc(t('k.' + k))}<em>${g[k].length}</em></b><div class="stack">${g[k].map(c => cardEl(c)).join('')}</div></div>`).join('');
 }
 function fitCards() {
   const tb = $('#table'); if (!tb) return;
-  const W = tb.clientWidth - 40, H = window.innerHeight;
-  const pc = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)').matches;
-  const hb = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hb-h')) || 0;
-  let cw = pc ? Math.min(W / 10.2, (H - hb - 150) / 4.55 / 1.656, 124) : Math.min((innerWidth - 36) / 8.4, 64);
-  document.documentElement.style.setProperty('--cw', Math.max(36, Math.floor(cw)) + 'px');
+    const pc = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)').matches;
+  const R = document.documentElement.style;
+  if (pc) {
+    // the table fills the top of the screen; rows: opponent (backs + captures), field (n rows x per), my hand (+ my captures beside it)
+    const TW = tb.clientWidth - 40, TH = tb.clientHeight - 32, K = 0.58, HB = 1.12, G = 12, R1 = 1.656;
+    const nField = Math.max(12, D.m && D.m.s ? D.m.s.field.length : 12);   // room for 12 field cards: the size does not jump during a month
+    let best = { cw: 0, per: 6 };
+    for (let per = 4; per <= 12; per++) {
+      const rows = Math.ceil(nField / per);
+      const wField = (TW - 24 - per * G) / (per + 1.2);             // deck + field
+      const wHand = (TW - 7 * 8 - 4 * (K * 2.6) * 0) / (8 * HB + 4 * K * 1.6);   // hand + my captures (4 groups, partly fanned)
+      const hcw = (TH - 2 * 22 - 2 * G - (rows - 1) * G) / R1 / (K + rows + HB);
+      const cw = Math.min(wField, wHand, hcw, 190);
+      if (cw > best.cw + 0.5) best = { cw, per };
+    }
+    let cw = Math.floor(best.cw);
+    const set = c => { R.setProperty('--cw', c + 'px'); R.setProperty('--kw', Math.floor(c * K) + 'px'); R.setProperty('--hw', Math.floor(c * HB) + 'px'); };
+    R.setProperty('--fcols', best.per); set(cw);
+    for (let i = 0; i < 8; i++) {
+      if (tb.scrollHeight <= tb.clientHeight + 1 && tb.scrollWidth <= tb.clientWidth + 1) break;
+      cw = Math.floor(cw * 0.95); set(cw);
+    }
+  } else {
+    const cw = Math.max(36, Math.floor(Math.min((innerWidth - 36) / 8.4, 64)));
+    R.setProperty('--cw', cw + 'px'); R.setProperty('--kw', Math.floor(cw * 0.62) + 'px'); R.setProperty('--hw', cw + 'px');
+  }
 }
 function render() {
   fitCards();
@@ -325,19 +395,21 @@ function render() {
   const fieldMatch = new Set();
   const pickable = new Set((s.phase === 'pickPlay' || s.phase === 'pickDraw') && s.turn === ME ? HF.actions(s) : []);
   $('#field').innerHTML = s.field.map(c => cardEl(c, pickable.has(c) ? 'pickable' : '')).join('');
+  { const per = +getComputedStyle(document.documentElement).getPropertyValue('--fcols') || 6; $('#field').style.gridTemplateColumns = `repeat(${Math.max(1, Math.min(per, s.field.length))}, var(--cw))`; }
   const canPlay = my && s.phase === 'play';
   $('#myHand').innerHTML = s.hands[ME].map(c => {
     const has = s.field.some(f => HF.month(f) === HF.month(c));
     return cardEl(c, (canPlay ? 'can ' : '') + (has ? '' : 'dead ') + (hintId === c ? 'hint' : ''));
   }).join('');
-  $('#oppCaps').innerHTML = capsHtml(s.caps[CPU]);
-  $('#myCaps').innerHTML = capsHtml(s.caps[ME]);
+  $('#oppCaps').innerHTML = capsHtml(s.caps[CPU], s.o);
+  $('#myCaps').innerHTML = capsHtml(s.caps[ME], s.o);
   $('#deckN').textContent = s.deck.length;
   // the card just drawn / played and waiting for a choice
   const pend = s.pending != null && (s.phase === 'pickPlay' || s.phase === 'pickDraw') ? s.pending : null;
   const lastDraw = s.log.length && s.log[s.log.length - 1].kind === 'draw' ? s.log[s.log.length - 1] : null;
   $('#drawn').innerHTML = pend != null ? cardEl(pend, 'sel') : (lastDraw && lastDraw.got && !lastDraw.got.length && s.phase !== 'over' ? '' : '');
   renderSide();
+  if (window.HFTut) HFTut.onRender();
 }
 function statusText() {
   const m = D.m; if (!m) return '';
@@ -356,7 +428,9 @@ function renderSide() {
     const s = m.s, yk = HF.yaku(s.caps[who], s.o).total;
     return `<div class="pl ${s.turn === who && s.phase !== 'over' ? 'turn' : ''}"><span>${esc(name)}${m.oya === who ? `<span class="tag">${esc(t('oya'))}</span>` : ''}${s.koi[who] ? `<span class="tag">${esc(t('koi.go'))}${s.koi[who] > 1 ? '×' + s.koi[who] : ''}</span>` : ''}</span><b>${m.scores[who]}</b></div>`;
   };
+  if (HB && HB.info) HB.info.innerHTML = m ? `<span class="hb-chip">${esc(t('monthOf', { n: m.k + 1, m: m.months }))}</span><span class="hb-chip">${esc(t('you'))} <b>${m.scores[ME]}</b> − <b>${m.scores[CPU]}</b> ${esc(t('cpu'))}</span><span class="hb-chip">${esc(t('oya'))}: <b>${esc(m.oya === ME ? t('you') : t('cpu'))}</b></span>${m.rated ? `<span class="hb-chip">R ${(window.HFRated && HFRated.load().r) || ''}</span>` : `<span class="hb-chip">AI <b>Lv.${m.lv}</b></span>`}` : '';
   $('#players').innerHTML = `<h3><span>${m ? esc(t('monthOf', { n: m.k + 1, m: m.months })) : ''}</span><span>${m ? 'Lv.' + m.lv : ''}</span></h3>` + pl(CPU, t('cpu')) + pl(ME, t('you')) + `<div class="status">${esc(statusText())}</div>`;
+  $('#tstrip').textContent = statusText();
   renderCoach();
   if (m) {
     const L = m.s.log.slice(-40).map(e => {
@@ -366,6 +440,7 @@ function renderSide() {
       return `<li>${esc(t(e.kind === 'draw' ? 'log.draw' : 'log.play', { p, c: cardName(e.card) }))}</li>`;
     }).reverse();
     $('#logBox').innerHTML = `<h3>${esc(t('log.h'))}</h3><ol>${L.join('')}</ol>`;
+    { const ol = $('#logBox ol'); if (ol) ol.scrollTop = ol.scrollHeight; }
   } else $('#logBox').innerHTML = `<h3>${esc(t('log.h'))}</h3>`;
   const canResign = m && !m.over && m.s.phase !== 'over';
   $('#btnResign').disabled = !canResign;
@@ -380,7 +455,7 @@ $('#field').addEventListener('click', e => { const c = e.target.closest('.hf'); 
 /* ---------------- menu ---------------- */
 $('#btnNew').onclick = openNew;
 $('#btnHint').onclick = async () => {
-  const m = D.m; if (!m || m.s.turn !== ME || busy || m.s.phase === 'over') { toast(t('hint.none')); return; }
+  const m = D.m; if (!m || m.s.turn !== ME || busy || m.s.phase === 'over' || m.rated) { toast(t('hint.none')); return; }
   const r = await think(m.s, 18);
   if (typeof r.action === 'number') { hintId = r.action; render(); $$(`.hf[data-id="${r.action}"]`).forEach(x => x.classList.add('hint')); toast(t('coach.best', { c: cardName(r.action) })); }
   else toast(t('coach.best', { c: t(r.action === 'koi' ? 'koi.go' : 'koi.stop') }));
@@ -397,14 +472,29 @@ addEventListener('keydown', e => { if (e.key === 'Escape') ['#newOverlay', '#rul
 addEventListener('resize', () => fitCards());
 $('#mTabs').addEventListener('click', e => { const b = e.target.closest('[data-pt]'); if (!b) return; const el = b.dataset.pt === 'coach' ? $('#coachBox') : b.dataset.pt === 'online' ? $('#onlineBox') : $('#logBox'); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
 
+/* ---------------- tutorial hooks ---------------- */
+let saved = null;
+function tutStart(layoutDef, script) {
+  saved = D.m ? JSON.stringify(D.m) : null;
+  closeOv('#resOverlay'); closeOv('#koiOverlay');
+  const o = HF.opts({});
+  D.m = { o, months: 1, k: 0, scores: [0, 0], oya: layoutDef.oya || 0, hist: [], lv: 1, s: HF.layout(layoutDef, o), over: false, tut: true, script: script.slice() };
+  gen++; busy = false; render(); step();
+}
+function tutEnd() {
+  gen++; busy = false; closeOv('#resOverlay'); closeOv('#koiOverlay');
+  D.m = saved ? JSON.parse(saved) : null; saved = null;
+  save(); render(); if (D.m && !D.m.over && D.m.s && D.m.s.phase !== 'over') step(); else if (!D.m) startMatch();
+}
 /* ---------------- shared parts ---------------- */
-window.HFApp = { t, esc, sfx, cardName, LANG: () => LANG, openOv, closeOv, toast, startMatch: () => openNew(), set, save };
+window.HFApp = { tutStart, tutEnd, state: () => D.m, render, t, esc, sfx, cardName, LANG: () => LANG, openOv, closeOv, toast, startMatch: () => openNew(), set, save };
 if (window.GameRecord) GameRecord.init({ game: 'hanafuda', lang: () => LANG, menu: '.controls' });
-if (window.HeaderBar) HeaderBar.init({ order: ['#btnNew', '#btnResign', '#btnHint', '#btnRules', '#btnLesson'], lang: () => LANG });
+HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnResign', '#btnHint', '#btnRules', '#btnLesson'], lang: () => LANG }) : null;
 if (window.RulesOffer) RulesOffer.init({ game: 'hanafuda', lang: () => LANG, open: () => window.HFRules && HFRules.open(), watch: '#rulesOverlay' });
 
 applyI18n();
 requestAnimationFrame(() => fitCards());
-if (!D.m) { startMatch(); }
+setTimeout(() => { if (window.HFTut && !D.m) HFTut.offer(); }, 600);
+if (!D.m) { startMatch(); D.firstVisit = 1; setTimeout(() => window.HFTut && HFTut.offer(), 700); }
 else if (D.m && !D.m.over && D.m.s) { if (D.m.s.phase === 'over') { /* finished hand: wait for the player */ render(); } else { gen++; step(); } }
 })();

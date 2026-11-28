@@ -95,7 +95,7 @@
     $('btnNb').classList.toggle('hide', !play);
     $('hbWhere').textContent = play ? '' : '';
     $('hbAp').innerHTML = '';
-    if (!play) { document.body.classList.remove('nb-open', 'night'); setNb(false); $('cast').innerHTML = ''; $('fx').innerHTML = ''; if (CINE) { CINE.reset(0); CINE.weather(null, false); } }
+    if (!play) { document.body.classList.remove('nb-open', 'night'); setNb(false); $('cast').innerHTML = ''; $('fx').innerHTML = ''; if (CINE) { CINE.reset(); CINE.weather(null, false); } }
     document.body.classList.toggle('anim-off', !pref.anim);
     document.body.classList.toggle('show-names', !!pref.names);
   }
@@ -180,10 +180,10 @@
     document.body.classList.toggle('night', !!night);
     if (CINE) CINE.weather(st.scene === 'alps' || st.scene === 'abbey' ? 'snow' : night ? null : 'motes', !!night);
     if (k === sceneKey) return;
-    sceneKey = k;
+    sceneKey = k; if (CINE) CINE.scene();
     const el = $('scene');
     el.classList.add('swap'); $('floor').classList.add('swap');
-    setTimeout(() => { el.innerHTML = ART.scene(st.scene, loc, 1); el.classList.remove('swap'); G.floorLoc = loc; drawFloor(); $('floor').classList.remove('swap'); }, pref.anim ? 260 : 0);
+    setTimeout(() => { el.innerHTML = ART.scene(st.scene, loc, 1); if (CINE) CINE.layer(); el.classList.remove('swap'); G.floorLoc = loc; drawFloor(); $('floor').classList.remove('swap'); }, pref.anim ? 260 : 0);
   }
   /* the stage floor, cut from paper and drawn for the real size (nothing stretches): what the way is made of, what lies beside it, what stands along it — one for each place, so it changes with the backdrop */
   const FLOOR = {
@@ -296,6 +296,7 @@
   }
   // the people on the stage: ids, and how to stand them
   function setCast(ids, o) {
+    if (CINE) CINE.cast();
     o = o || {};
     const c = $('cast');
     const have = {}; c.querySelectorAll('.pp').forEach(e => have[e.dataset.id] = e);
@@ -318,7 +319,7 @@
       const row = i < front ? 0 : 1, k = row ? i - front : i, m = row ? n - front : front;
       const x = m === 1 ? (o.x || 50) : (o.span ? o.span[0] : 10) + ((o.span ? o.span[1] - o.span[0] : 80) * (k + (row ? .5 : 0)) / Math.max(1, m - (row ? 0 : 1)));
       el.classList.toggle('back', !!row); el.classList.toggle('front', !row); el.classList.toggle('mid', !!o.mid);   // the day's search: the people stand halfway up the road, above the menu, names showing
-      requestAnimationFrame(() => { el.style.left = Math.min(94, Math.max(6, x)) + '%'; el.style.bottom = ''; el.style.opacity = ''; });
+      requestAnimationFrame(() => { el.style.left = Math.min(94, Math.max(6, x)) + '%'; el.style.bottom = ''; el.style.opacity = ''; if (CINE) CINE.cast(); });
       if (o.fallen === id) el.classList.add('fallen');
     });
     for (const id in have) { const e = have[id]; e.style.opacity = '0'; setTimeout(() => e.remove(), 600); }
@@ -329,7 +330,7 @@
 
   /* ---------- the text strip: narration and speech, one page at a time ---------- */
   function showTx() { $('tx').classList.remove('hide'); $('menu').classList.add('hide'); layoutDock(); }
-  function showMenu(html) { if (CINE) CINE.reset(); $('tx').classList.add('hide'); const m = $('menu'); m.innerHTML = html; m.classList.remove('hide'); layoutDock(); m.querySelector('button')?.focus({ preventScroll: true }); }
+  function showMenu(html) { if (CINE) { if (!S || S.phase === 'meeting' || S.phase === 'vote' || G.tut) CINE.reset(); else CINE.rest(); } $('tx').classList.add('hide'); const m = $('menu'); m.innerHTML = html; m.classList.remove('hide'); layoutDock(); m.querySelector('button')?.focus({ preventScroll: true }); }
   function say(items) { return new Promise(res => { G.q = items.filter(Boolean); G.qres = res; showTx(); nextPage(); }); }
   function nextPage() {
     if (G.typing) { finishType(); return; }
@@ -345,7 +346,8 @@
     else { who.classList.add('none'); nmEl.textContent = it.title || ''; speakPup(null); }
     tx.classList.toggle('narr', !id);
     G.talkVo = voiceOf(id);
-    if (CINE) CINE.page({ el: id && id !== 'you' ? pup(id) : null, wide: !S || S.phase === 'meeting' || S.phase === 'vote' || G.tut || !!it.guide });
+    const THx = window.WLTheater; if (THx && THx.on) THx.line(it);
+    if (CINE && !(THx && THx.on)) CINE.page({ text: it.text, el: id && id !== 'you' ? pup(id) : null, wide: !S || S.phase === 'meeting' || S.phase === 'vote' || G.tut || !!it.guide });
     type(it.text);
     renderRoster();
     SND.page();
@@ -374,7 +376,7 @@
     t.innerHTML = chars.map(c => c[0] === '<' ? c : `<i>${c}</i>`).join('');
     const is = t.querySelectorAll('i'); let k = 0;
     const vo = G.talkVo, quiet = /[\s、。！？…—「」『』（）・\-]/;
-    G.typing = setInterval(() => { if (G.paused) return; let say = false; for (let s = 0; s < 2 && k < is.length; s++) { const ch0 = is[k].textContent; if (!quiet.test(ch0)) say = true; is[k++].style.opacity = 1; } if (say) { SND.talk(vo); if (CINE) CINE.blip(); } if (k >= is.length) finishType(); }, sp * 2);
+    G.typing = setInterval(() => { if (G.paused) return; let say = false; for (let s = 0; s < 2 && k < is.length; s++) { const ch0 = is[k].textContent; if (!quiet.test(ch0)) say = true; is[k++].style.opacity = 1; } if (say) { SND.talk(vo); if (CINE) CINE.blip(); if (window.WLTheater) window.WLTheater.blip(); } if (k >= is.length) finishType(); }, sp * 2);
   }
   function finishType() { clearInterval(G.typing); G.typing = null; const t = $('tx').querySelector('.t'); t.querySelectorAll('i').forEach(i => i.style.opacity = 1); $('tx').classList.add('done'); }
   $('tx').addEventListener('click', nextPage);
@@ -528,26 +530,36 @@
     S.phase = 'prologue'; hud(); setCast([]);
     SND.windOn(.05);
     let rung = false;
+    // the directed version (演出 試験版): each page is played by the theater with the shots written for it
+    const TH = window.WLTheater, show = !!(TH && CINE && CINE.enabled && pref.anim !== false && TH.has(st));
+    const tag = (it, sid, part, who) => (it && show ? Object.assign(it, { shot: { sid, part, who } }) : it);
+    if (show) TH.start({ st, S, people: S.people.filter(p => !p.isPlayer).map(p => p.id), hero: S.hero, first: st.first });
     for (const pg of st.text.prologue) {
+      const sid = pg.sid || '';
       setScene(pg.bg || st.locs[0].id, pg.night);
       if (pg.night && !rung) { rung = true; SND.bell(.5, 1.5); }   // a second and a half after the dark scene comes up: then the music steps back and the bell rings   // once only: the recording rings twice by itself (night pages in a row must not ring it again)
       if (pg.cast) {
         const ids = S.people.filter(p => !p.isPlayer).map(p => p.id);
-        await say([{ text: fill(pg.t, ctxVars()) }]);
+        await say([tag({ text: fill(pg.t, ctxVars()) }, sid, 'n')]);
         setCast([], {});
         // the cast steps onto the screen one by one
         const shown = [];
         for (const id of ids) {
           shown.push(id); setCast(shown.slice(), { from: shown.length % 2 ? 'left' : 'right' });
-          await say([{ who: id, text: ch(id).intro }]);
+          await say([tag({ who: id, text: ch(id).intro }, sid, 'cast:' + id, id)]);
         }
         continue;
       }
-      if (pg.by) { setCast(castIn(pg.by).slice(0, 1), { x: 58 }); await say([pg.t ? { text: fill(pg.t, ctxVars()) } : null].concat(storyLine(pg))); setCast([]); continue; }
-      await say([{ text: fill(pg.t, ctxVars()) }]);
+      if (pg.by) {
+        setCast(castIn(pg.by).slice(0, 1), { x: 58 });
+        const sl = storyLine(pg).map(x => tag(x, sid, x.who ? 'line' : 'alt', x.who));
+        await say([pg.t ? tag({ text: fill(pg.t, ctxVars()) }, sid, 'n') : null].concat(sl)); setCast([]); continue;
+      }
+      await say([tag({ text: fill(pg.t, ctxVars()) }, sid, 'n')]);
     }
     // the role
-    await roleCard();
+    await roleCard(show ? 'role' : null);
+    if (show) TH.end();
     S.phase = 'morning'; save();
     await morning(true);
   }
@@ -593,9 +605,9 @@
     return { text: v.vign };
   }
 
-  async function roleCard() {
+  async function roleCard(shot) {
     const r = S.pl.role, R = st.roles[r];
-    await say([{ text: fill(st.text.role, { roleHow: R.how }) }]);
+    await say([Object.assign({ text: fill(st.text.role, { roleHow: R.how }) }, shot ? { shot: { sid: 'role', part: 'n' } } : {})]);
     await sheet(`<div class="rolecard"><div class="em">${ROLE_ICON[r]}</div><p style="font:700 15px var(--ui);letter-spacing:.2em;color:var(--mute);margin:0">あなたの役</p><h3>${esc(R.name)}</h3><p>${esc(R.perk)}</p><p style="font-size:15px;color:var(--mute)">${castLine()}</p>${st.rulesNote ? `<p style="font-size:14px;color:var(--mute)">${esc(st.rulesNote)}</p>` : ''}</div><div class="foot" style="justify-content:center"><button class="btn pri" data-ok>はじまる</button></div>`, box => box.querySelector('[data-ok]').onclick = () => closeSheet(true));
   }
 
@@ -608,7 +620,7 @@
       setScene(N.loc || st.meetLoc || st.locs[0].id);   // a night with no attack has no scene of its own
       items.push({ text: st.text.day[Math.min(S.day - 1, st.text.day.length - 1)] });
       if (N.died && N.target === 'you') {
-        setCast([]); SND.door(0, 1.1); SND.thud();
+        setCast([]); SND.door(0, 1.1); SND.thud(); if (CINE) CINE.shake(1.4);
         items.push({ text: st.text.dead }, { text: st.text.ghost });
       } else if (N.died) {
         const v = N.target, c = ch(v);
@@ -1139,7 +1151,7 @@
     const c = ch(out);
     const t = pickOne(st.text.exile);
     await say([{ text: fill(t, { name: c.name }) }, { who: out, text: c.last }]);
-    const e = pup(out); if (e) { e.classList.add('lift'); SND.thud(); }
+    const e = pup(out); if (e) { e.classList.add('lift'); SND.thud(); if (CINE) CINE.shake(1); }
     await wait(900);
     if (dragged) { await say(dragLine()); if (dragged === 'you') { await say([{ text: st.text.ghost }].concat(willLines())); if (E.check(S)) { S.phase = 'end'; save(); return end(); } S.phase = 'night'; save(); return night(); } }
     log({ k: 'exile', who: out });

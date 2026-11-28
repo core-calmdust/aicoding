@@ -1994,7 +1994,7 @@ html[dir=rtl] .parrow.d1,html[dir=rtl] .parrow.d3{transform:none}
 .hv-table.pass{display:flex;flex-direction:column;gap:12px}
 .hv-table.pass > div > small{display:block;font-size:12.5px;color:#f0e8d6;margin-bottom:4px}
 .hv-seat{display:flex;flex-direction:column;gap:4px;padding:6px 8px;border-radius:12px;background:rgba(0,0,0,.25)}
-.hv-seat b{font-size:13px}.hv-seat small{font:600 12px 'JetBrains Mono',monospace;color:#ffb7c4}
+.hv-seat b{font-size:13px}.hv-seat > small{font:600 12px 'JetBrains Mono',monospace;color:#ffb7c4}
 .hv-seat.s2{grid-column:1/3}.hv-seat.s0{grid-column:1/3;border:1px solid rgba(243,213,138,.35)}
 .hv-row{display:flex;flex-wrap:wrap;gap:2px;direction:ltr}.hv-row .mc{width:24px;height:33px;font-size:12px}.hv-row .mc small{font-size:10px}
 .hv-row .mc.gv{box-shadow:0 0 0 2px #ffb7c4}.hv-row .mc.gt{box-shadow:0 0 0 2px var(--gold)}
@@ -2040,3 +2040,59 @@ html[dir=rtl] .parrow.d1,html[dir=rtl] .parrow.d3{transform:none}
 @media (min-width:761px) and (min-height:820px){.ht .ng-games.ht4 .gcard .garts{--cw:56px;--chh:78.4px}}
 @media (max-width:760px) and (min-height:700px){.ht .ng-games.ht4 .gcard .garts{--cw:40px;--chh:56px}}
 .ht .gcard .garts{width:calc(var(--cw)*2.62);height:calc(var(--chh)*1.25)}
+/* cards you cannot play now: dimmed enough to tell, light enough to read (2026-11-28) */
+.ht .hhand .cd.pc.dim{filter:saturate(.62) brightness(.84)}
+.ht .hhand .cd.dim::after{background:rgba(44,10,24,.2)}
+/* the tutorial (tutorial.js, 2026-11-28): progress bar with chapter ticks, the gauge, the reason for a wrong move, the small cards */
+.ht-tl .tut-prog{position:relative;display:block;height:4px;margin:8px 0 2px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}
+.ht-tl .tut-prog i{position:absolute;inset-inline-start:0;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg,#d9536f,#f3d58a);transition:width .35s ease}
+.ht-tl .tut-prog s{position:absolute;top:0;bottom:0;width:2px;inset-inline-start:var(--at);margin-inline-start:-1px;background:rgba(10,10,12,.85)}
+.ht-tl .tut-meter{display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px 10px;margin-top:12px;padding:9px 11px;border-radius:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09)}
+.ht-tl .tut-meter small{grid-column:1/-1;font-size:13px;color:#d9d4ca}
+.ht-tl .tut-meter .tm-bar{height:9px;border-radius:5px;background:rgba(255,255,255,.09);overflow:hidden}
+.ht-tl .tut-meter .tm-bar i{display:block;height:100%;border-radius:5px;transition:width .25s}
+.ht-tl .tut-meter b{font:700 18px 'JetBrains Mono',monospace;min-width:2.4em;text-align:end}
+.ht-tl .tut-meter.hi .tm-bar i{background:#8fe3b8}.ht-tl .tut-meter.hi b{color:#8fe3b8}
+.ht-tl .tut-meter.mid .tm-bar i{background:#e3bf6a}.ht-tl .tut-meter.mid b{color:#e3bf6a}
+.ht-tl .tut-meter.lo .tm-bar i{background:#ff8f86}.ht-tl .tut-meter.lo b{color:#ff8f86}
+.ht-tl .tut-meter.none{display:block}
+.ht-tl .tut-mt:empty{display:none}
+.ht-tl .tut-ng{margin:10px 0 0;padding:7px 10px;border-radius:9px;background:rgba(255,120,110,.12);border:1px solid rgba(255,143,134,.45);color:#ffd2cd;font-size:14px;line-height:1.5}
+.ht-tl .tut-ng[hidden]{display:none}
+.ht-tl .gd-box.min p.tut-ng:not([hidden]){display:block}
+.ht-tl .gd-box.min .tut-mt{display:block}
+@media (max-width:760px){
+  .ht-tl .tut-meter{margin-top:8px;padding:7px 9px}
+  .ht-tl .gd-box.tight{padding:8px 11px 8px}
+  .ht-tl .gd-box.tight .tp-h{font-size:14.5px;margin:0 0 2px}
+  .ht-tl .gd-box.tight .tp-body p{font-size:12.5px;line-height:1.5}
+  .ht-tl .gd-box.tight .tp-pics{margin-top:6px;padding:6px;gap:4px}
+  .ht-tl .gd-box.tight .tut-meter{margin-top:6px;padding:5px 8px}.ht-tl .gd-box.tight .tut-meter small{font-size:11px}.ht-tl .gd-box.tight .tut-meter b{font-size:14px}
+  .ht-tl .gd-box.tight .tut-btns{margin-top:5px}.ht-tl .gd-box.tight .tut-prog{margin:4px 0 2px}
+  .ht-tl .gd-box.tight .tut-ng{margin-top:6px;padding:5px 8px;font-size:12px}
+}
+.ht-tl .tp-row.win .mc{box-shadow:0 0 0 2px #f3d58a}
+.ht-tl .tp-big{font:800 26px 'JetBrains Mono',monospace;color:#ffb7c4;line-height:39px}
+.ht-tl .tut-do{color:#8fe3b8;font-size:14px}
+.ht .hhand .cd.tut-want .fr{box-shadow:0 0 0 3px #8fe3b8,0 0 18px rgba(143,227,184,.85);animation:hintGlow 1.1s ease-in-out infinite}
+.ht-tl .tp-c .mc small{color:inherit;font-size:inherit;letter-spacing:0}
+.ht-tl .tp-row > small{font-size:12px;color:#d9d4ca;line-height:1.35}
+@media (max-width:760px){.ht-tl .gd-box.min .tut-meter.none,.ht-tl .gd-box.tight .tut-meter.none{display:none}.ht-tl .gd-box.min .tp-h{margin:0 0 2px}.ht-tl .gd-box.min .tut-btns{margin-top:4px}}
+/* dialogs with tabs keep one size whatever the tab (2026-11-28): rules · glossary · lessons · study */
+#rulesOverlay .modal.rules-modal,#lessonOverlay .modal.lesson-modal{width:min(980px,calc(100vw - 24px));height:min(calc(100dvh - 32px),900px);max-height:none;display:flex;flex-direction:column}
+.ht .rules-modal #rulesBody{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column}
+.ht .lt-top .lt-tut{color:var(--hl2)}
+@media (max-width:760px){#rulesOverlay .modal.rules-modal,#lessonOverlay .modal.lesson-modal,#studyOverlay .modal.study-modal{width:calc(100vw - 24px);height:calc(100dvh - 24px);max-height:calc(100dvh - 24px);border-radius:16px}}
+.ht .rt-ov-art{background:radial-gradient(90% 90% at 50% 40%,#8a2a3f,#3a0c18);box-shadow:inset 0 0 0 1px rgba(243,213,138,.35)}
+.ht .rules-offer button{background:rgba(255,255,255,.05);border:1px solid rgba(226,194,117,.6);color:#f3d58a;box-shadow:none}.ht .rules-offer button:hover{background:rgba(226,194,117,.14)}
+/* PC: the table and the side boxes readable at a glance (2026-11-28) */
+@media (min-width:1040px){
+  .ht .hseat .pn b{font-size:16px;max-width:150px}.ht .hseat .pn small{font-size:13px}
+  .ht .hpts{min-width:34px;height:31px;font-size:16.5px}
+  .ht .tk{font-size:13.5px;padding:3px 9px}
+  .ht .ab-msg{font-size:16px}
+  .ht .sc-tbl{font-size:15.5px}.ht .sc-tbl th{font-size:13.5px}.ht .sc-tbl td small{font-size:12px}
+  .ht .cn-cells i{font-size:13px;line-height:24px}.ht .cn-s small{font-size:13px}
+}
+.ht .mc > small{color:inherit;letter-spacing:0}   /* the suit of a small card keeps its colour whatever box it sits in */
+@media (max-width:760px){.ht .lt-top .lt-tut{white-space:nowrap;font-size:12.5px;letter-spacing:0;overflow:hidden;text-overflow:ellipsis;min-width:0}}

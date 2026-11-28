@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <defs>
+    <linearGradient id="hf-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8402e"/><stop offset="1" stop-color="#4a120c"/></linearGradient>
+    <radialGradient id="hf-tint" cx=".25" cy=".12" r=".95"><stop offset="0" stop-color="#ffe2c8" stop-opacity=".26"/><stop offset=".6" stop-color="#ffe2c8" stop-opacity=".04"/><stop offset="1" stop-color="#ffe2c8" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="96" height="96" rx="22" fill="url(#hf-bg)"/>
+  <rect width="96" height="96" rx="22" fill="url(#hf-tint)"/>
+  <g transform="rotate(-12 34 50)">
+    <rect x="16" y="22" width="34" height="54" rx="3" fill="#1c1a22"/>
+    <rect x="19.5" y="25.5" width="27" height="47" fill="#efe4cc"/>
+    <path d="M19.5 62 q8-6 14-1 t13-2 V72.5 H19.5Z" fill="#2c2a30"/>
+    <rect x="27" y="31" width="9" height="26" rx="1" fill="#ba3024" transform="rotate(8 31 44)"/>
+  </g>
+  <g transform="rotate(10 62 48)">
+    <rect x="44" y="20" width="34" height="54" rx="3" fill="#1c1a22"/>
+    <rect x="47.5" y="23.5" width="27" height="47" fill="#efe4cc"/>
+    <rect x="47.5" y="23.5" width="27" height="30" fill="#ba3024"/>
+    <circle cx="61" cy="35" r="8" fill="#fbf8f0" stroke="#1c1a22" stroke-width="1.4"/>
+    <path d="M47.5 57 q7-4 14-1 q7-4 13 0 V70.5 H47.5Z" fill="#2c2a30" stroke="#1c1a22" stroke-width="1"/>
+  </g>
+</svg>

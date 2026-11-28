@@ -942,8 +942,8 @@
       if (F.hang && !FA.hang && d > .05) return L(F.hangDef ? `{x}だと、その${SH_PN[F.pc]}が相手の${SH_PN[F.hang]}の利きに入っちゃう。安い駒と交換されると駒損なの。` : `{x}だと、その${SH_PN[F.pc]}を相手の${SH_PN[F.hang]}にタダで取られちゃう！`);
       if (FA.cap && FA.behind && !F.cap) return L('{x}だと取り返しそびれて、駒損のままになっちゃう。');
       if ((later || []).includes(u)) return L(N('{x}も『{n}』で指す手だけど、いまはまだ早いの。先に{m}を指しておかないと、形がくずれちゃう') + kon);
-      if (OF && (P.G || []).includes(u)) return L(N(['{x}も『{n}』の形に近づく手だけど、この局面ではAIの評価が{m}よりはっきり下がるの。先に{m}を指しておきたい', '{x}でも『{n}』には近づくけど、相手の形を見ると、AIは{m}のほうがずっと良いと見ている'][fb % 2]) + kon);
       const rw = shStaticWhyJa(o.pos, u, k); if (rw) return L(rw);
+      if (OF && (P.G || []).includes(u)) return L(N(['{x}も『{n}』の形に近づく手だけど、この局面では{m}が先なの。{m}なら' + SC, '{x}でも『{n}』には近づくけど、組む順番は{m}から。{m}なら' + SC][fb % 2]) + kon);   // (2026-11-28 担当B: not the engine's opinion — the order, and what the answer does on the board)
       if (d > .12) return L(N(shContrastJa(F, FA, k, fb, OF ? SC : null)));
       if (OF) return L(N([`{x}では囲いの形に近づかないの。{m}なら${SC}`, `{x}は囲いの駒が進まない手。ここで{m}なら${SC}`, `{x}だと完成が遠いまま。{m}を指せば${SC}`, `{x}を指しても、囲いはそのまま。{m}だと${SC}`, `{x}のあいだ、囲いは一歩も進まないの。{m}なら${SC}`][(vi != null ? vi : k) % 5]) + kon);
       return L([`{x}も悪い手じゃないけど、それだと手順からはずれちゃうの。{m}なら${shShortJa(FA)}`, `{x}だと、組みたい形から少しそれるの。手順の{m}なら${shShortJa(FA)}`, `{x}は形に合わない一手なの。ここで{m}なら${shShortJa(FA)}`, `{x}では組む順番がずれちゃうの。先に{m}なら${shShortJa(FA)}`, `{x}だと手順が一つ飛んじゃう。{m}を指してこそ${shShortJa(FA)}`, `{x}は今の形には早すぎるの。{m}だと${shShortJa(FA)}`][fb] + kon);
@@ -991,7 +991,7 @@
       const voice = fetch('../shogi/voice-fox-ja.js?v=9').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       const rep = getJ('../shogi/lesson-replies.json?v=7').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
       return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261128k5'), getJ('../shogi/openings.json?v=20261124ol1'),
-        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261128sf`).catch(() => ({ sets: [] })))])
+        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261128si`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
           sets.forEach(s => { if (!s.cat) s.cat = s.handi ? 'handi' : 'mid'; });
@@ -1438,7 +1438,7 @@
       rights = defd ? [`{m}なら${cA}が取れて、取り返されても得。`, `{m}で${cA}を取れば、${pA}との交換でも得なんだ。`] : [`${cA}はだれにも守られていなかった！ {m}で、ただ取りできたんだ。`, `{m}なら、守りのない${cA}をただで取れたピョン。`, `ここは{m}、${cA}を守る駒は1つもいなかった。`, `正しくは{m}、ノーガードの${cA}を取り返されずに取れた。`, `{m}で取れば、${cA}の分だけまるまる得になったピョン。`];
       altGood = () => `{x}も悪くない手！ でも{m}なら${cA}を取れて、もっと得だった。`;
       xpart = G => !G ? [] : G.cap && G.hang ? [`{x}で取った${N[G.cap]}は守られていて、${N[G.pc]}を取り返されちゃう。`, `{x}だと${N[G.cap]}は取れても、${N[G.pc]}を取り返されて損。`]
-        : G.cap && CH_VAL[G.cap] < CH_VAL[FA.cap] ? [`{x}で取れる${N[G.cap]}より、${cA}のほうが価値が高い。`, `{x}の${N[G.cap]}取りより、もっと大きな${cA}があった。`]
+        : G.cap && CH_VAL[G.cap] < CH_VAL[FA.cap] ? [`{x}だと取れるのは${N[G.cap]}だけ。${cA}のほうが価値が高いピョン。`, `{x}で${N[G.cap]}を取ると、もっと大きな${cA}を取りそこねちゃう。`]
         : G.hang ? [`{x}のあと、その${N[G.pc]}が${G.hang}に取られて損しちゃう。`, `{x}で動いた${N[G.pc]}は、${G.hang}に取られる場所。`] : [`{x}だと、${cA}を取るチャンスを見のがしちゃう。`, `{x}では、取れるはずの${cA}がそのまま。`, `{x}を指すあいだに、${cA}は逃げちゃうかも。`, `{x}のあと、${cA}はまだ盤の上。もったいないピョン。`];
     } else if (sid === 'escape') {
       const th = FA.was, safe = !FA.taken, H = FA.hits.length && FA.hits[0] !== 'p' ? N[FA.hits[0]] : '';
@@ -7071,7 +7071,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-mancala-v1-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../mancala/lessons.json?v=20261127n1'), Promise.all(['../mancala/i18n.js?v=20261107l15', '../mancala/i18n-learn.js?v=20261126l15'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mcEng().catch(() => null)])
+      return (this.p = Promise.all([getJ('../mancala/lessons.json?v=20261128n2'), Promise.all(['../mancala/i18n.js?v=20261107l15', '../mancala/i18n-learn.js?v=20261126l15'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mcEng().catch(() => null)])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] mancala texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -7306,7 +7306,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
         const how = id === 'b_move' || id === 'sx_nofly' ? '1歩動かして' : id === 'b_fly' ? '飛んで' : '置いて', dg = id === 'tw_diag' ? 'ななめに' : '';
         good = () => fg(pk([`${how}${dg}3つ並んでミル！ 相手の駒を1つ取れたね。`, id === 'tw_diag' ? 'ななめの線も、ちゃんとミルになるんだ。見落とさなかったね。' : '2つ並んだ線の3つ目に入れたのがよかったね。', '線がぴったりそろったね。これで相手の駒が1つ減るんだ。', `${dg ? 'ななめの' : 'きみの'}2つ並びを見のがさなかったね。ミル完成！`, '3つそろった瞬間に、相手の駒を1つ取れるんだ。']));
         ng = u => { const v = alt(u, Q => !Q.mill), Q = FF(v);
-          return f(Q.mill ? why(Q, v) + tail(Q) : pk([`{x}だと3つ並ばないから、ミルにならないの。{m}なら、${how}${dg}3つそろうから。`, `{x}では線がそろわないね。{m}を選べば、${how}ミルになったんだ。`, `{x}の線には、きみの駒が足りないから、3つそろわないの。{m}は、きみの2つ並びの残りの1点なんだ。`, `{x}だと駒は並ばず、相手の駒も取れないの。{m}へ${how}いれば、ミルで1つ取れたね。`, `{m}が、きみの2つ並びの3つ目。{x}はその線から外れているから、そろわないの。`])); };
+          return f(Q.mill ? why(Q, v) + tail(Q) : pk([`{x}だと3つ並ばないから、ミルにならないの。{m}なら、${how}${dg}3つそろうから。`, `{x}では線がそろわないね。{m}を選べば、${how}ミルになったんだ。`, `{x}の線には、きみの駒が足りないから、3つそろわないの。{m}は、きみの2つ並びの残りの1点なんだ。`, `{x}だと駒は並ばず、相手の駒も取れないの。{m}を選んで${how}いれば、ミルで1つ取れたね。`, `{m}が、きみの2つ並びの3つ目。{x}はその線から外れているから、そろわないの。`])); };
         break; }
       case 'b_take': {
         good = () => fg(pk(['ミルを作りながら、相手の2つ並びもくずせたね。一石二鳥！', 'これで相手は次のミルを作れないんだ。', '相手のねらいの駒を取ったから、ひと安心だね。', '取る駒の選び方がばっちり。相手の作りかけのミルが消えたんだ。', 'ミルで取ったのが、相手のミルの材料だったね！']));
@@ -7321,9 +7321,9 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
         break; }
       case 'b_reopen': {
         good = () => fg(pk(['空けた点に相手は届かないね。次に戻せば、またミルなんだ。', '相手が割りこめないから、次の手でまた取れるね。', 'これで同じミルを何度でも使えるんだ。', '開いた口のまわりに相手の駒がいない、安全な開き方だね。', '外へ出て、戻ればまたミル。いい開き方を選べたね。']));
-        ng = u => { const v = alt(u, Q => Q.enter || Q.oppNow > 0), Q = FF(v);
+        ng = u => { const v = alt(u, Q => (Q.opened && Q.enter) || Q.oppNow > 0), Q = FF(v);
           return f(Q.oppNow > 0 ? pk(['{x}だと、相手にミルの点をわたしちゃう。開いたすきに駒を取られるんだ。{m}なら、空いた点に相手が入れないから。', '{x}で開くと、相手にミルを作られる点ができちゃう。{m}を選べば、相手は何もできなかったの。', '{x}のすきに、相手がミルをそろえてくるの。{m}なら安全に開けたんだ。', '{m}は相手にねらいを与えない開き方。{x}だと、相手のミルの点があいちゃうの。', '{x}だと開いたとたんに相手の番でミル。{m}なら、相手が届かないから安全だったね。'])
-            : Q.enter ? pk(['{x}で空けた点には、相手の駒がとなりから入れるの。ふさがれたら閉じなおせないね。{m}なら、相手が届かないから。', '{x}だと、すき間に相手がすべりこめるの。{m}を選べば、戻ってまたミルにできたんだ。', '{x}の開き方だと、空いた点のとなりに相手の駒がいるの。{m}なら、そのすき間はだれも入れないから。', '{m}は相手の駒から遠い側を開ける手。{x}だと、空いた点を相手にうめられちゃう。', '{x}で開くと、相手にふたをされるの。{m}なら、次の手でミルを閉じなおせたね。'])
+            : Q.opened && Q.enter ? pk(['{x}で空けた点には、相手の駒がとなりから入れるの。ふさがれたら閉じなおせないね。{m}なら、相手が届かないから。', '{x}だと、すき間に相手がすべりこめるの。{m}を選べば、戻ってまたミルにできたんだ。', '{x}の開き方だと、空いた点のとなりに相手の駒がいるの。{m}なら、そのすき間はだれも入れないから。', '{m}は相手の駒から遠い側を開ける手。{x}だと、空いた点を相手にうめられちゃう。', '{x}で開くと、相手にふたをされるの。{m}なら、次の手でミルを閉じなおせたね。'])
             : pk(['{x}だと、次の手でミルを閉じなおせないの。{m}なら、戻ればまたミルになるから。', '{x}では、次の手でもう一度ミルを作る形にならないの。{m}なら、1歩出て戻るだけでまたミルになったから。', '{x}では同じミルを使いなおせないね。{m}を選べば、戻ってまた取れたんだ。'])); };
         break; }
       case 'b_win': case 'sx_win': {
@@ -7347,7 +7347,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-morris-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([Promise.all(MMV.map(v => getJ(`../morris/lessons${v === 'nine' ? '' : '-' + v}.json?v=20261128-tb`))), Promise.all(['../morris/i18n.js?v=20261116-p61', '../morris/i18n_more.js?v=20261126-mb'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mrEng().catch(() => null)])
+      return (this.p = Promise.all([Promise.all(MMV.map(v => getJ(`../morris/lessons${v === 'nine' ? '' : '-' + v}.json?v=20261128-mr`))), Promise.all(['../morris/i18n.js?v=20261116-p61', '../morris/i18n_more.js?v=20261128-mr'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mrEng().catch(() => null)])
         .then(([L, T]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] morris texts', e); } this.I = w.I18N || {};
           const steps = []; L.forEach((d, k) => d.steps.forEach(s => { if (s.problems && s.problems.length) steps.push(Object.assign({ v: MMV[k] }, s)); })); this.data = { steps }; return this; })
         .catch(e => { this.p = null; throw e; }));

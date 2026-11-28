@@ -5,7 +5,7 @@
   'use strict';
   const $ = id => document.getElementById(id);
   let cam, shade, bloom, grain, cv, cx, wx = null;
-  let state = { s: 1, x: 0, y: 0 }, mode = 'reset', alt = 0, focusEl = null, timers = [];
+  let mode = 'reset', focusEl = null, timers = [];
   let enabledPref = true;
   const reduce = () => document.body.classList.contains('anim-off');
   const active = () => enabledPref && !reduce();
@@ -20,98 +20,150 @@
     cv = document.createElement('canvas'); cv.id = 'cineSky'; st.insertBefore(cv, $('roster')); cx = cv.getContext('2d');
     grain = document.createElement('div'); grain.id = 'cineGrain'; st.insertBefore(grain, $('roster'));
     // film grain: a few noise tiles made once
-    const tiles = []; for (let k = 0; k < 4; k++) { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'), im = g.createImageData(256, 256); for (let i = 0; i < im.data.length; i += 4) { const v = 128 + (Math.random() - .5) * 230; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; } g.putImageData(im, 0, 0); tiles.push(c.toDataURL()); }
+    const tiles = []; for (let k = 0; k < 4; k++) { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'), im = g.createImageData(256, 256); for (let i = 0; i < im.data.length; i += 4) { const v = Math.random() < .5 ? 0 : 255; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = Math.random() * 70; } g.putImageData(im, 0, 0); tiles.push(c.toDataURL()); }
     grain.style.setProperty('--g0', `url(${tiles[0]})`); grain.style.setProperty('--g1', `url(${tiles[1]})`); grain.style.setProperty('--g2', `url(${tiles[2]})`); grain.style.setProperty('--g3', `url(${tiles[3]})`);
-    addEventListener('resize', () => { if (mode !== 'reset') refocus(0); sizeSky(); });
+    // if the stage changes size (the text box opening, a phone rotating), keep the picture inside it, gently
+    if (window.ResizeObserver) new ResizeObserver(() => { if (mode === 'on' && cam) { const v = view(), o = clampShot({ ...cur }, v), n = clampShot({ ...now() }, v), m = now(); if (Math.abs(o.x - cur.x) + Math.abs(o.y - cur.y) > 1 || Math.abs(n.x - m.x) + Math.abs(n.y - m.y) > 1) glide(o, 1400); lastTarget = null; } }).observe($('stage'));
+    addEventListener('resize', () => { if (mode !== 'reset') { lastTarget = null; } sizeSky(); });
     sizeSky(); requestAnimationFrame(tick);
   }
 
-  /* ---------- the camera ---------- */
-  function apply(s, x, y, dur) {
-    state = { s, x, y };
-    cam.style.transition = dur === 0 ? 'none' : `transform ${dur || 1.6}s cubic-bezier(.42,0,.16,1)`;
-    cam.style.transform = s === 1 && !x && !y ? '' : `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) scale(${s.toFixed(4)})`;
-    document.body.classList.toggle('cine-on', s !== 1);
-  }
+  /* ---------- the camera: calm ----------
+     One gentle frame for the whole scene. It never cuts and never snaps: every move starts from where the
+     camera is now and glides (2.6 s). The speaker is shown by the light and the focus, not by the camera;
+     the camera only leans a little toward the voice, and only when that changes the frame enough to matter.
+     A new place gets one slow settle from slightly higher. Menus ease back to the full stage. */
+  let anim = null, par = [], castAt = 0, sceneAt = 0, cur = { s: 1, x: 0, y: 0 }, lastTarget = null;
   function view() {
     const st = $('stage').getBoundingClientRect(), dock = $('dock');
     let vb = st.height;
     if (dock && !dock.classList.contains('hide')) { const d = dock.getBoundingClientRect(); if (d.top > st.top + 80 && d.top < st.bottom) vb = d.top - st.top; }
     return { w: st.width, h: st.height, vb, phone: !matchMedia('(min-width:1040px)').matches };
   }
-  // a rectangle in the camera's own (untransformed) coordinates
-  function base(el) {
-    const r = el.getBoundingClientRect(), c = cam.getBoundingClientRect(), k = c.width / cam.offsetWidth || 1;
-    return { x: (r.left - c.left) / k, y: (r.top - c.top) / k, w: r.width / k, h: r.height / k };
+  // where an element will stand once it stops sliding, in the camera's own coordinates (a hidden copy, no transition)
+  function finalRect(el) {
+    const probe = el.cloneNode(true); probe.style.transition = 'none'; probe.style.visibility = 'hidden';
+    probe.querySelectorAll('*').forEach(e => { e.style.transition = 'none'; e.style.animation = 'none'; });
+    el.parentNode.appendChild(probe);
+    const p = probe.querySelector('.pup') || probe, r = p.getBoundingClientRect(), c = $('stage').getBoundingClientRect();
+    const m = new DOMMatrix(getComputedStyle(cam).transform), inv = m.inverse();
+    const a = inv.transformPoint(new DOMPoint(r.left - c.left, r.top - c.top)), d = inv.transformPoint(new DOMPoint(r.right - c.left, r.bottom - c.top));
+    probe.remove();
+    return { x: a.x, y: a.y, w: d.x - a.x, h: d.y - a.y };
   }
-  function frame(bx, by, s, sx, sy, v) {
-    let x = sx - s * bx, y = sy - s * by;
-    x = Math.min(0, Math.max(v.w - s * v.w, x)); y = Math.min(0, Math.max(v.h - s * v.h, y));
-    return [x, y];
+  const clampShot = (o, v) => { const s = o.s; o.x = Math.min(-1, Math.max(v.w - s * v.w + 1, o.x)); o.y = Math.min(-1, Math.max(v.h - s * v.h + 1, o.y)); if (s <= 1.0005) { o.x = 0; o.y = 0; o.s = 1; } return o; };
+  const T = o => `translate(${o.x.toFixed(1)}px,${o.y.toFixed(1)}px) scale(${o.s.toFixed(4)})`;
+  function now() { const m = new DOMMatrix(getComputedStyle(cam).transform); return { s: Math.hypot(m.a, m.b) || 1, x: m.e, y: m.f }; }
+  // glide from wherever the camera is to o
+  const ease = t => { // same shape as cubic-bezier(.45,.05,.25,1), smooth start and end
+    return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
+  function glide(o, dur) {
+    const from = now(), v = view();
+    if (anim) anim.cancel();
+    cam.style.transform = T(from);
+    // sampled keyframes, each kept inside the stage, so the edge of the picture never shows mid-move
+    const ks = [];
+    for (let i = 0; i <= 24; i++) { const k = ease(i / 24); ks.push({ transform: T(clampShot({ s: from.s + (o.s - from.s) * k, x: from.x + (o.x - from.x) * k, y: from.y + (o.y - from.y) * k }, v)) }); }
+    anim = cam.animate(ks, { duration: dur, easing: 'linear', fill: 'forwards' });
+    anim.onfinish = () => { cam.style.transform = T(o); };
+    cur = o;
+    // the far and middle backdrop lag behind (parallax), also from where they are now
+    par.forEach(p => p.cancel()); par = [];
+    for (const [sel, f] of [['svg.scn.cine-far', .45], ['svg.scn.cine-mid', .22]]) {
+      const g = document.querySelector('#scene ' + sel); if (!g) continue;
+      const m = new DOMMatrix(getComputedStyle(g).transform), tx = -(o.x + (o.s - 1) * 0) / o.s * f, ty = -o.y / o.s * f;
+      g.style.transform = `translate(${m.e.toFixed(1)}px,${m.f.toFixed(1)}px)`;
+      const a2 = g.animate([{ transform: `translate(${m.e.toFixed(1)}px,${m.f.toFixed(1)}px)` }, { transform: `translate(${tx.toFixed(1)}px,${ty.toFixed(1)}px)` }], { duration: dur, easing: 'cubic-bezier(.65,0,.35,1)', fill: 'forwards' });
+      a2.onfinish = () => { g.style.transform = `translate(${tx.toFixed(1)}px,${ty.toFixed(1)}px)`; };
+      par.push(a2);
+    }
+    document.body.classList.toggle('cine-on', o.s > 1.001);
   }
-  function light(sx, sy, k, night) {
-    shade.style.setProperty('--lx', sx + 'px'); shade.style.setProperty('--ly', sy + 'px');
-    shade.style.opacity = k; bloom.style.setProperty('--lx', sx + 'px'); bloom.style.setProperty('--ly', sy + 'px');
-    bloom.style.opacity = night ? k * .35 : k * .8;
+  function light(sx, sy, k) {
+    shade.style.setProperty('--lx', sx + 'px'); shade.style.setProperty('--ly', sy + 'px'); shade.style.opacity = k;
+    bloom.style.setProperty('--lx', sx + 'px'); bloom.style.setProperty('--ly', sy + 'px');
+    bloom.style.opacity = document.body.classList.contains('night') ? k * .35 : k * .8;
   }
-  function refocus(delay) {
-    clear();
-    const go = () => {
-      if (!active() || mode === 'reset') return;
-      const v = view(), night = document.body.classList.contains('night');
-      if (mode === 'speak' && focusEl && focusEl.isConnected) {
-        const pup = focusEl.querySelector('.pup') || focusEl, b = base(pup);
-        // a bust shot: head and shoulders fill the upper part of the screen above the text strip
-        let s = v.phone ? 1.6 : 2.0; s = Math.min(s, (v.vb * 1.25) / Math.max(1, b.h));
-        s = Math.max(1.25, s);
-        const hx = b.x + b.w * .5, hy = b.y + b.h * .3;
-        const [x, y] = frame(hx, hy, s, v.w * (v.phone ? .5 : .44), v.vb * .42, v);
-        apply(s, x, y, 1.6);
-        light(x + s * hx, y + s * (b.y + b.h * .18), .78, night);
-      } else if (mode === 'body' && focusEl && focusEl.isConnected) {
-        const b = base(focusEl.querySelector('.pup') || focusEl), s = v.phone ? 1.25 : 1.4;
-        const [x, y] = frame(b.x + b.w * .5, b.y + b.h * .5, s, v.w * .5, v.vb * .55, v);
-        apply(s, x, y, 2.4); light(x + s * (b.x + b.w * .5), y + s * (b.y + b.h * .5), .8, night);
-      } else {   // narration: a slow push, alternately to one side and the other
-        const s = 1.07, ax = alt % 2 ? .38 : .62;
-        const [x, y] = frame(v.w * ax, v.vb * .45, s, v.w * ax, v.vb * .45, v);
-        apply(s, x, y, 6); light(v.w * ax, v.vb * .38, .55, night);
-      }
-    };
-    timers.push(setTimeout(go, delay || 0));
-    timers.push(setTimeout(go, (delay || 0) + 760));   // the figures slide into place (0.7 s): look again once they stand
+  // the frame for this page: the group on stage, leaning toward the speaker
+  function frame(o) {
+    const v = view(), cast = [...document.querySelectorAll('#cast .pp')].filter(e => e.style.opacity !== '0');
+    const rects = cast.map(finalRect);
+    let s = v.phone ? 1.1 : 1.14, cx = v.w / 2, cyHead = v.vb * .5;
+    if (rects.length) {
+      const L = Math.min(...rects.map(r => r.x)), R = Math.max(...rects.map(r => r.x + r.w));
+      const heads = rects.map(r => r.y + r.h * .2), headY = heads.reduce((a, b) => a + b, 0) / heads.length;
+      cx = (L + R) / 2; cyHead = headY;
+      // keep the whole group in the picture: zoom no closer than the group allows
+      s = Math.max(1.06, Math.min(s, (v.w * .92) / Math.max(1, R - L)));
+    }
+    let lx = null, ly = null;
+    if (o.el) {
+      const r = finalRect(o.el), sx = r.x + r.w / 2;
+      cx = cx * .7 + sx * .3;   // lean toward the voice, but keep the room
+      s = Math.min(s * 1.02, v.phone ? 1.14 : 1.17);
+      lx = sx; ly = r.y + r.h * .22;
+    }
+    const target = clampShot({ s, x: v.w / 2 - s * cx, y: v.vb * .42 - s * cyHead, }, v);
+    return { target, lx, ly, v };
+  }
+  function shoot(o) {
+    const night = document.body.classList.contains('night');
+    const { target, lx, ly, v } = frame(o);
+    const fresh = performance.now() - sceneAt < 1800;
+    // the light finds the speaker (it moves smoothly: see the @property in the CSS)
+    if (lx != null) light(target.x + target.s * lx, target.y + target.s * ly, .66);
+    else light(v.w * .5, v.vb * .4, .5);
+    document.querySelectorAll('#cast .pp').forEach(e => e.classList.toggle('cine-dim', !!o.el && e !== o.el && !e.classList.contains('fallen')));
+    if (fresh) {   // a new place: start a little higher and wider, settle down slowly
+      sceneAt = 0; glide(target, 4200); lastTarget = target; return;
+    }
+    // only move when the frame would change enough to notice; otherwise stay still
+    const d = lastTarget ? Math.hypot(target.x - lastTarget.x, target.y - lastTarget.y) / v.w + Math.abs(target.s - lastTarget.s) * 2 : 1;
+    if (d < .08) return;
+    glide(target, 3200); lastTarget = target;
   }
   function clear() { timers.forEach(clearTimeout); timers = []; }
-  // a page of text: who speaks (an element) or null for narration
   function page(o) {
     if (!cam) init();
-    document.querySelectorAll('#cast .pp.cine-dim').forEach(e => e.classList.remove('cine-dim'));
     if (!active() || o.wide) return reset();
-    if (o.el) {
-      mode = 'speak'; focusEl = o.el;
-      document.querySelectorAll('#cast .pp').forEach(e => { if (e !== o.el && !e.classList.contains('fallen')) e.classList.add('cine-dim'); });
-    } else {
-      const fallen = document.querySelector('#cast .pp.fallen');
-      if (fallen) { mode = 'body'; focusEl = fallen; } else { mode = 'wide'; focusEl = null; alt++; }
-    }
-    refocus(30);
+    clear(); mode = 'on'; focusEl = o.el || null;
+    timers.push(setTimeout(() => shoot(o), 40));
   }
-  function reset(dur) {
+  // a choice is on screen: keep the picture where it is, just let the light and focus relax
+  function rest() {
     if (!cam) init();
-    clear(); mode = 'reset'; focusEl = null;
-    document.querySelectorAll('#cast .pp.cine-dim').forEach(e => e.classList.remove('cine-dim'));
-    apply(1, 0, 0, dur == null ? 1.1 : dur); shade.style.opacity = 0; bloom.style.opacity = 0;
+    if (mode !== 'on' || !active()) return reset();
+    clear(); focusEl = null;
+    timers.push(setTimeout(() => shoot({ el: null }), 40));
   }
-  // a little lift of the speaker's figure on each syllable
+  function reset() {
+    if (!cam) init();
+    clear(); focusEl = null;
+    document.querySelectorAll('#cast .pp.cine-dim').forEach(e => e.classList.remove('cine-dim'));
+    const v = view();
+    if (mode !== 'reset' && active()) glide({ s: 1, x: 0, y: 0 }, 1600);   // ease back, never snap
+    else { if (anim) anim.cancel(); par.forEach(p => p.cancel()); cam.style.transform = ''; document.querySelectorAll('#scene svg.scn').forEach(g => g.style.transform = ''); document.body.classList.remove('cine-on'); }
+    mode = 'reset'; lastTarget = null;
+    light(v.w * .5, v.vb * .42, .32);
+  }
+  function cast() { castAt = performance.now(); }
+  function scene() { sceneAt = performance.now(); lastTarget = null; }
+  function shake() {}
+  // a very small lift of the speaker on each syllable
   function blip() {
     if (!active() || !focusEl) return;
     const p = focusEl.querySelector('.pup'); if (!p || !p.animate) return;
-    p.animate([{ translate: '0 0' }, { translate: '0 -4px' }, { translate: '0 0' }], { duration: 110, easing: 'ease-out' });
+    p.animate([{ translate: '0 0' }, { translate: '0 -2px' }, { translate: '0 0' }], { duration: 120, easing: 'ease-out' });
+  }
+  function layer() {
+    const sc = $('scene'), svg = sc && sc.querySelector('svg.scn:not(.cine-far):not(.cine-mid)'); if (!svg || sc.querySelector('.cine-far')) return;
+    for (const k of ['far', 'mid']) { const c2 = svg.cloneNode(true); c2.classList.add('cine-' + k); sc.insertBefore(c2, svg); }
+    svg.classList.add('cine-near');
   }
 
   /* ---------- the weather on the screen: snow (mountains, the abbey) or motes in the lamplight ---------- */
   const flakes = [];
-  function sizeSky() { if (!cv) return; const r = $('stage').getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); cv.width = r.width * d; cv.height = r.height * d; cv.style.width = r.width + 'px'; cv.style.height = r.height + 'px'; cx.setTransform(d, 0, 0, d, 0, 0); }
+  function sizeSky() { if (!cv) return; const r = $('stage').getBoundingClientRect(), d = 1; /* soft flakes need no retina pixels */ cv.width = r.width * d; cv.height = r.height * d; cv.style.width = r.width + 'px'; cv.style.height = r.height + 'px'; cx.setTransform(d, 0, 0, d, 0, 0); }
   function weather(kind, night) {
     if (!cv) init();
     if (wx === kind + night) return; wx = kind + night;
@@ -124,7 +176,7 @@
   let last = 0;
   function tick(t) {
     requestAnimationFrame(tick);
-    if (!cx || t - last < 33) return; const dt = Math.min(.1, (t - last) / 1000); last = t;
+    if (!cx || t - last < 33 || document.body.classList.contains('th-on')) return; const dt = Math.min(.1, (t - last) / 1000); last = t;
     const r = cv.getBoundingClientRect(); cx.clearRect(0, 0, r.width, r.height);
     if (!flakes.length || reduce() || document.body.classList.contains('paused') || document.hidden || !document.body.classList.contains('scr-play')) return;
     const snow = cv.dataset.kind === 'snow', night = cv.classList.contains('night');
@@ -175,5 +227,5 @@
     });
   }
 
-  root.WLCine = { init, page, reset, blip, weather, run, set enabled(v) { enabledPref = !!v; if (!v) reset(0); }, get enabled() { return enabledPref; } };
+  root.WLCine = { init, page, rest, reset, blip, weather, run, cast, scene, shake, layer, set enabled(v) { enabledPref = !!v; if (!v && cam) reset(); }, get enabled() { return enabledPref; } };
 })(window);

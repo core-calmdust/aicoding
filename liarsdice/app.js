@@ -122,6 +122,7 @@ function persist() { if (!M || M.tut) return; D.cur = M; save(); }
 function rulesFromSet(o) { o = o || set; return { wild: !!o.wild, palifico: !!o.palifico, calza: !!o.calza, raise: o.raise, dice: 5 }; }
 function newGame(o) {
   unsched();
+  if (M && M.tut && window.LdTut) LdTut.stop();
   if (window.LdRated) LdRated.forfeitIfLive();
   recordAbandon();
   o = o || {};
@@ -133,7 +134,7 @@ function newGame(o) {
 }
 function startRound() {
   const g = G();
-  LD.startRound(g);
+  LD.startRound(g, null, M.tut && g.no === 0 ? M.fix : null);
   U.rev = null; U.said = {}; U.coach = null; U.q = 0; U.f = 0;
   U.phase = 'roll'; U.rollAt = performance.now();
   persist(); render();
@@ -148,12 +149,15 @@ function loop() {
   unsched();
   const g = G(); if (!g || U.phase !== 'bid' || g.phase !== 'bid') return;
   const p = g.round.turn;
-  if (p === 0) { sfx('turn'); presetBuilder(); render(); return; }
+  if (p === 0) { sfx('turn'); if (M.tut) { U.f = 0; U.q = 0; } else presetBuilder(); render(); return; }
+  // the tutorial: the computer waits while a step is being read
+  if (window.LdTut && LdTut.on() && LdTut.hold()) { U.think = -1; render(); return; }
   U.think = p; render();
   // the computer answers at once; we wait only for the previous call's animation (the speech bubble)
   const since = performance.now() - (U.saidAt || 0), wait = Math.max(0, 760 * pace() - since);
   sched(() => {
     const g2 = G(); if (!g2 || g2.phase !== 'bid' || g2.round.turn !== p) return;
+    if (window.LdTut && LdTut.on() && LdTut.hold()) { U.think = -1; render(); return; }
     let a; try { a = window.LdTut && LdTut.on() ? LdTut.bot(g2, p) : AI.decide(g2, p, M.lvls[p]); } catch (e) { console.error(e); a = LD.last(g2) ? { t: 'dudo' } : { t: 'bid', q: 1, f: 2 }; }
     U.think = -1; doAct(p, a);
   }, wait);
@@ -301,6 +305,7 @@ function dudoMe() { const g = G(); if (!myCtx() || !LD.canDudo(g, 0)) return; if
 function calzaMe() { const g = G(); if (!myCtx() || !LD.canCalza(g, 0)) return; if (tutBlock({ t: 'calza' })) return; doAct(0, { t: 'calza' }); if (window.LdTut) LdTut.after('calza'); }
 function hintMe() {
   const g = G(); if (!myCtx()) return;
+  if (M.tut) { if (window.LdTut) LdTut.hint(); return; }
   if (M.mode === 'rated') { toast(t('hint.rated')); return; }
   const C = getCoach(); if (!C || !C.opts.length) return;
   const a = C.opts[0].a;
@@ -317,7 +322,8 @@ function seatPos(p, n) {
   if (p === 0) return [50, 88];
   const a = Math.PI / 2 + p * 2 * Math.PI / n;
   const ph = window.innerWidth < 761;
-  return [50 + Math.cos(a) * (ph ? 34 : 41), (ph ? 53 : 50) + Math.sin(a) * (ph ? 37 : 33)];
+  // (phones, three players: the two others sit higher, clear of the bid in the middle)
+  return [50 + Math.cos(a) * (ph ? 34 : 41), (ph ? (n === 3 ? 45 : 53) : 50) + Math.sin(a) * (ph ? 37 : 33)];
 }
 function render() {
   const g = G(); if (!g) return;
@@ -381,6 +387,7 @@ function render() {
   h += mid;
   patch(box, h);
   box.classList.toggle('reveal', !!rev);
+  box.dataset.n = n;
   renderActbar(); renderSide(); renderNums();
   if (window.LdTut) LdTut.ev('render');
 }
@@ -602,23 +609,22 @@ let NG = null, ngTab = 'game';
 const PRESETS = ['perudo', 'dudo', 'classic'];
 function openNew() {
   NG = { mode: 'ai', preset: set.preset, wild: set.wild, palifico: set.palifico, calza: set.calza, raise: set.raise, players: set.players, lvl: set.lvl };
-  ngTab = 'game'; renderNew(); openOv('#newOverlay');
+  ngTab = 'game'; openOv('#newOverlay'); renderNew();
 }
 function seg(items, cur, attr) { return `<div class="seg">${items.map(([val, lab]) => `<button type="button" data-${attr}="${esc(val)}" class="${String(val) === String(cur) ? 'sel' : ''}">${esc(lab)}</button>`).join('')}</div>`; }
 function presetOf(o) { for (const k of PRESETS) { const P = LD.PRESETS[k]; if (!!P.wild === !!o.wild && !!P.palifico === !!o.palifico && !!P.calza === !!o.calza && P.raise === o.raise) return k; } return 'custom'; }
-function renderNew() {
-  NG.preset = presetOf(NG);
-  $('#ngTabs').innerHTML = ['game', 'rules', 'design'].map(k => `<button type="button" class="${k === ngTab ? 'sel' : ''}" data-tab="${k}">${esc(t('tab.' + k))}${k === 'rules' ? `<small>${esc(t('gm.' + NG.preset))}</small>` : ''}</button>`).join('');
+// the body of one tab of the new-game dialog (mode: the play mode for the rules tab)
+function ngHtml(tab, mode) {
   let h;
-  if (ngTab === 'game') h = `<div class="ng-games ld3">` + PRESETS.map(k => `<button type="button" class="gcard${k === NG.preset ? ' sel' : ''}" data-g="${k}"><span class="gart">${Dice.art(k)}</span><b>${esc(t('gm.' + k))}</b><p>${esc(t('gm.' + k + '.d'))}</p><span class="gpick">${k === NG.preset ? '✓' : ''}</span></button>`).join('') + `</div>`;
-  else if (ngTab === 'rules') {
+  if (tab === 'game') h = `<div class="ng-games ld3">` + PRESETS.map(k => `<button type="button" class="gcard${k === NG.preset ? ' sel' : ''}" data-g="${k}"><span class="gart">${Dice.art(k)}</span><b>${esc(t('gm.' + k))}</b><p>${esc(t('gm.' + k + '.d'))}</p><span class="gm-rules">${[['wild', 'o.wild'], ['palifico', 'o.pal'], ['calza', 'o.calza']].map(([o, key]) => `<span class="${LD.PRESETS[k][o] ? 'on' : ''}"><i>${LD.PRESETS[k][o] ? '✓' : '—'}</i>${esc(t(key))}</span>`).join('')}</span><span class="gpick">${k === NG.preset ? '✓' : ''}</span></button>`).join('') + `</div>`;
+  else if (tab === 'rules') {
     const row = (lab, help, html) => `<div class="rl"><div class="rl-t"><b>${esc(lab)}</b>${help ? `<small>${esc(help)}</small>` : ''}</div>${html}</div>`;
-    const lvRow = NG.mode === 'rated' ? (window.LdRated ? `<div class="rl rl-rated">${LdRated.ngHtml()}</div>` : '') :
+    const lvRow = mode === 'rated' ? (window.LdRated ? `<div class="rl rl-rated">${LdRated.ngHtml()}</div>` : '') :
       `<div class="rl lvrow"><div class="rl-t"><b>${esc(t('o.level'))}</b><small>${esc(t('o.level.h'))}</small></div><div class="lvsel"><button type="button" class="qb" data-lvd="-1">−</button><input type="range" min="1" max="20" value="${NG.lvl}" id="ngLv"><button type="button" class="qb" data-lvd="1">+</button><b id="ngLvV">Lv.${NG.lvl}</b></div><p class="lv-desc" id="ngLvD">${esc(t('lvd.' + lvBand(NG.lvl)))}</p></div>`;
-    h = `<div class="ng-mode">${seg([['ai', t('mode.ai')], ['rated', t('mode.rated')], ['online', t('mode.online')]], NG.mode, 'md')}</div>` +
-      (NG.mode === 'online' ? `<div class="soon"><b>${esc(t('online.soon'))}</b><p>${esc(t('online.soon.d'))}</p></div>` :
+    h = `<div class="ng-mode">${seg([['ai', t('mode.ai')], ['rated', t('mode.rated')], ['online', t('mode.online')]], mode, 'md')}</div>` +
+      (mode === 'online' ? `<div class="soon"><b>${esc(t('online.soon'))}</b><p>${esc(t('online.soon.d'))}</p></div>` :
       `<div class="rl-list two"><div>` + lvRow +
-      (NG.mode === 'rated' ? '' : row(t('o.players'), t('o.players.h'), seg([2, 3, 4, 5, 6].map(n => [n, String(n)]), NG.players, 'np'))) +
+      (mode === 'rated' ? '' : row(t('o.players'), t('o.players.h'), seg([2, 3, 4, 5, 6].map(n => [n, String(n)]), NG.players, 'np'))) +
       `</div><div>` +
       row(t('o.wild'), t('o.wild.h'), seg([[1, t('on')], [0, t('off')]], NG.wild ? 1 : 0, 'wd')) +
       row(t('o.pal'), t('o.pal.h'), seg([[1, t('on')], [0, t('off')]], NG.palifico ? 1 : 0, 'pl')) +
@@ -626,7 +632,34 @@ function renderNew() {
       row(t('o.raise'), t('o.raise.h'), seg([['std', t('raise.std')], ['strict', t('raise.strict')]], NG.raise, 'rs')) +
       `</div></div>`);
   } else h = designHtml();
-  const body = $('#ngBody'); body.innerHTML = h; body.dataset.tab = ngTab;
+  return h;
+}
+// the dialogs with tabs keep one size: the tallest tab's body (measured once per language / window size, with the
+// variants given) is the body's minimum height; never taller than the screen (the rest scrolls inside)
+const TABMIN = {};
+function tabMin(id, body, variants) {
+  const key = LANG + '|' + innerWidth + 'x' + innerHeight;
+  body.style.minHeight = ''; body.style.maxHeight = '';
+  if (TABMIN[id] && TABMIN[id].key === key) return TABMIN[id].h;
+  if (!body.offsetParent) return 0;
+  let mx = 0;
+  for (const [tb, html] of variants) { body.dataset.tab = tb; body.innerHTML = html(); mx = Math.max(mx, body.scrollHeight); }
+  if (mx > 40) TABMIN[id] = { key, h: mx };
+  return mx;
+}
+function applyMin(body, mn) {
+  if (!mn) return;
+  const md = body.closest('.modal'), chrome = md.offsetHeight - body.offsetHeight, avail = Math.max(200, innerHeight - 24 - chrome);
+  body.style.minHeight = Math.min(mn, avail) + 'px'; body.style.maxHeight = avail + 'px';
+}
+function renderNew() {
+  NG.preset = presetOf(NG);
+  $('#ngTabs').innerHTML = ['game', 'rules', 'design'].map(k => `<button type="button" class="${k === ngTab ? 'sel' : ''}" data-tab="${k}">${esc(t('tab.' + k))}${k === 'rules' ? `<small>${esc(t('gm.' + NG.preset))}</small>` : ''}</button>`).join('');
+  let h = ngHtml(ngTab, NG.mode);
+  const body = $('#ngBody');
+  // one box size on every tab (and on every play mode of the rules tab)
+  const mn = innerWidth <= 760 ? 0 : tabMin('ng', body, [['game', () => ngHtml('game')], ['rules', () => ngHtml('rules', 'ai')], ['rules', () => ngHtml('rules', 'rated')], ['rules', () => ngHtml('rules', 'online')], ['design', () => ngHtml('design')]]);
+  body.innerHTML = h; body.dataset.tab = ngTab; if (innerWidth > 760) applyMin(body, mn);   // phones: the dialog is the full screen
   $('#btnStart').disabled = NG.mode === 'online';
   $$('#ngTabs [data-tab]').forEach(b => b.onclick = () => { ngTab = b.dataset.tab; renderNew(); });
   $$('#ngBody [data-g]').forEach(b => { b.onclick = () => { Object.assign(NG, LD.PRESETS[b.dataset.g]); NG.wild = +NG.wild; NG.palifico = +NG.palifico; NG.calza = +NG.calza; renderNew(); }; b.ondblclick = () => $('#btnStart').click(); });
@@ -673,21 +706,31 @@ let setTab = 'play';
 function openSettings() {
   const sw = (k, lab, help) => `<div class="rl"><div class="rl-t"><b>${esc(lab)}</b>${help ? `<small>${esc(help)}</small>` : ''}</div><label class="tgl"><input type="checkbox" data-k="${k}"${set[k] ? ' checked' : ''}><i></i></label></div>`;
   $('#setTabs').innerHTML = ['play', 'design'].map(k => `<button type="button" class="${k === setTab ? 'sel' : ''}" data-st="${k}">${esc(t('tab.' + k))}</button>`).join('');
-  let h;
-  if (setTab === 'play') h = `<div class="set-cols"><div class="rl-list">` + sw('coach', t('set.coach'), t('set.coach.h')) + sw('odds', t('set.odds'), t('set.odds.h')) + `</div><div class="rl-list">` + sw('anim', t('set.anim')) + sw('sound', t('set.sound')) +
-    `<div class="rl"><div class="rl-t"><b>${esc(t('set.speed'))}</b></div>${seg([['slow', t('sp.slow')], ['normal', t('sp.normal')], ['fast', t('sp.fast')]], set.speed, 'sp')}</div></div></div>`;
-  else h = designHtml();
-  $('#setBody').innerHTML = h;
+  const html = tab => tab === 'play' ? `<div class="set-cols"><div class="rl-list">` + sw('coach', t('set.coach'), t('set.coach.h')) + sw('odds', t('set.odds'), t('set.odds.h')) + `</div><div class="rl-list">` + sw('anim', t('set.anim'), t('set.anim.h')) + sw('sound', t('set.sound'), t('set.sound.h')) +
+    `<div class="rl"><div class="rl-t"><b>${esc(t('set.speed'))}</b><small>${esc(t('set.speed.h'))}</small></div>${seg([['slow', t('sp.slow')], ['normal', t('sp.normal')], ['fast', t('sp.fast')]], set.speed, 'sp')}</div></div></div>` : designHtml();
+  openOv('#setOverlay');
+  const body = $('#setBody'), mn = tabMin('set', body, [['play', () => html('play')], ['design', () => html('design')]]);
+  body.innerHTML = html(setTab); body.dataset.tab = setTab; applyMin(body, mn);
   $$('#setTabs [data-st]').forEach(b => b.onclick = () => { setTab = b.dataset.st; openSettings(); });
   $$('#setBody [data-k]').forEach(c => c.onchange = () => { set[c.dataset.k] = c.checked ? 1 : 0; if (c.dataset.k === 'sound') { set.sound = c.checked; try { localStorage.setItem('atlas-sfx', c.checked ? '1' : '0'); } catch (e) {} } save(); render(); });
   $$('#setBody [data-sp]').forEach(b => b.onclick = () => { set.speed = b.dataset.sp; save(); openSettings(); });
   if (setTab === 'design') wireDesign($('#setBody'));
-  openOv('#setOverlay');
 }
 $('#btnSetClose').onclick = () => closeOv('#setOverlay');
 
 /* ---------------- tutorial hooks ---------------- */
 function tutBlock(a) { return !!(window.LdTut && LdTut.on() && !LdTut.allow(a)); }
+// the tutorial's table: 3 players, Perudo rules, fixed dice for the first round, Luca opens (tutorial.js)
+function startTutorial(hands) {
+  unsched();
+  if (M && !M.tut) persist();
+  const g = LD.newGame({ players: 3, rules: Object.assign({}, LD.PRESETS.perudo, { dice: 5 }), starter: 1 });
+  M = { G: g, lvl: 3, lvls: [0, 3, 3], mode: 'ai', id: 'tut', dec: [], over: false, place: -1, tut: true, fix: hands };
+  U.rev = null; U.said = {}; U.coach = null; U.lastDec = null; U.think = -1;
+  startRound();
+}
+// back to the saved game (or a new one)
+function endTutorial() { unsched(); M = null; U.rev = null; U.said = {}; U.coach = null; U.think = -1; if (!resume()) newGame(); }
 
 /* ---------------- buttons & keys ---------------- */
 $('#btnNew').onclick = openNew;
@@ -743,6 +786,6 @@ function resume() {
 if (!resume()) newGame();
 
 window.LdApp = { get M() { return M; }, get G() { return G(); }, get LANG() { return LANG; }, get U() { return U; }, t, esc, sfx, openOv, closeOv, toast, confirmBox, set, D, save, render, nameOf, bidTxt, bidHtml, actTxt, levelLabel, newGame, startRound, loop, doAct, sched, unsched, persist, rulesFromSet, GRADE,
-  setM(m) { M = m; }, showTab(pt) { set.mTab = pt; mTabs(); } };
+  setM(m) { M = m; }, startTutorial, endTutorial, showTab(pt) { set.mTab = pt; mTabs(); } };
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-csw]'); if (!b || !G()) return; e.preventDefault(); const sc = document.querySelector('.stage'), st = sc ? sc.scrollTop : 0; set.coach = set.coach ? 0 : 1; save(); render(); toast(t('side.coach') + ' ' + (set.coach ? 'ON' : 'OFF')); if (sc) sc.scrollTop = st; });
 })();
