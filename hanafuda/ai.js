@@ -7,6 +7,7 @@
 (function (root) {
   'use strict';
   const HF = (typeof require !== 'undefined') ? require('./engine.js') : root.HF;
+  const SIM = (typeof require !== 'undefined') ? require('./aisim.js') : root.HFSim;
   const { CARDS, ID, month } = HF;
 
   // static card value for the quick policy
@@ -28,6 +29,7 @@
       infer: lv >= 8,                                // use the opponent's discards to shape its hand
       koiSmart: lv >= 5,
       strong: false,                                 // quick2: measured -0.59±0.45/hand vs quick at Lv.12 (2026-11-28) — off
+      v2: false, worlds2: 0, reps: 2, pen: 1, exact: 0, budget: 20000, koiMul: 1, P: null,
     };
   }
 
@@ -185,9 +187,59 @@
     return res.winner === me ? res.pts : -res.pts;
   }
 
+  // ---- v2 (2026-11-28): fast simulator, weighted worlds (Bayes), exact endgame ----
+  // likelihood of the opponent's past non-capturing discards for a sampled hand: a player holding a card of a month on
+  // the field almost always takes it, so each such card in the sampled hand multiplies the weight by C.pen
+  function worldWeight(hand, s, opp, pen) {
+    let w = 1;
+    for (const ev of s.seen) {
+      if (ev.p !== opp) continue;
+      let k = 0; for (const c of hand) if (ev.fieldMonths.indexOf(month(c)) >= 0) k++;
+      if (k) w *= Math.pow(pen, k);
+    }
+    return w;
+  }
+  function choose2(s, L, r, acts) {
+    const me = s.turn, opp = 1 - me;
+    const base = SIM.fromState(s);
+    const un = unseenFor(s, me), nOpp = s.hands[opp].length;
+    const inHands = s.hands[0].length + s.hands[1].length;
+    const endgame = L.exact && inHands <= L.exact;
+    const nW = s.phase === 'koi' ? Math.round(L.worlds2 * L.koiMul) : L.worlds2;
+    const sum = new Float64Array(acts.length);
+    let wsum = 0;
+    for (let k = 0; k < nW; k++) {
+      const sh = HF.shuffle(un.slice(), r);
+      const hand = sh.slice(0, nOpp);
+      const wt = L.pen < 1 ? worldWeight(hand, s, opp, L.pen) : 1;
+      if (wt < 1e-9) continue;
+      const w = SIM.copy(base);
+      w.hands[opp] = hand; w.deck = sh.slice(nOpp);
+      wsum += wt;
+      for (let i = 0; i < acts.length; i++) {
+        let v = null;
+        if (endgame) { const c = SIM.copy(w); SIM.apply(c, acts[i]); v = SIM.exact(c, me, L.budget); }
+        if (v === null) {
+          let tot = 0;
+          for (let j = 0; j < L.reps; j++) {
+            const c = SIM.copy(w);
+            if (j) HF.shuffle(c.deck, r);
+            SIM.apply(c, acts[i]);
+            const res = SIM.playout(c, r, L.P);
+            tot += me === 0 ? res : -res;
+          }
+          v = tot / L.reps;
+        }
+        sum[i] += wt * v;
+      }
+    }
+    return acts.map((a, i) => ({ a, v: wsum ? sum[i] / wsum : 0 }));
+  }
+
   // choose an action for the side to move. returns {action, scores:[{a,v}]}
-  function choose(s, lv, seed) {
-    const L = level(lv);
+  // cfg (tests / benchmarks): overrides of the level table
+  function choose(s, lv, seed, cfg) {
+    const L = Object.assign(level(lv), cfg || {});
     const r = HF.rng(seed || (Date.now() & 0xffffff));
     const acts = HF.actions(s);
     if (acts.length === 1) return { action: acts[0], scores: [{ a: acts[0], v: 0 }] };
@@ -195,23 +247,26 @@
       const a = L.lv <= 1 && r() < 0.5 ? acts[Math.floor(r() * acts.length)] : quick(s, r, 0);
       return { action: a, scores: acts.map(x => ({ a: x, v: x === a ? 1 : 0 })) };
     }
-    const me = s.turn;
-    const sum = new Map(acts.map(a => [a, 0]));
-    const reps = 2;
-    for (let w = 0; w < L.worlds; w++) {
-      const world = sampleWorld(s, me, r, L.infer);
-      for (const a of acts) {
-        let tot = 0;
-        for (let k = 0; k < reps; k++) {
-          // re-shuffle the deck between reps (the draw order is unknown to both)
-          const ws = HF.clone(world);
-          if (k) HF.shuffle(ws.deck, r);
-          tot += playout(HF.apply(ws, a), me, r, L.strong);
+    let scores;
+    if (L.v2) scores = choose2(s, L, r, acts);
+    else {
+      const me = s.turn;
+      const sum = new Map(acts.map(a => [a, 0]));
+      const reps = 2;
+      for (let w = 0; w < L.worlds; w++) {
+        const world = sampleWorld(s, me, r, L.infer);
+        for (const a of acts) {
+          let tot = 0;
+          for (let k = 0; k < reps; k++) {
+            const ws = HF.clone(world);
+            if (k) HF.shuffle(ws.deck, r);
+            tot += playout(HF.apply(ws, a), me, r, L.strong);
+          }
+          sum.set(a, sum.get(a) + tot / reps);
         }
-        sum.set(a, sum.get(a) + tot / reps);
       }
+      scores = acts.map(a => ({ a, v: sum.get(a) / L.worlds }));
     }
-    const scores = acts.map(a => ({ a, v: sum.get(a) / L.worlds }));
     // koi-koi at low levels: a simple rule instead of reading
     if (s.phase === 'koi' && !L.koiSmart) {
       const a = quickKoi(s) ? 'koi' : 'stop';
@@ -219,7 +274,6 @@
     }
     let best = scores[0];
     if (L.noise > 0.05) {
-      // noisy pick: add gaussian-ish noise scaled to the spread of the scores
       const spread = Math.max(0.5, Math.max(...scores.map(x => x.v)) - Math.min(...scores.map(x => x.v)));
       let bv = -1e9;
       for (const x of scores) {
@@ -229,9 +283,9 @@
     } else {
       for (const x of scores) if (x.v > best.v) best = x;
     }
-    return { action: best.a, scores: scores.sort((a, b) => b.v - a.v) };
+    return { action: best.a, scores: scores.slice().sort((a, b) => b.v - a.v) };
   }
 
-  const API = { choose, quick, quick2, level, pileValue, sampleWorld };
+  const API = { choose, quick, quick2, level, pileValue, sampleWorld, worldWeight };
   if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.HFAI = API;
 })(typeof self !== 'undefined' ? self : this);
