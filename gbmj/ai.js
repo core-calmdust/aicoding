@@ -97,6 +97,8 @@ function create(o) {
   const usePlans = level >= 3;
   const defend = level >= 8 ? Math.min(1, (level - 6) / 10) : 0;
   const Q = level >= 12 ? 0.42 : 0.36;
+  const look = level >= 20 ? 6 : level >= 19 ? 4 : level >= 18 ? 3 : 0;   // 1枚先読みする候補の数（上位レベル）
+  const callMargin = level >= 17 ? 1.12 : level >= 10 ? 1.15 : 1.05;
 
   function unseenCounts(r, p) {      // p から見えていない牌の数
     const u = new Array(34).fill(4);
@@ -109,7 +111,7 @@ function create(o) {
     return u.map(x => Math.max(0, x));
   }
   // 手の価値（立牌 c（13枚相当）、副露 melds）
-  function value(r, p, c, melds, unseen) {
+  function value(r, p, c, melds, unseen, fast) {
     const open = melds.some(x => x.k !== 'ankan');
     let bonus = open ? 0 : 2.5;
     const seat = r.seatWind(p) + 27, rw = r.wind + 27;
@@ -130,13 +132,13 @@ function create(o) {
     // 目標に関係なく速さ（受け入れ枚数）
     const s = GB.shanten(c, melds.length);
     let uke = 0;
-    if (s >= 0) for (let t = 0; t < 34; t++) { if (!unseen[t]) continue; c[t]++; if (GB.shanten(c, melds.length) < s) uke += unseen[t]; c[t]--; }
+    if (s >= 0 && !fast) for (let t = 0; t < 34; t++) { if (!unseen[t]) continue; c[t]++; if (GB.shanten(c, melds.length) < s) uke += unseen[t]; c[t]--; }
     vals.sort((a, b) => b - a);
     let V = (vals[0] || 0) + 0.3 * (vals[1] || 0) + 0.1 * (vals[2] || 0);
     V += (20 + bonus) * Math.pow(Q, s + 1) * (usePlans ? 0.25 : 1);
     V *= 1 + 0.012 * uke;
     // 聴牌：待ちごとに実際の点を計算（8点以上の待ちだけ数える）
-    if (s === 0 && level >= 5) {
+    if (s === 0 && level >= 5 && !fast) {
       let good = 0;
       const hand13 = []; for (let t = 0; t < 34; t++) for (let k = 0; k < c[t]; k++) hand13.push(t);
       for (const w of GBFan.waits(hand13, melds.length)) {
@@ -206,6 +208,29 @@ function create(o) {
       v += rand() * 1e-6;
       if (v > bv) { bv = v; best = a; }
     }
+    // 上位レベル：上位の候補だけ、次のツモ1枚を全部ためして（見えていない枚数で重みづけ）捨てた後の価値の平均で選び直す
+    if (look && tried.size > 1) {
+      const cand = [...tried.entries()].sort((a, b) => b[1] - a[1]).slice(0, look);
+      const tot = unseen.reduce((a, b) => a + b, 0) || 1;
+      let bt = -1, bvv = -1e9;
+      for (const [t, v0] of cand) {
+        c[t]--;
+        let ev = 0;
+        for (let d = 0; d < 34; d++) {
+          if (!unseen[d]) continue;
+          c[d]++;
+          let m = -1e9;
+          for (let x = 0; x < 34; x++) if (c[x]) { c[x]--; const v = value(r, p, c, melds, unseen, true); if (v > m) m = v; c[x]++; }
+          c[d]--;
+          ev += unseen[d] * m;
+        }
+        c[t]++;
+        const score = ev / tot + 0.5 * v0;
+        if (score > bvv) { bvv = score; bt = t; }
+      }
+      const a = discards.find(x => T(x.id) === bt);
+      if (a) return a;
+    }
     return best;
   }
   function decideClaim(r, p, opts) {
@@ -216,7 +241,7 @@ function create(o) {
     const P = r.P[p], melds = r.meldsOf(p), unseen = unseenCounts(r, p);
     const c = GB.countsIds(P.hand);
     const now = value(r, p, c, melds, unseen);
-    let best = { type: 'pass' }, bv = now * (level >= 10 ? 1.15 : 1.05);
+    let best = { type: 'pass' }, bv = now * callMargin;
     const dt = T(r.discard);
     for (const a of calls) {
       const c2 = c.slice(); let m2;
