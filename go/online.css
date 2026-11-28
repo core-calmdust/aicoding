@@ -104,7 +104,7 @@ body.in-online:not(.in-watch) #btnTerr{display:none}
 .dk-input{width:150px;border-radius:7px;border:1px solid var(--brass2);background:rgba(0,0,0,.35);color:var(--text);padding:5px 8px;font:inherit;font-size:14px;margin-inline-end:6px}
 .dk-btn{font-size:12.5px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);white-space:nowrap;flex:none}
 .dk-btn:hover{border-color:var(--brass2)}
-.dk-btn.go{background:linear-gradient(180deg,#e2c27c,#b08f4c);color:#1b150a;border-color:transparent;font-weight:700}
+.dk-btn.go{background:var(--rt-go-bg,linear-gradient(180deg,#f1efe9,#9c988f));color:var(--rt-go-ink,#121212);border-color:transparent;font-weight:700}
 .dk-btn.tg{width:34px;padding:6px 0;color:var(--muted)}
 .dk-g{display:inline-flex;align-items:center;gap:6px;max-width:230px;overflow:hidden}
 .dk-g span{overflow:hidden;text-overflow:ellipsis}

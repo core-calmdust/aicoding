@@ -208,7 +208,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:99px;padding:12px 22px;font-weight:900;font-size:16px;background:var(--coral);color:#fff;box-shadow:0 4px 0 var(--coral2);text-decoration:none;transition:transform .08s,box-shadow .08s;white-space:nowrap}
 .btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--coral2)}
 .btn.sky{background:var(--sky);box-shadow:0 4px 0 var(--sky2)}.btn.sky:active{box-shadow:0 1px 0 var(--sky2)}
-.btn.sun{background:var(--sun);color:#5a3a00;box-shadow:0 4px 0 var(--sun2)}.btn.sun:active{box-shadow:0 1px 0 var(--sun2)}
+.btn.sun{background:var(--coral);color:#fff;box-shadow:0 4px 0 var(--coral2)}.btn.sun:active{box-shadow:0 1px 0 var(--coral2)}   /* (was yellow: no yellow 3D buttons, common rule 2026-11-28) */
 .btn.mint{background:var(--mint);box-shadow:0 4px 0 var(--mint2)}
 .btn.ghost{background:#fff;color:var(--ink);box-shadow:0 4px 0 var(--line);border:2px solid var(--line)}
 .btn[disabled]{background:#d7dbe5;box-shadow:0 4px 0 #b9bfcd;color:#fff;cursor:not-allowed}
@@ -218,7 +218,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   .btn{transition:transform .15s,box-shadow .15s,filter .15s,background-color .15s}
   .btn:not([disabled]):hover{transform:translateY(-2px);filter:brightness(1.05);box-shadow:0 6px 0 var(--coral2),0 12px 20px -10px rgba(120,60,20,.45)}
   .btn.sky:not([disabled]):hover{box-shadow:0 6px 0 var(--sky2),0 12px 20px -10px rgba(20,80,140,.45)}
-  .btn.sun:not([disabled]):hover{box-shadow:0 6px 0 var(--sun2),0 12px 20px -10px rgba(140,90,0,.45)}
+  .btn.sun:not([disabled]):hover{box-shadow:0 6px 0 var(--coral2),0 12px 20px -10px rgba(120,60,20,.45)}
   .btn.mint:not([disabled]):hover{box-shadow:0 6px 0 var(--mint2),0 12px 20px -10px rgba(0,110,80,.4)}
   .btn.ghost:not([disabled]):hover{background:#fffaf0;filter:none;box-shadow:0 6px 0 var(--line),0 12px 20px -10px rgba(120,80,20,.35)}
   .btn:not([disabled]):active{transform:translateY(3px)}
