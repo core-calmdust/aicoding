@@ -17,7 +17,8 @@ const L = JSON.parse(fs.readFileSync(path.join(ROOT, 'shogi/lessons.json'), 'utf
 const STF = path.join(__dirname, `castlestable-${id}.json`), ST = fs.existsSync(STF) ? JSON.parse(fs.readFileSync(STF, 'utf8')) : null;   // (castlestable.js: 追84, the reads after other reads agree)
 const ok = C.filter(p => others.every(b => CU.dist(CU.brd(p.sfen), b) >= 5) && (!ST || (ST[p.sfen] && ST[p.sfen].ok && ST[p.sfen].dd[1] - ST[p.sfen].dd[0] <= 2)));
 console.log(C.length, 'candidates,', ok.length, 'apart from every other problem and line');
-for (const p of ok) { const r = W.analyze(p.sfen, { depth: 9 }), v = new Map(r.map(x => [x.usi, x.s])), ref = Math.max(...p.G.map(u => v.get(u))); p.dd = r.filter(x => !p.G.includes(x.usi) && x.s >= ref - 100).length; }
+for (const p of ok) { const r = require('./wasm-engine.js').loadSync().analyze(p.sfen, { depth: 9 }), v = new Map(r.map(x => [x.usi, x.s])), ref = Math.max(...p.G.map(u => v.get(u))); p.dd = r.filter(x => !p.G.includes(x.usi) && x.s >= ref - 100).length; }
+// (2026-11-28 c_kinmusou) dd with a new engine for every candidate, as lesson-verify.js recounts it (追84: the history moves depth 9 a little)
 ok.sort((a, b) => a.dd - b.dd || a.sfen.localeCompare(b.sfen));
 // spread over dd: greedy from the evenly spaced places, apart from each other, one answer at most twice
 const pick = [], cnt = new Map(), fits = p => pick.every(q => CU.dist(CU.brd(p.sfen), CU.brd(q.sfen)) >= 5) && p.accept.every(u => (cnt.get(u) || 0) < 2);
