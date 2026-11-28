@@ -980,6 +980,61 @@
       const sf = mesh(new T.CircleGeometry(.6, 40), M({ map: starTex, transparent: true, roughness: .3, metalness: .5 })); g0.add(at(sf, 1.4, .185, 1.4, -Math.PI / 2, 0, .3));
       return g0;
     },
+    hanafuda() {   // 花札 (hanafuda/, 2026-11-28): an indigo-dyed cloth (the game's table colour), a squat stack of black-backed cards with the
+      // grainy paper back, and three face cards fanned on it — 芒に月 (the full moon), 桜に幕 (the curtain) and 松に赤短 (the red ribbon).
+      // The faces are drawn here as plain shapes (not the game's card art); the thick black edge is the backing paper folded over the face.
+      const g0 = new T.Group();
+      const clothTex = X.canvasTex('ic-hfc', 512, 512, (c, W) => {
+        const r = 40; c.beginPath(); c.moveTo(r, 0); c.arcTo(W, 0, W, W, r); c.arcTo(W, W, 0, W, r); c.arcTo(0, W, 0, 0, r); c.arcTo(0, 0, W, 0, r); c.closePath();
+        const gr = c.createRadialGradient(W * .5, W * .4, 20, W * .5, W * .5, W * .75); gr.addColorStop(0, '#24607c'); gr.addColorStop(1, '#0f2f40'); c.fillStyle = gr; c.fill();
+        c.save(); c.clip(); c.globalAlpha = .07; c.strokeStyle = '#cfe3ee'; c.lineWidth = 1;   // the weave
+        for (let i = 0; i < W; i += 6) { c.beginPath(); c.moveTo(i, 0); c.lineTo(i, W); c.stroke(); c.beginPath(); c.moveTo(0, i); c.lineTo(W, i); c.stroke(); }
+        c.restore();
+        c.strokeStyle = 'rgba(205,226,236,.35)'; c.lineWidth = 4; c.save(); c.translate(22, 22); c.scale((W - 44) / W, (W - 44) / W); c.stroke(); c.restore();
+      });
+      const top = mesh(new T.PlaneGeometry(3.86, 3.86), M({ map: clothTex, transparent: true, roughness: .9 })); top.rotation.x = -Math.PI / 2; top.position.y = .006; top.receiveShadow = true; g0.add(top);
+      // faces: 320 x 530 like the real cards, a black frame all round
+      const face = (k, draw) => X.canvasTex('ic-hff' + k, 320, 530, (c, W, H) => {
+        c.fillStyle = '#1b1a1f'; c.fillRect(0, 0, W, H); c.fillStyle = '#f1e6cc'; c.fillRect(20, 20, W - 40, H - 40);
+        c.save(); c.beginPath(); c.rect(20, 20, W - 40, H - 40); c.clip(); draw(c, W, H); c.restore();
+      });
+      const moonTex = face('m', (c, W, H) => {
+        c.fillStyle = '#c8302a'; c.fillRect(0, 0, W, H * .62);
+        c.fillStyle = '#f6efdc'; c.beginPath(); c.arc(W * .5, H * .3, 92, 0, 7); c.fill();
+        c.fillStyle = '#1d1c22'; c.beginPath(); c.moveTo(0, H * .6); c.quadraticCurveTo(W * .5, H * .38, W, H * .6); c.lineTo(W, H); c.lineTo(0, H); c.fill();
+        c.strokeStyle = '#3a3940'; c.lineWidth = 4; for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(30, H * (.7 + i * .07)); c.quadraticCurveTo(W * .5, H * (.6 + i * .07), W - 30, H * (.7 + i * .07)); c.stroke(); }
+      });
+      const curtainTex = face('c', (c, W, H) => {
+        const bl = (x, y, r) => { c.fillStyle = '#e88aa4'; for (let i = 0; i < 5; i++) { const a = i * 1.257; c.beginPath(); c.arc(x + Math.cos(a) * r * .55, y + Math.sin(a) * r * .55, r * .5, 0, 7); c.fill(); } c.fillStyle = '#f7d9a0'; c.beginPath(); c.arc(x, y, r * .25, 0, 7); c.fill(); };
+        [[70, 70, 38], [160, 55, 34], [250, 80, 38], [110, 150, 30], [215, 160, 32]].forEach(b => bl(...b));
+        // the red-and-white curtain
+        for (let i = 0; i < 6; i++) { c.fillStyle = i % 2 ? '#f4ede0' : '#c8302a'; c.fillRect(20 + i * 47, 250, 47, 240); }
+        c.fillStyle = '#1d1c22'; c.fillRect(20, 236, W - 40, 22);
+      });
+      const ribbonTex = face('r', (c, W, H) => {
+        c.fillStyle = '#1d1c22';   // pine needles
+        for (let k = 0; k < 3; k++) { const x = 70 + k * 90, y = 330 + (k % 2) * 60; for (let i = 0; i < 12; i++) { const a = -Math.PI + i * Math.PI / 11; c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a) * 70, y + Math.sin(a) * 70); c.lineWidth = 6; c.strokeStyle = '#1d1c22'; c.stroke(); } }
+        c.fillRect(40, 440, W - 80, 26);
+        // the red ribbon, slanting
+        c.save(); c.translate(W * .5, H * .36); c.rotate(-.32); c.fillStyle = '#c8302a'; c.fillRect(-42, -190, 84, 340); c.restore();
+      });
+      // the back: black paper with a fine grain
+      const backTex = X.canvasTex('ic-hfb', 320, 530, (c, W, H) => {
+        c.fillStyle = '#1a1512'; c.fillRect(0, 0, W, H);
+        let s = 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+        for (let i = 0; i < 5200; i++) { const v = 60 + rnd() * 70; c.fillStyle = `rgba(${v + 14},${v + 4},${v - 6},${.25 + rnd() * .45})`; const r = .8 + rnd() * 2.2; c.fillRect(rnd() * W, rnd() * H, r, r); }
+      });
+      const edge = C(0x1b1a1f, { roughness: .55 });
+      // chunky cards: thick, with the black edge
+      const card = (mt, h) => { const b = rbox(1.32, h, 2.18, .1, edge); const f = mesh(new T.PlaneGeometry(1.26, 2.1), mt); f.rotation.x = -Math.PI / 2; f.position.y = h + .004; return grp(b, f); };
+      const backM = M({ map: backTex, roughness: .8 });
+      // the stack (the deck), squat and slightly uneven
+      for (let i = 0; i < 4; i++) g0.add(at(card(backM, .14), .62 + (i % 2 ? .04 : -.03), i * .14, -.7 + (i === 2 ? .04 : 0), 0, -.5 + .06 * (i - 1.5), 0));
+      // the three faces fanned in front
+      [[ribbonTex, -1.2, .62, .5], [curtainTex, -.52, .8, .18], [moonTex, .2, .95, -.14]].forEach(([tx, x, z, ry], i) =>
+        g0.add(at(card(M({ map: tx, roughness: .45 }), .16), x, .6 + i * .17, z, 0, ry, 0)));
+      return g0;
+    },
     blackjack() {   // a deep-teal blackjack felt: ivory printed arcs and a gold betting circle, a blackjack (A♠ + K♥) and black / gold chip stacks
       const g0 = new T.Group();
       const feltTex = X.canvasTex('ic-bjf', 512, 512, (c, W) => {
@@ -1662,7 +1717,7 @@
   };
 
   // post-process: pieces onto the thick base; scenes without a board get a square plinth
-  const PLINTH = { random: [0x9a7cff, 3.9], connect4: [0x1f5ed9, 5.2], mancala: [0xb37540, 4.6], sudoku: [0xf4efe6, 3.9], speedsudoku: [0xfff0e2, 3.9], samegame: [0xf2eadb, 3.9], jailbreak: [0x3a3f4a, 3.9], solitaire: [0x22704a, 3.9], poker: [0x1f1f24, 3.9], baccarat: [0x3d0f1a, 3.9], guandan: [0x7a1620, 3.9], blackjack: [0x0b3a3a, 3.9] };
+  const PLINTH = { random: [0x9a7cff, 3.9], connect4: [0x1f5ed9, 5.2], mancala: [0xb37540, 4.6], sudoku: [0xf4efe6, 3.9], speedsudoku: [0xfff0e2, 3.9], samegame: [0xf2eadb, 3.9], jailbreak: [0x3a3f4a, 3.9], solitaire: [0x22704a, 3.9], poker: [0x1f1f24, 3.9], baccarat: [0x3d0f1a, 3.9], guandan: [0x7a1620, 3.9], hanafuda: [0x17435a, 3.9], blackjack: [0x0b3a3a, 3.9] };
   const FIX = {};
   Object.keys(ICONS).forEach(id => {
     FIX[id] = () => {
