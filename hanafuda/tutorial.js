@@ -311,6 +311,7 @@ function place() {
     y = bot + 16 + bh < H - 8 ? bot + 16 : top - bh - 16 > 8 ? top - bh - 16 : 12;
     if (y === 12 && right + bw + 24 < W) { x = right + 18; y = Math.max(12, Math.min(H - bh - 12, top)); }
   }
+  y = Math.max(8, Math.min(y, H - bh - 8)); x = Math.max(8, Math.min(x, W - bw - 8));
   box.style.left = x + 'px'; box.style.top = y + 'px';
 }
 function go(i) {
@@ -361,7 +362,7 @@ function stop(done) {
   running = false; clearTimeout(autoT);
   if (layer) { layer.classList.remove('show'); box.innerHTML = ''; rings.innerHTML = ''; }
   document.querySelectorAll('.hf.tu-want').forEach(e => e.classList.remove('tu-want'));
-  try { localStorage.setItem('aicoding-hanafuda-tut', done ? 'done' : 'seen'); } catch (e) {}
+  try { localStorage.setItem('aicoding-hanafuda-tut', done ? 'done' : 'seen'); if (done) localStorage.setItem('aicoding-hanafuda-rules-seen', '1'); } catch (e) {}
   A.tutEnd();
 }
 window.HFTut = {

@@ -125,6 +125,7 @@ function handOver() {
   const m = D.m, s = m.s, r = s.result;
   if (m.tut) { m.scores[r.winner] += r.pts; showResult(r, false); render(); return; }
   if (r.winner >= 0) m.scores[r.winner] += r.pts;
+  D.hands = (D.hands || 0) + 1;
   m.hist.push({ winner: r.winner, pts: r.pts });
   const last = m.k + 1 >= m.months;
   sfx(r.winner === ME ? 'win' : r.winner === CPU ? 'lose' : 'play');
@@ -308,7 +309,7 @@ function nearSets(caps, s) {
   if (p.kasu >= 7 && p.kasu < 10) out.push({ id: 'kasu', n: 10 - p.kasu, need: [] });
   return out.sort((a, b) => a.n - b.n);
 }
-let reviewing = false;
+let reviewing = false, HB = null;
 function renderCoach() {
   const m = D.m, el = $('#coachBox');
   if (reviewing) return;
@@ -345,28 +346,28 @@ function fitCards() {
     const pc = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)').matches;
   const R = document.documentElement.style;
   if (pc) {
-    // table inner box; rows: opponent (backs + captures, small cards), field (rows x perRow), hand, my captures
-    const TW = tb.clientWidth - 40, TH = tb.clientHeight - 32, K = 0.5, G = 12, R1 = 1.656;
+    // the table fills the top of the screen; rows: opponent (backs + captures), field (n rows x per), my hand (+ my captures beside it)
+    const TW = tb.clientWidth - 40, TH = tb.clientHeight - 32, K = 0.58, HB = 1.12, G = 12, R1 = 1.656;
+    const nField = Math.max(12, D.m && D.m.s ? D.m.s.field.length : 12);   // room for 12 field cards: the size does not jump during a month
     let best = { cw: 0, per: 6 };
-    for (let per = 5; per <= 10; per++) {
-      const rows = Math.ceil(10 / per);
-      const wcw = Math.min((TW - 2 * 18 - per * G) / (per + 2), (TW - 7 * 8) / 8);
-      const hcw = (TH - 2 * 22 - 3 * G - (rows - 1) * G) / R1 / (2 * K + rows + 1);
-      const cw = Math.min(wcw, hcw, 150);
+    for (let per = 4; per <= 12; per++) {
+      const rows = Math.ceil(nField / per);
+      const wField = (TW - 24 - per * G) / (per + 1.2);             // deck + field
+      const wHand = (TW - 7 * 8 - 4 * (K * 2.6) * 0) / (8 * HB + 4 * K * 1.6);   // hand + my captures (4 groups, partly fanned)
+      const hcw = (TH - 2 * 22 - 2 * G - (rows - 1) * G) / R1 / (K + rows + HB);
+      const cw = Math.min(wField, wHand, hcw, 190);
       if (cw > best.cw + 0.5) best = { cw, per };
     }
     let cw = Math.floor(best.cw);
-    const set = c => { R.setProperty('--cw', c + 'px'); R.setProperty('--kw', Math.floor(c * K) + 'px'); };
+    const set = c => { R.setProperty('--cw', c + 'px'); R.setProperty('--kw', Math.floor(c * K) + 'px'); R.setProperty('--hw', Math.floor(c * HB) + 'px'); };
     R.setProperty('--fcols', best.per); set(cw);
-    // measure: the field area must hold two full rows; shrink until the content fits the table
-    for (let i = 0; i < 6; i++) {
-      const need = [...tb.children].filter(e => e.classList.contains('row')).reduce((s, e) => s + e.offsetHeight, 0) + 2 * cw * R1 + G * 4 + 32;
-      if (need <= tb.clientHeight + 1) break;
-      cw = Math.floor(cw * Math.max(0.9, (tb.clientHeight - 0) / need)); set(cw);
+    for (let i = 0; i < 8; i++) {
+      if (tb.scrollHeight <= tb.clientHeight + 1 && tb.scrollWidth <= tb.clientWidth + 1) break;
+      cw = Math.floor(cw * 0.95); set(cw);
     }
   } else {
     const cw = Math.max(36, Math.floor(Math.min((innerWidth - 36) / 8.4, 64)));
-    R.setProperty('--cw', cw + 'px'); R.setProperty('--kw', Math.floor(cw * 0.62) + 'px');
+    R.setProperty('--cw', cw + 'px'); R.setProperty('--kw', Math.floor(cw * 0.62) + 'px'); R.setProperty('--hw', cw + 'px');
   }
 }
 function render() {
@@ -378,6 +379,7 @@ function render() {
   const fieldMatch = new Set();
   const pickable = new Set((s.phase === 'pickPlay' || s.phase === 'pickDraw') && s.turn === ME ? HF.actions(s) : []);
   $('#field').innerHTML = s.field.map(c => cardEl(c, pickable.has(c) ? 'pickable' : '')).join('');
+  { const per = +getComputedStyle(document.documentElement).getPropertyValue('--fcols') || 6; $('#field').style.gridTemplateColumns = `repeat(${Math.max(1, Math.min(per, s.field.length))}, var(--cw))`; }
   const canPlay = my && s.phase === 'play';
   $('#myHand').innerHTML = s.hands[ME].map(c => {
     const has = s.field.some(f => HF.month(f) === HF.month(c));
@@ -410,6 +412,7 @@ function renderSide() {
     const s = m.s, yk = HF.yaku(s.caps[who], s.o).total;
     return `<div class="pl ${s.turn === who && s.phase !== 'over' ? 'turn' : ''}"><span>${esc(name)}${m.oya === who ? `<span class="tag">${esc(t('oya'))}</span>` : ''}${s.koi[who] ? `<span class="tag">${esc(t('koi.go'))}${s.koi[who] > 1 ? '×' + s.koi[who] : ''}</span>` : ''}</span><b>${m.scores[who]}</b></div>`;
   };
+  if (HB && HB.info) HB.info.innerHTML = m ? `<span class="hb-chip">${esc(t('monthOf', { n: m.k + 1, m: m.months }))}</span><span class="hb-chip">${esc(t('you'))} <b>${m.scores[ME]}</b> − <b>${m.scores[CPU]}</b> ${esc(t('cpu'))}</span><span class="hb-chip">${esc(t('oya'))}: <b>${esc(m.oya === ME ? t('you') : t('cpu'))}</b></span>${m.rated ? `<span class="hb-chip">R ${(window.HFRated && HFRated.load().r) || ''}</span>` : `<span class="hb-chip">AI <b>Lv.${m.lv}</b></span>`}` : '';
   $('#players').innerHTML = `<h3><span>${m ? esc(t('monthOf', { n: m.k + 1, m: m.months })) : ''}</span><span>${m ? 'Lv.' + m.lv : ''}</span></h3>` + pl(CPU, t('cpu')) + pl(ME, t('you')) + `<div class="status">${esc(statusText())}</div>`;
   renderCoach();
   if (m) {
@@ -468,7 +471,7 @@ function tutEnd() {
 /* ---------------- shared parts ---------------- */
 window.HFApp = { tutStart, tutEnd, state: () => D.m, render, t, esc, sfx, cardName, LANG: () => LANG, openOv, closeOv, toast, startMatch: () => openNew(), set, save };
 if (window.GameRecord) GameRecord.init({ game: 'hanafuda', lang: () => LANG, menu: '.controls' });
-if (window.HeaderBar) HeaderBar.init({ order: ['#btnNew', '#btnResign', '#btnHint', '#btnRules', '#btnLesson'], lang: () => LANG });
+HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnResign', '#btnHint', '#btnRules', '#btnLesson'], lang: () => LANG }) : null;
 if (window.RulesOffer) RulesOffer.init({ game: 'hanafuda', lang: () => LANG, open: () => window.HFRules && HFRules.open(), watch: '#rulesOverlay' });
 
 applyI18n();

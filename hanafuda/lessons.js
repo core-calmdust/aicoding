@@ -264,13 +264,15 @@ function find(id) { for (const c of CATS) { if (c.prep.id === id) return { c, it
 function item(id) {
   const { it, prep } = find(id);
   const tapRow = prep ? -1 : it.tapRow;
-  const rows = it.rows.map(([lab, ids], ri) => `<div class="rt-row"><b>${E(t(lab))}</b><div class="rt-cards">${ids.map(cid => `<div class="hf ${ri === tapRow && (!it.only || it.only.includes(cid)) ? 'tap' : ''}" data-id="${cid}">${C.face(cid)}</div>`).join('')}</div></div>`).join('');
-  const btns = it.kind === 'koi' ? `<div class="rt-btns"><button type="button" class="mbtn" data-a="koi">${E(t('go'))}</button><button type="button" class="mbtn go" data-a="stop">${E(t('stop'))}</button></div>` : '';
-  M().innerHTML = `<h2>${E(t(id + '.t'))}</h2><p class="ls-q">${E(t(id + (prep ? '.b' : '.q')))}</p><div class="rt-hf ls-board">${rows}${btns}</div><div class="ls-fb" id="lsFb"></div>
+  const rows = it.rows.map(([lab, ids], ri) => `<div class="hfr-row"><b>${E(t(lab))}</b><div class="hfr-cards">${ids.map(cid => `<div class="hf ${ri === tapRow && (!it.only || it.only.includes(cid)) ? 'tap' : ''}" data-id="${cid}">${C.face(cid)}</div>`).join('')}</div></div>`).join('');
+  const btns = it.kind === 'koi' ? `<div class="hfr-btns"><button type="button" class="mbtn" data-a="koi">${E(t('go'))}</button><button type="button" class="mbtn go" data-a="stop">${E(t('stop'))}</button></div>` : '';
+  M().innerHTML = `<h2>${E(t(id + '.t'))}</h2><p class="ls-q">${E(t(id + (prep ? '.b' : '.q')))}</p><div class="hfr ls-board">${rows}${btns}</div><div class="ls-fb" id="lsFb"></div>
     <div class="modal-actions"><button type="button" class="mbtn" data-list>${E(t('back'))}</button><button type="button" class="mbtn go" data-next style="${prep ? '' : 'display:none'}">${E(t(prep ? 'got' : 'next'))}</button></div><button type="button" class="ls-quit" data-close>${E(t('quit'))}</button>`;
-  const b = M().querySelector('.ls-board'), w = b.clientWidth || 600, h = b.clientHeight || 360;
-  const per = Math.max(...it.rows.map(r => r[1].length)), nr = it.rows.length + (it.kind === 'koi' ? 0.6 : 0);
-  b.style.setProperty('--rcw', Math.max(36, Math.min(96, (w - 120) / (per + .5), (h - nr * 12) / nr / 1.7)) + 'px');
+  const b = M().querySelector('.ls-board');
+  const per = Math.max(...it.rows.map(r => r[1].length)), nr = it.rows.length, extra = it.kind === 'koi' ? 56 : 0;
+  const fit = () => { const w = b.clientWidth || 600, h = b.clientHeight || 360;
+    b.style.setProperty('--rcw', Math.max(32, Math.min(120, (w - 24 - (per - 1) * 10) / per, (h - extra - nr * 34 - 16) / nr / 1.656)) + 'px'); };
+  fit(); requestAnimationFrame(fit);
   if (prep) { prog[id] = 1; saveP(); }
   M().dataset.cur = id;
 }
