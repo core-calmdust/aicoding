@@ -7,7 +7,7 @@
   line     img/ln-<set>-<x|o>.webp      1024 × 128: the stroke through the winning line of the big board
 boards:  walnut (oiled walnut, brass inlay, carved small grids) · slate (a school slate, chalk) · washi (handmade paper, sumi
          brush) · parchment (old paper, iron-gall ink) · marble (white marble, gold inlay, engraved small grids)
-marks:   token (vermilion lacquer X, ivory O) · chalk (white X, yellow O) · brush (sumi X, vermilion 朱 O) · ink (black X, blue O)
+marks:   token (vermilion lacquer X, ivory O) · chalk (white X, soft pink O — real-chalk pastel, 2026-11-28) · brush (sumi X, vermilion 朱 O) · ink (black X, blue O)
 Geometry (shared with app.js GEO): margin M, gap G between small boards, small board S = (1 − 2M − 2G) / 3.
 python3 tools/gen_art.py [boards] [marks]"""
 import os, sys, math, numpy as np
@@ -456,7 +456,7 @@ def mark_o(rng, N, style, big=False):
     a0 = rng.uniform(-2.4, -1.2) if style == 'brush' else rng.uniform(-3.1, 3.1)
     sweep = rng.uniform(5.9, 6.5) if style == 'brush' else rng.uniform(6.35, 6.75)
     pts, t = path_circle((N / 2 + rng.normal(0, N * .015), N / 2 + rng.normal(0, N * .015)), r, a0, sweep, 160, .05, rng, rng.uniform(.9, 1.04), rng.uniform(-.4, .4))
-    col = {'brush': C('#c8321e'), 'chalk': C('#f1d87a'), 'ink': C('#21479a')}[style]
+    col = {'brush': C('#c8321e'), 'chalk': C('#eea6b9'), 'ink': C('#21479a')}[style]
     return brushlike(rng, N, [(pts, t)], w, style, col, dry=.4 if style == 'brush' else 0)
 
 
@@ -534,7 +534,7 @@ def lines_img():
             pts, t = path_line((40, 64), (W - 40, 64), 80, .004, rng, bow=rng.normal(0, .01))
             st = {'token': 'ink'}.get(style, style)
             w0 = {'brush': 40, 'chalk': 26, 'ink': 18, 'token': 22}[style]
-            col = {('brush', 'x'): C('#15120f'), ('brush', 'o'): C('#c8321e'), ('chalk', 'x'): C('#f2f1ea'), ('chalk', 'o'): C('#f1d87a'),
+            col = {('brush', 'x'): C('#15120f'), ('brush', 'o'): C('#c8321e'), ('chalk', 'x'): C('#f2f1ea'), ('chalk', 'o'): C('#eea6b9'),
                    ('ink', 'x'): C('#191b22'), ('ink', 'o'): C('#21479a'), ('token', 'x'): C('#c23b22'), ('token', 'o'): C('#efe5cf')}[(style, which)]
             # draw on a square canvas, then crop the band
             colf, a = brushlike(rng, N, [(pts + np.array([0, N / 2 - 64]), t)], w0, st, col, dry=.4 if st == 'brush' else 0)
@@ -554,3 +554,5 @@ if __name__ == '__main__':
         washi_board()
     if 'brush' in what:
         marks(('brush',), False)
+    if 'chalk' in what:
+        marks(('chalk',), False); lines_img()

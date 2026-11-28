@@ -11,7 +11,7 @@
    Few cards (≤4) are shown big (.ngt-gcards.few); on PC the ルール tab puts the mode field (#segMode's .field) on top and the
    rest of .ng-cols in two balanced columns.
    Rules button on the cards: set $('.ngt-gcards').ngtRules = (key, card) => openRules(…) — see the end of this file.
-   <script src="../shared/ngtabs.js?v=16"></script> after the dialog; nothing else to call. */
+   <script src="../shared/ngtabs.js?v=38"></script> after the dialog; nothing else to call. */
 (function () {
 'use strict';
 const MQ = matchMedia('(pointer: coarse) and (max-width: 760px), (pointer: coarse) and (max-height: 560px)');
@@ -175,11 +175,12 @@ const CSS = `
   .modal:has(> :is(.seg.ls-tabs, #segLs)) > :not(.ls-tabs):not(#segLs){flex:none}
   html body:not(#_) .modal:not(#_):not(#_) :is(.seg.ls-tabs, #segLs):not(#_):not(#_){order:100;position:sticky!important;top:auto!important;bottom:0!important;z-index:7;margin:10px 0 0!important;flex:none}
   html body:not(#_) .modal:not(#_):not(#_) :has(> :is(.seg.ls-tabs, #segLs)) > .modal-actions:not(#_):not(#_){order:99;position:sticky!important;bottom:var(--lsT,44px)!important;z-index:8;margin-bottom:0!important}
-  html.atlas-skin body:not(#_) .modal:not(#_):not(#_) :is(.seg.ls-tabs, #segLs):not(#_):not(#_){box-shadow:0 12px 0 12px var(--a-paper,#fbf5e7)!important}   /* (the cover only round the sides and under the tabs, never over the buttons above them) */
-  html body:not(#_) .modal:not(#_):not(#_) :has(> :is(.seg.ls-tabs, #segLs)) > .modal-actions:not(#_):not(#_){bottom:var(--lsT,44px)!important;padding:10px 0 12px!important;margin-top:40px!important;background:var(--a-paper,var(--panel,#1b130d))!important}
+  html body:not(#_) .modal:not(#_):not(#_) :is(.seg.ls-tabs, #segLs):not(.ngt-raw):not(#_):not(#_){background:var(--ngt-tab,var(--ngt-cover,var(--a-paper,var(--panel,#1b130d))))!important;box-shadow:0 12px 0 12px var(--ngt-cover,var(--a-paper,var(--panel,#1b130d)))!important}   /* (2026-11-28) opaque: the list scrolling under the sticky tabs never shows through. --ngt-cover = the dialog's own colour at its bottom, --ngt-tab = the tabs' own (translucent) colour laid on it (lsFit); the cover only round the sides and under the tabs, never over the buttons above them */
+  html body:not(#_) .modal:not(#_):not(#_) :has(> :is(.seg.ls-tabs, #segLs)) > .modal-actions:not(#_):not(#_){bottom:var(--lsT,44px)!important;padding:10px 0 12px!important;margin-top:40px!important;background:var(--ngt-cover,var(--a-paper,var(--panel,#1b130d)))!important}
   .modal :is(div,section):has(> :is(.seg.ls-tabs, #segLs)):has(> .rt-host){height:100%;min-height:0}
   .modal :has(> :is(.seg.ls-tabs, #segLs)) > .rt-host{flex:1 1 auto!important;min-height:0!important}
-  .modal:has(> :is(.seg.ls-tabs, #segLs)) .rt > .rt-nav{position:sticky;bottom:var(--lsT,44px);z-index:8;background:var(--a-paper,var(--panel,#1b130d));padding-bottom:8px}
+  html body:not(#_) .modal:not(#_):has(> :is(.seg.ls-tabs, #segLs)) > :not(.ls-tabs):not(#segLs):has(.rt):not(#_){flex:1 1 auto;min-height:0}   /* (2026-11-28) the rules tour's own view (#rulesBody …) fills the dialog: sized by its content it left the tour a strip, and the tour then drew its board as a thumbnail */
+  .modal:has(> :is(.seg.ls-tabs, #segLs)) .rt > .rt-nav{position:sticky;bottom:var(--lsT,44px);z-index:8;background:var(--ngt-cover,var(--a-paper,var(--panel,#1b130d)));padding-bottom:8px}
 }
 `;
 const lang = () => (s => /^zh-(tw|hk|mo|hant)/i.test(s) ? 'zh-TW' : s.slice(0, 2).toLowerCase())(document.documentElement.lang || 'ja');
@@ -332,8 +333,34 @@ function rlInit() {
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', rlInit); else rlInit();
 // (2026-11-13) phones: the buttons over the bottom tabs sit right on them — no gap where the list shows through. The sticky
 // offset (--lsT) is measured: the tabs' top against the buttons' bottom, set on each dialog whose tabs are at the bottom
+// (2026-11-28) the colour under the sticky tabs / buttons: the dialog's own background where they sit (its colour, else the last
+// colour of its gradient, else the nearest ancestor's), and the tabs' own translucent colour laid on it — so every game's dialog
+// gets an opaque cover in its own colours, with no per-game CSS
+const rgba = v => { const m = /rgba?\(([^)]+)\)/.exec(v || ''); if (!m) return null; const p = m[1].split(/[\s,\/]+/).filter(Boolean).map(parseFloat); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
+const css = c => `rgb(${Math.round(c.r)},${Math.round(c.g)},${Math.round(c.b)})`;
+function coverOf(el) {
+  for (let e = el; e && e.nodeType === 1; e = e.parentElement) {
+    const cs = getComputedStyle(e), c = rgba(cs.backgroundColor);
+    if (c && c.a > .98) return c;
+    const all = (cs.backgroundImage || '').match(/rgba?\([^)]+\)/g);
+    if (all && all.length) { const l = rgba(all[all.length - 1]); if (l && l.a > .5) return c && c.a > 0 ? { r: l.r + (c.r - l.r) * c.a, g: l.g + (c.g - l.g) * c.a, b: l.b + (c.b - l.b) * c.a, a: 1 } : l; }
+  }
+  return null;
+}
+function lsCover() {
+  document.querySelectorAll('.overlay.show .modal, .modal.show').forEach(m => {
+    const t = [...m.querySelectorAll('.seg.ls-tabs, #segLs')].find(x => x.getClientRects().length); if (!t) return;
+    const c = coverOf(m); if (!c) return;
+    const cv = css(c); if (m.style.getPropertyValue('--ngt-cover') !== cv) m.style.setProperty('--ngt-cover', cv);
+    if (t.dataset.ngtOwn === undefined) { t.classList.add('ngt-raw'); t.dataset.ngtOwn = getComputedStyle(t).backgroundColor; t.classList.remove('ngt-raw'); }   // (its own colour, once, without the cover rule)
+    const own = rgba(t.dataset.ngtOwn);
+    const tv = own && own.a > 0 ? css({ r: c.r + (own.r - c.r) * own.a, g: c.g + (own.g - c.g) * own.a, b: c.b + (own.b - c.b) * own.a }) : cv;
+    if (t.style.getPropertyValue('--ngt-tab') !== tv) t.style.setProperty('--ngt-tab', tv);
+  });
+}
 function lsFit() {
   if (!matchMedia('(pointer: coarse) and (max-width: 760px)').matches) return;
+  lsCover();
   // the tabs stay at the bottom in a list's child views too (a lesson's intro, a puzzle level's grid …): the view's own tabs, or
   // the list view's moved in while it is shown (and back when the list returns)
   document.querySelectorAll('.overlay.show .modal').forEach(m => {
