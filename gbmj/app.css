@@ -7,10 +7,12 @@
   --af:'Zen Maru Gothic','Fredoka','Noto Sans JP',system-ui,sans-serif; --ar:'Fredoka','Zen Maru Gothic',system-ui,sans-serif;
 }
 *{box-sizing:border-box}
+#root{position:fixed;inset:0}
+html.rot #root{inset:auto;top:0;left:0;width:var(--W);height:var(--H);transform-origin:0 0;transform:translateX(var(--H)) rotate(90deg)}
 html,body{margin:0;height:100%;background:#2a0b10;color:var(--ink);font-family:var(--af);-webkit-tap-highlight-color:transparent;overflow:hidden}
 button{font:inherit;color:inherit;cursor:pointer}
 [hidden]{display:none!important}
-.screen{position:fixed;inset:0}
+.screen{position:absolute;inset:0}
 .sp{flex:1}
 svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
@@ -89,7 +91,7 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 @keyframes shout{0%{opacity:0;scale:.6}15%{opacity:1;scale:1.08}25%{scale:1}80%{opacity:1}100%{opacity:0}}
 
 /* ---------- ダイアログ ---------- */
-.modal{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(43,20,24,.5);backdrop-filter:blur(3px)}
+.modal{position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(43,20,24,.5);backdrop-filter:blur(3px)}
 .mbox{background:var(--paper);border:3px solid var(--line);border-radius:26px;box-shadow:0 18px 40px -14px rgba(0,0,0,.6);padding:22px 24px;max-width:min(560px,96vw);max-height:calc(100vh - 32px);overflow:auto;color:var(--ink)}
 .mbox h3{margin:0 0 10px;font-size:24px;color:var(--lac2)}
 .mb-p{font-size:16.5px;line-height:1.65}
@@ -153,38 +155,32 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .dx-h{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.dx-h .no{font-family:var(--ar);color:var(--ink2);font-size:14px}.dx-h .nm{font-size:19px}.dx-h .zh{color:var(--ink2);font-size:14px}.dx-h .pt{margin-left:auto;font-family:var(--ar);font-weight:700;color:var(--lac2);font-size:17px}
 .dx-c p{margin:6px 0 8px;font-size:15px;line-height:1.6}
 .dx-hand{display:flex;flex-wrap:wrap;gap:1px;align-items:flex-end}.dx-hand .gap{width:8px}.dx-hand .ml{display:inline-flex;gap:1px;margin-left:8px}.dx-hand .tl.mini{height:34px}.dx-hand .win{outline:2px solid var(--lac);outline-offset:1px}
-.toast{position:fixed;left:50%;top:84px;transform:translateX(-50%);z-index:60;padding:10px 18px;border-radius:999px;background:rgba(43,48,68,.92);color:#fff;font-size:16px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast{position:absolute;left:50%;top:84px;transform:translateX(-50%);z-index:60;padding:10px 18px;border-radius:999px;background:rgba(43,48,68,.92);color:#fff;font-size:16px;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
 
-/* ---------- スマホ ---------- */
-@media (max-width:760px),(max-aspect-ratio:3/4){
-  .topbar{padding:8px 10px}.ib{width:40px;height:40px}
-  .hm-title h1{font-size:34px}.hm-title p{font-size:15px}
-  .hm-menu{grid-template-columns:1fr;max-width:420px}
-  .hm-b{padding:12px 14px}.hm-b b{font-size:18px}
-  .g-info{font-size:14px;padding:6px 10px}.g-info b{font-size:15px}.g-info span{display:none}
-  .gtop{gap:6px;padding:8px}
-  .hand{gap:1px;bottom:10px;padding:0 4px}.hand .ht .tl{height:auto;width:calc((100vw - 40px) / 14.6);border-radius:5px;box-shadow:0 3px 0 #1c5846}
-  .hand .gap{width:6px}
-  .acts{bottom:calc((100vw - 40px) / 14.6 * 1.36 + 26px);gap:8px}.act{min-width:84px;padding:8px 12px;font-size:17px}
-  #seats .seat{font-size:13px;padding:4px 9px 4px 4px;gap:5px}.seat .wd{width:24px;height:24px;font-size:13px}.seat .sc{font-size:15px}
-  .seat.st0{bottom:calc((100vw - 40px) / 14.6 * 1.36 + 84px);left:8px}.seat.st1{right:6px;top:38%}.seat.st3{left:6px;top:38%}.seat.st2{top:62px}
-  .coach{left:8px;right:auto;width:auto;max-width:calc(100% - 16px);top:118px;max-height:44vh;font-size:14px;padding:8px 12px}
-  .coach:not(.open)>:not(h4){display:none}
-  .coach h4 small{display:inline}
-  .coach h4{margin:0;cursor:pointer}.coach h4::after{content:' ▾'}.coach.open h4::after{content:' ▴'}
-  #seats .seat .nm{display:none}
-  .ng-pane{grid-template-columns:1fr}
-  .modal.ngm .mbox{height:calc(100vh - 32px)}
-  .dx-list{grid-template-columns:1fr}
-  .pays{grid-template-columns:1fr 1fr}
-  .rhand .tl{height:40px}
-  .btn{min-width:0;flex:1}
-  .shout{font-size:40px}
-}
-
+/* ---------- スマホ（いつも横向きの配置。縦に持つと #root ごと90°回す：リーチ麻雀と同じ） ---------- */
+html.lp .topbar{padding:6px 10px}html.lp .ib{width:38px;height:38px}
+html.lp .hm-main{inset:56px 0 0;padding:14px 14px 24px}
+html.lp .hm-tiles .tl{height:44px}html.lp .hm-title h1{font-size:28px;margin:2px 0}html.lp .hm-title p{font-size:14px}html.lp .hm-title{margin-bottom:12px}
+html.lp .hm-menu{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-width:none}
+html.lp .hm-b{padding:10px 12px;grid-template-columns:40px 1fr;border-radius:18px}html.lp .hm-b i{width:40px;height:40px;border-radius:12px}html.lp .hm-b b{font-size:17px}html.lp .hm-b small{font-size:12.5px}
+html.lp .hm-note{font-size:13px;margin-top:12px}
+html.lp .gtop{padding:6px 8px;gap:6px}html.lp .g-info{font-size:14px;padding:4px 10px}html.lp .g-info b{font-size:15px}html.lp .g-info span{display:none}
+html.lp .hand{bottom:6px;gap:2px}html.lp .hand .ht .tl{height:calc(var(--H) * .13);border-radius:6px;box-shadow:0 3px 0 #1c5846}html.lp .hand .gap{width:8px}
+html.lp .acts{bottom:calc(var(--H) * .13 + 16px);gap:8px}html.lp .act{min-width:80px;padding:6px 12px;font-size:16px;border-radius:14px}html.lp .act small{font-size:11.5px}
+html.lp #seats .seat{font-size:13px;padding:3px 9px 3px 3px;gap:5px}html.lp .seat .wd{width:24px;height:24px;font-size:13px}html.lp .seat .sc{font-size:15px}html.lp .seat .fl,html.lp .seat .dead{font-size:11.5px;padding:0 6px}
+html.lp .seat.st0{left:8px;bottom:calc(var(--H) * .13 + 16px)}html.lp .seat.st1{right:8px;top:50%;transform:translateY(-50%)}html.lp .seat.st2{top:48px}html.lp .seat.st3{left:8px;top:50%;transform:translateY(-50%)}
+html.lp .coach{left:8px;right:auto;top:50px;width:250px;max-height:calc(var(--H) - 170px);font-size:13.5px;padding:6px 10px}
+html.lp .coach:not(.open)>:not(h4){display:none}
+html.lp .coach h4{margin:0;cursor:pointer;font-size:14px}html.lp .coach h4 small{display:inline}html.lp .coach h4::after{content:' ▾'}html.lp .coach.open h4::after{content:' ▴'}
+html.lp .mbox{padding:14px 16px;max-height:calc(var(--H) - 16px)}html.lp .mbox h3{font-size:19px}
+html.lp .modal.ngm .mbox,html.lp .modal.dexm .mbox{height:calc(var(--H) - 16px)}
+html.lp .btn{min-width:110px;padding:8px 14px;font-size:15px}
+html.lp .fans{font-size:14px}html.lp .fans td{padding:4px 6px}html.lp .rhand .tl{height:38px}
+html.lp .tu-bub{font-size:14px;padding:10px 12px;width:min(380px,calc(var(--W) - 24px))}
+html.lp .shout{font-size:36px}
 /* ---------- チュートリアル（光の枠＋吹き出し） ---------- */
-.tu-layer{position:fixed;inset:0;z-index:70;pointer-events:none}
+.tu-layer{position:absolute;inset:0;z-index:70;pointer-events:none}
 .tu-layer.idle{display:none}
 .tu-veil{position:absolute;inset:0}
 .tu-ring{position:absolute;border-radius:14px;border:3px solid #fff1a8;box-shadow:0 0 0 3px rgba(255,214,90,.9),0 0 26px 8px rgba(255,210,80,.85),inset 0 0 18px rgba(255,220,120,.5);animation:tuPulse 1.2s ease-in-out infinite}

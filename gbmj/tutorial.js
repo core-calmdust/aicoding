@@ -113,13 +113,13 @@ function stop() { document.body.classList.remove('tu-on'); on = false; clearTime
 function rectOf(x) {
   if (typeof x === 'function') x = x();
   if (!x) return null;
-  if (typeof x === 'string') { const el = $(x); if (!el) return null; const r = el.getBoundingClientRect(); if (!r.width) return null; return { l: r.left, t: r.top, r: r.right, b: r.bottom }; }
+  if (typeof x === 'string') { const el = $(x); if (!el || !el.offsetWidth) return null; return A.uiRect(el); }
   const TB = A.TB; if (!TB || !TB.camera) return null;
   let list = [];
   if (x.tile != null) list = [typeof x.tile === 'function' ? x.tile() : x.tile];
   if (x.flowers != null) list = R().P[x.flowers].flowers.slice();
   if (x.meld != null) { const m = R().P[x.meld].melds; list = m.length ? m[m.length - 1].ids.slice() : []; }
-  const host = TB.host.getBoundingClientRect();
+  const host = { left: 0, top: 0, width: TB.host.clientWidth, height: TB.host.clientHeight };
   let box = null;
   for (const id of list) {
     const g = TB.tiles.get(id); if (!g || !g.visible) continue;
@@ -142,10 +142,10 @@ function draw() {
   const st = cur(); if (!st) return;
   // 手順の when がまだなら（CPU の番の間など）吹き出しを隠して待つ
   const live = st.result ? !!$('.modal .res') : (!st.when || st.when());
-  if (!layer) { layer = document.createElement('div'); layer.className = 'tu-layer'; document.body.appendChild(layer); }
+  if (!layer) { layer = document.createElement('div'); layer.className = 'tu-layer'; $('#root').appendChild(layer); }
   if (!live) { layer.innerHTML = ''; layer.className = 'tu-layer idle'; return; }
   layer.className = 'tu-layer';
-  const W = innerWidth, H = innerHeight, pad = 8;
+  const W = $('#root').offsetWidth, H = $('#root').offsetHeight, pad = 8;
   const rings = (st.at || []).map(rectOf).filter(Boolean).map(r => ({ l: r.l - pad, t: r.t - pad, r: r.r + pad, b: r.b + pad }));
   const sees = (st.see || []).map(rectOf).filter(Boolean);
   const holes = rings.map(r => `<rect x="${r.l}" y="${r.t}" width="${r.r - r.l}" height="${r.b - r.t}" rx="14" fill="black"/>`).join('');

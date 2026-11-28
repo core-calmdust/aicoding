@@ -9,6 +9,18 @@ const T = GB.T;
 const ME = 0;
 const AUTO = /[?&]auto\b/.test(location.search);
 
+// ---------------------------------------------------------------- スマホはいつも横向きの配置（縦に持つと #root を90°回す。リーチ麻雀と同じ）
+const PHONE = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600;
+function fitRoot() {
+  const w = innerWidth, h = innerHeight, de = document.documentElement, rot = PHONE && h > w;
+  de.classList.toggle('lp', PHONE); de.classList.toggle('rot', rot);
+  de.style.setProperty('--W', (rot ? h : w) + 'px'); de.style.setProperty('--H', (rot ? w : h) + 'px');
+}
+fitRoot(); addEventListener('resize', fitRoot);
+// 画面の長方形を、回した #root の中の座標で（PC はそのまま）
+function uiRect(el) { const r = el.getBoundingClientRect(); if (!document.documentElement.classList.contains('rot')) return { l: r.left, t: r.top, r: r.right, b: r.bottom };
+  return { l: r.top, t: innerWidth - r.right, r: r.bottom, b: innerWidth - r.left }; }
+
 // ---------------------------------------------------------------- 保存
 const KEY = 'gbmj-v1';
 const DB = (() => { let d = {}; try { d = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {} return d; })();
@@ -463,7 +475,7 @@ function openDex(sel) {
   paint();
 }
 window.GBDBG = () => R0 ? `${R0.phase} cur=${R0.cur} left=${R0.left()} ev=${R0.events.length} wait=${R0.waiting()} uiwait=${UI && UI.wait ? UI.wait.kind : ''}` : 'none';
-window.GBApp = { startTutorial, exitGame, get R() { return R0; }, get UI() { return UI; }, renderAll, openDex, modal, closeModal, toast, tileImg, typeImg, parseTiles, t: (...a) => t(...a), esc, save, DB, ensureTable, get TB() { return TB; }, renderHome };
+window.GBApp = { uiRect, startTutorial, exitGame, get R() { return R0; }, get UI() { return UI; }, renderAll, openDex, modal, closeModal, toast, tileImg, typeImg, parseTiles, t: (...a) => t(...a), esc, save, DB, ensureTable, get TB() { return TB; }, renderHome };
 
 // ---------------------------------------------------------------- ボタン・起動
 $('#gExit').onclick = async () => { if (await confirmBox(t('exitTitle'), esc(t('exitBody')), t('exitYes'), t('cancel'))) exitGame(); };
