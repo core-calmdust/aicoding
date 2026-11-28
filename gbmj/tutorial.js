@@ -67,7 +67,7 @@ const STEPS = [
   { id: 'd2', k: 'task', when: myTurn, at: [() => handTile(TILE.W)], see: ['#hand', { meld: 0 }], ok: a => a.type === 'discard' && a.id === TILE.W, meter: 'd2' },
   { id: 'waits', k: 'info', when: () => R() && R().phase !== 'turn', at: ['#coach'], see: ['#hand'] },
   { id: 'ron', k: 'task', when: myClaim, at: ['#acts .act.win', { tile: () => TILE.S4 }], see: ['#hand'], ok: a => a.type === 'hu', meter: 'ron' },
-  { id: 'fans', k: 'info', result: true, at: ['.modal .fans'] },
+  { id: 'fans', k: 'info', result: true, at: ['.modal .fans'], see: ['.modal .rhand'] },
   { id: 'pay', k: 'info', result: true, at: ['.modal .pays'], see: ['.modal .fans'] },
   { id: 'end', k: 'info', result: true, center: true, last: true },
 ];
@@ -108,7 +108,7 @@ function next() {
   if (!n || n.k !== 'info' || (n.when && !n.when())) release();
   if (n && n.k === 'task') release();
 }
-function stop() { document.body.classList.remove('tu-on'); on = false; clearTimeout(autoT); release(); if (layer) layer.remove(); layer = null; }
+function stop() { const md = $('#modal'); if (md) md.classList.remove('tu-side'); document.body.classList.remove('tu-on'); on = false; clearTimeout(autoT); release(); if (layer) layer.remove(); layer = null; }
 // ---------------------------------------------------------------- 光の枠と吹き出し
 function rectOf(x) {
   if (typeof x === 'function') x = x();
@@ -145,6 +145,10 @@ function draw() {
   if (!layer) { layer = document.createElement('div'); layer.className = 'tu-layer'; $('#root').appendChild(layer); }
   if (!live) { layer.innerHTML = ''; layer.className = 'tu-layer idle'; return; }
   layer.className = 'tu-layer';
+  // スマホ（横向きの配置）の和了の結果：結果を左に寄せて細くし、吹き出しは右の空きに縦長で置く（結果のどこも隠さない）。枠の物は見える所までスクロール
+  const side = !!st.result && document.documentElement.classList.contains('lp');
+  const md = $('#modal'); if (md) md.classList.toggle('tu-side', side);
+  if (st.result) for (const x of st.at || []) if (typeof x === 'string') { const e = $(x); if (e) e.scrollIntoView({ block: 'nearest' }); }
   const W = $('#root').offsetWidth, H = $('#root').offsetHeight, pad = 8;
   const rings = (st.at || []).map(rectOf).filter(Boolean).map(r => ({ l: r.l - pad, t: r.t - pad, r: r.r + pad, b: r.b + pad }));
   const sees = (st.see || []).map(rectOf).filter(Boolean);
@@ -159,15 +163,24 @@ function draw() {
     + rings.map(r => `<i class="tu-ring" style="left:${r.l}px;top:${r.t}px;width:${r.r - r.l}px;height:${r.b - r.t}px"></i>`).join('')
     + `<div class="tu-bub${st.center ? ' center' : ''}"><div class="tu-top"><b>${esc(t('mTut'))}</b><span>${k} / ${n}</span><button class="tu-x" data-x aria-label="close">×</button></div><p>${esc(text)}</p>${st.id === 'goal' ? goalPics() : ''}${wrong}${okLine}${st.k === 'task' ? meterHtml(st) : ''}${btn ? `<div class="btns">${btn}</div>` : ''}${endBtns}</div>`;
   const b = layer.querySelector('.tu-bub');
+  // スマホ（横向きの配置）の和了の結果：結果を左に寄せて細くし、吹き出しは右の空きに縦長で置く（結果のどこも隠さない）
+  if (side) { b.classList.add('side'); b.style.left = (W - b.offsetWidth - 10) + 'px'; b.style.top = Math.max(8, (H - b.offsetHeight) / 2) + 'px'; }
   // 吹き出しの位置：枠と see を隠さない所（上・下・左・右・四隅の候補から）
-  if (!st.center) {
+  if (!st.center && !side) {
     const bw = b.offsetWidth, bh = b.offsetHeight, avoid = rings.concat(sees);
     const box0 = rings[0] || { l: W / 2, t: H / 2, r: W / 2, b: H / 2 };
     const cand = [[box0.l, box0.t - bh - 18], [box0.l, box0.b + 18], [box0.r + 18, box0.t], [box0.l - bw - 18, box0.t], [W - bw - 16, 80], [16, 80], [W / 2 - bw / 2, 80], [W - bw - 16, H / 2 - bh / 2], [16, H / 2 - bh / 2]];
     const hit = (x, y) => avoid.some(a => x < a.r && x + bw > a.l && y < a.b && y + bh > a.t);
     let pos = null;
     for (const [x0, y0] of cand) { const x = Math.max(12, Math.min(W - bw - 12, x0)), y = Math.max(64, Math.min(H - bh - 12, y0)); if (!hit(x, y)) { pos = [x, y]; break; } }
-    if (!pos) pos = [Math.max(12, W / 2 - bw / 2), 70];
+    // 入る所がないとき（低い画面で和了の結果が大きいなど）：吹き出しを横長にして、上か下の端へ。光の枠に重ならない方、次に see に重ならない方
+    if (!pos) {
+      b.classList.add('wide');
+      const bw2 = b.offsetWidth, bh2 = b.offsetHeight, x = Math.max(12, W / 2 - bw2 / 2);
+      const ov = (y, list) => list.reduce((s, a) => s + Math.max(0, Math.min(x + bw2, a.r) - Math.max(x, a.l)) * Math.max(0, Math.min(y + bh2, a.b) - Math.max(y, a.t)), 0);
+      const ys = [H - bh2 - 12, 64].map(y => [y, ov(y, rings) * 100 + ov(y, sees)]).sort((p, q) => p[1] - q[1]);
+      pos = [x, ys[0][0]];
+    }
     b.style.left = pos[0] + 'px'; b.style.top = pos[1] + 'px';
   }
   const nx = layer.querySelector('[data-next]'); if (nx) nx.onclick = next;
