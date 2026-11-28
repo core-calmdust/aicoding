@@ -7306,7 +7306,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
         const how = id === 'b_move' || id === 'sx_nofly' ? '1歩動かして' : id === 'b_fly' ? '飛んで' : '置いて', dg = id === 'tw_diag' ? 'ななめに' : '';
         good = () => fg(pk([`${how}${dg}3つ並んでミル！ 相手の駒を1つ取れたね。`, id === 'tw_diag' ? 'ななめの線も、ちゃんとミルになるんだ。見落とさなかったね。' : '2つ並んだ線の3つ目に入れたのがよかったね。', '線がぴったりそろったね。これで相手の駒が1つ減るんだ。', `${dg ? 'ななめの' : 'きみの'}2つ並びを見のがさなかったね。ミル完成！`, '3つそろった瞬間に、相手の駒を1つ取れるんだ。']));
         ng = u => { const v = alt(u, Q => !Q.mill), Q = FF(v);
-          return f(Q.mill ? why(Q, v) + tail(Q) : pk([`{x}だと3つ並ばないから、ミルにならないの。{m}なら、${how}${dg}3つそろうから。`, `{x}では線がそろわないね。{m}を選べば、${how}ミルになったんだ。`, `{x}の線には、きみの駒が足りないから、3つそろわないの。{m}は、きみの2つ並びの残りの1点なんだ。`, `{x}だと駒は並ばず、相手の駒も取れないの。{m}へ${how}いれば、ミルで1つ取れたね。`, `{m}が、きみの2つ並びの3つ目。{x}はその線から外れているから、そろわないの。`])); };
+          return f(Q.mill ? why(Q, v) + tail(Q) : pk([`{x}だと3つ並ばないから、ミルにならないの。{m}なら、${how}${dg}3つそろうから。`, `{x}では線がそろわないね。{m}を選べば、${how}ミルになったんだ。`, `{x}の線には、きみの駒が足りないから、3つそろわないの。{m}は、きみの2つ並びの残りの1点なんだ。`, `{x}だと駒は並ばず、相手の駒も取れないの。{m}を選んで${how}いれば、ミルで1つ取れたね。`, `{m}が、きみの2つ並びの3つ目。{x}はその線から外れているから、そろわないの。`])); };
         break; }
       case 'b_take': {
         good = () => fg(pk(['ミルを作りながら、相手の2つ並びもくずせたね。一石二鳥！', 'これで相手は次のミルを作れないんだ。', '相手のねらいの駒を取ったから、ひと安心だね。', '取る駒の選び方がばっちり。相手の作りかけのミルが消えたんだ。', 'ミルで取ったのが、相手のミルの材料だったね！']));
@@ -7321,9 +7321,9 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
         break; }
       case 'b_reopen': {
         good = () => fg(pk(['空けた点に相手は届かないね。次に戻せば、またミルなんだ。', '相手が割りこめないから、次の手でまた取れるね。', 'これで同じミルを何度でも使えるんだ。', '開いた口のまわりに相手の駒がいない、安全な開き方だね。', '外へ出て、戻ればまたミル。いい開き方を選べたね。']));
-        ng = u => { const v = alt(u, Q => Q.enter || Q.oppNow > 0), Q = FF(v);
+        ng = u => { const v = alt(u, Q => (Q.opened && Q.enter) || Q.oppNow > 0), Q = FF(v);
           return f(Q.oppNow > 0 ? pk(['{x}だと、相手にミルの点をわたしちゃう。開いたすきに駒を取られるんだ。{m}なら、空いた点に相手が入れないから。', '{x}で開くと、相手にミルを作られる点ができちゃう。{m}を選べば、相手は何もできなかったの。', '{x}のすきに、相手がミルをそろえてくるの。{m}なら安全に開けたんだ。', '{m}は相手にねらいを与えない開き方。{x}だと、相手のミルの点があいちゃうの。', '{x}だと開いたとたんに相手の番でミル。{m}なら、相手が届かないから安全だったね。'])
-            : Q.enter ? pk(['{x}で空けた点には、相手の駒がとなりから入れるの。ふさがれたら閉じなおせないね。{m}なら、相手が届かないから。', '{x}だと、すき間に相手がすべりこめるの。{m}を選べば、戻ってまたミルにできたんだ。', '{x}の開き方だと、空いた点のとなりに相手の駒がいるの。{m}なら、そのすき間はだれも入れないから。', '{m}は相手の駒から遠い側を開ける手。{x}だと、空いた点を相手にうめられちゃう。', '{x}で開くと、相手にふたをされるの。{m}なら、次の手でミルを閉じなおせたね。'])
+            : Q.opened && Q.enter ? pk(['{x}で空けた点には、相手の駒がとなりから入れるの。ふさがれたら閉じなおせないね。{m}なら、相手が届かないから。', '{x}だと、すき間に相手がすべりこめるの。{m}を選べば、戻ってまたミルにできたんだ。', '{x}の開き方だと、空いた点のとなりに相手の駒がいるの。{m}なら、そのすき間はだれも入れないから。', '{m}は相手の駒から遠い側を開ける手。{x}だと、空いた点を相手にうめられちゃう。', '{x}で開くと、相手にふたをされるの。{m}なら、次の手でミルを閉じなおせたね。'])
             : pk(['{x}だと、次の手でミルを閉じなおせないの。{m}なら、戻ればまたミルになるから。', '{x}では、次の手でもう一度ミルを作る形にならないの。{m}なら、1歩出て戻るだけでまたミルになったから。', '{x}では同じミルを使いなおせないね。{m}を選べば、戻ってまた取れたんだ。'])); };
         break; }
       case 'b_win': case 'sx_win': {
@@ -7347,7 +7347,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-morris-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([Promise.all(MMV.map(v => getJ(`../morris/lessons${v === 'nine' ? '' : '-' + v}.json?v=20261128-tb`))), Promise.all(['../morris/i18n.js?v=20261116-p61', '../morris/i18n_more.js?v=20261126-mb'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mrEng().catch(() => null)])
+      return (this.p = Promise.all([Promise.all(MMV.map(v => getJ(`../morris/lessons${v === 'nine' ? '' : '-' + v}.json?v=20261128-mr`))), Promise.all(['../morris/i18n.js?v=20261116-p61', '../morris/i18n_more.js?v=20261128-mr'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mrEng().catch(() => null)])
         .then(([L, T]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] morris texts', e); } this.I = w.I18N || {};
           const steps = []; L.forEach((d, k) => d.steps.forEach(s => { if (s.problems && s.problems.length) steps.push(Object.assign({ v: MMV[k] }, s)); })); this.data = { steps }; return this; })
         .catch(e => { this.p = null; throw e; }));
