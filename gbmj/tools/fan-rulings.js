@@ -15,12 +15,13 @@ function adapt(o, lib, mine) {
   //    個数は自作の組み合わせ判定（套算一次）のもの。例の形は固定テスト（fan-test.js）でも確かめる
   if (has(8) && mine.ok) { for (const id of [65, 32]) { const f = mine.fans.find(x => x.id === id); if (f && lib[id] !== f.n) { lib[id] = f.n; hit('R4'); } } }
   // R5 独聴（辺張・嵌張・単釣）の判定で、自分が4枚とも持っている牌は待ちに数えない（5枚目は来ない）。
-  //    PyMahjongGB は数えるので、その牌のせいで独聴でなくなったときだけ自作の待ちの番を写す
+  //    PyMahjongGB は数えるので、その牌のせいで独聴でなくなったときは点で比べる（fan-compare.js）
   if (mine.ok && mine.waits.length === 1 && !has(77) && !has(78) && !has(79) &&
       mine.alts.every(r => r.fans.some(f => f.id >= 77 && f.id <= 79))) {
     const c = new Array(34).fill(0); for (const t of all) c[t]++;
     const held4 = new Set(); for (let t = 0; t < 34; t++) if (c[t] - (t === o.win ? 1 : 0) >= 4) held4.add(t);
-    if (held4.size) for (const id of [77, 78, 79]) { const f = mine.fans.find(x => x.id === id); if (f) { lib[id] = 1; hit('R5'); } }
+    // 照合データは「待ちの番なし」で分け方を選んでいるので、番の並びではなく点（照合データ＋1点）で比べる
+    if (held4.size) { lib.__r5 = 1; hit('R5'); }
   }
   const open = o.melds.some(m => m.k !== 'ankan');
   if (!open && o.tsumo && !has(56)) { lib[56] = 1; delete lib[80]; delete lib[62]; hit('R2'); }

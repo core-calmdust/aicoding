@@ -70,6 +70,7 @@ function planShanten(pl, c, melds) {
       for (const x of melds) { const i = x.k === 'chi' ? req.indexOf(x.t) : -1; if (i >= 0) req.splice(i, 1); else other++; }
       if (other > 1) return 99;
       for (const b of req) for (const t of [b, b + 1, b + 2]) { if (r[t]) r[t]--; else miss++; }
+      if (miss > 5) return 99;
       return miss + GB.shantenSets(r, 1 - other);
     }
     case 'pairs': return m ? 99 : GB.shantenPairs(c);

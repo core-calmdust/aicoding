@@ -35,7 +35,11 @@ function shantenKnittedHonors(c) {
   return best;
 }
 // 「k面子＋雀頭」の向聴数（残りの牌が少ないときの一般形。面子の数が k を超えて数えないように上限をつける）
+const SETS_MEMO = new Map();
 function shantenSets(c, k) {
+  const sk = String.fromCharCode(48 + k, ...c);
+  const hit = SETS_MEMO.get(sk);
+  if (hit !== undefined) return hit;
   const cc = c.slice();
   let best = 2 * k;
   function rec(i, M, Tt, P) {
@@ -58,7 +62,10 @@ function shantenSets(c, k) {
     const x = cc[i]; cc[i] = 0; rec(i + 1, M, Tt, P); cc[i] = x;
   }
   rec(0, 0, 0, 0);
-  return Math.max(-1, best);
+  const res = Math.max(-1, best);
+  if (SETS_MEMO.size > 50000) SETS_MEMO.clear();
+  SETS_MEMO.set(sk, res);
+  return res;
 }
 // 組合龍（9枚）＋1面子＋雀頭。副露は1つまで
 function shantenKnittedStraight(c, melds) {
@@ -67,6 +74,7 @@ function shantenKnittedStraight(c, melds) {
   for (const kt of GBFan.KN_TILES) {
     const r = c.slice(); let miss = 0;
     for (const t of kt) { if (r[t]) r[t]--; else miss++; }
+    if (miss >= best) continue;
     const s = miss + shantenSets(r, 1 - melds);           // 残りは「(1−副露)面子＋雀頭」
     if (s < best) best = s;
   }

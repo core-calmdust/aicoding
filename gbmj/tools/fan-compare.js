@@ -10,7 +10,7 @@ const libs = fs.readFileSync(lf, 'utf8').trim().split('\n').map(JSON.parse);
 const ZH = {}; for (let i = 1; i <= 81; i++) ZH[G.FANS[i][2]] = i;
 Object.assign(ZH, { '独听・单钓': 79, '独听・嵌张': 78, '独听・边张': 77, '明暗杠': 57, '花牌': 81 });
 const RULES = require('./fan-rulings.js');
-let ok = 0, bad = 0, notwin = 0, tie = 0; const rh = {}; const cat = {};
+let ok = 0, bad = 0, notwin = 0, tie = 0, r5ok = 0; const rh = {}; const cat = {};
 const name = id => G.FANS[id][2];
 const fmt = m => Object.keys(m).sort((a, b) => a - b).map(k => name(+k) + (m[k] > 1 ? 'x' + m[k] : '')).join(' ');
 const ex = [];
@@ -20,6 +20,11 @@ cases.forEach((o, i) => {
   let lib = null;
   if (!L.err) { lib = {}; for (const [p, c, n] of L) { const id = ZH[n]; if (!id) throw new Error('unknown ' + n); lib[id] = (lib[id] || 0) + c; } }
   if (lib) for (const h of RULES.adapt(o, lib, mine)) rh[h] = (rh[h] || 0) + 1;
+  if (lib && lib.__r5) {
+    delete lib.__r5;
+    let lp = 0; for (const k of Object.keys(lib)) { const id = +k; if (id === 81) continue; lp += lib[k] * (id === 57 && mine.mixedKong ? 6 : G.FANS[id][1]); }
+    if (mine.ok && mine.pts === lp + 1) { ok++; r5ok++; return; }
+  }
   const mm = {}; if (mine.ok) for (const f of mine.fans) mm[f.id] = f.n;
   if (!mine.ok && !lib) { notwin++; ok++; return; }
   const a = fmt(mm), b = lib ? fmt(lib) : 'ERR ' + L.err;
@@ -33,7 +38,7 @@ cases.forEach((o, i) => {
   (cat[key] = cat[key] || []).push(i);
   if (ex.length < 3) ex.push(i);
 });
-console.log(`一致 ${ok} / ${cases.length}（どちらも和了でない ${notwin}、同点で名乗りだけ違う ${tie}）、不一致 ${bad}`); console.log('裁定で照合データを直した件数', JSON.stringify(rh));
+console.log(`一致 ${ok} / ${cases.length}（どちらも和了でない ${notwin}、同点で名乗りだけ違う ${tie}）、不一致 ${bad}`); console.log('裁定で照合データを直した件数', JSON.stringify(rh), '（R5 は点で一致 ' + r5ok + '）');
 const show = +showN || 2;
 for (const [k, v] of Object.entries(cat).sort((a, b) => b[1].length - a[1].length)) {
   console.log(`\n[${v.length}] ${k}`);
