@@ -127,7 +127,8 @@ function listHtml() {
   const head = `<div class="lc-head"><span class="lc-ico lg"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.3"/><circle cx="15" cy="15" r="1.3"/><circle cx="12" cy="12" r="1.3"/></svg></span><div><b>${esc(t('cat.odds'))}</b><p>${esc(t('catd.odds'))}</p></div><div class="lc-prog"><small>${esc(t('lsn.passed', { n: done, m: LESSONS.length }))}</small><span class="bar"><i style="width:${done / LESSONS.length * 100}%"></i></span></div></div>`;
   const cards = LESSONS.map((L, i) => { const pr = progress(L.id);
     return `<button type="button" class="lc-card${pr.pass ? ' pass' : ''}" data-l="${L.id}"><span class="lc-pic ld-pic">${picHtml(L.id)}</span><span class="lc-txt"><span class="lc-top"><em>STEP ${i + 1}</em><small class="${pr.pass ? 'ok' : ''}">${esc(pr.pass ? t('lsn.pass') : pr.best ? t('lsn.best', { n: pr.best }) : t('lsn.new'))}</small></span><b>${esc(t('l.' + L.id))}</b><span class="lc-d">${esc(t('ld.' + L.id))}</span></span></button>`; }).join('');
-  return `<p class="lc-lead">${esc(t('lsn.lead'))}</p>${head}<div class="lc-grid">${cards}</div>`;
+  const tut = window.LdTut ? `<button type="button" class="lc-tut" id="lcTut"><span>▶</span><span><b>${esc(t('tu.entry'))}</b><small>${esc(t('tu.entry.d'))}</small></span><span class="go">›</span></button>` : '';
+  return `<p class="lc-lead">${esc(t('lsn.lead'))}</p>${tut}${head}<div class="lc-grid">${cards}</div>`;
 }
 function open() { cur = null; renderShell(); A.openOv('#lessonOverlay'); }
 function renderShell() {
@@ -135,7 +136,7 @@ function renderShell() {
   const tabs = `<div class="ng-tabs lt-top"><button type="button" data-top="rules">${esc(t('btn.rules'))}</button><button type="button" class="sel" data-top="lessons">${esc(t('btn.lesson'))}</button></div>`;
   M.innerHTML = tabs + (!cur ? `<div class="lc-body">${listHtml()}</div><div class="modal-actions"><button class="mbtn go" id="lcClose">${esc(t('close'))}</button></div>` : playHtml());
   M.querySelectorAll('[data-top]').forEach(b => b.onclick = () => { if (b.dataset.top === 'rules') window.LdRules && LdRules.open(); });
-  if (!cur) { M.querySelectorAll('[data-l]').forEach(b => b.onclick = () => start(b.dataset.l)); $('#lcClose').onclick = () => A.closeOv('#lessonOverlay'); }
+  if (!cur) { M.querySelectorAll('[data-l]').forEach(b => b.onclick = () => start(b.dataset.l)); const tb = $('#lcTut'); if (tb) tb.onclick = () => { A.closeOv('#lessonOverlay'); LdTut.start(); }; $('#lcClose').onclick = () => A.closeOv('#lessonOverlay'); }
   else wirePlay();
 }
 // steps: 0..k-1 = the idea pages, k = the worked example, then the 5 problems

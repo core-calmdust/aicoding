@@ -113,8 +113,9 @@ function build() {
 }
 function tabs() {
   $('#rulesTabs').innerHTML = '';
-  $('#rulesTop').innerHTML = `<button type="button" class="sel" data-top="rules">${esc(t('btn.rules'))}</button><button type="button" data-top="lessons">${esc(t('btn.lesson'))}</button>`;
+  $('#rulesTop').innerHTML = `<button type="button" class="sel" data-top="rules">${esc(t('btn.rules'))}</button><button type="button" data-top="lessons">${esc(t('btn.lesson'))}</button>` + (window.LdTut ? `<button type="button" data-top="tut">▶ ${esc(t('tu.tab'))}</button>` : '');
   document.querySelector('#rulesTop [data-top="lessons"]').onclick = () => { if (tour) tour.stop(); window.LdLessons && LdLessons.open(); };
+  const tu = document.querySelector('#rulesTop [data-top="tut"]'); if (tu) tu.onclick = () => { if (tour) tour.stop(); A.closeOv('#rulesOverlay'); LdTut.start(); };
 }
 function open(page) {
   try { localStorage.setItem('aicoding-liarsdice-rules-seen', '1'); } catch (e) {}
