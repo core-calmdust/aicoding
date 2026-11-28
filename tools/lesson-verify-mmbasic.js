@@ -11,6 +11,15 @@
 //          ③ 3+ wrong removals ⑦ a non-mill move is named as no mill, a wrong removal as leaving the pair (the opponent still has a mill point)
 //  b_block (2026-11-28) ① ok = the placement on the opponent's only mill point ④ you have no mill point ⑦ every wrong move leaves the
 //          opponent's mill point and the words say so; the hint「まだミルを作れない」is true
+//  b_move  (2026-11-28 09:18) ① ok = every step that makes a mill (every removal), all 20 at both depths ② every other move under 16
+//          ④ the moving phase (both hands empty, 4+ pieces each: no flying), one mill step (one piece to one point), the opponent has no mill point
+//          ⑦⑧ a wrong move makes no mill and the words say so; the praise names the mill
+//  b_reopen (2026-11-28 09:18) ① ok = the steps of a piece of your closed mill out of it (no new mill) after which the opponent can step into
+//          no vacated point and has no mill point ④ the moving phase, neither side has a mill step now ⑦ every wrong move is an opening the
+//          opponent can step into, or leaves the opponent a mill point (= 2D ls.b_reopen.ng), and モリフク's words name which
+//          追45 the hint's tip (a mill piece whose vacated point has no opponent's neighbour) is the answer in some move
+//  追14    the intro diagrams of b_move (the arrow is a step that makes the mill) and b_reopen (the arrow opens your mill, no opponent's piece
+//          next to the vacated point)
 //  all     ③ 3 legal moves or more, 追72 right ≤ 1/3 of the legal moves ⑤ not the same board nor 1〜2 moves from any other nine board
 //          (lessons, warm-ups, diagrams, puzzles; the 16 symmetries of the board, both colours): 4 points or more differ
 //          ⑥ d = legal moves / right moves never goes down, the last more than the first
@@ -19,7 +28,7 @@
 'use strict';
 const path = require('path'), fs = require('fs'), vm = require('vm');
 const ROOT = path.join(__dirname, '..');
-const DONE = new Set(['b_place', 'b_mill', 'b_take', 'b_block']);
+const DONE = new Set(['b_place', 'b_mill', 'b_take', 'b_block', 'b_move', 'b_reopen']);
 let ENG = null;
 function engine() {
   if (ENG) return ENG;
@@ -81,20 +90,36 @@ function verify(opt) {
     if (st.id === 'b_take' && mk('x').some(g => !P2.some(x => x.ml.includes(g) && b[g] === 2))) add(st.id, 0, '追14 the diagram: the piece marked to take is not in the opponent\'s pair');
     if (st.id === 'b_take' && !(d.mills || []).length) add(st.id, 0, '追14 the diagram shows no mill');
     if (st.id === 'b_block' && pts(1).length) add(st.id, 0, '追14 the diagram: your side has a mill point (the intro says you cannot make one)'); });
+  L.steps.filter(st => (st.id === 'b_move' || st.id === 'b_reopen') && st.diagram).forEach(st => { const d = st.diagram, b = Array(G.n).fill(0);
+    (d.p1 || []).forEach(n => (b[at[n]] = 1)); (d.p2 || []).forEach(n => (b[at[n]] = 2));
+    const [fr, to] = (d.arrows || [])[0] || [], f = at[fr], t = at[to];
+    if (f == null || t == null || b[f] !== 1 || b[t] || !G.adj[f].includes(t)) { add(st.id, 0, '追14 the diagram: the arrow is not a step of your piece to an empty neighbour'); return; }
+    const full = (bb, ml) => ml.every(i => bb[i] === 1), b2 = b.slice(); b2[f] = 0; b2[t] = 1;
+    if (st.id === 'b_move' && !G.mills.some(ml => ml.includes(t) && full(b2, ml))) add(st.id, 0, '追14 the diagram: the arrow makes no mill');
+    if (st.id === 'b_reopen') { if (!G.mills.some(ml => ml.includes(f) && full(b, ml))) add(st.id, 0, '追14 the diagram: the arrow does not open a mill');
+      if (G.adj[f].some(j => b2[j] === 2)) add(st.id, 0, '追14 the diagram: an opponent\'s piece is next to the vacated point');
+      const ms = (d.mills || []).map(x => x.map(n => at[n])); if (!ms.length || !ms.some(x => x.every(i => b[i] === 1))) add(st.id, 0, '追14 the diagram shows no mill of yours'); } });
   let key = 0;
   L.steps.forEach(st => { if (!(st.problems && st.problems.length)) return; const K = key++; if (!DONE.has(st.id)) return; const id = st.id; let dPrev = 0, d0 = 0;
     st.problems.forEach((P, j) => { const q = j + 1, pos = E.Pos.from(G, P.s), ms = pos.moves(), me = pos.side, o = 3 - me, ok = P.ok || [];
       const okS = new Set(ok), my = millPts(pos, me), op = millPts(pos, o);
+      const after = m => { const c = pos.clone(); c.play(m); return c; };
       ok.forEach(m => { if (!ms.includes(m)) add(id, q, `① a right move is not legal`); });
       // ① the goal set, ④ the theme
-      if (!(pos.hand[me] > 0)) add(id, q, '④ not the placing phase');
-      const after = m => { const c = pos.clone(); c.play(m); return c; };
+      const moving = id === 'b_move' || id === 'b_reopen', cnt = w => pos.b.filter(x => x === w).length;
+      if (!moving && !(pos.hand[me] > 0)) add(id, q, '④ not the placing phase');
+      if (moving && (pos.hand[me] || pos.hand[o] || cnt(me) < 4 || cnt(o) < 4)) add(id, q, '④ not the moving phase (hands empty, 4+ pieces each)');
+      const inM = i => G.mills.some(ml => ml.includes(i) && ml.every(k => pos.b[k] === me));
+      const enterF = m => { const f = E.mFrom(m); if (f === NO) return false; const c = after(m); return c.moves().some(x => E.mTo(x) === f); };
+      const opening = m => E.mFrom(m) !== NO && inM(E.mFrom(m)) && E.mRm(m) === NO;
       const line2 = (at, who) => G.mills.some(ml => ml.includes(at) && ml.filter(i => i !== at).filter(i => pos.b[i] === who).length === 1 && ml.filter(i => i !== at).some(i => !pos.b[i]));
       const oppAfter = m => millPts(after(m), o).size;
       const goal = id === 'b_place' ? ms.filter(m => E.mFrom(m) === NO && G.adj[E.mTo(m)].length === 4)
         : id === 'b_mill' ? ms.filter(m => E.mFrom(m) === NO && E.mRm(m) !== NO)
         : id === 'b_take' ? ms.filter(m => E.mFrom(m) === NO && E.mRm(m) !== NO && line2(E.mRm(m), o) && oppAfter(m) === 0)
-        : ms.filter(m => E.mFrom(m) === NO && op.has(E.mTo(m)) && oppAfter(m) === 0);
+        : id === 'b_block' ? ms.filter(m => E.mFrom(m) === NO && op.has(E.mTo(m)) && oppAfter(m) === 0)
+        : id === 'b_move' ? ms.filter(m => E.mFrom(m) !== NO && E.mRm(m) !== NO)
+        : ms.filter(m => opening(m) && !enterF(m) && oppAfter(m) === 0);
       if (goal.length !== okS.size || goal.some(m => !okS.has(m))) add(id, q, `① ok (${ok.map(m => pos.name(m)).join(' ')}) is not the goal set (${goal.map(m => pos.name(m)).join(' ')})`);
       if (id === 'b_place' && (my.size || op.size)) add(id, q, `④ a mill point on the board (yours ${my.size}, the opponent's ${op.size}): not the point alone`);
       if (id === 'b_mill' && (!my.size || op.size)) add(id, q, `④ yours ${my.size} mill point(s), the opponent's ${op.size} (want 1+ and 0)`);
@@ -106,6 +131,11 @@ function verify(opt) {
       if (id === 'b_block') { // ④ you have no mill, the opponent has exactly one mill point
         if (my.size || op.size !== 1) add(id, q, `④ yours ${my.size} mill point(s), the opponent's ${op.size} (want 0 and 1)`);
         ms.filter(m => !okS.has(m)).forEach(m => { if (oppAfter(m) === 0) add(id, q, `① ${pos.name(m)} is wrong but leaves the opponent no mill point`); }); }
+      if (id === 'b_move') { const ft = new Set(goal.map(m => E.mFrom(m) + '-' + E.mTo(m)));
+        if (ft.size !== 1 || op.size) add(id, q, `④ ${ft.size} mill step(s) (want 1: one piece to one point), the opponent's mill points ${op.size} (want 0)`); }
+      if (id === 'b_reopen') { if (my.size || op.size) add(id, q, `④ yours ${my.size} mill step(s), the opponent's ${op.size} (want 0 and 0: opening is the theme)`);
+        if (!ms.some(opening)) add(id, q, '④ no mill of yours to open');
+        ms.filter(m => !okS.has(m)).forEach(m => { if (!((opening(m) && enterF(m)) || oppAfter(m) > 0 || (!opening(m) && !millPts(after(m), me).size))) add(id, q, `⑦ ${pos.name(m)} is wrong, but it lets the opponent into no vacated point, leaves them no mill point, and is an opening or leaves you a mill step (2D ls.b_reopen.ng)`); }); }
       // ③ 追72
       if (ms.length < 3) add(id, q, `③ only ${ms.length} legal moves`);
       if (ok.length * 3 > ms.length) add(id, q, `追72 ${ok.length} of the ${ms.length} legal moves are right`);
@@ -122,16 +152,22 @@ function verify(opt) {
       const s = Object.assign({ v: 'nine' }, st), Wd = W.mrLsJa(E, s, P, j, k => k === 'ok' ? '緑の手' : '赤の手', K);
       if (!Wd) { add(id, q, '⑧ no 3D words'); return; }
       const deg = m => G.adj[E.mTo(m)].length, dn = n => n >= 4 ? '交差点' : n === 3 ? '辺のまん中' : '角';
-      ok.forEach(m => { const t = Wd.good(m); if (id === 'b_take' && !/2つ並び|ねらい|作りかけ|材料|次のミル/.test(t)) add(id, q, `⑧ the praise does not name the opponent's pair: ${t}`); if (id === 'b_block' && !/ミル|3つ目|2つ並び|ねらい|取られ/.test(t)) add(id, q, `⑧ the praise does not name the block: ${t}`); if (id === 'b_place' && !/交差点|となりが4つ|4方向/.test(t)) add(id, q, `⑧ the praise does not name the junction: ${t}`); if (id === 'b_mill' && !/ミル|そろ|3つ目/.test(t)) add(id, q, `⑧ the praise names no mill: ${t}`); });
+      ok.forEach(m => { const t = Wd.good(m); if (id === 'b_take' && !/2つ並び|ねらい|作りかけ|材料|次のミル/.test(t)) add(id, q, `⑧ the praise does not name the opponent's pair: ${t}`); if (id === 'b_block' && !/ミル|3つ目|2つ並び|ねらい|取られ/.test(t)) add(id, q, `⑧ the praise does not name the block: ${t}`); if (id === 'b_place' && !/交差点|となりが4つ|4方向/.test(t)) add(id, q, `⑧ the praise does not name the junction: ${t}`); if ((id === 'b_mill' || id === 'b_move') && !/ミル|そろ|3つ目/.test(t)) add(id, q, `⑧ the praise names no mill: ${t}`); if (id === 'b_reopen' && !/届かない|割りこめない|入れない|いない|戻|また|何度でも/.test(t)) add(id, q, `⑧ the praise does not name the safe opening: ${t}`); });
       ms.filter(m => !okS.has(m)).forEach(m => { const t = Wd.ng(m);
         if (id === 'b_place') { const n = deg(m); const k = (t.match(/赤の手(?:は|の)(角|辺のまん中|交差点)/) || [])[1]; if ((k && k !== dn(n)) || !t.includes(`${n}`) || !/4/.test(t)) add(id, q, `⑦ ${pos.name(m)} (${dn(n)}, ${n}) is not named by its neighbours: ${t}`); }
         if (id === 'b_take') { if (E.mRm(m) === NO) { if (!/ミルにならない|そろわない|取れない|チャンスがない/.test(t)) add(id, q, `⑦ ${pos.name(m)} makes no mill: the words do not say so: ${t}`); }
           else { if (!/2つ並び|ねらい|ミルの点|作りかけ/.test(t)) add(id, q, `⑦ ${pos.name(m)}: the words do not say the opponent's pair stays: ${t}`); if (!oppAfter(m)) add(id, q, `⑦ ${pos.name(m)}: the words say the pair stays, but the opponent has no mill point`); if (line2(E.mRm(m), o) && /関係ない|ねらいのない/.test(t)) add(id, q, `⑦ ${pos.name(m)} takes a piece of a pair, but the words say it has no aim: ${t}`); } }
         if (id === 'b_block') { if (!oppAfter(m)) add(id, q, `⑦ ${pos.name(m)}: the words say the mill comes, but the opponent has no mill point`); if (!/空いたまま|ミルにされ|ミル。|ねらいが残る|間に合わない/.test(t)) add(id, q, `⑦ ${pos.name(m)}: the words do not say the opponent's mill point stays: ${t}`); }
-        if (id === 'b_mill') { if (E.mRm(m) !== NO) add(id, q, `⑦ ${pos.name(m)} makes a mill but is wrong`); else if (!/ミルにならない|そろわない|並ばない|並ばず/.test(t)) add(id, q, `⑦ ${pos.name(m)}: the words do not say it makes no mill: ${t}`); } });
+        if (id === 'b_reopen') { const oa = oppAfter(m) > 0, en = opening(m) && enterF(m);
+          if (oa && !/ミルの点|ミルを作られ|ミルをそろえ|ミル。|ねらい/.test(t)) add(id, q, `⑦ ${pos.name(m)} leaves the opponent a mill point: the words do not say so: ${t}`);
+          if (!oa && en && !/入れる|入って|すべりこ|ふさ|うめ|ふた|となりに相手/.test(t)) add(id, q, `⑦ ${pos.name(m)} lets the opponent into the vacated point: the words do not say so: ${t}`);
+          if (!oa && /ミルの点|ミルを作られ|ミルをそろえ/.test(t)) add(id, q, `⑦ ${pos.name(m)}: the words speak of the opponent's mill, but they have no mill point: ${t}`);
+          if (!oa && !opening(m) && (!/閉じなおせない|ミルを作る形にならない|使いなおせない/.test(t) || /入れる|すべりこ|となりに相手|開き方|開くと/.test(t))) add(id, q, `⑦ ${pos.name(m)} opens no mill: the words do not say it cannot close a mill again next move: ${t}`); }
+        if (id === 'b_mill' || id === 'b_move') { if (E.mRm(m) !== NO) add(id, q, `⑦ ${pos.name(m)} makes a mill but is wrong`); else if (!/ミルにならない|そろわない|並ばない|並ばず/.test(t)) add(id, q, `⑦ ${pos.name(m)}: the words do not say it makes no mill: ${t}`); } });
       const hint = W.MRJ_LS.hint[id][(j + K) % W.MRJ_LS.hint[id].length];
       if (id === 'b_place' && /四隅の角/.test(hint) && ms.every(m => deg(m) !== 2)) add(id, q, `⑧ the hint speaks of the corners but none is empty: ${hint}`);
       if (id === 'b_block' && /まだミルを作れない/.test(hint) && my.size) add(id, q, `⑧ the hint says you cannot make a mill: ${hint}`);
+      if (id === 'b_reopen' && /空けた点のとなりに相手の駒がいない/.test(hint) && !ok.some(m => !G.adj[E.mFrom(m)].some(k => pos.b[k] === o))) add(id, q, `追45 the hint's tip is no right move: ${hint}`);
       if (Wd.hintTx !== hint) add(id, q, '⑧ the hint is not the step\'s own');
     });
   });
