@@ -254,8 +254,26 @@ function create(o) {
     }
     return best;
   }
+  // コーチ用：捨て牌ごとの価値（高い順）と、いま近い目標（番）の上位
+  function analyze(r, p) {
+    const P = r.P[p], melds = r.meldsOf(p), unseen = unseenCounts(r, p), c = GB.countsIds(P.hand);
+    const out = [], seen = new Set();
+    if (P.hand.length % 3 === 2) for (const id of P.hand) {
+      const t = T(id); if (seen.has(t)) continue; seen.add(t);
+      c[t]--; let v = value(r, p, c, melds, unseen); const sh = GB.shanten(c, melds.length);
+      if (defend) v -= defend * danger(r, p, t, unseen) * 6 * Math.min(1, P.discards.length / 10);
+      c[t]++; out.push({ t, v, sh });
+    }
+    out.sort((a, b) => b.v - a.v);
+    const cc = c.slice(); if (P.hand.length % 3 === 2 && out.length) cc[out[0].t]--;
+    const plans = [];
+    for (const pl of PLANS) { const d = planShanten(pl, cc, melds); if (d <= 4) plans.push({ fan: pl.fan, pts: pl.pts, d, id: pl.id }); }
+    plans.sort((a, b) => a.d - b.d || b.pts - a.pts);
+    const uniq = []; const fs = new Set(); for (const x of plans) { if (fs.has(x.fan)) continue; fs.add(x.fan); uniq.push(x); if (uniq.length >= 3) break; }
+    return { discards: out, plans: uniq, shanten: GB.shanten(cc, melds.length) };
+  }
   return {
-    level,
+    level, analyze,
     decide(r, p, opts) { return r.phase === 'turn' ? decideTurn(r, p, opts) : decideClaim(r, p, opts); },
     value, planShanten,
   };
