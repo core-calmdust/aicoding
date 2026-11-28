@@ -40,7 +40,7 @@ const isPass = m => m < 0;
 
 // ====================================================================== state
 const STORE = 'aicoding-uttt';
-const settings = { mode: 'ai', rule: 'std', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, send: true, num: true, coach: true, lang: '', bd: 'walnut', pcs: 'token' };
+const settings = { mode: 'ai', rule: 'std', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, send: true, num: true, coach: true, lang: '', bd: 'slate', pcs: 'chalk' };
 const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(n)) return 'zh-TW'; return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -199,6 +199,7 @@ function drawLines() {
   linesEl.innerHTML = s;
   boardEl.classList.toggle('no-num', !settings.num);
   if (!zonesEl.children.length) for (let b = 0; b < 9; b++) { const z = document.createElement('div'); z.className = 'zone'; z.dataset.b = b; placeZone(z, b); zonesEl.appendChild(z); }
+  if (!zonesEl.querySelector('.zone-all')) { const a = document.createElement('div'); a.className = 'zone-all'; const o = GEO.M - GEO.G * .15; a.style.left = a.style.top = o * 100 + '%'; a.style.width = a.style.height = (1 - 2 * o) * 100 + '%'; zonesEl.appendChild(a); }   // 「どこでも置ける」: one quiet frame round the whole board, not nine lit boards
 }
 function setFlip() {}
 const flipFor = () => false;
@@ -244,10 +245,11 @@ function renderReserves(pos) {
 function renderZones(pos, st) {
   const allow = new Set(st.over ? [] : pos.boards());
   const show = !st.over && (canHumanPlay() || (lesson && !lesson.answered) || (puzzle && puzzle.state === 'play') || settings.mode === 'watch' || reviewing || thinking);
-  for (const z of zonesEl.children) {
+  const free = show && allow.size > 0 && pos.forced < 0;
+  zonesEl.classList.toggle('free-all', free);
+  for (const z of zonesEl.querySelectorAll('.zone')) {
     const b = +z.dataset.b, o = pos.own[b];
-    z.classList.toggle('allow', show && allow.has(b));
-    z.classList.toggle('free', show && allow.has(b) && pos.forced < 0);
+    z.classList.toggle('allow', show && !free && allow.has(b));
     z.classList.toggle('won-x', o === 1); z.classList.toggle('won-o', o === 2); z.classList.toggle('drawn', o === 3);
     z.classList.toggle('me-x', pos.turn === P1); z.classList.toggle('me-o', pos.turn === P2);
   }
@@ -829,16 +831,16 @@ document.addEventListener('keydown', e => {
 });
 
 // ---------------------------------------------------------------- 2D boards and mark sets (CSS: html[data-bd] / html[data-pcs]; rendered by tools/gen_art.py)
-// Boards: oiled walnut with brass inlay (default) · a school slate drawn in chalk · washi with a sumi brush grid · old paper in
-// iron-gall ink · white marble with gold inlay · cherry with ebony inlay. Marks: lacquer-and-ivory tokens (default) · sumi and
-// vermilion brush · chalk · pen and ink — every mark a rendered hand-made one (six variants each), never a font or a flat line.
-const BD_KEYS = ['walnut', 'slate', 'washi', 'parchment', 'marble', 'cherry'], PC_KEYS = ['token', 'brush', 'chalk', 'ink'];
+// Boards: a school slate drawn in chalk (default since 2026-11-28; saved choices stay) · oiled walnut with brass inlay · washi with a sumi brush grid · old paper in
+// iron-gall ink · white marble with gold inlay · cherry with ebony inlay. Marks: chalk, white X and soft pink O (default) · lacquer-and-ivory tokens · sumi and
+// vermilion brush · pen and ink — every mark a rendered hand-made one (six variants each), never a font or a flat line.
+const BD_KEYS = ['slate', 'walnut', 'washi', 'parchment', 'marble', 'cherry'], PC_KEYS = ['chalk', 'token', 'brush', 'ink'];
 const BD_PAL = { walnut: '#3a2416', slate: '#1d2523', washi: '#cbbd9f', parchment: '#7a5a36', marble: '#b9b3a6', cherry: '#5a2d1a' };   // the frame colour of the mini boards
 // a good mark set for each board (shown first in the mark tiles; any pair can be chosen)
 const BD_PCS = { walnut: 'token', slate: 'chalk', washi: 'brush', parchment: 'ink', marble: 'ink', cherry: 'token' };
 function designApply() {
-  if (!BD_KEYS.includes(settings.bd)) settings.bd = 'walnut';
-  if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'token';
+  if (!BD_KEYS.includes(settings.bd)) settings.bd = 'slate';
+  if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'chalk';
   document.documentElement.dataset.bd = settings.bd; document.documentElement.dataset.pcs = settings.pcs;
 }
 // the position of the design tiles: a few marks and one won board
@@ -863,7 +865,10 @@ function miniSVG(spec, o) {
   const pos = E.Pos.from(spec), W = MINI_W, bdk = o.bd || settings.bd, pk = o.pcs || settings.pcs;
   const X = m => cellX(m) * W, Y = m => cellY(m) * W, BX = b => boardX(b) * W, BY = b => boardY(b) * W, SW = GEO.S * W, u = SW / 3;
   let s = `<svg class="${o.cls || 'mini'}" viewBox="0 0 ${W} ${W}"><rect x="0" y="0" width="${W}" height="${W}" rx="7" fill="${BD_PAL[bdk] || '#333'}"/><image href="img/bd-${bdk}.webp" x="0" y="0" width="${W}" height="${W}" preserveAspectRatio="none"/>`;
-  if (!o.noAllow && pos.res < 0) for (const b of pos.boards()) s += `<rect x="${(BX(b) - 2).toFixed(1)}" y="${(BY(b) - 2).toFixed(1)}" width="${(SW + 4).toFixed(1)}" height="${(SW + 4).toFixed(1)}" rx="5" fill="rgba(255,226,140,.16)" stroke="#ffd36e" stroke-width="2.4"/>`;
+  if (!o.noAllow && pos.res < 0) {
+    if (pos.forced < 0) s += `<rect x="${(BX(0) - 4).toFixed(1)}" y="${(BY(0) - 4).toFixed(1)}" width="${(BX(2) - BX(0) + SW + 8).toFixed(1)}" height="${(BY(6) - BY(0) + SW + 8).toFixed(1)}" rx="6" fill="none" stroke="${bdk === 'slate' ? 'rgba(240,236,224,.5)' : 'rgba(214,178,106,.75)'}" stroke-width="1.6"/>`;   // どこでも: one quiet frame
+    else for (const b of pos.boards()) s += `<rect x="${(BX(b) - 2).toFixed(1)}" y="${(BY(b) - 2).toFixed(1)}" width="${(SW + 4).toFixed(1)}" height="${(SW + 4).toFixed(1)}" rx="5" fill="rgba(255,238,200,.07)" stroke="${bdk === 'slate' ? 'rgba(240,236,224,.62)' : 'rgba(214,178,106,.92)'}" stroke-width="1.8"/>`;
+  }
   for (const k in o.zones || {}) { const v = o.zones[k], b = +k; s += `<rect x="${(BX(b) - 2).toFixed(1)}" y="${(BY(b) - 2).toFixed(1)}" width="${(SW + 4).toFixed(1)}" height="${(SW + 4).toFixed(1)}" rx="5" fill="${v === 'ng' ? 'rgba(255,90,72,.14)' : 'rgba(61,245,154,.12)'}" stroke="${v === 'ng' ? '#ff6b5b' : '#3df59a'}" stroke-width="2.6" stroke-dasharray="${v === 'hl' ? '5 3' : ''}"/>`; }
   if (o.last != null && o.last >= 0) s += `<circle cx="${X(o.last).toFixed(1)}" cy="${Y(o.last).toFixed(1)}" r="${(u * 0.47).toFixed(1)}" fill="rgba(255,222,130,.42)"/>`;
   for (let m = 0; m < 81; m++) {
@@ -928,7 +933,7 @@ function tourPage(id, spec, o) {
 const tourRead = (id, html) => ({ id, title: () => t('tr.' + id + '.t'), body: () => t('tr.' + id + '.b').split('\n').map(x => `<p>${x}</p>`).join(''), html });
 const tourPic = (spec, o) => `<div class="tour-pic">${miniSVG(spec, Object.assign({ cls: '' }, o || {}))}</div>`;
 // page 1: what the game is (history / how to win / culture), read only — common spec
-const introPage = () => ({ id: 'intro', title: () => t('intro.t'), body: '', html: () => RuleTour.intro({ lang: LANG, img: '../images/atlas/uttt.webp?v=1', origin: t('intro.origin'), players: t('intro.players'), time: t('intro.time'), history: t('intro.hist'), win: t('intro.win'), culture: t('intro.cult') }) });
+const introPage = () => ({ id: 'intro', title: () => t('intro.t'), body: '', html: () => RuleTour.intro({ lang: LANG, img: '../images/atlas/uttt.webp?v=2', origin: t('intro.origin'), players: t('intro.players'), time: t('intro.time'), history: t('intro.hist'), win: t('intro.win'), culture: t('intro.cult') }) });
 // the tutorial positions (move lines: every one a legal game; tools/tour_pos.js)
 const TOUR_POS = {"pick":["a9","b9","e9","d9"],"small":["h1","e3","f9","g8","a6","c9","g9","a9","c7","g3","a7","a2","b6","d9"],"free":["g6","b8","e5","d6","a9","b9","d8","b5","e6","d9","c8","h6","f7","i2","i4","g3","c9","h8","e4","e2"],"big":["c3","g8","c4","h1","f2","i5","g6","b7","d3","a9","c7","g3","b9","e7","e1","d1","a3","b8","f4","i2","h6","d9","c9","g9","c8","i6","h7","d2","a6","g4","b3","f9","h9","e8","d6","g1","f7","h3","e9","d8"],"draw":["c3","h7","f1","g1","a3","b7","d3","a9","a7","b2","f6","g9","c8","i6","h8","d6","c7","g3","b9","e9","d9","a8","a4","b1","f3","h9","d7","c2","g6","c9","i7","h2","d4","b3","e7","d1","a6","b8","e4","e3","d8","c5","g5","a5","b5"],"board":["c7","h3","f7","g3","a9","a8","c6","i9","g9","a7","a1","a3","b7","d1","c3","h9","d9","b9","e8","e5","d6","c8","i5","g6","c9","i8","h5","e4","d3","b8"],"send":["f6"]};
 const TOUR_PAGES = [
@@ -2083,7 +2088,7 @@ function rvbFx(svg, pos) {
   (e.pv || []).slice(0, 3).forEach((m, k) => { if (!p.moves().includes(m)) return; const d = fxDiv('rvb-n', m); d.textContent = String(k + 2); p = p.clone().play(m); });
   const d0 = fxDiv('rvb-n first', e.m); d0.textContent = '1';
 }
-const rvbDot = p => p === P1 ? '<svg class="rvb-mk" viewBox="0 0 12 12" width="12" height="12" style="vertical-align:-1px;margin-inline-end:5px"><path d="M2.5 2.5 9.5 9.5M9.5 2.5 2.5 9.5" stroke="#d65a45" stroke-width="2.4" stroke-linecap="round"/></svg>' : '<svg class="rvb-mk" viewBox="0 0 12 12" width="12" height="12" style="vertical-align:-1px;margin-inline-end:5px"><circle cx="6" cy="6" r="3.9" fill="none" stroke="#e9e2d2" stroke-width="2"/></svg>';
+const rvbDot = p => `<i class="pdisc p${p === P1 ? 1 : 2}" style="width:13px;height:13px;vertical-align:-2px;margin-inline-end:5px"></i>`;   // the mark of the chosen design (chalk, tokens …)
 function rvbLine(pos, list, n0) { let p = pos.clone(), out = []; for (const m of list) { if (!p.moves().includes(m)) break; out.push((n0 ? (n0 + out.length) + '.' : '') + mvIn(p, m)); p = p.clone().play(m); } return out.join(' '); }
 function rvbLeft() {
   if (rv.running) return `<p class="rvb-dim">${BOX.t('analyzing', { a: rv.done, b: rv.total })}</p>`;

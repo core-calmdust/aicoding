@@ -991,7 +991,7 @@
       const voice = fetch('../shogi/voice-fox-ja.js?v=9').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       const rep = getJ('../shogi/lesson-replies.json?v=7').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
       return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261128k5'), getJ('../shogi/openings.json?v=20261124ol1'),
-        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261128sg`).catch(() => ({ sets: [] })))])
+        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261128sh`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
           sets.forEach(s => { if (!s.cat) s.cat = s.handi ? 'handi' : 'mid'; });
