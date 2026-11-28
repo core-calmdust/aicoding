@@ -30,9 +30,10 @@ function distHtml(n, m, q, f, wild) {
 function renderCalc() {
   const M = $('#toolsModal'), g = A.G, inGame = g && g.round && g.phase === 'bid' && !(A.M.mode === 'rated' && !A.M.over);
   const tabs = `<div class="ng-tabs"><button type="button" data-ct="calc" class="${C.tab === 'calc' ? 'sel' : ''}">${esc(t('calc.tab'))}</button><button type="button" data-ct="game" class="${C.tab === 'game' ? 'sel' : ''}"${inGame ? '' : ' disabled'}>${esc(t('calc.tabGame'))}</button></div>`;
-  let body;
-  if (C.tab === 'game' && inGame) body = gameHtml();
-  else {
+  // both tabs are drawn in the same cell (the hidden one invisible), so the box keeps the size of the larger one
+  // ("this position") when you switch tabs
+  let body = '';
+  {
     C.m = Math.min(C.m, 5); const pe = LD.pMatch(C.f, !!C.wild);
     const P = LD.pAtLeast(C.q, C.m, C.n, C.f, !!C.wild), E = LD.pExact(C.q, C.m, C.n, C.f, !!C.wild), ex = C.m + C.n * pe;
     body = `<div class="calc"><div class="cin">` + step(t('calc.n'), 'n', 0, 30) + step(t('calc.m'), 'm', 0, 5) + step(t('calc.q'), 'q', 1, 35) +
@@ -42,6 +43,9 @@ function renderCalc() {
       `<div class="crow"><span><small>${esc(t('calc.pEq'))}</small><b>${pct(E)}</b></span><span><small>${esc(t('calc.exp'))}</small><b>${ex.toFixed(2)}</b></span><span><small>${esc(t('calc.per'))}</small><b>${C.f === 1 || !C.wild ? '1/6' : '1/3'}</b></span></div>` +
       distHtml(C.n, C.m, C.q, C.f, !!C.wild) + `<p class="diff-desc">${esc(t('calc.help', { m: C.m, n: C.n, p: C.f === 1 || !C.wild ? '1/6' : '1/3' }))}</p></div></div>`;
   }
+  const onGame = C.tab === 'game' && inGame;
+  body = `<div class="tl-stack"><div class="tl-pane${onGame ? ' off' : ''}"${onGame ? ' aria-hidden="true" inert' : ''}>${body}</div>` +
+    (inGame ? `<div class="tl-pane${onGame ? '' : ' off'}"${onGame ? '' : ' aria-hidden="true" inert'}>${gameHtml()}</div>` : '') + `</div>`;
   M.innerHTML = `<h2>${esc(t('calc.h'))}</h2>${tabs}<div class="tools-body">${body}</div><div class="modal-actions"><button class="mbtn go" id="calcClose">${esc(t('close'))}</button></div>`;
   M.querySelectorAll('[data-ct]').forEach(b => b.onclick = () => { C.tab = b.dataset.ct; renderCalc(); });
   M.querySelectorAll('[data-st]').forEach(b => b.onclick = () => { const k = b.dataset.st, lim = { n: [0, 30], m: [0, 5], q: [1, 35] }[k]; C[k] = Math.max(lim[0], Math.min(lim[1], C[k] + +b.dataset.d)); A.sfx('sel'); renderCalc(); });
