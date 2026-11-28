@@ -1001,12 +1001,6 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 .rt-nav button.go,.rt-finish button.go{background:linear-gradient(180deg,#e58a5c,#c25f37)!important;color:#fff!important}
 .sqfx.last{background:rgba(255,220,170,.3);box-shadow:inset 0 0 0 2px rgba(255,255,255,.85)}
 .sqfx.lastf{background:rgba(255,220,170,.18)}
-/* phones: the rules / lessons / puzzles tabs stick to the dialog's bottom (shared/ngtabs.js); give them an opaque cover so the list
-   scrolling under them never shows through (2026-11-28) */
-@media (pointer: coarse) and (max-width: 760px){
-  html body:not(#_) .modal:not(#_):not(#_) .seg.ls-tabs:not(#_):not(#_){background:#13171b;box-shadow:0 12px 0 12px #13171b,0 -10px 14px -4px #13171b}
-  html body:not(#_) .modal:not(#_):not(#_) :has(> .seg.ls-tabs) > .modal-actions:not(#_):not(#_){background:#13171b!important}
-}
 </style>
 <link rel="stylesheet" href="online.css?v=2lx">
 <style>
@@ -1346,7 +1340,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="../shared/atlas-account.js?v=20261109ac2l14as1" defer></script>
 <script src="../shared/infotabs.js?v=24" defer></script>
 <script src="../shared/pickdrop.js?v=8l14"></script>
-<script src="../shared/ngtabs.js?v=36"></script>
+<script src="../shared/ngtabs.js?v=38"></script>
 <script src="../shared/nglux.js?v=24l16"></script><script src="../shared/ngdisp.js?v=1-nd1"></script>
 <script src="../shared/resumeng.js?v=1l14"></script>
 <script src="../shared/langsel.js?v=2l14" defer></script>
