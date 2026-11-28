@@ -235,7 +235,7 @@
 
   /* ---------- the theater ---------- */
   let host = null, cv = null, g = null, cur = null, old = null, raf = 0, talkAt = -1e9, ctx = null, seekT = null;
-  let paperC = null, paperKey = '', sizeKey = '';
+  let paperC = null, paperKey = '', sizeKey = '', grainP = null;
   const css = () => `#theater{position:absolute;inset:0;z-index:7;overflow:hidden;background:#000;opacity:0;transition:opacity .9s ease;pointer-events:none}
 #theater.on{opacity:1}
 #theater canvas{position:absolute;left:0;top:0}
@@ -384,6 +384,14 @@ body.th-full #cam,body.th-full #scrim,body.th-full #cineShade,body.th-full #cine
     // the vignette of the lens, and black
     const vg = g.createRadialGradient(W / 2, H * .48, W * .33, W / 2, H * .48, W * .78); vg.addColorStop(0, 'rgba(6,3,1,0)'); vg.addColorStop(1, 'rgba(6,3,1,.6)'); g.fillStyle = vg; g.fillRect(0, 0, W, H);
     if (black > 0) { g.globalAlpha = black; g.fillStyle = '#000'; g.fillRect(0, 0, W, H); g.globalAlpha = 1; }
+    // film grain: one small tile of noise laid over the picture in screen pixels, shifted 12 times a second (plain drawing, no blending)
+    if (!lite) {
+      if (!grainP) { const c = document.createElement('canvas'); c.width = c.height = 192; const gg = c.getContext('2d'), im = gg.createImageData(192, 192), rr = rng(31);
+        for (let i = 0; i < im.data.length; i += 4) { const v = rr() < .5 ? 0 : 255; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = Math.round(rr() * rr() * 34); }
+        gg.putImageData(im, 0, 0); grainP = g.createPattern(c, 'repeat'); }
+      const f = Math.floor(now / 83), ox = (f * 73) % 192, oy = (f * 131) % 192;
+      g.setTransform(1, 0, 0, 1, -ox, -oy); g.globalAlpha = 1; g.fillStyle = grainP; g.fillRect(ox, oy, cv.width, cv.height); g.setTransform(1, 0, 0, 1, 0, 0);
+    }
   }
 
   // play a shot: tr = 'cut' | 'fade' (dissolve) | 'dip' (through black). The cut waits until its pictures are made.
