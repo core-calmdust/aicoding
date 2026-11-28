@@ -20,5 +20,6 @@ for (let d = 0; d < N; d++) {
     if (res.winner >= 0) pair += res.winner === seatA ? res.pts : -res.pts;
   }
   sum += pair / 2; sq += (pair / 2) ** 2;
+  if (process.env.PROG && (d + 1) % 50 === 0) console.log(JSON.stringify({ n: d + 1, sum, sq, maxA: maxMs[0], maxB: maxMs[1], avgA: msA / Math.max(1, nA), s: (Date.now() - t0) / 1000, partial: 1 }));
 }
 console.log(JSON.stringify({ n: N, sum, sq, maxA: maxMs[0], maxB: maxMs[1], avgA: msA / Math.max(1, nA), s: (Date.now() - t0) / 1000 }));

@@ -29,7 +29,11 @@
       infer: lv >= 8,                                // use the opponent's discards to shape its hand
       koiSmart: lv >= 5,
       strong: false,                                 // quick2: measured -0.59±0.45/hand vs quick at Lv.12 (2026-11-28) — off
-      v2: false, worlds2: 0, reps: 2, pen: 1, exact: 0, budget: 20000, koiMul: 1, P: null,
+      // v2 (2026-11-28): the fast simulator (aisim.js); worlds2 = sampled worlds per decision (each action played out `reps` times in each).
+      // Measured (paired deals, Lv.20 settings): 300 vs 100 worlds +0.28±0.12/hand, 1000 vs 300 +0.39±0.13, 3000 vs 1000 no gain;
+      // v2 with 300 worlds vs the old Lv.16 +0.47±0.22. Not adopted (no significant gain): hand inference from the opponent's discards
+      // (pen 0.3: -0.25±0.12, pen 0.7: -0.18±0.12), exact endgame search with ≤6 cards in hand (+0.02±0.12), 4x worlds for koi-koi (-0.04±0.12).
+      v2: true, worlds2: [0, 2, 3, 4, 6, 8, 10, 14, 18, 24, 30, 40, 60, 90, 130, 180, 250, 350, 500, 700, 1000][lv], reps: 2, pen: 1, exact: 0, budget: 20000, koiMul: 1, P: null,
     };
   }
 
