@@ -126,10 +126,14 @@ function cell(img, k, ch, col) {
   return cv;
 }
 const INK = '#141414', RED2 = '#d0122a', GRN2 = '#127040';
+// 花牌（種類 34〜41＝春夏秋冬梅蘭竹菊）→ 絵のシートのセル（18〜21 梅蘭菊竹、22〜25 春夏秋冬）
+const FLOWER_CELL = [22, 23, 24, 25, 18, 19, 21, 20];
+const FLOWER_KANJI = '春夏秋冬梅蘭竹菊';
 function paintSheet(ctx, type, red) {
   const put = cv => ctx.drawImage(cv, 0, 0, FW, FH);
   if (type < 9) { put(cell(gImg, type, 0, red ? RED2 : INK)); put(cell(gImg, type, 1, RED2)); return true; }
   if (type < 27) { put(cell(aImg, type < 18 ? type - 9 : 9 + type - 18, -1, red ? RED2 : null)); return true; }
+  if (type >= 34) { put(cell(aImg, FLOWER_CELL[type - 34], -1, null)); return true; }   // 花牌（国標麻将）
   const k = type - 27;
   if (k < 4) { put(cell(gImg, 9 + k, 0, INK)); return true; }
   if (k === 5) { put(cell(gImg, 13, 2, GRN2)); return true; }
@@ -147,6 +151,11 @@ function paint(type, red) {
   }
   ground(ctx);
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  if (type >= 34) {   // 花牌（絵のシートが読めないとき）：漢字1字
+    ctx.fillStyle = type < 38 ? C_RED : C_GRN; ctx.font = `800 130px ${KANJI_FONT}`;
+    ctx.fillText(FLOWER_KANJI[type - 34], FW / 2, FH / 2);
+    return cv;
+  }
   if (type < 9) {
     const n = type;
     ctx.fillStyle = red ? C_RED : C_BLK;
@@ -246,6 +255,6 @@ function url(type, red) {
 }
 function reset() { cache.clear(); urls.clear(); ncache.clear(); }
 const RED = new Set([16, 52, 88]);
-const MJTiles = { FW, FH, canvas, url, reset, normal, ready, sheets: () => !!(gImg && aImg), ofId: id => ({ t: id >> 2, red: RED.has(id) }), urlId: id => url(id >> 2, RED.has(id)) };
+const MJTiles = { FW, FH, canvas, url, reset, normal, ready, sheets: () => !!(gImg && aImg), ofId: id => id >= 136 ? { t: 34 + id - 136, red: false } : { t: id >> 2, red: RED.has(id) }, urlId: id => id >= 136 ? url(34 + id - 136, false) : url(id >> 2, RED.has(id)), FLOWER_KANJI };
 root.MJTiles = MJTiles;
 })(window);
