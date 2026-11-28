@@ -28,6 +28,7 @@
   }
   const FIB1 = fiberURL(4, .0125, .03125, .62), FIB2 = fiberURL(11, .9, .9, .55);
 
+
   /* ---------- the stage floor (ported from the game's drawFloor) ---------- */
   const FLOOR = {
     tower: ['dirt', 'snow', 'post'], inn: ['dirt', 'snow', 'post'], forge: ['dirt', 'snow', 'rock'], mill: ['plank', 'water', 'post'], grave: ['dirt', 'snow', 'cross'],
@@ -92,302 +93,323 @@
   }
 
 
-  const THCSS = `#theater .world{position:absolute;inset:0;overflow:hidden;color:var(--ink)}
 
-#theater .scrim{position:absolute;inset:0}
-#theater .scrim>div{position:absolute;inset:0}
-#theater .scrim .base{background:var(--paper)}
-#theater .scrim .fib{inset:-60%;transform-origin:50% 50%}
-#theater .scrim .fib1{background-image:var(--fib1);background-size:640px 640px;mix-blend-mode:multiply;opacity:.5}
-#theater .scrim .fib2{background-image:var(--fib2);background-size:320px 320px;mix-blend-mode:multiply;opacity:.16}
-#theater .scrim .lampL{inset:auto;width:2600px;height:2600px;border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--lamp) 92%,white) 0%,color-mix(in srgb,var(--lamp) 60%,transparent) 22%,transparent 64%);}
-#theater .scrim .moonl{background:radial-gradient(70% 80% at 72% 18%,color-mix(in srgb,var(--moon) 70%,white) 0%,var(--moon) 25%,color-mix(in srgb,var(--night) 60%,var(--moon)) 62%,var(--night) 100%)}
-#theater .shadeL{position:absolute;inset:0;z-index:8;pointer-events:none}
-#theater .scrim .edge{background:radial-gradient(120% 95% at 50% 45%,transparent 46%,rgba(40,20,6,.5) 100%)}
-#theater .L{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
-#theater .bd{position:absolute}
-#theater .bd svg{position:absolute;inset:0;width:100%;height:100%;color:var(--ink);overflow:visible}
-#theater .only-far .mid,#theater .only-far .near,#theater .only-mid .far,#theater .only-mid .near,#theater .only-near .far,#theater .only-near .mid{display:none}
-#theater .scn .far{opacity:.17;filter:blur(2.4px)}
-#theater .scn .mid{opacity:.42;filter:blur(.8px)}
-#theater .scn .near{opacity:.94;filter:blur(.35px)}
-#theater .scn .glow{fill:var(--lamp);opacity:.95}
-#theater .night .scn .glow{fill:#ffd99a;opacity:.85}
-#theater .scn .snow{fill:var(--paper);opacity:.85}
-#theater .scn .pane{fill:color-mix(in srgb,var(--night) 55%,var(--paper));opacity:.9}
-#theater .scn .cel-s{opacity:.8}
-#theater .scn .cut:not([fill="none"]){fill:var(--paper);opacity:.9}
-#theater .scn [fill="none"].cut{stroke:var(--paper);opacity:.85}
-#theater .night .scn .cut:not([fill="none"]){fill:color-mix(in srgb,var(--moon) 55%,var(--night))}
-#theater .night .scn [fill="none"].cut{stroke:color-mix(in srgb,var(--moon) 55%,var(--night))}
-#theater .scn .moonc{fill:color-mix(in srgb,var(--lamp) 35%,white);opacity:.9}
-#theater .scn .smoke{opacity:.35}.scn .smokecut{stroke:var(--paper);opacity:.55}
-#theater .scn .ice{fill:var(--paper);opacity:.45}.scn .snowland{fill:var(--paper);opacity:.75}
-#theater .night .pup,#theater .night .scn,#theater .night .floor svg{color:#05070d}
-#theater .floor{position:absolute;left:0;background:linear-gradient(to bottom,color-mix(in srgb,var(--ink) 14%,transparent),transparent 40%)}
-#theater .floor svg{position:absolute;inset:0;width:100%;height:100%;color:var(--ink)}
-#theater .floor .road{fill:currentColor;opacity:.09;filter:blur(1.2px)}
-#theater .floor .tuft{fill:currentColor;opacity:.88;filter:blur(.5px)}
-#theater .floor .side{fill:currentColor;opacity:.2;filter:blur(.9px)}
-#theater .floor .far{fill:currentColor;opacity:.42;filter:blur(1px)}
-#theater .floor .pave{fill:currentColor;opacity:.13;filter:blur(.6px)}
-#theater .floor .dark{fill:currentColor;opacity:.5;filter:blur(.5px)}
-#theater .floor .water{fill:currentColor;opacity:.13}
-#theater .floor .wave{fill:none;stroke:currentColor;stroke-width:1.5;opacity:.28;filter:blur(.4px)}
-#theater .floor .snow{fill:#fffaf0;opacity:.55;stroke:currentColor;stroke-opacity:.25;stroke-width:1.5;filter:blur(.5px)}
-#theater .night .floor .snow{fill:color-mix(in srgb,var(--moon) 70%,white);opacity:.4}
-#theater .floor .w-plank .pave,#theater .floor .w-step .pave{opacity:.3}
-#theater .floor .s-snow .road{opacity:.2}
-#theater .floor .rug{fill:currentColor;opacity:.16;filter:blur(.6px)}
-#theater .floor .sand{fill:currentColor;opacity:.1;filter:blur(1px)}
-#theater .night .floor .road{opacity:.13}
-#theater .pp{position:absolute}
-#theater .pp .sway{width:100%;height:100%;transform-origin:50% 94.4%}
-#theater .pp .pup{display:block;width:100%;height:100%;color:var(--ink);overflow:visible}
-#theater .pup .cel{fill:var(--cel);opacity:.92}
-#theater .pup .cel-s{stroke:var(--cel)}
-#theater .pup .lamp{fill:#ffd27a}
-#theater .pup .rod{stroke:rgba(20,12,6,.38);stroke-width:1.3;fill:none}
-#theater .wolfsil{display:block;width:100%;height:auto;overflow:visible}
-#theater .wolfsil .eye{fill:#ffcf86}
-#theater .flake{position:absolute;left:0;top:0;border-radius:50%;background:#fffaf0}
-#theater .abs{position:absolute}
-#theater .puff{position:absolute;border-radius:50%;background:radial-gradient(closest-side,rgba(235,242,255,.95),rgba(235,242,255,0));filter:blur(4px)}
-#theater .pole{position:absolute;top:0;width:46px;height:62%;background:rgba(8,8,16,.55);filter:blur(10px)}
-#theater .tlamp{position:absolute;z-index:9;width:260px;height:260px;border-radius:50%;pointer-events:none;mix-blend-mode:screen;background:radial-gradient(closest-side,rgba(255,214,150,.75),rgba(255,190,110,.2) 50%,transparent)}
-#theater .steam{position:absolute;border-radius:50%;background:radial-gradient(closest-side,rgba(255,252,244,.9),rgba(255,252,244,0));filter:blur(18px)}
-#theater .ember{position:absolute;left:0;top:0;border-radius:50%;background:radial-gradient(closest-side,#ffd49a,#ff8a30 60%,transparent)}
-#theater .pp{left:0;top:0}`;
+  /* ---------- drawing on one canvas ----------
+     Every picture (backdrop layers, floor, rooms, puppets, props) is turned into a bitmap once, at the size it will be seen,
+     and each frame only places those bitmaps. No CSS filters or blending, no big composited layers: light on the
+     graphics chip and on memory (phones restarted the page when every layer was its own huge texture). */
+  const PAL_DEF = { paper: '#efe3c8', lamp: '#ffcf86', ink: '#1b120c', night: '#16233a', moon: '#b9c8e6', acc: '#c2412d' };
+  const SVGCSS = `.scn .far{opacity:.17;filter:url(#fb2)}.scn .mid{opacity:.42}.scn .near{opacity:.94}
+.scn .glow{fill:var(--lamp);opacity:.95}.night .scn .glow{fill:#ffd99a;opacity:.85}.scn .snow{fill:var(--paper);opacity:.85}
+.scn .pane{fill:color-mix(in srgb,var(--night) 55%,var(--paper));opacity:.9}.scn .cel-s{opacity:.8}
+.scn .cut:not([fill="none"]){fill:var(--paper);opacity:.9}.scn [fill="none"].cut{stroke:var(--paper);opacity:.85}
+.night .scn .cut:not([fill="none"]){fill:color-mix(in srgb,var(--moon) 55%,var(--night))}.night .scn [fill="none"].cut{stroke:color-mix(in srgb,var(--moon) 55%,var(--night))}
+.scn .moonc{fill:color-mix(in srgb,var(--lamp) 35%,white);opacity:.9}.scn .smoke{opacity:.35}.scn .smokecut{stroke:var(--paper);opacity:.55}
+.scn .ice{fill:var(--paper);opacity:.45}.scn .snowland{fill:var(--paper);opacity:.75}
+.only-far .mid,.only-far .near,.only-mid .far,.only-mid .near,.only-near .far,.only-near .mid{display:none}
+.floor .road{fill:currentColor;opacity:.09;filter:url(#fb1)}.floor .tuft{fill:currentColor;opacity:.88}.floor .side{fill:currentColor;opacity:.2;filter:url(#fb1)}
+.floor .far{fill:currentColor;opacity:.42;filter:url(#fb1)}.floor .pave{fill:currentColor;opacity:.13}.floor .dark{fill:currentColor;opacity:.5}
+.floor .water{fill:currentColor;opacity:.13}.floor .wave{fill:none;stroke:currentColor;stroke-width:1.5;opacity:.28}
+.floor .snow{fill:#fffaf0;opacity:.55;stroke:currentColor;stroke-opacity:.25;stroke-width:1.5}.night .floor .snow{fill:color-mix(in srgb,var(--moon) 70%,white);opacity:.4}
+.floor .w-plank .pave,.floor .w-step .pave{opacity:.3}.floor .s-snow .road{opacity:.2}.floor .rug{fill:currentColor;opacity:.16}.floor .sand{fill:currentColor;opacity:.1;filter:url(#fb1)}
+.night .floor .road{opacity:.13}
+.pup .cel{fill:var(--cel);opacity:.92}.pup .cel-s{stroke:var(--cel)}.pup .lamp{fill:#ffd27a}.pup .rod{stroke:rgba(20,12,6,.38);stroke-width:1.3;fill:none}`;
+  // a whole svg document for one picture, with the story's colours and the cut-paper styles inside it
+  function svgDoc(w, h, inner, pal, night, blur) {
+    const vars = Object.keys(PAL_DEF).map(k => `--${k}:${pal[k] || PAL_DEF[k]}`).join(';');
+    const ink = night ? '#05070d' : (pal.ink || PAL_DEF.ink);
+    const bl = blur ? `<filter id="pb" x="-30%" y="-10%" width="160%" height="120%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="${blur}"/></filter>` : '';
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" class="${night ? 'night' : ''}" style="${vars};color:${ink}"><defs><filter id="fb1" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="1"/></filter><filter id="fb2" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="2.4"/></filter>${bl}</defs><style>${SVGCSS}</style>${blur ? `<g filter="url(#pb)">${inner}</g>` : inner}</svg>`;
+  }
+  // svg text → bitmap (a canvas) of pw × ph pixels
+  function raster(doc, pw, ph) {
+    return new Promise(res => {
+      const img = new Image();
+      img.onload = () => { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(pw)); c.height = Math.max(1, Math.round(ph)); try { c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); } catch (e) { } res(c); };
+      img.onerror = () => res(null);
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(doc);
+    });
+  }
+  // how many bitmap pixels per world pixel the pictures need (the frame's scale on screen × the screen's pixel ratio, kept modest)
+  let RQ = 1;
+  const ratio = () => Math.min(window.devicePixelRatio || 1, 1.5);
 
-  /* ---------- a world: paper screen + backdrop (far/mid/near) + floor + people, seen by a camera ---------- */
-  // o: { st (story), loc, night, ww, wh (world size), gy (ground line), pFar, pMid, blurBg }
-  function World(root, o) {
-    const s = o.st, pal = Object.assign({}, s.pal, o.pal || {});
-    this.o = o; this.s = s;
+  /* ---------- a world: backdrop (far/mid/near) + floor + people + props, seen by a camera ---------- */
+  // o: { st, loc, room, night, ww, wh, gy, pFar, pMid, blurBg }
+  function World(o) {
+    const s = o.st, pal = this.pal = Object.assign({}, PAL_DEF, s.pal, o.pal || {});
+    this.o = o; this.s = s; this.night = !!o.night;
     const ww = this.ww = o.ww || W, wh = this.wh = o.wh || H;
     const gy = this.gy = o.gy != null ? o.gy : Math.round(wh * .58);
-    const box = this.box = el('div', 'world' + (o.night ? ' night' : ''), null, root);
-    for (const k of ['paper', 'lamp', 'acc', 'ink', 'night', 'moon']) if (pal[k]) box.style.setProperty('--' + k, pal[k]);
-    box.style.setProperty('--fib1', FIB1); box.style.setProperty('--fib2', FIB2);
-    this.scrim = el('div', 'scrim', `<div class="base"></div><div class="fib fib1"></div><div class="fib fib2"></div><div class="lampL"></div><div class="moonl"></div><div class="edge"></div>`, box);
-    const scn = o.loc ? (ART.sceneNew && ART.sceneNew(s.scene, o.loc, o.seed || 1)) || ART.scene(s.scene, o.loc, o.seed || 1) : '';
-    const bw = ww, bh = this.bh = Math.round(bw * 900 / 1600);
-    const by = this.by = gy - bh * (872 / 900);
-    this.layers = [];
-    const mk = (cls, p, html, z) => { const L = el('div', 'L ' + cls, html, box); L.style.width = ww + 'px'; L.style.height = wh + 'px'; L.style.zIndex = z; const o2 = { el: L, p }; this.layers.push(o2); return o2; };
-    const clipH = Math.round(gy - by + 3);
-    const bdrop = part => scn ? `<div class="bd" style="left:0;top:${by}px;width:${bw}px;height:${clipH}px;overflow:hidden">${scn.replace('<svg class="scn"', `<svg class="scn only-${part}" style="height:${bh}px;bottom:auto"`)}</div>` : '';
-    // an interior (o.room: { far, mid, near } html, drawn for this world's size) replaces the outdoor backdrop
-    const R = o.room ? o.room(ww, wh, gy) : null;
-    this.far = mk('Lfar', o.pFar != null ? o.pFar : .55, R ? R.far || '' : bdrop('far'), 2);
-    this.mid = mk('Lmid', o.pMid != null ? o.pMid : .78, R ? R.mid || '' : bdrop('mid'), 3);
-    this.near = mk('Lnear', .95, R ? R.near || '' : bdrop('near'), 4);
-    const floc = R && R.floor ? R.floor : o.loc;
-    this.floor = mk('floorL', 1, floc && o.floor !== false ? `<div class="floor" style="top:${gy - 4}px;height:${wh - gy + 4}px;width:${ww}px">${floorSVG(floc, ww, wh - gy + 4)}</div>` : '', 5);
-    this.cast = mk('cast', 1, '', 6);
-    this.fx = mk('fx', 1, '', 7);
-    this.fg = mk('fg', 1.25, '', 8);
-    if (o.blurBg) for (const L of [this.far, this.mid, this.near]) { const c = L.el.firstElementChild; if (c) { c.style.filter = `blur(${o.blurBg}px)`; } }   // the blur sits on the still picture inside the moving layer, so it is drawn once, not every frame
+    const bw = ww, bh = this.bh = Math.round(bw * 900 / 1600), by = this.by = gy - bh * (872 / 900);
     this.cam = { x: ww / 2, y: wh / 2, z: 1, r: 0 };
-    this.people = {};
+    this.people = {}; this.sprites = []; this.pending = [];
+    this.lt = {}; this.bl = null; this.shakeY = 0; this.box = { classList: { add() { } } };
+    const R = o.room ? o.room(ww, wh, gy) : null;
+    const scn = !R && o.loc ? (ART.sceneNew && ART.sceneNew(s.scene, o.loc, o.seed || 1)) || ART.scene(s.scene, o.loc, o.seed || 1) : '';
+    const clipH = Math.round(gy - by + 3);
+    const bd = part => scn ? `<clipPath id="cl"><rect x="0" y="0" width="${bw}" height="${clipH}"/></clipPath><g transform="translate(0 ${by.toFixed(1)})" clip-path="url(#cl)">${scn.replace('<svg class="scn"', `<svg class="scn only-${part}" x="0" y="0" width="${bw}" height="${bh}"`)}</g>` : '';
+    const floc = R && R.floor ? R.floor : o.loc;
+    const fl = floc && o.floor !== false ? `<defs><linearGradient id="fg0" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${pal.ink}" stop-opacity=".14"/><stop offset=".4" stop-color="${pal.ink}" stop-opacity="0"/></linearGradient></defs><g class="floor" transform="translate(0 ${gy - 4})"><rect width="${ww}" height="${wh - gy + 4}" fill="url(#fg0)"/>${floorSVG(floc, ww, wh - gy + 4)}</g>` : '';
+    // the layers: [name, parallax, svg body, height of the picture]
+    const L = [['far', o.pFar != null ? o.pFar : .55, R ? R.far : bd('far')], ['mid', o.pMid != null ? o.pMid : .78, R ? R.mid : bd('mid')], ['near', .95, R ? R.near : bd('near')], ['floor', 1, fl], ['cast', 1, ''], ['fx', 1, ''], ['fg', 1.25, '']];
+    this.layers = L.map(([name, p, body]) => ({ name, p, body: body || '', bmp: null }));
+    for (const k of ['far', 'mid', 'near', 'floor', 'cast', 'fx', 'fg']) this[k] = k;
+    // the backdrop is blurred into its picture once (rooms seen past a speaker's shoulder)
+    this.blurBg = o.blurBg || 0;
   }
-  World.prototype.camera = function (x, y, z, r) {
-    const c = this.cam; c.x = x; c.y = y; c.z = z; c.r = r || 0;
-    const cx0 = this.ww / 2, cy0 = this.wh / 2;
+  // make the bitmaps (call once the frame's size on screen is known)
+  World.prototype.prepare = function () {
+    const q = RQ, out = [];
     for (const L of this.layers) {
-      const zp = 1 + (z - 1) * L.p, px = cx0 + (x - cx0) * L.p, py = cy0 + (y - cy0) * L.p;
-      L.el.style.transform = `translate(${W / 2}px,${H / 2}px) rotate(${c.r.toFixed(3)}deg) scale(${zp.toFixed(4)}) translate(${(-px).toFixed(1)}px,${(-py).toFixed(1)}px)`;
+      if (!L.body || L.bmp) continue;
+      const blurred = this.blurBg && L.name !== 'floor';
+      // blurred pictures need fewer pixels; and never more than 4096 across
+      // only the band that has something in it: the backdrop down to the ground, the floor from the ground down
+      const y0 = L.name === 'floor' ? Math.max(0, this.gy - 4) : 0, y1 = L.name === 'floor' ? this.wh : Math.min(this.wh, this.gy + 6), hh = y1 - y0;
+      const k = Math.min(q * (blurred ? .5 : 1.05), 4096 / this.ww, 4096 / hh, Math.sqrt(5e6 / (this.ww * hh)));   // at most 5 million pixels a layer
+      const doc = svgDoc(this.ww, hh, `<g transform="translate(0 ${-y0})">${L.body}</g>`, this.pal, this.night, blurred ? this.blurBg : 0);
+      L.y0 = y0; L.hh = hh;
+      out.push(raster(doc, this.ww * k, hh * k).then(c => { L.bmp = c; }));
     }
-    const fz = 1 + (z - 1) * .85;
-
+    for (const sp of this.sprites) if (sp.svg && !sp.bmp) out.push(sp.make());
+    for (const id in this.people) out.push(this.people[id].need(0, 300));
+    return Promise.all(out);
   };
-  // where a world point lands in the frame
+  World.prototype.camera = function (x, y, z, r) { const c = this.cam; c.x = x; c.y = y; c.z = z; c.r = r || 0; };
   World.prototype.toFrame = function (x, y, p) { p = p == null ? 1 : p; const c = this.cam, zp = 1 + (c.z - 1) * p, px = this.ww / 2 + (c.x - this.ww / 2) * p, py = this.wh / 2 + (c.y - this.wh / 2) * p; return [W / 2 + (x - px) * zp, H / 2 + (y - py) * zp]; };
-  World.prototype.light = function (o) {
-    const L = this._lamp || (this._lamp = this.scrim.querySelector('.lampL')), M = this.scrim.querySelector('.moonl'), Ed = this.scrim.querySelector('.edge'), B = this.scrim.querySelector('.base');
-    L.style.left = (o.lx != null ? o.lx : .5) * W + 'px'; L.style.top = (o.ly != null ? o.ly : .46) * H + 'px';
-    L.style.opacity = ((o.lamp != null ? o.lamp : .95) * .42).toFixed(3);   // a plain glow (no light blending: much cheaper for the graphics chip) L.style.transform = `translate(-50%,-50%) scale(${o.ls || 1})`;
-    M.style.opacity = o.moon || 0; Ed.style.opacity = o.edge != null ? o.edge : 1;
-    B.style.opacity = o.paper != null ? o.paper : 1;
-    const Sd = this._sd || (this._sd = el('div', 'shadeL', null, this.box)), lx = (o.lx != null ? o.lx : .5) * 100, ly = (o.ly != null ? o.ly : .46) * 100;
-    const d = o.dark != null ? o.dark : 0, r = o.r || 75, tint = o.tint || '26,12,4';
-    const bg = d ? `radial-gradient(${(r * 1.25).toFixed(1)}% ${r.toFixed(1)}% at ${lx.toFixed(1)}% ${ly.toFixed(1)}%, rgba(${tint},0) 0%, rgba(${tint},${(d * .18).toFixed(3)}) 35%, rgba(${tint},${(d * .62).toFixed(3)}) 70%, rgba(${tint},${d.toFixed(3)}) 100%)` : 'none';
-    if (Sd._bg !== bg) { Sd.style.background = bg; Sd._bg = bg; }
+  World.prototype.light = function (o) { this.lt = o; };
+  World.prototype.bloom = function (o) { this.bl = o; };
+  // a prop: an svg picture (or a soft glow) in a layer. Its fields (x, y, w, h, op, rot, sx, sy, ox, oy) are set by the shot.
+  World.prototype.add = function (layer, svg, o) {
+    o = o || {};
+    const sp = Object.assign({ layer: layer || 'cast', svg: svg || null, x: 0, y: 0, w: 100, h: 100, op: 1, rot: 0, sx: 1, sy: 1, ox: .5, oy: .5, blur: 0, glow: null, z: 0 }, o);
+    const world = this;
+    sp.make = function () { if (!sp.svg) return Promise.resolve(); const k = Math.min(RQ * 1.2 * (sp.blur ? .5 : 1), 2048 / Math.max(sp.w, sp.h)); const body = sp.svg.replace(/width="100%" height="100%"/, `width="${sp.w}" height="${sp.h}"`); return raster(svgDoc(sp.w, sp.h, body, world.pal, world.night, sp.blur), sp.w * k, sp.h * k).then(c => { sp.bmp = c; }); };
+    this.sprites.push(sp); return sp;
   };
-  World.prototype.bloom = function (o) {
-    const b = this._bl || (this._bl = el('div', 'bloomL', null, this.box));
-    b.style.left = (o.x * W) + 'px'; b.style.top = (o.y * H) + 'px';
-    b.style.width = b.style.height = (o.r || 1400) + 'px'; b.style.opacity = o.a == null ? .35 : o.a;
-    if (o.c && b._c !== o.c) { b.style.background = `radial-gradient(closest-side, ${o.c}, transparent)`; b._c = o.c; }
-  };
-  World.prototype.add = function (layer, cls, html, style) { const e = el('div', 'abs ' + (cls || ''), html, this[layer].el); if (style) Object.assign(e.style, style); return e; };
-  // a puppet of the story (feet at x,y; h = height in px)
+  // a puppet of the story (or opt.look for someone who is not in the cast)
   World.prototype.puppet = function (key, id, opt) {
-    const c = this.s.chars.find(x => x.id === id); if (!c) return null;
-    const wrap = el('div', 'pp', `<div class="sway">${ART.puppet(c.look, c.color, { rod: opt && opt.rod === false ? false : true })}</div>`, (opt && opt.layer ? this[opt.layer] : this.cast).el);
-    const P = { el: wrap, sway: wrap.firstChild, c, id, phase: (opt && opt.phase) || (Object.keys(this.people).length * 1.37) % 4.6, lift: 0 };
-    // where the head is, as a share of the puppet's height from the top (measured once: hats, hoods and children differ)
-    try { wrap.style.width = '120px'; wrap.style.height = '250px'; const sv = wrap.querySelector('svg'), g = sv.querySelector('.fig > g[transform]'), sr = sv.getBoundingClientRect(), gr = g.getBoundingClientRect();
-      if (sr.height > 0 && gr.height > 0) { P.hc = (gr.top + gr.height * .55 - sr.top) / sr.height; P.ht = (gr.top - sr.top) / sr.height; } } catch (e) { }
+    opt = opt || {};
+    const c = opt.look ? { id: key, look: opt.look, color: opt.color || '#000' } : this.s.chars.find(x => x.id === id); if (!c) return null;
+    const world = this;
+    const P = { c, id, layer: opt.layer || 'cast', rod: opt.rod !== false, phase: opt.phase || (Object.keys(this.people).length * 1.37) % 4.6, lift: 0, st: null, bmps: {}, wait: {} };
+    const svg = ART.puppet(c.look, c.color, { rod: P.rod });
+    // the head, as a share of the height from the top (from the drawing: hats, hoods and children differ)
+    try { const tmp = document.createElement('div'); tmp.style.cssText = 'position:absolute;left:-9999px;top:0;width:120px;height:250px;visibility:hidden'; tmp.innerHTML = svg; document.body.appendChild(tmp);
+      const sv = tmp.querySelector('svg'); sv.style.width = '120px'; sv.style.height = '250px'; const g = sv.querySelector('.fig > g[transform]'), sr = sv.getBoundingClientRect(), gr = g.getBoundingClientRect();
+      if (sr.height > 0 && gr.height > 0) { P.hc = (gr.top + gr.height * .55 - sr.top) / sr.height; P.ht = (gr.top - sr.top) / sr.height; } tmp.remove(); } catch (e) { }
+    const body = svg.replace(/^<svg [^>]*>/, '<svg x="0" y="0" width="120" height="250" viewBox="0 0 120 250" class="pup" style="--cel:' + c.color + '">');
+    // a bitmap of this puppet at about px pixels tall, with blur b (world pixels) painted in
+    P.need = (b, px) => {
+      const hb = [192, 320, 512, 768, 1024, 1400, 1800, 2400][[192, 320, 512, 768, 1024, 1400, 1800, 2400].findIndex(v => v >= px * (b ? .6 : 1)) >>> 0] || 2400;
+      const key = b + '|' + hb;
+      if (P.bmps[key] || P.wait[key]) return P.wait[key] || Promise.resolve();
+      const sd = b ? b * 250 / Math.max(1, P.h || 1000) : 0;
+      P.wait[key] = raster(svgDoc(120, 250, body, world.pal, world.night, sd ? Math.max(.15, sd) : 0), hb * 120 / 250, hb).then(cv => { if (cv) P.bmps[key] = cv; delete P.wait[key]; });
+      return P.wait[key];
+    };
+    P.pick = (b, px) => {
+      // the best bitmap we have now; ask for a better one if it is missing
+      const want = [192, 320, 512, 768, 1024, 1400, 1800, 2400].find(v => v >= px * (b ? .6 : 1)) || 2400, k = b + '|' + want;
+      if (P.bmps[k]) return P.bmps[k];
+      P.need(b, px);
+      let best = null, bd = 1e9;
+      for (const kk in P.bmps) { const [bb, hh] = kk.split('|').map(Number); const d = Math.abs(bb - b) * 300 + Math.abs(hh - want) / 10 + (hh < want ? 50 : 0); if (d < bd) { bd = d; best = P.bmps[kk]; } }
+      return best;
+    };
     this.people[key] = P; return P;
   };
   // the middle of a puppet's head in the world, for feet at y and height h
   World.prototype.head = function (key, y, h) { const P = this.people[key]; return y - h * 236 / 250 + h * ((P && P.hc) || .3); };
   World.prototype.place = function (key, o, t) {
     const P = this.people[key]; if (!P) return;
-    const h = o.h || 420, w = h * 120 / 250, e = P.el;
-    const k = `${w.toFixed(1)}|${h.toFixed(1)}`;
-    if (P._k !== k) { e.style.width = w + 'px'; e.style.height = h + 'px'; P._k = k; }
-    // walking: a rod puppet glides with a small hop and a lean
-    const wk = o.walk ? Math.abs(Math.sin(t * Math.PI * 1.7 + P.phase)) : 0;
-    const hop = o.walk ? wk * h * .012 * o.walk : 0;
-    e.style.transform = `translate(${(o.x - w / 2).toFixed(1)}px,${(o.y - h * 236 / 250 - hop).toFixed(1)}px)`;
-    e.style.left = '0px'; e.style.top = '0px';
-    e.style.opacity = o.op != null ? o.op : 1;
-    const bq = (o.blur || 0) > 2 ? Math.max(3, Math.round(o.blur / 3) * 3) : Math.round((o.blur || 0) * 4) / 4;   // in steps, so the blur is not redrawn every frame
-    const f = `blur(${bq}px)` + (o.glow ? ` drop-shadow(0 0 ${o.glow}px ${o.glowC || 'rgba(255,200,120,.55)'})` : '');
-    if (P._f !== f) { (P.svg || (P.svg = e.querySelector('svg') || e)).style.filter = f; P._f = f; }   // the blur is painted into the puppet's own picture (kept while it only moves), not applied again every frame
-    const flip = o.face === -1 ? ' scaleX(-1)' : '';
-    const still = o.still || bq >= 1.5;   // a blurred figure keeps still, so its blur is drawn once
+    const h = o.h || 420, w = h * 120 / 250;
+    const wk = o.walk ? Math.abs(Math.sin(t * Math.PI * 1.7 + P.phase)) : 0, hop = o.walk ? wk * h * .012 * o.walk : 0;
+    const b = o.blur || 0, bq = b > 2 ? Math.max(3, Math.round(b / 3) * 3) : 0;   // blur in steps: each step is one bitmap
+    const still = o.still || bq >= 3;
     const sw = still ? 0 : Math.sin((t + P.phase) / 4.6 * Math.PI * 2) * 1.1, sc = still ? 1 : 1 + .008 * (1 + Math.sin((t + P.phase) / 2.3 * Math.PI * 2));
     const lean = o.walk ? (o.face === -1 ? -1 : 1) * 2.2 * o.walk : 0;
-    P.sway.style.transform = `${flip} rotate(${(sw + lean + (o.rot || 0)).toFixed(3)}deg) scale(1,${sc.toFixed(4)})` + (P.lift ? ` translateY(${(-P.lift).toFixed(2)}px)` : '');
-    e.style.zIndex = o.z != null ? o.z : Math.round(o.y);
+    P.h = h; P.st = { x: o.x, y: o.y - hop, h, w, face: o.face === -1 ? -1 : 1, rot: sw + lean + (o.rot || 0), sc, op: o.op != null ? o.op : 1, b: bq, z: o.z != null ? o.z : o.y };
   };
 
-  /* ---------- the theater: one frame on the stage, cut or dissolved from shot to shot ---------- */
-  let host = null, frame = null, sky = null, skyG = null, grainEl = null, blackEl = null, cur = null, old = null, raf = 0, talkAt = -1e9, ctx = null, seekT = null, lastFit = '';
+  /* ---------- the theater ---------- */
+  let host = null, cv = null, g = null, cur = null, old = null, raf = 0, talkAt = -1e9, ctx = null, seekT = null;
+  let paperC = null, paperKey = '', sizeKey = '';
   const css = () => `#theater{position:absolute;inset:0;z-index:7;overflow:hidden;background:#000;opacity:0;transition:opacity .9s ease;pointer-events:none}
 #theater.on{opacity:1}
-#theater .thFrame{position:absolute;left:0;top:0;width:${W}px;height:${H}px;transform-origin:0 0;overflow:hidden;background:#000}
-#theater .shot{position:absolute;inset:0;overflow:hidden}
-#theater .world{position:absolute;inset:0;overflow:hidden;color:var(--ink)}
-
-#theater .thSky{position:absolute;left:0;top:0;z-index:3;pointer-events:none}
-#theater .thVig{position:absolute;inset:0;z-index:4;pointer-events:none;background:radial-gradient(130% 110% at 50% 48%,transparent 52%,rgba(6,3,1,.6) 100%)}
-#theater .thGrain{display:none;position:absolute;inset:-128px;z-index:5;pointer-events:none;opacity:.5;mix-blend-mode:overlay;will-change:transform;animation:thGrain .5s steps(6) infinite}
-@keyframes thGrain{0%{transform:translate(0,0)}17%{transform:translate(-61px,37px)}33%{transform:translate(43px,-88px)}50%{transform:translate(-97px,-21px)}67%{transform:translate(19px,74px)}83%{transform:translate(88px,13px)}100%{transform:translate(0,0)}}
-#theater .bloomL{position:absolute;z-index:9;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(closest-side,rgba(255,226,170,.5),rgba(255,200,130,.16) 45%,transparent);pointer-events:none}
-#theater .lit .pup .cel{filter:drop-shadow(0 0 5px var(--cel)) drop-shadow(0 0 14px var(--cel))}
-#theater .wolfw{position:absolute}
-#theater .scrim .fib{display:none}
-#theater .scrim .base{background-color:var(--paper);background-image:var(--fib1),var(--fib2);background-size:640px 640px,320px 320px;background-blend-mode:multiply,multiply}
-#theater .pp{will-change:transform}
-#theater.lite .thGrain{display:none}
-#theater .thBlack{position:absolute;inset:0;z-index:6;background:#000;opacity:0;pointer-events:none}
-body.th-on #cineShade,body.th-on #cineBloom,body.th-on #cineSky,body.th-on #cineGrain{opacity:0!important}
-/* the ordinary stage under the theater is not drawn while the theater plays (it comes back as the theater fades out) */
-body.th-full #cam,body.th-full #scrim,body.th-full #cineShade,body.th-full #cineBloom,body.th-full #cineSky,body.th-full #cineGrain,body.th-full #cineFg{visibility:hidden}
-` + THCSS;
-
+#theater canvas{position:absolute;left:0;top:0}
+body.th-full #cam,body.th-full #scrim,body.th-full #cineShade,body.th-full #cineBloom,body.th-full #cineSky,body.th-full #cineGrain,body.th-full #cineFg{visibility:hidden}`;
   function init() {
     if (host) return;
     const st = $('stage'); if (!st) return;
     const s = document.createElement('style'); s.textContent = css(); document.head.appendChild(s);
     host = el('div', null, null, st); host.id = 'theater';
-    frame = el('div', 'thFrame', null, host);
-    sky = el('canvas', 'thSky', null, host); skyG = sky.getContext('2d');
-    el('div', 'thVig', null, host);
-    grainEl = el('div', 'thGrain', null, host);
-    blackEl = el('div', 'thBlack', null, host);
-    // film grain: one tile of noise, moved around (composited only)
-    const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'), im = g.createImageData(256, 256), r = rng(31);
-    for (let i = 0; i < im.data.length; i += 4) { const v = 128 + (r() - .5) * 220; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 46; }
-    g.putImageData(im, 0, 0); grainEl.style.backgroundImage = `url(${c.toDataURL()})`;
+    cv = el('canvas', null, null, host); g = cv.getContext('2d');
   }
-  // the visible part of the stage (above the text box when it covers the stage)
   function view() {
     const s = $('stage').getBoundingClientRect(), d = $('dock');
     let vb = s.height, solid = false;
     if (d && !d.classList.contains('hide')) { const r = d.getBoundingClientRect(); if (r.top > s.top + 80 && r.top < s.bottom) { vb = r.top - s.top; const tb = $('tx'), tr = tb && !tb.classList.contains('hide') ? tb.getBoundingClientRect() : r; solid = tr.width > s.width * .9; } }
     return { w: s.width, h: s.height, vb, solid };
   }
-  // fit the 1920×1080 frame over the stage, keeping the shot's point of interest (fx,fy in the frame) in the visible part
+  // where the 1920×1080 frame sits on the stage, keeping the shot's point of interest (fx,fy) in view
   function fit(fx, fy) {
-    const v = view();
-    // a text box across the whole width (a phone) hides what is under it: then only the part above it needs the picture
-    const hh = v.solid ? v.vb : v.h;
-    const vcx = v.w / 2, vcy = v.vb * .5;
+    const v = view(), hh = v.solid ? v.vb : v.h, vcx = v.w / 2, vcy = v.vb * .5;
     let s = Math.max(v.w / W, hh / H);
-    // the point should be able to sit at the middle of what is visible without the frame's bottom edge showing
     if (fy < H && !v.solid) s = Math.max(s, (hh - vcy) / (H - fy));
     s = Math.min(s, Math.max(v.w / W, hh / H) * 1.35);
     const x0 = clamp(vcx - s * fx, v.w - s * W, 0), y0 = clamp(vcy - s * fy, hh - s * H, 0);
-    const k = `translate(${x0.toFixed(1)}px,${y0.toFixed(1)}px) scale(${s.toFixed(4)})`;
-    if (k !== lastFit) { frame.style.transform = k; lastFit = k; }
-    return { s, x0, y0, v };
+    return { s, x0, y0, v, hh };
+  }
+  // the paper of the screen (colour and fibres), made once for each size and story
+  function paper(pal, pw, ph) {
+    const k = pal.paper + pw + 'x' + ph;
+    if (paperKey === k && paperC) return paperC;
+    paperKey = k; paperC = null;
+    const doc = `<svg xmlns="http://www.w3.org/2000/svg" width="${pw}" height="${ph}"><filter id="f1"><feTurbulence type="fractalNoise" baseFrequency="${(.0125 / 1).toFixed(4)} ${(.03125).toFixed(4)}" numOctaves="4" seed="4" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 .42 0 0 0 0 .32 0 0 0 0 .22 0 0 0 .31 0"/></filter><filter id="f2"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="11"/><feColorMatrix values="0 0 0 0 .42 0 0 0 0 .32 0 0 0 0 .22 0 0 0 .09 0"/></filter><rect width="100%" height="100%" fill="${pal.paper}"/><rect width="100%" height="100%" filter="url(#f1)"/><rect width="100%" height="100%" filter="url(#f2)"/></svg>`;
+    raster(doc, pw, ph).then(c => { if (paperKey === k) paperC = c; });
+    return null;
+  }
+  const rgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; };
+  // draw one world into the frame (frame coordinates are set up on g)
+  function drawWorld(w, alpha) {
+    const pal = w.pal, lt = w.lt || {};
+    g.save(); g.globalAlpha = alpha;
+    // the paper with the lamp behind it
+    const pc = paper(pal, Math.min(1600, Math.round(W * RQ * .7)), Math.min(900, Math.round(H * RQ * .7)));
+    if (pc) g.drawImage(pc, 0, 0, W, H); else { g.fillStyle = pal.paper; g.fillRect(0, 0, W, H); }
+    const lx = (lt.lx != null ? lt.lx : .5) * W, ly = (lt.ly != null ? lt.ly : .46) * H;
+    const lamp = (lt.lamp != null ? lt.lamp : .95) * .42, ls = lt.ls || 1;
+    if (lamp > .01) { const r = 1300 * ls, gr = g.createRadialGradient(lx, ly, 0, lx, ly, r); gr.addColorStop(0, rgba(pal.lamp, lamp)); gr.addColorStop(.22, rgba(pal.lamp, lamp * .55)); gr.addColorStop(.64, rgba(pal.lamp, 0)); g.fillStyle = gr; g.fillRect(0, 0, W, H); }
+    if (lt.moon) { const gr = g.createRadialGradient(W * .72, H * .18, 0, W * .72, H * .18, W * .95); gr.addColorStop(0, '#dfe6f4'); gr.addColorStop(.25, pal.moon); gr.addColorStop(.62, pal.night); gr.addColorStop(1, pal.night); g.globalAlpha = alpha * lt.moon; g.fillStyle = gr; g.fillRect(0, 0, W, H); g.globalAlpha = alpha; }
+    if ((lt.edge != null ? lt.edge : 1) > 0) { const gr = g.createRadialGradient(W / 2, H * .45, W * .3, W / 2, H * .45, W * .72); gr.addColorStop(0, 'rgba(40,20,6,0)'); gr.addColorStop(1, `rgba(40,20,6,${.5 * (lt.edge != null ? lt.edge : 1)})`); g.fillStyle = gr; g.fillRect(0, 0, W, H); }
+    // the layers, far to near, each with its people and props
+    const c = w.cam, cx0 = w.ww / 2, cy0 = w.wh / 2, k = W * 0;
+    for (const L of w.layers) {
+      g.save();
+      const zp = 1 + (c.z - 1) * L.p, px = cx0 + (c.x - cx0) * L.p, py = cy0 + (c.y - cy0) * L.p;
+      g.translate(W / 2, H / 2 + (w.shakeY || 0)); if (c.r) g.rotate(c.r * Math.PI / 180); g.scale(zp, zp); g.translate(-px, -py);
+      if (L.bmp) g.drawImage(L.bmp, 0, L.y0 || 0, w.ww, L.hh || w.wh);
+      const items = [];
+      for (const id in w.people) { const P = w.people[id]; if (P.layer === L.name && P.st) items.push({ z: P.st.z, P }); }
+      for (const sp of w.sprites) if (sp.layer === L.name) items.push({ z: sp.z || 0, sp });
+      items.sort((a, b) => a.z - b.z);
+      const onScreen = RQ * zp;
+      for (const it of items) {
+        if (it.P) {
+          const P = it.P, s = P.st; if (s.op <= 0) continue;
+          const bmp = P.pick(s.b, s.h * onScreen); if (!bmp) continue;
+          g.save(); g.globalAlpha = alpha * s.op;
+          g.translate(s.x, s.y - s.h * 236 / 250 + s.h * .944 - P.lift);
+          g.scale(s.face, 1); g.rotate(s.rot * Math.PI / 180 * s.face); g.scale(1, s.sc);
+          g.drawImage(bmp, -s.w / 2, -s.h * .944, s.w, s.h);
+          g.restore();
+        } else {
+          const sp = it.sp; if (sp.op <= 0) continue;
+          g.save(); g.globalAlpha = alpha * sp.op;
+          g.translate(sp.x + sp.ox * sp.w, sp.y + sp.oy * sp.h); if (sp.rot) g.rotate(sp.rot * Math.PI / 180); g.scale(sp.sx, sp.sy);
+          if (sp.glow) { const r = Math.max(sp.w, sp.h) / 2, gr = g.createRadialGradient(0, 0, 0, 0, 0, r); sp.glow.forEach(([o, col]) => gr.addColorStop(o, col)); g.translate((.5 - sp.ox) * sp.w, (.5 - sp.oy) * sp.h); g.fillStyle = gr; g.scale(sp.w / (2 * r), sp.h / (2 * r)); g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.fill(); }
+          else if (sp.bmp) g.drawImage(sp.bmp, -sp.ox * sp.w, -sp.oy * sp.h, sp.w, sp.h);
+          g.restore();
+        }
+      }
+      g.restore();
+    }
+    // the light falling off away from the lamp, and the lamp's glow
+    const d = lt.dark != null ? lt.dark : 0;
+    if (d > 0) { const r = (lt.r || 75) / 100, tint = lt.tint || '26,12,4', rx = W * r * 1.25, gr = g.createRadialGradient(lx, ly, 0, lx, ly, rx);
+      gr.addColorStop(0, `rgba(${tint},0)`); gr.addColorStop(.35, `rgba(${tint},${(d * .18).toFixed(3)})`); gr.addColorStop(.7, `rgba(${tint},${(d * .62).toFixed(3)})`); gr.addColorStop(1, `rgba(${tint},${d.toFixed(3)})`);
+      g.save(); g.translate(lx, ly); g.scale(1, (H * r) / rx); g.translate(-lx, -ly); g.fillStyle = gr; g.fillRect(-W, -H * 2, W * 3, H * 5); g.restore(); }
+    if (w.bl) { const b = w.bl, r = (b.r || 1400) / 2, x = b.x * W, y = b.y * H, gr = g.createRadialGradient(x, y, 0, x, y, r); const col = b.c || 'rgba(255,226,170,.5)'; gr.addColorStop(0, col); gr.addColorStop(.45, col.replace(/[\d.]+\)$/, m => (parseFloat(m) * .32).toFixed(3) + ')')); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.globalAlpha = alpha * (b.a == null ? .35 : b.a); g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2); }
+    g.restore();
   }
 
-  /* snow, drawn in the frame's own pixels on a small canvas (cheap: pre-made soft flakes) */
-  const flakeImg = (() => { const out = []; for (const b of [0, 1, 2]) { const c = document.createElement('canvas'), n = 32; c.width = c.height = n; const g = c.getContext('2d'); const gr = g.createRadialGradient(n / 2, n / 2, 0, n / 2, n / 2, n / 2); gr.addColorStop(0, 'rgba(255,252,244,1)'); gr.addColorStop(b === 0 ? .55 : b === 1 ? .3 : .1, 'rgba(255,252,244,.85)'); gr.addColorStop(1, 'rgba(255,252,244,0)'); g.fillStyle = gr; g.fillRect(0, 0, n, n); out.push(c); } return out; })();
+  /* snow, in the frame's pixels */
+  const flakeImg = (() => { const out = []; for (const b of [0, 1, 2]) { const c = document.createElement('canvas'), n = 32; c.width = c.height = n; const gg = c.getContext('2d'); const gr = gg.createRadialGradient(n / 2, n / 2, 0, n / 2, n / 2, n / 2); gr.addColorStop(0, 'rgba(255,252,244,1)'); gr.addColorStop(b === 0 ? .55 : b === 1 ? .3 : .1, 'rgba(255,252,244,.85)'); gr.addColorStop(1, 'rgba(255,252,244,0)'); gg.fillStyle = gr; gg.fillRect(0, 0, n, n); out.push(c); } return out; })();
   function makeSnow(o) {
     const r = rng(o.seed || 7), f = [];
     for (let i = 0; i < (o.n || 120); i++) { const d = r(); f.push({ x: r() * W, y: r() * H, d, v: lerp(30, 130, d) * (o.speed || 1), a: r() * 6.28, sw: lerp(8, 40, d), s: lerp(o.min || 2.5, o.max || 11, Math.pow(d, 2.2)), op: (o.op || .85) * (d > .85 ? .5 : .45 + d * .55) }); }
     return { f, o };
   }
-  function drawSnow(list, t, fitr) {
-    const v = fitr.v;
-    if (sky.width !== Math.round(v.w) || sky.height !== Math.round(v.h)) { sky.width = Math.round(v.w); sky.height = Math.round(v.h); }
-    skyG.clearRect(0, 0, sky.width, sky.height);
+  function drawSnow(list, t) {
     if (!list) return;
     for (const sn of list) {
       const o = sn.o, w = W, h = H + 60;
       for (let i = 0; i < sn.f.length; i += lite ? 2 : 1) { const p = sn.f[i];
-        let y = ((p.y + p.v * t) % h + h) % h - 30, x = p.x + Math.sin(t * .7 + p.a) * p.sw + (o.wind || 0) * t * (.5 + p.d);
-        x = ((x % w) + w) % w;
-        const X = fitr.x0 + x * fitr.s, Y = fitr.y0 + y * fitr.s, S = p.s * fitr.s * (p.d > .85 ? 2.2 : 1);
-        if (X < -S || Y < -S || X > v.w + S || Y > v.h + S) continue;
-        skyG.globalAlpha = p.op * (o.a == null ? 1 : o.a);
-        skyG.drawImage(flakeImg[p.d > .85 ? 2 : p.d > .5 ? 1 : 0], X - S, Y - S, S * 2, S * 2);
+        const y = ((p.y + p.v * t) % h + h) % h - 30; let x = p.x + Math.sin(t * .7 + p.a) * p.sw + (o.wind || 0) * t * (.5 + p.d); x = ((x % w) + w) % w;
+        const S = p.s * (p.d > .85 ? 2.2 : 1);
+        g.globalAlpha = p.op * (o.a == null ? 1 : o.a);
+        g.drawImage(flakeImg[p.d > .85 ? 2 : p.d > .5 ? 1 : 0], x - S, y - S, S * 2, S * 2);
       }
     }
-    skyG.globalAlpha = 1;
+    g.globalAlpha = 1;
   }
 
-  // a slow machine: when frames take too long, draw at 30 fps with less snow and no film grain (decided once, kept)
-  let lite = false, ema = 33, lastNow = 0, lastDraw = 0, pausedAt = 0;
-  // the picture is drawn 30 times a second (the camera moves slowly: more is wasted work and heat), 20 once a shot has settled,
-  // and not at all while the game is paused (the window has lost focus or is hidden)
+  // a slow machine: when frames take too long, fewer frames and half the snow (decided once, kept)
+  let lite = false, ema = 33, lastDraw = 0, pausedAt = 0;
+  // drawn 30 times a second (the camera moves slowly), 20 once a shot has settled; not at all while the game is paused
   function tick(now) {
-    raf = 0; if (!cur) return;
+    raf = 0; if (!cur || !host.classList.contains('on')) return;
     if (document.body.classList.contains('paused') || document.hidden) { if (!pausedAt) pausedAt = now; setTimeout(() => { if (!raf && host.classList.contains('on')) raf = requestAnimationFrame(tick); }, 250); return; }
     if (pausedAt) { const d = now - pausedAt; cur.t0 += d; if (old) { old.t0 += d; old.at += d; } pausedAt = 0; lastDraw = 0; }
+    raf = requestAnimationFrame(tick);
+    if (!cur.ready) return;
     const settled = (now - cur.t0) > 14000 && now - talkAt > 400;
     const gap = 1000 / (lite || settled ? 20 : 30);
-    if (lastDraw && now - lastDraw < gap - 4) { raf = requestAnimationFrame(tick); return; }
-    if (lastDraw) { const dt = Math.min(250, now - lastDraw); ema = ema * .9 + dt * .1; if (!lite && (now - cur.t0) > 1500 && ema > 48) { lite = true; host.classList.add('lite'); } }
-    lastDraw = now; lastNow = now; TH.draws = (TH.draws || 0) + 1;
+    if (lastDraw && now - lastDraw < gap - 4) return;
+    if (lastDraw) { const dt = Math.min(250, now - lastDraw); ema = ema * .9 + dt * .1; if (!lite && (now - cur.t0) > 1500 && ema > 48) lite = true; }
+    lastDraw = now; TH.draws = (TH.draws || 0) + 1;
+    render(now);
+  }
+  function render(now) {
     const t = seekT != null ? seekT : (now - cur.t0) / 1000;
     const talk = Math.max(0, 1 - (now - talkAt) / 140);
     const r = cur.def.draw(cur.S, t, ctx, { talk, now }) || {};
-    const fitr = fit(r.fx != null ? r.fx : W / 2, r.fy != null ? r.fy : H * .42);
+    const F = fit(r.fx != null ? r.fx : W / 2, r.fy != null ? r.fy : H * .42), Rr = ratio();
+    // the canvas covers what is visible of the stage, at a modest pixel ratio
+    const cw = Math.round(F.v.w * Rr), chh = Math.round(F.hh * Rr), key = cw + 'x' + chh;
+    if (key !== sizeKey) { cv.width = cw; cv.height = chh; cv.style.width = F.v.w + 'px'; cv.style.height = F.hh + 'px'; sizeKey = key; }
+    const q = F.s * Rr; if (Math.abs(q - RQ) / RQ > .25) { RQ = q; }
+    g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.fillStyle = '#000'; g.fillRect(0, 0, cw, chh);
+    g.setTransform(Rr * F.s, 0, 0, Rr * F.s, Rr * F.x0, Rr * F.y0);
+    let black = r.black || 0;
     if (old) {
       const k = clamp((now - old.at) / (old.dur * 1000), 0, 1);
-      if (old.kind === 'fade') { old.def.draw(old.S, (now - old.t0) / 1000, ctx, { talk: 0, now }); cur.root.style.opacity = E.s(k).toFixed(3); }
-      if (old.kind === 'dip') { const b = k < .5 ? E.s(k * 2) : 1 - E.s((k - .5) * 2); blackEl.style.opacity = b.toFixed(3); cur.root.style.visibility = k < .5 ? 'hidden' : ''; old.root.style.visibility = k < .5 ? '' : 'hidden'; if (k < .5) old.def.draw(old.S, (now - old.t0) / 1000, ctx, { talk: 0, now }); }
-      if (k >= 1) { old.root.remove(); old = null; cur.root.style.opacity = ''; cur.root.style.visibility = ''; blackEl.style.opacity = r.black || 0; }
-    } else blackEl.style.opacity = r.black || 0;
-    drawSnow(r.snow, t, fitr);
-    if (r.grain != null) grainEl.style.opacity = r.grain;
-    if (host.classList.contains('on')) raf = requestAnimationFrame(tick);
+      if (old.kind === 'fade') { old.def.draw(old.S, (now - old.t0) / 1000, ctx, { talk: 0, now }); drawWorld(old.S.w, 1); drawSnow(old.r && old.r.snow, (now - old.t0) / 1000); drawWorld(cur.S.w, E.s(k)); drawSnow(r.snow, t); }
+      else { if (k < .5) { old.def.draw(old.S, (now - old.t0) / 1000, ctx, { talk: 0, now }); drawWorld(old.S.w, 1); drawSnow(old.r && old.r.snow, (now - old.t0) / 1000); } else { drawWorld(cur.S.w, 1); drawSnow(r.snow, t); } black = Math.max(black, k < .5 ? E.s(k * 2) : 1 - E.s((k - .5) * 2)); }
+      if (k >= 1) old = null;
+    } else { drawWorld(cur.S.w, 1); drawSnow(r.snow, t); }
+    cur.r = r;
+    // the vignette of the lens, and black
+    const vg = g.createRadialGradient(W / 2, H * .48, W * .33, W / 2, H * .48, W * .78); vg.addColorStop(0, 'rgba(6,3,1,0)'); vg.addColorStop(1, 'rgba(6,3,1,.6)'); g.fillStyle = vg; g.fillRect(0, 0, W, H);
+    if (black > 0) { g.globalAlpha = black; g.fillStyle = '#000'; g.fillRect(0, 0, W, H); g.globalAlpha = 1; }
   }
 
-  // play a shot: tr = 'cut' | 'fade' (dissolve) | 'dip' (through black)
+  // play a shot: tr = 'cut' | 'fade' (dissolve) | 'dip' (through black). The cut waits until its pictures are made.
+  let seq = 0;
   function play(def, tr, dur) {
     init(); if (!host) return;
-    const rootEl = el('div', 'shot', null, frame);
-    const S = def.build(rootEl, ctx) || {};
-    const now = performance.now();
-    if (old) { old.root.remove(); old = null; }
-    if (cur && tr && tr !== 'cut') { old = Object.assign(cur, { kind: tr, at: now, dur: dur || (tr === 'dip' ? 1.2 : .8) }); rootEl.style.opacity = tr === 'fade' ? '0' : ''; }
-    else if (cur) cur.root.remove();
-    cur = { def, S, root: rootEl, t0: now };
-    if (!raf) raf = requestAnimationFrame(tick);
+    const my = ++seq;
+    const S = def.build(ctx) || {};
+    const go = () => {
+      if (my !== seq) return;
+      const now = performance.now();
+      if (cur && tr && tr !== 'cut' && cur.ready) old = Object.assign(cur, { kind: tr, at: now, dur: dur || (tr === 'dip' ? 1.2 : .8) }); else old = null;
+      cur = { def, S, t0: now, ready: true };
+      lastDraw = 0;
+      if (!raf) raf = requestAnimationFrame(tick);
+    };
+    // the size the pictures are needed at: the frame's scale now
+    const F = fit(W / 2, H * .42); RQ = F.s * ratio();
+    const p = S.w ? S.w.prepare() : Promise.resolve();
+    let done = false; const fin = () => { if (!done) { done = true; go(); } };
+    p.then(fin); setTimeout(fin, 900);   // never wait more than a moment
+    if (!cur) { cur = { def, S, t0: performance.now(), ready: false }; }
   }
   const TH = {
     W, H, E, clamp, lerp, seg, glide, noise1, flick, breath, rng, el, World, makeSnow,
     get on() { return !!(host && host.classList.contains('on')); },
-    // the story's directed pages, if it has them and the player wants the show
     has(st) { return !!(root.WL_SHOTS && st && root.WL_SHOTS[st.id]); },
     start(c) {
       init(); if (!host) return;
@@ -395,7 +417,6 @@ body.th-full #cam,body.th-full #scrim,body.th-full #cineShade,body.th-full #cine
       clearTimeout(TH._full); TH._full = setTimeout(() => { if (TH.on) document.body.classList.add('th-full'); }, 1000);
       if (!raf) raf = requestAnimationFrame(tick);
     },
-    // a line of the text strip: it.shot = { sid, part, who }
     line(it, instant) {
       if (!TH.on || !it || !it.shot) return;
       const book = root.WL_SHOTS[ctx.st.id] || {}, P = book.pages || {}, pg = P[it.shot.sid] || {};
@@ -410,9 +431,9 @@ body.th-full #cam,body.th-full #scrim,body.th-full #cineShade,body.th-full #cine
     end() {
       if (!host) return;
       host.classList.remove('on'); document.body.classList.remove('th-on', 'th-full'); clearTimeout(TH._full);
-      setTimeout(() => { if (host.classList.contains('on')) return; cancelAnimationFrame(raf); raf = 0; if (cur) cur.root.remove(); if (old) old.root.remove(); cur = old = null; skyG && skyG.clearRect(0, 0, sky.width, sky.height); }, 1000);
+      setTimeout(() => { if (host.classList.contains('on')) return; cancelAnimationFrame(raf); raf = 0; cur = old = null; seq++; cv.width = cv.height = 1; sizeKey = ''; paperC = null; paperKey = ''; }, 1000);   // let the memory go
     },
-    seek(t) { seekT = t; if (!raf && cur) raf = requestAnimationFrame(tick); },
+    seek(t) { seekT = t; if (cur && cur.ready) render(performance.now()); },
   };
   root.WLTheater = TH;
 })(typeof window !== "undefined" ? window : globalThis);
