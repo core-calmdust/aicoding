@@ -187,7 +187,7 @@
     this.cast = mk('cast', 1, '', 6);
     this.fx = mk('fx', 1, '', 7);
     this.fg = mk('fg', 1.25, '', 8);
-    if (o.blurBg) for (const L of [this.far, this.mid, this.near]) { const c = L.el.firstElementChild; if (c) { c.style.filter = `blur(${o.blurBg}px)`; c.style.willChange = 'transform'; } }   // the blur sits on the still picture inside the moving layer, so it is drawn once, not every frame
+    if (o.blurBg) for (const L of [this.far, this.mid, this.near]) { const c = L.el.firstElementChild; if (c) { c.style.filter = `blur(${o.blurBg}px)`; } }   // the blur sits on the still picture inside the moving layer, so it is drawn once, not every frame
     this.cam = { x: ww / 2, y: wh / 2, z: 1, r: 0 };
     this.people = {};
   }
@@ -199,7 +199,7 @@
       L.el.style.transform = `translate(${W / 2}px,${H / 2}px) rotate(${c.r.toFixed(3)}deg) scale(${zp.toFixed(4)}) translate(${(-px).toFixed(1)}px,${(-py).toFixed(1)}px)`;
     }
     const fz = 1 + (z - 1) * .85;
-    for (const f of this._fib || (this._fib = [...this.scrim.querySelectorAll('.fib')])) f.style.transform = `translate(${(-(x * .85) % 640).toFixed(1)}px,${(-(y * .85) % 640).toFixed(1)}px) scale(${fz.toFixed(4)})`;   // moved, not repainted
+
   };
   // where a world point lands in the frame
   World.prototype.toFrame = function (x, y, p) { p = p == null ? 1 : p; const c = this.cam, zp = 1 + (c.z - 1) * p, px = this.ww / 2 + (c.x - this.ww / 2) * p, py = this.wh / 2 + (c.y - this.wh / 2) * p; return [W / 2 + (x - px) * zp, H / 2 + (y - py) * zp]; };
@@ -244,9 +244,9 @@
     e.style.transform = `translate(${(o.x - w / 2).toFixed(1)}px,${(o.y - h * 236 / 250 - hop).toFixed(1)}px)`;
     e.style.left = '0px'; e.style.top = '0px';
     e.style.opacity = o.op != null ? o.op : 1;
-    const bq = (o.blur || 0) > 2 ? Math.round(o.blur) : Math.round((o.blur || 0) * 4) / 4;   // in steps, so the blur is not redrawn every frame
+    const bq = (o.blur || 0) > 2 ? Math.max(3, Math.round(o.blur / 3) * 3) : Math.round((o.blur || 0) * 4) / 4;   // in steps, so the blur is not redrawn every frame
     const f = `blur(${bq}px)` + (o.glow ? ` drop-shadow(0 0 ${o.glow}px ${o.glowC || 'rgba(255,200,120,.55)'})` : '');
-    if (P._f !== f) { e.style.filter = f; P._f = f; }
+    if (P._f !== f) { (P.svg || (P.svg = e.querySelector('svg') || e)).style.filter = f; P._f = f; }   // the blur is painted into the puppet's own picture (kept while it only moves), not applied again every frame
     const flip = o.face === -1 ? ' scaleX(-1)' : '';
     const still = o.still || bq >= 1.5;   // a blurred figure keeps still, so its blur is drawn once
     const sw = still ? 0 : Math.sin((t + P.phase) / 4.6 * Math.PI * 2) * 1.1, sc = still ? 1 : 1 + .008 * (1 + Math.sin((t + P.phase) / 2.3 * Math.PI * 2));
@@ -270,6 +270,10 @@
 #theater .bloomL{position:absolute;z-index:9;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(closest-side,rgba(255,214,150,.9),rgba(255,190,110,.35) 45%,transparent);mix-blend-mode:screen;pointer-events:none}
 #theater .lit .pup .cel{filter:drop-shadow(0 0 5px var(--cel)) drop-shadow(0 0 14px var(--cel))}
 #theater .wolfw{position:absolute}
+#theater .scrim .fib{display:none}
+#theater .scrim .base{background-color:var(--paper);background-image:var(--fib1),var(--fib2);background-size:640px 640px,320px 320px;background-blend-mode:multiply,multiply}
+#theater .pp{will-change:transform}
+#theater.lite .thGrain{display:none}
 #theater .thBlack{position:absolute;inset:0;z-index:6;background:#000;opacity:0;pointer-events:none}
 body.th-on #cineShade,body.th-on #cineBloom,body.th-on #cineSky,body.th-on #cineGrain{opacity:0!important}
 /* the ordinary stage under the theater is not drawn while the theater plays (it comes back as the theater fades out) */
@@ -328,7 +332,7 @@ body.th-full #cam,body.th-full #scrim,body.th-full #cineShade,body.th-full #cine
     if (!list) return;
     for (const sn of list) {
       const o = sn.o, w = W, h = H + 60;
-      for (const p of sn.f) {
+      for (let i = 0; i < sn.f.length; i += lite ? 2 : 1) { const p = sn.f[i];
         let y = ((p.y + p.v * t) % h + h) % h - 30, x = p.x + Math.sin(t * .7 + p.a) * p.sw + (o.wind || 0) * t * (.5 + p.d);
         x = ((x % w) + w) % w;
         const X = fitr.x0 + x * fitr.s, Y = fitr.y0 + y * fitr.s, S = p.s * fitr.s * (p.d > .85 ? 2.2 : 1);
@@ -340,8 +344,13 @@ body.th-full #cam,body.th-full #scrim,body.th-full #cineShade,body.th-full #cine
     skyG.globalAlpha = 1;
   }
 
+  // a slow machine: when frames take too long, draw at 30 fps with less snow and no film grain (decided once, kept)
+  let lite = false, ema = 16, lastNow = 0, skip = false;
   function tick(now) {
     raf = 0; if (!cur) return;
+    if (lastNow) { const dt = Math.min(200, now - lastNow); ema = ema * .9 + dt * .1; if (!lite && (now - cur.t0) > 1500 && ema > (skip ? 40 : 24)) { lite = true; host.classList.add('lite'); } }
+    lastNow = now;
+    if (lite && (skip = !skip)) { if (host.classList.contains('on')) raf = requestAnimationFrame(tick); return; }
     const t = seekT != null ? seekT : (now - cur.t0) / 1000;
     const talk = Math.max(0, 1 - (now - talkAt) / 140);
     const r = cur.def.draw(cur.S, t, ctx, { talk, now }) || {};
