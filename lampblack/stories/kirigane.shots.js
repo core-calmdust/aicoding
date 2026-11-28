@@ -51,8 +51,8 @@
   P.p5 = {
     n: {
       tr: 'cut',
-      build(r, c) {
-        const w = new World(r, Object.assign({ st: c.st }, K.place('inn/in'), { ww: 2600, wh: 1500, gy: 1000, blurBg: 16 }));
+      build(c) {
+        const w = new World(Object.assign({ st: c.st }, K.place('inn/in'), { ww: 2600, wh: 1500, gy: 1000, blurBg: 16 }));
         const sp = elderOf(c), rest = c.people.filter(x => x !== sp).slice(0, 4);
         if (sp) w.puppet('s', sp, { rod: false });
         rest.forEach((k, i) => w.puppet('f' + i, k, { rod: false, layer: i < 2 ? 'fg' : 'cast' }));
@@ -80,33 +80,28 @@
       build(S) {
         // the slide: a billowing white mass that pours down from the peaks on the left (one cut-paper cloud and a few loose puffs at its front)
         let d = '<rect x="0" y="300" width="1200" height="220"/>'; for (let i = 0; i < 16; i++) { const r = 80 + ((i * 53) % 70); d += `<circle cx="${i * 80}" cy="${300 - ((i * 37) % 90)}" r="${r}"/><circle cx="${i * 80 + 40}" cy="${380}" r="${r * .9}"/>`; }
-        S.cloud = S.w.add('far', 'abs', `<svg viewBox="0 0 1200 520" width="100%" height="100%" preserveAspectRatio="none" style="overflow:visible"><g fill="#fffcf6" opacity=".95">${d}</g></svg>`, { width: '1500px', height: '650px', filter: 'blur(5px)', transformOrigin: '0 100%', webkitMaskImage: 'linear-gradient(to bottom,#000 62%,transparent 96%)', maskImage: 'linear-gradient(to bottom,#000 62%,transparent 96%)' });
-        S.av = []; for (let i = 0; i < 0; i++) { const e = S.w.add('far', 'puff'); e.style.background = 'radial-gradient(closest-side,rgba(255,252,246,.98),rgba(255,252,246,.6) 55%,rgba(255,252,246,0))'; S.av.push({ e, k: i / 9, s: i * 3.7 }); }
+        S.cloud = S.w.add('far', `<svg viewBox="0 0 1200 520" width="100%" height="100%" preserveAspectRatio="none"><defs><linearGradient id="cm" x1="0" y1="0" x2="0" y2="1"><stop offset=".62" stop-color="#fff"/><stop offset=".96" stop-color="#fff" stop-opacity="0"/></linearGradient><mask id="mk"><rect width="1200" height="520" fill="url(#cm)"/></mask></defs><g fill="#fffcf6" opacity=".95" mask="url(#mk)">${d}</g></svg>`, { w: 1500, h: 650, blur: 5, ox: 0, oy: 1 });
+        S.av = [];
       },
       draw(S, t) {
         const go = E.o2(seg(t, .3, 6.5));
         // the cloud slides down the mountainside and swells
         const cx = lerp(-500, 150, go), cy = lerp(-120, 300, go), sc = lerp(.5, .95, go);
-        Object.assign(S.cloud.style, { left: cx + 'px', top: cy + 'px', transform: `scale(${sc.toFixed(3)})`, opacity: Math.min(1, go * 4).toFixed(3) });
-        for (const p of S.av) {
-          const q = clamp(go * 1.3 - p.k * .3, 0, 1), sz = 180 + 380 * q;
-          const x = cx + 1500 * sc * (.75 + p.k * .3) + noise1(t * .4 + p.s, p.s) * 60, y = cy + 650 * sc * (.35 + p.k * .5) - q * 40;
-          Object.assign(p.e.style, { width: sz + 'px', height: sz * .7 + 'px', left: (x - sz / 2) + 'px', top: (y - sz * .35) + 'px', opacity: (Math.min(1, go * 4) * .9).toFixed(3) });
-        }
+        Object.assign(S.cloud, { x: cx, y: cy, sx: sc, sy: sc, op: Math.min(1, go * 4) });
         // the floor shakes a little while it falls (only a few pixels: the rumble, not a jolt)
         const rum = Math.sin(t * 31) * 2.2 * (1 - seg(t, 2, 7)) * seg(t, .5, 1.2);
-        S.w.layers.forEach(l => l.el.style.translate = `0 ${rum.toFixed(2)}px`);
+        S.w.shakeY = rum;
       } }),
   };
   // その夜、鐘が鳴った（鐘は場面が出て1.5秒後に一打、録音の中でもう一打）
   P.p7 = {
     n: K.est({ tr: 'dip', trDur: 1.6, loc: 'tower', night: true, gy: 1240, from: [1850, 1050, 1.5], to: [1950, 330, 1.32], tau: 6, ease: 2.2, light: 'night', lamp: { lx: .78, ly: .1, dark: .6 }, fx: 1250, fy: 300, snow: { n: 170, speed: .5, wind: 14, min: 1.5, max: 5 },
       people: [{ id: c => who(c, ['kaja', 'jonas', 'hugo']), x: 1500, h: 430, face: -1 }],
-      build(S) { S.bell = S.w.add('near', 'abs', '', { width: '200px', height: '200px', borderRadius: '50%', background: 'radial-gradient(closest-side,rgba(255,226,160,.95),rgba(255,200,120,.35) 50%,transparent)', mixBlendMode: 'screen' }); },
+      build(S) { S.bell = S.w.add('near', null, { glow: [[0, 'rgba(255,226,160,.95)'], [.5, 'rgba(255,200,120,.35)'], [1, 'rgba(255,200,120,0)']], w: 200, h: 200, z: 9999 }); },
       draw(S, t) {
         const hit = tt => t > tt ? Math.exp(-(t - tt) * 1.5) : 0, ring = hit(1.6) + hit(4.75) * .9;
         // the bell window of the tower (the backdrop's tower stands at 81% of its width)
-        Object.assign(S.bell.style, { left: (1944 - 100) + 'px', top: (S.w.by + S.w.bh * .12 - 100) + 'px', opacity: (.4 + ring * .9).toFixed(3), transform: `scale(${(1.1 + ring * .8).toFixed(3)})` });
+        Object.assign(S.bell, { x: 1944 - 100, y: S.w.by + S.w.bh * .12 - 100, op: .4 + ring * .9, sx: 1.1 + ring * .8, sy: 1.1 + ring * .8 });
         S.w.bloom({ x: .66, y: .2, r: 1500, a: .2 + ring * .14, c: 'rgba(190,210,255,.7)' });
         return { black: 0 };
       } }),
@@ -118,16 +113,16 @@
       people: [{ id: c => who(c, ['kaja', 'jonas']), x: 2250, h: 620, face: -1, blur: 3 }, { id: c => who(c, ['anselm', 'elsa']), x: 1250, h: 560, face: 1, blur: 4 }],
       build(S) {
         // the keeper of the bell, lying across the bottom step
-        S.body = S.w.add('cast', 'abs', root.WLArt.puppet(ELDER, '#000', { rod: false }), {}); const sv = S.body.querySelector('svg'); sv.style.width = '100%'; sv.style.height = '100%'; sv.style.overflow = 'visible';
-        Object.assign(S.body.style, { left: '1640px', top: '833px', width: '220px', height: '460px', transformOrigin: '50% 94%', transform: 'rotate(-86deg)', color: 'var(--ink)', zIndex: 1300 });
-      } }),
+        S.w.puppet('body', null, { look: ELDER, rod: false });
+      },
+      draw(S, t) { S.w.place('body', { x: 1750, y: 1265, h: 460, rot: -86, still: true, z: 1300 }, t); } }),
   };
   // あなたは、老人の手のひらに気づいた（縄で擦りむけて）
   const ROPE = `<svg viewBox="0 0 60 1400" width="100%" height="100%" preserveAspectRatio="none" style="overflow:visible"><path fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" d="M30 0 C 26 300 34 700 30 1180"/><path fill="none" stroke="var(--paper)" stroke-width="3" opacity=".35" stroke-dasharray="10 14" d="M30 0 C 26 300 34 700 30 1180"/><path fill="currentColor" d="M14 1170 h32 l10 60 l-8 40 l6 70 l-12 -36 l-6 50 l-6 -54 l-10 34 l2 -64 z"/></svg>`;
   P.p9 = {
     n: K.insert({ loc: 'tower', cold: true, lamp: { lx: .55, ly: .2, dark: .5 }, blurBg: 12, items: [{ svg: ROPE, x: 1180, y: -60, w: 70, h: 1420 }],
       from: [1200, 560, 1.25], to: [1210, 980, 1.25], tau: 7, fx: 960, fy: 420,
-      draw(S, t) { S.it[0].style.transformOrigin = '50% 0'; S.it[0].style.transform = `rotate(${(Math.sin(t * 1.1) * 1.6 * Math.exp(-t * .08)).toFixed(3)}deg)`; } }),
+      draw(S, t) { Object.assign(S.it[0], { ox: .5, oy: 0, rot: Math.sin(t * 1.1) * 1.6 * Math.exp(-t * .08) }); } }),
   };
   // 村の者と、足止めされた旅人たちが、白樺亭の食堂に集められた
   P.p10 = {
@@ -137,7 +132,7 @@
   // 暖炉の火が爆ぜた。あなたは自分の荷物に目を落とす。
   P.role = {
     n: K.insert({ tr: 'fade', trDur: 1, loc: 'inn/in', blurBg: 7, items: [], from: [1200, 860, 1.45], to: [1200, 840, 1.6], tau: 10, lamp: { lx: .5, ly: .6, dark: .82, r: 46, ba: .8, br: 1100 }, fx: 960, fy: 520,
-      build(S) { S.sp = K.sparks(S.w, 'fx', 22); S.w.add('cast', 'abs', '', { left: '1000px', top: '960px', width: '400px', height: '140px', background: 'radial-gradient(closest-side,rgba(255,170,70,.95),rgba(255,120,40,.4) 60%,transparent)', mixBlendMode: 'screen', filter: 'blur(6px)' }); },
+      build(S) { S.sp = K.sparks(S.w, 'fx', 22); S.w.add('cast', null, { glow: [[0, 'rgba(255,170,70,.95)'], [.6, 'rgba(255,120,40,.4)'], [1, 'rgba(255,120,40,0)']], x: 1000, y: 960, w: 400, h: 140, ox: 0, oy: 0 }); },
       draw(S, t) { K.drawSparks(S.sp, t, 1200, 1040, { per: 2.4, spread: 160, rise: 560 }); } }),
   };
 
