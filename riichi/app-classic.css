@@ -2495,7 +2495,7 @@ html.lp #home.aaa .ap-opts{min-height:124px}
    (portrait, then name and skills) left of the corner buttons; the player's own portrait above her skill plates, which show their
    names again (side by side, below the left river) */
 html.lp #game #opp3{top:calc(max(10px,var(--st)) + var(--rbh, 64px) + 10px)}
-html.lp #game #opp2{flex-direction:row;align-items:center;gap:6px;top:max(6px,var(--st));right:calc(max(14px,var(--sr)) + 80px)}
+html.lp #game #opp2{flex-direction:row;align-items:center;gap:6px;top:max(6px,var(--st));right:calc(max(14px,var(--sr)) + 118px)}   /* (2026-11-28: 80px reached under the corner buttons — riichi/ shows three on a phone: 3×32px + gaps) */
 html.lp #game #opp2 .bt{align-items:flex-start}
 html.lp #game #opp2 .bk .skws{flex-direction:row;align-items:center;gap:4px}
 html.lp #game .me{flex-direction:column;align-items:flex-start;gap:6px}
