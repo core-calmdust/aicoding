@@ -40,7 +40,7 @@ html.hb-on .stage>.table{height:auto;min-height:0}
     radial-gradient(120% 90% at 50% 40%,rgba(255,255,255,.06),rgba(0,0,0,.28)),
     repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 3px),
     repeating-linear-gradient(90deg,rgba(0,0,0,.05) 0 1px,transparent 1px 4px),
-    #1c2c44;
+    #17435a;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),inset 0 0 60px rgba(0,0,0,.5),0 12px 30px rgba(0,0,0,.4)}
 html[data-table=lacquer] .table{background:
     radial-gradient(110% 80% at 40% 30%,rgba(255,190,150,.10),rgba(0,0,0,.35)),
