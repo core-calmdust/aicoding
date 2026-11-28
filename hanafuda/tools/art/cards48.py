@@ -133,14 +133,33 @@ def write_ribbon(cid):
     return drop, extra
 
 
+def ribbon_fill(cid):
+    def extra(masks, lines, w, h, px, rng, full, names):
+        red = masks.get('r')
+        if red is None or 'k' not in masks:
+            return
+        lab, n = nd.label(red > 0.5)
+        if not n:
+            return
+        sizes = nd.sum(np.ones_like(lab), lab, range(1, n + 1))
+        rib = nd.binary_fill_holes(nd.binary_closing(lab == int(np.argmax(sizes)) + 1, iterations=8))
+        moved = masks['k'] * nd.binary_erosion(rib, iterations=int(2 * px))
+        masks['k'] -= moved
+        masks['r'] = np.clip(masks['r'] + moved, 0, 1)
+    return extra
+
+
 def build(cid, outdir, scale=4.0):
     name = card_name(cid)
     out = os.path.join(outdir, name + '.png')
+    # writing (2026-11-28 user request): follow the reference's running hand — the underlay's letters are
+    # re-drawn stroke by stroke with the brush like every other line (no font); only the grey fill the underlay
+    # had inside the letters goes back to the ribbon / cup red
     if cid == 32:
-        kw = dict(drop=K4.kiku_drop, extra=K4.kiku_extra)
+        K4.KOTOBUKI[:] = []
+        kw = dict(extra=K4.kiku_extra)
     elif cid in TEXT:
-        dr, ex = write_ribbon(cid)
-        kw = dict(drop=dr, extra=ex)
+        kw = dict(extra=ribbon_fill(cid))
     else:
         kw = {}
     T.reprint(ref_file(cid), out, scale, seed=11 + cid * 7, **kw)

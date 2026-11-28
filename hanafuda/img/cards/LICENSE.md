@@ -68,7 +68,7 @@ Wikimedia Commons「Hanafuda_*_Alt.svg」（CC BY-SA 4.0）
 
 元の作品を下敷きにして描き直しました。色の面は型紙として切り直し、線は一本ずつ筆で引き直し（入り・抜き・太さの抑揚）、
 色を古い札の顔料らしい色に変え、版ずれ・刷りむら・和紙・札の縁の黒い裏紙などの質感を加えています。
-菊に盃の「寿」と短冊の文字（あかよろし・みよしの）は手で書き直し、盃の口に金の縁を加えました。
+短冊の文字と菊に盃の「寿」も、元の作品の筆跡を下敷きに筆で一画ずつ引き直し、盃の口に金の縁を加えました。
 
 Redrawn over the original works: colour areas re-cut as stencils, every line redrawn with a brush (entry, exit and varying width),
 colours changed to old pigment-like tones, and print texture added (misregistration, uneven ink, washi paper, the black backing
