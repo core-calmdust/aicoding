@@ -109,15 +109,29 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=1';
+const ENGINE_URL = 'engine.js?v=2';
+// A worker that fails (an error that escaped engine.js, a message that could not be read, a core that would not load) is
+// logged with its details and replaced: its jobs answer { error } so that the callers can retry on the new worker.
+function engineLog(what, d) { try { console.warn('[uttt engine] ' + what, d); } catch (e) {} }
+function failWorker(w, why) {
+  if (w.dead) return; w.dead = true;
+  try { w.terminate(); } catch (e) {}
+  const js = [...w.jobs.values()]; w.jobs.clear(); js.forEach(j => j.resolve({ error: why }));
+  if (w === aiW) aiW = makeWorker(); else if (w === anaW) anaW = makeWorker();
+}
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
   w.onmessage = e => {
-    const m = e.data, j = w.jobs.get(m.id); if (!j) return;
+    const m = e.data; if (!m) return;
+    if (m.type === 'werror') { engineLog('worker error', m); failWorker(w, m.msg); return; }
+    const j = w.jobs.get(m.id); if (!j) return;
     if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; }
+    if (m.error) engineLog('request failed', { id: m.id, error: m.error });
     w.jobs.delete(m.id); j.resolve(m);
   };
+  w.onerror = e => { e.preventDefault(); engineLog('worker onerror', { msg: e.message, file: e.filename, line: e.lineno, col: e.colno }); failWorker(w, String(e.message || 'worker error')); };
+  w.onmessageerror = () => { engineLog('worker messageerror', {}); failWorker(w, 'messageerror'); };
   return w;
 }
 let lastNps = 0;
@@ -134,8 +148,8 @@ function requestW(which, msg, onProgress) {
 function cancelWorker(which) {
   const w = which === 'ai' ? aiW : anaW;
   if (!w.jobs.size) return;
-  w.terminate();
-  w.jobs.forEach(j => j.resolve(null));
+  w.dead = true; w.terminate();
+  w.jobs.forEach(j => j.resolve(null)); w.jobs.clear();
   if (which === 'ai') aiW = makeWorker(); else anaW = makeWorker();
 }
 const anaCache = new Map();
@@ -580,7 +594,10 @@ async function maybeAI(tok) {
   if (!isAIColor(p)) return;
   thinking = p; renderInfo(); boardEl.classList.remove('can');
   const t0 = Date.now(), shown = moves.slice(0, cur);
-  const el = engLv(levelFor(p)), res = await request('ai', { type: 'think', moves: shown, level: el, cfg: proCfg(levelFor(p), p) || rtCap(el) });
+  const el = engLv(levelFor(p)), ask = () => request('ai', { type: 'think', moves: shown, level: el, cfg: proCfg(levelFor(p), p) || rtCap(el) });
+  let res = await ask();
+  // the worker failed (logged by makeWorker): once more on a fresh worker before giving up
+  for (let k = 0; k < 2 && res && res.error && tok === busyToken; k++) { if (!aiW.jobs.size) { aiW.dead = true; aiW.terminate(); aiW = makeWorker(); } await new Promise(r => setTimeout(r, 200)); if (tok !== busyToken) return; res = await ask(); }
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
   const prevDur = cur > 0 ? moveDur(moves[cur - 1], posAt(cur - 1).pos) : 0;
   const wait = (settings.mode === 'watch' ? Math.max(700, prevDur + 120) : animating ? prevDur : 0) - (Date.now() - t0);   // AIの着手は即時：前の手のアニメが終わるのを待つだけ（観戦だけ間を取る）
@@ -1918,9 +1935,16 @@ async function runReview() {
       const i = next++, pk = startKey() + '|' + game.slice(0, i).join(',');
       let list = anaCache.get(pk);
       if (!list) {
-        const res = await new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve }); w.postMessage({ type: 'analyze', start: st0, rule: gv, moves: game.slice(0, i), time: i < 10 ? 500 : 800, id }); });
-        if (rv !== run || !res) return;
-        list = res.list; anaCache.set(pk, list);
+        let res = null;
+        for (let tr = 0; tr < 3; tr++) {
+          res = await new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve }); w.postMessage({ type: 'analyze', start: st0, rule: gv, moves: game.slice(0, i), time: i < 10 ? 500 : 800, id }); });
+          if (rv !== run || !res) return;
+          if (!res.error && Array.isArray(res.list)) break;
+          // the worker failed (logged by makeWorker): a fresh one for this position and the rest
+          const k = run.ws.indexOf(w), nw = makeWorker(); if (k >= 0) run.ws[k] = nw; w.dead = true; try { w.terminate(); } catch (e) {} w = nw;
+        }
+        list = res && Array.isArray(res.list) ? res.list : [];
+        if (list.length) anaCache.set(pk, list);
       }
       run.list[i] = list;
       if (gameKey() === key && (!evals[i] || evals[i].kind === 'heur')) { const ev = evalFromList(list, toMoveAt(i)); if (ev) evals[i] = ev; }

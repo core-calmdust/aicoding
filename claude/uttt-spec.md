@@ -23,6 +23,7 @@ URL: https://core-calmdust.github.io/aicoding/uttt/ ／ トップは「コネク
 - 段（engine.js LEVELS）：Lv.1〜11 は深さ1〜7＋評価ノイズ（勝ちの1手は必ず指す）、Lv.12〜17 はノード数（2万〜64万）、Lv.18〜20 は 0.7／1.5／3 秒、天上は 6／12／19 秒（20秒以内）。
 - 実測（tools/match.js の自己対戦）：深さ1段で約+100（d4>d3 +89、d5>d4 +108、d6>d5 +117）、d2n160 vs d1n450 +382、d1n450 vs d1n900 +120。共通スケールの RT_LV（app.js）は Lv.1=100 … Lv.20=2500、天上 2700/2800/2900。
 - tools/selftest.js：JS のルール（engine.js Pos）と C コアの合法手・勝敗を全ルール違いでランダム照合。
+- Worker の障害対策（2026-11-28）：「1局通すと5回に1回 engine.js でエラー」の調査で、読み込み中の Worker を terminate（検討・AIの中断はページが Worker を捨てて作り直す）すると importScripts(core-wasm.js) が NetworkError になり、旧版はそれを console.error していたことを確認（実害なし）。engine.js はコアの読み込み失敗をその場で出さず、次の依頼で読み直し、だめならその依頼に error を返す。wasm のトラップ（RuntimeError）の後はインスタンスを作り直す。Worker 内の未捕捉エラー・messageerror は詳細（メッセージ・ファイル・行）を werror でページへ送る。app.js は onerror / onmessageerror / werror / error 付きの結果を `[uttt engine]` の console.warn で記録し、その Worker を作り直して、AIの着手と振り返りの解析は新しい Worker で再試行する（AIが止まったままにならない）。
 
 ## 画面（konane/ から派生）
 - 既定のデザインは「学校の石板＋チョーク」（2026-11-28 ユーザー指示。保存済みの選択は変えない＝未設定の人だけ）。

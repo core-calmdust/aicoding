@@ -1020,6 +1020,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 /* sea-teal theme: sand and coral instead of the series' gold (shared components that bring their own gold) */
 .rules-offer{border-color:rgba(255,214,163,.5)!important;background:linear-gradient(90deg,rgba(120,214,198,.16),rgba(0,0,0,.15))!important}
 .rules-offer button,#coachCard .ck-rvgo,.ck-rec .ck-rb{background:linear-gradient(180deg,#fff4e4,#ffd2a0)!important;color:#5a2a0f!important}
+:root{--rt-go-bg:linear-gradient(180deg,#fff4e4,#ffd2a0);--rt-go-ink:#5a2a0f}   /* the rule tour's 次へ in the theme colour (shared/ruletour.js) */
 .ck-sec-h{color:var(--accent)!important}
 .sqfx.last{background:rgba(255,220,170,.3);box-shadow:inset 0 0 0 2px rgba(255,255,255,.85)}
 .sqfx.lastf{background:rgba(255,220,170,.18)}
@@ -1334,14 +1335,14 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="i18n-online.js?v=1-l14-hb1"></script>
 <script src="../shared/pzbook.js?v=9sk"></script>
 <script src="../shared/placement.js?v=1l14"></script>
-<script src="../shared/rulesoffer.js?v=18l14k"></script>
+<script src="../shared/rulesoffer.js?v=24l14k"></script>
 <script src="../shared/headerbar.js?v=64"></script>
 <script src="../shared/lessonkeys.js?v=3"></script>
 <script src="../shared/flipbtn.js?v=5fs"></script>
 <script src="../shared/cardbar.js?v=15l14"></script>
 <script src="../shared/watchpause.js?v=2l14"></script>
 <script src="../shared/tick.js?v=2l14"></script>
-<script src="../shared/ruletour.js?v=30tw"></script>
+<script src="../shared/ruletour.js?v=32tw"></script>
 <script src="engine.js?v=10-v3nn"></script>
 <script src="ls-facts.js?v=5"></script>
 <script src="firebase-config.js?v=2"></script>
@@ -1363,7 +1364,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=101sk'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=102sk'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
