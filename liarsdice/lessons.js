@@ -126,7 +126,8 @@ function listHtml() {
   const done = LESSONS.filter(x => progress(x.id).pass).length;
   const head = `<div class="lc-head"><span class="lc-ico lg"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.3"/><circle cx="15" cy="15" r="1.3"/><circle cx="12" cy="12" r="1.3"/></svg></span><div><b>${esc(t('cat.odds'))}</b><p>${esc(t('catd.odds'))}</p></div><div class="lc-prog"><small>${esc(t('lsn.passed', { n: done, m: LESSONS.length }))}</small><span class="bar"><i style="width:${done / LESSONS.length * 100}%"></i></span></div></div>`;
   const cards = LESSONS.map((L, i) => { const pr = progress(L.id);
-    return `<button type="button" class="lc-card${pr.pass ? ' pass' : ''}" data-l="${L.id}"><span class="lc-pic ld-pic">${picHtml(L.id)}</span><span class="lc-txt"><span class="lc-top"><em>STEP ${i + 1}</em><small class="${pr.pass ? 'ok' : ''}">${esc(pr.pass ? t('lsn.pass') : pr.best ? t('lsn.best', { n: pr.best }) : t('lsn.new'))}</small></span><b>${esc(t('l.' + L.id))}</b><span class="lc-d">${esc(t('ld.' + L.id))}</span></span></button>`; }).join('');
+    return `<button type="button" class="lc-card${pr.pass ? ' pass' : ''}" data-l="${L.id}"><span class="lc-pic ld-pic">${picHtml(L.id)}</span><span class="lc-txt"><span class="lc-top"><em>STEP ${i + 1}</em><small class="${pr.pass ? 'ok' : ''}">${esc(pr.pass ? t('lsn.pass') : pr.best ? t('lsn.best', { n: pr.best }) : t('lsn.new'))}</small></span><b>${esc(t('l.' + L.id))}</b><span class="lc-d">${esc(t('ld.' + L.id))}</span><span class="lc-tip">💡 ${esc(t('lt.' + L.id))}</span>` +
+      `<span class="lc-meta"><span class="lc-pips" aria-label="${esc(t('lsn.best', { n: pr.best || 0 }))}">${[0, 1, 2, 3, 4].map(j => `<i class="${j < (pr.best || 0) ? 'on' : ''}${j === 3 ? ' pass' : ''}"></i>`).join('')}</span><small>${esc(t('lsn.fmt', { k: ideas(L.id).length }))}</small></span></span></button>`; }).join('');
   const tut = window.LdTut ? `<button type="button" class="lc-tut" id="lcTut"><span>▶</span><span><b>${esc(t('tu.entry'))}</b><small>${esc(t('tu.entry.d'))}</small></span><span class="go">›</span></button>` : '';
   return `<p class="lc-lead">${esc(t('lsn.lead'))}</p>${tut}${head}<div class="lc-grid">${cards}</div>`;
 }
@@ -187,18 +188,30 @@ function playHtml() {
     main = `<div class="lq-intro ld"><div class="lf">${fig(id, cur.page)}</div><div><span class="lq-step">${esc(t('lsn.prep', { i: cur.page + 1, n: k + 1 }))}</span><p>${esc(P[cur.page])}</p>${cur.page === k - 1 ? `<p class="lq-tip">💡 ${esc(t('lt.' + id))}</p>` : ''}</div></div>`;
     foot = `<button class="mbtn" id="lqList">${esc(t('lsn.backList'))}</button><button class="mbtn go" id="lqGo">${esc(t('lsn.nextP'))}</button>`;
   } else if (cur.page === k) {
-    main = `<span class="lq-step">${esc(t('lsn.prep', { i: k + 1, n: k + 1 }))}</span>` + qHtml(cur.ex, cur.exChosen, true);
+    main = qHtml(cur.ex, cur.exChosen, true);   // where you are: the flow line at the foot
     foot = `<button class="mbtn" id="lqList">${esc(t('lsn.backList'))}</button><button class="mbtn go" id="lqGo"${cur.exChosen == null ? ' disabled' : ''}>${esc(t('lsn.startQ'))}</button>`;
   } else if (cur.i >= cur.qs.length) {
     const pass = cur.score >= 4;
-    main = `<div class="lq-end"><div class="lq-score ${pass ? 'ok' : ''}">${cur.score} / 5</div><b>${esc(t(pass ? 'lsn.endPass' : 'lsn.endFail'))}</b><p>${esc(t(pass ? 'lsn.endPassD' : 'lsn.endFailD'))}</p></div>`;
+    const lab = o => o.bid ? A.bidHtml(o.bid, 'sm') : o.key ? `<b class="ckact dudo">${esc(t(o.s))}</b>` : `<b>${esc(o.s)}</b>`;
+    const rows = cur.qs.map((q, j) => `<li class="${q.ok ? 'ok' : 'ng'}"><i>${q.ok ? '✓' : '✕'}</i><span class="lr-qt">${esc(t(q.k, q.v))}${q.dice || q.bid ? `<span class="lr-vis">${q.dice ? q.dice.map(d => Dice.img(d, 'lrd' + (q.hl && (d === q.hl || (q.wild && d === 1 && q.hl !== 1)) ? ' m' : ''))).join('') : ''}${q.bid ? A.bidHtml(q.bid, 'sm') : ''}</span>` : ''}</span><span class="lr-a">${q.ok ? '' : `<small>${esc(t('lsn.yours'))}</small>${lab(q.opts[q.ch])}`}<small>${esc(t('lsn.ans'))}</small>${lab(q.opts[q.ans])}</span></li>`).join('');
+    main = `<div class="lq-end"><div class="lq-score ${pass ? 'ok' : ''}">${cur.score} / 5</div><b>${esc(t(pass ? 'lsn.endPass' : 'lsn.endFail'))}</b><p>${esc(t(pass ? 'lsn.endPassD' : 'lsn.endFailD'))}</p></div>` +
+      `<div class="lq-res"><b class="lq-res-h">${esc(t('lsn.qres'))}</b><ol>${rows}</ol></div>`;
     foot = `<button class="mbtn" id="lqList">${esc(t('lsn.backLesson'))}</button><button class="mbtn" id="lqRetry">${esc(t('lsn.retry'))}</button><button class="mbtn go" id="lqNext">${esc(t('lsn.nextLesson'))}</button>`;
   } else {
     main = qHtml(cur.qs[cur.i], cur.chosen, false);
     foot = `<button class="mbtn" id="lqList">${esc(t('lsn.backList'))}</button><button class="mbtn go" id="lqGo"${cur.chosen == null ? ' disabled' : ''}>${esc(cur.i === cur.qs.length - 1 ? t('lsn.finish') : t('lsn.nextQ'))}</button>`;
   }
+  main += flowHtml(k);
   const skip = cur.page < k ? `<button type="button" class="sbtn lq-skip" id="lqSkip">${esc(t('lsn.skip'))}</button>` : '';
   return `<div class="lq"><div class="lq-head"><em>STEP ${n}</em><b>${esc(t('l.' + id))}</b>${cur.page > k ? dots : skip}</div><div class="lq-main">${main}</div><div class="modal-actions">${foot}</div><div class="lq-quit"><button type="button" class="sbtn" id="lqX">${esc(t('lsn.quit'))}</button></div></div>`;
+}
+// where you are: idea pages → example → 5 problems → result
+function flowHtml(k) {
+  const at = cur.page < k ? 'prep' : cur.page === k ? 'ex' : cur.i >= cur.qs.length ? 'end' : 'q';
+  const seg = (id, lab, pips) => `<span class="lqf-s${at === id ? ' cur' : ''}"><b>${esc(lab)}</b>${pips ? `<span class="lqf-p">${pips}</span>` : ''}</span>`;
+  const prep = Array.from({ length: k }, (_, j) => `<i class="${cur.page > j ? 'done' : cur.page === j ? 'cur' : ''}"></i>`).join('');
+  const qs = cur.qs.map((q, j) => `<i class="${cur.page > k && (j < cur.i || cur.i >= cur.qs.length) ? (q.ok ? 'ok' : 'ng') : cur.page > k && j === cur.i ? 'cur' : ''}"></i>`).join('');
+  return `<div class="lq-flow">${seg('prep', t('lsn.flowPrep'), prep)}<em>›</em>${seg('ex', t('lsn.flowEx'), `<i class="${cur.page > k ? 'done' : cur.page === k ? 'cur' : ''}"></i>`)}<em>›</em>${seg('q', t('lsn.flowQ'), qs)}<em>›</em>${seg('end', t('lsn.flowEnd'), '')}<small>${esc(t('lsn.pass4'))}</small></div>`;
 }
 function wirePlay() {
   const M = $('#lessonModal'), k = ideas(cur.id).length;
@@ -207,7 +220,7 @@ function wirePlay() {
   const sk = $('#lqSkip'); if (sk) sk.onclick = () => { cur.page = k + 1; cur.i = 0; renderShell(); };
   M.querySelectorAll('[data-o]').forEach(b => b.onclick = () => {
     if (cur.page === k) { if (cur.exChosen != null) return; cur.exChosen = +b.dataset.o; A.sfx(cur.exChosen === cur.ex.ans ? 'ok' : 'ng'); renderShell(); return; }
-    if (cur.chosen != null) return; const q = cur.qs[cur.i]; cur.chosen = +b.dataset.o; q.ok = cur.chosen === q.ans; if (q.ok) cur.score++;
+    if (cur.chosen != null) return; const q = cur.qs[cur.i]; cur.chosen = +b.dataset.o; q.ch = cur.chosen; q.ok = cur.chosen === q.ans; if (q.ok) cur.score++;
     A.sfx(q.ok ? 'ok' : 'ng'); renderShell();
   });
   const go = $('#lqGo'); if (go) go.onclick = () => {

@@ -609,23 +609,22 @@ let NG = null, ngTab = 'game';
 const PRESETS = ['perudo', 'dudo', 'classic'];
 function openNew() {
   NG = { mode: 'ai', preset: set.preset, wild: set.wild, palifico: set.palifico, calza: set.calza, raise: set.raise, players: set.players, lvl: set.lvl };
-  ngTab = 'game'; renderNew(); openOv('#newOverlay');
+  ngTab = 'game'; openOv('#newOverlay'); renderNew();
 }
 function seg(items, cur, attr) { return `<div class="seg">${items.map(([val, lab]) => `<button type="button" data-${attr}="${esc(val)}" class="${String(val) === String(cur) ? 'sel' : ''}">${esc(lab)}</button>`).join('')}</div>`; }
 function presetOf(o) { for (const k of PRESETS) { const P = LD.PRESETS[k]; if (!!P.wild === !!o.wild && !!P.palifico === !!o.palifico && !!P.calza === !!o.calza && P.raise === o.raise) return k; } return 'custom'; }
-function renderNew() {
-  NG.preset = presetOf(NG);
-  $('#ngTabs').innerHTML = ['game', 'rules', 'design'].map(k => `<button type="button" class="${k === ngTab ? 'sel' : ''}" data-tab="${k}">${esc(t('tab.' + k))}${k === 'rules' ? `<small>${esc(t('gm.' + NG.preset))}</small>` : ''}</button>`).join('');
+// the body of one tab of the new-game dialog (mode: the play mode for the rules tab)
+function ngHtml(tab, mode) {
   let h;
-  if (ngTab === 'game') h = `<div class="ng-games ld3">` + PRESETS.map(k => `<button type="button" class="gcard${k === NG.preset ? ' sel' : ''}" data-g="${k}"><span class="gart">${Dice.art(k)}</span><b>${esc(t('gm.' + k))}</b><p>${esc(t('gm.' + k + '.d'))}</p><span class="gpick">${k === NG.preset ? '✓' : ''}</span></button>`).join('') + `</div>`;
-  else if (ngTab === 'rules') {
+  if (tab === 'game') h = `<div class="ng-games ld3">` + PRESETS.map(k => `<button type="button" class="gcard${k === NG.preset ? ' sel' : ''}" data-g="${k}"><span class="gart">${Dice.art(k)}</span><b>${esc(t('gm.' + k))}</b><p>${esc(t('gm.' + k + '.d'))}</p><span class="gm-rules">${[['wild', 'o.wild'], ['palifico', 'o.pal'], ['calza', 'o.calza']].map(([o, key]) => `<span class="${LD.PRESETS[k][o] ? 'on' : ''}"><i>${LD.PRESETS[k][o] ? '✓' : '—'}</i>${esc(t(key))}</span>`).join('')}</span><span class="gpick">${k === NG.preset ? '✓' : ''}</span></button>`).join('') + `</div>`;
+  else if (tab === 'rules') {
     const row = (lab, help, html) => `<div class="rl"><div class="rl-t"><b>${esc(lab)}</b>${help ? `<small>${esc(help)}</small>` : ''}</div>${html}</div>`;
-    const lvRow = NG.mode === 'rated' ? (window.LdRated ? `<div class="rl rl-rated">${LdRated.ngHtml()}</div>` : '') :
+    const lvRow = mode === 'rated' ? (window.LdRated ? `<div class="rl rl-rated">${LdRated.ngHtml()}</div>` : '') :
       `<div class="rl lvrow"><div class="rl-t"><b>${esc(t('o.level'))}</b><small>${esc(t('o.level.h'))}</small></div><div class="lvsel"><button type="button" class="qb" data-lvd="-1">−</button><input type="range" min="1" max="20" value="${NG.lvl}" id="ngLv"><button type="button" class="qb" data-lvd="1">+</button><b id="ngLvV">Lv.${NG.lvl}</b></div><p class="lv-desc" id="ngLvD">${esc(t('lvd.' + lvBand(NG.lvl)))}</p></div>`;
-    h = `<div class="ng-mode">${seg([['ai', t('mode.ai')], ['rated', t('mode.rated')], ['online', t('mode.online')]], NG.mode, 'md')}</div>` +
-      (NG.mode === 'online' ? `<div class="soon"><b>${esc(t('online.soon'))}</b><p>${esc(t('online.soon.d'))}</p></div>` :
+    h = `<div class="ng-mode">${seg([['ai', t('mode.ai')], ['rated', t('mode.rated')], ['online', t('mode.online')]], mode, 'md')}</div>` +
+      (mode === 'online' ? `<div class="soon"><b>${esc(t('online.soon'))}</b><p>${esc(t('online.soon.d'))}</p></div>` :
       `<div class="rl-list two"><div>` + lvRow +
-      (NG.mode === 'rated' ? '' : row(t('o.players'), t('o.players.h'), seg([2, 3, 4, 5, 6].map(n => [n, String(n)]), NG.players, 'np'))) +
+      (mode === 'rated' ? '' : row(t('o.players'), t('o.players.h'), seg([2, 3, 4, 5, 6].map(n => [n, String(n)]), NG.players, 'np'))) +
       `</div><div>` +
       row(t('o.wild'), t('o.wild.h'), seg([[1, t('on')], [0, t('off')]], NG.wild ? 1 : 0, 'wd')) +
       row(t('o.pal'), t('o.pal.h'), seg([[1, t('on')], [0, t('off')]], NG.palifico ? 1 : 0, 'pl')) +
@@ -633,7 +632,34 @@ function renderNew() {
       row(t('o.raise'), t('o.raise.h'), seg([['std', t('raise.std')], ['strict', t('raise.strict')]], NG.raise, 'rs')) +
       `</div></div>`);
   } else h = designHtml();
-  const body = $('#ngBody'); body.innerHTML = h; body.dataset.tab = ngTab;
+  return h;
+}
+// the dialogs with tabs keep one size: the tallest tab's body (measured once per language / window size, with the
+// variants given) is the body's minimum height; never taller than the screen (the rest scrolls inside)
+const TABMIN = {};
+function tabMin(id, body, variants) {
+  const key = LANG + '|' + innerWidth + 'x' + innerHeight;
+  body.style.minHeight = ''; body.style.maxHeight = '';
+  if (TABMIN[id] && TABMIN[id].key === key) return TABMIN[id].h;
+  if (!body.offsetParent) return 0;
+  let mx = 0;
+  for (const [tb, html] of variants) { body.dataset.tab = tb; body.innerHTML = html(); mx = Math.max(mx, body.scrollHeight); }
+  if (mx > 40) TABMIN[id] = { key, h: mx };
+  return mx;
+}
+function applyMin(body, mn) {
+  if (!mn) return;
+  const md = body.closest('.modal'), chrome = md.offsetHeight - body.offsetHeight, avail = Math.max(200, innerHeight - 24 - chrome);
+  body.style.minHeight = Math.min(mn, avail) + 'px'; body.style.maxHeight = avail + 'px';
+}
+function renderNew() {
+  NG.preset = presetOf(NG);
+  $('#ngTabs').innerHTML = ['game', 'rules', 'design'].map(k => `<button type="button" class="${k === ngTab ? 'sel' : ''}" data-tab="${k}">${esc(t('tab.' + k))}${k === 'rules' ? `<small>${esc(t('gm.' + NG.preset))}</small>` : ''}</button>`).join('');
+  let h = ngHtml(ngTab, NG.mode);
+  const body = $('#ngBody');
+  // one box size on every tab (and on every play mode of the rules tab)
+  const mn = innerWidth <= 760 ? 0 : tabMin('ng', body, [['game', () => ngHtml('game')], ['rules', () => ngHtml('rules', 'ai')], ['rules', () => ngHtml('rules', 'rated')], ['rules', () => ngHtml('rules', 'online')], ['design', () => ngHtml('design')]]);
+  body.innerHTML = h; body.dataset.tab = ngTab; if (innerWidth > 760) applyMin(body, mn);   // phones: the dialog is the full screen
   $('#btnStart').disabled = NG.mode === 'online';
   $$('#ngTabs [data-tab]').forEach(b => b.onclick = () => { ngTab = b.dataset.tab; renderNew(); });
   $$('#ngBody [data-g]').forEach(b => { b.onclick = () => { Object.assign(NG, LD.PRESETS[b.dataset.g]); NG.wild = +NG.wild; NG.palifico = +NG.palifico; NG.calza = +NG.calza; renderNew(); }; b.ondblclick = () => $('#btnStart').click(); });
@@ -680,16 +706,15 @@ let setTab = 'play';
 function openSettings() {
   const sw = (k, lab, help) => `<div class="rl"><div class="rl-t"><b>${esc(lab)}</b>${help ? `<small>${esc(help)}</small>` : ''}</div><label class="tgl"><input type="checkbox" data-k="${k}"${set[k] ? ' checked' : ''}><i></i></label></div>`;
   $('#setTabs').innerHTML = ['play', 'design'].map(k => `<button type="button" class="${k === setTab ? 'sel' : ''}" data-st="${k}">${esc(t('tab.' + k))}</button>`).join('');
-  let h;
-  if (setTab === 'play') h = `<div class="set-cols"><div class="rl-list">` + sw('coach', t('set.coach'), t('set.coach.h')) + sw('odds', t('set.odds'), t('set.odds.h')) + `</div><div class="rl-list">` + sw('anim', t('set.anim')) + sw('sound', t('set.sound')) +
-    `<div class="rl"><div class="rl-t"><b>${esc(t('set.speed'))}</b></div>${seg([['slow', t('sp.slow')], ['normal', t('sp.normal')], ['fast', t('sp.fast')]], set.speed, 'sp')}</div></div></div>`;
-  else h = designHtml();
-  $('#setBody').innerHTML = h;
+  const html = tab => tab === 'play' ? `<div class="set-cols"><div class="rl-list">` + sw('coach', t('set.coach'), t('set.coach.h')) + sw('odds', t('set.odds'), t('set.odds.h')) + `</div><div class="rl-list">` + sw('anim', t('set.anim'), t('set.anim.h')) + sw('sound', t('set.sound'), t('set.sound.h')) +
+    `<div class="rl"><div class="rl-t"><b>${esc(t('set.speed'))}</b><small>${esc(t('set.speed.h'))}</small></div>${seg([['slow', t('sp.slow')], ['normal', t('sp.normal')], ['fast', t('sp.fast')]], set.speed, 'sp')}</div></div></div>` : designHtml();
+  openOv('#setOverlay');
+  const body = $('#setBody'), mn = tabMin('set', body, [['play', () => html('play')], ['design', () => html('design')]]);
+  body.innerHTML = html(setTab); body.dataset.tab = setTab; applyMin(body, mn);
   $$('#setTabs [data-st]').forEach(b => b.onclick = () => { setTab = b.dataset.st; openSettings(); });
   $$('#setBody [data-k]').forEach(c => c.onchange = () => { set[c.dataset.k] = c.checked ? 1 : 0; if (c.dataset.k === 'sound') { set.sound = c.checked; try { localStorage.setItem('atlas-sfx', c.checked ? '1' : '0'); } catch (e) {} } save(); render(); });
   $$('#setBody [data-sp]').forEach(b => b.onclick = () => { set.speed = b.dataset.sp; save(); openSettings(); });
   if (setTab === 'design') wireDesign($('#setBody'));
-  openOv('#setOverlay');
 }
 $('#btnSetClose').onclick = () => closeOv('#setOverlay');
 

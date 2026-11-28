@@ -210,7 +210,8 @@ function showResult(r, last) {
 }
 $('#resClose').onclick = () => closeOv('#resOverlay');
 let toastT = 0;
-function toast(msg) { const e = $('#toast'); e.textContent = msg; e.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => e.classList.remove('on'), 2400); }
+// the toast sits at the top of the table (between the opponent's hand and captures), never over the boxes below
+function toast(msg) { const e = $('#toast'); e.textContent = msg; placeToast(); e.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => e.classList.remove('on'), 2400); }
 let banT = 0;
 function banner(msg) { const e = $('#banner'); e.textContent = msg; e.classList.add('on'); clearTimeout(banT); banT = setTimeout(() => e.classList.remove('on'), 1300); }
 
@@ -250,7 +251,7 @@ function renderNew() {
     }
   } else {
     const backs = ['black', 'red'], tabs = ['indigo', 'lacquer'];
-    h = `<div class="opt"><label>${esc(t('o.back'))}</label><div class="tiles">` + backs.map(b => `<button type="button" class="tile ${draft.back === b ? 'on' : ''}" data-back="${b}"><span class="sw-card" style="background:${b === 'black' ? '#17151b' : '#7a1f1a'};box-shadow:inset 0 0 0 2px #050406"></span>${esc(t('bk.' + b))}</button>`).join('') + '</div></div>' +
+    h = `<div class="opt"><label>${esc(t('o.back'))}</label><div class="tiles">` + backs.map(b => `<button type="button" class="tile ${draft.back === b ? 'on' : ''}" data-back="${b}"><span class="sw-card" style="background:${b === 'black' ? '#121114' : '#3e0c0b'} url(img/cards/back-${b}@2x.webp?v=1) center/100% 100%"></span>${esc(t('bk.' + b))}</button>`).join('') + '</div></div>' +
       `<div class="opt"><label>${esc(t('o.table'))}</label><div class="tiles">` + tabs.map(b => `<button type="button" class="tile ${draft.table === b ? 'on' : ''}" data-table="${b}"><span class="sw-table" style="background:${b === 'indigo' ? '#1c2c44' : '#3a1712'}"></span>${esc(t('tb.' + b))}</button>`).join('') + '</div></div>' +
       `<p class="credit">${esc(t('credit.art'))} <a href="img/cards/LICENSE.md" target="_blank" rel="noopener">CC BY-SA 4.0</a></p>`;
   }
@@ -310,6 +311,23 @@ function nearSets(caps, s) {
   return out.sort((a, b) => a.n - b.n);
 }
 let reviewing = false, HB = null;
+function placeToast() {
+  const e = $('#toast'), tb = $('#table'); if (!tb) return;
+  const r = tb.getBoundingClientRect(), oh = $('#oppHand').getBoundingClientRect(), oc = $('#oppCaps').getBoundingClientRect();
+  const pc = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)').matches;
+  // PC: centered in the free strip of the opponent's row; phone: exactly over the status strip at the top of the table
+  e.classList.toggle('ph', !pc);
+  if (!pc) { const st = $('#tstrip').getBoundingClientRect(); Object.assign(e.style, { bottom: 'auto', top: Math.round(Math.max(st.top, 4)) + 'px', left: Math.round(st.left) + 'px', width: Math.round(st.width) + 'px', minHeight: Math.round(st.height) + 'px', maxWidth: 'none' }); return; }
+  e.style.width = ''; e.style.minHeight = '';
+  e.style.bottom = 'auto'; e.style.top = Math.round(r.top + 14) + 'px';
+  if (pc) {
+    // the free strip: from the right edge of the opponent's hand to the left edge of its first capture group
+    let right = r.right - 20; for (const g of $('#oppCaps').children) { const gr = g.getBoundingClientRect(); if (gr.width) right = Math.min(right, gr.left); }
+    const left = Math.max(r.left + 20, oh.right);
+    e.style.left = Math.round((left + right) / 2) + 'px'; e.style.maxWidth = Math.max(240, right - left - 32) + 'px';
+  }
+}
+window.HFToast = m => toast(m);
 function renderCoach() {
   const m = D.m, el = $('#coachBox');
   if (reviewing) return;
@@ -319,15 +337,13 @@ function renderCoach() {
   if (m.rated && !m.over) { el.innerHTML = head + `<p class="muted">${esc(HFRated.r('rest'))}</p>`; return; }
   const s = m.s;
   const mine = nearSets(s.caps[ME], s), opp = nearSets(s.caps[CPU], s);
-  let h = head + `<div class="prog"><b>${esc(t('coach.mine'))}</b>` + (mine.length ? mine.slice(0, 4).map(x => `<div class="it"><span>${esc(t('y.' + x.id))}</span><em>${esc(t('coach.near', { n: x.n }))}</em></div>`).join('') : `<div class="it">${esc(t('coach.none'))}</div>`) + '</div>';
-  h += `<div class="prog" style="margin-top:10px"><b>${esc(t('coach.opp'))}</b>` + (opp.length ? opp.slice(0, 3).map(x => `<div class="it"><span>${esc(t('y.' + x.id))}</span><em>${esc(t('coach.near', { n: x.n }))}</em></div>`).join('') : `<div class="it">${esc(t('coach.none'))}</div>`) + '</div>';
-  const danger = opp.find(x => x.n === 1 && x.need.length);
-  if (danger) {
-    const months = new Set(danger.need.map(HF.month));
-    const onField = s.hands[ME].filter(c => months.has(HF.month(c)));
-    if (onField.length) h += `<p class="warn">${esc(t('coach.danger', { y: t('y.' + danger.id), n: 1, c: cardName(onField[0]) }))}</p>`;
-  }
-  if (s.turn === ME && coachBest && coachBest.key === gen + ':' + s.log.length && typeof coachBest.a === 'number') h += `<div class="best">${esc(t('coach.best', { c: cardName(coachBest.a) }))}</div>`;
+  const best = s.turn === ME && coachBest && coachBest.key === gen + ':' + s.log.length && typeof coachBest.a === 'number' ? `<div class="best">${esc(t('coach.best', { c: cardName(coachBest.a) }))}</div>` : '';
+  let warn = '';
+  { const danger = opp.find(x => x.n === 1 && x.need.length);
+    if (danger) { const months = new Set(danger.need.map(HF.month)); const onField = s.hands[ME].filter(c => months.has(HF.month(c)));
+      if (onField.length) warn = `<p class="warn">${esc(t('coach.danger', { y: t('y.' + danger.id), n: 1, c: cardName(onField[0]) }))}</p>`; } }
+  let h = head + best + `<div class="cols"><div class="prog"><b>${esc(t('coach.mine'))}</b>` + (mine.length ? mine.slice(0, warn ? 2 : 3).map(x => `<div class="it"><span>${esc(t('y.' + x.id))}</span><em>${esc(t('coach.near', { n: x.n }))}</em></div>`).join('') : `<div class="it none">${esc(t('coach.none'))}</div>`) + '</div>';
+  h += `<div class="prog"><b>${esc(t('coach.opp'))}</b>` + (opp.length ? opp.slice(0, warn ? 2 : 3).map(x => `<div class="it"><span>${esc(t('y.' + x.id))}</span><em>${esc(t('coach.near', { n: x.n }))}</em></div>`).join('') : `<div class="it none">${esc(t('coach.none'))}</div>`) + '</div></div>' + warn;
   el.innerHTML = h;
 }
 $('#coachBox').addEventListener('click', e => { if (e.target.closest('#coachSw')) { set.coach = set.coach ? 0 : 1; save(); renderCoach(); if (set.coach) coachThink(); toast(set.coach ? 'ON' : 'OFF'); } });
@@ -414,6 +430,7 @@ function renderSide() {
   };
   if (HB && HB.info) HB.info.innerHTML = m ? `<span class="hb-chip">${esc(t('monthOf', { n: m.k + 1, m: m.months }))}</span><span class="hb-chip">${esc(t('you'))} <b>${m.scores[ME]}</b> − <b>${m.scores[CPU]}</b> ${esc(t('cpu'))}</span><span class="hb-chip">${esc(t('oya'))}: <b>${esc(m.oya === ME ? t('you') : t('cpu'))}</b></span>${m.rated ? `<span class="hb-chip">R ${(window.HFRated && HFRated.load().r) || ''}</span>` : `<span class="hb-chip">AI <b>Lv.${m.lv}</b></span>`}` : '';
   $('#players').innerHTML = `<h3><span>${m ? esc(t('monthOf', { n: m.k + 1, m: m.months })) : ''}</span><span>${m ? 'Lv.' + m.lv : ''}</span></h3>` + pl(CPU, t('cpu')) + pl(ME, t('you')) + `<div class="status">${esc(statusText())}</div>`;
+  $('#tstrip').textContent = statusText();
   renderCoach();
   if (m) {
     const L = m.s.log.slice(-40).map(e => {
@@ -423,6 +440,7 @@ function renderSide() {
       return `<li>${esc(t(e.kind === 'draw' ? 'log.draw' : 'log.play', { p, c: cardName(e.card) }))}</li>`;
     }).reverse();
     $('#logBox').innerHTML = `<h3>${esc(t('log.h'))}</h3><ol>${L.join('')}</ol>`;
+    { const ol = $('#logBox ol'); if (ol) ol.scrollTop = ol.scrollHeight; }
   } else $('#logBox').innerHTML = `<h3>${esc(t('log.h'))}</h3>`;
   const canResign = m && !m.over && m.s.phase !== 'over';
   $('#btnResign').disabled = !canResign;

@@ -75,7 +75,7 @@ function oddsTab() {
 function pointsTab() {
   const vs = ['std', 'omni', 'maria', 'spot'];
   const cell = (v, c) => { const p = HT.pts(c, HT.rules({ v })); return p ? (p > 0 ? p : `<span class="neg">${p}</span>`) : '·'; };
-  const cards = [['♥2〜♥10', HT.card(3, 2)], ['♥J/Q/K', HT.card(3, 12)], ['♥A', HT.card(3, 14)], ['♠Q', HT.QS], ['♠K', HT.KS], ['♠A', HT.AS], ['♦J', HT.JD]];
+  const cards = [['2♥〜10♥', HT.card(3, 2)], ['J♥/Q♥/K♥', HT.card(3, 12)], ['A♥', HT.card(3, 14)], ['Q♠', HT.QS], ['K♠', HT.KS], ['A♠', HT.AS], ['J♦', HT.JD]];
   return `<table class="st-tbl sd-pts"><tr><th></th>${vs.map(v => `<th>${esc(t('var.' + v))}</th>`).join('')}</tr>${cards.map(([lab, c]) => `<tr><td>${lab}</td>${vs.map(v => `<td>${c === HT.card(3, 2) && v === 'spot' ? '2〜10' : c === HT.card(3, 12) && v === 'spot' ? '11/12/13' : cell(v, c)}</td>`).join('')}</tr>`).join('')}` +
     `<tr class="tot"><td>${esc(t('sd.total'))}</td>${vs.map(v => `<td>${HT.totalPen(HT.rules({ v }))}</td>`).join('')}</tr><tr><td>${esc(t('sd.end'))}</td>${vs.map(v => `<td>${HT.VARIANTS[v].target}</td>`).join('')}</tr></table><p class="diff-desc">${A.gl(t('sd.ptsHelp'))}</p>`;
 }

@@ -346,7 +346,8 @@
     else { who.classList.add('none'); nmEl.textContent = it.title || ''; speakPup(null); }
     tx.classList.toggle('narr', !id);
     G.talkVo = voiceOf(id);
-    if (CINE) CINE.page({ text: it.text, el: id && id !== 'you' ? pup(id) : null, wide: !S || S.phase === 'meeting' || S.phase === 'vote' || G.tut || !!it.guide });
+    const THx = window.WLTheater; if (THx && THx.on) THx.line(it);
+    if (CINE && !(THx && THx.on)) CINE.page({ text: it.text, el: id && id !== 'you' ? pup(id) : null, wide: !S || S.phase === 'meeting' || S.phase === 'vote' || G.tut || !!it.guide });
     type(it.text);
     renderRoster();
     SND.page();
@@ -375,7 +376,7 @@
     t.innerHTML = chars.map(c => c[0] === '<' ? c : `<i>${c}</i>`).join('');
     const is = t.querySelectorAll('i'); let k = 0;
     const vo = G.talkVo, quiet = /[\s、。！？…—「」『』（）・\-]/;
-    G.typing = setInterval(() => { if (G.paused) return; let say = false; for (let s = 0; s < 2 && k < is.length; s++) { const ch0 = is[k].textContent; if (!quiet.test(ch0)) say = true; is[k++].style.opacity = 1; } if (say) { SND.talk(vo); if (CINE) CINE.blip(); } if (k >= is.length) finishType(); }, sp * 2);
+    G.typing = setInterval(() => { if (G.paused) return; let say = false; for (let s = 0; s < 2 && k < is.length; s++) { const ch0 = is[k].textContent; if (!quiet.test(ch0)) say = true; is[k++].style.opacity = 1; } if (say) { SND.talk(vo); if (CINE) CINE.blip(); if (window.WLTheater) window.WLTheater.blip(); } if (k >= is.length) finishType(); }, sp * 2);
   }
   function finishType() { clearInterval(G.typing); G.typing = null; const t = $('tx').querySelector('.t'); t.querySelectorAll('i').forEach(i => i.style.opacity = 1); $('tx').classList.add('done'); }
   $('tx').addEventListener('click', nextPage);
@@ -529,26 +530,36 @@
     S.phase = 'prologue'; hud(); setCast([]);
     SND.windOn(.05);
     let rung = false;
+    // the directed version (演出 試験版): each page is played by the theater with the shots written for it
+    const TH = window.WLTheater, show = !!(TH && CINE && CINE.enabled && pref.anim !== false && TH.has(st));
+    const tag = (it, sid, part, who) => (it && show ? Object.assign(it, { shot: { sid, part, who } }) : it);
+    if (show) TH.start({ st, S, people: S.people.filter(p => !p.isPlayer).map(p => p.id), hero: S.hero, first: st.first });
     for (const pg of st.text.prologue) {
+      const sid = pg.sid || '';
       setScene(pg.bg || st.locs[0].id, pg.night);
       if (pg.night && !rung) { rung = true; SND.bell(.5, 1.5); }   // a second and a half after the dark scene comes up: then the music steps back and the bell rings   // once only: the recording rings twice by itself (night pages in a row must not ring it again)
       if (pg.cast) {
         const ids = S.people.filter(p => !p.isPlayer).map(p => p.id);
-        await say([{ text: fill(pg.t, ctxVars()) }]);
+        await say([tag({ text: fill(pg.t, ctxVars()) }, sid, 'n')]);
         setCast([], {});
         // the cast steps onto the screen one by one
         const shown = [];
         for (const id of ids) {
           shown.push(id); setCast(shown.slice(), { from: shown.length % 2 ? 'left' : 'right' });
-          await say([{ who: id, text: ch(id).intro }]);
+          await say([tag({ who: id, text: ch(id).intro }, sid, 'cast:' + id, id)]);
         }
         continue;
       }
-      if (pg.by) { setCast(castIn(pg.by).slice(0, 1), { x: 58 }); await say([pg.t ? { text: fill(pg.t, ctxVars()) } : null].concat(storyLine(pg))); setCast([]); continue; }
-      await say([{ text: fill(pg.t, ctxVars()) }]);
+      if (pg.by) {
+        setCast(castIn(pg.by).slice(0, 1), { x: 58 });
+        const sl = storyLine(pg).map(x => tag(x, sid, x.who ? 'line' : 'alt', x.who));
+        await say([pg.t ? tag({ text: fill(pg.t, ctxVars()) }, sid, 'n') : null].concat(sl)); setCast([]); continue;
+      }
+      await say([tag({ text: fill(pg.t, ctxVars()) }, sid, 'n')]);
     }
     // the role
-    await roleCard();
+    await roleCard(show ? 'role' : null);
+    if (show) TH.end();
     S.phase = 'morning'; save();
     await morning(true);
   }
@@ -594,9 +605,9 @@
     return { text: v.vign };
   }
 
-  async function roleCard() {
+  async function roleCard(shot) {
     const r = S.pl.role, R = st.roles[r];
-    await say([{ text: fill(st.text.role, { roleHow: R.how }) }]);
+    await say([Object.assign({ text: fill(st.text.role, { roleHow: R.how }) }, shot ? { shot: { sid: 'role', part: 'n' } } : {})]);
     await sheet(`<div class="rolecard"><div class="em">${ROLE_ICON[r]}</div><p style="font:700 15px var(--ui);letter-spacing:.2em;color:var(--mute);margin:0">あなたの役</p><h3>${esc(R.name)}</h3><p>${esc(R.perk)}</p><p style="font-size:15px;color:var(--mute)">${castLine()}</p>${st.rulesNote ? `<p style="font-size:14px;color:var(--mute)">${esc(st.rulesNote)}</p>` : ''}</div><div class="foot" style="justify-content:center"><button class="btn pri" data-ok>はじまる</button></div>`, box => box.querySelector('[data-ok]').onclick = () => closeSheet(true));
   }
 

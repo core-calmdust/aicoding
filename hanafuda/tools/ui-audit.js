@@ -26,6 +26,24 @@ const CHECK = () => {
     if (r.left < -1 || r.top < -1 || r.right > innerWidth + 1 || r.bottom > innerHeight + 1) bad.push('dialog leaves the window: ' + m.className);
   });
   document.querySelectorAll('.hfr-row>b, .cap-grp b').forEach(b => { if (vis(b) && b.textContent.trim() && lines(b) > 1) bad.push('label wraps: ' + b.textContent.trim()); });
+  // the boxes under the table: nothing may be cut at the bottom or the side
+  document.querySelectorAll('.side>.box, .side .status').forEach(e => {
+    if (!vis(e)) return;
+    if (e.scrollHeight > e.clientHeight + 1) bad.push('box content cut (height): ' + (e.id || e.className) + ' ' + e.scrollHeight + '>' + e.clientHeight);
+    if (e.scrollWidth > e.clientWidth + 1) bad.push('box content cut (width): ' + (e.id || e.className));
+  });
+  document.querySelectorAll('.side .prog .it span, .side .prog .it em').forEach(e => { if (vis(e) && e.scrollWidth > e.clientWidth + 1) bad.push('text cut: ' + e.textContent.trim()); });
+  return bad;
+};
+// the toast must not cover the boxes below the table, any card, the header or a label
+const TOAST = () => {
+  const bad = [], tEl = document.getElementById('toast');
+  const tr = tEl.getBoundingClientRect();
+  if (tr.left < 0 || tr.right > innerWidth || tr.top < 0 || tr.bottom > innerHeight) bad.push('toast leaves the window');
+  const hit = r => !(r.right <= tr.left || r.left >= tr.right || r.bottom <= tr.top || r.top >= tr.bottom);
+  document.querySelectorAll('.side>.box, .hf, .hb, .cap-grp b, #deckN, .m-tabs').forEach(e => {
+    const r = e.getBoundingClientRect(); if (r.width && r.height && getComputedStyle(e).display !== 'none' && hit(r)) bad.push('toast covers ' + (e.id || e.className.toString().slice(0, 20)) + (e.dataset && e.dataset.id ? ' ' + e.dataset.id : ''));
+  });
   return bad;
 };
 (async () => {
@@ -41,6 +59,16 @@ const CHECK = () => {
     await p.evaluate(() => { localStorage.clear(); localStorage.setItem('aicoding-hanafuda-tut', 'seen'); });
     await p.reload({ waitUntil: 'load' }); await p.waitForTimeout(1500);
     await shot('main');
+    const toastCheck = async name => {
+      await p.evaluate(() => scrollTo(0, 0));   // phone: the toast sits on the status strip at the top of the table
+      for (const msg of ['早い月を引いたAIが親です', 'Lv.20 と対局 (R 1500) ・ 早い月を引いたAIが親です', 'The AI drew the earlier month and deals first ・ Rated game against Lv.20']) {
+        await p.evaluate(m => window.HFToast(m), msg); await p.waitForTimeout(350);
+        const bad = await p.evaluate(() => window.TOAST()); report.push([tag, 'toast-' + name, bad]);
+        if (msg.length < 20) await p.screenshot({ path: `${OUT}/${tag}-toast-${name}.png` });
+      }
+    };
+    await p.evaluate(`window.TOAST = ${TOAST.toString()}`);
+    await toastCheck('main');
     const clickJS = sel => p.evaluate(s => document.querySelector(s) && document.querySelector(s).click(), sel);
     await clickJS('#btnNew'); await shot('new-game');
     await clickJS('#ngTabs [data-tab=rule]'); await shot('new-rule');
@@ -70,12 +98,13 @@ const CHECK = () => {
       await p.waitForTimeout(700);
     }
     // a month played to the end: result + review
+    let plays = 0;
     for (let i = 0; i < 300; i++) {
       const st = await p.evaluate(() => { const ov = id => document.getElementById(id).classList.contains('on'); return ov('resOverlay') ? 'res' : ov('koiOverlay') ? 'koi' : document.querySelector('#field .hf.pickable') ? 'pick' : document.querySelector('#myHand .hf.can') ? 'play' : 'wait'; });
       if (st === 'res') { await shot('result'); if (await p.$('#resReview')) { await clickJS('#resReview'); await p.waitForTimeout(9000); await shot('review'); } break; }
       if (st === 'koi') { await shot('koi'); await clickJS('#btnStop'); await p.waitForTimeout(500); continue; }
       if (st === 'pick') { await clickJS('#field .hf.pickable'); await p.waitForTimeout(400); continue; }
-      if (st === 'play') { if (i === 4) await shot('mid'); await clickJS('#myHand .hf.can:not(.dead)') || await clickJS('#myHand .hf.can'); await p.waitForTimeout(400); continue; }
+      if (st === 'play') { if (++plays === 3) { await shot('mid'); await p.evaluate(`window.TOAST = ${TOAST.toString()}`); await toastCheck('mid'); } await clickJS('#myHand .hf.can:not(.dead)') || await clickJS('#myHand .hf.can'); await p.waitForTimeout(400); continue; }
       await p.waitForTimeout(300);
     }
     if (errs.length) report.push([tag, 'console', errs]);
