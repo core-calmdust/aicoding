@@ -63,8 +63,9 @@ if (process.argv.includes('--merge')) {   // OUT=dir node op_curate.js c9,e9 --m
     if (CF && !fs.existsSync(CF)) fs.writeFileSync(CF, JSON.stringify(cands));
     if (SH.length === 2) { const mine = cands.filter((_, i) => i % SH[1] === SH[0]); cands.length = 0; cands.push(...mine); }
     console.error(id, 'candidates', cands.length);
-    const keep = [];
-    for (const mv of cands) {
+    const keep = [], PF = process.env.OUT ? path.join(process.env.OUT, id + '.progress.json') : '', PR = PF && fs.existsSync(PF) ? JSON.parse(fs.readFileSync(PF, 'utf8')) : { done: 0, keep: [] };   // (OUT: the progress is saved after every candidate, so a run that stops — a restarted machine — goes on from there. A speed-up only)
+    keep.push(...PR.keep);
+    for (let ci = 0; ci < cands.length; ci++) { if (PF) fs.writeFileSync(PF, JSON.stringify({ done: ci, keep })); if (ci < PR.done) continue; const mv = cands[ci];
       const p = replay(mv), spec = p.spec(); if (p.swapOk) spec.sw = 1;
       if (CHK.near(ctx, spec, id, []) <= 2) continue;
       await N.setpos(spec); const a = await N.analyze(ms * 2, 0, 3); if (a.list.length < 2 || a.list[0].v - a.list[1].v < 150 || Math.abs(a.list[0].v) > 600) continue;
