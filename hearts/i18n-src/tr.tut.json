@@ -101,5 +101,6 @@
 "ck.tut": "Öğretici sırasında baloncuktaki notları izleyin. Normal oyunda önerilen kart ve nedeni burada görünür.",
 "tu.mPick": "Bir kart seçin; bu eli kimin alacağı ve kaç puan olduğu görünsün",
 "tu.mThem": "{c} oynanırsa: bu eli {n} alır ({p} puan)",
-"tu.mMe": "{c} oynanırsa: bu eli siz alırsınız ({p} puan)"
+"tu.mMe": "{c} oynanırsa: bu eli siz alırsınız ({p} puan)",
+"tu.tab": "Öğretici"
 }

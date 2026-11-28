@@ -101,5 +101,6 @@
 "ck.tut": "Pendant le tutoriel, suivez les notes de la bulle. En partie normale, la carte conseillée et la raison s'affichent ici.",
 "tu.mPick": "Choisissez une carte pour voir qui remporte ce pli et combien de points il contient",
 "tu.mThem": "En jouant {c} : {n} remporte ce pli ({p} points)",
-"tu.mMe": "En jouant {c} : vous remportez ce pli ({p} points)"
+"tu.mMe": "En jouant {c} : vous remportez ce pli ({p} points)",
+"tu.tab": "Tutoriel"
 }

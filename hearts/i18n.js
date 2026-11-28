@@ -426,6 +426,7 @@ Object.assign(I18N.en, {
 
 /* the play-along tutorial (tutorial.js, 2026-11-28) */
 Object.assign(I18N.ja, {
+"tu.tab": "チュートリアル",
 "tu.mPick": "札を選ぶと、このトリックをだれが取って何点になるかが出ます",
 "tu.mThem": "{c}を出すと：このトリックは{n}が取る（{p}点）",
 "tu.mMe": "{c}を出すと：このトリックはあなたが取る（{p}点）",
@@ -531,6 +532,7 @@ Object.assign(I18N.ja, {
 "tu.offer.go": "チュートリアルを始める"
 });
 Object.assign(I18N.en, {
+"tu.tab": "Tutorial",
 "tu.mPick": "Pick a card to see who takes this trick and how many points are in it",
 "tu.mThem": "Play {c}: {n} takes this trick ({p} points)",
 "tu.mMe": "Play {c}: you take this trick ({p} points)",

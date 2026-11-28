@@ -101,5 +101,6 @@
 "ck.tut": "Durante el tutorial, sigue las notas del globo. En una partida normal, aquí aparecen la carta sugerida y el motivo.",
 "tu.mPick": "Elige una carta para ver quién se lleva esta baza y cuántos puntos tiene",
 "tu.mThem": "Si juegas {c}: {n} se lleva esta baza ({p} puntos)",
-"tu.mMe": "Si juegas {c}: te llevas esta baza ({p} puntos)"
+"tu.mMe": "Si juegas {c}: te llevas esta baza ({p} puntos)",
+"tu.tab": "Tutorial"
 }

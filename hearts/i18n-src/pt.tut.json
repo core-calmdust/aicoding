@@ -101,5 +101,6 @@
 "ck.tut": "Durante o tutorial, siga as notas do balão. Numa partida normal, a carta sugerida e o motivo aparecem aqui.",
 "tu.mPick": "Escolha uma carta para ver quem leva esta vaza e quantos pontos ela tem",
 "tu.mThem": "Jogando {c}: {n} leva esta vaza ({p} pontos)",
-"tu.mMe": "Jogando {c}: você leva esta vaza ({p} pontos)"
+"tu.mMe": "Jogando {c}: você leva esta vaza ({p} pontos)",
+"tu.tab": "Tutorial"
 }

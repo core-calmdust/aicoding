@@ -47,7 +47,7 @@ function listHtml() {
 function open(o) { cur = null; if (o && o.cat) cat = o.cat; renderShell(); A.openOv('#lessonOverlay'); }
 function renderShell() {
   const M = $('#lessonModal');
-  const tabs = `<div class="ng-tabs lt-top"><button type="button" data-top="rules">${esc(t('btn.rules'))}</button><button type="button" class="sel" data-top="lessons">${esc(t('btn.lesson'))}</button>${window.HtTut ? `<button type="button" class="lt-tut" data-tut="1">▶ ${esc(t('tu.entry'))}</button>` : ''}</div>`;
+  const tabs = `<div class="ng-tabs lt-top"><button type="button" data-top="rules">${esc(t('btn.rules'))}</button><button type="button" class="sel" data-top="lessons">${esc(t('btn.lesson'))}</button>${window.HtTut ? `<button type="button" class="lt-tut" data-tut="1">▶ ${esc(t('tu.tab'))}</button>` : ''}</div>`;
   const body = !cur ? `<div class="lc-body">${listHtml()}</div><div class="modal-actions"><button class="mbtn go" id="lcClose">${esc(t('close'))}</button></div>` : playHtml();
   M.innerHTML = tabs + body;
   M.querySelectorAll('[data-top]').forEach(b => b.onclick = () => { if (b.dataset.top === 'rules') window.HtRules && HtRules.open(); });

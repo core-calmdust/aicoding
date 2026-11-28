@@ -101,5 +101,6 @@
 "ck.tut": "Selama tutorial, ikuti catatan di balon. Di permainan biasa, kartu yang disarankan dan alasannya muncul di sini.",
 "tu.mPick": "Pilih kartu untuk melihat siapa yang mengambil trik ini dan berapa poinnya",
 "tu.mThem": "Jika memainkan {c}: {n} mengambil trik ini ({p} poin)",
-"tu.mMe": "Jika memainkan {c}: kamu mengambil trik ini ({p} poin)"
+"tu.mMe": "Jika memainkan {c}: kamu mengambil trik ini ({p} poin)",
+"tu.tab": "Tutorial"
 }

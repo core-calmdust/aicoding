@@ -2095,3 +2095,4 @@ html[dir=rtl] .parrow.d1,html[dir=rtl] .parrow.d3{transform:none}
   .ht .cn-cells i{font-size:13px;line-height:24px}.ht .cn-s small{font-size:13px}
 }
 .ht .mc > small{color:inherit;letter-spacing:0}   /* the suit of a small card keeps its colour whatever box it sits in */
+@media (max-width:760px){.ht .lt-top .lt-tut{white-space:nowrap;font-size:12.5px;letter-spacing:0;overflow:hidden;text-overflow:ellipsis;min-width:0}}

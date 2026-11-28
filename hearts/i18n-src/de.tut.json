@@ -101,5 +101,6 @@
 "ck.tut": "Folge im Tutorial den Hinweisen in der Sprechblase. In einem normalen Spiel stehen hier die empfohlene Karte und der Grund.",
 "tu.mPick": "Wähle eine Karte, um zu sehen, wer diesen Stich bekommt und wie viele Punkte darin sind",
 "tu.mThem": "Mit {c}: {n} bekommt diesen Stich ({p} Punkte)",
-"tu.mMe": "Mit {c}: du bekommst diesen Stich ({p} Punkte)"
+"tu.mMe": "Mit {c}: du bekommst diesen Stich ({p} Punkte)",
+"tu.tab": "Tutorial"
 }
