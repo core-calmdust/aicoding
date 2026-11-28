@@ -120,7 +120,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=1';
+const ENGINE_URL = 'engine.js?v=2';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -1176,7 +1176,7 @@ $('#btnStart').onclick = () => {
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 300000, inc: 3000 };
 // rating of each AI step on the kyu / dan scale (100 points per kyu: 15級 = 450 … 1級 = 1850, then 200 per dan)
 // measured: adjacent levels played each other (tools/native.c lv, see MODEL_CARD.md); about +125 per step up to 3級, smaller above
-const RT_LV = [0, 100, 400, 620, 720, 880, 1080, 1180, 1290, 1360, 1580, 1720, 1790, 1900, 1940, 2050, 2130, 2200, 2270, 2330, 2390, 2460, 2520, 2580];   // (2026-11-28: Lv.1〜15 adjacent-level matches tools/ladder.js, smoothed; Lv.16〜23 +60〜70 per doubling of time, an estimate — claude/breakthrough-spec.md「レベル」)
+const RT_LV = [0, 100, 256, 395, 534, 681, 858, 1009, 1101, 1236, 1340, 1448, 1493, 1571, 1638, 1742, 1820, 1880, 1972, 2042, 2107, 2177, 2222, 2267];   // (2026-11-28: Lv.1〜18 measured, adjacent levels 200 games each, tools/ladder.js; Lv.19〜23 extrapolated — claude/breakthrough-spec.md「レベル」)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };

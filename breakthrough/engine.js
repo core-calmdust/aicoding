@@ -102,7 +102,7 @@ let WA = null;
 function loadCore() {
   try {
     let b64 = null;
-    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=1'); b64 = self.BT_WASM; }
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=2'); b64 = self.BT_WASM; }
     else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = globalThis, had = 'self' in g, old = g.self; g.self = g; try { require(require('path').join(__dirname, 'core-wasm.js')); b64 = g.BT_WASM; } finally { if (had) g.self = old; else delete g.self; } }
     if (!b64) return;
     const g = typeof self !== 'undefined' ? self : globalThis, list = [b64, g.BT_WASM0];
@@ -145,24 +145,25 @@ function evalInfo(pos) {
 const LEVELS = [null,
   { d: 1, noise: 220, rnd: 0.6 },        // 1
   { d: 1, noise: 120, rnd: 0.35 },       // 2
-  { d: 1, noise: 60, rnd: 0.18 },        // 3
-  { d: 2, noise: 60, rnd: 0.12 },        // 4
-  { d: 2, noise: 40, rnd: 0.06 },        // 5
+  { d: 1, noise: 80, rnd: 0.24 },        // 3
+  { d: 2, noise: 80, rnd: 0.16 },        // 4
+  { d: 2, noise: 60, rnd: 0.10 },        // 5
   { d: 3, noise: 55, rnd: 0.05 },        // 6
-  { d: 3, noise: 10 },                   // 7
-  { d: 4, noise: 30 },                   // 8
-  { d: 4, noise: 5 },                    // 9
+  { d: 3, noise: 30, rnd: 0.03 },        // 7
+  { d: 4, noise: 25, rnd: 0.02 },        // 8
+  { d: 4, noise: 6 },                    // 9
   { d: 5, noise: 10 },                   // 10
-  { d: 6, noise: 6 },                    // 11
-  { s: 1, dx: 6 },                       // 12
-  { s: 1, dx: 7 },                       // 13
-  { s: 1, dx: 8 },                       // 14
-  { s: 1, dx: 9 },                       // 15
-  { s: 1, ms: 250 },                     // 16
-  { s: 1, ms: 500 },                     // 17
-  { s: 1, ms: 900 },                     // 18
-  { s: 1, ms: 1500 },                    // 19
-  { s: 1, ms: 2500 },                    // 20
+  { d: 5, noise: 2 },                    // 11
+  // Lv.12〜20: a node budget (thousands; machine-independent, measured — claude/breakthrough-spec.md「レベル」), capped at 6 s on slow devices
+  { s: 1, nk: 25, ms: 6000 },            // 12
+  { s: 1, nk: 50, ms: 6000 },            // 13
+  { s: 1, nk: 100, ms: 6000 },           // 14
+  { s: 1, nk: 200, ms: 6000 },           // 15
+  { s: 1, nk: 400, ms: 6000 },           // 16
+  { s: 1, nk: 800, ms: 6000 },           // 17
+  { s: 1, nk: 1600, ms: 6000 },          // 18
+  { s: 1, nk: 3200, ms: 6000 },          // 19
+  { s: 1, nk: 6400, ms: 6000 },          // 20
   { s: 1, ms: 5000 },                    // 21 天上Ⅰ
   { s: 1, ms: 10000 },                   // 22 天上Ⅱ
   { s: 1, ms: 20000 },                   // 23 天上Ⅲ
