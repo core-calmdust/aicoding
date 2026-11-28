@@ -2009,12 +2009,6 @@ html[lang=ar] .ld-box .tut-btns #tuBack{margin-right:0;margin-left:auto}
   .ld .ldh .dimg{width:20px;height:20px}
   .ld .count small{font-size:15px}
 }
-/* buttons: the site's quiet light buttons instead of the shared parts' yellow ones (rule tour "Next", the "first time?" banner) */
-.ld .rt-nav button.go,.ld .rt-finish button.go{background:linear-gradient(180deg,#f1efe9,#9c988f);color:#121212;border:0}
-.ld .rt-nav button.go:disabled{opacity:.45}
-.ld .rules-offer{border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.04)}
-.ld .rules-offer button{background:rgba(255,255,255,.1);color:#f1efe9;border:1px solid rgba(255,255,255,.22)}
-.ld .rules-offer button:hover{background:rgba(255,255,255,.16)}
 @media (min-width:761px){.ld .tools-modal{max-height:calc(100dvh - 32px)}}
 @media (max-width:760px){.ld .lt-top button{white-space:nowrap;font-size:13px;letter-spacing:.02em;padding-left:4px;padding-right:4px}}
 

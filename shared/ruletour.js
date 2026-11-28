@@ -142,7 +142,9 @@ const CSS = `
 .rt .rt-main.rt-finpage .rt-finish{align-items:center;width:100%;margin-top:18px}
 .rt-nav{display:flex;gap:8px;justify-content:space-between;margin-top:14px}
 .rt-nav button,.rt-finish button{flex:1;padding:10px 12px;border-radius:10px;border:1px solid var(--line,rgba(255,255,255,.15));background:rgba(255,255,255,.05);color:var(--text,#eee);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
-.rt-nav button.go,.rt-finish button.go{border:0;background:linear-gradient(180deg,#e9cf8e,#c9a961);color:#14100a}
+/* the primary button (次へ): the site's light primary button, never a yellow / gold one (common rule). A game may tint it
+   with its theme: --rt-go-bg (background), --rt-go-ink (text). rulesoffer.js uses the same variables. */
+.rt-nav button.go,.rt-finish button.go{border:0;background:var(--rt-go-bg,linear-gradient(180deg,#f1efe9,#9c988f));color:var(--rt-go-ink,#121212);text-shadow:none}
 .rt-nav button:disabled{opacity:.35;cursor:default}
 @keyframes rtPop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
 .rt-msg.ok{animation:rtPop .3s cubic-bezier(.2,1.6,.4,1)}

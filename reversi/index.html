@@ -1741,7 +1741,7 @@ html:not(.atlas-skin) #lsListDesc{font-size:14px!important}
 <script src="i18n.js?v=20261113lxh-p61-f82-c1"></script>
 <script src="../shared/pzbook.js?v=9sk"></script>
 <script src="../shared/placement.js?v=1l14"></script>
-<script src="../shared/rulesoffer.js?v=17l14j"></script>
+<script src="../shared/rulesoffer.js?v=24l14j"></script>
 <script src="../shared/headerbar.js?v=64"></script>
 <script src="../shared/lessonkeys.js?v=3"></script>
 <script src="../shared/flipbtn.js?v=5fs"></script>
@@ -1752,7 +1752,7 @@ html:not(.atlas-skin) #lsListDesc{font-size:14px!important}
 <script>/* the Fischer time control (local and online, shared/fischer.js): its names in every language */ (function () { if (!window.Fischer) return; for (const l in I18N) Object.assign(I18N[l], { 'ol.tcn.fis': Fischer.name(l), 'ol.tcd.fis': Fischer.label('5+10', l), 'ol.tc.fis': Fischer.name(l) + ' ' + Fischer.label('5+10', l), 'ol.rulesFis': Fischer.name(l) + ' — ' + Fischer.desc('5+10', l) }); })();</script>
 <script src="../shared/resign.js?v=3l14"></script>
 <script src="../shared/export.js?v=9l14"></script>
-<script src="../shared/ruletour.js?v=30tw"></script>
+<script src="../shared/ruletour.js?v=32tw"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14as1sh1"></script>
 <script src="online.js?v=stale2fisas1tqsh1"></script>
@@ -5942,7 +5942,7 @@ accRender();
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=101sk'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=102sk'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
