@@ -980,6 +980,79 @@
       const sf = mesh(new T.CircleGeometry(.6, 40), M({ map: starTex, transparent: true, roughness: .3, metalness: .5 })); g0.add(at(sf, 1.4, .185, 1.4, -Math.PI / 2, 0, .3));
       return g0;
     },
+    hanafuda() {   // 花札 (hanafuda/, 2026-11-28): on an indigo-dyed cloth (the game's table colour) two chunky cards stand leaning back toward
+      // the viewer — 芒に月 (the full moon over the pampas hill) in front, 桜に幕 (cherry blossom and the curtain) behind it — 松に赤短 (the red
+      // ribbon on the pine) lies in front, and a squat stack of black-backed cards sits at the back. The faces are drawn here as simple shapes
+      // (not the game's card art); the thick black edge is the backing paper folded over the face.
+      const g0 = new T.Group();
+      const clothTex = X.canvasTex('ic-hfcl', 512, 512, (c, W) => {
+        const r = 40; c.beginPath(); c.moveTo(r, 0); c.arcTo(W, 0, W, W, r); c.arcTo(W, W, 0, W, r); c.arcTo(0, W, 0, 0, r); c.arcTo(0, 0, W, 0, r); c.closePath();
+        const gr = c.createRadialGradient(W * .5, W * .4, 20, W * .5, W * .5, W * .75); gr.addColorStop(0, '#24607c'); gr.addColorStop(1, '#0f2f40'); c.fillStyle = gr; c.fill();
+        c.save(); c.clip(); c.globalAlpha = .07; c.strokeStyle = '#cfe3ee'; c.lineWidth = 1;   // the weave
+        for (let i = 0; i < W; i += 6) { c.beginPath(); c.moveTo(i, 0); c.lineTo(i, W); c.stroke(); c.beginPath(); c.moveTo(0, i); c.lineTo(W, i); c.stroke(); }
+        c.restore();
+        c.strokeStyle = 'rgba(205,226,236,.35)'; c.lineWidth = 4; c.save(); c.translate(22, 22); c.scale((W - 44) / W, (W - 44) / W); c.stroke(); c.restore();
+      });
+      const top = mesh(new T.PlaneGeometry(3.86, 3.86), M({ map: clothTex, transparent: true, roughness: .9 })); top.rotation.x = -Math.PI / 2; top.position.y = .006; top.receiveShadow = true; g0.add(top);
+      const INK = '#1c1b20', RED = '#d23a2c', PAPER = '#f3e9d0';
+      const face = (k, draw) => X.canvasTex('ic-hff' + k, 400, 662, (c, W, H) => {
+        c.fillStyle = INK; c.fillRect(0, 0, W, H); c.fillStyle = PAPER; c.fillRect(22, 22, W - 44, H - 44);
+        c.save(); c.beginPath(); c.rect(22, 22, W - 44, H - 44); c.clip(); draw(c, W, H); c.restore();
+      });
+      const blade = (c, x, y, len, a, w) => { c.beginPath(); c.moveTo(x - w, y); c.quadraticCurveTo(x + Math.cos(a) * len * .5, y - Math.sin(a) * len * .6, x + Math.cos(a) * len, y - Math.sin(a) * len); c.quadraticCurveTo(x + Math.cos(a) * len * .5 + w, y - Math.sin(a) * len * .5, x + w, y); c.fill(); };
+      // 芒に月: a red sky, the big white full moon, the black pampas hill with its blades
+      const moonTex = face('m', (c, W, H) => {
+        c.fillStyle = RED; c.fillRect(0, 0, W, H * .66);
+        c.fillStyle = '#fbf6e8'; c.beginPath(); c.arc(W * .5, H * .3, 120, 0, 7); c.fill();
+        c.fillStyle = INK; c.beginPath(); c.moveTo(0, H * .62); c.quadraticCurveTo(W * .5, H * .4, W, H * .62); c.lineTo(W, H); c.lineTo(0, H); c.fill();
+        for (let i = 0; i < 9; i++) blade(c, 40 + i * 40, H * .56 + Math.abs(i - 4) * 9, 70 + (i % 3) * 22, Math.PI / 2 + (i - 4) * .16, 6);
+        c.strokeStyle = '#4a4850'; c.lineWidth = 5; for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(40, H * (.72 + i * .065)); c.quadraticCurveTo(W * .5, H * (.64 + i * .065), W - 40, H * (.72 + i * .065)); c.stroke(); }
+      });
+      // 桜に幕: pink blossoms on dark branches above, the red-and-white striped curtain below
+      const sakuraTex = face('s', (c, W, H) => {
+        c.strokeStyle = INK; c.lineWidth = 16; c.lineCap = 'round'; c.beginPath(); c.moveTo(20, 230); c.quadraticCurveTo(150, 150, 380, 120); c.stroke(); c.beginPath(); c.moveTo(150, 170); c.lineTo(110, 60); c.stroke();
+        const bl = (x, y, r) => { c.fillStyle = '#ef9bb4'; for (let i = 0; i < 5; i++) { const a = i * 1.2566 - Math.PI / 2; c.beginPath(); c.ellipse(x + Math.cos(a) * r * .55, y + Math.sin(a) * r * .55, r * .5, r * .42, a, 0, 7); c.fill(); } c.fillStyle = '#c23a55'; c.beginPath(); c.arc(x, y, r * .22, 0, 7); c.fill(); };
+        [[80, 90, 46], [190, 70, 44], [300, 100, 48], [120, 200, 40], [250, 190, 44], [345, 220, 36], [60, 270, 34]].forEach(b => bl(...b));
+        c.fillStyle = INK; c.fillRect(0, 330, W, 30);
+        for (let i = 0; i < 6; i++) { c.fillStyle = i % 2 ? '#fbf6e8' : RED; c.beginPath(); c.moveTo(22 + i * 60, 360); c.lineTo(22 + (i + 1) * 60, 360); c.lineTo(22 + (i + 1) * 60 + (i % 2 ? 6 : -4), H); c.lineTo(22 + i * 60 + (i % 2 ? -4 : 6), H); c.fill(); }
+        c.fillStyle = INK; c.beginPath(); c.arc(W * .5, 470, 44, 0, 7); c.fill(); c.fillStyle = '#fbf6e8'; c.beginPath(); c.arc(W * .5, 470, 26, 0, 7); c.fill();
+      });
+      // 松に赤短: the black pine with its needle fans, the red ribbon slanting across with brush strokes on it
+      const pineTex = face('p', (c, W, H) => {
+        c.fillStyle = INK; c.strokeStyle = INK; c.lineWidth = 18; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(60, H); c.quadraticCurveTo(120, 450, 90, 300); c.stroke();
+        const fan = (x, y, r) => { for (let i = 0; i < 15; i++) { const a = Math.PI + i * Math.PI / 14; c.lineWidth = 7; c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); c.stroke(); } };
+        fan(110, 330, 90); fan(260, 420, 100); fan(150, 560, 90); fan(320, 600, 70);
+        c.save(); c.translate(W * .52, H * .4); c.rotate(-.22);
+        c.fillStyle = RED; c.fillRect(-66, -230, 132, 440);
+        c.strokeStyle = INK; c.lineWidth = 9; [[-150, -95], [-60, 0], [30, 95], [120, 170]].forEach(([y0, y1]) => { c.beginPath(); c.moveTo(-14, y0); c.quadraticCurveTo(22, (y0 + y1) / 2 - 10, -8, (y0 + y1) / 2); c.quadraticCurveTo(-26, (y0 + y1) / 2 + 20, 12, y1); c.stroke(); });
+        c.restore();
+      });
+      const backTex = X.canvasTex('ic-hfb', 320, 530, (c, W, H) => {
+        c.fillStyle = '#1a1512'; c.fillRect(0, 0, W, H);
+        let s = 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+        for (let i = 0; i < 5200; i++) { const v = 60 + rnd() * 70; c.fillStyle = `rgba(${v + 14},${v + 4},${v - 6},${.25 + rnd() * .45})`; const r = .8 + rnd() * 2.2; c.fillRect(rnd() * W, rnd() * H, r, r); }
+      });
+      const edge = C(0x1b1a1f, { roughness: .55 });
+      const CW = 1.3, CL = 2.15;
+      // a chunky card lying flat: the face up, the top of the picture toward -z
+      const card = (mt, h) => { const b = rbox(CW, h, CL, .1, edge); const f = mesh(new T.PlaneGeometry(CW - .06, CL - .06), mt); f.rotation.x = -Math.PI / 2; f.position.y = h + .004; return grp(b, f); };
+      // a card standing up, leaning back by `lean`, turned to face the corner-on camera
+      const stand = (mt, h, lean, s, ry) => {
+        const inner = card(mt, h); inner.position.set(0, -h / 2, 0);
+        const tilt = new T.Group(); tilt.add(inner); tilt.rotation.x = Math.PI / 2 - lean;
+        const outer = new T.Group(); outer.add(tilt); outer.rotation.y = -Math.PI / 4 + (ry || 0); outer.scale.setScalar(s || 1);
+        outer.userData.up = CL / 2 * Math.cos(lean) * (s || 1); return outer; };
+      const backM = M({ map: backTex, roughness: .8 });
+      // the stack of backs at the far corner
+      for (let i = 0; i < 4; i++) g0.add(at(card(backM, .13), 1.0 + (i % 2 ? .04 : -.03), i * .13, -1.05 + (i === 2 ? .04 : 0), 0, .7 + .06 * (i - 1.5), 0));
+      // 松に赤短 lying in front
+      g0.add(at(card(M({ map: pineTex, roughness: .45 }), .2), -.75, 0, .95, 0, -.55, 0));
+      // 桜に幕 standing behind, the moon card standing big in front of it
+      const sk = stand(M({ map: sakuraTex, roughness: .45 }), .22, .3, .92, .22); sk.position.set(-.45, sk.userData.up + .02, -.6); g0.add(sk);
+      const mo = stand(M({ map: moonTex, roughness: .45 }), .24, .38, 1.1, -.05); mo.position.set(.45, mo.userData.up + .02, .15); g0.add(mo);
+      return g0;
+    },
     blackjack() {   // a deep-teal blackjack felt: ivory printed arcs and a gold betting circle, a blackjack (A♠ + K♥) and black / gold chip stacks
       const g0 = new T.Group();
       const feltTex = X.canvasTex('ic-bjf', 512, 512, (c, W) => {
@@ -1662,7 +1735,7 @@
   };
 
   // post-process: pieces onto the thick base; scenes without a board get a square plinth
-  const PLINTH = { random: [0x9a7cff, 3.9], connect4: [0x1f5ed9, 5.2], mancala: [0xb37540, 4.6], sudoku: [0xf4efe6, 3.9], speedsudoku: [0xfff0e2, 3.9], samegame: [0xf2eadb, 3.9], jailbreak: [0x3a3f4a, 3.9], solitaire: [0x22704a, 3.9], poker: [0x1f1f24, 3.9], baccarat: [0x3d0f1a, 3.9], guandan: [0x7a1620, 3.9], blackjack: [0x0b3a3a, 3.9] };
+  const PLINTH = { random: [0x9a7cff, 3.9], connect4: [0x1f5ed9, 5.2], mancala: [0xb37540, 4.6], sudoku: [0xf4efe6, 3.9], speedsudoku: [0xfff0e2, 3.9], samegame: [0xf2eadb, 3.9], jailbreak: [0x3a3f4a, 3.9], solitaire: [0x22704a, 3.9], poker: [0x1f1f24, 3.9], baccarat: [0x3d0f1a, 3.9], guandan: [0x7a1620, 3.9], hanafuda: [0x17435a, 3.9], blackjack: [0x0b3a3a, 3.9] };
   const FIX = {};
   Object.keys(ICONS).forEach(id => {
     FIX[id] = () => {

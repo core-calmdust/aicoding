@@ -3,7 +3,7 @@
 2Dオンリーのカードゲーム（大百科の3D版は作らない）。ALPHA。2人用「こいこい」。
 
 ## 状態（2026-11-28 更新）
-- トップページに ALPHA で掲載（ユーザー承認「ひとまず」）。並びはハーツの前（カードゲーム）。サムネイルは `images/hanafuda.webp`（卓の画面）、アイコンは `images/icons/hanafuda.svg`。大百科の一覧（`shared/atlas.js` の GAMES・READ）に登録、3D版はなし。トップの3Dアイコン（`images/atlas/hanafuda.webp`）は未作成（ハーツと同じく既定の絵）。
+- トップページに ALPHA で掲載（ユーザー承認「ひとまず」）。並びはハーツの前（カードゲーム）。サムネイルは `images/hanafuda.webp`（卓の画面）、アイコンは `images/icons/hanafuda.svg`。大百科の一覧（`shared/atlas.js` の GAMES・READ）に登録、3D版はなし。大百科ギャラリーの3Dアイコンは `images/atlas/hanafuda.webp`（`atlas/icons3d.js` の `hanafuda()`：藍の布の厚い台に、厚みのある札を2枚斜めに立てる〔手前に大きく芒に月、後ろに桜に幕〕、手前に松に赤短を寝かせ、奥に砂目の黒い裏の山札。絵柄は図形で描き直したもので、ゲームの札の絵〔CC BY-SA〕は使わない。`atlas/tools/icons.html` → `icon-post.py`）。
 
 ## 状態（2026-11-28）
 - フェーズ1：難所4枚（松に鶴・柳に小野道風・桐に鳳凰・菊に盃）の絵柄サンプルを `hanafuda/art-preview.html` で公開。**残り44枚の本番絵柄とトップページ掲載はユーザーの合格待ち**。
