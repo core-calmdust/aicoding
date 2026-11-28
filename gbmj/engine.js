@@ -34,6 +34,32 @@ function shantenKnittedHonors(c) {
   }
   return best;
 }
+// 「k面子＋雀頭」の向聴数（残りの牌が少ないときの一般形。面子の数が k を超えて数えないように上限をつける）
+function shantenSets(c, k) {
+  const cc = c.slice();
+  let best = 2 * k;
+  function rec(i, M, Tt, P) {
+    while (i < 34 && !cc[i]) i++;
+    if (i >= 34) { const s = 2 * k - 2 * M - Math.min(Tt, k - M) - P; if (s < best) best = s; return; }
+    if (M < k) {
+      if (cc[i] >= 3) { cc[i] -= 3; rec(i, M + 1, Tt, P); cc[i] += 3; }
+      if (i < 27 && i % 9 <= 6 && cc[i + 1] && cc[i + 2]) { cc[i]--; cc[i + 1]--; cc[i + 2]--; rec(i, M + 1, Tt, P); cc[i]++; cc[i + 1]++; cc[i + 2]++; }
+    }
+    if (cc[i] >= 2) {
+      cc[i] -= 2;
+      if (!P) rec(i, M, Tt, 1);
+      if (M + Tt < k) rec(i, M, Tt + 1, P);
+      cc[i] += 2;
+    }
+    if (M + Tt < k && i < 27) {
+      if (i % 9 <= 7 && cc[i + 1]) { cc[i]--; cc[i + 1]--; rec(i, M, Tt + 1, P); cc[i]++; cc[i + 1]++; }
+      if (i % 9 <= 6 && cc[i + 2]) { cc[i]--; cc[i + 2]--; rec(i, M, Tt + 1, P); cc[i]++; cc[i + 2]++; }
+    }
+    const x = cc[i]; cc[i] = 0; rec(i + 1, M, Tt, P); cc[i] = x;
+  }
+  rec(0, 0, 0, 0);
+  return Math.max(-1, best);
+}
 // 組合龍（9枚）＋1面子＋雀頭。副露は1つまで
 function shantenKnittedStraight(c, melds) {
   if (melds > 1) return 8;
@@ -41,24 +67,29 @@ function shantenKnittedStraight(c, melds) {
   for (const kt of GBFan.KN_TILES) {
     const r = c.slice(); let miss = 0;
     for (const t of kt) { if (r[t]) r[t]--; else miss++; }
-    const s = miss + MJ.shantenNormal(r, 3 + melds);      // 残りは「1面子＋雀頭」（3面子あるものとして数える）
+    const s = miss + shantenSets(r, 1 - melds);           // 残りは「(1−副露)面子＋雀頭」
     if (s < best) best = s;
   }
   return best;
+}
+// 七対：国標では同じ牌4枚を2対に数えてよい（四帰一。リーチ麻雀の七対子とちがう）
+function shantenPairs(c) {
+  let p = 0; for (let t = 0; t < 34; t++) p += c[t] >> 1;
+  return 6 - Math.min(7, p);
 }
 // 全形の向聴数（-1＝和了形）。c：立牌の種類ごとの枚数、melds：副露（暗槓を含む）の数
 function shanten(c, melds) {
   melds = melds || 0;
   let s = MJ.shantenNormal(c, melds);
   if (melds <= 1) s = Math.min(s, shantenKnittedStraight(c, melds));
-  if (!melds) s = Math.min(s, MJ.shantenChiitoi(c), MJ.shantenKokushi(c), shantenKnittedHonors(c));
+  if (!melds) s = Math.min(s, shantenPairs(c), MJ.shantenKokushi(c), shantenKnittedHonors(c));
   return s;
 }
 function shantenParts(c, melds) {
   melds = melds || 0;
   return {
     normal: MJ.shantenNormal(c, melds),
-    pairs: melds ? 9 : MJ.shantenChiitoi(c),
+    pairs: melds ? 9 : shantenPairs(c),
     orphans: melds ? 14 : MJ.shantenKokushi(c),
     honorsKnitted: melds ? 14 : shantenKnittedHonors(c),
     knitted: shantenKnittedStraight(c, melds),
@@ -67,7 +98,7 @@ function shantenParts(c, melds) {
 
 const GB = {
   N_TILES, T, isFlower, NAMES, rng, shuffle, newWall, counts, countsIds,
-  shanten, shantenParts, shantenKnittedHonors, shantenKnittedStraight,
+  shanten, shantenParts, shantenPairs, shantenSets, shantenKnittedHonors, shantenKnittedStraight,
   waits: (types13, melds) => GBFan.waits(types13, melds),
   MIN: 8,
 };
