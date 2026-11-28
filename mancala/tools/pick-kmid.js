@@ -3,7 +3,7 @@
 //   node mancala/tools/pick-kmid.js <candidates dir> k_combo,k_tempo,...
 const fs = require('fs'), path = require('path'), ROOT = path.join(__dirname, '../..');
 const E = require(path.join(ROOT, 'mancala/engine.js'));
-const R = 'kalah', dir = process.argv[2], ids = process.argv[3].split(','), skip = new Set((process.argv[4] || '').split(',').filter(Boolean));
+const dir = process.argv[2], ids = process.argv[3].split(','), R = /^n_/.test(ids[0]) ? 'basic' : 'kalah', skip = new Set((process.argv[4] || '').split(',').filter(Boolean));
 const LP = path.join(ROOT, 'mancala/lessons.json'), L = JSON.parse(fs.readFileSync(LP, 'utf8')), PZ = JSON.parse(fs.readFileSync(path.join(ROOT, 'mancala/puzzles.json'), 'utf8'));
 const pool = []; L.steps.forEach(st => { if (ids.includes(st.id)) return; st.problems.forEach(P => pool.push(P.b)); (st.ramp || []).forEach(r => pool.push(r.b)); });
 PZ.cats.forEach(c => c.themes.forEach(t => t.puzzles.forEach(p => pool.push(p.b))));

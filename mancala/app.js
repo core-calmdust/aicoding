@@ -1653,7 +1653,7 @@ $('#rulesClose').onclick = () => { const tour = curTour(); if (tour) tour.stop()
 
 // ====================================================================== lessons & puzzles: shared
 let LESSONS = null, PUZZLES = null;
-const lessonsReady = fetch('lessons.json?v=20261127n1').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=20261128n2').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const puzzlesReady = fetch('puzzles.json?v=20261104pzd').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
