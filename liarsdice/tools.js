@@ -36,12 +36,13 @@ function renderCalc() {
   {
     C.m = Math.min(C.m, 5); const pe = LD.pMatch(C.f, !!C.wild);
     const P = LD.pAtLeast(C.q, C.m, C.n, C.f, !!C.wild), E = LD.pExact(C.q, C.m, C.n, C.f, !!C.wild), ex = C.m + C.n * pe;
-    body = `<div class="calc"><div class="cin">` + step(t('calc.n'), 'n', 0, 30) + step(t('calc.m'), 'm', 0, 5) + step(t('calc.q'), 'q', 1, 35) +
+    const X = refHtml();
+    body = `<div class="calc2"><div class="c-left"><div class="cin">` + step(t('calc.n'), 'n', 0, 30) + step(t('calc.m'), 'm', 0, 5) + step(t('calc.q'), 'q', 1, 35) +
       `<div class="cstep"><small>${esc(t('calc.f'))}</small><div class="fsel">${[1, 2, 3, 4, 5, 6].map(f => `<button type="button" class="fbtn${C.f === f ? ' sel' : ''}" data-cf="${f}">${Dice.img(f, 'fb')}</button>`).join('')}</div></div>` +
-      `<div class="cstep"><small>${esc(t('o.wild'))}</small><div class="seg"><button type="button" data-cw="1" class="${C.wild ? 'sel' : ''}">${esc(t('on'))}</button><button type="button" data-cw="0" class="${C.wild ? '' : 'sel'}">${esc(t('off'))}</button></div></div></div>` +
-      `<div class="cout"><div class="cbig"><small>${esc(t('calc.pAt', { q: C.q, f: C.f }))}</small><b class="${P < .4 ? 'lo' : P > .65 ? 'hi' : ''}">${pct(P)}</b></div>` +
-      `<div class="crow"><span><small>${esc(t('calc.pEq'))}</small><b>${pct(E)}</b></span><span><small>${esc(t('calc.exp'))}</small><b>${ex.toFixed(2)}</b></span><span><small>${esc(t('calc.per'))}</small><b>${C.f === 1 || !C.wild ? '1/6' : '1/3'}</b></span></div>` +
-      distHtml(C.n, C.m, C.q, C.f, !!C.wild) + `<p class="diff-desc">${esc(t('calc.help', { m: C.m, n: C.n, p: C.f === 1 || !C.wild ? '1/6' : '1/3' }))}</p></div></div>`;
+      `<div class="cstep"><small>${esc(t('o.wild'))}</small><div class="seg"><button type="button" data-cw="1" class="${C.wild ? 'sel' : ''}">${esc(t('on'))}</button><button type="button" data-cw="0" class="${C.wild ? '' : 'sel'}">${esc(t('off'))}</button></div></div></div>${X.c3}</div>` +
+      `<div class="c-right"><div class="ctop"><div class="cbig"><small>${esc(t('calc.pAt', { q: C.q, f: C.f }))}</small><b class="${P < .4 ? 'lo' : P > .65 ? 'hi' : ''}">${pct(P)}</b></div>` +
+      `<div class="crow"><span><small>${esc(t('calc.pEq'))}</small><b>${pct(E)}</b></span><span><small>${esc(t('calc.exp'))}</small><b>${ex.toFixed(2)}</b></span><span><small>${esc(t('calc.per'))}</small><b>${C.f === 1 || !C.wild ? '1/6' : '1/3'}</b></span></div></div>` +
+      distHtml(C.n, C.m, C.q, C.f, !!C.wild) + `<p class="diff-desc chelp">${esc(t('calc.help', { m: C.m, n: C.n, p: C.f === 1 || !C.wild ? '1/6' : '1/3' }))}</p><div class="cx">${X.c1}${X.c2}</div></div></div>`;
   }
   const onGame = C.tab === 'game' && inGame;
   body = `<div class="tl-stack"><div class="tl-pane${onGame ? ' off' : ''}"${onGame ? ' aria-hidden="true" inert' : ''}>${body}</div>` +
@@ -53,19 +54,55 @@ function renderCalc() {
   M.querySelectorAll('[data-cw]').forEach(b => b.onclick = () => { C.wild = +b.dataset.cw; renderCalc(); });
   $('#calcClose').onclick = () => A.closeOv('#toolsOverlay');
 }
+// study tables under the calculator, all from engine.js's binomial odds:
+// (1) at least k of the n hidden dice, for 1/6 and 1/3 (the row you need for the bid marked),
+// (2) how many of the face you can bid at 80% / 50% / 20%, with and without wild ones (your matches included),
+// (3) the expected count of a face among 5–30 hidden dice
+function refHtml() {
+  const n = C.n, m = C.m, need = C.q - m, d6 = LD.binDist(n, 1 / 6), d3 = LD.binDist(n, 1 / 3);
+  const atl = (d, k) => k <= 0 ? 1 : k > n ? 0 : d.slice(k).reduce((a, b) => a + b, 0);
+  const cls = x => x >= .65 ? 'hi' : x < .4 ? 'lo' : '';
+  // (1)
+  const k0 = Math.max(1, Math.min(need, n) - 3), k1 = Math.min(n, k0 + 6), wcol = C.f !== 1 && C.wild;
+  let r1 = '';
+  for (let k = k0; k <= k1; k++) r1 += `<tr class="${k === need ? 'cur' : ''}"><td>${k}</td><td class="${cls(atl(d6, k))}${wcol ? '' : ' use'}">${pct(atl(d6, k))}</td><td class="${cls(atl(d3, k))}${wcol ? ' use' : ''}">${pct(atl(d3, k))}</td></tr>`;
+  if (n < 1) r1 = `<tr><td colspan="3">—</td></tr>`;
+  const c1 = `<div class="cx-card"><b class="cx-h">${esc(t('calc.tblH', { n }))}</b><table class="cx-t ck"><tr><th>${esc(t('calc.k'))}</th><th>1/6<small>${esc(t('rs.nowild'))}</small></th><th>1/3<small>${esc(t('rs.wild'))}</small></th></tr>${r1}</table>` +
+    (need >= 1 && need <= n ? `<p class="cx-n">${esc(t('calc.needC', { k: need, q: C.q, m }))}</p>` : '') + `</div>`;
+  // (2)
+  const safe = (th, wild) => { let best = 0; for (let q = 1; q <= m + n; q++) if (LD.pAtLeast(q, m, n, C.f, wild) >= th) best = q; return best || '—'; };
+  const cols = C.f === 1 ? [[true, t('calc.one')]] : [[true, t('rs.wild')], [false, t('rs.nowild')]];
+  const r2 = [.9, .7, .5, .3, .1].map(th => `<tr class="${th === .9 || th === .1 ? 'ext' : ''}"><td class="thr">≥${Math.round(th * 100)}%</td>${cols.map(([w]) => `<td class="${C.f === 1 || !!C.wild === w ? 'use' : ''}"><b>${safe(th, w)}</b></td>`).join('')}</tr>`).join('');
+  const c2 = `<div class="cx-card"><b class="cx-h">${esc(t('calc.safeH', { m }))}${Dice.img(C.f, 'cxd')}</b><table class="cx-t"><tr><th>${esc(t('ck.colT'))}</th>${cols.map(([, l]) => `<th>${esc(l)}</th>`).join('')}</tr>${r2}</table><p class="cx-n">${esc(t(C.f === 1 ? 'calc.safe1' : 'calc.safeN'))}</p></div>`;
+  // (3)
+  const ns = [5, 10, 15, 20, 25, 30]; if (n > 0 && !ns.includes(n)) { ns.push(n); ns.sort((a, b) => a - b); }
+  const r3 = ns.map(x => `<tr class="${x === n ? 'cur' : (x === 5 || x === 30) ? 'ext' : ''}"><td>${x}</td><td class="${wcol ? '' : 'use'}">${(x / 6).toFixed(1)}</td><td class="${wcol ? 'use' : ''}">${(x / 3).toFixed(1)}</td></tr>`).join('');
+  const c3 = `<div class="cx-card"><b class="cx-h">${esc(t('calc.expH'))}</b><table class="cx-t"><tr><th>${esc(t('calc.colN'))}</th><th>×1/6<small>${esc(t('rs.nowild'))}</small></th><th>×1/3<small>${esc(t('rs.wild'))}</small></th></tr>${r3}</table><p class="cx-n">${esc(t('calc.expC'))}</p></div>`;
+  return { c1, c2, c3 };
+}
 // from the table: the last bid with and without the reading of the bids, and every option's value
 function gameHtml() {
   const g = A.G, wild = LD.wildOn(g), Co = AI.coach(g, 0), unk = LD.total(g) - g.dice[0];
   let h = `<div class="cg"><div class="cg-h"><span>${esc(t('ck.total'))} <b>${LD.total(g)}</b></span><span>${esc(t('calc.n'))} <b>${unk}</b></span><span>${esc(t('ck.rule'))} <b>${esc(g.round.pal >= 0 ? t('pal.badge') : wild ? t('wild.on') : t('rs.nowild'))}</b></span></div>`;
-  h += `<div class="cg-hand"><small>${esc(t('calc.yours'))}</small>${g.hands[0].map(d => Dice.img(d, 'cgd')).join('')}</div>`;
+  let L = `<div class="cg-hand"><small>${esc(t('calc.yours'))}</small>${g.hands[0].map(d => Dice.img(d, 'cgd')).join('')}</div>`;
   if (Co.prev) {
     const own = LD.supportOf(g.hands[0], Co.prev.f, wild), plain = LD.pAtLeast(Co.prev.q, own, unk, Co.prev.f, wild);
-    h += `<div class="cg-cmp"><div><small>${esc(t('calc.plain'))}</small><b>${pct(plain)}</b></div><div><small>${esc(t('calc.bayes'))}</small><b>${pct(Co.T)}</b></div><p>${esc(t('calc.cmp', { b: A.bidTxt(Co.prev) }))}</p></div>`;
+    L += `<div class="cg-cmp"><div><small>${esc(t('calc.plain'))}</small><b>${pct(plain)}</b></div><div><small>${esc(t('calc.bayes'))}</small><b>${pct(Co.T)}</b></div><p>${esc(t('calc.cmp', { b: A.bidTxt(Co.prev) }))}</p></div>`;
   }
+  // every face: your matches + the hidden dice, by the odds alone and with the reading of the bids
+  const cf = Co.prev ? Co.prev.f : 0;
+  L += `<div class="cx-card cg-face"><b class="cx-h">${esc(t('calc.faceH'))}</b><table class="cx-t"><tr><th></th><th>${esc(t('calc.colMine'))}</th><th>${esc(t('calc.plain'))}</th><th>${esc(t('calc.bayes'))}</th><th>${esc(t('calc.colTot'))}</th></tr>` +
+    [1, 2, 3, 4, 5, 6].map(f => { const mine = LD.supportOf(g.hands[0], f, wild), pl = unk * LD.pMatch(f, wild), rd = Co.expect[f] || 0, up = rd - pl;
+      return `<tr class="${f === cf ? 'cur' : ''}"><td>${Dice.img(f, 'cxd')}</td><td>${mine}</td><td>${pl.toFixed(1)}</td><td class="${up > .25 ? 'up' : up < -.25 ? 'dn' : ''}">${rd.toFixed(1)}</td><td class="use"><b>${(mine + rd).toFixed(1)}</b></td></tr>`; }).join('') +
+    `</table><p class="cx-n">${esc(t('calc.faceN'))}</p></div>`;
+  const reads = Co.reads.filter(r => r.f && r.up > .25 && g.round.bids.some(b => b.p === r.j));
+  if (reads.length) L += `<div class="ck-reads cg-reads"><div class="tips-h">${esc(t('ck.reads'))}</div>${reads.map(r => `<div><span class="ava av${r.j}">${esc(A.nameOf(r.j).slice(0, 1))}</span>${esc(t('ck.read', { n: A.nameOf(r.j), u: r.up.toFixed(1) }))}${Dice.img(r.f, 'od')}</div>`).join('')}</div>`;
+  let Rr = '';
   if (g.round.turn === 0) {
-    h += `<div class="tips-h">${esc(t('calc.ev'))}</div><table class="cg-tbl"><tr><th></th><th>${esc(t('ck.colT'))}</th><th>${esc(t('ck.colL'))}</th><th>${esc(t('calc.colG'))}</th><th>${esc(t('ck.colU'))}</th></tr>` +
-      Co.opts.slice(0, 8).map((o, i) => `<tr class="${i === 0 ? 'best' : ''}"><td>${o.a.t === 'bid' ? A.bidHtml(o.a, 'sm') : `<b class="ckact ${o.a.t}">${esc(t(o.a.t === 'dudo' ? 'act.dudo' : 'act.calza'))}</b>`}</td><td>${pct(o.a.t === 'calza' ? o.E : o.T)}</td><td>${pct(o.lose)}</td><td>${pct(o.gain)}</td><td class="${o.U >= 0 ? 'pos' : 'neg'}">${o.U >= 0 ? '+' : '−'}${Math.abs(o.U).toFixed(2)}</td></tr>`).join('') + `</table><p class="diff-desc">${esc(t('calc.evHelp'))}</p>`;
+    Rr = `<div class="tips-h">${esc(t('calc.ev'))}</div><table class="cg-tbl"><tr><th></th><th>${esc(t('ck.colT'))}</th><th>${esc(t('ck.colL'))}</th><th>${esc(t('calc.colG'))}</th><th>${esc(t('ck.colU'))}</th></tr>` +
+      Co.opts.slice(0, Co.prev ? 10 : 14).map((o, i) => `<tr class="${i === 0 ? 'best' : ''}"><td>${o.a.t === 'bid' ? A.bidHtml(o.a, 'sm') : `<b class="ckact ${o.a.t}">${esc(t(o.a.t === 'dudo' ? 'act.dudo' : 'act.calza'))}</b>`}</td><td>${pct(o.a.t === 'calza' ? o.E : o.T)}</td><td>${pct(o.lose)}</td><td>${pct(o.gain)}</td><td class="${o.U >= 0 ? 'pos' : 'neg'}">${o.U >= 0 ? '+' : '−'}${Math.abs(o.U).toFixed(2)}</td></tr>`).join('') + `</table><p class="diff-desc">${esc(t('calc.evHelp'))}</p>`;
   }
+  h += `<div class="cg-cols"><div class="cg-l">${L}</div>${Rr ? `<div class="cg-r">${Rr}</div>` : ''}</div>`;
   return h + `</div>`;
 }
 
