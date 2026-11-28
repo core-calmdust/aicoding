@@ -21,7 +21,8 @@
     st.text = Object.assign({}, st.text);
     const pro = st.text.prologue || [], core = pro.findIndex(p => p.core);
     // a hero with an opening of their own starts the story their way; the shared part (from the page marked core) follows
-    st.text.prologue = hh.prologue && core > 0 ? hh.prologue.concat(pro.slice(core)) : pro.flatMap(p => p.hero ? [{ bg: hh.bg || p.bg || st.locs[0].id, t: hh.intro }] : [p]);
+    const tagged = pro.map((p, i) => p.sid ? p : Object.assign({}, p, { sid: 'p' + i }));   // a name for each page, so the theater can find its shots
+    st.text.prologue = hh.prologue && core > 0 ? hh.prologue.map((p, k) => Object.assign({}, p, { sid: 'h:' + h.id + ':' + k })).concat(tagged.slice(core)) : tagged.flatMap(p => p.hero ? [{ bg: hh.bg || p.bg || st.locs[0].id, t: hh.intro, sid: 'h:' + h.id }] : [p]);
     if (hh.win) st.text.win = hh.win;
     if (st.arc) {
       const days = {};
