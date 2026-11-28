@@ -991,7 +991,7 @@
       const voice = fetch('../shogi/voice-fox-ja.js?v=9').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       const rep = getJ('../shogi/lesson-replies.json?v=7').then(j => { SH_REP = j || {}; }).catch(() => {});   // (the opponent's answer to each move of the lesson problems: shogi/tools/lesson-replies.js)
       return (this.p = Promise.all([voice, rep, getJ('../shogi/lessons.json?v=30261128k5'), getJ('../shogi/openings.json?v=20261124ol1'),
-        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261128si`).catch(() => ({ sets: [] })))])
+        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261128sj`).catch(() => ({ sets: [] })))])
         .then(([_, _r, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
           sets.forEach(s => { if (!s.cat) s.cat = s.handi ? 'handi' : 'mid'; });
@@ -7071,7 +7071,7 @@ o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good
     LKEY: 'aicoding-mancala-v1-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../mancala/lessons.json?v=20261127n1'), Promise.all(['../mancala/i18n.js?v=20261107l15', '../mancala/i18n-learn.js?v=20261126l15'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mcEng().catch(() => null)])
+      return (this.p = Promise.all([getJ('../mancala/lessons.json?v=20261128n2'), Promise.all(['../mancala/i18n.js?v=20261107l15', '../mancala/i18n-learn.js?v=20261126l15'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mcEng().catch(() => null)])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] mancala texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },

@@ -405,7 +405,7 @@ html[lang=ar] .cr-box{direction:rtl;text-align:right}
 #lessonListView > .modal-actions, #pzListView > .modal-actions, #pzGridView > .modal-actions{margin-top:auto;padding-top:22px}
 .mbtn{flex:1;padding:12px;border-radius:11px;font-weight:700;letter-spacing:.05em;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted);min-width:0}
 .mbtn:hover{color:var(--text)}
-.mbtn.go{background:linear-gradient(180deg,#f3d99a 0%,#d4b064 45%,#a98443 100%);color:#1d1306;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 6px 16px -8px rgba(207,173,104,.6);border-color:transparent}
+.mbtn.go{background:var(--rt-go-bg,linear-gradient(180deg,#f1efe9,#9c988f));color:var(--rt-go-ink,#121212);box-shadow:0 6px 16px -10px rgba(0,0,0,.55);border-color:transparent}
 .mbtn.go:hover{filter:brightness(1.07)}
 .result-big{font-family:'Shippori Mincho B1',serif;font-size:34px;font-weight:800;text-align:center;letter-spacing:.1em;margin:4px 0 10px}
 .result-score{display:flex;justify-content:center;align-items:center;gap:18px;font-family:'Shippori Mincho B1',serif;font-size:44px;font-weight:800;direction:ltr}
@@ -490,7 +490,7 @@ body.in-puzzle #evalCard, body.in-puzzle .kifu-card, body.in-puzzle .info-line, 
 .lesson-actions button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted);font-size:13px;font-weight:700;min-width:0}
 .lesson-actions button:hover:not(:disabled){color:var(--text)}
 .lesson-actions button:disabled{opacity:.35}
-.lesson-actions button.go{background:linear-gradient(180deg,#f3d99a 0%,#d4b064 45%,#a98443 100%);color:#1d1306;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 6px 16px -8px rgba(207,173,104,.6);border-color:transparent}
+.lesson-actions button.go{background:var(--rt-go-bg,linear-gradient(180deg,#f1efe9,#9c988f));color:var(--rt-go-ink,#121212);box-shadow:0 6px 16px -10px rgba(0,0,0,.55);border-color:transparent}
 .lesson-list{display:grid;gap:8px}
 .lesson-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.2);text-align:left;color:var(--text);width:100%}
 .lesson-item:hover{border-color:var(--brass2)}
@@ -895,7 +895,7 @@ body{background:radial-gradient(1300px 700px at 50% -25%, #222224 0%, transparen
 .tip.below{transform:translate(-50%,0)}
 .modal{background:linear-gradient(180deg,#1b1b1d,#111112)!important;border-color:rgba(201,169,97,.32)!important}
 .overlay{background:rgba(0,0,0,.66)!important}
-.mbtn.go,.lesson-actions button.go{background:linear-gradient(180deg,#d1ac55,#a8862f)!important;color:#140f05!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 8px 18px -10px rgba(201,169,97,.7)!important}
+.mbtn.go,.lesson-actions button.go{background:var(--rt-go-bg,linear-gradient(180deg,#f1efe9,#9c988f))!important;color:var(--rt-go-ink,#121212)!important;box-shadow:0 6px 16px -10px rgba(0,0,0,.55)!important}
 #btnNew{background:linear-gradient(180deg,#c9a24a,#a1802c);color:#140f05;border-color:transparent}
 #btnNew:hover{filter:brightness(1.08);color:#140f05}
 .btn{background:linear-gradient(180deg,#1a1a1c,#131314);border-color:#2b2b2e}
@@ -1282,7 +1282,7 @@ html[data-sk=ocean] .seed{box-shadow:0 calc(var(--u) * .025) calc(var(--u) * .04
   body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:auto}
 }
 </style>
-<link rel="stylesheet" href="online.css?v=20261028sklx">
+<link rel="stylesheet" href="online.css?v=20261028sklxyb">
 <style>/* lesson passed: the three buttons never wrap their labels; if they don't fit in one row they go to two (2026-10-30) */
 .modal-actions:has(#btnLessonNextStep){display:flex!important;flex-wrap:wrap!important;gap:8px!important}
 .modal-actions:has(#btnLessonNextStep) .mbtn{flex:1 1 auto!important;min-width:max-content!important;width:auto!important;white-space:nowrap!important;padding-left:12px!important;padding-right:12px!important;letter-spacing:.02em}
@@ -1572,7 +1572,7 @@ html[data-sk=ocean] .seed{box-shadow:0 calc(var(--u) * .025) calc(var(--u) * .04
                           : 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + H + 'px;border:0;display:block';
     };
     fit(); addEventListener('resize', fit);
-  } else document.write('<script src="../shared/resign.js?v=3l14"><\/script><script src="../shared/rulesoffer.js?v=17l14j"><\/script><script src="../shared/headerbar.js?v=64"><\/script><script src="../shared/flipbtn.js?v=5fs"><\/script><script src="../shared/cardbar.js?v=15l14"><\/script><script src="../shared/watchpause.js?v=2l14"><\/script><script src="../shared/ruletour.js?v=30tw"><\/script><script src="../shared/pzbook.js?v=9sk"><\/script><script src="rvcoach.js?v=20261107l14sq-ls"><\/script><script src="../shared/coachkit.js?v=17l14"><\/script><script src="../shared/record.js?v=17"><\/script><script src="coach.js?v=11sq-ls-rv"><\/script><script src="coach-i18n.js?v=4"><\/script><script src="../shared/tick.js?v=2l14"><\/script><script src="firebase-config.js?v=ac2sh1"><\/script><script src="../shared/onlinesec.js?v=2l14as1sh1"><\/script><script src="online.js?v=stale2pfas1tqsh1"><\/script><script src="../shared/export.js?v=9l14"><\/script><script src="../shared/mtengine.js?v=15"><\/script><script src="../shared/mtsplit.js?v=7"><\/script><script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"><\/script><script src="../shared/ponder.js?v=1"><\/script><script src="../shared/luxintro.js?v=3"><\/script><script src="app.js?v=20261127n1"><\/script><script src="online-ui.js?v=20261031ck1plx1c"><\/script><script src="landtabs.js?v=11"><\/script>');
+  } else document.write('<script src="../shared/resign.js?v=3l14"><\/script><script src="../shared/rulesoffer.js?v=24l14j"><\/script><script src="../shared/headerbar.js?v=64"><\/script><script src="../shared/flipbtn.js?v=5fs"><\/script><script src="../shared/cardbar.js?v=15l14"><\/script><script src="../shared/watchpause.js?v=2l14"><\/script><script src="../shared/ruletour.js?v=32tw"><\/script><script src="../shared/pzbook.js?v=10sk"><\/script><script src="rvcoach.js?v=20261107l14sq-ls"><\/script><script src="../shared/coachkit.js?v=17l14"><\/script><script src="../shared/record.js?v=17"><\/script><script src="coach.js?v=11sq-ls-rv"><\/script><script src="coach-i18n.js?v=4"><\/script><script src="../shared/tick.js?v=2l14"><\/script><script src="firebase-config.js?v=ac2sh1"><\/script><script src="../shared/onlinesec.js?v=2l14as1sh1"><\/script><script src="online.js?v=stale2pfas1tqsh1"><\/script><script src="../shared/export.js?v=9l14"><\/script><script src="../shared/mtengine.js?v=15"><\/script><script src="../shared/mtsplit.js?v=7"><\/script><script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"><\/script><script src="../shared/ponder.js?v=1"><\/script><script src="../shared/luxintro.js?v=3"><\/script><script src="app.js?v=20261128n2"><\/script><script src="online-ui.js?v=20261031ck1plx1c"><\/script><script src="landtabs.js?v=11"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas portal skin: mancala/?skin=atlas — 3D piano-black lacquer board, guide speech bubbles, portal look (all features kept) -->
@@ -1581,7 +1581,7 @@ html[data-sk=ocean] .seed{box-shadow:0 calc(var(--u) * .025) calc(var(--u) * .04
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   if (window.__ROTWRAP) { document.documentElement.classList.add('atlas-ready'); if (window.AtlasLoading) AtlasLoading.hide(); return; }   // phone landscape wrapper: the skin runs in the turned page inside
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=101sk'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=102sk'; document.head.appendChild(css);
   const css2 = document.createElement('link'); css2.rel = 'stylesheet'; css2.href = '../atlas/skin/mancala.css?v=19l14'; document.head.appendChild(css2);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
@@ -1591,7 +1591,7 @@ html[data-sk=ocean] .seed{box-shadow:0 calc(var(--u) * .025) calc(var(--u) * .04
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261128b" defer></script>
+<script src="../shared/atlas.js?v=20261128e" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac2l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261109ac2l14as1" defer></script>
 <script src="../shared/infotabs.js?v=24" defer></script>

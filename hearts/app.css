@@ -1740,6 +1740,7 @@ html[lang=ar] .gd-box .tut-btns #tuBack{margin-right:0;margin-left:auto}
 .ht{--hl:#d9556f;--hl2:#ff9fb0;--hl-a:rgba(217,85,111,.5);--gold:#e3bf6a;--rose:#f08ca0}
 .ht .gcard.sel{background:linear-gradient(180deg,rgba(217,85,111,.16),rgba(0,0,0,.15))}
 .ht .tgl input:checked + i{background:linear-gradient(180deg,#e56d85,#a8324b)}
+html[data-felt=blue]{--felt1:#2a5cbc;--felt2:#0b1f58}
 html[data-felt=claret]{--felt1:#7d2236;--felt2:#2c0812}
 html[data-felt=wine]{--felt1:#5a2a52;--felt2:#200a1e}
 /* claret felt: a deeper nap (two noise layers, a soft lamp in the middle, darker rim) */
@@ -2084,7 +2085,7 @@ html[dir=rtl] .parrow.d1,html[dir=rtl] .parrow.d3{transform:none}
 .ht .lt-top .lt-tut{color:var(--hl2)}
 @media (max-width:760px){#rulesOverlay .modal.rules-modal,#lessonOverlay .modal.lesson-modal,#studyOverlay .modal.study-modal{width:calc(100vw - 24px);height:calc(100dvh - 24px);max-height:calc(100dvh - 24px);border-radius:16px}}
 .ht .rt-ov-art{background:radial-gradient(90% 90% at 50% 40%,#8a2a3f,#3a0c18);box-shadow:inset 0 0 0 1px rgba(243,213,138,.35)}
-.ht .rules-offer button{background:rgba(255,255,255,.05);border:1px solid rgba(226,194,117,.6);color:#f3d58a;box-shadow:none}.ht .rules-offer button:hover{background:rgba(226,194,117,.14)}
+.ht .rules-offer button{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.24);color:#f1efe9;box-shadow:none}.ht .rules-offer button:hover{background:rgba(255,255,255,.12)}
 /* PC: the table and the side boxes readable at a glance (2026-11-28) */
 @media (min-width:1040px){
   .ht .hseat .pn b{font-size:16px;max-width:150px}.ht .hseat .pn small{font-size:13px}

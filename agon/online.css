@@ -104,7 +104,7 @@ body.in-watch #btnDraw{display:none!important}
 .dk-input{width:150px;border-radius:7px;border:1px solid var(--brass2);background:rgba(0,0,0,.35);color:var(--text);padding:5px 8px;font:inherit;font-size:14px;margin-inline-end:6px}
 .dk-btn{font-size:12.5px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);white-space:nowrap;flex:none}
 .dk-btn:hover{border-color:var(--brass2)}
-.dk-btn.go{background:linear-gradient(180deg,#ffffff,#e9d79f);color:#3a2d0c;border-color:transparent;font-weight:700}
+.dk-btn.go{background:var(--rt-go-bg,linear-gradient(180deg,#f1efe9,#9c988f));color:var(--rt-go-ink,#121212);border-color:transparent;font-weight:700}
 .dk-btn.tg{width:34px;padding:6px 0;color:var(--muted)}
 .dk-g{display:inline-flex;align-items:center;gap:6px;max-width:230px;overflow:hidden}
 .dk-g span{overflow:hidden;text-overflow:ellipsis}
@@ -207,7 +207,7 @@ html[lang=ar] :is(.dk-chat, .mt-strip){direction:rtl}
 /* draw offers (in the game card) */
 .ol-offer{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:6px 0 2px;font-size:13px;color:var(--text)}
 .ol-offer span{flex:1 1 140px}
-.ol-offer button.go{background:linear-gradient(180deg,#e6cd8c,#b39249);color:#1b150a;border-color:transparent;font-weight:700}
+.ol-offer button.go{background:var(--rt-go-bg,linear-gradient(180deg,#f1efe9,#9c988f));color:var(--rt-go-ink,#121212);border-color:transparent;font-weight:700}
 /* online rating history */
 .ol-hist{display:grid;gap:6px}
 .ol-spark{width:100%;height:34px;display:block}

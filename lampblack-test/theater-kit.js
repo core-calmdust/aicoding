@@ -16,7 +16,7 @@
   /* the lights */
   const L = {
     day(w, o) { o = o || {}; w.light({ lx: o.lx != null ? o.lx : .5, ly: o.ly != null ? o.ly : .3, lamp: o.lamp != null ? o.lamp : .75, ls: 1.2, dark: o.dark != null ? o.dark : .22, r: 90, edge: .8 }); },
-    cold(w, o) { o = o || {}; w.light({ lx: o.lx != null ? o.lx : .5, ly: o.ly != null ? o.ly : .25, lamp: .35, ls: 1.4, dark: o.dark != null ? o.dark : .35, r: 95, tint: '18,24,34', edge: 1 }); },
+    cold(w, o) { o = o || {}; w.light({ lx: o.lx != null ? o.lx : .5, ly: o.ly != null ? o.ly : .25, lamp: .35, ls: 1.4, dark: o.dark != null ? o.dark : .35, r: 95, tint: '22,21,24', edge: 1 }); },
     warm(w, t, o) { o = o || {}; const f = flick(t * (o.fs || 1), o.seed || 3); w.light({ lx: o.lx != null ? o.lx : .3, ly: o.ly != null ? o.ly : .4, lamp: (o.lamp || .95) * (.9 + .1 * f), ls: o.ls || .85, dark: o.dark != null ? o.dark : .7, r: o.r || 66 }); if (o.bloom !== false) w.bloom({ x: o.lx != null ? o.lx : .3, y: o.ly != null ? o.ly : .4, r: o.br || 1300, a: (o.ba || .4) * (.92 + .08 * f) }); },
     night(w, o) { o = o || {}; w.light({ lamp: o.lamp || .08, moon: 1, edge: 1, lx: o.lx != null ? o.lx : .75, ly: o.ly != null ? o.ly : .12, dark: o.dark != null ? o.dark : .55, r: 85, tint: '6,10,24' }); },
   };
@@ -33,22 +33,19 @@
     bell: `<svg viewBox="0 0 300 320" width="100%" height="100%" style="overflow:visible"><path fill="currentColor" d="M138 10 h24 v26 h-24z M150 34 c-60 0 -84 50 -88 120 c-4 70 -24 100 -50 120 h276 c-26 -20 -46 -50 -50 -120 c-4 -70 -28 -120 -88 -120z M130 274 a20 20 0 0 0 40 0z"/><path fill="none" stroke="var(--paper)" stroke-width="3" opacity=".7" d="M206 120 l-10 30 l14 22 l-12 34 l8 20"/></svg>`,
   };
   // steam / breath puffs: a few soft blobs that rise and fade (in a layer)
-  function puffs(w, layer, n, seed) { const out = []; for (let i = 0; i < n; i++) { const e = w.add(layer, 'puff'); out.push({ e, k: i / n, s: seed + i }); } return out; }
+  function puffs(w, layer, n, seed) { const out = []; for (let i = 0; i < n; i++) out.push({ sp: w.add(layer, null, { glow: [[0, 'rgba(240,245,255,.9)'], [.55, 'rgba(240,245,255,.4)'], [1, 'rgba(240,245,255,0)']], op: 0 }), k: i / n, s: seed + i }); return out; }
   function drawPuffs(P, t, x, y, o) {
     o = o || {}; const per = o.per || 3.2, size = o.size || 90, rise = o.rise || 220;
-    for (const p of P) { const k = ((t / per + p.k) % 1), a = Math.sin(k * Math.PI) * (o.a || .55);
-      if (!p.sz) { p.sz = size * 2; p.e.style.width = p.e.style.height = p.sz + 'px'; p.e.style.left = '0px'; p.e.style.top = '0px'; }
-      const sc = (.6 + k * 1.4) / 2, px = x + noise1(t * .6 + p.s, p.s) * 30 + (o.drift || 0) * k - p.sz / 2, py = y - rise * k - p.sz / 2;
-      p.e.style.transform = `translate(${px.toFixed(1)}px,${py.toFixed(1)}px) scale(${sc.toFixed(3)})`; p.e.style.opacity = a.toFixed(3); }
+    for (const p of P) { const k = ((t / per + p.k) % 1), sz = size * (.6 + k * 1.4);
+      Object.assign(p.sp, { w: sz, h: sz, x: x + noise1(t * .6 + p.s, p.s) * 30 + (o.drift || 0) * k - sz / 2, y: y - rise * k - sz / 2, op: Math.sin(k * Math.PI) * (o.a || .55) }); }
   }
-  // sparks from a fire (in a layer)
-  function sparks(w, layer, n) { const out = []; for (let i = 0; i < n; i++) { const e = w.add(layer, 'ember'); e.style.width = e.style.height = (7 + (i % 3) * 5) + 'px'; e.style.left = '0px'; e.style.top = '0px'; out.push({ e, k: (i * .618) % 1, s: i * 7.1 }); } return out; }
+  // sparks from a fire
+  function sparks(w, layer, n) { const out = []; for (let i = 0; i < n; i++) { const s = 10 + (i % 3) * 8; out.push({ sp: w.add(layer, null, { glow: [[0, 'rgba(255,220,150,1)'], [.35, 'rgba(255,140,50,.9)'], [1, 'rgba(255,120,40,0)']], w: s, h: s, op: 0 }), k: (i * .618) % 1, s: i * 7.1 }); } return out; }
   function drawSparks(P, t, x, y, o) {
     o = o || {}; const per = o.per || 2.6, spread = o.spread || 160, rise = o.rise || 520;
-    for (const p of P) { const k = ((t / per + p.k) % 1), a = (1 - k) * (k < .08 ? k / .08 : 1);
-      p.e.style.transform = `translate(${(x + noise1(t * 1.3 + p.s, p.s) * spread * k + Math.sin(p.s) * 30).toFixed(1)}px,${(y - rise * E.o2(k)).toFixed(1)}px)`; p.e.style.opacity = a.toFixed(3); }
+    for (const p of P) { const k = ((t / per + p.k) % 1);
+      Object.assign(p.sp, { x: x + noise1(t * 1.3 + p.s, p.s) * spread * k + Math.sin(p.s) * 30, y: y - rise * E.o2(k), op: (1 - k) * (k < .08 ? k / .08 : 1) }); }
   }
-
 
   /* interiors, cut from paper like the outdoor scenes: far = the back wall and windows, mid = hearth/posts/shelves, near = furniture */
   const svgL = (ww, h, body) => `<svg viewBox="0 0 ${ww} ${h}" width="${ww}" height="${h}" style="position:absolute;left:0;top:0;overflow:visible;color:var(--ink)">${body}</svg>`;
@@ -106,8 +103,8 @@
   // o: { loc, night, side, low (camera below eye line), push, lamp: {lx,ly}, others: [ids, blurred, behind], fg: id (a shoulder in the foreground), warm, cold, zoom }
   K.mcu = o => ({
     tr: o.tr || 'cut',
-    build(r, c) {
-      const id = o.who || c.shot.who, w = new World(r, Object.assign({ st: c.st, night: o.night }, place(o.loc), { ww: 2600, wh: 1500, gy: 1000, blurBg: o.blurBg != null ? o.blurBg : 11 }));
+    build(c) {
+      const id = o.who || c.shot.who, w = new World(Object.assign({ st: c.st, night: o.night }, place(o.loc), { ww: 2600, wh: 1500, gy: 1000, blurBg: o.blurBg != null ? o.blurBg : 11 }));
       w.puppet('s', id, { rod: false });
       (o.others || []).forEach((k, i) => w.puppet('o' + i, k));
       if (o.fg) w.puppet('fg', o.fg, { rod: false, layer: 'fg' });
@@ -140,10 +137,10 @@
   // o: { loc, night, ww, gy, from: [x,y,z], to: [x,y,z], tau, light: 'day'|'cold'|'warm'|'night', snow, people: [{id,x,y?,h,face,blur,walk:[x0,x1,t0,t1]}], fx, fy, fg: svg html for a dark foreground shape }
   K.est = o => ({
     tr: o.tr || 'cut', trDur: o.trDur,
-    build(r, c) {
-      const w = new World(r, Object.assign({ st: c.st, night: o.night }, place(o.loc), { ww: o.ww || 2400, wh: o.wh || 1500, gy: o.gy || 1240, blurBg: o.blurBg }));
+    build(c) {
+      const w = new World(Object.assign({ st: c.st, night: o.night }, place(o.loc), { ww: o.ww || 2400, wh: o.wh || 1500, gy: o.gy || 1240, blurBg: o.blurBg }));
       (o.people || []).forEach((p, i) => { const id = typeof p.id === 'function' ? p.id(c) : p.id; if (id) w.puppet('p' + i, id); });
-      if (o.fg) w.add('fg', 'abs', o.fg.html, Object.assign({ left: o.fg.x + 'px', top: o.fg.y + 'px', width: o.fg.w + 'px', height: o.fg.h + 'px', color: 'var(--ink)', filter: `blur(${o.fg.blur || 6}px)` }));
+      if (o.fg) w.add('fg', o.fg.html, { x: o.fg.x, y: o.fg.y, w: o.fg.w, h: o.fg.h, blur: o.fg.blur || 6, ox: 0, oy: 0 });
       const S = { w, sn: o.snow === false ? null : [makeSnow(Object.assign({ n: 140, speed: .55, wind: 16, min: 2, max: 8, seed: 3 }, o.snow || {})), makeSnow({ n: 12, speed: 1.2, wind: 36, min: 14, max: 32, op: .4, seed: 9 })] };
       if (o.build) o.build(S, c);
       return S;
@@ -154,7 +151,7 @@
       (o.people || []).forEach((p, i) => {
         if (!w.people['p' + i]) return;
         let x = p.x, walk = 0;
-        if (p.walk) { const q = seg(t, p.walk[2], p.walk[3]); x = lerp(p.walk[0], p.walk[1], E.io(q)); walk = q > 0 && q < 1 ? 1 : 0; }
+        if (p.walk) { const q = seg(t, p.walk[2], p.walk[3]); x = lerp(p.walk[0], p.walk[1], E.io(q)); walk = Math.min(1, q * 6, (1 - q) * 6); }
         w.place('p' + i, { x, y: p.y || (o.gy || 1240) + 20, h: p.h || 520, face: p.face, blur: p.blur || .4, op: p.op, walk, rot: p.rot, still: p.still }, t);
       });
       const lt = o.light || 'cold';
@@ -168,9 +165,9 @@
   // o: { loc, ids: ctx => [ids], dir: 1|-1, warm }
   K.crowd = o => ({
     tr: o.tr || 'cut',
-    build(r, c) {
+    build(c) {
       const ids = (o.ids ? o.ids(c) : c.people).slice(0, o.max || 7);
-      const w = new World(r, Object.assign({ st: c.st, night: o.night }, place(o.loc), { ww: 3400, wh: 1500, gy: 1000, blurBg: 14 }));
+      const w = new World(Object.assign({ st: c.st, night: o.night }, place(o.loc), { ww: 3400, wh: 1500, gy: 1000, blurBg: 14 }));
       ids.forEach((id, i) => w.puppet('c' + i, id, { rod: i % 2 === 1 }));
       w.box.classList.add('lit');
       return { w, ids };
@@ -194,9 +191,9 @@
   // o: { loc, items: [{ svg, x, y, w, h, blur, layer, rot }], from, to, tau, lamp, draw }
   K.insert = o => ({
     tr: o.tr || 'cut', trDur: o.trDur,
-    build(r, c) {
-      const w = new World(r, Object.assign({ st: c.st, night: o.night }, place(o.loc), { ww: 2400, wh: 1500, gy: 1100, blurBg: o.blurBg != null ? o.blurBg : 16 }));
-      const it = (o.items || []).map(p => w.add(p.layer || 'cast', 'abs', p.svg, { left: p.x + 'px', top: p.y + 'px', width: p.w + 'px', height: p.h + 'px', color: 'var(--ink)', filter: `blur(${p.blur || 0}px)`, transform: `rotate(${p.rot || 0}deg)` }));
+    build(c) {
+      const w = new World(Object.assign({ st: c.st, night: o.night }, place(o.loc), { ww: 2400, wh: 1500, gy: 1100, blurBg: o.blurBg != null ? o.blurBg : 16 }));
+      const it = (o.items || []).map(p => w.add(p.layer || 'cast', p.svg, { x: p.x, y: p.y, w: p.w, h: p.h, blur: p.blur || 0, rot: p.rot || 0, z: 5000 }));
       w.box.classList.add('lit');
       const S = { w, it };
       if (o.build) o.build(S, c);
@@ -215,9 +212,9 @@
   // four ways of seeing them, in turn: from the right, from the left, from below, against the light
   K.portrait = o => ({
     tr: 'cut',
-    build(r, c) {
+    build(c) {
       const id = c.shot.who, i = Math.max(0, c.people.indexOf(id)), v = (o && o.order ? o.order : [0, 1, 2, 3])[i % 4];
-      const w = new World(r, Object.assign({ st: c.st }, place((o && o.loc) || 'inn/in'), { ww: 2600, wh: 1500, gy: 1000, blurBg: v === 3 ? 20 : 13 }));
+      const w = new World(Object.assign({ st: c.st }, place((o && o.loc) || 'inn/in'), { ww: 2600, wh: 1500, gy: 1000, blurBg: v === 3 ? 20 : 13 }));
       // the ones already introduced stand behind, out of focus
       const before = c.people.slice(Math.max(0, i - 3), i);
       before.forEach((k, j) => w.puppet('b' + j, k));
@@ -231,7 +228,9 @@
       const py = 1000 + h * (v === 2 ? .7 : .62), hy = w.head('s', py, h);
       S.before.forEach((k, j) => w.place('b' + j, { x: px0 - sg * (560 + j * 380), y: 1060, h: 950, blur: 8, op: .8, face: sg }, t));
       w.people.s.lift = f.talk * 5;
-      w.place('s', { x: px, y: py, h, blur: v === 3 ? .2 : .3, face: -sg, walk: enter < 1 ? 1 : 0, still: enter >= 1, rot: noise1(t * .2, 3) * .4 }, t);
+      // the walk fades out as they arrive (no switch from walking to standing: that was a visible jolt)
+      const wk = 1 - E.s(seg(t, .55, 1.25));
+      w.place('s', { x: px, y: py, h, blur: v === 3 ? .2 : .3, face: -sg, walk: wk, rot: noise1(t * .2, 3) * .4 }, t);
       const k = glide(t, 8, 1), b = breath(t, 5, 13);
       const z = lerp(1, v === 2 ? 1.04 : 1.07, k), P0 = w.people.s, top = ((P0.hc || .3) - (P0.ht || .2)) * h * z;
       const FX = W / 2 + sg * W * .16, FY = Math.max(v === 2 ? 400 : 330, top + (nr ? 190 : 70) - (v === 2 ? 130 * z : 0));

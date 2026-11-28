@@ -1,10 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
   <defs>
-    <linearGradient id="hearts-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a2540"/><stop offset="1" stop-color="#2c0812"/></linearGradient>
-    <radialGradient id="hearts-tint" cx=".25" cy=".12" r=".95"><stop offset="0" stop-color="#ffc7d2" stop-opacity=".28"/><stop offset=".6" stop-color="#ffc7d2" stop-opacity=".04"/><stop offset="1" stop-color="#ffc7d2" stop-opacity="0"/></radialGradient>
+    <linearGradient id="hearts-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a78e0"/><stop offset=".55" stop-color="#1f4fb0"/><stop offset="1" stop-color="#0d2462"/></linearGradient>
+    <radialGradient id="hearts-tint" cx=".25" cy=".12" r=".95"><stop offset="0" stop-color="#cfe0ff" stop-opacity=".28"/><stop offset=".6" stop-color="#cfe0ff" stop-opacity=".04"/><stop offset="1" stop-color="#cfe0ff" stop-opacity="0"/></radialGradient>
     <linearGradient id="hearts-face" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffdf6"/><stop offset="1" stop-color="#ecdfc2"/></linearGradient>
     <linearGradient id="hearts-red" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8475f"/><stop offset="1" stop-color="#a5132b"/></linearGradient>
-    <linearGradient id="hearts-gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6dd92"/><stop offset="1" stop-color="#b8862e"/></linearGradient>
   </defs>
   <rect width="96" height="96" rx="22" fill="url(#hearts-bg)"/>
   <rect width="96" height="96" rx="22" fill="url(#hearts-tint)"/>
@@ -20,6 +19,6 @@
     <text x="45.5" y="36" font-family="Georgia,serif" font-weight="700" font-size="11" fill="#b3122b" stroke="none">A</text>
     <path d="M59 64c-8-5.6-12.3-9.6-12.3-14.3a5.6 5.6 0 0 1 12.3-2.4 5.6 5.6 0 0 1 12.3 2.4c0 4.7-4.3 8.7-12.3 14.3z" fill="url(#hearts-red)" stroke="#7a0d1f" stroke-opacity=".5"/>
   </g>
-  <circle cx="78" cy="20" r="7.5" fill="url(#hearts-gold)" stroke="#6b4a10" stroke-opacity=".5"/>
-  <path d="M74.8 20.3a3.6 3.6 0 1 0 6.2-2.6 4.4 4.4 0 1 1-6.2 2.6z" fill="#2c0812" opacity=".85"/>
+  <circle cx="78" cy="20" r="7.5" fill="#f3ead6" stroke="#0d2462" stroke-opacity=".5"/>
+  <path d="M74.8 20.3a3.6 3.6 0 1 0 6.2-2.6 4.4 4.4 0 1 1-6.2 2.6z" fill="#1f4fb0" opacity=".9"/>
 </svg>

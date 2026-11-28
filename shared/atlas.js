@@ -57,9 +57,9 @@
       name: N('バカラ', 'Baccarat', '百家乐', '바카라', 'Baccarat', 'Baccara', 'Bacará', 'Baccara', 'बैकारेट', 'باكارا', 'Баккара', '百家樂', 'Bakarat', 'Bakara') },
     { id: 'blackjack', cat: 'card', store: ['aicoding-blackjack'], href: 'blackjack/', color: '#d4a54a', released: '2026-11-04', tags: ['classic', 'card', 'lessons', 'variants', 'mobile'], total: { ls: 16 },
       name: N('ブラックジャック', 'Blackjack', '21点', '블랙잭', 'Blackjack', 'Blackjack', 'Blackjack', 'Blackjack', 'ब्लैकजैक', 'بلاك جاك', 'Блэкджек', '21點', 'Blackjack', 'Blackjack') },
-    { id: 'guandan', cat: 'card', store: ['aicoding-guandan'], href: 'guandan/', color: '#1f7d5e', alpha: true, released: '2026-11-24', tags: ['classic', 'card', 'ai', 'lessons', 'mobile'], total: { ls: 12 },
+    { id: 'guandan', cat: 'card', store: ['aicoding-guandan'], href: 'guandan/', color: '#b52a34', alpha: true, released: '2026-11-24', tags: ['classic', 'card', 'ai', 'lessons', 'mobile'], total: { ls: 12 },
       name: N('掼蛋', 'Guandan', '掼蛋', '관단', 'Guandan', 'Guandan', 'Guandan', 'Guandan', 'ग्वानदान', 'غواندان', 'Гуаньдань', '摜蛋', 'Guandan', 'Guandan') },
-    { id: 'hanafuda', cat: 'card', store: ['aicoding-hanafuda', 'aicoding-hanafuda-lessons', 'aicoding-hanafuda-rated'], href: 'hanafuda/', color: '#ba3024', alpha: true, released: '2026-11-28', tags: ['classic', 'card', 'ai', 'rated', 'lessons', 'variants', 'mobile'], total: { ls: 9 },
+    { id: 'hanafuda', cat: 'card', store: ['aicoding-hanafuda', 'aicoding-hanafuda-lessons', 'aicoding-hanafuda-rated'], href: 'hanafuda/', color: '#1d6a80', alpha: true, released: '2026-11-28', tags: ['classic', 'card', 'ai', 'rated', 'lessons', 'variants', 'mobile'], total: { ls: 9 },
       name: N('花札', 'Hanafuda', '花札', '하나후다', 'Hanafuda', 'Hanafuda', 'Hanafuda', 'Hanafuda', 'हानाफ़ुदा', 'هانافودا', 'Ханафуда', '花札', 'Hanafuda', 'Hanafuda') },
     { id: 'riichi', cat: 'card', store: ['riichi-v1'], href: 'riichi/', color: '#2f7a5a', alpha: true, released: '2026-11-27', tags: ['classic', 'ai', 'online', 'lessons', 'mobile'], total: { ls: 40 },   /* (雀華 mahjong/ の土台をスキルなし・キャラなしで。2026-11-27) */
       name: N('麻雀', 'Riichi Mahjong', '立直麻将', '리치 마작', 'Mahjong riichi', 'Mahjong riichi', 'Mahjong riichi', 'Riichi-Mahjong', 'रीची माहजोंग', 'ماجونغ ريتشي', 'Риичи-маджонг', '立直麻將', 'Mahjong Riichi', 'Riichi Mahjong') },
@@ -130,7 +130,7 @@
     { id: 'hex', cat: 'line', store: ['aicoding-hex', 'hex-online-name'], href: 'hex/', color: '#4f86e8', released: '2026-10-25', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 403, ls: 13 },
       name: N('ヘックス', 'Hex', '六贯棋', '헥스', 'Hex', 'Hex', 'Hex', 'Hex', 'हेक्स', 'هيكس', 'Гекс', '六貫棋', 'Hex', 'Hex') },
   ];
-  GAMES.forEach(g => { g.icon = 'images/icons/' + (g.id === 'speedsudoku' ? 'speed-sudoku' : g.id) + '.svg'; });
+  GAMES.forEach(g => { g.icon = 'images/icons/' + (g.id === 'speedsudoku' ? 'speed-sudoku' : g.id) + '.svg' + (g.id === 'hanafuda' || g.id === 'hearts' || g.id === 'guandan' ? '?v=2' : ''); });   // (?v: the 2026-11-28 recolour)
   // cat: home-grid category chip — chess (shogi/chess-like) · line (line-up & territory) · race (dice race & sowing) · hist (historical: ancient games recreated) · puzzle
   const CATS = ['chess', 'line', 'race', 'hist', 'action', 'puzzle', 'deduce', 'card'];   // (deduce 推理・数あて: ヒット＆ブロー, 2026-11-16)
   // sound effects on/off for every page of the series (localStorage 'atlas-sfx': '0' = off)

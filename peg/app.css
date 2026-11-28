@@ -94,7 +94,7 @@ body.in-puzzle .daily-card,body.in-puzzle .rec-card{display:none}
 .pz-actions button.nx svg{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .pz-actions button.nx span{overflow:hidden;text-overflow:ellipsis}
 .pz-actions button:hover:not(:disabled){border-color:var(--accent);color:var(--text)}
-.pz-actions button.go{background:linear-gradient(180deg,#f3cf86,#cf9c4c);color:#2a1806;border-color:transparent}
+.pz-actions button.go{background:var(--rt-go-bg,linear-gradient(180deg,#f1efe9,#9c988f));color:var(--rt-go-ink,#121212);border-color:transparent}
 .pz-actions button:disabled{opacity:.35;cursor:default}
 /* the title: back to this game's top (as chess / shogi) */
 .brand h1.to-board{cursor:pointer;transition:opacity .15s;-webkit-tap-highlight-color:transparent}
@@ -145,7 +145,7 @@ body.in-puzzle .daily-card,body.in-puzzle .rec-card{display:none}
 .dz-row button svg{width:64px;height:64px}
 .modal-actions{display:flex;gap:10px;margin-top:20px}
 .mbtn{flex:1;height:48px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.18);font-size:15px;font-weight:700;color:var(--muted);white-space:nowrap}
-.mbtn.go{background:linear-gradient(180deg,#f3cf86,#cf9c4c);color:#2a1806;border:0}
+.mbtn.go{background:var(--rt-go-bg,linear-gradient(180deg,#f1efe9,#9c988f));color:var(--rt-go-ink,#121212);border:0}
 .mbtn.ghost{background:none}
 .mbtn.sm{flex:none;height:36px;padding:0 14px;font-size:13px}
 .res-modal{text-align:center;width:min(460px,100%)}
