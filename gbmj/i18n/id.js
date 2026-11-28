@@ -26,7 +26,7 @@ S: {
   tu_intro: 'Selamat datang di Mahjong Resmi Tiongkok! Ini aturan resmi Tiongkok. Kumpulkan empat set dan satu pasang (atau tujuh pasang dan beberapa tangan khusus); kamu bisa menang bila fan-mu berjumlah 8 poin atau lebih. Mari belajar sambil memainkan ronde ini.',
   tu_hand: 'Ini tanganmu. Kamu bandar (Timur), jadi kamu memegang 14 ubin dan membuang lebih dulu. Arahkan ke sebuah ubin dan ubin yang sama di meja akan menyala.',
   tu_goal: 'Kamu punya 1-2-3 Karakter, 4-5-6 Bulatan, dan 7-8 Bambu. Satu 1-2-3, satu 4-5-6, dan satu 7-8-9, masing-masing dari jenis yang berbeda, adalah Mixed Straight (花龙): 8 poin, cukup sendiri untuk batas minimal.',
-  tu_flower: 'Bunga yang kamu terima (Musim Semi) disisihkan dan diganti dari ujung belakang dinding. Satu bunga bernilai 1 poin, tetapi tidak dihitung untuk batas minimal 8.',
+  tu_flower: 'Bunga yang kamu terima (Musim Semi) diletakkan di samping namamu dan diganti dari ujung belakang dinding. Satu bunga bernilai 1 poin, tetapi tidak dihitung untuk batas minimal 8.',
   tu_d1: 'Buang Utara. Ubin kehormatan Utara dan Barat tidak membantu Mixed Straight maupun pasangan. Klik (ketuk) Utara yang menyala.',
   tu_d1_no: 'Ubin itu bagian dari Mixed Straight atau pasangan (dua 5 Bambu). Yang lebih adalah Utara dan Barat. Mulailah dengan Utara yang menyala.',
   tu_d1_ok: 'Buangan yang bagus. Sekarang giliran CPU.',
@@ -44,7 +44,7 @@ S: {
   tu_pay: 'Pembayaran: menang dari buangan, pembuang membayar poin + 8 dan dua pemain lain masing-masing 8. Menang dari ambilan sendiri, ketiganya membayar poin + 8. Tidak ada riichi, dora, atau fu.',
   tu_end: 'Sekarang kamu siap bermain! Masih banyak lagi: pung, kong (kong tertutup diletakkan menghadap bawah), Tujuh Pasang, Tiga Belas Yatim, tangan Knitted, dan total 81 fan. Gunakan Panduan fan dan contoh tangannya untuk belajar mencapai 8 poin.',
   tu_m_d1: 'Menuju Mixed Straight', tu_m_chi: 'Menuju Mixed Straight', tu_m_d2: 'Menuju siap', tu_m_ron: 'Poin kemenangan ini (8 untuk lulus)',
-  exitTitle: 'Keluar dari permainan?', exitBody: 'Permainan ini tidak akan dicatat.', exitYes: 'Keluar', yes: 'Ya', no: 'Tidak', leftShort: 'sisa',
+  exitTitle: 'Keluar dari permainan?', exitBody: 'Permainan ini tidak akan dicatat.', exitYes: 'Keluar', yes: 'Ya', no: 'Tidak', leftShort: 'sisa', minRule: 'Minimal 8 poin', stats: 'Rekor',
 },
 DESC: {
   1: 'Pung (atau kong) dari keempat angin.', 2: 'Pung (atau kong) dari ketiga naga.', 3: 'Hanya 2, 3, 4, 6, 8 Bambu dan Naga Hijau.',

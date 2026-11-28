@@ -21,8 +21,8 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .topbar{background:linear-gradient(180deg,var(--bar),var(--bar2));box-shadow:0 2px 0 rgba(0,0,0,.25);color:#fbe9d8}
 .logo{display:flex;flex-direction:column;line-height:1;text-decoration:none;color:#fbe9d8}
 .logo b{font-family:var(--ar);font-size:20px;letter-spacing:.06em}.logo small{font-size:10px;letter-spacing:.3em;opacity:.8}
-.ib{width:44px;height:44px;border-radius:50%;border:0;display:grid;place-items:center;background:rgba(255,253,247,.94);color:var(--ink);box-shadow:0 3px 0 rgba(0,0,0,.22)}
-.ib:hover{background:#fff}
+.topbar .ib{width:44px;height:44px;border-radius:50%;border:0;display:grid;place-items:center;background:rgba(255,253,247,.94);color:var(--ink);box-shadow:0 3px 0 rgba(0,0,0,.22)}
+.topbar .ib:hover{background:#fff}
 .topbar .ib{background:rgba(255,240,225,.14);color:#fbe9d8;box-shadow:none}
 .topbar .ib:hover{background:rgba(255,240,225,.26)}
 
@@ -32,7 +32,7 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .hm-main{position:absolute;inset:70px 0 0;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:28px 18px 40px}
 .hm-title{text-align:center;color:#fff3e4;margin-bottom:22px}
 .hm-tiles{display:flex;gap:6px;justify-content:center;margin-bottom:12px}
-.hm-tiles .tl{height:64px;border-radius:7px;box-shadow:0 4px 0 #1c5846,0 8px 16px rgba(0,0,0,.35)}
+.hm-tiles .gt{height:64px;border-radius:7px;box-shadow:0 4px 0 #1c5846,0 8px 16px rgba(0,0,0,.35)}
 .hm-title h1{font-family:'Shippori Mincho B1',var(--af);font-size:44px;margin:4px 0 6px;letter-spacing:.08em;text-shadow:0 3px 0 rgba(0,0,0,.3)}
 .hm-title p{margin:0;font-size:17px;opacity:.92;max-width:640px;line-height:1.6}
 .hm-menu{display:grid;grid-template-columns:repeat(3,minmax(0,250px));gap:16px;width:100%;justify-content:center}
@@ -46,46 +46,10 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .hm-b.dis{opacity:.6}.hm-b.dis i{background:#9aa0b0}
 .hm-note{color:#f3d9c8;font-size:15px;margin-top:22px;text-align:center;max-width:680px;line-height:1.6}
 
-/* ---------- 対局 ---------- */
-#game{background:#200a0e}
-#stage{position:absolute;inset:0}
-#stage canvas{display:block}
-.gtop{pointer-events:none;padding:12px 14px}
-.gtop>*{pointer-events:auto}
-.g-info{display:flex;align-items:center;gap:10px;padding:8px 14px;border-radius:16px;background:rgba(255,253,247,.94);border:2px solid var(--line);box-shadow:0 3px 0 rgba(0,0,0,.2);font-size:17px}
-.g-info b{font-size:19px}.g-info span{color:var(--ink2)}
-.tag{font-style:normal;font-size:13px;padding:2px 8px;border-radius:999px;background:var(--lac);color:#fff}
-#seats .seat{position:absolute;display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:999px;background:rgba(255,253,247,.95);border:2px solid var(--line);box-shadow:0 3px 0 rgba(0,0,0,.22);font-size:16px;z-index:4;white-space:nowrap}
-#seats .seat.on{border-color:var(--lac);box-shadow:0 0 0 3px rgba(163,40,58,.35),0 3px 0 rgba(0,0,0,.22)}
-.seat .wd{font-style:normal;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#2b3044;color:#fff;font-weight:900;font-size:15px}
-.seat .wd.e{background:var(--lac)}
-.seat .sc{font-family:var(--ar);font-size:18px}
-.seat .fl{font-size:13px;padding:1px 8px;border-radius:999px;background:#fbe3e5;color:var(--lac2)}
-.seat .dead{font-size:13px;padding:1px 8px;border-radius:999px;background:var(--warn);color:#fff}
-.seat.st0{left:16px;bottom:150px}.seat.st1{right:16px;top:46%}.seat.st2{left:50%;top:72px;transform:translateX(-50%)}.seat.st3{left:16px;top:46%}
-.hand{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;align-items:flex-end;gap:3px;z-index:4;padding:0 10px}
-.hand .ht{border:0;padding:0;background:none;border-radius:9px;transition:transform .1s;line-height:0}
-.hand .ht .tl{height:min(96px,7.4vw,var(--thmax,999px));border-radius:9px;box-shadow:0 5px 0 #1c5846,0 8px 14px rgba(0,0,0,.35)}
-.hand.my .ht.can:hover{transform:translateY(-14px)}
-.hand .ht.rec .tl{outline:4px solid #3df59a;outline-offset:-2px;box-shadow:0 5px 0 #1c5846,0 0 18px rgba(61,245,154,.8)}
-.hand .gap{width:16px}
-.acts{position:absolute;left:0;right:0;bottom:calc(min(96px,7.4vw) + 34px);display:flex;justify-content:center;gap:12px;z-index:5;flex-wrap:wrap;padding:0 10px}
-.act{min-width:112px;padding:10px 18px;border:0;border-radius:18px;color:#fff;display:flex;flex-direction:column;align-items:center;line-height:1.15;font-size:20px;font-weight:900;box-shadow:0 5px 0 rgba(0,0,0,.3)}
-.act small{font-size:13px;font-weight:700;opacity:.95}
-.act.win{background:var(--lac)}.act.warn{background:var(--warn)}.act.call{background:var(--jade)}.act.pass{background:var(--paper);color:var(--ink);border:2px solid var(--line)}
-.act:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.3)}
-.coach{position:absolute;right:14px;top:72px;width:300px;max-height:calc(100% - 300px);overflow:auto;padding:12px 14px;border-radius:18px;background:rgba(255,253,247,.96);border:2px solid var(--line);box-shadow:0 4px 0 rgba(0,0,0,.2);z-index:4;font-size:15px}
-.coach h4{margin:0 0 6px;font-size:16px;color:var(--lac2)}
-.coach h4 small{display:none;font-weight:500;color:var(--ink);margin-left:6px}
-.coach p{margin:4px 0}.ck-l{font-size:17px}.ck-h{color:var(--ink2);font-size:14px;margin-top:10px!important}
-.ck-rec .tl{vertical-align:middle}
-.ck-p{list-style:none;margin:4px 0 0;padding:0}.ck-p li{display:flex;gap:8px;align-items:baseline;padding:3px 0;border-top:1px dashed var(--line)}
-.ck-p b{flex:1}.ck-p span{font-family:var(--ar)}.ck-p em{font-style:normal;color:var(--ink2);font-size:13px}
-.ck-w{display:flex;flex-wrap:wrap;gap:6px}.wt{display:flex;flex-direction:column;align-items:center;font-family:var(--ar)}.wt.low b{color:var(--warn)}.wt.low .tl{opacity:.6}
-.ck-warn{color:var(--warn);font-size:13.5px}
-.tl.mini{height:38px;border-radius:5px;box-shadow:0 2px 0 #1c5846}
-.tlb{display:inline-block;aspect-ratio:3/4;height:52px;border-radius:6px;background:linear-gradient(180deg,#2b7a62,#164a3b);box-shadow:inset 0 -3px 0 rgba(0,0,0,.25),0 3px 0 #0f3a2d}
-.tlb.mini{height:34px;border-radius:5px}
+/* ---------- 対局（riichi/ の組み立てと CSS の上に、国標の分だけ：gbmj-game.css 相当はこのファイルの末尾） ---------- */
+.gt.mini{height:38px;border-radius:5px;box-shadow:0 2px 0 #1c5846}
+.gtb{display:inline-block;aspect-ratio:3/4;height:52px;border-radius:6px;background:linear-gradient(180deg,#2b7a62,#164a3b);box-shadow:inset 0 -3px 0 rgba(0,0,0,.25),0 3px 0 #0f3a2d}
+.gtb.mini{height:34px;border-radius:5px}
 .shout{position:absolute;z-index:8;font-family:'Shippori Mincho B1',var(--af);font-weight:800;font-size:52px;color:#fff;text-shadow:0 4px 0 var(--lac2),0 0 18px rgba(0,0,0,.5);animation:shout 1.2s ease-out forwards;pointer-events:none}
 .shout.s0{left:50%;bottom:220px;transform:translateX(-50%)}.shout.s1{right:14%;top:42%}.shout.s2{left:50%;top:20%;transform:translateX(-50%)}.shout.s3{left:14%;top:42%}.shout.sc{left:50%;top:44%;transform:translateX(-50%)}
 @keyframes shout{0%{opacity:0;scale:.6}15%{opacity:1;scale:1.08}25%{scale:1}80%{opacity:1}100%{opacity:0}}
@@ -130,8 +94,8 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .modal.resm .mbox{width:min(760px,96vw);max-width:none}
 .res .how{margin:0 0 10px;font-size:17px;color:var(--ink2)}
 .rhand{display:flex;flex-wrap:wrap;align-items:flex-end;gap:2px;margin:6px 0 12px}
-.rhand .tl{height:52px;border-radius:6px;box-shadow:0 3px 0 #1c5846}.rhand .tl.win{outline:3px solid var(--lac);outline-offset:1px}
-.rhand .gap{width:10px}.rhand .ml{display:inline-flex;gap:1px;margin-left:10px}.rhand .fl .tl{height:44px}
+.rhand .gt{height:52px;border-radius:6px;box-shadow:0 3px 0 #1c5846}.rhand .gt.win{outline:3px solid var(--lac);outline-offset:1px}
+.rhand .gap{width:10px}.rhand .ml{display:inline-flex;gap:1px;margin-left:10px}.rhand .fl .gt{height:44px}
 .fans{width:100%;border-collapse:collapse;font-size:17px}
 .fans td{padding:7px 6px;border-bottom:1px dashed var(--line)}
 .fans .fn small{display:block;color:var(--ink2);font-size:13px}.fans .fx{color:var(--ink2);text-align:right;width:50px}.fans .fp{text-align:right;font-family:var(--ar);font-size:19px;width:70px}
@@ -154,29 +118,21 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .dx-c.hi{border-color:var(--lac)}
 .dx-h{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.dx-h .no{font-family:var(--ar);color:var(--ink2);font-size:14px}.dx-h .nm{font-size:19px}.dx-h .zh{color:var(--ink2);font-size:14px}.dx-h .pt{margin-left:auto;font-family:var(--ar);font-weight:700;color:var(--lac2);font-size:17px}
 .dx-c p{margin:6px 0 8px;font-size:15px;line-height:1.6}
-.dx-hand{display:flex;flex-wrap:wrap;gap:1px;align-items:flex-end}.dx-hand .gap{width:8px}.dx-hand .ml{display:inline-flex;gap:1px;margin-left:8px}.dx-hand .tl.mini{height:34px}.dx-hand .win{outline:2px solid var(--lac);outline-offset:1px}
+.dx-hand{display:flex;flex-wrap:wrap;gap:1px;align-items:flex-end}.dx-hand .gap{width:8px}.dx-hand .ml{display:inline-flex;gap:1px;margin-left:8px}.dx-hand .gt.mini{height:34px}.dx-hand .win{outline:2px solid var(--lac);outline-offset:1px}
 .toast{position:absolute;left:50%;top:84px;transform:translateX(-50%);z-index:60;padding:10px 18px;border-radius:999px;background:rgba(43,48,68,.92);color:#fff;font-size:16px;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
 
 /* ---------- スマホ（いつも横向きの配置。縦に持つと #root ごと90°回す：リーチ麻雀と同じ） ---------- */
-html.lp .topbar{padding:6px 10px}html.lp .ib{width:38px;height:38px}
+html.lp .topbar{padding:6px 10px}html.lp .topbar .ib{width:38px;height:38px}
 html.lp .hm-main{inset:56px 0 0;padding:14px 14px 24px}
-html.lp .hm-tiles .tl{height:44px}html.lp .hm-title h1{font-size:28px;margin:2px 0}html.lp .hm-title p{font-size:14px}html.lp .hm-title{margin-bottom:12px}
+html.lp .hm-tiles .gt{height:44px}html.lp .hm-title h1{font-size:28px;margin:2px 0}html.lp .hm-title p{font-size:14px}html.lp .hm-title{margin-bottom:12px}
 html.lp .hm-menu{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-width:none}
 html.lp .hm-b{padding:10px 12px;grid-template-columns:40px 1fr;border-radius:18px}html.lp .hm-b i{width:40px;height:40px;border-radius:12px}html.lp .hm-b b{font-size:17px}html.lp .hm-b small{font-size:12.5px}
 html.lp .hm-note{font-size:13px;margin-top:12px}
-html.lp .gtop{padding:6px 8px;gap:6px}html.lp .g-info{font-size:14px;padding:4px 10px}html.lp .g-info b{font-size:15px}html.lp .g-info span{display:none}
-html.lp .hand{bottom:6px;gap:2px}html.lp .hand .ht .tl{height:min(calc(var(--H) * .13),var(--thmax,999px));border-radius:6px;box-shadow:0 3px 0 #1c5846}html.lp .hand .gap{width:8px}
-html.lp .acts{bottom:calc(var(--H) * .13 + 16px);gap:8px}html.lp .act{min-width:80px;padding:6px 12px;font-size:16px;border-radius:14px}html.lp .act small{font-size:11.5px}
-html.lp #seats .seat{font-size:13px;padding:3px 9px 3px 3px;gap:5px}html.lp .seat .wd{width:24px;height:24px;font-size:13px}html.lp .seat .sc{font-size:15px}html.lp .seat .fl,html.lp .seat .dead{font-size:11.5px;padding:0 6px}
-html.lp .seat.st0{left:8px;bottom:calc(var(--H) * .13 + 16px)}html.lp .seat.st1{right:8px;top:50%;transform:translateY(-50%)}html.lp .seat.st2{top:48px}html.lp .seat.st3{left:8px;top:50%;transform:translateY(-50%)}
-html.lp .coach{left:8px;right:auto;top:50px;width:250px;max-height:calc(var(--H) - 170px);font-size:13.5px;padding:6px 10px}
-html.lp .coach:not(.open)>:not(h4){display:none}
-html.lp .coach h4{margin:0;cursor:pointer;font-size:14px}html.lp .coach h4 small{display:inline}html.lp .coach h4::after{content:' ▾'}html.lp .coach.open h4::after{content:' ▴'}
 html.lp .mbox{padding:14px 16px;max-height:calc(var(--H) - 16px)}html.lp .mbox h3{font-size:19px}
 html.lp .modal.ngm .mbox,html.lp .modal.dexm .mbox{height:calc(var(--H) - 16px)}
 html.lp .btn{min-width:110px;padding:8px 14px;font-size:15px}
-html.lp .fans{font-size:14px}html.lp .fans td{padding:4px 6px}html.lp .rhand .tl{height:38px}
+html.lp .fans{font-size:14px}html.lp .fans td{padding:4px 6px}html.lp .rhand .gt{height:38px}
 html.lp .tu-bub{font-size:14px;padding:10px 12px;width:min(380px,calc(var(--W) - 24px))}
 html.lp .shout{font-size:36px}
 /* ---------- チュートリアル（光の枠＋吹き出し） ---------- */
@@ -198,16 +154,68 @@ html.lp .shout{font-size:36px}
 @media (max-width:760px){.tu-bub{font-size:15px;padding:12px 14px}}
 .tu-on .modal .res .btns{display:none}
 /* アラビア語（RTL）でも牌の並びは左から右 */
-.hand,.rhand,.dx-hand,.ck-w,.tu-pics,.hm-tiles,.acts small{direction:ltr}
+.hand,.rhand,.dx-hand,.ck-w,.tu-pics,.hm-tiles,.chiPick{direction:ltr}
 [dir=rtl] .dx-hand,[dir=rtl] .rhand{justify-content:flex-end}
-/* コーチ欄（PC）：卓の右の枠より右に入らないときは要点だけの1行。見出しに触れると開く */
-.coach.cmp{padding:8px 12px}
-.coach.cmp:not(.open)>:not(h4){display:none}
-.coach.cmp h4{margin:0;cursor:pointer;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px}.coach.cmp h4 small{display:inline;margin:0}
-.coach.cmp h4::after{content:'▾';margin-left:auto}.coach.cmp.open h4::after{content:'▴'}.coach.cmp.open h4{margin-bottom:6px}
-.coach h4 .sw-w{display:inline-flex;align-items:center;gap:2px;margin-left:4px;font-family:var(--ar);font-weight:700}.coach h4 .sw-w .tl.mini{height:26px}.coach h4 .sw-w.low{color:var(--warn)}
-.pay b,.pay small,.fans .fx,.fans .fp,.seat .sc,.final em,.rt-res,.coach h4 .sw-w{direction:ltr;unicode-bidi:isolate}
+.pay b,.pay small,.fans .fx,.fans .fp,.gb-sc,.final em,.rt-res,.gb-coach h4 .sw-w{direction:ltr;unicode-bidi:isolate}
 .tu-bub.wide{width:min(760px,calc(100% - 24px))}
 html.lp .tu-bub.wide{width:min(760px,calc(var(--W) - 24px))}
 html.lp .modal.tu-side{justify-content:flex-start;padding-left:10px}html.lp .modal.tu-side .mbox{max-width:calc(var(--W) - 370px)}
 html.lp .tu-bub.side{width:340px;font-size:13.5px;line-height:1.55}
+
+/* ================= 対局：riichi/（大百科のリーチ麻雀）の組み立てと CSS（../riichi/app-classic.css・atlas-skin.css）に、国標の分だけ重ねる ================= */
+html.classic #game{background:#1a070b}
+/* 牌の背：翡翠（リーチ麻雀は藍） */
+#game .tl,#game .hand .tl{box-shadow:0 calc(var(--tw)*.1) 0 #2c7a58,0 calc(var(--tw)*.1 + 2px) 0 #1a5440,0 8px 14px rgba(0,0,0,.35)}
+#game .tl.sm{box-shadow:0 3px 0 #2c7a58,0 4px 8px rgba(0,0,0,.3)}
+#game .tl.xs{box-shadow:0 2px 0 #2c7a58,0 3px 5px rgba(0,0,0,.3)}
+#game .tl.back{background:radial-gradient(120% 80% at 30% 20%,rgba(236,230,214,.18),transparent 55%),linear-gradient(135deg,transparent 40%,rgba(236,230,214,.12) 46%,transparent 52%),linear-gradient(160deg,#2f8566,#1f6a50 55%,#28785c);box-shadow:inset 0 0 0 2px rgba(255,255,255,.3),0 3px 0 #fafaf6,0 5px 8px rgba(0,0,0,.3)}
+#game .tl.ph{visibility:hidden}
+/* コーチのおすすめの捨て牌：緑の光の枠 */
+#game .hand .tl.rec{box-shadow:0 0 0 3px #3df59a,0 0 18px rgba(61,245,154,.85),0 calc(var(--tw)*.1) 0 #2c7a58,0 8px 14px rgba(0,0,0,.35)}
+/* 名札：点数・CPU の強さ・花牌の小さな絵・和了不可 */
+#game :is(.opp,.me) .bt .bk{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:4px 6px;align-items:center;margin-top:3px;max-width:190px}
+html.ds #game #opp2 .bt .bk{justify-content:flex-start}
+#game .gb-sc{font-family:var(--ar)!important;font-weight:900;font-size:16px;color:var(--ink);background:var(--paper);border:2px solid var(--line);border-radius:99px;padding:0 9px;line-height:1.5;box-shadow:0 2px 0 var(--line)}
+#game .gb-lv{font-size:12px;font-weight:900;color:#fff;background:rgba(43,48,68,.78);border-radius:99px;padding:1px 8px}
+#game .gb-fl{display:inline-flex;gap:2px;padding:3px 5px;border-radius:10px;background:rgba(255,253,247,.94);border:2px solid var(--line);box-shadow:0 2px 0 var(--line)}
+#game .gb-fl img{height:30px;width:auto;border-radius:3px;box-shadow:0 2px 0 #2c7a58,0 2px 4px rgba(0,0,0,.25);background:#fafaf6}
+#game .gb-dead{font-size:12px;font-weight:900;color:#fff;background:#e0662c;border-radius:99px;padding:1px 8px}
+#game :is(.opp,.me .mb).gb-turn .bf .frame,#game .me .mb.gb-turn .bf .frame{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--coral),0 10px 18px -8px rgba(0,0,0,.5)!important}
+html.lp #game .gb-fl img{height:20px}html.lp #game .gb-sc{font-size:13px;padding:0 7px}html.lp #game .gb-lv,html.lp #game .gb-dead{font-size:10.5px}
+/* 左上の箱：局と8点縛り */
+#game .rbox .rk b{font-size:20px}#game .rbox .rk span{font-size:14px}
+#game .gb-rule{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+html.classic #game .rbox .gb-min{font-size:13px;font-weight:900;color:#fff!important;background:#a3283a;border-radius:99px;padding:2px 10px}
+#game .gb-tag{font-style:normal;font-size:12px;font-weight:900;padding:2px 8px;border-radius:99px;background:#f6efdd}
+/* 和了・鳴きのボタン：riichi/ の丸いボタン。点の小さな文字を下に。8点未満の和了は橙 */
+#acts .ab .gb-ab{display:flex;flex-direction:column;align-items:center;line-height:1.1}
+#acts .ab .gb-ab small{font-size:.62em;font-weight:800;opacity:.95;letter-spacing:0}
+#acts .ab .tl.xs{margin-left:2px}
+html.classic #acts .ab.win.gb-low{background:#f08a3c!important;box-shadow:0 4px 0 #c0601e!important}
+/* コーチ：riichi/ の情報の箱（.intel）の場所と見た目（大百科の紙） */
+#game .gb-coach{position:absolute;right:var(--gi,10px);top:calc(var(--gi,10px) + 62px * var(--hz,1));padding:12px 14px;width:300px;max-width:none;max-height:calc(100% - 330px);overflow:auto;border-radius:18px!important;background:rgba(255,253,247,.95)!important;border:2px solid var(--line)!important;box-shadow:0 3px 0 var(--line),0 10px 20px -10px rgba(0,0,0,.5)!important;color:var(--ink);font-size:15px}
+#game .gb-coach h4{margin:0 0 6px;font-size:16px;color:#7a1726}
+#game .gb-coach h4 small{display:none;font-weight:700;color:var(--ink);margin-left:6px}
+#game .gb-coach p{margin:4px 0}
+#game .gb-coach.cmp{padding:8px 12px}
+#game .gb-coach.cmp:not(.open)>:not(h4){display:none}
+#game .gb-coach.cmp h4{margin:0;cursor:pointer;display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px}#game .gb-coach.cmp h4 small{display:inline;margin:0}
+#game .gb-coach.cmp h4::after{content:'▾';margin-left:auto}#game .gb-coach.cmp.open h4::after{content:'▴'}#game .gb-coach.cmp.open h4{margin-bottom:6px}
+#game .gb-coach h4 .sw-w{display:inline-flex;align-items:center;gap:2px;margin-left:4px;font-family:var(--ar);font-weight:800}#game .gb-coach h4 .sw-w .gt.mini{height:26px}#game .gb-coach h4 .sw-w.low{color:#e0662c}
+html.lp #game .gb-coach{right:auto;left:8px;top:calc(var(--rbh,90px) + 16px);width:260px;font-size:13.5px;z-index:6;max-height:calc(var(--H) - var(--rbh,90px) - 30px)}
+html.lp #game .gb-coach:not(.open){display:none}html.lp #game .gb-coach h4{display:none}
+html.lp #game .gb-coach.cmp:not(.open)>:not(h4){display:revert}
+#game .gb-ckb{display:flex;align-items:center;gap:6px;border:0;background:#f6efdd;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:900;color:var(--ink);max-width:250px}
+#game .gb-ckb b{color:#7a1726!important}#game .gb-ckb span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}#game .gb-ckb .sw-w{display:inline-flex;align-items:center;gap:1px;font-family:var(--ar)}#game .gb-ckb .sw-w .gt.mini{height:20px}#game .gb-ckb .sw-w.low{color:#e0662c!important}
+html.lp #game #gStats{display:none}
+html.lp #game .gb-lv{display:none}html.lp #game :is(.opp,.me) .bt .bk{flex-wrap:nowrap;max-width:none}
+/* RTL でも卓の上の配置（名札・アイコン列）は左右を入れ替えない（文字の向きだけ右から左） */
+[dir=rtl] #game .hud{direction:ltr}
+[dir=rtl] #game .hud :is(.bt b,.rbox,.gb-coach,.ab){direction:rtl}
+/* スマホ：名札の下に点数・花牌を積むと、隣の名札に当たる。名札（顔＋名前）の横に置く */
+html.lp #game :is(.opp,.me .mb) .bt .bk{position:absolute;top:2px;margin:0;flex-direction:column;align-items:flex-start;gap:3px}
+html.lp #game :is(#opp3,.me .mb) .bt .bk{left:calc(100% + 5px)}
+html.lp #game #opp1 .bt .bk{right:calc(100% + 5px);left:auto;align-items:flex-end}
+html.lp #game #opp2 .bt .bk{right:calc(100% + 5px);left:auto;top:6px;flex-direction:row-reverse;align-items:center}
+html.lp #game .me .mb{position:relative}
+html.lp #game #opp2{left:auto!important;right:calc(max(10px,var(--sr)) + 136px)!important}

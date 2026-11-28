@@ -26,7 +26,7 @@ S: {
   tu_intro: 'Willkommen beim Chinesischen Wettkampf-Mahjong! Das sind die offiziellen chinesischen Regeln. Sammle vier Sätze und ein Paar (oder sieben Paare und einige Sonderhände); du kannst gewinnen, wenn deine Fan zusammen 8 Punkte oder mehr ergeben. Lernen wir es, indem wir diese Hand spielen.',
   tu_hand: 'Das ist deine Hand. Du bist der Geber (Ost), hast also 14 Steine und wirfst zuerst ab. Zeigst du auf einen Stein, leuchtet derselbe Stein auf dem Tisch auf.',
   tu_goal: 'Du hast 1-2-3 Zeichen, 4-5-6 Kreise und 7-8 Bambus. Je ein 1-2-3, 4-5-6 und 7-8-9 in drei verschiedenen Farben ergibt Mixed Straight (花龙): 8 Punkte, allein schon genug für das Minimum.',
-  tu_flower: 'Die Blume aus deinem Austeilen (Frühling) wurde beiseitegelegt und vom hinteren Ende der Mauer ersetzt. Eine Blume ist 1 Punkt wert, zählt aber nicht für das Minimum von 8.',
+  tu_flower: 'Die Blume aus deinem Austeilen (Frühling) wurde neben dein Namensschild gelegt und vom hinteren Ende der Mauer ersetzt. Eine Blume ist 1 Punkt wert, zählt aber nicht für das Minimum von 8.',
   tu_d1: 'Wirf den Nord ab. Die Ehrensteine Nord und West helfen weder dem Mixed Straight noch dem Paar. Klicke (tippe) auf den leuchtenden Nord.',
   tu_d1_no: 'Dieser Stein gehört zum Mixed Straight oder zum Paar (die beiden 5 Bambus). Übrig sind Nord und West. Fang mit dem leuchtenden Nord an.',
   tu_d1_ok: 'Guter Abwurf. Jetzt spielen die CPUs.',
@@ -44,7 +44,7 @@ S: {
   tu_pay: 'Zahlung: Bei einem Sieg auf einen Abwurf zahlt der Abwerfer Punkte + 8 und die beiden anderen je 8. Bei einem selbst gezogenen Sieg zahlen alle drei Punkte + 8. Es gibt kein Riichi, Dora oder Fu.',
   tu_end: 'Jetzt kannst du spielen! Es gibt noch viel mehr: Pungs, Kongs (ein verdecktes Kong liegt verdeckt), Sieben Paare, Dreizehn Waisen, Knitted-Hände und insgesamt 81 Fan. Mit dem Fan-Lexikon und seinen Beispielhänden lernst du, wie man 8 Punkte erreicht.',
   tu_m_d1: 'Richtung Mixed Straight', tu_m_chi: 'Richtung Mixed Straight', tu_m_d2: 'Richtung bereit', tu_m_ron: 'Punkte dieses Siegs (8 zum Bestehen)',
-  exitTitle: 'Partie beenden?', exitBody: 'Diese Partie wird nicht gespeichert.', exitYes: 'Beenden', yes: 'Ja', no: 'Nein', leftShort: 'übrig',
+  exitTitle: 'Partie beenden?', exitBody: 'Diese Partie wird nicht gespeichert.', exitYes: 'Beenden', yes: 'Ja', no: 'Nein', leftShort: 'übrig', minRule: 'Mindestens 8 Punkte', stats: 'Bilanz',
 },
 DESC: {
   1: 'Pungs (oder Kongs) aller vier Winde.', 2: 'Pungs (oder Kongs) aller drei Drachen.', 3: 'Nur 2, 3, 4, 6, 8 Bambus und Grüner Drache.',

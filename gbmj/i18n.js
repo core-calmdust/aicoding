@@ -29,7 +29,7 @@ const S = {
     tu_intro: '国標麻将へようこそ！中国の公式ルールの麻雀です。4面子＋1雀頭（または七対子など）をそろえ、番種の点の合計が8点以上なら上がれます。この1局で、実際に打ちながら覚えましょう。',
     tu_hand: 'これがあなたの手牌です。あなたは親（東）なので14枚あり、最初に1枚捨てます。牌に触れると、卓の上の同じ牌が光ります。',
     tu_goal: '萬子の123・筒子の456・索子の78があります。3つの色で123・456・789を1組ずつそろえると「花龍」で8点。これだけで8点縛りを満たせます。',
-    tu_flower: '配牌にあった花牌（春）は、手の横に出して山の後ろから1枚補充しました。花牌は1枚1点ですが、8点縛りには数えません。',
+    tu_flower: '配牌にあった花牌（春）は、名札の横に出して山の後ろから1枚補充しました。花牌は1枚1点ですが、8点縛りには数えません。',
     tu_d1: '北を捨てましょう。字牌の北と西は、花龍にも雀頭にも使わない牌です。光っている北をクリック（タップ）。',
     tu_d1_no: 'その牌は花龍の組か雀頭（五索の対子）に使います。いらないのは北と西。まずは光っている北を。',
     tu_d1_ok: 'いい捨て牌です。CPU の番が回ります。',
@@ -47,7 +47,7 @@ const S = {
     tu_pay: '支払い：ロンなら放銃した人が「点＋8」、ほかの2人も8点ずつ払います。ツモなら3人が「点＋8」ずつ。立直・ドラ・符はありません。',
     tu_end: 'これで遊べます！ほかにもポン・カン（暗槓は伏せる）、七対子・十三么・全不靠など81の番種があります。番種図鑑で例の手を見ながら、8点の作り方を覚えていきましょう。',
     tu_m_d1: '花龍まで', tu_m_chi: '花龍まで', tu_m_d2: '聴牌まで', tu_m_ron: 'この和了の点（8点で合格）',
-    exitTitle: '対局をやめますか？', exitBody: 'この対局は記録されません。', exitYes: 'やめる', yes: 'はい', no: 'いいえ', leftShort: '余',
+    exitTitle: '対局をやめますか？', exitBody: 'この対局は記録されません。', exitYes: 'やめる', yes: 'はい', no: 'いいえ', leftShort: '余', minRule: '8点縛り', stats: '戦績',
   },
   en: {
     title: 'Chinese Official Mahjong', sub: 'Mahjong by the Chinese official rules (MCR). Build 8 points or more out of 81 scoring patterns to win.',
@@ -75,7 +75,7 @@ const S = {
     tu_intro: 'Welcome to Chinese Official Mahjong! Collect four sets and a pair (or seven pairs and a few special hands); you can win when your fan add up to 8 points or more. Let\'s learn by playing this hand.',
     tu_hand: 'This is your hand. You are the dealer (East), so you hold 14 tiles and discard first. Point at a tile and the same tile lights up on the table.',
     tu_goal: 'You have 1-2-3 Characters, 4-5-6 Dots and 7-8 Bamboo. One 1-2-3, one 4-5-6 and one 7-8-9, each in a different suit, is Mixed Straight: 8 points, enough for the minimum on its own.',
-    tu_flower: 'The flower you were dealt (Spring) was set aside and replaced from the back of the wall. A flower is 1 point, but flowers do not count toward the 8-point minimum.',
+    tu_flower: 'The flower you were dealt (Spring) was set aside by your name plate and replaced from the back of the wall. A flower is 1 point, but flowers do not count toward the 8-point minimum.',
     tu_d1: 'Discard North. The honors North and West help neither the Mixed Straight nor the pair. Click (tap) the glowing North.',
     tu_d1_no: 'That tile belongs to the Mixed Straight or the pair (the two 5 Bamboo). North and West are the spare tiles. Start with the glowing North.',
     tu_d1_ok: 'Good discard. Now the CPUs play.',
@@ -93,7 +93,7 @@ const S = {
     tu_pay: 'Payment: on a discard win the discarder pays points + 8 and the other two pay 8 each. On a self-drawn win all three pay points + 8. There is no riichi, dora or fu.',
     tu_end: 'You are ready to play! There is more: pungs, kongs (a concealed kong lies face down), Seven Pairs, Thirteen Orphans, Knitted hands and 81 fan in all. Use the Fan Guide and its example hands to learn how to reach 8 points.',
     tu_m_d1: 'Toward Mixed Straight', tu_m_chi: 'Toward Mixed Straight', tu_m_d2: 'Toward ready', tu_m_ron: 'Points of this win (8 to pass)',
-    exitTitle: 'Quit this game?', exitBody: 'This game will not be recorded.', exitYes: 'Quit', yes: 'Yes', no: 'No', leftShort: 'left',
+    exitTitle: 'Quit this game?', exitBody: 'This game will not be recorded.', exitYes: 'Quit', yes: 'Yes', no: 'No', leftShort: 'left', minRule: '8-point minimum', stats: 'Record',
   },
 };
 // 言語メニュー（14言語）
@@ -143,7 +143,7 @@ const DESC = {};
   };
 let lang = 'ja';
 const CODES = ALL.map(x => x[0]);
-const V = 1;   // 言語ファイル（i18n/<lang>.js）の版。文言を変えたら上げる
+const V = 2;   // 言語ファイル（i18n/<lang>.js）の版。文言を変えたら上げる
 function detect() {
   const ls = (navigator.languages || [navigator.language || 'en']).map(x => String(x));
   for (const x of ls) {
