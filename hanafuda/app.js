@@ -56,7 +56,7 @@ function sfx(k) {
 
 /* ---------------- worker ---------------- */
 let W = null, wid = 0; const wait = new Map();
-try { W = new Worker('worker.js?v=4'); W.onmessage = e => { const f = wait.get(e.data.id); if (f) { wait.delete(e.data.id); f(e.data); } }; } catch (e) { W = null; }
+try { W = new Worker('worker.js?v=5'); W.onmessage = e => { const f = wait.get(e.data.id); if (f) { wait.delete(e.data.id); f(e.data); } }; } catch (e) { W = null; }
 function think(s, lv) {
   const seed = (Math.random() * 1e9) | 0;
   if (!W) return Promise.resolve(AI.choose(s, lv, seed));
