@@ -16,6 +16,15 @@ function fitRoot() {
   const w = innerWidth, h = innerHeight, de = document.documentElement, rot = PHONE && h > w;
   de.classList.toggle('lp', PHONE); de.classList.toggle('rot', rot);
   de.style.setProperty('--W', (rot ? h : w) + 'px'); de.style.setProperty('--H', (rot ? w : h) + 'px');
+  // PC：riichi/（mahjong/app.js fitRoot）と同じ目盛り。対局の HUD は大きな窓で --hz 倍に育つ
+  de.classList.toggle('ds', !PHONE);
+  if (!PHONE) {
+    const GW = Math.min(w, h * 2.4), GH = Math.min(h, w / 1.36);
+    de.style.setProperty('--hz', Math.max(1, Math.min(2, Math.min(h, w / 1.36) / 860)).toFixed(3));
+    de.style.setProperty('--SW', GW + 'px'); de.style.setProperty('--SH', GH + 'px'); de.style.setProperty('--Z', Math.max(.5, Math.min(GW / 1280, GH / 760, 1.6)));
+    de.style.setProperty('--MZ', Math.max(1, Math.min((w - 40) / 1100, (h - 40) / 700, 1.6)).toFixed(3));
+    de.style.setProperty('--SX', ((w - GW) / 2) + 'px'); de.style.setProperty('--SY', ((h - GH) / 2) + 'px');
+  }
 }
 fitRoot(); addEventListener('resize', fitRoot);
 // 画面の長方形を、回した #root の中の座標で（PC はそのまま）
@@ -64,8 +73,8 @@ const IC = {
 };
 
 // ---------------------------------------------------------------- 牌の絵（HTML）
-const tileImg = (id, cls) => `<img class="tl ${cls || ''}" src="${MJTiles.urlId(id)}" alt="${GB.NAMES[T(id)]}" draggable="false">`;
-const backImg = cls => `<span class="tl tlb ${cls || ''}"></span>`;
+const tileImg = (id, cls) => `<img class="gt ${cls || ''}" src="${MJTiles.urlId(id)}" alt="${GB.NAMES[T(id)]}" draggable="false">`;
+const backImg = cls => `<span class="gt gtb ${cls || ''}"></span>`;
 const typeImg = (t, cls) => /\bback\b/.test(cls || '') ? backImg(cls) : tileImg(t >= 34 ? 136 + t - 34 : t * 4 + 1, cls);
 const parseTiles = s => { const out = []; let buf = []; for (const ch of String(s).replace(/\s+/g, '')) { if (/\d/.test(ch)) buf.push(+ch); else if ('mps'.includes(ch)) { const b = { m: 0, p: 9, s: 18 }[ch]; for (const n of buf) out.push(b + n - 1); buf = []; } else { const h = { E: 27, S: 28, W: 29, N: 30, P: 31, F: 32, C: 33 }[ch]; if (h != null) out.push(h); } } return out; };
 
@@ -80,7 +89,7 @@ function modal(html, cls, bind) {
 function closeModal() { const m = $('#modal'); m.hidden = true; m.className = 'modal'; m.innerHTML = ''; if (TB) TB.quiet = false; }
 function toast(s, ms) { const el = $('#toast'); el.textContent = s; el.classList.add('show'); clearTimeout(toast.tm); toast.tm = setTimeout(() => el.classList.remove('show'), ms || 1600); }
 function confirmBox(title, body, yes, no) {
-  return new Promise(res => modal(`<h3>${esc(title)}</h3><p class="mb-p">${body}</p><div class="btns"><button class="btn" data-a="0">${esc(no || t('no'))}</button><button class="btn pri" data-a="1">${esc(yes || t('yes'))}</button></div>`, 'small', box => {
+  return new Promise(res => modal(`<h3>${esc(title)}</h3><p class="mb-p">${body}</p><div class="btns"><button class="btn" data-a="0">${esc(no || t('no'))}</button><button class="btn pri gold" data-a="1">${esc(yes || t('yes'))}</button></div>`, 'small', box => {
     box.querySelectorAll('[data-a]').forEach(b => b.onclick = () => { closeModal(); res(b.dataset.a === '1'); });
   }));
 }
@@ -133,7 +142,7 @@ function newGameDialog(rated) {
       <div class="ng-pane" data-pane="game"></div>
       <div class="ng-pane" data-pane="rule"></div>
     </div>
-    <div class="btns"><button class="btn" data-x>${esc(t('close'))}</button><button class="btn pri" data-go>${esc(t('start'))}</button></div></div>`, 'ngm');
+    <div class="btns"><button class="btn" data-x>${esc(t('close'))}</button><button class="btn pri gold" data-go>${esc(t('start'))}</button></div></div>`, 'ngm');
   const paint = () => {
     box.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
     box.querySelectorAll('[data-pane]').forEach(p => p.hidden = p.dataset.pane !== tab);
@@ -197,7 +206,7 @@ async function startMatch(o) {
   TB.hideAll();
   GBFan.OPTS.tianjin = rated ? false : !!DB.set.tianjin;
   M = new GBMatch({ hands: len, dealer0: Math.floor(Math.random() * 4) });
-  UI = { rated, lv, plPick, bots: [null, 1, 2, 3].map((x, i) => i ? GBAI.create({ level: lv }) : null), coachBot: GBAI.create({ level: 16 }), autoBot: GBAI.create({ level: 10 }), stop: false, wait: null, sel: null };
+  UI = { rated, lv, plPick, bots: [null, 1, 2, 3].map((x, i) => i ? GBAI.create({ level: lv }) : null), coachBot: GBAI.create({ level: 16 }), autoBot: GBAI.create({ level: 10 }), stop: false, wait: null, sel: null, chars: seatChars() };
   G = M;
   renderAll();
   while (!M.over && !UI.stop) {
@@ -214,7 +223,6 @@ async function startMatch(o) {
   }
   if (!UI.stop) await showFinal();
 }
-const name = p => p === ME ? t('you') : t('cpu', { n: p }) + ' Lv.' + UI.lv;
 async function until(f) { while (!f()) await sleep(120); }
 async function botWait(ms) { await sleep(FAST ? 30 : ms); await until(() => !document.hidden); }
 
@@ -264,6 +272,28 @@ function shout(p, s) {
 function tbMeld(m) {
   return { type: m.k === 'minkan' ? 'minkan' : m.k, tiles: m.ids.slice(), from: m.from, called: m.k === 'ankan' ? null : (m.got != null ? m.got : null), added: m.k === 'kakan' ? m.ids[m.ids.length - 1] : null };
 }
+// 席の顔：自分は大百科で選んだアバター（atlas-v1 の av.icon）、CPU は大百科のアトラモから毎回ちがう3体（riichi/atlamo.js。リーチ麻雀と同じ）
+const AV_DIR = '../images/atlas/av/';
+const SEAT_C = ['#a3283a', '#1f7a60', '#2f6fb0', '#8a5a2b'];
+function myAv() { try { const d = window.Atlas && Atlas.load ? Atlas.load() : JSON.parse(localStorage.getItem('atlas-v1') || 'null') || { av: { icon: 'av-dice-0' } }, m = /^av-([a-z0-9-]+)-(\d)$/.exec((d && d.av && d.av.icon) || 'av-dice-0'); return m ? AV_DIR + m[1] + '-' + m[2] + '.webp' : AV_DIR + 'dice-0.webp'; } catch (e) { return AV_DIR + 'dice-0.webp'; } }
+function seatChars() {
+  const L0 = window.RIICHI_ATLAMO || [], used = new Set(), out = [{ img: myAv(), name: null }];
+  for (let i = 1; i < 4; i++) {
+    if (!L0.length) { out.push({ img: AV_DIR + 'dice-' + (i % 3) + '.webp', name: null }); continue; }
+    let k = Math.floor(Math.random() * L0.length); for (let n = 0; used.has(k) && n < L0.length; n++) k = (k + 1) % L0.length; used.add(k);
+    const [sp, ja, en] = L0[k]; out.push({ img: AV_DIR + sp + '-' + Math.floor(Math.random() * 3) + '.webp', name: { ja, en } });
+  }
+  return out;
+}
+// 名前：自分は「あなた」、CPU はアトラモの名前（日本語以外は英語名）
+const name = p => p === ME ? t('you') : UI && UI.chars && UI.chars[p] && UI.chars[p].name ? (L() === 'ja' ? UI.chars[p].name.ja : UI.chars[p].name.en) : t('cpu', { n: p });
+
+// ---------------------------------------------------------------- 描画
+// 牌（手牌の行・副露・鳴きの候補）：riichi/ と同じ span.tl（大きさは CSS の --tw / --th）
+const lpNow = () => document.documentElement.classList.contains('lp');
+const hTile = (id, cls, extra) => `<span class="tl ${cls || ''}" data-id="${id}" ${extra || ''}><img src="${MJTiles.urlId(id)}" alt="" draggable="false"></span>`;
+const hBack = cls => `<span class="tl back ${cls || ''}"></span>`;
+const hType = (tt, cls) => `<span class="tl ${cls || ''}"><img src="${MJTiles.urlId(tt >= 34 ? 136 + tt - 34 : tt * 4 + 1)}" alt="" draggable="false"></span>`;
 function renderAll(fresh, discarder) {
   if (!R0 || !TB) { renderHand(); return; }
   const r = R0;
@@ -272,28 +302,40 @@ function renderAll(fresh, discarder) {
     const end = r.phase === 'end';
     if (s !== ME) TB.layoutHand(s, P.hand.slice().sort((a, b) => a - b), null, end && r.result && r.result.type === 'win' && r.result.p === s);
     TB.layoutRiver(s, P.discards.map(d => ({ id: d.id, taken: d.claimed })), discarder === s, null);
-    TB.layoutMelds(s, P.melds.map(tbMeld));
-    TB.layoutFlowers(s, P.flowers);
+    // 卓の上は手牌・河・副露・山だけ。自分の副露は手牌の行の右（riichi/ と同じ）、花牌は名札の横に（卓には置かない）
+    if (s !== ME) TB.layoutMelds(s, P.melds.map(tbMeld));
   }
   if (r.robTile != null && r.phase === 'rob') { const g = TB.tile(r.robTile); TB.place(g, r.robber, 0, 6.2, 'flat'); g.visible = true; }
   TB.setInfo({ round: r.wind, kyoku: r.no % 4, honba: 0, kyotaku: 0, left: r.left(), scores: M.scores.slice(), dealer: r.dealer, turn: r.phase === 'end' ? -1 : r.cur });
   TB.dirty = true;
   renderSeats(); renderHand(); renderCoach(); renderInfo(); layoutHud();
-  clearTimeout(renderAll.tm); renderAll.tm = setTimeout(layoutHud, 380);   // 3D の牌が動き終わってから測り直す
 }
+// 左上の箱：局・何局目・8点縛り（レート戦・天津裁定の印）
 function renderInfo() {
   const r = R0; if (!r) return;
-  $('#gInfo').innerHTML = `<b>${esc(t('roundName', { w: t('wind' + r.wind), n: r.no % 4 + 1 }))}</b><span>${esc(t('handNo', { n: r.no + 1, of: M.hands }))}</span>${UI.rated ? `<em class="tag">${esc(t('mRated'))}</em>` : ''}${GBFan.OPTS.tianjin ? `<em class="tag">${esc(t('tjShort'))}</em>` : ''}`;
+  $('#rbox').innerHTML = `<div class="rk"><b>${esc(t('roundName', { w: t('wind' + r.wind), n: r.no % 4 + 1 }))}</b><span>${esc(t('handNo', { n: r.no + 1, of: M.hands }))}</span></div>
+    <div class="gb-rule"><span class="gb-min">${esc(t('minRule'))}</span>${UI.rated ? `<em class="gb-tag">${esc(t('mRated'))}</em>` : ''}${GBFan.OPTS.tianjin ? `<em class="gb-tag">${esc(t('tjShort'))}</em>` : ''}</div>`
+    // スマホ：コーチの要点は左上の箱の中に1行（触れると下に開く）。名札と重ならないように
+    + (lpNow() && UI.ckSum != null && !$('#coach').hidden ? `<button class="gb-ckb" type="button"><b>${esc(t('coach'))}</b><span>${UI.ckSum}</span><i>${$('#coach').classList.contains('open') ? '▴' : '▾'}</i></button>` : '');
+  const ckb = $('#rbox .gb-ckb'); if (ckb) ckb.onclick = () => { const c = $('#coach'); c.classList.toggle('open'); UI.ckOpen = c.classList.contains('open'); renderInfo(); };
   $('#gFan').innerHTML = IC.book; $('#gStats').innerHTML = IC.cup; $('#gSet').innerHTML = IC.gear; $('#gExit').innerHTML = IC.exit;
+  for (const [k, id] of [['mDex', 'gFan'], ['stats', 'gStats'], ['settings', 'gSet'], ['exitTitle', 'gExit']]) { const b = $('#' + id); b.title = t(k); b.setAttribute('aria-label', t(k)); }
+}
+// 名札：顔・席の風（親は珊瑚色）・名前、その下に点数・花牌（どの花か分かる小さな絵を枚数ぶん）・和了不可の印
+function badge(s) {
+  const r = R0, P = r.P[s], w = r.seatWind(s), c = UI.chars[s];
+  const fl = P.flowers.length ? `<span class="gb-fl" title="${esc(t('flowersN', { n: P.flowers.length }))}">${P.flowers.slice().sort((a, b) => a - b).map(id => `<img src="${MJTiles.urlId(id)}" alt="" draggable="false">`).join('')}</span>` : '';
+  return `<div class="bf ${w === 0 ? 'dealer' : ''}" style="--c:${SEAT_C[s]}"><span class="frame fr-N" style="--c:${SEAT_C[s]}"><img src="${c.img}" alt="" draggable="false"></span><em>${esc(t('windS' + w))}</em></div>
+    <div class="bt"><b>${esc(name(s))}</b><span class="bk"><span class="gb-sc">${M.scores[s]}</span>${s !== ME ? `<small class="gb-lv">Lv.${UI.lv}</small>` : ''}${fl}${P.dead ? `<span class="gb-dead">${esc(t('dead'))}</span>` : ''}</span></div>`;
 }
 function renderSeats() {
   const r = R0; if (!r) return;
-  $('#seats').innerHTML = [0, 1, 2, 3].map(s => {
-    const P = r.P[s], w = r.seatWind(s);
-    return `<div class="seat st${s}${r.cur === s && r.phase !== 'end' ? ' on' : ''}"><i class="wd${w === 0 ? ' e' : ''}">${esc(t('windS' + w))}</i><span class="nm">${esc(name(s))}</span><b class="sc">${M.scores[s]}</b>${P.flowers.length ? `<span class="fl">${esc(t('flowersN', { n: P.flowers.length }))}</span>` : ''}${P.dead ? `<span class="dead">${esc(t('dead'))}</span>` : ''}</div>`;
-  }).join('');
+  for (let s = 1; s < 4; s++) { const el = $('#opp' + s); el.innerHTML = badge(s); el.classList.toggle('gb-turn', r.cur === s && r.phase !== 'end'); }
+  const me = $('#mePanel'); me.innerHTML = `<div class="mb${r.cur === ME && r.phase !== 'end' ? ' gb-turn' : ''}">${badge(ME)}</div>`;
 }
-// 自分の手牌（HTML）
+// 自分の手牌（riichi/ と同じ行：キー 1〜0 - ^ ¥、ツモ牌は Space。副露は行の右に小さく）
+const HAND_LABELS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '^', '¥'];
+const HAND_CODES = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0', 'Minus', 'Equal', 'IntlYen'];
 function renderHand() {
   const el = $('#hand'), acts = $('#acts');
   if (!R0) { el.innerHTML = ''; acts.innerHTML = ''; return; }
@@ -302,33 +344,68 @@ function renderHand() {
   const ids = P.hand.filter(id => id !== drawn).sort((a, b) => a - b);
   const myTurn = r.phase === 'turn' && r.cur === ME && UI.wait;
   const rec = myTurn && DB.set.coach && !UI.rated && !UI.tut && UI.coach && UI.coach.discards[0] ? UI.coach.discards[0].t : null;
-  const showAll = r.phase === 'end' && r.result && r.result.type === 'win' && r.result.p === ME;
-  el.innerHTML = ids.map(id => `<button class="ht${myTurn ? ' can' : ''}${T(id) === rec ? ' rec' : ''}" data-id="${id}">${tileImg(id)}</button>`).join('') + (drawn != null ? `<span class="gap"></span><button class="ht dr${myTurn ? ' can' : ''}${T(drawn) === rec ? ' rec' : ''}" data-id="${drawn}">${tileImg(drawn)}</button>` : '');
-  el.classList.toggle('my', !!myTurn); el.classList.toggle('done', !!showAll);
-  el.querySelectorAll('.ht').forEach(b => {
-    b.onclick = () => { if (!UI.wait || UI.wait.kind !== 'turn') return; const id = +b.dataset.id; UI.wait.done({ type: 'discard', id }); };
+  const cls = id => (myTurn ? 'can' : '') + (T(id) === rec ? ' rec' : '');
+  const melds = P.melds.map(m => {
+    const rel = (m.from - ME + 4) % 4;
+    let order = m.ids.slice(); const got = m.k === 'ankan' ? null : m.got;
+    if (got != null && m.k !== 'kakan') { order = order.filter(x => x !== got); order.splice(rel === 3 ? 0 : rel === 2 ? 1 : order.length, 0, got); }
+    return `<span class="meld">${order.map((id, i) => m.k === 'ankan' ? hBack('sm') : hTile(id, 'sm' + (id === got ? ' side' : ''))).join('')}</span>`;
+  }).join('');
+  el.innerHTML = `<div class="hrow">${ids.map((id, i) => hTile(id, cls(id)).replace('</span>', `<kbd class="tk">${HAND_LABELS[i] || ''}</kbd></span>`)).join('')}<span class="gap"></span>${drawn != null ? hTile(drawn, cls(drawn) + ' drawn').replace('</span>', '<kbd class="tk">Space</kbd></span>') : '<span class="tl ph"></span>'}</div>${melds ? `<div class="melds">${melds}</div>` : ''}`;
+  el.classList.toggle('active', !!myTurn);
+  el.querySelectorAll('.tl[data-id]').forEach(b => {
+    b.onclick = () => { if (!UI.wait || UI.wait.kind !== 'turn' || !b.closest('.hrow')) return; UI.wait.done({ type: 'discard', id: +b.dataset.id }); };
     b.onmouseenter = () => { if (TB) TB.highlightType(T(+b.dataset.id)); };
     b.onmouseleave = () => { if (TB) TB.highlightType(null); };
   });
   renderActs();
-  layoutHud();
 }
+// 鳴き・和了のボタン（riichi/ と同じ丸いボタン：和了は珊瑚色、8点未満の和了は橙、鳴きは空色、パスは白。キー：Enter・C・V・B・Space）
 function renderActs() {
-  const acts = $('#acts'); const w = UI && UI.wait;
+  const acts = $('#acts'), pk = $('#chiPick'); const w = UI && UI.wait;
+  pk.hidden = true;
   if (!w) { acts.innerHTML = ''; return; }
-  const B = (a, label, cls, sub) => `<button class="act ${cls}" data-a='${JSON.stringify(a)}'><b>${esc(label)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</button>`;
+  const B = (role, label, cls, sub, key) => `<button class="ab ${cls}" data-role="${role}"${key ? ` data-key="${key}"` : ''}><span class="gb-ab"><b>${label}</b>${sub ? `<small>${sub}</small>` : ''}</span>${key ? `<kbd>${key === 'Escape' ? 'Space' : key === 'Enter' ? 'Enter' : key.toUpperCase()}</kbd>` : ''}</button>`;
   let h = '';
-  for (const o of w.opts) {
-    if (o.type === 'hu') h += B({ type: 'hu' }, w.kind === 'turn' ? t('tsumo') : t('ron'), o.low ? 'warn' : 'win', o.low ? t('lowShort', { n: o.pts }) : t('ptsN', { n: o.pts }));
-    else if (o.type === 'pon') h += B(o, t('call_pon'), 'call');
-    else if (o.type === 'kan') h += B(o, t('call_kan'), 'call');
-    else if (o.type === 'chi') h += B(o, t('call_chi'), 'call', GB.NAMES[o.t] + GB.NAMES[o.t + 1] + GB.NAMES[o.t + 2]);
-    else if (o.type === 'ankan' || o.type === 'kakan') h += B(o, t(o.type === 'ankan' ? 'ankan' : 'kakan'), 'call', GB.NAMES[o.t]);
-  }
-  if (w.kind === 'claim') h += B({ type: 'pass' }, t('pass'), 'pass');
+  const chis = w.opts.filter(o => o.type === 'chi');
+  w.opts.forEach((o, i) => {
+    if (o.type === 'hu') h += B('hu', esc(w.kind === 'turn' ? t('tsumo') : t('ron')), o.low ? 'win gb-low' : 'win', esc(o.low ? t('lowShort', { n: o.pts }) : t('ptsN', { n: o.pts })), 'Enter');
+    else if (o.type === 'pon') h += B('pon', esc(t('call_pon')), 'call', '', 'v');
+    else if (o.type === 'kan') h += B('kan', esc(t('call_kan')), 'call', '', 'b');
+    else if (o.type === 'ankan' || o.type === 'kakan') h += B(o.type + ':' + o.t, esc(t(o.type === 'ankan' ? 'ankan' : 'kakan')) + hType(o.t, 'xs'), 'call', '', null);
+  });
+  if (chis.length) h += B('chi', esc(t('call_chi')) + (chis.length === 1 ? ' ' + [0, 1, 2].map(k => hType(chis[0].t + k, 'xs')).join('') : ''), 'call', '', 'c');
+  if (w.kind === 'claim') h += B('pass', esc(t('pass')), 'skip', '', 'Escape');
   acts.innerHTML = h;
-  acts.querySelectorAll('.act').forEach(b => b.onclick = () => { const a = JSON.parse(b.dataset.a); const o = w.opts.find(x => x.type === a.type && (a.t === undefined || x.t === a.t)) || a; w.done(o); });
+  const pick = role => {
+    if (role === 'pass') return w.done({ type: 'pass' });
+    if (role === 'chi') {
+      if (chis.length === 1) return w.done(chis[0]);
+      pk.innerHTML = chis.map((o, i) => `<button data-i="${i}">${[0, 1, 2].map(k => hType(o.t + k, 'xs' + (o.t + k === T(R0.discard) ? ' hl' : ''))).join('')}<kbd>${i + 1}</kbd></button>`).join('');
+      pk.hidden = false; pk.onclick = e => { const b = e.target.closest('[data-i]'); if (b) w.done(chis[+b.dataset.i]); }; return;
+    }
+    if (role.includes(':')) { const [k, tt] = role.split(':'); return w.done(w.opts.find(o => o.type === k && o.t === +tt)); }
+    const o = w.opts.find(x => x.type === role); if (o) w.done(o);
+  };
+  acts.querySelectorAll('.ab').forEach(b => b.onclick = () => pick(b.dataset.role));
+  acts._pick = pick;
 }
+// キーボード：手牌 1〜0 - ^ ¥・ツモ牌 Space、和了 Enter・チー C・ポン V・カン B・パス Space（Esc）、チーの選び 1〜3
+addEventListener('keydown', e => {
+  if (!UI || !UI.wait || $('#game').hidden || !$('#modal').hidden || e.ctrlKey || e.metaKey || e.altKey) return;
+  const w = UI.wait, acts = $('#acts');
+  const pk = $('#chiPick');
+  if (!pk.hidden && /^Digit[1-3]$/.test(e.code)) { const b = pk.querySelector(`[data-i="${+e.code.slice(5) - 1}"]`); if (b) { b.click(); e.preventDefault(); } return; }
+  const k = e.key === 'Enter' ? 'Enter' : e.key === 'Escape' ? 'Escape' : e.key.toLowerCase();
+  const b = acts.querySelector(`.ab[data-key="${k}"]`) || (e.code === 'Space' && w.kind === 'claim' ? acts.querySelector('.ab[data-key="Escape"]') : null);
+  if (b) { b.click(); e.preventDefault(); return; }
+  if (w.kind !== 'turn') return;
+  const row = [...document.querySelectorAll('#hand .hrow .tl[data-id]')];
+  let el = null;
+  if (e.code === 'Space') el = row.find(x => x.classList.contains('drawn')) || row[row.length - 1];
+  else { const i = HAND_CODES.indexOf(e.code); if (i >= 0) el = row.filter(x => !x.classList.contains('drawn'))[i]; }
+  if (el) { el.click(); e.preventDefault(); }
+});
 function humanAct(r) {
   return new Promise(res => {
     const opts = r.options(ME);
@@ -336,12 +413,12 @@ function humanAct(r) {
     UI.wait = { kind, opts: opts.filter(o => o.type !== 'discard'), done: a => { UI.wait = null; renderHand(); res(a); } };
     if (kind === 'claim') { const tl = TB.tile(r.phase === 'rob' ? r.robTile : r.discard); TB.setTileLook(tl, 'hi'); TB.dirty = true; }
     UI.coach = DB.set.coach && !UI.rated ? UI.coachBot.analyze(r, ME) : null;
-    renderHand(); renderCoach();
+    renderHand(); renderCoach(); renderSeats();
     if (UI.tut) UI.tut.waiting(r);
   });
 }
 
-// ---------------------------------------------------------------- コーチ（目標の番・向聴数・聴牌の待ちと点）
+// ---------------------------------------------------------------- コーチ（目標の番・向聴数・聴牌の待ちと点）：riichi/ の情報の箱（.intel）の場所に
 function renderCoach() {
   const el = $('#coach');
   if (!R0 || !UI || !DB.set.coach || UI.rated) { el.hidden = true; return; }
@@ -351,18 +428,17 @@ function renderCoach() {
   const types = P.hand.map(T);
   let sum = '', sumW = '';
   let h = `<h4>${esc(t('coach'))}<small data-sum></small></h4>`;
+  const calcW = (w, fl) => GBFan.calc({ melds, hand: types, win: w, tsumo: false, flowers: fl, seat: r.seatWind(ME), round: r.wind });
   if (P.hand.length % 3 === 1) {
     const sh = GB.shanten(GB.counts(types), melds.length);
     if (sh === 0) {
       const ws = GBFan.waits(types, melds.length);
-      h += `<p class="ck-l"><b>${esc(t('tenpai'))}</b></p><div class="ck-w">` + ws.map(w => {
-        const res = GBFan.calc({ melds, hand: types, win: w, tsumo: false, flowers: P.flowers.length, seat: r.seatWind(ME), round: r.wind });
-        const ok = res.ok && res.pts >= 8;
-        return `<span class="wt${ok ? '' : ' low'}">${typeImg(w, 'mini')}<b>${res.ok ? res.pts : 0}</b></span>`;
-      }).join('') + `</div>` + (ws.some(w => { const x = GBFan.calc({ melds, hand: types, win: w, tsumo: false, flowers: 0, seat: r.seatWind(ME), round: r.wind }); return !x.ok || x.pts < 8; }) ? `<p class="ck-warn">${esc(t('lowWaitWarn'))}</p>` : '');
+      const xs = ws.map(w => [w, calcW(w, P.flowers.length), calcW(w, 0)]);
+      h += `<p class="ck-l"><b>${esc(t('tenpai'))}</b></p><div class="ck-w">` + xs.map(([w, res, r0]) => `<span class="wt${r0.ok && r0.pts >= 8 ? '' : ' low'}">${typeImg(w, 'mini')}<b>${res.ok ? res.pts : 0}</b></span>`).join('') + `</div>`
+        + (xs.some(([, , r0]) => !r0.ok || r0.pts < 8) ? `<p class="ck-warn">${esc(t('lowWaitWarn'))}</p>` : '');
+      sumW = xs.map(([w, res, r0]) => `<span class="sw-w${r0.ok && r0.pts >= 8 ? '' : ' low'}">${typeImg(w, 'mini')}${res.ok ? res.pts : 0}</span>`).join('');
     } else h += `<p class="ck-l">${esc(t('shantenN', { n: sh }))}</p>`;
     sum = sh === 0 ? t('ready') : t('shantenN', { n: sh });
-    if (sh === 0) sumW = GBFan.waits(types, melds.length).map(w => { const x = GBFan.calc({ melds, hand: types, win: w, tsumo: false, flowers: P.flowers.length, seat: r.seatWind(ME), round: r.wind }); return `<span class="sw-w${x.ok && x.pts >= 8 ? '' : ' low'}">${typeImg(w, 'mini')}${x.ok ? x.pts : 0}</span>`; }).join('');
   } else if (UI.coach) {
     const c = UI.coach;
     h += `<p class="ck-l">${esc(t('shantenN', { n: Math.max(0, c.shanten) }))}</p>`;
@@ -374,46 +450,30 @@ function renderCoach() {
   const a = UI.coach || UI.ckPlans;
   if (a && a.plans.length) h += `<p class="ck-h">${esc(t('targets'))}</p><ul class="ck-p">${a.plans.map(p => `<li><b>${esc(fanName(p.fan))}</b><span>${p.pts}${esc(t('ptsUnit'))}</span><em>${esc(p.d <= 0 ? t('ready') : t('awayN', { n: p.d }))}</em></li>`).join('')}</ul>`;
   el.innerHTML = h;
-  el.querySelector('[data-sum]').innerHTML = esc(sum) + (sumW ? ' ' + sumW : '');
+  el.querySelector('[data-sum]').innerHTML = UI.ckSum = esc(sum) + (sumW ? ' ' + sumW : '');
+  if (lpNow()) renderInfo();
   el.querySelector('h4').onclick = () => { el.classList.toggle('open'); UI.ckOpen = el.classList.contains('open'); layoutHud(); };
   if (UI.ckOpen) el.classList.add('open');
   layoutHud();
 }
 
-// ---------------------------------------------------------------- 手牌の行とコーチ欄の置き場（卓の3Dの位置から）
-// 手牌の行は、手前左の花牌と右の副露（3D）にかからない幅に収め、牌の大きさをそれに合わせる。
-// コーチ欄（PC）は卓の右の枠より右に置く。入らないときは、要点だけの1行（触れると開く）にする。
+// ---------------------------------------------------------------- コーチ欄の置き場（PC）：卓の右の枠より右に入れる。入らないときは要点だけの1行（触れると開く）
 function scr(v3) { const h = TB.host, v = v3.clone().project(TB.camera); return [(v.x + 1) / 2 * h.clientWidth, (1 - v.y) / 2 * h.clientHeight]; }
 function layoutHud() {
-  const el = $('#hand'), ck = $('#coach');
+  const ck = $('#coach');
   if (!TB || !TB.camera || !R0 || $('#game').hidden) return;
-  const W = TB.host.clientWidth, P = R0.P[ME], V = THREE.Vector3;
-  // 手前の花牌・副露の画面上の左右端（牌の中心±半幅）
-  // 置き終わった位置で測る（動いている途中の牌では測らない）：花牌は左端 -9.7 から右へ、副露は右端 9.7 から左へ（table3d.js の layoutFlowers・layoutMelds と同じ幅）
-  const at = (lx, lz) => { const q = TB.local(0, lx, lz); return scr(new V(q.x, .39, q.z))[0]; };
-  const xs = lx => [at(lx, 8.05), at(lx, 9.45)];
-  const fR = P.flowers.length ? Math.max(...xs(-9.7 + P.flowers.length * 1.02)) : null;
-  let mw = 0; for (const m of P.melds) { const k = m.ids.length; mw += k * 1.02 + (m.k !== 'ankan' ? .36 : 0) + .22; }
-  const mL = P.melds.length ? Math.min(...xs(9.7 - mw)) : null;
-  const lp = document.documentElement.classList.contains('lp'), pad = lp ? 6 : 12;
-  const left = fR != null ? Math.max(pad, fR + pad) : pad, right = mL != null ? Math.max(pad, W - mL + pad) : pad;
-  // 花牌と副露のあいだの帯に収め、牌はできるだけ大きく（帯の中では中央寄せ）
-  el.style.left = left + 'px'; el.style.right = right + 'px'; el.style.padding = '0';
-  const n = el.querySelectorAll('.ht').length, gap = lp ? 2 : 3, gw = el.querySelector('.gap') ? (lp ? 8 : 16) : 0;
-  const band = W - left - right - (n - 1) * gap - gw, ratio = .74;
-  el.style.setProperty('--thmax', n ? Math.max(28, Math.floor(band / n / ratio)) + 'px' : '999px');
-  // コーチ欄（PC のみ）
-  if (lp || ck.hidden) { ck.classList.remove('cmp'); ck.style.width = ''; return; }
-  const top = 72, H = TB.host.clientHeight;
+  const lp = document.documentElement.classList.contains('lp');
+  if (lp || ck.hidden) { ck.classList.toggle('cmp', lp); ck.style.width = ''; return; }
+  const W = TB.host.clientWidth, H = TB.host.clientHeight, V = THREE.Vector3, top = ck.offsetTop || 72;
   const freeAt = b => { let mx = 0; for (let z = -12.3; z <= 12.31; z += .3) { const [x, y] = scr(new V(12.3, .92, z)); if (y >= top - 10 && y <= b + 10) mx = Math.max(mx, x); } return W - mx - 14 - 12; };
   const free = freeAt(Math.min(H, top + Math.max(ck.classList.contains('cmp') ? 0 : ck.offsetHeight, 220)));
   const fit = free >= 250;
   ck.classList.toggle('cmp', !fit);
-  // 1行（要点だけ）のとき：枠にかからない幅（開いたときは 300px）
   const f1 = fit ? free : freeAt(top + 48);
   ck.style.width = fit ? Math.min(320, free) + 'px' : ck.classList.contains('open') ? '300px' : Math.max(160, Math.min(300, f1)) + 'px';
 }
 addEventListener('resize', () => requestAnimationFrame(layoutHud));
+if (window.ResizeObserver) new ResizeObserver(() => { const r = $('#rbox'); if (r.offsetHeight) $('#game').style.setProperty('--rbh', r.offsetHeight + 'px'); }).observe($('#rbox'));
 
 // ---------------------------------------------------------------- 和了・流局の結果
 function fanTable(fr) {
@@ -436,7 +496,7 @@ function showResult(r) {
       const how = x.how === 'tsumo' ? t('byTsumo') : x.how === 'rob' ? t('byRob', { from: name(x.from) }) : t('byRon', { from: name(x.from) });
       h = `<div class="res"><h3>${esc(t('winTitle', { who: name(x.p) }))}</h3><p class="how">${esc(how)}</p>${handRowHtml(r, x.p, x.winId)}${fanTable(x.fan)}<p class="dim">${esc(x.how === 'tsumo' ? t('payTsumo', { n: x.fan.total }) : t('payRon', { n: x.fan.total }))}</p>${pay}`;
     } else h = `<div class="res"><h3>${esc(t('exhaust'))}</h3><p class="how">${esc(t('exhaustNote'))}</p>${pay}`;
-    h += UI.tut ? `<div class="btns"><button class="btn pri" data-ok>${esc(t('next'))}</button></div></div>` : `<div class="btns"><button class="btn pri" data-ok>${esc(M.over ? t('seeFinal') : t('nextHand'))}</button></div></div>`;
+    h += UI.tut ? `<div class="btns"><button class="btn pri gold" data-ok>${esc(t('next'))}</button></div></div>` : `<div class="btns"><button class="btn pri gold" data-ok>${esc(M.over ? t('seeFinal') : t('nextHand'))}</button></div></div>`;
     modal(h, 'resm', box => { box.querySelector('[data-ok]').onclick = () => { if (UI.tut) { UI.tut.next(); return; } closeModal(); res(); }; if (AUTO && !/[?&]hold/.test(location.search)) setTimeout(() => { if (!$('#modal').hidden) { closeModal(); res(); } }, 400); });
   });
 }
@@ -457,7 +517,7 @@ function showFinal() {
     }
     try { GameRecord.add({ mode: UI.rated ? 'rated' : 'ai', res: resCode, side: 0, opp: 'AI Lv.' + UI.lv, key: 'ai:' + UI.lv, n: M.hands, why: t('rankN', { n: myRank }) }); } catch (e) {}
     const h = `<div class="res"><h3>${esc(t('finalTitle'))}</h3><div class="final">${order.map(s => `<div class="fr${s === ME ? ' me' : ''}"><b class="rk">${ranks[s]}</b><span>${esc(name(s))}</span><em>${M.scores[s]}</em><small>${esc(t('tableP', { n: tp[s] }))}</small></div>`).join('')}</div>${rateHtml ? `<p class="rate">${rateHtml}</p>` : ''}
-      <div class="btns"><button class="btn" data-home>${esc(t('toHome'))}</button><button class="btn pri" data-again>${esc(t('again'))}</button></div></div>`;
+      <div class="btns"><button class="btn" data-home>${esc(t('toHome'))}</button><button class="btn pri gold" data-again>${esc(t('again'))}</button></div></div>`;
     modal(h, 'resm', box => {
       box.querySelector('[data-home]').onclick = () => { closeModal(); exitGame(); res(); };
       box.querySelector('[data-again]').onclick = () => { closeModal(); res(); startMatch({ rated: UI.rated }); };
@@ -473,7 +533,7 @@ async function startTutorial(T) {
   TB.hideAll();
   GBFan.OPTS.tianjin = false;
   M = new GBMatch({ hands: 1, dealer0: 0 });
-  UI = { rated: false, lv: 6, tut: T, bots: [null, 1, 2, 3].map((x, i) => i ? GBAI.create({ level: 6, seed: i }) : null), coachBot: GBAI.create({ level: 16 }), autoBot: GBAI.create({ level: 10 }), stop: false, wait: null };
+  UI = { rated: false, lv: 6, tut: T, bots: [null, 1, 2, 3].map((x, i) => i ? GBAI.create({ level: 6, seed: i }) : null), coachBot: GBAI.create({ level: 16 }), autoBot: GBAI.create({ level: 10 }), stop: false, wait: null, chars: seatChars() };
   G = M;
   const r = T.makeRound(); R0 = r; M.round = r;
   const coach0 = DB.set.coach; DB.set.coach = true;

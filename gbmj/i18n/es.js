@@ -26,7 +26,7 @@ S: {
   tu_intro: '¡Bienvenido al Mahjong Oficial Chino! Son las reglas oficiales chinas. Reúne cuatro combinaciones y una pareja (o siete parejas y algunas manos especiales); puedes ganar cuando tus fan suman 8 puntos o más. Aprendamos jugando esta mano.',
   tu_hand: 'Esta es tu mano. Eres el repartidor (Este), así que tienes 14 fichas y descartas primero. Señala una ficha y la misma ficha se ilumina en la mesa.',
   tu_goal: 'Tienes 1-2-3 de Caracteres, 4-5-6 de Círculos y 7-8 de Bambúes. Un 1-2-3, un 4-5-6 y un 7-8-9, cada uno de un palo distinto, es Mixed Straight (花龙): 8 puntos, suficiente por sí solo para el mínimo.',
-  tu_flower: 'La flor que te repartieron (Primavera) se apartó y se repuso desde el final de la muralla. Una flor vale 1 punto, pero no cuenta para el mínimo de 8.',
+  tu_flower: 'La flor que te repartieron (Primavera) se apartó junto a tu nombre y se repuso desde el final de la muralla. Una flor vale 1 punto, pero no cuenta para el mínimo de 8.',
   tu_d1: 'Descarta el Norte. Los honores Norte y Oeste no sirven ni para el Mixed Straight ni para la pareja. Haz clic (toca) en el Norte que brilla.',
   tu_d1_no: 'Esa ficha es del Mixed Straight o de la pareja (los dos 5 de Bambúes). Las que sobran son el Norte y el Oeste. Empieza por el Norte que brilla.',
   tu_d1_ok: 'Buen descarte. Ahora juegan las CPU.',
@@ -44,7 +44,7 @@ S: {
   tu_pay: 'Pago: si ganas con un descarte, quien descartó paga puntos + 8 y los otros dos pagan 8 cada uno. Si ganas robando, los tres pagan puntos + 8. No hay riichi, dora ni fu.',
   tu_end: '¡Ya puedes jugar! Hay mucho más: pungs, kongs (el kong oculto se pone boca abajo), Siete Parejas, Trece Huérfanos, manos Knitted y 81 fan en total. Usa la Guía de fan y sus manos de ejemplo para aprender a llegar a 8 puntos.',
   tu_m_d1: 'Hacia el Mixed Straight', tu_m_chi: 'Hacia el Mixed Straight', tu_m_d2: 'Hacia estar lista', tu_m_ron: 'Puntos de esta victoria (8 para aprobar)',
-  exitTitle: '¿Abandonar la partida?', exitBody: 'Esta partida no se registrará.', exitYes: 'Abandonar', yes: 'Sí', no: 'No', leftShort: 'quedan',
+  exitTitle: '¿Abandonar la partida?', exitBody: 'Esta partida no se registrará.', exitYes: 'Abandonar', yes: 'Sí', no: 'No', leftShort: 'quedan', minRule: 'Mínimo 8 puntos', stats: 'Historial',
 },
 DESC: {
   1: 'Pungs (o kongs) de los cuatro vientos.', 2: 'Pungs (o kongs) de los tres dragones.', 3: 'Solo 2, 3, 4, 6, 8 de Bambúes y Dragón Verde.',

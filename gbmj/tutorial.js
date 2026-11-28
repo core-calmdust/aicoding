@@ -55,18 +55,18 @@ function botAct(r, p) {
 const R = () => A.R;
 const myTurn = () => R() && R().phase === 'turn' && R().cur === 0 && A.UI && A.UI.wait;
 const myClaim = () => R() && (R().phase === 'claim') && A.UI && A.UI.wait && A.UI.wait.kind === 'claim';
-const handTile = id => `#hand .ht[data-id="${id}"]`;
+const handTile = id => `#hand .hrow .tl[data-id="${id}"]`;
 // 中国式の説明の一意性のため、CPU は台本の牌以外は捨てない（台本が尽きたら普通の思考）
 const STEPS = [
   { id: 'intro', k: 'info', center: true },
   { id: 'hand', k: 'info', at: ['#hand'] },
   { id: 'goal', k: 'info', at: ['#hand'], pics: true },
-  { id: 'flower', k: 'info', at: [{ flowers: 0 }, '.seat.st0'] },
+  { id: 'flower', k: 'info', at: ['#mePanel .gb-fl'], see: ['#mePanel', '#hand'] },
   { id: 'd1', k: 'task', when: myTurn, at: [() => handTile(TILE.N)], see: ['#hand'], ok: a => a.type === 'discard' && a.id === TILE.N, meter: 'd1' },
-  { id: 'chi', k: 'task', when: myClaim, at: ['#acts .act.call', { tile: () => TILE.S9 }], see: ['#hand'], ok: a => a.type === 'chi', meter: 'chi' },
-  { id: 'd2', k: 'task', when: myTurn, at: [() => handTile(TILE.W)], see: ['#hand', { meld: 0 }], ok: a => a.type === 'discard' && a.id === TILE.W, meter: 'd2' },
+  { id: 'chi', k: 'task', when: myClaim, at: ['#acts .ab.call', { tile: () => TILE.S9 }], see: ['#hand'], ok: a => a.type === 'chi', meter: 'chi' },
+  { id: 'd2', k: 'task', when: myTurn, at: [() => handTile(TILE.W)], see: ['#hand'], ok: a => a.type === 'discard' && a.id === TILE.W, meter: 'd2' },
   { id: 'waits', k: 'info', when: () => R() && R().phase !== 'turn', at: ['#coach'], see: ['#hand'] },
-  { id: 'ron', k: 'task', when: myClaim, at: ['#acts .act.win', { tile: () => TILE.S4 }], see: ['#hand'], ok: a => a.type === 'hu', meter: 'ron' },
+  { id: 'ron', k: 'task', when: myClaim, at: ['#acts .ab.win', { tile: () => TILE.S4 }], see: ['#hand'], ok: a => a.type === 'hu', meter: 'ron' },
   { id: 'fans', k: 'info', result: true, at: ['.modal .fans'], see: ['.modal .rhand'] },
   { id: 'pay', k: 'info', result: true, at: ['.modal .pays'], see: ['.modal .fans'] },
   { id: 'end', k: 'info', result: true, center: true, last: true },

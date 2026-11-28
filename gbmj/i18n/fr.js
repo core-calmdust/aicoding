@@ -26,7 +26,7 @@ S: {
   tu_intro: 'Bienvenue dans le Mahjong officiel chinois ! Ce sont les règles officielles chinoises. Réunissez quatre combinaisons et une paire (ou sept paires et quelques mains spéciales) ; vous pouvez gagner quand vos fan totalisent 8 points ou plus. Apprenons en jouant cette main.',
   tu_hand: 'Voici votre main. Vous êtes le donneur (Est) : vous avez 14 tuiles et défaussez en premier. Pointez une tuile et la même tuile s\'allume sur la table.',
   tu_goal: 'Vous avez 1-2-3 Caractères, 4-5-6 Cercles et 7-8 Bambous. Un 1-2-3, un 4-5-6 et un 7-8-9, chacun d\'une famille différente, forment Mixed Straight (花龙) : 8 points, assez à lui seul pour le minimum.',
-  tu_flower: 'La fleur reçue à la donne (Printemps) a été posée à côté et remplacée depuis le fond du mur. Une fleur vaut 1 point, mais ne compte pas pour le minimum de 8.',
+  tu_flower: 'La fleur reçue à la donne (Printemps) a été posée à côté de votre nom et remplacée depuis le fond du mur. Une fleur vaut 1 point, mais ne compte pas pour le minimum de 8.',
   tu_d1: 'Défaussez le Nord. Les honneurs Nord et Ouest ne servent ni au Mixed Straight ni à la paire. Cliquez (touchez) le Nord qui brille.',
   tu_d1_no: 'Cette tuile sert au Mixed Straight ou à la paire (les deux 5 Bambous). Les tuiles en trop sont le Nord et l\'Ouest. Commencez par le Nord qui brille.',
   tu_d1_ok: 'Bonne défausse. Les ordinateurs jouent.',
@@ -44,7 +44,7 @@ S: {
   tu_pay: 'Paiement : sur une défausse, celui qui a défaussé paie points + 8 et les deux autres paient 8 chacun. En pioche propre, les trois paient points + 8. Il n\'y a ni riichi, ni dora, ni fu.',
   tu_end: 'Vous pouvez jouer ! Il y a bien plus : pungs, kongs (un kong caché est posé face cachée), Sept Paires, Treize Orphelins, mains Knitted et 81 fan en tout. Servez-vous du Guide des fan et de ses mains d\'exemple pour apprendre à atteindre 8 points.',
   tu_m_d1: 'Vers le Mixed Straight', tu_m_chi: 'Vers le Mixed Straight', tu_m_d2: 'Vers prêt', tu_m_ron: 'Points de cette victoire (8 pour réussir)',
-  exitTitle: 'Quitter la partie ?', exitBody: 'Cette partie ne sera pas enregistrée.', exitYes: 'Quitter', yes: 'Oui', no: 'Non', leftShort: 'reste',
+  exitTitle: 'Quitter la partie ?', exitBody: 'Cette partie ne sera pas enregistrée.', exitYes: 'Quitter', yes: 'Oui', no: 'Non', leftShort: 'reste', minRule: 'Minimum 8 points', stats: 'Bilan',
 },
 DESC: {
   1: 'Pungs (ou kongs) des quatre vents.', 2: 'Pungs (ou kongs) des trois dragons.', 3: 'Seulement 2, 3, 4, 6, 8 Bambous et Dragon vert.',

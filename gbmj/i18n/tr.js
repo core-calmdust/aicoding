@@ -26,7 +26,7 @@ S: {
   tu_intro: 'Çin Resmî Mahjongu\'na hoş geldin! Bunlar Çin\'in resmî kuralları. Dört set ve bir çift (ya da yedi çift ve birkaç özel el) topla; fanlarının toplamı 8 puan veya daha fazlaysa kazanabilirsin. Bu eli oynayarak öğrenelim.',
   tu_hand: 'Bu senin elin. Dağıtıcısın (Doğu), bu yüzden 14 taşın var ve ilk taşı sen atarsın. Bir taşın üzerine gelince masadaki aynı taş parlar.',
   tu_goal: 'Elinde 1-2-3 Karakter, 4-5-6 Daire ve 7-8 Bambu var. Her biri farklı renkte bir 1-2-3, bir 4-5-6 ve bir 7-8-9 Mixed Straight (花龙) olur: 8 puan, alt sınır için tek başına yeter.',
-  tu_flower: 'Dağıtımda gelen çiçek (İlkbahar) yana kondu ve yerine duvarın arkasından taş çekildi. Bir çiçek 1 puandır ama 8 puanlık alt sınıra sayılmaz.',
+  tu_flower: 'Dağıtımda gelen çiçek (İlkbahar) isminin yanına kondu ve yerine duvarın arkasından taş çekildi. Bir çiçek 1 puandır ama 8 puanlık alt sınıra sayılmaz.',
   tu_d1: 'Kuzey\'i at. Onur taşları Kuzey ve Batı ne Mixed Straight\'e ne de çifte yarar. Parlayan Kuzey\'e tıkla (dokun).',
   tu_d1_no: 'O taş Mixed Straight\'e ya da çifte (iki 5 Bambu) ait. Fazla olanlar Kuzey ve Batı. Parlayan Kuzey\'le başla.',
   tu_d1_ok: 'İyi atış. Şimdi CPU\'lar oynuyor.',
@@ -44,7 +44,7 @@ S: {
   tu_pay: 'Ödeme: atılan taşla kazanılırsa taşı atan puan + 8, diğer ikisi 8\'er öder. Kendi çekişiyle kazanılırsa üçü de puan + 8 öder. Riichi, dora ve fu yoktur.',
   tu_end: 'Artık oynayabilirsin! Daha fazlası da var: pung\'lar, kong\'lar (kapalı kong ters konur), Yedi Çift, On Üç Yetim, Knitted eller ve toplam 81 fan. 8 puana ulaşmayı Fan rehberi ve örnek elleriyle öğren.',
   tu_m_d1: 'Mixed Straight\'e doğru', tu_m_chi: 'Mixed Straight\'e doğru', tu_m_d2: 'Hazıra doğru', tu_m_ron: 'Bu kazancın puanı (8 ile geçer)',
-  exitTitle: 'Oyundan çıkılsın mı?', exitBody: 'Bu oyun kaydedilmeyecek.', exitYes: 'Çık', yes: 'Evet', no: 'Hayır', leftShort: 'kalan',
+  exitTitle: 'Oyundan çıkılsın mı?', exitBody: 'Bu oyun kaydedilmeyecek.', exitYes: 'Çık', yes: 'Evet', no: 'Hayır', leftShort: 'kalan', minRule: 'En az 8 puan', stats: 'Kayıt',
 },
 DESC: {
   1: 'Dört rüzgârın da pung\'ları (veya kong\'ları).', 2: 'Üç ejderhanın da pung\'ları (veya kong\'ları).', 3: 'Yalnızca 2, 3, 4, 6, 8 Bambu ve Yeşil Ejderha.',
