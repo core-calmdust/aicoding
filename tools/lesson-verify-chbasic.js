@@ -26,7 +26,7 @@
 'use strict';
 const path = require('path'), fs = require('fs'), vm = require('vm');
 const ROOT = path.join(__dirname, '..');
-const DONE = new Set(['b_check', 'b_escape', 'b_mate', 'b_special', 'b_draw']);
+const DONE = new Set(['b_check', 'b_escape', 'b_mate', 'b_special', 'b_draw', 'capture', 'escape']);
 const MV = [0, 1, 3, 3, 5, 9, 0];
 function lib() {
   const E = require(path.join(ROOT, 'chess/engine.js'));
@@ -92,7 +92,8 @@ function verify(opt) {
   let wasm = null; const eng = (fen, nodes) => { if (!wasm) wasm = require(path.join(ROOT, 'chess/tools/wasm.js')); return wasm.analyze(fen, [], nodes); };
   const boards = [];
   for (const sid of DONE) {
-    const st = LS.steps.find(s => s.id === sid); if (!st) { add(sid, 0, 'missing'); continue; }
+    if (opt && opt.only && !opt.only.includes(sid)) continue;
+    const st = (opt && opt.steps && opt.steps[sid]) || LS.steps.find(s => s.id === sid); if (!st) { add(sid, 0, 'missing'); continue; }
     const kinds = new Set(), defs = new Set(); let prevD = -1, firstD = null, lastD = null;
     st.problems.forEach((P, j) => {
       const q = j + 1, a = m => add(sid, q, m), p = Lb.pos(P.fen), me = p.side, legal = p.legal().map(m => p.uci(m));
@@ -175,6 +176,78 @@ function verify(opt) {
         // ⑧ the question and the praise: no piece named that the answer does not move
         const T = []; for (let off = 0; off < 30; off++) { try { const R = W.X.chLsJa(sid, { pos: P.fen, ans, P }, j, W.mkV(off)); T.push(R.ask, R.hintTx, R.good(ans)); } catch (e) { break; } }
         new Set(T).forEach(t => { for (const [c, n] of Object.entries(W.X.CH_PN)) if (c !== FA.pc && c !== 'k' && t.includes(n)) a(`⑧ the ${n} named, the answer moves the ${W.X.CH_PN[FA.pc]}: ${t}`); if (!/詰|メイト|決着/.test(t) && T.indexOf(t) % 3 === 2) a(`⑧ the praise does not say mate: ${t}`); });
+      } else if (sid === 'capture' || sid === 'escape') {
+        // (2026-11-28 担当A) the tactics「ただの駒を取る」capture /「狙われた駒を守る」escape. The material search (3 plies + captures) over every
+        // legal move: capture ① the answer is the one move that wins the most, a capture, 2 pawns or more over every other move; escape ① the
+        // one move that loses nothing, a move of the one threatened piece, every other move loses 2 or more. Both: the engine's best at 2 node
+        // budgets, the next 150 or more worse (追4) ② every other move under 16 points, sc = every legal move ③ 8 legal moves or more; capture
+        // 3 captures or more, escape the threatened piece has 4 moves or more ④ the 2D red frames (chess/app.js hanging): capture 2 frames or
+        // more on the other side, the answer takes one, each can be taken without a loss (the hint), none on our side; escape exactly one
+        // frame (a piece, not a pawn) on our side, none on theirs; capture: both a free piece and a defended bigger one in the lesson; no pawn
+        // one step from promoting ⑦⑧ ナイトン's words (every wording) for the answer and every wrong move against the board
+        d = legal.length; if (legal.length < 8) a(`③ ${legal.length} legal moves (8 or more)`);
+        const m0 = Lb.mat(p, me), keep = Object.fromEntries(legal.map(u => [u, Lb.keep(P.fen, u)]));
+        const hgO = hanging(Lb, P.fen, me ^ 1), hgM = hanging(Lb, P.fen, me), to = u => E.sqOf(u.slice(2, 4));
+        const takes = (z, sq, by) => z.legal().some(m => (m >> 7 & 127) === sq && (!by || 'xpnbrqk'[z.b[m & 127] & 7] === by));
+        // the moved piece is taken for a loss by that piece (the words「〜に取られて損」): that capture is legal and either cannot be taken back or
+        // takes a piece worth more than the taker
+        const lost = (u, by) => { const z = Lb.after(P.fen, u), sq = to(u); return z.legal().some(m => { if ((m >> 7 & 127) !== sq || 'xpnbrqk'[z.b[m & 127] & 7] !== by) return false;
+          const v = MV[z.b[sq] & 7], t = MV[z.b[m & 127] & 7]; z.make(m); const back = z.legal().some(m2 => (m2 >> 7 & 127) === sq); z.unmake(m); return !back || v > t; }); };
+        { const bb = Lb.brd(P.fen); for (let i = 0; i < 64; i++) if ((bb[i] === 'p' && (i >> 3) === 1) || (bb[i] === 'P' && (i >> 3) === 6)) a('④ a pawn one step from promoting'); }
+        if (sid === 'capture') {
+          const mx = Math.max(...legal.map(u => keep[u])); right = legal.filter(u => keep[u] === mx);
+          if (right.length !== 1 || right[0] !== ans) a(`① the moves that win the most ${right} (only ${ans} wanted)`);
+          if (mx < m0 + 2) a(`① the answer wins ${mx - m0} (2 or more)`);
+          legal.forEach(u => { if (u !== ans && keep[u] > mx - 2) a(`② ${u} keeps ${keep[u] - m0}, the answer ${mx - m0}`); });
+          if (!p.b[to(ans)]) a('④ the answer takes nothing');
+          if (legal.filter(u => p.b[to(u)]).length < 3) a('③ fewer than 3 captures');
+          if (hgO.length < 2) a(`④ ${hgO.length} red frames (2 or more)`); if (!hgO.includes(ans.slice(2, 4))) a('④ the answer\'s piece is not framed');
+          hgO.forEach(sq => { if (!legal.some(u => u.slice(2, 4) === sq && keep[u] >= m0)) a(`④ the frame ${sq} cannot be taken without a loss`); });
+          if (hgM.length) a(`④ our own piece framed ${hgM}`);
+          const defd = takes(Lb.after(P.fen, ans), to(ans)); defs.add(defd ? 'defended' : 'free');
+          if (defd && MV['xpnbrqk'.indexOf(FA.cap)] <= MV['xpnbrqk'.indexOf(FA.pc)]) a('④ a defended piece no bigger than the taker');
+        } else {
+          right = legal.filter(u => keep[u] >= m0); if (right.length !== 1 || right[0] !== ans) a(`① the moves that lose nothing ${right} (only ${ans} wanted)`);
+          legal.forEach(u => { if (u !== ans && keep[u] > m0 - 2) a(`② ${u} loses only ${m0 - keep[u]}`); });
+          if (hgM.length !== 1) a(`④ ${hgM.length} of our pieces framed (one wanted)`); else { const s0 = hgM[0];
+            if ((p.b[E.sqOf(s0)] & 7) === 1) a('④ the threatened piece is a pawn');
+            if (ans.slice(0, 2) !== s0) a('④ the answer does not move the threatened piece');
+            if (legal.filter(u => u.slice(0, 2) === s0).length < 4) a('③ the threatened piece has fewer than 4 moves'); }
+          if (hgO.length) a(`④ their piece framed ${hgO}`);
+          if (!FA.was) a('⑧ the words take the answer for a counter-attack (FA.was false)');
+          defs.add(FA.pc);
+        }
+        const sc = new Map(P.sc || []); if (!P.sc || P.sc.length !== legal.length || legal.some(u => !sc.has(u))) a('② sc is not every legal move');
+        if (!(opt && opt.fast)) for (const nodes of [2e5, 8e5]) { const R = eng(P.fen, nodes); if (!R.length || R[0].uci !== ans) a(`① 追4 the engine (${nodes} nodes) prefers ${R[0] && R[0].uci}`); else if (R[1] && R[0].v - R[1].v < 150) a(`② 追4 the next (${R[1].uci}) only ${R[0].v - R[1].v} worse (${nodes} nodes)`); }
+        if (P.sc) { legal.filter(u => u !== ans).forEach(u => { const pt = CHESS_points(P, u); if (pt >= 16) a(`② ${u} scores ${pt}`); if (sc.get(ans) - sc.get(u) < 150) a(`② ${u} only ${sc.get(ans) - sc.get(u)} worse`); }); if (CHESS_points(P, ans) !== 20) a('② the answer scores under 20'); }
+        // ⑦⑧ the words
+        const zA = Lb.after(P.fen, ans), ansSafe = !takes(zA, to(ans)), s0 = ans.slice(0, 2);
+        const T = []; let Rs = []; try { Rs = [...Array(12).keys()].map(off => W.X.chLsJa(sid, { pos: P.fen, ans, P }, j, W.mkV(off))); } catch (e) { a('⑦ chLsJa threw ' + e.message); }
+        Rs.forEach(R => T.push(R.good(ans), R.hintTx));
+        const ansWords = t => {   // what the words say of the answer (the praise, and the correct move led into a correction)
+          if (sid === 'capture') {
+            if (/守られていなかった|守りのない|守る駒は1つもいなかった|取り返されずに|取り返せる駒はどこにもいない|守っている駒がいない|取り返す駒がいない|取り返しに来る駒はいない|何も取り返せない|ノーガード|ただ取り|まるまる得/.test(t) && !ansSafe) a(`⑧ said ${ans} is not taken back, it is: ${t}`);
+            if (/取り返されても|交換でも得|との交換/.test(t) && ansSafe) a(`⑧ said ${ans} is taken back, it is not: ${t}`);
+          } else {
+            if (/もう相手の駒は届かない|どの駒にもねらわれない|もう取られない|逃げた先も安全|届かないマスへ|もうねらわれない|どの駒にも取られない|ねらえる駒がいない|安全ピョン/.test(t) && !ansSafe) a(`⑧ said ${ans} is safe, it can be taken: ${t}`);
+            if (/取られても取り返せ|守りのあるマス|味方の守りがつく|味方の駒で取り返せる/.test(t) && (ansSafe || !Lb.after(P.fen, ans).attacked(to(ans), me))) a(`⑧ said ${ans} can be taken and taken back: ${t}`);
+            if (/ねらわれているのは/.test(t) && !t.includes(W.X.CH_PN[FA.pc])) a(`⑧ the hint names another piece: ${t}`);
+            if (/反撃|にらみ返|ねらいをつけ/.test(t)) a(`⑧ a counter-attack in the words: ${t}`);
+          } };
+        new Set(T).forEach(ansWords);
+        Rs.length && legal.filter(u => u !== ans).forEach(u => [...new Set(Rs.map(R => R.ng(u)))].forEach(t => { ansWords(t); const G = W.X.chLsF(P.fen, u), z = Lb.after(P.fen, u), loss = m0 - keep[u]; let known = 0;
+          const byOf = h => (Object.entries(W.X.CH_PN).find(([, v]) => v === h) || [])[0];
+          if (sid === 'capture') {
+            if (/守られていて|取り返されて損/.test(t)) { known++; if (!lost(u, byOf(G.hang)) || loss < 1) a(`⑦ ${u}: said taken back for a loss (loss ${loss}): ${t}`); }
+            if (/のほうが価値が高い|もっと大きな/.test(t)) { known++; if (!G.cap || MV['xpnbrqk'.indexOf(G.cap)] >= MV['xpnbrqk'.indexOf(FA.cap)]) a(`⑦ ${u}: said a smaller capture: ${t}`); }
+            if (/取られて損しちゃう|に取られる場所/.test(t)) { known++; if (!lost(u, byOf(G.hang))) a(`⑦ ${u}: said taken by the ${G.hang}: ${t}`); }
+            if (/見のがし|がそのまま|逃げちゃうかも|まだ盤の上/.test(t)) { known++; if (u.slice(2, 4) === ans.slice(2, 4)) a(`⑦ ${u}: said to miss the capture, takes it: ${t}`); }
+          } else {
+            if (/そのまま取られ|を取られちゃう|ただで取られる/.test(t)) { known++; if (u.slice(0, 2) === s0 || !takes(z, E.sqOf(s0)) || loss < 1) a(`⑦ ${u}: said the threatened piece is taken: ${t}`); }
+            if (/に逃げても、そこで|の通り道/.test(t)) { known++; if (u.slice(0, 2) !== s0 || !lost(u, byOf(G.hang)) || loss < 1) a(`⑦ ${u}: said taken where it ran to: ${t}`); }
+            if (/形が悪くなって損|駒を損する|べつの駒がねらわれて損|心配が残ったまま/.test(t)) { known++; if (loss < 1) a(`⑦ ${u}: said to lose, keeps the material: ${t}`); if (/べつの駒/.test(t) && u.slice(0, 2) !== s0) a(`⑦ ${u}: said another piece is hit: ${t}`); }
+          }
+          if (!known) a(`⑦ ${u}: the words do not say what the move does: ${t}`); }));
       } else {
         d = legal.length; if (legal.length < 3) a(`③ ${legal.length} legal moves`);
         const m0 = Lb.mat(p, me), keep = Object.fromEntries(legal.map(u => [u, Lb.keep(P.fen, u)]));
@@ -236,8 +309,19 @@ function verify(opt) {
     if (sid !== 'b_special' && kinds.size < 2) add(sid, 0, `追27 one kind of answer piece`);
     if (sid === 'b_special' && ['castle-short', 'castle-long', 'ep', 'promo'].some(k => !kinds.has(k))) add(sid, 0, `④ the three rules (both castles, en passant, promotion): ${[...kinds]}`);
     if (sid === 'b_escape' && defs.size < 3) add(sid, 0, `④ the three ways (take / run / block): ${[...defs]}`);
+    if (sid === 'capture' && defs.size < 2) add(sid, 0, `④ a free piece and a defended bigger one (the intro): ${[...defs]}`);
   }
   return out;
 }
-module.exports = { verify, lib, pool, words3d, DONE };
+// = chess/app.js hanging(): the pieces of that colour (0 white, 1 black) the other side attacks with no defender or with a cheaper piece
+// (the 2D red frames of「ただの駒を取る」capture / 「狙われた駒を守る」escape)
+function hanging(Lb, fen, color) {
+  const { E } = Lb, pos = Lb.pos(fen), b = pos.b, them = color ^ 1, atk = new Map(), PV = [0, 1, 3, 3, 5, 9, 0];
+  const flip = pos.side !== them; if (flip) pos.makeNull();
+  const buf = new Int32Array(256), n = pos.gen(buf, true); if (flip) pos.unmakeNull();
+  for (let i = 0; i < n; i++) { const m = buf[i], t = E.mTo(m), f = E.mFrom(m); if (!b[t] || (b[t] >> 3) !== color) continue; const v = PV[b[f] & 7] || 100; if (!atk.has(t) || v < atk.get(t)) atk.set(t, v); }
+  const out = []; for (const [s, av] of atk) { const t = b[s] & 7; if (t === 6) continue; if (!pos.attacked(s, color) || av < PV[t]) out.push(E.sqName(s)); }
+  return out.sort();
+}
+module.exports = { verify, lib, pool, words3d, hanging, DONE };
 if (require.main === module) { const f = verify({ fast: process.argv.includes('--fast') }); f.forEach(x => console.log(`NG ${x.step} q${x.q}: ${x.msg}`)); console.log(f.length ? `${f.length} NG` : 'OK'); }
