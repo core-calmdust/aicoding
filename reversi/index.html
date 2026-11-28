@@ -414,7 +414,7 @@ body.rated-live #evalCard::before{content:attr(data-rtnote);display:block;font-s
 #lessonListView > .modal-actions, #pzListView > .modal-actions, #pzGridView > .modal-actions{margin-top:auto;padding-top:22px}
 .mbtn{flex:1;padding:12px;border-radius:11px;font-weight:700;letter-spacing:.08em;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted)}
 .mbtn:hover{color:var(--text)}
-.mbtn.go{background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;border-color:transparent}
+.mbtn.go{background:var(--rt-go-bg,linear-gradient(180deg,#f1efe9,#9c988f));color:var(--rt-go-ink,#121212);border-color:transparent}
 .mbtn.go:hover{filter:brightness(1.07)}
 .result-big{font-family:'Shippori Mincho B1',serif;font-size:34px;font-weight:800;text-align:center;letter-spacing:.1em;margin:4px 0 10px}
 .result-score{display:flex;justify-content:center;align-items:center;gap:18px;font-family:'Shippori Mincho B1',serif;font-size:44px;font-weight:800}
@@ -564,7 +564,7 @@ body.in-online:not(.ol-over) #evalCard, body.in-online #btnHint, body.in-online:
 .dk-me b{color:var(--accent);font-family:'JetBrains Mono',monospace;font-weight:500}
 .dk-btn{font-size:12.5px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);white-space:nowrap;flex:none}
 .dk-btn:hover{border-color:var(--brass2)}
-.dk-btn.go{background:linear-gradient(180deg,#d9b873,#b8964e);color:#1a1408;border-color:transparent;font-weight:700}
+.dk-btn.go{background:var(--rt-go-bg,linear-gradient(180deg,#f1efe9,#9c988f));color:var(--rt-go-ink,#121212);border-color:transparent;font-weight:700}
 .dk-btn.tg{width:34px;padding:6px 0;color:var(--muted)}
 .dock-panel{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:18px;padding:0 18px}
 body.dock-open .dock-panel{padding:4px 18px 16px}
@@ -676,7 +676,7 @@ body.in-lesson .controls{display:none}
 .lesson-actions{display:flex;gap:8px;margin-top:12px}
 .lesson-actions button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted);font-size:13px;font-weight:700}
 .lesson-actions button:hover{color:var(--text)}
-.lesson-actions button.go{background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;border-color:transparent}
+.lesson-actions button.go{background:var(--rt-go-bg,linear-gradient(180deg,#f1efe9,#9c988f));color:var(--rt-go-ink,#121212);border-color:transparent}
 .lesson-list{display:grid;gap:8px}
 .lesson-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.2);text-align:left;color:var(--text);width:100%}
 .lesson-item:hover{border-color:var(--brass2)}
@@ -901,7 +901,7 @@ html[lang=ar] .lx :is(p, .tx){text-align:start}
 .pzx-daily .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
 .pzx-daily .tx b{font-size:15px}.pzx-daily .tx b span{color:var(--dim);font-weight:400;font-family:'JetBrains Mono',monospace;font-size:12px;margin-inline-start:6px}
 .pzx-daily .tx small{font-size:12px;color:var(--muted)}
-.pzx-daily .go{flex:none;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;color:#14100a;background:linear-gradient(180deg,#f4d98f,#d4a84a)}
+.pzx-daily .go{flex:none;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;color:var(--rt-go-ink,#121212);background:var(--rt-go-bg,linear-gradient(180deg,#f1efe9,#9c988f))}
 .pzx-daily .go.ok{color:#8fe3b8;background:rgba(111,211,160,.12);border:1px solid rgba(111,211,160,.4)}
 .pzx .lx-tabs{margin:2px 0 0}
 .pzx .lx-tabs button .ic{background:none;color:var(--brass);padding:3px}
@@ -1739,7 +1739,7 @@ html:not(.atlas-skin) #lsListDesc{font-size:14px!important}
 </div>
 
 <script src="i18n.js?v=20261113lxh-p61-f82-c1"></script>
-<script src="../shared/pzbook.js?v=9sk"></script>
+<script src="../shared/pzbook.js?v=10sk"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="../shared/rulesoffer.js?v=24l14j"></script>
 <script src="../shared/headerbar.js?v=64"></script>

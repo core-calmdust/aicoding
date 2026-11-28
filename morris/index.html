@@ -514,7 +514,7 @@ body.in-online .controls{grid-template-columns:repeat(8,1fr)}   /* + 引き分�
 #lessonListView > .modal-actions, #pzListView > .modal-actions, #pzGridView > .modal-actions{margin-top:auto;padding-top:22px}
 .mbtn{flex:1;padding:12px;border-radius:11px;font-weight:700;letter-spacing:.08em;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted)}
 .mbtn:hover{color:var(--text)}
-.mbtn.go{background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;border-color:transparent}
+.mbtn.go{background:var(--rt-go-bg,linear-gradient(180deg,#f1efe9,#9c988f));color:var(--rt-go-ink,#121212);border-color:transparent}
 .mbtn.go:hover{filter:brightness(1.07)}
 .result-big{font-family:'Shippori Mincho B1',serif;font-size:34px;font-weight:800;text-align:center;letter-spacing:.1em;margin:4px 0 10px}
 .result-disc{display:flex;justify-content:center;margin:6px 0 4px}
@@ -601,7 +601,7 @@ body.hb-on .controls.hb-menu{display:flex!important}   /* PC: the header menu st
 .lesson-actions button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted);font-size:13px;font-weight:700}
 .lesson-actions button:hover:not(:disabled){color:var(--text)}
 .lesson-actions button:disabled{opacity:.35}
-.lesson-actions button.go{background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;border-color:transparent}
+.lesson-actions button.go{background:var(--rt-go-bg,linear-gradient(180deg,#f1efe9,#9c988f));color:var(--rt-go-ink,#121212);border-color:transparent}
 .lesson-list{display:grid;gap:8px}
 .ls-course{grid-column:1 / -1;margin:10px 0 2px;display:flex;flex-direction:column;gap:2px}
 .ls-course:first-child{margin-top:0}
@@ -1007,7 +1007,7 @@ body .info-line{font-size:12.5px}
 @media (pointer: coarse) and (orientation: portrait){ html.atlas-skin .board-area{margin-top:-18px;margin-bottom:-17px} }
 #btnPuzzle{display:none!important}   /* パズルは非表示 (2026-11-01) */
 </style>
-<link rel="stylesheet" href="online.css?v=20261028mrnlx">
+<link rel="stylesheet" href="online.css?v=20261028mrnlxyb">
 <style>
 /* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
    not from the height, which differs by browser (iOS Chrome: toolbars) and would make some boards narrower; the page scrolls instead */
@@ -1346,7 +1346,7 @@ body.in-online:not(.ol-over) #coachCard{display:none!important}
 <script src="coach.js?v=7sq-ls-rv"></script>
 <script src="coach-i18n.js?v=5"></script>
 <script src="../shared/export.js?v=9l14"></script>
-<script src="../shared/pzbook.js?v=9sk"></script>
+<script src="../shared/pzbook.js?v=10sk"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="../shared/rulesoffer.js?v=24l14j"></script>
 <script src="../shared/headerbar.js?v=64"></script>

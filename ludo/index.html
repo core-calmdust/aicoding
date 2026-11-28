@@ -166,7 +166,7 @@ html.hb-on .throw .shown:not(.cw){width:60px;height:60px}html.hb-on .throw .show
 .field > label{display:block;font-size:12px;letter-spacing:.1em;color:var(--dim);margin-bottom:6px}
 .seg{display:flex;gap:4px;padding:3px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid var(--line)}
 .seg button{flex:1;height:36px;border:0;border-radius:9px;background:none;cursor:pointer;font-size:14px;color:var(--muted);white-space:nowrap}
-.seg button.on{background:var(--accent);color:#2a1600;font-weight:700}
+.seg button.on{background:rgba(244,176,66,.16);color:var(--accent);box-shadow:inset 0 0 0 1px rgba(244,176,66,.55);font-weight:700}   /* not a filled yellow button (common rule) */
 .seg button:disabled{opacity:.35;cursor:default}
 .ng-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 @media (max-width:640px){.ng-cols{grid-template-columns:1fr;gap:0}}
@@ -200,7 +200,7 @@ html.hb-on .throw .shown:not(.cw){width:60px;height:60px}html.hb-on .throw .show
 @media (max-width:520px){#bdRow.dsg{gap:8px}#bdRow.dsg button{width:calc(25% - 6px);padding:5px 3px;font-size:11.5px}#bdRow.dsg button svg{width:100%;height:auto;aspect-ratio:1}}   /* (4 boards in a row on phones) */
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
 .mbtn{height:44px;min-width:120px;padding:0 18px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);cursor:pointer;font-size:15px;font-weight:600}
-.mbtn.go{background:linear-gradient(180deg,#f6c25c,#e09a2a);border-color:#f8d07e;color:#2a1600;font-weight:800}
+.mbtn.go{background:var(--rt-go-bg,linear-gradient(180deg,#f1efe9,#9c988f));border-color:transparent;color:var(--rt-go-ink,#121212);font-weight:800}
 .result-big{font-family:'Shippori Mincho B1','Cormorant Garamond',serif;font-size:30px;text-align:center;margin:6px 0 4px}
 .result-sub{text-align:center;color:var(--muted);margin-bottom:10px}
 .result-dots{display:flex;justify-content:center;gap:8px;margin-bottom:4px}
@@ -337,7 +337,7 @@ body:is(.in-lesson,.in-puzzle) .cb-bar{padding-bottom:2px}
 .lesson-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
 .lesson-actions button{flex:1 1 auto;padding:8px 10px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.2);font-size:12.5px;color:var(--muted);white-space:nowrap}
 .lesson-actions button:hover:not(:disabled){color:var(--text);border-color:var(--accent)}
-.lesson-actions button.go{background:linear-gradient(180deg,#f1d68e,#c9a24f);border-color:transparent;color:#1b1408;font-weight:800}
+.lesson-actions button.go{background:var(--rt-go-bg,linear-gradient(180deg,#f1efe9,#9c988f));border-color:transparent;color:var(--rt-go-ink,#121212);font-weight:800}
 /* rules / lessons / puzzles (tabbed list dialog, fixed size) */
 .ls-tabs{margin-bottom:16px}
 .ls-tabs button{font-size:13.5px;padding:9px 4px}
@@ -423,7 +423,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 @media (max-width:560px){.ls-cats{grid-auto-flow:row;grid-template-columns:1fr 1fr}.ls-cats button{flex-direction:row!important;justify-content:flex-start;padding:7px 8px!important}.ls-cats button .nm{flex:1;text-align:start}}
 
 </style>
-<link rel="stylesheet" href="online.css?v=2">
+<link rel="stylesheet" href="online.css?v=3">
 </head>
 <body>
 <div class="app">

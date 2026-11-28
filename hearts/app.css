@@ -2085,7 +2085,7 @@ html[dir=rtl] .parrow.d1,html[dir=rtl] .parrow.d3{transform:none}
 .ht .lt-top .lt-tut{color:var(--hl2)}
 @media (max-width:760px){#rulesOverlay .modal.rules-modal,#lessonOverlay .modal.lesson-modal,#studyOverlay .modal.study-modal{width:calc(100vw - 24px);height:calc(100dvh - 24px);max-height:calc(100dvh - 24px);border-radius:16px}}
 .ht .rt-ov-art{background:radial-gradient(90% 90% at 50% 40%,#8a2a3f,#3a0c18);box-shadow:inset 0 0 0 1px rgba(243,213,138,.35)}
-.ht .rules-offer button{background:rgba(255,255,255,.05);border:1px solid rgba(226,194,117,.6);color:#f3d58a;box-shadow:none}.ht .rules-offer button:hover{background:rgba(226,194,117,.14)}
+.ht .rules-offer button{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.24);color:#f1efe9;box-shadow:none}.ht .rules-offer button:hover{background:rgba(255,255,255,.12)}
 /* PC: the table and the side boxes readable at a glance (2026-11-28) */
 @media (min-width:1040px){
   .ht .hseat .pn b{font-size:16px;max-width:150px}.ht .hseat .pn small{font-size:13px}

@@ -322,7 +322,7 @@ body.rated-live #evalCard .evalrow,body.rated-live #evalCard .evalbar,body.rated
 #lessonListView > .modal-actions, #pzListView > .modal-actions, #pzGridView > .modal-actions{margin-top:auto;padding-top:22px}
 .mbtn{flex:1;padding:12px;border-radius:11px;font-weight:700;letter-spacing:.08em;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted)}
 .mbtn:hover{color:var(--text)}
-.mbtn.go{background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;border-color:transparent}
+.mbtn.go{background:var(--rt-go-bg,linear-gradient(180deg,#f1efe9,#9c988f));color:var(--rt-go-ink,#121212);border-color:transparent}
 .mbtn.go:hover{filter:brightness(1.07)}
 .result-big{font-family:'Shippori Mincho B1',serif;font-size:34px;font-weight:800;text-align:center;letter-spacing:.1em;margin:4px 0 10px}
 .result-disc{display:flex;justify-content:center;margin:6px 0 4px}
@@ -408,7 +408,7 @@ body.in-puzzle #evalCard, body.in-puzzle .kifu-card, body.in-puzzle .info-line, 
 .lesson-actions button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted);font-size:13px;font-weight:700}
 .lesson-actions button:hover:not(:disabled){color:var(--text)}
 .lesson-actions button:disabled{opacity:.35}
-.lesson-actions button.go{background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;border-color:transparent}
+.lesson-actions button.go{background:var(--rt-go-bg,linear-gradient(180deg,#f1efe9,#9c988f));color:var(--rt-go-ink,#121212);border-color:transparent}
 .lesson-list{display:grid;gap:8px}
 .ls-course{grid-column:1 / -1;margin:10px 0 2px;display:flex;flex-direction:column;gap:2px}
 .ls-course:first-child{margin-top:0}
@@ -1019,7 +1019,7 @@ html.atlas-skin #ruleCards .tf-chip{background:rgba(0,0,0,.04)}
 .tf-rtable .tf-yes{color:var(--accent)}.tf-rtable .tf-no{color:var(--dim)}
 @media (max-width: 600px){ .tf-rtable table{white-space:normal;font-size:11px} .tf-rtable th,.tf-rtable td{padding:6px 3px} .tf-rtable thead th{font-size:10px} .tf-rtable tbody th svg{display:none} }
 </style>
-<link rel="stylesheet" href="online.css?v=1l9twlx">
+<link rel="stylesheet" href="online.css?v=1l9twlxyb">
 <style>
 /* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
    not from the height, which differs by browser (iOS Chrome: toolbars) and would make some boards narrower; the page scrolls instead */
@@ -1325,7 +1325,7 @@ html.atlas-skin #ruleCards .tf-chip{background:rgba(0,0,0,.04)}
 
 <script src="i18n.js?v=6ek-nd1-bm2-f82-bs1-tu1-sc1-br1-sq1-tb1"></script>
 <script src="i18n-online.js?v=l14"></script>
-<script src="../shared/pzbook.js?v=9sk"></script>
+<script src="../shared/pzbook.js?v=10sk"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="../shared/rulesoffer.js?v=24l14j"></script>
 <script src="../shared/headerbar.js?v=64"></script>

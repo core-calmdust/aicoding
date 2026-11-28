@@ -312,7 +312,7 @@ const CSS = `
 .pbh-daily .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
 .pbh-daily .tx b{font-size:15px}.pbh-daily .tx b span{color:var(--dim);font-weight:400;font-family:'JetBrains Mono',monospace;font-size:12px;margin-inline-start:6px}
 .pbh-daily .tx small{font-size:12px;color:var(--muted)}
-.pbh-daily .go{flex:none;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;color:#14100a;background:linear-gradient(180deg,#f4d98f,#d4a84a)}
+.pbh-daily .go{flex:none;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;color:var(--rt-go-ink,#121212);background:var(--rt-go-bg,linear-gradient(180deg,#f1efe9,#9c988f))}
 .pbh-daily .go.ok{color:#8fe3b8;background:rgba(111,211,160,.12);border:1px solid rgba(111,211,160,.4)}
 .pbh-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin:2px 0 0;overflow-x:auto;scrollbar-width:none}
 .pbh-tabs::-webkit-scrollbar{display:none}
