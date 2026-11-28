@@ -378,7 +378,11 @@ function finalize(F) {
   return { pts, fans: list, mixedKong: !!F.mixedKong };
 }
 
+// OPTS.tianjin：2006年10月 天津の審判講習の追加裁定（七対＋緑一色／清么九は四帰一なし、組合龍は辺張・嵌張なし）を入れる。
+// 既定は入れない（2006年版の本文どおり）。o.tianjin で1回ごとに上書きできる。
+const OPTS = { tianjin: false };
 function calc(o) {
+  const tianjin = o.tianjin != null ? !!o.tianjin : OPTS.tianjin;
   const m = o.melds.length;
   const hc = counts(o.hand); hc[o.win]++;
   const all = hc.slice();
@@ -437,6 +441,7 @@ function calc(o) {
       else F.add(19);
       let hog = 0; for (let t = 0; t < 34; t++) if (hc[t] === 4) hog++;
       if (hog) F.add(64, hog);
+      if (tianjin && (F.f[3] || F.f[8])) F.no(64);      // 天津2006：七対＋緑一色／清么九は四帰一なし
       situational(F, o, true); F.no(62);
       consider(F, 'pairs');
     }
@@ -493,7 +498,7 @@ function calc(o) {
         situational(F, o, !set.open);
         if (uniq) {
           if (a === 'pair') F.add(79);
-          else if (a === 's' && s.k === 'c') { const pos = o.win - s.t; if (pos === 1) F.add(78); else if ((pos === 2 && num(s.t) === 1) || (pos === 0 && num(s.t) === 7)) F.add(77); }
+          else if (a === 's' && s.k === 'c' && !tianjin) { const pos = o.win - s.t; if (pos === 1) F.add(78); else if ((pos === 2 && num(s.t) === 1) || (pos === 0 && num(s.t) === 7)) F.add(77); }
         }
         consider(F, 'knitstraight');
       }
@@ -510,7 +515,7 @@ function calc(o) {
   return best;
 }
 
-const GBFan = { FANS, calc, waits, isWinShape, decomp, counts, KN_TILES, ORPHANS, GREEN, REV, MIN: 8 };
+const GBFan = { FANS, OPTS, calc, waits, isWinShape, decomp, counts, KN_TILES, ORPHANS, GREEN, REV, MIN: 8 };
 if (typeof module !== 'undefined' && module.exports) module.exports = GBFan;
 else root.GBFan = GBFan;
 })(typeof window !== 'undefined' ? window : globalThis);

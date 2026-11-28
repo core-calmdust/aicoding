@@ -1,0 +1,27 @@
+// チュートリアルの台本の検査（DOM なし）：決まった配牌で、北切り → 九索チー → 西切り → 四索ロンが合法で、和了が8点以上になるか
+'use strict';
+global.window = global; global.document = { querySelector: () => null, body: { classList: { add() {}, remove() {} } } }; global.addEventListener = () => {}; global.setInterval = () => 0;
+global.GB = require('../engine.js'); global.GBFan = require('../fan.js'); Object.assign(global, require('../game.js'));
+global.I18N = { t: k => k, fan: id => GBFan.FANS[id][4] };
+const P = s => { const out = []; let buf = []; for (const ch of s.replace(/\s+/g, '')) { if (/\d/.test(ch)) buf.push(+ch); else if ('mps'.includes(ch)) { const b = { m: 0, p: 9, s: 18 }[ch]; for (const n of buf) out.push(b + n - 1); buf = []; } else { const h = { E: 27, S: 28, W: 29, N: 30, P: 31, F: 32, C: 33 }[ch]; if (h != null) out.push(h); } } return out; };
+global.GBApp = { esc: s => s, parseTiles: P, closeModal() {}, startTutorial() {} };
+require('../tutorial.js');
+const TU = global.GBTutorial, api = TU._api, r = TU.makeRound(), T = GB.T;
+let ok = 0, n = 0; const chk = (c, m) => { n++; if (c) ok++; else console.log('NG', m); };
+r.audit();
+const act = (p, a) => { const o = r.options(p).find(x => x.type === a.type && (a.id === undefined || x.id === a.id) && (a.t === undefined || x.t === a.t)); chk(!!o, `席${p} ${JSON.stringify(a)}`); r.act(p, o || a); };
+act(0, { type: 'discard', id: TU.TILE.N });
+let guard = 0;
+const bots = () => { while (r.phase !== 'end' && !r.waiting().includes(0) && guard++ < 50) for (const p of r.waiting()) { const a = api.botAct(r, p) || { type: 'pass' }; act(p, a); } };
+bots();
+chk(r.phase === 'claim' && r.options(0).some(o => o.type === 'chi' && o.t === P('7s')[0]), '九索をチーできる');
+for (const p of r.waiting()) if (p !== 0) act(p, { type: 'pass' });
+act(0, { type: 'chi', t: P('7s')[0] });
+act(0, { type: 'discard', id: TU.TILE.W });
+bots();
+const hu = r.options(0).find(o => o.type === 'hu');
+chk(hu && hu.pts === 10 && !hu.low, '四索のロンが10点 ' + (hu && hu.pts));
+for (const p of r.waiting()) if (p !== 0) act(p, { type: 'pass' });
+act(0, { type: 'hu' });
+chk(r.phase === 'end' && r.result.fan.total === 11, '合計11点（花牌込み）');
+console.log(`${ok} / ${n}`); process.exit(ok === n ? 0 : 1);
