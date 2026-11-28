@@ -93,12 +93,12 @@ function create(o) {
   const level = Math.max(1, Math.min(20, o.level || 10));
   const rand = GB.rng(o.seed == null ? (Math.random() * 2 ** 32) >>> 0 : o.seed);
   // 強さの段：ミスの率、目標を見る深さ、守り、鳴きの判断
-  const noise = level >= 16 ? 0 : [0.34, 0.3, 0.26, 0.23, 0.2, 0.17, 0.15, 0.13, 0.11, 0.09, 0.07, 0.055, 0.04, 0.025, 0.012][level - 1];
+  const noise = level >= 16 ? 0 : [0.42, 0.36, 0.31, 0.27, 0.23, 0.2, 0.17, 0.145, 0.12, 0.1, 0.08, 0.06, 0.045, 0.03, 0.015][level - 1];
   const usePlans = true;
   const defend = level >= 8 ? Math.min(1, (level - 6) / 10) : 0;
   const Q = level >= 12 ? 0.42 : 0.36;
   const look = level >= 20 ? 6 : level >= 19 ? 4 : level >= 18 ? 3 : 0;   // 1枚先読みする候補の数（上位レベル）
-  const callMargin = level >= 17 ? 1.12 : level >= 10 ? 1.15 : 1.05;
+  const callMargin = 1.03;                     // 鳴くのは今より良くなるとき（測定：控えめに鳴くより強い）
 
   function unseenCounts(r, p) {      // p から見えていない牌の数
     const u = new Array(34).fill(4);
@@ -136,7 +136,7 @@ function create(o) {
     vals.sort((a, b) => b - a);
     let V = (vals[0] || 0) + 0.3 * (vals[1] || 0) + 0.1 * (vals[2] || 0);
     V += (20 + bonus) * Math.pow(Q, s + 1) * (usePlans ? 0.25 : 1);
-    V *= 1 + 0.012 * uke;
+    if (level >= 4) V *= 1 + 0.012 * uke;
     // 聴牌：待ちごとに実際の点を計算（8点以上の待ちだけ数える）
     if (s === 0 && level >= 5 && !fast) {
       let good = 0;
@@ -191,7 +191,7 @@ function create(o) {
     if (rand() < noise) {
       // ミス：形を見ずに捨てる（下のレベルほど多い）
       const s = discards[Math.floor(rand() * discards.length)];
-      if (level <= 2 || rand() < 0.5) return s;
+      return s;
     }
     let best = null, bv = -1e9;
     const tried = new Map();
