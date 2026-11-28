@@ -1966,3 +1966,23 @@ html[lang=ar] .ld-box .tut-btns #tuBack{margin-right:0;margin-left:auto}
 @media (max-width:760px){.ld .actbar:has(.bld) .ab-btns.main{pointer-events:none}.ld .actbar:has(.bld) .ab-btns.main > *{pointer-events:auto}}
 @media (max-width:760px){#tutLayer.ld-tl.center .ld-box{max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px)}}
 @media (max-width:760px) and (max-height:700px){#tutLayer .ld-box{max-height:54vh;max-height:54dvh}.ld-box .tp-body p{font-size:13.5px;line-height:1.6}}
+/* the tutorial: the reason for a wrong move, inside the bubble; the compact bubble on phones (no free band for the full one) */
+.ld-box .tut-ng{margin:10px 0 0;padding:7px 10px;border-radius:9px;background:rgba(255,120,110,.12);border:1px solid rgba(255,143,134,.45);color:#ffd2cd;font-size:13px;line-height:1.5}
+.ld-box .tut-ng[hidden]{display:none}
+@media (max-width:760px){
+  .ld-box.tight{padding:8px 11px 8px}
+  .ld-box.tight .tp-h{font-size:14.5px;margin:0 0 2px}
+  .ld-box.tight .tp-body p{font-size:12.5px;line-height:1.5}
+  .ld-box.tight .tut-meter{margin-top:6px;padding:5px 8px}.ld-box.tight .tut-meter small{font-size:11px}.ld-box.tight .tut-meter b{font-size:14px}
+  .ld-box.tight .tut-btns{margin-top:5px}.ld-box.tight .tut-prog{margin-bottom:4px}.ld-box.tight .tut-top{margin-bottom:2px}
+  .ld-box.tight .tut-ng{margin-top:6px;padding:5px 8px;font-size:12px}
+}
+/* phones, three players: the two others sit at the top corners; their speech bubbles go under the name plate
+   (beside it, the two bubbles met in the middle and covered each other) */
+@media (max-width:760px){
+  .ld #ldTable[data-n="3"] .seat.top .bub{top:calc(100% + 9px);bottom:auto;left:4px;right:auto;transform:none;animation-name:ldBubT}
+  .ld #ldTable[data-n="3"] .seat.top .bub::after{top:-5px;bottom:auto;left:16px;right:auto;transform:rotate(45deg)}
+  .ld #ldTable[data-n="3"] .seat.top.rside .bub{left:auto;right:4px}
+  .ld #ldTable[data-n="3"] .seat.top.rside .bub::after{left:auto;right:16px}
+}
+.ld-box.min p.tut-ng:not([hidden]){display:block}

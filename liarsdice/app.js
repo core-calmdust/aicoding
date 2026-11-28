@@ -387,6 +387,7 @@ function render() {
   h += mid;
   patch(box, h);
   box.classList.toggle('reveal', !!rev);
+  box.dataset.n = n;
   renderActbar(); renderSide(); renderNums();
   if (window.LdTut) LdTut.ev('render');
 }

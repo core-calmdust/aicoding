@@ -24,7 +24,8 @@ const myTurn = () => bidding() && G().round.turn === 0;
 const counted = () => !!(U().rev && U().rev.done);
 const SEAT = p => `.seat.s${p} .plate`, BUB = p => `.seat.s${p} .bub`, CUP = p => `.seat.s${p} .cup`;
 /* the steps. k: info (read, then Next) · bid / dudo (do it on the table). ch: the chapter. when: the moment the step waits for.
-   at: one ring per entry (an entry may be a list: one ring around them all); atPh: the rings on phones, when fewer. pics: a small picture in the bubble. center: no ring. */
+   at: one ring per entry (an entry may be a list: one ring around them all). see: what the text talks about without a ring —
+   the bubble must not cover it either (no ring, no veil hole). pics: a small picture in the bubble. center: no ring. */
 const STEPS = [
   { id: 'what', ch: 1, k: 'info', when: bidding, center: true, pics: 'what' },
   { id: 'mine', ch: 1, k: 'info', when: bidding, at: ['.seat.me .dice'] },
@@ -35,17 +36,17 @@ const STEPS = [
   { id: 'goal', ch: 1, k: 'info', when: bidding, at: [SEAT(0), SEAT(1), SEAT(2)] },
   { id: 'go', ch: 1, k: 'info', when: bidding, center: true },
   { id: 'n1', ch: 2, k: 'info', when: bots(1), at: [[BUB(1), SEAT(1)], '.mid-bid'] },
-  { id: 'wild', ch: 2, k: 'info', when: bots(1), at: ['.seat.me .dice', '.mid .wildt'], atPh: ['.seat.me .dice'] },
-  { id: 'n2', ch: 2, k: 'info', when: bots(2), at: [[BUB(2), SEAT(2)], '.mid-bid'] },
-  { id: 'p1', ch: 2, k: 'bid', when: myTurn, at: [['#actbar .bld'], '#abBid'], meter: 'bid' },
-  { id: 'n3', ch: 2, k: 'info', when: bots(3), at: [[BUB(1), SEAT(1)], '.mid .hist'] },
-  { id: 'n4', ch: 2, k: 'info', when: bots(4), at: [[BUB(2), SEAT(2)], '.mid-bid'] },
-  { id: 'p2', ch: 2, k: 'dudo', when: myTurn, at: ['.mid-bid', '#abDudo'], atPh: ['#abDudo'], meter: 'dudo' },
-  { id: 'c1', ch: 2, k: 'info', when: counted, at: ['.mid .count', '.mid .verdict'] },
+  { id: 'wild', ch: 2, k: 'info', when: bots(1), at: ['.seat.me .dice', '.mid .wildt'] },
+  { id: 'n2', ch: 2, k: 'info', when: bots(2), at: [[BUB(2), SEAT(2)], '.mid-bid'], see: [BUB(1)] },
+  { id: 'p1', ch: 2, k: 'bid', when: myTurn, at: [['#actbar .bld'], '#abBid'], see: ['.mid-bid', '.seat.me .dice'], meter: 'bid' },
+  { id: 'n3', ch: 2, k: 'info', when: bots(3), at: [[BUB(1), SEAT(1)], '.mid .hist'], see: [BUB(0)] },
+  { id: 'n4', ch: 2, k: 'info', when: bots(4), at: [[BUB(2), SEAT(2)], '.mid-bid'], see: ['.seat.me .dice', [BUB(1), SEAT(1)]] },
+  { id: 'p2', ch: 2, k: 'dudo', when: myTurn, at: ['.mid-bid', '#abDudo'], see: [[BUB(1), SEAT(1)], [BUB(2), SEAT(2)], '.seat.me .dice'], meter: 'dudo' },
+  { id: 'c1', ch: 2, k: 'info', when: counted, at: ['.mid .count', '.mid .verdict'], see: ['.seat.s1 .dice', ['.seat.s2 .dice', SEAT(2)], '.seat.me .dice'] },
   { id: 'c2', ch: 2, k: 'info', when: counted, at: [['.seat.s2 .dice', SEAT(2)], ['.seat.s1 .dice']] },
   { id: 'pal', ch: 3, k: 'info', when: counted, center: true, pics: 'pal' },
   { id: 'calza', ch: 3, k: 'info', when: counted, center: true, pics: 'calza' },
-  { id: 'tools', ch: 3, k: 'info', when: counted, at: ['#btnHint', '#btnCalc', '#btnLesson', '#btnRules'] },
+  { id: 'tools', ch: 3, k: 'info', when: counted, at: ['#btnHint', '#btnCalc', '#btnLesson', '#btnRules'], see: ['.coach-card'] },
   { id: 'end', ch: 3, k: 'info', when: counted, center: true, last: true },
 ];
 let on = false, idx = 0, sp = 0, layer = null, box = null, mask = null, rings = null, tab0 = null;
@@ -67,15 +68,21 @@ function bot(g, p) {
   return AI.decide(g, p, 3);   // (the script and the table disagree: never happens with the fixed dice)
 }
 const okBid = a => a.t === 'bid' && a.f === TASK_F && TASK_Q.includes(a.q);
+// a wrong move: the reason in the bubble (not a toast: at the bottom it would cover the buttons), and the bubble shakes
+function ng(k) {
+  const e = box && box.querySelector('.tut-ng');
+  if (e && layer.classList.contains('show')) { e.textContent = t(k); e.hidden = false; place(); } else A.toast(t(k));
+  shake(); return false;
+}
 function allow(a) {
   const st = cur();
-  if (!st || !active() || st.k === 'info') { A.toast(t(st && st.k === 'info' && active() ? 'tu.ngNext' : 'tu.watch')); shake(); return false; }
+  if (!st || !active() || st.k === 'info') return ng(st && st.k === 'info' && active() ? 'tu.ngNext' : 'tu.watch');
   if (st.k === 'bid') {
-    if (a.t !== 'bid') { A.toast(t('tu.ngBidNow')); shake(); return false; }
-    if (!okBid(a)) { A.toast(t('tu.ngBid')); shake(); return false; }
+    if (a.t !== 'bid') return ng('tu.ngBidNow');
+    if (!okBid(a)) return ng('tu.ngBid');
     return true;
   }
-  if (a.t !== 'dudo') { A.toast(t('tu.ngDudo')); shake(); return false; }
+  if (a.t !== 'dudo') return ng('tu.ngDudo');
   return true;
 }
 function after(a) {
@@ -154,7 +161,7 @@ function rectOf(sel) {
   }));
   return r;
 }
-let lastKey = '';
+let lastKey = '', opened = -1;
 function show() {
   if (!on) return;
   ensure();
@@ -163,6 +170,7 @@ function show() {
   if (act && phone() && A.showTab && A.set.mTab !== 'coach') A.showTab('coach');
   const key = idx + ':' + act + ':' + A.LANG;
   if (key !== lastKey) {
+    if (lastKey.split(':')[0] !== String(idx)) { if (box.classList.contains('auto')) box.classList.remove('min', 'auto'); opened = -1; }
     lastKey = key;
     let inner;
     if (!act) inner = `<p class="tp-wait">${esc(t('tu.watch'))}</p>`;
@@ -170,14 +178,14 @@ function show() {
       const btn = st.k === 'info' ? `<button type="button" class="mbtn go" id="tuNext">${esc(st.last ? t('tu.done') : t('tu.next'))}</button>`
         : `<span class="tut-do">👉 ${esc(t(st.k === 'bid' ? 'tu.doBid' : 'tu.doDudo'))}</span>`;
       const canBack = idx > 0 && STEPS[idx - 1].when === st.when;
-      inner = `<b class="tp-h">${esc(t('tu.' + st.id + '.t'))}</b><p>${t('tu.' + st.id + '.b')}</p>${st.pics && PICS[st.pics] ? PICS[st.pics]() : ''}<div class="tut-mt"></div><div class="tut-btns">${canBack ? `<button type="button" class="mbtn" id="tuBack">${esc(t('tu.back'))}</button>` : ''}${btn}</div>`;
+      inner = `<b class="tp-h">${esc(t('tu.' + st.id + '.t'))}</b><p>${t('tu.' + st.id + '.b')}</p>${st.pics && PICS[st.pics] ? PICS[st.pics]() : ''}<div class="tut-mt"></div><p class="tut-ng" role="alert" hidden></p><div class="tut-btns">${canBack ? `<button type="button" class="mbtn" id="tuBack">${esc(t('tu.back'))}</button>` : ''}${btn}</div>`;
     }
     box.innerHTML = `<div class="tut-top"><em>${esc(t('tu.chap' + st.ch))} · ${esc(t('tu.step', { n, m: tot }))}</em><span class="tut-tr"><button type="button" class="tut-x" id="tuMin">${esc(t(box.classList.contains('min') ? 'tu.max' : 'tu.min'))}</button><button type="button" class="tut-x" id="tuQuit">${esc(t('tu.quit'))}</button></span></div>` +
       `<span class="tut-prog" aria-hidden="true"><i style="width:${Math.round(n / tot * 100)}%"></i></span><div class="tp-body">${inner}</div>`;
     const nb = $('#tuNext'); if (nb) { nb.onclick = next; setTimeout(() => { try { nb.focus({ preventScroll: true }); } catch (e) {} }, 30); }
     const bb = $('#tuBack'); if (bb) bb.onclick = back;
     $('#tuQuit').onclick = () => A.confirmBox(t('tu.quitQ'), () => { finish(); A.toast(t('tu.quitDone')); });
-    $('#tuMin').onclick = () => { box.classList.toggle('min'); lastKey = ''; show(); };
+    $('#tuMin').onclick = () => { const was = box.classList.contains('min'); box.classList.toggle('min', !was); box.classList.remove('auto'); opened = was ? idx : -1; lastKey = ''; show(); };
   }
   const mt = box.querySelector('.tut-mt'); if (mt) { const h = meterHtml(st); if (mt.innerHTML !== h) mt.innerHTML = h; }
   layer.classList.add('show');
@@ -201,8 +209,8 @@ function place() {
   if (!layer || !layer.classList.contains('show')) return;
   const st = cur(); if (!st) return;
   const act = active(), W = innerWidth, H = innerHeight, m = 10, pad = phone() ? 5 : 8;
-  const at = phone() && st.atPh ? st.atPh : st.at;   // (phones: a tall bubble leaves room for fewer rings)
-  const list = act && at ? at.map(rectOf).filter(Boolean) : [];
+  const list = act && st.at ? st.at.map(rectOf).filter(Boolean) : [];
+  const keep = act ? seeRects(st) : [];
   paint(list, pad);
   layer.classList.toggle('center', !list.length && act); layer.classList.toggle('watch', !act);
   // while the computer plays: no veil, a small box at the bottom (the table stays in full view)
@@ -211,27 +219,48 @@ function place() {
     box.style.left = (phone() ? m : Math.max(m, (W - bw) / 2)) + 'px'; box.style.top = (phone() ? m : H - bh - m) + 'px'; return;
   }
   // phones: the bubble docks at the top or the bottom, on the side away from what it points at
+  // phones: full width; the top, the bottom, or a free band between the things to keep in view
   if (phone()) {
     box.style.width = (W - 2 * m) + 'px'; box.style.left = m + 'px';
-    const bh = box.offsetHeight;
-    if (!list.length) { box.style.top = Math.max(m, (H - bh) / 2) + 'px'; return; }
-    const top = m, bot = H - bh - m;
-    const cover = y => list.reduce((a, r) => a + Math.max(0, Math.min(y + bh, r.b + pad) - Math.max(y, r.t - pad)), 0);
-    const u = list.reduce((a, r) => ({ t: Math.min(a.t, r.t), b: Math.max(a.b, r.b) }), { t: 1e9, b: -1e9 });
-    box.style.top = (cover(top) < cover(bot) || (cover(top) === cover(bot) && u.t + u.b > H) ? top : bot) + 'px';
+    box.classList.remove('tight');
+    let bh = box.offsetHeight;
+    if (!list.length && !keep.length) { box.style.top = Math.max(m, (H - bh) / 2) + 'px'; return; }
+    const obs = list.map(r => ({ r, w: 3 })).concat(keep.map(r => ({ r, w: 1 })));
+    const cover = y => obs.reduce((a, o) => a + o.w * Math.max(0, Math.min(y + bh, o.r.b + pad) - Math.max(y, o.r.t - pad)), 0);
+    const pick = () => {
+      const ys = [m, H - bh - m].concat(...obs.map(o => [o.r.b + pad + 4, o.r.t - pad - 4 - bh])).filter(y => y >= m - .5 && y + bh <= H - m + .5);
+      const free = ys.filter(y => cover(y) === 0);
+      return free.length ? free[0] : null;
+    };
+    let y = pick();
+    // no free band: the compact bubble (smaller text and gaps); still none (short phones): folded to the title, the meter and
+    // what to do — "Open" shows the text again (the player's choice, kept for the step)
+    if (y == null) { box.classList.add('tight'); bh = box.offsetHeight; y = pick(); }
+    if (y == null && opened !== idx && !box.classList.contains('min')) {
+      box.classList.add('min', 'auto'); const mb = $('#tuMin'); if (mb) mb.textContent = t('tu.max'); bh = box.offsetHeight; y = pick();
+    }
+    if (y == null) y = [m, H - bh - m].concat(...obs.map(o => [o.r.b + pad + 4, o.r.t - pad - 4 - bh])).map(v => Math.max(m, Math.min(H - bh - m, v))).sort((a, b) => cover(a) - cover(b))[0];
+    box.style.top = y + 'px';
     return;
   }
   box.style.width = ''; const bw = box.offsetWidth, bh = box.offsetHeight;
-  if (!list.length) { box.style.left = Math.max(m, (W - bw) / 2) + 'px'; box.style.top = Math.max(m, (H - bh) / 2) + 'px'; return; }
-  const u = list.reduce((a, r) => ({ l: Math.min(a.l, r.l), t: Math.min(a.t, r.t), r: Math.max(a.r, r.r), b: Math.max(a.b, r.b) }), { l: 1e9, t: 1e9, r: -1e9, b: -1e9 });
+  if (!list.length && !keep.length) { box.style.left = Math.max(m, (W - bw) / 2) + 'px'; box.style.top = Math.max(m, (H - bh) / 2) + 'px'; return; }
+  const ul = list.length ? list : keep;
+  const u = ul.reduce((a, r) => ({ l: Math.min(a.l, r.l), t: Math.min(a.t, r.t), r: Math.max(a.r, r.r), b: Math.max(a.b, r.b) }), { l: 1e9, t: 1e9, r: -1e9, b: -1e9 });
   const cx = (u.l + u.r) / 2, cy = (u.t + u.b) / 2, g = 22;
   const clampX = x => Math.max(m, Math.min(W - bw - m, x)), clampY = y => Math.max(m, Math.min(H - bh - m, y));
   const cand = [[clampX(cx - bw / 2), u.b + g], [clampX(cx - bw / 2), u.t - g - bh], [u.r + g, clampY(cy - bh / 2)], [u.l - g - bw, clampY(cy - bh / 2)],
     [m, m], [W - bw - m, m], [m, H - bh - m], [W - bw - m, H - bh - m], [clampX(W * .5 - bw / 2), clampY(H * .42 - bh / 2)]];
-  const over = ([x, y]) => list.reduce((a, r) => a + Math.max(0, Math.min(x + bw, r.r + pad) - Math.max(x, r.l - pad)) * Math.max(0, Math.min(y + bh, r.b + pad) - Math.max(y, r.t - pad)), 0);
+  const ov1 = ([x, y], r) => Math.max(0, Math.min(x + bw, r.r + pad) - Math.max(x, r.l - pad)) * Math.max(0, Math.min(y + bh, r.b + pad) - Math.max(y, r.t - pad));
+  const over = p => list.reduce((a, r) => a + 3 * ov1(p, r), 0) + keep.reduce((a, r) => a + ov1(p, r), 0);
   const inside = ([x, y]) => x >= m - .5 && y >= m - .5 && x + bw <= W - m + .5 && y + bh <= H - m + .5;
   const best = cand.find(p => inside(p) && over(p) === 0) || cand.map(([x, y]) => [clampX(x), clampY(y)]).sort((a, b) => over(a) - over(b))[0];
   box.style.left = best[0] + 'px'; box.style.top = best[1] + 'px';
+}
+// what the text talks about (see), clipped to the screen; off-screen parts do not count
+function seeRects(st) {
+  const W = innerWidth, H = innerHeight;
+  return (st.see || []).map(rectOf).filter(Boolean).map(r => ({ l: Math.max(0, r.l), t: Math.max(0, r.t), r: Math.min(W, r.r), b: Math.min(H, r.b) })).filter(r => r.r - r.l > 4 && r.b - r.t > 4);
 }
 function hide() { if (layer) { layer.classList.remove('show'); box.innerHTML = ''; rings.innerHTML = ''; lastKey = ''; } }
 function shake() { if (!box) return; box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake'); A.sfx('bad'); }
@@ -250,7 +279,7 @@ function offer(force) {
   const close = () => { if ($('#toNo').checked) try { localStorage.setItem(HIDE, '1'); } catch (e) {} ov.remove(); if (A.G && A.U.phase === 'bid') A.loop(); };
   $('#toLater').onclick = close; $('#toGo').onclick = () => { ov.remove(); start(); };
 }
-window.LdTut = { start, on: () => on, step: () => STEPS[idx], hold, allow, after, bot, ev, hint, finish, stop, offer, STEPS, SCRIPT, HANDS, TASK: { f: TASK_F, q: TASK_Q } };
+window.LdTut = { start, on: () => on, step: () => STEPS[idx], seeRects: () => (cur() ? seeRects(cur()) : []), hold, allow, after, bot, ev, hint, finish, stop, offer, STEPS, SCRIPT, HANDS, TASK: { f: TASK_F, q: TASK_Q } };
 // first visit: the offer box once the page has settled (not over another dialog)
 setTimeout(() => { if (!document.querySelector('.overlay.show')) offer(false); }, 900);
 })();
