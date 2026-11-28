@@ -2216,3 +2216,9 @@ html[dir=rtl] .cx-t tr.cur td:first-child{box-shadow:inset -3px 0 0 #ffd36a}
   .ld .review-modal .lr-body{flex:1 1 auto;min-height:0;overflow:auto;align-content:start}
 }
 @media (max-width:760px){.tiles.dicet .dice-pv img{width:22px;height:22px}}
+/* lesson pages on phones: the footer buttons share the width (three long labels did not fit in Arabic); the score reads left to right */
+@media (max-width:760px){
+  .lesson-modal .lq > .modal-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:8px}
+  .lesson-modal .lq > .modal-actions .mbtn{min-width:0;white-space:normal;line-height:1.25;padding-inline:6px}
+}
+.lq-score{direction:ltr;unicode-bidi:isolate}
