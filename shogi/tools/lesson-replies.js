@@ -27,7 +27,7 @@ function replies(sfen, quick) {
 const L = JSON.parse(fs.readFileSync(path.join(ROOT, 'lessons.json'), 'utf8'));
 let n = 0; const t0 = Date.now();
 for (const g of L.grades) g.problems.forEach((p, i) => {
-  if (p.kind !== 'best') return;
+  if (p.kind !== 'best' || p.src === 'fork' || p.src === 'deep') return;   // (k5 and k1 say the opponent's reply from P.rep: set-fork.js / set-deep.js)
   out[g.id + '/' + i] = replies(p.sfen); n++;
   process.stderr.write(`\r${n} positions, ${((Date.now() - t0) / 1000).toFixed(0)} s`);
 });
