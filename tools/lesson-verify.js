@@ -3168,10 +3168,12 @@ function shogiOpen(opt) {
   // (there is no line here), "近づく" only for a castle move, "近づかない / 進まない / 遠いまま" only for the others, "AIの評価が…下がる"
   // only 100+ below, captures / recaptures / king / bishop's line / edge pawn / rook claims on the board, the near words only 10+ points.
   {
-    const SHC_DONE = new Set(['c_mino', 'c_yagura', 'c_funa', 'c_takamino', 'c_ginkan', 'c_hidarimino', 'c_kinmusou', 'c_furiana', 'c_ibiana']), SRCC = require(path.join(ROOT, 'shogi/tools/openings/src/castle.js')), KIF = require(path.join(ROOT, 'shogi/tools/openings/kif.js'));
+    const SHC_DONE = new Set(['c_mino', 'c_yagura', 'c_funa', 'c_takamino', 'c_ginkan', 'c_hidarimino', 'c_kinmusou', 'c_furiana', 'c_ibiana', 'c_elmo']), SRCC = require(path.join(ROOT, 'shogi/tools/openings/src/castle.js')), KIF = require(path.join(ROOT, 'shogi/tools/openings/kif.js'));
     if (!src.includes("sort((a, b) => (a.off ? a.dd : a.ply) - (b.off ? b.dd : b.ply))")) add('-', -1, '⑥ the 3D castle problems are not drawn in the dd order');
     const linePos = []; for (const c of CATS) require(path.join(ROOT, `shogi/tools/openings/src/${c}.js`)).forEach(e => { try { const q = new E.Position(); q.setSfen(e.start || KIF.START); for (const u of KIF.conv(e.line, e.start).usi) { q.doMove(q.fromUsi(u)); q.sp = 0; linePos.push([e.id + ' line', CU.brd(q.sfen())]); } } catch (er) {} });
     const STEP = { 4: [[0, -1], [1, -1], [-1, -1], [1, 1], [-1, 1]], 7: [[0, -1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1]], 8: [[0, -1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1], [1, 1], [-1, 1]], 3: [[1, -2], [-1, -2]] };
+    STEP[5] = [];   // (2026-11-28 c_millennium: the bishop slides; on an empty board every diagonal distance is one move)
+    for (let k = 1; k <= 8; k++) STEP[5].push([k, k], [k, -k], [-k, k], [-k, -k]);
     const dist1 = (tp, a0, b0) => { const d = new Array(81).fill(99), q = [a0]; d[a0] = 0; while (q.length) { const s0 = q.shift(), f = E.sqFile(s0), r = E.sqRank(s0); for (const [df, dr] of STEP[tp] || []) { const f2 = f - df, r2 = r + dr; if (f2 < 1 || f2 > 9 || r2 < 1 || r2 > 9) continue; const s2 = E.makeSq(f2, r2); if (d[s2] > d[s0] + 1) { d[s2] = d[s0] + 1; q.push(s2); } } } return d[b0]; };
     for (const s of sets) { if (!SHC_DONE.has(s.id)) continue; if (process.env.SHO_ONLY && !process.env.SHO_ONLY.split(',').includes(s.id)) continue; const id = s.id, e = SRCC.find(x => x.id === id), nm = String(s.title.ja), VO = X.shOpVoice(id), hs = id.length * 3;
       const q0 = new E.Position(); q0.setSfen(e.start || KIF.START); for (const u of KIF.conv(e.line, e.start).usi) { q0.doMove(q0.fromUsi(u)); q0.sp = 0; }

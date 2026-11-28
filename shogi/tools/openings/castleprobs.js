@@ -26,6 +26,8 @@ const SQ = s => E.makeSq(+s[0], +s[1]);
 const targets = e.story.marks.map(m => ({ sq: SQ(m), t: E.typeOf(fin[SQ(m)]) }));
 // one step of each piece type (☗: rank 1 is forward), on an empty board
 const STEP = { 4: [[0, -1], [1, -1], [-1, -1], [1, 1], [-1, 1]], 7: [[0, -1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1]], 8: [[0, -1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1], [1, 1], [-1, 1]], 3: [[1, -2], [-1, -2]] };
+STEP[5] = [];   // (2026-11-28 c_millennium: the bishop slides; on an empty board every diagonal distance is one move)
+for (let k = 1; k <= 8; k++) STEP[5].push([k, k], [k, -k], [-k, k], [-k, -k]);
 const DIST = {};
 function dist(t, a, b) {   // fewest moves of a ☗ piece of type t from a to b on an empty board (∞ if none)
   const k = t + ':' + a; if (!DIST[k]) { const d = new Array(81).fill(99), q = [a]; d[a] = 0;
