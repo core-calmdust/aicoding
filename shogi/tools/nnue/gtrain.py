@@ -9,6 +9,7 @@ small MLP beside the linear output, on the clipped (not squared) first-layer out
     --passes P  how many times the data is gone through (may be a fraction); --max N: only the first N positions
     --lr 0.001 --lr-end 0.00003   Adam; the rate falls geometrically from --lr to --lr-end over the run (--warmup 500 steps)
     --lambda 0.75 --oscale 0.805  as trainkp.c (target = L x sigmoid(score / 600) + (1 - L) x result; output = s x scale)
+    --scale 600                   the 600 of that target (2026-11-28)
     --batch 16384 --threads 8 (the decoder's) --ft dense|gather (how the first layer is computed: --bench measures both)
     --snap N    also writes out.bin.pNNN every N positions (default 500 million), to play the stages against each other
   out.bin is written at every report; out.bin.ckpt (weights, Adam's state, the position) every 10 minutes: the same
@@ -111,10 +112,11 @@ class Net(torch.nn.Module):
                     f.write(rq(MC[k], QM, 32767, '<i2'))
         os.replace(path + '.tmp', path)
 
+SCALE = 600.0   # --scale: the score that is a win probability of 73% in the target
 def tensors(c, dev, lam, lend, lply):
     fu, ft, sc, rs, ply, bk = c
     t = lambda a, dt: torch.from_numpy(a.astype(dt)).to(dev)
-    e = torch.sigmoid(t(sc, np.float32) / 600.0); r = t(rs, np.float32); w = (r > -1.5).float(); res = (r.clamp(-1, 1) + 1) * 0.5
+    e = torch.sigmoid(t(sc, np.float32) / SCALE); r = t(rs, np.float32); w = (r > -1.5).float(); res = (r.clamp(-1, 1) + 1) * 0.5
     L = lam if lply <= 0 else lend + (lam - lend) * (1 - t(ply, np.float32) / lply).clamp(min=0)
     return t(fu, np.int32), t(ft, np.int32), t(bk, np.int64), L * e + (1 - L) * res, w
 
@@ -128,11 +130,13 @@ def main():
     ap.add_argument('--lr', type=float, default=0.001); ap.add_argument('--lr-end', type=float, default=0.00003)
     ap.add_argument('--lambda', dest='lam', type=float, default=0.75); ap.add_argument('--lambda-end', type=float, default=0.0)
     ap.add_argument('--lambda-ply', type=int, default=0); ap.add_argument('--oscale', type=float, default=0.805)
+    ap.add_argument('--scale', type=float, default=600.0)   # target = sigmoid(score / scale); the output keeps its size (score x oscale) whatever the scale (other trainers: 361 to 511; this data's results fit 400)
     ap.add_argument('--batch', type=int, default=16384); ap.add_argument('--threads', type=int, default=8)
     ap.add_argument('--ft', default='dense', choices=['dense', 'gather']); ap.add_argument('--val', default='')
     ap.add_argument('--snap', type=int, default=500_000_000); ap.add_argument('--device', default='')
     ap.add_argument('--report', type=int, default=20_000_000); ap.add_argument('--warmup', type=int, default=500)
     a = ap.parse_args()
+    global SCALE; SCALE = a.scale
     dev = torch.device(a.device or ('mps' if torch.backends.mps.is_available() else 'cuda' if torch.cuda.is_available() else 'cpu'))
     if a.bench: paths, out = a.train, None
     else:
@@ -156,7 +160,7 @@ def main():
         fu, ft, bk, tg, w = tensors(c, dev, a.lam, a.lambda_end, a.lambda_ply)
         return fu, ft, bk, tg, w
     def run_batch(fu, ft, bk, tg, w, mode, train=True):
-        o = net(fu, ft, bk, mode); d = torch.sigmoid(o / a.oscale) - tg; loss = (w * d * d).sum() / w.sum().clamp(min=1)
+        o = net(fu, ft, bk, mode); d = torch.sigmoid(o * (600.0 / SCALE) / a.oscale) - tg; loss = (w * d * d).sum() / w.sum().clamp(min=1)
         if train: opt.zero_grad(set_to_none=True); loss.backward(); opt.step(); net.clip()
         return loss
 
