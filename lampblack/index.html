@@ -657,19 +657,26 @@ body.scr-play{-webkit-user-select:none;user-select:none}
 
 /* ---------- 演出（cine.js）：カメラ・光・粒子 ---------- */
 #cam{position:absolute;inset:0;transform-origin:0 0;will-change:transform}
-#cineShade{position:absolute;inset:0;z-index:5;pointer-events:none;opacity:0;mix-blend-mode:multiply;transition:opacity 1.4s;background:radial-gradient(44vmax 34vmax at var(--lx,50%) var(--ly,40%),rgba(26,12,4,0) 0%,rgba(26,12,4,.14) 34%,rgba(22,10,3,.6) 72%,rgba(14,6,2,.92) 100%)}
-body.night #cineShade{background:radial-gradient(44vmax 34vmax at var(--lx,50%) var(--ly,40%),rgba(4,8,20,0) 0%,rgba(4,8,20,.14) 34%,rgba(4,8,20,.6) 72%,rgba(2,4,12,.9) 100%)}
-#cineBloom{position:absolute;inset:0;z-index:5;pointer-events:none;opacity:0;mix-blend-mode:screen;transition:opacity 1.4s;background:radial-gradient(34vmax 30vmax at var(--lx,50%) var(--ly,40%),color-mix(in srgb,var(--lamp) 55%,transparent),transparent 70%)}
-body.night #cineBloom{background:radial-gradient(34vmax 30vmax at var(--lx,50%) var(--ly,40%),rgba(190,210,255,.45),transparent 70%)}
+#cineShade{position:absolute;inset:0;z-index:5;pointer-events:none;opacity:0;transition:opacity 1.4s;background:radial-gradient(44vmax 34vmax at var(--lx,50%) var(--ly,40%),rgba(20,9,2,0) 0%,rgba(20,9,2,.08) 34%,rgba(18,8,2,.42) 72%,rgba(10,4,1,.72) 100%)}
+body.night #cineShade{background:radial-gradient(44vmax 34vmax at var(--lx,50%) var(--ly,40%),rgba(3,6,16,0) 0%,rgba(3,6,16,.08) 34%,rgba(3,6,16,.42) 72%,rgba(1,3,10,.72) 100%)}
+#cineBloom{position:absolute;inset:0;z-index:5;pointer-events:none;opacity:0;transition:opacity 1.4s;background:radial-gradient(34vmax 30vmax at var(--lx,50%) var(--ly,40%),color-mix(in srgb,var(--lamp) 24%,transparent),transparent 70%)}
+body.night #cineBloom{background:radial-gradient(34vmax 30vmax at var(--lx,50%) var(--ly,40%),rgba(190,210,255,.16),transparent 70%)}
 #cineSky{position:absolute;left:0;top:0;z-index:5;pointer-events:none}
-#cineGrain{position:absolute;inset:0;z-index:5;pointer-events:none;mix-blend-mode:overlay;opacity:0;transition:opacity 1s;animation:cineGrain .5s steps(1) infinite}
-body.cine-on #cineGrain{opacity:.07}
-@keyframes cineGrain{0%{background-image:var(--g0);background-position:0 0}25%{background-image:var(--g1);background-position:-37px 61px}50%{background-image:var(--g2);background-position:83px -29px}75%{background-image:var(--g3);background-position:-12px -77px}}
+#cineGrain{position:absolute;inset:-128px;z-index:5;pointer-events:none;opacity:.55;background-image:var(--g0);will-change:transform;animation:cineGrain .48s steps(1) infinite}
+@keyframes cineGrain{0%{transform:translate(0,0)}25%{transform:translate(-37px,61px)}50%{transform:translate(83px,-29px)}75%{transform:translate(-12px,-77px)}}
+#scene svg.scn.cine-far,#scene svg.scn.cine-mid{will-change:transform}
+#scene svg.scn.cine-far .mid,#scene svg.scn.cine-far .near,#scene svg.scn.cine-mid .far,#scene svg.scn.cine-mid .near,#scene svg.scn.cine-near .far,#scene svg.scn.cine-near .mid{display:none}
 #cast .pp.cine-dim{filter:blur(2.6px);opacity:.74}
+body.cine-on #cast .pp .nm{opacity:0;transition:opacity .3s}
+body.cine-on #cast .pp.speak .pup{filter:drop-shadow(0 0 10px color-mix(in srgb,var(--cel,#fff) 35%,transparent));opacity:1}
 #cast .pp{transition:left .7s cubic-bezier(.3,.7,.2,1),bottom .7s,transform .5s,opacity .6s,filter .9s}
 #fx .run.cine-gallop{filter:blur(1.2px)}
+#cineFg{position:absolute;z-index:5;display:none;pointer-events:none;color:var(--ink);filter:blur(14px) brightness(.6);opacity:.96}
+#cineFg .pup{width:100%;height:100%;color:var(--ink)}
+#cineFg .rod{display:none}
+body.night #cineFg{color:#05070d}
 .cine-lens{position:absolute;bottom:-30%;width:260vw;color:#030407;filter:blur(16px);z-index:6;pointer-events:none;display:none}
-body.anim-off #cineGrain,body.anim-off #cineSky{display:none}
+body.anim-off #cineGrain{animation:none}body.anim-off #cineSky{display:none}
 </style>
 </head>
 <body class="scr-title">
@@ -775,7 +782,7 @@ body.anim-off #cineGrain,body.anim-off #cineSky{display:none}
 <script src="stories/kiteki.who.open.js?v=2"></script>
 <script src="tutorial.js?v=7"></script>
 <script src="sound.js?v=14"></script>
-<script src="cine.js?v=1"></script>
-<script src="game.js?v=78"></script>
+<script src="cine.js?v=4"></script>
+<script src="game.js?v=81"></script>
 </body>
 </html>
