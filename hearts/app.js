@@ -22,7 +22,7 @@ D.stats = Object.assign(ST0(), D.stats || {});
 D.rev = D.rev || [];
 const set = D.set;
 ['felt', 'back', 'court', 'cmode'].forEach(k => { document.documentElement.dataset[k] = set[k]; });
-function save() { try { localStorage.setItem(STORE, JSON.stringify(D)); } catch (e) { try { D.rev = D.rev.slice(-10); localStorage.setItem(STORE, JSON.stringify(D)); } catch (e2) {} } }
+function save() { try { localStorage.setItem(STORE, JSON.stringify(D.cur && D.cur.tut ? Object.assign({}, D, { cur: D.prevCur || null, prevCur: null }) : D)); } catch (e) { try { D.rev = D.rev.slice(-10); localStorage.setItem(STORE, JSON.stringify(D)); } catch (e2) {} } }
 
 /* ---------------- language ---------------- */
 let LANG = (() => { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo)\b|^zh-hant/.test(n)) return 'zh-TW'; return SUPPORTED.find(c => c !== 'zh-TW' && n.startsWith(c.toLowerCase())) || 'en'; })();
@@ -160,6 +160,7 @@ const LV = () => G ? G.lvl : set.lvl;
 const isMe = s => s === 0;
 const pace = () => !set.anim ? .4 : set.speed === 'slow' ? 1.5 : set.speed === 'fast' ? .55 : 1;
 const frozen = () => !!(window.__focusGate && window.__focusGate.frozen) || !!document.querySelector('.overlay.show:not(#resOverlay)');
+const TUT = () => !!(window.HtTut && HtTut.on());
 let schedN = 0;
 function sched(fn, ms) {
   clearTimeout(U.timer); const my = ++schedN, end = performance.now() + (ms || 0);
@@ -167,7 +168,7 @@ function sched(fn, ms) {
   U.timer = setTimeout(tick, Math.max(0, Math.min(ms || 0, 150)));
 }
 function unsched() { schedN++; clearTimeout(U.timer); }
-function persist() { if (!G) return; D.cur = { G, S, res: U.res, dec: U.dec, passInfo: U.passInfo }; save(); }
+function persist() { if (!G || TUT()) return; D.cur = { G, S, res: U.res, dec: U.dec, passInfo: U.passInfo }; save(); }
 function rulesFromSet(v) {
   const o = { v: v || set.v };
   const base = HT.VARIANTS[o.v];
@@ -179,6 +180,7 @@ function rulesFromSet(v) {
   return o;
 }
 function newGame(o) {
+  if (TUT()) { HtTut.drop(); D.cur = D.prevCur || null; D.prevCur = null; }
   unsched(); recordAbandon();
   o = o || {};
   G = HT.newGame(rulesFromSet(o.v));
@@ -195,6 +197,7 @@ function startHand() {
 }
 function aiPasses() {
   const my = G.id, no = S.no;
+  if (TUT()) { for (const s of [1, 2, 3]) S.pass[s] = HtTut.passOf(s); render(); return; }
   for (const s of [1, 2, 3]) if (!S.pass[s]) think('pass', S, s, LV()).then(r => { if (!G || G.id !== my || !S || S.no !== no || S.phase !== 'pass') return; S.pass[s] = r && r.length === 3 ? r : AI.heurPass(S.hands[s], S.R, S.dir); persist(); render(); if (S.pass[0]) sched(loop, 200); });
 }
 
@@ -204,7 +207,8 @@ function loop() {
   unsched();
   if (!S || U.res) return;
   if (S.phase === 'pass') {
-    if (!S.pass[0]) { render(); requestCoach(); return; }
+    if (!S.pass[0]) { render(); if (!TUT()) requestCoach(); return; }
+    if (TUT() && HtTut.hold()) { render(); return; }
     if (S.pass.some(p => !p)) { render(); return; }
     const recv = HT.passDir ? null : null;
     U.passInfo = { mine: S.pass[0].slice(), got: null, dir: S.dir };
@@ -214,7 +218,10 @@ function loop() {
   }
   if (S.phase === 'play') {
     if (U.trickShow) return;
-    if (isMe(S.turn)) { sfx('turn'); render(); requestCoach(); return; }
+    if (TUT() && HtTut.hold()) { U.think = false; render(); return; }
+    if (TUT() && HtTut.auto()) { const c = AI.fastPick(S, S.turn); sched(() => act(S.turn, c), 260); return; }
+    if (isMe(S.turn)) { sfx('turn'); render(); if (!TUT()) requestCoach(); return; }
+    if (TUT()) { const seat = S.turn, c = HtTut.bot(S, seat); U.think = true; render(); sched(() => { U.think = false; act(seat, c); }, 520 * pace()); return; }
     const seat = S.turn, my = ++thinking, key = S.log.length;
     U.think = true; render();
     const t0 = performance.now();
@@ -232,11 +239,12 @@ function act(seat, c) {
   let ev; try { ev = HT.play(S, seat, c); } catch (e) { console.error(e); toast(t('err.illegal')); return; }
   U.sel = null; U.coach = null;
   sfx(c === QS ? 'queen' : 'play');
-  if (!wasBroken && S.broken && suit(c) === 3) setTimeout(() => { sfx('break'); toast(t('msg.broken')); }, 120);
+  if (!wasBroken && S.broken && suit(c) === 3) setTimeout(() => { sfx('break'); if (!TUT()) toast(t('msg.broken')); }, 120);
   if (ev.trick) {
     U.trickShow = { cards: ev.trick.cards.map((x, i) => ({ s: S.tricks[S.tricks.length - 1].cards[i].s, c: x })), win: ev.trick.win, pts: ev.trick.pts, at: Date.now() };
     persist(); render();
-    sched(() => { sfx('take'); U.trickShow.go = 1; render(); sched(() => { U.trickShow = null; render(); if (ev.end) handEnd(); else loop(); }, 420 * Math.max(.6, pace())); }, 1000 * pace());
+    const collect = () => { if (TUT() && HtTut.hold()) { sched(collect, 150); return; } sfx('take'); U.trickShow.go = 1; render(); sched(() => { U.trickShow = null; render(); if (ev.end) handEnd(); else loop(); }, 420 * Math.max(.6, pace())); };
+    sched(collect, (TUT() && HtTut.auto() ? 500 : 1000) * pace());
     return;
   }
   persist(); render();
@@ -247,6 +255,7 @@ function act(seat, c) {
 function handEnd() {
   const R = HT.finishHand(G, S);
   U.res = R;
+  if (TUT()) { sfx('win'); render(); return; }   // the tutorial hand: no statistics, review or record
   const st = D.stats; st.hands++; st.pts += R.delta[0]; if (R.raw[0] === 0 || (R.moon === 0)) st.zero++;
   if (S.taken[0].includes(QS)) st.qs++;
   if (R.moon === 0) st.moonMe++; else if (R.moon > 0) st.moonThem++;
@@ -266,7 +275,7 @@ function saveReview() {
   const r = { at: Date.now(), no: S.no, R: S.R, dir: S.dir, start: S.start, dealt: S.dealt, pass: S.pass, got: S.got, log: S.log.map(e => [e.s, e.c]), delta: U.res.delta, raw: U.res.raw, moon: U.res.moon, lvl: LV(), dec: U.dec, passInfo: U.passInfo };
   D.rev.push(r); if (D.rev.length > 30) D.rev.splice(0, D.rev.length - 30);
 }
-function nextHand() { if (!G) return; if (G.over) { if (!document.querySelector('#resOverlay.show')) showGameEnd(); return; } U.res = null; startHand(); }
+function nextHand() { if (!G) return; if (TUT()) { HtTut.finish(); return; } if (G.over) { if (!document.querySelector('#resOverlay.show')) showGameEnd(); return; } U.res = null; startHand(); }
 function recordGame(place) {
   if (!window.GameRecord || !G || G.recorded) return;
   G.recorded = true;
@@ -274,7 +283,7 @@ function recordGame(place) {
   try { GameRecord.add({ mode: 'ai', res, opp: 'CPU ' + lvLabel(LV()), key: 'ai:' + LV(), n: G.hand, why: t('rec.place', { n: place + 1, s: G.scores[0] }) }); } catch (e) {}
 }
 function recordAbandon() {
-  if (!G || G.over || G.recorded || !G.hand || (S && S.phase === 'pass' && G.hand === 1)) return;
+  if (!G || G.tut || G.over || G.recorded || !G.hand || (S && S.phase === 'pass' && G.hand === 1)) return;
   D.stats.games++; D.stats.places[3]++; G.recorded = true;
   try { window.GameRecord && GameRecord.add({ mode: 'ai', res: 'l', opp: 'CPU ' + lvLabel(LV()), key: 'ai:' + LV(), n: G.hand, why: t('rec.resign') }); } catch (e) {}
 }
@@ -296,11 +305,14 @@ function tapCard(c) {
   if (!S || U.res) return;
   if (S.phase === 'pass') {
     if (S.pass[0]) return;
-    if (U.psel.has(c)) U.psel.delete(c); else { if (U.psel.size >= 3) { toast(t('msg.three')); sfx('bad'); return; } U.psel.add(c); }
+    if (TUT() && !HtTut.allow('pick', [c])) return;
+    if (U.psel.has(c)) U.psel.delete(c); else { if (U.psel.size >= 3) { if (TUT()) HtTut.say(t('msg.three')); else toast(t('msg.three')); sfx('bad'); return; } U.psel.add(c); }
     sfx('sel'); render(); return;
   }
   const L = myLegal(); if (!L.length) return;
-  if (!L.includes(c)) { sfx('bad'); toast(illegalWhy(c)); shake(c); return; }
+  if (!L.includes(c)) { sfx('bad'); if (TUT()) HtTut.say(illegalWhy(c)); else toast(illegalWhy(c)); shake(c); return; }
+  if (TUT() && !HtTut.allow('select', [c])) return;
+  if (TUT() && U.sel !== c) { U.sel = c; sfx('sel'); render(); return; }   // (the tutorial: a tap selects, so the gauge shows that card)
   if (U.sel === c || set.tap1) { playMine(c); return; }
   U.sel = c; sfx('sel'); render();
 }
@@ -315,6 +327,7 @@ function illegalWhy(c) {
 function shake(c) { const e = document.querySelector(`#htHand .cd[data-c="${c}"]`); if (!e) return; e.classList.remove('shake'); void e.offsetWidth; e.classList.add('shake'); }
 function playMine(c) {
   const L = myLegal(); if (!L.includes(c)) return;
+  if (TUT()) { if (!HtTut.allow('play', [c])) return; act(0, c); HtTut.after('play'); return; }
   // the decision record (graded now if the coach's numbers are ready, else later in the review)
   const key = stateKey();
   const ev = U.coach && U.coach.key === key && U.coach.list ? U.coach.list : null;
@@ -324,11 +337,14 @@ function playMine(c) {
 }
 function confirmPass() {
   if (!S || S.phase !== 'pass' || S.pass[0]) return;
-  if (U.psel.size !== 3) { toast(t('msg.three')); sfx('bad'); return; }
+  if (U.psel.size !== 3) { if (TUT()) HtTut.say(t('msg.three')); else toast(t('msg.three')); sfx('bad'); return; }
+  if (TUT() && !HtTut.allow('pass', [...U.psel])) return;
   S.pass[0] = [...U.psel]; U.psel = new Set(); sfx('play'); persist(); render(); sched(loop, 250);
+  if (TUT()) HtTut.after('pass');
 }
 function hint() {
   if (!S || U.res) return;
+  if (TUT()) { const w = HtTut.want(); if (!w) { HtTut.allow('hint', []); return; } if (S.phase === 'pass') U.psel = new Set(w); else U.sel = w[0]; sfx('sel'); render(); return; }
   if (S.phase === 'pass' && !S.pass[0]) {
     const best = U.coach && U.coach.pass ? U.coach.pass.slice().sort((a, b) => a.obj - b.obj)[0].cards : AI.heurPass(S.hands[0], S.R, S.dir);
     U.psel = new Set(best); sfx('sel'); render(); return;
@@ -419,7 +435,7 @@ function resHtml() {
   const rows = [0, 1, 2, 3].map(s => `<li class="${s === 0 ? 'me' : ''}${R.moon === s ? ' moon' : ''}"><b>${esc(N[s])}</b><em>${R.delta[s] > 0 ? '+' : ''}${R.delta[s]}</em><span>${G.scores[s]}</span></li>`).join('');
   const note = R.moon >= 0 ? t(R.moon === 0 ? 'res.moonMe' : 'res.moonThem', { n: N[R.moon], p: HT.totalPen(S.R) }) : R.delta[0] === 0 ? t('res.clean') : '';
   return `<div class="hres ${R.delta[0] <= 0 || R.moon === 0 ? 'win' : 'lose'}" data-k="hres"><b class="hres-h">${esc(t('res.h', { n: S.no }))}</b><ol class="hres-pts"><li class="hd"><b></b><em>${esc(t('res.hand'))}</em><span>${esc(t('res.total'))}</span></li>${rows}</ol>${note ? `<p>${esc(note)}</p>` : ''}` +
-    `<div class="hres-b"><button class="abtn" id="hrRev">${esc(t('btn.review'))}</button>${G.over ? `<button class="abtn go" id="hrNext">${esc(t('r.final'))}<kbd>Space</kbd></button>` : `<button class="abtn go" id="hrNext">${esc(t('r.next'))}<kbd>Space</kbd></button>`}</div></div>`;
+    `<div class="hres-b">${TUT() ? '' : `<button class="abtn" id="hrRev">${esc(t('btn.review'))}</button>`}${TUT() ? '' : G.over ? `<button class="abtn go" id="hrNext">${esc(t('r.final'))}<kbd>Space</kbd></button>` : `<button class="abtn go" id="hrNext">${esc(t('r.next'))}<kbd>Space</kbd></button>`}</div></div>`;
 }
 function render() {
   if (!S) return;
@@ -455,6 +471,7 @@ function render() {
   wireHand();
   const nx = $('#hrNext'); if (nx) nx.onclick = nextHand; const rv = $('#hrRev'); if (rv) rv.onclick = () => window.HtReview && HtReview.open(D.rev.length - 1);
   renderActbar(); renderSide(); renderNums();
+  if (window.HtTut) HtTut.ev('render');
 }
 function wireHand() {
   const hb = $('#htHand'); if (!hb || hb._w) return; hb._w = 1;
@@ -538,6 +555,7 @@ function logHtml() {
 /* ---- the coach ---- */
 function coachHtml() {
   if (U.res) return `<p class="muted">${esc(t('ck.handEnd'))}</p>` + tipsHtml(tipList('end'));
+  if (TUT()) return `<p class="muted">${esc(t('ck.tut'))}</p>`;   // the tutorial explains every move itself
   const C = U.coach && U.coach.key === stateKey() ? U.coach : null;
   if (S.phase === 'pass') {
     if (S.pass[0]) return `<p class="muted">${esc(t('ck.passWait'))}</p>` + tipsHtml(tipList('pass'));
@@ -800,6 +818,7 @@ $('#btnSound').onclick = () => { set.sound = !set.sound; try { localStorage.setI
 $('#btnHint').onclick = hint;
 $('#btnResign').onclick = () => {
   if (!G) return;
+  if (TUT()) { HtTut.quit(); return; }
   if (G.over) { newGame(); return; }
   const go = () => { unsched(); recordAbandon(); toast(t('resigned')); newGame({ v: G.R.v, lvl: G.lvl }); };
   if (window.Resign) Resign.confirm({ lang: LANG }).then(ok => { if (ok) go(); }); else confirmBox(t('resignQ'), go);
@@ -812,6 +831,7 @@ $('#langSel').onchange = () => { LANG = $('#langSel').value; try { localStorage.
 document.addEventListener('keydown', e => {
   if (e.target.closest('input, select, textarea') || $('.overlay.show') || !S) return;
   const k = e.key.toLowerCase();
+  if (TUT() && (e.target.closest('#tutLayer') || U.res)) return;   // keys on the tutorial bubble belong to it
   if (U.res && (k === ' ' || k === 'enter')) { e.preventDefault(); nextHand(); return; }
   if (k === 'h') { hint(); return; }
   if (S.phase === 'pass') { if (k === ' ' || k === 'enter') { e.preventDefault(); confirmPass(); } return; }
@@ -822,6 +842,24 @@ document.addEventListener('keydown', e => {
     i = i < 0 ? (k === 'arrowleft' ? hs.length - 1 : 0) : (i + (k === 'arrowleft' ? -1 : 1) + hs.length) % hs.length; U.sel = hs[i]; sfx('sel'); render();
   } else if (k === 'escape') { U.sel = null; render(); }
 });
+
+/* ---------------- tutorial hooks (tutorial.js) ---------------- */
+function startTutorial(setup) {
+  unsched(); thinking++;
+  if (!D.cur || !D.cur.tut) D.prevCur = D.cur || null;
+  const o = setup();   // { G, S }
+  G = o.G; S = o.S; D.cur = { tut: true };
+  U.sel = null; U.psel = new Set(); U.res = null; U.coach = null; U.coachKey = ''; U.recv = null; U.trickShow = null; U.dec = []; U.passInfo = null; U.think = false; U.deal = Date.now();
+  sfx('deal'); render();
+}
+function endTutorial() {
+  unsched(); thinking++;
+  const p = D.prevCur; D.prevCur = null; D.cur = p || null; save();
+  U.trickShow = null; U.think = false; U.sel = null; U.psel = new Set(); U.recv = null;
+  if (p && p.G && p.S) { G = p.G; S = p.S; U.res = p.res || null; U.dec = p.dec || []; U.passInfo = p.passInfo || null; U.coach = null; U.coachKey = ''; render(); if (S.phase === 'pass') aiPasses(); if (!U.res) sched(loop, 500); }
+  else newGame();
+}
+function showTab(pt) { set.mTab = pt; mTabs(); }
 
 /* ---------------- start ---------------- */
 applyI18n();
@@ -837,6 +875,6 @@ if (D.cur && D.cur.G && D.cur.S) {
   else { render(); if (S.phase === 'pass') aiPasses(); if (!U.res) sched(loop, 700); }
 } else { newGame(); }
 
-window.HtApp = { get G() { return G; }, get S() { return S; }, get LANG() { return LANG; }, t, esc, gl, sfx, openOv, closeOv, toast, confirmBox, set, D, save, render, gArt, cname, NAMES, dirName, newGame, nextHand, loop, sched, unsched, U, lvLabel, think, grade, fmt, AI, HT, showTab(pt) { set.mTab = pt; mTabs(); } };
+window.HtApp = { startTutorial, endTutorial, showTab, act, get G() { return G; }, get S() { return S; }, get LANG() { return LANG; }, t, esc, gl, sfx, openOv, closeOv, toast, confirmBox, set, D, save, render, gArt, cname, NAMES, dirName, newGame, nextHand, loop, sched, unsched, U, lvLabel, think, grade, fmt, AI, HT, showTab(pt) { set.mTab = pt; mTabs(); } };
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-csw]'); if (!b || !S) return; e.preventDefault(); const sc = document.querySelector('.stage'), st = sc ? sc.scrollTop : 0; set.coach = set.coach ? 0 : 1; save(); render(); toast(t('side.coach') + ' ' + (set.coach ? 'ON' : 'OFF')); if (set.coach) requestCoach(); if (sc) sc.scrollTop = st; });
 })();
