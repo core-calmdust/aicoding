@@ -66,9 +66,11 @@ elif [ "$US" = kp ]; then
 else
   build_ours; YO="$YOO"; TAG=ours; WHAT="YaneuraOu's search + our evaluation"; UOPT=""
 fi
-gzip -dc "$SHOGI/nnue.bin.gz" > "$WORK/site.bin"
-H=$(od -An -t d4 -j 4 -N 4 "$WORK/site.bin" | tr -d ' ')
-cc -O3 -DNATIVE -DNUE_H=$H -w -o "$WORK/usimatch" "$HERE/usimatch.c"
+# the site's net: since 2026-11-27 nnue-s1280.bin.gz (SITENET=shogi/nnue.bin.gz = the 512 net before it); the build's sizes from its header
+SITENET=${SITENET:-$SHOGI/nnue-s1280.bin.gz}; gzip -dc "$SITENET" > "$WORK/site.bin" 2>/dev/null || cp "$SITENET" "$WORK/site.bin"
+H=$(od -An -t d4 -j 4 -N 4 "$WORK/site.bin" | tr -d ' '); NF="-DNUE_H=$H"
+if [ "$(od -An -t x4 -N 4 "$WORK/site.bin" | tr -d ' ')" = 5345554e ]; then NF="$NF -DNUE_KB=1 -DNUE_MB=8 -DNUE_L1=$(od -An -t d4 -j 16 -N 4 "$WORK/site.bin" | tr -d ' ') -DNUE_L2=$(od -An -t d4 -j 20 -N 4 "$WORK/site.bin" | tr -d ' ') -DNUE_MI=$(od -An -t d4 -j 24 -N 4 "$WORK/site.bin" | tr -d ' ')"; fi
+cc -O3 -DNATIVE $NF -w -o "$WORK/usimatch" "$HERE/usimatch.c"
 cd "$WORK"; printf 'usi\n%sisready\nquit\n' "${ED:+setoption name EvalDir value $ED
 }" | OURNET="$WORK/site.bin" "$YO" 2>/dev/null | grep -q readyok || { echo "the engine does not start: $YO"; exit 1; }
 if [ "$OPP" = micro ]; then
