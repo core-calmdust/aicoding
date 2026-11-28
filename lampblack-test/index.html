@@ -665,7 +665,7 @@ body.night #cineShade{background:radial-gradient(44vmax 34vmax at var(--lx,50%) 
 #cineBloom{position:absolute;inset:0;z-index:5;pointer-events:none;opacity:0;transition:opacity 1.4s,--lx 2.2s cubic-bezier(.45,.05,.25,1),--ly 2.2s cubic-bezier(.45,.05,.25,1);background:radial-gradient(34vmax 30vmax at var(--lx,50%) var(--ly,40%),color-mix(in srgb,var(--lamp) 24%,transparent),transparent 70%)}
 body.night #cineBloom{background:radial-gradient(34vmax 30vmax at var(--lx,50%) var(--ly,40%),rgba(190,210,255,.16),transparent 70%)}
 #cineSky{position:absolute;left:0;top:0;z-index:5;pointer-events:none}
-#cineGrain{position:absolute;inset:-128px;z-index:5;pointer-events:none;opacity:.55;background-image:var(--g0);will-change:transform;animation:cineGrain .48s steps(1) infinite}
+#cineGrain{position:absolute;inset:-128px;z-index:5;pointer-events:none;opacity:1;background-image:var(--g0);will-change:transform;animation:cineGrain .48s steps(1) infinite}
 @keyframes cineGrain{0%{transform:translate(0,0)}25%{transform:translate(-37px,61px)}50%{transform:translate(83px,-29px)}75%{transform:translate(-12px,-77px)}}
 #scene svg.scn.cine-far,#scene svg.scn.cine-mid{will-change:transform}
 #scene svg.scn.cine-far .mid,#scene svg.scn.cine-far .near,#scene svg.scn.cine-mid .far,#scene svg.scn.cine-mid .near,#scene svg.scn.cine-near .far,#scene svg.scn.cine-near .mid{display:none}
@@ -785,7 +785,7 @@ body.anim-off #cineGrain{animation:none}body.anim-off #cineSky{display:none}
 <script src="stories/kiteki.who.open.js?v=2"></script>
 <script src="tutorial.js?v=7"></script>
 <script src="sound.js?v=14"></script>
-<script src="cine.js?v=8"></script>
+<script src="cine.js?v=9"></script>
 <script src="theater.js?v=5"></script>
 <script src="theater-kit.js?v=4"></script>
 <script src="stories/kirigane.shots.js?v=3"></script>
