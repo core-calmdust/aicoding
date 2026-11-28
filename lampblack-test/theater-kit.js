@@ -154,7 +154,7 @@
       (o.people || []).forEach((p, i) => {
         if (!w.people['p' + i]) return;
         let x = p.x, walk = 0;
-        if (p.walk) { const q = seg(t, p.walk[2], p.walk[3]); x = lerp(p.walk[0], p.walk[1], E.io(q)); walk = q > 0 && q < 1 ? 1 : 0; }
+        if (p.walk) { const q = seg(t, p.walk[2], p.walk[3]); x = lerp(p.walk[0], p.walk[1], E.io(q)); walk = Math.min(1, q * 6, (1 - q) * 6); }
         w.place('p' + i, { x, y: p.y || (o.gy || 1240) + 20, h: p.h || 520, face: p.face, blur: p.blur || .4, op: p.op, walk, rot: p.rot, still: p.still }, t);
       });
       const lt = o.light || 'cold';
@@ -231,7 +231,9 @@
       const py = 1000 + h * (v === 2 ? .7 : .62), hy = w.head('s', py, h);
       S.before.forEach((k, j) => w.place('b' + j, { x: px0 - sg * (560 + j * 380), y: 1060, h: 950, blur: 8, op: .8, face: sg }, t));
       w.people.s.lift = f.talk * 5;
-      w.place('s', { x: px, y: py, h, blur: v === 3 ? .2 : .3, face: -sg, walk: enter < 1 ? 1 : 0, still: enter >= 1, rot: noise1(t * .2, 3) * .4 }, t);
+      // the walk fades out as they arrive (no switch from walking to standing: that was a visible jolt)
+      const wk = 1 - E.s(seg(t, .55, 1.25));
+      w.place('s', { x: px, y: py, h, blur: v === 3 ? .2 : .3, face: -sg, walk: wk, rot: noise1(t * .2, 3) * .4 }, t);
       const k = glide(t, 8, 1), b = breath(t, 5, 13);
       const z = lerp(1, v === 2 ? 1.04 : 1.07, k), P0 = w.people.s, top = ((P0.hc || .3) - (P0.ht || .2)) * h * z;
       const FX = W / 2 + sg * W * .16, FY = Math.max(v === 2 ? 400 : 330, top + (nr ? 190 : 70) - (v === 2 ? 130 * z : 0));
