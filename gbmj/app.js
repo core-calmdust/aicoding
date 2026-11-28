@@ -213,13 +213,16 @@ async function playRound(r) {
     // CPU を先に（ロンがあれば人の鳴きは不要になることがある）
     for (const p of ws.filter(x => x !== ME)) {
       if (r.phase === 'end' || !r.waiting().includes(p)) continue;
-      if (r.phase === 'turn') await botWait(420 + Math.random() * 380);
-      const a = UI.bots[p].decide(r, p, r.options(p));
+      if (UI.tut) { await UI.tut.gate(r, p); if (UI.stop) return; }
+      if (r.phase === 'turn') await botWait(UI.tut ? 700 : 420 + Math.random() * 380);
+      const a = (UI.tut && UI.tut.botAct(r, p)) || UI.bots[p].decide(r, p, r.options(p));
       r.act(p, a);
     }
     if (r.phase !== 'end' && r.waiting().includes(ME)) {
-      const a = AUTO ? UI.autoBot.decide(r, ME, r.options(ME)) : await humanAct(r);
+      if (UI.tut) { await UI.tut.gate(r, ME); if (UI.stop) return; }
+      const a = AUTO && !UI.tut ? UI.autoBot.decide(r, ME, r.options(ME)) : await humanAct(r);
       if (UI.stop) return;
+      if (UI.tut && !UI.tut.allow(r, a)) continue;
       if (a.type === 'hu' && a.low) { const ok = AUTO ? false : await confirmBox(t('lowTitle'), esc(t('lowBody', { n: a.pts })), t('lowYes'), t('cancel')); if (!ok) continue; }
       r.act(ME, a);
     }
@@ -230,7 +233,7 @@ async function showEvent(r, e) {
     case 'deal': renderAll(true); break;
     case 'draw': renderAll(); break;
     case 'flower': if (!e.deal) { toast(t('flowerToast', { who: name(e.p) }), 900); SND.call(); } renderAll(); if (!e.deal) await sleep(250); break;
-    case 'discard': renderAll(false, e.p); await sleep(AUTO ? 10 : 260); break;
+    case 'discard': renderAll(false, e.p); await sleep(UI.tut ? 1000 : AUTO ? 10 : 260); break;
     case 'chi': case 'pon': case 'kan': case 'kong': case 'kakan': SND.call(); shout(e.p, t('call_' + (e.ev === 'kong' ? 'kan' : e.ev === 'kakan' ? 'kan' : e.ev))); renderAll(); await sleep(AUTO ? 10 : 420); break;
     case 'falsehu': SND.warn(); shout(e.p, t('falseHu')); toast(t('falseHuToast', { who: name(e.p), n: e.pts }), 2600); renderAll(); await sleep(900); break;
     case 'win': SND.win(); shout(e.p, e.how === 'tsumo' ? t('tsumo') : t('ron')); renderAll(); await sleep(AUTO ? 50 : 900); break;
@@ -282,7 +285,7 @@ function renderHand() {
   const drawn = r.phase === 'turn' && r.cur === ME && r.drawn != null && P.hand.includes(r.drawn) ? r.drawn : null;
   const ids = P.hand.filter(id => id !== drawn).sort((a, b) => a - b);
   const myTurn = r.phase === 'turn' && r.cur === ME && UI.wait;
-  const rec = myTurn && DB.set.coach && !UI.rated && UI.coach && UI.coach.discards[0] ? UI.coach.discards[0].t : null;
+  const rec = myTurn && DB.set.coach && !UI.rated && !UI.tut && UI.coach && UI.coach.discards[0] ? UI.coach.discards[0].t : null;
   const showAll = r.phase === 'end' && r.result && r.result.type === 'win' && r.result.p === ME;
   el.innerHTML = ids.map(id => `<button class="ht${myTurn ? ' can' : ''}${T(id) === rec ? ' rec' : ''}" data-id="${id}">${tileImg(id)}</button>`).join('') + (drawn != null ? `<span class="gap"></span><button class="ht dr${myTurn ? ' can' : ''}${T(drawn) === rec ? ' rec' : ''}" data-id="${drawn}">${tileImg(drawn)}</button>` : '');
   el.classList.toggle('my', !!myTurn); el.classList.toggle('done', !!showAll);
@@ -317,6 +320,7 @@ function humanAct(r) {
     if (kind === 'claim') { const tl = TB.tile(r.phase === 'rob' ? r.robTile : r.discard); TB.setTileLook(tl, 'hi'); TB.dirty = true; }
     UI.coach = DB.set.coach && !UI.rated ? UI.coachBot.analyze(r, ME) : null;
     renderHand(); renderCoach();
+    if (UI.tut) UI.tut.waiting(r);
   });
 }
 
@@ -345,7 +349,7 @@ function renderCoach() {
     const c = UI.coach;
     h += `<p class="ck-l">${esc(t('shantenN', { n: Math.max(0, c.shanten) }))}</p>`;
     sum = t('shantenN', { n: Math.max(0, c.shanten) });
-    if (c.discards[0]) h += `<p class="ck-rec">${esc(t('recDiscard'))} ${typeImg(c.discards[0].t, 'mini')}</p>`;
+    if (c.discards[0] && !UI.tut) h += `<p class="ck-rec">${esc(t('recDiscard'))} ${typeImg(c.discards[0].t, 'mini')}</p>`;
   }
   const key = P.hand.join() + '|' + P.melds.length;
   if (!UI.coach && UI.ckKey !== key) { UI.ckKey = key; UI.ckPlans = UI.coachBot.analyze(r, ME); }
@@ -377,8 +381,8 @@ function showResult(r) {
       const how = x.how === 'tsumo' ? t('byTsumo') : x.how === 'rob' ? t('byRob', { from: name(x.from) }) : t('byRon', { from: name(x.from) });
       h = `<div class="res"><h3>${esc(t('winTitle', { who: name(x.p) }))}</h3><p class="how">${esc(how)}</p>${handRowHtml(r, x.p, x.winId)}${fanTable(x.fan)}<p class="dim">${esc(x.how === 'tsumo' ? t('payTsumo', { n: x.fan.total }) : t('payRon', { n: x.fan.total }))}</p>${pay}`;
     } else h = `<div class="res"><h3>${esc(t('exhaust'))}</h3><p class="how">${esc(t('exhaustNote'))}</p>${pay}`;
-    h += `<div class="btns"><button class="btn pri" data-ok>${esc(M.over ? t('seeFinal') : t('nextHand'))}</button></div></div>`;
-    modal(h, 'resm', box => { box.querySelector('[data-ok]').onclick = () => { closeModal(); res(); }; if (AUTO && !/[?&]hold/.test(location.search)) setTimeout(() => { if (!$('#modal').hidden) { closeModal(); res(); } }, 400); });
+    h += UI.tut ? `<div class="btns"><button class="btn pri" data-ok>${esc(t('next'))}</button></div></div>` : `<div class="btns"><button class="btn pri" data-ok>${esc(M.over ? t('seeFinal') : t('nextHand'))}</button></div></div>`;
+    modal(h, 'resm', box => { box.querySelector('[data-ok]').onclick = () => { if (UI.tut) { UI.tut.next(); return; } closeModal(); res(); }; if (AUTO && !/[?&]hold/.test(location.search)) setTimeout(() => { if (!$('#modal').hidden) { closeModal(); res(); } }, 400); });
   });
 }
 function showFinal() {
@@ -405,7 +409,30 @@ function showFinal() {
     });
   });
 }
+// チュートリアル（tutorial.js）：決まった配牌の1局を、台本どおりの CPU と打つ
+async function startTutorial(T) {
+  if (UI) UI.stop = true;
+  $('#home').hidden = true; $('#game').hidden = false;
+  ensureTable();
+  requestAnimationFrame(() => dispatchEvent(new Event('resize')));
+  TB.hideAll();
+  GBFan.OPTS.tianjin = false;
+  M = new GBMatch({ hands: 1, dealer0: 0 });
+  UI = { rated: false, lv: 6, tut: T, bots: [null, 1, 2, 3].map((x, i) => i ? GBAI.create({ level: 6, seed: i }) : null), coachBot: GBAI.create({ level: 16 }), autoBot: GBAI.create({ level: 10 }), stop: false, wait: null };
+  G = M;
+  const r = T.makeRound(); R0 = r; M.round = r;
+  const coach0 = DB.set.coach; DB.set.coach = true;
+  renderAll(true);
+  await sleep(600);
+  T.begin();
+  await playRound(r);
+  DB.set.coach = coach0;
+  if (UI.stop) return;
+  M.finishRound(r); renderAll();
+  await new Promise(res => { showResult(r).then(res); T.result(); });
+}
 function exitGame() {
+  if (UI && UI.tut) UI.tut.stop();
   if (UI) { UI.stop = true; if (UI.wait) { const w = UI.wait; UI.wait = null; w.done({ type: 'pass' }); } }
   R0 = null; G = null;
   if (TB) { TB.hideAll(); TB.pause && TB.pause(); }
@@ -435,7 +462,7 @@ function openDex(sel) {
   paint();
 }
 window.GBDBG = () => R0 ? `${R0.phase} cur=${R0.cur} left=${R0.left()} ev=${R0.events.length} wait=${R0.waiting()} uiwait=${UI && UI.wait ? UI.wait.kind : ''}` : 'none';
-window.GBApp = { openDex, modal, closeModal, toast, tileImg, typeImg, parseTiles, t: (...a) => t(...a), esc, save, DB, ensureTable, get TB() { return TB; }, renderHome };
+window.GBApp = { startTutorial, exitGame, get R() { return R0; }, get UI() { return UI; }, renderAll, openDex, modal, closeModal, toast, tileImg, typeImg, parseTiles, t: (...a) => t(...a), esc, save, DB, ensureTable, get TB() { return TB; }, renderHome };
 
 // ---------------------------------------------------------------- ボタン・起動
 $('#gExit').onclick = async () => { if (await confirmBox(t('exitTitle'), esc(t('exitBody')), t('exitYes'), t('cancel'))) exitGame(); };
@@ -453,4 +480,5 @@ if (q.get('lv')) DB.set.lv = +q.get('lv');
 if (q.get('go') === 'free') startMatch({ rated: false });
 else if (q.get('go') === 'rated') startMatch({ rated: true });
 else if (q.get('go') === 'dex') openDex();
+else if (q.get('go') === 'tut') addEventListener('load', () => window.GBTutorial && GBTutorial.open());
 })();

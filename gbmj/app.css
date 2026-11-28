@@ -176,6 +176,27 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
   .ng-pane{grid-template-columns:1fr}
   .modal.ngm .mbox{height:calc(100vh - 32px)}
   .dx-list{grid-template-columns:1fr}
+  .pays{grid-template-columns:1fr 1fr}
+  .rhand .tl{height:40px}
   .btn{min-width:0;flex:1}
   .shout{font-size:40px}
 }
+
+/* ---------- チュートリアル（光の枠＋吹き出し） ---------- */
+.tu-layer{position:fixed;inset:0;z-index:70;pointer-events:none}
+.tu-layer.idle{display:none}
+.tu-veil{position:absolute;inset:0}
+.tu-ring{position:absolute;border-radius:14px;border:3px solid #fff1a8;box-shadow:0 0 0 3px rgba(255,214,90,.9),0 0 26px 8px rgba(255,210,80,.85),inset 0 0 18px rgba(255,220,120,.5);animation:tuPulse 1.2s ease-in-out infinite}
+@keyframes tuPulse{50%{box-shadow:0 0 0 4px rgba(255,214,90,1),0 0 38px 14px rgba(255,210,80,.95),inset 0 0 22px rgba(255,220,120,.6)}}
+.tu-bub{position:absolute;width:min(430px,calc(100vw - 24px));pointer-events:auto;background:var(--paper);border:3px solid var(--line);border-radius:22px;padding:14px 18px 16px;box-shadow:0 16px 36px -10px rgba(0,0,0,.6);font-size:17px;line-height:1.65;color:var(--ink)}
+.tu-bub.center{left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,calc(100vw - 24px))}
+.tu-top{display:flex;align-items:center;gap:10px;margin-bottom:4px}.tu-top b{color:var(--lac2)}.tu-top span{color:var(--ink2);font-family:var(--ar);font-size:15px}
+.tu-x{margin-left:auto;border:0;background:none;font-size:26px;line-height:1;color:var(--ink2)}
+.tu-bub p{margin:4px 0}
+.tu-no{color:var(--warn);font-weight:700}
+.tu-ok{color:var(--jade);font-weight:900}
+.tu-m{margin-top:8px;font-size:14px;color:var(--ink2)}.tu-m i{display:block;height:10px;border-radius:999px;background:#eadfca;overflow:hidden;margin-top:4px}.tu-m i b{display:block;height:100%;background:linear-gradient(90deg,var(--jade),#3df59a);transition:width .5s}
+.tu-pics{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:6px}.tu-pics span{display:inline-flex;gap:1px}.tu-pics em{font-style:normal;font-weight:900;color:var(--lac2)}
+.tu-bub .btns{margin-top:10px}
+@media (max-width:760px){.tu-bub{font-size:15px;padding:12px 14px}}
+.tu-on .modal .res .btns{display:none}
